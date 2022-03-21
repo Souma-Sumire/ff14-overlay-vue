@@ -25,7 +25,7 @@ export const useActionStore = defineStore("action", {
   actions: {
     getAction(options: IActionOptions): (IAction & { Url?: string }) | undefined {
       const action: any = (actions as any).find((item: any) => {
-        if (item[ActionEnum.Icon] === 405) return;
+        if (options?.IsPlayerAction && item[ActionEnum.Icon] === 405) return;
         return Object.entries(options).every(([key, value]) => {
           return item[ActionEnum[key as any]] === value;
         });

@@ -5,15 +5,21 @@
       <el-button type="success" @click="broadcastData()">发送到悬浮窗</el-button>
       <el-button @click="showFflogs = !showFflogs">从FFlogs导入</el-button>
       <el-button @click="showSettings = !showSettings" color="#626aef" style="color: white">样式设置</el-button>
-      <el-button @click="exportData">导出</el-button>
-      <el-button @click="importData">导入</el-button>
+      <el-button @click="exportAllTimelines">导出</el-button>
+      <el-button @click="importTimelines">导入</el-button>
       <div class="slider-demo-block">
         <span>预览时间：</span>
-        <el-slider v-model="simulatedCombatTime" :min="-30" :max="600" :step="0.1" show-input> </el-slider>
+        <el-slider v-model="simulatedCombatTime" :min="-30" :max="1000" :step="0.1" show-input> </el-slider>
       </div>
     </el-header>
     <el-main>
-      <FflogsVue :settings="timelineStore.settings" v-if="showFflogs" @newTimeline="timelineStore.newTimeline"></FflogsVue>
+      <FflogsVue
+        :settings="timelineStore.settings"
+        :filters="timelineFilters"
+        v-if="showFflogs"
+        @showFflogsToggle="() => (showFflogs = !showFflogs)"
+        @newTimeline="timelineStore.newTimeline"
+      ></FflogsVue>
       <el-descriptions title="时间轴参数" size="small" style="width: 100%" border v-show="showSettings">
         <el-descriptions-item
           v-for="(value, key, index) in timelineStore.configValues"
@@ -73,10 +79,17 @@
                 <el-input v-model="item.create" disabled />
               </p>
               <el-button type="danger" @click="deleteTimeline(timelines, index)">删除</el-button>
+              <el-button @click="exportTimeline(item)">导出</el-button>
             </el-col>
             <el-col :span="10">
               <span>编辑：</span>
-              <el-input class="timeline-timeline-raw" v-model="item.timeline" type="textarea" :rows="10" placeholder="请键入时间轴文本"
+              <el-input
+                class="timeline-timeline-raw"
+                v-model="item.timeline"
+                type="textarea"
+                :rows="10"
+                wrap="off"
+                placeholder="请键入时间轴文本"
             /></el-col>
             <el-col :span="6">
               <span>预览：</span>
@@ -110,6 +123,7 @@ import Util from "../utils/util";
 const simulatedCombatTime = ref(-30);
 const timelineStore = useTimelineStore();
 const timelines = toRef(timelineStore, "allTimelines");
+const timelineFilters = toRef(timelineStore, "filters");
 const highDifficultZoneId: { id: string; name: string }[] = [{ id: "0", name: "任意" }];
 const showFflogs = ref(false);
 const showSettings = ref(false);
@@ -135,8 +149,7 @@ function init() {
 
 //通信数据
 function broadcastData() {
-  console.log(window.hasOwnProperty("OverlayPluginApi"));
-
+  // console.log(window.hasOwnProperty("OverlayPluginApi"));
   if (!!urlTool(location.href)?.OVERLAY_WS) {
     callOverlayHandler({
       call: "broadcast",
@@ -201,11 +214,15 @@ function saveTimelineStoreData() {
   });
 }
 
-function exportData() {
+function exportTimeline(timeline: ITimeline) {
+  Swal.fire({ text: window.btoa(encodeURIComponent(JSON.stringify([timeline]))) });
+}
+
+function exportAllTimelines() {
   Swal.fire({ text: window.btoa(encodeURIComponent(JSON.stringify(timelineStore.allTimelines))) });
 }
 
-function importData() {
+function importTimelines() {
   Swal.fire({
     title: "输入导出的字符串",
     input: "text",
@@ -219,8 +236,25 @@ function importData() {
   }).then((result) => {
     if (result.isConfirmed || result.isDenied) {
       try {
-        if (result.isDenied) timelineStore.allTimelines.length = 0;
-        timelineStore.allTimelines.push(...(JSON.parse(decodeURIComponent(window.atob(result.value))) as ITimeline[]));
+        if (result.isDenied) {
+          Swal.fire({
+            title: "这将丢失目前拥有的所有数据，你确定要覆盖吗？",
+            showConfirmButton: false,
+            showDenyButton: true,
+            denyButtonText: "确定覆盖",
+            showCancelButton: true,
+            cancelButtonText: "取消",
+          }).then((res) => {
+            if (res.isDenied) {
+              timelineStore.allTimelines.length = 0;
+              timelineStore.allTimelines.push(...(JSON.parse(decodeURIComponent(window.atob(result.value))) as ITimeline[]));
+              timelineStore.sortTimelines();
+            }
+          });
+        } else {
+          timelineStore.allTimelines.push(...(JSON.parse(decodeURIComponent(window.atob(result.value))) as ITimeline[]));
+          timelineStore.sortTimelines();
+        }
       } catch (e: any) {
         Swal.fire({
           icon: "error",
@@ -264,12 +298,14 @@ function importData() {
       :deep(.el-input) {
         width: 275px !important;
       }
+
       .timeline-timeline-view {
         margin-top: 7px;
         overflow-x: auto;
       }
       :deep(.el-textarea__inner) {
         line-height: 1.929;
+        // overflow-x: hidden;
       }
     }
   }

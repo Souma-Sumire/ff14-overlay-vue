@@ -54,12 +54,13 @@ export type FflogsQuery = {
   start: number;
   end: number;
   friendlies: Friendlies[];
-  abilityFilterEvents: { time: number; actionName: string; actionId: number }[];
-  abilityFilterParseRule: Set<number>;
-  abilityFilterUsedRule: number[];
+  abilityFilterEvents: { time: number; actionName: string; actionId: number; sourceIsFriendly: boolean,url:string }[];
+  abilityFilterCandidate: { time: number; actionName: string; actionId: number; sourceIsFriendly: boolean; url: string }[];
+  abilityFilterSelected: number[];
   abilityFilterEventsAfterFilterRawTimeline: string;
   zoneID: string;
   player: { fights?: [{ id: number }]; guid?: number; icon?: FfIcon; id?: number; name?: string; server?: string };
+  bossIDs: number[];
 };
 
 export type FflogsApiV1ReportEvents = {

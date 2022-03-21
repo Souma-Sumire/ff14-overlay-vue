@@ -39,11 +39,11 @@ const configTranslate: TimelineConfigTranslate = {
 };
 
 const configValues: TimelineConfigValues = {
-  [TimelineConfigEnum.显示范围]: 120,
-  [TimelineConfigEnum.变色时间]: 4,
-  [TimelineConfigEnum.零后持续]: 0.2,
+  [TimelineConfigEnum.显示范围]: 80,
+  [TimelineConfigEnum.变色时间]: 2.75,
+  [TimelineConfigEnum.零后持续]: 0.25,
   [TimelineConfigEnum.战前准备]: 30,
-  [TimelineConfigEnum.TTS提前量]: 2,
+  [TimelineConfigEnum.TTS提前量]: 1,
   [TimelineConfigEnum.刷新频率]: 100,
 };
 
@@ -57,22 +57,23 @@ const showStyleTranslate: ShowStyleTranslate = {
 };
 
 let showStyle: ShowStyle = {
-  "--timeline-width": 220,
+  "--timeline-width": 160,
   "--font-size": 16,
   "--opacity": 0.5,
   "--normal-scale": 0.5,
-  "--up-coming-scale": 0.75,
+  "--up-coming-scale": 1,
   "--tras-duration": 1,
 };
 export const useTimelineStore = defineStore("timeline", {
   state: () => {
     return {
       timelineLegalRegular:
-        /^\s*(?<time>[\-:：\d.]+) (?:["']?(?<action>[^"\n\r]+)["']?)?(?: (?<t>tts) ?)?(?:["']??(?<tts>[^"\s\n\r]+)["']??)?(?: sync ?\/(?<sync>.+)\/)?(?: window ?(?<windowBefore>\d+)(?:,(?<windowAfter>\d+))?)?(?: jump ?(?<jump>\d+))?\s*$/gm,
+        /^\s*(?<time>[\-:：\d.]+)\s+(?:["']?(?<action>[^"\n\r]+)["']?)?(?:\s+(?<t>tts)\s+?)?(?:["']??(?<tts>[^"\s\n\r]+)["']??)?(?:\s+sync\s+?\/(?<sync>.+)\/)?(?:\s+window\s+?(?<windowBefore>\d+)(?:,(?<windowAfter>\d+))?)?(?:\s+jump\s+?(?<jump>\d+))?\s*$/gm,
       allTimelines: [] as ITimeline[],
       configValues,
       configTranslate,
       settings: { api: "" },
+      filters: {},
       showStyle,
       showStyleTranslate,
     };
@@ -82,12 +83,13 @@ export const useTimelineStore = defineStore("timeline", {
     newTimeline(
       title: string = "Demo",
       condition: ITimelineCondition = { zoneId: "0", jobList: ["GLA"] },
-      rawTimeline: string = `0 "战斗开始"
+      rawTimeline: string = `
+-20 "中间学派"
+0 "战斗开始"
 10 "<死斗>~" tts
-20 "<地星><星体爆轰!>"
 65 "一运" tts "场中集合"
-75 "<宏观宇宙>"
-85 "<微观宇宙!>"`,
+100 "二运" sync /^.{14} ActionEffect 15:4.{7}:[^:]+:AAAA:/
+`,
       codeFight: string = "用户创建"
     ) {
       this.allTimelines.push(new Timeline(title, condition, rawTimeline, codeFight));
@@ -123,8 +125,10 @@ export const useTimelineStore = defineStore("timeline", {
         }
       }
       function parseAction(text: string): string {
-        [...text.matchAll(/\<(?<name>[^\<\>]*?)(?<mandatory>\!)?\>(?<repeat>~)?/gim)].forEach((item) => {
-          let action = actionStore.getAction({ Name: item.groups!.name, IsPlayerAction: !item.groups?.mandatory });
+        [...text.matchAll(/\<(?<name>[^\<\>]*?)!??\>(?<repeat>~)?/gim)].forEach((item) => {
+          let action =
+            actionStore.getAction({ Name: item.groups!.name, IsPlayerAction: true }) ??
+            actionStore.getAction({ Name: item.groups!.name, IsPlayerAction: false });
           //"https://xivapi.com/i/${action.Url}.png"
           if (action) {
             text = text.replace(
@@ -161,6 +165,7 @@ export const useTimelineStore = defineStore("timeline", {
           configValues: this.configValues,
           settings: this.settings,
           showStyle: this.showStyle,
+          filters: this.filters,
         })
       );
     },

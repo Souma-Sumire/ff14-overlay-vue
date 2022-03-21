@@ -57,7 +57,6 @@ init();
 //页面初始化
 function init() {
   addOverlayListener("onLogEvent", handleLogEvent);
-  addOverlayListener("onPartyWipe", handlePartyWipe);
   addOverlayListener("onPlayerChangedEvent", handlePlayerChangedEvent);
   addOverlayListener("ChangeZone", handleChangeZone);
   addOverlayListener("BroadcastMessage", handleBroadcastMessage);
@@ -152,18 +151,19 @@ function startTimeline(countdownSeconds: number) {
 //日志
 function handleLogEvent(e: any) {
   for (const log of e.detail.logs) {
-    let regex: RegExpMatchArray | null;
-    if (
-      (regex = log.match(/^.{14} (\w+ |)00:(?:00b9|0139)::?(?:距离战斗开始还有|Battle commencing in |戦闘開始まで)(?<cd>\d+)[^（(]+[（(]/i))
-    ) {
+    let regex = log.match(
+      /^.{14} (\w+ |)00:(?:00b9|0139)::?(?:距离战斗开始还有|Battle commencing in |戦闘開始まで)(?<cd>\d+)[^（(]+[（(]/i
+    );
+    if (regex) {
       //倒计时
       startTimeline(parseInt(regex!.groups!.cd));
-      // } else if (
-      //   runtimeTimeSeconds.value <= -timelineStore.configValues.preBattle &&
-      //   (regex = log.match(/^.{14} (?:LimitBreak|) 24:0000:/))
-      // ) {
-      //   //LB变空槽且尚未进入播放状态
-      //   startTimeline(0);
+    } else if (/^.{14} (?:Director |)21:.{8}:8.{5}1A/.test(log)) {
+      // 进本体?
+      getTimeline(condition);
+    } else if (/^.{14} (?:Director |)21:.{8}:40000010/.test(log)) {
+      //团灭
+      stopTimeline();
+      mountTimeline(lastUsedTimeline);
     } else {
       //是否触发了某行的sync
       const timelineSync = timelinePageData.loadedTimeline.find(
@@ -186,12 +186,7 @@ function syncTimeline(targetTime: number) {
   offsetTimeMS.value += (targetTime - runtimeTimeSeconds.value) * 1000;
 }
 
-//团灭
-function handlePartyWipe() {
-  mountTimeline(lastUsedTimeline);
-}
-
-//玩家状态
+//玩家状态（职业）
 function handlePlayerChangedEvent(e: any) {
   condition.jobList = [e.detail.job] as Job[];
 }

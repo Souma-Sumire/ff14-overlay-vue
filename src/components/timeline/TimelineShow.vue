@@ -3,8 +3,10 @@
     <li
       v-for="(item, index) in lines"
       :key="index"
-      v-show="item.show && item.time - runtime > 0 - config.hold && item.time - runtime <= config.displayDuration"
-      :class="item.time - runtime <= config.discoloration ? 'upcoming' : ''"
+      v-show="
+        item.show && item.time - runtime > 0 - config.hold - showStyle['--tras-duration'] && item.time - runtime <= config.displayDuration
+      "
+      :class="{ upcoming: item.time - runtime <= config.discoloration, fade: item.time - runtime <= 0 - config.hold }"
     >
       <!-- 底部的进度条 -->
       <aside :style="{ right: Math.max((item.time - runtime) / config.displayDuration, 0) * 100 + '%' }"></aside>
@@ -23,11 +25,11 @@ defineProps<{ config: TimelineConfigValues; lines: ITimelineLine[]; runtime: num
 
 <style lang="scss" scoped>
 $normalScale: 0.5;
-$upComingScale: 0.75;
+$upComingScale: 1;
 $fontSize: 16;
 $trasDuration: 1;
 $opacity: 0.5;
-$timelineWitdh: 250;
+$timelineWitdh: 160;
 .loadedTimelines {
   width: calc(1px * var(--timeline-width, $timelineWitdh));
   list-style-type: none;
@@ -43,19 +45,20 @@ $timelineWitdh: 250;
     border: 1px solid #000;
     position: relative;
     opacity: var(--opacity, $opacity);
-    transition-duration: 1s;
+    transition-duration: calc(var(--trasDuration, $trasDuration) * 1s);
     height: calc(48px * var(--normal-scale, $normalScale));
-    .fade {
-      animation: myfade 1s 1 forwards;
+    &.fade {
+      animation: myfade calc(var(--trasDuration, $trasDuration) * 1s) 1 forwards;
+      height: calc(40px * var(--up-coming-scale, $upComingScale));
     }
     @keyframes myfade {
       0% {
         opacity: 1;
-        height: 100%;
+        height: calc(40px * var(--up-coming-scale, $upComingScale));
       }
       50% {
         opacity: 0;
-        height: 48px;
+        height: calc(40px * var(--up-coming-scale, $upComingScale));
       }
       100% {
         opacity: 0;
@@ -64,36 +67,38 @@ $timelineWitdh: 250;
     }
     &.upcoming {
       opacity: 1;
-      font-size: calc(var(--font-size, $fontSize) * var(--up-coming-scale, $upComingScale) * 1px);
       font-weight: bold;
       transition-property: all;
-      transition-duration: calc(var(--trs-duration, $trasDuration) * 1s);
+      transition-duration: calc(var(--tras-duration, $trasDuration) * 1s);
       transition-timing-function: ease;
-      height: calc(48px * var(--up-coming-scale, $upComingScale)) !important;
+      height: calc(48px * var(--up-coming-scale, $upComingScale));
       aside {
         background-color: rgb(255, 136, 136);
       }
+      :deep(span) {
+        font-size: calc(var(--font-size, $fontSize) * var(--up-coming-scale, $upComingScale) * 1px) !important;
+      }
       span :deep(.skill_icon) {
         transition-property: all;
-        transition-duration: calc(var(--trs-duration, $trasDuration) * 1s);
+        transition-duration: calc(var(--tras-duration, $trasDuration) * 1s);
         transition-timing-function: ease;
-        width: calc(46px * var(--up-coming-scale, $upComingScale)) !important;
-        height: calc(48px * var(--up-coming-scale, $upComingScale)) !important;
+        width: calc(46px * var(--up-coming-scale, $upComingScale));
+        height: calc(48px * var(--up-coming-scale, $upComingScale));
         img {
           transition-property: all;
-          transition-duration: calc(var(--trs-duration, $trasDuration) * 1s);
+          transition-duration: calc(var(--tras-duration, $trasDuration) * 1s);
           transition-timing-function: ease;
-          width: calc(40px * var(--up-coming-scale, $upComingScale)) !important;
-          height: calc(40px * var(--up-coming-scale, $upComingScale)) !important;
-          top: calc(4px * var(--up-coming-scale, $upComingScale)) !important;
-          left: calc(4px * var(--up-coming-scale, $upComingScale)) !important;
+          width: calc(40px * var(--up-coming-scale, $upComingScale));
+          height: calc(40px * var(--up-coming-scale, $upComingScale));
+          top: calc(4px * var(--up-coming-scale, $upComingScale));
+          left: calc(4px * var(--up-coming-scale, $upComingScale));
         }
         &::after {
           transition-property: all;
-          transition-duration: calc(var(--trs-duration, $trasDuration) * 1s);
+          transition-duration: calc(var(--tras-duration, $trasDuration) * 1s);
           transition-timing-function: ease;
-          width: calc(48px * var(--up-coming-scale, $upComingScale)) !important;
-          height: calc(48px * var(--up-coming-scale, $upComingScale)) !important;
+          width: calc(48px * var(--up-coming-scale, $upComingScale));
+          height: calc(48px * var(--up-coming-scale, $upComingScale));
         }
       }
     }
