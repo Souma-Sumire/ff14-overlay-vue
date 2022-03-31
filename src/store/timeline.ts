@@ -13,7 +13,6 @@ import { useActionStore } from "./action";
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 const actionStore = useActionStore();
-
 class Timeline implements ITimeline {
   constructor(name: string, condition: ITimelineCondition, timeline: string, codeFight: string) {
     this.name = name;
@@ -57,7 +56,7 @@ const showStyleTranslate: ShowStyleTranslate = {
 };
 
 let showStyle: ShowStyle = {
-  "--timeline-width": 160,
+  "--timeline-width": 180,
   "--font-size": 16,
   "--opacity": 0.5,
   "--normal-scale": 0.5,
@@ -83,13 +82,11 @@ export const useTimelineStore = defineStore("timeline", {
     newTimeline(
       title: string = "Demo",
       condition: ITimelineCondition = { zoneId: "0", jobList: ["GLA"] },
-      rawTimeline: string = `
--20 "中间学派"
+      rawTimeline: string = `-20 "<中间学派>刷盾"
 0 "战斗开始"
 10 "<死斗>~" tts
 65 "一运" tts "场中集合"
-100 "二运" sync /^.{14} ActionEffect 15:4.{7}:[^:]+:AAAA:/
-`,
+100 "二运" sync /^.{14} ActionEffect 15:4.{7}:[^:]+:AAAA:/`,
       codeFight: string = "用户创建"
     ) {
       this.allTimelines.push(new Timeline(title, condition, rawTimeline, codeFight));
@@ -129,11 +126,10 @@ export const useTimelineStore = defineStore("timeline", {
           let action =
             actionStore.getAction({ Name: item.groups!.name, IsPlayerAction: true }) ??
             actionStore.getAction({ Name: item.groups!.name, IsPlayerAction: false });
-          //"https://xivapi.com/i/${action.Url}.png"
           if (action) {
             text = text.replace(
               item[0],
-              `<div class="skill_icon"><img src="https://souma.diemoe.net/resources/icon/${action.Url}.png" alt=""></div>
+              `<div class="skill_icon"><img src="${__SITE_IMG__}/${action.Url}.png" alt=""></div>
               <span>${item.groups?.repeat ? item.groups!.name : ""}</span>`
             );
           } else {

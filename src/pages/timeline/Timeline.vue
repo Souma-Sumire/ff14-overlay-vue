@@ -22,12 +22,12 @@
 </template>
 
 <script lang="ts" setup>
-import TimelineShow from "../components/timeline/TimelineShow.vue";
+import TimelineShow from "../../components/timeline/TimelineShow.vue";
 // import UnlockedTextVue from "../components/UnlockedText.vue";
 import { reactive, ref } from "vue";
-import { useTimelineStore } from "../store/timeline";
-import { Job } from "../types/Job";
-import { ITimelineLine, ITimeline, ITimelineCondition, TimelineConfigValues, ShowStyle } from "../types/Timeline";
+import { useTimelineStore } from "../../store/timeline";
+import { Job } from "../../types/Job";
+import { ITimelineLine, ITimeline, ITimelineCondition, TimelineConfigValues, ShowStyle } from "../../types/Timeline";
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 

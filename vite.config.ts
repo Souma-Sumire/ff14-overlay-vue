@@ -15,5 +15,7 @@ export default defineConfig({
       resolvers: [ElementPlusResolver()],
     }),
   ],
-  // build: { target: "es2015" },
+  define: {
+    __SITE_IMG__: JSON.stringify(`https://cafemaker.wakingsands.com/i`),
+  },
 });

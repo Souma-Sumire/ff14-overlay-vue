@@ -1,8 +1,11 @@
 <template>
   <ul>
     <li>
-      <router-link to="/timeline">timeline</router-link>
-      <router-link to="/timeline/settings?OVERLAY_WS=ws://127.0.0.1:10501/ws">timelineSettings</router-link>
+      <router-link to="/timeline">时间轴</router-link>
+      <router-link to="/timeline/settings?OVERLAY_WS=ws://127.0.0.1:10501/ws">时间轴设置</router-link>
+    </li>
+    <li>
+      <a href="https://souma.diemoe.net/dist/index.html">旧导航页面</a>
     </li>
   </ul>
 </template>

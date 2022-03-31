@@ -113,12 +113,12 @@
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 import { ref, toRef, watchEffect } from "vue";
-import FflogsVue from "../components/timeline/Fflogs.vue";
-import TimelineShowVue from "../components/timeline/TimelineShow.vue";
-import zoneInfo from "../resources/zoneInfo";
-import { useTimelineStore } from "../store/timeline";
-import { ITimeline } from "../types/Timeline";
-import Util from "../utils/util";
+import FflogsVue from "../../components/timeline/Fflogs.vue";
+import TimelineShowVue from "../../components/timeline/TimelineShow.vue";
+import zoneInfo from "../../resources/zoneInfo";
+import { useTimelineStore } from "../../store/timeline";
+import { ITimeline } from "../../types/Timeline";
+import Util from "../../utils/util";
 
 const simulatedCombatTime = ref(-30);
 const timelineStore = useTimelineStore();
@@ -162,7 +162,6 @@ function broadcastData() {
     Swal.fire({
       title: "已尝试进行通信",
       text: "请检查ACT悬浮窗是否成功接收",
-      footer: '<a href="http://souma.diemoe.net/#/Timeline">ACT悬浮窗链接</a>',
     });
   } else {
     Swal.fire({

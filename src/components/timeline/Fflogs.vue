@@ -38,7 +38,7 @@
           :value="rule.actionId"
           :label="rule.actionName"
         >
-          <img :src="`https://souma.diemoe.net/resources/icon/${rule.url}.png`" class="ability-filter-li-icon" />{{ rule.actionName }}
+          <img :src="`${__SITE_IMG__}/${rule.url}.png`" class="ability-filter-li-icon" />{{ rule.actionName }}
         </el-option>
       </el-select>
       <el-button type="success" @click="handeleFflogsQueryResultFriendiesListFilter()">选择好了</el-button>
@@ -62,8 +62,8 @@ enum QueryTextEnum {
 const actionStore = useActionStore();
 const props = defineProps<{ settings: { api: any }; filters: any }>();
 const emit = defineEmits(["newTimeline", "showFflogsToggle"]);
-
 const urlReg = /^.*(?<code>[\d\w]{16,})#fight=(?<fight>\d+)/;
+
 let queryText = ref(QueryTextEnum.query);
 let inputUrl = ref("");
 
@@ -81,6 +81,7 @@ const fflogsQueryConfig: FflogsQuery = reactive({
   zoneID: "0",
   bossIDs: [],
 });
+claerFflogsQueryConfig();
 
 //fflogs导入第1步：用户点击查询按钮
 function queryFflogsReportFights(url: string) {
@@ -92,7 +93,7 @@ function queryFflogsReportFights(url: string) {
     Swal.fire({
       icon: "error",
       title: "FF logs API Key 未填写",
-      footer: '<a href="https://cn.fflogs.com/profile">点击这里，在最下方获得你的V1 Client Key</a>',
+      footer: '<a href="https://cn.fflogs.com/profile">点击这里，在最下方起名，然后获得你的V1 Client Key</a>',
     });
     queryText.value = QueryTextEnum.query;
   } else if (!reg) {
@@ -296,13 +297,13 @@ function claerFflogsQueryConfig() {
   fflogsQueryConfig.fightIndex = 0;
   fflogsQueryConfig.start = 0;
   fflogsQueryConfig.end = 0;
-  fflogsQueryConfig.friendlies.length = 0;
-  fflogsQueryConfig.abilityFilterEvents.length = 0;
-  fflogsQueryConfig.abilityFilterCandidate.length = 0;
-  fflogsQueryConfig.abilityFilterSelected.length = 0;
+  fflogsQueryConfig.friendlies = [];
+  fflogsQueryConfig.abilityFilterEvents = [];
+  fflogsQueryConfig.abilityFilterCandidate = [];
+  fflogsQueryConfig.abilityFilterSelected = [];
   fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline = "";
-  fflogsQueryConfig.zoneID = "";
   fflogsQueryConfig.player = {};
+  fflogsQueryConfig.zoneID = "0";
   fflogsQueryConfig.bossIDs = [];
 }
 </script>
