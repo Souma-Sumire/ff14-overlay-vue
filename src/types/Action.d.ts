@@ -1,3 +1,4 @@
+export type IActionJson = [number, string, number, number, number, number, boolean, number, number, number, boolean, boolean];
 export type IAction = {
   Id: number;
   Name: string;
@@ -11,6 +12,7 @@ export type IAction = {
   MaxCharges: number;
   IsPvP: boolean;
   IsPlayerAction: boolean;
+  Url?: string;
 };
 export type IActionOptions = {
   Id?: number;

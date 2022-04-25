@@ -38,7 +38,7 @@
           :value="rule.actionId"
           :label="rule.actionName"
         >
-          <img :src="`${__SITE_IMG__}/${rule.url}.png`" class="ability-filter-li-icon" />{{ rule.actionName }}
+          <img :src="`${siteImg}/${rule.url}.png`" class="ability-filter-li-icon" />{{ rule.actionName }}
         </el-option>
       </el-select>
       <el-button type="success" @click="handeleFflogsQueryResultFriendiesListFilter()">选择好了</el-button>
@@ -63,7 +63,7 @@ const actionStore = useActionStore();
 const props = defineProps<{ settings: { api: any }; filters: any }>();
 const emit = defineEmits(["newTimeline", "showFflogsToggle"]);
 const urlReg = /^.*(?<code>[\d\w]{16,})#fight=(?<fight>\d+)/;
-
+const siteImg = __SITE_IMG__;
 let queryText = ref(QueryTextEnum.query);
 let inputUrl = ref("");
 
@@ -82,6 +82,11 @@ const fflogsQueryConfig: FflogsQuery = reactive({
   bossIDs: [],
 });
 claerFflogsQueryConfig();
+
+const window999Action = new Set();
+window999Action.add(26155); //海德林转场 众生离绝 没有14行!!
+window999Action.add(28027); //佐迪亚克转场 悼念
+window999Action.add(26340); //P3S转场 黑暗不死鸟
 
 //fflogs导入第1步：用户点击查询按钮
 function queryFflogsReportFights(url: string) {
@@ -266,9 +271,9 @@ function handeleFflogsQueryResultFriendiesListFilter() {
       if (item.sourceIsFriendly) {
         return `${time} "<${item.actionName}>~"`;
       } else {
-        return `${time} "--${item.actionName}--" sync /^.{14}(?:StartsCasting |) 14:4.{7}:[^:]+:${item.actionId
-          .toString(16)
-          .toUpperCase()}:/ window 2.5`;
+        return `${time} "--${item.actionName}--" sync /^.{14} \\w+ 14:4.{7}:[^:]+:${item.actionId.toString(16).toUpperCase()}:/ window ${
+          window999Action.has(item.actionId) ? 999 : 3
+        }`;
         // return `# ${time} "--${item.actionName}--"`;
       }
     })

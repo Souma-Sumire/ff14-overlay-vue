@@ -157,7 +157,7 @@ function handleLogEvent(e: any) {
     if (regex) {
       //倒计时
       startTimeline(parseInt(regex!.groups!.cd));
-    } else if (/^.{14} (?:Director |)21:.{8}:8.{5}1A/.test(log)) {
+    } else if (condition.zoneId === "1009" && /^.{14} (?:Director |)21:.{8}:8.{5}1A/.test(log)) {
       // 进本体?
       getTimeline(condition);
     } else if (/^.{14} (?:Director |)21:.{8}:40000010/.test(log)) {
