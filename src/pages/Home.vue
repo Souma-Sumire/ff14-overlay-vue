@@ -5,7 +5,7 @@
       <router-link to="/timeline/settings?OVERLAY_WS=ws://127.0.0.1:10501/ws">时间轴设置</router-link>
     </li>
     <li>
-      <a href="https://souma.diemoe.net/dist/index.html">旧导航页面</a>
+      <a href="https://soumasumire.gitee.io/ffxiv-overlay/">旧导航页面</a>
     </li>
   </ul>
 </template>
