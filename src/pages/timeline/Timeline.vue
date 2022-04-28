@@ -88,7 +88,7 @@ function init() {
 //从数据列表中根据玩家职业与地区获得一个或多个时间轴
 function getTimeline(condition: ITimelineCondition) {
   stopTimeline();
-  const candidate: ITimeline[] = timelineStore.getTimeline(condition);
+  let candidate: ITimeline[] = timelineStore.getTimeline(condition);
   if (candidate.length === 1) {
     //单个结果
     mountTimeline(candidate[0]);

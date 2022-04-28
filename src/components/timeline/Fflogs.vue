@@ -271,9 +271,12 @@ function handeleFflogsQueryResultFriendiesListFilter() {
       if (item.sourceIsFriendly) {
         return `${time} "<${item.actionName}>~"`;
       } else {
-        return `${time} "--${item.actionName}--" sync /^.{14} \\w+ 14:4.{7}:[^:]+:${item.actionId.toString(16).toUpperCase()}:/ window ${
-          window999Action.has(item.actionId) ? 999 : 3
-        }`;
+        if(window999Action.has(item.actionId)){
+          return `${time} "--${item.actionName}--" sync /^.{14} \\w+ 14:4.{7}:[^:]+:${item.actionId.toString(16).toUpperCase()}:/ window 999`;
+        }else{
+          return `# ${time} "--${item.actionName}--"`
+        }
+        // return `${time} "--${item.actionName}--" sync /^.{14} \\w+ 14:4.{7}:[^:]+:${item.actionId.toString(16).toUpperCase()}:/ window ${window999Action.has(item.actionId) ? 999 : 3}`;
         // return `# ${time} "--${item.actionName}--"`;
       }
     })
