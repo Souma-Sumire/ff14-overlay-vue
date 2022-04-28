@@ -51,7 +51,7 @@
           class="timeline-timelines"
           v-for="(item, index) in timelines"
           :key="index"
-          :title="`${item.name} - ${item.condition.jobList.map((value) => Util.nameToCN(value).full)} - ${
+          :title="`${item.name} - ${Util.nameToCN(item.condition.job).full} - ${
             highDifficultZoneId.find((value) => value.id === item.condition.zoneId)?.name
           } `"
         >
@@ -66,7 +66,7 @@
               </p>
               <p>
                 职业：
-                <el-select v-model="item.condition.jobList" required multiple placeholder="职业">
+                <el-select v-model="item.condition.job" required placeholder="职业">
                   <el-option v-for="job in Util.getBattleJobs()" :key="job" :label="Util.nameToCN(job).full" :value="job"></el-option>
                 </el-select>
               </p>
@@ -208,17 +208,20 @@ function loadTimelineStoreData() {
 
 //开启watch去save
 function saveTimelineStoreData() {
-  watchEffect(() => {
-    timelineStore.saveTimelineSettings();
-  });
+  watchEffect(
+    () => {
+      timelineStore.saveTimelineSettings();
+    },
+    { flush: "post" }
+  );
 }
 
 function exportTimeline(timeline: ITimeline) {
-  Swal.fire({ text: window.btoa(encodeURIComponent(JSON.stringify([timeline]))) });
+  Swal.fire({ text: JSON.stringify([timeline]) });
 }
 
 function exportAllTimelines() {
-  Swal.fire({ text: window.btoa(encodeURIComponent(JSON.stringify(timelineStore.allTimelines))) });
+  Swal.fire({ text: JSON.stringify(timelineStore.allTimelines) });
 }
 
 function importTimelines() {
@@ -246,12 +249,13 @@ function importTimelines() {
           }).then((res) => {
             if (res.isDenied) {
               timelineStore.allTimelines.length = 0;
-              timelineStore.allTimelines.push(...(JSON.parse(decodeURIComponent(window.atob(result.value))) as ITimeline[]));
+              // timelineStore.allTimelines.push(...(JSON.parse(decodeURIComponent(window.atob(result.value))) as ITimeline[]));
+              timelineStore.allTimelines.push(...(JSON.parse(result.value) as ITimeline[]));
               timelineStore.sortTimelines();
             }
           });
         } else {
-          timelineStore.allTimelines.push(...(JSON.parse(decodeURIComponent(window.atob(result.value))) as ITimeline[]));
+          timelineStore.allTimelines.push(...(JSON.parse(result.value) as ITimeline[]));
           timelineStore.sortTimelines();
         }
       } catch (e: any) {

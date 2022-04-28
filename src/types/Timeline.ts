@@ -10,7 +10,7 @@ export interface ITimeline {
 
 export interface ITimelineCondition {
   zoneId: string; //0=true
-  jobList: Job[]; //JobEnum.NONE=true
+  job: Job; //JobEnum.NONE=true
 }
 
 export interface ITimelineLine {

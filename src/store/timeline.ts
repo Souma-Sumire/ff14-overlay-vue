@@ -12,6 +12,7 @@ import {
 import { useActionStore } from "./action";
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
+import { Job } from "../types/Job";
 const actionStore = useActionStore();
 class Timeline implements ITimeline {
   constructor(name: string, condition: ITimelineCondition, timeline: string, codeFight: string) {
@@ -75,13 +76,14 @@ export const useTimelineStore = defineStore("timeline", {
       filters: {},
       showStyle,
       showStyleTranslate,
+      playerJob: "NONE" as Job,
     };
   },
   getters: {},
   actions: {
     newTimeline(
       title: string = "Demo",
-      condition: ITimelineCondition = { zoneId: "0", jobList: ["GLA"] },
+      condition: ITimelineCondition = { zoneId: "0", job: "GLA" },
       rawTimeline: string = `-20 "<中间学派>刷盾"
 0 "战斗开始"
 10 "<死斗>~" tts
@@ -104,9 +106,7 @@ export const useTimelineStore = defineStore("timeline", {
         return (
           (value.condition.zoneId === "0" || value.condition.zoneId === condition.zoneId) &&
           //玩家站着不动不会触发职业事件，职业会为none
-          (condition.jobList.includes("NONE") ||
-            value.condition.jobList.length === 0 ||
-            value.condition.jobList.filter((v) => condition.jobList.includes(v)).length)
+          (condition.job === "NONE" || !value.condition.job || value.condition.job === condition.job)
         );
       });
     },
@@ -167,7 +167,15 @@ export const useTimelineStore = defineStore("timeline", {
     },
     loadTimelineSettings() {
       const ls = localStorage.getItem("timelines");
-      if (ls) Object.assign(this, JSON.parse(ls));
+      if (ls) {
+        Object.assign(this, JSON.parse(ls));
+        this.allTimelines.forEach((v) => {
+          if ((v.condition as any).jobList) {
+            v.condition.job = (v.condition as any).jobList[0] ?? "NONE";
+            delete (v.condition as any).jobList;
+          }
+        });
+      }
     },
     sortTimelines() {
       this.allTimelines.sort((a, b) => Number(a.condition.zoneId) - Number(b.condition.zoneId));

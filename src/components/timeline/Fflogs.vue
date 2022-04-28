@@ -284,7 +284,7 @@ function handeleFflogsQueryResultFriendiesListFilter() {
   emit(
     "newTimeline",
     `导入${fflogsQueryConfig.player!.name}`,
-    { zoneId: fflogsQueryConfig.zoneID.toString(), jobList: [FfIconToName(fflogsQueryConfig.player.icon ?? "NONE")] },
+    { zoneId: fflogsQueryConfig.zoneID.toString(), job: FfIconToName(fflogsQueryConfig.player.icon ?? "NONE") },
     fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline,
     `${fflogsQueryConfig.code}#fight=${fflogsQueryConfig.fightIndex}`
   );

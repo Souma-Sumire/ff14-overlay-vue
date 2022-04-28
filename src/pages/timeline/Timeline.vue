@@ -46,7 +46,7 @@ let ttsSuppressTimer: NodeJS.Timer; // tts的timeout计时器
 //每次get时间轴时被传入的条件对象
 let condition: ITimelineCondition = {
   zoneId: "0",
-  jobList: ["NONE"],
+  job: "NONE",
 };
 //保存最后一次选择的时间轴，用于团灭时重新加载
 let lastUsedTimeline: ITimeline;
@@ -63,6 +63,7 @@ function init() {
   addOverlayListener("onInCombatChangedEvent", handleInCombatChanged);
   startOverlayEvents();
   timelineStore.loadTimelineSettings();
+  condition.job = timelineStore.playerJob;
   setTimeout(() => {
     if (!timelinePageData.loadedTimeline.length && !timelinePageData.optionalTimeline.length) {
       getTimeline(condition);
@@ -88,6 +89,7 @@ function init() {
 //从数据列表中根据玩家职业与地区获得一个或多个时间轴
 function getTimeline(condition: ITimelineCondition) {
   stopTimeline();
+  timelinePageData.loadedTimeline = [];
   let candidate: ITimeline[] = timelineStore.getTimeline(condition);
   if (candidate.length === 1) {
     //单个结果
@@ -188,7 +190,8 @@ function syncTimeline(targetTime: number) {
 
 //玩家状态（职业）
 function handlePlayerChangedEvent(e: any) {
-  condition.jobList = [e.detail.job] as Job[];
+  condition.job = e.detail.job;
+  timelineStore.playerJob = condition.job;
 }
 
 //切换场景
