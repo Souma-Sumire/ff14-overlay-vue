@@ -26,7 +26,6 @@ import TimelineShow from "../../components/timeline/TimelineShow.vue";
 // import UnlockedTextVue from "../components/UnlockedText.vue";
 import { reactive, ref } from "vue";
 import { useTimelineStore } from "../../store/timeline";
-import { Job } from "../../types/Job";
 import { ITimelineLine, ITimeline, ITimelineCondition, TimelineConfigValues, ShowStyle } from "../../types/Timeline";
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
@@ -89,7 +88,8 @@ function init() {
 //从数据列表中根据玩家职业与地区获得一个或多个时间轴
 function getTimeline(condition: ITimelineCondition) {
   stopTimeline();
-  timelinePageData.loadedTimeline = [];
+  timelinePageData.loadedTimeline.length = 0;
+  timelinePageData.optionalTimeline.length = 0;
   let candidate: ITimeline[] = timelineStore.getTimeline(condition);
   if (candidate.length === 1) {
     //单个结果
@@ -197,6 +197,7 @@ function handlePlayerChangedEvent(e: any) {
 //切换场景
 function handleChangeZone(e: any) {
   condition.zoneId = String(e.zoneID);
+
   getTimeline(condition);
 }
 
