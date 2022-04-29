@@ -8,7 +8,7 @@
       class="optionalTimelines"
     >
       <li v-for="(item, index) in timelinePageData.optionalTimeline" :key="index" @click="selectedTimeline(item)">
-        {{ item.name }}
+        {{ item.condition.job }} - {{ item.name }}
       </li>
     </ul>
     <!-- 时间轴本体 -->

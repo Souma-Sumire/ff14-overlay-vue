@@ -2,7 +2,7 @@
   <el-container class="container">
     <el-header>
       <el-button type="primary" @click="timelineStore.newTimeline()">新建</el-button>
-      <el-button type="success" @click="broadcastData()">发送到悬浮窗</el-button>
+      <el-button type="success" @click="broadcastData()">通过WS发送到悬浮窗</el-button>
       <el-button @click="showFflogs = !showFflogs">从FFlogs导入</el-button>
       <el-button @click="showSettings = !showSettings" color="#626aef" style="color: white">样式设置</el-button>
       <el-button @click="exportAllTimelines">导出</el-button>
@@ -160,8 +160,8 @@ function broadcastData() {
       },
     });
     Swal.fire({
-      title: "已尝试进行通信",
-      text: "请检查ACT悬浮窗是否成功接收",
+      title: "已尝试进行通信,请检查ACT悬浮窗是否接收",
+      text: "若无法通信，可将本页面直接添加到ACT悬浮窗进行编辑，设置将会自动保存。（编辑后刷新一下时间轴网页）",
     });
   } else {
     Swal.fire({
