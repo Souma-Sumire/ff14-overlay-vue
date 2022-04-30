@@ -30,6 +30,7 @@
       </el-table-column>
     </el-table>
     <div v-show="fflogsQueryConfig.abilityFilterEvents.length > 0" class="fflogs-query-result-friendlies-ability-filter-select">
+      <el-button size="large" type="success" @click="handeleFflogsQueryResultFriendiesListFilter()">选择好了</el-button>
       <el-select v-model="fflogsQueryConfig.abilityFilterSelected" multiple placeholder="技能过滤器" size="large" :fit-input-width="true">
         <el-option
           class="ability-filter-li"
@@ -41,7 +42,6 @@
           <img :src="`${siteImg}/${rule.url}.png`" class="ability-filter-li-icon" />{{ rule.actionName }}
         </el-option>
       </el-select>
-      <el-button type="success" @click="handeleFflogsQueryResultFriendiesListFilter()">选择好了</el-button>
     </div>
   </div>
 </template>
@@ -255,47 +255,65 @@ function handeleFflogsQueryResultFriendiesListFilter() {
   if (fflogsQueryConfig.player.icon) {
     props.filters[fflogsQueryConfig.player.icon] = JSON.parse(JSON.stringify(fflogsQueryConfig.abilityFilterSelected));
   }
-  //解析处理格式化一条龙
-  fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline = fflogsQueryConfig.abilityFilterEvents
-    .filter((event) => {
-      return (event.sourceIsFriendly && fflogsQueryConfig.abilityFilterSelected.includes(event.actionId)) || !event.sourceIsFriendly;
-    })
-    .sort((a, b) => a.time - b.time)
-    .map((item) => {
-      let time = `${
-        (Array(2).join("0") + Math.floor(item.time / 60)).slice(-2) +
-        ":" +
-        (Array(2).join("0") + Math.floor(item.time % 60)).slice(-2) +
-        (item.time % 60).toFixed(1).replace(/^\d+(?=\.)/, "")
-      }`;
-      if (item.sourceIsFriendly) {
-        return `${time} "<${item.actionName}>~"`;
-      } else {
-        if(window999Action.has(item.actionId)){
-          return `${time} "--${item.actionName}--" sync /^.{14} \\w+ 14:4.{7}:[^:]+:${item.actionId.toString(16).toUpperCase()}:/ window 999`;
-        }else{
-          return `# ${time} "--${item.actionName}--"`
-        }
-        // return `${time} "--${item.actionName}--" sync /^.{14} \\w+ 14:4.{7}:[^:]+:${item.actionId.toString(16).toUpperCase()}:/ window ${window999Action.has(item.actionId) ? 999 : 3}`;
-        // return `# ${time} "--${item.actionName}--"`;
-      }
-    })
-    .join("\n");
-  emit(
-    "newTimeline",
-    `导入${fflogsQueryConfig.player!.name}`,
-    { zoneId: fflogsQueryConfig.zoneID.toString(), job: FfIconToName(fflogsQueryConfig.player.icon ?? "NONE") },
-    fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline,
-    `${fflogsQueryConfig.code}#fight=${fflogsQueryConfig.fightIndex}`
-  );
-  claerFflogsQueryConfig();
-  emit("showFflogsToggle");
+  //询问是否添加TTS
+  let addTTS = false;
   Swal.fire({
-    position: "top-end",
-    icon: "success",
-    title: "已生成新时间轴",
-    showConfirmButton: false,
-    timer: 1500,
+    title: "是否自动添加TTS语音?",
+    showDenyButton: true,
+    showCancelButton: false,
+    confirmButtonText: "是",
+    denyButtonText: `否`,
+  }).then((result) => {
+    if (result.isConfirmed) {
+      addTTS = true;
+    } else if (result.isDenied) {
+      addTTS = false;
+    }
+
+    //解析处理格式化一条龙
+    fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline = fflogsQueryConfig.abilityFilterEvents
+      .filter((event) => {
+        return (event.sourceIsFriendly && fflogsQueryConfig.abilityFilterSelected.includes(event.actionId)) || !event.sourceIsFriendly;
+      })
+      .sort((a, b) => a.time - b.time)
+      .map((item) => {
+        let time = `${
+          (Array(2).join("0") + Math.floor(item.time / 60)).slice(-2) +
+          ":" +
+          (Array(2).join("0") + Math.floor(item.time % 60)).slice(-2) +
+          (item.time % 60).toFixed(1).replace(/^\d+(?=\.)/, "")
+        }`;
+        if (item.sourceIsFriendly) {
+          return `${time} "<${item.actionName}>~"${addTTS ? ` tts "${item.actionName}"` : ""}`;
+        } else {
+          if (window999Action.has(item.actionId)) {
+            return `${time} "--${item.actionName}--" sync /^.{14} \\w+ 14:4.{7}:[^:]+:${item.actionId
+              .toString(16)
+              .toUpperCase()}:/ window 999`;
+          } else {
+            return `# ${time} "--${item.actionName}--"`;
+          }
+          // return `${time} "--${item.actionName}--" sync /^.{14} \\w+ 14:4.{7}:[^:]+:${item.actionId.toString(16).toUpperCase()}:/ window ${window999Action.has(item.actionId) ? 999 : 3}`;
+          // return `# ${time} "--${item.actionName}--"`;
+        }
+      })
+      .join("\n");
+    emit(
+      "newTimeline",
+      `导入${fflogsQueryConfig.player!.name}`,
+      { zoneId: fflogsQueryConfig.zoneID.toString(), job: FfIconToName(fflogsQueryConfig.player.icon ?? "NONE") },
+      fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline,
+      `${fflogsQueryConfig.code}#fight=${fflogsQueryConfig.fightIndex}`
+    );
+    claerFflogsQueryConfig();
+    emit("showFflogsToggle");
+    Swal.fire({
+      position: "top-end",
+      icon: "success",
+      title: "已生成新时间轴",
+      showConfirmButton: false,
+      timer: 1500,
+    });
   });
 }
 
