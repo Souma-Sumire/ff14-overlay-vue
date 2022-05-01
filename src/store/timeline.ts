@@ -12,7 +12,8 @@ import {
 import { useActionStore } from "./action";
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
-import { Job } from "../types/Job";
+import Util from "../utils/util";
+
 const actionStore = useActionStore();
 class Timeline implements ITimeline {
   constructor(name: string, condition: ITimelineCondition, timeline: string, codeFight: string) {
@@ -64,11 +65,12 @@ let showStyle: ShowStyle = {
   "--up-coming-scale": 1,
   "--tras-duration": 1,
 };
+
 export const useTimelineStore = defineStore("timeline", {
   state: () => {
     return {
       timelineLegalRegular:
-        /^\s*(?<time>[\-:：\d.]+)\s+(?:["']?(?<action>[^"\n\r]+)["']?)?(?:\s+(?<t>tts)\s+?)?(?:["']??(?<tts>[^"\s\n\r]+)["']??)?(?:\s+sync\s+?\/(?<sync>.+)\/)?(?:\s+window\s+?(?<windowBefore>\d+)(?:,(?<windowAfter>\d+))?)?(?:\s+jump\s+?(?<jump>\d+))?\s*$/gm,
+        /^[ \t　]*(?<time>[\-:：\d.]+) +(?:["']?(?<action>[^"\n\r]+)["']?)?(?:[ \t　]+(?<t>tts)[ \t　]?)?(?: ["']??(?<tts>[^" \t　\n\r]+)["']??)?(?:[ \t　]+sync[ \t　]+?\/(?<sync>.+)\/)?(?:[ \t　]+window[ \t　]+?(?<windowBefore>\d+)(?:,(?<windowAfter>\d+))?)?(?:[ \t　]+jump[ \t　]+?(?<jump>\d+))?[ \t　]*$/gm,
       allTimelines: [] as ITimeline[],
       configValues,
       configTranslate,
@@ -76,7 +78,6 @@ export const useTimelineStore = defineStore("timeline", {
       filters: {},
       showStyle,
       showStyleTranslate,
-      playerJob: "NONE" as Job,
     };
   },
   getters: {},
@@ -102,11 +103,10 @@ export const useTimelineStore = defineStore("timeline", {
       });
     },
     getTimeline(condition: ITimelineCondition): ITimeline[] {
-      return this.allTimelines.filter((value) => {
+      return this.allTimelines.filter((timeline) => {
+        // console.log(timeline.condition, condition, timeline.condition.job === condition.job);
         return (
-          (value.condition.zoneId === "0" || value.condition.zoneId === condition.zoneId) &&
-          //玩家站着不动不会触发职业事件，职业会为none
-          (condition.job === "NONE" || !value.condition.job || value.condition.job === condition.job)
+          (timeline.condition.zoneId === "0" || timeline.condition.zoneId === condition.zoneId) && timeline.condition.job === condition.job
         );
       });
     },
@@ -175,10 +175,15 @@ export const useTimelineStore = defineStore("timeline", {
             delete (v.condition as any).jobList;
           }
         });
+        this.sortTimelines();
       }
     },
     sortTimelines() {
-      this.allTimelines.sort((a, b) => Number(a.condition.zoneId) - Number(b.condition.zoneId));
+      this.allTimelines.sort((a, b) =>
+        a.condition.job === b.condition.job
+          ? Number(a.condition.zoneId) - Number(b.condition.zoneId)
+          : Util.jobToJobEnum(a.condition.job) - Util.jobToJobEnum(b.condition.job)
+      );
     },
   },
 });

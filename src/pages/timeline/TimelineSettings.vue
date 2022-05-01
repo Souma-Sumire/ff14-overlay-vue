@@ -22,7 +22,7 @@
       ></FflogsVue>
       <el-descriptions title="时间轴参数" size="small" style="width: 100%" border v-show="showSettings">
         <el-descriptions-item
-          v-for="(value, key, index) in timelineStore.configValues"
+          v-for="(_value, key, index) in timelineStore.configValues"
           :key="index"
           :label="timelineStore.configTranslate[key]"
           label-align="right"
@@ -34,7 +34,7 @@
       </el-descriptions>
       <el-descriptions size="small" title="时间轴样式" style="width: 100%" border v-show="showSettings">
         <el-descriptions-item
-          v-for="(value, key, index) in timelineStore.showStyle"
+          v-for="(_value, key, index) in timelineStore.showStyle"
           :key="index"
           :label="timelineStore.showStyleTranslate[key]"
           label-align="right"
@@ -44,65 +44,66 @@
           <el-input-number :min="0" :step="0.01" v-model="timelineStore.showStyle[key]" />
         </el-descriptions-item>
       </el-descriptions>
-      <br />
-      <el-empty v-if="!timelines.length" description="当前无数据"></el-empty>
-      <el-collapse v-if="timelines.length">
+      <el-card class="box-card" v-show="timelineCurrentlyEditing.timeline.create !== '空'">
+        <el-row class="timeline-info">
+          <el-col :span="8">
+            <p>名称： <el-input v-model="timelineCurrentlyEditing.timeline.name" class="timeline-info-name"></el-input></p>
+            <p>
+              地图：
+              <el-select v-model="timelineCurrentlyEditing.timeline.condition.zoneId" filterable>
+                <el-option v-for="zone in highDifficultZoneId" :key="zone.id" :label="zone.name" :value="zone.id"></el-option>
+              </el-select>
+            </p>
+            <p>
+              职业：
+              <el-select v-model="timelineCurrentlyEditing.timeline.condition.job" required placeholder="职业">
+                <el-option v-for="job in Util.getBattleJobs()" :key="job" :label="Util.nameToCN(job).full" :value="job"></el-option>
+              </el-select>
+            </p>
+            <p>
+              来源：
+              <el-input v-model="timelineCurrentlyEditing.timeline.codeFight" disabled />
+            </p>
+            <p>
+              创建：
+              <el-input v-model="timelineCurrentlyEditing.timeline.create" disabled />
+            </p>
+          </el-col>
+          <el-col :span="10">
+            <span>编辑：</span>
+            <el-input
+              class="timeline-timeline-raw"
+              v-model="timelineCurrentlyEditing.timeline.timeline"
+              type="textarea"
+              :rows="10"
+              wrap="off"
+              placeholder="请键入时间轴文本"
+          /></el-col>
+          <el-col :span="6">
+            <span>预览：</span>
+            <div class="timeline-timeline-view">
+              <TimelineShowVue
+                :config="timelineStore.configValues"
+                :lines="timelineStore.parseTimeline(timelineCurrentlyEditing.timeline.timeline)"
+                :runtime="simulatedCombatTime"
+                :show-style="timelineStore.showStyle"
+              ></TimelineShowVue>
+            </div>
+          </el-col>
+        </el-row>
+      </el-card>
+      <el-collapse v-if="timelines.length" accordion>
         <el-collapse-item
           class="timeline-timelines"
           v-for="(item, index) in timelines"
           :key="index"
-          :title="`${item.name} - ${Util.nameToCN(item.condition.job).full} - ${
+          :title="`${
             highDifficultZoneId.find((value) => value.id === item.condition.zoneId)?.name
-          } `"
+          } - ${Util.nameToCN(item.condition.job).simple2} - ${item.name}`"
         >
-          <el-row class="timeline-info">
-            <el-col :span="8">
-              <p>名称： <el-input v-model="item.name" class="timeline-info-name"></el-input></p>
-              <p>
-                地图：
-                <el-select v-model="item.condition.zoneId" filterable>
-                  <el-option v-for="zone in highDifficultZoneId" :key="zone.id" :label="zone.name" :value="zone.id"></el-option>
-                </el-select>
-              </p>
-              <p>
-                职业：
-                <el-select v-model="item.condition.job" required placeholder="职业">
-                  <el-option v-for="job in Util.getBattleJobs()" :key="job" :label="Util.nameToCN(job).full" :value="job"></el-option>
-                </el-select>
-              </p>
-              <p>
-                来源：
-                <el-input v-model="item.codeFight" disabled />
-              </p>
-              <p>
-                创建：
-                <el-input v-model="item.create" disabled />
-              </p>
-              <el-button type="danger" @click="deleteTimeline(timelines, index)">删除</el-button>
-              <el-button @click="exportTimeline(item)">导出</el-button>
-            </el-col>
-            <el-col :span="10">
-              <span>编辑：</span>
-              <el-input
-                class="timeline-timeline-raw"
-                v-model="item.timeline"
-                type="textarea"
-                :rows="10"
-                wrap="off"
-                placeholder="请键入时间轴文本"
-            /></el-col>
-            <el-col :span="6">
-              <span>预览：</span>
-              <div class="timeline-timeline-view">
-                <TimelineShowVue
-                  :config="timelineStore.configValues"
-                  :lines="timelineStore.parseTimeline(item.timeline)"
-                  :runtime="simulatedCombatTime"
-                  :show-style="timelineStore.showStyle"
-                ></TimelineShowVue>
-              </div>
-            </el-col>
-          </el-row>
+          <el-button type="primary" @click="editTimeline(item)">编辑</el-button>
+          <el-button type="danger" @click="deleteTimeline(timelines, index)">删除</el-button>
+          <el-button @click="exportTimeline(item)">单独导出</el-button>
         </el-collapse-item>
       </el-collapse>
     </el-main>
@@ -112,7 +113,7 @@
 <script lang="ts" setup>
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
-import { ref, toRef, watchEffect } from "vue";
+import { reactive, ref, toRef, watchEffect } from "vue";
 import FflogsVue from "../../components/timeline/Fflogs.vue";
 import TimelineShowVue from "../../components/timeline/TimelineShow.vue";
 import zoneInfo from "../../resources/zoneInfo";
@@ -127,6 +128,15 @@ const timelineFilters = toRef(timelineStore, "filters");
 const highDifficultZoneId: { id: string; name: string }[] = [{ id: "0", name: "任意" }];
 const showFflogs = ref(false);
 const showSettings = ref(false);
+let timelineCurrentlyEditing: { timeline: ITimeline } = reactive({
+  timeline: {
+    name: "空",
+    condition: { zoneId: "0", job: "NONE" },
+    timeline: "空",
+    codeFight: "空",
+    create: "空",
+  },
+});
 
 init();
 
@@ -181,6 +191,9 @@ function urlTool(url: string) {
     data[dataArr[0]] = dataArr[1];
   });
   return data;
+}
+function editTimeline(timeline: ITimeline) {
+  timelineCurrentlyEditing.timeline = timeline;
 }
 
 //删除某时间轴 来自点击事件
@@ -282,34 +295,18 @@ function importTimelines() {
 }
 .container {
   max-width: 1080px;
-  .timeline-timelines {
-    :deep(.el-collapse-item__header) {
-      padding-left: 12px;
-      font-weight: bold;
-      font-size: 16px;
-      background-color: rgba($color: rgb(245, 247, 250), $alpha: 1);
-      transition: 0.2s;
-      &:hover {
-        color: rgb(64, 158, 255);
-        background-color: rgba($color: rgb(236, 245, 255), $alpha: 0.5);
-      }
+  .timeline-info {
+    :deep(.el-input) {
+      width: 275px !important;
     }
-    :deep(.el-collapse-item__wrap) {
-      padding-left: 24px;
-    }
-    .timeline-info {
-      :deep(.el-input) {
-        width: 275px !important;
-      }
 
-      .timeline-timeline-view {
-        margin-top: 7px;
-        overflow-x: auto;
-      }
-      :deep(.el-textarea__inner) {
-        line-height: 1.929;
-        // overflow-x: hidden;
-      }
+    .timeline-timeline-view {
+      margin-top: 7px;
+      overflow-x: auto;
+    }
+    :deep(.el-textarea__inner) {
+      line-height: 1.929;
+      // overflow-x: hidden;
     }
   }
 }

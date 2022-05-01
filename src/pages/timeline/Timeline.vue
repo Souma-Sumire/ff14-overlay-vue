@@ -29,6 +29,7 @@ import { useTimelineStore } from "../../store/timeline";
 import { ITimelineLine, ITimeline, ITimelineCondition, TimelineConfigValues, ShowStyle } from "../../types/Timeline";
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
+import { Job } from "../../types/Job";
 
 const timelineStore = useTimelineStore();
 const timelinePageData = reactive({
@@ -62,10 +63,10 @@ function init() {
   addOverlayListener("onInCombatChangedEvent", handleInCombatChanged);
   startOverlayEvents();
   timelineStore.loadTimelineSettings();
-  condition.job = timelineStore.playerJob;
+  condition.job = (localStorage.getItem("timelineLastJob") ?? "NONE") as Job;
   setTimeout(() => {
     if (!timelinePageData.loadedTimeline.length && !timelinePageData.optionalTimeline.length) {
-      getTimeline(condition);
+      // getTimeline(condition);
       Swal.fire({
         text: `${timelineStore.allTimelines.length}条时间轴已就绪`,
         timer: 1500,
@@ -175,7 +176,7 @@ function handleLogEvent(e: any) {
           item.windowAfter &&
           item.sync.test(log) &&
           runtimeTimeSeconds.value >= item.time - item.windowBefore &&
-          runtimeTimeSeconds.value <= item.time + item.windowAfter
+          runtimeTimeSeconds.value <= item.time + Number(item.windowAfter)
       );
       //如果匹配sync则同步到time，有jump则同步至jump
       if (timelineSync) syncTimeline(timelineSync.jump || timelineSync.time);
@@ -190,14 +191,16 @@ function syncTimeline(targetTime: number) {
 
 //玩家状态（职业）
 function handlePlayerChangedEvent(e: any) {
-  condition.job = e.detail.job;
-  timelineStore.playerJob = condition.job;
+  if (condition.job !== e.detail.job) {
+    localStorage.setItem("timelineLastJob", e.detail.job);
+    condition.job = e.detail.job;
+  }
+  // timelineStore.playerJob = condition.job;
 }
 
 //切换场景
 function handleChangeZone(e: any) {
   condition.zoneId = String(e.zoneID);
-
   getTimeline(condition);
 }
 
@@ -239,8 +242,9 @@ function handleBroadcastMessage(e: {
         timelineStore.allTimelines = e.msg.store.allTimelines;
         timelineStore.configValues = e.msg.store.configValues;
         timelineStore.showStyle = e.msg.store.showStyle;
-        getTimeline(condition); //获取新数据之后查询一次
         timelineStore.saveTimelineSettings();
+        Swal.fire("接受成功");
+        getTimeline(condition); //获取新数据之后查询一次
       }
     });
   }
