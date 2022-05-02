@@ -1,9 +1,9 @@
 <template>
   <el-container class="container">
     <el-header>
-      <el-button type="primary" @click="timelineStore.newTimeline()">新建</el-button>
+      <el-button type="primary" @click="newDemoTimeline()">新建</el-button>
       <el-button type="success" @click="broadcastData()">通过WS发送到悬浮窗</el-button>
-      <el-button @click="showFflogs = !showFflogs">从FFlogs导入</el-button>
+      <el-button @click="fflogsImportClick()">从FFlogs导入</el-button>
       <el-button @click="showSettings = !showSettings" color="#626aef" style="color: white">样式设置</el-button>
       <el-button @click="exportAllTimelines">导出</el-button>
       <el-button @click="importTimelines">导入</el-button>
@@ -17,33 +17,39 @@
         :settings="timelineStore.settings"
         :filters="timelineFilters"
         v-if="showFflogs"
+        @clearCurrentlyTimeline="clearCurrentlyTimeline"
         @showFflogsToggle="() => (showFflogs = !showFflogs)"
         @newTimeline="timelineStore.newTimeline"
       ></FflogsVue>
-      <el-descriptions title="时间轴参数" size="small" style="width: 100%" border v-show="showSettings">
-        <el-descriptions-item
-          v-for="(_value, key, index) in timelineStore.configValues"
-          :key="index"
-          :label="timelineStore.configTranslate[key]"
-          label-align="right"
-          align="center"
-          width="16em"
-        >
-          <el-input-number :min="0" :step="0.1" v-model="timelineStore.configValues[key]" />
-        </el-descriptions-item>
-      </el-descriptions>
-      <el-descriptions size="small" title="时间轴样式" style="width: 100%" border v-show="showSettings">
-        <el-descriptions-item
-          v-for="(_value, key, index) in timelineStore.showStyle"
-          :key="index"
-          :label="timelineStore.showStyleTranslate[key]"
-          label-align="right"
-          align="center"
-          width="16em"
-        >
-          <el-input-number :min="0" :step="0.01" v-model="timelineStore.showStyle[key]" />
-        </el-descriptions-item>
-      </el-descriptions>
+      <el-card class="box-card" v-show="showSettings">
+        <el-descriptions title="时间轴参数" size="small" style="width: 100%" border>
+          <el-descriptions-item
+            v-for="(_value, key, index) in timelineStore.configValues"
+            :key="index"
+            :label="timelineStore.configTranslate[key]"
+            label-align="right"
+            align="center"
+            width="16em"
+          >
+            <el-input-number :min="0" :step="0.1" v-model="timelineStore.configValues[key]" />
+          </el-descriptions-item>
+        </el-descriptions>
+        <br />
+        <el-descriptions size="small" title="时间轴样式" style="width: 100%" border>
+          <el-descriptions-item
+            v-for="(_value, key, index) in timelineStore.showStyle"
+            :key="index"
+            :label="timelineStore.showStyleTranslate[key]"
+            label-align="right"
+            align="center"
+            width="16em"
+          >
+            <el-input-number :min="0" :step="0.01" v-model="timelineStore.showStyle[key]" />
+          </el-descriptions-item>
+        </el-descriptions>
+        <br />
+      </el-card>
+      <br />
       <el-card class="box-card" v-show="timelineCurrentlyEditing.timeline.create !== '空'">
         <el-row class="timeline-info">
           <el-col :span="8">
@@ -70,7 +76,6 @@
             </p>
           </el-col>
           <el-col :span="10">
-            <span>编辑：</span>
             <el-input
               class="timeline-timeline-raw"
               v-model="timelineCurrentlyEditing.timeline.timeline"
@@ -80,7 +85,6 @@
               placeholder="请键入时间轴文本"
           /></el-col>
           <el-col :span="6">
-            <span>预览：</span>
             <div class="timeline-timeline-view">
               <TimelineShowVue
                 :config="timelineStore.configValues"
@@ -92,20 +96,24 @@
           </el-col>
         </el-row>
       </el-card>
-      <el-collapse v-if="timelines.length" accordion>
-        <el-collapse-item
-          class="timeline-timelines"
-          v-for="(item, index) in timelines"
-          :key="index"
-          :title="`${
-            highDifficultZoneId.find((value) => value.id === item.condition.zoneId)?.name
-          } - ${Util.nameToCN(item.condition.job).simple2} - ${item.name}`"
-        >
-          <el-button type="primary" @click="editTimeline(item)">编辑</el-button>
-          <el-button type="danger" @click="deleteTimeline(timelines, index)">删除</el-button>
-          <el-button @click="exportTimeline(item)">单独导出</el-button>
-        </el-collapse-item>
-      </el-collapse>
+      <br />
+      <el-card>
+        <el-collapse v-if="timelines.length" accordion>
+          <el-collapse-item
+            class="timeline-timelines"
+            v-for="(item, index) in timelines"
+            :key="index"
+            :title="`${highDifficultZoneId.find((value) => value.id === item.condition.zoneId)?.name} - ${
+              Util.nameToCN(item.condition.job).simple2
+            } - ${item.name}`"
+            @click="editTimeline(item)"
+          >
+            <!-- <el-button type="primary" @click="editTimeline(item)">编辑</el-button> -->
+            <el-button type="danger" @click="deleteTimeline(timelines, index)">删除</el-button>
+            <el-button @click="exportTimeline(item)">单独导出</el-button>
+          </el-collapse-item>
+        </el-collapse>
+      </el-card>
     </el-main>
   </el-container>
 </template>
@@ -129,13 +137,7 @@ const highDifficultZoneId: { id: string; name: string }[] = [{ id: "0", name: "�
 const showFflogs = ref(false);
 const showSettings = ref(false);
 let timelineCurrentlyEditing: { timeline: ITimeline } = reactive({
-  timeline: {
-    name: "空",
-    condition: { zoneId: "0", job: "NONE" },
-    timeline: "空",
-    codeFight: "空",
-    create: "空",
-  },
+  timeline: { name: "空", condition: { zoneId: "0", job: "NONE" }, timeline: "空", codeFight: "空", create: "空" },
 });
 
 init();
@@ -192,6 +194,27 @@ function urlTool(url: string) {
   });
   return data;
 }
+
+function fflogsImportClick() {
+  showFflogs.value = !showFflogs.value;
+  clearCurrentlyTimeline();
+}
+
+function clearCurrentlyTimeline() {
+  timelineCurrentlyEditing.timeline = {
+    name: "空",
+    condition: { zoneId: "0", job: "NONE" },
+    timeline: "空",
+    codeFight: "空",
+    create: "空",
+  };
+}
+
+function newDemoTimeline() {
+  clearCurrentlyTimeline();
+  timelineStore.newTimeline();
+}
+
 function editTimeline(timeline: ITimeline) {
   timelineCurrentlyEditing.timeline = timeline;
 }
@@ -209,6 +232,7 @@ function deleteTimeline(parent: ITimeline[], targetIndex: number) {
     cancelButtonText: "取消",
   }).then((result) => {
     if (result.isConfirmed) {
+      if (timelineCurrentlyEditing.timeline === parent[targetIndex]) timelineCurrentlyEditing.timeline.create = "空";
       parent.splice(targetIndex, 1);
     }
   });
@@ -297,15 +321,14 @@ function importTimelines() {
   max-width: 1080px;
   .timeline-info {
     :deep(.el-input) {
-      width: 275px !important;
+      width: 270px !important;
+      margin-right: 5px;
     }
-
     .timeline-timeline-view {
-      margin-top: 7px;
       overflow-x: auto;
     }
     :deep(.el-textarea__inner) {
-      line-height: 1.929;
+      line-height: 2;
       // overflow-x: hidden;
     }
   }

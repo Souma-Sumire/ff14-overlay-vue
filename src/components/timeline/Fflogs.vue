@@ -60,8 +60,8 @@ enum QueryTextEnum {
 }
 
 const actionStore = useActionStore();
-const props = defineProps<{ settings: { api: any }; filters: any }>();
-const emit = defineEmits(["newTimeline", "showFflogsToggle"]);
+const props = defineProps<{ settings: { api: any }; filters: any}>();
+const emit = defineEmits(["newTimeline", "showFflogsToggle","clearCurrentlyTimeline"]);
 const urlReg = /^.*(?<code>[\d\w]{16,})#fight=(?<fight>\d+)/;
 const siteImg = __SITE_IMG__;
 let queryText = ref(QueryTextEnum.query);
