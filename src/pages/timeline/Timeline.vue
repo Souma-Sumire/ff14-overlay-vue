@@ -23,7 +23,6 @@
 
 <script lang="ts" setup>
 import TimelineShow from "../../components/timeline/TimelineShow.vue";
-// import UnlockedTextVue from "../components/UnlockedText.vue";
 import { reactive, ref } from "vue";
 import { useTimelineStore } from "../../store/timeline";
 import { ITimelineLine, ITimeline, ITimelineCondition, TimelineConfigValues, ShowStyle } from "../../types/Timeline";

@@ -1,24 +1,20 @@
 <template>
-  <div v-if="show" class="unlocked">
+  <div v-show="show" class="unlocked">
     <h3>🔓 已解除锁定 (你需要将此悬浮窗锁定后使用)</h3>
   </div>
 </template>
 
 <script lang="ts" setup>
+
 import { ref } from "vue";
-import "sweetalert2/src/sweetalert2.scss";
 
 let show = ref(false);
 
-(() => {
-  document.addEventListener("onOverlayStateUpdate", (e: any): void => {
-    show.value = !e.detail.isLocked;
-    
-  });
-  startOverlayEvents();
+document.addEventListener("onOverlayStateUpdate", (e: any) => (show.value = !e.detail.isLocked));
+startOverlayEvents();
 
-})();
 </script>
+
 <style lang="scss" scoped>
 .unlocked {
   overflow: hidden;

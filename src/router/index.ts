@@ -7,6 +7,7 @@ const router = createRouter({
     { path: "/index.html", redirect: "/" },
     { path: "/timeline", component: () => import("../pages/timeline/Timeline.vue"), meta: { title: "时间轴" } },
     { path: "/timeline/settings", component: () => import("../pages/timeline/TimelineSettings.vue"), meta: { title: "时间轴编辑" } },
+    { path: "/instancedAreaInfo", component: () => import("../pages/InstancedAreaInfo.vue"), meta: { title: "副本区信息" } },
   ],
 });
 router.afterEach((to) => {
