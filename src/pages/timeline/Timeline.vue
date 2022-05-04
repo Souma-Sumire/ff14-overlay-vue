@@ -22,13 +22,14 @@
 </template>
 
 <script lang="ts" setup>
-import TimelineShow from "../../components/timeline/TimelineShow.vue";
-import { reactive, ref } from "vue";
-import { useTimelineStore } from "../../store/timeline";
-import { ITimelineLine, ITimeline, ITimelineCondition, TimelineConfigValues, ShowStyle } from "../../types/Timeline";
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
+import { reactive, ref } from "vue";
+import "../../common/hasOverlayPluginApi";
+import TimelineShow from "../../components/timeline/TimelineShow.vue";
+import { useTimelineStore } from "../../store/timeline";
 import { Job } from "../../types/Job";
+import { ITimeline, ITimelineCondition, ITimelineLine, ShowStyle, TimelineConfigValues } from "../../types/Timeline";
 
 const timelineStore = useTimelineStore();
 const timelinePageData = reactive({
@@ -63,26 +64,16 @@ function init() {
   startOverlayEvents();
   timelineStore.loadTimelineSettings();
   condition.job = (localStorage.getItem("timelineLastJob") ?? "NONE") as Job;
-  setTimeout(() => {
-    if (!timelinePageData.loadedTimeline.length && !timelinePageData.optionalTimeline.length) {
-      // getTimeline(condition);
-      Swal.fire({
-        text: `${timelineStore.allTimelines.length}条时间轴已就绪`,
-        timer: 1500,
-        showConfirmButton: false,
-        backdrop: false,
-      });
-      if (!window.hasOwnProperty("OverlayPluginApi")) {
-        Swal.fire({
-          title: "未检测到OverlayPlugin环境",
-          text: "请在ACT的悬浮窗插件中添加本网页",
-          icon: "warning",
-          confirmButtonColor: "#d33",
-          confirmButtonText: "我就要在这用！",
-        });
-      }
-    }
-  }, 1000);
+  // setTimeout(() => {
+  //   if (!timelinePageData.loadedTimeline.length && !timelinePageData.optionalTimeline.length) {
+  //     Swal.fire({
+  //       text: `${timelineStore.allTimelines.length}条时间轴已就绪`,
+  //       timer: 1500,
+  //       showConfirmButton: false,
+  //       backdrop: false,
+  //     });
+  //   }
+  // }, 0);
 }
 
 //从数据列表中根据玩家职业与地区获得一个或多个时间轴

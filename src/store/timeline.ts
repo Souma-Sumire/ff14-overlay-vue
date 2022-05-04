@@ -176,6 +176,12 @@ export const useTimelineStore = defineStore("timeline", {
           }
         });
         this.sortTimelines();
+        Swal.fire({
+          text: `${this.allTimelines.length}条时间轴已就绪`,
+          timer: 1500,
+          showConfirmButton: false,
+          backdrop: false,
+        });
       }
     },
     sortTimelines() {
