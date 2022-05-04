@@ -201,6 +201,7 @@ function handlePlayerChangedEvent(e: any) {
 //切换场景
 function handleChangeZone(e: any) {
   condition.zoneId = String(e.zoneID);
+  lastUsedTimeline = { name: "", condition: { zoneId: "", job: "NONE" }, timeline: "", codeFight: "", create: "" };
   getTimeline(condition);
 }
 
