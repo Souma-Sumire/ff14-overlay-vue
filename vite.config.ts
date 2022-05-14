@@ -17,5 +17,6 @@ export default defineConfig({
   ],
   define: {
     __SITE_IMG__: JSON.stringify(`https://cafemaker.wakingsands.com/i`),
+    __SITE_IMG__BAK: JSON.stringify(`https://xivapi.com//i`),
   },
 });

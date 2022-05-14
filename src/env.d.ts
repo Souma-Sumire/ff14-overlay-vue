@@ -6,3 +6,4 @@ declare module "*.vue" {
   export default component;
 }
 declare var __SITE_IMG__: string;
+declare var __SITE_IMG__BAK: string;

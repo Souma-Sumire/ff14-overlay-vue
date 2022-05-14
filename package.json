@@ -10,6 +10,7 @@
     "animate.css": "^4.1.1",
     "axios": "^0.26.0",
     "element-plus": "^2.0.2",
+    "moment": "^2.29.3",
     "pinia": "^2.0.11",
     "sweetalert2": "^11.4.0",
     "vue": "^3.2.25",

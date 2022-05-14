@@ -2,15 +2,11 @@
   <el-container class="container">
     <el-header>
       <el-button type="primary" @click="newDemoTimeline()">新建</el-button>
-      <el-button type="success" @click="broadcastData()">通过WS发送到悬浮窗</el-button>
       <el-button @click="fflogsImportClick()">从FFlogs导入</el-button>
       <el-button @click="showSettings = !showSettings" color="#626aef" style="color: white">样式设置</el-button>
       <el-button @click="exportAllTimelines">导出</el-button>
       <el-button @click="importTimelines">导入</el-button>
-      <div class="slider-demo-block">
-        <span>预览时间：</span>
-        <el-slider v-model="simulatedCombatTime" :min="-30" :max="1000" :step="0.1" show-input> </el-slider>
-      </div>
+      <el-button type="success" @click="broadcastData()">通过WS发送到悬浮窗</el-button>
     </el-header>
     <el-main>
       <FflogsVue
@@ -20,7 +16,8 @@
         @clearCurrentlyTimeline="clearCurrentlyTimeline"
         @showFflogsToggle="() => (showFflogs = !showFflogs)"
         @newTimeline="timelineStore.newTimeline"
-      ></FflogsVue>
+      >
+      </FflogsVue>
       <el-card class="box-card" v-show="showSettings">
         <el-descriptions title="时间轴参数" size="small" style="width: 100%" border>
           <el-descriptions-item
@@ -47,10 +44,13 @@
             <el-input-number :min="0" :step="0.01" v-model="timelineStore.showStyle[key]" />
           </el-descriptions-item>
         </el-descriptions>
-        <br />
       </el-card>
       <br />
-      <el-card class="box-card" v-show="timelineCurrentlyEditing.timeline.create !== '空'">
+      <el-card v-show="timelineCurrentlyEditing.timeline.create !== '空'">
+        <div class="slider-demo-block">
+          <span>模拟时间：</span>
+          <el-slider v-model="simulatedCombatTime" :min="-30" :max="1000" :step="0.1" show-input> </el-slider>
+        </div>
         <el-row class="timeline-info">
           <el-col :span="8">
             <p>名称： <el-input v-model="timelineCurrentlyEditing.timeline.name" class="timeline-info-name"></el-input></p>
@@ -63,7 +63,7 @@
             <p>
               职业：
               <el-select v-model="timelineCurrentlyEditing.timeline.condition.job" required placeholder="职业">
-                <el-option v-for="job in Util.getBattleJobs()" :key="job" :label="Util.nameToCN(job).full" :value="job"></el-option>
+                <el-option v-for="job in Util.getBattleJobs2()" :key="job" :label="Util.nameToCN(job).full" :value="job"></el-option>
               </el-select>
             </p>
             <p>
@@ -74,6 +74,7 @@
               创建：
               <el-input v-model="timelineCurrentlyEditing.timeline.create" disabled />
             </p>
+            <el-button type="danger" @click="deleteTimeline(timelineCurrentlyEditing.timeline)">删除</el-button>
           </el-col>
           <el-col :span="10">
             <el-input
@@ -95,25 +96,36 @@
             </div>
           </el-col>
         </el-row>
+        <br />
       </el-card>
       <br />
       <el-card>
-        <el-collapse v-if="timelines.length" accordion>
-          <el-collapse-item
-            class="timeline-timelines"
-            v-for="(item, index) in timelines"
-            :key="index"
-            :title="`${highDifficultZoneId.find((value) => value.id === item.condition.zoneId)?.name} - ${
-              Util.nameToCN(item.condition.job).simple2
-            } - ${item.name}`"
-            @click="editTimeline(item)"
-          >
-            <!-- <el-button type="primary" @click="editTimeline(item)">编辑</el-button> -->
-            <el-button type="danger" @click="deleteTimeline(timelines, index)">删除</el-button>
-            <el-button @click="exportTimeline(item)">单独导出</el-button>
-          </el-collapse-item>
-        </el-collapse>
-      </el-card>
+        <el-table
+          v-if="timelines.length > 0"
+          :data="timelines"
+          stripe
+          style="width: 100%"
+          :default-sort="{ prop: 'conditon.job', order: 'descending' }"
+        >
+          <el-table-column prop="name" label="名称" sortable> </el-table-column>
+          <el-table-column prop="conditon" label="地图" sortable>
+            <template #default="scope">
+              {{ highDifficultZoneId.find((value) => value.id === scope.row.condition.zoneId)?.name }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="conditon" label="职业" sortable>
+            <template #default="scope">
+              {{ Util.nameToCN(scope.row.condition.job).simple2 }}
+            </template>
+          </el-table-column>
+          <el-table-column fixed="right" label="操作" width="100">
+            <template #default="scope">
+              <el-button @click="editTimeline(scope.row)" type="text" size="small">编辑</el-button>
+            </template>
+          </el-table-column>
+        </el-table></el-card
+      >
+      <el-card v-if="timelines.length === 0"> <el-empty description="点击上方新建或导入一个时间轴吧~"></el-empty></el-card>
     </el-main>
   </el-container>
 </template>
@@ -128,6 +140,7 @@ import zoneInfo from "../../resources/zoneInfo";
 import { useTimelineStore } from "../../store/timeline";
 import { ITimeline } from "../../types/Timeline";
 import Util from "../../utils/util";
+import "animate.css";
 
 const simulatedCombatTime = ref(-30);
 const timelineStore = useTimelineStore();
@@ -220,9 +233,9 @@ function editTimeline(timeline: ITimeline) {
 }
 
 //删除某时间轴 来自点击事件
-function deleteTimeline(parent: ITimeline[], targetIndex: number) {
+function deleteTimeline(target: ITimeline) {
   Swal.fire({
-    title: `确定要删除${parent[targetIndex].name}吗？`,
+    title: `确定要删除${target.name}吗？`,
     text: "这将无法撤回！",
     icon: "warning",
     showCancelButton: true,
@@ -232,8 +245,13 @@ function deleteTimeline(parent: ITimeline[], targetIndex: number) {
     cancelButtonText: "取消",
   }).then((result) => {
     if (result.isConfirmed) {
-      if (timelineCurrentlyEditing.timeline === parent[targetIndex]) timelineCurrentlyEditing.timeline.create = "空";
-      parent.splice(targetIndex, 1);
+      // if (timelineCurrentlyEditing.timeline === parent[targetIndex]) timelineCurrentlyEditing.timeline.create = "空";
+      // parent.splice(targetIndex, 1);
+      clearCurrentlyTimeline();
+      timelines.value.splice(
+        timelines.value.findIndex((v) => v === target),
+        1
+      );
     }
   });
 }
@@ -253,9 +271,9 @@ function saveTimelineStoreData() {
   );
 }
 
-function exportTimeline(timeline: ITimeline) {
-  Swal.fire({ text: JSON.stringify([timeline]) });
-}
+// function exportTimeline(timeline: ITimeline) {
+//   Swal.fire({ text: JSON.stringify([timeline]) });
+// }
 
 function exportAllTimelines() {
   Swal.fire({ text: JSON.stringify(timelineStore.allTimelines) });
@@ -325,11 +343,30 @@ function importTimelines() {
       margin-right: 5px;
     }
     .timeline-timeline-view {
+      margin-top: 1em;
       overflow-x: auto;
     }
     :deep(.el-textarea__inner) {
       line-height: 2;
+      margin-top: 1em;
       // overflow-x: hidden;
+    }
+  }
+  .timelinesList {
+    list-style: circle;
+    padding: 0;
+    margin: 0;
+    margin-left: 1em;
+    li {
+      cursor: pointer;
+      font-size: 16px;
+      font-family: "Microsoft YaHei";
+      padding: 5px;
+      transition-duration: 0.5s;
+      animation-duration: 1s;
+      &:hover {
+        background-color: rgba($color: gray, $alpha: 0.1);
+      }
     }
   }
 }

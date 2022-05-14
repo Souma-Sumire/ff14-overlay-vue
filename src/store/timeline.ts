@@ -129,7 +129,10 @@ export const useTimelineStore = defineStore("timeline", {
           if (action) {
             text = text.replace(
               item[0],
-              `<div class="skill_icon"><img src="${__SITE_IMG__}/${action.Url}.png" alt=""></div>
+              `<div class="skill_icon">
+              <img src="${__SITE_IMG__}/${action.Url}.png"
+              onerror="javascript:this.src='${__SITE_IMG__BAK}/${action.Url}.png';this.onerror=null;">
+              </div>
               <span>${item.groups?.repeat ? item.groups!.name : ""}</span>`
             );
           } else {

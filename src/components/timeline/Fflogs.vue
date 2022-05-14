@@ -39,7 +39,11 @@
           :value="rule.actionId"
           :label="rule.actionName"
         >
-          <img :src="`${siteImg}/${rule.url}.png`" class="ability-filter-li-icon" />{{ rule.actionName }}
+          <img
+            :src="`${siteImg}/${rule.url}.png`"
+            :onerror="`javascript:this.src='${siteImgBak}/${rule.url}.png';this.onerror=null;`"
+            class="ability-filter-li-icon"
+          />{{ rule.actionName }}
         </el-option>
       </el-select>
     </div>
@@ -60,10 +64,12 @@ enum QueryTextEnum {
 }
 
 const actionStore = useActionStore();
-const props = defineProps<{ settings: { api: any }; filters: any}>();
-const emit = defineEmits(["newTimeline", "showFflogsToggle","clearCurrentlyTimeline"]);
+const props = defineProps<{ settings: { api: any }; filters: any }>();
+const emit = defineEmits(["newTimeline", "showFflogsToggle", "clearCurrentlyTimeline"]);
 const urlReg = /^.*(?<code>[\d\w]{16,})#fight=(?<fight>\d+)/;
 const siteImg = __SITE_IMG__;
+const siteImgBak = __SITE_IMG__BAK;
+
 let queryText = ref(QueryTextEnum.query);
 let inputUrl = ref("");
 

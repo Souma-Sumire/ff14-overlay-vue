@@ -4,6 +4,8 @@
       <router-link to="/timeline">时间轴悬浮窗</router-link>
       <router-link to="/timeline/settings?OVERLAY_WS=ws://127.0.0.1:10501/ws">时间轴悬浮窗设置</router-link>
       <router-link to="/instancedAreaInfo">副本区信息显示</router-link>
+      <!-- <router-link to="/stageProgramme">舞台节目单</router-link> -->
+      <!-- <router-link to="/mpTick">回蓝监控</router-link> -->
     </li>
     <br />
     <li>

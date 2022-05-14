@@ -7,7 +7,9 @@ const router = createRouter({
     { path: "/index.html", redirect: "/" },
     { path: "/timeline", component: () => import("../pages/timeline/Timeline.vue"), meta: { title: "时间轴" } },
     { path: "/timeline/settings", component: () => import("../pages/timeline/TimelineSettings.vue"), meta: { title: "时间轴编辑" } },
-    { path: "/instancedAreaInfo", component: () => import("../pages/InstancedAreaInfo.vue"), meta: { title: "副本区信息" } },
+    { path: "/instancedAreaInfo", component: () => import("../pages/instancedAreaInfo/InstancedAreaInfo.vue"), meta: { title: "副本区信息" } },
+    { path: "/stageProgramme", component: () => import("../pages/stageProgramme/StageProgramme.vue"), meta: { title: "舞台节目单" } },
+    { path: "/mpTick", component: () => import("../pages/mpTick/MpTick.vue"), meta: { title: "回蓝监控" } },
   ],
 });
 router.afterEach((to) => {

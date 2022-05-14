@@ -120,6 +120,7 @@ const rangedDpsJobs: Job[] = ["ARC", "BRD", "DNC", "MCH"];
 const casterDpsJobs: Job[] = ["BLU", "RDM", "BLM", "SMN", "ACN", "THM"];
 const dpsJobs: Job[] = [...meleeDpsJobs, ...rangedDpsJobs, ...casterDpsJobs];
 const battleJobs: Job[] = [...tankJobs, ...healerJobs, ...meleeDpsJobs, ...rangedDpsJobs, ...casterDpsJobs];
+const battleJobs2: Job[] = [...tankJobs, ...healerJobs, ...meleeDpsJobs, ...rangedDpsJobs, ...casterDpsJobs, "NONE"];
 
 const craftingJobs: Job[] = ["CRP", "BSM", "ARM", "GSM", "LTW", "WVR", "ALC", "CUL"];
 const gatheringJobs: Job[] = ["MIN", "BTN", "FSH"];
@@ -176,6 +177,7 @@ const Util = {
   canAddle: (job: Job) => addleJobs.includes(job),
   getAllJobs: (): readonly Job[] => allJobs,
   getBattleJobs: (): readonly Job[] => battleJobs,
+  getBattleJobs2: (): readonly Job[] => battleJobs2,
   nameToCN: (job: Job) => {
     return nameToCN[job] ?? job;
   },
