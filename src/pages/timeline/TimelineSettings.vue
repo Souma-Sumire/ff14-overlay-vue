@@ -4,8 +4,8 @@
       <el-button type="primary" @click="newDemoTimeline()">新建</el-button>
       <el-button @click="fflogsImportClick()">从FFlogs导入</el-button>
       <el-button @click="showSettings = !showSettings" color="#626aef" style="color: white">样式设置</el-button>
-      <el-button @click="exportAllTimelines">导出</el-button>
       <el-button @click="importTimelines">导入</el-button>
+      <el-button class="export" @click="exportTimeline(timelines)">全部导出</el-button>
       <el-button type="success" @click="broadcastData()">通过WS发送到悬浮窗</el-button>
     </el-header>
     <el-main>
@@ -75,6 +75,7 @@
               <el-input v-model="timelineCurrentlyEditing.timeline.create" disabled />
             </p>
             <el-button type="danger" @click="deleteTimeline(timelineCurrentlyEditing.timeline)">删除</el-button>
+            <el-button class="export" @click="exportTimeline([timelineCurrentlyEditing.timeline])">单独导出</el-button>
           </el-col>
           <el-col :span="10">
             <el-input
@@ -141,6 +142,7 @@ import { useTimelineStore } from "../../store/timeline";
 import { ITimeline } from "../../types/Timeline";
 import Util from "../../utils/util";
 import "animate.css";
+import ClipboardJS from "clipboard";
 
 const simulatedCombatTime = ref(-30);
 const timelineStore = useTimelineStore();
@@ -271,13 +273,31 @@ function saveTimelineStoreData() {
   );
 }
 
-// function exportTimeline(timeline: ITimeline) {
-//   Swal.fire({ text: JSON.stringify([timeline]) });
-// }
-
-function exportAllTimelines() {
-  Swal.fire({ text: JSON.stringify(timelineStore.allTimelines) });
+function exportTimeline(timelineArr: ITimeline[]) {
+  let clipboard = new ClipboardJS(".export", {
+    text: () => {
+      return JSON.stringify(timelineArr);
+    },
+  });
+  clipboard.on("success", () => {
+    Swal.fire({
+      position: "top-end",
+      icon: "success",
+      title: "复制成功，已写入剪切板。",
+      showConfirmButton: false,
+      timer: 1500,
+    });
+    clipboard.destroy();
+  });
+  clipboard.on("error", () => {
+    Swal.fire("复制失败，请手动复制！", JSON.stringify([timelineArr]));
+    clipboard.destroy();
+  });
 }
+
+// function exportAllTimelines() {
+// Swal.fire({ text: JSON.stringify(timelineStore.allTimelines) });
+// }
 
 function importTimelines() {
   Swal.fire({
