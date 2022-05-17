@@ -6,7 +6,8 @@
       <el-button @click="showSettings = !showSettings" color="#626aef" style="color: white">样式设置</el-button>
       <el-button @click="importTimelines">导入</el-button>
       <el-button class="export" @click="exportTimeline(timelines)">全部导出</el-button>
-      <el-button type="success" @click="broadcastData()">通过WS发送到悬浮窗</el-button>
+      <el-button v-if="isWSMode" type="success" @click="broadcastData()">通过WS发送到悬浮窗</el-button>
+      <!-- <el-button v-if="!isWSMode" type="success" @click="applyData()">应用</el-button> -->
     </el-header>
     <el-main>
       <FflogsVue
@@ -134,7 +135,7 @@
 <script lang="ts" setup>
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
-import { reactive, ref, toRef, watchEffect } from "vue";
+import { reactive, ref, toRef, watchEffect, onBeforeUnmount } from "vue";
 import FflogsVue from "../../components/timeline/Fflogs.vue";
 import TimelineShowVue from "../../components/timeline/TimelineShow.vue";
 import zoneInfo from "../../resources/zoneInfo";
@@ -154,6 +155,7 @@ const showSettings = ref(false);
 let timelineCurrentlyEditing: { timeline: ITimeline } = reactive({
   timeline: { name: "空", condition: { zoneId: "0", job: "NONE" }, timeline: "空", codeFight: "空", create: "空" },
 });
+const isWSMode = location.href.includes("OVERLAY_WS=");
 
 init();
 
@@ -174,18 +176,20 @@ function init() {
   saveTimelineStoreData();
 }
 
+function applyData() {
+  callOverlayHandler({
+    call: "broadcast",
+    source: "soumuaTimelineSetting",
+    msg: {
+      store: timelineStore.$state,
+    },
+  });
+}
+
 //通信数据
 function broadcastData() {
-  // console.log(window.hasOwnProperty("OverlayPluginApi"));
   if (!!urlTool(location.href)?.OVERLAY_WS) {
-    callOverlayHandler({
-      call: "broadcast",
-      source: "soumuaTimelineSetting",
-      msg: {
-        store: timelineStore.$state,
-        // store: timelineStore, //直接传的话国服ACT会报错
-      },
-    });
+    applyData();
     Swal.fire({
       title: "已尝试进行通信,请检查ACT悬浮窗是否接收",
       text: "若无法通信，可将本页面直接添加到ACT悬浮窗进行编辑，设置将会自动保存。（编辑后刷新一下时间轴网页）",
@@ -247,8 +251,6 @@ function deleteTimeline(target: ITimeline) {
     cancelButtonText: "取消",
   }).then((result) => {
     if (result.isConfirmed) {
-      // if (timelineCurrentlyEditing.timeline === parent[targetIndex]) timelineCurrentlyEditing.timeline.create = "空";
-      // parent.splice(targetIndex, 1);
       clearCurrentlyTimeline();
       timelines.value.splice(
         timelines.value.findIndex((v) => v === target),
@@ -294,10 +296,6 @@ function exportTimeline(timelineArr: ITimeline[]) {
     clipboard.destroy();
   });
 }
-
-// function exportAllTimelines() {
-// Swal.fire({ text: JSON.stringify(timelineStore.allTimelines) });
-// }
 
 function importTimelines() {
   Swal.fire({
