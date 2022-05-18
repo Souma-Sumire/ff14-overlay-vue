@@ -40,11 +40,11 @@
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 import { reactive, ref } from "vue";
-import "../../common/hasOverlayPluginApi";
-import TimelineShow from "../../components/timeline/TimelineShow.vue";
-import { useTimelineStore } from "../../store/timeline";
-import { Job } from "../../types/Job";
-import { ITimeline, ITimelineCondition, ITimelineLine, ShowStyle, TimelineConfigValues } from "../../types/Timeline";
+import "../common/hasOverlayPluginApi";
+import TimelineShow from "../components/timeline/TimelineShow.vue";
+import { useTimelineStore } from "../store/timeline";
+import { Job } from "../types/Job";
+import { ITimeline, ITimelineCondition, ITimelineLine, ShowStyle, TimelineConfigValues } from "../types/Timeline";
 
 // const settingsBtnShow = ref(false);
 // document.addEventListener("onOverlayStateUpdate", (e: any) => (settingsBtnShow.value = !e.detail.isLocked));

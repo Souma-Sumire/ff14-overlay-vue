@@ -1,4 +1,4 @@
-export type FfIcon =
+export type FFIcon =
   | "NONE"
   | "Astrologian"
   | "Bard"
@@ -20,7 +20,7 @@ export type FfIcon =
   | "Reaper"
   | "Sage";
 
-export function FfIconToName(fficon: FfIcon) {
+export function FFIconToName(fficon: FFIcon) {
   return (
     {
       "NONE": "NONE",
@@ -48,22 +48,46 @@ export function FfIconToName(fficon: FfIcon) {
 }
 export type Friendlies = { guid: number; icon: string; id: number; name: string; server: string; fights: [{ id: number }] };
 
-export type FflogsQuery = {
+export type FFlogsView =
+  | "summary"
+  | "damage-done"
+  | "damage-taken"
+  | "healing"
+  | "casts"
+  | "summons"
+  | "buffs"
+  | "debuffs"
+  | "deaths"
+  | "threat"
+  | "resources"
+  | "interrupts"
+  | "dispels";
+
+export type FFlogsStance = {
+  time: number;
+  view: FFlogsView;
+  actionName: string;
+  actionId: number;
+  sourceIsFriendly: boolean;
+  url: string;
+}[];
+
+export type FFlogsQuery = {
   code: string;
   fightIndex: number;
   start: number;
   end: number;
   friendlies: Friendlies[];
-  abilityFilterEvents: { time: number; actionName: string; actionId: number; sourceIsFriendly: boolean,url:string }[];
-  abilityFilterCandidate: { time: number; actionName: string; actionId: number; sourceIsFriendly: boolean; url: string }[];
+  abilityFilterEvents: FFlogsStance;
+  abilityFilterCandidate: FFlogsStance;
   abilityFilterSelected: number[];
   abilityFilterEventsAfterFilterRawTimeline: string;
   zoneID: string;
-  player: { fights?: [{ id: number }]; guid?: number; icon?: FfIcon; id?: number; name?: string; server?: string };
+  player: { fights?: [{ id: number }]; guid?: number; icon?: FFIcon; id?: number; name?: string; server?: string };
   bossIDs: number[];
 };
 
-export type FflogsApiV1ReportEvents = {
+export type FFlogsApiV1ReportEvents = {
   ability: { name: string; guid: number; type: number; abilityIcon: string };
   fight: number;
   sourceID: number;

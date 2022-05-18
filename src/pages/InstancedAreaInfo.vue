@@ -4,7 +4,7 @@
 
 <script lang="ts" setup>
 import { ref } from "vue";
-import "../../common/hasOverlayPluginApi";
+import "../common/hasOverlayPluginApi";
 
 enum InstancedEnum {
   "" = "①",

@@ -10,15 +10,15 @@
       <!-- <el-button v-if="!isWSMode" type="success" @click="applyData()">应用</el-button> -->
     </el-header>
     <el-main>
-      <FflogsVue
+      <FFlogsVue
         :settings="timelineStore.settings"
         :filters="timelineFilters"
-        v-if="showFflogs"
+        v-if="showFFlogs"
         @clearCurrentlyTimeline="clearCurrentlyTimeline"
-        @showFflogsToggle="() => (showFflogs = !showFflogs)"
+        @showFFlogsToggle="() => (showFFlogs = !showFFlogs)"
         @newTimeline="timelineStore.newTimeline"
       >
-      </FflogsVue>
+      </FFlogsVue>
       <el-card class="box-card" v-show="showSettings">
         <el-descriptions title="时间轴参数" size="small" style="width: 100%" border>
           <el-descriptions-item
@@ -136,8 +136,8 @@
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 import { reactive, ref, toRef, watchEffect, onBeforeUnmount } from "vue";
-import FflogsVue from "../../components/timeline/Fflogs.vue";
-import TimelineShowVue from "../../components/timeline/TimelineShow.vue";
+import FFlogsVue from "./FFlogs.vue";
+import TimelineShowVue from "./TimelineShow.vue";
 import zoneInfo from "../../resources/zoneInfo";
 import { useTimelineStore } from "../../store/timeline";
 import { ITimeline } from "../../types/Timeline";
@@ -150,7 +150,7 @@ const timelineStore = useTimelineStore();
 const timelines = toRef(timelineStore, "allTimelines");
 const timelineFilters = toRef(timelineStore, "filters");
 const highDifficultZoneId: { id: string; name: string }[] = [{ id: "0", name: "任意" }];
-const showFflogs = ref(false);
+const showFFlogs = ref(false);
 const showSettings = ref(false);
 let timelineCurrentlyEditing: { timeline: ITimeline } = reactive({
   timeline: { name: "空", condition: { zoneId: "0", job: "NONE" }, timeline: "空", codeFight: "空", create: "空" },
@@ -215,7 +215,7 @@ function urlTool(url: string) {
 }
 
 function fflogsImportClick() {
-  showFflogs.value = !showFflogs.value;
+  showFFlogs.value = !showFFlogs.value;
   clearCurrentlyTimeline();
 }
 

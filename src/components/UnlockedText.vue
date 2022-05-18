@@ -5,14 +5,12 @@
 </template>
 
 <script lang="ts" setup>
-
 import { ref } from "vue";
 
 let show = ref(false);
 
 document.addEventListener("onOverlayStateUpdate", (e: any) => (show.value = !e.detail.isLocked));
 startOverlayEvents();
-
 </script>
 
 <style lang="scss" scoped>

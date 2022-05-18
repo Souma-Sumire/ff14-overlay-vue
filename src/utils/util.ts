@@ -1,7 +1,7 @@
-import { FfIcon } from "../types/Fflogs";
+import { FFIcon } from "../types/FFlogs";
 import { Job, Role } from "../types/Job";
 
-const iconToJobEnum: Record<FfIcon, number> = {
+const iconToJobEnum: Record<FFIcon, number> = {
   NONE: 0,
   Paladin: 19,
   Monk: 20,
@@ -181,7 +181,7 @@ const Util = {
   nameToCN: (job: Job) => {
     return nameToCN[job] ?? job;
   },
-  iconToJobEnum: (icon: FfIcon) => {
+  iconToJobEnum: (icon: FFIcon) => {
     return iconToJobEnum[icon] ?? 0;
   },
 } as const;
