@@ -6,7 +6,17 @@ import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  build: { outDir: "../Souma-Sumire.github.io/" },
+  build: {
+    outDir: "../Souma-Sumire.github.io/",
+    emptyOutDir: true, //构建时清空outDir目录
+    terserOptions: {
+      compress: {
+        drop_console: true, //生产环境时移除console
+        drop_debugger: true,
+      },
+    },
+    reportCompressedSize: false, //禁用gzip压缩大小报告以提高构建性能
+  },
   plugins: [
     vue(),
     AutoImport({
