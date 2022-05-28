@@ -42,7 +42,7 @@ const configTranslate: TimelineConfigTranslate = {
 const configValues: TimelineConfigValues = {
   [TimelineConfigEnum.显示范围]: 120,
   [TimelineConfigEnum.变色时间]: 2.75,
-  [TimelineConfigEnum.零后持续]: 0.25,
+  [TimelineConfigEnum.零后持续]: 0.75,
   [TimelineConfigEnum.战前准备]: 30,
   [TimelineConfigEnum.TTS提前量]: 1,
   [TimelineConfigEnum.刷新频率]: 100,
@@ -61,7 +61,7 @@ let showStyle: ShowStyle = {
   "--timeline-width": 160,
   "--font-size": 18,
   "--opacity": 0.33,
-  "--normal-scale": 0.33,
+  "--normal-scale": 0.5,
   "--up-coming-scale": 1,
   "--tras-duration": 0.66,
 };

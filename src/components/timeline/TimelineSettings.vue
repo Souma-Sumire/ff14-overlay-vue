@@ -85,12 +85,12 @@
               class="timeline-timeline-raw"
               v-model="timelineCurrentlyEditing.timeline.timeline"
               type="textarea"
-              :rows="10"
+              :rows="12"
               wrap="off"
               placeholder="请键入时间轴文本"
             />
           </div>
-          <div style="max-height: 297px;">
+          <div style="max-height: 353px">
             <div class="timeline-timeline-view">
               <TimelineShowVue
                 :config="timelineStore.configValues"
@@ -104,14 +104,8 @@
         <br />
       </el-card>
       <br />
-      <el-card>
-        <el-table
-          v-if="timelines.length > 0"
-          :data="timelines"
-          stripe
-          style="width: 100%"
-          :default-sort="{ prop: 'conditon.job', order: 'descending' }"
-        >
+      <el-card v-if="timelines.length > 0">
+        <el-table :data="timelines" stripe style="width: 100%" :default-sort="{ prop: 'conditon.job', order: 'descending' }">
           <el-table-column prop="name" label="名称" sortable> </el-table-column>
           <el-table-column prop="conditon" label="地图" sortable>
             <template #default="scope">

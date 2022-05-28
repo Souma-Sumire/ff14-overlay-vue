@@ -43,10 +43,11 @@ $timelineWitdh: 160;
     background-color: rgb(20, 22, 25);
     margin-bottom: 1px;
     border: 1px solid #000;
+    box-sizing: border-box;
     position: relative;
     opacity: var(--opacity, $opacity);
     transition-duration: calc(var(--trasDuration, $trasDuration) * 1s);
-    height: calc(40px * var(--normal-scale, $normalScale));
+    height: calc(48px * var(--normal-scale, $normalScale));
     &.fade {
       animation: myfade calc(var(--trasDuration, $trasDuration) * 1s) 1 forwards;
       height: calc(40px * var(--up-coming-scale, $upComingScale));
