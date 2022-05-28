@@ -32,15 +32,15 @@ class Timeline implements ITimeline {
 
 const configTranslate: TimelineConfigTranslate = {
   [TimelineConfigEnum.显示范围]: "显示范围（秒）",
-  [TimelineConfigEnum.变色时间]: "变色时间（秒）",
-  [TimelineConfigEnum.零后持续]: "零秒后持续（秒）",
-  [TimelineConfigEnum.战前准备]: "战前显示（秒）",
-  [TimelineConfigEnum.TTS提前量]: "TTS提前量（秒）",
-  [TimelineConfigEnum.刷新频率]: "刷新频率（毫秒）",
+  [TimelineConfigEnum.变色时间]: "提前变色（秒）",
+  [TimelineConfigEnum.零后持续]: "后续保持（秒）",
+  [TimelineConfigEnum.战前准备]: "倒计时量（秒）",
+  [TimelineConfigEnum.TTS提前量]: "TTS预备（秒）",
+  [TimelineConfigEnum.刷新频率]: "刷新率（毫秒）",
 };
 
 const configValues: TimelineConfigValues = {
-  [TimelineConfigEnum.显示范围]: 80,
+  [TimelineConfigEnum.显示范围]: 120,
   [TimelineConfigEnum.变色时间]: 2.75,
   [TimelineConfigEnum.零后持续]: 0.25,
   [TimelineConfigEnum.战前准备]: 30,
@@ -58,19 +58,19 @@ const showStyleTranslate: ShowStyleTranslate = {
 };
 
 let showStyle: ShowStyle = {
-  "--timeline-width": 180,
-  "--font-size": 16,
-  "--opacity": 0.5,
-  "--normal-scale": 0.5,
+  "--timeline-width": 160,
+  "--font-size": 18,
+  "--opacity": 0.33,
+  "--normal-scale": 0.33,
   "--up-coming-scale": 1,
-  "--tras-duration": 1,
+  "--tras-duration": 0.66,
 };
 
 export const useTimelineStore = defineStore("timeline", {
   state: () => {
     return {
       timelineLegalRegular:
-        /^[ \t　]*(?<time>[\-:：\d.]+) +(?:["']?(?<action>[^"\n\r]+)["']?)?(?:[ \t　]+(?<t>tts)[ \t　]?)?(?: ["']??(?<tts>[^" \t　\n\r]+)["']??)?(?:[ \t　]+sync[ \t　]+?\/(?<sync>.+)\/)?(?:[ \t　]+window[ \t　]+?(?<windowBefore>\d+)(?:,(?<windowAfter>\d+))?)?(?:[ \t　]+jump[ \t　]+?(?<jump>\d+))?[ \t　]*$/gm,
+        /^[ \t　]*(?<time>[\-:：\d.]+) +(?:["']?(?<action>[^"\n\r]+)["']?)?(?:[ \t　]+(?<t>tts)[ \t　]?)?(?: ["']??(?<tts>[^" \t　\n\r]+)["']??)?(?:[ \t　]+sync[ \t　]*\/(?<sync>.+)\/)?(?:[ \t　]*window[ \t　]*(?<windowBefore>\d+)(?:,[ \t　]*(?<windowAfter>\d+))?)?(?:[ \t　]*jump[ \t　]*(?<jump>\d+))?[ \t　]*$/gm,
       allTimelines: [] as ITimeline[],
       configValues,
       configTranslate,
@@ -103,58 +103,31 @@ export const useTimelineStore = defineStore("timeline", {
       });
     },
     getTimeline(condition: ITimelineCondition): ITimeline[] {
-      return this.allTimelines.filter((timeline) => {
-        // console.log(timeline.condition, condition, timeline.condition.job === condition.job);
-        return (
-          (timeline.condition.zoneId === "0" || timeline.condition.zoneId === condition.zoneId) && timeline.condition.job === condition.job
-        );
-      });
+      return this.allTimelines.filter(
+        (t) => (t.condition.zoneId === "0" || t.condition.zoneId === condition.zoneId) && t.condition.job === condition.job
+      );
     },
     parseTimeline(rawTimeline: string) {
-      function parseTime(time: string): number {
-        const timeFormatType = time.match(/^(?<negative>-)?(?<mm>[^:：]+):(?<ss>[^:：]+)$/);
-        if (timeFormatType) {
-          return (
-            parseFloat(timeFormatType.groups!.mm) * 60 + parseFloat(timeFormatType.groups!.ss) * (timeFormatType.groups?.negative ? -1 : 1)
-          );
-        } else {
-          return parseFloat(time);
-        }
-      }
-      function parseAction(text: string): string {
-        [...text.matchAll(/\<(?<name>[^\<\>]*?)!??\>(?<repeat>~)?/gim)].forEach((item) => {
-          let action =
-            actionStore.getAction({ Name: item.groups!.name, IsPlayerAction: true }) ??
-            actionStore.getAction({ Name: item.groups!.name, IsPlayerAction: false });
-          if (action) {
-            text = text.replace(
-              item[0],
-              `<div class="skill_icon">
-              <img src="${__SITE_IMG__}/${action.Url}.png"
-              onerror="javascript:this.src='${__SITE_IMG__BAK}/${action.Url}.png';this.onerror=null;">
-              </div>
-              <span>${item.groups?.repeat ? item.groups!.name : ""}</span>`
-            );
-          } else {
-            text = `<span>${item[0]}</span>`;
-          }
-        });
-        return text;
-      }
-      return [...rawTimeline.matchAll(this.timelineLegalRegular)].reduce((total, line) => {
-        total.push({
-          time: parseTime(line.groups!.time),
-          action: line.groups!.action ? parseAction(line.groups!.action.replace(/ /, "&nbsp")) : "",
-          sync: line.groups?.sync ? new RegExp(line.groups.sync) : void 0,
-          show: !line.groups!.sync,
-          windowBefore: line.groups?.windowBefore ? parseInt(line.groups.windowBefore) : 2.5,
-          windowAfter: line.groups?.windowAfter ? parseInt(line.groups.windowAfter || line.groups.windowBefore) : 2.5,
-          jump: line.groups?.jump ? parseInt(line.groups.jump) : void 0,
-          alertAlready: false,
-          tts: line.groups?.tts ? line.groups.tts : line.groups?.t ? line.groups.action.match(/^.*<(?<name>.+)>.*$/)?.groups?.name : void 0,
-        });
-        return total;
-      }, [] as Array<ITimelineLine>);
+      return [...rawTimeline.matchAll(this.timelineLegalRegular)]
+        .reduce((total, line) => {
+          total.push({
+            time: parseTime(line.groups!.time),
+            action: line.groups!.action ? parseAction(line.groups!.action.replace(/ /, "&nbsp")) : "",
+            sync: line.groups?.sync ? new RegExp(line.groups.sync) : void 0,
+            show: !line.groups!.sync,
+            windowBefore: line.groups?.windowBefore ? parseInt(line.groups.windowBefore) : 2.5,
+            windowAfter: line.groups?.windowAfter ? parseInt(line.groups.windowAfter || line.groups.windowBefore) : 2.5,
+            jump: line.groups?.jump ? parseInt(line.groups.jump) : void 0,
+            alertAlready: false,
+            tts: line.groups?.tts
+              ? line.groups.tts
+              : line.groups?.t
+              ? line.groups.action.match(/^.*<(?<name>.+)>.*$/)?.groups?.name
+              : void 0,
+          });
+          return total;
+        }, [] as Array<ITimelineLine>)
+        .sort((a, b) => a.time - b.time);
     },
     saveTimelineSettings() {
       localStorage.setItem(
@@ -196,3 +169,27 @@ export const useTimelineStore = defineStore("timeline", {
     },
   },
 });
+
+function parseTime(time: string): number {
+  const timeFormatType = time.match(/^(?<negative>-)?(?<mm>[^:：]+):(?<ss>[^:：]+)$/);
+  if (timeFormatType) {
+    return parseFloat(timeFormatType.groups!.mm) * 60 + parseFloat(timeFormatType.groups!.ss) * (timeFormatType.groups?.negative ? -1 : 1);
+  } else {
+    return parseFloat(time);
+  }
+}
+function parseAction(text: string): string {
+  [...text.matchAll(/\s*\<(?<name>[^\<\>]*?)!??\>(?<repeat>~)?(?<other>.*)\s*/gm)].forEach((item) => {
+    const action =
+      actionStore.getAction({ Name: item.groups!.name, IsPlayerAction: true }) ??
+      actionStore.getAction({ Name: item.groups!.name, IsPlayerAction: false });
+    if (action) {
+      text = `<div class="skill_icon">
+    <img src="${__SITE_IMG__}/${action.Url}.png"
+    onerror="javascript:this.src='${__SITE_IMG__BAK}/${action.Url}.png';this.onerror=null;">
+    </div><span>${item.groups?.repeat ? item.groups!.name : ""}${item.groups?.other ? item.groups.other : ""}</span>`;
+    }
+  });
+
+  return text;
+}

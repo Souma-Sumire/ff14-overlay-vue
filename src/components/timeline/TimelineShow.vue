@@ -34,7 +34,7 @@ $timelineWitdh: 160;
   width: calc(1px * var(--timeline-width, $timelineWitdh));
   list-style-type: none;
   color: white;
-  text-shadow: -1px 0 2px #000, 0 1px 2px #000, 1px 0 2px #000, 0 -1px 2px #000;
+  text-shadow: -1px 0 1px #000, 0 1px 1px #000, 1px 0 1px #000, 0 -1px 1px #000;
   font-family: "Microsoft Yahei UI";
   margin: 0em;
   padding: 0em 0.5em;
@@ -46,7 +46,7 @@ $timelineWitdh: 160;
     position: relative;
     opacity: var(--opacity, $opacity);
     transition-duration: calc(var(--trasDuration, $trasDuration) * 1s);
-    height: calc(48px * var(--normal-scale, $normalScale));
+    height: calc(40px * var(--normal-scale, $normalScale));
     &.fade {
       animation: myfade calc(var(--trasDuration, $trasDuration) * 1s) 1 forwards;
       height: calc(40px * var(--up-coming-scale, $upComingScale));
@@ -66,6 +66,7 @@ $timelineWitdh: 160;
       }
     }
     &.upcoming {
+      font-family: "SmartisanHei", "微软雅黑";
       opacity: 1;
       font-weight: bold;
       transition-property: all;
@@ -76,13 +77,18 @@ $timelineWitdh: 160;
         background-color: rgb(255, 136, 136);
       }
       :deep(span) {
-        font-size: calc(var(--font-size, $fontSize) * var(--up-coming-scale, $upComingScale) * 1px) !important;
+        &:first-of-type {
+          font-size: calc(var(--font-size, $fontSize) * var(--up-coming-scale, $upComingScale) * 1px) !important;
+        }
+        &:not(:first-of-type) {
+          display: none;
+        }
       }
       span :deep(.skill_icon) {
         transition-property: all;
         transition-duration: calc(var(--tras-duration, $trasDuration) * 1s);
         transition-timing-function: ease;
-        width: calc(46px * var(--up-coming-scale, $upComingScale));
+        width: calc(48px * var(--up-coming-scale, $upComingScale));
         height: calc(48px * var(--up-coming-scale, $upComingScale));
         img {
           transition-property: all;
@@ -102,7 +108,7 @@ $timelineWitdh: 160;
         }
       }
     }
-    aside {
+    > aside {
       position: absolute;
       top: 0;
       left: 0;
@@ -111,22 +117,26 @@ $timelineWitdh: 160;
       background-color: #88f;
     }
     section {
+      height: 100%;
       position: relative;
-      padding: 0 0.25em;
+      padding: 0 2px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: calc(var(--font-size, $fontSize) * 1px);
-      height: 100%;
-      span {
+      font-size: calc(calc(var(--font-size, $fontSize) * 1px) * var(--normal-scale, $normalScale));
+      // font-size: calc(calc(var(--font-size, $fontSize) * 1px));
+      > span {
         display: flex;
         align-items: center;
+        > :deep(span) {
+          white-space: nowrap;
+        }
       }
       span :deep(.skill_icon) {
         position: relative;
         top: 0px;
         left: calc(-4px * var(--normal-scale, $normalScale));
-        width: calc(46px * var(--normal-scale, $normalScale));
+        width: calc(48px * var(--normal-scale, $normalScale));
         height: calc(48px * var(--normal-scale, $normalScale));
         img {
           display: inline-block;

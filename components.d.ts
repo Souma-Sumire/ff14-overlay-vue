@@ -23,7 +23,7 @@ declare module 'vue' {
     ElSlider: typeof import('element-plus/es')['ElSlider']
     ElTable: typeof import('element-plus/es')['ElTable']
     ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
-    FFlogs: typeof import('./src/components/timeline/FFlogs.vue')['default']
+    FFlogsImport: typeof import('./src/components/timeline/FFlogsImport.vue')['default']
     TimelineSettings: typeof import('./src/components/timeline/TimelineSettings.vue')['default']
     TimelineShow: typeof import('./src/components/timeline/TimelineShow.vue')['default']
     UnlockedText: typeof import('./src/components/UnlockedText.vue')['default']

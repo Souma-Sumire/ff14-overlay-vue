@@ -10,7 +10,7 @@
       <!-- <el-button v-if="!isWSMode" type="success" @click="applyData()">应用</el-button> -->
     </el-header>
     <el-main>
-      <FFlogsVue
+      <FFlogsImport
         :settings="timelineStore.settings"
         :filters="timelineFilters"
         v-if="showFFlogs"
@@ -18,7 +18,7 @@
         @showFFlogsToggle="() => (showFFlogs = !showFFlogs)"
         @newTimeline="timelineStore.newTimeline"
       >
-      </FFlogsVue>
+      </FFlogsImport>
       <el-card class="box-card" v-show="showSettings">
         <el-descriptions title="时间轴参数" size="small" style="width: 100%" border>
           <el-descriptions-item
@@ -53,32 +53,34 @@
           <el-slider v-model="simulatedCombatTime" :min="-30" :max="1000" :step="0.1" show-input> </el-slider>
         </div>
         <el-row class="timeline-info">
-          <el-col :span="8">
-            <p>名称： <el-input v-model="timelineCurrentlyEditing.timeline.name" class="timeline-info-name"></el-input></p>
-            <p>
-              地图：
+          <div>
+            <p class="timeline-info-config">
+              <span>名称：</span> <el-input v-model="timelineCurrentlyEditing.timeline.name" class="timeline-info-name"></el-input>
+            </p>
+            <p class="timeline-info-config">
+              <span>地图：</span>
               <el-select v-model="timelineCurrentlyEditing.timeline.condition.zoneId" filterable>
                 <el-option v-for="zone in highDifficultZoneId" :key="zone.id" :label="zone.name" :value="zone.id"></el-option>
               </el-select>
             </p>
-            <p>
-              职业：
+            <p class="timeline-info-config">
+              <span>职业：</span>
               <el-select v-model="timelineCurrentlyEditing.timeline.condition.job" required placeholder="职业">
                 <el-option v-for="job in Util.getBattleJobs2()" :key="job" :label="Util.nameToCN(job).full" :value="job"></el-option>
               </el-select>
             </p>
-            <p>
-              来源：
+            <p class="timeline-info-config">
+              <span>来源：</span>
               <el-input v-model="timelineCurrentlyEditing.timeline.codeFight" disabled />
             </p>
-            <p>
-              创建：
+            <p class="timeline-info-config">
+              <span>创建：</span>
               <el-input v-model="timelineCurrentlyEditing.timeline.create" disabled />
             </p>
             <el-button type="danger" @click="deleteTimeline(timelineCurrentlyEditing.timeline)">删除</el-button>
             <el-button class="export" @click="exportTimeline([timelineCurrentlyEditing.timeline])">单独导出</el-button>
-          </el-col>
-          <el-col :span="10">
+          </div>
+          <div style="flex: 1">
             <el-input
               class="timeline-timeline-raw"
               v-model="timelineCurrentlyEditing.timeline.timeline"
@@ -86,8 +88,9 @@
               :rows="10"
               wrap="off"
               placeholder="请键入时间轴文本"
-          /></el-col>
-          <el-col :span="6">
+            />
+          </div>
+          <div style="max-height: 297px;">
             <div class="timeline-timeline-view">
               <TimelineShowVue
                 :config="timelineStore.configValues"
@@ -96,7 +99,7 @@
                 :show-style="timelineStore.showStyle"
               ></TimelineShowVue>
             </div>
-          </el-col>
+          </div>
         </el-row>
         <br />
       </el-card>
@@ -135,8 +138,8 @@
 <script lang="ts" setup>
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
-import { reactive, ref, toRef, watchEffect, onBeforeUnmount } from "vue";
-import FFlogsVue from "./FFlogs.vue";
+import { reactive, ref, toRef, watchEffect } from "vue";
+import FFlogsImport from "./FFlogsImport.vue";
 import TimelineShowVue from "./TimelineShow.vue";
 import zoneInfo from "../../resources/zoneInfo";
 import { useTimelineStore } from "../../store/timeline";
@@ -322,7 +325,6 @@ function importTimelines() {
           }).then((res) => {
             if (res.isDenied) {
               timelineStore.allTimelines.length = 0;
-              // timelineStore.allTimelines.push(...(JSON.parse(decodeURIComponent(window.atob(result.value))) as ITimeline[]));
               timelineStore.allTimelines.push(...(JSON.parse(result.value) as ITimeline[]));
               timelineStore.sortTimelines();
             }
@@ -356,8 +358,20 @@ function importTimelines() {
 .container {
   max-width: 1080px;
   .timeline-info {
+    display: flex;
+    flex-wrap: nowrap;
+    position: relative;
+    box-sizing: border-box;
+    flex-direction: row;
+    justify-content: space-between;
+    .timeline-info-config {
+      display: flex;
+      span {
+        white-space: nowrap;
+      }
+    }
     :deep(.el-input) {
-      width: 270px !important;
+      max-width: 200px;
       margin-right: 5px;
     }
     .timeline-timeline-view {
