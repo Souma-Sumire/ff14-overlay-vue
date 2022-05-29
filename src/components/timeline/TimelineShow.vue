@@ -78,12 +78,7 @@ $timelineWitdh: 160;
         background-color: rgb(255, 136, 136);
       }
       :deep(span) {
-        &:first-of-type {
-          font-size: calc(var(--font-size, $fontSize) * var(--up-coming-scale, $upComingScale) * 1px) !important;
-        }
-        &:not(:first-of-type) {
-          display: none;
-        }
+        font-size: calc(var(--font-size, $fontSize) * var(--up-coming-scale, $upComingScale) * 1px) !important;
       }
       span :deep(.skill_icon) {
         transition-property: all;
@@ -129,9 +124,21 @@ $timelineWitdh: 160;
       > span {
         display: flex;
         align-items: center;
-        > :deep(span) {
-          white-space: nowrap;
+        overflow: hidden;
+        &:first-of-type {
+          flex: 1;
         }
+        > :deep(span) {
+          // white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          flex: 1;
+        }
+      }
+      > :deep(div) {
+        width: calc(40px * var(--up-coming-scale, 1));
+        height: calc(40px * var(--up-coming-scale, 1));
+        top: calc(4px * var(--up-coming-scale, 1));
       }
       span :deep(.skill_icon) {
         position: relative;
