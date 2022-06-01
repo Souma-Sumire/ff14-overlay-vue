@@ -46,12 +46,6 @@ import { useTimelineStore } from "../store/timeline";
 import { Job } from "../types/Job";
 import { ITimeline, ITimelineCondition, ITimelineLine, ShowStyle, TimelineConfigValues } from "../types/Timeline";
 
-// const settingsBtnShow = ref(false);
-// document.addEventListener("onOverlayStateUpdate", (e: any) => (settingsBtnShow.value = !e.detail.isLocked));
-// startOverlayEvents();
-// const settingsBtnShow2 = computed(() => {
-//   return (document.querySelector(".unlocked") as HTMLElement).style.display !== "none";
-// });
 const timelineStore = useTimelineStore();
 const timelinePageData = reactive({
   loadedTimeline: [] as ITimelineLine[], //显示在页面上的时间轴
@@ -63,7 +57,6 @@ const offsetTimeMS = ref(0); //sync产生的时间轴偏移 会在baseTimeMs后�
 let runtimeTimer: NodeJS.Timer; //计时器用以循环刷新界面
 let ttsSuppressFlag = true; //防止tts重复
 let ttsSuppressMs = 300; // tts重复阈值
-let ttsSuppressTimer: NodeJS.Timer; // tts的timeout计时器
 //每次get时间轴时被传入的条件对象
 let condition: ITimelineCondition = {
   zoneId: "0",
@@ -71,7 +64,6 @@ let condition: ITimelineCondition = {
 };
 //保存最后一次选择的时间轴，用于团灭时重新加载
 let lastUsedTimeline: ITimeline;
-let inACTCombat = false;
 
 init();
 
@@ -119,6 +111,10 @@ function selectedTimeline(timeline: ITimeline) {
 
 //载入时间轴页面
 function mountTimeline(timeline: ITimeline) {
+  ttsSuppressFlag = false;
+  setTimeout(() => {
+    ttsSuppressFlag = true;
+  }, 1000);
   if (timeline && timeline?.timeline) {
     timelinePageData.loadedTimeline = timelineStore.parseTimeline(timeline.timeline);
     timelinePageData.loadedTimeline.sort((a, b) => a.time - b.time);
@@ -148,17 +144,13 @@ function startTimeline(countdownSeconds: number) {
   clearInterval(Number(runtimeTimer));
   runtimeTimer = setInterval(() => {
     runtimeTimeSeconds.value = (new Date().getTime() - baseTimeMs.value + offsetTimeMS.value) / 1000;
-    let nextTTSText: string | undefined;
-    timelinePageData.loadedTimeline
-      .filter((line) => line.tts && !line.alertAlready && line.time - timelineStore.configValues.ttsAdvance <= runtimeTimeSeconds.value)
-      .forEach((iLine) => {
-        iLine.alertAlready = true;
-        if (iLine.tts && ttsSuppressFlag) {
-          nextTTSText = iLine.tts;
-          ttsSuppressFlag = false;
-        }
-        if (nextTTSText) cactbotSay(nextTTSText);
-      });
+    const l = timelinePageData.loadedTimeline.find(
+      (line) => line.tts && !line.alertAlready && line.time - timelineStore.configValues.ttsAdvance <= runtimeTimeSeconds.value
+    );
+    if (l) {
+      l.alertAlready = true;
+      if (l.tts) cactbotSay(l.tts);
+    }
   }, timelineStore.configValues.refreshRateMs);
 }
 
@@ -203,10 +195,9 @@ function syncTimeline(targetTime: number) {
 //玩家状态（职业）
 function handlePlayerChangedEvent(e: any) {
   if (condition.job !== e.detail.job) {
-    localStorage.setItem("timelineLastJob", e.detail.job);
     condition.job = e.detail.job;
+    localStorage.setItem("timelineLastJob", e.detail.job);
   }
-  // timelineStore.playerJob = condition.job;
 }
 
 //切换场景
@@ -218,12 +209,13 @@ function handleChangeZone(e: any) {
 
 //调用TTS
 function cactbotSay(text: string) {
-  ttsSuppressFlag = false;
-  clearTimeout(Number(ttsSuppressTimer));
-  callOverlayHandler({ call: "cactbotSay", text: text });
-  ttsSuppressTimer = setTimeout(() => {
-    ttsSuppressFlag = true;
-  }, ttsSuppressMs);
+  if (ttsSuppressFlag) {
+    ttsSuppressFlag = false;
+    callOverlayHandler({ call: "cactbotSay", text: text });
+    setTimeout(() => {
+      ttsSuppressFlag = true;
+    }, ttsSuppressMs);
+  }
 }
 
 //接受广播
@@ -269,9 +261,8 @@ function handleInCombatChanged(ev: {
     inACTCombat: boolean;
   };
 }) {
-  if (!inACTCombat && ev.detail.inACTCombat) startTimeline(0);
-  if (inACTCombat && !ev.detail.inACTCombat) mountTimeline(lastUsedTimeline);
-  inACTCombat = ev.detail.inACTCombat;
+  if (ev.detail.inGameCombat && ev.detail.inACTCombat) startTimeline(0);
+  else if (!ev.detail.inGameCombat && !ev.detail.inACTCombat) mountTimeline(lastUsedTimeline);
 }
 </script>
 

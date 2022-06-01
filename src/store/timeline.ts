@@ -103,9 +103,9 @@ export const useTimelineStore = defineStore("timeline", {
       });
     },
     getTimeline(condition: ITimelineCondition): ITimeline[] {
-      return this.allTimelines.filter(
-        (t) => (t.condition.zoneId === "0" || t.condition.zoneId === condition.zoneId) && t.condition.job === condition.job
-      );
+      return this.allTimelines.filter((t) => {
+        return (t.condition.zoneId === "0" || t.condition.zoneId === condition.zoneId) && t.condition.job === condition.job;
+      });
     },
     parseTimeline(rawTimeline: string) {
       return [...rawTimeline.matchAll(this.timelineLegalRegular)]
