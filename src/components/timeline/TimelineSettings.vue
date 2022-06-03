@@ -50,7 +50,7 @@
       <el-card v-show="timelineCurrentlyEditing.timeline.create !== '空'">
         <div class="slider-demo-block">
           <span>模拟时间：</span>
-          <el-slider v-model="simulatedCombatTime" :min="-30" :max="1000" :step="0.1" show-input> </el-slider>
+          <el-slider v-model="simulatedCombatTime" :min="-30" :max="1500" :step="0.1" show-input> </el-slider>
         </div>
         <el-row class="timeline-info">
           <div>
