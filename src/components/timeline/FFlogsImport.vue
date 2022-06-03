@@ -305,12 +305,9 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
             "casts": "14",
             "damage-done": "1[56]",
           };
-          return `${item.sourceIsFriendly ? "" : "#"}${time} "--${item.actionName}--" sync /^.{14} \\w+ ${
-            viewType[item.view]
-          }:4.{7}:[^:]+:${item.actionId.toString(16).toUpperCase()}:/${item.window ? ` window ${item.window.join(",")}` : ""}`;
-          // return `${time} "--${item.actionName}--" sync /^.{14} \\w+ ${viewType[item.view]}:4.{7}:[^:]+:${item.actionId
-          //   .toString(16)
-          //   .toUpperCase()}:/${windowAction.has(item.actionId) ? ` window ${windowAction.get(item.actionId).join(",")}` : ""}`;
+          return `${time} "--${item.actionName}--" sync /^.{14} \\w+ ${viewType[item.view]}:4.{7}:[^:]+:${item.actionId
+            .toString(16)
+            .toUpperCase()}:/${item.window ? ` window ${item.window.join(",")}` : ""}`;
         }
       })
       .join("\n");
