@@ -34,15 +34,15 @@ function urlTool(url: string) {
   });
   return data;
 }
-function handleLogLine(event: any) {
+function handleLogLine(event: { line: string[] }): void {
   if (event.line[0] === "00" && event.line[2] === "0039") {
     const match =
       event.line[4].match(/当前所在副本区为“(?<zoneName>[^”]+)(?<zoneInstanced>[])”/) ??
       event.line[4].match(/You are now in the instanced area (?<zoneName>.+?)(?<zoneInstanced>[])”/) ??
       event.line[4].match(/インスタンスエリア「(?<zoneName>.+?)(?<zoneInstanced>[])」/);
     if (match) {
-      zoneName.value = match.groups.zoneName;
-      zoneInstanced.value = InstancedEnum[match.groups.zoneInstanced as keyof typeof InstancedEnum];
+      zoneName.value = match.groups!.zoneName;
+      zoneInstanced.value = InstancedEnum[match.groups!.zoneInstanced as keyof typeof InstancedEnum];
     }
   } else if (event.line[0] === "01") {
     zoneName.value = event.line[3];
