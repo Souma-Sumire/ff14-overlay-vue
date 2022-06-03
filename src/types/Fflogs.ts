@@ -70,6 +70,7 @@ export type FFlogsStance = {
   actionId: number;
   sourceIsFriendly: boolean;
   url: string;
+  window?:Array<number>
 }[];
 
 export type FFlogsQuery = {
@@ -82,7 +83,7 @@ export type FFlogsQuery = {
   abilityFilterCandidate: FFlogsStance;
   abilityFilterSelected: number[];
   abilityFilterEventsAfterFilterRawTimeline: string;
-  zoneID: string;
+  zoneID: number;
   player: { fights?: [{ id: number }]; guid?: number; icon?: FFIcon; id?: number; name?: string; server?: string };
   bossIDs: number[];
 };

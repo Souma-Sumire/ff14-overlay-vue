@@ -43,8 +43,9 @@
           >
             <img
               :src="`${siteImg}/${rule.url}.png`"
-              :onerror="`javascript:this.src='${siteImgBak}/${rule.url}.png';this.onerror=null;`"
               class="ability-filter-li-icon"
+              title=""
+              :onerror="`javascript:this.src='${siteImgBak}/${rule.url}.png';this.onerror=null;`"
             />{{ rule.actionName }}
           </el-option>
         </el-select>
@@ -61,6 +62,7 @@ import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 import { useActionStore } from "../../store/action";
 import { FFIconToName, FFlogsApiV1ReportEvents, FFlogsQuery, Friendlies, FFlogsView } from "../../types/FFlogs";
+import { factory } from "../../utils/timelineSpecialRules";
 
 enum QueryTextEnum {
   query = "查询",
@@ -88,15 +90,10 @@ const fflogsQueryConfig: FFlogsQuery = reactive({
   abilityFilterSelected: [],
   abilityFilterEventsAfterFilterRawTimeline: "",
   player: {},
-  zoneID: "0",
+  zoneID: 0,
   bossIDs: [],
 });
 claerFFlogsQueryConfig();
-
-const windowAction = new Map();
-windowAction.set(26155, [999, 999]); //海德林转场 众生离绝
-windowAction.set(28027, [999, 999]); //佐迪亚克转场 悼念
-windowAction.set(26340, [999, 999]); //P3S转场 黑暗不死鸟
 
 //fflogs导入第1步：用户点击查询按钮
 function queryFFlogsReportFights(url: string) {
@@ -254,6 +251,7 @@ async function queryFFlogsReportEvents(view: FFlogsView = "casts") {
         actionId: event.ability.guid,
         sourceIsFriendly: event.sourceIsFriendly,
         url: action?.Url ?? "000000/000405",
+        window: undefined,
       });
     }
     if (fflogsQueryConfig.player.icon && props.filters[fflogsQueryConfig.player.icon]) {
@@ -286,11 +284,13 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
     }
 
     //解析处理格式化一条龙
-    fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline = fflogsQueryConfig.abilityFilterEvents
+    fflogsQueryConfig.abilityFilterEvents = fflogsQueryConfig.abilityFilterEvents
       .filter((event) => {
         return (event.sourceIsFriendly && fflogsQueryConfig.abilityFilterSelected.includes(event.actionId)) || !event.sourceIsFriendly;
       })
-      .sort((a, b) => a.time - b.time)
+      .sort((a, b) => a.time - b.time);
+    fflogsQueryConfig.abilityFilterEvents = factory(fflogsQueryConfig.abilityFilterEvents, Number(fflogsQueryConfig.zoneID));
+    fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline = fflogsQueryConfig.abilityFilterEvents
       .map((item) => {
         let time = `${
           (Array(2).join("0") + Math.floor(item.time / 60)).slice(-2) +
@@ -303,15 +303,14 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
         } else {
           const viewType: Partial<Record<FFlogsView, string>> = {
             "casts": "14",
-            "damage-done": "[156]",
+            "damage-done": "1[56]",
           };
-          if (windowAction.has(item.actionId)) {
-            return `${time} "--${item.actionName}--" sync /^.{14} \\w+ ${viewType[item.view]}:4.{7}:[^:]+:${item.actionId
-              .toString(16)
-              .toUpperCase()}:/ window ${windowAction.get(item.actionId).join(",")}`;
-          } else {
-            return `# ${time} "--${item.actionName}--"`;
-          }
+          return `${item.sourceIsFriendly ? "" : "#"}${time} "--${item.actionName}--" sync /^.{14} \\w+ ${
+            viewType[item.view]
+          }:4.{7}:[^:]+:${item.actionId.toString(16).toUpperCase()}:/${item.window ? ` window ${item.window.join(",")}` : ""}`;
+          // return `${time} "--${item.actionName}--" sync /^.{14} \\w+ ${viewType[item.view]}:4.{7}:[^:]+:${item.actionId
+          //   .toString(16)
+          //   .toUpperCase()}:/${windowAction.has(item.actionId) ? ` window ${windowAction.get(item.actionId).join(",")}` : ""}`;
         }
       })
       .join("\n");
@@ -346,7 +345,7 @@ function claerFFlogsQueryConfig() {
   fflogsQueryConfig.abilityFilterSelected = [];
   fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline = "";
   fflogsQueryConfig.player = {};
-  fflogsQueryConfig.zoneID = "0";
+  fflogsQueryConfig.zoneID = 0;
   fflogsQueryConfig.bossIDs = [];
 }
 </script>
