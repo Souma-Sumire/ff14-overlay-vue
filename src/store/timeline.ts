@@ -65,12 +65,13 @@ let showStyle: ShowStyle = {
   "--up-coming-scale": 1,
   "--tras-duration": 0.66,
 };
+const reg = `^[ \\t　]*(?<time>[\\-:：\\d.]+) +(?:["']?(?<action>[^"\\n\\r]+)["']?)?(?:[ \\t　]+(?<t>tts)[ \\t　]?)?(?: ["']??(?<tts>[^" \\t　\\n\\r]+)["']??)?(?:[ \\t　]+sync[ \\t　]*\\/(?<sync>.+)\\/)?(?:[ \\t　]*window[ \\t　]*(?<windowBefore>\\d+)(?:,[ \\t　]*(?<windowAfter>\\d+))?)?(?:[ \\t　]*jump[ \\t　]*(?<jump>\\d+))?[ \\t　]*$`;
 
 export const useTimelineStore = defineStore("timeline", {
   state: () => {
     return {
-      timelineLegalRegular:
-        /^[ \t　]*(?<time>[\-:：\d.]+) +(?:["']?(?<action>[^"\n\r]+)["']?)?(?:[ \t　]+(?<t>tts)[ \t　]?)?(?: ["']??(?<tts>[^" \t　\n\r]+)["']??)?(?:[ \t　]+sync[ \t　]*\/(?<sync>.+)\/)?(?:[ \t　]*window[ \t　]*(?<windowBefore>\d+)(?:,[ \t　]*(?<windowAfter>\d+))?)?(?:[ \t　]*jump[ \t　]*(?<jump>\d+))?[ \t　]*$/gm,
+      reg: reg,
+      timelineLegalRegular: new RegExp(reg, "gm"),
       allTimelines: [] as ITimeline[],
       configValues,
       configTranslate,
@@ -84,7 +85,7 @@ export const useTimelineStore = defineStore("timeline", {
   actions: {
     newTimeline(
       title: string = "Demo",
-      condition: ITimelineCondition = { zoneId: "0", job: "GLA" },
+      condition: ITimelineCondition = { zoneId: "0", job: "NONE" },
       rawTimeline: string = `-20 "<中间学派>刷盾"
 0 "战斗开始"
 10 "<死斗>~" tts
@@ -104,7 +105,10 @@ export const useTimelineStore = defineStore("timeline", {
     },
     getTimeline(condition: ITimelineCondition): ITimeline[] {
       return this.allTimelines.filter((t) => {
-        return (t.condition.zoneId === "0" || t.condition.zoneId === condition.zoneId) && t.condition.job === condition.job;
+        return (
+          (t.condition.zoneId === "0" || t.condition.zoneId === condition.zoneId) &&
+          (t.condition.job === "NONE" || t.condition.job === condition.job)
+        );
       });
     },
     parseTimeline(rawTimeline: string) {
