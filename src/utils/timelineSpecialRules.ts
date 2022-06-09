@@ -8,10 +8,10 @@ windowAction.set(25533, [20, 20]); //绝龙诗 万物终结
 windowAction.set(26376, [999,999]); //绝龙诗 灭绝之诗
 windowAction.set(26814, [999,999]); //绝龙诗 邪龙爪牙
 windowAction.set(25313, [200,200]); //绝龙诗 空间牢狱
-windowAction.set(27526, [999,999]); //绝龙诗 圣徒化
-windowAction.set(26215, [999,999]); //绝龙诗 P6: Nidhogg v2
-windowAction.set(29050, [200,200]); //绝龙诗 P6.5: Eyes v2
-windowAction.set(29156, [10,20]); //绝龙诗 冲击波
+windowAction.set(27526, [1000,10]); //绝龙诗 圣徒化
+windowAction.set(26215, [500,10]); //绝龙诗 P6: Nidhogg v2
+windowAction.set(29050, [200,10]); //绝龙诗 P6.5: Eyes v2
+windowAction.set(29156, [20,20]); //绝龙诗 冲击波
 
 
 
