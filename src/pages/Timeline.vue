@@ -178,8 +178,6 @@ function handleLogEvent(e: any) {
       const timelineSync = timelinePageData.loadedTimeline.find((item) => {
         return (
           item.sync &&
-          item.windowBefore >= 0 &&
-          item.windowAfter >= 0 &&
           item.sync.test(log) &&
           runtimeTimeSeconds.value >= item.time - item.windowBefore &&
           runtimeTimeSeconds.value <= item.time + Number(item.windowAfter)
