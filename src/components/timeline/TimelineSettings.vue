@@ -77,8 +77,9 @@
               <span>创建：</span>
               <el-input v-model="timelineCurrentlyEditing.timeline.create" disabled />
             </p>
-            <el-button type="danger" @click="deleteTimeline(timelineCurrentlyEditing.timeline)">删除</el-button>
+            <el-button type="success" @click="checkTimelineRaw(timelineCurrentlyEditing.timeline)">检查</el-button>
             <el-button class="export" @click="exportTimeline([timelineCurrentlyEditing.timeline])">单独导出</el-button>
+            <el-button type="danger" @click="deleteTimeline(timelineCurrentlyEditing.timeline)">删除</el-button>
           </div>
           <div style="flex: 1">
             <el-input
@@ -156,7 +157,7 @@ const isWSMode = location.href.includes("OVERLAY_WS=");
 
 init();
 
-function init() {
+function init(): void {
   for (const key in zoneInfo) {
     if (Object.prototype.hasOwnProperty.call(zoneInfo, key)) {
       const element = zoneInfo[key];
@@ -173,7 +174,7 @@ function init() {
   saveTimelineStoreData();
 }
 
-function applyData() {
+function applyData(): void {
   callOverlayHandler({
     call: "broadcast",
     source: "soumuaTimelineSetting",
@@ -184,8 +185,8 @@ function applyData() {
 }
 
 //通信数据
-function broadcastData() {
-  if (!!urlTool(location.href)?.OVERLAY_WS) {
+function broadcastData(): void {
+  if (!!urlTool({ url: location.href })?.OVERLAY_WS) {
     applyData();
     Swal.fire({
       title: "已尝试进行通信,请检查ACT悬浮窗是否接收",
@@ -201,7 +202,7 @@ function broadcastData() {
 }
 
 //获取URL参数
-function urlTool(url: string) {
+function urlTool({ url }: { url: string }): any {
   const array = url.split("?")!.pop()!.split("&");
   const data: any = {};
   array!.forEach((ele) => {
@@ -211,12 +212,12 @@ function urlTool(url: string) {
   return data;
 }
 
-function fflogsImportClick() {
+function fflogsImportClick(): void {
   showFFlogs.value = !showFFlogs.value;
   clearCurrentlyTimeline();
 }
 
-function clearCurrentlyTimeline() {
+function clearCurrentlyTimeline(): void {
   timelineCurrentlyEditing.timeline = {
     name: "空",
     condition: { zoneId: "0", job: "NONE" },
@@ -226,17 +227,17 @@ function clearCurrentlyTimeline() {
   };
 }
 
-function newDemoTimeline() {
+function newDemoTimeline(): void {
   clearCurrentlyTimeline();
   timelineStore.newTimeline();
 }
 
-function editTimeline(timeline: ITimeline) {
+function editTimeline(timeline: ITimeline): void {
   timelineCurrentlyEditing.timeline = timeline;
 }
 
 //删除某时间轴 来自点击事件
-function deleteTimeline(target: ITimeline) {
+function deleteTimeline(target: ITimeline): void {
   Swal.fire({
     title: `确定要删除${target.name}吗？`,
     text: "这将无法撤回！",
@@ -258,12 +259,12 @@ function deleteTimeline(target: ITimeline) {
 }
 
 //初始化时load
-function loadTimelineStoreData() {
+function loadTimelineStoreData(): void {
   timelineStore.loadTimelineSettings();
 }
 
 //开启watch去save
-function saveTimelineStoreData() {
+function saveTimelineStoreData(): void {
   watchEffect(
     () => {
       timelineStore.saveTimelineSettings();
@@ -272,7 +273,7 @@ function saveTimelineStoreData() {
   );
 }
 
-function exportTimeline(timelineArr: ITimeline[]) {
+function exportTimeline(timelineArr: ITimeline[]): void {
   let clipboard = new ClipboardJS(".export", {
     text: () => {
       return JSON.stringify(timelineArr);
@@ -294,7 +295,7 @@ function exportTimeline(timelineArr: ITimeline[]) {
   });
 }
 
-function importTimelines() {
+function importTimelines(): void {
   Swal.fire({
     title: "输入导出的字符串",
     input: "text",
@@ -336,6 +337,22 @@ function importTimelines() {
       }
     }
   });
+}
+
+function checkTimelineRaw(timeline: ITimeline): void {
+  const re = new RegExp(timelineStore.reg);
+  let errorList: { t: string; index: number }[] = [];
+  const everyLine = timeline.timeline.split("\n");
+  everyLine.forEach((t, index) => {
+    if (!re.test(t)) {
+      errorList.push({ t, index });
+    }
+  });
+  Swal.fire({
+    title: `正确：${everyLine.length - errorList.length}，错误：${errorList.length}。`,
+    html: `${errorList.length > 0 ? errorList.map((v) => `<p style="white-space: nowrap;">第${v.index + 1}行：${v.t}</p>`).join("") : ""}`,
+  });
+  // return errorList.length > 0;
 }
 </script>
 
