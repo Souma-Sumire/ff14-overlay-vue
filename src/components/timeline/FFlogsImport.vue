@@ -72,7 +72,7 @@ enum QueryTextEnum {
 const actionStore = useActionStore();
 const props = defineProps<{ settings: { api: any }; filters: any }>();
 const emit = defineEmits(["newTimeline", "showFFlogsToggle", "clearCurrentlyTimeline"]);
-const urlRe = /^.*?(?<anonymous>a:)?(?<code>[\d\w]{16,})#fight=(?<fight>\d+|last)/;
+const urlRe = /(?<=^|\/)(?<code>[\d\w]{16,})\/?#fight=(?<fight>\d+|last)/;
 const siteImg = __SITE_IMG__;
 const siteImgBak = __SITE_IMG__BAK;
 
@@ -182,6 +182,7 @@ async function handleFFlogsQueryResultFriendliesList(player: Friendlies) {
 
 //fflogs导入第3步：通过API获取选定玩家所有casts
 async function queryFFlogsReportEvents(view: FFlogsView = "casts") {
+  // view = `damage-done`;
   Swal.fire({ text: "正在解析数据，耗时可能较长，请耐心等待。(步骤2/3)", showConfirmButton: false });
   let resEvents: FFlogsApiV1ReportEvents[] = [];
   fflogsQueryConfig.abilityFilterEvents.length = 0;
@@ -270,62 +271,75 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
   }
   //询问是否添加TTS
   let addTTS = false;
+  let timeFormat: boolean;
   Swal.fire({
-    title: "是否自动添加TTS语音?",
+    title: "选择时间格式",
     showDenyButton: true,
     showCancelButton: false,
-    confirmButtonText: "是",
-    denyButtonText: `否`,
-  }).then((result) => {
-    if (result.isConfirmed) {
-      addTTS = true;
-    } else if (result.isDenied) {
-      addTTS = false;
-    }
-
-    //解析处理格式化一条龙
-    fflogsQueryConfig.abilityFilterEvents = fflogsQueryConfig.abilityFilterEvents
-      .filter((event) => {
-        return (event.sourceIsFriendly && fflogsQueryConfig.abilityFilterSelected.includes(event.actionId)) || !event.sourceIsFriendly;
-      })
-      .sort((a, b) => a.time - b.time);
-    fflogsQueryConfig.abilityFilterEvents = factory(fflogsQueryConfig.abilityFilterEvents, Number(fflogsQueryConfig.zoneID));
-    fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline = fflogsQueryConfig.abilityFilterEvents
-      .map((item) => {
-        let time = `${
-          (Array(2).join("0") + Math.floor(item.time / 60)).slice(-2) +
-          ":" +
-          (Array(2).join("0") + Math.floor(item.time % 60)).slice(-2) +
-          (item.time % 60).toFixed(1).replace(/^\d+(?=\.)/, "")
-        }`;
-        if (item.sourceIsFriendly) {
-          return `${time} "<${item.actionName}>~"${addTTS ? ` tts "${item.actionName}"` : ""}`;
-        } else {
-          const viewType: Partial<Record<FFlogsView, string>> = {
-            "casts": "14",
-            "damage-done": "1[56]",
-          };
-          return `${time} "--${item.actionName}--" sync /^.{14} \\w+ ${viewType[item.view]}:4.{7}:[^:]+:${item.actionId
-            .toString(16)
-            .toUpperCase()}:/${item.window ? ` window ${item.window.join(",")}` : ""}`;
-        }
-      })
-      .join("\n");
-    emit(
-      "newTimeline",
-      `导入${fflogsQueryConfig.player!.name}`,
-      { zoneId: fflogsQueryConfig.zoneID.toString(), job: FFIconToName(fflogsQueryConfig.player.icon ?? "NONE") },
-      fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline,
-      `${fflogsQueryConfig.code}#fight=${fflogsQueryConfig.fightIndex + 1}`
-    );
-    claerFFlogsQueryConfig();
-    emit("showFFlogsToggle");
+    confirmButtonText: "秒数",
+    denyButtonText: `MM:SS`,
+  }).then((r) => {
+    timeFormat = r.isConfirmed;
     Swal.fire({
-      position: "top-end",
-      icon: "success",
-      title: "已生成新时间轴",
-      showConfirmButton: false,
-      timer: 1500,
+      title: "是否自动添加TTS语音?",
+      showDenyButton: true,
+      showCancelButton: false,
+      confirmButtonText: "是",
+      denyButtonText: `否`,
+    }).then((result) => {
+      if (result.isConfirmed) {
+        addTTS = true;
+      } else if (result.isDenied) {
+        addTTS = false;
+      }
+      //解析处理格式化一条龙
+      fflogsQueryConfig.abilityFilterEvents = fflogsQueryConfig.abilityFilterEvents
+        .filter((event) => {
+          return (event.sourceIsFriendly && fflogsQueryConfig.abilityFilterSelected.includes(event.actionId)) || !event.sourceIsFriendly;
+        })
+        .sort((a, b) => a.time - b.time);
+      fflogsQueryConfig.abilityFilterEvents = factory(fflogsQueryConfig.abilityFilterEvents, Number(fflogsQueryConfig.zoneID));
+      fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline = fflogsQueryConfig.abilityFilterEvents
+        .map((item) => {
+          let time = timeFormat
+            ? item.time
+            : `${
+                (Array(2).join("0") + Math.floor(item.time / 60)).slice(-2) +
+                ":" +
+                (Array(2).join("0") + Math.floor(item.time % 60)).slice(-2) +
+                (item.time % 60).toFixed(1).replace(/^\d+(?=\.)/, "")
+              }`;
+          if (item.sourceIsFriendly) {
+            return `${time} "<${item.actionName}>~"${addTTS ? ` tts "${item.actionName}"` : ""}`;
+          } else if (item.window === undefined) {
+            return `# ${time} "--${item.actionName}--"`;
+          } else {
+            const viewType: Partial<Record<FFlogsView, string>> = {
+              "casts": "14",
+              "damage-done": "1[56]",
+            };
+            return `${time} "--${item.actionName}--" sync /^.{14} \\w+ ${viewType[item.view]}:4.{7}:[^:]+:${item.actionId
+              .toString(16)
+              .toUpperCase()}:/${item.window ? ` window ${item.window.join(",")}` : ""}`;
+          }
+        })
+        .join("\n");
+      emit(
+        "newTimeline",
+        `导入${fflogsQueryConfig.player!.name}`,
+        { zoneId: fflogsQueryConfig.zoneID.toString(), job: FFIconToName(fflogsQueryConfig.player.icon ?? "NONE") },
+        fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline,
+        `${fflogsQueryConfig.code}#fight=${fflogsQueryConfig.fightIndex + 1}`
+      );
+      claerFFlogsQueryConfig();
+      emit("showFFlogsToggle");
+      Swal.fire({
+        position: "top-end",
+        icon: "success",
+        title: "已生成新时间轴",
+        showConfirmButton: false,
+        timer: 1500,
+      });
     });
   });
 }
