@@ -277,11 +277,11 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
     showDenyButton: true,
     showCancelButton: false,
     confirmButtonText: "秒数",
-    denyButtonText: `MM:SS`,
+    denyButtonText: `分:秒`,
   }).then((r) => {
     timeFormat = r.isConfirmed;
     Swal.fire({
-      title: "是否自动添加TTS语音?",
+      title: "是否为所有技能添加TTS语音?",
       showDenyButton: true,
       showCancelButton: false,
       confirmButtonText: "是",
