@@ -344,7 +344,7 @@ function checkTimelineRaw(timeline: ITimeline): void {
   let errorList: { t: string; index: number }[] = [];
   const everyLine = timeline.timeline.split("\n");
   everyLine.forEach((t, index) => {
-    if (!re.test(t)) {
+    if (!re.test(t) && !/^#/.test(t)) {
       errorList.push({ t, index });
     }
   });
