@@ -5,12 +5,11 @@
       <router-link to="/timeline/settings?OVERLAY_WS=ws://127.0.0.1:10501/ws">时间轴悬浮窗设置</router-link>
       <router-link to="/instancedAreaInfo">副本区信息显示</router-link>
       <!-- <router-link to="/stageProgramme">舞台节目单</router-link> -->
-      <!-- <router-link to="/mpTick">回蓝监控</router-link> -->
     </li>
     <br />
     <li>
       <a href="https://souma.diemoe.net/dist/">旧导航页面</a>
-      <a href="https://soumasumire.gitee.io/ffxiv-overlay/">旧导航页面备用地址</a>
+      <a href="https://souma.diemoe.net/ffxiv_zhpatch/">国际服汉化补丁</a>
     </li>
   </ul>
 </template>
