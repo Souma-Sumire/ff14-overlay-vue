@@ -13,6 +13,7 @@ windowAction.set(26215, [500, 10]); //绝龙诗 P6: Nidhogg v2
 windowAction.set(29050, [200, 10]); //绝龙诗 P6.5: Eyes v2
 windowAction.set(29156, [20, 20]); //绝龙诗 冲击波
 windowAction.set(27973, [20, 20]); //绝龙诗 邪念之火
+windowAction.set(27937, [20, 20]); //绝龙诗 绝命怒嚎
 
 export function factory(events: FFlogsStance, zoneID: number): FFlogsStance {
   for (const event of events) event.window = windowAction.get(event.actionId);
