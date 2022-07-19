@@ -1,3 +1,4 @@
+import { ActionEnum } from "../types/Action";
 import { defineStore } from "pinia";
 import {
   ITimeline,
@@ -13,6 +14,7 @@ import { useActionStore } from "./action";
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 import Util from "../utils/util";
+import { IActionData } from "../types/Action";
 
 const actionStore = useActionStore();
 class Timeline implements ITimeline {
@@ -184,9 +186,12 @@ function parseTime(time: string): number {
 }
 function parseAction(text: string): string {
   [...text.matchAll(/\s*\<(?<name>[^\<\>]*?)!??\>(?<repeat>~)?(?<other>.*)\s*/gm)].forEach((item) => {
+    // const action =
+    //   actionStore.getAction({ Name: item.groups!.name, IsPlayerAction: true }) ??
+    //   actionStore.getAction({ Name: item.groups!.name, IsPlayerAction: false });
     const action =
-      actionStore.getAction({ Name: item.groups!.name, IsPlayerAction: true }) ??
-      actionStore.getAction({ Name: item.groups!.name, IsPlayerAction: false });
+      actionStore.getActionByName(item.groups!.name, (a: IActionData) => a[ActionEnum.IsPlayerAction]) ??
+      actionStore.getActionByName(item.groups!.name, () => true);
     if (action) {
       text = `<div class="skill_icon">
     <img src="${__SITE_IMG__}/${action.Url}.png"

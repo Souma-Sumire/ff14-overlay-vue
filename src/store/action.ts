@@ -1,67 +1,71 @@
-import actions from "../resources/action.json";
 import { defineStore } from "pinia";
-import { IAction, IActionJson, IActionOptions } from "../types/Action";
+import { IAction, ActionEnum } from "../types/Action";
+import { actions } from "../resources/action";
 import Util from "../utils/util";
-
-enum ActionEnum {
-  "Id",
-  "Name",
-  "Icon",
-  "ActionCategory",
-  "ClassJob",
-  "ClassJobLevel",
-  "IsRoleAction",
-  "Cast100ms",
-  "Recast100ms",
-  "MaxCharges",
-  "IsPvP",
-  "IsPlayerAction",
-}
-
 export const useActionStore = defineStore("action", {
   state: () => {
     return {};
   },
   getters: {},
   actions: {
-    getAction(options: IActionOptions): (IAction & { Url?: string }) | undefined {
-      const action: any = (actions as any).find((item: any) => {
-        if (options?.IsPlayerAction && item[ActionEnum.Icon] === 405) return;
-        return Object.entries(options).every(([key, value]) => {
-          return item[ActionEnum[key as any]] === value;
-        });
-      });
-      if (action) {
-        return createAction(action);
+    getActionById(id: number): IAction | undefined {
+      return createActionById(id);
+    },
+    getActionByName(name: string, fn: Function): IAction | undefined {
+      for (const key in actions) {
+        if (Object.prototype.hasOwnProperty.call(actions, key)) {
+          const action = actions[key];
+          if (action[ActionEnum.Name] === name && fn(action)) return createActionById(Number(key));
+        }
       }
     },
-    getActions(options: IActionOptions): (IAction & { Url?: string })[] | undefined {
-      let _actions: any[] = (actions as []).filter((item: any) => {
-        return Object.entries(options).every(([key, value]) => {
-          return item[ActionEnum[key as any]] === value;
-        });
-      });
-      for (let i = 0; i < _actions.length; i++) {
-        _actions[i] = createAction(_actions[i]);
-      }
-      if (_actions) return _actions;
-    },
+    // getAction(options: IActionOptions): (IAction & { Url?: string }) | undefined {
+    // const action: any = (actions as any).find((item: any) => {
+    //   if (options?.IsPlayerAction && item[ActionEnum.Icon] === 405) return;
+    //   return Object.entries(options).every(([key, value]) => {
+    //     return item[ActionEnum[key as any]] === value;
+    //   });
+    // });
+    // for (const key in actions) {
+    // if (Object.prototype.hasOwnProperty.call(actions, key)) {
+    // const element = actions[key];
+    // for (const key in actions) {
+    // const element = actions[key];
+    // }
+    // }
+    // }
+    // if (action) {
+    //   return createAction(action);
+    // }
+    // },
+    // getActions(options: IActionOptions): (IAction & { Url?: string })[] | undefined {
+    // let _actions: any[] = (actions as []).filter((item: any) => {
+    //   return Object.entries(options).every(([key, value]) => {
+    //     return item[ActionEnum[key as any]] === value;
+    //   });
+    // });
+    // for (let i = 0; i < _actions.length; i++) {
+    //   _actions[i] = createAction(_actions[i]);
+    // }
+    // if (_actions) return _actions;
+    // },
   },
 });
 
-function createAction(action: IActionJson): IAction {
-  const actionId: number = action[ActionEnum.Id];
+function createActionById(id: number): IAction | undefined {
+  const action: any[] = actions[id];
+  if (action === undefined) return undefined;
   return {
-    Id: actionId,
+    Id: id,
     Name: action[ActionEnum.Name],
-    Icon: traitIcon[actionId] ?? action[ActionEnum.Icon],
-    ActionCategory: traitActionCategory[actionId] ?? action[ActionEnum.ActionCategory],
+    Icon: traitIcon[id] ?? action[ActionEnum.Icon],
+    ActionCategory: traitActionCategory[id] ?? action[ActionEnum.ActionCategory],
     ClassJob: Util.jobEnumToJob(action[ActionEnum.ClassJob]),
     ClassJobLevel: action[ActionEnum.ClassJobLevel],
     IsRoleAction: action[ActionEnum.IsRoleAction],
     Cast100ms: action[ActionEnum.Cast100ms],
-    Recast100ms: traitRecast100ms[actionId] ?? action[ActionEnum.Recast100ms],
-    MaxCharges: traitMaxCharges[actionId] ?? action[ActionEnum.MaxCharges],
+    Recast100ms: traitRecast100ms[id] ?? action[ActionEnum.Recast100ms],
+    MaxCharges: traitMaxCharges[id] ?? action[ActionEnum.MaxCharges],
     IsPvP: action[ActionEnum.IsPvP],
     IsPlayerAction: action[ActionEnum.IsPlayerAction],
     Url: createIconUrl(action[ActionEnum.Icon]),
