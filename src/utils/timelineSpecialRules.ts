@@ -14,10 +14,11 @@ windowAction.set(29050, [200, 10]); //绝龙诗 P6.5: Eyes v2
 windowAction.set(29156, [20, 20]); //绝龙诗 冲击波
 windowAction.set(27973, [20, 20]); //绝龙诗 邪念之火
 windowAction.set(27937, [20, 20]); //绝龙诗 绝命怒嚎
+windowAction.set(28060, [20, 20]); //绝龙诗 骑龙剑百京核爆
 
 export function factory(events: FFlogsStance, zoneID: number): FFlogsStance {
   for (const event of events) event.window = windowAction.get(event.actionId);
-  if (zoneID === 968 && events.length > 0 && events[0].actionId === 25544) {
+  if (zoneID === 968 && events.length > 0 && events.filter((v) => !v.sourceIsFriendly)[0].actionId === 25544) {
     events[0].window = [200, 0];
     for (const event of events) event.time += 180;
   }
