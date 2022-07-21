@@ -9,6 +9,7 @@ const router = createRouter({
     { path: "/timeline/settings", component: () => import("../components/timeline/TimelineSettings.vue"), meta: { title: "时间轴编辑" } },
     { path: "/instancedAreaInfo", component: () => import("../pages/InstancedAreaInfo.vue"), meta: { title: "副本区信息" } },
     { path: "/stageProgramme", component: () => import("../pages/StageProgramme.vue"), meta: { title: "舞台节目单" } },
+    { path: "/DSRP6", component: () => import("../pages/DSRP6.vue"), meta: { title: "绝龙诗P6" } },
   ],
 });
 router.afterEach((to) => {
