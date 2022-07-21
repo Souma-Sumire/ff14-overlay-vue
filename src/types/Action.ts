@@ -27,34 +27,6 @@ export enum ActionEnum {
   "IsPvP",
   "IsPlayerAction",
 }
-// export type IActionOptions = {
-//   Id?: number;
-//   Name?: string;
-//   Icon?: number;
-//   ActionCategory?: ActionCategoryEnum;
-//   ClassJob?: number;
-//   ClassJobLevel?: number;
-//   IsRoleAction?: boolean;
-//   Cast100ms?: number;
-//   Recast100ms?: number;
-//   MaxCharges?: number;
-//   IsPvP?: boolean;
-//   IsPlayerAction?: boolean;
-// };
-// export enum ActionEnum {
-//   Id,
-//   Name,
-//   Icon,
-//   ActionCategory,
-//   ClassJob,
-//   ClassJobLevel,
-//   IsRoleAction,
-//   Cast100ms,
-//   Recast100ms,
-//   MaxCharges,
-//   IsPvP,
-//   IsPlayerAction,
-// }
 export enum ActionCategoryEnum {
   自动攻击 = 1,
   魔法 = 2,
