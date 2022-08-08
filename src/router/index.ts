@@ -10,6 +10,7 @@ const router = createRouter({
     { path: "/instancedAreaInfo", component: () => import("../pages/InstancedAreaInfo.vue"), meta: { title: "副本区信息" } },
     { path: "/stageProgramme", component: () => import("../pages/StageProgramme.vue"), meta: { title: "舞台节目单" } },
     { path: "/DSRP6", component: () => import("../pages/DSRP6.vue"), meta: { title: "绝龙诗P6" } },
+    { path: "/obs", component: () => import("../pages/Obs.vue"), meta: { title: "obs自动录制" } },
   ],
 });
 router.afterEach((to) => {
