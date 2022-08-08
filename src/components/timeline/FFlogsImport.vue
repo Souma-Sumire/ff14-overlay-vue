@@ -314,16 +314,16 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
               }`;
           if (item.sourceIsFriendly) {
             return `${time} "<${item.actionName}>~"${addTTS ? ` tts "${item.actionName}"` : ""}`;
-          } else if (item.window === undefined) {
-            return `# ${time} "--${item.actionName}--"`;
+            // } else if (item.window === undefined) {
+            //   return `# ${time} "--${item.actionName}--"`;
           } else {
             const viewType: Partial<Record<FFlogsView, string>> = {
               "casts": "14",
               "damage-done": "1[56]",
             };
-            return `${time} "--${item.actionName}--" sync /^.{14} \\w+ ${viewType[item.view]}:4.{7}:[^:]+:${item.actionId
-              .toString(16)
-              .toUpperCase()}:/${item.window ? ` window ${item.window.join(",")}` : ""}`;
+            return `${item.window === undefined ? "// " : ""}${time} "--${item.actionName}--" sync /^.{14} \\w+ ${
+              viewType[item.view]
+            }:4.{7}:[^:]+:${item.actionId.toString(16).toUpperCase()}:/${` window ${(item.window ?? [12, 12]).join(",")}`}`;
           }
         })
         .join("\n");
