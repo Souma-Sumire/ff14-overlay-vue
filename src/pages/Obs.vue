@@ -4,7 +4,7 @@
     <br />
     端口<input type="text" v-model="data.port" />
     <br />
-    密码<input type="password" v-model="data.password" autocomplete />
+    密码<input type="password" v-model="data.password" autocomplete="on" />
     <br />
     <label style="user-select: none" for="auto"> <input type="checkbox" id="auto" v-model="data.autoConnect" /> 自动连接 </label>
     <label style="user-select: none" for="partyLength">
@@ -43,6 +43,9 @@ addOverlayListener("onLogEvent", handleLogEvent);
 addOverlayListener("onInCombatChangedEvent", handleInCombatChanged);
 addOverlayListener("PartyChanged", handlePartyChanged);
 startOverlayEvents();
+setTimeout(async () => {
+  if (data.autoConnect) await ObsConnect();
+}, 1000);
 function loadSettings() {
   const p = JSON.parse(localStorage.getItem("ObsData") ?? "{}");
   data.ip = p?.ip ?? data.ip;
@@ -60,7 +63,7 @@ function onConnectionClosed() {
   data.status = "closed";
   data.connect = false;
 }
-async function handleClickToConnect() {
+async function ObsConnect() {
   try {
     const { obsWebSocketVersion, negotiatedRpcVersion } = await obs.connect(`ws://127.0.0.1:${data.port}`, data.password, {
       rpcVersion: 1,
@@ -71,6 +74,9 @@ async function handleClickToConnect() {
     data.status = `失败 ${error.code} ${error.message}`;
     data.connect = false;
   }
+}
+async function handleClickToConnect() {
+  await ObsConnect();
 }
 async function handleClickToDisconnect() {
   await obs.disconnect();
