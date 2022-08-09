@@ -5,7 +5,6 @@
     <li><router-link to="/instancedAreaInfo">副本区信息显示</router-link></li>
     <li><router-link to="/DSRP6">绝龙诗P6双目标</router-link></li>
     <li><router-link to="/obs">OBS自动录制</router-link></li>
-    <li><router-link to="/instancedAreaInfo">副本区信息显示</router-link></li>
     <!-- <router-link to="/stageProgramme">舞台节目单</router-link> -->
     <br />
     <li><a href="https://souma.diemoe.net/dist/">其他悬浮窗</a></li>

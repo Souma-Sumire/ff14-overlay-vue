@@ -19,36 +19,6 @@ export const useActionStore = defineStore("action", {
         }
       }
     },
-    // getAction(options: IActionOptions): (IAction & { Url?: string }) | undefined {
-    // const action: any = (actions as any).find((item: any) => {
-    //   if (options?.IsPlayerAction && item[ActionEnum.Icon] === 405) return;
-    //   return Object.entries(options).every(([key, value]) => {
-    //     return item[ActionEnum[key as any]] === value;
-    //   });
-    // });
-    // for (const key in actions) {
-    // if (Object.prototype.hasOwnProperty.call(actions, key)) {
-    // const element = actions[key];
-    // for (const key in actions) {
-    // const element = actions[key];
-    // }
-    // }
-    // }
-    // if (action) {
-    //   return createAction(action);
-    // }
-    // },
-    // getActions(options: IActionOptions): (IAction & { Url?: string })[] | undefined {
-    // let _actions: any[] = (actions as []).filter((item: any) => {
-    //   return Object.entries(options).every(([key, value]) => {
-    //     return item[ActionEnum[key as any]] === value;
-    //   });
-    // });
-    // for (let i = 0; i < _actions.length; i++) {
-    //   _actions[i] = createAction(_actions[i]);
-    // }
-    // if (_actions) return _actions;
-    // },
   },
 });
 
