@@ -1,9 +1,7 @@
-<script setup lang="ts">
-import UnlockedTextVue from "./components/UnlockedText.vue";
-</script>
+<script setup lang="ts"></script>
 
 <template>
-  <UnlockedTextVue></UnlockedTextVue>
+  <!-- <UnlockedTextVue></UnlockedTextVue> -->
   <router-view></router-view>
 </template>
 
