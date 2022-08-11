@@ -1,29 +1,45 @@
 <template>
-  <form>
-    地址<input type="text" v-model="data.ip" />
+  <div id="container">
+    <form>
+      地址<input type="text" v-model="data.ip" />
+      <br />
+      端口<input type="text" v-model="data.port" />
+      <br />
+      密码<input :type="data.passowrdShow ? 'text' : 'password'" v-model="data.password" autocomplete="on" /><button
+        @click="data.passowrdShow = !data.passowrdShow"
+      >
+        👀
+      </button>
+      <br />
+      <label style="user-select: none" for="auto"> <input type="checkbox" id="auto" v-model="data.autoConnect" /> 自动连接 </label>
+      <label style="user-select: none" for="partyLength">
+        <input type="checkbox" id="partyLength" v-model="data.partyLength" /> 仅在小队人数在5~8人时录制
+      </label>
+      <br />
+      <button @click="handleClickToSave">保存设置</button>
+    </form>
     <br />
-    端口<input type="text" v-model="data.port" />
-    <br />
-    密码<input type="password" v-model="data.password" autocomplete="on" />
-    <br />
-    <label style="user-select: none" for="auto"> <input type="checkbox" id="auto" v-model="data.autoConnect" /> 自动连接 </label>
-    <label style="user-select: none" for="partyLength">
-      <input type="checkbox" id="partyLength" v-model="data.partyLength" /> 仅在小队人数在5~8人时录制
-    </label>
-    <br />
-    <button @click="handleClickToSave">保存设置</button>
-  </form>
-  <br />
-  <p>连接状态：{{ data.status }}</p>
-  <button :disabled="data.connect" @click="handleClickToConnect">连接</button>
-  <button :disabled="!data.connect" @click="handleClickToDisconnect">断开</button>
+    <p>连接状态：{{ data.status }}</p>
+    <button :disabled="data.connect" @click="handleClickToConnect">连接</button>
+    <button :disabled="!data.connect" @click="handleClickToDisconnect">断开</button>
+    <button :disabled="!data.connect" @click="restartRecord">手动开始录制</button>
+  </div>
 </template>
 
 <script lang="ts" setup>
 import OBSWebSocket from "obs-websocket-js";
 import { reactive } from "vue";
 import "../common/hasOverlayPluginApi";
-type Data = { ip: string; port: string; password: string; connect: boolean; status: string; autoConnect: boolean; partyLength: boolean };
+type Data = {
+  ip: string;
+  port: string;
+  password: string;
+  connect: boolean;
+  status: string;
+  autoConnect: boolean;
+  partyLength: boolean;
+  passowrdShow: boolean;
+};
 let inACTCombat = false;
 const data: Data = reactive({
   ip: "127.0.0.1",
@@ -33,6 +49,7 @@ const data: Data = reactive({
   partyLength: true,
   connect: false,
   status: "空闲",
+  passowrdShow: false,
 });
 const partyData = { party: [] };
 loadSettings();
@@ -53,6 +70,7 @@ function loadSettings() {
   data.port = p?.port ?? data.port;
   data.password = p?.password ?? data.password;
   data.autoConnect = p?.autoConnect ?? data.autoConnect;
+  data.partyLength = p?.partyLength ?? data.partyLength;
 }
 function handleClickToSave() {
   localStorage.setItem(
@@ -82,30 +100,40 @@ async function handleClickToConnect() {
 async function handleClickToDisconnect() {
   await obs.disconnect();
 }
-async function startRecord() {
-  if (data.partyLength && partyData.party.length <= 8 && partyData.party.length >= 5) await obs.call("StartRecord");
+function startRecord() {
+  if (data.partyLength && partyData.party.length <= 8 && partyData.party.length >= 5) obs.call("StartRecord");
+  else if (!data.partyLength) obs.call("StartRecord");
 }
 async function stopRecord() {
-  await obs.call("StopRecord");
+  await obs.call("StopRecord").catch(() => {});
 }
-async function restartRecord() {
-  await stopRecord();
-  await startRecord();
+function restartRecord() {
+  obs.call("GetRecordStatus").then(async (v) => {
+    if (v.outputActive) await stopRecord().then(() => setTimeout(() => restartRecord(), 1000));
+    else startRecord();
+  });
 }
-function handleInCombatChanged(ev: any) {
+async function handleInCombatChanged(ev: any) {
   if (!inACTCombat && ev.detail.inACTCombat) restartRecord();
   if (inACTCombat && !ev.detail.inACTCombat) stopRecord();
   inACTCombat = ev.detail.inACTCombat;
 }
-function handleLogEvent(e: any) {
+async function handleLogEvent(e: any) {
   for (const log of e.detail.logs) {
-    if (/^.{14} \w+ 00:(?:00b9|0139)::?(?:距离战斗开始还有|Battle commencing in |戦闘開始まで)\d+[^（(]+[（(]/.test(log)) restartRecord();
-    else if (/^.{14} (?:Director |)21:.{8}:4000001[026]/.test(log) || /^.{14} ChatLog 00:0038::end$/.test(log)) stopRecord();
+    if (/^.{14} \w+ 00:(?:00B9|0139)::?(?:距离战斗开始还有|Battle commencing in |戦闘開始まで)\d+[^（(]+[（(]/i.test(log)) restartRecord();
+    else if (/^.{14} (?:Director |)21:.{8}:4000001[026]/.test(log) || /^.{14} ChatLog 00:0038::end$/i.test(log)) stopRecord();
   }
 }
 function handlePartyChanged(e: any) {
   partyData.party = e?.party ?? [];
 }
+window.onunload = async () => {
+  await obs.disconnect();
+};
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+#container {
+  background-color: white;
+}
+</style>
