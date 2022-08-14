@@ -246,17 +246,20 @@ async function queryFFlogsReportEvents(view: FFlogsView = "casts") {
       // action = actionStore.getAction({ Id: event.ability.guid, IsPlayerAction: event.sourceIsFriendly });
       // if (!action) action = actionStore.getAction({ Id: event.ability.guid });
       const action = actionStore.getActionById(event.ability.guid);
-      if (action !== undefined) {
-        fflogsQueryConfig.abilityFilterEvents.push({
-          time: Number(((event.timestamp - fflogsQueryConfig.start) / 1000).toFixed(1)),
-          view: view,
-          actionName: action?.Name ?? event.ability.name,
-          actionId: event.ability.guid,
-          sourceIsFriendly: event.sourceIsFriendly,
-          url: action?.Url ?? "000000/000405",
-          window: undefined,
-        });
-      }
+      // if (action !== undefined) {
+      fflogsQueryConfig.abilityFilterEvents.push({
+        time: Number(((event.timestamp - fflogsQueryConfig.start) / 1000).toFixed(1)),
+        view: view,
+        actionName: action?.Name ?? event.ability.name,
+        actionId: event.ability.guid,
+        sourceIsFriendly: event.sourceIsFriendly,
+        url: action?.Url ?? event?.ability?.abilityIcon.replace("-", "/").replace(".png", "") ?? "000000/000405",
+        window: undefined,
+      });
+      // } else {
+      // console.log(event.ability, action);
+
+      // }
     }
     if (fflogsQueryConfig.player.icon && props.filters[fflogsQueryConfig.player.icon]) {
       fflogsQueryConfig.abilityFilterSelected = props.filters[fflogsQueryConfig.player.icon];
