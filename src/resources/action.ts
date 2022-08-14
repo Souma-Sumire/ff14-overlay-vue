@@ -1,9 +1,9 @@
 import { IActionData } from "../types/Action";
-
+//03冲刺图标=104
 export const actions: { [key: number]: IActionData } = {
   1: ["任务道具", 405, 8, 0, 0, false, 0, 0, 0, false, false],
   2: ["任务指令", 405, 8, 0, 0, false, 50, 0, 0, false, false],
-  3: ["冲刺", 405, 10, 0, 0, false, 0, 600, 0, false, false],
+  3: ["冲刺", 104, 10, 0, 0, false, 0, 600, 0, false, false],
   4: ["坐骑", 405, 5, 0, 0, false, 10, 0, 0, false, false],
   5: ["传送", 111, 11, 0, 0, false, 50, 0, 0, false, false],
   6: ["返回", 112, 11, 0, 0, false, 50, 9000, 0, false, false],
