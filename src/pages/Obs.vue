@@ -101,6 +101,7 @@ async function handleClickToDisconnect() {
   await obs.disconnect();
 }
 function startRecord() {
+  if (!data.connect) return;
   if (data.partyLength && partyData.party.length <= 8 && partyData.party.length >= 5) obs.call("StartRecord");
   else if (!data.partyLength) obs.call("StartRecord");
 }
