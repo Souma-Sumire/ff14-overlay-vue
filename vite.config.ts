@@ -1,23 +1,16 @@
 import { defineConfig } from "vite";
-import eslintPlugin from "vite-plugin-eslint";
 import vue from "@vitejs/plugin-vue";
 import AutoImport from "unplugin-auto-import/vite";
 import Components from "unplugin-vue-components/vite";
 import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
 import Unocss from "unocss/vite";
-import { presetUno, presetAttributify, presetIcons } from 'unocss'
+import { presetUno, presetAttributify, presetIcons } from "unocss";
 
 // https://vitejs.dev/config/
 export default defineConfig({
   build: {
-    outDir: "../Souma-Sumire.github.io/",
+    outDir: "./dist",
     emptyOutDir: true, //构建时清空outDir目录
-    terserOptions: {
-      compress: {
-        drop_console: true, //生产环境时移除console
-        drop_debugger: true,
-      },
-    },
     reportCompressedSize: false, //禁用gzip压缩大小报告以提高构建性能
   },
   plugins: [
@@ -31,9 +24,6 @@ export default defineConfig({
     Unocss({
       presets: [presetUno(), presetAttributify(), presetIcons()],
     }),
-    eslintPlugin({
-      include: ["src/**/*.js","src/**/*.vue","src/*.js","src/*.vue"]
-    })
   ],
   css: {
     postcss: {

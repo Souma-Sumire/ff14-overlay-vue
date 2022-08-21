@@ -26,7 +26,7 @@
         <el-table-column prop="icon" label="职业" min-width="60px" />
         <el-table-column label="选定" min-width="20px">
           <template #default="scope">
-            <el-button type="text" size="small" @click="handleFFlogsQueryResultFriendliesList(scope.row)">选择</el-button>
+            <el-button type="primary" size="small" @click="handleFFlogsQueryResultFriendliesList(scope.row)">选择</el-button>
           </template>
         </el-table-column>
       </el-table></el-row
@@ -61,7 +61,7 @@ import { reactive, ref } from "vue";
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 import { useActionStore } from "../../store/action";
-import { FFIconToName, FFlogsApiV1ReportEvents, FFlogsQuery, Friendlies, FFlogsView } from "../../types/FFlogs";
+import { FFIconToName, FFlogsApiV1ReportEvents, FFlogsQuery, Friendlies, FFlogsView } from "../../types/Fflogs";
 import { factory } from "../../utils/timelineSpecialRules";
 
 enum QueryTextEnum {

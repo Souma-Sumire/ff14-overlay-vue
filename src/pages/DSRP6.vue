@@ -33,7 +33,7 @@ const actionTimeline: { show: boolean; data: { xie: string[]; xieHP: string; she
 });
 const hp: { xie: number; sheng: number } = { xie: 0, sheng: 0 };
 let baseTime = 0;
-function createACompleteImg(url: string = "000000/000405"): string {
+function createACompleteImg(url = "000000/000405"): string {
   return siteImg + "/" + url + ".png";
 }
 function handleLogLine(e: { line: string[] }): void {

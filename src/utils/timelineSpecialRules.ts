@@ -1,4 +1,4 @@
-import { FFlogsStance } from "../types/FFlogs";
+import { FFlogsStance } from "../types/Fflogs";
 
 const windowAction = new Map();
 windowAction.set(26155, [999, 999]); //海德林转场 众生离绝
