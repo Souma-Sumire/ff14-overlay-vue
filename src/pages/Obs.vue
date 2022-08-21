@@ -102,17 +102,17 @@ async function handleClickToDisconnect() {
 }
 function startRecord() {
   if (!data.connect) return;
-  if (data.partyLength && partyData.party.length <= 8 && partyData.party.length >= 5) obs.call("StartRecord");
-  else if (!data.partyLength) obs.call("StartRecord");
+  if (data.partyLength && partyData.party.length <= 8 && partyData.party.length >= 5) obs.call("StartRecord").catch(()=>{});
+  else if (!data.partyLength) obs.call("StartRecord").catch(()=>{});
 }
 async function stopRecord() {
   await obs.call("StopRecord").catch(() => {});
 }
 function restartRecord() {
   obs.call("GetRecordStatus").then(async (v) => {
-    if (v.outputActive) await stopRecord().then(() => setTimeout(() => restartRecord(), 1000));
+    if (v.outputActive) await stopRecord().then(() => setTimeout(() => restartRecord(), 1000)).catch(()=>{});
     else startRecord();
-  });
+  }).catch(()=>{});
 }
 async function handleInCombatChanged(ev: any) {
   if (!inACTCombat && ev.detail.inACTCombat) restartRecord();
