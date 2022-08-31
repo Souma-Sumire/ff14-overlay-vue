@@ -30390,7 +30390,7 @@ export const actions: { [key: number]: IActionData } = {
   30855: ["协同", 405, 3, -1, 0, false, 63, 0, 0, false, false],
   30856: ["协同", 405, 2, -1, 0, false, 70, 0, 0, false, false],
   30857: ["协同", 405, 3, -1, 0, false, 70, 0, 0, false, false],
-  30858: ["螯合协同", 405, 3, -1, 0, false, 70, 0, 0, false, false],
+  30858: ["甲壳协同", 405, 3, -1, 0, false, 70, 0, 0, false, false],
   30859: ["暗天顶", 405, 2, -1, 0, false, 40, 0, 0, false, false],
   30860: ["暗天顶", 405, 2, -1, 0, false, 40, 0, 0, false, false],
   30861: ["黑暗之烬", 405, 2, -1, 0, false, 40, 0, 0, false, false],
