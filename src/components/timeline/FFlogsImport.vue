@@ -179,7 +179,7 @@ function queryFFlogsReportFights(url: string) {
 async function handleFFlogsQueryResultFriendliesList(player: Friendlies) {
   fflogsQueryConfig.player = player as any;
   //进入第三步
-  await queryFFlogsReportEvents()
+  await queryFFlogsReportEvents("cast")
     .then(() => {
       fflogsQueryConfig.abilityFilterCandidate = fflogsQueryConfig.abilityFilterEvents.reduce((total: any[], event) => {
         if (event.sourceIsFriendly && !total.find((v) => v.actionId === event.actionId)) total.push(event);
@@ -260,7 +260,8 @@ async function queryFFlogsReportEvents(type: FFlogsType = "cast") {
   let enemiesPromise = await queryEnemies(fflogsQueryConfig.start, 0);
   await Promise.all([friendlyPromise, enemiesPromise]).then(() => {
     for (const event of resEvents) {
-      if ((event.type !== type && event.sourceIsFriendly) || (event.type === type && !event.sourceIsFriendly)) continue;
+      // if ((event.type !== type && event.sourceIsFriendly) || (event.type !== type && !event.sourceIsFriendly)) continue;
+      if (event.type !== type) continue;
       const action = actionStore.getActionById(event.ability.guid);
       fflogsQueryConfig.abilityFilterEvents.push({
         time: Number(((event.timestamp - fflogsQueryConfig.start) / 1000).toFixed(1)),
