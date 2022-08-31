@@ -1,5 +1,6 @@
 import { IActionData } from "../types/Action";
 //03冲刺图标=104
+//A插一列: =B5&": ["""&C5&""", "&E5&", "&F5&", "&M5&", "&O5&", "&P5&", "&AN5&", "&AP5&", "&AS5&", "&BF5&", "&BR5&"],"
 export const actions: { [key: number]: IActionData } = {
   0: ["", 405, 0, -1, 0, false, 0, 0, 0, false, false],
   1: ["任务道具", 405, 8, 0, 0, false, 0, 0, 0, false, false],
@@ -30389,7 +30390,7 @@ export const actions: { [key: number]: IActionData } = {
   30855: ["协同", 405, 3, -1, 0, false, 63, 0, 0, false, false],
   30856: ["协同", 405, 2, -1, 0, false, 70, 0, 0, false, false],
   30857: ["协同", 405, 3, -1, 0, false, 70, 0, 0, false, false],
-  30858: ["甲壳协同", 405, 3, -1, 0, false, 70, 0, 0, false, false],
+  30858: ["螯合协同", 405, 3, -1, 0, false, 70, 0, 0, false, false],
   30859: ["暗天顶", 405, 2, -1, 0, false, 40, 0, 0, false, false],
   30860: ["暗天顶", 405, 2, -1, 0, false, 40, 0, 0, false, false],
   30861: ["黑暗之烬", 405, 2, -1, 0, false, 40, 0, 0, false, false],
@@ -30654,12 +30655,12 @@ export const actions: { [key: number]: IActionData } = {
   31207: ["虚空环面", 405, 3, -1, 0, false, 40, 0, 0, false, false],
   31208: ["虚空重压", 405, 3, -1, 0, false, 70, 0, 0, false, false],
   31209: ["饥饿暴动", 405, 3, -1, 0, false, 18, 0, 0, false, false],
-  31210: ["", 405, 2, -1, 0, false, 50, 0, 0, false, false],
+  31210: ["爆炎波动", 405, 2, -1, 0, false, 50, 0, 0, false, false],
   31211: ["完全寄生", 405, 2, -1, 0, false, 5, 0, 0, false, false],
   31212: ["完全寄生", 405, 2, -1, 0, false, 5, 0, 0, false, false],
   31213: ["喷气", 405, 3, -1, 0, false, 34, 0, 0, false, false],
-  31214: ["喷气", 405, 3, -1, 0, false, 3, 0, 0, false, false],
-  31215: ["爪击", 405, 3, -1, 0, false, 3, 0, 0, false, false],
+  31214: ["爪击", 405, 3, -1, 0, false, 3, 0, 0, false, false],
+  31215: ["", 405, 3, -1, 0, false, 3, 0, 0, false, false],
   31216: ["", 405, 2, -1, 0, false, 0, 0, 0, false, false],
   31217: ["红宝石反射", 405, 3, -1, 0, false, 0, 0, 0, false, false],
   31218: ["红宝石反射", 405, 3, -1, 0, false, 0, 0, 0, false, false],
