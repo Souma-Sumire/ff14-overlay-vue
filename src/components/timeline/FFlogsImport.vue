@@ -7,9 +7,12 @@
       <el-input type="password" v-model="props.settings.api" />
     </el-form-item>
     <el-form-item>
-      <el-button :disabled="queryText === QueryTextEnum.querying" type="primary" @click="queryFFlogsReportFights(inputUrl)">{{
-        queryText
-      }}</el-button>
+      <el-button
+        :disabled="queryText === QueryTextEnum.querying"
+        type="primary"
+        @click="queryFFlogsReportFights(inputUrl)"
+        >{{ queryText }}</el-button
+      >
     </el-form-item>
   </el-form>
   <div class="fflogs-query-result-friendlies">
@@ -26,14 +29,24 @@
         <el-table-column prop="icon" label="职业" min-width="60px" />
         <el-table-column label="选定" min-width="20px">
           <template #default="scope">
-            <el-button type="primary" size="small" @click="handleFFlogsQueryResultFriendliesList(scope.row)">选择</el-button>
+            <el-button type="primary" size="small" @click="handleFFlogsQueryResultFriendliesList(scope.row)"
+              >选择</el-button
+            >
           </template>
         </el-table-column>
       </el-table></el-row
     >
-    <el-row v-show="fflogsQueryConfig.abilityFilterEvents.length > 0" class="fflogs-query-result-friendlies-ability-filter-select">
+    <el-row
+      v-show="fflogsQueryConfig.abilityFilterEvents.length > 0"
+      class="fflogs-query-result-friendlies-ability-filter-select"
+    >
       <el-col :span="20">
-        <el-select v-model="fflogsQueryConfig.abilityFilterSelected" multiple placeholder="技能过滤器" :fit-input-width="true">
+        <el-select
+          v-model="fflogsQueryConfig.abilityFilterSelected"
+          multiple
+          placeholder="技能过滤器"
+          :fit-input-width="true"
+        >
           <el-option
             class="ability-filter-li"
             v-for="rule in fflogsQueryConfig.abilityFilterCandidate"
@@ -50,7 +63,9 @@
           </el-option>
         </el-select>
       </el-col>
-      <el-col :span="4"><el-button type="success" @click="handeleFFlogsQueryResultFriendiesListFilter()">选择好了</el-button></el-col>
+      <el-col :span="4"
+        ><el-button type="success" @click="handeleFFlogsQueryResultFriendiesListFilter()">选择好了</el-button></el-col
+      >
     </el-row>
   </div>
 </template>
@@ -61,7 +76,7 @@ import { reactive, ref } from "vue";
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 import { useActionStore } from "../../store/action";
-import { FFIconToName, FFlogsApiV1ReportEvents, FFlogsQuery, Friendlies, FFlogsView } from "../../types/Fflogs";
+import { FFIconToName, FFlogsApiV1ReportEvents, FFlogsQuery, Friendlies, FFlogsType } from "../../types/Fflogs";
 import { factory } from "../../utils/timelineSpecialRules";
 
 enum QueryTextEnum {
@@ -128,13 +143,14 @@ function queryFFlogsReportFights(url: string) {
         )
           .filter((arr) => arr.type === "Boss")
           .map((boss) => boss.id);
-        fflogsQueryConfig.fightIndex = (reg!.groups!.fight === "last" ? res.data.fights.length : parseInt(reg!.groups!.fight)) - 1;
+        fflogsQueryConfig.fightIndex =
+          (reg!.groups!.fight === "last" ? res.data.fights.length : parseInt(reg!.groups!.fight)) - 1;
         const fight = res.data.fights[fflogsQueryConfig.fightIndex];
         fflogsQueryConfig.zoneID = fight.zoneID;
         fflogsQueryConfig.start = fight.start_time;
         fflogsQueryConfig.end = fight.end_time;
         fflogsQueryConfig.friendlies = (res.data.friendlies as Friendlies[]).filter(
-          (value) => value.icon !== "LimitBreak" && value.fights.find((f) => f.id === fflogsQueryConfig.fightIndex + 1)
+          (value) => value.icon !== "LimitBreak" && value.fights.find((f) => f.id === fflogsQueryConfig.fightIndex + 1),
         );
         queryText.value = QueryTextEnum.query;
         fflogsQueryConfig.abilityFilterEvents.length = 0;
@@ -181,21 +197,24 @@ async function handleFFlogsQueryResultFriendliesList(player: Friendlies) {
 }
 
 //fflogs导入第3步：通过API获取选定玩家所有casts
-async function queryFFlogsReportEvents(view: FFlogsView = "casts") {
-  // view = `damage-done`;
+async function queryFFlogsReportEvents(type: FFlogsType = "cast") {
   Swal.fire({ text: "正在解析数据，耗时可能较长，请耐心等待。(步骤2/3)", showConfirmButton: false });
   let resEvents: FFlogsApiV1ReportEvents[] = [];
   fflogsQueryConfig.abilityFilterEvents.length = 0;
   async function queryFriendly(startTime: number) {
     await axios
       .get(
-        `https://cn.fflogs.com/v1/report/events/${view}/${fflogsQueryConfig.code}?start=${startTime}&end=${
+        `https://cn.fflogs.com/v1/report/events/casts/${fflogsQueryConfig.code}?start=${startTime}&end=${
           fflogsQueryConfig.end
-        }&hostility=0&sourceid=${fflogsQueryConfig.player!.id}&api_key=${props.settings.api}`
+        }&hostility=0&sourceid=${fflogsQueryConfig.player!.id}&api_key=${props.settings.api}`,
       )
       .then(async (res: { data: { events: FFlogsApiV1ReportEvents[]; nextPageTimestamp?: number } }) => {
         resEvents.push(...res.data.events);
-        if (res.data.nextPageTimestamp && res.data.nextPageTimestamp > 0 && res.data.nextPageTimestamp < fflogsQueryConfig.end) {
+        if (
+          res.data.nextPageTimestamp &&
+          res.data.nextPageTimestamp > 0 &&
+          res.data.nextPageTimestamp < fflogsQueryConfig.end
+        ) {
           await queryFriendly(res.data.nextPageTimestamp);
         }
       })
@@ -212,11 +231,15 @@ async function queryFFlogsReportEvents(view: FFlogsView = "casts") {
     if (index >= 0) {
       await axios
         .get(
-          `https://cn.fflogs.com/v1/report/events/${view}/${fflogsQueryConfig.code}?start=${startTime}&end=${fflogsQueryConfig.end}&hostility=1&sourceid=${fflogsQueryConfig.bossIDs[index]}&api_key=${props.settings.api}`
+          `https://cn.fflogs.com/v1/report/events/casts/${fflogsQueryConfig.code}?start=${startTime}&end=${fflogsQueryConfig.end}&hostility=1&sourceid=${fflogsQueryConfig.bossIDs[index]}&api_key=${props.settings.api}`,
         )
         .then(async (res) => {
           resEvents.push(...res.data.events);
-          if (res.data.nextPageTimestamp && res.data.nextPageTimestamp > 0 && res.data.nextPageTimestamp < fflogsQueryConfig.end) {
+          if (
+            res.data.nextPageTimestamp &&
+            res.data.nextPageTimestamp > 0 &&
+            res.data.nextPageTimestamp < fflogsQueryConfig.end
+          ) {
             await queryEnemies(res.data.nextPageTimestamp, index);
           }
           if (index < fflogsQueryConfig.bossIDs.length - 1) {
@@ -237,29 +260,17 @@ async function queryFFlogsReportEvents(view: FFlogsView = "casts") {
   let enemiesPromise = await queryEnemies(fflogsQueryConfig.start, 0);
   await Promise.all([friendlyPromise, enemiesPromise]).then(() => {
     for (const event of resEvents) {
-      if (view === "casts") {
-        if ((!/^casts?$/.test(event.type) && event.sourceIsFriendly) || (/^casts?$/.test(event.type) && !event.sourceIsFriendly)) continue;
-      } else {
-        if ((event.type !== view && event.sourceIsFriendly) || (event.type === view && !event.sourceIsFriendly)) continue;
-      }
-      // let action;
-      // action = actionStore.getAction({ Id: event.ability.guid, IsPlayerAction: event.sourceIsFriendly });
-      // if (!action) action = actionStore.getAction({ Id: event.ability.guid });
+      if ((event.type !== type && event.sourceIsFriendly) || (event.type === type && !event.sourceIsFriendly)) continue;
       const action = actionStore.getActionById(event.ability.guid);
-      // if (action !== undefined) {
       fflogsQueryConfig.abilityFilterEvents.push({
         time: Number(((event.timestamp - fflogsQueryConfig.start) / 1000).toFixed(1)),
-        view: view,
-        actionName: action?.Name ?? event.ability.name,
+        type: type,
+        actionName: action?.Name === undefined || action?.Name === "" ? event.ability.name : action.Name,
         actionId: event.ability.guid,
         sourceIsFriendly: event.sourceIsFriendly,
         url: action?.Url ?? event?.ability?.abilityIcon.replace("-", "/").replace(".png", "") ?? "000000/000405",
         window: undefined,
       });
-      // } else {
-      // console.log(event.ability, action);
-
-      // }
     }
     if (fflogsQueryConfig.player.icon && props.filters[fflogsQueryConfig.player.icon]) {
       fflogsQueryConfig.abilityFilterSelected = props.filters[fflogsQueryConfig.player.icon];
@@ -301,10 +312,16 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
       //解析处理格式化一条龙
       fflogsQueryConfig.abilityFilterEvents = fflogsQueryConfig.abilityFilterEvents
         .filter((event) => {
-          return (event.sourceIsFriendly && fflogsQueryConfig.abilityFilterSelected.includes(event.actionId)) || !event.sourceIsFriendly;
+          return (
+            (event.sourceIsFriendly && fflogsQueryConfig.abilityFilterSelected.includes(event.actionId)) ||
+            !event.sourceIsFriendly
+          );
         })
         .sort((a, b) => a.time - b.time);
-      fflogsQueryConfig.abilityFilterEvents = factory(fflogsQueryConfig.abilityFilterEvents, Number(fflogsQueryConfig.zoneID));
+      fflogsQueryConfig.abilityFilterEvents = factory(
+        fflogsQueryConfig.abilityFilterEvents,
+        Number(fflogsQueryConfig.zoneID),
+      );
       fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline = fflogsQueryConfig.abilityFilterEvents
         .map((item) => {
           let time = timeFormat
@@ -320,13 +337,15 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
             // } else if (item.window === undefined) {
             //   return `# ${time} "--${item.actionName}--"`;
           } else {
-            const viewType: Partial<Record<FFlogsView, string>> = {
-              "casts": "14",
-              "damage-done": "1[56]",
+            const regexType: Partial<Record<FFlogsType, string>> = {
+              "begincast": "14",
+              "cast": "1[56]",
             };
             return `${item.window === undefined ? "// " : ""}${time} "--${item.actionName}--" sync /^.{14} \\w+ ${
-              viewType[item.view]
-            }:4.{7}:[^:]+:${item.actionId.toString(16).toUpperCase()}:/${` window ${(item.window ?? [12, 12]).join(",")}`}`;
+              regexType[item.type]
+            }:4.{7}:[^:]+:${item.actionId.toString(16).toUpperCase()}:/${
+              item.window ? ` window ${(item.window ?? [12, 12]).join(",")}` : ""
+            }`;
           }
         })
         .join("\n");
@@ -335,7 +354,7 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
         `导入${fflogsQueryConfig.player!.name}`,
         { zoneId: fflogsQueryConfig.zoneID.toString(), job: FFIconToName(fflogsQueryConfig.player.icon ?? "NONE") },
         fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline,
-        `${fflogsQueryConfig.code}#fight=${fflogsQueryConfig.fightIndex + 1}`
+        `${fflogsQueryConfig.code}#fight=${fflogsQueryConfig.fightIndex + 1}`,
       );
       claerFFlogsQueryConfig();
       emit("showFFlogsToggle");

@@ -1,10 +1,8 @@
 import { createApp } from "vue";
 import App from "./App.vue";
 import router from "./router";
-import "https://overlay.diemoe.net/common/common.min.js";
-import "./common/common.min.js";
+// import "https://overlay.diemoe.net/common/common.min.js";
 import { createPinia } from "pinia";
-import "default-passive-events"; 
 import 'uno.css'
 
 const app = createApp(App);

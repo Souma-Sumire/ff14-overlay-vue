@@ -46,8 +46,15 @@ export function FFIconToName(fficon: FFIcon) {
     }[fficon] ?? "NONE"
   );
 }
-export type Friendlies = { guid: number; icon: string; id: number; name: string; server: string; fights: [{ id: number }] };
-
+export type Friendlies = {
+  guid: number;
+  icon: string;
+  id: number;
+  name: string;
+  server: string;
+  fights: [{ id: number }];
+};
+export type FFlogsType = "begincast" | "cast";
 export type FFlogsView =
   | "summary"
   | "damage-done"
@@ -65,12 +72,12 @@ export type FFlogsView =
 
 export type FFlogsStance = {
   time: number;
-  view: FFlogsView;
+  type: FFlogsType;
   actionName: string;
   actionId: number;
   sourceIsFriendly: boolean;
   url: string;
-  window?:Array<number>
+  window?: Array<number>;
 }[];
 
 export type FFlogsQuery = {
