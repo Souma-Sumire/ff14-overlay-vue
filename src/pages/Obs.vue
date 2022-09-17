@@ -11,7 +11,9 @@
         👀
       </button>
       <br />
-      <label style="user-select: none" for="auto"> <input type="checkbox" id="auto" v-model="data.autoConnect" /> 自动连接 </label>
+      <label style="user-select: none" for="auto">
+        <input type="checkbox" id="auto" v-model="data.autoConnect" /> 自动连接
+      </label>
       <label style="user-select: none" for="partyLength">
         <input type="checkbox" id="partyLength" v-model="data.partyLength" /> 仅在小队人数在5~8人时录制
       </label>
@@ -75,7 +77,13 @@ function loadSettings() {
 function handleClickToSave() {
   localStorage.setItem(
     "ObsData",
-    JSON.stringify({ ip: data.ip, port: data.port, password: data.password, autoConnect: data.autoConnect, partyLength: data.partyLength })
+    JSON.stringify({
+      ip: data.ip,
+      port: data.port,
+      password: data.password,
+      autoConnect: data.autoConnect,
+      partyLength: data.partyLength,
+    }),
   );
 }
 function onConnectionClosed() {
@@ -84,9 +92,13 @@ function onConnectionClosed() {
 }
 async function ObsConnect() {
   try {
-    const { obsWebSocketVersion, negotiatedRpcVersion } = await obs.connect(`ws://127.0.0.1:${data.port}`, data.password, {
-      rpcVersion: 1,
-    });
+    const { obsWebSocketVersion, negotiatedRpcVersion } = await obs.connect(
+      `ws://127.0.0.1:${data.port}`,
+      data.password,
+      {
+        rpcVersion: 1,
+      },
+    );
     data.status = `成功 ${obsWebSocketVersion} (using RPC ${negotiatedRpcVersion})`;
     data.connect = true;
   } catch (error: any) {
@@ -100,19 +112,30 @@ async function handleClickToConnect() {
 async function handleClickToDisconnect() {
   await obs.disconnect();
 }
-function startRecord() {
-  if (!data.connect) return;
-  if (data.partyLength && partyData.party.length <= 8 && partyData.party.length >= 5) obs.call("StartRecord").catch(()=>{});
-  else if (!data.partyLength) obs.call("StartRecord").catch(()=>{});
+async function startRecord() {
+  if (!data.connect) {
+    await ObsConnect().then(() => {
+      if (data.connect) startRecord();
+    });
+  }
+  if (data.partyLength && partyData.party.length <= 8 && partyData.party.length >= 5)
+    obs.call("StartRecord").catch(() => {});
+  else if (!data.partyLength) obs.call("StartRecord").catch(() => {});
 }
 async function stopRecord() {
   await obs.call("StopRecord").catch(() => {});
 }
 function restartRecord() {
-  obs.call("GetRecordStatus").then(async (v) => {
-    if (v.outputActive) await stopRecord().then(() => setTimeout(() => restartRecord(), 1000)).catch(()=>{});
-    else startRecord();
-  }).catch(()=>{});
+  obs
+    .call("GetRecordStatus")
+    .then(async (v) => {
+      if (v.outputActive)
+        await stopRecord()
+          .then(() => setTimeout(() => restartRecord(), 1000))
+          .catch(() => {});
+      else startRecord();
+    })
+    .catch(() => {});
 }
 async function handleInCombatChanged(ev: any) {
   if (!inACTCombat && ev.detail.inACTCombat) restartRecord();
@@ -121,8 +144,12 @@ async function handleInCombatChanged(ev: any) {
 }
 async function handleLogEvent(e: any) {
   for (const log of e.detail.logs) {
-    if (/^.{14} \w+ 00:(?:00B9|0139)::?(?:距离战斗开始还有|Battle commencing in |戦闘開始まで)\d+[^（(]+[（(]/i.test(log)) restartRecord();
-    else if (/^.{14} (?:Director |)21:.{8}:4000001[026]/.test(log) || /^.{14} ChatLog 00:0038::end$/i.test(log)) stopRecord();
+    if (
+      /^.{14} \w+ 00:(?:00B9|0139)::?(?:距离战斗开始还有|Battle commencing in |戦闘開始まで)\d+[^（(]+[（(]/i.test(log)
+    )
+      restartRecord();
+    else if (/^.{14} (?:Director |)21:.{8}:400000(?:0F|10)/.test(log) || /^.{14} ChatLog 00:0038::end$/i.test(log))
+      stopRecord();
   }
 }
 function handlePartyChanged(e: any) {

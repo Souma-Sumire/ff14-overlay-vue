@@ -68,7 +68,6 @@ let lastUsedTimeline: ITimeline;
 
 init();
 
-
 //页面初始化
 function init() {
   addOverlayListener("onLogEvent", handleLogEvent);
@@ -149,7 +148,8 @@ function startTimeline(countdownSeconds: number) {
   runtimeTimer = setInterval(() => {
     runtimeTimeSeconds.value = (new Date().getTime() - baseTimeMs.value + offsetTimeMS.value) / 1000;
     const l = timelinePageData.loadedTimeline.find(
-      (line) => line.tts && !line.alertAlready && line.time - timelineStore.configValues.ttsAdvance <= runtimeTimeSeconds.value
+      (line) =>
+        line.tts && !line.alertAlready && line.time - timelineStore.configValues.ttsAdvance <= runtimeTimeSeconds.value,
     );
     if (l) {
       l.alertAlready = true;
@@ -162,7 +162,7 @@ function startTimeline(countdownSeconds: number) {
 function handleLogEvent(e: any) {
   for (const log of e.detail.logs) {
     let regex = log.match(
-      /^.{14} (\w+ |)00:(?:00b9|0139)::?(?:距离战斗开始还有|Battle commencing in |戦闘開始まで)(?<cd>\d+)[^（(]+[（(]/i
+      /^.{14} (\w+ |)00:(?:00b9|0139)::?(?:距离战斗开始还有|Battle commencing in |戦闘開始まで)(?<cd>\d+)[^（(]+[（(]/i,
     );
     if (regex) {
       //倒计时
@@ -170,7 +170,7 @@ function handleLogEvent(e: any) {
     } else if (condition.zoneId === "1009" && /^.{14} (?:Director |)21:.{8}:8.{5}1A/.test(log)) {
       // 进本体?
       getTimeline(condition);
-    } else if (/^.{14} (?:Director |)21:.{8}:4000001[026]/.test(log) || /^.{14} ChatLog 00:0038::end$/.test(log)) {
+    } else if (/^.{14} (?:Director |)21:.{8}:400000(?:0F|10)/.test(log) || /^.{14} ChatLog 00:0038::end$/.test(log)) {
       //团灭
       stopTimeline();
       mountTimeline(lastUsedTimeline);

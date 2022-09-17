@@ -11,6 +11,7 @@ const router = createRouter({
     { path: "/stageProgramme", component: () => import("../pages/StageProgramme.vue"), meta: { title: "舞台节目单" } },
     { path: "/DSRP6", component: () => import("../pages/DSRP6.vue"), meta: { title: "绝龙诗P6" } },
     { path: "/obs", component: () => import("../pages/Obs.vue"), meta: { title: "obs自动录制" } },
+    { path: "/zoneMacro", component: () => import("../pages/ZoneMacro.vue"), meta: { title: "副本宏" } },
   ],
 });
 router.afterEach((to) => {
