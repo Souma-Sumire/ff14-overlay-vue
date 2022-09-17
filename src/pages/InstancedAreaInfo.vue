@@ -4,9 +4,6 @@
 
 <script lang="ts" setup>
 import { ref } from "vue";
-// import "../common/hasOverlayPluginApi";
-
-
 enum InstancedEnum {
   "" = "①",
   "" = "②",
@@ -18,14 +15,11 @@ enum InstancedEnum {
   "" = "⑧",
   "" = "⑨",
 }
-
 addOverlayListener("LogLine", handleLogLine);
 startOverlayEvents();
-
 let zoneName = ref("");
 let zoneInstanced = ref("");
 const simpleMode = urlTool(location.href)?.simple === "true";
-
 function urlTool(url: string) {
   const array = url.split("?")!.pop()!.split("&");
   const data: any = {};
