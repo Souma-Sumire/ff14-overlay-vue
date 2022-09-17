@@ -16,3 +16,7 @@ export function doWayMark(place: PlaceMark[]): void {
   );
   callOverlayHandler({ call: "PostNamazu", c: "place", p: JSON.stringify(waymark) });
 }
+
+export function slotWayMark(place: PlaceMark[]): void {
+  throw new Error("该方法尚未实现");
+}

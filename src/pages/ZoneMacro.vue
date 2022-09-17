@@ -187,11 +187,11 @@ const markMap = {
                 @click="macroStore.submitMacro(macro)"
               />
               <el-button class="hvr-grow" type="danger" :icon="Delete" circle @click="macroStore.deleteMacro(macro)" />
-              <el-button class="hvr-grow" type="primary" @click="macroStore.sendMarkPlace(macro.place!)"
-                >本地标点</el-button
+              <el-button class="hvr-grow" type="primary" @click="macroStore.doLocalWayMark(macro.place!)"
+                >本地</el-button
               >
-              <el-button type="primary" plain disabled @click="macroStore.sendMarkPlace(macro.place!)"
-                >插入插槽</el-button
+              <el-button type="primary" plain disabled @click="macroStore.doSlotWayMark(macro.place!)"
+                >插槽(未实现)</el-button
               >
             </el-row>
           </div>
