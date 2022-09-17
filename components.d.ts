@@ -26,10 +26,9 @@ declare module 'vue' {
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
     ElTable: typeof import('element-plus/es')['ElTable']
     ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
-    FFlogsImport: typeof import('./src/components/timeline/FFlogsImport.vue')['default']
-    TimelineSettings: typeof import('./src/components/timeline/TimelineSettings.vue')['default']
-    TimelineShow: typeof import('./src/components/timeline/TimelineShow.vue')['default']
-    UnlockedText: typeof import('./src/components/UnlockedText.vue')['default']
+    FflogsImport: typeof import('./src/components/timeline/fflogsImport.vue')['default']
+    TimelineShow: typeof import('./src/components/timeline/timelineShow.vue')['default']
+    UnlockedText: typeof import('./src/components/unlockedText.vue')['default']
   }
 }
 

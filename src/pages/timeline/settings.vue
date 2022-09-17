@@ -2,8 +2,8 @@
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 import { reactive, ref, toRef, watchEffect } from "vue";
-import FFlogsImport from "./FFlogsImport.vue";
-import TimelineShowVue from "./TimelineShow.vue";
+import FflogsImport from "../../components/timeline/fflogsImport.vue";
+import TimelineShow from "../../components/timeline/timelineShow.vue";
 import zoneInfo from "../../resources/zoneInfo";
 import { useTimelineStore } from "../../store/timeline";
 import { ITimeline } from "../../types/Timeline";
@@ -239,7 +239,7 @@ function checkTimelineRaw(timeline: ITimeline): void {
       <!-- <el-button v-if="!isWSMode" type="success" @click="applyData()">应用</el-button> -->
     </el-header>
     <el-main>
-      <FFlogsImport
+      <FflogsImport
         :settings="timelineStore.settings"
         :filters="timelineFilters"
         v-if="showFFlogs"
@@ -247,7 +247,7 @@ function checkTimelineRaw(timeline: ITimeline): void {
         @showFFlogsToggle="() => (showFFlogs = !showFFlogs)"
         @newTimeline="timelineStore.newTimeline"
       >
-      </FFlogsImport>
+      </FflogsImport>
       <el-card class="box-card" v-show="showSettings">
         <el-descriptions title="时间轴参数" size="small" style="width: 100%" border>
           <el-descriptions-item
@@ -333,12 +333,12 @@ function checkTimelineRaw(timeline: ITimeline): void {
           </div>
           <div style="max-height: 353px">
             <div class="timeline-timeline-view">
-              <TimelineShowVue
+              <TimelineShow
                 :config="timelineStore.configValues"
                 :lines="timelineStore.parseTimeline(timelineCurrentlyEditing.timeline.timeline)"
                 :runtime="simulatedCombatTime"
                 :show-style="timelineStore.showStyle"
-              ></TimelineShowVue>
+              ></TimelineShow>
             </div>
           </div>
         </el-row>
