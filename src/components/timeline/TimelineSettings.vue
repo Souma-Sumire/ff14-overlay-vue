@@ -1,135 +1,3 @@
-<template>
-  <el-container class="container">
-    <el-header>
-      <el-button type="primary" @click="newDemoTimeline()">新建</el-button>
-      <el-button @click="fflogsImportClick()">从FFlogs导入</el-button>
-      <el-button @click="showSettings = !showSettings" color="#626aef" style="color: white">样式设置</el-button>
-      <el-button @click="importTimelines">导入</el-button>
-      <el-button class="export" @click="exportTimeline(timelines)">全部导出</el-button>
-      <el-button v-if="isWSMode" type="success" @click="broadcastData()">通过WS发送到悬浮窗</el-button>
-      <!-- <el-button v-if="!isWSMode" type="success" @click="applyData()">应用</el-button> -->
-    </el-header>
-    <el-main>
-      <FFlogsImport
-        :settings="timelineStore.settings"
-        :filters="timelineFilters"
-        v-if="showFFlogs"
-        @clearCurrentlyTimeline="clearCurrentlyTimeline"
-        @showFFlogsToggle="() => (showFFlogs = !showFFlogs)"
-        @newTimeline="timelineStore.newTimeline"
-      >
-      </FFlogsImport>
-      <el-card class="box-card" v-show="showSettings">
-        <el-descriptions title="时间轴参数" size="small" style="width: 100%" border>
-          <el-descriptions-item
-            v-for="(_value, key, index) in timelineStore.configValues"
-            :key="index"
-            :label="timelineStore.configTranslate[key]"
-            label-align="right"
-            align="center"
-            width="16em"
-          >
-            <el-input-number :min="0" :step="0.1" v-model="timelineStore.configValues[key]" />
-          </el-descriptions-item>
-        </el-descriptions>
-        <br />
-        <el-descriptions size="small" title="时间轴样式" style="width: 100%" border>
-          <el-descriptions-item
-            v-for="(_value, key, index) in timelineStore.showStyle"
-            :key="index"
-            :label="timelineStore.showStyleTranslate[key]"
-            label-align="right"
-            align="center"
-            width="16em"
-          >
-            <el-input-number :min="0" :step="0.01" v-model="timelineStore.showStyle[key]" />
-          </el-descriptions-item>
-        </el-descriptions>
-      </el-card>
-      <br />
-      <el-card v-show="timelineCurrentlyEditing.timeline.create !== '空'">
-        <div class="slider-demo-block">
-          <span>模拟时间：</span>
-          <el-slider v-model="simulatedCombatTime" :min="-30" :max="1500" :step="0.1" show-input> </el-slider>
-        </div>
-        <el-row class="timeline-info">
-          <div>
-            <p class="timeline-info-config">
-              <span>名称：</span> <el-input v-model="timelineCurrentlyEditing.timeline.name" class="timeline-info-name"></el-input>
-            </p>
-            <p class="timeline-info-config">
-              <span>地图：</span>
-              <el-select v-model="timelineCurrentlyEditing.timeline.condition.zoneId" filterable>
-                <el-option v-for="zone in highDifficultZoneId" :key="zone.id" :label="zone.name" :value="zone.id"></el-option>
-              </el-select>
-            </p>
-            <p class="timeline-info-config">
-              <span>职业：</span>
-              <el-select v-model="timelineCurrentlyEditing.timeline.condition.job" required placeholder="职业">
-                <el-option v-for="job in Util.getBattleJobs2()" :key="job" :label="Util.nameToCN(job).full" :value="job"></el-option>
-              </el-select>
-            </p>
-            <p class="timeline-info-config">
-              <span>来源：</span>
-              <el-input v-model="timelineCurrentlyEditing.timeline.codeFight" disabled />
-            </p>
-            <p class="timeline-info-config">
-              <span>创建：</span>
-              <el-input v-model="timelineCurrentlyEditing.timeline.create" disabled />
-            </p>
-            <el-button type="success" @click="checkTimelineRaw(timelineCurrentlyEditing.timeline)">检查</el-button>
-            <el-button class="export" @click="exportTimeline([timelineCurrentlyEditing.timeline])">单独导出</el-button>
-            <el-button type="danger" @click="deleteTimeline(timelineCurrentlyEditing.timeline)">删除</el-button>
-          </div>
-          <div style="flex: 1">
-            <el-input
-              class="timeline-timeline-raw"
-              v-model="timelineCurrentlyEditing.timeline.timeline"
-              type="textarea"
-              :rows="12"
-              wrap="off"
-              placeholder="请键入时间轴文本"
-            />
-          </div>
-          <div style="max-height: 353px">
-            <div class="timeline-timeline-view">
-              <TimelineShowVue
-                :config="timelineStore.configValues"
-                :lines="timelineStore.parseTimeline(timelineCurrentlyEditing.timeline.timeline)"
-                :runtime="simulatedCombatTime"
-                :show-style="timelineStore.showStyle"
-              ></TimelineShowVue>
-            </div>
-          </div>
-        </el-row>
-        <br />
-      </el-card>
-      <br />
-      <el-card v-if="timelines.length > 0">
-        <el-table :data="timelines" stripe style="width: 100%" :default-sort="{ prop: 'conditon.job', order: 'descending' }">
-          <el-table-column prop="name" label="名称" sortable> </el-table-column>
-          <el-table-column prop="conditon" label="地图" sortable>
-            <template #default="scope">
-              {{ highDifficultZoneId.find((value) => value.id === scope.row.condition.zoneId)?.name }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="conditon" label="职业" sortable>
-            <template #default="scope">
-              {{ Util.nameToCN(scope.row.condition.job).simple2 }}
-            </template>
-          </el-table-column>
-          <el-table-column fixed="right" label="操作" width="100">
-            <template #default="scope">
-              <el-button @click="editTimeline(scope.row)" type="primary" size="small">编辑</el-button>
-            </template>
-          </el-table-column>
-        </el-table></el-card
-      >
-      <el-card v-if="timelines.length === 0"> <el-empty description="点击上方新建或导入一个时间轴吧~"></el-empty></el-card>
-    </el-main>
-  </el-container>
-</template>
-
 <script lang="ts" setup>
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
@@ -252,7 +120,7 @@ function deleteTimeline(target: ITimeline): void {
       clearCurrentlyTimeline();
       timelines.value.splice(
         timelines.value.findIndex((v) => v === target),
-        1
+        1,
       );
     }
   });
@@ -269,7 +137,7 @@ function saveTimelineStoreData(): void {
     () => {
       timelineStore.saveTimelineSettings();
     },
-    { flush: "post" }
+    { flush: "post" },
   );
 }
 
@@ -350,12 +218,164 @@ function checkTimelineRaw(timeline: ITimeline): void {
   });
   Swal.fire({
     title: `正确：${everyLine.length - errorList.length}，错误：${errorList.length}。`,
-    html: `${errorList.length > 0 ? errorList.map((v) => `<p style="white-space: nowrap;">第${v.index + 1}行：${v.t}</p>`).join("") : ""}`,
+    html: `${
+      errorList.length > 0
+        ? errorList.map((v) => `<p style="white-space: nowrap;">第${v.index + 1}行：${v.t}</p>`).join("")
+        : ""
+    }`,
   });
   // return errorList.length > 0;
 }
 </script>
-
+<template>
+  <el-container class="container">
+    <el-header>
+      <el-button type="primary" @click="newDemoTimeline()">新建</el-button>
+      <el-button @click="fflogsImportClick()">从FFlogs导入</el-button>
+      <el-button @click="showSettings = !showSettings" color="#626aef" style="color: white">样式设置</el-button>
+      <el-button @click="importTimelines">导入</el-button>
+      <el-button class="export" @click="exportTimeline(timelines)">全部导出</el-button>
+      <el-button v-if="isWSMode" type="success" @click="broadcastData()">通过WS发送到悬浮窗</el-button>
+      <!-- <el-button v-if="!isWSMode" type="success" @click="applyData()">应用</el-button> -->
+    </el-header>
+    <el-main>
+      <FFlogsImport
+        :settings="timelineStore.settings"
+        :filters="timelineFilters"
+        v-if="showFFlogs"
+        @clearCurrentlyTimeline="clearCurrentlyTimeline"
+        @showFFlogsToggle="() => (showFFlogs = !showFFlogs)"
+        @newTimeline="timelineStore.newTimeline"
+      >
+      </FFlogsImport>
+      <el-card class="box-card" v-show="showSettings">
+        <el-descriptions title="时间轴参数" size="small" style="width: 100%" border>
+          <el-descriptions-item
+            v-for="(_value, key, index) in timelineStore.configValues"
+            :key="index"
+            :label="timelineStore.configTranslate[key]"
+            label-align="right"
+            align="center"
+            width="16em"
+          >
+            <el-input-number :min="0" :step="0.1" v-model="timelineStore.configValues[key]" />
+          </el-descriptions-item>
+        </el-descriptions>
+        <br />
+        <el-descriptions size="small" title="时间轴样式" style="width: 100%" border>
+          <el-descriptions-item
+            v-for="(_value, key, index) in timelineStore.showStyle"
+            :key="index"
+            :label="timelineStore.showStyleTranslate[key]"
+            label-align="right"
+            align="center"
+            width="16em"
+          >
+            <el-input-number :min="0" :step="0.01" v-model="timelineStore.showStyle[key]" />
+          </el-descriptions-item>
+        </el-descriptions>
+      </el-card>
+      <br />
+      <el-card v-show="timelineCurrentlyEditing.timeline.create !== '空'">
+        <div class="slider-demo-block">
+          <span>模拟时间：</span>
+          <el-slider v-model="simulatedCombatTime" :min="-30" :max="1500" :step="0.1" show-input> </el-slider>
+        </div>
+        <el-row class="timeline-info">
+          <div>
+            <p class="timeline-info-config">
+              <span>名称：</span>
+              <el-input v-model="timelineCurrentlyEditing.timeline.name" class="timeline-info-name"></el-input>
+            </p>
+            <p class="timeline-info-config">
+              <span>地图：</span>
+              <el-select v-model="timelineCurrentlyEditing.timeline.condition.zoneId" filterable>
+                <el-option
+                  v-for="zone in highDifficultZoneId"
+                  :key="zone.id"
+                  :label="zone.name"
+                  :value="zone.id"
+                ></el-option>
+              </el-select>
+            </p>
+            <p class="timeline-info-config">
+              <span>职业：</span>
+              <el-select v-model="timelineCurrentlyEditing.timeline.condition.job" required placeholder="职业">
+                <el-option
+                  v-for="job in Util.getBattleJobs2()"
+                  :key="job"
+                  :label="Util.nameToCN(job).full"
+                  :value="job"
+                ></el-option>
+              </el-select>
+            </p>
+            <p class="timeline-info-config">
+              <span>来源：</span>
+              <el-input v-model="timelineCurrentlyEditing.timeline.codeFight" disabled />
+            </p>
+            <p class="timeline-info-config">
+              <span>创建：</span>
+              <el-input v-model="timelineCurrentlyEditing.timeline.create" disabled />
+            </p>
+            <el-button type="success" @click="checkTimelineRaw(timelineCurrentlyEditing.timeline)">检查</el-button>
+            <el-button class="export" @click="exportTimeline([timelineCurrentlyEditing.timeline])">单独导出</el-button>
+            <el-button type="danger" @click="deleteTimeline(timelineCurrentlyEditing.timeline)">删除</el-button>
+          </div>
+          <div style="flex: 1">
+            <el-input
+              class="timeline-timeline-raw"
+              v-model="timelineCurrentlyEditing.timeline.timeline"
+              type="textarea"
+              :rows="12"
+              wrap="off"
+              placeholder="请键入时间轴文本"
+            />
+          </div>
+          <div style="max-height: 353px">
+            <div class="timeline-timeline-view">
+              <TimelineShowVue
+                :config="timelineStore.configValues"
+                :lines="timelineStore.parseTimeline(timelineCurrentlyEditing.timeline.timeline)"
+                :runtime="simulatedCombatTime"
+                :show-style="timelineStore.showStyle"
+              ></TimelineShowVue>
+            </div>
+          </div>
+        </el-row>
+        <br />
+      </el-card>
+      <br />
+      <el-card v-if="timelines.length > 0">
+        <el-table
+          :data="timelines"
+          stripe
+          style="width: 100%"
+          :default-sort="{ prop: 'conditon.job', order: 'descending' }"
+        >
+          <el-table-column prop="name" label="名称" sortable> </el-table-column>
+          <el-table-column prop="conditon" label="地图" sortable>
+            <template #default="scope">
+              {{ highDifficultZoneId.find((value) => value.id === scope.row.condition.zoneId)?.name }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="conditon" label="职业" sortable>
+            <template #default="scope">
+              {{ Util.nameToCN(scope.row.condition.job).simple2 }}
+            </template>
+          </el-table-column>
+          <el-table-column fixed="right" label="操作" width="100">
+            <template #default="scope">
+              <el-button @click="editTimeline(scope.row)" type="primary" size="small">编辑</el-button>
+            </template>
+          </el-table-column>
+        </el-table></el-card
+      >
+      <el-card v-if="timelines.length === 0">
+        <el-empty description="点击上方新建或导入一个时间轴吧~"></el-empty
+      ></el-card>
+    </el-main>
+  </el-container>
+</template>
 <style lang="scss" scoped>
 .slider-demo-block {
   display: flex;

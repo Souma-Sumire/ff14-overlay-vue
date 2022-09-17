@@ -34,9 +34,10 @@ const markMap = {
         <el-button
           plain
           color="rgb(24,34,44)"
-          v-for="i in macroStore.fastEntrance"
-          @click="macroStore.selectZone = i.value"
-          >{{ i.text }}</el-button
+          v-for="(entrance, index) in macroStore.fastEntrance"
+          :key="index"
+          @click="macroStore.selectZone = entrance.value"
+          >{{ entrance.text }}</el-button
         >
       </el-space>
     </el-header>
@@ -50,14 +51,8 @@ const markMap = {
             </div>
           </template>
           <div v-if="macro.type === 'macro'">
-            <article>
-              <div
-                style="white-space: nowrap"
-                v-if="!macro.editable"
-                v-for="(macro, o) in macro.text!.split('\n')"
-                :key="o"
-                class="text item"
-              >
+            <article v-if="!macro.editable">
+              <div style="white-space: nowrap" v-for="(macro, o) in macro.text?.split('\n')" :key="o" class="text item">
                 {{ macro }}
               </div>
             </article>
@@ -187,10 +182,10 @@ const markMap = {
                 @click="macroStore.submitMacro(macro)"
               />
               <el-button class="hvr-grow" type="danger" :icon="Delete" circle @click="macroStore.deleteMacro(macro)" />
-              <el-button class="hvr-grow" type="primary" @click="macroStore.doLocalWayMark(macro.place!)"
+              <el-button class="hvr-grow" type="primary" @click="macroStore.doLocalWayMark(macro?.place)"
                 >本地</el-button
               >
-              <el-button type="primary" plain disabled @click="macroStore.doSlotWayMark(macro.place!)"
+              <el-button type="primary" plain disabled @click="macroStore.doSlotWayMark(macro?.place)"
                 >插槽(未实现)</el-button
               >
             </el-row>

@@ -1,75 +1,3 @@
-<template>
-  <el-form :inline="true" class="fflogs-query">
-    <el-form-item label="FF logs 战斗" style="width: 450px">
-      <el-input v-model="inputUrl" placeholder="reports/AAAaAaAAaa1aA1aA#fight=3" autocomplete="on" />
-    </el-form-item>
-    <el-form-item label="FF logs V1 Key" style="width: 450px">
-      <el-input type="password" v-model="props.settings.api" />
-    </el-form-item>
-    <el-form-item>
-      <el-button
-        :disabled="queryText === QueryTextEnum.querying"
-        type="primary"
-        @click="queryFFlogsReportFights(inputUrl)"
-        >{{ queryText }}</el-button
-      >
-    </el-form-item>
-  </el-form>
-  <div class="fflogs-query-result-friendlies">
-    <el-row>
-      <el-table
-        v-show="fflogsQueryConfig.abilityFilterEvents.length === 0"
-        :data="fflogsQueryConfig.friendlies"
-        stripe
-        border
-        class="fflogs-query-result-friendlies-list"
-      >
-        <el-table-column prop="name" label="玩家名称" min-width="60px" />
-        <el-table-column prop="server" label="服务器" min-width="60px" />
-        <el-table-column prop="icon" label="职业" min-width="60px" />
-        <el-table-column label="选定" min-width="20px">
-          <template #default="scope">
-            <el-button type="primary" size="small" @click="handleFFlogsQueryResultFriendliesList(scope.row)"
-              >选择</el-button
-            >
-          </template>
-        </el-table-column>
-      </el-table></el-row
-    >
-    <el-row
-      v-show="fflogsQueryConfig.abilityFilterEvents.length > 0"
-      class="fflogs-query-result-friendlies-ability-filter-select"
-    >
-      <el-col :span="20">
-        <el-select
-          v-model="fflogsQueryConfig.abilityFilterSelected"
-          multiple
-          placeholder="技能过滤器"
-          :fit-input-width="true"
-        >
-          <el-option
-            class="ability-filter-li"
-            v-for="rule in fflogsQueryConfig.abilityFilterCandidate"
-            :key="rule.actionId"
-            :value="rule.actionId"
-            :label="rule.actionName"
-          >
-            <img
-              :src="`${siteImg}/${rule.url}.png`"
-              class="ability-filter-li-icon"
-              title=""
-              :onerror="`javascript:this.src='${siteImgBak}/${rule.url}.png';this.onerror=null;`"
-            />{{ rule.actionName }}
-          </el-option>
-        </el-select>
-      </el-col>
-      <el-col :span="4"
-        ><el-button type="success" @click="handeleFFlogsQueryResultFriendiesListFilter()">选择好了</el-button></el-col
-      >
-    </el-row>
-  </div>
-</template>
-
 <script lang="ts" setup>
 import axios from "axios";
 import { reactive, ref } from "vue";
@@ -386,7 +314,77 @@ function claerFFlogsQueryConfig() {
   fflogsQueryConfig.bossIDs = [];
 }
 </script>
-
+<template>
+  <el-form :inline="true" class="fflogs-query">
+    <el-form-item label="FF logs 战斗" style="width: 450px">
+      <el-input v-model="inputUrl" placeholder="reports/AAAaAaAAaa1aA1aA#fight=3" autocomplete="on" />
+    </el-form-item>
+    <el-form-item label="FF logs V1 Key" style="width: 450px">
+      <el-input type="password" v-model="props.settings.api" />
+    </el-form-item>
+    <el-form-item>
+      <el-button
+        :disabled="queryText === QueryTextEnum.querying"
+        type="primary"
+        @click="queryFFlogsReportFights(inputUrl)"
+        >{{ queryText }}</el-button
+      >
+    </el-form-item>
+  </el-form>
+  <div class="fflogs-query-result-friendlies">
+    <el-row>
+      <el-table
+        v-show="fflogsQueryConfig.abilityFilterEvents.length === 0"
+        :data="fflogsQueryConfig.friendlies"
+        stripe
+        border
+        class="fflogs-query-result-friendlies-list"
+      >
+        <el-table-column prop="name" label="玩家名称" min-width="60px" />
+        <el-table-column prop="server" label="服务器" min-width="60px" />
+        <el-table-column prop="icon" label="职业" min-width="60px" />
+        <el-table-column label="选定" min-width="20px">
+          <template #default="scope">
+            <el-button type="primary" size="small" @click="handleFFlogsQueryResultFriendliesList(scope.row)"
+              >选择</el-button
+            >
+          </template>
+        </el-table-column>
+      </el-table></el-row
+    >
+    <el-row
+      v-show="fflogsQueryConfig.abilityFilterEvents.length > 0"
+      class="fflogs-query-result-friendlies-ability-filter-select"
+    >
+      <el-col :span="20">
+        <el-select
+          v-model="fflogsQueryConfig.abilityFilterSelected"
+          multiple
+          placeholder="技能过滤器"
+          :fit-input-width="true"
+        >
+          <el-option
+            class="ability-filter-li"
+            v-for="rule in fflogsQueryConfig.abilityFilterCandidate"
+            :key="rule.actionId"
+            :value="rule.actionId"
+            :label="rule.actionName"
+          >
+            <img
+              :src="`${siteImg}/${rule.url}.png`"
+              class="ability-filter-li-icon"
+              title=""
+              :onerror="`javascript:this.src='${siteImgBak}/${rule.url}.png';this.onerror=null;`"
+            />{{ rule.actionName }}
+          </el-option>
+        </el-select>
+      </el-col>
+      <el-col :span="4"
+        ><el-button type="success" @click="handeleFFlogsQueryResultFriendiesListFilter()">选择好了</el-button></el-col
+      >
+    </el-row>
+  </div>
+</template>
 <style lang="scss" scoped>
 .ability-filter-li {
   display: inline-flex;

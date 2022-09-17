@@ -1,10 +1,12 @@
 <template>
-  <ul v-if="lines.length" class="loadedTimelines" :style="(showStyle as any)">
+  <ul v-if="lines.length" class="loadedTimelines" :style="showStyle">
     <li
       v-for="(item, index) in lines"
       :key="index"
       v-show="
-        item.show && item.time - runtime > 0 - config.hold - showStyle['--tras-duration'] && item.time - runtime <= config.displayDuration
+        item.show &&
+        item.time - runtime > 0 - config.hold - showStyle['--tras-duration'] &&
+        item.time - runtime <= config.displayDuration
       "
       :class="{ upcoming: item.time - runtime <= config.discoloration, fade: item.time - runtime <= 0 - config.hold }"
     >
