@@ -1,11 +1,9 @@
 <script lang="ts" setup>
+import { useStorage } from "@vueuse/core";
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 import { reactive, ref } from "vue";
-// import "../common/hasOverlayPluginApi";
-// import TimelineShow from "../components/timeline/TimelineShow.vue";
 import { useTimelineStore } from "../../store/timeline";
-import { Job } from "../../types/Job";
 import { ITimeline, ITimelineCondition, ITimelineLine, ShowStyle, TimelineConfigValues } from "../../types/Timeline";
 
 const timelineStore = useTimelineStore();
@@ -20,12 +18,13 @@ let runtimeTimer: NodeJS.Timer; //计时器用以循环刷新界面
 let ttsSuppressFlag = true; //防止tts重复
 let ttsSuppressMs = 300; // tts重复阈值
 //每次get时间轴时被传入的条件对象
-let condition: ITimelineCondition = {
+const condition = useStorage("timeline-condition", {
   zoneId: "0",
   job: "NONE",
-};
+} as ITimelineCondition);
+const devMode = ref(window.location.href.match(/localhost/));
 //保存最后一次选择的时间轴，用于团灭时重新加载
-let lastUsedTimeline: ITimeline;
+// let lastUsedTimeline: ITimeline;
 
 init();
 
@@ -38,7 +37,15 @@ function init() {
   addOverlayListener("onInCombatChangedEvent", handleInCombatChanged);
   startOverlayEvents();
   timelineStore.loadTimelineSettings();
-  condition.job = (localStorage.getItem("timelineLastJob") ?? "NONE") as Job;
+  if (!Swal.isVisible()) {
+    Swal.fire({
+      text: `${timelineStore.allTimelines.length}条时间轴已就绪`,
+      showConfirmButton: false,
+      timer: 1500,
+      backdrop: false,
+    });
+  }
+  getTimeline(condition.value);
 }
 
 function openSettings() {
@@ -47,7 +54,7 @@ function openSettings() {
     if (windowsOpen?.closed) {
       clearInterval(loop);
       timelineStore.loadTimelineSettings();
-      getTimeline(condition);
+      getTimeline(condition.value);
     }
   }, 500);
 }
@@ -90,7 +97,7 @@ function mountTimeline(timeline: ITimeline) {
       timer: 1000,
       backdrop: false,
     });
-    lastUsedTimeline = timeline;
+    // lastUsedTimeline = timeline;
   }
 }
 
@@ -128,13 +135,13 @@ function handleLogEvent(e: any) {
     if (regex) {
       //倒计时
       startTimeline(parseInt(regex!.groups!.cd));
-    } else if (condition.zoneId === "1009" && /^.{14} (?:Director |)21:.{8}:8.{5}1A/.test(log)) {
-      // 进本体?
-      getTimeline(condition);
+      // } else if (condition.value.zoneId === "1009" && /^.{14} (?:Director |)21:.{8}:8.{5}1A/.test(log)) {
+      //   // 进本体?
+      //   getTimeline(condition.value);
     } else if (/^.{14} (?:Director |)21:.{8}:400000(?:0F|10)/.test(log) || /^.{14} ChatLog 00:0038::end$/.test(log)) {
       //团灭
       stopTimeline();
-      mountTimeline(lastUsedTimeline);
+      // mountTimeline(lastUsedTimeline);
     } else {
       //是否触发了某行的sync
       const timelineSync = timelinePageData.loadedTimeline.find((item) => {
@@ -159,17 +166,14 @@ function syncTimeline(targetTime: number) {
 
 //玩家状态（职业）
 function handlePlayerChangedEvent(e: any) {
-  if (condition.job !== e.detail.job) {
-    condition.job = e.detail.job;
-    localStorage.setItem("timelineLastJob", e.detail.job);
-  }
+  condition.value.job = e.detail.job;
 }
 
 //切换场景
 function handleChangeZone(e: any) {
-  condition.zoneId = String(e.zoneID);
-  lastUsedTimeline = { name: "", condition: { zoneId: "", job: "NONE" }, timeline: "", codeFight: "", create: "" };
-  getTimeline(condition);
+  condition.value.zoneId = String(e.zoneID);
+  // lastUsedTimeline = { name: "", condition: { zoneId: "", job: "NONE" }, timeline: "", codeFight: "", create: "" };
+  getTimeline(condition.value);
 }
 
 //调用TTS
@@ -213,7 +217,7 @@ function handleBroadcastMessage(e: {
         timelineStore.showStyle = e.msg.store.showStyle;
         timelineStore.saveTimelineSettings();
         Swal.fire("接受成功");
-        getTimeline(condition); //获取新数据之后查询一次
+        getTimeline(condition.value); //获取新数据之后查询一次
       }
     });
   }
@@ -247,7 +251,6 @@ function handleInCombatChanged(ev: {
       <path
         d="M943.321212 577.163636c12.412121 18.618182 31.030303 31.030303 55.854546 37.236364 6.206061 0 12.412121 6.206061 12.412121 6.206061 6.206061 6.206061 18.618182 18.618182 18.618182 31.030303v24.824242c-6.206061 24.824242-12.412121 43.442424-24.824243 62.060606l-6.20606 12.412121c-6.206061 12.412121-12.412121 18.618182-24.824243 24.824243-6.206061 6.206061-18.618182 6.206061-24.824242 6.20606-6.206061 0-12.412121 0-18.618182-6.20606-18.618182-6.206061-37.236364-6.206061-55.854546-6.206061h6.206061-12.412121c-18.618182 0-31.030303 6.206061-43.442424 12.412121 0 0-12.412121 6.206061-24.824243 18.618182-12.412121 12.412121-24.824242 37.236364-24.824242 62.060606 0 18.618182 0 37.236364 12.412121 62.060606 6.206061 12.412121 6.206061 31.030303-6.206061 43.442425-12.412121 12.412121-24.824242 18.618182-37.236363 24.824242-6.206061 6.206061-37.236364 18.618182-68.266667 24.824242 37.236364-6.206061 12.412121 0-12.412121 0h-6.206061c-6.206061 0-12.412121 0-18.618182-6.20606-6.206061-6.206061-12.412121-12.412121-12.412121-24.824243v6.206061c-12.412121-31.030303-31.030303-55.854545-55.854545-68.266667 0-6.206061-24.824242-12.412121-49.648485-12.412121s-49.648485 6.206061-68.266667 24.824243c-24.824242 18.618182-43.442424 43.442424-49.648485 74.472727 0-6.206061-6.206061 0-12.412121 0 0 0-12.412121 6.206061-18.618182 6.20606-12.412121 0-18.618182 0-37.236363-6.20606-12.412121-6.206061-24.824242-6.206061-37.236364-12.412121l-37.236364-18.618182c-12.412121-6.206061-18.618182-12.412121-24.824242-24.824243-6.206061-6.206061-6.206061-12.412121-6.206061-18.618181 0-6.206061 0-18.618182 6.206061-31.030304 6.206061-6.206061 12.412121-24.824242 12.412121-49.648484s-12.412121-43.442424-31.030303-62.060606c-12.412121-12.412121-24.824242-18.618182-43.442424-24.824243h-24.824242-6.206061c-12.412121 0-31.030303 6.206061-49.648485 6.206061h-12.412121c-6.206061 0-12.412121 0-18.618182-6.206061-6.206061 0-12.412121-12.412121-24.824242-18.618182-18.618182-31.030303-31.030303-68.266667-37.236364-105.50303v-6.206061c0-18.618182 12.412121-24.824242 24.824242-31.030303 24.824242-6.206061 43.442424-24.824242 62.060606-43.442424 18.618182-6.206061 24.824242-31.030303 24.824243-55.854545s-6.206061-49.648485-24.824243-68.266667C62.060606 415.806061 31.030303 397.187879 0 390.981818c18.618182 6.206061 12.412121 0 12.412121-6.20606-6.206061-6.206061-6.206061-18.618182-6.20606-24.824243 0-6.206061 0-18.618182 6.20606-31.030303 6.206061-24.824242 18.618182-49.648485 31.030303-68.266667-12.412121 24.824242-6.206061 12.412121 0 6.206061 0-12.412121 6.206061-18.618182 12.412121-24.824242 6.206061 0 6.206061-6.206061 12.412122-6.206061s12.412121 0 18.618181 6.206061c24.824242 6.206061 49.648485 12.412121 74.472728 6.20606 24.824242 0 43.442424-12.412121 62.060606-31.030303 12.412121-12.412121 18.618182-24.824242 18.618182-43.442424 6.206061 0 6.206061-12.412121 6.20606-24.824242v-18.618182-18.618182c0-18.618182-6.206061-43.442424-12.412121-62.060606 6.206061 31.030303 0 18.618182 0 6.20606v0c12.412121-6.206061 18.618182-12.412121 31.030303-18.618181l37.236364-18.618182c12.412121-6.206061 24.824242-6.206061 37.236363-12.412121 12.412121-6.206061 24.824242-6.206061 31.030303-6.206061 12.412121 0 18.618182 0 24.824243 12.412121 6.206061 6.206061 12.412121 18.618182 12.412121 31.030303 6.206061 12.412121 18.618182 24.824242 37.236364 43.442424s37.236364 24.824242 62.060606 24.824243 49.648485-6.206061 68.266666-18.618182c24.824242-24.824242 37.236364-43.442424 43.442425-68.266667 0-6.206061 6.206061-12.412121 12.412121-18.618181 6.206061 0 12.412121-6.206061 18.618182-6.206061 12.412121 0 18.618182 0 31.030303 6.206061 12.412121 0 24.824242 6.206061 37.236363 12.412121 12.412121 6.206061 24.824242 12.412121 31.030303 18.618182 12.412121 6.206061 18.618182 18.618182 24.824243 24.824242 0 6.206061 6.206061 6.206061 6.20606 12.412121v6.206061c0 6.206061-6.206061 18.618182-6.20606 24.824242 0 6.206061-6.206061 24.824242-6.206061 37.236364v18.618182c6.206061 24.824242 12.412121 43.442424 31.030303 62.060606 18.618182 18.618182 37.236364 24.824242 62.060606 31.030303 24.824242 0 49.648485 0 68.266667-12.412121 6.206061 0 12.412121-6.206061 18.618182-6.206061h6.20606c6.206061 0 18.618182 6.206061 24.824243 12.412121 12.412121 12.412121 18.618182 24.824242 31.030303 43.442424 6.206061 18.618182 12.412121 43.442424 18.618182 62.060607 0 12.412121 0 24.824242-6.206061 31.030303-6.206061 6.206061-12.412121 12.412121-24.824242 18.618181-24.824242 6.206061-49.648485 31.030303-62.060606 55.854546-6.206061 6.206061-12.412121 24.824242-12.412122 49.648485-6.206061 24.824242 0 49.648485 18.618182 68.266666zM682.666667 341.333333c-43.442424-43.442424-105.50303-68.266667-167.563637-68.266666-31.030303 0-62.060606 6.206061-93.090909 18.618181-43.442424 18.618182-80.678788 49.648485-105.50303 86.884849-6.206061-6.206061-24.824242 37.236364-37.236364 80.678788 0-18.618182-6.206061 12.412121-6.20606 49.648485 0 31.030303 6.206061 62.060606 18.618181 93.090909 12.412121 31.030303 31.030303 55.854545 49.648485 74.472727 18.618182 24.824242 49.648485 37.236364 74.472728 49.648485 31.030303 12.412121 62.060606 18.618182 93.090909 18.618182s62.060606-6.206061 93.090909-18.618182c43.442424-18.618182 80.678788-49.648485 105.50303-86.884849-6.206061 12.412121 12.412121-12.412121 24.824243-43.442424 12.412121-31.030303 18.618182-62.060606 18.618181-93.090909s-6.206061-62.060606-18.618181-93.090909C713.69697 372.363636 682.666667 335.127273 645.430303 310.30303l37.236364 31.030303z"
         p-id="2216"
-        fill="#fff"
       ></path>
     </svg>
 
@@ -267,6 +270,8 @@ function handleInCombatChanged(ev: {
       :show-style="timelineStore.showStyle"
     ></TimelineShow>
   </div>
+  <button v-if="devMode" @click="startTimeline(0)">开始</button>
+  <button v-if="devMode" @click="stopTimeline()">团灭</button>
 </template>
 
 <style lang="scss" scoped>
@@ -284,19 +289,19 @@ function handleInCombatChanged(ev: {
   .icon {
     background-color: rgba($color: #000000, $alpha: 0.01);
     cursor: pointer;
-    filter: brightness(0.8);
+    // filter: brightness(0.8);
+    fill: gray;
     opacity: 0.5;
     transition-duration: 0.2s;
     position: fixed;
     top: 0;
     right: 0;
     margin: 10px;
-  }
-  &:hover .icon {
-    filter: none !important;
-    opacity: 1;
-    transform-origin: right top;
-    // transform: scale(1.25);
+    &:hover {
+      opacity: 1;
+      transform-origin: center center;
+      transform: scale(1.25);
+    }
   }
   .optionalTimelines {
     display: flex;
@@ -312,7 +317,7 @@ function handleInCombatChanged(ev: {
       &:hover {
         cursor: pointer;
         transition-duration: 0.2s;
-        font-size: 24px;
+        font-size: 20px;
       }
     }
   }
