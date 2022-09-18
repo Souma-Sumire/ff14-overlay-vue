@@ -1,4 +1,4 @@
-import vue from "@vitejs/plugin-vue";
+import Vue from "@vitejs/plugin-vue";
 import { presetAttributify, presetIcons, presetUno } from "unocss";
 import Unocss from "unocss/vite";
 import AutoImport from "unplugin-auto-import/vite";
@@ -6,6 +6,7 @@ import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
 import Components from "unplugin-vue-components/vite";
 import { defineConfig } from "vite";
 import Pages from "vite-plugin-pages";
+import Markdown from "vite-plugin-vue-markdown";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -15,7 +16,7 @@ export default defineConfig({
     reportCompressedSize: false, //禁用gzip压缩大小报告以提高构建性能
   },
   plugins: [
-    vue(),
+    Vue({ include: [/\.vue$/, /\.md$/] }),
     AutoImport({
       resolvers: [ElementPlusResolver()],
     }),
@@ -26,6 +27,7 @@ export default defineConfig({
       presets: [presetUno(), presetAttributify(), presetIcons()],
     }),
     Pages(),
+    Markdown(),
   ],
   css: {
     postcss: {
