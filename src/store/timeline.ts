@@ -67,7 +67,8 @@ let showStyle: ShowStyle = {
   "--up-coming-scale": 1,
   "--tras-duration": 0.66,
 };
-const reg = `^[ \\t　]*(?<time>[\\-:：\\d.]+) +(?:["']?(?<action>[^"\\n\\r]+)["']?)?(?:[ \\t　]+(?<t>tts)[ \\t　]?)?(?: ["']??(?<tts>[^" \\t　\\n\\r]+)["']??)?(?:[ \\t　]+sync[ \\t　]*\\/(?<sync>.+)\\/)?(?:[ \\t　]*window[ \\t　]*(?<windowBefore>\\d+)(?:,[ \\t　]*(?<windowAfter>\\d+))?)?(?:[ \\t　]*jump[ \\t　]*(?<jump>\\d+))?[ \\t　]*$`;
+//(?:[ \\t　]+(?<t>tts)[ \\t　]?)?(?: ["']??(?<tts>[^" \\t　\\n\\r]+)["']??)?(?:[ \\t　]+sync[ \\t　]*\\/(?<sync>.+)\\/)?(?:[ \\t　]*window[ \\t　]*(?<windowBefore>\\d+)(?:,[ \\t　]*(?<windowAfter>\\d+))?)?(?:[ \\t　]*jump[ \\t　]*(?<jump>\\d+))?[ \\t　]*$`;
+const reg = `^(?<time>[-:：\\d.]+)\\s+(?<action>["'][^"']+["']).*`;
 
 export const useTimelineStore = defineStore("timeline", {
   state: () => {
@@ -88,11 +89,18 @@ export const useTimelineStore = defineStore("timeline", {
     newTimeline(
       title: string = "Demo",
       condition: ITimelineCondition = { zoneId: "0", job: "NONE" },
-      rawTimeline: string = `-20 "<中间学派>刷盾"
-0 "战斗开始"
-10 "<死斗>~" tts
-65 "一运" tts "场中集合"
-100 "二运" sync /^.{14} ActionEffect 15:4.{7}:[^:]+:AAAA:/`,
+      rawTimeline: string = `# 注释的内容不会被解析
+# "<技能名>"会被解析为图片 紧接着一个波浪线可快捷重复技能名
+-20 "<中间学派>~刷盾"
+0 "战斗开始" tts "冲呀"
+# 当sync在window的范围内被满足时将进行时间同步
+30 "一运" sync / 14:4.{7}:[^:]*:AAAA:/ window 2.5,2.5
+# 当存在jump时会进跳转至jump时间
+50 "变异化型:蛇" sync / 14:4.{7}:[^:]*:BBBB:/ window 2.5,2.5 jump 1000
+50 "变异化型:兽" sync / 14:4.{7}:[^:]*:CCCC:/ window 2.5,2.5 jump 2000
+1000 "蛇轴"
+2000 "兽轴"
+`,
       codeFight: string = "用户创建",
     ) {
       this.allTimelines.push(new Timeline(title, condition, rawTimeline, codeFight));
@@ -116,20 +124,35 @@ export const useTimelineStore = defineStore("timeline", {
     parseTimeline(rawTimeline: string) {
       return [...rawTimeline.matchAll(this.timelineLegalRegular)]
         .reduce((total, line) => {
+          const jump = line[0].match(/(?<=jump )[-:：\d.]+/)?.[0];
+          const sync = line[0].match(/(?<=sync \/).+(?=\/)/)?.[0];
+          const windowAfter = line[0].match(/(?<=window )[-:：\d.]+/)?.[0];
+          const windowBefore = line[0].match(/(?<=window [-:：\d.]+,)[-:：\d.]+/)?.[0];
+          const tts = line[0].match(/ tts ["'](?<tts>[^"']+)["']/)?.groups?.tts;
+          const ttsSim = / tts(?: |$)/.test(line[0]) ? parseAction(line.groups!.action)?.groups?.name : undefined;
           total.push({
+            // time: parseTime(line.groups!.time),
+            // action: line.groups!.action ? parseAction(line.groups!.action.replace(/ /, "&nbsp")) : "",
+            // sync: line.groups?.sync ? new RegExp(line.groups.sync) : void 0,
+            // show: !line.groups!.sync,
+            // windowBefore: line.groups?.windowBefore ? parseInt(line.groups.windowBefore) : 2.5,
+            // windowAfter: line.groups?.windowAfter ? parseInt(line.groups.windowAfter || line.groups.windowBefore) : 2.5,
+            // jump: line.groups?.jump ? parseInt(line.groups.jump) : void 0,
+            // alertAlready: false,
+            // tts: line.groups?.tts
+            //   ? line.groups.tts
+            //   : line.groups?.t
+            //   ? line.groups.action.match(/^.*<(?<name>.+)>.*$/)?.groups?.name
+            //   : void 0,
             time: parseTime(line.groups!.time),
-            action: line.groups!.action ? parseAction(line.groups!.action.replace(/ /, "&nbsp")) : "",
-            sync: line.groups?.sync ? new RegExp(line.groups.sync) : void 0,
-            show: !line.groups!.sync,
-            windowBefore: line.groups?.windowBefore ? parseInt(line.groups.windowBefore) : 2.5,
-            windowAfter: line.groups?.windowAfter ? parseInt(line.groups.windowAfter || line.groups.windowBefore) : 2.5,
-            jump: line.groups?.jump ? parseInt(line.groups.jump) : void 0,
+            actionHTML: line.groups!.action ? parseActionHTML(line.groups!.action) : "",
             alertAlready: false,
-            tts: line.groups?.tts
-              ? line.groups.tts
-              : line.groups?.t
-              ? line.groups.action.match(/^.*<(?<name>.+)>.*$/)?.groups?.name
-              : void 0,
+            sync: sync ? new RegExp(sync) : undefined,
+            show: !sync,
+            windowBefore: parseFloat(windowBefore || windowAfter || "2.5"),
+            windowAfter: parseFloat(windowAfter || windowBefore || "2.5"),
+            jump: jump ? parseFloat(jump) : undefined,
+            tts: tts || ttsSim,
           });
           return total;
         }, [] as Array<ITimelineLine>)
@@ -181,21 +204,22 @@ function parseTime(time: string): number {
     return parseFloat(time);
   }
 }
-function parseAction(text: string): string {
-  [...text.matchAll(/\s*\<(?<name>[^\<\>]*?)!??\>(?<repeat>~)?(?<other>.*)\s*/gm)].forEach((item) => {
-    // const action =
-    //   actionStore.getAction({ Name: item.groups!.name, IsPlayerAction: true }) ??
-    //   actionStore.getAction({ Name: item.groups!.name, IsPlayerAction: false });
-    const action =
-      actionStore.getActionByName(item.groups!.name, (a: IActionData) => a[ActionEnum.IsPlayerAction]) ??
-      actionStore.getActionByName(item.groups!.name, () => true);
-    if (action) {
-      text = `<div class="skill_icon">
+function parseAction(text: string) {
+  return text.match(/\s*\<(?<name>[^\<\>]*?)!??\>(?<repeat>~)?(?<other>.*)\s*/);
+}
+function parseActionHTML(text: string): string {
+  // text = text.replace(/ /, "&nbsp");
+  text = text.replaceAll(/^["']|["']$/g, "");
+  const item = parseAction(text);
+  if (!item) return text;
+  const action =
+    actionStore.getActionByName(item.groups!.name, (a: IActionData) => a[ActionEnum.IsPlayerAction]) ??
+    actionStore.getActionByName(item.groups!.name, () => true);
+  if (action) {
+    text = `<div class="skill_icon">
     <img src="${__SITE_IMG__}/${action.Url}.png"
     onerror="javascript:this.src='${__SITE_IMG__BAK}/${action.Url}.png';this.onerror=null;">
     </div><span>${item.groups?.repeat ? item.groups!.name : ""}${item.groups?.other ? item.groups.other : ""}</span>`;
-    }
-  });
-
+  }
   return text;
 }

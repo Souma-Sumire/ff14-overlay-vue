@@ -2,7 +2,7 @@
 import { useStorage } from "@vueuse/core";
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
-import { reactive, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 import { useTimelineStore } from "../../store/timeline";
 import { ITimeline, ITimelineCondition, ITimelineLine, ShowStyle, TimelineConfigValues } from "../../types/Timeline";
 
@@ -25,6 +25,8 @@ const condition = useStorage("timeline-condition", {
 const devMode = ref(window.location.href.match(/localhost/));
 //保存最后一次选择的时间轴，用于团灭时重新加载
 // let lastUsedTimeline: ITimeline;
+
+const syncLines = computed(() => timelinePageData.loadedTimeline.filter((item) => item.sync));
 
 init();
 
@@ -111,6 +113,8 @@ function stopTimeline() {
 
 //页面时间轴开始播放
 function startTimeline(countdownSeconds: number) {
+  runtimeTimeSeconds.value = 0;
+  offsetTimeMS.value = 0;
   baseTimeMs.value = new Date().getTime() + countdownSeconds * 1000;
   clearInterval(Number(runtimeTimer));
   runtimeTimer = setInterval(() => {
@@ -135,24 +139,19 @@ function handleLogEvent(e: any) {
     if (regex) {
       //倒计时
       startTimeline(parseInt(regex!.groups!.cd));
-      // } else if (condition.value.zoneId === "1009" && /^.{14} (?:Director |)21:.{8}:8.{5}1A/.test(log)) {
-      //   // 进本体?
-      //   getTimeline(condition.value);
     } else if (/^.{14} (?:Director |)21:.{8}:400000(?:0F|10)/.test(log) || /^.{14} ChatLog 00:0038::end$/.test(log)) {
       //团灭
       stopTimeline();
       // mountTimeline(lastUsedTimeline);
     } else {
       //是否触发了某行的sync
-      const timelineSync = timelinePageData.loadedTimeline.find((item) => {
+      const timelineSync = syncLines.value.find((item) => {
         return (
-          item.sync &&
-          item.sync.test(log) &&
+          item.sync!.test(log) &&
           runtimeTimeSeconds.value >= item.time - item.windowBefore &&
           runtimeTimeSeconds.value <= item.time + Number(item.windowAfter)
         );
       });
-
       //如果匹配sync则同步到time，有jump则同步至jump
       if (timelineSync) syncTimeline(timelineSync.jump || timelineSync.time);
     }
@@ -161,7 +160,11 @@ function handleLogEvent(e: any) {
 
 //同步页面时间轴
 function syncTimeline(targetTime: number) {
-  offsetTimeMS.value += (targetTime - runtimeTimeSeconds.value) * 1000;
+  if (targetTime === 0) stopTimeline();
+  else {
+    if (baseTimeMs.value === 0) startTimeline(0);
+    offsetTimeMS.value += (targetTime - runtimeTimeSeconds.value) * 1000;
+  }
 }
 
 //玩家状态（职业）
@@ -272,6 +275,7 @@ function handleInCombatChanged(ev: {
   </div>
   <button v-if="devMode" @click="startTimeline(0)">开始</button>
   <button v-if="devMode" @click="stopTimeline()">团灭</button>
+  {{ runtimeTimeSeconds }}
 </template>
 
 <style lang="scss" scoped>

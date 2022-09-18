@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
-import { reactive, ref, toRef, watchEffect } from "vue";
+import { computed, reactive, ref, toRef, watchEffect } from "vue";
 import FflogsImport from "../../components/timeline/fflogsImport.vue";
 import TimelineShow from "../../components/timeline/timelineShow.vue";
 import zoneInfo from "../../resources/zoneInfo";
@@ -10,7 +10,8 @@ import { ITimeline } from "../../types/Timeline";
 import Util from "../../utils/util";
 import "animate.css";
 import ClipboardJS from "clipboard";
-
+import router from "../../router";
+import { useDebounce } from "@vueuse/core";
 const simulatedCombatTime = ref(-30);
 const timelineStore = useTimelineStore();
 const timelines = toRef(timelineStore, "allTimelines");
@@ -22,7 +23,17 @@ let timelineCurrentlyEditing: { timeline: ITimeline } = reactive({
   timeline: { name: "空", condition: { zoneId: "0", job: "NONE" }, timeline: "空", codeFight: "空", create: "空" },
 });
 const isWSMode = location.href.includes("OVERLAY_WS=");
-
+const debounceTimeline = useDebounce(
+  computed(() => timelineStore.parseTimeline(timelineCurrentlyEditing.timeline.timeline)),
+  500,
+  { maxWait: 5000 },
+);
+const debounceZone = useDebounce(ref(timelineCurrentlyEditing.timeline.condition.zoneId), 500, { maxWait: 5000 });
+const debounceJobCN = useDebounce(
+  computed(() => Util.getBattleJobs2()),
+  500,
+  { maxWait: 5000 },
+);
 init();
 
 function init(): void {
@@ -226,6 +237,9 @@ function checkTimelineRaw(timeline: ITimeline): void {
   });
   // return errorList.length > 0;
 }
+function readMe(): void {
+  router.push("/timeline/help");
+}
 </script>
 <template>
   <el-container class="container">
@@ -233,10 +247,11 @@ function checkTimelineRaw(timeline: ITimeline): void {
       <el-button type="primary" @click="newDemoTimeline()">新建</el-button>
       <el-button @click="fflogsImportClick()">从FFlogs导入</el-button>
       <el-button @click="showSettings = !showSettings" color="#626aef" style="color: white">样式设置</el-button>
-      <el-button @click="importTimelines">导入</el-button>
+      <el-button @click="importTimelines()">导入</el-button>
       <el-button class="export" @click="exportTimeline(timelines)">全部导出</el-button>
       <el-button v-if="isWSMode" type="success" @click="broadcastData()">通过WS发送到悬浮窗</el-button>
       <!-- <el-button v-if="!isWSMode" type="success" @click="applyData()">应用</el-button> -->
+      <el-button type="success" @click="readMe()">帮助</el-button>
     </el-header>
     <el-main>
       <FflogsImport
@@ -289,7 +304,7 @@ function checkTimelineRaw(timeline: ITimeline): void {
             </p>
             <p class="timeline-info-config">
               <span>地图：</span>
-              <el-select v-model="timelineCurrentlyEditing.timeline.condition.zoneId" filterable>
+              <el-select v-model="debounceZone" filterable>
                 <el-option
                   v-for="zone in highDifficultZoneId"
                   :key="zone.id"
@@ -302,7 +317,7 @@ function checkTimelineRaw(timeline: ITimeline): void {
               <span>职业：</span>
               <el-select v-model="timelineCurrentlyEditing.timeline.condition.job" required placeholder="职业">
                 <el-option
-                  v-for="job in Util.getBattleJobs2()"
+                  v-for="job in debounceJobCN"
                   :key="job"
                   :label="Util.nameToCN(job).full"
                   :value="job"
@@ -329,13 +344,14 @@ function checkTimelineRaw(timeline: ITimeline): void {
               :rows="12"
               wrap="off"
               placeholder="请键入时间轴文本"
+              style="max-width: 569px"
             />
           </div>
           <div style="max-height: 353px">
             <div class="timeline-timeline-view">
               <TimelineShow
                 :config="timelineStore.configValues"
-                :lines="timelineStore.parseTimeline(timelineCurrentlyEditing.timeline.timeline)"
+                :lines="debounceTimeline"
                 :runtime="simulatedCombatTime"
                 :show-style="timelineStore.showStyle"
               ></TimelineShow>

@@ -1,20 +1,23 @@
 <template>
   <ul v-if="lines.length" class="loadedTimelines" :style="showStyle">
     <li
-      v-for="(item, index) in lines"
+      v-for="(item, index) in props.lines"
       :key="index"
       v-show="
         item.show &&
         item.time - runtime > 0 - config.hold - showStyle['--tras-duration'] &&
         item.time - runtime <= config.displayDuration
       "
-      :class="{ upcoming: item.time - runtime <= config.discoloration, fade: item.time - runtime <= 0 - config.hold }"
+      :class="{
+        upcoming: item.time - runtime <= config.discoloration,
+        fade: item.time - runtime <= 0 - config.hold,
+        passed: item.time - runtime <= 0,
+      }"
     >
-      <!-- 底部的进度条 -->
       <aside :style="{ right: Math.max((item.time - runtime) / config.displayDuration, 0) * 100 + '%' }"></aside>
-      <!-- 时间轴模板解析后的内容 -->
       <section>
-        <span v-html="item.action"></span><span>{{ (item.time - runtime).toFixed(1) }} </span>
+        <span v-html="item.actionHTML"></span
+        ><span style="padding: 0px 1px">{{ (item.time - runtime).toFixed(1) }} </span>
       </section>
     </li>
   </ul>
@@ -22,10 +25,19 @@
 
 <script lang="ts" setup>
 import { ITimelineLine, TimelineConfigValues, ShowStyle } from "../../types/Timeline";
-defineProps<{ config: TimelineConfigValues; lines: ITimelineLine[]; runtime: number; showStyle: ShowStyle }>();
+const props = defineProps<{
+  config: TimelineConfigValues;
+  lines: ITimelineLine[];
+  runtime: number;
+  showStyle: ShowStyle;
+}>();
 </script>
 
 <style lang="scss" scoped>
+* {
+  overflow: hidden;
+  box-sizing: border-box;
+}
 $normalScale: 0.5;
 $upComingScale: 1;
 $fontSize: 16;
@@ -66,6 +78,19 @@ $timelineWitdh: 160;
       100% {
         opacity: 0;
         height: 0px;
+      }
+    }
+    &.passed {
+      // > aside {
+      animation: passed 0.25s 2 alternate;
+      // }
+      @keyframes passed {
+        0% {
+          filter: drop-shadow(0px 0px 0px black);
+        }
+        100% {
+          filter: drop-shadow(1px 2px 3px black);
+        }
       }
     }
     &.upcoming {
