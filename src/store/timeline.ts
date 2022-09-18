@@ -126,8 +126,8 @@ export const useTimelineStore = defineStore("timeline", {
         .reduce((total, line) => {
           const jump = line[0].match(/(?<=jump )[-:：\d.]+/)?.[0];
           const sync = line[0].match(/(?<=sync \/).+(?=\/)/)?.[0];
-          const windowAfter = line[0].match(/(?<=window )[-:：\d.]+/)?.[0];
-          const windowBefore = line[0].match(/(?<=window [-:：\d.]+,)[-:：\d.]+/)?.[0];
+          const windowBefore = line[0].match(/(?<=window )[-:：\d.]+/)?.[0];
+          const windowAfter = line[0].match(/(?<=window [-:：\d.]+,)[-:：\d.]+/)?.[0];
           const tts = line[0].match(/ tts ["'](?<tts>[^"']+)["']/)?.groups?.tts;
           const ttsSim = / tts(?: |$)/.test(line[0]) ? parseAction(line.groups!.action)?.groups?.name : undefined;
           total.push({

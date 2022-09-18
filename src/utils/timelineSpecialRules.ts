@@ -24,11 +24,9 @@ windowAction.set(25544, [300, 20]); //绝龙诗 阿斯卡隆之仁·隐秘
 
 export function factory(events: FFlogsStance, zoneID: number): FFlogsStance {
   for (const event of events) event.window = windowAction.get(event.actionId);
-  if (
-    zoneID === 968 &&
-    events.length > 0 &&
-    events.filter((v) => !v.sourceIsFriendly).findIndex((v) => v.actionId === 25544) <= 5
-  )
+  if (zoneID === 968 && events.length > 0 && events.filter((v) => !v.sourceIsFriendly)[0].actionId === 25531) {
+    events.filter((v) => !v.sourceIsFriendly)[0].window = [999, 2.5];
     for (const event of events) event.time += 180;
+  }
   return events;
 }
