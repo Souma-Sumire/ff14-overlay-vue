@@ -275,7 +275,7 @@ function handleInCombatChanged(ev: {
   </div>
   <button v-if="devMode" @click="startTimeline(0)">开始</button>
   <button v-if="devMode" @click="stopTimeline()">团灭</button>
-  {{ runtimeTimeSeconds }}
+  <span v-if="devMode">{{ runtimeTimeSeconds }}</span>
 </template>
 
 <style lang="scss" scoped>
