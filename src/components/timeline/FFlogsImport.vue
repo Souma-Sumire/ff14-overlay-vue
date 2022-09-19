@@ -107,7 +107,7 @@ function queryFFlogsReportFights(url: string) {
 async function handleFFlogsQueryResultFriendliesList(player: Friendlies) {
   fflogsQueryConfig.player = player as any;
   //进入第三步
-  await queryFFlogsReportEvents("cast")
+  await queryFFlogsReportEvents()
     .then(() => {
       fflogsQueryConfig.abilityFilterCandidate = fflogsQueryConfig.abilityFilterEvents.reduce((total: any[], event) => {
         if (event.sourceIsFriendly && !total.find((v) => v.actionId === event.actionId)) total.push(event);
@@ -125,7 +125,7 @@ async function handleFFlogsQueryResultFriendliesList(player: Friendlies) {
 }
 
 //fflogs导入第3步：通过API获取选定玩家所有casts
-async function queryFFlogsReportEvents(type: FFlogsType = "cast") {
+async function queryFFlogsReportEvents() {
   Swal.fire({ text: "正在解析数据，耗时可能较长，请耐心等待。(步骤2/3)", showConfirmButton: false });
   let resEvents: FFlogsApiV1ReportEvents[] = [];
   fflogsQueryConfig.abilityFilterEvents.length = 0;
@@ -188,12 +188,11 @@ async function queryFFlogsReportEvents(type: FFlogsType = "cast") {
   let enemiesPromise = await queryEnemies(fflogsQueryConfig.start, 0);
   await Promise.all([friendlyPromise, enemiesPromise]).then(() => {
     for (const event of resEvents) {
-      // if ((event.type !== type && event.sourceIsFriendly) || (event.type !== type && !event.sourceIsFriendly)) continue;
-      if (event.type !== type) continue;
+      if (event.type === "begincast" && event.sourceIsFriendly) continue;
       const action = actionStore.getActionById(event.ability.guid);
       fflogsQueryConfig.abilityFilterEvents.push({
         time: Number(((event.timestamp - fflogsQueryConfig.start) / 1000).toFixed(1)),
-        type: type,
+        type: event.type,
         actionName: action?.Name === undefined || action?.Name === "" ? event.ability.name : action.Name,
         actionId: event.ability.guid,
         sourceIsFriendly: event.sourceIsFriendly,
@@ -247,10 +246,7 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
           );
         })
         .sort((a, b) => a.time - b.time);
-      fflogsQueryConfig.abilityFilterEvents = factory(
-        fflogsQueryConfig.abilityFilterEvents,
-        Number(fflogsQueryConfig.zoneID),
-      );
+      fflogsQueryConfig.abilityFilterEvents = factory(fflogsQueryConfig.abilityFilterEvents);
       fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline = fflogsQueryConfig.abilityFilterEvents
         .map((item) => {
           let time = timeFormat
@@ -263,14 +259,12 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
               }`;
           if (item.sourceIsFriendly) {
             return `${time} "<${item.actionName}>~"${addTTS ? ` tts "${item.actionName}"` : ""}`;
-            // } else if (item.window === undefined) {
-            //   return `# ${time} "--${item.actionName}--"`;
           } else {
             const regexType: Partial<Record<FFlogsType, string>> = {
               "begincast": "14",
               "cast": "1[56]",
             };
-            return `${item.window === undefined ? "// " : ""}${time} "--${item.actionName}--" sync /^.{14} \\w+ ${
+            return `${time} --${item.actionName}-- sync /^.{14} \\w+ ${
               regexType[item.type]
             }:4.{7}:[^:]+:${item.actionId.toString(16).toUpperCase()}:/${
               item.window ? ` window ${(item.window ?? [12, 12]).join(",")}` : ""
@@ -414,8 +408,6 @@ function claerFFlogsQueryConfig() {
   }
   :deep(.fflogs-query-result-friendlies-ability-filter-select) {
     margin: 10px;
-    //   display: flex;
-    //   flex-direction: column;
     .el-select {
       width: 1040px;
       max-width: 100%;

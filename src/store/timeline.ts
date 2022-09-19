@@ -44,7 +44,7 @@ const configTranslate: TimelineConfigTranslate = {
 const configValues: TimelineConfigValues = {
   [TimelineConfigEnum.显示范围]: 120,
   [TimelineConfigEnum.变色时间]: 2.75,
-  [TimelineConfigEnum.零后持续]: 0.75,
+  [TimelineConfigEnum.零后持续]: 0.5,
   [TimelineConfigEnum.战前准备]: 30,
   [TimelineConfigEnum.TTS提前量]: 1,
   [TimelineConfigEnum.刷新频率]: 100,
@@ -60,21 +60,19 @@ const showStyleTranslate: ShowStyleTranslate = {
 };
 
 let showStyle: ShowStyle = {
-  "--timeline-width": 160,
+  "--timeline-width": 180,
   "--font-size": 18,
   "--opacity": 0.33,
   "--normal-scale": 0.5,
   "--up-coming-scale": 1,
-  "--tras-duration": 0.66,
+  "--tras-duration": 1,
 };
-//(?:[ \\t　]+(?<t>tts)[ \\t　]?)?(?: ["']??(?<tts>[^" \\t　\\n\\r]+)["']??)?(?:[ \\t　]+sync[ \\t　]*\\/(?<sync>.+)\\/)?(?:[ \\t　]*window[ \\t　]*(?<windowBefore>\\d+)(?:,[ \\t　]*(?<windowAfter>\\d+))?)?(?:[ \\t　]*jump[ \\t　]*(?<jump>\\d+))?[ \\t　]*$`;
-const reg = `^(?<time>[-:：\\d.]+)\\s+(?<action>["'][^"']+["']).*`;
 
 export const useTimelineStore = defineStore("timeline", {
   state: () => {
     return {
-      reg: reg,
-      timelineLegalRegular: new RegExp(reg, "gm"),
+      // reg: reg,
+      // timelineLegalRegular: new RegExp(reg, "gm"),
       allTimelines: [] as ITimeline[],
       configValues,
       configTranslate,
@@ -122,7 +120,7 @@ export const useTimelineStore = defineStore("timeline", {
       });
     },
     parseTimeline(rawTimeline: string) {
-      return [...rawTimeline.matchAll(this.timelineLegalRegular)]
+      return [...rawTimeline.matchAll(/^(?<time>[-:：\d.]+)\s+(?<action>(--|["'])[^"'\n]+?\3).*$/gm)]
         .reduce((total, line) => {
           const jump = line[0].match(/(?<=jump )[-:：\d.]+/)?.[0];
           const sync = line[0].match(/(?<=sync \/).+(?=\/)/)?.[0];
@@ -131,19 +129,6 @@ export const useTimelineStore = defineStore("timeline", {
           const tts = line[0].match(/ tts ["'](?<tts>[^"']+)["']/)?.groups?.tts;
           const ttsSim = / tts(?: |$)/.test(line[0]) ? parseAction(line.groups!.action)?.groups?.name : undefined;
           total.push({
-            // time: parseTime(line.groups!.time),
-            // action: line.groups!.action ? parseAction(line.groups!.action.replace(/ /, "&nbsp")) : "",
-            // sync: line.groups?.sync ? new RegExp(line.groups.sync) : void 0,
-            // show: !line.groups!.sync,
-            // windowBefore: line.groups?.windowBefore ? parseInt(line.groups.windowBefore) : 2.5,
-            // windowAfter: line.groups?.windowAfter ? parseInt(line.groups.windowAfter || line.groups.windowBefore) : 2.5,
-            // jump: line.groups?.jump ? parseInt(line.groups.jump) : void 0,
-            // alertAlready: false,
-            // tts: line.groups?.tts
-            //   ? line.groups.tts
-            //   : line.groups?.t
-            //   ? line.groups.action.match(/^.*<(?<name>.+)>.*$/)?.groups?.name
-            //   : void 0,
             time: parseTime(line.groups!.time),
             actionHTML: line.groups!.action ? parseActionHTML(line.groups!.action) : "",
             alertAlready: false,
@@ -208,7 +193,6 @@ function parseAction(text: string) {
   return text.match(/\s*\<(?<name>[^\<\>]*?)!??\>(?<repeat>~)?(?<other>.*)\s*/);
 }
 function parseActionHTML(text: string): string {
-  // text = text.replace(/ /, "&nbsp");
   text = text.replaceAll(/^["']|["']$/g, "");
   const item = parseAction(text);
   if (!item) return text;

@@ -38,12 +38,12 @@ const props = defineProps<{
   overflow: hidden;
   box-sizing: border-box;
 }
+$timelineWitdh: 180;
+$fontSize: 18;
+$opacity: 0.33;
 $normalScale: 0.5;
 $upComingScale: 1;
-$fontSize: 16;
 $trasDuration: 1;
-$opacity: 0.5;
-$timelineWitdh: 160;
 .loadedTimelines {
   width: calc(1px * var(--timeline-width, $timelineWitdh));
   list-style-type: none;
@@ -60,10 +60,10 @@ $timelineWitdh: 160;
     box-sizing: border-box;
     position: relative;
     opacity: var(--opacity, $opacity);
-    transition-duration: calc(var(--trasDuration, $trasDuration) * 1s);
+    transition-duration: calc(var(--tras-duration, $trasDuration) * 1s);
     height: calc(48px * var(--normal-scale, $normalScale));
     &.fade {
-      animation: myfade calc(var(--trasDuration, $trasDuration) * 1s) 1 forwards;
+      animation: myfade calc(var(--tras-duration, $trasDuration) * 1s) 1 forwards !important;
       height: calc(40px * var(--up-coming-scale, $upComingScale));
     }
     @keyframes myfade {
@@ -76,13 +76,15 @@ $timelineWitdh: 160;
         height: calc(40px * var(--up-coming-scale, $upComingScale));
       }
       100% {
-        opacity: 0;
         height: 0px;
+        opacity: 0;
       }
     }
     &.passed {
       // > aside {
-      animation: passed 0.25s 2 alternate;
+      > * {
+        animation: passed 0.34s 2 alternate;
+      }
       // }
       @keyframes passed {
         0% {

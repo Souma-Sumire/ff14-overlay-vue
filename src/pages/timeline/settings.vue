@@ -218,25 +218,25 @@ function importTimelines(): void {
   });
 }
 
-function checkTimelineRaw(timeline: ITimeline): void {
-  const re = new RegExp(timelineStore.reg);
-  let errorList: { t: string; index: number }[] = [];
-  const everyLine = timeline.timeline.split("\n");
-  everyLine.forEach((t, index) => {
-    if (!re.test(t) && !/^#/.test(t) && !/^\/\//.test(t)) {
-      errorList.push({ t, index });
-    }
-  });
-  Swal.fire({
-    title: `正确：${everyLine.length - errorList.length}，错误：${errorList.length}。`,
-    html: `${
-      errorList.length > 0
-        ? errorList.map((v) => `<p style="white-space: nowrap;">第${v.index + 1}行：${v.t}</p>`).join("")
-        : ""
-    }`,
-  });
-  // return errorList.length > 0;
-}
+// function checkTimelineRaw(timeline: ITimeline): void {
+//   const re = new RegExp(timelineStore.reg);
+//   let errorList: { t: string; index: number }[] = [];
+//   const everyLine = timeline.timeline.split("\n");
+//   everyLine.forEach((t, index) => {
+//     if (!re.test(t) && !/^#/.test(t) && !/^\/\//.test(t)) {
+//       errorList.push({ t, index });
+//     }
+//   });
+//   Swal.fire({
+//     title: `正确：${everyLine.length - errorList.length}，错误：${errorList.length}。`,
+//     html: `${
+//       errorList.length > 0
+//         ? errorList.map((v) => `<p style="white-space: nowrap;">第${v.index + 1}行：${v.t}</p>`).join("")
+//         : ""
+//     }`,
+//   });
+//   // return errorList.length > 0;
+// }
 function readMe(): void {
   router.push("/timeline/help");
 }
@@ -332,7 +332,7 @@ function readMe(): void {
               <span>创建：</span>
               <el-input v-model="timelineCurrentlyEditing.timeline.create" disabled />
             </p>
-            <el-button type="success" @click="checkTimelineRaw(timelineCurrentlyEditing.timeline)">检查</el-button>
+            <!-- <el-button type="success" @click="checkTimelineRaw(timelineCurrentlyEditing.timeline)">检查</el-button> -->
             <el-button class="export" @click="exportTimeline([timelineCurrentlyEditing.timeline])">单独导出</el-button>
             <el-button type="danger" @click="deleteTimeline(timelineCurrentlyEditing.timeline)">删除</el-button>
           </div>

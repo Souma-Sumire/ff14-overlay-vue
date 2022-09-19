@@ -126,5 +126,5 @@ export type FFlogsApiV1ReportEvents = {
     y: number;
   };
   timestamp: number;
-  type: string;
+  type: FFlogsType;
 };
