@@ -24,7 +24,7 @@
     <p>连接状态：{{ data.status }}</p>
     <button :disabled="data.connect" @click="handleClickToConnect">连接</button>
     <button :disabled="!data.connect" @click="handleClickToDisconnect">断开</button>
-    <button :disabled="!data.connect" @click="restartRecord">手动开始录制</button>
+    <!-- <button :disabled="!data.connect" @click="restartRecord">手动开始录制</button> -->
   </div>
 </template>
 
@@ -46,8 +46,8 @@ let inACTCombat = false;
 const data: Data = reactive({
   ip: "127.0.0.1",
   port: "4455",
-  password: "Yim1psOoJJ8s96Lc",
-  autoConnect: false,
+  password: "",
+  autoConnect: true,
   partyLength: true,
   connect: false,
   status: "空闲",
@@ -101,9 +101,11 @@ async function ObsConnect() {
     );
     data.status = `成功 ${obsWebSocketVersion} (using RPC ${negotiatedRpcVersion})`;
     data.connect = true;
+    Promise.resolve();
   } catch (error: any) {
     data.status = `失败 ${error.code} ${error.message}`;
     data.connect = false;
+    Promise.reject(error.code);
   }
 }
 async function handleClickToConnect() {
@@ -112,15 +114,20 @@ async function handleClickToConnect() {
 async function handleClickToDisconnect() {
   await obs.disconnect();
 }
-async function startRecord() {
+function startRecord() {
   if (!data.connect) {
-    await ObsConnect().then(() => {
-      if (data.connect) startRecord();
-    });
+    ObsConnect()
+      .then(() => {
+        if (data.partyLength && partyData.party.length <= 8 && partyData.party.length >= 5)
+          obs.call("StartRecord").catch(() => {});
+        else if (!data.partyLength) obs.call("StartRecord").catch(() => {});
+      })
+      .catch(() => {
+        setTimeout(() => {
+          startRecord();
+        }, 3000);
+      });
   }
-  if (data.partyLength && partyData.party.length <= 8 && partyData.party.length >= 5)
-    obs.call("StartRecord").catch(() => {});
-  else if (!data.partyLength) obs.call("StartRecord").catch(() => {});
 }
 async function stopRecord() {
   await obs.call("StopRecord").catch(() => {});
