@@ -28,7 +28,11 @@ const debounceTimeline = useDebounce(
   500,
   { maxWait: 5000 },
 );
-const debounceZone = useDebounce(ref(timelineCurrentlyEditing.timeline.condition.zoneId), 500, { maxWait: 5000 });
+const debounceZone = useDebounce(
+  computed(() => timelineCurrentlyEditing.timeline.condition.zoneId),
+  500,
+  { maxWait: 5000 },
+);
 const debounceJobCN = useDebounce(
   computed(() => Util.getBattleJobs2()),
   500,
