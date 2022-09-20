@@ -416,5 +416,204 @@ export const defaultMacro: { zoneId: ZoneIdInfo } = {
       //   ],
       // },
     ],
+    "968": [
+      {
+        name: "莫古力P1",
+        type: "macro",
+        text: cleanMacro(`
+          /p P1锁链点名 索尼 ｜ 白球冲锋：骑士12点，下半场躲避
+          /p    △H  ×T   □T   ｜ 深仁厚泽打断：ST→远敏→MT
+          /p    ○D          ○D   ｜ 钢铁：全维空间/月环：无维空间
+          /p    □D  ×H  △D   ｜ P1.5引导：奶→远→近→T
+          /p                              右 左 右 左
+      `),
+      },
+      {
+        name: "莫古力P2",
+        type: "macro",
+        text: cleanMacro(`
+          /p 一运雷分散   ｜ 二运分组：D12补位
+          /p         奶          ｜ MTH1       STH2
+          /p    近  T  远     ｜  D1D3       D2D4
+          /p  3C4D-MT组 |     2刀            1刀
+          /p  1A2B-ST组  |     脚下           对面
+          /p ————————————————
+          /p              MTD1             ｜ 固定AC陨石整组换位（除非BD正好出现陨石）
+          /p  H1D3            H2D4  ｜ 第一次踩塔：陨石＞DPS＞TN，对应塔：场外中左右＞场内左手
+          /p              STD2              ｜ 第二次踩塔：陨石＞DPS＞TN，按换位后的组同色标点塔正＞斜
+      `),
+      },
+      {
+        name: "莫古力P3",
+        type: "macro",
+        text: cleanMacro(`
+          /p 【莫古力龙诗站位宏P3】
+          /p 牙尾的连旋：分摊-钢铁-月环
+          /p 尾牙的连旋：分摊-月环-钢铁
+          /p ————————————————
+          /p 【麻将阶段】预站位｜【麻将阶段】小抄 
+          /p               A               ｜  注意麻将组内点名，B上D下
+          /p       4②       ②1       ｜ 处理麻将时请注意钢铁月环
+          /p           ③③③           ｜ ①C：放塔-回人群-分摊-踩3塔-引导
+          /p   B①          ①D    ｜  ①BD：放塔-回人群-踩2塔-引导-回人群-分摊
+          /p       3      ①     2       ｜  ② BD：分摊-连旋-放塔-回人群-分摊-踩3塔-引导
+          /p                C               ｜  ③BCD：分摊-踩1塔-引导-连旋-放塔-回人群
+          /p ————————————————
+          /p 【8人4塔阶段】 ｜ 4近战负责补塔，顺序：左→右→中
+          /p MTD3      STD4 ｜组内只有1座塔，补位；组内超过2座塔，不动
+          /p H1D1      H2D2｜死刑：MT接本体，ST接分身，本体/分身脚下处理
+      `),
+      },
+      {
+        name: "莫古力P4~P7",
+        type: "macro",
+        text: cleanMacro(`
+          /p 【P4撞球阶段】      ｜【陨石流】D12→D34→第一轮点名
+          /p 场中换色，DPS先撞｜ 左上角开始顺、逆时针数的第一个点名
+          /p         MT    ST          ｜  MT       ST
+          /p D12蓝      红D34    ｜       人群（蓝龙眼）
+          /p         H1    H2         ｜  H2       H1
+          /p ————————————————
+          /p  【P5死宣+锁链】｜ 【P7接刀】D12→D34→H12
+          /p   △无  X无  □无   ｜ 【死亡轮回/狂暴】BOSS面向！
+          /p   ○死           ○死  ｜ H1D3D1           H2D4D2
+          /p   □死  X无  △死   ｜                  MTST
+          /p 【P6传毒】DTTDD最后一次原地，其他全部场中处理
+          /p 【P6十字火阶段↓】｜ 【P6光翼死刑】MT固定中，ST找位置
+          /p V字放地火，从场边跑到场中时的面向处理点名
+          /p 攻击1 2 3 4 ←o→ 锁链2禁止2 锁链1禁止1
+          /p 【P6双龙俯冲+P7地火左右出】MT去左，ST去右
+      `),
+      },
+      {
+        name: "莫古力减伤宏",
+        type: "macro",
+        text: cleanMacro(`
+          /p 【莫古力龙诗减伤宏P1~P7】只安排目标减伤，场地减伤请队内自行沟通
+          /p P1至圣：MT雪仇、D1牵制                     ｜P2古代爆震：MT雪仇、D1牵制、D4昏乱
+          /p P1锁链点名：ST雪仇、D2牵制、D4昏乱｜P2碎屏斩：ST雪仇、D2牵制、D4昏乱
+          /p ————————————————
+          /p P3第一次连旋：MT雪仇、D1牵制               ｜P4陨石流：给不给都可以
+          /p P3第二次连旋：ST雪仇、D2牵制、D4昏乱 ｜P4.5纯洁心灵：ST雪仇、D2牵制、D4昏乱
+          /p ————————————————
+          /p P5第一次古代爆震：MT雪仇、D1牵制              ｜P6两次血量检测：MT雪仇
+          /p P5第二次古代爆震：ST雪仇、D2牵制、D4昏乱｜P6死亡轮回：ST雪仇、D1牵制、D4昏乱
+          /p ————————————————
+          /p 转场，超大AOE注意减伤嗷！别好不容易要进P7了结果噶了嗷！MTST给D34减伤，H12D12开特色减伤，龙骑找奶妈要
+          /p ————————————————
+          /p P7第一次死亡轮回：MT雪仇、D1牵制、D4昏乱  ｜P7第一次陨石：ST雪仇、D2牵制
+          /p P7第二次死亡轮回：MT雪仇                 ｜P7第二次陨石：ST雪仇  、D1牵制、D4昏乱
+          /p P7第三次死亡轮回：别看了！有什么给什么！留着过年吗？
+          （如果觉得第二次死亡轮回的压力过大，可以考虑2死亡轮回D2牵制）
+      `),
+      },
+      {
+        name: `陨石逃课宏 需要连打+锁60帧 ${getSource("https://docs.qq.com/doc/DSkpLTVNTT2doT2Rz")}`,
+        type: "macro",
+        text: cleanMacro(`
+          /mlock
+          /merror off
+          /automove on <wait.1>
+          /automove off
+          /echo
+          /echo
+          /echo
+          /echo
+          /echo
+          /echo
+          /echo
+          /echo
+          /echo
+          /echo
+          /echo
+      `),
+      },
+      {
+        name: "陨石宏 竹取辉夜姬",
+        type: "macro",
+        text: cleanMacro(`
+          /automove on <wait.1>
+          /automove off
+      `),
+      },
+      {
+        name: "黑色分散buff-攻击标",
+        type: "macro",
+        text: cleanMacro(`
+          /macrolock
+          /macroicon attack1 marking
+          /mk attack <me>
+          /wait 1
+      `),
+      },
+      {
+        name: "白色分摊buff-锁链标",
+        type: "macro",
+        text: cleanMacro(`
+          /macrolock
+          /macroicon bind1 marking
+          /mk bind <me>
+          /wait 1
+      `),
+      },
+      {
+        name: "无buff-禁止标",
+        type: "macro",
+        text: cleanMacro(`
+          /macrolock
+          /macroicon stop1 marking
+          /mk stop <me>
+          /wait 1
+      `),
+      },
+      {
+        name: "一键清除标记",
+        type: "macro",
+        text: cleanMacro(`
+          /mk attack1 <attack1>
+          /mk attack2 <attack2>
+          /mk attack3 <attack3>
+          /mk attack4 <attack4>
+          /mk attack5 <attack5>
+          /mk bind1 <bind1>
+          /mk bind2 <bind2>
+          /mk bind3 <bind3>
+          /mk stop1 <stop1>
+          /mk stop2 <stop2>
+      `),
+      },
+      {
+        name: "P1 门神",
+        type: "place",
+        place: [
+          { Mark: "A", "X": 94.265, "Y": 0.0, "Z": 90.057, "ID": 0, "Active": true },
+          { Mark: "B", "X": 105.559, "Y": 0.0, "Z": 89.944, "ID": 1, "Active": true },
+          { Mark: "C", "X": 105.687, "Y": 0.0, "Z": 109.95, "ID": 2, "Active": true },
+          { Mark: "D", "X": 94.363, "Y": 0.0, "Z": 109.892, "ID": 3, "Active": true },
+          { Mark: "One", "X": 89.994, "Y": 0.0, "Z": 94.231, "ID": 4, "Active": true },
+          { Mark: "Two", "X": 110.13, "Y": 0.0, "Z": 94.36, "ID": 5, "Active": true },
+          { Mark: "Three", "X": 110.003, "Y": 0.0, "Z": 105.871, "ID": 6, "Active": true },
+          { Mark: "Four", "X": 90.049, "Y": 0.0, "Z": 105.51, "ID": 7, "Active": true },
+        ],
+      },
+      {
+        name: `P2 竹取辉夜姬 ${getSource("https://nga.178.com/read.php?tid=31807681")}`,
+        type: "place",
+        place: [
+          { Mark: "A", "X": 100.0, "Y": 0.0, "Z": 86.8, "ID": 0, "Active": true },
+          { Mark: "B", "X": 113.2, "Y": 0.0, "Z": 100.0, "ID": 1, "Active": true },
+          { Mark: "C", "X": 100.0, "Y": 0.0, "Z": 113.2, "ID": 2, "Active": true },
+          { Mark: "D", "X": 86.8, "Y": 0.0, "Z": 100.0, "ID": 3, "Active": true },
+          { Mark: "One", "X": 109.333809, "Y": 0.0, "Z": 90.66619, "ID": 4, "Active": true },
+          { Mark: "Two", "X": 109.333809, "Y": 0.0, "Z": 109.333809, "ID": 5, "Active": true },
+          { Mark: "Three", "X": 90.66619, "Y": 0.0, "Z": 109.333809, "ID": 6, "Active": true },
+          { Mark: "Four", "X": 90.66619, "Y": 0.0, "Z": 90.66619, "ID": 7, "Active": true },
+        ],
+      },
+    ],
   },
 };
+
+function getSource(href: string) {
+  return `<a href='${href}' target='_blank'>出处</a>`;
+}
