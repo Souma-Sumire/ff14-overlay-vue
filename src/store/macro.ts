@@ -21,6 +21,7 @@ export const useMacroStore = defineStore("macro", {
         { text: "P6S", value: "1084" },
         { text: "P7S", value: "1086" },
         { text: "P8S", value: "1088" },
+        { text: "DSR", value: "968" },
       ],
     };
   },
@@ -95,8 +96,9 @@ export const useMacroStore = defineStore("macro", {
         cancelButtonText: "不，再想想",
       }).then((result) => {
         if (result.isConfirmed) {
-          doTextCommand("/e ============");
-          text.split("\n").map((v, i) => setTimeout(() => doTextCommand("/p " + v), 200 * (i + 1)));
+          const t = text;
+          t.replaceAll(/^\s*\/[pe]/gm, "");
+          t.split("\n").map((v, i) => setTimeout(() => doTextCommand("/p " + v), 200 * (i + 1)));
           Swal.fire({
             position: "top-end",
             icon: "success",
@@ -108,6 +110,10 @@ export const useMacroStore = defineStore("macro", {
       });
     },
     sendMacroEcho(text: string): void {
+      doTextCommand("/e ============");
+      const t = text;
+      t.replaceAll(/^\s*\/[pe]/gm, "");
+      t.split("\n").map((v, i) => setTimeout(() => doTextCommand("/e " + v), 200 * (i + 1)));
       Swal.fire({
         position: "top-end",
         icon: "success",
@@ -115,8 +121,6 @@ export const useMacroStore = defineStore("macro", {
         showConfirmButton: false,
         timer: 1000,
       });
-      doTextCommand("/e ============");
-      text.split("\n").map((v, i) => setTimeout(() => doTextCommand("/e " + v), 200 * (i + 1)));
     },
     doLocalWayMark(place: PlaceMark[]): void {
       Swal.fire({
@@ -202,6 +206,7 @@ export const useMacroStore = defineStore("macro", {
         .then((result) => {
           if (result.isConfirmed) {
             const json = JSON.parse(result.value);
+            targetMacro.name = json.Name;
             targetMacro.place = [
               { Mark: "A", X: json.A.X, Y: json.A.Y, Z: json.A.Z, Active: json.A.Active },
               { Mark: "B", X: json.B.X, Y: json.B.Y, Z: json.B.Z, Active: json.B.Active },
@@ -235,7 +240,8 @@ export const useMacroStore = defineStore("macro", {
 });
 export function cleanMacro(text: string): string {
   text = text.replaceAll(/\n{2,}/gm, "\n");
-  text = text.replaceAll(/^\s*\/[\w\d]+\s/gm, "");
+  // text = text.replaceAll(/^\s*\/[pe]\s/gm, "");
+  text = text.replaceAll(/^\s+/gm, "");
   text = text.replaceAll(/ /gm, `\xa0`);
   return text;
 }
