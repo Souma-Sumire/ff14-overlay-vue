@@ -96,17 +96,17 @@ const markMap = {
               <el-button @click="macroStore.importPPJSON(macro)">导入PP格式JSON</el-button>
             </el-space>
             <el-table :data="macro.place" border size="small" style="width: 100%">
-              <el-table-column align="center" v-if="macro.editable" label="启用" width="75">
+              <el-table-column align="center" v-if="macro.editable" label="启用" width="85">
                 <template #default="scope">
                   <el-switch v-model="scope.row.Active" size="small" style="--el-switch-on-color: #13ce66" />
                 </template>
               </el-table-column>
-              <el-table-column align="center" label="标记" width="75">
+              <el-table-column align="center" label="标记" width="85">
                 <template #default="scope">
                   <span v-show="true">{{ scope.row.Mark }}</span>
                 </template>
               </el-table-column>
-              <el-table-column align="center" label="X" width="75">
+              <el-table-column align="center" label="X" width="85">
                 <template #default="scope">
                   <span v-show="!macro.editable">{{ scope.row.X }}</span>
                   <el-input
@@ -119,7 +119,7 @@ const markMap = {
                   ></el-input>
                 </template>
               </el-table-column>
-              <el-table-column align="center" label="Z" width="75">
+              <el-table-column align="center" label="Z" width="85">
                 <template #default="scope">
                   <span v-show="!macro.editable">{{ scope.row.Z }}</span>
                   <el-input
@@ -132,7 +132,7 @@ const markMap = {
                   ></el-input>
                 </template>
               </el-table-column>
-              <el-table-column align="center" label="Y" width="75">
+              <el-table-column align="center" label="Y" width="85">
                 <template #default="scope">
                   <span v-show="!macro.editable">{{ scope.row.Y }}</span>
                   <el-input
