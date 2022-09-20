@@ -46,7 +46,7 @@ const markMap = {
         <el-card v-for="(macro, index) in macroStore.data.zoneId[macroStore.selectZone]" :key="index" class="box-card">
           <template #header>
             <div class="card-header">
-              <span v-show="!macro.editable">{{ macro.name }}</span>
+              <span v-show="!macro.editable" v-html="macro.name"></span>
               <el-input size="small" v-show="macro.editable" v-model="macro.name" placeholder="宏标题" />
             </div>
           </template>
@@ -67,9 +67,12 @@ const markMap = {
               @change="macroStore.cleanEditable"
               style="width: 25em"
             />
-            <el-row style="padding-top: 10px">
+            <el-row
+              class="buttonArea"
+              style="padding-top: 5px"
+              :style="{ maxHeight: macro.editable ? '100px' : null, opacity: macro.editable ? 1 : null }"
+            >
               <el-button
-                class="hvr-grow"
                 type="primary"
                 v-show="!macro.editable"
                 :icon="Edit"
@@ -77,20 +80,15 @@ const markMap = {
                 @click="macroStore.editMacro(macro)"
               />
               <el-button
-                class="hvr-grow"
                 type="success"
                 v-show="macro.editable"
                 :icon="Check"
                 circle
                 @click="macroStore.submitMacro(macro)"
               />
-              <el-button class="hvr-grow" type="danger" :icon="Delete" circle @click="macroStore.deleteMacro(macro)" />
-              <el-button class="hvr-grow" type="info" @click="macroStore.sendMacroEcho(macro?.text ?? '')"
-                >默</el-button
-              >
-              <el-button class="hvr-grow" type="primary" @click="macroStore.sendMacroParty(macro?.text ?? '')"
-                >队</el-button
-              >
+              <el-button type="danger" :icon="Delete" circle @click="macroStore.deleteMacro(macro)" />
+              <el-button type="info" @click="macroStore.sendMacroEcho(macro?.text ?? '')">默</el-button>
+              <el-button type="primary" @click="macroStore.sendMacroParty(macro?.text ?? '')">队</el-button>
             </el-row>
           </div>
           <div v-if="macro.type === 'place'">
@@ -164,9 +162,12 @@ const markMap = {
                 </span>
               </div>
             </el-space>
-            <el-row style="padding-top: 10px">
+            <el-row
+              class="buttonArea"
+              style="padding-top: 5px"
+              :style="{ maxHeight: macro.editable ? '100px' : null, opacity: macro.editable ? 1 : null }"
+            >
               <el-button
-                class="hvr-grow"
                 type="primary"
                 v-show="!macro.editable"
                 :icon="Edit"
@@ -174,17 +175,14 @@ const markMap = {
                 @click="macroStore.editMacro(macro)"
               />
               <el-button
-                class="hvr-grow"
                 type="success"
                 v-show="macro.editable"
                 :icon="Check"
                 circle
                 @click="macroStore.submitMacro(macro)"
               />
-              <el-button class="hvr-grow" type="danger" :icon="Delete" circle @click="macroStore.deleteMacro(macro)" />
-              <el-button class="hvr-grow" type="primary" @click="macroStore.doLocalWayMark(macro?.place)"
-                >本地</el-button
-              >
+              <el-button type="danger" :icon="Delete" circle @click="macroStore.deleteMacro(macro)" />
+              <el-button type="primary" @click="macroStore.doLocalWayMark(macro?.place)">本地</el-button>
               <el-button type="primary" plain disabled @click="macroStore.doSlotWayMark(macro?.place)"
                 >插槽(未实现)</el-button
               >
@@ -203,7 +201,6 @@ const markMap = {
   </el-container>
 </template>
 <style lang="scss" scoped>
-@import url("../css/hover.css");
 .markIcon {
   position: absolute;
   text-align: center;
@@ -235,5 +232,26 @@ $color4: rgba(128, 0, 128, 0.5);
 .markIconD,
 .markIconFour {
   text-shadow: -1px 0 3px $color4, 0 1px 3px $color4, 1px 0 3px $color4, 0 -1px 3px $color4;
+}
+:deep(a) {
+  color: blue;
+  padding: 0.5em;
+  font-weight: 700;
+  font-size: 14px;
+}
+.box-card {
+  // overflow: hidden;
+  .buttonArea {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0.5;
+    transition: all 0.5s ease-in-out;
+  }
+  &:hover {
+    .buttonArea {
+      opacity: 1;
+      max-height: 100px;
+    }
+  }
 }
 </style>
