@@ -117,15 +117,16 @@ function startTimeline(countdownSeconds: number) {
   offsetTimeMS.value = 0;
   baseTimeMs.value = new Date().getTime() + countdownSeconds * 1000;
   clearInterval(Number(runtimeTimer));
+  const loadedTimelineTTS = timelinePageData.loadedTimeline.filter((v) => v.tts);
+  loadedTimelineTTS.map((v) => (v.alertAlready = false));
   runtimeTimer = setInterval(() => {
     runtimeTimeSeconds.value = (new Date().getTime() - baseTimeMs.value + offsetTimeMS.value) / 1000;
-    const l = timelinePageData.loadedTimeline.find(
-      (line) =>
-        line.tts && !line.alertAlready && line.time - timelineStore.configValues.ttsAdvance <= runtimeTimeSeconds.value,
+    const l = loadedTimelineTTS.find(
+      (v) => !v.alertAlready && v.time - timelineStore.configValues.ttsAdvance <= runtimeTimeSeconds.value,
     );
     if (l) {
       l.alertAlready = true;
-      if (l.tts) cactbotSay(l.tts);
+      cactbotSay(l.tts!);
     }
   }, timelineStore.configValues.refreshRateMs);
 }
@@ -181,6 +182,7 @@ function handleChangeZone(e: any) {
 
 //调用TTS
 function cactbotSay(text: string) {
+  if (!text) return;
   if (ttsSuppressFlag) {
     ttsSuppressFlag = false;
     callOverlayHandler({ call: "cactbotSay", text: text });
