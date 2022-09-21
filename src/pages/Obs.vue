@@ -127,6 +127,9 @@ function startRecord() {
           startRecord();
         }, 3000);
       });
+  } else {
+    if (data.partyLength && partyData.party.length <= 8 && partyData.party.length >= 5)
+      obs.call("StartRecord").catch(() => {});
   }
 }
 async function stopRecord() {

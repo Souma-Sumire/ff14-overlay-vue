@@ -28,11 +28,6 @@ const debounceTimeline = useDebounce(
   500,
   { maxWait: 5000 },
 );
-const debounceZone = useDebounce(
-  computed(() => timelineCurrentlyEditing.timeline.condition.zoneId),
-  500,
-  { maxWait: 5000 },
-);
 const debounceJobCN = useDebounce(
   computed(() => Util.getBattleJobs2()),
   500,
@@ -308,7 +303,7 @@ function readMe(): void {
             </p>
             <p class="timeline-info-config">
               <span>地图：</span>
-              <el-select v-model="debounceZone" filterable>
+              <el-select v-model="timelineCurrentlyEditing.timeline.condition.zoneId" filterable>
                 <el-option
                   v-for="zone in highDifficultZoneId"
                   :key="zone.id"
