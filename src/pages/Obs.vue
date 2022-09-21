@@ -130,6 +130,7 @@ function startRecord() {
   } else {
     if (data.partyLength && partyData.party.length <= 8 && partyData.party.length >= 5)
       obs.call("StartRecord").catch(() => {});
+    else if (!data.partyLength) obs.call("StartRecord").catch(() => {});
   }
 }
 async function stopRecord() {
