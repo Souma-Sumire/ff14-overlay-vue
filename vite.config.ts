@@ -1,6 +1,7 @@
 import Vue from "@vitejs/plugin-vue";
 import { presetAttributify, presetIcons, presetUno } from "unocss";
 import Unocss from "unocss/vite";
+import viteCompression from "vite-plugin-compression";
 import AutoImport from "unplugin-auto-import/vite";
 import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
 import Components from "unplugin-vue-components/vite";
@@ -13,10 +14,25 @@ export default defineConfig({
   build: {
     outDir: "./dist",
     emptyOutDir: true, //构建时清空outDir目录
-    reportCompressedSize: false, //禁用gzip压缩大小报告以提高构建性能
+    rollupOptions: {
+      output: {
+        chunkFileNames: "assets/js/[name].js",
+        entryFileNames: "assets/js/[name].js",
+        assetFileNames: "assets/[ext]/[name].[ext]",
+      },
+    },
+    chunkSizeWarningLimit: 2000,
+    minify: "terser",
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
   },
   plugins: [
     Vue({ include: [/\.vue$/, /\.md$/] }),
+    viteCompression(),
     AutoImport({
       resolvers: [ElementPlusResolver()],
     }),
