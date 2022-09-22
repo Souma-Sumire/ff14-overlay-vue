@@ -31,3 +31,15 @@ export interface MacroInfo {
   editable?: boolean;
 }
 export type ZoneIdInfo = Record<string, MacroInfo[]>;
+export type postNamazuJSON = {
+  Name: "Slot1" | "Slot2" | "Slot3" | "Slot4" | "Slot5";
+  MapID: number;
+  A: WayMarkInfo;
+  B: WayMarkInfo;
+  C: WayMarkInfo;
+  D: WayMarkInfo;
+  One: WayMarkInfo;
+  Two: WayMarkInfo;
+  Three: WayMarkInfo;
+  Four: WayMarkInfo;
+};
