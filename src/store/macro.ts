@@ -1,11 +1,11 @@
-import { defineStore } from "pinia";
-import { reactive, ref } from "vue";
-import { MacroInfo, PlaceMark, TextType } from "../types/Macro";
 import { useStorage } from "@vueuse/core";
-import { defaultMacro } from "../resources/macro";
+import { defineStore } from "pinia";
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
-import { doWayMark, doTextCommand, slotWayMark } from "../api/postNamazu";
+import { reactive, ref } from "vue";
+import { doTextCommand, doWayMark, slotWayMark } from "../api/postNamazu";
+import { defaultMacro } from "../resources/macro";
+import { MacroInfo, PlaceMark, TextType } from "../types/Macro";
 export const useMacroStore = defineStore("macro", {
   state: () => {
     return {
@@ -146,20 +146,20 @@ export const useMacroStore = defineStore("macro", {
     },
     doSlotWayMark(place: PlaceMark[]): void {
       Swal.fire({
-        title: "确定将该标点覆盖到插槽1？",
-        text: "原在插槽1的标点将会被覆盖",
+        title: "确定将该预设覆盖到插槽5？",
+        text: "原在插槽5的预设将会被覆盖",
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
-        confirmButtonText: "是的，插入插槽1",
+        confirmButtonText: "是的，覆盖插槽5",
         cancelButtonText: "不，再想想",
       }).then((result) => {
         if (result.isConfirmed) {
-          slotWayMark(place);
+          slotWayMark(this.selectZone, place, 5);
           Swal.fire({
             position: "top-end",
             icon: "success",
-            title: "已写入插槽1",
+            title: "已写入插槽5",
             showConfirmButton: false,
             timer: 1000,
           });
