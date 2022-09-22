@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { Check, Delete, Edit, Plus, Position, RefreshLeft } from "@element-plus/icons-vue";
+import { watchEffect } from "vue";
+import { defaultMacro } from "../resources/macro";
 import zoneInfo from "../resources/zoneInfo";
-import { Edit, Check, Delete, Position, Plus, RefreshLeft } from "@element-plus/icons-vue";
 import { useMacroStore } from "../store/macro";
 const macroStore = useMacroStore();
 macroStore.cleanEditable();
@@ -16,6 +18,10 @@ const markMap = {
   Three: "3",
   Four: "4",
 };
+watchEffect(() => {
+  macroStore.data.zoneId[macroStore.selectZone] =
+    macroStore.data.zoneId[macroStore.selectZone] || defaultMacro.zoneId[macroStore.selectZone];
+});
 </script>
 <template>
   <el-container>
@@ -52,7 +58,7 @@ const markMap = {
           </template>
           <div v-if="macro.type === 'macro'">
             <article v-if="!macro.editable">
-              <div style="white-space: nowrap" v-for="(macro, o) in macro.text?.split('\n')" :key="o" class="text item">
+              <div v-for="(macro, o) in macro.text?.split('\n')" :key="o" class="text item">
                 {{ macro }}
               </div>
             </article>
@@ -60,12 +66,12 @@ const markMap = {
               size="small"
               v-show="macro.editable"
               v-model="macro.text"
-              :autosize="{ minRows: 5 }"
+              :autosize="{ minRows: 3 }"
               type="textarea"
               placeholder="宏文本"
               wrap="off"
               @change="macroStore.cleanEditable"
-              style="width: 25em"
+              style="width: 450px"
             />
             <el-row
               class="buttonArea"
@@ -183,9 +189,7 @@ const markMap = {
               />
               <el-button type="danger" :icon="Delete" circle @click="macroStore.deleteMacro(macro)" />
               <el-button type="primary" @click="macroStore.doLocalWayMark(macro?.place)">本地</el-button>
-              <el-button type="primary" plain disabled @click="macroStore.doSlotWayMark(macro?.place)"
-                >插槽(未实现)</el-button
-              >
+              <el-button type="primary" plain @click="macroStore.doSlotWayMark(macro?.place)">插槽5</el-button>
             </el-row>
           </div>
         </el-card>
@@ -240,7 +244,7 @@ $color4: rgba(128, 0, 128, 0.5);
   font-size: 14px;
 }
 .box-card {
-  // overflow: hidden;
+  max-width: 500px;
   .buttonArea {
     max-height: 0;
     overflow: hidden;
@@ -253,5 +257,10 @@ $color4: rgba(128, 0, 128, 0.5);
       max-height: 100px;
     }
   }
+}
+.text {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 </style>
