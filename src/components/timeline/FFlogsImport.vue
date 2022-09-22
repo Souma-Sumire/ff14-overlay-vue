@@ -18,7 +18,10 @@ const emit = defineEmits(["newTimeline", "showFFlogsToggle", "clearCurrentlyTime
 const urlRe = /(?<=^|\/)(?<code>[\d\w]{16,})\/?#fight=(?<fight>\d+|last)/;
 const siteImg = __SITE_IMG__;
 const siteImgBak = __SITE_IMG__BAK;
-
+const regexType: Partial<Record<FFlogsType, string>> = {
+  "begincast": "14",
+  "cast": "1[56]",
+};
 let queryText = ref(QueryTextEnum.query);
 let inputUrl = ref("");
 
@@ -260,15 +263,17 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
           if (item.sourceIsFriendly) {
             return `${time} "<${item.actionName}>~"${addTTS ? ` tts "${item.actionName}"` : ""}`;
           } else {
-            const regexType: Partial<Record<FFlogsType, string>> = {
-              "begincast": "14",
-              "cast": "1[56]",
-            };
-            return `${time} --${item.actionName}-- sync /^.{14} \\w+ ${
-              regexType[item.type]
-            }:4.{7}:[^:]+:${item.actionId.toString(16).toUpperCase()}:/${
-              item.window ? ` window ${(item.window ?? [12, 12]).join(",")}` : ""
-            }`;
+            if (
+              /^(?:攻击|attack|攻撃)$|^unknown/i.test(item.actionName) ||
+              (item.type === "cast" && item.window === undefined)
+            ) {
+              return `# ${time} "${item.actionName}"`;
+            } else {
+              //只匹配开始施法或符合特殊规则的window
+              return `${time} "${item.actionName}" sync /^.{14} \\w+ ${regexType[item.type]}:4.{7}:[^:]+:${item.actionId
+                .toString(16)
+                .toUpperCase()}:/${item.window ? ` window ${item.window.join(",")}` : ""}`;
+            }
           }
         })
         .join("\n");

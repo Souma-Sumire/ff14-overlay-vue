@@ -8,7 +8,7 @@ windowAction.set(25533, { type: "begincast", window: [60, 60] }); //绝龙诗 �
 windowAction.set(26376, { type: "cast", window: [999, 999] }); //绝龙诗 灭绝之诗
 windowAction.set(26814, { type: "begincast", window: [999, 999] }); //绝龙诗 邪龙爪牙
 windowAction.set(25313, { type: "begincast", window: [200, 200] }); //绝龙诗 空间牢狱
-windowAction.set(27526, { type: "begincast", window: [1000, 30] }); //绝龙诗 圣徒化
+windowAction.set(27526, { type: "begincast", window: [999, 999] }); //绝龙诗 圣徒化
 windowAction.set(26215, { type: "cast", window: [500, 30] }); //绝龙诗 P6: Nidhogg v2
 windowAction.set(29050, { type: "begincast", window: [200, 30] }); //绝龙诗 P6.5: Eyes v2
 windowAction.set(29156, { type: "cast", window: [20, 20] }); //绝龙诗 冲击波
@@ -19,8 +19,9 @@ windowAction.set(28060, { type: "begincast", window: [20, 20] }); //绝龙诗 �
 windowAction.set(28061, { type: "begincast", window: [20, 20] }); //绝龙诗 骑龙剑百京核爆
 windowAction.set(27956, { type: "begincast", window: [20, 20] }); //绝龙诗 圣龙吐息
 windowAction.set(27957, { type: "begincast", window: [20, 20] }); //绝龙诗 圣龙吐息
-windowAction.set(25316, { type: "begincast", window: [20, 20] }); //绝龙诗 纯洁心灵
+windowAction.set(25316, { type: "begincast", window: [999, 999] }); //绝龙诗 纯洁心灵
 windowAction.set(25544, { type: "begincast", window: [10, 10] }); //绝龙诗 阿斯卡隆之仁·隐秘
+windowAction.set(26379, { type: "begincast", window: [10, 10] }); //绝龙诗 腾龙枪
 
 export function factory(events: FFlogsStance): FFlogsStance {
   for (const event of events) {
