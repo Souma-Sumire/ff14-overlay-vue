@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { Check, Delete, Edit, Plus, Position, RefreshLeft } from "@element-plus/icons-vue";
-import { watchEffect } from "vue";
+import Swal from "sweetalert2";
+import { onMounted, watchEffect } from "vue";
 import { defaultMacro } from "../resources/macro";
 import zoneInfo from "../resources/zoneInfo";
 import { useMacroStore } from "../store/macro";
+import actWS from "@/assets/actWS.png";
 const macroStore = useMacroStore();
 macroStore.cleanEditable();
+addOverlayListener("onGameExistsEvent", macroStore.handleGameExists);
 addOverlayListener("ChangeZone", macroStore.handleChangeZone);
 startOverlayEvents();
 const markMap = {
@@ -21,6 +24,33 @@ const markMap = {
 watchEffect(() => {
   macroStore.data.zoneId[macroStore.selectZone] =
     macroStore.data.zoneId[macroStore.selectZone] || defaultMacro.zoneId[macroStore.selectZone];
+});
+const raidEmulatorOnLoad = async () => {
+  let websocketConnected = false;
+  if (window.location.href.indexOf("OVERLAY_WS") > 0) {
+    websocketConnected = await Promise.race<Promise<boolean>>([
+      new Promise<boolean>((res) => {
+        void callOverlayHandler({ call: "cactbotRequestState" }).then(() => {
+          res(true);
+        });
+      }),
+      new Promise<boolean>((res) => {
+        window.setTimeout(() => {
+          res(false);
+        }, 500);
+      }),
+    ]);
+    if (!websocketConnected) {
+      Swal.fire({
+        title: "已断开连接",
+        text: "目前与ACT断开了连接。请按照上图进行操作。",
+        imageUrl: actWS,
+      });
+    }
+  }
+};
+onMounted(() => {
+  raidEmulatorOnLoad();
 });
 </script>
 <template>
@@ -75,7 +105,7 @@ watchEffect(() => {
             />
             <el-row
               class="buttonArea"
-              style="padding-top: 5px"
+              style="margin-top: 5px"
               :style="{ maxHeight: macro.editable ? '100px' : null, opacity: macro.editable ? 1 : null }"
             >
               <el-button
@@ -170,7 +200,7 @@ watchEffect(() => {
             </el-space>
             <el-row
               class="buttonArea"
-              style="padding-top: 5px"
+              style="margin-top: 5px"
               :style="{ maxHeight: macro.editable ? '100px' : null, opacity: macro.editable ? 1 : null }"
             >
               <el-button
@@ -200,7 +230,7 @@ watchEffect(() => {
       <el-button type="success" color="#3375b9" :icon="Plus" @click="macroStore.newOne('place')"
         >新增场地标记</el-button
       >
-      <el-button type="danger" :icon="RefreshLeft" @click="macroStore.resetZone()">恢复默认</el-button>
+      <el-button type="danger" :icon="RefreshLeft" @click="macroStore.resetZone()">恢复当前区域默认</el-button>
     </el-footer>
   </el-container>
 </template>

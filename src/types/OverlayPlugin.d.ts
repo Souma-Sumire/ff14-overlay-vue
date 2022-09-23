@@ -1,5 +1,5 @@
-declare function addOverlayListener(event: OverlayEvent, fn: Function): void;
-declare function removeOverlayListener(event: OverlayEvent, fn: Function): void;
+declare function addOverlayListener(event: OverlayEvent | CactbotEvent, fn: Function): void;
+declare function removeOverlayListener(event: OverlayEvent | CactbotEvent, fn: Function): void;
 declare function callOverlayHandler(event: any): any;
 declare function startOverlayEvents(): void;
 
@@ -29,6 +29,21 @@ type OverlayEvent =
   | "MiniParse"
   | "ImportedLogLines"
   | "EnmityAggroList";
+type CactbotEvent =
+  | "onForceReload"
+  | "onGameExistsEvent"
+  | "onGameActiveChangedEvent"
+  | "onLogEvent"
+  | "onImportLogEvent"
+  | "onInCombatChangedEvent"
+  | "onZoneChangedEvent"
+  | "onPlayerDied"
+  | "onPartyWipe"
+  | "onFateEvent"
+  | "onPlayerChangedEvent"
+  | "onSendSaveData"
+  | "onDataFilesRead"
+  | "onInitializeOverlay";
 
 declare interface EnmityTargetDataEvent {
   type: string;

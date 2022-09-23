@@ -9,7 +9,7 @@ import { MacroInfo, PlaceMark, TextType } from "../types/Macro";
 export const useMacroStore = defineStore("macro", {
   state: () => {
     return {
-      data: useStorage("my-macors", reactive(defaultMacro), localStorage),
+      data: useStorage("my-macors", reactive(defaultMacro)),
       selectZone: useStorage("my-zone", ref("1003")),
       zoneNow: useStorage("my-zone-now", ref("129")),
       fastEntrance: [
@@ -23,6 +23,7 @@ export const useMacroStore = defineStore("macro", {
         { text: "P8S", value: "1088" },
         { text: "DSR", value: "968" },
       ],
+      gameExists: useStorage("my-game-exists", false),
     };
   },
   getters: {},
@@ -38,7 +39,8 @@ export const useMacroStore = defineStore("macro", {
     },
     cleanMacro,
     cleanEditable() {
-      for (const key in this.data.zoneId) this.data.zoneId[key].map((v) => (v.editable = false));
+      for (const x in this.data.zoneId)
+        for (const y in this.data.zoneId[x]) Reflect.deleteProperty(this.data.zoneId[x][y], "editable");
     },
     newOne(type: TextType = "macro"): void {
       this.cleanEditable();
@@ -170,8 +172,13 @@ export const useMacroStore = defineStore("macro", {
       this.selectZone = this.zoneNow;
     },
     handleChangeZone(event: any): void {
-      this.selectZone = String(event.zoneID);
-      this.zoneNow = this.selectZone;
+      if (this.gameExists) {
+        this.selectZone = String(event.zoneID);
+        this.zoneNow = this.selectZone;
+      }
+    },
+    handleGameExists(event: any): void {
+      this.gameExists = !!event?.detail?.exists;
     },
     resetZone(): void {
       Swal.fire({
