@@ -33,9 +33,9 @@
   "devDependencies": {
     "@types/node": "^17.0.45",
     "@vitejs/plugin-vue": "^2.3.4",
-    "sass": "^1.54.9",
+    "sass": "^1.55.0",
     "typescript": "*",
-    "unocss": "^0.45.21",
+    "unocss": "^0.45.22",
     "unplugin-auto-import": "^0.6.9",
     "unplugin-vue-components": "^0.17.21",
     "vite": "^2.9.15",
