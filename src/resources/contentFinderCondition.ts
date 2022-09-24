@@ -902,5 +902,8 @@ for (const key in contentFinderCondition) {
   map[contentFinderCondition[key]] = Number(key);
 }
 export function getMapIDByTerritoryType(territoryType: number): number {
-  return map[territoryType] ?? 0;
+  return map[territoryType] ?? territoryType;
+}
+export function getTerritoryTypeByMapID(mapID: number): number {
+  return contentFinderCondition[mapID] ?? mapID;
 }

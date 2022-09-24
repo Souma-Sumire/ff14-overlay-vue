@@ -1,5 +1,5 @@
 import { defaultMacro } from "./../resources/macro";
-import { PPJSON } from "./../types/Macro";
+import { PPJSON, WayMarkKeys } from "./../types/Macro";
 import { useStorage } from "@vueuse/core";
 import { defineStore } from "pinia";
 import Swal from "sweetalert2";
@@ -8,6 +8,7 @@ import { reactive, ref } from "vue";
 import { doTextCommand, doWayMark, slotWayMark } from "../api/postNamazu";
 import { MacroInfoMacro, MacroInfoPlace, MacroType } from "../types/Macro";
 import zoneInfo from "../resources/zoneInfo";
+import { getMapIDByTerritoryType, getTerritoryTypeByMapID } from "../resources/contentFinderCondition";
 
 export const useMacroStore = defineStore("macro", {
   state: () => {
@@ -53,27 +54,42 @@ export const useMacroStore = defineStore("macro", {
         if (type === "macro") {
           this.data.zoneId[selectZoneId].push({ Type: type, Name: "New Macro", Text: "", Editable: true });
         } else if (type === "place") {
+          const defaultX = -zoneInfo[selectZoneId].offsetX;
+          const defaultY = -zoneInfo[selectZoneId].offsetY;
           const i = this.data.zoneId[selectZoneId].push({
             Name: "New WayMark",
             Type: type,
             Editable: true,
             Place: {
-              "A": { X: 100, Y: 0, Z: 100, Active: false },
-              "B": { X: 100, Y: 0, Z: 100, Active: false },
-              "C": { X: 100, Y: 0, Z: 100, Active: false },
-              "D": { X: 100, Y: 0, Z: 100, Active: false },
-              "One": { X: 100, Y: 0, Z: 100, Active: false },
-              "Two": { X: 100, Y: 0, Z: 100, Active: false },
-              "Three": { X: 100, Y: 0, Z: 100, Active: false },
-              "Four": { X: 100, Y: 0, Z: 100, Active: false },
+              "A": { X: defaultX, Y: 0, Z: defaultY, Active: false },
+              "B": { X: defaultX, Y: 0, Z: defaultY, Active: false },
+              "C": { X: defaultX, Y: 0, Z: defaultY, Active: false },
+              "D": { X: defaultX, Y: 0, Z: defaultY, Active: false },
+              "One": { X: defaultX, Y: 0, Z: defaultY, Active: false },
+              "Two": { X: defaultX, Y: 0, Z: defaultY, Active: false },
+              "Three": { X: defaultX, Y: 0, Z: defaultY, Active: false },
+              "Four": { X: defaultX, Y: 0, Z: defaultY, Active: false },
             },
           });
           return this.data.zoneId[selectZoneId][i - 1];
         }
       }
     },
-    importPPJSON(): void {
-      Swal.fire({
+    async importPPJSON(): Promise<void> {
+      const selectZoneId = Number(this.selectZone);
+      const defaultX = -zoneInfo[selectZoneId].offsetX;
+      const defaultY = -zoneInfo[selectZoneId].offsetY;
+      const blank: PPJSON = {
+        A: { X: defaultX, Y: 0, Z: defaultY, Active: false },
+        B: { X: defaultX, Y: 0, Z: defaultY, Active: false },
+        C: { X: defaultX, Y: 0, Z: defaultY, Active: false },
+        D: { X: defaultX, Y: 0, Z: defaultY, Active: false },
+        One: { X: defaultX, Y: 0, Z: defaultY, Active: false },
+        Two: { X: defaultX, Y: 0, Z: defaultY, Active: false },
+        Three: { X: defaultX, Y: 0, Z: defaultY, Active: false },
+        Four: { X: defaultX, Y: 0, Z: defaultY, Active: false },
+      };
+      await Swal.fire({
         title: "请输入PP导出格式JSON字符串",
         input: "text",
         inputAttributes: {
@@ -85,23 +101,41 @@ export const useMacroStore = defineStore("macro", {
         confirmButtonText: "确定",
         cancelButtonText: "放弃",
       })
-        .then((result) => {
+        .then(async (result) => {
           if (result.isConfirmed) {
-            const blank: PPJSON = {
-              A: { X: 100, Y: 100, Z: 0, Active: false },
-              B: { X: 100, Y: 100, Z: 0, Active: false },
-              C: { X: 100, Y: 100, Z: 0, Active: false },
-              D: { X: 100, Y: 100, Z: 0, Active: false },
-              One: { X: 100, Y: 100, Z: 0, Active: false },
-              Two: { X: 100, Y: 100, Z: 0, Active: false },
-              Three: { X: 100, Y: 100, Z: 0, Active: false },
-              Four: { X: 100, Y: 100, Z: 0, Active: false },
-            };
-            const json = Object.assign(blank, JSON.parse(result.value));
+            const json = Object.assign({ MapID: -1, Name: "json" }, Object.assign(blank, JSON.parse(result.value)));
+            const selectMapID = getMapIDByTerritoryType(selectZoneId);
+            const selectZone = zoneInfo[selectZoneId];
+            const JSONZone = zoneInfo[getTerritoryTypeByMapID(json.MapID)];
+            if (json.MapID !== selectMapID) {
+              await Swal.fire({
+                title: "地图不符",
+                text: `你正试图将"${
+                  JSONZone.name.cn ?? JSONZone.name.ja ?? "" + JSONZone.name.en
+                }"的场景标记预设导入至"${selectZone.name.cn ?? selectZone.name.ja ?? "" + selectZone.name.en}"中`,
+                showConfirmButton: false,
+                showDenyButton: true,
+                showCancelButton: true,
+                denyButtonText: `强制转换坐标`,
+                cancelButtonText: "不，再想想",
+              }).then((result) => {
+                if (!result.isDenied) return;
+              });
+            }
             const targetMacro = this.newOne("place") as MacroInfoPlace;
             targetMacro.Name = json.Name;
-            targetMacro.Place = Object.assign(blank, JSON.parse(result.value));
+            targetMacro.Place = json;
             targetMacro.Editable = false;
+            const oX = selectZone.offsetX - JSONZone.offsetX;
+            const oY = selectZone.offsetY - JSONZone.offsetY;
+            try {
+              ["A", "B", "C", "D", "One", "Two", "Three", "Four"].map((v: any) => {
+                // @ts-ignore
+                targetMacro.Place[v].X -= oX;
+                // @ts-ignore
+                targetMacro.Place[v].Z -= oY;
+              });
+            } catch {}
             Reflect.deleteProperty(targetMacro.Place, "MapID");
             Reflect.deleteProperty(targetMacro.Place, "Name");
             Swal.fire({
@@ -109,7 +143,7 @@ export const useMacroStore = defineStore("macro", {
               icon: "success",
               title: "导入成功",
               showConfirmButton: false,
-              timer: 1500,
+              timer: 1000,
             });
           }
         })
@@ -238,8 +272,9 @@ export const useMacroStore = defineStore("macro", {
     },
     handleChangeZone(e: any): void {
       const zoneID = getZoneIDByZoneName(e.zoneName);
-      if (zoneID === undefined) return;
-      if (this.data.zoneId[this.zoneNow]?.length === 0) {
+      if (!zoneID) {
+        this.selectZone = "129";
+        this.zoneNow = "129";
         Swal.fire({
           title: "未知区域",
           text: `${e.zoneName} ${e.zoneID}`,
@@ -259,10 +294,14 @@ export const useMacroStore = defineStore("macro", {
       if (e.line[2] === "0038") {
         switch (e.line[4]) {
           case "发宏":
+            var lastTimeMacro = new Date().getTime();
             {
               const macro = this.data.zoneId[this.selectZone].filter((v) => v.Type === "macro");
-              if (macro.length === 1) {
-                this.sendMacroEcho((macro[0] as MacroInfoMacro).Text);
+              if (macro.length === 1 && macro[0].Type === "macro") {
+                const now = new Date().getTime();
+                if (now - lastTimeMacro >= 3000) this.sendMacroEcho(macro[0].Text);
+                else this.sendMacroParty(macro[0].Text);
+                lastTimeMacro = new Date().getTime();
               } else if (macro.length > 1) {
                 doTextCommand("/e 本地图存在多个宏，无法使用快捷发宏，请手动在网页中指定。");
               }
@@ -357,7 +396,7 @@ export const useMacroStore = defineStore("macro", {
     },
     resetAllData(): void {
       Swal.fire({
-        title: "确定恢复该所有地图的内容到默认？",
+        title: "确定清除所有地图的自定义内容？",
         text: "所有数据都将灰飞烟灭！！！",
         icon: "warning",
         showCancelButton: true,

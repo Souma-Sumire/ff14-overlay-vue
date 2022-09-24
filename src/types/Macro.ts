@@ -14,22 +14,15 @@ export interface MacroInfoPlace extends Macro {
   Place: PPJSON;
 }
 export type ZoneIdInfo = Record<string, (MacroInfoMacro | MacroInfoPlace)[]>;
-interface WayMarkInfo {
+export interface WayMarkInfo {
   X: number;
   Y: number;
   Z: number;
   Active: boolean;
   ID?: number;
 }
-export interface PPJSON {
-  Name?: string;
-  MapID?: number;
-  A: WayMarkInfo;
-  B: WayMarkInfo;
-  C: WayMarkInfo;
-  D: WayMarkInfo;
-  One: WayMarkInfo;
-  Two: WayMarkInfo;
-  Three: WayMarkInfo;
-  Four: WayMarkInfo;
-}
+export type WayMarkKeys = "A" | "B" | "C" | "D" | "One" | "Two" | "Three" | "Four";
+
+export type PPJSON = {
+  [key in WayMarkKeys]: WayMarkInfo;
+} & { Name?: string; MapID?: number };
