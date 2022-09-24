@@ -8,7 +8,7 @@ import { useMacroStore } from "../store/macro";
 import actWS from "@/assets/actWS.png";
 const macroStore = useMacroStore();
 {
-  //临时更新策略
+  //兼容旧数据的更新策略 日后删除
   for (const macros in macroStore.data.zoneId) {
     for (const key in macroStore.data.zoneId[macros]) {
       const item = macroStore.data.zoneId[macros][key];
@@ -25,6 +25,8 @@ const macroStore = useMacroStore();
       Reflect.deleteProperty(item, "text");
       Reflect.deleteProperty(item, "place");
       if (item.Type === "place") {
+        Reflect.deleteProperty(item.Place, "MapID");
+        Reflect.deleteProperty(item.Place, "Name");
         if (item.Place instanceof Array) {
           const res = {
             A: item.Place.find((v) => v.Mark === "A"),
