@@ -7,6 +7,43 @@ import zoneInfo from "../resources/zoneInfo";
 import { useMacroStore } from "../store/macro";
 import actWS from "@/assets/actWS.png";
 const macroStore = useMacroStore();
+{
+  //临时更新策略
+  for (const macros in macroStore.data.zoneId) {
+    for (const key in macroStore.data.zoneId[macros]) {
+      const item = macroStore.data.zoneId[macros][key];
+      // @ts-ignore
+      if (item.name) item.Name = item.name;
+      // @ts-ignore
+      if (item.type) item.Type = item.type;
+      // @ts-ignore
+      if (item.text) item.Text = item.text;
+      // @ts-ignore
+      if (item.place) item.Place = item.place;
+      Reflect.deleteProperty(item, "name");
+      Reflect.deleteProperty(item, "type");
+      Reflect.deleteProperty(item, "text");
+      Reflect.deleteProperty(item, "place");
+      if (item.Type === "place") {
+        if (item.Place instanceof Array) {
+          const res = {
+            A: item.Place.find((v) => v.Mark === "A"),
+            B: item.Place.find((v) => v.Mark === "B"),
+            C: item.Place.find((v) => v.Mark === "C"),
+            D: item.Place.find((v) => v.Mark === "D"),
+            One: item.Place.find((v) => v.Mark === "One"),
+            Two: item.Place.find((v) => v.Mark === "Two"),
+            Three: item.Place.find((v) => v.Mark === "Three"),
+            Four: item.Place.find((v) => v.Mark === "Four"),
+          };
+          // @ts-ignore
+          for (const k in res) Reflect.deleteProperty(res[k], "Mark");
+          item.Place = res;
+        }
+      }
+    }
+  }
+}
 macroStore.cleanEditable();
 addOverlayListener("onGameExistsEvent", macroStore.handleGameExists);
 addOverlayListener("ChangeZone", macroStore.handleChangeZone);

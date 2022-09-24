@@ -25,7 +25,7 @@ router.getRoutes().forEach((route) => (route.meta.title = routeTitles.get(route.
 router.afterEach((to, from) => {
   document.title = to.meta.title?.toString() ?? "页面";
   if (to.name === "index") Swal.close();
-  if (from.name === "index" && to.name === "ZoneMacro") location.reload();
+  if (from.name === "index" && to.name === "zoneMacro") location.reload();
 });
 
 export default router;

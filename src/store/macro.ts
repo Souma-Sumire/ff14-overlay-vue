@@ -8,7 +8,6 @@ import { reactive, ref } from "vue";
 import { doTextCommand, doWayMark, slotWayMark } from "../api/postNamazu";
 import { MacroInfoMacro, MacroInfoPlace, MacroType } from "../types/Macro";
 import zoneInfo from "../resources/zoneInfo";
-import { getMapIDByTerritoryType } from "../resources/contentFinderCondition";
 
 export const useMacroStore = defineStore("macro", {
   state: () => {
@@ -321,23 +320,37 @@ export const useMacroStore = defineStore("macro", {
         cancelButtonText: "不，再想想",
       }).then((result) => {
         if (result.isConfirmed) {
-          for (const zoneId in defaultMacro.zoneId) {
-            const defData = defaultMacro.zoneId[zoneId as keyof typeof defaultMacro.zoneId];
-            const nowData = this.data.zoneId[zoneId];
-            for (const key in defData) {
-              const def = defData[key];
-              if (
-                !nowData.find((v) => {
-                  if (def.Type === "macro" && v.Type === "macro")
-                    return JSON.stringify(def.Text) === JSON.stringify(v.Text);
-                  if (def.Type === "place" && v.Type === "place")
-                    return JSON.stringify(def.Place) === JSON.stringify(v.Place);
-                  return false;
-                })
-              ) {
-                nowData.unshift(def);
+          try {
+            for (const zoneId in defaultMacro.zoneId) {
+              const defData = defaultMacro.zoneId[zoneId as keyof typeof defaultMacro.zoneId];
+              const nowData = this.data.zoneId[zoneId] ?? []; //144 = 金蝶
+              for (const key in defData) {
+                const def = defData[key];
+                if (
+                  !nowData.find((v) => {
+                    if (def.Type === "macro" && v.Type === "macro")
+                      return JSON.stringify(def.Text) === JSON.stringify(v.Text);
+                    if (def.Type === "place" && v.Type === "place")
+                      return JSON.stringify(def.Place) === JSON.stringify(v.Place);
+                    return false;
+                  })
+                ) {
+                  nowData.unshift(def);
+                }
               }
             }
+            Swal.fire({
+              position: "top-end",
+              icon: "success",
+              title: "更新完成",
+              showConfirmButton: false,
+              timer: 1000,
+            });
+          } catch (e: any) {
+            Swal.fire({
+              icon: "error",
+              title: e.message,
+            });
           }
         }
       });
@@ -368,6 +381,13 @@ export const useMacroStore = defineStore("macro", {
           }).then((result) => {
             if (result.isDenied) {
               this.data.zoneId = defaultMacro.zoneId;
+              Swal.fire({
+                position: "top-end",
+                icon: "success",
+                title: "世界已核平~",
+                showConfirmButton: false,
+                timer: 1000,
+              });
             }
           });
         }
