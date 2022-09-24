@@ -1,11 +1,15 @@
+import { defaultMacro } from "./../resources/macro";
+import { PPJSON } from "./../types/Macro";
 import { useStorage } from "@vueuse/core";
 import { defineStore } from "pinia";
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 import { reactive, ref } from "vue";
 import { doTextCommand, doWayMark, slotWayMark } from "../api/postNamazu";
-import { defaultMacro } from "../resources/macro";
-import { MacroInfo, PlaceMark, TextType } from "../types/Macro";
+import { MacroInfoMacro, MacroInfoPlace, MacroType } from "../types/Macro";
+import zoneInfo from "../resources/zoneInfo";
+import { getMapIDByTerritoryType } from "../resources/contentFinderCondition";
+
 export const useMacroStore = defineStore("macro", {
   state: () => {
     return {
@@ -28,48 +32,111 @@ export const useMacroStore = defineStore("macro", {
   },
   getters: {},
   actions: {
-    editMacro(macro: MacroInfo): void {
-      this.data.zoneId[this.selectZone].map((v) => (v.editable = false));
-      macro.editable = true;
-      if (macro.text) macro.text = cleanMacro(macro.text);
+    editMacro(macro: MacroInfoMacro): void {
+      this.data.zoneId[this.selectZone].map((v) => (v.Editable = false));
+      macro.Editable = true;
+      if (macro.Text) macro.Text = cleanMacro(macro.Text);
     },
-    submitMacro(macro: MacroInfo): void {
-      macro.editable = false;
-      if (macro.text) macro.text = cleanMacro(macro.text);
+    submitMacro(macro: MacroInfoMacro): void {
+      macro.Editable = false;
+      if (macro.Text) macro.Text = cleanMacro(macro.Text);
     },
     cleanMacro,
     cleanEditable() {
       for (const x in this.data.zoneId)
-        for (const y in this.data.zoneId[x]) Reflect.deleteProperty(this.data.zoneId[x][y], "editable");
+        for (const y in this.data.zoneId[x]) Reflect.deleteProperty(this.data.zoneId[x][y], "Editable");
     },
-    newOne(type: TextType = "macro"): void {
+    newOne(type: MacroType = "macro") {
       this.cleanEditable();
       const selectZoneId = Number(this.selectZone);
       if (this.data.zoneId[selectZoneId] === undefined) this.data.zoneId[selectZoneId] = [];
       if (this.data.zoneId[selectZoneId]) {
         if (type === "macro") {
-          this.data.zoneId[selectZoneId].push({ type: type, name: "New Macro", text: "", editable: true });
+          this.data.zoneId[selectZoneId].push({ Type: type, Name: "New Macro", Text: "", Editable: true });
         } else if (type === "place") {
-          this.data.zoneId[selectZoneId].push({
-            type: type,
-            name: "New WayMark",
-            place: [
-              { Mark: "A", X: 100, Y: 0, Z: 100, Active: false },
-              { Mark: "B", X: 100, Y: 0, Z: 100, Active: false },
-              { Mark: "C", X: 100, Y: 0, Z: 100, Active: false },
-              { Mark: "D", X: 100, Y: 0, Z: 100, Active: false },
-              { Mark: "One", X: 100, Y: 0, Z: 100, Active: false },
-              { Mark: "Two", X: 100, Y: 0, Z: 100, Active: false },
-              { Mark: "Three", X: 100, Y: 0, Z: 100, Active: false },
-              { Mark: "Four", X: 100, Y: 0, Z: 100, Active: false },
-            ],
-            editable: true,
+          const i = this.data.zoneId[selectZoneId].push({
+            Name: "New WayMark",
+            Type: type,
+            Editable: true,
+            Place: {
+              "A": { X: 100, Y: 0, Z: 100, Active: false },
+              "B": { X: 100, Y: 0, Z: 100, Active: false },
+              "C": { X: 100, Y: 0, Z: 100, Active: false },
+              "D": { X: 100, Y: 0, Z: 100, Active: false },
+              "One": { X: 100, Y: 0, Z: 100, Active: false },
+              "Two": { X: 100, Y: 0, Z: 100, Active: false },
+              "Three": { X: 100, Y: 0, Z: 100, Active: false },
+              "Four": { X: 100, Y: 0, Z: 100, Active: false },
+            },
           });
+          return this.data.zoneId[selectZoneId][i - 1];
         }
       }
     },
-    deleteMacro(macro: MacroInfo): void {
-      if (macro.type === "macro" && (macro?.text ?? "").length <= 5) {
+    importPPJSON(): void {
+      Swal.fire({
+        title: "请输入PP导出格式JSON字符串",
+        input: "text",
+        inputAttributes: {
+          autocapitalize: "off",
+          autocorrect: "off",
+          autocomplete: "off",
+        },
+        showCancelButton: true,
+        confirmButtonText: "确定",
+        cancelButtonText: "放弃",
+      })
+        .then((result) => {
+          if (result.isConfirmed) {
+            const blank: PPJSON = {
+              A: { X: 100, Y: 100, Z: 0, Active: false },
+              B: { X: 100, Y: 100, Z: 0, Active: false },
+              C: { X: 100, Y: 100, Z: 0, Active: false },
+              D: { X: 100, Y: 100, Z: 0, Active: false },
+              One: { X: 100, Y: 100, Z: 0, Active: false },
+              Two: { X: 100, Y: 100, Z: 0, Active: false },
+              Three: { X: 100, Y: 100, Z: 0, Active: false },
+              Four: { X: 100, Y: 100, Z: 0, Active: false },
+            };
+            const json = Object.assign(blank, JSON.parse(result.value));
+            const targetMacro = this.newOne("place") as MacroInfoPlace;
+            targetMacro.Name = json.Name;
+            targetMacro.Place = Object.assign(blank, JSON.parse(result.value));
+            targetMacro.Editable = false;
+            Reflect.deleteProperty(targetMacro.Place, "MapID");
+            Reflect.deleteProperty(targetMacro.Place, "Name");
+            Swal.fire({
+              position: "top-end",
+              icon: "success",
+              title: "导入成功",
+              showConfirmButton: false,
+              timer: 1500,
+            });
+          }
+        })
+        .catch(() => {
+          Swal.fire({
+            position: "top-end",
+            icon: "error",
+            title: "解析字符串时出现错误，动作终止",
+            showConfirmButton: false,
+            timer: 1500,
+          });
+        });
+    },
+    deleteMacro(macro: MacroInfoMacro | MacroInfoPlace): void {
+      if (
+        (macro.Type === "macro" && (macro?.Text ?? "").length <= 5) ||
+        (macro.Type === "place" &&
+          !macro.Place.A.Active &&
+          !macro.Place.B.Active &&
+          !macro.Place.C.Active &&
+          !macro.Place.D.Active &&
+          !macro.Place.One.Active &&
+          !macro.Place.Two.Active &&
+          !macro.Place.Three.Active &&
+          !macro.Place.Four.Active)
+      ) {
         let index = this.data.zoneId[this.selectZone].indexOf(macro);
         if (index > -1) this.data.zoneId[this.selectZone].splice(index, 1);
       } else
@@ -112,7 +179,6 @@ export const useMacroStore = defineStore("macro", {
       });
     },
     sendMacroEcho(text: string): void {
-      doTextCommand("/e ============");
       const t = text;
       t.replaceAll(/^\s*\/[pe]/gm, "");
       t.split("\n").map((v, i) => setTimeout(() => doTextCommand("/e " + v), 200 * (i + 1)));
@@ -124,7 +190,7 @@ export const useMacroStore = defineStore("macro", {
         timer: 1000,
       });
     },
-    doLocalWayMark(place: PlaceMark[]): void {
+    doLocalWayMark(place: PPJSON): void {
       Swal.fire({
         title: "确定进行本地标点？",
         text: "只有你自己能看到这些标点哦",
@@ -146,7 +212,7 @@ export const useMacroStore = defineStore("macro", {
         }
       });
     },
-    doSlotWayMark(place: PlaceMark[]): void {
+    doSlotWayMark(place: PPJSON): void {
       Swal.fire({
         title: "确定将该预设覆盖到插槽5？",
         text: "原在插槽5的预设将会被覆盖",
@@ -171,25 +237,72 @@ export const useMacroStore = defineStore("macro", {
     positioning(): void {
       this.selectZone = this.zoneNow;
     },
-    handleChangeZone(event: any): void {
+    handleChangeZone(e: any): void {
+      const zoneID = getZoneIDByZoneName(e.zoneName);
+      if (zoneID === undefined) return;
+      if (this.data.zoneId[this.zoneNow]?.length === 0) {
+        Swal.fire({
+          title: "未知区域",
+          text: `${e.zoneName} ${e.zoneID}`,
+          footer: "若此处是战斗副本，请反馈作者。",
+        });
+        return;
+      }
       if (this.gameExists) {
-        this.selectZone = String(event.zoneID);
-        this.zoneNow = this.selectZone;
+        this.selectZone = zoneID;
+        this.zoneNow = zoneID;
       }
     },
-    handleGameExists(event: any): void {
-      this.gameExists = !!event?.detail?.exists;
+    handleGameExists(e: any): void {
+      this.gameExists = !!e?.detail?.exists;
+    },
+    handleLogLine(e: any) {
+      if (e.line[2] === "0038") {
+        switch (e.line[4]) {
+          case "发宏":
+            {
+              const macro = this.data.zoneId[this.selectZone].filter((v) => v.Type === "macro");
+              if (macro.length === 1) {
+                this.sendMacroEcho((macro[0] as MacroInfoMacro).Text);
+              } else if (macro.length > 1) {
+                doTextCommand("/e 本地图存在多个宏，无法使用快捷发宏，请手动在网页中指定。");
+              }
+            }
+            break;
+          case "本地标点":
+            {
+              const place = this.data.zoneId[this.selectZone].filter((v) => v.Type === "place");
+              if (place.length === 1) {
+                doWayMark((place[0] as MacroInfoPlace).Place!);
+              } else if (place.length > 1) {
+                doTextCommand("/e 本地图存在多个场景标记，无法使用快捷本地标点，请手动在网页中指定。");
+              }
+            }
+            break;
+          case "标点插槽":
+            {
+              const place = this.data.zoneId[this.selectZone].filter((v) => v.Type === "place");
+              if (place.length === 1) {
+                slotWayMark(this.selectZone, (place[0] as MacroInfoPlace).Place!, 5);
+              } else if (place.length > 1) {
+                doTextCommand("/e 本地图存在多个场景标记预设，无法使用快捷插槽，请手动在网页中指定。");
+              }
+            }
+            break;
+        }
+      }
     },
     resetZone(): void {
       Swal.fire({
         title: "确定恢复该地图的内容到默认？",
-        text: "你把宏玩崩啦！？",
+        text: "仅限当前地图",
         icon: "warning",
         showCancelButton: true,
         showDenyButton: true,
         showConfirmButton: false,
         confirmButtonColor: "#3085d6",
-        denyButtonText: "是的，抹除用户数据",
+        denyButtonColor: "#E6A23C",
+        denyButtonText: "是的，恢复该区域数据",
         cancelButtonText: "不，再想想",
       }).then((result) => {
         if (result.isDenied) {
@@ -197,51 +310,68 @@ export const useMacroStore = defineStore("macro", {
         }
       });
     },
-    importPPJSON(targetMacro: MacroInfo): void {
+    updateData(): void {
       Swal.fire({
-        title: "请输入JSON字符串",
-        input: "text",
-        inputAttributes: {
-          autocapitalize: "off",
-          autocorrect: "off",
-          autocomplete: "off",
-        },
+        title: "确定更新全部地图数据库吗？",
+        text: "该动作会恢复掉你曾经删除的默认数据",
+        icon: "question",
         showCancelButton: true,
-        confirmButtonText: "确定",
-        cancelButtonText: "放弃",
-      })
-        .then((result) => {
-          if (result.isConfirmed) {
-            const json = JSON.parse(result.value);
-            targetMacro.name = json.Name;
-            targetMacro.place = [
-              { Mark: "A", X: json.A.X, Y: json.A.Y, Z: json.A.Z, Active: json.A.Active },
-              { Mark: "B", X: json.B.X, Y: json.B.Y, Z: json.B.Z, Active: json.B.Active },
-              { Mark: "C", X: json.C.X, Y: json.C.Y, Z: json.C.Z, Active: json.C.Active },
-              { Mark: "D", X: json.D.X, Y: json.D.Y, Z: json.D.Z, Active: json.D.Active },
-              { Mark: "One", X: json.One.X, Y: json.One.Y, Z: json.One.Z, Active: json.One.Active },
-              { Mark: "Two", X: json.Two.X, Y: json.Two.Y, Z: json.Two.Z, Active: json.Two.Active },
-              { Mark: "Three", X: json.Three.X, Y: json.Three.Y, Z: json.Three.Z, Active: json.Three.Active },
-              { Mark: "Four", X: json.Four.X, Y: json.Four.Y, Z: json.Four.Z, Active: json.Four.Active },
-            ];
-            Swal.fire({
-              position: "top-end",
-              icon: "success",
-              title: "导入成功",
-              showConfirmButton: false,
-              timer: 1500,
-            });
+        showConfirmButton: true,
+        confirmButtonText: "是的，更新全部数据",
+        cancelButtonText: "不，再想想",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          for (const zoneId in defaultMacro.zoneId) {
+            const defData = defaultMacro.zoneId[zoneId as keyof typeof defaultMacro.zoneId];
+            const nowData = this.data.zoneId[zoneId];
+            for (const key in defData) {
+              const def = defData[key];
+              if (
+                !nowData.find((v) => {
+                  if (def.Type === "macro" && v.Type === "macro")
+                    return JSON.stringify(def.Text) === JSON.stringify(v.Text);
+                  if (def.Type === "place" && v.Type === "place")
+                    return JSON.stringify(def.Place) === JSON.stringify(v.Place);
+                  return false;
+                })
+              ) {
+                nowData.unshift(def);
+              }
+            }
           }
-        })
-        .catch(() => {
+        }
+      });
+    },
+    resetAllData(): void {
+      Swal.fire({
+        title: "确定恢复该所有地图的内容到默认？",
+        text: "所有数据都将灰飞烟灭！！！",
+        icon: "warning",
+        showCancelButton: true,
+        showDenyButton: true,
+        showConfirmButton: false,
+        confirmButtonColor: "#3085d6",
+        denyButtonText: "是的，抹除所有一切用户数据",
+        cancelButtonText: "不，再想想",
+      }).then((result) => {
+        if (result.isDenied) {
           Swal.fire({
-            position: "top-end",
-            icon: "error",
-            title: "解析字符串时出现错误，动作终止",
+            title: "你真的真的确定要毁灭一切数据吗？",
+            text: "所有数据都将灰飞烟灭！！！！！！！！",
+            icon: "warning",
+            showCancelButton: true,
+            showDenyButton: true,
             showConfirmButton: false,
-            timer: 1500,
+            confirmButtonColor: "#3085d6",
+            denyButtonText: "是的，抹除所有数据！！！！！",
+            cancelButtonText: "不，再想想",
+          }).then((result) => {
+            if (result.isDenied) {
+              this.data.zoneId = defaultMacro.zoneId;
+            }
           });
-        });
+        }
+      });
     },
   },
 });
@@ -251,4 +381,15 @@ export function cleanMacro(text: string): string {
   text = text.replaceAll(/^\s+/gm, "");
   text = text.replaceAll(/ /gm, `\xa0`);
   return text;
+}
+export function getZoneIDByZoneName(ZoneName: string) {
+  for (const zoneId in zoneInfo) {
+    const zone = zoneInfo[zoneId];
+    for (const lang in zone.name) {
+      const zoneName = zone.name[lang as keyof typeof zone.name];
+      if (zoneName === ZoneName || zoneName === ZoneName.replaceAll(/[\(\)]/g, "")) {
+        return zoneId;
+      }
+    }
+  }
 }

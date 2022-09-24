@@ -5,10 +5,10 @@ const router = createRouter({
   history: createWebHashHistory(),
   routes,
 });
-router.beforeResolve((to, from) => {
-  if (to.name === "index") Swal.close();
-  return true;
-});
+// router.beforeResolve((to, from) => {
+//   if (to.name === "index") Swal.close();
+//   return true;
+// });
 const routeTitles = new Map(
   Object.entries({
     "index": "首页",
@@ -22,6 +22,10 @@ const routeTitles = new Map(
   }),
 );
 router.getRoutes().forEach((route) => (route.meta.title = routeTitles.get(route.name?.toString() ?? "")));
-router.afterEach((to) => (document.title = to.meta.title?.toString() ?? "页面"));
+router.afterEach((to, from) => {
+  document.title = to.meta.title?.toString() ?? "页面";
+  if (to.name === "index") Swal.close();
+  if (from.name === "index" && to.name === "ZoneMacro") location.reload();
+});
 
 export default router;

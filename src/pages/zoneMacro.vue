@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Check, Delete, Edit, Plus, Position, RefreshLeft } from "@element-plus/icons-vue";
 import Swal from "sweetalert2";
-import { onMounted, watchEffect } from "vue";
+import { computed, onMounted, watchEffect } from "vue";
 import { defaultMacro } from "../resources/macro";
 import zoneInfo from "../resources/zoneInfo";
 import { useMacroStore } from "../store/macro";
@@ -10,6 +10,7 @@ const macroStore = useMacroStore();
 macroStore.cleanEditable();
 addOverlayListener("onGameExistsEvent", macroStore.handleGameExists);
 addOverlayListener("ChangeZone", macroStore.handleChangeZone);
+addOverlayListener("LogLine", macroStore.handleLogLine);
 startOverlayEvents();
 const markMap = {
   A: "A",
@@ -21,6 +22,8 @@ const markMap = {
   Three: "3",
   Four: "4",
 };
+const zoneOffsetX = computed(() => zoneInfo[Number(macroStore.selectZone)].offsetX);
+const zoneOffsetY = computed(() => zoneInfo[Number(macroStore.selectZone)].offsetY);
 watchEffect(() => {
   macroStore.data.zoneId[macroStore.selectZone] =
     macroStore.data.zoneId[macroStore.selectZone] || defaultMacro.zoneId[macroStore.selectZone];
@@ -82,20 +85,20 @@ onMounted(() => {
         <el-card v-for="(macro, index) in macroStore.data.zoneId[macroStore.selectZone]" :key="index" class="box-card">
           <template #header>
             <div class="card-header">
-              <span v-show="!macro.editable" v-html="macro.name"></span>
-              <el-input size="small" v-show="macro.editable" v-model="macro.name" placeholder="宏标题" />
+              <span v-show="!macro.Editable" v-html="macro.Name"></span>
+              <el-input size="small" v-show="macro.Editable" v-model="macro.Name" placeholder="宏标题" />
             </div>
           </template>
-          <div v-if="macro.type === 'macro'">
-            <article v-if="!macro.editable">
-              <div v-for="(macro, o) in macro.text?.split('\n')" :key="o" class="text item">
+          <div v-if="macro.Type === 'macro'">
+            <article v-if="!macro.Editable">
+              <div v-for="(macro, o) in macro.Text?.split('\n')" :key="o" class="text item">
                 {{ macro }}
               </div>
             </article>
             <el-input
               size="small"
-              v-show="macro.editable"
-              v-model="macro.text"
+              v-show="macro.Editable"
+              v-model="macro.Text"
               :autosize="{ minRows: 3 }"
               type="textarea"
               placeholder="宏文本"
@@ -106,18 +109,18 @@ onMounted(() => {
             <el-row
               class="buttonArea"
               style="margin-top: 5px"
-              :style="{ maxHeight: macro.editable ? '100px' : null, opacity: macro.editable ? 1 : null }"
+              :style="{ maxHeight: macro.Editable ? '100px' : null, opacity: macro.Editable ? 1 : null }"
             >
               <el-button
                 type="primary"
-                v-show="!macro.editable"
+                v-show="!macro.Editable"
                 :icon="Edit"
                 circle
                 @click="macroStore.editMacro(macro)"
               />
               <el-button
                 type="success"
-                v-show="macro.editable"
+                v-show="macro.Editable"
                 :icon="Check"
                 circle
                 @click="macroStore.submitMacro(macro)"
@@ -127,99 +130,98 @@ onMounted(() => {
               <el-button type="primary" @click="macroStore.sendMacroParty(macro?.text ?? '')">队</el-button>
             </el-row>
           </div>
-          <div v-if="macro.type === 'place'">
-            <el-space v-show="macro.editable">
-              <el-button @click="macroStore.importPPJSON(macro)">导入PP格式JSON</el-button>
+          <div v-if="macro.Type === 'place'">
+            <el-space v-show="macro.Editable">
+              <el-table :data="Object.entries(macro.Place)" border size="small" style="width: 100%">
+                <el-table-column align="center" v-if="macro.Editable" label="启用" width="85">
+                  <template #default="scope">
+                    <el-switch v-model="scope.row[1].Active" size="small" style="--el-switch-on-color: #13ce66" />
+                  </template>
+                </el-table-column>
+                <el-table-column align="center" label="标记" width="85">
+                  <template #default="scope">
+                    <span v-show="true">{{ scope.row[0] }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column align="center" label="X" width="85">
+                  <template #default="scope">
+                    <span v-show="!macro.Editable">{{ scope.row.X }}</span>
+                    <el-input
+                      type="number"
+                      :precision="2"
+                      size="small"
+                      controls-position="right"
+                      v-show="macro.Editable"
+                      v-model="scope.row[1].X"
+                    ></el-input>
+                  </template>
+                </el-table-column>
+                <el-table-column align="center" label="Z" width="85">
+                  <template #default="scope">
+                    <span v-show="!macro.Editable">{{ scope.row.Z }}</span>
+                    <el-input
+                      type="number"
+                      :precision="2"
+                      size="small"
+                      controls-position="right"
+                      v-show="macro.Editable"
+                      v-model="scope.row[1].Z"
+                    ></el-input>
+                  </template>
+                </el-table-column>
+                <el-table-column align="center" label="Y" width="85">
+                  <template #default="scope">
+                    <span v-show="!macro.Editable">{{ scope.row.Y }}</span>
+                    <el-input
+                      type="number"
+                      :precision="2"
+                      size="small"
+                      controls-position="right"
+                      v-show="macro.Editable"
+                      v-model="scope.row[1].Y"
+                    ></el-input>
+                  </template>
+                </el-table-column>
+              </el-table>
             </el-space>
-            <el-table :data="macro.place" border size="small" style="width: 100%">
-              <el-table-column align="center" v-if="macro.editable" label="启用" width="85">
-                <template #default="scope">
-                  <el-switch v-model="scope.row.Active" size="small" style="--el-switch-on-color: #13ce66" />
-                </template>
-              </el-table-column>
-              <el-table-column align="center" label="标记" width="85">
-                <template #default="scope">
-                  <span v-show="true">{{ scope.row.Mark }}</span>
-                </template>
-              </el-table-column>
-              <el-table-column align="center" label="X" width="85">
-                <template #default="scope">
-                  <span v-show="!macro.editable">{{ scope.row.X }}</span>
-                  <el-input
-                    type="number"
-                    :precision="2"
-                    size="small"
-                    controls-position="right"
-                    v-show="macro.editable"
-                    v-model="scope.row.X"
-                  ></el-input>
-                </template>
-              </el-table-column>
-              <el-table-column align="center" label="Z" width="85">
-                <template #default="scope">
-                  <span v-show="!macro.editable">{{ scope.row.Z }}</span>
-                  <el-input
-                    type="number"
-                    :precision="2"
-                    size="small"
-                    controls-position="right"
-                    v-show="macro.editable"
-                    v-model="scope.row.Z"
-                  ></el-input>
-                </template>
-              </el-table-column>
-              <el-table-column align="center" label="Y" width="85">
-                <template #default="scope">
-                  <span v-show="!macro.editable">{{ scope.row.Y }}</span>
-                  <el-input
-                    type="number"
-                    :precision="2"
-                    size="small"
-                    controls-position="right"
-                    v-show="macro.editable"
-                    v-model="scope.row.Y"
-                  ></el-input>
-                </template>
-              </el-table-column>
-            </el-table>
             <el-space>
               <div h200px w200px style="position: relative; background-color: rgba(214, 199, 148, 1)">
                 <span
-                  v-for="(mark, index) in macro.place"
-                  :key="index"
+                  v-for="(mark, key) in macro.Place"
+                  :key="key"
                   class="markIcon"
-                  :class="'markIcon' + mark.Mark"
+                  :class="'markIcon' + key"
                   :style="{
-                    left: Math.min(200, Math.max(0, (mark.X - 100) * 4 + 100)) + 'px',
-                    top: Math.min(200, Math.max(0, (mark.Z - 100) * 4 + 100)) + 'px',
+                    left: Math.min(200, Math.max(0, (Number(mark.X) + Number(zoneOffsetX)) * 3 + 100)) + 'px',
+                    top: Math.min(200, Math.max(0, (Number(mark.Z) + Number(zoneOffsetY)) * 3 + 100)) + 'px',
                   }"
                 >
-                  {{ mark.Active ? markMap[mark.Mark] ?? mark.Mark : "" }}
+                  {{ mark.Active ? markMap[key] ?? key : "" }}
                 </span>
               </div>
             </el-space>
             <el-row
               class="buttonArea"
               style="margin-top: 5px"
-              :style="{ maxHeight: macro.editable ? '100px' : null, opacity: macro.editable ? 1 : null }"
+              :style="{ maxHeight: macro.Editable ? '100px' : null, opacity: macro.Editable ? 1 : null }"
             >
               <el-button
                 type="primary"
-                v-show="!macro.editable"
+                v-show="!macro.Editable"
                 :icon="Edit"
                 circle
                 @click="macroStore.editMacro(macro)"
               />
               <el-button
                 type="success"
-                v-show="macro.editable"
+                v-show="macro.Editable"
                 :icon="Check"
                 circle
                 @click="macroStore.submitMacro(macro)"
               />
               <el-button type="danger" :icon="Delete" circle @click="macroStore.deleteMacro(macro)" />
-              <el-button type="primary" @click="macroStore.doLocalWayMark(macro?.place)">本地</el-button>
-              <el-button type="primary" plain @click="macroStore.doSlotWayMark(macro?.place)">插槽5</el-button>
+              <el-button type="primary" @click="macroStore.doLocalWayMark(macro.Place)">本地</el-button>
+              <el-button type="primary" plain @click="macroStore.doSlotWayMark(macro.Place)">插槽5</el-button>
             </el-row>
           </div>
         </el-card>
@@ -230,9 +232,18 @@ onMounted(() => {
       <el-button type="success" color="#3375b9" :icon="Plus" @click="macroStore.newOne('place')"
         >新增场地标记</el-button
       >
-      <el-button type="danger" :icon="RefreshLeft" @click="macroStore.resetZone()">恢复当前区域默认</el-button>
+      <el-button color="#BA5783" :icon="Plus" @click="macroStore.importPPJSON()">导入PP</el-button>
+      <el-button type="warning" :icon="RefreshLeft" @click="macroStore.resetZone()">恢复当前区域默认</el-button>
     </el-footer>
   </el-container>
+  <el-footer mt1em>
+    <el-button type="success" :icon="RefreshLeft" color="rgb(101,92,201)" @click="macroStore.updateData()"
+      >更新全部地图的自带数据库</el-button
+    >
+    <el-button type="danger" :icon="RefreshLeft" @click="macroStore.resetAllData()"
+      >毁灭全部用户数据</el-button
+    ></el-footer
+  >
 </template>
 <style lang="scss" scoped>
 .markIcon {
