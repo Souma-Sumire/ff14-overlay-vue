@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useStorage } from "@vueuse/core";
 import Swal from "sweetalert2";
-import "sweetalert2/src/sweetalert2.scss";
+import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import { computed, reactive, ref } from "vue";
 import { useTimelineStore } from "../../store/timeline";
 import { ITimeline, ITimelineCondition, ITimelineLine, ShowStyle, TimelineConfigValues } from "../../types/Timeline";

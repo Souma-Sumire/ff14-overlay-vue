@@ -1,9 +1,9 @@
 import { defaultMacro } from "./../resources/macro";
-import { PPJSON, WayMarkKeys } from "./../types/Macro";
+import { PPJSON } from "./../types/Macro";
 import { useStorage } from "@vueuse/core";
 import { defineStore } from "pinia";
 import Swal from "sweetalert2";
-import "sweetalert2/src/sweetalert2.scss";
+import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import { reactive, ref } from "vue";
 import { doTextCommand, doWayMark, slotWayMark } from "../api/postNamazu";
 import { MacroInfoMacro, MacroInfoPlace, MacroType } from "../types/Macro";
@@ -272,13 +272,18 @@ export const useMacroStore = defineStore("macro", {
     },
     handleChangeZone(e: any): void {
       const zoneID = getZoneIDByZoneName(e.zoneName);
+      //金蝶游乐场
+      if (e.zoneID === 144) return;
       if (!zoneID) {
         this.selectZone = "129";
         this.zoneNow = "129";
         Swal.fire({
+          position: "center",
+          icon: "info",
           title: "未知区域",
           text: `${e.zoneName} ${e.zoneID}`,
           footer: "若此处是战斗副本，请反馈作者。",
+          backdrop: false,
         });
         return;
       }

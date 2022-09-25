@@ -2,7 +2,7 @@
 import axios from "axios";
 import { reactive, ref } from "vue";
 import Swal from "sweetalert2";
-import "sweetalert2/src/sweetalert2.scss";
+import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import { useActionStore } from "../../store/action";
 import { FFIconToName, FFlogsApiV1ReportEvents, FFlogsQuery, Friendlies, FFlogsType } from "../../types/Fflogs";
 import { factory } from "../../utils/timelineSpecialRules";

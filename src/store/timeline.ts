@@ -12,7 +12,7 @@ import {
 } from "../types/Timeline";
 import { useActionStore } from "./action";
 import Swal from "sweetalert2";
-import "sweetalert2/src/sweetalert2.scss";
+import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import Util from "../utils/util";
 import { IActionData } from "../types/Action";
 

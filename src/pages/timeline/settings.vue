@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import Swal from "sweetalert2";
-import "sweetalert2/src/sweetalert2.scss";
+import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import { computed, reactive, ref, toRef, watchEffect } from "vue";
 import FflogsImport from "../../components/timeline/fflogsImport.vue";
 import TimelineShow from "../../components/timeline/timelineShow.vue";

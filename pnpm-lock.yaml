@@ -4,6 +4,7 @@ specifiers:
   '@babel/core': ^7.19.1
   '@element-plus/icons-vue': ^2.0.9
   '@johnsoncodehk/html2pug': ^1.0.0
+  '@sweetalert2/theme-bootstrap-4': ^5.0.12
   '@types/node': ^17.0.45
   '@vitejs/plugin-vue': ^2.3.4
   '@volar/pug-language-service': ^0.40.13
@@ -40,6 +41,7 @@ dependencies:
   '@babel/core': 7.19.1
   '@element-plus/icons-vue': 2.0.9_vue@3.2.39
   '@johnsoncodehk/html2pug': 1.0.0
+  '@sweetalert2/theme-bootstrap-4': 5.0.12
   '@volar/pug-language-service': 0.40.13
   '@volar/typescript-language-service': 0.40.13
   '@volar/vue-language-service': 0.40.13
@@ -457,6 +459,10 @@ packages:
       estree-walker: 2.0.2
       picomatch: 2.3.1
     dev: true
+
+  /@sweetalert2/theme-bootstrap-4/5.0.12:
+    resolution: {integrity: sha512-n2a4efzRS4yDDAL0tr+4jLuBnKn5oaXX/KXNMmhKbFNClQuZcf5NkMasLwYFUuJ5eHHZf5MLCpdKoIywerSGrg==}
+    dev: false
 
   /@sxzz/popperjs-es/2.11.7:
     resolution: {integrity: sha512-Ccy0NlLkzr0Ex2FKvh2X+OyERHXJ88XJ1MXtsI9y9fGexlaXaVTPzBCRBwIxFkORuOb+uBqeu+RqnpgYTEZRUQ==}

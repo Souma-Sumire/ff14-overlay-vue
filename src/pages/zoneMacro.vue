@@ -3,7 +3,7 @@ import actWS from "@/assets/actWS.png";
 import { Check, Delete, Edit, Plus, Position, RefreshLeft } from "@element-plus/icons-vue";
 import { useStorage } from "@vueuse/core";
 import Swal from "sweetalert2";
-import "sweetalert2/src/sweetalert2.scss";
+import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import { computed, onMounted, ref, watchEffect } from "vue";
 import { defaultMacro } from "../resources/macro";
 import zoneInfo from "../resources/zoneInfo";
@@ -49,6 +49,7 @@ const macroStore = useMacroStore();
   }
 }
 macroStore.cleanEditable();
+
 addOverlayListener("onGameExistsEvent", macroStore.handleGameExists);
 addOverlayListener("ChangeZone", macroStore.handleChangeZone);
 addOverlayListener("LogLine", macroStore.handleLogLine);
@@ -88,9 +89,12 @@ const raidEmulatorOnLoad = async () => {
     if (!websocketConnected) {
       Swal.fire({
         title: "已断开连接",
-        text: "目前与ACT断开了连接。请按照上图进行操作。",
+        text: "请按照上图所示进行操作，然后刷新页面。",
         imageUrl: actWS,
+        allowOutsideClick: false,
+        showConfirmButton: false,
       });
+
     }
   }
 };

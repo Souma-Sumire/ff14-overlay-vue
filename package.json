@@ -10,6 +10,7 @@
     "@babel/core": "^7.19.1",
     "@element-plus/icons-vue": "^2.0.9",
     "@johnsoncodehk/html2pug": "^1.0.0",
+    "@sweetalert2/theme-bootstrap-4": "^5.0.12",
     "@volar/pug-language-service": "^0.40.13",
     "@volar/typescript-language-service": "^0.40.13",
     "@volar/vue-language-service": "^0.40.13",
