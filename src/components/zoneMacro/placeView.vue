@@ -41,7 +41,7 @@ const { place } = defineProps<{ place: PPJSON }>();
   position: absolute;
   text-align: center;
   transform: translate(-50%, -50%);
-  font-size: 22px;
+  font-size: 21px;
   font-weight: bold;
   color: white;
   -webkit-text-stroke: 1px rgba(50, 50, 50, 1);
