@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import HelloWorld from "./README.md";
+import "github-markdown-css/github-markdown-light.css";
+import README from "../../components/timeline/README.md";
 </script>
 <template>
-  <HelloWorld />
+  <article class="markdown-body">
+    <README />
+  </article>
 </template>
