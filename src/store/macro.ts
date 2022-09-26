@@ -9,11 +9,13 @@ import { doTextCommand, doWayMark, slotWayMark } from "../api/postNamazu";
 import { MacroInfoMacro, MacroInfoPlace, MacroType } from "../types/Macro";
 import zoneInfo from "../resources/zoneInfo";
 import { getMapIDByTerritoryType, getTerritoryTypeByMapID } from "../resources/contentFinderCondition";
-
+let lastTimeMacro = 0;
+let partyLen = 0;
+addOverlayListener("PartyChanged", (e: any) => (partyLen = e.party.length));
 export const useMacroStore = defineStore("macro", {
   state: () => {
     return {
-      data: useStorage("my-macors", reactive(defaultMacro)),
+      data: useStorage("my-macros", reactive(defaultMacro)),
       selectZone: useStorage("my-zone", ref("1003")),
       zoneNow: useStorage("my-zone-now", ref("129")),
       fastEntrance: [
@@ -198,30 +200,12 @@ export const useMacroStore = defineStore("macro", {
         cancelButtonText: "不，再想想",
       }).then((result) => {
         if (result.isConfirmed) {
-          const t = text;
-          t.replaceAll(/^\s*\/[pe]/gm, "");
-          t.split("\n").map((v, i) => setTimeout(() => doTextCommand("/p " + v), 200 * (i + 1)));
-          Swal.fire({
-            position: "top-end",
-            icon: "success",
-            title: "已发送到小队频道",
-            showConfirmButton: false,
-            timer: 1000,
-          });
+          macroCommand(text, "p");
         }
       });
     },
     sendMacroEcho(text: string): void {
-      const t = text;
-      t.replaceAll(/^\s*\/[pe]/gm, "");
-      t.split("\n").map((v, i) => setTimeout(() => doTextCommand("/e " + v), 200 * (i + 1)));
-      Swal.fire({
-        position: "top-end",
-        icon: "success",
-        title: "已发送到默语频道",
-        showConfirmButton: false,
-        timer: 1000,
-      });
+      macroCommand(text, "e");
     },
     doLocalWayMark(place: PPJSON): void {
       Swal.fire({
@@ -299,22 +283,21 @@ export const useMacroStore = defineStore("macro", {
       if (e.line[2] === "0038") {
         switch (e.line[4]) {
           case "发宏":
-            var lastTimeMacro = new Date().getTime();
             {
-              const macro = this.data.zoneId[this.selectZone].filter((v) => v.Type === "macro");
+              const macro = this.data.zoneId[this.zoneNow].filter((v) => v.Type === "macro");
               if (macro.length === 1 && macro[0].Type === "macro") {
                 const now = new Date().getTime();
-                if (now - lastTimeMacro >= 3000) this.sendMacroEcho(macro[0].Text);
-                else this.sendMacroParty(macro[0].Text);
+                if (now - lastTimeMacro >= 3000) macroCommand(macro[0].Text, "e");
+                else macroCommand(macro[0].Text, "p");
                 lastTimeMacro = new Date().getTime();
               } else if (macro.length > 1) {
                 doTextCommand("/e 本地图存在多个宏，无法使用快捷发宏，请手动在网页中指定。");
-              }
+              } else doTextCommand("/e 当前地图没有宏<se.3>");
             }
             break;
           case "本地标点":
             {
-              const place = this.data.zoneId[this.selectZone].filter((v) => v.Type === "place");
+              const place = this.data.zoneId[this.zoneNow].filter((v) => v.Type === "place");
               if (place.length === 1) {
                 doWayMark((place[0] as MacroInfoPlace).Place!);
               } else if (place.length > 1) {
@@ -324,9 +307,9 @@ export const useMacroStore = defineStore("macro", {
             break;
           case "标点插槽":
             {
-              const place = this.data.zoneId[this.selectZone].filter((v) => v.Type === "place");
+              const place = this.data.zoneId[this.zoneNow].filter((v) => v.Type === "place");
               if (place.length === 1) {
-                slotWayMark(this.selectZone, (place[0] as MacroInfoPlace).Place!, 5);
+                slotWayMark(this.zoneNow, (place[0] as MacroInfoPlace).Place!, 5);
               } else if (place.length > 1) {
                 doTextCommand("/e 本地图存在多个场景标记预设，无法使用快捷插槽，请手动在网页中指定。");
               }
@@ -456,4 +439,25 @@ export function getZoneIDByZoneName(ZoneName: string) {
       }
     }
   }
+}
+
+async function macroCommand(text: string, channel: "e" | "p") {
+  if (channel === "p" && partyLen === 0) doTextCommand("/e 单人时无法发送小队宏<se.3>");
+  const macros = text.replaceAll(/^\s*\/[pe]\s/gm, "").split("\n");
+  let i = 0;
+  let startTime = Date.now();
+  while (true && macros[i]) {
+    const now = Date.now();
+    if (now - startTime >= 150) {
+      startTime = now;
+      doTextCommand(`/${channel} ` + macros[i++]);
+    }
+  }
+  Swal.fire({
+    position: "top-end",
+    icon: "success",
+    title: "已发送",
+    showConfirmButton: false,
+    timer: 1000,
+  });
 }

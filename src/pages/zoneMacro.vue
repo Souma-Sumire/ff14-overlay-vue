@@ -180,8 +180,8 @@ onMounted(() => {
                 @click="macroStore.submitMacro(macro)"
               />
               <el-button type="danger" :icon="Delete" circle @click="macroStore.deleteMacro(macro)" />
-              <el-button type="info" @click="macroStore.sendMacroEcho(macro?.text ?? '')">默</el-button>
-              <el-button type="primary" @click="macroStore.sendMacroParty(macro?.text ?? '')">队</el-button>
+              <el-button type="info" @click="macroStore.sendMacroEcho(macro.Text)">默</el-button>
+              <el-button type="primary" @click="macroStore.sendMacroParty(macro.Text)">队</el-button>
             </el-row>
           </div>
           <div v-if="macro.Type === 'place'">
@@ -275,7 +275,7 @@ onMounted(() => {
               />
               <el-button type="danger" :icon="Delete" circle @click="macroStore.deleteMacro(macro)" />
               <el-button type="primary" @click="macroStore.doLocalWayMark(macro.Place)">本地</el-button>
-              <el-button type="primary" plain @click="macroStore.doSlotWayMark(macro.Place)">插槽5</el-button>
+              <el-button type="primary" plain @click="macroStore.doSlotWayMark(macro.Place)">预设5</el-button>
             </el-row>
           </div>
         </el-card>
