@@ -33,12 +33,12 @@ export const useMacroStore = defineStore("macro", {
   getters: {},
   actions: {
     editMacro(macro: MacroInfoMacro): void {
-      this.data.zoneId[this.selectZone].map((v) => (v.Editable = false));
+      this.data.zoneId[this.selectZone].map((v) => Reflect.deleteProperty(v, "Editable"));
       macro.Editable = true;
       if (macro.Text) macro.Text = cleanMacro(macro.Text);
     },
     submitMacro(macro: MacroInfoMacro): void {
-      macro.Editable = false;
+      Reflect.deleteProperty(macro, "Editable");
       if (macro.Text) macro.Text = cleanMacro(macro.Text);
     },
     cleanMacro,
@@ -125,7 +125,7 @@ export const useMacroStore = defineStore("macro", {
             const targetMacro = this.newOne("place") as MacroInfoPlace;
             targetMacro.Name = json.Name;
             targetMacro.Place = json;
-            targetMacro.Editable = false;
+            Reflect.deleteProperty(targetMacro, "Editable");
             const oX = selectZone.offsetX - JSONZone.offsetX;
             const oY = selectZone.offsetY - JSONZone.offsetY;
             try {
