@@ -42,11 +42,11 @@
 
 ## 数据来源
 
-默认自带的标点、宏来源于：
+默认自带的标点、宏大部分来源于：
 
 * [FFXIVWaymarkPresets/wiki](https://github.com/Em-Six/FFXIVWaymarkPresets/wiki)
 * [FF14标点大全](https://docs.qq.com/sheet/DY0ttR2xQT1Vjc2V4?tab=BB08J2)
-* [NGA副本迷宫开门到打完系列](https://nga.178.com/read.php?pid=369819381)（6.0以后未收录）
+* [NGA副本迷宫开门到打完系列](https://nga.178.com/read.php?pid=369819381)
 
 ## 捐赠
 
