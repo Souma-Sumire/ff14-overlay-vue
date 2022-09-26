@@ -3,12 +3,13 @@ import actWS from "@/assets/actWS.png";
 import { Check, Delete, Edit, Plus, Position, RefreshLeft } from "@element-plus/icons-vue";
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
-import { computed, onMounted, ref, watchEffect } from "vue";
+import { onMounted, watchEffect } from "vue";
 import { defaultMacro } from "../resources/macro";
 import zoneInfo from "../resources/zoneInfo";
 import { useMacroStore } from "../store/macro";
 import ZoneMacroTips from "../components/zoneMacro/zoneMacroHelp.vue";
 import { useToggle } from "@vueuse/core";
+import PlaceView from "../components/zoneMacro/placeView.vue";
 const [help, toggleHelp] = useToggle(false);
 const macroStore = useMacroStore();
 {
@@ -56,18 +57,6 @@ addOverlayListener("onGameExistsEvent", macroStore.handleGameExists);
 addOverlayListener("ChangeZone", macroStore.handleChangeZone);
 addOverlayListener("LogLine", macroStore.handleLogLine);
 startOverlayEvents();
-const markMap = {
-  A: "A",
-  B: "B",
-  C: "C",
-  D: "D",
-  One: "1",
-  Two: "2",
-  Three: "3",
-  Four: "4",
-};
-const zoneOffsetX = computed(() => zoneInfo[Number(macroStore.selectZone)].offsetX);
-const zoneOffsetY = computed(() => zoneInfo[Number(macroStore.selectZone)].offsetY);
 watchEffect(() => {
   macroStore.data.zoneId[macroStore.selectZone] =
     macroStore.data.zoneId[macroStore.selectZone] || defaultMacro.zoneId[macroStore.selectZone];
@@ -104,7 +93,7 @@ onMounted(() => {
 </script>
 <template>
   <el-container>
-    <el-header flex style="align-items: center; height: 35px">
+    <el-header flex="~ wrap gap1" height="auto">
       <el-space>
         <el-button type="primary" :icon="Position" @click="macroStore.positioning()">当前区域</el-button>
         <el-select w-369px m-3px v-model="macroStore.selectZone" filterable placeholder="Select">
@@ -116,18 +105,19 @@ onMounted(() => {
           />
         </el-select>
       </el-space>
-      <el-space></el-space>
-      <el-button-group ml-4 flex="~ !">
-        <el-button
-          plain
-          bg
-          color="rgb(24,34,44)"
-          v-for="(entrance, index) in macroStore.fastEntrance"
-          :key="index"
-          @click="macroStore.selectZone = entrance.value"
-          >{{ entrance.text }}</el-button
-        >
-      </el-button-group>
+      <el-space>
+        <el-button-group flex="~ !">
+          <el-button
+            plain
+            bg
+            color="rgb(24,34,44)"
+            v-for="(entrance, index) in macroStore.fastEntrance"
+            :key="index"
+            @click="macroStore.selectZone = entrance.value"
+            >{{ entrance.text }}</el-button
+          >
+        </el-button-group>
+      </el-space>
     </el-header>
     <el-main>
       <el-space wrap alignment="flex-start" style="font-size: 12px">
@@ -239,20 +229,7 @@ onMounted(() => {
               </el-table>
             </el-space>
             <el-space>
-              <div h200px w200px style="position: relative; background-color: rgba(214, 199, 148, 1)">
-                <span
-                  v-for="(mark, key) in macro.Place"
-                  :key="key"
-                  class="markIcon"
-                  :class="'markIcon' + key"
-                  :style="{
-                    left: Math.min(200, Math.max(0, (Number(mark.X) + Number(zoneOffsetX)) * 3 + 100)) + 'px',
-                    top: Math.min(200, Math.max(0, (Number(mark.Z) + Number(zoneOffsetY)) * 3 + 100)) + 'px',
-                  }"
-                >
-                  {{ mark.Active ? markMap[key] ?? key : "" }}
-                </span>
-              </div>
+              <PlaceView :place="macro.Place"></PlaceView>
             </el-space>
             <el-row
               class="buttonArea"
@@ -282,22 +259,21 @@ onMounted(() => {
       </el-space>
     </el-main>
     <el-footer>
-      <el-space direction="vertical" alignment="left">
-        <el-space>
-          <el-button type="success" :icon="Plus" @click="macroStore.newOne('macro')">新增宏文本</el-button>
-          <el-button type="success" color="#3375b9" :icon="Plus" @click="macroStore.newOne('place')"
-            >新增场地标记</el-button
-          >
-          <el-button color="#BA5783" :icon="Plus" @click="macroStore.importPPJSON()">导入PP字符串</el-button>
-          <el-button type="warning" :icon="RefreshLeft" @click="macroStore.resetZone()">恢复当前区域默认</el-button>
-          <el-button type="success" :icon="RefreshLeft" color="rgb(101,92,201)" @click="macroStore.updateData()"
-            >更新自带数据库</el-button
-          >
-          <el-button type="danger" :icon="RefreshLeft" @click="macroStore.resetAllData()">清除用户数据</el-button>
-          <el-button @click="toggleHelp()">帮助</el-button>
-        </el-space>
-        <el-card v-show="help"> <ZoneMacroTips></ZoneMacroTips> </el-card></el-space
-    ></el-footer>
+      <el-space flex="~ wrap" style="column-gap: 0em; row-gap: 0.5em">
+        <el-button type="success" :icon="Plus" @click="macroStore.newOne('macro')">新增宏文本</el-button>
+        <el-button type="success" color="#3375b9" :icon="Plus" @click="macroStore.newOne('place')"
+          >新增场地标记</el-button
+        >
+        <el-button color="#BA5783" :icon="Plus" @click="macroStore.importPPJSON()">导入PP字符串</el-button>
+        <el-button type="warning" :icon="RefreshLeft" @click="macroStore.resetZone()">恢复当前区域默认</el-button>
+        <el-button type="success" :icon="RefreshLeft" color="rgb(101,92,201)" @click="macroStore.updateData()"
+          >更新自带数据库</el-button
+        >
+        <el-button type="danger" :icon="RefreshLeft" @click="macroStore.resetAllData()">清除用户数据</el-button>
+        <el-button @click="toggleHelp()">帮助</el-button>
+      </el-space>
+      <el-card v-show="help" m-t-1em> <ZoneMacroTips></ZoneMacroTips> </el-card>
+    </el-footer>
   </el-container>
 </template>
 <style lang="scss" scoped>
@@ -308,38 +284,6 @@ onMounted(() => {
 }
 .main-box-card {
   max-width: 500px;
-  .markIcon {
-    position: absolute;
-    text-align: center;
-    transform: translate(-50%, -50%);
-    font-size: 16px;
-    font-weight: bold;
-    color: white;
-    -webkit-text-stroke: 1px rgba(50, 50, 50, 0.8);
-    z-index: 222;
-    overflow: hidden;
-    padding: 5px;
-  }
-  $color1: rgba(255, 0, 0, 0.5);
-  $color2: rgba(255, 255, 0, 0.5);
-  $color3: rgba(0, 0, 255, 0.5);
-  $color4: rgba(128, 0, 128, 0.5);
-  .markIconA,
-  .markIconOne {
-    text-shadow: -1px 0 3px $color1, 0 1px 3px $color1, 1px 0 3px $color1, 0 -1px 3px $color1;
-  }
-  .markIconB,
-  .markIconTwo {
-    text-shadow: -1px 0 3px $color2, 0 1px 3px $color2, 1px 0 3px $color2, 0 -1px 3px $color2;
-  }
-  .markIconC,
-  .markIconThree {
-    text-shadow: -1px 0 3px $color3, 0 1px 3px $color3, 1px 0 3px $color3, 0 -1px 3px $color3;
-  }
-  .markIconD,
-  .markIconFour {
-    text-shadow: -1px 0 3px $color4, 0 1px 3px $color4, 1px 0 3px $color4, 0 -1px 3px $color4;
-  }
   :deep(a) {
     color: blue;
     padding: 0.5em;
@@ -362,17 +306,6 @@ onMounted(() => {
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
-  }
-}
-.footer-box-card {
-  width: 25em;
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .item {
-    margin-bottom: 18px;
   }
 }
 </style>
