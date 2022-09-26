@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import actWS from "@/assets/actWS.png";
 import { Check, Delete, Edit, Plus, Position, RefreshLeft } from "@element-plus/icons-vue";
-import { useStorage } from "@vueuse/core";
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import { computed, onMounted, ref, watchEffect } from "vue";
 import { defaultMacro } from "../resources/macro";
 import zoneInfo from "../resources/zoneInfo";
 import { useMacroStore } from "../store/macro";
+import ZoneMacroTips from "../components/zoneMacro/zoneMacroHelp.vue";
+import { useToggle } from "@vueuse/core";
+const [help, toggleHelp] = useToggle(false);
 const macroStore = useMacroStore();
 {
   //兼容旧数据的更新策略 日后删除
@@ -54,7 +56,6 @@ addOverlayListener("onGameExistsEvent", macroStore.handleGameExists);
 addOverlayListener("ChangeZone", macroStore.handleChangeZone);
 addOverlayListener("LogLine", macroStore.handleLogLine);
 startOverlayEvents();
-const skipHelp = useStorage("macro-skip-help", ref(0));
 const markMap = {
   A: "A",
   B: "B",
@@ -94,7 +95,6 @@ const raidEmulatorOnLoad = async () => {
         allowOutsideClick: false,
         showConfirmButton: false,
       });
-
     }
   }
 };
@@ -294,26 +294,10 @@ onMounted(() => {
             >更新自带数据库</el-button
           >
           <el-button type="danger" :icon="RefreshLeft" @click="macroStore.resetAllData()">清除用户数据</el-button>
+          <el-button @click="toggleHelp()">帮助</el-button>
         </el-space>
-        <el-space m-t-1em m-b-1em
-          ><el-card class="footer-box-card" shadow="never" v-if="new Date().getTime() - skipHelp >= 2592000000">
-            <template #header>
-              <div class="card-header">
-                <span>在游戏中使用默语宏进行控制</span>
-                <el-button class="button" plain type="info" @click="skipHelp = new Date().getTime()"
-                  >30天内不再提示</el-button
-                >
-              </div>
-            </template>
-            <div>当仅存在一个对应结果时</div>
-            <p>/e 发宏</p>
-            <div>默认发默语，在3秒内连按则发送至小队频道</div>
-            <p>/e 本地标点</p>
-            <p>/e 标点插槽</p>
-          </el-card></el-space
-        >
-      </el-space></el-footer
-    >
+        <el-card v-show="help"> <ZoneMacroTips></ZoneMacroTips> </el-card></el-space
+    ></el-footer>
   </el-container>
 </template>
 <style lang="scss" scoped>

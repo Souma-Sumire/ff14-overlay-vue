@@ -30,6 +30,7 @@ declare module 'vue' {
     FflogsImport: typeof import('./src/components/timeline/fflogsImport.vue')['default']
     TimelineShow: typeof import('./src/components/timeline/timelineShow.vue')['default']
     UnlockedText: typeof import('./src/components/unlockedText.vue')['default']
+    ZoneMacroHelp: typeof import('./src/components/zoneMacro/zoneMacroHelp.vue')['default']
   }
 }
 
