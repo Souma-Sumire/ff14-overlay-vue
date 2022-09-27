@@ -128,6 +128,7 @@ export const useMacroStore = defineStore("macro", {
             const selectMapID = getMapIDByTerritoryType(selectZoneId);
             const selectZone = zoneInfo[selectZoneId];
             const JSONZone = zoneInfo[getTerritoryTypeByMapID(json.MapID)];
+            let flag = true;
             if (json.MapID !== selectMapID) {
               await Swal.fire({
                 title: "地图不符",
@@ -140,9 +141,10 @@ export const useMacroStore = defineStore("macro", {
                 denyButtonText: `强制转换坐标`,
                 cancelButtonText: "不，再想想",
               }).then((result) => {
-                if (!result.isDenied) return;
+                flag = result.isDenied;
               });
             }
+            if (!flag) return;
             const targetMacro = this.newOne("place") as MacroInfoPlace;
             targetMacro.Name = json.Name;
             targetMacro.Place = json;
@@ -255,9 +257,23 @@ export const useMacroStore = defineStore("macro", {
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
-        confirmButtonText: "是的，覆盖插槽5",
+        confirmButtonText: "写入",
+        showDenyButton: true,
+        denyButtonText: "写入并标记",
         cancelButtonText: "不，再想想",
       }).then((result) => {
+        if (result.isDenied) {
+          doInsertPreset(this.selectZone, place, 5);
+          if (this.selectZone === this.zoneNow)
+            doQueueActions([{ c: "DoTextCommand", p: "/waymark preset 5", d: 500 }]);
+          Swal.fire({
+            position: "top-end",
+            icon: "success",
+            title: "已写入插槽5",
+            showConfirmButton: false,
+            timer: 1000,
+          });
+        }
         if (result.isConfirmed) {
           doInsertPreset(this.selectZone, place, 5);
           Swal.fire({
@@ -300,10 +316,9 @@ export const useMacroStore = defineStore("macro", {
     },
     handleLogLine(e: any) {
       if (e.line[2] === "0038") {
-        const echoSwitch = e.line[4].match(/^发宏\s*(?<channel>e|p)/);
+        const echoSwitch = e.line[4].match(/^发宏\s*(?<channel>e|p)?/);
         if (echoSwitch) {
-          const channel: "e" | "p" =
-            ((e.line[4] as string).match(/发宏\s*(?<channel>e|p)/)?.groups?.channel as "e" | "p") ?? "e";
+          const channel: "e" | "p" = echoSwitch?.groups?.channel ?? "e";
           const macro = this.data.zoneId[this.zoneNow].filter((v) => v.Type === "macro");
           if (macro.length === 1 && macro[0].Type === "macro") {
             macroCommand(macro[0].Text, channel);
@@ -322,9 +337,9 @@ export const useMacroStore = defineStore("macro", {
           }
           return;
         }
-        const echoSlot = (e.line[4] as string).match(/^(?:标点|标记|场景|场景标记)(?:插槽|预设)\s*(?<slot>[1-5])/);
+        const echoSlot = (e.line[4] as string).match(/^(?:标点|标记|场景|场景标记)(?:插槽|预设)\s*(?<slot>[1-5])?/);
         if (echoSlot) {
-          const slotIndex: 1 | 2 | 3 | 4 | 5 = (Number(echoSlot?.groups?.slot) as 1 | 2 | 3 | 4 | 5) ?? 5;
+          const slotIndex: 1 | 2 | 3 | 4 | 5 = Number(echoSlot?.groups?.slot ?? 5) as 1 | 2 | 3 | 4 | 5;
           const place = this.data.zoneId[this.zoneNow].filter((v) => v.Type === "place");
           if (place.length === 1) {
             doInsertPreset(this.zoneNow, (place[0] as MacroInfoPlace).Place!, slotIndex);
