@@ -18,12 +18,13 @@ const macroStore = useMacroStore();
 const zoneOffsetX = computed(() => zoneInfo[Number(macroStore.selectZone)].offsetX);
 const zoneOffsetY = computed(() => zoneInfo[Number(macroStore.selectZone)].offsetY);
 const { place } = defineProps<{ place: PPJSON }>();
+const placeInfo = reactivePick(place, ["A", "B", "C", "D", "One", "Two", "Three", "Four"]);
 </script>
 
 <template>
   <div h200px w200px style="position: relative; background-color: rgba(214, 199, 148, 1)">
     <div
-      v-for="(mark, key) in place"
+      v-for="(mark, key) in placeInfo"
       :key="key"
       class="markIcon"
       :class="'markIcon' + key"

@@ -8,7 +8,7 @@ import Components from "unplugin-vue-components/vite";
 import { defineConfig } from "vite";
 import Pages from "vite-plugin-pages";
 import Markdown from "vite-plugin-vue-markdown";
-const path = require('path');
+const path = require("path");
 // https://vitejs.dev/config/
 export default defineConfig({
   build: {
@@ -34,6 +34,8 @@ export default defineConfig({
     Vue({ include: [/\.vue$/, /\.md$/] }),
     viteCompression(),
     AutoImport({
+      imports: ["vue", "vue-router", "@vueuse/core"],
+      dts: true,
       resolvers: [ElementPlusResolver()],
     }),
     Components({

@@ -3,7 +3,6 @@ import actWS from "@/assets/actWS.png";
 import { Check, Delete, Edit, Plus, Position, RefreshLeft } from "@element-plus/icons-vue";
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
-import { onMounted, watchEffect } from "vue";
 import { defaultMacro } from "../resources/macro";
 import zoneInfo from "../resources/zoneInfo";
 import { useMacroStore } from "../store/macro";
@@ -135,8 +134,8 @@ onMounted(() => {
           </template>
           <div v-if="macro.Type === 'macro'">
             <article v-if="!macro.Editable">
-              <div v-for="(macro, o) in macro.Text?.split('\n')" :key="o" class="text item">
-                {{ macro }}
+              <div v-for="(m, o) in macro.Text?.split('\n')" :key="o" class="text item">
+                {{ m }}
               </div>
             </article>
             <el-input
