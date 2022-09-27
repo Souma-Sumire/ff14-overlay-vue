@@ -32,14 +32,21 @@ export const useMacroStore = defineStore("macro", {
   },
   getters: {},
   actions: {
-    editMacro(macro: MacroInfoMacro): void {
+    editMacroMacro(macro: MacroInfoMacro): void {
       this.data.zoneId[this.selectZone].map((v) => Reflect.deleteProperty(v, "Editable"));
       macro.Editable = true;
-      if (macro.Text) macro.Text = cleanMacro(macro.Text);
+      macro.Text = cleanMacro(macro.Text);
     },
-    submitMacro(macro: MacroInfoMacro): void {
+    submitMacroMacro(macro: MacroInfoMacro): void {
       Reflect.deleteProperty(macro, "Editable");
-      if (macro.Text) macro.Text = cleanMacro(macro.Text);
+      macro.Text = cleanMacro(macro.Text);
+    },
+    editMacroPlace(macro: MacroInfoPlace): void {
+      this.data.zoneId[this.selectZone].map((v) => Reflect.deleteProperty(v, "Editable"));
+      macro.Editable = true;
+    },
+    submitMacroPlace(macro: MacroInfoPlace): void {
+      Reflect.deleteProperty(macro, "Editable");
     },
     cleanMacro,
     cleanEditable() {

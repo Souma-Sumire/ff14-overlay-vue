@@ -159,14 +159,14 @@ onMounted(() => {
                 v-show="!macro.Editable"
                 :icon="Edit"
                 circle
-                @click="macroStore.editMacro(macro)"
+                @click="macroStore.editMacroMacro(macro)"
               />
               <el-button
                 type="success"
                 v-show="macro.Editable"
                 :icon="Check"
                 circle
-                @click="macroStore.submitMacro(macro)"
+                @click="macroStore.submitMacroMacro(macro)"
               />
               <el-button type="danger" :icon="Delete" circle @click="macroStore.deleteMacro(macro)" />
               <el-button type="info" @click="macroStore.sendMacroEcho(macro.Text)">默</el-button>
@@ -240,14 +240,14 @@ onMounted(() => {
                 v-show="!macro.Editable"
                 :icon="Edit"
                 circle
-                @click="macroStore.editMacro(macro)"
+                @click="macroStore.editMacroPlace(macro)"
               />
               <el-button
                 type="success"
                 v-show="macro.Editable"
                 :icon="Check"
                 circle
-                @click="macroStore.submitMacro(macro)"
+                @click="macroStore.submitMacroPlace(macro)"
               />
               <el-button type="danger" :icon="Delete" circle @click="macroStore.deleteMacro(macro)" />
               <el-button type="primary" @click="macroStore.doLocalWayMark(macro.Place)">本地</el-button>
