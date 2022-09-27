@@ -73,9 +73,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, reactive, ref, StyleValue, watchEffect } from "vue";
 import moment from "moment";
-// import "../../common/hasOverlayPluginApi";
 
 type Programme = {
   text: string;
@@ -285,8 +283,7 @@ watchEffect(() => {
     document.body.append(styleHTML);
   }
 });
-
-function stageSplit(str: string): StyleValue {
+function stageSplit(str: string) {
   if (stageRegexp.test(str)) return { fontSize: "18px", justifyContent: "center" };
   return {};
 }
@@ -372,11 +369,11 @@ $color: rgba(
 );
 @font-face {
   font-family: AccidentalPresidency;
-  src: url(../../common/font/AccidentalPresidency.ttf);
+  src: url(@/common/font/AccidentalPresidency.ttf);
 }
 @font-face {
   font-family: SourceHanSansCN;
-  src: url(../../common/font/SourceHanSansCN-Bold.otf);
+  src: url(@/common/font/SourceHanSansCN-Bold.otf);
 }
 #warpper {
   float: left;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ReadMe from "./README.md";
+import ReadMe from "@/pages/zoneMacro/README.md";
 import "github-markdown-css/github-markdown-light.css";
 </script>
 

@@ -30,7 +30,6 @@
 
 <script lang="ts" setup>
 import OBSWebSocket from "obs-websocket-js";
-import { reactive } from "vue";
 // import "../common/hasOverlayPluginApi";
 type Data = {
   ip: string;

@@ -1,9 +1,7 @@
 import { defaultMacro } from "./../resources/macro";
-import { useStorage } from "@vueuse/core";
 import { defineStore } from "pinia";
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
-import { reactive, ref } from "vue";
 import { doTextCommand, doWayMarks, doInsertPreset, doQueueActions } from "../utils/postNamazu";
 import { MacroInfoMacro, MacroInfoPlace, MacroType, PPJSON } from "../types/Macro";
 import zoneInfo from "../resources/zoneInfo";

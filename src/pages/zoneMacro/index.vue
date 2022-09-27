@@ -3,12 +3,9 @@ import actWS from "@/assets/actWS.png";
 import { Check, Delete, Edit, Plus, Position, RefreshLeft } from "@element-plus/icons-vue";
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
-import { defaultMacro } from "../resources/macro";
-import zoneInfo from "../resources/zoneInfo";
-import { useMacroStore } from "../store/macro";
-import ZoneMacroTips from "../components/zoneMacro/zoneMacroHelp.vue";
-import { useToggle } from "@vueuse/core";
-import PlaceView from "../components/zoneMacro/placeView.vue";
+import { defaultMacro } from "@/resources/macro";
+import zoneInfo from "@/resources/zoneInfo";
+import { useMacroStore } from "@/store/macro";
 const [help, toggleHelp] = useToggle(false);
 const macroStore = useMacroStore();
 {
@@ -228,7 +225,7 @@ onMounted(() => {
               </el-table>
             </el-space>
             <el-space>
-              <PlaceView :place="macro.Place"></PlaceView>
+              <ZoneMacroPlaceView :place="macro.Place"></ZoneMacroPlaceView>
             </el-space>
             <el-row
               class="buttonArea"
@@ -271,7 +268,7 @@ onMounted(() => {
         <el-button type="danger" :icon="RefreshLeft" @click="macroStore.resetAllData()">清除用户数据</el-button>
         <el-button @click="toggleHelp()">帮助</el-button>
       </el-space>
-      <el-card v-show="help" m-t-1em> <ZoneMacroTips></ZoneMacroTips> </el-card>
+      <el-card v-show="help" m-t-1em> <ZoneMacroZoneMacroHelp></ZoneMacroZoneMacroHelp> </el-card>
     </el-footer>
   </el-container>
 </template>

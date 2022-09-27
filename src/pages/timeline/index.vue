@@ -1,10 +1,8 @@
 <script lang="ts" setup>
-import { useStorage } from "@vueuse/core";
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
-import { computed, reactive, ref } from "vue";
-import { useTimelineStore } from "../../store/timeline";
-import { ITimeline, ITimelineCondition, ITimelineLine, ShowStyle, TimelineConfigValues } from "../../types/Timeline";
+import { useTimelineStore } from "@/store/timeline";
+import { ITimeline, ITimelineCondition, ITimelineLine, ShowStyle, TimelineConfigValues } from "@/types/Timeline";
 
 const timelineStore = useTimelineStore();
 const timelinePageData = reactive({
@@ -258,7 +256,6 @@ function handleInCombatChanged(ev: {
         p-id="2216"
       ></path>
     </svg>
-
     <ul
       v-if="timelinePageData.optionalTimeline.length && runtimeTimeSeconds <= -timelineStore.configValues.preBattle"
       class="optionalTimelines"
@@ -267,17 +264,16 @@ function handleInCombatChanged(ev: {
         {{ item.condition.job }} - {{ item.name }}
       </li>
     </ul>
-    <!-- 时间轴本体 -->
-    <TimelineShow
+    <TimelineTimelineShow
       :config="timelineStore.configValues"
       :lines="timelinePageData.loadedTimeline"
       :runtime="runtimeTimeSeconds"
       :show-style="timelineStore.showStyle"
-    ></TimelineShow>
+    ></TimelineTimelineShow>
+    <button v-if="devMode" @click="startTimeline(0)">开始</button>
+    <button v-if="devMode" @click="stopTimeline()">团灭</button>
+    <span v-if="devMode">{{ runtimeTimeSeconds }}</span>
   </div>
-  <button v-if="devMode" @click="startTimeline(0)">开始</button>
-  <button v-if="devMode" @click="stopTimeline()">团灭</button>
-  <span v-if="devMode">{{ runtimeTimeSeconds }}</span>
 </template>
 
 <style lang="scss" scoped>

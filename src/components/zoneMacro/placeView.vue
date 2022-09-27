@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import zoneInfo from "../../resources/zoneInfo";
-import { useMacroStore } from "../../store/macro";
-import { PPJSON } from "../../types/Macro";
+import zoneInfo from "@/resources/zoneInfo";
+import { useMacroStore } from "@/store/macro";
+import { PPJSON } from "@/types/Macro";
 
 const markMap = {
   A: "A",

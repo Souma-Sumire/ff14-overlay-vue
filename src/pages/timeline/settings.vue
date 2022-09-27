@@ -1,17 +1,14 @@
 <script lang="ts" setup>
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
-import { computed, reactive, ref, toRef, watchEffect } from "vue";
-import FflogsImport from "../../components/timeline/fflogsImport.vue";
-import TimelineShow from "../../components/timeline/timelineShow.vue";
-import zoneInfo from "../../resources/zoneInfo";
-import { useTimelineStore } from "../../store/timeline";
-import { ITimeline } from "../../types/Timeline";
-import Util from "../../utils/util";
+import zoneInfo from "@/resources/zoneInfo";
+import { useTimelineStore } from "@/store/timeline";
+import Util from "@/utils/util";
 import "animate.css";
 import ClipboardJS from "clipboard";
-import router from "../../router";
-import { useDebounce } from "@vueuse/core";
+import router from "@/router";
+import { ITimeline } from "@/types/Timeline";
+import TimelineShow from "@/components/timeline/timelineShow.vue";
 const simulatedCombatTime = ref(-30);
 const timelineStore = useTimelineStore();
 const timelines = toRef(timelineStore, "allTimelines");
@@ -253,7 +250,7 @@ function readMe(): void {
       <el-button type="success" @click="readMe()">帮助</el-button>
     </el-header>
     <el-main>
-      <FflogsImport
+      <TimelineFflogsImport
         :settings="timelineStore.settings"
         :filters="timelineFilters"
         v-if="showFFlogs"
@@ -261,7 +258,7 @@ function readMe(): void {
         @showFFlogsToggle="() => (showFFlogs = !showFFlogs)"
         @newTimeline="timelineStore.newTimeline"
       >
-      </FflogsImport>
+      </TimelineFflogsImport>
       <el-card class="box-card" v-show="showSettings">
         <el-descriptions title="时间轴参数" size="small" style="width: 100%" border>
           <el-descriptions-item
@@ -348,12 +345,12 @@ function readMe(): void {
           </div>
           <div style="max-height: 353px">
             <div class="timeline-timeline-view">
-              <TimelineShow
+              <TimelineTimelineShow
                 :config="timelineStore.configValues"
                 :lines="debounceTimeline"
                 :runtime="simulatedCombatTime"
                 :show-style="timelineStore.showStyle"
-              ></TimelineShow>
+              ></TimelineTimelineShow>
             </div>
           </div>
         </el-row>

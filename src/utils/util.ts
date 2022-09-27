@@ -179,7 +179,7 @@ const Util = {
   getBattleJobs: (): readonly Job[] => battleJobs,
   getBattleJobs2: (): readonly Job[] => battleJobs2,
   nameToCN: (job: Job) => {
-    return nameToCN[job] ?? job;
+    return nameToCN[job] ?? { full: job, simple2: job.substring(0, 2), simple1: job.substring(0, 2) };
   },
   iconToJobEnum: (icon: FFIcon) => {
     return iconToJobEnum[icon] ?? 0;

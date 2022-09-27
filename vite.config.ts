@@ -35,10 +35,14 @@ export default defineConfig({
     viteCompression(),
     AutoImport({
       imports: ["vue", "vue-router", "@vueuse/core"],
-      dts: true,
+      dts: "./src/types/auto-imports.d.ts",
       resolvers: [ElementPlusResolver()],
     }),
     Components({
+      dirs: ["src/components"],
+      //组件名称包含目录，防止同名组件冲突
+      directoryAsNamespace: true,
+      dts: "./src/types/components.d.ts",
       resolvers: [ElementPlusResolver()],
     }),
     Unocss({

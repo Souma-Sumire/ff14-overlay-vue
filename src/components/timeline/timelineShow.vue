@@ -24,7 +24,8 @@
 </template>
 
 <script lang="ts" setup>
-import { ITimelineLine, TimelineConfigValues, ShowStyle } from "../../types/Timeline";
+import { ITimelineLine, ShowStyle, TimelineConfigValues } from "@/types/Timeline";
+
 const props = defineProps<{
   config: TimelineConfigValues;
   lines: ITimelineLine[];
@@ -186,7 +187,7 @@ $trasDuration: 1;
         }
         &::after {
           content: "";
-          background: url(../../assets/frame.png) no-repeat;
+          background: url(@/assets/frame.png) no-repeat;
           background-size: cover;
           width: calc(48px * var(--normal-scale, $normalScale));
           height: calc(48px * var(--normal-scale, $normalScale));

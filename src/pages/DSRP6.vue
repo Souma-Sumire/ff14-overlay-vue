@@ -23,7 +23,6 @@
 
 <script lang="ts" setup>
 // import "../common/hasOverlayPluginApi";
-import { reactive } from "vue";
 import { useActionStore } from "../store/action";
 addOverlayListener("LogLine", handleLogLine);
 startOverlayEvents();
