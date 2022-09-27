@@ -22,7 +22,6 @@ export interface WayMarkInfo {
   ID?: number;
 }
 export type WayMarkKeys = "A" | "B" | "C" | "D" | "One" | "Two" | "Three" | "Four";
+export type WayMarkJSON = Required<{ [key in WayMarkKeys]?: WayMarkInfo }>;
 
-export type PPJSON = {
-  [key in WayMarkKeys]: WayMarkInfo;
-} & { Name?: string; MapID?: number };
+export type PPJSON = WayMarkJSON & { Name?: string; MapID?: number };

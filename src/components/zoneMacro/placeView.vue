@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import zoneInfo from "@/resources/zoneInfo";
 import { useMacroStore } from "@/store/macro";
 import { PPJSON } from "@/types/Macro";
 
@@ -14,22 +13,20 @@ const markMap = {
   Four: "4",
 };
 const macroStore = useMacroStore();
-const zoneOffsetX = computed(() => zoneInfo[Number(macroStore.selectZone)].offsetX);
-const zoneOffsetY = computed(() => zoneInfo[Number(macroStore.selectZone)].offsetY);
 const { place } = defineProps<{ place: PPJSON }>();
-const placeInfo = reactivePick(place, ["A", "B", "C", "D", "One", "Two", "Three", "Four"]);
+const completionPlace = reactiveOmit(place as Required<PPJSON>, "MapID", "Name");
 </script>
 
 <template>
   <div h200px w200px style="position: relative; background-color: rgba(214, 199, 148, 1)">
     <div
-      v-for="(mark, key) in placeInfo"
+      v-for="(mark, key) in completionPlace"
       :key="key"
       class="markIcon"
       :class="'markIcon' + key"
       :style="{
-        left: Math.min(200, Math.max(0, (Number(mark.X) + Number(zoneOffsetX)) * 3 + 100)) + 'px',
-        top: Math.min(200, Math.max(0, (Number(mark.Z) + Number(zoneOffsetY)) * 3 + 100)) + 'px',
+        left: Math.min(200, Math.max(0, (Number(mark.X) + macroStore.defaultX) * 3 + 100)) + 'px',
+        top: Math.min(200, Math.max(0, (Number(mark.Z) + macroStore.defaultY) * 3 + 100)) + 'px',
       }"
     >
       {{ mark.Active ? markMap[key] ?? key : "" }}

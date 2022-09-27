@@ -47,7 +47,7 @@ const macroStore = useMacroStore();
     }
   }
 }
-macroStore.cleanEditable();
+macroStore.initData();
 
 addOverlayListener("onGameExistsEvent", macroStore.handleGameExists);
 addOverlayListener("ChangeZone", macroStore.handleChangeZone);
@@ -143,7 +143,6 @@ onMounted(() => {
               type="textarea"
               placeholder="宏文本"
               wrap="off"
-              @change="macroStore.cleanEditable"
               style="width: 450px"
             />
             <el-row

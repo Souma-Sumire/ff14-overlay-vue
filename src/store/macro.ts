@@ -3,7 +3,7 @@ import { defineStore } from "pinia";
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import { doTextCommand, doWayMarks, doInsertPreset, doQueueActions } from "../utils/postNamazu";
-import { MacroInfoMacro, MacroInfoPlace, MacroType, PPJSON } from "../types/Macro";
+import { MacroInfoMacro, MacroInfoPlace, MacroType, PPJSON, WayMarkJSON } from "../types/Macro";
 import zoneInfo from "../resources/zoneInfo";
 import { getMapIDByTerritoryType, getTerritoryTypeByMapID } from "../resources/contentFinderCondition";
 let partyLen = 0;
@@ -28,7 +28,10 @@ export const useMacroStore = defineStore("macro", {
       gameExists: useStorage("my-game-exists", false),
     };
   },
-  getters: {},
+  getters: {
+    defaultX: (state) => zoneInfo[Number(state.selectZone)].offsetX,
+    defaultY: (state) => zoneInfo[Number(state.selectZone)].offsetY,
+  },
   actions: {
     editMacroMacro(macro: MacroInfoMacro): void {
       this.data.zoneId[this.selectZone].map((v) => Reflect.deleteProperty(v, "Editable"));
@@ -46,33 +49,49 @@ export const useMacroStore = defineStore("macro", {
     submitMacroPlace(macro: MacroInfoPlace): void {
       Reflect.deleteProperty(macro, "Editable");
     },
-    cleanEditable() {
+    initData() {
       for (const x in this.data.zoneId)
-        for (const y in this.data.zoneId[x]) Reflect.deleteProperty(this.data.zoneId[x][y], "Editable");
+        for (const y in this.data.zoneId[x]) {
+          Reflect.deleteProperty(this.data.zoneId[x][y], "Editable");
+          if (this.data.zoneId[x][y].Type === "place") {
+            const base: WayMarkJSON = {
+              A: { X: 0, Y: 0, Z: 0, Active: false },
+              B: { X: 0, Y: 0, Z: 0, Active: false },
+              C: { X: 0, Y: 0, Z: 0, Active: false },
+              D: { X: 0, Y: 0, Z: 0, Active: false },
+              One: { X: 0, Y: 0, Z: 0, Active: false },
+              Two: { X: 0, Y: 0, Z: 0, Active: false },
+              Three: { X: 0, Y: 0, Z: 0, Active: false },
+              Four: { X: 0, Y: 0, Z: 0, Active: false },
+            };
+            (this.data.zoneId[x][y] as MacroInfoPlace).Place = Object.assign(
+              base,
+              (this.data.zoneId[x][y] as MacroInfoPlace).Place,
+            );
+          }
+        }
     },
     newOne(type: MacroType = "macro") {
-      this.cleanEditable();
+      this.initData();
       const selectZoneId = Number(this.selectZone);
       if (this.data.zoneId[selectZoneId] === undefined) this.data.zoneId[selectZoneId] = [];
       if (this.data.zoneId[selectZoneId]) {
         if (type === "macro") {
           this.data.zoneId[selectZoneId].push({ Type: type, Name: "New Macro", Text: "", Editable: true });
         } else if (type === "place") {
-          const defaultX = -zoneInfo[selectZoneId].offsetX;
-          const defaultY = -zoneInfo[selectZoneId].offsetY;
           const i = this.data.zoneId[selectZoneId].push({
             Name: "New WayMark",
             Type: type,
             Editable: true,
             Place: {
-              "A": { X: defaultX, Y: 0, Z: defaultY, Active: false },
-              "B": { X: defaultX, Y: 0, Z: defaultY, Active: false },
-              "C": { X: defaultX, Y: 0, Z: defaultY, Active: false },
-              "D": { X: defaultX, Y: 0, Z: defaultY, Active: false },
-              "One": { X: defaultX, Y: 0, Z: defaultY, Active: false },
-              "Two": { X: defaultX, Y: 0, Z: defaultY, Active: false },
-              "Three": { X: defaultX, Y: 0, Z: defaultY, Active: false },
-              "Four": { X: defaultX, Y: 0, Z: defaultY, Active: false },
+              "A": { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+              "B": { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+              "C": { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+              "D": { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+              "One": { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+              "Two": { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+              "Three": { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+              "Four": { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
             },
           });
           return this.data.zoneId[selectZoneId][i - 1];
@@ -81,17 +100,15 @@ export const useMacroStore = defineStore("macro", {
     },
     async importPPJSON(): Promise<void> {
       const selectZoneId = Number(this.selectZone);
-      const defaultX = -zoneInfo[selectZoneId].offsetX;
-      const defaultY = -zoneInfo[selectZoneId].offsetY;
       const blank: PPJSON = {
-        A: { X: defaultX, Y: 0, Z: defaultY, Active: false },
-        B: { X: defaultX, Y: 0, Z: defaultY, Active: false },
-        C: { X: defaultX, Y: 0, Z: defaultY, Active: false },
-        D: { X: defaultX, Y: 0, Z: defaultY, Active: false },
-        One: { X: defaultX, Y: 0, Z: defaultY, Active: false },
-        Two: { X: defaultX, Y: 0, Z: defaultY, Active: false },
-        Three: { X: defaultX, Y: 0, Z: defaultY, Active: false },
-        Four: { X: defaultX, Y: 0, Z: defaultY, Active: false },
+        A: { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+        B: { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+        C: { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+        D: { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+        One: { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+        Two: { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+        Three: { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+        Four: { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
       };
       await Swal.fire({
         title: "请输入PP导出格式JSON字符串",
@@ -165,14 +182,14 @@ export const useMacroStore = defineStore("macro", {
       if (
         (macro.Type === "macro" && (macro?.Text ?? "").length <= 5) ||
         (macro.Type === "place" &&
-          !macro.Place.A.Active &&
-          !macro.Place.B.Active &&
-          !macro.Place.C.Active &&
-          !macro.Place.D.Active &&
-          !macro.Place.One.Active &&
-          !macro.Place.Two.Active &&
-          !macro.Place.Three.Active &&
-          !macro.Place.Four.Active)
+          macro.Place?.A?.Active === false &&
+          macro.Place?.B?.Active === false &&
+          macro.Place?.C?.Active === false &&
+          macro.Place?.D?.Active === false &&
+          macro.Place?.One?.Active === false &&
+          macro.Place?.Two?.Active === false &&
+          macro.Place?.Three?.Active === false &&
+          macro.Place?.Four?.Active === false)
       ) {
         let index = this.data.zoneId[this.selectZone].indexOf(macro);
         if (index > -1) this.data.zoneId[this.selectZone].splice(index, 1);
