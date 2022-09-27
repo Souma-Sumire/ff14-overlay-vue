@@ -48,7 +48,6 @@ export const useMacroStore = defineStore("macro", {
     submitMacroPlace(macro: MacroInfoPlace): void {
       Reflect.deleteProperty(macro, "Editable");
     },
-    cleanMacro,
     cleanEditable() {
       for (const x in this.data.zoneId)
         for (const y in this.data.zoneId[x]) Reflect.deleteProperty(this.data.zoneId[x][y], "Editable");
