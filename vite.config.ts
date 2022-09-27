@@ -22,13 +22,13 @@ export default defineConfig({
       },
     },
     chunkSizeWarningLimit: 2000,
-    minify: "terser",
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
-    },
+    // minify: "terser",
+    // terserOptions: {
+      // compress: {
+        // drop_console: true,
+        // drop_debugger: true,
+      // },
+    // },
   },
   plugins: [
     Vue({ include: [/\.vue$/, /\.md$/] }),
