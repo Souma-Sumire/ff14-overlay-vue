@@ -49,30 +49,30 @@ export const useMacroStore = defineStore("macro", {
     submitMacroPlace(macro: MacroInfoPlace): void {
       Reflect.deleteProperty(macro, "Editable");
     },
-    initData() {
-      for (const x in this.data.zoneId)
-        for (const y in this.data.zoneId[x]) {
-          Reflect.deleteProperty(this.data.zoneId[x][y], "Editable");
-          if (this.data.zoneId[x][y].Type === "place") {
-            const base: WayMarkJSON = {
-              A: { X: 0, Y: 0, Z: 0, Active: false },
-              B: { X: 0, Y: 0, Z: 0, Active: false },
-              C: { X: 0, Y: 0, Z: 0, Active: false },
-              D: { X: 0, Y: 0, Z: 0, Active: false },
-              One: { X: 0, Y: 0, Z: 0, Active: false },
-              Two: { X: 0, Y: 0, Z: 0, Active: false },
-              Three: { X: 0, Y: 0, Z: 0, Active: false },
-              Four: { X: 0, Y: 0, Z: 0, Active: false },
-            };
-            (this.data.zoneId[x][y] as MacroInfoPlace).Place = Object.assign(
-              base,
-              (this.data.zoneId[x][y] as MacroInfoPlace).Place,
-            );
-          }
+    initAllData() {
+      for (const x in this.data.zoneId) this.initSelectZoneData(x);
+    },
+    initSelectZoneData(zone: string) {
+      for (const y in this.data.zoneId[zone]) {
+        Reflect.deleteProperty(this.data.zoneId[zone][y], "Editable");
+        if (this.data.zoneId[zone][y].Type === "place") {
+          const d = this.data.zoneId[zone][y] as MacroInfoPlace;
+          d.Place = {
+            A: d.Place.A ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+            B: d.Place.B ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+            C: d.Place.C ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+            D: d.Place.D ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+            One: d.Place.One ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+            Two: d.Place.Two ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+            Three: d.Place.Three ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+            Four: d.Place.Four ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+          };
         }
+      }
     },
     newOne(type: MacroType = "macro") {
-      this.initData();
+      for (const x in this.data.zoneId)
+        for (const y in this.data.zoneId[x]) Reflect.deleteProperty(this.data.zoneId[x][y], "Editable");
       const selectZoneId = Number(this.selectZone);
       if (this.data.zoneId[selectZoneId] === undefined) this.data.zoneId[selectZoneId] = [];
       if (this.data.zoneId[selectZoneId]) {
@@ -349,53 +349,9 @@ export const useMacroStore = defineStore("macro", {
         cancelButtonText: "不，再想想",
       }).then((result) => {
         if (result.isDenied) {
-          this.data.zoneId[this.selectZone] = defaultMacro.zoneId[this.selectZone];
-        }
-      });
-    },
-    updateData(): void {
-      Swal.fire({
-        title: "确定更新全部地图数据库吗？",
-        text: "该动作会恢复掉你曾经删除的默认数据",
-        icon: "question",
-        showCancelButton: true,
-        showConfirmButton: true,
-        confirmButtonText: "是的，更新全部数据",
-        cancelButtonText: "不，再想想",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          try {
-            for (const zoneId in defaultMacro.zoneId) {
-              const defData = defaultMacro.zoneId[zoneId as keyof typeof defaultMacro.zoneId];
-              const nowData = this.data.zoneId[zoneId] ?? []; //144 = 金蝶
-              for (const key in defData) {
-                const def = defData[key];
-                if (
-                  !nowData.find((v) => {
-                    if (def.Type === "macro" && v.Type === "macro")
-                      return JSON.stringify(def.Text) === JSON.stringify(v.Text);
-                    if (def.Type === "place" && v.Type === "place")
-                      return JSON.stringify(def.Place) === JSON.stringify(v.Place);
-                    return false;
-                  })
-                ) {
-                  nowData.unshift(def);
-                }
-              }
-            }
-            Swal.fire({
-              position: "top-end",
-              icon: "success",
-              title: "更新完成",
-              showConfirmButton: false,
-              timer: 1000,
-            });
-          } catch (e: any) {
-            Swal.fire({
-              icon: "error",
-              title: e.message,
-            });
-          }
+          this.data.zoneId[this.selectZone].length = 0;
+          this.data.zoneId[this.selectZone].push(...JSON.parse(JSON.stringify(defaultMacro.zoneId[this.selectZone])));
+          this.initSelectZoneData(this.selectZone);
         }
       });
     },
@@ -424,7 +380,7 @@ export const useMacroStore = defineStore("macro", {
             cancelButtonText: "不，再想想",
           }).then((result) => {
             if (result.isDenied) {
-              this.data.zoneId = defaultMacro.zoneId;
+              this.data.zoneId = JSON.parse(JSON.stringify(defaultMacro.zoneId));
               Swal.fire({
                 position: "top-end",
                 icon: "success",

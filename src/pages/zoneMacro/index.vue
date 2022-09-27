@@ -6,8 +6,10 @@ import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import { defaultMacro } from "@/resources/macro";
 import zoneInfo from "@/resources/zoneInfo";
 import { useMacroStore } from "@/store/macro";
+import { WayMarkKeys } from "@/types/Macro";
 const [help, toggleHelp] = useToggle(false);
 const macroStore = useMacroStore();
+macroStore.initAllData();
 {
   //兼容旧数据的更新策略 日后删除
   for (const macros in macroStore.data.zoneId) {
@@ -47,8 +49,16 @@ const macroStore = useMacroStore();
     }
   }
 }
-macroStore.initData();
-
+const markMap = {
+  A: "A",
+  B: "B",
+  C: "C",
+  D: "D",
+  One: "1",
+  Two: "2",
+  Three: "3",
+  Four: "4",
+};
 addOverlayListener("onGameExistsEvent", macroStore.handleGameExists);
 addOverlayListener("ChangeZone", macroStore.handleChangeZone);
 addOverlayListener("LogLine", macroStore.handleLogLine);
@@ -57,6 +67,13 @@ watchEffect(() => {
   macroStore.data.zoneId[macroStore.selectZone] =
     macroStore.data.zoneId[macroStore.selectZone] || defaultMacro.zoneId[macroStore.selectZone];
 });
+watch(
+  toRef(macroStore, "selectZone"),
+  () => {
+    macroStore.initSelectZoneData(macroStore.selectZone);
+  },
+  { immediate: true },
+);
 const raidEmulatorOnLoad = async () => {
   let websocketConnected = false;
   if (window.location.href.indexOf("OVERLAY_WS") > 0) {
@@ -171,7 +188,7 @@ onMounted(() => {
           </div>
           <div v-if="macro.Type === 'place'">
             <el-space v-show="macro.Editable">
-              <el-table :data="Object.entries(macro.Place)" border size="small" style="width: 100%">
+              <el-table :data="Object.entries(macro.Place)" border size="small">
                 <el-table-column align="center" v-if="macro.Editable" label="启用" width="85">
                   <template #default="scope">
                     <el-switch v-model="scope.row[1].Active" size="small" style="--el-switch-on-color: #13ce66" />
@@ -224,7 +241,20 @@ onMounted(() => {
               </el-table>
             </el-space>
             <el-space>
-              <ZoneMacroPlaceView :place="macro.Place"></ZoneMacroPlaceView>
+              <div h200px w200px style="position: relative; background-color: rgba(214, 199, 148, 1)">
+                <div v-for="(mark, i) in ['A', 'B', 'C', 'D', 'One', 'Two', 'Three', 'Four']" :key="i">
+                  <span
+                    class="markIcon"
+                    :class="'markIcon' + mark"
+                    :style="{
+                      left: Math.min(200, Math.max(0, (Number(macro.Place[(mark as WayMarkKeys)].X) + macroStore.defaultX) * 3 + 100)) + 'px',
+                      top: Math.min(200, Math.max(0, (Number(macro.Place[mark as WayMarkKeys].Z) + macroStore.defaultY) * 3 + 100)) + 'px',
+                    }"
+                  >
+                    {{ macro.Place[mark as WayMarkKeys].Active ? markMap[mark as WayMarkKeys] ?? mark : "" }}
+                  </span>
+                </div>
+              </div>
             </el-space>
             <el-row
               class="buttonArea"
@@ -260,11 +290,8 @@ onMounted(() => {
           >新增场地标记</el-button
         >
         <el-button color="#BA5783" :icon="Plus" @click="macroStore.importPPJSON()">导入PP字符串</el-button>
-        <el-button type="warning" :icon="RefreshLeft" @click="macroStore.resetZone()">恢复当前区域默认</el-button>
-        <el-button type="success" :icon="RefreshLeft" color="rgb(101,92,201)" @click="macroStore.updateData()"
-          >更新自带数据库</el-button
-        >
-        <el-button type="danger" :icon="RefreshLeft" @click="macroStore.resetAllData()">清除用户数据</el-button>
+        <el-button type="warning" :icon="RefreshLeft" @click="macroStore.resetZone()">恢复本图默认</el-button>
+        <el-button type="danger" :icon="RefreshLeft" @click="macroStore.resetAllData()">恢复全部默认</el-button>
         <el-button @click="toggleHelp()">帮助</el-button>
       </el-space>
       <el-card v-show="help" m-t-1em> <ZoneMacroZoneMacroHelp></ZoneMacroZoneMacroHelp> </el-card>
@@ -302,5 +329,38 @@ onMounted(() => {
     overflow: hidden;
     white-space: nowrap;
   }
+}
+
+.markIcon {
+  position: absolute;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  font-size: 21px;
+  font-weight: bold;
+  color: white;
+  -webkit-text-stroke: 1px rgba(50, 50, 50, 1);
+  z-index: 10;
+  overflow: hidden;
+  padding: 5px;
+}
+$color1: rgba(255, 0, 0, 1);
+$color2: rgba(255, 255, 0, 1);
+$color3: rgba(0, 0, 255, 1);
+$color4: rgba(128, 0, 128, 1);
+.markIconA,
+.markIconOne {
+  text-shadow: 0 0 1px $color1, 0 0 2px $color1, 0 0 3px $color1;
+}
+.markIconB,
+.markIconTwo {
+  text-shadow: 0 0 1px $color2, 0 0 2px $color2, 0 0 3px $color2;
+}
+.markIconC,
+.markIconThree {
+  text-shadow: 0 0 1px $color3, 0 0 2px $color3, 0 0 3px $color3;
+}
+.markIconD,
+.markIconFour {
+  text-shadow: 0 0 1px $color4, 0 0 2px $color4, 0 0 3px $color4;
 }
 </style>
