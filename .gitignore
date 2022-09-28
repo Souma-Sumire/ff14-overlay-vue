@@ -5,3 +5,4 @@ dist-ssr
 *.local
 src/types/components.d.ts
 src/types/auto-imports.d.ts
+src/pages/test/index.vue
