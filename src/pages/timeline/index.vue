@@ -107,10 +107,13 @@ function stopTimeline() {
   baseTimeMs.value = 0;
   runtimeTimeSeconds.value = 0 - timelineStore.configValues.preBattle;
   offsetTimeMS.value = 0;
+  timelinePageData.loadedTimeline.map((v) => (v.alertAlready = false));
 }
 
 //页面时间轴开始播放
 function startTimeline(countdownSeconds: number) {
+  ttsSuppressFlag = false;
+  setTimeout(() => (ttsSuppressFlag = true), 1000);
   runtimeTimeSeconds.value = 0;
   offsetTimeMS.value = 0;
   baseTimeMs.value = new Date().getTime() + countdownSeconds * 1000;
@@ -138,7 +141,7 @@ function handleLogEvent(e: any) {
     if (regex) {
       //倒计时
       startTimeline(parseInt(regex!.groups!.cd));
-    } else if (/^.{14} (?:Director |)21:.{8}:400000(?:0F|10)/.test(log) || /^.{14} ChatLog 00:0038::end$/.test(log)) {
+    } else if (/^.{14} Director 21:.{8}:400000(?:0F|10)/.test(log) || /^.{14} ChatLog 00:0038::end$/.test(log)) {
       //团灭
       stopTimeline();
       // mountTimeline(lastUsedTimeline);
@@ -234,7 +237,7 @@ function handleInCombatChanged(ev: {
   };
 }) {
   if (ev.detail.inGameCombat && ev.detail.inACTCombat) startTimeline(0);
-  // else if (!ev.detail.inGameCombat && !ev.detail.inACTCombat) mountTimeline(lastUsedTimeline);
+  else if (!ev.detail.inGameCombat && !ev.detail.inACTCombat) stopTimeline();
 }
 </script>
 <template>

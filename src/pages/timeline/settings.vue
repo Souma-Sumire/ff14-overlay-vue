@@ -8,7 +8,7 @@ import "animate.css";
 import ClipboardJS from "clipboard";
 import router from "@/router";
 import { ITimeline } from "@/types/Timeline";
-import TimelineShow from "@/components/timeline/timelineShow.vue";
+
 const simulatedCombatTime = ref(-30);
 const timelineStore = useTimelineStore();
 const timelines = toRef(timelineStore, "allTimelines");
