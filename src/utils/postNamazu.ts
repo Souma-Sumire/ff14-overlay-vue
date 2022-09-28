@@ -7,8 +7,8 @@ export function doWayMarks(json: PPJSON) {
   return callOverlayHandler({ call: "PostNamazu", c: "DoWaymarks", p: JSON.stringify(json) });
 }
 
-export function doInsertPreset(mapID: string, json: PPJSON, slot: Slot = 5) {
-  json.MapID = getMapIDByTerritoryType(Number(mapID));
+export function doInsertPreset(mapID: number, json: PPJSON, slot: Slot = 5) {
+  json.MapID = getMapIDByTerritoryType(mapID);
   json.Name = `Slot${slot}`;
   return callOverlayHandler({ call: "PostNamazu", c: "DoInsertPreset", p: JSON.stringify(json) });
 }

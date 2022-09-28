@@ -3,7 +3,7 @@ import { defineStore } from "pinia";
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import { doTextCommand, doWayMarks, doInsertPreset, doQueueActions } from "../utils/postNamazu";
-import { MacroInfoMacro, MacroInfoPlace, MacroType, PPJSON, WayMarkJSON } from "../types/Macro";
+import { MacroInfoMacro, MacroInfoPlace, MacroType } from "../types/Macro";
 import zoneInfo from "../resources/zoneInfo";
 import { getMapIDByTerritoryType, getTerritoryTypeByMapID } from "../resources/contentFinderCondition";
 let partyLen = 0;
@@ -263,7 +263,7 @@ export const useMacroStore = defineStore("macro", {
         cancelButtonText: "不，再想想",
       }).then((result) => {
         if (result.isDenied) {
-          doInsertPreset(this.selectZone, place, 5);
+          doInsertPreset(Number(this.selectZone), place, 5);
           if (this.selectZone === this.zoneNow)
             doQueueActions([{ c: "DoTextCommand", p: "/waymark preset 5", d: 500 }]);
           Swal.fire({
@@ -275,7 +275,7 @@ export const useMacroStore = defineStore("macro", {
           });
         }
         if (result.isConfirmed) {
-          doInsertPreset(this.selectZone, place, 5);
+          doInsertPreset(Number(this.selectZone), place, 5);
           Swal.fire({
             position: "top-end",
             icon: "success",
@@ -342,7 +342,7 @@ export const useMacroStore = defineStore("macro", {
           const slotIndex: 1 | 2 | 3 | 4 | 5 = Number(echoSlot?.groups?.slot ?? 5) as 1 | 2 | 3 | 4 | 5;
           const place = this.data.zoneId[this.zoneNow].filter((v) => v.Type === "place");
           if (place.length === 1) {
-            doInsertPreset(this.zoneNow, (place[0] as MacroInfoPlace).Place!, slotIndex);
+            doInsertPreset(Number(this.zoneNow), (place[0] as MacroInfoPlace).Place!, slotIndex);
           } else if (place.length > 1) {
             doTextCommand("/e 本地图存在多个场景标记预设，无法使用快捷插槽，请手动在网页中指定。");
           }

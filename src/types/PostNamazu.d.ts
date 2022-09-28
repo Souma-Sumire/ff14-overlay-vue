@@ -53,13 +53,9 @@ interface QueueActionsEvent {
   c: "DoQueueActions";
   p: PostNamazuQueueAction;
 }
+declare type PostNamazuCall =  "DoTextCommand" | "command" | "DoWaymarks" | "place" | "mark" | "DoInsertPreset" | "preset" | "DoQueueActions";
 declare type PostNamazuQueueAction = {
-  c:
-    | Pick<TextCommandEvent, "c">
-    | Pick<WaymarksEvent, "c">
-    | Pick<MarkEvent, "c">
-    | Pick<InsertPresetEvent, "c">
-    | Pick<QueueActionsEvent, "c">;
+  c: PostNamazuCall;
   p: string | PPJSON;
   d?: number;
 }[];
