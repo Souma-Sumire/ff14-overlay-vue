@@ -11,7 +11,14 @@
           fill="white"
         />
         <defs>
-          <linearGradient id="paint0_linear_2392_974" x1="0" y1="0" x2="62.1639" y2="69.6625" gradientUnits="userSpaceOnUse">
+          <linearGradient
+            id="paint0_linear_2392_974"
+            x1="0"
+            y1="0"
+            x2="62.1639"
+            y2="69.6625"
+            gradientUnits="userSpaceOnUse"
+          >
             <stop stop-color="white" />
             <stop offset="0.884426" stop-color="white" stop-opacity="0" />
           </linearGradient>
@@ -45,10 +52,17 @@
           :class="[stageRegexp.test(item.text) ? 'stage' : 'normal', item.className]"
         >
           {{ item.text }}
-          <span v-show="item.timeSeconds && item.timeSeconds > 0 && item.timeFormat" class="auxiliary">{{ item.timeFormat }}</span>
+          <span v-show="item.timeSeconds && item.timeSeconds > 0 && item.timeFormat" class="auxiliary">{{
+            item.timeFormat
+          }}</span>
         </li>
       </ul>
-      <span :style="{ width: decorativeLineHeight + 'px', top: `${programme.style.lineHeight + 25 * 1.5 - 5 - mainTranslateY}px` }">
+      <span
+        :style="{
+          width: decorativeLineHeight + 'px',
+          top: `${programme.style.lineHeight + 25 * 1.5 - 5 - mainTranslateY}px`,
+        }"
+      >
         {{ "-".repeat(299) }}</span
       >
     </main>
@@ -248,29 +262,31 @@ loadData();
 
 watchEffect(() => {
   let result: Programme[] = [];
-  [...programme.inputRaw.matchAll(/^([ \t　]*(?<time>[:：\d.]+) +)?"?(?<action>.+?)"?(?: *class="(?<className>[^"]+)")?$/gm)].forEach(
-    (v) => {
-      let t: any = v.groups?.time;
-      if (t?.includes(":")) {
-        let decimal = 0;
-        if (t?.includes(".")) {
-          decimal = Number(t.substr(t.lastIndexOf(".") + 1) / 10);
-          t = t.substring(0, t.lastIndexOf("."));
-        }
-        t = moment.duration(t).as("seconds") / 60 + decimal;
-      } else {
-        t = t ? Number(t) : null;
+  [
+    ...programme.inputRaw.matchAll(
+      /^([ \t　]*(?<time>[:：\d.]+) +)?"?(?<action>.+?)"?(?: *class="(?<className>[^"]+)")?$/gm,
+    ),
+  ].forEach((v) => {
+    let t: any = v.groups?.time;
+    if (t?.includes(":")) {
+      let decimal = 0;
+      if (t?.includes(".")) {
+        decimal = Number(t.substr(t.lastIndexOf(".") + 1) / 10);
+        t = t.substring(0, t.lastIndexOf("."));
       }
-      const time = moment.duration(t, "seconds");
-      const timeFormat = moment({ h: time.hours(), m: time.minutes(), s: time.seconds() }).format("mm:ss");
-      result.push({
-        text: v.groups!.action,
-        timeSeconds: t?.toFixed(1) ?? null,
-        timeFormat: timeFormat,
-        className: v?.groups?.className ?? "",
-      });
+      t = moment.duration(t).as("seconds") / 60 + decimal;
+    } else {
+      t = t ? Number(t) : null;
     }
-  );
+    const time = moment.duration(t, "seconds");
+    const timeFormat = moment({ h: time.hours(), m: time.minutes(), s: time.seconds() }).format("mm:ss");
+    result.push({
+      text: v.groups!.action,
+      timeSeconds: t?.toFixed(1) ?? null,
+      timeFormat: timeFormat,
+      className: v?.groups?.className ?? "",
+    });
+  });
   programme.list = result;
   localStorage.setItem("programmeData", JSON.stringify(programme.inputRaw));
   localStorage.setItem("programmeStyle", JSON.stringify(programme.style));
@@ -339,7 +355,8 @@ function oneSecond() {
   }
 
   function calculateOffset(distance: number) {
-    const max = document.querySelector<HTMLUListElement>("#main>ul")!.scrollHeight - 650 + programme.style.lineHeight * 1.5;
+    const max =
+      document.querySelector<HTMLUListElement>("#main>ul")!.scrollHeight - 650 + programme.style.lineHeight * 1.5;
     if (distance >= max) distance = max;
     return distance;
   }
@@ -373,7 +390,7 @@ $color: rgba(
 }
 @font-face {
   font-family: SourceHanSansCN;
-  src: url(@/common/font/SourceHanSansCN-Bold.otf);
+  src: url("//ffxiv-res.diemoe.net/SourceHanSansCN-Bold.otf");
 }
 #warpper {
   float: left;
