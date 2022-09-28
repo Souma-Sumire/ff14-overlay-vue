@@ -367,6 +367,14 @@ export const useMacroStore = defineStore("macro", {
           this.data.zoneId[this.selectZone].length = 0;
           this.data.zoneId[this.selectZone].push(...JSON.parse(JSON.stringify(defaultMacro.zoneId[this.selectZone])));
           this.initSelectZoneData(this.selectZone);
+          const zoneName = zoneInfo?.[this.selectZone as unknown as number];
+          Swal.fire({
+            position: "top-end",
+            icon: "success",
+            title: "已恢复" + zoneName?.name.cn ?? zoneName?.name?.ja ?? zoneName?.name?.en ?? "",
+            showConfirmButton: false,
+            timer: 1000,
+          });
         }
       });
     },

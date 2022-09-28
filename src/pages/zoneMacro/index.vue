@@ -7,6 +7,9 @@ import { defaultMacro } from "@/resources/macro";
 import zoneInfo from "@/resources/zoneInfo";
 import { useMacroStore } from "@/store/macro";
 import { WayMarkKeys } from "@/types/Macro";
+import charactersJson from "@/resources/characters.json";
+
+const charactersData = new Map(Object.entries(charactersJson));
 const [help, toggleHelp] = useToggle(false);
 const macroStore = useMacroStore();
 macroStore.initAllData();
@@ -103,6 +106,22 @@ const raidEmulatorOnLoad = async () => {
 onMounted(() => {
   raidEmulatorOnLoad();
 });
+// function parseMacroText(innerHTML: string): string {
+//   return innerHTML
+//     .split("")
+//     .map((v) => {
+//       const conV = convertUnicode(v);
+//       if (charactersData.has(conV)) {
+//         const [char, info] = charactersData.get(conV) as [string, string];
+//         return `<i class="xiv ${char}" data-info="${info}"></i>`;
+//       }
+//       return v;
+//     })
+//     .join("");
+// }
+// function convertUnicode(string: string) {
+//   return string.charCodeAt(0).toString(16);
+// }
 </script>
 <template>
   <el-container>
@@ -148,9 +167,7 @@ onMounted(() => {
           </template>
           <div v-if="macro.Type === 'macro'">
             <article v-if="!macro.Editable">
-              <div v-for="(m, o) in macro.Text?.split('\n')" :key="o" class="text item">
-                {{ m }}
-              </div>
+              <div v-for="(m, o) in macro.Text?.split('\n')" :key="o" class="macroText">{{ m }}</div>
             </article>
             <el-input
               size="small"
@@ -298,13 +315,15 @@ onMounted(() => {
     </el-footer>
   </el-container>
 </template>
-<style lang="scss" scoped>
+<style lang="scss">
+@import "@/css/ffxiv-axis-font-icons.css";
 * {
-  font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial,
-    sans-serif;
+  font-family: "FFXIV", "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑",
+    Arial, sans-serif;
   pointer-events: initial;
 }
 .main-box-card {
+  
   max-width: 500px;
   :deep(a) {
     color: blue;
@@ -324,10 +343,12 @@ onMounted(() => {
       max-height: 100px;
     }
   }
-  .text {
+  .macroText {
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
+    vertical-align: baseline;
+    line-height: 1.5;
   }
 }
 
