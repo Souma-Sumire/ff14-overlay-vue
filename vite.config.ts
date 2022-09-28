@@ -24,15 +24,23 @@ export default defineConfig({
     chunkSizeWarningLimit: 2000,
     // minify: "terser",
     // terserOptions: {
-      // compress: {
-        // drop_console: true,
-        // drop_debugger: true,
-      // },
+    // compress: {
+    // drop_console: true,
+    // drop_debugger: true,
+    // },
     // },
   },
   plugins: [
     Vue({ include: [/\.vue$/, /\.md$/] }),
-    viteCompression(),
+    viteCompression({
+      verbose: false,
+      filter: /\.(js|mjs|json|css)$/i,
+      disable: false,
+      threshold: 1025,
+      algorithm: "gzip",
+      ext: ".gz",
+      // deleteOriginFile: true,
+    }),
     AutoImport({
       imports: ["vue", "vue-router", "@vueuse/core"],
       dts: "./src/types/auto-imports.d.ts",
