@@ -6,10 +6,9 @@ import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import { defaultMacro } from "@/resources/macro";
 import zoneInfo from "@/resources/zoneInfo";
 import { useMacroStore } from "@/store/macro";
-import { WayMarkKeys } from "@/types/Macro";
-import charactersJson from "@/resources/characters.json";
+// import charactersJson from "@/resources/characters.json";
 
-const charactersData = new Map(Object.entries(charactersJson));
+// const charactersData = new Map(Object.entries(charactersJson));
 const [help, toggleHelp] = useToggle(false);
 const macroStore = useMacroStore();
 macroStore.initAllData();
