@@ -123,7 +123,7 @@ onMounted(() => {
 // }
 </script>
 <template>
-  <el-container>
+  <el-container bg-white rd-1>
     <el-header flex="~ wrap gap1" height="auto">
       <el-space>
         <el-button type="primary" :icon="Position" @click="macroStore.positioning()">当前区域</el-button>
@@ -322,7 +322,6 @@ onMounted(() => {
   pointer-events: initial;
 }
 .main-box-card {
-  
   max-width: 500px;
   :deep(a) {
     color: blue;
