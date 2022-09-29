@@ -434,7 +434,7 @@ export function getZoneIDByZoneName(ZoneName: string) {
     const zone = zoneInfo[zoneId];
     for (const lang in zone.name) {
       const zoneName = zone.name[lang as keyof typeof zone.name];
-      if (zoneName === ZoneName || zoneName === ZoneName.replaceAll(/[\(\)]/g, "")) {
+      if (zoneName?.toUpperCase() === ZoneName.toUpperCase() || zoneName === ZoneName.replaceAll(/[\(\)]/gi, "")) {
         return zoneId;
       }
     }
