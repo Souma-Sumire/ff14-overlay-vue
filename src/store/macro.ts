@@ -290,9 +290,13 @@ export const useMacroStore = defineStore("macro", {
       this.selectZone = this.zoneNow;
     },
     handleChangeZone(e: any): void {
+      Swal.close();
       const zoneID = getZoneIDByZoneName(e.zoneName);
-      //金蝶游乐场
-      if (e.zoneID === 144) return;
+      const ignore = [
+        144, //金蝶游乐场
+        979, //苍穹皓天
+      ];
+      if (ignore.includes(e.zoneID)) return;
       if (!zoneID) {
         this.selectZone = "129";
         this.zoneNow = "129";
