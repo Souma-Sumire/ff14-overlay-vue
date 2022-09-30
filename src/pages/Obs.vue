@@ -1,12 +1,12 @@
 <template>
-  <div id="container">
+  <div id="container" bg-white>
     <form>
       地址<input type="text" v-model="data.ip" />
       <br />
       端口<input type="text" v-model="data.port" />
       <br />
-      密码<input :type="data.passowrdShow ? 'text' : 'password'" v-model="data.password" autocomplete="on" /><button
-        @click="data.passowrdShow = !data.passowrdShow"
+      密码<input :type="state.passowrdShow ? 'text' : 'password'" v-model="data.password" autocomplete="on" /><button
+        @click="state.passowrdShow = !state.passowrdShow"
       >
         👀
       </button>
@@ -19,10 +19,9 @@
       </label>
     </form>
     <br />
-    <p>状态：{{ data.status }}</p>
-    <button :disabled="data.connect" @click="handleClickToConnect">连接</button>
-    <button :disabled="!data.connect" @click="handleClickToDisconnect">断开</button>
-    <!-- <button :disabled="!data.connect" @click="restartRecord">手动开始录制</button> -->
+    <p>状态：{{ state.status }}</p>
+    <button :disabled="state.connect" @click="handleClickToConnect">连接</button>
+    <button :disabled="!state.connect" @click="handleClickToDisconnect">断开</button>
   </div>
 </template>
 
@@ -38,11 +37,9 @@ const data = useStorage(
     password: "",
     autoConnect: true,
     partyLength: true,
-    connect: false,
-    status: "空闲",
-    passowrdShow: false,
   }),
 );
+const state = reactive({ connect: false, status: "空闲", passowrdShow: false });
 const partyData = { party: [] };
 const obs = new OBSWebSocket();
 obs.on("ExitStarted", onConnectionClosed);
@@ -56,24 +53,24 @@ setTimeout(async () => {
   if (data.value.autoConnect) await ObsConnect();
 }, 1000);
 function onConnectionClosed() {
-  data.value.status = "closed";
-  data.value.connect = false;
+  state.status = "closed";
+  state.connect = false;
 }
 async function ObsConnect() {
   try {
     const { obsWebSocketVersion, negotiatedRpcVersion } = await obs.connect(
-      `ws://127.0.0.1:${data.value.port}`,
+      `ws://${data.value.ip}:${data.value.port}`,
       data.value.password,
       {
         rpcVersion: 1,
       },
     );
-    data.value.status = `成功 ${obsWebSocketVersion} (using RPC ${negotiatedRpcVersion})`;
-    data.value.connect = true;
+    state.status = `成功 ${obsWebSocketVersion} (using RPC ${negotiatedRpcVersion})`;
+    state.connect = true;
     Promise.resolve();
   } catch (error: any) {
-    data.value.status = `失败 ${error.code} ${error.message}`;
-    data.value.connect = false;
+    state.status = `失败 ${error.code} ${error.message}`;
+    state.connect = false;
     Promise.reject(error.code);
   }
 }
@@ -84,7 +81,7 @@ async function handleClickToDisconnect() {
   await obs.disconnect();
 }
 async function startRecord() {
-  if (!data.value.connect) await ObsConnect().then(() => obs.call("StartRecord"));
+  if (!state.connect) await ObsConnect().then(() => obs.call("StartRecord"));
   else {
     if (data.value.partyLength) {
       if (partyData.party.length <= 8 && partyData.party.length >= 5) obs.call("StartRecord");
