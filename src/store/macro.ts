@@ -7,6 +7,7 @@ import { MacroInfoMacro, MacroInfoPlace, MacroType } from "../types/Macro";
 import zoneInfo from "../resources/zoneInfo";
 import { getMapIDByTerritoryType, getTerritoryTypeByMapID } from "../resources/contentFinderCondition";
 let partyLen = 0;
+const slotIndex = useStorage("macro-slot-index", 5);
 addOverlayListener("PartyChanged", (e: any) => (partyLen = e.party.length));
 export const useMacroStore = defineStore("macro", {
   state: () => {
@@ -228,58 +229,72 @@ export const useMacroStore = defineStore("macro", {
     sendMacroEcho(text: string): void {
       macroCommand(text, "e");
     },
-    doLocalWayMark(place: PPJSON): void {
-      Swal.fire({
-        title: "确定进行本地标点？",
-        text: "只有你自己能看到这些标点哦",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        confirmButtonText: "是的，本地标点",
-        cancelButtonText: "不，再想想",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          doWayMarks(place);
-          Swal.fire({
-            position: "top-end",
-            icon: "success",
-            title: "已进行本地标点",
-            showConfirmButton: false,
-            timer: 1000,
-          });
-        }
-      });
-    },
+    // doLocalWayMark(place: PPJSON): void {
+    //   Swal.fire({
+    //     title: "确定进行本地标点？",
+    //     text: "只有你自己能看到这些标点哦",
+    //     icon: "warning",
+    //     showCancelButton: true,
+    //     confirmButtonColor: "#3085d6",
+    //     confirmButtonText: "是的，本地标点",
+    //     cancelButtonText: "不，再想想",
+    //   }).then((result) => {
+    //     if (result.isConfirmed) {
+    //       doWayMarks(place);
+    //       Swal.fire({
+    //         position: "top-end",
+    //         icon: "success",
+    //         title: "已进行本地标点",
+    //         showConfirmButton: false,
+    //         timer: 1000,
+    //       });
+    //     }
+    //   });
+    // },
     doSlotWayMark(place: PPJSON): void {
       Swal.fire({
-        title: "确定将该预设覆盖到插槽5？",
-        text: "原在插槽5的预设将会被覆盖",
+        title: "确定将该预设覆盖到插槽？",
+        text: "原预设将会被覆盖",
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
-        confirmButtonText: "写入",
+        confirmButtonText: "仅写入",
         showDenyButton: true,
         denyButtonText: "写入并标记",
         cancelButtonText: "不，再想想",
+        input: "number",
+        inputLabel: "要写入的插槽位置",
+        inputValue: slotIndex.value,
+        inputAttributes: {
+          min: "1",
+          max: "5",
+          step: "1",
+        },
+        inputValidator: (value) => {
+          if (Number(value) >= 1 && Number(value) <= 5) return null;
+          return "你必须输入一个合法数字（1~5）";
+        },
       }).then((result) => {
+        if (Number(result.value) >= 1 && Number(result.value) <= 5 && (result.isDenied || result.isConfirmed))
+          slotIndex.value = result.value;
         if (result.isDenied) {
           doInsertPreset(Number(this.selectZone), place, 5);
-          if (this.selectZone === this.zoneNow)
-            doQueueActions([{ c: "DoTextCommand", p: "/waymark preset 5", d: 500 }]);
+          // if (this.selectZone === this.zoneNow)
+          doQueueActions([{ c: "DoTextCommand", p: "/waymark preset " + result.value, d: 500 }]);
           Swal.fire({
             position: "top-end",
             icon: "success",
-            title: "已写入插槽5",
+            title: "已写入插槽",
             showConfirmButton: false,
             timer: 1000,
           });
         }
         if (result.isConfirmed) {
-          doInsertPreset(Number(this.selectZone), place, 5);
+          doInsertPreset(Number(this.selectZone), place, result.value);
           Swal.fire({
             position: "top-end",
             icon: "success",
-            title: "已写入插槽5",
+            title: "已写入插槽",
             showConfirmButton: false,
             timer: 1000,
           });

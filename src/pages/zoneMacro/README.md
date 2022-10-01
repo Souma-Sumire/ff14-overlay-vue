@@ -39,7 +39,15 @@
 
 ### 游戏自带宏
 
-`/waymark preset {num}` 标记预设num（num=1|2|3|4|5, 必须传参）可与上文的插槽宏配合/wait使用。
+`/waymark preset {num}` 标记预设num（num=1|2|3|4|5, 必须传参）
+
+#### 配合使用 写入插槽后立即小队标点
+
+```plain
+/e 标点插槽 5
+/wait 1
+/waymark preset 5
+```
 
 ## 数据来源
 
