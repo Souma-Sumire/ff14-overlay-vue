@@ -333,7 +333,7 @@ export const useMacroStore = defineStore("macro", {
     },
     handleLogLine(e: any) {
       if (e.line[2] === "0038") {
-        const echoSwitch = e.line[4].match(/^发宏\s*(?<channel>e|p)?/);
+        const echoSwitch = e.line[4].match(/^(?:发宏|宏|macro)\s*(?<channel>e|p)?.*/i);
         if (echoSwitch) {
           const channel: "e" | "p" = echoSwitch?.groups?.channel ?? "e";
           const macro = this.data.zoneId[this.zoneNow].filter((v) => v.Type === "macro");
@@ -344,17 +344,17 @@ export const useMacroStore = defineStore("macro", {
           } else doTextCommand("/e 当前地图没有宏<se.3>");
           return;
         }
-        const echoWayMarkLocal = (e.line[4] as string).match(/^本地标点/);
-        if (echoWayMarkLocal) {
-          const place = this.data.zoneId[this.zoneNow].filter((v) => v.Type === "place");
-          if (place.length === 1) {
-            doWayMarks((place[0] as MacroInfoPlace).Place!);
-          } else if (place.length > 1) {
-            doTextCommand("/e 本地图存在多个场景标记，无法使用快捷本地标点，请手动在网页中指定。");
-          }
-          return;
-        }
-        const echoSlot = (e.line[4] as string).match(/^(?:标点|标记|场景|场景标记)(?:插槽|预设)\s*(?<slot>[1-5])?/);
+        // const echoWayMarkLocal = (e.line[4] as string).match(/^本地标点/);
+        // if (echoWayMarkLocal) {
+        //   const place = this.data.zoneId[this.zoneNow].filter((v) => v.Type === "place");
+        //   if (place.length === 1) {
+        //     doWayMarks((place[0] as MacroInfoPlace).Place!);
+        //   } else if (place.length > 1) {
+        //     doTextCommand("/e 本地图存在多个场景标记，无法使用快捷本地标点，请手动在网页中指定。");
+        //   }
+        //   return;
+        // }
+        const echoSlot = (e.line[4] as string).match(/^(?:标点|标记|场景标记|place)(?:插槽|预设|)\s*(?<slot>[1-5])?.*/);
         if (echoSlot) {
           const slotIndex: 1 | 2 | 3 | 4 | 5 = Number(echoSlot?.groups?.slot ?? 5) as 1 | 2 | 3 | 4 | 5;
           const place = this.data.zoneId[this.zoneNow].filter((v) => v.Type === "place");
