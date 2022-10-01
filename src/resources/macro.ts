@@ -401,20 +401,20 @@ export const defaultMacro: { zoneId: ZoneIdInfo } = {
           /p 　ST H2 D4 D2
   `),
       },
-      // {
-      //   Name: "P8S WayMark",
-      //   Type: "place",
-      //   Place: {
-      //     A:{ X: 100.0, Y: 0.0, Z: 85.0, ID: 0, Active: true },
-      //     B:{ X: 115.0, Y: 0.0, Z: 100.0, ID: 1, Active: true },
-      //     C:{ X: 100.0, Y: 0.0, Z: 115.0, ID: 2, Active: true },
-      //     D:{ X: 85.0, Y: 0.0, Z: 100.0, ID: 3, Active: true },
-      //     One:{ X: 110.0, Y: 0.0, Z: 90.0, ID: 4, Active: true },
-      //     Two:{ X: 110.0, Y: 0.0, Z: 110.0, ID: 5, Active: true },
-      //     Three:{ X: 90.0, Y: 0.0, Z: 110.0, ID: 6, Active: true },
-      //     Four:{ X: 90.0, Y: 0.0, Z: 90.0, ID: 7, Active: true },
-      // },
-      // },
+      {
+        Name: "P8S WayMark High Concept",
+        Type: "place",
+        Place: {
+          "A": { "X": 117.531, "Y": 0.0, "Z": 82.394, "ID": 0, "Active": true },
+          "B": { "X": 117.7, "Y": 0.0, "Z": 117.216, "ID": 1, "Active": true },
+          "C": { "X": 82.823, "Y": 0.0, "Z": 117.213, "ID": 2, "Active": true },
+          "D": { "X": 104.985, "Y": 0.0, "Z": 94.741, "ID": 3, "Active": true },
+          "One": { "X": 88.489, "Y": 0.0, "Z": 80.738, "ID": 4, "Active": true },
+          "Two": { "X": 80.601, "Y": 0.0, "Z": 90.739, "ID": 5, "Active": true },
+          "Three": { "X": 89.753, "Y": 0.0, "Z": 81.265, "ID": 6, "Active": true },
+          "Four": { "X": 105.044, "Y": 0.0, "Z": 83.843, "ID": 7, "Active": true },
+        },
+      },
     ],
     "968": [
       {
