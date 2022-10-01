@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import actWS from "@/assets/actWS.png";
-import { Check, Delete, Edit, Plus, Position, RefreshLeft, CopyDocument } from "@element-plus/icons-vue";
+import {
+  Check,
+  Delete,
+  Edit,
+  Plus,
+  Position,
+  RefreshLeft,
+  CopyDocument,
+  Upload,
+  ChatDotSquare,
+  ChatSquare,
+} from "@element-plus/icons-vue";
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import { defaultMacro } from "@/resources/macro";
@@ -187,8 +198,10 @@ onMounted(() => {
               :style="{ maxHeight: macro.Editable ? '100px' : null, opacity: macro.Editable ? 1 : null }"
             >
               <el-button :icon="Edit" @click="macroStore.editMacroMacro(macro)">编辑</el-button>
-              <el-button type="info" @click="macroStore.sendMacroEcho(macro.Text)">发默语</el-button>
-              <el-button type="primary" @click="macroStore.sendMacroParty(macro.Text)">发小队</el-button>
+              <el-button :icon="ChatSquare" type="info" @click="macroStore.sendMacroEcho(macro.Text)">默语</el-button>
+              <el-button :icon="ChatDotSquare" type="primary" @click="macroStore.sendMacroParty(macro.Text)"
+                >小队</el-button
+              >
             </el-row>
             <el-row v-if="macro.Editable" class="buttonAreaEditing">
               <el-button type="success" :icon="Check" @click="macroStore.submitMacroMacro(macro)">完成</el-button>
@@ -275,7 +288,9 @@ onMounted(() => {
             >
               <el-button :icon="Edit" @click="macroStore.editMacroPlace(macro)">编辑</el-button>
               <!-- <el-button type="primary" @click="macroStore.doLocalWayMark(macro.Place)">本地</el-button> -->
-              <el-button type="primary" @click="macroStore.doSlotWayMark(macro.Place)">写入标点预设</el-button>
+              <el-button type="primary" :icon="Upload" @click="macroStore.doSlotWayMark(macro.Place)"
+                >写入预设</el-button
+              >
             </el-row>
             <el-row v-if="macro.Editable" class="buttonAreaEditing">
               <el-button type="success" :icon="Check" @click="macroStore.submitMacroPlace(macro)">完成</el-button>
