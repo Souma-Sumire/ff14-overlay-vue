@@ -61,6 +61,9 @@ const markMap = {
   Three: "3",
   Four: "4",
 };
+const markViewSize = 180;
+const markViewScale = 3;
+const markViewFontSize = 19;
 addOverlayListener("onGameExistsEvent", macroStore.handleGameExists);
 addOverlayListener("ChangeZone", macroStore.handleChangeZone);
 addOverlayListener("LogLine", macroStore.handleLogLine);
@@ -247,14 +250,17 @@ onMounted(() => {
               </el-table>
             </el-space>
             <el-space>
-              <div h200px w200px style="position: relative; background-color: rgba(214, 199, 148, 1)">
+              <div
+                style="position: relative; background-color: rgba(214, 199, 148, 1)"
+                :style="{ height: markViewSize + 'px', width: markViewSize + 'px', fontSize: markViewFontSize + 'px' }"
+              >
                 <div v-for="(mark, i) in ['A', 'B', 'C', 'D', 'One', 'Two', 'Three', 'Four']" :key="i">
                   <span
                     class="markIcon"
                     :class="'markIcon' + mark"
                     :style="{
-                      left: Math.min(200, Math.max(0, (Number(macro.Place[(mark as WayMarkKeys)].X) + macroStore.defaultX) * 3 + 100)) + 'px',
-                      top: Math.min(200, Math.max(0, (Number(macro.Place[mark as WayMarkKeys].Z) + macroStore.defaultY) * 3 + 100)) + 'px',
+                      left: Math.min(markViewSize, Math.max(0, (Number(macro.Place[(mark as WayMarkKeys)].X) + macroStore.defaultX) * markViewScale + markViewSize / 2)) + 'px',
+                      top: Math.min(markViewSize, Math.max(0, (Number(macro.Place[mark as WayMarkKeys].Z) + macroStore.defaultY) * markViewScale + markViewSize / 2)) + 'px',
                     }"
                   >
                     {{ macro.Place[mark as WayMarkKeys].Active ? markMap[mark as WayMarkKeys] ?? mark : "" }}
@@ -338,13 +344,13 @@ onMounted(() => {
   position: absolute;
   text-align: center;
   transform: translate(-50%, -50%);
-  font-size: 21px;
   font-weight: bold;
   color: white;
   -webkit-text-stroke: 1px rgba(50, 50, 50, 1);
   z-index: 10;
   overflow: hidden;
   padding: 5px;
+  user-select: none;
 }
 $color1: rgba(255, 0, 0, 1);
 $color2: rgba(255, 255, 0, 1);
