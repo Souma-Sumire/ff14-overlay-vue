@@ -8,7 +8,7 @@
 
 ## 依赖
 
-通过 [ACT](https://advancedcombattraker.com/) 的 [OverlayPlugin](https://github.com/OverlayPlugin/OverlayPlugin) 提供的 WebSocket Server 实现在主流浏览器中与 [鲶鱼精邮差](https://github.com/Natsukage/PostNamazu/releases)（版本1.3.2.0及以上） 进行通信，委托其执行场地标点或发送消息的动作（Command, Preset, Queue, WayMark）。同时使用了 [OverlayPlugin](https://github.com/OverlayPlugin/OverlayPlugin) 与 [Cactbot](https://github.com/quisquous/cactbot) 提供的事件来实现部分易用性改善的功能（ChangeZone, LogLine, onGameExistsEvent）。
+通过 [ACT](https://advancedcombattraker.com/) 的 [OverlayPlugin](https://github.com/OverlayPlugin/OverlayPlugin) 提供的 WebSocket Server 实现在主流浏览器中与 [鲶鱼精邮差](https://github.com/Natsukage/PostNamazu/releases)（版本1.3.2.1及以上） 进行通信，委托其执行场地标点或发送消息的动作（Command, Preset, Queue, WayMark）。同时使用了 [OverlayPlugin](https://github.com/OverlayPlugin/OverlayPlugin) 与 [Cactbot](https://github.com/quisquous/cactbot) 提供的事件来实现部分易用性改善的功能（ChangeZone, LogLine, onGameExistsEvent）。
 
 ## 使用说明
 
