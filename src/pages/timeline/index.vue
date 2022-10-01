@@ -136,7 +136,7 @@ function startTimeline(countdownSeconds: number) {
 function handleLogEvent(e: any) {
   for (const log of e.detail.logs) {
     let regex = log.match(
-      /^.{14} (\w+ |)00:(?:00b9|0139)::?(?:距离战斗开始还有|Battle commencing in |戦闘開始まで)(?<cd>\d+)[^（(]+[（(]/i,
+      /^.{14} (\w+ |)00:(?:00b9|0[12]39)::?(?:距离战斗开始还有|Battle commencing in |戦闘開始まで)(?<cd>\d+)[^（(]+[（(]/i,
     );
     if (regex) {
       //倒计时
