@@ -1,4 +1,15 @@
 <script setup lang="ts">
+import Swal from "sweetalert2";
+import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
+onErrorCaptured((err) => {
+  Swal.fire({
+    icon: "error",
+    title: "未知错误",
+    text: err.message,
+    footer: `<a href="javascript:void(0);" onclick="(()=>{localStorage.clear();location.reload()})()">尝试清空本地存储数据</a>`,
+  });
+  return false;
+});
 </script>
 
 <template>

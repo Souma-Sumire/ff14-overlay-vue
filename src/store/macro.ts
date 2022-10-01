@@ -290,7 +290,6 @@ export const useMacroStore = defineStore("macro", {
       this.selectZone = this.zoneNow;
     },
     handleChangeZone(e: any): void {
-      Swal.close();
       const zoneID = getZoneIDByZoneName(e.zoneName);
       // const ignore = [
       //   144, //金蝶游乐场
