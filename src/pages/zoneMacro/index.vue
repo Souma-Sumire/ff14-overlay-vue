@@ -292,8 +292,8 @@ onMounted(() => {
                 @click="macroStore.submitMacroPlace(macro)"
               />
               <el-button type="danger" :icon="Delete" circle @click="macroStore.deleteMacro(macro)" />
-              <el-button type="primary" @click="macroStore.doLocalWayMark(macro.Place)">本</el-button>
-              <el-button type="primary" plain @click="macroStore.doSlotWayMark(macro.Place)">槽</el-button>
+              <!-- <el-button type="primary" @click="macroStore.doLocalWayMark(macro.Place)">本地</el-button> -->
+              <el-button type="primary" plain @click="macroStore.doSlotWayMark(macro.Place)">插槽</el-button>
             </el-row>
           </div>
         </el-card>
