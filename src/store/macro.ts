@@ -253,51 +253,51 @@ export const useMacroStore = defineStore("macro", {
     // },
     doSlotWayMark(place: PPJSON): void {
       Swal.fire({
-        title: "确定将该预设覆盖到插槽？",
+        title: "确定将该预设覆盖到场地标点预设？",
         text: "原预设将会被覆盖",
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
         confirmButtonText: "仅写入",
         showDenyButton: true,
-        denyButtonText: "写入并标记",
+        denyButtonText: "写入且标记",
         cancelButtonText: "不，再想想",
         input: "number",
-        inputLabel: "要写入的插槽位置",
+        inputLabel: "要写入的场地标点预设位置",
         inputValue: slotIndex.value,
         inputAttributes: {
           min: "1",
           max: "5",
           step: "1",
         },
+        returnInputValueOnDeny: true,
         inputValidator: (value) => {
           if (Number(value) >= 1 && Number(value) <= 5) return null;
           return "你必须输入一个合法数字（1~5）";
         },
       }).then((result) => {
-        if (Number(result.value) >= 1 && Number(result.value) <= 5 && (result.isDenied || result.isConfirmed))
-          slotIndex.value = result.value;
-        if (result.isDenied) {
-          doInsertPreset(Number(this.selectZone), place, 5);
-          // if (this.selectZone === this.zoneNow)
-          doQueueActions([{ c: "DoTextCommand", p: "/waymark preset " + result.value, d: 500 }]);
-          Swal.fire({
-            position: "top-end",
-            icon: "success",
-            title: "已写入插槽",
-            showConfirmButton: false,
-            timer: 1000,
-          });
-        }
-        if (result.isConfirmed) {
-          doInsertPreset(Number(this.selectZone), place, result.value);
-          Swal.fire({
-            position: "top-end",
-            icon: "success",
-            title: "已写入插槽",
-            showConfirmButton: false,
-            timer: 1000,
-          });
+        if (Number(result.value) >= 1 && Number(result.value) <= 5) {
+          slotIndex.value = result.value as 1 | 2 | 3 | 4 | 5;
+          if (result.isConfirmed) {
+            doInsertPreset(Number(this.selectZone), place, slotIndex.value as 1 | 2 | 3 | 4 | 5);
+            Swal.fire({
+              position: "top-end",
+              icon: "success",
+              title: "已仅写入插槽",
+              showConfirmButton: false,
+              timer: 1000,
+            });
+          } else if (result.isDenied) {
+            doInsertPreset(Number(this.selectZone), place, slotIndex.value as 1 | 2 | 3 | 4 | 5);
+            doQueueActions([{ c: "DoTextCommand", p: "/waymark preset " + slotIndex.value, d: 250 }]);
+            Swal.fire({
+              position: "top-end",
+              icon: "success",
+              title: "已写入插槽且标记",
+              showConfirmButton: false,
+              timer: 1000,
+            });
+          }
         }
       });
     },
