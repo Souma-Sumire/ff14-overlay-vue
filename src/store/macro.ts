@@ -2,10 +2,11 @@ import { defaultMacro } from "./../resources/macro";
 import { defineStore } from "pinia";
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
-import { doTextCommand, doWayMarks, doInsertPreset, doQueueActions } from "../utils/postNamazu";
+import { doTextCommand, doInsertPreset, doQueueActions } from "../utils/postNamazu";
 import { MacroInfoMacro, MacroInfoPlace, MacroType } from "../types/Macro";
 import zoneInfo from "../resources/zoneInfo";
 import { getMapIDByTerritoryType, getTerritoryTypeByMapID } from "../resources/contentFinderCondition";
+import ClipboardJS from "clipboard";
 let partyLen = 0;
 const slotIndex = useStorage("macro-slot-index", 5);
 addOverlayListener("PartyChanged", (e: any) => (partyLen = e.party.length));
@@ -210,6 +211,34 @@ export const useMacroStore = defineStore("macro", {
             if (index > -1) this.data.zoneId[this.selectZone].splice(index, 1);
           }
         });
+    },
+    exportWaymarksJson(macro: MacroInfoPlace): void {
+      const json = JSON.parse(JSON.stringify(macro.Place));
+      json.MapID = getMapIDByTerritoryType(Number(this.selectZone));
+      json.Name = macro.Name;
+      let clipboard = new ClipboardJS(".export", {
+        text: () => {
+          return JSON.stringify(json);
+        },
+      });
+      clipboard.on("success", () => {
+        Swal.fire({
+          position: "top-end",
+          icon: "success",
+          title: "复制成功，已写入剪切板。",
+          showConfirmButton: false,
+          timer: 1500,
+        });
+        clipboard.destroy();
+      });
+      clipboard.on("error", () => {
+        Swal.fire({
+          title: "Export waymarks",
+          showCancelButton: true,
+          text: JSON.stringify(json),
+        });
+        clipboard.destroy();
+      });
     },
     sendMacroParty(text: string): void {
       Swal.fire({

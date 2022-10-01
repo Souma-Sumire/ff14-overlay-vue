@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import actWS from "@/assets/actWS.png";
-import { Check, Delete, Edit, Plus, Position, RefreshLeft } from "@element-plus/icons-vue";
+import { Check, Delete, Edit, Plus, Position, RefreshLeft, CopyDocument } from "@element-plus/icons-vue";
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import { defaultMacro } from "@/resources/macro";
@@ -280,6 +280,9 @@ onMounted(() => {
             <el-row v-if="macro.Editable" class="buttonAreaEditing">
               <el-button type="success" :icon="Check" @click="macroStore.submitMacroPlace(macro)">完成</el-button>
               <el-button type="danger" :icon="Delete" @click="macroStore.deleteMacro(macro)">删除</el-button>
+              <el-button :icon="CopyDocument" class="export" @click="macroStore.exportWaymarksJson(macro)"
+                >导出JSON</el-button
+              >
             </el-row>
           </div>
         </el-card>
