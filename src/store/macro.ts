@@ -292,20 +292,19 @@ export const useMacroStore = defineStore("macro", {
     handleChangeZone(e: any): void {
       Swal.close();
       const zoneID = getZoneIDByZoneName(e.zoneName);
-      const ignore = [
-        144, //金蝶游乐场
-        979, //苍穹皓天
-      ];
-      if (ignore.includes(e.zoneID)) return;
+      // const ignore = [
+      //   144, //金蝶游乐场
+      //   979, //苍穹皓天
+      //   177, //后桅旅店
+      // ];
+      // if (ignore.includes(e.zoneID)) return;
       if (!zoneID) {
         this.selectZone = "129";
         this.zoneNow = "129";
         Swal.fire({
-          position: "center",
+          position: "top-end",
           icon: "info",
-          title: "未知区域",
-          text: `${e.zoneName} ${e.zoneID}`,
-          footer: "若此处是战斗副本，请反馈作者。",
+          title: `未知区域 ${e.zoneName} ${e.zoneID}`,
           backdrop: false,
         });
         return;
