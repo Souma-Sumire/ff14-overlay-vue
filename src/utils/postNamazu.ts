@@ -19,6 +19,6 @@ export function doQueueActions(queue: PostNamazuQueueAction) {
   return callOverlayHandler({
     call: "PostNamazu",
     c: "DoQueueActions",
-    p: queue,
+    p: JSON.stringify(queue),
   });
 }
