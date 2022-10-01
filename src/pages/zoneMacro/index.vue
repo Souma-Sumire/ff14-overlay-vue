@@ -179,43 +179,33 @@ onMounted(() => {
               style="width: 450px"
             />
             <el-row
+              v-if="!macro.Editable"
               class="buttonArea"
-              style="margin-top: 5px"
               :style="{ maxHeight: macro.Editable ? '100px' : null, opacity: macro.Editable ? 1 : null }"
             >
-              <el-button
-                type="primary"
-                v-show="!macro.Editable"
-                :icon="Edit"
-                circle
-                @click="macroStore.editMacroMacro(macro)"
-              />
-              <el-button
-                type="success"
-                v-show="macro.Editable"
-                :icon="Check"
-                circle
-                @click="macroStore.submitMacroMacro(macro)"
-              />
-              <el-button type="danger" :icon="Delete" circle @click="macroStore.deleteMacro(macro)" />
-              <el-button type="info" @click="macroStore.sendMacroEcho(macro.Text)">默</el-button>
-              <el-button type="primary" @click="macroStore.sendMacroParty(macro.Text)">队</el-button>
+              <el-button :icon="Edit" @click="macroStore.editMacroMacro(macro)">编辑</el-button>
+              <el-button type="info" @click="macroStore.sendMacroEcho(macro.Text)">发默语</el-button>
+              <el-button type="primary" @click="macroStore.sendMacroParty(macro.Text)">发小队</el-button>
             </el-row>
+            <el-row v-if="macro.Editable" class="buttonAreaEditing">
+              <el-button type="success" :icon="Check" @click="macroStore.submitMacroMacro(macro)">完成</el-button>
+              <el-button type="danger" :icon="Delete" @click="macroStore.deleteMacro(macro)"> 删除</el-button></el-row
+            >
           </div>
           <div v-if="macro.Type === 'place'">
             <el-space v-show="macro.Editable">
               <el-table :data="Object.entries(macro.Place)" border size="small">
-                <el-table-column align="center" v-if="macro.Editable" label="启用" width="85">
+                <el-table-column align="center" v-if="macro.Editable" label="启用" width="50">
                   <template #default="scope">
                     <el-switch v-model="scope.row[1].Active" size="small" style="--el-switch-on-color: #13ce66" />
                   </template>
                 </el-table-column>
-                <el-table-column align="center" label="标记" width="85">
+                <el-table-column align="center" label="标记" width="50">
                   <template #default="scope">
                     <span v-show="true">{{ scope.row[0] }}</span>
                   </template>
                 </el-table-column>
-                <el-table-column align="center" label="X" width="85">
+                <el-table-column align="center" label="X" width="90">
                   <template #default="scope">
                     <span v-show="!macro.Editable">{{ scope.row.X }}</span>
                     <el-input
@@ -228,7 +218,7 @@ onMounted(() => {
                     ></el-input>
                   </template>
                 </el-table-column>
-                <el-table-column align="center" label="Z" width="85">
+                <el-table-column align="center" label="Z" width="90">
                   <template #default="scope">
                     <span v-show="!macro.Editable">{{ scope.row.Z }}</span>
                     <el-input
@@ -241,7 +231,7 @@ onMounted(() => {
                     ></el-input>
                   </template>
                 </el-table-column>
-                <el-table-column align="center" label="Y" width="85">
+                <el-table-column align="center" label="Y" width="85" v-if="false">
                   <template #default="scope">
                     <span v-show="!macro.Editable">{{ scope.row.Y }}</span>
                     <el-input
@@ -273,27 +263,17 @@ onMounted(() => {
               </div>
             </el-space>
             <el-row
+              v-if="!macro.Editable"
               class="buttonArea"
-              style="margin-top: 5px"
               :style="{ maxHeight: macro.Editable ? '100px' : null, opacity: macro.Editable ? 1 : null }"
             >
-              <el-button
-                type="primary"
-                v-show="!macro.Editable"
-                :icon="Edit"
-                circle
-                @click="macroStore.editMacroPlace(macro)"
-              />
-              <el-button
-                type="success"
-                v-show="macro.Editable"
-                :icon="Check"
-                circle
-                @click="macroStore.submitMacroPlace(macro)"
-              />
-              <el-button type="danger" :icon="Delete" circle @click="macroStore.deleteMacro(macro)" />
+              <el-button :icon="Edit" @click="macroStore.editMacroPlace(macro)">编辑</el-button>
               <!-- <el-button type="primary" @click="macroStore.doLocalWayMark(macro.Place)">本地</el-button> -->
-              <el-button type="primary" plain @click="macroStore.doSlotWayMark(macro.Place)">插槽</el-button>
+              <el-button type="primary" @click="macroStore.doSlotWayMark(macro.Place)">写入标点预设</el-button>
+            </el-row>
+            <el-row v-if="macro.Editable" class="buttonAreaEditing">
+              <el-button type="success" :icon="Check" @click="macroStore.submitMacroPlace(macro)">完成</el-button>
+              <el-button type="danger" :icon="Delete" @click="macroStore.deleteMacro(macro)">删除</el-button>
             </el-row>
           </div>
         </el-card>
@@ -322,14 +302,18 @@ onMounted(() => {
   pointer-events: initial;
 }
 .main-box-card {
-  max-width: 500px;
+  // max-width: 500px;
   :deep(a) {
     color: blue;
     padding: 0.5em;
     font-weight: 700;
     font-size: 14px;
   }
+  .buttonAreaEditing {
+    margin-top: 5px;
+  }
   .buttonArea {
+    margin-top: 5px;
     max-height: 0;
     overflow: hidden;
     opacity: 0.5;
