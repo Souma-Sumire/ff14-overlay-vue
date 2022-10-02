@@ -42,7 +42,7 @@ export default defineConfig({
       // deleteOriginFile: true,
     }),
     AutoImport({
-      imports: ["vue", "vue-router", "@vueuse/core"],
+      imports: ["vue", "vue-router", "@vueuse/core", "vue/macros"],
       dts: "./src/types/auto-imports.d.ts",
       resolvers: [ElementPlusResolver()],
     }),
