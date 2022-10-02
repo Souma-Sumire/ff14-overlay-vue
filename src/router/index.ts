@@ -19,6 +19,7 @@ const routeTitles = new Map(
     "dsrp6": "绝龙诗P6",
     "obs": "obs自动录制",
     "zoneMacro": "副本宏",
+    "fflogsUploaderDownload": "今天FFLogsUploader更新了吗？",
   }),
 );
 router.getRoutes().forEach((route) => (route.meta.title = routeTitles.get(route.name?.toString() ?? "")));
