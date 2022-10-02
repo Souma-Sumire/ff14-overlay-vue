@@ -23,7 +23,7 @@
 
 <script lang="ts" setup>
 // import "../common/hasOverlayPluginApi";
-import { useActionStore } from "../store/action";
+import { useActionStore } from "@/store/action";
 addOverlayListener("LogLine", handleLogLine);
 startOverlayEvents();
 const actionStore = useActionStore();

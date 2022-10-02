@@ -385,13 +385,14 @@ $color: rgba(
   $alpha: 0.8,
 );
 @font-face {
-  font-family: AccidentalPresidency;
+  font-family: "AccidentalPresidency";
   src: url(@/common/font/AccidentalPresidency.ttf);
 }
-@font-face {
-  font-family: SourceHanSansCN;
-  src: url("//ffxiv-res.diemoe.net/SourceHanSansCN-Bold.otf");
-}
+// @font-face {
+//   font-family: SourceHanSansCN;
+//   src: url("@/common/font/SourceHanSansCN-Bold.otf");
+// }
+
 #warpper {
   float: left;
   position: fixed;
@@ -435,7 +436,7 @@ $color: rgba(
   }
   > main {
     width: 360px;
-    font-family: SourceHanSansCN;
+    font-family: 'SourceHanSansCN';
     font-size: 22px;
     overflow-x: hidden;
     // overflow-y: hidden;
