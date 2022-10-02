@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import OBSWebSocket from "obs-websocket-js";
 import README from "./README.md";
+import "github-markdown-css/github-markdown-light.css";
 // import "../common/hasOverlayPluginApi";
 let inACTCombat = false;
 const data = useStorage(
@@ -127,7 +128,7 @@ onBeforeUnmount(async () => {
     <p>状态：{{ state.status }}</p>
     <button :disabled="state.connect" @click="handleClickToConnect">连接</button>
     <button :disabled="!state.connect" @click="handleClickToDisconnect">断开</button>
-    <button :disabled="!state.connect" @click="showPage = false">隐藏页面</button>
+    <button @click="showPage = false">隐藏页面</button>
     <button v-if="!state.connect" @click="toggleHelp()">查看帮助</button>
   </div>
 </template>
