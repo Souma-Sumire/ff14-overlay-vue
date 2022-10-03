@@ -20,11 +20,19 @@ let timelineCurrentlyEditing: { timeline: ITimeline } = reactive({
   timeline: { name: "空", condition: { zoneId: "0", job: "NONE" }, timeline: "空", codeFight: "空", create: "空" },
 });
 const isWSMode = location.href.includes("OVERLAY_WS=");
-const debounceTimeline = useDebounce(
-  computed(() => timelineStore.parseTimeline(timelineCurrentlyEditing.timeline.timeline)),
-  500,
-  { maxWait: 5000 },
-);
+const transmissionTimeline = ref(timelineStore.parseTimeline(timelineCurrentlyEditing.timeline.timeline));
+async function updateTransmissionTimeline() {
+  await Swal.fire({
+    text: "正在更新预览",
+    showConfirmButton: false,
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    allowEnterKey: false,
+    timer: 250,
+  });
+  transmissionTimeline.value = timelineStore.parseTimeline(timelineCurrentlyEditing.timeline.timeline);
+  Swal.close();
+}
 const debounceJobCN = useDebounce(
   computed(() => Util.getBattleJobs2()),
   500,
@@ -109,6 +117,7 @@ function newDemoTimeline(): void {
 
 function editTimeline(timeline: ITimeline): void {
   timelineCurrentlyEditing.timeline = timeline;
+  updateTransmissionTimeline();
 }
 
 //删除某时间轴 来自点击事件
@@ -213,29 +222,19 @@ function importTimelines(): void {
     }
   });
 }
-
-// function checkTimelineRaw(timeline: ITimeline): void {
-//   const re = new RegExp(timelineStore.reg);
-//   let errorList: { t: string; index: number }[] = [];
-//   const everyLine = timeline.timeline.split("\n");
-//   everyLine.forEach((t, index) => {
-//     if (!re.test(t) && !/^#/.test(t) && !/^\/\//.test(t)) {
-//       errorList.push({ t, index });
-//     }
-//   });
-//   Swal.fire({
-//     title: `正确：${everyLine.length - errorList.length}，错误：${errorList.length}。`,
-//     html: `${
-//       errorList.length > 0
-//         ? errorList.map((v) => `<p style="white-space: nowrap;">第${v.index + 1}行：${v.t}</p>`).join("")
-//         : ""
-//     }`,
-//   });
-//   // return errorList.length > 0;
-// }
 function readMe(): void {
   router.push("/timeline/help");
 }
+const timeMinuteSecondDisplay = computed(() => {
+  return (
+    (simulatedCombatTime.value < 0 ? "-" : "") +
+    (Array(2).join("0") + (Math.floor(simulatedCombatTime.value / 60) + (simulatedCombatTime.value < 0 ? 1 : 0))).slice(
+      -2,
+    ) +
+    ":" +
+    (Array(2).join("0") + Math.floor(simulatedCombatTime.value % 60)).slice(-2)
+  );
+});
 </script>
 <template>
   <el-container class="container">
@@ -291,6 +290,7 @@ function readMe(): void {
         <div class="slider-demo-block">
           <span>模拟时间：</span>
           <el-slider v-model="simulatedCombatTime" :min="-30" :max="1500" :step="0.1" show-input> </el-slider>
+          <div>{{ timeMinuteSecondDisplay }}</div>
         </div>
         <el-row class="timeline-info">
           <div>
@@ -341,13 +341,14 @@ function readMe(): void {
               wrap="off"
               placeholder="请键入时间轴文本"
               style="max-width: 569px"
+              @change="updateTransmissionTimeline()"
             />
           </div>
           <div style="max-height: 353px">
             <div class="timeline-timeline-view">
               <TimelineTimelineShow
                 :config="timelineStore.configValues"
-                :lines="debounceTimeline"
+                :lines="transmissionTimeline"
                 :runtime="simulatedCombatTime"
                 :show-style="timelineStore.showStyle"
               ></TimelineTimelineShow>
@@ -360,9 +361,8 @@ function readMe(): void {
       <el-card v-if="timelines.length > 0">
         <el-table
           :data="timelines"
-          stripe
           style="width: 100%"
-          :default-sort="{ prop: 'conditon.job', order: 'descending' }"
+          stripe
         >
           <el-table-column prop="name" label="名称" sortable> </el-table-column>
           <el-table-column prop="conditon" label="地图" sortable>
