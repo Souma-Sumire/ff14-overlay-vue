@@ -288,7 +288,7 @@ export const useMacroStore = defineStore("macro", {
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
         confirmButtonText: "仅写入",
-        showDenyButton: true,
+        showDenyButton: this.selectZone === this.zoneNow,
         denyButtonText: "写入且标记",
         cancelButtonText: "不，再想想",
         input: "number",
@@ -365,18 +365,20 @@ export const useMacroStore = defineStore("macro", {
         const echoSwitch = e.line[4].match(/^(?:发宏|宏|macro)\s*(?<channel>e|p)?.*/i);
         if (echoSwitch) {
           const channel: "e" | "p" = echoSwitch?.groups?.channel ?? "e";
-          const macro = this.data.zoneId[this.zoneNow].filter((v) => v.Type === "macro");
-          if (macro.length === 1 && macro[0].Type === "macro") {
+          const macro = this.data.zoneId[this.zoneNow]?.filter((v) => v.Type === "macro");
+          if (!macro) doTextCommand("/e 当前地图没有宏<se.3>");
+          else if (macro.length === 1 && macro[0].Type === "macro") {
             macroCommand(macro[0].Text, channel);
           } else if (macro.length > 1) {
             doTextCommand("/e 本地图存在多个宏，无法使用快捷发宏，请手动在网页中指定。");
-          } else doTextCommand("/e 当前地图没有宏<se.3>");
+          }
           return;
         }
         // const echoWayMarkLocal = (e.line[4] as string).match(/^本地标点/);
         // if (echoWayMarkLocal) {
-        //   const place = this.data.zoneId[this.zoneNow].filter((v) => v.Type === "place");
-        //   if (place.length === 1) {
+        //   const place = this.data.zoneId[this.zoneNow]?.filter((v) => v.Type === "place");
+        //   if (!place) doTextCommand("/e 当前地图没有标点<se.3>");
+        //   else if (place.length === 1) {
         //     doWayMarks((place[0] as MacroInfoPlace).Place!);
         //   } else if (place.length > 1) {
         //     doTextCommand("/e 本地图存在多个场景标记，无法使用快捷本地标点，请手动在网页中指定。");
@@ -386,8 +388,9 @@ export const useMacroStore = defineStore("macro", {
         const echoSlot = (e.line[4] as string).match(/^(?:标点|标记|场景标记|place)(?:插槽|预设|)\s*(?<slot>[1-5])?.*/);
         if (echoSlot) {
           const slotIndex: 1 | 2 | 3 | 4 | 5 = Number(echoSlot?.groups?.slot ?? 5) as 1 | 2 | 3 | 4 | 5;
-          const place = this.data.zoneId[this.zoneNow].filter((v) => v.Type === "place");
-          if (place.length === 1) {
+          const place = this.data.zoneId[this.zoneNow]?.filter((v) => v.Type === "place");
+          if (!place) doTextCommand("/e 当前地图没有标点<se.3>");
+          else if (place.length === 1) {
             doInsertPreset(Number(this.zoneNow), (place[0] as MacroInfoPlace).Place!, slotIndex);
           } else if (place.length > 1) {
             doTextCommand("/e 本地图存在多个场景标记预设，无法使用快捷插槽，请手动在网页中指定。");
