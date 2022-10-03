@@ -42,7 +42,7 @@ claerFFlogsQueryConfig();
 
 //fflogs导入第1步：用户点击查询按钮
 function queryFFlogsReportFights(url: string) {
-  Swal.fire({ text: "正在解析数据，耗时可能较长，请耐心等待。(步骤1/3)", showConfirmButton: false });
+  Swal.fire({ text: "正在解析数据 (步骤1/3)", showConfirmButton: false });
   claerFFlogsQueryConfig();
   queryText.value = QueryTextEnum.querying;
   let reg = url.match(urlRe);
@@ -128,7 +128,7 @@ async function handleFFlogsQueryResultFriendliesList(player: Friendlies) {
 
 //fflogs导入第3步：通过API获取选定玩家所有casts
 async function queryFFlogsReportEvents() {
-  Swal.fire({ text: "正在解析数据，耗时可能较长，请耐心等待。(步骤2/3)", showConfirmButton: false });
+  Swal.fire({ text: "正在解析数据，请耐心等待。(步骤2/3)", showConfirmButton: false });
   let resEvents: FFlogsApiV1ReportEvents[] = [];
   fflogsQueryConfig.abilityFilterEvents.length = 0;
   async function queryFriendly(startTime: number) {
@@ -211,7 +211,7 @@ async function queryFFlogsReportEvents() {
 
 //fflogs导入第4步：用户选好了过滤器
 function handeleFFlogsQueryResultFriendiesListFilter() {
-  Swal.fire({ text: "正在解析数据，耗时可能较长，请耐心等待。(步骤3/3)", showConfirmButton: false });
+  Swal.fire({ text: "正在解析数据 (步骤3/3)", showConfirmButton: false });
   //保存过滤器
   if (fflogsQueryConfig.player.icon) {
     props.filters[fflogsQueryConfig.player.icon] = JSON.parse(JSON.stringify(fflogsQueryConfig.abilityFilterSelected));
