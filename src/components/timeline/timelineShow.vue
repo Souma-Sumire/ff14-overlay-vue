@@ -65,16 +65,16 @@ $trasDuration: 1;
     height: calc(48px * var(--normal-scale, $normalScale));
     &.fade {
       animation: myfade calc(var(--tras-duration, $trasDuration) * 1s) 1 forwards !important;
-      height: calc(40px * var(--up-coming-scale, $upComingScale));
+      height: calc(48px * var(--up-coming-scale, $upComingScale));
     }
     @keyframes myfade {
       0% {
         opacity: 1;
-        height: calc(40px * var(--up-coming-scale, $upComingScale));
+        height: calc(48px * var(--up-coming-scale, $upComingScale));
       }
       50% {
         opacity: 0;
-        height: calc(40px * var(--up-coming-scale, $upComingScale));
+        height: calc(48px * var(--up-coming-scale, $upComingScale));
       }
       100% {
         height: 0px;
