@@ -169,11 +169,14 @@ export const useTimelineStore = defineStore("timeline", {
       }
     },
     sortTimelines() {
-      this.allTimelines.sort((a, b) =>
-        a.condition.job === b.condition.job
-          ? Number(a.condition.zoneId) - Number(b.condition.zoneId)
-          : Util.jobToJobEnum(a.condition.job) - Util.jobToJobEnum(b.condition.job),
-      );
+      this.allTimelines.sort((a, b) => {
+        // a.condition.job === b.condition.job
+        //   ? Number(a.condition.zoneId) - Number(b.condition.zoneId)
+        //   : Util.jobToJobEnum(a.condition.job) - Util.jobToJobEnum(b.condition.job),
+        if (Number(a.condition.zoneId) === Number(b.condition.zoneId))
+          return Util.jobToJobEnum(a.condition.job) - Util.jobToJobEnum(b.condition.job);
+        return Number(a.condition.zoneId) - Number(b.condition.zoneId);
+      });
     },
   },
 });
