@@ -385,13 +385,19 @@ export const useMacroStore = defineStore("macro", {
         //   }
         //   return;
         // }
-        const echoSlot = (e.line[4] as string).match(/^(?:标点|标记|场景标记|place)(?:插槽|预设|)\s*(?<slot>[1-5])?.*/);
+        const echoSlot = (e.line[4] as string).match(
+          /^(?:标点|标记|场景标记|place)(?:插槽|预设|)\s*(?<slot>[1-5])?.*?(?<mark>[!！])?/i,
+        );
         if (echoSlot) {
           const slotIndex: 1 | 2 | 3 | 4 | 5 = Number(echoSlot?.groups?.slot ?? 5) as 1 | 2 | 3 | 4 | 5;
           const place = this.data.zoneId[this.zoneNow]?.filter((v) => v.Type === "place");
           if (!place) doTextCommand("/e 当前地图没有标点<se.3>");
           else if (place.length === 1) {
             doInsertPreset(Number(this.zoneNow), (place[0] as MacroInfoPlace).Place!, slotIndex);
+            doTextCommand(`/e 已写入第${slotIndex}格<se.9>`);
+            if (echoSlot?.groups?.mark) {
+              doQueueActions([{ c: "DoTextCommand", p: `/waymark preset ${slotIndex}`, d: 500 }]);
+            }
           } else if (place.length > 1) {
             doTextCommand("/e 本地图存在多个场景标记预设，无法使用快捷插槽，请手动在网页中指定。");
           }
