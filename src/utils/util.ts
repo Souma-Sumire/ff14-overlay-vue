@@ -1,5 +1,5 @@
 import { FFIcon } from "../types/Fflogs";
-import { Job, Role } from "../types/Job";
+import { FullJob, Job, Role } from "../types/Job";
 
 const iconToJobEnum: Record<FFIcon, number> = {
   NONE: 0,
@@ -66,6 +66,49 @@ const nameToJobEnum: Record<Job, number> = {
   DNC: 38,
   RPR: 39,
   SGE: 40,
+};
+const nameToFullName: Record<Job, FullJob> = {
+  NONE: "none",
+  GLA: "gladiator",
+  PGL: "pugilist",
+  MRD: "marauder",
+  LNC: "lancer",
+  ARC: "arcanist",
+  CNJ: "conjurer",
+  THM: "thaumaturge",
+  CRP: "carpenter",
+  BSM: "blacksmith",
+  ARM: "armorer",
+  GSM: "goldsmith",
+  LTW: "leatherworker",
+  WVR: "weaver",
+  ALC: "alchemist",
+  CUL: "culinarian",
+  MIN: "miner",
+  BTN: "botanist",
+  FSH: "fisher",
+  PLD: "paladin",
+  MNK: "monk",
+  WAR: "warrior",
+  DRG: "dragoon",
+  BRD: "bard",
+  WHM: "whitemage",
+  BLM: "blackmage",
+  ACN: "arcanist",
+  SMN: "summoner",
+  SCH: "scholar",
+  ROG: "rogue",
+  NIN: "ninja",
+  MCH: "machinist",
+  DRK: "darkknight",
+  AST: "astrologian",
+  SAM: "samurai",
+  RDM: "redmage",
+  BLU: "blackmage",
+  GNB: "gunbreaker",
+  DNC: "dancer",
+  RPR: "reaper",
+  SGE: "sage",
 };
 const nameToCN: Record<Job, { full: string; simple1: string; simple2: string }> = {
   NONE: { full: "无", simple2: "无", simple1: "无" },
@@ -183,6 +226,9 @@ const Util = {
   },
   iconToJobEnum: (icon: FFIcon) => {
     return iconToJobEnum[icon] ?? 0;
+  },
+  nameToFullName: (job: Job): FullJob => {
+    return nameToFullName[job] ?? "none";
   },
 } as const;
 
