@@ -20,10 +20,10 @@ onBeforeUnmount(() => {
   <div class="common-layout">
     <el-container>
       <el-header height="0px" p-0>
-        <CastingMonitorPartyHeader />
+        <casting-monitor-header />
       </el-header>
       <el-main>
-        <casting-monitor-monitor-main />
+        <casting-monitor-main />
       </el-main>
     </el-container>
   </div>
