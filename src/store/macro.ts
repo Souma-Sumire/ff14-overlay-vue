@@ -362,15 +362,18 @@ export const useMacroStore = defineStore("macro", {
     },
     handleLogLine(e: any) {
       if (e.line[2] === "0038") {
-        const echoSwitch = e.line[4].match(/^(?:发宏|宏|macro)\s*(?<channel>e|p)?.*/i);
+        const echoSwitch = e.line[4].match(/^(?:发宏|宏|macro)\s*(?<channel>e|p)?(?<party>[!！])?\s*$/i);
         if (echoSwitch) {
-          const channel: "e" | "p" = echoSwitch?.groups?.channel ?? "e";
+          const channel: "e" | "p" = echoSwitch?.groups?.party ? "p" : echoSwitch?.groups?.channel ?? "e";
           const macro = this.data.zoneId[this.zoneNow]?.filter((v) => v.Type === "macro");
-          if (!macro) doTextCommand("/e 当前地图没有宏<se.3>");
-          else if (macro.length === 1 && macro[0].Type === "macro") {
+          if (macro?.length === 0 || !macro) {
+            doTextCommand("/e 当前地图没有宏<se.3>");
+          } else if (macro.length === 1 && macro[0].Type === "macro") {
             macroCommand(macro[0].Text, channel);
           } else if (macro.length > 1) {
             doTextCommand("/e 本地图存在多个宏，无法使用快捷发宏，请手动在网页中指定。");
+          } else {
+            console.error(macro);
           }
           return;
         }
@@ -386,13 +389,14 @@ export const useMacroStore = defineStore("macro", {
         //   return;
         // }
         const echoSlot = (e.line[4] as string).match(
-          /^(?:标点|标记|场景标记|place)(?:插槽|预设|)\s*(?<slot>[1-5])?.*?(?<mark>[!！])?/i,
+          /^(?:标点|标记|场景标记|place)(?:插槽|预设|)\s*(?<slot>[1-5])?.*?(?<mark>[!！])?\s*$/i,
         );
         if (echoSlot) {
           const slotIndex: 1 | 2 | 3 | 4 | 5 = Number(echoSlot?.groups?.slot ?? 5) as 1 | 2 | 3 | 4 | 5;
           const place = this.data.zoneId[this.zoneNow]?.filter((v) => v.Type === "place");
-          if (!place) doTextCommand("/e 当前地图没有标点<se.3>");
-          else if (place.length === 1) {
+          if (place?.length === 0 || !place) {
+            doTextCommand("/e 当前地图没有标点<se.3>");
+          } else if (place.length === 1) {
             doInsertPreset(Number(this.zoneNow), (place[0] as MacroInfoPlace).Place!, slotIndex);
             doTextCommand(`/e 已写入第${slotIndex}格<se.9>`);
             if (echoSlot?.groups?.mark) {
@@ -400,6 +404,8 @@ export const useMacroStore = defineStore("macro", {
             }
           } else if (place.length > 1) {
             doTextCommand("/e 本地图存在多个场景标记预设，无法使用快捷插槽，请手动在网页中指定。");
+          } else {
+            console.error(place);
           }
           return;
         }

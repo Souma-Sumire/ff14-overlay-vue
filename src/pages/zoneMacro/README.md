@@ -40,15 +40,15 @@
 
 `/e marco <channel>`
 
-macro：也可以写作 "宏" "发宏"
+macro：也可以写作 "宏" "发宏" "macro"
 
-channel：发言频道。默语为e，小队为p，忽略为e
+channel：发言频道。默语为e，小队为p或者叹号 `!`，忽略为e
 
 #### 标点预设写入插槽
 
 `/e place <num>`
 
-place：也可以写作"标点" "标记" "场景标记"
+place：也可以写作"标点" "标记" "场景标记" "place"
 
 num：存档编号1-5，省略为5
 
@@ -61,6 +61,7 @@ num：存档编号1-5，省略为5
 * [FFXIVWaymarkPresets/wiki](https://github.com/Em-Six/FFXIVWaymarkPresets/wiki)
 * [FF14标点大全](https://docs.qq.com/sheet/DY0ttR2xQT1Vjc2V4?tab=BB08J2)
 * [NGA副本迷宫开门到打完系列](https://nga.178.com/read.php?pid=369819381)
+* [素素攻略站](https://www.ffxiv.cn/v2/)
 
 ## 感谢
 
