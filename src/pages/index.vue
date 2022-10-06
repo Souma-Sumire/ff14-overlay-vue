@@ -39,17 +39,15 @@ function handleClickMenu(menu: Menu) {
       <el-header><h1>主页导航</h1></el-header>
       <el-main>
         <el-table :data="menu" :show-header="false">
-          <el-table-column label="类型" width="80">
+          <el-table-column label="跳转" width="100%">
+            <template #default="scope"> <el-button @click="handleClickMenu(scope.row)">跳转</el-button> </template>
+          </el-table-column>
+          <el-table-column label="类型" width="100%">
             <template #default="scope">
               <el-tag :type="buttonType[(scope.row as Menu ).type]" effect="dark">{{ scope.row.type }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="title" label="标题" width="180" />
-          <el-table-column label="跳转">
-            <template #default="scope">
-              <el-button @click="handleClickMenu(scope.row)">跳转</el-button>
-            </template>
-          </el-table-column>
+          <el-table-column prop="title" label="标题" />
         </el-table>
       </el-main>
     </el-container>
