@@ -2,6 +2,7 @@
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 onErrorCaptured((err) => {
+  console.trace(err);
   Swal.fire({
     icon: "error",
     title: "未知错误",
