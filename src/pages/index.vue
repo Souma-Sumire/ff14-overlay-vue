@@ -10,13 +10,13 @@ interface Menu {
 }
 const menu: Menu[] = [
   { title: "FFLOGS上传器加速下载", type: "网页", path: "fflogsUploaderDownload" },
-  { title: "副本宏整理", type: "网页", path: "zoneMacro?OVERLAY_WS=ws://127.0.0.1:10501/ws" },
-  { title: "时间轴悬浮窗", type: "悬浮窗", path: "timeline" },
-  { title: "副本区信息显示", type: "悬浮窗", path: "instancedAreaInfo" },
-  { title: "龙诗P6修血记录", type: "悬浮窗", path: "dsrP6" },
+  { title: "全副本一键发宏/一键标点", type: "网页", path: "zoneMacro?OVERLAY_WS=ws://127.0.0.1:10501/ws" },
+  { title: "自定义的时间轴悬浮窗", type: "悬浮窗", path: "timeline" },
+  { title: "换线小助手", type: "悬浮窗", path: "instancedAreaInfo" },
+  { title: "绝龙诗P6修血记录", type: "悬浮窗", path: "dsrP6" },
   { title: "OBS自动录制", type: "悬浮窗", path: "obs" },
-  { title: "舞台节目单", type: "网页", path: "stageProgramme" },
-  { title: "其他悬浮窗", type: "网页", path: "other" },
+  { title: "风格化舞台节目单", type: "网页", path: "stageProgramme" },
+  { title: "以前的悬浮窗", type: "网页", path: "other" },
   { title: "国际服汉化补丁", type: "网页", path: "ffxiv_zhpatch" },
 ];
 const buttonType: Record<MenuType, ButtonType> = { "网页": "", "悬浮窗": "success" };
