@@ -8,13 +8,16 @@ const castingMonitorStore = useCastingMonitorStore();
   <div>
     <el-button-group>
       <el-button
-        v-for="(item, index) in castingMonitorStore.partyData"
+        v-for="(item, index) in castingMonitorStore.partyDataFormatted"
         :key="index"
         plain
         size="small"
         @click="castingMonitorStore.changeTarget(item.id)"
       >
-        {{ Util.nameToCN(Util.jobEnumToJob(item.job as number)).simple2 }}
+        <div flex="~ nowrap items-end" style="align-items: flex-end">
+          <img :src="castingMonitorStore.getClassjobIconSrc(item.job, 'companion')" style="height: 1.5em" />
+          {{ Util.nameToCN(Util.jobEnumToJob(item.job as number)).simple2 }}
+        </div>
       </el-button>
     </el-button-group>
   </div>

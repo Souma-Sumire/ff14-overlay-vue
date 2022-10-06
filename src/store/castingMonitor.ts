@@ -1,4 +1,7 @@
+import { getParams } from "@/utils/queryParams";
+import Util from "@/utils/util";
 import { defineStore } from "pinia";
+const THNSort = ["tank", "healer", "dps", "crafter", "gatherer", "none"];
 export const useCastingMonitorStore = defineStore("castingMonitor", {
   state: () => {
     return {
@@ -17,7 +20,16 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
       ] as { id: string; name: string; job: number; inParty: boolean }[]),
     };
   },
-  getters: {},
+  getters: {
+    partyDataFormatted(state) {
+      return state.partyData.sort((a, b) => {
+        return (
+          THNSort.indexOf(Util.jobToRole(Util.jobEnumToJob(a.job))) -
+          THNSort.indexOf(Util.jobToRole(Util.jobEnumToJob(b.job)))
+        );
+      });
+    },
+  },
   actions: {
     handleChangePrimaryPlayer(e: any): void {
       this.playerId = e?.charID?.toString(16)?.toUpperCase();
@@ -42,6 +54,12 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
       if (e.source === "castMonitorOverlay" && e.msg.targetId) {
         this.focusTargetId = e.msg.targetId;
       }
+    },
+    getClassjobIconSrc(jobNumber: number, iconType: "companion" | "1"): string {
+      let site = `http://cafemaker.wakingsands.com`;
+      if (getParams().apiVersion && getParams().apiVersion.toLowerCase() === "international")
+        site = `https://xivapi.com`;
+      return `${site}/cj/${iconType}/${Util.nameToFullName(Util.jobEnumToJob(jobNumber) ?? "NONE").toLowerCase()}.png`;
     },
   },
 });
