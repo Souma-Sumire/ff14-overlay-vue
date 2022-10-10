@@ -14,6 +14,7 @@
     "@volar/pug-language-service": "^0.40.13",
     "@volar/typescript-language-service": "^0.40.13",
     "@volar/vue-language-service": "^0.40.13",
+    "@vue/compiler-sfc": "^3.2.40",
     "@vueuse/core": "^9.3.0",
     "animate.css": "^4.1.1",
     "axios": "^0.26.1",
@@ -29,6 +30,7 @@
     "sweetalert2": "^11.4.34",
     "vue": "^3.2.39",
     "vue-router": "^4.1.5",
+    "vue-tsc": "^1.0.0",
     "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
@@ -42,7 +44,6 @@
     "vite": "^2.9.15",
     "vite-plugin-compression": "^0.5.1",
     "vite-plugin-pages": "^0.26.0",
-    "vite-plugin-vue-markdown": "^0.22.1",
-    "vue-tsc": "^0.40.13"
+    "vite-plugin-vue-markdown": "^0.22.1"
   }
 }
