@@ -22,7 +22,6 @@
 </template>
 
 <script lang="ts" setup>
-// import "../common/hasOverlayPluginApi";
 import { useActionStore } from "@/store/action";
 addOverlayListener("LogLine", handleLogLine);
 startOverlayEvents();
@@ -37,24 +36,22 @@ const actionTimeline: { show: boolean; data: { xie: string[]; xieHP: string; she
     data: [],
     show: false,
   });
-const hp: { xie: number; sheng: number } = { xie: 0, sheng: 0 };
+const HP = { xie: 0, sheng: 0 };
 let baseTime = 0;
 function createACompleteImg(url = "000000/000405"): string {
   return siteImg + "/" + url + ".png";
 }
 function handleLogLine(e: { line: string[] }): void {
-  if (baseTime === 0 && e.line[0] === "20" && /^6D41$/.test(e.line[4])) {
+  if (e.line[0] === "20" && /^6D41$/.test(e.line[4])) {
     actionTimeline.data.length = 0;
     actionTimeline.show = true;
-    actionTimeline.data[0] = { xie: [], sheng: [], xieHP: "0", shengHP: "0" };
+    actionTimeline.data.push({ xie: [], sheng: [], xieHP: "0", shengHP: "0" });
     baseTime = new Date().getTime();
-    setTimeout(() => {
-      baseTime = 0;
-    }, 7700);
+    setTimeout(() => (baseTime = 0), 7700);
   } else if (e.line[0] === "20" && /^(?:63C8|6D21)$/.test(e.line[4])) {
     actionTimeline.data.length = 0;
     actionTimeline.show = false;
-    actionTimeline.data[0] = { xie: [], sheng: [], xieHP: "0", shengHP: "0" };
+    actionTimeline.data.push({ xie: [], sheng: [], xieHP: "0", shengHP: "0" });
   } else if (
     baseTime > 0 &&
     (e.line[0] === "21" || e.line[0] === "22") &&
@@ -64,19 +61,16 @@ function handleLogLine(e: { line: string[] }): void {
     if (e.line[4] === "07" || e.line[4] === "08") return;
     const timeIndex = Math.round((new Date().getTime() - baseTime) / 1000);
     if (actionTimeline.data[timeIndex] === undefined)
-      actionTimeline.data[timeIndex] = { xie: [], sheng: [], xieHP: hp.xie.toFixed(1), shengHP: hp.sheng.toFixed(1) };
-    // console.log(1, actionTimeline.data[timeIndex].xieHP.toString(), actionTimeline.data[timeIndex].shengHP.toString());
+      actionTimeline.data[timeIndex] = { xie: [], sheng: [], xieHP: HP.xie.toFixed(1), shengHP: HP.sheng.toFixed(1) };
     const img = createACompleteImg(actionStore.getActionById(parseInt(e.line[4], 16))?.Url);
     if (targetName.xie.includes(e.line[7])) {
-      hp.xie = (Number(e.line[24]) / Number(e.line[25])) * 100;
+      HP.xie = (Number(e.line[24]) / Number(e.line[25])) * 100;
       actionTimeline.data[timeIndex].xie.push(img);
-      actionTimeline.data[timeIndex].xieHP = hp.xie.toFixed(1);
-      // console.log(2.1, actionTimeline.data[timeIndex].xieHP.toString());
+      actionTimeline.data[timeIndex].xieHP = HP.xie.toFixed(1);
     } else if (targetName.sheng.includes(e.line[7])) {
-      hp.sheng = (Number(e.line[24]) / Number(e.line[25])) * 100;
+      HP.sheng = (Number(e.line[24]) / Number(e.line[25])) * 100;
       actionTimeline.data[timeIndex].sheng.push(img);
-      actionTimeline.data[timeIndex].shengHP = hp.sheng.toFixed(1);
-      // console.log(2.2, actionTimeline.data[timeIndex].shengHP.toString());
+      actionTimeline.data[timeIndex].shengHP = HP.sheng.toFixed(1);
     }
   }
 }
