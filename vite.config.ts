@@ -31,7 +31,7 @@ export default defineConfig({
     // },
   },
   plugins: [
-    Vue({ include: [/\.vue$/, /\.md$/] }),
+    Vue({ include: [/\.vue$/, /\.md$/i] }),
     viteCompression({
       verbose: false,
       filter: /\.(js|mjs|json|css)$/i,
@@ -57,7 +57,7 @@ export default defineConfig({
       presets: [presetUno(), presetAttributify(), presetIcons()],
     }),
     Pages(),
-    Markdown(),
+    Markdown({ headEnabled: true }),
   ],
   css: {
     postcss: {
