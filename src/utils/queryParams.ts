@@ -1,6 +1,9 @@
-function queryString(str: string) {
+function queryString(str?: string) {
+  if (!str) return {};
   let params = str.split("?")[1];
+  if (!params) return {};
   let param = params.split("&");
+  if (!param) return {};
   let obj: any = {};
   for (let i = 0; i < param.length; i++) {
     let paramsA = param[i].split("=");
