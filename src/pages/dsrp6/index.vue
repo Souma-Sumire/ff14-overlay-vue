@@ -10,10 +10,10 @@
         <li class="li-main" v-for="(second, i) in actionTimeline.data" :key="i">
           <aside>{{ i }}</aside>
           <div class="xie">
-            {{ second?.xieHP ?? "" }}%<img v-for="(src, j) in second.xie" :key="j" :src="src" alt="" />
+            {{ second?.xieHP ?? "" }}%<img v-for="(src, j) in second?.xie" :key="j" :src="src" alt="" />
           </div>
           <div class="sheng">
-            {{ second?.shengHP ?? "" }}%<img v-for="(src, j) in second.sheng" :key="j" :src="src" alt="" />
+            {{ second?.shengHP ?? "" }}%<img v-for="(src, j) in second?.sheng" :key="j" :src="src" alt="" />
           </div>
         </li>
       </ul>
@@ -55,8 +55,8 @@ function handleLogLine(e: { line: string[] }): void {
   } else if (
     baseTime > 0 &&
     (e.line[0] === "21" || e.line[0] === "22") &&
-    e.line[2][0] === "1" &&
-    e.line[6][0] === "4"
+    e.line?.[2]?.[0] === "1" &&
+    e.line?.[6]?.[0] === "4"
   ) {
     if (e.line[4] === "07" || e.line[4] === "08") return;
     const timeIndex = Math.round((new Date().getTime() - baseTime) / 1000);
