@@ -12,22 +12,28 @@ const animals: Record<Animals, string> = {
   "kangaroo": "袋鼠",
 };
 const img = ref("");
-const fact = ref("");
+const text = ref("");
 async function getAnimal(animal: Animals) {
+  text.value = "正在加载...";
+  img.value = "";
   const res = await fetch(`https://some-random-api.ml/animal/${animal}`);
   const json = await res.json();
   img.value = json.image;
-  fact.value = json.fact;
+  text.value = json.fact;
 }
 getAnimal("cat");
 </script>
 
 <template>
-  <div>
+  <el-header>
     <el-button v-for="animal in Object.keys(animals)" :key="animal" @click="getAnimal(animal as Animals)">
       {{ animals[animal as Animals] }}
     </el-button>
-    <img :src="img" max-w-sm />
-    <p>{{ fact }}</p>
-  </div>
+  </el-header>
+  <el-main>
+    <el-card style="width: 500px">
+      <p>{{ text }}</p>
+      <img :src="img" style="width: 100%" />
+    </el-card>
+  </el-main>
 </template>
