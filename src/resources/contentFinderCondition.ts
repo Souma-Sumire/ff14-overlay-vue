@@ -1,4 +1,4 @@
-//A: =B5&":"&D5&","
+//A: =B4&":"&D4&","
 const contentFinderCondition: Record<number, number> = {
   0: 0,
   1: 1039,
@@ -868,7 +868,7 @@ const contentFinderCondition: Record<number, number> = {
   865: 1049,
   866: 1054,
   867: 1052,
-  868: 0,
+  868: 1069,
   869: 1070,
   870: 1071,
   871: 1072,
@@ -878,8 +878,8 @@ const contentFinderCondition: Record<number, number> = {
   875: 1090,
   876: 1085,
   877: 1086,
-  878: 0,
-  879: 0,
+  878: 1075,
+  879: 1076,
   880: 1083,
   881: 1084,
   882: 0,
