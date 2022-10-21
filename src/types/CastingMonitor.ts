@@ -1,9 +1,8 @@
 interface Cast {
-  casterId: string;
-  casterName: string;
-  targetId?: string;
-  targetName?: string;
-  abilityId: string;
-  abilityNameForLog: string;
-  abilityNameForCN: string;
+  src: string;
+  time: number;
+  class: string;
+  key: symbol;
+  type: number;
+  loaded: boolean;
 }

@@ -5,16 +5,17 @@ const castingMonitorStore = useCastingMonitorStore();
 
 <template>
   <div w-100vw flex="~ nowrap" class="main">
-    <div v-for="(actor, i1) in castingMonitorStore.castData" :key="i1">
+    <div v-for="(casts, castersId) in castingMonitorStore.castData" :key="castersId" :data-casterId="castersId">
       <div
-        v-for="(item) in actor"
-        :key="item.key"
-        class="images"
-        :class="item.class"
-        :style="`--animeDuration: ${castingMonitorStore.config.duration}s;`"
+        v-for="cast in casts"
+        :key="cast.key"
+        :class="`images ${cast.class} type${cast.type}`"
+        :style="`--animeDuration: ${castingMonitorStore.config.duration}s;opacity:${Number(
+          castingMonitorStore.focusTargetId === castersId && cast.loaded,
+        )}`"
       >
+        <img :src="cast.src" class="action" height="40" />
         <img src="@/assets/frame.png" class="frame" height="48" />
-        <img :src="item.src" class="action" height="40" />
       </div>
     </div>
   </div>
@@ -32,7 +33,8 @@ const castingMonitorStore = useCastingMonitorStore();
 .main {
   position: relative;
   z-index: -1;
-  height: 80px;
+  min-height: 60px;
+  height: 100vh;
   .images {
     position: absolute;
     bottom: 0px;
@@ -42,13 +44,21 @@ const castingMonitorStore = useCastingMonitorStore();
     display: flex;
     align-items: center;
     justify-content: center;
-    animation-name: move;
-    animation-duration: var(--animeDuration);
-    animation-timing-function: linear;
-    animation-fill-mode: forwards;
+    &.type14 {
+      filter: opacity(0.5);
+    }
+    &.type15,
+    &.type16 {
+      animation-name: move;
+      animation-duration: var(--animeDuration);
+      animation-timing-function: linear;
+      animation-fill-mode: forwards;
+    }
     .frame {
       z-index: 1;
       position: absolute;
+      //不知道为什么反正要top一个像素才对齐
+      top: 1px;
     }
     .action {
       z-index: 0;
@@ -58,7 +68,9 @@ const castingMonitorStore = useCastingMonitorStore();
 
   //自动攻击
   .action-category-1 {
-    transform: translateY(-30px) scale(0.2);
+    transform: scale(0.25);
+    transform-origin: top;
+    top: 0px;
   }
 
   //魔法 战技 特殊技能 弩炮
