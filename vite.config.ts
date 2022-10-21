@@ -31,10 +31,10 @@ export default defineConfig({
     // },
   },
   plugins: [
-    Vue({ include: [/\.vue$/, /\.md$/i] }),
+    Vue({ include: [/\.vue$/, /\.md$/] }),
     viteCompression({
       verbose: false,
-      filter: /\.(js|mjs|json|css)$/i,
+      filter: /\.(js|mjs|json|css)$/,
       disable: false,
       threshold: 1025,
       algorithm: "gzip",
@@ -46,9 +46,11 @@ export default defineConfig({
       dts: "./src/types/auto-imports.d.ts",
       resolvers: [ElementPlusResolver()],
     }),
+    Markdown({ headEnabled: true }),
     Components({
       dirs: ["src/components"],
       //组件名称包含目录，防止同名组件冲突
+      extensions: ["vue", "md"],
       directoryAsNamespace: true,
       dts: "./src/types/components.d.ts",
       resolvers: [ElementPlusResolver()],
@@ -57,7 +59,6 @@ export default defineConfig({
       presets: [presetUno(), presetAttributify(), presetIcons()],
     }),
     Pages(),
-    Markdown({ headEnabled: true }),
   ],
   css: {
     postcss: {
