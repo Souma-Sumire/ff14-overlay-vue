@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import OBSWebSocket from "obs-websocket-js";
-import README from "./README.md";
 import "github-markdown-css/github-markdown-light.css";
 // import "../common/hasOverlayPluginApi";
 let inACTCombat = false;
@@ -58,7 +57,10 @@ async function handleClickToDisconnect() {
   await obs.disconnect();
 }
 async function startRecord() {
-  if (!state.connect) await ObsConnect().then(() => obs.call("StartRecord"));
+  if (!state.connect)
+    await ObsConnect()
+      .then(() => obs.call("StartRecord"))
+      .catch(() => {});
   else {
     if (data.value.partyLength) {
       if (partyData.party.length <= 8 && partyData.party.length >= 5) obs.call("StartRecord");
@@ -106,7 +108,7 @@ onBeforeUnmount(async () => {
 </script>
 <template>
   <div id="container" bg-white v-if="showPage">
-    <README v-show="showHelp"></README>
+    <ObsREADME v-show="showHelp"></ObsREADME>
     <form>
       <!-- 地址<input type="text" v-model="data.ip" />
       <br /> -->
