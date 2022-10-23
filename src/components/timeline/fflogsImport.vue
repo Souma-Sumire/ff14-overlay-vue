@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import { useActionStore } from "@/store/action";
 import { factory } from "@/utils/timelineSpecialRules";
-import { FFIconToName, FFlogsApiV1ReportEvents, FFlogsQuery, FFlogsType, Friendlies } from "@/types/Fflogs";
+import { FFIcon, FFlogsApiV1ReportEvents, FFlogsQuery, FFlogsType, Friendlies } from "@/types/Fflogs";
 
 enum QueryTextEnum {
   query = "查询",
@@ -279,7 +279,7 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
       emit(
         "newTimeline",
         `导入${fflogsQueryConfig.player!.name}`,
-        { zoneId: fflogsQueryConfig.zoneID.toString(), job: FFIconToName(fflogsQueryConfig.player.icon ?? "NONE") },
+        { zoneId: fflogsQueryConfig.zoneID.toString(), job: fflogsQueryConfig.player.icon ?? "NONE" },
         fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline,
         `${fflogsQueryConfig.code}#fight=${fflogsQueryConfig.fightIndex + 1}`,
       );
@@ -295,7 +295,6 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
     });
   });
 }
-
 //fflogs相关配置初始化
 function claerFFlogsQueryConfig() {
   fflogsQueryConfig.code = "";

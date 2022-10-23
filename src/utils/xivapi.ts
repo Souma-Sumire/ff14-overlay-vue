@@ -51,16 +51,10 @@ export async function getImgSrc(imgSrc: string): Promise<string> {
     .catch(() => `${site.second.site}${imgSrc}`);
 }
 export async function getClassjobIconSrc(jobNumber: number) {
-  return checkImgExists(
-    `${site.first.site}/cj/companion/${Util.nameToFullName(Util.jobEnumToJob(jobNumber) ?? "NONE").toLowerCase()}.png`,
-  )
+  return checkImgExists(`${site.first.site}/cj/companion/${Util.nameToFullName(Util.jobEnumToJob(jobNumber)).en}.png`)
     .then((res: any) => res)
     .catch(() => {
-      checkImgExists(
-        `${site.second.site}/cj/companion/${Util.nameToFullName(
-          Util.jobEnumToJob(jobNumber) ?? "NONE",
-        ).toLowerCase()}.png`,
-      )
+      checkImgExists(`${site.second.site}/cj/companion/${Util.nameToFullName(Util.jobEnumToJob(jobNumber)).en}.png`)
         .then((res: any) => res)
         .catch(() => {
           return "/i/000000/000405.png";

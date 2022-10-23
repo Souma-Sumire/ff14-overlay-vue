@@ -315,7 +315,7 @@ const timeMinuteSecondDisplay = computed(() => {
                 <el-option
                   v-for="job in debounceJobCN"
                   :key="job"
-                  :label="Util.nameToCN(job).full"
+                  :label="Util.nameToFullName(job).full"
                   :value="job"
                 ></el-option>
               </el-select>
@@ -372,7 +372,7 @@ const timeMinuteSecondDisplay = computed(() => {
           </el-table-column>
           <el-table-column prop="conditon" label="职业" sortable>
             <template #default="scope">
-              {{ Util.nameToCN(scope.row.condition.job).simple2 }}
+              {{ Util.nameToFullName(scope.row.condition.job).simple2 }}
             </template>
           </el-table-column>
           <el-table-column fixed="right" label="操作" width="100">

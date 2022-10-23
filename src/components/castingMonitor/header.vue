@@ -23,7 +23,7 @@ watchEffect(() => {
     >
       <div flex="~ nowrap items-end" style="align-items: flex-end; gap: 0.1rem">
         <img :src="item.src" style="height: 1.25em" />
-        {{ Util.nameToCN(Util.jobEnumToJob(item.job as number)).simple2 }}
+        {{ Util.nameToFullName(Util.jobEnumToJob(item.job as number)).simple2 }}
       </div>
     </button>
   </div>

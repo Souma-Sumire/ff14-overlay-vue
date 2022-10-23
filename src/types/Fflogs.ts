@@ -20,32 +20,6 @@ export type FFIcon =
   | "Reaper"
   | "Sage";
 
-export function FFIconToName(fficon: FFIcon) {
-  return (
-    {
-      "NONE": "NONE",
-      "Astrologian": "AST",
-      "Bard": "BRD",
-      "BlackMage": "BLM",
-      "DarkKnight": "DRK",
-      "Dragoon": "DRG",
-      "Machinist": "MCH",
-      "Monk": "MNK",
-      "Ninja": "NIN",
-      "Paladin": "PLD",
-      "Scholar": "SCH",
-      "Summoner": "SMN",
-      "Warrior": "WAR",
-      "WhiteMage": "WHM",
-      "RedMage": "RDM",
-      "Samurai": "SAM",
-      "Dancer": "DNC",
-      "Gunbreaker": "GNB",
-      "Reaper": "RPR",
-      "Sage": "SGE",
-    }[fficon] ?? "NONE"
-  );
-}
 export type Friendlies = {
   guid: number;
   icon: string;
