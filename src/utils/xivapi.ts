@@ -11,11 +11,11 @@ const site: { first: Site; second: Site } = {
   second: getParams()?.api?.toLowerCase() === "xivapi" ? { site: siteList.cafe } : { site: siteList.xivapi },
 };
 const userAction = {
-  2: { Icon: "/i/000000/000123.png" }, //任务指令
-  3: { Icon: "/i/000000/000104.png" }, //冲刺
-  4: { Icon: "/i/000000/000118.png" }, //坐骑
-  7: { Icon: "/i/000000/000101.png" }, //攻击
-  8: { Icon: "/i/000000/000101.png" }, //攻击
+  2: { ActionCategory: { ID: 8 }, Icon: "/i/000000/000123.png" }, //任务指令
+  3: { ActionCategory: { ID: 10 }, Icon: "/i/000000/000104.png" }, //冲刺
+  4: { ActionCategory: { ID: 5 }, Icon: "/i/000000/000118.png" }, //坐骑
+  7: { ActionCategory: { ID: 1 }, Icon: "/i/000000/000101.png" }, //攻击
+  8: { ActionCategory: { ID: 1 }, Icon: "/i/000000/000101.png" }, //攻击
 };
 export async function parseAction(
   type: "item" | "action" | "mount" | string,
@@ -24,10 +24,7 @@ export async function parseAction(
 ): Promise<Partial<XivApiJson>> {
   if (Object.hasOwn(userAction, actionId)) {
     return Promise.resolve(
-      Object.assign(
-        { ActionCategory: { ID: 0 }, ID: actionId, Icon: "/i/000000/000405.png" },
-        userAction[actionId as keyof typeof userAction],
-      ) as Partial<XivApiJson>,
+      Object.assign({ ID: actionId }, userAction[actionId as keyof typeof userAction]) as Partial<XivApiJson>,
     );
   }
   return fetch(`${site.first.site}/${type}/${actionId}?columns=${columns.join(",")}`, {
