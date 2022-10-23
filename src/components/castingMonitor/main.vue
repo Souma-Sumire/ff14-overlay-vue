@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useCastingMonitorStore } from "@/store/castingMonitor";
+import { getParams } from "@/utils/queryParams";
 const castingMonitorStore = useCastingMonitorStore();
+const displayAA = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(getParams()?.displayAA));
 </script>
 
 <template>
@@ -9,7 +11,7 @@ const castingMonitorStore = useCastingMonitorStore();
       <div
         v-for="cast in casts"
         :key="cast.key"
-        :class="`images ${cast.class} logLine${cast.logLine}`"
+        :class="`images ${cast.class} logLine${cast.logLine} displayAA${displayAA}`"
         :style="`--animeDuration: ${castingMonitorStore.config.duration}s;opacity:${Number(
           castingMonitorStore.focusTargetId === castersId && cast.loaded,
         )}`"
@@ -71,6 +73,9 @@ const castingMonitorStore = useCastingMonitorStore();
     transform: scale(0.25);
     transform-origin: top;
     top: 0px;
+    &.displayAA0 {
+      display: none;
+    }
   }
 
   //魔法 战技 特殊技能 弩炮

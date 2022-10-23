@@ -8,7 +8,7 @@ interface Menu {
   path: string;
 }
 const menu: Menu[] = [
-  { title: "🌱【新】（ACT悬浮窗）施法监控", type: "悬浮窗", path: "castingMonitor?duration=25&energySaving=true&api=cafemaker" },
+  { title: "🌱【新】（ACT悬浮窗）施法监控", type: "悬浮窗", path: "castingMonitor?duration=25&energySaving=true&displayAA=false&api=cafemaker" },
   { title: "👍【新】全副本一键发宏/标点", type: "悬浮窗/网页", path: "zoneMacro?OVERLAY_WS=ws://127.0.0.1:10501/ws" },
   { title: "🔥（ACT悬浮窗）技能时间轴", type: "悬浮窗", path: "timeline" },
   { title: "📹（ACT悬浮窗）OBS自动录制", type: "悬浮窗", path: "obs" },
