@@ -39,9 +39,25 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
     },
   },
   actions: {
-    testAction(casterId: string, logType: number, duration?: number): void {
+    testAction(): void {
       const actionId = testActions[Math.floor(Math.random() * testActions.length)];
-      this.pushAction(logType, "action", casterId, actionId, duration);
+      this.pushAction(15, "action", this.focusTargetId, actionId);
+    },
+    testParty(fakeParty: boolean): void {
+      this.handlePartyChanged({
+        party: fakeParty
+          ? [
+              { id: "10000001", name: "测试张三", job: 24, inParty: true, src: "" },
+              { id: "10000002", name: "测试李四", job: 25, inParty: true, src: "" },
+              { id: "10000004", name: "测试王五", job: 19, inParty: true, src: "" },
+              { id: "10000005", name: "测试赵六", job: 23, inParty: true, src: "" },
+              { id: "10000006", name: "测试孙七", job: 39, inParty: true, src: "" },
+              { id: "10000007", name: "测试周八", job: 40, inParty: true, src: "" },
+              { id: "10000008", name: "测试吴九", job: 37, inParty: true, src: "" },
+              { id: "10000009", name: "测试郑十", job: 38, inParty: true, src: "" },
+            ]
+          : [],
+      });
     },
     async pushAction(
       logLine: number,
@@ -51,18 +67,18 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
       cast1000Ms?: number,
     ): Promise<void> {
       const energySaving = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(getParams()?.energySaving);
-      if (/^(?:item|mount)_/.test(abilityName)) {
-        abilityId = parseInt(abilityName.replace(/^.+_/, ""), 16);
-        abilityName = abilityName.replace(/_.+$/, "") as "item" | "mount";
-      } else {
-        console.assert(!/_/.test(abilityName), abilityName);
-        abilityName = "action";
-      }
       if (
         (this.partyData.length === 0 && casterId === this.playerId) ||
         (energySaving && casterId === this.focusTargetId) ||
         (!energySaving && this.partyData.length > 0 && this.partyData.find((v) => v.id === casterId))
       ) {
+        if (/^(?:item|mount)_/.test(abilityName)) {
+          abilityId = parseInt(abilityName.replace(/^.+_/, ""), 16);
+          abilityName = abilityName.replace(/_.+$/, "") as "item" | "mount";
+        } else {
+          console.assert(!/^unknown_/.test(abilityName), abilityName);
+          abilityName = "action";
+        }
         if (!this.castData[casterId]) this.castData[casterId] = [];
         const key = Symbol();
         this.castData[casterId].push({
@@ -77,11 +93,16 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
         setTimeout(() => {
           this.castData[casterId]?.splice(this.castData[casterId].indexOf(cast), 1);
         }, (cast1000Ms || this.config.duration) * 1000);
-        const action =
-          abilityId < 100000 ? await parseAction(abilityName, abilityId, ["ID", "Icon", "ActionCategory"]) : {};
+        if (/^unknown_/.test(abilityName)) {
+          cast.src = "/i/000000/000405.png";
+          cast.class = `action-category-0`;
+        } else {
+          const action =
+            abilityId < 100000 ? await parseAction(abilityName, abilityId, ["ID", "Icon", "ActionCategory"]) : {};
+          cast.src = await getImgSrc(action?.Icon ?? "/i/000000/000405.png");
+          cast.class = `action-category-${action.ActionCategory?.ID}`;
+        }
         cast.loaded = true;
-        cast.src = await getImgSrc(action?.Icon ?? "/i/000000/000405.png");
-        cast.class = `action-category-${action.ActionCategory?.ID}`;
       }
     },
     handleChangePrimaryPlayer(e: any): void {
@@ -103,17 +124,15 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
             }
           }
         }
-        if (!Object.keys(this.castData).includes(this.focusTargetId)) {
+        if (!Object.keys(this.partyData).includes(this.focusTargetId)) {
           // 没有之前监控的目标，重置为玩家本人。
           this.focusTargetId = this.playerId;
         }
       } else {
         // 没有队伍，重置为玩家本人。
         this.focusTargetId = this.playerId;
-        for (let key in this.castData) {
-          if (key === this.playerId) continue;
-          Reflect.deleteProperty(this.castData, key);
-        }
+        // 清空队伍数据
+        this.partyData = this.partyData.filter((v) => v.id === this.playerId);
       }
     },
     handleClickChangeTarget(targetId: string): void {

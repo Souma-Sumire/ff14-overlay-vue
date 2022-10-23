@@ -2,28 +2,12 @@
 import { useCastingMonitorStore } from "@/store/castingMonitor";
 const castingMonitorStore = useCastingMonitorStore();
 const dev = location.href.indexOf("localhost") > -1;
-const random = () => {
-  return String(Math.floor(Math.random() * 1) + 10000001);
-};
 onMounted(() => {
   addOverlayListener("ChangePrimaryPlayer", castingMonitorStore.handleChangePrimaryPlayer);
   addOverlayListener("LogLine", castingMonitorStore.handleLogLine);
   addOverlayListener("PartyChanged", castingMonitorStore.handlePartyChanged);
   addOverlayListener("BroadcastMessage", castingMonitorStore.handleBroadcastMessage);
   startOverlayEvents();
-  (function test() {
-    if (!dev) return;
-    castingMonitorStore.partyData = [
-      { id: "10000001", name: "测试张三", job: 24, inParty: true, src: "" },
-      { id: "10000002", name: "测试李四", job: 25, inParty: true, src: "" },
-      { id: "10000004", name: "测试王五", job: 19, inParty: true, src: "" },
-      { id: "10000005", name: "测试赵六", job: 23, inParty: true, src: "" },
-      { id: "10000006", name: "测试孙七", job: 39, inParty: true, src: "" },
-      { id: "10000007", name: "测试周八", job: 40, inParty: true, src: "" },
-      { id: "10000008", name: "测试吴九", job: 37, inParty: true, src: "" },
-      { id: "10000009", name: "测试郑十", job: 38, inParty: true, src: "" },
-    ];
-  })();
 });
 onBeforeUnmount(() => {
   removeOverlayListener("ChangePrimaryPlayer", castingMonitorStore.handleChangePrimaryPlayer);
@@ -45,8 +29,9 @@ onBeforeUnmount(() => {
     </el-container>
   </div>
   <footer style="position: fixed; bottom: 0%">
-    <el-button v-if="dev" @click="castingMonitorStore.testAction(random(), 14, 2.5)">14</el-button>
-    <el-button v-if="dev" @click="castingMonitorStore.testAction(random(), 15)">15</el-button>
+    <el-button v-if="dev" @click="castingMonitorStore.testParty(true)">虚假小队</el-button>
+    <el-button v-if="dev" @click="castingMonitorStore.testParty(false)">单人</el-button>
+    <el-button v-if="dev" @click="castingMonitorStore.testAction()">test</el-button>
   </footer>
 </template>
 <style lang="scss" scoped>
