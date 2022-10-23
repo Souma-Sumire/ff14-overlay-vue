@@ -9,7 +9,7 @@ const castingMonitorStore = useCastingMonitorStore();
       <div
         v-for="cast in casts"
         :key="cast.key"
-        :class="`images ${cast.class} type${cast.type}`"
+        :class="`images ${cast.class} logLine${cast.logLine}`"
         :style="`--animeDuration: ${castingMonitorStore.config.duration}s;opacity:${Number(
           castingMonitorStore.focusTargetId === castersId && cast.loaded,
         )}`"
@@ -44,11 +44,11 @@ const castingMonitorStore = useCastingMonitorStore();
     display: flex;
     align-items: center;
     justify-content: center;
-    &.type14 {
+    &.logLine14 {
       filter: opacity(0.5);
     }
-    &.type15,
-    &.type16 {
+    &.logLine15,
+    &.logLine16 {
       animation-name: move;
       animation-duration: var(--animeDuration);
       animation-timing-function: linear;

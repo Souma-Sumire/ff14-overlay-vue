@@ -44,13 +44,20 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
       this.pushAction(logType, "action", casterId, actionId, duration);
     },
     async pushAction(
-      logType: number,
-      actionType: "item" | "action",
+      logLine: number,
+      abilityName: "item" | "action" | "mount" | string,
       casterId: string,
-      actionId: number,
-      duration?: number,
+      abilityId: number,
+      cast1000Ms?: number,
     ): Promise<void> {
       const energySaving = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(getParams()?.energySaving);
+      if (/^(?:item|mount)_/.test(abilityName)) {
+        abilityId = parseInt(abilityName.replace(/^.+_/, ""), 16);
+        abilityName = abilityName.replace(/_.+$/, "") as "item" | "mount";
+      } else {
+        console.assert(!/_/.test(abilityName), abilityName);
+        abilityName = "action";
+      }
       if (
         (this.partyData.length === 0 && casterId === this.playerId) ||
         (energySaving && casterId === this.focusTargetId) ||
@@ -58,14 +65,22 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
       ) {
         if (!this.castData[casterId]) this.castData[casterId] = [];
         const key = Symbol();
-        this.castData[casterId].push({ time: Date.now(), type: logType, src: "", class: "", key: key, loaded: false });
+        this.castData[casterId].push({
+          time: Date.now(),
+          logLine: logLine,
+          src: "",
+          class: "",
+          key: key,
+          loaded: false,
+        });
         const cast = this.castData[casterId].find((v) => v.key === key)!;
         setTimeout(() => {
           this.castData[casterId]?.splice(this.castData[casterId].indexOf(cast), 1);
-        }, (duration || this.config.duration) * 1000);
-        const action = await parseAction(actionType, actionId, ["ID", "Icon", "ActionCategory"]);
+        }, (cast1000Ms || this.config.duration) * 1000);
+        const action =
+          abilityId < 100000 ? await parseAction(abilityName, abilityId, ["ID", "Icon", "ActionCategory"]) : {};
         cast.loaded = true;
-        cast.src = await getImgSrc(action.Icon);
+        cast.src = await getImgSrc(action?.Icon ?? "/i/000000/000405.png");
         cast.class = `action-category-${action.ActionCategory?.ID}`;
       }
     },
@@ -74,9 +89,9 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
       this.focusTargetId = this.playerId;
     },
     handleLogLine(e: { line: string[] }): void {
-      if (e.line[0] === "20") this.pushAction(14, "action", e.line[2], parseInt(e.line[4], 16), Number(e.line[8]));
+      if (e.line[0] === "20") this.pushAction(14, e.line[5], e.line[2], parseInt(e.line[4], 16), Number(e.line[8]));
       else if (e.line[0] === "21" || (e.line[0] === "22" && e.line[45] === "0"))
-        this.pushAction(15, "action", e.line[2], parseInt(e.line[4], 16), Number(e.line[8]));
+        this.pushAction(15, e.line[5], e.line[2], parseInt(e.line[4], 16), Number(e.line[8]));
     },
     handlePartyChanged(e: any): void {
       if (e.party.length > 0) {

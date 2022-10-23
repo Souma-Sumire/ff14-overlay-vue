@@ -3,6 +3,6 @@ interface Cast {
   time: number;
   class: string;
   key: symbol;
-  type: number;
+  logLine: number;
   loaded: boolean;
 }
