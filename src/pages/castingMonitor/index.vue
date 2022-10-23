@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { useCastingMonitorStore } from "@/store/castingMonitor";
 const castingMonitorStore = useCastingMonitorStore();
-const cns = getCurrentInstance()!;
 const dev = location.href.indexOf("localhost") > -1;
 const random = () => {
   return String(Math.floor(Math.random() * 1) + 10000001);
 };
 onMounted(() => {
-  for (let key in castingMonitorStore.castData) Reflect.deleteProperty(castingMonitorStore.castData, key);
   addOverlayListener("ChangePrimaryPlayer", castingMonitorStore.handleChangePrimaryPlayer);
   addOverlayListener("LogLine", castingMonitorStore.handleLogLine);
   addOverlayListener("PartyChanged", castingMonitorStore.handlePartyChanged);

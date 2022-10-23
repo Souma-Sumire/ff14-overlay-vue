@@ -61,7 +61,7 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
         this.castData[casterId].push({ time: Date.now(), type: logType, src: "", class: "", key: key, loaded: false });
         const cast = this.castData[casterId].find((v) => v.key === key)!;
         setTimeout(() => {
-          this.castData[casterId].splice(this.castData[casterId].indexOf(cast), 1);
+          this.castData[casterId]?.splice(this.castData[casterId].indexOf(cast), 1);
         }, (duration || this.config.duration) * 1000);
         const action = await parseAction(actionType, actionId, ["ID", "Icon", "ActionCategory"]);
         cast.loaded = true;
@@ -95,6 +95,10 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
       } else {
         // 没有队伍，重置为玩家本人。
         this.focusTargetId = this.playerId;
+        for (let key in this.castData) {
+          if (key === this.playerId) continue;
+          Reflect.deleteProperty(this.castData, key);
+        }
       }
     },
     handleClickChangeTarget(targetId: string): void {
