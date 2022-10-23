@@ -8,9 +8,13 @@ const siteList = {
 };
 const site: { first: Site; second: Site } = {
   first:
-    getParams()?.api?.toLowerCase() === "xivapi" ? { site: siteList.xivapi, mode: "cors" } : { site: siteList.cafe, mode: "no-cors" },
+    getParams()?.api?.toLowerCase() === "xivapi"
+      ? { site: siteList.xivapi, mode: "cors" }
+      : { site: siteList.cafe, mode: "no-cors" },
   second:
-    getParams()?.api?.toLowerCase() === "xivapi" ? { site: siteList.cafe, mode: "no-cors" } : { site: siteList.xivapi, mode: "cors" },
+    getParams()?.api?.toLowerCase() === "xivapi"
+      ? { site: siteList.cafe, mode: "no-cors" }
+      : { site: siteList.xivapi, mode: "cors" },
 };
 export async function parseAction(
   type: "item" | "action",
@@ -25,7 +29,14 @@ export async function parseAction(
       (): Promise<XivApiJson> =>
         fetch(`${site.second.site}/${type}/${actionId}?columns=${columns.join(",")}`, { mode: site.second.mode })
           .then((res) => res.json())
-          .then((res) => res)
+          .then((res) => {
+            if (res.ID === 2 && res.Icon) res.Icon = "000000/000123"; //任务指令
+            else if (res.ID === 3 && res.Icon) res.Icon = "000000/000104"; //冲刺
+            else if (res.ID === 4 && res.Icon) res.Icon = "000000/000118"; //坐骑
+            else if (res.ID === 7 && res.Icon) res.Icon = "000000/000101"; //攻击
+            else if (res.ID === 8 && res.Icon) res.Icon = "000000/000101"; //攻击
+            return res;
+          })
           .catch(() => {
             return { ActionCategory: { ID: 0 }, ID: actionId, Icon: "/i/000000/000405.png" };
           }),

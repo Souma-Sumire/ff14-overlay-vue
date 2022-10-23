@@ -2,14 +2,13 @@
 import { pleaseUseACT } from "../utils/pleaseUseACT";
 import router from "../router";
 type MenuType = "网页" | "悬浮窗" | "悬浮窗/网页";
-type ButtonType = "info" | "success" | "warning" | "danger" | "";
 interface Menu {
   title: string;
   type: MenuType;
   path: string;
 }
 const menu: Menu[] = [
-  { title: "🌱【新】（ACT悬浮窗）施法监控", type: "悬浮窗", path: "castingMonitor?duration=15" },
+  { title: "🌱【新】（ACT悬浮窗）施法监控", type: "悬浮窗", path: "castingMonitor?duration=25&energySaving=true&api=cafemaker" },
   { title: "👍【新】全副本一键发宏/标点", type: "悬浮窗/网页", path: "zoneMacro?OVERLAY_WS=ws://127.0.0.1:10501/ws" },
   { title: "🔥（ACT悬浮窗）技能时间轴", type: "悬浮窗", path: "timeline" },
   { title: "📹（ACT悬浮窗）OBS自动录制", type: "悬浮窗", path: "obs" },
@@ -20,7 +19,6 @@ const menu: Menu[] = [
   { title: "💃舞台节目单", type: "网页", path: "stageProgramme" },
   { title: "📟以前的悬浮窗", type: "网页", path: "other" },
 ];
-const buttonType: Record<MenuType, ButtonType> = { "网页": "", "悬浮窗": "success", "悬浮窗/网页": "success" };
 function handleClickMenu(menu: Menu) {
   if (menu.path === "other") {
     location.href = "https://souma.diemoe.net/dist/";

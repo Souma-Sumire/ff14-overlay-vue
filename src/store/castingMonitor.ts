@@ -21,7 +21,7 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
         src: string;
       }[],
       config: {
-        duration: Number(getParams()?.duration || 15),
+        duration: Number(getParams()?.duration || 25),
       },
     };
   },
@@ -50,17 +50,24 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
       actionId: number,
       duration?: number,
     ): Promise<void> {
-      if (!this.castData[casterId]) this.castData[casterId] = [];
-      const key = Symbol();
-      this.castData[casterId].push({ time: Date.now(), type: logType, src: "", class: "", key: key, loaded: false });
-      const cast = this.castData[casterId].find((v) => v.key === key)!;
-      setTimeout(() => {
-        this.castData[casterId].splice(this.castData[casterId].indexOf(cast), 1);
-      }, (duration || this.config.duration) * 1000);
-      const action = await parseAction(actionType, actionId, ["ID", "Icon", "ActionCategory"]);
-      cast.loaded = true;
-      cast.src = await getImgSrc(action.Icon);
-      cast.class = `action-category-${action.ActionCategory?.ID}`;
+      const energySaving = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(getParams()?.energySaving);
+      if (
+        (this.partyData.length === 0 && casterId === this.playerId) ||
+        (energySaving && casterId === this.focusTargetId) ||
+        (!energySaving && this.partyData.length > 0 && this.partyData.find((v) => v.id === casterId))
+      ) {
+        if (!this.castData[casterId]) this.castData[casterId] = [];
+        const key = Symbol();
+        this.castData[casterId].push({ time: Date.now(), type: logType, src: "", class: "", key: key, loaded: false });
+        const cast = this.castData[casterId].find((v) => v.key === key)!;
+        setTimeout(() => {
+          this.castData[casterId].splice(this.castData[casterId].indexOf(cast), 1);
+        }, (duration || this.config.duration) * 1000);
+        const action = await parseAction(actionType, actionId, ["ID", "Icon", "ActionCategory"]);
+        cast.loaded = true;
+        cast.src = await getImgSrc(action.Icon);
+        cast.class = `action-category-${action.ActionCategory?.ID}`;
+      }
     },
     handleChangePrimaryPlayer(e: any): void {
       this.playerId = e.charID.toString(16).toUpperCase();
