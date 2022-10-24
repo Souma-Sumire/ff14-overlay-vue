@@ -16,8 +16,8 @@ const displayAA = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(getParams()?.d
           castingMonitorStore.focusTargetId === castersId,
         )}`"
       >
-        <img :src="cast.src" class="action" height="40" />
-        <img src="@/assets/frame.png" class="frame" height="48" />
+        <img :src="cast.src" class="action-icon" height="40" />
+        <img :class="`frame`" />
       </div>
     </div>
   </div>
@@ -59,10 +59,21 @@ const displayAA = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(getParams()?.d
     .frame {
       z-index: 1;
       position: absolute;
-      //不知道为什么反正要top一个像素才对齐
-      top: 1px;
+      height: 48px;
+      width: 48px;
     }
-    .action {
+    &.action .frame,
+    &.mount .frame {
+      top: 1px;
+      content: url(@/assets/frame.png);
+    }
+    &.item .frame {
+      content: url(@/assets/item_icon_frame.png);
+    }
+    &.itemHQ .frame {
+      content: url(@/assets/item_icon_frame.png);
+    }
+    .action-icon {
       z-index: 0;
       position: absolute;
     }

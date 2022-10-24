@@ -31,7 +31,9 @@ onBeforeUnmount(() => {
   <footer style="position: fixed; bottom: 0%">
     <el-button v-if="dev" @click="castingMonitorStore.testParty(true)">虚假小队</el-button>
     <el-button v-if="dev" @click="castingMonitorStore.testParty(false)">单人</el-button>
-    <el-button v-if="dev" @click="castingMonitorStore.testAction()">test</el-button>
+    <el-button v-if="dev" @click="castingMonitorStore.testAction()">Action</el-button>
+    <el-button v-if="dev" @click="castingMonitorStore.testItem()">Item</el-button>
+    <el-button v-if="dev" @click="castingMonitorStore.testItemHQ()">ItemHQ</el-button>
   </footer>
 </template>
 <style lang="scss" scoped>

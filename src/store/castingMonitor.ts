@@ -41,7 +41,13 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
   actions: {
     testAction(): void {
       const actionId = testActions[Math.floor(Math.random() * testActions.length)];
-      this.pushAction(15, "action", this.focusTargetId, actionId);
+      this.pushAction(15, "贤者技能随机", this.focusTargetId, actionId);
+    },
+    testItem(): void {
+      this.pushAction(15, "item_11c7", this.focusTargetId, parseInt("20011C7", 16));
+    },
+    testItemHQ(): void {
+      this.pushAction(15, "item_f5407", this.focusTargetId, parseInt("20F5407", 16));
     },
     testParty(fakeParty: boolean): void {
       this.handlePartyChanged({
@@ -73,8 +79,14 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
         (!energySaving && this.partyData.length > 0 && this.partyData.find((v) => v.id === casterId))
       ) {
         let queryType;
+        let itemIsHQ = false;
         if (/^(?:item|mount)_/.test(abilityName)) {
           abilityId = parseInt(abilityName.replace(/^.+_/, ""), 16);
+          //HQ道具 item_fXXXX （转十进制则为10XXXXXX）
+          if (abilityId > 1000000) {
+            abilityId = parseInt(abilityId.toString().slice(-5), 10);
+            itemIsHQ = true;
+          }
           queryType = abilityName.replace(/_.+$/, "") as "item" | "mount";
         } else {
           console.assert(!/^unknown_/.test(abilityName), abilityName);
@@ -95,12 +107,19 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
         }, (cast1000Ms || this.config.duration) * 1000);
         if (/^unknown_/.test(abilityName)) {
           cast.src = "/i/000000/000405.png";
-          cast.class = `action-category-0`;
+          cast.class = `action action-category-0`;
         } else {
-          const action =
-            abilityId < 100000 ? await parseAction(queryType, abilityId, ["ID", "Icon", "ActionCategory"]) : {};
-          cast.src = await getImgSrc(action?.Icon);
-          cast.class = `action-category-${action.ActionCategory?.ID}`;
+          if (abilityId < 100000) {
+            const action = await parseAction(queryType, abilityId, ["ID", "Icon", "ActionCategory"]);
+            cast.src = await getImgSrc(action?.Icon, itemIsHQ);
+            if (queryType === "action") {
+              cast.class = `action action-category-${action.ActionCategory?.ID}`;
+            } else if (queryType === "item") {
+              cast.class = "item" + (itemIsHQ ? "HQ" : "");
+            } else if (queryType === "mount") {
+              cast.class = "mount";
+            }
+          }
         }
       }
     },

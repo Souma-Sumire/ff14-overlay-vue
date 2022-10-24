@@ -40,12 +40,16 @@ export async function parseAction(
   );
 }
 
-export async function getImgSrc(imgSrc: string = "/i/000000/000405.png"): Promise<string> {
-  return checkImgExists(`${site.first.site}${imgSrc}`).catch(() =>
-    checkImgExists(`${site.second.site}${imgSrc}`).catch(() =>
-      Promise.resolve("https://cafemaker.wakingsands.com/i/000000/000405.png"),
-    ),
-  );
+export async function getImgSrc(imgSrc: string = "/i/000000/000405.png", itemIsHQ = false): Promise<string> {
+  return checkImgExists(`${site.first.site}${imgSrc}`)
+    .catch(() =>
+      checkImgExists(`${site.second.site}${imgSrc}`).catch(() =>
+        Promise.resolve("https://cafemaker.wakingsands.com/i/000000/000405.png"),
+      ),
+    )
+    .then((src) =>
+      src.replace(/(\d{6})\/(\d{6})\.png$/, (_match, p1, p2) => `${p1}/${itemIsHQ ? "hq/" : ""}${p2}.png`),
+    );
 }
 export async function getClassjobIconSrc(jobNumber: number): Promise<string> {
   return checkImgExists(
