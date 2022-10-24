@@ -109,10 +109,10 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
           cast.class = `action action-category-0`;
         } else {
           if (abilityId < 100000) {
-            const action = await parseAction(queryType, abilityId, ["ID", "Icon", "ActionCategory"]);
+            const action = await parseAction(queryType, abilityId, ["ID", "Icon", "ActionCategoryTargetID"]);
             cast.src = await getImgSrc(action?.Icon, itemIsHQ);
             if (queryType === "action") {
-              cast.class = `action action-category-${action.ActionCategory?.ID}`;
+              cast.class = `action action-category-${action?.ActionCategoryTargetID}`;
             } else if (queryType === "item") {
               cast.class = "item" + (itemIsHQ ? "HQ" : "");
             } else if (queryType === "mount") {

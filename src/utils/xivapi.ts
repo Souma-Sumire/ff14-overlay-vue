@@ -11,20 +11,24 @@ const site: { first: Site; second: Site } = {
   second: getParams()?.api?.toLowerCase() === "xivapi" ? { site: siteList.cafe } : { site: siteList.xivapi },
 };
 const userAction = {
-  2: { ActionCategory: { ID: 8 }, Icon: "/i/000000/000123.png" }, //任务指令
-  3: { ActionCategory: { ID: 10 }, Icon: "/i/000000/000104.png" }, //冲刺
-  4: { ActionCategory: { ID: 5 }, Icon: "/i/000000/000118.png" }, //坐骑
-  7: { ActionCategory: { ID: 1 }, Icon: "/i/000000/000101.png" }, //攻击
-  8: { ActionCategory: { ID: 1 }, Icon: "/i/000000/000101.png" }, //攻击
+  2: { ActionCategoryTargetID: 8, Icon: "/i/000000/000123.png" }, //任务指令
+  3: { ActionCategoryTargetID: 10, Icon: "/i/000000/000104.png" }, //冲刺
+  4: { ActionCategoryTargetID: 5, Icon: "/i/000000/000118.png" }, //坐骑
+  7: { ActionCategoryTargetID: 1, Icon: "/i/000000/000101.png" }, //攻击
+  8: { ActionCategoryTargetID: 1, Icon: "/i/000000/000101.png" }, //攻击
+  25756: { ActionCategoryTargetID: 4, Icon: "/i/003000/003090.png" }, //腐秽大地(隐藏)
 };
 export async function parseAction(
   type: "item" | "action" | "mount" | string,
   actionId: number,
-  columns: (keyof XivApiJson)[] = ["ID", "Icon", "ActionCategory"],
+  columns: (keyof XivApiJson)[] = ["ID", "Icon", "ActionCategoryTargetID"],
 ): Promise<Partial<XivApiJson>> {
   if (Object.hasOwn(userAction, actionId)) {
     return Promise.resolve(
-      Object.assign({ ID: actionId }, userAction[actionId as keyof typeof userAction]) as Partial<XivApiJson>,
+      Object.assign(
+        { ActionCategoryTargetID: 0, ID: actionId, Icon: "/i/000000/000405.png" },
+        userAction[actionId as keyof typeof userAction],
+      ) as Partial<XivApiJson>,
     );
   }
   return (
@@ -36,7 +40,7 @@ export async function parseAction(
     (await fetch(`${site.second.site}/${type}/${actionId}?columns=${columns.join(",")}`, { mode: "cors" })
       .then((res) => res.json())
       .catch(() => {})) ||
-    Promise.resolve({ ActionCategory: { ID: 0 }, ID: actionId, Icon: "/i/000000/000405.png" })
+    Promise.resolve({ ActionCategoryTargetID: 0, ID: actionId, Icon: "/i/000000/000405.png" })
   );
 }
 
