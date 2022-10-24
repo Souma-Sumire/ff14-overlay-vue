@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useCastingMonitorStore } from "@/store/castingMonitor";
+import { getParams } from "@/utils/queryParams";
 import Util from "@/utils/util";
 import { getClassjobIconSrc } from "@/utils/xivapi";
 const castingMonitorStore = useCastingMonitorStore();
@@ -8,10 +9,11 @@ watchEffect(() => {
     item.src = await getClassjobIconSrc(item.job);
   });
 });
+const showHeader = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(getParams()?.showHeader);
 </script>
 
 <template>
-  <div z-100 flex="~ gap0 wrap" class="header-layout">
+  <div z-100 flex="~ gap0 wrap" class="header-layout" v-if="showHeader">
     <button
       v-for="(item, index) in castingMonitorStore.partyDataFormatted"
       :key="index"
