@@ -1,4 +1,4 @@
-import { getParams } from "@/utils/queryParams";
+import { params } from "@/utils/queryParams";
 import Util from "./util";
 
 type Site = { site: string };
@@ -7,8 +7,8 @@ const siteList = {
   xivapi: "https://xivapi.com",
 };
 const site: { first: Site; second: Site } = {
-  first: getParams()?.api?.toLowerCase() === "xivapi" ? { site: siteList.xivapi } : { site: siteList.cafe },
-  second: getParams()?.api?.toLowerCase() === "xivapi" ? { site: siteList.cafe } : { site: siteList.xivapi },
+  first: params?.api?.toLowerCase() === "xivapi" ? { site: siteList.xivapi } : { site: siteList.cafe },
+  second: params?.api?.toLowerCase() === "xivapi" ? { site: siteList.cafe } : { site: siteList.xivapi },
 };
 const userAction = {
   2: { ActionCategoryTargetID: 8, Icon: "/i/000000/000123.png" }, //任务指令

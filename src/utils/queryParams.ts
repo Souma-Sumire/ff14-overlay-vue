@@ -18,6 +18,5 @@ function queryString(str?: string) {
   }
   return obj;
 }
-export function getParams(): Record<string, string> {
-  return queryString(location.href);
-}
+const params = queryString(location.href);
+export { params };

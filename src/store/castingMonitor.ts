@@ -1,4 +1,4 @@
-import { getParams } from "@/utils/queryParams";
+import { params } from "@/utils/queryParams";
 import Util from "@/utils/util";
 import { getImgSrc, parseAction } from "@/utils/xivapi";
 import { defineStore } from "pinia";
@@ -21,7 +21,7 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
         src: string;
       }[],
       config: {
-        duration: Number(getParams()?.duration || 25),
+        duration: Number(params?.duration || 25),
       },
     };
   },
@@ -72,7 +72,7 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
       abilityId: number,
       cast1000Ms?: number,
     ): Promise<void> {
-      const energySaving = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(getParams()?.energySaving);
+      const energySaving = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(params?.energySaving);
       if (
         (this.partyData.length === 0 && casterId === this.playerId) ||
         (energySaving && casterId === this.focusTargetId) ||
@@ -159,7 +159,7 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
       } else {
         this.focusTargetId = targetId;
       }
-      if (/^(?:1|true|yes|on|open|enabled|undefined)$/i.test(getParams()?.syncFocusWS)) {
+      if (/^(?:1|true|yes|on|open|enabled|undefined)$/i.test(params?.syncFocusWS)) {
         callOverlayHandler({
           call: "broadcast",
           source: "castMonitorOverlay",

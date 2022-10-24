@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useCastingMonitorStore } from "@/store/castingMonitor";
-import { getParams } from "@/utils/queryParams";
+import { params } from "@/utils/queryParams";
 const castingMonitorStore = useCastingMonitorStore();
-const displayAA = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(getParams()?.displayAA));
+const displayAA = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.displayAA));
 </script>
 
 <template>

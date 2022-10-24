@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useCastingMonitorStore } from "@/store/castingMonitor";
-import { getParams } from "@/utils/queryParams";
+import { params } from "@/utils/queryParams";
 import Util from "@/utils/util";
 import { getClassjobIconSrc } from "@/utils/xivapi";
 const castingMonitorStore = useCastingMonitorStore();
@@ -9,7 +9,7 @@ watchEffect(() => {
     item.src = await getClassjobIconSrc(item.job);
   });
 });
-const showHeader = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(getParams()?.showHeader);
+const showHeader = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(params?.showHeader);
 </script>
 
 <template>
