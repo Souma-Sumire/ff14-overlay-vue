@@ -157,14 +157,14 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
       if (targetId === this.focusTargetId) {
         // 重复点击，重置为玩家本人。
         this.focusTargetId = this.playerId;
-        return;
+      } else {
+        this.focusTargetId = targetId;
       }
-      this.focusTargetId = targetId;
       callOverlayHandler({
         call: "broadcast",
         source: "castMonitorOverlay",
         msg: {
-          targetId,
+          targetId: this.focusTargetId,
         },
       });
     },
