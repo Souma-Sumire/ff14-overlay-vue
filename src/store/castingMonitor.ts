@@ -160,13 +160,15 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
       } else {
         this.focusTargetId = targetId;
       }
-      callOverlayHandler({
-        call: "broadcast",
-        source: "castMonitorOverlay",
-        msg: {
-          targetId: this.focusTargetId,
-        },
-      });
+      if (/^(?:1|true|yes|on|open|enabled|undefined)$/i.test(getParams()?.syncFocusWS)) {
+        callOverlayHandler({
+          call: "broadcast",
+          source: "castMonitorOverlay",
+          msg: {
+            targetId: this.focusTargetId,
+          },
+        });
+      }
     },
     handleBroadcastMessage(e: { source: string; msg: any }): void {
       if (e.source === "castMonitorOverlay" && e.msg.targetId) {
