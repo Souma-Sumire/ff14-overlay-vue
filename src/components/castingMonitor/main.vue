@@ -56,22 +56,28 @@ const displayAA = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(getParams()?.d
       animation-timing-function: linear;
       animation-fill-mode: forwards;
     }
+
     .frame {
       z-index: 1;
       position: absolute;
       height: 48px;
       width: 48px;
+      //src有值之前隐藏默认img灰色边框
+      opacity: 0;
     }
     &.action .frame,
     &.mount .frame {
       top: 1px;
       content: url(@/assets/frame.png);
+      opacity: 1;
     }
     &.item .frame {
       content: url(@/assets/item_icon_frame.png);
+      opacity: 1;
     }
     &.itemHQ .frame {
       content: url(@/assets/item_icon_frame.png);
+      opacity: 1;
     }
     .action-icon {
       z-index: 0;
