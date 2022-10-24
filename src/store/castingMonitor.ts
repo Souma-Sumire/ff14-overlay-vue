@@ -89,7 +89,6 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
           }
           queryType = abilityName.replace(/_.+$/, "") as "item" | "mount";
         } else {
-          console.assert(!/^unknown_/.test(abilityName), abilityName);
           queryType = "action";
         }
         if (!this.castData[casterId]) this.castData[casterId] = [];
@@ -106,7 +105,7 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
           this.castData[casterId]?.splice(this.castData[casterId].indexOf(cast), 1);
         }, (cast1000Ms || this.config.duration) * 1000);
         if (/^unknown_/.test(abilityName)) {
-          cast.src = "/i/000000/000405.png";
+          cast.src = "https://cafemaker.wakingsands.com/i/000000/000405.png";
           cast.class = `action action-category-0`;
         } else {
           if (abilityId < 100000) {

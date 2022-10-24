@@ -27,14 +27,14 @@ onBeforeUnmount(() => {
         <casting-monitor-main />
       </el-main>
     </el-container>
+    <footer v-if="dev">
+      <el-button @click="castingMonitorStore.testParty(true)">虚假小队</el-button>
+      <el-button @click="castingMonitorStore.testParty(false)">单人</el-button>
+      <el-button @click="castingMonitorStore.testAction()">Action</el-button>
+      <el-button @click="castingMonitorStore.testItem()">Item</el-button>
+      <el-button @click="castingMonitorStore.testItemHQ()">ItemHQ</el-button>
+    </footer>
   </div>
-  <footer style="position: fixed; bottom: 0%">
-    <el-button v-if="dev" @click="castingMonitorStore.testParty(true)">虚假小队</el-button>
-    <el-button v-if="dev" @click="castingMonitorStore.testParty(false)">单人</el-button>
-    <el-button v-if="dev" @click="castingMonitorStore.testAction()">Action</el-button>
-    <el-button v-if="dev" @click="castingMonitorStore.testItem()">Item</el-button>
-    <el-button v-if="dev" @click="castingMonitorStore.testItemHQ()">ItemHQ</el-button>
-  </footer>
 </template>
 <style lang="scss" scoped>
 .common-layout {
@@ -49,6 +49,16 @@ onBeforeUnmount(() => {
   ::v-deep(.header-layout .job-lists) {
     transform: translateY(0px);
     opacity: 1;
+  }
+}
+footer {
+  position: fixed;
+  bottom: 0%;
+  width: 100vw;
+  filter: opacity(0);
+  transition: filter 0.5s;
+  &:hover {
+    filter: none;
   }
 }
 </style>

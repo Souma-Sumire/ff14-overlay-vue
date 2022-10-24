@@ -103,7 +103,7 @@ const displayAA = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(getParams()?.d
     transform: none;
   }
 
-  //能力 道具 采集能力 制作能力 任务 极限技 系统 系统 坐骑 道具操作 极限技
+  //能力 道具 采集能力 制作能力 任务 极限技 系统 系统 坐骑 道具操作 极限技 action的道具 action的道具HQ
   .action-category-4,
   .action-category-5,
   .action-category-6,
@@ -114,7 +114,9 @@ const displayAA = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(getParams()?.d
   .action-category-11,
   .action-category-12,
   .action-category-14,
-  .action-category-15 {
+  .action-category-15,
+  .item,
+  .itemHQ {
     transform: translateY(-15px) scale(0.8);
   }
 }
