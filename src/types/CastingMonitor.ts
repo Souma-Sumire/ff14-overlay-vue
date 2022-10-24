@@ -4,5 +4,4 @@ interface Cast {
   class: string;
   key: symbol;
   logLine: number;
-  loaded: boolean;
 }

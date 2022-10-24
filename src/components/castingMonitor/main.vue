@@ -13,7 +13,7 @@ const displayAA = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(getParams()?.d
         :key="cast.key"
         :class="`images ${cast.class} logLine${cast.logLine} displayAA${displayAA}`"
         :style="`--animeDuration: ${castingMonitorStore.config.duration}s;opacity:${Number(
-          castingMonitorStore.focusTargetId === castersId && cast.loaded,
+          castingMonitorStore.focusTargetId === castersId,
         )}`"
       >
         <img :src="cast.src" class="action" height="40" />

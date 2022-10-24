@@ -72,12 +72,13 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
         (energySaving && casterId === this.focusTargetId) ||
         (!energySaving && this.partyData.length > 0 && this.partyData.find((v) => v.id === casterId))
       ) {
+        let queryType;
         if (/^(?:item|mount)_/.test(abilityName)) {
           abilityId = parseInt(abilityName.replace(/^.+_/, ""), 16);
-          abilityName = abilityName.replace(/_.+$/, "") as "item" | "mount";
+          queryType = abilityName.replace(/_.+$/, "") as "item" | "mount";
         } else {
           console.assert(!/^unknown_/.test(abilityName), abilityName);
-          abilityName = "action";
+          queryType = "action";
         }
         if (!this.castData[casterId]) this.castData[casterId] = [];
         const key = Symbol();
@@ -87,7 +88,6 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
           src: "",
           class: "",
           key: key,
-          loaded: false,
         });
         const cast = this.castData[casterId].find((v) => v.key === key)!;
         setTimeout(() => {
@@ -98,11 +98,10 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
           cast.class = `action-category-0`;
         } else {
           const action =
-            abilityId < 100000 ? await parseAction(abilityName, abilityId, ["ID", "Icon", "ActionCategory"]) : {};
-          cast.src = await getImgSrc(action?.Icon ?? "/i/000000/000405.png");
+            abilityId < 100000 ? await parseAction(queryType, abilityId, ["ID", "Icon", "ActionCategory"]) : {};
+          cast.src = await getImgSrc(action?.Icon);
           cast.class = `action-category-${action.ActionCategory?.ID}`;
         }
-        cast.loaded = true;
       }
     },
     handleChangePrimaryPlayer(e: any): void {
@@ -112,7 +111,7 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
     handleLogLine(e: { line: string[] }): void {
       if (e.line[0] === "20") this.pushAction(14, e.line[5], e.line[2], parseInt(e.line[4], 16), Number(e.line[8]));
       else if (e.line[0] === "21" || (e.line[0] === "22" && e.line[45] === "0"))
-        this.pushAction(15, e.line[5], e.line[2], parseInt(e.line[4], 16), Number(e.line[8]));
+        this.pushAction(15, e.line[5], e.line[2], parseInt(e.line[4], 16));
     },
     handlePartyChanged(e: any): void {
       if (e.party.length > 0) {

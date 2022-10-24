@@ -27,39 +27,34 @@ export async function parseAction(
       Object.assign({ ID: actionId }, userAction[actionId as keyof typeof userAction]) as Partial<XivApiJson>,
     );
   }
-  return fetch(`${site.first.site}/${type}/${actionId}?columns=${columns.join(",")}`, {
-    mode: "cors",
-  })
-    .then((res) => res.json())
-    .catch(() =>
-      fetch(`${site.second.site}/${type}/${actionId}?columns=${columns.join(",")}`, { mode: "cors" })
-        .then((res) => res.json())
-        .catch(() => {
-          return Promise.resolve(
-            Object.assign(
-              { ActionCategory: { ID: 0 }, ID: actionId, Icon: "/i/000000/000405.png" },
-              { ID: actionId, Icon: "/i/000000/000405.png" },
-            ),
-          );
-        }),
-    );
+  return (
+    (await fetch(`${site.first.site}/${type}/${actionId}?columns=${columns.join(",")}`, {
+      mode: "cors",
+    })
+      .then((res) => res.json())
+      .catch(() => {})) ||
+    (await fetch(`${site.second.site}/${type}/${actionId}?columns=${columns.join(",")}`, { mode: "cors" })
+      .then((res) => res.json())
+      .catch(() => {})) ||
+    Promise.resolve({ ActionCategory: { ID: 0 }, ID: actionId, Icon: "/i/000000/000405.png" })
+  );
 }
 
-export async function getImgSrc(imgSrc: string): Promise<string> {
-  return checkImgExists(`${site.first.site}${imgSrc}`)
-    .then(() => `${site.first.site}${imgSrc}`)
-    .catch(() => `${site.second.site}${imgSrc}`);
+export async function getImgSrc(imgSrc: string = "/i/000000/000405.png"): Promise<string> {
+  return checkImgExists(`${site.first.site}${imgSrc}`).catch(() =>
+    checkImgExists(`${site.second.site}${imgSrc}`).catch(() =>
+      Promise.resolve("https://cafemaker.wakingsands.com/i/000000/000405.png"),
+    ),
+  );
 }
-export async function getClassjobIconSrc(jobNumber: number) {
-  return checkImgExists(`${site.first.site}/cj/companion/${Util.nameToFullName(Util.jobEnumToJob(jobNumber)).en}.png`)
-    .then((res: any) => res)
-    .catch(() => {
-      checkImgExists(`${site.second.site}/cj/companion/${Util.nameToFullName(Util.jobEnumToJob(jobNumber)).en}.png`)
-        .then((res: any) => res)
-        .catch(() => {
-          return "/i/000000/000405.png";
-        });
-    });
+export async function getClassjobIconSrc(jobNumber: number): Promise<string> {
+  return checkImgExists(
+    `${site.first.site}/cj/companion/${Util.nameToFullName(Util.jobEnumToJob(jobNumber)).en}.png`,
+  ).catch(() =>
+    checkImgExists(
+      `${site.second.site}/cj/companion/${Util.nameToFullName(Util.jobEnumToJob(jobNumber)).en}.png`,
+    ).catch(() => Promise.resolve("https://cafemaker.wakingsands.com/cj/companion/none.png")),
+  );
 }
 
 function checkImgExists(imgurl: string): Promise<string> {
@@ -67,6 +62,6 @@ function checkImgExists(imgurl: string): Promise<string> {
     let img = new Image();
     img.src = imgurl;
     img.onload = () => resolve(imgurl);
-    img.onerror = () => reject;
+    img.onerror = () => reject();
   });
 }
