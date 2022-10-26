@@ -41,13 +41,13 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
   actions: {
     testAction(): void {
       const actionId = testActions[Math.floor(Math.random() * testActions.length)];
-      this.pushAction(15, "贤者技能随机", this.focusTargetId, actionId);
+      this.pushAction(Date.now(), 15, "贤者技能随机", this.focusTargetId, actionId);
     },
     testItem(): void {
-      this.pushAction(15, "item_11c7", this.focusTargetId, parseInt("20011C7", 16));
+      this.pushAction(Date.now(), 15, "item_11c7", this.focusTargetId, parseInt("20011C7", 16));
     },
     testItemHQ(): void {
-      this.pushAction(15, "item_f5407", this.focusTargetId, parseInt("20F5407", 16));
+      this.pushAction(Date.now(), 15, "item_f5407", this.focusTargetId, parseInt("20F5407", 16));
     },
     testParty(fakeParty: boolean): void {
       this.handlePartyChanged({
@@ -66,6 +66,7 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
       });
     },
     async pushAction(
+      time: number,
       logLine: number,
       abilityName: "item" | "action" | "mount" | string,
       casterId: string,
@@ -94,7 +95,7 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
         if (!this.castData[casterId]) this.castData[casterId] = [];
         const key = Symbol();
         this.castData[casterId].push({
-          time: Date.now(),
+          time: time,
           logLine: logLine,
           src: "",
           class: "",
@@ -118,6 +119,10 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
             } else if (queryType === "mount") {
               cast.class = "mount";
             }
+            if (action.ActionCategoryTargetID === 2 || action.ActionCategoryTargetID === 3) {
+              const lastCast = this.castData[casterId].filter((v) => /action-category-[23]/.test(v.class)).at(-2);
+              if (lastCast) cast.GCDCast = ((cast.time - lastCast.time) / 1000).toFixed(2);
+            }
           }
         }
       }
@@ -127,9 +132,10 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
       this.focusTargetId = this.playerId;
     },
     handleLogLine(e: { line: string[] }): void {
-      if (e.line[0] === "20") this.pushAction(14, e.line[5], e.line[2], parseInt(e.line[4], 16), Number(e.line[8]));
+      if (e.line[0] === "20")
+        this.pushAction(Date.parse(e.line[1]), 14, e.line[5], e.line[2], parseInt(e.line[4], 16), Number(e.line[8]));
       else if (e.line[0] === "21" || (e.line[0] === "22" && e.line[45] === "0"))
-        this.pushAction(15, e.line[5], e.line[2], parseInt(e.line[4], 16));
+        this.pushAction(Date.parse(e.line[1]), 15, e.line[5], e.line[2], parseInt(e.line[4], 16));
     },
     handlePartyChanged(e: any): void {
       if (e.party.length > 0) {

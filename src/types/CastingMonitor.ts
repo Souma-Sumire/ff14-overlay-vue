@@ -4,4 +4,5 @@ interface Cast {
   class: string;
   key: symbol;
   logLine: number;
+  GCDCast?: string;
 }

@@ -3,6 +3,7 @@ import { useCastingMonitorStore } from "@/store/castingMonitor";
 import { params } from "@/utils/queryParams";
 const castingMonitorStore = useCastingMonitorStore();
 const displayAA = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.displayAA));
+const displayGCD = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.displayGCDSpace));
 </script>
 
 <template>
@@ -11,13 +12,14 @@ const displayAA = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.display
       <div
         v-for="cast in casts"
         :key="cast.key"
-        :class="`images ${cast.class} logLine${cast.logLine} displayAA${displayAA}`"
+        :class="`images ${cast.class} logLine${cast.logLine} displayAA${displayAA} displayGCD${displayGCD}`"
         :style="`--animeDuration: ${castingMonitorStore.config.duration}s;opacity:${Number(
           castingMonitorStore.focusTargetId === castersId,
         )}`"
       >
         <img :src="cast.src" class="action-icon" height="40" />
         <img :class="`frame`" />
+        <span v-if="displayGCD === 1" class="GCDCast">{{ cast?.GCDCast ?? "" }}</span>
       </div>
     </div>
   </div>
@@ -40,6 +42,9 @@ const displayAA = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.display
   .images {
     position: absolute;
     bottom: 0px;
+    &.displayGCD1 {
+      bottom: 18px;
+    }
     height: 48px;
     right: calc(0% - 24px);
     width: 48px;
@@ -94,13 +99,24 @@ const displayAA = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.display
       display: none;
     }
   }
-
+  .GCDCast {
+    display: none;
+  }
   //魔法 战技 特殊技能 弩炮
   .action-category-2,
   .action-category-3,
   .action-category-13,
   .action-category-17 {
     transform: none;
+    .GCDCast {
+      display: inline-block;
+      color: whitesmoke;
+      font-family: monospace;
+      transform: translateY(30px);
+      z-index: 2;
+      text-shadow: -1px 0 1px #000, 0 1px 1px #000, 1px 0 1px #000, 0 -1px 1px #000;
+      font-size: 12px;
+    }
   }
 
   //能力 道具 采集能力 制作能力 任务 极限技 系统 系统 坐骑 道具操作 极限技 action的道具 action的道具HQ
