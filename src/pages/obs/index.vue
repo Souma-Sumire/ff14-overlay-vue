@@ -26,13 +26,13 @@ addOverlayListener("onInCombatChangedEvent", handleInCombatChanged);
 addOverlayListener("PartyChanged", handlePartyChanged);
 startOverlayEvents();
 setTimeout(async () => {
-  if (data.value.autoConnect && data.value.password.length > 0) await ObsConnect();
+  if (data.value.autoConnect && data.value.password.length > 0) await obsConnect();
 }, 1000);
 function onConnectionClosed() {
   state.status = "closed";
   state.connect = false;
 }
-async function ObsConnect() {
+async function obsConnect() {
   try {
     const { obsWebSocketVersion, negotiatedRpcVersion } = await obs.connect(
       `ws://127.0.0.1:${data.value.port}`,
@@ -51,35 +51,35 @@ async function ObsConnect() {
   }
 }
 async function handleClickToConnect() {
-  await ObsConnect();
+  await obsConnect();
 }
 async function handleClickToDisconnect() {
-  await obs.disconnect();
+  await obs.disconnect().catch(() => {});
 }
 async function startRecord() {
   if (!state.connect)
-    await ObsConnect()
+    await obsConnect()
       .then(() => obs.call("StartRecord"))
       .catch(() => {});
   else {
     if (data.value.partyLength) {
-      if (partyData.party.length <= 8 && partyData.party.length >= 5) obs.call("StartRecord");
-    } else obs.call("StartRecord");
+      if (partyData.party.length <= 8 && partyData.party.length >= 5) obs.call("StartRecord").catch(() => {});
+    } else obs.call("StartRecord").catch(() => {});
   }
 }
 async function stopRecord() {
-  await obs.call("StopRecord");
+  await obs.call("StopRecord").catch(() => {});
 }
 function restartRecord() {
   obs
     .call("GetRecordStatus")
     .then(async (v) => {
       if (v.outputActive && v.outputDuration <= 5000)
-        await stopRecord().then(() => setTimeout(() => restartRecord(), 1000));
+        await stopRecord().then(() => setTimeout(() => restartRecord(), 1000)).catch(() => {});
       else startRecord();
     })
     .catch(() => {
-      ObsConnect();
+      obsConnect();
     });
 }
 async function handleInCombatChanged(ev: any) {
