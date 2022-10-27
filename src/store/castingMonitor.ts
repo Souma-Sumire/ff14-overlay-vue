@@ -163,7 +163,7 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
         // 没有队伍，重置为玩家本人。
         this.focusTargetId = this.playerId;
         // 清空队伍数据
-        this.partyData = this.partyData.filter((v) => v.id === this.playerId);
+        this.partyData.length = 0;
       }
     },
     handleClickChangeTarget(targetId: string): void {
