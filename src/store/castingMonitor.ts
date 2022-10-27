@@ -41,7 +41,10 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
   actions: {
     testAction(): void {
       const actionId = testActions[Math.floor(Math.random() * testActions.length)];
-      this.pushAction(Date.now(), 15, "贤者技能随机", this.focusTargetId, actionId);
+      this.pushAction(Date.now(), 14, "贤者技能随机", this.focusTargetId, actionId, 1);
+      setTimeout(() => {
+        this.pushAction(Date.now(), 15, "贤者技能随机", this.focusTargetId, actionId);
+      }, 1000);
     },
     testItem(): void {
       this.pushAction(Date.now(), 15, "item_11c7", this.focusTargetId, parseInt("20011C7", 16));
@@ -120,8 +123,13 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
               cast.class = "mount";
             }
             if (action.ActionCategoryTargetID === 2 || action.ActionCategoryTargetID === 3) {
-              const lastCast = this.castData[casterId].filter((v) => /action-category-[23]/.test(v.class)).at(-2);
-              if (lastCast) cast.GCDCast = ((cast.time - lastCast.time) / 1000).toFixed(2);
+              const lastCast = this.castData[casterId]
+                .filter((v) => /action-category-[23]/.test(v.class) && v.logLine !== 14)
+                .at(-2);
+              if (lastCast) {
+                cast.GCDCast = ((cast.time - lastCast.time) / 1000).toFixed(2);
+                if (parseFloat(cast.GCDCast) >= 2.55) cast.GCDClass = "wasted";
+              }
             }
           }
         }

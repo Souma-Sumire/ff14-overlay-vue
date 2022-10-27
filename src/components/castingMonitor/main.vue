@@ -19,7 +19,7 @@ const displayGCD = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.displa
       >
         <img :src="cast.src" class="action-icon" height="40" />
         <img :class="`frame`" />
-        <span v-if="displayGCD === 1" class="GCDCast">{{ cast?.GCDCast ?? "" }}</span>
+        <span v-if="displayGCD === 1" class="GCDCast" :class="cast.GCDClass">{{ cast?.GCDCast ?? "" }}</span>
       </div>
     </div>
   </div>
@@ -116,6 +116,9 @@ const displayGCD = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.displa
       z-index: 2;
       text-shadow: -1px 0 1px #000, 0 1px 1px #000, 1px 0 1px #000, 0 -1px 1px #000;
       font-size: 12px;
+      &.wasted {
+        color: yellow;
+      }
     }
   }
 

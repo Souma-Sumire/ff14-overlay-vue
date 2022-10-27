@@ -5,4 +5,5 @@ interface Cast {
   key: symbol;
   logLine: number;
   GCDCast?: string;
+  GCDClass?: string;
 }
