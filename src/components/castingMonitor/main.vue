@@ -36,7 +36,6 @@ const displayGCD = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.displa
 }
 .main {
   position: relative;
-  z-index: -1;
   min-height: 60px;
   height: 100vh;
   .images {
@@ -61,9 +60,29 @@ const displayGCD = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.displa
       animation-timing-function: linear;
       animation-fill-mode: forwards;
     }
-
-    .frame {
+    .action-icon {
       z-index: 1;
+    }
+    .action-category-2,
+    .action-category-3,
+    .action-category-13,
+    .action-category-17 {
+      .action-icon {
+        z-index: 3;
+      }
+    }
+    .frame {
+      z-index: 2;
+    }
+    .action-category-2,
+    .action-category-3,
+    .action-category-13,
+    .action-category-17 {
+      .frame {
+        z-index: 4;
+      }
+    }
+    .frame {
       position: absolute;
       height: 48px;
       width: 48px;
@@ -85,7 +104,6 @@ const displayGCD = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.displa
       opacity: 1;
     }
     .action-icon {
-      z-index: 0;
       position: absolute;
     }
   }
@@ -101,6 +119,7 @@ const displayGCD = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.displa
   }
   .GCDCast {
     display: none;
+    z-index: 20;
   }
   //魔法 战技 特殊技能 弩炮
   .action-category-2,
@@ -113,7 +132,6 @@ const displayGCD = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.displa
       color: whitesmoke;
       font-family: monospace;
       transform: translateY(30px);
-      z-index: 2;
       text-shadow: -1px 0 1px #000, 0 1px 1px #000, 1px 0 1px #000, 0 -1px 1px #000;
       font-size: 12px;
       &.wasted {

@@ -43,7 +43,6 @@ onBeforeUnmount(() => {
   left: 0;
   top: 0;
   background-color: rgba($color: #000000, $alpha: 0.2);
-  z-index: -999;
 }
 .common-layout :hover {
   ::v-deep(.header-layout .job-lists) {
@@ -54,7 +53,6 @@ onBeforeUnmount(() => {
 footer {
   position: fixed;
   bottom: 0%;
-  width: 100vw;
   filter: opacity(0);
   transition: filter 0.5s;
   &:hover {
