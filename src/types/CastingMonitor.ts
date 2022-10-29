@@ -6,4 +6,5 @@ interface Cast {
   logLine: number;
   GCDCast?: string;
   GCDClass?: string;
+  APIData: Partial<XivApiJson>;
 }

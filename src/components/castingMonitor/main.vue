@@ -9,18 +9,34 @@ const displayGCD = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.displa
 <template>
   <div w-100vw flex="~ nowrap" class="main">
     <div v-for="(casts, castersId) in castingMonitorStore.castData" :key="castersId" :data-casterId="castersId">
-      <div
+      <el-tooltip
+        raw-content
+        placement="right-start"
+        effect="dark"
+        transition=""
+        :teleported="false"
+        popper-class="el-tooltip"
+        :show-arrow="false"
         v-for="cast in casts"
         :key="cast.key"
-        :class="`images ${cast.class} logLine${cast.logLine} displayAA${displayAA} displayGCD${displayGCD}`"
-        :style="`--animeDuration: ${castingMonitorStore.config.duration}s;opacity:${Number(
-          castingMonitorStore.focusTargetId === castersId,
-        )}`"
       >
-        <img :src="cast.src" class="action-icon" height="40" />
-        <img :class="`frame`" />
-        <span v-if="displayGCD === 1" class="GCDCast" :class="cast.GCDClass">{{ cast?.GCDCast ?? "" }}</span>
-      </div>
+        <template #content>
+          <div class="elhover">
+            <strong>{{ cast.APIData.Name }}</strong>
+            <div v-html="cast.APIData?.Description" style="white-space: pre-line"></div>
+          </div>
+        </template>
+        <div
+          :class="`images ${cast.class} logLine${cast.logLine} displayAA${displayAA} displayGCD${displayGCD}`"
+          :style="`--animeDuration: ${castingMonitorStore.config.duration}s;opacity:${Number(
+            castingMonitorStore.focusTargetId === castersId,
+          )}`"
+        >
+          <img :src="cast.src" class="action-icon" height="40" />
+          <img class="frame" />
+          <span v-if="displayGCD === 1" class="GCDCast" :class="cast.GCDClass">{{ cast?.GCDCast ?? "" }}</span>
+        </div>
+      </el-tooltip>
     </div>
   </div>
 </template>
@@ -33,6 +49,11 @@ const displayGCD = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.displa
   to {
     right: 100%;
   }
+}
+::v-deep(.elhover) {
+  user-select: text;
+  line-height: 1.2em;
+  font-size: 12px;
 }
 .main {
   position: relative;

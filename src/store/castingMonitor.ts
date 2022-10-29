@@ -103,6 +103,7 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
           src: "",
           class: "",
           key: key,
+          APIData: {},
         });
         const cast = this.castData[casterId].find((v) => v.key === key)!;
         setTimeout(() => {
@@ -113,7 +114,14 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
           cast.class = `action action-category-0`;
         } else {
           if (abilityId < 100000) {
-            const action = await parseAction(queryType, abilityId, ["ID", "Icon", "ActionCategoryTargetID"]);
+            const action = await parseAction(queryType, abilityId, [
+              "ID",
+              "Icon",
+              "ActionCategoryTargetID",
+              "Name",
+              "Description",
+            ]);
+            cast.APIData = action;
             cast.src = await getImgSrc(action?.Icon, itemIsHQ);
             if (queryType === "action") {
               cast.class = `action action-category-${action?.ActionCategoryTargetID}`;
