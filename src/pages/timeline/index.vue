@@ -111,13 +111,15 @@ function stopTimeline() {
 }
 
 //页面时间轴开始播放
-function startTimeline(countdownSeconds: number) {
-  ttsSuppressFlag = false;
-  setTimeout(() => (ttsSuppressFlag = true), 1000);
+function startTimeline(countdownSeconds: number, preventTTS = true) {
+  if (preventTTS) {
+    ttsSuppressFlag = false;
+    setTimeout(() => (ttsSuppressFlag = true), countdownSeconds <= 0 ? 0 : 500);
+  }
   runtimeTimeSeconds.value = 0;
   offsetTimeMS.value = 0;
   baseTimeMs.value = new Date().getTime() + countdownSeconds * 1000;
-  clearInterval(Number(runtimeTimer));
+  clearInterval(runtimeTimer);
   const loadedTimelineTTS = timelinePageData.loadedTimeline.filter((v) => v.tts);
   loadedTimelineTTS.map((v) => (v.alertAlready = false));
   runtimeTimer = setInterval(() => {
@@ -162,9 +164,11 @@ function handleLogEvent(e: any) {
 
 //同步页面时间轴
 function syncTimeline(targetTime: number) {
+  ttsSuppressFlag = false;
+  setTimeout(() => (ttsSuppressFlag = true), targetTime <= 0 ? 0 : 500);
   if (targetTime === 0) stopTimeline();
   else {
-    if (baseTimeMs.value === 0) startTimeline(0);
+    if (baseTimeMs.value === 0) startTimeline(0, false);
     offsetTimeMS.value += (targetTime - runtimeTimeSeconds.value) * 1000;
   }
 }
