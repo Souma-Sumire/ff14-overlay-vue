@@ -10,6 +10,7 @@ import ClipboardJS from "clipboard";
 let partyLen = 0;
 const slotIndex = useStorage("macro-slot-index", 5);
 addOverlayListener("PartyChanged", (e: any) => (partyLen = e.party.length));
+const [show, toggleShow] = useToggle(true);
 export const useMacroStore = defineStore("macro", {
   state: () => {
     return {
@@ -28,6 +29,7 @@ export const useMacroStore = defineStore("macro", {
         { text: "DSR", value: "968" },
       ],
       gameExists: useStorage("my-game-exists", false),
+      show,
     };
   },
   getters: {
@@ -362,7 +364,11 @@ export const useMacroStore = defineStore("macro", {
     },
     handleLogLine(e: any) {
       if (e.line[2] === "0038") {
-        const echoSwitch = e.line[4].match(/^(?:发宏|宏|macro)\s*(?<channel>e|p)?(?<party>[!！])?\s*$/i);
+        if (/^duty$/i.test(e.line[4])) {
+          toggleShow();
+          return;
+        }
+        const echoSwitch = e.line[4].match(/^(?:发宏|宏|macro|hong)\s*(?<channel>e|p)?(?<party>[!！])?\s*$/i);
         if (echoSwitch) {
           const channel: "e" | "p" = echoSwitch?.groups?.party ? "p" : echoSwitch?.groups?.channel ?? "e";
           const macro = this.data.zoneId[this.zoneNow]?.filter((v) => v.Type === "macro");
@@ -372,6 +378,7 @@ export const useMacroStore = defineStore("macro", {
             macroCommand(macro[0].Text, channel);
           } else if (macro.length > 1) {
             doTextCommand("/e 本地图存在多个宏，无法使用快捷发宏，请手动在网页中指定。");
+            show.value = true;
           } else {
             console.error(macro);
           }
@@ -389,7 +396,7 @@ export const useMacroStore = defineStore("macro", {
         //   return;
         // }
         const echoSlot = (e.line[4] as string).match(
-          /^(?:标点|标记|场景标记|place)(?:插槽|预设|)\s*(?<slot>[1-5])?.*?(?<mark>[!！])?\s*$/i,
+          /^(?:标点|标记|场景标记|place|biaodian)(?:插槽|预设|)\s*(?<slot>[1-5])?.*?(?<mark>[!！])?\s*$/i,
         );
         if (echoSlot) {
           const slotIndex: 1 | 2 | 3 | 4 | 5 = Number(echoSlot?.groups?.slot ?? 5) as 1 | 2 | 3 | 4 | 5;
@@ -403,6 +410,7 @@ export const useMacroStore = defineStore("macro", {
               doQueueActions([{ c: "DoTextCommand", p: `/waymark preset ${slotIndex}`, d: 500 }]);
             }
           } else if (place.length > 1) {
+            show.value = true;
             doTextCommand("/e 本地图存在多个场景标记预设，无法使用快捷插槽，请手动在网页中指定。");
           } else {
             console.error(place);
