@@ -368,7 +368,7 @@ export const useMacroStore = defineStore("macro", {
           toggleShow();
           return;
         }
-        const echoSwitch = e.line[4].match(/^(?:发宏|宏|macro|hong)\s*(?<channel>e|p)?(?<party>[!！])?\s*$/i);
+        const echoSwitch = e.line[4].match(/^(?:发宏|宏|macro|hong|fahong)\s*(?<channel>e|p)?(?<party>[!！])?\s*$/i);
         if (echoSwitch) {
           const channel: "e" | "p" = echoSwitch?.groups?.party ? "p" : echoSwitch?.groups?.channel ?? "e";
           const macro = this.data.zoneId[this.zoneNow]?.filter((v) => v.Type === "macro");
