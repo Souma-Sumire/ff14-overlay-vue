@@ -87,7 +87,7 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
         if (/^(?:item|mount)_/.test(abilityName)) {
           abilityId = parseInt(abilityName.replace(/^.+_/, ""), 16);
           //HQ道具 item_fXXXX （转十进制则为10XXXXXX）
-          if (abilityId > 1000000) {
+          if (abilityId > 983040) {
             abilityId = parseInt(abilityId.toString().slice(-5), 10);
             itemIsHQ = true;
           }
