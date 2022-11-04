@@ -23,6 +23,7 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
       config: {
         duration: Number(params?.duration || 25),
       },
+      lastPush: Date.now(),
     };
   },
   getters: {
@@ -105,6 +106,7 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
           key: key,
           APIData: {},
         });
+        this.lastPush = Date.now();
         const cast = this.castData[casterId].find((v) => v.key === key)!;
         setTimeout(() => {
           this.castData[casterId]?.splice(this.castData[casterId].indexOf(cast), 1);

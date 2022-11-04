@@ -15,10 +15,14 @@ onBeforeUnmount(() => {
   removeOverlayListener("PartyChanged", castingMonitorStore.handlePartyChanged);
   removeOverlayListener("BroadcastMessage", castingMonitorStore.handleBroadcastMessage);
 });
+const show = ref(false);
+setInterval(() => {
+  show.value = Date.now() - castingMonitorStore.lastPush < castingMonitorStore.config.duration * 2 * 1000;
+}, 1000);
 </script>
 
 <template>
-  <div class="common-layout">
+  <div class="common-layout" v-show="show">
     <el-container items-center>
       <el-header class="header-layout">
         <casting-monitor-header />
