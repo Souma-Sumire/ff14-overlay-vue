@@ -13,14 +13,9 @@ import {
   ChatSquare,
   CirclePlus,
 } from "@element-plus/icons-vue";
-import Swal from "sweetalert2";
-import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import { defaultMacro } from "@/resources/macro";
 import zoneInfo from "@/resources/zoneInfo";
 import { useMacroStore } from "@/store/macro";
-// import charactersJson from "@/resources/characters.json";
-
-// const charactersData = new Map(Object.entries(charactersJson));
 const [help, toggleHelp] = useToggle(false);
 const [showFooter, toggleFooter] = useToggle(false);
 const macroStore = useMacroStore();
@@ -93,12 +88,9 @@ const raidEmulatorOnLoad = async () => {
       }),
     ]);
     if (!websocketConnected) {
-      Swal.fire({
-        title: "已断开连接",
-        text: "请按照上图所示进行操作，然后刷新页面。",
-        imageUrl: actWS,
-        allowOutsideClick: false,
-        showConfirmButton: false,
+      ElMessageBox.alert(`请先启动ACT，再打开此页面<img src='${actWS}' style='width:100%'>`, "未检测到ACT连接", {
+        confirmButtonText: "确定",
+        dangerouslyUseHTMLString: true,
       });
     }
   }
@@ -127,22 +119,6 @@ onUnmounted(() => {
   removeOverlayListener("ChangeZone", macroStore.handleChangeZone);
   removeOverlayListener("LogLine", macroStore.handleLogLine);
 });
-// function parseMacroText(innerHTML: string): string {
-//   return innerHTML
-//     .split("")
-//     .map((v) => {
-//       const conV = convertUnicode(v);
-//       if (charactersData.has(conV)) {
-//         const [char, info] = charactersData.get(conV) as [string, string];
-//         return `<i class="xiv ${char}" data-info="${info}"></i>`;
-//       }
-//       return v;
-//     })
-//     .join("");
-// }
-// function convertUnicode(string: string) {
-//   return string.charCodeAt(0).toString(16);
-// }
 </script>
 <template>
   <el-container rd-1 m-0 p-0 absolute left-0 top-0 v-show="macroStore.show" class="elcontainer">
