@@ -80,5 +80,6 @@ export type FullJob =
   | "dragoon"
   | "fisher"
   | "reaper"
-  | "sage";
+  | "sage"
+  | "bluemage";
 export type Role = "tank" | "healer" | "dps" | "crafter" | "gatherer" | "none";

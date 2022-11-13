@@ -114,7 +114,7 @@ onMounted(() => {
   );
   raidEmulatorOnLoad();
 });
-onUnmounted(() => {
+onBeforeUnmount(() => {
   removeOverlayListener("onGameExistsEvent", macroStore.handleGameExists);
   removeOverlayListener("ChangeZone", macroStore.handleChangeZone);
   removeOverlayListener("LogLine", macroStore.handleLogLine);

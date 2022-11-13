@@ -104,7 +104,7 @@ const nameToFullName: Record<Job, { full: string; simple1: string; simple2: stri
   AST: { full: "占星术士", simple2: "占星", simple1: "占", en: "astrologian" },
   SAM: { full: "武士", simple2: "武士", simple1: "武", en: "samurai" },
   RDM: { full: "赤魔法师", simple2: "赤魔", simple1: "赤", en: "redmage" },
-  BLU: { full: "青魔法师", simple2: "青魔", simple1: "青", en: "blackmage" },
+  BLU: { full: "青魔法师", simple2: "青魔", simple1: "青", en: "bluemage" },
   GNB: { full: "绝枪战士", simple2: "绝枪", simple1: "绝", en: "gunbreaker" },
   DNC: { full: "舞者", simple2: "舞者", simple1: "舞", en: "dancer" },
   RPR: { full: "钐镰客", simple2: "钐镰", simple1: "镰", en: "reaper" },
@@ -183,6 +183,9 @@ const Util = {
   },
   iconToJobEnum: (icon: FFIcon) => {
     return iconToJobEnum[icon] ?? 0;
+  },
+  nameToJobEnum: (job: Job) => {
+    return nameToJobEnum[job] ?? 0;
   },
 } as const;
 
