@@ -26,8 +26,9 @@ export const useMacroStore = defineStore("macro", {
         { text: "P8S", value: "1088" },
         { text: "DSR", value: "968" },
       ],
-      gameExists: useStorage("my-game-exists", false),
+      // gameExists: useStorage("my-game-exists", false),
       show,
+      toggleShow,
     };
   },
   getters: {
@@ -257,14 +258,14 @@ export const useMacroStore = defineStore("macro", {
         ElMessage(`未知区域 ${e.zoneName} ${e.zoneID}`);
         return;
       }
-      if (this.gameExists) {
-        this.selectZone = zoneID;
-        this.zoneNow = zoneID;
-      }
+      // if (this.gameExists) {
+      this.selectZone = zoneID;
+      this.zoneNow = zoneID;
+      // }
     },
-    handleGameExists(e: any): void {
-      this.gameExists = !!e?.detail?.exists;
-    },
+    // handleGameExists(e: any): void {
+    //   this.gameExists = !!e?.detail?.exists;
+    // },
     handleLogLine(e: any) {
       if (e.line[2] === "0038") {
         if (/^duty$/i.test(e.line[4])) {
