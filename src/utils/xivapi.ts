@@ -44,7 +44,8 @@ export async function parseAction(
   );
 }
 
-export async function getImgSrc(imgSrc: string = "/i/000000/000405.png", itemIsHQ = false): Promise<string> {
+export async function getImgSrc(imgSrc: string, itemIsHQ = false): Promise<string> {
+  if (imgSrc.length === 0) return Promise.resolve("");
   return checkImgExists(`${site.first.site}${imgSrc}`)
     .catch(() =>
       checkImgExists(`${site.second.site}${imgSrc}`).catch(() =>
@@ -72,4 +73,21 @@ function checkImgExists(imgurl: string): Promise<string> {
     img.onload = () => resolve(imgurl);
     img.onerror = () => reject();
   });
+}
+
+export async function getImgSrcByActionId(id: number): Promise<string> {
+  return parseAction("action", id, ["Icon"]).then((res) => {
+    return getImgSrc(res?.Icon ?? "");
+  });
+}
+
+export async function getActionByChineseName(name: string): Promise<Partial<XivApiJson> | undefined> {
+  const isCN = /^[\u4e00-\u9fa5]+$/.test(name);
+  return fetch(
+    `https://${
+      isCN ? "cafemaker.wakingsands.com" : "xivapi.com"
+    }/search?filters=IsPlayerAction=1,ClassJobLevel>0&indexes=action&string=${encodeURIComponent(name)}`,
+  )
+    .then((res) => res.json())
+    .then((res) => res["Results"]?.[0]);
 }

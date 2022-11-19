@@ -17,8 +17,13 @@ windowAction.set(27937, { type: "begincast", window: [20, 20] }); //绝龙诗 �
 windowAction.set(28059, { type: "begincast", window: [20, 20] }); //绝龙诗 骑龙剑百京核爆
 windowAction.set(28060, { type: "begincast", window: [20, 20] }); //绝龙诗 骑龙剑百京核爆
 windowAction.set(28061, { type: "begincast", window: [20, 20] }); //绝龙诗 骑龙剑百京核爆
-windowAction.set(27956, { type: "begincast", window: [20, 20] }); //绝龙诗 圣龙吐息
-windowAction.set(27957, { type: "begincast", window: [20, 20] }); //绝龙诗 圣龙吐息
+windowAction.set(27956, { type: "begincast", window: [20, 20] }); //绝龙诗 圣龙吐息 不太行 吐息是随机的
+windowAction.set(27957, { type: "begincast", window: [20, 20] }); //绝龙诗 圣龙吐息 不太行 吐息是随机的
+windowAction.set(27952, { type: "begincast", window: [30, 30] }); //绝龙诗 灭杀的誓言
+windowAction.set(27969, { type: "begincast", window: [20, 20] }); //绝龙诗 无尽轮回
+windowAction.set(27971, { type: "begincast", window: [20, 20] }); //绝龙诗 无尽轮回
+windowAction.set(27939, { type: "begincast", window: [20, 20] }); //绝龙诗 神圣之翼
+windowAction.set(27966, { type: "begincast", window: [20, 20] }); //绝龙诗 邪炎俯冲
 windowAction.set(25316, { type: "begincast", window: [999, 999] }); //绝龙诗 纯洁心灵
 windowAction.set(25544, { type: "begincast", window: [10, 10] }); //绝龙诗 阿斯卡隆之仁·隐秘
 windowAction.set(26379, { type: "begincast", window: [10, 10] }); //绝龙诗 腾龙枪

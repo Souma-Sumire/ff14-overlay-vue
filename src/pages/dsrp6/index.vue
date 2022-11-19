@@ -22,11 +22,10 @@
 </template>
 
 <script lang="ts" setup>
-import { useActionStore } from "@/store/action";
+import { getImgSrcByActionId } from "@/utils/xivapi";
+
 addOverlayListener("LogLine", handleLogLine);
 startOverlayEvents();
-const actionStore = useActionStore();
-const siteImg = __SITE_IMG__;
 const targetName = {
   xie: ["尼德霍格", "ニーズヘッグ", "Nidhogg"],
   sheng: ["赫拉斯瓦尔格", "フレースヴェルグ", "Hraesvelgr"],
@@ -38,10 +37,7 @@ const actionTimeline: { show: boolean; data: { xie: string[]; xieHP: string; she
   });
 const HP = { xie: 0, sheng: 0 };
 let baseTime = 0;
-function createACompleteImg(url = "000000/000405"): string {
-  return siteImg + "/" + url + ".png";
-}
-function handleLogLine(e: { line: string[] }): void {
+async function handleLogLine(e: { line: string[] }): Promise<void> {
   if (e.line[0] === "20" && /^6D41$/.test(e.line[4])) {
     actionTimeline.data.length = 0;
     actionTimeline.show = true;
@@ -62,7 +58,7 @@ function handleLogLine(e: { line: string[] }): void {
     const timeIndex = Math.round((new Date().getTime() - baseTime) / 1000);
     if (actionTimeline.data[timeIndex] === undefined)
       actionTimeline.data[timeIndex] = { xie: [], sheng: [], xieHP: HP.xie.toFixed(1), shengHP: HP.sheng.toFixed(1) };
-    const img = createACompleteImg(actionStore.getActionById(parseInt(e.line[4], 16))?.Url);
+    const img = await getImgSrcByActionId(parseInt(e.line[4], 16));
     if (targetName.xie.includes(e.line[7])) {
       HP.xie = (Number(e.line[24]) / Number(e.line[25])) * 100;
       actionTimeline.data[timeIndex].xie.push(img);

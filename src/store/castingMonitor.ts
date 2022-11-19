@@ -124,7 +124,7 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
               "Description",
             ]);
             cast.APIData = action;
-            cast.src = await getImgSrc(action?.Icon, itemIsHQ);
+            cast.src = await getImgSrc(action?.Icon ?? "", itemIsHQ);
             if (queryType === "action") {
               cast.class = `action action-category-${action?.ActionCategoryTargetID}`;
             } else if (queryType === "item") {

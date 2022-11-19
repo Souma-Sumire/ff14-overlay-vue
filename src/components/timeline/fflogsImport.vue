@@ -2,9 +2,9 @@
 import axios from "axios";
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
-import { useActionStore } from "@/store/action";
 import { factory } from "@/utils/timelineSpecialRules";
 import { FFlogsApiV1ReportEvents, FFlogsQuery, FFlogsType, Friendlies } from "@/types/Fflogs";
+import Util from "@/utils/util";
 import { getActionChinese } from "@/resources/actionChinese";
 
 enum QueryTextEnum {
@@ -12,7 +12,6 @@ enum QueryTextEnum {
   querying = "正在请求",
 }
 
-const actionStore = useActionStore();
 const props = defineProps<{ settings: { api: any }; filters: any }>();
 const emit = defineEmits(["newTimeline", "showFFlogsToggle", "clearCurrentlyTimeline"]);
 const urlRe = /(?<=^|\/)(?<code>[\d\w]{16,})\/?#fight=(?<fight>\d+|last)/;
@@ -192,14 +191,14 @@ async function queryFFlogsReportEvents() {
   await Promise.all([friendlyPromise, enemiesPromise]).then(() => {
     for (const event of resEvents) {
       if (event.type === "begincast" && event.sourceIsFriendly) continue;
-      const action = actionStore.getActionById(event.ability.guid);
+      // const action = actionStore.getActionById(event.ability.guid);
       fflogsQueryConfig.abilityFilterEvents.push({
         time: Number(((event.timestamp - fflogsQueryConfig.start) / 1000).toFixed(1)),
         type: event.type,
         actionName: getActionChinese(event.ability.guid) ?? event.ability.name,
         actionId: event.ability.guid,
         sourceIsFriendly: event.sourceIsFriendly,
-        url: action?.Url ?? event?.ability?.abilityIcon.replace("-", "/").replace(".png", "") ?? "000000/000405",
+        url: event?.ability?.abilityIcon.replace("-", "/").replace(".png", "") ?? "000000/000405",
         window: undefined,
       });
     }
@@ -333,13 +332,17 @@ function claerFFlogsQueryConfig() {
     <el-row>
       <el-table
         v-show="fflogsQueryConfig.abilityFilterEvents.length === 0"
-        :data="fflogsQueryConfig.friendlies"
+        :data="fflogsQueryConfig.friendlies.filter((v) => v.icon !== 'NPC')"
         stripe
         border
         class="fflogs-query-result-friendlies-list">
         <el-table-column prop="name" label="玩家名称" min-width="60px" />
         <el-table-column prop="server" label="服务器" min-width="60px" />
-        <el-table-column prop="icon" label="职业" min-width="60px" />
+        <el-table-column label="职业" min-width="60px">
+          <template #default="{ row }">
+            {{ Util.nameToFullName(Util.jobEnumToJob(Util.iconToJobEnum(row.icon))).full }}
+          </template>
+        </el-table-column>
         <el-table-column label="选定" min-width="20px">
           <template #default="scope">
             <el-button type="primary" size="small" @click="handleFFlogsQueryResultFriendliesList(scope.row)"

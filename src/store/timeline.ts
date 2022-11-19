@@ -1,4 +1,3 @@
-import { ActionEnum } from "../types/Action";
 import { defineStore } from "pinia";
 import {
   ITimeline,
@@ -10,15 +9,18 @@ import {
   TimelineConfigValues,
   ShowStyle,
 } from "../types/Timeline";
-import { useActionStore } from "./action";
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import Util from "../utils/util";
-import { IActionData } from "../types/Action";
+import { getActionByChineseName, getImgSrc } from "@/utils/xivapi";
+import { FFIcon } from "@/types/Fflogs";
 
-const actionStore = useActionStore();
 class Timeline implements ITimeline {
   constructor(name: string, condition: ITimelineCondition, timeline: string, codeFight: string) {
+    if (Util.iconToJobEnum(condition.job as FFIcon)) {
+      //突然有一天数据格式不一致了 可能是fflogs改返回值了?
+      condition.job = Util.jobEnumToJob(Util.iconToJobEnum(condition.job as FFIcon));
+    }
     this.name = name;
     this.condition = condition;
     this.timeline = timeline;
@@ -119,30 +121,6 @@ export const useTimelineStore = defineStore("timeline", {
         );
       });
     },
-    parseTimeline(rawTimeline: string) {
-      return [...rawTimeline.matchAll(/^(?<time>[-:：\d.]+)\s+(?<action>(--|["'])[^"'\n]+?\3).*$/gm)]
-        .reduce((total, line) => {
-          const jump = line[0].match(/(?<=jump )[-:：\d.]+/)?.[0];
-          const sync = line[0].match(/(?<=sync \/).+(?=\/)/)?.[0];
-          const windowBefore = line[0].match(/(?<=window )[-:：\d.]+/)?.[0];
-          const windowAfter = line[0].match(/(?<=window [-:：\d.]+,)[-:：\d.]+/)?.[0];
-          const tts = line[0].match(/ tts ["'](?<tts>[^"']+)["']/)?.groups?.tts;
-          const ttsSim = / tts(?: |$)/.test(line[0]) ? parseAction(line.groups!.action)?.groups?.name : undefined;
-          total.push({
-            time: parseTime(line.groups!.time),
-            actionHTML: line.groups!.action ? parseActionHTML(line.groups!.action) : "",
-            alertAlready: false,
-            sync: sync ? new RegExp(sync) : undefined,
-            show: !sync,
-            windowBefore: parseFloat(windowBefore || windowAfter || "2.5"),
-            windowAfter: parseFloat(windowAfter || windowBefore || "2.5"),
-            jump: jump ? parseFloat(jump) : undefined,
-            tts: tts || ttsSim,
-          });
-          return total;
-        }, [] as Array<ITimelineLine>)
-        .sort((a, b) => a.time - b.time);
-    },
     saveTimelineSettings() {
       localStorage.setItem(
         "timelines",
@@ -167,6 +145,11 @@ export const useTimelineStore = defineStore("timeline", {
         });
         this.sortTimelines();
       }
+      this.allTimelines.forEach((v) => {
+        //突然有一天数据格式不一致了 可能是fflogs改返回值了? 对现有数据进行修复
+        if (Util.iconToJobEnum(v.condition.job as FFIcon))
+          v.condition.job = Util.jobEnumToJob(Util.iconToJobEnum(v.condition.job as FFIcon));
+      });
     },
     sortTimelines() {
       this.allTimelines.sort((a, b) => {
@@ -193,20 +176,52 @@ function parseTime(time: string): number {
   }
 }
 function parseAction(text: string) {
-  return text.match(/\s*\<(?<name>[^\<\>]*?)!??\>(?<repeat>~)?(?<other>.*)\s*/);
+  return text.matchAll(/\<(?<name>[^\<\>]*?)!??\>(?<repeat>~)?/g);
 }
-function parseActionHTML(text: string): string {
+
+async function parseActionHTML(text: string): Promise<string> {
   text = text.replaceAll(/^["']|["']$/g, "");
-  const item = parseAction(text);
-  if (!item) return text;
-  const action =
-    actionStore.getActionByName(item.groups!.name, (a: IActionData) => a[ActionEnum.IsPlayerAction]) ??
-    actionStore.getActionByName(item.groups!.name, () => true);
-  if (action) {
-    text = `<div class="skill_icon">
-    <img src="${__SITE_IMG__}/${action.Url}.png"
-    onerror="javascript:this.src='${__SITE_IMG__BAK}/${action.Url}.png';this.onerror=null;">
-    </div><span>${item.groups?.repeat ? item.groups!.name : ""}${item.groups?.other ? item.groups.other : ""}</span>`;
+  const items = parseAction(text);
+  if (!items) return Promise.resolve(text);
+  for (const item of items) {
+    if (item.groups?.name) {
+      const src = await getImgSrc(await getActionByChineseName(item.groups.name).then((v) => v?.Icon ?? ""));
+      text = text.replace(
+        item[0],
+        `${src ? `<div class="skill_icon"><img src='${src}'/></div>` : ""}${
+          item.groups?.repeat ? item.groups!.name : ""
+        }`,
+      );
+    }
   }
-  return text;
+  return Promise.resolve(text);
+}
+export async function parseTimeline(rawTimeline: string): Promise<ITimelineLine[]> {
+  const total: ITimelineLine[] = [];
+  const matchs = [...rawTimeline.matchAll(/^(?<time>[-:：\d.]+)\s+(?<action>(--|["'])[^"'\n]+?\3).*$/gm)];
+  for (let i = 0; i < matchs.length; i++) {
+    const match = matchs[i];
+    const jump = match[0].match(/(?<=jump )[-:：\d.]+/)?.[0];
+    const sync = match[0].match(/(?<=sync \/).+(?=\/)/)?.[0];
+    const windowBefore = match[0].match(/(?<=window )[-:：\d.]+/)?.[0];
+    const windowAfter = match[0].match(/(?<=window [-:：\d.]+,)[-:：\d.]+/)?.[0];
+    const tts = match[0].match(/ tts ["'](?<tts>[^"']+)["']/)?.groups?.tts;
+    const ttsSim = / tts(?: |$)/.test(match[0])
+      ? Array.from(parseAction(match.groups!.action))?.[0]?.groups?.name
+      : undefined;
+    const actionHTML = await parseActionHTML(match.groups!.action);
+    total.push({
+      time: parseTime(match.groups!.time),
+      actionHTML: match.groups!.action ? actionHTML : "",
+      alertAlready: false,
+      sync: sync ? new RegExp(sync) : undefined,
+      show: !sync,
+      windowBefore: parseFloat(windowBefore || windowAfter || "2.5"),
+      windowAfter: parseFloat(windowAfter || windowBefore || "2.5"),
+      jump: jump ? parseFloat(jump) : undefined,
+      tts: tts || ttsSim,
+    });
+  }
+  total.sort((a, b) => a.time - b.time);
+  return total;
 }

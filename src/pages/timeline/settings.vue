@@ -2,12 +2,12 @@
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import zoneInfo from "@/resources/zoneInfo";
-import { useTimelineStore } from "@/store/timeline";
+import { useTimelineStore, parseTimeline } from "@/store/timeline";
 import Util from "@/utils/util";
 import "animate.css";
 import ClipboardJS from "clipboard";
 import router from "@/router";
-import { ITimeline } from "@/types/Timeline";
+import { ITimeline, ITimelineLine } from "@/types/Timeline";
 
 const simulatedCombatTime = ref(-30);
 const timelineStore = useTimelineStore();
@@ -20,18 +20,10 @@ let timelineCurrentlyEditing: { timeline: ITimeline } = reactive({
   timeline: { name: "空", condition: { zoneId: "0", job: "NONE" }, timeline: "空", codeFight: "空", create: "空" },
 });
 const isWSMode = location.href.includes("OVERLAY_WS=");
-const transmissionTimeline = ref(timelineStore.parseTimeline(timelineCurrentlyEditing.timeline.timeline));
+const transmissionTimeline = ref([] as ITimelineLine[]);
+
 async function updateTransmissionTimeline() {
-  await Swal.fire({
-    text: "正在更新预览",
-    showConfirmButton: false,
-    allowOutsideClick: false,
-    allowEscapeKey: false,
-    allowEnterKey: false,
-    timer: 250,
-  });
-  transmissionTimeline.value = timelineStore.parseTimeline(timelineCurrentlyEditing.timeline.timeline);
-  Swal.close();
+  transmissionTimeline.value = await parseTimeline(timelineCurrentlyEditing.timeline.timeline);
 }
 const debounceJobCN = useDebounce(
   computed(() => Util.getBattleJobs2()),
@@ -116,6 +108,10 @@ function newDemoTimeline(): void {
 }
 
 function editTimeline(timeline: ITimeline): void {
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
   timelineCurrentlyEditing.timeline = timeline;
   updateTransmissionTimeline();
 }
@@ -255,8 +251,7 @@ const timeMinuteSecondDisplay = computed(() => {
         v-if="showFFlogs"
         @clearCurrentlyTimeline="clearCurrentlyTimeline"
         @showFFlogsToggle="() => (showFFlogs = !showFFlogs)"
-        @newTimeline="timelineStore.newTimeline"
-      >
+        @newTimeline="timelineStore.newTimeline">
       </TimelineFflogsImport>
       <el-card class="box-card" v-show="showSettings">
         <el-descriptions title="时间轴参数" size="small" style="width: 100%" border>
@@ -266,8 +261,7 @@ const timeMinuteSecondDisplay = computed(() => {
             :label="timelineStore.configTranslate[key]"
             label-align="right"
             align="center"
-            width="16em"
-          >
+            width="16em">
             <el-input-number :min="0" :step="0.1" v-model="timelineStore.configValues[key]" />
           </el-descriptions-item>
         </el-descriptions>
@@ -279,8 +273,7 @@ const timeMinuteSecondDisplay = computed(() => {
             :label="timelineStore.showStyleTranslate[key]"
             label-align="right"
             align="center"
-            width="16em"
-          >
+            width="16em">
             <el-input-number :min="0" :step="0.01" v-model="timelineStore.showStyle[key]" />
           </el-descriptions-item>
         </el-descriptions>
@@ -305,8 +298,7 @@ const timeMinuteSecondDisplay = computed(() => {
                   v-for="zone in highDifficultZoneId"
                   :key="zone.id"
                   :label="zone.name"
-                  :value="zone.id"
-                ></el-option>
+                  :value="zone.id"></el-option>
               </el-select>
             </p>
             <p class="timeline-info-config">
@@ -316,8 +308,7 @@ const timeMinuteSecondDisplay = computed(() => {
                   v-for="job in debounceJobCN"
                   :key="job"
                   :label="Util.nameToFullName(job).full"
-                  :value="job"
-                ></el-option>
+                  :value="job"></el-option>
               </el-select>
             </p>
             <p class="timeline-info-config">
@@ -341,8 +332,7 @@ const timeMinuteSecondDisplay = computed(() => {
               wrap="off"
               placeholder="请键入时间轴文本"
               style="max-width: 569px"
-              @change="updateTransmissionTimeline()"
-            />
+              @change="updateTransmissionTimeline()" />
           </div>
           <div style="max-height: 353px">
             <div class="timeline-timeline-view">
@@ -350,8 +340,7 @@ const timeMinuteSecondDisplay = computed(() => {
                 :config="timelineStore.configValues"
                 :lines="transmissionTimeline"
                 :runtime="simulatedCombatTime"
-                :show-style="timelineStore.showStyle"
-              ></TimelineTimelineShow>
+                :show-style="timelineStore.showStyle"></TimelineTimelineShow>
             </div>
           </div>
         </el-row>
@@ -359,21 +348,15 @@ const timeMinuteSecondDisplay = computed(() => {
       </el-card>
       <br />
       <el-card v-if="timelines.length > 0">
-        <el-table
-          :data="timelines"
-          style="width: 100%"
-          stripe
-        >
-          <el-table-column prop="name" label="名称" sortable> </el-table-column>
+        <el-table :data="timelines" style="width: 100%" stripe>
+          <el-table-column prop="name" label="名称"> </el-table-column>
           <el-table-column prop="conditon" label="地图" sortable>
             <template #default="scope">
               {{ highDifficultZoneId.find((value) => value.id === scope.row.condition.zoneId)?.name }}
             </template>
           </el-table-column>
-          <el-table-column prop="conditon" label="职业" sortable>
-            <template #default="scope">
-              {{ Util.nameToFullName(scope.row.condition.job).simple2 }}
-            </template>
+          <el-table-column prop="conditon" label="职业">
+            <template #default="scope">{{ Util.nameToFullName(scope.row.condition.job).full }} </template>
           </el-table-column>
           <el-table-column fixed="right" label="操作" width="100">
             <template #default="scope">
