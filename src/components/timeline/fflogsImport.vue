@@ -4,7 +4,8 @@ import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import { useActionStore } from "@/store/action";
 import { factory } from "@/utils/timelineSpecialRules";
-import { FFIcon, FFlogsApiV1ReportEvents, FFlogsQuery, FFlogsType, Friendlies } from "@/types/Fflogs";
+import { FFlogsApiV1ReportEvents, FFlogsQuery, FFlogsType, Friendlies } from "@/types/Fflogs";
+import { getActionChinese } from "@/resources/actionChinese";
 
 enum QueryTextEnum {
   query = "查询",
@@ -195,7 +196,7 @@ async function queryFFlogsReportEvents() {
       fflogsQueryConfig.abilityFilterEvents.push({
         time: Number(((event.timestamp - fflogsQueryConfig.start) / 1000).toFixed(1)),
         type: event.type,
-        actionName: action?.Name === undefined || action?.Name === "" ? event.ability.name : action.Name,
+        actionName: getActionChinese(event.ability.guid) ?? event.ability.name,
         actionId: event.ability.guid,
         sourceIsFriendly: event.sourceIsFriendly,
         url: action?.Url ?? event?.ability?.abilityIcon.replace("-", "/").replace(".png", "") ?? "000000/000405",
@@ -335,8 +336,7 @@ function claerFFlogsQueryConfig() {
         :data="fflogsQueryConfig.friendlies"
         stripe
         border
-        class="fflogs-query-result-friendlies-list"
-      >
+        class="fflogs-query-result-friendlies-list">
         <el-table-column prop="name" label="玩家名称" min-width="60px" />
         <el-table-column prop="server" label="服务器" min-width="60px" />
         <el-table-column prop="icon" label="职业" min-width="60px" />
@@ -351,28 +351,26 @@ function claerFFlogsQueryConfig() {
     >
     <el-row
       v-show="fflogsQueryConfig.abilityFilterEvents.length > 0"
-      class="fflogs-query-result-friendlies-ability-filter-select"
-    >
+      class="fflogs-query-result-friendlies-ability-filter-select">
       <el-col :span="20">
         <el-select
           v-model="fflogsQueryConfig.abilityFilterSelected"
           multiple
           placeholder="技能过滤器"
-          :fit-input-width="true"
-        >
+          :fit-input-width="true">
           <el-option
             class="ability-filter-li"
             v-for="rule in fflogsQueryConfig.abilityFilterCandidate"
             :key="rule.actionId"
             :value="rule.actionId"
-            :label="rule.actionName"
-          >
+            :label="rule.actionName">
             <img
               :src="`${siteImg}/${rule.url}.png`"
               class="ability-filter-li-icon"
               title=""
-              :onerror="`javascript:this.src='${siteImgBak}/${rule.url}.png';this.onerror=null;`"
-            />{{ rule.actionName }}
+              :onerror="`javascript:this.src='${siteImgBak}/${rule.url}.png';this.onerror=null;`" />{{
+              rule.actionName
+            }}
           </el-option>
         </el-select>
       </el-col>
