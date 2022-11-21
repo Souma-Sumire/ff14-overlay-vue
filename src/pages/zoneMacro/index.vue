@@ -4,11 +4,8 @@ import {
   Check,
   Delete,
   Edit,
-  Plus,
   Position,
-  RefreshLeft,
   CopyDocument,
-  Upload,
   ChatDotSquare,
   ChatSquare,
 } from "@element-plus/icons-vue";
@@ -17,7 +14,7 @@ import zoneInfo from "@/resources/zoneInfo";
 import { useMacroStore } from "@/store/macro";
 const [help, toggleHelp] = useToggle(false);
 const macroStore = useMacroStore();
-macroStore.initAllData();
+macroStore.formatAllWaymarkPlaceData();
 {
   //兼容旧数据的更新策略 日后删除
   for (const macros in macroStore.data.zoneId) {
@@ -106,7 +103,7 @@ onMounted(() => {
   watch(
     toRef(macroStore, "selectZone"),
     () => {
-      macroStore.initSelectZoneData(macroStore.selectZone);
+      macroStore.formatSelectZoneWaymarkPlaceData(macroStore.selectZone);
     },
     { immediate: true },
   );
@@ -280,9 +277,9 @@ onBeforeUnmount(() => {
               class="buttonArea"
               :style="{ maxHeight: macro.Editable ? '100px' : null, opacity: macro.Editable ? 1 : null }">
               <el-button :icon="Edit" size="small" @click="macroStore.editMacroPlace(macro)">编辑</el-button>
-              <!-- <el-button type="primary" size="small"  @click="macroStore.doLocalWayMark(macro.Place)">本地</el-button> -->
-              <el-button type="primary" size="small" :icon="Upload" @click="macroStore.doSlotWayMark(macro.Place)"
-                >写入预设</el-button
+              <el-button type="primary" size="small" @click="macroStore.doLocalWayMark(macro.Place)">本地</el-button>
+              <el-button type="primary" size="small" @click="macroStore.doSlotWayMark(macro.Place)"
+                >插槽</el-button
               >
             </el-row>
             <el-row v-if="macro.Editable" class="buttonAreaEditing">

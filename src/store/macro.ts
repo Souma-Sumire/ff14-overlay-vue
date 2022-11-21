@@ -24,7 +24,7 @@ export const useMacroStore = defineStore("macro", {
         { text: "P6S", value: "1084" },
         { text: "P7S", value: "1086" },
         { text: "P8S", value: "1088" },
-        { text: "DSR", value: "968" },
+        // { text: "DSR", value: "968" },
       ],
       // gameExists: useStorage("my-game-exists", false),
       show,
@@ -52,15 +52,15 @@ export const useMacroStore = defineStore("macro", {
     submitMacroPlace(macro: MacroInfoPlace): void {
       Reflect.deleteProperty(macro, "Editable");
     },
-    initAllData() {
-      for (const x in this.data.zoneId) this.initSelectZoneData(x);
+    formatAllWaymarkPlaceData() {
+      for (const x in this.data.zoneId) this.formatSelectZoneWaymarkPlaceData(x);
     },
-    initSelectZoneData(zone: string) {
+    formatSelectZoneWaymarkPlaceData(zone: string) {
       for (const y in this.data.zoneId[zone]) {
         Reflect.deleteProperty(this.data.zoneId[zone][y], "Editable");
         if (this.data.zoneId[zone][y].Type === "place") {
           const d = this.data.zoneId[zone][y] as MacroInfoPlace;
-          d.Place = {
+          (this.data.zoneId[zone][y] as MacroInfoPlace).Place = {
             A: d.Place.A ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
             B: d.Place.B ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
             C: d.Place.C ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
@@ -139,7 +139,6 @@ export const useMacroStore = defineStore("macro", {
                 type: "warning",
               },
             );
-            console.log(confirm);
             if (confirm !== "confirm") flag = false;
           }
           if (!flag) return;
@@ -222,6 +221,10 @@ export const useMacroStore = defineStore("macro", {
     },
     sendMacroEcho(text: string): void {
       macroCommand(text, "e");
+    },
+    doLocalWayMark(place: PPJSON): void {
+      doInsertPreset(Number(this.selectZone), place, slotIndex.value as 1 | 2 | 3 | 4 | 5);
+      ElMessage.success("插槽" + slotIndex.value + "已标点");
     },
     doSlotWayMark(place: PPJSON): void {
       ElMessageBox({
@@ -321,7 +324,7 @@ export const useMacroStore = defineStore("macro", {
         .then(() => {
           this.data.zoneId[this.selectZone].length = 0;
           this.data.zoneId[this.selectZone].push(...JSON.parse(JSON.stringify(defaultMacro.zoneId[this.selectZone])));
-          this.initSelectZoneData(this.selectZone);
+          this.formatSelectZoneWaymarkPlaceData(this.selectZone);
           ElMessage.success("重置成功");
         })
         .catch(() => {});
@@ -338,7 +341,9 @@ export const useMacroStore = defineStore("macro", {
             cancelButtonText: "取消",
             type: "warning",
           }).then(() => {
-            this.data.zoneId = JSON.parse(JSON.stringify(defaultMacro.zoneId));
+            // localStorage.removeItem("my-macros");
+            this.data = JSON.parse(JSON.stringify(defaultMacro));
+            this.formatSelectZoneWaymarkPlaceData(this.selectZone);
             ElMessage.success("重置成功");
           });
         })
