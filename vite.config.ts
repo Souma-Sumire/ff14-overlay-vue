@@ -11,7 +11,7 @@ import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
 const path = require("path");
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: "./ff14-overlay-vite",
+  base: "/ff14-overlay-vite/",
   build: {
     outDir: "./dist",
     emptyOutDir: true, //构建时清空outDir目录

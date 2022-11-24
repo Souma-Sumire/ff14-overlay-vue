@@ -2,8 +2,8 @@ import Swal from "sweetalert2";
 import { createRouter, createWebHashHistory, createWebHistory } from "vue-router";
 import routes from "~pages";
 const router = createRouter({
-  // history: createWebHashHistory(),
-  history: createWebHistory(),
+  history: createWebHashHistory(),
+  // history: createWebHistory(),
   routes,
 });
 // router.beforeResolve((to, from) => {
