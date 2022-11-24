@@ -1,6 +1,6 @@
 import { defaultMacro } from "./../resources/macro";
 import { defineStore } from "pinia";
-import { doTextCommand, doInsertPreset, doQueueActions } from "../utils/postNamazu";
+import { doTextCommand, doInsertPreset, doWayMarks, doQueueActions } from "../utils/postNamazu";
 import { MacroInfoMacro, MacroInfoPlace, MacroType } from "../types/Macro";
 import zoneInfo from "../resources/zoneInfo";
 import { getMapIDByTerritoryType, getTerritoryTypeByMapID } from "../resources/contentFinderCondition";
@@ -223,8 +223,8 @@ export const useMacroStore = defineStore("macro", {
       macroCommand(text, "e");
     },
     doLocalWayMark(place: PPJSON): void {
-      doInsertPreset(Number(this.selectZone), place, slotIndex.value as 1 | 2 | 3 | 4 | 5);
-      ElMessage.success("插槽" + slotIndex.value + "已标点");
+      doWayMarks(place);
+      ElMessage.success("已标点");
     },
     doSlotWayMark(place: PPJSON): void {
       ElMessageBox({
