@@ -2,15 +2,16 @@ import Vue from "@vitejs/plugin-vue";
 import { presetAttributify, presetIcons, presetUno } from "unocss";
 import Unocss from "unocss/vite";
 import viteCompression from "vite-plugin-compression";
-import AutoImport from "unplugin-auto-import/vite";
-import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
-import Components from "unplugin-vue-components/vite";
-import { defineConfig } from "vite";
 import Pages from "vite-plugin-pages";
 import Markdown from "vite-plugin-vue-markdown";
+import { defineConfig } from "vite";
+import AutoImport from "unplugin-auto-import/vite";
+import Components from "unplugin-vue-components/vite";
+import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
 const path = require("path");
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: "/",
   build: {
     outDir: "./dist",
     emptyOutDir: true, //构建时清空outDir目录
@@ -46,7 +47,6 @@ export default defineConfig({
       dts: "./src/types/auto-imports.d.ts",
       resolvers: [ElementPlusResolver()],
     }),
-    Markdown({ headEnabled: true }),
     Components({
       dirs: ["src/components"],
       //组件名称包含目录，防止同名组件冲突
@@ -59,6 +59,7 @@ export default defineConfig({
       presets: [presetUno(), presetAttributify(), presetIcons()],
     }),
     Pages(),
+    Markdown({ headEnabled: true }),
   ],
   css: {
     postcss: {
@@ -78,8 +79,6 @@ export default defineConfig({
     },
   },
   define: {
-    __SITE_IMG__: JSON.stringify(`https://cafemaker.wakingsands.com/i`),
-    __SITE_IMG__BAK: JSON.stringify(`https://xivapi.com/i`),
     __VUE_OPTIONS_API__: false,
   },
   resolve: {

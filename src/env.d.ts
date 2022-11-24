@@ -5,5 +5,3 @@ declare module "*.vue" {
   const component: DefineComponent<{}, {}, any>;
   export default component;
 }
-declare const __SITE_IMG__: string;
-declare const __SITE_IMG__BAK: string;

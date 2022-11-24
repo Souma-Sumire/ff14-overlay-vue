@@ -15,8 +15,6 @@ enum QueryTextEnum {
 const props = defineProps<{ settings: { api: any }; filters: any }>();
 const emit = defineEmits(["newTimeline", "showFFlogsToggle", "clearCurrentlyTimeline"]);
 const urlRe = /(?<=^|\/)(?<code>[\d\w]{16,})\/?#fight=(?<fight>\d+|last)/;
-const siteImg = __SITE_IMG__;
-const siteImgBak = __SITE_IMG__BAK;
 const regexType: Partial<Record<FFlogsType, string>> = {
   "begincast": "14",
   "cast": "1[56]",
@@ -368,10 +366,10 @@ function claerFFlogsQueryConfig() {
             :value="rule.actionId"
             :label="rule.actionName">
             <img
-              :src="`${siteImg}/${rule.url}.png`"
+              :src="`https://cafemaker.wakingsands.com/i/${rule.url}.png`"
               class="ability-filter-li-icon"
               title=""
-              :onerror="`javascript:this.src='${siteImgBak}/${rule.url}.png';this.onerror=null;`" />{{
+              :onerror="`javascript:this.src='https://xivapi.com/i/${rule.url}.png';this.onerror=null;`" />{{
               rule.actionName
             }}
           </el-option>
