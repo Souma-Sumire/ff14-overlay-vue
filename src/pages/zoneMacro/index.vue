@@ -217,28 +217,28 @@ onBeforeUnmount(() => {
                     <span v-show="true">{{ scope.row[0] }}</span>
                   </template>
                 </el-table-column>
-                <el-table-column align="center" label="X" width="90">
+                <el-table-column align="center" label="X" width="140">
                   <template #default="scope">
                     <span v-show="!macro.Editable">{{ scope.row.X }}</span>
-                    <el-input
-                      type="number"
+                    <el-input-number
+                    controls-position="right"
+                      :step="1"
                       :precision="2"
                       size="small"
-                      controls-position="right"
                       v-show="macro.Editable"
-                      v-model="scope.row[1].X"></el-input>
+                      v-model="scope.row[1].X"></el-input-number>
                   </template>
                 </el-table-column>
-                <el-table-column align="center" label="Z" width="90">
+                <el-table-column align="center" label="Z" width="140">
                   <template #default="scope">
                     <span v-show="!macro.Editable">{{ scope.row.Z }}</span>
-                    <el-input
-                      type="number"
+                    <el-input-number
+                    controls-position="right"
+                      :step="1"
                       :precision="2"
                       size="small"
-                      controls-position="right"
                       v-show="macro.Editable"
-                      v-model="scope.row[1].Z"></el-input>
+                      v-model="scope.row[1].Z"></el-input-number>
                   </template>
                 </el-table-column>
                 <el-table-column align="center" label="Y" width="85" v-if="false">
