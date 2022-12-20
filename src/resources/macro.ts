@@ -511,26 +511,26 @@ export const defaultMacro: { zoneId: ZoneIdInfo } = {
         Type: "macro",
         Text: cleanMacro(`
         p ■四重核爆/引导/蛇2     ■基本散开
-        /p MT/D3　→　ST/D4  D3 MT D4
-        /p ↑ ☆ ↓ H1(H2) ST
-        /p H1/D1　←　H2/D2 D1 H2 D2
+        /p MT/D3　→　ST/D4　　　D3 MT D4
+        /p ↑　　　☆　　↓ 　　　 H1    ST
+        /p H1/D1　←　H2/D2 　　 D1 H2 D2
         /p ■巨蛇模式(第一次)
         /p 蛇：从北顺时针MTD1>STD2>H1D3>H2D4
         /p ■四足步行
         /p 1,3次→1(北西)　2,4次→中央　待机→A(北)
         /p ■幻影创造
-        /p ◎龙龙×散開 │◎凤凰×散開
-        /p D3 │　D3 MT D4
-        /p MT　ST　D4│　H1 ☆ ST
-        /p H1 D1　D2 │　D1 H2 D2
-        /p H2 │
+        /p ◎龙龙×散开 　　│ ◎凤凰×散开
+        /p 　　D3 　　　　│　D3 MT D4
+        /p 　　MT　ST　D4 │　H1 ☆ ST
+        /p H1　D1　D2 　　│　D1 H2 D2
+        /p 　　　　H2 　　│
         /p ■四重炎岚(横竖) ｜■四重炎岚(角)
-        /p MT │ 中央　※MT组：西优先
-        /p D1 ST D2 ｜T　近
-        /p D3 H1 H2 D4 │遠　H
+        /p 　　　MT 　　　│ 　　中央　　※MT组：西优先
+        /p 　D1 ST D2 　 ｜ T　近
+        /p D3 H1 H2 D4 　│ 远　H
         /p ◎分摊：靠近H位置(MTD1/STD2/H1D3/H2D4)
         /p ■巨蛇模式(第二次) 4:4分摊
-        /p DEBUFF：北西>MT/D1>ST/D2>H1/D3>H2/D4>南東
+        /p DEBUFF：北西>MT/D1>ST/D2>H1/D3>H2/D4>南东
         /p 其余：北西TH/南东DPS
         /p ■四重核爆/双重核爆
         /p 四重：(BOSS)MT/D1>ST/D2>H1/D3>H2/D4
