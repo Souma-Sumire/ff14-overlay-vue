@@ -681,6 +681,22 @@ export const defaultMacro: { zoneId: ZoneIdInfo } = {
         },
       },
     ],
+    "1090": [
+      {
+        Name: "候鸟",
+        Type: "place",
+        Place: {
+          "A": { "X": 0.0, "Y": 0.074, "Z": -11.161, "ID": 0, "Active": true },
+          "B": { "X": 5.7, "Y": 0.082, "Z": -18.5, "ID": 1, "Active": true },
+          "C": { "X": -5.7, "Y": 0.082, "Z": -18.5, "ID": 2, "Active": true },
+          "D": { "X": 0.0, "Y": 0.0, "Z": 0.0, "ID": 3, "Active": false },
+          "One": { "X": 4.171, "Y": 0.07, "Z": -6.632, "ID": 4, "Active": true },
+          "Two": { "X": 0.08, "Y": 0.048, "Z": -1.98, "ID": 5, "Active": true },
+          "Three": { "X": 7.038, "Y": 0.074, "Z": 4.041, "ID": 6, "Active": true },
+          "Four": { "X": 0.0, "Y": 0.0, "Z": 0.0, "ID": 7, "Active": false },
+        },
+      },
+    ],
     "968": [
       {
         Name: "莫古力P1",
