@@ -3,7 +3,7 @@ import router from "./router";
 import { createPinia } from "pinia";
 import { createHead } from "@vueuse/head";
 // import ElementPlus from "element-plus";
-// import "element-plus/dist/index.css";
+import "element-plus/dist/index.css";
 import "uno.css";
 
 const app = createApp(App);

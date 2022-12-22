@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "tsc": "vue-tsc --noEmit",
     "build": "vite build",
     "preview": "vite preview"
   },

@@ -47,11 +47,7 @@ export default defineConfig({
       extensions: ["vue", "md"],
       directoryAsNamespace: true,
       include: [/\.vue$/, /\.vue\?vue/, /\.md$/],
-      resolvers: [
-        ElementPlusResolver({
-          importStyle: "sass",
-        }),
-      ],
+      resolvers: [ElementPlusResolver()],
       dts: "src/types/components.d.ts",
     }),
     viteCompression({
