@@ -127,7 +127,7 @@ async function handleLogEvent(e: any) {
       )
     )
       restartRecord();
-    else if (/^.{14} Director 21:.{8}:400000(?:0F|10)/.test(log) || /^.{14} ChatLog 00:0038::end$/i.test(log))
+    else if (/^.{14} Director 21:.{8}:4000000F/.test(log) || /^.{14} ChatLog 00:0038::end$/i.test(log))
       stopRecord();
   }
 }

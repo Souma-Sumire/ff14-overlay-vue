@@ -824,7 +824,7 @@ const logRegex = {
   drawCard: /^.{14} ActionEffect 15:(?<casterID>1.{7}):[^:]+:E06:/,
   updateHp: /^.{14} UpdateHp 27:(?<targetID>[^:]+):[^:]+:(?<currentHP>\d+):/,
   death: /^.{14} Death 19:(?<targetID>[^:]+):/,
-  director: /^.{14} Director 21:.{8}:4000001[026]/,
+  director: /^.{14} Director 21:.{8}:4000000F/,
   territory: /^.{14} Territory 01:/,
 };
 
