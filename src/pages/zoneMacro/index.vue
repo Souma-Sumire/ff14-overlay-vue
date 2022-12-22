@@ -92,7 +92,11 @@ onMounted(() => {
   addOverlayListener("LogLine", macroStore.handleLogLine);
   startOverlayEvents();
   watchEffect(() => {
-    if (macroStore.data.zoneId[macroStore.selectZone]?.length === 0 && defaultMacro.zoneId[macroStore.selectZone]) {
+    if (
+      (macroStore.data.zoneId[macroStore.selectZone] === undefined ||
+        macroStore.data.zoneId[macroStore.selectZone]?.length === 0) &&
+      defaultMacro.zoneId[macroStore.selectZone]
+    ) {
       ElMessage.success("用户数据为空，加载默认数据");
       macroStore.data.zoneId[macroStore.selectZone] = defaultMacro.zoneId[macroStore.selectZone];
     }
