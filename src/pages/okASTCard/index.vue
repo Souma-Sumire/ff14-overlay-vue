@@ -2,6 +2,7 @@
 import { Job } from "@/types/Job";
 import Util from "@/utils/util";
 import { getClassjobIconSrc } from "@/utils/xivapi";
+import { ElMessage, ElMessageBox } from "element-plus";
 const BattleJobs: string[] = Util.getBattleJobs().filter(() => true);
 const CONFIG = useStorage("ok-ast-card-config", {
   lang: "cn" as "cn" | "ja" | "en",

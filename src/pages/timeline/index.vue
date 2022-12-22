@@ -237,7 +237,6 @@ function handleBroadcastMessage(e: {
     });
   }
 }
-
 function handleInCombatChanged(ev: {
   type: "onInCombatChangedEvent";
   detail: {
@@ -273,11 +272,11 @@ function handleInCombatChanged(ev: {
         {{ item.condition.job }} - {{ item.name }}
       </li>
     </ul>
-    <TimelineTimelineShow
+    <timeline-timeline-show
       :config="timelineStore.configValues"
       :lines="timelinePageData.loadedTimeline"
       :runtime="runtimeTimeSeconds"
-      :show-style="timelineStore.showStyle"></TimelineTimelineShow>
+      :show-style="timelineStore.showStyle"></timeline-timeline-show>
     <button v-if="devMode" @click="startTimeline(0)">开始</button>
     <button v-if="devMode" @click="stopTimeline()">团灭</button>
     <span v-if="devMode">{{ runtimeTimeSeconds }}</span>

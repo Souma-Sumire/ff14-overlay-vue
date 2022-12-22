@@ -1,17 +1,12 @@
 <script setup lang="ts">
 import actWS from "@/assets/actWS.png";
-import {
-  Check,
-  Delete,
-  Edit,
-  Position,
-  CopyDocument,
-  ChatDotSquare,
-  ChatSquare,
-} from "@element-plus/icons-vue";
+import { Check, Delete, Edit, Position, CopyDocument, ChatDotSquare, ChatSquare } from "@element-plus/icons-vue";
 import { defaultMacro } from "@/resources/macro";
 import zoneInfo from "@/resources/zoneInfo";
 import { useMacroStore } from "@/store/macro";
+import "github-markdown-css/github-markdown-light.css";
+import README from "./README.md";
+import { ElMessageBox } from "element-plus";
 const [help, toggleHelp] = useToggle(false);
 const macroStore = useMacroStore();
 macroStore.formatAllWaymarkPlaceData();
@@ -221,7 +216,7 @@ onBeforeUnmount(() => {
                   <template #default="scope">
                     <span v-show="!macro.Editable">{{ scope.row.X }}</span>
                     <el-input-number
-                    controls-position="right"
+                      controls-position="right"
                       :step="1"
                       :precision="2"
                       size="small"
@@ -233,7 +228,7 @@ onBeforeUnmount(() => {
                   <template #default="scope">
                     <span v-show="!macro.Editable">{{ scope.row.Z }}</span>
                     <el-input-number
-                    controls-position="right"
+                      controls-position="right"
                       :step="1"
                       :precision="2"
                       size="small"
@@ -278,9 +273,7 @@ onBeforeUnmount(() => {
               :style="{ maxHeight: macro.Editable ? '100px' : null, opacity: macro.Editable ? 1 : null }">
               <el-button :icon="Edit" size="small" @click="macroStore.editMacroPlace(macro)">编辑</el-button>
               <el-button type="primary" size="small" @click="macroStore.doLocalWayMark(macro.Place)">本地</el-button>
-              <el-button type="primary" size="small" @click="macroStore.doSlotWayMark(macro.Place)"
-                >插槽</el-button
-              >
+              <el-button type="primary" size="small" @click="macroStore.doSlotWayMark(macro.Place)">插槽</el-button>
             </el-row>
             <el-row v-if="macro.Editable" class="buttonAreaEditing">
               <el-button type="success" size="small" :icon="Check" @click="macroStore.submitMacroPlace(macro)"
@@ -296,7 +289,9 @@ onBeforeUnmount(() => {
           </div>
         </el-card>
       </el-space>
-      <el-card v-show="help"> <ZoneMacroZoneMacroHelp></ZoneMacroZoneMacroHelp> </el-card>
+      <el-card v-show="help" class="markdown-body">
+        <README />
+      </el-card>
     </el-main>
     <div class="menu">
       <el-button size="small" @click="macroStore.toggleShow()">隐藏页面</el-button>

@@ -1,6 +1,36 @@
+<template>
+  <div id="container" bg-white v-if="showPage">
+    <ReadMe v-show="showHelp"></ReadMe>
+    <form>
+      <!-- 地址<input type="text" v-model="data.ip" />
+      <br /> -->
+      端口<input type="text" v-model="data.port" />
+      <br />
+      密码<input :type="state.passowrdShow ? 'text' : 'password'" v-model="data.password" autocomplete="on" /><button
+        @click="state.passowrdShow = !state.passowrdShow">
+        👀
+      </button>
+      <br />
+      <label style="user-select: none" for="auto">
+        <input type="checkbox" id="auto" v-model="data.autoConnect" /> 自动连接
+      </label>
+      <label style="user-select: none" for="partyLength">
+        <input type="checkbox" id="partyLength" v-model="data.partyLength" /> 仅5~8人时录制
+      </label>
+    </form>
+    <p>状态：{{ state.status }}</p>
+    <button :disabled="state.connect" @click="handleClickToConnect">连接</button>
+    <button :disabled="!state.connect" @click="handleClickToDisconnect">断开</button>
+    <button @click="showPage = false">隐藏页面</button>
+    <button v-if="!state.connect" @click="toggleHelp()">查看帮助</button>
+  </div>
+</template>
+
 <script lang="ts" setup>
 import OBSWebSocket from "obs-websocket-js";
 import "github-markdown-css/github-markdown-light.css";
+import ReadMe from "./README.md";
+
 // import "../common/hasOverlayPluginApi";
 let inACTCombat = false;
 const data = useStorage(
@@ -75,7 +105,9 @@ function restartRecord() {
     .call("GetRecordStatus")
     .then(async (v) => {
       if (v.outputActive && v.outputDuration <= 5000)
-        await stopRecord().then(() => setTimeout(() => restartRecord(), 1000)).catch(() => {});
+        await stopRecord()
+          .then(() => setTimeout(() => restartRecord(), 1000))
+          .catch(() => {});
       else startRecord();
     })
     .catch(() => {
@@ -106,31 +138,3 @@ onBeforeUnmount(async () => {
   await obs.disconnect();
 });
 </script>
-<template>
-  <div id="container" bg-white v-if="showPage">
-    <ObsREADME v-show="showHelp"></ObsREADME>
-    <form>
-      <!-- 地址<input type="text" v-model="data.ip" />
-      <br /> -->
-      端口<input type="text" v-model="data.port" />
-      <br />
-      密码<input :type="state.passowrdShow ? 'text' : 'password'" v-model="data.password" autocomplete="on" /><button
-        @click="state.passowrdShow = !state.passowrdShow"
-      >
-        👀
-      </button>
-      <br />
-      <label style="user-select: none" for="auto">
-        <input type="checkbox" id="auto" v-model="data.autoConnect" /> 自动连接
-      </label>
-      <label style="user-select: none" for="partyLength">
-        <input type="checkbox" id="partyLength" v-model="data.partyLength" /> 仅5~8人时录制
-      </label>
-    </form>
-    <p>状态：{{ state.status }}</p>
-    <button :disabled="state.connect" @click="handleClickToConnect">连接</button>
-    <button :disabled="!state.connect" @click="handleClickToDisconnect">断开</button>
-    <button @click="showPage = false">隐藏页面</button>
-    <button v-if="!state.connect" @click="toggleHelp()">查看帮助</button>
-  </div>
-</template>

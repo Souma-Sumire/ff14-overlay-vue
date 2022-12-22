@@ -1,14 +1,16 @@
 import Vue from "@vitejs/plugin-vue";
+import Markdown from "vite-plugin-md";
 import { presetAttributify, presetIcons, presetUno } from "unocss";
 import Unocss from "unocss/vite";
 import viteCompression from "vite-plugin-compression";
 import Pages from "vite-plugin-pages";
-import Markdown from "vite-plugin-vue-markdown";
 import { defineConfig } from "vite";
 import AutoImport from "unplugin-auto-import/vite";
 import Components from "unplugin-vue-components/vite";
 import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
-const path = require("path");
+import { resolve } from "path";
+// const path = require("path");
+
 // https://vitejs.dev/config/
 export default defineConfig({
   base: "/ff14-overlay-vite/",
@@ -32,7 +34,26 @@ export default defineConfig({
     // },
   },
   plugins: [
-    Vue({ include: [/\.vue$/, /\.md$/] }),
+    Vue({
+      include: [/\.vue$/, /\.md$/], // <--
+    }),
+    Markdown(),
+    AutoImport({
+      imports: ["vue", "@vueuse/core"],
+      dts: "src/types/auto-imports.d.ts",
+      resolvers: [ElementPlusResolver()],
+    }),
+    Components({
+      extensions: ["vue", "md"],
+      directoryAsNamespace: true,
+      include: [/\.vue$/, /\.vue\?vue/, /\.md$/],
+      resolvers: [
+        ElementPlusResolver({
+          importStyle: "sass",
+        }),
+      ],
+      dts: "src/types/components.d.ts",
+    }),
     viteCompression({
       verbose: false,
       filter: /\.(js|mjs|json|css)$/,
@@ -42,49 +63,17 @@ export default defineConfig({
       ext: ".gz",
       // deleteOriginFile: true,
     }),
-    AutoImport({
-      imports: ["vue", "vue-router", "@vueuse/core", "vue/macros"],
-      dts: "./src/types/auto-imports.d.ts",
-      resolvers: [ElementPlusResolver()],
-    }),
-    Components({
-      dirs: ["src/components"],
-      //组件名称包含目录，防止同名组件冲突
-      extensions: ["vue", "md"],
-      directoryAsNamespace: true,
-      dts: "./src/types/components.d.ts",
-      resolvers: [ElementPlusResolver()],
-    }),
     Unocss({
       presets: [presetUno(), presetAttributify(), presetIcons()],
     }),
     Pages(),
-    Markdown({ headEnabled: true }),
   ],
-  css: {
-    postcss: {
-      plugins: [
-        // 移除打包element时的@charset警告
-        {
-          postcssPlugin: "internal:charset-removal",
-          AtRule: {
-            charset: (atRule) => {
-              if (atRule.name === "charset") {
-                atRule.remove();
-              }
-            },
-          },
-        },
-      ],
-    },
-  },
   define: {
     __VUE_OPTIONS_API__: false,
   },
   resolve: {
-    // 配置路径别名
     alias: {
-      "@": path.resolve(__dirname, "src"),
+      "@": resolve(__dirname, "./src"),
     },
   },
 });

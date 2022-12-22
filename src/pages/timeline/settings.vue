@@ -245,14 +245,14 @@ const timeMinuteSecondDisplay = computed(() => {
       <el-button type="success" @click="readMe()">帮助</el-button>
     </el-header>
     <el-main>
-      <TimelineFflogsImport
+      <timeline-fflogs-import
         :settings="timelineStore.settings"
         :filters="timelineFilters"
         v-if="showFFlogs"
         @clearCurrentlyTimeline="clearCurrentlyTimeline"
         @showFFlogsToggle="() => (showFFlogs = !showFFlogs)"
         @newTimeline="timelineStore.newTimeline">
-      </TimelineFflogsImport>
+      </timeline-fflogs-import>
       <el-card class="box-card" v-show="showSettings">
         <el-descriptions title="时间轴参数" size="small" style="width: 100%" border>
           <el-descriptions-item
@@ -336,11 +336,11 @@ const timeMinuteSecondDisplay = computed(() => {
           </div>
           <div style="max-height: 353px">
             <div class="timeline-timeline-view">
-              <TimelineTimelineShow
+              <timeline-timeline-show
                 :config="timelineStore.configValues"
                 :lines="transmissionTimeline"
                 :runtime="simulatedCombatTime"
-                :show-style="timelineStore.showStyle"></TimelineTimelineShow>
+                :show-style="timelineStore.showStyle"></timeline-timeline-show>
             </div>
           </div>
         </el-row>
