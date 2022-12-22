@@ -80,8 +80,8 @@ function selectedTimeline(timeline: ITimeline) {
 }
 
 //载入时间轴页面
-async function mountTimeline(timeline: ITimeline) {
-  stopTimeline();
+async function mountTimeline(timeline: ITimeline, stopLoadedTimeline: boolean = true) {
+  stopLoadedTimeline && stopTimeline();
   ttsSuppressFlag = false;
   setTimeout(() => {
     ttsSuppressFlag = true;
@@ -135,7 +135,7 @@ function startTimeline(countdownSeconds: number, preventTTS = true) {
 }
 
 //日志
-function handleLogEvent(e: any) {
+function handleLogEvent(e: { detail: { logs: string[] } }) {
   for (const log of e.detail.logs) {
     let regex = log.match(
       /^.{14} \w+ 00:(?:00b9|0[12]39)::?(?:距离战斗开始还有|Battle commencing in |戦闘開始まで)(?<cd>\d+)[^（(]+[（(]/i,
@@ -143,10 +143,17 @@ function handleLogEvent(e: any) {
     if (regex) {
       //倒计时
       startTimeline(parseInt(regex!.groups!.cd));
-    } else if (/^.{14} Director 21:.{8}:400000(?:0F|10)/.test(log) || /^.{14} ChatLog 00:0038::end$/.test(log)) {
+    } else if (/^.{14} Director 21:.{8}:4000000F/.test(log) || /^.{14} ChatLog 00:0038::end$/.test(log)) {
       //团灭
       stopTimeline();
       // mountTimeline(lastUsedTimeline);
+    } else if (/^.{14} ChatLog 00:0038::/.test(log)) {
+      //echo
+      const name = log.match(/^.{14} ChatLog 00:0038::(?<name>.+)$/)?.groups?.name;
+      if (name) {
+        const timeline = timelineStore.getTimeline(condition.value).find((c) => c.name === name);
+        timeline && mountTimeline(timeline, false);
+      }
     } else {
       //是否触发了某行的sync
       const timelineSync = syncLines.value.find((item) => {
