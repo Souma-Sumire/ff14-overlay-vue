@@ -6,7 +6,7 @@ import zoneInfo from "@/resources/zoneInfo";
 import { useMacroStore } from "@/store/macro";
 import "github-markdown-css/github-markdown-light.css";
 import README from "./README.md";
-import { ElMessageBox } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 const [help, toggleHelp] = useToggle(false);
 const macroStore = useMacroStore();
 macroStore.formatAllWaymarkPlaceData();
@@ -92,8 +92,10 @@ onMounted(() => {
   addOverlayListener("LogLine", macroStore.handleLogLine);
   startOverlayEvents();
   watchEffect(() => {
-    macroStore.data.zoneId[macroStore.selectZone] =
-      macroStore.data.zoneId[macroStore.selectZone] || defaultMacro.zoneId[macroStore.selectZone];
+    if (macroStore.data.zoneId[macroStore.selectZone]?.length === 0 && defaultMacro.zoneId[macroStore.selectZone]) {
+      ElMessage.success("用户数据为空，加载默认数据");
+      macroStore.data.zoneId[macroStore.selectZone] = defaultMacro.zoneId[macroStore.selectZone];
+    }
   });
   watch(
     toRef(macroStore, "selectZone"),
