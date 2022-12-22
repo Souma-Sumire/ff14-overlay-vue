@@ -300,6 +300,7 @@ onBeforeUnmount(() => {
       <el-button color="#BA5783" size="small" @click="macroStore.importPPJSON()">导入PP</el-button>
       <el-button type="warning" size="small" @click="macroStore.resetZone()">恢复本图</el-button>
       <el-button type="danger" size="small" @click="macroStore.resetAllData()">恢复全部</el-button>
+      <el-button type="success" size="small" @click="macroStore.updateZone()">数据更新</el-button>
       <el-button size="small" @click="toggleHelp()">查看帮助</el-button>
     </div>
   </el-container>
@@ -317,7 +318,7 @@ body {
   width: 100%;
   margin: 0;
   padding: 0;
-  opacity: 0.95;
+  opacity: 0.98;
 }
 .elcontainer {
   background-color: white;

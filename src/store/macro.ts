@@ -5,6 +5,7 @@ import { MacroInfoMacro, MacroInfoPlace, MacroType } from "../types/Macro";
 import zoneInfo from "../resources/zoneInfo";
 import { getMapIDByTerritoryType, getTerritoryTypeByMapID } from "../resources/contentFinderCondition";
 import ClipboardJS from "clipboard";
+import { ElInputNumber, ElMessage, ElMessageBox } from "element-plus";
 let partyLen = 0;
 const slotIndex = useStorage("macro-slot-index", 5);
 addOverlayListener("PartyChanged", (e: any) => (partyLen = e.party.length));
@@ -254,17 +255,9 @@ export const useMacroStore = defineStore("macro", {
       this.selectZone = this.zoneNow;
     },
     handleChangeZone(e: any): void {
-      const zoneID = getZoneIDByZoneName(e.zoneName);
-      if (!zoneID) {
-        this.selectZone = "129";
-        this.zoneNow = "129";
-        ElMessage(`未知区域 ${e.zoneName} ${e.zoneID}`);
-        return;
-      }
-      // if (this.gameExists) {
-      this.selectZone = zoneID;
-      this.zoneNow = zoneID;
-      // }
+      this.selectZone = e.zoneID.toString();
+      this.zoneNow = e.zoneID.toString();
+      getZoneIDByZoneName(e.zoneName) || ElMessage(`未知区域 ${e.zoneName} ${e.zoneID}`);
     },
     // handleGameExists(e: any): void {
     //   this.gameExists = !!e?.detail?.exists;
@@ -346,6 +339,23 @@ export const useMacroStore = defineStore("macro", {
             this.formatSelectZoneWaymarkPlaceData(this.selectZone);
             ElMessage.success("重置成功");
           });
+        })
+        .catch(() => {});
+    },
+    updateZone(): void {
+      ElMessageBox.confirm("将所有地图的用户当前数据与自带数据取并集？这将恢复你曾经删除的默认数据", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(() => {
+          for (const key in this.data.zoneId) {
+            this.data.zoneId[key] = Array.from(
+              new Set([...defaultMacro.zoneId[key], ...this.data.zoneId[key]].map((v) => JSON.stringify(v))),
+            ).map((v) => JSON.parse(v));
+          }
+
+          ElMessage.success("更新成功");
         })
         .catch(() => {});
     },
