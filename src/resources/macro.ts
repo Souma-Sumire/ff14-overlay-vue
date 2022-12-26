@@ -399,9 +399,9 @@ export const defaultMacro: { zoneId: ZoneIdInfo } = {
         Type: "place",
         Place: {
           A: { X: 100.0, Y: 0.0, Z: 81.3, ID: 0, Active: true },
-          B: { X: 108.7, Y: 0.0, Z: 91.3, ID: 3, Active: true },
+          D: { X: 108.7, Y: 0.0, Z: 91.3, ID: 3, Active: true },
           C: { X: 100.0, Y: 0.0, Z: 118.7, ID: 2, Active: true },
-          D: { X: 91.3, Y: 0.0, Z: 108.7, ID: 1, Active: true },
+          B: { X: 91.3, Y: 0.0, Z: 108.7, ID: 1, Active: true },
           One: { X: 98.7, Y: 0.0, Z: 98.7, ID: 4, Active: true },
           Two: { X: 101.3, Y: 0.0, Z: 98.7, ID: 5, Active: true },
           Three: { X: 92.9, Y: 0.0, Z: 92.9, ID: 6, Active: true },
@@ -413,9 +413,9 @@ export const defaultMacro: { zoneId: ZoneIdInfo } = {
         Type: "place",
         Place: {
           A: { X: 100, Y: 0, Z: 81.818, ID: 0, Active: true },
-          B: { X: 109.09, Y: 0, Z: 90.91, ID: 3, Active: true },
+          D: { X: 109.09, Y: 0, Z: 90.91, ID: 3, Active: true },
           C: { X: 100, Y: 0, Z: 118.182, ID: 2, Active: true },
-          D: { X: 90.91, Y: 0, Z: 109.09, ID: 1, Active: true },
+          B: { X: 90.91, Y: 0, Z: 109.09, ID: 1, Active: true },
           One: { X: 98.182, Y: 0, Z: 100, ID: 4, Active: true },
           Two: { X: 101.818, Y: 0, Z: 100, ID: 5, Active: true },
           Three: { X: 92.728, Y: 0, Z: 92.728, ID: 6, Active: true },
