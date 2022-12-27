@@ -405,49 +405,17 @@ export const defaultMacro: { zoneId: ZoneIdInfo } = {
   `),
       },
       {
-        Name:
-          "P6S DeepseaXX云的千星标点（未实测）" +
-          getSource(
-            `https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86`,
-          ),
-        Type: "place",
-        Place: {
-          A: { X: 100.0, Y: 0.0, Z: 81.3, ID: 0, Active: true },
-          B: { X: 91.3, Y: 0.0, Z: 108.7, ID: 1, Active: true },
-          C: { X: 100.0, Y: 0.0, Z: 118.7, ID: 2, Active: true },
-          D: { X: 108.7, Y: 0.0, Z: 91.3, ID: 3, Active: true },
-          One: { X: 98.7, Y: 0.0, Z: 98.7, ID: 4, Active: true },
-          Two: { X: 101.3, Y: 0.0, Z: 98.7, ID: 5, Active: true },
-          Three: { X: 92.9, Y: 0.0, Z: 92.9, ID: 6, Active: true },
-          Four: { X: 107.1, Y: 0.0, Z: 107.1, ID: 7, Active: true },
-        },
-      },
-      {
-        Name: "P6S 我云的千星标点（未实测）",
+        Name: "P6S 千星",
         Type: "place",
         Place: {
           A: { X: 100, Y: 0, Z: 81.818, ID: 0, Active: true },
           B: { X: 90.91, Y: 0, Z: 109.09, ID: 1, Active: true },
           C: { X: 100, Y: 0, Z: 118.182, ID: 2, Active: true },
           D: { X: 109.09, Y: 0, Z: 90.91, ID: 3, Active: true },
-          One: { X: 98.182, Y: 0, Z: 100, ID: 4, Active: true },
-          Two: { X: 101.818, Y: 0, Z: 100, ID: 5, Active: true },
+          One: { X: 95, Y: 0, Z: 95, ID: 4, Active: true },
+          Two: { X: 105, Y: 0, Z: 95, ID: 5, Active: true },
           Three: { X: 92.728, Y: 0, Z: 92.728, ID: 6, Active: true },
           Four: { X: 107.272, Y: 0, Z: 107.272, ID: 7, Active: true },
-        },
-      },
-      {
-        Name: "P6S 我有一个“朋友”提供的千星标点",
-        Type: "place",
-        Place: {
-          A: { X: 100, Y: 0, Z: 81.627, ID: 0, Active: true },
-          B: { X: 91.736, Y: 0, Z: 108.286, ID: 1, Active: true },
-          C: { X: 100, Y: 0, Z: 118.349, ID: 2, Active: true },
-          D: { X: 108.262, Y: 0, Z: 91.684, ID: 3, Active: true },
-          One: { X: 98.328, Y: 0, Z: 98.306, ID: 4, Active: true },
-          Two: { X: 101.672, Y: 0, Z: 98.328, ID: 5, Active: true },
-          Three: { X: 93.316, Y: 0, Z: 93.313, ID: 6, Active: true },
-          Four: { X: 106.622, Y: 0, Z: 106.681, ID: 7, Active: true },
         },
       },
       {
