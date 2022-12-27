@@ -35,8 +35,8 @@ export const useMacroStore = defineStore("macro", {
     };
   },
   getters: {
-    defaultX: (state) => zoneInfo[Number(state.selectZone)].offsetX,
-    defaultY: (state) => zoneInfo[Number(state.selectZone)].offsetY,
+    defaultX: (state) => zoneInfo[Number(state.selectZone)]?.offsetX ?? 0,
+    defaultY: (state) => zoneInfo[Number(state.selectZone)]?.offsetY ?? 0,
   },
   actions: {
     editMacroMacro(macro: MacroInfoMacro): void {
