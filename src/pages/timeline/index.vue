@@ -25,7 +25,7 @@ const devMode = ref(window.location.href.match(/localhost/));
 // let lastUsedTimeline: ITimeline;
 
 const syncLines = computed(() => timelinePageData.loadedTimeline.filter((item) => item.sync));
-
+const loadedTimelineTTS = computed(() => timelinePageData.loadedTimeline.filter((v) => v.tts));
 init();
 
 //页面初始化
@@ -120,11 +120,10 @@ function startTimeline(countdownSeconds: number, preventTTS = true) {
   offsetTimeMS.value = 0;
   baseTimeMs.value = new Date().getTime() + countdownSeconds * 1000;
   clearInterval(runtimeTimer);
-  const loadedTimelineTTS = timelinePageData.loadedTimeline.filter((v) => v.tts);
-  loadedTimelineTTS.map((v) => (v.alertAlready = false));
+  loadedTimelineTTS.value.map((v) => (v.alertAlready = false));
   runtimeTimer = setInterval(() => {
     runtimeTimeSeconds.value = (new Date().getTime() - baseTimeMs.value + offsetTimeMS.value) / 1000;
-    const l = loadedTimelineTTS.find(
+    const l = loadedTimelineTTS.value.find(
       (v) => !v.alertAlready && v.time - timelineStore.configValues.ttsAdvance <= runtimeTimeSeconds.value,
     );
     if (l) {
@@ -306,17 +305,18 @@ function handleInCombatChanged(ev: {
     background-color: rgba($color: #000000, $alpha: 0.01);
     cursor: pointer;
     // filter: brightness(0.8);
-    fill: gray;
-    opacity: 0.5;
+    filter: drop-shadow(1px 2px 1px black);
+    fill: blueviolet;
+    opacity: 0.8;
     transition-duration: 0.2s;
     position: fixed;
     top: 0;
     right: 0;
-    margin: 10px;
+    margin: 5px;
     &:hover {
       opacity: 1;
       transform-origin: center center;
-      transform: scale(1.25);
+      transform: scale(1.2);
     }
   }
   .optionalTimelines {
