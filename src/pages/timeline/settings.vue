@@ -8,6 +8,7 @@ import "animate.css";
 import ClipboardJS from "clipboard";
 import router from "@/router";
 import { ITimeline, ITimelineLine } from "@/types/Timeline";
+import { p8sTimeline } from "./p8sTimeline";
 
 const simulatedCombatTime = ref(-30);
 const timelineStore = useTimelineStore();
@@ -219,7 +220,16 @@ function importTimelines(): void {
   });
 }
 function readMe(): void {
-  router.push("/timeline/help");
+  // router.push("/timeline/help");
+  window.open("/ff14-overlay-vite/#/timeline/help");
+}
+function createP8STimeline(): void {
+  timelineStore.newTimeline(
+    "P8S 门神 请手动选择一个职业",
+    { zoneId: "1088", job: "NONE" },
+    p8sTimeline,
+    "创建P8S门神模板",
+  );
 }
 const timeMinuteSecondDisplay = computed(() => {
   return (
@@ -242,6 +252,7 @@ const timeMinuteSecondDisplay = computed(() => {
       <el-button class="export" @click="exportTimeline(timelines)">全部导出</el-button>
       <el-button v-if="isWSMode" type="success" @click="broadcastData()">通过WS发送到悬浮窗</el-button>
       <!-- <el-button v-if="!isWSMode" type="success" @click="applyData()">应用</el-button> -->
+      <el-button @click="createP8STimeline()">P8S门神</el-button>
       <el-button type="success" @click="readMe()">帮助</el-button>
     </el-header>
     <el-main>
