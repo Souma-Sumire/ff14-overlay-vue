@@ -350,21 +350,23 @@ export const defaultMacro: { zoneId: ZoneIdInfo } = {
       {
         Name: "P6S 千星流月夜（推荐）" + getSource(`https://www.bilibili.com/video/BV1RG4y1u78L`),
         Type: "macro",
-        Text: cleanMacro(`/p ※MT组：MTH1D1D3 ST组：STH2D2D4
-      /p 　【基本散开】　　 【恶病质】
-      /p MT/D3　ST/D4　　　　20　 20
+        Text: cleanMacro(`
+      /p ※MT组：MTH1D1D3　ST组：STH2D2D4
+      /p 　【基本散开】　　【恶病质】
+      /p MT/D3　ST/D4　　　　20　20
       /p 　　　★　　　　　　8　★　8
       /p H1/D1　H2/D2　　　12　　　12
       /p 　　　　　　　　　　16　　16
-      /p 【 分摊分组 】 ｜ 【苦痛爆发+寄生之舞】
-      /p 西：MT组 东：ST組 ｜DPS分摊：场地4点 TN分摊：场地3点
+      /p 【分摊分组】　　　　｜【苦痛爆发+寄生之舞】
+      /p 西：MT组 东：ST組　｜DPS分摊：场地4点 TN分摊：场地3点
       /p ※顺时针移动处理分摊｜DPS大圈：D1→B D2→4 D3→右下 D4→D
-      /p 【致病胞流】　　 　｜TN 大圈：MT→3 ST→D H1→左上 H2→B
-      /p 奇数：场地1点　　 　｜ 【苦痛爆发+界外劈砍】
-      /p 偶数：场地2点　　　 ｜DPS分摊：场地4点 TN分摊：场地3点
-      /p ｜DPS大圈：B /TN大圈：D
+      /p 【致病胞流】　　　　｜TN 大圈：MT→3 ST→D H1→左上 H2→B
+      /p 奇数：场地1点　　　 ｜【苦痛爆发+界外劈砍】
+      /p 偶数：场地2点　　 　｜DPS分摊：场地4点 TN分摊：场地3点
+      /p 　　　　　　　　　　｜DPS大圈：B /TN大圈：D
       /p 【恶病质+多元以太】
-      /p 安全格中上半两格→AoE　下半两格→分摊`),
+      /p 安全格中上半两格→AoE　下半两格→分摊
+      `),
       },
       {
         Name: "P6S 苦茶子（和game8一样）",
