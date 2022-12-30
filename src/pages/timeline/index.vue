@@ -172,11 +172,11 @@ function handleLogEvent(e: { detail: { logs: string[] } }) {
 function syncTimeline(targetTime: number) {
   ttsSuppressFlag = false;
   setTimeout(() => (ttsSuppressFlag = true), targetTime <= 0 ? 0 : 500);
-  if (targetTime === 0) stopTimeline();
-  else {
-    if (baseTimeMs.value === 0) startTimeline(0, false);
-    offsetTimeMS.value += (targetTime - runtimeTimeSeconds.value) * 1000;
-  }
+  // if (targetTime === 0) stopTimeline();
+  // else {
+  if (baseTimeMs.value === 0) startTimeline(0, false);
+  offsetTimeMS.value += (targetTime - runtimeTimeSeconds.value) * 1000;
+  // }
 }
 
 //玩家状态（职业）
