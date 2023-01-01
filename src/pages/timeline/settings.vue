@@ -6,9 +6,9 @@ import { useTimelineStore, parseTimeline } from "@/store/timeline";
 import Util from "@/utils/util";
 import "animate.css";
 import ClipboardJS from "clipboard";
-import router from "@/router";
 import { ITimeline, ITimelineLine } from "@/types/Timeline";
 import { p8sTimeline } from "./p8sTimeline";
+import moment from "moment";
 
 const simulatedCombatTime = ref(-30);
 const timelineStore = useTimelineStore();
@@ -220,7 +220,6 @@ function importTimelines(): void {
   });
 }
 function readMe(): void {
-  // router.push("/timeline/help");
   window.open("/ff14-overlay-vite/#/timeline/help");
 }
 function createP8STimeline(): void {
@@ -241,6 +240,23 @@ const timeMinuteSecondDisplay = computed(() => {
     (Array(2).join("0") + Math.floor(simulatedCombatTime.value % 60)).slice(-2)
   );
 });
+function timelineTimeFormat() {
+  timelineCurrentlyEditing.timeline.timeline = timelineCurrentlyEditing.timeline.timeline.replaceAll(
+    /(?<=^|^#\s*)(?<time>[:：\d.]+)/gm,
+    (searchValue: string | RegExp, replaceValue: string): string => {
+      if (/^\d+[::]\d+(?:\.\d{1,2})?$/.test(searchValue.toString())) {
+        // mm:ss 转 seconds
+        return moment
+          .duration("00:" + searchValue.toString())
+          .as("seconds")
+          .toString();
+      } else {
+        //seconds 转 mm:ss
+        return moment.utc(parseFloat(searchValue.toString()) * 1000).format("mm:ss.S");
+      }
+    },
+  );
+}
 </script>
 <template>
   <el-container class="container">
@@ -330,9 +346,25 @@ const timeMinuteSecondDisplay = computed(() => {
               <span>创建：</span>
               <el-input v-model="timelineCurrentlyEditing.timeline.create" disabled />
             </p>
-            <!-- <el-button type="success" @click="checkTimelineRaw(timelineCurrentlyEditing.timeline)">检查</el-button> -->
-            <el-button class="export" @click="exportTimeline([timelineCurrentlyEditing.timeline])">单独导出</el-button>
-            <el-button type="danger" @click="deleteTimeline(timelineCurrentlyEditing.timeline)">删除</el-button>
+            <el-row m-b-10px>
+              <el-button :span="12" class="export" @click="exportTimeline([timelineCurrentlyEditing.timeline])"
+                >单独导出</el-button
+              >
+              <el-button :span="12" type="danger" @click="deleteTimeline(timelineCurrentlyEditing.timeline)"
+                >删除</el-button
+              >
+            </el-row>
+            <el-row>
+              <el-popconfirm
+                title="提前做好备份，损坏不配！"
+                confirm-button-text="确认"
+                cancel-button-text="取消"
+                @confirm="timelineTimeFormat()">
+                <template #reference>
+                  <el-button type="primary" :span="24">切换时间显示格式(测试功能)</el-button>
+                </template>
+              </el-popconfirm>
+            </el-row>
           </div>
           <div style="flex: 1">
             <el-input

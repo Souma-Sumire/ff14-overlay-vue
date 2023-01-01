@@ -216,22 +216,14 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
   }
   //询问是否添加TTS
   let addTTS = false;
-  let timeFormat: boolean;
   Swal.fire({
-    title: "选择时间格式",
+    title: "是否为所有技能添加TTS语音?",
     showDenyButton: true,
     showCancelButton: false,
-    confirmButtonText: "秒数",
-    denyButtonText: `分:秒`,
-  }).then((r) => {
-    timeFormat = r.isConfirmed;
-    Swal.fire({
-      title: "是否为所有技能添加TTS语音?",
-      showDenyButton: true,
-      showCancelButton: false,
-      confirmButtonText: "是",
-      denyButtonText: `否`,
-    }).then((result) => {
+    confirmButtonText: "是",
+    denyButtonText: `否`,
+  }).then(
+    (result) => {
       if (result.isConfirmed) {
         addTTS = true;
       } else if (result.isDenied) {
@@ -249,27 +241,21 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
       fflogsQueryConfig.abilityFilterEvents = factory(fflogsQueryConfig.abilityFilterEvents);
       fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline = fflogsQueryConfig.abilityFilterEvents
         .map((item) => {
-          let time = timeFormat
-            ? item.time
-            : `${
-                (Array(2).join("0") + Math.floor(item.time / 60)).slice(-2) +
-                ":" +
-                (Array(2).join("0") + Math.floor(item.time % 60)).slice(-2) +
-                (item.time % 60).toFixed(1).replace(/^\d+(?=\.)/, "")
-              }`;
           if (item.sourceIsFriendly) {
-            return `${time} "<${item.actionName}>~"${addTTS ? ` tts "${item.actionName}"` : ""}`;
+            return `${item.time} "<${item.actionName}>~"${addTTS ? ` tts "${item.actionName}"` : ""}`;
           } else {
             if (
               /^(?:攻击|attack|攻撃)$|^unknown/i.test(item.actionName) ||
               (item.type === "cast" && item.window === undefined)
             ) {
-              return `# ${time} "${item.actionName}"`;
+              return `# ${item.time} "${item.actionName}"`;
             } else {
               //只匹配开始施法或符合特殊规则的window
-              return `${time} "${item.actionName}" sync /^.{14} \\w+ ${regexType[item.type]}:4.{7}:[^:]+:${item.actionId
-                .toString(16)
-                .toUpperCase()}:/${item.window ? ` window ${item.window.join(",")}` : ""}`;
+              return `${item.time} "${item.actionName}" sync /^.{14} \\w+ ${
+                regexType[item.type]
+              }:4.{7}:[^:]+:${item.actionId.toString(16).toUpperCase()}:/${
+                item.window ? ` window ${item.window.join(",")}` : ""
+              }`;
             }
           }
         })
@@ -290,8 +276,9 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
         showConfirmButton: false,
         timer: 1500,
       });
-    });
-  });
+    },
+    // }
+  );
 }
 //fflogs相关配置初始化
 function claerFFlogsQueryConfig() {
