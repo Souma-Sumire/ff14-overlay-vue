@@ -40,7 +40,7 @@ const configTranslate: TimelineConfigTranslate = {
   [TimelineConfigEnum.零后持续]: "后续保持（秒）",
   [TimelineConfigEnum.战前准备]: "倒计时量（秒）",
   [TimelineConfigEnum.TTS提前量]: "TTS预备（秒）",
-  [TimelineConfigEnum.刷新频率]: "刷新率（毫秒）",
+  // [TimelineConfigEnum.刷新频率]: "刷新率（毫秒）",
 };
 
 const configValues: TimelineConfigValues = {
@@ -49,7 +49,7 @@ const configValues: TimelineConfigValues = {
   [TimelineConfigEnum.零后持续]: 0.5,
   [TimelineConfigEnum.战前准备]: 30,
   [TimelineConfigEnum.TTS提前量]: 1,
-  [TimelineConfigEnum.刷新频率]: 100,
+  // [TimelineConfigEnum.刷新频率]: 100,
 };
 
 const showStyleTranslate: ShowStyleTranslate = {
@@ -102,8 +102,8 @@ export const useTimelineStore = defineStore("timeline", {
 2000 "兽轴"
 `,
       codeFight: string = "用户创建",
-    ) {
-      this.allTimelines.push(new Timeline(title, condition, rawTimeline, codeFight));
+    ): number {
+      const result = this.allTimelines.push(new Timeline(title, condition, rawTimeline, codeFight));
       this.sortTimelines();
       Swal.fire({
         position: "center",
@@ -112,6 +112,7 @@ export const useTimelineStore = defineStore("timeline", {
         showConfirmButton: false,
         timer: 1000,
       });
+      return result;
     },
     getTimeline(condition: ITimelineCondition): ITimeline[] {
       return this.allTimelines.filter((t) => {
@@ -201,11 +202,11 @@ export async function parseTimeline(rawTimeline: string): Promise<ITimelineLine[
   const matchs = [...rawTimeline.matchAll(/^(?<time>[-:：\d.]+)\s+(?<action>(--|["'])[^"'\n]+?\3).*$/gm)];
   for (let i = 0; i < matchs.length; i++) {
     const match = matchs[i];
-    const jump = match[0].match(/(?<=jump )[-:：\d.]+/)?.[0];
-    const sync = match[0].match(/(?<=sync \/).+(?=\/)/)?.[0];
-    const windowBefore = match[0].match(/(?<=window )[-:：\d.]+/)?.[0];
-    const windowAfter = match[0].match(/(?<=window [-:：\d.]+,)[-:：\d.]+/)?.[0];
-    const tts = match[0].match(/ tts ["'](?<tts>[^"']+)["']/)?.groups?.tts;
+    const jump = match[0].match(/(?<=jump ?)[-:：\d.]+/)?.[0];
+    const sync = match[0].match(/(?<=sync ?\/).+(?=\/)/)?.[0];
+    const windowBefore = match[0].match(/(?<=window ?)[-:：\d.]+/)?.[0];
+    const windowAfter = match[0].match(/(?<=window ?[-:：\d.]+,)[-:：\d.]+/)?.[0];
+    const tts = match[0].match(/ tts ?["'](?<tts>[^"']+)["']/)?.groups?.tts;
     const ttsSim = / tts(?: |$)/.test(match[0])
       ? Array.from(parseAction(match.groups!.action))?.[0]?.groups?.name
       : undefined;

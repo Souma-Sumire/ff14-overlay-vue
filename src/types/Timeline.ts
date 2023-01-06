@@ -31,7 +31,7 @@ export enum TimelineConfigEnum {
   零后持续 = "hold",
   战前准备 = "preBattle",
   TTS提前量 = "ttsAdvance",
-  刷新频率 = "refreshRateMs",
+  // 刷新频率 = "refreshRateMs",
 }
 
 export type TimelineConfigTranslate = Record<TimelineConfigEnum, string>;

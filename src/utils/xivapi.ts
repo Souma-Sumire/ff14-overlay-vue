@@ -32,14 +32,12 @@ export async function parseAction(
     );
   }
   return (
-    (await fetch(`${site.first.site}/${type}/${actionId}?columns=${columns.join(",")}`, {
-      mode: "cors",
-    })
-      .then((res) => res.json())
-      .catch(() => {})) ||
-    (await fetch(`${site.second.site}/${type}/${actionId}?columns=${columns.join(",")}`, { mode: "cors" })
-      .then((res) => res.json())
-      .catch(() => {})) ||
+    (await fetch(`${site.first.site}/${type}/${actionId}?columns=${columns.join(",")}`, { mode: "cors" }).then((res) =>
+      res.json(),
+    )) ||
+    (await fetch(`${site.second.site}/${type}/${actionId}?columns=${columns.join(",")}`, { mode: "cors" }).then((res) =>
+      res.json(),
+    )) ||
     Promise.resolve({ ActionCategoryTargetID: 0, ID: actionId, Icon: "/i/000000/000405.png" })
   );
 }

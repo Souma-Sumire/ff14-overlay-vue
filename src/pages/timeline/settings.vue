@@ -104,8 +104,8 @@ function clearCurrentlyTimeline(): void {
 }
 
 function newDemoTimeline(): void {
-  clearCurrentlyTimeline();
-  timelineStore.newTimeline();
+  // clearCurrentlyTimeline();
+  timelineCurrentlyEditing.timeline = timelineStore.allTimelines[timelineStore.newTimeline() - 1];
 }
 
 function editTimeline(timeline: ITimeline): void {
@@ -142,6 +142,7 @@ function deleteTimeline(target: ITimeline): void {
 //初始化时load
 function loadTimelineStoreData(): void {
   timelineStore.loadTimelineSettings();
+  Reflect.deleteProperty(timelineStore.configValues, "refreshRateMs");
 }
 
 //开启watch去save
@@ -223,12 +224,10 @@ function readMe(): void {
   window.open("/ff14-overlay-vite/#/timeline/help");
 }
 function createP8STimeline(): void {
-  timelineStore.newTimeline(
-    "P8S 门神 请手动选择一个职业",
-    { zoneId: "1088", job: "NONE" },
-    p8sTimeline,
-    "创建P8S门神模板",
-  );
+  timelineCurrentlyEditing.timeline =
+    timelineStore.allTimelines[
+      timelineStore.newTimeline("门神模板", { zoneId: "1088", job: "NONE" }, p8sTimeline, "P8S门神模板V4") - 1
+    ];
 }
 const timeMinuteSecondDisplay = computed(() => {
   return (
@@ -268,7 +267,7 @@ function timelineTimeFormat() {
       <el-button class="export" @click="exportTimeline(timelines)">全部导出</el-button>
       <el-button v-if="isWSMode" type="success" @click="broadcastData()">通过WS发送到悬浮窗</el-button>
       <!-- <el-button v-if="!isWSMode" type="success" @click="applyData()">应用</el-button> -->
-      <el-button @click="createP8STimeline()">P8S门神</el-button>
+      <el-button @click="createP8STimeline()">P8S门神模板</el-button>
       <el-button type="success" @click="readMe()">帮助</el-button>
     </el-header>
     <el-main>
@@ -281,25 +280,23 @@ function timelineTimeFormat() {
         @newTimeline="timelineStore.newTimeline">
       </timeline-fflogs-import>
       <el-card class="box-card" v-show="showSettings">
-        <el-descriptions title="时间轴参数" size="small" style="width: 100%" border>
+        <el-descriptions title="时间轴参数" size="small" border>
           <el-descriptions-item
             v-for="(_value, key, index) in timelineStore.configValues"
             :key="index"
             :label="timelineStore.configTranslate[key]"
             label-align="right"
-            align="center"
             width="16em">
             <el-input-number :min="0" :step="0.1" v-model="timelineStore.configValues[key]" />
           </el-descriptions-item>
         </el-descriptions>
         <br />
-        <el-descriptions size="small" title="时间轴样式" style="width: 100%" border>
+        <el-descriptions size="small" title="时间轴样式" border>
           <el-descriptions-item
             v-for="(_value, key, index) in timelineStore.showStyle"
             :key="index"
             :label="timelineStore.showStyleTranslate[key]"
             label-align="right"
-            align="center"
             width="16em">
             <el-input-number :min="0" :step="0.01" v-model="timelineStore.showStyle[key]" />
           </el-descriptions-item>
@@ -350,20 +347,13 @@ function timelineTimeFormat() {
               <el-button :span="12" class="export" @click="exportTimeline([timelineCurrentlyEditing.timeline])"
                 >单独导出</el-button
               >
+              <el-button type="primary" :span="12" @click="timelineTimeFormat()">切换时间</el-button>
+            </el-row>
+            <el-row>
               <el-button :span="12" type="danger" @click="deleteTimeline(timelineCurrentlyEditing.timeline)"
                 >删除</el-button
               >
-            </el-row>
-            <el-row>
-              <el-popconfirm
-                title="提前做好备份，损坏不配！"
-                confirm-button-text="确认"
-                cancel-button-text="取消"
-                @confirm="timelineTimeFormat()">
-                <template #reference>
-                  <el-button type="primary" :span="24">切换时间显示格式(测试功能)</el-button>
-                </template>
-              </el-popconfirm>
+              <el-button :span="12" @click="clearCurrentlyTimeline()">隐藏编辑界面</el-button>
             </el-row>
           </div>
           <div style="flex: 1">

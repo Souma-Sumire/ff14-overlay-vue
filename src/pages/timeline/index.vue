@@ -12,9 +12,9 @@ const timelinePageData = reactive({
 const baseTimeMs = ref(0); //战斗开始时间 每场战斗中这个值应该是固定的
 const runtimeTimeSeconds = ref(0 - timelineStore.configValues.preBattle); //当前进行到多少秒了 相对与baseTime来说 （战斗时间）  时间轴时间将以他为基准进行计算
 const offsetTimeMS = ref(0); //sync产生的时间轴偏移 会在baseTimeMs后附加 以影响runtimeTime
-let runtimeTimer: NodeJS.Timer; //计时器用以循环刷新界面
-let ttsSuppressFlag = true; //防止tts重复
-let ttsSuppressMs = 300; // tts重复阈值
+// let runtimeTimer: NodeJS.Timer; //计时器用以循环刷新界面
+let ttsSuppressFlag = false; //防止tts重复
+// let ttsSuppressMs = 300; // tts重复阈值
 //每次get时间轴时被传入的条件对象
 const condition = useStorage("timeline-condition", {
   zoneId: "0",
@@ -83,9 +83,7 @@ function selectedTimeline(timeline: ITimeline) {
 async function mountTimeline(timeline: ITimeline, stopLoadedTimeline: boolean = true) {
   stopLoadedTimeline && stopTimeline();
   ttsSuppressFlag = false;
-  setTimeout(() => {
-    ttsSuppressFlag = true;
-  }, 1000);
+  setTimeout(() => (ttsSuppressFlag = true), 500);
   if (timeline && timeline?.timeline) {
     timelinePageData.loadedTimeline = await parseTimeline(timeline.timeline);
     timelinePageData.loadedTimeline.sort((a, b) => a.time - b.time);
@@ -103,7 +101,7 @@ async function mountTimeline(timeline: ITimeline, stopLoadedTimeline: boolean = 
 
 //停止当前
 function stopTimeline() {
-  clearInterval(Number(runtimeTimer));
+  // clearInterval(Number(runtimeTimer));
   baseTimeMs.value = 0;
   runtimeTimeSeconds.value = 0 - timelineStore.configValues.preBattle;
   offsetTimeMS.value = 0;
@@ -114,25 +112,27 @@ function stopTimeline() {
 function startTimeline(countdownSeconds: number, preventTTS = true) {
   if (preventTTS) {
     ttsSuppressFlag = false;
-    setTimeout(() => (ttsSuppressFlag = true), countdownSeconds <= 0 ? 0 : 500);
+    setTimeout(() => (ttsSuppressFlag = true), 500);
   }
   runtimeTimeSeconds.value = 0;
   offsetTimeMS.value = 0;
   baseTimeMs.value = new Date().getTime() + countdownSeconds * 1000;
-  clearInterval(runtimeTimer);
   loadedTimelineTTS.value.map((v) => (v.alertAlready = false));
-  runtimeTimer = setInterval(() => {
-    runtimeTimeSeconds.value = (new Date().getTime() - baseTimeMs.value + offsetTimeMS.value) / 1000;
-    const l = loadedTimelineTTS.value.find(
-      (v) => !v.alertAlready && v.time - timelineStore.configValues.ttsAdvance <= runtimeTimeSeconds.value,
-    );
-    if (l) {
-      l.alertAlready = true;
-      cactbotSay(l.tts!);
-    }
-  }, timelineStore.configValues.refreshRateMs);
+  play();
 }
 
+function play() {
+  if (baseTimeMs.value === 0) return;
+  runtimeTimeSeconds.value = (new Date().getTime() - baseTimeMs.value + offsetTimeMS.value) / 1000;
+  const l = loadedTimelineTTS.value.find(
+    (v) => !v.alertAlready && v.time - timelineStore.configValues.ttsAdvance <= runtimeTimeSeconds.value,
+  );
+  if (l) {
+    l.alertAlready = true;
+    cactbotSay(l.tts!);
+  }
+  requestAnimationFrame(play);
+}
 //日志
 function handleLogEvent(e: { detail: { logs: string[] } }) {
   for (const log of e.detail.logs) {
@@ -171,11 +171,12 @@ function handleLogEvent(e: { detail: { logs: string[] } }) {
 //同步页面时间轴
 function syncTimeline(targetTime: number) {
   ttsSuppressFlag = false;
-  setTimeout(() => (ttsSuppressFlag = true), targetTime <= 0 ? 0 : 500);
+  // setTimeout(() => (ttsSuppressFlag = true), targetTime <= 0 ? 0 : 500);
   // if (targetTime === 0) stopTimeline();
   // else {
   if (baseTimeMs.value === 0) startTimeline(0, false);
   offsetTimeMS.value += (targetTime - runtimeTimeSeconds.value) * 1000;
+  setTimeout(() => (ttsSuppressFlag = true), 500);
   // }
 }
 
@@ -200,11 +201,11 @@ function handleChangeZone(e: any) {
 function cactbotSay(text: string) {
   if (!text) return;
   if (ttsSuppressFlag) {
-    ttsSuppressFlag = false;
+    // ttsSuppressFlag = false;
     callOverlayHandler({ call: "cactbotSay", text: text });
-    setTimeout(() => {
-      ttsSuppressFlag = true;
-    }, ttsSuppressMs);
+    // setTimeout(() => {
+    //   ttsSuppressFlag = true;
+    // }, ttsSuppressMs);
   }
 }
 
@@ -283,7 +284,8 @@ function handleInCombatChanged(ev: {
       :lines="timelinePageData.loadedTimeline"
       :runtime="runtimeTimeSeconds"
       :show-style="timelineStore.showStyle"></timeline-timeline-show>
-    <button v-if="devMode" @click="startTimeline(0)">开始</button>
+    <button v-if="devMode" @click="startTimeline(30)">开始从-30</button>
+    <button v-if="devMode" @click="startTimeline(0)">开始从0</button>
     <button v-if="devMode" @click="stopTimeline()">团灭</button>
     <span v-if="devMode">{{ runtimeTimeSeconds }}</span>
   </div>
