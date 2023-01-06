@@ -8,6 +8,7 @@ interface Menu {
   path: string;
 }
 const menu: Menu[] = [
+  // { title: "🦐读条汉化", type: "悬浮窗", path: "castingToChinese" },
   { title: "🪐占星一键发卡", type: "悬浮窗", path: "okASTCard" },
   {
     title: "🌱施法监控",

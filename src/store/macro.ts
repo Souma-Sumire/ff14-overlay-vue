@@ -90,14 +90,14 @@ export const useMacroStore = defineStore("macro", {
             Type: type,
             Editable: true,
             Place: {
-              "A": { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
-              "B": { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
-              "C": { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
-              "D": { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
-              "One": { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
-              "Two": { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
-              "Three": { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
-              "Four": { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+              A: { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+              B: { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+              C: { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+              D: { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+              One: { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+              Two: { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+              Three: { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+              Four: { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
             },
           });
           return this.data.zoneId[selectZoneId][i - 1];
@@ -234,10 +234,10 @@ export const useMacroStore = defineStore("macro", {
         title: "选择插槽",
         message: () =>
           h(ElInputNumber, {
-            modelValue: slotIndex.value,
-            min: 1,
-            max: 5,
-            size: "large",
+            "modelValue": slotIndex.value,
+            "min": 1,
+            "max": 5,
+            "size": "large",
             "onUpdate:modelValue": (val: any) => {
               slotIndex.value = val;
             },

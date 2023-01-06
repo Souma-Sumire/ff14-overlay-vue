@@ -28661,7 +28661,7 @@ const actionChinese = {
   31374: "概念消除",
   31392: "自我概念崩坏",
 };
-
+const actionChineseMap = new Map(Object.entries(actionChinese));
 export function getActionChinese(id: number): string | undefined {
-  return actionChinese[id as keyof typeof actionChinese] ?? undefined;
+  return actionChineseMap.get(id.toString());
 }
