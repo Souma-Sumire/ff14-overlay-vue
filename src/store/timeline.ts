@@ -103,7 +103,7 @@ export const useTimelineStore = defineStore("timeline", {
 `,
       codeFight: string = "用户创建",
     ): number {
-      const result = this.allTimelines.push(new Timeline(title, condition, rawTimeline, codeFight));
+      this.allTimelines.push(new Timeline(title, condition, rawTimeline, codeFight));
       this.sortTimelines();
       Swal.fire({
         position: "center",
@@ -112,6 +112,14 @@ export const useTimelineStore = defineStore("timeline", {
         showConfirmButton: false,
         timer: 1000,
       });
+      //如果严谨点应该还要比较create 但重复的demo选错又能怎么样呢
+      const result = this.allTimelines.findIndex(
+        (t) =>
+          t.timeline === rawTimeline &&
+          t.name === title &&
+          JSON.stringify(t.condition) === JSON.stringify(condition) &&
+          t.codeFight === codeFight,
+      );
       return result;
     },
     getTimeline(condition: ITimelineCondition): ITimeline[] {
