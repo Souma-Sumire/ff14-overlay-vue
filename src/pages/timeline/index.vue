@@ -47,9 +47,12 @@ function init() {
   }
   getTimeline(condition.value);
 }
-
 function openSettings() {
-  const windowsOpen = window.open(`${window.location.href}/settings`, "_blank", "width=1200,height=800");
+  const windowsOpen = window.open(
+    "/ff14-overlay-vite/#/timeline/settings?timestamp=" + new Date().getTime(),
+    "_blank",
+    "width=1200,height=800",
+  );
   const loop = setInterval(function () {
     if (windowsOpen?.closed) {
       clearInterval(loop);
