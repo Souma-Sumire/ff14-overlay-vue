@@ -226,7 +226,7 @@ function readMe(): void {
 function createP8STimeline(): void {
   timelineCurrentlyEditing.timeline =
     timelineStore.allTimelines[
-      timelineStore.newTimeline("门神模板", { zoneId: "1088", job: "NONE" }, p8sTimeline, "P8S门神模板V5")
+      timelineStore.newTimeline("门神模板", { zoneId: "1088", job: "NONE" }, p8sTimeline, "P8S门神模板V6")
     ];
 }
 const timeMinuteSecondDisplay = computed(() => {
