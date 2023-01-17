@@ -28,15 +28,20 @@ const defaultSortArray = [
   "35", //赤
   "36", //青
 ];
-const fakeParty = [
-  { id: "10000001", name: "虚构战士", job: 21, inParty: true },
-  { id: "10000002", name: "虚构骑士", job: 19, inParty: true },
-  { id: "10000003", name: "虚构占星", job: 33, inParty: true },
-  { id: "10000004", name: "虚构学者", job: 28, inParty: true },
-  { id: "10000005", name: "虚构忍者", job: 30, inParty: true },
-  { id: "10000006", name: "虚构武士", job: 34, inParty: true },
-  { id: "10000007", name: "虚构黑魔", job: 25, inParty: true },
-  { id: "10000008", name: "虚构舞者", job: 38, inParty: true },
+const fakeParty: {
+  id: string;
+  name: string;
+  job: number;
+  inParty: boolean;
+}[] = [
+  // { id: "10000001", name: "虚构战士", job: 21, inParty: true },
+  // { id: "10000002", name: "虚构骑士", job: 19, inParty: true },
+  // { id: "10000003", name: "虚构占星", job: 33, inParty: true },
+  // { id: "10000004", name: "虚构学者", job: 28, inParty: true },
+  // { id: "10000005", name: "虚构忍者", job: 30, inParty: true },
+  // { id: "10000006", name: "虚构武士", job: 34, inParty: true },
+  // { id: "10000007", name: "虚构黑魔", job: 25, inParty: true },
+  // { id: "10000008", name: "虚构舞者", job: 38, inParty: true },
 ];
 const data: {
   party: {
@@ -101,7 +106,7 @@ function broadcastParty(): void {
   });
 }
 function handleChangePrimaryPlayer(event: { charID: string; charName: string }): void {
-  playerName.value = event.charName;
+  if (!isDev) playerName.value = event.charName;
 }
 onMounted(() => {
   addOverlayListener("PartyChanged", handlePartyChanged);
@@ -113,7 +118,7 @@ onBeforeUnmount(() => {
   removeOverlayListener("ChangePrimaryPlayer", handleChangePrimaryPlayer);
 });
 const mouseEnter = ref(false);
-const playerName = ref(isDev ? fakeParty[3].name : "");
+const playerName = ref(isDev ? "虚构占星" : "");
 function onMouseOver(): void {
   mouseEnter.value = true;
 }
@@ -123,16 +128,14 @@ function onMouseOut(): void {
 </script>
 
 <template>
+  <span v-if="data.party.length === 0">等待小队...</span>
   <el-container @mouseenter="onMouseOver" @mouseleave="onMouseOut">
     <el-main>
       <transition-group
         name="animate__animated animate__bounce"
         enter-active-class="animate__fadeInLeft"
         leave-active-class="animate__fadeOutLeft">
-        <div
-          v-for="(member, i) in data.party"
-          :key="member.id"
-          v-show="mouseEnter || member.name === playerName">
+        <div v-for="(member, i) in data.party" :key="member.id" v-show="mouseEnter || member.name === playerName">
           <el-select v-model="member.rp" size="small" m-0 p-0 @change="handleSelectChange(i)" :teleported="false">
             <el-option
               v-for="(item, index) in roleAssignLocationNames[getJobClassification(member.job)]"
@@ -152,19 +155,18 @@ function onMouseOut(): void {
   user-select: none !important;
 }
 .el-container {
-  > .el-header,
-  .el-header {
-    background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.1);
+  width: 10em;
+  > .el-header {
     height: 2em;
     position: fixed;
     top: 0;
   }
   .el-main {
-    animation-duration: 0.2s;
     padding: 0;
     margin: 0;
     > div {
-      animation-duration: 0.25s;
+      animation-duration: 0.2s;
       animation-timing-function: ease-in-out;
       $color: rgba(0, 0, 0, 0.25);
       > span {
