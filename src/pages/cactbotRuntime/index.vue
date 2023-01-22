@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { RemovableRef } from "@vueuse/core";
 import "animate.css";
 const roleAssignLocationNames: Record<Role, string[]> = {
   tank: ["MT", "ST", "T3", "T4", "T5", "T6", "T7", "T8"],
@@ -43,7 +44,7 @@ const fakeParty: {
   // { id: "10000007", name: "虚构黑魔", job: 25, inParty: true },
   // { id: "10000008", name: "虚构舞者", job: 38, inParty: true },
 ];
-const data: {
+const data: RemovableRef<{
   party: {
     id: string;
     name: string;
@@ -51,7 +52,7 @@ const data: {
     inParty: boolean;
     job: number;
   }[];
-} = reactive({ party: [] });
+}> = useStorage("souma-cactbot-runtime", reactive({ party: [] }));
 const roleSelectLength = {
   tank: 0,
   healer: 0,
@@ -59,9 +60,12 @@ const roleSelectLength = {
   unknown: 1,
 };
 function updateRoleSelectLength(): void {
-  roleSelectLength.tank = data.party.reduce((p, c) => (getJobClassification(c.job) === "tank" ? p + 1 : p), 0);
-  roleSelectLength.healer = data.party.reduce((p, c) => (getJobClassification(c.job) === "healer" ? p + 1 : p), 0);
-  roleSelectLength.dps = data.party.reduce((p, c) => (getJobClassification(c.job) === "dps" ? p + 1 : p), 0);
+  roleSelectLength.tank = data.value.party.reduce((p, c) => (getJobClassification(c.job) === "tank" ? p + 1 : p), 0);
+  roleSelectLength.healer = data.value.party.reduce(
+    (p, c) => (getJobClassification(c.job) === "healer" ? p + 1 : p),
+    0,
+  );
+  roleSelectLength.dps = data.value.party.reduce((p, c) => (getJobClassification(c.job) === "dps" ? p + 1 : p), 0);
 }
 const isDev = location.href.includes("localhost");
 if (isDev) {
@@ -76,39 +80,40 @@ function getJobClassification(job: number): Role {
 }
 function handlePartyChanged(e: { party: { id: string; name: string; inParty: boolean; job: number }[] }): void {
   if (isDev && e.party.length === 0) return;
-  data.party = e.party
+  data.value.party = e.party
     .map((p) => {
       return { ...p, rp: "" };
     })
     .sort((a, b) => defaultSortArray.indexOf(a.job.toString()) - defaultSortArray.indexOf(b.job.toString()));
-  data.party.forEach((v) => (v.rp = getRP(v.job)));
+  data.value.party.forEach((v) => (v.rp = getRP(v.job)));
   updateRoleSelectLength();
   broadcastParty();
 }
 function handleSelectChange(i: number): void {
-  const t = data.party.find((v) => v.rp === data.party[i].rp && v.id !== data.party[i].id);
+  const t = data.value.party.find((v) => v.rp === data.value.party[i].rp && v.id !== data.value.party[i].id);
   t && (t.rp = getRP(t.job));
   broadcastParty();
 }
 function getRP(job: number): string {
   return (
-    roleAssignLocationNames[getJobClassification(job)].find((role) => !data.party.find((v) => v.rp === role)) ??
+    roleAssignLocationNames[getJobClassification(job)].find((role) => !data.value.party.find((v) => v.rp === role)) ??
     "unknown"
   );
 }
 function broadcastParty(): void {
   const sortArr = [...roleAssignLocationNames.tank, ...roleAssignLocationNames.healer, ...roleAssignLocationNames.dps];
-  data.party.sort((a, b) => sortArr.indexOf(a.rp) - sortArr.indexOf(b.rp));
+  data.value.party.sort((a, b) => sortArr.indexOf(a.rp) - sortArr.indexOf(b.rp));
   callOverlayHandler({
     call: "broadcast",
     source: "soumaRuntimeJS",
-    msg: { party: data.party },
+    msg: { party: data.value.party },
   });
 }
 function handleChangePrimaryPlayer(event: { charID: string; charName: string }): void {
   if (!isDev) playerName.value = event.charName;
 }
 onMounted(() => {
+  broadcastParty();
   addOverlayListener("PartyChanged", handlePartyChanged);
   addOverlayListener("ChangePrimaryPlayer", handleChangePrimaryPlayer);
   startOverlayEvents();
