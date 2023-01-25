@@ -1185,7 +1185,7 @@ function copyMacro(text: string) {
     <el-table v-if="showConfig" :data="data.dps" style="width: 100%" height="433" m-b-3 border>
       <el-table-column label="职业" width="110">
         <template #default="scope">
-          <img :src="scope.row.jobSrc" :alt="scope.row.job" srcset="" style="height: 1.25rem" />
+          <img loading="lazy" :src="scope.row.jobSrc" :alt="scope.row.job" srcset="" style="height: 1.25rem" />
           {{ Util.nameToFullName(scope.row.job).full }}
         </template>
       </el-table-column>
@@ -1239,6 +1239,7 @@ function copyMacro(text: string) {
         >（使用本地通讯贝1可以把它放到不常用的聊天窗口分类中以避免刷屏）
       </p>
       <p>修改好设置之后，在ACT取消勾选“显示悬浮窗”以后台运行，如果需要修改设置重新勾选以显示本页面。</p>
+      <p>常见问题：我怎么改不了小队排序：先切到act，再点击悬浮窗才可以正确获得焦点。同时你只能编辑输入规则内的文字。</p>
     </div>
   </el-card>
 </template>
