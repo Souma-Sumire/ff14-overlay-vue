@@ -1,14 +1,16 @@
-import Vue from "@vitejs/plugin-vue";
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
 import Markdown from "vite-plugin-md";
 import { presetAttributify, presetIcons, presetUno } from "unocss";
 import Unocss from "unocss/vite";
 import viteCompression from "vite-plugin-compression";
 import Pages from "vite-plugin-pages";
-import { defineConfig } from "vite";
 import AutoImport from "unplugin-auto-import/vite";
 import Components from "unplugin-vue-components/vite";
 import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
 import { resolve } from "path";
+import vueJsx from "@vitejs/plugin-vue-jsx";
+import { createStyleImportPlugin, VxeTableResolve } from "vite-plugin-style-import";
 // const path = require("path");
 
 // https://vitejs.dev/config/
@@ -34,9 +36,10 @@ export default defineConfig({
     // },
   },
   plugins: [
-    Vue({
+    vue({
       include: [/\.vue$/, /\.md$/], // <--
     }),
+    vueJsx(),
     Markdown(),
     AutoImport({
       imports: ["vue", "@vueuse/core"],
@@ -63,6 +66,9 @@ export default defineConfig({
       presets: [presetUno(), presetAttributify(), presetIcons()],
     }),
     Pages(),
+    createStyleImportPlugin({
+      resolves: [VxeTableResolve()],
+    }),
   ],
   define: {
     __VUE_OPTIONS_API__: false,
