@@ -18,8 +18,7 @@ const displayGCD = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.displa
         popper-class="el-tooltip"
         :show-arrow="false"
         v-for="cast in casts"
-        :key="cast.key"
-      >
+        :key="cast.key">
         <template #content>
           <div class="elhover">
             <strong>{{ cast.APIData.Name }}</strong>
@@ -30,10 +29,9 @@ const displayGCD = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.displa
           :class="`images ${cast.class} logLine${cast.logLine} displayAA${displayAA} displayGCD${displayGCD}`"
           :style="`--animeDuration: ${castingMonitorStore.config.duration}s;opacity:${Number(
             castingMonitorStore.focusTargetId === castersId,
-          )}`"
-        >
-          <img :src="cast.src" class="action-icon" height="40" />
-          <img class="frame" />
+          )}`">
+          <img :src="cast.src" class="action-icon" height="40" loading="lazy" />
+          <img class="frame" loading="lazy" />
           <span v-if="displayGCD === 1" class="GCDCast" :class="cast.GCDClass">{{ cast?.GCDCast ?? "" }}</span>
         </div>
       </el-tooltip>

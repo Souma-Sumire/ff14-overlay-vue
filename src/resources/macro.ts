@@ -471,9 +471,9 @@ export const defaultMacro: { zoneId: ZoneIdInfo } = {
         /p MT组：MTH1D1D3　ST组：STH2D2D4
         /p 　【基础分散】　　　 【击退+分散+鸟】
         /p MT/D1　ST/D2　　　　 D1　　 　 　 D2
-        /p 　　 ★            D3　 MT　 　ST　 D4
+        /p 　　 ★ 　　　　　　D3　 MT　 　ST　 D4
         /p H1/D3　H2/D4　　　　过道 　 　 　 过道
-        /p                     H1           H2
+        /p 　　　　　　　　　　　H1　　　　　　H2
         /p 【生命的果实:分摊】　 │【魔印创造:分散】
         /p 北侧：MT组 南测：ST组 │基础分散※分摊在中心
         /p 【左右分摊】　 　 　 │【鸟+塔】

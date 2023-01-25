@@ -16,8 +16,8 @@ const props = defineProps<{ settings: { api: any }; filters: any }>();
 const emit = defineEmits(["newTimeline", "showFFlogsToggle", "clearCurrentlyTimeline"]);
 const urlRe = /(?<=^|\/)(?<code>[\d\w]{16,})\/?#fight=(?<fight>\d+|last)/;
 const regexType: Partial<Record<FFlogsType, string>> = {
-  "begincast": "14",
-  "cast": "1[56]",
+  begincast: "14",
+  cast: "1[56]",
 };
 let queryText = ref(QueryTextEnum.query);
 let inputUrl = ref("");
@@ -356,6 +356,7 @@ function claerFFlogsQueryConfig() {
               :src="`https://cafemaker.wakingsands.com/i/${rule.url}.png`"
               class="ability-filter-li-icon"
               title=""
+              loading="lazy"
               :onerror="`javascript:this.src='https://xivapi.com/i/${rule.url}.png';this.onerror=null;`" />{{
               rule.actionName
             }}

@@ -9,6 +9,7 @@ interface Menu {
 }
 const menu: Menu[] = [
   // { title: "🦐读条汉化", type: "悬浮窗", path: "castingToChinese" },
+  // { title: "FFLOGS 减伤表生成", type: "网页", path: "fflogsCsvTimelineCreate" },
   { title: "🪐占星一键发卡", type: "悬浮窗", path: "okASTCard" },
   {
     title: "🌱施法监控",

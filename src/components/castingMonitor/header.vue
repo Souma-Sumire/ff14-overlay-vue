@@ -24,7 +24,7 @@ const showHeader = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(params?.sh
       m-0
     >
       <div flex="~ nowrap items-end" style="align-items: flex-end; gap: 0.1rem">
-        <img :src="item.src" style="height: 1.25em" />
+        <img :src="item.src" style="height: 1.25em" loading="lazy"/>
         {{ Util.nameToFullName(Util.jobEnumToJob(item.job as number)).simple2 }}
       </div>
     </button>

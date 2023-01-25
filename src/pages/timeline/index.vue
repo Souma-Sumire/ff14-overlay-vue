@@ -293,7 +293,11 @@ function handleInCombatChanged(ev: {
     <span v-if="devMode">{{ runtimeTimeSeconds }}</span>
   </div>
 </template>
-
+<style lang="scss">
+::-webkit-scrollbar {
+  display: none !important;
+}
+</style>
 <style lang="scss" scoped>
 * {
   padding: 0;
