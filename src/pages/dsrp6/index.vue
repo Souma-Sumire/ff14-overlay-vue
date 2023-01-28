@@ -71,7 +71,11 @@ async function handleLogLine(e: { line: string[] }): Promise<void> {
   }
 }
 </script>
-
+<style lang="scss">
+::-webkit-scrollbar {
+  display: none !important;
+}
+</style>
 <style lang="scss" scoped>
 #container {
   * {

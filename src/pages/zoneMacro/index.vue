@@ -135,12 +135,14 @@ onBeforeUnmount(() => {
           m-3px
           v-model="macroStore.selectZone"
           filterable
-          placeholder="Select">
+          placeholder="Select"
+        >
           <el-option
             v-for="(item, i) in zoneInfo"
             :key="i"
             :label="item.name?.cn ?? `${item.name.en} / ${item.name.ja}`"
-            :value="i" />
+            :value="i"
+          />
         </el-select>
       </el-space>
       <el-space class="fastEntrance">
@@ -164,7 +166,8 @@ onBeforeUnmount(() => {
           shadow="hover"
           v-for="(macro, index) in macroStore.data.zoneId[macroStore.selectZone]"
           :key="index"
-          class="main-box-card">
+          class="main-box-card"
+        >
           <p m-t-2 m-b-2 v-show="!macro.Editable" v-html="macro.Name" font-bold></p>
           <el-input size="small" v-show="macro.Editable" v-model="macro.Name" placeholder="宏标题" />
           <div v-if="macro.Type === 'macro'">
@@ -179,11 +182,13 @@ onBeforeUnmount(() => {
               type="textarea"
               placeholder="宏文本"
               wrap="off"
-              style="width: 450px" />
+              style="width: 450px"
+            />
             <el-row
               v-if="!macro.Editable"
               class="buttonArea"
-              :style="{ maxHeight: macro.Editable ? '100px' : null, opacity: macro.Editable ? 1 : null }">
+              :style="{ maxHeight: macro.Editable ? '100px' : null, opacity: macro.Editable ? 1 : null }"
+            >
               <el-button :icon="Edit" size="small" @click="macroStore.editMacroMacro(macro)">编辑</el-button>
               <el-button :icon="ChatSquare" size="small" type="info" @click="macroStore.sendMacroEcho(macro.Text)"
                 >默语</el-button
@@ -227,7 +232,8 @@ onBeforeUnmount(() => {
                       :precision="2"
                       size="small"
                       v-show="macro.Editable"
-                      v-model="scope.row[1].X"></el-input-number>
+                      v-model="scope.row[1].X"
+                    ></el-input-number>
                   </template>
                 </el-table-column>
                 <el-table-column align="center" label="Z" width="140">
@@ -239,7 +245,8 @@ onBeforeUnmount(() => {
                       :precision="2"
                       size="small"
                       v-show="macro.Editable"
-                      v-model="scope.row[1].Z"></el-input-number>
+                      v-model="scope.row[1].Z"
+                    ></el-input-number>
                   </template>
                 </el-table-column>
                 <el-table-column align="center" label="Y" width="85" v-if="false">
@@ -251,7 +258,8 @@ onBeforeUnmount(() => {
                       size="small"
                       controls-position="right"
                       v-show="macro.Editable"
-                      v-model="scope.row[1].Y"></el-input>
+                      v-model="scope.row[1].Y"
+                    ></el-input>
                   </template>
                 </el-table-column>
               </el-table>
@@ -259,7 +267,8 @@ onBeforeUnmount(() => {
             <el-space>
               <div
                 style="position: relative; background-color: rgba(214, 199, 148, 1)"
-                :style="{ height: markViewSize + 'px', width: markViewSize + 'px', fontSize: markViewFontSize + 'px' }">
+                :style="{ height: markViewSize + 'px', width: markViewSize + 'px', fontSize: markViewFontSize + 'px' }"
+              >
                 <div v-for="(mark, i) in ['A', 'B', 'C', 'D', 'One', 'Two', 'Three', 'Four']" :key="i">
                   <span
                     class="markIcon"
@@ -267,7 +276,8 @@ onBeforeUnmount(() => {
                     :style="{
                       left: Math.min(markViewSize, Math.max(0, (Number(macro.Place[(mark as WayMarkKeys)].X) + macroStore.defaultX) * markViewScale + markViewSize / 2)) + 'px',
                       top: Math.min(markViewSize, Math.max(0, (Number(macro.Place[mark as WayMarkKeys].Z) + macroStore.defaultY) * markViewScale + markViewSize / 2)) + 'px',
-                    }">
+                    }"
+                  >
                     {{ macro.Place[mark as WayMarkKeys].Active ? markMap[mark as WayMarkKeys] ?? mark : "" }}
                   </span>
                 </div>
@@ -276,7 +286,8 @@ onBeforeUnmount(() => {
             <el-row
               v-if="!macro.Editable"
               class="buttonArea"
-              :style="{ maxHeight: macro.Editable ? '100px' : null, opacity: macro.Editable ? 1 : null }">
+              :style="{ maxHeight: macro.Editable ? '100px' : null, opacity: macro.Editable ? 1 : null }"
+            >
               <el-button :icon="Edit" size="small" @click="macroStore.editMacroPlace(macro)">编辑</el-button>
               <el-button type="primary" size="small" @click="macroStore.doLocalWayMark(macro.Place)">本地</el-button>
               <el-button type="primary" size="small" @click="macroStore.doSlotWayMark(macro.Place)">插槽</el-button>
@@ -317,6 +328,20 @@ onBeforeUnmount(() => {
   font-family: "FFXIV", "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑",
     Arial, sans-serif;
   pointer-events: initial;
+}
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background-color: rgba(51, 51, 51, 1);
+}
+::-webkit-scrollbar-thumb {
+  height: 30px;
+  border-radius: 5px;
+  background-color: rgba(216, 216, 216, 0.4);
+}
+::-webkit-scrollbar-thumb:active {
+  background-color: rgba(160, 160, 160, 1);
 }
 html,
 body {

@@ -40,6 +40,11 @@ setInterval(() => {
     </footer>
   </div>
 </template>
+<style lang="scss">
+::-webkit-scrollbar {
+  display: none !important;
+}
+</style>
 <style lang="scss" scoped>
 .common-layout {
   user-select: none;
