@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RemovableRef } from "@vueuse/core";
 import "animate.css";
+import { ElMessage } from "element-plus";
 const roleAssignLocationNames: Record<Role, string[]> = {
   tank: ["MT", "ST", "T3", "T4", "T5", "T6", "T7", "T8"],
   healer: ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8"],
@@ -112,15 +113,22 @@ function broadcastParty(): void {
 function handleChangePrimaryPlayer(event: { charID: string; charName: string }): void {
   if (!isDev) playerName.value = event.charName;
 }
+function handleBroadcastMessage(e: { source: string; msg: any }) {
+  if (e.source === "soumaUserJS" && e.msg.text === "updateNewPartyRP Success") {
+    ElMessage("通信成功");
+  }
+}
 onMounted(() => {
   broadcastParty();
   addOverlayListener("PartyChanged", handlePartyChanged);
   addOverlayListener("ChangePrimaryPlayer", handleChangePrimaryPlayer);
+  addOverlayListener("BroadcastMessage", handleBroadcastMessage);
   startOverlayEvents();
 });
 onBeforeUnmount(() => {
   removeOverlayListener("PartyChanged", handlePartyChanged);
   removeOverlayListener("ChangePrimaryPlayer", handleChangePrimaryPlayer);
+  removeOverlayListener("BroadcastMessage", handleBroadcastMessage);
 });
 const mouseEnter = ref(false);
 const playerName = ref(isDev ? "虚构占星" : "");
@@ -133,13 +141,14 @@ function onMouseOut(): void {
 </script>
 
 <template>
-  <span v-if="data.party.length === 0">等待小队...</span>
+  <span v-if="data.party.length === 0" style="color: white; text-shadow: 1px 1px 2px black">等待小队...</span>
   <el-container @mouseenter="onMouseOver" @mouseleave="onMouseOut">
     <el-main>
       <transition-group
         name="animate__animated animate__bounce"
         enter-active-class="animate__fadeInLeft"
-        leave-active-class="animate__fadeOutLeft">
+        leave-active-class="animate__fadeOutLeft"
+      >
         <div v-for="(member, i) in data.party" :key="member.id" v-show="mouseEnter || member.name === playerName">
           <el-select v-model="member.rp" size="small" m-0 p-0 @change="handleSelectChange(i)" :teleported="false">
             <el-option
@@ -147,7 +156,8 @@ function onMouseOut(): void {
               v-show="index < roleSelectLength[getJobClassification(member.job)]"
               :key="index"
               :value="item"
-              :fit-input-width="true" />
+              :fit-input-width="true"
+            />
           </el-select>
           <span>{{ member.name }}</span>
         </div>
