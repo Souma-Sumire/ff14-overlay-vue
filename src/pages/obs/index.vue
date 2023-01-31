@@ -70,7 +70,7 @@ async function connect() {
 async function restart(clickManually: boolean = false) {
   if (!clickManually && data.value.partyLength < data.value.greaterThanOrEqualTo) return Promise.resolve();
   if (!status.connecting) await connect();
-  else if (status.recording) {
+  if (status.recording) {
     obs.call("StopRecord").then(() => setTimeout(() => obs.call("StartRecord"), 1500));
   } else obs.call("StartRecord");
 }
