@@ -36,6 +36,7 @@ onUnmounted(() => {
   obs.off("ExitStarted", onConnectionClosed);
   obs.off("ConnectionClosed", onConnectionClosed);
   obs.off("ConnectionError", onConnectionClosed);
+  obs.off("RecordStateChanged", onRecordStateChanged);
   removeOverlayListener("onLogEvent", handleLogEvent);
   removeOverlayListener("onInCombatChangedEvent", handleInCombatChanged);
   removeOverlayListener("PartyChanged", handlePartyChanged);
