@@ -49,7 +49,7 @@ async function connect() {
         status: "success",
         width: "7rem",
         size: "mini",
-        top: 0,
+        top: 8,
       });
       status.connecting = true;
       showSettings.value = false;
@@ -60,7 +60,7 @@ async function connect() {
         status: "error",
         width: "7rem",
         size: "mini",
-        top: 0,
+        top: 8,
       });
       status.connecting = false;
     });
@@ -111,7 +111,7 @@ function handlePartyChanged(e: { party: any[] }) {
 </script>
 
 <template>
-  <header v-if="status.connecting">
+  <header v-show="status.connecting">
     <i
       class="vxe-icon-dot icon"
       :style="{ color: status.recording ? 'red' : 'gray', textShadow: '0px  0px 3px black' }"
@@ -125,9 +125,14 @@ function handlePartyChanged(e: { party: any[] }) {
       @click="restart(true)"
       size="mini"
     ></vxe-button>
-    <vxe-button class="btns settings" icon="vxe-icon-setting" @click="showSettings = true" size="mini"></vxe-button>
+    <vxe-button
+      class="btns settings"
+      icon="vxe-icon-setting"
+      @click="showSettings = !showSettings"
+      size="mini"
+    ></vxe-button>
   </header>
-  <main p-b-2 v-if="!status.connecting || showSettings">
+  <main p-b-2 v-show="!status.connecting || showSettings">
     <vxe-form :data="data">
       <vxe-form-item span="24">
         <template #default="{ data }">
@@ -183,19 +188,17 @@ function handlePartyChanged(e: { party: any[] }) {
       content="未连接到OBS"
       :disabled="true"
     ></vxe-button>
-    <vxe-button
-      v-if="showSettings"
-      class="btns"
-      icon="vxe-icon-setting"
-      @click="showSettings = false"
-      size="mini"
-      content="隐藏设置"
-    ></vxe-button>
   </main>
 </template>
 <style lang="scss">
+body {
+  padding: 0;
+  margin: 0.3rem 0;
+  overflow-x: hidden;
+}
 ::-webkit-scrollbar {
   width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background-color: rgba(51, 51, 51, 1);
@@ -209,6 +212,9 @@ function handlePartyChanged(e: { party: any[] }) {
   background-color: rgba(160, 160, 160, 1);
 }
 header {
+  position: relative;
+  top: 0.25rem;
+  left: 0.25rem;
   .icon {
     float: left;
   }
@@ -221,8 +227,10 @@ header {
   }
 }
 main {
+  border-radius: 0.3rem;
   background-color: white;
   padding: 1rem;
+  padding-top: 1.5rem;
   margin: 0;
 }
 </style>
