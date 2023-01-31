@@ -15,6 +15,7 @@ const status = reactive({
 });
 const obs = new OBSWebSocket();
 const showSettings = ref(true);
+const hideUntilConnection = ref(false);
 onMounted(async () => {
   obs.on("ExitStarted", onConnectionClosed);
   obs.on("ConnectionClosed", onConnectionClosed);
@@ -53,6 +54,7 @@ async function connect() {
       });
       status.connecting = true;
       showSettings.value = false;
+      hideUntilConnection.value = false;
     })
     .catch((e) => {
       VXETable.modal.message({
@@ -111,28 +113,45 @@ function handlePartyChanged(e: { party: any[] }) {
 </script>
 
 <template>
-  <header v-show="status.connecting">
-    <i
-      class="vxe-icon-dot icon"
-      :style="{ color: status.recording ? 'red' : 'gray', textShadow: '0px  0px 3px black' }"
-    ></i>
-    <vxe-button class="btns" icon="vxe-icon-caret-right" v-show="!status.recording" @click="restart(true)"></vxe-button>
-    <vxe-button class="btns" icon="vxe-icon-close" v-show="status.recording" @click="stop" size="mini"></vxe-button>
-    <vxe-button
-      class="btns"
-      icon="vxe-icon-cut"
-      v-show="status.recording"
-      @click="restart(true)"
-      size="mini"
-    ></vxe-button>
-    <vxe-button
-      class="btns settings"
-      icon="vxe-icon-setting"
-      @click="showSettings = !showSettings"
-      size="mini"
-    ></vxe-button>
+  <header v-show="!hideUntilConnection">
+    <div v-show="status.connecting">
+      <i
+        class="vxe-icon-dot icon"
+        :style="{ color: status.recording ? 'red' : 'gray', textShadow: '0px  0px 3px black' }"
+      ></i>
+      <vxe-button
+        class="btns"
+        icon="vxe-icon-caret-right"
+        v-show="!status.recording"
+        @click="restart(true)"
+      ></vxe-button>
+      <vxe-button class="btns" icon="vxe-icon-close" v-show="status.recording" @click="stop" size="mini"></vxe-button>
+      <vxe-button
+        class="btns"
+        icon="vxe-icon-cut"
+        v-show="status.recording"
+        @click="restart(true)"
+        size="mini"
+      ></vxe-button>
+      <vxe-button
+        class="btns settings"
+        icon="vxe-icon-setting"
+        @click="showSettings = !showSettings"
+        size="mini"
+      ></vxe-button>
+    </div>
+    <div v-show="!status.connecting">
+      <vxe-button
+        class="btns"
+        style="width: auto !important"
+        size="medium"
+        icon="vxe-icon-eye-fill-close"
+        @click="hideUntilConnection = true"
+        >隐藏页面</vxe-button
+      >
+    </div>
   </header>
-  <main p-b-2 v-show="!status.connecting || showSettings">
+  <main p-b-2 v-show="!hideUntilConnection && (!status.connecting || showSettings)">
     <vxe-form :data="data">
       <vxe-form-item span="24">
         <template #default="{ data }">
@@ -212,18 +231,20 @@ body {
   background-color: rgba(160, 160, 160, 1);
 }
 header {
-  position: relative;
-  top: 0.25rem;
-  left: 0.25rem;
-  .icon {
-    float: left;
-  }
-  .btns {
-    float: left;
-    padding: 0.1rem 0rem 1rem 0.1rem !important;
-    margin: 0rem 0.2rem 0rem 0rem !important;
-    height: 1rem !important;
-    width: 1.25rem !important;
+  > div {
+    position: relative;
+    top: 0.25rem;
+    left: 0.25rem;
+    .icon {
+      float: left;
+    }
+    .btns {
+      float: left;
+      padding: 0.1rem 0rem 1rem 0.1rem !important;
+      margin: 0rem 0.2rem 0rem 0rem !important;
+      height: 1rem !important;
+      width: 1.25rem !important;
+    }
   }
 }
 main {
