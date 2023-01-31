@@ -14,6 +14,7 @@ const status = reactive({
   inACTCombat: false,
 });
 const obs = new OBSWebSocket();
+const showSettings = ref(true);
 onMounted(async () => {
   obs.on("ExitStarted", onConnectionClosed);
   obs.on("ConnectionClosed", onConnectionClosed);
@@ -51,6 +52,7 @@ async function connect() {
         top: 0,
       });
       status.connecting = true;
+      showSettings.value = false;
     })
     .catch((e) => {
       VXETable.modal.message({
@@ -63,7 +65,8 @@ async function connect() {
       status.connecting = false;
     });
 }
-async function restart() {
+async function restart(clickManually: boolean = false) {
+  if (!clickManually && data.value.partyLength < data.value.greaterThanOrEqualTo) return Promise.resolve();
   if (!status.connecting) await connect();
   else if (status.recording) {
     obs.call("StopRecord").then(() => setTimeout(() => obs.call("StartRecord"), 1500));
@@ -71,7 +74,7 @@ async function restart() {
 }
 async function stop() {
   if (status.recording) return obs.call("StopRecord");
-  return Promise.reject();
+  return Promise.resolve();
 }
 function onConnectionClosed() {
   status.connecting = false;
@@ -108,11 +111,27 @@ function handlePartyChanged(e: { party: any[] }) {
 </script>
 
 <template>
-  <main p-b-2 v-if="!status.connecting">
+  <header v-if="status.connecting">
+    <i
+      class="vxe-icon-dot icon"
+      :style="{ color: status.recording ? 'red' : 'gray', textShadow: '0px  0px 3px black' }"
+    ></i>
+    <vxe-button class="btns" icon="vxe-icon-caret-right" v-show="!status.recording" @click="restart(true)"></vxe-button>
+    <vxe-button class="btns" icon="vxe-icon-close" v-show="status.recording" @click="stop" size="mini"></vxe-button>
+    <vxe-button
+      class="btns"
+      icon="vxe-icon-cut"
+      v-show="status.recording"
+      @click="restart(true)"
+      size="mini"
+    ></vxe-button>
+    <vxe-button class="btns settings" icon="vxe-icon-setting" @click="showSettings = true" size="mini"></vxe-button>
+  </header>
+  <main p-b-2 v-if="!status.connecting || showSettings">
     <vxe-form :data="data">
       <vxe-form-item span="24">
         <template #default="{ data }">
-          最少人数
+          自动录制最少小队人数
           <vxe-input
             v-model="data.greaterThanOrEqualTo"
             size="small"
@@ -164,16 +183,15 @@ function handlePartyChanged(e: { party: any[] }) {
       content="未连接到OBS"
       :disabled="true"
     ></vxe-button>
+    <vxe-button
+      v-if="showSettings"
+      class="btns"
+      icon="vxe-icon-setting"
+      @click="showSettings = false"
+      size="mini"
+      content="隐藏设置"
+    ></vxe-button>
   </main>
-  <header v-if="status.connecting">
-    <i
-      class="vxe-icon-dot icon"
-      :style="{ color: status.recording ? 'red' : 'gray', textShadow: '0px  0px 3px black' }"
-    ></i>
-    <vxe-button class="btns" icon="vxe-icon-caret-right" v-show="!status.recording" @click="restart"></vxe-button>
-    <vxe-button class="btns" icon="vxe-icon-close" v-show="status.recording" @click="stop" size="mini"></vxe-button>
-    <vxe-button class="btns" icon="vxe-icon-cut" v-show="status.recording" @click="restart" size="mini"></vxe-button>
-  </header>
 </template>
 <style lang="scss">
 ::-webkit-scrollbar {
