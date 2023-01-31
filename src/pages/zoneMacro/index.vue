@@ -117,14 +117,12 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-  <el-button
-    style="position: fixed; top: 0; right: 0"
-    type="info"
-    size="small"
+  <i
+    class="vxe-icon-search-zoom-in"
+    style="position: fixed; top: 0; right: 0; color: white; cursor: pointer"
     v-show="!macroStore.show"
     @click="macroStore.toggleShow()"
-    >显示</el-button
-  >
+  ></i>
   <el-container rd-1 m-0 p-0 absolute left-0 top-0 v-show="macroStore.show" class="elcontainer">
     <el-header flex="~ wrap gap1" height="auto" p-l-1 class="elheader">
       <el-space>
@@ -319,6 +317,7 @@ onBeforeUnmount(() => {
       <el-button type="danger" size="small" @click="macroStore.resetAllData()">恢复全部</el-button>
       <el-button type="success" size="small" @click="macroStore.updateZone()">数据更新</el-button>
       <el-button size="small" @click="toggleHelp()">查看帮助</el-button>
+      <i class="vxe-icon-arrow-down">菜单</i>
     </div>
   </el-container>
 </template>
@@ -331,6 +330,7 @@ onBeforeUnmount(() => {
 }
 ::-webkit-scrollbar {
   width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background-color: rgba(51, 51, 51, 1);
@@ -371,26 +371,31 @@ body {
   }
 }
 .menu {
-  $menuPaddingLeft: 2rem;
+  [class*="vxe-"] {
+    text-align: center;
+    font-size: 14px;
+  }
   background: transparent;
   width: auto;
   height: auto;
   margin: 0.2rem;
   padding: 0;
-  padding-left: $menuPaddingLeft;
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
   transition: all 0.25s;
   position: fixed;
   top: 0;
-  right: $menuPaddingLeft;
-  transform: translateX(calc(100% - 0.25rem));
+  right: 0;
+  transform: translateY(calc(-100% + 1rem));
   opacity: 0.5;
   z-index: 100;
   &:hover {
-    transform: translateX($menuPaddingLeft);
+    transform: translateY(0);
     opacity: 1;
+    [class*="vxe-"] {
+      opacity: 0;
+    }
   }
   .el-button {
     margin: 0;
