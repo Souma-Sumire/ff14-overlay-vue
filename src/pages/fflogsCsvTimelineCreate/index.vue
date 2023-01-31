@@ -188,13 +188,12 @@ const rowClassName: VxeTablePropTypes.RowClassName = ({ row }) => {
         border
         :loading="loading"
         class="mytable-scrollbar"
-        height="400"
-        max-height="720"
+        height="720"
         align="center"
         show-header-overflow="tooltip"
         :show-overflow="true"
-        :scroll-x="{ enabled: true, oSize: 5 }"
-        :scroll-y="{ enabled: true, oSize: 5, mode: 'wheel' }"
+        :scroll-x="{ enabled: true, oSize: 15 }"
+        :scroll-y="{ enabled: true, oSize: 15, mode: 'wheel' }"
         :data="data.tableData"
         :row-config="{ isHover: false, height: 25 }"
         :row-class-name="rowClassName">
