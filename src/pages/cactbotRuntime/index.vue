@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import Util from "@/utils/util";
 import { RemovableRef } from "@vueuse/core";
 import "animate.css";
 import { ElMessage } from "element-plus";
@@ -36,14 +37,14 @@ const fakeParty: {
   job: number;
   inParty: boolean;
 }[] = [
-  // { id: "10000001", name: "虚构战士", job: 21, inParty: true },
-  // { id: "10000002", name: "虚构骑士", job: 19, inParty: true },
-  // { id: "10000003", name: "虚构占星", job: 33, inParty: true },
-  // { id: "10000004", name: "虚构学者", job: 28, inParty: true },
-  // { id: "10000005", name: "虚构忍者", job: 30, inParty: true },
-  // { id: "10000006", name: "虚构武士", job: 34, inParty: true },
-  // { id: "10000007", name: "虚构黑魔", job: 25, inParty: true },
-  // { id: "10000008", name: "虚构舞者", job: 38, inParty: true },
+  { id: "10000001", name: "虚构战士", job: 21, inParty: true },
+  { id: "10000002", name: "虚构骑士", job: 19, inParty: true },
+  { id: "10000003", name: "虚构占星", job: 33, inParty: true },
+  { id: "10000004", name: "虚构学者", job: 28, inParty: true },
+  { id: "10000005", name: "虚构忍者", job: 30, inParty: true },
+  { id: "10000006", name: "虚构武士", job: 34, inParty: true },
+  { id: "10000007", name: "虚构黑魔", job: 25, inParty: true },
+  { id: "10000008", name: "虚构舞者", job: 38, inParty: true },
 ];
 const data: RemovableRef<{
   party: {
@@ -114,8 +115,15 @@ function handleChangePrimaryPlayer(event: { charID: string; charName: string }):
   if (!isDev) playerName.value = event.charName;
 }
 function handleBroadcastMessage(e: { source: string; msg: any }) {
-  if (e.source === "soumaUserJS" && e.msg.text === "updateNewPartyRP Success") {
-    ElMessage("通信成功");
+  if (e.source === "soumaUserJS") {
+    switch (e.msg.text) {
+      case "updateNewPartyRP Success":
+        ElMessage("通信成功");
+        break;
+      case "requestData":
+        broadcastParty();
+        break;
+    }
   }
 }
 onMounted(() => {
@@ -149,7 +157,12 @@ function onMouseOut(): void {
         enter-active-class="animate__fadeInLeft"
         leave-active-class="animate__fadeOutLeft"
       >
-        <div v-for="(member, i) in data.party" :key="member.id" v-show="mouseEnter || member.name === playerName">
+        <div
+          v-for="(member, i) in data.party"
+          :key="member.id"
+          v-show="mouseEnter || member.name === playerName"
+          flex="~ nowrap"
+        >
           <el-select v-model="member.rp" size="small" m-0 p-0 @change="handleSelectChange(i)" :teleported="false">
             <el-option
               v-for="(item, index) in roleAssignLocationNames[getJobClassification(member.job)]"
@@ -159,21 +172,40 @@ function onMouseOut(): void {
               :fit-input-width="true"
             />
           </el-select>
-          <span>{{ member.name }}</span>
+          <span style="white-space: nowrap"
+            >{{ Util.nameToFullName(Util.jobEnumToJob(member.job)).simple2 }} {{ member.name }}</span
+          >
         </div>
       </transition-group>
     </el-main>
   </el-container>
 </template>
+<style lang="scss">
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background-color: rgba(51, 51, 51, 1);
+}
+::-webkit-scrollbar-thumb {
+  height: 30px;
+  border-radius: 5px;
+  background-color: rgba(216, 216, 216, 0.4);
+}
+::-webkit-scrollbar-thumb:active {
+  background-color: rgba(160, 160, 160, 1);
+}
+</style>
 <style lang="scss" scoped>
 :deep(*) {
   user-select: none !important;
 }
 .el-container {
   background-color: rgba(0, 0, 0, 0.1);
-  width: 10em;
+  width: 12rem;
   > .el-header {
-    height: 2em;
+    height: 2rem;
     position: fixed;
     top: 0;
   }
@@ -187,7 +219,7 @@ function onMouseOut(): void {
       > span {
         color: white;
         text-shadow: 1px 1px 2px $color, -1px -1px 2px $color, 1px -1px 2px $color, -1px 1px 2px $color;
-        padding-left: 0.25em;
+        // padding-left: 0.25em;
       }
       :deep(*:not(.el-popper)) {
         background-color: rgba(0, 0, 0, 0.01);
@@ -199,11 +231,11 @@ function onMouseOut(): void {
         background-color: rgba(255, 255, 255, 1);
       }
       .el-select {
-        width: 2.5em;
+        width: 2.5rem;
         :deep(.el-input__suffix-inner) {
-          width: 0em;
+          width: 0rem;
           position: relative;
-          right: 0.75em;
+          right: 0.75rem;
         }
         :deep(.el-input__wrapper) {
           padding: 0px 5px;
