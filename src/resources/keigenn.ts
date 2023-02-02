@@ -772,13 +772,17 @@ export function getKeigennById(id: number): Keigenn | undefined {
   return res;
 }
 export function createIconUrl(icon: number): string {
-  let head = [..."000000"];
-  let iconStr = icon.toString();
-  if (iconStr.length > 3) {
-    const temp = [...iconStr].slice(0, iconStr.length - 3).concat(..."000");
-    head = [...head.slice(0, 6 - temp.length), ...temp];
+  if (typeof icon === "number") {
+    let head = [..."000000"];
+    let iconStr = icon.toString();
+    if (iconStr.length > 3) {
+      const temp = [...iconStr].slice(0, iconStr.length - 3).concat(..."000");
+      head = [...head.slice(0, 6 - temp.length), ...temp];
+    }
+    let foot = [..."000000"];
+    foot = [...foot.slice(0, 6 - iconStr.length), ...iconStr];
+    return `${head.join("")}/${foot.join("")}.png`;
+  } else {
+    return icon;
   }
-  let foot = [..."000000"];
-  foot = [...foot.slice(0, 6 - iconStr.length), ...iconStr];
-  return `${head.join("")}/${foot.join("")}.png`;
 }
