@@ -16,7 +16,7 @@ import { keigennData, createIconUrl, Keigenn } from "@/resources/keigenn";
 import { ElMessage, ElMessageBox } from "element-plus";
 import moment from "moment";
 import { VxeTablePropTypes } from "vxe-table";
-import { getImgSrc } from "@/utils/xivapi";
+// import { getImgSrc } from "@/utils/xivapi";
 type processedKeigenn = Omit<Keigenn, "icon"> & { icon: string };
 const data = useStorage("fflogs-csv-timeline-create", {
   api_key: "",
@@ -38,7 +38,9 @@ const data = useStorage("fflogs-csv-timeline-create", {
   tableData: [] as TakenEvent[],
   keigenns: [] as processedKeigenn[],
 });
-data.value.keigenns = keigennData.map((k) => Object.assign(k, { icon: createIconUrl(k.icon) }));
+data.value.keigenns = keigennData.map((k) => {
+  return Object.assign(k, { icon: typeof k.icon === "number" ? createIconUrl(k.icon) : k.icon });
+});
 const loading = ref(false);
 async function startParse() {
   loading.value = true;
@@ -134,9 +136,7 @@ const formatTableTime = (time: string) =>
 //   }
 //   return [];
 // });
-const toCN = (id: number): string | undefined => {
-  return getActionChinese(id);
-};
+const toCN = (id: number): string | undefined => getActionChinese(id);
 const getAbilityType = (type: AbilityDamageType): any => AbilityDamageType[type] ?? "未知";
 // const getSrc = (guid: number): string => {
 //   const ability = data.value.auraAbilities.find((v) => v.guid === guid);
@@ -178,7 +178,8 @@ const rowClassName: VxeTablePropTypes.RowClassName = ({ row }) => {
               <vxe-radio-button
                 v-for="i in data.friendyIDs"
                 :label="i"
-                :content="data.friendlies.find((f) => f.id === i)?.icon"></vxe-radio-button>
+                :content="data.friendlies.find((f) => f.id === i)?.icon"
+              ></vxe-radio-button>
             </vxe-radio-group>
           </el-col>
         </el-form-item>
@@ -196,7 +197,8 @@ const rowClassName: VxeTablePropTypes.RowClassName = ({ row }) => {
         :scroll-y="{ enabled: true, oSize: 15, mode: 'wheel' }"
         :data="data.tableData"
         :row-config="{ isHover: false, height: 25 }"
-        :row-class-name="rowClassName">
+        :row-class-name="rowClassName"
+      >
         <vxe-column title="时间" width="65" fixed="left">
           <template #default="{ row }">
             <span> {{ formatTableTime(row.timestamp) }}</span>
@@ -225,13 +227,15 @@ const rowClassName: VxeTablePropTypes.RowClassName = ({ row }) => {
         <vxe-column field="multiplier" title="减伤" width="50" />
         <vxe-column field="absorbed" title="护盾" width="60" />
         <vxe-column field="amount" title="实际" width="60" />
-        <vxe-column v-for="b in data.keigenns" :key="b.id" width="24" :show-overflow="false">
+        <!-- <vxe-column v-for="b in data.keigenns" :key="b.id" width="24" :show-overflow="false">
           <template #header>
             <div style="overflow: hidden; z-index: 1; position: absolute; left: 0px; top: 4px">
               <img
                 :src="'https://cafemaker.wakingsands.com/i/' + b.icon"
                 :onerror="`javascript:this.src='https://xivapi.com/i/${b.icon}';this.onerror=null;`"
-                :title="b.name" />
+                :title="b.name"
+                loading="lazy"
+              />
             </div>
           </template>
           <template #default="{ row }">
@@ -239,7 +243,7 @@ const rowClassName: VxeTablePropTypes.RowClassName = ({ row }) => {
               row?.buffs?.includes(b.id + 1000000) ? "√" : ""
             }}</span>
           </template>
-        </vxe-column>
+        </vxe-column> -->
       </vxe-table>
     </el-main>
   </el-container>

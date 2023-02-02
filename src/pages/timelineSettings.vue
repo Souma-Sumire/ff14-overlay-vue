@@ -7,7 +7,7 @@ import Util from "@/utils/util";
 import "animate.css";
 import ClipboardJS from "clipboard";
 import { ITimeline, ITimelineLine } from "@/types/Timeline";
-import { p8sTimeline } from "./p8sTimeline";
+import { p8sTimeline } from "@/resources/timelineTemplate";
 import moment from "moment";
 
 const simulatedCombatTime = ref(-30);
@@ -220,9 +220,7 @@ function importTimelines(): void {
     }
   });
 }
-function readMe(): void {
-  window.open("/ff14-overlay-vite/#/timeline/help");
-}
+
 function createP8STimeline(): void {
   timelineCurrentlyEditing.timeline =
     timelineStore.allTimelines[
@@ -268,7 +266,6 @@ function timelineTimeFormat() {
       <el-button v-if="isWSMode" type="success" @click="broadcastData()">通过WS发送到悬浮窗</el-button>
       <!-- <el-button v-if="!isWSMode" type="success" @click="applyData()">应用</el-button> -->
       <el-button @click="createP8STimeline()">P8S门神模板</el-button>
-      <el-button type="success" @click="readMe()">帮助</el-button>
     </el-header>
     <el-main>
       <timeline-fflogs-import
@@ -277,7 +274,8 @@ function timelineTimeFormat() {
         v-if="showFFlogs"
         @clearCurrentlyTimeline="clearCurrentlyTimeline"
         @showFFlogsToggle="() => (showFFlogs = !showFFlogs)"
-        @newTimeline="timelineStore.newTimeline">
+        @newTimeline="timelineStore.newTimeline"
+      >
       </timeline-fflogs-import>
       <el-card class="box-card" v-show="showSettings">
         <el-descriptions title="时间轴参数" size="small" border>
@@ -286,7 +284,8 @@ function timelineTimeFormat() {
             :key="index"
             :label="timelineStore.configTranslate[key]"
             label-align="right"
-            width="16em">
+            width="16em"
+          >
             <el-input-number :min="0" :step="0.1" v-model="timelineStore.configValues[key]" />
           </el-descriptions-item>
         </el-descriptions>
@@ -297,7 +296,8 @@ function timelineTimeFormat() {
             :key="index"
             :label="timelineStore.showStyleTranslate[key]"
             label-align="right"
-            width="16em">
+            width="16em"
+          >
             <el-input-number :min="0" :step="0.01" v-model="timelineStore.showStyle[key]" />
           </el-descriptions-item>
         </el-descriptions>
@@ -322,7 +322,8 @@ function timelineTimeFormat() {
                   v-for="zone in highDifficultZoneId"
                   :key="zone.id"
                   :label="zone.name"
-                  :value="zone.id"></el-option>
+                  :value="zone.id"
+                ></el-option>
               </el-select>
             </p>
             <p class="timeline-info-config">
@@ -332,7 +333,8 @@ function timelineTimeFormat() {
                   v-for="job in debounceJobCN"
                   :key="job"
                   :label="Util.nameToFullName(job).full"
-                  :value="job"></el-option>
+                  :value="job"
+                ></el-option>
               </el-select>
             </p>
             <p class="timeline-info-config">
@@ -365,7 +367,8 @@ function timelineTimeFormat() {
               wrap="off"
               placeholder="请键入时间轴文本"
               style="max-width: 569px"
-              @change="updateTransmissionTimeline()" />
+              @change="updateTransmissionTimeline()"
+            />
           </div>
           <div style="max-height: 353px">
             <div class="timeline-timeline-view">
@@ -373,7 +376,8 @@ function timelineTimeFormat() {
                 :config="timelineStore.configValues"
                 :lines="transmissionTimeline"
                 :runtime="simulatedCombatTime"
-                :show-style="timelineStore.showStyle"></timeline-timeline-show>
+                :show-style="timelineStore.showStyle"
+              ></timeline-timeline-show>
             </div>
           </div>
         </el-row>

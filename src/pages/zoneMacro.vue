@@ -5,7 +5,7 @@ import { defaultMacro } from "@/resources/macro";
 import zoneInfo from "@/resources/zoneInfo";
 import { useMacroStore } from "@/store/macro";
 import "github-markdown-css/github-markdown-light.css";
-import README from "./README.md";
+import README from "@/common/markdown/zoneMacro.md";
 import { ElMessage, ElMessageBox } from "element-plus";
 const [help, toggleHelp] = useToggle(false);
 const macroStore = useMacroStore();
