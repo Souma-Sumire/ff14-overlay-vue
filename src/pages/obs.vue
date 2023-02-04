@@ -68,10 +68,10 @@ async function connect() {
       status.connecting = false;
     });
 }
-async function restart(clickManually: boolean = false) {
-  if (!clickManually && data.value.partyLength < data.value.greaterThanOrEqualTo) return Promise.resolve();
+async function start(restart = true, justDoIt = false) {
+  if (!justDoIt && data.value.partyLength < data.value.greaterThanOrEqualTo) return Promise.resolve();
   if (!status.connecting) await connect();
-  if (status.recording) {
+  if (status.recording && restart) {
     obs.call("StopRecord").then(() => setTimeout(() => obs.call("StartRecord"), 1500));
   } else obs.call("StartRecord");
 }
@@ -99,12 +99,12 @@ async function handleLogEvent(e: { detail: { logs: string[] } }) {
         log,
       )
     )
-      restart();
+      start();
     else if (/^.{14} (Director 21:.{8}:4000000F|Territory 01:|ChatLog 00:0038::end$)/i.test(log)) stop();
   }
 }
 async function handleInCombatChanged(ev: any) {
-  if (!status.inACTCombat && ev.detail.inACTCombat) restart();
+  if (!status.inACTCombat && ev.detail.inACTCombat) start(false);
   if (status.inACTCombat && !ev.detail.inACTCombat) stop();
   status.inACTCombat = ev.detail.inACTCombat;
 }
@@ -124,14 +124,14 @@ function handlePartyChanged(e: { party: any[] }) {
         class="btns"
         icon="vxe-icon-caret-right"
         v-show="!status.recording"
-        @click="restart(true)"
+        @click="start(false, true)"
       ></vxe-button>
       <vxe-button class="btns" icon="vxe-icon-close" v-show="status.recording" @click="stop" size="mini"></vxe-button>
       <vxe-button
         class="btns"
         icon="vxe-icon-cut"
         v-show="status.recording"
-        @click="restart(true)"
+        @click="start(true, true)"
         size="mini"
       ></vxe-button>
       <vxe-button
