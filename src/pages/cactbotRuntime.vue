@@ -203,7 +203,7 @@ function onMouseOut(): void {
 }
 .el-container {
   background-color: rgba(0, 0, 0, 0.1);
-  width: 12rem;
+  width: 16rem;
   > .el-header {
     height: 2rem;
     position: fixed;
