@@ -1289,6 +1289,20 @@ const zoneInfo: ZoneInfoType = {
     sizeFactor: 400,
     weatherRate: 69,
   },
+  1122: {
+    contentType: 28,
+    exVersion: 4,
+    name: {
+      de: "Omega (fatal)",
+      en: "The Omega Protocol (Ultimate)",
+      fr: "Le Protocole Oméga (fatal)",
+      ja: "絶オメガ検証戦",
+    },
+    offsetX: -100,
+    offsetY: -100,
+    sizeFactor: 400,
+    weatherRate: 150,
+  },
   1123: {
     contentType: 9,
     exVersion: 4,

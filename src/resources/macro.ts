@@ -233,7 +233,7 @@ export const defaultMacro: { zoneId: ZoneIdInfo } = {
         /p 【距离衰减+分摊】【PS连线：TH固定法】
         /p 　　MT　　ST　　　　　　   MT(A)
         /p 　　　　◎ 　 　 　　　H1(D)  DPS  H2(B)
-        /p 　　　分摊  　 　 　　　　       ST(C)  ※T分摊死刑点名T无敌单吃
+        /p 　　　分摊　　　　　　　　　ST(C)  ※T分摊死刑点名T无敌单吃
         /p 【咒发拘束1】①③标记处分摊
         /p 【咒发拘束2/PS连线】DPS：顺时针（左）　TH：逆时针（右）
         /p 【4连黄圈】C点集合，顺时针放圈
@@ -470,19 +470,19 @@ export const defaultMacro: { zoneId: ZoneIdInfo } = {
         Text: cleanMacro(`
         /p MT组：MTH1D1D3　ST组：STH2D2D4
         /p 　【基础分散】　　　 【击退+分散+鸟】
-        /p MT/D1　ST/D2　　　　 D1　　 　 　 D2
-        /p 　　 ★ 　　　　　　D3　 MT　 　ST　 D4
-        /p H1/D3　H2/D4　　　　过道 　 　 　 过道
+        /p MT/D1　ST/D2　　　　　D1　　　　D2
+        /p 　　 ★ 　　　　　　D3　MT　　　ST　D4
+        /p H1/D3　H2/D4　　　　过道　　　　过道
         /p 　　　　　　　　　　　H1　　　　　　H2
         /p 【生命的果实:分摊】　 │【魔印创造:分散】
         /p 北侧：MT组 南测：ST组 │基础分散※分摊在中心
-        /p 【左右分摊】　 　 　 │【鸟+塔】
+        /p 【左右分摊】　　　　　│【鸟+塔】
         /p 西：MT组　东：ST组　 │相对基础分散※贴近引导
         /p 【魔印创造·狱】
-        /p 　 ▼西平台▼ 　         ▼东平台▼
-        /p 分摊 　MT/D1 　 　 　 MT/D1　分摊
-        /p ST/D2　H2/D4　 过道　H2/D4　ST/D2
-        /p 　　　 H1/D3    　　　H1/D3
+        /p 　　▼西平台▼　　　　　　▼东平台▼
+        /p 分摊　　MT/D1　|　　　　MT/D1　分摊
+        /p ST/D2　H2/D4　|　　H2/D4　ST/D2
+        /p 　　　H1/D3　　|　　　H1/D3
   `),
       },
       {
@@ -1010,6 +1010,22 @@ export const defaultMacro: { zoneId: ZoneIdInfo } = {
           Two: { X: 109.333809, Y: 0.0, Z: 109.333809, ID: 5, Active: true },
           Three: { X: 90.66619, Y: 0.0, Z: 109.333809, ID: 6, Active: true },
           Four: { X: 90.66619, Y: 0.0, Z: 90.66619, ID: 7, Active: true },
+        },
+      },
+    ],
+    "1122": [
+      {
+        Name: "绝欧米茄八方标准点4A1" + getSource(`https://nga.178.com/read.php?tid=35178002`),
+        Type: "place",
+        Place: {
+          A: { X: 100.0, Y: 0.0, Z: 86.99, ID: 0, Active: true },
+          B: { X: 113.01, Y: 0.0, Z: 100.0, ID: 1, Active: true },
+          C: { X: 100.0, Y: 0.0, Z: 113.01, ID: 2, Active: true },
+          D: { X: 86.99, Y: 0.0, Z: 100.0, ID: 3, Active: true },
+          One: { X: 109.2, Y: 0.0, Z: 90.8, ID: 4, Active: true },
+          Two: { X: 109.2, Y: 0.0, Z: 109.2, ID: 5, Active: true },
+          Three: { X: 90.8, Y: 0.0, Z: 109.2, ID: 6, Active: true },
+          Four: { X: 90.8, Y: 0.0, Z: 90.8, ID: 7, Active: true },
         },
       },
     ],
