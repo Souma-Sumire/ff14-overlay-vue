@@ -82,5 +82,6 @@ function handleClickMenu(menu: Menu) {
         </el-table>
       </el-main>
     </el-container>
+    <footer>赞助一下：https://afdian.net/a/Souma</footer>
   </div>
 </template>
