@@ -100,7 +100,12 @@ async function handleLogEvent(e: { detail: { logs: string[] } }) {
       )
     )
       start();
-    else if (/^.{14} (Director 21:.{8}:4000000F|Territory 01:|ChatLog 00:0038::end$)/i.test(log)) stop();
+    else if (
+      /^.{14} (?:Director 21:.{8}:4000000F|Territory 01:|ChatLog 00:0038::end$|ChatLog 00:(?:00B9|0[12]39)::(?:.+取消了战斗开始倒计时。|Countdown canceled by .+\.|.+により、戦闘開始カウントがキャンセルされました。))/i.test(
+        log,
+      )
+    )
+      stop();
   }
 }
 async function handleInCombatChanged(ev: any) {
@@ -109,7 +114,8 @@ async function handleInCombatChanged(ev: any) {
   status.inACTCombat = ev.detail.inACTCombat;
 }
 function handlePartyChanged(e: { party: any[] }) {
-  data.value.partyLength = Math.max(e.party.length, 1);
+  // data.value.partyLength = Math.max(e.party.length, 1);
+  data.value.partyLength = e.party?.length ?? 0;
 }
 </script>
 
@@ -161,7 +167,7 @@ function handlePartyChanged(e: { party: any[] }) {
             v-model="data.greaterThanOrEqualTo"
             size="small"
             type="integer"
-            min="1"
+            min="0"
             max="8"
             style="width: 3rem; margin-right: 5px"
           ></vxe-input>
