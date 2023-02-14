@@ -3,9 +3,13 @@ import Util from "@/utils/util";
 import { RemovableRef } from "@vueuse/core";
 import "animate.css";
 import { ElMessage } from "element-plus";
+const createRPArr = (r: "T" | "H" | "D", l: number) =>
+  Array(l)
+    .fill(r)
+    .map((v, i) => v + ++i);
 const roleAssignLocationNames: Record<Role, string[]> = {
-  tank: ["MT", "ST", "T3", "T4", "T5", "T6", "T7", "T8"],
-  healer: ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8"],
+  tank: ["MT", "ST", ...createRPArr("T", 70)],
+  healer: [...createRPArr("H", 72)],
   dps: ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"],
   unknown: ["unknown"],
 };
