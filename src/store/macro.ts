@@ -249,8 +249,8 @@ export const useMacroStore = defineStore("macro", {
       })
         .then(() => {
           doInsertPreset(Number(this.selectZone), place, slotIndex.value as 1 | 2 | 3 | 4 | 5);
-          doQueueActions([{ c: "DoTextCommand", p: "/waymark preset " + slotIndex.value, d: 250 }]);
-          ElMessage.success("插槽" + slotIndex.value + "已设置");
+          doQueueActions([{ c: "DoTextCommand", p: "/waymark preset " + slotIndex.value, d: 750 }]);
+          ElMessage.success("插槽" + slotIndex.value + "已设置并标记");
         })
         .catch(() => {});
     },
