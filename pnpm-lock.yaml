@@ -21,7 +21,6 @@ specifiers:
   element-plus: ^2.2.28
   github-markdown-css: ^5.1.0
   hover.css: ^2.3.2
-  lodash: ^4.17.21
   moment: ^2.29.4
   obs-websocket-js: ^5.0.2
   pinia: ^2.0.29
@@ -61,7 +60,6 @@ dependencies:
   element-plus: 2.2.28_vue@3.2.45
   github-markdown-css: 5.1.0
   hover.css: 2.3.2
-  lodash: 4.17.21
   moment: 2.29.4
   obs-websocket-js: 5.0.2
   pinia: 2.0.29_prq2uz4lho2pwp6irk4cfkrxwu
