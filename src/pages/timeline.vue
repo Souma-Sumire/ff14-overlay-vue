@@ -86,7 +86,6 @@ function selectedTimeline(timeline: ITimeline) {
 async function mountTimeline(timeline: ITimeline, stopLoadedTimeline: boolean = true) {
   stopLoadedTimeline && stopTimeline();
   ttsSuppressFlag = false;
-  setTimeout(() => (ttsSuppressFlag = true), 500);
   if (timeline && timeline?.timeline) {
     timelinePageData.loadedTimeline = await parseTimeline(timeline.timeline);
     timelinePageData.loadedTimeline.sort((a, b) => a.time - b.time);
@@ -100,6 +99,7 @@ async function mountTimeline(timeline: ITimeline, stopLoadedTimeline: boolean = 
     });
     // lastUsedTimeline = timeline;
   }
+  setTimeout(() => (ttsSuppressFlag = true), 500);
 }
 
 //停止当前
