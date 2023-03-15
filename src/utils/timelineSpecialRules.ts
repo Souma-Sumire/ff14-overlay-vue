@@ -27,6 +27,12 @@ windowAction.set(27966, { type: "begincast", window: [20, 20] }); //绝龙诗 �
 windowAction.set(25316, { type: "begincast", window: [999, 999] }); //绝龙诗 纯洁心灵
 windowAction.set(25544, { type: "begincast", window: [10, 10] }); //绝龙诗 阿斯卡隆之仁·隐秘
 windowAction.set(26379, { type: "begincast", window: [10, 10] }); //绝龙诗 腾龙枪
+windowAction.set(31552, { type: "begincast", window: [30, 30] }); //绝欧米茄 防御程序
+windowAction.set(31573, { type: "begincast", window: [30, 30] }); //绝欧米茄 你好，世界
+windowAction.set(31573, { type: "begincast", window: [30, 30] }); //绝欧米茄 你好，世界
+windowAction.set(31617, { type: "begincast", window: [8, 8] }); //绝欧米茄 波动炮
+windowAction.set(31624, { type: "begincast", window: [30, 30] }); //绝欧米茄 代号：*能*·德尔塔
+windowAction.set(31649, { type: "begincast", window: [30, 30] }); //绝欧米茄 宇宙记忆
 
 export function factory(events: FFlogsStance): FFlogsStance {
   for (const event of events) {
