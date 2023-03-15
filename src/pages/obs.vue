@@ -72,11 +72,14 @@ async function start(restart = true, justDoIt = false) {
   if (!justDoIt && data.value.partyLength < data.value.greaterThanOrEqualTo) return Promise.resolve();
   if (!status.connecting) await connect();
   if (status.recording && restart) {
-    obs.call("StopRecord").then(() => setTimeout(() => obs.call("StartRecord"), 1500));
-  } else obs.call("StartRecord");
+    obs
+      .call("StopRecord")
+      .then(() => setTimeout(() => obs.call("StartRecord").catch(() => {}), 1500))
+      .catch(() => {});
+  } else obs.call("StartRecord").catch(() => {});
 }
 async function stop() {
-  if (status.recording) return obs.call("StopRecord");
+  if (status.recording) return obs.call("StopRecord").catch(() => {});
   return Promise.resolve();
 }
 function onConnectionClosed() {
@@ -94,12 +97,7 @@ function onRecordStateChanged(e: { outputActive: boolean; outputState: string })
 }
 async function handleLogEvent(e: { detail: { logs: string[] } }) {
   for (const log of e.detail.logs) {
-    if (
-      /^.{14} \w+ 00:(?:00B9|0[12]39)::?(?:距离战斗开始还有|Battle commencing in |戦闘開始まで)\d+[^（(]+[（(]/i.test(
-        log,
-      )
-    )
-      start();
+    if (/^.{14} \w+ 00:(?:00B9|0[12]39)::?(?:距离战斗开始还有|Battle commencing in |戦闘開始まで)\d+[^（(]+[（(]/i.test(log)) start();
     else if (
       /^.{14} (?:Director 21:.{8}:4000000F|Territory 01:|ChatLog 00:0038::end$|ChatLog 00:(?:00B9|0[12]39)::(?:.+取消了战斗开始倒计时。|Countdown canceled by .+\.|.+により、戦闘開始カウントがキャンセルされました。))/i.test(
         log,
@@ -122,38 +120,14 @@ function handlePartyChanged(e: { party: any[] }) {
 <template>
   <header v-show="!hideUntilConnection">
     <div v-show="status.connecting">
-      <i
-        class="vxe-icon-dot icon"
-        :style="{ color: status.recording ? 'red' : 'gray', textShadow: '0px  0px 3px black' }"
-      ></i>
-      <vxe-button
-        class="btns"
-        icon="vxe-icon-caret-right"
-        v-show="!status.recording"
-        @click="start(false, true)"
-      ></vxe-button>
+      <i class="vxe-icon-dot icon" :style="{ color: status.recording ? 'red' : 'gray', textShadow: '0px  0px 3px black' }"></i>
+      <vxe-button class="btns" icon="vxe-icon-caret-right" v-show="!status.recording" @click="start(false, true)"></vxe-button>
       <vxe-button class="btns" icon="vxe-icon-close" v-show="status.recording" @click="stop" size="mini"></vxe-button>
-      <vxe-button
-        class="btns"
-        icon="vxe-icon-cut"
-        v-show="status.recording"
-        @click="start(true, true)"
-        size="mini"
-      ></vxe-button>
-      <vxe-button
-        class="btns settings"
-        icon="vxe-icon-setting"
-        @click="showSettings = !showSettings"
-        size="mini"
-      ></vxe-button>
+      <vxe-button class="btns" icon="vxe-icon-cut" v-show="status.recording" @click="start(true, true)" size="mini"></vxe-button>
+      <vxe-button class="btns settings" icon="vxe-icon-setting" @click="showSettings = !showSettings" size="mini"></vxe-button>
     </div>
     <div v-show="!status.connecting">
-      <vxe-button
-        class="btns"
-        style="width: auto !important"
-        size="medium"
-        icon="vxe-icon-eye-fill-close"
-        @click="hideUntilConnection = true"
+      <vxe-button class="btns" style="width: auto !important" size="medium" icon="vxe-icon-eye-fill-close" @click="hideUntilConnection = true"
         >隐藏页面</vxe-button
       >
     </div>
@@ -163,37 +137,19 @@ function handlePartyChanged(e: { party: any[] }) {
       <vxe-form-item span="24">
         <template #default="{ data }">
           自动录制最少小队人数
-          <vxe-input
-            v-model="data.greaterThanOrEqualTo"
-            size="small"
-            type="integer"
-            min="0"
-            max="8"
-            style="width: 3rem; margin-right: 5px"
-          ></vxe-input>
+          <vxe-input v-model="data.greaterThanOrEqualTo" size="small" type="integer" min="0" max="8" style="width: 3rem; margin-right: 5px"></vxe-input>
         </template>
       </vxe-form-item>
       <vxe-form-item span="24">
         <template #default="{ data }">
           端口
-          <vxe-input
-            v-model="data.port"
-            size="small"
-            placeholder="端口号"
-            style="width: 4rem; margin-right: 5px"
-          ></vxe-input>
+          <vxe-input v-model="data.port" size="small" placeholder="端口号" style="width: 4rem; margin-right: 5px"></vxe-input>
         </template>
       </vxe-form-item>
       <vxe-form-item span="24">
         <template #default="{ data }">
           密码
-          <vxe-input
-            v-model="data.password"
-            size="small"
-            placeholder="密码"
-            type="password"
-            style="width: 12rem"
-          ></vxe-input>
+          <vxe-input v-model="data.password" size="small" placeholder="密码" type="password" style="width: 12rem"></vxe-input>
           <vxe-button
             content="无法输入"
             size="mini"
@@ -206,14 +162,7 @@ function handlePartyChanged(e: { party: any[] }) {
       </vxe-form-item>
     </vxe-form>
     <vxe-button size="mini" :status="'primary'" icon="vxe-icon-swap" content="连接" @click="connect"></vxe-button>
-    <vxe-button
-      type="text"
-      status="info"
-      size="mini"
-      icon="vxe-icon-warning-circle"
-      content="未连接到OBS"
-      :disabled="true"
-    ></vxe-button>
+    <vxe-button type="text" status="info" size="mini" icon="vxe-icon-warning-circle" content="未连接到OBS" :disabled="true"></vxe-button>
   </main>
 </template>
 <style lang="scss">
