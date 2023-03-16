@@ -15,7 +15,7 @@ import { createStyleImportPlugin, VxeTableResolve } from "vite-plugin-style-impo
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: "/ff14-overlay-vite/",
+  base: "/ff14-overlay-vue/",
   build: {
     outDir: "./dist",
     emptyOutDir: true, //构建时清空outDir目录

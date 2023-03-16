@@ -49,7 +49,7 @@ function init() {
 }
 function openSettings() {
   const windowsOpen = window.open(
-    "/ff14-overlay-vite/#/timelineSettings?timestamp=" + new Date().getTime(),
+    "/ff14-overlay-vue/#/timelineSettings?timestamp=" + new Date().getTime(),
     "_blank",
     "width=1200,height=800",
   );
