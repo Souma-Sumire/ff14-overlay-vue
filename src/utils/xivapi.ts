@@ -80,7 +80,7 @@ export async function getImgSrcByActionId(id: number): Promise<string> {
 }
 
 export async function getActionByChineseName(name: string): Promise<Partial<XivApiJson> | undefined> {
-  const isCN = /^[\u4e00-\u9fa5]+$/.test(name);
+  const isCN = /^[\u4e00-\u9fa5]/.test(name);
   return fetch(
     `https://${
       isCN ? "cafemaker.wakingsands.com" : "xivapi.com"
