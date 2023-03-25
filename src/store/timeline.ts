@@ -194,7 +194,10 @@ async function parseActionHTML(text: string): Promise<string> {
   if (!items) return Promise.resolve(text);
   for (const item of items) {
     if (item.groups?.name) {
-      const src = await getImgSrc(await getActionByChineseName(item.groups.name).then((v) => v?.Icon ?? ""));
+      let src
+      try {
+        src = await getImgSrc(await getActionByChineseName(item.groups.name).then((v) => v?.Icon ?? ""));
+      } catch (e) {}
       text = text.replace(
         item[0],
         `${src ? `<div class="skill_icon"><img src='${src}' loading="lazy"/></div>` : ""}${
