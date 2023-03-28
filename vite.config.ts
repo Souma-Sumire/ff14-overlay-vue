@@ -39,7 +39,7 @@ export default defineConfig({
     vue({
       include: [/\.vue$/, /\.md$/], // <--
     }),
-    vueJsx(),
+    vueJsx({}),
     Markdown(),
     AutoImport({
       imports: ["vue", "@vueuse/core"],
