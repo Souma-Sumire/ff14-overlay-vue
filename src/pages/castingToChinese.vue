@@ -28,7 +28,7 @@ const settings = useStorage(
     offsetCountdownX: 0,
     offsetCountdownY: 0,
     offsetActionChineseX: 0,
-    offsetActionChineseY: 4,
+    offsetActionChineseY: -4,
     ping: 80,
     keep: 100,
     fontSizeCountDown: 17,
