@@ -45,7 +45,7 @@ const menu: Menu[] = [
   {
     title: "📰读条汉化",
     type: "悬浮窗",
-    path: "https://souma.diemoe.net/dist/castingToChinese.html?directive=false&focus=false&tts=false&hideProg=false&hideCountdown=false&roomaji=true&progHeight=10px&fontSize=20px&fontFamily=SmartisanHei&ping=80&showCastId=true",
+    path: "castingToChinese",
   },
   {
     title: "🏵️LB额外增长监控",
@@ -53,7 +53,7 @@ const menu: Menu[] = [
     path: "https://souma.diemoe.net/dist/limitBreakTip.html?LBMax=30000&automatic=220",
   },
   {
-    title: "OBS用的：显示具体时间",
+    title: "（录像用）显示时间",
     type: "网页",
     path: "time",
   },
@@ -82,6 +82,5 @@ function handleClickMenu(menu: Menu) {
         </el-table>
       </el-main>
     </el-container>
-    <footer>赞助一下：https://afdian.net/a/Souma</footer>
   </div>
 </template>
