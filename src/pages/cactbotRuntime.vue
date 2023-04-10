@@ -84,6 +84,7 @@ function getJobClassification(job: number): Role {
 function handlePartyChanged(e: { party: { id: string; name: string; inParty: boolean; job: number }[] }): void {
   if (isDev && e.party.length === 0) return;
   data.value.party = e.party
+    .filter((v) => v.inParty)
     .map((p) => {
       return { ...p, rp: "" };
     })
