@@ -67,10 +67,7 @@ const roleSelectLength = {
 };
 function updateRoleSelectLength(): void {
   roleSelectLength.tank = data.value.party.reduce((p, c) => (getJobClassification(c.job) === "tank" ? p + 1 : p), 0);
-  roleSelectLength.healer = data.value.party.reduce(
-    (p, c) => (getJobClassification(c.job) === "healer" ? p + 1 : p),
-    0,
-  );
+  roleSelectLength.healer = data.value.party.reduce((p, c) => (getJobClassification(c.job) === "healer" ? p + 1 : p), 0);
   roleSelectLength.dps = data.value.party.reduce((p, c) => (getJobClassification(c.job) === "dps" ? p + 1 : p), 0);
 }
 const isDev = location.href.includes("localhost");
@@ -101,10 +98,7 @@ function handleSelectChange(i: number): void {
   broadcastParty();
 }
 function getRP(job: number): string {
-  return (
-    roleAssignLocationNames[getJobClassification(job)].find((role) => !data.value.party.find((v) => v.rp === role)) ??
-    "unknown"
-  );
+  return roleAssignLocationNames[getJobClassification(job)].find((role) => !data.value.party.find((v) => v.rp === role)) ?? "unknown";
 }
 function broadcastParty(): void {
   const sortArr = [...roleAssignLocationNames.tank, ...roleAssignLocationNames.healer, ...roleAssignLocationNames.dps];
@@ -156,17 +150,8 @@ function onMouseOut(): void {
   <span v-if="data.party.length === 0" style="color: white; text-shadow: 1px 1px 2px black">等待小队...</span>
   <el-container @mouseenter="onMouseOver" @mouseleave="onMouseOut">
     <el-main>
-      <transition-group
-        name="animate__animated animate__bounce"
-        enter-active-class="animate__fadeInLeft"
-        leave-active-class="animate__fadeOutLeft"
-      >
-        <div
-          v-for="(member, i) in data.party"
-          :key="member.id"
-          v-show="mouseEnter || member.name === playerName"
-          flex="~ nowrap"
-        >
+      <transition-group name="animate__animated animate__bounce" enter-active-class="animate__fadeInLeft" leave-active-class="animate__fadeOutLeft">
+        <div v-for="(member, i) in data.party" :key="member.id" v-show="mouseEnter || member.name === playerName" flex="~ nowrap">
           <el-select v-model="member.rp" size="small" m-0 p-0 @change="handleSelectChange(i)" :teleported="false">
             <el-option
               v-for="(item, index) in roleAssignLocationNames[getJobClassification(member.job)]"
@@ -176,9 +161,7 @@ function onMouseOut(): void {
               :fit-input-width="true"
             />
           </el-select>
-          <span style="white-space: nowrap"
-            >{{ Util.nameToFullName(Util.jobEnumToJob(member.job)).simple2 }} {{ member.name }}</span
-          >
+          <span style="white-space: nowrap">{{ Util.nameToFullName(Util.jobEnumToJob(member.job)).simple2 }} {{ member.name }}</span>
         </div>
       </transition-group>
     </el-main>
