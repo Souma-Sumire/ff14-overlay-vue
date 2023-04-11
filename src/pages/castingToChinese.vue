@@ -49,7 +49,7 @@ const offsetActionChineseY = computed(() => settings.value.offsetActionChineseY 
 const casting = new Map();
 const now = ref(0);
 const ping = settings.value.ping;
-const showSettings = ref((document.getElementById("unlocked")?.style?.display === "flex"));
+const showSettings = ref(document.getElementById("unlocked")?.style?.display === "flex");
 
 addOverlayListener("EnmityTargetData", (e: { Target: { ID: number } | null; Focus: { ID: number } | null }) => {
   data.targetCast = casting.get(e.Target?.ID);
@@ -115,7 +115,11 @@ document.addEventListener("onOverlayStateUpdate", (e: any) => {
     </el-main>
   </el-container>
 </template>
-
+<style>
+* {
+  overflow: hidden;
+}
+</style>
 <style lang="scss" scoped>
 ::-webkit-scrollbar {
   display: none !important;
