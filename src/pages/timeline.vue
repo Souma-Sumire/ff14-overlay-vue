@@ -137,7 +137,7 @@ function handleLogEvent(e: { detail: { logs: string[] } }) {
     if (regex) {
       //倒计时
       startTimeline(parseInt(regex!.groups!.cd));
-    } else if (/^.{14} Director 21:.{8}:4000000F/.test(log) || /^.{14} ChatLog 00:0038::end$/.test(log)) {
+    } else if (/^.{14} Director 21:.{8}:4000000F/.test(log) || /^.{14} ChatLog 00:0038::end$/.test(log) || /^.{14} SystemLogMessage 29:.{8}:B1C:/.test(log)) {
       //团灭
       stopTimeline();
       // mountTimeline(lastUsedTimeline);
