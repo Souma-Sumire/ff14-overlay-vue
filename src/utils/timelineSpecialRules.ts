@@ -35,9 +35,14 @@ windowAction.set(31624, { type: "begincast", window: [30, 30] }); //绝欧米茄
 windowAction.set(31649, { type: "begincast", window: [30, 30] }); //绝欧米茄 宇宙记忆
 
 export function factory(events: FFlogsStance): FFlogsStance {
+  const statistics = new Map<number, number>();
+  events.map((e) => statistics.set(e.actionId, (statistics.get(e.actionId) ?? 0) + 1)); // 统计每一个ability出现的次数
   for (const event of events) {
-    const w = windowAction.get(event.actionId);
-    if (w?.type === event.type) event.window = w?.window;
+    if (statistics.get(event.actionId) === 1) event.window = [999, 999]; // 为独一无二的能力赋予999的window
+    else {
+      const w = windowAction.get(event.actionId);
+      if (w?.type === event.type) event.window = w?.window;
+    }
   }
   return events;
 }
