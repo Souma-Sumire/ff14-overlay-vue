@@ -36,7 +36,7 @@ windowAction.set(31649, { type: "begincast", window: [30, 30] }); //绝欧米茄
 
 export function factory(events: FFlogsStance): FFlogsStance {
   const statistics = new Map<number, number>();
-  events.map((e) => statistics.set(e.actionId, (statistics.get(e.actionId) ?? 0) + 1)); // 统计每一个ability出现的次数
+  events.filter((e) => e.type === "begincast").map((e) => statistics.set(e.actionId, (statistics.get(e.actionId) ?? 0) + 1)); // 统计每一个ability出现的次数
   for (const event of events) {
     if (statistics.get(event.actionId) === 1) event.window = [999, 999]; // 为独一无二的能力赋予999的window
     else {
