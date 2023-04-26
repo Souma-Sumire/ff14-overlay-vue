@@ -1,14 +1,14 @@
 import { params } from "@/utils/queryParams";
 import Util from "./util";
 
-type Site = { site: string };
+const waitingTimeout = 500;
 const siteList = {
   cafe: "https://cafemaker.wakingsands.com",
   xivapi: "https://xivapi.com",
 };
-const site: { first: Site; second: Site } = {
-  first: params?.api?.toLowerCase() === "xivapi" ? { site: siteList.xivapi } : { site: siteList.cafe },
-  second: params?.api?.toLowerCase() === "xivapi" ? { site: siteList.cafe } : { site: siteList.xivapi },
+const site: { first: string; second: string } = {
+  first: params?.api?.toLowerCase() === "xivapi" ? siteList.xivapi : siteList.cafe,
+  second: params?.api?.toLowerCase() === "xivapi" ? siteList.cafe : siteList.xivapi,
 };
 const userAction = {
   2: { ActionCategoryTargetID: 8, Icon: "/i/000000/000123.png" }, //任务指令
@@ -31,46 +31,42 @@ export async function parseAction(
       ) as Partial<XivApiJson>,
     );
   }
-  return (
-    (await fetch(`${site.first.site}/${type}/${actionId}?columns=${columns.join(",")}`, { mode: "cors" }).then((res) =>
-      res.json(),
-    )) ||
-    (await fetch(`${site.second.site}/${type}/${actionId}?columns=${columns.join(",")}`, { mode: "cors" }).then((res) =>
-      res.json(),
-    )) ||
-    Promise.resolve({ ActionCategoryTargetID: 0, ID: actionId, Icon: "/i/000000/000405.png" })
-  );
+
+  return Promise.race([
+    fetch(`${site.first}/${type}/${actionId}?columns=${columns.join(",")}`, { mode: "cors" }).then((v) => v.json()),
+    new Promise<string>((_, reject) => setTimeout(() => reject(new Error(site.first + " First timed out")), waitingTimeout)),
+  ]).catch(async (_e) => {
+    return Promise.race([
+      fetch(`${site.second}/${type}/${actionId}?columns=${columns.join(",")}`, { mode: "cors" }).then((v) => v.json()),
+      new Promise<string>((_, reject) => setTimeout(() => reject(new Error(site.second + " Second timed out")), waitingTimeout)),
+    ]).catch((_e) => {
+      return { ActionCategoryTargetID: 0, ID: actionId, Icon: "/i/000000/000405.png" };
+    });
+  });
 }
 
-export async function getImgSrc(imgSrc: string, itemIsHQ = false): Promise<string> {
-  if (imgSrc.length === 0) return Promise.resolve("");
-  return checkImgExists(`${site.first.site}${imgSrc}`)
-    .catch(() =>
-      checkImgExists(`${site.second.site}${imgSrc}`).catch(() =>
-        Promise.resolve("https://cafemaker.wakingsands.com/i/000000/000405.png"),
-      ),
-    )
-    .then((src) =>
-      src.replace(/(\d{6})\/(\d{6})\.png$/, (_match, p1, p2) => `${p1}/${itemIsHQ ? "hq/" : ""}${p2}.png`),
-    );
+export async function getImgSrc(imgSrc: string, itemIsHQ = false) {
+  if (imgSrc.length === 0) return "";
+  let url = `${site.first}${imgSrc}`;
+  await checkImgExists(url).catch(() => (url = url.replace(site.first, site.second)));
+  return url.replace(/(\d{6})\/(\d{6})\.png$/, (_match, p1, p2) => `${p1}/${itemIsHQ ? "hq/" : ""}${p2}.png`);
 }
-export async function getClassjobIconSrc(jobNumber: number): Promise<string> {
-  return checkImgExists(
-    `${site.first.site}/cj/companion/${Util.nameToFullName(Util.jobEnumToJob(jobNumber)).en}.png`,
-  ).catch(() =>
-    checkImgExists(
-      `${site.second.site}/cj/companion/${Util.nameToFullName(Util.jobEnumToJob(jobNumber)).en}.png`,
-    ).catch(() => Promise.resolve("https://cafemaker.wakingsands.com/cj/companion/none.png")),
-  );
+export function getClassjobIconSrc(jobNumber: number): string {
+  let url = `${site.first}/cj/companion/${Util.nameToFullName(Util.jobEnumToJob(jobNumber)).en}.png`;
+  checkImgExists(url).catch(() => (url = url.replace(site.first, site.second)));
+  return url;
 }
 
 function checkImgExists(imgurl: string): Promise<string> {
-  return new Promise(function (resolve, reject) {
-    let img = new Image();
-    img.src = imgurl;
-    img.onload = () => resolve(imgurl);
-    img.onerror = () => reject();
-  });
+  return Promise.race([
+    new Promise<string>(function (resolve, reject) {
+      let img = new Image();
+      img.src = imgurl;
+      img.onload = () => resolve(imgurl);
+      img.onerror = () => reject();
+    }),
+    new Promise<string>((_, reject) => setTimeout(() => reject(new Error(site.second + " Second timed out")), waitingTimeout)),
+  ]);
 }
 
 export async function getImgSrcByActionId(id: number): Promise<string> {
@@ -82,9 +78,9 @@ export async function getImgSrcByActionId(id: number): Promise<string> {
 export async function getActionByChineseName(name: string): Promise<Partial<XivApiJson> | undefined> {
   const isCN = /^[\u4e00-\u9fa5]/.test(name);
   return fetch(
-    `https://${
-      isCN ? "cafemaker.wakingsands.com" : "xivapi.com"
-    }/search?filters=IsPlayerAction=1,ClassJobLevel>0&indexes=action&string=${encodeURIComponent(name)}`,
+    `https://${isCN ? "cafemaker.wakingsands.com" : "xivapi.com"}/search?filters=IsPlayerAction=1,ClassJobLevel>0&indexes=action&string=${encodeURIComponent(
+      name,
+    )}`,
   )
     .then((res) => res.json())
     .then((res) => res["Results"]?.[0]);
