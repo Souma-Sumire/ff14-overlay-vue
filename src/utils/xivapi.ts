@@ -1,7 +1,7 @@
 import { params } from "@/utils/queryParams";
 import Util from "./util";
 
-const waitingTimeout = 500;
+const waitingTimeout = 3000;
 const siteList = {
   cafe: "https://cafemaker.wakingsands.com",
   xivapi: "https://xivapi.com",
@@ -32,21 +32,15 @@ export async function parseAction(
     );
   }
 
-  return Promise.race([
-    fetch(`${site.first}/${type}/${actionId}?columns=${columns.join(",")}`, { mode: "cors" }).then((v) => v.json()),
-    new Promise<string>((_, reject) => setTimeout(() => reject(new Error(site.first + " First timed out")), waitingTimeout)),
-  ]).catch(async (_e) => {
-    return Promise.race([
-      fetch(`${site.second}/${type}/${actionId}?columns=${columns.join(",")}`, { mode: "cors" }).then((v) => v.json()),
-      new Promise<string>((_, reject) => setTimeout(() => reject(new Error(site.second + " Second timed out")), waitingTimeout)),
-    ]).catch((_e) => {
+  return myRequest(fetch(`${site.first}/${type}/${actionId}?columns=${columns.join(",")}`, { mode: "cors" }).then((v) => v.json())).catch(async () => {
+    return myRequest(fetch(`${site.second}/${type}/${actionId}?columns=${columns.join(",")}`, { mode: "cors" }).then((v) => v.json())).catch((_e) => {
       return { ActionCategoryTargetID: 0, ID: actionId, Icon: "/i/000000/000405.png" };
     });
   });
 }
 
-export async function getImgSrc(imgSrc: string, itemIsHQ = false) {
-  if (imgSrc.length === 0) return "";
+export async function getImgSrc(imgSrc: string | undefined, itemIsHQ = false) {
+  if (!imgSrc) return "";
   let url = `${site.first}${imgSrc}`;
   await checkImgExists(url).catch(() => (url = url.replace(site.first, site.second)));
   return url.replace(/(\d{6})\/(\d{6})\.png$/, (_match, p1, p2) => `${p1}/${itemIsHQ ? "hq/" : ""}${p2}.png`);
@@ -58,15 +52,14 @@ export function getClassjobIconSrc(jobNumber: number): string {
 }
 
 function checkImgExists(imgurl: string): Promise<string> {
-  return Promise.race([
+  return myRequest(
     new Promise<string>(function (resolve, reject) {
       let img = new Image();
       img.src = imgurl;
       img.onload = () => resolve(imgurl);
       img.onerror = () => reject();
     }),
-    new Promise<string>((_, reject) => setTimeout(() => reject(new Error(site.second + " Second timed out")), waitingTimeout)),
-  ]);
+  );
 }
 
 export async function getImgSrcByActionId(id: number): Promise<string> {
@@ -75,13 +68,41 @@ export async function getImgSrcByActionId(id: number): Promise<string> {
   });
 }
 
-export async function getActionByChineseName(name: string): Promise<Partial<XivApiJson> | undefined> {
-  const isCN = /^[\u4e00-\u9fa5]/.test(name);
-  return fetch(
-    `https://${isCN ? "cafemaker.wakingsands.com" : "xivapi.com"}/search?filters=IsPlayerAction=1,ClassJobLevel>0&indexes=action&string=${encodeURIComponent(
-      name,
-    )}`,
-  )
-    .then((res) => res.json())
-    .then((res) => res["Results"]?.[0]);
+export async function getActionByChineseName(name: string): Promise<Partial<XivApiJson>> {
+  // const isCN = /[\u4e00-\u9fa5]/.test(name);
+  return queueRequest([
+    async () => {
+      return fetch(`${siteList.cafe}/search?filters=ClassJobLevel>0&indexes=action&string=${encodeURIComponent(name)}`)
+        .then((v) => v.json())
+        .then((v) => {
+          const result = v.Results[0];
+          if (!result) Promise.reject(new Error("No result (cafe) " + name));
+          return result;
+        });
+    },
+    async () => {
+      return fetch(`${siteList.xivapi}/search?filters=ClassJobLevel>0&indexes=action&string=${encodeURIComponent(name)}`)
+        .then((v) => v.json())
+        .then((v) => {
+          const result = v.Results[0];
+          if (!result) Promise.reject(new Error("No result (xivapi) " + name));
+          return result;
+        });
+    },
+  ]);
+}
+
+function myRequest(p1: Promise<any>) {
+  return Promise.race([
+    p1,
+    new Promise((_, reject) =>
+      setTimeout(() => {
+        reject(new Error("timed out"));
+      }, waitingTimeout),
+    ),
+  ]);
+}
+
+async function queueRequest(p: (() => Promise<string>)[], i = 0): Promise<any> {
+  return myRequest(p[i]()).catch(() => myRequest(p[i + 1]()));
 }

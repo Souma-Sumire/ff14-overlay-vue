@@ -24,6 +24,16 @@ const isWSMode = location.href.includes("OVERLAY_WS=");
 const transmissionTimeline = ref([] as ITimelineLine[]);
 
 async function updateTransmissionTimeline() {
+  transmissionTimeline.value = [
+    {
+      time: simulatedCombatTime.value,
+      actionHTML: "正在加载...",
+      show: true,
+      windowBefore: 0,
+      windowAfter: 0,
+      alertAlready: true,
+    },
+  ];
   transmissionTimeline.value = await parseTimeline(timelineCurrentlyEditing.timeline.timeline);
 }
 const debounceJobCN = useDebounce(
@@ -223,16 +233,12 @@ function importTimelines(): void {
 
 function createP8STimeline(): void {
   timelineCurrentlyEditing.timeline =
-    timelineStore.allTimelines[
-      timelineStore.newTimeline("门神模板", { zoneId: "1088", job: "NONE" }, p8sTimeline, "P8S门神模板V6")
-    ];
+    timelineStore.allTimelines[timelineStore.newTimeline("门神模板", { zoneId: "1088", job: "NONE" }, p8sTimeline, "P8S门神模板V6")];
 }
 const timeMinuteSecondDisplay = computed(() => {
   return (
     (simulatedCombatTime.value < 0 ? "-" : "") +
-    (Array(2).join("0") + (Math.floor(simulatedCombatTime.value / 60) + (simulatedCombatTime.value < 0 ? 1 : 0))).slice(
-      -2,
-    ) +
+    (Array(2).join("0") + (Math.floor(simulatedCombatTime.value / 60) + (simulatedCombatTime.value < 0 ? 1 : 0))).slice(-2) +
     ":" +
     (Array(2).join("0") + Math.floor(simulatedCombatTime.value % 60)).slice(-2)
   );
@@ -318,23 +324,13 @@ function timelineTimeFormat() {
             <p class="timeline-info-config">
               <span>地图：</span>
               <el-select v-model="timelineCurrentlyEditing.timeline.condition.zoneId" filterable>
-                <el-option
-                  v-for="zone in highDifficultZoneId"
-                  :key="zone.id"
-                  :label="zone.name"
-                  :value="zone.id"
-                ></el-option>
+                <el-option v-for="zone in highDifficultZoneId" :key="zone.id" :label="zone.name" :value="zone.id"></el-option>
               </el-select>
             </p>
             <p class="timeline-info-config">
               <span>职业：</span>
               <el-select v-model="timelineCurrentlyEditing.timeline.condition.job" required placeholder="职业">
-                <el-option
-                  v-for="job in debounceJobCN"
-                  :key="job"
-                  :label="Util.nameToFullName(job).full"
-                  :value="job"
-                ></el-option>
+                <el-option v-for="job in debounceJobCN" :key="job" :label="Util.nameToFullName(job).full" :value="job"></el-option>
               </el-select>
             </p>
             <p class="timeline-info-config">
@@ -346,15 +342,11 @@ function timelineTimeFormat() {
               <el-input v-model="timelineCurrentlyEditing.timeline.create" disabled />
             </p>
             <el-row m-b-10px>
-              <el-button :span="12" class="export" @click="exportTimeline([timelineCurrentlyEditing.timeline])"
-                >单独导出</el-button
-              >
+              <el-button :span="12" class="export" @click="exportTimeline([timelineCurrentlyEditing.timeline])">单独导出</el-button>
               <el-button type="primary" :span="12" @click="timelineTimeFormat()">切换时间</el-button>
             </el-row>
             <el-row>
-              <el-button :span="12" type="danger" @click="deleteTimeline(timelineCurrentlyEditing.timeline)"
-                >删除</el-button
-              >
+              <el-button :span="12" type="danger" @click="deleteTimeline(timelineCurrentlyEditing.timeline)">删除</el-button>
               <el-button :span="12" @click="clearCurrentlyTimeline()">隐藏编辑界面</el-button>
             </el-row>
           </div>
@@ -402,9 +394,7 @@ function timelineTimeFormat() {
           </el-table-column>
         </el-table></el-card
       >
-      <el-card v-if="timelines.length === 0">
-        <el-empty description="点击上方新建或导入一个时间轴吧~"></el-empty
-      ></el-card>
+      <el-card v-if="timelines.length === 0"> <el-empty description="点击上方新建或导入一个时间轴吧~"></el-empty></el-card>
     </el-main>
   </el-container>
 </template>
