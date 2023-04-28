@@ -114,20 +114,13 @@ export const useTimelineStore = defineStore("timeline", {
       });
       //如果严谨点应该还要比较create 但重复的demo选错又能怎么样呢
       const result = this.allTimelines.findIndex(
-        (t) =>
-          t.timeline === rawTimeline &&
-          t.name === title &&
-          JSON.stringify(t.condition) === JSON.stringify(condition) &&
-          t.codeFight === codeFight,
+        (t) => t.timeline === rawTimeline && t.name === title && JSON.stringify(t.condition) === JSON.stringify(condition) && t.codeFight === codeFight,
       );
       return result;
     },
     getTimeline(condition: ITimelineCondition): ITimeline[] {
       return this.allTimelines.filter((t) => {
-        return (
-          (t.condition.zoneId === "0" || t.condition.zoneId === condition.zoneId) &&
-          (t.condition.job === "NONE" || t.condition.job === condition.job)
-        );
+        return (t.condition.zoneId === "0" || t.condition.zoneId === condition.zoneId) && (t.condition.job === "NONE" || t.condition.job === condition.job);
       });
     },
     saveTimelineSettings() {
@@ -156,8 +149,7 @@ export const useTimelineStore = defineStore("timeline", {
       }
       this.allTimelines.forEach((v) => {
         //突然有一天数据格式不一致了 可能是fflogs改返回值了? 对现有数据进行修复
-        if (Util.iconToJobEnum(v.condition.job as FFIcon))
-          v.condition.job = Util.jobEnumToJob(Util.iconToJobEnum(v.condition.job as FFIcon));
+        if (Util.iconToJobEnum(v.condition.job as FFIcon)) v.condition.job = Util.jobEnumToJob(Util.iconToJobEnum(v.condition.job as FFIcon));
       });
     },
     sortTimelines() {
@@ -165,8 +157,7 @@ export const useTimelineStore = defineStore("timeline", {
         // a.condition.job === b.condition.job
         //   ? Number(a.condition.zoneId) - Number(b.condition.zoneId)
         //   : Util.jobToJobEnum(a.condition.job) - Util.jobToJobEnum(b.condition.job),
-        if (Number(a.condition.zoneId) === Number(b.condition.zoneId))
-          return Util.jobToJobEnum(a.condition.job) - Util.jobToJobEnum(b.condition.job);
+        if (Number(a.condition.zoneId) === Number(b.condition.zoneId)) return Util.jobToJobEnum(a.condition.job) - Util.jobToJobEnum(b.condition.job);
         return Number(a.condition.zoneId) - Number(b.condition.zoneId);
       });
     },
@@ -176,10 +167,7 @@ export const useTimelineStore = defineStore("timeline", {
 function parseTime(time: string): number {
   const timeFormatType = time.match(/^(?<negative>-)?(?<mm>[^:：]+):(?<ss>[^:：]+)$/);
   if (timeFormatType) {
-    return (
-      parseFloat(timeFormatType.groups!.mm) * 60 +
-      parseFloat(timeFormatType.groups!.ss) * (timeFormatType.groups?.negative ? -1 : 1)
-    );
+    return parseFloat(timeFormatType.groups!.mm) * 60 + parseFloat(timeFormatType.groups!.ss) * (timeFormatType.groups?.negative ? -1 : 1);
   } else {
     return parseFloat(time);
   }
@@ -194,15 +182,11 @@ async function parseActionHTML(text: string): Promise<string> {
   if (!items) return Promise.resolve(text);
   for (const item of items) {
     if (item.groups?.name) {
-      let src
-      try {
-        src = await getImgSrc(await getActionByChineseName(item.groups.name).then((v) => v?.Icon ?? ""));
-      } catch (e) {}
+      const action = await getActionByChineseName(item.groups.name);
+      const src = await getImgSrc(action?.Icon ?? "/i/000000/000405.png");
       text = text.replace(
         item[0],
-        `${src ? `<div class="skill_icon"><img src='${src}' loading="lazy"/></div>` : ""}${
-          item.groups?.repeat ? item.groups!.name : ""
-        }`,
+        `${src ? `<div class="skill_icon"><img src='${src}' loading="auto"/></div>` : ""}${item.groups?.repeat ? item.groups!.name : ""}`,
       );
     }
   }
@@ -218,9 +202,7 @@ export async function parseTimeline(rawTimeline: string): Promise<ITimelineLine[
     const windowBefore = match[0].match(/(?<=window ?)[-:：\d.]+/)?.[0];
     const windowAfter = match[0].match(/(?<=window ?[-:：\d.]+,)[-:：\d.]+/)?.[0];
     const tts = match[0].match(/ tts ?["'](?<tts>[^"']+)["']/)?.groups?.tts;
-    const ttsSim = / tts(?: |$)/.test(match[0])
-      ? Array.from(parseAction(match.groups!.action))?.[0]?.groups?.name
-      : undefined;
+    const ttsSim = / tts(?: |$)/.test(match[0]) ? Array.from(parseAction(match.groups!.action))?.[0]?.groups?.name : undefined;
     const actionHTML = await parseActionHTML(match.groups!.action);
     total.push({
       time: parseTime(match.groups!.time),

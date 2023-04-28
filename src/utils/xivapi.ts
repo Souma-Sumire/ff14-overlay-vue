@@ -1,7 +1,7 @@
 import { params } from "@/utils/queryParams";
 import Util from "./util";
 
-const waitingTimeout = 500;
+const waitingTimeout = 3000;
 const siteList = {
   cafe: "https://cafemaker.wakingsands.com",
   xivapi: "https://xivapi.com",
@@ -31,22 +31,15 @@ export async function parseAction(
       ) as Partial<XivApiJson>,
     );
   }
-
-  return Promise.race([
+  return requestPromise([
     fetch(`${site.first}/${type}/${actionId}?columns=${columns.join(",")}`, { mode: "cors" }).then((v) => v.json()),
-    new Promise<string>((_, reject) => setTimeout(() => reject(new Error(site.first + " First timed out")), waitingTimeout)),
-  ]).catch(async (_e) => {
-    return Promise.race([
-      fetch(`${site.second}/${type}/${actionId}?columns=${columns.join(",")}`, { mode: "cors" }).then((v) => v.json()),
-      new Promise<string>((_, reject) => setTimeout(() => reject(new Error(site.second + " Second timed out")), waitingTimeout)),
-    ]).catch((_e) => {
-      return { ActionCategoryTargetID: 0, ID: actionId, Icon: "/i/000000/000405.png" };
-    });
-  });
+    fetch(`${site.second}/${type}/${actionId}?columns=${columns.join(",")}`, { mode: "cors" }).then((v) => v.json()),
+    Promise.resolve({ ActionCategoryTargetID: 0, ID: actionId, Icon: "/i/000000/000405.png" }),
+  ]);
 }
 
-export async function getImgSrc(imgSrc: string, itemIsHQ = false) {
-  if (imgSrc.length === 0) return "";
+export async function getImgSrc(imgSrc: string | undefined, itemIsHQ = false) {
+  if (!imgSrc) return "";
   let url = `${site.first}${imgSrc}`;
   await checkImgExists(url).catch(() => (url = url.replace(site.first, site.second)));
   return url.replace(/(\d{6})\/(\d{6})\.png$/, (_match, p1, p2) => `${p1}/${itemIsHQ ? "hq/" : ""}${p2}.png`);
@@ -58,15 +51,14 @@ export function getClassjobIconSrc(jobNumber: number): string {
 }
 
 function checkImgExists(imgurl: string): Promise<string> {
-  return Promise.race([
+  return timeoutPromise(
     new Promise<string>(function (resolve, reject) {
       let img = new Image();
       img.src = imgurl;
       img.onload = () => resolve(imgurl);
       img.onerror = () => reject();
     }),
-    new Promise<string>((_, reject) => setTimeout(() => reject(new Error(site.second + " Second timed out")), waitingTimeout)),
-  ]);
+  );
 }
 
 export async function getImgSrcByActionId(id: number): Promise<string> {
@@ -75,13 +67,43 @@ export async function getImgSrcByActionId(id: number): Promise<string> {
   });
 }
 
-export async function getActionByChineseName(name: string): Promise<Partial<XivApiJson> | undefined> {
-  const isCN = /^[\u4e00-\u9fa5]/.test(name);
-  return fetch(
-    `https://${isCN ? "cafemaker.wakingsands.com" : "xivapi.com"}/search?filters=IsPlayerAction=1,ClassJobLevel>0&indexes=action&string=${encodeURIComponent(
-      name,
-    )}`,
-  )
-    .then((res) => res.json())
-    .then((res) => res["Results"]?.[0]);
+export async function getActionByChineseName(name: string): Promise<Partial<XivApiJson>> {
+  // const isCN = /[\u4e00-\u9fa5]/.test(name);
+  return requestPromise([
+    fetch(`${siteList.cafe}/search?filters=ClassJobLevel>0&indexes=action&string=${encodeURIComponent(name)}`)
+      .then((v) => v.json())
+      .then((v) => {
+        const result = v.Results[0];
+        if (!result) Promise.reject(new Error("No correct result (cafe) " + name));
+        return result;
+      }),
+    fetch(`${siteList.xivapi}/search?filters=ClassJobLevel>0&indexes=action&string=${encodeURIComponent(name)}`)
+      .then((v) => v.json())
+      .then((v) => {
+        const result = v.Results[0];
+        if (!result) Promise.reject(new Error("No correct result (xivapi) " + name));
+        return result;
+      }),
+  ]);
+}
+
+function timeoutPromise<T>(promise: Promise<T>, timeout: number = waitingTimeout): Promise<T> {
+  return Promise.race([promise, new Promise<T>((_, reject) => setTimeout(() => reject(new Error("Promise timed out")), timeout))]);
+}
+
+async function requestPromise<T>(promises: Promise<T>[]): Promise<T> {
+  // 如果promise数组为空，则直接返回一个拒绝的promise
+  if (promises.length === 0) {
+    return Promise.reject(new Error("Promise array is empty"));
+  }
+
+  // 取出第一个promise并执行
+  const [currentPromise, ...remainingPromises] = promises;
+  const currentPromiseWithTimeout = timeoutPromise(currentPromise);
+  try {
+    const result = await currentPromiseWithTimeout;
+    return await Promise.resolve(result);
+  } catch (error) {
+    return await requestPromise(remainingPromises);
+  }
 }
