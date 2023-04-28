@@ -50,11 +50,7 @@ function checkImgExists(imgurl: string): Promise<string> {
       img.onload = () => resolve(imgurl);
       img.onerror = () => reject();
     }),
-<<<<<<< HEAD
     3000,
-=======
-    3000,
->>>>>>> da96dd020b6f51797245e576a0fe21181920c21a
   );
 }
 
