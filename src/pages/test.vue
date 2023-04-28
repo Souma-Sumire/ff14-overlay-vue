@@ -1,11 +1,27 @@
 <script setup lang="ts">
-const props = defineProps<{
-  modelValue?: boolean;
-}>();
+import TestTsx from "@/components/TestTsx";
+function clickHandler() {
+  console.log("click!");
+}
+
+//获取当前时间
+
+function test() {
+  console.log("test");
+  localStorage.setItem("test", Date.now().toString());
+}
+
+window.addEventListener("storage", (event) => {
+  console.log("storage", event);
+});
+
 </script>
 
 <template>
   <div>
-    <h1>test</h1>
+    <TestTsx @testEmit="clickHandler"> </TestTsx>
+    <div>
+      <button @click="test">测试</button>
+    </div>
   </div>
 </template>

@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<!-- <script setup lang="ts">
 import { getActionChinese } from "@/resources/actionChinese";
 import {
   FflogsjsonReport,
@@ -10,7 +10,7 @@ import {
   // CastEvent,
   TakenEvent,
   AbilityDamageType,
-  // AuraAbilities,
+  AuraAbilities,
 } from "@/types/Fflogs2";
 import { keigennData, createIconUrl, Keigenn } from "@/resources/keigenn";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -28,16 +28,18 @@ const data = useStorage("fflogs-csv-timeline-create", {
   friendyIDs: [] as number[],
   // castEvents: [] as CastEvent[],
   takenEvents: [] as TakenEvent[],
-  // auraAbilities: [] as AuraAbilities[],
+  auraAbilities: [] as AuraAbilities[],
+  auraAbilitiesIDs: [] as number[],
   code: "" as string,
   showCN: true as boolean,
-  // uniqueBuffs: [] as { id: number; url: string; title: string }[],
   filter: {
     friendlyID: 0 as number,
   },
   tableData: [] as TakenEvent[],
   keigenns: [] as processedKeigenn[],
+  uniqueBuffs: [] as number[],
 });
+const buffIDs: Set<number> = new Set();
 data.value.keigenns = keigennData.map((k) => {
   return Object.assign(k, { icon: typeof k.icon === "number" ? createIconUrl(k.icon) : k.icon });
 });
@@ -67,22 +69,35 @@ async function startParse() {
         .filter((v) => res.friendlies.find((f) => f.id === v)?.type !== "LimitBreak");
       // data.value.castEvents = []; //
       data.value.takenEvents = [];
-      // data.value.auraAbilities = [];
+      // data.value.auraAbilitiesIDs.length = 0;
+      buffIDs.clear();
+      data.value.auraAbilities = [];
       await getEvents("taken", data.value.fight.start_time, data.value.fight.end_time, 0);
       data.value.takenEvents = data.value.takenEvents
         .filter((v) => v.ability.name !== "Combined DoTs" && v.type === "damage")
         .sort((a, b) => a.timestamp - b.timestamp);
       // data.value.castEvents.sort((a, b) => a.timestamp - b.timestamp);
-      // data.value.auraAbilities = Array.from(new Set(data.value.auraAbilities));
-      // data.value.uniqueBuffs = Array.from(
-      //   new Set(
-      //     data.value.takenEvents
-      //       .map((v) => v.buffs?.split("."))
-      //       .flat()
-      //       .map((v) => Number(v))
-      //       .filter((v) => v),
-      //   ),
-      // )
+      // data.value.auraAbilitiesIDs = [...new Set(data.value.auraAbilitiesIDs)];
+      data.value.auraAbilitiesIDs = [...buffIDs]
+        .sort((a, b) => {
+          return (
+            keigennData.findIndex((v) => v.id === b - 1000000) - keigennData.findIndex((v) => v.id === a - 1000000)
+          );
+        })
+        .reverse();
+      // data.value.auraAbilitiesIDs = data.value.auraAbilitiesIDs.sort(
+      //   (a, b) =>
+      //     keigennData.findIndex((v) => v.id === a - 1000000) - keigennData.findIndex((v) => v.id === b - 1000000),
+      // );
+      data.value.uniqueBuffs = Array.from(
+        new Set(
+          data.value.takenEvents
+            .map((v) => v.buffs?.split("."))
+            .flat()
+            .map((v) => Number(v))
+            .filter((v) => v),
+        ),
+      );
       //   .filter((v) => getKeigenn(v - 1000000))
       //   .sort(
       //     (a, b) =>
@@ -113,7 +128,13 @@ async function getEvents(type: "casts" | "taken", start: number, end: number, in
         if (!res.events) throw new Error("result has no events");
         if (type === "taken") {
           data.value.takenEvents.push(...(res.events as TakenEvent[]));
-          // data.value.auraAbilities.push(...res.auraAbilities);
+          data.value.auraAbilities.push(...res.auraAbilities);
+          res.auraAbilities.map((v) =>
+            // data.value.auraAbilitiesIDs.findIndex((a) => a === v.guid) === -1
+            //   ? data.value.auraAbilitiesIDs.push(v.guid)
+            //   : "",
+            buffIDs.add(v.guid),
+          );
         }
         // else if (type === "casts") data.value.castEvents.push(...(res.events as CastEvent[]));
         if (res?.nextPageTimestamp && res?.nextPageTimestamp > 0 && res.nextPageTimestamp < end)
@@ -138,21 +159,21 @@ const formatTableTime = (time: string) =>
 // });
 const toCN = (id: number): string | undefined => getActionChinese(id);
 const getAbilityType = (type: AbilityDamageType): any => AbilityDamageType[type] ?? "未知";
-// const getSrc = (guid: number): string => {
-//   const ability = data.value.auraAbilities.find((v) => v.guid === guid);
-//   if (!ability) return "";
-//   return "http://cafemaker.wakingsands.com/i/" + ability.abilityIcon.replace("-", "/");
-// };
-// const getTitle = (guid: number): string => data.value.auraAbilities.find((v) => v.guid === guid)?.name ?? "";
+const getSrc = (guid: number): string => {
+  const ability = data.value.auraAbilities.find((v) => v.guid === guid);
+  if (!ability) return "";
+  return "https://cafemaker.wakingsands.com/i/" + ability.abilityIcon.replace("-", "/");
+};
+const getTitle = (guid: number): string => data.value.auraAbilities.find((v) => v.guid === guid)?.name ?? "";
 function updateTableData() {
   data.value.tableData = data.value.takenEvents.filter((v) => v.targetID == data.value.filter.friendlyID);
 }
 const rowClassName: VxeTablePropTypes.RowClassName = ({ row }) => {
   return "row-type-" + row.type;
 };
-</script>
+</script> -->
 
-<template>
+<!-- <template>
   <el-container>
     <el-main p-t-0>
       <el-form>
@@ -226,25 +247,275 @@ const rowClassName: VxeTablePropTypes.RowClassName = ({ row }) => {
         </vxe-column>
         <vxe-column field="multiplier" title="减伤" width="50" />
         <vxe-column field="absorbed" title="护盾" width="60" />
-        <vxe-column field="amount" title="实际" width="60" />
-        <!-- <vxe-column v-for="b in data.keigenns" :key="b.id" width="24" :show-overflow="false">
+        <vxe-column field="amount" title="实际" width="80" />
+        <vxe-column v-for="id in data.auraAbilitiesIDs" :key="id" :width="24 * 1" :show-overflow="false">
           <template #header>
             <div style="overflow: hidden; z-index: 1; position: absolute; left: 0px; top: 4px">
               <img
-                :src="'https://cafemaker.wakingsands.com/i/' + b.icon"
-                :onerror="`javascript:this.src='https://xivapi.com/i/${b.icon}';this.onerror=null;`"
-                :title="b.name"
+                :src="getSrc(id)"
+                :title="getTitle(id)"
+                :onerror="`javascript:this.src=this.src.replace('cafemaker.wakingsands','xivapi');this.onerror=null;`"
                 loading="lazy"
               />
             </div>
           </template>
           <template #default="{ row }">
-            <span class="noWrap" style="position: absolute; left: 0px; top: 0px">{{
-              row?.buffs?.includes(b.id + 1000000) ? "√" : ""
-            }}</span>
+            <span class="noWrap" style="position: absolute; left: 5px; top: 0px">
+              {{ row?.buffs?.split(".").flat().includes(id) ? "√" : "" }}
+            </span>
           </template>
-        </vxe-column> -->
+        </vxe-column>
       </vxe-table>
+    </el-main>
+  </el-container>
+</template> -->
+<!-- <style lang="scss">
+.noWrap {
+  white-space: nowrap;
+  overflow: hidden;
+}
+.ability-type-32 {
+  color: orchid;
+}
+.ability-type-64 {
+  color: orange;
+}
+.ability-type-128 {
+  color: #a60f22;
+}
+.ability-type-1024 {
+  color: #0187fb;
+}
+.row-type-calculateddamage {
+  background-color: lightcyan;
+}
+.row-type-damage {
+  background-color: inherit;
+}
+.mytable-scrollbar ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+/*滚动条的轨道*/
+.mytable-scrollbar ::-webkit-scrollbar-track {
+  background-color: #ffffff;
+}
+/*滚动条里面的小方块，能向上向下移动*/
+.mytable-scrollbar ::-webkit-scrollbar-thumb {
+  background-color: #bfbfbf;
+  border-radius: 4px;
+  border: 1px solid #f1f1f1;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+}
+.mytable-scrollbar ::-webkit-scrollbar-thumb:hover {
+  background-color: #a8a8a8;
+}
+.mytable-scrollbar ::-webkit-scrollbar-thumb:active {
+  background-color: #787878;
+}
+/*边角，即两个滚动条的交汇处*/
+.mytable-scrollbar ::-webkit-scrollbar-corner {
+  background-color: #ffffff;
+}
+</style> -->
+
+<script setup lang="ts">
+import { getActionChinese } from "@/resources/actionChinese";
+import {
+  FflogsjsonReport,
+  FflogsjsonCast,
+  FflogsjsonDamageTaken,
+  Fight,
+  Enemy,
+  Friendly,
+  // CastEvent,
+  TakenEvent,
+  AbilityDamageType,
+  // AuraAbilities,
+} from "@/types/Fflogs2";
+import { keigennData, createIconUrl, Keigenn } from "@/resources/keigenn";
+import { ElMessage, ElMessageBox } from "element-plus";
+import moment from "moment";
+import { VxeTablePropTypes } from "vxe-table";
+import { getImgSrc } from "@/utils/xivapi";
+type processedKeigenn = Omit<Keigenn, "icon"> & { icon: string };
+const data = useStorage("fflogs-csv-timeline-create", {
+  api_key: "",
+  url: "",
+  code: "" as string,
+});
+const data2 = reactive({
+  fight: undefined as Fight | undefined,
+  enemies: [] as Enemy[],
+  friendlies: [] as Friendly[],
+  enemiesIDs: [] as number[],
+  friendyIDs: [] as number[],
+  // castEvents: [] as CastEvent[],
+  takenEvents: [] as TakenEvent[],
+  // auraAbilities: [] as AuraAbilities[],
+  showCN: true as boolean,
+  // uniqueBuffs: [] as { id: number; url: string; title: string }[],
+  filter: {
+    friendlyID: 0 as number,
+  },
+  tableData: [] as TakenEvent[],
+  keigenns: [] as processedKeigenn[],
+});
+// data.value.keigenns = keigennData.map((k) => Object.assign(k, { icon: createIconUrl(k.icon) }));
+const loading = ref(false);
+async function startParse() {
+  loading.value = true;
+  let reg = data.value.url.match(/(?<=^|\/)(?<code>[\d\w]{16,})\/?#fight=(?<fight>\d+|last)/);
+  if (data.value.api_key.length !== 32) {
+    ElMessageBox.alert("错误的 API key");
+    return;
+  }
+  if (!reg) {
+    ElMessage.error("战斗记录输入有误");
+    return;
+  }
+  data.value.code = reg.groups!.code;
+  await fetch(`https://cn.fflogs.com/v1/report/fights/${data.value.code}?api_key=${data.value.api_key}`)
+    .then((res) => res.json())
+    .then(async (res: FflogsjsonReport) => {
+      const fightIndex = (reg!.groups!.fight === "last" ? res.fights.length : parseInt(reg!.groups!.fight)) - 1;
+      data2.fight = res.fights[fightIndex];
+      data2.enemiesIDs = res.enemies.filter((enemy) => enemy.type === "Boss").map((boss) => boss.id);
+      data2.enemies = res.enemies;
+      data2.friendlies = res.friendlies.filter((v) => v.fights.find((f) => f.id === fightIndex));
+      data2.friendyIDs = data2.friendlies
+        .map((f) => f.id)
+        .filter((v) => res.friendlies.find((f) => f.id === v)?.type !== "LimitBreak");
+      // data.value.castEvents = []; //
+      data2.takenEvents = [];
+      // data2.auraAbilities = [];
+      await getEvents(data2.fight.start_time, data2.fight.end_time, 0);
+      data2.takenEvents = data2.takenEvents
+        .filter((v) => v.ability.name !== "Combined DoTs" && v.type === "damage")
+        .sort((a, b) => a.timestamp - b.timestamp);
+      // data.value.castEvents.sort((a, b) => a.timestamp - b.timestamp);
+      // data.value.auraAbilities = Array.from(new Set(data.value.auraAbilities));
+      // data.value.uniqueBuffs = Array.from(
+      //   new Set(
+      //     data.value.takenEvents
+      //       .map((v) => v.buffs?.split("."))
+      //       .flat()
+      //       .map((v) => Number(v))
+      //       .filter((v) => v),
+      //   ),
+      // )
+      //   .filter((v) => getKeigenn(v - 1000000))
+      //   .sort(
+      //     (a, b) =>
+      //       keigennArr.findIndex((f) => f.id === a - 1000000) - keigennArr.findIndex((f) => f.id === b - 1000000),
+      //   )
+      //   .map((v) => ({ id: v, url: getSrc(v), title: getTitle(v) }));
+      data2.filter.friendlyID = data2.friendyIDs?.[0] ?? 0;
+      // updateTableData();
+    })
+    .catch((e) => {
+      ElMessageBox.alert(e);
+    });
+  loading.value = false;
+}
+async function getEvents(start: number, end: number, index: number) {
+  if (index >= 0) {
+    await fetch(
+      `https://cn.fflogs.com/v1/report/events/damage-taken/${data.value.code}?start=${start}&end=${end}&hostility=0&sourceid=${data2.friendyIDs[index]}&api_key=${data.value.api_key}`,
+    )
+      .then((res) => res.json())
+      .then(async (result) => {
+        let res: FflogsjsonDamageTaken = result;
+        data2.takenEvents.push(...(res.events as TakenEvent[]));
+        if (res?.nextPageTimestamp && res?.nextPageTimestamp > 0 && res.nextPageTimestamp < end)
+          await getEvents(res.nextPageTimestamp, end, index);
+        if (index < data2.friendyIDs.length - 1) await getEvents(start, end, index + 1);
+      });
+  }
+}
+const formatTableTime = (time: string) => moment.utc(Number(time) - (data2.fight?.start_time ?? 0)).format("mm:ss.S");
+// const getSourceName = (id: number) => data.value?.enemies.find((v) => v.id === id)?.name ?? id.toString();
+// const filterTable = (value: string, row: any) => row.type === value;
+// const takenFilter = computed(() => {
+//   if (data.value.takenEvents.length > 0) {
+//     const sourceIDs = Array.from(new Set(data.value.takenEvents.map((v) => v.sourceID))).filter((v) => v);
+//     return sourceIDs.map((v) => {
+//       return { text: getSourceName(v), value: v.toString() };
+//     });
+//   }
+//   return [];
+// });
+// const toCN = (id: number): string | undefined => {
+//   return getActionChinese(id);
+// };
+// const getAbilityType = (type: AbilityDamageType): any => AbilityDamageType[type] ?? "未知";
+// const getSrc = (guid: number): string => {
+//   const ability = data.value.auraAbilities.find((v) => v.guid === guid);
+//   if (!ability) return "";
+//   return "http://cafemaker.wakingsands.com/i/" + ability.abilityIcon.replace("-", "/");
+// };
+// const getTitle = (guid: number): string => data.value.auraAbilities.find((v) => v.guid === guid)?.name ?? "";
+// function updateTableData() {
+//   data.value.tableData = data.value.takenEvents.filter((v) => v.targetID == data.value.filter.friendlyID);
+// }
+// const rowClassName: VxeTablePropTypes.RowClassName = ({ row }) => {
+//   return "row-type-" + row.type;
+// };
+</script>
+
+<template>
+  <el-container>
+    <el-main p-t-0>
+      <el-form>
+        <el-form-item>
+          <el-row :gutter="5" style="width: 100%">
+            <el-col :span="6">
+              <el-form-item label="API KEY">
+                <el-input v-model="data.api_key" type="password" placeholder="" show-password />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="FIGHT CODE">
+                <el-input v-model="data.url" type="text" placeholder="" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-button type="primary" @click="startParse" :loading="loading">开始分析</el-button>
+            </el-col>
+          </el-row>
+          <!-- <el-col p-t-3
+            >视角：
+            <vxe-radio-group v-model="data.filter.friendlyID" @change="updateTableData">
+              <vxe-radio-button
+                v-for="i in data.friendyIDs"
+                :label="i"
+                :content="data.friendlies.find((f) => f.id === i)?.icon"
+              ></vxe-radio-button>
+            </vxe-radio-group>
+          </el-col> -->
+        </el-form-item>
+      </el-form>
+      <!-- <vxe-table
+        size="small"
+        border
+        :loading="loading"
+        class="mytable-scrollbar"
+        height="720"
+        align="center"
+        show-header-overflow="tooltip"
+        :show-overflow="true"
+        :scroll-x="{ enabled: true, oSize: 15 }"
+        :scroll-y="{ enabled: true, oSize: 15, mode: 'wheel' }"
+        :data="data.tableData"
+        :row-config="{ isHover: false, height: 25 }"
+        :row-class-name="rowClassName"
+      >
+        <vxe-column title="时间" width="65" fixed="left">
+          <template #default="{ row }">
+            <span> {{ formatTableTime(row.timestamp) }}</span>
+          </template>
+        </vxe-column>
+      </vxe-table> -->
     </el-main>
   </el-container>
 </template>
