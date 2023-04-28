@@ -71,8 +71,7 @@ function queryFFlogsReportFights(url: string) {
         )
           .filter((arr) => arr.type === "Boss")
           .map((boss) => boss.id);
-        fflogsQueryConfig.fightIndex =
-          (reg!.groups!.fight === "last" ? res.data.fights.length : parseInt(reg!.groups!.fight)) - 1;
+        fflogsQueryConfig.fightIndex = (reg!.groups!.fight === "last" ? res.data.fights.length : parseInt(reg!.groups!.fight)) - 1;
         const fight = res.data.fights[fflogsQueryConfig.fightIndex];
         fflogsQueryConfig.zoneID = fight.zoneID;
         fflogsQueryConfig.start = fight.start_time;
@@ -132,17 +131,13 @@ async function queryFFlogsReportEvents() {
   async function queryFriendly(startTime: number) {
     await axios
       .get(
-        `https://cn.fflogs.com/v1/report/events/casts/${fflogsQueryConfig.code}?start=${startTime}&end=${
-          fflogsQueryConfig.end
-        }&hostility=0&sourceid=${fflogsQueryConfig.player!.id}&api_key=${props.settings.api}`,
+        `https://cn.fflogs.com/v1/report/events/casts/${fflogsQueryConfig.code}?start=${startTime}&end=${fflogsQueryConfig.end}&hostility=0&sourceid=${
+          fflogsQueryConfig.player!.id
+        }&api_key=${props.settings.api}`,
       )
       .then(async (res: { data: { events: FFlogsApiV1ReportEvents[]; nextPageTimestamp?: number } }) => {
         resEvents.push(...res.data.events);
-        if (
-          res.data.nextPageTimestamp &&
-          res.data.nextPageTimestamp > 0 &&
-          res.data.nextPageTimestamp < fflogsQueryConfig.end
-        ) {
+        if (res.data.nextPageTimestamp && res.data.nextPageTimestamp > 0 && res.data.nextPageTimestamp < fflogsQueryConfig.end) {
           await queryFriendly(res.data.nextPageTimestamp);
         }
       })
@@ -163,11 +158,7 @@ async function queryFFlogsReportEvents() {
         )
         .then(async (res) => {
           resEvents.push(...res.data.events);
-          if (
-            res.data.nextPageTimestamp &&
-            res.data.nextPageTimestamp > 0 &&
-            res.data.nextPageTimestamp < fflogsQueryConfig.end
-          ) {
+          if (res.data.nextPageTimestamp && res.data.nextPageTimestamp > 0 && res.data.nextPageTimestamp < fflogsQueryConfig.end) {
             await queryEnemies(res.data.nextPageTimestamp, index);
           }
           if (index < fflogsQueryConfig.bossIDs.length - 1) {
@@ -216,69 +207,61 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
   }
   //询问是否添加TTS
   let addTTS = false;
-  Swal.fire({
-    title: "是否为所有技能添加TTS语音?",
-    showDenyButton: true,
-    showCancelButton: false,
-    confirmButtonText: "是",
-    denyButtonText: `否`,
-  }).then(
-    (result) => {
-      if (result.isConfirmed) {
-        addTTS = true;
-      } else if (result.isDenied) {
-        addTTS = false;
+  // Swal.fire({
+  //   title: "是否为所有技能添加TTS语音?",
+  //   showDenyButton: true,
+  //   showCancelButton: false,
+  //   confirmButtonText: "是",
+  //   denyButtonText: `否`,
+  // }).then(
+  //   (result) => {
+  //     if (result.isConfirmed) {
+  //       addTTS = true;
+  //     } else if (result.isDenied) {
+  //       addTTS = false;
+  //     }
+  //解析处理格式化一条龙
+  fflogsQueryConfig.abilityFilterEvents = fflogsQueryConfig.abilityFilterEvents
+    .filter((event) => {
+      return (event.sourceIsFriendly && fflogsQueryConfig.abilityFilterSelected.includes(event.actionId)) || !event.sourceIsFriendly;
+    })
+    .sort((a, b) => a.time - b.time);
+  fflogsQueryConfig.abilityFilterEvents = factory(fflogsQueryConfig.abilityFilterEvents);
+  fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline = fflogsQueryConfig.abilityFilterEvents
+    .map((item) => {
+      if (item.sourceIsFriendly) {
+        return `${item.time} "<${item.actionName}>~"${addTTS ? ` tts "${item.actionName}"` : ""}`;
+      } else {
+        if (/^(?:攻击|attack|攻撃)$|^unknown/i.test(item.actionName) || (item.type === "cast" && item.window === undefined)) {
+          return `# ${item.time} "${item.actionName}"`;
+        } else {
+          //只匹配开始施法或符合特殊规则的window
+          return `${item.time} "${item.actionName}" sync /^.{14} \\w+ ${regexType[item.type]}:4.{7}:[^:]+:${item.actionId.toString(16).toUpperCase()}:/${
+            item.window ? ` window ${item.window.join(",")}` : ""
+          }`;
+        }
       }
-      //解析处理格式化一条龙
-      fflogsQueryConfig.abilityFilterEvents = fflogsQueryConfig.abilityFilterEvents
-        .filter((event) => {
-          return (
-            (event.sourceIsFriendly && fflogsQueryConfig.abilityFilterSelected.includes(event.actionId)) ||
-            !event.sourceIsFriendly
-          );
-        })
-        .sort((a, b) => a.time - b.time);
-      fflogsQueryConfig.abilityFilterEvents = factory(fflogsQueryConfig.abilityFilterEvents);
-      fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline = fflogsQueryConfig.abilityFilterEvents
-        .map((item) => {
-          if (item.sourceIsFriendly) {
-            return `${item.time} "<${item.actionName}>~"${addTTS ? ` tts "${item.actionName}"` : ""}`;
-          } else {
-            if (
-              /^(?:攻击|attack|攻撃)$|^unknown/i.test(item.actionName) ||
-              (item.type === "cast" && item.window === undefined)
-            ) {
-              return `# ${item.time} "${item.actionName}"`;
-            } else {
-              //只匹配开始施法或符合特殊规则的window
-              return `${item.time} "${item.actionName}" sync /^.{14} \\w+ ${
-                regexType[item.type]
-              }:4.{7}:[^:]+:${item.actionId.toString(16).toUpperCase()}:/${
-                item.window ? ` window ${item.window.join(",")}` : ""
-              }`;
-            }
-          }
-        })
-        .join("\n");
-      emit(
-        "newTimeline",
-        `导入${fflogsQueryConfig.player!.name}`,
-        { zoneId: fflogsQueryConfig.zoneID.toString(), job: fflogsQueryConfig.player.icon ?? "NONE" },
-        fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline,
-        `${fflogsQueryConfig.code}#fight=${fflogsQueryConfig.fightIndex + 1}`,
-      );
-      claerFFlogsQueryConfig();
-      emit("showFFlogsToggle");
-      Swal.fire({
-        position: "top-end",
-        icon: "success",
-        title: "已生成新时间轴",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    },
-    // }
+    })
+    .join("\n");
+  emit(
+    "newTimeline",
+    `导入${fflogsQueryConfig.player!.name}`,
+    { zoneId: fflogsQueryConfig.zoneID.toString(), job: fflogsQueryConfig.player.icon ?? "NONE" },
+    fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline,
+    `${fflogsQueryConfig.code}#fight=${fflogsQueryConfig.fightIndex + 1}`,
   );
+  claerFFlogsQueryConfig();
+  emit("showFFlogsToggle");
+  Swal.fire({
+    position: "top-end",
+    icon: "success",
+    title: "已生成新时间轴",
+    showConfirmButton: false,
+    timer: 1500,
+  });
+  // },
+  // }
+  // );
 }
 //fflogs相关配置初始化
 function claerFFlogsQueryConfig() {
@@ -305,12 +288,7 @@ function claerFFlogsQueryConfig() {
       <el-input type="password" v-model="props.settings.api" />
     </el-form-item>
     <el-form-item>
-      <el-button
-        :disabled="queryText === QueryTextEnum.querying"
-        type="primary"
-        @click="queryFFlogsReportFights(inputUrl)"
-        >{{ queryText }}</el-button
-      >
+      <el-button :disabled="queryText === QueryTextEnum.querying" type="primary" @click="queryFFlogsReportFights(inputUrl)">{{ queryText }}</el-button>
     </el-form-item>
   </el-form>
   <div class="fflogs-query-result-friendlies">
@@ -320,7 +298,8 @@ function claerFFlogsQueryConfig() {
         :data="fflogsQueryConfig.friendlies.filter((v) => v.icon !== 'NPC')"
         stripe
         border
-        class="fflogs-query-result-friendlies-list">
+        class="fflogs-query-result-friendlies-list"
+      >
         <el-table-column prop="name" label="玩家名称" min-width="60px" />
         <el-table-column prop="server" label="服务器" min-width="60px" />
         <el-table-column label="职业" min-width="60px">
@@ -330,42 +309,32 @@ function claerFFlogsQueryConfig() {
         </el-table-column>
         <el-table-column label="选定" min-width="20px">
           <template #default="scope">
-            <el-button type="primary" size="small" @click="handleFFlogsQueryResultFriendliesList(scope.row)"
-              >选择</el-button
-            >
+            <el-button type="primary" size="small" @click="handleFFlogsQueryResultFriendliesList(scope.row)">选择</el-button>
           </template>
         </el-table-column>
       </el-table></el-row
     >
-    <el-row
-      v-show="fflogsQueryConfig.abilityFilterEvents.length > 0"
-      class="fflogs-query-result-friendlies-ability-filter-select">
+    <el-row v-show="fflogsQueryConfig.abilityFilterEvents.length > 0" class="fflogs-query-result-friendlies-ability-filter-select">
       <el-col :span="20">
-        <el-select
-          v-model="fflogsQueryConfig.abilityFilterSelected"
-          multiple
-          placeholder="技能过滤器"
-          :fit-input-width="true">
+        <el-select v-model="fflogsQueryConfig.abilityFilterSelected" multiple placeholder="技能过滤器" :fit-input-width="true">
           <el-option
             class="ability-filter-li"
             v-for="rule in fflogsQueryConfig.abilityFilterCandidate"
             :key="rule.actionId"
             :value="rule.actionId"
-            :label="rule.actionName">
+            :label="rule.actionName"
+          >
             <img
               :src="`https://cafemaker.wakingsands.com/i/${rule.url}.png`"
               class="ability-filter-li-icon"
               title=""
-              loading="lazy"
-              :onerror="`javascript:this.src='https://xivapi.com/i/${rule.url}.png';this.onerror=null;`" />{{
-              rule.actionName
-            }}
+              loading="auto"
+              :onerror="`javascript:this.src='https://xivapi.com/i/${rule.url}.png';this.onerror=null;`"
+            />{{ rule.actionName }}
           </el-option>
         </el-select>
       </el-col>
-      <el-col :span="4"
-        ><el-button type="success" @click="handeleFFlogsQueryResultFriendiesListFilter()">选择好了</el-button></el-col
-      >
+      <el-col :span="4"><el-button type="success" @click="handeleFFlogsQueryResultFriendiesListFilter()">选择好了</el-button></el-col>
     </el-row>
   </div>
 </template>

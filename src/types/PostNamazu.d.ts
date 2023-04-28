@@ -10,7 +10,7 @@ type WayMarkKeys = "A" | "B" | "C" | "D" | "One" | "Two" | "Three" | "Four";
 type WayMarkJSON = Required<{ [key in WayMarkKeys]?: WayMarkInfo }>;
 declare type PPJSON = WayMarkJSON & { Name?: string; MapID?: number };
 type Slot = 1 | 2 | 3 | 4 | 5;
-enum MarkTypes {
+export enum MarkTypes {
   "attack1" = 0, //攻击1
   "attack2" = 1, //攻击2
   "attack3" = 2, //攻击3
@@ -53,7 +53,7 @@ interface QueueActionsEvent {
   c: "DoQueueActions";
   p: PostNamazuQueueAction;
 }
-declare type PostNamazuCall =  "DoTextCommand" | "command" | "DoWaymarks" | "place" | "mark" | "DoInsertPreset" | "preset" | "DoQueueActions";
+declare type PostNamazuCall = "DoTextCommand" | "command" | "DoWaymarks" | "place" | "mark" | "DoInsertPreset" | "preset" | "DoQueueActions";
 declare type PostNamazuQueueAction = {
   c: PostNamazuCall;
   p: string | PPJSON;
