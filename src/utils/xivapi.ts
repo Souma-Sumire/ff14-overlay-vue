@@ -10,32 +10,25 @@ const site: { first: string; second: string } = {
   first: params?.api?.toLowerCase() === "xivapi" ? siteList.xivapi : siteList.cafe,
   second: params?.api?.toLowerCase() === "xivapi" ? siteList.cafe : siteList.xivapi,
 };
-const userAction = {
-  2: { ActionCategoryTargetID: 8, Icon: "/i/000000/000123.png" }, //任务指令
-  3: { ActionCategoryTargetID: 10, Icon: "/i/000000/000104.png" }, //冲刺
-  4: { ActionCategoryTargetID: 5, Icon: "/i/000000/000118.png" }, //坐骑
-  7: { ActionCategoryTargetID: 1, Icon: "/i/000000/000101.png" }, //攻击
-  8: { ActionCategoryTargetID: 1, Icon: "/i/000000/000101.png" }, //攻击
-  25756: { ActionCategoryTargetID: 4, Icon: "/i/003000/003090.png" }, //腐秽大地(隐藏)
-};
+const userAction = new Map(
+  Object.entries({
+    任务指令: "/i/000000/000123.png",
+    冲刺: "/i/000000/000104.png",
+    坐骑: "/i/000000/000118.png",
+    攻击: "/i/000000/000101.png",
+    腐秽大地: "/i/003000/003090.png",
+  }),
+);
 export async function parseAction(
   type: "item" | "action" | "mount" | string,
   actionId: number,
   columns: (keyof XivApiJson)[] = ["ID", "Icon", "ActionCategoryTargetID"],
-): Promise<Partial<XivApiJson>> {
-  if (Object.hasOwn(userAction, actionId)) {
-    return Promise.resolve(
-      Object.assign(
-        { ActionCategoryTargetID: 0, ID: actionId, Icon: "/i/000000/000405.png" },
-        userAction[actionId as keyof typeof userAction],
-      ) as Partial<XivApiJson>,
-    );
-  }
-  return requestPromise([
-    fetch(`${site.first}/${type}/${actionId}?columns=${columns.join(",")}`, { mode: "cors" }).then((v) => v.json()),
-    fetch(`${site.second}/${type}/${actionId}?columns=${columns.join(",")}`, { mode: "cors" }).then((v) => v.json()),
-    Promise.resolve({ ActionCategoryTargetID: 0, ID: actionId, Icon: "/i/000000/000405.png" }),
-  ]);
+) {
+  return requestPromise([`${site.first}/${type}/${actionId}?columns=${columns.join(",")}`, `${site.second}/${type}/${actionId}?columns=${columns.join(",")}`], {
+    mode: "cors",
+  })
+    .then((v) => v.json())
+    .catch(() => ({ ActionCategoryTargetID: 0, ID: actionId, Icon: "/i/000000/000405.png" }));
 }
 
 export async function getImgSrc(imgSrc: string | undefined, itemIsHQ = false) {
@@ -58,6 +51,7 @@ function checkImgExists(imgurl: string): Promise<string> {
       img.onload = () => resolve(imgurl);
       img.onerror = () => reject();
     }),
+    waitingTimeout,
   );
 }
 
@@ -67,43 +61,39 @@ export async function getImgSrcByActionId(id: number): Promise<string> {
   });
 }
 
-export async function getActionByChineseName(name: string): Promise<Partial<XivApiJson>> {
+export async function getActionByChineseName(name: string) {
   // const isCN = /[\u4e00-\u9fa5]/.test(name);
-  return requestPromise([
-    fetch(`${siteList.cafe}/search?filters=ClassJobLevel>0&indexes=action&string=${encodeURIComponent(name)}`)
-      .then((v) => v.json())
-      .then((v) => {
-        const result = v.Results[0];
-        if (!result) Promise.reject(new Error("No correct result (cafe) " + name));
-        return result;
-      }),
-    fetch(`${siteList.xivapi}/search?filters=ClassJobLevel>0&indexes=action&string=${encodeURIComponent(name)}`)
-      .then((v) => v.json())
-      .then((v) => {
-        const result = v.Results[0];
-        if (!result) Promise.reject(new Error("No correct result (xivapi) " + name));
-        return result;
-      }),
-  ]);
+  const customAction = userAction.get(name);
+  if (customAction) return Object.assign({ ActionCategoryTargetID: 0, ID: 0, Icon: customAction });
+  return await requestPromise([
+    `${siteList.cafe}/search?filters=ClassJobLevel>0&indexes=action&string=${encodeURIComponent(name)}`,
+    `${siteList.xivapi}/search?filters=ClassJobLevel>0&indexes=action&string=${encodeURIComponent(name)}`,
+  ])
+    .then((v) => v.json())
+    .then((v) => v.Results[0] ?? { ActionCategoryTargetID: 0, ID: 0, Icon: "/i/000000/000405.png" });
+}
+async function timeoutPromise<T>(promise: Promise<T>, timeout: number): Promise<T> {
+  let timeoutId: NodeJS.Timer;
+  const timeoutPromise = new Promise<T>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error("Promise timed out"));
+    }, timeout);
+  });
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    clearTimeout(timeoutId);
+  });
 }
 
-function timeoutPromise<T>(promise: Promise<T>, timeout: number = waitingTimeout): Promise<T> {
-  return Promise.race([promise, new Promise<T>((_, reject) => setTimeout(() => reject(new Error("Promise timed out")), timeout))]);
-}
-
-async function requestPromise<T>(promises: Promise<T>[]): Promise<T> {
-  // 如果promise数组为空，则直接返回一个拒绝的promise
-  if (promises.length === 0) {
-    return Promise.reject(new Error("Promise array is empty"));
+async function requestPromise(urls: string[], options?: RequestInit): Promise<Response> {
+  for (const url of urls) {
+    try {
+      const response = await timeoutPromise(fetch(url, options), 3000);
+      if (response.ok) {
+        return response;
+      }
+    } catch (err) {
+      console.error(`Failed to fetch ${url}: ${err}`);
+    }
   }
-
-  // 取出第一个promise并执行
-  const [currentPromise, ...remainingPromises] = promises;
-  const currentPromiseWithTimeout = timeoutPromise(currentPromise);
-  try {
-    const result = await currentPromiseWithTimeout;
-    return await Promise.resolve(result);
-  } catch (error) {
-    return await requestPromise(remainingPromises);
-  }
+  throw new Error("All fetch attempts failed.");
 }
