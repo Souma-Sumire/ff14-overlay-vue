@@ -21,14 +21,14 @@ const data: { targetCast?: Cast } = reactive({ targetCast: undefined });
 const settings = useStorage(
   "castingToChinese",
   {
-    width: 303,
+    width: 283,
     showCountdown: true,
     showProgress: true,
     showActionChinese: true,
-    offsetCountdownX: 0,
+    offsetCountdownX: 2,
     offsetCountdownY: 0,
     offsetActionChineseX: 0,
-    offsetActionChineseY: -4,
+    offsetActionChineseY: -2,
     ping: 80,
     keep: 100,
     fontSizeCountDown: 17,
@@ -81,8 +81,8 @@ document.addEventListener("onOverlayStateUpdate", (e: any) => {
       <form>显示倒计时: <el-switch v-model="settings.showCountdown" /></form>
       <form>显示进度条: <el-switch v-model="settings.showProgress" /></form>
       <form>显示中文: <el-switch v-model="settings.showActionChinese" /></form>
-      <form>延迟(ms): <el-input-number v-model="settings.ping" :min="0" :max="1000" size="small" controls-position="right" /></form>
-      <form>保留(ms): <el-input-number v-model="settings.keep" :min="0" :max="1000" size="small" controls-position="right" /></form>
+      <form>延迟(ms): <el-input-number v-model="settings.ping" :min="0" :max="10000" size="small" controls-position="right" /></form>
+      <form>保留(ms): <el-input-number v-model="settings.keep" :min="0" :max="10000" size="small" controls-position="right" /></form>
       <form>倒计时偏移X: <el-input-number v-model="settings.offsetCountdownX" :min="-1000" :max="1000" size="small" /></form>
       <form>倒计时偏移Y: <el-input-number v-model="settings.offsetCountdownY" :min="-1000" :max="1000" size="small" controls-position="right" /></form>
       <form>中文偏移X: <el-input-number v-model="settings.offsetActionChineseX" :min="-1000" :max="1000" size="small" /></form>
@@ -115,11 +115,6 @@ document.addEventListener("onOverlayStateUpdate", (e: any) => {
     </el-main>
   </el-container>
 </template>
-<style>
-* {
-  overflow: hidden;
-}
-</style>
 <style lang="scss" scoped>
 ::-webkit-scrollbar {
   display: none !important;
@@ -132,6 +127,7 @@ document.addEventListener("onOverlayStateUpdate", (e: any) => {
   font-style: normal;
 }
 .settings {
+  overflow: visible;
   position: fixed;
   right: 5px;
   z-index: 999999;
@@ -145,7 +141,9 @@ document.addEventListener("onOverlayStateUpdate", (e: any) => {
   align-content: flex-end;
   > form {
     white-space: nowrap;
+    padding: 0px 3px;
   }
+  padding-bottom: 25px;
 }
 .countdown {
   opacity: v-bind(opacityCountdown);
@@ -162,6 +160,11 @@ document.addEventListener("onOverlayStateUpdate", (e: any) => {
   width: v-bind(windowWidth);
   color: rgb(254, 254, 253);
   text-shadow: -1px 0 3px #b38915, 0 1px 3px #b38915, 1px 0 3px #b38915, 0 -1px 3px #b38915;
+  padding: 10px;
+  margin: 0px;
+  > * {
+    overflow: visible;
+  }
   .el-progress {
     :deep(.el-progress-bar) {
       .el-progress-bar__outer,

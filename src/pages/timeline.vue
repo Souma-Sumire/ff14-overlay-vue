@@ -13,7 +13,7 @@ const baseTimeMs = ref(0); //战斗开始时间 每场战斗中这个值应该�
 const runtimeTimeSeconds = ref(0 - timelineStore.configValues.preBattle); //当前进行到多少秒了 相对与baseTime来说 （战斗时间）  时间轴时间将以他为基准进行计算
 const offsetTimeMS = ref(0); //sync产生的时间轴偏移 会在baseTimeMs后附加 以影响runtimeTime
 // let runtimeTimer: NodeJS.Timer; //计时器用以循环刷新界面
-let ttsSuppressFlag = false; //防止tts重复
+let doTTS = false; //防止tts重复
 // let ttsSuppressMs = 300; // tts重复阈值
 //每次get时间轴时被传入的条件对象
 const condition = useStorage("timeline-condition", {
@@ -81,7 +81,7 @@ function selectedTimeline(timeline: ITimeline) {
 //载入时间轴页面
 async function mountTimeline(timeline: ITimeline, stopLoadedTimeline: boolean = true) {
   stopLoadedTimeline && stopTimeline();
-  ttsSuppressFlag = false;
+  doTTS = false;
   if (timeline && timeline?.timeline) {
     timelinePageData.loadedTimeline = await parseTimeline(timeline.timeline);
     timelinePageData.loadedTimeline.sort((a, b) => a.time - b.time);
@@ -95,7 +95,7 @@ async function mountTimeline(timeline: ITimeline, stopLoadedTimeline: boolean = 
     });
     // lastUsedTimeline = timeline;
   }
-  setTimeout(() => (ttsSuppressFlag = true), 500);
+  setTimeout(() => (doTTS = true), 500);
 }
 
 //停止当前
@@ -110,8 +110,8 @@ function stopTimeline() {
 //页面时间轴开始播放
 function startTimeline(countdownSeconds: number, preventTTS = true) {
   if (preventTTS) {
-    ttsSuppressFlag = false;
-    setTimeout(() => (ttsSuppressFlag = true), 500);
+    doTTS = false;
+    setTimeout(() => (doTTS = true), 500);
   }
   runtimeTimeSeconds.value = 0;
   offsetTimeMS.value = 0;
@@ -161,16 +161,17 @@ function handleLogEvent(e: { detail: { logs: string[] } }) {
   }
 }
 
+//测试用
+function fakeJump(time: number) {
+  syncTimeline(time);
+}
+
 //同步页面时间轴
 function syncTimeline(targetTime: number) {
-  ttsSuppressFlag = false;
-  // setTimeout(() => (ttsSuppressFlag = true), targetTime <= 0 ? 0 : 500);
-  // if (targetTime === 0) stopTimeline();
-  // else {
+  doTTS = false;
   if (baseTimeMs.value === 0) startTimeline(0, false);
   offsetTimeMS.value += (targetTime - runtimeTimeSeconds.value) * 1000;
-  setTimeout(() => (ttsSuppressFlag = true), 500);
-  // }
+  setTimeout(() => (doTTS = true), 500);
 }
 
 //玩家状态（职业）
@@ -193,13 +194,7 @@ function handleChangeZone(e: any) {
 //调用TTS
 function cactbotSay(text: string) {
   if (!text) return;
-  if (ttsSuppressFlag) {
-    // ttsSuppressFlag = false;
-    callOverlayHandler({ call: "cactbotSay", text: text });
-    // setTimeout(() => {
-    //   ttsSuppressFlag = true;
-    // }, ttsSuppressMs);
-  }
+  if (doTTS) callOverlayHandler({ call: "cactbotSay", text: text });
 }
 
 //接受广播
@@ -281,6 +276,8 @@ function handleInCombatChanged(ev: {
     <button v-if="devMode" @click="startTimeline(30)">开始从-30</button>
     <button v-if="devMode" @click="startTimeline(0)">开始从0</button>
     <button v-if="devMode" @click="stopTimeline()">团灭</button>
+    <button v-if="devMode" @click="fakeJump(1000)">跳转1000测试</button>
+    <button v-if="devMode" @click="cactbotSay('今天天气真不错')">TTS测试</button>
     <span v-if="devMode">{{ runtimeTimeSeconds }}</span>
   </div>
 </template>
