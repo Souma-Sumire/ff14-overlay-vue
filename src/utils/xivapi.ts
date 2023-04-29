@@ -42,12 +42,43 @@ export function getClassjobIconSrc(jobNumber: number): string {
   return url;
 }
 
+interface CachedImage {
+  url: string;
+  expirationTime: number; // Unix 时间戳，毫秒
+}
+interface CachedAction {
+  name: string;
+  action: any;
+  expirationTime: number; // Unix 时间戳，毫秒
+}
+const cacheExpirationTime = {
+  get random() {
+    return Math.floor(Math.random() * 86400000 * 11) + 86400000 * 25;
+  },
+};
+
 function checkImgExists(imgurl: string): Promise<string> {
+  const cachedImageData = localStorage.getItem("souma-img-cache");
+  const cachedImages: CachedImage[] = cachedImageData ? JSON.parse(cachedImageData) : [];
+  const cachedImage = cachedImages.find((img) => img.url === imgurl);
+  if (cachedImage && cachedImage.expirationTime > Date.now()) {
+    console.log("已缓存img", imgurl);
+    return Promise.resolve(imgurl);
+  }
   return timeoutPromise(
-    new Promise<string>(function (resolve, reject) {
+    new Promise<string>((resolve, reject) => {
       let img = new Image();
       img.src = imgurl;
-      img.onload = () => resolve(imgurl);
+      img.onload = () => {
+        const expirationTime = Date.now() + cacheExpirationTime.random;
+        const newCachedImage: CachedImage = {
+          url: imgurl,
+          expirationTime,
+        };
+        cachedImages.push(newCachedImage);
+        localStorage.setItem("souma-img-cache", JSON.stringify(cachedImages));
+        resolve(imgurl);
+      };
       img.onerror = () => reject();
     }),
     3000,
@@ -64,12 +95,30 @@ export async function getActionByChineseName(name: string) {
   // const isCN = /[\u4e00-\u9fa5]/.test(name);
   const customAction = userAction.get(name);
   if (customAction) return Object.assign({ ActionCategoryTargetID: 0, ID: 0, Icon: customAction });
-  return await requestPromise([
-    `${siteList.cafe}/search?filters=ClassJobLevel>0&indexes=action&string=${encodeURIComponent(name)}`,
-    `${siteList.xivapi}/search?filters=ClassJobLevel>0&indexes=action&string=${encodeURIComponent(name)}`,
-  ])
+  const cachedActionData = localStorage.getItem("souma-action-cache");
+  const cachedActions: CachedAction[] = cachedActionData ? JSON.parse(cachedActionData) : [];
+  const cachedAction = cachedActions.find((v) => v.name === name);
+  if (cachedAction && cachedAction.action && cachedAction.expirationTime > Date.now()) {
+    console.log("已缓存action", name);
+    return Promise.resolve(cachedAction.action);
+  }
+  return await requestPromise([`${siteList.cafe}/search?filters=ClassJobLevel>0&indexes=action&string=${encodeURIComponent(name)}`])
     .then((v) => v.json())
-    .then((v) => v.Results[0] ?? { ActionCategoryTargetID: 0, ID: 0, Icon: "/i/000000/000405.png" });
+    .then((v) => {
+      const result = v.Results?.[0];
+      if (result) {
+        const expirationTime = Date.now() + cacheExpirationTime.random;
+        const newCachedAction: CachedAction = {
+          name: name,
+          action: result,
+          expirationTime,
+        };
+        cachedActions.push(newCachedAction);
+        localStorage.setItem("souma-action-cache", JSON.stringify(cachedActions));
+        return result;
+      } else return { ActionCategoryTargetID: 0, ID: 0, Icon: "/i/000000/000405.png" };
+    })
+    .catch(() => ({ ActionCategoryTargetID: 0, ID: 0, Icon: "/i/000000/000405.png" }));
 }
 async function timeoutPromise<T>(promise: Promise<T>, timeout: number): Promise<T> {
   let timeoutId: NodeJS.Timer;
@@ -84,9 +133,10 @@ async function timeoutPromise<T>(promise: Promise<T>, timeout: number): Promise<
 }
 
 async function requestPromise(urls: string[], options?: RequestInit): Promise<Response> {
+  const _options = Object.assign({ cache: "force-cache" }, options);
   for (const url of urls) {
     try {
-      const response = await timeoutPromise(fetch(url, options), 3000);
+      const response = await timeoutPromise(fetch(url, _options), 3000);
       if (response.ok) {
         return response;
       }

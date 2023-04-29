@@ -260,6 +260,30 @@ function timelineTimeFormat() {
     },
   );
 }
+function clearLocalStorage() {
+  Swal.fire({
+    title: "确定删除相关LocalStorage吗？",
+    text: "仅有当图片/技能缓存需要强制刷新时你才需要这样做。",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "gray",
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+  }).then((v) => {
+    if (v.isConfirmed) {
+      localStorage.removeItem("souma-img-cache");
+      localStorage.removeItem("souma-action-cache");
+      Swal.fire({
+        position: "top-end",
+        icon: "success",
+        title: "已清理",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    }
+  });
+}
 </script>
 <template>
   <el-container class="container">
@@ -272,6 +296,7 @@ function timelineTimeFormat() {
       <el-button v-if="isWSMode" type="success" @click="broadcastData()">通过WS发送到悬浮窗</el-button>
       <!-- <el-button v-if="!isWSMode" type="success" @click="applyData()">应用</el-button> -->
       <el-button @click="createP8STimeline()">P8S门神模板</el-button>
+      <el-button @click="clearLocalStorage()">清理LocalStorage缓存</el-button>
     </el-header>
     <el-main>
       <timeline-fflogs-import
