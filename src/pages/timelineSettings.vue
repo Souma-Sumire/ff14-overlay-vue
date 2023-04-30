@@ -10,7 +10,7 @@ import { ITimeline, ITimelineLine } from "@/types/Timeline";
 import { p8sTimeline } from "@/resources/timelineTemplate";
 import moment from "moment";
 
-const simulatedCombatTime = ref(-30);
+const simulatedCombatTime = ref(0);
 const timelineStore = useTimelineStore();
 const timelines = toRef(timelineStore, "allTimelines");
 const timelineFilters = toRef(timelineStore, "filters");
@@ -22,6 +22,8 @@ let timelineCurrentlyEditing: { timeline: ITimeline } = reactive({
 });
 const isWSMode = location.href.includes("OVERLAY_WS=");
 const transmissionTimeline = ref([] as ITimelineLine[]);
+
+resetCurrentlyTimeline();
 
 async function updateTransmissionTimeline() {
   transmissionTimeline.value = [
@@ -100,10 +102,11 @@ function urlTool({ url }: { url: string }): any {
 
 function fflogsImportClick(): void {
   showFFlogs.value = !showFFlogs.value;
-  clearCurrentlyTimeline();
+  resetCurrentlyTimeline();
 }
 
-function clearCurrentlyTimeline(): void {
+function resetCurrentlyTimeline(): void {
+  simulatedCombatTime.value = -30;
   timelineCurrentlyEditing.timeline = {
     name: "空",
     condition: { zoneId: "0", job: "NONE" },
@@ -140,7 +143,7 @@ function deleteTimeline(target: ITimeline): void {
     cancelButtonText: "取消",
   }).then((result) => {
     if (result.isConfirmed) {
-      clearCurrentlyTimeline();
+      resetCurrentlyTimeline();
       timelines.value.splice(
         timelines.value.findIndex((v) => v === target),
         1,
@@ -303,7 +306,7 @@ function clearLocalStorage() {
         :settings="timelineStore.settings"
         :filters="timelineFilters"
         v-if="showFFlogs"
-        @clearCurrentlyTimeline="clearCurrentlyTimeline"
+        @clearCurrentlyTimeline="resetCurrentlyTimeline"
         @showFFlogsToggle="() => (showFFlogs = !showFFlogs)"
         @newTimeline="timelineStore.newTimeline"
       >
@@ -372,7 +375,7 @@ function clearLocalStorage() {
             </el-row>
             <el-row>
               <el-button :span="12" type="danger" @click="deleteTimeline(timelineCurrentlyEditing.timeline)">删除</el-button>
-              <el-button :span="12" @click="clearCurrentlyTimeline()">隐藏编辑界面</el-button>
+              <el-button :span="12" @click="resetCurrentlyTimeline()">隐藏编辑界面</el-button>
             </el-row>
           </div>
           <div style="flex: 1">
