@@ -6,8 +6,11 @@ import zoneInfo from "../resources/zoneInfo";
 import { getMapIDByTerritoryType, getTerritoryTypeByMapID } from "../resources/contentFinderCondition";
 import ClipboardJS from "clipboard";
 import { ElInputNumber, ElMessage, ElMessageBox } from "element-plus";
+// import { PPJSON, PostNamazuCall } from "@/types/PostNamazu";
 let partyLen = 0;
 const slotIndex = useStorage("macro-slot-index", 5);
+const lastUpdate = useStorage("macro-last-update", 0);
+
 addOverlayListener("PartyChanged", (e: any) => (partyLen = e.party.length));
 const [show, toggleShow] = useToggle(true);
 export const useMacroStore = defineStore("macro", {
@@ -17,20 +20,14 @@ export const useMacroStore = defineStore("macro", {
       selectZone: useStorage("my-zone", ref("1003")),
       zoneNow: useStorage("my-zone-now", ref("129")),
       fastEntrance: [
-        // { text: "P1S", value: "1003" },
-        // { text: "P2S", value: "1005" },
-        // { text: "P3S", value: "1007" },
-        // { text: "P4S", value: "1009" },
-        // { text: "极风", value: "1072" },
-        { text: "幻魔神", value: "1090" },
+        // { text: "幻魔神", value: "1090" },
         { text: "P5S", value: "1082" },
         { text: "P6S", value: "1084" },
         { text: "P7S", value: "1086" },
         { text: "P8S", value: "1088" },
-        { text: "绝龙诗", value: "968" },
+        { text: "零式水道", value: "1076" },
+        { text: "极火天王", value: "1096" },
         { text: "绝欧米茄", value: "1122" },
-        { text: "异闻水道", value: "1075" },
-        { text: "零式异闻水道", value: "1076" },
       ],
       // gameExists: useStorage("my-game-exists", false),
       show,
@@ -67,31 +64,31 @@ export const useMacroStore = defineStore("macro", {
         if (this.data.zoneId[zone][y].Type === "place") {
           const d = this.data.zoneId[zone][y] as MacroInfoPlace;
           (this.data.zoneId[zone][y] as MacroInfoPlace).Place = {
-            A: d.Place.A ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
-            B: d.Place.B ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
-            C: d.Place.C ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
-            D: d.Place.D ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
-            One: d.Place.One ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
-            Two: d.Place.Two ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
-            Three: d.Place.Three ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
-            Four: d.Place.Four ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+            A: d?.Place?.A ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+            B: d?.Place?.B ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+            C: d?.Place?.C ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+            D: d?.Place?.D ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+            One: d?.Place?.One ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+            Two: d?.Place?.Two ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+            Three: d?.Place?.Three ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
+            Four: d?.Place?.Four ?? { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
           };
         }
       }
     },
     newOne(type: MacroType = "macro") {
-      for (const x in this.data.zoneId)
-        for (const y in this.data.zoneId[x]) Reflect.deleteProperty(this.data.zoneId[x][y], "Editable");
+      for (const x in this.data.zoneId) for (const y in this.data.zoneId[x]) Reflect.deleteProperty(this.data.zoneId[x][y], "Editable");
       const selectZoneId = Number(this.selectZone);
       if (this.data.zoneId[selectZoneId] === undefined) this.data.zoneId[selectZoneId] = [];
       if (this.data.zoneId[selectZoneId]) {
         if (type === "macro") {
-          this.data.zoneId[selectZoneId].push({ Type: type, Name: "New Macro", Text: "", Editable: true });
+          this.data.zoneId[selectZoneId].push({ Type: type, Name: "New Macro", Text: "", Editable: true, Deletability: true });
         } else if (type === "place") {
           const i = this.data.zoneId[selectZoneId].push({
             Name: "New WayMark",
             Type: type,
             Editable: true,
+            Deletability: true,
             Place: {
               A: { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
               B: { X: -this.defaultX, Y: 0, Z: -this.defaultY, Active: false },
@@ -133,9 +130,7 @@ export const useMacroStore = defineStore("macro", {
           let flag = true;
           if (json.MapID !== selectMapID) {
             const confirm = await ElMessageBox.confirm(
-              `PPJSON中的地图${JSONZone.name.cn ?? JSONZone.name.ja ?? "" + JSONZone.name.en}(${
-                json.MapID
-              })), 与当前选择的地图${
+              `PPJSON中的地图${JSONZone.name.cn ?? JSONZone.name.ja ?? "" + JSONZone.name.en}(${json.MapID})), 与当前选择的地图${
                 selectZone.name.cn ?? selectZone.name.ja ?? "" + selectZone.name.en
               }(${selectMapID})不一致, 是否继续?`,
               "警告",
@@ -289,9 +284,7 @@ export const useMacroStore = defineStore("macro", {
           }
           return;
         }
-        const echoSlot = (e.line[4] as string).match(
-          /^(?:标点|标记|场景标记|place|biaodian)(?:插槽|预设|)\s*(?<slot>[1-5])?.*?(?<mark>[!！])?\s*$/i,
-        );
+        const echoSlot = (e.line[4] as string).match(/^(?:标点|标记|场景标记|place|biaodian)(?:插槽|预设|)\s*(?<slot>[1-5])?.*?(?<mark>[!！])?\s*$/i);
         if (echoSlot) {
           const slotIndex: 1 | 2 | 3 | 4 | 5 = Number(echoSlot?.groups?.slot ?? 5) as 1 | 2 | 3 | 4 | 5;
           const place = this.data.zoneId[this.zoneNow]?.filter((v) => v.Type === "place");
@@ -348,21 +341,61 @@ export const useMacroStore = defineStore("macro", {
         .catch(() => {});
     },
     updateZone(): void {
-      ElMessageBox.confirm("将所有地图的用户当前数据与自带数据取并集？这将恢复你曾经删除的默认数据", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      })
-        .then(() => {
-          for (const key in this.data.zoneId) {
-            this.data.zoneId[key] = Array.from(
-              new Set([...defaultMacro.zoneId[key], ...this.data.zoneId[key]].map((v) => JSON.stringify(v))),
-            ).map((v) => JSON.parse(v));
-          }
-
-          ElMessage.success("更新成功");
-        })
-        .catch(() => {});
+      // 如果24小时内已经成功更新过则跳过
+      if (Date.now() - lastUpdate.value < 1000 * 60 * 24 * 1) return;
+      try {
+        const before = JSON.stringify(this.data.zoneId);
+        for (const key in this.data.zoneId) {
+          const userData = JSON.parse(JSON.stringify(this.data.zoneId[key]));
+          const defaultData = defaultMacro.zoneId[key];
+          const resultData: (MacroInfoMacro | MacroInfoPlace)[] = [];
+          [...defaultData, ...userData].map((v) => {
+            if (v.Type === "macro") {
+              if (
+                !resultData.find((r) => {
+                  //@ts-ignore
+                  if (r.Text && v.Text) {
+                    // @ts-ignore
+                    const a = r.Text.replaceAll(/ /g, "");
+                    const b = v.Text.replaceAll(/ /g, "");
+                    // console.log(a);
+                    // console.log(b);
+                    // console.log(a === b);
+                    return a === b;
+                  }
+                })
+              ) {
+                resultData.push(v);
+              }
+            } else if (v.Type === "place") {
+              if (Object.hasOwn(v.Place, "MapID")) delete v.Place.MapID;
+              if (Object.hasOwn(v.Place, "Name")) delete v.Place.Name;
+              if (
+                !resultData.find((r) => {
+                  // @ts-ignore
+                  if (r.Place && r.Place) {
+                    // @ts-ignore
+                    const a = JSON.stringify(r.Place, ["A", "B", "C", "D", "One", "Two", "Three", "Four", "X", "Y", "Z", "Active"]);
+                    const b = JSON.stringify(v.Place, ["A", "B", "C", "D", "One", "Two", "Three", "Four", "X", "Y", "Z", "Active"]);
+                    // console.log(a);
+                    // console.log(b);
+                    // console.log(a === b);
+                    return a === b;
+                  }
+                })
+              )
+                resultData.push(v);
+            }
+          });
+          this.data.zoneId[key] = resultData;
+        }
+        const after = JSON.stringify(this.data.zoneId);
+        if (before !== after) {
+          ElMessage({ message: "数据已更新", type: "success" });
+          // 记录成功更新时间
+          lastUpdate.value = Date.now();
+        }
+      } catch {}
     },
   },
 });
