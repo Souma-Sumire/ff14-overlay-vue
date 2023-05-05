@@ -20,7 +20,7 @@ const condition = useStorage("timeline-condition", {
   zoneId: "0",
   job: "NONE",
 } as ITimelineCondition);
-const devMode = ref(window.location.href.match(/localhost/));
+const devMode = ref(window.location.href.match(/localhost/) || new URLSearchParams(location.hash.split("?")[1]).get("dev") === "1");
 //保存最后一次选择的时间轴，用于团灭时重新加载
 // let lastUsedTimeline: ITimeline;
 
@@ -95,7 +95,7 @@ async function mountTimeline(timeline: ITimeline, stopLoadedTimeline: boolean = 
     });
     // lastUsedTimeline = timeline;
   }
-  setTimeout(() => (doTTS = true), 500);
+  setTimeout(() => (doTTS = true), 1000);
 }
 
 //停止当前
@@ -111,7 +111,7 @@ function stopTimeline() {
 function startTimeline(countdownSeconds: number, preventTTS = true) {
   if (preventTTS) {
     doTTS = false;
-    setTimeout(() => (doTTS = true), 500);
+    setTimeout(() => (doTTS = true), 1000);
   }
   runtimeTimeSeconds.value = 0;
   offsetTimeMS.value = 0;
@@ -171,7 +171,7 @@ function syncTimeline(targetTime: number) {
   doTTS = false;
   if (baseTimeMs.value === 0) startTimeline(0, false);
   offsetTimeMS.value += (targetTime - runtimeTimeSeconds.value) * 1000;
-  setTimeout(() => (doTTS = true), 500);
+  setTimeout(() => (doTTS = true), 1000);
 }
 
 //玩家状态（职业）
@@ -192,9 +192,9 @@ function handleChangeZone(e: any) {
 }
 
 //调用TTS
-function cactbotSay(text: string) {
+function cactbotSay(text: string, force: boolean = false) {
   if (!text) return;
-  if (doTTS) callOverlayHandler({ call: "cactbotSay", text: text });
+  if (doTTS || force) callOverlayHandler({ call: "cactbotSay", text: text });
 }
 
 //接受广播
@@ -277,7 +277,7 @@ function handleInCombatChanged(ev: {
     <button v-if="devMode" @click="startTimeline(0)">开始从0</button>
     <button v-if="devMode" @click="stopTimeline()">团灭</button>
     <button v-if="devMode" @click="fakeJump(1000)">跳转1000测试</button>
-    <button v-if="devMode" @click="cactbotSay('今天天气真不错')">TTS测试</button>
+    <button v-if="devMode" @click="cactbotSay('今天天气真不错', true)">TTS测试</button>
     <span v-if="devMode">{{ runtimeTimeSeconds }}</span>
   </div>
 </template>
