@@ -62,7 +62,7 @@ function checkImgExists(imgurl: string): Promise<string> {
   const cachedImages: CachedImage[] = cachedImageData ? JSON.parse(cachedImageData) : [];
   const cachedImage = cachedImages.find((img) => img.url === imgurl);
   if (cachedImage && cachedImage.expirationTime > Date.now()) {
-    console.log("已缓存img", imgurl);
+    // console.log("已缓存img", imgurl);
     return Promise.resolve(imgurl);
   }
   return timeoutPromise(
@@ -99,7 +99,7 @@ export async function getActionByChineseName(name: string) {
   const cachedActions: CachedAction[] = cachedActionData ? JSON.parse(cachedActionData) : [];
   const cachedAction = cachedActions.find((v) => v.name === name);
   if (cachedAction && cachedAction.action && cachedAction.expirationTime > Date.now()) {
-    console.log("已缓存action", name);
+    // console.log("已缓存action", name);
     return Promise.resolve(cachedAction.action);
   }
   return await requestPromise([`${siteList.cafe}/search?filters=ClassJobLevel>0&indexes=action&string=${encodeURIComponent(name)}`])
