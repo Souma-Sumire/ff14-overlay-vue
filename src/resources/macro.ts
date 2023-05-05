@@ -7073,7 +7073,62 @@ export const defaultMacro: { zoneId: ZoneIdInfo } = {
         Deletability: false,
       },
       {
-        Name: "Clocks",
+        Name: "1A4",
+        Type: "place",
+        Place: {
+          A: {
+            X: 100,
+            Y: 0,
+            Z: 86,
+            Active: true,
+          },
+          B: {
+            X: 114,
+            Y: 0,
+            Z: 100,
+            Active: true,
+          },
+          C: {
+            X: 100,
+            Y: 0,
+            Z: 114,
+            Active: true,
+          },
+          D: {
+            X: 86,
+            Y: 0,
+            Z: 100,
+            Active: true,
+          },
+          One: {
+            X: 93,
+            Y: 0,
+            Z: 93,
+            Active: true,
+          },
+          Two: {
+            X: 107,
+            Y: 0,
+            Z: 93,
+            Active: true,
+          },
+          Three: {
+            X: 107,
+            Y: 0,
+            Z: 107,
+            Active: true,
+          },
+          Four: {
+            X: 93,
+            Y: 0,
+            Z: 107,
+            Active: true,
+          },
+        },
+        Deletability: false,
+      },
+      {
+        Name: "4A1",
         Type: "place",
         Place: {
           A: {
