@@ -12,11 +12,7 @@
 
     /* Language and Environment */
     "target": "es2017" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
-    "lib": [
-      "esnext",
-      "dom",
-      "ESNext.String"
-    ] /* Specify a set of bundled library declaration files that describe the target runtime environment. */,
+    "lib": ["esnext", "dom", "ESNext.String"] /* Specify a set of bundled library declaration files that describe the target runtime environment. */,
     "jsx": "preserve" /* Specify what JSX code is generated. */,
     // "experimentalDecorators": true,                   /* Enable experimental support for TC39 stage 2 draft decorators. */
     // "emitDecoratorMetadata": true,                    /* Emit design-type metadata for decorated declarations in source files. */
@@ -105,7 +101,8 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": false /* Skip type checking all .d.ts files. */
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "src/**/*.d.ts", "src/**/*.jsx"]
+  "include": ["src/**/*.ts", "src/**/*.vue", "src/**/*.tsx", "src/**/*.d.ts", "src/**/*.jsx", "src/**/types"],
+  "exclude": ["./eslint", "./.eslintrc.cjs", "./dist", "**/*.spec.ts"]
   // "exclude": ["node_modules"]
   // "vueCompilerOptions": {
   // "experimentalDisableTemplateSupport": true
