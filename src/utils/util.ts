@@ -1,5 +1,5 @@
-import { FFIcon } from "../types/Fflogs";
-import { FullJob, Job, Role } from "../types/Job";
+import { FFIcon } from "../types/fflogs";
+import { FullJob, Job, Role } from "../types/job";
 
 const iconToJobEnum: Record<FFIcon, number> = {
   NONE: 0,

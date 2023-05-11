@@ -11,7 +11,7 @@ import {
   TakenEvent,
   AbilityDamageType,
   AuraAbilities,
-} from "@/types/Fflogs2";
+} from "@/types/fflogs2";
 import { keigennData, createIconUrl, Keigenn } from "@/resources/keigenn";
 import { ElMessage, ElMessageBox } from "element-plus";
 import moment from "moment";
@@ -332,7 +332,7 @@ import {
   TakenEvent,
   AbilityDamageType,
   // AuraAbilities,
-} from "@/types/Fflogs2";
+} from "@/types/fflogs2";
 import { keigennData, createIconUrl, Keigenn } from "@/resources/keigenn";
 import { ElMessage, ElMessageBox } from "element-plus";
 import moment from "moment";

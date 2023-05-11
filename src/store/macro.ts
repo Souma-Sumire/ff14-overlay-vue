@@ -1,12 +1,12 @@
 import { defaultMacro } from "./../resources/macro";
 import { defineStore } from "pinia";
 import { doTextCommand, doInsertPreset, doWayMarks, doQueueActions } from "../utils/postNamazu";
-import { MacroInfoMacro, MacroInfoPlace, MacroType } from "../types/Macro";
+import { MacroInfoMacro, MacroInfoPlace, MacroType } from "@/types/macro";
 import zoneInfo from "../resources/zoneInfo";
 import { getMapIDByTerritoryType, getTerritoryTypeByMapID } from "../resources/contentFinderCondition";
 import ClipboardJS from "clipboard";
 import { ElInputNumber, ElMessage, ElMessageBox } from "element-plus";
-// import { PPJSON, PostNamazuCall } from "@/types/PostNamazu";
+
 let partyLen = 0;
 const slotIndex = useStorage("macro-slot-index", 5);
 const lastUpdate = useStorage("macro-last-update", 0);

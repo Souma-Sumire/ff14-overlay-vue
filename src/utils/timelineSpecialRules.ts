@@ -1,4 +1,4 @@
-import { FFlogsStance, FFlogsType } from "../types/Fflogs";
+import { FFlogsStance, FFlogsType } from "../types/fflogs";
 
 const windowAction: Map<number, { type: FFlogsType; window: [number, number] }> = new Map();
 windowAction.set(26155, { type: "cast", window: [999, 999] }); //海德林转场 众生离绝

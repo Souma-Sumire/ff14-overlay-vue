@@ -6,7 +6,7 @@ import { useTimelineStore, parseTimeline } from "@/store/timeline";
 import Util from "@/utils/util";
 import "animate.css";
 import ClipboardJS from "clipboard";
-import { ITimeline, ITimelineLine } from "@/types/Timeline";
+import { ITimeline, ITimelineLine } from "@/types/timeline";
 import { p8sTimeline } from "@/resources/timelineTemplate";
 import moment from "moment";
 

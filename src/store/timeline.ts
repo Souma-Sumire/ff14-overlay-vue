@@ -8,12 +8,12 @@ import {
   ShowStyleTranslate,
   TimelineConfigValues,
   ShowStyle,
-} from "../types/Timeline";
+} from "../types/timeline";
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import Util from "../utils/util";
 import { getActionByChineseName, getImgSrc } from "@/utils/xivapi";
-import { FFIcon } from "@/types/Fflogs";
+import { FFIcon } from "@/types/fflogs";
 
 class Timeline implements ITimeline {
   constructor(name: string, condition: ITimelineCondition, timeline: string, codeFight: string) {

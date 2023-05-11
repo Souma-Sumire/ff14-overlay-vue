@@ -23,7 +23,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ITimelineLine, ShowStyle, TimelineConfigValues } from "@/types/Timeline";
+import { ITimelineLine, ShowStyle, TimelineConfigValues } from "@/types/timeline";
 
 const props = defineProps<{
   config: TimelineConfigValues;

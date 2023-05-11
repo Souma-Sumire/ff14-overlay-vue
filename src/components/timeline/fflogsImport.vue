@@ -3,7 +3,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import { factory } from "@/utils/timelineSpecialRules";
-import { FFlogsApiV1ReportEvents, FFlogsQuery, FFlogsType, Friendlies } from "@/types/Fflogs";
+import { FFlogsApiV1ReportEvents, FFlogsQuery, FFlogsType, Friendlies } from "@/types/fflogs";
 import Util from "@/utils/util";
 import { getActionChinese } from "@/resources/actionChinese";
 

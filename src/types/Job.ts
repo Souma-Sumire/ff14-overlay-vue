@@ -40,6 +40,9 @@ export type Job =
   | "DNC"
   | "RPR"
   | "SGE";
+
+export type Role = "tank" | "healer" | "dps" | "crafter" | "gatherer" | "none";
+
 export type FullJob =
   | "gladiator"
   | "goldsmith"
@@ -82,4 +85,3 @@ export type FullJob =
   | "reaper"
   | "sage"
   | "bluemage";
-export type Role = "tank" | "healer" | "dps" | "crafter" | "gatherer" | "none";

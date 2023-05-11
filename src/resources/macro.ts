@@ -1,7 +1,7 @@
 // import { cleanMacro, getZoneIDByZoneName } from "../store/macro";
-// import { PPJSON } from "@/types/PostNamazu";
+// import { PPJSON } from "@/types/postNamazu";
 import { cleanMacro } from "@/store/macro";
-import { ZoneIdInfo } from "../types/Macro";
+import { ZoneIdInfo } from "../types/macro";
 export const defaultMacro: { zoneId: ZoneIdInfo } = {
   zoneId: {
     "142": [

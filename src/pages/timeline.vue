@@ -2,7 +2,7 @@
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import { useTimelineStore, parseTimeline } from "@/store/timeline";
-import { ITimeline, ITimelineCondition, ITimelineLine, ShowStyle, TimelineConfigValues } from "@/types/Timeline";
+import { ITimeline, ITimelineCondition, ITimelineLine, ShowStyle, TimelineConfigValues } from "@/types/timeline";
 
 const timelineStore = useTimelineStore();
 const timelinePageData = reactive({
