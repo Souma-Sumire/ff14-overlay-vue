@@ -13,6 +13,7 @@ const roleAssignLocationNames: Record<Role, string[]> = {
   dps: ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"],
   unknown: ["unknown"],
 };
+const lastRp = useStorage("cactbotRuntime-last-rp", {} as Record<string, string>);
 const defaultSortArray = [
   "21", //战
   "32", //暗
@@ -35,12 +36,15 @@ const defaultSortArray = [
   "35", //赤
   "36", //青
 ];
-const fakeParty: {
+type Player = {
   id: string;
   name: string;
-  job: number;
+  rp?: string;
   inParty: boolean;
-}[] = [
+  job: number;
+};
+
+const fakeParty: Player[] = [
   { id: "10000001", name: "虚构战士", job: 21, inParty: true },
   { id: "10000002", name: "虚构骑士", job: 19, inParty: true },
   { id: "10000003", name: "虚构占星", job: 33, inParty: true },
@@ -50,14 +54,9 @@ const fakeParty: {
   { id: "10000007", name: "虚构黑魔", job: 25, inParty: true },
   { id: "10000008", name: "虚构舞者", job: 38, inParty: true },
 ];
+
 const data: RemovableRef<{
-  party: {
-    id: string;
-    name: string;
-    rp: string;
-    inParty: boolean;
-    job: number;
-  }[];
+  party: Player[];
 }> = useStorage("souma-cactbot-runtime", reactive({ party: [] }));
 const roleSelectLength = {
   tank: 0,
@@ -89,21 +88,29 @@ function handlePartyChanged(e: { party: { id: string; name: string; inParty: boo
       return { ...p, rp: "" };
     })
     .sort((a, b) => defaultSortArray.indexOf(a.job.toString()) - defaultSortArray.indexOf(b.job.toString()));
-  data.value.party.forEach((v) => (v.rp = getRP(v.job)));
+  data.value.party.forEach((v) => (v.rp = getRP(v)));
   updateRoleSelectLength();
   broadcastParty();
 }
 function handleSelectChange(i: number): void {
   const t = data.value.party.find((v) => v.rp === data.value.party[i].rp && v.id !== data.value.party[i].id);
-  t && (t.rp = getRP(t.job));
+  t && (t.rp = getRP(t));
   broadcastParty();
 }
-function getRP(job: number): string {
-  return roleAssignLocationNames[getJobClassification(job)].find((role) => !data.value.party.find((v) => v.rp === role)) ?? "unknown";
+function getRP(player: Player): string {
+  // 如果有上一次的位置则优先使用上一次的（并且与现有的不重复） 以应对小队成员掉线或中途刷新悬浮窗需要重新选位置的情况
+  const hasLastRp = lastRp.value[player.id];
+  if (hasLastRp && !data.value.party.find((v) => v.rp === hasLastRp)) return hasLastRp;
+  // 否则正常走逻辑
+  return roleAssignLocationNames[getJobClassification(player.job)].find((role) => !data.value.party.find((v) => v.rp === role)) ?? "unknown";
 }
 function broadcastParty(): void {
   const sortArr = [...roleAssignLocationNames.tank, ...roleAssignLocationNames.healer, ...roleAssignLocationNames.dps];
-  data.value.party.sort((a, b) => sortArr.indexOf(a.rp) - sortArr.indexOf(b.rp));
+  data.value.party.sort((a, b) => sortArr.indexOf(a.rp!) - sortArr.indexOf(b.rp!));
+  lastRp.value = data.value.party.reduce((pre, cur) => {
+    pre[cur.id] = cur.rp!;
+    return pre;
+  }, {} as Record<string, string>);
   callOverlayHandler({
     call: "broadcast",
     source: "soumaRuntimeJS",
