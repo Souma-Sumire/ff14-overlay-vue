@@ -85,3 +85,41 @@ interface Effect {
   ActorID: number;
   isOwner: boolean;
 }
+interface DncJob {
+  type: string;
+  detail: {
+    id: number;
+    level: number;
+    name: string;
+    job: string;
+    currentHP: number;
+    maxHP: number;
+    currentMP: number;
+    maxMP: number;
+    currentTP: number;
+    maxTP: number;
+    currentGP: number;
+    maxGP: number;
+    currentCP: number;
+    maxCP: number;
+    debugJob: string;
+    currentShield: number;
+    pos: Pos;
+    rotation: number;
+    bait: number;
+    jobDetail: JobDetail;
+  };
+}
+
+interface JobDetail {
+  feathers: number;
+  esprit: number;
+  currentStep: number;
+  steps: "Cascade" | "Fountain" | "Reverse Cascade" | "Fountainfall";
+}
+
+interface Pos {
+  x: number;
+  y: number;
+  z: number;
+}
