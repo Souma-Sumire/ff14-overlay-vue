@@ -75,9 +75,10 @@ if (isDev) {
 }
 type Role = "tank" | "healer" | "dps" | "unknown";
 function getJobClassification(job: number): Role {
-  if ([1, 3, 19, 21, 32, 37].includes(job)) return "tank";
-  else if ([6, 24, 28, 33, 40].includes(job)) return "healer";
-  else if ([2, 4, 5, 7, 20, 22, 23, 25, 26, 27, 29, 30, 31, 34, 35, 36, 38, 39].includes(job)) return "dps";
+  const jobN = Number(job)
+  if ([1, 3, 19, 21, 32, 37].includes(jobN)) return "tank";
+  else if ([6, 24, 28, 33, 40].includes(jobN)) return "healer";
+  else if ([2, 4, 5, 7, 20, 22, 23, 25, 26, 27, 29, 30, 31, 34, 35, 36, 38, 39].includes(jobN)) return "dps";
   return "unknown";
 }
 function handlePartyChanged(e: { party: { id: string; name: string; inParty: boolean; job: number }[] }): void {
