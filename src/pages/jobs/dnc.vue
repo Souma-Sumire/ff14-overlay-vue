@@ -26,7 +26,7 @@
   <main>
     <div v-for="item in data" :key="item.id">
       <span :class="item.cd <= settings.warn ? 'warning' : ''" :style="{ top: item.style.top + 'px', left: item.style.left + 'px' }">{{
-        item.cd >= 0 ? item.cd : settings.zeroStr
+        item.cd >= 0 ? item.cd : showSettings ? "0" : settings.zeroStr
       }}</span>
     </div>
   </main>
