@@ -101,7 +101,7 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": false /* Skip type checking all .d.ts files. */
   },
-  "include": ["src/**/*.ts", "src/**/*.vue", "src/**/*.tsx", "src/**/*.d.ts", "src/**/*.jsx", "src/**/types"],
+  "include": ["src/**/*.ts", "src/**/*.vue", "src/**/*.tsx", "src/**/*.jsx", "src/**/types"],
   "exclude": ["./eslint", "./.eslintrc.cjs", "./dist", "**/*.spec.ts"]
   // "exclude": ["node_modules"]
   // "vueCompilerOptions": {

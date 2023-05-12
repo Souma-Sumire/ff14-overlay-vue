@@ -1,19 +1,10 @@
 import { defineStore } from "pinia";
-import {
-  ITimeline,
-  ITimelineCondition,
-  TimelineConfigEnum,
-  ITimelineLine,
-  TimelineConfigTranslate,
-  ShowStyleTranslate,
-  TimelineConfigValues,
-  ShowStyle,
-} from "../types/timeline";
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import Util from "../utils/util";
 import { getActionByChineseName, getImgSrc } from "@/utils/xivapi";
 import { FFIcon } from "@/types/fflogs";
+import { ITimeline, ITimelineCondition, ITimelineLine, ShowStyle, ShowStyleTranslate, TimelineConfigEnum, TimelineConfigTranslate, TimelineConfigValues } from "@/types/timeline";
 
 class Timeline implements ITimeline {
   constructor(name: string, condition: ITimelineCondition, timeline: string, codeFight: string) {
