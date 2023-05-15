@@ -1,39 +1,47 @@
 <template>
-  <header v-show="showSettings" class="settings">
-    <form>连击X: <el-input-number class="input input-number" v-model="settings.combo.left" size="small" /></form>
-    <form>连击Y: <el-input-number class="input input-number" v-model="settings.combo.top" size="small" /></form>
-    <form>触发3X: <el-input-number class="input input-number" v-model="settings.tr3.left" size="small" /></form>
-    <form>触发3Y: <el-input-number class="input input-number" v-model="settings.tr3.top" size="small" /></form>
-    <form>百花3X: <el-input-number class="input input-number" v-model="settings.fl3.left" size="small" /></form>
-    <form>百花3Y: <el-input-number class="input input-number" v-model="settings.fl3.top" size="small" /></form>
-    <form>触发4X: <el-input-number class="input input-number" v-model="settings.tr4.left" size="small" /></form>
-    <form>触发4Y: <el-input-number class="input input-number" v-model="settings.tr4.top" size="small" /></form>
-    <form>百花4X: <el-input-number class="input input-number" v-model="settings.fl4.left" size="small" /></form>
-    <form>百花4Y: <el-input-number class="input input-number" v-model="settings.fl4.top" size="small" /></form>
-    <form>剩余警告: <el-input-number class="input input-number" :min="-1" :max="30" v-model="settings.warn" size="small" /></form>
-    <form>字体颜色: <el-input class="input input-string" v-model="settings.color" size="small" /></form>
-    <form>阴影颜色: <el-input class="input input-string" v-model="settings.shadow" size="small" /></form>
-    <form>警告颜色: <el-input class="input input-string" v-model="settings.warncolor" size="small" /></form>
-    <form>警告阴影: <el-input class="input input-string" v-model="settings.warnshadow" size="small" /></form>
-    <form>零值文本: <el-input class="input input-string" v-model="settings.zeroStr" size="small" /></form>
-    <form>字号: <el-input-number class="input input-number" v-model="settings.size" size="small" /></form>
-    <el-popconfirm @confirm="resetSettings" :teleported="false" title="确定要重置？">
-      <template #reference>
-        <el-button>Reset</el-button>
-      </template>
-    </el-popconfirm>
-  </header>
-  <main>
-    <div v-for="item in data" :key="item.id">
-      <span :class="item.cd <= settings.warn ? 'warning' : ''" :style="{ top: item.style.top + 'px', left: item.style.left + 'px' }">{{
-        item.cd >= 0 ? item.cd : showSettings ? "0" : settings.zeroStr
-      }}</span>
-    </div>
-  </main>
+  <div class="dnc-overlay">
+    <header v-show="showSettings" class="settings">
+      <form>连击X: <el-input-number class="input input-number" v-model="settings.combo.left" size="small" /></form>
+      <form>连击Y: <el-input-number class="input input-number" v-model="settings.combo.top" size="small" /></form>
+      <form>触发3X: <el-input-number class="input input-number" v-model="settings.tr3.left" size="small" /></form>
+      <form>触发3Y: <el-input-number class="input input-number" v-model="settings.tr3.top" size="small" /></form>
+      <form>触发4X: <el-input-number class="input input-number" v-model="settings.tr4.left" size="small" /></form>
+      <form>触发4Y: <el-input-number class="input input-number" v-model="settings.tr4.top" size="small" /></form>
+      <form>百花X: <el-input-number class="input input-number" v-model="settings.fl.left" size="small" /></form>
+      <form>百花Y: <el-input-number class="input input-number" v-model="settings.fl.top" size="small" /></form>
+      <form>剩余警告: <el-input-number class="input input-number" :min="-1" :max="30" v-model="settings.warn" size="small" /></form>
+      <form>常规颜色: <el-input class="input input-string" v-model="settings.color" size="small" /></form>
+      <form>常规阴影: <el-input class="input input-string" v-model="settings.shadow" size="small" /></form>
+      <form>警告颜色: <el-input class="input input-string" v-model="settings.warncolor" size="small" /></form>
+      <form>警告阴影: <el-input class="input input-string" v-model="settings.warnshadow" size="small" /></form>
+      <form>零值文本: <el-input class="input input-string" v-model="settings.zeroStr" size="small" /></form>
+      <form>字号: <el-input-number class="input input-number" v-model="settings.size" size="small" /></form>
+      <form>字体: <el-input class="input input-string" v-model="settings.fontFamily" size="small" /></form>
+      <form>粗体：<el-switch v-model="settings.fontWeight" size="small" /></form>
+      <form>自定义CSS： <br /><el-input v-model="settings.userCss" autosize type="textarea" placeholder="" /></form>
+      <br />
+      <form>
+        <el-popconfirm @confirm="resetSettings" :teleported="false" title="确定要重置？">
+          <template #reference>
+            <el-button>重置全部用户设置</el-button>
+          </template>
+        </el-popconfirm>
+      </form>
+    </header>
+    <main>
+      <div v-for="item in data" :key="item.id">
+        <span :class="item.cd <= settings.warn && !showSettings ? 'warning' : ''" :style="item.style">
+          {{ item.cd >= 0 ? item.cd : showSettings ? "30" : settings.zeroStr }}
+        </span>
+      </div>
+    </main>
+  </div>
+  <component is="style">{{ userCss }} </component>
 </template>
 
 <script setup lang="ts">
 import { RemovableRef } from "@vueuse/core";
+import { template } from "xe-utils";
 
 let now = ref(0);
 const game = reactive({
@@ -50,8 +58,7 @@ interface Settings {
   combo: { left: number; top: number };
   tr3: { left: number; top: number };
   tr4: { left: number; top: number };
-  fl3: { left: number; top: number };
-  fl4: { left: number; top: number };
+  fl: { left: number; top: number };
   color: string;
   shadow: string;
   size: number;
@@ -59,22 +66,27 @@ interface Settings {
   warnshadow: string;
   zeroStr: string;
   warn: number;
+  fontFamily: string;
+  fontWeight: boolean;
+  userCss: string;
 }
 const settings: RemovableRef<Settings> = useStorage(
   "jobs-dnc",
   {
     combo: { left: 10, top: -30 },
-    tr3: { left: 46, top: -30 },
-    tr4: { left: 82, top: -30 },
-    fl3: { left: 46, top: -42 },
-    fl4: { left: 82, top: -42 },
-    color: "white",
-    shadow: "black",
-    size: 12,
-    warncolor: "white",
-    warnshadow: "red",
+    tr3: { left: 46, top: -22 },
+    tr4: { left: 82, top: -22 },
+    fl: { left: 0, top: -15 },
+    color: "rgb(255,255,255)",
+    shadow: "rgb(0,0,0)",
+    size: 14,
+    warncolor: "rgb(255,255,255)",
+    warnshadow: "rgb(255,0,0)",
     zeroStr: "",
+    fontFamily: "微软雅黑",
+    fontWeight: false,
     warn: 5,
+    userCss: ``,
   },
   localStorage,
   { mergeDefaults: true },
@@ -86,30 +98,21 @@ const data = reactive([
     cd: computed(() => {
       return 30 - Math.floor((now.value - game.lastCombo) / 1000);
     }),
-    style: {
-      top: computed(() => settings.value.combo.top),
-      left: computed(() => settings.value.combo.left),
-    },
+    style: { top: computed(() => settings.value.combo.top + "px"), left: computed(() => settings.value.combo.left + "px") },
   },
   {
     id: "tr3",
     cd: computed(() => {
       return 30 - Math.floor((now.value - game.status.get("A85")!) / 1000);
     }),
-    style: {
-      top: computed(() => settings.value.tr3.top),
-      left: computed(() => settings.value.tr3.left),
-    },
+    style: { top: computed(() => settings.value.tr3.top + "px"), left: computed(() => settings.value.tr3.left + "px") },
   },
   {
     id: "tr4",
     cd: computed(() => {
       return 30 - Math.floor((now.value - game.status.get("A86")!) / 1000);
     }),
-    style: {
-      top: computed(() => settings.value.tr4.top),
-      left: computed(() => settings.value.tr4.left),
-    },
+    style: { top: computed(() => settings.value.tr4.top + "px"), left: computed(() => settings.value.tr4.left + "px") },
   },
   {
     id: "fl3",
@@ -117,8 +120,8 @@ const data = reactive([
       return 30 - Math.floor((now.value - game.status.get("BC9")!) / 1000);
     }),
     style: {
-      top: computed(() => settings.value.fl3.top),
-      left: computed(() => settings.value.fl3.left),
+      top: computed(() => settings.value.tr3.top + settings.value.fl.top + "px"),
+      left: computed(() => settings.value.tr3.left + settings.value.fl.left + "px"),
     },
   },
   {
@@ -127,8 +130,8 @@ const data = reactive([
       return 30 - Math.floor((now.value - game.status.get("BCA")!) / 1000);
     }),
     style: {
-      top: computed(() => settings.value.fl4.top),
-      left: computed(() => settings.value.fl4.left),
+      top: computed(() => settings.value.tr4.top + settings.value.fl.top + "px"),
+      left: computed(() => settings.value.tr4.left + settings.value.fl.left + "px"),
     },
   },
 ]);
@@ -136,7 +139,10 @@ const color = computed(() => settings.value.color);
 const shadow = computed(() => settings.value.shadow);
 const warncolor = computed(() => settings.value.warncolor);
 const warnshadow = computed(() => settings.value.warnshadow);
+const fontFamily = computed(() => settings.value.fontFamily);
 const size = computed(() => settings.value.size + "px");
+const fontWeight = computed(() => (settings.value.fontWeight ? "bold" : "none"));
+const userCss = computed(() => settings.value.userCss);
 
 function handleOnLogEvent(e: { line: string[] }) {
   if (e.line[5] === game.playerId && (e.line[0] === "26" || e.line[0] === "30") && game.status.has(e.line[2])) {
@@ -193,6 +199,10 @@ body {
 * {
   user-select: none !important;
 }
+.dnc-overlay {
+  font-family: v-bind(fontFamily);
+  font-weight: v-bind(fontWeight);
+}
 .settings {
   overflow: visible;
   position: fixed;
@@ -206,21 +216,21 @@ body {
   flex-direction: column;
   align-content: flex-end;
   font-size: 14px;
-  > form {
+  > form:not(:last-child) {
     white-space: nowrap;
     padding: 0px 3px;
     text-shadow: -1px 0 1px #000, 0 1px 1px #000, 1px 0 1px #000, 0 -1px 1px #000;
   }
-  :deep(.input) {
-    width: 7em;
-    height: 1.3em;
+  :deep(.input-number) {
+    width: 8em;
+    height: 1.15em;
+  }
+  :deep(.input-string) {
+    width: 9em;
+    height: 1.35em;
   }
 }
 main {
-  $shadow: v-bind(shadow);
-  color: v-bind(color);
-  font-size: v-bind(size);
-  text-shadow: 1px 1px 1px $shadow, -1px -1px 1px $shadow, 1px -1px 1px $shadow, -1px 1px 1px $shadow;
   display: flex;
   align-items: flex-end;
   height: 100vh;
@@ -230,11 +240,16 @@ main {
       position: absolute;
       text-align: right;
       width: 1em;
+      color: v-bind(color);
+      $shadow: v-bind(shadow);
+      font-size: v-bind(size);
+      text-shadow: 1px 1px 1px $shadow, -1px -1px 1px $shadow, 1px -1px 1px $shadow, -1px 1px 1px $shadow;
       &.warning {
         color: v-bind(warncolor);
         $warnshadow: v-bind(warnshadow);
         text-shadow: 1px 1px 1px $warnshadow, -1px -1px 1px $warnshadow, 1px -1px 1px $warnshadow, -1px 1px 1px $warnshadow;
       }
+      transform: translateX(-50%) translateY(-50%);
     }
   }
 }

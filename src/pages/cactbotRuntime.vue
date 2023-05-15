@@ -42,6 +42,7 @@ type Player = {
   rp?: string;
   inParty: boolean;
   job: number;
+  specify?: boolean;
 };
 
 const fakeParty: Player[] = [
@@ -75,7 +76,7 @@ if (isDev) {
 }
 type Role = "tank" | "healer" | "dps" | "unknown";
 function getJobClassification(job: number): Role {
-  const jobN = Number(job)
+  const jobN = Number(job);
   if ([1, 3, 19, 21, 32, 37].includes(jobN)) return "tank";
   else if ([6, 24, 28, 33, 40].includes(jobN)) return "healer";
   else if ([2, 4, 5, 7, 20, 22, 23, 25, 26, 27, 29, 30, 31, 34, 35, 36, 38, 39].includes(jobN)) return "dps";
@@ -86,7 +87,7 @@ function handlePartyChanged(e: { party: { id: string; name: string; inParty: boo
   data.value.party = e.party
     .filter((v) => v.inParty)
     .map((p) => {
-      return { ...p, rp: "" };
+      return { ...p, rp: "", specify: false };
     })
     .sort((a, b) => defaultSortArray.indexOf(a.job.toString()) - defaultSortArray.indexOf(b.job.toString()));
   data.value.party.forEach((v) => (v.rp = getRP(v)));
@@ -94,14 +95,18 @@ function handlePartyChanged(e: { party: { id: string; name: string; inParty: boo
   broadcastParty();
 }
 function handleSelectChange(i: number): void {
+  data.value.party[i].specify = true;
   const t = data.value.party.find((v) => v.rp === data.value.party[i].rp && v.id !== data.value.party[i].id);
-  t && (t.rp = getRP(t));
+  t && (t.rp = getRP(t)) && (t.specify = true);
   broadcastParty();
 }
 function getRP(player: Player): string {
   // 如果有上一次的位置则优先使用上一次的（并且与现有的不重复） 以应对小队成员掉线或中途刷新悬浮窗需要重新选位置的情况
-  const hasLastRp = lastRp.value[player.id];
-  if (hasLastRp && !data.value.party.find((v) => v.rp === hasLastRp)) return hasLastRp;
+  const hasLastRp = lastRp.value[player.id + player.job];
+  if (hasLastRp && !data.value.party.find((v) => v.rp === hasLastRp)) {
+    player.specify = true;
+    return hasLastRp;
+  }
   // 否则正常走逻辑
   return roleAssignLocationNames[getJobClassification(player.job)].find((role) => !data.value.party.find((v) => v.rp === role)) ?? "unknown";
 }
@@ -109,7 +114,7 @@ function broadcastParty(): void {
   const sortArr = [...roleAssignLocationNames.tank, ...roleAssignLocationNames.healer, ...roleAssignLocationNames.dps];
   data.value.party.sort((a, b) => sortArr.indexOf(a.rp!) - sortArr.indexOf(b.rp!));
   lastRp.value = data.value.party.reduce((pre, cur) => {
-    pre[cur.id] = cur.rp!;
+    if (cur.specify) pre[cur.id + cur.job] = cur.rp!;
     return pre;
   }, {} as Record<string, string>);
   callOverlayHandler({
