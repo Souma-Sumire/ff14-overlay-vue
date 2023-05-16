@@ -9,6 +9,8 @@ import README from "@/common/markdown/zoneMacro.md";
 import { ElMessage, ElMessageBox } from "element-plus";
 const [help, toggleHelp] = useToggle(false);
 const macroStore = useMacroStore();
+const hideOnStartup = useStorage("zoneMacroHideOnStartup", ref(false));
+if (hideOnStartup.value) macroStore.show = false;
 macroStore.formatAllWaymarkPlaceData();
 {
   //兼容旧数据的更新策略 日后删除
@@ -267,6 +269,7 @@ onBeforeUnmount(() => {
       <el-button type="danger" size="small" @click="macroStore.resetAllData()">恢复全部</el-button>
       <!-- <el-button type="success" size="small" @click="macroStore.updateZone()">数据更新</el-button> -->
       <el-button size="small" @click="toggleHelp()">查看帮助</el-button>
+      <form bg-white style="font-size: 12px"><el-switch v-model="hideOnStartup" size="small" />默认最小化</form>
       <i class="vxe-icon-arrow-down">菜单</i>
     </div>
   </el-container>
@@ -309,7 +312,7 @@ body {
   .fastEntrance {
     max-height: 0;
     opacity: 0;
-    transition: all 0.25s;
+    transition: all 0.1s;
     width: 100%;
   }
   &:hover {
@@ -332,7 +335,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
-  transition: all 0.25s;
+  transition: all 0.1s;
   position: fixed;
   top: 0;
   right: 0;
@@ -369,7 +372,7 @@ body {
     max-height: 0;
     overflow: hidden;
     opacity: 0.5;
-    transition: all 0.25s ease-in-out;
+    transition: all 0.1s ease-in-out;
   }
   &:hover {
     .buttonArea {
