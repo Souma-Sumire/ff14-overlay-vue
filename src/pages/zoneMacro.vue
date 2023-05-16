@@ -380,9 +380,12 @@ body {
   .macroText {
     text-overflow: ellipsis;
     overflow: hidden;
-    white-space: nowrap;
-    vertical-align: baseline;
     line-height: 1.5;
+  }
+  @media screen and (max-width: 600px) {
+    .macroText {
+      white-space: normal;
+    }
   }
 }
 
