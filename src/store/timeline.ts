@@ -185,7 +185,7 @@ async function parseActionHTML(text: string): Promise<string> {
 }
 export async function parseTimeline(rawTimeline: string): Promise<ITimelineLine[]> {
   const total: ITimelineLine[] = [];
-  const matchs = [...rawTimeline.matchAll(/^(?<time>[-:：\d.]+)\s+(?<action>(--|["'])[^"'\n]+?\3).*$/gm)];
+  const matchs = [...rawTimeline.matchAll(/^\s*(?<time>[-:：\d.]+)\s+(?<action>(--|["'])[^"'\n]+?\3).*$/gm)];
   for (let i = 0; i < matchs.length; i++) {
     const match = matchs[i];
     const jump = match[0].match(/(?<=jump ?)[-:：\d.]+/)?.[0];

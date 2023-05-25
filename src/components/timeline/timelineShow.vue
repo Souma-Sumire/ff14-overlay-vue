@@ -3,20 +3,16 @@
     <li
       v-for="(item, index) in props.lines"
       :key="index"
-      v-show="
-        item.show &&
-        item.time - runtime > 0 - config.hold - showStyle['--tras-duration'] &&
-        item.time - runtime <= config.displayDuration
-      "
+      v-show="item.show && item.time - runtime > 0 - config.hold - showStyle['--tras-duration'] && item.time - runtime <= config.displayDuration"
       :class="{
         upcoming: item.time - runtime <= config.discoloration,
         fade: item.time - runtime <= 0 - config.hold,
         passed: item.time - runtime <= 0,
-      }">
+      }"
+    >
       <aside :style="{ right: Math.max((item.time - runtime) / config.displayDuration, 0) * 100 + '%' }"></aside>
       <section>
-        <span v-html="item.actionHTML"></span
-        ><span style="padding: 0px 1px">{{ (item.time - runtime).toFixed(1) }} </span>
+        <span v-html="item.actionHTML"></span><span style="padding: 0px 1px">{{ (item.time - runtime).toFixed(1) }} </span>
       </section>
     </li>
   </ul>
