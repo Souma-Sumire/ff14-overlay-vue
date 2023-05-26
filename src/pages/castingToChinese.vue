@@ -31,6 +31,8 @@ const settings = useStorage(
     offsetCountdownY: 2,
     offsetActionChineseX: 0,
     offsetActionChineseY: -2,
+    offsetActionIDX: 0,
+    offsetActionIDY: 35,
     ping: 80,
     keep: 100,
     fontSizeCountDown: 17,
@@ -49,6 +51,8 @@ const offsetCountdownX = computed(() => settings.value.offsetCountdownX + "px");
 const offsetCountdownY = computed(() => settings.value.offsetCountdownY + "px");
 const offsetActionChineseX = computed(() => settings.value.offsetActionChineseX + "px");
 const offsetActionChineseY = computed(() => settings.value.offsetActionChineseY + "px");
+const offsetActionIDX = computed(() => settings.value.offsetActionIDX + "px");
+const offsetActionIDY = computed(() => settings.value.offsetActionIDY + "px");
 const casting = new Map();
 const now = ref(0);
 const ping = settings.value.ping;
@@ -75,6 +79,11 @@ requestAnimationFrame(function update() {
 document.addEventListener("onOverlayStateUpdate", (e: any) => {
   showSettings.value = e?.detail?.isLocked === false;
 });
+
+function resetSettings() {
+  localStorage.removeItem("castingToChinese");
+  location.reload();
+}
 </script>
 
 <template>
@@ -91,9 +100,18 @@ document.addEventListener("onOverlayStateUpdate", (e: any) => {
       <form>倒计时偏移Y: <el-input-number v-model="settings.offsetCountdownY" :min="-1000" :max="1000" size="small" controls-position="right" /></form>
       <form>中文偏移X: <el-input-number v-model="settings.offsetActionChineseX" :min="-1000" :max="1000" size="small" /></form>
       <form>中文偏移Y: <el-input-number v-model="settings.offsetActionChineseY" :min="-1000" :max="1000" size="small" controls-position="right" /></form>
+      <form>ID偏移X: <el-input-number v-model="settings.offsetActionIDX" :min="-1000" :max="1000" size="small" /></form>
+      <form>ID偏移Y: <el-input-number v-model="settings.offsetActionIDY" :min="-1000" :max="1000" size="small" controls-position="right" /></form>
       <form>倒计时字号(px): <el-input-number v-model="settings.fontSizeCountDown" :min="1" :max="100" size="small" controls-position="right" /></form>
       <form>中文字号(px): <el-input-number v-model="settings.fontSizeActionName" :min="1" :max="100" size="small" controls-position="right" /></form>
       <form style="width: 10rem">字体: <el-input v-model="settings.fontFamily" size="small" clearable @clear="settings.fontFamily = 'SmartisanHei'" /></form>
+      <form class="noCSS">
+        <el-popconfirm @confirm="resetSettings" :teleported="false" title="确定要重置？">
+          <template #reference>
+            <el-button>重置全部用户设置</el-button>
+          </template>
+        </el-popconfirm>
+      </form>
     </el-header>
     <el-main v-show="data.targetCast && now - data.targetCast.overTime + ping < settings.keep" :style="{ fontFamily: settings.fontFamily }">
       <el-row>
@@ -138,7 +156,9 @@ document.addEventListener("onOverlayStateUpdate", (e: any) => {
   z-index: 999999;
   height: 90vh;
   color: white;
-  text-shadow: -1px 0 1px #000, 0 1px 1px #000, 1px 0 1px #000, 0 -1px 1px #000;
+  > form:not(.noCSS) {
+    text-shadow: -1px 0 1px #000, 0 1px 1px #000, 1px 0 1px #000, 0 -1px 1px #000;
+  }
   font-weight: bold;
   display: flex;
   flex-wrap: wrap;
@@ -168,6 +188,7 @@ document.addEventListener("onOverlayStateUpdate", (e: any) => {
 }
 .actionID {
   opacity: v-bind(opacityActionID);
+  transform: translateX(v-bind(offsetActionIDX)) translateY(calc(v-bind(offsetActionIDY) * -1));
 }
 .el-main {
   width: v-bind(windowWidth);
