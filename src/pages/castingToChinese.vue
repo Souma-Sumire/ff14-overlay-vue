@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { getActionChinese } from "@/resources/actionChinese";
+import { params } from "@/utils/queryParams";
 
 class Cast {
   name: string;
@@ -25,8 +26,9 @@ const settings = useStorage(
     showCountdown: true,
     showProgress: true,
     showActionChinese: true,
+    showActionID: false,
     offsetCountdownX: 2,
-    offsetCountdownY: 0,
+    offsetCountdownY: 2,
     offsetActionChineseX: 0,
     offsetActionChineseY: -2,
     ping: 80,
@@ -42,6 +44,7 @@ const windowWidth = computed(() => settings.value.width + "px");
 const opacityCountdown = computed(() => (settings.value.showCountdown ? 1 : 0));
 const opacityProgress = computed(() => (settings.value.showProgress ? 1 : 0));
 const opacityActionChinese = computed(() => (settings.value.showActionChinese ? 1 : 0));
+const opacityActionID = computed(() => (settings.value.showActionID ? 1 : 0));
 const offsetCountdownX = computed(() => settings.value.offsetCountdownX + "px");
 const offsetCountdownY = computed(() => settings.value.offsetCountdownY + "px");
 const offsetActionChineseX = computed(() => settings.value.offsetActionChineseX + "px");
@@ -49,7 +52,7 @@ const offsetActionChineseY = computed(() => settings.value.offsetActionChineseY 
 const casting = new Map();
 const now = ref(0);
 const ping = settings.value.ping;
-const showSettings = ref(document.getElementById("unlocked")?.style?.display === "flex");
+const showSettings = ref(/^(?:1|true|on)$/i.test(params?.showSettings) || document.getElementById("unlocked")?.style?.display === "flex");
 
 addOverlayListener("EnmityTargetData", (e: { Target: { ID: number } | null; Focus: { ID: number } | null }) => {
   data.targetCast = casting.get(e.Target?.ID);
@@ -81,8 +84,9 @@ document.addEventListener("onOverlayStateUpdate", (e: any) => {
       <form>显示倒计时: <el-switch v-model="settings.showCountdown" /></form>
       <form>显示进度条: <el-switch v-model="settings.showProgress" /></form>
       <form>显示中文: <el-switch v-model="settings.showActionChinese" /></form>
+      <form>显示ID: <el-switch v-model="settings.showActionID" /></form>
       <form>延迟(ms): <el-input-number v-model="settings.ping" :min="0" :max="10000" size="small" controls-position="right" /></form>
-      <form>保留(ms): <el-input-number v-model="settings.keep" :min="0" :max="10000" size="small" controls-position="right" /></form>
+      <form>保留(ms): <el-input-number v-model="settings.keep" :min="0" :max="100000" size="small" controls-position="right" /></form>
       <form>倒计时偏移X: <el-input-number v-model="settings.offsetCountdownX" :min="-1000" :max="1000" size="small" /></form>
       <form>倒计时偏移Y: <el-input-number v-model="settings.offsetCountdownY" :min="-1000" :max="1000" size="small" controls-position="right" /></form>
       <form>中文偏移X: <el-input-number v-model="settings.offsetActionChineseX" :min="-1000" :max="1000" size="small" /></form>
@@ -108,8 +112,9 @@ document.addEventListener("onOverlayStateUpdate", (e: any) => {
         class="progress"
       />
       <el-row>
-        <el-col :span="24" flex justify-end
-          ><div :style="{ fontSize: settings.fontSizeActionName + 'px' }" class="actionChinese">{{ data.targetCast?.name }}</div></el-col
+        <el-col :span="24" class="action"
+          ><div class="actionID">{{ data.targetCast?.actionId }}</div>
+          <div :style="{ fontSize: settings.fontSizeActionName + 'px' }" class="actionChinese">{{ data.targetCast?.name }}</div></el-col
         >
       </el-row>
     </el-main>
@@ -152,9 +157,17 @@ document.addEventListener("onOverlayStateUpdate", (e: any) => {
 .progress {
   opacity: v-bind(opacityProgress);
 }
+.action {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
 .actionChinese {
   opacity: v-bind(opacityActionChinese);
   transform: translateX(v-bind(offsetActionChineseX)) translateY(calc(v-bind(offsetActionChineseY) * -1));
+}
+.actionID {
+  opacity: v-bind(opacityActionID);
 }
 .el-main {
   width: v-bind(windowWidth);
