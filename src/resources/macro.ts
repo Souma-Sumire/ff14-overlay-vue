@@ -6754,7 +6754,7 @@ export const defaultMacro: { zoneId: ZoneIdInfo } = {
       {
         Name: "P8S 苦茶子门神",
         Type: "macro",
-        Text: "p ■四重核爆/引导/蛇2     ■基本散开\n/p MT/D3　→　ST/D4　　　D3 MT D4\n/p ↑　　　☆　　↓ 　　　 H1    ST\n/p H1/D1　←　H2/D2 　　 D1 H2 D2\n/p ■巨蛇模式(第一次)\n/p 蛇：从北顺时针MTD1>STD2>H1D3>H2D4\n/p ■四足步行\n/p 1,3次→1(北西)　2,4次→中央　待机→A(北)\n/p ■幻影创造\n/p ◎龙龙×散开 　　│ ◎凤凰×散开\n/p 　　D3 　　　　│　D3 MT D4\n/p 　　MT　ST　D4 │　H1 ☆ ST\n/p H1　D1　D2 　　│　D1 H2 D2\n/p 　　　　H2 　　│\n/p ■四重炎岚(横竖) ｜■四重炎岚(角)\n/p 　　　MT 　　　│ 　　中央　　※MT组：西优先\n/p 　D1 ST D2 　 ｜ T　近\n/p D3 H1 H2 D4 　│ 远　H\n/p ◎分摊：靠近H位置(MTD1/STD2/H1D3/H2D4)\n/p ■巨蛇模式(第二次) 4:4分摊\n/p DEBUFF：北西>MT/D1>ST/D2>H1/D3>H2/D4>南东\n/p 其余：北西TH/南东DPS\n/p ■四重核爆/双重核爆\n/p 四重：(BOSS)MT/D1>ST/D2>H1/D3>H2/D4\n/p 双重：(BOSS)MTH1D1D2>STH2D3D4\n",
+        Text: "/p ■四重核爆/引导/蛇2     ■基本散开\n/p MT/D3　→　ST/D4　　　D3 MT D4\n/p ↑　　　☆　　↓ 　　　 H1    ST\n/p H1/D1　←　H2/D2 　　 D1 H2 D2\n/p ■巨蛇模式(第一次)\n/p 蛇：从北顺时针MTD1>STD2>H1D3>H2D4\n/p ■四足步行\n/p 1,3次→1(北西)　2,4次→中央　待机→A(北)\n/p ■幻影创造\n/p ◎龙龙×散开 　　│ ◎凤凰×散开\n/p 　　D3 　　　　│　D3 MT D4\n/p 　　MT　ST　D4 │　H1 ☆ ST\n/p H1　D1　D2 　　│　D1 H2 D2\n/p 　　　　H2 　　│\n/p ■四重炎岚(横竖) ｜■四重炎岚(角)\n/p 　　　MT 　　　│ 　　中央　　※MT组：西优先\n/p 　D1 ST D2 　 ｜ T　近\n/p D3 H1 H2 D4 　│ 远　H\n/p ◎分摊：靠近H位置(MTD1/STD2/H1D3/H2D4)\n/p ■巨蛇模式(第二次) 4:4分摊\n/p DEBUFF：北西>MT/D1>ST/D2>H1/D3>H2/D4>南东\n/p 其余：北西TH/南东DPS\n/p ■四重核爆/双重核爆\n/p 四重：(BOSS)MT/D1>ST/D2>H1/D3>H2/D4\n/p 双重：(BOSS)MTH1D1D2>STH2D3D4\n",
         Deletability: false,
       },
       {
@@ -7240,12 +7240,57 @@ export const defaultMacro: { zoneId: ZoneIdInfo } = {
         Deletability: false,
       },
     ],
+    "1141": [
+      {
+        Name: "EX6 safer corner markers",
+        Type: "place",
+        Place: {
+          A: { X: 99.89, Y: 0.029, Z: 85.838, ID: 0, Active: true },
+          B: { X: 114.435, Y: 0.029, Z: 99.778, ID: 1, Active: true },
+          C: { X: 99.728, Y: 0.03, Z: 113.862, ID: 2, Active: true },
+          D: { X: 86.173, Y: 0.03, Z: 99.97, ID: 3, Active: true },
+          One: { X: 97.378, Y: 0.029, Z: 97.296, ID: 4, Active: true },
+          Two: { X: 102.584, Y: 0.03, Z: 97.331, ID: 5, Active: true },
+          Three: { X: 102.537, Y: 0.03, Z: 102.563, ID: 6, Active: true },
+          Four: { X: 97.462, Y: 0.029, Z: 102.573, ID: 7, Active: true },
+        },
+        Deletability: false,
+      },
+      {
+        Name: "(game8)ハムカツ式改※ウインドスフィア最新版",
+        Type: "macro",
+        Text: `/p ■散開(北基準)--■44頭割り-------ハムカツ式改---\n/p D3 MT D4　　| 西/外:MTH1D1D3\n/p H1 ★ H2　　| 東/内:STH2D2D4\n/p D1 ST D2　　 | 縦安置 北:MT組 南:ST組\n/p ■ディレイスパーク--------------------------------------\n/p ディレイアースを避けた位置で捨てる\n/p ■ダブルメテオ-------------------------------------------\n/p DPS:3人塔　フレア北\n/p TH:2人塔　フレア南　ノックバック中央\n/p ■ヴォイド･コメットレイン-----------------------------\n/p 北1:H1D3　北2:MTD1　南1:H2D4　南2:STD2\n/p ■ウィンドスフィア2,3回目----------------------------\n/p 北/西 H1D3,MTD1,STD2,H2D4 南/東\n/p ■三連黒竜閃---------------------------------------------\n/p T:北 東西:H 南:DPS`,
+        Deletability: false,
+      },
+    ],
+    "1157": [
+      {
+        Name: "game8",
+        Type: "macro",
+        Text: `/p 【飛翔：散開方向】\n/p 　　　 　 (A)\n/p 　 　　 MT+ST\n/p 　　D3　　 　 D4\n/p (D)　　　 　 　 　 (B)\n/p 　　D1　　 　 D2\n/p 　 　 　H1+H2\n/p 　　　 　 (C)\n/p 【デモンクロー】ST先頭で頭割り\n/p 【雑魚タゲ取り】\n/p 2回目：MT⇒北西ウィル　ST⇒南西ウィル\n/p 3回目：MT⇒南ウィル　　ST⇒東セウ\n/p 【サザンクロス】 　 ｜【波動砲】\n/p 背面から時計回り　｜9時で捨てる\n/p MTのみ反時計回り ｜MTは東寄りにタゲサ内へ入る`,
+        Deletability: false,
+      },
+      {
+        Name: "Markers from Discord @Maya#1998" + getSource(`https://discord.com/channels/277897135515762698/448209053743579186/1109777325140217896`),
+        Type: "place",
+        Place: {
+          A: { X: 4.916, Y: 0.0, Z: -18.292, ID: 0, Active: true },
+          B: { X: 16.196, Y: 0.0, Z: -9.309, ID: 1, Active: true },
+          C: { X: 18.292, Y: 0.0, Z: 4.902, ID: 2, Active: true },
+          D: { X: 0.0, Y: 0.0, Z: 0.0, ID: 3, Active: false },
+          One: { X: -4.903, Y: 0.0, Z: 18.315, ID: 4, Active: true },
+          Two: { X: -16.272, Y: 0.0, Z: 9.354, ID: 5, Active: true },
+          Three: { X: -18.335, Y: 0.0, Z: -4.913, ID: 6, Active: true },
+          Four: { X: 0.0, Y: 0.0, Z: 0.0, ID: 7, Active: false },
+        },
+        Deletability: false,
+      },
+    ],
   },
 };
-
-// function getSource(href: string): string {
-//   return `<ahref='${href}'target='_blank'>出处</a>`;
-// }
+function getSource(href: string): string {
+  return `<ahref='${href}'target='_blank'>出处</a>`;
+}
 // function fastPush(zoneName: string, data: PPJSON | string, coverTitle?: string): void {
 //   const mapID = getZoneIDByZoneName(zoneName);
 //   if (!mapID) {
