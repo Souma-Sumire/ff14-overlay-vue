@@ -131,7 +131,7 @@ function resetSettings() {
       />
       <el-row>
         <el-col :span="24" class="action"
-          ><div class="actionID">{{ data.targetCast?.actionId }}</div>
+          ><div class="actionID">{{ data.targetCast?.actionId }}({{ data.targetCast?.actionId.toString(16).toUpperCase() }})</div>
           <div :style="{ fontSize: settings.fontSizeActionName + 'px' }" class="actionChinese">{{ data.targetCast?.name }}</div></el-col
         >
       </el-row>

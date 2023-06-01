@@ -148,8 +148,8 @@ function handleOnLogEvent(e: { line: string[] }) {
   if (e.line[5] === game.playerId && (e.line[0] === "26" || e.line[0] === "30") && game.status.has(e.line[2])) {
     game.status.set(e.line[2], e.line[0] === "26" ? Date.now() : 0);
   } else if (e.line[2] === game.playerId && (e.line[0] === "21" || e.line[0] === "22")) {
-    if (e.line[4] === "3E79" || e.line[4] === "3E75") game.lastCombo = Date.now();
-    else if (e.line[4] === "3E76" || e.line[4] === "3E7A") game.lastCombo = 0;
+    if ((e.line[4] === "3E79" && e.line[0] === "22") || (e.line[4] === "3E75" && e.line[0] === "21")) game.lastCombo = Date.now();
+    else if (e.line[4] === "3E76" || e.line[4] === "3E7A" || (e.line[0] === "21" && e.line[4] === "3E79")) game.lastCombo = 0;
   }
 }
 
