@@ -7286,6 +7286,173 @@ export const defaultMacro: { zoneId: ZoneIdInfo } = {
         Deletability: false,
       },
     ],
+    "1154": [
+      {
+        Name: "门神",
+        Type: "place",
+        Place: {
+          A: {
+            X: 100,
+            Y: 0,
+            Z: 91.6,
+            Active: true,
+          },
+          B: {
+            X: 108.4,
+            Y: 0,
+            Z: 100,
+            Active: true,
+          },
+          C: {
+            X: 100,
+            Y: 0,
+            Z: 108.4,
+            Active: true,
+          },
+          D: {
+            X: 91.6,
+            Y: 0,
+            Z: 100,
+            Active: true,
+          },
+          One: {
+            X: 91.6,
+            Y: 0,
+            Z: 91.6,
+            Active: true,
+          },
+          Two: {
+            X: 108.4,
+            Y: 0,
+            Z: 91.6,
+            Active: true,
+          },
+          Three: {
+            X: 108.4,
+            Y: 0,
+            Z: 108.4,
+            Active: true,
+          },
+          Four: {
+            X: 91.6,
+            Y: 0,
+            Z: 108.4,
+            Active: true,
+          },
+        },
+        Deletability: false,
+      },
+      {
+        Name: "本体 自用 NL的ABCD+激光引导的12",
+        Type: "place",
+        Place: {
+          A: {
+            X: 96.81801948466054,
+            Z: 91.81801948466054,
+            Y: 0,
+            Active: true,
+          },
+          B: {
+            X: 103.18198051533946,
+            Z: 91.81801948466054,
+            Y: 0,
+            Active: true,
+          },
+          C: {
+            X: 103.18198051533946,
+            Z: 98.18198051533946,
+            Y: 0,
+            Active: true,
+          },
+          D: {
+            X: 96.81801948466054,
+            Z: 98.18198051533946,
+            Y: 0,
+            Active: true,
+          },
+          One: {
+            X: 92,
+            Y: 0,
+            Z: 92,
+            Active: true,
+          },
+          Two: {
+            X: 108,
+            Y: 0,
+            Z: 92,
+            Active: true,
+          },
+          Three: {
+            X: 0,
+            Y: 0,
+            Z: 0,
+            Active: false,
+          },
+          Four: {
+            X: 0,
+            Y: 0,
+            Z: 0,
+            Active: false,
+          },
+        },
+        Deletability: false,
+      },
+      {
+        Name: "本体 风火 非NL打法",
+        Type: "place",
+        Place: {
+          A: {
+            X: 100,
+            Y: 0,
+            Z: 85,
+            Active: true,
+          },
+          B: {
+            X: 106.928,
+            Y: 0,
+            Z: 105,
+            Active: true,
+          },
+          C: {
+            X: 100,
+            Y: 0,
+            Z: 101,
+            Active: true,
+          },
+          D: {
+            X: 100,
+            Y: 0,
+            Z: 93,
+            Active: true,
+          },
+          One: {
+            X: 93.072,
+            Y: 0,
+            Z: 89,
+            Active: true,
+          },
+          Two: {
+            X: 106.928,
+            Y: 0,
+            Z: 89,
+            Active: true,
+          },
+          Three: {
+            X: 106.928,
+            Y: 0,
+            Z: 97,
+            Active: true,
+          },
+          Four: {
+            X: 93.072,
+            Y: 0,
+            Z: 97,
+            Active: true,
+          },
+        },
+        Deletability: false,
+      },
+    ],
   },
 };
 function getSource(href: string): string {
