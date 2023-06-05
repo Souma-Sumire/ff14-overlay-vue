@@ -21,6 +21,7 @@ const regexType: Partial<Record<FFlogsType, string>> = {
 };
 let queryText = ref(QueryTextEnum.query);
 let inputUrl = ref("");
+const addTTS = ref(false);
 
 const fflogsQueryConfig: FFlogsQuery = reactive({
   code: "",
@@ -206,7 +207,7 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
     props.filters[fflogsQueryConfig.player.icon] = JSON.parse(JSON.stringify(fflogsQueryConfig.abilityFilterSelected));
   }
   //询问是否添加TTS
-  let addTTS = false;
+  // let addTTS = false;
   // Swal.fire({
   //   title: "是否为所有技能添加TTS语音?",
   //   showDenyButton: true,
@@ -230,7 +231,7 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
   fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline = fflogsQueryConfig.abilityFilterEvents
     .map((item) => {
       if (item.sourceIsFriendly) {
-        return `${item.time} "<${item.actionName}>~"${addTTS ? ` tts "${item.actionName}"` : ""}`;
+        return `${item.time} "<${item.actionName}>~"${addTTS.value ? ` tts "${item.actionName}"` : ""}`;
       } else {
         if (/^(?:攻击|attack|攻撃)$|^unknown/i.test(item.actionName) || (item.type === "cast" && item.window === undefined)) {
           return `# ${item.time} "${item.actionName}"`;
@@ -285,7 +286,10 @@ function claerFFlogsQueryConfig() {
       <el-input v-model="inputUrl" placeholder="reports/AAAaAaAAaa1aA1aA#fight=3" autocomplete="on" />
     </el-form-item>
     <el-form-item label="FF logs V1 Key" style="width: 450px">
-      <el-input type="password" v-model="props.settings.api" />
+      <el-input v-model="props.settings.api" />
+    </el-form-item>
+    <el-form-item label="添加TTS" style="width: 100px">
+      <el-switch v-model="addTTS" />
     </el-form-item>
     <el-form-item>
       <el-button :disabled="queryText === QueryTextEnum.querying" type="primary" @click="queryFFlogsReportFights(inputUrl)">{{ queryText }}</el-button>
@@ -351,11 +355,14 @@ function claerFFlogsQueryConfig() {
 
 .fflogs-query {
   background-color: aliceblue;
-  padding: 5px;
+  // padding: ;
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
   align-items: flex-end;
+  :deep(.el-form-item){
+    margin: 10px;
+  }
 }
 .fflogs-query-result-friendlies {
   margin: 10px 0px;
