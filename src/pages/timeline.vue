@@ -239,7 +239,7 @@ function handleInCombatChanged(ev: {
     inACTCombat: boolean;
   };
 }) {
-  if (ev.detail.inGameCombat && ev.detail.inACTCombat) startTimeline(0);
+  if (ev.detail.inGameCombat && ev.detail.inACTCombat && baseTimeMs.value === 0) startTimeline(0);
   else if (!ev.detail.inGameCombat && !ev.detail.inACTCombat) stopTimeline();
 }
 </script>
