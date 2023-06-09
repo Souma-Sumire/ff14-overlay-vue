@@ -38,7 +38,8 @@ export function factory(events: FFlogsStance): FFlogsStance {
   const statistics = new Map<number, number>();
   events.filter((e) => e.type === "begincast").map((e) => statistics.set(e.actionId, (statistics.get(e.actionId) ?? 0) + 1)); // 统计每一个ability出现的次数
   for (const event of events) {
-    if (statistics.get(event.actionId) === 1) event.window = [999, 999]; // 为独一无二的能力赋予999的window
+    if (statistics.get(event.actionId) === 1 && event.type === "begincast")
+      event.window = [12, 12]; // 为独一无二的能力赋予window，不能太长了，否则双轴boss会出问题。
     else {
       const w = windowAction.get(event.actionId);
       if (w?.type === event.type) event.window = w?.window;
