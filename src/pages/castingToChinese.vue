@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { getActionChinese } from "@/resources/actionChinese";
 import { params } from "@/utils/queryParams";
+import { RemovableRef } from "@vueuse/core";
 
 class Cast {
   name: string;
@@ -18,8 +19,35 @@ class Cast {
 }
 
 const data: { targetCast?: Cast } = reactive({ targetCast: undefined });
-// localStorage.removeItem("castingToChinese");
-const settings = useStorage(
+const targetOptions = [
+  {
+    value: "Target",
+    label: "当前目标",
+  },
+  {
+    value: "Focus",
+    label: "焦点目标",
+  },
+];
+const settings: RemovableRef<{
+  width: number;
+  showCountdown: boolean;
+  showProgress: boolean;
+  showActionChinese: boolean;
+  showActionID: boolean;
+  offsetCountdownX: number;
+  offsetCountdownY: number;
+  offsetActionChineseX: number;
+  offsetActionChineseY: number;
+  offsetActionIDX: number;
+  offsetActionIDY: number;
+  ping: number;
+  keep: number;
+  fontSizeCountDown: number;
+  fontSizeActionName: number;
+  fontFamily: string;
+  targetKey: "Target" | "Focus";
+}> = useStorage(
   "castingToChinese",
   {
     width: 283,
@@ -38,6 +66,7 @@ const settings = useStorage(
     fontSizeCountDown: 17,
     fontSizeActionName: 20,
     fontFamily: "SmartisanHei",
+    targetKey: "Target",
   },
   localStorage,
   { mergeDefaults: true },
@@ -59,7 +88,7 @@ const ping = settings.value.ping;
 const showSettings = ref(/^(?:1|true|on)$/i.test(params?.showSettings) || document.getElementById("unlocked")?.style?.display === "flex");
 
 addOverlayListener("EnmityTargetData", (e: { Target: { ID: number } | null; Focus: { ID: number } | null }) => {
-  data.targetCast = casting.get(e.Target?.ID);
+  data.targetCast = casting.get(e[settings.value.targetKey]?.ID);
 });
 
 addOverlayListener("LogLine", (e: { line: string[] }) => {
@@ -106,6 +135,11 @@ function resetSettings() {
       <form>中文字号(px): <el-input-number v-model="settings.fontSizeActionName" :min="1" :max="100" size="small" controls-position="right" /></form>
       <form style="width: 10rem">字体: <el-input v-model="settings.fontFamily" size="small" clearable @clear="settings.fontFamily = 'SmartisanHei'" /></form>
       <form class="noCSS">
+        <el-select v-model="settings.targetKey" placeholder="Select" size="small" :teleported="false">
+          <el-option v-for="item in targetOptions" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
+      </form>
+      <form class="noCSS">
         <el-popconfirm @confirm="resetSettings" :teleported="false" title="确定要重置？">
           <template #reference>
             <el-button>重置全部用户设置</el-button>
@@ -139,6 +173,9 @@ function resetSettings() {
   </el-container>
 </template>
 <style lang="scss" scoped>
+* {
+  user-select: none;
+}
 ::-webkit-scrollbar {
   display: none !important;
 }
@@ -168,7 +205,7 @@ function resetSettings() {
     white-space: nowrap;
     padding: 0px 3px;
   }
-  padding-bottom: 25px;
+  padding-bottom: 20px;
 }
 .countdown {
   opacity: v-bind(opacityCountdown);
