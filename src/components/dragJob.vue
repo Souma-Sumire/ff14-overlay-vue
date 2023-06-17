@@ -16,7 +16,7 @@
         v-for="item in jobList[role.name]"
         :key="item.id"
         :class="`${
-          isJobInParty(item.id) ? `draggable bg-${role.color}-700/75` : 'no-draggable bg-gray-700/50'
+          isJobInParty(item.id) ? `draggable bg-${role.color}` : 'no-draggable bg-gray-700/50'
         } rounded p-l-0.6 p-r-0.6 p-t-0 p-b-0.3 m-0 color-white cursor-move`"
       >
         {{ item.name }}
@@ -112,5 +112,14 @@ const jobList: RemovableRef<
 .ghost {
   opacity: 0.5;
   background: #c8ebfb;
+}
+.bg-blue {
+  background-color: rgba(29, 78, 216, 0.75);
+}
+.bg-green {
+  background-color: rgba(21, 128, 61, 0.75);
+}
+.bg-red {
+  background-color: rgba(185, 28, 28, 0.75);
 }
 </style>
