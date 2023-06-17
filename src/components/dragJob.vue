@@ -15,9 +15,9 @@
       <div
         v-for="item in jobList[role.name]"
         :key="item.id"
-        :class="`
-        ${isJobInParty(item.id) ? 'draggable' : 'no-draggable'}
-        ${isJobInParty(item.id) ? 'bg-' + role.color + '-700/75' : 'bg-gray-700/50'} rounded p-l-0.6 p-r-0.6 p-t-0 p-b-0.3 m-0 color-white cursor-move`"
+        :class="`${
+          isJobInParty(item.id) ? `draggable bg-${role.color}-700/75` : 'no-draggable bg-gray-700/50'
+        } rounded p-l-0.6 p-r-0.6 p-t-0 p-b-0.3 m-0 color-white cursor-move`"
       >
         {{ item.name }}
       </div>

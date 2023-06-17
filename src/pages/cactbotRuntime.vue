@@ -175,28 +175,29 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <span v-if="data.party.length === 0" style="color: white; text-shadow: 1px 1px 2px black">等待小队...</span>
-  <el-dialog v-model="dialogVisible" title="初见提示" width="90%" @mouseenter="onMouseOver" @mouseleave="onMouseOut">
-    <span>用鼠标拖动职业，使悬浮窗的位置分配对应游戏内的实际位置（D1D2等）</span>
-    <template #footer>
-      <span class="dialog-footer">
-        <el-button
-          type="primary"
-          @click="
-            dialogVisible = false;
-            showTips = false;
-          "
-          >明白了</el-button
-        >
-      </span>
-    </template>
-  </el-dialog>
-  <el-container @mouseenter="onMouseOver" @mouseleave="onMouseOut" :style="{ width: mouseEnter ? '16.75rem' : '4rem' }">
-    <el-main>
-      <DragJob class="dragJob" v-show="mouseEnter" @updateSortArr="updateSortArr" :party="data.party" />
-      <!-- <transition-group name="animate__animated animate__bounce" enter-active-class="animate__fadeIn" leave-active-class="animate__fadeOut"> -->
-      <div v-for="(member, i) in data.party" :key="member.id" v-show="mouseEnter || member.name === playerName" flex="~ nowrap">
-        <!-- <el-select v-model="member.rp" size="small" m-0 p-0 @change="handleSelectChange(i)" :teleported="false">
+  <div @mouseenter="onMouseOver" @mouseleave="onMouseOut">
+    <span v-if="data.party.length === 0" style="color: white; text-shadow: 1px 1px 2px black">等待小队...</span>
+    <el-dialog v-model="dialogVisible" title="初见提示" width="90%" :destroy-on-close="true" :close-on-click-modal="false">
+      <span>用鼠标拖动职业，使悬浮窗的位置分配对应游戏内的实际位置（D1D2等）</span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button
+            type="primary"
+            @click="
+              dialogVisible = false;
+              showTips = false;
+            "
+            >明白了</el-button
+          >
+        </span>
+      </template>
+    </el-dialog>
+    <el-container :style="{ width: mouseEnter ? '16.75rem' : '4rem' }">
+      <el-main>
+        <DragJob class="dragJob" v-show="mouseEnter" @updateSortArr="updateSortArr" :party="data.party" />
+        <!-- <transition-group name="animate__animated animate__bounce" enter-active-class="animate__fadeIn" leave-active-class="animate__fadeOut"> -->
+        <div v-for="(member, i) in data.party" :key="member.id" v-show="mouseEnter || member.name === playerName" flex="~ nowrap">
+          <!-- <el-select v-model="member.rp" size="small" m-0 p-0 @change="handleSelectChange(i)" :teleported="false">
             <el-option
             v-for="(item, index) in roleAssignLocationNames[getJobClassification(member.job)]"
             v-show="index < roleSelectLength[getJobClassification(member.job)]"
@@ -205,14 +206,15 @@ onBeforeUnmount(() => {
             :fit-input-width="true"
             />
           </el-select> -->
-        <!-- <span style="white-space: nowrap" -->
-        {{ member.rp }} {{ Util.nameToFullName(Util.jobEnumToJob(member.job)).simple2 }} {{ mouseEnter ? member.name : "" }}
-        <!-- </span> -->
-      </div>
-      <!-- </transition-group> -->
-      <!-- <h5 p-0 m-0 v-show="mouseEnter" style="color: white; text-shadow: 1px 1px 2px black">默认排序：</h5> -->
-    </el-main>
-  </el-container>
+          <!-- <span style="white-space: nowrap" -->
+          {{ member.rp }} {{ Util.nameToFullName(Util.jobEnumToJob(member.job)).simple2 }} {{ mouseEnter ? member.name : "" }}
+          <!-- </span> -->
+        </div>
+        <!-- </transition-group> -->
+        <!-- <h5 p-0 m-0 v-show="mouseEnter" style="color: white; text-shadow: 1px 1px 2px black">默认排序：</h5> -->
+      </el-main>
+    </el-container>
+  </div>
 </template>
 <style lang="scss">
 ::-webkit-scrollbar {
@@ -230,13 +232,14 @@ onBeforeUnmount(() => {
 ::-webkit-scrollbar-thumb:active {
   background-color: rgba(160, 160, 160, 1);
 }
+* {
+  user-select: none;
+}
 </style>
 <style lang="scss" scoped>
-:deep(*) {
-  user-select: none !important;
-}
 .el-container {
   background-color: rgba(0, 0, 0, 0.1);
+  margin: 3px;
   > .el-header {
     height: 2rem;
     position: fixed;
@@ -244,7 +247,7 @@ onBeforeUnmount(() => {
   }
   .el-main {
     padding: 0;
-    margin: 3px;
+    margin: 0;
     > div:not(.dragJob) {
       overflow: hidden;
       // animation-duration: 0.2s;
