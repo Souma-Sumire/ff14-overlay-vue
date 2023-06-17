@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Job } from "@/types/job";
+import { Job } from "@/types/job.js";
 import Util from "@/utils/util";
 import { getClassjobIconSrc } from "@/utils/xivapi";
 import { ElMessage, ElMessageBox } from "element-plus";
