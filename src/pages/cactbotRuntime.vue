@@ -2,7 +2,7 @@
 import Util from "@/utils/util";
 import { RemovableRef } from "@vueuse/core";
 import "animate.css";
-import { ElMessage, ElMessageBox, ElNotification } from "element-plus";
+// import { ElMessage, ElMessageBox, ElNotification } from "element-plus";
 import { VXETable } from "vxe-table";
 const createRPArr = (r: "T" | "H" | "D", l: number) =>
   Array(l)
@@ -175,8 +175,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
+  <span v-if="data.party.length === 0" style="color: white; text-shadow: 1px 1px 2px black">等待小队...</span>
   <div @mouseenter="onMouseOver" @mouseleave="onMouseOut">
-    <span v-if="data.party.length === 0" style="color: white; text-shadow: 1px 1px 2px black">等待小队...</span>
     <el-dialog v-model="dialogVisible" title="初见提示" width="90%" :destroy-on-close="true" :close-on-click-modal="false">
       <span>用鼠标拖动职业，使悬浮窗的位置分配对应游戏内的实际位置（D1D2等）</span>
       <template #footer>
