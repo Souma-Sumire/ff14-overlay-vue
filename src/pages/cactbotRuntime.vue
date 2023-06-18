@@ -97,12 +97,12 @@ function defaultPartySort() {
   data.value.party.forEach((v) => (v.rp = undefined));
   data.value.party.forEach((v) => (v.rp = getRP(v)));
 }
-// function handleSelectChange(i: number): void {
-//   data.value.party[i].specify = true;
-//   const t = data.value.party.find((v) => v.rp === data.value.party[i].rp && v.id !== data.value.party[i].id);
-//   t && (t.rp = getRP(t)) && (t.specify = true);
-//   broadcastParty();
-// }
+function handleSelectChange(i: number): void {
+  data.value.party[i].specify = true;
+  const t = data.value.party.find((v) => v.rp === data.value.party[i].rp && v.id !== data.value.party[i].id);
+  t && (t.rp = getRP(t)) && (t.specify = true);
+  broadcastParty();
+}
 function getRP(player: Player): string {
   // 如果有上一次的位置则优先使用上一次的（并且与现有的不重复） 以应对小队成员掉线或中途刷新悬浮窗需要重新选位置的情况
   // const hasLastRp = lastRp.value[player.id + player.job];
@@ -192,25 +192,23 @@ onBeforeUnmount(() => {
         </span>
       </template>
     </el-dialog>
-    <el-container :style="{ width: mouseEnter ? '16.75rem' : '4rem' }">
+    <el-container :style="{ width: mouseEnter ? '16.75rem' : '5rem' }">
       <el-main>
-        <DragJob class="dragJob" v-show="mouseEnter" @updateSortArr="updateSortArr" :party="data.party" />
-        <!-- <transition-group name="animate__animated animate__bounce" enter-active-class="animate__fadeIn" leave-active-class="animate__fadeOut"> -->
-        <div v-for="(member, i) in data.party" :key="member.id" v-show="mouseEnter || member.name === playerName" flex="~ nowrap">
-          <!-- <el-select v-model="member.rp" size="small" m-0 p-0 @change="handleSelectChange(i)" :teleported="false">
-            <el-option
-            v-for="(item, index) in roleAssignLocationNames[getJobClassification(member.job)]"
-            v-show="index < roleSelectLength[getJobClassification(member.job)]"
-            :key="index"
-            :value="item"
-            :fit-input-width="true"
-            />
-          </el-select> -->
-          <!-- <span style="white-space: nowrap" -->
-          {{ member.rp }} {{ Util.nameToFullName(Util.jobEnumToJob(member.job)).simple2 }} {{ mouseEnter ? member.name : "" }}
-          <!-- </span> -->
-        </div>
-        <!-- </transition-group> -->
+        <transition-group name="animate__animated animate__bounce" enter-active-class="animate__fadeInLeft" leave-active-class="animate__fadeOutLeft">
+          <div v-for="(member, i) in data.party" :key="member.id" v-show="mouseEnter || member.name === playerName" flex="~ nowrap">
+            <el-select v-model="member.rp" size="small" m-0 p-0 @change="handleSelectChange(i)" :teleported="false">
+              <el-option
+                v-for="(item, index) in roleAssignLocationNames[getJobClassification(member.job)]"
+                v-show="index < roleSelectLength[getJobClassification(member.job)]"
+                :key="index"
+                :value="item"
+                :fit-input-width="true"
+              />
+            </el-select>
+            <span style="white-space: nowrap"> {{ Util.nameToFullName(Util.jobEnumToJob(member.job)).simple2 }} {{ mouseEnter ? member.name : "" }} </span>
+          </div>
+        </transition-group>
+        <DragJob class="dragJob" v-show="mouseEnter" @updateSortArr="updateSortArr" :party="data.party" m-b-1 p-1/>
         <!-- <h5 p-0 m-0 v-show="mouseEnter" style="color: white; text-shadow: 1px 1px 2px black">默认排序：</h5> -->
       </el-main>
     </el-container>
@@ -249,36 +247,36 @@ onBeforeUnmount(() => {
     padding: 0;
     margin: 0;
     > div:not(.dragJob) {
-      overflow: hidden;
-      // animation-duration: 0.2s;
-      // animation-timing-function: ease-in-out;
+      // overflow: hidden;
+      animation-duration: 0.2s;
+      animation-timing-function: ease-in-out;
       $color: rgba(0, 0, 0, 0.25);
-      // > span {
-      white-space: nowrap;
-      color: white;
-      text-shadow: 1px 1px 2px $color, -1px -1px 2px $color, 1px -1px 2px $color, -1px 1px 2px $color;
-      // padding-left: 0.25em;
-      // }
-      // :deep(*:not(.el-popper)) {
-      //   background-color: rgba(0, 0, 0, 0.01);
-      // }
-      // :deep(.el-input__inner) {
-      //   color: white;
-      // }
-      // :deep(.el-popper) {
-      //   background-color: rgba(255, 255, 255, 1);
-      // }
-      // .el-select {
-      //   width: 2.5rem;
-      //   :deep(.el-input__suffix-inner) {
-      //     width: 0rem;
-      //     position: relative;
-      //     right: 0.75rem;
-      //   }
-      //   :deep(.el-input__wrapper) {
-      //     padding: 0px 5px;
-      //   }
-      // }
+      > span {
+        white-space: nowrap;
+        color: white;
+        text-shadow: 1px 1px 2px $color, -1px -1px 2px $color, 1px -1px 2px $color, -1px 1px 2px $color;
+        padding-left: 0.25em;
+      }
+      :deep(*:not(.el-popper)) {
+        background-color: rgba(0, 0, 0, 0.01);
+      }
+      :deep(.el-input__inner) {
+        color: white;
+      }
+      :deep(.el-popper) {
+        background-color: rgba(255, 255, 255, 1);
+      }
+      .el-select {
+        width: 2.5rem;
+        :deep(.el-input__suffix-inner) {
+          width: 0rem;
+          position: relative;
+          right: 0.75rem;
+        }
+        :deep(.el-input__wrapper) {
+          padding: 0px 5px;
+        }
+      }
     }
   }
 }
