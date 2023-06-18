@@ -178,7 +178,12 @@ onBeforeUnmount(() => {
   <span v-if="data.party.length === 0" style="color: white; text-shadow: 1px 1px 2px black">等待小队...</span>
   <div @mouseenter="onMouseOver" @mouseleave="onMouseOut">
     <el-dialog v-model="dialogVisible" title="初见提示" width="90%" :destroy-on-close="true" :close-on-click-modal="false">
-      <span>用鼠标拖动职业，使悬浮窗的位置分配对应游戏内的实际位置（D1D2等）</span>
+      <p>使悬浮窗的位置分配对应游戏内的实际位置（D1D2等）</p>
+      <ul>
+        <li>长期：用鼠标拖动职能顺序。</li>
+        <li>临时：下拉选择框修改。</li>
+      </ul>
+
       <template #footer>
         <span class="dialog-footer">
           <el-button
@@ -208,7 +213,7 @@ onBeforeUnmount(() => {
             <span style="white-space: nowrap"> {{ Util.nameToFullName(Util.jobEnumToJob(member.job)).simple2 }} {{ mouseEnter ? member.name : "" }} </span>
           </div>
         </transition-group>
-        <DragJob class="dragJob" v-show="mouseEnter" @updateSortArr="updateSortArr" :party="data.party" m-b-1 p-1/>
+        <DragJob class="dragJob" v-show="mouseEnter" @updateSortArr="updateSortArr" :party="data.party" m-b-1 p-1 />
         <!-- <h5 p-0 m-0 v-show="mouseEnter" style="color: white; text-shadow: 1px 1px 2px black">默认排序：</h5> -->
       </el-main>
     </el-container>
