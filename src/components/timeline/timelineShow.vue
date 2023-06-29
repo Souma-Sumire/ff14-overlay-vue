@@ -154,14 +154,14 @@ $trasDuration: 1;
         display: flex;
         align-items: center;
         overflow: hidden;
-        &:first-of-type {
-          flex: 1;
-        }
+        // &:first-of-type {
+        //   flex: 1;
+        // }
         > :deep(span) {
           // white-space: nowrap;
           text-overflow: ellipsis;
           overflow: hidden;
-          flex: 1;
+          // flex: 1;
         }
       }
       > :deep(div) {
