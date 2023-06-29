@@ -141,22 +141,24 @@ function handleLogEvent(e: { detail: { logs: string[] } }) {
       //团灭
       stopTimeline();
       // mountTimeline(lastUsedTimeline);
-    } else if (/^.{14} ChatLog 00:0038::/.test(log)) {
-      //echo
-      const name = log.match(/^.{14} ChatLog 00:0038::(?<name>.+)$/)?.groups?.name;
-      if (name) {
-        const timeline = timelineStore.getTimeline(condition.value).find((c) => c.name === name);
-        timeline && mountTimeline(timeline, false);
-      }
     } else {
       //是否触发了某行的sync
       const timelineSync = syncLines.value.find((item) => {
+        // console.log(item.sync, log);
         return (
           item.sync!.test(log) && runtimeTimeSeconds.value >= item.time - item.windowBefore && runtimeTimeSeconds.value <= item.time + Number(item.windowAfter)
         );
       });
       //如果匹配sync则同步到time，有jump则同步至jump
       if (timelineSync) syncTimeline(timelineSync.jump || timelineSync.time);
+    }
+    if (/^.{14} ChatLog 00:0038::/.test(log)) {
+      //echo
+      const name = log.match(/^.{14} ChatLog 00:0038::(?<name>.+)$/)?.groups?.name;
+      if (name) {
+        const timeline = timelineStore.getTimeline(condition.value).find((c) => c.name === name);
+        timeline && mountTimeline(timeline, false);
+      }
     }
   }
 }
@@ -168,10 +170,11 @@ function fakeJump(time: number) {
 
 //同步页面时间轴
 function syncTimeline(targetTime: number) {
-  doTTS = false;
   if (baseTimeMs.value === 0) startTimeline(0, false);
   offsetTimeMS.value += (targetTime - runtimeTimeSeconds.value) * 1000;
-  setTimeout(() => (doTTS = true), 1000);
+  loadedTimelineTTS.value.map((v) => {
+    if (v.time < targetTime) v.alertAlready = true;
+  });
 }
 
 //玩家状态（职业）
@@ -278,7 +281,7 @@ function handleInCombatChanged(ev: {
     <button v-if="devMode" @click="stopTimeline()">团灭</button>
     <button v-if="devMode" @click="fakeJump(1000)">跳转1000测试</button>
     <button v-if="devMode" @click="cactbotSay('今天天气真不错', true)">TTS测试</button>
-    <span v-if="devMode">{{ runtimeTimeSeconds }}</span>
+    <span v-if="devMode" style="color: white; background-color: black">{{ runtimeTimeSeconds }}</span>
   </div>
 </template>
 <style lang="scss">

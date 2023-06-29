@@ -161,7 +161,7 @@ $trasDuration: 1;
           // white-space: nowrap;
           text-overflow: ellipsis;
           overflow: hidden;
-          // flex: 1;
+          flex: 1;
         }
       }
       > :deep(div) {
