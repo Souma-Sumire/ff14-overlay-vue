@@ -82,9 +82,9 @@ function parse(text: string) {
  * 3、下载图片完成展示图片
  * 4、下载图片出错展示兜底图
  */
-function getSkillImage(name: string) {
+function getSkillImage(name: string): string {
   if (typeof imageMap[name] === "string") {
-    return imageMap[name];
+    return imageMap[name] as string;
   }
 
   if (typeof imageMap[name] === "undefined") {
@@ -93,6 +93,7 @@ function getSkillImage(name: string) {
       if (res?.Icon)
         getImgSrc(res.Icon).then((url) => {
           imageMap[name] = url;
+          return imageMap[name];
         });
     });
   }
