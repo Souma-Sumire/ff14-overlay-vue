@@ -119,6 +119,7 @@ function resetCurrentlyTimeline(): void {
 function newDemoTimeline(): void {
   // clearCurrentlyTimeline();
   timelineCurrentlyEditing.timeline = timelineStore.allTimelines[timelineStore.newTimeline()];
+  updateTransmissionTimeline();
 }
 
 function editTimeline(timeline: ITimeline): void {
