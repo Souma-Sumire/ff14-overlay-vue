@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import Util from "../utils/util";
+import { getActionByChineseName, getImgSrc } from "@/utils/xivapi";
 import { FFIcon } from "@/types/fflogs";
 import { ITimeline, ITimelineCondition, ITimelineLine, ShowStyle, ShowStyleTranslate, TimelineConfigEnum, TimelineConfigTranslate, TimelineConfigValues } from "@/types/timeline";
 
@@ -162,10 +163,26 @@ function parseTime(time: string): number {
     return parseFloat(time);
   }
 }
-export function parseAction(text: string) {
+function parseAction(text: string) {
   return text.matchAll(/\<(?<name>[^\<\>]*?)!??\>(?<repeat>~)?/g);
 }
 
+async function parseActionHTML(text: string): Promise<string> {
+  text = text.replaceAll(/^["']|["']$/g, "");
+  const items = parseAction(text);
+  if (!items) return Promise.resolve(text);
+  for (const item of items) {
+    if (item.groups?.name) {
+      const action = await getActionByChineseName(item.groups.name);
+      const src = await getImgSrc(action.Icon);
+      text = text.replace(
+        item[0],
+        `${src ? `<div class="skill_icon"><img src='${src}' loading="auto"/></div>` : ""}<span>${item.groups?.repeat ? item.groups!.name : ""}</span>`,
+      );
+    }
+  }
+  return Promise.resolve(text);
+}
 export async function parseTimeline(rawTimeline: string): Promise<ITimelineLine[]> {
   const total: ITimelineLine[] = [];
   const matchs = [...rawTimeline.matchAll(/^\s*(?<time>[-:：\d.]+)\s+(?<action>(--|["'])[^"'\n]+?\3).*$/gm)];
@@ -177,10 +194,10 @@ export async function parseTimeline(rawTimeline: string): Promise<ITimelineLine[
     const windowAfter = match[0].match(/(?<=window ?[-:：\d.]+,)[-:：\d.]+/)?.[0];
     const tts = match[0].match(/ tts ?["'](?<tts>[^"']+)["']/)?.groups?.tts;
     const ttsSim = / tts(?: |$)/.test(match[0]) ? Array.from(parseAction(match.groups!.action))?.[0]?.groups?.name : undefined;
-    
+    const actionHTML = await parseActionHTML(match.groups!.action);
     total.push({
       time: parseTime(match.groups!.time),
-      action: match.groups!.action || "",
+      actionHTML: match.groups!.action ? actionHTML : "",
       alertAlready: false,
       sync: sync ? new RegExp(sync) : undefined,
       show: !sync,
