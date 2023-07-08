@@ -11,6 +11,10 @@ on:
     types:
       - closed
 
+permissions:
+  pages: write
+  id-token: write
+  
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
