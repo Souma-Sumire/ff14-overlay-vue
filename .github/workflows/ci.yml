@@ -1,6 +1,7 @@
 name: Build and Deploy
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -10,6 +11,11 @@ on:
     types:
       - closed
 
+permissions:
+  pages: write
+  id-token: write
+  contents: write
+  
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest

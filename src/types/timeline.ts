@@ -15,7 +15,7 @@ export interface ITimelineCondition {
 
 export interface ITimelineLine {
   time: number;
-  actionHTML: string;
+  action: string;
   sync?: RegExp;
   show: boolean;
   windowBefore: number;
