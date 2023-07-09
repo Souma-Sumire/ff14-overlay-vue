@@ -36,7 +36,7 @@ const imageMap: Record<string, unknown> = reactive({});
 
 // 在Vue组件内生成HTML是可以响应数据变化更新视图的
 function renderHTML(text: string): string{
-  text = text.replaceAll(/^["']|["']$/g, "");
+  text = text.replaceAll(/^["'“”]|["'“”]$/g, "");
   const items = parseAction(text);
   if (!items) return text;
 

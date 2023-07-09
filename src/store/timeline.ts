@@ -168,14 +168,14 @@ export function parseAction(text: string) {
 
 export async function parseTimeline(rawTimeline: string): Promise<ITimelineLine[]> {
   const total: ITimelineLine[] = [];
-  const matchs = [...rawTimeline.matchAll(/^\s*(?<time>[-:：\d.]+)\s+(?<action>(--|["'])[^"'\n]+?\3).*$/gm)];
+  const matchs = [...rawTimeline.matchAll(/^\s*(?<time>[-:：\d.]+)\s+(?<action>(?:--|["'“”])[^"'\n]+?(?:--|["'“”])).*$/gm)];
   for (let i = 0; i < matchs.length; i++) {
     const match = matchs[i];
     const jump = match[0].match(/(?<=jump ?)[-:：\d.]+/)?.[0];
     const sync = match[0].match(/(?<=sync ?\/).+(?=\/)/)?.[0];
     const windowBefore = match[0].match(/(?<=window ?)[-:：\d.]+/)?.[0];
     const windowAfter = match[0].match(/(?<=window ?[-:：\d.]+,)[-:：\d.]+/)?.[0];
-    const tts = match[0].match(/ tts ?["'](?<tts>[^"']+)["']/)?.groups?.tts;
+    const tts = match[0].match(/ tts ?["'“”](?<tts>[^"'“”]+)["'“”]/)?.groups?.tts;
     const ttsSim = / tts(?: |$)/.test(match[0]) ? Array.from(parseAction(match.groups!.action))?.[0]?.groups?.name : undefined;
     
     total.push({
