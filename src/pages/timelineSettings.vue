@@ -29,7 +29,7 @@ async function updateTransmissionTimeline() {
   transmissionTimeline.value = [
     {
       time: 0,
-      actionHTML: "正在加载...",
+      action: "正在加载...",
       show: true,
       windowBefore: 0,
       windowAfter: 0,
