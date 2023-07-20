@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import Util from "@/utils/util";
-import { RemovableRef } from "@vueuse/core";
 import "animate.css";
-// import { ElMessage, ElMessageBox, ElNotification } from "element-plus";
-import { VXETable } from "vxe-table";
+// import { VXETable } from "vxe-table";
 const createRPArr = (r: "T" | "H" | "D", l: number) =>
   Array(l)
     .fill(r)
@@ -49,10 +47,8 @@ const fakeParty: Player[] = [
   { id: "10000007", name: "虚构黑魔", job: 25, inParty: true },
   { id: "10000008", name: "虚构舞者", job: 38, inParty: true },
 ];
-
-const data: RemovableRef<{
-  party: Player[];
-}> = useStorage("cactbotRuntime-data", reactive({ party: [] }));
+const _party: Player[] = [];
+const data = useStorage("cactbotRuntime-data", { party: _party });
 const showTips = useStorage("cactbotRuntime-showTips", ref(true));
 const roleSelectLength = {
   tank: 0,
@@ -104,22 +100,11 @@ function handleSelectChange(i: number): void {
   broadcastParty();
 }
 function getRP(player: Player): string {
-  // 如果有上一次的位置则优先使用上一次的（并且与现有的不重复） 以应对小队成员掉线或中途刷新悬浮窗需要重新选位置的情况
-  // const hasLastRp = lastRp.value[player.id + player.job];
-  // if (hasLastRp && !data.value.party.find((v) => v.rp === hasLastRp)) {
-  //   player.specify = true;
-  //   return hasLastRp;
-  // }
-  // 否则正常走逻辑
   return roleAssignLocationNames[getJobClassification(player.job)].find((role) => !data.value.party.find((v) => v.rp === role)) ?? "unknown";
 }
 function broadcastParty(): void {
   const sortArr = [...roleAssignLocationNames.tank, ...roleAssignLocationNames.healer, ...roleAssignLocationNames.dps];
   data.value.party.sort((a, b) => sortArr.indexOf(a.rp!) - sortArr.indexOf(b.rp!));
-  // lastRp.value = data.value.party.reduce((pre, cur) => {
-  //   if (cur.specify) pre[cur.id + cur.job] = cur.rp!;
-  //   return pre;
-  // }, {} as Record<string, string>);
   callOverlayHandler({
     call: "broadcast",
     source: "soumaRuntimeJS",
@@ -129,17 +114,14 @@ function broadcastParty(): void {
 function handleChangePrimaryPlayer(event: { charID: string; charName: string }): void {
   if (!isDev) playerName.value = event.charName;
 }
-const openMessage = (options: any) => {
-  VXETable.modal.message(options);
-};
+// function openMessage(options: any) {
+//   VXETable.modal.message(options);
+// }
 function handleBroadcastMessage(e: { source: string; msg: any }) {
   if (e.source === "soumaUserJS") {
     switch (e.msg.text) {
       case "updateNewPartyRP Success":
-        // ElNotification({
-        //   message: h("i", { style: "color: teal" }, "通信成功"),
-        // });
-        openMessage({ content: "通信成功", status: "success", duration: 800, top: 5, id: "updateNewPartyRp" });
+        // openMessage({ content: "通信成功", status: "success", duration: 800, top: 5, id: "updateNewPartyRp" });
         break;
       case "requestData":
         broadcastParty();
