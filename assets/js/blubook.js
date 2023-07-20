@@ -1,4 +1,4 @@
-import{d as U,r as N,b as L,Q as $,al as X,c as P,f as k,g as A,k as l,i as n,T as S,h as c,F as v,m as x,l as B,j as w,t as m,bX as Y,E as G,q as j,s as q,x as O,w as E,v as T,at as Q}from"./index.js";import{E as J}from"./el-input.js";import{E as K,a as W}from"./index2.js";import{_ as Z}from"./_plugin-vue_export-helper.js";import"./index3.js";import"./scroll.js";import"./vnode.js";const C=b=>(j("data-v-19b6d921"),b=b(),q(),b),nn={class:"app"},sn={class:"pageSelection"},an=["onClick"],cn={class:"blubook"},tn=["onClick"],en=["src","onError"],on={class:"Number"},rn=C(()=>c("span",{style:{display:"none"}},null,-1)),pn={class:"actionDetails"},ln={class:"Number"},mn={class:"Name"},Dn=["src"],In=["innerHTML"],yn={class:"Cast100ms"},fn=C(()=>c("span",{style:{color:"#00c2c2"}},"咏唱时间：",-1)),hn={class:"Recast100ms"},gn=C(()=>c("span",{style:{color:"#00c2c2"}},"复唱时间：",-1)),Nn=["innerHTML"],kn=["innerHTML"],An={class:"Learn"},bn=U({__name:"blubook",setup(b){let o=N(0),p=N(1);const f=N(""),d=N(!1),D=L("blubook-notLearnedOnly",!1),u=L("blubook-grayNotLearned",!1),i=L("blubook-learned",{});$(D,()=>{X(()=>{p.value=1})});const t=N([{ID:3,ActionID:11385,Name:"水炮",Number:1,Stats:`攻击类型：魔法
+import{d as U,b as k,r as L,Q as $,al as P,c as X,f as N,g as A,k as l,i as n,T as S,h as c,F as v,m as x,l as B,j as w,t as m,bX as Y,E as G,q as j,s as q,x as O,w as E,v as T,at as Q}from"./index.js";import{E as J}from"./el-input.js";import{E as K,a as W}from"./index2.js";import{_ as Z}from"./_plugin-vue_export-helper.js";import"./index3.js";import"./scroll.js";import"./vnode.js";const C=b=>(j("data-v-7a0af343"),b=b(),q(),b),nn={class:"app"},sn={class:"pageSelection"},an=["onClick"],cn={class:"blubook"},tn=["onClick"],on=["src","onError"],en={class:"Number"},pn=C(()=>c("span",{style:{display:"none"}},null,-1)),rn={class:"actionDetails"},ln={class:"Number"},mn={class:"Name"},Dn=["src"],yn=["innerHTML"],In={class:"Cast100ms"},fn=C(()=>c("span",{style:{color:"#00c2c2"}},"咏唱时间：",-1)),gn={class:"Recast100ms"},hn=C(()=>c("span",{style:{color:"#00c2c2"}},"复唱时间：",-1)),kn=["innerHTML"],Nn=["innerHTML"],An={class:"Learn"},bn=U({__name:"blubook",setup(b){const e=k("blubook-selectIndex",0),r=k("blubook-page",1),f=L(""),u=L(!1),D=k("blubook-notLearnedOnly",!1),d=k("blubook-grayNotLearned",!1),i=k("blubook-learned",{});$(D,()=>{P(()=>{r.value=1})});const t=L([{ID:3,ActionID:11385,Name:"水炮",Number:1,Stats:`攻击类型：魔法
 攻击属性：水
 评级：★`,Cast100ms:20,Description:'对目标发动水属性魔法攻击　<span style="color:#00cc22;">威力：</span>200',AozDescription:`从克拉肯身上学习到的青魔法。
 放出高压水流对敌人造成冲击。因为是利用水属性以太凝聚空气中的水分，所以即使在看似没有水的地方也能够使用。`,Icon:"https://cafemaker.wakingsands.com/i/003000/003253_hr1.png",Recast100ms:25,Learn:"初始技能"},{ID:20,ActionID:11402,Name:"火炎放射",Number:2,Stats:`攻击类型：魔法
@@ -626,104 +626,104 @@ import{d as U,r as N,b as L,Q as $,al as X,c as P,f as k,g as A,k as l,i as n,T 
 与部分青魔法共享复唱时间`,AozDescription:`月读的绝招。
 让混有恶意的魔力聚为花束，再使其爆炸。将一年只开花一次的月下美人，喻为亲手葬送自己的彼岸花，这种决意正是此魔法的力量之源。`,Icon:"https://cafemaker.wakingsands.com/i/003000/003357_hr1.png",Learn:"月读讨伐战",Recast100ms:1200},{ID:105,ActionID:34563,Name:"哥布林乱拳",Number:105,Stats:`攻击类型：物理・打
 攻击属性：无
-评级：★`,Cast100ms:0,Description:`对目标进行无属性物理攻击。威力：120
-正面攻击时威力：220
+评级：★`,Cast100ms:0,Description:`对目标进行无属性物理攻击。<span style='color:#00cc22;'>威力：</span>120
+<span style='color:#00cc22;'>正面攻击时威力：</span>220
 如果自身被给予「强力守护」效果，则威力提升。
-强力守护时威力：220
-强力守护且正面攻击时威力：320`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003358_hr1.png",Learn:"珂露西亚岛(X:34,Y:30)  大哥布林",Recast100ms:25},{ID:106,ActionID:34564,Name:"大回旋",Number:106,Stats:`攻击类型：物理・打
+<span style='color:#00cc22;'>强力守护时威力：</span>220
+<span style='color:#00cc22;'>强力守护且正面攻击时威力：</span>320`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003358_hr1.png",Learn:"珂露西亚岛(X:34,Y:30)  大哥布林",Recast100ms:25},{ID:106,ActionID:34564,Name:"大回旋",Number:106,Stats:`攻击类型：物理・打
 攻击属性：无
-评级：★★`,Cast100ms:20,Description:`自身周围的敌人进行无属性范围物理攻击。威力：110
-附加效果：将范围内的敌人和队伍成员击退10米。
+评级：★★`,Cast100ms:20,Description:`自身周围的敌人进行无属性范围物理攻击。<span style='color:#00cc22;'>威力：</span>110
+<span style='color:#00cc22;'>追加效果：</span>将范围内的敌人和队伍成员击退10米。
 如果目标处于某些异常状态或非战斗状态，则效果无效。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003359_hr1.png",Learn:"避暑离宫马利卡大井  1号BOSS",Recast100ms:25},{ID:107,ActionID:34565,Name:"刺阵",Number:107,Stats:`攻击类型：魔法
 攻击属性：无
-评级：★`,Cast100ms:20,Description:`在一定时间内，当自身受到物理攻击时，对攻击者造成无属性魔法伤害。威力：50持续时间：15秒
-如果自身受到「以太复制：坦克」效果影响，则威力增加。
-以太复制：坦克时威力：100
-「冰锥」「水神的面纱」不会同时生效。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003360_hr1.png",Learn:"安穆·艾兰(X:17,Y:29)  长尾犰狳",Recast100ms:25},{ID:108,ActionID:34566,Name:"补水",Number:108,Stats:`攻击类型：魔法
+评级：★`,Cast100ms:20,Description:`在一定时间内，当自身受到物理攻击时，对攻击者造成无属性魔法伤害。<span style='color:#00cc22;'>威力：</span>50。<span style='color:#00cc22;'>持续时间：</span>15秒
+如果自身受到<span style='color:#ff7b1a;'>以太复制：防护</span>效果影响，则威力增加。
+<span style='color:#00cc22;'>以太复制：防护时威力：</span>100
+无法与<span style='color:#ff7b1a;'>冰棘屏障</span>、<span style='color:#ff7b1a;'>水神的面纱</span>效果共存。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003360_hr1.png",Learn:"安穆·艾兰(X:17,Y:29)  长尾犰狳",Recast100ms:25},{ID:108,ActionID:34566,Name:"补水",Number:108,Stats:`攻击类型：魔法
 攻击属性：无
-评级：★`,Cast100ms:50,Description:"恢复自身的生命值。恢复量：600",AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003361_hr1.png",Recast100ms:25,Learn:`安穆·艾兰(X:32,Y:9)  荒漠犰狳/スリッパリー・アルマジロ
+评级：★`,Cast100ms:50,Description:"恢复自身的生命值。<span style='color:#00cc22;'>恢复力：</span>600",AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003361_hr1.png",Recast100ms:25,Learn:`安穆·艾兰(X:32,Y:9)  湿滑犰狳/slippery armadillo/スリッパリー・アルマジロ
 提示：新出的体型大的那个`},{ID:109,ActionID:34567,Name:"魔法呼吸",Number:109,Stats:`攻击类型：魔法
 攻击属性：无
 评级：★★★`,Cast100ms:20,Description:`自身对前方扇形范围内的敌人吹出魔力气息。
 给范围内的敌人造成无属性持续伤害。
-威力：120持续时间：60秒
+<span style='color:#00cc22;'>威力：</span>120　<span style='color:#00cc22;'>持续时间：</span>60秒
 此行动的效果只能同时应用一次。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003362_hr1.png",Recast100ms:25,Learn:"青魔法师80级达成 图腾兑换"},{ID:110,ActionID:34568,Name:"兽魂的愤怒",Number:110,Stats:`攻击类型：物理・打
 攻击属性：无
-评级：★★★★`,Cast100ms:50,Description:`自身对周围的敌人进行无属性范围物理攻击。威力：500
+评级：★★★★`,Cast100ms:50,Description:`自身对周围的敌人进行无属性范围物理攻击。<span style='color:#00cc22;'>威力：</span>500
 对第二个目标及后续目标的威力降低50%。
 执行此行动时消耗最大生命值的50%。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003363_hr1.png",Recast100ms:25,Learn:"暗影决战诺弗兰特 3号BOSS"},{ID:111,ActionID:34569,Name:"玩泥球",Number:111,Stats:`攻击类型：魔法
 攻击属性：土
-评级：★★`,Cast100ms:20,Description:`对目标及其周围的敌人进行土属性范围魔法攻击。威力：100
+评级：★★`,Cast100ms:20,Description:`对目标及其周围的敌人进行土属性范围魔法攻击。<span style='color:#00cc22;'>威力：</span>100
 对第二个目标及后续目标的威力降低50%。
-附加效果：给予目标「泥污」效果。
-泥污效果：给予目标土属性持续伤害。
-威力：10持续时间：9秒`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003364_hr1.png",Learn:"魔术工房玛托雅工作室 1号BOSS",Recast100ms:25},{ID:112,ActionID:34570,Name:"大扫除",Number:112,Stats:`攻击类型：物理・打
+对目标附加<span style='color:#ff7b1a;'>泥污</span>效果。
+<span style='color:#00cc22;'>泥污效果：</span>给予目标土属性持续伤害。
+<span style='color:#00cc22;'>威力：</span>10　<span style='color:#00cc22;'>持续时间：</span>9秒`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003364_hr1.png",Learn:"魔术工房玛托雅工作室 1号BOSS",Recast100ms:25},{ID:112,ActionID:34570,Name:"大扫除",Number:112,Stats:`攻击类型：物理・打
 攻击属性：无
-评级：★★★`,Cast100ms:20,Description:`对目标及其周围的敌人进行无属性范围物理攻击。威力：220
+评级：★★★`,Cast100ms:20,Description:`对目标及其周围的敌人进行无属性范围物理攻击。<span style='color:#00cc22;'>威力：</span>220
 对第二个目标及后续目标的威力降低50%。
-附加效果：如果目标已被「泥污」效果影响，则解除该效果并给予自身「大扫除」效果。
-最大叠加数：6
-大扫除效果：持续回复目标的生命值。
-该效果的回复量根据自身受到的「大扫除」叠加数而变化。
-回复量：50～300持续时间：15秒
+<span style='color:#00cc22;'>追加效果：</span>如果目标已被<span style='color:#ff7b1a;'>泥污</span>效果影响，则解除该效果并给予自身<span style='color:#ff7b1a;'>大扫除</span>效果。
+<span style='color:#00cc22;'>最大档数：</span>6
+<span style='color:#00cc22;'>大扫除效果：</span>持续回复目标的生命值。
+该效果的回复量根据自身受到的<span style='color:#ff7b1a;'>大扫除</span>叠加数而变化。
+<span style='color:#00cc22;'>恢复力：</span>50～300　<span style='color:#00cc22;'>持续时间：</span>15秒
 大扫除的效果时间不会随叠加数增加而更新。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003365_hr1.png",Learn:"魔法宫殿宇宙宫 1号BOSS",Recast100ms:25},{ID:113,ActionID:34571,Name:"红宝石电圈",Number:113,Stats:`攻击类型：物理・斬
 攻击属性：无
-评级：★★★★`,Cast100ms:20,Description:`自身对前方进行无属性范围物理攻击。威力：220
-此魔法具有特定的冷却时间，并与「玄结界」「斗灵弹」共享。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003366_hr1.png",Recast100ms:300,Learn:"红宝石神兵破坏作战 p1"},{ID:114,ActionID:34572,Name:"魔之符文",Number:114,Stats:`攻击类型：魔法
+评级：★★★★`,Cast100ms:20,Description:`自身对前方进行无属性范围物理攻击。<span style='color:#00cc22;'>威力：</span>220
+该魔法有单独计算的复唱时间，并与<span style='color:#ff7b1a;'>玄结界</span>、<span style='color:#ff7b1a;'>斗灵弹</span>共享复唱时间。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003366_hr1.png",Recast100ms:300,Learn:"红宝石神兵破坏作战 p1"},{ID:114,ActionID:34572,Name:"魔之符文",Number:114,Stats:`攻击类型：魔法
 攻击属性：无
-评级：★★★★`,Cast100ms:20,Description:`自身对前方进行无属性扇形范围魔法攻击。威力：100
-附加效果：回复自身的魔力值。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003367_hr1.png",Recast100ms:25,Learn:"缇坦妮雅歼灭战"},{ID:115,ActionID:34573,Name:"空间转换",Number:115,Stats:`攻击类型：魔法
+评级：★★★★`,Cast100ms:20,Description:`自身对前方进行无属性扇形范围魔法攻击。<span style='color:#00cc22;'>威力：</span>100
+<span style='color:#00cc22;'>追加效果：</span>回复自身的魔力值。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003367_hr1.png",Recast100ms:25,Learn:"缇坦妮雅歼灭战"},{ID:115,ActionID:34573,Name:"空间转换",Number:115,Stats:`攻击类型：魔法
 攻击属性：无
 评级：★★★★`,Cast100ms:50,Description:`对自身周围的敌人造成目标当前生命值的30%伤害。
 如果目标的等级高于自身，则无效化。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003368_hr1.png",Recast100ms:25,Learn:"伊甸希望乐园 觉醒之章1"},{ID:116,ActionID:34574,Name:"坚信",Number:116,Stats:`攻击类型：魔法
 攻击属性：无
-评级：★★★`,Cast100ms:20,Description:`对目标进行无属性前方直线范围魔法攻击。威力：220
+评级：★★★`,Cast100ms:20,Description:`对目标进行无属性前方直线范围魔法攻击。<span style='color:#00cc22;'>威力：</span>220
 对第二个目标及后续目标的威力降低50%。
-如果自身被「全能者的祝福」效果影响，则威力增加。
-全能者的祝福时威力：440`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003369_hr1.png",Learn:"伪造天界格鲁格火山  3号BOSS",Recast100ms:25},{ID:117,ActionID:34575,Name:"力场",Number:117,Stats:`攻击类型：魔法
+如果自身被<span style='color:#ff7b1a;'>全能者的祝福</span>效果影响，则威力增加。
+<span style='color:#00cc22;'>全能者的祝福时威力：</span>440`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003369_hr1.png",Learn:"伪造天界格鲁格火山  3号BOSS",Recast100ms:25},{ID:117,ActionID:34575,Name:"力场",Number:117,Stats:`攻击类型：魔法
 攻击属性：无
-评级：★★★`,Cast100ms:20,Description:`给自身附加「物理受伤减轻」或「减少魔法伤害」之一效果。效果持续时间：10秒
-物理受伤减轻效果：减少所受物理伤害50%。
-减少魔法伤害效果：减少所受魔法伤害50%。
-该魔法具有固有的冷却时间。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003370_hr1.png",Learn:"萨菲洛特歼灭战/图腾兑换",Recast100ms:1200},{ID:118,ActionID:34576,Name:"断罪飞翔",Number:118,Stats:`攻击类型：物理・突
+评级：★★★`,Cast100ms:20,Description:`给自身附加<span style='color:#ff7b1a;'>物理受伤减轻</span>或<span style='color:#ff7b1a;'>魔法受伤减轻</span>之一效果。<span style='color:#00cc22;'>持续时间：</span>10秒
+<span style='color:#00cc22;'>物理受伤减轻效果：</span>减少所受物理伤害50%。
+<span style='color:#00cc22;'>魔法受伤减轻效果：</span>减少所受魔法伤害50%。
+该魔法有单独计算的复唱时间，并与部分青魔法共享复唱时间。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003370_hr1.png",Learn:"萨菲洛特歼灭战/图腾兑换",Recast100ms:1200},{ID:118,ActionID:34576,Name:"断罪飞翔",Number:118,Stats:`攻击类型：物理・突
 攻击属性：无
-评级：★★★`,Cast100ms:10,Description:`对目标进行无属性前方直线范围物理攻击。威力：300
+评级：★★★`,Cast100ms:10,Description:`对目标进行无属性前方直线范围物理攻击。<span style='color:#00cc22;'>威力：</span>300
 对第二个目标及后续目标的威力降低50%。
-附加效果：立即解除此行动的再次冷却时间，并给予自身「断罪飞翔」效果。
-最大叠加数：4
-效果时间：永久
+<span style='color:#00cc22;'>追加效果：</span>立即解除此行动的再次冷却时间，并给予自身<span style='color:#ff7b1a;'>断罪飞翔</span>效果。
+<span style='color:#00cc22;'>最大档数：</span>4
+<span style='color:#00cc22;'>持续时间：</span>永久
 当断罪飞翔叠加到3层时，执行此行动不再解除冷却时间，而是威力增加到400。
-当断罪飞翔附加并达到最大叠加层数时，断罪飞翔变为「全能者的祝福」。效果时间：10秒
-全能者的祝福效果：增加战犯标记的威力。
-该魔法具有固有的冷却时间。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003371_hr1.png",Learn:"无瑕灵君歼灭战",Recast100ms:900},{ID:119,ActionID:34577,Name:"激射眼",Number:119,Stats:`攻击类型：魔法
+当断罪飞翔附加并达到最大叠加层数时，断罪飞翔变为全能者的祝福。<span style='color:#00cc22;'>持续时间：</span>10秒
+<span style='color:#00cc22;'>全能者的祝福效果：</span>增加坚信的威力。
+该魔法有单独计算的复唱时间。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003371_hr1.png",Learn:"无瑕灵君歼灭战",Recast100ms:900},{ID:119,ActionID:34577,Name:"激射眼",Number:119,Stats:`攻击类型：魔法
 攻击属性：无
-评级：★★★`,Cast100ms:20,Description:`对目标及其周围的敌人进行无属性范围魔法攻击。威力：220
+评级：★★★`,Cast100ms:20,Description:`对目标及其周围的敌人进行无属性范围魔法攻击。<span style='color:#00cc22;'>威力：</span>220
 对第二个目标及后续目标的威力降低50%。
-附加效果：击退效果，将范围内的敌人击退5米。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003372_hr1.png",Recast100ms:25,Learn:"伊甸希望乐园 再生之章4"},{ID:120,ActionID:34578,Name:"糖果手杖",Number:120,Stats:`攻击类型：魔法
+<span style='color:#00cc22;'>追加效果：</span>击退效果，将范围内的敌人击退5米。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003372_hr1.png",Recast100ms:25,Learn:"伊甸希望乐园 再生之章4"},{ID:120,ActionID:34578,Name:"糖果手杖",Number:120,Stats:`攻击类型：魔法
 攻击属性：无
-评级：★★`,Cast100ms:10,Description:`对目标及其周围的敌人进行无属性范围魔法攻击。威力：250
+评级：★★`,Cast100ms:10,Description:`对目标及其周围的敌人进行无属性范围魔法攻击。<span style='color:#00cc22;'>威力：</span>250
 对第二个目标及后续目标的威力降低50%。
-附加效果：减少目标的STR和DEX属性10%。
-效果时间：10秒
-附加效果：回复自身最大MP的10%。
-该魔法具有固有的冷却时间，并与「魔法锤」共享。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003373_hr1.png",Learn:"水妖幻园多恩美格禁园 1号BOSS",Recast100ms:900},{ID:121,ActionID:34579,Name:"必灭之炎",Number:121,Stats:`攻击类型：魔法
+<span style='color:#00cc22;'>追加效果：</span>减少目标的力量和灵巧属性10%。
+<span style='color:#00cc22;'>持续时间：</span>10秒
+<span style='color:#00cc22;'>追加效果：</span>回复自身最大MP的10%。
+该魔法具有固有的冷却时间，并与<span style='color:#ff7b1a;'>魔法锤</span>共享。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003373_hr1.png",Learn:"水妖幻园多恩美格禁园 1号BOSS",Recast100ms:900},{ID:121,ActionID:34579,Name:"必灭之炎",Number:121,Stats:`攻击类型：魔法
 攻击属性：火
 评级：★★★`,Cast100ms:20,Description:`对目标施加火属性的持续伤害。
-威力：40效果时间：永久
+<span style='color:#00cc22;'>威力：</span>40　<span style='color:#00cc22;'>持续时间：</span>永久
 该行动的效果只能同时施加一个。
 如果目标处于非战斗状态，则无效。
-另外，如果目标的战斗状态解除，则附加的「必灭之炎」效果也会解除。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003374_hr1.png",Learn:"魔法宫殿宇宙宫 3号BOSS",Recast100ms:25},{ID:122,ActionID:34580,Name:"咕噜咕噜",Number:122,Stats:`攻击类型：魔法
+另外，如果目标的战斗状态解除，则附加的<span style='color:#ff7b1a;'>必灭之炎</span>效果也会解除。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003374_hr1.png",Learn:"魔法宫殿宇宙宫 3号BOSS",Recast100ms:25},{ID:122,ActionID:34580,Name:"咕噜咕噜",Number:122,Stats:`攻击类型：魔法
 攻击属性：水
-评级：★★★★★`,Cast100ms:0,Description:`对自身周围的敌人进行水属性范围魔法攻击。威力：500
-附加效果：当天气为「雨」「暴雨」「雷雨」时，威力增加。
-雨天时威力：1000`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003375_hr1.png",Recast100ms:1200,Learn:"魔术工房玛托雅工作室 2号BOSS"},{ID:123,ActionID:34581,Name:"启示录",Number:123,Stats:`攻击类型：魔法
+评级：★★★★★`,Cast100ms:0,Description:`对自身周围的敌人进行水属性范围魔法攻击。<span style='color:#00cc22;'>威力：</span>500
+<span style='color:#00cc22;'>追加效果：</span>当天气为「雨」「暴雨」「雷雨」时，威力增加。
+<span style='color:#00cc22;'>雨天时威力：</span>1000`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003375_hr1.png",Recast100ms:1200,Learn:"魔术工房玛托雅工作室 2号BOSS"},{ID:123,ActionID:34581,Name:"启示录",Number:123,Stats:`攻击类型：魔法
 攻击属性：无
 评级：★★★★★`,Cast100ms:0,Description:`对自身前方直线范围持续进行攻击。
 对范围内的敌人每秒造成伤害。
-威力：140效果时间：10秒
+<span style='color:#00cc22;'>威力：</span>140　<span style='color:#00cc22;'>持续时间：</span>10秒
 如果在效果时间内执行其他行动、移动或转身，则启示录将立即解除。
-该行动与「终有一死」共享冷却时间。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003376_hr1.png",Learn:"末日暗影亚马乌罗提 3号BOSS",Recast100ms:1200},{ID:124,ActionID:34582,Name:"终有一死",Number:124,Stats:`攻击类型：魔法
+该行动与<span style='color:#ff7b1a;'>终有一死</span>共享冷却时间。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003376_hr1.png",Learn:"末日暗影亚马乌罗提 3号BOSS",Recast100ms:1200},{ID:124,ActionID:34582,Name:"终有一死",Number:124,Stats:`攻击类型：魔法
 攻击属性：无
-评级：★★★★★`,Cast100ms:0,Description:`对自身周围的敌人进行无属性范围魔法攻击。威力：800
+评级：★★★★★`,Cast100ms:0,Description:`对自身周围的敌人进行无属性范围魔法攻击。<span style='color:#00cc22;'>威力：</span>800
 对第二个目标及后续目标的威力降低50%。
-该行动与「启示录」共享冷却时间。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003377_hr1.png",Recast100ms:1200,Learn:"缇坦妮雅歼灭战"}]);for(const e of t.value)e.Stats=e.Stats.replaceAll(/(攻击类型|攻击属性|评级)：/g,'<span style="color:#00cc22;">$1：</span>'),e.Number>=105&&(e.Icon=e.Icon.replace("cafemaker.wakingsands.com","xivapi.com"));const z=P(()=>f.value.length===0?t.value.filter(e=>D.value?!i.value[e.Number.toString()]:!0):t.value.filter(s=>{const r=new RegExp(f.value);return(D.value?!i.value[s.Number.toString()]:!0)&&(r.test(s.Name)||r.test(s.Number.toString())||r.test(s.Description))}));function R(e,s){const r=e.target;/xivapi.com/.test(r.src)||(t.value[s-1].Icon=t.value[s-1].Icon.replace("cafemaker.wakingsands.com","xivapi.com"))}function V(e,s){o.value=s-1}function M(e,s){p.value=s}const F=/^\b(?:\d+(?:-\d+)?(?:,(?=\d)|~\d+)?)+\b$/;function H(e){K.prompt('输入字符串 例如 "1~104"、"1,3,21,24"',"Tip",{confirmButtonText:"确认",cancelButtonText:"取消",inputPattern:F,inputErrorMessage:"格式错误"}).then(({value:s})=>{for(const r of s.split(","))if(/^\d+[\-~]\d+$/.test(r)){const[I,_]=r.split(/[\-~]/).map(Number);for(let h=I;h<=_;h++)i.value[h.toString()]=!0}else i.value[r]=!0}).catch(()=>{W({type:"info",message:"Input canceled"})})}return(e,s)=>{const r=J,I=Y,_=G,h=Q;return k(),A("div",nn,[l(r,{modelValue:n(f),"onUpdate:modelValue":s[0]||(s[0]=a=>S(f)?f.value=a:null),placeholder:"搜索技能名称或序号或描述",class:"search"},null,8,["modelValue"]),c("div",sn,[(k(!0),A(v,null,x(Math.ceil(n(z).length/16),a=>(k(),A("div",{onClick:y=>M(y,a),class:O(n(p)===a?"selected":"")},m(a),11,an))),256))]),l(I,{modelValue:n(d),"onUpdate:modelValue":s[1]||(s[1]=a=>S(d)?d.value=a:null),label:"编辑模式",class:"toggleEdingMode",color:"white"},null,8,["modelValue"]),l(I,{modelValue:n(u),"onUpdate:modelValue":s[2]||(s[2]=a=>S(u)?u.value=a:null),label:"没学会的灰度显示",class:"toggleGrayNotLearned",color:"white"},null,8,["modelValue"]),l(I,{modelValue:n(D),"onUpdate:modelValue":s[3]||(s[3]=a=>S(D)?D.value=a:null),label:"只显示没学会的",class:"toggleNotLearnedOnly",color:"white"},null,8,["modelValue"]),l(_,{type:"primary",class:"batchLearning",size:"small",onClick:H},{default:B(()=>[w("批量学习")]),_:1}),c("div",cn,[(k(!0),A(v,null,x(n(z),(a,y)=>(k(),A("div",{key:a.ID,class:"actionGrid"},[l(h,{class:"box-item",effect:"dark",content:a.Name,placement:"top",offset:0,"hide-after":0,"show-arrow":!1,enterable:!1},{default:B(()=>[E(c("div",{class:"grid-item",onClick:g=>V(g,a.Number)},[c("img",{class:O(`IconHD ${!n(i)[a.Number]&&n(u)?"notLearned":"learned"}`),src:(n(p)-1)*16<=y&&n(p)*16>y?`${a.Icon}`:void 0,onError:g=>R(g,a.Number)},null,42,en),c("div",on,m(a.Number),1),E(l(I,{modelValue:n(i)[a.Number],"onUpdate:modelValue":g=>n(i)[a.Number]=g,label:a.Number,size:"small",class:"learnedSwitch",color:"white",fill:"#f00"},null,8,["modelValue","onUpdate:modelValue","label"]),[[T,n(d)]])],8,tn),[[T,(n(p)-1)*16<=y&&n(p)*16>y]]),rn]),_:2},1032,["content"])]))),128)),c("div",pn,[c("div",ln,m(n(t)[n(o)].Number),1),c("div",mn,m(n(t)[n(o)].Name),1),c("img",{class:"IconHD",src:`${n(t)[n(o)].Icon}`,onError:s[4]||(s[4]=a=>R(a,n(o)))},null,40,Dn),c("div",{class:"Stats",innerHTML:n(t)[n(o)].Stats},null,8,In),c("div",yn,[fn,w(m(n(t)[n(o)].Cast100ms/10),1)]),c("div",hn,[gn,w(m(n(t)[n(o)].Recast100ms/10),1)]),c("div",{class:"Description",innerHTML:n(t)[n(o)].Description},null,8,Nn),c("div",{class:"AozDescription",innerHTML:n(t)[n(o)].AozDescription},null,8,kn),c("div",An,m(n(t)[n(o)].Learn),1)])])])}}});const Rn=Z(bn,[["__scopeId","data-v-19b6d921"]]);export{Rn as default};
+该行动与<span style='color:#ff7b1a;'>启示录</span>共享冷却时间。`,AozDescription:"",Icon:"https://cafemaker.wakingsands.com/i/003000/003377_hr1.png",Recast100ms:1200,Learn:"缇坦妮雅歼灭战"}]);for(const o of t.value)o.Stats=o.Stats.replaceAll(/(攻击类型|攻击属性|评级)：/g,'<span style="color:#00cc22;">$1：</span>'),o.Number>=105&&(o.Icon=o.Icon.replace("cafemaker.wakingsands.com","xivapi.com"));const z=X(()=>f.value.length===0?t.value.filter(o=>D.value?!i.value[o.Number.toString()]:!0):t.value.filter(s=>{const p=new RegExp(f.value);return(D.value?!i.value[s.Number.toString()]:!0)&&(p.test(s.Name)||p.test(s.Number.toString())||p.test(s.Description))}));function R(o,s){const p=o.target;/xivapi.com/.test(p.src)||(t.value[s-1].Icon=t.value[s-1].Icon.replace("cafemaker.wakingsands.com","xivapi.com"))}function V(o,s){e.value=s-1}function M(o,s){r.value=s}const F=/^\b(?:\d+(?:-\d+)?(?:,(?=\d)|~\d+)?)+\b$/;function H(o){K.prompt('输入字符串 例如 "1~104"、"1,3,21,24"',"Tip",{confirmButtonText:"确认",cancelButtonText:"取消",inputPattern:F,inputErrorMessage:"格式错误"}).then(({value:s})=>{for(const p of s.split(","))if(/^\d+[\-~]\d+$/.test(p)){const[y,_]=p.split(/[\-~]/).map(Number);for(let g=y;g<=_;g++)i.value[g.toString()]=!0}else i.value[p]=!0}).catch(()=>{W({type:"info",message:"Input canceled"})})}return(o,s)=>{const p=J,y=Y,_=G,g=Q;return N(),A("div",nn,[l(p,{modelValue:n(f),"onUpdate:modelValue":s[0]||(s[0]=a=>S(f)?f.value=a:null),placeholder:"搜索技能名称或序号或描述",class:"search"},null,8,["modelValue"]),c("div",sn,[(N(!0),A(v,null,x(Math.ceil(n(z).length/16),a=>(N(),A("div",{onClick:I=>M(I,a),class:O(n(r)===a?"selected":"")},m(a),11,an))),256))]),l(y,{modelValue:n(u),"onUpdate:modelValue":s[1]||(s[1]=a=>S(u)?u.value=a:null),label:"编辑模式",class:"toggleEdingMode",color:"white"},null,8,["modelValue"]),l(y,{modelValue:n(d),"onUpdate:modelValue":s[2]||(s[2]=a=>S(d)?d.value=a:null),label:"没学会的灰度显示",class:"toggleGrayNotLearned",color:"white"},null,8,["modelValue"]),l(y,{modelValue:n(D),"onUpdate:modelValue":s[3]||(s[3]=a=>S(D)?D.value=a:null),label:"只显示没学会的",class:"toggleNotLearnedOnly",color:"white"},null,8,["modelValue"]),l(_,{type:"primary",class:"batchLearning",size:"small",onClick:H},{default:B(()=>[w("批量学习")]),_:1}),c("div",cn,[(N(!0),A(v,null,x(n(z),(a,I)=>(N(),A("div",{key:a.ID,class:"actionGrid"},[l(g,{class:"box-item",effect:"dark",content:a.Name,placement:"top",offset:0,"hide-after":0,"show-arrow":!1,enterable:!1},{default:B(()=>[E(c("div",{class:"grid-item",onClick:h=>V(h,a.Number)},[c("img",{class:O(`IconHD ${!n(i)[a.Number]&&n(d)?"notLearned":"learned"}`),src:(n(r)-1)*16<=I&&n(r)*16>I?`${a.Icon}`:void 0,onError:h=>R(h,a.Number)},null,42,on),c("div",en,m(a.Number),1),E(l(y,{modelValue:n(i)[a.Number],"onUpdate:modelValue":h=>n(i)[a.Number]=h,label:a.Number,size:"small",class:"learnedSwitch",color:"white",fill:"#f00"},null,8,["modelValue","onUpdate:modelValue","label"]),[[T,n(u)]])],8,tn),[[T,(n(r)-1)*16<=I&&n(r)*16>I]]),pn]),_:2},1032,["content"])]))),128)),c("div",rn,[c("div",ln,m(n(t)[n(e)].Number),1),c("div",mn,m(n(t)[n(e)].Name),1),c("img",{class:"IconHD",src:`${n(t)[n(e)].Icon}`,onError:s[4]||(s[4]=a=>R(a,n(e)))},null,40,Dn),c("div",{class:"Stats",innerHTML:n(t)[n(e)].Stats},null,8,yn),c("div",In,[fn,w(m(n(t)[n(e)].Cast100ms/10),1)]),c("div",gn,[hn,w(m(n(t)[n(e)].Recast100ms/10),1)]),c("div",{class:"Description",innerHTML:n(t)[n(e)].Description},null,8,kn),c("div",{class:"AozDescription",innerHTML:n(t)[n(e)].AozDescription},null,8,Nn),c("div",An,m(n(t)[n(e)].Learn),1)])])])}}});const Rn=Z(bn,[["__scopeId","data-v-7a0af343"]]);export{Rn as default};
