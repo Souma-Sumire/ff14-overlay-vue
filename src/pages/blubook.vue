@@ -63,8 +63,8 @@ type AozAction = {
   Learn: string;
 };
 
-let selectIndex = ref(0);
-let page = ref(1);
+const selectIndex = useStorage("blubook-selectIndex", 0);
+const page = useStorage("blubook-page", 1);
 const searchStr = ref("");
 const editingMode = ref(false);
 const notLearnedOnly = useStorage("blubook-notLearnedOnly", false);
@@ -1540,7 +1540,7 @@ const aozActions: AozAction[] = [
     Stats: "攻击类型：物理・打\n攻击属性：无\n评级：★",
     Cast100ms: 0,
     Description:
-      "对目标进行无属性物理攻击。威力：120\n正面攻击时威力：220\n如果自身被给予「强力守护」效果，则威力提升。\n强力守护时威力：220\n强力守护且正面攻击时威力：320",
+      "对目标进行无属性物理攻击。<span style='color:#00cc22;'>威力：</span>120\n<span style='color:#00cc22;'>正面攻击时威力：</span>220\n如果自身被给予「强力守护」效果，则威力提升。\n<span style='color:#00cc22;'>强力守护时威力：</span>220\n<span style='color:#00cc22;'>强力守护且正面攻击时威力：</span>320",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003358_hr1.png",
     Learn: "珂露西亚岛(X:34,Y:30)  大哥布林",
@@ -1554,7 +1554,7 @@ const aozActions: AozAction[] = [
     Stats: "攻击类型：物理・打\n攻击属性：无\n评级：★★",
     Cast100ms: 20,
     Description:
-      "自身周围的敌人进行无属性范围物理攻击。威力：110\n附加效果：将范围内的敌人和队伍成员击退10米。\n如果目标处于某些异常状态或非战斗状态，则效果无效。",
+      "自身周围的敌人进行无属性范围物理攻击。<span style='color:#00cc22;'>威力：</span>110\n<span style='color:#00cc22;'>追加效果：</span>将范围内的敌人和队伍成员击退10米。\n如果目标处于某些异常状态或非战斗状态，则效果无效。",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003359_hr1.png",
     Learn: "避暑离宫马利卡大井  1号BOSS",
@@ -1568,7 +1568,7 @@ const aozActions: AozAction[] = [
     Stats: "攻击类型：魔法\n攻击属性：无\n评级：★",
     Cast100ms: 20,
     Description:
-      "在一定时间内，当自身受到物理攻击时，对攻击者造成无属性魔法伤害。威力：50持续时间：15秒\n如果自身受到「以太复制：坦克」效果影响，则威力增加。\n以太复制：坦克时威力：100\n「冰锥」「水神的面纱」不会同时生效。",
+      "在一定时间内，当自身受到物理攻击时，对攻击者造成无属性魔法伤害。<span style='color:#00cc22;'>威力：</span>50。<span style='color:#00cc22;'>持续时间：</span>15秒\n如果自身受到<span style='color:#ff7b1a;'>以太复制：防护</span>效果影响，则威力增加。\n<span style='color:#00cc22;'>以太复制：防护时威力：</span>100\n无法与<span style='color:#ff7b1a;'>冰棘屏障</span>、<span style='color:#ff7b1a;'>水神的面纱</span>效果共存。",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003360_hr1.png",
     Learn: "安穆·艾兰(X:17,Y:29)  长尾犰狳",
@@ -1581,11 +1581,11 @@ const aozActions: AozAction[] = [
     Number: 108,
     Stats: "攻击类型：魔法\n攻击属性：无\n评级：★",
     Cast100ms: 50,
-    Description: "恢复自身的生命值。恢复量：600",
+    Description: "恢复自身的生命值。<span style='color:#00cc22;'>恢复力：</span>600",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003361_hr1.png",
     Recast100ms: 25,
-    Learn: "安穆·艾兰(X:32,Y:9)  荒漠犰狳/スリッパリー・アルマジロ\n提示：新出的体型大的那个",
+    Learn: "安穆·艾兰(X:32,Y:9)  湿滑犰狳/slippery armadillo/スリッパリー・アルマジロ\n提示：新出的体型大的那个",
   },
   {
     ID: 109,
@@ -1594,7 +1594,8 @@ const aozActions: AozAction[] = [
     Number: 109,
     Stats: "攻击类型：魔法\n攻击属性：无\n评级：★★★",
     Cast100ms: 20,
-    Description: "自身对前方扇形范围内的敌人吹出魔力气息。\n给范围内的敌人造成无属性持续伤害。\n威力：120持续时间：60秒\n此行动的效果只能同时应用一次。",
+    Description:
+      "自身对前方扇形范围内的敌人吹出魔力气息。\n给范围内的敌人造成无属性持续伤害。\n<span style='color:#00cc22;'>威力：</span>120　<span style='color:#00cc22;'>持续时间：</span>60秒\n此行动的效果只能同时应用一次。",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003362_hr1.png",
     Recast100ms: 25,
@@ -1607,7 +1608,8 @@ const aozActions: AozAction[] = [
     Number: 110,
     Stats: "攻击类型：物理・打\n攻击属性：无\n评级：★★★★",
     Cast100ms: 50,
-    Description: "自身对周围的敌人进行无属性范围物理攻击。威力：500\n对第二个目标及后续目标的威力降低50%。\n执行此行动时消耗最大生命值的50%。",
+    Description:
+      "自身对周围的敌人进行无属性范围物理攻击。<span style='color:#00cc22;'>威力：</span>500\n对第二个目标及后续目标的威力降低50%。\n执行此行动时消耗最大生命值的50%。",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003363_hr1.png",
     Recast100ms: 25,
@@ -1621,7 +1623,7 @@ const aozActions: AozAction[] = [
     Stats: "攻击类型：魔法\n攻击属性：土\n评级：★★",
     Cast100ms: 20,
     Description:
-      "对目标及其周围的敌人进行土属性范围魔法攻击。威力：100\n对第二个目标及后续目标的威力降低50%。\n附加效果：给予目标「泥污」效果。\n泥污效果：给予目标土属性持续伤害。\n威力：10持续时间：9秒",
+      "对目标及其周围的敌人进行土属性范围魔法攻击。<span style='color:#00cc22;'>威力：</span>100\n对第二个目标及后续目标的威力降低50%。\n对目标附加<span style='color:#ff7b1a;'>泥污</span>效果。\n<span style='color:#00cc22;'>泥污效果：</span>给予目标土属性持续伤害。\n<span style='color:#00cc22;'>威力：</span>10　<span style='color:#00cc22;'>持续时间：</span>9秒",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003364_hr1.png",
     Learn: "魔术工房玛托雅工作室 1号BOSS",
@@ -1635,7 +1637,7 @@ const aozActions: AozAction[] = [
     Stats: "攻击类型：物理・打\n攻击属性：无\n评级：★★★",
     Cast100ms: 20,
     Description:
-      "对目标及其周围的敌人进行无属性范围物理攻击。威力：220\n对第二个目标及后续目标的威力降低50%。\n附加效果：如果目标已被「泥污」效果影响，则解除该效果并给予自身「大扫除」效果。\n最大叠加数：6\n大扫除效果：持续回复目标的生命值。\n该效果的回复量根据自身受到的「大扫除」叠加数而变化。\n回复量：50～300持续时间：15秒\n大扫除的效果时间不会随叠加数增加而更新。",
+      "对目标及其周围的敌人进行无属性范围物理攻击。<span style='color:#00cc22;'>威力：</span>220\n对第二个目标及后续目标的威力降低50%。\n<span style='color:#00cc22;'>追加效果：</span>如果目标已被<span style='color:#ff7b1a;'>泥污</span>效果影响，则解除该效果并给予自身<span style='color:#ff7b1a;'>大扫除</span>效果。\n<span style='color:#00cc22;'>最大档数：</span>6\n<span style='color:#00cc22;'>大扫除效果：</span>持续回复目标的生命值。\n该效果的回复量根据自身受到的<span style='color:#ff7b1a;'>大扫除</span>叠加数而变化。\n<span style='color:#00cc22;'>恢复力：</span>50～300　<span style='color:#00cc22;'>持续时间：</span>15秒\n大扫除的效果时间不会随叠加数增加而更新。",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003365_hr1.png",
     Learn: "魔法宫殿宇宙宫 1号BOSS",
@@ -1648,7 +1650,7 @@ const aozActions: AozAction[] = [
     Number: 113,
     Stats: "攻击类型：物理・斬\n攻击属性：无\n评级：★★★★",
     Cast100ms: 20,
-    Description: "自身对前方进行无属性范围物理攻击。威力：220\n此魔法具有特定的冷却时间，并与「玄结界」「斗灵弹」共享。",
+    Description: "自身对前方进行无属性范围物理攻击。<span style='color:#00cc22;'>威力：</span>220\n该魔法有单独计算的复唱时间，并与<span style='color:#ff7b1a;'>玄结界</span>、<span style='color:#ff7b1a;'>斗灵弹</span>共享复唱时间。",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003366_hr1.png",
     Recast100ms: 300,
@@ -1661,7 +1663,7 @@ const aozActions: AozAction[] = [
     Number: 114,
     Stats: "攻击类型：魔法\n攻击属性：无\n评级：★★★★",
     Cast100ms: 20,
-    Description: "自身对前方进行无属性扇形范围魔法攻击。威力：100\n附加效果：回复自身的魔力值。",
+    Description: "自身对前方进行无属性扇形范围魔法攻击。<span style='color:#00cc22;'>威力：</span>100\n<span style='color:#00cc22;'>追加效果：</span>回复自身的魔力值。",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003367_hr1.png",
     Recast100ms: 25,
@@ -1688,7 +1690,7 @@ const aozActions: AozAction[] = [
     Stats: "攻击类型：魔法\n攻击属性：无\n评级：★★★",
     Cast100ms: 20,
     Description:
-      "对目标进行无属性前方直线范围魔法攻击。威力：220\n对第二个目标及后续目标的威力降低50%。\n如果自身被「全能者的祝福」效果影响，则威力增加。\n全能者的祝福时威力：440",
+      "对目标进行无属性前方直线范围魔法攻击。<span style='color:#00cc22;'>威力：</span>220\n对第二个目标及后续目标的威力降低50%。\n如果自身被<span style='color:#ff7b1a;'>全能者的祝福</span>效果影响，则威力增加。\n<span style='color:#00cc22;'>全能者的祝福时威力：</span>440",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003369_hr1.png",
     Learn: "伪造天界格鲁格火山  3号BOSS",
@@ -1702,7 +1704,7 @@ const aozActions: AozAction[] = [
     Stats: "攻击类型：魔法\n攻击属性：无\n评级：★★★",
     Cast100ms: 20,
     Description:
-      "给自身附加「物理受伤减轻」或「减少魔法伤害」之一效果。效果持续时间：10秒\n物理受伤减轻效果：减少所受物理伤害50%。\n减少魔法伤害效果：减少所受魔法伤害50%。\n该魔法具有固有的冷却时间。",
+      "给自身附加<span style='color:#ff7b1a;'>物理受伤减轻</span>或<span style='color:#ff7b1a;'>魔法受伤减轻</span>之一效果。<span style='color:#00cc22;'>持续时间：</span>10秒\n<span style='color:#00cc22;'>物理受伤减轻效果：</span>减少所受物理伤害50%。\n<span style='color:#00cc22;'>魔法受伤减轻效果：</span>减少所受魔法伤害50%。\n该魔法有单独计算的复唱时间，并与部分青魔法共享复唱时间。",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003370_hr1.png",
     Learn: "萨菲洛特歼灭战/图腾兑换",
@@ -1716,7 +1718,7 @@ const aozActions: AozAction[] = [
     Stats: "攻击类型：物理・突\n攻击属性：无\n评级：★★★",
     Cast100ms: 10,
     Description:
-      "对目标进行无属性前方直线范围物理攻击。威力：300\n对第二个目标及后续目标的威力降低50%。\n附加效果：立即解除此行动的再次冷却时间，并给予自身「断罪飞翔」效果。\n最大叠加数：4\n效果时间：永久\n当断罪飞翔叠加到3层时，执行此行动不再解除冷却时间，而是威力增加到400。\n当断罪飞翔附加并达到最大叠加层数时，断罪飞翔变为「全能者的祝福」。效果时间：10秒\n全能者的祝福效果：增加战犯标记的威力。\n该魔法具有固有的冷却时间。",
+      "对目标进行无属性前方直线范围物理攻击。<span style='color:#00cc22;'>威力：</span>300\n对第二个目标及后续目标的威力降低50%。\n<span style='color:#00cc22;'>追加效果：</span>立即解除此行动的再次冷却时间，并给予自身<span style='color:#ff7b1a;'>断罪飞翔</span>效果。\n<span style='color:#00cc22;'>最大档数：</span>4\n<span style='color:#00cc22;'>持续时间：</span>永久\n当断罪飞翔叠加到3层时，执行此行动不再解除冷却时间，而是威力增加到400。\n当断罪飞翔附加并达到最大叠加层数时，断罪飞翔变为全能者的祝福。<span style='color:#00cc22;'>持续时间：</span>10秒\n<span style='color:#00cc22;'>全能者的祝福效果：</span>增加坚信的威力。\n该魔法有单独计算的复唱时间。",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003371_hr1.png",
     Learn: "无瑕灵君歼灭战",
@@ -1729,7 +1731,8 @@ const aozActions: AozAction[] = [
     Number: 119,
     Stats: "攻击类型：魔法\n攻击属性：无\n评级：★★★",
     Cast100ms: 20,
-    Description: "对目标及其周围的敌人进行无属性范围魔法攻击。威力：220\n对第二个目标及后续目标的威力降低50%。\n附加效果：击退效果，将范围内的敌人击退5米。",
+    Description:
+      "对目标及其周围的敌人进行无属性范围魔法攻击。<span style='color:#00cc22;'>威力：</span>220\n对第二个目标及后续目标的威力降低50%。\n<span style='color:#00cc22;'>追加效果：</span>击退效果，将范围内的敌人击退5米。",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003372_hr1.png",
     Recast100ms: 25,
@@ -1743,7 +1746,7 @@ const aozActions: AozAction[] = [
     Stats: "攻击类型：魔法\n攻击属性：无\n评级：★★",
     Cast100ms: 10,
     Description:
-      "对目标及其周围的敌人进行无属性范围魔法攻击。威力：250\n对第二个目标及后续目标的威力降低50%。\n附加效果：减少目标的STR和DEX属性10%。\n效果时间：10秒\n附加效果：回复自身最大MP的10%。\n该魔法具有固有的冷却时间，并与「魔法锤」共享。",
+      "对目标及其周围的敌人进行无属性范围魔法攻击。<span style='color:#00cc22;'>威力：</span>250\n对第二个目标及后续目标的威力降低50%。\n<span style='color:#00cc22;'>追加效果：</span>减少目标的力量和灵巧属性10%。\n<span style='color:#00cc22;'>持续时间：</span>10秒\n<span style='color:#00cc22;'>追加效果：</span>回复自身最大MP的10%。\n该魔法具有固有的冷却时间，并与<span style='color:#ff7b1a;'>魔法锤</span>共享。",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003373_hr1.png",
     Learn: "水妖幻园多恩美格禁园 1号BOSS",
@@ -1757,7 +1760,7 @@ const aozActions: AozAction[] = [
     Stats: "攻击类型：魔法\n攻击属性：火\n评级：★★★",
     Cast100ms: 20,
     Description:
-      "对目标施加火属性的持续伤害。\n威力：40效果时间：永久\n该行动的效果只能同时施加一个。\n如果目标处于非战斗状态，则无效。\n另外，如果目标的战斗状态解除，则附加的「必灭之炎」效果也会解除。",
+      "对目标施加火属性的持续伤害。\n<span style='color:#00cc22;'>威力：</span>40　<span style='color:#00cc22;'>持续时间：</span>永久\n该行动的效果只能同时施加一个。\n如果目标处于非战斗状态，则无效。\n另外，如果目标的战斗状态解除，则附加的<span style='color:#ff7b1a;'>必灭之炎</span>效果也会解除。",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003374_hr1.png",
     Learn: "魔法宫殿宇宙宫 3号BOSS",
@@ -1770,7 +1773,8 @@ const aozActions: AozAction[] = [
     Number: 122,
     Stats: "攻击类型：魔法\n攻击属性：水\n评级：★★★★★",
     Cast100ms: 0,
-    Description: "对自身周围的敌人进行水属性范围魔法攻击。威力：500\n附加效果：当天气为「雨」「暴雨」「雷雨」时，威力增加。\n雨天时威力：1000",
+    Description:
+      "对自身周围的敌人进行水属性范围魔法攻击。<span style='color:#00cc22;'>威力：</span>500\n<span style='color:#00cc22;'>追加效果：</span>当天气为「雨」「暴雨」「雷雨」时，威力增加。\n<span style='color:#00cc22;'>雨天时威力：</span>1000",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003375_hr1.png",
     Recast100ms: 1200,
@@ -1784,7 +1788,7 @@ const aozActions: AozAction[] = [
     Stats: "攻击类型：魔法\n攻击属性：无\n评级：★★★★★",
     Cast100ms: 0,
     Description:
-      "对自身前方直线范围持续进行攻击。\n对范围内的敌人每秒造成伤害。\n威力：140效果时间：10秒\n如果在效果时间内执行其他行动、移动或转身，则启示录将立即解除。\n该行动与「终有一死」共享冷却时间。",
+      "对自身前方直线范围持续进行攻击。\n对范围内的敌人每秒造成伤害。\n<span style='color:#00cc22;'>威力：</span>140　<span style='color:#00cc22;'>持续时间：</span>10秒\n如果在效果时间内执行其他行动、移动或转身，则启示录将立即解除。\n该行动与<span style='color:#ff7b1a;'>终有一死</span>共享冷却时间。",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003376_hr1.png",
     Learn: "末日暗影亚马乌罗提 3号BOSS",
@@ -1797,7 +1801,8 @@ const aozActions: AozAction[] = [
     Number: 124,
     Stats: "攻击类型：魔法\n攻击属性：无\n评级：★★★★★",
     Cast100ms: 0,
-    Description: "对自身周围的敌人进行无属性范围魔法攻击。威力：800\n对第二个目标及后续目标的威力降低50%。\n该行动与「启示录」共享冷却时间。",
+    Description:
+      "对自身周围的敌人进行无属性范围魔法攻击。<span style='color:#00cc22;'>威力：</span>800\n对第二个目标及后续目标的威力降低50%。\n该行动与<span style='color:#ff7b1a;'>启示录</span>共享冷却时间。",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003377_hr1.png",
     Recast100ms: 1200,
