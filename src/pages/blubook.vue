@@ -68,7 +68,7 @@ let page = ref(1);
 const searchStr = ref("");
 const editingMode = ref(false);
 const notLearnedOnly = useStorage("blubook-notLearnedOnly", false);
-const grayNotLearned = useStorage("blubook-grayNotLearned", true);
+const grayNotLearned = useStorage("blubook-grayNotLearned", false);
 const learned = useStorage("blubook-learned", {} as Record<string, boolean>);
 
 watch(notLearnedOnly, () => {
@@ -292,7 +292,7 @@ const aozActions: AozAction[] = [
     ActionID: 11418,
     Name: "冰棘屏障",
     Number: 16,
-    Stats: "攻击类型：魔法\n攻击属性：氷\n评级：★",
+    Stats: "攻击类型：魔法\n攻击属性：水\n评级：★",
     Cast100ms: 20,
     Description:
       '一定时间内，自身受到物理攻击时会对对方造成冰属性魔法伤害\n<span style="color:#00cc22;">威力：</span>40　<span style="color:#00cc22;">持续时间：</span>15秒\n<span style="color:#00cc22;">追加效果（发动几率50%）：</span>减速20%\n<span style="color:#00cc22;">持续时间：</span>15秒',
@@ -527,7 +527,7 @@ const aozActions: AozAction[] = [
     ActionID: 11419,
     Name: "寒冰咆哮",
     Number: 33,
-    Stats: "攻击类型：魔法\n攻击属性：氷\n评级：★★",
+    Stats: "攻击类型：魔法\n攻击属性：水\n评级：★★",
     Cast100ms: 20,
     Description:
       '对自身周围的敌人发动冰属性范围魔法攻击　<span style="color:#00cc22;">威力：</span>220\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>冻结　<span style="color:#00cc22;">持续时间：</span>12秒',
@@ -734,7 +734,7 @@ const aozActions: AozAction[] = [
     ActionID: 11430,
     Name: "冰雪乱舞",
     Number: 48,
-    Stats: "攻击类型：魔法\n攻击属性：氷\n评级：★★★★★",
+    Stats: "攻击类型：魔法\n攻击属性：水\n评级：★★★★★",
     Cast100ms: 0,
     Description:
       '向自身前方与两侧发动冰属性扇形范围魔法攻击\n<span style="color:#00cc22;">威力：</span>350\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n与部分青魔法共享复唱时间',
@@ -789,7 +789,7 @@ const aozActions: AozAction[] = [
     ActionID: 18297,
     Name: "狂风暴雪",
     Number: 52,
-    Stats: "攻击类型：魔法\n攻击属性：氷\n评级：★★★★",
+    Stats: "攻击类型：魔法\n攻击属性：水\n评级：★★★★",
     Cast100ms: 20,
     Description:
       '向自身前方发动冰属性扇形范围魔法攻击　<span style="color:#00cc22;">威力：</span>220\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>敌人处于<span style="color:#ff7b1a;">水毒</span>状态时解除该状态，同时附加<span style="color:#ff7b1a;">冻结</span>状态\n<span style="color:#00cc22;">持续时间：</span>20秒',
@@ -1237,7 +1237,7 @@ const aozActions: AozAction[] = [
     ActionID: 23267,
     Name: "彻骨雾寒",
     Number: 84,
-    Stats: "攻击类型：魔法\n攻击属性：氷\n评级：★★★★",
+    Stats: "攻击类型：魔法\n攻击属性：水\n评级：★★★★",
     Cast100ms: 20,
     Description:
       '对自身附加<span style="color:#ff7b1a;">彻骨雾寒</span>状态　<span style="color:#00cc22;">持续时间：</span>5秒\n持续时间内如果受到敌人的攻击，则效果会变化成<span style="color:#ff7b1a;">冰雾</span>\n<span style="color:#00cc22;">冰雾效果：</span>技能<span style="color:#ff7b1a;">彻骨雾寒</span>变化为<span style="color:#ff7b1a;">冰雾</span>\n<span style="color:#00cc22;">持续时间：</span>15秒\n该魔法有单独计算的复唱时间\n\n<span style="color:#ff7b1a;">冰雾</span>\n对目标发动冰属性魔法攻击　<span style="color:#00cc22;">威力：</span>400\n<span style="color:#00cc22;">追加效果：</span>冻结　<span style="color:#00cc22;">持续时间：</span>10秒\n<span style="color:#00cc22;">发动条件：</span><span style="color:#ff7b1a;">冰雾</span>状态中',
@@ -1365,7 +1365,7 @@ const aozActions: AozAction[] = [
     ActionID: 23278,
     Name: "冰焰",
     Number: 93,
-    Stats: "攻击类型：魔法\n攻击属性：氷\n评级：★★",
+    Stats: "攻击类型：魔法\n攻击属性：水\n评级：★★",
     Cast100ms: 20,
     Description: '对目标及其周围的敌人发动冰属性范围魔法攻击　<span style="color:#00cc22;">威力：</span>220\n攻击复数敌人时，对目标之外的敌人威力降低50%',
     AozDescription:
@@ -1874,7 +1874,6 @@ function handleBatchLearning(_e: Event): void {
 
 <style scoped lang="scss">
 .app {
-  overflow: hidden;
   font-family: Microsoft YaHei, sans-serif;
   position: relative;
   transform: translateX(-50px) translateY(-30px);
