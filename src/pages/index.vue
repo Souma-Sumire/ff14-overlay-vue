@@ -8,6 +8,7 @@ interface Menu {
   path: string;
 }
 const menu: Menu[] = [
+  { title: "青魔法书图鉴", type: "悬浮窗", path: "blubook" },
   { title: "职业增强：舞者", type: "悬浮窗", path: "jobs/dnc" },
   {
     title: "♿[Github]CACTBOT JS 火箭轮椅",
