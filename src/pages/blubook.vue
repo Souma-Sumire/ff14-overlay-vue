@@ -90,7 +90,7 @@ const aozActions: AozAction[] = [
     AozDescription: "从克拉肯身上学习到的青魔法。\n放出高压水流对敌人造成冲击。因为是利用水属性以太凝聚空气中的水分，所以即使在看似没有水的地方也能够使用。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003253_hr1.png",
     Recast100ms: 25,
-    Learn: "初始技能",
+    Learn: "自动习得 Lv.1",
   },
   {
     ID: 20,
@@ -103,7 +103,7 @@ const aozActions: AozAction[] = [
     AozDescription:
       "向自身前方放出火焰的青魔法。\n与咒术中的火炎原理相似，通过放出火属性以太来引起火焰燃烧的现象。也有兵器可以通过喷射可燃液体加以点燃来产生相似效果。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003270_hr1.png",
-    Learn: "50纷争要地布雷福洛克斯野营地 老三6号哥布林坦克\n50幻龙残骸密约之塔 老一独爪妖禽 老二魔导炮艇",
+    Learn: "纷争要地布雷福洛克斯野营地 - 6号哥布林坦克 Lv.50\n 幻龙残骸密约之塔 - 独爪妖禽、魔导炮艇 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -117,7 +117,7 @@ const aozActions: AozAction[] = [
       '向自身前方发动水属性扇形范围魔法攻击　<span style="color:#00cc22;">威力：</span>140\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>水属性持续伤害\n<span style="color:#00cc22;">威力：</span>20　<span style="color:#00cc22;">持续时间：</span>12秒',
     AozDescription: "标志性的水属性青魔法。\n以强大的魔力操纵周围的水分，制造出大量的水泡包裹住敌人。更能加入有毒成分，侵蚀被包裹的敌人。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003258_hr1.png",
-    Learn: "艾玛吉娜杯斗技大会决赛 奥尔特罗斯\n假面狂欢第20关 奥尔特罗斯\n利维亚桑歼灭战、歼殛战 利维亚桑",
+    Learn: "艾玛吉娜杯斗技大会决赛 - 奥尔特罗斯 Lv.50\n 假面狂欢20 - 奥尔特罗斯 Lv.50\n 利维亚桑歼灭战 - 利维亚桑 Lv.50\n 利维亚桑歼殛战 - 利维亚桑 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -131,7 +131,7 @@ const aozActions: AozAction[] = [
       '跃向目标并对目标及其周围敌人发动范围物理攻击\n<span style="color:#00cc22;">威力：</span>150\n攻击复数敌人时，对目标之外的敌人威力降低50%\n止步状态下无法发动',
     AozDescription: "祖使用的青魔法。\n使用魔法操纵自身的精神，消除脑内的恐惧并增幅愤怒，以此解除肉体的枷锁，将全部力量发挥出来攻向敌人。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003257_hr1.png",
-    Learn: "50领航明灯天狼星灯塔 老二祖(打破两个蛋后使用) \n拉外A级lv.50角祖",
+    Learn: "领航明灯天狼星灯塔 - 祖 Lv.50打破两个蛋后使用\n 拉诺西亚外地 [A] - 角祖 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -145,7 +145,7 @@ const aozActions: AozAction[] = [
       '向目标所在方向发出无属性直线范围物理攻击　<span style="color:#00cc22;">威力：</span>200\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n目标处于<span style="color:#ff7b1a;">石化</span>状态时威力提高\n<span style="color:#00cc22;">目标处于石化状态时威力：</span>600\n<span style="color:#00cc22;">追加效果：</span>解除敌对目标身上的<span style="color:#ff7b1a;">石化</span>状态',
     AozDescription:
       "模仿魔导兵器攻击方式的青魔法。\n让奔涌的魔力旋转起来，以此获得惊人的贯穿力。由于魔导兵器的这种攻击手段本身是从凿石机上得到的灵感，所以这个青魔法对被石化的敌人也有更加显著的效果。",
-    Learn: "北萨FATE(x18,y15) lv.46废弃的魔导先锋\n北萨(x16,y15) lv.50魔导先锋强化型(60%血后使用) ",
+    Learn: "北萨纳兰 - 逆向工程 - 废弃的魔导先锋 Lv.46\n 北萨纳兰 (x:16, y:15) - 魔导先锋强化型 Lv.50血量低于 60% 后使用\n 纷争要地布雷福洛克斯野营地 - 3号哥布林装甲 Lv.50\n 帝国南方堡外围激战 - 魔导先锋、魔导先锋强袭型 Lv.50\n 天幕魔导城最终决战 - 魔导先锋重装型 Lv.50",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003266_hr1.png",
     Recast100ms: 25,
   },
@@ -160,7 +160,7 @@ const aozActions: AozAction[] = [
       '对自身周围的敌人发动雷属性范围魔法攻击　<span style="color:#00cc22;">威力：</span>180\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>麻痹　<span style="color:#00cc22;">持续时间：</span>15秒\n<span style="color:#00cc22;">追加效果：</span>目标处于<span style="color:#ff7b1a;">水毒</span>状态时威力提高，持续时间增加\n<span style="color:#00cc22;">目标处于水毒状态时威力：</span>220\n<span style="color:#00cc22;">目标处于水毒状态时持续时间：</span>30秒',
     AozDescription: "亚拉戈帝国开发出的机械魔法。\n尝试让机械发动魔法的过程中诞生的产物。首先控制雷属性以太，然后提高电压，最后将电流向四周放射出去。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003255_hr1.png",
-    Learn: "巴哈姆特大迷宫T1、T2 自卫系统\n假面狂欢第15关 斗兽系统",
+    Learn: "巴哈姆特大迷宫 邂逅之章1 - 自卫系统 Lv.50\n 巴哈姆特大迷宫 邂逅之章2 - 监视/净化/防卫/焚烧/迎击/防疫/自卫系统 Lv.50\n 假面狂欢15 - 斗兽系统 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -174,7 +174,7 @@ const aozActions: AozAction[] = [
     AozDescription: "一种传送魔法。\n将自身的魔力流出，以此制造简易的地脉，利用简易地脉进行传送。只能移动很短的距离，但需要紧急回避时十分有效。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003269_hr1.png",
     Recast100ms: 25,
-    Learn: "北萨B级lv.50永恒不灭的菲兰德副耀士(一定距离外使用) \n50惨剧灵殿塔姆·塔拉墓园 但他林",
+    Learn: "北萨纳兰 [B] - 永恒不灭的菲兰德副耀士 Lv.50\n 腐坏遗迹无限城市街古迹 - 巴尔泽芬 Lv.50\n 惨剧灵殿塔姆·塔拉墓园 - 但他林、幻影骑士 Lv.50",
   },
   {
     ID: 25,
@@ -187,7 +187,7 @@ const aozActions: AozAction[] = [
       '对目标发动无属性物理攻击　<span style="color:#00cc22;">威力：</span>2000\n发动后自身陷入无法战斗状态\n<span style="color:#00cc22;">追加效果：</span><span style="color:#ff7b1a;">意志薄弱</span>\n即使进入无法战斗状态也不会解除<span style="color:#ff7b1a;">意志薄弱</span>\n<span style="color:#00cc22;">持续时间：</span>600秒\n<span style="color:#00cc22;">发动条件：</span>非<span style="color:#ff7b1a;">意志薄弱</span>状态中',
     AozDescription: "胡蜂最后的一刺。\n将自身的生命力全部转换成魔力，生成剧毒注入敌人体内。若没有玉石俱焚的气魄不建议使用。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003275_hr1.png",
-    Learn: "中拉(x15,y15) lv.13杀手胡蜂(低血量后使用/一定时间后使用) \n35古代遗迹喀恩埋没圣堂 lv.35圣堂蜂(低血量后使用/一定时间后使用) ",
+    Learn: "中拉诺西亚 (x:15, y:15) - 杀手胡蜂 Lv.13\n 古代遗迹喀恩埋没圣堂 - 圣堂蜂、粪便胡蜂 Lv.35",
     Recast100ms: 25,
   },
   {
@@ -201,7 +201,7 @@ const aozActions: AozAction[] = [
       '对目标发动无属性魔法攻击　<span style="color:#00cc22;">威力：</span>50\n<span style="color:#00cc22;">追加效果：</span>无属性持续伤害\n<span style="color:#00cc22;">威力：</span>50　<span style="color:#00cc22;">持续时间：</span>30秒',
     AozDescription: "塞壬所擅长的青魔法。\n将恶毒的魔力融入歌声，污染听到的人的精神，由此引起敌人的幻痛，间接对肉体造成伤害。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003254_hr1.png",
-    Learn: "50领航明灯天狼星灯塔 老四塞壬",
+    Learn: "领航明灯天狼星灯塔 - 塞壬 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -215,7 +215,7 @@ const aozActions: AozAction[] = [
       '向目标所在方向发出雷属性直线范围魔法攻击　<span style="color:#00cc22;">威力：</span>220\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>麻痹　<span style="color:#00cc22;">持续时间：</span>6秒',
     AozDescription: "独眼巨人发射的诡异光线。\n原理与诡异视线相似，从以眼球为基础的魔法阵中放出魔法。不过怒视的集中度更高，可以使敌人如遭雷击麻痹当场。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003272_hr1.png",
-    Learn: "47毒雾洞窟黄金谷 老二数币巨人\n中萨S级lv.50布隆特斯",
+    Learn: "毒雾洞窟黄金谷 - 数币巨人 Lv.47\n 中萨纳兰 [S] - 布隆特斯 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -229,7 +229,7 @@ const aozActions: AozAction[] = [
     AozDescription: "土属性的魔法生物使用的青魔法。\n使用魔法操纵以太来引发局部地震。据说魔力强大的人使用时连地形都能改变。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003259_hr1.png",
     Recast100ms: 25,
-    Learn: "北森(x19,y29) lv.28泥土巨像\n南萨(x24,y13) lv.29砂石巨像\n拉外(x16,y16) lv.34玄岩巨像\n假面狂欢第25关 启示者之杖\n50骚乱坑道铜铃铜山 老二哥革巨像",
+    Learn: "黑衣森林北部林区 (x:19, y:28) - 泥土巨像 Lv.28\n 南萨纳兰 (x:24, y:13) - 砂石巨像 Lv.29\n 拉诺西亚外地 (x:16, y:16) - 玄岩巨像 Lv.34\n 骚乱坑道铜铃铜山 - 哥革巨像 Lv.50\n 苏醒遗迹喀恩埋没圣堂 - 喀恩守护者 Lv.50\n 假面狂欢25 - 启示者 Lv.50",
   },
   {
     ID: 11,
@@ -242,7 +242,7 @@ const aozActions: AozAction[] = [
       '效果时间内，自身发动的1次魔法威力提升50%\n<span style="color:#00cc22;">持续时间：</span>30秒\n无法与<span style="color:#ff7b1a;">攻击准备</span>效果共存',
     AozDescription: "野生生物的斗争本能。\n通过愤怒来增幅魔力，提高自身的战斗能力。青魔法师拿来用的话也许能提高魔法攻击的威力。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003261_hr1.png",
-    Learn: "东森(x18,y24) lv.20-21狂野疣猪",
+    Learn: "黑衣森林东部林区 (x:18, y:24) - 狂野疣猪 Lv.20",
     Recast100ms: 25,
   },
   {
@@ -256,7 +256,7 @@ const aozActions: AozAction[] = [
     AozDescription: "原始的治疗魔法。\n将纯净的以太用风吹向四周。不仅对自身、对周围的同伴也有着高效的治疗效果，代价是巨额的魔力消耗。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003274_hr1.png",
     Recast100ms: 25,
-    Learn: "习得10个青魔法后在沙都辉麟人异男子嘎希迦处领技能机",
+    Learn: "学习 10 个技能后可从[乌尔达哈来生回廊]的[异男子嘎希迦]处获得[天青图腾] Lv.1\n 无限城的死斗 - 恩奇都 Lv.50",
   },
   {
     ID: 32,
@@ -269,7 +269,7 @@ const aozActions: AozAction[] = [
       '令自身前方扇形范围内等级为5的倍数的敌人陷入石化状态\n<span style="color:#00cc22;">持续时间：</span>20秒\n命中率较低\n目标等级高于自身等级时无效',
     AozDescription:
       "冥鬼之眼等妖异使用的诅咒。\n可以找出特定成长阶段的对手的心灵破绽，污染对方的精神，以此停止其生命活动。魔法名中的“级”字可能是什么地方对成长阶段的叫法……",
-    Learn: "28名门府邸静语庄园 庄园的守卫(老三的小怪，20%血后使用，可通过自爆快速重刷) ",
+    Learn: "名门府邸静语庄园 - 庄园的守卫 Lv.28血量低于 20% 后使用\n 水晶塔 古代人迷宫 - 诅咒之眼、腐朽之眼 Lv.50",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003282_hr1.png",
     Recast100ms: 25,
   },
@@ -284,7 +284,7 @@ const aozActions: AozAction[] = [
       '对目标发动无属性物理攻击　<span style="color:#00cc22;">威力：</span>220\n目标处于<span style="color:#ff7b1a;">眩晕</span>状态时威力提高\n<span style="color:#00cc22;">目标处于眩晕状态时威力：</span>450',
     AozDescription: "冬贝利使用的青魔法。\n用魔力聚集所有的怨恨之情，提高武器的锋利程度砍向敌人。对于无法动弹的敌人来说这种攻击非常可怕。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003268_hr1.png",
-    Learn: "50神灵圣域放浪神古神殿 老三冬贝利王\n拉高A级lv.50玛贝利",
+    Learn: "神灵圣域放浪神古神殿 - 冬贝利王 Lv.50\n 拉诺西亚高地 [A] - 玛贝利 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -298,7 +298,7 @@ const aozActions: AozAction[] = [
       '一定时间内，自身受到物理攻击时会对对方造成冰属性魔法伤害\n<span style="color:#00cc22;">威力：</span>40　<span style="color:#00cc22;">持续时间：</span>15秒\n<span style="color:#00cc22;">追加效果（发动几率50%）：</span>减速20%\n<span style="color:#00cc22;">持续时间：</span>15秒',
     AozDescription: "部分妖异使用的青魔法。\n是一种对施术者自身施加的诅咒，会将敌人对自己的敌意转换为冰属性以太，凝成冰柱反射出去。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003286_hr1.png",
-    Learn: "中森(x27,y24) lv.9捣蛋小鬼\n28名门府邸静语庄园 老二庄园的小丑",
+    Learn: "黑衣森林中央林区 (x:27, y:24) - 捣蛋小鬼 Lv.9\n 名门府邸静语庄园 - 庄园小丑 Lv.50\n 假面狂欢25 - 启示者 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -312,7 +312,7 @@ const aozActions: AozAction[] = [
     AozDescription: "蝙蝠和沙蚤使用的青魔法。\n通过血液吸收敌人的生命以太，并转化为自身的魔力。人们推测最初这种魔法是由摄取养分的吸血行为逐渐演变来的。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003263_hr1.png",
     Recast100ms: 25,
-    Learn: "拉低(x27,y16) lv.7洞穴蝙蝠\n中萨(x26,y18) lv.14烈阳蝙蝠\n中森(x25,y20) lv.5-7沙蚤\n南森(x29,y23) lv.45小狐蝠",
+    Learn: "拉诺西亚低地 (x:27, y:16) - 洞穴蝙蝠 Lv.7\n 中萨纳兰 (x:26, y:18) - 烈阳蝙蝠 Lv.14\n 西拉诺西亚 (x:28, y:24) - 黄昏蝙蝠 Lv.15\n 黑衣森林东部林区 (x:17, y:23) - 漆黑蝙蝠、血蚤 Lv.21\n 黑衣森林南部林区 (x:24, y:23) - 小狐蝠 Lv.37\n 名门府邸静语庄园 - 阁楼蝙蝠 Lv.28\n 古代遗迹喀恩埋没圣堂 - 圣堂蝙蝠 Lv.35\n 流沙迷宫樵明洞 - 沙漠蝙蝠 Lv.38\n 毒雾洞窟黄金谷 - 金谷蝙蝠 Lv.47\n 剑斗领域日影地修炼所 - 日影地蝙蝠 Lv.50\n 苏醒遗迹喀恩埋没圣堂 - 圣堂蝙蝠 Lv.50",
   },
   {
     ID: 10,
@@ -325,7 +325,7 @@ const aozActions: AozAction[] = [
     AozDescription:
       "树精等草木纲魔物使用的青魔法。\n撒出橡果状的魔力块并引起连锁爆炸，借此散布具有催眠效果的成分。这种魔法是为了从取食树液的百虫纲魔物手中保护自己而诞生的。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003260_hr1.png",
-    Learn: "北森(x27,y28) lv.12-17幼体树精(每只怪只用一次) \n中森(x27,y15) lv.12-17幼体树精(每只怪只用一次) \n东森(x13,y25) lv.14幼体树精",
+    Learn: "黑衣森林北部林区 (x:27, y:28) - 幼体树精 Lv.12\n 黑衣森林中央林区 (x:27, y:15) - 幼体树精 Lv.12\n 黑衣森林东部林区 (x:13, y:25) - 幼体树精 Lv.12\n 黑衣森林中央林区 [S] - 乌尔迦鲁 Lv.50\n 邪念妖地无限城古堡 - 多节树精 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -339,7 +339,7 @@ const aozActions: AozAction[] = [
       '对指定地点发动火属性范围魔法攻击　<span style="color:#00cc22;">威力：</span>200\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>眩晕　<span style="color:#00cc22;">持续时间：</span>3秒',
     AozDescription: "模仿哥布林族投掷炸弹的青魔法。\n哥布林族在炸弹的火药里加入魔力，以此提高爆炸威力。用青魔法模仿这种形式，造出虚假的炸弹进行燃烧攻击。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003264_hr1.png",
-    Learn: "中拉(x23,y21) lv.5-7哥布林鱼师、哥布林赌徒",
+    Learn: "中拉诺西亚 (x:23, y:21) - 哥布林鱼师、哥布林赌徒 Lv.5\n 西拉诺西亚 (x:27, y:23) - 哥布林猎手 Lv.18\n 黑衣森林东部林区 (x:11, y:28) - 哥布林猎手 Lv.11\n 黑衣森林南部林区 (x:28, y:21) - 哥布林暴徒 Lv.28\n 纷争要地布雷福洛克斯野营地 - 青蓝之手滑翔兵 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -353,7 +353,7 @@ const aozActions: AozAction[] = [
       '一定时间内，目标所受伤害提高5%\n<span style="color:#00cc22;">持续时间：</span>15秒\n该魔法有单独计算的复唱时间，不受其他魔法复唱时间的影响\n与<span style="color:#ff7b1a;">惊奇光</span>共享复唱时间',
     AozDescription: "新大陆的巨人种族使用的青魔法。\n这是一种原始的诅咒，通过侵蚀敌人的精神来瓦解对方的防御。当敌人变得毫无防备后，己方攻击的效果将大幅提升。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003279_hr1.png",
-    Learn: "习得5个青魔法后在沙都辉麟人辉麟人处领技能机",
+    Learn: "学习 5 个技能后可从[乌尔达哈来生回廊]的[异男子嘎希迦]处获得[天青图腾] Lv.1",
     Recast100ms: 600,
   },
   {
@@ -367,7 +367,7 @@ const aozActions: AozAction[] = [
       '对自身周围的敌人发动火属性范围魔法攻击　<span style="color:#00cc22;">威力：</span>1500\n自身处于<span style="color:#ff7b1a;">油性分泌物</span>状态时威力提高至1800\n发动后自身陷入无法战斗状态\n<span style="color:#00cc22;">追加效果：</span><span style="color:#ff7b1a;">意志薄弱</span>\n即使进入无法战斗状态也不会解除<span style="color:#ff7b1a;">意志薄弱</span>\n<span style="color:#00cc22;">持续时间：</span>600秒\n<span style="color:#00cc22;">发动条件：</span>非<span style="color:#ff7b1a;">意志薄弱</span>状态中',
     AozDescription: "爆弹怪倾情代言的青魔法。\n将构成生命的以太全部转换成火属性魔力引起大爆炸。在身上沾满油脂的情况下使用时，能够令火力更上一层楼。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003276_hr1.png",
-    Learn: "西萨(x27,y16) lv.12滑行爆弹怪(一定时间后使用) \n17封锁坑道铜铃铜山 爆破爆弹怪、烈火弹怪\n20魔兽领域日影地修炼 瓦斯弹怪",
+    Learn: "西萨纳兰 (x:27, y:16) - 滑行爆弹怪 Lv.12\n 封锁坑道铜铃铜山 - 爆破爆弹怪、烈火弹怪 Lv.17\n 魔兽领域日影地修炼所 - 瓦斯弹怪 Lv.20\n 名门府邸静语庄园 - 夫人手提灯 Lv.28\n 流沙迷宫樵明洞 - 榴霰弹怪 Lv.38\n 巴哈姆特大迷宫 真源之章2 - 护卫系统 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -381,7 +381,7 @@ const aozActions: AozAction[] = [
       '令一名队员的体力与魔力完全恢复\n发动后自身陷入无法战斗状态\n<span style="color:#00cc22;">追加效果：</span><span style="color:#ff7b1a;">意志薄弱</span>\n即使进入无法战斗状态也不会解除<span style="color:#ff7b1a;">意志薄弱</span>\n<span style="color:#00cc22;">持续时间：</span>600秒\n<span style="color:#00cc22;">发动条件：</span>非<span style="color:#ff7b1a;">意志薄弱</span>状态中',
     AozDescription: "新大陆的死灵使用的青魔法。\n将自己的生命力和魔力全部分给他人，献出生命来让对方完全恢复。牺牲自己，拯救他人。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003277_hr1.png",
-    Learn: "习得20个青魔法后在沙都辉麟人异男子嘎希迦处领技能机",
+    Learn: "学习 20 个技能后可从[乌尔达哈来生回廊]的[异男子嘎希迦]处获得[天青图腾] Lv.1",
     Recast100ms: 25,
   },
   {
@@ -395,7 +395,7 @@ const aozActions: AozAction[] = [
     AozDescription: "卢恩族擅长的青魔法。\n为了从凶猛的肉食野兽口中保护自己而创造出的魔法，将魔力凝聚在手掌上，通过拍手产生的冲击波来惊吓敌人。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003271_hr1.png",
     Recast100ms: 25,
-    Learn: "中萨FATE(x18,y20) lv.6卢恩人烘鸥手\n中萨(x16,y19) lv.9卢恩人护甲手\n东拉FATE(x29,y34) lv.30卢恩人烘鸥手\n东拉(x26,y32) lv.32卢恩人烘鸥手",
+    Learn: "中萨纳兰 (x:16, y:19) - 卢恩人护甲手 Lv.6\n 东拉诺西亚 (x:26, y:32) - 卢恩人烘鸥手 Lv.32",
   },
   {
     ID: 41,
@@ -408,7 +408,7 @@ const aozActions: AozAction[] = [
     AozDescription:
       "碧企鹅擅长的青魔法。\n把捕食时吞下的鱼一口气喷射出来，以此来惊吓敌人。用青魔法再现这个过程则是喷射出魔力制造的鱼，在施加冲击的同时来使对方动摇。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003291_hr1.png",
-    Learn: "东拉(x27,y35) lv.30碧企鹅",
+    Learn: "东拉诺西亚 (x:27, y:35) - 碧企鹅 Lv.30\n 东拉诺西亚 [B] - 血腥玛丽 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -422,7 +422,7 @@ const aozActions: AozAction[] = [
     AozDescription: "提丰老师的秘技。\n喷出猛烈的鼻息来攻击正面敌人的青魔法。除了能让敌人受到狂风侵袭外，还可以微妙地造成一些精神伤害。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003251_hr1.png",
     Recast100ms: 25,
-    Learn: "艾玛吉娜杯斗技大会决赛 提丰\n假面狂欢第20关 提丰",
+    Learn: "艾玛吉娜杯斗技大会决赛 - 提丰 Lv.50\n 假面狂欢20 - 提丰 Lv.50",
   },
   {
     ID: 2,
@@ -435,7 +435,7 @@ const aozActions: AozAction[] = [
       '对指定地点发动无属性范围物理攻击　<span style="color:#00cc22;">威力：</span>200\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>40%加重　<span style="color:#00cc22;">持续时间：</span>30秒',
     AozDescription: "奥尔特罗斯的绝招。\n制造出虚幻的砝码并使其落下压向敌人。实际上砝码究竟是不是正好4星吨就不好说了。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003252_hr1.png",
-    Learn: "艾玛吉娜杯斗技大会决赛 奥尔特罗斯",
+    Learn: "艾玛吉娜杯斗技大会决赛 - 奥尔特罗斯 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -449,7 +449,7 @@ const aozActions: AozAction[] = [
       '向自身前方发动无属性扇形范围魔法攻击\n<span style="color:#00cc22;">威力：</span>220\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>提升仇恨',
     AozDescription: "扎哈克等妖异使用的攻击方式。\n以眼球为基础构筑魔法阵，凝聚魔力和恶意一并放射出去，因此可以引起敌人更大的敌意。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003267_hr1.png",
-    Learn: "摩杜纳理符(x29,y12) 回收禁书«尖牙利齿的怪物»lv.45暗黑扎哈克\n50邪教驻地无限城古堡老三 阿难塔波嘉",
+    Learn: "摩杜纳  - 理符任务：回收禁书《尖牙利齿的怪物》 暗黑扎哈克 Lv.50\n 邪教驻地无限城古堡 - 阿难塔波嘉 Lv.50\n 水晶塔 古代人迷宫 - 瓦力弗 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -463,7 +463,7 @@ const aozActions: AozAction[] = [
       '向自身前方扇形范围内喷吐臭气\n令范围内的敌人陷入中毒、伤害降低10%、加重40%、减速20%、失明、麻痹状态\n<span style="color:#00cc22;">中毒威力：</span>20　<span style="color:#00cc22;">持续时间：</span>15秒\n同时中断目标的技能咏唱',
     AozDescription: "魔界花使用的青魔法。\n操纵风土两种属性的以太，使以太转向灵极性，由此向口中吐出的气息中加入毒素大范围喷射。被称为是最臭的青魔法。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003256_hr1.png",
-    Learn: "中森(x18,y21) lv.31套索花\n中森(x15,y21) lv.31臭套索花",
+    Learn: "黑衣森林中央林区 (x:18, y:21) - 套索花、臭套索花 Lv.31\n 摩杜纳 (x:14, y:14) - 魔界花 Lv.44\n 毒雾洞窟黄金谷 - 魔界花、守财夫人 Lv.47",
     Recast100ms: 25,
   },
   {
@@ -477,7 +477,7 @@ const aozActions: AozAction[] = [
       '一定时间内，将自身所受的伤害减轻90%，同时除特定攻击之外其他所有击退与吸引效果失效\n但是持续时间内无法移动或使用技能　<span style="color:#00cc22;">持续时间：</span>10秒\n<span style="color:#00cc22;">追加效果：</span>解除自身的<span style="color:#ff7b1a;">狂战士化</span>状态\n此技能发动后无法主动中断',
     AozDescription: "龟甲龙擅长的青魔法。\n操纵土属性以太来展开含有金属成分的魔法障壁，以此来强化铠甲和服装。不过由于重量增加会导致强化效果中无法移动。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003292_hr1.png",
-    Learn: "50激战城塞石卫塔老二 库卡龙龟(推荐它使用技能后直接用螺旋尾解决) \n皇都伊修加德保卫战 lv.50部落龙龟",
+    Learn: "激战城塞石卫塔 - 库卡龙龟 Lv.50\n 皇都伊修加德保卫战 - 部落龙龟 Lv.50\n 龙堡参天高地 - 坚甲铁龙——塔拉斯克 - 塔拉斯克 Lv.53",
     Recast100ms: 25,
   },
   {
@@ -491,7 +491,7 @@ const aozActions: AozAction[] = [
       '令自身所受到的伤害减轻40%，同时以令攻击造成的伤害降低40%为代价提升自身仇恨\n持续时间内咏唱不会因受到伤害而中断\n再次发动时则取消该状态　<span style="color:#00cc22;">持续时间：</span>永久',
     AozDescription:
       "新大陆的海洋生物使用的青魔法。\n皮肤很薄的海洋生物为了保护自身而进化出了高超的以太操纵技术。将用于攻击的以太分出一部分加强防御，创造出可以保护自身的魔法障壁。",
-    Learn: "习得10个青魔法后在沙都异男子嘎希迦处领技能机",
+    Learn: "学习 10 个技能后可从[乌尔达哈来生回廊]的[异男子嘎希迦]处获得[天青图腾] Lv.1",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003285_hr1.png",
     Recast100ms: 25,
   },
@@ -506,7 +506,7 @@ const aozActions: AozAction[] = [
       '将目标拉向自身，同时令目标陷入眩晕状态　<span style="color:#00cc22;">持续时间：</span>4秒\n<span style="color:#00cc22;">追加效果：</span>提升仇恨',
     AozDescription: "巨蟾蜍擅长的青魔法。\n本来是伸出粘粘的舌头捕获远处猎物的捕食技能。青魔法则是用魔力制造出无形的舌头来模仿这一效果。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003280_hr1.png",
-    Learn: "拉低FATE(x24,y22) lv.2杖蟾蜍\n中萨(x27,y19) lv.14毒蟾蜍\n西萨(x15,y7) lv.24痴笑巨蟾蜍",
+    Learn: "中萨纳兰 (x:27, y:19) - 毒蟾蜍 Lv.14\n 西萨纳兰 (x:15, y:7) - 痴笑巨蟾蜍 Lv.14\n 东拉诺西亚 (x:17, y:27) - 巨蟾蜍 Lv.33",
     Recast100ms: 25,
   },
   {
@@ -520,7 +520,7 @@ const aozActions: AozAction[] = [
     AozDescription: "巨蟾蜍使用的青魔法。\n给自己涂上油脂，得以让自己变得滑溜溜的，以此回避敌人的攻击。使用起来有点恶心，但也有十分狂热的爱好者。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003278_hr1.png",
     Recast100ms: 25,
-    Learn: "西萨(x15,y7) lv.24痴笑巨蟾蜍",
+    Learn: "西萨纳兰 (x:15, y:7) - 痴笑巨蟾蜍 Lv.24",
   },
   {
     ID: 37,
@@ -533,7 +533,7 @@ const aozActions: AozAction[] = [
       '对自身周围的敌人发动冰属性范围魔法攻击　<span style="color:#00cc22;">威力：</span>220\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>冻结　<span style="color:#00cc22;">持续时间：</span>12秒',
     AozDescription:
       "奇美拉使用的青魔法。\n据说是合成时所用的原产自极北之地的山羊为保护自己不受冰雪侵袭而练就了冰属性以太操控能力，后来将这种能力发展成了攻击手段。",
-    Learn: "38流沙迷宫樵鸣洞老三 奇美拉\n北萨FATE(x17,14) lv.49强化奇美拉\n死化奇美拉讨伐战 奇美拉\n假面狂欢第25关 启示者之杖",
+    Learn: "流沙迷宫樵鸣洞 - 奇美拉 Lv.38\n 死化奇美拉讨伐战 - 死化奇美拉 Lv.50\n 北萨纳兰 - 狂暴巨兽——强化奇美拉 - 强化奇美拉 Lv.49",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003287_hr1.png",
     Recast100ms: 25,
   },
@@ -548,7 +548,7 @@ const aozActions: AozAction[] = [
       '对自身周围的敌人发动雷属性范围魔法攻击　<span style="color:#00cc22;">威力：</span>200\n无法攻击到自身周围8米以内的敌人\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>麻痹　<span style="color:#00cc22;">持续时间：</span>9秒\n目标处于<span style="color:#ff7b1a;">冻结</span>状态时威力提高，对特定敌人无效\n<span style="color:#00cc22;">冻结状态时威力：</span>400\n<span style="color:#00cc22;">追加效果：</span>解除目标身上的<span style="color:#ff7b1a;">冻结</span>状态，对特定敌人无效',
     AozDescription: "奇美拉使用的青魔法。\n据说是通过合成擅长操控雷电的龙族而使奇美拉获得的能力。使用时会在周围引发激烈的放电现象。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003288_hr1.png",
-    Learn: "38流沙迷宫樵鸣洞老三 奇美拉\n北萨FATE(x17,14) lv.49强化奇美拉\n死化奇美拉讨伐战 奇美拉\n假面狂欢第25关 启示者之杖",
+    Learn: "流沙迷宫樵鸣洞 - 奇美拉 Lv.38\n 死化奇美拉讨伐战 - 奇美拉 Lv.50\n 北萨纳兰 - 狂暴巨兽——强化奇美拉 - 强化奇美拉 Lv.49\n 假面狂欢21 - 阿皮狄马 Lv.50\n 假面狂欢25 - 阿波卡里普斯 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -562,7 +562,7 @@ const aozActions: AozAction[] = [
     AozDescription: "模仿导弹的青魔法。\n发射以太构成的虚假导弹。中弹时的冲击力十分强劲，对于越是顽强的敌人越能造成更多伤害。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003273_hr1.png",
     Recast100ms: 25,
-    Learn: "无限城的死斗 恩奇都",
+    Learn: "无限城的死斗 - 恩奇都 Lv.50",
   },
   {
     ID: 15,
@@ -575,7 +575,7 @@ const aozActions: AozAction[] = [
     AozDescription: "仙人刺擅长的射出针刺的攻击。\n不过实际上并不会真的射出针刺，而是将细长的魔力块快速射出，使敌人受到如同针扎般的痛楚。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003265_hr1.png",
     Recast100ms: 25,
-    Learn: "南萨理符(x18,y13) 稀少的带花仙人掌lv.24仙人刺舞蹈家\n南萨(x16,y15) lv.26仙人刺舞蹈家\n38樵鸣洞 仙人刺逃兵",
+    Learn: "南萨纳兰 (x:16, y:15) - 仙人刺舞蹈家 Lv.24\n 流沙迷宫樵鸣洞 - 仙人刺逃兵 Lv.24",
   },
   {
     ID: 40,
@@ -588,7 +588,7 @@ const aozActions: AozAction[] = [
       '向自身前方发动无属性扇形范围魔法攻击　<span style="color:#00cc22;">威力：</span>200\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>失明　<span style="color:#00cc22;">持续时间：</span>30秒',
     AozDescription: "克拉肯使用的青魔法。\n将青魔法水炮进一步强化，向魔力聚集出的水分中加入不纯物质，制造出魔法的墨汁并发射，可以遮蔽敌人的视野。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003290_hr1.png",
-    Learn: "50逆转要害沙斯塔夏溶洞 老三克拉肯",
+    Learn: "逆转要害沙斯塔夏溶洞 - 克拉肯 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -602,7 +602,7 @@ const aozActions: AozAction[] = [
     AozDescription: "从新大陆的辉鳞人身上继承而来的战斗技术。\n向投枪里注入火属性以太后进行投掷的技巧。青魔法中则需要用魔力制造出投枪进行再现。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003293_hr1.png",
     Recast100ms: 25,
-    Learn: "50武装圣域放浪神古神殿老一 折角骑士 寇黑加",
+    Learn: "武装圣域放浪神古神殿 - 折角骑士 寇黑加 Lv.50",
   },
   {
     ID: 33,
@@ -615,7 +615,7 @@ const aozActions: AozAction[] = [
       '令自身发动攻击造成的伤害提高50%，同时移动速度提高30%\n<span style="color:#00cc22;">持续时间：</span>15秒\n效果结束后对自身附加<span style="color:#ff7b1a;">狂战士化的副作用</span>状态\n<span style="color:#00cc22;">持续时间：</span>15秒\n<span style="color:#00cc22;">狂战士化的副作用效果：</span>无法发动自动攻击、魔法、战技、能力',
     AozDescription: "新大陆的妖异使用的青魔法。\n作为信仰月亮的少数部族的神而君临于世的妖异，为了支配信徒所利用的某种可以使精神亢奋的笛声。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003283_hr1.png",
-    Learn: "完成10关假面狂欢",
+    Learn: "完成 10 种假面狂欢关卡后可从[乌尔达哈来生回廊]的[异男子嘎希迦]处获得[天青图腾] Lv.1",
     Recast100ms: 25,
   },
   {
@@ -629,7 +629,7 @@ const aozActions: AozAction[] = [
     AozDescription: "真红龙虾使用的青魔法。\n将魔力凝聚在尾巴尖上，放出螺旋状的以太来侵蚀敌人的生命力。由于需要有高超的以太操纵技术，很难成功施放。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003281_hr1.png",
     Recast100ms: 25,
-    Learn: "50逆转要害沙斯塔夏溶洞老一 真红龙虾\n山区(x27,y8) lv.61峭壁巨钳虾",
+    Learn: "逆转要害沙斯塔夏溶洞 - 真红龙虾 Lv.50\n 基拉巴尼亚山区 (x:26, y:8) - 峭壁巨钳虾 Lv.61",
   },
   {
     ID: 12,
@@ -642,7 +642,7 @@ const aozActions: AozAction[] = [
       '对自身周围的敌人发动无属性范围魔法攻击　<span style="color:#00cc22;">威力：</span>200\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>麻痹　<span style="color:#00cc22;">持续时间：</span>30秒',
     AozDescription: "夺魂魔使用的精神攻击魔法。\n使敌人产生身体遭到切割的错觉，伴随着麻痹对敌人的身体造成伤害。据说擅长限制对手的忍术兵爆破者也会使用。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003262_hr1.png",
-    Learn: "16墓园BOSS 主宰者 加尔梵斯(50%血后使用) \n南森S级lv.50夺心魔",
+    Learn: "地下灵殿塔姆·塔拉墓园 - 主宰者 加尔梵斯 Lv.16\n 黑衣森林南部林区 [S] - 夺心魔 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -656,7 +656,7 @@ const aozActions: AozAction[] = [
       '令目标陷入<span style="color:#ff7b1a;">死亡宣告</span>状态　<span style="color:#00cc22;">持续时间：</span>15秒\n持续时间结束后，目标陷入无法战斗状态\n命中率较低\n目标等级高于自身等级时无效',
     AozDescription:
       "新大陆的妖异使用的青魔法。\n是一种强有力的诅咒，对敌人宣言其生命所剩无几，通过暗示来实行咒杀。只不过由于可以左右生死的效果过于强力，所以成功率也相应的很低。",
-    Learn: "完成20关假面狂欢",
+    Learn: "完成 20 种假面狂欢关卡后可从[乌尔达哈来生回廊]的[异男子嘎希迦]处获得[天青图腾] Lv.1",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003284_hr1.png",
     Recast100ms: 25,
   },
@@ -671,7 +671,7 @@ const aozActions: AozAction[] = [
       '令自身周围的敌人所受到的魔法伤害提高5%\n<span style="color:#00cc22;">持续时间：</span>15秒\n该魔法有单独计算的复唱时间，不受其他魔法复唱时间的影响\n与<span style="color:#ff7b1a;">破防</span>共享复唱时间',
     AozDescription: "蝾螈擅长的青魔法。\n利用放出魔力时的发光现象来暂时夺取敌人的视力。将融入恶意的光线进行漫反射，致使敌人陷入魔力过敏状态。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003289_hr1.png",
-    Learn: "摩杜纳(x13,y10) lv.45静水泥沼蝾螈",
+    Learn: "摩杜纳 (x:13, y:10) - 静水泥沼蝾螈 Lv.45\n 休养胜地布雷福洛克斯野营地 - 水栖蝾螈 Lv.32",
     Recast100ms: 600,
   },
   {
@@ -685,7 +685,7 @@ const aozActions: AozAction[] = [
       '对指定地点发动风属性范围魔法攻击　<span style="color:#00cc22;">威力：</span>220\n<span style="color:#00cc22;">追加效果：</span>风属性持续伤害\n<span style="color:#00cc22;">威力：</span>40　<span style="color:#00cc22;">持续时间：</span>6秒\n与部分青魔法共享复唱时间',
     AozDescription: "迦楼罗的绝招。\n散布魔法羽毛的同时引发暴风来撕裂敌人。通过对敌人造成无数的裂伤来维持持续的疼痛感，十分冷酷无情。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003294_hr1.png",
-    Learn: "迦楼罗歼殛战 迦楼罗",
+    Learn: "迦楼罗歼殛战 - 迦楼罗 Lv.50",
     Recast100ms: 300,
   },
   {
@@ -699,7 +699,7 @@ const aozActions: AozAction[] = [
     AozDescription: "伊弗利特的绝招。\n操纵地脉来增强火属性之力，从而使地面上出现火柱。那副光景仿佛火山喷发。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003295_hr1.png",
     Recast100ms: 300,
-    Learn: "伊芙利特讨伐战、歼灭战、歼殛战 伊弗利特",
+    Learn: "伊弗利特讨伐战 - 伊弗利特 Lv.20\n 伊弗利特歼灭战 - 伊弗利特 Lv.50\n 伊弗利特歼殛战 - 伊弗利特 Lv.50",
   },
   {
     ID: 46,
@@ -712,7 +712,7 @@ const aozActions: AozAction[] = [
       '向自身前方发动土属性扇形范围物理攻击　<span style="color:#00cc22;">威力：</span>400\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n与部分青魔法共享复唱时间',
     AozDescription: "泰坦的绝招。\n通过放出强力的土属性以太来制造出岩石块，给予敌人剧烈的打击。如同山崩地裂般的可怕光景导致的冲击感无法估量。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003296_hr1.png",
-    Learn: "泰坦歼灭战、歼殛战 泰坦",
+    Learn: "泰坦歼灭战 - 泰坦 Lv.50\n 泰坦歼殛战 - 泰坦 Lv.50",
     Recast100ms: 600,
   },
   {
@@ -726,7 +726,7 @@ const aozActions: AozAction[] = [
       '对目标及其周围的敌人发动雷属性范围魔法攻击　<span style="color:#00cc22;">威力：</span>400\n攻击复数敌人时，对目标之外的敌人威力降低50%\n与部分青魔法共享复唱时间',
     AozDescription: "拉姆的绝招。\n从空中放出强有力的落雷。其电压远高于自然现象所产生的雷电，其轨迹仿佛是巨大的战锤落下般贯穿敌人。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003297_hr1.png",
-    Learn: "拉姆歼灭战、歼殛战 拉姆",
+    Learn: "拉姆歼灭战 - 拉姆 Lv.50\n 拉姆歼殛战 - 拉姆 Lv.50",
     Recast100ms: 600,
   },
   {
@@ -740,7 +740,7 @@ const aozActions: AozAction[] = [
       '向自身前方与两侧发动冰属性扇形范围魔法攻击\n<span style="color:#00cc22;">威力：</span>350\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n与部分青魔法共享复唱时间',
     AozDescription: "希瓦的绝招。\n制造出魔法的弓，放出冰柱箭雨。这一技能受到了冰之巫女伊塞勒在尾羽集落见到的猎人箭术的深刻影响。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003298_hr1.png",
-    Learn: "希瓦歼殛战 希瓦",
+    Learn: "希瓦歼殛战 - 希瓦 Lv.50",
     Recast100ms: 900,
   },
   {
@@ -754,7 +754,7 @@ const aozActions: AozAction[] = [
       '一定时间内，自身受到攻击时会对对方造成水属性魔法伤害\n<span style="color:#00cc22;">威力：</span>50　<span style="color:#00cc22;">持续时间：</span>30秒\n与部分青魔法共享复唱时间',
     AozDescription: "利维亚桑的绝招。\n收集大气中的水分来制造蕴含魔力的水膜。这层如同面纱般的水膜既是反弹伤害的魔法镜，也是保护施术者的盾。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003299_hr1.png",
-    Learn: "利维亚桑歼灭战、歼殛战 利维亚桑",
+    Learn: "利维亚桑歼灭战 - 利维亚桑 Lv.50\n 利维亚桑歼殛战 - 利维亚桑 Lv.50",
     Recast100ms: 900,
   },
   {
@@ -768,7 +768,7 @@ const aozActions: AozAction[] = [
     AozDescription: "狮鹫使用的青魔法。\n主要是在争夺地盘抵御外敌的时候使用的魔法，有如阿巴拉提亚山脉高地的劲风般强烈。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003300_hr1.png",
     Recast100ms: 25,
-    Learn: "51暮卫塔尾王狮鹫，云海左上9,8处狮鹫",
+    Learn: "阿巴拉提亚云海 (x:35, y:10) - 狮鹫 Lv.59\n 冰雪废堡暮卫塔 - 狮身巨鹰 Lv.51",
   },
   {
     ID: 51,
@@ -781,7 +781,7 @@ const aozActions: AozAction[] = [
       '向自身前方发动水属性扇形范围魔法攻击　<span style="color:#00cc22;">威力：</span>220\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>将范围内的敌人击退15米',
     AozDescription: "有生命活水的特殊攻击。\n机械装置“水合核心”通过操控流体创造了激流。如果能用魔法进行再现，就算再巨大的敌人也都可以冲走了。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003301_hr1.png",
-    Learn: "启动3水基佬，假面狂欢29层P2水柱和BOSS本体",
+    Learn: "亚历山大机神城 启动之章3 - 有生命活水 Lv.60\n 零式亚历山大机神城 启动之章3 - 有生命活水 Lv.60\n 假面狂欢29 - 水之式神、水龙卷 Lv.60",
     Recast100ms: 25,
   },
   {
@@ -795,7 +795,7 @@ const aozActions: AozAction[] = [
       '向自身前方发动冰属性扇形范围魔法攻击　<span style="color:#00cc22;">威力：</span>220\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>敌人处于<span style="color:#ff7b1a;">水毒</span>状态时解除该状态，同时附加<span style="color:#ff7b1a;">冻结</span>状态\n<span style="color:#00cc22;">持续时间：</span>20秒',
     AozDescription:
       "雪人使用的青魔法。\n将体内生成的冰冷媒介融入吐息之中，就可以产生有如狂风暴雪般的冷风。如果吹向被水毒侵蚀的敌人，则可以使其从体内开始全身冰冻。",
-    Learn: "西高隼巢左边，台子上(56级)或下面(51级)雪人都可以学到，西高A怪米勒卡，Lv53职业任务需求。",
+    Learn: "库尔扎斯西部高地 (x:25, y:32) - 大脚板岩雪人 Lv.56",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003302_hr1.png",
     Recast100ms: 25,
   },
@@ -810,7 +810,7 @@ const aozActions: AozAction[] = [
     AozDescription: "大海蛇使用的青魔法。\n将积累的雷属性以太与吐出的水块结合，使其成为带电水块。它可以使猎物变虚弱从而便于捕获。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003303_hr1.png",
     Recast100ms: 25,
-    Learn: "云海(27,31)雷牙(沃仙曦染水里的蛇)",
+    Learn: "阿巴拉提亚云海 (x:26, y:33) - 雷牙 Lv.50",
   },
   {
     ID: 54,
@@ -823,7 +823,7 @@ const aozActions: AozAction[] = [
     AozDescription: "装甲人偶的特殊攻击。\n如闪光般快速挥动长枪型的武器，从而横扫前方的敌人。如果要用青魔法再现这种攻击，需要从生成以太长枪开始。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003304_hr1.png",
     Recast100ms: 25,
-    Learn: "A1(启动1)浮士德",
+    Learn: "亚历山大机神城 启动之章1 - 浮士德 Lv.60\n 亚历山大机神城 启动之章2 - 浮士德 Lv.60",
   },
   {
     ID: 55,
@@ -836,7 +836,7 @@ const aozActions: AozAction[] = [
       '对目标发动无属性物理攻击　<span style="color:#00cc22;">威力：</span>220\n<span style="color:#00cc22;">追加效果：</span>麻痹　<span style="color:#00cc22;">持续时间：</span>30秒',
     AozDescription: "上级恶魔的绝招。\n通过以太炼成无数的剑，从各个方位刺向敌人。这也可以通过刺伤敌人的神经系统，使其产生麻痹。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003305_hr1.png",
-    Learn: "学识宝库迦巴勒幻想图书馆(59)，尾王第三波召唤小怪放一只出来，等读条使用后打掉，恶灵府邸静语庄园(50)，2号BOSS，58理符焚书任务/Necrologos",
+    Learn: "龙堡内陆低地  - 焚书任务：回收禁书《青眼怪物》 上级恶魔 Lv.58\n 学识宝库迦巴勒幻想图书馆 - 偷书者 Lv.59最终 BOSS 第三次踩塔（虚无召唤）失败后出现的小怪",
     Recast100ms: 25,
   },
   {
@@ -850,7 +850,7 @@ const aozActions: AozAction[] = [
     AozDescription: "猴面雀使用的青魔法。\n听到这奇妙的叫声后会有一种领悟了宇宙神秘的感觉。因为宇宙的情报量过多大脑处理不过来，所以会陷入深沉的睡眠。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003306_hr1.png",
     Recast100ms: 25,
-    Learn: "云顶附近(14,31)狡猾猴面雀。低血量不会使用，别打太快",
+    Learn: "阿巴拉提亚云海 (x:21, y:32) - 猴面雀 Lv.50",
   },
   {
     ID: 57,
@@ -863,7 +863,7 @@ const aozActions: AozAction[] = [
     AozDescription: "疫虫等魔物使用的青魔法。\n通过震动身体的一部分，发出令人不适的音波。据说该震动发出的音波能打消一部分以太波长，从而解除部分强化魔法。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003307_hr1.png",
     Recast100ms: 25,
-    Learn: "魔大陆30,9，疫虫，腐坏遗迹无限城市街古迹2号BOSS，无限城的死斗，恩奇都",
+    Learn: "魔大陆阿济兹拉 (x:30, y:12) - 疫虫 Lv.59",
   },
   {
     ID: 58,
@@ -876,7 +876,7 @@ const aozActions: AozAction[] = [
       '恢复目标的体力　<span style="color:#00cc22;">恢复力：</span>100\n自身处于<span style="color:#ff7b1a;">以太复制：治疗</span>状态时　<span style="color:#00cc22;">恢复力：</span>500',
     AozDescription: "部分莫古力使用的治疗魔法。\n原理和幻术的治疗没有区别，不过理论却很随便。大概就是用头上的绒球聚集魔力，然后随便一用就可以治疗他人了。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003308_hr1.png",
-    Learn: "真/极莫古力贤王歼灭战，茸茸之愈",
+    Learn: "莫古力贤王歼灭战 - 茸茸之愈 库普洛·奇普 Lv.50\n 莫古力贤王歼殛战 - 茸茸之愈 库普洛·奇普 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -890,7 +890,7 @@ const aozActions: AozAction[] = [
       '为自身和周围队员附加能够抵御一定伤害的防护罩\n该防护罩能够抵消相当于恢复力100的伤害量\n<span style="color:#00cc22;">持续时间：</span>30秒\n自身处于<span style="color:#ff7b1a;">以太复制：治疗</span>状态时\n该防护罩能够抵消相当于恢复力250的伤害量\n无法与学者的鼓舞和贤者的均衡诊断及均衡预后效果共存',
     AozDescription:
       "部分哥布林使用的青魔法。\n科学家集团青蓝之手在用科学原理研究分析魔法的过程中创造出的新魔法，通过在身体表面展开如皮肤般轻薄的魔法障壁，可以吸收外界带来的冲击。",
-    Learn: "A10普通小怪，龙低A怪哥布林，龙低玛托雅洞口59智蛙，靠近才会放，Lv60职业任务需求。",
+    Learn: "龙堡内陆低地 [A] - 机工兵 斯利普金克斯 Lv.60\n 亚历山大机神城 天动之章2 - 亚历山大伏兵、亚历山大挥刀兵 Lv.60",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003309_hr1.png",
     Recast100ms: 25,
   },
@@ -905,7 +905,7 @@ const aozActions: AozAction[] = [
       '对目标及其周围的敌人发动无属性魔法攻击　<span style="color:#00cc22;">威力：</span>250\n攻击复数敌人时，对目标之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>令目标的智力与精神降低10%\n<span style="color:#00cc22;">持续时间：</span>10秒\n<span style="color:#00cc22;">追加效果：</span>恢复自身最大魔力的10%\n该魔法有单独计算的复唱时间',
     AozDescription: "比布鲁斯等魔物使用的青魔法。\n用物理或魔法的锤子敲打敌人头部，使其变得虚脱，从而强制放出体内的魔力，是非常可怕的招式。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003310_hr1.png",
-    Learn: "秘本宝库图书馆(60)，3号BOSS前的阿班达，假面狂欢24层第3面，艾匹罗基",
+    Learn: "秘本宝库迦巴勒幻想图书馆 - 阿班达 Lv.60\n 假面狂欢24 - 艾匹罗基 Lv.50",
     Recast100ms: 900,
   },
   {
@@ -919,7 +919,7 @@ const aozActions: AozAction[] = [
       '让目标队员替自己承受来自敌人的攻击\n但对部分攻击无效\n<span style="color:#00cc22;">持续时间：</span>12秒\n与目标的距离不能超过10米\n该魔法有单独计算的复唱时间',
     AozDescription: "鹰蜂女王使用的青魔法。\n通过释放特殊的荷尔蒙，可以命令蜂群守护自己。学会此青魔法后，经常会把队友看成肉盾。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003311_hr1.png",
-    Learn: "植物园2号BOSS",
+    Learn: "草木庭园圣茉夏娜植物园 - 鹰锋女王 Lv.60",
     Recast100ms: 1200,
   },
   {
@@ -933,7 +933,7 @@ const aozActions: AozAction[] = [
     AozDescription: "智蛙使用的青魔法。\n这魔法之歌可以将周围敌人的仇恨瞬间聚集到自己身上。假扮成普通的青蛙，以傻傻的音调放声歌唱即可。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003312_hr1.png",
     Recast100ms: 25,
-    Learn: "通关所有30层假面狂欢，领取图腾",
+    Learn: "龙堡内陆低地 (x:12, y:35) - 智蛙 Lv.59需要靠近才会使用",
   },
   {
     ID: 63,
@@ -946,7 +946,7 @@ const aozActions: AozAction[] = [
     AozDescription: "祖使用的青魔法。\n挥动巨大翅膀产生的冲击波，在风属性以太的操控下压缩成了风刃飞向敌人。其威力有如名刀一击。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003313_hr1.png",
     Recast100ms: 25,
-    Learn: "云海(9.5,16.7)瓦魔蛾拉一起，压低血线才会释放，腐坏遗迹无限城市街古迹，第二波小怪的瓦魔蛾，附近有其他怪物目标时自动使用，Lv58职业任务需求。",
+    Learn: "阿巴拉提亚云海 - 黑色怪鸟 - 安祖主母 Lv.47\n 阿巴拉提亚云海 (x:37, y:36) - 安祖 Lv.59\n 领航明灯天狼星灯塔 - 祖 Lv.50",
   },
   {
     ID: 64,
@@ -959,7 +959,7 @@ const aozActions: AozAction[] = [
       '效果时间内自身发动的1次魔法为物理攻击时，威力提升80%\n<span style="color:#00cc22;">持续时间：</span>30秒\n无法与<span style="color:#ff7b1a;">蓄力</span>效果共存',
     AozDescription: "长颈驼使用的青魔法。\n通过自我暗示提升力量，是一种强化魔法。繁殖期的长颈驼会一边发出口笛的声音，一边用该魔法强化自己，以向异性展示自己。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003314_hr1.png",
-    Learn: "云海右上(30,7)安祖，灯塔2号BOSS祖(学狂乱那位)",
+    Learn: "阿巴拉提亚云海 (x:19, y:30) - 长颈驼 Lv.56",
     Recast100ms: 25,
   },
   {
@@ -973,7 +973,7 @@ const aozActions: AozAction[] = [
       '向目标所在方向发出无属性直线范围魔法攻击　<span style="color:#00cc22;">威力：</span>200\n敌人处于<span style="color:#ff7b1a;">止步</span>状态时解除该状态，同时提升威力\n<span style="color:#00cc22;">敌人处于止步状态时威力：</span>400\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>减速20%　<span style="color:#00cc22;">持续时间：</span>20秒',
     AozDescription:
       "捕获异端者用人偶骑士的特殊攻击。\n通过照射特定波长的以太，可以侵蚀对方的肉体，使其动作变得迟缓。如果对方精神也被侵蚀，那么威力会更加强大。",
-    Learn: "云海(20,32)长颈驼，Lv55职业任务需求。",
+    Learn: "圣教中枢伊修加德教皇厅 - 白骑士 Lv.57",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003315_hr1.png",
     Recast100ms: 25,
   },
@@ -988,7 +988,7 @@ const aozActions: AozAction[] = [
       '向目标所在方向发出无属性直线范围魔法攻击　<span style="color:#00cc22;">威力：</span>200\n敌人处于<span style="color:#ff7b1a;">减速</span>状态时解除该状态，同时提升威力\n<span style="color:#00cc22;">敌人处于减速状态时威力：</span>400\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>止步　<span style="color:#00cc22;">持续时间：</span>20秒',
     AozDescription:
       "拷问异端者用人偶骑士的特殊攻击。\n通过照射特定波长的以太，可以侵蚀对方的精神，从而夺取对方行动的自由。如果对方肉体也被侵蚀，那么威力会更加强大。",
-    Learn: "教皇厅",
+    Learn: "圣教中枢伊修加德教皇厅 - 黑骑士 Lv.57",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003316_hr1.png",
     Recast100ms: 25,
   },
@@ -1003,7 +1003,7 @@ const aozActions: AozAction[] = [
       "令自身周围等级为5的倍数的敌人陷入无法战斗状态\n命中率较低\n目标等级高于自身等级时无效\n该魔法有单独计算的复唱时间，并与部分青魔法共享复唱时间",
     AozDescription: "部分妖异使用的青魔法。\n侵蚀成长到特定阶段的对象，对他们的心灵与精神进行污染，强制停止肉体的自净作用，夺取他们的性命。宛如死神般的招式。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003317_hr1.png",
-    Learn: "A4(启动4)",
+    Learn: "学识宝库加巴勒幻想图书馆 - 64页 Lv.59",
     Recast100ms: 1800,
   },
   {
@@ -1017,7 +1017,7 @@ const aozActions: AozAction[] = [
     AozDescription: "模仿魔导兵器攻击方式的青魔法。\n发射用魔力创造出的幻影导弹，让敌人产生错觉以为自己被攻击了。错觉越是强烈，实际受到的伤害就越大。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003318_hr1.png",
     Recast100ms: 25,
-    Learn: "长城2号BOSS",
+    Learn: "监牢铁臂巴埃萨长城 - 武装重甲 Lv.60",
   },
   {
     ID: 69,
@@ -1030,7 +1030,7 @@ const aozActions: AozAction[] = [
       '对目标发动无属性魔法攻击　<span style="color:#00cc22;">威力：</span>220\n<span style="color:#00cc22;">追加效果：</span>眩晕　<span style="color:#00cc22;">持续时间：</span>1秒\n该技能的眩晕效果不受其他眩晕影响',
     AozDescription:
       "模仿蛮神兵器使用的破坏光线的青魔法。\n用极细的热光线将目标的神经系统与动力传达系统烧毁，从而夺取对方行动的自由。重要的是，只要能够攻击到对方，无论多少次都能夺取对方行动的自由。",
-    Learn: "女神索菲娅(所有难度)",
+    Learn: "亚历山大机神城 启动之章4 - 操纵者 Lv.60\n 零式亚历山大机神城 启动之章4 - 操纵者 Lv.60",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003319_hr1.png",
     Recast100ms: 25,
   },
@@ -1045,7 +1045,7 @@ const aozActions: AozAction[] = [
       '指定一名队员，令其受到的伤害减轻5%\n<span style="color:#00cc22;">持续时间：</span>6秒\n自身处于<span style="color:#ff7b1a;">以太复制：防护</span>状态时\n队员受到的伤害减轻15%',
     AozDescription: "某种仙人刺使用的青魔法。\n偶尔会有仙人刺将自己的魔力献给拥有更多种子的仙人刺。这是它们在严酷的荒野中为了让种族延续而获得的某种本能。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003320_hr1.png",
-    Learn: "武神罗波那(所有难度)",
+    Learn: "苏醒遗迹喀恩埋没圣堂 - 仙人刺守卫 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -1059,7 +1059,7 @@ const aozActions: AozAction[] = [
       '对目标发动无属性物理攻击　<span style="color:#00cc22;">威力：</span>50\n自身剩余体力在20%以下时威力提升\n<span style="color:#00cc22;">体力在20%以下时：</span>500',
     AozDescription:
       "瓦拉其族代代相传的攻击魔法。\n濒死状态下才能发挥该魔法的真正威力，主要是利用了攻击者濒死时心理产生的负荷，从而大幅提升攻击威力。该青魔法源自哪种生物则是族里的秘密。",
-    Learn: "50圣堂，2号BOSS仙人刺女王召唤的护卫",
+    Learn: "学习 50 个技能后可从[乌尔达哈来生回廊]的[异男子嘎希迦]处获得[天青图腾] Lv.1",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003321_hr1.png",
     Recast100ms: 25,
   },
@@ -1074,7 +1074,7 @@ const aozActions: AozAction[] = [
     AozDescription:
       "瓦拉其族代代相传的复活魔法。\n将像天使一样的使魔作为媒介把魔力注入对象，可以使其复活。不过，瓦拉其族的宗教信仰中没有天使，有关天使的起源仍是谜团。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003322_hr1.png",
-    Learn: "通关所有30层假面狂欢，领取图腾",
+    Learn: "完成 30 个假面狂欢关卡后可从[乌尔达哈来生回廊]的[异男子嘎希迦]处获得[天青图腾] Lv.1",
     Recast100ms: 3000,
   },
   {
@@ -1088,7 +1088,7 @@ const aozActions: AozAction[] = [
       '恢复自身及周围队员的体力　<span style="color:#00cc22;">恢复力：</span>50\n<span style="color:#00cc22;">追加效果：</span>解除部分弱化效果中的一种\n自身处于<span style="color:#ff7b1a;">以太复制：治疗</span>状态时　<span style="color:#00cc22;">恢复力：</span>300',
     AozDescription: "瓦魔蛾使用的青魔法。\n通过活化自身的治愈能力，可以排除体内的代谢物和毒素。使用此魔法后，会有一种类似蜕皮的感觉。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003323_hr1.png",
-    Learn: "A8(亚历山大律动4层)残暴正义号",
+    Learn: "腐坏遗迹无限城市街古迹 - 瓦魔蛾 Lv.50\n 阿巴拉提亚云海 (x:10, y:17) - 阿巴拉提亚瓦魔蛾 Lv.57",
     Recast100ms: 25,
   },
   {
@@ -1102,7 +1102,7 @@ const aozActions: AozAction[] = [
       '对目标发动雷属性魔法攻击　<span style="color:#00cc22;">威力：</span>220\n<span style="color:#00cc22;">追加效果：</span>40%加重　<span style="color:#00cc22;">持续时间：</span>10秒\n该技能的加重效果不受其他加重影响',
     AozDescription: "古老双足飞龙使用的青魔法。\n将云中飞行时积攒的雷电逆流放出。被击中的人会一时间有如重物压身般，无法正常行动。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003324_hr1.png",
-    Learn: "地脉灵灯天狼星灯塔，1号BOSS召唤的小怪",
+    Learn: "翻云雾海 (x:25, y:28) - 云上双足飞龙 Lv.56\n 邪龙王座龙巢神殿 - 雷雅克魔龙 Lv.55",
     Recast100ms: 25,
   },
   {
@@ -1116,7 +1116,7 @@ const aozActions: AozAction[] = [
       '对目标发动无属性魔法攻击　<span style="color:#00cc22;">威力：</span>250\n<span style="color:#00cc22;">追加效果：</span>一定时间内，自身的最大体力提高20%\n<span style="color:#00cc22;">持续时间：</span>15秒\n<span style="color:#ff7b1a;">以太复制：防护</span>状态下的持续时间变为70秒\n<span style="color:#00cc22;">追加效果：</span>恢复伤害量100%的体力\n该魔法有单独计算的复唱时间',
     AozDescription: "野生生物的捕食行动。\n不过运用到青魔法时不是直接吸取对方的血肉，而是夺取对方的以太。可以恢复自身的体力以及暂时提高自己的最大体力。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003325_hr1.png",
-    Learn: "女神索菲娅(所有难度)",
+    Learn: "腐坏遗迹无限城市街古迹 - 腐坏贪吃鬼 Lv.50\n 巴哈姆特大迷宫 邂逅之章1 - 神杖巨蛇 Lv.50",
     Recast100ms: 600,
   },
   {
@@ -1130,7 +1130,7 @@ const aozActions: AozAction[] = [
       '对目标随机附加<span style="color:#ff7b1a;">星极性耐性降低</span>、<span style="color:#ff7b1a;">灵极性耐性降低</span>、<span style="color:#ff7b1a;">物理受伤加重</span>状态　<span style="color:#00cc22;">持续时间：</span>30秒\n<span style="color:#00cc22;">星极性耐性降低效果：</span>所受火、风、雷属性伤害提高5%\n<span style="color:#00cc22;">灵极性耐性降低效果：</span>所受水、土、冰属性伤害提高5%\n<span style="color:#00cc22;">物理受伤加重效果：</span>所受物理伤害提高5%\n以上状态无法叠加',
     AozDescription:
       "自走人偶抄写员使用的特殊魔法。\n调查对方的弱点，暂时扩大弱点范围。某人偶师为了调查对象是否有外遇而制作的自走人偶，调查弱点的功能纯属偶然。",
-    Learn: "武神罗波那(所有难度)",
+    Learn: "假面狂欢24 - 斗场抄写员 Lv.50\n 秘本宝库迦巴勒幻想图书馆 - 自走人偶抄写员 Lv.60",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003326_hr1.png",
     Recast100ms: 25,
   },
@@ -1145,7 +1145,7 @@ const aozActions: AozAction[] = [
       '指定一名除自身外的玩家，复制其以太特性\n对自身附加<span style="color:#ff7b1a;">以太复制：防护</span>、<span style="color:#ff7b1a;">以太复制：进攻</span>、<span style="color:#ff7b1a;">以太复制：治疗</span>状态中的一种\n指定玩家的职能将决定附加的状态\n<span style="color:#ff7b1a;">以太复制：防护</span>状态下，自身的防御力上升，同时强化部分青魔法\n<span style="color:#ff7b1a;">以太复制：进攻</span>状态下，自身的暴击发动率和直击发动率提高20%，同时强化部分青魔法\n<span style="color:#ff7b1a;">以太复制：治疗</span>状态下，自身发动治疗魔法的治疗量提高20%，同时强化部分青魔法\n再次发动时则取消该状态　<span style="color:#00cc22;">持续时间：</span>永久',
     AozDescription: "晶片使用的青魔法。\n分析对方以太的同时，将自身的以太波长与其靠拢。从而可以暂时获得对方以太的所带来的优势。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003327_hr1.png",
-    Learn: "女神索菲娅(所有难度)",
+    Learn: "地脉灵灯天狼星灯塔 - 被腐化连线后产生的小怪 Lv.60",
     Recast100ms: 25,
   },
   {
@@ -1159,7 +1159,7 @@ const aozActions: AozAction[] = [
       '向自身前方发出土属性扇形范围魔法攻击　<span style="color:#00cc22;">威力：</span>200\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">积蓄次数：</span>4\n<span style="color:#00cc22;">追加效果：</span>穿甲散弹的威力提高50%\n<span style="color:#00cc22;">最大档数：</span>3档　<span style="color:#00cc22;">持续时间：</span>3秒\n若在持续时间中发动穿甲散弹之外的技能，会立即解除该状态',
     AozDescription: "罗波那的绝招。\n操纵土属性以太，从周围的矿物中吸取所需物质，生成无数的金属颗粒。释放该金属颗粒，可以将前方的敌人一网打尽。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003328_hr1.png",
-    Learn: "武神罗波那(所有难度)",
+    Learn: "罗波那歼灭战 - 罗波那 Lv.53\n 罗波那歼殛战 - 罗波那 Lv.60",
     Recast100ms: 300,
   },
   {
@@ -1173,7 +1173,7 @@ const aozActions: AozAction[] = [
       '对自身周围的敌人发动无属性魔法攻击　<span style="color:#00cc22;">威力：</span>300\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n与部分青魔法共享复唱时间',
     AozDescription: "索菲娅的绝招。\n重视“调和”的女神索菲娅会对破坏“均衡”的人们落下神罚的流星。那象征着毁灭命运的流星，宛如凶星一般。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003329_hr1.png",
-    Learn: "女神索菲娅(所有难度)",
+    Learn: "索菲娅歼灭战 - 索菲娅 Lv.60\n 索菲娅歼殛战 - 索菲娅 Lv.60",
     Recast100ms: 600,
   },
   {
@@ -1187,7 +1187,7 @@ const aozActions: AozAction[] = [
       '跳起接近目标并发动无属性范围物理攻击　<span style="color:#00cc22;">威力：</span>300\n攻击复数敌人时，对目标之外的敌人威力降低50%\n<span style="color:#ff7b1a;">止步</span>状态下无法发动\n与部分青魔法共享复唱时间',
     AozDescription: "残暴正义号的必杀技。\n飞翔吧，正义号，穿越天空！我们的梦想、希望、友情与爱和勇气合体，惩戒作恶的坏人！接招吧，正义飞踢！！",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003330_hr1.png",
-    Learn: "武神罗波那(所有难度)",
+    Learn: "亚历山大机神城 律动之章4 - 残暴正义号 Lv.60\n 零式亚历山大机神城 律动之章4 - 残暴正义号 Lv.60",
     Recast100ms: 600,
   },
   {
@@ -1201,7 +1201,7 @@ const aozActions: AozAction[] = [
     AozDescription: "鲶鱼精族擅长的传统捕鱼技。\n用捕鱼的尖枪刺出三连击。本来是捕鱼用的技巧，后来发展成了防身术。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003331_hr1.png",
     Recast100ms: 900,
-    Learn: "延夏(28,7)鲶鱼精 延夏B怪鱼雷",
+    Learn: "延夏 (x:28, y:8) - 惠比寿鲶鱼精 Lv.67\n 延夏 [B] - 闪雷击 鱼雷 Lv.70",
   },
   {
     ID: 82,
@@ -1214,7 +1214,7 @@ const aozActions: AozAction[] = [
       '对目标及其周围敌人发动雷属性范围魔法攻击　<span style="color:#00cc22;">威力：</span>100\n攻击复数敌人时，对目标之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>效果时间内自身发动的1次魔法为物理攻击时，威力提升100\n<span style="color:#00cc22;">持续时间：</span>15秒',
     AozDescription: "鲶鱼精族释放的雷击。\n懒惰的鲶鱼精为了轻松捕鱼，会使用这种雷击魔法将鱼儿电翻。此外，释放的雷击还会促进血液循环，增强自身力量。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003332_hr1.png",
-    Learn: "延夏(28,7)鲶鱼精 延夏B怪鱼雷",
+    Learn: "延夏 (x:28, y:8) - 惠比寿鲶鱼精 Lv.67\n 延夏 [B] - 闪雷击 鱼雷 Lv.70",
     Recast100ms: 25,
   },
   {
@@ -1228,7 +1228,7 @@ const aozActions: AozAction[] = [
       '向目标所在方向发出无属性直线范围魔法攻击　<span style="color:#00cc22;">威力：</span>220\n<span style="color:#00cc22;">追加效果：</span>眩晕　<span style="color:#00cc22;">持续时间：</span>3秒\n攻击复数敌人时，对目标之外的敌人威力降低50%',
     AozDescription:
       "模仿道顺丸忍众妨碍技的青魔法。\n用魔力制造出幻影的草席，然后再将其翻转过来，从而使敌人失去平衡。如果使用熟练的话，就连草席的香气都能再现出来。",
-    Learn: "恶党孤城黄金阁 2号BOSS道顺丸",
+    Learn: "恶党孤城黄金阁 - 道顺丸 Lv.70",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003333_hr1.png",
     Recast100ms: 25,
   },
@@ -1243,7 +1243,7 @@ const aozActions: AozAction[] = [
       '对自身附加<span style="color:#ff7b1a;">彻骨雾寒</span>状态　<span style="color:#00cc22;">持续时间：</span>5秒\n持续时间内如果受到敌人的攻击，则效果会变化成<span style="color:#ff7b1a;">冰雾</span>\n<span style="color:#00cc22;">冰雾效果：</span>技能<span style="color:#ff7b1a;">彻骨雾寒</span>变化为<span style="color:#ff7b1a;">冰雾</span>\n<span style="color:#00cc22;">持续时间：</span>15秒\n该魔法有单独计算的复唱时间\n\n<span style="color:#ff7b1a;">冰雾</span>\n对目标发动冰属性魔法攻击　<span style="color:#00cc22;">威力：</span>400\n<span style="color:#00cc22;">追加效果：</span>冻结　<span style="color:#00cc22;">持续时间：</span>10秒\n<span style="color:#00cc22;">发动条件：</span><span style="color:#ff7b1a;">冰雾</span>状态中',
     AozDescription: "雾龙在自我保护时使用的技能。\n使自身周围环绕冷气，让攻击自己的敌人冻冰。此时还需要制作一张空气膜保护自己，这样就不会波及到自身了。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003334_hr1.png",
-    Learn: "死亡大地终末焦土 最终BOSS雾龙\n提示：留一个龙头等待boss释放完技能(会附加冰冻dot6s，奶妈注意团血)，打掉所有龙头中断读条视为失败",
+    Learn: "死亡大地终末焦土 - 雾龙 Lv.70",
     Recast100ms: 900,
   },
   {
@@ -1257,7 +1257,7 @@ const aozActions: AozAction[] = [
       '对周围的敌人发动无属性范围魔法攻击　<span style="color:#00cc22;">威力：</span>140\n自身处于<span style="color:#ff7b1a;">以太复制：治疗</span>状态时效果变为\n恢复自身及周围队员的体力　<span style="color:#00cc22;">恢复力：</span>300',
     AozDescription:
       "吉祥天女的绝招。\n这是爱的赞歌。不知爱为何物之人唱出此歌，会将周围燃烧殆尽。心怀慈爱之人唱出此歌，会绽放治愈之光。此曲完美展现了爱为何物。",
-    Learn: "美神",
+    Learn: "吉祥天女歼灭战 - 吉祥天女 Lv.67\n 吉祥天女歼殛战 - 吉祥天女 Lv.70",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003336_hr1.png",
     Recast100ms: 25,
   },
@@ -1272,7 +1272,7 @@ const aozActions: AozAction[] = [
       '对目标及其周围的敌人发动无属性范围魔法攻击　<span style="color:#00cc22;">威力：</span>100\n目标为不死系怪物时，威力提高\n<span style="color:#00cc22;">对不死系怪物的威力：</span>500',
     AozDescription:
       "魔列车释放的净化之光。\n会将亡灵和不净之物的灵魂净化。发明了魔导列车的加雷马帝国有着一个奇怪的传说，那就是有种专门承载死者的列车……这究竟是？",
-    Learn: "O5 魔列车",
+    Learn: "欧米茄时空狭缝 西格玛幻境1 - 魔列车 Lv.70\n 欧米茄零式时空狭缝 西格玛幻境1 - 魔列车 Lv.70",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003337_hr1.png",
     Recast100ms: 25,
   },
@@ -1287,7 +1287,7 @@ const aozActions: AozAction[] = [
     AozDescription: "枯腐泥妖擅长的绝技。\n操控土属性以太制作出泥土，再将泥土投向敌人。会对身穿白色衣物的敌人带来极大的精神创伤。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003338_hr1.png",
     Recast100ms: 25,
-    Learn: "污染庭园圣茉夏娜植物园 最终BOSS枯腐泥妖\n提示：对小怪泥丸子方向进行扇形AOE",
+    Learn: "污染庭园圣茉夏娜植物园 - 枯腐泥妖 Lv.70\n 伊尔美格 [A] - 泥人 Lv.80",
   },
   {
     ID: 88,
@@ -1300,7 +1300,7 @@ const aozActions: AozAction[] = [
       '恢复自身及周围队员的体力　<span style="color:#00cc22;">恢复力：</span>400\n自身处于<span style="color:#ff7b1a;">以太复制：治疗</span>状态时\n<span style="color:#00cc22;">追加效果：</span>令目标体力持续恢复\n<span style="color:#00cc22;">恢复力：</span>200　<span style="color:#00cc22;">持续时间：</span>15秒\n该魔法有单独计算的复唱时间，并与部分青魔法共享复唱时间',
     AozDescription: "新大陆的守护像使用的青魔法。\n用魔法生成类似万能药的物质，可以活化自身治愈能力。如果拥有治愈知识之人使用此魔法，会带来更强大的效果。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003339_hr1.png",
-    Learn: "青魔法师70级达成 图腾兑换",
+    Learn: "达到 70 级后可从[乌尔达哈来生回廊]的[异男子嘎希迦]处获得[天青图腾] Lv.70",
     Recast100ms: 1200,
   },
   {
@@ -1314,7 +1314,7 @@ const aozActions: AozAction[] = [
       '展开玄结界，令自身所受的伤害减轻20%\n<span style="color:#00cc22;">持续时间：</span>10秒\n<span style="color:#00cc22;">追加效果：</span>持续时间内如果受到超过自身最大体力30%的伤害，则对自身附加<span style="color:#ff7b1a;">玄天武水壁</span>\n<span style="color:#00cc22;">玄天武水壁效果：</span>技能<span style="color:#ff7b1a;">玄结界</span>变化为<span style="color:#ff7b1a;">玄天武水壁</span>\n效果时间内发动技能或进行移动、转身都会使玄结界立即消失\n此外当玄结界消失时，玄天武水壁也会同时消失\n该魔法有单独计算的复唱时间，并与部分青魔法共享复唱时间\n\n<span style="color:#ff7b1a;">玄天武水壁</span>\n对自身周围的敌人发动水属性范围魔法攻击　<span style="color:#00cc22;">威力：</span>500\n自身处于<span style="color:#ff7b1a;">以太复制：防护</span>状态时　<span style="color:#00cc22;">威力：</span>1000\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">效果发动条件：</span><span style="color:#ff7b1a;">玄天武水壁</span>状态中',
     AozDescription: "玄武的绝招。\n展开水属性以太制作的魔法屏障。可以吸收并积攒受到的冲击，再将其一并释放，是一个攻防兼备的魔法。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003340_hr1.png",
-    Learn: "红玉火山狱之盖 最终BOSS玄武",
+    Learn: "红玉火山狱之盖 - 玄武 Lv.70",
     Recast100ms: 300,
   },
   {
@@ -1328,7 +1328,7 @@ const aozActions: AozAction[] = [
       '对目标发动无属性魔法攻击\n<span style="color:#00cc22;">威力：</span>400\n<span style="color:#00cc22;">追加效果：</span>击退10米\n该魔法有单独计算的复唱时间，并与部分青魔法共享复唱时间',
     AozDescription: "模仿双豹伊沃恩武技的青魔法。\n用双拳击出聚集的以太。于山中修行的伊沃恩，在模仿长须豹释放的冲击波时创造出的技能。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003342_hr1.png",
-    Learn: "修行古刹星导寺 最终BOSS双豹伊沃恩",
+    Learn: "修行古刹星导寺 - 双豹伊沃恩 Lv.70",
     Recast100ms: 300,
   },
   {
@@ -1342,7 +1342,7 @@ const aozActions: AozAction[] = [
       '此技能仅限在非单人任务中，且由自己单独进行攻略时或除自身外其他小队成员均陷入无法战斗状态时才会生效\n\n令自身的移动速度提升30%，自身攻击造成的伤害及治疗魔法的治疗量提高100%，并无视<span style="color:#ff7b1a;">强力守护</span>所造成的伤害降低效果\n<span style="color:#00cc22;">持续时间：</span>永久\n此效果在小队成员回归战斗状态后立即解除',
     AozDescription: "部分长须豹使用的青魔法。\n在同伴纷纷倒下的时候，唤醒斗争的本能提高自身能力的技巧。只身前往需要多人才能挑战的战斗时，也会产生同样的效果。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003343_hr1.png",
-    Learn: "修行古刹星导寺 1号BOSS,拉诺西亚高地(8,21)24级成年长须豹",
+    Learn: "修行古刹星导寺 - 凶豹所闻，凶豹所忆 Lv.70\n 拉诺西亚高地 (x:9, y:21.5) - 高阶长须豹 Lv.24",
     Recast100ms: 25,
   },
   {
@@ -1356,7 +1356,7 @@ const aozActions: AozAction[] = [
       '在自身周围产生超音波，令<span style="color:#ff7b1a;">冻结</span>或<span style="color:#ff7b1a;">石化</span>状态中的敌人必定陷入无法战斗状态\n对部分敌人无效\n目标等级高于自身等级时无效\n该魔法有单独计算的复唱时间，并与部分青魔法共享复唱时间',
     AozDescription:
       "模仿恐甲蚂蜓特技的青魔法。\n将身体的一部分视为翅膀，通过细微的震动产生超音波。如果震动传到了被冻结或被石化的敌人那里，则会将敌人震成细小的碎片。",
-    Learn: "基拉巴尼亚山区(13,26)恐甲蚂蜓,山区B怪 食夫毒妇·蛇仆蚂蜓",
+    Learn: "基拉巴尼亚山区 (x:11, y:26) - 恐甲蚂蜓 Lv.68\n 基拉巴尼亚山区 [B] - 蛇仆蚂蜓 Lv.70",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003344_hr1.png",
     Recast100ms: 1200,
   },
@@ -1371,7 +1371,7 @@ const aozActions: AozAction[] = [
     AozDescription:
       "老者使用的魔法。\n明明是冰属性魔法，名字中却带着焰字。该魔法和老者的原型都出自一本古典小说。不知道“冰焰”是得名于作者的玩笑，还是它造成的烧伤般的重度冻伤。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003345_hr1.png",
-    Learn: "O1 老者",
+    Learn: "欧米茄时空狭缝 德尔塔幻境1 - 老者 Lv.70\n 欧米茄零式时空狭缝 德尔塔幻境1 - 老者 Lv.70",
     Recast100ms: 25,
   },
   {
@@ -1385,7 +1385,7 @@ const aozActions: AozAction[] = [
       '对目标及其周围的敌人发动火属性范围魔法攻击　<span style="color:#00cc22;">威力：</span>220\n攻击复数敌人时，对目标之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>如果目标处于<span style="color:#ff7b1a;">头晕</span>状态中，则附加火属性持续伤害　<span style="color:#00cc22;">威力：</span>50\n<span style="color:#00cc22;">持续时间：</span>15秒',
     AozDescription:
       "模仿欧米茄使用的化学兵器的青魔法。\n用魔法合成有害成分，再通过爆炸将其散播出去。本来是无味的毒素，但因混入了不纯物，有了类似芥末的味道，从而得名。",
-    Learn: "O11 欧米茄",
+    Learn: "欧米茄时空狭缝 阿尔法幻境3 - 欧米茄 Lv.70\n 欧米茄零式时空狭缝 阿尔法幻境3 - 欧米茄 Lv.70",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003346_hr1.png",
     Recast100ms: 25,
   },
@@ -1400,7 +1400,7 @@ const aozActions: AozAction[] = [
       '一定时间内，将自身所受的伤害减轻20%\n<span style="color:#00cc22;">持续时间：</span>15秒\n<span style="color:#ff7b1a;">以太复制：防护</span>状态下的伤害减轻变为40%\n该魔法有单独计算的复唱时间，并与部分青魔法共享复唱时间',
     AozDescription:
       "新大陆的龙族使用的青魔法。\n将以太膜覆盖全身，从而降低外部来的刺激，使防御力提高。目前还不能确定是否真的有使用此技能的龙族，也或许是与龙族长得很像的甲鳞纲魔物在使用。",
-    Learn: "习得青魔法100种 图腾兑换",
+    Learn: "学习 100 个技能后可从[乌尔达哈来生回廊]的[异男子嘎希迦]处获得[天青图腾] Lv.70",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003347_hr1.png",
     Recast100ms: 1200,
   },
@@ -1415,7 +1415,7 @@ const aozActions: AozAction[] = [
       '向目标所在方向发出无属性直线范围魔法攻击　<span style="color:#00cc22;">威力：</span>50\n<span style="color:#00cc22;">追加效果：</span>无属性持续伤害\n<span style="color:#00cc22;">威力：</span>50　<span style="color:#00cc22;">持续时间：</span>15秒',
     AozDescription: "陀鲁婆使用的青魔法。\n射出环境以太，给敌人体表造成无数细小的伤痕。这些错综复杂的伤痕，会慢慢折磨敌人，使其血流不止。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003348_hr1.png",
-    Learn: "基拉巴尼亚湖区(27,22)陀鲁婆,湖区A怪 美丽虐杀者·泛光晶体",
+    Learn: "基拉巴尼亚湖区 (x:22, y:22) - 陀鲁婆 Lv.69\n 基拉巴尼亚湖区 [A] - 泛光晶体 Lv.70",
     Recast100ms: 25,
   },
   {
@@ -1429,7 +1429,7 @@ const aozActions: AozAction[] = [
       '对自身周围的敌人发动水属性范围魔法攻击　<span style="color:#00cc22;">威力：</span>220\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>把敌人吸引到身边',
     AozDescription: "凯尔派擅长的青魔法。\n用魔法的水流吸引周围的敌人。至于为什么连飞在空中的鸟都能吸引过来……这或许就是魔法被称为魔法的原因吧。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003349_hr1.png",
-    Learn: "沉没神殿斯卡拉遗迹 1号BOSS凯尔派",
+    Learn: "沉没神殿斯卡拉遗迹 - 凯尔派 Lv.70",
     Recast100ms: 25,
   },
   {
@@ -1443,7 +1443,7 @@ const aozActions: AozAction[] = [
       '向自身前方发出水属性直线范围魔法攻击　<span style="color:#00cc22;">威力：</span>200\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>将范围内的敌人与小队成员击退10米\n目标身中部分弱化效果或处于非战斗状态时无效',
     AozDescription:
       "赛太岁使用的一种风水术。\n将以太传入地下，从而创造出人造水脉，可以推走水脉上的人。如果随意使用，很可能会波及到同伴，这会导致某种意义上真的被人诅咒。",
-    Learn: "风水灵庙岩燕庙 老一到老二路上",
+    Learn: "风水灵庙岩燕庙 - 赛太岁 Lv.70",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003350_hr1.png",
     Recast100ms: 25,
   },
@@ -1458,7 +1458,7 @@ const aozActions: AozAction[] = [
       '对目标及其周围的敌人发动无属性范围魔法攻击　<span style="color:#00cc22;">威力：</span>200\n如果小队中存在自己的<span style="color:#ff7b1a;">专属陆行鸟</span>，则技能威力上升\n<span style="color:#00cc22;">专属陆行鸟在小队时威力：</span>300\n攻击复数敌人时，对目标之外的敌人威力降低50%',
     AozDescription:
       "一种名为红陆行鸟的追猎种的绝招。\n用周围环境中的沙尘制作岩块，再将其烧至通红后坠落地面。正是因为此技能，所以红陆行鸟才会被世界各地的人们惧怕。",
-    Learn: "龙堡参天高地(37,23)红陆行鸟 (5.45新增)",
+    Learn: "失落之都拉巴纳斯塔 - ? Lv.70\n 龙堡参天高地 (x:34.7, y:28.8) - 追猎种陆行鸟 Lv.53",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003351_hr1.png",
     Recast100ms: 25,
   },
@@ -1473,7 +1473,7 @@ const aozActions: AozAction[] = [
       '对目标发动连续8次无属性魔法攻击　<span style="color:#00cc22;">威力：</span>50\n自身处于<span style="color:#ff7b1a;">以太复制：进攻</span>状态时　<span style="color:#00cc22;">威力：</span>100\n该魔法有单独计算的复唱时间，并与部分青魔法共享复唱时间',
     AozDescription: "新大陆的妖异使用的青魔法。\n连续发射光弹。名字与瓦拉其族将对手逼入绝境的诅咒，以及将体力和魔力相互转换的秘术的名字相同。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003352_hr1.png",
-    Learn: "习得青魔法100种 图腾兑换",
+    Learn: "学习 100 个技能后可从[乌尔达哈来生回廊]的[异男子嘎希迦]处获得[天青图腾] Lv.70",
     Recast100ms: 1200,
   },
   {
@@ -1487,7 +1487,7 @@ const aozActions: AozAction[] = [
       '向目标所在方向发出无属性直线范围物理攻击　<span style="color:#00cc22;">威力：</span>220\n<span style="color:#00cc22;">追加效果：</span>附加<span style="color:#ff7b1a;">头晕</span>　<span style="color:#00cc22;">持续时间：</span>5秒\n短时间内对同一目标重复使用时，每次可令目标头晕的时间都会减少，直至完全无效\n令目标陷入头晕状态时威力上升\n<span style="color:#00cc22;">令目标陷入头晕状态时威力：</span>400\n攻击复数敌人时，对目标之外的敌人威力降低50%',
     AozDescription:
       "模仿欧米茄使用技术的青魔法。\n完全掌握了时空狭缝的欧米茄，可以用数据创造出任意的东西。现在将此技术用魔法再现，创造出铁拳的幻影，攻击敌人。",
-    Learn: "O11 欧米茄",
+    Learn: "欧米茄时空狭缝 阿尔法幻境3 - 欧米茄 Lv.70\n 欧米茄零式时空狭缝 阿尔法幻境3 - 欧米茄 Lv.70",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003353_hr1.png",
     Recast100ms: 25,
   },
@@ -1502,7 +1502,7 @@ const aozActions: AozAction[] = [
     AozDescription: "齐天大圣的绝招。\n神通力创造出的可伸缩自如的武器——如意棒，现在用魔法将其再现。通过高速挥动如意棒，可以带动四周的空气，产生旋风。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003354_hr1.png",
     Recast100ms: 1200,
-    Learn: "风水灵庙岩燕庙最终BOSS齐天大圣",
+    Learn: "风水灵庙岩燕庙 - 齐天大圣 Lv.70",
   },
   {
     ID: 103,
@@ -1515,7 +1515,7 @@ const aozActions: AozAction[] = [
       '持续向自身前方发出扇形范围攻击\n每秒对范围内的敌人造成伤害　<span style="color:#00cc22;">威力：</span>200　<span style="color:#00cc22;">持续时间：</span>5秒\n持续时间内再次使用时，向自身前方发出无属性扇形范围攻击\n<span style="color:#00cc22;">威力：</span>600\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n效果时间内发动鬼宿脚以外的技能或进行移动、转身都会使鬼宿脚立即消失',
     AozDescription: "朱雀的绝招。\n以电光石火般的速度连续踢向敌人。鬼宿为东方占卜术中天球的一角，虽然几乎所有事情都象征着吉兆，但只有婚姻象征着凶兆。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003355_hr1.png",
-    Learn: "朱雀征 婚 魂战",
+    Learn: "朱雀镇魂战 - 朱雀 Lv.70\n 朱雀诗魂战 - 朱雀 Lv.70",
     Recast100ms: 1200,
   },
   {
@@ -1529,7 +1529,7 @@ const aozActions: AozAction[] = [
       '对周围的敌人发动无属性范围魔法攻击　<span style="color:#00cc22;">威力：</span>400\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>对目标附加无属性持续伤害状态\n<span style="color:#00cc22;">威力：</span>75　<span style="color:#00cc22;">持续时间：</span>60秒\n与部分青魔法共享复唱时间',
     AozDescription: "月读的绝招。\n让混有恶意的魔力聚为花束，再使其爆炸。将一年只开花一次的月下美人，喻为亲手葬送自己的彼岸花，这种决意正是此魔法的力量之源。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003357_hr1.png",
-    Learn: "月读讨伐战",
+    Learn: "月读歼灭战 - 月读 Lv.70\n 月读幽夜歼灭战 - 月读 Lv.70",
     Recast100ms: 1200,
   },
   {
