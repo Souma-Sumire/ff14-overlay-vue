@@ -1685,7 +1685,7 @@ const aozActions: AozAction[] = [
   {
     ID: 116,
     ActionID: 34574,
-    Name: "坚信",
+    Name: "坚定判罪",
     Number: 116,
     Stats: "攻击类型：魔法\n攻击属性：无\n评级：★★★",
     Cast100ms: 20,
@@ -1718,7 +1718,7 @@ const aozActions: AozAction[] = [
     Stats: "攻击类型：物理・突\n攻击属性：无\n评级：★★★",
     Cast100ms: 10,
     Description:
-      "对目标进行无属性前方直线范围物理攻击。<span style='color:#00cc22;'>威力：</span>300\n对第二个目标及后续目标的威力降低50%。\n<span style='color:#00cc22;'>追加效果：</span>立即解除此行动的再次冷却时间，并给予自身<span style='color:#ff7b1a;'>断罪飞翔</span>效果。\n<span style='color:#00cc22;'>最大档数：</span>4\n<span style='color:#00cc22;'>持续时间：</span>永久\n当断罪飞翔叠加到3层时，执行此行动不再解除冷却时间，而是威力增加到400。\n当断罪飞翔附加并达到最大叠加层数时，断罪飞翔变为全能者的祝福。<span style='color:#00cc22;'>持续时间：</span>10秒\n<span style='color:#00cc22;'>全能者的祝福效果：</span>增加坚信的威力。\n该魔法有单独计算的复唱时间。",
+      "对目标进行无属性前方直线范围物理攻击。<span style='color:#00cc22;'>威力：</span>300\n对第二个目标及后续目标的威力降低50%。\n<span style='color:#00cc22;'>追加效果：</span>立即解除此行动的再次冷却时间，并给予自身<span style='color:#ff7b1a;'>断罪飞翔</span>效果。\n<span style='color:#00cc22;'>最大档数：</span>4\n<span style='color:#00cc22;'>持续时间：</span>永久\n当断罪飞翔叠加到3层时，执行此行动不再解除冷却时间，而是威力增加到400。\n当断罪飞翔附加并达到最大叠加层数时，断罪飞翔变为全能者的祝福。<span style='color:#00cc22;'>持续时间：</span>10秒\n<span style='color:#00cc22;'>全能者的祝福效果：</span>增加坚定判罪的威力。\n该魔法有单独计算的复唱时间。",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003371_hr1.png",
     Learn: "无瑕灵君歼灭战",
