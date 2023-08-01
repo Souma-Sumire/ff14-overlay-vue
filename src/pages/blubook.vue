@@ -1707,7 +1707,7 @@ const aozActions: AozAction[] = [
       "给自身附加<span style='color:#ff7b1a;'>物理受伤减轻</span>或<span style='color:#ff7b1a;'>魔法受伤减轻</span>之一效果。<span style='color:#00cc22;'>持续时间：</span>10秒\n<span style='color:#00cc22;'>物理受伤减轻效果：</span>减少所受物理伤害50%。\n<span style='color:#00cc22;'>魔法受伤减轻效果：</span>减少所受魔法伤害50%。\n该魔法有单独计算的复唱时间。",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003370_hr1.png",
-    Learn: "萨菲洛特歼灭战/图腾兑换",
+    Learn: "青魔法习得120种 图腾兑换",
     Recast100ms: 1200,
   },
   {
