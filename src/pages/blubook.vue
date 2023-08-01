@@ -14,6 +14,7 @@
           <div v-show="(page - 1) * 16 <= index && page * 16 > index" class="grid-item" @click="handleActionClick($event, item.Number)">
             <img
               :class="`IconHD ${!learned[item.Number] && grayNotLearned ? 'notLearned' : 'learned'}`"
+              draggable="false"
               :src="(page - 1) * 16 <= index && page * 16 > index ? `${item.Icon}` : undefined"
               @error="handleError($event, item.Number)"
             />
@@ -33,14 +34,14 @@
       </div>
       <div class="actionDetails">
         <div class="Number">{{ aozActionRef[selectIndex].Number }}</div>
-        <div class="Name">{{ aozActionRef[selectIndex].Name }}</div>
-        <img class="IconHD" :src="`${aozActionRef[selectIndex].Icon}`" @error="handleError($event, selectIndex)" />
-        <div class="Stats" v-html="aozActionRef[selectIndex].Stats"></div>
+        <div class="Name" v-html="highlight(aozActionRef[selectIndex].Name)"></div>
+        <img class="IconHD" :src="`${aozActionRef[selectIndex].Icon}`" @error="handleError($event, selectIndex)" draggable="false"/>
+        <div class="Stats" v-html="highlight(aozActionRef[selectIndex].Stats)"></div>
         <div class="Cast100ms"><span style="color: #00c2c2">咏唱时间：</span>{{ aozActionRef[selectIndex].Cast100ms / 10 }}</div>
         <div class="Recast100ms"><span style="color: #00c2c2">复唱时间：</span>{{ aozActionRef[selectIndex].Recast100ms / 10 }}</div>
-        <div class="Description" v-html="aozActionRef[selectIndex].Description"></div>
-        <div class="AozDescription" v-html="aozActionRef[selectIndex].AozDescription"></div>
-        <div class="Learn">{{ aozActionRef[selectIndex].Learn }}</div>
+        <div class="Description" v-html="highlight(aozActionRef[selectIndex].Description)"></div>
+        <div class="AozDescription" v-html="highlight(aozActionRef[selectIndex].AozDescription)"></div>
+        <div class="Learn" v-html="highlight(aozActionRef[selectIndex].Learn)"></div>
       </div>
     </div>
   </div>
@@ -145,7 +146,8 @@ const aozActions: AozAction[] = [
       '向目标所在方向发出无属性直线范围物理攻击　<span style="color:#00cc22;">威力：</span>200\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n目标处于<span style="color:#ff7b1a;">石化</span>状态时威力提高\n<span style="color:#00cc22;">目标处于石化状态时威力：</span>600\n<span style="color:#00cc22;">追加效果：</span>解除敌对目标身上的<span style="color:#ff7b1a;">石化</span>状态',
     AozDescription:
       "模仿魔导兵器攻击方式的青魔法。\n让奔涌的魔力旋转起来，以此获得惊人的贯穿力。由于魔导兵器的这种攻击手段本身是从凿石机上得到的灵感，所以这个青魔法对被石化的敌人也有更加显著的效果。",
-    Learn: "北萨纳兰 - 逆向工程 - 废弃的魔导先锋 Lv.46\n 北萨纳兰 (x:16, y:15) - 魔导先锋强化型 Lv.50血量低于 60% 后使用\n 纷争要地布雷福洛克斯野营地 - 3号哥布林装甲 Lv.50\n 帝国南方堡外围激战 - 魔导先锋、魔导先锋强袭型 Lv.50\n 天幕魔导城最终决战 - 魔导先锋重装型 Lv.50",
+    Learn:
+      "北萨纳兰 - 逆向工程 - 废弃的魔导先锋 Lv.46\n 北萨纳兰 (x:16, y:15) - 魔导先锋强化型 Lv.50血量低于 60% 后使用\n 纷争要地布雷福洛克斯野营地 - 3号哥布林装甲 Lv.50\n 帝国南方堡外围激战 - 魔导先锋、魔导先锋强袭型 Lv.50\n 天幕魔导城最终决战 - 魔导先锋重装型 Lv.50",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003266_hr1.png",
     Recast100ms: 25,
   },
@@ -229,7 +231,8 @@ const aozActions: AozAction[] = [
     AozDescription: "土属性的魔法生物使用的青魔法。\n使用魔法操纵以太来引发局部地震。据说魔力强大的人使用时连地形都能改变。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003259_hr1.png",
     Recast100ms: 25,
-    Learn: "黑衣森林北部林区 (x:19, y:28) - 泥土巨像 Lv.28\n 南萨纳兰 (x:24, y:13) - 砂石巨像 Lv.29\n 拉诺西亚外地 (x:16, y:16) - 玄岩巨像 Lv.34\n 骚乱坑道铜铃铜山 - 哥革巨像 Lv.50\n 苏醒遗迹喀恩埋没圣堂 - 喀恩守护者 Lv.50\n 假面狂欢25 - 启示者 Lv.50",
+    Learn:
+      "黑衣森林北部林区 (x:19, y:28) - 泥土巨像 Lv.28\n 南萨纳兰 (x:24, y:13) - 砂石巨像 Lv.29\n 拉诺西亚外地 (x:16, y:16) - 玄岩巨像 Lv.34\n 骚乱坑道铜铃铜山 - 哥革巨像 Lv.50\n 苏醒遗迹喀恩埋没圣堂 - 喀恩守护者 Lv.50\n 假面狂欢25 - 启示者 Lv.50",
   },
   {
     ID: 11,
@@ -312,7 +315,8 @@ const aozActions: AozAction[] = [
     AozDescription: "蝙蝠和沙蚤使用的青魔法。\n通过血液吸收敌人的生命以太，并转化为自身的魔力。人们推测最初这种魔法是由摄取养分的吸血行为逐渐演变来的。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003263_hr1.png",
     Recast100ms: 25,
-    Learn: "拉诺西亚低地 (x:27, y:16) - 洞穴蝙蝠 Lv.7\n 中萨纳兰 (x:26, y:18) - 烈阳蝙蝠 Lv.14\n 西拉诺西亚 (x:28, y:24) - 黄昏蝙蝠 Lv.15\n 黑衣森林东部林区 (x:17, y:23) - 漆黑蝙蝠、血蚤 Lv.21\n 黑衣森林南部林区 (x:24, y:23) - 小狐蝠 Lv.37\n 名门府邸静语庄园 - 阁楼蝙蝠 Lv.28\n 古代遗迹喀恩埋没圣堂 - 圣堂蝙蝠 Lv.35\n 流沙迷宫樵明洞 - 沙漠蝙蝠 Lv.38\n 毒雾洞窟黄金谷 - 金谷蝙蝠 Lv.47\n 剑斗领域日影地修炼所 - 日影地蝙蝠 Lv.50\n 苏醒遗迹喀恩埋没圣堂 - 圣堂蝙蝠 Lv.50",
+    Learn:
+      "拉诺西亚低地 (x:27, y:16) - 洞穴蝙蝠 Lv.7\n 中萨纳兰 (x:26, y:18) - 烈阳蝙蝠 Lv.14\n 西拉诺西亚 (x:28, y:24) - 黄昏蝙蝠 Lv.15\n 黑衣森林东部林区 (x:17, y:23) - 漆黑蝙蝠、血蚤 Lv.21\n 黑衣森林南部林区 (x:24, y:23) - 小狐蝠 Lv.37\n 名门府邸静语庄园 - 阁楼蝙蝠 Lv.28\n 古代遗迹喀恩埋没圣堂 - 圣堂蝙蝠 Lv.35\n 流沙迷宫樵明洞 - 沙漠蝙蝠 Lv.38\n 毒雾洞窟黄金谷 - 金谷蝙蝠 Lv.47\n 剑斗领域日影地修炼所 - 日影地蝙蝠 Lv.50\n 苏醒遗迹喀恩埋没圣堂 - 圣堂蝙蝠 Lv.50",
   },
   {
     ID: 10,
@@ -325,7 +329,8 @@ const aozActions: AozAction[] = [
     AozDescription:
       "树精等草木纲魔物使用的青魔法。\n撒出橡果状的魔力块并引起连锁爆炸，借此散布具有催眠效果的成分。这种魔法是为了从取食树液的百虫纲魔物手中保护自己而诞生的。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003260_hr1.png",
-    Learn: "黑衣森林北部林区 (x:27, y:28) - 幼体树精 Lv.12\n 黑衣森林中央林区 (x:27, y:15) - 幼体树精 Lv.12\n 黑衣森林东部林区 (x:13, y:25) - 幼体树精 Lv.12\n 黑衣森林中央林区 [S] - 乌尔迦鲁 Lv.50\n 邪念妖地无限城古堡 - 多节树精 Lv.50",
+    Learn:
+      "黑衣森林北部林区 (x:27, y:28) - 幼体树精 Lv.12\n 黑衣森林中央林区 (x:27, y:15) - 幼体树精 Lv.12\n 黑衣森林东部林区 (x:13, y:25) - 幼体树精 Lv.12\n 黑衣森林中央林区 [S] - 乌尔迦鲁 Lv.50\n 邪念妖地无限城古堡 - 多节树精 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -339,7 +344,8 @@ const aozActions: AozAction[] = [
       '对指定地点发动火属性范围魔法攻击　<span style="color:#00cc22;">威力：</span>200\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>眩晕　<span style="color:#00cc22;">持续时间：</span>3秒',
     AozDescription: "模仿哥布林族投掷炸弹的青魔法。\n哥布林族在炸弹的火药里加入魔力，以此提高爆炸威力。用青魔法模仿这种形式，造出虚假的炸弹进行燃烧攻击。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003264_hr1.png",
-    Learn: "中拉诺西亚 (x:23, y:21) - 哥布林鱼师、哥布林赌徒 Lv.5\n 西拉诺西亚 (x:27, y:23) - 哥布林猎手 Lv.18\n 黑衣森林东部林区 (x:11, y:28) - 哥布林猎手 Lv.11\n 黑衣森林南部林区 (x:28, y:21) - 哥布林暴徒 Lv.28\n 纷争要地布雷福洛克斯野营地 - 青蓝之手滑翔兵 Lv.50",
+    Learn:
+      "中拉诺西亚 (x:23, y:21) - 哥布林鱼师、哥布林赌徒 Lv.5\n 西拉诺西亚 (x:27, y:23) - 哥布林猎手 Lv.18\n 黑衣森林东部林区 (x:11, y:28) - 哥布林猎手 Lv.11\n 黑衣森林南部林区 (x:28, y:21) - 哥布林暴徒 Lv.28\n 纷争要地布雷福洛克斯野营地 - 青蓝之手滑翔兵 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -367,7 +373,8 @@ const aozActions: AozAction[] = [
       '对自身周围的敌人发动火属性范围魔法攻击　<span style="color:#00cc22;">威力：</span>1500\n自身处于<span style="color:#ff7b1a;">油性分泌物</span>状态时威力提高至1800\n发动后自身陷入无法战斗状态\n<span style="color:#00cc22;">追加效果：</span><span style="color:#ff7b1a;">意志薄弱</span>\n即使进入无法战斗状态也不会解除<span style="color:#ff7b1a;">意志薄弱</span>\n<span style="color:#00cc22;">持续时间：</span>600秒\n<span style="color:#00cc22;">发动条件：</span>非<span style="color:#ff7b1a;">意志薄弱</span>状态中',
     AozDescription: "爆弹怪倾情代言的青魔法。\n将构成生命的以太全部转换成火属性魔力引起大爆炸。在身上沾满油脂的情况下使用时，能够令火力更上一层楼。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003276_hr1.png",
-    Learn: "西萨纳兰 (x:27, y:16) - 滑行爆弹怪 Lv.12\n 封锁坑道铜铃铜山 - 爆破爆弹怪、烈火弹怪 Lv.17\n 魔兽领域日影地修炼所 - 瓦斯弹怪 Lv.20\n 名门府邸静语庄园 - 夫人手提灯 Lv.28\n 流沙迷宫樵明洞 - 榴霰弹怪 Lv.38\n 巴哈姆特大迷宫 真源之章2 - 护卫系统 Lv.50",
+    Learn:
+      "西萨纳兰 (x:27, y:16) - 滑行爆弹怪 Lv.12\n 封锁坑道铜铃铜山 - 爆破爆弹怪、烈火弹怪 Lv.17\n 魔兽领域日影地修炼所 - 瓦斯弹怪 Lv.20\n 名门府邸静语庄园 - 夫人手提灯 Lv.28\n 流沙迷宫樵明洞 - 榴霰弹怪 Lv.38\n 巴哈姆特大迷宫 真源之章2 - 护卫系统 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -548,7 +555,8 @@ const aozActions: AozAction[] = [
       '对自身周围的敌人发动雷属性范围魔法攻击　<span style="color:#00cc22;">威力：</span>200\n无法攻击到自身周围8米以内的敌人\n攻击复数敌人时，对第一个之外的敌人威力降低50%\n<span style="color:#00cc22;">追加效果：</span>麻痹　<span style="color:#00cc22;">持续时间：</span>9秒\n目标处于<span style="color:#ff7b1a;">冻结</span>状态时威力提高，对特定敌人无效\n<span style="color:#00cc22;">冻结状态时威力：</span>400\n<span style="color:#00cc22;">追加效果：</span>解除目标身上的<span style="color:#ff7b1a;">冻结</span>状态，对特定敌人无效',
     AozDescription: "奇美拉使用的青魔法。\n据说是通过合成擅长操控雷电的龙族而使奇美拉获得的能力。使用时会在周围引发激烈的放电现象。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003288_hr1.png",
-    Learn: "流沙迷宫樵鸣洞 - 奇美拉 Lv.38\n 死化奇美拉讨伐战 - 奇美拉 Lv.50\n 北萨纳兰 - 狂暴巨兽——强化奇美拉 - 强化奇美拉 Lv.49\n 假面狂欢21 - 阿皮狄马 Lv.50\n 假面狂欢25 - 阿波卡里普斯 Lv.50",
+    Learn:
+      "流沙迷宫樵鸣洞 - 奇美拉 Lv.38\n 死化奇美拉讨伐战 - 奇美拉 Lv.50\n 北萨纳兰 - 狂暴巨兽——强化奇美拉 - 强化奇美拉 Lv.49\n 假面狂欢21 - 阿皮狄马 Lv.50\n 假面狂欢25 - 阿波卡里普斯 Lv.50",
     Recast100ms: 25,
   },
   {
@@ -836,7 +844,8 @@ const aozActions: AozAction[] = [
       '对目标发动无属性物理攻击　<span style="color:#00cc22;">威力：</span>220\n<span style="color:#00cc22;">追加效果：</span>麻痹　<span style="color:#00cc22;">持续时间：</span>30秒',
     AozDescription: "上级恶魔的绝招。\n通过以太炼成无数的剑，从各个方位刺向敌人。这也可以通过刺伤敌人的神经系统，使其产生麻痹。",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003305_hr1.png",
-    Learn: "龙堡内陆低地  - 焚书任务：回收禁书《青眼怪物》 上级恶魔 Lv.58\n 学识宝库迦巴勒幻想图书馆 - 偷书者 Lv.59最终 BOSS 第三次踩塔（虚无召唤）失败后出现的小怪",
+    Learn:
+      "龙堡内陆低地  - 焚书任务：回收禁书《青眼怪物》 上级恶魔 Lv.58\n 学识宝库迦巴勒幻想图书馆 - 偷书者 Lv.59最终 BOSS 第三次踩塔（虚无召唤）失败后出现的小怪",
     Recast100ms: 25,
   },
   {
@@ -1650,7 +1659,8 @@ const aozActions: AozAction[] = [
     Number: 113,
     Stats: "攻击类型：物理・斬\n攻击属性：无\n评级：★★★★",
     Cast100ms: 20,
-    Description: "自身对前方进行无属性范围物理攻击。<span style='color:#00cc22;'>威力：</span>220\n该魔法有单独计算的复唱时间，并与<span style='color:#ff7b1a;'>玄结界</span>、<span style='color:#ff7b1a;'>斗灵弹</span>共享复唱时间。",
+    Description:
+      "自身对前方进行无属性范围物理攻击。<span style='color:#00cc22;'>威力：</span>220\n该魔法有单独计算的复唱时间，并与<span style='color:#ff7b1a;'>玄结界</span>、<span style='color:#ff7b1a;'>斗灵弹</span>共享复唱时间。",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003366_hr1.png",
     Recast100ms: 300,
@@ -1663,7 +1673,8 @@ const aozActions: AozAction[] = [
     Number: 114,
     Stats: "攻击类型：魔法\n攻击属性：无\n评级：★★★★",
     Cast100ms: 20,
-    Description: "自身对前方进行无属性扇形范围魔法攻击。<span style='color:#00cc22;'>威力：</span>100\n<span style='color:#00cc22;'>追加效果：</span>回复自身的魔力值。",
+    Description:
+      "自身对前方进行无属性扇形范围魔法攻击。<span style='color:#00cc22;'>威力：</span>100\n<span style='color:#00cc22;'>追加效果：</span>回复自身的魔力值。",
     AozDescription: "",
     Icon: "https://cafemaker.wakingsands.com/i/003000/003367_hr1.png",
     Recast100ms: 25,
@@ -1818,7 +1829,7 @@ for (const i of aozActionRef.value) {
 }
 
 const showAozAction = computed(() => {
-  if (searchStr.value.length === 0)
+  if (searchStr.value.trim().length === 0)
     return aozActionRef.value.filter((v) => {
       return notLearnedOnly.value ? !learned.value[v.Number.toString()] : true;
     });
@@ -1826,12 +1837,22 @@ const showAozAction = computed(() => {
     const res = aozActionRef.value.filter((v) => {
       const reg = new RegExp(searchStr.value);
       return (
-        (notLearnedOnly.value ? !learned.value[v.Number.toString()] : true) && (reg.test(v.Name) || reg.test(v.Number.toString()) || reg.test(v.Description))
+        (notLearnedOnly.value ? !learned.value[v.Number.toString()] : true) &&
+        (reg.test(v.Name) || reg.test(v.Number.toString()) || reg.test(v.Description) || reg.test(v.Stats) || reg.test(v.AozDescription) || reg.test(v.Learn))
       );
     });
     return res;
   }
 });
+
+function highlight(str: string): string {
+  const key = searchStr.value.trim();
+  if (key) {
+    const reg = new RegExp(key, "g");
+    str = str.replace(reg, (key) => `<em>${key}</em>`);
+  }
+  return str;
+}
 
 function handleError(e: Event, index: number): void {
   const imageElement = e.target as HTMLImageElement;
@@ -1878,6 +1899,10 @@ function handleBatchLearning(_e: Event): void {
 </script>
 
 <style scoped lang="scss">
+:deep(em) {
+  font-style: normal;
+  background-color: rgb(255, 150, 0);
+}
 .app {
   font-family: Microsoft YaHei, sans-serif;
   position: relative;
@@ -2011,6 +2036,7 @@ function handleBatchLearning(_e: Event): void {
         opacity: 1;
         width: 3em;
         text-align: center;
+        user-select: none;
       }
       .Name {
         position: absolute;
@@ -2020,6 +2046,7 @@ function handleBatchLearning(_e: Event): void {
         width: 25em;
       }
       .IconHD {
+        user-select: none;
         position: absolute;
         left: 8px;
         top: 52px;
