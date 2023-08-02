@@ -2,12 +2,18 @@
 import OBSWebSocket from "obs-websocket-js";
 import { VXETable } from "vxe-table";
 const oldPw = JSON.parse(window.localStorage.getItem("obs-data") ?? "{}")?.password;
-const data = useStorage("obs2-data", {
-  port: "4455",
-  password: oldPw ?? "",
-  greaterThanOrEqualTo: 4,
-  partyLength: 1,
-});
+const data = useStorage(
+  "obs2-data",
+  {
+    port: "4455",
+    password: oldPw ?? "",
+    greaterThanOrEqualTo: 4,
+    partyLength: 1,
+    autoHide: false,
+  },
+  localStorage,
+  { mergeDefaults: true },
+);
 const status = reactive({
   connecting: false,
   recording: false,
@@ -15,7 +21,6 @@ const status = reactive({
 });
 const obs = new OBSWebSocket();
 const showSettings = ref(true);
-const hideUntilConnection = ref(false);
 onMounted(async () => {
   obs.on("ExitStarted", onConnectionClosed);
   obs.on("ConnectionClosed", onConnectionClosed);
@@ -26,11 +31,12 @@ onMounted(async () => {
   addOverlayListener("PartyChanged", handlePartyChanged);
   startOverlayEvents();
   if (data.value.password !== "") {
-    await connect();
+    await connect(false);
     obs.call("GetRecordStatus").then((v) => (status.recording = v.outputActive));
   } else {
     VXETable.modal.alert({ content: "先锁定悬浮窗，再填写端口与密码", title: "初次使用", width: "80%", size: "mini" });
   }
+  showSettings.value = !data.value.autoHide;
 });
 onUnmounted(() => {
   obs.off("ExitStarted", onConnectionClosed);
@@ -42,7 +48,7 @@ onUnmounted(() => {
   removeOverlayListener("PartyChanged", handlePartyChanged);
   obs.disconnect();
 });
-async function connect() {
+async function connect(showTips = false) {
   return obs
     .connect(`ws://127.0.0.1:${data.value.port}`, data.value.password)
     .then((_v) => {
@@ -55,16 +61,16 @@ async function connect() {
       });
       status.connecting = true;
       showSettings.value = false;
-      hideUntilConnection.value = false;
     })
-    .catch((e) => {
-      VXETable.modal.message({
-        content: "连接失败",
-        status: "error",
-        width: "7rem",
-        size: "mini",
-        top: 8,
-      });
+    .catch((_e) => {
+      if (showTips)
+        VXETable.modal.message({
+          content: "连接失败",
+          status: "error",
+          width: "7rem",
+          size: "mini",
+          top: 8,
+        });
       status.connecting = false;
     });
 }
@@ -118,21 +124,16 @@ function handlePartyChanged(e: { party: any[] }) {
 </script>
 
 <template>
-  <header v-show="!hideUntilConnection">
-    <div v-show="status.connecting">
+  <header>
+    <div>
       <i class="vxe-icon-dot icon" :style="{ color: status.recording ? 'red' : 'gray', textShadow: '0px  0px 3px black' }"></i>
       <vxe-button class="btns" icon="vxe-icon-caret-right" v-show="!status.recording" @click="start(false, true)"></vxe-button>
       <vxe-button class="btns" icon="vxe-icon-close" v-show="status.recording" @click="stop" size="mini"></vxe-button>
+      <vxe-button class="btns" icon="vxe-icon-setting" @click="showSettings = !showSettings" size="mini"></vxe-button>
       <vxe-button class="btns" icon="vxe-icon-cut" v-show="status.recording" @click="start(true, true)" size="mini"></vxe-button>
-      <vxe-button class="btns settings" icon="vxe-icon-setting" @click="showSettings = !showSettings" size="mini"></vxe-button>
-    </div>
-    <div v-show="!status.connecting">
-      <vxe-button class="btns" style="width: auto !important" size="medium" icon="vxe-icon-eye-fill-close" @click="hideUntilConnection = true"
-        >隐藏页面</vxe-button
-      >
     </div>
   </header>
-  <main p-b-2 v-show="!hideUntilConnection && (!status.connecting || showSettings)">
+  <main p-b-2 v-show="showSettings">
     <vxe-form :data="data">
       <vxe-form-item span="24">
         <template #default="{ data }">
@@ -161,8 +162,8 @@ function handlePartyChanged(e: { party: any[] }) {
         </template>
       </vxe-form-item>
     </vxe-form>
-    <vxe-button size="mini" :status="'primary'" icon="vxe-icon-swap" content="连接" @click="connect"></vxe-button>
-    <vxe-button type="text" status="info" size="mini" icon="vxe-icon-warning-circle" content="未连接到OBS" :disabled="true"></vxe-button>
+    <vxe-button size="mini" :status="'primary'" icon="vxe-icon-swap" content="连接" @click="connect(true)"></vxe-button>
+    <el-checkbox style="margin-left: 1em" v-model="data.autoHide" label="启动时隐藏设置界面（即使连接失败）" />
   </main>
 </template>
 <style lang="scss">
@@ -195,6 +196,7 @@ header {
       float: left;
     }
     .btns {
+      background-color: white;
       float: left;
       padding: 0.1rem 0rem 1rem 0.1rem !important;
       margin: 0rem 0.2rem 0rem 0rem !important;
