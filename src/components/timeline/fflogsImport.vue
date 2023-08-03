@@ -308,7 +308,7 @@ function claerFFlogsQueryConfig() {
         <el-table-column prop="server" label="服务器" min-width="60px" />
         <el-table-column label="职业" min-width="60px">
           <template #default="{ row }">
-            {{ Util.nameToFullName(Util.jobEnumToJob(Util.iconToJobEnum(row.icon))).full }}
+            {{ Util.nameToFullName(Util.jobEnumToJob(Util.iconToJobEnum(row.icon))).cn }}
           </template>
         </el-table-column>
         <el-table-column label="选定" min-width="20px">

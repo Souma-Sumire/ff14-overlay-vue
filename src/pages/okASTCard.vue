@@ -1091,7 +1091,7 @@ function copyMacro(text: string) {
       <el-table-column label="职业" width="110">
         <template #default="scope">
           <img loading="lazy" :src="scope.row.jobSrc" :alt="scope.row.job" srcset="" style="height: 1.25rem" />
-          {{ Util.nameToFullName(scope.row.job).full }}
+          {{ Util.nameToFullName(scope.row.job).cn }}
         </template>
       </el-table-column>
       <el-table-column label="近/远" width="100">

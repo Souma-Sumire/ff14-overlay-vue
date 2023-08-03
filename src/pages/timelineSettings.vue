@@ -359,7 +359,7 @@ function clearLocalStorage() {
             <p class="timeline-info-config">
               <span>职业：</span>
               <el-select v-model="timelineCurrentlyEditing.timeline.condition.job" required placeholder="职业">
-                <el-option v-for="job in debounceJobCN" :key="job" :label="Util.nameToFullName(job).full" :value="job"></el-option>
+                <el-option v-for="job in debounceJobCN" :key="job" :label="Util.nameToFullName(job).cn" :value="job"></el-option>
               </el-select>
             </p>
             <p class="timeline-info-config">
@@ -414,7 +414,7 @@ function clearLocalStorage() {
             </template>
           </el-table-column>
           <el-table-column prop="conditon" label="职业">
-            <template #default="scope">{{ Util.nameToFullName(scope.row.condition.job).full }} </template>
+            <template #default="scope">{{ Util.nameToFullName(scope.row.condition.job).cn }} </template>
           </el-table-column>
           <el-table-column fixed="right" label="操作" width="100">
             <template #default="scope">
