@@ -8,10 +8,11 @@ interface Menu {
   path: string;
 }
 const menu: Menu[] = [
-  { title: "青魔法书图鉴", type: "悬浮窗", path: "blubook" },
+  { title: "深层迷宫图鉴", type: "悬浮窗", path: "https://github.com/Souma-Sumire/ff14-overlay-dungeon-cn" },
+  { title: "青魔法书图鉴", type: "网页", path: "blubook" },
   { title: "职业增强：舞者", type: "悬浮窗", path: "jobs/dnc" },
   {
-    title: "♿[Github]CACTBOT JS 火箭轮椅",
+    title: "♿Cactbot Raidboss User JS （俗称：轮椅）",
     type: "网页",
     path: "https://github.com/Souma-Sumire/raidboss-user-js-public",
   },
@@ -26,9 +27,9 @@ const menu: Menu[] = [
   { title: "📹OBS自动录制", type: "悬浮窗", path: "obs" },
   { title: "🤷我TM现在在几线？", type: "悬浮窗", path: "instancedAreaInfo" },
   { title: "📖绝龙诗双分摊修血记录", type: "悬浮窗", path: "dsrP6" },
-  { title: "🀄[Github]国际服汉化补丁", type: "网页", path: "https://github.com/Souma-Sumire/FFXIVChnTextPatch-Souma/" },
-  { title: "⏩FFLOGS上传器加速下载", type: "网页", path: "fflogsUploaderDownload" },
-  { title: "💃舞台节目单（没啥用，被窝同款）", type: "网页", path: "stageProgramme" },
+  { title: "国际服汉化补丁", type: "网页", path: "https://github.com/Souma-Sumire/FFXIVChnTextPatch-Souma/" },
+  { title: "FFLOGS上传器加速下载", type: "网页", path: "fflogsUploaderDownload" },
+  { title: "舞台节目单（没啥用，被窝同款）", type: "网页", path: "stageProgramme" },
   {
     title: "🧐减伤监控",
     type: "悬浮窗",
@@ -55,7 +56,7 @@ const menu: Menu[] = [
     path: "https://souma.diemoe.net/dist/limitBreakTip.html?LBMax=30000&automatic=220",
   },
   {
-    title: "（录像用）显示时间",
+    title: "（OBS用）显示当前时间",
     type: "网页",
     path: "time",
   },
