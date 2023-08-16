@@ -22,6 +22,7 @@ const status = reactive({
 const obs = new OBSWebSocket();
 const showSettings = ref(true);
 onMounted(async () => {
+  showSettings.value = !data.value.autoHide;
   obs.on("ExitStarted", onConnectionClosed);
   obs.on("ConnectionClosed", onConnectionClosed);
   obs.on("ConnectionError", onConnectionClosed);
@@ -36,7 +37,6 @@ onMounted(async () => {
   } else {
     VXETable.modal.alert({ content: "先锁定悬浮窗，再填写端口与密码", title: "初次使用", width: "80%", size: "mini" });
   }
-  showSettings.value = !data.value.autoHide;
 });
 onUnmounted(() => {
   obs.off("ExitStarted", onConnectionClosed);
