@@ -35,7 +35,7 @@ const PLACEHOLDER =
 const imageMap: Record<string, unknown> = reactive({});
 
 // 在Vue组件内生成HTML是可以响应数据变化更新视图的
-function renderHTML(text: string): string{
+function renderHTML(text: string): string {
   text = text.replaceAll(/^["'“”]|["'“”]$/g, "");
   const items = parseAction(text);
   if (!items) return text;
@@ -45,11 +45,13 @@ function renderHTML(text: string): string{
       const src = getSkillImage(item.groups!.name);
       text = text.replace(
         item[0],
-        `${src ? `<div class="skill_icon"><img src="${src}" style="background-image: url('${PLACEHOLDER}')" loading="auto"/></div>` : ""}<span>${item.groups?.repeat ? item.groups!.name : ""}</span>`,
+        `${src ? `<div class="skill_icon"><img src="${src}" style="background-image: url('${PLACEHOLDER}')" loading="auto"/></div>` : ""}<span>${
+          item.groups?.repeat ? item.groups!.name : ""
+        }</span>`,
       );
     }
   }
-  
+
   return text;
 }
 
@@ -70,11 +72,13 @@ function getSkillImage(name: string): string {
     imageMap[name] = getActionByChineseName(name).then((res) => {
       if (res?.Icon)
         getFullImgSrc(res.Icon).then((url) => {
-          preloadImage(url).then(() => {
-            imageMap[name] = url;
-          }).catch(() => {
-            imageMap[name] = PLACEHOLDER;
-          });
+          preloadImage(url)
+            .then(() => {
+              imageMap[name] = url;
+            })
+            .catch(() => {
+              imageMap[name] = PLACEHOLDER;
+            });
         });
     });
   }
@@ -85,11 +89,11 @@ function getSkillImage(name: string): string {
 //一种在JS里判断图片下载成功或失败的方法
 function preloadImage(url: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.onload = () => resolve()
-    img.onerror = () => reject()
-    img.src = url
-  })
+    const img = new Image();
+    img.onload = () => resolve();
+    img.onerror = () => reject();
+    img.src = url;
+  });
 }
 </script>
 <style lang="scss">
