@@ -1,14 +1,35 @@
 import { params } from "@/utils/queryParams";
 import Util from "./util";
 
+const { api } = params;
+
 const siteList = {
   cafe: "https://cafemaker.wakingsands.com",
   xivapi: "https://xivapi.com",
 };
+
 const site: { first: string; second: string } = {
-  first: params?.api?.toLowerCase() === "xivapi" ? siteList.xivapi : siteList.cafe,
-  second: params?.api?.toLowerCase() === "xivapi" ? siteList.cafe : siteList.xivapi,
+  first: api?.toLowerCase() === "xivapi" ? siteList.xivapi : siteList.cafe,
+  second: api?.toLowerCase() === "xivapi" ? siteList.cafe : siteList.xivapi,
 };
+
+interface CachedImage {
+  url: string;
+  expirationTime: number;
+}
+
+interface CachedAction {
+  name: string;
+  action: any;
+  expirationTime: number;
+}
+
+const cacheExpirationTime = {
+  get random() {
+    return Math.floor(Math.random() * 86400000 * 11) + 86400000 * 25;
+  },
+};
+
 const userAction = new Map(
   Object.entries({
     任务指令: "/i/000000/000123.png",
@@ -18,108 +39,92 @@ const userAction = new Map(
     腐秽大地: "/i/003000/003090.png",
   }),
 );
+
+const IMG_CACHE_KEY = "souma-img-cache";
+const ACTION_CACHE_KEY = "souma-action-cache";
+
+const rejectImageData: CachedImage[] = JSON.parse(localStorage.getItem(IMG_CACHE_KEY) || "[]");
+const cachedActionData: CachedAction[] = JSON.parse(localStorage.getItem(ACTION_CACHE_KEY) || "[]");
+const currentTime = Date.now();
+const MAX_CACHE_LENGTH = 1000;
+const updatedImageData = rejectImageData.filter((v, index) => v.expirationTime >= currentTime && index < MAX_CACHE_LENGTH);
+const updatedActionData = cachedActionData.filter((v, index) => v.expirationTime >= currentTime && index < MAX_CACHE_LENGTH);
+localStorage.setItem(IMG_CACHE_KEY, JSON.stringify(updatedImageData));
+localStorage.setItem(ACTION_CACHE_KEY, JSON.stringify(updatedActionData));
+
+const ICON_REGEX = /(\d{6})\/(\d{6})\.png$/;
+
 export async function parseAction(
   type: "item" | "action" | "mount" | string,
   actionId: number,
   columns: (keyof XivApiJson)[] = ["ID", "Icon", "ActionCategoryTargetID"],
 ) {
-  return requestPromise([`${site.first}/${type}/${actionId}?columns=${columns.join(",")}`, `${site.second}/${type}/${actionId}?columns=${columns.join(",")}`], {
-    mode: "cors",
-  })
-    .then((v) => v.json())
-    .catch(() => ({ ActionCategoryTargetID: 0, ID: actionId, Icon: "/i/000000/000405.png" }));
-}
-
-export async function getImgSrc(imgSrc: string | undefined, itemIsHQ = false) {
-  if (!imgSrc) return "";
-  let url = `${site.first}${imgSrc}`;
-  await checkImgExists(url).catch(() => (url = url.replace(site.first, site.second)));
-  return url.replace(/(\d{6})\/(\d{6})\.png$/, (_match, p1, p2) => `${p1}/${itemIsHQ ? "hq/" : ""}${p2}.png`);
-}
-export function getClassjobIconSrc(jobNumber: number): string {
-  let url = `${site.first}/cj/companion/${Util.nameToFullName(Util.jobEnumToJob(jobNumber)).en}.png`;
-  checkImgExists(url).catch(() => (url = url.replace(site.first, site.second)));
-  return url;
-}
-
-interface CachedImage {
-  url: string;
-  expirationTime: number; // Unix 时间戳，毫秒
-}
-interface CachedAction {
-  name: string;
-  action: any;
-  expirationTime: number; // Unix 时间戳，毫秒
-}
-const cacheExpirationTime = {
-  get random() {
-    return Math.floor(Math.random() * 86400000 * 11) + 86400000 * 25;
-  },
-};
-
-function checkImgExists(imgurl: string): Promise<string> {
-  const cachedImageData = localStorage.getItem("souma-img-cache");
-  const cachedImages: CachedImage[] = cachedImageData ? JSON.parse(cachedImageData) : [];
-  const cachedImage = cachedImages.find((img) => img.url === imgurl);
-  if (cachedImage && cachedImage.expirationTime > Date.now()) {
-    // console.log("已缓存img", imgurl);
-    return Promise.resolve(imgurl);
+  const urls = generateActionUrls(type, actionId, columns);
+  try {
+    const response = await requestPromise(urls, { mode: "cors" });
+    return await response.json();
+  } catch (error) {
+    console.error(`Failed to parse action: ${error}`);
+    return { ActionCategoryTargetID: 0, ID: actionId, Icon: "/i/000000/000405.png" };
   }
-  return timeoutPromise(
-    new Promise<string>((resolve, reject) => {
-      let img = new Image();
-      img.src = imgurl;
-      img.onload = () => {
-        const expirationTime = Date.now() + cacheExpirationTime.random;
-        const newCachedImage: CachedImage = {
-          url: imgurl,
-          expirationTime,
-        };
-        cachedImages.push(newCachedImage);
-        localStorage.setItem("souma-img-cache", JSON.stringify(cachedImages));
-        resolve(imgurl);
-      };
-      img.onerror = () => reject();
-    }),
-    3000,
-  );
+}
+
+function generateActionUrls(type: string, actionId: number, columns: (keyof XivApiJson)[]) {
+  const urlTemplate = `${site.first}/${type}/${actionId}?columns=${columns.join(",")}`;
+  return [urlTemplate, urlTemplate.replace(site.first, site.second)];
+}
+
+export async function getFullImgSrc(icon: string, itemIsHQ = false) {
+  const url = `${site.first}${icon}`;
+  return url.replace(ICON_REGEX, (_match, p1, p2) => `${p1}/${itemIsHQ ? "hq/" : ""}${p2}.png`);
+}
+
+export function getClassjobIconSrc(jobEnum: number): string {
+  const job = Util.jobEnumToJob(jobEnum);
+  const fullName = Util.nameToFullName(job);
+  return `${site.first}/cj/companion/${fullName.en}.png`;
 }
 
 export async function getImgSrcByActionId(id: number): Promise<string> {
-  return parseAction("action", id, ["Icon"]).then((res) => {
-    return getImgSrc(res?.Icon ?? "");
-  });
+  const res = await parseAction("action", id, ["Icon"]);
+  return getFullImgSrc(res.Icon);
 }
 
 export async function getActionByChineseName(name: string) {
-  // const isCN = /[\u4e00-\u9fa5]/.test(name);
   const customAction = userAction.get(name);
-  if (customAction) return Object.assign({ ActionCategoryTargetID: 0, ID: 0, Icon: customAction });
-  const cachedActionData = localStorage.getItem("souma-action-cache");
-  const cachedActions: CachedAction[] = cachedActionData ? JSON.parse(cachedActionData) : [];
-  const cachedAction = cachedActions.find((v) => v.name === name);
-  if (cachedAction && cachedAction.action && cachedAction.expirationTime > Date.now()) {
-    // console.log("已缓存action", name);
-    return Promise.resolve(cachedAction.action);
+  if (customAction) {
+    return { ActionCategoryTargetID: 0, ID: 0, Icon: customAction };
   }
-  return await requestPromise([`${siteList.cafe}/search?filters=ClassJobLevel>0&indexes=action&string=${encodeURIComponent(name)}`])
-    .then((v) => v.json())
-    .then((v) => {
-      const result = v.Results?.[0];
-      if (result) {
-        const expirationTime = Date.now() + cacheExpirationTime.random;
-        const newCachedAction: CachedAction = {
-          name: name,
-          action: result,
-          expirationTime,
-        };
-        cachedActions.push(newCachedAction);
-        localStorage.setItem("souma-action-cache", JSON.stringify(cachedActions));
-        return result;
-      } else return { ActionCategoryTargetID: 0, ID: 0, Icon: "/i/000000/000405.png" };
-    })
-    .catch(() => ({ ActionCategoryTargetID: 0, ID: 0, Icon: "/i/000000/000405.png" }));
+
+  const cachedAction = cachedActionData.find((v) => v.name === name);
+  if (cachedAction?.action) {
+    return cachedAction.action;
+  }
+
+  try {
+    const response = await requestPromise([`${siteList.cafe}/search?filters=ClassJobLevel>0&indexes=action&string=${encodeURIComponent(name)}`]);
+    const searchData = await response.json();
+    const result = searchData.Results?.[0];
+
+    if (result) {
+      const expirationTime = Date.now() + cacheExpirationTime.random;
+      const newCachedAction: CachedAction = {
+        name: name,
+        action: result,
+        expirationTime,
+      };
+      cachedActionData.push(newCachedAction);
+      localStorage.setItem("souma-action-cache", JSON.stringify(cachedActionData));
+      return result;
+    } else {
+      return { ActionCategoryTargetID: 0, ID: 0, Icon: "/i/000000/000405.png" };
+    }
+  } catch (error) {
+    console.error(`Failed to get action by name: ${error}`);
+    throw new Error("Failed to retrieve action data");
+  }
 }
+
 async function timeoutPromise<T>(promise: Promise<T>, timeout: number): Promise<T> {
   let timeoutId: NodeJS.Timer;
   const timeoutPromise = new Promise<T>((_, reject) => {

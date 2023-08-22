@@ -1,6 +1,6 @@
 import { params } from "@/utils/queryParams";
 import Util from "@/utils/util";
-import { getImgSrc, parseAction } from "@/utils/xivapi";
+import { getFullImgSrc, parseAction } from "@/utils/xivapi";
 import { defineStore } from "pinia";
 const THNSort = ["tank", "healer", "dps", "crafter", "gatherer", "none"];
 const testActions = [
@@ -124,7 +124,7 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
               "Description",
             ]);
             cast.APIData = action;
-            cast.src = await getImgSrc(action?.Icon ?? "", itemIsHQ);
+            cast.src = await getFullImgSrc(action?.Icon ?? "", itemIsHQ);
             if (queryType === "action") {
               cast.class = `action action-category-${action?.ActionCategoryTargetID}`;
             } else if (queryType === "item") {

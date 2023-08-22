@@ -21,7 +21,7 @@
 <script lang="ts" setup>
 import { ITimelineLine, ShowStyle, TimelineConfigValues } from "@/types/timeline";
 import { parseAction } from "@/store/timeline";
-import { getActionByChineseName, getImgSrc } from "@/utils/xivapi";
+import { getActionByChineseName, getFullImgSrc } from "@/utils/xivapi";
 
 const props = defineProps<{
   config: TimelineConfigValues;
@@ -69,7 +69,7 @@ function getSkillImage(name: string): string {
     //仅请求一次，无论成功失败都不会再调用
     imageMap[name] = getActionByChineseName(name).then((res) => {
       if (res?.Icon)
-        getImgSrc(res.Icon).then((url) => {
+        getFullImgSrc(res.Icon).then((url) => {
           preloadImage(url).then(() => {
             imageMap[name] = url;
           }).catch(() => {

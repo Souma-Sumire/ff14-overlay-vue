@@ -337,7 +337,7 @@ import { keigennData, createIconUrl, Keigenn } from "@/resources/keigenn";
 import { ElMessage, ElMessageBox } from "element-plus";
 import moment from "moment";
 import { VxeTablePropTypes } from "vxe-table";
-import { getImgSrc } from "@/utils/xivapi";
+import { getFullImgSrc } from "@/utils/xivapi";
 type processedKeigenn = Omit<Keigenn, "icon"> & { icon: string };
 const data = useStorage("fflogs-csv-timeline-create", {
   api_key: "",
