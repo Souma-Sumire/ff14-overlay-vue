@@ -24,24 +24,17 @@ interface resJson {
 }
 
 const data = reactive({ res: {} as resJson });
+const fileName = ref();
 const accelerationNodeList = [
-  { url: "https://gh.gh2233.ml/https://github.com", title: "美国" },
-  { url: "https://gh.ddlc.top/https://github.com", title: "美国" },
-  { url: "https://gh2.yanqishui.work/https://github.com", title: "美国" },
-  { url: "https://gh-proxy-misakano7545.koyeb.app/https://github.com", title: "美国" },
-  { url: "https://gh.flyinbug.top/gh/https://github.com", title: "美国" },
-  { url: "https://github.91chi.fun/https://github.com", title: "美国" },
-  { url: "https://proxy.zyun.vip/https://github.com", title: "美国" },
-  { url: "https://git.xfj0.cn/https://github.com", title: "美国" },
-  { url: "https://gh.con.sh/https://github.com", title: "美国" },
-  { url: "https://ghps.cc/https://github.com", title: "美国" },
-  { url: "https://cors.isteed.cc/github.com", title: "美国" },
-  { url: "https://cdn.githubjs.cf", title: "美国" },
-  { url: "https://download.fastgit.org", title: "日本" },
-  { url: "https://gitclone.com", title: "国内" },
-  { url: "https://hub.fastgit.xyz", title: "日本" },
-  { url: "https://ghproxy.com/https://github.com", title: "韩国" },
-  { url: "https://gh.gcdn.mirr.one", title: "俄罗斯" },
+  { url: "https://gh.ddlc.top/https://github.com", title: "[美国 Cloudflare CDN]" },
+  { url: "https://slink.ltd/https://github.com", title: "[美国 Cloudflare CDN]" },
+  { url: "https://git.xfj0.cn/https://github.com", title: "[美国 Cloudflare CDN]" },
+  { url: "https://gh.con.sh/https://github.com", title: "[美国 Cloudflare CDN]" },
+  { url: "https://ghps.cc/https://github.com", title: "[美国 Cloudflare CDN]" },
+  { url: "https://cors.isteed.cc/github.com", title: "[美国 Cloudflare CDN]" },
+  { url: "https://hub.gitmirror.com/https://github.com", title: "[美国 Cloudflare CDN]" },
+  { url: "https://download.njuu.cf", title: "[美国 拉斯维加斯]" },
+  { url: "https://download.yzuu.cf", title: "[美国 Cloudflare CDN]" },
 ];
 onMounted(() => {
   fetch("https://api.github.com/repos/RPGLogs/Uploaders-fflogs/releases/latest", { method: "GET" })
@@ -51,6 +44,7 @@ onMounted(() => {
     })
     .then((res: resJson) => {
       Swal.close();
+      fileName.value = res.assets.find((v) => /v.+\.exe$/.test(v.name)).name;
       data.res = res;
     })
     .catch((err) => {
@@ -76,7 +70,7 @@ onMounted(() => {
             v-if="data.res.tag_name"
             v-for="(item, index) in accelerationNodeList"
             :key="index"
-            :href="`${item.url}/RPGLogs/Uploaders-fflogs/releases/download/v${data.res.name}/FF-Logs-Uploader-Setup-${data.res.name}.exe`"
+            :href="`${item.url}/RPGLogs/Uploaders-fflogs/releases/download/v${data.res.name}/${fileName}`"
             type="primary"
             m-r-8px
           >
