@@ -104,7 +104,7 @@ const nameToFullName: Record<Job, { en: string; ja: string; cn: string; simple1:
   AST: { en: "Astrologian", ja: "占星術師", cn: "占星术士", simple1: "占", simple2: "占星" },
   SAM: { en: "Samurai", ja: "侍", cn: "武士", simple1: "武", simple2: "武士" },
   RDM: { en: "Red Mage", ja: "赤魔道士", cn: "赤魔法师", simple1: "赤", simple2: "赤魔" },
-  BLU: { en: "Blue Mage Mage", ja: "青魔道士", cn: "青魔法师", simple1: "青", simple2: "青魔" },
+  BLU: { en: "Blue Mage", ja: "青魔道士", cn: "青魔法师", simple1: "青", simple2: "青魔" },
   GNB: { en: "Gunbreaker", ja: "ガンブレイカー", cn: "绝枪战士", simple1: "绝", simple2: "绝枪" },
   DNC: { en: "Dancer", ja: "踊り子", cn: "舞者", simple1: "舞", simple2: "舞者" },
   RPR: { en: "Reaper", ja: "リーパー", cn: "钐镰客", simple1: "镰", simple2: "钐镰" },
