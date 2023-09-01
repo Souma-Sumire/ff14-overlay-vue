@@ -82,7 +82,7 @@ export async function getFullImgSrc(icon: string, itemIsHQ = false) {
 export function getClassjobIconSrc(jobEnum: number): string {
   const job = Util.jobEnumToJob(jobEnum);
   const fullName = Util.nameToFullName(job);
-  return `${site.first}/cj/companion/${fullName.en.toLowerCase().replaceAll(/\s/, "")}.png`;
+  return `${site.first}/cj/companion/${fullName.en.toLowerCase().replaceAll(/\s/g, "")}.png`;
 }
 
 export async function getImgSrcByActionId(id: number): Promise<string> {
