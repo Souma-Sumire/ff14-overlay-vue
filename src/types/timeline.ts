@@ -1,4 +1,4 @@
-import { Job } from './job';
+import { Job } from "@/types/job";
 
 export interface ITimeline {
   name: string;
