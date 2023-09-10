@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { Job } from "@/types/job.js";
+import { Job } from "@/types/job";
 import Util from "@/utils/util";
 import { getClassjobIconSrc } from "@/utils/xivapi";
 import { ElMessage, ElMessageBox } from "element-plus";
 const BattleJobs: string[] = Util.getBattleJobs().filter(() => true);
+
+const JOBS = "战骑枪暗白占贤学僧龙忍侍镰诗机舞黑召赤青";
 const CONFIG = useStorage("ok-ast-card-config", {
   lang: "cn" as "cn" | "ja" | "en",
-  partySort: "战骑枪暗白占贤学僧龙忍侍镰诗机舞黑召赤青",
+  partySort: JOBS,
   redraw: true,
   astrodyne: true,
   queueTimes: 3,
@@ -981,34 +983,15 @@ function handleInCombatChanged(e: any) {
   inCombat = e.detail.inGameCombat;
 }
 
-onMounted(() => {
-  addOverlayListener("onPlayerChangedEvent", handlePlayerChangedEvent);
-  addOverlayListener("onLogEvent", handleOnLogEvent);
-  addOverlayListener("PartyChanged", handlePartyChanged);
-  addOverlayListener("CombatData", handleCombatData);
-  addOverlayListener("onInCombatChangedEvent", handleInCombatChanged);
-  startOverlayEvents();
-  initData();
-  checkInput();
-});
-
-onBeforeUnmount(() => {
-  removeOverlayListener("onPlayerChangedEvent", handlePlayerChangedEvent);
-  removeOverlayListener("onLogEvent", handleOnLogEvent);
-  removeOverlayListener("PartyChanged", handlePartyChanged);
-  removeOverlayListener("CombatData", handleCombatData);
-  removeOverlayListener("onInCombatChangedEvent", handleInCombatChanged);
-});
-
-const JOBS = "战骑枪暗白占贤学僧龙忍侍镰诗机舞黑召赤青";
-
 function onBlurEvent(event: FocusEvent): void {
   checkInput();
 }
+
 function onInputEvent(value: string | number): void {
   CONFIG.value.partySort = value.toString().replace(new RegExp(`[^${JOBS}]`, "g"), "");
   checkInput();
 }
+
 function checkInput() {
   if (CONFIG.value.partySort.length === 0) CONFIG.value.partySort = JOBS;
   CONFIG.value.partySort = CONFIG.value.partySort
@@ -1022,6 +1005,7 @@ function checkInput() {
     }
   });
 }
+
 function restoreSetting() {
   ElMessageBox.confirm("确定要使表格内填写的DPS数据全部恢复默认值吗？", "警告", {
     confirmButtonText: "确定",
@@ -1034,6 +1018,7 @@ function restoreSetting() {
     })
     .catch(() => {});
 }
+
 function handleInputCycle(row: { cycle: string; job: string }) {
   ElMessageBox.prompt("请输入一个数字数组以逗号分隔", "编辑周期", {
     confirmButtonText: "确定",
@@ -1053,6 +1038,7 @@ function handleInputCycle(row: { cycle: string; job: string }) {
     })
     .catch(() => {});
 }
+
 function copyMacro(text: string) {
   navigator.clipboard.writeText(text).catch(() => {
     const input = document.createElement("input");
@@ -1064,6 +1050,16 @@ function copyMacro(text: string) {
   });
   ElMessage.success("已复制到剪贴板");
 }
+
+initData();
+checkInput();
+addOverlayListener("onPlayerChangedEvent", handlePlayerChangedEvent);
+addOverlayListener("onLogEvent", handleOnLogEvent);
+addOverlayListener("PartyChanged", handlePartyChanged);
+addOverlayListener("CombatData", handleCombatData);
+addOverlayListener("onInCombatChangedEvent", handleInCombatChanged);
+startOverlayEvents();
+
 </script>
 
 <template>
