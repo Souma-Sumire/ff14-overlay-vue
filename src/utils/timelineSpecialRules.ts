@@ -34,16 +34,21 @@ windowAction.set(31617, { type: "begincast", window: [8, 8] }); //绝欧米茄 �
 windowAction.set(31624, { type: "begincast", window: [30, 30] }); //绝欧米茄 代号：*能*·德尔塔
 windowAction.set(31649, { type: "begincast", window: [30, 30] }); //绝欧米茄 宇宙记忆
 
+// 绝亚未实测
+windowAction.set(18516, { type: "cast", window: [250, 60] }); //绝亚 残暴正义号 正义飞踢 4854
+windowAction.set(18522, { type: "begincast", window: [500, 500] }); //绝亚 至尊亚历山大 时间静止 485A
+windowAction.set(18552, { type: "begincast", window: [500, 500] }); //绝亚 神圣审判 4878
+windowAction.set(19083, { type: "cast", window: [500, 0] }); //绝亚 what's this? cactbot写了900的前window
+
 export function factory(events: FFlogsStance): FFlogsStance {
   const statistics = new Map<number, number>();
   events.filter((e) => e.type === "begincast").map((e) => statistics.set(e.actionId, (statistics.get(e.actionId) ?? 0) + 1)); // 统计每一个ability出现的次数
   for (const event of events) {
-    if (statistics.get(event.actionId) === 1 && event.type === "begincast")
+    if (statistics.get(event.actionId) === 1 && event.type === "begincast") {
       event.window = [12, 12]; // 为独一无二的能力赋予window，不能太长了，否则双轴boss会出问题。
-    else {
-      const w = windowAction.get(event.actionId);
-      if (w?.type === event.type) event.window = w?.window;
     }
+    const w = windowAction.get(event.actionId);
+    if (w?.type === event.type) event.window = w?.window;
   }
   return events;
 }
