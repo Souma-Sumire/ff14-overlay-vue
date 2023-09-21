@@ -58,7 +58,7 @@ const menu: Menu[] = [
   {
     title: "（OBS用）显示当前时间",
     type: "网页",
-    path: "time",
+    path: "time?OVERLAY_WS=ws://127.0.0.1:10501/ws",
   },
 ];
 function handleClickMenu(menu: Menu) {
