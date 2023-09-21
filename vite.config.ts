@@ -9,7 +9,7 @@ import AutoImport from "unplugin-auto-import/vite";
 import Components from "unplugin-vue-components/vite";
 import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
 import { resolve } from "path";
-import vueJsx from "@vitejs/plugin-vue-jsx";
+import jsx from "@vitejs/plugin-vue-jsx";
 import { createStyleImportPlugin, VxeTableResolve } from "vite-plugin-style-import";
 // const path = require("path");
 
@@ -27,6 +27,7 @@ export default defineConfig({
       },
     },
     chunkSizeWarningLimit: 2000,
+    sourcemap: true,
     // minify: "terser",
     // terserOptions: {
     // compress: {
@@ -39,7 +40,7 @@ export default defineConfig({
     vue({
       include: [/\.vue$/, /\.md$/], // <--
     }),
-    vueJsx({}),
+    jsx(),
     Markdown(),
     AutoImport({
       imports: ["vue", "@vueuse/core"],
