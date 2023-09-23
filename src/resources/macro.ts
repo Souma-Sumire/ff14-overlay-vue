@@ -7333,6 +7333,21 @@ export const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 1→東 2→西 3,4→北 無職→南`,
         Deletability: false,
       },
+      {
+        Name: "Anabaseios: The Ninth Circle (Savage) - AutoImported",
+        Type: "place",
+        Place: {
+          A: { X: 100.0, Y: 0.0, Z: 92.0, ID: 0, Active: true },
+          B: { X: 108.0, Y: 0.0, Z: 100.0, ID: 1, Active: true },
+          C: { X: 100.0, Y: 0.0, Z: 108.0, ID: 2, Active: true },
+          D: { X: 92.0, Y: 0.0, Z: 100.0, ID: 3, Active: true },
+          One: { X: 90.0, Y: 0.0, Z: 90.0, ID: 4, Active: true },
+          Two: { X: 110.0, Y: 0.0, Z: 90.0, ID: 5, Active: true },
+          Three: { X: 110.0, Y: 0.0, Z: 110.0, ID: 6, Active: true },
+          Four: { X: 90.0, Y: 0.0, Z: 110.0, ID: 7, Active: true },
+        },
+        Deletability: false,
+      },
     ],
     "1150": [
       {
@@ -7422,6 +7437,36 @@ export const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p H1　H2　D3　D4`,
         Deletability: false,
       },
+      {
+        Name: "JP Markers",
+        Type: "place",
+        Place: {
+          A: { X: 100.049, Y: 0.0, Z: 88.601, ID: 0, Active: true },
+          B: { X: 108.029, Y: 0.0, Z: 99.999, ID: 1, Active: true },
+          C: { X: 100.008, Y: 0.0, Z: 111.188, ID: 2, Active: true },
+          D: { X: 91.983, Y: 0.0, Z: 99.929, ID: 3, Active: true },
+          One: { X: 103.995, Y: 0.0, Z: 96.253, ID: 4, Active: true },
+          Two: { X: 108.013, Y: 0.0, Z: 111.159, ID: 5, Active: true },
+          Three: { X: 92.009, Y: 0.0, Z: 111.204, ID: 6, Active: true },
+          Four: { X: 95.936, Y: 0.0, Z: 96.023, ID: 7, Active: true },
+        },
+        Deletability: false,
+      },
+      {
+        Name: "Anabaseios: The Tenth Circle (Savage) - AutoImported",
+        Type: "place",
+        Place: {
+          A: { X: 91.962, Y: 0.0, Z: 114.282, ID: 0, Active: true },
+          B: { X: 100.025, Y: 0.0, Z: 114.321, ID: 1, Active: true },
+          C: { X: 108.046, Y: 0.0, Z: 114.306, ID: 2, Active: true },
+          D: { X: 100.019, Y: 0.0, Z: 103.943, ID: 3, Active: true },
+          One: { X: 94.819, Y: 0.0, Z: 93.835, ID: 4, Active: true },
+          Two: { X: 105.378, Y: 0.0, Z: 93.728, ID: 5, Active: true },
+          Three: { X: 92.321, Y: 0.0, Z: 100.435, ID: 6, Active: true },
+          Four: { X: 107.609, Y: 0.0, Z: 100.66, ID: 7, Active: true },
+        },
+        Deletability: false,
+      },
     ],
     "1152": [
       {
@@ -7484,6 +7529,21 @@ export const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 闇線中央捨て　光線その場
 /p 塔処理　北(A)基準で塔ペア散開
 /p 闇ディスミサル　ボスを見て　左:MTD3/STD2 右:H1D1/H2D4`,
+        Deletability: false,
+      },
+      {
+        Name: "Kindred D&L",
+        Type: "place",
+        Place: {
+          A: { X: 100.0, Y: 0.0, Z: 87.0, ID: 0, Active: true },
+          B: { X: 107.0, Y: 0.0, Z: 100.0, ID: 1, Active: true },
+          C: { X: 100.0, Y: 0.0, Z: 113.0, ID: 2, Active: true },
+          D: { X: 93.0, Y: 0.0, Z: 100.0, ID: 3, Active: true },
+          One: { X: 109.192, Y: 0.0, Z: 90.808, ID: 4, Active: true },
+          Two: { X: 105.0, Y: 0.0, Z: 105.0, ID: 5, Active: true },
+          Three: { X: 90.808, Y: 0.0, Z: 109.192, ID: 6, Active: true },
+          Four: { X: 95.05, Y: 0.0, Z: 95.05, ID: 7, Active: true },
+        },
         Deletability: false,
       },
     ],
@@ -7622,7 +7682,37 @@ export const defaultMacro: { zoneId: ZoneIdInfo } = {
         Deletability: false,
       },
       {
-        Name: "本体 自用 NL的ABCD+激光引导的12",
+        Name: "本体 JP Strat",
+        Type: "place",
+        Place: {
+          A: { X: 97.25, Y: 0.0, Z: 92.5, ID: 0, Active: true },
+          B: { X: 102.75, Y: 0.0, Z: 92.5, ID: 1, Active: true },
+          C: { X: 102.75, Y: 0.0, Z: 97.5, ID: 2, Active: true },
+          D: { X: 97.25, Y: 0.0, Z: 97.5, ID: 3, Active: true },
+          One: { X: 94.5, Y: 0.0, Z: 89.0, ID: 4, Active: true },
+          Two: { X: 105.5, Y: 0.0, Z: 89.0, ID: 5, Active: true },
+          Three: { X: 105.5, Y: 0.0, Z: 101.0, ID: 6, Active: true },
+          Four: { X: 94.5, Y: 0.0, Z: 101.0, ID: 7, Active: true },
+        },
+        Deletability: false,
+      },
+      {
+        Name: "本体 Papan",
+        Type: "place",
+        Place: {
+          A: { X: 100.0, Y: 0.0, Z: 89.0, ID: 0, Active: true },
+          B: { X: 104.0, Y: 0.0, Z: 93.0, ID: 1, Active: true },
+          C: { X: 100.0, Y: 0.0, Z: 97.0, ID: 2, Active: true },
+          D: { X: 96.0, Y: 0.0, Z: 93.0, ID: 3, Active: true },
+          One: { X: 87.0, Y: 0.0, Z: 93.0, ID: 4, Active: true },
+          Two: { X: 113.0, Y: 0.0, Z: 93.0, ID: 5, Active: true },
+          Three: { X: 92.0, Y: 0.0, Z: 92.0, ID: 6, Active: true },
+          Four: { X: 108.0, Y: 0.0, Z: 92.0, ID: 7, Active: true },
+        },
+        Deletability: false,
+      },
+      {
+        Name: "本体 自用",
         Type: "place",
         Place: {
           A: {
