@@ -1,8 +1,8 @@
 // import { cleanMacro, getZoneIDByZoneName } from "../store/macro";
-// import { PPJSON } from "@/types/postNamazu";
 import { cleanMacro } from "@/store/macro";
 import { ZoneIdInfo } from "../types/macro";
-export const defaultMacro: { zoneId: ZoneIdInfo } = {
+import { getTerritoryTypeByMapID } from "./contentFinderCondition";
+const defaultMacro: { zoneId: ZoneIdInfo } = {
   zoneId: {
     "142": [
       {
@@ -7824,9 +7824,46 @@ export const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
   },
 };
+export { defaultMacro };
 function getSource(href: string): string {
   return `<ahref='${href}'target='_blank'>出处</a>`;
 }
+const fastPP = (jsonstr: string): void => {
+  const d = JSON.parse(jsonstr) as Partial<PPJSON>;
+  if (!d.MapID) throw new Error("PPJSON 不存在 MapID");
+  const nullMark = { X: 0, Y: 0, Z: 0, Active: false };
+  defaultMacro.zoneId[getTerritoryTypeByMapID(d.MapID)].push({
+    Name: d.Name ?? "Imported",
+    Type: "place",
+    Place: {
+      A: d.A ?? nullMark,
+      B: d.B ?? nullMark,
+      C: d.C ?? nullMark,
+      D: d.D ?? nullMark,
+      One: d.One ?? nullMark,
+      Two: d.Two ?? nullMark,
+      Three: d.Three ?? nullMark,
+      Four: d.Four ?? nullMark,
+    },
+    Deletability: false,
+  });
+};
+fastPP(
+  `{"Name":"game8 P9S","MapID":937,"A":{"X":100.194,"Y":0.0,"Z":85.723,"ID":0,"Active":true},"B":{"X":113.964,"Y":0.0,"Z":99.91,"ID":1,"Active":true},"C":{"X":100.036,"Y":0.0,"Z":113.949,"ID":2,"Active":true},"D":{"X":86.03,"Y":0.0,"Z":99.873,"ID":3,"Active":true},"One":{"X":109.858,"Y":0.0,"Z":90.002,"ID":4,"Active":true},"Two":{"X":109.863,"Y":0.0,"Z":109.787,"ID":5,"Active":true},"Three":{"X":90.079,"Y":0.0,"Z":109.847,"ID":6,"Active":true},"Four":{"X":90.268,"Y":0.0,"Z":90.187,"ID":7,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"game8 P10S","MapID":939,"A":{"X":91.861,"Y":0.0,"Z":85.465,"ID":0,"Active":true},"B":{"X":108.281,"Y":0.0,"Z":85.139,"ID":1,"Active":true},"C":{"X":91.886,"Y":0.0,"Z":99.907,"ID":2,"Active":true},"D":{"X":108.038,"Y":0.0,"Z":99.865,"ID":3,"Active":true},"One":{"X":92.035,"Y":0.0,"Z":111.176,"ID":4,"Active":true},"Two":{"X":108.048,"Y":0.0,"Z":111.27,"ID":5,"Active":true},"Three":{"X":99.946,"Y":0.0,"Z":111.275,"ID":6,"Active":true},"Four":{"X":100.081,"Y":0.0,"Z":97.414,"ID":7,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"game8 P11S","MapID":941,"A":{"X":99.872,"Y":0.0,"Z":85.948,"ID":0,"Active":true},"B":{"X":114.112,"Y":0.0,"Z":100.084,"ID":1,"Active":true},"C":{"X":99.965,"Y":0.0,"Z":114.324,"ID":2,"Active":true},"D":{"X":85.639,"Y":0.0,"Z":99.892,"ID":3,"Active":true},"One":{"X":94.069,"Y":0.0,"Z":94.693,"ID":4,"Active":true},"Two":{"X":105.484,"Y":0.0,"Z":94.467,"ID":5,"Active":true},"Three":{"X":105.346,"Y":0.0,"Z":105.452,"ID":6,"Active":true},"Four":{"X":94.527,"Y":0.0,"Z":105.24,"ID":7,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"game8 P12S","MapID":943,"A":{"X":100.017,"Y":0.0,"Z":81.293,"ID":0,"Active":true},"B":{"X":119.21,"Y":0.0,"Z":100.161,"ID":1,"Active":true},"C":{"X":100.055,"Y":0.0,"Z":119.197,"ID":2,"Active":true},"D":{"X":80.909,"Y":0.0,"Z":100.179,"ID":3,"Active":true},"One":{"X":110.14,"Y":0.0,"Z":89.562,"ID":4,"Active":true},"Two":{"X":109.896,"Y":0.0,"Z":109.996,"ID":5,"Active":true},"Three":{"X":90.064,"Y":0.0,"Z":109.996,"ID":6,"Active":true},"Four":{"X":90.077,"Y":0.0,"Z":90.129,"ID":7,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"game8 P12S 本体","MapID":943,"A":{"X":97.919,"Y":0.0,"Z":92.978,"ID":0,"Active":true},"B":{"X":102.185,"Y":0.0,"Z":92.877,"ID":1,"Active":true},"C":{"X":102.148,"Y":0.0,"Z":97.109,"ID":2,"Active":true},"D":{"X":97.924,"Y":0.0,"Z":97.066,"ID":3,"Active":true},"One":{"X":99.146,"Y":0.0,"Z":80.831,"ID":4,"Active":true},"Two":{"X":119.0,"Y":0.0,"Z":90.51,"ID":5,"Active":true},"Three":{"X":106.289,"Y":0.0,"Z":101.104,"ID":6,"Active":true},"Four":{"X":94.293,"Y":0.0,"Z":101.127,"ID":7,"Active":true}}`,
+);
+
 // function fastPush(zoneName: string, data: PPJSON | string, coverTitle?: string): void {
 //   const mapID = getZoneIDByZoneName(zoneName);
 //   if (!mapID) {
