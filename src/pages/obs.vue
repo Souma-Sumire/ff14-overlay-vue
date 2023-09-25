@@ -105,7 +105,7 @@ async function handleLogEvent(e: { detail: { logs: string[] } }) {
   for (const log of e.detail.logs) {
     if (/^.{14} \w+ 00:(?:00B9|0[12]39)::?(?:距离战斗开始还有|Battle commencing in |戦闘開始まで)\d+[^（(]+[（(]/i.test(log)) start();
     else if (
-      /^.{14} (?:Director 21:.{8}:4000000F|Territory 01:|ChatLog 00:0038::end$|ChatLog 00:(?:00B9|0[12]39)::(?:.+取消了战斗开始倒计时。|Countdown canceled by .+\.|.+により、戦闘開始カウントがキャンセルされました。))/i.test(
+      /^.{14} (?:Director 21:.{8}:4000000[3F]|ChatLog 00:0038::end$|ChatLog 00:(?:00B9|0[12]39)::(?:.+取消了战斗开始倒计时。|Countdown canceled by .+\.|.+により、戦闘開始カウントがキャンセルされました。))/i.test(
         log,
       )
     )
