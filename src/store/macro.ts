@@ -348,7 +348,7 @@ export const useMacroStore = defineStore("macro", {
     },
     updateZone(): void {
       // 如果24小时内已经成功更新过则跳过
-      if (Date.now() - lastUpdate.value < 1000 * 60 * 24 * 1) return;
+      // if (Date.now() - lastUpdate.value < 1000 * 60 * 24 * 1) return;
       try {
         const before = JSON.stringify(this.data.zoneId);
         for (const key in this.data.zoneId) {
