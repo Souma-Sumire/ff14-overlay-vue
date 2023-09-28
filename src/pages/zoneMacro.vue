@@ -195,7 +195,7 @@ onBeforeUnmount(() => {
                     <span v-show="!macro.Editable">{{ scope.row.X }}</span>
                     <el-input-number
                       controls-position="right"
-                      :step="1"
+                      :step="0.1"
                       :precision="2"
                       size="small"
                       v-show="macro.Editable"
@@ -208,7 +208,7 @@ onBeforeUnmount(() => {
                     <span v-show="!macro.Editable">{{ scope.row.Z }}</span>
                     <el-input-number
                       controls-position="right"
-                      :step="1"
+                      :step="0.1"
                       :precision="2"
                       size="small"
                       v-show="macro.Editable"

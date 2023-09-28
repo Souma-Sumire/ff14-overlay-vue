@@ -9,7 +9,7 @@ declare type WayMarkInfo = {
 type WayMarkKeys = "A" | "B" | "C" | "D" | "One" | "Two" | "Three" | "Four";
 type WayMarkJSON = Partial<{ [key in WayMarkKeys]?: WayMarkInfo }>;
 declare type PPJSON = WayMarkJSON & { Name?: string; MapID?: number };
-type Slot = 1 | 2 | 3 | 4 | 5;
+declare type Slot = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30;
 declare enum MarkTypes {
   "attack1" = 0, //攻击1
   "attack2" = 1, //攻击2
@@ -25,6 +25,9 @@ declare enum MarkTypes {
   "circle" = 11, //圆圈
   "cross" = 12, //十字
   "triangle" = 13, //三角
+  "attack6" = 14, //攻击6
+  "attack7" = 15, //攻击7
+  "attack8" = 16, //攻击8
 }
 
 declare type MarkJSON = {

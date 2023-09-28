@@ -240,7 +240,7 @@ export const useMacroStore = defineStore("macro", {
           h(ElInputNumber, {
             "modelValue": slotIndex.value,
             "min": 1,
-            "max": 5,
+            "max": 30,
             "size": "large",
             "onUpdate:modelValue": (val: any) => {
               slotIndex.value = val;
@@ -251,7 +251,7 @@ export const useMacroStore = defineStore("macro", {
         cancelButtonText: "取消",
       })
         .then(() => {
-          doInsertPreset(Number(this.selectZone), place, slotIndex.value as 1 | 2 | 3 | 4 | 5);
+          doInsertPreset(Number(this.selectZone), place, slotIndex.value as Slot);
           doQueueActions([{ c: "DoTextCommand", p: "/waymark preset " + slotIndex.value, d: 750 }]);
           ElMessage.success("插槽" + slotIndex.value + "已设置并标记");
         })
@@ -292,7 +292,7 @@ export const useMacroStore = defineStore("macro", {
         }
         const echoSlot = (e.line[4] as string).match(/^(?:标点|标记|场景标记|place|biaodian)(?:插槽|预设|)\s*(?<slot>[1-5])?.*?(?<mark>[!！])?\s*$/i);
         if (echoSlot) {
-          const slotIndex: 1 | 2 | 3 | 4 | 5 = Number(echoSlot?.groups?.slot ?? 5) as 1 | 2 | 3 | 4 | 5;
+          const slotIndex: Slot = Number(echoSlot?.groups?.slot ?? 5) as Slot;
           const place = this.data.zoneId[this.zoneNow]?.filter((v) => v.Type === "place");
           if (place?.length === 0 || !place) {
             doTextCommand("/e 当前地图没有标点<se.3>");
