@@ -21,13 +21,18 @@ export default defineConfig({
     emptyOutDir: true, //构建时清空outDir目录
     rollupOptions: {
       output: {
-        chunkFileNames: "assets/js/[name].js",
-        entryFileNames: "assets/js/[name].js",
-        assetFileNames: "assets/[ext]/[name].[ext]",
+        //   chunkFileNames: "assets/js/[name].js",
+        //   entryFileNames: "assets/js/[name].js",
+        //   assetFileNames: "assets/[ext]/[name].[ext]",
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            return "vendor";
+          }
+        },
       },
     },
     chunkSizeWarningLimit: 2000,
-    sourcemap: true,
+    // sourcemap: true,
     // minify: "terser",
     // terserOptions: {
     // compress: {
