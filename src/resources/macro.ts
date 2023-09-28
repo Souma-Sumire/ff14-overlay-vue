@@ -6136,13 +6136,13 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     "1082": [
       {
-        Name: "P5S 苦茶子（和game8一样）",
+        Name: "P5S 苦茶子（和Game8一样）",
         Type: "macro",
         Text: "/p 【基本散开】 【捕食毒塔】ST自由\n/p D3 MT D4　　　　　　MT(无敌)\n/p H1　　H2　　　H1D3　　 H2D4\n/p D1 ST D2　　　　　　 D1D2\n/p 【毒塔（近战内侧 / 远程外侧）】\n/p MTST / H1D3：12点位置逆时针找塔\n/p D1D2 / H2D4：1点位置顺时针找塔\n/p 【毒液泉涌（染色分摊)】\n/p 内侧：MTH1D1D3 外侧：STH2D2D4\n/p  【毒池 + 毒液风暴】\n/p 　　毒D1H1D3外\n/p 　　　　MT\n/p 　　　　☆\n/p 　　　　ST\n/p 外D4H2D2毒　※毒如果相反则站位相反\n/p MT組：标记1or4 找毒圈\n/p ST組： 标记2or3 找毒圈\n/p AOE放在外侧，内侧分摊\n/p 【染色+冲锋 找3个水晶的对侧房间分摊染色】",
         Deletability: false,
       },
       {
-        Name: "P5S game8",
+        Name: "P5S Game8",
         Type: "macro",
         Text: "/p 【基本散開】　　　【十字毒塔】STフリー\n/p D3 MT D4　　　　　　MT(無敵)\n/p H1　　H2　　　H1D3　　 H2D4\n/p D1 ST D2　　　　　　 D1D2\n/p 【毒塔（近接内側 / 遠隔外側）】\n/p MTST / H1D3：12時から反時計回り\n/p D1D2 / H2D4：1時から時計回り\n/p 【ベノムサージ(東西受け)/スプラッシュ】\n/p 西/内壁：MTH1D1D3 東/外壁：STH2D2D4\n/p 【毒沼 + ベノムスコール】\n/p 　　毒D1H1D3外\n/p 　　　　MT\n/p 　　　　☆\n/p 　　　　ST\n/p 　外D4H2D2毒　※毒が逆位置の場合反転\n/p MT組：マーカー1or4に出た毒に合わせて移動\n/p ST組：マーカー2or3に出た毒に合わせて移動\n/p AOEは外周に捨ててMT/STの位置で頭割り\n/p 【4部屋ベノムスプラッシュ：3個部屋の対角】\n",
         Deletability: false,
@@ -6321,13 +6321,13 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Deletability: false,
       },
       {
-        Name: "P6S 苦茶子（和game8一样）",
+        Name: "P6S 苦茶子（和Game8一样）",
         Type: "macro",
         Text: "/p ※MT组：MTH1D1D3 ST组：STH2D2D4\n/p 【基本散开】 【恶病体质第一次】\n/p MT/D3　ST/D4 　 　 8　　 　 　8\n/p 　　 　 ★　　 　 12　20 ★ 20　12\n/p H1/D1　H2/D2　　  16 　 　 　 16\n/p 【 分摊+扇型攻击 】｜ 【4：4分摊】\n/p 西：MT组 东：ST组 ｜西侧→MT组 东侧→ST组\n/p ※顺时针移动分摊   ｜※内侧标记集合\n/p 【麻将】　　　　 　｜【苦痛交换第二次】\n/p 西：奇数　　　 　　｜西→T・H    东→DPS\n/p 东：偶数　　 　　　｜※AOE放置方向同上\n/p 【恶病体质第二次】\n/p 西：紫DEBUFF　东：绿DEBUFF\n/p 北・南外侧标记→AoE　内侧标记→分摊",
         Deletability: false,
       },
       {
-        Name: "P6S game8",
+        Name: "P6S Game8",
         Type: "macro",
         Text: "/p ※MT組：MTH1D1D3 ST組：STH2D2D4\n/p 　【基本散開】　　【カヘキシー1回目】\n/p MT/D3　ST/D4 　 　 8　　 　 　8\n/p 　　 　 ★　　 　 　12　20 ★ 20　12\n/p H1/D1　H2/D2　　16 　 　 　 16\n/p 【 頭割り+扇範囲 】｜ 【4：4頭割り】\n/p 西：MT組 東：ST組｜西側→MT組 東側→ST組\n/p ※時計回りで頭割り｜※内周4マスを使用\n/p 【サイコロ】　　 　｜【チェンジバースト2回目】\n/p 西：奇数　　　　　｜西→T・H 東→DPS\n/p 東：偶数　　　　　｜※AOEも上記方向に捨てる\n/p 【カヘキシー2回目】\n/p 西：紫デバフ　東：緑デバフ\n/p 北・南外周マス→AoE　内周マス→頭割り\n",
         Deletability: false,
@@ -6567,7 +6567,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Deletability: false,
       },
       {
-        Name: "P7S game8",
+        Name: "P7S Game8",
         Type: "macro",
         Text: "/p MT組：MTH1D1D3　ST組：STH2D2D4\n/p 　【基本散開】　　　　　【ノックバック+鳥】\n/p MT/D1　ST/D2　　　　 D1　　 　 　 D2\n/p 　　 　 ★　　　　　　D3　 MT　 　ST　 D4\n/p H1/D3　H2/D4　　　　通路 　 　 　 通路\n/p 　　　　　　　　　　　H1　　　　　　　H2\n/p 【生命の果実：頭割り】　│【魔印創成：散開】\n/p 北側：MT組　南側：ST組 │基本散開※頭割りと被ったら通路\n/p 【エクサ+頭割り】　 　 　 │【鳥誘導＋塔】\n/p 西：MT組　東：ST組　　 │基本散開準拠でズレたら時計回り\n/p 【魔印創成：獄】\n/p 　 ▼西島▼　　　　　　　 　 ▼東島▼\n/p 頭割り　MT/D1 　 　 　 MT/D1　頭割り\n/p ST/D2　H2/D4　通路　H2/D4　ST/D2\n/p 　　　　H1/D3　 　　　H1/D3\n",
         Deletability: false,
@@ -6764,13 +6764,13 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Deletability: false,
       },
       {
-        Name: "P8S game8门神",
+        Name: "P8S Game8门神",
         Type: "macro",
         Text: "/p ■テトラオクタ/誘導/蛇2　 ■基本散会\n/p 　MT/D3　→　ST/D4　　　D3 MT D4\n/p 　　↑　　 ☆　　↓　 　　　H1(H2) ST\n/p 　H1/D1　←　H2/D2 　　D1 H2 D2\n/p ■イントゥシャドウ(1回目)\n/p 　蛇：北から時計回りMTD1>STD2>H1D3>H2D4\n/p ■フェイタルストンプ\n/p 　1,3回目→1(北西)　2,4回目→中央　待機→A(北)\n/p ■幻影創造\n/p ◎竜竜×散開　　　　 │◎フェニ×散開\n/p 　　　　D3　　　 　 │　D3 MT D4\n/p 　　　　MT　ST　D4│　H1 ☆ ST\n/p 　　H1 D1　D2　　 │　D1 H2 D2\n/p 　　　　　　 H2　　 │\n/p ■四重炎嵐(縦横) ｜■四重炎嵐(角)\n/p 　　　 MT　　　│　　中央　※MT組：西優先\n/p 　 D1 ST D2 　　｜T　近\n/p 　D3 H1 H2 D4 │遠　H\n/p ◎頭割り：近H位置(MTD1/STD2/H1D3/H2D4)\n/p ■イントゥシャドウ(2回目) 4:4頭割り\n/p 　デバフ持ち：北西>MT/D1>ST/D2>H1/D3>H2/D4>南東\n/p 　無職：北西TH/南東DPS\n/p ■テトラ/ディフレア\n/p 　テトラ：(ボス)MT/D1>ST/D2>H1/D3>H2/D4\n/p 　ディフレア：(ボス)MTH1D1D2>STH2D3D4\n",
         Deletability: false,
       },
       {
-        Name: "P8S game8本体",
+        Name: "P8S Game8本体",
         Type: "macro",
         Text: "/p 【術式1回目(頭割は西)】【術式炎氷(TH西 DPS東) 】\n/p 　 　★　　　紫 　 ST│ ▼炎:中央前詰め　▼氷誘導\n/p D1 MT D2　　 MT　│ MT>ST >H1>H2 西 D1>ST\n/p H1　　H2　H1　D2│ D1>D2>D3>D4 東MT>D2\n/p D3 S T D4　 　 D1　│【術式2回目散開 】\n/p 　※左安置は　H2　D3│　STMT 紫 D3D1\n/p 　　左右反転→　 D4 　│　　 H1H2D4D2\n/p 【概念1回目①】　　【概念1回目②】\n/p 　　　　早α　　 　 │　　　遅α\n/p 複/遅α　　　　　　│\n/p 　　　　　　 早β 　│ 生物　　　　遅β\n/p 重/遅βγ　　　　　 │\n/p 　　　　早γ　　 　 │　　　遅γ\n/p ※4塔：遅αβγ→北で合成\n/p 　 　 　 複/重/早余り→南で合成\n/p 【万象灰燼：はいじあ/ビジョン式】\n/p 　　MT　　D1\n/p ST　 +　　　+　D2　※1,3番塔は前+で範囲捨て\n/p H1　+　　　+　D3　※2,4番塔は後+で範囲捨て\n/p 　 　H2　　D4\n/p 【概念2回目①】 　 　【概念2回目②】\n/p 　　 無/早α　　　 │　　　　遅α\n/p 単　　　　　 　 　 │ 生物\n/p 　　　　　　早β　│ ｲﾌ ｲﾌ　　　　遅β\n/p 複/遅　　　　　　 │ 生物\n/p 　　　 早γ 　　 　 │　　　　遅γ\n/p ※4塔：遅αβ→北で合成　遅γ/早余り→南で合成\n/p 【支配者の一撃】　　　　　【塔優先度】\n/p 　MTH1 D3 D1　西>MTSTH1H2D4D3D2D1>東\n/p 　ST H2 D4 D2\n",
         Deletability: false,
@@ -7257,7 +7257,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Deletability: false,
       },
       {
-        Name: "(game8)ハムカツ式改※ウインドスフィア最新版",
+        Name: "(Game8)ハムカツ式改※ウインドスフィア最新版",
         Type: "macro",
         Text: `/p ■散開(北基準)--■44頭割り-------ハムカツ式改---\n/p D3 MT D4　　| 西/外:MTH1D1D3\n/p H1 ★ H2　　| 東/内:STH2D2D4\n/p D1 ST D2　　 | 縦安置 北:MT組 南:ST組\n/p ■ディレイスパーク--------------------------------------\n/p ディレイアースを避けた位置で捨てる\n/p ■ダブルメテオ-------------------------------------------\n/p DPS:3人塔　フレア北\n/p TH:2人塔　フレア南　ノックバック中央\n/p ■ヴォイド･コメットレイン-----------------------------\n/p 北1:H1D3　北2:MTD1　南1:H2D4　南2:STD2\n/p ■ウィンドスフィア2,3回目----------------------------\n/p 北/西 H1D3,MTD1,STD2,H2D4 南/東\n/p ■三連黒竜閃---------------------------------------------\n/p T:北 東西:H 南:DPS`,
         Deletability: false,
@@ -7265,7 +7265,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     "1157": [
       {
-        Name: "game8",
+        Name: "Game8",
         Type: "macro",
         Text: `/p 【飛翔：散開方向】\n/p 　　　 　 (A)\n/p 　 　　 MT+ST\n/p 　　D3　　 　 D4\n/p (D)　　　 　 　 　 (B)\n/p 　　D1　　 　 D2\n/p 　 　 　H1+H2\n/p 　　　 　 (C)\n/p 【デモンクロー】ST先頭で頭割り\n/p 【雑魚タゲ取り】\n/p 2回目：MT⇒北西ウィル　ST⇒南西ウィル\n/p 3回目：MT⇒南ウィル　　ST⇒東セウ\n/p 【サザンクロス】 　 ｜【波動砲】\n/p 背面から時計回り　｜9時で捨てる\n/p MTのみ反時計回り ｜MTは東寄りにタゲサ内へ入る`,
         Deletability: false,
@@ -7331,21 +7331,6 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 毒:12時から時計回り DPS＞TH 扇誘導:TH→D
 /p ■キメリック(サイコロ２回目)
 /p 1→東 2→西 3,4→北 無職→南`,
-        Deletability: false,
-      },
-      {
-        Name: "Anabaseios: The Ninth Circle (Savage) - AutoImported",
-        Type: "place",
-        Place: {
-          A: { X: 100.0, Y: 0.0, Z: 92.0, ID: 0, Active: true },
-          B: { X: 108.0, Y: 0.0, Z: 100.0, ID: 1, Active: true },
-          C: { X: 100.0, Y: 0.0, Z: 108.0, ID: 2, Active: true },
-          D: { X: 92.0, Y: 0.0, Z: 100.0, ID: 3, Active: true },
-          One: { X: 90.0, Y: 0.0, Z: 90.0, ID: 4, Active: true },
-          Two: { X: 110.0, Y: 0.0, Z: 90.0, ID: 5, Active: true },
-          Three: { X: 110.0, Y: 0.0, Z: 110.0, ID: 6, Active: true },
-          Four: { X: 90.0, Y: 0.0, Z: 110.0, ID: 7, Active: true },
-        },
         Deletability: false,
       },
     ],
@@ -7630,7 +7615,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Deletability: false,
       },
       {
-        Name: "门神点",
+        Name: "门神",
         Type: "place",
         Place: {
           A: {
@@ -7681,21 +7666,6 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
             Z: 108.4,
             Active: true,
           },
-        },
-        Deletability: false,
-      },
-      {
-        Name: "本体 JP Strat",
-        Type: "place",
-        Place: {
-          A: { X: 97.25, Y: 0.0, Z: 92.5, ID: 0, Active: true },
-          B: { X: 102.75, Y: 0.0, Z: 92.5, ID: 1, Active: true },
-          C: { X: 102.75, Y: 0.0, Z: 97.5, ID: 2, Active: true },
-          D: { X: 97.25, Y: 0.0, Z: 97.5, ID: 3, Active: true },
-          One: { X: 94.5, Y: 0.0, Z: 89.0, ID: 4, Active: true },
-          Two: { X: 105.5, Y: 0.0, Z: 89.0, ID: 5, Active: true },
-          Three: { X: 105.5, Y: 0.0, Z: 101.0, ID: 6, Active: true },
-          Four: { X: 94.5, Y: 0.0, Z: 101.0, ID: 7, Active: true },
         },
         Deletability: false,
       },
@@ -7715,62 +7685,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Deletability: false,
       },
       {
-        Name: "本体 自用",
-        Type: "place",
-        Place: {
-          A: {
-            X: 96.81801948466054,
-            Z: 91.81801948466054,
-            Y: 0,
-            Active: true,
-          },
-          B: {
-            X: 103.18198051533946,
-            Z: 91.81801948466054,
-            Y: 0,
-            Active: true,
-          },
-          C: {
-            X: 103.18198051533946,
-            Z: 98.18198051533946,
-            Y: 0,
-            Active: true,
-          },
-          D: {
-            X: 96.81801948466054,
-            Z: 98.18198051533946,
-            Y: 0,
-            Active: true,
-          },
-          One: {
-            X: 92,
-            Y: 0,
-            Z: 92,
-            Active: true,
-          },
-          Two: {
-            X: 108,
-            Y: 0,
-            Z: 92,
-            Active: true,
-          },
-          Three: {
-            X: 0,
-            Y: 0,
-            Z: 0,
-            Active: false,
-          },
-          Four: {
-            X: 0,
-            Y: 0,
-            Z: 0,
-            Active: false,
-          },
-        },
-        Deletability: false,
-      },
-      {
-        Name: "本体 风火 非NL打法",
+        Name: "本体 风火",
         Type: "place",
         Place: {
           A: {
@@ -7851,9 +7766,15 @@ const fastPP = (jsonstr: string): void => {
     Deletability: false,
   });
 };
+// 保真
 fastPP(
-  `{"Name":"game8 P9S","MapID":937,"A":{"X":100.194,"Y":0.0,"Z":85.723,"ID":0,"Active":true},"B":{"X":113.964,"Y":0.0,"Z":99.91,"ID":1,"Active":true},"C":{"X":100.036,"Y":0.0,"Z":113.949,"ID":2,"Active":true},"D":{"X":86.03,"Y":0.0,"Z":99.873,"ID":3,"Active":true},"One":{"X":109.858,"Y":0.0,"Z":90.002,"ID":4,"Active":true},"Two":{"X":109.863,"Y":0.0,"Z":109.787,"ID":5,"Active":true},"Three":{"X":90.079,"Y":0.0,"Z":109.847,"ID":6,"Active":true},"Four":{"X":90.268,"Y":0.0,"Z":90.187,"ID":7,"Active":true}}`,
+  `{"Name":"P9S 树歌","MapID":937,"A":{"X":100.11,"Z":85.86,"Y":0,"Active":true},"B":{"X":114.07,"Z":99.94,"Y":0,"Active":true},"C":{"X":100.17,"Z":113.89,"Y":0,"Active":true},"D":{"X":86.09,"Z":99.74,"Y":0,"Active":true},"One":{"X":85.83,"Z":85.64,"Y":0,"Active":true},"Two":{"X":111.93,"Z":87.8,"Y":0,"Active":true},"Three":{"X":109.97,"Z":109.75,"Y":0,"Active":true},"Four":{"X":90.13,"Z":109.86,"Y":0,"Active":true}}`,
 );
+// 保真
+fastPP(
+  `{"Name":"P9S Game8","MapID":937,"A":{"X":100.194,"Y":0.0,"Z":85.723,"ID":0,"Active":true},"B":{"X":113.964,"Y":0.0,"Z":99.91,"ID":1,"Active":true},"C":{"X":100.036,"Y":0.0,"Z":113.949,"ID":2,"Active":true},"D":{"X":86.03,"Y":0.0,"Z":99.873,"ID":3,"Active":true},"One":{"X":109.858,"Y":0.0,"Z":90.002,"ID":4,"Active":true},"Two":{"X":109.863,"Y":0.0,"Z":109.787,"ID":5,"Active":true},"Three":{"X":90.079,"Y":0.0,"Z":109.847,"ID":6,"Active":true},"Four":{"X":90.268,"Y":0.0,"Z":90.187,"ID":7,"Active":true}}`,
+);
+
 fastPP(
   `{"Name":"P10S 不保真","MapID":939,"A":{"X":91.861,"Y":0.0,"Z":85.465,"ID":0,"Active":true},"B":{"X":108.281,"Y":0.0,"Z":85.139,"ID":1,"Active":true},"C":{"X":91.886,"Y":0.0,"Z":99.907,"ID":2,"Active":true},"D":{"X":108.038,"Y":0.0,"Z":99.865,"ID":3,"Active":true},"One":{"X":92.035,"Y":0.0,"Z":111.176,"ID":4,"Active":true},"Two":{"X":108.048,"Y":0.0,"Z":111.27,"ID":5,"Active":true},"Three":{"X":99.946,"Y":0.0,"Z":111.275,"ID":6,"Active":true},"Four":{"X":100.081,"Y":0.0,"Z":97.414,"ID":7,"Active":true}}`,
 );
@@ -7861,20 +7782,12 @@ fastPP(
   `{"Name":"P11S 不保真","MapID":941,"A":{"X":99.872,"Y":0.0,"Z":85.948,"ID":0,"Active":true},"B":{"X":114.112,"Y":0.0,"Z":100.084,"ID":1,"Active":true},"C":{"X":99.965,"Y":0.0,"Z":114.324,"ID":2,"Active":true},"D":{"X":85.639,"Y":0.0,"Z":99.892,"ID":3,"Active":true},"One":{"X":94.069,"Y":0.0,"Z":94.693,"ID":4,"Active":true},"Two":{"X":105.484,"Y":0.0,"Z":94.467,"ID":5,"Active":true},"Three":{"X":105.346,"Y":0.0,"Z":105.452,"ID":6,"Active":true},"Four":{"X":94.527,"Y":0.0,"Z":105.24,"ID":7,"Active":true}}`,
 );
 fastPP(
-  `{"Name":"game8 P12S","MapID":943,"A":{"X":100.017,"Y":0.0,"Z":81.293,"ID":0,"Active":true},"B":{"X":119.21,"Y":0.0,"Z":100.161,"ID":1,"Active":true},"C":{"X":100.055,"Y":0.0,"Z":119.197,"ID":2,"Active":true},"D":{"X":80.909,"Y":0.0,"Z":100.179,"ID":3,"Active":true},"One":{"X":110.14,"Y":0.0,"Z":89.562,"ID":4,"Active":true},"Two":{"X":109.896,"Y":0.0,"Z":109.996,"ID":5,"Active":true},"Three":{"X":90.064,"Y":0.0,"Z":109.996,"ID":6,"Active":true},"Four":{"X":90.077,"Y":0.0,"Z":90.129,"ID":7,"Active":true}}`,
+  `{"Name":"门神 Game8","MapID":943,"A":{"X":100.017,"Y":0.0,"Z":81.293,"ID":0,"Active":true},"B":{"X":119.21,"Y":0.0,"Z":100.161,"ID":1,"Active":true},"C":{"X":100.055,"Y":0.0,"Z":119.197,"ID":2,"Active":true},"D":{"X":80.909,"Y":0.0,"Z":100.179,"ID":3,"Active":true},"One":{"X":110.14,"Y":0.0,"Z":89.562,"ID":4,"Active":true},"Two":{"X":109.896,"Y":0.0,"Z":109.996,"ID":5,"Active":true},"Three":{"X":90.064,"Y":0.0,"Z":109.996,"ID":6,"Active":true},"Four":{"X":90.077,"Y":0.0,"Z":90.129,"ID":7,"Active":true}}`,
 );
 fastPP(
-  `{"Name":"game8 P12S 本体","MapID":943,"A":{"X":97.919,"Y":0.0,"Z":92.978,"ID":0,"Active":true},"B":{"X":102.185,"Y":0.0,"Z":92.877,"ID":1,"Active":true},"C":{"X":102.148,"Y":0.0,"Z":97.109,"ID":2,"Active":true},"D":{"X":97.924,"Y":0.0,"Z":97.066,"ID":3,"Active":true},"One":{"X":99.146,"Y":0.0,"Z":80.831,"ID":4,"Active":true},"Two":{"X":119.0,"Y":0.0,"Z":90.51,"ID":5,"Active":true},"Three":{"X":106.289,"Y":0.0,"Z":101.104,"ID":6,"Active":true},"Four":{"X":94.293,"Y":0.0,"Z":101.127,"ID":7,"Active":true}}`,
+  `{"Name":"本体 Game8","MapID":943,"A":{"X":97.919,"Y":0.0,"Z":92.978,"ID":0,"Active":true},"B":{"X":102.185,"Y":0.0,"Z":92.877,"ID":1,"Active":true},"C":{"X":102.148,"Y":0.0,"Z":97.109,"ID":2,"Active":true},"D":{"X":97.924,"Y":0.0,"Z":97.066,"ID":3,"Active":true},"One":{"X":99.146,"Y":0.0,"Z":80.831,"ID":4,"Active":true},"Two":{"X":119.0,"Y":0.0,"Z":90.51,"ID":5,"Active":true},"Three":{"X":106.289,"Y":0.0,"Z":101.104,"ID":6,"Active":true},"Four":{"X":94.293,"Y":0.0,"Z":101.127,"ID":7,"Active":true}}`,
 );
 
-fastPP(`{"Name":"P9S 树歌12特殊${getSource(
-  `https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86`,
-)}","MapID":937,"A":{"X":100.0,"Y":0.0,"Z":78.8,"ID":0,"Active":true},"B":{"X":121.2,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":121.2,"ID":2,"Active":true},"D":{"X":78.8,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":70.0,"Y":0.0,"Z":70.0,"ID":4,"Active":true},"Two":{"X":122.5,"Y":0.0,"Z":77.5,"ID":5,"Active":true},"Three":{"X":115.0,"Y":0.0,"Z":115.0,"ID":6,"Active":true},"Four":{"X":85.0,"Y":0.0,"Z":115.0,"ID":7,"Active":true}}
-`);
-fastPP(`{"Name":"P9S Game8国服适配spjp 距离不确定再看看${getSource(
-  `https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86`,
-)}","MapID":937,"A":{"X":100.0,"Y":0.0,"Z":78.8,"ID":0,"Active":true},"B":{"X":121.2,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":121.2,"ID":2,"Active":true},"D":{"X":78.8,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":85.0,"Y":0.0,"Z":85.0,"ID":4,"Active":true},"Two":{"X":115.0,"Y":0.0,"Z":85.0,"ID":5,"Active":true},"Three":{"X":115.0,"Y":0.0,"Z":115.0,"ID":6,"Active":true},"Four":{"X":85.0,"Y":0.0,"Z":115.0,"ID":7,"Active":true}}
-`);
 fastPP(`{"Name":"P10S Game8国服适配 不确定再看看${getSource(
   `https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86`,
 )}","MapID":939,"A":{"X":100.0,"Y":0.0,"Z":98.2,"ID":0,"Active":true},"B":{"X":92.009,"Y":0.0,"Z":111.204,"ID":6,"Active":true},"C":{"X":100.008,"Y":0.0,"Z":111.188,"ID":2,"Active":true},"D":{"X":108.013,"Y":0.0,"Z":111.159,"ID":5,"Active":true},"One":{"X":92.009,"Y":0.0,"Z":88.82,"ID":4,"Active":true},"Two":{"X":108.013,"Y":0.0,"Z":88.82,"ID":5,"Active":true},"Three":{"X":75.0,"Y":0.0,"Z":85.0,"ID":6,"Active":true},"Four":{"X":125.0,"Y":0.0,"Z":85.0,"ID":7,"Active":true}}
@@ -7883,17 +7796,13 @@ fastPP(`{"Name":"P11S Game8国服适配 不确定再看看${getSource(
   `https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86`,
 )}","MapID":941,"A":{"X":100.0,"Y":0.0,"Z":85.0,"ID":0,"Active":true},"B":{"X":115.0,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":115.0,"ID":2,"Active":true},"D":{"X":85.0,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":89.4,"Y":0.0,"Z":89.4,"ID":4,"Active":true},"Two":{"X":110.6,"Y":0.0,"Z":89.4,"ID":5,"Active":true},"Three":{"X":110.6,"Y":0.0,"Z":110.6,"ID":6,"Active":true},"Four":{"X":89.4,"Y":0.0,"Z":110.6,"ID":7,"Active":true}}
 `);
-fastPP(`{"Name":"P12S 门神 kashi 八方${getSource(
+fastPP(`{"Name":"极高贝扎安全角树歌(不确定再看看)${getSource(
   `https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86`,
-)}","MapID":943,"A":{"X":100.0,"Y":0.0,"Z":90.0,"ID":0,"Active":true},"B":{"X":110.0,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":110.0,"ID":2,"Active":true},"D":{"X":90.0,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":90.0,"Y":0.0,"Z":90.0,"ID":4,"Active":true},"Two":{"X":110.0,"Y":0.0,"Z":90.0,"ID":5,"Active":true},"Three":{"X":110.0,"Y":0.0,"Z":110.0,"ID":6,"Active":true},"Four":{"X":90.0,"Y":0.0,"Z":110.0,"ID":7,"Active":true}}
+)}","MapID":950,"A":{"X":100.0,"Y":0.03,"Z":86.0,"ID":0,"Active":true},"B":{"X":114.0,"Y":0.03,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.03,"Z":114.0,"ID":2,"Active":true},"D":{"X":86.0,"Y":0.03,"Z":100.0,"ID":3,"Active":true},"One":{"X":103.9,"Y":0.03,"Z":96.1,"ID":4,"Active":true},"Two":{"X":103.9,"Y":0.03,"Z":103.9,"ID":5,"Active":true},"Three":{"X":96.1,"Y":0.03,"Z":103.9,"ID":6,"Active":true},"Four":{"X":96.1,"Y":0.03,"Z":96.1,"ID":7,"Active":true}}
 `);
-fastPP(`{"Name":"P12S 本体 NOCCHH 非常大概${getSource(
+fastPP(`{"Name":"幻鬼神候鸟${getSource(
   `https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86`,
-)}","MapID":943,"A":{"X":100.0,"Y":0.0,"Z":85.0,"ID":0,"Active":true},"B":{"X":100.0,"Y":0.0,"Z":93.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":101.0,"ID":2,"Active":true},"D":{"X":107.0,"Y":0.0,"Z":105.0,"ID":3,"Active":true},"One":{"X":93.0,"Y":0.0,"Z":89.0,"ID":4,"Active":true},"Two":{"X":107.0,"Y":0.0,"Z":89.0,"ID":5,"Active":true},"Three":{"X":107.0,"Y":0.0,"Z":97.0,"ID":6,"Active":true},"Four":{"X":93.0,"Y":0.0,"Z":97.0,"ID":7,"Active":true}}
-`);
-fastPP(`{"Name":"极高贝扎安全角树歌(不确定再看看)${getSource(`https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86`)}","MapID":950,"A":{"X":100.0,"Y":0.03,"Z":86.0,"ID":0,"Active":true},"B":{"X":114.0,"Y":0.03,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.03,"Z":114.0,"ID":2,"Active":true},"D":{"X":86.0,"Y":0.03,"Z":100.0,"ID":3,"Active":true},"One":{"X":103.9,"Y":0.03,"Z":96.1,"ID":4,"Active":true},"Two":{"X":103.9,"Y":0.03,"Z":103.9,"ID":5,"Active":true},"Three":{"X":96.1,"Y":0.03,"Z":103.9,"ID":6,"Active":true},"Four":{"X":96.1,"Y":0.03,"Z":96.1,"ID":7,"Active":true}}
-`);
-fastPP(`{"Name":"幻鬼神候鸟${getSource(`https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86`)}","MapID":951,"A":{"X":0.0,"Y":0.0,"Z":-18.799,"ID":0,"Active":true},"B":{"X":18.5,"Y":0.0,"Z":3.255,"ID":1,"Active":true},"C":{"X":0.0,"Y":0.0,"Z":18.799,"ID":2,"Active":true},"D":{"X":-18.5,"Y":0.0,"Z":-3.255,"ID":3,"Active":true},"One":{"X":0.0,"Y":0.0,"Z":0.0,"ID":4,"Active":false},"Two":{"X":6.5,"Y":0.0,"Z":-17.6,"ID":5,"Active":true},"Three":{"X":0.0,"Y":0.0,"Z":0.0,"ID":6,"Active":false},"Four":{"X":-6.5,"Y":0.0,"Z":17.6,"ID":7,"Active":true}}
+)}","MapID":951,"A":{"X":0.0,"Y":0.0,"Z":-18.799,"ID":0,"Active":true},"B":{"X":18.5,"Y":0.0,"Z":3.255,"ID":1,"Active":true},"C":{"X":0.0,"Y":0.0,"Z":18.799,"ID":2,"Active":true},"D":{"X":-18.5,"Y":0.0,"Z":-3.255,"ID":3,"Active":true},"One":{"X":0.0,"Y":0.0,"Z":0.0,"ID":4,"Active":false},"Two":{"X":6.5,"Y":0.0,"Z":-17.6,"ID":5,"Active":true},"Three":{"X":0.0,"Y":0.0,"Z":0.0,"ID":6,"Active":false},"Four":{"X":-6.5,"Y":0.0,"Z":17.6,"ID":7,"Active":true}}
 `);
 
 // function fastPush(zoneName: string, data: PPJSON | string, coverTitle?: string): void {
