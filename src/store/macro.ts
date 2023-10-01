@@ -352,7 +352,7 @@ export const useMacroStore = defineStore("macro", {
       try {
         const before = JSON.stringify(this.data.zoneId);
         for (const key in this.data.zoneId) {
-          const userData = JSON.parse(JSON.stringify(this.data.zoneId[key]));
+          const userData = (JSON.parse(JSON.stringify(this.data.zoneId[key])) as (MacroInfoMacro | MacroInfoPlace)[]).filter((v) => !v.Deletability);
           const defaultData = defaultMacro.zoneId[key];
           const resultData: (MacroInfoMacro | MacroInfoPlace)[] = [];
           [...defaultData, ...userData].map((v) => {
@@ -401,7 +401,9 @@ export const useMacroStore = defineStore("macro", {
           // 记录成功更新时间
           lastUpdate.value = Date.now();
         }
-      } catch {}
+      } catch (e) {
+        console.error(e);
+      }
     },
   },
 });
