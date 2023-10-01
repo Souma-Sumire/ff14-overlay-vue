@@ -7438,7 +7438,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Deletability: false,
       },
       {
-        Name: "Anabaseios: The Tenth Circle (Savage) - AutoImported",
+        Name: "NA Markers",
         Type: "place",
         Place: {
           A: { X: 91.962, Y: 0.0, Z: 114.282, ID: 0, Active: true },
@@ -7514,6 +7514,21 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 闇線中央捨て　光線その場
 /p 塔処理　北(A)基準で塔ペア散開
 /p 闇ディスミサル　ボスを見て　左:MTD3/STD2 右:H1D1/H2D4`,
+        Deletability: false,
+      },
+      {
+        Name: "P11S Game8",
+        Type: "place",
+        Place: {
+          A: { X: 100.0, Y: 0.0, Z: 87.0, Active: true },
+          B: { X: 113.01, Y: 0.0, Z: 100.08, Active: true },
+          C: { X: 100.0, Y: 0.0, Z: 113.0, Active: true },
+          D: { X: 86.97, Y: 0.0, Z: 100.02, Active: true },
+          One: { X: 90.79, Y: 0.0, Z: 90.85, Active: true },
+          Two: { X: 109.17, Y: 0.0, Z: 90.68, Active: true },
+          Three: { X: 109.21, Y: 0.0, Z: 109.22, Active: true },
+          Four: { X: 90.85, Y: 0.0, Z: 109.29, Active: true },
+        },
         Deletability: false,
       },
       {
@@ -7774,12 +7789,8 @@ fastPP(
 fastPP(
   `{"Name":"P9S Game8","MapID":937,"A":{"X":100.194,"Y":0.0,"Z":85.723,"ID":0,"Active":true},"B":{"X":113.964,"Y":0.0,"Z":99.91,"ID":1,"Active":true},"C":{"X":100.036,"Y":0.0,"Z":113.949,"ID":2,"Active":true},"D":{"X":86.03,"Y":0.0,"Z":99.873,"ID":3,"Active":true},"One":{"X":109.858,"Y":0.0,"Z":90.002,"ID":4,"Active":true},"Two":{"X":109.863,"Y":0.0,"Z":109.787,"ID":5,"Active":true},"Three":{"X":90.079,"Y":0.0,"Z":109.847,"ID":6,"Active":true},"Four":{"X":90.268,"Y":0.0,"Z":90.187,"ID":7,"Active":true}}`,
 );
-
 fastPP(
-  `{"Name":"P10S 不保真","MapID":939,"A":{"X":91.861,"Y":0.0,"Z":85.465,"ID":0,"Active":true},"B":{"X":108.281,"Y":0.0,"Z":85.139,"ID":1,"Active":true},"C":{"X":91.886,"Y":0.0,"Z":99.907,"ID":2,"Active":true},"D":{"X":108.038,"Y":0.0,"Z":99.865,"ID":3,"Active":true},"One":{"X":92.035,"Y":0.0,"Z":111.176,"ID":4,"Active":true},"Two":{"X":108.048,"Y":0.0,"Z":111.27,"ID":5,"Active":true},"Three":{"X":99.946,"Y":0.0,"Z":111.275,"ID":6,"Active":true},"Four":{"X":100.081,"Y":0.0,"Z":97.414,"ID":7,"Active":true}}`,
-);
-fastPP(
-  `{"Name":"P11S 不保真","MapID":941,"A":{"X":99.872,"Y":0.0,"Z":85.948,"ID":0,"Active":true},"B":{"X":114.112,"Y":0.0,"Z":100.084,"ID":1,"Active":true},"C":{"X":99.965,"Y":0.0,"Z":114.324,"ID":2,"Active":true},"D":{"X":85.639,"Y":0.0,"Z":99.892,"ID":3,"Active":true},"One":{"X":94.069,"Y":0.0,"Z":94.693,"ID":4,"Active":true},"Two":{"X":105.484,"Y":0.0,"Z":94.467,"ID":5,"Active":true},"Three":{"X":105.346,"Y":0.0,"Z":105.452,"ID":6,"Active":true},"Four":{"X":94.527,"Y":0.0,"Z":105.24,"ID":7,"Active":true}}`,
+  `{"Name":"P10S 不保真","MapID":939,"A":{"X":91.861,"Y":0.0,"Z":87,"ID":0,"Active":true},"B":{"X":108.281,"Y":0.0,"Z":87,"ID":1,"Active":true},"C":{"X":91.886,"Y":0.0,"Z":99.907,"ID":2,"Active":true},"D":{"X":108.038,"Y":0.0,"Z":99.865,"ID":3,"Active":true},"One":{"X":92.035,"Y":0.0,"Z":111.176,"ID":4,"Active":true},"Two":{"X":108.048,"Y":0.0,"Z":111.27,"ID":5,"Active":true},"Three":{"X":99.946,"Y":0.0,"Z":111.275,"ID":6,"Active":true},"Four":{"X":100.081,"Y":0.0,"Z":97.414,"ID":7,"Active":true}}`,
 );
 fastPP(
   `{"Name":"门神 Game8","MapID":943,"A":{"X":100.017,"Y":0.0,"Z":81.293,"ID":0,"Active":true},"B":{"X":119.21,"Y":0.0,"Z":100.161,"ID":1,"Active":true},"C":{"X":100.055,"Y":0.0,"Z":119.197,"ID":2,"Active":true},"D":{"X":80.909,"Y":0.0,"Z":100.179,"ID":3,"Active":true},"One":{"X":110.14,"Y":0.0,"Z":89.562,"ID":4,"Active":true},"Two":{"X":109.896,"Y":0.0,"Z":109.996,"ID":5,"Active":true},"Three":{"X":90.064,"Y":0.0,"Z":109.996,"ID":6,"Active":true},"Four":{"X":90.077,"Y":0.0,"Z":90.129,"ID":7,"Active":true}}`,
@@ -7791,10 +7802,6 @@ fastPP(
 fastPP(`{"Name":"P10S Game8国服适配 不确定再看看${getSource(
   `https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86`,
 )}","MapID":939,"A":{"X":100.0,"Y":0.0,"Z":98.2,"ID":0,"Active":true},"B":{"X":92.009,"Y":0.0,"Z":111.204,"ID":6,"Active":true},"C":{"X":100.008,"Y":0.0,"Z":111.188,"ID":2,"Active":true},"D":{"X":108.013,"Y":0.0,"Z":111.159,"ID":5,"Active":true},"One":{"X":92.009,"Y":0.0,"Z":88.82,"ID":4,"Active":true},"Two":{"X":108.013,"Y":0.0,"Z":88.82,"ID":5,"Active":true},"Three":{"X":75.0,"Y":0.0,"Z":85.0,"ID":6,"Active":true},"Four":{"X":125.0,"Y":0.0,"Z":85.0,"ID":7,"Active":true}}
-`);
-fastPP(`{"Name":"P11S Game8国服适配 不确定再看看${getSource(
-  `https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86`,
-)}","MapID":941,"A":{"X":100.0,"Y":0.0,"Z":85.0,"ID":0,"Active":true},"B":{"X":115.0,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":115.0,"ID":2,"Active":true},"D":{"X":85.0,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":89.4,"Y":0.0,"Z":89.4,"ID":4,"Active":true},"Two":{"X":110.6,"Y":0.0,"Z":89.4,"ID":5,"Active":true},"Three":{"X":110.6,"Y":0.0,"Z":110.6,"ID":6,"Active":true},"Four":{"X":89.4,"Y":0.0,"Z":110.6,"ID":7,"Active":true}}
 `);
 fastPP(`{"Name":"极高贝扎安全角树歌(不确定再看看)${getSource(
   `https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86`,
