@@ -53,6 +53,7 @@ export const useMacroStore = defineStore("macro", {
     submitMacroMacro(macro: MacroInfoMacro): void {
       Reflect.deleteProperty(macro, "Editable");
       macro.Text = cleanMacro(macro.Text);
+      macro.Deletability = true; // 用户修改过，所以不归于默认数据中
     },
     editMacroPlace(macro: MacroInfoPlace): void {
       this.data.zoneId[this.selectZone].map((v) => Reflect.deleteProperty(v, "Editable"));
@@ -60,6 +61,7 @@ export const useMacroStore = defineStore("macro", {
     },
     submitMacroPlace(macro: MacroInfoPlace): void {
       Reflect.deleteProperty(macro, "Editable");
+      macro.Deletability = true; // 用户修改过，所以不归于默认数据中
     },
     formatAllWaymarkPlaceData() {
       for (const x in this.data.zoneId) this.formatSelectZoneWaymarkPlaceData(x);
@@ -352,8 +354,16 @@ export const useMacroStore = defineStore("macro", {
       try {
         const before = JSON.stringify(this.data.zoneId);
         for (const key in this.data.zoneId) {
-          const userData = (JSON.parse(JSON.stringify(this.data.zoneId[key])) as (MacroInfoMacro | MacroInfoPlace)[]).filter((v) => !v.Deletability);
           const defaultData = defaultMacro.zoneId[key];
+          const userData = (JSON.parse(JSON.stringify(this.data.zoneId[key])) as (MacroInfoMacro | MacroInfoPlace)[]).filter((v) => {
+            return (
+              !v.Deletability ||
+              (v.Deletability &&
+                defaultData.find(
+                  (d) => (d.Type === "macro" && v.Type === "macro" && d.Text === v.Text) || (d.Type === "place" && v.Type === "place" && d.Place === v.Place),
+                ))
+            );
+          });
           const resultData: (MacroInfoMacro | MacroInfoPlace)[] = [];
           [...defaultData, ...userData].map((v) => {
             if (v.Type === "macro") {
