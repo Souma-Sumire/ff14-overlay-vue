@@ -322,7 +322,7 @@ function toggleWindow(window: string) {
 </script>
 
 <template>
-  <header v-show="showHeader && status.connected">
+  <header v-show="showHeader">
     <div>
       <i class="vxe-icon-dot icon" :style="{ color: status.recording ? 'red' : 'gray', textShadow: '0px  0px 3px black', margin: '1px' }"></i>
       <vxe-button class="btns" icon="vxe-icon-caret-right" v-show="!status.recording" @click="start('manual', false, true)"></vxe-button>
