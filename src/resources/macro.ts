@@ -7285,6 +7285,21 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         },
         Deletability: false,
       },
+      {
+        Name: "候鸟",
+        Type: "place",
+        Place: {
+          A: { X: 0.0, Y: 0.0, Z: -18.799, ID: 0, Active: true },
+          B: { X: 18.5, Y: 0.0, Z: 3.255, ID: 1, Active: true },
+          C: { X: 0.0, Y: 0.0, Z: 18.799, ID: 2, Active: true },
+          D: { X: -18.5, Y: 0.0, Z: -3.255, ID: 3, Active: true },
+          One: { X: 0.0, Y: 0.0, Z: 0.0, ID: 4, Active: false },
+          Two: { X: 6.5, Y: 0.0, Z: -17.6, ID: 5, Active: true },
+          Three: { X: 0.0, Y: 0.0, Z: 0.0, ID: 6, Active: false },
+          Four: { X: -6.5, Y: 0.0, Z: 17.6, ID: 7, Active: true },
+        },
+        Deletability: false,
+      },
     ],
     "1148": [
       {
@@ -7755,6 +7770,49 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Deletability: false,
       },
     ],
+    "1169": [
+      {
+        Name: "极泽罗姆斯 Game8",
+        Type: "macro",
+        Text: `/p ■基本散開 　| ■フレア（頭割り塔）
+/p 　MT　ST 　 | 北西：MT ST D1 D2
+/p D1　　　D2 | 南東：H1 H2 D3 D4
+/p D3　　　D4 | ■メテオインパクト
+/p 　H1　H2　 | 西←H1D3/MTD1/STD2/H2D4→東
+/p ■ヴィセラルワール+鎖
+/p DPS：北 TH：南
+/p ■フレアスパーク/ブランド
+/p 西塔:MT H1 D1 D3
+/p 東塔:ST H2 D2 D4
+/p MT/D1　ST/D2
+/p 　　 　 ◆
+/p H1/D3　H2/D4　※追尾は時計回り
+/p ■ダークマター
+/p 北西：MT　北東：ST　頭割：中央　雷：外周`,
+        Deletability: false,
+      },
+      {
+        Name: "极泽罗姆斯 Game8 汉化",
+        Type: "macro",
+        Text: `
+/p ■基本散开 　| ■核爆（分摊踩塔）
+/p 　MT　ST 　 | 左上塔：MTSTD1D2
+/p D1　　　D2 | 右下他：H1H2D3D4
+/p D3　　　D4 | ■陨石冲击
+/p 　H1　H2　 | 西←H1D3/MTD1/STD2/H2D4→东
+/p ■爪子+锁链
+/p DPS：北 TH：南
+/p ■核爆火花/烙印
+/p 西塔:MT H1 D1 D3
+/p 东塔:ST H2 D2 D4
+/p MT/D1　ST/D2
+/p 　　 　 ◆
+/p H1/D3　H2/D4　※追踪点名顺时针放置
+/p ■暗物质
+/p 北西：MT　北东：ST　分摊：中间　雷：外侧`,
+        Deletability: false,
+      },
+    ],
   },
 };
 export { defaultMacro };
@@ -7765,7 +7823,12 @@ const fastPP = (jsonstr: string): void => {
   const d = JSON.parse(jsonstr) as Partial<PPJSON>;
   if (!d.MapID) throw new Error("PPJSON 不存在 MapID");
   const nullMark = { X: 0, Y: 0, Z: 0, Active: false };
-  defaultMacro.zoneId[getTerritoryTypeByMapID(d.MapID)].push({
+  const zondId = getTerritoryTypeByMapID(d.MapID);
+  if (zondId === 0) {
+    console.error(d.MapID, "无法获取地图ID", zondId);
+    return;
+  }
+  defaultMacro.zoneId[zondId].push({
     Name: d.Name ?? "Imported",
     Type: "place",
     Place: {
@@ -7799,17 +7862,17 @@ fastPP(
   `{"Name":"本体 Game8","MapID":943,"A":{"X":97.919,"Y":0.0,"Z":92.978,"ID":0,"Active":true},"B":{"X":102.185,"Y":0.0,"Z":92.877,"ID":1,"Active":true},"C":{"X":102.148,"Y":0.0,"Z":97.109,"ID":2,"Active":true},"D":{"X":97.924,"Y":0.0,"Z":97.066,"ID":3,"Active":true},"One":{"X":99.146,"Y":0.0,"Z":80.831,"ID":4,"Active":true},"Two":{"X":119.0,"Y":0.0,"Z":90.51,"ID":5,"Active":true},"Three":{"X":106.289,"Y":0.0,"Z":101.104,"ID":6,"Active":true},"Four":{"X":94.293,"Y":0.0,"Z":101.127,"ID":7,"Active":true}}`,
 );
 
-fastPP(`{"Name":"P10S Game8国服适配 不确定再看看${getSource(
-  `https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86`,
-)}","MapID":939,"A":{"X":100.0,"Y":0.0,"Z":98.2,"ID":0,"Active":true},"B":{"X":92.009,"Y":0.0,"Z":111.204,"ID":6,"Active":true},"C":{"X":100.008,"Y":0.0,"Z":111.188,"ID":2,"Active":true},"D":{"X":108.013,"Y":0.0,"Z":111.159,"ID":5,"Active":true},"One":{"X":92.009,"Y":0.0,"Z":88.82,"ID":4,"Active":true},"Two":{"X":108.013,"Y":0.0,"Z":88.82,"ID":5,"Active":true},"Three":{"X":75.0,"Y":0.0,"Z":85.0,"ID":6,"Active":true},"Four":{"X":125.0,"Y":0.0,"Z":85.0,"ID":7,"Active":true}}
-`);
+fastPP(
+  `{"Name":"P10S Game8国服适配 确定${getSource(
+    `https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86`,
+  )}","MapID":939,"A":{"X":100.0,"Y":0.0,"Z":98.2,"ID":0,"Active":true},"B":{"X":92.009,"Y":0.0,"Z":111.204,"ID":6,"Active":true},"C":{"X":100.008,"Y":0.0,"Z":111.188,"ID":2,"Active":true},"D":{"X":108.013,"Y":0.0,"Z":111.159,"ID":5,"Active":true},"One":{"X":92.009,"Y":0.0,"Z":88.82,"ID":4,"Active":true},"Two":{"X":108.013,"Y":0.0,"Z":88.82,"ID":5,"Active":true},"Three":{"X":75.0,"Y":0.0,"Z":85.0,"ID":6,"Active":true},"Four":{"X":125.0,"Y":0.0,"Z":85.0,"ID":7,"Active":true}}
+  `,
+);
 fastPP(`{"Name":"极高贝扎安全角树歌(不确定再看看)${getSource(
   `https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86`,
 )}","MapID":950,"A":{"X":100.0,"Y":0.03,"Z":86.0,"ID":0,"Active":true},"B":{"X":114.0,"Y":0.03,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.03,"Z":114.0,"ID":2,"Active":true},"D":{"X":86.0,"Y":0.03,"Z":100.0,"ID":3,"Active":true},"One":{"X":103.9,"Y":0.03,"Z":96.1,"ID":4,"Active":true},"Two":{"X":103.9,"Y":0.03,"Z":103.9,"ID":5,"Active":true},"Three":{"X":96.1,"Y":0.03,"Z":103.9,"ID":6,"Active":true},"Four":{"X":96.1,"Y":0.03,"Z":96.1,"ID":7,"Active":true}}
 `);
-fastPP(`{"Name":"幻鬼神候鸟${getSource(
-  `https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86`,
-)}","MapID":951,"A":{"X":0.0,"Y":0.0,"Z":-18.799,"ID":0,"Active":true},"B":{"X":18.5,"Y":0.0,"Z":3.255,"ID":1,"Active":true},"C":{"X":0.0,"Y":0.0,"Z":18.799,"ID":2,"Active":true},"D":{"X":-18.5,"Y":0.0,"Z":-3.255,"ID":3,"Active":true},"One":{"X":0.0,"Y":0.0,"Z":0.0,"ID":4,"Active":false},"Two":{"X":6.5,"Y":0.0,"Z":-17.6,"ID":5,"Active":true},"Three":{"X":0.0,"Y":0.0,"Z":0.0,"ID":6,"Active":false},"Four":{"X":-6.5,"Y":0.0,"Z":17.6,"ID":7,"Active":true}}
+fastPP(`{"Name":"极泽罗姆斯 日基","MapID":965,"A":{"X":92.09,"Z":81.31,"Y":0,"Active":true},"B":{"X":107.91,"Z":81.28,"Y":0,"Active":true},"C":{"X":100.05,"Z":99.98,"Y":0,"Active":true},"D":{"X":0,"Z":0,"Y":0,"Active":false},"One":{"X":81.12,"Z":81.11,"Y":0,"Active":true},"Two":{"X":118.9,"Z":81.1,"Y":0,"Active":true},"Three":{"X":118.85,"Z":92.09,"Y":0,"Active":true},"Four":{"X":81.01,"Z":92.1,"Y":0,"Active":true}}
 `);
 
 // function fastPush(zoneName: string, data: PPJSON | string, coverTitle?: string): void {
