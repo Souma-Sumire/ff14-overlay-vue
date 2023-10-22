@@ -695,7 +695,7 @@ export const keigennData: Keigenn[] = [
   {
     name: "减速",
     description: "战技与魔法的咏唱及复唱时间延长",
-    id: 1346,
+    id: 9,
     icon: 15009,
     type: "multiplier",
     multiplier: { physics: 1, magic: 1, darkness: 1 },
