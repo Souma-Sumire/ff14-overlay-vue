@@ -324,10 +324,14 @@ function toggleWindow(window: string) {
 <template>
   <header v-show="showHeader">
     <div>
-      <i class="vxe-icon-dot icon" :style="{ color: status.recording ? 'red' : 'gray', textShadow: '0px  0px 3px black', margin: '1px' }"></i>
-      <vxe-button class="btns" icon="vxe-icon-caret-right" v-show="!status.recording" @click="start('manual', false, true)"></vxe-button>
-      <vxe-button class="btns" icon="vxe-icon-close" v-show="status.recording" @click="stop('manual')" size="mini"></vxe-button>
-      <vxe-button class="btns" icon="vxe-icon-cut" v-show="status.recording" @click="start('manual', true, true)" size="mini"></vxe-button>
+      <i
+        v-show="status.connected"
+        class="vxe-icon-dot icon"
+        :style="{ color: status.recording ? 'red' : 'gray', textShadow: '0px  0px 3px black', margin: '1px' }"
+      ></i>
+      <vxe-button class="btns" icon="vxe-icon-caret-right" v-show="status.connected && !status.recording" @click="start('manual', false, true)"></vxe-button>
+      <vxe-button class="btns" icon="vxe-icon-close" v-show="status.connected && status.recording" @click="stop('manual')" size="mini"></vxe-button>
+      <vxe-button class="btns" icon="vxe-icon-cut" v-show="status.connected && status.recording" @click="start('manual', true, true)" size="mini"></vxe-button>
       <vxe-button class="btns settings" icon="vxe-icon-setting" @click="toggleWindow('settings')" size="mini"></vxe-button>
     </div>
   </header>
@@ -386,8 +390,8 @@ function toggleWindow(window: string) {
       </vxe-form-item>
       <vxe-form-item span="24" collapse-node>
         <vxe-button size="mini" :status="'primary'" icon="vxe-icon-swap" content="连接" @click="connect(true)"></vxe-button>
-        <vxe-button v-show="!status.connected" type="text" status="danger" size="mini" icon="vxe-icon-warning-circle" content="未连接"></vxe-button>
-        <vxe-button v-show="status.connected" type="text" status="success" size="mini" icon="vxe-icon-success-circle" content="已连接"></vxe-button>
+        <!-- <vxe-button v-show="!status.connected" type="text" status="danger" size="mini" icon="vxe-icon-warning-circle" content="未连接"></vxe-button>
+        <vxe-button v-show="status.connected" type="text" status="success" size="mini" icon="vxe-icon-success-circle" content="已连接"></vxe-button> -->
       </vxe-form-item>
     </vxe-form>
   </main>
