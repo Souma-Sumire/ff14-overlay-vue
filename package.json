@@ -6,7 +6,8 @@
     "dev": "vite",
     "tsc": "vue-tsc --noEmit",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "submodule": "git submodule update --remote"
   },
   "dependencies": {
     "@babel/core": "^7.22.5",
