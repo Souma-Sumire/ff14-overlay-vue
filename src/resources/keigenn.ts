@@ -1,8 +1,16 @@
+export type KeigennType = "multiplier" | "absorbed";
+
+export type MultiplierType = {
+  physics: number;
+  magic: number;
+  darkness: number;
+};
+
 export type Keigenn = {
   id: number;
   icon: number;
-  type: "multiplier" | "absorbed";
-  multiplier: { physics: number; magic: number; darkness: number };
+  type: KeigennType;
+  multiplier: MultiplierType;
   isFriendly: boolean;
   name?: string;
   description?: string;
@@ -65,7 +73,7 @@ export const keigennData: Keigenn[] = [
   {
     name: "圣光幕帘",
     description: "抵消一定伤害",
-    id: 727,
+    id: 1362,
     icon: 12509,
     type: "absorbed",
     multiplier: { physics: 1, magic: 1, darkness: 1 },
@@ -90,10 +98,37 @@ export const keigennData: Keigenn[] = [
     isFriendly: true,
   },
   {
+    name: "壁垒",
+    description: "受到攻击时必定发动格挡",
+    id: 77,
+    icon: 10156,
+    type: "multiplier",
+    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    isFriendly: true,
+  },
+  {
     name: "原初的直觉",
     description: "自身发动战技命中时可以恢复体力，同时减轻所受到的伤害",
     id: 735,
     icon: 12555,
+    type: "multiplier",
+    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    isFriendly: true,
+  },
+  {
+    name: "原初的勇猛",
+    description: "自身发动战技命中时可以恢复体力",
+    id: 1857,
+    icon: 12558,
+    type: "multiplier",
+    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    isFriendly: true,
+  },
+  {
+    name: "原初的武猛",
+    description: "附加此效果的战士受到原初的勇猛的恢复体力的效果时，会获得相当于其100%的恢复效果\n另外受到攻击的伤害减少",
+    id: 1858,
+    icon: 12559,
     type: "multiplier",
     multiplier: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
@@ -109,7 +144,7 @@ export const keigennData: Keigenn[] = [
   },
   {
     name: "复仇",
-    description: "受到物理攻击时会发动反击",
+    description: "受到攻击的伤害减少并且受到物理攻击时会发动反击",
     id: 89,
     icon: 10256,
     type: "multiplier",
@@ -202,6 +237,25 @@ export const keigennData: Keigenn[] = [
     description: "受到致命伤害时体力减为1，并附加死而不僵状态\n但是对部分攻击无效",
     id: 810,
     icon: 13115,
+    type: "multiplier",
+    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    isFriendly: true,
+  },
+  {
+    name: "死而不僵",
+    description:
+      "除特定攻击之外其他所有对自身发动的攻击均无法令体力减少到1以下，在效果结束前没有得到足够的治疗便会陷入无法战斗状态\n同时，自身发动战技或魔法攻击命中时可以恢复体力",
+    id: 811,
+    icon: 13116,
+    type: "multiplier",
+    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    isFriendly: true,
+  },
+  {
+    name: "出死入生",
+    description: "除特定攻击之外其他所有对自身发动的攻击均无法令体力减少到1以下",
+    id: 3255,
+    icon: 13124,
     type: "multiplier",
     multiplier: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
@@ -486,19 +540,19 @@ export const keigennData: Keigenn[] = [
     isFriendly: true,
   },
   {
-    name: "血印",
-    description: "输血状态消失后消耗血印档数重新附加输血状态，持续时间结束后根据血印剩余档数恢复自身体力",
-    id: 2642,
-    icon: 17585,
+    name: "输血",
+    description: "抵消一定伤害",
+    id: 2612,
+    icon: 12958,
     type: "absorbed",
     multiplier: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
-    name: "泛血印",
-    description: "泛输血状态消失后消耗血印档数重新附加泛输血状态，持续时间结束后根据泛血印剩余档数恢复自身体力",
-    id: 2643,
-    icon: 17355,
+    name: "泛输血",
+    description: "抵消一定伤害",
+    id: 2613,
+    icon: 12959,
     type: "absorbed",
     multiplier: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
@@ -627,6 +681,24 @@ export const keigennData: Keigenn[] = [
     icon: 13917,
     type: "multiplier",
     multiplier: { physics: 0.5, magic: 1, darkness: 0 },
+    isFriendly: false,
+  },
+  {
+    name: "武装解除",
+    description: "攻击所造成的伤害降低",
+    id: 860,
+    icon: 13009,
+    type: "multiplier",
+    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    isFriendly: false,
+  },
+  {
+    name: "减速",
+    description: "战技与魔法的咏唱及复唱时间延长",
+    id: 1346,
+    icon: 15009,
+    type: "multiplier",
+    multiplier: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: false,
   },
   {
@@ -765,11 +837,14 @@ export const keigennData: Keigenn[] = [
     isFriendly: true,
   },
 ];
-const keigennMap = new Map(keigennData.map((v) => [v.id, v]));
+
+const keigennMap: { [key: number]: Keigenn } = {};
+keigennData.forEach((item) => {
+  keigennMap[item.id] = item;
+});
+
 export function getKeigennById(id: number): Keigenn | undefined {
-  const res = keigennMap.get(id);
-  if (!res) return res;
-  return res;
+  return keigennMap[id];
 }
 export function createIconUrl(icon: number): string {
   if (typeof icon === "number") {
@@ -782,7 +857,6 @@ export function createIconUrl(icon: number): string {
     let foot = [..."000000"];
     foot = [...foot.slice(0, 6 - iconStr.length), ...iconStr];
     return `${head.join("")}/${foot.join("")}.png`;
-  } else {
-    return icon;
   }
+  throw new Error("icon is not a number");
 }
