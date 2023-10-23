@@ -126,7 +126,7 @@ export async function getActionByChineseName(name: string) {
 }
 
 async function timeoutPromise<T>(promise: Promise<T>, timeout: number): Promise<T> {
-  let timeoutId: NodeJS.Timer;
+  let timeoutId: NodeJS.Timeout;
   const timeoutPromise = new Promise<T>((_, reject) => {
     timeoutId = setTimeout(() => {
       reject(new Error("Promise timed out"));
