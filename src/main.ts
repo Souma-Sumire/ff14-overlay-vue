@@ -17,3 +17,8 @@ app.use(head);
 app.use(pinia);
 app.use(VXETable);
 app.mount("#app");
+
+
+// app.config.errorHandler = (err, vm, info) => {
+//   console.error(err, vm, info);
+// };
