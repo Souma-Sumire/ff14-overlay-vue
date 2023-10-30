@@ -1,8 +1,26 @@
-import { FFIcon } from "../types/fflogs";
+import { FFIcon as Icon } from "../types/fflogs";
 import { Job, Role } from "@/types/job";
 
-const iconToJobEnum: Record<FFIcon, number> = {
+const iconToJobEnum: Record<Icon, number> = {
   NONE: 0,
+  Gladiator: 1,
+  Pugilist: 2,
+  Marauder: 3,
+  Lancer: 4,
+  Archer: 5,
+  Conjurer: 6,
+  Thaumaturge: 7,
+  Carpenter: 8,
+  Blacksmith: 9,
+  Armorer: 10,
+  Goldsmith: 11,
+  Leatherworker: 12,
+  Weaver: 13,
+  Alchemist: 14,
+  Culinarian: 15,
+  Miner: 16,
+  Botanist: 17,
+  Fisher: 18,
   Paladin: 19,
   Monk: 20,
   Warrior: 21,
@@ -10,14 +28,17 @@ const iconToJobEnum: Record<FFIcon, number> = {
   Bard: 23,
   WhiteMage: 24,
   BlackMage: 25,
+  Arcanist: 26,
   Summoner: 27,
   Scholar: 28,
+  Rogue: 29,
   Ninja: 30,
   Machinist: 31,
   DarkKnight: 32,
   Astrologian: 33,
   Samurai: 34,
   RedMage: 35,
+  BlueMage: 36,
   Gunbreaker: 37,
   Dancer: 38,
   Reaper: 39,
@@ -111,6 +132,7 @@ const nameToFullName: Record<Job, { en: string; ja: string; cn: string; simple1:
   SGE: { en: "Sage", ja: "賢者", cn: "贤者", simple1: "贤", simple2: "贤者" },
 };
 const allJobs = Object.keys(nameToJobEnum) as Job[];
+const allIcons = Object.keys(iconToJobEnum) as Icon[];
 const allRoles = ["tank", "healer", "dps", "crafter", "gatherer", "none"] as Role[];
 
 const tankJobs: Job[] = ["GLA", "PLD", "MRD", "WAR", "DRK", "GNB"];
@@ -152,6 +174,10 @@ const Util = {
     const job = allJobs.find((job: Job) => nameToJobEnum[job] === id);
     return job ?? "NONE";
   },
+  jobEnumToIcon: (id: number) => {
+    const icon = allIcons.find((icon: Icon) => iconToJobEnum[icon] === id);
+    return icon ?? "none";
+  },
   jobToJobEnum: (job: Job) => nameToJobEnum[job],
   jobToRole: (job: Job) => {
     const role = jobToRoleMap.get(job);
@@ -181,7 +207,7 @@ const Util = {
   nameToFullName: (job: Job) => {
     return nameToFullName[job];
   },
-  iconToJobEnum: (icon: FFIcon) => {
+  iconToJobEnum: (icon: Icon) => {
     return iconToJobEnum[icon] ?? 0;
   },
   nameToJobEnum: (job: Job) => {
