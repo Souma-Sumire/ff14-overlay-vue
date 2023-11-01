@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import moment from "moment";
-// const time = ref("");
+
+const isDev = process.env.NODE_ENV === "development";
+const time = ref("");
 const gameIsActive = ref(false);
 const gameActiveTime = ref(0);
 const gameCombatTime = ref("");
 const lastLogTime = ref("");
+const params = new URLSearchParams(window.location.search);
+const timeType = params.get("timeType") === "game" ? "game" : "real";
 
 requestAnimationFrame(function update() {
-  // time.value = moment().format("YYYY/MM/DD HH:mm:ss.SSS");
+  time.value = moment().format("YYYY/MM/DD HH:mm:ss.SSS");
   if (gameActiveTime.value > 0) {
     const currentTime = Date.now();
     const milliseconds = currentTime - gameActiveTime.value;
@@ -43,12 +47,17 @@ startOverlayEvents();
   <!-- <span class="time realTime">
     {{ time }}
   </span> -->
-  <span v-if="gameCombatTime" class="time gameTime">
-    {{ gameCombatTime }}
-  </span>
-  <span v-if="gameCombatTime" class="time logTime">
-    {{ lastLogTime }}
-  </span>
+  <div>
+    <span v-if="gameCombatTime" class="time gameTime">
+      {{ gameCombatTime }}
+    </span>
+    <span v-if="timeType === 'game' || isDev" class="time logTime">
+      {{ lastLogTime }}
+    </span>
+    <span v-if="timeType === 'real' || isDev" class="time realTime">
+      {{ time }}
+    </span>
+  </div>
 </template>
 
 <style lang="scss" scoped>
