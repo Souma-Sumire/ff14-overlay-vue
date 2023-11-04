@@ -17,7 +17,7 @@ const tableData: Menu[] = [
   { title: "FFLOGS上传器加速下载", type: "网页", path: "/#/fflogsUploaderDownload", comment: "" },
   { title: "国际服汉化补丁", type: "网页", path: "https://github.com/Souma-Sumire/FFXIVChnTextPatch-Souma/", comment: "" },
   { title: "职业增强：舞者", type: "悬浮窗", path: "/#/jobs/dnc", comment: "" },
-  { title: "占星一键发卡", type: "悬浮窗", path: "okASTCard", comment: "" },
+  { title: "占星一键发卡", type: "悬浮窗", path: "/#/okASTCard", comment: "" },
   {
     title: "施法监控",
     type: "悬浮窗",
