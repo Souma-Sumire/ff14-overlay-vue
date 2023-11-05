@@ -7,7 +7,7 @@ import Util from "@/utils/util";
 import "animate.css";
 import ClipboardJS from "clipboard";
 import { ITimeline, ITimelineLine } from "@/types/timeline";
-import { p8sTimeline } from "@/resources/timelineTemplate";
+// import { p8sTimeline } from "@/resources/timelineTemplate";
 import moment from "moment";
 
 const simulatedCombatTime = ref(0);
@@ -235,10 +235,10 @@ function importTimelines(): void {
   });
 }
 
-function createP8STimeline(): void {
-  timelineCurrentlyEditing.timeline =
-    timelineStore.allTimelines[timelineStore.newTimeline("门神模板", { zoneId: "1088", job: "NONE" }, p8sTimeline, "P8S门神模板V6")];
-}
+// function createP8STimeline(): void {
+//   timelineCurrentlyEditing.timeline =
+//     timelineStore.allTimelines[timelineStore.newTimeline("门神模板", { zoneId: "1088", job: "NONE" }, p8sTimeline, "P8S门神模板V6")];
+// }
 const timeMinuteSecondDisplay = computed(() => {
   return (
     (simulatedCombatTime.value < 0 ? "-" : "") +
@@ -299,8 +299,8 @@ function clearLocalStorage() {
       <el-button class="export" @click="exportTimeline(timelines)">全部导出</el-button>
       <el-button v-if="isWSMode" type="success" @click="broadcastData()">通过WS发送到悬浮窗</el-button>
       <!-- <el-button v-if="!isWSMode" type="success" @click="applyData()">应用</el-button> -->
-      <el-button @click="createP8STimeline()">P8S门神模板</el-button>
-      <el-button @click="clearLocalStorage()">清理LocalStorage缓存</el-button>
+      <!-- <el-button @click="createP8STimeline()">P8S门神模板</el-button> -->
+      <!-- <el-button @click="clearLocalStorage()">清理LocalStorage缓存</el-button> -->
     </el-header>
     <el-main>
       <timeline-fflogs-import
