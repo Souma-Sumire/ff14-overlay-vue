@@ -26,15 +26,19 @@ interface resJson {
 const data = reactive({ res: {} as resJson });
 const fileName = ref();
 const accelerationNodeList = [
-  { url: "https://gh.ddlc.top/https://github.com", title: "[美国 Cloudflare CDN]" },
-  { url: "https://slink.ltd/https://github.com", title: "[美国 Cloudflare CDN]" },
-  { url: "https://git.xfj0.cn/https://github.com", title: "[美国 Cloudflare CDN]" },
-  { url: "https://gh.con.sh/https://github.com", title: "[美国 Cloudflare CDN]" },
-  { url: "https://ghps.cc/https://github.com", title: "[美国 Cloudflare CDN]" },
-  { url: "https://cors.isteed.cc/github.com", title: "[美国 Cloudflare CDN]" },
-  { url: "https://hub.gitmirror.com/https://github.com", title: "[美国 Cloudflare CDN]" },
-  { url: "https://download.njuu.cf", title: "[美国 拉斯维加斯]" },
-  { url: "https://download.yzuu.cf", title: "[美国 Cloudflare CDN]" },
+  ["https://gh.h233.eu.org/https://github.com", "[美国 Cloudflare CDN]"],
+  ["https://gh.ddlc.top/https://github.com", "[美国 Cloudflare CDN]"],
+  ["https://dl.ghpig.top/https://github.com", "[美国 Cloudflare CDN]"],
+  ["https://slink.ltd/https://github.com", "[美国 Cloudflare CDN]"],
+  ["https://git.xfj0.cn/https://github.com", "[美国 Cloudflare CDN]"],
+  ["https://gh.con.sh/https://github.com", "[美国 Cloudflare CDN]"],
+  ["https://ghps.cc/https://github.com", "[美国 Cloudflare CDN]"],
+  ["https://cors.isteed.cc/github.com", "[美国 Cloudflare CDN]"],
+  ["https://hub.gitmirror.com/https://github.com", "[美国 Cloudflare CDN]"],
+  ["https://download.fgit.cf", "[美国 洛杉矶]"],
+  ["https://download.njuu.cf", "[美国 拉斯维加斯]"],
+  ["https://download.yzuu.cf", "[美国 Cloudflare CDN]"],
+  ["https://download.nuaa.cf", "[美国 Cloudflare CDN]"],
 ];
 onMounted(() => {
   fetch("https://api.github.com/repos/RPGLogs/Uploaders-fflogs/releases/latest", { method: "GET" })
@@ -64,17 +68,17 @@ onMounted(() => {
         <h1>FFLOGS上传器 加速下载</h1>
         <h2>最新版本：{{ data.res.tag_name || "loading" }}</h2>
         <h2>更新时间：{{ data.res.published_at || "loading" }}</h2>
-        <h3 v-if="data.res.tag_name">加速节点：</h3>
+        <h3 v-if="data.res.tag_name">加速节点：（挨个试试，总有一个能用的）</h3>
         <div flex="~ col wrap gap1" items-start>
           <el-link
             v-if="data.res.tag_name"
             v-for="(item, index) in accelerationNodeList"
             :key="index"
-            :href="`${item.url}/RPGLogs/Uploaders-fflogs/releases/download/v${data.res.name}/${fileName}`"
+            :href="`${item[0]}/RPGLogs/Uploaders-fflogs/releases/download/v${data.res.name}/${fileName}`"
             type="primary"
             m-r-8px
           >
-            <span>{{ index + 1 }}.{{ item.title }}节点</span>
+            <span>{{ (index + 1).toString().padStart(2, "0") }}.{{ item[1] }}节点</span>
           </el-link>
         </div>
       </el-main>
