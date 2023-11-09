@@ -50,6 +50,10 @@
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from "element-plus";
 
+// TODO
+// 右侧显示是否习得/设置习得
+// 快捷栏放置模拟
+
 type AozAction = {
   ID: number;
   ActionID: number;
