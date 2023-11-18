@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Util from "@/utils/util";
 import "animate.css";
-// import { VXETable } from "vxe-table";
+
 const createRPArr = (r: "T" | "H" | "D", l: number) =>
   Array(l)
     .fill(r)
@@ -13,7 +13,7 @@ const roleAssignLocationNames: Record<Role, string[]> = {
   dps: [...createRPArr("D", 72)],
   unknown: ["unknown"],
 };
-// const lastRp = useStorage("cactbotRuntime-last-rp", {} as Record<string, string>);
+
 const dialogVisible = ref(false);
 const defaultSortArray = useStorage("cactbotRuntime-sortArr", [
   21, //战
@@ -67,6 +67,7 @@ const playerName = ref(isDev ? "虚构占星" : "");
 if (isDev) {
   handlePartyChanged({ party: fakeParty });
 }
+
 function getJobClassification(job: number): Role {
   const jobN = Number(job);
   if ([1, 3, 19, 21, 32, 37].includes(jobN)) return "tank";
@@ -74,6 +75,7 @@ function getJobClassification(job: number): Role {
   else if ([2, 4, 5, 7, 20, 22, 23, 25, 26, 27, 29, 30, 31, 34, 35, 36, 38, 39].includes(jobN)) return "dps";
   return "unknown";
 }
+
 function handlePartyChanged(e: { party: { id: string; name: string; inParty: boolean; job: number }[] }): void {
   if (showTips.value) {
     dialogVisible.value = true;
@@ -88,20 +90,24 @@ function handlePartyChanged(e: { party: { id: string; name: string; inParty: boo
   updateRoleSelectLength();
   broadcastParty();
 }
+
 function defaultPartySort() {
   data.value.party.sort((a, b) => defaultSortArray.value.indexOf(a.job) - defaultSortArray.value.indexOf(b.job));
   data.value.party.forEach((v) => (v.rp = undefined));
   data.value.party.forEach((v) => (v.rp = getRP(v)));
 }
+
 function handleSelectChange(i: number): void {
   data.value.party[i].specify = true;
   const t = data.value.party.find((v) => v.rp === data.value.party[i].rp && v.id !== data.value.party[i].id);
   t && (t.rp = getRP(t)) && (t.specify = true);
   broadcastParty();
 }
+
 function getRP(player: Player): string {
   return roleAssignLocationNames[getJobClassification(player.job)].find((role) => !data.value.party.find((v) => v.rp === role)) ?? "unknown";
 }
+
 function broadcastParty(): void {
   const sortArr = [...roleAssignLocationNames.tank, ...roleAssignLocationNames.healer, ...roleAssignLocationNames.dps];
   data.value.party.sort((a, b) => sortArr.indexOf(a.rp!) - sortArr.indexOf(b.rp!));
@@ -111,37 +117,39 @@ function broadcastParty(): void {
     msg: { party: data.value.party },
   });
 }
+
 function handleChangePrimaryPlayer(event: { charID: string; charName: string }): void {
   if (!isDev) playerName.value = event.charName;
 }
-// function openMessage(options: any) {
-//   VXETable.modal.message(options);
-// }
+
 function handleBroadcastMessage(e: { source: string; msg: any }) {
   if (e.source === "soumaUserJS") {
     switch (e.msg.text) {
-      case "updateNewPartyRP Success":
-        // openMessage({ content: "通信成功", status: "success", duration: 800, top: 5, id: "updateNewPartyRp" });
-        break;
+      // case "updateNewPartyRP Success":
+      // openMessage({ content: "通信成功", status: "success", duration: 800, top: 5, id: "updateNewPartyRp" });
+      // break;
       case "requestData":
         broadcastParty();
         break;
     }
   }
 }
+
 function onMouseOver(): void {
   mouseEnter.value = true;
 }
+
 function onMouseOut(): void {
   mouseEnter.value = false;
 }
+
 function updateSortArr(arr: number[]) {
-  // lastRp.value = {}; // 清空lastRp 因为这是手动拖拽后的新排序
   defaultSortArray.value = arr;
   defaultPartySort();
   updateRoleSelectLength();
   broadcastParty();
 }
+
 onMounted(() => {
   broadcastParty();
   addOverlayListener("PartyChanged", handlePartyChanged);
@@ -149,6 +157,7 @@ onMounted(() => {
   addOverlayListener("BroadcastMessage", handleBroadcastMessage);
   startOverlayEvents();
 });
+
 onBeforeUnmount(() => {
   removeOverlayListener("PartyChanged", handlePartyChanged);
   removeOverlayListener("ChangePrimaryPlayer", handleChangePrimaryPlayer);
@@ -201,6 +210,7 @@ onBeforeUnmount(() => {
     </el-container>
   </div>
 </template>
+
 <style lang="scss">
 ::-webkit-scrollbar {
   width: 5px;
@@ -221,6 +231,7 @@ onBeforeUnmount(() => {
   user-select: none;
 }
 </style>
+
 <style lang="scss" scoped>
 .el-container {
   background-color: rgba(0, 0, 0, 0.1);
