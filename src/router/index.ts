@@ -33,6 +33,10 @@ router.getRoutes().forEach((route) => {
 
 router.afterEach((to, from) => {
   document.title = to.meta.title?.toString() ?? "";
+  if (to.name === "index" && from.name !== undefined && to.name !== from.name) {
+    // 防止子页面的style污染主页的样式
+    window.location.reload();
+  }
 });
 
 export default router;
