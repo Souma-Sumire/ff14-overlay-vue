@@ -109,10 +109,11 @@ function processProperties(flag: string): DamageProperties {
 
 // 0x50000 = magic
 // 0x60000 = darkness
+// 740003  = Shot (physics?)?
 
 function processType(flag: string): DamageType {
   switch (true) {
-    case /7?[123]\w{3}[35]$|[16]$/.test(flag):
+    case /7?[1234]\w{3}[35]$|[16]$/.test(flag):
       return "physics";
     case /^E$/.test(flag):
     case /5\w{4}$/.test(flag):
@@ -121,7 +122,8 @@ function processType(flag: string): DamageType {
     case /6\w{4}$/.test(flag):
       return "darkness";
     default:
-      throw new Error("Unknown type flag " + flag);
+      console.error("Unknown type flag " + flag);
+      return "physics";
   }
 }
 // 0x10000 = 真无敌
