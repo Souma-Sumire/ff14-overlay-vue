@@ -166,7 +166,7 @@ const userOptions = {
   showIcon: parseParams(params.showIcon as string, true), // 显示目标图标
   showName: parseParams(params.showName as string, true), // 显示目标ID
   abbrId: parseParams(params.abbrId as string, true), // 目标ID缩写
-  anonymous: parseParams(params.anonymous as string, false), // 目标ID改为职业名
+  anonymous: parseParams(params.anonymous as string, true), // 目标ID改为职业名
   replaceWithYou: parseParams(params.replaceWithYou as string, false), // 目标是玩家本人替换为YOU
   parseAA: parseParams(params.parseAA as string, true), // 解析自动攻击（旧结果不会跟随改变）
   parseDoT: parseParams(params.parseDoT as string, false), // 解析DoT（旧结果不会跟随改变）
