@@ -212,7 +212,7 @@ const allowAutoScroll = ref(true);
 const povName = useStorage("keigenn-record-2-pov-name", "");
 const povId = useStorage("keigenn-record-2-pov-id", "");
 const partyList = useStorage("keigenn-record-2-party-list", [] as string[]);
-const jobMap: Record<string, string> = {};
+const jobMap = useStorage("keigenn-record-2-job-map", {} as Record<string, { job: string; timestamp: number }>);
 const select = ref(0);
 const data = ref<Encounter[]>([{ zoneName: "", duration: "00:00", table: [], key: "init" }]);
 const regexes: Record<string, RegExp> = {
@@ -344,11 +344,13 @@ const handleLine = (line: string) => {
           break;
         case "addCombatant":
           if (splitLine[logDefinitions.AddedCombatant.fields.job] !== "00") {
-            jobMap[splitLine[logDefinitions.AddedCombatant.fields.id]] = splitLine[logDefinitions.AddedCombatant.fields.job];
+            const job = splitLine[logDefinitions.AddedCombatant.fields.job];
+            const timestamp = new Date(splitLine[logDefinitions.AddedCombatant.fields.timestamp]).getTime();
+            jobMap.value[splitLine[logDefinitions.AddedCombatant.fields.id]] = { job, timestamp };
           }
           break;
         case "removingCombatant":
-          Reflect.deleteProperty(jobMap, splitLine[logDefinitions.RemovedCombatant.fields.id]);
+          Reflect.deleteProperty(jobMap.value, splitLine[logDefinitions.RemovedCombatant.fields.id]);
           break;
         case "primaryPlayer":
           povId.value = splitLine[logDefinitions.ChangedPlayer.fields.id];
@@ -412,7 +414,7 @@ const handleLine = (line: string) => {
             const maxHp = Number(splitLine[logDefinitions.NetworkDoT.fields.maxHp]);
             const time = combatTimeStamp.value === 0 ? 0 : timestamp - combatTimeStamp.value;
             const formattedTime = formatTime(time);
-            const targetJob = jobMap[targetId] ?? target.substring(0, 2);
+            const targetJob = jobMap.value[targetId].job ?? target.substring(0, 2);
             const job = Util.nameToFullName(Util.jobEnumToJob(parseInt(targetJob, 16))).simple2;
             const jobEnum = parseInt(targetJob, 16);
             const jobIcon = Util.jobEnumToIcon(jobEnum).toLocaleLowerCase();
@@ -474,7 +476,7 @@ const handleLine = (line: string) => {
               const { effect, type } = processFlags(ability.flags);
               const time = combatTimeStamp.value === 0 ? 0 : timestamp - combatTimeStamp.value;
               const formattedTime = formatTime(time);
-              const targetJob = jobMap[targetId] ?? target.substring(0, 2);
+              const targetJob = jobMap.value[targetId].job ?? target.substring(0, 2);
               const job = Util.nameToFullName(Util.jobEnumToJob(parseInt(targetJob, 16))).cn.substring(0, 2);
               const jobEnum = parseInt(targetJob, 16);
               const jobIcon = Util.jobEnumToIcon(jobEnum).toLocaleLowerCase();
@@ -652,6 +654,12 @@ watch(
 );
 
 onMounted(() => {
+  for (const id in jobMap.value) {
+    const element = jobMap.value[id];
+    if (Date.now() - element.timestamp > 1000 * 60 * 60 * 24 * 1) {
+      Reflect.deleteProperty(jobMap.value, id);
+    }
+  }
   loadStorage();
   addOverlayListener("LogLine", handleLogLine);
   startOverlayEvents();
@@ -704,9 +712,7 @@ function Target({ row }: { row: RowVO }) {
 
 function Amount({ row }: { row: RowVO }) {
   const slot = {
-    reference: () => (
-      <span class={`damage ${row.type} ${row.currentHp - row.amount < 0 ? "lethal" : ""} `}>{row.amount.toLocaleString().padStart(3, "　")}</span>
-    ),
+    reference: () => <span class={`damage ${row.type} ${isLethal(row) ? "lethal" : ""} `}>{row.amount.toLocaleString().padStart(3, "　")}</span>,
   };
   return (
     <el-popover
@@ -747,10 +753,21 @@ function AmountDetails({ row }: { row: RowVO }) {
   );
 }
 
+const invincibleEffect = [
+  Number(409).toString(16).toUpperCase(), // 死斗
+  Number(810).toString(16).toUpperCase(), // 行尸走肉
+  Number(811).toString(16).toUpperCase(), // 死而不僵
+  Number(1836).toString(16).toUpperCase(), // 超火流星
+];
+
+const isLethal = (row: RowVO): boolean => {
+  return row.currentHp - row.amount < 0 && !row.keigenns.find((k) => invincibleEffect.includes(k.effectId));
+};
+
 function KeigennShow({ row }: { row: RowVO }) {
   return (
     <>
-      <span>{row.currentHp - row.amount < 0 ? "💀致死 " : ""}</span>
+      <span>{isLethal(row) ? "💀致死 " : ""}</span>
       {row.type === "dot"
         ? "（不支持）"
         : row.keigenns.map((keigenn) => {
