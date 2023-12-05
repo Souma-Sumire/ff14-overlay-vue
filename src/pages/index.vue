@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import router from "@/router";
+
 type MenuType = "网页" | "悬浮窗" | "悬浮窗/网页";
 interface Menu {
   title: string;
@@ -15,17 +17,17 @@ const tableData: Menu[] = [
   {
     title: "减伤监控2",
     type: "网页",
-    path: "/#/keigennRecord2",
+    path: "keigennRecord2",
   },
   {
     title: "青魔法书图鉴",
     type: "网页",
-    path: "/#/blubook",
+    path: "blubook",
   },
   {
     title: "FFLOGS上传器加速下载",
     type: "网页",
-    path: "/#/fflogsUploaderDownload",
+    path: "fflogsUploaderDownload",
   },
   {
     title: "国际服汉化补丁",
@@ -35,37 +37,37 @@ const tableData: Menu[] = [
   {
     title: "职业增强：舞者",
     type: "悬浮窗",
-    path: "/#/jobs/dnc",
+    path: "jobs/dnc",
   },
   {
     title: "占星一键发卡",
     type: "悬浮窗",
-    path: "/#/okASTCard",
+    path: "okASTCard",
   },
   {
     title: "施法监控",
     type: "悬浮窗",
-    path: "/#/castingMonitor?duration=25&energySaving=true&displayAA=false&displayGCDSpace=false&api=cafemaker&syncFocusWS=true&showHeader=true",
+    path: "castingMonitor?duration=25&energySaving=true&displayAA=false&displayGCDSpace=false&api=cafemaker&syncFocusWS=true&showHeader=true",
   },
   {
     title: "全副本发宏/标点",
     type: "悬浮窗",
-    path: "/#/zoneMacro",
+    path: "zoneMacro",
   },
   {
     title: "自定义技能时间轴",
     type: "悬浮窗",
-    path: "/#/timeline",
+    path: "timeline",
   },
   {
     title: "OBS自动录制",
     type: "悬浮窗",
-    path: "/#/obs",
+    path: "obs",
   },
   {
     title: "读条汉化",
     type: "悬浮窗",
-    path: "/#/castingToChinese",
+    path: "castingToChinese",
     comment: "国服也可以用里面的倒计时功能",
   },
   {
@@ -89,10 +91,18 @@ const tableData: Menu[] = [
   {
     title: "我TM现在在几线？",
     type: "悬浮窗",
-    path: "/#/instancedAreaInfo",
+    path: "instancedAreaInfo",
     comment: "版本初期狩猎用",
   },
 ];
+
+function handleClick(e: Menu) {
+  if (e.path.startsWith("http")) {
+    window.open(e.path, "_blank");
+  } else {
+    router.push(e.path);
+  }
+}
 </script>
 
 <template>
@@ -105,7 +115,7 @@ const tableData: Menu[] = [
           <vxe-column field="type" width="100" title="类型"></vxe-column>
           <vxe-column field="path" width="100" title="链接">
             <template #default="{ row }">
-              <a :href="row.path" :target="row.type === '网页' ? '_blank' : '_self'">{{ row.type === "网页" ? "访问" : "跳转" }}</a>
+              <a @click="() => handleClick(row)" style="cursor: pointer">{{ row.type === "网页" ? "访问" : "跳转" }}</a>
             </template>
           </vxe-column>
           <vxe-column field="comment" title="备注"></vxe-column>
@@ -120,5 +130,8 @@ a:visited,
 a:link,
 a:hover {
   color: blue;
+}
+a:hover {
+  text-decoration: underline;
 }
 </style>
