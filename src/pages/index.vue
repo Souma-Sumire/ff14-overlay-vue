@@ -16,7 +16,7 @@ const tableData: Menu[] = [
   },
   {
     title: "减伤监控2",
-    type: "网页",
+    type: "悬浮窗/网页",
     path: "keigennRecord2",
   },
   {
