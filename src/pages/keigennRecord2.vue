@@ -206,12 +206,12 @@ const maxStorage = {
 
 let lastPush: number = 0;
 let lastScroll: number = 0;
-let povId = "";
-let partyList: string[] = [];
 
 const xTable = ref<VxeTableInstance>();
 const allowAutoScroll = ref(true);
 const povName = useStorage("keigenn-record-2-pov-name", "");
+const povId = useStorage("keigenn-record-2-pov-id", "");
+const partyList = useStorage("keigenn-record-2-party-list", [] as string[]);
 const jobMap: Record<string, string> = {};
 const select = ref(0);
 const data = ref<Encounter[]>([{ zoneName: "", duration: "00:00", table: [], key: "init" }]);
@@ -317,7 +317,7 @@ const handleLine = (line: string) => {
               expirationTimestamp,
               performance: keigenn.performance,
               fullIcon: keigenn.fullIcon,
-              isPov: povId === sourceId,
+              isPov: povId.value === sourceId,
             };
             if (targetId[0] === "1" && keigenn.isFriendly) {
               (statusData.friendly[targetId] ??= {})[effectId] = status;
@@ -351,14 +351,14 @@ const handleLine = (line: string) => {
           Reflect.deleteProperty(jobMap, splitLine[logDefinitions.RemovedCombatant.fields.id]);
           break;
         case "primaryPlayer":
-          povId = splitLine[logDefinitions.ChangedPlayer.fields.id];
+          povId.value = splitLine[logDefinitions.ChangedPlayer.fields.id];
           const _povName = splitLine[logDefinitions.ChangedPlayer.fields.name];
           if (povName.value === _povName) return;
           povName.value = _povName;
           initEnvironment(splitLine[logDefinitions.ChangedPlayer.fields.name]);
           break;
         case "partyList":
-          partyList = match.groups!.list?.split("|").filter((v) => v) ?? [];
+          partyList.value = match.groups!.list?.split("|") ?? [];
           break;
         case "changeZone":
           zoneName.value = splitLine[logDefinitions.ChangeZone.fields.name];
@@ -401,7 +401,7 @@ const handleLine = (line: string) => {
           {
             const which = splitLine[logDefinitions.NetworkDoT.fields.which];
             const targetId = splitLine[logDefinitions.NetworkDoT.fields.id];
-            if (which !== "DoT" || targetId[0] === "4" || !(targetId === povId || partyList.includes(targetId))) {
+            if (which !== "DoT" || targetId[0] === "4" || !(targetId === povId.value || partyList.value.includes(targetId))) {
               return;
             }
             const target = splitLine[logDefinitions.NetworkDoT.fields.name];
@@ -436,7 +436,7 @@ const handleLine = (line: string) => {
               effect: "damage done",
               type: "dot",
               shield: shieldData[targetId],
-              povId,
+              povId: povId.value,
             });
           }
           break;
@@ -450,7 +450,7 @@ const handleLine = (line: string) => {
               if (!(sourceId[0] === "4" && targetId[0] === "1")) {
                 return;
               }
-              if (!(targetId === povId || partyList.includes(targetId))) {
+              if (!(targetId === povId.value || partyList.value.includes(targetId))) {
                 return;
               }
               const timestamp = new Date(splitLine[logDefinitions.Ability.fields.timestamp] ?? "???").getTime();
@@ -507,7 +507,7 @@ const handleLine = (line: string) => {
                 effect,
                 type,
                 shield: shieldData[match.groups!.targetId],
-                povId,
+                povId: povId.value,
               });
               data.value[0].duration = formatTime(new Date(splitLine[logDefinitions.Ability.fields.timestamp]).getTime() - combatTimeStamp.value);
             }
