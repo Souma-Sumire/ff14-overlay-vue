@@ -413,7 +413,7 @@ const handleLine = (line: string) => {
             const time = combatTimeStamp.value === 0 ? 0 : timestamp - combatTimeStamp.value;
             const formattedTime = formatTime(time);
             const targetJob = jobMap[targetId] ?? target.substring(0, 2);
-            const job = Util.nameToFullName(Util.jobEnumToJob(parseInt(targetJob, 16))).cn.substring(0, 2);
+            const job = Util.nameToFullName(Util.jobEnumToJob(parseInt(targetJob, 16))).simple2;
             const jobEnum = parseInt(targetJob, 16);
             const jobIcon = Util.jobEnumToIcon(jobEnum).toLocaleLowerCase();
             // dot/hot日志的source不准确 故无法计算目标减
