@@ -1,6 +1,8 @@
+import { completeIcon, statusData } from "./status";
+
 export type KeigennType = "multiplier" | "absorbed";
 
-export type MultiplierType = {
+export type PerformanceType = {
   physics: number;
   magic: number;
   darkness: number;
@@ -9,20 +11,22 @@ export type MultiplierType = {
 export type Keigenn = {
   id: number;
   icon: number;
+  fullIcon: string;
   type: KeigennType;
-  multiplier: MultiplierType;
+  performance: PerformanceType;
   isFriendly: boolean;
-  name?: string;
+  name: string;
   description?: string;
 };
-export const keigennData: Keigenn[] = [
+
+const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
   {
     name: "铁壁",
     description: "减轻所受到的伤害",
     id: 1191,
     icon: 13911,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -31,7 +35,7 @@ export const keigennData: Keigenn[] = [
     id: 1856,
     icon: 12510,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -40,7 +44,7 @@ export const keigennData: Keigenn[] = [
     id: 1174,
     icon: 12511,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -49,7 +53,7 @@ export const keigennData: Keigenn[] = [
     id: 74,
     icon: 10151,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -58,7 +62,7 @@ export const keigennData: Keigenn[] = [
     id: 1176,
     icon: 12513,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -67,7 +71,7 @@ export const keigennData: Keigenn[] = [
     id: 82,
     icon: 12504,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -76,7 +80,7 @@ export const keigennData: Keigenn[] = [
     id: 1362,
     icon: 12509,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -85,7 +89,7 @@ export const keigennData: Keigenn[] = [
     id: 2674,
     icon: 12515,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -94,7 +98,7 @@ export const keigennData: Keigenn[] = [
     id: 2675,
     icon: 12516,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -103,7 +107,7 @@ export const keigennData: Keigenn[] = [
     id: 77,
     icon: 10156,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -112,7 +116,7 @@ export const keigennData: Keigenn[] = [
     id: 735,
     icon: 12555,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -121,7 +125,7 @@ export const keigennData: Keigenn[] = [
     id: 1857,
     icon: 12558,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -130,7 +134,7 @@ export const keigennData: Keigenn[] = [
     id: 1858,
     icon: 12559,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -139,7 +143,7 @@ export const keigennData: Keigenn[] = [
     id: 87,
     icon: 10254,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -148,7 +152,7 @@ export const keigennData: Keigenn[] = [
     id: 89,
     icon: 10256,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -157,7 +161,7 @@ export const keigennData: Keigenn[] = [
     id: 1457,
     icon: 12557,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -166,7 +170,7 @@ export const keigennData: Keigenn[] = [
     id: 409,
     icon: 10266,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -175,7 +179,7 @@ export const keigennData: Keigenn[] = [
     id: 2678,
     icon: 12562,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -184,7 +188,7 @@ export const keigennData: Keigenn[] = [
     id: 2679,
     icon: 12563,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -193,7 +197,7 @@ export const keigennData: Keigenn[] = [
     id: 2680,
     icon: 12564,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -202,7 +206,7 @@ export const keigennData: Keigenn[] = [
     id: 1178,
     icon: 13118,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -211,7 +215,7 @@ export const keigennData: Keigenn[] = [
     id: 746,
     icon: 13114,
     type: "multiplier",
-    multiplier: { physics: 0, magic: 1, darkness: 0 },
+    performance: { physics: 0, magic: 1, darkness: 0 },
     isFriendly: true,
   },
   {
@@ -220,7 +224,7 @@ export const keigennData: Keigenn[] = [
     id: 747,
     icon: 13113,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -229,7 +233,7 @@ export const keigennData: Keigenn[] = [
     id: 1894,
     icon: 13122,
     type: "multiplier",
-    multiplier: { physics: 0, magic: 1, darkness: 0 },
+    performance: { physics: 0, magic: 1, darkness: 0 },
     isFriendly: true,
   },
   {
@@ -238,17 +242,16 @@ export const keigennData: Keigenn[] = [
     id: 810,
     icon: 13115,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
     name: "死而不僵",
-    description:
-      "除特定攻击之外其他所有对自身发动的攻击均无法令体力减少到1以下，在效果结束前没有得到足够的治疗便会陷入无法战斗状态\n同时，自身发动战技或魔法攻击命中时可以恢复体力",
+    description: "除特定攻击之外其他所有对自身发动的攻击均无法令体力减少到1以下",
     id: 811,
     icon: 13116,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -257,7 +260,7 @@ export const keigennData: Keigenn[] = [
     id: 3255,
     icon: 13124,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -266,7 +269,7 @@ export const keigennData: Keigenn[] = [
     id: 2682,
     icon: 13123,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -275,7 +278,7 @@ export const keigennData: Keigenn[] = [
     id: 1840,
     icon: 13610,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -284,7 +287,7 @@ export const keigennData: Keigenn[] = [
     id: 1898,
     icon: 13614,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -293,7 +296,7 @@ export const keigennData: Keigenn[] = [
     id: 1832,
     icon: 13602,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -302,7 +305,7 @@ export const keigennData: Keigenn[] = [
     id: 1834,
     icon: 13604,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -311,7 +314,7 @@ export const keigennData: Keigenn[] = [
     id: 1839,
     icon: 13609,
     type: "multiplier",
-    multiplier: { physics: 0, magic: 1, darkness: 0 },
+    performance: { physics: 0, magic: 1, darkness: 0 },
     isFriendly: true,
   },
   {
@@ -320,7 +323,7 @@ export const keigennData: Keigenn[] = [
     id: 1836,
     icon: 13606,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -329,7 +332,7 @@ export const keigennData: Keigenn[] = [
     id: 2683,
     icon: 13615,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -338,7 +341,7 @@ export const keigennData: Keigenn[] = [
     id: 2684,
     icon: 13616,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -347,7 +350,7 @@ export const keigennData: Keigenn[] = [
     id: 1218,
     icon: 12632,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -356,7 +359,7 @@ export const keigennData: Keigenn[] = [
     id: 1873,
     icon: 12633,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -365,7 +368,7 @@ export const keigennData: Keigenn[] = [
     id: 2708,
     icon: 12638,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -374,7 +377,7 @@ export const keigennData: Keigenn[] = [
     id: 297,
     icon: 12801,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -383,7 +386,7 @@ export const keigennData: Keigenn[] = [
     id: 1918,
     icon: 12814,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -392,7 +395,7 @@ export const keigennData: Keigenn[] = [
     id: 1917,
     icon: 12848,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -401,7 +404,7 @@ export const keigennData: Keigenn[] = [
     id: 299,
     icon: 12803,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -410,7 +413,7 @@ export const keigennData: Keigenn[] = [
     id: 317,
     icon: 12828,
     type: "multiplier",
-    multiplier: { physics: 0, magic: 1, darkness: 0 },
+    performance: { physics: 0, magic: 1, darkness: 0 },
     isFriendly: true,
   },
   {
@@ -419,7 +422,7 @@ export const keigennData: Keigenn[] = [
     id: 1875,
     icon: 12847,
     type: "multiplier",
-    multiplier: { physics: 0, magic: 1, darkness: 0 },
+    performance: { physics: 0, magic: 1, darkness: 0 },
     isFriendly: true,
   },
   {
@@ -428,7 +431,7 @@ export const keigennData: Keigenn[] = [
     id: 2710,
     icon: 12815,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -437,7 +440,7 @@ export const keigennData: Keigenn[] = [
     id: 2711,
     icon: 12816,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -446,7 +449,7 @@ export const keigennData: Keigenn[] = [
     id: 849,
     icon: 13226,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -455,7 +458,7 @@ export const keigennData: Keigenn[] = [
     id: 1889,
     icon: 13250,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -464,7 +467,7 @@ export const keigennData: Keigenn[] = [
     id: 2717,
     icon: 13262,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -473,7 +476,7 @@ export const keigennData: Keigenn[] = [
     id: 1921,
     icon: 13255,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -482,7 +485,7 @@ export const keigennData: Keigenn[] = [
     id: 2607,
     icon: 12954,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -491,7 +494,7 @@ export const keigennData: Keigenn[] = [
     id: 2608,
     icon: 12955,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -500,7 +503,7 @@ export const keigennData: Keigenn[] = [
     id: 2609,
     icon: 12954,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -509,7 +512,7 @@ export const keigennData: Keigenn[] = [
     id: 2618,
     icon: 12964,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -518,7 +521,7 @@ export const keigennData: Keigenn[] = [
     id: 2619,
     icon: 12965,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -527,7 +530,7 @@ export const keigennData: Keigenn[] = [
     id: 3003,
     icon: 12971,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -536,7 +539,7 @@ export const keigennData: Keigenn[] = [
     id: 3365,
     icon: 12972,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -545,7 +548,7 @@ export const keigennData: Keigenn[] = [
     id: 2612,
     icon: 12958,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -554,7 +557,7 @@ export const keigennData: Keigenn[] = [
     id: 2613,
     icon: 12959,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -563,7 +566,7 @@ export const keigennData: Keigenn[] = [
     id: 1232,
     icon: 13307,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -572,7 +575,7 @@ export const keigennData: Keigenn[] = [
     id: 1179,
     icon: 12527,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -581,7 +584,7 @@ export const keigennData: Keigenn[] = [
     id: 1934,
     icon: 12615,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -590,7 +593,7 @@ export const keigennData: Keigenn[] = [
     id: 1951,
     icon: 13021,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -599,7 +602,7 @@ export const keigennData: Keigenn[] = [
     id: 1826,
     icon: 13715,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -608,7 +611,7 @@ export const keigennData: Keigenn[] = [
     id: 2697,
     icon: 13721,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -617,7 +620,7 @@ export const keigennData: Keigenn[] = [
     id: 488,
     icon: 10605,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -626,7 +629,7 @@ export const keigennData: Keigenn[] = [
     id: 168,
     icon: 10456,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -635,7 +638,7 @@ export const keigennData: Keigenn[] = [
     id: 2702,
     icon: 12691,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -644,7 +647,7 @@ export const keigennData: Keigenn[] = [
     id: 2597,
     icon: 12934,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -653,7 +656,7 @@ export const keigennData: Keigenn[] = [
     id: 2707,
     icon: 13408,
     type: "multiplier",
-    multiplier: { physics: 0, magic: 1, darkness: 0 },
+    performance: { physics: 0, magic: 1, darkness: 0 },
     isFriendly: true,
   },
   {
@@ -662,7 +665,7 @@ export const keigennData: Keigenn[] = [
     id: 1193,
     icon: 13901,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: false,
   },
   {
@@ -671,7 +674,7 @@ export const keigennData: Keigenn[] = [
     id: 1195,
     icon: 13904,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 0.5, darkness: 0 },
+    performance: { physics: 1, magic: 0.5, darkness: 0 },
     isFriendly: false,
   },
   {
@@ -680,7 +683,7 @@ export const keigennData: Keigenn[] = [
     id: 1203,
     icon: 13917,
     type: "multiplier",
-    multiplier: { physics: 0.5, magic: 1, darkness: 0 },
+    performance: { physics: 0.5, magic: 1, darkness: 0 },
     isFriendly: false,
   },
   {
@@ -689,7 +692,7 @@ export const keigennData: Keigenn[] = [
     id: 860,
     icon: 13009,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: false,
   },
   {
@@ -698,7 +701,7 @@ export const keigennData: Keigenn[] = [
     id: 9,
     icon: 15009,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: false,
   },
   {
@@ -707,7 +710,7 @@ export const keigennData: Keigenn[] = [
     id: 2120,
     icon: 13523,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -716,7 +719,7 @@ export const keigennData: Keigenn[] = [
     id: 1715,
     icon: 13502,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: false,
   },
   {
@@ -725,7 +728,7 @@ export const keigennData: Keigenn[] = [
     id: 2115,
     icon: 13518,
     type: "multiplier",
-    multiplier: { physics: 0, magic: 1, darkness: 0 },
+    performance: { physics: 0, magic: 1, darkness: 0 },
     isFriendly: false,
   },
   {
@@ -734,7 +737,7 @@ export const keigennData: Keigenn[] = [
     id: 2500,
     icon: 13539,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -743,7 +746,7 @@ export const keigennData: Keigenn[] = [
     id: 1722,
     icon: 13509,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -752,7 +755,7 @@ export const keigennData: Keigenn[] = [
     id: 2496,
     icon: 13535,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -761,7 +764,7 @@ export const keigennData: Keigenn[] = [
     id: 2119,
     icon: 13522,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -770,7 +773,7 @@ export const keigennData: Keigenn[] = [
     id: 1719,
     icon: 13506,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -779,7 +782,7 @@ export const keigennData: Keigenn[] = [
     id: 2114,
     icon: 13517,
     type: "absorbed",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -788,7 +791,7 @@ export const keigennData: Keigenn[] = [
     id: 194,
     icon: 16306,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -797,7 +800,7 @@ export const keigennData: Keigenn[] = [
     id: 195,
     icon: 16306,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -806,7 +809,7 @@ export const keigennData: Keigenn[] = [
     id: 196,
     icon: 16306,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -815,7 +818,7 @@ export const keigennData: Keigenn[] = [
     id: 863,
     icon: 16306,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -824,7 +827,7 @@ export const keigennData: Keigenn[] = [
     id: 864,
     icon: 16306,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -833,30 +836,50 @@ export const keigennData: Keigenn[] = [
     id: 1931,
     icon: 16306,
     type: "multiplier",
-    multiplier: { physics: 1, magic: 1, darkness: 1 },
+    performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
   },
 ];
 
-const keigennMap: { [key: number]: Keigenn } = {};
-keigennData.forEach((item) => {
-  keigennMap[item.id] = item;
-});
+const keigennMap: Map<string, Keigenn> = new Map();
 
-export function getKeigennById(id: number): Keigenn | undefined {
-  return keigennMap[id];
-}
-export function createIconUrl(icon: number): string {
-  if (typeof icon === "number") {
-    let head = [..."000000"];
-    let iconStr = icon.toString();
-    if (iconStr.length > 3) {
-      const temp = [...iconStr].slice(0, iconStr.length - 3).concat(..."000");
-      head = [...head.slice(0, 6 - temp.length), ...temp];
+export type Server = "Chinese" | "Global";
+
+export let loadedDataLang: Server | undefined = undefined;
+
+export function loadKeigenn(server: "Chinese" | "Global"): void {
+  if (loadedDataLang !== server) {
+    const sourceKeigenns = server === "Chinese" ? keigenns : Object.assign(keigenns, {});
+    keigennMap.clear();
+    for (const keigenn of sourceKeigenns) {
+      keigenn.fullIcon = completeIcon(keigenn.icon);
+      keigennMap.set(keigenn.id.toString(16).toUpperCase(), keigenn as Keigenn);
     }
-    let foot = [..."000000"];
-    foot = [...foot.slice(0, 6 - iconStr.length), ...iconStr];
-    return `${head.join("")}/${foot.join("")}.png`;
+    loadedDataLang = server;
   }
-  throw new Error("icon is not a number");
 }
+
+loadKeigenn("Chinese");
+
+export function getKeigenn(decId: string): Keigenn | undefined {
+  return keigennMap.get(decId);
+}
+export const multiplierEffect = (multiplier: number) => {
+  if (multiplier === 1) return "useful";
+  if (multiplier === 0) return "unuseful";
+  return "half-useful";
+};
+
+const regFriendly = /(?:耐性|防御力)(?:大幅)?(?:降低|提升|低下|下降)|受伤(?:加重|减轻)|体力(?:增加|衰减|减少)/;
+const regEnemy = /(?:精神|力量|灵巧|智力){1,2}(?:大幅)?降低/;
+
+const createMap = (regExp: RegExp, isFriendly: boolean) =>
+  Object.entries(statusData).reduce((map, [key, [name, icon]]) => {
+    if (regExp.test(name)) {
+      map.set(key, { name, icon, isFriendly });
+    }
+    return map;
+  }, new Map());
+
+export const universalVulnerableFriendly = createMap(regFriendly, true);
+export const universalVulnerableEnemy = createMap(regEnemy, false);

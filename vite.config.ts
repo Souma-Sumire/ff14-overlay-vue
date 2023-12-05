@@ -8,10 +8,9 @@ import Pages from "vite-plugin-pages";
 import AutoImport from "unplugin-auto-import/vite";
 import Components from "unplugin-vue-components/vite";
 import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
-import { resolve } from "path";
 import jsx from "@vitejs/plugin-vue-jsx";
 import { createStyleImportPlugin, VxeTableResolve } from "vite-plugin-style-import";
-// const path = require("path");
+import { fileURLToPath } from "url";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -56,8 +55,8 @@ export default defineConfig({
       extensions: ["vue", "md"],
       directoryAsNamespace: true,
       include: [/\.vue$/, /\.vue\?vue/, /\.md$/],
-      resolvers: [ElementPlusResolver()],
       dts: "src/types/components.d.ts",
+      resolvers: [ElementPlusResolver()],
     }),
     viteCompression({
       verbose: false,
@@ -81,7 +80,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": resolve(__dirname, "./src"),
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
 });

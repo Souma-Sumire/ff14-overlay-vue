@@ -88,6 +88,64 @@ const nameToJobEnum: Record<Job, number> = {
   RPR: 39,
   SGE: 40,
 };
+
+const baseJob = [
+  "GLA", // 剑术师
+  "MRD", // 斧术师
+  "CNJ", // 幻术师
+  "ROG", // 双剑师
+  "PGL", // 格斗家
+  "LNC", // 枪术师
+  "ARC", // 弓箭手
+  "ACN", // 秘术师
+  "THM", // 咒术师
+];
+
+export const jobEnumOrder = [
+  3, // MRD 斧术师
+  21, // WAR 战士
+  1, // GLA 剑术师
+  32, // DRK 暗黑骑士
+  37, // GNB 绝枪战士
+  19, // PLD 骑士
+  6, // CNJ 幻术师
+  24, // WHM 白魔法师
+  33, // AST 占星术士
+  40, // SGE 贤者
+  28, // SCH 学者
+  34, // SAM 武士
+  29, // ROG 双剑师
+  30, // NIN 忍者
+  39, // RPR 钐镰客
+  4, // LNC 枪术师
+  22, // DRG 龙骑士
+  2, // PGL 格斗家
+  20, // MNK 武僧
+  5, // ARC 弓箭手
+  23, // BRD 吟游诗人
+  31, // MCH 机工士
+  38, // DNC 舞者
+  7, // THM 咒术师
+  25, // BLM 黑魔法师
+  26, // ACN 秘术师
+  27, // SMN 召唤师
+  35, // RDM 赤魔法师
+  36, // BLU 青魔法师
+
+  8, // CRP 刻木匠
+  9, // BSM 锻铁匠
+  10, // ARM 铸甲匠
+  11, // GSM 雕金匠
+  12, // LTW 制革匠
+  13, // WVR 裁衣匠
+  14, // ALC 炼金术士
+  15, // CUL 烹调师
+  16, // MIN 采矿工
+  17, // BTN 园艺工
+  18, // FSH 捕鱼人
+  0, // NONE 冒险者
+];
+
 const nameToFullName: Record<Job, { en: string; ja: string; cn: string; simple1: string; simple2: string }> = {
   NONE: { en: "Adventurer", ja: "すっぴん士", cn: "冒险者", simple1: "冒", simple2: "冒险" },
   GLA: { en: "Gladiator", ja: "剣術士", cn: "剑术师", simple1: "剑", simple2: "剑术" },
@@ -204,6 +262,7 @@ const Util = {
   getAllJobs: (): readonly Job[] => allJobs,
   getBattleJobs: (): readonly Job[] => battleJobs,
   getBattleJobs2: (): readonly Job[] => battleJobs2,
+  getBattleJobs3: (): readonly Job[] => battleJobs.filter((v) => !baseJob.includes(v)),
   nameToFullName: (job: Job) => {
     return nameToFullName[job];
   },
@@ -212,6 +271,9 @@ const Util = {
   },
   nameToJobEnum: (job: Job) => {
     return nameToJobEnum[job] ?? 0;
+  },
+  enumSortMethod: (a: number, b: number) => {
+    return jobEnumOrder.indexOf(a) - jobEnumOrder.indexOf(b);
   },
 } as const;
 

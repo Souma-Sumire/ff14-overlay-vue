@@ -1,26 +1,57 @@
-export enum DamageEffect {
-  "dodge" = "闪避",
-  "damage done" = "击中",
-  "blocked damage" = "格挡",
-  "parried damage" = "招架",
-  "instant death" = "即死",
-  // "special" = "特殊", // P10S 蛛网分摊E 宝石兽护盾9A0E 不死鸟4F50E
+export type DamageEffect =
+  | "dodge" // 闪避
+  | "damage done" // 击中
+  | "blocked damage" // 格挡
+  | "parried damage" // 招架
+  | "instant death" // 即死
+  | "heal" // 治疗
+  | "crit heal"; // 暴击治疗
 
-  "heal" = "治疗",
-  "crit heal" = "暴击治疗",
-}
+export type DamageProperties =
+  | "damage" // 普通
+  | "crit damage" // 暴击
+  | "direct hit damage" // 直击
+  | "crit direct hit damage"; // 直暴;
 
-export enum DamageProperties {
-  "damage" = "普通",
-  "crit damage" = "暴击",
-  "direct hit damage" = "直击",
-  "crit direct hit damage" = "直暴",
-}
+export type DamageType =
+  | "physics" // 物理
+  | "magic" // 魔法
+  | "darkness" // 暗黑;
+  | "dot";
 
-export enum DamageType {
-  "physics" = "物理",
-  "magic" = "魔法",
-  "darkness" = "暗黑",
+export function translationFlags(typeString: DamageEffect | DamageProperties | DamageType): string {
+  switch (typeString) {
+    case "dodge":
+      return "闪避";
+    case "damage done":
+      return "击中";
+    case "blocked damage":
+      return "格挡";
+    case "parried damage":
+      return "招架";
+    case "instant death":
+      return "即死";
+    case "heal":
+      return "治疗";
+    case "crit heal":
+      return "暴击治疗";
+    case "damage":
+      return "普通";
+    case "crit damage":
+      return "暴击";
+    case "direct hit damage":
+      return "直击";
+    case "crit direct hit damage":
+      return "直暴";
+    case "physics":
+      return "物理";
+    case "magic":
+      return "魔法";
+    case "darkness":
+      return "暗黑";
+    default:
+      throw new Error("Unknown type");
+  }
 }
 
 export function processFlags(flag: string) {
@@ -41,21 +72,19 @@ export function processFlags(flag: string) {
 function processEffect(flag: string): DamageEffect {
   switch (true) {
     case /1$/.test(flag):
-      return DamageEffect["dodge"];
+      return "dodge";
     case /3$/.test(flag):
-      return DamageEffect["damage done"];
+      return "damage done";
     case /5$/.test(flag):
-      return DamageEffect["blocked damage"];
+      return "blocked damage";
     case /6$/.test(flag):
-      return DamageEffect["parried damage"];
+      return "parried damage";
     case /33$/.test(flag):
-      return DamageEffect["instant death"];
+      return "instant death";
     case /4$/.test(flag):
-      return DamageEffect["heal"];
+      return "heal";
     case /2\w{4}4$/.test(flag):
-      return DamageEffect["crit heal"];
-    // case /E$/.test(flag):
-    //   return DamageEffect["special"];
+      return "crit heal";
     default:
       throw new Error("Unknown effect flag " + flag);
   }
@@ -68,13 +97,13 @@ function processEffect(flag: string): DamageEffect {
 function processProperties(flag: string): DamageProperties {
   switch (true) {
     case /2\w{3}$/.test(flag):
-      return DamageProperties["crit damage"];
+      return "crit damage";
     case /4\w{3}$/.test(flag):
-      return DamageProperties["direct hit damage"];
+      return "direct hit damage";
     case /6\w{3}$/.test(flag):
-      return DamageProperties["crit direct hit damage"];
+      return "crit direct hit damage";
     default:
-      return DamageProperties["damage"];
+      return "damage";
   }
 }
 
@@ -84,13 +113,13 @@ function processProperties(flag: string): DamageProperties {
 function processType(flag: string): DamageType {
   switch (true) {
     case /7?[123]\w{3}[35]$|[16]$/.test(flag):
-      return DamageType["physics"];
+      return "physics";
     case /^E$/.test(flag):
     case /5\w{4}$/.test(flag):
-      return DamageType["magic"];
+      return "magic";
     case /^(?:\d0)?3$/.test(flag):
     case /6\w{4}$/.test(flag):
-      return DamageType["darkness"];
+      return "darkness";
     default:
       throw new Error("Unknown type flag " + flag);
   }
@@ -138,7 +167,7 @@ export const processAbilityLine = (splitLine: string[]) => {
   };
 };
 
-const UnscrambleDamage = (field?: string): number => {
+export const UnscrambleDamage = (field?: string): number => {
   if (field === undefined) return 0;
   const len = field.length;
   if (len <= 4) return 0;
