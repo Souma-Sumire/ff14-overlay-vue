@@ -4,6 +4,7 @@ import { createPinia } from "pinia";
 import { createHead } from "@vueuse/head";
 // import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
+import "element-plus/theme-chalk/dark/css-vars.css";
 import "uno.css";
 import VXETable from "vxe-table";
 import "vxe-table/lib/style.css";
@@ -17,7 +18,6 @@ app.use(head);
 app.use(pinia);
 app.use(VXETable);
 app.mount("#app");
-
 
 // app.config.errorHandler = (err, vm, info) => {
 //   console.error(err, vm, info);

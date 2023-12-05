@@ -1,21 +1,22 @@
-type DebouncedRef<T> = {
-  value: T;
-};
+import { customRef } from "vue";
 
-export function debounceRef<T>(value: T, duration = 1000): DebouncedRef<T> {
+export function debounceRef<T>(value: T, duration = 1000) {
+  let timer: NodeJS.Timeout | null = null;
+
   return customRef((track, trigger) => {
-    let timeout: NodeJS.Timeout | null = null;
-
     return {
       get() {
         track();
         return value;
       },
-      set(newValue: T) {
-        value = newValue;
-        if (timeout) clearTimeout(timeout);
-        timeout = setTimeout(() => {
+      set(val) {
+        if (timer) {
+          clearTimeout(timer);
+        }
+        value = val;
+        timer = setTimeout(() => {
           trigger();
+          timer = null; // 清除定时器引用
         }, duration);
       },
     };

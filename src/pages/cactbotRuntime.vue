@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Util from "@/utils/util";
+import Util, { jobEnumOrder } from "@/utils/util";
 import "animate.css";
 
 const createRPArr = (r: "T" | "H" | "D", l: number) =>
@@ -15,28 +15,8 @@ const roleAssignLocationNames: Record<Role, string[]> = {
 };
 
 const dialogVisible = ref(false);
-const defaultSortArray = useStorage("cactbotRuntime-sortArr", [
-  21, //战
-  32, //暗
-  37, //枪
-  19, //骑
-  33, //占
-  24, //白
-  40, //贤
-  28, //学
-  34, //侍
-  30, //忍
-  39, //钐
-  22, //龙
-  20, //僧
-  38, //舞
-  23, //诗
-  31, //机
-  25, //黑
-  27, //召
-  35, //赤
-  36, //青
-]);
+const defaultSortArray = useStorage("cactbotRuntime-sortArr", jobEnumOrder);
+
 const fakeParty: Player[] = [
   { id: "10000001", name: "虚构战士", job: 21, inParty: true },
   { id: "10000002", name: "虚构骑士", job: 19, inParty: true },

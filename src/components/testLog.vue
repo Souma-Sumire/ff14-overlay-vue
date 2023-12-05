@@ -1,9 +1,4 @@
 <template>
-  <div>
-    单行测试
-    <input type="text" v-model="testInput" />
-    <button @click="test">test</button>
-  </div>
   <div class="upload select">
     <div class="upload-select" ref="select">
       <div class="upload text">
@@ -21,13 +16,6 @@ const emits = defineEmits<{
   (e: "beforeHandle"): void;
   (e: "afterHandle"): void;
 }>();
-
-const testInput = ref("");
-const test = () => {
-  emits("beforeHandle");
-  emits("handleLine", testInput.value);
-  emits("afterHandle");
-};
 
 const input = ref<HTMLInputElement | null>(null);
 const select = ref<HTMLInputElement | null>(null);
@@ -76,10 +64,11 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .upload {
-  margin: 10px;
+  color: black;
+  // margin: 10px;
   .upload-select {
     min-width: 400px;
-    height: 100px;
+    height: 75px;
     border: 1px solid #ccc;
     border-radius: 10px;
     position: relative;
@@ -104,6 +93,7 @@ onUnmounted(() => {
         transform: translate(-50%, -50%);
       }
     }
+    background-color: #fff;
     &:hover,
     &.drag {
       border-color: #000;

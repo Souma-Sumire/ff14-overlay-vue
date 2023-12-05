@@ -73,14 +73,29 @@ const roles: {
 function isJobInParty(job: number) {
   return props.party.find((v) => v.job === job);
 }
+const allJobs = Util.getBattleJobs3();
+const tankJobs = allJobs
+  .filter((v) => Util.isTankJob(v))
+  .map((v) => Util.jobToJobEnum(v))
+  .sort((a, b) => Util.enumSortMethod(a, b));
+const healerJobs = allJobs
+  .filter((v) => Util.isHealerJob(v))
+  .map((v) => Util.jobToJobEnum(v))
+  .sort((a, b) => Util.enumSortMethod(a, b));
+const dpsJobs = allJobs
+  .filter((v) => Util.isDpsJob(v))
+  .map((v) => Util.jobToJobEnum(v))
+  .sort((a, b) => Util.enumSortMethod(a, b));
+
 const jobsList: {
   [K in Role]: number[];
 } = {
-  tank: [21, 32, 37, 19],
-  healer: [33, 24, 40, 28],
-  dps: [34, 30, 39, 22, 20, 38, 23, 31, 25, 27, 35, 36],
+  tank: tankJobs,
+  healer: healerJobs,
+  dps: dpsJobs,
   unknown: [],
 };
+
 const jobsListAll = Object.values(jobsList).flat();
 const jobs = jobsListAll.map((v) => {
   return {

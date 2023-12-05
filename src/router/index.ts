@@ -24,6 +24,7 @@ const routeTitles = new Map(
     "castingMonitor": "施法监控",
     "cactbotRuntime": "cactbot拓展",
     "blubook": "青魔法书图鉴",
+    "keigennRecord": "减伤监控2",
   }),
 );
 
