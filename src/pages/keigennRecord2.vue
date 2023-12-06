@@ -183,9 +183,9 @@ const icon4k = userOptions.scale >= 2 || window.devicePixelRatio >= 2 ? "_hr1" :
 const config = {
   line_height: 30 * userOptions.scale,
   time: 40 * userOptions.scale,
-  action: 80 * userOptions.scale,
+  action: 65 * userOptions.scale,
   target:
-    ((userOptions.showIcon ? 24 : 0) + (userOptions.showName ? (userOptions.anonymous || (!userOptions.anonymous && userOptions.abbrId) ? 24 : 36) : 12) + 7) *
+    ((userOptions.showIcon ? 24 : 0) + (userOptions.showName ? (userOptions.anonymous || (!userOptions.anonymous && userOptions.abbrId) ? 24 : 36) : 0) + 7) *
     userOptions.scale,
   source: 90 * userOptions.scale,
   amount: 47 * userOptions.scale,
@@ -207,12 +207,17 @@ const maxStorage = {
 let lastPush: number = 0;
 let lastScroll: number = 0;
 
+interface PlayerSP extends Player {
+  timestamp: number;
+}
+
 const xTable = ref<VxeTableInstance>();
 const allowAutoScroll = ref(true);
 const povName = useStorage("keigenn-record-2-pov-name", "");
 const povId = useStorage("keigenn-record-2-pov-id", "");
-const partyList = useStorage("keigenn-record-2-party-list", [] as string[]);
+const partyLogList = useStorage("keigenn-record-2-party-list", [] as string[]);
 const jobMap = useStorage("keigenn-record-2-job-map", {} as Record<string, { job: string; timestamp: number }>);
+const partyEventParty = useStorage("keigenn-record-2-party-event-party", [] as PlayerSP[]);
 const select = ref(0);
 const data = ref<Encounter[]>([{ zoneName: "", duration: "00:00", table: [], key: "init" }]);
 const regexes: Record<string, RegExp> = {
@@ -360,7 +365,7 @@ const handleLine = (line: string) => {
           initEnvironment(splitLine[logDefinitions.ChangedPlayer.fields.name]);
           break;
         case "partyList":
-          partyList.value = match.groups!.list?.split("|") ?? [];
+          partyLogList.value = match.groups!.list?.split("|") ?? [];
           break;
         case "changeZone":
           zoneName.value = splitLine[logDefinitions.ChangeZone.fields.name];
@@ -403,7 +408,11 @@ const handleLine = (line: string) => {
           {
             const which = splitLine[logDefinitions.NetworkDoT.fields.which];
             const targetId = splitLine[logDefinitions.NetworkDoT.fields.id];
-            if (which !== "DoT" || targetId[0] === "4" || !(targetId === povId.value || partyList.value.includes(targetId))) {
+            if (
+              which !== "DoT" ||
+              targetId[0] === "4" ||
+              !(targetId === povId.value || partyLogList.value.includes(targetId) || partyEventParty.value.find((v) => v.id === targetId))
+            ) {
               return;
             }
             const target = splitLine[logDefinitions.NetworkDoT.fields.name];
@@ -414,7 +423,8 @@ const handleLine = (line: string) => {
             const maxHp = Number(splitLine[logDefinitions.NetworkDoT.fields.maxHp]);
             const time = combatTimeStamp.value === 0 ? 0 : timestamp - combatTimeStamp.value;
             const formattedTime = formatTime(time);
-            const targetJob = jobMap.value[targetId].job ?? target.substring(0, 2);
+            const targetJob = getJobById(targetId);
+            // const targetJob = jobMap.value[targetId].job ?? target.substring(0, 2);
             const job = Util.nameToFullName(Util.jobEnumToJob(parseInt(targetJob, 16))).simple2;
             const jobEnum = parseInt(targetJob, 16);
             const jobIcon = Util.jobEnumToIcon(jobEnum).toLocaleLowerCase();
@@ -452,7 +462,7 @@ const handleLine = (line: string) => {
               if (!(sourceId[0] === "4" && targetId[0] === "1")) {
                 return;
               }
-              if (!(targetId === povId.value || partyList.value.includes(targetId))) {
+              if (!(targetId === povId.value || partyLogList.value.includes(targetId) || partyEventParty.value.find((v) => v.id === targetId))) {
                 return;
               }
               const timestamp = new Date(splitLine[logDefinitions.Ability.fields.timestamp] ?? "???").getTime();
@@ -476,7 +486,8 @@ const handleLine = (line: string) => {
               const { effect, type } = processFlags(ability.flags);
               const time = combatTimeStamp.value === 0 ? 0 : timestamp - combatTimeStamp.value;
               const formattedTime = formatTime(time);
-              const targetJob = jobMap.value[targetId].job ?? target.substring(0, 2);
+              const targetJob = getJobById(targetId);
+              // const targetJob = jobMap.value[targetId].job ?? target.substring(0, 2);
               const job = Util.nameToFullName(Util.jobEnumToJob(parseInt(targetJob, 16))).cn.substring(0, 2);
               const jobEnum = parseInt(targetJob, 16);
               const jobIcon = Util.jobEnumToIcon(jobEnum).toLocaleLowerCase();
@@ -520,6 +531,12 @@ const handleLine = (line: string) => {
       }
     }
   }
+};
+
+const getJobById = (targetId: string) => {
+  return [jobMap.value[targetId], partyEventParty.value.find((v) => v.id === targetId) ?? { job: "0", timestamp: 0 }]
+    .sort((a, b) => b.timestamp - a.timestamp)[0]
+    .job.toString();
 };
 
 const addRow = (row: RowVO) => {
@@ -653,6 +670,16 @@ watch(
   { immediate: true },
 );
 
+const handleChangePrimaryPlayer = (event: { charID: string; charName: string }): void => {
+  povName.value = event.charName;
+  povId.value = event.charID;
+  console.log(event);
+};
+
+const handlePartyChanged = (e: { party: { id: string; name: string; inParty: boolean; job: number }[] }): void => {
+  partyEventParty.value = e.party.map((v) => ({ ...v, timestamp: Date.now() }));
+};
+
 onMounted(() => {
   for (const id in jobMap.value) {
     const element = jobMap.value[id];
@@ -662,6 +689,8 @@ onMounted(() => {
   }
   loadStorage();
   addOverlayListener("LogLine", handleLogLine);
+  addOverlayListener("PartyChanged", handlePartyChanged);
+  addOverlayListener("ChangePrimaryPlayer", handleChangePrimaryPlayer);
   startOverlayEvents();
 });
 
@@ -669,28 +698,7 @@ onUnmounted(() => {
   removeOverlayListener("LogLine", handleLogLine);
 });
 
-// function Target({ row }: { row: RowVO }) {
-//   const slot = {
-//     reference: () => TargetShow(row),
-//   };
-//   return userOptions.anonymous || userOptions.abbrId ? (
-//     <el-popover
-//       append-to=".wrapper"
-//       effect="dark"
-//       placement="right"
-//       title={row.target}
-//       trigger="hover"
-//       hide-after={0}
-//       enterable={false}
-//       popper-class="my-el-popover"
-//       v-slots={slot}
-//     ></el-popover>
-//   ) : (
-//     slot.reference()
-//   );
-// }
-
-function Target({ row }: { row: RowVO }) {
+const Target = ({ row }: { row: RowVO }) => {
   return (
     <div>
       <span class="target">
@@ -708,9 +716,9 @@ function Target({ row }: { row: RowVO }) {
       </span>
     </div>
   );
-}
+};
 
-function Amount({ row }: { row: RowVO }) {
+const Amount = ({ row }: { row: RowVO }) => {
   const slot = {
     reference: () => <span class={`damage ${row.type} ${isLethal(row) ? "lethal" : ""} `}>{row.amount.toLocaleString().padStart(3, "　")}</span>,
   };
@@ -729,9 +737,9 @@ function Amount({ row }: { row: RowVO }) {
       <AmountDetails row={row}></AmountDetails>
     </el-popover>
   );
-}
+};
 
-function AmountDetails({ row }: { row: RowVO }) {
+const AmountDetails = ({ row }: { row: RowVO }) => {
   return (
     <div>
       <span>
@@ -751,7 +759,7 @@ function AmountDetails({ row }: { row: RowVO }) {
       </span>
     </div>
   );
-}
+};
 
 const invincibleEffect = [
   Number(409).toString(16).toUpperCase(), // 死斗
@@ -764,7 +772,7 @@ const isLethal = (row: RowVO): boolean => {
   return row.currentHp - row.amount < 0 && !row.keigenns.find((k) => invincibleEffect.includes(k.effectId));
 };
 
-function KeigennShow({ row }: { row: RowVO }) {
+const KeigennShow = ({ row }: { row: RowVO }) => {
   return (
     <>
       <span>{isLethal(row) ? "💀致死 " : ""}</span>
@@ -786,13 +794,9 @@ function KeigennShow({ row }: { row: RowVO }) {
       <span>{row.effect === "damage done" ? "" : translationFlags(row.effect)}</span>
     </>
   );
-}
+};
 
-// const cellClick: VxeTableEvents.CellClick<RowVO> = ({ row }) => {
-//   doCopy(row);
-// };
-
-function doCopy(row: RowVO) {
+const doCopy = (row: RowVO) => {
   const { action, actionCN, amount, job, keigenns, source, target, time, type } = row;
   const sp = row.effect === "damage done" ? "" : "," + translationFlags(row.effect);
   const result = `${time} [${job}]${target} HP:${row.currentHp}/${row.maxHp}(${Math.round((row.currentHp / row.maxHp) * 100)}%) + 护盾:${Math.round(
@@ -803,9 +807,9 @@ function doCopy(row: RowVO) {
     keigenns.length === 0 && sp === "" ? "无" : keigenns.map((k) => (userOptions.statusCN ? k.name : k.effect)).join(",") + sp
   }。`;
   copyText(result);
-}
+};
 
-function copyText(text: string) {
+const copyText = (text: string) => {
   navigator.clipboard.writeText(text).catch(() => {
     const input = document.createElement("input");
     input.value = text;
@@ -815,7 +819,7 @@ function copyText(text: string) {
     document.body.removeChild(input);
   });
   VXETable.modal.message({ content: "已复制到剪贴板", status: "success" });
-}
+};
 
 const focusing = ref({ target: false, action: false });
 const focusRow: Ref<RowVO | undefined> = ref();
@@ -1047,8 +1051,8 @@ img:not([src]) {
 @import "vxe-table/styles/index.scss";
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
   background-color: rgba(51, 51, 51, 1);
