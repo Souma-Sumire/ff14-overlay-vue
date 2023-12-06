@@ -98,7 +98,7 @@ function broadcastParty(): void {
   });
 }
 
-function handleChangePrimaryPlayer(event: { charID: string; charName: string }): void {
+function handleChangePrimaryPlayer(event: { charID: number; charName: string }): void {
   if (!isDev) playerName.value = event.charName;
 }
 

@@ -670,10 +670,9 @@ watch(
   { immediate: true },
 );
 
-const handleChangePrimaryPlayer = (event: { charID: string; charName: string }): void => {
+const handleChangePrimaryPlayer = (event: { charID: number; charName: string }): void => {
   povName.value = event.charName;
-  povId.value = event.charID;
-  console.log(event);
+  povId.value = event.charID.toString(16).toUpperCase();
 };
 
 const handlePartyChanged = (e: { party: { id: string; name: string; inParty: boolean; job: number }[] }): void => {
