@@ -216,7 +216,7 @@ const allowAutoScroll = ref(true);
 const povName = useStorage("keigenn-record-2-pov-name", "");
 const povId = useStorage("keigenn-record-2-pov-id", "");
 const partyLogList = useStorage("keigenn-record-2-party-list", [] as string[]);
-const jobMap = useStorage("keigenn-record-2-job-map", {} as Record<string, { job: string; timestamp: number }>);
+const jobMap = useStorage("keigenn-record-2-job-map", {} as Record<string, { job: number; timestamp: number }>);
 const partyEventParty = useStorage("keigenn-record-2-party-event-party", [] as PlayerSP[]);
 const select = ref(0);
 const data = ref<Encounter[]>([{ zoneName: "", duration: "00:00", table: [], key: "init" }]);
@@ -237,7 +237,7 @@ const regexes: Record<string, RegExp> = {
 
 const STORAGE_KEY = "souma-keigenn-record-2";
 const combatTimeStamp: Ref<number> = ref(0);
-const zoneName: Ref<string> = ref("");
+const zoneName = useStorage("souma-keigenn-record-2-zone-name", "" as string);
 const rsvData = useStorage("souma-keigenn-record-2-rsv-data", {} as Record<number, string>);
 const shieldData: Record<string, string> = {};
 const statusData: { friendly: { [id: string]: { [effectId: string]: Status } }; enemy: { [name: string]: { [effectId: string]: Status } } } = {
@@ -351,7 +351,7 @@ const handleLine = (line: string) => {
           if (splitLine[logDefinitions.AddedCombatant.fields.job] !== "00") {
             const job = splitLine[logDefinitions.AddedCombatant.fields.job];
             const timestamp = new Date(splitLine[logDefinitions.AddedCombatant.fields.timestamp]).getTime();
-            jobMap.value[splitLine[logDefinitions.AddedCombatant.fields.id]] = { job, timestamp };
+            jobMap.value[splitLine[logDefinitions.AddedCombatant.fields.id]] = { job: parseInt(job, 16), timestamp };
           }
           break;
         case "removingCombatant":
@@ -425,8 +425,8 @@ const handleLine = (line: string) => {
             const formattedTime = formatTime(time);
             const targetJob = getJobById(targetId);
             // const targetJob = jobMap.value[targetId].job ?? target.substring(0, 2);
-            const job = Util.nameToFullName(Util.jobEnumToJob(parseInt(targetJob, 16))).simple2;
-            const jobEnum = parseInt(targetJob, 16);
+            const job = Util.nameToFullName(Util.jobEnumToJob(targetJob)).simple2;
+            const jobEnum = targetJob;
             const jobIcon = Util.jobEnumToIcon(jobEnum).toLocaleLowerCase();
             // dot/hot日志的source不准确 故无法计算目标减
             addRow({
@@ -488,8 +488,8 @@ const handleLine = (line: string) => {
               const formattedTime = formatTime(time);
               const targetJob = getJobById(targetId);
               // const targetJob = jobMap.value[targetId].job ?? target.substring(0, 2);
-              const job = Util.nameToFullName(Util.jobEnumToJob(parseInt(targetJob, 16))).cn.substring(0, 2);
-              const jobEnum = parseInt(targetJob, 16);
+              const job = Util.nameToFullName(Util.jobEnumToJob(targetJob)).cn.substring(0, 2);
+              const jobEnum = targetJob;
               const jobIcon = Util.jobEnumToIcon(jobEnum).toLocaleLowerCase();
               const keigenns = deepClone(
                 Object.values(statusData.friendly[targetId] ?? [])
@@ -533,10 +533,10 @@ const handleLine = (line: string) => {
   }
 };
 
-const getJobById = (targetId: string) => {
-  return [jobMap.value[targetId], partyEventParty.value.find((v) => v.id === targetId) ?? { job: "0", timestamp: 0 }]
-    .sort((a, b) => b.timestamp - a.timestamp)[0]
-    .job.toString();
+const getJobById = (targetId: string): number => {
+  const fromJobMap = jobMap.value[targetId];
+  const fromPartyEvent = partyEventParty.value.find((v) => v.id === targetId) ?? { job: 0, timestamp: 0 };
+  return [fromJobMap, fromPartyEvent].sort((a, b) => b.timestamp - a.timestamp)[0].job;
 };
 
 const addRow = (row: RowVO) => {
