@@ -164,7 +164,7 @@ const userOptions = {
   scale: parseParams(params.scale as string, 1), // 缩放倍率
   showHeader: parseParams(params.showHeader as string, true), // 显示表头
   showIcon: parseParams(params.showIcon as string, true), // 显示目标图标
-  showName: parseParams(params.showName as string, true), // 显示目标ID
+  showName: parseParams(params.showName as string, false), // 显示目标ID
   abbrId: parseParams(params.abbrId as string, true), // 目标ID缩写
   anonymous: parseParams(params.anonymous as string, true), // 目标ID改为职业名
   replaceWithYou: parseParams(params.replaceWithYou as string, false), // 目标是玩家本人替换为YOU
