@@ -17,7 +17,7 @@ const roleAssignLocationNames: Record<Role, string[]> = {
 const dialogVisible = ref(false);
 const defaultSortArray = useStorage("cactbotRuntime-sortArr", jobEnumOrder);
 
-const fakeParty: Player[] = [
+const fakeParty: PlayerRuntime[] = [
   { id: "10000001", name: "虚构战士", job: 21, inParty: true },
   { id: "10000002", name: "虚构骑士", job: 19, inParty: true },
   { id: "10000003", name: "虚构占星", job: 33, inParty: true },
@@ -27,7 +27,7 @@ const fakeParty: Player[] = [
   { id: "10000007", name: "虚构黑魔", job: 25, inParty: true },
   { id: "10000008", name: "虚构舞者", job: 38, inParty: true },
 ];
-const _party: Player[] = [];
+const _party: PlayerRuntime[] = [];
 const data = useStorage("cactbotRuntime-data", { party: _party });
 const showTips = useStorage("cactbotRuntime-showTips", ref(true));
 const roleSelectLength = {
@@ -84,7 +84,7 @@ function handleSelectChange(i: number): void {
   broadcastParty();
 }
 
-function getRP(player: Player): string {
+function getRP(player: PlayerRuntime): string {
   return roleAssignLocationNames[getJobClassification(player.job)].find((role) => !data.value.party.find((v) => v.rp === role)) ?? "unknown";
 }
 
