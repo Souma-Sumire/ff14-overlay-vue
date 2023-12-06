@@ -284,13 +284,13 @@ const handleLine = (line: string) => {
             const effectId = splitLine[logDefinitions.GainsEffect.fields.effectId];
             const effect = splitLine[logDefinitions.GainsEffect.fields.effect];
             const target = splitLine[logDefinitions.GainsEffect.fields.target];
+            const targetId = splitLine[logDefinitions.GainsEffect.fields.targetId];
             const count = Number(splitLine[logDefinitions.GainsEffect.fields.count]);
             let keigenn: Keigenn | undefined = getKeigenn(effectId);
             if (!keigenn) {
-              universalVulnerableFriendly;
               const vulnerable =
-                (target.startsWith("1") && universalVulnerableFriendly.get(parseInt(effectId, 16).toString())) ||
-                (target.startsWith("4") && universalVulnerableEnemy.get(parseInt(effectId, 16).toString()));
+                (targetId.startsWith("1") && universalVulnerableFriendly.get(parseInt(effectId, 16).toString())) ||
+                (targetId.startsWith("4") && universalVulnerableEnemy.get(parseInt(effectId, 16).toString()));
               if (!vulnerable) return;
               const fullIcon = completeIcon(vulnerable.icon);
               const realIcon = count > 1 ? stackUrl(fullIcon, count) : fullIcon;
@@ -307,7 +307,6 @@ const handleLine = (line: string) => {
             const duration = splitLine[logDefinitions.GainsEffect.fields.duration];
             const source = splitLine[logDefinitions.GainsEffect.fields.source];
             const sourceId = splitLine[logDefinitions.GainsEffect.fields.sourceId];
-            const targetId = splitLine[logDefinitions.GainsEffect.fields.targetId];
             const timestamp = new Date(splitLine[logDefinitions.GainsEffect.fields.timestamp]).getTime();
             const expirationTimestamp = timestamp + parseFloat(duration) * 1000;
             const status: Status = {
