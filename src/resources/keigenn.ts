@@ -870,7 +870,7 @@ export const multiplierEffect = (multiplier: number) => {
   return "half-useful";
 };
 
-const regFriendly = /(?:耐性|防御力)(?:大幅)?(?:降低|提升|低下|下降)|受伤(?:加重|减轻)|体力(?:增加|衰减|减少)/;
+const regFriendly = /(?:耐性|防御力)(?:大幅)?(?:降低|提升|低下|下降)|受伤(?:加重|减轻)|体力(?:增加|衰减|减少)|伤害屏障/;
 const regEnemy = /(?:精神|力量|灵巧|智力){1,2}(?:大幅)?降低/;
 
 const createMap = (regExp: RegExp, isFriendly: boolean) =>
