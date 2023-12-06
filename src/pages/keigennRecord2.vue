@@ -12,7 +12,7 @@
       <vxe-button
         class="minimize"
         :icon="minimize ? 'vxe-icon-fullscreen' : 'vxe-icon-minimize'"
-        @click="minimize = !minimize"
+        @click="clickMinimize"
         :style="{ opacity: minimize ? 0.5 : 1 }"
       ></vxe-button>
     </header>
@@ -204,8 +204,8 @@ const maxStorage = {
   localStorage: 3,
 };
 
-let lastPush: number = 0;
-let lastScroll: number = 0;
+let lastPush: number = Date.now();
+let lastScroll: number = -1000;
 
 interface PlayerSP extends Player {
   timestamp: number;
@@ -627,14 +627,17 @@ const autoScroll = () => {
   if (!userOptions.pushMode) {
     return;
   }
-  if (allowAutoScroll.value && Date.now() - lastPush < 1000 && Date.now() - lastScroll > 100) {
-    xTable.value?.scrollTo(0, Number.MAX_SAFE_INTEGER);
-    lastScroll = Date.now();
-    // console.log("scroll");
+  if (!minimize.value && allowAutoScroll.value && Date.now() - lastPush < 1000 && Date.now() - lastScroll > 100) {
+    scroll();
   }
   requestAnimationFrame(() => {
     autoScroll();
   });
+};
+
+const scroll = () => {
+  xTable.value?.scrollTo(0, Number.MAX_SAFE_INTEGER);
+  lastScroll = Date.now();
 };
 
 const handleWhell = (event: WheelEvent) => {
@@ -865,6 +868,14 @@ watchEffect(() => {
     ];
   }
 });
+
+const clickMinimize = () => {
+  minimize.value = !minimize.value;
+  if (minimize.value === false && userOptions.pushMode) {
+    lastPush = Date.now();
+    scroll();
+  }
+};
 
 const cellContextMenuEvent: VxeTableEvents.CellMenu<RowVO> = ({ row }) => {
   const $table = xTable.value;
