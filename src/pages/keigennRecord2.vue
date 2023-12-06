@@ -181,7 +181,7 @@ const minimize = ref(userOptions.minimize);
 const icon4k = userOptions.scale >= 2 || window.devicePixelRatio >= 2 ? "_hr1" : "";
 
 const config = {
-  line_height: 30 * userOptions.scale,
+  line_height: 28 * userOptions.scale,
   time: 40 * userOptions.scale,
   action: 65 * userOptions.scale,
   target:
@@ -1164,7 +1164,7 @@ main {
   position: absolute;
   text-align: center;
   left: 50%;
-  transform: translateX(-50%) translateY(1.4em) scale(0.8);
+  transform: translateX(-50%) translateY(1.4em) scale(0.75);
   transform-origin: top center;
   font-size: calc(var(--vxe-font-size-mini));
   font-family: emoji;
