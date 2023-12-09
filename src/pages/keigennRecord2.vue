@@ -580,14 +580,14 @@ const formatTime = (time: number) => {
 };
 
 const actionOptions = computed(() => {
-  const result = new Set(data.value[0].table.map((v) => (userOptions.actionCN ? v.actionCN : v.action)));
+  const result = new Set(data.value[select.value].table.map((v) => (userOptions.actionCN ? v.actionCN : v.action)));
   return Array.from(result).map((v) => ({ label: v, value: v }));
 });
 
 const targetOptions = computed(() => {
   const targetToJob: Record<string, string> = {};
   const result = new Set(
-    data.value[0].table
+    data.value[select.value].table
       .slice()
       .sort((a, b) => Util.enumSortMethod(a.jobEnum, b.jobEnum))
       .map((item) => {
@@ -627,7 +627,7 @@ const autoScroll = () => {
   if (!userOptions.pushMode) {
     return;
   }
-  if (!minimize.value && allowAutoScroll.value && Date.now() - lastPush < 1000 && Date.now() - lastScroll > 100) {
+  if (allowAutoScroll.value && Date.now() - lastPush < 2000 && Date.now() - lastScroll > 100) {
     scroll();
   }
   requestAnimationFrame(() => {
@@ -873,7 +873,7 @@ const clickMinimize = () => {
   minimize.value = !minimize.value;
   if (minimize.value === false && userOptions.pushMode) {
     lastPush = Date.now();
-    scroll();
+    requestAnimationFrame(() => scroll());
   }
 };
 
@@ -1159,7 +1159,7 @@ main {
 }
 .status {
   position: relative;
-  top: -0.3em;
+  top: -0.4em;
   object-fit: cover;
 }
 .statusIcon {
@@ -1170,11 +1170,14 @@ main {
 .status::before {
   content: attr(data-duration);
   // vertical-align: bottom;
+  height: 1em;
+  line-height: 1em;
   z-index: 1;
   position: absolute;
   text-align: center;
   left: 50%;
-  transform: translateX(-50%) translateY(1.4em) scale(0.75);
+  bottom: -1em;
+  transform: translateX(-50%) scale(0.75);
   transform-origin: top center;
   font-size: calc(var(--vxe-font-size-mini));
   font-family: emoji;
