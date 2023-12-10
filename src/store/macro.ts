@@ -26,6 +26,8 @@ export const useMacroStore = defineStore("macro", {
         { text: "P10S", value: "1150" },
         { text: "P11S", value: "1152" },
         { text: "P12S", value: "1154" },
+        { text: "异闻六根山", value: "1155" },
+        { text: "零式六根山", value: "1156" },
       ],
       // gameExists: useStorage("my-game-exists", false),
       show,

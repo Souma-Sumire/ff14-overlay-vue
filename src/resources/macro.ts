@@ -7823,12 +7823,12 @@ const fastPP = (jsonstr: string): void => {
   const d = JSON.parse(jsonstr) as Partial<PPJSON>;
   if (!d.MapID) throw new Error("PPJSON 不存在 MapID");
   const nullMark = { X: 0, Y: 0, Z: 0, Active: false };
-  const zondId = getTerritoryTypeByMapID(d.MapID);
-  if (zondId === 0) {
-    console.error(d.MapID, "无法获取地图ID", zondId);
+  const zoneId = getTerritoryTypeByMapID(d.MapID);
+  if (zoneId === 0) {
+    console.error(d.MapID, "无法获取地图ID", zoneId);
     return;
   }
-  defaultMacro.zoneId[zondId].push({
+  (defaultMacro.zoneId[zoneId] ??= []).push({
     Name: d.Name ?? "Imported",
     Type: "place",
     Place: {
@@ -7872,8 +7872,39 @@ fastPP(`{"Name":"极高贝扎安全角树歌(不确定再看看)${getSource(
   `https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86`,
 )}","MapID":950,"A":{"X":100.0,"Y":0.03,"Z":86.0,"ID":0,"Active":true},"B":{"X":114.0,"Y":0.03,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.03,"Z":114.0,"ID":2,"Active":true},"D":{"X":86.0,"Y":0.03,"Z":100.0,"ID":3,"Active":true},"One":{"X":103.9,"Y":0.03,"Z":96.1,"ID":4,"Active":true},"Two":{"X":103.9,"Y":0.03,"Z":103.9,"ID":5,"Active":true},"Three":{"X":96.1,"Y":0.03,"Z":103.9,"ID":6,"Active":true},"Four":{"X":96.1,"Y":0.03,"Z":96.1,"ID":7,"Active":true}}
 `);
-fastPP(`{"Name":"极泽罗姆斯 日基","MapID":965,"A":{"X":92.09,"Z":81.31,"Y":0,"Active":true},"B":{"X":107.91,"Z":81.28,"Y":0,"Active":true},"C":{"X":100.05,"Z":99.98,"Y":0,"Active":true},"D":{"X":0,"Z":0,"Y":0,"Active":false},"One":{"X":81.12,"Z":81.11,"Y":0,"Active":true},"Two":{"X":118.9,"Z":81.1,"Y":0,"Active":true},"Three":{"X":118.85,"Z":92.09,"Y":0,"Active":true},"Four":{"X":81.01,"Z":92.1,"Y":0,"Active":true}}
-`);
+fastPP(
+  `{"Name":"极泽罗姆斯 日基","MapID":965,"A":{"X":92.09,"Z":81.31,"Y":0,"Active":true},"B":{"X":107.91,"Z":81.28,"Y":0,"Active":true},"C":{"X":100.05,"Z":99.98,"Y":0,"Active":true},"D":{"X":0,"Z":0,"Y":0,"Active":false},"One":{"X":81.12,"Z":81.11,"Y":0,"Active":true},"Two":{"X":118.9,"Z":81.1,"Y":0,"Active":true},"Three":{"X":118.85,"Z":92.09,"Y":0,"Active":true},"Four":{"X":81.01,"Z":92.1,"Y":0,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"BOSS1${getSource(
+    "https://www.bilibili.com/read/cv28235466/",
+  )}","MapID":946,"A":{"X":-0.282,"Y":0.0,"Z":-113.311,"ID":0,"Active":true},"B":{"X":15.779,"Y":0.0,"Z":-99.813,"ID":1,"Active":true},"C":{"X":-0.517,"Y":0.0,"Z":-85.961,"ID":2,"Active":true},"D":{"X":-15.289,"Y":0.0,"Z":-100.051,"ID":3,"Active":true},"One":{"X":8.199,"Y":0.0,"Z":-106.268,"ID":4,"Active":true},"Two":{"X":7.64,"Y":0.0,"Z":-93.008,"ID":5,"Active":true},"Three":{"X":-7.993,"Y":0.0,"Z":-93.792,"ID":6,"Active":true},"Four":{"X":-7.938,"Y":0.0,"Z":-106.316,"ID":7,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"BOSS2（spell式麻将）${getSource(
+    "https://www.bilibili.com/read/cv28235466/",
+  )}","MapID":946,"A":{"X":300.033,"Y":7.0,"Z":-132.846,"ID":0,"Active":true},"B":{"X":312.372,"Y":7.0,"Z":-120.148,"ID":1,"Active":true},"C":{"X":300.04,"Y":7.0,"Z":-105.134,"ID":2,"Active":true},"D":{"X":287.503,"Y":7.0,"Z":-120.045,"ID":3,"Active":true},"One":{"X":307.58,"Y":7.0,"Z":-108.437,"ID":4,"Active":true},"Two":{"X":292.741,"Y":7.0,"Z":-108.599,"ID":5,"Active":true},"Three":{"X":318.81,"Y":7.0,"Z":-108.372,"ID":6,"Active":true},"Four":{"X":281.45,"Y":7.0,"Z":-108.488,"ID":7,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"BOSS3${getSource(
+    "https://www.bilibili.com/read/cv28235466/",
+  )}","MapID":946,"A":{"X":-199.954,"Y":-195.0,"Z":-11.785,"ID":0,"Active":true},"B":{"X":-187.473,"Y":-195.0,"Z":-0.102,"ID":1,"Active":true},"C":{"X":-199.985,"Y":-195.0,"Z":11.857,"ID":2,"Active":true},"D":{"X":-212.558,"Y":-195.0,"Z":-0.023,"ID":3,"Active":true},"One":{"X":-194.177,"Y":-195.0,"Z":3.905,"ID":4,"Active":true},"Two":{"X":-205.843,"Y":-195.0,"Z":3.943,"ID":5,"Active":true},"Three":{"X":-194.272,"Y":-195.0,"Z":-3.841,"ID":6,"Active":true},"Four":{"X":-205.776,"Y":-195.0,"Z":-3.99,"ID":7,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"BOSS1${getSource(
+    "https://www.bilibili.com/read/cv28235466/",
+  )}","MapID":947,"A":{"X":-0.282,"Y":0.0,"Z":-113.311,"ID":0,"Active":true},"B":{"X":15.779,"Y":0.0,"Z":-99.813,"ID":1,"Active":true},"C":{"X":-0.517,"Y":0.0,"Z":-85.961,"ID":2,"Active":true},"D":{"X":-15.289,"Y":0.0,"Z":-100.051,"ID":3,"Active":true},"One":{"X":8.199,"Y":0.0,"Z":-106.268,"ID":4,"Active":true},"Two":{"X":7.64,"Y":0.0,"Z":-93.008,"ID":5,"Active":true},"Three":{"X":-7.993,"Y":0.0,"Z":-93.792,"ID":6,"Active":true},"Four":{"X":-7.938,"Y":0.0,"Z":-106.316,"ID":7,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"BOSS2（spell式麻将）${getSource(
+    "https://www.bilibili.com/read/cv28235466/",
+  )}","MapID":947,"A":{"X":300.033,"Y":7.0,"Z":-132.846,"ID":0,"Active":true},"B":{"X":312.372,"Y":7.0,"Z":-120.148,"ID":1,"Active":true},"C":{"X":300.04,"Y":7.0,"Z":-105.134,"ID":2,"Active":true},"D":{"X":287.503,"Y":7.0,"Z":-120.045,"ID":3,"Active":true},"One":{"X":307.58,"Y":7.0,"Z":-108.437,"ID":4,"Active":true},"Two":{"X":292.741,"Y":7.0,"Z":-108.599,"ID":5,"Active":true},"Three":{"X":318.81,"Y":7.0,"Z":-108.372,"ID":6,"Active":true},"Four":{"X":281.45,"Y":7.0,"Z":-108.488,"ID":7,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"BOSS3${getSource(
+    "https://www.bilibili.com/read/cv28235466/",
+  )}","MapID":947,"A":{"X":-199.954,"Y":-195.0,"Z":-11.785,"ID":0,"Active":true},"B":{"X":-187.473,"Y":-195.0,"Z":-0.102,"ID":1,"Active":true},"C":{"X":-199.985,"Y":-195.0,"Z":11.857,"ID":2,"Active":true},"D":{"X":-212.558,"Y":-195.0,"Z":-0.023,"ID":3,"Active":true},"One":{"X":-194.177,"Y":-195.0,"Z":3.905,"ID":4,"Active":true},"Two":{"X":-205.843,"Y":-195.0,"Z":3.943,"ID":5,"Active":true},"Three":{"X":-194.272,"Y":-195.0,"Z":-3.841,"ID":6,"Active":true},"Four":{"X":-205.776,"Y":-195.0,"Z":-3.99,"ID":7,"Active":true}}`,
+);
 
 // function fastPush(zoneName: string, data: PPJSON | string, coverTitle?: string): void {
 //   const mapID = getZoneIDByZoneName(zoneName);
