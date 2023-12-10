@@ -4499,7 +4499,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Deletability: false,
       },
       {
-        Name: "陨石逃课宏 需要连打+锁60帧  <a href='https://docs.qq.com/doc/DSkpLTVNTT2doT2Rz' target='_blank'>出处</a>",
+        Name: "陨石逃课宏 需要连打+锁60帧  <a href='https://docs.qq.com/doc/DSkpLTVNTT2doT2Rz' target='_blank'>来源</a>",
         Type: "macro",
         Text: "/mlock\n/merror off\n/automove on <wait.1>\n/automove off\n/echo\n/echo\n/echo\n/echo\n/echo\n/echo\n/echo\n/echo\n/echo\n/echo\n/echo\n",
         Deletability: false,
@@ -4590,7 +4590,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Deletability: false,
       },
       {
-        Name: "P2 @竹取辉夜姬  <a href='https://nga.178.com/read.php?tid=31807681' target='_blank'>出处</a>",
+        Name: "P2 @竹取辉夜姬  <a href='https://nga.178.com/read.php?tid=31807681' target='_blank'>来源</a>",
         Type: "place",
         Place: {
           A: {
@@ -4759,13 +4759,13 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     "998": [
       {
-        Name: "子言评论区 @辅助不萌 <a href='https://www.bilibili.com/video/BV1PU4y1e72C/?vd_source=583984e97858d637c7db9eb92b042c91' target='_blank'>出处</a>",
+        Name: "子言评论区 @辅助不萌 <a href='https://www.bilibili.com/video/BV1PU4y1e72C/?vd_source=583984e97858d637c7db9eb92b042c91' target='_blank'>来源</a>",
         Type: "macro",
         Text: "/p 分摊站位\n/p MT H1 D1 D2左上\n/p ST  H2 D3 D4 右下\n/p 踩塔站位\n/p  MT   D1\n/p  ST    D2\n/p  H1   D3 \n/p  H2   D4\n/p 三连点名基础分散站位\n/p D1 MT D2\n/p H1  ○  ST　\n/p D3  H2 D4\n/p 三连点名最终站位\n/p          核爆t\n/p 大圈    ○   核爆d\n/p          核爆n",
         Deletability: false,
       },
       {
-        Name: "斜点角尖击退点 @竹取辉夜姬 <a href='https://nga.178.com/read.php?tid=33015568' target='_blank'>出处</a>",
+        Name: "斜点角尖击退点 @竹取辉夜姬 <a href='https://nga.178.com/read.php?tid=33015568' target='_blank'>来源</a>",
         Type: "place",
         Place: {
           A: {
@@ -5568,7 +5568,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     "1072": [
       {
-        Name: "宏 <a href='https://nga.178.com/read.php?tid=34756217' target='_blank'>出处</a>",
+        Name: "宏 <a href='https://nga.178.com/read.php?tid=34756217' target='_blank'>来源</a>",
         Type: "macro",
         Text: "/p 【散开基准】咒发突袭：BOSS面向基准　其它：北（A）基准\n/p 【基本散开】 【十字分摊】\n/p D3 MT D4　　　MTD3\n/p H1　　H2　 H1D1　 H2D4\n/p D1 ST D2　 　　 STD2\n/p 【咒法突袭（分摊/分散）】\n/p D3H1D1MT←▲→STD2H2D4　※分散：T原地不动,D1D2在扇形结束后往内侧走\n/p 【距离衰减+分摊】【PS连线：TH固定法】\n/p 　　MT　　ST　　　　　　   MT(A)\n/p 　　　　◎ 　 　 　　　H1(D)  DPS  H2(B)\n/p 　　　分摊　　　　　　　　　ST(C)  ※T分摊死刑点名T无敌单吃\n/p 【咒发拘束1】①③标记处分摊\n/p 【咒发拘束2/PS连线】DPS：顺时针（左）　TH：逆时针（右）\n/p 【4连黄圈】C点集合，顺时针放圈\n/p 【PS连线2分摊】对组分摊：全员靠近后和邻组分摊  邻组分摊：无点名找点名分摊",
         Deletability: false,
@@ -6315,7 +6315,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     "1084": [
       {
-        Name: "P6S 千星流月夜（推荐） <a href='https://www.bilibili.com/video/BV1RG4y1u78L' target='_blank'>出处</a>",
+        Name: "P6S 千星流月夜（推荐） <a href='https://www.bilibili.com/video/BV1RG4y1u78L' target='_blank'>来源</a>",
         Type: "macro",
         Text: "/p ※MT组：MTH1D1D3　ST组：STH2D2D4\n/p 　【基本散开】　　【恶病质】\n/p MT/D3　ST/D4　　　　20　20\n/p 　　　★　　　　　　8　★　8\n/p H1/D1　H2/D2　　　12　　　12\n/p 　　　　　　　　　　16　　16\n/p 【分摊分组】　　　　｜【苦痛爆发+寄生之舞】\n/p 西：MT组 东：ST組　｜DPS分摊：场地4点 TN分摊：场地3点\n/p ※顺时针移动处理分摊｜DPS大圈：D1→B D2→4 D3→右下 D4→D\n/p 【致病胞流】　　　　｜TN 大圈：MT→3 ST→D H1→左上 H2→B\n/p 奇数：场地1点　　　 ｜【苦痛爆发+界外劈砍】\n/p 偶数：场地2点　　 　｜DPS分摊：场地4点 TN分摊：场地3点\n/p 　　　　　　　　　　｜DPS大圈：B /TN大圈：D\n/p 【恶病质+多元以太】\n/p 安全格中上半两格→AoE　下半两格→分摊\n",
         Deletability: false,
@@ -7185,7 +7185,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     "1122": [
       {
-        Name: "绝欧米茄八方标准点4A1 <a href='https://nga.178.com/read.php?tid=35178002' target='_blank'>出处</a>",
+        Name: "绝欧米茄八方标准点4A1 <a href='https://nga.178.com/read.php?tid=35178002' target='_blank'>来源</a>",
         Type: "place",
         Place: {
           A: {
@@ -7816,8 +7816,8 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
   },
 };
 export { defaultMacro };
-function getSource(href: string): string {
-  return `<a href='${href}'target='_blank'>出处</a>`;
+function getSource(href: string, title: string = ""): string {
+  return `<a href='${href}'target='_blank'>来源${title}</a>`;
 }
 const fastPP = (jsonstr: string): void => {
   const d = JSON.parse(jsonstr) as Partial<PPJSON>;
@@ -7876,33 +7876,101 @@ fastPP(
   `{"Name":"极泽罗姆斯 日基","MapID":965,"A":{"X":92.09,"Z":81.31,"Y":0,"Active":true},"B":{"X":107.91,"Z":81.28,"Y":0,"Active":true},"C":{"X":100.05,"Z":99.98,"Y":0,"Active":true},"D":{"X":0,"Z":0,"Y":0,"Active":false},"One":{"X":81.12,"Z":81.11,"Y":0,"Active":true},"Two":{"X":118.9,"Z":81.1,"Y":0,"Active":true},"Three":{"X":118.85,"Z":92.09,"Y":0,"Active":true},"Four":{"X":81.01,"Z":92.1,"Y":0,"Active":true}}`,
 );
 fastPP(
-  `{"Name":"BOSS1${getSource(
+  `{"Name":"Enrance Mob ${getSource(
+    "https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs",
+    "树嘎",
+  )}","MapID":946,"A":{"X":-11.747,"Y":0.0,"Z":-9.764,"ID":0,"Active":true},"B":{"X":-16.405,"Y":0.0,"Z":8.963,"ID":1,"Active":true},"C":{"X":-12.119,"Y":0.0,"Z":1.613,"ID":2,"Active":true},"D":{"X":0.0,"Y":0.0,"Z":0.0,"ID":3,"Active":false},"One":{"X":-0.009,"Y":0.0,"Z":19.405,"ID":4,"Active":true},"Two":{"X":0.0,"Y":0.0,"Z":0.0,"ID":5,"Active":false},"Three":{"X":0.0,"Y":0.0,"Z":0.0,"ID":6,"Active":false},"Four":{"X":0.0,"Y":0.0,"Z":0.0,"ID":7,"Active":false}}`,
+);
+fastPP(
+  `{"Name":"Boss 1 ${getSource(
+    "https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs",
+    "树嘎",
+  )}","MapID":946,"A":{"X":0.0,"Y":0.0,"Z":-117.0,"ID":0,"Active":true},"B":{"X":17.0,"Y":0.0,"Z":-100.0,"ID":1,"Active":true},"C":{"X":0.0,"Y":0.0,"Z":-83.0,"ID":2,"Active":true},"D":{"X":-17.0,"Y":0.0,"Z":-100.0,"ID":3,"Active":true},"One":{"X":7.199,"Y":0.0,"Z":-108.4,"ID":4,"Active":true},"Two":{"X":7.199,"Y":0.0,"Z":-91.599,"ID":5,"Active":true},"Three":{"X":-7.199,"Y":0.0,"Z":-91.599,"ID":6,"Active":true},"Four":{"X":-7.199,"Y":0.0,"Z":-108.4,"ID":7,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"Middle Mob ${getSource(
+    "https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs",
+    "树嘎",
+  )}","MapID":946,"A":{"X":0.0,"Y":0.0,"Z":0.0,"ID":0,"Active":false},"B":{"X":0.0,"Y":0.0,"Z":0.0,"ID":1,"Active":false},"C":{"X":0.0,"Y":0.0,"Z":0.0,"ID":2,"Active":false},"D":{"X":0.0,"Y":0.0,"Z":0.0,"ID":3,"Active":false},"One":{"X":285.028,"Y":0.0,"Z":36.561,"ID":4,"Active":true},"Two":{"X":281.299,"Y":0.0,"Z":20.222,"ID":5,"Active":true},"Three":{"X":294.197,"Y":0.0,"Z":-1.702,"ID":6,"Active":true},"Four":{"X":309.982,"Y":0.0,"Z":-31.385,"ID":7,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"Boss 2 ${getSource(
+    "https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs",
+    "树嘎",
+  )}","MapID":946,"A":{"X":300.0,"Y":7.0,"Z":-139.5,"ID":0,"Active":true},"B":{"X":318.5,"Y":7.0,"Z":-120.0,"ID":1,"Active":true},"C":{"X":300.0,"Y":7.0,"Z":-101.5,"ID":2,"Active":true},"D":{"X":281.5,"Y":7.0,"Z":-120.0,"ID":3,"Active":true},"One":{"X":300.0,"Y":7.0,"Z":-117.5,"ID":4,"Active":true},"Two":{"X":281.5,"Y":7.0,"Z":-139.0,"ID":5,"Active":true},"Three":{"X":318.5,"Y":7.0,"Z":-139.0,"ID":6,"Active":true},"Four":{"X":281.5,"Y":7.0,"Z":-101.5,"ID":7,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"Boss 3 ${getSource(
+    "https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs",
+    "树嘎",
+  )}","MapID":946,"A":{"X":-200.0,"Y":-195.0,"Z":-13.199,"ID":0,"Active":true},"B":{"X":-186.199,"Y":-195.0,"Z":0.0,"ID":1,"Active":true},"C":{"X":-200.0,"Y":-195.0,"Z":13.199,"ID":2,"Active":true},"D":{"X":-213.8,"Y":-195.0,"Z":0.0,"ID":3,"Active":true},"One":{"X":-188.58,"Y":-195.0,"Z":-13.199,"ID":4,"Active":true},"Two":{"X":-188.58,"Y":-195.0,"Z":13.0,"ID":5,"Active":true},"Three":{"X":-211.419,"Y":-195.0,"Z":13.199,"ID":6,"Active":true},"Four":{"X":-211.419,"Y":-195.0,"Z":-13.0,"ID":7,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"Enrance Mob ${getSource(
+    "https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs",
+    "树嘎",
+  )}","MapID":947,"A":{"X":-11.747,"Y":0.0,"Z":-9.764,"ID":0,"Active":true},"B":{"X":-16.405,"Y":0.0,"Z":8.963,"ID":1,"Active":true},"C":{"X":-12.119,"Y":0.0,"Z":1.613,"ID":2,"Active":true},"D":{"X":0.0,"Y":0.0,"Z":0.0,"ID":3,"Active":false},"One":{"X":-0.009,"Y":0.0,"Z":19.405,"ID":4,"Active":true},"Two":{"X":0.0,"Y":0.0,"Z":0.0,"ID":5,"Active":false},"Three":{"X":0.0,"Y":0.0,"Z":0.0,"ID":6,"Active":false},"Four":{"X":0.0,"Y":0.0,"Z":0.0,"ID":7,"Active":false}}`,
+);
+fastPP(
+  `{"Name":"Boss 1 ${getSource(
+    "https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs",
+    "树嘎",
+  )}","MapID":947,"A":{"X":0.0,"Y":0.0,"Z":-117.0,"ID":0,"Active":true},"B":{"X":17.0,"Y":0.0,"Z":-100.0,"ID":1,"Active":true},"C":{"X":0.0,"Y":0.0,"Z":-83.0,"ID":2,"Active":true},"D":{"X":-17.0,"Y":0.0,"Z":-100.0,"ID":3,"Active":true},"One":{"X":7.199,"Y":0.0,"Z":-108.4,"ID":4,"Active":true},"Two":{"X":7.199,"Y":0.0,"Z":-91.599,"ID":5,"Active":true},"Three":{"X":-7.199,"Y":0.0,"Z":-91.599,"ID":6,"Active":true},"Four":{"X":-7.199,"Y":0.0,"Z":-108.4,"ID":7,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"Middle Mob ${getSource(
+    "https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs",
+    "树嘎",
+  )}","MapID":947,"A":{"X":0.0,"Y":0.0,"Z":0.0,"ID":0,"Active":false},"B":{"X":0.0,"Y":0.0,"Z":0.0,"ID":1,"Active":false},"C":{"X":0.0,"Y":0.0,"Z":0.0,"ID":2,"Active":false},"D":{"X":0.0,"Y":0.0,"Z":0.0,"ID":3,"Active":false},"One":{"X":285.028,"Y":0.0,"Z":36.561,"ID":4,"Active":true},"Two":{"X":281.299,"Y":0.0,"Z":20.222,"ID":5,"Active":true},"Three":{"X":294.197,"Y":0.0,"Z":-1.702,"ID":6,"Active":true},"Four":{"X":309.982,"Y":0.0,"Z":-31.385,"ID":7,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"Boss 2 ${getSource(
+    "https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs",
+    "树嘎",
+  )}","MapID":947,"A":{"X":300.0,"Y":7.0,"Z":-139.5,"ID":0,"Active":true},"B":{"X":318.5,"Y":7.0,"Z":-120.0,"ID":1,"Active":true},"C":{"X":300.0,"Y":7.0,"Z":-101.5,"ID":2,"Active":true},"D":{"X":281.5,"Y":7.0,"Z":-120.0,"ID":3,"Active":true},"One":{"X":300.0,"Y":7.0,"Z":-117.5,"ID":4,"Active":true},"Two":{"X":281.5,"Y":7.0,"Z":-139.0,"ID":5,"Active":true},"Three":{"X":318.5,"Y":7.0,"Z":-139.0,"ID":6,"Active":true},"Four":{"X":281.5,"Y":7.0,"Z":-101.5,"ID":7,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"Boss 3 ${getSource(
+    "https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs",
+    "树嘎",
+  )}","MapID":947,"A":{"X":-200.0,"Y":-195.0,"Z":-13.199,"ID":0,"Active":true},"B":{"X":-186.199,"Y":-195.0,"Z":0.0,"ID":1,"Active":true},"C":{"X":-200.0,"Y":-195.0,"Z":13.199,"ID":2,"Active":true},"D":{"X":-213.8,"Y":-195.0,"Z":0.0,"ID":3,"Active":true},"One":{"X":-188.58,"Y":-195.0,"Z":-13.199,"ID":4,"Active":true},"Two":{"X":-188.58,"Y":-195.0,"Z":13.0,"ID":5,"Active":true},"Three":{"X":-211.419,"Y":-195.0,"Z":13.199,"ID":6,"Active":true},"Four":{"X":-211.419,"Y":-195.0,"Z":-13.0,"ID":7,"Active":true}}`,
+);
+
+fastPP(
+  `{"Name":"BOSS1 ${getSource(
     "https://www.bilibili.com/read/cv28235466/",
+    "MMW",
   )}","MapID":946,"A":{"X":-0.282,"Y":0.0,"Z":-113.311,"ID":0,"Active":true},"B":{"X":15.779,"Y":0.0,"Z":-99.813,"ID":1,"Active":true},"C":{"X":-0.517,"Y":0.0,"Z":-85.961,"ID":2,"Active":true},"D":{"X":-15.289,"Y":0.0,"Z":-100.051,"ID":3,"Active":true},"One":{"X":8.199,"Y":0.0,"Z":-106.268,"ID":4,"Active":true},"Two":{"X":7.64,"Y":0.0,"Z":-93.008,"ID":5,"Active":true},"Three":{"X":-7.993,"Y":0.0,"Z":-93.792,"ID":6,"Active":true},"Four":{"X":-7.938,"Y":0.0,"Z":-106.316,"ID":7,"Active":true}}`,
 );
 fastPP(
-  `{"Name":"BOSS2（spell式麻将）${getSource(
+  `{"Name":"BOSS2（spell式麻将） ${getSource(
     "https://www.bilibili.com/read/cv28235466/",
+    "MMW",
   )}","MapID":946,"A":{"X":300.033,"Y":7.0,"Z":-132.846,"ID":0,"Active":true},"B":{"X":312.372,"Y":7.0,"Z":-120.148,"ID":1,"Active":true},"C":{"X":300.04,"Y":7.0,"Z":-105.134,"ID":2,"Active":true},"D":{"X":287.503,"Y":7.0,"Z":-120.045,"ID":3,"Active":true},"One":{"X":307.58,"Y":7.0,"Z":-108.437,"ID":4,"Active":true},"Two":{"X":292.741,"Y":7.0,"Z":-108.599,"ID":5,"Active":true},"Three":{"X":318.81,"Y":7.0,"Z":-108.372,"ID":6,"Active":true},"Four":{"X":281.45,"Y":7.0,"Z":-108.488,"ID":7,"Active":true}}`,
 );
 fastPP(
-  `{"Name":"BOSS3${getSource(
+  `{"Name":"BOSS3 ${getSource(
     "https://www.bilibili.com/read/cv28235466/",
+    "MMW",
   )}","MapID":946,"A":{"X":-199.954,"Y":-195.0,"Z":-11.785,"ID":0,"Active":true},"B":{"X":-187.473,"Y":-195.0,"Z":-0.102,"ID":1,"Active":true},"C":{"X":-199.985,"Y":-195.0,"Z":11.857,"ID":2,"Active":true},"D":{"X":-212.558,"Y":-195.0,"Z":-0.023,"ID":3,"Active":true},"One":{"X":-194.177,"Y":-195.0,"Z":3.905,"ID":4,"Active":true},"Two":{"X":-205.843,"Y":-195.0,"Z":3.943,"ID":5,"Active":true},"Three":{"X":-194.272,"Y":-195.0,"Z":-3.841,"ID":6,"Active":true},"Four":{"X":-205.776,"Y":-195.0,"Z":-3.99,"ID":7,"Active":true}}`,
 );
+
 fastPP(
-  `{"Name":"BOSS1${getSource(
+  `{"Name":"BOSS1 ${getSource(
     "https://www.bilibili.com/read/cv28235466/",
+    "MMW",
   )}","MapID":947,"A":{"X":-0.282,"Y":0.0,"Z":-113.311,"ID":0,"Active":true},"B":{"X":15.779,"Y":0.0,"Z":-99.813,"ID":1,"Active":true},"C":{"X":-0.517,"Y":0.0,"Z":-85.961,"ID":2,"Active":true},"D":{"X":-15.289,"Y":0.0,"Z":-100.051,"ID":3,"Active":true},"One":{"X":8.199,"Y":0.0,"Z":-106.268,"ID":4,"Active":true},"Two":{"X":7.64,"Y":0.0,"Z":-93.008,"ID":5,"Active":true},"Three":{"X":-7.993,"Y":0.0,"Z":-93.792,"ID":6,"Active":true},"Four":{"X":-7.938,"Y":0.0,"Z":-106.316,"ID":7,"Active":true}}`,
 );
 fastPP(
-  `{"Name":"BOSS2（spell式麻将）${getSource(
+  `{"Name":"BOSS2（spell式麻将） ${getSource(
     "https://www.bilibili.com/read/cv28235466/",
+    "MMW",
   )}","MapID":947,"A":{"X":300.033,"Y":7.0,"Z":-132.846,"ID":0,"Active":true},"B":{"X":312.372,"Y":7.0,"Z":-120.148,"ID":1,"Active":true},"C":{"X":300.04,"Y":7.0,"Z":-105.134,"ID":2,"Active":true},"D":{"X":287.503,"Y":7.0,"Z":-120.045,"ID":3,"Active":true},"One":{"X":307.58,"Y":7.0,"Z":-108.437,"ID":4,"Active":true},"Two":{"X":292.741,"Y":7.0,"Z":-108.599,"ID":5,"Active":true},"Three":{"X":318.81,"Y":7.0,"Z":-108.372,"ID":6,"Active":true},"Four":{"X":281.45,"Y":7.0,"Z":-108.488,"ID":7,"Active":true}}`,
 );
 fastPP(
-  `{"Name":"BOSS3${getSource(
+  `{"Name":"BOSS3 ${getSource(
     "https://www.bilibili.com/read/cv28235466/",
+    "MMW",
   )}","MapID":947,"A":{"X":-199.954,"Y":-195.0,"Z":-11.785,"ID":0,"Active":true},"B":{"X":-187.473,"Y":-195.0,"Z":-0.102,"ID":1,"Active":true},"C":{"X":-199.985,"Y":-195.0,"Z":11.857,"ID":2,"Active":true},"D":{"X":-212.558,"Y":-195.0,"Z":-0.023,"ID":3,"Active":true},"One":{"X":-194.177,"Y":-195.0,"Z":3.905,"ID":4,"Active":true},"Two":{"X":-205.843,"Y":-195.0,"Z":3.943,"ID":5,"Active":true},"Three":{"X":-194.272,"Y":-195.0,"Z":-3.841,"ID":6,"Active":true},"Four":{"X":-205.776,"Y":-195.0,"Z":-3.99,"ID":7,"Active":true}}`,
 );
 
