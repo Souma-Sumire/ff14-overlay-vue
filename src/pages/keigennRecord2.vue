@@ -170,7 +170,7 @@ const userOptions = {
   replaceWithYou: parseParams(params.replaceWithYou as string, false), // 目标是玩家本人替换为YOU
   parseAA: parseParams(params.parseAA as string, true), // 解析自动攻击（旧结果不会跟随改变）
   parseDoT: parseParams(params.parseDoT as string, false), // 解析DoT（旧结果不会跟随改变）
-  pushMode: parseParams(params.pushMode as string, true), // 底部开始添加并自动向下滚动（低性能）
+  // pushMode: parseParams(params.pushMode as string, true), // 底部开始添加并自动向下滚动（低性能）
   minimize: parseParams(params.minimize as string, false), // 启动时迷你化
   actionCN: parseParams(params.actionCN as string, true), // action显示中文化
   statusCN: parseParams(params.statusCN as string, true), // status显示中文化
@@ -204,15 +204,15 @@ const maxStorage = {
   localStorage: 3,
 };
 
-let lastPush: number = Date.now();
-let lastScroll: number = 0;
+// let lastPush: number = Date.now();
+// let lastScroll: number = 0;
 
 interface PlayerSP extends Player {
   timestamp: number;
 }
 
 const xTable = ref<VxeTableInstance>();
-const allowAutoScroll = ref(true);
+// const allowAutoScroll = ref(true);
 const povName = useStorage("keigenn-record-2-pov-name", "");
 const povId = useStorage("keigenn-record-2-pov-id", "");
 const partyLogList = useStorage("keigenn-record-2-party-list", [] as string[]);
@@ -495,7 +495,7 @@ const handleLine = (line: string) => {
                   .concat(Object.values(statusData.enemy[source] ?? []))
                   .filter((v) => {
                     const remain = Math.max(0, (v.expirationTimestamp - timestamp) / 1000);
-                    v.remainingDuration = remain >= 999 ? "" : remain.toFixed(remain < 2 ? 1 : 0);
+                    v.remainingDuration = remain >= 999 ? "" : remain.toFixed(remain >= 0.1 && remain < 1 ? 1 : 0);
                     // 有时会有过期很久的遗留的buff?
                     return Number(v.remainingDuration) > -3;
                   }),
@@ -539,12 +539,12 @@ const getJobById = (targetId: string): number => {
 };
 
 const addRow = (row: RowVO) => {
-  if (userOptions.pushMode) {
-    data.value[0].table.push(row);
-    lastPush = Date.now();
-  } else {
-    data.value[0].table.unshift(row);
-  }
+  // if (userOptions.pushMode) {
+  //   data.value[0].table.push(row);
+  //   lastPush = Date.now();
+  // } else {
+  data.value[0].table.unshift(row);
+  // }
 };
 
 const stopCombat = (timeStamp: number) => {
@@ -623,54 +623,54 @@ const handleImgError = (event: Event) => {
   }
 };
 
-const autoScroll = () => {
-  if (!userOptions.pushMode) {
-    return;
-  }
-  if (allowAutoScroll.value && Date.now() - lastPush < 2000 && Date.now() - lastScroll > 100) {
-    scroll();
-  }
-  requestAnimationFrame(() => {
-    autoScroll();
-  });
-};
+// const autoScroll = () => {
+//   if (!userOptions.pushMode) {
+//     return;
+//   }
+//   if (allowAutoScroll.value && Date.now() - lastPush < 2000 && Date.now() - lastScroll > 100) {
+//     scroll();
+//   }
+//   requestAnimationFrame(() => {
+//     autoScroll();
+//   });
+// };
 
-const scroll = () => {
-  xTable.value?.scrollTo(0, Number.MAX_SAFE_INTEGER);
-  lastScroll = Date.now();
-};
+// const scroll = () => {
+//   xTable.value?.scrollTo(0, Number.MAX_SAFE_INTEGER);
+//   lastScroll = Date.now();
+// };
 
-const handleWhell = (event: WheelEvent) => {
-  if (!xTable.value) return;
-  if (select.value !== 0 || event.deltaY < 0) {
-    allowAutoScroll.value = false;
-  } else {
-    const lineHeight = parseInt(style["--vxe-table-row-height-mini"]);
-    const tableData = xTable.value.getData();
-    const lineLength = tableData.length;
-    const scroll = xTable.value.getScroll();
-    const contentHeight = lineHeight * lineLength;
-    const clientHeight = document.body.clientHeight;
-    const selectHeight = parseInt(style["--vxe-input-height-mini"]);
-    const headerHeight = lineHeight;
-    const diff = 100;
-    const isBottom = contentHeight - (scroll.scrollTop + clientHeight) + selectHeight + headerHeight <= diff;
-    allowAutoScroll.value = isBottom;
-  }
-};
+// const handleWhell = (event: WheelEvent) => {
+//   if (!xTable.value) return;
+//   if (select.value !== 0 || event.deltaY < 0) {
+//     allowAutoScroll.value = false;
+//   } else {
+//     const lineHeight = parseInt(style["--vxe-table-row-height-mini"]);
+//     const tableData = xTable.value.getData();
+//     const lineLength = tableData.length;
+//     const scroll = xTable.value.getScroll();
+//     const contentHeight = lineHeight * lineLength;
+//     const clientHeight = document.body.clientHeight;
+//     const selectHeight = parseInt(style["--vxe-input-height-mini"]);
+//     const headerHeight = lineHeight;
+//     const diff = 100;
+//     const isBottom = contentHeight - (scroll.scrollTop + clientHeight) + selectHeight + headerHeight <= diff;
+//     allowAutoScroll.value = isBottom;
+//   }
+// };
 
-watch(
-  () => userOptions.pushMode,
-  () => {
-    if (userOptions.pushMode) {
-      document.addEventListener("wheel", handleWhell);
-      autoScroll();
-    } else {
-      document.removeEventListener("wheel", handleWhell);
-    }
-  },
-  { immediate: true },
-);
+// watch(
+//   () => userOptions.pushMode,
+//   () => {
+//     if (userOptions.pushMode) {
+//       document.addEventListener("wheel", handleWhell);
+//       autoScroll();
+//     } else {
+//       document.removeEventListener("wheel", handleWhell);
+//     }
+//   },
+//   { immediate: true },
+// );
 
 const handleChangePrimaryPlayer = (event: { charID: number; charName: string }): void => {
   povName.value = event.charName;
@@ -871,10 +871,10 @@ watchEffect(() => {
 
 const clickMinimize = () => {
   minimize.value = !minimize.value;
-  if (minimize.value === false && userOptions.pushMode) {
-    lastPush = Date.now();
-    requestAnimationFrame(() => scroll());
-  }
+  // if (minimize.value === false && userOptions.pushMode) {
+  //   lastPush = Date.now();
+  //   requestAnimationFrame(() => scroll());
+  // }
 };
 
 const cellContextMenuEvent: VxeTableEvents.CellMenu<RowVO> = ({ row }) => {
