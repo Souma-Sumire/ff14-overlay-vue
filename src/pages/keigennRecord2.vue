@@ -146,7 +146,14 @@ interface Encounter {
 }
 
 const params = useUrlSearchParams("hash");
-const isDev = params.dev === "1" || (!window.OverlayPluginApi && !params.OVERLAY_WS && !params.HOST_PORT);
+const isDev = ref(params.dev === "1" || (params.dev === undefined && !window.OverlayPluginApi && !params.OVERLAY_WS && !params.HOST_PORT));
+
+if (isDev.value) {
+  // 某些情况下OverlayPluginApi并不会立即被挂在到window上。用户上报，未复现。
+  setTimeout(() => {
+    isDev.value = params.dev === "1" || (params.dev === undefined && !window.OverlayPluginApi && !params.OVERLAY_WS && !params.HOST_PORT);
+  }, 1000);
+}
 
 function parseParams<T>(v: string, def: T): T {
   if (typeof def === "boolean") {
