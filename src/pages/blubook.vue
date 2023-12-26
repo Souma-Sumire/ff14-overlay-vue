@@ -35,7 +35,7 @@
       <div class="actionDetails">
         <div class="Number">{{ aozActionRef[selectIndex].Number }}</div>
         <div class="Name" v-html="highlight(aozActionRef[selectIndex].Name)"></div>
-        <img class="IconHD" :src="`${aozActionRef[selectIndex].Icon}`" @error="handleError($event, selectIndex)" draggable="false" />
+        <img class="IconHD" :src="`${tempIcon ?? aozActionRef[selectIndex].Icon}`" @error="handleError($event, selectIndex)" draggable="false" />
         <div class="Stats" v-html="highlight(aozActionRef[selectIndex].Stats)"></div>
         <div class="Cast100ms"><span style="color: #00c2c2">咏唱时间：</span>{{ aozActionRef[selectIndex].Cast100ms / 10 }}</div>
         <div class="Recast100ms"><span style="color: #00c2c2">复唱时间：</span>{{ aozActionRef[selectIndex].Recast100ms / 10 }}</div>
@@ -58,6 +58,7 @@
 <script setup lang="ts">
 import { completeIcon } from "@/resources/status";
 import { ElMessage, ElMessageBox } from "element-plus";
+import { Ref } from "vue";
 
 type AozAction = {
   ID: number;
@@ -93,6 +94,8 @@ watch(searchStr, () => {
     page.value = 1;
   });
 });
+
+const tempIcon: Ref<string | undefined> = ref(undefined);
 
 // update: Action.csv AozAction.csv AozActionTransient.csv
 
@@ -1874,7 +1877,11 @@ function handleError(e: Event, index: number): void {
 }
 
 function handleActionClick(_e: Event, index: number): void {
+  tempIcon.value = "";
   selectIndex.value = index - 1;
+  nextTick(() => {
+    tempIcon.value = undefined;
+  });
 }
 
 function handlePageSelect(_e: Event, i: number): void {
