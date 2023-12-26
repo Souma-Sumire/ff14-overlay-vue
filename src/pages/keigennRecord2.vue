@@ -502,7 +502,7 @@ const handleLine = (line: string) => {
                   .concat(Object.values(statusData.enemy[source] ?? []))
                   .filter((v) => {
                     const remain = Math.max(0, (v.expirationTimestamp - timestamp) / 1000);
-                    v.remainingDuration = remain >= 999 ? "" : remain.toFixed(remain >= 0.1 && remain < 1 ? 1 : 0);
+                    v.remainingDuration = remain >= 999 ? "" : remain.toFixed(remain > 0.05 && remain < 0.95 ? 1 : 0);
                     // 有时会有过期很久的遗留的buff?
                     return Number(v.remainingDuration) > -3;
                   }),
