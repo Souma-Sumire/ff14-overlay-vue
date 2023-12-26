@@ -1183,8 +1183,8 @@ main {
   position: absolute;
   text-align: center;
   left: 50%;
-  bottom: -1em;
-  transform: translateX(-50%) scale(0.75);
+  bottom: -1.1em;
+  transform: translateX(-50%) scale(0.725);
   transform-origin: top center;
   font-size: calc(var(--vxe-font-size-mini));
   font-family: emoji;
