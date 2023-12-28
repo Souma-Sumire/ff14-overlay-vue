@@ -783,7 +783,6 @@ const isLethal = (row: RowVO): boolean => {
 const KeigennShow = ({ row }: { row: RowVO }) => {
   return (
     <>
-      <span>{isLethal(row) ? "💀致死 " : ""}</span>
       {row.type === "dot"
         ? "（不支持）"
         : row.keigenns.map((keigenn) => {
