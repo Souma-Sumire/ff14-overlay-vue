@@ -61,7 +61,7 @@
             <Target :row="row"></Target>
           </template>
         </vxe-column>
-        <vxe-column :width="config.amount" title="伤害" align="right" header-align="center">
+        <vxe-column :width="config.amount" title="伤害" header-align="center">
           <template #default="{ row }">
             <Amount :row="row"></Amount>
           </template>
@@ -195,8 +195,7 @@ const config = {
   target:
     ((userOptions.showIcon ? 24 : 0) + (userOptions.showName ? (userOptions.anonymous || (!userOptions.anonymous && userOptions.abbrId) ? 24 : 36) : 0) + 7) *
     userOptions.scale,
-  source: 90 * userOptions.scale,
-  amount: 47 * userOptions.scale,
+  amount: 44 * userOptions.scale,
 };
 
 const style = {
@@ -716,7 +715,14 @@ const Target = ({ row }: { row: RowVO }) => {
     <div>
       <span class="target">
         {userOptions.showIcon && (
-          <img class="jobIcon" src={`//cafemaker.wakingsands.com/cj/companion/${row.jobIcon}.png`} alt="" onError={handleImgError} loading="lazy" />
+          <img
+            class="jobIcon"
+            src={`//cafemaker.wakingsands.com/cj/companion/${row.jobIcon}.png`}
+            alt=""
+            data-job={userOptions.showName ? "" : row.job}
+            onError={handleImgError}
+            loading="lazy"
+          />
         )}
         {userOptions.showName && (
           <span
@@ -733,7 +739,13 @@ const Target = ({ row }: { row: RowVO }) => {
 
 const Amount = ({ row }: { row: RowVO }) => {
   const slot = {
-    reference: () => <span class={`damage ${row.type} ${isLethal(row) ? "lethal" : ""} `}>{row.amount.toLocaleString().padStart(3, "　")}</span>,
+    reference: () => (
+      <span class="amount">
+        <span class={`${row.type}`}>
+          <span class={`${isLethal(row) ? "lethal" : ""}`}>{row.amount.toLocaleString().padStart(3, "　")}</span>
+        </span>
+      </span>
+    ),
   };
   return (
     <el-popover
@@ -1041,12 +1053,15 @@ html {
 }
 img[src=""],
 img:not([src]) {
-  opacity: 0;
-  display: none;
+  // opacity: 0;
+  // display: none;
+  &::after {
+    content: attr(data-job);
+  }
 }
 .vxe-cell {
-  padding-left: 3px !important;
-  padding-right: 3px !important;
+  padding-left: 2px !important;
+  padding-right: 2px !important;
   overflow: visible !important;
 }
 .minimize {
@@ -1264,5 +1279,9 @@ main {
 }
 .my-clear-filter {
   font-style: oblique;
+}
+.amount {
+  display: flex;
+  justify-content: flex-end;
 }
 </style>
