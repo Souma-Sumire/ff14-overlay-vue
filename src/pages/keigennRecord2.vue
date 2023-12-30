@@ -36,7 +36,6 @@
         :menu-config="menuConfig"
         @menu-click="contextMenuClickEvent"
       >
-        >
         <vxe-column :width="config.time" field="time" title="时间" align="center" />
         <vxe-column
           :width="config.action"
