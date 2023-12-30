@@ -6,6 +6,9 @@ import limitBreakTip from "@/assets/screenshots/limit-break-tip.gif";
 import dnc from "@/assets/screenshots/dnc.gif";
 import castingToChinese from "@/assets/screenshots/casting-to-chinese.gif";
 import teamWatch from "@/assets/screenshots/team-watch.jpg";
+import timeline from "@/assets/screenshots/timeline.jpg";
+import castingMonitor from "@/assets/screenshots/casting-monitor.jpg";
+import zoneMacro from "@/assets/screenshots/zone-macro.png";
 
 type MenuType = "网页" | "悬浮窗" | "悬浮窗/网页";
 interface Menu {
@@ -62,16 +65,19 @@ const tableData: Menu[] = [
     type: "悬浮窗",
     path: "castingMonitor?duration=25&energySaving=true&displayAA=false&displayGCDSpace=false&api=cafemaker&syncFocusWS=true&showHeader=true",
     comment: "详细说明：\nhttps://nga.178.com/read.php?tid=33989985",
+    src: castingMonitor,
   },
   {
     title: "[悬浮窗] 全副本发宏/标点",
     type: "悬浮窗",
     path: "zoneMacro",
+    src: zoneMacro,
   },
   {
     title: "[悬浮窗] 自定义技能时间轴",
     type: "悬浮窗",
     path: "timeline",
+    src: timeline,
   },
   {
     title: "[悬浮窗] OBS自动录制",
@@ -134,7 +140,7 @@ function handleClick(e: Menu) {
               <a @click="() => handleClick(row)" style="cursor: pointer">{{ row.title }}</a>
             </template>
           </vxe-column>
-          <vxe-column width="300" title="预览">
+          <vxe-column width="420" title="预览">
             <template #default="{ row }">
               <img v-if="row.src" :src="row.src" alt="" />
               <i v-if="!row.src">无</i>
@@ -158,6 +164,6 @@ a:hover {
 }
 img {
   object-fit: cover;
-  max-width: 280px;
+  max-width: 400px;
 }
 </style>
