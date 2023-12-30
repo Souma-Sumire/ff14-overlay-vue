@@ -28,7 +28,7 @@
         :loading="loading"
         :show-header="userOptions.showHeader"
         :data="data[select].table"
-        :row-config="{ isHover: true, height: config.line_height }"
+        :row-config="{ isHover: true, height: size.line_height }"
         :header-cell-style="{
           padding: '0px',
         }"
@@ -36,9 +36,9 @@
         :menu-config="menuConfig"
         @menu-click="contextMenuClickEvent"
       >
-        <vxe-column :width="config.time" field="time" title="时间" align="center" />
+        <vxe-column :width="size.time" field="time" title="时间" align="center" />
         <vxe-column
-          :width="config.action"
+          :width="size.action"
           :field="userOptions.actionCN ? 'actionCN' : 'action'"
           title="技能"
           :filters="actionOptions"
@@ -47,7 +47,7 @@
           align="center"
         />
         <vxe-column
-          :width="config.target"
+          :width="size.target"
           field="target"
           :title="userOptions.showName ? '目标' : '目'"
           :filters="targetOptions"
@@ -60,7 +60,7 @@
             <Target :row="row"></Target>
           </template>
         </vxe-column>
-        <vxe-column :width="config.amount" title="伤害" header-align="center">
+        <vxe-column :width="size.amount" title="伤害" header-align="center">
           <template #default="{ row }">
             <Amount :row="row"></Amount>
           </template>
@@ -187,7 +187,7 @@ const actionKey = computed(() => (userOptions.actionCN ? "actionCN" : "action"))
 const minimize = ref(userOptions.minimize);
 const icon4k = userOptions.scale >= 2 || window.devicePixelRatio >= 2 ? "_hr1" : "";
 
-const config = {
+const size = {
   line_height: 28 * userOptions.scale,
   time: 40 * userOptions.scale,
   action: 65 * userOptions.scale,
