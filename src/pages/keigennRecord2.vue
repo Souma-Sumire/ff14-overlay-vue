@@ -25,6 +25,7 @@
         round
         height="100%"
         :scroll-y="{ enabled: true }"
+        :loading="loading"
         :show-header="userOptions.showHeader"
         :data="data[select].table"
         :row-config="{ isHover: true, height: config.line_height }"
@@ -211,6 +212,8 @@ const maxStorage = {
   localStorage: 3,
 };
 
+const loading = ref(false);
+
 // let lastPush: number = Date.now();
 // let lastScroll: number = 0;
 
@@ -260,6 +263,7 @@ const resetLine = (line: Encounter) => {
 };
 
 const beforeHandle = () => {
+  loading.value = true;
   combatTimeStamp.value = 0;
   select.value = 0;
   data.value.length = 1;
@@ -268,6 +272,7 @@ const beforeHandle = () => {
 
 const afterHandle = () => {
   saveStorage();
+  loading.value = false;
 };
 
 const handleLogLine = (e: { type: string; line: string[]; rawLine: string }) => {
