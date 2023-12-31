@@ -67,7 +67,7 @@
         </vxe-column>
         <vxe-column title="减伤" align="left">
           <template #default="{ row }">
-            <KeigennShow :row="row"></KeigennShow>
+            <StatusShow :row="row"></StatusShow>
           </template>
         </vxe-column>
       </vxe-table>
@@ -285,7 +285,7 @@ const handleLine = (line: string) => {
       const splitLine = line.split("|");
       switch (regexName) {
         case "statusEffectExplicit":
-          if (match.groups!.targetId[0] === "1") {
+          if (match.groups!.targetId.startsWith("1")) {
             shieldData[match.groups!.targetId] = match.groups!.currentShield;
           }
           break;
@@ -333,9 +333,9 @@ const handleLine = (line: string) => {
               fullIcon: keigenn.fullIcon,
               isPov: povId.value === sourceId,
             };
-            if (targetId[0] === "1" && keigenn.isFriendly) {
+            if (targetId.startsWith("1") && keigenn.isFriendly) {
               (statusData.friendly[targetId] ??= {})[effectId] = status;
-            } else if (targetId[0] === "4" && !keigenn.isFriendly) {
+            } else if (targetId.startsWith("4") && !keigenn.isFriendly) {
               (statusData.enemy[target] ??= {})[effectId] = status;
             }
           }
@@ -345,7 +345,7 @@ const handleLine = (line: string) => {
             const target = splitLine[logDefinitions.LosesEffect.fields.target];
             const targetId = splitLine[logDefinitions.LosesEffect.fields.targetId];
             const effectId = splitLine[logDefinitions.LosesEffect.fields.effectId];
-            if (targetId[0] === "1") {
+            if (targetId.startsWith("1")) {
               if (statusData.friendly[targetId]) {
                 Reflect.deleteProperty(statusData.friendly[targetId], effectId);
               }
@@ -419,7 +419,7 @@ const handleLine = (line: string) => {
             const targetId = splitLine[logDefinitions.NetworkDoT.fields.id];
             if (
               which !== "DoT" ||
-              targetId[0] === "4" ||
+              targetId.startsWith("4") ||
               !(targetId === povId.value || partyLogList.value.includes(targetId) || partyEventParty.value.find((v) => v.id === targetId))
             ) {
               return;
@@ -468,7 +468,7 @@ const handleLine = (line: string) => {
             if (ability.isAttack && ability.amount >= 0) {
               const sourceId = splitLine[logDefinitions.Ability.fields.sourceId] ?? "???";
               const targetId = splitLine[logDefinitions.Ability.fields.targetId] ?? "???";
-              if (!(sourceId[0] === "4" && targetId[0] === "1")) {
+              if (!(sourceId.startsWith("4") && targetId.startsWith("1"))) {
                 return;
               }
               if (!(targetId === povId.value || partyLogList.value.includes(targetId) || partyEventParty.value.find((v) => v.id === targetId))) {
@@ -796,7 +796,7 @@ const isLethal = (row: RowVO): boolean => {
   return row.currentHp - row.amount < 0 && !row.keigenns.find((k) => invincibleEffect.includes(k.effectId));
 };
 
-const KeigennShow = ({ row }: { row: RowVO }) => {
+const StatusShow = ({ row }: { row: RowVO }) => {
   return (
     <>
       {row.type === "dot"
