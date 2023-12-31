@@ -712,11 +712,13 @@ const StatusShow = ({ row }: { row: RowVO }) => {
 };
 
 const doCopy = (row: RowVO) => {
-  const { action, actionCN, amount, job, raidbuffs, target, time, type } = row;
+  const { action, actionCN, amount, job, raidbuffs, source, time, type, properties } = row;
   const sp = row.effect === "damage done" ? "" : "," + translationFlags(row.effect);
-  const result = `${time} [${job}]${target} “${action}${actionCN !== action ? "(" + actionCN + ")" : ""}” 造成${amount.toLocaleString()}点${translationFlags(
+  const result = `${time} [${job}]${source}的“${action}${actionCN !== action ? "(" + actionCN + ")" : ""}”造成${amount.toLocaleString()}点${translationFlags(
     type,
-  )}伤害。团辅：${raidbuffs.length === 0 && sp === "" ? "无" : raidbuffs.map((k) => (userOptions.statusCN ? k.name : k.effect)).join(",") + sp}。`;
+  )}${translationFlags(properties)}伤害。团辅：${
+    raidbuffs.length === 0 && sp === "" ? "无" : raidbuffs.map((k) => (userOptions.statusCN ? k.name : k.effect)).join(",") + sp
+  }。`;
   copyText(result);
 };
 
