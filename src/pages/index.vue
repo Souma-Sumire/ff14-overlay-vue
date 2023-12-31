@@ -9,6 +9,7 @@ import teamWatch from "@/assets/screenshots/team-watch.jpg";
 import timeline from "@/assets/screenshots/timeline.jpg";
 import castingMonitor from "@/assets/screenshots/casting-monitor.jpg";
 import zoneMacro from "@/assets/screenshots/zone-macro.png";
+import raidbuffRecord from "@/assets/screenshots/raidbuff-record.png";
 
 type MenuType = "网页" | "悬浮窗" | "悬浮窗/网页";
 interface Menu {
@@ -118,6 +119,13 @@ const tableData: Menu[] = [
     path: "instancedAreaInfo",
     comment: "狩猎用，显示你当前在几线。",
   },
+  {
+    title: "[悬浮窗] 团辅覆盖记录",
+    type: "悬浮窗/网页",
+    path: "raidbuffRecord",
+    comment: "真有用吗？",
+    src: raidbuffRecord,
+  },
 ];
 
 function handleClick(e: Menu) {
@@ -146,7 +154,7 @@ function handleClick(e: Menu) {
               <i v-if="!row.src">无</i>
             </template>
           </vxe-column>
-          <vxe-column field="comment" type="html" title="描述" />
+          <vxe-column field="comment" title="描述" />
         </vxe-table>
       </el-main>
     </el-container>
