@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="tsx">
 import actWS from "@/assets/actWS.png";
 import { Check, Delete, Edit, Position, CopyDocument, ChatDotSquare, ChatSquare } from "@element-plus/icons-vue";
 import { defaultMacro } from "@/resources/macro";
@@ -7,51 +7,14 @@ import { useMacroStore } from "@/store/macro";
 import "github-markdown-css/github-markdown-light.css";
 import README from "@/common/markdown/zoneMacro.md";
 import { ElMessage, ElMessageBox } from "element-plus";
+import { MacroInfoPlace } from "@/types/macro";
 const [help, toggleHelp] = useToggle(false);
 const macroStore = useMacroStore();
 const hideOnStartup = useStorage("zoneMacroHideOnStartup", ref(false));
 if (hideOnStartup.value) macroStore.show = false;
 macroStore.formatAllWaymarkPlaceData();
-{
-  //兼容旧数据的更新策略 日后删除
-  for (const macros in macroStore.data.zoneId) {
-    for (const key in macroStore.data.zoneId[macros]) {
-      const item = macroStore.data.zoneId[macros][key];
-      // @ts-ignore
-      if (item.name) item.Name = item.name;
-      // @ts-ignore
-      if (item.type) item.Type = item.type;
-      // @ts-ignore
-      if (item.text) item.Text = item.text;
-      // @ts-ignore
-      if (item.place) item.Place = item.place;
-      Reflect.deleteProperty(item, "name");
-      Reflect.deleteProperty(item, "type");
-      Reflect.deleteProperty(item, "text");
-      Reflect.deleteProperty(item, "place");
-      if (item.Type === "place") {
-        Reflect.deleteProperty(item.Place, "MapID");
-        Reflect.deleteProperty(item.Place, "Name");
-        if (item.Place instanceof Array) {
-          const res = {
-            A: item.Place.find((v) => v.Mark === "A"),
-            B: item.Place.find((v) => v.Mark === "B"),
-            C: item.Place.find((v) => v.Mark === "C"),
-            D: item.Place.find((v) => v.Mark === "D"),
-            One: item.Place.find((v) => v.Mark === "One"),
-            Two: item.Place.find((v) => v.Mark === "Two"),
-            Three: item.Place.find((v) => v.Mark === "Three"),
-            Four: item.Place.find((v) => v.Mark === "Four"),
-          };
-          // @ts-ignore
-          for (const k in res) Reflect.deleteProperty(res[k], "Mark");
-          item.Place = res;
-        }
-      }
-    }
-  }
-}
-const markMap = {
+
+const markMap: Record<WayMarkKeys, string> = {
   A: "A",
   B: "B",
   C: "C",
@@ -61,6 +24,11 @@ const markMap = {
   Three: "3",
   Four: "4",
 };
+
+// 多变迷宫地图ID
+const specialMap = [1069, 1075, 1076, 1137, 1155, 1156, 1176, 1179, 1180];
+const marks = Object.keys(markMap) as WayMarkKeys[];
+
 const markViewSize = 180;
 const markViewScale = 3;
 const markViewFontSize = 19;
@@ -117,6 +85,44 @@ onBeforeUnmount(() => {
   removeOverlayListener("ChangeZone", macroStore.handleChangeZone);
   removeOverlayListener("LogLine", macroStore.handleLogLine);
 });
+
+function getOffset(v: number, offset: number) {
+  return Math.min(markViewSize, Math.max(0, (v + offset) * markViewScale + markViewSize / 2));
+}
+
+function MarksDiv({ macro }: { macro: MacroInfoPlace }) {
+  const offset = { x: 0, y: 0, active: false };
+  if (specialMap.includes(Number(macroStore.selectZone))) {
+    offset.active = true;
+    const ave = { x: 0, y: 0, count: 0 };
+    for (const key in macro.Place) {
+      const e = macro.Place[key as keyof typeof macro.Place] as WayMarkInfo;
+      if (e.Active !== true) {
+        continue;
+      }
+      ave.x += Number(e.X);
+      ave.y += Number(e.Z);
+      ave.count++;
+    }
+    offset.x = ave.x / ave.count;
+    offset.y = ave.y / ave.count;
+  }
+  return (
+    <>
+      {marks.map((mark) => (
+        <span
+          class={"markIcon" + " " + "markIcon" + mark}
+          style={{
+            left: getOffset(Number(macro.Place[mark]?.X), offset.active ? -offset.x : macroStore.defaultX) + "px",
+            top: getOffset(Number(macro.Place[mark]?.Z), offset.active ? -offset.y : macroStore.defaultY) + "px",
+          }}
+        >
+          {macro.Place[mark]?.Active ? markMap[mark] ?? mark : ""}
+        </span>
+      ))}
+    </>
+  );
+}
 </script>
 <template>
   <i
@@ -168,7 +174,7 @@ onBeforeUnmount(() => {
               style="width: 450px"
             />
             <el-row v-if="!macro.Editable" class="buttonArea" :style="{ maxHeight: macro.Editable ? '100px' : null, opacity: macro.Editable ? 1 : null }">
-              <el-button :icon="Edit" size="small" @click="macroStore.editMacroMacro(macro)">编辑</el-button>
+              <el-button v-if="macro.Deletability" :icon="Edit" size="small" @click="macroStore.editMacroMacro(macro)"></el-button>
               <el-button :icon="ChatSquare" size="small" type="info" @click="macroStore.sendMacroEcho(macro.Text)">默语</el-button>
               <el-button :icon="ChatDotSquare" size="small" type="primary" @click="macroStore.sendMacroParty(macro.Text)">小队</el-button>
             </el-row>
@@ -229,29 +235,18 @@ onBeforeUnmount(() => {
                 style="position: relative; background-color: rgba(214, 199, 148, 1)"
                 :style="{ height: markViewSize + 'px', width: markViewSize + 'px', fontSize: markViewFontSize + 'px' }"
               >
-                <div v-for="(mark, i) in ['A', 'B', 'C', 'D', 'One', 'Two', 'Three', 'Four']" :key="i">
-                  <span
-                    class="markIcon"
-                    :class="'markIcon' + mark"
-                    :style="{
-                      left: Math.min(markViewSize, Math.max(0, (Number(macro.Place[(mark as WayMarkKeys)]?.X) + macroStore.defaultX) * markViewScale + markViewSize / 2)) + 'px',
-                      top: Math.min(markViewSize, Math.max(0, (Number(macro.Place[mark as WayMarkKeys]?.Z) + macroStore.defaultY) * markViewScale + markViewSize / 2)) + 'px',
-                    }"
-                  >
-                    {{ macro.Place[mark as WayMarkKeys]?.Active ? markMap[mark as WayMarkKeys] ?? mark : "" }}
-                  </span>
-                </div>
+                <MarksDiv :macro="macro"></MarksDiv>
               </div>
             </el-space>
             <el-row v-if="!macro.Editable" class="buttonArea" :style="{ maxHeight: macro.Editable ? '100px' : null, opacity: macro.Editable ? 1 : null }">
-              <el-button :icon="Edit" size="small" @click="macroStore.editMacroPlace(macro)">编辑</el-button>
               <el-button type="primary" size="small" @click="macroStore.doLocalWayMark(macro.Place)">本地</el-button>
               <el-button type="primary" size="small" @click="macroStore.doSlotWayMark(macro.Place)">插槽</el-button>
+              <el-button :icon="CopyDocument" size="small" class="export" @click="macroStore.exportWaymarksJson(macro)"></el-button>
+              <el-button v-if="macro.Deletability" :icon="Edit" size="small" @click="macroStore.editMacroPlace(macro)"></el-button>
             </el-row>
             <el-row v-if="macro.Editable" class="buttonAreaEditing">
               <el-button type="success" size="small" :icon="Check" @click="macroStore.submitMacroPlace(macro)">完成</el-button>
               <el-button v-if="macro.Deletability" type="danger" size="small" :icon="Delete" @click="macroStore.deleteMacro(macro)">删除</el-button>
-              <el-button :icon="CopyDocument" size="small" class="export" @click="macroStore.exportWaymarksJson(macro)">导出JSON</el-button>
             </el-row>
           </div>
         </el-card>

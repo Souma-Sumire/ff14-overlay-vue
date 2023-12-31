@@ -9,7 +9,6 @@ import { ElInputNumber, ElMessage, ElMessageBox } from "element-plus";
 
 let partyLen = 0;
 const slotIndex = useStorage("macro-slot-index", 5);
-const lastUpdate = useStorage("macro-last-update", 0);
 
 addOverlayListener("PartyChanged", (e: any) => (partyLen = e.party.length));
 const [show, toggleShow] = useToggle(true);
@@ -47,7 +46,6 @@ export const useMacroStore = defineStore("macro", {
     submitMacroMacro(macro: MacroInfoMacro): void {
       Reflect.deleteProperty(macro, "Editable");
       macro.Text = cleanMacro(macro.Text);
-      macro.Deletability = true; // 用户修改过，所以不归于默认数据中
     },
     editMacroPlace(macro: MacroInfoPlace): void {
       this.data.zoneId[this.selectZone].map((v) => Reflect.deleteProperty(v, "Editable"));
@@ -55,7 +53,6 @@ export const useMacroStore = defineStore("macro", {
     },
     submitMacroPlace(macro: MacroInfoPlace): void {
       Reflect.deleteProperty(macro, "Editable");
-      macro.Deletability = true; // 用户修改过，所以不归于默认数据中
     },
     formatAllWaymarkPlaceData() {
       for (const x in this.data.zoneId) this.formatSelectZoneWaymarkPlaceData(x);
@@ -158,7 +155,10 @@ export const useMacroStore = defineStore("macro", {
               // @ts-ignore
               targetMacro.Place[v].Z -= oY;
             });
-          } catch {}
+          } catch (e) {
+            ElMessage.error("解析失败");
+            return;
+          }
           Reflect.deleteProperty(targetMacro.Place, "MapID");
           Reflect.deleteProperty(targetMacro.Place, "Name");
           ElMessage.success("导入成功");
@@ -343,70 +343,10 @@ export const useMacroStore = defineStore("macro", {
         .catch(() => {});
     },
     updateZone(): void {
-      // 如果24小时内已经成功更新过则跳过
-      // if (Date.now() - lastUpdate.value < 1000 * 60 * 24 * 1) return;
-      try {
-        const before = JSON.stringify(this.data.zoneId);
-        for (const key in this.data.zoneId) {
-          const defaultData = defaultMacro.zoneId[key];
-          const userData = (JSON.parse(JSON.stringify(this.data.zoneId[key])) as (MacroInfoMacro | MacroInfoPlace)[]).filter((v) => {
-            return (
-              !v.Deletability ||
-              (v.Deletability &&
-                defaultData.find(
-                  (d) => (d.Type === "macro" && v.Type === "macro" && d.Text === v.Text) || (d.Type === "place" && v.Type === "place" && d.Place === v.Place),
-                ))
-            );
-          });
-          const resultData: (MacroInfoMacro | MacroInfoPlace)[] = [];
-          [...defaultData, ...userData].map((v) => {
-            if (v.Type === "macro") {
-              if (
-                !resultData.find((r) => {
-                  //@ts-ignore
-                  if (r.Text && v.Text) {
-                    // @ts-ignore
-                    const a = r.Text.replaceAll(/ /g, "");
-                    const b = v.Text.replaceAll(/ /g, "");
-                    // console.log(a);
-                    // console.log(b);
-                    // console.log(a === b);
-                    return a === b;
-                  }
-                })
-              ) {
-                resultData.push(v);
-              }
-            } else if (v.Type === "place") {
-              if (Object.hasOwn(v.Place, "MapID")) delete v.Place.MapID;
-              if (Object.hasOwn(v.Place, "Name")) delete v.Place.Name;
-              if (
-                !resultData.find((r) => {
-                  // @ts-ignore
-                  if (r.Place && r.Place) {
-                    // @ts-ignore
-                    const a = JSON.stringify(r.Place, ["A", "B", "C", "D", "One", "Two", "Three", "Four", "X", "Y", "Z", "Active"]);
-                    const b = JSON.stringify(v.Place, ["A", "B", "C", "D", "One", "Two", "Three", "Four", "X", "Y", "Z", "Active"]);
-                    // console.log(a);
-                    // console.log(b);
-                    // console.log(a === b);
-                    return a === b;
-                  }
-                })
-              )
-                resultData.push(v);
-            }
-          });
-          this.data.zoneId[key] = resultData;
-        }
-        const after = JSON.stringify(this.data.zoneId);
-        if (before !== after) {
-          ElMessage({ message: "数据已更新", type: "success" });
-          // 记录成功更新时间
-          lastUpdate.value = Date.now();
-        }
-      } catch (e) {
-        console.error(e);
+      for (const key in this.data.zoneId) {
+        const userData = this.data.zoneId[key].filter((v) => v.Deletability);
+        const nativeData = defaultMacro.zoneId[key];
+        this.data.zoneId[key] = [...userData, ...nativeData];
       }
     },
   },
