@@ -189,7 +189,7 @@ const icon4k = userOptions.scale >= 2 || window.devicePixelRatio >= 2 ? "_hr1" :
 
 const size = {
   line_height: 28 * userOptions.scale,
-  time: 40 * userOptions.scale,
+  time: 35 * userOptions.scale,
   action: 65 * userOptions.scale,
   target:
     ((userOptions.showIcon ? 24 : 0) + (userOptions.showName ? (userOptions.anonymous || (!userOptions.anonymous && userOptions.abbrId) ? 24 : 36) : 0) + 7) *
