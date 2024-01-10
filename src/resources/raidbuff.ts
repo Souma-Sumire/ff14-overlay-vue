@@ -22,6 +22,12 @@ const keigenns: (Omit<Raidbuff, "fullIcon"> & { fullIcon?: string })[] = [
   { id: 1822, name: "技巧舞步结束", isFriendly: true },
   { id: 1825, name: "进攻之探戈", isFriendly: true },
   { id: 1878, name: "占卜", isFriendly: true },
+  { id: 1882, name: "太阳神之衡", isFriendly: true },
+  { id: 1884, name: "放浪神之箭", isFriendly: true },
+  { id: 1885, name: "战争神之枪", isFriendly: true },
+  { id: 1883, name: "世界树之干", isFriendly: true },
+  { id: 1886, name: "河流神之瓶", isFriendly: true },
+  { id: 1887, name: "建筑神之塔", isFriendly: true },
 ];
 
 const keigennMap: Map<string, Raidbuff> = new Map();
