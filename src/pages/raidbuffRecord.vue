@@ -290,7 +290,6 @@ const handleLine = (line: string) => {
               const realIcon = count > 1 ? stackUrl(fullIcon, count) : fullIcon;
               raidbuff = {
                 id: parseInt(effectId, 16),
-                icon: vulnerable.icon,
                 fullIcon: realIcon,
                 name: vulnerable.name,
                 isFriendly: vulnerable.isFriendly,

@@ -308,7 +308,6 @@ const handleLine = (line: string) => {
                 type: "multiplier",
                 performance: { physics: 1, magic: 1, darkness: 1 },
                 id: parseInt(effectId, 16),
-                icon: vulnerable.icon,
                 fullIcon: realIcon,
                 name: vulnerable.name,
                 isFriendly: vulnerable.isFriendly,

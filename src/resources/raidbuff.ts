@@ -2,27 +2,26 @@ import { completeIcon, statusData } from "./status";
 
 export type Raidbuff = {
   id: number;
-  icon: number;
   fullIcon: string;
   isFriendly: boolean;
   name: string;
 };
 
 const keigenns: (Omit<Raidbuff, "fullIcon"> & { fullIcon?: string })[] = [
-  { id: 141, name: "战斗之声", icon: 12601, isFriendly: true },
-  { id: 2722, name: "光明神的最终乐章", icon: 12622, isFriendly: true },
-  { id: 3183, name: "夺取", icon: 14942, isFriendly: false },
-  { id: 2599, name: "神秘环", icon: 12936, isFriendly: true },
-  { id: 786, name: "战斗连祷", icon: 12578, isFriendly: true },
-  { id: 1910, name: "巨龙右眼", icon: 12581, isFriendly: true },
-  { id: 1454, name: "巨龙左眼", icon: 12582, isFriendly: true },
-  { id: 1185, name: "义结金兰：攻击", icon: 12532, isFriendly: true },
-  { id: 2703, name: "灼热之光", icon: 12699, isFriendly: true },
-  { id: 1221, name: "连环计", icon: 12809, isFriendly: false },
-  { id: 1297, name: "鼓励", icon: 13410, isFriendly: true },
-  { id: 1822, name: "技巧舞步结束", icon: 13709, isFriendly: true },
-  { id: 1825, name: "进攻之探戈", icon: 13714, isFriendly: true },
-  { id: 1878, name: "占卜", icon: 13245, isFriendly: true },
+  { id: 141, name: "战斗之声", isFriendly: true },
+  { id: 2722, name: "光明神的最终乐章", isFriendly: true },
+  { id: 3183, name: "夺取", isFriendly: false },
+  { id: 2599, name: "神秘环", isFriendly: true },
+  { id: 786, name: "战斗连祷", isFriendly: true },
+  { id: 1910, name: "巨龙右眼", isFriendly: true },
+  { id: 1454, name: "巨龙左眼", isFriendly: true },
+  { id: 1185, name: "义结金兰：攻击", isFriendly: true },
+  { id: 2703, name: "灼热之光", isFriendly: true },
+  { id: 1221, name: "连环计", isFriendly: false },
+  { id: 1297, name: "鼓励", isFriendly: true },
+  { id: 1822, name: "技巧舞步结束", isFriendly: true },
+  { id: 1825, name: "进攻之探戈", isFriendly: true },
+  { id: 1878, name: "占卜", isFriendly: true },
 ];
 
 const keigennMap: Map<string, Raidbuff> = new Map();
@@ -36,7 +35,8 @@ export function loadRaidbuff(server: "Chinese" | "Global"): void {
     const sourceKeigenns = server === "Chinese" ? keigenns : Object.assign(keigenns, {});
     keigennMap.clear();
     for (const keigenn of sourceKeigenns) {
-      keigenn.fullIcon = completeIcon(keigenn.icon);
+      const icon = statusData[keigenn.id][1];
+      keigenn.fullIcon = completeIcon(icon);
       keigennMap.set(keigenn.id.toString(16).toUpperCase(), keigenn as Raidbuff);
     }
     loadedDataLang = server;
