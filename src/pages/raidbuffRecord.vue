@@ -59,7 +59,7 @@
         </vxe-column>
         <vxe-column :width="size.properties" title="直暴" header-align="center" align="center">
           <template #default="{ row }">
-            {{ translationFlags(row.properties).replace(/普通|击$/, "") }}
+            {{ translationFlags(row.properties).replace(/普通$/, "").replace("直击", "直　").replace("暴击", "　暴") }}
           </template>
         </vxe-column>
         <vxe-column title="团辅" align="left">
