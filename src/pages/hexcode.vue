@@ -1,10 +1,28 @@
 <template>
+  <div>
+    <div><input type="file" name="" id="" @input="handleInput" /></div>
+    <div>
+      <ul>
+        <li v-for="(l, i) in fileResult" :key="i" v-show="!l.result.every((e) => e.passed)">
+          {{ l.key }}
+          {{
+            l.result.every((e) => e.passed)
+              ? "全部通过"
+              : l.result
+                  .filter((f) => f.passed === false)
+                  .map((e) => `${e.msg}${e.over}`)
+                  .join("")
+          }}
+        </li>
+      </ul>
+    </div>
+  </div>
   <main>
     <textarea name="" id="" cols="100" rows="5" v-model="text"></textarea>
     <article>
       <ul>
         <li v-for="(m, i) in message" :key="i">
-          <span :style="{ color: m.endsWith('通过') ? 'black' : 'red' }">{{ m }}</span>
+          <span :style="{ color: m.passed ? 'black' : 'red' }">{{ `${m.msg} ${m.passed ? "通过" : `错误${m.over}`}` }}</span>
         </li>
       </ul>
     </article>
@@ -13,17 +31,45 @@
 
 <script setup lang="ts">
 import { Ref } from "vue";
-
+interface Result {
+  msg: string;
+  passed: boolean;
+  over: string;
+}
+const fileResult: Ref<{ key: string; result: Result[] }[]> = ref([]);
 const text = useStorage("hexcode", "");
-const message: Ref<string[]> = ref([]);
-watchEffect(() => {
-  console.clear();
+const message: Ref<Result[]> = ref([]);
+function handleInput(e: any) {
+  const file = e.target.files[0];
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const text = e.target?.result;
+    if (text) {
+      text
+        .toString()
+        .split("\n")
+        .map((t: string, i: number) => {
+          if (i <= 4) {
+            return;
+          }
+          const [key, text] = t.split(",");
+          if (key && text) {
+            const result = test(key, text);
+            console.log(result);
+            fileResult.value.push({ key, result });
+          }
+        });
+    }
+  };
+  reader.readAsText(file);
+}
+
+function test(key: string, text: string): Result[] {
   let lastIndex = 0;
-  message.value.length = 0;
-  while (lastIndex < text.value.length) {
-    const msg: string[] = [];
-    const hex02 = text.value.indexOf("<hex:02", lastIndex);
-    const hexFF = text.value.indexOf("<hex:FF", lastIndex);
+  const result = [];
+  while (lastIndex < text.length) {
+    const hex02 = text.indexOf("<hex:02", lastIndex);
+    const hexFF = text.indexOf("<hex:FF", lastIndex);
     if (hex02 === -1 && hexFF === -1) {
       break;
     }
@@ -31,48 +77,56 @@ watchEffect(() => {
     const offset = hex === hexFF ? -2 : 0;
     if (hex02 !== -1) lastIndex = hex02 + 1;
     else if (hexFF !== -1) lastIndex = hexFF + 1;
-    const code = text.value.slice(lastIndex + 6 + offset, lastIndex + 8 + offset);
-    const len16 = text.value.slice(lastIndex + 8 + offset, lastIndex + 10 + offset);
+    const code = text.slice(lastIndex + 6 + offset, lastIndex + 8 + offset);
+    const len16 = text.slice(lastIndex + 8 + offset, lastIndex + 10 + offset);
     const len10 = parseInt(len16, 16);
-    msg.push(`指令${code} 长度${len16}(${len10})`);
+    const msg = `指令${code} 长度${len16}(${len10})`;
     let i = 0;
     let byte = 0;
     let label = true;
     let colon = true;
     for (; byte < len10; i++) {
-      const q = text.value[hex + 11 + offset + i - 1];
-      const b = text.value[hex + 11 + offset + i];
-
-      if (b === ">") {
-        label = false;
-        colon = false;
+      const b = text[hex + offset + i + 11];
+      const after = text.slice(hex + offset + i + 11, hex + offset + i + 11 + 5);
+      if (b === undefined) {
+        break;
       }
       if (b === "<") {
         label = true;
         colon = false;
       }
       if (label && !colon) {
-      } else if (/\u3002|\uff1f|\uff01|\uff0c|\u3001|\uff1b|\uff1a|\u201c|\u201d|\u2018|\u2019|\uff08|\uff09|\u300a|\u300b|\u3010|\u3011|\u007e/.test(b)) {
-        byte += 3;
-        console.debug(b, "+3", `已数${byte}`);
-      } else if (/[\u4e00-\u9fa5\u0800-\u4e00]/.test(b)) {
-        byte += 3;
-        console.debug(b, "+3", `已数${byte}`);
-      } else if (/[a-zA-Z0-9!"#$%&'()*+,-./:;=?@\[\]\^_{\|}~]/.test(b)) {
+      } else if (b === ">" && colon) {
+        continue;
+      } else if (b === "<" && after === "<hex:") {
+        continue;
+      } else if (/[\u0000-\u007f]/.test(b)) {
         byte += label ? 0.5 : 1;
-        console.debug(b, label ? "+0.5" : "+1", `已数${byte}`);
-      } else if (b === ">" || b === "<") {
-        console.debug(b, "+0", `跳过`);
-      } else throw new Error("error: " + b);
+        console.debug(b, "+" + label ? 0.5 : 1, `已数${byte}`);
+      } else if (/[\ue000-\uf8ff\uff00-\uffef]/.test(b)) {
+        byte += 3;
+        console.debug(b, "+3", `已数${byte}`);
+      } else {
+        console.error(`未知的${key} ${b} \\u${b.charCodeAt(0).toString(16).padStart(4, "0")}`);
+      }
       if (b === ":") {
         colon = true;
       }
+      if (b === ">") {
+        label = false;
+        colon = false;
+      }
     }
-    const over = text.value.slice(lastIndex + offset + i + 3, lastIndex + offset + i + 11);
-    msg.push(over.endsWith("03>") || over.startsWith("<hex:FF") ? "通过" : `失败（${over}）`);
-
-    message.value.push(msg.join(" "));
+    const over = text.slice(lastIndex + offset + i + 3, lastIndex + offset + i + 11);
+    result.push({ passed: over.endsWith("03>") || over.startsWith("<hex:FF"), over, msg });
   }
+  return result;
+}
+
+watchEffect(() => {
+  message.value.length = 0;
+  const result = test("input", text.value);
+  message.value.push(...result);
 });
 </script>
 
