@@ -94,7 +94,7 @@ function test(text: string): Result[] {
       }
     }
     const over = text.slice(lastIndex + i + 3, lastIndex + i + 11);
-    const full = text.slice(lastIndex - 1, lastIndex + 10 + i + 1);
+    const full = text.slice(lastIndex + 10, lastIndex + 10 + i);
     result.push({ passed: over.endsWith("03>"), over, msg, full });
     // break;
   }
