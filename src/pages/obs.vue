@@ -1,4 +1,6 @@
+<!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <script setup lang="ts">
+/*global addOverlayListener,removeOverlayListener,startOverlayEvents */
 import ContentType from "../../cactbot/resources/content_type";
 import ZoneInfo from "../resources/zoneInfo";
 import UserConfig from "../../cactbot/resources/user_config";
@@ -27,7 +29,7 @@ const ZoneType = {
 const oldPw = JSON.parse(window.localStorage.getItem("obs2-data") ?? "{}")?.password;
 const password = useStorage("obs-passwd", oldPw ?? "");
 const config = useStorage("aster-obs-config", {
-  host: "127.0.0.1:4455",
+  host: "4455",
   greaterThan: 0,
   userRecFilePath: "",
   suffixByZone: true,
@@ -35,6 +37,7 @@ const config = useStorage("aster-obs-config", {
   autoForZones: defaultEntireForZones,
   recFilePaths: Object.fromEntries(Object.values(ZoneType).map((i) => [i, ""])),
 });
+config.value.host = config.value.host.replace(/^.+?:/,'');
 const data = {
   partyLength: 1,
   inACTCombat: false,
@@ -85,8 +88,8 @@ onUnmounted(() => {
 
 async function connect(init = false) {
   return obs
-    .connect(`ws://${config.value.host}`, password.value)
-    .then((_v) => {
+    .connect(`ws://127.0.0.1:${config.value.host}`, password.value)
+    .then(() => {
       if (!config.value.userRecFilePath) {
         getUserRecFilePath();
       }
@@ -103,7 +106,7 @@ async function connect(init = false) {
       showHeader.value = true;
       return Promise.resolve(true);
     })
-    .catch((_e) => {
+    .catch(() => {
       status.connected = false;
       if (init) {
         VXETable.modal.message({
@@ -203,7 +206,7 @@ async function start(reason: string, restart = true, justDoIt = false) {
     if ((await setRecordingNameAndFolder(false)) !== false) {
       await new Promise((res) => setTimeout(res, 500));
       MyLog("[obs_start] ", { recording: status.recording, data, reason, restart, justDoIt });
-      return obs.call("StartRecord").then((_) => setTimeout((_) => setRecordingNameAndFolder(true), 2000));
+      return obs.call("StartRecord").then(() => setTimeout(() => setRecordingNameAndFolder(true), 2000));
     }
   } catch (error) {
     console.warn(["obs_start_error"], error);
@@ -251,7 +254,7 @@ async function handleLogLine(ev: { line: string[]; rawLine: string; type: string
   return Promise.resolve();
 }
 
-async function handleChangeZone(ev: any) {
+async function handleChangeZone(ev: { zoneID: number; zoneName: string }) {
   if (data.zoneID === ev.zoneID) return Promise.resolve();
   data.zoneID = ev.zoneID;
   data.zoneName = ev.zoneName;
@@ -268,7 +271,7 @@ async function handleChangeZone(ev: any) {
   return stop("changeZone");
 }
 
-function getZoneType(zoneInfo: any) {
+function getZoneType(zoneInfo:any) {
   switch (zoneInfo.contentType) {
     case ContentType.UltimateRaids:
       return ZoneType.UltimateOrRaidOrTrials;
@@ -287,7 +290,7 @@ function getZoneType(zoneInfo: any) {
   return ZoneType.Default;
 }
 
-async function handleInCombatChanged(ev: any) {
+async function handleInCombatChanged(ev:any) {
   if (!config.value.inCombatStart) {
     return Promise.resolve();
   }
@@ -340,10 +343,10 @@ function toggleWindow(window: string) {
       <vxe-form-item span="24" v-show="showSettings" class-name="hidePageBtn">
         <vxe-button size="mini" content="隐藏页面" icon="vxe-icon-eye-fill-close" @click="toggleWindow('header')"></vxe-button>
       </vxe-form-item>
-      <vxe-form-item span="24" field="host" title="主机">
-        <vxe-input v-model="config.host" size="small" placeholder="127.0.0.1:4455" style="width: 70%; margin-right: -5px"></vxe-input>
+      <vxe-form-item span="24" field="host" title="OBS服务器端口">
+        <vxe-input v-model="config.host" type="number" size="small" style="width: 70%; margin-right: -5px"></vxe-input>
         <vxe-button
-          content="帮助"
+          content="无法输入"
           size="mini"
           icon="vxe-icon-question"
           type="text"
@@ -351,7 +354,7 @@ function toggleWindow(window: string) {
           @click="VXETable.modal.message({ content: '先点击ACT，再点击悬浮窗，即可正常输入' })"
         ></vxe-button>
       </vxe-form-item>
-      <vxe-form-item span="24" field="password" title="密码">
+      <vxe-form-item span="24" field="password" title="OBS服务器密码">
         <vxe-input v-model="password" size="small" placeholder="密码" type="password"></vxe-input>
       </vxe-form-item>
       <vxe-form-item span="24" field="inCombatStart" title="进入战斗自动录制">
