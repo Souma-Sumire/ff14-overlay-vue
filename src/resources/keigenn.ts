@@ -117,7 +117,8 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
   },
   {
     name: "原初的武猛",
-    description: "附加此效果的战士受到原初的勇猛的恢复体力的效果时，会获得相当于其100%的恢复效果\n另外受到攻击的伤害减少",
+    description:
+      "附加此效果的战士受到原初的勇猛的恢复体力的效果时，会获得相当于其100%的恢复效果\n另外受到攻击的伤害减少",
     id: 1858,
     type: "multiplier",
     performance: { physics: 1, magic: 1, darkness: 1 },
@@ -125,7 +126,8 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
   },
   {
     name: "战栗",
-    description: "体力最大值提高\n习得战栗效果提高后追加效果：自身所受的治疗效果提高",
+    description:
+      "体力最大值提高\n习得战栗效果提高后追加效果：自身所受的治疗效果提高",
     id: 87,
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
@@ -149,7 +151,8 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
   },
   {
     name: "死斗",
-    description: "除特定攻击之外其他所有对自身发动的攻击均无法令体力减少到1以下",
+    description:
+      "除特定攻击之外其他所有对自身发动的攻击均无法令体力减少到1以下",
     id: 409,
     type: "multiplier",
     performance: { physics: 1, magic: 1, darkness: 1 },
@@ -213,7 +216,8 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
   },
   {
     name: "行尸走肉",
-    description: "受到致命伤害时体力减为1，并附加死而不僵状态\n但是对部分攻击无效",
+    description:
+      "受到致命伤害时体力减为1，并附加死而不僵状态\n但是对部分攻击无效",
     id: 810,
     type: "multiplier",
     performance: { physics: 1, magic: 1, darkness: 1 },
@@ -221,7 +225,8 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
   },
   {
     name: "死而不僵",
-    description: "除特定攻击之外其他所有对自身发动的攻击均无法令体力减少到1以下",
+    description:
+      "除特定攻击之外其他所有对自身发动的攻击均无法令体力减少到1以下",
     id: 811,
     type: "multiplier",
     performance: { physics: 1, magic: 1, darkness: 1 },
@@ -229,7 +234,8 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
   },
   {
     name: "出死入生",
-    description: "除特定攻击之外其他所有对自身发动的攻击均无法令体力减少到1以下",
+    description:
+      "除特定攻击之外其他所有对自身发动的攻击均无法令体力减少到1以下",
     id: 3255,
     type: "multiplier",
     performance: { physics: 1, magic: 1, darkness: 1 },
@@ -757,7 +763,8 @@ export let loadedDataLang: Server | undefined = undefined;
 
 export function loadKeigenn(server: "Chinese" | "Global"): void {
   if (loadedDataLang !== server) {
-    const sourceKeigenns = server === "Chinese" ? keigenns : Object.assign(keigenns, {});
+    const sourceKeigenns =
+      server === "Chinese" ? keigenns : Object.assign(keigenns, {});
     keigennMap.clear();
     for (const keigenn of sourceKeigenns) {
       const icon = statusData[keigenn.id][1];
@@ -773,13 +780,15 @@ loadKeigenn("Chinese");
 export function getKeigenn(decId: string): Keigenn | undefined {
   return keigennMap.get(decId);
 }
+
 export const multiplierEffect = (multiplier: number) => {
   if (multiplier === 1) return "useful";
   if (multiplier === 0) return "unuseful";
   return "half-useful";
 };
 
-const regFriendly = /(?:耐性|防御力)(?:大幅)?(?:降低|提升|低下|下降)|受伤(?:加重|减轻)|体力(?:增加|衰减|减少)|伤害屏障/;
+const regFriendly =
+  /(?:耐性|防御力)(?:大幅)?(?:降低|提升|低下|下降)|受伤(?:加重|减轻)|体力(?:增加|衰减|减少)|伤害屏障/;
 const regEnemy = /(?:精神|力量|灵巧|智力){1,2}(?:大幅)?降低/;
 
 const createMap = (regExp: RegExp, isFriendly: boolean) =>

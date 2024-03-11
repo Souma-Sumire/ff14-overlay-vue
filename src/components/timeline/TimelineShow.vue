@@ -3,23 +3,38 @@
     <li
       v-for="(item, index) in props.lines"
       :key="index"
-      v-show="item.show && item.time - runtime > 0 - config.hold - showStyle['--tras-duration'] && item.time - runtime <= config.displayDuration"
+      v-show="
+        item.show &&
+        item.time - runtime > 0 - config.hold - showStyle['--tras-duration'] &&
+        item.time - runtime <= config.displayDuration
+      "
       :class="{
         upcoming: item.time - runtime <= config.discoloration,
         fade: item.time - runtime <= 0 - config.hold,
         passed: item.time - runtime <= 0,
       }"
     >
-      <aside :style="{ right: Math.max((item.time - runtime) / config.displayDuration, 0) * 100 + '%' }"></aside>
+      <aside
+        :style="{
+          right:
+            Math.max((item.time - runtime) / config.displayDuration, 0) * 100 +
+            '%',
+        }"
+      ></aside>
       <section>
-        <span v-html="renderHTML(item.action)"></span><span style="padding: 0px 1px">{{ (item.time - runtime).toFixed(1) }} </span>
+        <span v-html="renderHTML(item.action)"></span
+        ><span class="countdown">{{ (item.time - runtime).toFixed(1) }} </span>
       </section>
     </li>
   </ul>
 </template>
 
 <script lang="ts" setup>
-import { ITimelineLine, ShowStyle, TimelineConfigValues } from "@/types/timeline";
+import type {
+  ITimelineLine,
+  ShowStyle,
+  TimelineConfigValues,
+} from "@/types/timeline";
 import { parseAction } from "@/store/timeline";
 import { getActionByChineseName, getFullImgSrc } from "@/utils/xivapi";
 
@@ -36,23 +51,25 @@ const imageMap: Record<string, unknown> = reactive({});
 
 // 在Vue组件内生成HTML是可以响应数据变化更新视图的
 function renderHTML(text: string): string {
-  text = text.replaceAll(/^["'“”]|["'“”]$/g, "");
-  const items = parseAction(text);
-  if (!items) return text;
+  let res = text.replaceAll(/^["'“”]|["'“”]$/g, "");
+  const items = parseAction(res);
+  if (!items) return res;
 
   for (const item of items) {
     if (item.groups?.name) {
-      const src = getSkillImage(item.groups!.name);
-      text = text.replace(
+      const src = getSkillImage(item.groups?.name);
+      res = res.replace(
         item[0],
-        `${src ? `<div class="skill_icon"><img src="${src}" style="background-image: url('${PLACEHOLDER}')" loading="auto"/></div>` : ""}<span>${
-          item.groups?.repeat ? item.groups!.name : ""
-        }</span>`,
+        `${
+          src
+            ? `<div class="skill_icon"><img src="${src}" style="background-image: url('${PLACEHOLDER}')" loading="auto"/></div>`
+            : ""
+        }<span>${item.groups?.repeat ? item.groups?.name : ""}</span>`
       );
     }
   }
 
-  return text;
+  return res;
 }
 
 /**
@@ -112,6 +129,9 @@ $opacity: 0.33;
 $normalScale: 0.5;
 $upComingScale: 1;
 $trasDuration: 1;
+.countdown {
+  text-align: right;
+}
 .loadedTimelines {
   width: calc(1px * var(--timeline-width, $timelineWitdh));
   list-style-type: none;
@@ -131,7 +151,8 @@ $trasDuration: 1;
     transition-duration: calc(var(--tras-duration, $trasDuration) * 1s);
     height: calc(48px * var(--normal-scale, $normalScale));
     &.fade {
-      animation: myfade calc(var(--tras-duration, $trasDuration) * 1s) 1 forwards !important;
+      animation: myfade calc(var(--tras-duration, $trasDuration) * 1s) 1
+        forwards !important;
       height: calc(48px * var(--up-coming-scale, $upComingScale));
     }
     @keyframes myfade {
@@ -175,7 +196,13 @@ $trasDuration: 1;
         background-color: rgb(255, 136, 136);
       }
       :deep(span) {
-        font-size: calc(var(--font-size, $fontSize) * var(--up-coming-scale, $upComingScale) * 1px) !important;
+        font-size: calc(
+          var(--font-size, $fontSize) * var(--up-coming-scale, $upComingScale) *
+            1px
+        ) !important;
+        &.countdown {
+          padding-right: 0.2em;
+        }
       }
       span :deep(.skill_icon) {
         transition-property: all;
@@ -212,16 +239,19 @@ $trasDuration: 1;
     section {
       height: 100%;
       position: relative;
-      padding: 0 2px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: calc(calc(var(--font-size, $fontSize) * 1px) * var(--normal-scale, $normalScale));
+      font-size: calc(
+        calc(var(--font-size, $fontSize) * 1px) *
+          var(--normal-scale, $normalScale)
+      );
       // font-size: calc(calc(var(--font-size, $fontSize) * 1px));
       > span {
         display: flex;
         align-items: center;
-        overflow: hidden;
+        overflow: auto;
+        padding: 0 1px;
         // &:first-of-type {
         //   flex: 1;
         // }

@@ -86,7 +86,7 @@ export type FFlogsQuery = {
   abilityFilterSelected: number[];
   abilityFilterEventsAfterFilterRawTimeline: string;
   zoneID: number;
-  player: { fights?: [{ id: number }]; guid?: number; icon?: FFIcon; id?: number; name?: string; server?: string };
+  player?: Friendlies;
   bossIDs: number[];
 };
 

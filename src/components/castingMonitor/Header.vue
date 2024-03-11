@@ -5,11 +5,13 @@ import Util from "@/utils/util";
 import { getClassjobIconSrc } from "@/utils/xivapi";
 const castingMonitorStore = useCastingMonitorStore();
 watchEffect(() => {
-  castingMonitorStore.partyData.forEach(async (item) => {
-    item.src = await getClassjobIconSrc(item.job);
-  });
+  for (const item of castingMonitorStore.partyData) {
+    item.src = getClassjobIconSrc(item.job);
+  }
 });
-const showHeader = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(params?.showHeader);
+const showHeader = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(
+  params?.showHeader
+);
 </script>
 
 <template>
@@ -19,12 +21,14 @@ const showHeader = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(params?.sh
       :key="index"
       @click="castingMonitorStore.handleClickChangeTarget(item.id)"
       class="job-lists"
-      :class="castingMonitorStore.focusTargetId === item.id ? 'job-lists-focus' : ''"
+      :class="
+        castingMonitorStore.focusTargetId === item.id ? 'job-lists-focus' : ''
+      "
       p-0
       m-0
     >
       <div flex="~ nowrap items-end" style="align-items: flex-end; gap: 0.1rem">
-        <img :src="item.src" style="height: 1.25em" loading="lazy"/>
+        <img :src="item.src" style="height: 1.25em" loading="lazy" />
         {{ Util.nameToFullName(Util.jobEnumToJob(item.job as number)).simple2 }}
       </div>
     </button>
@@ -44,7 +48,8 @@ const showHeader = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(params?.sh
     cursor: pointer;
     color: white;
     font-family: "微软雅黑";
-    text-shadow: -1px 0 2px #000, 0 1px 2px #000, 1px 0 2px #000, 0 -1px 2px #000;
+    text-shadow: -1px 0 2px #000, 0 1px 2px #000, 1px 0 2px #000,
+      0 -1px 2px #000;
     &:hover {
       transition-duration: 0.05s !important;
       color: lightskyblue;

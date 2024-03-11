@@ -1,7 +1,8 @@
 <template>
   <div flex="~ col">
     <VueDraggable
-      v-for="role in roles"
+      v-for="(role,index) in roles"
+      :key="index"
       ref="el"
       :disabled="!isDisabled"
       v-model="jobList[role.name]"
@@ -26,16 +27,15 @@
 </template>
 
 <script setup lang="ts">
+import type { Player, Role } from "@/types/partyPlayer";
 import Util from "@/utils/util";
-import { RemovableRef } from "@vueuse/core";
+import type { RemovableRef } from "@vueuse/core";
 import { ref } from "vue";
 import { type UseDraggableReturn, VueDraggable } from "vue-draggable-plus";
 
 const el = ref<UseDraggableReturn>();
 const isDisabled = ref(true);
-const emit = defineEmits<{
-  (e: "updateSortArr", id: number[]): void;
-}>();
+const emit = defineEmits<(e: "updateSortArr", id: number[]) => void>();
 
 const props = defineProps<{
   party: Player[];
@@ -113,9 +113,17 @@ const jobList: RemovableRef<
     }[]
   >
 > = useStorage("cactbotRuntime-jobList", {
-  tank: jobs.filter((v) => jobsList.tank.includes(v.id)).sort((a, b) => jobsList.tank.indexOf(a.id) - jobsList.tank.indexOf(b.id)),
-  healer: jobs.filter((v) => jobsList.healer.includes(v.id)).sort((a, b) => jobsList.healer.indexOf(a.id) - jobsList.healer.indexOf(b.id)),
-  dps: jobs.filter((v) => jobsList.dps.includes(v.id)).sort((a, b) => jobsList.dps.indexOf(a.id) - jobsList.dps.indexOf(b.id)),
+  tank: jobs
+    .filter((v) => jobsList.tank.includes(v.id))
+    .sort((a, b) => jobsList.tank.indexOf(a.id) - jobsList.tank.indexOf(b.id)),
+  healer: jobs
+    .filter((v) => jobsList.healer.includes(v.id))
+    .sort(
+      (a, b) => jobsList.healer.indexOf(a.id) - jobsList.healer.indexOf(b.id),
+    ),
+  dps: jobs
+    .filter((v) => jobsList.dps.includes(v.id))
+    .sort((a, b) => jobsList.dps.indexOf(a.id) - jobsList.dps.indexOf(b.id)),
   unknown: [],
 });
 </script>

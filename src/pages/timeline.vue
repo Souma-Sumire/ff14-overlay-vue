@@ -2,7 +2,12 @@
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import { useTimelineStore, parseTimeline } from "@/store/timeline";
-import { ITimeline, ITimelineCondition, ITimelineLine, ShowStyle, TimelineConfigValues } from "@/types/timeline";
+import { ITimeline, ITimelineCondition, ITimelineLine } from "@/types/timeline";
+import {
+  addOverlayListener,
+  callOverlayHandler,
+} from "../../cactbot/resources/overlay_plugin_api";
+import { EventMap } from "cactbot/types/event";
 
 const timelineStore = useTimelineStore();
 const timelinePageData = reactive({
@@ -20,13 +25,22 @@ const condition = useStorage("timeline-condition", {
   zoneId: "0",
   job: "NONE",
 } as ITimelineCondition);
-const devMode = ref(window.location.href.match(/localhost/) || new URLSearchParams(location.hash.split("?")[1]).get("dev") === "1");
+const devMode = ref(
+  window.location.href.match(/localhost/) ||
+    new URLSearchParams(location.hash.split("?")[1]).get("dev") === "1"
+);
 //保存最后一次选择的时间轴，用于团灭时重新加载
 // let lastUsedTimeline: ITimeline;
 
-const syncLines = computed(() => timelinePageData.loadedTimeline.filter((item) => item.sync));
-const loadedTimelineTTS = computed(() => timelinePageData.loadedTimeline.filter((v) => v.tts));
-init();
+const syncLines = computed(() =>
+  timelinePageData.loadedTimeline.filter((item) => item.sync)
+);
+const loadedTimelineTTS = computed(() =>
+  timelinePageData.loadedTimeline.filter((v) => v.tts)
+);
+onMounted(() => {
+  init();
+});
 
 //页面初始化
 function init() {
@@ -48,7 +62,11 @@ function init() {
   getTimeline(condition.value);
 }
 function openSettings() {
-  const windowsOpen = window.open("/ff14-overlay-vue/#/timelineSettings?timestamp=" + new Date().getTime(), "_blank", "width=1200,height=800");
+  const windowsOpen = window.open(
+    "/ff14-overlay-vue/#/timelineSettings?timestamp=" + new Date().getTime(),
+    "_blank",
+    "width=1200,height=800"
+  );
   const loop = setInterval(function () {
     if (windowsOpen?.closed) {
       clearInterval(loop);
@@ -79,7 +97,10 @@ function selectedTimeline(timeline: ITimeline) {
 }
 
 //载入时间轴页面
-async function mountTimeline(timeline: ITimeline, stopLoadedTimeline: boolean = true) {
+async function mountTimeline(
+  timeline: ITimeline,
+  stopLoadedTimeline: boolean = true
+) {
   stopLoadedTimeline && stopTimeline();
   doTTS = false;
   if (timeline && timeline?.timeline) {
@@ -122,8 +143,13 @@ function startTimeline(countdownSeconds: number, preventTTS = true) {
 
 function play() {
   if (baseTimeMs.value === 0) return;
-  runtimeTimeSeconds.value = (new Date().getTime() - baseTimeMs.value + offsetTimeMS.value) / 1000;
-  const l = loadedTimelineTTS.value.find((v) => !v.alertAlready && v.time - timelineStore.configValues.ttsAdvance <= runtimeTimeSeconds.value);
+  runtimeTimeSeconds.value =
+    (new Date().getTime() - baseTimeMs.value + offsetTimeMS.value) / 1000;
+  const l = loadedTimelineTTS.value.find(
+    (v) =>
+      !v.alertAlready &&
+      v.time - timelineStore.configValues.ttsAdvance <= runtimeTimeSeconds.value
+  );
   if (l) {
     l.alertAlready = true;
     cactbotSay(l.tts!);
@@ -133,11 +159,17 @@ function play() {
 //日志
 function handleLogEvent(e: { detail: { logs: string[] } }) {
   for (const log of e.detail.logs) {
-    let regex = log.match(/^.{14} \w+ 00:(?:00b9|0[12]39)::?(?:距离战斗开始还有|Battle commencing in |戦闘開始まで)(?<cd>\d+)[^（(]+[（(]/i);
+    let regex = log.match(
+      /^.{14} \w+ 00:(?:00b9|0[12]39)::?(?:距离战斗开始还有|Battle commencing in |戦闘開始まで)(?<cd>\d+)[^（(]+[（(]/i
+    );
     if (regex) {
       //倒计时
       startTimeline(parseInt(regex!.groups!.cd));
-    } else if (/^.{14} Director 21:.{8}:4000000F/.test(log) || /^.{14} ChatLog 00:0038::end$/.test(log) || /^.{14} SystemLogMessage 29:.{8}:B1C:/.test(log)) {
+    } else if (
+      /^.{14} Director 21:.{8}:4000000F/.test(log) ||
+      /^.{14} ChatLog 00:0038::end$/.test(log) ||
+      /^.{14} SystemLogMessage 29:.{8}:B1C:/.test(log)
+    ) {
       //团灭
       stopTimeline();
       // mountTimeline(lastUsedTimeline);
@@ -146,7 +178,9 @@ function handleLogEvent(e: { detail: { logs: string[] } }) {
       const timelineSync = syncLines.value.find((item) => {
         // console.log(item.sync, log);
         return (
-          item.sync!.test(log) && runtimeTimeSeconds.value >= item.time - item.windowBefore && runtimeTimeSeconds.value <= item.time + Number(item.windowAfter)
+          item.sync!.test(log) &&
+          runtimeTimeSeconds.value >= item.time - item.windowBefore &&
+          runtimeTimeSeconds.value <= item.time + Number(item.windowAfter)
         );
       });
       //如果匹配sync则同步到time，有jump则同步至jump
@@ -154,9 +188,12 @@ function handleLogEvent(e: { detail: { logs: string[] } }) {
     }
     if (/^.{14} ChatLog 00:0038::/.test(log)) {
       //echo
-      const name = log.match(/^.{14} ChatLog 00:0038::(?<name>.+)$/)?.groups?.name;
+      const name = log.match(/^.{14} ChatLog 00:0038::(?<name>.+)$/)?.groups
+        ?.name;
       if (name) {
-        const timeline = timelineStore.getTimeline(condition.value).find((c) => c.name === name);
+        const timeline = timelineStore
+          .getTimeline(condition.value)
+          .find((c) => c.name === name);
         timeline && mountTimeline(timeline, false);
       }
     }
@@ -178,21 +215,21 @@ function syncTimeline(targetTime: number) {
 }
 
 //玩家状态（职业）
-function handlePlayerChangedEvent(e: any) {
+const handlePlayerChangedEvent: EventMap["onPlayerChangedEvent"] = (e) => {
   if (e.detail.job !== condition.value.job) {
     condition.value.job = e.detail.job;
     getTimeline(condition.value);
   } else {
     condition.value.job = e.detail.job;
   }
-}
+};
 
 //切换场景
-function handleChangeZone(e: any) {
+const handleChangeZone: EventMap["ChangeZone"] = (e) => {
   condition.value.zoneId = String(e.zoneID);
   // lastUsedTimeline = { name: "", condition: { zoneId: "", job: "NONE" }, timeline: "", codeFight: "", create: "" };
   getTimeline(condition.value);
-}
+};
 
 //调用TTS
 function cactbotSay(text: string, force: boolean = false) {
@@ -201,20 +238,11 @@ function cactbotSay(text: string, force: boolean = false) {
 }
 
 //接受广播
-function handleBroadcastMessage(e: {
-  type: string;
-  source: string;
-  msg: {
-    store: {
-      allTimelines: ITimeline[];
-      configValues: TimelineConfigValues;
-      showStyle: ShowStyle;
-    };
-  };
-}) {
-  if (e.source === "soumuaTimelineSetting" && e.msg.store) {
+const handleBroadcastMessage: EventMap["BroadcastMessage"] = (e) => {
+  if (e.source === "soumuaTimelineSetting") {
+    const store = (e.msg as { store: typeof timelineStore.$state }).store;
     Swal.fire({
-      text: `接受到${e.msg.store.allTimelines.length}个时间轴`,
+      text: `接受到${store.allTimelines.length}个时间轴`,
       showDenyButton: true,
       denyButtonText: "覆盖",
       showConfirmButton: true,
@@ -225,16 +253,16 @@ function handleBroadcastMessage(e: {
     }).then((result) => {
       if (result.isConfirmed || result.isDenied) {
         if (result.isDenied) timelineStore.allTimelines.length = 0;
-        timelineStore.allTimelines = e.msg.store.allTimelines;
-        timelineStore.configValues = e.msg.store.configValues;
-        timelineStore.showStyle = e.msg.store.showStyle;
+        timelineStore.allTimelines = store.allTimelines;
+        timelineStore.configValues = store.configValues;
+        timelineStore.showStyle = store.showStyle;
         timelineStore.saveTimelineSettings();
         Swal.fire("接受成功");
         getTimeline(condition.value); //获取新数据之后查询一次
       }
     });
   }
-}
+};
 function handleInCombatChanged(ev: {
   type: "onInCombatChangedEvent";
   detail: {
@@ -242,7 +270,8 @@ function handleInCombatChanged(ev: {
     inACTCombat: boolean;
   };
 }) {
-  if (ev.detail.inGameCombat && ev.detail.inACTCombat && baseTimeMs.value === 0) startTimeline(0);
+  if (ev.detail.inGameCombat && ev.detail.inACTCombat && baseTimeMs.value === 0)
+    startTimeline(0);
   else if (!ev.detail.inGameCombat && !ev.detail.inACTCombat) stopTimeline();
 }
 </script>
@@ -265,8 +294,18 @@ function handleInCombatChanged(ev: {
         p-id="2216"
       ></path>
     </svg>
-    <ul v-if="timelinePageData.optionalTimeline.length && runtimeTimeSeconds <= -timelineStore.configValues.preBattle" class="optionalTimelines">
-      <li v-for="(item, index) in timelinePageData.optionalTimeline" :key="index" @click="selectedTimeline(item)">
+    <ul
+      v-if="
+        timelinePageData.optionalTimeline.length &&
+        runtimeTimeSeconds <= -timelineStore.configValues.preBattle
+      "
+      class="optionalTimelines"
+    >
+      <li
+        v-for="(item, index) in timelinePageData.optionalTimeline"
+        :key="index"
+        @click="selectedTimeline(item)"
+      >
         {{ item.condition.job }} - {{ item.name }}
       </li>
     </ul>
@@ -280,8 +319,12 @@ function handleInCombatChanged(ev: {
     <button v-if="devMode" @click="startTimeline(0)">开始从0</button>
     <button v-if="devMode" @click="stopTimeline()">团灭</button>
     <button v-if="devMode" @click="fakeJump(1000)">跳转1000测试</button>
-    <button v-if="devMode" @click="cactbotSay('今天天气真不错', true)">TTS测试</button>
-    <span v-if="devMode" style="color: white; background-color: black">{{ runtimeTimeSeconds }}</span>
+    <button v-if="devMode" @click="cactbotSay('今天天气真不错', true)">
+      TTS测试
+    </button>
+    <span v-if="devMode" style="color: white; background-color: black">{{
+      runtimeTimeSeconds
+    }}</span>
   </div>
 </template>
 <style lang="scss">

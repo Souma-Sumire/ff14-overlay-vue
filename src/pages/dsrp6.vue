@@ -10,10 +10,20 @@
         <li class="li-main" v-for="(second, i) in actionTimeline.data" :key="i">
           <aside>{{ i }}</aside>
           <div class="xie">
-            {{ second?.xieHP ?? "" }}%<img v-for="(src, j) in second?.xie" :key="j" :src="src" alt="" />
+            {{ second?.xieHP ?? "" }}%<img
+              v-for="(src, j) in second?.xie"
+              :key="j"
+              :src="src"
+              alt=""
+            />
           </div>
           <div class="sheng">
-            {{ second?.shengHP ?? "" }}%<img v-for="(src, j) in second?.sheng" :key="j" :src="src" alt="" />
+            {{ second?.shengHP ?? "" }}%<img
+              v-for="(src, j) in second?.sheng"
+              :key="j"
+              :src="src"
+              alt=""
+            />
           </div>
         </li>
       </ul>
@@ -23,6 +33,7 @@
 
 <script lang="ts" setup>
 import { getImgSrcByActionId } from "@/utils/xivapi";
+import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
 
 addOverlayListener("LogLine", handleLogLine);
 startOverlayEvents();
@@ -30,11 +41,13 @@ const targetName = {
   xie: ["尼德霍格", "ニーズヘッグ", "Nidhogg"],
   sheng: ["赫拉斯瓦尔格", "フレースヴェルグ", "Hraesvelgr"],
 };
-const actionTimeline: { show: boolean; data: { xie: string[]; xieHP: string; sheng: string[]; shengHP: string }[] } =
-  reactive({
-    data: [],
-    show: false,
-  });
+const actionTimeline: {
+  show: boolean;
+  data: { xie: string[]; xieHP: string; sheng: string[]; shengHP: string }[];
+} = reactive({
+  data: [],
+  show: false,
+});
 const HP = { xie: 0, sheng: 0 };
 let baseTime = 0;
 async function handleLogLine(e: { line: string[] }): Promise<void> {
@@ -43,7 +56,9 @@ async function handleLogLine(e: { line: string[] }): Promise<void> {
     actionTimeline.show = true;
     actionTimeline.data.push({ xie: [], sheng: [], xieHP: "0", shengHP: "0" });
     baseTime = new Date().getTime();
-    setTimeout(() => (baseTime = 0), 7700);
+    setTimeout(() => {
+      baseTime = 0;
+    }, 7700);
   } else if (e.line[0] === "20" && /^(?:63C8|6D21)$/.test(e.line[4])) {
     actionTimeline.data.length = 0;
     actionTimeline.show = false;
@@ -57,8 +72,13 @@ async function handleLogLine(e: { line: string[] }): Promise<void> {
     if (e.line[4] === "07" || e.line[4] === "08") return;
     const timeIndex = Math.round((new Date().getTime() - baseTime) / 1000);
     if (actionTimeline.data[timeIndex] === undefined)
-      actionTimeline.data[timeIndex] = { xie: [], sheng: [], xieHP: HP.xie.toFixed(1), shengHP: HP.sheng.toFixed(1) };
-    const img = await getImgSrcByActionId(parseInt(e.line[4], 16));
+      actionTimeline.data[timeIndex] = {
+        xie: [],
+        sheng: [],
+        xieHP: HP.xie.toFixed(1),
+        shengHP: HP.sheng.toFixed(1),
+      };
+    const img = await getImgSrcByActionId(Number.parseInt(e.line[4], 16));
     if (targetName.xie.includes(e.line[7])) {
       HP.xie = (Number(e.line[24]) / Number(e.line[25])) * 100;
       actionTimeline.data[timeIndex].xie.push(img);

@@ -2,6 +2,7 @@
 import { getActionChinese } from "@/resources/actionChinese";
 import { params } from "@/utils/queryParams";
 import { RemovableRef } from "@vueuse/core";
+import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
 
 class Cast {
   name: string;
@@ -69,30 +70,43 @@ const settings: RemovableRef<{
     targetKey: "Target",
   },
   localStorage,
-  { mergeDefaults: true },
+  { mergeDefaults: true }
 );
 const windowWidth = computed(() => settings.value.width + "px");
 const opacityCountdown = computed(() => (settings.value.showCountdown ? 1 : 0));
 const opacityProgress = computed(() => (settings.value.showProgress ? 1 : 0));
-const opacityActionChinese = computed(() => (settings.value.showActionChinese ? 1 : 0));
+const opacityActionChinese = computed(() =>
+  settings.value.showActionChinese ? 1 : 0
+);
 const opacityActionID = computed(() => (settings.value.showActionID ? 1 : 0));
 const offsetCountdownX = computed(() => settings.value.offsetCountdownX + "px");
 const offsetCountdownY = computed(() => settings.value.offsetCountdownY + "px");
-const offsetActionChineseX = computed(() => settings.value.offsetActionChineseX + "px");
-const offsetActionChineseY = computed(() => settings.value.offsetActionChineseY + "px");
+const offsetActionChineseX = computed(
+  () => settings.value.offsetActionChineseX + "px"
+);
+const offsetActionChineseY = computed(
+  () => settings.value.offsetActionChineseY + "px"
+);
 const offsetActionIDX = computed(() => settings.value.offsetActionIDX + "px");
 const offsetActionIDY = computed(() => settings.value.offsetActionIDY + "px");
 const casting = new Map();
 const now = ref(0);
 const ping = settings.value.ping;
-const showSettings = ref(/^(?:1|true|on)$/i.test(params?.showSettings) || document.getElementById("unlocked")?.style?.display === "flex");
+const showSettings = ref(
+  /^(?:1|true|on)$/i.test(params?.showSettings) ||
+    document.getElementById("unlocked")?.style?.display === "flex"
+);
 
-addOverlayListener("EnmityTargetData", (e: { Target: { ID: number } | null; Focus: { ID: number } | null }) => {
-  data.targetCast = casting.get(e[settings.value.targetKey]?.ID);
-});
+addOverlayListener(
+  "EnmityTargetData",
+  (e: { Target: { ID: number } | null; Focus: { ID: number } | null }) => {
+    data.targetCast = casting.get(e[settings.value.targetKey]?.ID);
+  }
+);
 
 addOverlayListener("LogLine", (e: { line: string[] }) => {
-  if (e.line[0] === "20") casting.set(parseInt(e.line[2], 16), new Cast(e.line));
+  if (e.line[0] === "20")
+    casting.set(parseInt(e.line[2], 16), new Cast(e.line));
   else if (e.line[0] === "23") casting.delete(parseInt(e.line[2], 16));
 });
 
@@ -105,7 +119,7 @@ requestAnimationFrame(function update() {
   requestAnimationFrame(update);
 });
 
-document.addEventListener("onOverlayStateUpdate", (e: any) => {
+document.addEventListener("onOverlayStateUpdate", (e) => {
   showSettings.value = e?.detail?.isLocked === false;
 });
 
@@ -118,45 +132,183 @@ function resetSettings() {
 <template>
   <el-container>
     <el-header v-show="showSettings" class="settings">
-      <form>宽度: <el-input-number v-model="settings.width" :min="20" :max="1000" size="small" controls-position="right" /></form>
+      <form>
+        宽度:
+        <el-input-number
+          v-model="settings.width"
+          :min="20"
+          :max="1000"
+          size="small"
+          controls-position="right"
+        />
+      </form>
       <form>显示倒计时: <el-switch v-model="settings.showCountdown" /></form>
       <form>显示进度条: <el-switch v-model="settings.showProgress" /></form>
       <form>显示中文: <el-switch v-model="settings.showActionChinese" /></form>
       <form>显示ID: <el-switch v-model="settings.showActionID" /></form>
-      <form>延迟(ms): <el-input-number v-model="settings.ping" :min="0" :max="10000" size="small" controls-position="right" /></form>
-      <form>保留(ms): <el-input-number v-model="settings.keep" :min="0" :max="100000" size="small" controls-position="right" /></form>
-      <form>倒计时偏移X: <el-input-number v-model="settings.offsetCountdownX" :min="-1000" :max="1000" size="small" /></form>
-      <form>倒计时偏移Y: <el-input-number v-model="settings.offsetCountdownY" :min="-1000" :max="1000" size="small" controls-position="right" /></form>
-      <form>中文偏移X: <el-input-number v-model="settings.offsetActionChineseX" :min="-1000" :max="1000" size="small" /></form>
-      <form>中文偏移Y: <el-input-number v-model="settings.offsetActionChineseY" :min="-1000" :max="1000" size="small" controls-position="right" /></form>
-      <form>ID偏移X: <el-input-number v-model="settings.offsetActionIDX" :min="-1000" :max="1000" size="small" /></form>
-      <form>ID偏移Y: <el-input-number v-model="settings.offsetActionIDY" :min="-1000" :max="1000" size="small" controls-position="right" /></form>
-      <form>倒计时字号(px): <el-input-number v-model="settings.fontSizeCountDown" :min="1" :max="100" size="small" controls-position="right" /></form>
-      <form>中文字号(px): <el-input-number v-model="settings.fontSizeActionName" :min="1" :max="100" size="small" controls-position="right" /></form>
-      <form style="width: 10rem">字体: <el-input v-model="settings.fontFamily" size="small" clearable @clear="settings.fontFamily = 'SmartisanHei'" /></form>
+      <form>
+        延迟(ms):
+        <el-input-number
+          v-model="settings.ping"
+          :min="0"
+          :max="10000"
+          size="small"
+          controls-position="right"
+        />
+      </form>
+      <form>
+        保留(ms):
+        <el-input-number
+          v-model="settings.keep"
+          :min="0"
+          :max="100000"
+          size="small"
+          controls-position="right"
+        />
+      </form>
+      <form>
+        倒计时偏移X:
+        <el-input-number
+          v-model="settings.offsetCountdownX"
+          :min="-1000"
+          :max="1000"
+          size="small"
+        />
+      </form>
+      <form>
+        倒计时偏移Y:
+        <el-input-number
+          v-model="settings.offsetCountdownY"
+          :min="-1000"
+          :max="1000"
+          size="small"
+          controls-position="right"
+        />
+      </form>
+      <form>
+        中文偏移X:
+        <el-input-number
+          v-model="settings.offsetActionChineseX"
+          :min="-1000"
+          :max="1000"
+          size="small"
+        />
+      </form>
+      <form>
+        中文偏移Y:
+        <el-input-number
+          v-model="settings.offsetActionChineseY"
+          :min="-1000"
+          :max="1000"
+          size="small"
+          controls-position="right"
+        />
+      </form>
+      <form>
+        ID偏移X:
+        <el-input-number
+          v-model="settings.offsetActionIDX"
+          :min="-1000"
+          :max="1000"
+          size="small"
+        />
+      </form>
+      <form>
+        ID偏移Y:
+        <el-input-number
+          v-model="settings.offsetActionIDY"
+          :min="-1000"
+          :max="1000"
+          size="small"
+          controls-position="right"
+        />
+      </form>
+      <form>
+        倒计时字号(px):
+        <el-input-number
+          v-model="settings.fontSizeCountDown"
+          :min="1"
+          :max="100"
+          size="small"
+          controls-position="right"
+        />
+      </form>
+      <form>
+        中文字号(px):
+        <el-input-number
+          v-model="settings.fontSizeActionName"
+          :min="1"
+          :max="100"
+          size="small"
+          controls-position="right"
+        />
+      </form>
+      <form style="width: 10rem">
+        字体:
+        <el-input
+          v-model="settings.fontFamily"
+          size="small"
+          clearable
+          @clear="settings.fontFamily = 'SmartisanHei'"
+        />
+      </form>
       <form class="noCSS">
-        <el-select v-model="settings.targetKey" placeholder="Select" size="small" :teleported="false">
-          <el-option v-for="item in targetOptions" :key="item.value" :label="item.label" :value="item.value" />
+        <el-select
+          v-model="settings.targetKey"
+          placeholder="Select"
+          size="small"
+          :teleported="false"
+        >
+          <el-option
+            v-for="item in targetOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
         </el-select>
       </form>
       <form class="noCSS">
-        <el-popconfirm @confirm="resetSettings" :teleported="false" title="确定要重置？">
+        <el-popconfirm
+          @confirm="resetSettings"
+          :teleported="false"
+          title="确定要重置？"
+        >
           <template #reference>
             <el-button>重置全部用户设置</el-button>
           </template>
         </el-popconfirm>
       </form>
     </el-header>
-    <el-main v-show="data.targetCast && now - data.targetCast.overTime + ping < settings.keep" :style="{ fontFamily: settings.fontFamily }">
+    <el-main
+      v-show="
+        data.targetCast && now - data.targetCast.overTime + ping < settings.keep
+      "
+      :style="{ fontFamily: settings.fontFamily }"
+    >
       <el-row>
         <el-col :span="24" flex justify-end
-          ><div :style="{ fontSize: settings.fontSizeCountDown + 'px' }" class="countdown">
-            {{ Math.max(((data.targetCast?.overTime ?? 1) - now - ping) / 1000, 0).toFixed(2) }}
+          ><div
+            :style="{ fontSize: settings.fontSizeCountDown + 'px' }"
+            class="countdown"
+          >
+            {{
+              Math.max(
+                ((data.targetCast?.overTime ?? 1) - now - ping) / 1000,
+                0
+              ).toFixed(2)
+            }}
           </div></el-col
         >
       </el-row>
       <el-progress
-        :percentage="Math.min(((now - (data.targetCast?.startTime ?? 1) + ping) / (data.targetCast?.castTime ?? 1)) * 100, 100)"
+        :percentage="
+          Math.min(
+            ((now - (data.targetCast?.startTime ?? 1) + ping) /
+              (data.targetCast?.castTime ?? 1)) *
+              100,
+            100
+          )
+        "
         :stroke-width="8"
         :indeterminate="false"
         :show-text="false"
@@ -165,8 +317,17 @@ function resetSettings() {
       />
       <el-row>
         <el-col :span="24" class="action"
-          ><div class="actionID">{{ data.targetCast?.actionId }}({{ data.targetCast?.actionId.toString(16).toUpperCase() }})</div>
-          <div :style="{ fontSize: settings.fontSizeActionName + 'px' }" class="actionChinese">{{ data.targetCast?.name }}</div></el-col
+          ><div class="actionID">
+            {{ data.targetCast?.actionId }}({{
+              data.targetCast?.actionId.toString(16).toUpperCase()
+            }})
+          </div>
+          <div
+            :style="{ fontSize: settings.fontSizeActionName + 'px' }"
+            class="actionChinese"
+          >
+            {{ data.targetCast?.name }}
+          </div></el-col
         >
       </el-row>
     </el-main>
@@ -181,8 +342,10 @@ function resetSettings() {
 }
 @font-face {
   font-family: "SmartisanHei";
-  src: url("//ffxiv-res.diemoe.net/SmartisanHei.woff2") format("woff2"), url("//ffxiv-res.diemoe.net/SmartisanHei.ttf"),
-    url("//cdn.diemoe.net/files/fonts/SmartisanHei.woff2") format("woff2"), url("//cdn.diemoe.net/files/fonts/SmartisanHei.ttf");
+  src: url("//ffxiv-res.diemoe.net/SmartisanHei.woff2") format("woff2"),
+    url("//ffxiv-res.diemoe.net/SmartisanHei.ttf"),
+    url("//cdn.diemoe.net/files/fonts/SmartisanHei.woff2") format("woff2"),
+    url("//cdn.diemoe.net/files/fonts/SmartisanHei.ttf");
   font-weight: normal;
   font-style: normal;
 }
@@ -194,7 +357,8 @@ function resetSettings() {
   height: 90vh;
   color: white;
   > form:not(.noCSS) {
-    text-shadow: -1px 0 1px #000, 0 1px 1px #000, 1px 0 1px #000, 0 -1px 1px #000;
+    text-shadow: -1px 0 1px #000, 0 1px 1px #000, 1px 0 1px #000,
+      0 -1px 1px #000;
   }
   font-weight: bold;
   display: flex;
@@ -209,7 +373,8 @@ function resetSettings() {
 }
 .countdown {
   opacity: v-bind(opacityCountdown);
-  transform: translateX(v-bind(offsetCountdownX)) translateY(calc(v-bind(offsetCountdownY) * -1));
+  transform: translateX(v-bind(offsetCountdownX))
+    translateY(calc(v-bind(offsetCountdownY) * -1));
 }
 .progress {
   opacity: v-bind(opacityProgress);
@@ -221,16 +386,19 @@ function resetSettings() {
 }
 .actionChinese {
   opacity: v-bind(opacityActionChinese);
-  transform: translateX(v-bind(offsetActionChineseX)) translateY(calc(v-bind(offsetActionChineseY) * -1));
+  transform: translateX(v-bind(offsetActionChineseX))
+    translateY(calc(v-bind(offsetActionChineseY) * -1));
 }
 .actionID {
   opacity: v-bind(opacityActionID);
-  transform: translateX(v-bind(offsetActionIDX)) translateY(calc(v-bind(offsetActionIDY) * -1));
+  transform: translateX(v-bind(offsetActionIDX))
+    translateY(calc(v-bind(offsetActionIDY) * -1));
 }
 .el-main {
   width: v-bind(windowWidth);
   color: rgb(254, 254, 253);
-  text-shadow: -1px 0 3px #b38915, 0 1px 3px #b38915, 1px 0 3px #b38915, 0 -1px 3px #b38915;
+  text-shadow: -1px 0 3px #b38915, 0 1px 3px #b38915, 1px 0 3px #b38915,
+    0 -1px 3px #b38915;
   padding: 10px;
   margin: 0px;
   > * {

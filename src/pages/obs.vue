@@ -1,6 +1,4 @@
-<!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <script setup lang="ts">
-/*global addOverlayListener,removeOverlayListener,startOverlayEvents */
 import ContentType from "../../cactbot/resources/content_type";
 import ZoneInfo from "../resources/zoneInfo";
 import UserConfig from "../../cactbot/resources/user_config";
@@ -8,6 +6,8 @@ import { commonNetRegex } from "../../cactbot/resources/netregexes";
 import { LocaleNetRegex } from "../../cactbot/resources/translations";
 import OBSWebSocket, { RequestBatchRequest } from "obs-websocket-js";
 import { VXETable } from "vxe-table";
+import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
+import { EventMap } from "cactbot/types/event";
 
 const defaultEntireForZones: number[] = [
   ContentType.DutyRoulette,
@@ -26,7 +26,9 @@ const ZoneType = {
   VcOrDeepDungeons: "vcOrDeepDungeons",
   Pvp: "pvp",
 };
-const oldPw = JSON.parse(window.localStorage.getItem("obs2-data") ?? "{}")?.password;
+const oldPw = JSON.parse(
+  window.localStorage.getItem("obs2-data") ?? "{}"
+)?.password;
 const password = useStorage("obs-passwd", oldPw ?? "");
 const config = useStorage("aster-obs-config", {
   host: "4455",
@@ -37,7 +39,7 @@ const config = useStorage("aster-obs-config", {
   autoForZones: defaultEntireForZones,
   recFilePaths: Object.fromEntries(Object.values(ZoneType).map((i) => [i, ""])),
 });
-config.value.host = config.value.host.replace(/^.+?:/,'');
+config.value.host = config.value.host.replace(/^.+?:/, "");
 const data = {
   partyLength: 1,
   inACTCombat: false,
@@ -71,19 +73,13 @@ onMounted(async () => {
   if (password.value !== "") {
     await connect(true);
   } else {
-    VXETable.modal.alert({ content: "先锁定悬浮窗，再填写端口与密码", title: "初次使用", width: "80%", size: "mini" });
+    VXETable.modal.alert({
+      content: "先锁定悬浮窗，再填写端口与密码",
+      title: "初次使用",
+      width: "80%",
+      size: "mini",
+    });
   }
-});
-onUnmounted(() => {
-  obs.off("ExitStarted", onConnectionClosed);
-  obs.off("ConnectionClosed", onConnectionClosed);
-  obs.off("ConnectionError", onConnectionClosed);
-  obs.off("RecordStateChanged", onRecordStateChanged);
-  removeOverlayListener("LogLine", handleLogLine);
-  removeOverlayListener("ChangeZone", handleChangeZone);
-  removeOverlayListener("onInCombatChangedEvent", handleInCombatChanged);
-  removeOverlayListener("PartyChanged", handlePartyChanged);
-  obs.disconnect();
 });
 
 async function connect(init = false) {
@@ -93,7 +89,9 @@ async function connect(init = false) {
       if (!config.value.userRecFilePath) {
         getUserRecFilePath();
       }
-      obs.call("GetRecordStatus").then((v) => (status.recording = v.outputActive));
+      obs
+        .call("GetRecordStatus")
+        .then((v) => (status.recording = v.outputActive));
       VXETable.modal.message({
         content: "连接成功",
         status: "success",
@@ -192,10 +190,17 @@ async function setRecordingNameAndFolder(revert = false) {
   return Promise.resolve(true);
 }
 async function start(reason: string, restart = true, justDoIt = false) {
-  MyLog("[obs_start_prepare] ", { recording: status.recording, data, reason, restart, justDoIt });
+  MyLog("[obs_start_prepare] ", {
+    recording: status.recording,
+    data,
+    reason,
+    restart,
+    justDoIt,
+  });
   try {
     if (data.reason === "countDown") data.reason = reason;
-    if (!justDoIt && data.partyLength <= config.value.greaterThan) return Promise.resolve(true);
+    if (!justDoIt && data.partyLength <= config.value.greaterThan)
+      return Promise.resolve(true);
     if (!status.connected && !(await connect())) return Promise.resolve(false);
     if (status.recording && !restart) return Promise.resolve(true);
     data.reason = reason;
@@ -205,8 +210,16 @@ async function start(reason: string, restart = true, justDoIt = false) {
     }
     if ((await setRecordingNameAndFolder(false)) !== false) {
       await new Promise((res) => setTimeout(res, 500));
-      MyLog("[obs_start] ", { recording: status.recording, data, reason, restart, justDoIt });
-      return obs.call("StartRecord").then(() => setTimeout(() => setRecordingNameAndFolder(true), 2000));
+      MyLog("[obs_start] ", {
+        recording: status.recording,
+        data,
+        reason,
+        restart,
+        justDoIt,
+      });
+      return obs
+        .call("StartRecord")
+        .then(() => setTimeout(() => setRecordingNameAndFolder(true), 2000));
     }
   } catch (error) {
     console.warn(["obs_start_error"], error);
@@ -223,7 +236,10 @@ function onConnectionClosed() {
   status.connected = false;
 }
 
-function onRecordStateChanged(e: { outputActive: boolean; outputState: string }) {
+function onRecordStateChanged(e: {
+  outputActive: boolean;
+  outputState: string;
+}) {
   switch (e.outputState) {
     case "OBS_WEBSOCKET_OUTPUT_STARTED":
       status.recording = true;
@@ -235,7 +251,9 @@ function onRecordStateChanged(e: { outputActive: boolean; outputState: string })
 }
 
 const isWipe = (line: string): boolean => {
-  return commonNetRegex.wipe.test(line) || /^41\|[^|]*\|[^|]*\|7DE\|/.test(line);
+  return (
+    commonNetRegex.wipe.test(line) || /^41\|[^|]*\|[^|]*\|7DE\|/.test(line)
+  );
 };
 const isCountDownStart = (line: string): boolean => {
   return LocaleNetRegex.countdownStart[options.ParserLanguage].test(line);
@@ -244,10 +262,15 @@ const isCountDownCancel = (line: string): boolean => {
   return LocaleNetRegex.countdownCancel[options.ParserLanguage].test(line);
 };
 
-async function handleLogLine(ev: { line: string[]; rawLine: string; type: string }) {
+async function handleLogLine(ev: {
+  line: string[];
+  rawLine: string;
+  type: string;
+}) {
   if (status.recording) {
     if (isWipe(ev.rawLine)) return stop("wipe");
-    if (data.reason === "countDown" && isCountDownCancel(ev.rawLine)) return stop("countDown");
+    if (data.reason === "countDown" && isCountDownCancel(ev.rawLine))
+      return stop("countDown");
   } else if (isCountDownStart(ev.rawLine)) {
     return start("countDown", false);
   }
@@ -267,11 +290,12 @@ async function handleChangeZone(ev: { zoneID: number; zoneName: string }) {
   data.zoneName = zoneInfo.name[options.ParserLanguage] ?? ev.zoneName;
   data.zoneType = getZoneType(zoneInfo);
   MyLog(["changeZone"], { data, ev });
-  if (config.value.autoForZones.includes(zoneInfo.contentType)) return start("changeZone", false);
+  if (config.value.autoForZones.includes(zoneInfo.contentType))
+    return start("changeZone", false);
   return stop("changeZone");
 }
 
-function getZoneType(zoneInfo:any) {
+function getZoneType(zoneInfo: (typeof ZoneInfo)[number]) {
   switch (zoneInfo.contentType) {
     case ContentType.UltimateRaids:
       return ZoneType.UltimateOrRaidOrTrials;
@@ -281,22 +305,31 @@ function getZoneType(zoneInfo:any) {
     case ContentType.VCDungeonFinder:
       return ZoneType.VcOrDeepDungeons;
     case ContentType.Trials:
-      if (zoneInfo.name["fr"]?.includes("(extrême)")) return ZoneType.UltimateOrRaidOrTrials;
+      if (zoneInfo.name["fr"]?.includes("(extrême)"))
+        return ZoneType.UltimateOrRaidOrTrials;
       break;
     case ContentType.Raids:
-      if (zoneInfo.name["en"]?.includes("(Savage)")) return ZoneType.UltimateOrRaidOrTrials;
+      if (zoneInfo.name["en"]?.includes("(Savage)"))
+        return ZoneType.UltimateOrRaidOrTrials;
       break;
   }
   return ZoneType.Default;
 }
 
-async function handleInCombatChanged(ev:any) {
+const handleInCombatChanged: EventMap["onInCombatChangedEvent"] = async (
+  ev
+) => {
   if (!config.value.inCombatStart) {
     return Promise.resolve();
   }
   const prev = data.inACTCombat;
   data.inACTCombat = ev.detail.inACTCombat;
-  MyLog(["InCombatChanged"], { now: ev.detail.inACTCombat, prev, zoneName: data.zoneName, recording: status.recording });
+  MyLog(["InCombatChanged"], {
+    now: ev.detail.inACTCombat,
+    prev,
+    zoneName: data.zoneName,
+    recording: status.recording,
+  });
 
   await new Promise((res) => setTimeout(res, 500));
 
@@ -305,18 +338,25 @@ async function handleInCombatChanged(ev:any) {
   }
 
   const zoneInfo = ZoneInfo[data.zoneID];
-  const autoForZone = config.value.autoForZones.includes(zoneInfo?.contentType ?? 0);
+  const autoForZone = config.value.autoForZones.includes(
+    zoneInfo?.contentType ?? 0
+  );
 
-  if (prev && !ev.detail.inACTCombat && data.reason === "inCombat" && !autoForZone) {
+  if (
+    prev &&
+    !ev.detail.inACTCombat &&
+    data.reason === "inCombat" &&
+    !autoForZone
+  ) {
     return stop("inCombat");
   }
 
   return Promise.resolve();
-}
+};
 
-function handlePartyChanged(e: { party: any[] }) {
-  data.partyLength = e.party?.length || 1;
-}
+const handlePartyChanged: EventMap["PartyChanged"] = (ev) => {
+  data.partyLength = ev.party?.length || 1;
+};
 
 function toggleWindow(window: string) {
   showHeader.value = window !== "settings";
@@ -330,69 +370,193 @@ function toggleWindow(window: string) {
       <i
         v-show="status.connected"
         class="vxe-icon-dot icon"
-        :style="{ color: status.recording ? 'red' : 'gray', textShadow: '0px  0px 3px black', margin: '1px' }"
+        :style="{
+          color: status.recording ? 'red' : 'gray',
+          textShadow: '0px  0px 3px black',
+          margin: '1px',
+        }"
       ></i>
-      <vxe-button class="btns" icon="vxe-icon-caret-right" v-show="status.connected && !status.recording" @click="start('manual', false, true)"></vxe-button>
-      <vxe-button class="btns" icon="vxe-icon-close" v-show="status.connected && status.recording" @click="stop('manual')" size="mini"></vxe-button>
-      <vxe-button class="btns" icon="vxe-icon-cut" v-show="status.connected && status.recording" @click="start('manual', true, true)" size="mini"></vxe-button>
-      <vxe-button class="btns settings" icon="vxe-icon-setting" @click="toggleWindow('settings')" size="mini"></vxe-button>
+      <vxe-button
+        class="btns"
+        icon="vxe-icon-caret-right"
+        v-show="status.connected && !status.recording"
+        @click="start('manual', false, true)"
+      ></vxe-button>
+      <vxe-button
+        class="btns"
+        icon="vxe-icon-close"
+        v-show="status.connected && status.recording"
+        @click="stop('manual')"
+        size="mini"
+      ></vxe-button>
+      <vxe-button
+        class="btns"
+        icon="vxe-icon-cut"
+        v-show="status.connected && status.recording"
+        @click="start('manual', true, true)"
+        size="mini"
+      ></vxe-button>
+      <vxe-button
+        class="btns settings"
+        icon="vxe-icon-setting"
+        @click="toggleWindow('settings')"
+        size="mini"
+      ></vxe-button>
     </div>
   </header>
   <main v-show="showSettings">
-    <vxe-form :data="config" :collapseStatus="!showMore" custom-layout size="mini">
+    <vxe-form
+      :data="config"
+      :collapseStatus="!showMore"
+      custom-layout
+      size="mini"
+    >
       <vxe-form-item span="24" v-show="showSettings" class-name="hidePageBtn">
-        <vxe-button size="mini" content="隐藏页面" icon="vxe-icon-eye-fill-close" @click="toggleWindow('header')"></vxe-button>
+        <vxe-button
+          size="mini"
+          content="隐藏页面"
+          icon="vxe-icon-eye-fill-close"
+          @click="toggleWindow('header')"
+        ></vxe-button>
       </vxe-form-item>
       <vxe-form-item span="24" field="host" title="OBS服务器端口">
-        <vxe-input v-model="config.host" type="number" size="small" style="width: 70%; margin-right: -5px"></vxe-input>
+        <vxe-input
+          v-model="config.host"
+          type="number"
+          size="small"
+          style="width: 70%; margin-right: -5px"
+        ></vxe-input>
         <vxe-button
           content="无法输入"
           size="mini"
           icon="vxe-icon-question"
           type="text"
           status="info"
-          @click="VXETable.modal.message({ content: '先点击ACT，再点击悬浮窗，即可正常输入' })"
+          @click="
+            VXETable.modal.message({
+              content: '先点击ACT，再点击悬浮窗，即可正常输入',
+            })
+          "
         ></vxe-button>
       </vxe-form-item>
       <vxe-form-item span="24" field="password" title="OBS服务器密码">
-        <vxe-input v-model="password" size="small" placeholder="密码" type="password"></vxe-input>
+        <vxe-input
+          v-model="password"
+          size="small"
+          placeholder="密码"
+          type="password"
+        ></vxe-input>
       </vxe-form-item>
       <vxe-form-item span="24" field="inCombatStart" title="进入战斗自动录制">
-        <vxe-switch v-model="config.inCombatStart" open-label="是" close-label="否"></vxe-switch>
+        <vxe-switch
+          v-model="config.inCombatStart"
+          open-label="是"
+          close-label="否"
+        ></vxe-switch>
       </vxe-form-item>
-      <vxe-form-item span="24" field="suffixByZone" title="录像文件名添加副本名后缀">
-        <vxe-switch v-model="config.suffixByZone" open-label="是" close-label="否"></vxe-switch>
+      <vxe-form-item
+        span="24"
+        field="suffixByZone"
+        title="录像文件名添加副本名后缀"
+      >
+        <vxe-switch
+          v-model="config.suffixByZone"
+          open-label="是"
+          close-label="否"
+        ></vxe-switch>
       </vxe-form-item>
       <vxe-form-item span="24" field="greaterThan" title="小队多于">
-        <vxe-input v-model="config.greaterThan" size="small" type="integer" min="0" max="8" style="width: 3rem"></vxe-input>
+        <vxe-input
+          v-model="config.greaterThan"
+          size="small"
+          type="integer"
+          min="0"
+          max="8"
+          style="width: 3rem"
+        ></vxe-input>
         人自动录制（8:永不自动）
       </vxe-form-item>
-      <vxe-form-item span="24" field="autoForZones" title="进入区域自动录制" class-name="zoneAuto" folding title-overflow>
+      <vxe-form-item
+        span="24"
+        field="autoForZones"
+        title="进入区域自动录制"
+        class-name="zoneAuto"
+        folding
+        title-overflow
+      >
         <vxe-checkbox-group v-model="config.autoForZones">
-          <vxe-checkbox :label="ContentType.UltimateRaids" content="绝境战"></vxe-checkbox>
-          <vxe-checkbox :label="ContentType.Raids" content="大型Raid"></vxe-checkbox>
-          <vxe-checkbox :label="ContentType.Trials" content="讨伐战"></vxe-checkbox>
-          <vxe-checkbox :label="ContentType.VCDungeonFinder" content="异闻迷宫"></vxe-checkbox>
-          <vxe-checkbox :label="ContentType.DeepDungeons" content="深层迷宫"></vxe-checkbox>
-          <vxe-checkbox :label="ContentType.Dungeons" content="4人迷宫"></vxe-checkbox>
+          <vxe-checkbox
+            :label="ContentType.UltimateRaids"
+            content="绝境战"
+          ></vxe-checkbox>
+          <vxe-checkbox
+            :label="ContentType.Raids"
+            content="大型Raid"
+          ></vxe-checkbox>
+          <vxe-checkbox
+            :label="ContentType.Trials"
+            content="讨伐战"
+          ></vxe-checkbox>
+          <vxe-checkbox
+            :label="ContentType.VCDungeonFinder"
+            content="异闻迷宫"
+          ></vxe-checkbox>
+          <vxe-checkbox
+            :label="ContentType.DeepDungeons"
+            content="深层迷宫"
+          ></vxe-checkbox>
+          <vxe-checkbox
+            :label="ContentType.Dungeons"
+            content="4人迷宫"
+          ></vxe-checkbox>
           <vxe-checkbox :label="ContentType.Pvp" content="PVP"></vxe-checkbox>
         </vxe-checkbox-group>
       </vxe-form-item>
-      <vxe-form-item span="24" title="录像目录（须保证目录存在，可留空）" folding></vxe-form-item>
+      <vxe-form-item
+        span="24"
+        title="录像目录（须保证目录存在，可留空）"
+        folding
+      ></vxe-form-item>
       <vxe-form-item span="24" title="默认" folding class-name="recPaths">
-        <vxe-input v-model="config.recFilePaths.default" size="small" placeholder="留空则使用OBS录像目录" spellcheck="false"></vxe-input>
+        <vxe-input
+          v-model="config.recFilePaths.default"
+          size="small"
+          placeholder="留空则使用OBS录像目录"
+          spellcheck="false"
+        ></vxe-input>
       </vxe-form-item>
       <vxe-form-item span="24" title="高难" folding class-name="recPaths">
-        <vxe-input v-model="config.recFilePaths.ultimateOrRaidOrTrials" size="small" placeholder="绝&零式&极神" spellcheck="false"></vxe-input>
+        <vxe-input
+          v-model="config.recFilePaths.ultimateOrRaidOrTrials"
+          size="small"
+          placeholder="绝&零式&极神"
+          spellcheck="false"
+        ></vxe-input>
       </vxe-form-item>
       <vxe-form-item span="24" title="深层" folding class-name="recPaths">
-        <vxe-input v-model="config.recFilePaths.vcOrDeepDungeons" size="small" placeholder="深层&异闻迷宫" spellcheck="false"></vxe-input>
+        <vxe-input
+          v-model="config.recFilePaths.vcOrDeepDungeons"
+          size="small"
+          placeholder="深层&异闻迷宫"
+          spellcheck="false"
+        ></vxe-input>
       </vxe-form-item>
       <vxe-form-item span="24" title="PVP" folding class-name="recPaths">
-        <vxe-input v-model="config.recFilePaths.pvp" size="small" placeholder="玩家对战" spellcheck="false"></vxe-input>
+        <vxe-input
+          v-model="config.recFilePaths.pvp"
+          size="small"
+          placeholder="玩家对战"
+          spellcheck="false"
+        ></vxe-input>
       </vxe-form-item>
       <vxe-form-item span="24" collapse-node>
-        <vxe-button size="mini" :status="'primary'" icon="vxe-icon-swap" content="连接" @click="connect(true)"></vxe-button>
+        <vxe-button
+          size="mini"
+          :status="'primary'"
+          icon="vxe-icon-swap"
+          content="连接"
+          @click="connect(true)"
+        ></vxe-button>
         <!-- <vxe-button v-show="!status.connected" type="text" status="danger" size="mini" icon="vxe-icon-warning-circle" content="未连接"></vxe-button>
         <vxe-button v-show="status.connected" type="text" status="success" size="mini" icon="vxe-icon-success-circle" content="已连接"></vxe-button> -->
       </vxe-form-item>
@@ -468,3 +632,5 @@ main {
   margin: 0;
 }
 </style>
+: { detail: { inACTCombat: boolean; }; }: { party: string | any[]; }: { detail:
+{ inACTCombat: boolean; }; }: { party: string | any[]; }

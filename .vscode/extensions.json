@@ -1,7 +1,9 @@
 {
-    "recommendations": [
-        "vue.volar",
-        "antfu.vite",
-        "antfu.unocss"
-    ]
+  "recommendations": [
+    "biomejs.biome",
+    "dbaeumer.vscode-eslint",
+    "antfu.vite",
+    "antfu.unocss",
+    "vue.volar"
+  ]
 }

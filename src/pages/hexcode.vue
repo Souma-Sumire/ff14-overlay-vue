@@ -77,10 +77,7 @@ function test(text: string): Result[] {
         label = true;
         colon = false;
       }
-      if (label && !colon) {
-      } else if (b === ">" && colon) {
-      } else if (b === "<" && after === "<hex:") {
-      } else {
+      if (label && !colon) { /* empty */ } else if (b === ">" && colon) { /* empty */ } else if (b === "<" && after === "<hex:") { /* empty */ } else {
         const l = getUtf8ByteLength(b);
         byte += label ? l / 2 : l;
         console.debug(b, "+" + (label ? l / 2 : l), `已数${byte}`);

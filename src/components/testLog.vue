@@ -23,7 +23,7 @@ const select = ref<HTMLInputElement | null>(null);
 const onChange = async (e: Event) => {
   select.value?.classList.remove("drag");
   const files = (e.target as HTMLInputElement).files;
-  if (!files || files.length == 0) {
+  if (!files || files.length === 0) {
     return;
   }
 
@@ -32,9 +32,9 @@ const onChange = async (e: Event) => {
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     const text = await file.text();
-    text.split("\n").forEach((line) => {
+    for (const line of text.split("\n")) {
       emits("handleLine", line);
-    });
+    }
   }
 
   emits("afterHandle");

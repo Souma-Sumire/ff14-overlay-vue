@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
+import type { EventMap } from "cactbot/types/event";
 import moment from "moment";
 
-const isDev = process.env.NODE_ENV === "development";
 const time = ref("");
 const gameIsActive = ref(false);
 const gameActiveTime = ref(0);
@@ -18,12 +19,17 @@ requestAnimationFrame(function update() {
     const duration = moment.duration(milliseconds);
     const minutes = duration.minutes();
     const seconds = duration.seconds();
-    gameCombatTime.value = `${minutes < 10 ? "0" : ""}${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+    gameCombatTime.value = `${minutes < 10 ? "0" : ""}${minutes}:${
+      seconds < 10 ? "0" : ""
+    }${seconds}`;
   }
   requestAnimationFrame(update);
 });
 
-const handleCombatData = (e: any) => {
+const handleCombatData: (ev: {
+  type: "CombatData";
+  isActive?: "true" | "false";
+}) => void = (e) => {
   if (e.isActive === "true" && gameIsActive.value === false) {
     gameActiveTime.value = Date.now();
   } else if (e.isActive === "false") {
@@ -33,9 +39,10 @@ const handleCombatData = (e: any) => {
   gameIsActive.value = e.isActive === "true";
 };
 
-const handleLogLine = (e: any) => {
+const handleLogLine: EventMap["LogLine"] = (e) => {
   if (e.line[0] === "00") return;
-  lastLogTime.value = e.line[1].match(/(?<=T)\d\d:\d\d\:\d\d\.\d\d\d/)[0];
+  lastLogTime.value =
+    e?.line?.[1]?.match(/(?<=T)\d\d:\d\d:\d\d\.\d\d\d/)?.[0] ?? "";
 };
 
 addOverlayListener("CombatData", handleCombatData);
@@ -51,10 +58,10 @@ startOverlayEvents();
     <span v-if="gameCombatTime" class="time gameTime">
       {{ gameCombatTime }}
     </span>
-    <span v-if="timeType === 'game' || isDev" class="time logTime">
+    <span v-if="timeType === 'game'" class="time logTime">
       {{ lastLogTime }}
     </span>
-    <span v-if="timeType === 'real' || isDev" class="time realTime">
+    <span v-if="timeType === 'real'" class="time realTime">
       {{ time }}
     </span>
   </div>

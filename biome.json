@@ -1,0 +1,30 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.6.0/schema.json",
+  "organizeImports": {
+    "enabled": false
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true
+    }
+  },
+  "files": {
+    "ignore": [
+      "cactbot",
+      "src/pages/okASTCard.vue",
+      "src/pages/raidbuffRecord.vue",
+      "src/types/auto-imports.d.ts",
+      "src/types/components.d.ts"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": false,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 80,
+    "lineEnding": "crlf",
+    "ignore": []
+  }
+}

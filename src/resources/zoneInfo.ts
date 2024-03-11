@@ -1,5 +1,4 @@
 import data from "../../cactbot/resources/zone_info";
-
 const zoneInfo = Object.assign(
   {
     967: {

@@ -1,23 +1,29 @@
 <script setup lang="ts">
 import { useCastingMonitorStore } from "@/store/castingMonitor";
+import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
 const castingMonitorStore = useCastingMonitorStore();
 const dev = location.href.indexOf("localhost") > -1;
 onMounted(() => {
-  addOverlayListener("ChangePrimaryPlayer", castingMonitorStore.handleChangePrimaryPlayer);
+  addOverlayListener(
+    "ChangePrimaryPlayer",
+    castingMonitorStore.handleChangePrimaryPlayer
+  );
   addOverlayListener("LogLine", castingMonitorStore.handleLogLine);
   addOverlayListener("PartyChanged", castingMonitorStore.handlePartyChanged);
-  addOverlayListener("BroadcastMessage", castingMonitorStore.handleBroadcastMessage);
+  addOverlayListener("BroadcastMessage", (e) => {
+    if (e.source === "castMonitorOverlay") {
+      castingMonitorStore.focusTargetId = (
+        e.msg as { targetId: string }
+      ).targetId;
+    }
+  });
   startOverlayEvents();
-});
-onBeforeUnmount(() => {
-  removeOverlayListener("ChangePrimaryPlayer", castingMonitorStore.handleChangePrimaryPlayer);
-  removeOverlayListener("LogLine", castingMonitorStore.handleLogLine);
-  removeOverlayListener("PartyChanged", castingMonitorStore.handlePartyChanged);
-  removeOverlayListener("BroadcastMessage", castingMonitorStore.handleBroadcastMessage);
 });
 const show = ref(false);
 setInterval(() => {
-  show.value = Date.now() - castingMonitorStore.lastPush < castingMonitorStore.config.duration * 2 * 1000;
+  show.value =
+    Date.now() - castingMonitorStore.lastPush <
+    castingMonitorStore.config.duration * 2 * 1000;
 }, 1000);
 </script>
 
@@ -32,7 +38,9 @@ setInterval(() => {
       </el-main>
     </el-container>
     <footer v-if="dev">
-      <el-button @click="castingMonitorStore.testParty(true)">虚假小队</el-button>
+      <el-button @click="castingMonitorStore.testParty(true)"
+        >虚假小队</el-button
+      >
       <el-button @click="castingMonitorStore.testParty(false)">单人</el-button>
       <el-button @click="castingMonitorStore.testAction()">Action</el-button>
       <el-button @click="castingMonitorStore.testItem()">Item</el-button>

@@ -1,4 +1,4 @@
-import { Job } from "@/types/job";
+import { Job } from "cactbot/types/job";
 
 export interface ITimeline {
   name: string;

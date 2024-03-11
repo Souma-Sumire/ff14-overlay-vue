@@ -8,7 +8,7 @@ interface resJson {
   upload_url: string;
   html_url: string;
   id: number;
-  author: any;
+  author: unknown;
   node_id: string;
   tag_name: string;
   target_commitish: string;
@@ -17,10 +17,10 @@ interface resJson {
   prerelease: boolean;
   created_at: string;
   published_at: string;
-  assets: any[];
+  assets: unknown[];
   tarball_url: string;
   zipball_url: string;
-  body?: any;
+  body?: unknown;
 }
 
 const data = reactive({ res: {} as resJson });
@@ -32,23 +32,29 @@ const accelerationNodeList = [
   ["https://slink.ltd/https://github.com", "[美国 Cloudflare CDN]"],
   ["https://git.xfj0.cn/https://github.com", "[美国 Cloudflare CDN]"],
   ["https://gh.con.sh/https://github.com", "[美国 Cloudflare CDN]"],
-  ["https://ghps.cc/https://github.com", "[美国 Cloudflare CDN]"],
   ["https://cors.isteed.cc/github.com", "[美国 Cloudflare CDN]"],
   ["https://hub.gitmirror.com/https://github.com", "[美国 Cloudflare CDN]"],
-  ["https://download.fgit.cf", "[美国 洛杉矶]"],
-  ["https://download.njuu.cf", "[美国 拉斯维加斯]"],
-  ["https://download.yzuu.cf", "[美国 Cloudflare CDN]"],
-  ["https://download.nuaa.cf", "[美国 Cloudflare CDN]"],
+  ["https://sciproxy.com/github.com", "[美国 Cloudflare CDN]"],
+  ["https://ghproxy.cc/https://github.com", "[美国 洛杉矶]"],
+  ["https://cf.ghproxy.cc/https://github.com", "[美国 Cloudflare CDN]"],
+  ["https://download.nuaa.cf", "[美国 洛杉矶]"],
+  ["https://download.scholar.rr.nu", "[美国 纽约]"],
+  ["https://download.yzuu.cf", "[美国 纽约]"],
 ];
 onMounted(() => {
-  fetch("https://api.github.com/repos/RPGLogs/Uploaders-fflogs/releases/latest", { method: "GET" })
+  fetch(
+    "https://api.github.com/repos/RPGLogs/Uploaders-fflogs/releases/latest",
+    { method: "GET" }
+  )
     .then((res) => {
       if (res.ok) return res.json();
       throw res.status;
     })
-    .then((res: resJson) => {
+    .then((res) => {
       Swal.close();
-      fileName.value = res.assets.find((v) => /v.+\.exe$/.test(v.name)).name;
+      fileName.value = res.assets.find((v: { name: string }) =>
+        /v.+\.exe$/.test(v.name)
+      ).name;
       data.res = res;
     })
     .catch((err) => {
@@ -71,14 +77,18 @@ onMounted(() => {
         <h3 v-if="data.res.tag_name">加速节点：（挨个试试，总有一个能用的）</h3>
         <div flex="~ col wrap gap1" items-start>
           <el-link
-            v-if="data.res.tag_name"
+            v-show="data.res.tag_name"
             v-for="(item, index) in accelerationNodeList"
             :key="index"
             :href="`${item[0]}/RPGLogs/Uploaders-fflogs/releases/download/v${data.res.name}/${fileName}`"
             type="primary"
             m-r-8px
           >
-            <span>{{ (index + 1).toString().padStart(2, "0") }}.{{ item[1] }}节点</span>
+            <span
+              >{{ (index + 1).toString().padStart(2, "0") }}.{{
+                item[1]
+              }}节点</span
+            >
           </el-link>
         </div>
       </el-main>

@@ -1,7 +1,14 @@
 <template>
   <div id="warpper" :style="stageStyle">
     <header>
-      <svg xmlns="http://www.w3.org/2000/svg" class="icon clock" width="60" height="70" viewBox="0 0 60 70" fill="none">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="icon clock"
+        width="60"
+        height="70"
+        viewBox="0 0 60 70"
+        fill="none"
+      >
         <path
           d="M53.5685 11.7169L58.2818 16.4303L53.4385 21.2738C58.2244 27.2645 60.5349 34.8603 59.8954 42.5013C59.256 50.1423 55.7152 57.2485 50.0001 62.3603C44.2851 67.4722 36.8297 70.2018 29.1652 69.9884C21.5006 69.775 14.2086 66.6349 8.7868 61.213C3.36502 55.7911 0.224998 48.499 0.0116294 40.8342C-0.201739 33.1695 2.52774 25.7139 7.63949 19.9988C12.7512 14.2836 19.8572 10.7427 27.4981 10.1033C35.1389 9.46381 42.7346 11.7743 48.7252 16.5603L53.5685 11.7169ZM38.9319 61.5579C44.2831 59.341 48.6184 55.2129 51.0947 49.9765C53.5711 44.7402 54.0113 38.77 52.3298 33.2271C50.6483 27.6841 46.9654 22.9648 41.9972 19.9868C37.0291 17.0089 31.1309 15.9854 25.4499 17.1152C19.7689 18.2451 14.7113 21.4476 11.2606 26.0999C7.80989 30.7522 6.2129 36.5217 6.7802 42.2862C7.34751 48.0507 10.0386 53.3982 14.33 57.2885C18.6213 61.1788 24.2063 63.3339 29.9985 63.3346C33.063 63.3346 36.0974 62.7308 38.9285 61.5579H38.9319ZM33.3319 23.3338V43.3342H26.6652V23.3338H33.3319ZM43.3318 0V6.6668H16.6652V0H43.3318Z"
           fill="url(#paint0_linear_2392_974)"
@@ -37,7 +44,10 @@
         viewBox="0 0 38 22"
         fill="none"
         class="icon position"
-        :style="{ top: iconPosTop - mainTranslateY + 'px', opacity: combatDuration }"
+        :style="{
+          top: iconPosTop - mainTranslateY + 'px',
+          opacity: combatDuration,
+        }"
       >
         <path
           d="M16.7974 20.3694C15.1176 21.4034 13.1389 22 11.0205 22C4.93406 22 -7.46378e-07 17.0751 -4.80825e-07 11C-2.15273e-07 4.92487 4.93406 -1.44536e-06 11.0205 -1.17931e-06C12.8556 -1.0991e-06 14.586 0.447694 16.1079 1.23963L37.9014 11.0859L37.7156 11.0908L38 11.0872L16.7974 20.3694ZM4.00746 11C4.00746 14.866 7.14732 18 11.0205 18C14.8937 18 18.0336 14.866 18.0336 11C18.0336 7.13401 14.8937 4 11.0205 4C7.14732 4 4.00747 7.13401 4.00746 11Z"
@@ -48,19 +58,30 @@
         <li
           v-for="(item, index) in programme.list"
           :key="index"
-          :style="Object.assign(stageSplit(item.text), { height: programme.style.lineHeight + 'px' })"
-          :class="[stageRegexp.test(item.text) ? 'stage' : 'normal', item.className]"
+          :style="
+            Object.assign(stageSplit(item.text), {
+              height: programme.style.lineHeight + 'px',
+            })
+          "
+          :class="[
+            stageRegexp.test(item.text) ? 'stage' : 'normal',
+            item.className,
+          ]"
         >
           {{ item.text }}
-          <span v-show="item.timeSeconds && item.timeSeconds > 0 && item.timeFormat" class="auxiliary">{{
-            item.timeFormat
-          }}</span>
+          <span
+            v-show="item.timeSeconds && item.timeSeconds > 0 && item.timeFormat"
+            class="auxiliary"
+            >{{ item.timeFormat }}</span
+          >
         </li>
       </ul>
       <span
         :style="{
           width: decorativeLineHeight + 'px',
-          top: `${programme.style.lineHeight + 25 * 1.5 - 5 - mainTranslateY}px`,
+          top: `${
+            programme.style.lineHeight + 25 * 1.5 - 5 - mainTranslateY
+          }px`,
         }"
       >
         {{ "-".repeat(299) }}</span
@@ -75,18 +96,42 @@
     </p>
     <textarea cols="80" rows="20" v-model="programme.inputRaw"></textarea>
 
-    <p>总缩放<input type="number" v-model="programme.style.scale" step="0.1" min="0.5" /></p>
-    <p>每行高<input type="number" v-model="programme.style.lineHeight" step="1" min="20" /></p>
-    <p>允许用户滚动<input type="checkbox" v-model="enablescrollBar" />（该选项不会保存）</p>
+    <p>
+      总缩放<input
+        type="number"
+        v-model="programme.style.scale"
+        step="0.1"
+        min="0.5"
+      />
+    </p>
+    <p>
+      每行高<input
+        type="number"
+        v-model="programme.style.lineHeight"
+        step="1"
+        min="20"
+      />
+    </p>
+    <p>
+      允许用户滚动<input
+        type="checkbox"
+        v-model="enablescrollBar"
+      />（该选项不会保存）
+    </p>
     <p>
       自定义CSS
       <button @click="clearStyle()">恢复默认CSS</button>
     </p>
-    <textarea cols="80" rows="30" v-model="programme.style.customCSS"></textarea>
+    <textarea
+      cols="80"
+      rows="30"
+      v-model="programme.style.customCSS"
+    ></textarea>
   </aside>
 </template>
 
 <script lang="ts" setup>
+import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
 import moment from "moment";
 
 type Programme = {
@@ -105,10 +150,10 @@ const programme = reactive({
 const iconPosTop = ref(0);
 const inACTCombat = ref(false);
 const combatDuration = ref(0);
-let showSettings = ref(true);
+const showSettings = ref(true);
 const mainTranslateY = ref(0);
-let combatDurationTimer: NodeJS.Timer;
-let testTimer: NodeJS.Timer;
+let combatDurationTimer: number;
+let testTimer: number;
 const stageStyle = computed(() => {
   return {
     transform: `scale(${programme.style.scale})`,
@@ -122,13 +167,20 @@ const decorativeLineHeight = computed(() => {
 });
 const momentFilter = computed(() => {
   const time = moment.duration(combatDuration.value, "seconds");
-  return moment({ h: time.hours(), m: time.minutes(), s: time.seconds() }).format("mm:ss");
+  return moment({
+    h: time.hours(),
+    m: time.minutes(),
+    s: time.seconds(),
+  }).format("mm:ss");
 });
 
 function init() {
   initValue();
   addOverlayListener("onInCombatChangedEvent", handleInCombatChanged);
-  document.addEventListener("onOverlayStateUpdate", (e: any) => (showSettings.value = !e.detail.isLocked));
+  addEventListener("onOverlayStateUpdate", (e: unknown) => {
+    showSettings.value = !(e as { detail: { isLocked: boolean } }).detail
+      .isLocked;
+  });
   startOverlayEvents();
 }
 function loadData() {
@@ -261,10 +313,10 @@ init();
 loadData();
 
 watchEffect(() => {
-  let result: Programme[] = [];
+  const result: Programme[] = [];
   [
     ...programme.inputRaw.matchAll(
-      /^([ \t　]*(?<time>[:：\d.]+) +)?"?(?<action>.+?)"?(?: *class="(?<className>[^"]+)")?$/gm,
+      /^([ \t　]*(?<time>[:：\d.]+) +)?"?(?<action>.+?)"?(?: *class="(?<className>[^"]+)")?$/gm
     ),
   ].forEach((v) => {
     let t: any = v.groups?.time;
@@ -279,7 +331,11 @@ watchEffect(() => {
       t = t ? Number(t) : null;
     }
     const time = moment.duration(t, "seconds");
-    const timeFormat = moment({ h: time.hours(), m: time.minutes(), s: time.seconds() }).format("mm:ss");
+    const timeFormat = moment({
+      h: time.hours(),
+      m: time.minutes(),
+      s: time.seconds(),
+    }).format("mm:ss");
     result.push({
       text: v.groups!.action,
       timeSeconds: t?.toFixed(1) ?? null,
@@ -300,7 +356,8 @@ watchEffect(() => {
   }
 });
 function stageSplit(str: string) {
-  if (stageRegexp.test(str)) return { fontSize: "18px", justifyContent: "center" };
+  if (stageRegexp.test(str))
+    return { fontSize: "18px", justifyContent: "center" };
   return {};
 }
 
@@ -340,14 +397,24 @@ function initValue() {
 function oneSecond() {
   combatDuration.value++;
   for (let i = 0; i < programme.list.length; i++) {
-    if (parseInt(programme.list[i].timeSeconds?.toString() ?? "-1") === combatDuration.value) {
+    if (
+      parseInt(programme.list[i].timeSeconds?.toString() ?? "-1") ===
+      combatDuration.value
+    ) {
       iconPosTop.value = programme.style.lineHeight * (i + 1);
       if (i > 1 && stageRegexp.test(programme.list[i - 1].text)) {
-        mainTranslateY.value = calculateOffset(programme.style.lineHeight * (i - 2.5));
+        mainTranslateY.value = calculateOffset(
+          programme.style.lineHeight * (i - 2.5)
+        );
       } else {
         //阶段过长时进行滚动
-        if (mainTranslateY.value + 650 - programme.style.lineHeight * 2.5 < programme.style.lineHeight * (i + 1)) {
-          mainTranslateY.value = calculateOffset(programme.style.lineHeight * (i - 2.5));
+        if (
+          mainTranslateY.value + 650 - programme.style.lineHeight * 2.5 <
+          programme.style.lineHeight * (i + 1)
+        ) {
+          mainTranslateY.value = calculateOffset(
+            programme.style.lineHeight * (i - 2.5)
+          );
         }
       }
       break;
@@ -356,7 +423,9 @@ function oneSecond() {
 
   function calculateOffset(distance: number) {
     const max =
-      document.querySelector<HTMLUListElement>("#main>ul")!.scrollHeight - 650 + programme.style.lineHeight * 1.5;
+      document.querySelector<HTMLUListElement>("#main>ul")!.scrollHeight -
+      650 +
+      programme.style.lineHeight * 1.5;
     if (distance >= max) distance = max;
     return distance;
   }
@@ -436,7 +505,7 @@ $color: rgba(
   }
   > main {
     width: 360px;
-    font-family: 'SourceHanSansCN';
+    font-family: "SourceHanSansCN";
     font-size: 22px;
     overflow-x: hidden;
     // overflow-y: hidden;

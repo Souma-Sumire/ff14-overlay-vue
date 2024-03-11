@@ -20,7 +20,7 @@ interface CachedImage {
 
 interface CachedAction {
   name: string;
-  action: any;
+  action: unknown;
   expirationTime: number;
 }
 
@@ -43,12 +43,20 @@ const userAction = new Map(
 const IMG_CACHE_KEY = "souma-img-cache";
 const ACTION_CACHE_KEY = "souma-action-cache";
 
-const rejectImageData: CachedImage[] = JSON.parse(localStorage.getItem(IMG_CACHE_KEY) || "[]");
-const cachedActionData: CachedAction[] = JSON.parse(localStorage.getItem(ACTION_CACHE_KEY) || "[]");
+const rejectImageData: CachedImage[] = JSON.parse(
+  localStorage.getItem(IMG_CACHE_KEY) || "[]",
+);
+const cachedActionData: CachedAction[] = JSON.parse(
+  localStorage.getItem(ACTION_CACHE_KEY) || "[]",
+);
 const currentTime = Date.now();
 const MAX_CACHE_LENGTH = 1000;
-const updatedImageData = rejectImageData.filter((v, index) => v.expirationTime >= currentTime && index < MAX_CACHE_LENGTH);
-const updatedActionData = cachedActionData.filter((v, index) => v.expirationTime >= currentTime && index < MAX_CACHE_LENGTH);
+const updatedImageData = rejectImageData.filter(
+  (v, index) => v.expirationTime >= currentTime && index < MAX_CACHE_LENGTH,
+);
+const updatedActionData = cachedActionData.filter(
+  (v, index) => v.expirationTime >= currentTime && index < MAX_CACHE_LENGTH,
+);
 localStorage.setItem(IMG_CACHE_KEY, JSON.stringify(updatedImageData));
 localStorage.setItem(ACTION_CACHE_KEY, JSON.stringify(updatedActionData));
 
@@ -65,24 +73,39 @@ export async function parseAction(
     return await response.json();
   } catch (error) {
     console.error(`Failed to parse action: ${error}`);
-    return { ActionCategoryTargetID: 0, ID: actionId, Icon: "/i/000000/000405.png" };
+    return {
+      ActionCategoryTargetID: 0,
+      ID: actionId,
+      Icon: "/i/000000/000405.png",
+    };
   }
 }
 
-function generateActionUrls(type: string, actionId: number, columns: (keyof XivApiJson)[]) {
-  const urlTemplate = `${site.first}/${type}/${actionId}?columns=${columns.join(",")}`;
+function generateActionUrls(
+  type: string,
+  actionId: number,
+  columns: (keyof XivApiJson)[],
+) {
+  const urlTemplate = `${site.first}/${type}/${actionId}?columns=${columns.join(
+    ",",
+  )}`;
   return [urlTemplate, urlTemplate.replace(site.first, site.second)];
 }
 
 export async function getFullImgSrc(icon: string, itemIsHQ = false) {
   const url = `${site.first}${icon}`;
-  return url.replace(ICON_REGEX, (_match, p1, p2) => `${p1}/${itemIsHQ ? "hq/" : ""}${p2}.png`);
+  return url.replace(
+    ICON_REGEX,
+    (_match, p1, p2) => `${p1}/${itemIsHQ ? "hq/" : ""}${p2}.png`,
+  );
 }
 
 export function getClassjobIconSrc(jobEnum: number): string {
   const job = Util.jobEnumToJob(jobEnum);
   const fullName = Util.nameToFullName(job);
-  return `${site.first}/cj/companion/${fullName.en.toLowerCase().replaceAll(/\s/g, "")}.png`;
+  return `${site.first}/cj/companion/${fullName.en
+    .toLowerCase()
+    .replaceAll(/\s/g, "")}.png`;
 }
 
 export async function getImgSrcByActionId(id: number): Promise<string> {
@@ -102,7 +125,13 @@ export async function getActionByChineseName(name: string) {
   }
 
   try {
-    const response = await requestPromise([`${siteList.cafe}/search?filters=ClassJobLevel>0&indexes=action&string=${encodeURIComponent(name)}`]);
+    const response = await requestPromise([
+      `${
+        siteList.cafe
+      }/search?filters=ClassJobLevel>0&indexes=action&string=${encodeURIComponent(
+        name,
+      )}`,
+    ]);
     const searchData = await response.json();
     const result = searchData.Results?.[0];
 
@@ -114,18 +143,23 @@ export async function getActionByChineseName(name: string) {
         expirationTime,
       };
       cachedActionData.push(newCachedAction);
-      localStorage.setItem("souma-action-cache", JSON.stringify(cachedActionData));
+      localStorage.setItem(
+        "souma-action-cache",
+        JSON.stringify(cachedActionData),
+      );
       return result;
-    } else {
-      return { ActionCategoryTargetID: 0, ID: 0, Icon: "/i/000000/000405.png" };
     }
+    return { ActionCategoryTargetID: 0, ID: 0, Icon: "/i/000000/000405.png" };
   } catch (error) {
     console.error(`Failed to get action by name: ${error}`);
     throw new Error("Failed to retrieve action data");
   }
 }
 
-async function timeoutPromise<T>(promise: Promise<T>, timeout: number): Promise<T> {
+async function timeoutPromise<T>(
+  promise: Promise<T>,
+  timeout: number,
+): Promise<T> {
   let timeoutId: NodeJS.Timeout;
   const timeoutPromise = new Promise<T>((_, reject) => {
     timeoutId = setTimeout(() => {
@@ -137,7 +171,10 @@ async function timeoutPromise<T>(promise: Promise<T>, timeout: number): Promise<
   });
 }
 
-async function requestPromise(urls: string[], options?: RequestInit): Promise<Response> {
+async function requestPromise(
+  urls: string[],
+  options?: RequestInit,
+): Promise<Response> {
   const _options = Object.assign({ cache: "force-cache" }, options);
   for (const url of urls) {
     try {
@@ -151,3 +188,12 @@ async function requestPromise(urls: string[], options?: RequestInit): Promise<Re
   }
   throw new Error("All fetch attempts failed.");
 }
+
+export const handleImgError = (event: Event) => {
+  const target = event.target as HTMLImageElement;
+  if (target.src.includes("cafemaker.wakingsands.com")) {
+    target.src = target.src.replace("cafemaker.wakingsands.com", "xivapi.com");
+  } else if (target.src.includes("xivapi.com")) {
+    target.src = "";
+  }
+};

@@ -5,9 +5,9 @@ import { createHead } from "@vueuse/head";
 // import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
 import "element-plus/theme-chalk/dark/css-vars.css";
-import "uno.css";
 import VXETable from "vxe-table";
 import "vxe-table/lib/style.css";
+import "virtual:uno.css";
 
 const app = createApp(App);
 const head = createHead();

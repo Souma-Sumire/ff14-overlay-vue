@@ -142,10 +142,17 @@ function handleClick(e: Menu) {
     <el-container>
       <el-header><h1>主页导航</h1></el-header>
       <el-main>
-        <vxe-table :data="tableData" border stripe :row-config="{ height: 100 }">
+        <vxe-table
+          :data="tableData"
+          border
+          stripe
+          :row-config="{ height: 100 }"
+        >
           <vxe-column width="250" title="名称">
             <template #default="{ row }">
-              <a @click="() => handleClick(row)" style="cursor: pointer">{{ row.title }}</a>
+              <a @click="() => handleClick(row)" style="cursor: pointer">{{
+                row.title
+              }}</a>
             </template>
           </vxe-column>
           <vxe-column width="420" title="预览">
