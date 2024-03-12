@@ -18,9 +18,9 @@
           loading="lazy"
         />
       </span>
-      <span>
-        {{ row.effect === "damage done" ? "" : translationFlags(row.effect) }}
-      </span>
+    </span>
+    <span>
+      {{ row.effect === "damage done" ? "" : translationFlags(row.effect) }}
     </span>
   </div>
 </template>
