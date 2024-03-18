@@ -35,10 +35,13 @@ windowAction.set(31624, { type: "begincast", window: [30, 30] }); //绝欧米茄
 windowAction.set(31649, { type: "begincast", window: [30, 30] }); //绝欧米茄 宇宙记忆
 
 // 绝亚未实测
-windowAction.set(18516, { type: "cast", window: [250, 60] }); //绝亚 残暴正义号 正义飞踢 4854
-windowAction.set(18522, { type: "begincast", window: [500, 500] }); //绝亚 至尊亚历山大 时间静止 485A
-windowAction.set(18552, { type: "begincast", window: [500, 500] }); //绝亚 神圣审判 4878
-windowAction.set(19083, { type: "cast", window: [500, 0] }); //绝亚 what's this? cactbot写了900的前window
+windowAction.set(0x49b0, { type: "cast", window: [10, 2.5] }); // 流体摆动
+windowAction.set(0x4830, { type: "cast", window: [200, 60] }); // 鹰式破坏炮
+windowAction.set(0x4854, { type: "cast", window: [250, 65] }); // 正义飞踢
+windowAction.set(0x485a, { type: "begincast", window: [500, 500] }); // 时间停止
+windowAction.set(0x4878, { type: "begincast", window: [67, 67] }); // 神圣审判
+windowAction.set(0x4879, { type: "cast", window: [67, 67] }); // 神圣审判
+windowAction.set(0x4a8b, { type: "cast", window: [900, 0] }); // unknown
 
 export function factory(events: FFlogsStance): FFlogsStance {
   const statistics = new Map<number, number>();
