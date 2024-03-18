@@ -1,3 +1,80 @@
+<template>
+  <span
+    v-if="data.party.length === 0"
+    style="color: white; text-shadow: 1px 1px 2px black"
+    >等待小队...</span
+  >
+  <div @mouseenter="onMouseOver" @mouseleave="onMouseOut">
+    <vxe-modal
+      v-model="dialogVisible"
+      size="small"
+      :position="{
+        left: 10,
+        top: 10,
+      }"
+      width="90vw"
+    >
+      <template #title>
+        <span>用法</span>
+      </template>
+      <template #default>
+        <p>使悬浮窗的位置分配对应游戏内的实际位置（D1D2等）</p>
+        <ul>
+          <li>临时：下拉选择框修改。</li>
+          <li>长期：用鼠标拖动职能顺序。</li>
+        </ul>
+      </template>
+    </vxe-modal>
+    <main :class="mouseEnter ? 'mouseIn' : ''">
+      <div class="players">
+        <transition-group
+          name="animate__animated animate__bounce"
+          enter-active-class="animate__fadeInLeft"
+          leave-active-class="animate__fadeOutLeft"
+        >
+          <section
+            v-for="(member, i) in data.party"
+            :key="member.id"
+            v-show="mouseEnter || member.name === playerName"
+            flex="~ nowrap"
+            class="player"
+          >
+            <vxe-select
+              v-model="member.rp"
+              size="mini"
+              @change="handleSelectChange(i)"
+              class-name="select"
+            >
+              <vxe-option
+                v-for="(item, index) in roleAssignLocationNames[
+                  getJobClassification(member.job)
+                ]"
+                :visible="
+                  index < roleSelectLength[getJobClassification(member.job)]
+                "
+                :key="index"
+                :value="item"
+                :label="item"
+              ></vxe-option>
+            </vxe-select>
+            <span class="name">
+              {{ Util.nameToFullName(Util.jobEnumToJob(member.job)).simple2 }}
+              {{ mouseEnter ? member.name : "" }}
+            </span>
+          </section>
+        </transition-group>
+      </div>
+      <DragJob
+        class="dragJob"
+        v-show="mouseEnter"
+        @updateSortArr="updateSortArr"
+        :party="data.party"
+        m-b-1
+        p-1
+      />
+    </main>
+  </div>
+</template>
 <script setup lang="ts">
 import type { PlayerRuntime, Role } from "@/types/partyPlayer";
 import Util, { jobEnumOrder } from "@/utils/util";
@@ -60,9 +137,7 @@ const mouseEnter = ref(false);
 const playerName = ref(isDev ? "虚构占星" : "");
 if (isDev) {
   const e = { party: fakeParty };
-  if (showTips.value) {
-    dialogVisible.value = true;
-  }
+  if (showTips.value) dialogVisible.value = true;
   data.value.party = e.party.map((p) => ({ ...p, rp: "", specify: false }));
   defaultPartySort();
   updateRoleSelectLength();
@@ -178,92 +253,6 @@ onMounted(() => {
 });
 </script>
 
-<template>
-  <span
-    v-if="data.party.length === 0"
-    style="color: white; text-shadow: 1px 1px 2px black"
-    >等待小队...</span
-  >
-  <div @mouseenter="onMouseOver" @mouseleave="onMouseOut">
-    <el-dialog
-      v-model="dialogVisible"
-      title="初见提示"
-      width="90%"
-      :destroy-on-close="true"
-      :close-on-click-modal="false"
-    >
-      <p>使悬浮窗的位置分配对应游戏内的实际位置（D1D2等）</p>
-      <ul>
-        <li>长期：用鼠标拖动职能顺序。</li>
-        <li>临时：下拉选择框修改。</li>
-      </ul>
-
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button
-            type="primary"
-            @click="
-              dialogVisible = false;
-              showTips = false;
-            "
-            >明白了</el-button
-          >
-        </span>
-      </template>
-    </el-dialog>
-    <el-container :style="{ width: mouseEnter ? '16.75rem' : '5rem' }">
-      <el-main>
-        <transition-group
-          name="animate__animated animate__bounce"
-          enter-active-class="animate__fadeInLeft"
-          leave-active-class="animate__fadeOutLeft"
-        >
-          <div
-            v-for="(member, i) in data.party"
-            :key="member.id"
-            v-show="mouseEnter || member.name === playerName"
-            flex="~ nowrap"
-          >
-            <el-select
-              v-model="member.rp"
-              size="small"
-              m-0
-              p-0
-              @change="handleSelectChange(i)"
-              :teleported="false"
-            >
-              <el-option
-                v-for="(item, index) in roleAssignLocationNames[
-                  getJobClassification(member.job)
-                ]"
-                v-show="
-                  index < roleSelectLength[getJobClassification(member.job)]
-                "
-                :key="index"
-                :value="item"
-                :fit-input-width="true"
-              />
-            </el-select>
-            <span style="white-space: nowrap">
-              {{ Util.nameToFullName(Util.jobEnumToJob(member.job)).simple2 }}
-              {{ mouseEnter ? member.name : "" }}
-            </span>
-          </div>
-        </transition-group>
-        <DragJob
-          class="dragJob"
-          v-show="mouseEnter"
-          @updateSortArr="updateSortArr"
-          :party="data.party"
-          m-b-1
-          p-1
-        />
-        <!-- <h5 p-0 m-0 v-show="mouseEnter" style="color: white; text-shadow: 1px 1px 2px black">默认排序：</h5> -->
-      </el-main>
-    </el-container>
-  </div>
-</template>
-
 <style lang="scss">
 ::-webkit-scrollbar {
   width: 5px;
@@ -286,48 +275,48 @@ onMounted(() => {
 </style>
 
 <style lang="scss" scoped>
-.el-container {
-  background-color: rgba(0, 0, 0, 0.1);
-  margin: 3px;
-  > .el-header {
-    height: 2rem;
-    position: fixed;
-    top: 0;
+main {
+  width: 5rem;
+  &.mouseIn {
+    width: 16.75em;
   }
-  .el-main {
-    padding: 0;
-    margin: 0;
-    > div:not(.dragJob) {
-      // overflow: hidden;
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 0;
+  margin: 0;
+  transition-timing-function: ease-in-out;
+  .players {
+    $shadowColor: rgba(0, 0, 0, 0.25);
+    $text-shadow: 1px 1px 2px $shadowColor, -1px -1px 2px $shadowColor,
+      1px -1px 2px $shadowColor, -1px 1px 2px $shadowColor;
+    $line-height: 1.5em;
+    .player {
+      transition-property: all;
+      transition-duration: 0.3s;
+      transition-timing-function: ease-in-out;
       animation-duration: 0.2s;
       animation-timing-function: ease-in-out;
-      $color: rgba(0, 0, 0, 0.25);
-      > span {
+      height: $line-height;
+      line-height: $line-height;
+      .select {
+        width: 3.25em;
+        --vxe-input-height-mini: $line-height;
+        :deep(.vxe-input--inner) {
+          color: white;
+          font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+          font-size: 16px;
+          font-weight: 700;
+          background-color: rgba(0, 0, 0, 0.01);
+          padding: 0 0 0 0.4em;
+          text-shadow: $text-shadow;
+        }
+        :deep(.vxe-input--suffix) {
+          right: -0.2em;
+        }
+      }
+      .name {
         white-space: nowrap;
         color: white;
-        text-shadow: 1px 1px 2px $color, -1px -1px 2px $color,
-          1px -1px 2px $color, -1px 1px 2px $color;
-        padding-left: 0.25em;
-      }
-      :deep(*:not(.el-popper)) {
-        background-color: rgba(0, 0, 0, 0.01);
-      }
-      :deep(.el-input__inner) {
-        color: white;
-      }
-      :deep(.el-popper) {
-        background-color: rgba(255, 255, 255, 1);
-      }
-      .el-select {
-        width: 2.5rem;
-        :deep(.el-input__suffix-inner) {
-          width: 0rem;
-          position: relative;
-          right: 0.75rem;
-        }
-        :deep(.el-input__wrapper) {
-          padding: 0px 5px;
-        }
+        text-shadow: $text-shadow;
       }
     }
   }
