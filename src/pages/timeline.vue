@@ -185,9 +185,9 @@ function handleLogEvent(e: { detail: { logs: string[] } }) {
         return (
           item.sync &&
           ((item.syncOnce && !item.syncAlready) || !item.syncOnce) &&
-          item.sync.test(log) &&
           runtimeTimeSeconds.value >= item.time - item.windowBefore &&
-          runtimeTimeSeconds.value <= item.time + Number(item.windowAfter)
+          runtimeTimeSeconds.value <= item.time + Number(item.windowAfter) &&
+          item.sync.test(log)
         );
       });
       //如果匹配sync则同步到time，有jump则同步至jump
