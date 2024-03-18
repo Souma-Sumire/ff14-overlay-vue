@@ -10,6 +10,7 @@ import type { ITimeline, ITimelineLine } from "@/types/timeline";
 // import { p8sTimeline } from "@/resources/timelineTemplate";
 import moment from "moment";
 import { callOverlayHandler } from "../../cactbot/resources/overlay_plugin_api";
+import router from "@/router";
 
 const simulatedCombatTime = ref(0);
 const timelineStore = useTimelineStore();
@@ -316,6 +317,11 @@ function timelineTimeFormat() {
 //     }
 //   });
 // }
+
+const openMarkdown = () => {
+  const href = router.resolve({ path: "/timelineHelp" }).href;
+  window.open(href, "_blank");
+};
 </script>
 <template>
   <el-container class="container">
@@ -326,7 +332,7 @@ function timelineTimeFormat() {
         @click="showSettings = !showSettings"
         color="#626aef"
         style="color: white"
-        >样式设置</el-button
+        >时间轴设置</el-button
       >
       <el-button @click="importTimelines()">导入</el-button>
       <el-button class="export" @click="exportTimeline(timelines)"
@@ -335,6 +341,7 @@ function timelineTimeFormat() {
       <el-button v-if="isWSMode" type="success" @click="broadcastData()"
         >通过WS发送到悬浮窗</el-button
       >
+      <el-button @click="openMarkdown()">查看语法</el-button>
       <!-- <el-button v-if="!isWSMode" type="success" @click="applyData()">应用</el-button> -->
       <!-- <el-button @click="createP8STimeline()">P8S门神模板</el-button> -->
       <!-- <el-button @click="clearLocalStorage()">清理LocalStorage缓存</el-button> -->
