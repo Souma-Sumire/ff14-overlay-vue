@@ -1,4 +1,4 @@
-import { Job } from "cactbot/types/job";
+import type { Job } from "cactbot/types/job";
 
 export interface ITimeline {
   name: string;
@@ -17,6 +17,8 @@ export interface ITimelineLine {
   time: number;
   action: string;
   sync?: RegExp;
+  syncOnce?:boolean;
+  syncAlready?:boolean;
   show: boolean;
   windowBefore: number;
   windowAfter: number;

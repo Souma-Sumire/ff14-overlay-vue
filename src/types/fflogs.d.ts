@@ -73,6 +73,7 @@ export type FFlogsStance = {
   sourceIsFriendly: boolean;
   url: string;
   window?: Array<number>;
+  syncOnce?:boolean;
 }[];
 
 export type FFlogsQuery = {

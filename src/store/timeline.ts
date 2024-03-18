@@ -212,7 +212,8 @@ export async function parseTimeline(
   for (let i = 0; i < matchs.length; i++) {
     const match = matchs[i];
     const jump = match[0].match(/(?<=jump ?)[-:：\d.]+/)?.[0];
-    const sync = match[0].match(/(?<=sync ?\/).+(?=\/)/)?.[0];
+    const sync = match[0].match(/(?<=sync(?:\.once)? ?\/).+(?=\/)/)?.[0];
+    const syncOnce = /sync\.once/.test(match[0]);
     const windowBefore = match[0].match(/(?<=window ?)[-:：\d.]+/)?.[0];
     const windowAfter = match[0].match(
       /(?<=window ?[-:：\d.]+,)[-:：\d.]+/,
@@ -228,6 +229,8 @@ export async function parseTimeline(
       action: match.groups?.action || "",
       alertAlready: false,
       sync: sync ? new RegExp(sync) : undefined,
+      syncOnce: syncOnce,
+      syncAlready: false,
       show: !sync,
       windowBefore: Number.parseFloat(windowBefore || windowAfter || "2.5"),
       windowAfter: Number.parseFloat(windowAfter || windowBefore || "2.5"),

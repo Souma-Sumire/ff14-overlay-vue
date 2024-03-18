@@ -178,13 +178,18 @@ function handleLogEvent(e: { detail: { logs: string[] } }) {
       const timelineSync = syncLines.value.find((item) => {
         // console.log(item.sync, log);
         return (
-          item.sync!.test(log) &&
+          item.sync &&
+          ((item.syncOnce && !item.syncAlready) || !item.syncOnce) &&
+          item.sync.test(log) &&
           runtimeTimeSeconds.value >= item.time - item.windowBefore &&
           runtimeTimeSeconds.value <= item.time + Number(item.windowAfter)
         );
       });
       //如果匹配sync则同步到time，有jump则同步至jump
-      if (timelineSync) syncTimeline(timelineSync.jump || timelineSync.time);
+      if (timelineSync) {
+        timelineSync.syncAlready = true;
+        syncTimeline(timelineSync.jump || timelineSync.time);
+      }
     }
     if (/^.{14} ChatLog 00:0038::/.test(log)) {
       //echo
