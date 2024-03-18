@@ -1,7 +1,7 @@
 <template>
   <div flex="~ col">
     <VueDraggable
-      v-for="(role,index) in roles"
+      v-for="(role, index) in roles"
       :key="index"
       ref="el"
       :disabled="!isDisabled"
@@ -17,8 +17,10 @@
         v-for="item in jobList[role.name]"
         :key="item.id"
         :class="`${
-          isJobInParty(item.id) ? `draggable bg-${role.color}` : 'no-draggable bg-gray-700/50'
-        } rounded p-l-0.6 p-r-0.6 p-t-0 p-b-0.3 m-0 color-white cursor-move`"
+          isJobInParty(item.id)
+            ? `draggable bg-${role.color} cursor-move`
+            : 'no-draggable bg-gray-700/50'
+        } rounded p-l-0.6 p-r-0.6 p-t-0 p-b-0.3 m-0 color-white`"
       >
         {{ item.name }}
       </div>
@@ -37,9 +39,13 @@ const el = ref<UseDraggableReturn>();
 const isDisabled = ref(true);
 const emit = defineEmits<(e: "updateSortArr", id: number[]) => void>();
 
-const props = defineProps<{
+export interface Props {
   party: Player[];
-}>();
+}
+
+const props = withDefaults(defineProps<Props>(), {
+});
+
 // function pause() {
 //   el.value?.pause();
 // }
@@ -58,7 +64,7 @@ const onUpdate = () => {
     "updateSortArr",
     Object.values(jobList.value)
       .flat()
-      .map((v) => v.id),
+      .map((v) => v.id)
   );
 };
 
@@ -119,7 +125,7 @@ const jobList: RemovableRef<
   healer: jobs
     .filter((v) => jobsList.healer.includes(v.id))
     .sort(
-      (a, b) => jobsList.healer.indexOf(a.id) - jobsList.healer.indexOf(b.id),
+      (a, b) => jobsList.healer.indexOf(a.id) - jobsList.healer.indexOf(b.id)
     ),
   dps: jobs
     .filter((v) => jobsList.dps.includes(v.id))
