@@ -10,7 +10,7 @@ import {
 const createRPArr = (r: "T" | "H" | "D", l: number) =>
   Array(l)
     .fill(r)
-    .map((v, i) => v + i + 1);
+    .map((v, i) => v + (+i + 1));
 
 const roleAssignLocationNames: Record<Role, string[]> = {
   tank: ["MT", "ST", ...createRPArr("T", 70)],
