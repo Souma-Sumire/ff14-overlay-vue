@@ -125,7 +125,12 @@ function stopTimeline() {
   baseTimeMs.value = 0;
   runtimeTimeSeconds.value = 0 - timelineStore.configValues.preBattle;
   offsetTimeMS.value = 0;
-  timelinePageData.loadedTimeline.map((v) => (v.alertAlready = false));
+  for (const v of timelinePageData.loadedTimeline) {
+    v.alertAlready = false;
+  }
+  for (const v of syncLines.value) {
+    v.syncAlready = false;
+  }
 }
 
 //页面时间轴开始播放
