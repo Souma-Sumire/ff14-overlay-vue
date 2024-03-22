@@ -32,6 +32,7 @@ import { useMacroStore } from "@/store/macro";
 import type { WayMarkInfo, WayMarkKeys } from "@/types/PostNamazu";
 import type { MacroInfoPlace } from "@/types/macro";
 const macroStore = useMacroStore();
+
 const offset = { x: 0, y: 0, active: false };
 const markMap: Record<WayMarkKeys, string> = {
   A: "A",
@@ -55,23 +56,29 @@ const props = defineProps({
   macro: { type: Object as () => MacroInfoPlace, required: true },
 });
 
-if (specialMap.includes(Number(macroStore.selectZone))) {
-  offset.active = true;
-  const ave = { x: 0, y: 0, count: 0 };
-  for (const key in props.macro.Place) {
-    const e = props.macro.Place[
-      key as keyof typeof props.macro.Place
-    ] as WayMarkInfo;
-    if (e.Active !== true) {
-      continue;
+watch(
+  () => macroStore.selectZone,
+  () => {
+    if (specialMap.includes(Number(macroStore.selectZone))) {
+      offset.active = true;
+      const ave = { x: 0, y: 0, count: 0 };
+      for (const key in props.macro.Place) {
+        const e = props.macro.Place[
+          key as keyof typeof props.macro.Place
+        ] as WayMarkInfo;
+        if (e.Active !== true) {
+          continue;
+        }
+        ave.x += Number(e.X);
+        ave.y += Number(e.Z);
+        ave.count++;
+      }
+      offset.x = ave.x / ave.count;
+      offset.y = ave.y / ave.count;
     }
-    ave.x += Number(e.X);
-    ave.y += Number(e.Z);
-    ave.count++;
-  }
-  offset.x = ave.x / ave.count;
-  offset.y = ave.y / ave.count;
-}
+  },
+  { immediate: true }
+);
 
 function getOffset(v: number, offset: number) {
   return Math.min(
