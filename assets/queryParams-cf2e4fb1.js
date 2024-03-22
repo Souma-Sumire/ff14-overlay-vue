@@ -1,0 +1,1 @@
+function p(a){if(!a)return{};const e=a.split("?")[1];if(!e)return{};const n=e.split("&");if(!n)return{};const r={};for(let s=0;s<n.length;s++){const o=n[s].split("="),t=o[0],i=o[1];r[t]?(r[t]=Array.isArray(r[t])?r[t]:[r[t]],r[t].push(i)):r[t]=i}return r}const c=p(location.href);export{c as p};
