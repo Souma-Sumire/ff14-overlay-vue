@@ -75,6 +75,10 @@ watch(
       }
       offset.x = ave.x / ave.count;
       offset.y = ave.y / ave.count;
+    } else {
+      offset.active = false;
+      offset.x = 0;
+      offset.y = 0;
     }
   },
   { immediate: true }
