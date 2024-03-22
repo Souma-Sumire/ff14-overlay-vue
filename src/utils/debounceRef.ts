@@ -13,6 +13,7 @@ export function debounceRef<T>(value: T, duration = 1000) {
         if (timer) {
           clearTimeout(timer);
         }
+        // biome-ignore lint/style/noParameterAssign:
         value = val;
         timer = setTimeout(() => {
           trigger();

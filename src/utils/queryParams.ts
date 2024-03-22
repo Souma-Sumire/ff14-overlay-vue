@@ -1,14 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 function queryString(str?: string) {
   if (!str) return {};
-  let params = str.split("?")[1];
+  const params = str.split("?")[1];
   if (!params) return {};
-  let param = params.split("&");
+  const param = params.split("&");
   if (!param) return {};
-  let obj: any = {};
+
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  const obj: any = {};
   for (let i = 0; i < param.length; i++) {
-    let paramsA = param[i].split("=");
-    let key = paramsA[0];
-    let value = paramsA[1];
+    const paramsA = param[i].split("=");
+    const key = paramsA[0];
+    const value = paramsA[1];
     if (obj[key]) {
       obj[key] = Array.isArray(obj[key]) ? obj[key] : [obj[key]];
       obj[key].push(value);

@@ -1,6 +1,8 @@
+/* eslint-disable no-irregular-whitespace */
 // import { cleanMacro, getZoneIDByZoneName } from "../store/macro";
-import { cleanMacro } from "@/store/macro";
-import { ZoneIdInfo } from "../types/macro";
+// import { cleanMacro } from "@/store/macro";
+import type { PPJSON } from "@/types/PostNamazu";
+import type { ZoneIdInfo } from "../types/macro";
 import { getTerritoryTypeByMapID } from "./contentFinderCondition";
 const defaultMacro: { zoneId: ZoneIdInfo } = {
   zoneId: {
@@ -5692,7 +5694,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     "1075": [
       {
-        Name: "树歌异闻老一 请无视预览结果",
+        Name: "树歌异闻老一",
         Type: "place",
         Place: {
           A: {
@@ -5747,7 +5749,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Deletability: false,
       },
       {
-        Name: "树歌异闻老二 请无视预览结果",
+        Name: "树歌异闻老二",
         Type: "place",
         Place: {
           A: {
@@ -5802,7 +5804,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Deletability: false,
       },
       {
-        Name: "树歌异闻老三 请无视预览结果",
+        Name: "树歌异闻老三",
         Type: "place",
         Place: {
           A: {
@@ -5857,7 +5859,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Deletability: false,
       },
       {
-        Name: "树歌异闻老三eis呪具3专用 请无视预览结果",
+        Name: "树歌异闻老三eis呪具3专用",
         Type: "place",
         Place: {
           A: {
@@ -5914,7 +5916,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     "1076": [
       {
-        Name: "树歌异闻老一 请无视预览结果",
+        Name: "树歌异闻老一",
         Type: "place",
         Place: {
           A: {
@@ -5969,7 +5971,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Deletability: false,
       },
       {
-        Name: "树歌异闻老二 请无视预览结果",
+        Name: "树歌异闻老二",
         Type: "place",
         Place: {
           A: {
@@ -6024,7 +6026,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Deletability: false,
       },
       {
-        Name: "树歌异闻老三 请无视预览结果",
+        Name: "树歌异闻老三",
         Type: "place",
         Place: {
           A: {
@@ -6079,7 +6081,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Deletability: false,
       },
       {
-        Name: "树歌异闻老三eis呪具3专用 请无视预览结果",
+        Name: "树歌异闻老三eis呪具3专用",
         Type: "place",
         Place: {
           A: {
@@ -7259,7 +7261,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
       {
         Name: "(Game8)ハムカツ式改※ウインドスフィア最新版",
         Type: "macro",
-        Text: `/p ■散開(北基準)--■44頭割り-------ハムカツ式改---\n/p D3 MT D4　　| 西/外:MTH1D1D3\n/p H1 ★ H2　　| 東/内:STH2D2D4\n/p D1 ST D2　　 | 縦安置 北:MT組 南:ST組\n/p ■ディレイスパーク--------------------------------------\n/p ディレイアースを避けた位置で捨てる\n/p ■ダブルメテオ-------------------------------------------\n/p DPS:3人塔　フレア北\n/p TH:2人塔　フレア南　ノックバック中央\n/p ■ヴォイド･コメットレイン-----------------------------\n/p 北1:H1D3　北2:MTD1　南1:H2D4　南2:STD2\n/p ■ウィンドスフィア2,3回目----------------------------\n/p 北/西 H1D3,MTD1,STD2,H2D4 南/東\n/p ■三連黒竜閃---------------------------------------------\n/p T:北 東西:H 南:DPS`,
+        Text: "/p ■散開(北基準)--■44頭割り-------ハムカツ式改---\n/p D3 MT D4　　| 西/外:MTH1D1D3\n/p H1 ★ H2　　| 東/内:STH2D2D4\n/p D1 ST D2　　 | 縦安置 北:MT組 南:ST組\n/p ■ディレイスパーク--------------------------------------\n/p ディレイアースを避けた位置で捨てる\n/p ■ダブルメテオ-------------------------------------------\n/p DPS:3人塔　フレア北\n/p TH:2人塔　フレア南　ノックバック中央\n/p ■ヴォイド･コメットレイン-----------------------------\n/p 北1:H1D3　北2:MTD1　南1:H2D4　南2:STD2\n/p ■ウィンドスフィア2,3回目----------------------------\n/p 北/西 H1D3,MTD1,STD2,H2D4 南/東\n/p ■三連黒竜閃---------------------------------------------\n/p T:北 東西:H 南:DPS",
         Deletability: false,
       },
     ],
@@ -7267,11 +7269,13 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
       {
         Name: "Game8",
         Type: "macro",
-        Text: `/p 【飛翔：散開方向】\n/p 　　　 　 (A)\n/p 　 　　 MT+ST\n/p 　　D3　　 　 D4\n/p (D)　　　 　 　 　 (B)\n/p 　　D1　　 　 D2\n/p 　 　 　H1+H2\n/p 　　　 　 (C)\n/p 【デモンクロー】ST先頭で頭割り\n/p 【雑魚タゲ取り】\n/p 2回目：MT⇒北西ウィル　ST⇒南西ウィル\n/p 3回目：MT⇒南ウィル　　ST⇒東セウ\n/p 【サザンクロス】 　 ｜【波動砲】\n/p 背面から時計回り　｜9時で捨てる\n/p MTのみ反時計回り ｜MTは東寄りにタゲサ内へ入る`,
+        Text: "/p 【飛翔：散開方向】\n/p 　　　 　 (A)\n/p 　 　　 MT+ST\n/p 　　D3　　 　 D4\n/p (D)　　　 　 　 　 (B)\n/p 　　D1　　 　 D2\n/p 　 　 　H1+H2\n/p 　　　 　 (C)\n/p 【デモンクロー】ST先頭で頭割り\n/p 【雑魚タゲ取り】\n/p 2回目：MT⇒北西ウィル　ST⇒南西ウィル\n/p 3回目：MT⇒南ウィル　　ST⇒東セウ\n/p 【サザンクロス】 　 ｜【波動砲】\n/p 背面から時計回り　｜9時で捨てる\n/p MTのみ反時計回り ｜MTは東寄りにタゲサ内へ入る",
         Deletability: false,
       },
       {
-        Name: "Markers from Discord @Maya#1998" + getSource(`https://discord.com/channels/277897135515762698/448209053743579186/1109777325140217896`),
+        Name: `Markers from Discord @Maya#1998${getSource(
+          "https://discord.com/channels/277897135515762698/448209053743579186/1109777325140217896",
+        )}`,
         Type: "place",
         Place: {
           A: { X: 4.916, Y: 0.0, Z: -18.292, ID: 0, Active: true },
@@ -7816,7 +7820,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
   },
 };
 export { defaultMacro };
-function getSource(href: string, title: string = ""): string {
+function getSource(href: string, title = ""): string {
   return `<a href='${href}'target='_blank'>来源${title}</a>`;
 }
 const fastPP = (jsonstr: string): void => {
@@ -7828,7 +7832,10 @@ const fastPP = (jsonstr: string): void => {
     console.error(d.MapID, "无法获取地图ID", zoneId);
     return;
   }
-  (defaultMacro.zoneId[zoneId] ??= []).push({
+  if (defaultMacro.zoneId[zoneId] === undefined) {
+    defaultMacro.zoneId[zoneId] = [];
+  }
+  defaultMacro.zoneId[zoneId].push({
     Name: d.Name ?? "Imported",
     Type: "place",
     Place: {
@@ -7864,12 +7871,12 @@ fastPP(
 
 fastPP(
   `{"Name":"P10S Game8国服适配 确定${getSource(
-    `https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86`,
+    "https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86",
   )}","MapID":939,"A":{"X":100.0,"Y":0.0,"Z":98.2,"ID":0,"Active":true},"B":{"X":92.009,"Y":0.0,"Z":111.204,"ID":6,"Active":true},"C":{"X":100.008,"Y":0.0,"Z":111.188,"ID":2,"Active":true},"D":{"X":108.013,"Y":0.0,"Z":111.159,"ID":5,"Active":true},"One":{"X":92.009,"Y":0.0,"Z":88.82,"ID":4,"Active":true},"Two":{"X":108.013,"Y":0.0,"Z":88.82,"ID":5,"Active":true},"Three":{"X":75.0,"Y":0.0,"Z":85.0,"ID":6,"Active":true},"Four":{"X":125.0,"Y":0.0,"Z":85.0,"ID":7,"Active":true}}
   `,
 );
 fastPP(`{"Name":"极高贝扎安全角树歌(不确定再看看)${getSource(
-  `https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86`,
+  "https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86",
 )}","MapID":950,"A":{"X":100.0,"Y":0.03,"Z":86.0,"ID":0,"Active":true},"B":{"X":114.0,"Y":0.03,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.03,"Z":114.0,"ID":2,"Active":true},"D":{"X":86.0,"Y":0.03,"Z":100.0,"ID":3,"Active":true},"One":{"X":103.9,"Y":0.03,"Z":96.1,"ID":4,"Active":true},"Two":{"X":103.9,"Y":0.03,"Z":103.9,"ID":5,"Active":true},"Three":{"X":96.1,"Y":0.03,"Z":103.9,"ID":6,"Active":true},"Four":{"X":96.1,"Y":0.03,"Z":96.1,"ID":7,"Active":true}}
 `);
 fastPP(

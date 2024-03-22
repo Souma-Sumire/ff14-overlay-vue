@@ -8,7 +8,7 @@
 export function completeIcon(icon: number): string {
   if (typeof icon === "number") {
     let head = [..."000000"];
-    let iconStr = icon.toString();
+    const iconStr = icon.toString();
     if (iconStr.length > 3) {
       const temp = [...iconStr].slice(0, iconStr.length - 3).concat(..."000");
       head = [...head.slice(0, 6 - temp.length), ...temp];
@@ -21,7 +21,13 @@ export function completeIcon(icon: number): string {
 }
 
 export function stackUrl(url: string, stack: number) {
-  return stack > 1 && stack <= 16 ? url.substring(0, 7) + (Array(6).join("0") + (parseInt(url.substring(7)) + stack - 1)).slice(-6) : url;
+  return stack > 1 && stack <= 16
+    ? url.substring(0, 7) +
+        (
+          Array(6).join("0") +
+          (Number.parseInt(url.substring(7)) + stack - 1)
+        ).slice(-6)
+    : url;
 }
 // A: =B5&": ["""&C5&""", "&E5&"],"
 export const statusData: Record<number, [string, number]> = {

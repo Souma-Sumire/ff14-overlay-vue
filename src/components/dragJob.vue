@@ -29,9 +29,10 @@
 </template>
 
 <script setup lang="ts">
-import type { Player, Role } from "@/types/partyPlayer";
+import type { Player } from "@/types/partyPlayer";
 import Util from "@/utils/util";
 import type { RemovableRef } from "@vueuse/core";
+import type { Role } from "../../cactbot/types/job";
 import { ref } from "vue";
 import { type UseDraggableReturn, VueDraggable } from "vue-draggable-plus";
 
@@ -43,23 +44,9 @@ export interface Props {
   party: Player[];
 }
 
-const props = withDefaults(defineProps<Props>(), {
-});
-
-// function pause() {
-//   el.value?.pause();
-// }
-
-// function start() {
-//   el.value?.start();
-// }
-
-// const onStart = () => {
-//   console.log("start");
-// };
+const props = withDefaults(defineProps<Props>(), {});
 
 const onUpdate = () => {
-  // console.log("update");
   emit(
     "updateSortArr",
     Object.values(jobList.value)
@@ -75,33 +62,40 @@ const roles: {
   { name: "tank", color: "blue" },
   { name: "healer", color: "green" },
   { name: "dps", color: "red" },
+  { name: "crafter", color: "yellow" },
+  { name: "gatherer", color: "purple" },
+  { name: "none", color: "gray" },
 ];
 function isJobInParty(job: number) {
   return props.party.find((v) => v.job === job);
 }
 const allJobs = Util.getBattleJobs3();
-const tankJobs = allJobs
-  .filter((v) => Util.isTankJob(v))
-  .map((v) => Util.jobToJobEnum(v))
-  .sort((a, b) => Util.enumSortMethod(a, b));
-const healerJobs = allJobs
-  .filter((v) => Util.isHealerJob(v))
-  .map((v) => Util.jobToJobEnum(v))
-  .sort((a, b) => Util.enumSortMethod(a, b));
-const dpsJobs = allJobs
-  .filter((v) => Util.isDpsJob(v))
-  .map((v) => Util.jobToJobEnum(v))
-  .sort((a, b) => Util.enumSortMethod(a, b));
-
+const rolesKeys: Role[] = [
+  "tank",
+  "healer",
+  "dps",
+  "crafter",
+  "gatherer",
+  "none",
+];
 const jobsList: {
   [K in Role]: number[];
-} = {
-  tank: tankJobs,
-  healer: healerJobs,
-  dps: dpsJobs,
-  unknown: [],
-};
-
+} = (() => {
+  const res = {} as Record<Role, number[]>;
+  const funcMap = {
+    tank: Util.isTankJob,
+    healer: Util.isHealerJob,
+    dps: Util.isDpsJob,
+    crafter: Util.isCraftingJob,
+    gatherer: Util.isGatheringJob,
+  };
+  for (const role of rolesKeys) {
+    res[role] = (role === "none" ? [] : allJobs.filter((v) => funcMap[role](v)))
+      .map((v) => Util.jobToJobEnum(v))
+      .sort((a, b) => Util.enumSortMethod(a, b));
+  }
+  return res;
+})();
 const jobsListAll = Object.values(jobsList).flat();
 const jobs = jobsListAll.map((v) => {
   return {
@@ -118,20 +112,20 @@ const jobList: RemovableRef<
       id: number;
     }[]
   >
-> = useStorage("cactbotRuntime-jobList", {
-  tank: jobs
-    .filter((v) => jobsList.tank.includes(v.id))
-    .sort((a, b) => jobsList.tank.indexOf(a.id) - jobsList.tank.indexOf(b.id)),
-  healer: jobs
-    .filter((v) => jobsList.healer.includes(v.id))
-    .sort(
-      (a, b) => jobsList.healer.indexOf(a.id) - jobsList.healer.indexOf(b.id)
-    ),
-  dps: jobs
-    .filter((v) => jobsList.dps.includes(v.id))
-    .sort((a, b) => jobsList.dps.indexOf(a.id) - jobsList.dps.indexOf(b.id)),
-  unknown: [],
-});
+> = useStorage(
+  "cactbotRuntime-jobList",
+  (() => {
+    const res = {} as Record<Role, { name: string; id: number }[]>;
+    for (const role of rolesKeys) {
+      res[role] = jobs
+        .filter((v) => jobsList[role].includes(v.id))
+        .sort(
+          (a, b) => jobsList[role].indexOf(a.id) - jobsList[role].indexOf(b.id)
+        );
+    }
+    return res;
+  })()
+);
 </script>
 
 <style scoped>

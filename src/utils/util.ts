@@ -1,5 +1,5 @@
-import { FFIcon as Icon } from "../types/fflogs";
-import { Job, Role } from "@/types/job";
+import type { Job, Role } from "../../cactbot/types/job";
+import type { FFIcon as Icon } from "../types/fflogs";
 
 const iconToJobEnum: Record<Icon, number> = {
   NONE: 0,
@@ -146,63 +146,326 @@ export const jobEnumOrder = [
   0, // NONE 冒险者
 ];
 
-const nameToFullName: Record<Job, { en: string; ja: string; cn: string; simple1: string; simple2: string }> = {
-  NONE: { en: "Adventurer", ja: "すっぴん士", cn: "冒险者", simple1: "冒", simple2: "冒险" },
-  GLA: { en: "Gladiator", ja: "剣術士", cn: "剑术师", simple1: "剑", simple2: "剑术" },
-  PGL: { en: "Pugilist", ja: "格闘士", cn: "格斗家", simple1: "斗", simple2: "格斗" },
-  MRD: { en: "Marauder", ja: "斧術士", cn: "斧术师", simple1: "斧", simple2: "斧术" },
-  LNC: { en: "Lancer", ja: "槍術士", cn: "枪术师", simple1: "枪", simple2: "枪术" },
-  ARC: { en: "Archer", ja: "弓術士", cn: "弓箭手", simple1: "弓", simple2: "弓箭" },
-  CNJ: { en: "Conjurer", ja: "幻術士", cn: "幻术师", simple1: "幻", simple2: "幻术" },
-  THM: { en: "Thaumaturge", ja: "呪術士", cn: "咒术师", simple1: "咒", simple2: "咒术" },
-  CRP: { en: "Carpenter", ja: "木工師", cn: "刻木匠", simple1: "刻", simple2: "刻木" },
-  BSM: { en: "Blacksmith", ja: "鍛冶師", cn: "锻铁匠", simple1: "锻", simple2: "锻铁" },
-  ARM: { en: "Armorer", ja: "甲冑師", cn: "铸甲匠", simple1: "铸", simple2: "铸甲" },
-  GSM: { en: "Goldsmith", ja: "彫金師", cn: "雕金匠", simple1: "雕", simple2: "雕金" },
-  LTW: { en: "Leatherworker", ja: "革細工師", cn: "制革匠", simple1: "革", simple2: "制革" },
-  WVR: { en: "Weaver", ja: "裁縫師", cn: "裁衣匠", simple1: "裁", simple2: "裁衣" },
-  ALC: { en: "Alchemist", ja: "錬金術師", cn: "炼金术士", simple1: "炼", simple2: "炼金" },
-  CUL: { en: "Culinarian", ja: "調理師", cn: "烹调师", simple1: "烹", simple2: "烹调" },
-  MIN: { en: "Miner", ja: "採掘師", cn: "采矿工", simple1: "采", simple2: "采矿" },
-  BTN: { en: "Botanist", ja: "園芸師", cn: "园艺工", simple1: "园", simple2: "园艺" },
-  FSH: { en: "Fisher", ja: "漁師", cn: "捕鱼人", simple1: "捕", simple2: "捕鱼" },
-  PLD: { en: "Paladin", ja: "ナイト", cn: "骑士", simple1: "骑", simple2: "骑士" },
+const nameToFullName: Record<
+  Job,
+  { en: string; ja: string; cn: string; simple1: string; simple2: string }
+> = {
+  NONE: {
+    en: "Adventurer",
+    ja: "すっぴん士",
+    cn: "冒险者",
+    simple1: "冒",
+    simple2: "冒险",
+  },
+  GLA: {
+    en: "Gladiator",
+    ja: "剣術士",
+    cn: "剑术师",
+    simple1: "剑",
+    simple2: "剑术",
+  },
+  PGL: {
+    en: "Pugilist",
+    ja: "格闘士",
+    cn: "格斗家",
+    simple1: "斗",
+    simple2: "格斗",
+  },
+  MRD: {
+    en: "Marauder",
+    ja: "斧術士",
+    cn: "斧术师",
+    simple1: "斧",
+    simple2: "斧术",
+  },
+  LNC: {
+    en: "Lancer",
+    ja: "槍術士",
+    cn: "枪术师",
+    simple1: "枪",
+    simple2: "枪术",
+  },
+  ARC: {
+    en: "Archer",
+    ja: "弓術士",
+    cn: "弓箭手",
+    simple1: "弓",
+    simple2: "弓箭",
+  },
+  CNJ: {
+    en: "Conjurer",
+    ja: "幻術士",
+    cn: "幻术师",
+    simple1: "幻",
+    simple2: "幻术",
+  },
+  THM: {
+    en: "Thaumaturge",
+    ja: "呪術士",
+    cn: "咒术师",
+    simple1: "咒",
+    simple2: "咒术",
+  },
+  CRP: {
+    en: "Carpenter",
+    ja: "木工師",
+    cn: "刻木匠",
+    simple1: "刻",
+    simple2: "刻木",
+  },
+  BSM: {
+    en: "Blacksmith",
+    ja: "鍛冶師",
+    cn: "锻铁匠",
+    simple1: "锻",
+    simple2: "锻铁",
+  },
+  ARM: {
+    en: "Armorer",
+    ja: "甲冑師",
+    cn: "铸甲匠",
+    simple1: "铸",
+    simple2: "铸甲",
+  },
+  GSM: {
+    en: "Goldsmith",
+    ja: "彫金師",
+    cn: "雕金匠",
+    simple1: "雕",
+    simple2: "雕金",
+  },
+  LTW: {
+    en: "Leatherworker",
+    ja: "革細工師",
+    cn: "制革匠",
+    simple1: "革",
+    simple2: "制革",
+  },
+  WVR: {
+    en: "Weaver",
+    ja: "裁縫師",
+    cn: "裁衣匠",
+    simple1: "裁",
+    simple2: "裁衣",
+  },
+  ALC: {
+    en: "Alchemist",
+    ja: "錬金術師",
+    cn: "炼金术士",
+    simple1: "炼",
+    simple2: "炼金",
+  },
+  CUL: {
+    en: "Culinarian",
+    ja: "調理師",
+    cn: "烹调师",
+    simple1: "烹",
+    simple2: "烹调",
+  },
+  MIN: {
+    en: "Miner",
+    ja: "採掘師",
+    cn: "采矿工",
+    simple1: "采",
+    simple2: "采矿",
+  },
+  BTN: {
+    en: "Botanist",
+    ja: "園芸師",
+    cn: "园艺工",
+    simple1: "园",
+    simple2: "园艺",
+  },
+  FSH: {
+    en: "Fisher",
+    ja: "漁師",
+    cn: "捕鱼人",
+    simple1: "捕",
+    simple2: "捕鱼",
+  },
+  PLD: {
+    en: "Paladin",
+    ja: "ナイト",
+    cn: "骑士",
+    simple1: "骑",
+    simple2: "骑士",
+  },
   MNK: { en: "Monk", ja: "モンク", cn: "武僧", simple1: "僧", simple2: "武僧" },
-  WAR: { en: "Warrior", ja: "戦士", cn: "战士", simple1: "战", simple2: "战士" },
-  DRG: { en: "Dragoon", ja: "竜騎士", cn: "龙骑士", simple1: "龙", simple2: "龙骑" },
-  BRD: { en: "Bard", ja: "吟遊詩人", cn: "吟游诗人", simple1: "诗", simple2: "诗人" },
-  WHM: { en: "White Mage", ja: "白魔道士", cn: "白魔法师", simple1: "白", simple2: "白魔" },
-  BLM: { en: "Black Mage", ja: "黒魔道士", cn: "黑魔法师", simple1: "黑", simple2: "黑魔" },
-  ACN: { en: "Arcanist", ja: "巴術士", cn: "秘术师", simple1: "秘", simple2: "秘术" },
-  SMN: { en: "Summoner", ja: "召喚士", cn: "召唤师", simple1: "召", simple2: "召唤" },
-  SCH: { en: "Scholar", ja: "学者", cn: "学者", simple1: "学", simple2: "学者" },
-  ROG: { en: "Rogue", ja: "双剣士", cn: "双剑师", simple1: "双", simple2: "双剑" },
+  WAR: {
+    en: "Warrior",
+    ja: "戦士",
+    cn: "战士",
+    simple1: "战",
+    simple2: "战士",
+  },
+  DRG: {
+    en: "Dragoon",
+    ja: "竜騎士",
+    cn: "龙骑士",
+    simple1: "龙",
+    simple2: "龙骑",
+  },
+  BRD: {
+    en: "Bard",
+    ja: "吟遊詩人",
+    cn: "吟游诗人",
+    simple1: "诗",
+    simple2: "诗人",
+  },
+  WHM: {
+    en: "White Mage",
+    ja: "白魔道士",
+    cn: "白魔法师",
+    simple1: "白",
+    simple2: "白魔",
+  },
+  BLM: {
+    en: "Black Mage",
+    ja: "黒魔道士",
+    cn: "黑魔法师",
+    simple1: "黑",
+    simple2: "黑魔",
+  },
+  ACN: {
+    en: "Arcanist",
+    ja: "巴術士",
+    cn: "秘术师",
+    simple1: "秘",
+    simple2: "秘术",
+  },
+  SMN: {
+    en: "Summoner",
+    ja: "召喚士",
+    cn: "召唤师",
+    simple1: "召",
+    simple2: "召唤",
+  },
+  SCH: {
+    en: "Scholar",
+    ja: "学者",
+    cn: "学者",
+    simple1: "学",
+    simple2: "学者",
+  },
+  ROG: {
+    en: "Rogue",
+    ja: "双剣士",
+    cn: "双剑师",
+    simple1: "双",
+    simple2: "双剑",
+  },
   NIN: { en: "Ninja", ja: "忍者", cn: "忍者", simple1: "忍", simple2: "忍者" },
-  MCH: { en: "Machinist", ja: "機工士", cn: "机工士", simple1: "机", simple2: "机工" },
-  DRK: { en: "Dark Knight", ja: "暗黒騎士", cn: "暗黑骑士", simple1: "暗", simple2: "暗骑" },
-  AST: { en: "Astrologian", ja: "占星術師", cn: "占星术士", simple1: "占", simple2: "占星" },
+  MCH: {
+    en: "Machinist",
+    ja: "機工士",
+    cn: "机工士",
+    simple1: "机",
+    simple2: "机工",
+  },
+  DRK: {
+    en: "Dark Knight",
+    ja: "暗黒騎士",
+    cn: "暗黑骑士",
+    simple1: "暗",
+    simple2: "暗骑",
+  },
+  AST: {
+    en: "Astrologian",
+    ja: "占星術師",
+    cn: "占星术士",
+    simple1: "占",
+    simple2: "占星",
+  },
   SAM: { en: "Samurai", ja: "侍", cn: "武士", simple1: "武", simple2: "武士" },
-  RDM: { en: "Red Mage", ja: "赤魔道士", cn: "赤魔法师", simple1: "赤", simple2: "赤魔" },
-  BLU: { en: "Blue Mage", ja: "青魔道士", cn: "青魔法师", simple1: "青", simple2: "青魔" },
-  GNB: { en: "Gunbreaker", ja: "ガンブレイカー", cn: "绝枪战士", simple1: "绝", simple2: "绝枪" },
-  DNC: { en: "Dancer", ja: "踊り子", cn: "舞者", simple1: "舞", simple2: "舞者" },
-  RPR: { en: "Reaper", ja: "リーパー", cn: "钐镰客", simple1: "镰", simple2: "钐镰" },
+  RDM: {
+    en: "Red Mage",
+    ja: "赤魔道士",
+    cn: "赤魔法师",
+    simple1: "赤",
+    simple2: "赤魔",
+  },
+  BLU: {
+    en: "Blue Mage",
+    ja: "青魔道士",
+    cn: "青魔法师",
+    simple1: "青",
+    simple2: "青魔",
+  },
+  GNB: {
+    en: "Gunbreaker",
+    ja: "ガンブレイカー",
+    cn: "绝枪战士",
+    simple1: "绝",
+    simple2: "绝枪",
+  },
+  DNC: {
+    en: "Dancer",
+    ja: "踊り子",
+    cn: "舞者",
+    simple1: "舞",
+    simple2: "舞者",
+  },
+  RPR: {
+    en: "Reaper",
+    ja: "リーパー",
+    cn: "钐镰客",
+    simple1: "镰",
+    simple2: "钐镰",
+  },
   SGE: { en: "Sage", ja: "賢者", cn: "贤者", simple1: "贤", simple2: "贤者" },
 };
 const allJobs = Object.keys(nameToJobEnum) as Job[];
 const allIcons = Object.keys(iconToJobEnum) as Icon[];
-const allRoles = ["tank", "healer", "dps", "crafter", "gatherer", "none"] as Role[];
+const allRoles = [
+  "tank",
+  "healer",
+  "dps",
+  "crafter",
+  "gatherer",
+  "none",
+] as Role[];
 
 const tankJobs: Job[] = ["GLA", "PLD", "MRD", "WAR", "DRK", "GNB"];
 const healerJobs: Job[] = ["CNJ", "WHM", "SCH", "AST", "SGE"];
-const meleeDpsJobs: Job[] = ["PGL", "MNK", "LNC", "DRG", "ROG", "NIN", "SAM", "RPR"];
+const meleeDpsJobs: Job[] = [
+  "PGL",
+  "MNK",
+  "LNC",
+  "DRG",
+  "ROG",
+  "NIN",
+  "SAM",
+  "RPR",
+];
 const rangedDpsJobs: Job[] = ["ARC", "BRD", "DNC", "MCH"];
 const casterDpsJobs: Job[] = ["BLU", "RDM", "BLM", "SMN", "ACN", "THM"];
 const dpsJobs: Job[] = [...meleeDpsJobs, ...rangedDpsJobs, ...casterDpsJobs];
-const battleJobs: Job[] = [...tankJobs, ...healerJobs, ...meleeDpsJobs, ...rangedDpsJobs, ...casterDpsJobs];
-const battleJobs2: Job[] = [...tankJobs, ...healerJobs, ...meleeDpsJobs, ...rangedDpsJobs, ...casterDpsJobs, "NONE"];
+const battleJobs: Job[] = [
+  ...tankJobs,
+  ...healerJobs,
+  ...meleeDpsJobs,
+  ...rangedDpsJobs,
+  ...casterDpsJobs,
+];
+const battleJobs2: Job[] = [
+  ...tankJobs,
+  ...healerJobs,
+  ...meleeDpsJobs,
+  ...rangedDpsJobs,
+  ...casterDpsJobs,
+  "NONE",
+];
 
-const craftingJobs: Job[] = ["CRP", "BSM", "ARM", "GSM", "LTW", "WVR", "ALC", "CUL"];
+const craftingJobs: Job[] = [
+  "CRP",
+  "BSM",
+  "ARM",
+  "GSM",
+  "LTW",
+  "WVR",
+  "ALC",
+  "CUL",
+];
 const gatheringJobs: Job[] = ["MIN", "BTN", "FSH"];
 
 const stunJobs: Job[] = ["BLU", ...tankJobs, ...meleeDpsJobs];
@@ -214,7 +477,9 @@ const cleanseJobs: Job[] = ["BLU", "BRD", ...healerJobs];
 
 const jobToRoleMap: Map<Job, Role> = (() => {
   const addToMap = (map: Map<Job, Role>, jobs: Job[], role: Role) => {
-    jobs.forEach((job) => map.set(job, role));
+    for (const job of jobs) {
+      map.set(job, role);
+    }
   };
 
   const map: Map<Job, Role> = new Map([["NONE", "none"]]);
@@ -262,7 +527,8 @@ const Util = {
   getAllJobs: (): readonly Job[] => allJobs,
   getBattleJobs: (): readonly Job[] => battleJobs,
   getBattleJobs2: (): readonly Job[] => battleJobs2,
-  getBattleJobs3: (): readonly Job[] => battleJobs.filter((v) => !baseJob.includes(v)),
+  getBattleJobs3: (): readonly Job[] =>
+    battleJobs.filter((v) => !baseJob.includes(v)),
   nameToFullName: (job: Job) => {
     return nameToFullName[job];
   },

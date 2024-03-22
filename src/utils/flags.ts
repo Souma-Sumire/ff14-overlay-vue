@@ -19,7 +19,9 @@ export type DamageType =
   | "darkness" // 暗黑;
   | "dot";
 
-export function translationFlags(typeString: DamageEffect | DamageProperties | DamageType): string {
+export function translationFlags(
+  typeString: DamageEffect | DamageProperties | DamageType,
+): string {
   switch (typeString) {
     case "dodge":
       return "闪避";
@@ -86,7 +88,7 @@ function processEffect(flag: string): DamageEffect {
     case /2\w{4}4$/.test(flag):
       return "crit heal";
     default:
-      throw new Error("Unknown effect flag " + flag);
+      throw new Error(`Unknown effect flag ${flag}`);
   }
 }
 
@@ -122,7 +124,7 @@ function processType(flag: string): DamageType {
     case /6\w{4}$/.test(flag):
       return "darkness";
     default:
-      console.error("Unknown type flag " + flag);
+      console.error(`Unknown type flag ${flag}`);
       return "physics";
   }
 }
@@ -174,11 +176,11 @@ export const UnscrambleDamage = (field?: string): number => {
   const len = field.length;
   if (len <= 4) return 0;
   // Get the left two bytes as damage.
-  let damage = parseInt(field.slice(0, len - 4), 16);
+  let damage = Number.parseInt(field.slice(0, len - 4), 16);
   // Check for third byte == 0x40.
   if (field[len - 4] === "4") {
     // Wrap in the 4th byte as extra damage.  See notes above.
-    const rightDamage = parseInt(field.slice(len - 2, len), 16);
+    const rightDamage = Number.parseInt(field.slice(len - 2, len), 16);
     damage = damage - rightDamage + (rightDamage << 16);
   }
   return damage;
