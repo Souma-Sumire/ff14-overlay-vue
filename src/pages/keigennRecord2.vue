@@ -318,13 +318,13 @@ const handleLine = (line: string) => {
               isPov: povId.value === sourceId,
             };
             if (targetId.startsWith("1") && keigenn.isFriendly) {
-              if (statusData.friendly[targetId] == null) {
+              if (statusData.friendly[targetId] === undefined) {
                 statusData.friendly[targetId] = {};
               }
               statusData.friendly[targetId][effectId] = status;
             } else if (targetId.startsWith("4") && !keigenn.isFriendly) {
-              if (statusData.enemy[targetId] == null) {
-                statusData.enemy[targetId] = {};
+              if (statusData.enemy[target] === undefined) {
+                statusData.enemy[target] = {};
               }
               statusData.enemy[target][effectId] = status;
             }
