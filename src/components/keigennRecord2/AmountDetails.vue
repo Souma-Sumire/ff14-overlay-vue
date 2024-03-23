@@ -7,8 +7,9 @@
     </span>
     <br />
     <span>
-      HP:{{ props.row.currentHp }}/{{ props.row.maxHp }} (
-      {{ Math.round((props.row.currentHp / props.row.maxHp) * 100) }}%)
+      HP:{{ props.row.currentHp }}/{{ props.row.maxHp }} ({{
+        Math.round((props.row.currentHp / props.row.maxHp) * 100)
+      }}%)
     </span>
     <br />
     <span>来源:{{ props.row.source }}</span>
@@ -16,8 +17,7 @@
     <span>受到伤害:{{ props.row.amount }}</span>
     <br />
     <span>
-      剩余HP:{{ props.row.currentHp - props.row.amount }} (
-      {{
+      剩余HP:{{ props.row.currentHp - props.row.amount }} ({{
         Math.round(
           ((props.row.currentHp - props.row.amount) / props.row.maxHp) * 100
         )
