@@ -171,7 +171,11 @@
 
 <script setup lang="ts">
 import type { RemovableRef } from "@vueuse/core";
-import { addOverlayListener } from "../../../cactbot/resources/overlay_plugin_api";
+import {
+  addOverlayListener,
+  removeOverlayListener,
+} from "../../../cactbot/resources/overlay_plugin_api";
+import type { EventMap } from "../../../cactbot/types/event";
 
 const now = ref(0);
 const game = reactive({
@@ -268,10 +272,10 @@ const data = reactive([
     }),
     style: {
       top: computed(
-        () => `${settings.value.tr3.top}${settings.value.fl.top}px`
+        () => `${settings.value.tr3.top + settings.value.fl.top}px`
       ),
       left: computed(
-        () => `${settings.value.tr3.left}${settings.value.fl.left}px`
+        () => `${settings.value.tr3.left + settings.value.fl.left}px`
       ),
     },
   },
@@ -284,10 +288,10 @@ const data = reactive([
     }),
     style: {
       top: computed(
-        () => `${settings.value.tr4.top}${settings.value.fl.top}px`
+        () => `${settings.value.tr4.top + settings.value.fl.top}px`
       ),
       left: computed(
-        () => `${settings.value.tr4.left}${settings.value.fl.left}px`
+        () => `${settings.value.tr4.left + settings.value.fl.left}px`
       ),
     },
   },
@@ -303,6 +307,31 @@ const fontWeight = computed(() =>
 );
 const userCss = computed(() => settings.value.userCss);
 
+const handleOnLogEvent: EventMap["LogLine"] = (e) => {
+  if (
+    e.line[5] === game.playerId &&
+    (e.line[0] === "26" || e.line[0] === "30") &&
+    game.status.has(e.line[2])
+  ) {
+    game.status.set(e.line[2], e.line[0] === "26" ? Date.now() : 0);
+  } else if (
+    e.line[2] === game.playerId &&
+    (e.line[0] === "21" || e.line[0] === "22")
+  ) {
+    if (
+      (e.line[4] === "3E79" && e.line[0] === "22") ||
+      (e.line[4] === "3E75" && e.line[0] === "21")
+    )
+      game.lastCombo = Date.now();
+    else if (
+      e.line[4] === "3E76" ||
+      e.line[4] === "3E7A" ||
+      (e.line[0] === "21" && e.line[4] === "3E79")
+    )
+      game.lastCombo = 0;
+  }
+};
+
 function handlePlayerDied() {
   game.status.set("A85", 0);
   game.status.set("A86", 0);
@@ -311,6 +340,10 @@ function handlePlayerDied() {
   game.lastCombo = 0;
 }
 
+const handleChangePrimaryPlayer: EventMap["ChangePrimaryPlayer"] = (e) => {
+  game.playerId = Number(e.charID).toString(16).toUpperCase();
+};
+
 function resetSettings() {
   localStorage.removeItem("jobs-dnc");
   location.reload();
@@ -318,37 +351,17 @@ function resetSettings() {
 
 onMounted(() => {
   addOverlayListener("onPlayerDied", handlePlayerDied);
-  addOverlayListener("LogLine", (e) => {
-    if (
-      e.line[5] === game.playerId &&
-      (e.line[0] === "26" || e.line[0] === "30") &&
-      game.status.has(e.line[2])
-    ) {
-      game.status.set(e.line[2], e.line[0] === "26" ? Date.now() : 0);
-    } else if (
-      e.line[2] === game.playerId &&
-      (e.line[0] === "21" || e.line[0] === "22")
-    ) {
-      if (
-        (e.line[4] === "3E79" && e.line[0] === "22") ||
-        (e.line[4] === "3E75" && e.line[0] === "21")
-      )
-        game.lastCombo = Date.now();
-      else if (
-        e.line[4] === "3E76" ||
-        e.line[4] === "3E7A" ||
-        (e.line[0] === "21" && e.line[4] === "3E79")
-      )
-        game.lastCombo = 0;
-    }
-  });
-  addOverlayListener("ChangePrimaryPlayer", (e) => {
-    game.playerId = Number(e.charID).toString(16).toUpperCase();
-  });
+  addOverlayListener("LogLine", handleOnLogEvent);
+  addOverlayListener("ChangePrimaryPlayer", handleChangePrimaryPlayer);
   startOverlayEvents();
   document.addEventListener("onOverlayStateUpdate", (e) => {
     showSettings.value = e?.detail?.isLocked === false;
   });
+});
+onBeforeUnmount(() => {
+  removeOverlayListener("onPlayerDied", handlePlayerDied);
+  removeOverlayListener("LogLine", handleOnLogEvent);
+  removeOverlayListener("ChangePrimaryPlayer", handleChangePrimaryPlayer);
 });
 requestAnimationFrame(function update() {
   now.value = Date.now();
