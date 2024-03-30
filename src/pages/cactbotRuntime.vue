@@ -76,15 +76,16 @@
   </div>
 </template>
 <script setup lang="ts">
-import type { PlayerRuntime, Role } from "@/types/partyPlayer";
+import type { PlayerRuntime } from "@/types/partyPlayer";
 import Util, { jobEnumOrder } from "@/utils/util";
 import "animate.css";
 import {
   addOverlayListener,
   callOverlayHandler,
 } from "../../cactbot/resources/overlay_plugin_api";
+import type { Role } from "../../cactbot/types/job";
 
-const createRPArr = (r: "T" | "H" | "D", l: number) =>
+const createRPArr = (r: "T" | "H" | "D" | "C" | "G" | "N", l: number) =>
   Array(l)
     .fill(r)
     .map((v, i) => v + (+i + 1));
@@ -93,7 +94,9 @@ const roleAssignLocationNames: Record<Role, string[]> = {
   tank: ["MT", "ST", ...createRPArr("T", 70)],
   healer: [...createRPArr("H", 72)],
   dps: [...createRPArr("D", 72)],
-  unknown: ["unknown"],
+  crafter: [...createRPArr("C", 72)],
+  gatherer: [...createRPArr("G", 72)],
+  none: [...createRPArr("N", 72)],
 };
 
 const dialogVisible = ref(false);
@@ -112,11 +115,13 @@ const fakeParty: PlayerRuntime[] = [
 const _party: PlayerRuntime[] = [];
 const data = useStorage("cactbotRuntime-data", { party: _party });
 const showTips = useStorage("cactbotRuntime-showTips", ref(true));
-const roleSelectLength = {
+const roleSelectLength: Record<Role, number> = {
   tank: 0,
   healer: 0,
   dps: 0,
-  unknown: 1,
+  crafter: 0,
+  gatherer: 0,
+  none: 0,
 };
 function updateRoleSelectLength(): void {
   roleSelectLength.tank = data.value.party.reduce(
@@ -154,7 +159,10 @@ function getJobClassification(job: number): Role {
     ].includes(jobN)
   )
     return "dps";
-  return "unknown";
+
+  if (Util.isCraftingJob(Util.jobEnumToJob(job))) return "crafter";
+  if (Util.isGatheringJob(Util.jobEnumToJob(job))) return "gatherer";
+  return "none";
 }
 
 function defaultPartySort() {
@@ -194,6 +202,9 @@ function broadcastParty(): void {
     ...roleAssignLocationNames.tank,
     ...roleAssignLocationNames.healer,
     ...roleAssignLocationNames.dps,
+    ...roleAssignLocationNames.crafter,
+    ...roleAssignLocationNames.gatherer,
+    ...roleAssignLocationNames.none,
   ];
   data.value.party.sort(
     (a, b) => sortArr.indexOf(a.rp ?? "") - sortArr.indexOf(b.rp ?? "")
@@ -283,8 +294,10 @@ main {
   background-color: rgba(0, 0, 0, 0.1);
   padding: 0;
   margin: 0;
+  border-radius: 5px;
   transition-timing-function: ease-in-out;
   .players {
+    margin-left: 1px;
     $shadowColor: rgba(0, 0, 0, 0.25);
     $text-shadow: 1px 1px 2px $shadowColor, -1px -1px 2px $shadowColor,
       1px -1px 2px $shadowColor, -1px 1px 2px $shadowColor;
