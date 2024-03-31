@@ -1,14 +1,23 @@
 <script setup lang="ts">
 import { useCastingMonitorStore } from "@/store/castingMonitor";
 import { params } from "@/utils/queryParams";
+import { handleImgError } from "@/utils/xivapi";
 const castingMonitorStore = useCastingMonitorStore();
-const displayAA = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.displayAA));
-const displayGCD = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.displayGCDSpace));
+const displayAA = Number(
+  /^(?:1|true|yes|on|open|enabled)$/i.test(params.displayAA)
+);
+const displayGCD = Number(
+  /^(?:1|true|yes|on|open|enabled)$/i.test(params.displayGCDSpace)
+);
 </script>
 
 <template>
   <div w-100vw flex="~ nowrap" class="main">
-    <div v-for="(casts, castersId) in castingMonitorStore.castData" :key="castersId" :data-casterId="castersId">
+    <div
+      v-for="(casts, castersId) in castingMonitorStore.castData"
+      :key="castersId"
+      :data-casterId="castersId"
+    >
       <el-tooltip
         raw-content
         placement="right-start"
@@ -18,21 +27,39 @@ const displayGCD = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.displa
         popper-class="el-tooltip"
         :show-arrow="false"
         v-for="cast in casts"
-        :key="cast.key">
+        :key="cast.key"
+      >
         <template #content>
           <div class="elhover">
             <strong>{{ cast.APIData.Name }}</strong>
-            <div v-html="cast.APIData?.Description" style="white-space: pre-line"></div>
+            <div
+              v-html="cast.APIData?.Description"
+              style="white-space: pre-line"
+            ></div>
           </div>
         </template>
         <div
           :class="`images ${cast.class} logLine${cast.logLine} displayAA${displayAA} displayGCD${displayGCD}`"
-          :style="`--animeDuration: ${castingMonitorStore.config.duration}s;opacity:${Number(
-            castingMonitorStore.focusTargetId === castersId,
-          )}`">
-          <img :src="cast.src" class="action-icon" height="40" loading="lazy" />
+          :style="`--animeDuration: ${
+            castingMonitorStore.config.duration
+          }s;opacity:${Number(
+            castingMonitorStore.focusTargetId === castersId
+          )}`"
+        >
+          <img
+            :src="cast.src"
+            class="action-icon"
+            height="40"
+            loading="lazy"
+            @error="handleImgError"
+          />
           <img class="frame" loading="lazy" />
-          <span v-if="displayGCD === 1" class="GCDCast" :class="cast.GCDClass">{{ cast?.GCDCast ?? "" }}</span>
+          <span
+            v-if="displayGCD === 1"
+            class="GCDCast"
+            :class="cast.GCDClass"
+            >{{ cast?.GCDCast ?? "" }}</span
+          >
         </div>
       </el-tooltip>
     </div>
@@ -151,7 +178,8 @@ const displayGCD = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.displa
       color: whitesmoke;
       font-family: monospace;
       transform: translateY(30px);
-      text-shadow: -1px 0 1px #000, 0 1px 1px #000, 1px 0 1px #000, 0 -1px 1px #000;
+      text-shadow: -1px 0 1px #000, 0 1px 1px #000, 1px 0 1px #000,
+        0 -1px 1px #000;
       font-size: 12px;
       &.wasted {
         color: yellow;

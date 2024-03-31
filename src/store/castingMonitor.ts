@@ -5,10 +5,14 @@ import { callOverlayHandler } from "../../cactbot/resources/overlay_plugin_api";
 import type { Party } from "cactbot/types/event";
 import { defineStore } from "pinia";
 const THNSort = ["tank", "healer", "dps", "crafter", "gatherer", "none"];
+// const testActions = [
+//   24283, 24284, 24285, 24286, 24287, 24288, 24289, 24290, 24294, 24295, 24296,
+//   24297, 24298, 24299, 24300, 24301, 24302, 24303, 24304, 24305, 24306, 24307,
+//   24309, 24310, 24311, 24312, 24313, 24315, 24316, 24317, 24318,
+// ];
 const testActions = [
-  24283, 24284, 24285, 24286, 24287, 24288, 24289, 24290, 24294, 24295, 24296,
-  24297, 24298, 24299, 24300, 24301, 24302, 24303, 24304, 24305, 24306, 24307,
-  24309, 24310, 24311, 24312, 24313, 24315, 24316, 24317, 24318,
+  34563, 34564, 34565, 34566, 34567, 34568, 34569, 34570, 34571, 34572, 34573,
+  34574, 34575, 34576, 34577, 34578, 34579, 34580, 34581, 34582,
 ];
 export const useCastingMonitorStore = defineStore("castingMonitor", {
   state: () => {
@@ -46,23 +50,24 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
     testAction(): void {
       const actionId =
         testActions[Math.floor(Math.random() * testActions.length)];
-      this.pushAction(
-        Date.now(),
-        14,
-        "贤者技能随机",
-        this.focusTargetId,
-        actionId,
-        1,
-      );
-      setTimeout(() => {
-        this.pushAction(
-          Date.now(),
-          15,
-          "贤者技能随机",
-          this.focusTargetId,
-          actionId,
-        );
-      }, 1000);
+      this.pushAction(Date.now(), 15, "青魔技能随机", this.focusTargetId, actionId);
+      // this.pushAction(
+      //   Date.now(),
+      //   14,
+      //   "贤者技能随机",
+      //   this.focusTargetId,
+      //   actionId,
+      //   1,
+      // );
+      // setTimeout(() => {
+      //   this.pushAction(
+      //     Date.now(),
+      //     15,
+      //     "贤者技能随机",
+      //     this.focusTargetId,
+      //     actionId,
+      //   );
+      // }, 1000);
     },
     testItem(): void {
       this.pushAction(
