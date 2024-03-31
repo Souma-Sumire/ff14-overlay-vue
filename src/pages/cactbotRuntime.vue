@@ -57,9 +57,9 @@
                 :label="item"
               ></vxe-option>
             </vxe-select>
-            <span class="name">
-              {{ Util.nameToFullName(Util.jobEnumToJob(member.job)).simple2 }}
-              {{ mouseEnter ? member.name : "" }}
+            <span class="name" :class="aprilFoolSDay ? 'aprilFoolSDay' : ''">
+              {{ getJobName(member.job) }}
+              {{ mouseEnter ? getPlayerName(member.name) : "" }}
             </span>
           </section>
         </transition-group>
@@ -84,6 +84,10 @@ import {
   callOverlayHandler,
 } from "../../cactbot/resources/overlay_plugin_api";
 import type { Role } from "../../cactbot/types/job";
+
+const aprilFoolSDay = ref(
+  new Date().getMonth() === 3 && new Date().getDate() === 1
+);
 
 const createRPArr = (r: "T" | "H" | "D" | "C" | "G" | "N", l: number) =>
   Array(l)
@@ -231,6 +235,14 @@ function updateSortArr(arr: number[]) {
   broadcastParty();
 }
 
+const getJobName = (job: number) => {
+  return Util.nameToFullName(Util.jobEnumToJob(job)).simple1;
+};
+
+const getPlayerName = (name: string) => {
+  return name;
+};
+
 onMounted(() => {
   broadcastParty();
   addOverlayListener("PartyChanged", (e) => {
@@ -287,7 +299,7 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 main {
-  width: 5rem;
+  width: 4rem;
   &.mouseIn {
     width: 16.75em;
   }
@@ -330,6 +342,29 @@ main {
         white-space: nowrap;
         color: white;
         text-shadow: $text-shadow;
+        &.aprilFoolSDay {
+          animation: shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both
+            infinite;
+          @keyframes shake {
+            10%,
+            90% {
+              transform: translateX(-4px);
+            }
+            20%,
+            80% {
+              transform: translateX(4px);
+            }
+            30%,
+            50%,
+            70% {
+              transform: translateX(-4px);
+            }
+            40%,
+            60% {
+              transform: translateX(4px);
+            }
+          }
+        }
       }
     }
   }
