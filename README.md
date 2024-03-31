@@ -1,8 +1,13 @@
 # ff14-overlay-vue
 
-二选一任选使用
-[DieMoe服务器部署页面](https://souma.diemoe.net/#/)
-[Github Pages部署页面](https://souma-sumire.github.io/ff14-overlay-vue/#/)
+## 用法
+
+ACT > OverlayPlugin 悬浮窗插件 > 新建 > 名称：任意，预设：'自定义悬浮窗'，类型：'数据统计'
+
+### 悬浮窗地址
+
+- from [DieMoe](https://souma.diemoe.net/#/)
+- from [Github Pages](https://souma-sumire.github.io/ff14-overlay-vue/#/)
 
 ## 开发笔记
 
