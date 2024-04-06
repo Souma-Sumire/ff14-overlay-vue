@@ -66,12 +66,12 @@ export default defineConfig({
       },
     }),
     viteCompression({
-      verbose: false,
-      filter: /\.(js|mjs|json|css)$/,
-      disable: false,
-      threshold: 1025,
-      algorithm: "gzip",
-      ext: ".gz",
+      // verbose: false,
+      // filter: /\.(js|mjs|json|css)$/,
+      // disable: false,
+      // threshold: 1025,
+      // algorithm: "gzip",
+      // ext: ".gz",
       // deleteOriginFile: true,
     }),
     Unocss({

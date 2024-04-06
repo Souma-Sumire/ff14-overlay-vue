@@ -2314,7 +2314,7 @@ function handleBatchLearning(): void {
   .blubook {
     height: 720px;
     width: 1280px;
-    background-image: url("@/assets/blubook.png");
+    background-image: url("@/assets/blubook.webp");
     background-repeat: no-repeat;
     position: relative;
     .actionGrid {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import actWS from "@/assets/actWS.png";
+import actWS from "@/assets/actWS.webp";
 import {
   Check,
   Delete,

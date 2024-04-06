@@ -3,7 +3,7 @@
     "target": "es2017",
     "lib": ["esnext", "dom", "ESNext.String"],
     "jsx": "preserve",
-    "module": "commonjs",
+    "module": "esnext",
     "baseUrl": "./",
     "paths": {
       "@": ["src"],
@@ -11,6 +11,7 @@
     },
     "types": ["node"],
     "resolveJsonModule": true,
+    "moduleResolution": "Node",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
