@@ -33,14 +33,14 @@ export const useMacroStore = defineStore("macro", {
       selectZone: useStorage("my-zone", ref("1003")),
       zoneNow: useStorage("my-zone-now", ref("129")),
       fastEntrance: [
-        { text: "幻鬼", value: "1157" },
+        { text: "幻骑", value: "1175" },
         { text: "极泽", value: "1169" },
         { text: "P9S", value: "1148" },
         { text: "P10S", value: "1150" },
         { text: "P11S", value: "1152" },
         { text: "P12S", value: "1154" },
-        { text: "异闻六根山", value: "1155" },
-        { text: "零式六根山", value: "1156" },
+        { text: "异闻阿罗", value: "1179" },
+        { text: "零式阿罗", value: "1180" },
       ],
       // gameExists: useStorage("my-game-exists", false),
       show,
@@ -255,9 +255,9 @@ export const useMacroStore = defineStore("macro", {
                 "Three",
                 "Four",
               ] as WayMarkKeys[]
-            ).map((v) => {
-              targetMacro.Place[v].X -= oX;
-              targetMacro.Place[v].Z -= oY;
+            ).map((key) => {
+              targetMacro.Place[key].X -= oX;
+              targetMacro.Place[key].Z -= oY;
             });
           } catch (_e) {
             ElMessage.error("解析失败");
