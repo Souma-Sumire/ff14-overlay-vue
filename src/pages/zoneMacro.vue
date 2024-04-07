@@ -501,15 +501,16 @@ body {
     }
   }
   .macroText {
+    white-space: pre;
     text-overflow: ellipsis;
     overflow: hidden;
     line-height: 1.5;
   }
-  @media screen and (max-width: 600px) {
-    .macroText {
-      white-space: normal;
-    }
-  }
+  // @media screen and (max-width: 600px) {
+  //   .macroText {
+  //     white-space: normal;
+  //   }
+  // }
 }
 
 .markIcon {
