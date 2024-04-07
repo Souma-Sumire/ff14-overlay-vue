@@ -6814,7 +6814,8 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Text: "/p 【飛翔：散開方向】\n/p 　　　 　 (A)\n/p 　 　　 MT+ST\n/p 　　D3　　 　 D4\n/p (D)　　　 　 　 　 (B)\n/p 　　D1　　 　 D2\n/p 　 　 　H1+H2\n/p 　　　 　 (C)\n/p 【デモンクロー】ST先頭で頭割り\n/p 【雑魚タゲ取り】\n/p 2回目：MT⇒北西ウィル　ST⇒南西ウィル\n/p 3回目：MT⇒南ウィル　　ST⇒東セウ\n/p 【サザンクロス】 　 ｜【波動砲】\n/p 背面から時計回り　｜9時で捨てる\n/p MTのみ反時計回り ｜MTは東寄りにタゲサ内へ入る",
       },
       {
-        Name: `Markers from Discord @Maya#1998${getSource(
+        Name: `${getSource(
+          "Markers from Discord @Maya#1998",
           "https://discord.com/channels/277897135515762698/448209053743579186/1109777325140217896",
         )}`,
         Type: "place",
@@ -7360,11 +7361,63 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p ■圆桌骑士第4回  　Boss背面集合→分散`,
       },
     ],
+    1179: [
+      {
+        Name: "MMW - BOSS1",
+        Type: "macro",
+        Text: `
+        /p ■南北                 ─┬■追泡泡/海峡┬■钢铁月环ー
+        /p 分摊：止步1           │ Ｔ    H            │ A/D:T D2
+        /p 分散：止步2           │    ★               │  C/B:D1 H
+        /p 水泡无脑                 │ D2  D1         │
+        /p ■排队
+        /p   分散←止步→分摊 │
+        /p     2  水泡→1   │
+        /p                         │
+        /p    1←水泡   2   │
+        /p   分摊←止步→分散 │
+        /p ■小怪优先级(A顺)  ■吹飞踩塔
+        /p  T＞H＞D1＞D2     │  TH固定踩中塔 泡炮&补塔:DPS
+        `,
+      },
+    ],
+    1180: [
+      {
+        Name: "MMW - BOSS1",
+        Type: "macro",
+        Text: `
+        /p ■南北                 ─┬■追泡泡/海峡┬■钢铁月环ー
+        /p 分摊：止步1           │ Ｔ    H            │ A/D:T D2
+        /p 分散：止步2           │    ★               │  C/B:D1 H
+        /p 水泡无脑                 │ D2  D1         │
+        /p ■排队
+        /p   分散←止步→分摊 │
+        /p     2  水泡→1   │
+        /p                         │
+        /p    1←水泡   2   │
+        /p   分摊←止步→分散 │
+        /p ■小怪优先级(A顺)  ■吹飞踩塔
+        /p  T＞H＞D1＞D2     │  TH固定踩中塔 泡炮&补塔:DPS
+        `,
+      },
+    ],
   },
 };
+for (const key in defaultMacro.zoneId) {
+  if (Object.prototype.hasOwnProperty.call(defaultMacro.zoneId, key)) {
+    const map = defaultMacro.zoneId[key];
+    for (const item of map) {
+      item.Deletability = false;
+      item.Editable = false;
+      if (item.Type === "macro") {
+        item.Text = item.Text.replaceAll(/^\s+|\s+$/gm, ""); // 移除每行开头的空白字符
+      }
+    }
+  }
+}
 export { defaultMacro };
-function getSource(href: string, title = ""): string {
-  return `<a href='${href}'target='_blank'>来源${title}</a>`;
+function getSource(title: string, href: string): string {
+  return `<a href='${href}'target='_blank'>${title}</a>`;
 }
 const fastPP = (jsonstr: string): void => {
   const d = JSON.parse(jsonstr) as Partial<PPJSON>;
@@ -7412,12 +7465,14 @@ fastPP(
 );
 
 fastPP(
-  `{"Name":"P10S Game8国服适配 确定${getSource(
+  `{"Name":"${getSource(
+    "P10S Game8国服适配",
     "https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86",
   )}","MapID":939,"A":{"X":100.0,"Y":0.0,"Z":98.2,"ID":0,"Active":true},"B":{"X":92.009,"Y":0.0,"Z":111.204,"ID":6,"Active":true},"C":{"X":100.008,"Y":0.0,"Z":111.188,"ID":2,"Active":true},"D":{"X":108.013,"Y":0.0,"Z":111.159,"ID":5,"Active":true},"One":{"X":92.009,"Y":0.0,"Z":88.82,"ID":4,"Active":true},"Two":{"X":108.013,"Y":0.0,"Z":88.82,"ID":5,"Active":true},"Three":{"X":75.0,"Y":0.0,"Z":85.0,"ID":6,"Active":true},"Four":{"X":125.0,"Y":0.0,"Z":85.0,"ID":7,"Active":true}}
   `,
 );
-fastPP(`{"Name":"极高贝扎安全角树歌(不确定再看看)${getSource(
+fastPP(`{"Name":"${getSource(
+  "极高贝扎安全角树歌",
   "https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86",
 )}","MapID":950,"A":{"X":100.0,"Y":0.03,"Z":86.0,"ID":0,"Active":true},"B":{"X":114.0,"Y":0.03,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.03,"Z":114.0,"ID":2,"Active":true},"D":{"X":86.0,"Y":0.03,"Z":100.0,"ID":3,"Active":true},"One":{"X":103.9,"Y":0.03,"Z":96.1,"ID":4,"Active":true},"Two":{"X":103.9,"Y":0.03,"Z":103.9,"ID":5,"Active":true},"Three":{"X":96.1,"Y":0.03,"Z":103.9,"ID":6,"Active":true},"Four":{"X":96.1,"Y":0.03,"Z":96.1,"ID":7,"Active":true}}
 `);
@@ -7425,102 +7480,142 @@ fastPP(
   `{"Name":"极泽罗姆斯 日基","MapID":965,"A":{"X":92.09,"Z":81.31,"Y":0,"Active":true},"B":{"X":107.91,"Z":81.28,"Y":0,"Active":true},"C":{"X":100.05,"Z":99.98,"Y":0,"Active":true},"D":{"X":0,"Z":0,"Y":0,"Active":false},"One":{"X":81.12,"Z":81.11,"Y":0,"Active":true},"Two":{"X":118.9,"Z":81.1,"Y":0,"Active":true},"Three":{"X":118.85,"Z":92.09,"Y":0,"Active":true},"Four":{"X":81.01,"Z":92.1,"Y":0,"Active":true}}`,
 );
 fastPP(
-  `{"Name":"Enrance Mob ${getSource(
+  `{"Name":"${getSource(
+    "树嘎 Enrance Mob",
     "https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs",
-    "树嘎",
   )}","MapID":946,"A":{"X":-11.747,"Y":0.0,"Z":-9.764,"ID":0,"Active":true},"B":{"X":-16.405,"Y":0.0,"Z":8.963,"ID":1,"Active":true},"C":{"X":-12.119,"Y":0.0,"Z":1.613,"ID":2,"Active":true},"D":{"X":0.0,"Y":0.0,"Z":0.0,"ID":3,"Active":false},"One":{"X":-0.009,"Y":0.0,"Z":19.405,"ID":4,"Active":true},"Two":{"X":0.0,"Y":0.0,"Z":0.0,"ID":5,"Active":false},"Three":{"X":0.0,"Y":0.0,"Z":0.0,"ID":6,"Active":false},"Four":{"X":0.0,"Y":0.0,"Z":0.0,"ID":7,"Active":false}}`,
 );
 fastPP(
-  `{"Name":"Boss 1 ${getSource(
+  `{"Name":"${getSource(
+    "树嘎 Boss 1",
     "https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs",
-    "树嘎",
   )}","MapID":946,"A":{"X":0.0,"Y":0.0,"Z":-117.0,"ID":0,"Active":true},"B":{"X":17.0,"Y":0.0,"Z":-100.0,"ID":1,"Active":true},"C":{"X":0.0,"Y":0.0,"Z":-83.0,"ID":2,"Active":true},"D":{"X":-17.0,"Y":0.0,"Z":-100.0,"ID":3,"Active":true},"One":{"X":7.199,"Y":0.0,"Z":-108.4,"ID":4,"Active":true},"Two":{"X":7.199,"Y":0.0,"Z":-91.599,"ID":5,"Active":true},"Three":{"X":-7.199,"Y":0.0,"Z":-91.599,"ID":6,"Active":true},"Four":{"X":-7.199,"Y":0.0,"Z":-108.4,"ID":7,"Active":true}}`,
 );
 fastPP(
-  `{"Name":"Middle Mob ${getSource(
+  `{"Name":"${getSource(
+    "树嘎 Middle Mob",
     "https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs",
-    "树嘎",
   )}","MapID":946,"A":{"X":0.0,"Y":0.0,"Z":0.0,"ID":0,"Active":false},"B":{"X":0.0,"Y":0.0,"Z":0.0,"ID":1,"Active":false},"C":{"X":0.0,"Y":0.0,"Z":0.0,"ID":2,"Active":false},"D":{"X":0.0,"Y":0.0,"Z":0.0,"ID":3,"Active":false},"One":{"X":285.028,"Y":0.0,"Z":36.561,"ID":4,"Active":true},"Two":{"X":281.299,"Y":0.0,"Z":20.222,"ID":5,"Active":true},"Three":{"X":294.197,"Y":0.0,"Z":-1.702,"ID":6,"Active":true},"Four":{"X":309.982,"Y":0.0,"Z":-31.385,"ID":7,"Active":true}}`,
 );
 fastPP(
-  `{"Name":"Boss 2 ${getSource(
+  `{"Name":"${getSource(
+    "树嘎 Boss 2",
     "https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs",
-    "树嘎",
   )}","MapID":946,"A":{"X":300.0,"Y":7.0,"Z":-139.5,"ID":0,"Active":true},"B":{"X":318.5,"Y":7.0,"Z":-120.0,"ID":1,"Active":true},"C":{"X":300.0,"Y":7.0,"Z":-101.5,"ID":2,"Active":true},"D":{"X":281.5,"Y":7.0,"Z":-120.0,"ID":3,"Active":true},"One":{"X":300.0,"Y":7.0,"Z":-117.5,"ID":4,"Active":true},"Two":{"X":281.5,"Y":7.0,"Z":-139.0,"ID":5,"Active":true},"Three":{"X":318.5,"Y":7.0,"Z":-139.0,"ID":6,"Active":true},"Four":{"X":281.5,"Y":7.0,"Z":-101.5,"ID":7,"Active":true}}`,
 );
 fastPP(
-  `{"Name":"Boss 3 ${getSource(
+  `{"Name":"${getSource(
+    "树嘎 Boss 3",
     "https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs",
-    "树嘎",
   )}","MapID":946,"A":{"X":-200.0,"Y":-195.0,"Z":-13.199,"ID":0,"Active":true},"B":{"X":-186.199,"Y":-195.0,"Z":0.0,"ID":1,"Active":true},"C":{"X":-200.0,"Y":-195.0,"Z":13.199,"ID":2,"Active":true},"D":{"X":-213.8,"Y":-195.0,"Z":0.0,"ID":3,"Active":true},"One":{"X":-188.58,"Y":-195.0,"Z":-13.199,"ID":4,"Active":true},"Two":{"X":-188.58,"Y":-195.0,"Z":13.0,"ID":5,"Active":true},"Three":{"X":-211.419,"Y":-195.0,"Z":13.199,"ID":6,"Active":true},"Four":{"X":-211.419,"Y":-195.0,"Z":-13.0,"ID":7,"Active":true}}`,
 );
 fastPP(
-  `{"Name":"Enrance Mob ${getSource(
+  `{"Name":"${getSource(
+    "树嘎 Enrance Mob",
     "https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs",
-    "树嘎",
   )}","MapID":947,"A":{"X":-11.747,"Y":0.0,"Z":-9.764,"ID":0,"Active":true},"B":{"X":-16.405,"Y":0.0,"Z":8.963,"ID":1,"Active":true},"C":{"X":-12.119,"Y":0.0,"Z":1.613,"ID":2,"Active":true},"D":{"X":0.0,"Y":0.0,"Z":0.0,"ID":3,"Active":false},"One":{"X":-0.009,"Y":0.0,"Z":19.405,"ID":4,"Active":true},"Two":{"X":0.0,"Y":0.0,"Z":0.0,"ID":5,"Active":false},"Three":{"X":0.0,"Y":0.0,"Z":0.0,"ID":6,"Active":false},"Four":{"X":0.0,"Y":0.0,"Z":0.0,"ID":7,"Active":false}}`,
 );
 fastPP(
-  `{"Name":"Boss 1 ${getSource(
+  `{"Name":"${getSource(
+    "树嘎 Boss 1",
     "https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs",
-    "树嘎",
   )}","MapID":947,"A":{"X":0.0,"Y":0.0,"Z":-117.0,"ID":0,"Active":true},"B":{"X":17.0,"Y":0.0,"Z":-100.0,"ID":1,"Active":true},"C":{"X":0.0,"Y":0.0,"Z":-83.0,"ID":2,"Active":true},"D":{"X":-17.0,"Y":0.0,"Z":-100.0,"ID":3,"Active":true},"One":{"X":7.199,"Y":0.0,"Z":-108.4,"ID":4,"Active":true},"Two":{"X":7.199,"Y":0.0,"Z":-91.599,"ID":5,"Active":true},"Three":{"X":-7.199,"Y":0.0,"Z":-91.599,"ID":6,"Active":true},"Four":{"X":-7.199,"Y":0.0,"Z":-108.4,"ID":7,"Active":true}}`,
 );
 fastPP(
-  `{"Name":"Middle Mob ${getSource(
+  `{"Name":"${getSource(
+    "树嘎 Middle Mob",
     "https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs",
-    "树嘎",
   )}","MapID":947,"A":{"X":0.0,"Y":0.0,"Z":0.0,"ID":0,"Active":false},"B":{"X":0.0,"Y":0.0,"Z":0.0,"ID":1,"Active":false},"C":{"X":0.0,"Y":0.0,"Z":0.0,"ID":2,"Active":false},"D":{"X":0.0,"Y":0.0,"Z":0.0,"ID":3,"Active":false},"One":{"X":285.028,"Y":0.0,"Z":36.561,"ID":4,"Active":true},"Two":{"X":281.299,"Y":0.0,"Z":20.222,"ID":5,"Active":true},"Three":{"X":294.197,"Y":0.0,"Z":-1.702,"ID":6,"Active":true},"Four":{"X":309.982,"Y":0.0,"Z":-31.385,"ID":7,"Active":true}}`,
 );
 fastPP(
-  `{"Name":"Boss 2 ${getSource(
+  `{"Name":"${getSource(
+    "树嘎 Boss 2",
     "https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs",
-    "树嘎",
   )}","MapID":947,"A":{"X":300.0,"Y":7.0,"Z":-139.5,"ID":0,"Active":true},"B":{"X":318.5,"Y":7.0,"Z":-120.0,"ID":1,"Active":true},"C":{"X":300.0,"Y":7.0,"Z":-101.5,"ID":2,"Active":true},"D":{"X":281.5,"Y":7.0,"Z":-120.0,"ID":3,"Active":true},"One":{"X":300.0,"Y":7.0,"Z":-117.5,"ID":4,"Active":true},"Two":{"X":281.5,"Y":7.0,"Z":-139.0,"ID":5,"Active":true},"Three":{"X":318.5,"Y":7.0,"Z":-139.0,"ID":6,"Active":true},"Four":{"X":281.5,"Y":7.0,"Z":-101.5,"ID":7,"Active":true}}`,
 );
 fastPP(
-  `{"Name":"Boss 3 ${getSource(
+  `{"Name":"${getSource(
+    "树嘎 Boss 3",
     "https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs",
-    "树嘎",
   )}","MapID":947,"A":{"X":-200.0,"Y":-195.0,"Z":-13.199,"ID":0,"Active":true},"B":{"X":-186.199,"Y":-195.0,"Z":0.0,"ID":1,"Active":true},"C":{"X":-200.0,"Y":-195.0,"Z":13.199,"ID":2,"Active":true},"D":{"X":-213.8,"Y":-195.0,"Z":0.0,"ID":3,"Active":true},"One":{"X":-188.58,"Y":-195.0,"Z":-13.199,"ID":4,"Active":true},"Two":{"X":-188.58,"Y":-195.0,"Z":13.0,"ID":5,"Active":true},"Three":{"X":-211.419,"Y":-195.0,"Z":13.199,"ID":6,"Active":true},"Four":{"X":-211.419,"Y":-195.0,"Z":-13.0,"ID":7,"Active":true}}`,
 );
 
 fastPP(
-  `{"Name":"BOSS1 ${getSource(
+  `{"Name":"${getSource(
+    "MMW BOSS1",
     "https://www.bilibili.com/read/cv28235466/",
-    "MMW",
   )}","MapID":946,"A":{"X":-0.282,"Y":0.0,"Z":-113.311,"ID":0,"Active":true},"B":{"X":15.779,"Y":0.0,"Z":-99.813,"ID":1,"Active":true},"C":{"X":-0.517,"Y":0.0,"Z":-85.961,"ID":2,"Active":true},"D":{"X":-15.289,"Y":0.0,"Z":-100.051,"ID":3,"Active":true},"One":{"X":8.199,"Y":0.0,"Z":-106.268,"ID":4,"Active":true},"Two":{"X":7.64,"Y":0.0,"Z":-93.008,"ID":5,"Active":true},"Three":{"X":-7.993,"Y":0.0,"Z":-93.792,"ID":6,"Active":true},"Four":{"X":-7.938,"Y":0.0,"Z":-106.316,"ID":7,"Active":true}}`,
 );
 fastPP(
-  `{"Name":"BOSS2（spell式麻将） ${getSource(
+  `{"Name":"${getSource(
+    "MMW BOSS2（spell式麻将）",
     "https://www.bilibili.com/read/cv28235466/",
-    "MMW",
   )}","MapID":946,"A":{"X":300.033,"Y":7.0,"Z":-132.846,"ID":0,"Active":true},"B":{"X":312.372,"Y":7.0,"Z":-120.148,"ID":1,"Active":true},"C":{"X":300.04,"Y":7.0,"Z":-105.134,"ID":2,"Active":true},"D":{"X":287.503,"Y":7.0,"Z":-120.045,"ID":3,"Active":true},"One":{"X":307.58,"Y":7.0,"Z":-108.437,"ID":4,"Active":true},"Two":{"X":292.741,"Y":7.0,"Z":-108.599,"ID":5,"Active":true},"Three":{"X":318.81,"Y":7.0,"Z":-108.372,"ID":6,"Active":true},"Four":{"X":281.45,"Y":7.0,"Z":-108.488,"ID":7,"Active":true}}`,
 );
 fastPP(
-  `{"Name":"BOSS3 ${getSource(
+  `{"Name":"${getSource(
+    "MMW BOSS3",
     "https://www.bilibili.com/read/cv28235466/",
-    "MMW",
   )}","MapID":946,"A":{"X":-199.954,"Y":-195.0,"Z":-11.785,"ID":0,"Active":true},"B":{"X":-187.473,"Y":-195.0,"Z":-0.102,"ID":1,"Active":true},"C":{"X":-199.985,"Y":-195.0,"Z":11.857,"ID":2,"Active":true},"D":{"X":-212.558,"Y":-195.0,"Z":-0.023,"ID":3,"Active":true},"One":{"X":-194.177,"Y":-195.0,"Z":3.905,"ID":4,"Active":true},"Two":{"X":-205.843,"Y":-195.0,"Z":3.943,"ID":5,"Active":true},"Three":{"X":-194.272,"Y":-195.0,"Z":-3.841,"ID":6,"Active":true},"Four":{"X":-205.776,"Y":-195.0,"Z":-3.99,"ID":7,"Active":true}}`,
 );
 
 fastPP(
-  `{"Name":"BOSS1 ${getSource(
+  `{"Name":"${getSource(
+    "MMW BOSS1",
     "https://www.bilibili.com/read/cv28235466/",
-    "MMW",
   )}","MapID":947,"A":{"X":-0.282,"Y":0.0,"Z":-113.311,"ID":0,"Active":true},"B":{"X":15.779,"Y":0.0,"Z":-99.813,"ID":1,"Active":true},"C":{"X":-0.517,"Y":0.0,"Z":-85.961,"ID":2,"Active":true},"D":{"X":-15.289,"Y":0.0,"Z":-100.051,"ID":3,"Active":true},"One":{"X":8.199,"Y":0.0,"Z":-106.268,"ID":4,"Active":true},"Two":{"X":7.64,"Y":0.0,"Z":-93.008,"ID":5,"Active":true},"Three":{"X":-7.993,"Y":0.0,"Z":-93.792,"ID":6,"Active":true},"Four":{"X":-7.938,"Y":0.0,"Z":-106.316,"ID":7,"Active":true}}`,
 );
 fastPP(
-  `{"Name":"BOSS2（spell式麻将） ${getSource(
+  `{"Name":"${getSource(
+    "MMW BOSS2（spell式麻将）",
     "https://www.bilibili.com/read/cv28235466/",
-    "MMW",
   )}","MapID":947,"A":{"X":300.033,"Y":7.0,"Z":-132.846,"ID":0,"Active":true},"B":{"X":312.372,"Y":7.0,"Z":-120.148,"ID":1,"Active":true},"C":{"X":300.04,"Y":7.0,"Z":-105.134,"ID":2,"Active":true},"D":{"X":287.503,"Y":7.0,"Z":-120.045,"ID":3,"Active":true},"One":{"X":307.58,"Y":7.0,"Z":-108.437,"ID":4,"Active":true},"Two":{"X":292.741,"Y":7.0,"Z":-108.599,"ID":5,"Active":true},"Three":{"X":318.81,"Y":7.0,"Z":-108.372,"ID":6,"Active":true},"Four":{"X":281.45,"Y":7.0,"Z":-108.488,"ID":7,"Active":true}}`,
 );
 fastPP(
-  `{"Name":"BOSS3 ${getSource(
+  `{"Name":"${getSource(
+    "MMW BOSS3",
     "https://www.bilibili.com/read/cv28235466/",
-    "MMW",
   )}","MapID":947,"A":{"X":-199.954,"Y":-195.0,"Z":-11.785,"ID":0,"Active":true},"B":{"X":-187.473,"Y":-195.0,"Z":-0.102,"ID":1,"Active":true},"C":{"X":-199.985,"Y":-195.0,"Z":11.857,"ID":2,"Active":true},"D":{"X":-212.558,"Y":-195.0,"Z":-0.023,"ID":3,"Active":true},"One":{"X":-194.177,"Y":-195.0,"Z":3.905,"ID":4,"Active":true},"Two":{"X":-205.843,"Y":-195.0,"Z":3.943,"ID":5,"Active":true},"Three":{"X":-194.272,"Y":-195.0,"Z":-3.841,"ID":6,"Active":true},"Four":{"X":-205.776,"Y":-195.0,"Z":-3.99,"ID":7,"Active":true}}`,
+);
+
+fastPP(
+  `{"Name":"幻骑神","MapID":963,"A":{"X":0,"Y":0.039,"Z":-20,"ID":0,"Active":true},"B":{"X":20,"Y":0.039,"Z":0,"ID":1,"Active":true},"C":{"X":0,"Y":0.039,"Z":20,"ID":2,"Active":true},"D":{"X":-20,"Y":0.039,"Z":0,"ID":3,"Active":true},"One":{"X":-8.61,"Y":0.039,"Z":-18.052,"ID":4,"Active":true},"Two":{"X":8.61,"Y":0.039,"Z":-18.052,"ID":5,"Active":true},"Three":{"X":8.61,"Y":0.039,"Z":18.052,"ID":6,"Active":true},"Four":{"X":0.0,"Y":0.0,"Z":0.0,"ID":7,"Active":false}}`,
+);
+
+fastPP(
+  `{"Name":"${getSource(
+    "异闻阿罗一",
+    "https://docs.qq.com/sheet/DTlFYZlVkeGlSenFI?tab=BB08J2",
+  )}","MapID":979,"A":{"X":0.0,"Y":0.0,"Z":-10,"ID":0,"Active":true},"B":{"X":10.0,"Y":0.0,"Z":0.0,"ID":1,"Active":true},"C":{"X":0.0,"Y":0.0,"Z":10.0,"ID":2,"Active":true},"D":{"X":-10.0,"Y":0.0,"Z":0.0,"ID":3,"Active":true},"One":{"X":10.0,"Y":0.0,"Z":-10.0,"ID":4,"Active":true},"Two":{"X":10.0,"Y":0.0,"Z":10.0,"ID":5,"Active":true},"Three":{"X":-10.0,"Y":0.0,"Z":10.0,"ID":6,"Active":true},"Four":{"X":-10.0,"Y":0.0,"Z":-10.0,"ID":7,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"${getSource(
+    "异闻阿罗二",
+    "https://docs.qq.com/sheet/DTlFYZlVkeGlSenFI?tab=BB08J2",
+  )}","MapID":979,"A":{"X":200,"Y":-300.0,"Z":-8,"ID":0,"Active":true},"B":{"X":208,"Y":-300.0,"Z":0,"ID":1,"Active":true},"C":{"X":200,"Y":-300.0,"Z":8,"ID":2,"Active":true},"D":{"X":192,"Y":-300.0,"Z":0,"ID":3,"Active":true},"One":{"X":212,"Y":-300.0,"Z":-12,"ID":4,"Active":true},"Two":{"X":212,"Y":-300.0,"Z":12,"ID":5,"Active":true},"Three":{"X":188,"Y":-300.0,"Z":12,"ID":6,"Active":true},"Four":{"X":188,"Y":-300.0,"Z":-12,"ID":7,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"${getSource(
+    "异闻阿罗三",
+    "https://docs.qq.com/sheet/DTlFYZlVkeGlSenFI?tab=BB08J2",
+  )}","MapID":979,"A":{"X":-200,"Y":-200.0,"Z":-18.55,"ID":0,"Active":true},"B":{"X":-181.45,"Y":-200.0,"Z":0,"ID":1,"Active":true},"C":{"X":-200,"Y":-200.0,"Z":18.55,"ID":2,"Active":true},"D":{"X":-218.55,"Y":-200.0,"Z":0,"ID":3,"Active":true},"One":{"X":-186.883,"Y":-200.0,"Z":-13.117,"ID":4,"Active":true},"Two":{"X":-186.883,"Y":-200.0,"Z":13.117,"ID":5,"Active":true},"Three":{"X":-213.117,"Y":-200.0,"Z":13.117,"ID":6,"Active":true},"Four":{"X":-213.117,"Y":-200.0,"Z":-13.117,"ID":7,"Active":true}}`,
+);
+fastPP(`{"Name":"${getSource(
+  "零式阿罗一",
+  "https://docs.qq.com/sheet/DTlFYZlVkeGlSenFI?tab=BB08J2",
+)}","MapID":980,"A":{"X":0.0,"Y":0.0,"Z":-10,"ID":0,"Active":true},"B":{"X":10.0,"Y":0.0,"Z":0.0,"ID":1,"Active":true},"C":{"X":0.0,"Y":0.0,"Z":10.0,"ID":2,"Active":true},"D":{"X":-10.0,"Y":0.0,"Z":0.0,"ID":3,"Active":true},"One":{"X":10.0,"Y":0.0,"Z":-10.0,"ID":4,"Active":true},"Two":{"X":10.0,"Y":0.0,"Z":10.0,"ID":5,"Active":true},"Three":{"X":-10.0,"Y":0.0,"Z":10.0,"ID":6,"Active":true},"Four":{"X":-10.0,"Y":0.0,"Z":-10.0,"ID":7,"Active":true}}
+`);
+fastPP(
+  `{"Name":"${getSource(
+    "零式阿罗二",
+    "https://docs.qq.com/sheet/DTlFYZlVkeGlSenFI?tab=BB08J2",
+  )}","MapID":980,"A":{"X":200,"Y":-300.0,"Z":-8,"ID":0,"Active":true},"B":{"X":208,"Y":-300.0,"Z":0,"ID":1,"Active":true},"C":{"X":200,"Y":-300.0,"Z":8,"ID":2,"Active":true},"D":{"X":192,"Y":-300.0,"Z":0,"ID":3,"Active":true},"One":{"X":212,"Y":-300.0,"Z":-12,"ID":4,"Active":true},"Two":{"X":212,"Y":-300.0,"Z":12,"ID":5,"Active":true},"Three":{"X":188,"Y":-300.0,"Z":12,"ID":6,"Active":true},"Four":{"X":188,"Y":-300.0,"Z":-12,"ID":7,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"${getSource(
+    "零式阿罗三",
+    "https://docs.qq.com/sheet/DTlFYZlVkeGlSenFI?tab=BB08J2",
+  )}","MapID":980,"A":{"X":-200,"Y":-200.0,"Z":-18.55,"ID":0,"Active":true},"B":{"X":-181.45,"Y":-200.0,"Z":0,"ID":1,"Active":true},"C":{"X":-200,"Y":-200.0,"Z":18.55,"ID":2,"Active":true},"D":{"X":-218.55,"Y":-200.0,"Z":0,"ID":3,"Active":true},"One":{"X":-186.883,"Y":-200.0,"Z":-13.117,"ID":4,"Active":true},"Two":{"X":-186.883,"Y":-200.0,"Z":13.117,"ID":5,"Active":true},"Three":{"X":-213.117,"Y":-200.0,"Z":13.117,"ID":6,"Active":true},"Four":{"X":-213.117,"Y":-200.0,"Z":-13.117,"ID":7,"Active":true}}`,
 );
 
 // function fastPush(zoneName: string, data: PPJSON | string, coverTitle?: string): void {

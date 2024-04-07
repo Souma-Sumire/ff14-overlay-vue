@@ -256,8 +256,10 @@ export const useMacroStore = defineStore("macro", {
                 "Four",
               ] as WayMarkKeys[]
             ).map((key) => {
-              targetMacro.Place[key].X -= oX;
-              targetMacro.Place[key].Z -= oY;
+              // biome-ignore lint/style/noNonNullAssertion: <explanation>
+              targetMacro.Place[key]!.X -= oX;
+              // biome-ignore lint/style/noNonNullAssertion: <explanation>
+              targetMacro.Place[key]!.Z -= oY;
             });
           } catch (_e) {
             ElMessage.error("解析失败");
@@ -489,8 +491,13 @@ export const useMacroStore = defineStore("macro", {
     updateZone(): void {
       for (const key in this.data.zoneId) {
         const userData = this.data.zoneId[key].filter((v) => v.Deletability);
-        const nativeData = defaultMacro.zoneId[key];
-        this.data.zoneId[key] = [...userData, ...nativeData];
+        const nativeData = defaultMacro.zoneId[key] ?? [];
+        try {
+          this.data.zoneId[key] = [...userData, ...nativeData];
+        } catch (e) {
+          console.error(e);
+          this.data.zoneId[key] = [...userData];
+        }
       }
     },
   },
