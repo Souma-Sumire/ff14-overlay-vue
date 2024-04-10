@@ -85,7 +85,7 @@
       </vxe-table>
     </main>
   </div>
-  <div v-if="isDev" class="testLog">
+  <div v-if="store.isDev" class="testLog">
     <testLog
       @before-handle="beforeHandle"
       @after-handle="afterHandle"
@@ -127,11 +127,8 @@ import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
 
 const store = useKeigennRecord2Store();
 const userOptions = store.userOptions;
-const isDev = store.isDev;
-if (isDev) {
-  // 某些情况下OverlayPluginApi并不会立即被挂在到window上。用户上报，未复现。
-  store.recheckIsDev();
-}
+// 某些情况下OverlayPluginApi并不会立即被挂在到window上。用户上报，未复现。
+store.recheckIsDev();
 
 const actionKey = computed(() =>
   userOptions.actionCN ? "actionCN" : "action"

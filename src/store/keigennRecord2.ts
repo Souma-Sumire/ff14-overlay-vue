@@ -18,12 +18,7 @@ export const useKeigennRecord2Store = defineStore("keigennRecord2", {
         actionCN: parseParams(params.actionCN as string, true), // action显示中文化
         statusCN: parseParams(params.statusCN as string, true), // status显示中文化
       },
-      isDev:
-        params.dev === "1" ||
-        (params.dev === undefined &&
-          !window.OverlayPluginApi &&
-          !params.OVERLAY_WS &&
-          !params.HOST_PORT),
+      isDev: false,
     };
   },
   getters: {
@@ -35,14 +30,16 @@ export const useKeigennRecord2Store = defineStore("keigennRecord2", {
   },
   actions: {
     recheckIsDev() {
-      setTimeout(() => {
-        this.isDev =
-          params.dev === "1" ||
-          (params.dev === undefined &&
-            !window.OverlayPluginApi &&
-            !params.OVERLAY_WS &&
-            !params.HOST_PORT);
-      }, 1000);
+      this.isDev =
+        params.dev === "1" ||
+        (params.dev === undefined &&
+          !window.OverlayPluginApi &&
+          !params.OVERLAY_WS &&
+          !params.HOST_PORT);
+      // console.log("check", this.isDev);
+      if (this.isDev) {
+        setTimeout(this.recheckIsDev, 1000);
+      }
     },
     formatterName(v: string) {
       return v;
