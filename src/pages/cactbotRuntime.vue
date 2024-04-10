@@ -1,9 +1,9 @@
 <template>
-  <span
+  <!-- <span
     v-if="data.party.length === 0"
     style="color: white; text-shadow: 1px 1px 2px black"
     >等待小队...</span
-  >
+  > -->
   <div @mouseenter="onMouseOver" @mouseleave="onMouseOut">
     <vxe-modal
       v-model="dialogVisible"
@@ -35,7 +35,10 @@
           <section
             v-for="(member, i) in data.party"
             :key="member.id"
-            v-show="mouseEnter || member.name === playerName"
+            v-show="
+              data.party.length > 1 &&
+              (mouseEnter || member.name === playerName)
+            "
             flex="~ nowrap"
             class="player"
           >
