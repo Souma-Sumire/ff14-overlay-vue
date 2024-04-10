@@ -29,7 +29,13 @@
         </ul>
       </template>
     </vxe-modal>
-    <main :class="mouseEnter ? 'mouseIn' : ''">
+    <main
+      :style="{
+        width: mouseEnter
+          ? 15.5 + +(data.party.find((v) => v.job === 36) ? 1 : 0) + 'em'
+          : '4em',
+      }"
+    >
       <div class="players">
         <transition-group
           name="animate__animated animate__bounce"
@@ -44,6 +50,9 @@
               (mouseEnter || member.name === playerName)
             "
             flex="~ nowrap"
+            :style="{
+              opacity: mouseEnter ? 1 : 0.5,
+            }"
             class="player"
           >
             <vxe-select
@@ -68,7 +77,6 @@
         </transition-group>
       </div>
       <DragJob
-        class="dragJob"
         v-show="mouseEnter"
         @updateSortArr="updateSortArr"
         :party="data.party"
@@ -137,8 +145,8 @@ const fakeParty: PlayerRuntime[] = [
   { id: "10000004", name: "虚构学者", job: 28, inParty: true },
   { id: "10000005", name: "虚构忍者", job: 30, inParty: true },
   { id: "10000006", name: "虚构武士", job: 34, inParty: true },
-  { id: "10000007", name: "虚构SMN", job: 27, inParty: true },
-  { id: "10000008", name: "虚构BRD", job: 23, inParty: true },
+  { id: "10000008", name: "虚构诗人", job: 23, inParty: true },
+  { id: "10000007", name: "虚构召唤", job: 27, inParty: true },
 ];
 const _party: PlayerRuntime[] = [];
 const data = useStorage("cactbotRuntime-data", { party: _party });
@@ -151,6 +159,7 @@ const roleSelectLength: Record<Role, number> = reactive({
   gatherer: 0,
   none: 0,
 });
+
 function updateRoleSelectLength(): void {
   for (const role in roleSelectLength) {
     if (Object.prototype.hasOwnProperty.call(roleSelectLength, role)) {
@@ -328,10 +337,6 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 main {
-  width: 4rem;
-  &.mouseIn {
-    width: 16.75em;
-  }
   background-color: rgba(0, 0, 0, 0.1);
   padding: 0;
   margin: 0;
