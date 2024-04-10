@@ -5,7 +5,7 @@
       :key="index"
       ref="el"
       :disabled="!isDisabled"
-      v-model="jobList[role.name]"
+      v-model="jobList[role.role]"
       animation="150"
       ghostClass="ghost"
       class="flex flex-row gap-0.25 p-0 m-t-0.25 m-b-0.25 rounded"
@@ -14,12 +14,13 @@
       :forceFallback="true"
     >
       <div
-        v-for="item in jobList[role.name]"
+        v-for="item in jobList[role.role]"
         :key="item.id"
+        v-show="!!props.party.find((v) => v.job === 36) ? true : item.id !== 36"
         :class="`${
           isJobInParty(item.id)
             ? `draggable bg-${role.color} cursor-move`
-            : 'no-draggable bg-gray-700/50'
+            : 'no-draggable bg-gray-700/50 opacity-33'
         } rounded p-l-0.6 p-r-0.6 p-t-0 p-b-0.3 m-0 color-white`"
       >
         {{ item.name }}
@@ -56,28 +57,20 @@ const onUpdate = () => {
 };
 
 const roles: {
-  name: Role;
+  role: Role;
   color: string;
 }[] = [
-  { name: "tank", color: "blue" },
-  { name: "healer", color: "green" },
-  { name: "dps", color: "red" },
-  { name: "crafter", color: "yellow" },
-  { name: "gatherer", color: "purple" },
-  { name: "none", color: "gray" },
+  { role: "tank", color: "blue" },
+  { role: "healer", color: "green" },
+  { role: "dps", color: "red" },
+  { role: "crafter", color: "yellow" },
+  { role: "gatherer", color: "purple" },
+  { role: "none", color: "gray" },
 ];
-function isJobInParty(job: number) {
+const isJobInParty = (job: number) => {
   return props.party.find((v) => v.job === job);
-}
+};
 const allJobs = Util.getBattleJobs3();
-const rolesKeys: Role[] = [
-  "tank",
-  "healer",
-  "dps",
-  "crafter",
-  "gatherer",
-  "none",
-];
 const jobsList: {
   [K in Role]: number[];
 } = (() => {
@@ -89,7 +82,7 @@ const jobsList: {
     crafter: Util.isCraftingJob,
     gatherer: Util.isGatheringJob,
   };
-  for (const role of rolesKeys) {
+  for (const role of roles.map((v) => v.role)) {
     res[role] = (role === "none" ? [] : allJobs.filter((v) => funcMap[role](v)))
       .map((v) => Util.jobToJobEnum(v))
       .sort((a, b) => Util.enumSortMethod(a, b));
@@ -116,7 +109,7 @@ const jobList: RemovableRef<
   "cactbotRuntime-jobList",
   (() => {
     const res = {} as Record<Role, { name: string; id: number }[]>;
-    for (const role of rolesKeys) {
+    for (const role of roles.map((v) => v.role)) {
       res[role] = jobs
         .filter((v) => jobsList[role].includes(v.id))
         .sort(
