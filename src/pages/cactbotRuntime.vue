@@ -13,6 +13,10 @@
         top: 10,
       }"
       width="90vw"
+      @close="
+        dialogVisible = false;
+        showTips = false;
+      "
     >
       <template #title>
         <span>用法</span>
