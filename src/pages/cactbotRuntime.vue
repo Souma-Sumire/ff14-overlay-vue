@@ -53,12 +53,7 @@
               class-name="select"
             >
               <vxe-option
-                v-for="(item, index) in roleAssignLocationNames[
-                  getJobClassification(member.job)
-                ]"
-                :visible="
-                  index < roleSelectLength[getJobClassification(member.job)]
-                "
+                v-for="(item, index) in getOptions(member.job)"
                 :key="index"
                 :value="item"
                 :label="item"
@@ -81,6 +76,27 @@
         p-1
       />
     </main>
+    <div v-if="isDev" style="position: fixed; bottom: 0">
+      <button
+        @click="
+          {
+            data.party = data.party.filter((v) => v.name === playerName);
+          }
+        "
+      >
+        测试单人
+      </button>
+      <button
+        @click="
+          {
+            const e = { party: fakeParty };
+            data.party = e.party.map((p) => ({ ...p, rp: '', specify: false }));
+          }
+        "
+      >
+        测试组队
+      </button>
+    </div>
   </div>
 </template>
 <script setup lang="ts">
@@ -103,12 +119,12 @@ const createRPArr = (r: "T" | "H" | "D" | "C" | "G" | "N", l: number) =>
     .map((v, i) => v + (+i + 1));
 
 const roleAssignLocationNames: Record<Role, string[]> = {
-  tank: ["MT", "ST", ...createRPArr("T", 70)],
-  healer: [...createRPArr("H", 72)],
-  dps: [...createRPArr("D", 72)],
-  crafter: [...createRPArr("C", 72)],
-  gatherer: [...createRPArr("G", 72)],
-  none: [...createRPArr("N", 72)],
+  tank: ["MT", "ST", ...createRPArr("T", 6)],
+  healer: [...createRPArr("H", 8)],
+  dps: [...createRPArr("D", 8)],
+  crafter: [...createRPArr("C", 8)],
+  gatherer: [...createRPArr("G", 8)],
+  none: [...createRPArr("N", 8)],
 };
 
 const dialogVisible = ref(false);
@@ -121,47 +137,41 @@ const fakeParty: PlayerRuntime[] = [
   { id: "10000004", name: "虚构学者", job: 28, inParty: true },
   { id: "10000005", name: "虚构忍者", job: 30, inParty: true },
   { id: "10000006", name: "虚构武士", job: 34, inParty: true },
-  { id: "10000007", name: "虚构黑魔", job: 25, inParty: true },
-  { id: "10000008", name: "虚构舞者", job: 38, inParty: true },
+  { id: "10000007", name: "虚构SMN", job: 27, inParty: true },
+  { id: "10000008", name: "虚构BRD", job: 23, inParty: true },
 ];
 const _party: PlayerRuntime[] = [];
 const data = useStorage("cactbotRuntime-data", { party: _party });
 const showTips = useStorage("cactbotRuntime-showTips", ref(true));
-const roleSelectLength: Record<Role, number> = {
+const roleSelectLength: Record<Role, number> = reactive({
   tank: 0,
   healer: 0,
   dps: 0,
   crafter: 0,
   gatherer: 0,
   none: 0,
-};
+});
 function updateRoleSelectLength(): void {
-  roleSelectLength.tank = data.value.party.reduce(
-    (p, c) => (getJobClassification(c.job) === "tank" ? p + 1 : p),
-    0
-  );
-  roleSelectLength.healer = data.value.party.reduce(
-    (p, c) => (getJobClassification(c.job) === "healer" ? p + 1 : p),
-    0
-  );
-  roleSelectLength.dps = data.value.party.reduce(
-    (p, c) => (getJobClassification(c.job) === "dps" ? p + 1 : p),
-    0
-  );
+  for (const role in roleSelectLength) {
+    if (Object.prototype.hasOwnProperty.call(roleSelectLength, role)) {
+      roleSelectLength[role as Role] = data.value.party.reduce(
+        (p, c) => (getJobClassification(c.job) === role ? p + 1 : p),
+        0
+      );
+    }
+  }
 }
+const getOptions = (job: number) => {
+  const classification = getJobClassification(job);
+  return roleAssignLocationNames[classification].filter((_v, i) => {
+    return i < roleSelectLength[classification];
+  });
+};
 const isDev = location.href.includes("localhost");
 const mouseEnter = ref(false);
-const playerName = ref(isDev ? "虚构占星" : "");
-if (isDev) {
-  const e = { party: fakeParty };
-  if (showTips.value) dialogVisible.value = true;
-  data.value.party = e.party.map((p) => ({ ...p, rp: "", specify: false }));
-  defaultPartySort();
-  updateRoleSelectLength();
-  broadcastParty();
-}
+const playerName = ref(isDev ? "虚构SMN" : "");
 
-function getJobClassification(job: number): Role {
+const getJobClassification = (job: number): Role => {
   const jobN = Number(job);
   if ([1, 3, 19, 21, 32, 37].includes(jobN)) return "tank";
   if ([6, 24, 28, 33, 40].includes(jobN)) return "healer";
@@ -175,9 +185,9 @@ function getJobClassification(job: number): Role {
   if (Util.isCraftingJob(Util.jobEnumToJob(job))) return "crafter";
   if (Util.isGatheringJob(Util.jobEnumToJob(job))) return "gatherer";
   return "none";
-}
+};
 
-function defaultPartySort() {
+const defaultPartySort = () => {
   data.value.party.sort(
     (a, b) =>
       defaultSortArray.value.indexOf(a.job) -
@@ -187,9 +197,9 @@ function defaultPartySort() {
     v.rp = undefined;
     v.rp = getRP(v);
   }
-}
+};
 
-function handleSelectChange(i: number): void {
+const handleSelectChange = (i: number): void => {
   data.value.party[i].specify = true;
   const t = data.value.party.find(
     (v) => v.rp === data.value.party[i].rp && v.id !== data.value.party[i].id
@@ -199,17 +209,17 @@ function handleSelectChange(i: number): void {
     t.specify = true;
   }
   broadcastParty();
-}
+};
 
-function getRP(player: PlayerRuntime): string {
+const getRP = (player: PlayerRuntime): string => {
   return (
     roleAssignLocationNames[getJobClassification(player.job)].find(
       (role) => !data.value.party.find((v) => v.rp === role)
     ) ?? "unknown"
   );
-}
+};
 
-function broadcastParty(): void {
+const broadcastParty = (): void => {
   const sortArr = [
     ...roleAssignLocationNames.tank,
     ...roleAssignLocationNames.healer,
@@ -226,22 +236,20 @@ function broadcastParty(): void {
     source: "soumaRuntimeJS",
     msg: { party: data.value.party },
   });
-}
+};
 
-function onMouseOver(): void {
+const onMouseOver = (): void => {
   mouseEnter.value = true;
-}
+};
 
-function onMouseOut(): void {
+const onMouseOut = (): void => {
   mouseEnter.value = false;
-}
+};
 
-function updateSortArr(arr: number[]) {
+const updateSortArr = (arr: number[]) => {
   defaultSortArray.value = arr;
-  defaultPartySort();
-  updateRoleSelectLength();
-  broadcastParty();
-}
+  updateData();
+};
 
 const getJobName = (job: number) => {
   return Util.nameToFullName(Util.jobEnumToJob(job)).simple1;
@@ -250,6 +258,22 @@ const getJobName = (job: number) => {
 const getPlayerName = (name: string) => {
   return name;
 };
+
+const updateData = () => {
+  defaultPartySort();
+  updateRoleSelectLength();
+  broadcastParty();
+};
+
+watch(
+  () => data.value.party,
+  () => {
+    updateData();
+  },
+  {
+    immediate: true,
+  }
+);
 
 onMounted(() => {
   broadcastParty();
@@ -263,9 +287,6 @@ onMounted(() => {
       .map((p) => {
         return { ...p, rp: "", specify: false };
       });
-    defaultPartySort();
-    updateRoleSelectLength();
-    broadcastParty();
   });
   addOverlayListener("ChangePrimaryPlayer", (e) => {
     if (!isDev) playerName.value = e.charName;
