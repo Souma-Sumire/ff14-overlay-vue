@@ -60,7 +60,8 @@
                 :label="item"
               ></vxe-option>
             </vxe-select>
-            <span class="name" :class="aprilFoolSDay ? 'aprilFoolSDay' : ''">
+            <!-- <span class="name" :class="aprilFoolSDay ? 'aprilFoolSDay' : ''"> -->
+            <span class="name">
               {{ getJobName(member.job) }}
               {{ mouseEnter ? getPlayerName(member.name) : "" }}
             </span>
@@ -88,9 +89,9 @@ import {
 } from "../../cactbot/resources/overlay_plugin_api";
 import type { Role } from "../../cactbot/types/job";
 
-const aprilFoolSDay = ref(
-  new Date().getMonth() === 3 && new Date().getDate() === 1
-);
+// const aprilFoolSDay = ref(
+//   new Date().getMonth() === 3 && new Date().getDate() === 1
+// );
 
 const createRPArr = (r: "T" | "H" | "D" | "C" | "G" | "N", l: number) =>
   Array(l)
@@ -345,29 +346,29 @@ main {
         white-space: nowrap;
         color: white;
         text-shadow: $text-shadow;
-        &.aprilFoolSDay {
-          animation: shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both
-            infinite;
-          @keyframes shake {
-            10%,
-            90% {
-              transform: translateX(-4px);
-            }
-            20%,
-            80% {
-              transform: translateX(4px);
-            }
-            30%,
-            50%,
-            70% {
-              transform: translateX(-4px);
-            }
-            40%,
-            60% {
-              transform: translateX(4px);
-            }
-          }
-        }
+        // &.aprilFoolSDay {
+        //   animation: shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both
+        //     infinite;
+        //   @keyframes shake {
+        //     10%,
+        //     90% {
+        //       transform: translateX(-4px);
+        //     }
+        //     20%,
+        //     80% {
+        //       transform: translateX(4px);
+        //     }
+        //     30%,
+        //     50%,
+        //     70% {
+        //       transform: translateX(-4px);
+        //     }
+        //     40%,
+        //     60% {
+        //       transform: translateX(4px);
+        //     }
+        //   }
+        // }
       }
     }
   }
