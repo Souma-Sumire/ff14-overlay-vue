@@ -1,10 +1,10 @@
 <template>
-  <!-- <span
-    v-if="data.party.length === 0"
-    style="color: white; text-shadow: 1px 1px 2px black"
-    >等待小队...</span
-  > -->
   <div @mouseenter="onMouseOver" @mouseleave="onMouseOut">
+    <span
+      v-show="data.party.length <= 1"
+      style="color: white; text-shadow: 1px 1px 2px black"
+      >...</span
+    >
     <vxe-modal
       v-model="dialogVisible"
       size="small"
@@ -89,6 +89,7 @@
         @click="
           {
             data.party = data.party.filter((v) => v.name === playerName);
+            updateData();
           }
         "
       >
@@ -99,6 +100,7 @@
           {
             const e = { party: fakeParty };
             data.party = e.party.map((p) => ({ ...p, rp: '', specify: false }));
+            updateData();
           }
         "
       >
@@ -274,16 +276,6 @@ const updateData = () => {
   broadcastParty();
 };
 
-watch(
-  () => data.value.party,
-  () => {
-    updateData();
-  },
-  {
-    immediate: true,
-  }
-);
-
 onMounted(() => {
   broadcastParty();
   addOverlayListener("PartyChanged", (e) => {
@@ -296,6 +288,7 @@ onMounted(() => {
       .map((p) => {
         return { ...p, rp: "", specify: false };
       });
+    updateData();
   });
   addOverlayListener("ChangePrimaryPlayer", (e) => {
     if (!isDev) playerName.value = e.charName;
