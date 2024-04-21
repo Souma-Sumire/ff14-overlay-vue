@@ -1,5 +1,11 @@
 <template>
-  <div flex="~ col">
+  <div flex="~ col" style="position: relative">
+    <vxe-checkbox
+      v-model="free"
+      size="mini"
+      style="position: absolute; top: 0.25rem; right: 0.25rem;color: darkcyan;"
+      >解除限制</vxe-checkbox
+    >
     <VueDraggable
       v-for="(role, index) in roles"
       :key="index"
@@ -18,7 +24,7 @@
         :key="item.id"
         v-show="!!props.party.find((v) => v.job === 36) ? true : item.id !== 36"
         :class="`${
-          isJobInParty(item.id)
+          free || isJobInParty(item.id)
             ? `draggable bg-${role.color} cursor-move`
             : 'no-draggable bg-gray-700/50 opacity-33'
         } rounded p-l-0.6 p-r-0.6 p-t-0 p-b-0.3 m-0 color-white`"
@@ -40,6 +46,7 @@ import { type UseDraggableReturn, VueDraggable } from "vue-draggable-plus";
 const el = ref<UseDraggableReturn>();
 const isDisabled = ref(true);
 const emit = defineEmits<(e: "updateSortArr", id: number[]) => void>();
+const free = ref(false);
 
 export interface Props {
   party: Player[];
