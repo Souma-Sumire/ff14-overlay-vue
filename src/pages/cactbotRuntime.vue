@@ -128,15 +128,6 @@ const createRPArr = (r: "T" | "H" | "D" | "C" | "G" | "N", l: number) =>
     .fill(r)
     .map((v, i) => v + (+i + 1));
 
-const roleAssignLocationNames: Record<Role, string[]> = {
-  tank: ["MT", "ST", ...createRPArr("T", 6)],
-  healer: [...createRPArr("H", 8)],
-  dps: [...createRPArr("D", 8)],
-  crafter: [...createRPArr("C", 8)],
-  gatherer: [...createRPArr("G", 8)],
-  none: [...createRPArr("N", 8)],
-};
-
 const dialogVisible = ref(false);
 const defaultSortArray = useStorage("cactbotRuntime-sortArr", jobEnumOrder);
 
@@ -153,19 +144,30 @@ const fakeParty: PlayerRuntime[] = [
 const _party: PlayerRuntime[] = [];
 const data = useStorage("cactbotRuntime-data", { party: _party });
 const showTips = useStorage("cactbotRuntime-showTips", ref(true));
-const roleSelectLength: Record<Role, number> = reactive({
+const roleSelectLength = useStorage("cactbotRuntime-roleSelectLength", {
   tank: 0,
   healer: 0,
   dps: 0,
   crafter: 0,
   gatherer: 0,
   none: 0,
-});
+} as Record<Role, number>);
+const roleAssignLocationNames = useStorage(
+  "cactbotRuntime-roleAssignLocationNames",
+  {
+    tank: ["MT", "ST", ...createRPArr("T", 6)],
+    healer: [...createRPArr("H", 8)],
+    dps: [...createRPArr("D", 8)],
+    crafter: [...createRPArr("C", 8)],
+    gatherer: [...createRPArr("G", 8)],
+    none: [...createRPArr("N", 8)],
+  } as Record<Role, string[]>
+);
 
 function updateRoleSelectLength(): void {
-  for (const role in roleSelectLength) {
-    if (Object.prototype.hasOwnProperty.call(roleSelectLength, role)) {
-      roleSelectLength[role as Role] = data.value.party.reduce(
+  for (const role in roleSelectLength.value) {
+    if (Object.prototype.hasOwnProperty.call(roleSelectLength.value, role)) {
+      roleSelectLength.value[role as Role] = data.value.party.reduce(
         (p, c) => (getJobClassification(c.job) === role ? p + 1 : p),
         0
       );
@@ -174,22 +176,21 @@ function updateRoleSelectLength(): void {
 }
 const getOptions = (job: number) => {
   const classification = getJobClassification(job);
-  return roleAssignLocationNames[classification].filter((_v, i) => {
-    return i < roleSelectLength[classification];
+  return roleAssignLocationNames.value[classification].filter((_v, i) => {
+    return i < roleSelectLength.value[classification];
   });
 };
 const isDev = location.href.includes("localhost");
 const mouseEnter = ref(false);
-const playerName = ref(isDev ? "虚构SMN" : "");
+const playerName = ref(isDev ? fakeParty[2].name : "");
 
 const getJobClassification = (job: number): Role => {
-  const jobN = Number(job);
-  if ([1, 3, 19, 21, 32, 37].includes(jobN)) return "tank";
-  if ([6, 24, 28, 33, 40].includes(jobN)) return "healer";
+  if ([1, 3, 19, 21, 32, 37].includes(job)) return "tank";
+  if ([6, 24, 28, 33, 40].includes(job)) return "healer";
   if (
     [
       2, 4, 5, 7, 20, 22, 23, 25, 26, 27, 29, 30, 31, 34, 35, 36, 38, 39,
-    ].includes(jobN)
+    ].includes(job)
   )
     return "dps";
 
@@ -224,7 +225,7 @@ const handleSelectChange = (i: number): void => {
 
 const getRP = (player: PlayerRuntime): string => {
   return (
-    roleAssignLocationNames[getJobClassification(player.job)].find(
+    roleAssignLocationNames.value[getJobClassification(player.job)].find(
       (role) => !data.value.party.find((v) => v.rp === role)
     ) ?? "unknown"
   );
@@ -232,12 +233,12 @@ const getRP = (player: PlayerRuntime): string => {
 
 const broadcastParty = (): void => {
   const sortArr = [
-    ...roleAssignLocationNames.tank,
-    ...roleAssignLocationNames.healer,
-    ...roleAssignLocationNames.dps,
-    ...roleAssignLocationNames.crafter,
-    ...roleAssignLocationNames.gatherer,
-    ...roleAssignLocationNames.none,
+    ...roleAssignLocationNames.value.tank,
+    ...roleAssignLocationNames.value.healer,
+    ...roleAssignLocationNames.value.dps,
+    ...roleAssignLocationNames.value.crafter,
+    ...roleAssignLocationNames.value.gatherer,
+    ...roleAssignLocationNames.value.none,
   ];
   data.value.party.sort(
     (a, b) => sortArr.indexOf(a.rp ?? "") - sortArr.indexOf(b.rp ?? "")
