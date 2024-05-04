@@ -1,23 +1,27 @@
 <template>
   <div>
+    <span>来源:{{ props.row.source }}</span>
+    <br />
+    <span>目标:{{ props.row.target }}</span>
+    <br />
     <span>
-      盾:{{ Math.round((props.row.maxHp * +props.row.shield) / 100) }} ({{
+      护盾:{{ Math.round((props.row.maxHp * +props.row.shield) / 100) }} ({{
         props.row.shield
       }}%)
     </span>
     <br />
     <span>
-      HP:{{ props.row.currentHp }}/{{ props.row.maxHp }} ({{
+      血量:{{ props.row.currentHp }}/{{ props.row.maxHp }} ({{
         Math.round((props.row.currentHp / props.row.maxHp) * 100)
       }}%)
     </span>
     <br />
-    <span>来源:{{ props.row.source }}</span>
-    <br />
-    <span>受到伤害:{{ props.row.amount }}</span>
+    <span
+      >伤害:<span :class="props.row.type">{{ props.row.amount }}</span></span
+    >
     <br />
     <span>
-      剩余HP:{{ props.row.currentHp - props.row.amount }} ({{
+      剩余:{{ props.row.currentHp - props.row.amount }} ({{
         Math.round(
           ((props.row.currentHp - props.row.amount) / props.row.maxHp) * 100
         )
