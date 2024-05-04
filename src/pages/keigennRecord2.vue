@@ -86,6 +86,20 @@
     </main>
   </div>
   <div v-if="store.isDev" class="testLog">
+    <div class="test-buttons">
+      <vxe-button class="test-button" type="primary" @click="test.clearData">
+        清空
+      </vxe-button>
+      <vxe-button class="test-button" type="primary" @click="test.fakeData">
+        假条目
+      </vxe-button>
+      <vxe-button class="test-button" type="primary" @click="test.fakeLogDamage">
+        假伤害
+      </vxe-button>
+      <vxe-button class="test-button" type="primary" @click="test.fakeLogStatus">
+        假状态
+      </vxe-button>
+    </div>
     <testLog
       @before-handle="beforeHandle"
       @after-handle="afterHandle"
@@ -694,7 +708,12 @@ const targetOptions = computed(() => {
   }));
 });
 
-store.initEnvironment(povName.value);
+if (store.isDev) {
+  povName.value = "测试用户";
+}
+if (povName.value !== "") {
+  store.initEnvironment(povName.value);
+}
 
 onMounted(() => {
   for (const id in jobMap.value) {
@@ -900,6 +919,120 @@ const contextMenuClickEvent: VxeTableEvents.MenuClick<RowVO> = ({
     default:
       break;
   }
+};
+
+const test = {
+  clearData: () => {
+    select.value = 0;
+    data.value.length = 0;
+    data.value.push({
+      key: Date.now().toString(),
+      zoneName: "测试地区",
+      duration: "00:00",
+      table: [],
+    });
+    combatTimeStamp.value = 0;
+    statusData.friendly = {};
+    statusData.enemy = {};
+    saveStorage();
+  },
+  fakeData: () => {
+    data.value[0].table.push({
+      timestamp: 10000,
+      time: data.value[0].table.length.toString(),
+      id: undefined,
+      action: "测试动作",
+      actionCN: "测试动作",
+      source: "测试敌人",
+      target: povName.value,
+      targetId: "1234567890",
+      job: "战士",
+      jobIcon: "warrior",
+      jobEnum: 0,
+      amount: 1000,
+      keigenns: [
+        {
+          name: "整体盾",
+          count: 0,
+          effect: "整体盾",
+          effectId: "D25",
+          source: "芸豆角包子",
+          sourceId: "1011A008",
+          target: "芸豆角包子",
+          targetId: "1011A008",
+          expirationTimestamp: 1712757148883,
+          performance: {
+            physics: 1,
+            magic: 1,
+            darkness: 1,
+          },
+          fullIcon: "012000/012972",
+          isPov: false,
+          remainingDuration: "14",
+        },
+        {
+          name: "整体论",
+          count: 0,
+          effect: "整体论",
+          effectId: "BBB",
+          source: "芸豆角包子",
+          sourceId: "1011A008",
+          target: "芸豆角包子",
+          targetId: "1011A008",
+          expirationTimestamp: 1712757138883,
+          performance: {
+            physics: 1,
+            magic: 1,
+            darkness: 1,
+          },
+          fullIcon: "012000/012971",
+          isPov: false,
+          remainingDuration: "4",
+        },
+        {
+          name: "均衡预后",
+          count: 0,
+          effect: "均衡预后",
+          effectId: "A31",
+          source: "芸豆角包子",
+          sourceId: "1011A008",
+          target: "芸豆角包子",
+          targetId: "1011A008",
+          expirationTimestamp: 1712757153915,
+          performance: {
+            physics: 1,
+            magic: 1,
+            darkness: 1,
+          },
+          fullIcon: "012000/012954",
+          isPov: false,
+          remainingDuration: "19",
+        },
+      ],
+      currentHp: 1000,
+      maxHp: 1000,
+      effect: "damage done",
+      type: "magic",
+      shield: "0",
+      povId: povId.value,
+    });
+    saveStorage();
+  },
+  fakeLogDamage: () => {
+    combatTimeStamp.value = Date.now();
+    handleLine(
+      `21|${new Date()}|4000044A|万魔殿|829A|尖脚|${povId.value}|${
+        povName.value
+      }|720203|B0F10000|9F0E|8200000|1B|829A8000|0|0|0|0|0|0|0|0|0|0|155065|155065|10000|10000|||94.62|98.28|0.00|-3.13|44|44|0|10000|||92.00|100.00|0.00|0.00|000010B3|0|1|fd5fa47ff773c3ca`
+    );
+  },
+  fakeLogStatus: () => {
+    handleLine(
+      `26|${new Date()}|59|复仇|15.00|${povId.value}|${povName.value}|${
+        povId.value
+      }|${povName.value}|64|129221|129221|b6388ee76760c33b`
+    );
+  },
 };
 </script>
 
