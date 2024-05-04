@@ -736,19 +736,17 @@ const doCopy = (row: RowVO) => {
     row.effect === "damage done" ? "" : `,${translationFlags(row.effect)}`;
   const result = `${time} [${job}]${target} HP:${row.currentHp}/${
     row.maxHp
-  }(${Math.round((row.currentHp / row.maxHp) * 100)}%) + 护盾:${Math.round(
+  }(${Math.round((row.currentHp / row.maxHp) * 100)}%)+盾:${Math.round(
     (row.maxHp * +row.shield) / 100
-  )}(${row.shield}%) 受到${source}“${action}${
+  )}(${row.shield}%),受到${source}“${action}${
     actionCN !== action ? `(${actionCN})` : ""
-  }”的${amount.toLocaleString()}点${translationFlags(type)}伤害。剩余HP:${
-    row.currentHp - row.amount
-  }(${Math.round(((row.currentHp - row.amount) / row.maxHp) * 100)}%)。减伤：${
+  }”的 ${amount.toLocaleString()} 点${translationFlags(type)}伤害。减伤:${
     keigenns.length === 0 && sp === ""
       ? "无"
       : keigenns
           .map((k) => (userOptions.statusCN ? k.name : k.effect))
           .join(",") + sp
-  }。`;
+  }`;
   copyText(result);
 };
 
