@@ -26,5 +26,11 @@
     "lineWidth": 80,
     "lineEnding": "crlf",
     "ignore": []
+  },
+  "javascript": {
+    "formatter": {
+      "trailingComma": "es5",
+      "semicolons": "always"
+    }
   }
 }
