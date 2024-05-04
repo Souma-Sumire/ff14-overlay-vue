@@ -263,8 +263,9 @@ const handleLine = (line: string) => {
             const target = splitLine[logDefinitions.GainsEffect.fields.target];
             const targetId =
               splitLine[logDefinitions.GainsEffect.fields.targetId];
-            const count = Number(
-              splitLine[logDefinitions.GainsEffect.fields.count]
+            const count = Number.parseInt(
+              splitLine[logDefinitions.GainsEffect.fields.count],
+              16
             );
             let keigenn: Keigenn | undefined = getKeigenn(effectId);
             if (!keigenn) {
