@@ -26,15 +26,14 @@
 </template>
 
 <script setup lang="ts">
-import type { RowVO } from "@/types/keigennRecord2";
-import { multiplierEffect } from "@/resources/keigenn";
-import type { PerformanceType } from "@/resources/keigenn";
 import { useKeigennRecord2Store } from "@/store/keigennRecord2";
-import { handleImgError } from "@/utils/xivapi";
+import type { RowVO, PerformanceType } from "@/types/keigennRecord2";
 import { translationFlags } from "@/utils/flags";
+import { multiplierEffect } from "@/utils/keigenn";
+import { handleImgError } from "@/utils/xivapi";
+
 const keigennRecord2Store = useKeigennRecord2Store();
 const icon4k = keigennRecord2Store.icon4k;
-
 const props = defineProps({
   row: { type: Object as () => RowVO, required: true },
 });

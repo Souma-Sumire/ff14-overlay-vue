@@ -1,6 +1,8 @@
-import { loadKeigenn } from "@/resources/keigenn";
+import { loadKeigenn } from "@/utils/keigenn";
 import { defineStore } from "pinia";
+
 const params = useUrlSearchParams("hash");
+
 export const useKeigennRecord2Store = defineStore("keigennRecord2", {
   state: () => {
     return {

@@ -1,24 +1,6 @@
-import { completeIcon, statusData } from "./status";
+import type { Keigenn } from "@/types/keigennRecord2";
 
-export type KeigennType = "multiplier" | "absorbed";
-
-export type PerformanceType = {
-  physics: number;
-  magic: number;
-  darkness: number;
-};
-
-export type Keigenn = {
-  id: number;
-  fullIcon: string;
-  type: KeigennType;
-  performance: PerformanceType;
-  isFriendly: boolean;
-  name: string;
-  description?: string;
-};
-
-const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
+const chinese: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
   {
     name: "铁壁",
     description: "减轻所受到的伤害",
@@ -754,50 +736,6 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     isFriendly: true,
   },
 ];
+const global = { ...chinese };
 
-const keigennMap: Map<string, Keigenn> = new Map();
-
-export type Server = "Chinese" | "Global";
-
-export let loadedDataLang: Server | undefined = undefined;
-
-export function loadKeigenn(server: "Chinese" | "Global"): void {
-  if (loadedDataLang !== server) {
-    const sourceKeigenns =
-      server === "Chinese" ? keigenns : Object.assign(keigenns, {});
-    keigennMap.clear();
-    for (const keigenn of sourceKeigenns) {
-      const icon = statusData[keigenn.id][1];
-      keigenn.fullIcon = completeIcon(icon);
-      keigennMap.set(keigenn.id.toString(16).toUpperCase(), keigenn as Keigenn);
-    }
-    loadedDataLang = server;
-  }
-}
-
-loadKeigenn("Chinese");
-
-export function getKeigenn(decId: string): Keigenn | undefined {
-  return keigennMap.get(decId);
-}
-
-export const multiplierEffect = (multiplier: number) => {
-  if (multiplier === 1) return "useful";
-  if (multiplier === 0) return "unuseful";
-  return "half-useful";
-};
-
-const regFriendly =
-  /(?:耐性|防御力)(?:大幅)?(?:降低|提升|低下|下降)|受伤(?:加重|减轻)|体力(?:增加|衰减|减少)|伤害屏障/;
-const regEnemy = /(?:精神|力量|灵巧|智力){1,2}(?:大幅)?降低/;
-
-const createMap = (regExp: RegExp, isFriendly: boolean) =>
-  Object.entries(statusData).reduce((map, [key, [name, icon]]) => {
-    if (regExp.test(name)) {
-      map.set(key, { name, icon, isFriendly });
-    }
-    return map;
-  }, new Map());
-
-export const universalVulnerableFriendly = createMap(regFriendly, true);
-export const universalVulnerableEnemy = createMap(regEnemy, false);
+export { global, chinese };

@@ -111,19 +111,18 @@ import {
   type VxeTablePropTypes,
 } from "vxe-table";
 import Util from "@/utils/util";
-import {
-  getKeigenn,
-  type Keigenn,
-  universalVulnerableEnemy,
-  universalVulnerableFriendly,
-} from "@/resources/keigenn";
 import { getActionChinese } from "@/resources/actionChinese";
 import { completeIcon, stackUrl } from "@/resources/status";
 import { deepClone } from "@/utils/deepClone";
 import type { Player } from "@/types/partyPlayer";
-import type { Encounter, RowVO, Status } from "@/types/keigennRecord2";
+import type { Encounter, Keigenn, RowVO, Status } from "@/types/keigennRecord2";
 import { useKeigennRecord2Store } from "@/store/keigennRecord2";
 import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
+import {
+  getKeigenn,
+  universalVulnerableEnemy,
+  universalVulnerableFriendly,
+} from "@/utils/keigenn";
 
 const store = useKeigennRecord2Store();
 const userOptions = store.userOptions;
@@ -465,7 +464,7 @@ const handleLine = (line: string) => {
               Util.jobEnumToJob(targetJob)
             ).simple2;
             const jobEnum = targetJob;
-            const jobIcon = Util.jobEnumToIcon(jobEnum).toLocaleLowerCase();
+            const jobIcon = Util.jobEnumToIcon(jobEnum).toLowerCase();
             // dot/hot日志的source不准确 故无法计算目标减
             addRow({
               timestamp,
@@ -557,7 +556,7 @@ const handleLine = (line: string) => {
                 Util.jobEnumToJob(targetJob)
               ).cn.substring(0, 2);
               const jobEnum = targetJob;
-              const jobIcon = Util.jobEnumToIcon(jobEnum).toLocaleLowerCase();
+              const jobIcon = Util.jobEnumToIcon(jobEnum).toLowerCase();
               const keigenns = deepClone(
                 Object.values(statusData.friendly[targetId] ?? [])
                   .concat(Object.values(statusData.enemy[source] ?? []))
