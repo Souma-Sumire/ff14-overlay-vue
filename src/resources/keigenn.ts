@@ -736,6 +736,6 @@ const chinese: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     isFriendly: true,
   },
 ];
-const global = { ...chinese };
+const global = [...chinese];
 
 export { global, chinese };
