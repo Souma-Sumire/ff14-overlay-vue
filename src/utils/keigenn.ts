@@ -12,7 +12,10 @@ export function loadKeigenn(server: "Chinese" | "Global"): void {
     for (const keigenn of server === "Chinese" ? chinese : global) {
       const icon = statusData[keigenn.id][1];
       keigenn.fullIcon = completeIcon(icon);
-      keigennMap.set(keigenn.id.toString(16).toUpperCase(), keigenn as Keigenn);
+      keigennMap.set(
+        keigenn.id.toString(16).toUpperCase().padStart(2, "0"),
+        keigenn as Keigenn
+      );
     }
     loadedDataLang = server;
   }
