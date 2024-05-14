@@ -736,7 +736,7 @@ onMounted(() => {
     povName.value = e.charName;
     povId.value = Number(e.charID).toString(16).toUpperCase();
   });
-  startOverlayEvents();
+  // startOverlayEvents();
 });
 
 const doCopy = (row: RowVO) => {

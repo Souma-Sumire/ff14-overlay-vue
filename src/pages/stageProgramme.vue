@@ -181,7 +181,7 @@ function init() {
     showSettings.value = !(e as { detail: { isLocked: boolean } }).detail
       .isLocked;
   });
-  startOverlayEvents();
+  // startOverlayEvents();
 }
 function loadData() {
   const _ = localStorage.getItem("programmeData");

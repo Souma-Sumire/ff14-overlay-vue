@@ -353,7 +353,7 @@ onMounted(() => {
   addOverlayListener("onPlayerDied", handlePlayerDied);
   addOverlayListener("LogLine", handleOnLogEvent);
   addOverlayListener("ChangePrimaryPlayer", handleChangePrimaryPlayer);
-  startOverlayEvents();
+  // startOverlayEvents();
   document.addEventListener("onOverlayStateUpdate", (e) => {
     showSettings.value = e?.detail?.isLocked === false;
   });

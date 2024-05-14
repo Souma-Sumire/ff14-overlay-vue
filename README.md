@@ -12,4 +12,4 @@ ACT > OverlayPlugin 悬浮窗插件 > 新建 > 名称：任意，预设：'自�
 ## 开发笔记
 
 - 更新 Cactbot 模块 `git submodule update --remote`
-- 添加 PostNamazu 事件声明 `git apply patches/0001-PostNamazu.patch`
+- 添加 PostNamazu 事件声明 / 兼容 Hash 路由模式  `git apply patches/0001-postNamazu.patch patches/0002-hash-mode.patch`

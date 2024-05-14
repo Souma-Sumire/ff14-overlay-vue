@@ -1,0 +1,25 @@
+From b750eb2b60edc25d2224361676a3d17268ec5445 Mon Sep 17 00:00:00 2001
+From: Souma-Sumire <553469159@qq.com>
+Date: Wed, 15 May 2024 02:57:41 +0800
+Subject: [PATCH] hash mode
+
+---
+ resources/overlay_plugin_api.ts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/cactbot/resources/overlay_plugin_api.ts b/cactbot/resources/overlay_plugin_api.ts
+index b08e4d0b7..b5e8f34a9 100644
+--- a/cactbot/resources/overlay_plugin_api.ts
++++ b/cactbot/resources/overlay_plugin_api.ts
+@@ -209,7 +209,7 @@ export const init = (): void => {
+     return;
+ 
+   if (typeof window !== 'undefined') {
+-    wsUrl = new URLSearchParams(window.location.search).get('OVERLAY_WS');
++    wsUrl = new URLSearchParams(window.location.href.split('?')[1]).get('OVERLAY_WS');
+     if (wsUrl !== null) {
+       const connectWs = function(wsUrl: string) {
+         ws = new WebSocket(wsUrl);
+-- 
+2.41.0.windows.1
+

@@ -17,7 +17,7 @@ onMounted(() => {
       ).targetId;
     }
   });
-  startOverlayEvents();
+  // startOverlayEvents();
 });
 const show = ref(false);
 setInterval(() => {

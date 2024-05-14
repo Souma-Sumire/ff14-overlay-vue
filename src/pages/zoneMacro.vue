@@ -25,7 +25,7 @@ const hideOnStartup = useStorage("zoneMacroHideOnStartup", ref(false));
 if (hideOnStartup.value) macroStore.show = false;
 macroStore.formatAllWaymarkPlaceData();
 
-const raidEmulatorOnLoad = async () => {
+const onLoad = async () => {
   let websocketConnected = false;
   if (window.location.href.indexOf("OVERLAY_WS") > 0) {
     websocketConnected = await Promise.race<Promise<boolean>>([
@@ -57,7 +57,7 @@ onMounted(() => {
   // addOverlayListener("onGameExistsEvent", macroStore.handleGameExists);
   addOverlayListener("ChangeZone", macroStore.handleChangeZone);
   addOverlayListener("LogLine", macroStore.handleLogLine);
-  startOverlayEvents();
+  // startOverlayEvents();
   watchEffect(() => {
     if (
       (macroStore.data.zoneId[macroStore.selectZone] === undefined ||
@@ -76,7 +76,7 @@ onMounted(() => {
     },
     { immediate: true }
   );
-  raidEmulatorOnLoad();
+  onLoad();
   macroStore.updateZone();
 });
 </script>

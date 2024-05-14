@@ -2,12 +2,16 @@
 import Swal from "sweetalert2";
 import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
 import { useTimelineStore, parseTimeline } from "@/store/timeline";
-import { ITimeline, ITimelineCondition, ITimelineLine } from "@/types/timeline";
+import type {
+  ITimeline,
+  ITimelineCondition,
+  ITimelineLine,
+} from "@/types/timeline";
 import {
   addOverlayListener,
   callOverlayHandler,
 } from "../../cactbot/resources/overlay_plugin_api";
-import { EventMap } from "cactbot/types/event";
+import type { EventMap } from "cactbot/types/event";
 
 const timelineStore = useTimelineStore();
 const timelinePageData = reactive({
@@ -49,7 +53,7 @@ function init() {
   addOverlayListener("ChangeZone", handleChangeZone);
   addOverlayListener("BroadcastMessage", handleBroadcastMessage);
   addOverlayListener("onInCombatChangedEvent", handleInCombatChanged);
-  startOverlayEvents();
+  // startOverlayEvents();
   timelineStore.loadTimelineSettings();
   if (!Swal.isVisible()) {
     Swal.fire({
@@ -63,11 +67,11 @@ function init() {
 }
 function openSettings() {
   const windowsOpen = window.open(
-    "/ff14-overlay-vue/#/timelineSettings?timestamp=" + new Date().getTime(),
+    `/ff14-overlay-vue/#/timelineSettings?timestamp=${new Date().getTime()}`,
     "_blank",
     "width=1200,height=800"
   );
-  const loop = setInterval(function () {
+  const loop = setInterval(() => {
     if (windowsOpen?.closed) {
       clearInterval(loop);
       timelineStore.loadTimelineSettings();
@@ -81,7 +85,7 @@ function getTimeline(condition: ITimelineCondition) {
   stopTimeline();
   timelinePageData.loadedTimeline.length = 0;
   timelinePageData.optionalTimeline.length = 0;
-  let candidate: ITimeline[] = timelineStore.getTimeline(condition);
+  const candidate: ITimeline[] = timelineStore.getTimeline(condition);
   if (candidate.length === 1) {
     //单个结果
     mountTimeline(candidate[0]);
@@ -97,13 +101,10 @@ function selectedTimeline(timeline: ITimeline) {
 }
 
 //载入时间轴页面
-async function mountTimeline(
-  timeline: ITimeline,
-  stopLoadedTimeline: boolean = true
-) {
+async function mountTimeline(timeline: ITimeline, stopLoadedTimeline = true) {
   stopLoadedTimeline && stopTimeline();
   doTTS = false;
-  if (timeline && timeline?.timeline) {
+  if (timeline?.timeline) {
     timelinePageData.loadedTimeline = await parseTimeline(timeline.timeline);
     timelinePageData.loadedTimeline.sort((a, b) => a.time - b.time);
     Swal.fire({
@@ -116,7 +117,9 @@ async function mountTimeline(
     });
     // lastUsedTimeline = timeline;
   }
-  setTimeout(() => (doTTS = true), 1000);
+  setTimeout(() => {
+    doTTS = true;
+  }, 1000);
 }
 
 //停止当前
@@ -137,12 +140,16 @@ function stopTimeline() {
 function startTimeline(countdownSeconds: number, preventTTS = true) {
   if (preventTTS) {
     doTTS = false;
-    setTimeout(() => (doTTS = true), 1000);
+    setTimeout(() => {
+      doTTS = true;
+    }, 1000);
   }
   runtimeTimeSeconds.value = 0;
   offsetTimeMS.value = 0;
   baseTimeMs.value = new Date().getTime() + countdownSeconds * 1000;
-  loadedTimelineTTS.value.map((v) => (v.alertAlready = false));
+  loadedTimelineTTS.value.map((v) => {
+    v.alertAlready = false;
+  });
   play();
 }
 
@@ -157,19 +164,19 @@ function play() {
   );
   if (l) {
     l.alertAlready = true;
-    cactbotSay(l.tts!);
+    if (l.tts) cactbotSay(l.tts);
   }
   requestAnimationFrame(play);
 }
 //日志
 function handleLogEvent(e: { detail: { logs: string[] } }) {
   for (const log of e.detail.logs) {
-    let regex = log.match(
+    const regex = log.match(
       /^.{14} \w+ 00:(?:00b9|0[12]39)::?(?:距离战斗开始还有|Battle commencing in |戦闘開始まで)(?<cd>\d+)[^（(]+[（(]/i
     );
     if (regex) {
       //倒计时
-      startTimeline(parseInt(regex!.groups!.cd));
+      startTimeline(Number.parseInt(regex?.groups?.cd || "0"));
     } else if (
       /^.{14} Director 21:.{8}:4000000F/.test(log) ||
       /^.{14} ChatLog 00:0038::end$/.test(log) ||
@@ -242,7 +249,7 @@ const handleChangeZone: EventMap["ChangeZone"] = (e) => {
 };
 
 //调用TTS
-function cactbotSay(text: string, force: boolean = false) {
+function cactbotSay(text: string, force = false) {
   if (!text) return;
   if (doTTS || force) callOverlayHandler({ call: "cactbotSay", text: text });
 }

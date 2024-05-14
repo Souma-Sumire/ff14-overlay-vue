@@ -17,7 +17,7 @@ enum InstancedEnum {
   "" = "⑨",
 }
 addOverlayListener("LogLine", handleLogLine);
-startOverlayEvents();
+// startOverlayEvents();
 const zoneName = ref("");
 const zoneInstanced = ref("");
 const simpleMode = urlTool(location.href)?.simple === "true";

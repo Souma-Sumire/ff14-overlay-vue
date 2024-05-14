@@ -36,7 +36,7 @@ import { getImgSrcByActionId } from "@/utils/xivapi";
 import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
 
 addOverlayListener("LogLine", handleLogLine);
-startOverlayEvents();
+// startOverlayEvents();
 const targetName = {
   xie: ["尼德霍格", "ニーズヘッグ", "Nidhogg"],
   sheng: ["赫拉斯瓦尔格", "フレースヴェルグ", "Hraesvelgr"],

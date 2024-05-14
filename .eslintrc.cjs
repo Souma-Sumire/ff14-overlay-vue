@@ -41,7 +41,7 @@ module.exports = {
       },
     ],
   },
-  globals: {
-    startOverlayEvents: true,
-  },
+  // globals: {
+  //   startOverlayEvents: true,
+  // },
 };

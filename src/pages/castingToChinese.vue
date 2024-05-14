@@ -112,7 +112,7 @@ addOverlayListener("LogLine", (e: { line: string[] }) => {
 
 addOverlayListener("ChangeZone", () => casting.clear());
 
-startOverlayEvents();
+// startOverlayEvents();
 
 requestAnimationFrame(function update() {
   now.value = Date.now();

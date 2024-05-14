@@ -4,10 +4,10 @@ import ZoneInfo from "../resources/zoneInfo";
 import UserConfig from "../../cactbot/resources/user_config";
 import { commonNetRegex } from "../../cactbot/resources/netregexes";
 import { LocaleNetRegex } from "../../cactbot/resources/translations";
-import OBSWebSocket, { RequestBatchRequest } from "obs-websocket-js";
+import OBSWebSocket, { type RequestBatchRequest } from "obs-websocket-js";
 import { VXETable } from "vxe-table";
 import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
-import { EventMap } from "cactbot/types/event";
+import type { EventMap } from "cactbot/types/event";
 
 const defaultEntireForZones: number[] = [
   ContentType.DutyRoulette,
@@ -68,7 +68,7 @@ onMounted(async () => {
     addOverlayListener("ChangeZone", handleChangeZone);
     addOverlayListener("onInCombatChangedEvent", handleInCombatChanged);
     addOverlayListener("PartyChanged", handlePartyChanged);
-    startOverlayEvents();
+    // startOverlayEvents();
   });
   if (password.value !== "") {
     await connect(true);
@@ -89,9 +89,9 @@ async function connect(init = false) {
       if (!config.value.userRecFilePath) {
         getUserRecFilePath();
       }
-      obs
-        .call("GetRecordStatus")
-        .then((v) => (status.recording = v.outputActive));
+      obs.call("GetRecordStatus").then((v) => {
+        status.recording = v.outputActive;
+      });
       VXETable.modal.message({
         content: "连接成功",
         status: "success",
@@ -123,7 +123,7 @@ async function connect(init = false) {
 
 async function getUserRecFilePath() {
   return obs.call("GetRecordDirectory").then((v) => {
-    if (v && v.recordDirectory) {
+    if (v.recordDirectory) {
       config.value.userRecFilePath = v.recordDirectory;
       if (config.value.recFilePaths.default === "") {
         config.value.recFilePaths.default = v.recordDirectory;
@@ -143,7 +143,7 @@ async function setRecordingNameAndFolder(revert = false) {
   }
   if (!revert) {
     if (filenameFormatting) {
-      filenameFormatting += " " + data.zoneName.replaceAll(":", "_");
+      filenameFormatting += ` ${data.zoneName.replaceAll(":", "_")}`;
     }
     if (!config.value.userRecFilePath) {
       await getUserRecFilePath();
@@ -305,11 +305,11 @@ function getZoneType(zoneInfo: (typeof ZoneInfo)[number]) {
     case ContentType.VCDungeonFinder:
       return ZoneType.VcOrDeepDungeons;
     case ContentType.Trials:
-      if (zoneInfo.name["fr"]?.includes("(extrême)"))
+      if (zoneInfo.name.fr?.includes("(extrême)"))
         return ZoneType.UltimateOrRaidOrTrials;
       break;
     case ContentType.Raids:
-      if (zoneInfo.name["en"]?.includes("(Savage)"))
+      if (zoneInfo.name.en?.includes("(Savage)"))
         return ZoneType.UltimateOrRaidOrTrials;
       break;
   }

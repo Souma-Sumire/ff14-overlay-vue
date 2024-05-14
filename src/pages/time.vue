@@ -47,7 +47,7 @@ const handleLogLine: EventMap["LogLine"] = (e) => {
 
 addOverlayListener("CombatData", handleCombatData);
 addOverlayListener("LogLine", handleLogLine);
-startOverlayEvents();
+// startOverlayEvents();
 </script>
 
 <template>

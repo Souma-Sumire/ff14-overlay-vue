@@ -1367,7 +1367,7 @@ addOverlayListener("onLogEvent", handleOnLogEvent);
 addOverlayListener("PartyChanged", handlePartyChanged);
 addOverlayListener("CombatData", handleCombatData);
 addOverlayListener("onInCombatChangedEvent", handleInCombatChanged);
-startOverlayEvents();
+// startOverlayEvents();
 </script>
 
 <template>

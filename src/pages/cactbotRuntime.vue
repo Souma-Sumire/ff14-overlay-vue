@@ -304,7 +304,7 @@ onMounted(() => {
       broadcastParty();
     }
   });
-  startOverlayEvents();
+  // startOverlayEvents();
 });
 </script>
 

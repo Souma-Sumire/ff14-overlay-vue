@@ -837,7 +837,7 @@ onMounted(() => {
   addOverlayListener("LogLine", handleLogLine);
   addOverlayListener("PartyChanged", handlePartyChanged);
   addOverlayListener("ChangePrimaryPlayer", handleChangePrimaryPlayer);
-  startOverlayEvents();
+  // startOverlayEvents();
 });
 
 onUnmounted(() => {
