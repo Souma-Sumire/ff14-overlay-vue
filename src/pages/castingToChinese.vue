@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { getActionChinese } from "@/resources/actionChinese";
 import { params } from "@/utils/queryParams";
-import { RemovableRef } from "@vueuse/core";
+import type { RemovableRef } from "@vueuse/core";
 import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
 
 class Cast {
@@ -11,11 +11,11 @@ class Cast {
   overTime: number;
   actionId: number;
   constructor(line: string[]) {
-    this.name = getActionChinese(parseInt(line[4], 16)) ?? line[4];
+    this.name = getActionChinese(Number.parseInt(line[4], 16)) ?? line[4];
     this.startTime = Date.now();
     this.castTime = Number(line[8]) * 1000;
     this.overTime = this.startTime + this.castTime;
-    this.actionId = parseInt(line[4], 16);
+    this.actionId = Number.parseInt(line[4], 16);
   }
 }
 
@@ -72,23 +72,23 @@ const settings: RemovableRef<{
   localStorage,
   { mergeDefaults: true }
 );
-const windowWidth = computed(() => settings.value.width + "px");
+const windowWidth = computed(() => `${settings.value.width}px`);
 const opacityCountdown = computed(() => (settings.value.showCountdown ? 1 : 0));
 const opacityProgress = computed(() => (settings.value.showProgress ? 1 : 0));
 const opacityActionChinese = computed(() =>
   settings.value.showActionChinese ? 1 : 0
 );
 const opacityActionID = computed(() => (settings.value.showActionID ? 1 : 0));
-const offsetCountdownX = computed(() => settings.value.offsetCountdownX + "px");
-const offsetCountdownY = computed(() => settings.value.offsetCountdownY + "px");
+const offsetCountdownX = computed(() => `${settings.value.offsetCountdownX}px`);
+const offsetCountdownY = computed(() => `${settings.value.offsetCountdownY}px`);
 const offsetActionChineseX = computed(
-  () => settings.value.offsetActionChineseX + "px"
+  () => `${settings.value.offsetActionChineseX}px`
 );
 const offsetActionChineseY = computed(
-  () => settings.value.offsetActionChineseY + "px"
+  () => `${settings.value.offsetActionChineseY}px`
 );
-const offsetActionIDX = computed(() => settings.value.offsetActionIDX + "px");
-const offsetActionIDY = computed(() => settings.value.offsetActionIDY + "px");
+const offsetActionIDX = computed(() => `${settings.value.offsetActionIDX}px`);
+const offsetActionIDY = computed(() => `${settings.value.offsetActionIDY}px`);
 const casting = new Map();
 const now = ref(0);
 const ping = settings.value.ping;
@@ -106,8 +106,8 @@ addOverlayListener(
 
 addOverlayListener("LogLine", (e: { line: string[] }) => {
   if (e.line[0] === "20")
-    casting.set(parseInt(e.line[2], 16), new Cast(e.line));
-  else if (e.line[0] === "23") casting.delete(parseInt(e.line[2], 16));
+    casting.set(Number.parseInt(e.line[2], 16), new Cast(e.line));
+  else if (e.line[0] === "23") casting.delete(Number.parseInt(e.line[2], 16));
 });
 
 addOverlayListener("ChangeZone", () => casting.clear());
