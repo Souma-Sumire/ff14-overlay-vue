@@ -26,20 +26,63 @@ interface resJson {
 const data = reactive({ res: {} as resJson });
 const fileName = ref();
 const accelerationNodeList = [
-  ["https://gh.h233.eu.org/https://github.com", "[美国 Cloudflare CDN]"],
-  ["https://gh.ddlc.top/https://github.com", "[美国 Cloudflare CDN]"],
-  ["https://dl.ghpig.top/https://github.com", "[美国 Cloudflare CDN]"],
-  ["https://slink.ltd/https://github.com", "[美国 Cloudflare CDN]"],
-  ["https://git.xfj0.cn/https://github.com", "[美国 Cloudflare CDN]"],
-  ["https://gh.con.sh/https://github.com", "[美国 Cloudflare CDN]"],
-  ["https://cors.isteed.cc/github.com", "[美国 Cloudflare CDN]"],
-  ["https://hub.gitmirror.com/https://github.com", "[美国 Cloudflare CDN]"],
-  ["https://sciproxy.com/github.com", "[美国 Cloudflare CDN]"],
-  ["https://ghproxy.cc/https://github.com", "[美国 洛杉矶]"],
-  ["https://cf.ghproxy.cc/https://github.com", "[美国 Cloudflare CDN]"],
-  ["https://download.nuaa.cf", "[美国 洛杉矶]"],
-  ["https://download.scholar.rr.nu", "[美国 纽约]"],
-  ["https://download.yzuu.cf", "[美国 纽约]"],
+  [
+    "https://gh.h233.eu.org/https://github.com",
+    "[美国 Cloudflare CDN] - 该公益加速源由 [@X.I.U/XIU2] 提供",
+  ],
+  [
+    "https://gh.ddlc.top/https://github.com",
+    "[美国 Cloudflare CDN] - 该公益加速源由 [@mtr-static-official] 提供",
+  ],
+  [
+    "https://dl.ghpig.top/https://github.com",
+    "[美国 Cloudflare CDN] - 该公益加速源由 [feizhuqwq.com] 提供",
+  ],
+  [
+    "https://slink.ltd/https://github.com",
+    "[美国 Cloudflare CDN] - 该公益加速源由 [知了小站] 提供",
+  ],
+  [
+    "https://gh.con.sh/https://github.com",
+    "[美国 Cloudflare CDN] - 该公益加速源由 [佚名] 提供",
+  ],
+  [
+    "https://cors.isteed.cc/github.com",
+    "[美国 Cloudflare CDN] - 该公益加速源由 [@Lufs's] 提供",
+  ],
+  [
+    "https://hub.gitmirror.com/https://github.com",
+    "[美国 Cloudflare CDN] - 该公益加速源由 [GitMirror] 提供",
+  ],
+  [
+    "https://sciproxy.com/github.com",
+    "[美国 Cloudflare CDN] - 该公益加速源由 [sciproxy.com] 提供",
+  ],
+  [
+    "https://ghproxy.cc/https://github.com",
+    "[美国 洛杉矶] - 该公益加速源由 [@yionchiii lau] 提供",
+  ],
+  [
+    "https://cf.ghproxy.cc/https://github.com",
+    "[美国 Cloudflare CDN] - 该公益加速源由 [@yionchiii lau] 提供",
+  ],
+  [
+    "https://gh.jiasu.in/https://github.com",
+    "[美国 Cloudflare CDN] - 该公益加速源由 [@0-RTT] 提供",
+  ],
+  ["https://dgithub.xyz", "[美国 西雅图] - 该公益加速源由 [dgithub.xyz] 提供"],
+  [
+    "https://download.nuaa.cf",
+    "[美国 洛杉矶] - 该公益加速源由 [FastGit 群组成员] 提供",
+  ],
+  [
+    "https://download.scholar.rr.nu",
+    "[美国 纽约] - 该公益加速源由 [FastGit 群组成员] 提供",
+  ],
+  [
+    "https://download.yzuu.cf",
+    "[美国 纽约] - 该公益加速源由 [FastGit 群组成员] 提供",
+  ],
 ];
 onMounted(() => {
   fetch(
