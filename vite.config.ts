@@ -1,25 +1,25 @@
-import vue from "@vitejs/plugin-vue";
-import jsx from "@vitejs/plugin-vue-jsx";
-import { presetAttributify, presetIcons, presetUno } from "unocss";
-import Unocss from "unocss/vite";
-import AutoImport from "unplugin-auto-import/vite";
-import path from "node:path";
-import Components from "unplugin-vue-components/vite";
-import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
-import { defineConfig } from "vite";
-import viteCompression from "vite-plugin-compression";
-import Markdown from "vite-plugin-md";
-import Pages from "vite-plugin-pages";
+import path from 'node:path'
+import vue from '@vitejs/plugin-vue'
+import jsx from '@vitejs/plugin-vue-jsx'
+import { presetAttributify, presetIcons, presetUno } from 'unocss'
+import Unocss from 'unocss/vite'
+import AutoImport from 'unplugin-auto-import/vite'
+import Components from 'unplugin-vue-components/vite'
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import { defineConfig } from 'vite'
+import viteCompression from 'vite-plugin-compression'
+import Markdown from 'vite-plugin-md'
+import Pages from 'vite-plugin-pages'
 import {
-  createStyleImportPlugin,
   VxeTableResolve,
-} from "vite-plugin-style-import";
+  createStyleImportPlugin,
+} from 'vite-plugin-style-import'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: "/ff14-overlay-vue/",
+  base: '/ff14-overlay-vue/',
   build: {
-    outDir: "./dist",
+    outDir: './dist',
     emptyOutDir: true, // 构建时清空outDir目录
     rollupOptions: {
       output: {
@@ -27,9 +27,8 @@ export default defineConfig({
         //   entryFileNames: "assets/js/[name].js",
         //   assetFileNames: "assets/[ext]/[name].[ext]",
         manualChunks(id) {
-          if (id.includes("node_modules")) {
-            return "vendor";
-          }
+          if (id.includes('node_modules'))
+            return 'vendor'
         },
       },
     },
@@ -52,16 +51,16 @@ export default defineConfig({
     Components({
       resolvers: [ElementPlusResolver()],
       deep: true,
-      dts: "./src/types/components.d.ts",
+      dts: './src/types/components.d.ts',
       directoryAsNamespace: true,
     }),
     AutoImport({
-      imports: ["vue", "@vueuse/core"],
-      dts: "./src/types/auto-imports.d.ts",
+      imports: ['vue', '@vueuse/core'],
+      dts: './src/types/auto-imports.d.ts',
       resolvers: [ElementPlusResolver()],
       eslintrc: {
         enabled: true, // Default `false`
-        filepath: "./.eslintrc-auto-import.json", // Default `./.eslintrc-auto-import.json`
+        filepath: './.eslintrc-auto-import.json', // Default `./.eslintrc-auto-import.json`
         globalsPropValue: true, // Default `true`, (true | false | 'readonly' | 'readable' | 'writable' | 'writeable')
       },
     }),
@@ -87,7 +86,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      '@': path.resolve(__dirname, './src'),
     },
   },
-});
+})

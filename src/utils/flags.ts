@@ -1,66 +1,66 @@
 export type DamageEffect =
-  | "dodge" // 闪避
-  | "damage done" // 击中
-  | "blocked damage" // 格挡
-  | "parried damage" // 招架
-  | "instant death" // 即死
-  | "heal" // 治疗
-  | "crit heal"; // 暴击治疗
+  | 'dodge' // 闪避
+  | 'damage done' // 击中
+  | 'blocked damage' // 格挡
+  | 'parried damage' // 招架
+  | 'instant death' // 即死
+  | 'heal' // 治疗
+  | 'crit heal' // 暴击治疗
 
 export type DamageProperties =
-  | "damage" // 普通
-  | "crit damage" // 暴击
-  | "direct hit damage" // 直击
-  | "crit direct hit damage"; // 直暴;
+  | 'damage' // 普通
+  | 'crit damage' // 暴击
+  | 'direct hit damage' // 直击
+  | 'crit direct hit damage' // 直暴;
 
 export type DamageType =
-  | "physics" // 物理
-  | "magic" // 魔法
-  | "darkness" // 暗黑;
-  | "dot";
+  | 'physics' // 物理
+  | 'magic' // 魔法
+  | 'darkness' // 暗黑;
+  | 'dot'
 
 export function translationFlags(
   typeString: DamageEffect | DamageProperties | DamageType,
 ): string {
   switch (typeString) {
-    case "dodge":
-      return "闪避";
-    case "damage done":
-      return "击中";
-    case "blocked damage":
-      return "格挡";
-    case "parried damage":
-      return "招架";
-    case "instant death":
-      return "即死";
-    case "heal":
-      return "治疗";
-    case "crit heal":
-      return "暴击治疗";
-    case "damage":
-      return "普通";
-    case "crit damage":
-      return "暴击";
-    case "direct hit damage":
-      return "直击";
-    case "crit direct hit damage":
-      return "直暴";
-    case "physics":
-      return "物理";
-    case "magic":
-      return "魔法";
-    case "darkness":
-      return "暗黑";
+    case 'dodge':
+      return '闪避'
+    case 'damage done':
+      return '击中'
+    case 'blocked damage':
+      return '格挡'
+    case 'parried damage':
+      return '招架'
+    case 'instant death':
+      return '即死'
+    case 'heal':
+      return '治疗'
+    case 'crit heal':
+      return '暴击治疗'
+    case 'damage':
+      return '普通'
+    case 'crit damage':
+      return '暴击'
+    case 'direct hit damage':
+      return '直击'
+    case 'crit direct hit damage':
+      return '直暴'
+    case 'physics':
+      return '物理'
+    case 'magic':
+      return '魔法'
+    case 'darkness':
+      return '暗黑'
     default:
-      throw new Error("Unknown type");
+      throw new Error('Unknown type')
   }
 }
 
 export function processFlags(flag: string) {
-  const effect = processEffect(flag);
-  const properties = processProperties(flag);
-  const type = processType(flag);
-  return { effect, properties, type };
+  const effect = processEffect(flag)
+  const properties = processProperties(flag)
+  const type = processType(flag)
+  return { effect, properties, type }
 }
 
 // 0x01 = dodge
@@ -73,22 +73,22 @@ export function processFlags(flag: string) {
 
 function processEffect(flag: string): DamageEffect {
   switch (true) {
-    case /1$/.test(flag):
-      return "dodge";
-    case /3$/.test(flag):
-      return "damage done";
-    case /5$/.test(flag):
-      return "blocked damage";
-    case /6$/.test(flag):
-      return "parried damage";
-    case /33$/.test(flag):
-      return "instant death";
-    case /4$/.test(flag):
-      return "heal";
+    case flag.endsWith('1'):
+      return 'dodge'
+    case flag.endsWith('3'):
+      return 'damage done'
+    case flag.endsWith('5'):
+      return 'blocked damage'
+    case flag.endsWith('6'):
+      return 'parried damage'
+    case flag.endsWith('33'):
+      return 'instant death'
+    case flag.endsWith('4'):
+      return 'heal'
     case /2\w{4}4$/.test(flag):
-      return "crit heal";
+      return 'crit heal'
     default:
-      throw new Error(`Unknown effect flag ${flag}`);
+      throw new Error(`Unknown effect flag ${flag}`)
   }
 }
 
@@ -99,13 +99,13 @@ function processEffect(flag: string): DamageEffect {
 function processProperties(flag: string): DamageProperties {
   switch (true) {
     case /2\w{3}$/.test(flag):
-      return "crit damage";
+      return 'crit damage'
     case /4\w{3}$/.test(flag):
-      return "direct hit damage";
+      return 'direct hit damage'
     case /6\w{3}$/.test(flag):
-      return "crit direct hit damage";
+      return 'crit direct hit damage'
     default:
-      return "damage";
+      return 'damage'
   }
 }
 
@@ -115,17 +115,17 @@ function processProperties(flag: string): DamageProperties {
 
 function processType(flag: string): DamageType {
   switch (true) {
-    case /7?[1234]\w{3}[35]$|[16]$/.test(flag):
-      return "physics";
+    case /7?[1-4]\w{3}[35]$|[16]$/.test(flag):
+      return 'physics'
     case /^E$/.test(flag):
     case /5\w{4}$/.test(flag):
-      return "magic";
+      return 'magic'
     case /^(?:\d0)?3$/.test(flag):
     case /6\w{4}$/.test(flag):
-      return "darkness";
+      return 'darkness'
     default:
-      console.error(`Unknown type flag ${flag}`);
-      return "physics";
+      console.error(`Unknown type flag ${flag}`)
+      return 'physics'
   }
 }
 // 0x10000 = 真无敌
@@ -139,49 +139,51 @@ function processType(flag: string): DamageType {
 
 // 0x600 = 似乎意味着存在护盾
 
-const kShiftFlagValues = ["3E", "113", "213", "313"];
-const kShiftFlagValues2 = ["A10", "E"];
-const kHealFlags = ["04"];
-const kFlagInstantDeath = "36";
-const kAttackFlags = ["01", "03", "05", "06", kFlagInstantDeath];
+const kShiftFlagValues = ['3E', '113', '213', '313']
+const kShiftFlagValues2 = ['A10', 'E']
+const kHealFlags = ['04']
+const kFlagInstantDeath = '36'
+const kAttackFlags = ['01', '03', '05', '06', kFlagInstantDeath]
 
-export const processAbilityLine = (splitLine: string[]) => {
-  const flagIdx = 8;
-  let offset = 0;
-  let flags = splitLine[flagIdx] ?? "";
-  let damage = splitLine[flagIdx + 1] ?? "";
+export function processAbilityLine(splitLine: string[]) {
+  const flagIdx = 8
+  let offset = 0
+  let flags = splitLine[flagIdx] ?? ''
+  let damage = splitLine[flagIdx + 1] ?? ''
   if (kShiftFlagValues.includes(flags)) {
-    offset += 2;
-    flags = splitLine[flagIdx + offset] ?? flags;
-    damage = splitLine[flagIdx + offset + 1] ?? damage;
+    offset += 2
+    flags = splitLine[flagIdx + offset] ?? flags
+    damage = splitLine[flagIdx + offset + 1] ?? damage
   }
   if (kShiftFlagValues2.includes(flags)) {
-    offset += 2;
-    flags = splitLine[flagIdx + offset] ?? flags;
-    damage = splitLine[flagIdx + offset + 1] ?? damage;
+    offset += 2
+    flags = splitLine[flagIdx + offset] ?? flags
+    damage = splitLine[flagIdx + offset + 1] ?? damage
   }
-  const amount = UnscrambleDamage(damage);
-  const lowByte = `00${flags}`.slice(-2);
+  const amount = UnscrambleDamage(damage)
+  const lowByte = `00${flags}`.slice(-2)
   return {
-    amount: amount,
-    lowByte: lowByte,
-    flags: flags,
+    amount,
+    lowByte,
+    flags,
     isHeal: kHealFlags.includes(lowByte),
     isAttack: kAttackFlags.includes(lowByte),
-  };
-};
-
-export const UnscrambleDamage = (field?: string): number => {
-  if (field === undefined) return 0;
-  const len = field.length;
-  if (len <= 4) return 0;
-  // Get the left two bytes as damage.
-  let damage = Number.parseInt(field.slice(0, len - 4), 16);
-  // Check for third byte == 0x40.
-  if (field[len - 4] === "4") {
-    // Wrap in the 4th byte as extra damage.  See notes above.
-    const rightDamage = Number.parseInt(field.slice(len - 2, len), 16);
-    damage = damage - rightDamage + (rightDamage << 16);
   }
-  return damage;
-};
+}
+
+export function UnscrambleDamage(field?: string): number {
+  if (field === undefined)
+    return 0
+  const len = field.length
+  if (len <= 4)
+    return 0
+  // Get the left two bytes as damage.
+  let damage = Number.parseInt(field.slice(0, len - 4), 16)
+  // Check for third byte == 0x40.
+  if (field[len - 4] === '4') {
+    // Wrap in the 4th byte as extra damage.  See notes above.
+    const rightDamage = Number.parseInt(field.slice(len - 2, len), 16)
+    damage = damage - rightDamage + (rightDamage << 16)
+  }
+  return damage
+}

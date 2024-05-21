@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { useCastingMonitorStore } from "@/store/castingMonitor";
-import { params } from "@/utils/queryParams";
-import { handleImgError } from "@/utils/xivapi";
-const castingMonitorStore = useCastingMonitorStore();
+import { useCastingMonitorStore } from '@/store/castingMonitor'
+import { handleImgError } from '@/utils/xivapi'
+
+const params = new URLSearchParams(window.location.href.split('?')[1])
+const castingMonitorStore = useCastingMonitorStore()
 const displayAA = Number(
-  /^(?:1|true|yes|on|open|enabled)$/i.test(params.displayAA)
-);
+  /^(?:1|true|yes|on|open|enabled)$/i.test(params.get('displayAA') ?? ''),
+)
 const displayGCD = Number(
-  /^(?:1|true|yes|on|open|enabled)$/i.test(params.displayGCDSpace)
-);
+  /^(?:1|true|yes|on|open|enabled)$/i.test(params.get('displayGCD') ?? ''),
+)
 </script>
 
 <template>
@@ -19,6 +20,8 @@ const displayGCD = Number(
       :data-casterId="castersId"
     >
       <el-tooltip
+        v-for="cast in casts"
+        :key="cast.key"
         raw-content
         placement="right-start"
         effect="dark"
@@ -26,16 +29,14 @@ const displayGCD = Number(
         :teleported="false"
         popper-class="el-tooltip"
         :show-arrow="false"
-        v-for="cast in casts"
-        :key="cast.key"
       >
         <template #content>
           <div class="elhover">
             <strong>{{ cast.APIData.Name }}</strong>
             <div
-              v-html="cast.APIData?.Description"
               style="white-space: pre-line"
-            ></div>
+              v-html="cast.APIData?.Description"
+            />
           </div>
         </template>
         <div
@@ -43,7 +44,7 @@ const displayGCD = Number(
           :style="`--animeDuration: ${
             castingMonitorStore.config.duration
           }s;opacity:${Number(
-            castingMonitorStore.focusTargetId === castersId
+            castingMonitorStore.focusTargetId === castersId,
           )}`"
         >
           <img
@@ -52,14 +53,13 @@ const displayGCD = Number(
             height="40"
             loading="lazy"
             @error="handleImgError"
-          />
-          <img class="frame" loading="lazy" />
+          >
+          <img class="frame" loading="lazy">
           <span
             v-if="displayGCD === 1"
             class="GCDCast"
             :class="cast.GCDClass"
-            >{{ cast?.GCDCast ?? "" }}</span
-          >
+          >{{ cast?.GCDCast ?? "" }}</span>
         </div>
       </el-tooltip>
     </div>

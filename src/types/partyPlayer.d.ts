@@ -1,11 +1,11 @@
 export interface Player {
-  id: string;
-  name: string;
-  inParty: boolean;
-  job: number;
+  id: string
+  name: string
+  inParty: boolean
+  job: number
 }
 
 export interface PlayerRuntime extends Player {
-  rp?: string;
-  specify?: boolean;
+  rp?: string
+  specify?: boolean
 }

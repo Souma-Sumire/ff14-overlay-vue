@@ -1,28 +1,121 @@
+<script setup lang="ts">
+import type { RemovableRef } from '@vueuse/core'
+import { ref } from 'vue'
+import { type UseDraggableReturn, VueDraggable } from 'vue-draggable-plus'
+import type { Role } from '../../cactbot/types/job'
+import Util from '@/utils/util'
+import type { Player } from '@/types/partyPlayer'
+
+const props = withDefaults(defineProps<Props>(), {})
+const emit = defineEmits<(e: 'updateSortArr', id: number[]) => void>()
+const el = ref<UseDraggableReturn>()
+const isDisabled = ref(true)
+const free = ref(false)
+
+export interface Props {
+  party: Player[]
+}
+
+const roles: {
+  role: Role
+  color: string
+}[] = [
+  { role: 'tank', color: 'blue' },
+  { role: 'healer', color: 'green' },
+  { role: 'dps', color: 'red' },
+  { role: 'crafter', color: 'yellow' },
+  { role: 'gatherer', color: 'purple' },
+  { role: 'none', color: 'gray' },
+]
+
+function isJobInParty(job: number) {
+  return props.party.find(v => v.job === job)
+}
+const allJobs = Util.getBattleJobs3()
+const jobsList: {
+  [K in Role]: number[];
+} = (() => {
+  const res = {} as Record<Role, number[]>
+  const funcMap = {
+    tank: Util.isTankJob,
+    healer: Util.isHealerJob,
+    dps: Util.isDpsJob,
+    crafter: Util.isCraftingJob,
+    gatherer: Util.isGatheringJob,
+  }
+  for (const role of roles.map(v => v.role)) {
+    res[role] = (role === 'none' ? [] : allJobs.filter(v => funcMap[role](v)))
+      .map(v => Util.jobToJobEnum(v))
+      .sort((a, b) => Util.enumSortMethod(a, b))
+  }
+  return res
+})()
+const jobsListAll = Object.values(jobsList).flat()
+const jobs = jobsListAll.map((v) => {
+  return {
+    name: Util.nameToFullName(Util.jobEnumToJob(v)).simple1,
+    id: v,
+  }
+})
+const jobList: RemovableRef<
+  Record<
+    Role,
+    {
+      name: string
+      id: number
+    }[]
+  >
+> = useStorage(
+  'cactbotRuntime-jobList',
+  (() => {
+    const res = {} as Record<Role, { name: string, id: number }[]>
+    for (const role of roles.map(v => v.role)) {
+      res[role] = jobs
+        .filter(v => jobsList[role].includes(v.id))
+        .sort(
+          (a, b) => jobsList[role].indexOf(a.id) - jobsList[role].indexOf(b.id),
+        )
+    }
+    return res
+  })(),
+)
+
+function onUpdate() {
+  emit(
+    'updateSortArr',
+    Object.values(jobList.value)
+      .flat()
+      .map(v => v.id),
+  )
+}
+</script>
+
 <template>
   <div flex="~ col" style="position: relative">
     <vxe-checkbox
       v-model="free"
       size="mini"
       style="position: absolute; top: 0.25rem; right: 0.25rem;color: darkcyan;"
-      >解除限制</vxe-checkbox
     >
+      解除限制
+    </vxe-checkbox>
     <VueDraggable
       v-for="(role, index) in roles"
       :key="index"
       ref="el"
-      :disabled="!isDisabled"
       v-model="jobList[role.role]"
+      :disabled="!isDisabled"
       animation="150"
-      ghostClass="ghost"
-      class="flex flex-row gap-0.25 p-0 m-t-0.25 m-b-0.25 rounded"
-      @update="onUpdate"
+      ghost-class="ghost"
+      class="p-0 flex flex-row gap-0.25 m-t-0.25 m-b-0.25 rounded"
       filter=".no-draggable"
-      :forceFallback="true"
+      :force-fallback="true"
+      @update="onUpdate"
     >
       <div
         v-for="item in jobList[role.role]"
-        :key="item.id"
         v-show="!!props.party.find((v) => v.job === 36) ? true : item.id !== 36"
+        :key="item.id"
         :class="`${
           free || isJobInParty(item.id)
             ? `draggable bg-${role.color} cursor-move`
@@ -34,99 +127,6 @@
     </VueDraggable>
   </div>
 </template>
-
-<script setup lang="ts">
-import type { Player } from "@/types/partyPlayer";
-import Util from "@/utils/util";
-import type { RemovableRef } from "@vueuse/core";
-import type { Role } from "../../cactbot/types/job";
-import { ref } from "vue";
-import { type UseDraggableReturn, VueDraggable } from "vue-draggable-plus";
-
-const el = ref<UseDraggableReturn>();
-const isDisabled = ref(true);
-const emit = defineEmits<(e: "updateSortArr", id: number[]) => void>();
-const free = ref(false);
-
-export interface Props {
-  party: Player[];
-}
-
-const props = withDefaults(defineProps<Props>(), {});
-
-const onUpdate = () => {
-  emit(
-    "updateSortArr",
-    Object.values(jobList.value)
-      .flat()
-      .map((v) => v.id)
-  );
-};
-
-const roles: {
-  role: Role;
-  color: string;
-}[] = [
-  { role: "tank", color: "blue" },
-  { role: "healer", color: "green" },
-  { role: "dps", color: "red" },
-  { role: "crafter", color: "yellow" },
-  { role: "gatherer", color: "purple" },
-  { role: "none", color: "gray" },
-];
-const isJobInParty = (job: number) => {
-  return props.party.find((v) => v.job === job);
-};
-const allJobs = Util.getBattleJobs3();
-const jobsList: {
-  [K in Role]: number[];
-} = (() => {
-  const res = {} as Record<Role, number[]>;
-  const funcMap = {
-    tank: Util.isTankJob,
-    healer: Util.isHealerJob,
-    dps: Util.isDpsJob,
-    crafter: Util.isCraftingJob,
-    gatherer: Util.isGatheringJob,
-  };
-  for (const role of roles.map((v) => v.role)) {
-    res[role] = (role === "none" ? [] : allJobs.filter((v) => funcMap[role](v)))
-      .map((v) => Util.jobToJobEnum(v))
-      .sort((a, b) => Util.enumSortMethod(a, b));
-  }
-  return res;
-})();
-const jobsListAll = Object.values(jobsList).flat();
-const jobs = jobsListAll.map((v) => {
-  return {
-    name: Util.nameToFullName(Util.jobEnumToJob(v)).simple1,
-    id: v,
-  };
-});
-
-const jobList: RemovableRef<
-  Record<
-    Role,
-    {
-      name: string;
-      id: number;
-    }[]
-  >
-> = useStorage(
-  "cactbotRuntime-jobList",
-  (() => {
-    const res = {} as Record<Role, { name: string; id: number }[]>;
-    for (const role of roles.map((v) => v.role)) {
-      res[role] = jobs
-        .filter((v) => jobsList[role].includes(v.id))
-        .sort(
-          (a, b) => jobsList[role].indexOf(a.id) - jobsList[role].indexOf(b.id)
-        );
-    }
-    return res;
-  })()
-);
-</script>
 
 <style scoped>
 * {

@@ -1,4 +1,4 @@
-import type { RowVO } from "@/types/keigennRecord2";
+import type { RowVO } from '@/types/keigennRecord2'
 
 export const invincibleEffect = [
   Number(409)
@@ -13,11 +13,11 @@ export const invincibleEffect = [
   Number(1836)
     .toString(16)
     .toUpperCase(), // 超火流星
-];
+]
 
-export const isLethal = (row: RowVO): boolean => {
+export function isLethal(row: RowVO): boolean {
   return (
-    row.currentHp - row.amount < 0 &&
-    !row.keigenns.find((k) => invincibleEffect.includes(k.effectId))
-  );
-};
+    row.currentHp - row.amount < 0
+    && !row.keigenns.find(k => invincibleEffect.includes(k.effectId))
+  )
+}

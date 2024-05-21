@@ -1,52 +1,54 @@
 <script setup lang="ts">
-import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
-import type { EventMap } from "cactbot/types/event";
-import moment from "moment";
+import type { EventMap } from 'cactbot/types/event'
+import moment from 'moment'
+import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
-const time = ref("");
-const gameIsActive = ref(false);
-const gameActiveTime = ref(0);
-const gameCombatTime = ref("");
-const lastLogTime = ref("");
-const params = new URLSearchParams(window.location.search);
-const timeType = params.get("timeType") === "game" ? "game" : "real";
+const time = ref('')
+const gameIsActive = ref(false)
+const gameActiveTime = ref(0)
+const gameCombatTime = ref('')
+const lastLogTime = ref('')
+const params = new URLSearchParams(window.location.search)
+const timeType = params.get('timeType') === 'game' ? 'game' : 'real'
 
 requestAnimationFrame(function update() {
-  time.value = moment().format("YYYY/MM/DD HH:mm:ss.SSS");
+  time.value = moment().format('YYYY/MM/DD HH:mm:ss.SSS')
   if (gameActiveTime.value > 0) {
-    const currentTime = Date.now();
-    const milliseconds = currentTime - gameActiveTime.value;
-    const duration = moment.duration(milliseconds);
-    const minutes = duration.minutes();
-    const seconds = duration.seconds();
-    gameCombatTime.value = `${minutes < 10 ? "0" : ""}${minutes}:${
-      seconds < 10 ? "0" : ""
-    }${seconds}`;
+    const currentTime = Date.now()
+    const milliseconds = currentTime - gameActiveTime.value
+    const duration = moment.duration(milliseconds)
+    const minutes = duration.minutes()
+    const seconds = duration.seconds()
+    gameCombatTime.value = `${minutes < 10 ? '0' : ''}${minutes}:${
+      seconds < 10 ? '0' : ''
+    }${seconds}`
   }
-  requestAnimationFrame(update);
-});
+  requestAnimationFrame(update)
+})
 
 const handleCombatData: (ev: {
-  type: "CombatData";
-  isActive?: "true" | "false";
+  type: 'CombatData'
+  isActive?: 'true' | 'false'
 }) => void = (e) => {
-  if (e.isActive === "true" && gameIsActive.value === false) {
-    gameActiveTime.value = Date.now();
-  } else if (e.isActive === "false") {
-    gameActiveTime.value = 0;
-    gameCombatTime.value = "";
+  if (e.isActive === 'true' && gameIsActive.value === false) {
+    gameActiveTime.value = Date.now()
   }
-  gameIsActive.value = e.isActive === "true";
-};
+  else if (e.isActive === 'false') {
+    gameActiveTime.value = 0
+    gameCombatTime.value = ''
+  }
+  gameIsActive.value = e.isActive === 'true'
+}
 
-const handleLogLine: EventMap["LogLine"] = (e) => {
-  if (e.line[0] === "00") return;
-  lastLogTime.value =
-    e?.line?.[1]?.match(/(?<=T)\d\d:\d\d:\d\d\.\d\d\d/)?.[0] ?? "";
-};
+const handleLogLine: EventMap['LogLine'] = (e) => {
+  if (e.line[0] === '00')
+    return
+  lastLogTime.value
+    = e?.line?.[1]?.match(/(?<=T)\d\d:\d\d:\d\d\.\d\d\d/)?.[0] ?? ''
+}
 
-addOverlayListener("CombatData", handleCombatData);
-addOverlayListener("LogLine", handleLogLine);
+addOverlayListener('CombatData', handleCombatData)
+addOverlayListener('LogLine', handleLogLine)
 // startOverlayEvents();
 </script>
 

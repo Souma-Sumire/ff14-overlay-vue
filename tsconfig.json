@@ -1,20 +1,20 @@
 {
   "compilerOptions": {
     "target": "es2017",
-    "lib": ["esnext", "dom", "ESNext.String"],
     "jsx": "preserve",
-    "module": "esnext",
+    "lib": ["esnext", "dom", "ESNext.String"],
     "baseUrl": "./",
+    "module": "esnext",
+    "moduleResolution": "Node",
     "paths": {
       "@": ["src"],
       "@/*": ["src/*"]
     },
-    "types": ["node"],
     "resolveJsonModule": true,
-    "moduleResolution": "Node",
+    "types": ["node"],
+    "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "strict": true,
     "skipLibCheck": false
   },
   "include": [
@@ -27,8 +27,6 @@
     "src/**/*.vue"
   ],
   "exclude": [
-    "./eslint",
-    "./.eslintrc.cjs",
     "./dist",
     "**/*.spec.ts",
     "cactbot",

@@ -1,194 +1,66 @@
-<template>
-  <div id="warpper" :style="stageStyle">
-    <header>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="icon clock"
-        width="60"
-        height="70"
-        viewBox="0 0 60 70"
-        fill="none"
-      >
-        <path
-          d="M53.5685 11.7169L58.2818 16.4303L53.4385 21.2738C58.2244 27.2645 60.5349 34.8603 59.8954 42.5013C59.256 50.1423 55.7152 57.2485 50.0001 62.3603C44.2851 67.4722 36.8297 70.2018 29.1652 69.9884C21.5006 69.775 14.2086 66.6349 8.7868 61.213C3.36502 55.7911 0.224998 48.499 0.0116294 40.8342C-0.201739 33.1695 2.52774 25.7139 7.63949 19.9988C12.7512 14.2836 19.8572 10.7427 27.4981 10.1033C35.1389 9.46381 42.7346 11.7743 48.7252 16.5603L53.5685 11.7169ZM38.9319 61.5579C44.2831 59.341 48.6184 55.2129 51.0947 49.9765C53.5711 44.7402 54.0113 38.77 52.3298 33.2271C50.6483 27.6841 46.9654 22.9648 41.9972 19.9868C37.0291 17.0089 31.1309 15.9854 25.4499 17.1152C19.7689 18.2451 14.7113 21.4476 11.2606 26.0999C7.80989 30.7522 6.2129 36.5217 6.7802 42.2862C7.34751 48.0507 10.0386 53.3982 14.33 57.2885C18.6213 61.1788 24.2063 63.3339 29.9985 63.3346C33.063 63.3346 36.0974 62.7308 38.9285 61.5579H38.9319ZM33.3319 23.3338V43.3342H26.6652V23.3338H33.3319ZM43.3318 0V6.6668H16.6652V0H43.3318Z"
-          fill="url(#paint0_linear_2392_974)"
-        />
-        <path
-          d="M53.5685 11.7169L58.2818 16.4303L53.4385 21.2738C58.2244 27.2645 60.5349 34.8603 59.8954 42.5013C59.256 50.1423 55.7152 57.2485 50.0001 62.3603C44.2851 67.4722 36.8297 70.2018 29.1652 69.9884C21.5006 69.775 14.2086 66.6349 8.7868 61.213C3.36502 55.7911 0.224998 48.499 0.0116294 40.8342C-0.201739 33.1695 2.52774 25.7139 7.63949 19.9988C12.7512 14.2836 19.8572 10.7427 27.4981 10.1033C35.1389 9.46381 42.7346 11.7743 48.7252 16.5603L53.5685 11.7169ZM38.9319 61.5579C44.2831 59.341 48.6184 55.2129 51.0947 49.9765C53.5711 44.7402 54.0113 38.77 52.3298 33.2271C50.6483 27.6841 46.9654 22.9648 41.9972 19.9868C37.0291 17.0089 31.1309 15.9854 25.4499 17.1152C19.7689 18.2451 14.7113 21.4476 11.2606 26.0999C7.80989 30.7522 6.2129 36.5217 6.7802 42.2862C7.34751 48.0507 10.0386 53.3982 14.33 57.2885C18.6213 61.1788 24.2063 63.3339 29.9985 63.3346C33.063 63.3346 36.0974 62.7308 38.9285 61.5579H38.9319ZM33.3319 23.3338V43.3342H26.6652V23.3338H33.3319ZM43.3318 0V6.6668H16.6652V0H43.3318Z"
-          fill="white"
-        />
-        <defs>
-          <linearGradient
-            id="paint0_linear_2392_974"
-            x1="0"
-            y1="0"
-            x2="62.1639"
-            y2="69.6625"
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop stop-color="white" />
-            <stop offset="0.884426" stop-color="white" stop-opacity="0" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <aside>
-        <span>COMBAT</span>
-        <span>TIMELINE</span>
-      </aside>
-      <article>{{ momentFilter }}</article>
-    </header>
-    <main id="main" :style="{ overflowY: enablescrollBar ? 'auto' : 'hidden' }">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="35"
-        viewBox="0 0 38 22"
-        fill="none"
-        class="icon position"
-        :style="{
-          top: iconPosTop - mainTranslateY + 'px',
-          opacity: combatDuration,
-        }"
-      >
-        <path
-          d="M16.7974 20.3694C15.1176 21.4034 13.1389 22 11.0205 22C4.93406 22 -7.46378e-07 17.0751 -4.80825e-07 11C-2.15273e-07 4.92487 4.93406 -1.44536e-06 11.0205 -1.17931e-06C12.8556 -1.0991e-06 14.586 0.447694 16.1079 1.23963L37.9014 11.0859L37.7156 11.0908L38 11.0872L16.7974 20.3694ZM4.00746 11C4.00746 14.866 7.14732 18 11.0205 18C14.8937 18 18.0336 14.866 18.0336 11C18.0336 7.13401 14.8937 4 11.0205 4C7.14732 4 4.00747 7.13401 4.00746 11Z"
-          fill="white"
-        />
-      </svg>
-      <ul :style="{ transform: `translateY(${-mainTranslateY}px)` }">
-        <li
-          v-for="(item, index) in programme.list"
-          :key="index"
-          :style="
-            Object.assign(stageSplit(item.text), {
-              height: programme.style.lineHeight + 'px',
-            })
-          "
-          :class="[
-            stageRegexp.test(item.text) ? 'stage' : 'normal',
-            item.className,
-          ]"
-        >
-          {{ item.text }}
-          <span
-            v-show="item.timeSeconds && item.timeSeconds > 0 && item.timeFormat"
-            class="auxiliary"
-            >{{ item.timeFormat }}</span
-          >
-        </li>
-      </ul>
-      <span
-        :style="{
-          width: decorativeLineHeight + 'px',
-          top: `${
-            programme.style.lineHeight + 25 * 1.5 - 5 - mainTranslateY
-          }px`,
-        }"
-      >
-        {{ "-".repeat(299) }}</span
-      >
-    </main>
-  </div>
-  <aside id="settings" v-show="showSettings">
-    <p><button @click="test()">10倍速测试</button></p>
-    <p>
-      正文模板
-      <button @click="clearData()">恢复默认正文</button>
-    </p>
-    <textarea cols="80" rows="20" v-model="programme.inputRaw"></textarea>
-
-    <p>
-      总缩放<input
-        type="number"
-        v-model="programme.style.scale"
-        step="0.1"
-        min="0.5"
-      />
-    </p>
-    <p>
-      每行高<input
-        type="number"
-        v-model="programme.style.lineHeight"
-        step="1"
-        min="20"
-      />
-    </p>
-    <p>
-      允许用户滚动<input
-        type="checkbox"
-        v-model="enablescrollBar"
-      />（该选项不会保存）
-    </p>
-    <p>
-      自定义CSS
-      <button @click="clearStyle()">恢复默认CSS</button>
-    </p>
-    <textarea
-      cols="80"
-      rows="30"
-      v-model="programme.style.customCSS"
-    ></textarea>
-  </aside>
-</template>
-
+<!-- eslint-disable no-alert -->
+<!-- eslint-disable regexp/no-super-linear-backtracking -->
+<!-- eslint-disable regexp/no-misleading-capturing-group -->
 <script lang="ts" setup>
-import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
-import moment from "moment";
+import moment from 'moment'
+import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
-type Programme = {
-  text: string;
-  timeSeconds?: number;
-  timeFormat?: string;
-  className?: string;
-};
+interface Programme {
+  text: string
+  timeSeconds?: number
+  timeFormat?: string
+  className?: string
+}
 
 const programme = reactive({
   list: [] as Programme[],
-  inputRaw: "",
-  style: {} as { scale: number; lineHeight: number; customCSS: string },
-});
+  inputRaw: '',
+  style: {} as { scale: number, lineHeight: number, customCSS: string },
+})
 
-const iconPosTop = ref(0);
-const inACTCombat = ref(false);
-const combatDuration = ref(0);
-const showSettings = ref(true);
-const mainTranslateY = ref(0);
-let combatDurationTimer: number;
-let testTimer: number;
+const iconPosTop = ref(0)
+const inACTCombat = ref(false)
+const combatDuration = ref(0)
+const showSettings = ref(true)
+const mainTranslateY = ref(0)
+let combatDurationTimer: NodeJS.Timeout
+let testTimer: NodeJS.Timeout
 const stageStyle = computed(() => {
   return {
-    transform: `scale(${programme.style.scale})`,
-    "--stage-programme-height": programme.style.lineHeight,
-  };
-});
-const enablescrollBar = ref(false);
-const stageRegexp = /^(P\d|阶段)/;
+    'transform': `scale(${programme.style.scale})`,
+    '--stage-programme-height': programme.style.lineHeight,
+  }
+})
+const enablescrollBar = ref(false)
+const stageRegexp = /^(P\d|阶段)/
 const decorativeLineHeight = computed(() => {
-  return programme.list.length * (programme.style.lineHeight - 1.5) - 5;
-});
+  return programme.list.length * (programme.style.lineHeight - 1.5) - 5
+})
 const momentFilter = computed(() => {
-  const time = moment.duration(combatDuration.value, "seconds");
+  const time = moment.duration(combatDuration.value, 'seconds')
   return moment({
     h: time.hours(),
     m: time.minutes(),
     s: time.seconds(),
-  }).format("mm:ss");
-});
+  }).format('mm:ss')
+})
 
 function init() {
-  initValue();
-  addOverlayListener("onInCombatChangedEvent", handleInCombatChanged);
-  addEventListener("onOverlayStateUpdate", (e: unknown) => {
+  initValue()
+  addOverlayListener('onInCombatChangedEvent', handleInCombatChanged)
+  addEventListener('onOverlayStateUpdate', (e: unknown) => {
     showSettings.value = !(e as { detail: { isLocked: boolean } }).detail
-      .isLocked;
-  });
+      .isLocked
+  })
   // startOverlayEvents();
 }
 function loadData() {
-  const _ = localStorage.getItem("programmeData");
-  const _2 = localStorage.getItem("programmeStyle");
+  const _ = localStorage.getItem('programmeData')
+  const _2 = localStorage.getItem('programmeStyle')
   if (_) {
-    programme.inputRaw = JSON.parse(_);
-  } else {
+    programme.inputRaw = JSON.parse(_)
+  }
+  else {
     programme.inputRaw = `0 阶段 - 1
 00:11.4 "深度污浊" class="AoE"
 00:21.6 "双重冲击" class="TankBurster"
@@ -231,13 +103,15 @@ function loadData() {
 08:21.2 "连贯攻击" class="Shared"
 08:54.6 "分离"
 09:06.9 "污水喷发（狂暴）" class="Enrage"
-`;
+`
   }
   if (_2) {
-    const _2JSON = JSON.parse(_2);
-    if (_2JSON.scale < 0.5) _2JSON.scale = 1;
-    programme.style = Object.assign(programme.style, _2JSON);
-  } else {
+    const _2JSON = JSON.parse(_2)
+    if (_2JSON.scale < 0.5)
+      _2JSON.scale = 1
+    programme.style = Object.assign(programme.style, _2JSON)
+  }
+  else {
     programme.style = {
       scale: 1,
       lineHeight: 40,
@@ -306,147 +180,289 @@ header > article {
   /* color: var(--color-enrage); */
 }
 `,
-    };
+    }
   }
 }
-init();
-loadData();
+init()
+loadData()
 
 watchEffect(() => {
   const result: Programme[] = [];
   [
     ...programme.inputRaw.matchAll(
-      /^([ \t　]*(?<time>[:：\d.]+) +)?"?(?<action>.+?)"?(?: *class="(?<className>[^"]+)")?$/gm
+      /^([ \t\u3000]*(?<time>[:：\d.]+) +)?"?(?<action>.+?)"?(?: *class="(?<className>[^"]+)")?$/gm,
     ),
   ].forEach((v) => {
-    let t: any = v.groups?.time;
-    if (t?.includes(":")) {
-      let decimal = 0;
-      if (t?.includes(".")) {
-        decimal = Number(t.substr(t.lastIndexOf(".") + 1) / 10);
-        t = t.substring(0, t.lastIndexOf("."));
+    let t: any = v.groups?.time
+    if (t?.includes(':')) {
+      let decimal = 0
+      if (t?.includes('.')) {
+        decimal = Number(t.substr(t.lastIndexOf('.') + 1) / 10)
+        t = t.substring(0, t.lastIndexOf('.'))
       }
-      t = moment.duration(t).as("seconds") / 60 + decimal;
-    } else {
-      t = t ? Number(t) : null;
+      t = moment.duration(t).as('seconds') / 60 + decimal
     }
-    const time = moment.duration(t, "seconds");
+    else {
+      t = t ? Number(t) : null
+    }
+    const time = moment.duration(t, 'seconds')
     const timeFormat = moment({
       h: time.hours(),
       m: time.minutes(),
       s: time.seconds(),
-    }).format("mm:ss");
+    }).format('mm:ss')
     result.push({
       text: v.groups!.action,
       timeSeconds: t?.toFixed(1) ?? null,
-      timeFormat: timeFormat,
-      className: v?.groups?.className ?? "",
-    });
-  });
-  programme.list = result;
-  localStorage.setItem("programmeData", JSON.stringify(programme.inputRaw));
-  localStorage.setItem("programmeStyle", JSON.stringify(programme.style));
+      timeFormat,
+      className: v?.groups?.className ?? '',
+    })
+  })
+  programme.list = result
+  localStorage.setItem('programmeData', JSON.stringify(programme.inputRaw))
+  localStorage.setItem('programmeStyle', JSON.stringify(programme.style))
   {
-    document.querySelector("#styleHTML")?.remove();
-    const styleHTML = document.createElement("style");
-    styleHTML.setAttribute("type", `text/css`);
-    styleHTML.id = "styleHTML";
-    styleHTML.innerHTML = programme.style.customCSS;
-    document.body.append(styleHTML);
+    document.querySelector('#styleHTML')?.remove()
+    const styleHTML = document.createElement('style')
+    styleHTML.setAttribute('type', `text/css`)
+    styleHTML.id = 'styleHTML'
+    styleHTML.innerHTML = programme.style.customCSS
+    document.body.append(styleHTML)
   }
-});
+})
 function stageSplit(str: string) {
   if (stageRegexp.test(str))
-    return { fontSize: "18px", justifyContent: "center" };
-  return {};
+    return { fontSize: '18px', justifyContent: 'center' }
+  return {}
 }
 
 function handleInCombatChanged(ev: {
-  type: "onInCombatChangedEvent";
+  type: 'onInCombatChangedEvent'
   detail: {
-    inGameCombat: boolean;
-    inACTCombat: boolean;
-  };
-}) {
-  if (!inACTCombat.value && ev.detail.inACTCombat)
-    combatDurationTimer = setInterval(() => {
-      oneSecond();
-    }, 1000);
-  if (inACTCombat.value && !ev.detail.inACTCombat) {
-    clearInterval(combatDurationTimer);
-    initValue();
+    inGameCombat: boolean
+    inACTCombat: boolean
   }
-  inACTCombat.value = ev.detail.inACTCombat;
+}) {
+  if (!inACTCombat.value && ev.detail.inACTCombat) {
+    combatDurationTimer = setInterval(() => {
+      oneSecond()
+    }, 1000)
+  }
+  if (inACTCombat.value && !ev.detail.inACTCombat) {
+    clearInterval(combatDurationTimer)
+    initValue()
+  }
+  inACTCombat.value = ev.detail.inACTCombat
 }
 
 function test() {
-  initValue();
+  initValue()
   testTimer = setInterval(() => {
-    oneSecond();
-  }, 100);
+    oneSecond()
+  }, 100)
 }
 
 function initValue() {
-  clearInterval(testTimer);
-  inACTCombat.value = false;
-  combatDuration.value = 0;
-  mainTranslateY.value = 0;
-  iconPosTop.value = programme.style.lineHeight;
+  clearInterval(testTimer)
+  inACTCombat.value = false
+  combatDuration.value = 0
+  mainTranslateY.value = 0
+  iconPosTop.value = programme.style.lineHeight
 }
 
 function oneSecond() {
-  combatDuration.value++;
+  combatDuration.value++
   for (let i = 0; i < programme.list.length; i++) {
     if (
-      parseInt(programme.list[i].timeSeconds?.toString() ?? "-1") ===
-      combatDuration.value
+      Number.parseInt(programme.list[i].timeSeconds?.toString() ?? '-1')
+      === combatDuration.value
     ) {
-      iconPosTop.value = programme.style.lineHeight * (i + 1);
+      iconPosTop.value = programme.style.lineHeight * (i + 1)
       if (i > 1 && stageRegexp.test(programme.list[i - 1].text)) {
         mainTranslateY.value = calculateOffset(
-          programme.style.lineHeight * (i - 2.5)
-        );
-      } else {
-        //阶段过长时进行滚动
+          programme.style.lineHeight * (i - 2.5),
+        )
+      }
+      else {
+        // 阶段过长时进行滚动
         if (
-          mainTranslateY.value + 650 - programme.style.lineHeight * 2.5 <
-          programme.style.lineHeight * (i + 1)
+          mainTranslateY.value + 650 - programme.style.lineHeight * 2.5
+          < programme.style.lineHeight * (i + 1)
         ) {
           mainTranslateY.value = calculateOffset(
-            programme.style.lineHeight * (i - 2.5)
-          );
+            programme.style.lineHeight * (i - 2.5),
+          )
         }
       }
-      break;
+      break
     }
   }
 
   function calculateOffset(distance: number) {
-    const max =
-      document.querySelector<HTMLUListElement>("#main>ul")!.scrollHeight -
-      650 +
-      programme.style.lineHeight * 1.5;
-    if (distance >= max) distance = max;
-    return distance;
+    const max
+      = document.querySelector<HTMLUListElement>('#main>ul')!.scrollHeight
+      - 650
+      + programme.style.lineHeight * 1.5
+    if (distance >= max)
+      distance = max
+    return distance
   }
 }
 
 function clearData() {
-  const a = confirm("确定恢复模板字符串为默认设置吗？");
+  const a = confirm('确定恢复模板字符串为默认设置吗？')
   if (a) {
-    localStorage.removeItem("programmeData");
-    loadData();
+    localStorage.removeItem('programmeData')
+    loadData()
   }
 }
 
 function clearStyle() {
-  const a = confirm("确定恢复自定义CSS为默认设置吗？");
+  const a = confirm('确定恢复自定义CSS为默认设置吗？')
   if (a) {
-    localStorage.removeItem("programmeStyle");
-    loadData();
+    localStorage.removeItem('programmeStyle')
+    loadData()
   }
 }
 </script>
+
+<template>
+  <div id="warpper" :style="stageStyle">
+    <header>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="icon clock"
+        width="60"
+        height="70"
+        viewBox="0 0 60 70"
+        fill="none"
+      >
+        <path
+          d="M53.5685 11.7169L58.2818 16.4303L53.4385 21.2738C58.2244 27.2645 60.5349 34.8603 59.8954 42.5013C59.256 50.1423 55.7152 57.2485 50.0001 62.3603C44.2851 67.4722 36.8297 70.2018 29.1652 69.9884C21.5006 69.775 14.2086 66.6349 8.7868 61.213C3.36502 55.7911 0.224998 48.499 0.0116294 40.8342C-0.201739 33.1695 2.52774 25.7139 7.63949 19.9988C12.7512 14.2836 19.8572 10.7427 27.4981 10.1033C35.1389 9.46381 42.7346 11.7743 48.7252 16.5603L53.5685 11.7169ZM38.9319 61.5579C44.2831 59.341 48.6184 55.2129 51.0947 49.9765C53.5711 44.7402 54.0113 38.77 52.3298 33.2271C50.6483 27.6841 46.9654 22.9648 41.9972 19.9868C37.0291 17.0089 31.1309 15.9854 25.4499 17.1152C19.7689 18.2451 14.7113 21.4476 11.2606 26.0999C7.80989 30.7522 6.2129 36.5217 6.7802 42.2862C7.34751 48.0507 10.0386 53.3982 14.33 57.2885C18.6213 61.1788 24.2063 63.3339 29.9985 63.3346C33.063 63.3346 36.0974 62.7308 38.9285 61.5579H38.9319ZM33.3319 23.3338V43.3342H26.6652V23.3338H33.3319ZM43.3318 0V6.6668H16.6652V0H43.3318Z"
+          fill="url(#paint0_linear_2392_974)"
+        />
+        <path
+          d="M53.5685 11.7169L58.2818 16.4303L53.4385 21.2738C58.2244 27.2645 60.5349 34.8603 59.8954 42.5013C59.256 50.1423 55.7152 57.2485 50.0001 62.3603C44.2851 67.4722 36.8297 70.2018 29.1652 69.9884C21.5006 69.775 14.2086 66.6349 8.7868 61.213C3.36502 55.7911 0.224998 48.499 0.0116294 40.8342C-0.201739 33.1695 2.52774 25.7139 7.63949 19.9988C12.7512 14.2836 19.8572 10.7427 27.4981 10.1033C35.1389 9.46381 42.7346 11.7743 48.7252 16.5603L53.5685 11.7169ZM38.9319 61.5579C44.2831 59.341 48.6184 55.2129 51.0947 49.9765C53.5711 44.7402 54.0113 38.77 52.3298 33.2271C50.6483 27.6841 46.9654 22.9648 41.9972 19.9868C37.0291 17.0089 31.1309 15.9854 25.4499 17.1152C19.7689 18.2451 14.7113 21.4476 11.2606 26.0999C7.80989 30.7522 6.2129 36.5217 6.7802 42.2862C7.34751 48.0507 10.0386 53.3982 14.33 57.2885C18.6213 61.1788 24.2063 63.3339 29.9985 63.3346C33.063 63.3346 36.0974 62.7308 38.9285 61.5579H38.9319ZM33.3319 23.3338V43.3342H26.6652V23.3338H33.3319ZM43.3318 0V6.6668H16.6652V0H43.3318Z"
+          fill="white"
+        />
+        <defs>
+          <linearGradient
+            id="paint0_linear_2392_974"
+            x1="0"
+            y1="0"
+            x2="62.1639"
+            y2="69.6625"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stop-color="white" />
+            <stop offset="0.884426" stop-color="white" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <aside>
+        <span>COMBAT</span>
+        <span>TIMELINE</span>
+      </aside>
+      <article>{{ momentFilter }}</article>
+    </header>
+    <main id="main" :style="{ overflowY: enablescrollBar ? 'auto' : 'hidden' }">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="35"
+        viewBox="0 0 38 22"
+        fill="none"
+        class="icon position"
+        :style="{
+          top: `${iconPosTop - mainTranslateY}px`,
+          opacity: combatDuration,
+        }"
+      >
+        <path
+          d="M16.7974 20.3694C15.1176 21.4034 13.1389 22 11.0205 22C4.93406 22 -7.46378e-07 17.0751 -4.80825e-07 11C-2.15273e-07 4.92487 4.93406 -1.44536e-06 11.0205 -1.17931e-06C12.8556 -1.0991e-06 14.586 0.447694 16.1079 1.23963L37.9014 11.0859L37.7156 11.0908L38 11.0872L16.7974 20.3694ZM4.00746 11C4.00746 14.866 7.14732 18 11.0205 18C14.8937 18 18.0336 14.866 18.0336 11C18.0336 7.13401 14.8937 4 11.0205 4C7.14732 4 4.00747 7.13401 4.00746 11Z"
+          fill="white"
+        />
+      </svg>
+      <ul :style="{ transform: `translateY(${-mainTranslateY}px)` }">
+        <li
+          v-for="(item, index) in programme.list"
+          :key="index"
+          :style="
+            Object.assign(stageSplit(item.text), {
+              height: `${programme.style.lineHeight}px`,
+            })
+          "
+          :class="[
+            stageRegexp.test(item.text) ? 'stage' : 'normal',
+            item.className,
+          ]"
+        >
+          {{ item.text }}
+          <span
+            v-show="item.timeSeconds && item.timeSeconds > 0 && item.timeFormat"
+            class="auxiliary"
+          >{{ item.timeFormat }}</span>
+        </li>
+      </ul>
+      <span
+        :style="{
+          width: `${decorativeLineHeight}px`,
+          top: `${
+            programme.style.lineHeight + 25 * 1.5 - 5 - mainTranslateY
+          }px`,
+        }"
+      >
+        {{ "-".repeat(299) }}</span>
+    </main>
+  </div>
+  <aside v-show="showSettings" id="settings">
+    <p>
+      <button @click="test()">
+        10倍速测试
+      </button>
+    </p>
+    <p>
+      正文模板
+      <button @click="clearData()">
+        恢复默认正文
+      </button>
+    </p>
+    <textarea v-model="programme.inputRaw" cols="80" rows="20" />
+
+    <p>
+      总缩放<input
+        v-model="programme.style.scale"
+        type="number"
+        step="0.1"
+        min="0.5"
+      >
+    </p>
+    <p>
+      每行高<input
+        v-model="programme.style.lineHeight"
+        type="number"
+        step="1"
+        min="20"
+      >
+    </p>
+    <p>
+      允许用户滚动<input
+        v-model="enablescrollBar"
+        type="checkbox"
+      >（该选项不会保存）
+    </p>
+    <p>
+      自定义CSS
+      <button @click="clearStyle()">
+        恢复默认CSS
+      </button>
+    </p>
+    <textarea
+      v-model="programme.style.customCSS"
+      cols="80"
+      rows="30"
+    />
+  </aside>
+</template>
 
 <style lang="scss" scoped>
 $color: rgba(

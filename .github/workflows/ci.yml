@@ -6,12 +6,12 @@ on:
     branches:
       - main
     paths-ignore:
-      - "*.md"
+      - '*.md'
   pull_request:
     branches:
       - main
     paths-ignore:
-      - "*.md"
+      - '*.md'
     types:
       - closed
 
@@ -33,7 +33,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18.16"
+          node-version: '18.16'
 
       - name: Install Dependencies
         run: |

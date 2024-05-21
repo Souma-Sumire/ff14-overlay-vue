@@ -1,9 +1,9 @@
-import { loadKeigenn } from "@/utils/keigenn";
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia'
+import { loadKeigenn } from '@/utils/keigenn'
 
-const params = useUrlSearchParams("hash");
+const params = useUrlSearchParams('hash')
 
-export const useKeigennRecord2Store = defineStore("keigennRecord2", {
+export const useKeigennRecord2Store = defineStore('keigennRecord2', {
   state: () => {
     return {
       userOptions: {
@@ -21,56 +21,58 @@ export const useKeigennRecord2Store = defineStore("keigennRecord2", {
         statusCN: parseParams(params.statusCN as string, true), // status显示中文化
       },
       isDev: false,
-    };
+    }
   },
   getters: {
     icon4k(state) {
       return state.userOptions.scale >= 2 || window.devicePixelRatio >= 2
-        ? "_hr1"
-        : "";
+        ? '_hr1'
+        : ''
     },
   },
   actions: {
     recheckIsDev() {
-      this.isDev =
-        params.dev === "1" ||
-        (params.dev === undefined &&
-          !window.OverlayPluginApi &&
-          !params.OVERLAY_WS &&
-          !params.HOST_PORT);
-      // console.log("check", this.isDev);
-      if (this.isDev) {
-        setTimeout(this.recheckIsDev, 1000);
-      }
+      this.isDev
+        = params.dev === '1'
+        || (params.dev === undefined
+        && !window.OverlayPluginApi
+        && !params.OVERLAY_WS
+        && !params.HOST_PORT)
+      if (this.isDev)
+        setTimeout(() => this.recheckIsDev(), 1000)
     },
     formatterName(v: string) {
-      return v;
+      return v
     },
     initEnvironment(name: string) {
-      if (/^([A-Z])\S+ ([A-Z])\S+$/.test(name)) {
+      if (/^[A-Z]\S+ [A-Z]\S+$/.test(name)) {
         // 国际服
-        if (this.userOptions.abbrId)
+        if (this.userOptions.abbrId) {
           this.formatterName = (v: string) =>
-            v.replace(/^([A-Z])\S+ ([A-Z])\S+$/, "$1.$2.");
-        loadKeigenn("Global");
-      } else {
+            v.replace(/^([A-Z])\S+ ([A-Z])\S+$/, '$1.$2.')
+        }
+        loadKeigenn('Global')
+      }
+      else {
         // 国服
         if (this.userOptions.abbrId)
-          this.formatterName = (v: string) => v.substring(0, 2);
-        loadKeigenn("Chinese");
+          this.formatterName = (v: string) => v.substring(0, 2)
+        loadKeigenn('Chinese')
       }
     },
   },
-});
+})
 
 function parseParams<T>(v: string, def: T): T {
-  if (typeof def === "boolean") {
-    if (v === "0") return false as T;
-    if (v === "1") return true as T;
-    return def;
+  if (typeof def === 'boolean') {
+    if (v === '0')
+      return false as T
+    if (v === '1')
+      return true as T
+    return def
   }
-  if (typeof def === "number") {
-    return Number.isNaN(+v) ? def : (+v as T);
-  }
-  return def;
+  if (typeof def === 'number')
+    return Number.isNaN(+v) ? def : (+v as T)
+
+  return def
 }

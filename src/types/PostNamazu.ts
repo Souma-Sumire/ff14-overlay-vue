@@ -1,30 +1,30 @@
-import type { PostNamazuCall } from "cactbot/types/event";
+import type { PostNamazuCall } from 'cactbot/types/event'
 
 export interface WayMarkInfo {
-  X: number;
-  Y: number;
-  Z: number;
-  Active: boolean;
-  ID?: number;
+  X: number
+  Y: number
+  Z: number
+  Active: boolean
+  ID?: number
 }
 export type WayMarkKeys =
-  | "A"
-  | "B"
-  | "C"
-  | "D"
-  | "One"
-  | "Two"
-  | "Three"
-  | "Four";
+  | 'A'
+  | 'B'
+  | 'C'
+  | 'D'
+  | 'One'
+  | 'Two'
+  | 'Three'
+  | 'Four'
 
-export type WayMarkJSON = Partial<{ [key in WayMarkKeys]?: WayMarkInfo }>;
-export type PPJSON = WayMarkJSON & { Name?: string; MapID?: number };
+export type WayMarkJSON = Partial<{ [key in WayMarkKeys]?: WayMarkInfo }>
+export type PPJSON = WayMarkJSON & { Name?: string, MapID?: number }
 
 export type QueueArr = {
-  c: PostNamazuCall;
-  p: string;
-  d?: number;
-}[];
+  c: PostNamazuCall
+  p: string
+  d?: number
+}[]
 
 export type Slot =
   | 1
@@ -56,4 +56,4 @@ export type Slot =
   | 27
   | 28
   | 29
-  | 30;
+  | 30

@@ -1,13 +1,15 @@
 {
   "name": "vite-project",
-  "version": "1.0.0",
   "type": "module",
+  "version": "1.0.0",
   "scripts": {
     "dev": "vite",
     "tsc": "vue-tsc --noEmit",
     "build": "vite build",
     "preview": "vite preview",
-    "submodule": "git submodule update --remote"
+    "submodule": "git submodule update --remote",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "@babel/core": "^7.24.5",
@@ -24,7 +26,6 @@
     "animate.css": "^4.1.1",
     "axios": "^1.7.1",
     "clipboard": "^2.0.11",
-    "default-passive-events": "^2.0.0",
     "element-plus": "^2.7.3",
     "github-markdown-css": "^5.5.1",
     "hover.css": "^2.3.2",
@@ -42,16 +43,19 @@
     "xe-utils": "^3.5.26"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.7.2",
+    "@antfu/eslint-config": "^2.18.1",
     "@types/node": "^20.12.12",
     "@typescript-eslint/eslint-plugin": "^7.9.0",
     "@typescript-eslint/parser": "^7.9.0",
+    "@unocss/eslint-plugin": "^0.60.2",
     "@vitejs/plugin-vue": "^4.6.2",
     "@vitejs/plugin-vue-jsx": "^3.1.0",
     "cz-conventional-changelog-zh": "^0.0.2",
     "eslint": "^8.57.0",
     "eslint-plugin-vue": "^9.26.0",
+    "lint-staged": "^15.2.2",
     "sass": "^1.77.2",
+    "simple-git-hooks": "^2.11.1",
     "typescript": "^4.9.5",
     "unocss": "^0.58.9",
     "unplugin-auto-import": "^0.12.2",
@@ -61,6 +65,12 @@
     "vite-plugin-md": "^0.21.5",
     "vite-plugin-pages": "^0.28.0",
     "vite-plugin-style-import": "^2.0.0"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged"
+  },
+  "lint-staged": {
+    "*": "eslint --fix"
   },
   "config": {
     "commitizen": {

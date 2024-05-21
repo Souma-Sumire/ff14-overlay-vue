@@ -1,4 +1,4 @@
-//contentFinderCondition.csv A5: =B5&":"&D5&","
+// contentFinderCondition.csv A5: =B5&":"&D5&","
 const contentFinderCondition: Record<number, number> = {
   0: 0,
   1: 1039,
@@ -981,14 +981,14 @@ const contentFinderCondition: Record<number, number> = {
   978: 1139,
   979: 1179,
   980: 1180,
-};
-const map: Record<number, number> = {};
-for (const key in contentFinderCondition) {
-  map[contentFinderCondition[key]] = Number(key);
 }
+const map: Record<number, number> = {}
+for (const key in contentFinderCondition)
+  map[contentFinderCondition[key]] = Number(key)
+
 export function getMapIDByTerritoryType(territoryType: number): number {
-  return map[territoryType] ?? territoryType;
+  return map[territoryType] ?? territoryType
 }
 export function getTerritoryTypeByMapID(mapID: number): number {
-  return contentFinderCondition[mapID] ?? mapID;
+  return contentFinderCondition[mapID] ?? mapID
 }

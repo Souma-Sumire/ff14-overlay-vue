@@ -1,7 +1,23 @@
+<script setup lang="ts">
+import { useKeigennRecord2Store } from '@/store/keigennRecord2'
+import type { PerformanceType, RowVO } from '@/types/keigennRecord2'
+import { translationFlags } from '@/utils/flags'
+import { multiplierEffect } from '@/utils/keigenn'
+import { handleImgError } from '@/utils/xivapi'
+
+const props = defineProps({
+  row: { type: Object as () => RowVO, required: true },
+})
+const keigennRecord2Store = useKeigennRecord2Store()
+const icon4k = keigennRecord2Store.icon4k
+</script>
+
 <template>
-  <div v-if="props.row.type === 'dot'">（不支持）</div>
+  <div v-if="props.row.type === 'dot'">
+    （不支持）
+  </div>
   <div v-else>
-    <span v-for="(keigenn, index) in props.row.keigenns" :key="index">
+    <span v-for="(keigenn, index) in (props.row.keigenns)" :key="index">
       <span
         class="status"
         :title="`${keigenn.name}(${keigenn.source})`"
@@ -10,13 +26,13 @@
       >
         <img
           :class="`statusIcon ${multiplierEffect(
-                    keigenn.performance[row.type as keyof PerformanceType],
-                  )}`"
+            keigenn.performance[row.type as keyof PerformanceType],
+          )}`"
           :src="`//cafemaker.wakingsands.com/i/${keigenn.fullIcon}${icon4k}.png`"
           :alt="keigenn.effect"
-          @error="handleImgError"
           loading="lazy"
-        />
+          @error="handleImgError"
+        >
       </span>
     </span>
     <span>
@@ -24,19 +40,5 @@
     </span>
   </div>
 </template>
-
-<script setup lang="ts">
-import { useKeigennRecord2Store } from "@/store/keigennRecord2";
-import type { RowVO, PerformanceType } from "@/types/keigennRecord2";
-import { translationFlags } from "@/utils/flags";
-import { multiplierEffect } from "@/utils/keigenn";
-import { handleImgError } from "@/utils/xivapi";
-
-const keigennRecord2Store = useKeigennRecord2Store();
-const icon4k = keigennRecord2Store.icon4k;
-const props = defineProps({
-  row: { type: Object as () => RowVO, required: true },
-});
-</script>
 
 <style scoped lang="scss"></style>

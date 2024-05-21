@@ -1,6 +1,5 @@
 {
   "recommendations": [
-    "biomejs.biome",
     "dbaeumer.vscode-eslint",
     "antfu.vite",
     "antfu.unocss",

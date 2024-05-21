@@ -1,55 +1,56 @@
 <script setup lang="ts">
-import { getActionChinese } from "@/resources/actionChinese";
-import { params } from "@/utils/queryParams";
-import type { RemovableRef } from "@vueuse/core";
-import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
+import type { RemovableRef } from '@vueuse/core'
+import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
+import { getActionChinese } from '@/resources/actionChinese'
+
+const params = new URLSearchParams(window.location.href.split('?')[1])
 
 class Cast {
-  name: string;
-  startTime: number;
-  castTime: number;
-  overTime: number;
-  actionId: number;
+  name: string
+  startTime: number
+  castTime: number
+  overTime: number
+  actionId: number
   constructor(line: string[]) {
-    this.name = getActionChinese(Number.parseInt(line[4], 16)) ?? line[4];
-    this.startTime = Date.now();
-    this.castTime = Number(line[8]) * 1000;
-    this.overTime = this.startTime + this.castTime;
-    this.actionId = Number.parseInt(line[4], 16);
+    this.name = getActionChinese(Number.parseInt(line[4], 16)) ?? line[4]
+    this.startTime = Date.now()
+    this.castTime = Number(line[8]) * 1000
+    this.overTime = this.startTime + this.castTime
+    this.actionId = Number.parseInt(line[4], 16)
   }
 }
 
-const data: { targetCast?: Cast } = reactive({ targetCast: undefined });
+const data: { targetCast?: Cast } = reactive({ targetCast: undefined })
 const targetOptions = [
   {
-    value: "Target",
-    label: "当前目标",
+    value: 'Target',
+    label: '当前目标',
   },
   {
-    value: "Focus",
-    label: "焦点目标",
+    value: 'Focus',
+    label: '焦点目标',
   },
-];
+]
 const settings: RemovableRef<{
-  width: number;
-  showCountdown: boolean;
-  showProgress: boolean;
-  showActionChinese: boolean;
-  showActionID: boolean;
-  offsetCountdownX: number;
-  offsetCountdownY: number;
-  offsetActionChineseX: number;
-  offsetActionChineseY: number;
-  offsetActionIDX: number;
-  offsetActionIDY: number;
-  ping: number;
-  keep: number;
-  fontSizeCountDown: number;
-  fontSizeActionName: number;
-  fontFamily: string;
-  targetKey: "Target" | "Focus";
+  width: number
+  showCountdown: boolean
+  showProgress: boolean
+  showActionChinese: boolean
+  showActionID: boolean
+  offsetCountdownX: number
+  offsetCountdownY: number
+  offsetActionChineseX: number
+  offsetActionChineseY: number
+  offsetActionIDX: number
+  offsetActionIDY: number
+  ping: number
+  keep: number
+  fontSizeCountDown: number
+  fontSizeActionName: number
+  fontFamily: string
+  targetKey: 'Target' | 'Focus'
 }> = useStorage(
-  "castingToChinese",
+  'castingToChinese',
   {
     width: 283,
     showCountdown: true,
@@ -66,66 +67,67 @@ const settings: RemovableRef<{
     keep: 100,
     fontSizeCountDown: 17,
     fontSizeActionName: 20,
-    fontFamily: "SmartisanHei",
-    targetKey: "Target",
+    fontFamily: 'SmartisanHei',
+    targetKey: 'Target',
   },
   localStorage,
-  { mergeDefaults: true }
-);
-const windowWidth = computed(() => `${settings.value.width}px`);
-const opacityCountdown = computed(() => (settings.value.showCountdown ? 1 : 0));
-const opacityProgress = computed(() => (settings.value.showProgress ? 1 : 0));
+  { mergeDefaults: true },
+)
+const windowWidth = computed(() => `${settings.value.width}px`)
+const opacityCountdown = computed(() => (settings.value.showCountdown ? 1 : 0))
+const opacityProgress = computed(() => (settings.value.showProgress ? 1 : 0))
 const opacityActionChinese = computed(() =>
-  settings.value.showActionChinese ? 1 : 0
-);
-const opacityActionID = computed(() => (settings.value.showActionID ? 1 : 0));
-const offsetCountdownX = computed(() => `${settings.value.offsetCountdownX}px`);
-const offsetCountdownY = computed(() => `${settings.value.offsetCountdownY}px`);
+  settings.value.showActionChinese ? 1 : 0,
+)
+const opacityActionID = computed(() => (settings.value.showActionID ? 1 : 0))
+const offsetCountdownX = computed(() => `${settings.value.offsetCountdownX}px`)
+const offsetCountdownY = computed(() => `${settings.value.offsetCountdownY}px`)
 const offsetActionChineseX = computed(
-  () => `${settings.value.offsetActionChineseX}px`
-);
+  () => `${settings.value.offsetActionChineseX}px`,
+)
 const offsetActionChineseY = computed(
-  () => `${settings.value.offsetActionChineseY}px`
-);
-const offsetActionIDX = computed(() => `${settings.value.offsetActionIDX}px`);
-const offsetActionIDY = computed(() => `${settings.value.offsetActionIDY}px`);
-const casting = new Map();
-const now = ref(0);
-const ping = settings.value.ping;
+  () => `${settings.value.offsetActionChineseY}px`,
+)
+const offsetActionIDX = computed(() => `${settings.value.offsetActionIDX}px`)
+const offsetActionIDY = computed(() => `${settings.value.offsetActionIDY}px`)
+const casting = new Map()
+const now = ref(0)
+const ping = settings.value.ping
 const showSettings = ref(
-  /^(?:1|true|on)$/i.test(params?.showSettings) ||
-    document.getElementById("unlocked")?.style?.display === "flex"
-);
+  /^(?:1|true|on)$/i.test(params.get('showSettings') || '')
+  || document.getElementById('unlocked')?.style?.display === 'flex',
+)
 
 addOverlayListener(
-  "EnmityTargetData",
-  (e: { Target: { ID: number } | null; Focus: { ID: number } | null }) => {
-    data.targetCast = casting.get(e[settings.value.targetKey]?.ID);
-  }
-);
+  'EnmityTargetData',
+  (e: { Target: { ID: number } | null, Focus: { ID: number } | null }) => {
+    data.targetCast = casting.get(e[settings.value.targetKey]?.ID)
+  },
+)
 
-addOverlayListener("LogLine", (e: { line: string[] }) => {
-  if (e.line[0] === "20")
-    casting.set(Number.parseInt(e.line[2], 16), new Cast(e.line));
-  else if (e.line[0] === "23") casting.delete(Number.parseInt(e.line[2], 16));
-});
+addOverlayListener('LogLine', (e: { line: string[] }) => {
+  if (e.line[0] === '20')
+    casting.set(Number.parseInt(e.line[2], 16), new Cast(e.line))
+  else if (e.line[0] === '23')
+    casting.delete(Number.parseInt(e.line[2], 16))
+})
 
-addOverlayListener("ChangeZone", () => casting.clear());
+addOverlayListener('ChangeZone', () => casting.clear())
 
 // startOverlayEvents();
 
 requestAnimationFrame(function update() {
-  now.value = Date.now();
-  requestAnimationFrame(update);
-});
+  now.value = Date.now()
+  requestAnimationFrame(update)
+})
 
-document.addEventListener("onOverlayStateUpdate", (e) => {
-  showSettings.value = e?.detail?.isLocked === false;
-});
+document.addEventListener('onOverlayStateUpdate', (e) => {
+  showSettings.value = e?.detail?.isLocked === false
+})
 
 function resetSettings() {
-  localStorage.removeItem("castingToChinese");
-  location.reload();
+  localStorage.removeItem('castingToChinese')
+  location.reload()
 }
 </script>
 
@@ -269,9 +271,9 @@ function resetSettings() {
       </form>
       <form class="noCSS">
         <el-popconfirm
-          @confirm="resetSettings"
           :teleported="false"
           title="确定要重置？"
+          @confirm="resetSettings"
         >
           <template #reference>
             <el-button>重置全部用户设置</el-button>
@@ -286,27 +288,27 @@ function resetSettings() {
       :style="{ fontFamily: settings.fontFamily }"
     >
       <el-row>
-        <el-col :span="24" flex justify-end
-          ><div
-            :style="{ fontSize: settings.fontSizeCountDown + 'px' }"
+        <el-col :span="24" flex justify-end>
+          <div
+            :style="{ fontSize: `${settings.fontSizeCountDown}px` }"
             class="countdown"
           >
             {{
               Math.max(
                 ((data.targetCast?.overTime ?? 1) - now - ping) / 1000,
-                0
+                0,
               ).toFixed(2)
             }}
-          </div></el-col
-        >
+          </div>
+        </el-col>
       </el-row>
       <el-progress
         :percentage="
           Math.min(
-            ((now - (data.targetCast?.startTime ?? 1) + ping) /
-              (data.targetCast?.castTime ?? 1)) *
-              100,
-            100
+            ((now - (data.targetCast?.startTime ?? 1) + ping)
+              / (data.targetCast?.castTime ?? 1))
+              * 100,
+            100,
           )
         "
         :stroke-width="8"
@@ -316,23 +318,24 @@ function resetSettings() {
         class="progress"
       />
       <el-row>
-        <el-col :span="24" class="action"
-          ><div class="actionID">
+        <el-col :span="24" class="action">
+          <div class="actionID">
             {{ data.targetCast?.actionId }}({{
               data.targetCast?.actionId.toString(16).toUpperCase()
             }})
           </div>
           <div
-            :style="{ fontSize: settings.fontSizeActionName + 'px' }"
+            :style="{ fontSize: `${settings.fontSizeActionName}px` }"
             class="actionChinese"
           >
             {{ data.targetCast?.name }}
-          </div></el-col
-        >
+          </div>
+        </el-col>
       </el-row>
     </el-main>
   </el-container>
 </template>
+
 <style lang="scss" scoped>
 * {
   user-select: none;

@@ -1,3 +1,12 @@
+<script setup lang="ts">
+import type { RowVO } from '@/types/keigennRecord2'
+import { isLethal } from '@/utils/keigennRecord2'
+
+const props = defineProps({
+  row: { type: Object as () => RowVO, required: true },
+})
+</script>
+
 <template>
   <el-popover
     append-to=".wrapper"
@@ -18,16 +27,8 @@
         </span>
       </span>
     </template>
-    <KeigennRecord2AmountDetails :row="row"></KeigennRecord2AmountDetails>
+    <KeigennRecord2AmountDetails :row="row" />
   </el-popover>
 </template>
-
-<script setup lang="ts">
-import type { RowVO } from "@/types/keigennRecord2";
-import { isLethal } from "@/utils/keigennRecord2";
-const props = defineProps({
-  row: { type: Object as () => RowVO, required: true },
-});
-</script>
 
 <style scoped lang="scss"></style>

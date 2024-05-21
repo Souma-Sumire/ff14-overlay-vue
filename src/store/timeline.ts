@@ -1,8 +1,8 @@
-import { defineStore } from "pinia";
-import Swal from "sweetalert2";
-import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
-import Util from "../utils/util";
-import type { FFIcon } from "@/types/fflogs";
+import { defineStore } from 'pinia'
+import Swal from 'sweetalert2'
+import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
+import Util from '../utils/util'
+import type { FFIcon } from '@/types/fflogs'
 import {
   type ITimeline,
   type ITimelineCondition,
@@ -12,7 +12,7 @@ import {
   TimelineConfigEnum,
   type TimelineConfigTranslate,
   type TimelineConfigValues,
-} from "@/types/timeline";
+} from '@/types/timeline'
 
 class Timeline implements ITimeline {
   constructor(
@@ -22,32 +22,33 @@ class Timeline implements ITimeline {
     codeFight: string,
   ) {
     if (Util.iconToJobEnum(condition.job as FFIcon)) {
-      //突然有一天数据格式不一致了 可能是fflogs改返回值了?
+      // 突然有一天数据格式不一致了 可能是fflogs改返回值了?
       condition.job = Util.jobEnumToJob(
         Util.iconToJobEnum(condition.job as FFIcon),
-      );
+      )
     }
-    this.name = name;
-    this.condition = condition;
-    this.timeline = timeline;
-    this.codeFight = codeFight;
-    this.create = new Date().toLocaleString();
+    this.name = name
+    this.condition = condition
+    this.timeline = timeline
+    this.codeFight = codeFight
+    this.create = new Date().toLocaleString()
   }
-  name: string;
-  condition: ITimelineCondition;
-  timeline: string;
-  codeFight: string;
-  create: string;
+
+  name: string
+  condition: ITimelineCondition
+  timeline: string
+  codeFight: string
+  create: string
 }
 
 const configTranslate: TimelineConfigTranslate = {
-  [TimelineConfigEnum.显示范围]: "显示范围（秒）",
-  [TimelineConfigEnum.变色时间]: "提前变色（秒）",
-  [TimelineConfigEnum.零后持续]: "后续保持（秒）",
-  [TimelineConfigEnum.战前准备]: "倒计时量（秒）",
-  [TimelineConfigEnum.TTS提前量]: "TTS预备（秒）",
+  [TimelineConfigEnum.显示范围]: '显示范围（秒）',
+  [TimelineConfigEnum.变色时间]: '提前变色（秒）',
+  [TimelineConfigEnum.零后持续]: '后续保持（秒）',
+  [TimelineConfigEnum.战前准备]: '倒计时量（秒）',
+  [TimelineConfigEnum.TTS提前量]: 'TTS预备（秒）',
   // [TimelineConfigEnum.刷新频率]: "刷新率（毫秒）",
-};
+}
 
 const configValues: TimelineConfigValues = {
   [TimelineConfigEnum.显示范围]: 120,
@@ -56,27 +57,27 @@ const configValues: TimelineConfigValues = {
   [TimelineConfigEnum.战前准备]: 30,
   [TimelineConfigEnum.TTS提前量]: 1,
   // [TimelineConfigEnum.刷新频率]: 100,
-};
+}
 
 const showStyleTranslate: ShowStyleTranslate = {
-  "--timeline-width": "时间轴宽度",
-  "--font-size": "字体大小",
-  "--normal-scale": "等待缩放",
-  "--up-coming-scale": "来临缩放",
-  "--opacity": "等待不透明度",
-  "--tras-duration": "动画时间",
-};
+  '--timeline-width': '时间轴宽度',
+  '--font-size': '字体大小',
+  '--normal-scale': '等待缩放',
+  '--up-coming-scale': '来临缩放',
+  '--opacity': '等待不透明度',
+  '--tras-duration': '动画时间',
+}
 
 const showStyle: ShowStyle = {
-  "--timeline-width": 180,
-  "--font-size": 18,
-  "--opacity": 0.33,
-  "--normal-scale": 0.5,
-  "--up-coming-scale": 1,
-  "--tras-duration": 1,
-};
+  '--timeline-width': 180,
+  '--font-size': 18,
+  '--opacity': 0.33,
+  '--normal-scale': 0.5,
+  '--up-coming-scale': 1,
+  '--tras-duration': 1,
+}
 
-export const useTimelineStore = defineStore("timeline", {
+export const useTimelineStore = defineStore('timeline', {
   state: () => {
     return {
       // reg: reg,
@@ -84,17 +85,17 @@ export const useTimelineStore = defineStore("timeline", {
       allTimelines: [] as ITimeline[],
       configValues,
       configTranslate,
-      settings: { api: "" },
+      settings: { api: '' },
       filters: {} as Record<string, number[]>,
       showStyle,
       showStyleTranslate,
-    };
+    }
   },
   getters: {},
   actions: {
     newTimeline(
-      title = "Demo",
-      condition: ITimelineCondition = { zoneId: "0", job: "NONE" },
+      title = 'Demo',
+      condition: ITimelineCondition = { zoneId: '0', job: 'NONE' },
       rawTimeline = `# 注释的内容不会被解析
 # "<技能名>"会被解析为图片 紧接着一个波浪线可快捷重复技能名
 -20 "<中间学派>~刷盾"
@@ -107,41 +108,41 @@ export const useTimelineStore = defineStore("timeline", {
 1000 "蛇轴"
 2000 "兽轴"
 `,
-      codeFight = "用户创建",
+      codeFight = '用户创建',
     ): number {
       this.allTimelines.push(
         new Timeline(title, condition, rawTimeline, codeFight),
-      );
-      this.sortTimelines();
-      Swal.fire({
-        position: "center",
-        icon: "success",
+      )
+      this.sortTimelines()
+      void Swal.fire({
+        position: 'center',
+        icon: 'success',
         title: `“${title}”已创建`,
         showConfirmButton: false,
         timer: 1000,
-      });
-      //如果严谨点应该还要比较create 但重复的demo选错又能怎么样呢
+      })
+      // 如果严谨点应该还要比较create 但重复的demo选错又能怎么样呢
       const result = this.allTimelines.findIndex(
-        (t) =>
-          t.timeline === rawTimeline &&
-          t.name === title &&
-          JSON.stringify(t.condition) === JSON.stringify(condition) &&
-          t.codeFight === codeFight,
-      );
-      return result;
+        t =>
+          t.timeline === rawTimeline
+          && t.name === title
+          && JSON.stringify(t.condition) === JSON.stringify(condition)
+          && t.codeFight === codeFight,
+      )
+      return result
     },
     getTimeline(condition: ITimelineCondition): ITimeline[] {
       return this.allTimelines.filter((t) => {
         return (
-          (t.condition.zoneId === "0" ||
-            t.condition.zoneId === condition.zoneId) &&
-          (t.condition.job === "NONE" || t.condition.job === condition.job)
-        );
-      });
+          (t.condition.zoneId === '0'
+          || t.condition.zoneId === condition.zoneId)
+          && (t.condition.job === 'NONE' || t.condition.job === condition.job)
+        )
+      })
     },
     saveTimelineSettings() {
       localStorage.setItem(
-        "timelines",
+        'timelines',
         JSON.stringify({
           allTimelines: this.allTimelines,
           configValues: this.configValues,
@@ -149,19 +150,20 @@ export const useTimelineStore = defineStore("timeline", {
           showStyle: this.showStyle,
           filters: this.filters,
         }),
-      );
+      )
     },
     loadTimelineSettings() {
-      const ls = localStorage.getItem("timelines");
+      const ls = localStorage.getItem('timelines')
       if (ls) {
-        Object.assign(this, JSON.parse(ls));
-        this.sortTimelines();
+        Object.assign(this, JSON.parse(ls))
+        this.sortTimelines()
       }
       for (const v of this.allTimelines) {
-        if (Util.iconToJobEnum(v.condition.job as FFIcon))
+        if (Util.iconToJobEnum(v.condition.job as FFIcon)) {
           v.condition.job = Util.jobEnumToJob(
             Util.iconToJobEnum(v.condition.job as FFIcon),
-          );
+          )
+        }
       }
     },
     sortTimelines() {
@@ -169,75 +171,77 @@ export const useTimelineStore = defineStore("timeline", {
         // a.condition.job === b.condition.job
         //   ? Number(a.condition.zoneId) - Number(b.condition.zoneId)
         //   : Util.jobToJobEnum(a.condition.job) - Util.jobToJobEnum(b.condition.job),
-        if (Number(a.condition.zoneId) === Number(b.condition.zoneId))
+        if (Number(a.condition.zoneId) === Number(b.condition.zoneId)) {
           return (
-            Util.jobToJobEnum(a.condition.job) -
-            Util.jobToJobEnum(b.condition.job)
-          );
-        return Number(a.condition.zoneId) - Number(b.condition.zoneId);
-      });
+            Util.jobToJobEnum(a.condition.job)
+            - Util.jobToJobEnum(b.condition.job)
+          )
+        }
+        return Number(a.condition.zoneId) - Number(b.condition.zoneId)
+      })
     },
     updateFilters(target: string, value: number[]) {
-      this.filters[target as keyof typeof this.filters] = value;
+      this.filters[target] = value
     },
   },
-});
+})
 
 function parseTime(time: string): number {
   const timeFormatType = time.match(
     /^(?<negative>-)?(?<mm>[^:：]+):(?<ss>[^:：]+)$/,
-  );
+  )
   if (timeFormatType) {
     return (
-      Number.parseFloat(timeFormatType.groups?.mm ?? "0") * 60 +
-      Number.parseFloat(timeFormatType.groups?.ss ?? "0") *
-        (timeFormatType.groups?.negative ? -1 : 1)
-    );
+      Number.parseFloat(timeFormatType.groups?.mm ?? '0') * 60
+      + Number.parseFloat(timeFormatType.groups?.ss ?? '0')
+      * (timeFormatType.groups?.negative ? -1 : 1)
+    )
   }
-  return Number.parseFloat(time);
+  return Number.parseFloat(time)
 }
 export function parseAction(text: string) {
-  return text.matchAll(/<(?<name>[^<>]*?)!??>(?<repeat>~)?/g);
+  return text.matchAll(/<(?<name>[^<>]*?)!?>(?<repeat>~)?/g)
 }
 
 export async function parseTimeline(
   rawTimeline: string,
 ): Promise<ITimelineLine[]> {
-  const total: ITimelineLine[] = [];
+  const total: ITimelineLine[] = []
   const matchs = [
     ...rawTimeline.matchAll(
+      // eslint-disable-next-line regexp/no-super-linear-backtracking
       /^\s*(?<time>[-:：\d.]+)\s+(?<action>(?:--|["'“”])[^"'\n]+?(?:--|["'“”])).*$/gm,
     ),
-  ];
+  ]
   for (let i = 0; i < matchs.length; i++) {
-    const match = matchs[i];
-    const jump = match[0].match(/(?<=jump ?)[-:：\d.]+/)?.[0];
-    const sync = match[0].match(/(?<=sync(?:\.once)? ?\/).+(?=\/)/)?.[0];
-    const syncOnce = /sync\.once/.test(match[0]);
-    const windowBefore = match[0].match(/(?<=window ?)[-:：\d.]+/)?.[0];
+    const match = matchs[i]
+    const jump = match[0].match(/(?<=jump ?)[-:：\d.]+/)?.[0]
+    const sync = match[0].match(/(?<=sync(?:\.once)? ?\/).+(?=\/)/)?.[0]
+    const syncOnce = /sync\.once/.test(match[0])
+    const windowBefore = match[0].match(/(?<=window ?)[-:：\d.]+/)?.[0]
     const windowAfter = match[0].match(
       /(?<=window ?[-:：\d.]+,)[-:：\d.]+/,
-    )?.[0];
+    )?.[0]
     const tts = match[0].match(/ tts ?["'“”](?<tts>[^"'“”]+)["'“”]/)?.groups
-      ?.tts;
+      ?.tts
     const ttsSim = / tts(?: |$)/.test(match[0])
-      ? Array.from(parseAction(match.groups?.action ?? ""))?.[0]?.groups?.name
-      : undefined;
+      ? Array.from(parseAction(match.groups?.action ?? ''))?.[0]?.groups?.name
+      : undefined
 
     total.push({
-      time: parseTime(match.groups?.time ?? "0"),
-      action: match.groups?.action || "",
+      time: parseTime(match.groups?.time ?? '0'),
+      action: match.groups?.action || '',
       alertAlready: false,
       sync: sync ? new RegExp(sync) : undefined,
-      syncOnce: syncOnce,
+      syncOnce,
       syncAlready: false,
       show: !sync,
-      windowBefore: Number.parseFloat(windowBefore || windowAfter || "2.5"),
-      windowAfter: Number.parseFloat(windowAfter || windowBefore || "2.5"),
+      windowBefore: Number.parseFloat(windowBefore || windowAfter || '2.5'),
+      windowAfter: Number.parseFloat(windowAfter || windowBefore || '2.5'),
       jump: jump ? Number.parseFloat(jump) : undefined,
       tts: tts || ttsSim,
-    });
+    })
   }
-  total.sort((a, b) => a.time - b.time);
-  return total;
+  total.sort((a, b) => a.time - b.time)
+  return total
 }

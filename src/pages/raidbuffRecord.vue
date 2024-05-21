@@ -1,409 +1,279 @@
 <!-- 一坨大屎。。。 -->
-<template>
-  <div class="wrapper" :style="style">
-    <header>
-      <vxe-select
-        v-show="!minimize"
-        v-model="select"
-        size="mini"
-        class="select"
-      >
-        <vxe-option
-          v-for="i in data.length"
-          :key="`${data[i - 1].key}-${data[i - 1].duration}-${
-            data[i - 1].zoneName
-          }`"
-          :value="i - 1"
-          :label="`${data[i - 1].duration} ${data[i - 1].zoneName}`"
-        ></vxe-option>
-      </vxe-select>
-      <vxe-button
-        class="minimize"
-        :icon="minimize ? 'vxe-icon-fullscreen' : 'vxe-icon-minimize'"
-        @click="clickMinimize"
-        :style="{ opacity: minimize ? 0.5 : 1 }"
-      ></vxe-button>
-    </header>
-    <main v-show="!minimize">
-      <vxe-table
-        ref="xTable"
-        size="mini"
-        class="vxe-table"
-        show-overflow="tooltip"
-        round
-        height="100%"
-        :scroll-y="{ enabled: true }"
-        :loading="loading"
-        :show-header="userOptions.showHeader"
-        :data="data[select].table"
-        :row-config="{ isHover: true, height: size.line_height }"
-        :header-cell-style="{
-          padding: '0px',
-        }"
-        @cell-menu="cellContextMenuEvent"
-        :menu-config="menuConfig"
-        @menu-click="contextMenuClickEvent"
-      >
-        <vxe-column
-          :width="size.source"
-          field="source"
-          :title="userOptions.showName ? '友方' : '友'"
-          :filters="sourceOptions"
-          :filter-multiple="false"
-          :resizable="!userOptions.anonymous && !userOptions.abbrId"
-          align="left"
-          header-align="center"
-        >
-          <template #default="{ row }">
-            <Target :row="row"></Target>
-          </template>
-        </vxe-column>
-        <vxe-column
-          :width="size.time"
-          field="time"
-          title="时间"
-          align="center"
-        />
-        <vxe-column
-          :width="size.action"
-          :field="userOptions.actionCN ? 'actionCN' : 'action'"
-          title="技能"
-          :resizable="false"
-          align="right"
-        />
-        <vxe-column :width="size.amount" title="伤害" header-align="center">
-          <template #default="{ row }">
-            <Amount :row="row"></Amount>
-          </template>
-        </vxe-column>
-        <vxe-column
-          :width="size.properties"
-          title="直暴"
-          header-align="center"
-          align="center"
-        >
-          <template #default="{ row }">
-            {{
-              translationFlags(row.properties)
-                .replace(/普通$/, "")
-                .replace("直击", "直　")
-                .replace("暴击", "　暴")
-            }}
-          </template>
-        </vxe-column>
-        <vxe-column title="团辅" align="left">
-          <template #default="{ row }">
-            <StatusShow :row="row"></StatusShow>
-          </template>
-        </vxe-column>
-      </vxe-table>
-    </main>
-  </div>
-  <div v-if="isDev" class="testLog">
-    <testLog
-      @before-handle="beforeHandle"
-      @after-handle="afterHandle"
-      @handle-line="handleLine"
-    ></testLog>
-  </div>
-</template>
-
 <script setup lang="tsx">
-import testLog from "@/components/testLog.vue";
-import NetRegexes from "../../cactbot/resources/netregexes";
-import logDefinitions from "../../cactbot/resources/netlog_defs";
-import {
-  DamageEffect,
-  DamageProperties,
-  DamageType,
-  processAbilityLine,
-  processFlags,
-  translationFlags,
-} from "@/utils/flags";
-import { Ref } from "vue";
-import {
-  VXETable,
+import type { Ref } from 'vue'
+import type {
   VxeTableEvents,
   VxeTableInstance,
   VxeTablePropTypes,
-} from "vxe-table";
-import Util from "@/utils/util";
+} from 'vxe-table'
 import {
+  VXETable,
+} from 'vxe-table'
+import { addOverlayListener, removeOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
+import logDefinitions from '../../cactbot/resources/netlog_defs'
+import NetRegexes from '../../cactbot/resources/netregexes'
+import testLog from '@/components/testLog.vue'
+import { getActionChinese } from '@/resources/actionChinese'
+import type {
   Raidbuff,
+} from '@/resources/raidbuff'
+import {
   getRaidbuff,
-  loadRaidbuff,
   universalVulnerableEnemy,
   universalVulnerableFriendly,
-} from "@/resources/raidbuff";
-import { useUrlSearchParams } from "@vueuse/core";
-import { getActionChinese } from "@/resources/actionChinese";
-import { completeIcon, stackUrl } from "@/resources/status";
-import { deepClone } from "@/utils/deepClone";
+} from '@/resources/raidbuff'
+import { completeIcon, stackUrl } from '@/resources/status'
+import type { Player } from '@/types/partyPlayer'
+import { deepClone } from '@/utils/deepClone'
+import type {
+  DamageEffect,
+  DamageProperties,
+  DamageType,
+} from '@/utils/flags'
+import {
+  processAbilityLine,
+  processFlags,
+  translationFlags,
+} from '@/utils/flags'
+import Util from '@/utils/util'
+import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 
-interface RowVO {
-  timestamp: number;
-  time: string;
-  id?: string;
-  actionCN: string;
-  action: string;
-  source: string;
-  target: string;
-  sourceId: string;
-  job: string;
-  jobIcon: string;
-  jobEnum: number;
-  amount: number;
-  raidbuffs: Status[];
-  currentHp: number;
-  maxHp: number;
-  effect: DamageEffect;
-  properties: DamageProperties;
-  type: DamageType;
-  povId: string;
+export interface RowVO {
+  timestamp: number
+  time: string
+  id?: string
+  actionCN: string
+  action: string
+  source: string
+  target: string
+  sourceId: string
+  job: string
+  jobIcon: string
+  jobEnum: number
+  amount: number
+  raidbuffs: Status[]
+  currentHp: number
+  maxHp: number
+  effect: DamageEffect
+  properties: DamageProperties
+  type: DamageType
+  povId: string
 }
-
 interface Status {
-  name: string;
-  count: number;
-  effect: string;
-  effectId: string;
-  source: string;
-  sourceId: string;
-  target: string;
-  targetId: string;
-  expirationTimestamp: number;
-  fullIcon: string;
-  isPov: boolean;
-  remainingDuration?: string;
+  name: string
+  count: number
+  effect: string
+  effectId: string
+  source: string
+  sourceId: string
+  target: string
+  targetId: string
+  expirationTimestamp: number
+  fullIcon: string
+  isPov: boolean
+  remainingDuration?: string
+}interface Encounter {
+  key: string
+  zoneName: string
+  duration: string
+  table: RowVO[]
 }
+const store = useKeigennRecord2Store()
+const userOptions = { ...store.userOptions }
+const filterPov = new URLSearchParams(window.location.href.split('?')[1]).get('filterPov') === 'true'
+const onlyBuffs = new URLSearchParams(window.location.href.split('?')[1]).get('onlyBuffs') === 'true'
+store.recheckIsDev()
 
-interface Encounter {
-  key: string;
-  zoneName: string;
-  duration: string;
-  table: RowVO[];
-}
-
-// todo: 自动筛选POV玩家
-
-const params = useUrlSearchParams("hash");
+const params = useUrlSearchParams('hash')
 const isDev = ref(
-  params.dev === "1" ||
-    (params.dev === undefined &&
-      !window.OverlayPluginApi &&
-      !params.OVERLAY_WS &&
-      !params.HOST_PORT)
-);
+  params.dev === '1'
+  || (params.dev === undefined
+  && !window.OverlayPluginApi
+  && !params.OVERLAY_WS
+  && !params.HOST_PORT),
+)
 
 if (isDev.value) {
   // 某些情况下OverlayPluginApi并不会立即被挂在到window上。用户上报，未复现。
   setTimeout(() => {
-    isDev.value =
-      params.dev === "1" ||
-      (params.dev === undefined &&
-        !window.OverlayPluginApi &&
-        !params.OVERLAY_WS &&
-        !params.HOST_PORT);
-  }, 1000);
+    isDev.value
+      = params.dev === '1'
+      || (params.dev === undefined
+      && !window.OverlayPluginApi
+      && !params.OVERLAY_WS
+      && !params.HOST_PORT)
+  }, 1000)
 }
 
-function parseParams<T>(v: string, def: T): T {
-  if (typeof def === "boolean") {
-    if (v === "0") return false as T;
-    if (v === "1") return true as T;
-    return def;
-  }
-  if (typeof def === "number") {
-    return isNaN(+v) ? def : (+v as T);
-  }
-  return def;
-}
+const focusing = ref({ source: false, action: false })
+const focusRow: Ref<RowVO | undefined> = ref()
 
-const userOptions = {
-  scale: parseParams(params.scale as string, 1), // 缩放倍率
-  showHeader: parseParams(params.showHeader as string, true), // 显示表头
-  showIcon: parseParams(params.showIcon as string, true), // 显示目标图标
-  showName: parseParams(params.showName as string, false), // 显示目标ID
-  abbrId: parseParams(params.abbrId as string, true), // 目标ID缩写
-  anonymous: parseParams(params.anonymous as string, true), // 目标ID改为职业名
-  replaceWithYou: parseParams(params.replaceWithYou as string, false), // 目标是玩家本人替换为YOU
-  parseAA: parseParams(params.parseAA as string, false), // 解析自动攻击（旧结果不会跟随改变）
-  parseDoT: parseParams(params.parseDoT as string, false), // 解析DoT（旧结果不会跟随改变）
-  // pushMode: parseParams(params.pushMode as string, true), // 底部开始添加并自动向下滚动（低性能）
-  minimize: parseParams(params.minimize as string, false), // 启动时迷你化
-  actionCN: parseParams(params.actionCN as string, true), // action显示中文化
-  statusCN: parseParams(params.statusCN as string, true), // status显示中文化
-  onlyBuffs: parseParams(params.onlyBuffs as string, true), // 只记录有团辅的技能
-  filterPov: parseParams(params.filterPov as string, true), // 新战斗自动筛选玩家本人
-};
-
-const minimize = ref(userOptions.minimize);
-const icon4k =
-  userOptions.scale >= 2 || window.devicePixelRatio >= 2 ? "_hr1" : "";
+const minimize = ref(userOptions.minimize)
 
 const size = {
   line_height: 28 * userOptions.scale,
   time: 35 * userOptions.scale,
   action: 65 * userOptions.scale,
   source:
-    ((userOptions.showIcon ? 24 : 0) +
-      (userOptions.showName
-        ? userOptions.anonymous ||
-          (!userOptions.anonymous && userOptions.abbrId)
-          ? 24
-          : 36
-        : 0) +
-      4) *
-    userOptions.scale,
+    ((userOptions.showIcon ? 24 : 0)
+    + (userOptions.showName
+      ? userOptions.anonymous
+      || (!userOptions.anonymous && userOptions.abbrId)
+        ? 24
+        : 36
+      : 0)
+      + 4)
+      * userOptions.scale,
   amount: 44 * userOptions.scale,
   properties: 32 * userOptions.scale,
-};
+}
 
 const style = {
-  "--vxe-font-size-mini": 12 * userOptions.scale + "px",
-  "--vxe-table-row-line-height": 30 * userOptions.scale + "px",
-  "--vxe-table-row-height-mini": 30 * userOptions.scale + "px",
-  "--vxe-input-height-mini": 20 * userOptions.scale + "px",
-  "--vxe-select-option-height-mini": 24 * userOptions.scale + "px",
-};
+  '--vxe-font-size-mini': `${12 * userOptions.scale}px`,
+  '--vxe-table-row-line-height': `${30 * userOptions.scale}px`,
+  '--vxe-table-row-height-mini': `${30 * userOptions.scale}px`,
+  '--vxe-input-height-mini': `${20 * userOptions.scale}px`,
+  '--vxe-select-option-height-mini': `${24 * userOptions.scale}px`,
+}
 
 const maxStorage = {
   runtime: 99,
   localStorage: 3,
-};
+}
 
-const loading = ref(false);
+const loading = ref(false)
 
 // let lastPush: number = Date.now();
 // let lastScroll: number = 0;
 
 interface PlayerSP extends Player {
-  timestamp: number;
+  timestamp: number
 }
 
-const xTable = ref<VxeTableInstance>();
+const xTable = ref<VxeTableInstance>()
 // const allowAutoScroll = ref(true);
-const povName = useStorage("raidbuff-record-2-pov-name", "");
-const povId = useStorage("raidbuff-record-2-pov-id", "");
-const partyLogList = useStorage("raidbuff-record-2-party-list", [] as string[]);
+const povName = useStorage('raidbuff-record-2-pov-name', '')
+const povId = useStorage('raidbuff-record-2-pov-id', '')
+const partyLogList = useStorage('raidbuff-record-2-party-list', [] as string[])
 const jobMap = useStorage(
-  "raidbuff-record-2-job-map",
-  {} as Record<string, { job: number; timestamp: number }>
-);
+  'raidbuff-record-2-job-map',
+  {} as Record<string, { job: number, timestamp: number }>,
+)
 const partyEventParty = useStorage(
-  "raidbuff-record-2-party-event-party",
-  [] as PlayerSP[]
-);
-const select = ref(0);
+  'raidbuff-record-2-party-event-party',
+  [] as PlayerSP[],
+)
+const select = ref(0)
 const data = ref<Encounter[]>([
-  { zoneName: "", duration: "00:00", table: [], key: "init" },
-]);
+  { zoneName: '', duration: '00:00', table: [], key: 'init' },
+])
 const regexes: Record<string, RegExp> = {
-  rsv: /^262\|(?<timestamp>[^|]*)\|[^|]*\|[^|]*\|_rsv_(?<id>\d*)[^|]*\|(?<real>[^|]*)\|/i,
+  rsv: /^262\|(?<timestamp>[^|]*)\|[^|]*\|[^|]*\|_rsv_(?<id>\d+)_[^|]+\|(?<real>[^|]*)\|/i,
   ability: NetRegexes.ability(),
   gainsEffect: NetRegexes.gainsEffect(),
   losesEffect: NetRegexes.losesEffect(),
   inCombat:
-    /^260\|(?<timestamp>[^|]*)\|(?<inACTCombat>[^|]*)\|(?<inGameCombat>[^|]*)\|/i,
+    /^260\|(?<timestamp>[^|]*)\|(?<inACTCombat>[^|]*)\|(?<inGameCombat>[^|]*)\|/,
   changeZone: NetRegexes.changeZone(),
   partyList:
-    /^11\|(?<timestamp>[^|]*)\|(?<partyCount>\d*)\|(?<list>(?:\w{8}\|){0,})\w{16}/i,
+    /^11\|(?<timestamp>[^|]*)\|(?<partyCount>\d*)\|(?<list>(?:\w{8}\|)*)\w{16}/,
   primaryPlayer: /^02\|(?<timestamp>[^|]*)\|(?<id>[^|]*)\|(?<name>[^|]*)/,
   addCombatant: NetRegexes.addedCombatant(),
   removingCombatant: NetRegexes.removingCombatant(),
-};
+}
 
-const STORAGE_KEY = "souma-raidbuff-record-2";
-const combatTimeStamp: Ref<number> = ref(0);
-const zoneName = useStorage("souma-raidbuff-record-2-zone-name", "" as string);
+const STORAGE_KEY = 'souma-raidbuff-record-2'
+const combatTimeStamp: Ref<number> = ref(0)
+const zoneName = useStorage('souma-raidbuff-record-2-zone-name', '' as string)
 const rsvData = useStorage(
-  "souma-raidbuff-record-2-rsv-data",
-  {} as Record<number, string>
-);
+  'souma-raidbuff-record-2-rsv-data',
+  {} as Record<number, string>,
+)
 const statusData: {
-  friendly: { [id: string]: { [effectId: string]: Status } };
-  enemy: { [name: string]: { [effectId: string]: Status } };
+  friendly: { [id: string]: { [effectId: string]: Status } }
+  enemy: { [name: string]: { [effectId: string]: Status } }
 } = {
   friendly: {},
   enemy: {},
-};
+}
 
-const resetLine = (line: Encounter) => {
-  line.table.length = 0;
-  line.zoneName = "";
-  line.duration = "00:00";
-  line.key = "init";
-};
+function resetLine(line: Encounter) {
+  line.table.length = 0
+  line.zoneName = ''
+  line.duration = '00:00'
+  line.key = 'init'
+}
 
-const beforeHandle = () => {
-  loading.value = true;
-  combatTimeStamp.value = 0;
-  select.value = 0;
-  data.value.length = 1;
-  resetLine(data.value[0]);
-};
+function beforeHandle() {
+  loading.value = true
+  combatTimeStamp.value = 0
+  select.value = 0
+  data.value.length = 1
+  resetLine(data.value[0])
+}
 
-const afterHandle = () => {
-  saveStorage();
-  loading.value = false;
-};
+function afterHandle() {
+  saveStorage()
+  loading.value = false
+}
 
-const handleLogLine = (e: {
-  type: string;
-  line: string[];
-  rawLine: string;
-}) => {
-  handleLine(e.rawLine);
-};
+function handleLogLine(e: {
+  type: string
+  line: string[]
+  rawLine: string
+}) {
+  handleLine(e.rawLine)
+}
 
-const handleLine = (line: string) => {
+function handleLine(line: string) {
   for (const regexName in regexes) {
-    const regex = regexes[regexName];
-    const match = regex.exec(line);
+    const regex = regexes[regexName]
+    const match = regex.exec(line)
     if (match) {
-      const splitLine = line.split("|");
+      const splitLine = line.split('|')
       switch (regexName) {
-        case "gainsEffect":
+        case 'gainsEffect':
           {
-            const effectId =
-              splitLine[logDefinitions.GainsEffect.fields.effectId];
-            const effect = splitLine[logDefinitions.GainsEffect.fields.effect];
-            const target = splitLine[logDefinitions.GainsEffect.fields.target];
-            const targetId =
-              splitLine[logDefinitions.GainsEffect.fields.targetId];
+            const effectId
+              = splitLine[logDefinitions.GainsEffect.fields.effectId]
+            const effect = splitLine[logDefinitions.GainsEffect.fields.effect]
+            const target = splitLine[logDefinitions.GainsEffect.fields.target]
+            const targetId
+              = splitLine[logDefinitions.GainsEffect.fields.targetId]
             const count = Number(
-              splitLine[logDefinitions.GainsEffect.fields.count]
-            );
-            let raidbuff: Raidbuff | undefined = getRaidbuff(effectId);
+              splitLine[logDefinitions.GainsEffect.fields.count],
+            )
+            let raidbuff: Raidbuff | undefined = getRaidbuff(effectId)
             if (!raidbuff) {
-              const vulnerable =
-                (targetId.startsWith("1") &&
-                  universalVulnerableFriendly.get(
-                    parseInt(effectId, 16).toString()
-                  )) ||
-                (targetId.startsWith("4") &&
-                  universalVulnerableEnemy.get(
-                    parseInt(effectId, 16).toString()
-                  ));
-              if (!vulnerable) return;
-              const fullIcon = completeIcon(vulnerable.icon);
-              const realIcon = count > 1 ? stackUrl(fullIcon, count) : fullIcon;
+              const vulnerable
+                = (targetId.startsWith('1')
+                && universalVulnerableFriendly.get(
+                  Number.parseInt(effectId, 16).toString(),
+                ))
+                || (targetId.startsWith('4')
+                && universalVulnerableEnemy.get(
+                  Number.parseInt(effectId, 16).toString(),
+                ))
+              if (!vulnerable)
+                return
+              const fullIcon = completeIcon(vulnerable.icon)
+              const realIcon = count > 1 ? stackUrl(fullIcon, count) : fullIcon
               raidbuff = {
-                id: parseInt(effectId, 16),
+                id: Number.parseInt(effectId, 16),
                 fullIcon: realIcon,
                 name: vulnerable.name,
                 isFriendly: vulnerable.isFriendly,
-              };
+              }
             }
-            const duration =
-              splitLine[logDefinitions.GainsEffect.fields.duration];
-            const source = splitLine[logDefinitions.GainsEffect.fields.source];
-            const sourceId =
-              splitLine[logDefinitions.GainsEffect.fields.sourceId];
+            const duration
+              = splitLine[logDefinitions.GainsEffect.fields.duration]
+            const source = splitLine[logDefinitions.GainsEffect.fields.source]
+            const sourceId
+              = splitLine[logDefinitions.GainsEffect.fields.sourceId]
             const timestamp = new Date(
-              splitLine[logDefinitions.GainsEffect.fields.timestamp]
-            ).getTime();
-            const expirationTimestamp = timestamp + parseFloat(duration) * 1000;
+              splitLine[logDefinitions.GainsEffect.fields.timestamp],
+            ).getTime()
+            const expirationTimestamp = timestamp + Number.parseFloat(duration) * 1000
             const status: Status = {
               name: raidbuff.name,
               count,
@@ -416,217 +286,222 @@ const handleLine = (line: string) => {
               expirationTimestamp,
               fullIcon: raidbuff.fullIcon,
               isPov: povId.value === sourceId,
-            };
-            if (targetId.startsWith("1") && raidbuff.isFriendly) {
-              (statusData.friendly[targetId] ??= {})[effectId] = status;
-            } else if (targetId.startsWith("4") && !raidbuff.isFriendly) {
-              (statusData.enemy[target] ??= {})[effectId] = status;
             }
+            if (targetId.startsWith('1') && raidbuff.isFriendly)
+              (statusData.friendly[targetId] ??= {})[effectId] = status
+            else if (targetId.startsWith('4') && !raidbuff.isFriendly)
+              (statusData.enemy[target] ??= {})[effectId] = status
           }
-          break;
-        case "losesEffect":
+          break
+        case 'losesEffect':
           {
-            const target = splitLine[logDefinitions.LosesEffect.fields.target];
-            const targetId =
-              splitLine[logDefinitions.LosesEffect.fields.targetId];
-            const effectId =
-              splitLine[logDefinitions.LosesEffect.fields.effectId];
-            if (targetId.startsWith("1")) {
-              if (statusData.friendly[targetId]) {
-                Reflect.deleteProperty(statusData.friendly[targetId], effectId);
-              }
-            } else {
-              if (statusData.enemy[target]) {
-                Reflect.deleteProperty(statusData.enemy[target], effectId);
-              }
+            const target = splitLine[logDefinitions.LosesEffect.fields.target]
+            const targetId
+              = splitLine[logDefinitions.LosesEffect.fields.targetId]
+            const effectId
+              = splitLine[logDefinitions.LosesEffect.fields.effectId]
+            if (targetId.startsWith('1')) {
+              if (statusData.friendly[targetId])
+                Reflect.deleteProperty(statusData.friendly[targetId], effectId)
+            }
+            else {
+              if (statusData.enemy[target])
+                Reflect.deleteProperty(statusData.enemy[target], effectId)
             }
           }
-          break;
-        case "addCombatant":
-          if (splitLine[logDefinitions.AddedCombatant.fields.job] !== "00") {
-            const job = splitLine[logDefinitions.AddedCombatant.fields.job];
+          break
+        case 'addCombatant':
+          if (splitLine[logDefinitions.AddedCombatant.fields.job] !== '00') {
+            const job = splitLine[logDefinitions.AddedCombatant.fields.job]
             const timestamp = new Date(
-              splitLine[logDefinitions.AddedCombatant.fields.timestamp]
-            ).getTime();
+              splitLine[logDefinitions.AddedCombatant.fields.timestamp],
+            ).getTime()
             jobMap.value[splitLine[logDefinitions.AddedCombatant.fields.id]] = {
-              job: parseInt(job, 16),
+              job: Number.parseInt(job, 16),
               timestamp,
-            };
+            }
           }
-          break;
-        case "removingCombatant":
+          break
+        case 'removingCombatant':
           Reflect.deleteProperty(
             jobMap.value,
-            splitLine[logDefinitions.RemovedCombatant.fields.id]
-          );
-          break;
-        case "primaryPlayer":
-          povId.value = splitLine[logDefinitions.ChangedPlayer.fields.id];
-          const _povName = splitLine[logDefinitions.ChangedPlayer.fields.name];
-          if (povName.value === _povName) return;
-          povName.value = _povName;
-          initEnvironment(splitLine[logDefinitions.ChangedPlayer.fields.name]);
-          break;
-        case "partyList":
-          partyLogList.value = match.groups!.list?.split("|") ?? [];
-          break;
-        case "changeZone":
-          zoneName.value = splitLine[logDefinitions.ChangeZone.fields.name];
+            splitLine[logDefinitions.RemovedCombatant.fields.id],
+          )
+          break
+        case 'primaryPlayer':
+          { povId.value = splitLine[logDefinitions.ChangedPlayer.fields.id]
+            const _povName = splitLine[logDefinitions.ChangedPlayer.fields.name]
+            if (povName.value === _povName)
+              return
+            povName.value = _povName
+            store.initEnvironment(
+              splitLine[logDefinitions.ChangedPlayer.fields.name],
+            )
+          }
+          break
+        case 'partyList':
+          partyLogList.value = match.groups!.list?.split('|') ?? []
+          break
+        case 'changeZone':
+          zoneName.value = splitLine[logDefinitions.ChangeZone.fields.name]
           stopCombat(
             new Date(
-              splitLine[logDefinitions.ChangeZone.fields.timestamp]
-            ).getTime()
-          );
-          break;
-        case "inCombat":
+              splitLine[logDefinitions.ChangeZone.fields.timestamp],
+            ).getTime(),
+          )
+          break
+        case 'inCombat':
           {
-            const inACTCombat =
-              splitLine[logDefinitions.InCombat.fields.inACTCombat] === "1";
-            const inGameCombat =
-              splitLine[logDefinitions.InCombat.fields.inGameCombat] === "1";
+            const inACTCombat
+              = splitLine[logDefinitions.InCombat.fields.inACTCombat] === '1'
+            const inGameCombat
+              = splitLine[logDefinitions.InCombat.fields.inGameCombat] === '1'
             const timeStamp = new Date(
-              splitLine[logDefinitions.InCombat.fields.timestamp]
-            ).getTime();
+              splitLine[logDefinitions.InCombat.fields.timestamp],
+            ).getTime()
             if (inACTCombat || inGameCombat) {
               // new combat
-              if (combatTimeStamp.value > 0) return;
+              if (combatTimeStamp.value > 0)
+                return
               if (data.value[0].table.length !== 0) {
-                data.value[0] = markRaw(data.value[0]);
+                data.value[0] = markRaw(data.value[0])
                 data.value.unshift({
-                  zoneName: "",
-                  duration: "00:00",
+                  zoneName: '',
+                  duration: '00:00',
                   table: [],
                   key: splitLine[logDefinitions.InCombat.fields.timestamp],
-                });
+                })
                 if (data.value.length >= maxStorage.runtime)
-                  data.value.splice(data.value.length - 1, 1);
+                  data.value.splice(data.value.length - 1, 1)
               }
-              combatTimeStamp.value = timeStamp;
-              data.value[0].zoneName = zoneName.value;
-              select.value = 0;
-              const $table = xTable.value;
-              if ($table && userOptions.filterPov) {
+              combatTimeStamp.value = timeStamp
+              data.value[0].zoneName = zoneName.value
+              select.value = 0
+              const $table = xTable.value
+              if ($table && filterPov) {
                 $table.updateData().then(() => {
-                  const col = $table.getColumnByField("source");
+                  const col = $table.getColumnByField('source')
                   if (col) {
                     const option = col.filters.find(
-                      (v) => v.value === povName.value
-                    );
-                    if (!option) {
-                      return;
-                    }
-                    option.checked = true;
+                      v => v.value === povName.value,
+                    )
+                    if (!option)
+                      return
+
+                    option.checked = true
                     $table.updateData().then(() => {
-                      focusing.value.source = true;
-                    });
+                      focusing.value.source = true
+                    })
                   }
-                });
+                })
               }
-              return;
+              return
             }
             if (!inACTCombat && !inGameCombat) {
               // stop combat
-              stopCombat(timeStamp);
-              return;
+              stopCombat(timeStamp)
+              return
             }
           }
-          break;
-        case "rsv":
+          break
+        case 'rsv':
           {
-            const id = Number(match.groups!.id as string);
-            const real = splitLine[logDefinitions.RSVData.fields.value];
-            rsvData.value[Number(id)] = real;
+            const id = Number(match.groups!.id as string)
+            const real = splitLine[logDefinitions.RSVData.fields.value]
+            rsvData.value[Number(id)] = real
           }
-          break;
-        case "ability":
-          if (combatTimeStamp.value === 0) return;
+          break
+        case 'ability':
+          if (combatTimeStamp.value === 0)
+            return
           {
-            const ability = processAbilityLine(splitLine);
+            const ability = processAbilityLine(splitLine)
             if (ability.isAttack && ability.amount >= 0) {
-              const sourceId =
-                splitLine[logDefinitions.Ability.fields.sourceId] ?? "???";
-              const targetId =
-                splitLine[logDefinitions.Ability.fields.targetId] ?? "???";
-              if (!(sourceId.startsWith("1") && targetId.startsWith("4"))) {
-                return;
-              }
+              const sourceId
+                = splitLine[logDefinitions.Ability.fields.sourceId] ?? '???'
+              const targetId
+                = splitLine[logDefinitions.Ability.fields.targetId] ?? '???'
+              if (!(sourceId.startsWith('1') && targetId.startsWith('4')))
+                return
+
               if (
                 !(
-                  sourceId === povId.value ||
-                  partyLogList.value.includes(sourceId) ||
-                  partyEventParty.value.find((v) => v.id === sourceId)
+                  sourceId === povId.value
+                  || partyLogList.value.includes(sourceId)
+                  || partyEventParty.value.find(v => v.id === sourceId)
                 )
-              ) {
-                return;
-              }
+              )
+                return
+
               const timestamp = new Date(
-                splitLine[logDefinitions.Ability.fields.timestamp] ?? "???"
-              ).getTime();
-              const rawAblityName =
-                splitLine[logDefinitions.Ability.fields.ability];
-              const rsvMatch = rawAblityName.match(/^_rsv_(?<id>\d+)_/);
-              const id = splitLine[logDefinitions.Ability.fields.id] ?? "???";
-              let action = rawAblityName;
+                splitLine[logDefinitions.Ability.fields.timestamp] ?? '???',
+              ).getTime()
+              const rawAblityName
+                = splitLine[logDefinitions.Ability.fields.ability]
+              const rsvMatch = rawAblityName.match(/^_rsv_(?<id>\d+)_/)
+              const id = splitLine[logDefinitions.Ability.fields.id] ?? '???'
+              let action = rawAblityName
               if (rsvMatch) {
-                const id: number = Number(rsvMatch.groups!.id);
-                action =
-                  rsvData.value[id] ??
-                  rawAblityName.match(/^_(?<id>rsv_\d+)_/)!.groups!.id;
-              } else {
-                action = action.replace(/unknown_.*/, "攻击");
-                if (
-                  userOptions.parseAA === false &&
-                  /^攻击|攻撃|[Aa]ttack$/.test(action)
-                )
-                  return;
+                const id: number = Number(rsvMatch.groups!.id)
+                action
+                  = rsvData.value[id]
+                  ?? rawAblityName.match(/^_(?<id>rsv_\d+)_/)!.groups!.id
               }
-              const cn = getActionChinese(parseInt(id, 16));
-              const actionCN = cn && cn !== "" ? cn : action;
-              const currentHp =
-                Number(
-                  splitLine[logDefinitions.Ability.fields.targetCurrentHp]
-                ) ?? "???";
-              const maxHp =
-                Number(splitLine[logDefinitions.Ability.fields.targetMaxHp]) ??
-                "???";
-              const source =
-                splitLine[logDefinitions.Ability.fields.source] ?? "???";
-              const target =
-                splitLine[logDefinitions.Ability.fields.target] ?? "???";
-              const { effect, type, properties } = processFlags(ability.flags);
-              const time =
-                combatTimeStamp.value === 0
+              else {
+                action = action.replace(/unknown_.*/, '攻击')
+                if (
+                  userOptions.parseAA === false
+                  && /^攻击|攻撃|[Aa]ttack$/.test(action)
+                )
+                  return
+              }
+              const cn = getActionChinese(Number.parseInt(id, 16))
+              const actionCN = cn && cn !== '' ? cn : action
+              const currentHp
+                = Number(
+                  splitLine[logDefinitions.Ability.fields.targetCurrentHp],
+                ) ?? '???'
+              const maxHp
+                = Number(splitLine[logDefinitions.Ability.fields.targetMaxHp])
+                ?? '???'
+              const source
+                = splitLine[logDefinitions.Ability.fields.source] ?? '???'
+              const target
+                = splitLine[logDefinitions.Ability.fields.target] ?? '???'
+              const { effect, type, properties } = processFlags(ability.flags)
+              const time
+                = combatTimeStamp.value === 0
                   ? 0
-                  : timestamp - combatTimeStamp.value;
-              const formattedTime = formatTime(time);
-              const playerJob = getJobById(sourceId);
+                  : timestamp - combatTimeStamp.value
+              const formattedTime = formatTime(time)
+              const playerJob = getJobById(sourceId)
               // const targetJob = jobMap.value[targetId].job ?? target.substring(0, 2);
               const job = Util.nameToFullName(
-                Util.jobEnumToJob(playerJob)
-              ).cn.substring(0, 2);
-              const jobEnum = playerJob;
-              const jobIcon = Util.jobEnumToIcon(jobEnum).toLocaleLowerCase();
+                Util.jobEnumToJob(playerJob),
+              ).cn.substring(0, 2)
+              const jobEnum = playerJob
+              const jobIcon = Util.jobEnumToIcon(jobEnum).toLocaleLowerCase()
               const raidbuffs = deepClone(
                 Object.values(statusData.friendly[sourceId] ?? [])
                   .concat(Object.values(statusData.enemy[target] ?? []))
                   .filter((v) => {
                     const remain = Math.max(
                       0,
-                      (v.expirationTimestamp - timestamp) / 1000
-                    );
-                    v.remainingDuration =
-                      remain >= 999
-                        ? ""
+                      (v.expirationTimestamp - timestamp) / 1000,
+                    )
+                    v.remainingDuration
+                      = remain >= 999
+                        ? ''
                         : remain.toFixed(
-                            remain > 0.05 && remain < 0.95 ? 1 : 0
-                          );
+                          remain > 0.05 && remain < 0.95 ? 1 : 0,
+                        )
                     // 有时会有过期很久的遗留的buff?
-                    return Number(v.remainingDuration) > -3;
-                  })
-              );
-              if (userOptions.onlyBuffs && raidbuffs.length === 0) {
-                return;
-              }
+                    return Number(v.remainingDuration) > -3
+                  }),
+              )
+              if (onlyBuffs && raidbuffs.length === 0)
+                return
+
               addRow({
                 timestamp,
                 time: formattedTime,
@@ -647,273 +522,129 @@ const handleLine = (line: string) => {
                 properties,
                 type,
                 povId: povId.value,
-              });
+              })
               data.value[0].duration = formatTime(
                 new Date(
-                  splitLine[logDefinitions.Ability.fields.timestamp]
-                ).getTime() - combatTimeStamp.value
-              );
+                  splitLine[logDefinitions.Ability.fields.timestamp],
+                ).getTime() - combatTimeStamp.value,
+              )
             }
-            break;
+            break
           }
         default:
-          break;
+          break
       }
     }
   }
-};
+}
 
-const getJobById = (targetId: string): number => {
-  const fromJobMap = jobMap.value[targetId];
+function getJobById(targetId: string): number {
+  const fromJobMap = jobMap.value[targetId]
   const fromPartyEvent = partyEventParty.value.find(
-    (v) => v.id === targetId
-  ) ?? { job: 0, timestamp: 0 };
+    v => v.id === targetId,
+  ) ?? { job: 0, timestamp: 0 }
   return [fromJobMap, fromPartyEvent].sort(
-    (a, b) => b.timestamp - a.timestamp
-  )[0].job;
-};
+    (a, b) => b.timestamp - a.timestamp,
+  )[0].job
+}
 
-const addRow = (row: RowVO) => {
+function addRow(row: RowVO) {
   // if (userOptions.pushMode) {
   //   data.value[0].table.push(row);
   //   lastPush = Date.now();
   // } else {
-  data.value[0].table.unshift(row);
+  data.value[0].table.unshift(row)
   // }
-};
+}
 
-const stopCombat = (timeStamp: number) => {
-  if (combatTimeStamp.value === 0) return;
-  data.value[0].duration = formatTime(timeStamp - combatTimeStamp.value);
-  combatTimeStamp.value = 0;
-  statusData.friendly = {};
-  statusData.enemy = {};
-  saveStorage();
-};
+function stopCombat(timeStamp: number) {
+  if (combatTimeStamp.value === 0)
+    return
+  data.value[0].duration = formatTime(timeStamp - combatTimeStamp.value)
+  combatTimeStamp.value = 0
+  statusData.friendly = {}
+  statusData.enemy = {}
+  saveStorage()
+}
 
-const saveStorage = () => {
+function saveStorage() {
   localStorage.setItem(
     STORAGE_KEY,
-    JSON.stringify(data.value.slice(0, maxStorage.localStorage))
-  );
-};
+    JSON.stringify(data.value.slice(0, maxStorage.localStorage)),
+  )
+}
 
-const loadStorage = () => {
-  const load = localStorage.getItem(STORAGE_KEY);
+function loadStorage() {
+  const load = localStorage.getItem(STORAGE_KEY)
   if (load) {
     try {
-      const loadData = JSON.parse(load);
-      data.value.length = 0;
-      data.value.push(...loadData);
-    } catch (e) {
-      console.error(e);
+      const loadData = JSON.parse(load)
+      data.value.length = 0
+      data.value.push(...loadData)
+    }
+    catch (e) {
+      console.error(e)
     }
   }
-};
+}
 
-const formatTime = (time: number) => {
-  const minute = Math.max(Math.floor(time / 60000), 0);
-  const second = Math.max(Math.floor((time - minute * 60000) / 1000), 0);
-  return `${minute < 10 ? "0" : ""}${minute}:${
-    second < 10 ? "0" : ""
-  }${second}`;
-};
+function formatTime(time: number) {
+  const minute = Math.max(Math.floor(time / 60000), 0)
+  const second = Math.max(Math.floor((time - minute * 60000) / 1000), 0)
+  return `${minute < 10 ? '0' : ''}${minute}:${
+    second < 10 ? '0' : ''
+  }${second}`
+}
 
 const sourceOptions = computed(() => {
-  const targetToJob: Record<string, string> = {};
+  const targetToJob: Record<string, string> = {}
   const result = new Set(
     data.value[select.value].table
       .slice()
       .sort((a, b) => Util.enumSortMethod(a.jobEnum, b.jobEnum))
       .map((item) => {
-        targetToJob[item.source] = item.job;
-        return item.source;
-      })
-  );
-  return Array.from(result).map((item) => ({
+        targetToJob[item.source] = item.job
+        return item.source
+      }),
+  )
+  return Array.from(result).map(item => ({
     label: `${targetToJob[item]}（${item}）`,
     value: item,
-  }));
-});
+  }))
+})
 
-let formatterName: (v: string) => string = (v) => v;
+function handleChangePrimaryPlayer(event: {
+  charID: number
+  charName: string
+}): void {
+  povName.value = event.charName
+  povId.value = event.charID.toString(16).toUpperCase()
+}
 
-const initEnvironment = (name: string) => {
-  if (/^([A-Z])\S+ ([A-Z])\S+$/.test(name)) {
-    // 国际服
-    if (userOptions.abbrId)
-      formatterName = (v: string) =>
-        v.replace(/^([A-Z])\S+ ([A-Z])\S+$/, "$1.$2.");
-    loadRaidbuff("Global");
-  } else {
-    // 国服
-    if (userOptions.abbrId) formatterName = (v: string) => v.substring(0, 2);
-    loadRaidbuff("Chinese");
-  }
-};
-
-initEnvironment(povName.value);
-
-const handleImgError = (event: Event) => {
-  const target = event.target as HTMLImageElement;
-  if (target.src.includes("cafemaker.wakingsands.com")) {
-    target.src = target.src.replace("cafemaker.wakingsands.com", "xivapi.com");
-  } else if (target.src.includes("xivapi.com")) {
-    target.src = "";
-  }
-};
-
-// const autoScroll = () => {
-//   if (!userOptions.pushMode) {
-//     return;
-//   }
-//   if (allowAutoScroll.value && Date.now() - lastPush < 2000 && Date.now() - lastScroll > 100) {
-//     scroll();
-//   }
-//   requestAnimationFrame(() => {
-//     autoScroll();
-//   });
-// };
-
-// const scroll = () => {
-//   xTable.value?.scrollTo(0, Number.MAX_SAFE_INTEGER);
-//   lastScroll = Date.now();
-// };
-
-// const handleWhell = (event: WheelEvent) => {
-//   if (!xTable.value) return;
-//   if (select.value !== 0 || event.deltaY < 0) {
-//     allowAutoScroll.value = false;
-//   } else {
-//     const lineHeight = parseInt(style["--vxe-table-row-height-mini"]);
-//     const tableData = xTable.value.getData();
-//     const lineLength = tableData.length;
-//     const scroll = xTable.value.getScroll();
-//     const contentHeight = lineHeight * lineLength;
-//     const clientHeight = document.body.clientHeight;
-//     const selectHeight = parseInt(style["--vxe-input-height-mini"]);
-//     const headerHeight = lineHeight;
-//     const diff = 100;
-//     const isBottom = contentHeight - (scroll.scrollTop + clientHeight) + selectHeight + headerHeight <= diff;
-//     allowAutoScroll.value = isBottom;
-//   }
-// };
-
-// watch(
-//   () => userOptions.pushMode,
-//   () => {
-//     if (userOptions.pushMode) {
-//       document.addEventListener("wheel", handleWhell);
-//       autoScroll();
-//     } else {
-//       document.removeEventListener("wheel", handleWhell);
-//     }
-//   },
-//   { immediate: true },
-// );
-
-const handleChangePrimaryPlayer = (event: {
-  charID: number;
-  charName: string;
-}): void => {
-  povName.value = event.charName;
-  povId.value = event.charID.toString(16).toUpperCase();
-};
-
-const handlePartyChanged = (e: {
-  party: { id: string; name: string; inParty: boolean; job: number }[];
-}): void => {
-  partyEventParty.value = e.party.map((v) => ({ ...v, timestamp: Date.now() }));
-};
+function handlePartyChanged(e: {
+  party: { id: string, name: string, inParty: boolean, job: number }[]
+}): void {
+  partyEventParty.value = e.party.map(v => ({ ...v, timestamp: Date.now() }))
+}
 
 onMounted(() => {
   for (const id in jobMap.value) {
-    const element = jobMap.value[id];
-    if (Date.now() - element.timestamp > 1000 * 60 * 60 * 24 * 1) {
-      Reflect.deleteProperty(jobMap.value, id);
-    }
+    const element = jobMap.value[id]
+    if (Date.now() - element.timestamp > 1000 * 60 * 60 * 24 * 1)
+      Reflect.deleteProperty(jobMap.value, id)
   }
-  loadStorage();
-  addOverlayListener("LogLine", handleLogLine);
-  addOverlayListener("PartyChanged", handlePartyChanged);
-  addOverlayListener("ChangePrimaryPlayer", handleChangePrimaryPlayer);
+  loadStorage()
+  addOverlayListener('LogLine', handleLogLine)
+  addOverlayListener('PartyChanged', handlePartyChanged)
+  addOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
   // startOverlayEvents();
-});
+})
 
 onUnmounted(() => {
-  removeOverlayListener("LogLine", handleLogLine);
-});
+  removeOverlayListener('LogLine', handleLogLine)
+})
 
-const Target = ({ row }: { row: RowVO }) => {
-  return (
-    <div>
-      <span class="target">
-        {userOptions.showIcon && (
-          <img
-            class="jobIcon"
-            src={`//cafemaker.wakingsands.com/cj/companion/${row.jobIcon}.png`}
-            alt=""
-            data-job={userOptions.showName ? "" : row.job}
-            onError={handleImgError}
-            loading="lazy"
-          />
-        )}
-        {userOptions.showName && (
-          <span
-            class={`job ${row.jobIcon} ${
-              row.sourceId === row.povId ? "YOU" : ""
-            }`}
-          >
-            {row.sourceId === row.povId && userOptions.replaceWithYou
-              ? "YOU"
-              : userOptions.anonymous
-              ? row.job
-              : formatterName(row.source)}
-          </span>
-        )}
-      </span>
-    </div>
-  );
-};
-
-const Amount = ({ row }: { row: RowVO }) => {
-  return (
-    <span class="amount">
-      <span class={`${row.type}`}>
-        <span>{row.amount.toLocaleString().padStart(3, "　")}</span>
-      </span>
-    </span>
-  );
-};
-
-const StatusShow = ({ row }: { row: RowVO }) => {
-  return (
-    <>
-      {row.type === "dot"
-        ? "（不支持）"
-        : row.raidbuffs.map((raidbuff) => {
-            return (
-              <span
-                class="status"
-                title={`${raidbuff.name}(${raidbuff.source})`}
-                data-duration={raidbuff.remainingDuration}
-                data-sourcePov={raidbuff.isPov}
-              >
-                <img
-                  class={`statusIcon`}
-                  src={`//cafemaker.wakingsands.com/i/${raidbuff.fullIcon}${icon4k}.png`}
-                  alt={raidbuff.effect}
-                  onError={handleImgError}
-                  loading="lazy"
-                ></img>
-              </span>
-            );
-          })}
-    </>
-  );
-};
-
-const doCopy = (row: RowVO) => {
+function doCopy(row: RowVO) {
   const {
     action,
     actionCN,
@@ -924,135 +655,242 @@ const doCopy = (row: RowVO) => {
     time,
     type,
     properties,
-  } = row;
-  const sp =
-    row.effect === "damage done" ? "" : "," + translationFlags(row.effect);
+  } = row
+  const sp
+    = row.effect === 'damage done' ? '' : `,${translationFlags(row.effect)}`
   const result = `${time} [${job}]${source}的“${action}${
-    actionCN !== action ? "(" + actionCN + ")" : ""
+    actionCN !== action ? `(${actionCN})` : ''
   }”造成${amount.toLocaleString()}点${translationFlags(type)}${translationFlags(
-    properties
+    properties,
   )}伤害。团辅：${
-    raidbuffs.length === 0 && sp === ""
-      ? "无"
+    raidbuffs.length === 0 && sp === ''
+      ? '无'
       : raidbuffs
-          .map((k) => (userOptions.statusCN ? k.name : k.effect))
-          .join(",") + sp
-  }。`;
-  copyText(result);
-};
+          .map(k => (userOptions.statusCN ? k.name : k.effect))
+          .join(',') + sp
+  }。`
+  copyText(result)
+}
 
-const copyText = (text: string) => {
+function copyText(text: string) {
   navigator.clipboard.writeText(text).catch(() => {
-    const input = document.createElement("input");
-    input.value = text;
-    document.body.appendChild(input);
-    input.select();
-    document.execCommand("copy");
-    document.body.removeChild(input);
-  });
-  VXETable.modal.message({ content: "已复制到剪贴板", status: "success" });
-};
-
-const focusing = ref({ source: false, action: false });
-const focusRow: Ref<RowVO | undefined> = ref();
+    const input = document.createElement('input')
+    input.value = text
+    document.body.appendChild(input)
+    input.select()
+    document.execCommand('copy')
+    document.body.removeChild(input)
+  })
+  VXETable.modal.message({ content: '已复制到剪贴板', status: 'success' })
+}
 
 const menuConfig = reactive<VxeTablePropTypes.MenuConfig<RowVO>>({
-  className: "my-menus",
+  className: 'my-menus',
   body: {
     options: [],
   },
-});
+})
 
 watchEffect(() => {
   if (menuConfig.body && menuConfig.body.options && xTable.value) {
     menuConfig.body.options[0] = [
       {
-        code: "copy",
-        name: "复制详情",
-        prefixIcon: "vxe-icon-copy",
-        className: "my-copy-item",
+        code: 'copy',
+        name: '复制详情',
+        prefixIcon: 'vxe-icon-copy',
+        className: 'my-copy-item',
       },
       {
-        code: "clearFilterTarget",
-        name: "取消玩家筛选",
-        prefixIcon: "vxe-icon-funnel-clear",
+        code: 'clearFilterTarget',
+        name: '取消玩家筛选',
+        prefixIcon: 'vxe-icon-funnel-clear',
         visible: focusing.value.source,
         disabled: false,
       },
       {
-        code: "filterSelectTarget",
+        code: 'filterSelectTarget',
         name: focusRow.value?.source
           ? `只看[${focusRow.value.job}] ${focusRow.value.source}`
-          : "只看该玩家",
-        prefixIcon: "vxe-icon-user-fill",
+          : '只看该玩家',
+        prefixIcon: 'vxe-icon-user-fill',
         visible: !focusing.value.source,
         disabled: false,
       },
-    ];
+    ]
   }
-});
+})
 
-const clickMinimize = () => {
-  minimize.value = !minimize.value;
+function clickMinimize() {
+  minimize.value = !minimize.value
   // if (minimize.value === false && userOptions.pushMode) {
   //   lastPush = Date.now();
   //   requestAnimationFrame(() => scroll());
   // }
-};
+}
 
 const cellContextMenuEvent: VxeTableEvents.CellMenu<RowVO> = ({ row }) => {
-  const $table = xTable.value;
+  const $table = xTable.value
   if ($table) {
-    $table.setCurrentRow(row);
-    focusRow.value = row;
+    $table.setCurrentRow(row)
+    focusRow.value = row
   }
-};
+}
 
 const contextMenuClickEvent: VxeTableEvents.MenuClick<RowVO> = ({
   menu,
   row,
-  column,
 }) => {
-  const $table = xTable.value;
+  const $table = xTable.value
 
   switch (menu.code) {
-    case "copy":
+    case 'copy':
       if (!row) {
         VXETable.modal.message({
-          content: "未选中有效数据行",
-          status: "error",
-        });
-        return;
+          content: '未选中有效数据行',
+          status: 'error',
+        })
+        return
       }
-      doCopy(row);
-      break;
-    case "clearFilterTarget":
+      doCopy(row)
+      break
+    case 'clearFilterTarget':
       if ($table) {
-        $table.clearFilter($table.getColumnByField("source"));
-        focusing.value.source = false;
+        $table.clearFilter($table.getColumnByField('source'))
+        focusing.value.source = false
       }
-      break;
-    case "filterSelectTarget":
+      break
+    case 'filterSelectTarget':
       if ($table) {
-        const col = $table.getColumnByField("source");
+        const col = $table.getColumnByField('source')
         if (col) {
-          const option = col.filters.find((v) => v.value === row.source);
-          if (!option) {
-            return;
-          }
-          option.checked = true;
+          const option = col.filters.find(v => v.value === row.source)
+          if (!option)
+            return
+
+          option.checked = true
           $table.updateData().then(() => {
-            $table.scrollToRow(row);
-            focusing.value.source = true;
-          });
+            $table.scrollToRow(row)
+            focusing.value.source = true
+          })
         }
       }
-      break;
+      break
     default:
-      break;
+      break
   }
-};
+}
 </script>
+
+<template>
+  <div class="wrapper" :style="style">
+    <header>
+      <vxe-select
+        v-show="!minimize"
+        v-model="select"
+        size="mini"
+        class="select"
+      >
+        <vxe-option
+          v-for="i in data.length"
+          :key="`${data[i - 1].key}-${data[i - 1].duration}-${
+            data[i - 1].zoneName
+          }`"
+          :value="i - 1"
+          :label="`${data[i - 1].duration} ${data[i - 1].zoneName}`"
+        />
+      </vxe-select>
+      <vxe-button
+        class="minimize"
+        :icon="minimize ? 'vxe-icon-fullscreen' : 'vxe-icon-minimize'"
+        :style="{ opacity: minimize ? 0.5 : 1 }"
+        @click="clickMinimize"
+      />
+    </header>
+    <main v-show="!minimize">
+      <vxe-table
+        ref="xTable"
+        size="mini"
+        class="vxe-table"
+        show-overflow="tooltip"
+        round
+        height="100%"
+        :scroll-y="{ enabled: true }"
+        :loading="loading"
+        :show-header="userOptions.showHeader"
+        :data="data[select].table"
+        :row-config="{ isHover: true, height: size.line_height }"
+        :header-cell-style="{
+          padding: '0px',
+        }"
+        :menu-config="menuConfig"
+        @cell-menu="cellContextMenuEvent"
+        @menu-click="contextMenuClickEvent"
+      >
+        <vxe-column
+          :width="size.source"
+          field="source"
+          :title="userOptions.showName ? '友方' : '友'"
+          :filters="sourceOptions"
+          :filter-multiple="false"
+          :resizable="!userOptions.anonymous && !userOptions.abbrId"
+          align="left"
+          header-align="center"
+        >
+          <template #default="{ row }">
+            <KeigennRecord2Target :row="row" />
+          </template>
+        </vxe-column>
+        <vxe-column
+          :width="size.time"
+          field="time"
+          title="时间"
+          align="center"
+        />
+        <vxe-column
+          :width="size.action"
+          :field="userOptions.actionCN ? 'actionCN' : 'action'"
+          title="技能"
+          :resizable="false"
+          align="right"
+        />
+        <vxe-column :width="size.amount" title="伤害" header-align="center">
+          <template #default="{ row }">
+            <KeigennRecord2Amount :row="row" />
+          </template>
+        </vxe-column>
+        <vxe-column
+          :width="size.properties"
+          title="直暴"
+          header-align="center"
+          align="center"
+        >
+          <template #default="{ row }">
+            {{
+              translationFlags(row.properties)
+                .replace(/普通$/, "")
+                // eslint-disable-next-line no-irregular-whitespace
+                .replace("直击", "直　")
+                // eslint-disable-next-line no-irregular-whitespace
+                .replace("暴击", "　暴")
+            }}
+          </template>
+        </vxe-column>
+        <vxe-column title="团辅" align="left">
+          <template #default="{ row }">
+            <RaidbuffRecordStatusShow :row="row" />
+          </template>
+        </vxe-column>
+      </vxe-table>
+    </main>
+  </div>
+  <div v-if="isDev" class="testLog">
+    <testLog
+      @before-handle="beforeHandle"
+      @after-handle="afterHandle"
+      @handle-line="handleLine"
+    />
+  </div>
+</template>
 
 <style lang="scss">
 $base-bg: lighten(#151515, 0%);
@@ -1379,4 +1217,7 @@ main {
   justify-content: flex-end;
 }
 </style>
-@/resources/raidbuff
+@/resources/raidbuffDamageProperties,
+  DamageType,
+  DamageProperties,
+  DamageType,

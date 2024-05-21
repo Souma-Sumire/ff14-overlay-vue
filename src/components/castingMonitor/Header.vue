@@ -1,39 +1,41 @@
 <script setup lang="ts">
-import { useCastingMonitorStore } from "@/store/castingMonitor";
-import { params } from "@/utils/queryParams";
-import Util from "@/utils/util";
-import { getClassjobIconSrc } from "@/utils/xivapi";
-const castingMonitorStore = useCastingMonitorStore();
+import { useCastingMonitorStore } from '@/store/castingMonitor'
+import Util from '@/utils/util'
+import { getClassjobIconSrc } from '@/utils/xivapi'
+
+const params = new URLSearchParams(window.location.href.split('?')[1])
+
+const castingMonitorStore = useCastingMonitorStore()
 watchEffect(() => {
-  for (const item of castingMonitorStore.partyData) {
-    item.src = getClassjobIconSrc(item.job);
-  }
-});
+  for (const item of castingMonitorStore.partyData)
+    item.src = getClassjobIconSrc(item.job)
+})
 const showHeader = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(
-  params?.showHeader
-);
+  params.get('showHeader') || 'false',
+)
 </script>
 
 <template>
-  <div z-100 flex="~ gap0 wrap" class="header-layout" v-if="showHeader">
+  <div v-if="showHeader" z-100 flex="~ gap0 wrap" class="header-layout">
     <button
       v-for="(item, index) in castingMonitorStore.partyDataFormatted"
       :key="index"
-      @click="castingMonitorStore.handleClickChangeTarget(item.id)"
       class="job-lists"
       :class="
         castingMonitorStore.focusTargetId === item.id ? 'job-lists-focus' : ''
       "
       p-0
       m-0
+      @click="castingMonitorStore.handleClickChangeTarget(item.id)"
     >
       <div flex="~ nowrap items-end" style="align-items: flex-end; gap: 0.1rem">
-        <img :src="item.src" style="height: 1.25em" loading="lazy" />
+        <img :src="item.src" style="height: 1.25em" loading="lazy">
         {{ Util.nameToFullName(Util.jobEnumToJob(item.job as number)).simple2 }}
       </div>
     </button>
   </div>
 </template>
+
 <stype lang="scss" scoped>
 .header-layout {
   padding: 0;

@@ -1,25 +1,25 @@
-import { customRef } from "vue";
+import { customRef } from 'vue'
 
 export function debounceRef<T>(value: T, duration = 1000) {
-  let timer: NodeJS.Timeout | null = null;
+  let timer: NodeJS.Timeout | null = null
 
   return customRef((track, trigger) => {
     return {
       get() {
-        track();
-        return value;
+        track()
+        return value
       },
       set(val) {
-        if (timer) {
-          clearTimeout(timer);
-        }
+        if (timer)
+          clearTimeout(timer)
+
         // biome-ignore lint/style/noParameterAssign:
-        value = val;
+        value = val
         timer = setTimeout(() => {
-          trigger();
-          timer = null; // 清除定时器引用
-        }, duration);
+          trigger()
+          timer = null // 清除定时器引用
+        }, duration)
       },
-    };
-  });
+    }
+  })
 }

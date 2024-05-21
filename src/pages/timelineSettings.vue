@@ -1,66 +1,66 @@
 <script lang="ts" setup>
-import Swal from "sweetalert2";
-import "@sweetalert2/theme-bootstrap-4/bootstrap-4.scss";
-import zoneInfo from "@/resources/zoneInfo";
-import { useTimelineStore, parseTimeline } from "@/store/timeline";
-import Util from "@/utils/util";
-import "animate.css";
-import ClipboardJS from "clipboard";
-import type { ITimeline, ITimelineLine } from "@/types/timeline";
+import ClipboardJS from 'clipboard'
+import Swal from 'sweetalert2'
+import moment from 'moment'
+import { callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
+import zoneInfo from '@/resources/zoneInfo'
+import { parseTimeline, useTimelineStore } from '@/store/timeline'
+import type { ITimeline, ITimelineLine } from '@/types/timeline'
+import Util from '@/utils/util'
+import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
+import 'animate.css'
 // import { p8sTimeline } from "@/resources/timelineTemplate";
-import moment from "moment";
-import { callOverlayHandler } from "../../cactbot/resources/overlay_plugin_api";
-import router from "@/router";
+import router from '@/router'
 
-const simulatedCombatTime = ref(0);
-const timelineStore = useTimelineStore();
-const timelines = toRef(timelineStore, "allTimelines");
-const timelineFilters = toRef(timelineStore, "filters");
-const highDifficultZoneId: { id: string; name: string }[] = [
-  { id: "0", name: "任意" },
-];
-const showFFlogs = ref(false);
-const showSettings = ref(false);
+const simulatedCombatTime = ref(0)
+const timelineStore = useTimelineStore()
+const timelines = toRef(timelineStore, 'allTimelines')
+const timelineFilters = toRef(timelineStore, 'filters')
+const highDifficultZoneId: { id: string, name: string }[] = [
+  { id: '0', name: '任意' },
+]
+const showFFlogs = ref(false)
+const showSettings = ref(false)
 const timelineCurrentlyEditing: { timeline: ITimeline } = reactive({
   timeline: {
-    name: "空",
-    condition: { zoneId: "0", job: "NONE" },
-    timeline: "空",
-    codeFight: "空",
-    create: "空",
+    name: '空',
+    condition: { zoneId: '0', job: 'NONE' },
+    timeline: '空',
+    codeFight: '空',
+    create: '空',
   },
-});
-const isWSMode = location.href.includes("OVERLAY_WS=");
-const transmissionTimeline = ref([] as ITimelineLine[]);
+})
+const isWSMode = location.href.includes('OVERLAY_WS=')
+const transmissionTimeline = ref([] as ITimelineLine[])
 
-resetCurrentlyTimeline();
+resetCurrentlyTimeline()
 
 async function updateTransmissionTimeline() {
   transmissionTimeline.value = [
     {
       time: 0,
-      action: "正在加载...",
+      action: '正在加载...',
       show: true,
       windowBefore: 0,
       windowAfter: 0,
       alertAlready: true,
     },
-  ];
+  ]
   transmissionTimeline.value = await parseTimeline(
-    timelineCurrentlyEditing.timeline.timeline
-  );
+    timelineCurrentlyEditing.timeline.timeline,
+  )
 }
 const debounceJobCN = useDebounce(
   computed(() => Util.getBattleJobs2()),
   500,
-  { maxWait: 5000 }
-);
-init();
+  { maxWait: 5000 },
+)
+init()
 
 function init(): void {
   for (const key in zoneInfo) {
     if (Object.prototype.hasOwnProperty.call(zoneInfo, key)) {
-      const element = zoneInfo[key];
+      const element = zoneInfo[key]
       switch (element.contentType) {
         case 4:
         case 5:
@@ -69,193 +69,196 @@ function init(): void {
             id: key,
             name:
               element.name?.cn ?? element.name?.ja ?? element.name?.ja ?? key,
-          });
+          })
       }
     }
   }
-  loadTimelineStoreData();
-  timelineStore.sortTimelines();
-  saveTimelineStoreData();
+  loadTimelineStoreData()
+  timelineStore.sortTimelines()
+  saveTimelineStoreData()
 }
 
 function applyData(): void {
   callOverlayHandler({
-    call: "broadcast",
-    source: "soumuaTimelineSetting",
+    call: 'broadcast',
+    source: 'soumuaTimelineSetting',
     msg: {
       store: timelineStore.$state,
     },
-  });
+  })
 }
 
-//通信数据
+// 通信数据
 function broadcastData(): void {
   if (urlTool({ url: location.href })?.OVERLAY_WS) {
-    applyData();
+    applyData()
     Swal.fire({
-      title: "已尝试进行通信,请检查ACT悬浮窗是否接收",
-      text: "若无法通信，可将本页面直接添加到ACT悬浮窗进行编辑，设置将会自动保存。（编辑后刷新一下时间轴网页）",
-    });
-  } else {
+      title: '已尝试进行通信,请检查ACT悬浮窗是否接收',
+      text: '若无法通信，可将本页面直接添加到ACT悬浮窗进行编辑，设置将会自动保存。（编辑后刷新一下时间轴网页）',
+    })
+  }
+  else {
     Swal.fire({
-      icon: "error",
-      title: "目前与ACT断开了连接。",
+      icon: 'error',
+      title: '目前与ACT断开了连接。',
       text: '请启用ACT OverlayPlugin WSServer，并使本页面url参数中的端口号与其保持一致：OVERLAY_WS=ws://127.0.0.1:端口号/ws"',
-    });
+    })
   }
 }
 
-//获取URL参数
+// 获取URL参数
 function urlTool({ url }: { url: string }) {
-  const array = url.split("?")?.pop()?.split("&");
-  const res: Record<string, string> = {};
+  const array = url.split('?')?.pop()?.split('&')
+  const res: Record<string, string> = {}
   if (array) {
     for (const ele of array) {
-      const dataArr = ele.split("=");
-      res[dataArr[0]] = dataArr[1];
+      const dataArr = ele.split('=')
+      res[dataArr[0]] = dataArr[1]
     }
   }
-  return res;
+  return res
 }
 
 function fflogsImportClick(): void {
-  showFFlogs.value = !showFFlogs.value;
-  resetCurrentlyTimeline();
+  showFFlogs.value = !showFFlogs.value
+  resetCurrentlyTimeline()
 }
 
 function resetCurrentlyTimeline(): void {
-  simulatedCombatTime.value = -30;
+  simulatedCombatTime.value = -30
   timelineCurrentlyEditing.timeline = {
-    name: "空",
-    condition: { zoneId: "0", job: "NONE" },
-    timeline: "空",
-    codeFight: "空",
-    create: "空",
-  };
+    name: '空',
+    condition: { zoneId: '0', job: 'NONE' },
+    timeline: '空',
+    codeFight: '空',
+    create: '空',
+  }
 }
 
 function newDemoTimeline(): void {
   // clearCurrentlyTimeline();
-  timelineCurrentlyEditing.timeline =
-    timelineStore.allTimelines[timelineStore.newTimeline()];
-  updateTransmissionTimeline();
+  timelineCurrentlyEditing.timeline
+    = timelineStore.allTimelines[timelineStore.newTimeline()]
+  updateTransmissionTimeline()
 }
 
 function editTimeline(timeline: ITimeline): void {
   window.scrollTo({
     top: 0,
-    behavior: "smooth",
-  });
-  timelineCurrentlyEditing.timeline = timeline;
-  updateTransmissionTimeline();
+    behavior: 'smooth',
+  })
+  timelineCurrentlyEditing.timeline = timeline
+  updateTransmissionTimeline()
 }
 
-//删除某时间轴 来自点击事件
+// 删除某时间轴 来自点击事件
 function deleteTimeline(target: ITimeline): void {
   Swal.fire({
     title: `确定要删除${target.name}吗？`,
-    text: "这将无法撤回！",
-    icon: "warning",
+    text: '这将无法撤回！',
+    icon: 'warning',
     showCancelButton: true,
-    confirmButtonColor: "#3085d6",
-    cancelButtonColor: "#d33",
-    confirmButtonText: "确认删除",
-    cancelButtonText: "取消",
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: '确认删除',
+    cancelButtonText: '取消',
   }).then((result) => {
     if (result.isConfirmed) {
-      resetCurrentlyTimeline();
+      resetCurrentlyTimeline()
       timelines.value.splice(
-        timelines.value.findIndex((v) => v === target),
-        1
-      );
+        timelines.value.findIndex(v => v === target),
+        1,
+      )
     }
-  });
+  })
 }
 
-//初始化时load
+// 初始化时load
 function loadTimelineStoreData(): void {
-  timelineStore.loadTimelineSettings();
-  Reflect.deleteProperty(timelineStore.configValues, "refreshRateMs");
+  timelineStore.loadTimelineSettings()
+  Reflect.deleteProperty(timelineStore.configValues, 'refreshRateMs')
 }
 
-//开启watch去save
+// 开启watch去save
 function saveTimelineStoreData(): void {
   watchEffect(
     () => {
-      timelineStore.saveTimelineSettings();
+      timelineStore.saveTimelineSettings()
     },
-    { flush: "post" }
-  );
+    { flush: 'post' },
+  )
 }
 
 function exportTimeline(timelineArr: ITimeline[]): void {
-  const clipboard = new ClipboardJS(".export", {
+  const clipboard = new ClipboardJS('.export', {
     text: () => {
-      return JSON.stringify(timelineArr);
+      return JSON.stringify(timelineArr)
     },
-  });
-  clipboard.on("success", () => {
+  })
+  clipboard.on('success', () => {
     Swal.fire({
-      position: "top-end",
-      icon: "success",
-      title: "复制成功，已写入剪切板。",
+      position: 'top-end',
+      icon: 'success',
+      title: '复制成功，已写入剪切板。',
       showConfirmButton: false,
       timer: 1500,
-    });
-    clipboard.destroy();
-  });
-  clipboard.on("error", () => {
-    Swal.fire("复制失败，请手动复制！", JSON.stringify([timelineArr]));
-    clipboard.destroy();
-  });
+    })
+    clipboard.destroy()
+  })
+  clipboard.on('error', () => {
+    Swal.fire('复制失败，请手动复制！', JSON.stringify([timelineArr]))
+    clipboard.destroy()
+  })
 }
 
 function importTimelines(): void {
   Swal.fire({
-    title: "输入导出的字符串",
-    input: "text",
+    title: '输入导出的字符串',
+    input: 'text',
     returnInputValueOnDeny: true,
     showDenyButton: true,
-    denyButtonText: "覆盖",
+    denyButtonText: '覆盖',
     showConfirmButton: true,
-    confirmButtonText: "追加",
+    confirmButtonText: '追加',
     showCancelButton: true,
-    cancelButtonText: "放弃",
+    cancelButtonText: '放弃',
   }).then((result) => {
     if (result.isConfirmed || result.isDenied) {
       try {
         if (result.isDenied) {
           Swal.fire({
-            title: "这将丢失目前拥有的所有数据，你确定要覆盖吗？",
+            title: '这将丢失目前拥有的所有数据，你确定要覆盖吗？',
             showConfirmButton: false,
             showDenyButton: true,
-            denyButtonText: "确定覆盖",
+            denyButtonText: '确定覆盖',
             showCancelButton: true,
-            cancelButtonText: "取消",
+            cancelButtonText: '取消',
           }).then((res) => {
             if (res.isDenied) {
-              timelineStore.allTimelines.length = 0;
+              timelineStore.allTimelines.length = 0
               timelineStore.allTimelines.push(
-                ...(JSON.parse(result.value) as ITimeline[])
-              );
-              timelineStore.sortTimelines();
+                ...(JSON.parse(result.value) as ITimeline[]),
+              )
+              timelineStore.sortTimelines()
             }
-          });
-        } else {
-          timelineStore.allTimelines.push(
-            ...(JSON.parse(result.value) as ITimeline[])
-          );
-          timelineStore.sortTimelines();
+          })
         }
-      } catch (e) {
+        else {
+          timelineStore.allTimelines.push(
+            ...(JSON.parse(result.value) as ITimeline[]),
+          )
+          timelineStore.sortTimelines()
+        }
+      }
+      catch (e) {
         Swal.fire({
-          icon: "error",
-          title: "Oops...",
+          icon: 'error',
+          title: 'Oops...',
           text: e as string,
-        });
+        })
       }
     }
-  });
+  })
 }
 
 // function createP8STimeline(): void {
@@ -264,34 +267,34 @@ function importTimelines(): void {
 // }
 const timeMinuteSecondDisplay = computed(() => {
   return `${
-    (simulatedCombatTime.value < 0 ? "-" : "") +
-    (
-      Array(2).join("0") +
-      (Math.floor(simulatedCombatTime.value / 60) +
-        (simulatedCombatTime.value < 0 ? 1 : 0))
+    (simulatedCombatTime.value < 0 ? '-' : '')
+    + (
+      Array(2).join('0')
+      + (Math.floor(simulatedCombatTime.value / 60)
+      + (simulatedCombatTime.value < 0 ? 1 : 0))
     ).slice(-2)
-  }:${(Array(2).join("0") + Math.floor(simulatedCombatTime.value % 60)).slice(
-    -2
-  )}`;
-});
+  }:${(Array(2).join('0') + Math.floor(simulatedCombatTime.value % 60)).slice(
+    -2,
+  )}`
+})
 function timelineTimeFormat() {
-  timelineCurrentlyEditing.timeline.timeline =
-    timelineCurrentlyEditing.timeline.timeline.replaceAll(
-      /(?<=^|^#\s*)(?<time>[:：\d.]+)/gm,
+  timelineCurrentlyEditing.timeline.timeline
+    = timelineCurrentlyEditing.timeline.timeline.replaceAll(
+      /(?<=^|#\s*)(?<time>[:：\d.]+)/gm,
       (searchValue: string | RegExp, _replaceValue: string): string => {
-        if (/^\d+[::]\d+(?:\.\d{1,2})?$/.test(searchValue.toString())) {
+        if (/^\d+:\d+(?:\.\d{1,2})?$/.test(searchValue.toString())) {
           // mm:ss 转 seconds
           return moment
             .duration(`00:${searchValue.toString()}`)
-            .as("seconds")
-            .toString();
+            .as('seconds')
+            .toString()
         }
-        //seconds 转 mm:ss
+        // seconds 转 mm:ss
         return moment
           .utc(Number.parseFloat(searchValue.toString()) * 1000)
-          .format("mm:ss.S");
-      }
-    );
+          .format('mm:ss.S')
+      },
+    )
 }
 // function clearLocalStorage() {
 //   Swal.fire({
@@ -318,45 +321,54 @@ function timelineTimeFormat() {
 //   });
 // }
 
-const openMarkdown = () => {
-  const href = router.resolve({ path: "/timelineHelp" }).href;
-  window.open(href, "_blank");
-};
+function openMarkdown() {
+  const href = router.resolve({ path: '/timelineHelp' }).href
+  window.open(href, '_blank')
+}
 </script>
+
 <template>
   <el-container class="container">
     <el-header>
-      <el-button type="primary" @click="newDemoTimeline()">新建</el-button>
-      <el-button @click="fflogsImportClick()">从FFlogs导入</el-button>
+      <el-button type="primary" @click="newDemoTimeline()">
+        新建
+      </el-button>
+      <el-button @click="fflogsImportClick()">
+        从FFlogs导入
+      </el-button>
       <el-button
-        @click="showSettings = !showSettings"
         color="#626aef"
         style="color: white"
-        >时间轴设置</el-button
+        @click="showSettings = !showSettings"
       >
-      <el-button @click="importTimelines()">导入</el-button>
-      <el-button class="export" @click="exportTimeline(timelines)"
-        >全部导出</el-button
-      >
-      <el-button v-if="isWSMode" type="success" @click="broadcastData()"
-        >通过WS发送到悬浮窗</el-button
-      >
-      <el-button @click="openMarkdown()">查看语法</el-button>
+        时间轴设置
+      </el-button>
+      <el-button @click="importTimelines()">
+        导入
+      </el-button>
+      <el-button class="export" @click="exportTimeline(timelines)">
+        全部导出
+      </el-button>
+      <el-button v-if="isWSMode" type="success" @click="broadcastData()">
+        通过WS发送到悬浮窗
+      </el-button>
+      <el-button @click="openMarkdown()">
+        查看语法
+      </el-button>
       <!-- <el-button v-if="!isWSMode" type="success" @click="applyData()">应用</el-button> -->
       <!-- <el-button @click="createP8STimeline()">P8S门神模板</el-button> -->
       <!-- <el-button @click="clearLocalStorage()">清理LocalStorage缓存</el-button> -->
     </el-header>
     <el-main>
       <timeline-fflogs-import
-        :filters="timelineFilters"
         v-if="showFFlogs"
-        @clearCurrentlyTimeline="resetCurrentlyTimeline"
-        @showFFlogsToggle="() => (showFFlogs = !showFFlogs)"
-        @newTimeline="timelineStore.newTimeline"
-        @updateFilters="timelineStore.updateFilters"
-      >
-      </timeline-fflogs-import>
-      <el-card class="box-card" v-show="showSettings">
+        :filters="timelineFilters"
+        @clear-currently-timeline="resetCurrentlyTimeline"
+        @show-f-flogs-toggle="() => (showFFlogs = !showFFlogs)"
+        @new-timeline="timelineStore.newTimeline"
+        @update-filters="timelineStore.updateFilters"
+      />
+      <el-card v-show="showSettings" class="box-card">
         <el-descriptions title="时间轴参数" size="small" border>
           <el-descriptions-item
             v-for="(_value, key, index) in timelineStore.configValues"
@@ -366,13 +378,13 @@ const openMarkdown = () => {
             width="16em"
           >
             <el-input-number
+              v-model="timelineStore.configValues[key]"
               :min="0"
               :step="0.1"
-              v-model="timelineStore.configValues[key]"
             />
           </el-descriptions-item>
         </el-descriptions>
-        <br />
+        <br>
         <el-descriptions size="small" title="时间轴样式" border>
           <el-descriptions-item
             v-for="(_value, key, index) in timelineStore.showStyle"
@@ -382,14 +394,14 @@ const openMarkdown = () => {
             width="16em"
           >
             <el-input-number
+              v-model="timelineStore.showStyle[key]"
               :min="0"
               :step="0.01"
-              v-model="timelineStore.showStyle[key]"
             />
           </el-descriptions-item>
         </el-descriptions>
       </el-card>
-      <br />
+      <br>
       <el-card v-show="timelineCurrentlyEditing.timeline.create !== '空'">
         <div class="slider-demo-block">
           <span>模拟时间：</span>
@@ -399,8 +411,7 @@ const openMarkdown = () => {
             :max="1500"
             :step="0.1"
             show-input
-          >
-          </el-slider>
+          />
           <div>{{ timeMinuteSecondDisplay }}</div>
         </div>
         <el-row class="timeline-info">
@@ -410,7 +421,7 @@ const openMarkdown = () => {
               <el-input
                 v-model="timelineCurrentlyEditing.timeline.name"
                 class="timeline-info-name"
-              ></el-input>
+              />
             </p>
             <p class="timeline-info-config">
               <span>地图：</span>
@@ -423,7 +434,7 @@ const openMarkdown = () => {
                   :key="zone.id"
                   :label="zone.name"
                   :value="zone.id"
-                ></el-option>
+                />
               </el-select>
             </p>
             <p class="timeline-info-config">
@@ -438,7 +449,7 @@ const openMarkdown = () => {
                   :key="job"
                   :label="Util.nameToFullName(job).cn"
                   :value="job"
-                ></el-option>
+                />
               </el-select>
             </p>
             <p class="timeline-info-config">
@@ -460,28 +471,30 @@ const openMarkdown = () => {
                 :span="12"
                 class="export"
                 @click="exportTimeline([timelineCurrentlyEditing.timeline])"
-                >单独导出</el-button
               >
-              <el-button type="primary" :span="12" @click="timelineTimeFormat()"
-                >切换时间</el-button
-              >
+                单独导出
+              </el-button>
+              <el-button type="primary" :span="12" @click="timelineTimeFormat()">
+                切换时间
+              </el-button>
             </el-row>
             <el-row>
               <el-button
                 :span="12"
                 type="danger"
                 @click="deleteTimeline(timelineCurrentlyEditing.timeline)"
-                >删除</el-button
               >
-              <el-button :span="12" @click="resetCurrentlyTimeline()"
-                >隐藏编辑界面</el-button
-              >
+                删除
+              </el-button>
+              <el-button :span="12" @click="resetCurrentlyTimeline()">
+                隐藏编辑界面
+              </el-button>
             </el-row>
           </div>
           <div style="flex: 1">
             <el-input
-              class="timeline-timeline-raw"
               v-model="timelineCurrentlyEditing.timeline.timeline"
+              class="timeline-timeline-raw"
               type="textarea"
               :rows="12"
               wrap="off"
@@ -497,48 +510,50 @@ const openMarkdown = () => {
                 :lines="transmissionTimeline"
                 :runtime="simulatedCombatTime"
                 :show-style="timelineStore.showStyle"
-              ></timeline-timeline-show>
+              />
             </div>
           </div>
         </el-row>
-        <br />
+        <br>
       </el-card>
-      <br />
+      <br>
       <el-card v-if="timelines.length > 0">
         <el-table :data="timelines" style="width: 100%" stripe>
-          <el-table-column prop="name" label="名称"> </el-table-column>
+          <el-table-column prop="name" label="名称" />
           <el-table-column prop="conditon" label="地图" sortable>
             <template #default="scope">
               {{
                 highDifficultZoneId.find(
-                  (value) => value.id === scope.row.condition.zoneId
+                  (value) => value.id === scope.row.condition.zoneId,
                 )?.name
               }}
             </template>
           </el-table-column>
           <el-table-column prop="conditon" label="职业">
-            <template #default="scope"
-              >{{ Util.nameToFullName(scope.row.condition.job).cn }}
+            <template #default="scope">
+              {{ Util.nameToFullName(scope.row.condition.job).cn }}
             </template>
           </el-table-column>
           <el-table-column fixed="right" label="操作" width="100">
             <template #default="scope">
               <el-button
-                @click="editTimeline(scope.row)"
                 type="primary"
                 size="small"
-                >编辑</el-button
+                @click="editTimeline(scope.row)"
               >
+                编辑
+              </el-button>
             </template>
           </el-table-column>
-        </el-table></el-card
-      >
+        </el-table>
+      </el-card>
       <el-card v-if="timelines.length === 0">
-        <el-empty description="点击上方新建或导入一个时间轴吧~"></el-empty
-      ></el-card>
+        <el-empty description="点击上方新建或导入一个时间轴吧~" />
+      </el-card>
     </el-main>
   </el-container>
 </template>
+
 <style lang="scss" scoped>
 .slider-demo-block {
   display: flex;

@@ -1,66 +1,64 @@
+<script setup lang="ts">
+const emits = defineEmits<{
+  (e: 'handleLine', line: string): unknown
+  (e: 'beforeHandle'): void
+  (e: 'afterHandle'): void
+}>()
+
+const input = ref<HTMLInputElement | null>(null)
+const select = ref<HTMLInputElement | null>(null)
+
+async function onChange(e: Event) {
+  select.value?.classList.remove('drag')
+  const files = (e.target as HTMLInputElement).files
+  if (!files || files.length === 0)
+    return
+
+  emits('beforeHandle')
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i]
+    const text = await file.text()
+    for (const line of text.split('\n'))
+      emits('handleLine', line)
+  }
+
+  emits('afterHandle')
+  select.value?.classList.remove('drag')
+}
+
+function onDragOver(e: DragEvent) {
+  e.preventDefault()
+  select.value?.classList.add('drag')
+}
+function onDragEnd(e: DragEvent) {
+  e.preventDefault()
+  select.value?.classList.remove('drag')
+}
+
+onMounted(() => {
+  input.value?.addEventListener('change', onChange)
+  select.value?.addEventListener('dragover', onDragOver)
+  select.value?.addEventListener('dragleave', onDragEnd)
+})
+onUnmounted(() => {
+  input.value?.removeEventListener('change', onChange)
+  select.value?.removeEventListener('dragover', onDragOver)
+  select.value?.removeEventListener('dragleave', onDragEnd)
+})
+</script>
+
 <template>
   <div class="upload select">
-    <div class="upload-select" ref="select">
+    <div ref="select" class="upload-select">
       <div class="upload text">
         <span>+</span>
         <p>上传或拖入ACT日志</p>
       </div>
-      <input type="file" ref="input" />
+      <input ref="input" type="file">
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-const emits = defineEmits<{
-  (e: "handleLine", line: string): unknown;
-  (e: "beforeHandle"): void;
-  (e: "afterHandle"): void;
-}>();
-
-const input = ref<HTMLInputElement | null>(null);
-const select = ref<HTMLInputElement | null>(null);
-
-const onChange = async (e: Event) => {
-  select.value?.classList.remove("drag");
-  const files = (e.target as HTMLInputElement).files;
-  if (!files || files.length === 0) {
-    return;
-  }
-
-  emits("beforeHandle");
-
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    const text = await file.text();
-    for (const line of text.split("\n")) {
-      emits("handleLine", line);
-    }
-  }
-
-  emits("afterHandle");
-  select.value?.classList.remove("drag");
-};
-
-const onDragOver = (e: DragEvent) => {
-  e.preventDefault();
-  select.value?.classList.add("drag");
-};
-const onDragEnd = (e: DragEvent) => {
-  e.preventDefault();
-  select.value?.classList.remove("drag");
-};
-
-onMounted(() => {
-  input.value?.addEventListener("change", onChange);
-  select.value?.addEventListener("dragover", onDragOver);
-  select.value?.addEventListener("dragleave", onDragEnd);
-});
-onUnmounted(() => {
-  input.value?.removeEventListener("change", onChange);
-  select.value?.removeEventListener("dragover", onDragOver);
-  select.value?.removeEventListener("dragleave", onDragEnd);
-});
-</script>
 
 <style lang="scss" scoped>
 .upload {

@@ -1,3 +1,14 @@
+<script setup lang="ts">
+import { useKeigennRecord2Store } from '@/store/keigennRecord2'
+import type { RowVO } from '@/types/keigennRecord2'
+import { handleImgError } from '@/utils/xivapi'
+
+const props = defineProps({
+  row: { type: Object as () => RowVO, required: true },
+})
+const store = useKeigennRecord2Store()
+</script>
+
 <template>
   <div>
     <span v-if="store.userOptions.showIcon" class="target">
@@ -6,9 +17,9 @@
         :src="`//cafemaker.wakingsands.com/cj/companion/${props.row.jobIcon}.png`"
         alt=""
         :data-job="store.userOptions.showName ? '' : props.row.job"
-        @error="handleImgError"
         loading="lazy"
-      />
+        @error="handleImgError"
+      >
 
       <span
         v-if="store.userOptions.showName"
@@ -22,26 +33,16 @@
         "
       >
         {{
-          props.row.targetId === props.row.povId &&
-          store.userOptions.replaceWithYou
+          props.row.targetId === props.row.povId
+            && store.userOptions.replaceWithYou
             ? "YOU"
             : store.userOptions.anonymous
-            ? props.row.job
-            : store.formatterName(props.row.target)
+              ? props.row.job
+              : store.formatterName(props.row.target)
         }}
       </span>
     </span>
   </div>
 </template>
-
-<script setup lang="ts">
-import { useKeigennRecord2Store } from "@/store/keigennRecord2";
-import type { RowVO } from "@/types/keigennRecord2";
-import { handleImgError } from "@/utils/xivapi";
-const store = useKeigennRecord2Store();
-const props = defineProps({
-  row: { type: Object as () => RowVO, required: true },
-});
-</script>
 
 <style scoped lang="scss"></style>
