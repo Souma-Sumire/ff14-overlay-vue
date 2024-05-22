@@ -218,13 +218,26 @@ onMounted(() => {
   })
   // startOverlayEvents();
 })
+
+function testParty() {
+  const e = { party: fakeParty }
+  if (showTips.value)
+    dialogVisible.value = true
+
+  data.value.party = e.party
+    .filter(v => v.inParty)
+    .map((p) => {
+      return { ...p, rp: '', specify: false }
+    })
+  updateData()
+}
 </script>
 
 <template>
   <div @mouseenter="onMouseOver" @mouseleave="onMouseOut">
     <span
       v-show="data.party.length <= 1"
-      style="color: white; text-shadow: 1px 1px 2px black"
+      class="text-white text-shadow-sm text-shadow-color-black"
     >...</span>
     <vxe-modal
       v-model="dialogVisible"
@@ -316,12 +329,7 @@ onMounted(() => {
         测试单人
       </button>
       <button
-        @click=" {
-          const e = { party: fakeParty };
-          data.party = e.party.map((p) => ({ ...p, rp: '', specify: false }));
-          updateData();
-        }
-        "
+        @click="testParty"
       >
         测试组队
       </button>
