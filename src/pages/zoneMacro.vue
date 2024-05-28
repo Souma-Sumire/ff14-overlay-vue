@@ -13,6 +13,7 @@ import {
   addOverlayListener,
   callOverlayHandler,
 } from '../../cactbot/resources/overlay_plugin_api'
+import ContentType from '../../cactbot/resources/content_type'
 import { defaultMacro } from '@/resources/macro'
 import zoneInfo from '@/resources/zoneInfo'
 import { useMacroStore } from '@/store/macro'
@@ -26,6 +27,28 @@ const hideOnStartup = useStorage('zoneMacroHideOnStartup', ref(false))
 if (hideOnStartup.value)
   macroStore.show = false
 macroStore.formatAllWaymarkPlaceData()
+
+const usedContentTypes: number[] = [
+  ContentType.DutyRoulette,
+  ContentType.Dungeons,
+  ContentType.DeepDungeons,
+  ContentType.VCDungeonFinder,
+  // ContentType.Pvp,
+  ContentType.Trials,
+  ContentType.Raids,
+  ContentType.UltimateRaids,
+]
+
+const usedZoneInfo = Object.entries(zoneInfo).map(([id, info]) => {
+  return { id, ...info }
+}).sort((a, b) => {
+  if ((a.contentType && b.contentType) && a.contentType !== b.contentType)
+    return a.contentType - b.contentType
+  if (a.exVersion !== b.exVersion)
+    return a.exVersion - b.exVersion
+
+  return Number(a.id) - Number(b.id)
+})
 
 async function onLoad() {
   let websocketConnected = false
@@ -115,10 +138,10 @@ onMounted(() => {
           placeholder="Select"
         >
           <el-option
-            v-for="(item, i) in zoneInfo"
-            :key="i"
+            v-for="(item) in usedZoneInfo.filter(v => (v.contentType && usedContentTypes.includes(v.contentType)) || macroStore.selectZone === v.id)"
+            :key="item.id"
             :label="item.name?.cn ?? `${item.name.en} / ${item.name.ja}`"
-            :value="i"
+            :value="item.id"
           />
         </el-select>
       </el-space>
