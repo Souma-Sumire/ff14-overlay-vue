@@ -7402,6 +7402,19 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         `,
       },
     ],
+    348: [
+      {
+        Name: getSource('奶油咖啡', 'https://www.bilibili.com/video/BV1xF411G7rd/'),
+        Type: 'macro',
+        Text: `/p 究极神兵击退撞球
+        /p 当前MT：向北击退（不撞球）
+        /p 当前ST：向东击退/防击退（全减撞东）
+        /p 人群：向南击退（南→西）
+        /p 第三次（四组球）MT击退时开LB
+        /p MT优先减伤覆盖平A和小死刑
+        /p ST减伤不够时跟人群一起撞`,
+      },
+    ],
   },
 }
 for (const key in defaultMacro.zoneId) {
