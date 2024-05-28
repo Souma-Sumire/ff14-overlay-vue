@@ -67,5 +67,5 @@ const zoneInfo = Object.assign(
     },
   },
   data,
-)
+) as typeof data
 export default zoneInfo
