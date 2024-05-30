@@ -1,4 +1,4 @@
-import type { PostNamazuCall } from 'cactbot/types/event'
+import type { PostNamazuCall } from '../../cactbot/types/event'
 
 export interface WayMarkInfo {
   X: number

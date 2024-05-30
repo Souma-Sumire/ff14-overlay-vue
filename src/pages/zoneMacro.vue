@@ -189,7 +189,7 @@ onMounted(() => {
             size="small"
             placeholder="宏标题"
           />
-          <div v-if="macro.Type === 'macro'">
+          <div v-if="'Text' in macro">
             <article v-if="!macro.Editable">
               <div
                 v-for="(m, o) in macro.Text?.split('\n')"
@@ -260,7 +260,7 @@ onMounted(() => {
               </el-button>
             </el-row>
           </div>
-          <div v-if="macro.Type === 'place'">
+          <div v-if="'Place' in macro">
             <el-space v-show="macro.Editable">
               <el-table :data="Object.entries(macro.Place)" border size="small">
                 <el-table-column
