@@ -144,7 +144,7 @@ onMounted(() => {
           placeholder="Select"
         >
           <el-option
-            v-for="(item) in usedZoneInfo.filter(v => (v.contentType && showContentTypes.includes(v.contentType)) || macroStore.selectZone === v.id)"
+            v-for="(item) in usedZoneInfo.filter(v => (!v.name.en.startsWith('(') && v.contentType && showContentTypes.includes(v.contentType)) || macroStore.selectZone === v.id)"
             :key="item.id"
             :label="`${item.name?.cn ?? `${item.name.en} / ${item.name.ja}`}`"
             :value="item.id"
