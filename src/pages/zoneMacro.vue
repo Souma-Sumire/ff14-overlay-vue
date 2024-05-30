@@ -28,27 +28,33 @@ if (hideOnStartup.value)
   macroStore.show = false
 macroStore.formatAllWaymarkPlaceData()
 
-const usedContentTypes: number[] = [
-  ContentType.DutyRoulette,
-  ContentType.Dungeons,
-  ContentType.DeepDungeons,
-  ContentType.VCDungeonFinder,
-  // ContentType.Pvp,
-  ContentType.Trials,
-  ContentType.Raids,
-  ContentType.UltimateRaids,
+const showContentTypes: number[] = [
+  ContentType.Dungeons, // 4人迷宫
+  ContentType.Trials, // 讨伐战
+  ContentType.Raids, // 大型Raid
+  ContentType.VCDungeonFinder, // 多变迷宫
+  ContentType.UltimateRaids, // 绝境战
 ]
 
-const usedZoneInfo = Object.entries(zoneInfo).map(([id, info]) => {
+const preSortZoneInfo = Object.entries(zoneInfo).map(([id, info]) => {
   return { id, ...info }
 }).sort((a, b) => {
-  if ((a.contentType && b.contentType) && a.contentType !== b.contentType)
-    return a.contentType - b.contentType
   if (a.exVersion !== b.exVersion)
     return a.exVersion - b.exVersion
-
+  if (a.contentType === ContentType.Raids && b.contentType === ContentType.Raids && b.name.ja && a.name.ja)
+    return a.name.ja.localeCompare(b.name.ja)
   return Number(a.id) - Number(b.id)
 })
+
+const usedZoneInfo = [
+  ...preSortZoneInfo.filter(v => v.contentType === ContentType.Dungeons), // 4人迷宫
+  ...preSortZoneInfo.filter(v => v.contentType === ContentType.Trials), // 讨伐战
+  ...preSortZoneInfo.filter(v => v.contentType === ContentType.Raids), // 大型Raid
+  ...preSortZoneInfo.filter(v => v.contentType === ContentType.VCDungeonFinder), // 多变迷宫
+  ...preSortZoneInfo.filter(v => v.contentType === ContentType.UltimateRaids), // 绝境战
+  ...preSortZoneInfo.filter(v => v.contentType === ContentType.DeepDungeons), // 深层迷宫
+  ...preSortZoneInfo.filter(v => v.contentType === undefined || !showContentTypes.includes(v.contentType)),
+]
 
 async function onLoad() {
   let websocketConnected = false
@@ -138,9 +144,9 @@ onMounted(() => {
           placeholder="Select"
         >
           <el-option
-            v-for="(item) in usedZoneInfo.filter(v => (v.contentType && usedContentTypes.includes(v.contentType)) || macroStore.selectZone === v.id)"
+            v-for="(item) in usedZoneInfo.filter(v => (v.contentType && showContentTypes.includes(v.contentType)) || macroStore.selectZone === v.id)"
             :key="item.id"
-            :label="item.name?.cn ?? `${item.name.en} / ${item.name.ja}`"
+            :label="`${item.name?.cn ?? `${item.name.en} / ${item.name.ja}`}`"
             :value="item.id"
           />
         </el-select>
