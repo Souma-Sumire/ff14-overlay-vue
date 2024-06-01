@@ -1,7 +1,7 @@
 import type { Job, Role } from '../../cactbot/types/job'
 import type { FFIcon as Icon } from '../types/fflogs'
 
-const iconToJobEnum: Record<Icon, number> = {
+export const iconToJobEnum: Record<Icon, number> = {
   NONE: 0,
   Gladiator: 1,
   Pugilist: 2,
@@ -45,7 +45,7 @@ const iconToJobEnum: Record<Icon, number> = {
   Sage: 40,
 }
 
-const nameToJobEnum: Record<Job, number> = {
+export const nameToJobEnum: Record<Job, number> = {
   NONE: 0,
   GLA: 1,
   PGL: 2,
