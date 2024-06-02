@@ -100,8 +100,9 @@ function getJobClassification(job: number): Role {
       38,
       39,
     ].includes(job)
-  )
+  ) {
     return 'dps'
+  }
 
   if (Util.isCraftingJob(Util.jobEnumToJob(job)))
     return 'crafter'
@@ -213,8 +214,9 @@ onMounted(() => {
       && typeof e.msg === 'object'
       && e.msg !== null
       && Reflect.get(e.msg, 'text') === 'requestData'
-    )
+    ) {
       broadcastParty()
+    }
   })
   // startOverlayEvents();
 })

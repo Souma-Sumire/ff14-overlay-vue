@@ -3987,8 +3987,9 @@ function arcanumsRepeat() {
         && card.bonus === 'range')
         || (getMaxDps('range').max > getMaxDps('melee').max * 1.25
         && card.bonus === 'melee'))
-      )
+      ) {
         return false
+      }
 
       return playerJobDetail.arcanums.includes(
         cardsMap?.[playerJobDetail.heldCard as keyof typeof cardsMap]?.seal,
@@ -4202,13 +4203,15 @@ function handleOnLogEvent(e: any) {
           partyData.jobDetail?.[actorIndex]?.action
             ?.toString(16)
             .toUpperCase() === re.groups.actionID
-        )
+        ) {
           partyData.partySync[actorIndex] = new Date().getTime()
+        }
         if (
           actorIndex === 0
           && re.groups.actionID === Number(25870).toString(16).toUpperCase()
-        )
+        ) {
           lastestAstrodyneCast = new Date().getTime()
+        }
       }
     }
     else if ((re = log.match(logRegex.updateHp))) {
@@ -4277,8 +4280,9 @@ function handleCombatData(e: any) {
     playerJob !== 'AST'
     || e.isActive === 'false'
     || Number(e.Encounter.DURATION) < 30
-  )
+  ) {
     return
+  }
   for (let i = 0; i < partyData.party.length; i++) {
     const dps
       = e.Combatant?.[i === 0 ? 'YOU' : partyData.partyName[i]]?.ENCDPS ?? 0
@@ -4434,7 +4438,7 @@ addOverlayListener('onInCombatChangedEvent', handleInCombatChanged)
       style="width: 100%"
       height="433"
 
-      border m-b-3
+      m-b-3 border
     >
       <el-table-column label="职业" width="110">
         <template #default="scope">
@@ -4511,7 +4515,7 @@ addOverlayListener('onInCombatChangedEvent', handleInCombatChanged)
       </p>
       <p>
         选择一个宏进行控制
-        <el-button type="info" plain bg @click="copyMacro('/e /card')">
+        <el-button type="info" bg plain @click="copyMacro('/e /card')">
           默语
         </el-button>
         <el-button type="success" plain bg @click="copyMacro('/l1 /card')">

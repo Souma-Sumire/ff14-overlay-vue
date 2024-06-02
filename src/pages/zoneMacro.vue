@@ -121,8 +121,8 @@ onMounted(() => {
   />
   <el-container
 
-    v-show="macroStore.show" p-0 rd-1 m-0 absolute left-0
-    top-0
+    v-show="macroStore.show"
+    absolute left-0 top-0 m-0 rd-1 p-0
     class="elcontainer"
   >
     <el-header flex="~ wrap gap1" height="auto" p-l-1 class="elheader">
@@ -156,8 +156,8 @@ onMounted(() => {
           <el-button
             v-for="(entrance, index) in macroStore.fastEntrance"
             :key="index"
-            plain
-            bg
+
+            bg plain
             color="rgb(24,34,44)"
             size="small"
             @click="macroStore.selectZone = entrance.value"
@@ -184,9 +184,8 @@ onMounted(() => {
         >
           <p
             v-show="!macro.Editable"
-            m-t-2
-            m-b-2
-            font-bold
+
+            m-b-2 m-t-2 font-bold
             v-html="macro.Name"
           />
           <el-input

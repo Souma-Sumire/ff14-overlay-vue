@@ -140,8 +140,9 @@ async function handleFFlogsQueryResultFriendliesList(player: Friendlies) {
           if (
             event.sourceIsFriendly
             && !total.find(v => v.actionId === event.actionId)
-          )
+          ) {
             total.push(event)
+          }
           return total
         }, [] as FFlogsStance)
     })
@@ -179,8 +180,9 @@ async function queryFFlogsReportEvents() {
             res.data.nextPageTimestamp
             && res.data.nextPageTimestamp > 0
             && res.data.nextPageTimestamp < fflogsQueryConfig.end
-          )
+          ) {
             await queryFriendly(res.data.nextPageTimestamp)
+          }
         },
       )
       .catch((e) => {
@@ -203,8 +205,9 @@ async function queryFFlogsReportEvents() {
             res.data.nextPageTimestamp
             && res.data.nextPageTimestamp > 0
             && res.data.nextPageTimestamp < fflogsQueryConfig.end
-          )
+          ) {
             await queryEnemies(res.data.nextPageTimestamp, index)
+          }
 
           if (index < fflogsQueryConfig.bossIDs.length - 1)
             await queryEnemies(startTime, index + 1)
@@ -300,8 +303,9 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
         if (
           /^(?:攻击|attack|攻撃)$|^unknown/i.test(item.actionName)
           || (item.type === 'cast' && item.window === undefined)
-        )
+        ) {
           return `# ${item.time} "${item.actionName}"`
+        }
 
         // 只匹配开始施法或符合特殊规则的window
         return `${item.time} "${item.actionName}" sync /^.{14} \\w+ ${

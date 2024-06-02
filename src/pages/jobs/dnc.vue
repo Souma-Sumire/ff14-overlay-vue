@@ -151,14 +151,16 @@ const handleOnLogEvent: EventMap['LogLine'] = (e) => {
     if (
       (e.line[4] === '3E79' && e.line[0] === '22')
       || (e.line[4] === '3E75' && e.line[0] === '21')
-    )
+    ) {
       game.lastCombo = Date.now()
+    }
     else if (
       e.line[4] === '3E76'
       || e.line[4] === '3E7A'
       || (e.line[0] === '21' && e.line[4] === '3E79')
-    )
+    ) {
       game.lastCombo = 0
+    }
   }
 }
 

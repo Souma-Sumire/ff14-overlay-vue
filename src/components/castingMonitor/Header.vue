@@ -24,8 +24,8 @@ const showHeader = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(
       :class="
         castingMonitorStore.focusTargetId === item.id ? 'job-lists-focus' : ''
       "
-      p-0
-      m-0
+
+      m-0 p-0
       @click="castingMonitorStore.handleClickChangeTarget(item.id)"
     >
       <div flex="~ nowrap items-end" style="align-items: flex-end; gap: 0.1rem">

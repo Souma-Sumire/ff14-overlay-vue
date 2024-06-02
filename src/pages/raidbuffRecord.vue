@@ -430,8 +430,9 @@ function handleLine(line: string) {
                   || partyLogList.value.includes(sourceId)
                   || partyEventParty.value.find(v => v.id === sourceId)
                 )
-              )
+              ) {
                 return
+              }
 
               const timestamp = new Date(
                 splitLine[logDefinitions.Ability.fields.timestamp] ?? '???',
@@ -452,8 +453,9 @@ function handleLine(line: string) {
                 if (
                   userOptions.parseAA === false
                   && /^攻击|攻撃|[Aa]ttack$/.test(action)
-                )
+                ) {
                   return
+                }
               }
               const cn = getActionChinese(Number.parseInt(id, 16))
               const actionCN = cn && cn !== '' ? cn : action

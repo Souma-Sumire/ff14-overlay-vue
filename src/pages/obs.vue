@@ -329,8 +329,9 @@ const handleInCombatChanged: EventMap['onInCombatChangedEvent'] = async (
     && !ev.detail.inACTCombat
     && data.reason === 'inCombat'
     && !autoForZone
-  )
+  ) {
     return stop('inCombat')
+  }
 
   return Promise.resolve()
 }

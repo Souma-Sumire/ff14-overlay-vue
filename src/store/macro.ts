@@ -529,8 +529,9 @@ export function getZoneIDByZoneName(ZoneName: string) {
       if (
         zoneName?.toUpperCase() === ZoneName.toUpperCase()
         || zoneName === ZoneName.replaceAll(/[()]/g, '')
-      )
+      ) {
         return zoneId
+      }
     }
   }
 }

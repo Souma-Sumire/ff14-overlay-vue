@@ -103,7 +103,7 @@ function onUpdate() {
     <VueDraggable
       v-for="(role, index) in roles" :key="index" ref="el" v-model="jobList[role.role]"
       :disabled="!isDisabled" animation="150" ghost-class="ghost"
-      class="p-0 flex flex-row gap-0.25 m-t-0.25 m-b-0.25 rounded" filter=".no-draggable" :force-fallback="true"
+      class="m-b-0.25 m-t-0.25 flex flex-row gap-0.25 rounded p-0" filter=".no-draggable" :force-fallback="true"
       @update="onUpdate"
     >
       <div

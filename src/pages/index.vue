@@ -142,8 +142,8 @@ function handleClick(e: Menu) {
       <el-main>
         <vxe-table
           :data="tableData"
-          border
-          stripe
+
+          stripe border
           :row-config="{ height: 100 }"
         >
           <vxe-column width="250" title="名称">
