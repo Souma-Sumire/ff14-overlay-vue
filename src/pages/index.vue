@@ -51,6 +51,11 @@ const tableData: Menu[] = [
     src: 'dnc.webp',
   },
   {
+    title: '[悬浮窗] 一键舞步',
+    type: '悬浮窗',
+    path: 'okDncDance',
+  },
+  {
     title: '[悬浮窗] 占星一键发卡',
     type: '悬浮窗',
     path: 'okASTCard',
