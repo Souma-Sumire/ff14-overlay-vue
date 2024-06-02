@@ -77,12 +77,10 @@ const eventHandlers = {
     }
   },
   countdownCancel: () => {
-    doQueueActions([{ c: 'stop', p: 'okDncDance-(?:start|end)' }])
+    doQueueActions([{ c: 'stop', p: 'okDncDance-(?:start|end|auto)' }])
   },
-  losesEffect: (effectId: string) => {
-    const standard = effectId === '71A'
-    const technical = effectId === '7AB'
-    resetHotbar(standard, technical)
+  losesEffect: () => {
+    resetHotbar(true, true)
   },
   changeZone: () => {
     resetHotbar(true, true)
@@ -94,11 +92,10 @@ const eventHandlers = {
     resetHotbar(true, true)
   },
 }
-
 onMounted(() => {
   addOverlayListener('onPlayerChangedEvent', (e) => {
     playerJob = e.detail.job
-    if (playerID === e.detail.id)
+    if (playerID !== e.detail.id)
       playerID = e.detail.id
     if (!(e.detail.job === 'DNC'))
       return
@@ -107,14 +104,14 @@ onMounted(() => {
     if (curStep === undefined || needsSteps === undefined || curStep === lastStep)
       return
 
-    const stepAction = step[config.value.lang][['Emboite', 'Entrechat', 'Jete', 'Pirouette'].indexOf(needsSteps[curStep])]
     if (needsSteps.length && curStep < needsSteps.length) {
+      const stepAction = step[config.value.lang][['Emboite', 'Entrechat', 'Jete', 'Pirouette'].indexOf(needsSteps[curStep])]
       postNamazu(`/hotbar set ${stepAction} ${config.value.hotbar[needsSteps.length === 2 ? 'standard' : 'technical'].join(' ')}`)
       const currentStep = e.detail.jobDetail?.currentStep
       if (combatState.inGameCombat === false && currentStep !== undefined) {
         const queue: QueueArr = [
-          { c: 'DoTextCommand', p: `/ac ${stepAction}`, d: (currentStep === 0 ? 1400 : 900) },
-          ...(Array.from({ length: 10 }).map(() => ({ c: 'DoTextCommand', p: `/ac ${stepAction}`, d: 20 }))) as QueueArr,
+          { c: 'DoTextCommand', p: `/ac ${stepAction}`, d: (currentStep === 0 ? 1460 : 960) },
+          ...(Array.from({ length: 4 }).map(() => ({ c: 'DoTextCommand', p: `/ac ${stepAction}`, d: 20 }))) as QueueArr,
         ]
         doQueueActions(queue)
       }
@@ -138,8 +135,10 @@ onMounted(() => {
       eventHandlers.countdownCancel()
     }
     else if (netRegex.losesEffect.test(e.rawLine)) {
-      const effectId = netRegex.losesEffect.exec(e.rawLine)?.groups?.effectId ?? ''
-      eventHandlers.losesEffect(effectId)
+      const targetId = netRegex.losesEffect.exec(e.rawLine)?.groups?.targetId ?? ''
+      if (Number.parseInt(targetId, 16) === playerID) {
+        eventHandlers.losesEffect()
+      }
     }
     else if (netRegex.changeZone.test(e.rawLine)) {
       eventHandlers.changeZone()
