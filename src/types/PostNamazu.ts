@@ -21,7 +21,7 @@ export type WayMarkJSON = Partial<{ [key in WayMarkKeys]?: WayMarkInfo }>
 export type PPJSON = WayMarkJSON & { Name?: string, MapID?: number }
 
 export type QueueArr = {
-  c: PostNamazuCall
+  c: Exclude<PostNamazuCall, 'DoQueueActions'> | 'qid' | 'stop'
   p: string
   d?: number
 }[]
