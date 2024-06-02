@@ -639,5 +639,3 @@ main {
   margin: 0;
 }
 </style>
-: { detail: { inACTCombat: boolean; }; }: { party: string | any[]; }: { detail:
-{ inACTCombat: boolean; }; }: { party: string | any[]; }
