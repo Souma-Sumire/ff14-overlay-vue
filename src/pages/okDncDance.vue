@@ -55,6 +55,7 @@ const netRegex = {
   countdownCancel: NetRegexes.countdownCancel(),
   losesEffect: NetRegexes.losesEffect(),
   changeZone: NetRegexes.changeZone(),
+  wipe: NetRegexes.network6d({ command: ['40000010', '4000000F'] }),
 }
 
 const eventHandlers = {
@@ -87,6 +88,9 @@ const eventHandlers = {
     resetHotbar(true, true)
   },
   playerDied: () => {
+    resetHotbar(true, true)
+  },
+  wipe: () => {
     resetHotbar(true, true)
   },
 }
@@ -139,6 +143,9 @@ onMounted(() => {
     }
     else if (netRegex.changeZone.test(e.rawLine)) {
       eventHandlers.changeZone()
+    }
+    else if (netRegex.wipe.test(e.rawLine)) {
+      eventHandlers.wipe()
     }
   })
   addOverlayListener('onInCombatChangedEvent', (e) => {
