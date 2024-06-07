@@ -39,13 +39,13 @@ const config = useStorage('okDncDanceSettings', {
   autoDance: true,
 })
 
-const postNamazu = (v: string) => callOverlayHandler({ call: 'PostNamazu', c: 'DoTextCommand', p: v })
+const doTextCommand = (v: string) => callOverlayHandler({ call: 'PostNamazu', c: 'DoTextCommand', p: v })
 function resetHotbar(standard: boolean, technical: boolean) {
   if (playerJob === 'DNC') {
     if (standard)
-      postNamazu(`/hotbar set ${ending[config.value.lang].standard} ${config.value.hotbar.standard.join(' ')}`)
+      doTextCommand(`/hotbar set ${ending[config.value.lang].standard} ${config.value.hotbar.standard.join(' ')}`)
     if (technical)
-      postNamazu(`/hotbar set ${ending[config.value.lang].technical} ${config.value.hotbar.technical.join(' ')}`)
+      doTextCommand(`/hotbar set ${ending[config.value.lang].technical} ${config.value.hotbar.technical.join(' ')}`)
     lastStep = -1
   }
 }
@@ -95,8 +95,10 @@ const eventHandlers = {
 onMounted(() => {
   addOverlayListener('onPlayerChangedEvent', (e) => {
     playerJob = e.detail.job
-    if (playerID !== e.detail.id)
+    if (playerID !== e.detail.id) {
       playerID = e.detail.id
+      netRegex.losesEffect = NetRegexes.losesEffect({ targetId: playerID.toString(16).toUpperCase() })
+    }
     if (!(e.detail.job === 'DNC'))
       return
     const curStep = e.detail.jobDetail?.currentStep
@@ -106,7 +108,7 @@ onMounted(() => {
 
     if (needsSteps.length && curStep < needsSteps.length) {
       const stepAction = step[config.value.lang][['Emboite', 'Entrechat', 'Jete', 'Pirouette'].indexOf(needsSteps[curStep])]
-      postNamazu(`/hotbar set ${stepAction} ${config.value.hotbar[needsSteps.length === 2 ? 'standard' : 'technical'].join(' ')}`)
+      doTextCommand(`/hotbar set ${stepAction} ${config.value.hotbar[needsSteps.length === 2 ? 'standard' : 'technical'].join(' ')}`)
       const currentStep = e.detail.jobDetail?.currentStep
       if (combatState.inGameCombat === false && currentStep !== undefined) {
         const queue: QueueArr = [
@@ -127,18 +129,15 @@ onMounted(() => {
     eventHandlers.playerDied()
   })
   addOverlayListener('LogLine', (e) => {
-    if (netRegex.countdown.test(e.rawLine)) {
-      const countdownTime = Number.parseInt(netRegex.countdown.exec(e.rawLine)?.groups?.countdownTime ?? '0')
-      eventHandlers.countdown(countdownTime)
+    const countdown = netRegex.countdown.exec(e.rawLine)?.groups?.countdownTime
+    if (countdown !== undefined) {
+      eventHandlers.countdown(Number.parseInt(countdown))
     }
     else if (netRegex.countdownCancel.test(e.rawLine)) {
       eventHandlers.countdownCancel()
     }
     else if (netRegex.losesEffect.test(e.rawLine)) {
-      const targetId = netRegex.losesEffect.exec(e.rawLine)?.groups?.targetId ?? ''
-      if (Number.parseInt(targetId, 16) === playerID) {
-        eventHandlers.losesEffect()
-      }
+      eventHandlers.losesEffect()
     }
     else if (netRegex.changeZone.test(e.rawLine)) {
       eventHandlers.changeZone()
