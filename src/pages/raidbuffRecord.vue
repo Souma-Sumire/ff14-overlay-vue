@@ -1219,7 +1219,3 @@ main {
   justify-content: flex-end;
 }
 </style>
-@/resources/raidbuffDamageProperties,
-  DamageType,
-  DamageProperties,
-  DamageType,
