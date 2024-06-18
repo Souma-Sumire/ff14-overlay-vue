@@ -1023,7 +1023,7 @@ const test = {
     </main>
   </div>
   <div v-if="store.isDev" class="testLog">
-    <div class="test-buttons">
+    <div v-if="store.isLocalhost" class="test-buttons">
       <vxe-button class="test-button" type="primary" @click="test.clearData">
         清空
       </vxe-button>

@@ -36,7 +36,7 @@ const config = useStorage('okDncDanceSettings', {
   },
   cdDancingStart: true,
   cdDancingEnd: true,
-  autoDance: true,
+  autoDance: false,
 })
 
 const doTextCommand = (v: string) => callOverlayHandler({ call: 'PostNamazu', c: 'DoTextCommand', p: v })
@@ -154,7 +154,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div p-l-3>
+  <div bg-white p-l-3>
     <el-form label-width="9rem" style="max-width: 300px">
       <el-form-item label="Action语言" style="width:14em">
         <el-select v-model="config.lang" size="small">
