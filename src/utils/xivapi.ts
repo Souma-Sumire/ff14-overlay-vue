@@ -14,11 +14,6 @@ const site: { first: string, second: string } = {
   second: api?.toLowerCase() === 'xivapi' ? siteList.cafe : siteList.xivapi,
 }
 
-interface CachedImage {
-  url: string
-  expirationTime: number
-}
-
 interface CachedAction {
   name: string
   action: unknown
@@ -41,24 +36,15 @@ const userAction = new Map(
   }),
 )
 
-const IMG_CACHE_KEY = 'souma-img-cache'
 const ACTION_CACHE_KEY = 'souma-action-cache'
-
-const rejectImageData: CachedImage[] = JSON.parse(
-  localStorage.getItem(IMG_CACHE_KEY) || '[]',
-) as CachedImage[]
 const cachedActionData: CachedAction[] = JSON.parse(
   localStorage.getItem(ACTION_CACHE_KEY) || '[]',
 ) as CachedAction[]
 const currentTime = Date.now()
 const MAX_CACHE_LENGTH = 1000
-const updatedImageData = rejectImageData.filter(
-  (v, index) => v.expirationTime >= currentTime && index < MAX_CACHE_LENGTH,
-)
 const updatedActionData = cachedActionData.filter(
   (v, index) => v.expirationTime >= currentTime && index < MAX_CACHE_LENGTH,
 )
-localStorage.setItem(IMG_CACHE_KEY, JSON.stringify(updatedImageData))
 localStorage.setItem(ACTION_CACHE_KEY, JSON.stringify(updatedActionData))
 
 const ICON_REGEX = /(\d{6})\/(\d{6})\.png$/
@@ -145,10 +131,7 @@ export async function getActionByChineseName(name: string) {
         expirationTime,
       }
       cachedActionData.push(newCachedAction)
-      localStorage.setItem(
-        'souma-action-cache',
-        JSON.stringify(cachedActionData),
-      )
+      localStorage.setItem(ACTION_CACHE_KEY, JSON.stringify(cachedActionData))
 
       return result
     }
