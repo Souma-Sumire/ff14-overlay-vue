@@ -303,6 +303,9 @@ function handleLine(line: string) {
               // new combat
               if (combatTimeStamp.value > 0)
                 return
+              if (data.value[0].key === 'placeholder') {
+                data.value.splice(0, 1)
+              }
               if (data.value[0].table.length !== 0) {
                 data.value[0] = markRaw(data.value[0])
                 data.value.unshift({
@@ -609,7 +612,7 @@ const targetOptions = computed(() => {
   }))
 })
 
-if (store.isDev)
+if (store.isBrowser)
   povName.value = '测试用户'
 
 if (povName.value !== '')
@@ -622,6 +625,9 @@ onMounted(() => {
       Reflect.deleteProperty(jobMap.value, id)
   }
   loadStorage()
+  if (!store.isBrowser && data.value[0].key !== 'placeholder') {
+    data.value.unshift({ duration: '00:00', table: [], zoneName: '', key: 'placeholder' })
+  }
   addOverlayListener('LogLine', (e) => {
     handleLine(e.rawLine)
   })
@@ -937,7 +943,7 @@ const test = {
 
 <template>
   <div class="wrapper" :style="style">
-    <header>
+    <header v-if="userOptions.showHeader">
       <vxe-select
         v-show="!minimize"
         v-model="select"
@@ -1022,7 +1028,7 @@ const test = {
       </vxe-table>
     </main>
   </div>
-  <div v-if="store.isDev" class="testLog">
+  <div v-if="store.isBrowser" class="testLog">
     <div v-if="store.isLocalhost" class="test-buttons">
       <vxe-button class="test-button" type="primary" @click="test.clearData">
         清空

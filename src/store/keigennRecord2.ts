@@ -20,7 +20,7 @@ export const useKeigennRecord2Store = defineStore('keigennRecord2', {
         actionCN: parseParams(params.actionCN as string, true), // action显示中文化
         statusCN: parseParams(params.statusCN as string, true), // status显示中文化
       },
-      isDev: false,
+      isBrowser: false,
       isLocalhost: false,
     }
   },
@@ -33,14 +33,9 @@ export const useKeigennRecord2Store = defineStore('keigennRecord2', {
   },
   actions: {
     recheckIsDev() {
-      this.isDev
-        = params.dev === '1'
-        || (params.dev === undefined
-        && !window.OverlayPluginApi
-        && !params.OVERLAY_WS
-        && !params.HOST_PORT)
+      this.isBrowser = !window.OverlayPluginApi && !params.OVERLAY_WS && !params.HOST_PORT
       this.isLocalhost = location.hostname === 'localhost'
-      if (this.isDev)
+      if (this.isBrowser)
         setTimeout(() => this.recheckIsDev(), 1000)
     },
     formatterName(v: string) {
