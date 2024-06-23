@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { RowVO } from '@/pages/raidbuffRecord.vue'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
-import { handleImgError } from '@/utils/xivapi'
+import { handleImgError, site } from '@/utils/xivapi'
 
 const props = defineProps({
   row: { type: Object as () => RowVO, required: true },
@@ -24,7 +24,7 @@ const icon4k = keigennRecord2Store.icon4k
       >
         <img
           class="statusIcon"
-          :src="`//cafemaker.wakingsands.com/i/${raidbuff.fullIcon}${icon4k}.png`"
+          :src="`${site.first}/i/${raidbuff.fullIcon}${icon4k}.png`"
           :alt="raidbuff.effect"
           loading="lazy"
           @error="handleImgError"

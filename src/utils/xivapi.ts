@@ -5,13 +5,13 @@ const params = new URLSearchParams(window.location.href.split('?')[1])
 const api = params.get('api')
 
 const siteList = {
-  cafe: 'https://cafemaker.wakingsands.com',
-  xivapi: 'https://xivapi.com',
+  cafe: 'cafemaker.wakingsands.com',
+  xivapi: 'xivapi.com',
 }
 
-const site: { first: string, second: string } = {
-  first: api?.toLowerCase() === 'xivapi' ? siteList.xivapi : siteList.cafe,
-  second: api?.toLowerCase() === 'xivapi' ? siteList.cafe : siteList.xivapi,
+export const site: { first: string, second: string } = {
+  first: `https://${api?.toLowerCase() === 'xivapi' ? siteList.xivapi : siteList.cafe}`,
+  second: `https://${api?.toLowerCase() === 'xivapi' ? siteList.cafe : siteList.xivapi}`,
 }
 
 interface CachedAction {
@@ -53,7 +53,7 @@ export async function parseAction(
   type: 'item' | 'action' | 'mount' | string,
   actionId: number,
   columns: (keyof XivApiJson)[] = ['ID', 'Icon', 'ActionCategoryTargetID'],
-) {
+): Promise<XivApiJson> {
   const urls = generateActionUrls(type, actionId, columns)
   try {
     const response = await requestPromise(urls, { mode: 'cors' })
@@ -61,11 +61,11 @@ export async function parseAction(
   }
   catch (error) {
     console.error(`Failed to parse action: ${error}`)
-    return {
+    return Promise.resolve({
       ActionCategoryTargetID: 0,
       ID: actionId,
       Icon: '/i/000000/000405.png',
-    }
+    } as XivApiJson)
   }
 }
 
@@ -113,7 +113,7 @@ export async function getActionByChineseName(name: string) {
 
   try {
     const response = await requestPromise([
-      `${siteList.cafe
+      `https://${siteList.cafe
       }/search?filters=ClassJobLevel>0&indexes=action&string=${encodeURIComponent(
         name,
       )}`,
@@ -178,8 +178,10 @@ async function requestPromise(
 
 export function handleImgError(event: Event) {
   const target = event.target as HTMLImageElement
-  if (target.src.includes('cafemaker.wakingsands.com'))
-    target.src = target.src.replace('cafemaker.wakingsands.com', 'xivapi.com')
-  else if (target.src.includes('xivapi.com'))
+  if (target.src.includes(site.first)) {
+    target.src = target.src.replace(site.first, site.second)
+  }
+  else if (target.src.includes(site.second)) {
     target.src = ''
+  }
 }

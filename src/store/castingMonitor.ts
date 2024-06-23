@@ -2,7 +2,7 @@ import type { Party } from 'cactbot/types/event'
 import { defineStore } from 'pinia'
 import { callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 import Util from '@/utils/util'
-import { getFullImgSrc, parseAction } from '@/utils/xivapi'
+import { getFullImgSrc, parseAction, site } from '@/utils/xivapi'
 
 const params = new URLSearchParams(window.location.href.split('?')[1])
 
@@ -229,7 +229,7 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
           (cast1000Ms || this.config.duration) * 1000,
         )
         if (abilityName.startsWith('unknown_')) {
-          cast.src = 'https://cafemaker.wakingsands.com/i/000000/000405.png'
+          cast.src = `${site.first}/i/000000/000405.png`
           cast.class = 'action action-category-0'
         }
         else {

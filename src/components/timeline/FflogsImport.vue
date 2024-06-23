@@ -15,6 +15,7 @@ import Util from '@/utils/util'
 import { getActionChinese } from '@/resources/actionChinese'
 import type { ITimelineCondition } from '@/types/timeline'
 import { useTimelineStore } from '@/store/timeline'
+import { handleImgError, site } from '@/utils/xivapi'
 
 const props = defineProps<{
   filters: Record<string, number[]>
@@ -408,10 +409,10 @@ function claerFFlogsQueryConfig() {
             :label="rule.actionName"
           >
             <img
-              :src="`https://cafemaker.wakingsands.com/i/${rule.url}.png`"
+              :src="`${site.first}/i/${rule.url}.png`"
               class="ability-filter-li-icon"
               title=""
-              :onerror="`javascript:this.src='https://xivapi.com/i/${rule.url}.png';this.onerror=null;`"
+              :onerror="handleImgError"
             >{{ rule.actionName }}
           </el-option>
         </el-select>
