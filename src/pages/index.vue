@@ -15,7 +15,7 @@ function generateUrl(url: string) {
 }
 const tableData: Menu[] = [
   {
-    title: 'Cactbot自定义JS分享',
+    title: 'Cactbot Raidboss User JS 分享',
     type: '网页',
     path: 'https://github.com/Souma-Sumire/raidboss-user-js-public',
     comment: '前往Github项目了解详情',
@@ -80,7 +80,7 @@ const tableData: Menu[] = [
     src: 'timeline.webp',
   },
   {
-    title: '[悬浮窗] OBS自动录制',
+    title: '[悬浮窗] OBS 自动录制',
     type: '悬浮窗',
     path: 'obs',
   },
@@ -106,14 +106,14 @@ const tableData: Menu[] = [
     src: 'teamWatch.webp',
   },
   {
-    title: '[悬浮窗] LB额外增长监控',
+    title: '[悬浮窗] LB 额外增长监控',
     type: '悬浮窗',
     path: 'https://souma.diemoe.net/dist/limitBreakTip.html?LBMax=30000&automatic=220',
     comment: '速刷用，记录LB奖励数值。',
     src: 'limitBreakTip.webp',
   },
   {
-    title: '[悬浮窗] 我TM现在在几线？',
+    title: '[悬浮窗] 我 TM 现在在几线？',
     type: '悬浮窗',
     path: 'instancedAreaInfo',
     comment: '狩猎用，显示你当前在几线。',
@@ -124,6 +124,13 @@ const tableData: Menu[] = [
     path: 'raidbuffRecord',
     comment: '真有用吗？',
     src: 'raidbuffRecord.webp',
+  },
+  {
+    title: '石之家 - 修为查询',
+    type: '网页',
+    path: 'https://greasyfork.org/zh-CN/scripts/482604',
+    src: 'risingstones.webp',
+    comment: '前往GreasyFork脚本页面了解详情',
   },
 ]
 
