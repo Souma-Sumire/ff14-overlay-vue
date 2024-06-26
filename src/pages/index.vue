@@ -15,6 +15,11 @@ function generateUrl(url: string) {
 }
 const tableData: Menu[] = [
   {
+    title: '7.0风脉地图',
+    type: '网页',
+    path: 'aether',
+  },
+  {
     title: 'Cactbot Raidboss User JS 分享',
     type: '网页',
     path: 'https://github.com/Souma-Sumire/raidboss-user-js-public',
