@@ -41,6 +41,10 @@ function test(text: string): Result[] {
       break
 
     lastIndex = hex02 + 1
+    const short = text.slice(lastIndex - 1, lastIndex + 9)
+    if (short === '<hex:0203>') {
+      break
+    }
     const code = text.slice(lastIndex + 6, lastIndex + 8)
     const len16 = text.slice(lastIndex + 8, lastIndex + 10)
     const len10 = Number.parseInt(len16, 16)
