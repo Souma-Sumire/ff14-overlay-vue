@@ -87,6 +87,8 @@ export const nameToJobEnum: Record<Job, number> = {
   DNC: 38,
   RPR: 39,
   SGE: 40,
+  VPR: 41,
+  PCT: 42,
 }
 
 const baseJob = [
@@ -113,6 +115,7 @@ export const jobEnumOrder = [
   33, // AST 占星术士
   40, // SGE 贤者
   28, // SCH 学者
+  41, // VPR 蝰蛇剑士
   34, // SAM 武士
   29, // ROG 双剑师
   30, // NIN 忍者
@@ -125,13 +128,13 @@ export const jobEnumOrder = [
   23, // BRD 吟游诗人
   31, // MCH 机工士
   38, // DNC 舞者
+  42, // PCT 绘灵法师
   7, // THM 咒术师
   25, // BLM 黑魔法师
   26, // ACN 秘术师
   27, // SMN 召唤师
   35, // RDM 赤魔法师
   36, // BLU 青魔法师
-
   8, // CRP 刻木匠
   9, // BSM 锻铁匠
   10, // ARM 铸甲匠
@@ -413,6 +416,8 @@ const nameToFullName: Record<
     simple2: '钐镰',
   },
   SGE: { en: 'Sage', ja: '賢者', cn: '贤者', simple1: '贤', simple2: '贤者' },
+  VPR: { en: 'Viper', ja: 'ヴァイパー', cn: '蝰蛇剑士', simple1: '蛇', simple2: '蝰蛇' },
+  PCT: { en: 'Pictomancer', ja: 'ピクトマンサー', cn: '绘灵法师', simple1: '绘', simple2: '绘灵' },
 }
 const allJobs = Object.keys(nameToJobEnum) as Job[]
 const allIcons = Object.keys(iconToJobEnum) as Icon[]
@@ -436,9 +441,10 @@ const meleeDpsJobs: Job[] = [
   'NIN',
   'SAM',
   'RPR',
+  'VPR',
 ]
 const rangedDpsJobs: Job[] = ['ARC', 'BRD', 'DNC', 'MCH']
-const casterDpsJobs: Job[] = ['BLU', 'RDM', 'BLM', 'SMN', 'ACN', 'THM']
+const casterDpsJobs: Job[] = ['BLU', 'RDM', 'BLM', 'SMN', 'ACN', 'THM', 'PCT']
 const dpsJobs: Job[] = [...meleeDpsJobs, ...rangedDpsJobs, ...casterDpsJobs]
 const battleJobs: Job[] = [
   ...tankJobs,

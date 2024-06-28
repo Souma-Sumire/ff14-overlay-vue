@@ -80,6 +80,13 @@ const jobList: RemovableRef<
   })(),
 )
 
+if (jobList.value.dps.findIndex(v => v.id === 41) === -1) {
+  jobList.value.dps.push({ name: '蛇', id: 41 })
+}
+if (jobList.value.dps.findIndex(v => v.id === 42) === -1) {
+  jobList.value.dps.push({ name: '绘', id: 42 })
+}
+
 function onUpdate() {
   emit(
     'updateSortArr',

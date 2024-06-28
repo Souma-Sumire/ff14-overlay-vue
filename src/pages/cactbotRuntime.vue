@@ -99,6 +99,8 @@ function getJobClassification(job: number): Role {
       36,
       38,
       39,
+      41,
+      42,
     ].includes(job)
   ) {
     return 'dps'
