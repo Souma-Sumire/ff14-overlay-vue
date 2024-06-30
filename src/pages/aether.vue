@@ -15,6 +15,7 @@ const items = [
     },
     id: 'r2f1/00',
     exVersion: '3.0',
+    data: 2818053,
   },
   {
     x: '424.958',
@@ -31,6 +32,7 @@ const items = [
     },
     id: 'r2f1/00',
     exVersion: '3.0',
+    data: 2818055,
   },
   {
     x: '-332.888',
@@ -47,6 +49,7 @@ const items = [
     },
     id: 'r2f1/00',
     exVersion: '3.0',
+    data: 2818057,
   },
   {
     x: '-660.144',
@@ -63,6 +66,7 @@ const items = [
     },
     id: 'r2f1/00',
     exVersion: '3.0',
+    data: 2818058,
   },
   {
     x: '765.011',
@@ -79,6 +83,7 @@ const items = [
     },
     id: 'd2f1/00',
     exVersion: '3.0',
+    data: 2818068,
   },
   {
     x: '433.554',
@@ -95,6 +100,7 @@ const items = [
     },
     id: 'd2f1/00',
     exVersion: '3.0',
+    data: 2818070,
   },
   {
     x: '-480.278',
@@ -111,6 +117,7 @@ const items = [
     },
     id: 'd2f1/00',
     exVersion: '3.0',
+    data: 2818074,
   },
   {
     x: '406.76',
@@ -127,6 +134,7 @@ const items = [
     },
     id: 'd2f1/00',
     exVersion: '3.0',
+    data: 2818077,
   },
   {
     x: '729.228',
@@ -143,6 +151,7 @@ const items = [
     },
     id: 'd2f2/00',
     exVersion: '3.0',
+    data: 2818083,
   },
   {
     x: '98.9095',
@@ -159,6 +168,7 @@ const items = [
     },
     id: 'd2f2/00',
     exVersion: '3.0',
+    data: 2818086,
   },
   {
     x: '-487.471',
@@ -175,6 +185,7 @@ const items = [
     },
     id: 'd2f2/00',
     exVersion: '3.0',
+    data: 2818088,
   },
   {
     x: '-452.378',
@@ -191,6 +202,7 @@ const items = [
     },
     id: 'd2f2/00',
     exVersion: '3.0',
+    data: 2818092,
   },
   {
     x: '421.164',
@@ -207,6 +219,7 @@ const items = [
     },
     id: 'd2f3/00',
     exVersion: '3.0',
+    data: 2818099,
   },
   {
     x: '-93.7944',
@@ -223,6 +236,7 @@ const items = [
     },
     id: 'd2f3/00',
     exVersion: '3.0',
+    data: 2818100,
   },
   {
     x: '-775.265',
@@ -239,6 +253,7 @@ const items = [
     },
     id: 'd2f3/00',
     exVersion: '3.0',
+    data: 2818101,
   },
   {
     x: '340.021',
@@ -255,6 +270,7 @@ const items = [
     },
     id: 'd2f3/00',
     exVersion: '3.0',
+    data: 2818107,
   },
   {
     x: '-747.097',
@@ -271,6 +287,7 @@ const items = [
     },
     id: 'a2f1/00',
     exVersion: '3.0',
+    data: 2818116,
   },
   {
     x: '-759.426',
@@ -287,6 +304,7 @@ const items = [
     },
     id: 'a2f1/00',
     exVersion: '3.0',
+    data: 2818117,
   },
   {
     x: '-180.315',
@@ -303,6 +321,7 @@ const items = [
     },
     id: 'a2f1/00',
     exVersion: '3.0',
+    data: 2818119,
   },
   {
     x: '-564.813',
@@ -319,6 +338,7 @@ const items = [
     },
     id: 'a2f1/00',
     exVersion: '3.0',
+    data: 2818122,
   },
   {
     x: '-487.266',
@@ -335,6 +355,7 @@ const items = [
     },
     id: 'g3f1/00',
     exVersion: '4.0',
+    data: 2818133,
   },
   {
     x: '155.842',
@@ -351,6 +372,7 @@ const items = [
     },
     id: 'g3f1/00',
     exVersion: '4.0',
+    data: 2818135,
   },
   {
     x: '322.591',
@@ -367,6 +389,7 @@ const items = [
     },
     id: 'g3f1/00',
     exVersion: '4.0',
+    data: 2818139,
   },
   {
     x: '743.033',
@@ -383,6 +406,7 @@ const items = [
     },
     id: 'g3f1/00',
     exVersion: '4.0',
+    data: 2818140,
   },
   {
     x: '202.874',
@@ -399,6 +423,7 @@ const items = [
     },
     id: 'g3f2/00',
     exVersion: '4.0',
+    data: 2818149,
   },
   {
     x: '-271.229',
@@ -415,6 +440,7 @@ const items = [
     },
     id: 'g3f2/00',
     exVersion: '4.0',
+    data: 2818151,
   },
   {
     x: '-485.211',
@@ -431,6 +457,7 @@ const items = [
     },
     id: 'g3f2/00',
     exVersion: '4.0',
+    data: 2818154,
   },
   {
     x: '146.627',
@@ -447,6 +474,7 @@ const items = [
     },
     id: 'g3f2/00',
     exVersion: '4.0',
+    data: 2818157,
   },
   {
     x: '-380.191',
@@ -463,6 +491,7 @@ const items = [
     },
     id: 'g3f3/00',
     exVersion: '4.0',
+    data: 2818165,
   },
   {
     x: '109.605',
@@ -479,6 +508,7 @@ const items = [
     },
     id: 'g3f3/00',
     exVersion: '4.0',
+    data: 2818170,
   },
   {
     x: '261.534',
@@ -495,6 +525,7 @@ const items = [
     },
     id: 'g3f3/00',
     exVersion: '4.0',
+    data: 2818171,
   },
   {
     x: '683.406',
@@ -511,6 +542,7 @@ const items = [
     },
     id: 'g3f3/00',
     exVersion: '4.0',
+    data: 2818172,
   },
   {
     x: '423.562',
@@ -527,6 +559,7 @@ const items = [
     },
     id: 'e3f1/00',
     exVersion: '4.0',
+    data: 2818178,
   },
   {
     x: '21.2863',
@@ -543,6 +576,7 @@ const items = [
     },
     id: 'e3f1/00',
     exVersion: '4.0',
+    data: 2818182,
   },
   {
     x: '694.769',
@@ -559,6 +593,7 @@ const items = [
     },
     id: 'e3f1/00',
     exVersion: '4.0',
+    data: 2818185,
   },
   {
     x: '-805.781',
@@ -575,6 +610,7 @@ const items = [
     },
     id: 'e3f1/00',
     exVersion: '4.0',
+    data: 2818187,
   },
   {
     x: '497.307',
@@ -591,6 +627,7 @@ const items = [
     },
     id: 'e3f2/00',
     exVersion: '4.0',
+    data: 2818195,
   },
   {
     x: '163.583',
@@ -607,6 +644,7 @@ const items = [
     },
     id: 'e3f2/00',
     exVersion: '4.0',
+    data: 2818196,
   },
   {
     x: '457.511',
@@ -623,6 +661,7 @@ const items = [
     },
     id: 'e3f2/00',
     exVersion: '4.0',
+    data: 2818199,
   },
   {
     x: '-97.4191',
@@ -639,6 +678,7 @@ const items = [
     },
     id: 'e3f2/00',
     exVersion: '4.0',
+    data: 2818201,
   },
   {
     x: '570.277',
@@ -655,6 +695,7 @@ const items = [
     },
     id: 'e3f3/00',
     exVersion: '4.0',
+    data: 2818208,
   },
   {
     x: '232.005',
@@ -671,6 +712,7 @@ const items = [
     },
     id: 'e3f3/00',
     exVersion: '4.0',
+    data: 2818210,
   },
   {
     x: '105.608',
@@ -687,6 +729,7 @@ const items = [
     },
     id: 'e3f3/00',
     exVersion: '4.0',
+    data: 2818212,
   },
   {
     x: '-693.83',
@@ -703,6 +746,7 @@ const items = [
     },
     id: 'e3f3/00',
     exVersion: '4.0',
+    data: 2818215,
   },
   {
     x: '554.28',
@@ -719,6 +763,7 @@ const items = [
     },
     id: 'n4f1/00',
     exVersion: '5.0',
+    data: 2818223,
   },
   {
     x: '613.245',
@@ -735,6 +780,7 @@ const items = [
     },
     id: 'n4f1/00',
     exVersion: '5.0',
+    data: 2818227,
   },
   {
     x: '-149.798',
@@ -751,6 +797,7 @@ const items = [
     },
     id: 'n4f1/00',
     exVersion: '5.0',
+    data: 2818230,
   },
   {
     x: '-619.637',
@@ -767,6 +814,7 @@ const items = [
     },
     id: 'n4f1/00',
     exVersion: '5.0',
+    data: 2818231,
   },
   {
     x: '650.568',
@@ -783,6 +831,7 @@ const items = [
     },
     id: 'n4f2/00',
     exVersion: '5.0',
+    data: 2818238,
   },
   {
     x: '-651.165',
@@ -799,6 +848,7 @@ const items = [
     },
     id: 'n4f2/00',
     exVersion: '5.0',
+    data: 2818242,
   },
   {
     x: '623.752',
@@ -815,6 +865,7 @@ const items = [
     },
     id: 'n4f2/00',
     exVersion: '5.0',
+    data: 2818245,
   },
   {
     x: '-62.8977',
@@ -831,6 +882,7 @@ const items = [
     },
     id: 'n4f2/00',
     exVersion: '5.0',
+    data: 2818246,
   },
   {
     x: '446.079',
@@ -847,6 +899,7 @@ const items = [
     },
     id: 'n4f3/00',
     exVersion: '5.0',
+    data: 2818253,
   },
   {
     x: '344.683',
@@ -863,6 +916,7 @@ const items = [
     },
     id: 'n4f3/00',
     exVersion: '5.0',
+    data: 2818256,
   },
   {
     x: '-343.801',
@@ -879,6 +933,7 @@ const items = [
     },
     id: 'n4f3/00',
     exVersion: '5.0',
+    data: 2818259,
   },
   {
     x: '158.804',
@@ -895,6 +950,7 @@ const items = [
     },
     id: 'n4f3/00',
     exVersion: '5.0',
+    data: 2818261,
   },
   {
     x: '-231.414',
@@ -911,6 +967,7 @@ const items = [
     },
     id: 'n4f4/00',
     exVersion: '5.0',
+    data: 2818270,
   },
   {
     x: '12.8542',
@@ -927,6 +984,7 @@ const items = [
     },
     id: 'n4f4/00',
     exVersion: '5.0',
+    data: 2818273,
   },
   {
     x: '432.481',
@@ -943,6 +1001,7 @@ const items = [
     },
     id: 'n4f4/00',
     exVersion: '5.0',
+    data: 2818276,
   },
   {
     x: '-8.99945',
@@ -959,6 +1018,7 @@ const items = [
     },
     id: 'n4f4/00',
     exVersion: '5.0',
+    data: 2818277,
   },
   {
     x: '-405.955',
@@ -975,6 +1035,7 @@ const items = [
     },
     id: 'n4f5/00',
     exVersion: '5.0',
+    data: 2818283,
   },
   {
     x: '-141.571',
@@ -991,6 +1052,7 @@ const items = [
     },
     id: 'n4f5/00',
     exVersion: '5.0',
+    data: 2818285,
   },
   {
     x: '338.635',
@@ -1007,6 +1069,7 @@ const items = [
     },
     id: 'n4f5/00',
     exVersion: '5.0',
+    data: 2818288,
   },
   {
     x: '681.139',
@@ -1023,6 +1086,7 @@ const items = [
     },
     id: 'n4f5/00',
     exVersion: '5.0',
+    data: 2818292,
   },
   {
     x: '358.212',
@@ -1039,6 +1103,7 @@ const items = [
     },
     id: 'n4f6/00',
     exVersion: '5.0',
+    data: 2818298,
   },
   {
     x: '50.2051',
@@ -1055,6 +1120,7 @@ const items = [
     },
     id: 'n4f6/00',
     exVersion: '5.0',
+    data: 2818300,
   },
   {
     x: '339.116',
@@ -1071,6 +1137,7 @@ const items = [
     },
     id: 'n4f6/00',
     exVersion: '5.0',
+    data: 2818303,
   },
   {
     x: '-774.229',
@@ -1087,6 +1154,7 @@ const items = [
     },
     id: 'n4f6/00',
     exVersion: '5.0',
+    data: 2818307,
   },
   {
     x: '-184.222',
@@ -1103,6 +1171,7 @@ const items = [
     },
     id: 'm5f2/00',
     exVersion: '6.0',
+    data: 2818344,
   },
   {
     x: '194.816',
@@ -1119,6 +1188,7 @@ const items = [
     },
     id: 'm5f2/00',
     exVersion: '6.0',
+    data: 2818345,
   },
   {
     x: '382.184',
@@ -1135,6 +1205,7 @@ const items = [
     },
     id: 'm5f2/00',
     exVersion: '6.0',
+    data: 2818349,
   },
   {
     x: '-602.03',
@@ -1151,6 +1222,7 @@ const items = [
     },
     id: 'm5f2/00',
     exVersion: '6.0',
+    data: 2818350,
   },
   {
     x: '-176.104',
@@ -1167,6 +1239,7 @@ const items = [
     },
     id: 'm5f1/00',
     exVersion: '6.0',
+    data: 2818329,
   },
   {
     x: '-49.2675',
@@ -1183,6 +1256,7 @@ const items = [
     },
     id: 'm5f1/00',
     exVersion: '6.0',
+    data: 2818330,
   },
   {
     x: '118.474',
@@ -1199,6 +1273,7 @@ const items = [
     },
     id: 'm5f1/00',
     exVersion: '6.0',
+    data: 2818331,
   },
   {
     x: '550.018',
@@ -1215,6 +1290,7 @@ const items = [
     },
     id: 'm5f1/00',
     exVersion: '6.0',
+    data: 2818332,
   },
   {
     x: '346.529',
@@ -1231,6 +1307,7 @@ const items = [
     },
     id: 'k5f1/00',
     exVersion: '6.0',
+    data: 2818314,
   },
   {
     x: '748.562',
@@ -1247,6 +1324,7 @@ const items = [
     },
     id: 'k5f1/00',
     exVersion: '6.0',
+    data: 2818315,
   },
   {
     x: '-547.726',
@@ -1263,6 +1341,7 @@ const items = [
     },
     id: 'k5f1/00',
     exVersion: '6.0',
+    data: 2818316,
   },
   {
     x: '-128.069',
@@ -1279,6 +1358,7 @@ const items = [
     },
     id: 'k5f1/00',
     exVersion: '6.0',
+    data: 2818317,
   },
   {
     x: '42.5905',
@@ -1295,6 +1375,7 @@ const items = [
     },
     id: 'u5f1/00',
     exVersion: '6.0',
+    data: 2818359,
   },
   {
     x: '-482.744',
@@ -1311,6 +1392,7 @@ const items = [
     },
     id: 'u5f1/00',
     exVersion: '6.0',
+    data: 2818360,
   },
   {
     x: '316.401',
@@ -1327,6 +1409,7 @@ const items = [
     },
     id: 'u5f1/00',
     exVersion: '6.0',
+    data: 2818361,
   },
   {
     x: '29.1046',
@@ -1343,6 +1426,7 @@ const items = [
     },
     id: 'u5f1/00',
     exVersion: '6.0',
+    data: 2818362,
   },
   {
     x: '628.239',
@@ -1359,6 +1443,7 @@ const items = [
     },
     id: 'n5f1/00',
     exVersion: '6.0',
+    data: 2818374,
   },
   {
     x: '-754.753',
@@ -1375,6 +1460,7 @@ const items = [
     },
     id: 'n5f1/00',
     exVersion: '6.0',
+    data: 2818375,
   },
   {
     x: '-402.921',
@@ -1391,6 +1477,7 @@ const items = [
     },
     id: 'n5f1/00',
     exVersion: '6.0',
+    data: 2818379,
   },
   {
     x: '-555.623',
@@ -1407,6 +1494,7 @@ const items = [
     },
     id: 'n5f1/00',
     exVersion: '6.0',
+    data: 2818380,
   },
   {
     x: '-333.54',
@@ -1423,6 +1511,7 @@ const items = [
     },
     id: 'u5f2/00',
     exVersion: '6.0',
+    data: 2818389,
   },
   {
     x: '13.118',
@@ -1439,6 +1528,7 @@ const items = [
     },
     id: 'u5f2/00',
     exVersion: '6.0',
+    data: 2818390,
   },
   {
     x: '661.785',
@@ -1455,6 +1545,7 @@ const items = [
     },
     id: 'u5f2/00',
     exVersion: '6.0',
+    data: 2818391,
   },
   {
     x: '539.271',
@@ -1471,6 +1562,7 @@ const items = [
     },
     id: 'u5f2/00',
     exVersion: '6.0',
+    data: 2818392,
   },
   {
     x: '353.57',
@@ -1486,6 +1578,7 @@ const items = [
     },
     id: 'y6f1/00',
     exVersion: '7.0',
+    data: 2818404,
   },
   {
     x: '-458.305',
@@ -1501,6 +1594,7 @@ const items = [
     },
     id: 'y6f1/00',
     exVersion: '7.0',
+    data: 2818405,
   },
   {
     x: '-202.8',
@@ -1516,6 +1610,7 @@ const items = [
     },
     id: 'y6f1/00',
     exVersion: '7.0',
+    data: 2818408,
   },
   {
     x: '414.78',
@@ -1531,6 +1626,7 @@ const items = [
     },
     id: 'y6f1/00',
     exVersion: '7.0',
+    data: 2818409,
   },
   {
     x: '-134.576',
@@ -1546,6 +1642,7 @@ const items = [
     },
     id: 'y6f1/00',
     exVersion: '7.0',
+    data: 2818410,
   },
   {
     x: '-198.46',
@@ -1561,6 +1658,7 @@ const items = [
     },
     id: 'y6f1/00',
     exVersion: '7.0',
+    data: 2818406,
   },
   {
     x: '-812.893',
@@ -1576,6 +1674,7 @@ const items = [
     },
     id: 'y6f1/00',
     exVersion: '7.0',
+    data: 2818407,
   },
   {
     x: '70.1898',
@@ -1591,6 +1690,7 @@ const items = [
     },
     id: 'y6f1/00',
     exVersion: '7.0',
+    data: 2818411,
   },
   {
     x: '368.36',
@@ -1606,6 +1706,7 @@ const items = [
     },
     id: 'y6f1/00',
     exVersion: '7.0',
+    data: 2818412,
   },
   {
     x: '398.81',
@@ -1621,6 +1722,7 @@ const items = [
     },
     id: 'y6f1/00',
     exVersion: '7.0',
+    data: 2818413,
   },
   {
     x: '299.51',
@@ -1636,6 +1738,7 @@ const items = [
     },
     id: 'y6f2/00',
     exVersion: '7.0',
+    data: 2818419,
   },
   {
     x: '-599.553',
@@ -1651,6 +1754,7 @@ const items = [
     },
     id: 'y6f2/00',
     exVersion: '7.0',
+    data: 2818420,
   },
   {
     x: '-638.039',
@@ -1666,6 +1770,7 @@ const items = [
     },
     id: 'y6f2/00',
     exVersion: '7.0',
+    data: 2818423,
   },
   {
     x: '918.152',
@@ -1681,6 +1786,7 @@ const items = [
     },
     id: 'y6f2/00',
     exVersion: '7.0',
+    data: 2818424,
   },
   {
     x: '516.83',
@@ -1696,6 +1802,7 @@ const items = [
     },
     id: 'y6f2/00',
     exVersion: '7.0',
+    data: 2818425,
   },
   {
     x: '-294.179',
@@ -1711,6 +1818,7 @@ const items = [
     },
     id: 'y6f2/00',
     exVersion: '7.0',
+    data: 2818421,
   },
   {
     x: '48.9754',
@@ -1726,6 +1834,7 @@ const items = [
     },
     id: 'y6f2/00',
     exVersion: '7.0',
+    data: 2818422,
   },
   {
     x: '-754.104',
@@ -1741,6 +1850,7 @@ const items = [
     },
     id: 'y6f2/00',
     exVersion: '7.0',
+    data: 2818426,
   },
   {
     x: '130.47',
@@ -1756,6 +1866,7 @@ const items = [
     },
     id: 'y6f2/00',
     exVersion: '7.0',
+    data: 2818427,
   },
   {
     x: '485.92',
@@ -1771,6 +1882,7 @@ const items = [
     },
     id: 'y6f2/00',
     exVersion: '7.0',
+    data: 2818428,
   },
   {
     x: '-114.388',
@@ -1786,6 +1898,7 @@ const items = [
     },
     id: 'y6f3/00',
     exVersion: '7.0',
+    data: 2818434,
   },
   {
     x: '416.08',
@@ -1801,6 +1914,7 @@ const items = [
     },
     id: 'y6f3/00',
     exVersion: '7.0',
+    data: 2818435,
   },
   {
     x: '-550.591',
@@ -1816,6 +1930,7 @@ const items = [
     },
     id: 'y6f3/00',
     exVersion: '7.0',
+    data: 2818438,
   },
   {
     x: '-184.71',
@@ -1831,6 +1946,7 @@ const items = [
     },
     id: 'y6f3/00',
     exVersion: '7.0',
+    data: 2818439,
   },
   {
     x: '610.773',
@@ -1846,6 +1962,7 @@ const items = [
     },
     id: 'y6f3/00',
     exVersion: '7.0',
+    data: 2818440,
   },
   {
     x: '-114.32',
@@ -1861,6 +1978,7 @@ const items = [
     },
     id: 'y6f3/00',
     exVersion: '7.0',
+    data: 2818436,
   },
   {
     x: '39.3742',
@@ -1876,6 +1994,7 @@ const items = [
     },
     id: 'y6f3/00',
     exVersion: '7.0',
+    data: 2818437,
   },
   {
     x: '-676.539',
@@ -1891,6 +2010,7 @@ const items = [
     },
     id: 'y6f3/00',
     exVersion: '7.0',
+    data: 2818441,
   },
   {
     x: '205.188',
@@ -1906,6 +2026,7 @@ const items = [
     },
     id: 'y6f3/00',
     exVersion: '7.0',
+    data: 2818442,
   },
   {
     x: '747.188',
@@ -1921,6 +2042,7 @@ const items = [
     },
     id: 'y6f3/00',
     exVersion: '7.0',
+    data: 2818443,
   },
   {
     x: '296.071',
@@ -1936,6 +2058,7 @@ const items = [
     },
     id: 'x6f1/00',
     exVersion: '7.0',
+    data: 2818449,
   },
   {
     x: '-709.42',
@@ -1951,6 +2074,7 @@ const items = [
     },
     id: 'x6f1/00',
     exVersion: '7.0',
+    data: 2818450,
   },
   {
     x: '-602.93',
@@ -1966,6 +2090,7 @@ const items = [
     },
     id: 'x6f1/00',
     exVersion: '7.0',
+    data: 2818453,
   },
   {
     x: '-192.187',
@@ -1981,6 +2106,7 @@ const items = [
     },
     id: 'x6f1/00',
     exVersion: '7.0',
+    data: 2818454,
   },
   {
     x: '-620.361',
@@ -1996,6 +2122,7 @@ const items = [
     },
     id: 'x6f1/00',
     exVersion: '7.0',
+    data: 2818455,
   },
   {
     x: '-63.2181',
@@ -2011,6 +2138,7 @@ const items = [
     },
     id: 'x6f1/00',
     exVersion: '7.0',
+    data: 2818451,
   },
   {
     x: '380.321',
@@ -2026,6 +2154,7 @@ const items = [
     },
     id: 'x6f1/00',
     exVersion: '7.0',
+    data: 2818452,
   },
   {
     x: '645.594',
@@ -2041,6 +2170,7 @@ const items = [
     },
     id: 'x6f1/00',
     exVersion: '7.0',
+    data: 2818456,
   },
   {
     x: '183.905',
@@ -2056,6 +2186,7 @@ const items = [
     },
     id: 'x6f1/00',
     exVersion: '7.0',
+    data: 2818457,
   },
   {
     x: '658.289',
@@ -2071,6 +2202,7 @@ const items = [
     },
     id: 'x6f1/00',
     exVersion: '7.0',
+    data: 2818458,
   },
   {
     x: '397.89',
@@ -2086,6 +2218,7 @@ const items = [
     },
     id: 'x6f2/00',
     exVersion: '7.0',
+    data: 2818464,
   },
   {
     x: '204.578',
@@ -2101,6 +2234,7 @@ const items = [
     },
     id: 'x6f2/00',
     exVersion: '7.0',
+    data: 2818465,
   },
   {
     x: '77.55',
@@ -2116,6 +2250,7 @@ const items = [
     },
     id: 'x6f2/00',
     exVersion: '7.0',
+    data: 2818468,
   },
   {
     x: '606.856',
@@ -2131,6 +2266,7 @@ const items = [
     },
     id: 'x6f2/00',
     exVersion: '7.0',
+    data: 2818469,
   },
   {
     x: '686',
@@ -2146,6 +2282,7 @@ const items = [
     },
     id: 'x6f2/00',
     exVersion: '7.0',
+    data: 2818470,
   },
   {
     x: '-585.41',
@@ -2161,6 +2298,7 @@ const items = [
     },
     id: 'x6f2/00',
     exVersion: '7.0',
+    data: 2818466,
   },
   {
     x: '-600.09',
@@ -2176,6 +2314,7 @@ const items = [
     },
     id: 'x6f2/00',
     exVersion: '7.0',
+    data: 2818467,
   },
   {
     x: '-286.15',
@@ -2191,6 +2330,7 @@ const items = [
     },
     id: 'x6f2/00',
     exVersion: '7.0',
+    data: 2818471,
   },
   {
     x: '-28.99',
@@ -2206,6 +2346,7 @@ const items = [
     },
     id: 'x6f2/00',
     exVersion: '7.0',
+    data: 2818472,
   },
   {
     x: '-457.64',
@@ -2221,6 +2362,7 @@ const items = [
     },
     id: 'x6f2/00',
     exVersion: '7.0',
+    data: 2818473,
   },
   {
     x: '-698.848',
@@ -2236,6 +2378,7 @@ const items = [
     },
     id: 'x6f3/00',
     exVersion: '7.0',
+    data: 2818479,
   },
   {
     x: '753.37',
@@ -2251,6 +2394,7 @@ const items = [
     },
     id: 'x6f3/00',
     exVersion: '7.0',
+    data: 2818480,
   },
   {
     x: '-516.675',
@@ -2266,6 +2410,7 @@ const items = [
     },
     id: 'x6f3/00',
     exVersion: '7.0',
+    data: 2818483,
   },
   {
     x: '232.36',
@@ -2281,6 +2426,7 @@ const items = [
     },
     id: 'x6f3/00',
     exVersion: '7.0',
+    data: 2818484,
   },
   {
     x: '627.534',
@@ -2296,6 +2442,7 @@ const items = [
     },
     id: 'x6f3/00',
     exVersion: '7.0',
+    data: 2818485,
   },
   {
     x: '509.7',
@@ -2311,6 +2458,7 @@ const items = [
     },
     id: 'x6f3/00',
     exVersion: '7.0',
+    data: 2818481,
   },
   {
     x: '-559.59',
@@ -2326,6 +2474,7 @@ const items = [
     },
     id: 'x6f3/00',
     exVersion: '7.0',
+    data: 2818482,
   },
   {
     x: '315.229',
@@ -2341,6 +2490,7 @@ const items = [
     },
     id: 'x6f3/00',
     exVersion: '7.0',
+    data: 2818486,
   },
   {
     x: '169.581',
@@ -2356,6 +2506,7 @@ const items = [
     },
     id: 'x6f3/00',
     exVersion: '7.0',
+    data: 2818487,
   },
   {
     x: '-484.18',
@@ -2371,6 +2522,7 @@ const items = [
     },
     id: 'x6f3/00',
     exVersion: '7.0',
+    data: 2818488,
   },
 ]
 
@@ -2404,6 +2556,7 @@ const groupById = items.reduce((total, item) => {
       y: number
     }
     id: string
+    data: number
   }[]
 }[])
 const IMG_RAW_SIZE = 2048
@@ -2430,7 +2583,7 @@ const selectExVersion = ref(exVersions[0])
           >
           <article>
             <div
-              v-for="(item, index) in map.items" :key="`${item.id}-${index}`" class="point" :style="{
+              v-for="(item, index) in map.items.sort((a, b) => a.data - b.data)" :key="`${item.id}-${index}`" class="point" :style="{
                 position: 'absolute', left: `${item.game.x * IMG_SCALE}px`, top: `${item.game.y * IMG_SCALE}px`,
               }"
             >
