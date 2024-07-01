@@ -236,6 +236,7 @@ onMounted(() => {
         </el-popover>
       </el-form-item>
     </el-form>
+    作者：<a href="https://github.com/GooeyNyan" target="_blank">GooeyNyan</a>
   </div>
 </template>
 
