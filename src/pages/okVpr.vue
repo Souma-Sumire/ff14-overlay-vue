@@ -33,13 +33,6 @@ const step: Record<Lang, string[]> = {
   en: ['Steel Fangs', 'Dread Fangs'],
   ja: ['壱の牙【咬創】', '壱の牙【惨毒】'],
 }
-const combatState: {
-  inACTCombat: boolean
-  inGameCombat: boolean
-} = {
-  inACTCombat: false,
-  inGameCombat: false,
-}
 
 const config = useStorage('okDncDanceSettings', {
   lang: 'cn' as Lang,
@@ -130,9 +123,11 @@ onMounted(() => {
       netRegex.ability = NetRegexes.ability({ sourceId: playerID.toString(16).toUpperCase() })
     }
   })
+
   addOverlayListener('onPlayerDied', () => {
     eventHandlers.playerDied()
   })
+
   addOverlayListener('LogLine', (e) => {
     if (netRegex.gainsEffect.test(e.rawLine)) {
       if (Object.values(effects).includes(e.line[2])) {
@@ -169,10 +164,6 @@ onMounted(() => {
       lastWeaponskill = ''
       eventHandlers.wipe()
     }
-  })
-  addOverlayListener('onInCombatChangedEvent', (e) => {
-    combatState.inACTCombat = e.detail.inACTCombat
-    combatState.inGameCombat = e.detail.inGameCombat
   })
 })
 </script>

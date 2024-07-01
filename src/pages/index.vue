@@ -61,6 +61,11 @@ const tableData: Menu[] = [
     path: 'okDncDance',
   },
   {
+    title: '[悬浮窗] 一键 VPR 连击',
+    type: '悬浮窗',
+    path: 'okVpr',
+  },
+  {
     title: '[悬浮窗] 占星一键发卡',
     type: '悬浮窗',
     path: 'okASTCard',
