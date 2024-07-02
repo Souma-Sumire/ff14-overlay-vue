@@ -27,6 +27,7 @@ type DiscoveredMonsters = Array<{
   gameMapY: number
   show: boolean
 }>
+type FilterType = 'all' | '1' | '2' | '3' | '4' | '5' | '6'
 
 const ZONE_LIST = [
   ZoneId.Urqopacha,
@@ -38,6 +39,15 @@ const ZONE_LIST = [
 ]
 
 const Monsters = useStorage('souma-hunt-monsters', [] as DiscoveredMonsters)
+const FilterKeys: FilterType[] = ['all', '1', '2', '3', '4', '5', '6']
+const FilterConfig = useStorage('souma-hunt-filter', {
+  [ZoneId.Urqopacha]: 'all',
+  [ZoneId.Kozamauka]: 'all',
+  [ZoneId.YakTel]: 'all',
+  [ZoneId.Shaaloani]: 'all',
+  [ZoneId.HeritageFound]: 'all',
+  [ZoneId.LivingMemory]: 'all',
+} as Record<typeof ZONE_LIST[number], FilterType>)
 
 const NameToHuntEntry: Record<string, HuntEntry> = {}
 
@@ -245,14 +255,14 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
         }
       }
     }
-    else if (count === 1 || count) {
+    else if (count >= 1) {
       // 这是一个2个或3个点的合并坐标，并且自己是主monster
       const otherIds = exist.infos.map(v => v.id)
       const others = Monsters.value.filter(item => otherIds.includes(item.id))
       others[0].show = true
-      if (others.length === 2) {
-        // 这是一个由3拆2的情况，将其合并到一起
-        others[0].infos.push(others[1].infos[0])
+      if (others.length >= 2) {
+        // 这是一个由N>2拆N-1的情况，将其合并到一起
+        others[0].infos.push(...(others.filter((_v, i) => i !== 0).map(item => item.infos[0])))
       }
       // 更新数据
       Monsters.value = Monsters.value.filter(item => item.id !== id)
@@ -376,12 +386,12 @@ function clear() {
     Monsters.value = []
   })
 }
-function getBackgroundColor(monster: DiscoveredMonsters[number]): string {
-  if (monster.infos.length > 1) {
-    return `ins_merged_${monster.infos.map(i => i.instance).join('_')}`
+function getBackgroundColor(item: DiscoveredMonsters[number]): string {
+  if (item.infos.length > 1 && getShowType(item) === 'all') {
+    return `ins_merged_${item.infos.map(i => i.instance).join('_')}`
   }
   else {
-    switch (monster.infos[0].instance) {
+    switch (item.infos[0].instance) {
       case 1:
         return 'ins1'
       case 2:
@@ -400,8 +410,23 @@ function getBackgroundColor(monster: DiscoveredMonsters[number]): string {
   }
 }
 
-function getNumberText(monster: DiscoveredMonsters[number]): string {
-  return monster.infos.map(i => (`${i.instance}-${i.number}`)).join('/')
+function getNumberText(item: DiscoveredMonsters[number]): string {
+  if (getShowType(item) === 'all') {
+    return item.infos.map(i => (`${i.instance}-${i.number}`)).join('/')
+  }
+  return `${item.infos[0].instance}-${item.infos[0].number}`
+}
+
+function getShowType(item: DiscoveredMonsters[number]): FilterType {
+  return FilterConfig.value[item.zoneId as keyof typeof FilterConfig.value]
+}
+
+function isShow(item: DiscoveredMonsters[number]): boolean {
+  const showType = getShowType(item)
+  if (showType === 'all') {
+    return item.show !== false
+  }
+  return item.instance.toString() === showType
 }
 
 onMounted(async () => {
@@ -441,10 +466,20 @@ onMounted(async () => {
     </el-row>
     <div class="map-container" flex="~ wrap">
       <div v-for="m in ZONE_LIST" :key="m" class="map-info" flex="~ col">
-        <h3 mb-2 mt-2 p0>
-          {{ Map[m].name.souma }} / {{ Map[m].name.en }} / {{ Map[m].name.ja }}
+        <h3 mb-0 mt-1 p0>
+          {{ Map[m].name.souma }} / {{ Map[m].name.ja }} / {{ Map[m].name.en }}
         </h3>
         <div class="map-image">
+          <aside>
+            <el-radio-group v-model="FilterConfig[m]" size="small">
+              <el-radio-button
+                v-for="item in FilterKeys"
+                :key="item"
+                :label="item"
+                :value="item"
+              />
+            </el-radio-group>
+          </aside>
           <img
             alt="map"
             :src="`https://xivapi.com/m/${Map[m].id.split('/')[0]}/${Map[m].id.replace('/', '.')}.jpg`"
@@ -453,7 +488,7 @@ onMounted(async () => {
           <article>
             <div
               v-for="(item) in Monsters.filter((item) => item.zoneId === m)"
-              v-show="item.show !== false"
+              v-show="isShow(item)"
               :key="`${item.zoneId}-${item.id}`"
               :class="`point ${getBackgroundColor(item)}`"
               :style="{
@@ -561,9 +596,35 @@ $ins6_color:rgba(255, 165, 0, 0.5);
 .ins6 {
   background-color: $ins6_color;
 }
+$colors: (
+  "1": $ins1_color,
+  "2": $ins2_color,
+  "3": $ins3_color,
+  "4": $ins4_color,
+  "5": $ins5_color,
+  "6": $ins6_color
+);
 
-.ins_merged_1_2 {  background-image: linear-gradient(to right, $ins1_color 40%,$ins1_color 45%, $ins2_color 55%,$ins2_color 60%);}
-.ins_merged_1_3 {  background-image: linear-gradient(to right, $ins1_color 40%,$ins1_color 45%, $ins3_color 55%,$ins3_color 60%);}
-.ins_merged_2_3 {  background-image: linear-gradient(to right, $ins2_color 40%,$ins2_color 45%, $ins3_color 55%,$ins3_color 60%);}
-.ins_merged_1_2_3 {  background-image: linear-gradient(to right, $ins1_color 30%, $ins2_color 35%, $ins2_color 65%, $ins3_color 70%);}
+@for $i from 1 through 6 {
+  @for $j from 1 through 6 {
+    .ins_merged_#{$i}_#{$j} {
+      $color1: map-get($colors, "#{$i}");
+      $color2: map-get($colors, "#{$j}");
+      background-image: linear-gradient(to right, #{$color1} 40%, #{$color1} 45%, #{$color2} 55%, #{$color2} 60%);
+    }
+  }
+}
+
+@for $i from 1 through 6 {
+  @for $j from 1 through 6 {
+    @for $k from 1 through 6 {
+      .ins_merged_#{$i}_#{$j}_#{$k} {
+        $color1: map-get($colors, "#{$i}");
+        $color2: map-get($colors, "#{$j}");
+        $color3: map-get($colors, "#{$k}");
+        background-image: linear-gradient(to right, #{$color1} 30%, #{$color2} 35%, #{$color2} 65%, #{$color3} 70%);
+      }
+    }
+  }
+}
 </style>
