@@ -443,7 +443,7 @@ onMounted(async () => {
     closeOnClickModal: false,
     closeOnPressEscape: false,
     closeOnHashChange: false,
-    inputValue: (SavedInstance.value || '1').toString(),
+    inputValue: (SavedInstance.value > 0 ? SavedInstance.value : 1).toString(),
   })
     .then(({ value }) => {
       PlayerInstance.value = Number(value)
