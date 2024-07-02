@@ -93,6 +93,18 @@ watchEffect(() => {
     message.value.push(...result)
   })
 })
+
+function format(str: string) {
+  return str
+    .replaceAll('<hex:024804F201F803><hex:024904F201F903>', '<span style="color:#00cc22;">')
+    .replaceAll('<hex:024804F201FA03><hex:024904F201FB03>', '<span style="color:#ffff66;">')
+    .replaceAll('<hex:0249020103><hex:0248020103>', '</span>')
+    .replaceAll('<hex:02100103>', '<br>')
+    .replaceAll(
+      '<hex:024804F201F403><hex:024904F201F503>',
+      '<span style="color:#ff7b1a;">',
+    ).replaceAll(/(<)(hex:[^>]+)(>)/g, '&lt;$2&gt;')
+}
 </script>
 
 <template>
@@ -100,8 +112,9 @@ watchEffect(() => {
     <h2>UTF8长度计算</h2>
     <textarea id="" v-model="utftext" name="" cols="100" rows="5" wrap="off" />
     <p>{{ utftextlength }}</p>
+    <div style="min-height:2em;height: 100%;width:35em;border:1px solid #ccc;padding:0.5em; background-color:#333;color:white;font-family:'宋体';font-size: 16px;" v-html="format(text)" />
     <h2>{{ `<hex:02开头检测` }}</h2>
-    <textarea id="" v-model="text" name="" cols="100" rows="5" wrap="off" />
+    <textarea id="" v-model="text" name="" cols="100" rows="5" />
     <article>
       {{ message.every((m) => m.passed) ? "全部通过" : "有错误" }}
       <ul>
