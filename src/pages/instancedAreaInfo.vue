@@ -16,7 +16,7 @@ addOverlayListener('LogLine', handleLogLine)
 // startOverlayEvents();
 const zoneName = ref('')
 const zoneInstanced = ref('')
-const simpleMode = urlTool(location.href)?.simple === 'true'
+const simpleMode = urlTool(location.href)?.simple !== 'false'
 function urlTool(url: string) {
   const array = url.split('?')?.pop()?.split('&')
   const data: Record<string, string> = {}
