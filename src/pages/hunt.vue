@@ -27,7 +27,7 @@ type DiscoveredMonsters = Array<{
   gameMapY: number
   show: boolean
 }>
-type FilterType = 'all' | '1' | '2' | '3' | '4' | '5' | '6'
+type FilterType = 'all' | '1-3' | '4-6' | '1' | '2' | '3' | '4' | '5' | '6'
 
 const ZONE_LIST = [
   ZoneId.Urqopacha,
@@ -39,7 +39,7 @@ const ZONE_LIST = [
 ]
 
 const Monsters = useStorage('souma-hunt-monsters', [] as DiscoveredMonsters)
-const FilterKeys: FilterType[] = ['all', '1', '2', '3', '4', '5', '6']
+
 const FilterConfig = useStorage('souma-hunt-filter', {
   [ZoneId.Urqopacha]: 'all',
   [ZoneId.Kozamauka]: 'all',
@@ -49,6 +49,14 @@ const FilterConfig = useStorage('souma-hunt-filter', {
   [ZoneId.LivingMemory]: 'all',
 } as Record<typeof ZONE_LIST[number], FilterType>)
 
+const ZONE_FILTER = {
+  [ZoneId.Urqopacha]: ['all', '1-3', '4-6', '1', '2', '3', '4', '5', '6'],
+  [ZoneId.Kozamauka]: ['all', '1-3', '4-6', '1', '2', '3', '4', '5', '6'],
+  [ZoneId.YakTel]: ['all', '1', '2', '3'],
+  [ZoneId.Shaaloani]: ['all', '1', '2', '3'],
+  [ZoneId.HeritageFound]: ['all', '1', '2', '3'],
+  [ZoneId.LivingMemory]: ['all', '1', '2', '3'],
+} as Record<typeof ZONE_LIST[number], FilterType[]>
 const NameToHuntEntry: Record<string, HuntEntry> = {}
 
 for (const hunt of Object.values(HuntData)) {
@@ -74,8 +82,7 @@ if (!window.location.href.includes('OVERLAY_WS')) {
 }
 async function checkWebSocket(): Promise<any> {
   const { promise, resolve } = Promise.withResolvers()
-  let websocketConnected = false
-  websocketConnected = await Promise.race<Promise<boolean>>([
+  const websocketConnected = await Promise.race<Promise<boolean>>([
     new Promise<boolean>((res) => {
       void callOverlayHandler({ call: 'cactbotRequestState' }).then(() => {
         ElMessageBox.close()
@@ -103,6 +110,13 @@ async function checkWebSocket(): Promise<any> {
           showConfirmButton: false,
         },
     )
+    const loop = setInterval(() => {
+      void callOverlayHandler({ call: 'cactbotRequestState' }).then(() => {
+        clearInterval(loop)
+        ElMessageBox.close()
+        resolve(true)
+      })
+    }, 1000)
   }
   return promise
 }
@@ -386,6 +400,7 @@ function clear() {
     Monsters.value = []
   })
 }
+
 function getBackgroundColor(item: DiscoveredMonsters[number]): string {
   if (item.infos.length > 1 && getShowType(item) === 'all') {
     return `ins_merged_${item.infos.map(i => i.instance).join('_')}`
@@ -411,8 +426,43 @@ function getBackgroundColor(item: DiscoveredMonsters[number]): string {
 }
 
 function getNumberText(item: DiscoveredMonsters[number]): string {
-  if (getShowType(item) === 'all') {
+  const showType = getShowType(item)
+  if (showType === 'all') {
     return item.infos.map(i => (`${i.instance}-${i.number}`)).join('/')
+  }
+  else if (showType.includes('-')) {
+    const filterInstance = showType.split('-').map(v => Number(v)).sort((a, b) => a - b)
+    const max = filterInstance[filterInstance.length - 1]
+    const min = filterInstance[0]
+
+    // 如果这是一个普通节点
+    if (item.infos.length === 1) {
+      if (item.instance >= min && item.instance <= max) {
+        return `${item.infos[0].instance}-${item.infos[0].number}`
+      }
+      return ''
+    }
+
+    // 如果这是一个合并节点
+    if (item.infos.length > 1) {
+      if (item.infos[0].instance >= min && item.infos[0].instance <= max) {
+        return item.infos.filter(i => i.instance >= min && i.instance <= max).map(i => `${i.instance}-${i.number}`).join('/')
+      }
+      return ''
+    }
+    throw new Error('未知的情况')
+
+    // const dataInstance = item.infos.map(i => i.instance).filter(v => v >= min && v <= max)
+    // if (dataInstance.length === 0) {
+    //   return ''
+    // }
+    // const filterData = item.infos.filter(i => dataInstance.includes(i.instance))
+    // if (filterData.length === item.infos.length && item.infos[0].id === item.id) {
+    //   return filterData.map(i => `${i.instance}-${i.number}`).join('/')
+    // }
+    // else {
+    //   return ''
+    // }
   }
   return `${item.infos[0].instance}-${item.infos[0].number}`
 }
@@ -426,6 +476,21 @@ function isShow(item: DiscoveredMonsters[number]): boolean {
   if (showType === 'all') {
     return item.show !== false
   }
+  else if (showType.includes('-')) {
+    const filterInstance = showType.split('-').map(v => Number(v))
+    const max = filterInstance[filterInstance.length - 1]
+    const min = filterInstance[0]
+    // 如果这是一个普通节点
+    if (item.infos.length === 1) {
+      return item.instance >= min && item.instance <= max
+    }
+
+    // 如果这是一个合并节点
+    if (item.infos.length > 1) {
+      return item.infos[0].instance >= min && item.infos[0].instance <= max
+    }
+    throw new Error('未知的情况')
+  }
   return item.instance.toString() === showType
 }
 
@@ -434,7 +499,7 @@ onMounted(async () => {
   addOverlayListener('LogLine', handleLogLine)
   addOverlayListener('ChangeZone', handleChangeZone)
   ElMessageBox.close()
-  ElMessageBox.prompt('请输入你目前所在的分线，或者手动切一次线', 'Tip', {
+  ElMessageBox.prompt('请切一次线，或者手动指定当前分线', 'Tip', {
     confirmButtonText: '确认',
     inputPattern: /[1-6]/,
     inputErrorMessage: '只能输入1-6',
@@ -469,17 +534,17 @@ onMounted(async () => {
         <h3 mb-0 mt-1 p0>
           {{ Map[m].name.souma }} / {{ Map[m].name.ja }} / {{ Map[m].name.en }}
         </h3>
+        <aside>
+          <el-radio-group v-model="FilterConfig[m]" size="small">
+            <el-radio-button
+              v-for="item in ZONE_FILTER[m]"
+              :key="item"
+              :label="item"
+              :value="item"
+            />
+          </el-radio-group>
+        </aside>
         <div class="map-image">
-          <aside>
-            <el-radio-group v-model="FilterConfig[m]" size="small">
-              <el-radio-button
-                v-for="item in FilterKeys"
-                :key="item"
-                :label="item"
-                :value="item"
-              />
-            </el-radio-group>
-          </aside>
           <img
             alt="map"
             :src="`https://xivapi.com/m/${Map[m].id.split('/')[0]}/${Map[m].id.replace('/', '.')}.jpg`"
@@ -550,7 +615,7 @@ html::-webkit-scrollbar {
   height: $size;
   line-height: $size;
   border-radius: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(calc($size / 2) * -1, calc($size / 2) * -1);
   text-align: center;
   font-size: 12px;
   font-weight: bold;
@@ -566,12 +631,12 @@ html::-webkit-scrollbar {
   text-shadow: 0 0 2px #000;
 }
 
-$ins1_color:rgba(255, 0, 0, 0.5);
-$ins2_color:rgba(255, 255, 0, 0.5);
-$ins3_color:rgba(0, 128, 255, 0.5);
-$ins4_color:rgba(128, 0, 0, 0.5);
-$ins5_color:rgba(0, 255, 0, 0.5);
-$ins6_color:rgba(255, 165, 0, 0.5);
+$ins1_color: rgba(255, 0, 0, 0.5);
+$ins2_color: rgba(255, 255, 0, 0.5);
+$ins3_color: rgba(0, 128, 255, 0.5);
+$ins4_color: rgba(128, 0, 0, 0.5);
+$ins5_color: rgba(0, 255, 0, 0.5);
+$ins6_color: rgba(255, 165, 0, 0.5);
 
 .ins1 {
   background-color: $ins1_color;
@@ -596,6 +661,7 @@ $ins6_color:rgba(255, 165, 0, 0.5);
 .ins6 {
   background-color: $ins6_color;
 }
+
 $colors: (
   "1": $ins1_color,
   "2": $ins2_color,
