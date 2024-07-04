@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { EventMap } from 'cactbot/types/event'
+import { ElMessageBox } from 'element-plus'
 import { addOverlayListener, callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 import HuntData, { type HuntEntry } from '../../cactbot/resources/hunt'
 import ZoneId from '../../cactbot/resources/zone_id'
@@ -15,7 +16,8 @@ type DiscoveredMonsters = Array<{
   rank: string
   zoneId: number
   instance: number
-  infos: Array<{ instance: number, number: number, id: string }>
+  number: number
+  text: string
   worldX: number
   worldY: number
   worldZ: number
@@ -25,9 +27,10 @@ type DiscoveredMonsters = Array<{
   pixelY: number
   gameMapX: number
   gameMapY: number
-  show: boolean
 }>
-type FilterType = 'all' | '1-3' | '4-6' | '1' | '2' | '3' | '4' | '5' | '6'
+type FilterType = '1-3' | '4-6' | '1' | '2' | '3' | '4' | '5' | '6'
+
+const inLocalHost = window.location.hostname === 'localhost'
 
 const ZONE_LIST = [
   ZoneId.Urqopacha,
@@ -37,25 +40,27 @@ const ZONE_LIST = [
   ZoneId.HeritageFound,
   ZoneId.LivingMemory,
 ]
+localStorage.removeItem('souma-hunt-monsters')
+localStorage.removeItem('souma-hunt-filter')
+const Monsters = useStorage('souma-hunt-monsters-2', [] as DiscoveredMonsters)
+const showNumber = useStorage('souma-hunt-show-number', true)
 
-const Monsters = useStorage('souma-hunt-monsters', [] as DiscoveredMonsters)
-
-const FilterConfig = useStorage('souma-hunt-filter', {
-  [ZoneId.Urqopacha]: 'all',
-  [ZoneId.Kozamauka]: 'all',
-  [ZoneId.YakTel]: 'all',
-  [ZoneId.Shaaloani]: 'all',
-  [ZoneId.HeritageFound]: 'all',
-  [ZoneId.LivingMemory]: 'all',
+const FilterConfig = useStorage('souma-hunt-filter-2', {
+  [ZoneId.Urqopacha]: '1-3',
+  [ZoneId.Kozamauka]: '1-3',
+  [ZoneId.YakTel]: '1-3',
+  [ZoneId.Shaaloani]: '1-3',
+  [ZoneId.HeritageFound]: '1-3',
+  [ZoneId.LivingMemory]: '1-3',
 } as Record<typeof ZONE_LIST[number], FilterType>)
 
 const ZONE_FILTER = {
-  [ZoneId.Urqopacha]: ['all', '1-3', '4-6', '1', '2', '3', '4', '5', '6'],
-  [ZoneId.Kozamauka]: ['all', '1-3', '4-6', '1', '2', '3', '4', '5', '6'],
-  [ZoneId.YakTel]: ['all', '1', '2', '3'],
-  [ZoneId.Shaaloani]: ['all', '1', '2', '3'],
-  [ZoneId.HeritageFound]: ['all', '1', '2', '3'],
-  [ZoneId.LivingMemory]: ['all', '1', '2', '3'],
+  [ZoneId.Urqopacha]: ['1-3', '4-6', '1', '2', '3', '4', '5', '6'],
+  [ZoneId.Kozamauka]: ['1-3', '4-6', '1', '2', '3', '4', '5', '6'],
+  [ZoneId.YakTel]: ['1-3', '1', '2', '3'],
+  [ZoneId.Shaaloani]: ['1-3', '1', '2', '3'],
+  [ZoneId.HeritageFound]: ['1-3', '1', '2', '3'],
+  [ZoneId.LivingMemory]: ['1-3', '1', '2', '3'],
 } as Record<typeof ZONE_LIST[number], FilterType[]>
 const NameToHuntEntry: Record<string, HuntEntry> = {}
 
@@ -122,27 +127,58 @@ async function checkWebSocket(): Promise<any> {
 }
 
 const IMG_RAW_SIZE = 2048
-const IMG_SHOW_SIZE = 512
+const IMG_SHOW_SIZE = 596
 const IMG_SCALE = IMG_SHOW_SIZE / IMG_RAW_SIZE
 const PlayerZoneId = useStorage('souma-hunt-zone-id', ref(-1))
 const PlayerInstance = ref(-1)
 const SavedInstance = useStorage('souma-hunt-save-instance', PlayerInstance.value)
 
-const handleChangeZone: EventMap['ChangeZone'] = (event) => {
+function calcDistance(x: number, y: number, x2: number, y2: number) {
+  return Math.sqrt((x - x2) ** 2 + (y - y2) ** 2)
+}
+
+function getSoloText(monster: DiscoveredMonsters[number]): string {
+  return `${monster.number}`
+}
+
+function getMultipleText(monsters: DiscoveredMonsters[number][]): string {
+  return monsters.map(item => getSoloText(item)).join('/')
+}
+
+function mergeOverlapMonsters() {
+  // 将Monters中同一张地图内坐标过近的怪物合并为一个
+  Monsters.value.forEach(item => item.text = getSoloText(item))
+  Monsters.value.forEach((item) => {
+    const tooClose = Monsters.value.filter(item2 => item2.zoneId === item.zoneId && calcDistance(item.gameMapX, item.gameMapY, item2.gameMapX, item2.gameMapY) < 1)
+    const tooCloseAndInFilter = tooClose.filter(item => isShow(item))
+    if (tooCloseAndInFilter.length >= 2) {
+      tooCloseAndInFilter[0].text = getMultipleText(tooCloseAndInFilter)
+      tooCloseAndInFilter.forEach((item2, index2) => {
+        if (index2 === 0) {
+          return
+        }
+        item2.text = ''
+      })
+    }
+    else {
+      tooCloseAndInFilter.forEach((item2) => {
+        item2.text = getSoloText(item2)
+      })
+    }
+  })
+}
+
+function checkImmediatelyMonster() {
   const timestamp = new Date().getTime()
-  const instance = PlayerInstance.value
-  PlayerZoneId.value = event.zoneID
-  const monsters = Monsters.value.filter(item => item.zoneId === event.zoneID && item.instance === instance && timestamp - item.timestamp < 3000)
+  const monsters = Monsters.value.filter(item => item.zoneId === PlayerZoneId.value && timestamp - item.timestamp < 5000)
   monsters.forEach((item) => {
     // eslint-disable-next-line no-console
-    console.log(`触发了3秒规则`)
-    item.infos.forEach((i) => {
-      i.instance += 1
-    })
+    console.log(`触发了5秒规则`)
+    item.instance = PlayerInstance.value
     // number等于 从1、2、3、4、5、6中寻找第一个不在 monsters 中存在的number
     let number = -1
     for (let i = 1; i <= 6; i++) {
-      if (!monsters.some(item => item.infos.find(ii => ii.number === i))) {
+      if (!monsters.some(item => item.number === i)) {
         number = i
         break
       }
@@ -150,8 +186,17 @@ const handleChangeZone: EventMap['ChangeZone'] = (event) => {
     if (number === -1) {
       console.error('找不到空闲的number')
       number = 0
+      item.text = ''
+      return
     }
+    item.number = number
+    item.text = number.toString()
   })
+}
+
+const handleChangeZone: EventMap['ChangeZone'] = (event) => {
+  PlayerZoneId.value = event.zoneID
+  checkImmediatelyMonster()
   PlayerInstance.value = 0
 }
 const INSTANCE_STRING = ''
@@ -166,6 +211,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
       PlayerInstance.value = INSTANCE_STRING.indexOf(match.groups.zoneInstanced) + 1
       SavedInstance.value = PlayerInstance.value
       ElMessageBox.close()
+      checkImmediatelyMonster()
     }
   }
   else if (event.line[0] === '03') {
@@ -189,7 +235,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
       const pixelCoordinates = getPixelCoordinates(worldXZCoordinates, mapOffset, sizeFactor)
       const gameMapCoordinates = getGameMapCoordinates(pixelCoordinates, sizeFactor)
       const exist = Monsters.value.find(item => item.id === event.line[2] && item.zoneId === PlayerZoneId.value && item.instance === instance)
-      if (exist && exist.infos.length === 1) {
+      if (exist) {
         // 已经添加过了，更新坐标，且不是合并的情况
         exist.timestamp = timestamp
         exist.worldX = worldX
@@ -206,7 +252,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
         // number等于 从1、2、3、4、5、6中寻找第一个不在 monsters 中存在的number
         let number = -1
         for (let i = 1; i <= 6; i++) {
-          if (!monsters.some(item => item.infos.find(ii => ii.number === i))) {
+          if (!monsters.some(item => item.number === i)) {
             number = i
             break
           }
@@ -214,15 +260,6 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
         if (number === -1) {
           console.error('找不到空闲的number')
           number = 0
-        }
-        const veryClose = Monsters.value.filter(item => item.zoneId === PlayerZoneId.value).find((item) => {
-          const distance = Math.sqrt((item.pixelX - pixelCoordinates.x) ** 2 + (item.pixelY - pixelCoordinates.y) ** 2)
-          return distance < 30
-        })
-        if (veryClose) {
-        // 距离太近，在之前的monster的info后追加
-          const index = Monsters.value.indexOf(veryClose)
-          Monsters.value[index].infos.push({ instance, number, id })
         }
         Monsters.value.push({
           timestamp,
@@ -234,15 +271,16 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
           worldZ,
           zoneId: PlayerZoneId.value,
           instance,
-          infos: [{ instance, number, id }],
+          number,
+          text: number.toString(),
           offsetX,
           offsetY,
           pixelX: pixelCoordinates.x,
           pixelY: pixelCoordinates.y,
           gameMapX: gameMapCoordinates.x,
           gameMapY: gameMapCoordinates.y,
-          show: !veryClose,
         })
+        mergeOverlapMonsters()
         // say('已发现')
       }
       // console.log(`find: ${name} in ${zoneId.value} ins${instance.value},(${worldX}, ${worldY}, ${worldZ}) (${pixelCoordinates.x}, ${pixelCoordinates.y}) (${gameMapCoordinates.x}, ${gameMapCoordinates.y})`)
@@ -250,53 +288,24 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
   }
   else if (event.line[0] === '25') {
     const id = event.line[2]
-    const exist = Monsters.value.find(item => item.id === id)
-    if (!exist) {
-      return
-    }
-    // 清理掉已经消失的怪物
-    exist.infos = exist.infos.filter(i => i.id !== id)
-    const existShow = exist.show
-    const count = exist.infos.length
-    if (count === 0) {
-      // exist是普通1个点的情况，正常删除
-      Monsters.value = Monsters.value.filter(item => item.id !== id)
-      if (existShow === false) {
-        // 这是一个被隐藏的点，所以需要将其他的合并monster中的他删掉
-        const mergedPoint = Monsters.value.find(item => item.infos.some(ii => ii.id === id))
-        if (mergedPoint) {
-          mergedPoint.infos = mergedPoint.infos.filter(ii => ii.id !== id)
-        }
-      }
-    }
-    else if (count >= 1) {
-      // 这是一个2个或3个点的合并坐标，并且自己是主monster
-      const otherIds = exist.infos.map(v => v.id)
-      const others = Monsters.value.filter(item => otherIds.includes(item.id))
-      others[0].show = true
-      if (others.length >= 2) {
-        // 这是一个由N>2拆N-1的情况，将其合并到一起
-        others[0].infos.push(...(others.filter((_v, i) => i !== 0).map(item => item.infos[0])))
-      }
-      // 更新数据
-      Monsters.value = Monsters.value.filter(item => item.id !== id)
-    }
-    else {
-      throw new Error(`未知的情况`)
-    }
+    Monsters.value = Monsters.value.filter(item => item.id !== id)
+    mergeOverlapMonsters()
   }
 }
 
-function test() {
-  const monsterIds = ['1', '2', '3']
-  Monsters.value = []
-  PlayerInstance.value = 1
+function random(min: number, max: number) {
+  return Math.random() * (max - min) + min
+}
+
+async function addTestMonster(zoneId: number, instance: number, randomRange: number) {
+  PlayerInstance.value = instance
+  PlayerZoneId.value = zoneId
   handleLogLine({
     type: 'LogLine',
     line: [
       '03',
       '2024-07-03T05:08:46.5450000+08:00',
-      monsterIds[0],
+      new Date().toISOString(),
       'クイーンホーク',
       '00',
       '64',
@@ -311,79 +320,44 @@ function test() {
       '10000',
       '',
       '',
-      '323.26',
-      '56.25',
-      '58.79',
+      (323.26 + random(-randomRange, randomRange)).toFixed(2),
+      (56.25 + random(-randomRange, randomRange)).toFixed(2),
+      (58.79 + random(-randomRange, randomRange)).toFixed(2),
       '-3.03',
       '9b64e809cf609144',
     ],
     rawLine: '',
   })
-  setTimeout(() => {
-    // PlayerInstance.value = 2
-    handleLogLine({
-      type: 'LogLine',
-      line: [
-        '03',
-        '2024-07-03T05:11:34.7710000+08:00',
-        monsterIds[1],
-        'ネチュキホ',
-        '00',
-        '64',
-        '0000',
-        '00',
-        '',
-        '13362',
-        '17708',
-        '32956266',
-        '32956266',
-        '10000',
-        '10000',
-        '',
-        '',
-        '332.72',
-        '51.56',
-        '59.99',
-        '-2.65',
-        '4b029d1d6eee9ae9',
-      ],
-      rawLine: '',
-    })
+  await sleep(0.5)
+}
+
+async function sleep(time: number) {
+  return new Promise((resolve) => {
     setTimeout(() => {
-      // PlayerInstance.value = 3
-      handleLogLine({
-        type: 'LogLine',
-        line: [
-          '03',
-          '2024-07-03T05:08:46.5450000+08:00',
-          monsterIds[2],
-          'クイーンホーク',
-          '00',
-          '64',
-          '0000',
-          '00',
-          '',
-          '13361',
-          '17707',
-          '32956266',
-          '32956266',
-          '10000',
-          '10000',
-          '',
-          '',
-          '323.26',
-          '57.25',
-          '57.79',
-          '-3.03',
-          '9b64e809cf609144',
-        ],
-        rawLine: '',
-      })
-      setTimeout(() => {
-        handleLogLine({ type: 'LogLine', rawLine: '', line: ['25', '', monsterIds[2]] })
-      }, 500)
-    }, 500)
-  }, 500)
+      resolve(true)
+    }, time * 1000)
+  })
+}
+
+function test() {
+  (async () => {
+    Monsters.value = []
+    await addTestMonster(ZoneId.Urqopacha, 1, 30)
+    await addTestMonster(ZoneId.Urqopacha, 1, 30)
+    await addTestMonster(ZoneId.Urqopacha, 2, 60)
+    await addTestMonster(ZoneId.Urqopacha, 2, 60)
+    await addTestMonster(ZoneId.Urqopacha, 3, 90)
+    await addTestMonster(ZoneId.Urqopacha, 3, 90)
+    await addTestMonster(ZoneId.Urqopacha, 4, 120)
+    await addTestMonster(ZoneId.Urqopacha, 4, 120)
+    await addTestMonster(ZoneId.Urqopacha, 5, 150)
+    await addTestMonster(ZoneId.Urqopacha, 5, 150)
+    await addTestMonster(ZoneId.Urqopacha, 6, 180)
+    await addTestMonster(ZoneId.Urqopacha, 6, 180)
+  })()
+  // setTimeout(() => {
+  //   handleLogLine({ type: 'LogLine', rawLine: '', line: ['25', '', monsterIds[2]] })
+  // }, 500)
 }
 
 function clear() {
@@ -402,69 +376,11 @@ function clear() {
 }
 
 function getBackgroundColor(item: DiscoveredMonsters[number]): string {
-  if (item.infos.length > 1 && getShowType(item) === 'all') {
-    return `ins_merged_${item.infos.map(i => i.instance).join('_')}`
-  }
-  else {
-    switch (item.infos[0].instance) {
-      case 1:
-        return 'ins1'
-      case 2:
-        return 'ins2'
-      case 3:
-        return 'ins3'
-      case 4:
-        return 'ins4'
-      case 5:
-        return 'ins5'
-      case 6:
-        return 'ins6'
-      default:
-        return 'inst'
-    }
-  }
+  return `ins${item.instance}`
 }
 
-function getNumberText(item: DiscoveredMonsters[number]): string {
-  const showType = getShowType(item)
-  if (showType === 'all') {
-    return item.infos.map(i => (`${i.instance}-${i.number}`)).join('/')
-  }
-  else if (showType.includes('-')) {
-    const filterInstance = showType.split('-').map(v => Number(v)).sort((a, b) => a - b)
-    const max = filterInstance[filterInstance.length - 1]
-    const min = filterInstance[0]
-
-    // 如果这是一个普通节点
-    if (item.infos.length === 1) {
-      if (item.instance >= min && item.instance <= max) {
-        return `${item.infos[0].instance}-${item.infos[0].number}`
-      }
-      return ''
-    }
-
-    // 如果这是一个合并节点
-    if (item.infos.length > 1) {
-      if (item.infos[0].instance >= min && item.infos[0].instance <= max) {
-        return item.infos.filter(i => i.instance >= min && i.instance <= max).map(i => `${i.instance}-${i.number}`).join('/')
-      }
-      return ''
-    }
-    throw new Error('未知的情况')
-
-    // const dataInstance = item.infos.map(i => i.instance).filter(v => v >= min && v <= max)
-    // if (dataInstance.length === 0) {
-    //   return ''
-    // }
-    // const filterData = item.infos.filter(i => dataInstance.includes(i.instance))
-    // if (filterData.length === item.infos.length && item.infos[0].id === item.id) {
-    //   return filterData.map(i => `${i.instance}-${i.number}`).join('/')
-    // }
-    // else {
-    //   return ''
-    // }
-  }
-  return `${item.infos[0].instance}-${item.infos[0].number}`
+function getText(item: DiscoveredMonsters[number]): string {
+  return showNumber.value ? item.text : ''
 }
 
 function getShowType(item: DiscoveredMonsters[number]): FilterType {
@@ -473,25 +389,28 @@ function getShowType(item: DiscoveredMonsters[number]): FilterType {
 
 function isShow(item: DiscoveredMonsters[number]): boolean {
   const showType = getShowType(item)
-  if (showType === 'all') {
-    return item.show !== false
-  }
-  else if (showType.includes('-')) {
+  if (showType.includes('-')) {
     const filterInstance = showType.split('-').map(v => Number(v))
     const max = filterInstance[filterInstance.length - 1]
     const min = filterInstance[0]
-    // 如果这是一个普通节点
-    if (item.infos.length === 1) {
-      return item.instance >= min && item.instance <= max
-    }
-
-    // 如果这是一个合并节点
-    if (item.infos.length > 1) {
-      return item.infos[0].instance >= min && item.infos[0].instance <= max
-    }
-    throw new Error('未知的情况')
+    return item.instance >= min && item.instance <= max
   }
   return item.instance.toString() === showType
+}
+
+function handlePointClick(item: DiscoveredMonsters[number]): void {
+  const sameInstance = Monsters.value.filter(item2 => item2.zoneId === item.zoneId && item2.instance === item.instance)
+  const sameInstanceMaxNumber = Math.max(...sameInstance.map(item2 => item2.number))
+  sameInstance.forEach((item2) => {
+    if (item2.number === sameInstanceMaxNumber) {
+      item2.number = 1
+    }
+    else {
+      item2.number += 1
+    }
+  })
+  // 更新文本
+  mergeOverlapMonsters()
 }
 
 onMounted(async () => {
@@ -521,8 +440,12 @@ onMounted(async () => {
   <div>
     <el-row class="header">
       <el-col :span="24" class="menu">
-        <el-button v-if="false" type="primary" @click="test">
-          测试
+        <el-checkbox v-model="showNumber" label="显示数字" />
+        <el-button v-if="inLocalHost" type="primary" @click="test">
+          测试怪物
+        </el-button>
+        <el-button v-if="inLocalHost" type="primary" @click="mergeOverlapMonsters">
+          测试重叠
         </el-button>
         <el-button type="primary" @click="clear">
           清空
@@ -530,12 +453,12 @@ onMounted(async () => {
       </el-col>
     </el-row>
     <div class="map-container" flex="~ wrap">
-      <div v-for="m in ZONE_LIST" :key="m" class="map-info" flex="~ col">
+      <div v-for="(m, i) in ZONE_LIST" :key="m" class="map-info" flex="~ col">
         <h3 mb-0 mt-1 p0>
-          {{ Map[m].name.souma }} / {{ Map[m].name.ja }} / {{ Map[m].name.en }}
+          {{ i + 1 }}图 {{ Map[m].name.souma }} / {{ Map[m].name.ja }} / {{ Map[m].name.en }}
         </h3>
         <aside>
-          <el-radio-group v-model="FilterConfig[m]" size="small">
+          <el-radio-group v-model="FilterConfig[m]" size="small" @change="mergeOverlapMonsters">
             <el-radio-button
               v-for="item in ZONE_FILTER[m]"
               :key="item"
@@ -547,7 +470,7 @@ onMounted(async () => {
         <div class="map-image">
           <img
             alt="map"
-            :src="`https://xivapi.com/m/${Map[m].id.split('/')[0]}/${Map[m].id.replace('/', '.')}.jpg`"
+            :src="`https://souma.diemoe.net/m/${Map[m].id.split('/')[0]}/${Map[m].id.replace('/', '.')}.jpg`"
             :style="{ width: `${IMG_SHOW_SIZE}px` }"
           >
           <article>
@@ -555,15 +478,20 @@ onMounted(async () => {
               v-for="(item) in Monsters.filter((item) => item.zoneId === m)"
               v-show="isShow(item)"
               :key="`${item.zoneId}-${item.id}`"
-              :class="`point ${getBackgroundColor(item)}`"
               :style="{
-                color: 'white',
                 position: 'absolute',
                 left: `${item.pixelX * IMG_SCALE}px`,
                 top: `${item.pixelY * IMG_SCALE}px`,
               }"
             >
-              {{ getNumberText(item) }}
+              <div class="point" @click="handlePointClick(item)">
+                <div
+                  :class="`point-inner ${getBackgroundColor(item)}`"
+                />
+                <aside class="point-number">
+                  {{ getText(item) }}
+                </aside>
+              </div>
             </div>
           </article>
         </div>
@@ -590,7 +518,7 @@ html::-webkit-scrollbar {
   top: 0;
   right: 0;
   width: 100%;
-  z-index: 200;
+  z-index: 10;
 
   .menu {
     display: flex;
@@ -609,88 +537,63 @@ html::-webkit-scrollbar {
 }
 
 .point {
-  display: block;
+  position: relative;
+
+  &:hover {
+    filter: brightness(1.2);
+  }
+}
+
+.point-inner,
+.point-number {
+  position: absolute;
   $size: 24px;
   width: $size;
   height: $size;
   line-height: $size;
   border-radius: 50%;
+  border: 1px solid rgba($color: #000000, $alpha: 0.25);
   transform: translate(calc($size / 2) * -1, calc($size / 2) * -1);
   text-align: center;
   font-size: 12px;
   font-weight: bold;
-  z-index: 100;
-  box-shadow: 0 0 0 2px #000;
-
-  // 溢出不换行
   white-space: nowrap;
   display: flex;
   justify-content: center;
+  user-select: none;
+  cursor: pointer;
 
-  // 文本阴影
-  text-shadow: 0 0 2px #000;
 }
 
-$ins1_color: rgba(255, 0, 0, 0.5);
-$ins2_color: rgba(255, 255, 0, 0.5);
-$ins3_color: rgba(0, 128, 255, 0.5);
-$ins4_color: rgba(128, 0, 0, 0.5);
-$ins5_color: rgba(0, 255, 0, 0.5);
-$ins6_color: rgba(255, 165, 0, 0.5);
+.point-inner {
+  z-index: 1;
+}
 
-.ins1 {
+.point-number {
+  color: black;
+  z-index: 2;
+  // text-shadow: 0 0 2px white;
+}
+
+$ins1_color: rgba(255, 0, 0, .4);
+$ins2_color: rgba(255, 255, 0, .4);
+$ins3_color: rgba(0, 128, 255, .4);
+$ins4_color: $ins1_color;
+$ins5_color: $ins2_color;
+$ins6_color: $ins3_color;
+
+.ins1,
+.ins4 {
   background-color: $ins1_color;
 }
 
-.ins2 {
+.ins2,
+.ins5 {
   background-color: $ins2_color;
 }
 
-.ins3 {
-  background-color: $ins3_color;
-}
-
-.ins4 {
-  background-color: $ins4_color;
-}
-
-.ins5 {
-  background-color: $ins5_color;
-}
-
+.ins3,
 .ins6 {
-  background-color: $ins6_color;
-}
-
-$colors: (
-  "1": $ins1_color,
-  "2": $ins2_color,
-  "3": $ins3_color,
-  "4": $ins4_color,
-  "5": $ins5_color,
-  "6": $ins6_color
-);
-
-@for $i from 1 through 6 {
-  @for $j from 1 through 6 {
-    .ins_merged_#{$i}_#{$j} {
-      $color1: map-get($colors, "#{$i}");
-      $color2: map-get($colors, "#{$j}");
-      background-image: linear-gradient(to right, #{$color1} 40%, #{$color1} 45%, #{$color2} 55%, #{$color2} 60%);
-    }
-  }
-}
-
-@for $i from 1 through 6 {
-  @for $j from 1 through 6 {
-    @for $k from 1 through 6 {
-      .ins_merged_#{$i}_#{$j}_#{$k} {
-        $color1: map-get($colors, "#{$i}");
-        $color2: map-get($colors, "#{$j}");
-        $color3: map-get($colors, "#{$k}");
-        background-image: linear-gradient(to right, #{$color1} 30%, #{$color2} 35%, #{$color2} 65%, #{$color3} 70%);
-      }
-    }
-  }
+  background-color: $ins3_color;
 }
 </style>
