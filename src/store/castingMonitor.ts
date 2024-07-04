@@ -192,14 +192,19 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
       ) {
         let queryType: string
         let itemIsHQ = false
-        if (/^(?:item|mount)_/.test(abilityName)) {
+        // if (/^(?:item|mount)_/.test(abilityName)) {
+        if (abilityName.startsWith('item_')) {
+          return
+        }
+        if (abilityName.startsWith('mount_')) {
           abiId = Number.parseInt(abilityName.replace(/^.+_/, ''), 16)
           // HQ道具 item_fXXXX （转十进制则为10XXXXXX）
           if (abiId > 983040) {
             abiId = Number.parseInt(abiId.toString().slice(-5), 10)
             itemIsHQ = true
           }
-          queryType = abilityName.replace(/_.+$/, '') as 'item' | 'mount'
+          // queryType = abilityName.replace(/_.+$/, '') as 'item' | 'mount'
+          queryType = abilityName.replace(/_.+$/, '') as 'mount'
         }
         else {
           queryType = 'action'
