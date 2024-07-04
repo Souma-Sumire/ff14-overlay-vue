@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { EventMap } from 'cactbot/types/event'
-import { ElMessageBox } from 'element-plus'
+import { ElMessageBox, ElNotification } from 'element-plus'
 import { addOverlayListener, callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 import HuntData, { type HuntEntry } from '../../cactbot/resources/hunt'
 import ZoneId from '../../cactbot/resources/zone_id'
@@ -413,6 +413,46 @@ function handlePointClick(item: DiscoveredMonsters[number]): void {
   mergeOverlapMonsters()
 }
 
+function exportStr() {
+  const str = JSON.stringify(Monsters.value)
+  const el = document.createElement('textarea')
+  el.value = str
+  document.body.appendChild(el)
+  el.select()
+  document.execCommand('copy')
+  document.body.removeChild(el)
+  ElNotification({
+    title: '已复制到剪贴板',
+    message: '请粘贴到记事本或其他地方',
+    type: 'success',
+  })
+}
+
+function importStr() {
+  ElMessageBox.prompt('请输入要导入的字符串', '导入', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    inputType: 'textarea',
+    inputValue: '',
+    inputValidator: (value) => {
+      try {
+        const data = JSON.parse(value)
+        if (!Array.isArray(data)) {
+          return '数据格式错误'
+        }
+        return true
+      }
+      catch (error) {
+        return '数据格式错误'
+      }
+    },
+  }).then(({ value }) => {
+    const data = JSON.parse(value)
+    Monsters.value = data
+    mergeOverlapMonsters()
+  })
+}
+
 onMounted(async () => {
   await checkWebSocket()
   addOverlayListener('LogLine', handleLogLine)
@@ -446,6 +486,12 @@ onMounted(async () => {
         </el-button>
         <el-button v-if="inLocalHost" type="primary" @click="mergeOverlapMonsters">
           测试重叠
+        </el-button>
+        <el-button text bg @click="exportStr">
+          导出
+        </el-button>
+        <el-button text bg @click="importStr">
+          导入
         </el-button>
         <el-button type="primary" @click="clear">
           清空
