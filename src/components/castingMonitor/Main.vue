@@ -8,7 +8,7 @@ const displayAA = Number(
   /^(?:1|true|yes|on|open|enabled)$/i.test(params.get('displayAA') ?? ''),
 )
 const displayGCD = Number(
-  /^(?:1|true|yes|on|open|enabled)$/i.test(params.get('displayGCD') ?? ''),
+  /^(?:1|true|yes|on|open|enabled)$/i.test(params.get('displayGCD') ?? params.get('displayGCDSpace') ?? ''),
 )
 </script>
 
