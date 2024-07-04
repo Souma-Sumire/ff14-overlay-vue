@@ -62,7 +62,7 @@ function handleLogLine(event: { line: string[] }): void {
 <style lang="scss" scoped>
 h5 {
   font-family: emoji;
-  font-size: large;
+  font-size: 24px;
   color: rgb(254, 254, 253);
   text-shadow: -1px 0 3px rgb(179, 137, 21), 0 1px 3px rgb(179, 137, 21),
     1px 0 3px rgb(179, 137, 21), 0 -1px 3px rgb(179, 137, 21);
