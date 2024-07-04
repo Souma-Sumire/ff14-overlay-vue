@@ -538,7 +538,6 @@ html::-webkit-scrollbar {
 
 .point {
   position: relative;
-
   &:hover {
     filter: brightness(1.2);
   }
@@ -555,7 +554,7 @@ html::-webkit-scrollbar {
   border: 1px solid rgba($color: #000000, $alpha: 0.25);
   transform: translate(calc($size / 2) * -1, calc($size / 2) * -1);
   text-align: center;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: bold;
   white-space: nowrap;
   display: flex;
