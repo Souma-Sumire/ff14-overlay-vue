@@ -15,6 +15,11 @@ function generateUrl(url: string) {
 }
 const tableData: Menu[] = [
   {
+    title: '7.0狩猎找怪工具',
+    type: '网页',
+    path: 'hunt',
+  },
+  {
     title: '7.0风脉地图',
     type: '网页',
     path: 'aether',
