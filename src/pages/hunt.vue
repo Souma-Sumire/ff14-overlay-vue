@@ -4,6 +4,7 @@ import { ElMessageBox, ElNotification } from 'element-plus'
 import { addOverlayListener, callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 import HuntData, { type HuntEntry } from '../../cactbot/resources/hunt'
 import ZoneId from '../../cactbot/resources/zone_id'
+import sonar from '../../cactbot/resources/sounds/freesound/sonar.webm'
 import ActWS from '@/assets/actWS.webp'
 import Map from '@/resources/map.json'
 import { Vector2, getGameMapCoordinates, getPixelCoordinates } from '@/utils/mapCoordinates'
@@ -28,7 +29,7 @@ type DiscoveredMonsters = Array<{
   gameMapX: number
   gameMapY: number
 }>
-type FilterType = '1-3' | '4-6' | '1' | '2' | '3' | '4' | '5' | '6'
+type FilterType = '1-6' | '1-3' | '4-6' | '1' | '2' | '3' | '4' | '5' | '6'
 
 const inLocalHost = window.location.hostname === 'localhost'
 
@@ -44,10 +45,11 @@ localStorage.removeItem('souma-hunt-monsters')
 localStorage.removeItem('souma-hunt-filter')
 const Monsters = useStorage('souma-hunt-monsters-2', [] as DiscoveredMonsters)
 const showNumber = useStorage('souma-hunt-show-number', true)
+const playSound = useStorage('souma-hunt-play-sound', false)
 
 const FilterConfig = useStorage('souma-hunt-filter-2', {
-  [ZoneId.Urqopacha]: '1-3',
-  [ZoneId.Kozamauka]: '1-3',
+  [ZoneId.Urqopacha]: '1-6',
+  [ZoneId.Kozamauka]: '1-6',
   [ZoneId.YakTel]: '1-3',
   [ZoneId.Shaaloani]: '1-3',
   [ZoneId.HeritageFound]: '1-3',
@@ -55,8 +57,8 @@ const FilterConfig = useStorage('souma-hunt-filter-2', {
 } as Record<typeof ZONE_LIST[number], FilterType>)
 
 const ZONE_FILTER = {
-  [ZoneId.Urqopacha]: ['1-3', '4-6', '1', '2', '3', '4', '5', '6'],
-  [ZoneId.Kozamauka]: ['1-3', '4-6', '1', '2', '3', '4', '5', '6'],
+  [ZoneId.Urqopacha]: ['1-6', '1-3', '4-6', '1', '2', '3', '4', '5', '6'],
+  [ZoneId.Kozamauka]: ['1-6', '1-3', '4-6', '1', '2', '3', '4', '5', '6'],
   [ZoneId.YakTel]: ['1-3', '1', '2', '3'],
   [ZoneId.Shaaloani]: ['1-3', '1', '2', '3'],
   [ZoneId.HeritageFound]: ['1-3', '1', '2', '3'],
@@ -142,6 +144,7 @@ function getSoloText(monster: DiscoveredMonsters[number]): string {
 }
 
 function getMultipleText(monsters: DiscoveredMonsters[number][]): string {
+  console.warn(monsters)
   return monsters.map(item => getSoloText(item)).join('/')
 }
 
@@ -149,12 +152,19 @@ function mergeOverlapMonsters() {
   // 将Monters中同一张地图内坐标过近的怪物合并为一个
   Monsters.value.forEach(item => item.text = getSoloText(item))
   Monsters.value.forEach((item) => {
+    if (!isShow(item) || item.text === '') {
+      return
+    }
     const tooClose = Monsters.value.filter(item2 => item2.zoneId === item.zoneId && calcDistance(item.gameMapX, item.gameMapY, item2.gameMapX, item2.gameMapY) < 1)
     const tooCloseAndInFilter = tooClose.filter(item => isShow(item))
     if (tooCloseAndInFilter.length >= 2) {
       tooCloseAndInFilter[0].text = getMultipleText(tooCloseAndInFilter)
       tooCloseAndInFilter.forEach((item2, index2) => {
         if (index2 === 0) {
+          return
+        }
+        if (item2.id === item.id) {
+          // 这一条判断有必要吗？
           return
         }
         item2.text = ''
@@ -281,6 +291,11 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
           gameMapY: gameMapCoordinates.y,
         })
         mergeOverlapMonsters()
+        if (playSound.value) {
+          const audio = new Audio(sonar)
+          audio.volume = 0.2
+          audio.play()
+        }
         // say('已发现')
       }
       // console.log(`find: ${name} in ${zoneId.value} ins${instance.value},(${worldX}, ${worldY}, ${worldZ}) (${pixelCoordinates.x}, ${pixelCoordinates.y}) (${gameMapCoordinates.x}, ${gameMapCoordinates.y})`)
@@ -478,26 +493,25 @@ onMounted(async () => {
 
 <template>
   <div>
-    <el-row class="header">
-      <el-col :span="24" class="menu">
-        <el-checkbox v-model="showNumber" label="显示数字" />
-        <el-button v-if="inLocalHost" type="primary" @click="test">
-          测试怪物
-        </el-button>
-        <el-button v-if="inLocalHost" type="primary" @click="mergeOverlapMonsters">
-          测试重叠
-        </el-button>
-        <el-button text bg @click="exportStr">
+    <el-col class="menu">
+      <el-row>
+        <el-button type="primary" @click="clear">
+          清空
+        </el-button> <el-button text bg @click="exportStr">
           导出
         </el-button>
         <el-button text bg @click="importStr">
           导入
         </el-button>
-        <el-button type="primary" @click="clear">
-          清空
+        <el-button v-if="inLocalHost" type="primary" m-r-5 @click="test">
+          测试怪物
         </el-button>
-      </el-col>
-    </el-row>
+      </el-row>
+      <el-row>
+        <el-checkbox v-model="playSound" label="启用音效" />
+        <el-checkbox v-model="showNumber" label="显示数字" p-r-5 />
+      </el-row>
+    </el-col>
     <div class="map-container" flex="~ wrap">
       <div v-for="(m, i) in ZONE_LIST" :key="m" class="map-info" flex="~ col">
         <h3 mb-0 mt-1 p0>
@@ -505,12 +519,7 @@ onMounted(async () => {
         </h3>
         <aside>
           <el-radio-group v-model="FilterConfig[m]" size="small" @change="mergeOverlapMonsters">
-            <el-radio-button
-              v-for="item in ZONE_FILTER[m]"
-              :key="item"
-              :label="item"
-              :value="item"
-            />
+            <el-radio-button v-for="item in ZONE_FILTER[m]" :key="item" :label="item" :value="item" />
           </el-radio-group>
         </aside>
         <div class="map-image">
@@ -521,19 +530,15 @@ onMounted(async () => {
           >
           <article>
             <div
-              v-for="(item) in Monsters.filter((item) => item.zoneId === m)"
-              v-show="isShow(item)"
-              :key="`${item.zoneId}-${item.id}`"
-              :style="{
+              v-for="(item) in Monsters.filter((item) => item.zoneId === m)" v-show="isShow(item)"
+              :key="`${item.zoneId}-${item.id}`" :style="{
                 position: 'absolute',
                 left: `${item.pixelX * IMG_SCALE}px`,
                 top: `${item.pixelY * IMG_SCALE}px`,
               }"
             >
               <div class="point" @click="handlePointClick(item)">
-                <div
-                  :class="`point-inner ${getBackgroundColor(item)}`"
-                />
+                <div :class="`point-inner ${getBackgroundColor(item)}`" />
                 <aside class="point-number">
                   {{ getText(item) }}
                 </aside>
@@ -558,18 +563,9 @@ html::-webkit-scrollbar {
 </style>
 
 <style scoped lang='scss'>
-.header {
-  padding: 5px;
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 100%;
-  z-index: 10;
-
-  .menu {
-    display: flex;
-    justify-content: flex-end;
-  }
+.menu{
+  display: flex;
+  flex-wrap: nowrap;
 }
 
 .map-info {
