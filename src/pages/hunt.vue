@@ -293,9 +293,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
         })
         mergeOverlapMonsters()
         if (playSound.value) {
-          const audio = new Audio(sonar)
-          audio.volume = soundVolume.value
-          audio.play()
+          doSound()
         }
         // say('已发现')
       }
@@ -469,6 +467,12 @@ function importStr() {
   })
 }
 
+function doSound() {
+  const audio = new Audio(sonar)
+  audio.volume = soundVolume.value
+  audio.play()
+}
+
 onMounted(async () => {
   await checkWebSocket()
   addOverlayListener('LogLine', handleLogLine)
@@ -508,8 +512,11 @@ onMounted(async () => {
       <el-row>
         <el-checkbox v-model="showNumber" label="显示数字" />
         <el-checkbox v-model="playSound" label="启用音效" />
-        <div class="flex items-center" w-30 p-l-2>
+        <div class="flex items-center" w-40 p-l-2>
           <el-slider v-model="soundVolume" :min="0" :max="1" :step="0.1" size="small" class="flex-grow" />
+          <el-button size="small" m-l-1 @click="doSound">
+            试听
+          </el-button>
         </div>
       </el-row>
       <el-row v-if="inLocalHost" p-l-5>
