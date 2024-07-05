@@ -43,12 +43,12 @@ const ZONE_LIST = [
 ]
 localStorage.removeItem('souma-hunt-monsters')
 localStorage.removeItem('souma-hunt-filter')
-const Monsters = useStorage('souma-hunt-monsters-2', [] as DiscoveredMonsters)
+const monstersData = useStorage('souma-hunt-monsters-2', [] as DiscoveredMonsters)
 const showNumber = useStorage('souma-hunt-show-number', true)
 const playSound = useStorage('souma-hunt-play-sound', false)
 const soundVolume = useStorage('souma-hunt-sound-volume', 0.2)
 
-const FilterConfig = useStorage('souma-hunt-filter-2', {
+const filterConfig = useStorage('souma-hunt-filter-2', {
   [ZoneId.Urqopacha]: '1-6',
   [ZoneId.Kozamauka]: '1-6',
   [ZoneId.YakTel]: '1-3',
@@ -65,7 +65,7 @@ const ZONE_FILTER = {
   [ZoneId.HeritageFound]: ['1-3', '1', '2', '3'],
   [ZoneId.LivingMemory]: ['1-3', '1', '2', '3'],
 } as Record<typeof ZONE_LIST[number], FilterType[]>
-const NameToHuntEntry: Record<string, HuntEntry> = {}
+const nameToHuntEntry: Record<string, HuntEntry> = {}
 
 for (const hunt of Object.values(HuntData)) {
   const { id, rank } = hunt
@@ -75,11 +75,11 @@ for (const hunt of Object.values(HuntData)) {
     }
     if (Array.isArray(name)) {
       name.forEach((n) => {
-        NameToHuntEntry[n.toLowerCase()] = { id, rank, name: n }
+        nameToHuntEntry[n.toLowerCase()] = { id, rank, name: n }
       })
     }
     else {
-      NameToHuntEntry[name.toLowerCase()] = { id, rank, name }
+      nameToHuntEntry[name.toLowerCase()] = { id, rank, name }
     }
   })
 }
@@ -132,9 +132,9 @@ async function checkWebSocket(): Promise<any> {
 const IMG_RAW_SIZE = 2048
 const IMG_SHOW_SIZE = 596
 const IMG_SCALE = IMG_SHOW_SIZE / IMG_RAW_SIZE
-const PlayerZoneId = useStorage('souma-hunt-zone-id', ref(-1))
-const PlayerInstance = ref(-1)
-const SavedInstance = useStorage('souma-hunt-save-instance', PlayerInstance.value)
+const playerZoneId = useStorage('souma-hunt-zone-id', ref(-1))
+const playerInstance = ref(-1)
+const savedInstance = useStorage('souma-hunt-save-instance', playerInstance.value)
 
 function calcDistance(x: number, y: number, x2: number, y2: number) {
   return Math.sqrt((x - x2) ** 2 + (y - y2) ** 2)
@@ -151,12 +151,12 @@ function getMultipleText(monsters: DiscoveredMonsters[number][]): string {
 
 function mergeOverlapMonsters() {
   // 将Monters中同一张地图内坐标过近的怪物合并为一个
-  Monsters.value.forEach(item => item.text = getSoloText(item))
-  Monsters.value.forEach((item) => {
+  monstersData.value.forEach(item => item.text = getSoloText(item))
+  monstersData.value.forEach((item) => {
     if (!isShow(item) || item.text === '') {
       return
     }
-    const tooClose = Monsters.value.filter(item2 => item2.zoneId === item.zoneId && calcDistance(item.gameMapX, item.gameMapY, item2.gameMapX, item2.gameMapY) < 1)
+    const tooClose = monstersData.value.filter(item2 => item2.zoneId === item.zoneId && calcDistance(item.gameMapX, item.gameMapY, item2.gameMapX, item2.gameMapY) < 1)
     const tooCloseAndInFilter = tooClose.filter(item => isShow(item))
     if (tooCloseAndInFilter.length >= 2) {
       tooCloseAndInFilter[0].text = getMultipleText(tooCloseAndInFilter)
@@ -181,11 +181,11 @@ function mergeOverlapMonsters() {
 
 function checkImmediatelyMonster() {
   const timestamp = new Date().getTime()
-  const monsters = Monsters.value.filter(item => item.zoneId === PlayerZoneId.value && timestamp - item.timestamp < 5000)
+  const monsters = monstersData.value.filter(item => item.zoneId === playerZoneId.value && timestamp - item.timestamp < 5000)
   monsters.forEach((item) => {
     // eslint-disable-next-line no-console
     console.log(`触发了5秒规则`)
-    item.instance = PlayerInstance.value
+    item.instance = playerInstance.value
     // number等于 从1、2、3、4、5、6中寻找第一个不在 monsters 中存在的number
     let number = -1
     for (let i = 1; i <= 6; i++) {
@@ -206,38 +206,38 @@ function checkImmediatelyMonster() {
 }
 
 const handleChangeZone: EventMap['ChangeZone'] = (event) => {
-  PlayerZoneId.value = event.zoneID
+  playerZoneId.value = event.zoneID
   checkImmediatelyMonster()
-  PlayerInstance.value = 0
+  playerInstance.value = 0
 }
 const INSTANCE_STRING = ''
 const handleLogLine: EventMap['LogLine'] = (event) => {
   // 如果当前zoneId不在ZONE_LIST中，则不处理
-  if (!ZONE_LIST.includes(PlayerZoneId.value as typeof ZONE_LIST[number])) {
+  if (!ZONE_LIST.includes(playerZoneId.value as typeof ZONE_LIST[number])) {
     return
   }
   if (event.line[0] === '00' && event.line[2] === '0039') {
     const match = event.line[4].match(new RegExp(`(?:当前所在副本区为“|You are now in the instanced area |インスタンスエリア「)(?<zoneName>.+?)(?<zoneInstanced>[${INSTANCE_STRING}]).*`))
     if (match && match.groups && match.groups.zoneInstanced) {
-      PlayerInstance.value = INSTANCE_STRING.indexOf(match.groups.zoneInstanced) + 1
-      SavedInstance.value = PlayerInstance.value
+      playerInstance.value = INSTANCE_STRING.indexOf(match.groups.zoneInstanced) + 1
+      savedInstance.value = playerInstance.value
       ElMessageBox.close()
       checkImmediatelyMonster()
     }
   }
   else if (event.line[0] === '03') {
     const name = event.line[3]
-    const hunt = NameToHuntEntry[name]
+    const hunt = nameToHuntEntry[name]
     const rank = hunt?.rank
     if (hunt && rank === 'A') {
-      const instance = PlayerInstance.value
+      const instance = playerInstance.value
       const timestamp = new Date().getTime()
       const id = event.line[2]
       const name = event.line[3]
       const worldX = Number(event.line[17])
       const worldY = Number(event.line[18])
       const worldZ = Number(event.line[19])
-      const zone = zoneInfo[PlayerZoneId.value]
+      const zone = zoneInfo[playerZoneId.value]
       const sizeFactor = zone.sizeFactor
       const offsetX = zone.offsetX
       const offsetY = zone.offsetY
@@ -245,7 +245,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
       const mapOffset = new Vector2(offsetX, offsetY)
       const pixelCoordinates = getPixelCoordinates(worldXZCoordinates, mapOffset, sizeFactor)
       const gameMapCoordinates = getGameMapCoordinates(pixelCoordinates, sizeFactor)
-      const exist = Monsters.value.find(item => item.id === event.line[2] && item.zoneId === PlayerZoneId.value && item.instance === instance)
+      const exist = monstersData.value.find(item => item.id === event.line[2] && item.zoneId === playerZoneId.value && item.instance === instance)
       if (exist) {
         // 已经添加过了，更新坐标，且不是合并的情况
         exist.timestamp = timestamp
@@ -259,7 +259,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
       }
       else {
         // 新添加
-        const monsters = Monsters.value.filter(item => item.zoneId === PlayerZoneId.value && item.instance === instance)
+        const monsters = monstersData.value.filter(item => item.zoneId === playerZoneId.value && item.instance === instance)
         // number等于 从1、2、3、4、5、6中寻找第一个不在 monsters 中存在的number
         let number = -1
         for (let i = 1; i <= 6; i++) {
@@ -272,7 +272,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
           console.error('找不到空闲的number')
           number = 0
         }
-        Monsters.value.push({
+        monstersData.value.push({
           timestamp,
           id,
           name,
@@ -280,7 +280,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
           worldX,
           worldY,
           worldZ,
-          zoneId: PlayerZoneId.value,
+          zoneId: playerZoneId.value,
           instance,
           number,
           text: number.toString(),
@@ -302,7 +302,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
   }
   else if (event.line[0] === '25') {
     const id = event.line[2]
-    Monsters.value = Monsters.value.filter(item => item.id !== id)
+    monstersData.value = monstersData.value.filter(item => item.id !== id)
     mergeOverlapMonsters()
   }
 }
@@ -312,8 +312,8 @@ function random(min: number, max: number) {
 }
 
 async function addTestMonster(zoneId: number, instance: number, randomRange: number) {
-  PlayerInstance.value = instance
-  PlayerZoneId.value = zoneId
+  playerInstance.value = instance
+  playerZoneId.value = zoneId
   handleLogLine({
     type: 'LogLine',
     line: [
@@ -355,7 +355,7 @@ async function sleep(time: number) {
 
 function test() {
   (async () => {
-    Monsters.value = []
+    monstersData.value = []
     await addTestMonster(ZoneId.Urqopacha, 1, 30)
     await addTestMonster(ZoneId.Urqopacha, 1, 30)
     await addTestMonster(ZoneId.Urqopacha, 2, 60)
@@ -385,7 +385,10 @@ function clear() {
       type: 'warning',
     },
   ).then(() => {
-    Monsters.value = []
+    monstersData.value = []
+    for (const key in filterConfig.value) {
+      filterConfig.value[key as unknown as keyof typeof filterConfig.value] = ZONE_FILTER[key as unknown as keyof typeof ZONE_FILTER][0]
+    }
   })
 }
 
@@ -398,7 +401,7 @@ function getText(item: DiscoveredMonsters[number]): string {
 }
 
 function getShowType(item: DiscoveredMonsters[number]): FilterType {
-  return FilterConfig.value[item.zoneId as keyof typeof FilterConfig.value]
+  return filterConfig.value[item.zoneId as keyof typeof filterConfig.value]
 }
 
 function isShow(item: DiscoveredMonsters[number]): boolean {
@@ -413,7 +416,7 @@ function isShow(item: DiscoveredMonsters[number]): boolean {
 }
 
 function handlePointClick(item: DiscoveredMonsters[number]): void {
-  const sameInstance = Monsters.value.filter(item2 => item2.zoneId === item.zoneId && item2.instance === item.instance)
+  const sameInstance = monstersData.value.filter(item2 => item2.zoneId === item.zoneId && item2.instance === item.instance)
   const sameInstanceMaxNumber = Math.max(...sameInstance.map(item2 => item2.number))
   sameInstance.forEach((item2) => {
     if (item2.number === sameInstanceMaxNumber) {
@@ -428,7 +431,7 @@ function handlePointClick(item: DiscoveredMonsters[number]): void {
 }
 
 function exportStr() {
-  const str = JSON.stringify(Monsters.value)
+  const str = JSON.stringify(monstersData.value)
   const el = document.createElement('textarea')
   el.value = str
   document.body.appendChild(el)
@@ -462,7 +465,7 @@ function importStr() {
     },
   }).then(({ value }) => {
     const data = JSON.parse(value)
-    Monsters.value = data
+    monstersData.value = data
     mergeOverlapMonsters()
   })
 }
@@ -487,11 +490,11 @@ onMounted(async () => {
     closeOnClickModal: false,
     closeOnPressEscape: false,
     closeOnHashChange: false,
-    inputValue: (SavedInstance.value > 0 ? SavedInstance.value : 1).toString(),
+    inputValue: (savedInstance.value > 0 ? savedInstance.value : 1).toString(),
   })
     .then(({ value }) => {
-      PlayerInstance.value = Number(value)
-      SavedInstance.value = PlayerInstance.value
+      playerInstance.value = Number(value)
+      savedInstance.value = playerInstance.value
     })
 })
 </script>
@@ -531,7 +534,7 @@ onMounted(async () => {
           {{ i + 1 }}图 {{ Map[m].name.souma }} / {{ Map[m].name.ja }} / {{ Map[m].name.en }}
         </h3>
         <aside>
-          <el-radio-group v-model="FilterConfig[m]" size="small" @change="mergeOverlapMonsters">
+          <el-radio-group v-model="filterConfig[m]" size="small" @change="mergeOverlapMonsters">
             <el-radio-button v-for="item in ZONE_FILTER[m]" :key="item" :label="item" :value="item" />
           </el-radio-group>
         </aside>
@@ -543,7 +546,7 @@ onMounted(async () => {
           >
           <article>
             <div
-              v-for="(item) in Monsters.filter((item) => item.zoneId === m)" v-show="isShow(item)"
+              v-for="(item) in monstersData.filter((item) => item.zoneId === m)" v-show="isShow(item)"
               :key="`${item.zoneId}-${item.id}`" :style="{
                 position: 'absolute',
                 left: `${item.pixelX * IMG_SCALE}px`,
