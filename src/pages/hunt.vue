@@ -7,6 +7,7 @@ import ZoneId from '../../cactbot/resources/zone_id'
 import sonar from '../../cactbot/resources/sounds/freesound/sonar.webm'
 import ActWS from '@/assets/actWS.webp'
 import Map from '@/resources/map.json'
+import Aetherytes from '@/resources/aetherytes.json'
 import { Vector2, getGameMapCoordinates, getPixelCoordinates } from '@/utils/mapCoordinates'
 import zoneInfo from '@/resources/zoneInfo'
 
@@ -541,26 +542,43 @@ onMounted(async () => {
         <div class="map-image">
           <img
             alt="map"
-            :src="`https://souma.diemoe.net/m/${Map[m].id.split('/')[0]}/${Map[m].id.replace('/', '.')}.jpg`"
+            :src="`//souma.diemoe.net/m/${Map[m].id.split('/')[0]}/${Map[m].id.replace('/', '.')}.jpg`"
             :style="{ width: `${IMG_SHOW_SIZE}px` }"
           >
-          <article>
-            <div
-              v-for="(item) in monstersData.filter((item) => item.zoneId === m)" v-show="isShow(item)"
-              :key="`${item.zoneId}-${item.id}`" :style="{
-                position: 'absolute',
-                left: `${item.pixelX * IMG_SCALE}px`,
-                top: `${item.pixelY * IMG_SCALE}px`,
-              }"
+
+          <div
+            v-for="(aItem, aIndex) in Aetherytes.filter(a => a.territory === m.toString())" :key="`${aItem.territory}-${aIndex}`" :style="{
+              position: 'absolute',
+              left: `${(aItem.x - 1) * IMG_SCALE}px`,
+              top: `${(aItem.y - 1) * IMG_SCALE}px`,
+            }"
+          >
+            <img
+              class="aetherytes"
+              alt="aetheryte"
+              src="//cafemaker.wakingsands.com/img-misc/mappy/aetheryte.png"
+              :style="{ height: `${IMG_SHOW_SIZE / 20}px` }"
             >
-              <div class="point" @click="handlePointClick(item)">
-                <div :class="`point-inner ${getBackgroundColor(item)}`" />
-                <aside class="point-number">
-                  {{ getText(item) }}
-                </aside>
+          </div>
+          <div>
+            <article>
+              <div
+                v-for="(item) in monstersData.filter((item) => item.zoneId === m)" v-show="isShow(item)"
+                :key="`${item.zoneId}-${item.id}`" :style="{
+                  position: 'absolute',
+                  left: `${item.pixelX * IMG_SCALE}px`,
+                  top: `${item.pixelY * IMG_SCALE}px`,
+                }"
+              >
+                <div class="point" @click="handlePointClick(item)">
+                  <div :class="`point-inner ${getBackgroundColor(item)}`" />
+                  <aside class="point-number">
+                    {{ getText(item) }}
+                  </aside>
+                </div>
               </div>
-            </div>
-          </article>
+            </article>
+          </div>
         </div>
       </div>
     </div>
@@ -590,6 +608,7 @@ html::-webkit-scrollbar {
 
     img {
       object-fit: cover;
+      z-index: 1;
     }
   }
 }
@@ -622,13 +641,18 @@ html::-webkit-scrollbar {
 
 }
 
+.aetherytes{
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  user-select: none;
+}
 .point-inner {
-  z-index: 1;
+  z-index: 3;
 }
 
 .point-number {
   color: black;
-  z-index: 2;
+  z-index: 4;
   // text-shadow: 0 0 2px white;
 }
 

@@ -10,7 +10,8 @@
     "submodule": "git submodule update --remote",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "generate-aether": "node scripts/generate-aether.cjs",
+    "generate-aethercurrent": "node scripts/generate-aethercurrent.cjs",
+    "generate-aetheryte": "node scripts/generate-aetheryte.cjs",
     "generate-map": "node scripts/generate-map.cjs"
   },
   "dependencies": {
