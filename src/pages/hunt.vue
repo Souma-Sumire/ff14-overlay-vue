@@ -90,13 +90,17 @@ if (!window.location.href.includes('OVERLAY_WS')) {
   window.location.href += `?OVERLAY_WS=ws://127.0.0.1:10501/ws`
 }
 async function checkWebSocket(): Promise<any> {
-  const { promise, resolve } = Promise.withResolvers()
+  let resolvePromise: (value: boolean | PromiseLike<boolean>) => void
+  const promise = new Promise<boolean>((resolve) => {
+    resolvePromise = resolve
+  })
+
   const websocketConnected = await Promise.race<Promise<boolean>>([
     new Promise<boolean>((res) => {
       void callOverlayHandler({ call: 'cactbotRequestState' }).then(() => {
         ElMessageBox.close()
         res(true)
-        resolve(true)
+        resolvePromise(true)
       })
     }),
     new Promise<boolean>((res) => {
@@ -123,7 +127,7 @@ async function checkWebSocket(): Promise<any> {
       void callOverlayHandler({ call: 'cactbotRequestState' }).then(() => {
         clearInterval(loop)
         ElMessageBox.close()
-        resolve(true)
+        resolvePromise(true)
       })
     }, 1000)
   }
