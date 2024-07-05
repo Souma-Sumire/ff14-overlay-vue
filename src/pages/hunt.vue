@@ -59,8 +59,8 @@ const filterConfig = useStorage('souma-hunt-filter-2', {
 } as Record<typeof ZONE_LIST[number], FilterType>)
 
 const ZONE_FILTER = {
-  [ZoneId.Urqopacha]: ['1-6', '1-3', '4-6', '1', '2', '3', '4', '5', '6'],
-  [ZoneId.Kozamauka]: ['1-6', '1-3', '4-6', '1', '2', '3', '4', '5', '6'],
+  [ZoneId.Urqopacha]: ['1-3', '4-6', '1', '2', '3', '4', '5', '6', '1-6'],
+  [ZoneId.Kozamauka]: ['1-3', '4-6', '1', '2', '3', '4', '5', '6', '1-6'],
   [ZoneId.YakTel]: ['1-3', '1', '2', '3'],
   [ZoneId.Shaaloani]: ['1-3', '1', '2', '3'],
   [ZoneId.HeritageFound]: ['1-3', '1', '2', '3'],
@@ -107,17 +107,17 @@ async function checkWebSocket(): Promise<any> {
   ])
   if (!websocketConnected) {
     ElMessageBox.alert(
-        `请先启动ACT WS，再打开此页面<img src='${ActWS}' style='width:100%'>`,
-        '未检测到ACT连接',
-        {
-          dangerouslyUseHTMLString: true,
-          closeOnClickModal: false,
-          showClose: false,
-          closeOnPressEscape: false,
-          closeOnHashChange: false,
-          showCancelButton: false,
-          showConfirmButton: false,
-        },
+      `请先启动ACT WS，再打开此页面<img src='${ActWS}' style='width:100%'>`,
+      '未检测到ACT连接',
+      {
+        dangerouslyUseHTMLString: true,
+        closeOnClickModal: false,
+        showClose: false,
+        closeOnPressEscape: false,
+        closeOnHashChange: false,
+        showCancelButton: false,
+        showConfirmButton: false,
+      },
     )
     const loop = setInterval(() => {
       void callOverlayHandler({ call: 'cactbotRequestState' }).then(() => {
@@ -146,7 +146,6 @@ function getSoloText(monster: DiscoveredMonsters[number]): string {
 }
 
 function getMultipleText(monsters: DiscoveredMonsters[number][]): string {
-  console.warn(monsters)
   return monsters.map(item => getSoloText(item)).join('/')
 }
 
@@ -530,33 +529,34 @@ onMounted(async () => {
       </el-row>
     </el-col>
     <div class="map-container" flex="~ wrap">
-      <div v-for="(m, i) in ZONE_LIST" :key="m" class="map-info" flex="~ col">
-        <h3 mb-0 mt-1 p0>
+      <div v-for="(m, i) in ZONE_LIST" :key="m" class="map-info" flex="~ col" position-relative>
+        <h3 class="map-title" :style="{ width: `${IMG_SHOW_SIZE}px` }" position-absolute mb-0 ml-2 mt-1 p0>
           {{ i + 1 }}图 {{ Map[m].name.souma }} / {{ Map[m].name.ja }} / {{ Map[m].name.en }}
         </h3>
-        <aside>
+        <aside
+          class="map-filter" position-absolute style="top:2em;" ml-2 flex="~ justify-start"
+          :style="{ width: `${IMG_SHOW_SIZE}px` }"
+        >
           <el-radio-group v-model="filterConfig[m]" size="small" @change="mergeOverlapMonsters">
             <el-radio-button v-for="item in ZONE_FILTER[m]" :key="item" :label="item" :value="item" />
           </el-radio-group>
         </aside>
         <div class="map-image">
           <img
-            alt="map"
-            :src="`//souma.diemoe.net/m/${Map[m].id.split('/')[0]}/${Map[m].id.replace('/', '.')}.jpg`"
+            alt="map" :src="`//souma.diemoe.net/m/${Map[m].id.split('/')[0]}/${Map[m].id.replace('/', '.')}.jpg`"
             :style="{ width: `${IMG_SHOW_SIZE}px` }"
           >
 
           <div
-            v-for="(aItem, aIndex) in Aetherytes.filter(a => a.territory === m.toString())" :key="`${aItem.territory}-${aIndex}`" :style="{
+            v-for="(aItem, aIndex) in Aetherytes.filter(a => a.territory === m.toString())"
+            :key="`${aItem.territory}-${aIndex}`" :style="{
               position: 'absolute',
               left: `${(aItem.x - 1) * IMG_SCALE}px`,
               top: `${(aItem.y - 1) * IMG_SCALE}px`,
             }"
           >
             <img
-              class="aetherytes"
-              alt="aetheryte"
-              src="//cafemaker.wakingsands.com/img-misc/mappy/aetheryte.png"
+              class="aetherytes" alt="aetheryte" src="//cafemaker.wakingsands.com/img-misc/mappy/aetheryte.png"
               :style="{ height: `${IMG_SHOW_SIZE / 20}px` }"
             >
           </div>
@@ -597,7 +597,7 @@ html::-webkit-scrollbar {
 </style>
 
 <style scoped lang='scss'>
-.menu{
+.menu {
   display: flex;
   flex-wrap: nowrap;
 }
@@ -615,6 +615,7 @@ html::-webkit-scrollbar {
 
 .point {
   position: relative;
+
   &:hover {
     filter: brightness(1.2);
   }
@@ -641,18 +642,46 @@ html::-webkit-scrollbar {
 
 }
 
-.aetherytes{
+.map-title {
   z-index: 2;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  text-shadow: 0 0 4px black;
+}
+
+.map-filter {
+  z-index: 3;
+
+  .el-radio-button {
+    opacity: 0.0;
+    transition: opacity 0.3s ease-in-out, width 0.6s ease-in-out;
+
+    &.is-active {
+      opacity: 1;
+    }
+  }
+
+  &:hover {
+    .el-radio-button {
+      opacity: 1;
+    }
+  }
+}
+
+.aetherytes {
+  z-index: 4;
   transform: translate(-50%, -50%);
   user-select: none;
 }
+
 .point-inner {
-  z-index: 3;
+  z-index: 5;
 }
 
 .point-number {
   color: black;
-  z-index: 4;
+  z-index: 6;
   // text-shadow: 0 0 2px white;
 }
 
