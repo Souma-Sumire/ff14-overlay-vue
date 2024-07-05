@@ -46,6 +46,7 @@ localStorage.removeItem('souma-hunt-filter')
 const Monsters = useStorage('souma-hunt-monsters-2', [] as DiscoveredMonsters)
 const showNumber = useStorage('souma-hunt-show-number', true)
 const playSound = useStorage('souma-hunt-play-sound', false)
+const soundVolume = useStorage('souma-hunt-sound-volume', 0.2)
 
 const FilterConfig = useStorage('souma-hunt-filter-2', {
   [ZoneId.Urqopacha]: '1-6',
@@ -293,7 +294,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
         mergeOverlapMonsters()
         if (playSound.value) {
           const audio = new Audio(sonar)
-          audio.volume = 0.2
+          audio.volume = soundVolume.value
           audio.play()
         }
         // say('已发现')
@@ -500,16 +501,21 @@ onMounted(async () => {
         </el-button> <el-button text bg @click="exportStr">
           导出
         </el-button>
-        <el-button text bg @click="importStr">
+        <el-button text bg m-r-5 @click="importStr">
           导入
-        </el-button>
-        <el-button v-if="inLocalHost" type="primary" m-r-5 @click="test">
-          测试怪物
         </el-button>
       </el-row>
       <el-row>
+        <el-checkbox v-model="showNumber" label="显示数字" />
         <el-checkbox v-model="playSound" label="启用音效" />
-        <el-checkbox v-model="showNumber" label="显示数字" p-r-5 />
+        <div class="flex items-center" w-30 p-l-2>
+          <el-slider v-model="soundVolume" :min="0" :max="1" :step="0.1" size="small" class="flex-grow" />
+        </div>
+      </el-row>
+      <el-row v-if="inLocalHost" p-l-5>
+        <el-button type="primary" @click="test">
+          测试怪物
+        </el-button>
       </el-row>
     </el-col>
     <div class="map-container" flex="~ wrap">
