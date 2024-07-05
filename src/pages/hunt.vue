@@ -374,7 +374,7 @@ function test() {
   // }, 500)
 }
 
-function clear() {
+function clearMonster() {
   // 二次确认
   ElMessageBox.confirm(
     '确定要清空已发现的怪物吗？',
@@ -386,10 +386,14 @@ function clear() {
     },
   ).then(() => {
     monstersData.value = []
-    for (const key in filterConfig.value) {
-      filterConfig.value[key as unknown as keyof typeof filterConfig.value] = ZONE_FILTER[key as unknown as keyof typeof ZONE_FILTER][0]
-    }
+    clearFilter()
   })
+}
+
+function clearFilter() {
+  for (const key in filterConfig.value) {
+    filterConfig.value[key as unknown as keyof typeof filterConfig.value] = ZONE_FILTER[key as unknown as keyof typeof ZONE_FILTER][0]
+  }
 }
 
 function getBackgroundColor(item: DiscoveredMonsters[number]): string {
@@ -477,6 +481,9 @@ function doSound() {
 }
 
 onMounted(async () => {
+  if (monstersData.value.length === 0) {
+    clearFilter()
+  }
   await checkWebSocket()
   addOverlayListener('LogLine', handleLogLine)
   addOverlayListener('ChangeZone', handleChangeZone)
@@ -503,7 +510,7 @@ onMounted(async () => {
   <div>
     <el-col class="menu">
       <el-row>
-        <el-button type="primary" @click="clear">
+        <el-button type="primary" @click="clearMonster">
           清空
         </el-button> <el-button text bg @click="exportStr">
           导出
