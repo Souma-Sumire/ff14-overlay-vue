@@ -481,7 +481,7 @@ onMounted(async () => {
   addOverlayListener('LogLine', handleLogLine)
   addOverlayListener('ChangeZone', handleChangeZone)
   ElMessageBox.close()
-  ElMessageBox.prompt('请切一次线，或者手动指定当前分线', 'Tip', {
+  ElMessageBox.prompt('请切一次线，或者手动指定', '你在几线', {
     confirmButtonText: '确认',
     inputPattern: /[1-6]/,
     inputErrorMessage: '只能输入1-6',
