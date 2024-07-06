@@ -8,12 +8,18 @@ interface Result {
   full: string
 }
 const utftext = ref('')
+const utftext2 = ref('')
 const utftextlength = ref(0)
+const utftextlength2 = ref(0)
 const text = useStorage('hexcode', '')
 const message: Ref<Result[]> = ref([])
+const differenceHex = ref('')
 
 watchEffect(() => {
   utftextlength.value = getUtf8ByteLength(utftext.value)
+  utftextlength2.value = getUtf8ByteLength(utftext2.value)
+  // 十六进制差异
+  differenceHex.value = (utftextlength.value - utftextlength2.value).toString(16).toUpperCase()
 })
 
 function getUtf8ByteLength(str: string) {
@@ -105,18 +111,27 @@ function format(str: string) {
       '<span style="color:#ff7b1a;">',
     ).replaceAll(/(<)(hex:[^>]+)(>)/g, '&lt;$2&gt;')
 }
+
+function onChange() {
+  nextTick(() => {
+    text.value = text.value.replaceAll(/\n/g, '<hex:02100103>')
+  })
+}
 </script>
 
 <template>
   <main>
     <h2>UTF8长度计算</h2>
-    <textarea id="" v-model="utftext" name="" cols="100" rows="5" wrap="off" />
-    <p>{{ utftextlength }}</p>
+    <textarea id="" v-model="utftext" name="" cols="100" rows="1" />
+    {{ utftextlength }}
+    <textarea id="" v-model="utftext2" name="" cols="100" rows="1" />
+    {{ utftextlength2 }}
+    <p>UTF8长度差异（十六进制）：{{ differenceHex }}</p>
+    <h2>{{ `指令码检测（不包括FFXX>）` }}</h2>
     <div style="min-height:2em;height: 100%;width:35em;border:1px solid #ccc;padding:0.5em; background-color:#333;color:white;font-family:'宋体';font-size: 16px;" v-html="format(text)" />
-    <h2>{{ `<hex:02开头检测` }}</h2>
-    <textarea id="" v-model="text" name="" cols="100" rows="5" />
+    <textarea id="" v-model="text" m-b-2 m-t-2 name="" cols="100" rows="5" @keyup="onChange" />
     <article>
-      {{ message.every((m) => m.passed) ? "全部通过" : "有错误" }}
+      {{ message.every((m) => m.passed) ? "02开头指令全部通过" : "有错误" }}
       <ul>
         <li v-for="(m, i) in message" :key="i">
           <span :style="{ color: m.passed ? 'black' : 'red' }">{{ `${m.passed ? "通过" : `错误`} ${m.msg} ${m.full}` }}</span>
