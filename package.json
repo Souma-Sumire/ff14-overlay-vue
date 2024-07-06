@@ -12,7 +12,10 @@
     "lint:fix": "eslint . --fix",
     "generate-aethercurrent": "node scripts/generate-aethercurrent.cjs",
     "generate-aetheryte": "node scripts/generate-aetheryte.cjs",
-    "generate-map": "node scripts/generate-map.cjs"
+    "generate-map": "node scripts/generate-map.cjs",
+    "generate-action": "node scripts/generate-action.cjs",
+    "generate-status": "node scripts/generate-status.cjs",
+    "generate-all": "npm run generate-aethercurrent && npm run generate-aetheryte && npm run generate-map && npm run generate-action && npm run generate-status"
   },
   "dependencies": {
     "@babel/core": "^7.24.7",
