@@ -6,6 +6,7 @@
     "dev": "vite",
     "tsc": "vue-tsc --noEmit",
     "build": "vite build",
+    "prebuild": "npm run generate-all",
     "preview": "vite preview",
     "submodule": "git submodule update --remote",
     "lint": "eslint .",
