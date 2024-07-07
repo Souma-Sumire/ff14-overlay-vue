@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "vite",
     "tsc": "vue-tsc --noEmit",
-    "build": "vite build",
-    "prebuild": "npm run generate-all",
+    "github-build": "vite build",
+    "build": "npm run generate-all && vite build",
     "preview": "vite preview",
     "submodule": "git submodule update --remote",
     "lint": "eslint .",
