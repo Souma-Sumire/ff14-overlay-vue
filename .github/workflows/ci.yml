@@ -41,7 +41,7 @@ jobs:
           pnpm install
 
       - name: Build
-        run: pnpm run github build
+        run: pnpm run github-build
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
