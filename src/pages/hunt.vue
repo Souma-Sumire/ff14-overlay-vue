@@ -1,37 +1,58 @@
 <script setup lang="ts">
 import type { EventMap } from 'cactbot/types/event'
 import { ElMessageBox, ElNotification } from 'element-plus'
-import { addOverlayListener, callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
+import LZString from 'lz-string'
 import HuntData, { type HuntEntry } from '../../cactbot/resources/hunt'
-import ZoneId from '../../cactbot/resources/zone_id'
+import { addOverlayListener, callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 import sonar from '../../cactbot/resources/sounds/freesound/sonar.webm'
-import ActWS from '@/assets/actWS.webp'
+import ZoneId from '../../cactbot/resources/zone_id'
+import { Vector2, getPixelCoordinates } from '@/utils/mapCoordinates'
+import zoneInfo from '@/resources/zoneInfo'
 import Map from '@/resources/map.json'
 import Aetherytes from '@/resources/aetherytes.json'
-import { Vector2, getGameMapCoordinates, getPixelCoordinates } from '@/utils/mapCoordinates'
-import zoneInfo from '@/resources/zoneInfo'
+import ActWS from '@/assets/actWS.webp'
 
 type DiscoveredMonsters = Array<{
   timestamp: number
   id: string
   name: string
-  rank: string
+  // rank: string
   zoneId: number
   instance: number
   number: number
   text: string
-  worldX: number
-  worldY: number
-  worldZ: number
-  offsetX: number
-  offsetY: number
+  // worldX: number
+  // worldY: number
+  // worldZ: number
+  // offsetX: number
+  // offsetY: number
   pixelX: number
   pixelY: number
-  gameMapX: number
-  gameMapY: number
+  // gameMapX: number
+  // gameMapY: number
 }>
 type FilterType = '1-6' | '1-3' | '4-6' | '1' | '2' | '3' | '4' | '5' | '6'
 
+const INS_BG_COLOR = [
+  '255, 0, 0',
+  '255, 255, 0',
+  '0, 128, 255',
+]
+
+const INS_TEXT_COLOR = [
+  '255, 0, 0',
+  '240, 255, 0',
+  '0, 222, 255',
+]
+
+const COLOR_STYLE = {
+  '--ins1-color': `rgba(${INS_BG_COLOR[0]},0.4)`,
+  '--ins2-color': `rgba(${INS_BG_COLOR[1]},0.4)`,
+  '--ins3-color': `rgba(${INS_BG_COLOR[2]},0.4)`,
+  '--ins4-color': `rgba(${INS_BG_COLOR[0]},0.4)`,
+  '--ins5-color': `rgba(${INS_BG_COLOR[1]},0.4)`,
+  '--ins6-color': `rgba(${INS_BG_COLOR[2]},0.4)`,
+}
 const inLocalHost = window.location.hostname === 'localhost'
 
 const ZONE_LIST = [
@@ -142,25 +163,37 @@ const playerInstance = ref(-1)
 const savedInstance = useStorage('souma-hunt-save-instance', playerInstance.value)
 
 function calcDistance(x: number, y: number, x2: number, y2: number) {
-  return Math.sqrt((x - x2) ** 2 + (y - y2) ** 2)
+  return {
+    both: Math.sqrt((x - x2) ** 2 + (y - y2) ** 2),
+    x: Math.abs(x - x2),
+    y: Math.abs(y - y2),
+  }
 }
 
-function getSoloText(monster: DiscoveredMonsters[number]): string {
-  return `${monster.number}`
+// function getSoloText(monster: DiscoveredMonsters[number]): string {
+//   return `${monster.number}`
+// }
+
+function getColorDom(monster: DiscoveredMonsters[number]): string {
+  const n = (monster.instance - 1) % 3
+  return `<span style='color:rgb(${INS_TEXT_COLOR[n]})'>${monster.number}</span>`
 }
 
 function getMultipleText(monsters: DiscoveredMonsters[number][]): string {
-  return monsters.map(item => getSoloText(item)).join('/')
+  return monsters.map(item => getColorDom(item)).join(' ')
 }
 
 function mergeOverlapMonsters() {
   // 将Monters中同一张地图内坐标过近的怪物合并为一个
-  monstersData.value.forEach(item => item.text = getSoloText(item))
+  monstersData.value.forEach(item => item.text = getColorDom(item))
   monstersData.value.forEach((item) => {
     if (!isShow(item) || item.text === '') {
       return
     }
-    const tooClose = monstersData.value.filter(item2 => item2.zoneId === item.zoneId && calcDistance(item.gameMapX, item.gameMapY, item2.gameMapX, item2.gameMapY) < 1)
+    const tooClose = monstersData.value.filter((item2) => {
+      const distance = calcDistance(item.pixelX, item.pixelY, item2.pixelX, item2.pixelY)
+      return item2.zoneId === item.zoneId && (distance.both < (40) || (distance.y < 35 && distance.x < 70))
+    })
     const tooCloseAndInFilter = tooClose.filter(item => isShow(item))
     if (tooCloseAndInFilter.length >= 2) {
       tooCloseAndInFilter[0].text = getMultipleText(tooCloseAndInFilter)
@@ -177,7 +210,7 @@ function mergeOverlapMonsters() {
     }
     else {
       tooCloseAndInFilter.forEach((item2) => {
-        item2.text = getSoloText(item2)
+        item2.text = getColorDom(item2)
       })
     }
   })
@@ -240,7 +273,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
       const name = event.line[3]
       const worldX = Number(event.line[17])
       const worldY = Number(event.line[18])
-      const worldZ = Number(event.line[19])
+      // const worldZ = Number(event.line[19])
       const zone = zoneInfo[playerZoneId.value]
       const sizeFactor = zone.sizeFactor
       const offsetX = zone.offsetX
@@ -248,18 +281,18 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
       const worldXZCoordinates = new Vector2(Number(worldX), Number(worldY))
       const mapOffset = new Vector2(offsetX, offsetY)
       const pixelCoordinates = getPixelCoordinates(worldXZCoordinates, mapOffset, sizeFactor)
-      const gameMapCoordinates = getGameMapCoordinates(pixelCoordinates, sizeFactor)
+      // const gameMapCoordinates = getGameMapCoordinates(pixelCoordinates, sizeFactor)
       const exist = monstersData.value.find(item => item.id === event.line[2] && item.zoneId === playerZoneId.value && item.instance === instance)
       if (exist) {
         // 已经添加过了，更新坐标，且不是合并的情况
         exist.timestamp = timestamp
-        exist.worldX = worldX
-        exist.worldY = worldY
-        exist.worldZ = worldZ
+        // exist.worldX = worldX
+        // exist.worldY = worldY
+        // exist.worldZ = worldZ
         exist.pixelX = pixelCoordinates.x
         exist.pixelY = pixelCoordinates.y
-        exist.gameMapX = gameMapCoordinates.x
-        exist.gameMapY = gameMapCoordinates.y
+        // exist.gameMapX = gameMapCoordinates.x
+        // exist.gameMapY = gameMapCoordinates.y
       }
       else {
         // 新添加
@@ -280,20 +313,20 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
           timestamp,
           id,
           name,
-          rank,
-          worldX,
-          worldY,
-          worldZ,
+          // rank,
+          // worldX,
+          // worldY,
+          // worldZ,
           zoneId: playerZoneId.value,
           instance,
           number,
           text: number.toString(),
-          offsetX,
-          offsetY,
+          // offsetX,
+          // offsetY,
           pixelX: pixelCoordinates.x,
           pixelY: pixelCoordinates.y,
-          gameMapX: gameMapCoordinates.x,
-          gameMapY: gameMapCoordinates.y,
+          // gameMapX: gameMapCoordinates.x,
+          // gameMapY: gameMapCoordinates.y,
         })
         mergeOverlapMonsters()
         if (playSound.value) {
@@ -358,20 +391,21 @@ async function sleep(time: number) {
 }
 
 function test() {
+  const scale = 3;
   (async () => {
     monstersData.value = []
-    await addTestMonster(ZoneId.Urqopacha, 1, 30)
-    await addTestMonster(ZoneId.Urqopacha, 1, 30)
-    await addTestMonster(ZoneId.Urqopacha, 2, 60)
-    await addTestMonster(ZoneId.Urqopacha, 2, 60)
-    await addTestMonster(ZoneId.Urqopacha, 3, 90)
-    await addTestMonster(ZoneId.Urqopacha, 3, 90)
-    await addTestMonster(ZoneId.Urqopacha, 4, 120)
-    await addTestMonster(ZoneId.Urqopacha, 4, 120)
-    await addTestMonster(ZoneId.Urqopacha, 5, 150)
-    await addTestMonster(ZoneId.Urqopacha, 5, 150)
-    await addTestMonster(ZoneId.Urqopacha, 6, 180)
-    await addTestMonster(ZoneId.Urqopacha, 6, 180)
+    await addTestMonster(ZoneId.Urqopacha, 1, 30 * scale)
+    await addTestMonster(ZoneId.Urqopacha, 1, 30 * scale)
+    await addTestMonster(ZoneId.Urqopacha, 2, 60 * scale)
+    await addTestMonster(ZoneId.Urqopacha, 2, 60 * scale)
+    await addTestMonster(ZoneId.Urqopacha, 3, 90 * scale)
+    await addTestMonster(ZoneId.Urqopacha, 3, 90 * scale)
+    await addTestMonster(ZoneId.Urqopacha, 4, 120 * scale)
+    await addTestMonster(ZoneId.Urqopacha, 4, 120 * scale)
+    await addTestMonster(ZoneId.Urqopacha, 5, 150 * scale)
+    await addTestMonster(ZoneId.Urqopacha, 5, 150 * scale)
+    await addTestMonster(ZoneId.Urqopacha, 6, 180 * scale)
+    await addTestMonster(ZoneId.Urqopacha, 6, 180 * scale)
   })()
   // setTimeout(() => {
   //   handleLogLine({ type: 'LogLine', rawLine: '', line: ['25', '', monsterIds[2]] })
@@ -440,8 +474,9 @@ function handlePointClick(item: DiscoveredMonsters[number]): void {
 
 function exportStr() {
   const str = JSON.stringify(monstersData.value)
+  const compressedText = LZString.compressToEncodedURIComponent(str)
   const el = document.createElement('textarea')
-  el.value = str
+  el.value = compressedText
   document.body.appendChild(el)
   el.select()
   document.execCommand('copy')
@@ -461,7 +496,8 @@ function importStr() {
     inputValue: '',
     inputValidator: (value) => {
       try {
-        const data = JSON.parse(value)
+        const decompressedText = LZString.decompressFromEncodedURIComponent(value)
+        const data = JSON.parse(decompressedText)
         if (!Array.isArray(data)) {
           return '数据格式错误'
         }
@@ -472,7 +508,8 @@ function importStr() {
       }
     },
   }).then(({ value }) => {
-    const data = JSON.parse(value)
+    const decompressedText = LZString.decompressFromEncodedURIComponent(value)
+    const data = JSON.parse(decompressedText)
     monstersData.value = data
     mergeOverlapMonsters()
   })
@@ -511,7 +548,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
+  <div :style="COLOR_STYLE">
     <el-col class="menu">
       <el-row>
         <el-button type="primary" @click="clearMonster">
@@ -536,6 +573,9 @@ onMounted(async () => {
       <el-row v-if="inLocalHost" p-l-5>
         <el-button type="primary" @click="test">
           测试怪物
+        </el-button>
+        <el-button type="primary" @click="mergeOverlapMonsters">
+          测试合并
         </el-button>
       </el-row>
     </el-col>
@@ -583,9 +623,7 @@ onMounted(async () => {
               >
                 <div class="point" @click="handlePointClick(item)">
                   <div :class="`point-inner ${getBackgroundColor(item)}`" />
-                  <aside class="point-number">
-                    {{ getText(item) }}
-                  </aside>
+                  <aside class="point-number" v-html="getText(item)" />
                 </div>
               </div>
             </article>
@@ -628,7 +666,7 @@ html::-webkit-scrollbar {
   position: relative;
 
   &:hover {
-    filter: brightness(1.2);
+    filter: brightness(1.1);
   }
 }
 
@@ -691,30 +729,22 @@ html::-webkit-scrollbar {
 }
 
 .point-number {
-  color: black;
   z-index: 6;
-  // text-shadow: 0 0 2px white;
+  text-shadow: 0 0 2px black;
 }
-
-$ins1_color: rgba(255, 0, 0, .4);
-$ins2_color: rgba(255, 255, 0, .4);
-$ins3_color: rgba(0, 128, 255, .4);
-$ins4_color: $ins1_color;
-$ins5_color: $ins2_color;
-$ins6_color: $ins3_color;
 
 .ins1,
 .ins4 {
-  background-color: $ins1_color;
+  background-color: var(--ins1-color);
 }
 
 .ins2,
 .ins5 {
-  background-color: $ins2_color;
+  background-color: var(--ins2-color);
 }
 
 .ins3,
 .ins6 {
-  background-color: $ins3_color;
+  background-color: var(--ins3-color);
 }
 </style>
