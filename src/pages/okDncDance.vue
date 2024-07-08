@@ -15,11 +15,13 @@ const step: Record<Lang, string[]> = {
   en: ['Cascade', 'Fountain', 'Reverse Cascade', 'Fountainfall'],
   ja: ['カスケード', 'ファウンテン', 'リバースカスケー', 'ファウンテンフォール'],
 }
+
 const ending: Record<Lang, Record<string, string>> = {
   cn: { standard: '标准舞步', technical: '技巧舞步' },
   en: { standard: 'Standard Step', technical: 'Technical Step' },
   ja: { standard: 'スタンダードステップ', technical: 'テクニカルステップ' },
 }
+
 const combatState: {
   inACTCombat: boolean
   inGameCombat: boolean
@@ -40,6 +42,7 @@ const config = useStorage('okDncDanceSettings', {
 })
 
 const doTextCommand = (v: string) => callOverlayHandler({ call: 'PostNamazu', c: 'DoTextCommand', p: v })
+
 function resetHotbar(standard: boolean, technical: boolean) {
   if (playerJob === 'DNC') {
     if (standard)
@@ -92,12 +95,13 @@ const eventHandlers = {
     resetHotbar(true, true)
   },
 }
+
 onMounted(() => {
   addOverlayListener('onPlayerChangedEvent', (e) => {
     playerJob = e.detail.job
     if (playerID !== e.detail.id) {
       playerID = e.detail.id
-      netRegex.losesEffect = NetRegexes.losesEffect({ targetId: playerID.toString(16).toUpperCase() })
+      netRegex.losesEffect = NetRegexes.losesEffect({ targetId: playerID.toString(16).toUpperCase(), effectId: '71[AB]' })
     }
     if (!(e.detail.job === 'DNC'))
       return
@@ -110,7 +114,7 @@ onMounted(() => {
       const stepAction = step[config.value.lang][['Emboite', 'Entrechat', 'Jete', 'Pirouette'].indexOf(needsSteps[curStep])]
       doTextCommand(`/hotbar set ${stepAction} ${config.value.hotbar[needsSteps.length === 2 ? 'standard' : 'technical'].join(' ')}`)
       const currentStep = e.detail.jobDetail?.currentStep
-      if (combatState.inGameCombat === false && currentStep !== undefined) {
+      if (combatState.inGameCombat === false && combatState && currentStep !== undefined && config.value.autoDance) {
         const queue: QueueArr = [
           { c: 'DoTextCommand', p: `/ac ${stepAction}`, d: (currentStep === 0 ? 1460 : 960) },
           ...(Array.from({ length: 4 }).map(() => ({ c: 'DoTextCommand', p: `/ac ${stepAction}`, d: 20 }))) as QueueArr,
