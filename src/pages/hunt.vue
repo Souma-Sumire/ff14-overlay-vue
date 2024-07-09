@@ -417,16 +417,16 @@ function test() {
     monstersData.value = []
     await addTestMonster(ZoneId.Urqopacha, 1, 30 * scale)
     await addTestMonster(ZoneId.Urqopacha, 1, 30 * scale)
-    await addTestMonster(ZoneId.Urqopacha, 2, 60 * scale)
-    await addTestMonster(ZoneId.Urqopacha, 2, 60 * scale)
-    await addTestMonster(ZoneId.Urqopacha, 3, 90 * scale)
-    await addTestMonster(ZoneId.Urqopacha, 3, 90 * scale)
-    await addTestMonster(ZoneId.Urqopacha, 4, 120 * scale)
-    await addTestMonster(ZoneId.Urqopacha, 4, 120 * scale)
-    await addTestMonster(ZoneId.Urqopacha, 5, 150 * scale)
-    await addTestMonster(ZoneId.Urqopacha, 5, 150 * scale)
-    await addTestMonster(ZoneId.Urqopacha, 6, 180 * scale)
-    await addTestMonster(ZoneId.Urqopacha, 6, 180 * scale)
+    await addTestMonster(ZoneId.Kozamauka, 1, 60 * scale)
+    await addTestMonster(ZoneId.Kozamauka, 1, 60 * scale)
+  //   await addTestMonster(ZoneId.Urqopacha, 3, 90 * scale)
+  //   await addTestMonster(ZoneId.Urqopacha, 3, 90 * scale)
+  //   await addTestMonster(ZoneId.Urqopacha, 4, 120 * scale)
+  //   await addTestMonster(ZoneId.Urqopacha, 4, 120 * scale)
+  //   await addTestMonster(ZoneId.Urqopacha, 5, 150 * scale)
+  //   await addTestMonster(ZoneId.Urqopacha, 5, 150 * scale)
+  //   await addTestMonster(ZoneId.Urqopacha, 6, 180 * scale)
+  //   await addTestMonster(ZoneId.Urqopacha, 6, 180 * scale)
   })()
   // setTimeout(() => {
   //   handleLogLine({ type: 'LogLine', rawLine: '', line: ['25', '', monsterIds[2]] })
@@ -436,8 +436,8 @@ function test() {
 function clearMonster() {
   // 二次确认
   ElMessageBox.confirm(
-    '确定要清空已发现的怪物吗？',
-    '确认清空',
+    '确定要清空全部已发现的怪物吗？',
+    '全部清空',
     {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
@@ -446,6 +446,22 @@ function clearMonster() {
   ).then(() => {
     monstersData.value = []
     clearFilter()
+  })
+}
+
+function oneMapClear(zoneId: number) {
+  ElMessageBox.confirm(
+    `要清空「${Map[zoneId as unknown as keyof typeof Map].name.souma}」的怪物吗？`,
+    '本图清空',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    },
+  ).then(() => {
+    monstersData.value = monstersData.value.filter(item => item.zoneId !== zoneId)
+    filterConfig.value[zoneId as keyof typeof filterConfig.value] = ZONE_FILTER[zoneId as unknown as keyof typeof ZONE_FILTER][0]
+    mergeOverlapMonsters()
   })
 }
 
@@ -493,8 +509,8 @@ function handlePointClick(item: DiscoveredMonsters[number]): void {
   mergeOverlapMonsters()
 }
 
-function exportStr() {
-  const str = JSON.stringify(monstersData.value)
+function exportSth<T>(sth: T) {
+  const str = JSON.stringify(sth)
   const compressedText = LZString.compressToEncodedURIComponent(str)
   const el = document.createElement('textarea')
   el.value = compressedText
@@ -507,6 +523,18 @@ function exportStr() {
     message: '请粘贴到记事本或其他地方',
     type: 'success',
   })
+}
+
+function exportStr() {
+  exportSth(monstersData.value)
+}
+
+function oneMapExport(zoneId: number) {
+  const data = monstersData.value.filter(item => item.zoneId === zoneId)
+  if (!data) {
+    throw new Error('找不到该地图')
+  }
+  exportSth(data)
 }
 
 function importStr() {
@@ -529,10 +557,75 @@ function importStr() {
       }
     },
   }).then(({ value }) => {
+    Promise.race(
+      [
+        ElMessageBox.confirm('要舍弃当前的数据，并全部替换为导入的数据吗？', '你的地图上还有怪物！', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+        }),
+        monstersData.value.length === 0 ? Promise.resolve() : new Promise(() => {}),
+      ],
+    ).then(() => {
+      const decompressedText = LZString.decompressFromEncodedURIComponent(value)
+      const data = JSON.parse(decompressedText)
+      monstersData.value = data
+      mergeOverlapMonsters()
+      ElMessageBox.close()
+      ElNotification({
+        title: '导入成功',
+        message: `已导入${data.length}条数据`,
+        type: 'success',
+      })
+    }).catch(() => { })
+  })
+}
+
+function importOneStr() {
+  ElMessageBox.prompt('请输入要导入的字符串', '单独导入', {
+    confirmButtonText: '单独导入',
+    cancelButtonText: '取消',
+    inputType: 'textarea',
+    inputValue: '',
+    inputValidator: (value) => {
+      try {
+        const decompressedText = LZString.decompressFromEncodedURIComponent(value)
+        const data = JSON.parse(decompressedText) as DiscoveredMonsters
+        const zoneIds = new Set(data.map(item => item.zoneId))
+        if (zoneIds.size !== 1) {
+          return '导入的字符串不止一个地图，你是不是选错了？'
+        }
+        if (!Array.isArray(data)) {
+          return '数据格式错误'
+        }
+        return true
+      }
+      catch (error) {
+        return '数据格式错误'
+      }
+    },
+  }).then(({ value }) => {
     const decompressedText = LZString.decompressFromEncodedURIComponent(value)
-    const data = JSON.parse(decompressedText)
-    monstersData.value = data
-    mergeOverlapMonsters()
+    const data = JSON.parse(decompressedText) as DiscoveredMonsters
+    const mapName = Map[data[0].zoneId as unknown as keyof typeof Map].name.souma
+    Promise.race(
+      [
+        ElMessageBox.confirm(`要舍弃当前的数据，并替换为导入的数据吗？`, `你的「${mapName}」上还有怪物！`, {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+        }),
+        monstersData.value.length === 0 ? Promise.resolve() : new Promise(() => {}),
+      ],
+    ).then(() => {
+      monstersData.value = [...monstersData.value.filter(item => item.zoneId !== data[0].zoneId), ...data]
+      mergeOverlapMonsters()
+      ElNotification({
+        title: '导入成功',
+        message: `已导入${data.length}条数据`,
+        type: 'success',
+      })
+    }).catch(() => { })
   })
 }
 
@@ -573,12 +666,15 @@ onMounted(async () => {
     <el-col class="menu">
       <el-row>
         <el-button type="primary" @click="clearMonster">
-          清空
+          全部清空
         </el-button> <el-button text bg @click="exportStr">
-          导出
+          全部导出
         </el-button>
-        <el-button text bg m-r-5 @click="importStr">
-          导入
+        <el-button text bg @click="importStr">
+          全部导入
+        </el-button>
+        <el-button text bg m-r-5 @click="importOneStr">
+          单独导入某个图
         </el-button>
       </el-row>
       <el-row>
@@ -605,6 +701,18 @@ onMounted(async () => {
         <h3 class="map-title" :style="{ width: `${IMG_SHOW_SIZE}px` }" position-absolute mb-0 ml-2 mt-1 p0>
           {{ i + 1 }}图 {{ Map[m].name.souma }} / {{ Map[m].name.ja }} / {{ Map[m].name.en }}
         </h3>
+        <ul class="options" position-absolute right-0 top-0 mr-2 mt-1 p0>
+          <li class="option">
+            <el-button size="small" @click="oneMapClear(m)">
+              本图清空
+            </el-button>
+          </li>
+          <li class="option">
+            <el-button size="small" @click="oneMapExport(m)">
+              本图导出
+            </el-button>
+          </li>
+        </ul>
         <aside
           class="map-filter" position-absolute style="top:2em;" ml-2 flex="~ justify-start"
           :style="{ width: `${IMG_SHOW_SIZE}px` }"
@@ -738,19 +846,30 @@ html::-webkit-scrollbar {
     }
   }
 }
+.map-info:hover .options{
+  opacity: 1;
+}
+.options{
+  z-index: 4;
+  opacity: 0;
+  transition: opacity 0.1s ease-in-out;
+  .option{
+    list-style: none
+  }
+}
 
 .aetherytes {
-  z-index: 4;
+  z-index: 5;
   transform: translate(-50%, -50%);
   user-select: none;
 }
 
 .point-inner {
-  z-index: 5;
+  z-index: 6;
 }
 
 .point-number {
-  z-index: 6;
+  z-index: 7;
   text-shadow: 0 0 2px black;
 }
 
