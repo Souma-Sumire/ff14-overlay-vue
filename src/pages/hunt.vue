@@ -179,12 +179,19 @@ function getColorDom(monster: DiscoveredMonsters[number]): string {
   return `<span style='color:rgb(${INS_TEXT_COLOR[n]})'>${monster.number}</span>`
 }
 
+const mergedByOtherNodes = new Set<string>()
+
 function getMultipleText(monsters: DiscoveredMonsters[number][]): string {
-  return monsters.map(item => getColorDom(item)).join(' ')
+  return monsters.map((item, index) => {
+    if (index > 0)
+      mergedByOtherNodes.add(item.id)
+    return getColorDom(item)
+  }).join(' ')
 }
 
 function mergeOverlapMonsters() {
   // 将Monters中同一张地图内坐标过近的怪物合并为一个
+  mergedByOtherNodes.clear()
   monstersData.value.forEach(item => item.text = getColorDom(item))
   monstersData.value.forEach((item) => {
     if (!isShow(item) || item.text === '') {
@@ -212,6 +219,11 @@ function mergeOverlapMonsters() {
       tooCloseAndInFilter.forEach((item2) => {
         item2.text = getColorDom(item2)
       })
+    }
+  })
+  monstersData.value.forEach((item) => {
+    if (mergedByOtherNodes.has(item.id)) {
+      item.text = ''
     }
   })
 }
@@ -348,6 +360,15 @@ function random(min: number, max: number) {
   return Math.random() * (max - min) + min
 }
 
+function randomString() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let str = ''
+  for (let i = 0; i < 10; i++) {
+    str += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return str
+}
+
 async function addTestMonster(zoneId: number, instance: number, randomRange: number) {
   playerInstance.value = instance
   playerZoneId.value = zoneId
@@ -355,8 +376,8 @@ async function addTestMonster(zoneId: number, instance: number, randomRange: num
     type: 'LogLine',
     line: [
       '03',
-      '2024-07-03T05:08:46.5450000+08:00',
       new Date().toISOString(),
+      randomString(),
       'クイーンホーク',
       '00',
       '64',
