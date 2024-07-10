@@ -92,6 +92,7 @@ const inLocalHost = window.location.hostname === 'localhost'
 const nameToHuntEntry: Record<string, HuntEntry> = {}
 const mergedByOtherNodes = new Set<string>()
 const zoneFilter = Object.fromEntries(zoneList.map(zoneId => [zoneId, filterValue[zoneInstanceLength[zoneId]]])) as Record<ZoneIdType, FilterType[]>
+const websocketConnected = ref(false)
 const monstersData = useStorage('souma-hunt-monsters-2', [] as DiscoveredMonsters)
 const showNumber = useStorage('souma-hunt-show-number', true)
 const playSound = useStorage('souma-hunt-play-sound', false)
@@ -131,7 +132,7 @@ async function checkWebSocket(): Promise<any> {
     resolvePromise = resolve
   })
 
-  const websocketConnected = await Promise.race<Promise<boolean>>([
+  const websocket = await Promise.race<Promise<boolean>>([
     new Promise<boolean>((res) => {
       void callOverlayHandler({ call: 'cactbotRequestState' }).then(() => {
         ElMessageBox.close()
@@ -145,7 +146,7 @@ async function checkWebSocket(): Promise<any> {
       }, 250)
     }),
   ])
-  if (!websocketConnected) {
+  if (!websocket) {
     ElMessageBox.alert(
       `请先启动ACT WS，再打开此页面<img src='${ActWS}' style='width:100%'>`,
       '未检测到ACT连接',
@@ -155,15 +156,19 @@ async function checkWebSocket(): Promise<any> {
         showClose: false,
         closeOnPressEscape: false,
         closeOnHashChange: false,
-        showCancelButton: false,
+        // showCancelButton: false,
+        showCancelButton: true,
         showConfirmButton: false,
+        cancelButtonText: '我偏要看看',
+        buttonSize: 'small',
       },
-    )
+    ).catch(() => { })
     const loop = setInterval(() => {
       void callOverlayHandler({ call: 'cactbotRequestState' }).then(() => {
         clearInterval(loop)
         ElMessageBox.close()
         resolvePromise(true)
+        websocketConnected.value = true
       })
     }, 1000)
   }
@@ -724,10 +729,10 @@ function doSound() {
   audio.play()
 }
 
-function zoneSituation(zoneId: ZoneIdType): string {
+function getMapName(zoneId: ZoneIdType, i: number): string {
   const instanceMax = zoneInstanceMax(zoneId)
   const instanceNow = monstersData.value.filter(item => item.zoneId === zoneId).length
-  return `（${instanceNow}/${instanceMax}）${instanceNow === instanceMax ? '✅' : ''}`
+  return `${i + 1}图 ${Map[zoneId].name.souma} / ${Map[zoneId].name.ja} / ${Map[zoneId].name.en} （${instanceNow}/${instanceMax}）${instanceNow === instanceMax ? '✅' : ''}`
 }
 
 onMounted(async () => {
@@ -758,6 +763,9 @@ onMounted(async () => {
 
 <template>
   <div :style="COLOR_STYLE">
+    <h3 v-if="!websocketConnected">
+      无法连接到ACTWebSocket，找怪功能无法工作，但你可以导入导出数据。
+    </h3>
     <el-col class="menu">
       <el-row>
         <el-button type="primary" @click="clearMonster">
@@ -798,7 +806,7 @@ onMounted(async () => {
     <div class="map-container" flex="~ wrap">
       <div v-for="(m, i) in zoneList" :key="m" class="map-info" flex="~ col" position-relative>
         <h3 class="map-title" :style="{ width: `${IMG_SHOW_SIZE}px` }" position-absolute mb-0 ml-2 mt-1 p0>
-          {{ i + 1 }}图 {{ Map[m].name.souma }} / {{ Map[m].name.ja }} / {{ Map[m].name.en }}  <span v-html="zoneSituation(m)" />
+          {{ getMapName(m, i) }}
         </h3>
         <ul class="options" position-absolute right-0 top-0 mr-2 mt-1 p0>
           <li class="option">
