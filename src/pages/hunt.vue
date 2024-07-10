@@ -582,6 +582,8 @@ function importStr() {
         return true
       }
       catch (error) {
+        // 为什么catch里不传参还会报错啊？？？
+        void error
         return '数据格式错误'
       }
     },
@@ -630,6 +632,8 @@ function importOneZoneStr() {
         return true
       }
       catch (error) {
+        // 为什么catch里不传参还会报错啊？？？
+        void error
         return '数据格式错误'
       }
     },
@@ -681,6 +685,8 @@ function importOneInstanceStr() {
         return true
       }
       catch (error) {
+        // 为什么catch里不传参还会报错啊？？？
+        void error
         return '数据格式错误'
       }
     },

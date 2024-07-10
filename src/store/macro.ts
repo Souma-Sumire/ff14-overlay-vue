@@ -263,7 +263,9 @@ export const useMacroStore = defineStore('macro', {
               targetMacro.Place[key]!.Z -= oY
             })
           }
-          catch (_e) {
+          catch (e) {
+            // 为什么catch里不传参还会报错啊？？？
+            void e
             ElMessage.error('解析失败')
             return
           }
@@ -385,7 +387,7 @@ export const useMacroStore = defineStore('macro', {
       this.selectZone = e.zoneID.toString()
       this.zoneNow = e.zoneID.toString()
       getZoneIDByZoneName(e.zoneName)
-      || ElMessage(`未知区域 ${e.zoneName} ${e.zoneID}`)
+      // || ElMessage(`未知区域 ${e.zoneName} ${e.zoneID}`)
     },
     // handleGameExists(e: any): void {
     //   this.gameExists = !!e?.detail?.exists;

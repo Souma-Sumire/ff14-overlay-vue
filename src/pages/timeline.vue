@@ -87,7 +87,9 @@ function selectedTimeline(timeline: ITimeline) {
 
 // 载入时间轴页面
 async function mountTimeline(timeline: ITimeline, stopLoadedTimeline = true) {
-  stopLoadedTimeline && stopTimeline()
+  if (stopLoadedTimeline) {
+    stopTimeline()
+  }
   doTTS = false
   if (timeline?.timeline) {
     timelinePageData.loadedTimeline = await parseTimeline(timeline.timeline)
@@ -199,7 +201,9 @@ function handleLogEvent(e: { detail: { logs: string[] } }) {
         const timeline = timelineStore
           .getTimeline(condition.value)
           .find(c => c.name === name)
-        timeline && mountTimeline(timeline, false)
+        if (timeline) {
+          mountTimeline(timeline, false)
+        }
       }
     }
   }
