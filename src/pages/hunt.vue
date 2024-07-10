@@ -31,7 +31,36 @@ type DiscoveredMonsters = Array<{
   // gameMapX: number
   // gameMapY: number
 }>
+
 type FilterType = '1-3' | '4-6' | '1' | '2' | '3' | '4' | '5' | '6'
+type ZoneIdType = typeof zoneList[number]
+type LegalInstance = 1 | 3 | 6
+
+// 将来追加地图时，在这里添加对应的zoneId，并且在zoneInstanceLength中添加对应的分线数量
+const zoneList = [
+  ZoneId.Urqopacha,
+  ZoneId.Kozamauka,
+  ZoneId.YakTel,
+  ZoneId.Shaaloani,
+  ZoneId.HeritageFound,
+  ZoneId.LivingMemory,
+]
+
+const zoneInstanceLength: Record<ZoneIdType, LegalInstance> = {
+  [ZoneId.Urqopacha]: 6,
+  [ZoneId.Kozamauka]: 6,
+  [ZoneId.YakTel]: 3,
+  [ZoneId.Shaaloani]: 3,
+  [ZoneId.HeritageFound]: 3,
+  [ZoneId.LivingMemory]: 3,
+}
+
+// agree first is default
+const filterValue: Record<LegalInstance, FilterType[]> = {
+  1: ['1'],
+  3: ['1-3', '1', '2', '3'],
+  6: ['1-3', '4-6', '1', '2', '3', '4', '5', '6'],
+}
 
 const INS_BG_COLOR = [
   '255, 0, 0',
@@ -53,41 +82,27 @@ const COLOR_STYLE = {
   '--ins5-color': `rgba(${INS_BG_COLOR[1]},0.4)`,
   '--ins6-color': `rgba(${INS_BG_COLOR[2]},0.4)`,
 }
-const inLocalHost = window.location.hostname === 'localhost'
 
-const ZONE_LIST = [
-  ZoneId.Urqopacha,
-  ZoneId.Kozamauka,
-  ZoneId.YakTel,
-  ZoneId.Shaaloani,
-  ZoneId.HeritageFound,
-  ZoneId.LivingMemory,
-]
-localStorage.removeItem('souma-hunt-monsters')
-localStorage.removeItem('souma-hunt-filter')
+const IMG_RAW_SIZE = 2048
+const IMG_SHOW_SIZE = 596
+const INSTANCE_STRING = ''
+const IMG_SCALE = IMG_SHOW_SIZE / IMG_RAW_SIZE
+const playerInstance = ref(-1)
+const inLocalHost = window.location.hostname === 'localhost'
+const nameToHuntEntry: Record<string, HuntEntry> = {}
+const mergedByOtherNodes = new Set<string>()
+const zoneFilter = Object.fromEntries(zoneList.map(zoneId => [zoneId, filterValue[zoneInstanceLength[zoneId]]])) as Record<ZoneIdType, FilterType[]>
 const monstersData = useStorage('souma-hunt-monsters-2', [] as DiscoveredMonsters)
 const showNumber = useStorage('souma-hunt-show-number', true)
 const playSound = useStorage('souma-hunt-play-sound', false)
 const soundVolume = useStorage('souma-hunt-sound-volume', 0.2)
+const filterConfig = useStorage('souma-hunt-filter-2', Object.fromEntries(zoneList.map(zoneId => [zoneId, filterValue[zoneInstanceLength[zoneId]][0]])) as Record<ZoneIdType, FilterType>)
+const playerZoneId = useStorage('souma-hunt-zone-id', ref(-1))
+const savedInstance = useStorage('souma-hunt-save-instance', playerInstance.value)
 
-const filterConfig = useStorage('souma-hunt-filter-2', {
-  [ZoneId.Urqopacha]: '1-3',
-  [ZoneId.Kozamauka]: '1-3',
-  [ZoneId.YakTel]: '1-3',
-  [ZoneId.Shaaloani]: '1-3',
-  [ZoneId.HeritageFound]: '1-3',
-  [ZoneId.LivingMemory]: '1-3',
-} as Record<typeof ZONE_LIST[number], FilterType>)
-
-const ZONE_FILTER = {
-  [ZoneId.Urqopacha]: ['1-3', '4-6', '1', '2', '3', '4', '5', '6'],
-  [ZoneId.Kozamauka]: ['1-3', '4-6', '1', '2', '3', '4', '5', '6'],
-  [ZoneId.YakTel]: ['1-3', '1', '2', '3'],
-  [ZoneId.Shaaloani]: ['1-3', '1', '2', '3'],
-  [ZoneId.HeritageFound]: ['1-3', '1', '2', '3'],
-  [ZoneId.LivingMemory]: ['1-3', '1', '2', '3'],
-} as Record<typeof ZONE_LIST[number], FilterType[]>
-const nameToHuntEntry: Record<string, HuntEntry> = {}
+function zoneInstanceMax(zoneId: ZoneIdType): number {
+  return Math.max(...(zoneFilter[zoneId].filter(item => /^[1-6]$/.test(item)).map(item => Number(item)))) * 2
+}
 
 for (const hunt of Object.values(HuntData)) {
   const { id, rank } = hunt
@@ -155,13 +170,6 @@ async function checkWebSocket(): Promise<any> {
   return promise
 }
 
-const IMG_RAW_SIZE = 2048
-const IMG_SHOW_SIZE = 596
-const IMG_SCALE = IMG_SHOW_SIZE / IMG_RAW_SIZE
-const playerZoneId = useStorage('souma-hunt-zone-id', ref(-1))
-const playerInstance = ref(-1)
-const savedInstance = useStorage('souma-hunt-save-instance', playerInstance.value)
-
 function calcDistance(x: number, y: number, x2: number, y2: number) {
   return {
     both: Math.sqrt((x - x2) ** 2 + (y - y2) ** 2),
@@ -170,16 +178,10 @@ function calcDistance(x: number, y: number, x2: number, y2: number) {
   }
 }
 
-// function getSoloText(monster: DiscoveredMonsters[number]): string {
-//   return `${monster.number}`
-// }
-
 function getColorDom(monster: DiscoveredMonsters[number]): string {
   const n = (monster.instance - 1) % 3
   return `<span style='color:rgb(${INS_TEXT_COLOR[n]})'>${monster.number}</span>`
 }
-
-const mergedByOtherNodes = new Set<string>()
 
 function getMultipleText(monsters: DiscoveredMonsters[number][]): string {
   return monsters.map((item, index) => {
@@ -259,10 +261,10 @@ const handleChangeZone: EventMap['ChangeZone'] = (event) => {
   checkImmediatelyMonster()
   playerInstance.value = 0
 }
-const INSTANCE_STRING = ''
+
 const handleLogLine: EventMap['LogLine'] = (event) => {
   // 如果当前zoneId不在ZONE_LIST中，则不处理
-  if (!ZONE_LIST.includes(playerZoneId.value as typeof ZONE_LIST[number])) {
+  if (!zoneList.includes(playerZoneId.value as ZoneIdType)) {
     return
   }
   if (event.line[0] === '00' && event.line[2] === '0039') {
@@ -454,7 +456,7 @@ function clearMonster() {
 function oneMapInstanceClear(zoneId: number) {
   const instance = filterConfig.value[zoneId as keyof typeof filterConfig.value]
   ElMessageBox.confirm(
-    `确定要清空「${Map[zoneId as unknown as keyof typeof Map].name.souma}」的${instance}线的怪物吗？`,
+    `确定要清空「${Map[zoneId as ZoneIdType].name.souma}」的${instance}线的怪物吗？`,
     `${instance}线清空`,
     {
       confirmButtonText: '确定',
@@ -467,9 +469,9 @@ function oneMapInstanceClear(zoneId: number) {
   })
 }
 
-function oneMapClear(zoneId: number) {
+function oneMapClear(zoneId: ZoneIdType) {
   ElMessageBox.confirm(
-    `要清空「${Map[zoneId as unknown as keyof typeof Map].name.souma}」的怪物吗？`,
+    `要清空「${Map[zoneId as ZoneIdType].name.souma}」的怪物吗？`,
     '本图清空',
     {
       confirmButtonText: '确定',
@@ -478,14 +480,14 @@ function oneMapClear(zoneId: number) {
     },
   ).then(() => {
     monstersData.value = monstersData.value.filter(item => item.zoneId !== zoneId)
-    filterConfig.value[zoneId as keyof typeof filterConfig.value] = ZONE_FILTER[zoneId as unknown as keyof typeof ZONE_FILTER][0]
+    filterConfig.value[zoneId] = zoneFilter[zoneId as ZoneIdType][0]
     mergeOverlapMonsters()
   })
 }
 
 function clearFilter() {
-  for (const key in filterConfig.value) {
-    filterConfig.value[key as unknown as keyof typeof filterConfig.value] = ZONE_FILTER[key as unknown as keyof typeof ZONE_FILTER][0]
+  for (const zoneId in filterConfig.value) {
+    filterConfig.value[zoneId as unknown as ZoneIdType] = zoneFilter[zoneId as unknown as keyof typeof zoneFilter][0]
   }
 }
 
@@ -716,6 +718,12 @@ function doSound() {
   audio.play()
 }
 
+function zoneSituation(zoneId: ZoneIdType): string {
+  const instanceMax = zoneInstanceMax(zoneId)
+  const instanceNow = monstersData.value.filter(item => item.zoneId === zoneId).length
+  return `（${instanceNow}/${instanceMax}）${instanceNow === instanceMax ? '✅' : ''}`
+}
+
 onMounted(async () => {
   if (monstersData.value.length === 0) {
     clearFilter()
@@ -782,9 +790,9 @@ onMounted(async () => {
       </el-row>
     </el-col>
     <div class="map-container" flex="~ wrap">
-      <div v-for="(m, i) in ZONE_LIST" :key="m" class="map-info" flex="~ col" position-relative>
+      <div v-for="(m, i) in zoneList" :key="m" class="map-info" flex="~ col" position-relative>
         <h3 class="map-title" :style="{ width: `${IMG_SHOW_SIZE}px` }" position-absolute mb-0 ml-2 mt-1 p0>
-          {{ i + 1 }}图 {{ Map[m].name.souma }} / {{ Map[m].name.ja }} / {{ Map[m].name.en }}
+          {{ i + 1 }}图 {{ Map[m].name.souma }} / {{ Map[m].name.ja }} / {{ Map[m].name.en }}  <span v-html="zoneSituation(m)" />
         </h3>
         <ul class="options" position-absolute right-0 top-0 mr-2 mt-1 p0>
           <li class="option">
@@ -813,7 +821,7 @@ onMounted(async () => {
           :style="{ width: `${IMG_SHOW_SIZE}px` }"
         >
           <el-radio-group v-model="filterConfig[m]" size="small" @change="mergeOverlapMonsters">
-            <el-radio-button v-for="item in ZONE_FILTER[m]" :key="item" :label="item" :value="item" />
+            <el-radio-button v-for="item in zoneFilter[m]" :key="item" :label="item" :value="item" />
           </el-radio-group>
         </aside>
         <div class="map-image">
@@ -918,7 +926,7 @@ html::-webkit-scrollbar {
 .map-title {
   z-index: 2;
   color: white;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
   text-shadow: 0 0 4px black;
 }
