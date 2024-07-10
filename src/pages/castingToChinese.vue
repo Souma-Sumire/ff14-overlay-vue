@@ -359,20 +359,20 @@ function resetSettings() {
   z-index: 999999;
   height: 90vh;
   color: white;
-  > form:not(.noCSS) {
-    text-shadow: -1px 0 1px #000, 0 1px 1px #000, 1px 0 1px #000,
-      0 -1px 1px #000;
-  }
   font-weight: bold;
   display: flex;
   flex-wrap: wrap;
   flex-direction: column;
   align-content: flex-end;
+  padding-bottom: 20px;
+  > form:not(.noCSS) {
+    text-shadow: -1px 0 1px #000, 0 1px 1px #000, 1px 0 1px #000,
+      0 -1px 1px #000;
+  }
   > form {
     white-space: nowrap;
     padding: 0px 3px;
   }
-  padding-bottom: 20px;
 }
 .countdown {
   opacity: v-bind(opacityCountdown);
@@ -409,12 +409,12 @@ function resetSettings() {
   }
   .el-progress {
     :deep(.el-progress-bar) {
+      box-sizing: content-box;
+      box-shadow: 0 0 4px #f8a100, 0 0 2px #b28815, 0 0 1px #38260b;
       .el-progress-bar__outer,
       .el-progress-bar__inner {
         border-radius: 0;
       }
-      box-sizing: content-box;
-      box-shadow: 0 0 4px #f8a100, 0 0 2px #b28815, 0 0 1px #38260b;
       .el-progress-bar__outer {
         background-color: #38260b;
       }

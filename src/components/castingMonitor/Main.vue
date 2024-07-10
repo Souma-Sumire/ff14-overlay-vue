@@ -87,15 +87,15 @@ const displayGCD = Number(
   .images {
     position: absolute;
     bottom: 0px;
-    &.displayGCD1 {
-      bottom: 18px;
-    }
     height: 48px;
     right: calc(0% - 24px);
     width: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
+    &.displayGCD1 {
+      bottom: 18px;
+    }
     &.logLine14 {
       filter: opacity(0.5);
     }

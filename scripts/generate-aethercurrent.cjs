@@ -51,7 +51,7 @@ Promise.all([
   },
   )
   fs.outputJsonSync('src/resources/aethercurrent.json', result, { spaces: 2 })
-  console.log('Data generated successfully.')
+  // console.log('Data generated successfully.')
 })
 
 class Vector2 {

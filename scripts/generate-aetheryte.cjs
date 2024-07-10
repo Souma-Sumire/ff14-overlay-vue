@@ -33,5 +33,5 @@ Promise.all(fileNames.map(fileName => readFile(fileName, csvPaths.ja + fileName)
     }
   })
   fs.outputJsonSync('src/resources/aetherytes.json', aetherytes, { spaces: 2 })
-  console.log('Data generated successfully.')
+  // console.log('Data generated successfully.')
 })

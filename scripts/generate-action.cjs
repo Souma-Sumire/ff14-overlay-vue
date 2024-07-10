@@ -34,5 +34,5 @@ Promise.all([
     result[row[0]] = row[1]
   })
   fs.outputJsonSync('src/resources/actionChinese.json', result, { spaces: 2 })
-  console.log('Data generated successfully.')
+  // console.log('Data generated successfully.')
 })

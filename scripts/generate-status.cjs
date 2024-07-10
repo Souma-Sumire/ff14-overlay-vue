@@ -35,5 +35,5 @@ Promise.all([
     result[row[0]] = [row[1], ja[3]]
   })
   fs.outputJsonSync('src/resources/status.json', result, { spaces: 2 })
-  console.log('Data generated successfully.')
+  // console.log('Data generated successfully.')
 })

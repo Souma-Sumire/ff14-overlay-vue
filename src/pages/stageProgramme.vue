@@ -525,9 +525,6 @@ $color: rgba(
     font-size: 22px;
     overflow-x: hidden;
     // overflow-y: hidden;
-    &::-webkit-scrollbar {
-      display: none;
-    }
     max-height: 651px;
     background: $color;
     border-radius: 8px;
@@ -535,6 +532,9 @@ $color: rgba(
     user-select: none;
     position: relative;
     // padding: 10px;
+    &::-webkit-scrollbar {
+      display: none;
+    }
     .icon {
       margin-top: -12px;
       margin-left: 3px;

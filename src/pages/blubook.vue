@@ -2342,9 +2342,6 @@ function handleBatchLearning(): void {
         }
       }
       .grid-item {
-        .notLearned {
-          filter: grayscale(1) brightness(0.5);
-        }
         cursor: pointer;
         height: 96px;
         width: 108px;
@@ -2354,6 +2351,9 @@ function handleBatchLearning(): void {
         flex-direction: column;
         justify-content: flex-end;
         align-items: center;
+        .notLearned {
+          filter: grayscale(1) brightness(0.5);
+        }
         .learnedSwitch {
           // position: absolute;
           // left: 0px;

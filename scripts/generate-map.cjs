@@ -39,5 +39,5 @@ Promise.all([
     res[row[0]] = { id, name: { cn, en, ja, souma } }
   })
   fs.outputJsonSync('src/resources/map.json', res, { spaces: 2 })
-  console.log('Data generated successfully.')
+  // console.log('Data generated successfully.')
 })

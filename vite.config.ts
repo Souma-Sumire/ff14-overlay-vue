@@ -14,6 +14,7 @@ import {
   VxeTableResolve,
   createStyleImportPlugin,
 } from 'vite-plugin-style-import'
+import sassDts from 'vite-plugin-sass-dts'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -80,6 +81,7 @@ export default defineConfig({
     createStyleImportPlugin({
       resolves: [VxeTableResolve()],
     }),
+    sassDts(),
   ],
   define: {
     __VUE_OPTIONS_API__: false,

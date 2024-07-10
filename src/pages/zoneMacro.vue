@@ -483,10 +483,6 @@ body {
   }
 }
 .menu {
-  [class*="vxe-"] {
-    text-align: center;
-    font-size: 14px;
-  }
   background: transparent;
   width: auto;
   height: auto;
@@ -511,6 +507,10 @@ body {
   }
   .el-button {
     margin: 0;
+  }
+  [class*="vxe-"] {
+    text-align: center;
+    font-size: 14px;
   }
 }
 .main-box-card {

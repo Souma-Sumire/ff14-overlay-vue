@@ -70,6 +70,7 @@ onUnmounted(() => {
     border: 1px solid #ccc;
     border-radius: 10px;
     position: relative;
+    background-color: #fff;
     input {
       cursor: pointer;
       opacity: 0;
@@ -91,7 +92,6 @@ onUnmounted(() => {
         transform: translate(-50%, -50%);
       }
     }
-    background-color: #fff;
     &:hover,
     &.drag {
       border-color: #000;

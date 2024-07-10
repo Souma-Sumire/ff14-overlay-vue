@@ -386,10 +386,12 @@ body {
 * {
   user-select: none !important;
 }
+
 .dnc-overlay {
   font-family: v-bind(fontFamily);
   font-weight: v-bind(fontWeight);
 }
+
 .settings {
   overflow: visible;
   position: fixed;
@@ -403,28 +405,34 @@ body {
   flex-direction: column;
   align-content: flex-end;
   font-size: 14px;
-  > form:not(:last-child) {
+
+  >form:not(:last-child) {
     white-space: nowrap;
     padding: 0px 3px;
     text-shadow: -1px 0 1px #000, 0 1px 1px #000, 1px 0 1px #000,
       0 -1px 1px #000;
   }
+
   :deep(.input-number) {
     width: 8em;
     height: 1.15em;
   }
+
   :deep(.input-string) {
     width: 9em;
     height: 1.35em;
   }
 }
+
 main {
   display: flex;
   align-items: flex-end;
   height: 100vh;
-  > div {
+
+  >div {
     position: relative;
-    > span {
+
+    >span {
       position: absolute;
       text-align: right;
       width: 1em;
@@ -433,13 +441,14 @@ main {
       font-size: v-bind(size);
       text-shadow: 1px 1px 1px $shadow, -1px -1px 1px $shadow,
         1px -1px 1px $shadow, -1px 1px 1px $shadow;
+      transform: translateX(-50%) translateY(-50%);
+
       &.warning {
         color: v-bind(warncolor);
         $warnshadow: v-bind(warnshadow);
         text-shadow: 1px 1px 1px $warnshadow, -1px -1px 1px $warnshadow,
           1px -1px 1px $warnshadow, -1px 1px 1px $warnshadow;
       }
-      transform: translateX(-50%) translateY(-50%);
     }
   }
 }
