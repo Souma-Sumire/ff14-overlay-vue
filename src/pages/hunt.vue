@@ -31,7 +31,7 @@ type DiscoveredMonsters = Array<{
   // gameMapX: number
   // gameMapY: number
 }>
-type FilterType = '1-6' | '1-3' | '4-6' | '1' | '2' | '3' | '4' | '5' | '6'
+type FilterType = '1-3' | '4-6' | '1' | '2' | '3' | '4' | '5' | '6'
 
 const INS_BG_COLOR = [
   '255, 0, 0',
@@ -71,8 +71,8 @@ const playSound = useStorage('souma-hunt-play-sound', false)
 const soundVolume = useStorage('souma-hunt-sound-volume', 0.2)
 
 const filterConfig = useStorage('souma-hunt-filter-2', {
-  [ZoneId.Urqopacha]: '1-6',
-  [ZoneId.Kozamauka]: '1-6',
+  [ZoneId.Urqopacha]: '1-3',
+  [ZoneId.Kozamauka]: '1-3',
   [ZoneId.YakTel]: '1-3',
   [ZoneId.Shaaloani]: '1-3',
   [ZoneId.HeritageFound]: '1-3',
@@ -80,8 +80,8 @@ const filterConfig = useStorage('souma-hunt-filter-2', {
 } as Record<typeof ZONE_LIST[number], FilterType>)
 
 const ZONE_FILTER = {
-  [ZoneId.Urqopacha]: ['1-3', '4-6', '1', '2', '3', '4', '5', '6', '1-6'],
-  [ZoneId.Kozamauka]: ['1-3', '4-6', '1', '2', '3', '4', '5', '6', '1-6'],
+  [ZoneId.Urqopacha]: ['1-3', '4-6', '1', '2', '3', '4', '5', '6'],
+  [ZoneId.Kozamauka]: ['1-3', '4-6', '1', '2', '3', '4', '5', '6'],
   [ZoneId.YakTel]: ['1-3', '1', '2', '3'],
   [ZoneId.Shaaloani]: ['1-3', '1', '2', '3'],
   [ZoneId.HeritageFound]: ['1-3', '1', '2', '3'],
@@ -412,7 +412,7 @@ async function sleep(time: number) {
 }
 
 function test() {
-  const scale = 3;
+  const scale = 5;
   (async () => {
     monstersData.value = []
     await addTestMonster(ZoneId.Urqopacha, 1, 30 * scale)
@@ -555,6 +555,15 @@ function oneMapExport(zoneId: number) {
   exportSth(data)
 }
 
+function oneMapInstanceExport(zoneId: number) {
+  const instance = filterConfig.value[zoneId as keyof typeof filterConfig.value]
+  const data = monstersData.value.filter(item => item.zoneId === zoneId && item.instance === Number(instance))
+  if (!data) {
+    throw new Error('找不到该地图')
+  }
+  exportSth(data)
+}
+
 function importStr() {
   ElMessageBox.prompt('请输入要导入的字符串', '导入', {
     confirmButtonText: '确定',
@@ -599,8 +608,8 @@ function importStr() {
   })
 }
 
-function importOneStr() {
-  ElMessageBox.prompt('请输入要导入的字符串', '单独导入', {
+function importOneZoneStr() {
+  ElMessageBox.prompt('请输入要导入的字符串', '单独导入某个图', {
     confirmButtonText: '单独导入',
     cancelButtonText: '取消',
     inputType: 'textarea',
@@ -626,6 +635,7 @@ function importOneStr() {
     const decompressedText = LZString.decompressFromEncodedURIComponent(value)
     const data = JSON.parse(decompressedText) as DiscoveredMonsters
     const mapName = Map[data[0].zoneId as unknown as keyof typeof Map].name.souma
+    const targetMonsters = monstersData.value.filter(item => item.zoneId === data[0].zoneId)
     Promise.race(
       [
         ElMessageBox.confirm(`要舍弃当前的数据，并替换为导入的数据吗？`, `你的「${mapName}」上还有怪物！`, {
@@ -633,11 +643,64 @@ function importOneStr() {
           cancelButtonText: '取消',
           type: 'warning',
         }),
-        monstersData.value.length === 0 ? Promise.resolve() : new Promise(() => {}),
+        targetMonsters.length === 0 ? Promise.resolve() : new Promise(() => {}),
       ],
     ).then(() => {
       monstersData.value = [...monstersData.value.filter(item => item.zoneId !== data[0].zoneId), ...data]
       mergeOverlapMonsters()
+      ElMessageBox.close()
+      ElNotification({
+        title: '导入成功',
+        message: `已导入${data.length}条数据`,
+        type: 'success',
+      })
+    }).catch(() => { })
+  })
+}
+
+function importOneInstanceStr() {
+  ElMessageBox.prompt('请输入要导入的字符串', '单独导入某条线', {
+    confirmButtonText: '单独导入',
+    cancelButtonText: '取消',
+    inputType: 'textarea',
+    inputValue: '',
+    inputValidator: (value) => {
+      try {
+        const decompressedText = LZString.decompressFromEncodedURIComponent(value)
+        const data = JSON.parse(decompressedText) as DiscoveredMonsters
+        const zoneIds = new Set(data.map(item => item.zoneId))
+        const instanceIds = new Set(data.map(item => item.instance))
+        if (zoneIds.size !== 1 || instanceIds.size !== 1) {
+          return '导入的字符串不止一个地图或线，你是不是选错了？'
+        }
+        if (!Array.isArray(data)) {
+          return '数据格式错误'
+        }
+        return true
+      }
+      catch (error) {
+        return '数据格式错误'
+      }
+    },
+  }).then(({ value }) => {
+    const decompressedText = LZString.decompressFromEncodedURIComponent(value)
+    const data = JSON.parse(decompressedText) as DiscoveredMonsters
+    const mapName = Map[data[0].zoneId as unknown as keyof typeof Map].name.souma
+    const instanceName = data[0].instance.toString()
+    const targetMonsters = monstersData.value.filter(item => item.zoneId === data[0].zoneId && item.instance === data[0].instance)
+    Promise.race(
+      [
+        ElMessageBox.confirm(`要舍弃当前的数据，并替换为导入的数据吗？`, `你的「${mapName}」的${instanceName}线上还有怪物！`, {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+        }),
+        targetMonsters.length === 0 ? Promise.resolve() : new Promise(() => {}),
+      ],
+    ).then(() => {
+      monstersData.value = [...monstersData.value.filter(item => item.zoneId !== data[0].zoneId || item.instance !== data[0].instance), ...data]
+      mergeOverlapMonsters()
+      ElMessageBox.close()
       ElNotification({
         title: '导入成功',
         message: `已导入${data.length}条数据`,
@@ -663,7 +726,7 @@ onMounted(async () => {
   ElMessageBox.close()
   ElMessageBox.prompt('请切一次线，或者手动指定', '你在几线', {
     confirmButtonText: '确认',
-    inputPattern: /[1-6]/,
+    inputPattern: /^[1-6]$/,
     inputErrorMessage: '只能输入1-6',
     showCancelButton: false,
     showClose: false,
@@ -685,14 +748,18 @@ onMounted(async () => {
       <el-row>
         <el-button type="primary" @click="clearMonster">
           全部清空
-        </el-button> <el-button text bg @click="exportStr">
+        </el-button>
+        <el-button text bg @click="exportStr">
           全部导出
         </el-button>
         <el-button text bg @click="importStr">
           全部导入
         </el-button>
-        <el-button text bg m-r-5 @click="importOneStr">
+        <el-button text bg @click="importOneZoneStr">
           单独导入某个图
+        </el-button>
+        <el-button text bg m-r-5 @click="importOneInstanceStr">
+          单独导入某条线
         </el-button>
       </el-row>
       <el-row>
@@ -721,11 +788,6 @@ onMounted(async () => {
         </h3>
         <ul class="options" position-absolute right-0 top-0 mr-2 mt-1 p0>
           <li class="option">
-            <el-button size="small" w-5em @click="oneMapInstanceClear(m)">
-              {{ filterConfig[m] }}线清空
-            </el-button>
-          </li>
-          <li class="option">
             <el-button size="small" w-5em @click="oneMapClear(m)">
               本图清空
             </el-button>
@@ -733,6 +795,16 @@ onMounted(async () => {
           <li class="option">
             <el-button size="small" w-5em @click="oneMapExport(m)">
               本图导出
+            </el-button>
+          </li>
+          <li class="option">
+            <el-button size="small" w-5em @click="oneMapInstanceClear(m)">
+              {{ filterConfig[m] }}线清空
+            </el-button>
+          </li>
+          <li class="option">
+            <el-button size="small" w-5em @click="oneMapInstanceExport(m)">
+              {{ filterConfig[m] }}线导出
             </el-button>
           </li>
         </ul>
