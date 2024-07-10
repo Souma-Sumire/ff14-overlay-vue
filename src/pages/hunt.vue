@@ -400,7 +400,7 @@ async function addTestMonster(zoneId: number, instance: number, randomRange: num
     ],
     rawLine: '',
   })
-  await sleep(0.5)
+  await sleep(0.2)
 }
 
 async function sleep(time: number) {
@@ -417,16 +417,18 @@ function test() {
     monstersData.value = []
     await addTestMonster(ZoneId.Urqopacha, 1, 30 * scale)
     await addTestMonster(ZoneId.Urqopacha, 1, 30 * scale)
+    await addTestMonster(ZoneId.Urqopacha, 2, 30 * scale)
+    await addTestMonster(ZoneId.Urqopacha, 2, 30 * scale)
+    await addTestMonster(ZoneId.Urqopacha, 3, 90 * scale)
+    await addTestMonster(ZoneId.Urqopacha, 3, 90 * scale)
+    await addTestMonster(ZoneId.Urqopacha, 4, 120 * scale)
+    await addTestMonster(ZoneId.Urqopacha, 4, 120 * scale)
+    await addTestMonster(ZoneId.Urqopacha, 5, 150 * scale)
+    await addTestMonster(ZoneId.Urqopacha, 5, 150 * scale)
+    await addTestMonster(ZoneId.Urqopacha, 6, 180 * scale)
+    await addTestMonster(ZoneId.Urqopacha, 6, 180 * scale)
     await addTestMonster(ZoneId.Kozamauka, 1, 60 * scale)
     await addTestMonster(ZoneId.Kozamauka, 1, 60 * scale)
-  //   await addTestMonster(ZoneId.Urqopacha, 3, 90 * scale)
-  //   await addTestMonster(ZoneId.Urqopacha, 3, 90 * scale)
-  //   await addTestMonster(ZoneId.Urqopacha, 4, 120 * scale)
-  //   await addTestMonster(ZoneId.Urqopacha, 4, 120 * scale)
-  //   await addTestMonster(ZoneId.Urqopacha, 5, 150 * scale)
-  //   await addTestMonster(ZoneId.Urqopacha, 5, 150 * scale)
-  //   await addTestMonster(ZoneId.Urqopacha, 6, 180 * scale)
-  //   await addTestMonster(ZoneId.Urqopacha, 6, 180 * scale)
   })()
   // setTimeout(() => {
   //   handleLogLine({ type: 'LogLine', rawLine: '', line: ['25', '', monsterIds[2]] })
@@ -446,6 +448,22 @@ function clearMonster() {
   ).then(() => {
     monstersData.value = []
     clearFilter()
+  })
+}
+
+function oneMapInstanceClear(zoneId: number) {
+  const instance = filterConfig.value[zoneId as keyof typeof filterConfig.value]
+  ElMessageBox.confirm(
+    `确定要清空「${Map[zoneId as unknown as keyof typeof Map].name.souma}」的${instance}线的怪物吗？`,
+    `${instance}线清空`,
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    },
+  ).then(() => {
+    monstersData.value = monstersData.value.filter(item => !(item.zoneId === zoneId && item.instance === Number(instance)))
+    mergeOverlapMonsters()
   })
 }
 
@@ -703,12 +721,17 @@ onMounted(async () => {
         </h3>
         <ul class="options" position-absolute right-0 top-0 mr-2 mt-1 p0>
           <li class="option">
-            <el-button size="small" @click="oneMapClear(m)">
+            <el-button size="small" w-5em @click="oneMapInstanceClear(m)">
+              {{ filterConfig[m] }}线清空
+            </el-button>
+          </li>
+          <li class="option">
+            <el-button size="small" w-5em @click="oneMapClear(m)">
               本图清空
             </el-button>
           </li>
           <li class="option">
-            <el-button size="small" @click="oneMapExport(m)">
+            <el-button size="small" w-5em @click="oneMapExport(m)">
               本图导出
             </el-button>
           </li>
@@ -846,15 +869,18 @@ html::-webkit-scrollbar {
     }
   }
 }
-.map-info:hover .options{
+
+.map-info:hover .options {
   opacity: 1;
 }
-.options{
+
+.options {
   z-index: 4;
   opacity: 0;
   transition: opacity 0.1s ease-in-out;
-  .option{
-    list-style: none
+
+  .option {
+    list-style: none;
   }
 }
 
