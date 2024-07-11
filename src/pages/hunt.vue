@@ -138,6 +138,7 @@ async function checkWebSocket(): Promise<any> {
         ElMessageBox.close()
         res(true)
         resolvePromise(true)
+        websocketConnected.value = true
       })
     }),
     new Promise<boolean>((res) => {

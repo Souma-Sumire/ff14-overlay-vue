@@ -29,6 +29,7 @@ const displayGCD = Number(
         :teleported="false"
         popper-class="el-tooltip"
         :show-arrow="false"
+        :disabled="castingMonitorStore.focusTargetId === castersId ? false : true"
       >
         <template #content>
           <div class="elhover">
