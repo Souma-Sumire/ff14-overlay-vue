@@ -43,6 +43,8 @@ export const iconToJobEnum: Record<Icon, number> = {
   Dancer: 38,
   Reaper: 39,
   Sage: 40,
+  Viper: 41,
+  Pictomancer: 42,
 }
 
 export const nameToJobEnum: Record<Job, number> = {
@@ -115,7 +117,6 @@ export const jobEnumOrder = [
   33, // AST 占星术士
   40, // SGE 贤者
   28, // SCH 学者
-  41, // VPR 蝰蛇剑士
   34, // SAM 武士
   29, // ROG 双剑师
   30, // NIN 忍者
@@ -124,16 +125,17 @@ export const jobEnumOrder = [
   22, // DRG 龙骑士
   2, // PGL 格斗家
   20, // MNK 武僧
+  41, // VPR 蝰蛇剑士
   5, // ARC 弓箭手
   23, // BRD 吟游诗人
   31, // MCH 机工士
   38, // DNC 舞者
-  42, // PCT 绘灵法师
   7, // THM 咒术师
   25, // BLM 黑魔法师
   26, // ACN 秘术师
   27, // SMN 召唤师
   35, // RDM 赤魔法师
+  42, // PCT 绘灵法师
   36, // BLU 青魔法师
   8, // CRP 刻木匠
   9, // BSM 锻铁匠

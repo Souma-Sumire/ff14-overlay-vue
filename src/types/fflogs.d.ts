@@ -40,6 +40,8 @@ export type FFIcon =
   | 'Dancer'
   | 'Reaper'
   | 'Sage'
+  | 'Viper'
+  | 'Pictomancer'
 
 export interface Friendlies {
   guid: number
