@@ -12,10 +12,10 @@ import 'animate.css'
 //   new Date().getMonth() === 3 && new Date().getDate() === 1
 // );
 
-function createRPArr(r: 'T' | 'H' | 'D' | 'C' | 'G' | 'N', l: number) {
+function createRPArr(r: 'T' | 'H' | 'D' | 'C' | 'G' | 'N', l: number, start: number = 0) {
   return Array(l)
     .fill(r)
-    .map((v, i) => v + (+i + 1))
+    .map((v, i) => v + (+i + 1 + start))
 }
 
 const dialogVisible = ref(false)
@@ -45,7 +45,7 @@ const roleSelectLength = useStorage('cactbotRuntime-roleSelectLength', {
 const roleAssignLocationNames = useStorage(
   'cactbotRuntime-roleAssignLocationNames',
   {
-    tank: ['MT', 'ST', ...createRPArr('T', 6)],
+    tank: ['MT', 'ST', ...createRPArr('T', 6, 2)],
     healer: [...createRPArr('H', 8)],
     dps: [...createRPArr('D', 8)],
     crafter: [...createRPArr('C', 8)],
