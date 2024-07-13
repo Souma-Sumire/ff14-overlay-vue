@@ -533,6 +533,10 @@ function handlePointClick(item: DiscoveredMonsters[number]): void {
   })
   // 更新文本
   mergeOverlapMonsters()
+  if (item.instance === playerInstance.value && item.zoneId === playerZoneId.value) {
+    // 更新标点
+    updateWaymarks()
+  }
 }
 
 function exportSth(sth: DiscoveredMonsters) {
