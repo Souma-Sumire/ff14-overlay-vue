@@ -6,11 +6,12 @@ import HuntData, { type HuntEntry } from '../../cactbot/resources/hunt'
 import { addOverlayListener, callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 import sonar from '../../cactbot/resources/sounds/freesound/sonar.webm'
 import ZoneId from '../../cactbot/resources/zone_id'
-import { Vector2, getPixelCoordinates } from '@/utils/mapCoordinates'
+import { Vector2, getPixelCoordinates, getWorldCoordinates } from '@/utils/mapCoordinates'
 import zoneInfo from '@/resources/zoneInfo'
 import Map from '@/resources/map.json'
 import Aetherytes from '@/resources/aetherytes.json'
 import ActWS from '@/assets/actWS.webp'
+import type { PPJSON, WayMarkKeys } from '@/types/PostNamazu'
 
 type DiscoveredMonsters = Array<{
   timestamp: number
@@ -21,13 +22,13 @@ type DiscoveredMonsters = Array<{
   instance: number
   number: number
   text: string
-  // worldX: number
-  // worldY: number
-  // worldZ: number
+  worldX: number
+  worldY: number
+  worldZ: number
   // offsetX: number
   // offsetY: number
-  pixelX: number
-  pixelY: number
+  pixelX?: number
+  pixelY?: number
   // gameMapX: number
   // gameMapY: number
 }>
@@ -86,6 +87,7 @@ const COLOR_STYLE = {
 const IMG_RAW_SIZE = 2048
 const IMG_SHOW_SIZE = 596
 const INSTANCE_STRING = ''
+const waymarkKeys: WayMarkKeys[] = ['One', 'Two', 'Three', 'Four', 'A', 'B', 'C', 'D']
 const IMG_SCALE = IMG_SHOW_SIZE / IMG_RAW_SIZE
 const playerInstance = ref(-1)
 const inLocalHost = window.location.hostname === 'localhost'
@@ -100,6 +102,7 @@ const soundVolume = useStorage('souma-hunt-sound-volume', 0.2)
 const filterConfig = useStorage('souma-hunt-filter-2', Object.fromEntries(zoneList.map(zoneId => [zoneId, filterValue[zoneInstanceLength[zoneId]][0]])) as Record<ZoneIdType, FilterType>)
 const playerZoneId = useStorage('souma-hunt-zone-id', ref(-1))
 const savedInstance = useStorage('souma-hunt-save-instance', playerInstance.value)
+const usePostNamazu = useStorage('souma-hunt-use-post-namazu', false)
 
 function zoneInstanceMax(zoneId: ZoneIdType): number {
   return Math.max(...(zoneFilter[zoneId].filter(item => /^[1-6]$/.test(item)).map(item => Number(item)))) * 2
@@ -157,7 +160,6 @@ async function checkWebSocket(): Promise<any> {
         showClose: false,
         closeOnPressEscape: false,
         closeOnHashChange: false,
-        // showCancelButton: false,
         showCancelButton: true,
         showConfirmButton: false,
         cancelButtonText: '我偏要看看',
@@ -190,11 +192,9 @@ function getColorDom(monster: DiscoveredMonsters[number]): string {
 }
 
 function getMultipleText(monsters: DiscoveredMonsters[number][]): string {
-  monsters.forEach((item, index) => {
-    if (index > 0)
-      mergedByOtherNodes.add(item.id)
-  })
-  return monsters.sort((a, b) => a.instance - b.instance).map(item => getColorDom(item)).join(' ')
+  return monsters.toSorted((a, b) => a.instance - b.instance).map((item) => {
+    return getColorDom(item)
+  }).join(' ')
 }
 
 function mergeOverlapMonsters() {
@@ -202,29 +202,22 @@ function mergeOverlapMonsters() {
   mergedByOtherNodes.clear()
   monstersData.value.forEach(item => item.text = getColorDom(item))
   monstersData.value.forEach((item) => {
-    if (!isShow(item) || item.text === '') {
+    if (!isShow(item) || mergedByOtherNodes.has(item.id)) {
       return
     }
     const tooClose = monstersData.value.filter((item2) => {
-      const distance = calcDistance(item.pixelX, item.pixelY, item2.pixelX, item2.pixelY)
-      return item2.zoneId === item.zoneId && (distance.both < 35 || (distance.y < 20 && distance.x < 40))
+      const distance = calcDistance(item.worldX, item.worldY, item2.worldX, item2.worldY)
+      return isShow(item2) && !mergedByOtherNodes.has(item2.id) && item2.zoneId === item.zoneId && (distance.both < 35)
     })
-    const tooCloseAndInFilter = tooClose.filter(item => isShow(item))
-    if (tooCloseAndInFilter.length >= 2) {
-      tooCloseAndInFilter[0].text = getMultipleText(tooCloseAndInFilter)
-      tooCloseAndInFilter.forEach((item2, index2) => {
-        if (index2 === 0) {
-          return
-        }
-        if (item2.id === item.id) {
-          // 这一条判断有必要吗？
-          return
-        }
-        item2.text = ''
+    if (tooClose.length >= 2) {
+      tooClose.forEach((item2, index2) => {
+        if (index2 > 0)
+          mergedByOtherNodes.add(item2.id)
       })
+      tooClose[0].text = getMultipleText(tooClose)
     }
     else {
-      tooCloseAndInFilter.forEach((item2) => {
+      tooClose.forEach((item2) => {
         item2.text = getColorDom(item2)
       })
     }
@@ -280,6 +273,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
       savedInstance.value = playerInstance.value
       ElMessageBox.close()
       checkImmediatelyMonster()
+      updateWaymarks()
     }
   }
   else if (event.line[0] === '03') {
@@ -290,29 +284,16 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
       const instance = playerInstance.value
       const timestamp = new Date().getTime()
       const id = event.line[2]
-      // const name = event.line[3]
       const worldX = Number(event.line[17])
       const worldY = Number(event.line[18])
-      // const worldZ = Number(event.line[19])
-      const zone = zoneInfo[playerZoneId.value]
-      const sizeFactor = zone.sizeFactor
-      const offsetX = zone.offsetX
-      const offsetY = zone.offsetY
-      const worldXZCoordinates = new Vector2(Number(worldX), Number(worldY))
-      const mapOffset = new Vector2(offsetX, offsetY)
-      const pixelCoordinates = getPixelCoordinates(worldXZCoordinates, mapOffset, sizeFactor)
-      // const gameMapCoordinates = getGameMapCoordinates(pixelCoordinates, sizeFactor)
+      const worldZ = Number(event.line[19])
       const exist = monstersData.value.find(item => item.id === event.line[2] && item.zoneId === playerZoneId.value && item.instance === instance)
       if (exist) {
         // 已经添加过了，更新坐标，且不是合并的情况
         exist.timestamp = timestamp
-        // exist.worldX = worldX
-        // exist.worldY = worldY
-        // exist.worldZ = worldZ
-        exist.pixelX = pixelCoordinates.x
-        exist.pixelY = pixelCoordinates.y
-        // exist.gameMapX = gameMapCoordinates.x
-        // exist.gameMapY = gameMapCoordinates.y
+        exist.worldX = worldX
+        exist.worldY = worldY
+        exist.worldZ = worldZ
       }
       else {
         // 新添加
@@ -332,35 +313,29 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
         monstersData.value.push({
           timestamp,
           id,
-          // name,
-          // rank,
-          // worldX,
-          // worldY,
-          // worldZ,
+          worldX,
+          worldY,
+          worldZ,
           zoneId: playerZoneId.value,
           instance,
           number,
           text: number.toString(),
-          // offsetX,
-          // offsetY,
-          pixelX: pixelCoordinates.x,
-          pixelY: pixelCoordinates.y,
-          // gameMapX: gameMapCoordinates.x,
-          // gameMapY: gameMapCoordinates.y,
         })
-        mergeOverlapMonsters()
         if (playSound.value) {
           doSound()
         }
-        // say('已发现')
       }
-      // console.log(`find: ${name} in ${zoneId.value} ins${instance.value},(${worldX}, ${worldY}, ${worldZ}) (${pixelCoordinates.x}, ${pixelCoordinates.y}) (${gameMapCoordinates.x}, ${gameMapCoordinates.y})`)
+      mergeOverlapMonsters()
+      updateWaymarks()
+      // eslint-disable-next-line no-console
+      console.debug(`find: ${name} in ${Map[playerZoneId.value as ZoneIdType].name.souma} ins${playerInstance.value},(${worldX}, ${worldY}, ${worldZ})`)
     }
   }
   else if (event.line[0] === '25') {
     const id = event.line[2]
     monstersData.value = monstersData.value.filter(item => item.id !== id)
     mergeOverlapMonsters()
+    updateWaymarks()
   }
 }
 
@@ -420,7 +395,7 @@ async function sleep(time: number) {
 }
 
 function test() {
-  const scale = 5;
+  const scale = 2;
   (async () => {
     monstersData.value = []
     await addTestMonster(ZoneId.Urqopacha, 1, 30 * scale)
@@ -441,6 +416,31 @@ function test() {
   // setTimeout(() => {
   //   handleLogLine({ type: 'LogLine', rawLine: '', line: ['25', '', monsterIds[2]] })
   // }, 500)
+}
+
+function testPostnamazu() {
+  updateWaymarks()
+}
+
+function updateWaymarks() {
+  if (!usePostNamazu.value) {
+    return
+  }
+  const monsters = monstersData.value.filter(item => item.zoneId === playerZoneId.value && item.instance === playerInstance.value).sort((a, b) => a.number - b.number)
+  const waymarks: PPJSON = {}
+  waymarkKeys.forEach((key, index) => {
+    const item = monsters[index]
+    if (item) {
+      waymarks[key] = {
+        X: item.worldX,
+        Y: item.worldZ, // 是故意调换的
+        Z: item.worldY, // 是故意调换的
+        Active: true,
+      }
+    }
+    else { waymarks[key] = { X: 0, Y: 0, Z: 0, Active: false } }
+  })
+  callOverlayHandler({ call: 'PostNamazu', c: 'DoWaymarks', p: JSON.stringify(waymarks) })
 }
 
 function clearMonster() {
@@ -622,7 +622,9 @@ function importStr() {
       ],
     ).then(() => {
       const decompressedText = LZString.decompressFromEncodedURIComponent(value)
-      const data = JSON.parse(decompressedText)
+      const data = JSON.parse(decompressedText) as DiscoveredMonsters
+      // 过一段时间删除兼容性处理
+      compatibleOldVersions(data)
       monstersData.value = data
       mergeOverlapMonsters()
       ElMessageBox.close()
@@ -753,10 +755,45 @@ function getMapName(zoneId: ZoneIdType, i: number): string {
   return `${i + 1}图 ${Map[zoneId].name.souma} / ${Map[zoneId].name.ja} / ${Map[zoneId].name.en} （${instanceNow}/${instanceMax}）${instanceNow === instanceMax ? '✅' : ''}`
 }
 
+function getStyle(item: DiscoveredMonsters[number]): { [key: string]: string } {
+  const zone = zoneInfo[item.zoneId]
+  const sizeFactor = zone.sizeFactor
+  const offsetX = zone.offsetX
+  const offsetY = zone.offsetY
+  const worldXZCoordinates = new Vector2(Number(item.worldX), Number(item.worldY))
+  const mapOffset = new Vector2(offsetX, offsetY)
+  const pixelCoordinates = getPixelCoordinates(worldXZCoordinates, mapOffset, sizeFactor)
+  return {
+    position: 'absolute',
+    left: `${pixelCoordinates.x * IMG_SCALE}px`,
+    top: `${pixelCoordinates.y * IMG_SCALE}px`,
+  }
+}
+
+function compatibleOldVersions(data: DiscoveredMonsters) {
+  data.forEach((item) => {
+    if (item.pixelX && item.pixelY) {
+      const zone = zoneInfo[item.zoneId]
+      const sizeFactor = zone.sizeFactor
+      const offsetX = zone.offsetX
+      const offsetY = zone.offsetY
+      const pixelCoordinates = new Vector2(item.pixelX, item.pixelY)
+      const mapOffset = new Vector2(offsetX, offsetY)
+      const worldCoordinates = getWorldCoordinates(pixelCoordinates, mapOffset, sizeFactor)
+      item.worldX = worldCoordinates.x
+      item.worldY = worldCoordinates.y
+      item.worldZ = 0
+    }
+  })
+  mergeOverlapMonsters()
+}
+
 onMounted(async () => {
   if (monstersData.value.length === 0) {
     clearFilter()
   }
+  // 过一段时间删除兼容性处理
+  compatibleOldVersions(monstersData.value)
   await checkWebSocket()
   addOverlayListener('LogLine', handleLogLine)
   addOverlayListener('ChangeZone', handleChangeZone)
@@ -812,12 +849,18 @@ onMounted(async () => {
           </el-button>
         </div>
       </el-row>
+      <el-row p-l-5>
+        <el-checkbox v-model="usePostNamazu" label="场地标点(需要邮差)" />
+      </el-row>
       <el-row v-if="inLocalHost" p-l-5>
         <el-button type="primary" @click="test">
           测试怪物
         </el-button>
         <el-button type="primary" @click="mergeOverlapMonsters">
           测试合并
+        </el-button>
+        <el-button type="primary" @click="testPostnamazu">
+          测试邮差
         </el-button>
       </el-row>
     </el-col>
@@ -879,11 +922,7 @@ onMounted(async () => {
             <article>
               <div
                 v-for="(item) in monstersData.filter((item) => item.zoneId === m)" v-show="isShow(item)"
-                :key="`${item.zoneId}-${item.id}`" :style="{
-                  position: 'absolute',
-                  left: `${item.pixelX * IMG_SCALE}px`,
-                  top: `${item.pixelY * IMG_SCALE}px`,
-                }"
+                :key="`${item.zoneId}-${item.id}`" :style="getStyle(item)"
               >
                 <div class="point" @click="handlePointClick(item)">
                   <div :class="`point-inner ${getBackgroundColor(item)}`" />
