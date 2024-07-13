@@ -838,12 +838,12 @@ onMounted(async () => {
             </el-button>
           </li>
           <li class="option">
-            <el-button size="small" w-5em @click="oneMapInstanceClear(m)">
+            <el-button v-show="!(zoneInstanceLength[m] <= 3 && filterConfig[m].includes('-'))" size="small" w-5em @click="oneMapInstanceClear(m)">
               {{ filterConfig[m] }}线清空
             </el-button>
           </li>
           <li class="option">
-            <el-button size="small" w-5em @click="oneMapInstanceExport(m)">
+            <el-button v-show="!(zoneInstanceLength[m] <= 3 && filterConfig[m].includes('-'))" size="small" w-5em @click="oneMapInstanceExport(m)">
               {{ filterConfig[m] }}线导出
             </el-button>
           </li>
