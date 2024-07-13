@@ -190,11 +190,11 @@ function getColorDom(monster: DiscoveredMonsters[number]): string {
 }
 
 function getMultipleText(monsters: DiscoveredMonsters[number][]): string {
-  return monsters.map((item, index) => {
+  monsters.forEach((item, index) => {
     if (index > 0)
       mergedByOtherNodes.add(item.id)
-    return getColorDom(item)
-  }).join(' ')
+  })
+  return monsters.sort((a, b) => a.instance - b.instance).map(item => getColorDom(item)).join(' ')
 }
 
 function mergeOverlapMonsters() {
@@ -207,7 +207,7 @@ function mergeOverlapMonsters() {
     }
     const tooClose = monstersData.value.filter((item2) => {
       const distance = calcDistance(item.pixelX, item.pixelY, item2.pixelX, item2.pixelY)
-      return item2.zoneId === item.zoneId && (distance.both < (40) || (distance.y < 35 && distance.x < 70))
+      return item2.zoneId === item.zoneId && (distance.both < 35 || (distance.y < 20 && distance.x < 40))
     })
     const tooCloseAndInFilter = tooClose.filter(item => isShow(item))
     if (tooCloseAndInFilter.length >= 2) {
