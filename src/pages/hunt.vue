@@ -15,7 +15,7 @@ import ActWS from '@/assets/actWS.webp'
 type DiscoveredMonsters = Array<{
   timestamp: number
   id: string
-  name: string
+  // name: string
   // rank: string
   zoneId: number
   instance: number
@@ -290,7 +290,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
       const instance = playerInstance.value
       const timestamp = new Date().getTime()
       const id = event.line[2]
-      const name = event.line[3]
+      // const name = event.line[3]
       const worldX = Number(event.line[17])
       const worldY = Number(event.line[18])
       // const worldZ = Number(event.line[19])
@@ -332,7 +332,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
         monstersData.value.push({
           timestamp,
           id,
-          name,
+          // name,
           // rank,
           // worldX,
           // worldY,
@@ -535,8 +535,13 @@ function handlePointClick(item: DiscoveredMonsters[number]): void {
   mergeOverlapMonsters()
 }
 
-function exportSth<T>(sth: T) {
-  const str = JSON.stringify(sth)
+function exportSth(sth: DiscoveredMonsters) {
+  // 删除text属性，为了减少导出的字符串长度，但没关系因为导入之后会重新计算
+  const data = sth.map((item) => {
+    const { text, ...rest } = item
+    return rest
+  })
+  const str = JSON.stringify(data)
   const compressedText = LZString.compressToEncodedURIComponent(str)
   const el = document.createElement('textarea')
   el.value = compressedText
