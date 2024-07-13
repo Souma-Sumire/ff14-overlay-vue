@@ -570,11 +570,23 @@ function oneMapExport(zoneId: number) {
 
 function oneMapInstanceExport(zoneId: number) {
   const instance = filterConfig.value[zoneId as keyof typeof filterConfig.value]
-  const data = monstersData.value.filter(item => item.zoneId === zoneId && item.instance === Number(instance))
-  if (!data) {
-    throw new Error('找不到该地图')
+  if (instance.includes('-')) {
+    const filterInstance = instance.split('-').map(v => Number(v))
+    const max = filterInstance[filterInstance.length - 1]
+    const min = filterInstance[0]
+    const data = monstersData.value.filter(item => item.zoneId === zoneId && item.instance >= min && item.instance <= max)
+    if (!data) {
+      throw new Error('找不到该地图')
+    }
+    exportSth(data)
   }
-  exportSth(data)
+  else {
+    const data = monstersData.value.filter(item => item.zoneId === zoneId && item.instance === Number(instance))
+    if (!data) {
+      throw new Error('找不到该地图')
+    }
+    exportSth(data)
+  }
 }
 
 function importStr() {
