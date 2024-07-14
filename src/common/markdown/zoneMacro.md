@@ -10,7 +10,7 @@
 
 ## 依赖
 
-[鲶鱼精邮差](https://github.com/Natsukage/PostNamazu/releases)（版本1.3.2.1及以上）
+[鲶鱼精邮差](https://github.com/Natsukage/PostNamazu/releases)
 
 ## 数据来源
 
@@ -27,7 +27,3 @@
 ## 感谢
 
 [@Natsukage](https://github.com/Natsukage)
-
-## 捐赠
-
-[爱发电](https://afdian.net/a/Souma)

@@ -34,14 +34,16 @@ export const useMacroStore = defineStore('macro', {
       selectZone: useStorage('my-zone', ref('1003')),
       zoneNow: useStorage('my-zone-now', ref('129')),
       fastEntrance: [
-        { text: '幻骑', value: '1175' },
-        { text: '极泽', value: '1169' },
-        { text: 'P9S', value: '1148' },
-        { text: 'P10S', value: '1150' },
-        { text: 'P11S', value: '1152' },
-        { text: 'P12S', value: '1154' },
-        { text: '异闻阿罗', value: '1179' },
-        { text: '零式阿罗', value: '1180' },
+        { text: '7.0首饰神', value: '1201' },
+        { text: '7.0武器神', value: '1196' },
+        // { text: '幻骑', value: '1175' },
+        // { text: '极泽', value: '1169' },
+        // { text: 'P9S', value: '1148' },
+        // { text: 'P10S', value: '1150' },
+        // { text: 'P11S', value: '1152' },
+        // { text: 'P12S', value: '1154' },
+        // { text: '异闻阿罗', value: '1179' },
+        // { text: '零式阿罗', value: '1180' },
       ],
       // gameExists: useStorage("my-game-exists", false),
       show,
@@ -370,7 +372,7 @@ export const useMacroStore = defineStore('macro', {
             {
               c: 'DoTextCommand',
               p: `/waymark preset ${slotIndex.value}`,
-              d: 750,
+              d: 1500,
             },
           ])
           ElMessage.success(`插槽${slotIndex.value}已设置并标记`)

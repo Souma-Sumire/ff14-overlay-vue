@@ -6730,6 +6730,40 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         /p ST减伤不够时跟人群一起撞`,
       },
     ],
+    1196: [
+      {
+        Name: 'Game8(ハムカツ式)',
+        Text: `/p ■風 災禍（雷氷） |■口腔に魔力(扇)
+/p MT/D1　ST/D2 　|　MT/D1／＼ST/D2
+/p H1/D3　H2/D4　 |H1/D3／　　＼H2/D4
+/p ■力を溜める(前足)
+/p H1/D3　MT/D1　ST/D2　H2/D4
+/p ■マウンテンファイア 奇数:MT　偶数:ST
+/p ■ディザスターサイン
+/p 西：MTH1D1D3　東：STH2D2D4
+/p ■災禍（炎氷）
+/p 北西 MT　北東 ST
+/p 頭割:西 H1D1D3　東 H2D2D4`,
+      },
+      {
+        Name: 'Standard',
+        Place: { Name: 'Standard ig', MapID: 833, A: { X: 95.0, Y: 0.0, Z: 95.0, ID: 0, Active: true }, B: { X: 105.0, Y: 0.0, Z: 95.0, ID: 1, Active: true }, C: { X: 95.0, Y: 0.0, Z: 105.0, ID: 2, Active: true }, D: { X: 105.0, Y: 0.0, Z: 105.0, ID: 3, Active: true }, One: { X: 89.0, Y: 0.0, Z: 86.0, ID: 4, Active: true }, Two: { X: 111.0, Y: 0.0, Z: 86.0, ID: 5, Active: true }, Three: { X: 81.0, Y: 0.0, Z: 94.0, ID: 6, Active: true }, Four: { X: 119.0, Y: 0.0, Z: 94.0, ID: 7, Active: true } },
+      },
+    ],
+    1201: [
+      {
+        Name: 'Game8(ハムカツ式)',
+        Text: `/p 【プロジェクション・バースト(頭割り)】
+/p H1→H2→D4→D3→D2→D1→ST→MT
+/p 【ノック・オブ・ヴォロク(ペア割)】
+/p 　　　　　ボス
+/p H1/D3 MT/D1 ST/D2 H2/D4`,
+      },
+      {
+        Name: 'Conga (Braindead)',
+        Place: { Name: 'Conga', MapID: 996, A: { X: 100.0, Y: 0.0, Z: 87.5, ID: 0, Active: true }, B: { X: 100.0, Y: 0.0, Z: 102.5, ID: 1, Active: true }, C: { X: 94.5, Y: 0.0, Z: 77.8, ID: 2, Active: true }, D: { X: 100.0, Y: 0.0, Z: 117.5, ID: 3, Active: true }, One: { X: 100.0, Y: 0.0, Z: 95.0, ID: 4, Active: true }, Two: { X: 100.0, Y: 0.0, Z: 110.0, ID: 5, Active: true }, Three: { X: 105.5, Y: 0.0, Z: 77.8, ID: 6, Active: true }, Four: { X: 100.0, Y: 0.0, Z: 125.0, ID: 7, Active: true } },
+      },
+    ],
   },
 }
 for (const key in defaultMacro.zoneId) {
