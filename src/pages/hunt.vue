@@ -917,10 +917,17 @@ onMounted(async () => {
               top: `${(aItem.y - 1) * IMG_SCALE}px`,
             }"
           >
-            <img
-              class="aetherytes" alt="aetheryte" src="//cafemaker.wakingsands.com/img-misc/mappy/aetheryte.png"
-              :style="{ height: `${IMG_SHOW_SIZE / 20}px` }"
+            <el-tooltip
+              class="box-item"
+              effect="dark"
+              :content="`${aItem.placeName.souma} / ${aItem.placeName.ja} / ${aItem.placeName.en}`"
+              placement="top"
             >
+              <img
+                class="aetherytes" alt="aetheryte" src="//cafemaker.wakingsands.com/img-misc/mappy/aetheryte.png"
+                :style="{ height: `${IMG_SHOW_SIZE / 20}px` }"
+              >
+            </el-tooltip>
           </div>
           <div>
             <article>
