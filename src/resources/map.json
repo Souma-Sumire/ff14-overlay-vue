@@ -8544,6 +8544,54 @@
       "souma": "天深天然井 最深处"
     }
   },
+  "1223": {
+    "id": "x6e4/00",
+    "name": {
+      "en": "Tritails Training",
+      "ja": "ジム・トライテール",
+      "souma": "吉姆·特莱特尔"
+    }
+  },
+  "1224": {
+    "id": "x6e5/00",
+    "name": {
+      "en": "Greenroom",
+      "ja": "控室",
+      "souma": "休息室"
+    }
+  },
+  "1225": {
+    "id": "x6r1/00",
+    "name": {
+      "en": "Scratching Ring",
+      "ja": "リング・オブ・キャット",
+      "souma": ""
+    }
+  },
+  "1227": {
+    "id": "x6r2/00",
+    "name": {
+      "en": "Lovely Lovering",
+      "ja": "リング・オブ・ラブ",
+      "souma": ""
+    }
+  },
+  "1229": {
+    "id": "x6r3/00",
+    "name": {
+      "en": "Blasting Ring",
+      "ja": "リング・オブ・ボンバー",
+      "souma": ""
+    }
+  },
+  "1231": {
+    "id": "x6r4/00",
+    "name": {
+      "en": "The Thundering",
+      "ja": "リング・オブ・サンダー",
+      "souma": ""
+    }
+  },
   "1233": {
     "id": "f1dc/00",
     "name": {
