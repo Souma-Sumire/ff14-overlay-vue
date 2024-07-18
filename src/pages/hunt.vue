@@ -48,8 +48,8 @@ const zoneList = [
 ]
 
 const zoneInstanceLength: Record<ZoneIdType, LegalInstance> = {
-  [ZoneId.Urqopacha]: 6,
-  [ZoneId.Kozamauka]: 6,
+  [ZoneId.Urqopacha]: 3,
+  [ZoneId.Kozamauka]: 3,
   [ZoneId.YakTel]: 3,
   [ZoneId.Shaaloani]: 3,
   [ZoneId.HeritageFound]: 3,
