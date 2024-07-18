@@ -42,17 +42,14 @@ const roleSelectLength = useStorage('cactbotRuntime-roleSelectLength', {
   gatherer: 0,
   none: 0,
 } as Record<Role, number>)
-const roleAssignLocationNames = useStorage(
-  'cactbotRuntime-roleAssignLocationNames',
-  {
-    tank: ['MT', 'ST', ...createRPArr('T', 6, 2)],
-    healer: [...createRPArr('H', 8)],
-    dps: [...createRPArr('D', 8)],
-    crafter: [...createRPArr('C', 8)],
-    gatherer: [...createRPArr('G', 8)],
-    none: [...createRPArr('N', 8)],
-  } as Record<Role, string[]>,
-)
+const roleAssignLocationNames = {
+  tank: ['MT', 'ST', ...createRPArr('T', 6, 2)],
+  healer: [...createRPArr('H', 8)],
+  dps: [...createRPArr('D', 8)],
+  crafter: [...createRPArr('C', 8)],
+  gatherer: [...createRPArr('G', 8)],
+  none: [...createRPArr('N', 8)],
+} as Record<Role, string[]>
 
 function updateRoleSelectLength(): void {
   for (const role in roleSelectLength.value) {
@@ -66,7 +63,7 @@ function updateRoleSelectLength(): void {
 }
 function getOptions(job: number) {
   const classification = getJobClassification(job)
-  return roleAssignLocationNames.value[classification].filter((_v, i) => {
+  return roleAssignLocationNames[classification].filter((_v, i) => {
     return i < roleSelectLength.value[classification]
   })
 }
@@ -139,7 +136,7 @@ function handleSelectChange(i: number): void {
 
 function getRP(player: PlayerRuntime): string {
   return (
-    roleAssignLocationNames.value[getJobClassification(player.job)].find(
+    roleAssignLocationNames[getJobClassification(player.job)].find(
       role => !data.value.party.find(v => v.rp === role),
     ) ?? 'unknown'
   )
@@ -147,12 +144,12 @@ function getRP(player: PlayerRuntime): string {
 
 function broadcastParty(): void {
   const sortArr = [
-    ...roleAssignLocationNames.value.tank,
-    ...roleAssignLocationNames.value.healer,
-    ...roleAssignLocationNames.value.dps,
-    ...roleAssignLocationNames.value.crafter,
-    ...roleAssignLocationNames.value.gatherer,
-    ...roleAssignLocationNames.value.none,
+    ...roleAssignLocationNames.tank,
+    ...roleAssignLocationNames.healer,
+    ...roleAssignLocationNames.dps,
+    ...roleAssignLocationNames.crafter,
+    ...roleAssignLocationNames.gatherer,
+    ...roleAssignLocationNames.none,
   ]
   data.value.party.sort(
     (a, b) => sortArr.indexOf(a.rp ?? '') - sortArr.indexOf(b.rp ?? ''),
