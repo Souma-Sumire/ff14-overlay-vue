@@ -12,7 +12,7 @@ class Cast {
   overTime: number
   actionId: number
   constructor(line: string[]) {
-    this.name = getActionChinese(Number.parseInt(line[4], 16)) ?? line[4]
+    this.name = getActionChinese(Number.parseInt(line[4], 16)) ?? `${line[5]}(${line[4]})`
     this.startTime = Date.now()
     this.castTime = Number(line[8]) * 1000
     this.overTime = this.startTime + this.castTime
