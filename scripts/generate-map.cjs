@@ -30,7 +30,7 @@ Promise.all([
   fileValues['TerritoryType.csv'].forEach((row) => {
     const map = row[7]
     const id = fileValues['Map.csv'].find(v => v[0] === map)?.[7]
-    if (!id) { return }
+    if (!id || ['offset', 'key'].includes(row[0])) { return }
     const placeName = row[6]
     const ja = fileValues['PlaceName.csv'].find(v => v[0] === placeName)?.[1]
     const en = fileValues['PlaceName_en.csv'].find(v => v[0] === placeName)?.[1]
