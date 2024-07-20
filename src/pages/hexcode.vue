@@ -121,8 +121,13 @@ function onChange() {
 
 function handleReplace() {
   text.value = text.value
+    .replaceAll('この魔法は固有のリキャストタイマーを持ち、実行すると他のウェポンスキルと魔法にこのアクションと同じリキャストタイムが発生する。', '该魔法有单独计算的复唱时间，发动后其他战技与魔法会进入与该战技相同的复唱时间')
+    .replaceAll('このアクションはホットバーに登録することはできない。', '该技能无法设置到热键栏')
     .replaceAll(/<hex:024804F201F803><hex:024904F201F903>追加効果：<hex:0249020103><hex:0248020103>自身に<hex:024804F201F403><hex:024904F201F503>「(.+?)」<hex:0249020103><hex:0248020103>を付与する。/g, '<hex:024804F201F803><hex:024904F201F903>追加效果：<hex:0249020103><hex:0248020103><hex:024804F201F403><hex:024904F201F503>$1<hex:0249020103><hex:0248020103>　　　　　　　　　　　')
+  // eslint-disable-next-line regexp/no-super-linear-backtracking
+    .replaceAll(/発動条件を満たすと(.+?)が(.+?)に変化する。/g, '满足发动条件时，$1会变为$2')
     .replaceAll(/一定時間、自身の与ダメージを(\d+)％上昇させる。/g, '一定时间内，自身发动攻击造成的伤害提高$1%')
+    .replaceAll('自身のＭＰを回復する。', '恢复自身魔力')
     .replaceAll('コンボ条件', '连击条件　')
     .replaceAll('コンボ時かつ背面攻撃時威力', '连击中背面攻击威力　　　　')
     .replaceAll('コンボ時かつ側面攻撃時威力', '连击中侧面攻击威力　　　　')
@@ -132,6 +137,7 @@ function handleReplace() {
     .replaceAll('背面攻撃時威力', '背面攻击威力　')
     .replaceAll('側面攻撃時威力', '侧面攻击威力　')
     .replaceAll('対象に継続ダメージを付与する。', '持续伤害　　　　　　　　　　　')
+    .replaceAll('対象に向かって前方扇範囲物理攻撃。', '向目标所在方向发出扇形范围物理攻击')
     .replaceAll('追加', '追加')
     .replaceAll('効果時間', '持续时间')
     .replaceAll('時間', '时间')
@@ -167,7 +173,7 @@ function handleReplace() {
     .replaceAll('成功率', '成功率')
     .replaceAll('％', '% ')
     .replaceAll('自身に「匠的好機」を付与する。', '工匠的良机　　　　　　　　　　')
-    .replaceAll('ターン', '次作业')
+    .replaceAll(/最大スタック数：<hex:0249020103><hex:0248020103>(\d)/g, '最大档数：<hex:0249020103><hex:0248020103>$1　　　')
     .replaceAll(/最大チャージ数：<hex:0249020103><hex:0248020103>(\d)/g, '积蓄次数：<hex:0249020103><hex:0248020103>$1　　　')
 }
 </script>
