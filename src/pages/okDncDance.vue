@@ -63,6 +63,9 @@ const netRegex = {
 
 const eventHandlers = {
   countdown: (time: number) => {
+    if (playerJob !== 'DNC') {
+      return
+    }
     if (config.value.cdDancingStart) {
       doQueueActions([
         { c: 'stop', p: 'okDncDance-start' },
@@ -80,6 +83,9 @@ const eventHandlers = {
     }
   },
   countdownCancel: () => {
+    if (playerJob !== 'DNC') {
+      return
+    }
     doQueueActions([{ c: 'stop', p: 'okDncDance-(?:start|end|auto)' }])
   },
   losesEffect: () => {
