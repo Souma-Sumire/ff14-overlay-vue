@@ -2,6 +2,7 @@
 import type { RemovableRef } from '@vueuse/core'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import { getActionChinese } from '@/resources/actionChinese'
+import { getActionChineseTemp } from '@/resources/actionChineseTemp'
 
 const params = new URLSearchParams(window.location.href.split('?')[1])
 
@@ -12,7 +13,21 @@ class Cast {
   overTime: number
   actionId: number
   constructor(line: string[]) {
-    this.name = getActionChinese(Number.parseInt(line[4], 16)) ?? `${line[5]}(${line[4]})`
+    const name = getActionChinese(Number.parseInt(line[4], 16))
+    if (name) {
+      this.name = name
+    }
+    else {
+      const tempName = getActionChineseTemp(line[4])
+      if (tempName) {
+        this.name = tempName
+      }
+      else {
+        // eslint-disable-next-line no-console
+        console.log(`未找到动作${line[4]} - ${line[5]}的中文名`)
+        this.name = `${line[5]}(${line[4]})`
+      }
+    }
     this.startTime = Date.now()
     this.castTime = Number(line[8]) * 1000
     this.overTime = this.startTime + this.castTime
