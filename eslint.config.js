@@ -6,7 +6,7 @@ export default antfu({
     'cactbot/**',
     '.eslintrc-auto-import.json',
     'node_modules',
-    'scripts/generate-map.cjs',
-    'scripts/generate-aether.cjs',
+    'scripts/**.cjs',
+    'src/resources/**.json',
   ],
 })

@@ -1,10 +1,10 @@
 import STATUS from './status.json'
 
-const _STATUS = STATUS as unknown as Record<string, [string, number]>
+const _STATUS = STATUS as unknown as Record<string, [string, number, number]>
 
 for (const key in STATUS) {
   const element = STATUS[key as keyof typeof STATUS]
-  _STATUS[key] = [element[0], Number.parseInt(element[1])]
+  _STATUS[key] = [element[0], Number.parseInt(element[1]), Number.parseInt(element[2])]
 }
 
 export function completeIcon(icon: number): string {
@@ -32,4 +32,4 @@ export function stackUrl(url: string, stack: number) {
     : url
 }
 // A: =B5&": ["""&C5&""", "&E5&"],"
-export const statusData: Record<number, [string, number]> = _STATUS
+export const statusData: Record<number, [string, number, number]> = _STATUS

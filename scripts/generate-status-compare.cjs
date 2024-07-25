@@ -3,6 +3,8 @@ const fs = require('fs-extra')
 const iconv = require('iconv-lite')
 const { csvPaths } = require('./paths.cjs')
 
+const VERSION = '700'
+
 const fileValues = {}
 function readFile(fileName, path) {
   return new Promise((resolve) => {
@@ -18,22 +20,19 @@ function readFile(fileName, path) {
   })
 }
 
-Promise.all([
-  readFile('status.csv', `${csvPaths.souma}status.csv`),
-  readFile('status_ja.csv', `${csvPaths.ja}status.csv`),
-],
-).then(() => {
-  const result = {}
-  fileValues['status.csv'].forEach((row) => {
+Promise.all([readFile('status_ja.csv', `${csvPaths.ja}status.csv`), readFile('status_en.csv', `${csvPaths.en}status.csv`)], readFile('status_souma.csv', `${csvPaths.souma}status.csv`)).then(() => {
+  const old = {}
+  fileValues['status_ja.csv'].forEach((row) => {
     if (['key', '#', 'offset', 'int32', '0'].includes(row[0])) {
       return
     }
     if (row[1] === '') {
       return
     }
-    const ja = fileValues['status_ja.csv'].find(r => r[0] === row[0])
-    result[row[0]] = [row[1], ja[3], ja[6]]
+    const en = fileValues['status_en.csv'].find((r) => r[0] === row[0])
+    const souma = fileValues['status_souma.csv'].find((r) => r[0] === row[0])
+    old[row[0]] = { name: { ja: row[1], en: en[1], souma: souma[1] }, description: { ja: row[2], en: en[2], souma: souma[2] }, icon: row[3] }
   })
-  fs.outputJsonSync('src/resources/status.json', result, { spaces: 2 })
+  fs.outputJsonSync(`src/resources/status-compare-${VERSION}.json`, old, { spaces: 2 })
   // console.log('Data generated successfully.')
 })
