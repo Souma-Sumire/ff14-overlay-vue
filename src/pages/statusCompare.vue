@@ -35,7 +35,7 @@ function compareStatus(newStatus: any, oldStatus: any) {
     </el-select>
     <el-checkbox v-model="onlyAllClasses" label="只显示通用状态" />
     <main>
-      <el-table :data="typeMap[type].filter(item => !onlyAllClasses || item.classJobCategory === ALL_CLASSES_JOB_CATEGORY_KEY)" style="width: 100%">
+      <el-table :data="typeMap[type].filter(item => !item.name.ja.startsWith('●') && (!onlyAllClasses || item.classJobCategory === ALL_CLASSES_JOB_CATEGORY_KEY))" style="width: 100%">
         <el-table-column prop="id" label="ID(Dec)" width="80" />
         <el-table-column prop="id" label="ID(Hex)" width="80">
           <template #default="scope">
