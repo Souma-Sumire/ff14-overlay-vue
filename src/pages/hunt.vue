@@ -278,7 +278,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
   }
   else if (event.line[0] === '03') {
     const name = event.line[3]
-    const hunt = nameToHuntEntry[name]
+    const hunt = nameToHuntEntry[name.toLowerCase()]
     const rank = hunt?.rank
     if (hunt && rank === 'A') {
       const instance = playerInstance.value
