@@ -3,7 +3,7 @@ import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 import type { PerformanceType, RowVO } from '@/types/keigennRecord2'
 import { translationFlags } from '@/utils/flags'
 import { multiplierEffect } from '@/utils/keigenn'
-import { handleImgError, site } from '@/utils/xivapi'
+import { getImgSrc, handleImgError } from '@/utils/xivapi'
 
 const props = defineProps({
   row: { type: Object as () => RowVO, required: true },
@@ -28,7 +28,7 @@ const icon4k = keigennRecord2Store.icon4k
           :class="`statusIcon ${multiplierEffect(
             keigenn.performance[row.type as keyof PerformanceType],
           )}`"
-          :src="`${site.first}/i/${keigenn.fullIcon}${icon4k}.png`"
+          :src="getImgSrc(`/i/${keigenn.fullIcon}${icon4k}.png`)"
           :alt="keigenn.effect"
           loading="lazy"
           @error="handleImgError"

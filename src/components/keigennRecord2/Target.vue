@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 import type { RowVO } from '@/types/keigennRecord2'
-import { handleImgError, site } from '@/utils/xivapi'
+import { getImgSrc, handleImgError } from '@/utils/xivapi'
 
 const props = defineProps({
   row: { type: Object as () => RowVO, required: true },
@@ -14,7 +14,7 @@ const store = useKeigennRecord2Store()
     <span v-if="store.userOptions.showIcon" class="target">
       <img
         class="jobIcon"
-        :src="`${site.first}/cj/companion/${props.row.jobIcon}.png`"
+        :src="getImgSrc(`/cj/companion/${props.row.jobIcon}.png`)"
         alt=""
         :data-job="store.userOptions.showName ? '' : props.row.job"
         loading="lazy"

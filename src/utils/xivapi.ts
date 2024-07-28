@@ -176,12 +176,29 @@ async function requestPromise(
   throw new Error('All fetch attempts failed.')
 }
 
+const imgCache = new Map<string, string>()
+
+export function getImgSrc(src: string): string {
+  if (imgCache.has(src)) {
+    return imgCache.get(src) as string
+  }
+  return `${site.first}${src}`
+}
+
 export function handleImgError(event: Event) {
   const target = event.target as HTMLImageElement
-  if (target.src.includes(site.first)) {
+  const path = target.src.match(/(?<=\.\w+)\/.+$/)![0]
+  if (/pictomancer\.png$/.test(target.src)) {
+    target.src = '//souma.diemoe.net/resources/img/pictomancer.png'
+  }
+  else if (/viper\.png$/.test(target.src)) {
+    target.src = '//souma.diemoe.net/resources/img/viper.png'
+  }
+  else if (target.src.includes(site.first)) {
     target.src = target.src.replace(site.first, site.second)
   }
-  else if (target.src.includes(site.second)) {
+  else {
     target.src = ''
   }
+  imgCache.set(path, target.src)
 }

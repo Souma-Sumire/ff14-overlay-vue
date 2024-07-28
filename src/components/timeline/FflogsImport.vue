@@ -15,7 +15,7 @@ import Util from '@/utils/util'
 import { getActionChinese } from '@/resources/actionChinese'
 import type { ITimelineCondition } from '@/types/timeline'
 import { useTimelineStore } from '@/store/timeline'
-import { handleImgError, site } from '@/utils/xivapi'
+import { getImgSrc, handleImgError } from '@/utils/xivapi'
 
 const props = defineProps<{
   filters: Record<string, number[]>
@@ -409,7 +409,7 @@ function claerFFlogsQueryConfig() {
             :label="rule.actionName"
           >
             <img
-              :src="`${site.first}/i/${rule.url}.png`"
+              :src="getImgSrc(`/i/${rule.url}.png`)"
               class="ability-filter-li-icon"
               title=""
               :onerror="handleImgError"
