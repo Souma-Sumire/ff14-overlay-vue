@@ -89,24 +89,24 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
       //   );
       // }, 1000);
     },
-    testItem(): void {
-      void this.pushAction(
-        Date.now(),
-        15,
-        'item_11c7',
-        this.focusTargetId,
-        0x20011C7,
-      )
-    },
-    testItemHQ(): void {
-      void this.pushAction(
-        Date.now(),
-        15,
-        'item_f5407',
-        this.focusTargetId,
-        0x20F5407,
-      )
-    },
+    // testItem(): void {
+    //   void this.pushAction(
+    //     Date.now(),
+    //     15,
+    //     'item_11c7',
+    //     this.focusTargetId,
+    //     0x20011C7,
+    //   )
+    // },
+    // testItemHQ(): void {
+    //   void this.pushAction(
+    //     Date.now(),
+    //     15,
+    //     'item_f5407',
+    //     this.focusTargetId,
+    //     0x20F5407,
+    //   )
+    // },
     testParty(fakeParty: boolean): void {
       this.handlePartyChanged({
         party: fakeParty

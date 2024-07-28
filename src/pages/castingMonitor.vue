@@ -48,12 +48,12 @@ setInterval(() => {
       <el-button @click="castingMonitorStore.testAction()">
         Action
       </el-button>
-      <el-button @click="castingMonitorStore.testItem()">
+      <!-- <el-button @click="castingMonitorStore.testItem()">
         Item
       </el-button>
       <el-button @click="castingMonitorStore.testItemHQ()">
         ItemHQ
-      </el-button>
+      </el-button> -->
     </footer>
   </div>
 </template>

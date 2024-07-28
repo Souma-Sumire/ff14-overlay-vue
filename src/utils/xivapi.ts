@@ -187,7 +187,9 @@ export function getImgSrc(src: string): string {
 
 export function handleImgError(event: Event) {
   const target = event.target as HTMLImageElement
-  const path = target.src.match(/(?<=\.\w+)\/.+$/)![0]
+  const path = target.src.match(/(?<=\.\w+)\/.+$/)?.[0]
+  if (!path)
+    return
   if (/pictomancer\.png$/.test(target.src)) {
     target.src = '//souma.diemoe.net/resources/img/pictomancer.png'
   }
