@@ -246,6 +246,10 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
               'Name',
               'Description',
             ])
+            if (action.ID === 3) {
+              // 疾跑(冲刺)
+              action.Icon = '/i/000000/000104.png'
+            }
             cast.APIData = action
             cast.src = await getFullImgSrc(action?.Icon ?? '', itemIsHQ)
             if (queryType === 'action')
