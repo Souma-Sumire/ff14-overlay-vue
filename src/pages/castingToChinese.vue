@@ -1,22 +1,9 @@
 <script setup lang="ts">
-import { ElMessage } from 'element-plus'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import { getActionChinese } from '@/resources/actionChinese'
 import { getActionChineseTemp } from '@/resources/actionChineseTemp'
 
 const params = new URLSearchParams(window.location.href.split('?')[1])
-
-const readWarning = useStorage('readWarning', false, localStorage)
-if (!readWarning.value) {
-  ElMessage.warning({
-    message: '2024/7/26 改动：修改了元素偏移的实现，但导致旧版配置的位置错乱，烦请重新设置，添麻烦了非常抱歉！',
-    duration: 0,
-    showClose: true,
-    onClose: () => {
-      readWarning.value = true
-    },
-  })
-}
 
 function getName(line: string[]): string {
   const id = Number.parseInt(line[4], 16)
@@ -73,7 +60,7 @@ const settings
     fontFamily: 'SmartisanHei',
     targetKey: 'Target' as 'Target' | 'Focus',
   })
-useStorage('castingToChinese', settings, localStorage, { mergeDefaults: true })
+useStorage('castingToChineseFix', settings, localStorage, { mergeDefaults: true })
 const windowWidth = computed(() => `${settings.value.width}px`)
 const opacityCountdown = computed(() => (settings.value.showCountdown ? 1 : 0))
 const opacityProgress = computed(() => (settings.value.showProgress ? 1 : 0))
