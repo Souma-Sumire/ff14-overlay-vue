@@ -60,6 +60,5 @@ export interface Keigenn {
   performance: PerformanceType
   isFriendly: boolean
   name: string
-  description?: string
 }
 export type Server = 'Chinese' | 'Global'
