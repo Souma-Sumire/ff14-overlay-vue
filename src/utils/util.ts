@@ -125,7 +125,7 @@ export const jobEnumOrder = [
   22, // DRG 龙骑士
   2, // PGL 格斗家
   20, // MNK 武僧
-  41, // VPR 蝰蛇剑士
+  41, // VPR 蛇武士
   5, // ARC 弓箭手
   23, // BRD 吟游诗人
   31, // MCH 机工士
@@ -418,7 +418,7 @@ const nameToFullName: Record<
     simple2: '钐镰',
   },
   SGE: { en: 'Sage', ja: '賢者', cn: '贤者', simple1: '贤', simple2: '贤者' },
-  VPR: { en: 'Viper', ja: 'ヴァイパー', cn: '蝰蛇剑士', simple1: '蛇', simple2: '蝰蛇' },
+  VPR: { en: 'Viper', ja: 'ヴァイパー', cn: '蛇武士', simple1: '蛇', simple2: '蛇武' },
   PCT: { en: 'Pictomancer', ja: 'ピクトマンサー', cn: '绘灵法师', simple1: '绘', simple2: '绘灵' },
 }
 const allJobs = Object.keys(nameToJobEnum) as Job[]

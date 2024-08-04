@@ -3,16 +3,12 @@ import type { EventMap } from 'cactbot/types/event'
 import moment from 'moment'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
-const time = ref('')
 const gameIsActive = ref(false)
 const gameActiveTime = ref(0)
 const gameCombatTime = ref('')
 const lastLogTime = ref('')
-const params = new URLSearchParams(window.location.search)
-const timeType = params.get('timeType') === 'game' ? 'game' : 'real'
 
 requestAnimationFrame(function update() {
-  time.value = moment().format('YYYY/MM/DD HH:mm:ss.SSS')
   if (gameActiveTime.value > 0) {
     const currentTime = Date.now()
     const milliseconds = currentTime - gameActiveTime.value
@@ -49,22 +45,15 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
 
 addOverlayListener('CombatData', handleCombatData)
 addOverlayListener('LogLine', handleLogLine)
-// startOverlayEvents();
 </script>
 
 <template>
-  <!-- <span class="time realTime">
-    {{ time }}
-  </span> -->
   <div>
     <span v-if="gameCombatTime" class="time gameTime">
       {{ gameCombatTime }}
     </span>
-    <span v-if="timeType === 'game'" class="time logTime">
+    <span class="time logTime">
       {{ lastLogTime }}
-    </span>
-    <span v-if="timeType === 'real'" class="time realTime">
-      {{ time }}
     </span>
   </div>
 </template>
@@ -75,10 +64,6 @@ addOverlayListener('LogLine', handleLogLine)
   color: white;
   font-size: 24px;
   font-weight: bold;
-  padding: 2px 5px;
-}
-
-.realTime {
   padding: 2px 5px;
 }
 
