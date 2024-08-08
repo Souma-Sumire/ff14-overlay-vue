@@ -681,6 +681,18 @@ const global: typeof chinese = [...chinese, {
   type: 'absorbed',
   performance: { physics: 1, magic: 1, darkness: 1 },
   isFriendly: true,
+}, {
+  name: '世界树之干',
+  id: 3890,
+  type: 'multiplier',
+  performance: { physics: 1, magic: 1, darkness: 1 },
+  isFriendly: true,
+}, {
+  name: '建筑神之塔',
+  id: 3892,
+  type: 'absorbed',
+  performance: { physics: 1, magic: 1, darkness: 1 },
+  isFriendly: true,
 }]
 
 export { global, chinese }

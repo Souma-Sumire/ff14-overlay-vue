@@ -6764,6 +6764,66 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Place: { Name: 'Conga', MapID: 996, A: { X: 100.0, Y: 0.0, Z: 87.5, ID: 0, Active: true }, B: { X: 100.0, Y: 0.0, Z: 102.5, ID: 1, Active: true }, C: { X: 94.5, Y: 0.0, Z: 77.8, ID: 2, Active: true }, D: { X: 100.0, Y: 0.0, Z: 117.5, ID: 3, Active: true }, One: { X: 100.0, Y: 0.0, Z: 95.0, ID: 4, Active: true }, Two: { X: 100.0, Y: 0.0, Z: 110.0, ID: 5, Active: true }, Three: { X: 105.5, Y: 0.0, Z: 77.8, ID: 6, Active: true }, Four: { X: 100.0, Y: 0.0, Z: 125.0, ID: 7, Active: true } },
       },
     ],
+    1226: [
+      { Name: 'Game8', Text: `/p 　【基本散開】 　 　｜【扇範囲誘導】(全てボス基準)
+/p 　D3 　MT 　D4 　 ｜ 　 　 　 MTD3
+/p 　H1　ボス　H2 　｜　H1D1 　ボス 　H2D4
+/p 　D1 　ST 　D2 　 ｜　 　 　 　STD2
+/p 【クアドラプルネイル】（十字固定処理）
+/p 　先:TH　後:DPS　※ペア割は扇誘導位置から反時計に動く
+/p 【4:4頭割り・衝撃波】（衝撃波は東西散開）
+/p 　北/西:MTH1D1D3　南/東:STH2D2D4
+/p 【スプレッドネイル】
+/p 　 　 　ボス
+/p 　T 　 　D　 　H
+/p 【レイニングキャッツ】(タンク無敵)
+/p 　北西:MT→MT(無敵)→MT(無敵)→D1　南側タゲサ：H1D1D2
+/p 　北東:ST →ST(無敵) →ST(無敵) →D2 　 南側外周：H2D3D4` },
+    ],
+    1228: [
+      { Name: 'Game8', Text: `/p ■基本散開
+/p D3 MT D4　 　D3 D4 　 　MT/D3 　ST/D4
+/p H1 ☆ H2 　 　 MT ST 　 　 H1/D1 　 D2/H2
+/p D1 ST D2 　 　 D1 D2
+/p 　 　 　 　 　 　H1 H2
+/p ■1stライヴ
+/p 近接：♡2（頭割り処理）　遠隔：♡3
+/p ■2ndライヴ
+/p ♡0：中心→北→TH西、DPS東で頭割り
+/p ♡1：南待機→AOE対象者は捨てる 塔:TH 北/西 DPS南/東
+/p ■毒捨て　TH：北西、DPS：南東
+/p ■3rdライヴ
+/p デバフ捨て、塔踏みはペア割基準
+/p ■ブラックハート
+/p 8方向散会　HPが戻り次第、早いペア順に中央集合` },
+    ],
+    1230: [
+      { Name: 'Game8', Text: `/p ■基本散開ーーーーーー■4ウェイーーーーーー
+/p 　D3 MT D4 　 　 　 　MT/D3 　 　 H2/D4
+/p 　H1 ★ H2 　 　 　 　 　 　 　 　★
+/p 　D1 ST D2 　 　 　 　 H1/D1 　 　 ST/D2
+/p ■8ショックーーーーー■4ショックーーーーーー
+/p 　 MT　★　ST　 　 　 　 　 　 　 　★
+/p 　 　D1　D2 　 　 　 　 　 MT/D1 　 D2/ST
+/p D3　H1　H2　D4 　 　 　D3/H1 　 H2/D4
+/p ■ボンバリアンボム(ノックバック塔)ーーーーー
+/p 　1塔目　北西：近接、南東：遠隔
+/p 　2塔目　ボスを見て左側：MT組、右側：ST組
+/p ■零式フューズボムー※単体の長ボムを北に見る
+/p 1回目短　 　北H1/D3 ┃H1/D3　MT/D1
+/p 　MT/D1 　 　 　 　 　┃ 　 　 　 　 　 ST/D2
+/p 　H2/D4 ST/D2 　 　 ┃ 2回目長 　 　 H2/D4
+/p ■フューズフィールドーーーーーーーーーーー
+/p 　基本散開から時計回り 短→長
+/p 　MT→ST→H1→H2　D1→D2→D3→D4
+/p ■ボンバリアンスペシャルーーーーーーーーー
+/p 8ショック/基本散開
+/p 4ショック/ペアX受け
+/p ■極盛り式スピニングファイヤー(アタッチ)ーー
+/p 　D3　MT　D4
+/p 　D1 　★ 　D2
+/p 　H1　ST　 H2` },
+    ],
   },
 }
 for (const key in defaultMacro.zoneId) {
@@ -6910,6 +6970,8 @@ fastPP(
     'https://docs.qq.com/sheet/DTlFYZlVkeGlSenFI?tab=BB08J2',
   )}","MapID":979,"A":{"X":-200,"Y":-200.0,"Z":-18.55,"ID":0,"Active":true},"B":{"X":-181.45,"Y":-200.0,"Z":0,"ID":1,"Active":true},"C":{"X":-200,"Y":-200.0,"Z":18.55,"ID":2,"Active":true},"D":{"X":-218.55,"Y":-200.0,"Z":0,"ID":3,"Active":true},"One":{"X":-186.883,"Y":-200.0,"Z":-13.117,"ID":4,"Active":true},"Two":{"X":-186.883,"Y":-200.0,"Z":13.117,"ID":5,"Active":true},"Three":{"X":-213.117,"Y":-200.0,"Z":13.117,"ID":6,"Active":true},"Four":{"X":-213.117,"Y":-200.0,"Z":-13.117,"ID":7,"Active":true}}`,
 )
+fastPP(`{"Name":"Imported","MapID":992,"A":{"X":99.975,"Y":0.001,"Z":90.119,"ID":0,"Active":true},"B":{"X":110.05,"Y":0.0,"Z":100.159,"ID":1,"Active":true},"C":{"X":99.933,"Y":0.0,"Z":109.84,"ID":2,"Active":true},"D":{"X":89.966,"Y":0.0,"Z":99.842,"ID":3,"Active":true},"One":{"X":93.209,"Y":0.0,"Z":93.562,"ID":4,"Active":true},"Two":{"X":106.774,"Y":0.0,"Z":92.948,"ID":5,"Active":true},"Three":{"X":106.979,"Y":0.0,"Z":106.905,"ID":6,"Active":true},"Four":{"X":93.051,"Y":0.0,"Z":106.77,"ID":7,"Active":true}}`)
+fastPP(`{"Name":"Imported","MapID":990,"A":{"X":99.987,"Y":0.0,"Z":92.976,"ID":0,"Active":true},"B":{"X":106.861,"Y":0.0,"Z":99.83,"ID":1,"Active":true},"C":{"X":99.953,"Y":0.0,"Z":106.771,"ID":2,"Active":true},"D":{"X":93.27,"Y":0.0,"Z":99.982,"ID":3,"Active":true},"One":{"X":108.545,"Y":0.0,"Z":91.342,"ID":4,"Active":true},"Two":{"X":108.382,"Y":0.0,"Z":108.366,"ID":5,"Active":true},"Three":{"X":91.541,"Y":0.0,"Z":108.257,"ID":6,"Active":true},"Four":{"X":91.506,"Y":0.0,"Z":91.41,"ID":7,"Active":true}}`)
 
 const syncMap: Record<string, string> = {
   1076: '1075', // 希拉狄哈水道
