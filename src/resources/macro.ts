@@ -6824,6 +6824,35 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 　D1 　★ 　D2
 /p 　H1　ST　 H2` },
     ],
+    1232: [
+      { Name: 'Game8(8月5日最终修正版)', Text: `/p ■縦散開ーーーー■円輪・輪円（DN式）ーーーーーー
+/p   D3 D4                   D3  MT  D4
+/p   MT ST                   D1   ☆   D2
+/p   D1 D2                   H1  ST   H2
+/p   H1 H2
+/p ■エレクトロープ1回目ーーーーーーーーーーーーー
+/p   MT  D2  D4         |      ☆   ST/D2   H2/D4
+/p   D1  ST  H2        |  MT/D1
+/p   D3  H1  角          |  H1/D3
+/p ■エレクトロープ2回目
+/p   基本散開              |多  ■■■  多      西：TH  東：DpS
+/p   D3 MT D4          |■ 　 ■ 　 ■      22秒：3回 or 2回
+/p   H1  ☆  H2          |少 　 ■ 　 少      42秒：2回 or 1回
+/p   D1  ST D2          |■ ■ 他 ■ ■
+/p ・ペア散開　 　　  　 　　　  ・散開(北基準)　
+/p  TH多：B,D　DPS多：中央  |　　      D3
+/p  TH少：A   　DPS少：C       |     MT  　　H1
+/p  　　　　　 　　　　　　  　| ☆D1   ST
+/p  　　　 　　　　　　  　　　|     D2　      H2
+/p  　　　 　　　　　　 　 　　| 　    　D4
+/p ■ストリームーーーーーーエレクトロープ移植※ボス基準
+/p  　   紫　                      ｜
+/p 　  誘電　                      |    D3/MT　ST/D4
+/p  青         青 ※TH外側    |                 ☆
+/p  青         青 ※DPS内側  |    H1/D1    D2/H2
+/p  　 誘電                         |   ※自分のペアの基本散開位置と往復
+/p        紫` },
+    ],
   },
 }
 for (const key in defaultMacro.zoneId) {
