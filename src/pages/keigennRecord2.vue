@@ -471,7 +471,7 @@ function handleLine(line: string) {
               // const targetJob = jobMap.value[targetId].job ?? target.substring(0, 2);
               const job = Util.nameToFullName(
                 Util.jobEnumToJob(targetJob),
-              ).cn.substring(0, 2)
+              ).simple2
               const jobEnum = targetJob
               const jobIcon = Util.jobEnumToIcon(jobEnum).toLowerCase()
               const keigenns = deepClone(
@@ -646,31 +646,29 @@ onMounted(() => {
 
 function doCopy(row: RowVO) {
   const {
-    action,
+    // action,
     actionCN,
     amount,
     job,
     keigenns,
-    source,
-    target,
+    // source,
+    // target,
     time,
     type,
   } = row
   const sp
     = row.effect === 'damage done' ? '' : `,${translationFlags(row.effect)}`
-  const result = `${time} [${job}]${target} HP:${row.currentHp}/${
-    row.maxHp
-  }(${Math.round((row.currentHp / row.maxHp) * 100)}%)+盾:${Math.round(
-    (row.maxHp * +row.shield) / 100,
-  )}(${row.shield}%),受到${source}“${action}${
-    actionCN !== action ? `(${actionCN})` : ''
-  }”的 ${amount.toLocaleString()} 点${translationFlags(type)}伤害。减伤:${
+  const result = `${time} ${job} ${actionCN} ${amount.toLocaleString()}(${translationFlags(type)}) 减伤:${
     keigenns.length === 0 && sp === ''
       ? '无'
       : keigenns
           .map(k => (userOptions.statusCN ? k.name : k.effect))
           .join(',') + sp
-  }`
+  } HP:${row.currentHp}/${
+    row.maxHp
+  }(${Math.round((row.currentHp / row.maxHp) * 100)}%)+盾:${Math.round(
+    (row.maxHp * +row.shield) / 100,
+  )}(${row.shield}%)`
   copyText(result)
 }
 
