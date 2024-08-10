@@ -30,7 +30,7 @@ document.addEventListener('onOverlayStateUpdate', (e) => {
 })
 
 const settings = useStorage('special-r4s-settings', {
-  ms: 0.8,
+  ms: 0.65,
   text: '穿',
   test: false,
 })
@@ -75,11 +75,14 @@ function updateTime() {
     triggerTime.value[0].alreadyTTS = true
     callOverlayHandler({ call: 'cactbotSay', text: settings.value.text })
   }
+  requestAnimationFrame(() => {
+    updateTime()
+  })
 }
 
 setInterval(() => {
   updateTime()
-}, 1)
+}, 4.175)
 </script>
 
 <template>
