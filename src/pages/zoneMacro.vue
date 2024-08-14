@@ -125,7 +125,7 @@ onMounted(() => {
     absolute left-0 top-0 m-0 rd-1 p-0
     class="elcontainer"
   >
-    <el-header flex="~ wrap gap1" height="auto" p-l-1 class="elheader">
+    <el-header flex="~ wrap gap1" height="auto" class="elheader">
       <el-space>
         <el-button
           type="primary"
@@ -167,7 +167,7 @@ onMounted(() => {
         </el-button-group>
       </el-space>
     </el-header>
-    <el-main m-0 p-1>
+    <el-main style="padding: 0.25rem;margin:0">
       <el-space
         v-show="!help"
         wrap
@@ -469,6 +469,7 @@ body {
   width: 100%;
 }
 .elheader {
+  padding-left: 0.25rem;
   .fastEntrance {
     max-height: 0;
     opacity: 0;
