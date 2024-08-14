@@ -6745,10 +6745,6 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 北西 MT　北東 ST
 /p 頭割:西 H1D1D3　東 H2D2D4`,
       },
-      {
-        Name: 'Standard',
-        Place: { Name: 'Standard ig', MapID: 833, A: { X: 95.0, Y: 0.0, Z: 95.0, ID: 0, Active: true }, B: { X: 105.0, Y: 0.0, Z: 95.0, ID: 1, Active: true }, C: { X: 95.0, Y: 0.0, Z: 105.0, ID: 2, Active: true }, D: { X: 105.0, Y: 0.0, Z: 105.0, ID: 3, Active: true }, One: { X: 89.0, Y: 0.0, Z: 86.0, ID: 4, Active: true }, Two: { X: 111.0, Y: 0.0, Z: 86.0, ID: 5, Active: true }, Three: { X: 81.0, Y: 0.0, Z: 94.0, ID: 6, Active: true }, Four: { X: 119.0, Y: 0.0, Z: 94.0, ID: 7, Active: true } },
-      },
     ],
     1201: [
       {
@@ -6758,10 +6754,6 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 【ノック・オブ・ヴォロク(ペア割)】
 /p 　　　　　ボス
 /p H1/D3 MT/D1 ST/D2 H2/D4`,
-      },
-      {
-        Name: 'Conga (Braindead)',
-        Place: { Name: 'Conga', MapID: 996, A: { X: 100.0, Y: 0.0, Z: 87.5, ID: 0, Active: true }, B: { X: 100.0, Y: 0.0, Z: 102.5, ID: 1, Active: true }, C: { X: 94.5, Y: 0.0, Z: 77.8, ID: 2, Active: true }, D: { X: 100.0, Y: 0.0, Z: 117.5, ID: 3, Active: true }, One: { X: 100.0, Y: 0.0, Z: 95.0, ID: 4, Active: true }, Two: { X: 100.0, Y: 0.0, Z: 110.0, ID: 5, Active: true }, Three: { X: 105.5, Y: 0.0, Z: 77.8, ID: 6, Active: true }, Four: { X: 100.0, Y: 0.0, Z: 125.0, ID: 7, Active: true } },
       },
     ],
     1226: [
@@ -7003,7 +6995,8 @@ fastPP(`{"Name":"Numbers for Sleepy Cats","MapID":986,"A":{"X":100.0,"Y":0.0,"Z"
 fastPP(`{"Name":"Standard/Clocks","MapID":988,"A":{"X":100.0,"Y":0.0,"Z":85.0,"ID":0,"Active":true},"B":{"X":115.0,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":115.0,"ID":2,"Active":true},"D":{"X":85.0,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":90.0,"Y":0.0,"Z":90.0,"ID":4,"Active":true},"Two":{"X":110.0,"Y":0.0,"Z":90.0,"ID":5,"Active":true},"Three":{"X":110.0,"Y":0.0,"Z":110.0,"ID":6,"Active":true},"Four":{"X":90.0,"Y":0.0,"Z":110.0,"ID":7,"Active":true}}`)
 fastPP(`{"Name":"Safespots for Clone Dash","MapID":990,"A":{"X":100.0,"Y":0.0,"Z":93.0,"ID":0,"Active":true},"B":{"X":107.0,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":107.0,"ID":2,"Active":true},"D":{"X":93.0,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":94.0,"Y":0.0,"Z":94.0,"ID":4,"Active":true},"Two":{"X":106.0,"Y":0.0,"Z":94.0,"ID":5,"Active":true},"Three":{"X":106.0,"Y":0.0,"Z":106.0,"ID":6,"Active":true},"Four":{"X":94.0,"Y":0.0,"Z":106.0,"ID":7,"Active":true}}`)
 fastPP(`{"Name":"Witch Hunt","MapID":992,"A":{"X":100.0,"Y":0.0,"Z":90.0,"ID":0,"Active":true},"B":{"X":110.0,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":110.0,"ID":2,"Active":true},"D":{"X":90.0,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":93.0,"Y":0.0,"Z":93.0,"ID":4,"Active":true},"Two":{"X":107.0,"Y":0.0,"Z":93.0,"ID":5,"Active":true},"Three":{"X":107.0,"Y":0.0,"Z":107.0,"ID":6,"Active":true},"Four":{"X":93.0,"Y":0.0,"Z":107.0,"ID":7,"Active":true}}`)
-
+fastPP(`{"Name":"WayMark","MapID":996,"A":{"X":100.0,"Y":0.0,"Z":85.0,"ID":0,"Active":true},"B":{"X":110.0,"Y":0.0,"Z":95.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":105.0,"ID":2,"Active":true},"D":{"X":90.0,"Y":0.0,"Z":95.0,"ID":3,"Active":true},"One":{"X":0.0,"Y":0.0,"Z":0.0,"ID":4,"Active":false},"Two":{"X":0.0,"Y":0.0,"Z":0.0,"ID":5,"Active":false},"Three":{"X":0.0,"Y":0.0,"Z":0.0,"ID":6,"Active":false},"Four":{"X":0.0,"Y":0.0,"Z":0.0,"ID":7,"Active":false}}`)
+fastPP(`{"Name":"WayMark","MapID":833,"A":{"X":92.5,"Y":0,"Z":92.5,"ID":0,"Active":true},"B":{"X":107.5,"Y":0,"Z":92.5,"ID":1,"Active":true},"C":{"X":119,"Y":0,"Z":94,"ID":2,"Active":true},"D":{"X":81,"Y":0,"Z":94,"ID":3,"Active":true},"One":{"X":95,"Y":0,"Z":95,"ID":4,"Active":true},"Two":{"X":105,"Y":0,"Z":95,"ID":5,"Active":true},"Three":{"X":95,"Y":0,"Z":105,"ID":6,"Active":true},"Four":{"X":105,"Y":0,"Z":105,"ID":7,"Active":true}}`)
 const syncMap: Record<string, string> = {
   1076: '1075', // 希拉狄哈水道
   1156: '1155', // 六根山
