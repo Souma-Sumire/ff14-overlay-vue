@@ -146,6 +146,22 @@ function handleClick(e: Menu) {
 <template>
   <div class="common-layout" bt-white>
     <el-container>
+      <el-form>
+        <el-form-item label="联系我：" label-width="auto" style="margin-bottom: 0; padding-left: 1rem;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <a href="https://github.com/Souma-Sumire" target="_blank" style="text-decoration: none;">
+              Github
+            </a>
+            <a href="https://space.bilibili.com/1443740" target="_blank" style="text-decoration: none;">
+              Bilibili
+            </a>
+            <span style="font-weight: bold; color: #f00;">
+              其余账号均为山寨，请勿相信任何信息
+            </span>
+          </div>
+        </el-form-item>
+      </el-form>
+
       <el-header><h1>主页导航</h1></el-header>
       <el-main>
         <vxe-table
