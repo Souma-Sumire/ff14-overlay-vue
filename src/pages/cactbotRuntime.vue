@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import type { Role } from '../../cactbot/types/job'
+import 'animate.css'
+import { VxeUI } from 'vxe-table'
 import {
   addOverlayListener,
   callOverlayHandler,
 } from '../../cactbot/resources/overlay_plugin_api'
-import type { PlayerRuntime } from '@/types/partyPlayer'
+import type { Role } from '../../cactbot/types/job'
 import Util, { jobEnumOrder } from '@/utils/util'
-import 'animate.css'
+import type { PlayerRuntime } from '@/types/partyPlayer'
+
+VxeUI.setTheme('dark')
 
 // const aprilFoolSDay = ref(
 //   new Date().getMonth() === 3 && new Date().getDate() === 1
@@ -236,19 +239,12 @@ function testParty() {
 
 <template>
   <div @mouseenter="onMouseOver" @mouseleave="onMouseOut">
-    <span
-      v-show="data.party.length <= 1"
-      class="text-white text-shadow-sm text-shadow-color-black"
-    >...</span>
+    <span v-show="data.party.length <= 1" class="text-white text-shadow-sm text-shadow-color-black">...</span>
     <vxe-modal
-      v-model="dialogVisible"
-      size="small"
-      :position="{
+      v-model="dialogVisible" size="small" :position="{
         left: 10,
         top: 10,
-      }"
-      width="90vw"
-      @close="
+      }" width="90vw" @close="
         dialogVisible = false;
         showTips = false;
       "
@@ -267,41 +263,24 @@ function testParty() {
     <main
       :style="{
         width: mouseEnter
-          ? `${15.5 + +(data.party.find((v) => v.job === 36) ? 1 : 0)}em`
+          ? `${18 + +(data.party.find((v) => v.job === 36) ? 1 : 0)}em`
           : '4em',
       }"
     >
       <div class="players">
         <transition-group
-          name="animate__animated animate__bounce"
-          enter-active-class="animate__fadeInLeft"
+          name="animate__animated animate__bounce" enter-active-class="animate__fadeInLeft"
           leave-active-class="animate__fadeOutLeft"
         >
           <section
-            v-for="(member, i) in data.party"
-            v-show="
-              data.party.length > 1
-                && (mouseEnter || member.name === playerName)
-            "
-            :key="member.id"
-            flex="~ nowrap"
-            :style="{
+            v-for="(member, i) in data.party" v-show="data.party.length > 1
+              && (mouseEnter || member.name === playerName)
+            " :key="member.id" flex="~ nowrap" :style="{
               opacity: mouseEnter ? 1 : 0.5,
-            }"
-            class="player"
+            }" class="player"
           >
-            <vxe-select
-              v-model="member.rp"
-              size="mini"
-              class-name="select"
-              @change="handleSelectChange(i)"
-            >
-              <vxe-option
-                v-for="(item, index) in getOptions(member.job)"
-                :key="index"
-                :value="item"
-                :label="item"
-              />
+            <vxe-select v-model="member.rp" size="mini" class-name="select" @change="handleSelectChange(i)">
+              <vxe-option v-for="(item, index) in getOptions(member.job)" :key="index" :value="item" :label="item" />
             </vxe-select>
             <!-- <span class="name" :class="aprilFoolSDay ? 'aprilFoolSDay' : ''"> -->
             <span class="name">
@@ -311,13 +290,7 @@ function testParty() {
           </section>
         </transition-group>
       </div>
-      <DragJob
-        v-show="mouseEnter"
-        :party="data.party"
-        m-b-1
-        p-1
-        @update-sort-arr="updateSortArr"
-      />
+      <DragJob v-show="mouseEnter" :party="data.party" m-b-1 p-1 @update-sort-arr="updateSortArr" />
     </main>
     <div v-if="isDev" style="position: fixed; bottom: 0">
       <button
@@ -329,9 +302,7 @@ function testParty() {
       >
         测试单人
       </button>
-      <button
-        @click="testParty"
-      >
+      <button @click="testParty">
         测试组队
       </button>
     </div>
@@ -343,17 +314,21 @@ function testParty() {
   width: 5px;
   height: 5px;
 }
+
 ::-webkit-scrollbar-track {
   background-color: rgba(51, 51, 51, 1);
 }
+
 ::-webkit-scrollbar-thumb {
   height: 30px;
   border-radius: 5px;
   background-color: rgba(216, 216, 216, 0.4);
 }
+
 ::-webkit-scrollbar-thumb:active {
   background-color: rgba(160, 160, 160, 1);
 }
+
 * {
   user-select: none;
 }
@@ -366,12 +341,14 @@ main {
   margin: 0;
   border-radius: 5px;
   transition-timing-function: ease-in-out;
+
   .players {
     margin-left: 1px;
     $shadowColor: rgba(0, 0, 0, 0.25);
     $text-shadow: 1px 1px 2px $shadowColor, -1px -1px 2px $shadowColor,
       1px -1px 2px $shadowColor, -1px 1px 2px $shadowColor;
     $line-height: 1.5em;
+
     .player {
       transition-property: all;
       transition-duration: 0.3s;
@@ -380,9 +357,13 @@ main {
       animation-timing-function: ease-in-out;
       height: $line-height;
       line-height: $line-height;
+
       .select {
         width: 3.25em;
-        --vxe-input-height-mini: $line-height;
+        --vxe-ui-input-height-mini: $line-height;
+        --vxe-ui-font-color: white;
+        --vxe-ui-layout-background-color: rgba(12, 12, 12, 0.9);
+
         :deep(.vxe-input--inner) {
           color: white;
           font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
@@ -392,10 +373,25 @@ main {
           padding: 0 0 0 0.4em;
           text-shadow: $text-shadow;
         }
+
         :deep(.vxe-input--suffix) {
-          right: -0.2em;
+          background: none;
+        }
+
+        :deep(.vxe-input--suffix-icon) {
+          height: $line-height;
+          line-height: $line-height;
+          background: none;
+          padding-right: 0;
+        }
+
+        --vxe-ui-input-placeholder-color: white;
+
+        :deep(.vxe-icon-caret-down) {
+          background: none;
         }
       }
+
       .name {
         white-space: nowrap;
         color: white;

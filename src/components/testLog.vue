@@ -65,7 +65,7 @@ onUnmounted(() => {
   color: black;
   // margin: 10px;
   .upload-select {
-    min-width: 400px;
+    min-width: 300px;
     height: 75px;
     border: 1px solid #ccc;
     border-radius: 10px;

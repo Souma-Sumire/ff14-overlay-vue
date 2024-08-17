@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { Ref } from 'vue'
 import {
-  VXETable,
   type VxeTableEvents,
   type VxeTableInstance,
   type VxeTablePropTypes,
+  VxeUI,
 } from 'vxe-table'
 import NetRegexes from '../../cactbot/resources/netregexes'
 import logDefinitions from '../../cactbot/resources/netlog_defs'
@@ -27,6 +27,8 @@ import {
   universalVulnerableEnemy,
   universalVulnerableFriendly,
 } from '@/utils/keigenn'
+
+VxeUI.setTheme('dark')
 
 const store = useKeigennRecord2Store()
 const userOptions = store.userOptions
@@ -57,8 +59,8 @@ const size = {
 
 const style = {
   '--vxe-font-size-mini': `${12 * userOptions.scale}px`,
-  '--vxe-table-row-line-height': `${30 * userOptions.scale}px`,
-  '--vxe-table-row-height-mini': `${30 * userOptions.scale}px`,
+  '--vxe-ui-row-line-height': `${30 * userOptions.scale}px`,
+  '--vxe-ui-row-height-mini': `${30 * userOptions.scale}px`,
   '--vxe-input-height-mini': `${20 * userOptions.scale}px`,
   '--vxe-select-option-height-mini': `${24 * userOptions.scale}px`,
 }
@@ -581,8 +583,7 @@ function loadStorage() {
 function formatTime(time: number) {
   const minute = Math.max(Math.floor(time / 60000), 0)
   const second = Math.max(Math.floor((time - minute * 60000) / 1000), 0)
-  return `${minute < 10 ? '0' : ''}${minute}:${
-    second < 10 ? '0' : ''
+  return `${minute < 10 ? '0' : ''}${minute}:${second < 10 ? '0' : ''
   }${second}`
 }
 
@@ -658,14 +659,12 @@ function doCopy(row: RowVO) {
   } = row
   const sp
     = row.effect === 'damage done' ? '' : `,${translationFlags(row.effect)}`
-  const result = `${time} ${job} ${actionCN} ${amount.toLocaleString()}(${translationFlags(type)}) 减伤:${
-    keigenns.length === 0 && sp === ''
-      ? '无'
-      : keigenns
-          .map(k => (userOptions.statusCN ? k.name : k.effect))
-          .join(',') + sp
-  } HP:${row.currentHp}/${
-    row.maxHp
+  const result = `${time} ${job} ${actionCN} ${amount.toLocaleString()}(${translationFlags(type)}) 减伤:${keigenns.length === 0 && sp === ''
+    ? '无'
+    : keigenns
+      .map(k => (userOptions.statusCN ? k.name : k.effect))
+      .join(',') + sp
+  } HP:${row.currentHp}/${row.maxHp
   }(${Math.round((row.currentHp / row.maxHp) * 100)}%)+盾:${Math.round(
     (row.maxHp * +row.shield) / 100,
   )}(${row.shield}%)`
@@ -681,7 +680,7 @@ function copyText(text: string) {
     document.execCommand('copy')
     document.body.removeChild(input)
   })
-  VXETable.modal.message({ content: '已复制到剪贴板', status: 'success' })
+  VxeUI.modal.message({ content: '已复制到剪贴板', status: 'success' })
 }
 
 const focusing = ref({ target: false, action: false })
@@ -765,7 +764,7 @@ const contextMenuClickEvent: VxeTableEvents.MenuClick<RowVO> = ({
   switch (menu.code) {
     case 'copy':
       if (!row) {
-        VXETable.modal.message({
+        VxeUI.modal.message({
           content: '未选中有效数据行',
           status: 'error',
         })
@@ -792,7 +791,6 @@ const contextMenuClickEvent: VxeTableEvents.MenuClick<RowVO> = ({
           const option = col.filters.find(v => v.value === row.target)
           if (!option)
             return
-
           option.checked = true
           $table.updateData().then(() => {
             $table.scrollToRow(row)
@@ -924,15 +922,13 @@ const test = {
   fakeLogDamage: () => {
     combatTimeStamp.value = Date.now()
     handleLine(
-      `21|${new Date()}|4000044A|万魔殿|829A|尖脚|${povId.value}|${
-        povName.value
+      `21|${new Date()}|4000044A|万魔殿|829A|尖脚|${povId.value}|${povName.value
       }|720203|B0F10000|9F0E|8200000|1B|829A8000|0|0|0|0|0|0|0|0|0|0|155065|155065|10000|10000|||94.62|98.28|0.00|-3.13|44|44|0|10000|||92.00|100.00|0.00|0.00|000010B3|0|1|fd5fa47ff773c3ca`,
     )
   },
   fakeLogStatus: () => {
     handleLine(
-      `26|${new Date()}|59|复仇|15.00|${povId.value}|${povName.value}|${
-        povId.value
+      `26|${new Date()}|59|复仇|15.00|${povId.value}|${povName.value}|${povId.value
       }|${povName.value}|64|129221|129221|b6388ee76760c33b`,
     )
   },
@@ -940,74 +936,37 @@ const test = {
 </script>
 
 <template>
-  <div class="wrapper" :style="style">
+  <div class="wrapper" :style="style" :class="store.isBrowser ? 'is-browser' : 'not-browser'">
     <header v-if="userOptions.showHeader">
-      <vxe-select
-        v-show="!minimize"
-        v-model="select"
-        size="mini"
-        class="select"
-      >
+      <vxe-select v-show="!minimize" v-model="select" size="mini" class="select">
         <vxe-option
-          v-for="i in data.length"
-          :key="`${data[i - 1].key}-${data[i - 1].duration}-${
-            data[i - 1].zoneName
-          }`"
-          :value="i - 1"
-          :label="`${data[i - 1].duration} ${data[i - 1].zoneName}`"
+          v-for="i in data.length" :key="`${data[i - 1].key}-${data[i - 1].duration}-${data[i - 1].zoneName
+          }`" :value="i - 1" :label="`${data[i - 1].duration} ${data[i - 1].zoneName}`"
         />
       </vxe-select>
       <vxe-button
-        class="minimize"
-        :icon="minimize ? 'vxe-icon-fullscreen' : 'vxe-icon-minimize'"
-        :style="{ opacity: minimize ? 0.5 : 1 }"
+        class="minimize" :class="minimize ? 'in-minimize' : 'not-minimize'"
+        :icon="minimize ? 'vxe-icon-fullscreen' : 'vxe-icon-minimize'" :style="{ opacity: minimize ? 0.5 : 1 }"
         @click="clickMinimize"
       />
     </header>
     <main v-show="!minimize">
       <vxe-table
-        ref="xTable"
-        size="mini"
-        class="vxe-table"
-        show-overflow="tooltip"
-        round
-        height="100%"
-        :scroll-y="{ enabled: true }"
-        :loading="loading"
-        :show-header="userOptions.showHeader"
-        :data="data[select].table"
-        :row-config="{ isHover: true, height: size.line_height }"
-        :header-cell-style="{
+        ref="xTable" size="mini" class="vxe-table" show-overflow="tooltip" round height="100%"
+        :scroll-y="{ enabled: true }" :loading="loading" :show-header="userOptions.showHeader"
+        :data="data[select].table" :row-config="{ isHover: true, height: size.line_height }" :header-cell-style="{
           padding: '0px',
-        }"
-        :menu-config="menuConfig"
-        @cell-menu="cellContextMenuEvent"
-        @menu-click="contextMenuClickEvent"
+        }" :menu-config="menuConfig" @cell-menu="cellContextMenuEvent" @menu-click="contextMenuClickEvent"
       >
+        <vxe-column :width="size.time" field="time" title="时间" align="center" />
         <vxe-column
-          :width="size.time"
-          field="time"
-          title="时间"
-          align="center"
+          :width="size.action" :field="userOptions.actionCN ? 'actionCN' : 'action'" title="技能"
+          :filters="actionOptions" :filter-multiple="false" :resizable="false" align="center"
         />
         <vxe-column
-          :width="size.action"
-          :field="userOptions.actionCN ? 'actionCN' : 'action'"
-          title="技能"
-          :filters="actionOptions"
-          :filter-multiple="false"
-          :resizable="false"
-          align="center"
-        />
-        <vxe-column
-          :width="size.target"
-          field="target"
-          :title="userOptions.showName ? '目标' : '目'"
-          :filters="targetOptions"
-          :filter-multiple="false"
-          :resizable="!userOptions.anonymous && !userOptions.abbrId"
-          align="left"
-          header-align="center"
+          :width="size.target" field="target" title="目标" :filters="targetOptions" :filter-multiple="false"
+          :resizable="!userOptions.anonymous && !userOptions.abbrId" align="left" header-align="center"
+          :header-class-name="userOptions.showName ? 'target-name-column-full' : 'target-name-column-abbr'"
         >
           <template #default="{ row }">
             <KeigennRecord2Target :row="row" />
@@ -1027,7 +986,7 @@ const test = {
     </main>
   </div>
   <div v-if="store.isBrowser" class="testLog">
-    <div v-if="store.isLocalhost" class="test-buttons">
+    <div v-if="false" class="test-buttons">
       <vxe-button class="test-button" type="primary" @click="test.clearData">
         清空
       </vxe-button>
@@ -1041,82 +1000,14 @@ const test = {
         假状态
       </vxe-button>
     </div>
-    <testLog
-      @before-handle="beforeHandle"
-      @after-handle="afterHandle"
-      @handle-line="handleLine"
-    />
+    <testLog m-1 @before-handle="beforeHandle" @after-handle="afterHandle" @handle-line="handleLine" />
   </div>
 </template>
 
 <style lang="scss">
-$base-bg: lighten(#151515, 0%);
-$bg-color: rgba($base-bg, 0.7);
-$tooltip-bg-color: lighten(#303133, 0%);
-$text-color: lighten(#c9d1d9, 50%);
-$border-color: lighten(#4e4a4a, 0%);
-$selected-bg-color: lighten(#262626, 0%);
-$striped-bg-color: lighten(#2b2929, 0%);
-$primary-color-hover: lighten(white, 0%);
-$warning-color-active: lighten(orange, 0%);
-$vxe-form-background-color: $bg-color;
-$vxe-pager-background-color: $bg-color;
-$vxe-button-default-background-color: lighten($bg-color, 15%);
-$vxe-table-header-background-color: transparent;
-$vxe-font-color: darken($text-color, 12%);
-$vxe-table-header-font-color: $text-color;
-$vxe-table-footer-font-color: $text-color;
-$vxe-table-body-background-color: transparent;
-$vxe-table-row-striped-background-color: $striped-bg-color;
-$vxe-table-border-color: $border-color;
-$vxe-table-row-hover-background-color: darken($primary-color-hover, 50%);
-$vxe-table-row-hover-striped-background-color: lighten($striped-bg-color, 10%);
-$vxe-table-row-current-background-color: fade($primary-color-hover, 20%);
-$vxe-table-row-hover-current-background-color: fade($primary-color-hover, 20%);
-$vxe-table-column-hover-background-color: fade($primary-color-hover, 20%);
-$vxe-table-column-current-background-color: fade($primary-color-hover, 20%);
-$vxe-table-row-checkbox-checked-background-color: fade(
-  $warning-color-active,
-  15%
-);
-$vxe-table-row-hover-checkbox-checked-background-color: fade(
-  $warning-color-active,
-  20%
-);
-$vxe-table-menu-background-color: lighten($tooltip-bg-color, 10%);
-$vxe-table-filter-panel-background-color: rgba($base-bg, 75%);
-$vxe-grid-maximize-background-color: $bg-color;
-$vxe-pager-perfect-background-color: $bg-color;
-$vxe-pager-perfect-button-background-color: lighten($bg-color, 15%);
-$vxe-input-background-color: $bg-color;
-$vxe-input-border-color: $border-color;
-$vxe-select-panel-background-color: $bg-color;
-$vxe-table-popup-border-color: $border-color;
-$vxe-select-option-hover-background-color: lighten($selected-bg-color, 15%);
-$vxe-pulldown-panel-background-color: $bg-color;
-$vxe-table-fixed-left-scrolling-box-shadow: 8px 0px 10px -5px rgba(255, 255, 255, 0.12);
-$vxe-table-fixed-right-scrolling-box-shadow: -8px 0px 10px -5px rgba(255, 255, 255, 0.12);
-$vxe-loading-background-color: rgba(0, 0, 0, 0.5);
-$vxe-tooltip-dark-background-color: lighten($tooltip-bg-color, 25%);
-$vxe-modal-header-background-color: $selected-bg-color;
-$vxe-modal-body-background-color: $tooltip-bg-color;
-$vxe-modal-border-color: $border-color;
-$vxe-toolbar-panel-background-color: $bg-color;
-$vxe-input-disabled-color: lighten($striped-bg-color, 20%);
-$vxe-input-disabled-background-color: lighten($striped-bg-color, 25%);
-$vxe-checkbox-icon-background-color: lighten($selected-bg-color, 15%);
-$vxe-checkbox-checked-icon-border-color: $border-color;
-$vxe-checkbox-indeterminate-icon-background-color: lighten(
-  $selected-bg-color,
-  15%
-);
-$vxe-border-radius: 0px;
-$vxe-select-panel-background-color: rgba(21, 21, 21, 0.8);
-
 .vxe-header--column {
   line-height: 1.75em !important;
 
-  // 不换行
   .vxe-cell {
     white-space: nowrap !important;
   }
@@ -1124,17 +1015,19 @@ $vxe-select-panel-background-color: rgba(21, 21, 21, 0.8);
 
 body,
 html {
+  background: transparent;
   padding: 0;
   margin: 0;
   overflow: hidden;
+  --vxe-ui-input-height-mini: 20px;
+  --vxe-ui-layout-background-color: rgba(12, 12, 12, 0.8);
+  --vxe-ui-table-header-background-color: rgba(12, 12, 12, 0);
+  --vxe-ui-table-header-font-color: #ddd;
+  --vxe-ui-base-border-radius: 0;
 }
 
 * {
   user-select: none;
-}
-
-.vxe-table--main-wrapper {
-  background-color: rgba($bg-color, 0.8);
 }
 
 .vxe-body--row {
@@ -1145,6 +1038,7 @@ html {
 
 img[src=""],
 img:not([src]) {
+
   // opacity: 0;
   // display: none;
   &::after {
@@ -1165,16 +1059,25 @@ img:not([src]) {
   margin-left: auto !important;
   margin-right: 0 !important;
   border: none !important;
-  width: var(--vxe-input-height-mini) !important;
-  height: var(--vxe-input-height-mini) !important;
+  width: 20px !important;
+  height: 20px !important;
   z-index: 13;
+
+  i {
+    margin: auto !important;
+  }
+}
+
+.not-minimize {
+  background-color: transparent;
+  ;
 }
 
 .vxe-select-option {
   max-width: calc(100% - 2px) !important;
 }
 
-.vxe-table--filter-wrapper:not(.is--multiple) {
+.vxe-ui--filter-wrapper:not(.is--multiple) {
   text-align: left !important;
 }
 
@@ -1205,15 +1108,15 @@ img:not([src]) {
 }
 
 .my-el-popover {
-  & > div[role="title"] {
+  font-size: var(--vxe-font-size-mini) !important;
+  padding: 0.5em !important;
+  white-space: nowrap;
+
+  &>div[role="title"] {
     font-size: calc(var(--vxe-font-size-mini) * 1.2) !important;
     font-weight: bold;
     margin-bottom: 0.2em !important;
   }
-
-  font-size: var(--vxe-font-size-mini) !important;
-  padding: 0.5em !important;
-  white-space: nowrap;
 }
 
 .target {
@@ -1222,32 +1125,6 @@ img:not([src]) {
   align-items: center;
 }
 
-// .target-extra {
-//   position: relative;
-//   display: inline-flex;
-//   flex-direction: column;
-//   height: var(--vxe-input-height-mini);
-//   p {
-//     position: absolute;
-//     margin: 0;
-//     padding: 0;
-//     transform-origin: center left;
-//   }
-//   .hp,
-//   .shiled {
-//     width: 3.7em;
-//     display: flex;
-//     justify-content: space-between;
-//   }
-//   $s: 0.8;
-//   $y: 0.6em;
-//   .shiled {
-//     transform: scale($s) translateY(-$y) translateX(0.25em);
-//   }
-//   .hp {
-//     transform: scale($s) translateY($y) translateX(0.25em);
-//   }
-// }
 .wrapper {
   padding: 0;
   margin: 0;
@@ -1262,17 +1139,22 @@ header {
   display: flex;
 
   .select {
-    &:hover {
-      width: calc(100% - var(--vxe-input-height-mini));
-    }
-
-    transition: width 0.2s ease-in-out;
-    width: 5.25em;
+    transition: width 0.15s ease-in-out;
+    width: 4.75em;
     z-index: 15;
     position: absolute;
     right: var(--vxe-input-height-mini);
-    background-color: lighten(#151515, 0%);
+
+    &:hover {
+      background-color: #151515;
+      width: calc(100% - var(--vxe-input-height-mini));
+    }
   }
+}
+
+.vxe-input--suffix {
+  width: 0.85em;
+  transform: translateX(-0.5em);
 }
 
 main {
@@ -1280,12 +1162,20 @@ main {
   top: 0px;
   bottom: 0px;
   width: 100%;
+  --vxe-ui-font-color: rgb(219, 224, 230);
 }
 
-.vxe-table {
-  $text-color: rgba(#444, 0.5);
-  text-shadow: 1px 1px 1px $text-color, -1px -1px 1px $text-color,
-    1px -1px 1px $text-color, -1px 1px 1px $text-color;
+.vxe-context-menu--link {
+  --vxe-ui-font-color: rgb(219, 224, 230);
+}
+
+// .vxe-table {
+// $text-color: rgba(#444, 0.5);
+// text-shadow: 1px 1px 2px $text-color, -1px -1px 2px $text-color,    1px -1px 2px $text-color, -1px 1px 2px $text-color;
+// }
+
+.vxe-table--body {
+  --vxe-ui-layout-background-color: transparent;
 }
 
 .jobIcon {
@@ -1355,17 +1245,17 @@ main {
   border-bottom: 1px dashed red;
 }
 
-.vxe-table--header-wrapper {
+.vxe-ui--header-wrapper {
   background-color: #222;
   color: #fff;
 }
 
-.vxe-table--header-wrapper .vxe-header--column {
+.vxe-ui--header-wrapper .vxe-header--column {
   color: #fff;
 }
 
 .vxe-context-menu--option-wrapper,
-.vxe-table--context-menu-clild-wrapper {
+.vxe-ui--context-menu-clild-wrapper {
   border: none;
 }
 
@@ -1413,5 +1303,13 @@ main {
 .amount {
   display: flex;
   justify-content: flex-end;
+}
+
+.target-name-column-abbr {
+  transform: translateX(-0.75em);
+}
+
+.is-browser {
+  background-color: #fff;
 }
 </style>
