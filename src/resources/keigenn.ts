@@ -693,6 +693,18 @@ const global: typeof chinese = [...chinese, {
   type: 'absorbed',
   performance: { physics: 1, magic: 1, darkness: 1 },
   isFriendly: true,
+}, {
+  name: '太阳星座',
+  id: 3896,
+  type: 'multiplier',
+  performance: { physics: 1, magic: 1, darkness: 1 },
+  isFriendly: true,
+}, {
+  name: '神慰',
+  id: 3903,
+  type: 'absorbed',
+  performance: { physics: 1, magic: 1, darkness: 1 },
+  isFriendly: true,
 }]
 
 export { global, chinese }
