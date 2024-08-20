@@ -363,6 +363,7 @@ main {
         --vxe-ui-input-height-mini: $line-height;
         --vxe-ui-font-color: white;
         --vxe-ui-layout-background-color: rgba(12, 12, 12, 0.9);
+        --vxe-ui-input-placeholder-color: white;
 
         :deep(.vxe-input--inner) {
           color: white;
@@ -384,8 +385,6 @@ main {
           background: none;
           padding-right: 0;
         }
-
-        --vxe-ui-input-placeholder-color: white;
 
         :deep(.vxe-icon-caret-down) {
           background: none;

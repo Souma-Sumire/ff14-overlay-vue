@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import router from '@/router'
-
 type MenuType = '网页' | '悬浮窗' | '悬浮窗/网页'
 
 interface Menu {
@@ -134,13 +132,6 @@ const tableData: Menu[] = [
     comment: '狩猎用，显示你当前在几线。',
   },
 ]
-
-function handleClick(e: Menu) {
-  if (e.path.startsWith('http'))
-    window.open(e.path, '_blank')
-  else
-    router.push(e.path)
-}
 </script>
 
 <template>
@@ -172,9 +163,10 @@ function handleClick(e: Menu) {
         >
           <vxe-column width="250" title="名称">
             <template #default="{ row }">
-              <a style="cursor: pointer" @click="() => handleClick(row)">{{
-                row.title
-              }}</a>
+              <router-link v-if="!(row.path.startsWith('http'))" :to="row.path">
+                {{ row.title }}
+              </router-link>
+              <a v-else :href="row.path" target="_blank">{{ row.title }} </a>
             </template>
           </vxe-column>
           <vxe-column width="420" title="预览">
