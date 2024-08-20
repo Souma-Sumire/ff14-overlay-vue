@@ -13,78 +13,17 @@ function generateUrl(url: string) {
 }
 const tableData: Menu[] = [
   {
-    title: '7.0 车头找怪工具',
-    type: '网页',
-    path: 'hunt',
-  },
-  {
-    title: '7.0 风脉地图',
-    type: '网页',
-    path: 'aether',
-  },
-  {
-    title: 'Cactbot User JS 分享',
-    type: '网页',
-    path: 'https://github.com/Souma-Sumire/raidboss-user-js-public',
-    comment: '前往Github项目了解详情',
-  },
-  {
-    title: '国际服汉化补丁',
-    type: '网页',
-    path: 'https://github.com/Souma-Sumire/FFXIVChnTextPatch-Souma/',
-    comment: '前往Github项目了解详情',
-  },
-  {
-    title: '6.58 青魔法书图鉴',
-    type: '网页',
-    path: 'blubook',
-  },
-  {
-    title: 'FFLOGS上传器加速下载',
-    type: '网页',
-    path: 'fflogsUploaderDownload',
-  },
-  {
     title: '[悬浮窗] 减伤监控2',
     type: '悬浮窗/网页',
     path: 'keigennRecord2',
-    comment: '详细说明：\nhttps://nga.178.com/read.php?tid=28047277',
+    comment: '<a href="https://nga.178.com/read.php?tid=28047277">更多说明</a>',
     src: 'keigennRecord2.webp',
-  },
-  {
-    title: '[悬浮窗] 职业增强：舞者',
-    type: '悬浮窗',
-    path: 'jobs/dnc',
-    comment: '在技能上显示buff消失倒计时',
-    src: 'dnc.webp',
-  },
-  {
-    title: '[悬浮窗] 一键舞步',
-    type: '悬浮窗',
-    path: 'okDncDance',
-  },
-  {
-    title: '[悬浮窗] 一键 VPR 连击 Type1',
-    type: '悬浮窗',
-    path: 'okVpr',
-    comment: '进附体时不会重置热键栏，适合直接设置成单独键位的情况',
-  },
-  {
-    title: '[悬浮窗] 一键 VPR 连击 Type2',
-    type: '悬浮窗',
-    path: 'okVpr2',
-    comment: '进附体时会重置热键栏，适合设置成平时按的键位的情况',
-  },
-  {
-    title: '[悬浮窗] 6.X 占星一键发卡',
-    type: '悬浮窗',
-    path: 'okASTCard',
   },
   {
     title: '[悬浮窗] 施法监控',
     type: '悬浮窗',
     path: 'castingMonitor?duration=25&energySaving=true&displayAA=false&displayGCDSpace=false&api=cafemaker&syncFocusWS=true&showHeader=true',
-    comment: '详细说明：\nhttps://nga.178.com/read.php?tid=33989985',
+    comment: '<a href="https://nga.178.com/read.php?tid=33989985">更多说明</a>',
     src: 'castingMonitor.webp',
   },
   {
@@ -92,6 +31,7 @@ const tableData: Menu[] = [
     type: '悬浮窗',
     path: 'zoneMacro',
     src: 'zoneMacro.webp',
+    comment: '当开启 OverlayPlugin WSServer 后，可<a href="/#/zoneMacro?OVERLAY_WS=ws://127.0.0.1:10501/ws">在浏览器中使用</a>，操作不再局促',
   },
   {
     title: '[悬浮窗] 治疗/减伤时间轴',
@@ -130,6 +70,69 @@ const tableData: Menu[] = [
     type: '悬浮窗',
     path: 'instancedAreaInfo',
     comment: '狩猎用，显示你当前在几线。',
+  },
+  {
+    title: '[悬浮窗] 职业增强：舞者',
+    type: '悬浮窗',
+    path: 'jobs/dnc',
+    comment: '在技能上显示buff消失倒计时',
+    src: 'dnc.webp',
+  },
+  {
+    title: '[悬浮窗] 一键 VPR 连击 Type1',
+    type: '悬浮窗',
+    path: 'okVpr',
+    comment: '进附体时不会重置热键栏，适合直接设置成单独键位的情况（我自己没用过，不知道好不好用）',
+  },
+  {
+    title: '[悬浮窗] 一键 VPR 连击 Type2',
+    type: '悬浮窗',
+    path: 'okVpr2',
+    comment: '进附体时会重置热键栏，适合设置成平时按的键位的情况（我自己没用过，不知道好不好用）',
+  },
+  {
+    title: '[悬浮窗] 6.X 占星一键发卡',
+    type: '悬浮窗',
+    path: 'okASTCard',
+    comment: '即将在国服 7.0 更新后删除',
+  },
+  {
+    title: '[悬浮窗] 一键舞步',
+    type: '悬浮窗',
+    path: 'okDncDance',
+    comment: '不再维护，推荐使用 <a href="https://github.com/AtmoOmen/DalamudPlugins">Daily Routines</a> 的自动跳舞模块',
+  },
+  {
+    title: '国际服汉化补丁',
+    type: '网页',
+    path: 'https://github.com/Souma-Sumire/FFXIVChnTextPatch-Souma/',
+    comment: '前往Github项目了解详情',
+  },
+  {
+    title: '6.X Cactbot JS 分享',
+    type: '网页',
+    path: 'https://github.com/Souma-Sumire/raidboss-user-js-public',
+    comment: '前往Github项目了解详情',
+  },
+  {
+    title: '7.0 车头找怪工具',
+    type: '网页',
+    path: 'hunt',
+  },
+  {
+    title: '7.0 风脉地图',
+    type: '网页',
+    path: 'aether',
+  },
+  {
+    title: '6.58 青魔法书图鉴',
+    type: '网页',
+    path: 'blubook',
+  },
+  {
+    title: 'FFLOGS上传器加速下载',
+    type: '网页',
+    path: 'fflogsUploaderDownload',
   },
 ]
 </script>
@@ -175,7 +178,11 @@ const tableData: Menu[] = [
               <i v-if="!src">无</i>
             </template>
           </vxe-column>
-          <vxe-column field="comment" title="描述" />
+          <vxe-column field="comment" title="描述">
+            <template #default="{ row }">
+              <span v-html="row.comment" />
+            </template>
+          </vxe-column>
         </vxe-table>
       </el-main>
     </el-container>
