@@ -118,12 +118,14 @@ export async function getActionByChineseName(name: string) {
     return cachedAction.action
 
   try {
-    const result = await requestPromise([
+    const response = await requestPromise([
       `https://${siteList.cafe
       }/search?filters=ClassJobLevel>0&indexes=action&string=${encodeURIComponent(
         name,
       )}`,
     ])
+
+    const result = response.Results[0]
 
     if (result) {
       const expirationTime = Date.now() + cacheExpirationTime.random
