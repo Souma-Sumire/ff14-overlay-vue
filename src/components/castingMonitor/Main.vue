@@ -15,54 +15,12 @@ const displayGCD = Number(
 <template>
   <div w-100vw flex="~ nowrap" class="main">
     <div
-      v-for="(casts, castersId) in castingMonitorStore.castData"
-      :key="castersId"
-      :data-casterId="castersId"
+      v-for="(item) in castingMonitorStore.castData" :key="item.key" :data-casterId="item.casterId"
+      :class="`images ${item.class} logLine${item.logLine} displayAA${displayAA} displayGCD${displayGCD}`"
+      :style="`--animeDuration: ${castingMonitorStore.config.duration}s;`"
     >
-      <el-tooltip
-        v-for="cast in casts"
-        :key="cast.key"
-        raw-content
-        placement="right-start"
-        effect="dark"
-        transition=""
-        :teleported="false"
-        popper-class="el-tooltip"
-        :show-arrow="false"
-        :disabled="castingMonitorStore.focusTargetId === castersId ? false : true"
-      >
-        <template #content>
-          <div class="elhover">
-            <strong>{{ cast.APIData.Name }}</strong>
-            <div
-              style="white-space: pre-line"
-              v-html="cast.APIData?.Description"
-            />
-          </div>
-        </template>
-        <div
-          :class="`images ${cast.class} logLine${cast.logLine} displayAA${displayAA} displayGCD${displayGCD}`"
-          :style="`--animeDuration: ${
-            castingMonitorStore.config.duration
-          }s;opacity:${Number(
-            castingMonitorStore.focusTargetId === castersId,
-          )}`"
-        >
-          <img
-            :src="cast.src"
-            class="action-icon"
-            height="40"
-            loading="lazy"
-            @error="handleImgError"
-          >
-          <img class="frame" loading="lazy">
-          <span
-            v-if="displayGCD === 1"
-            class="GCDCast"
-            :class="cast.GCDClass"
-          >{{ cast?.GCDCast ?? "" }}</span>
-        </div>
-      </el-tooltip>
+      <img :src="item.src" class="action-icon" height="40" loading="lazy" @error="handleImgError">
+      <img class="frame" loading="lazy">
     </div>
   </div>
 </template>
@@ -70,21 +28,21 @@ const displayGCD = Number(
 <style lang="scss" scoped>
 @keyframes move {
   from {
-    right: calc(0% - 24px);
+    // right: calc(0% - 24px);
+    transform: translateX(0);
   }
+
   to {
-    right: 100%;
+    // right: 100%;
+    transform: translateX(calc(-100vw - 48px));
   }
 }
-::v-deep(.elhover) {
-  user-select: text;
-  line-height: 1.2em;
-  font-size: 12px;
-}
+
 .main {
   position: relative;
   min-height: 60px;
   height: 100vh;
+
   .images {
     position: absolute;
     bottom: 0px;
@@ -94,12 +52,15 @@ const displayGCD = Number(
     display: flex;
     align-items: center;
     justify-content: center;
+
     &.displayGCD1 {
       bottom: 18px;
     }
+
     &.logLine14 {
       filter: opacity(0.5);
     }
+
     &.logLine15,
     &.logLine16 {
       animation-name: move;
@@ -107,28 +68,34 @@ const displayGCD = Number(
       animation-timing-function: linear;
       animation-fill-mode: forwards;
     }
+
     .action-icon {
+      position: absolute;
       z-index: 1;
     }
-    .action-category-2,
-    .action-category-3,
-    .action-category-13,
-    .action-category-17 {
+
+    &.action-category-2,
+    &.action-category-3,
+    &.action-category-13,
+    &.action-category-17 {
       .action-icon {
         z-index: 3;
       }
     }
+
     .frame {
       z-index: 2;
     }
-    .action-category-2,
-    .action-category-3,
-    .action-category-13,
-    .action-category-17 {
+
+    &.action-category-2,
+    &.action-category-3,
+    &.action-category-13,
+    &.action-category-17 {
       .frame {
         z-index: 4;
       }
     }
+
     .frame {
       position: absolute;
       height: 48px;
@@ -136,57 +103,45 @@ const displayGCD = Number(
       //src有值之前隐藏默认img灰色边框
       opacity: 0;
     }
+
     &.action .frame,
     &.mount .frame {
       top: 1px;
       content: url(@/assets/frame.png);
       opacity: 1;
     }
+
     &.item .frame {
       content: url(@/assets/item_icon_frame.png);
       opacity: 1;
     }
+
     &.itemHQ .frame {
       content: url(@/assets/item_icon_frame.png);
       opacity: 1;
-    }
-    .action-icon {
-      position: absolute;
     }
   }
 
   //自动攻击
   .action-category-1 {
-    transform: scale(0.25);
-    transform-origin: top;
     top: 0px;
+
+    img {
+      transform: scale(0.25);
+      transform-origin: top;
+    }
+
     &.displayAA0 {
       display: none;
     }
   }
-  .GCDCast {
-    display: none;
-    z-index: 20;
-  }
+
   //魔法 战技 特殊技能 弩炮
-  .action-category-2,
-  .action-category-3,
-  .action-category-13,
-  .action-category-17 {
-    transform: none;
-    .GCDCast {
-      display: inline-block;
-      color: whitesmoke;
-      font-family: monospace;
-      transform: translateY(30px);
-      text-shadow: -1px 0 1px #000, 0 1px 1px #000, 1px 0 1px #000,
-        0 -1px 1px #000;
-      font-size: 12px;
-      &.wasted {
-        color: yellow;
-      }
-    }
-  }
+  // .action-category-2,
+  // .action-category-3,
+  // .action-category-13,
+  // .action-category-17 {
+  // }
 
   //能力 道具 采集能力 制作能力 任务 极限技 系统 系统 坐骑 道具操作 极限技 action的道具 action的道具HQ
   .action-category-4,
@@ -202,7 +157,14 @@ const displayGCD = Number(
   .action-category-15,
   .item,
   .itemHQ {
-    transform: translateY(-15px) scale(0.8);
+    img {
+      transform: translateY(-15px) scale(0.8);
+      transform-origin: top;
+    }
+  }
+
+  .hide {
+    opacity: 0 !important;
   }
 }
 </style>

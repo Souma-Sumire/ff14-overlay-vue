@@ -9,6 +9,8 @@ const siteList = {
   xivapi: 'xivapi.com',
 }
 
+export const hostCache = new Map()
+
 export const site: { first: string, second: string } = {
   first: `https://${api?.toLowerCase() === 'xivapi' ? siteList.xivapi : siteList.cafe}`,
   second: `https://${api?.toLowerCase() === 'xivapi' ? siteList.cafe : siteList.xivapi}`,
@@ -50,14 +52,18 @@ localStorage.setItem(ACTION_CACHE_KEY, JSON.stringify(updatedActionData))
 const ICON_REGEX = /(\d{6})\/(\d{6})\.png$/
 
 export async function parseAction(
-  type: 'item' | 'action' | 'mount' | string,
+  type: string,
   actionId: number,
   columns: (keyof XivApiJson)[] = ['ID', 'Icon', 'ActionCategoryTargetID'],
-): Promise<XivApiJson> {
+): Promise<any> {
+  if (hostCache.has(actionId)) {
+    return hostCache.get(actionId)
+  }
   const urls = generateActionUrls(type, actionId, columns)
   try {
-    const response = await requestPromise(urls, { mode: 'cors' })
-    return await response.json() as XivApiJson
+    const result = await requestPromise(urls, { mode: 'cors' })
+    hostCache.set(actionId, result)
+    return result
   }
   catch (error) {
     console.error(`Failed to parse action: ${error}`)
@@ -65,7 +71,7 @@ export async function parseAction(
       ActionCategoryTargetID: 0,
       ID: actionId,
       Icon: '/i/000000/000405.png',
-    } as XivApiJson)
+    })
   }
 }
 
@@ -112,16 +118,12 @@ export async function getActionByChineseName(name: string) {
     return cachedAction.action
 
   try {
-    const response = await requestPromise([
+    const result = await requestPromise([
       `https://${siteList.cafe
       }/search?filters=ClassJobLevel>0&indexes=action&string=${encodeURIComponent(
         name,
       )}`,
     ])
-
-    const searchData = await response.json()
-
-    const result = searchData.Results?.[0]
 
     if (result) {
       const expirationTime = Date.now() + cacheExpirationTime.random
@@ -161,17 +163,18 @@ async function timeoutPromise<T>(
 async function requestPromise(
   urls: string[],
   options?: RequestInit,
-): Promise<Response> {
+): Promise<any> {
   const _options = Object.assign({ cache: 'force-cache' }, options)
   for (const url of urls) {
     try {
       const response = await timeoutPromise(fetch(url, _options), 3000)
-      if (response.ok)
-        return response
+      if (response.ok) {
+        const json = await response.json()
+        const host = new URL(url).host
+        return { ...json, Host: host }
+      }
     }
-    catch (err) {
-      console.error(`Failed to fetch ${url}: ${err}`)
-    }
+    catch {}
   }
   throw new Error('All fetch attempts failed.')
 }

@@ -16,14 +16,13 @@ const tableData: Menu[] = [
     title: '[悬浮窗] 减伤监控2',
     type: '悬浮窗/网页',
     path: 'keigennRecord2',
-    comment: '<a href="https://nga.178.com/read.php?tid=28047277">更多说明</a>',
+    comment: '可以添加到 ACT 悬浮窗中用于实时监控。也可以在浏览器中打开，导入日志分析过往记录',
     src: 'keigennRecord2.webp',
   },
   {
     title: '[悬浮窗] 施法监控',
     type: '悬浮窗',
     path: 'castingMonitor?duration=25&energySaving=true&displayAA=false&displayGCDSpace=false&api=cafemaker&syncFocusWS=true&showHeader=true',
-    comment: '<a href="https://nga.178.com/read.php?tid=33989985">更多说明</a>',
     src: 'castingMonitor.webp',
   },
   {
@@ -75,7 +74,7 @@ const tableData: Menu[] = [
     title: '[悬浮窗] 职业增强：舞者',
     type: '悬浮窗',
     path: 'jobs/dnc',
-    comment: '在技能上显示buff消失倒计时',
+    comment: '在技能上显示buff消失倒计时，防止你丢失触发。仅包含6.X技能。7.0舞者过于蠢，我不玩了',
     src: 'dnc.webp',
   },
   {
@@ -94,7 +93,7 @@ const tableData: Menu[] = [
     title: '[悬浮窗] 6.X 占星一键发卡',
     type: '悬浮窗',
     path: 'okASTCard',
-    comment: '即将在国服 7.0 更新后删除',
+    comment: '不再维护，即将在国服 7.0 更新后删除',
   },
   {
     title: '[悬浮窗] 一键舞步',

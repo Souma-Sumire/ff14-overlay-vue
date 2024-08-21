@@ -20,21 +20,25 @@ onMounted(() => {
   })
   // startOverlayEvents();
 })
-const show = ref(false)
+// const show = ref(false)
+// setInterval(() => {
+//   show.value
+//     = Date.now() - castingMonitorStore.lastPush
+//     < castingMonitorStore.config.duration * 2 * 1000
+// }, 1000)
+
 setInterval(() => {
-  show.value
-    = Date.now() - castingMonitorStore.lastPush
-    < castingMonitorStore.config.duration * 2 * 1000
+  castingMonitorStore.cleanUpExpired()
 }, 1000)
 </script>
 
 <template>
-  <div v-show="show" class="common-layout">
+  <div class="common-layout">
     <el-container items-center>
       <el-header class="header-layout">
         <casting-monitor-header />
       </el-header>
-      <el-main p-0>
+      <el-main>
         <casting-monitor-main />
       </el-main>
     </el-container>
@@ -71,6 +75,9 @@ setInterval(() => {
   left: 0;
   top: 0;
   background-color: rgba($color: #000000, $alpha: 0.2);
+  :deep(.el-main){
+    padding:0;
+  }
 }
 .common-layout :hover {
   ::v-deep(.header-layout .job-lists) {

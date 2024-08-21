@@ -2,7 +2,7 @@ import type { Party } from 'cactbot/types/event'
 import { defineStore } from 'pinia'
 import { callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 import Util from '@/utils/util'
-import { getFullImgSrc, parseAction, site } from '@/utils/xivapi'
+import { getFullImgSrc, hostCache, parseAction, site } from '@/utils/xivapi'
 
 const params = new URLSearchParams(window.location.href.split('?')[1])
 
@@ -12,6 +12,7 @@ const THNSort = ['tank', 'healer', 'dps', 'crafter', 'gatherer', 'none']
 //   24297, 24298, 24299, 24300, 24301, 24302, 24303, 24304, 24305, 24306, 24307,
 //   24309, 24310, 24311, 24312, 24313, 24315, 24316, 24317, 24318,
 // ];
+
 const testActions = [
   34563,
   34564,
@@ -37,9 +38,17 @@ const testActions = [
 export const useCastingMonitorStore = defineStore('castingMonitor', {
   state: () => {
     return {
-      castData: reactive({} as Record<string, Cast[]>),
-      playerId: ref(''),
-      focusTargetId: ref(''),
+      castData: [] as {
+        casterId: string
+        src: string
+        time: number
+        expirationTime: number
+        class: string
+        key: string
+        logLine: number
+      }[],
+      playerId: '',
+      focusTargetId: '',
       partyData: [] as {
         id: string
         name: string
@@ -48,9 +57,9 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
         src: string
       }[],
       config: {
-        duration: Number(params.get('duration') || 25),
+        duration: Number(params.get('duration') || 15),
       },
-      lastPush: Date.now(),
+      // lastPush: Date.now(),
     }
   },
   getters: {
@@ -63,7 +72,7 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
       })
     },
     focusTargetCastArr(state) {
-      return state.castData?.[state.focusTargetId] ?? []
+      return state.castData.filter(v => v.casterId === state.focusTargetId)
     },
   },
   actions: {
@@ -174,23 +183,15 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
     async pushAction(
       time: number,
       logLine: number,
-      abilityName: 'item' | 'action' | 'mount' | string,
+      abilityName: string,
       casterId: string,
       abilityId: number,
       cast1000Ms?: number,
     ): Promise<void> {
-      const energySaving = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(
-        params.get('energySaving') || '',
-      )
-      let abiId = abilityId
       if (
-        (this.partyData.length === 0 && casterId === this.playerId)
-        || (energySaving && casterId === this.focusTargetId)
-        || (!energySaving
-        && this.partyData.length > 0
-        && this.partyData.find(v => v.id === casterId))
-      ) {
-        let queryType: string
+        (this.partyData.length === 0 && casterId === this.playerId) || (this.partyData.length > 0 && casterId === this.focusTargetId)) {
+        let abiId = abilityId
+        let queryType: string = 'action'
         let itemIsHQ = false
         // if (/^(?:item|mount)_/.test(abilityName)) {
         if (abilityName.startsWith('item_')) {
@@ -206,76 +207,49 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
           // queryType = abilityName.replace(/_.+$/, '') as 'item' | 'mount'
           queryType = abilityName.replace(/_.+$/, '') as 'mount'
         }
-        else {
-          queryType = 'action'
-        }
-        if (!this.castData[casterId])
-          this.castData[casterId] = []
-        const key = Symbol('cast')
-        this.castData[casterId].push({
+        const key = `${time}-${logLine}-${casterId}-${abilityId}`
+        const cast = {
+          casterId,
           time,
+          expirationTime: Date.now() + this.config.duration * 1000,
           logLine,
           src: '',
           class: '',
           key,
-          APIData: {},
-        })
-        this.lastPush = Date.now()
-        const cast = this.castData[casterId].find(v => v.key === key)
-        if (!cast)
-          return
-        setTimeout(
-          () => {
-            this.castData[casterId]?.splice(
-              this.castData[casterId].indexOf(cast),
-              1,
-            )
-          },
-          (cast1000Ms || this.config.duration) * 1000,
-        )
+        }
+        const cache = hostCache.get(abiId)
+        if (cache) {
+          cast.src = `//${cache.Host}${cache.Icon}`
+        }
+        this.castData.push(cast)
+        if (logLine === 14 && cast1000Ms) {
+          setTimeout(
+            () => {
+              this.castData = this.castData.filter(v => v.key !== key)
+            },
+            cast1000Ms * 1000 - 500,
+          )
+        }
         if (abilityName.startsWith('unknown_')) {
           cast.src = `${site.first}/i/000000/000405.png`
           cast.class = 'action action-category-0'
         }
-        else {
-          if (abiId < 100000) {
-            const action = await parseAction(queryType, abiId, [
-              'ID',
-              'Icon',
-              'ActionCategoryTargetID',
-              'Name',
-              'Description',
-            ])
-            if (action.ID === 3) {
-              // 疾跑(冲刺)
-              action.Icon = '/i/000000/000104.png'
-            }
-            cast.APIData = action
-            cast.src = await getFullImgSrc(action?.Icon ?? '', itemIsHQ)
-            if (queryType === 'action')
-              cast.class = `action action-category-${action?.ActionCategoryTargetID}`
-            else if (queryType === 'item')
-              cast.class = `item${itemIsHQ ? 'HQ' : ''}`
-            else if (queryType === 'mount')
-              cast.class = 'mount'
-
-            if (
-              action.ActionCategoryTargetID === 2
-              || action.ActionCategoryTargetID === 3
-            ) {
-              const lastCast = this.castData[casterId]
-                .filter(
-                  v =>
-                    /action-category-[23]/.test(v.class) && v.logLine !== 14,
-                )
-                .at(-2)
-              if (lastCast) {
-                cast.GCDCast = ((cast.time - lastCast.time) / 1000).toFixed(2)
-                if (Number.parseFloat(cast.GCDCast) >= 2.55)
-                  cast.GCDClass = 'wasted'
-              }
-            }
+        else if (abiId < 100000) {
+          const action = cache || await parseAction(queryType, abiId, [
+            'ID',
+            'Icon',
+            'ActionCategoryTargetID',
+          ])
+          if (action.ID === 3) {
+            // 疾跑(冲刺)
+            action.Icon = '/i/000000/000104.png'
           }
+          if (!cache)
+            cast.src = await getFullImgSrc(action?.Icon ?? '', itemIsHQ)
+          if (queryType === 'action')
+            cast.class = `action action-category-${action?.ActionCategoryTargetID}`
+          else if (queryType === 'mount')
+            cast.class = 'mount'
         }
       }
     },
@@ -288,7 +262,7 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
     handleLogLine(e: { line: string[] }): void {
       if (e.line[0] === '20') {
         void this.pushAction(
-          Date.parse(e.line[1]),
+          Date.now(),
           14,
           e.line[5],
           e.line[2],
@@ -298,7 +272,7 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
       }
       else if (e.line[0] === '21' || (e.line[0] === '22' && e.line[45] === '0')) {
         void this.pushAction(
-          Date.parse(e.line[1]),
+          Date.now(),
           15,
           e.line[5],
           e.line[2],
@@ -348,6 +322,9 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
           },
         })
       }
+    },
+    cleanUpExpired(): void {
+      this.castData = this.castData.filter(v => v.expirationTime > Date.now())
     },
   },
 })
