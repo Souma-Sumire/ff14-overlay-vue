@@ -363,14 +363,7 @@ export const useMacroStore = defineStore('macro', {
             place,
             slotIndex.value as Slot,
           )
-          doQueueActions([
-            {
-              c: 'DoTextCommand',
-              p: `/waymark preset ${slotIndex.value}`,
-              d: 1500,
-            },
-          ])
-          ElMessage.success(`插槽${slotIndex.value}已设置并标记`)
+          ElMessage.success(`已尝试写入至插槽${slotIndex.value}`)
         })
         .catch(() => { })
     },
