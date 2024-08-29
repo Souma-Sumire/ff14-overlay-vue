@@ -310,7 +310,18 @@ export const useMacroStore = defineStore('macro', {
       json.Name = macro.Name
       const clipboard = new ClipboardJS('.export', {
         text: () => {
-          return JSON.stringify(json)
+          return JSON.stringify({
+            Name: json.Name,
+            MapID: json.MapID,
+            A: json.A,
+            B: json.B,
+            C: json.C,
+            D: json.D,
+            One: json.One,
+            Two: json.Two,
+            Three: json.Three,
+            Four: json.Four,
+          })
         },
       })
       clipboard.on('success', () => {

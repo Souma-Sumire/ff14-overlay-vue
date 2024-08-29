@@ -19,9 +19,7 @@ import zoneInfo from '@/resources/zoneInfo'
 import { useMacroStore } from '@/store/macro'
 import 'github-markdown-css/github-markdown-light.css'
 import actWS from '@/assets/actWS.webp'
-import README from '@/common/markdown/zoneMacro.md'
 
-const [help, toggleHelp] = useToggle(false)
 const macroStore = useMacroStore()
 const hideOnStartup = useStorage('zoneMacroHideOnStartup', ref(false))
 if (hideOnStartup.value)
@@ -56,10 +54,11 @@ const usedZoneInfo = [
   ...preSortZoneInfo.filter(v => v.contentType === undefined || !showContentTypes.includes(v.contentType)),
 ]
 
+const websocketConnected = ref(false)
+
 async function onLoad() {
-  let websocketConnected = false
   if (window.location.href.indexOf('OVERLAY_WS') > 0) {
-    websocketConnected = await Promise.race<Promise<boolean>>([
+    websocketConnected.value = await Promise.race<Promise<boolean>>([
       new Promise<boolean>((res) => {
         void callOverlayHandler({ call: 'cactbotRequestState' }).then(() => {
           res(true)
@@ -71,7 +70,7 @@ async function onLoad() {
         }, 1000)
       }),
     ])
-    if (!websocketConnected) {
+    if (!websocketConnected.value) {
       ElMessageBox.alert(
         `请先启动ACT，再打开此页面<img src='${actWS}' style='width:100%'>`,
         '未检测到ACT连接',
@@ -169,7 +168,6 @@ onMounted(() => {
     </el-header>
     <el-main style="padding: 0.25rem;margin:0">
       <el-space
-        v-show="!help"
         wrap
         alignment="flex-start"
         style="font-size: 12px"
@@ -393,12 +391,9 @@ onMounted(() => {
           </div>
         </el-card>
       </el-space>
-      <el-card v-show="help" class="markdown-body">
-        <README />
-      </el-card>
     </el-main>
-    <div class="menu">
-      <el-button size="small" @click="macroStore.toggleShow()">
+    <div class="menu" :class="websocketConnected ? 'websocketConnected' : 'websocketDisconnected'">
+      <el-button v-if="!websocketConnected" size="small" @click="macroStore.toggleShow()">
         隐藏页面
       </el-button>
       <el-button type="success" size="small" @click="macroStore.newOne('macro')">
@@ -421,14 +416,10 @@ onMounted(() => {
       <el-button type="danger" size="small" @click="macroStore.resetAllData()">
         恢复全部
       </el-button>
-      <!-- <el-button type="success" size="small" @click="macroStore.updateZone()">数据更新</el-button> -->
-      <el-button size="small" @click="toggleHelp()">
-        查看帮助
-      </el-button>
-      <form bg-white style="font-size: 12px">
+      <form v-if="!websocketConnected" bg-white style="font-size: 12px">
         <el-switch v-model="hideOnStartup" size="small" />默认最小化
       </form>
-      <i class="vxe-icon-arrow-down">菜单</i>
+      <i v-if="!websocketConnected" class="vxe-icon-arrow-down">菜单</i>
     </div>
   </el-container>
 </template>
@@ -496,14 +487,16 @@ body {
   position: fixed;
   top: 0;
   right: 0;
-  transform: translateY(calc(-100% + 1rem));
-  opacity: 0.5;
-  z-index: 100;
-  &:hover {
-    transform: translateY(0);
-    opacity: 1;
-    [class*="vxe-"] {
-      opacity: 0;
+  &.websocketDisconnected{
+    transform: translateY(calc(-100% + 1rem));
+    opacity: 0.5;
+    z-index: 100;
+    &:hover {
+      transform: translateY(0);
+      opacity: 1;
+      [class*="vxe-"] {
+        opacity: 0;
+      }
     }
   }
   .el-button {
