@@ -6732,6 +6732,32 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     1196: [
       {
+        Name: getSource('莫古力攻略组', 'https://www.bilibili.com/video/BV1CApeeEEGd/'),
+        Text: `/p ■游龙绕场旋转(月环)         | ■嘴部发光(扇形)
+/p ＆火阶段雷分散&冰上雷下 |    MT/D1 ／＼ST/D2
+/p  MT/D1　ST/D2            　| H1/D3／　  　＼H2/D4
+/p  H1/D3　H2/D4
+/p  ■举起双爪(钢铁)
+/p  H1/D3　MT/D1　ST/D2　H2/D4
+/p  ■山火坦克踩塔 奇数:MT　偶数:ST
+/p  ■小怪阶段直线分摊&火雷阶段分摊
+/p  西：MTH1D1D3　东：STH2D2D4
+/p  ■冰阶段开场
+/p 大圈：西北 MT        东北 ST
+/p 分摊:西H1D1D3　东H2D2D4`,
+      },
+      { Name: getSource('MMW攻略组', `https://www.bilibili.com/video/BV1G7pEe9E5Z`), Text: `/p ■环分摊/冰雷分散 |■扇形分摊
+/p MT/D1　ST/D2 　|　MT/D1／＼ST/D2
+/p H1/D3　H2/D4　 |H1/D3／　　＼H2/D4
+/p ■远离分摊
+/p H1/D3　MT/D1　ST/D2　H2/D4
+/p ■死刑塔 奇数:MT　偶数:ST
+/p ■火雷灾祸分组分摊 + 小怪分组
+/p 左 MTH1D1D3　右 STH2D2D4
+/p ■冰灾祸死刑+分摊
+/p 左上 MT　右上 ST
+/p 分摊 左 H1D1D3　右 H2D2D4` },
+      {
         Name: 'Game8(ハムカツ式)',
         Text: `/p ■風 災禍（雷氷） |■口腔に魔力(扇)
 /p MT/D1　ST/D2 　|　MT/D1／＼ST/D2
@@ -7005,7 +7031,7 @@ fastPP(`{"Name":"Safespots for Clone Dash","MapID":990,"A":{"X":100.0,"Y":0.0,"Z
 // R4S
 fastPP(`{"Name":"Witch Hunt","MapID":992,"A":{"X":100.0,"Y":0.0,"Z":90.0,"ID":0,"Active":true},"B":{"X":110.0,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":110.0,"ID":2,"Active":true},"D":{"X":90.0,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":93.0,"Y":0.0,"Z":93.0,"ID":4,"Active":true},"Two":{"X":107.0,"Y":0.0,"Z":93.0,"ID":5,"Active":true},"Three":{"X":107.0,"Y":0.0,"Z":107.0,"ID":6,"Active":true},"Four":{"X":93.0,"Y":0.0,"Z":107.0,"ID":7,"Active":true}}`)
 // 艳翼蛇鸟
-fastPP(`{"Name":"莫古力","MapID":833,"A":{"X":92.5,"Y":0,"Z":92.5,"ID":0,"Active":true},"B":{"X":107.5,"Y":0,"Z":92.5,"ID":1,"Active":true},"C":{"X":81,"Y":0,"Z":94,"ID":3,"Active":true},"D":{"X":119,"Y":0,"Z":94,"ID":2,"Active":true},"One":{"X":95,"Y":0,"Z":95,"ID":4,"Active":true},"Two":{"X":105,"Y":0,"Z":95,"ID":5,"Active":true},"Three":{"X":95,"Y":0,"Z":105,"ID":6,"Active":true},"Four":{"X":105,"Y":0,"Z":105,"ID":7,"Active":true}}`)
+fastPP(`{"Name":"通用标点","MapID":833,"A":{"X":92.5,"Y":0,"Z":92.5,"ID":0,"Active":true},"B":{"X":107.5,"Y":0,"Z":92.5,"ID":1,"Active":true},"C":{"X":81,"Y":0,"Z":94,"ID":3,"Active":true},"D":{"X":119,"Y":0,"Z":94,"ID":2,"Active":true},"One":{"X":95,"Y":0,"Z":95,"ID":4,"Active":true},"Two":{"X":105,"Y":0,"Z":95,"ID":5,"Active":true},"Three":{"X":95,"Y":0,"Z":105,"ID":6,"Active":true},"Four":{"X":105,"Y":0,"Z":105,"ID":7,"Active":true}}`)
 // 佐拉加
 fastPP(`{"Name":"莫古力","MapID":996,"A":{"X":100,"Y":0,"Z":88,"ID":0,"Active":true},"B":{"X":112,"Y":0,"Z":100,"ID":1,"Active":true},"C":{"X":100,"Y":0,"Z":112,"ID":2,"Active":true},"D":{"X":88,"Y":0,"Z":100,"ID":3,"Active":true},"One":{"X":0,"Y":0,"Z":0,"ID":4,"Active":false},"Two":{"X":0,"Y":0,"Z":0,"ID":5,"Active":false},"Three":{"X":0,"Y":0,"Z":0,"ID":6,"Active":false},"Four":{"X":0,"Y":0,"Z":0,"ID":7,"Active":false}}`)
 
