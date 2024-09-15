@@ -896,12 +896,13 @@ function cleanUpExpiredData(): Promise<void> {
   })
 }
 
+// 手动维护分线数
 function getInstanceLengthByZoneId(zoneId: ZoneIdType): LegalInstance {
   const maxInsByData = Math.max(...monstersData.value.filter(item => item.zoneId === zoneId).map(item => item.instance))
   return Math.max(maxInsByData, (() => {
     if (server.value === 'Global') {
       switch (zoneId) {
-      // 7.0
+      // 国际服 7.0
         case ZoneId.Urqopacha:
         case ZoneId.Kozamauka:
         case ZoneId.YakTel:
@@ -913,13 +914,14 @@ function getInstanceLengthByZoneId(zoneId: ZoneIdType): LegalInstance {
           return 1
       }
     }
+
     switch (zoneId) {
-    // 7.0
+    // 国服 7.0
       case ZoneId.Urqopacha:
       case ZoneId.Kozamauka:
       case ZoneId.YakTel:
-        return 6
       case ZoneId.Shaaloani:
+        return 6
       case ZoneId.HeritageFound:
       case ZoneId.LivingMemory:
         return 3
