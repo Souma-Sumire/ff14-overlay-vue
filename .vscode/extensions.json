@@ -1,7 +1,6 @@
 {
   "recommendations": [
     "dbaeumer.vscode-eslint",
-    "antfu.vite",
     "antfu.unocss",
     "vue.volar"
   ]
