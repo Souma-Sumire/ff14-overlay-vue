@@ -43,9 +43,10 @@ const GMAE_VERSION = {
 }
 
 type GameVersion = keyof typeof GMAE_VERSION
-type FilterType = '1-3' | '4-6' | '1' | '2' | '3' | '4' | '5' | '6'
+type FilterType = '1-3' | '4-6' | '1' | '2' | '3' | '4' | '5' | '6' | '1-2'
 type ZoneIdType = typeof zoneList[number]
-type LegalInstance = 1 | 3 | 6
+type LegalInstance = 1 | 2 | 3 | 6
+type Server = 'Global' | 'CN'
 
 // 将来追加地图时，在zoneList添加新的zoneId，在zoneInstanceLength中添加对应的分线数量，在getZoneGameVersion中添加对应的游戏版本
 
@@ -85,40 +86,6 @@ const zoneList = [
 ]
 
 const zoneListUsed = ref([] as typeof zoneList)
-
-const zoneInstanceLength: Record<ZoneIdType, LegalInstance> = {
-  // 7.0
-  [ZoneId.Urqopacha]: 3,
-  [ZoneId.Kozamauka]: 3,
-  [ZoneId.YakTel]: 3,
-  [ZoneId.Shaaloani]: 3,
-  [ZoneId.HeritageFound]: 3,
-  [ZoneId.LivingMemory]: 3,
-
-  //  6.0
-  [ZoneId.Labyrinthos]: 3,
-  [ZoneId.Thavnair]: 3,
-  [ZoneId.Garlemald]: 3,
-  [ZoneId.MareLamentorum]: 3,
-  [ZoneId.Elpis]: 3,
-  [ZoneId.UltimaThule]: 3,
-
-  // 5.0
-  [ZoneId.AmhAraeng]: 3,
-  [ZoneId.IlMheg]: 3,
-  [ZoneId.Kholusia]: 3,
-  [ZoneId.Lakeland]: 3,
-  [ZoneId.TheRaktikaGreatwood]: 3,
-  [ZoneId.TheTempest]: 3,
-
-  // 4.0
-  [ZoneId.TheFringes]: 3,
-  [ZoneId.TheRubySea]: 3,
-  [ZoneId.ThePeaks]: 3,
-  [ZoneId.Yanxia]: 3,
-  [ZoneId.TheLochs]: 3,
-  [ZoneId.TheAzimSteppe]: 3,
-}
 
 function getZoneGameVersion(zoneId: ZoneIdType): GameVersion {
   switch (zoneId) {
@@ -170,6 +137,7 @@ function getSrc(_gameVersion: GameVersion, id: string): string {
 // agree first is default
 const filterValue: Record<LegalInstance, FilterType[]> = {
   1: ['1'],
+  2: ['1-2', '1', '2'],
   3: ['1-3', '1', '2', '3'],
   6: ['1-3', '4-6', '1', '2', '3', '4', '5', '6'],
 }
@@ -195,6 +163,7 @@ const COLOR_STYLE = {
   '--ins6-color': `rgba(${INS_BG_COLOR[2]},0.4)`,
 }
 
+const server = useStorage('souma-hunt-server', 'Global' as Server)
 const IMG_RAW_SIZE = 2048
 const IMG_SHOW_SIZE = 596
 const INSTANCE_STRING = ''
@@ -204,17 +173,17 @@ const playerInstance = ref(-1)
 const DEV_MODE = window.location.hostname === 'localhost' as const
 const nameToHuntEntry: Record<string, HuntEntry> = {}
 const mergedByOtherNodes = new Set<string>()
-const zoneFilter = Object.fromEntries(zoneList.map(zoneId => [zoneId, filterValue[zoneInstanceLength[zoneId]]])) as Record<ZoneIdType, FilterType[]>
 const websocketConnected = ref(false)
 const gameVersion = useStorage('souma-hunt-game-version', '7.0' as GameVersion)
 const allMonstersData = useStorage('souma-hunt-monsters-2', [] as DiscoveredMonsters)
 const monstersData = computed(() => {
   return allMonstersData.value.filter(v => (zoneListUsed.value.filter(z => getZoneGameVersion(z) === gameVersion.value)).includes(v.zoneId as ZoneIdType))
 })
+const zoneFilter = Object.fromEntries(zoneList.map(zoneId => [zoneId, filterValue[getInstanceLengthByZoneId(zoneId)]])) as Record<ZoneIdType, FilterType[]>
 const showNumber = useStorage('souma-hunt-show-number', true)
 const playSound = useStorage('souma-hunt-play-sound', false)
 const soundVolume = useStorage('souma-hunt-sound-volume', 0.2)
-const filterConfig = ref(Object.fromEntries(zoneList.map(zoneId => [zoneId, filterValue[zoneInstanceLength[zoneId]][0]])) as Record<ZoneIdType, FilterType>)
+const filterConfig = ref(Object.fromEntries(zoneList.map(zoneId => [zoneId, filterValue[getInstanceLengthByZoneId(zoneId)][0]])) as Record<ZoneIdType, FilterType>)
 const playerZoneId = useStorage('souma-hunt-zone-id', ref(-1))
 const savedInstance = useStorage('souma-hunt-save-instance', playerInstance.value)
 const usePostNamazu = useStorage('souma-hunt-use-post-namazu', false)
@@ -373,12 +342,18 @@ function checkImmediatelyMonster() {
 const handleChangeZone: EventMap['ChangeZone'] = (event) => {
   playerZoneId.value = event.zoneID
   checkImmediatelyMonster()
-  playerInstance.value = 0
+  playerInstance.value = 1
+}
+
+const handleChangePrimaryPlayer: EventMap['ChangePrimaryPlayer'] = (event) => {
+  server.value = /^[A-Z]\S+ [A-Z]\S+$/.test(event.charName) ? 'Global' : 'CN'
+  // eslint-disable-next-line no-console
+  console.log(`当前模式: ${server.value}`)
 }
 
 const handleLogLine: EventMap['LogLine'] = (event) => {
   // 如果当前zoneId不在ZONE_LIST中，则不处理
-  if (!zoneListUsed.value?.includes(playerZoneId.value as ZoneIdType)) {
+  if (!zoneList.includes(playerZoneId.value as ZoneIdType)) {
     return
   }
   if (event.line[0] === '00' && event.line[2] === '0039') {
@@ -396,6 +371,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
     const hunt = nameToHuntEntry[name.toLowerCase()]
     const rank = hunt?.rank
     if (hunt && rank === 'A') {
+      gameVersion.value = getZoneGameVersion(playerZoneId.value as ZoneIdType)
       const instance = playerInstance.value
       const timestamp = new Date().getTime()
       const id = event.line[2]
@@ -442,8 +418,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
       }
       mergeOverlapMonsters()
       updateWaymarks()
-      // eslint-disable-next-line no-console
-      console.debug(`find: ${name} in ${Map[playerZoneId.value as ZoneIdType].name.souma} ins${playerInstance.value},(${worldX}, ${worldY}, ${worldZ})`)
+      // console.debug(`find: ${name} in ${Map[playerZoneId.value as ZoneIdType].name.souma} ins${playerInstance.value},(${worldX}, ${worldY}, ${worldZ})`)
     }
   }
   else if (event.line[0] === '25') {
@@ -893,6 +868,12 @@ function getStyle(item: DiscoveredMonsters[number]): { [key: string]: string } {
 }
 
 function cleanUpExpiredData(): Promise<void> {
+  const before = allMonstersData.value.length
+  // 无提醒的清理超过24小时的怪物数据
+  allMonstersData.value = allMonstersData.value.filter(item => item.timestamp > 0 && item.timestamp > Date.now() - 1000 * 60 * 60 * 24)
+  if (before !== allMonstersData.value.length) {
+    ElMessage.info(`已清理${allMonstersData.value.length}条过期数据`)
+  }
   const monstersSorted = monstersData.value.toSorted((a, b) => b.timestamp - a.timestamp)
   const lastUpadateTime = monstersSorted.length > 0 ? monstersSorted[0].timestamp : 0
   return new Promise((resolve) => {
@@ -910,17 +891,42 @@ function cleanUpExpiredData(): Promise<void> {
             resolve(undefined)
           })
       }
-      else if (Date.now() - lastUpadateTime > 1000 * 60 * 60 * 24) {
-        // 上次更新时间距离现在超过24小时，直接清理数据
-        clearMonsterCurrentGameVerion()
-        ElMessage.info('已自动清理超过24小时的怪物数据')
-        resolve(undefined)
-      }
-      else {
-        resolve(undefined)
-      }
+      resolve(undefined)
     }
   })
+}
+
+function getInstanceLengthByZoneId(zoneId: ZoneIdType): LegalInstance {
+  const maxInsByData = Math.max(...monstersData.value.filter(item => item.zoneId === zoneId).map(item => item.instance))
+  return Math.max(maxInsByData, (() => {
+    if (server.value === 'Global') {
+      switch (zoneId) {
+      // 7.0
+        case ZoneId.Urqopacha:
+        case ZoneId.Kozamauka:
+        case ZoneId.YakTel:
+        case ZoneId.Shaaloani:
+        case ZoneId.HeritageFound:
+        case ZoneId.LivingMemory:
+          return 3
+        default:
+          return 1
+      }
+    }
+    switch (zoneId) {
+    // 7.0
+      case ZoneId.Urqopacha:
+      case ZoneId.Kozamauka:
+      case ZoneId.YakTel:
+        return 6
+      case ZoneId.Shaaloani:
+      case ZoneId.HeritageFound:
+      case ZoneId.LivingMemory:
+        return 3
+      default:
+        return 1
+    }
+  })()) as LegalInstance
 }
 
 onMounted(async () => {
@@ -943,6 +949,7 @@ onMounted(async () => {
   await checkWebSocket()
   addOverlayListener('LogLine', handleLogLine)
   addOverlayListener('ChangeZone', handleChangeZone)
+  addOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
   ElMessageBox.close()
   await cleanUpExpiredData()
   if (DEV_MODE) {
@@ -967,6 +974,7 @@ onMounted(async () => {
         savedInstance.value = playerInstance.value
       })
   }
+
   watch(gameVersion, () => {
     cleanUpExpiredData()
   }, { immediate: false })
@@ -980,11 +988,16 @@ onMounted(async () => {
     </h3>
     <el-col>
       <el-row>
-        <el-form w-60>
-          <el-form-item label="切换资料片">
-            <el-select v-model="gameVersion" placeholder="请选择">
-              <el-option v-for="[value, label] in Object.entries(GMAE_VERSION)" :key="value" :label="label" :value="value" />
-            </el-select>
+        <el-form>
+          <el-form-item label="资料片">
+            <div flex w-70>
+              <el-select v-model="gameVersion" placeholder="请选择">
+                <el-option v-for="[value, label] in Object.entries(GMAE_VERSION)" :key="value" :label="label" :value="value" />
+              </el-select>
+              <div w-60 p-l-2>
+                分线方式：{{ server === 'Global' ? '国际服' : '国服' }}
+              </div>
+            </div>
           </el-form-item>
         </el-form>
       </el-row>
@@ -1010,7 +1023,7 @@ onMounted(async () => {
       <el-row>
         <el-checkbox v-model="showNumber" label="显示数字" w-15 />
         <el-checkbox v-model="playSound" label="启用音效" />
-        <div class="flex items-center" w-40 p-l-2>
+        <div v-show="playSound" class="flex items-center" p-l-2 w-40>
           <el-slider v-model="soundVolume" :min="0" :max="1" :step="0.1" size="small" class="flex-grow" />
           <el-button size="small" m-l-1 @click="doSound">
             试听
@@ -1051,19 +1064,21 @@ onMounted(async () => {
               本图导出
             </el-button>
           </li>
-          <li class="option">
-            <el-button v-show="!(zoneInstanceLength[m] <= 3 && filterConfig[m]?.includes('-'))" size="small" w-5em @click="oneMapInstanceClear(m)">
+          <li v-show="getInstanceLengthByZoneId(m) !== 1" class="option">
+            <el-button v-show="!(getInstanceLengthByZoneId(m) !== 1 && filterConfig[m]?.includes('-'))" size="small" w-5em @click="oneMapInstanceClear(m)">
               {{ filterConfig[m] }}线清空
             </el-button>
           </li>
-          <li class="option">
-            <el-button v-show="!(zoneInstanceLength[m] <= 3 && filterConfig[m]?.includes('-'))" size="small" w-5em @click="oneMapInstanceExport(m)">
+          <li v-show="getInstanceLengthByZoneId(m) !== 1" class="option">
+            <el-button v-show="!(getInstanceLengthByZoneId(m) !== 1 && filterConfig[m]?.includes('-'))" size="small" w-5em @click="oneMapInstanceExport(m)">
               {{ filterConfig[m] }}线导出
             </el-button>
           </li>
         </ul>
         <aside
-          class="map-filter" position-absolute style="top:2em;" ml-2 flex="~ justify-start"
+          v-show="getInstanceLengthByZoneId(m) !== 1"
+          class="map-filter" position-absolute style="top:2em;" ml-2
+          flex="~ justify-start"
           :style="{ width: `${IMG_SHOW_SIZE}px` }"
         >
           <el-radio-group v-model="filterConfig[m]" size="small" @change="mergeOverlapMonsters">
