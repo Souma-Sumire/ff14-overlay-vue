@@ -6,7 +6,7 @@ import HuntData, { type HuntEntry } from '../../cactbot/resources/hunt'
 import { addOverlayListener, callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 import sonar from '../../cactbot/resources/sounds/freesound/sonar.webm'
 import ZoneId from '../../cactbot/resources/zone_id'
-import { Vector2, getPixelCoordinates, getWorldCoordinates } from '@/utils/mapCoordinates'
+import { Vector2, getPixelCoordinates } from '@/utils/mapCoordinates'
 import zoneInfo from '@/resources/zoneInfo'
 import Map from '@/resources/map.json'
 import Aetherytes from '@/resources/aetherytes.json'
@@ -33,27 +33,138 @@ type DiscoveredMonsters = Array<{
   // gameMapY: number
 }>
 
+const GMAE_VERSION = {
+  '7.0': '7.0 金曦之遗辉',
+  '6.0': '6.0 晓月之终途',
+  '5.0': '5.0 暗影之逆焰',
+  '4.0': '4.0 红莲之狂潮',
+  // '3.0': '3.0 苍穹之禁城',
+  // '2.0': '2.0 重生之境',
+}
+
+type GameVersion = keyof typeof GMAE_VERSION
 type FilterType = '1-3' | '4-6' | '1' | '2' | '3' | '4' | '5' | '6'
 type ZoneIdType = typeof zoneList[number]
 type LegalInstance = 1 | 3 | 6
 
-// 将来追加地图时，在这里添加对应的zoneId，并且在zoneInstanceLength中添加对应的分线数量
+// 将来追加地图时，在zoneList添加新的zoneId，在zoneInstanceLength中添加对应的分线数量，在getZoneGameVersion中添加对应的游戏版本
+
+// 全部地图ID
 const zoneList = [
+  // 7.0
   ZoneId.Urqopacha,
   ZoneId.Kozamauka,
   ZoneId.YakTel,
   ZoneId.Shaaloani,
   ZoneId.HeritageFound,
   ZoneId.LivingMemory,
+
+  // 6.0
+  ZoneId.Labyrinthos,
+  ZoneId.Thavnair,
+  ZoneId.Garlemald,
+  ZoneId.MareLamentorum,
+  ZoneId.Elpis,
+  ZoneId.UltimaThule,
+
+  // 5.0
+  ZoneId.Lakeland,
+  ZoneId.AmhAraeng,
+  ZoneId.IlMheg,
+  ZoneId.Kholusia,
+  ZoneId.TheRaktikaGreatwood,
+  ZoneId.TheTempest,
+
+  // 4.0
+  ZoneId.TheFringes,
+  ZoneId.TheRubySea,
+  ZoneId.ThePeaks,
+  ZoneId.Yanxia,
+  ZoneId.TheLochs,
+  ZoneId.TheAzimSteppe,
 ]
 
+const zoneListUsed = ref([] as typeof zoneList)
+
 const zoneInstanceLength: Record<ZoneIdType, LegalInstance> = {
+  // 7.0
   [ZoneId.Urqopacha]: 3,
   [ZoneId.Kozamauka]: 3,
   [ZoneId.YakTel]: 3,
   [ZoneId.Shaaloani]: 3,
   [ZoneId.HeritageFound]: 3,
   [ZoneId.LivingMemory]: 3,
+
+  //  6.0
+  [ZoneId.Labyrinthos]: 3,
+  [ZoneId.Thavnair]: 3,
+  [ZoneId.Garlemald]: 3,
+  [ZoneId.MareLamentorum]: 3,
+  [ZoneId.Elpis]: 3,
+  [ZoneId.UltimaThule]: 3,
+
+  // 5.0
+  [ZoneId.AmhAraeng]: 3,
+  [ZoneId.IlMheg]: 3,
+  [ZoneId.Kholusia]: 3,
+  [ZoneId.Lakeland]: 3,
+  [ZoneId.TheRaktikaGreatwood]: 3,
+  [ZoneId.TheTempest]: 3,
+
+  // 4.0
+  [ZoneId.TheFringes]: 3,
+  [ZoneId.TheRubySea]: 3,
+  [ZoneId.ThePeaks]: 3,
+  [ZoneId.Yanxia]: 3,
+  [ZoneId.TheLochs]: 3,
+  [ZoneId.TheAzimSteppe]: 3,
+}
+
+function getZoneGameVersion(zoneId: ZoneIdType): GameVersion {
+  switch (zoneId) {
+    case ZoneId.Urqopacha:
+    case ZoneId.Kozamauka:
+    case ZoneId.YakTel:
+    case ZoneId.Shaaloani:
+    case ZoneId.HeritageFound:
+    case ZoneId.LivingMemory:
+      return '7.0'
+
+    case ZoneId.Labyrinthos:
+    case ZoneId.Thavnair:
+    case ZoneId.Garlemald:
+    case ZoneId.MareLamentorum:
+    case ZoneId.Elpis:
+    case ZoneId.UltimaThule:
+      return '6.0'
+
+    case ZoneId.AmhAraeng:
+    case ZoneId.IlMheg:
+    case ZoneId.Kholusia:
+    case ZoneId.Lakeland:
+    case ZoneId.TheRaktikaGreatwood:
+    case ZoneId.TheTempest:
+      return '5.0'
+
+    case ZoneId.TheFringes:
+    case ZoneId.TheRubySea:
+    case ZoneId.ThePeaks:
+    case ZoneId.Yanxia:
+    case ZoneId.TheLochs:
+    case ZoneId.TheAzimSteppe:
+      return '4.0'
+
+    default:
+      console.error(`unknown zoneId: ${zoneId}`)
+      return '4.0'
+  }
+}
+
+function getSrc(_gameVersion: GameVersion, id: string): string {
+  const result = `//souma.diemoe.net/m/${id.split('/')[0]}/${id.replace('/', '.')}.jpg`
+  // const result = `//xivapi.com/m/${id.split('/')[0]}/${id.replace('/', '.')}.jpg`
+  return result
+  // TODO: 目前咖啡cafemaker不提供maps的图片资源 Issues: https://github.com/thewakingsands/cafemaker/issues/15
 }
 
 // agree first is default
@@ -87,19 +198,23 @@ const COLOR_STYLE = {
 const IMG_RAW_SIZE = 2048
 const IMG_SHOW_SIZE = 596
 const INSTANCE_STRING = ''
-const waymarkKeys: WayMarkKeys[] = ['One', 'Two', 'Three', 'Four', 'A', 'B', 'C', 'D']
+const waymarkKeys: WayMarkKeys[] = ['One', 'Two', 'Three', 'Four', 'A', 'B', 'C', 'D'] as const
 const IMG_SCALE = IMG_SHOW_SIZE / IMG_RAW_SIZE
 const playerInstance = ref(-1)
-const inLocalHost = window.location.hostname === 'localhost'
+const DEV_MODE = window.location.hostname === 'localhost' as const
 const nameToHuntEntry: Record<string, HuntEntry> = {}
 const mergedByOtherNodes = new Set<string>()
 const zoneFilter = Object.fromEntries(zoneList.map(zoneId => [zoneId, filterValue[zoneInstanceLength[zoneId]]])) as Record<ZoneIdType, FilterType[]>
 const websocketConnected = ref(false)
-const monstersData = useStorage('souma-hunt-monsters-2', [] as DiscoveredMonsters)
+const gameVersion = useStorage('souma-hunt-game-version', '7.0' as GameVersion)
+const allMonstersData = useStorage('souma-hunt-monsters-2', [] as DiscoveredMonsters)
+const monstersData = computed(() => {
+  return allMonstersData.value.filter(v => (zoneListUsed.value.filter(z => getZoneGameVersion(z) === gameVersion.value)).includes(v.zoneId as ZoneIdType))
+})
 const showNumber = useStorage('souma-hunt-show-number', true)
 const playSound = useStorage('souma-hunt-play-sound', false)
 const soundVolume = useStorage('souma-hunt-sound-volume', 0.2)
-const filterConfig = useStorage('souma-hunt-filter-2', Object.fromEntries(zoneList.map(zoneId => [zoneId, filterValue[zoneInstanceLength[zoneId]][0]])) as Record<ZoneIdType, FilterType>)
+const filterConfig = ref(Object.fromEntries(zoneList.map(zoneId => [zoneId, filterValue[zoneInstanceLength[zoneId]][0]])) as Record<ZoneIdType, FilterType>)
 const playerZoneId = useStorage('souma-hunt-zone-id', ref(-1))
 const savedInstance = useStorage('souma-hunt-save-instance', playerInstance.value)
 const usePostNamazu = useStorage('souma-hunt-use-post-namazu', false)
@@ -263,7 +378,7 @@ const handleChangeZone: EventMap['ChangeZone'] = (event) => {
 
 const handleLogLine: EventMap['LogLine'] = (event) => {
   // 如果当前zoneId不在ZONE_LIST中，则不处理
-  if (!zoneList.includes(playerZoneId.value as ZoneIdType)) {
+  if (!zoneListUsed.value?.includes(playerZoneId.value as ZoneIdType)) {
     return
   }
   if (event.line[0] === '00' && event.line[2] === '0039') {
@@ -287,7 +402,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
       const worldX = Number(event.line[17])
       const worldY = Number(event.line[18])
       const worldZ = Number(event.line[19])
-      const exist = monstersData.value.find(item => item.id === event.line[2] && item.zoneId === playerZoneId.value && item.instance === instance)
+      const exist = allMonstersData.value.find(item => item.id === event.line[2] && item.zoneId === playerZoneId.value && item.instance === instance)
       if (exist) {
         // 已经添加过了，更新坐标，且不是合并的情况
         exist.timestamp = timestamp
@@ -297,7 +412,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
       }
       else {
         // 新添加
-        const monsters = monstersData.value.filter(item => item.zoneId === playerZoneId.value && item.instance === instance)
+        const monsters = allMonstersData.value.filter(item => item.zoneId === playerZoneId.value && item.instance === instance)
         // number等于 从1、2、3、4、5、6中寻找第一个不在 monsters 中存在的number
         let number = -1
         for (let i = 1; i <= 6; i++) {
@@ -310,7 +425,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
           console.error('找不到空闲的number')
           number = 0
         }
-        monstersData.value.push({
+        allMonstersData.value.push({
           timestamp,
           id,
           worldX,
@@ -333,7 +448,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
   }
   else if (event.line[0] === '25') {
     const id = event.line[2]
-    monstersData.value = monstersData.value.filter(item => item.id !== id)
+    allMonstersData.value = allMonstersData.value.filter(item => item.id !== id)
     mergeOverlapMonsters()
     updateWaymarks()
   }
@@ -394,24 +509,30 @@ async function sleep(time: number) {
   })
 }
 
-function test() {
+function clearMonsterCurrentGameVerion() {
+  allMonstersData.value = allMonstersData.value.filter((v) => {
+    return getZoneGameVersion(v.zoneId as ZoneIdType) !== gameVersion.value
+  })
+}
+
+function testMonster() {
   const scale = 2;
   (async () => {
-    monstersData.value = []
-    await addTestMonster(ZoneId.Urqopacha, 1, 30 * scale)
-    await addTestMonster(ZoneId.Urqopacha, 1, 30 * scale)
-    await addTestMonster(ZoneId.Urqopacha, 2, 30 * scale)
-    await addTestMonster(ZoneId.Urqopacha, 2, 30 * scale)
-    await addTestMonster(ZoneId.Urqopacha, 3, 90 * scale)
-    await addTestMonster(ZoneId.Urqopacha, 3, 90 * scale)
-    await addTestMonster(ZoneId.Urqopacha, 4, 120 * scale)
-    await addTestMonster(ZoneId.Urqopacha, 4, 120 * scale)
-    await addTestMonster(ZoneId.Urqopacha, 5, 150 * scale)
-    await addTestMonster(ZoneId.Urqopacha, 5, 150 * scale)
-    await addTestMonster(ZoneId.Urqopacha, 6, 180 * scale)
-    await addTestMonster(ZoneId.Urqopacha, 6, 180 * scale)
-    await addTestMonster(ZoneId.Kozamauka, 1, 60 * scale)
-    await addTestMonster(ZoneId.Kozamauka, 1, 60 * scale)
+    clearMonsterCurrentGameVerion()
+    await addTestMonster(zoneListUsed.value[0], 1, 30 * scale)
+    await addTestMonster(zoneListUsed.value[0], 1, 30 * scale)
+    await addTestMonster(zoneListUsed.value[0], 2, 30 * scale)
+    await addTestMonster(zoneListUsed.value[0], 2, 30 * scale)
+    await addTestMonster(zoneListUsed.value[0], 3, 90 * scale)
+    await addTestMonster(zoneListUsed.value[0], 3, 90 * scale)
+    await addTestMonster(zoneListUsed.value[0], 4, 120 * scale)
+    await addTestMonster(zoneListUsed.value[0], 4, 120 * scale)
+    await addTestMonster(zoneListUsed.value[0], 5, 150 * scale)
+    await addTestMonster(zoneListUsed.value[0], 5, 150 * scale)
+    await addTestMonster(zoneListUsed.value[0], 6, 180 * scale)
+    await addTestMonster(zoneListUsed.value[0], 6, 180 * scale)
+    await addTestMonster(zoneListUsed.value[1], 1, 60 * scale)
+    await addTestMonster(zoneListUsed.value[1], 1, 60 * scale)
   })()
   // setTimeout(() => {
   //   handleLogLine({ type: 'LogLine', rawLine: '', line: ['25', '', monsterIds[2]] })
@@ -446,7 +567,7 @@ function updateWaymarks() {
 function clearMonster() {
   // 二次确认
   ElMessageBox.confirm(
-    '确定要清空全部已发现的怪物吗？',
+    `确定要清空「${GMAE_VERSION[gameVersion.value as GameVersion]}」全部已发现的怪物吗？`,
     '全部清空',
     {
       confirmButtonText: '确定',
@@ -454,7 +575,7 @@ function clearMonster() {
       type: 'warning',
     },
   ).then(() => {
-    monstersData.value = []
+    clearMonsterCurrentGameVerion()
     clearFilter()
   })
 }
@@ -470,7 +591,7 @@ function oneMapInstanceClear(zoneId: number) {
       type: 'warning',
     },
   ).then(() => {
-    monstersData.value = monstersData.value.filter(item => !(item.zoneId === zoneId && item.instance === Number(instance)))
+    allMonstersData.value = allMonstersData.value.filter(item => !(item.zoneId === zoneId && item.instance === Number(instance)))
     mergeOverlapMonsters()
   })
 }
@@ -485,7 +606,7 @@ function oneMapClear(zoneId: ZoneIdType) {
       type: 'warning',
     },
   ).then(() => {
-    monstersData.value = monstersData.value.filter(item => item.zoneId !== zoneId)
+    allMonstersData.value = allMonstersData.value.filter(item => item.zoneId !== zoneId)
     filterConfig.value[zoneId] = zoneFilter[zoneId as ZoneIdType][0]
     mergeOverlapMonsters()
   })
@@ -609,7 +730,6 @@ function importStr() {
         return true
       }
       catch (error) {
-        // 为什么catch里不传参还会报错啊？？？
         void error
         return '数据格式错误'
       }
@@ -627,9 +747,7 @@ function importStr() {
     ).then(() => {
       const decompressedText = LZString.decompressFromEncodedURIComponent(value)
       const data = JSON.parse(decompressedText) as DiscoveredMonsters
-      // 过一段时间删除兼容性处理
-      compatibleOldVersions(data)
-      monstersData.value = data
+      allMonstersData.value = data
       mergeOverlapMonsters()
       ElMessageBox.close()
       ElNotification({
@@ -681,7 +799,7 @@ function importOneZoneStr() {
         targetMonsters.length === 0 ? Promise.resolve() : new Promise(() => {}),
       ],
     ).then(() => {
-      monstersData.value = [...monstersData.value.filter(item => item.zoneId !== data[0].zoneId), ...data]
+      allMonstersData.value = [...allMonstersData.value.filter(item => item.zoneId !== data[0].zoneId), ...data]
       mergeOverlapMonsters()
       ElMessageBox.close()
       ElNotification({
@@ -735,7 +853,7 @@ function importOneInstanceStr() {
         targetMonsters.length === 0 ? Promise.resolve() : new Promise(() => {}),
       ],
     ).then(() => {
-      monstersData.value = [...monstersData.value.filter(item => item.zoneId !== data[0].zoneId || item.instance !== data[0].instance), ...data]
+      allMonstersData.value = [...allMonstersData.value.filter(item => item.zoneId !== data[0].zoneId || item.instance !== data[0].instance), ...data]
       mergeOverlapMonsters()
       ElMessageBox.close()
       ElNotification({
@@ -774,49 +892,84 @@ function getStyle(item: DiscoveredMonsters[number]): { [key: string]: string } {
   }
 }
 
-function compatibleOldVersions(data: DiscoveredMonsters) {
-  data.forEach((item) => {
-    if (item.pixelX && item.pixelY) {
-      const zone = zoneInfo[item.zoneId]
-      const sizeFactor = zone.sizeFactor
-      const offsetX = zone.offsetX
-      const offsetY = zone.offsetY
-      const pixelCoordinates = new Vector2(item.pixelX, item.pixelY)
-      const mapOffset = new Vector2(offsetX, offsetY)
-      const worldCoordinates = getWorldCoordinates(pixelCoordinates, mapOffset, sizeFactor)
-      item.worldX = worldCoordinates.x
-      item.worldY = worldCoordinates.y
-      item.worldZ = 0
+function cleanUpExpiredData(): Promise<void> {
+  const monstersSorted = monstersData.value.toSorted((a, b) => b.timestamp - a.timestamp)
+  const lastUpadateTime = monstersSorted.length > 0 ? monstersSorted[0].timestamp : 0
+  return new Promise((resolve) => {
+    if (lastUpadateTime > 0) {
+      if (Date.now() - lastUpadateTime > 1000 * 60 * 60 * 4) {
+        // 上次更新时间距离现在超过4小时，提醒用户数据可能已经过期
+        ElMessageBox.confirm('尚存有4小时前的怪物数据，可能已经过期，是否清空？', '数据过期', {
+          confirmButtonText: '全部清空',
+          cancelButtonText: '取消',
+          type: '',
+        }).then(() => {
+          clearMonsterCurrentGameVerion()
+        }).catch(() => { })
+          .finally(() => {
+            resolve(undefined)
+          })
+      }
+      else if (Date.now() - lastUpadateTime > 1000 * 60 * 60 * 24) {
+        // 上次更新时间距离现在超过24小时，直接清理数据
+        clearMonsterCurrentGameVerion()
+        ElMessage.info('已自动清理超过24小时的怪物数据')
+        resolve(undefined)
+      }
+      else {
+        resolve(undefined)
+      }
     }
   })
-  mergeOverlapMonsters()
 }
 
 onMounted(async () => {
+  // 预加载音频文件，避免需要时才加载
+  watch(playSound, (value) => {
+    if (value) {
+      const audio = new Audio(sonar)
+      audio.volume = 0
+      audio.play()
+    }
+  }, { immediate: true })
+
+  watch(gameVersion, () => {
+    zoneListUsed.value = zoneList.filter(zoneId => getZoneGameVersion(zoneId) === gameVersion.value)
+  }, { immediate: true })
+
   if (monstersData.value.length === 0) {
     clearFilter()
   }
-  // 过一段时间删除兼容性处理
-  compatibleOldVersions(monstersData.value)
   await checkWebSocket()
   addOverlayListener('LogLine', handleLogLine)
   addOverlayListener('ChangeZone', handleChangeZone)
   ElMessageBox.close()
-  ElMessageBox.prompt('请切一次线，或者手动指定', '你在几线', {
-    confirmButtonText: '确认',
-    inputPattern: /^[1-6]$/,
-    inputErrorMessage: '只能输入1-6',
-    showCancelButton: false,
-    showClose: false,
-    closeOnClickModal: false,
-    closeOnPressEscape: false,
-    closeOnHashChange: false,
-    inputValue: (savedInstance.value > 0 ? savedInstance.value : 1).toString(),
-  })
-    .then(({ value }) => {
-      playerInstance.value = Number(value)
-      savedInstance.value = playerInstance.value
+  await cleanUpExpiredData()
+  if (DEV_MODE) {
+    ElMessage.success('处于开发模式下，默认选择1线')
+    playerInstance.value = 1
+    savedInstance.value = 1
+  }
+  else {
+    ElMessageBox.prompt('请切一次线，或者手动指定', '你在几线', {
+      confirmButtonText: '确认',
+      inputPattern: /^[1-6]$/,
+      inputErrorMessage: '只能输入1-6',
+      showCancelButton: false,
+      showClose: false,
+      closeOnClickModal: false,
+      closeOnPressEscape: false,
+      closeOnHashChange: false,
+      inputValue: (savedInstance.value > 0 ? savedInstance.value : 1).toString(),
     })
+      .then(({ value }) => {
+        playerInstance.value = Number(value)
+        savedInstance.value = playerInstance.value
+      })
+  }
+  watch(gameVersion, () => {
+    cleanUpExpiredData()
+  }, { immediate: false })
 })
 </script>
 
@@ -825,6 +978,17 @@ onMounted(async () => {
     <h3 v-if="!websocketConnected">
       无法连接到ACTWebSocket，找怪功能无法工作，但你可以导入导出数据。
     </h3>
+    <el-col>
+      <el-row>
+        <el-form w-60>
+          <el-form-item label="切换资料片">
+            <el-select v-model="gameVersion" placeholder="请选择">
+              <el-option v-for="[value, label] in Object.entries(GMAE_VERSION)" :key="value" :label="label" :value="value" />
+            </el-select>
+          </el-form-item>
+        </el-form>
+      </el-row>
+    </el-col>
     <el-col class="menu">
       <el-row>
         <el-button type="primary" @click="clearMonster">
@@ -844,7 +1008,7 @@ onMounted(async () => {
         </el-button>
       </el-row>
       <el-row>
-        <el-checkbox v-model="showNumber" label="显示数字" />
+        <el-checkbox v-model="showNumber" label="显示数字" w-15 />
         <el-checkbox v-model="playSound" label="启用音效" />
         <div class="flex items-center" w-40 p-l-2>
           <el-slider v-model="soundVolume" :min="0" :max="1" :step="0.1" size="small" class="flex-grow" />
@@ -853,27 +1017,30 @@ onMounted(async () => {
           </el-button>
         </div>
       </el-row>
-      <el-row p-l-5>
+      <el-row p-l-3>
         <el-checkbox v-model="usePostNamazu" label="场地标点(需要邮差)" />
       </el-row>
-      <el-row v-if="inLocalHost" p-l-5>
-        <el-button type="primary" @click="test">
-          测试怪物
+    </el-col>
+    <el-row class="map-container" flex="~ wrap" m-t-1>
+      <el-row v-if="DEV_MODE">
+        DEV：
+        <el-button type="warning" @click="testMonster">
+          添加怪物
         </el-button>
-        <el-button type="primary" @click="mergeOverlapMonsters">
-          测试合并
+        <el-button type="warning" @click="mergeOverlapMonsters">
+          合并怪物
         </el-button>
-        <el-button type="primary" @click="testPostnamazu">
-          测试邮差
+        <el-button type="warning" @click="testPostnamazu">
+          邮差标点
         </el-button>
       </el-row>
-    </el-col>
+    </el-row>
     <div class="map-container" flex="~ wrap">
-      <div v-for="(m, i) in zoneList" :key="m" class="map-info" flex="~ col" position-relative>
+      <div v-for="(m, i) in zoneListUsed" :key="m" class="map-info" flex="~ col" position-relative>
         <h3 class="map-title" :style="{ width: `${IMG_SHOW_SIZE}px` }" position-absolute mb-0 ml-2 mt-1 p0>
           {{ getMapName(m, i) }}
         </h3>
-        <ul class="options" position-absolute right-0 top-0 mr-2 mt-1 p0>
+        <ul class="options" position-absolute mt-1 p0 right-0 top-0 mr-2>
           <li class="option">
             <el-button size="small" w-5em @click="oneMapClear(m)">
               本图清空
@@ -885,12 +1052,12 @@ onMounted(async () => {
             </el-button>
           </li>
           <li class="option">
-            <el-button v-show="!(zoneInstanceLength[m] <= 3 && filterConfig[m].includes('-'))" size="small" w-5em @click="oneMapInstanceClear(m)">
+            <el-button v-show="!(zoneInstanceLength[m] <= 3 && filterConfig[m]?.includes('-'))" size="small" w-5em @click="oneMapInstanceClear(m)">
               {{ filterConfig[m] }}线清空
             </el-button>
           </li>
           <li class="option">
-            <el-button v-show="!(zoneInstanceLength[m] <= 3 && filterConfig[m].includes('-'))" size="small" w-5em @click="oneMapInstanceExport(m)">
+            <el-button v-show="!(zoneInstanceLength[m] <= 3 && filterConfig[m]?.includes('-'))" size="small" w-5em @click="oneMapInstanceExport(m)">
               {{ filterConfig[m] }}线导出
             </el-button>
           </li>
@@ -903,10 +1070,13 @@ onMounted(async () => {
             <el-radio-button v-for="item in zoneFilter[m]" :key="item" :label="item" :value="item" />
           </el-radio-group>
         </aside>
-        <div class="map-image">
+        <div
+          class="map-image"
+          :style="{ width: `${IMG_SHOW_SIZE}px`, height: `${IMG_SHOW_SIZE}px` }"
+        >
           <img
-            alt="map" :src="`//souma.diemoe.net/m/${Map[m].id.split('/')[0]}/${Map[m].id.replace('/', '.')}.jpg`"
-            :style="{ width: `${IMG_SHOW_SIZE}px` }"
+            alt="map" :src="getSrc(getZoneGameVersion(m), Map[m].id)"
+            :style="{ width: `${IMG_SHOW_SIZE}px`, height: `${IMG_SHOW_SIZE}px` }"
           >
 
           <div
