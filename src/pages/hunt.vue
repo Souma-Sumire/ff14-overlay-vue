@@ -702,6 +702,9 @@ function importStr() {
         if (!Array.isArray(data)) {
           return '数据格式错误'
         }
+        if (data.find(v => getZoneGameVersion(v.zoneId)) !== gameVersion.value) {
+          return `该字符串不属于「${GMAE_VERSION[gameVersion.value as GameVersion]}」，请检查`
+        }
         return true
       }
       catch (error) {
