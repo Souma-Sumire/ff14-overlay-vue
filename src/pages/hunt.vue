@@ -722,7 +722,8 @@ function importStr() {
     ).then(() => {
       const decompressedText = LZString.decompressFromEncodedURIComponent(value)
       const data = JSON.parse(decompressedText) as DiscoveredMonsters
-      allMonstersData.value = data
+      const otherGameVersion = allMonstersData.value.filter(v => getZoneGameVersion(v.zoneId as ZoneIdType) !== gameVersion.value)
+      allMonstersData.value = [...otherGameVersion, ...data]
       mergeOverlapMonsters()
       ElMessageBox.close()
       ElNotification({
