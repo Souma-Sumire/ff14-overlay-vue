@@ -176,20 +176,18 @@ const mergedByOtherNodes = new Set<string>()
 const websocketConnected = ref(false)
 const gameVersion = useStorage('souma-hunt-game-version', '7.0' as GameVersion)
 const allMonstersData = useStorage('souma-hunt-monsters-2', [] as DiscoveredMonsters)
-const monstersData = computed(() => {
-  return allMonstersData.value.filter(v => (zoneListUsed.value.filter(z => getZoneGameVersion(z) === gameVersion.value)).includes(v.zoneId as ZoneIdType))
-})
-const zoneFilter = Object.fromEntries(zoneList.map(zoneId => [zoneId, filterValue[getInstanceLengthByZoneId(zoneId)]])) as Record<ZoneIdType, FilterType[]>
+const monstersData = computed(() => allMonstersData.value.filter(v => (zoneListUsed.value.filter(z => getZoneGameVersion(z) === gameVersion.value)).includes(v.zoneId as ZoneIdType)))
+const zoneFilter = computed(() => Object.fromEntries(zoneList.map(zoneId => [zoneId, filterValue[getInstanceLengthByZoneId(zoneId)]])) as Record<ZoneIdType, FilterType[]>)
 const showNumber = useStorage('souma-hunt-show-number', true)
 const playSound = useStorage('souma-hunt-play-sound', false)
 const soundVolume = useStorage('souma-hunt-sound-volume', 0.2)
-const filterConfig = ref(Object.fromEntries(zoneList.map(zoneId => [zoneId, filterValue[getInstanceLengthByZoneId(zoneId)][0]])) as Record<ZoneIdType, FilterType>)
+const filterConfig = computed(() => (Object.fromEntries(zoneList.map(zoneId => [zoneId, filterValue[getInstanceLengthByZoneId(zoneId)][0]])) as Record<ZoneIdType, FilterType>))
 const playerZoneId = useStorage('souma-hunt-zone-id', ref(-1))
 const savedInstance = useStorage('souma-hunt-save-instance', playerInstance.value)
 const usePostNamazu = useStorage('souma-hunt-use-post-namazu', false)
 
 function zoneInstanceMax(zoneId: ZoneIdType): number {
-  return Math.max(...(zoneFilter[zoneId].filter(item => /^[1-6]$/.test(item)).map(item => Number(item)))) * 2
+  return Math.max(...(zoneFilter.value[zoneId].filter(item => /^[1-6]$/.test(item)).map(item => Number(item)))) * 2
 }
 
 for (const hunt of Object.values(HuntData)) {
@@ -582,14 +580,15 @@ function oneMapClear(zoneId: ZoneIdType) {
     },
   ).then(() => {
     allMonstersData.value = allMonstersData.value.filter(item => item.zoneId !== zoneId)
-    filterConfig.value[zoneId] = zoneFilter[zoneId as ZoneIdType][0]
+    filterConfig.value[zoneId] = zoneFilter.value[zoneId as ZoneIdType][0]
     mergeOverlapMonsters()
   })
 }
 
 function clearFilter() {
   for (const zoneId in filterConfig.value) {
-    filterConfig.value[zoneId as unknown as ZoneIdType] = zoneFilter[zoneId as unknown as keyof typeof zoneFilter][0]
+    const z = Number(zoneId)
+    filterConfig.value[z as ZoneIdType] = zoneFilter.value[z as ZoneIdType][0]
   }
 }
 
