@@ -746,7 +746,7 @@
     "placeName": {
       "en": "Wachunpelo",
       "ja": "ワチュン・ペロ",
-      "souma": "瓦钦佩罗"
+      "souma": "瓦丘恩佩洛"
     }
   },
   {
@@ -756,7 +756,7 @@
     "placeName": {
       "en": "Worlar's Echo",
       "ja": "ウォーラーの残響",
-      "souma": "沃勒尔的余响"
+      "souma": "沃拉的回响"
     }
   },
   {
@@ -766,7 +766,7 @@
     "placeName": {
       "en": "Ok'hanu",
       "ja": "オック・ハヌ",
-      "souma": "奥克·哈努"
+      "souma": "哈努聚落"
     }
   },
   {
@@ -786,7 +786,7 @@
     "placeName": {
       "en": "Earthenshire",
       "ja": "アースンシャイア",
-      "souma": "阿森夏"
+      "souma": "土陶郡"
     }
   },
   {
@@ -796,7 +796,7 @@
     "placeName": {
       "en": "Iq Br'aax",
       "ja": "イクブラーシャ",
-      "souma": "伊克布拉莎"
+      "souma": "红豹村"
     }
   },
   {
@@ -806,7 +806,7 @@
     "placeName": {
       "en": "Mamook",
       "ja": "マムーク",
-      "souma": "马姆克"
+      "souma": "玛穆克"
     }
   },
   {
@@ -816,7 +816,7 @@
     "placeName": {
       "en": "Hhusatahwi",
       "ja": "フーサタイ宿場町",
-      "souma": "福萨泰宿镇"
+      "souma": "胡萨塔伊驿镇"
     }
   },
   {
@@ -826,7 +826,7 @@
     "placeName": {
       "en": "Mehwahhetsoan",
       "ja": "メワヘイゾーン",
-      "souma": "梅瓦希区"
+      "souma": "美花黑泽恩"
     }
   },
   {
@@ -836,7 +836,7 @@
     "placeName": {
       "en": "Sheshenewezi Springs",
       "ja": "シェシェネ青燐泉",
-      "souma": "涩水青磷泉"
+      "souma": "谢申内青磷泉"
     }
   },
   {
@@ -856,7 +856,7 @@
     "placeName": {
       "en": "Electrope Strike",
       "ja": "エレクトロープ採石場",
-      "souma": "电气石采石场"
+      "souma": "雷转质矿场"
     }
   },
   {
@@ -866,7 +866,7 @@
     "placeName": {
       "en": "The Outskirts",
       "ja": "アウトスカーツ",
-      "souma": "外围地带"
+      "souma": "边郊镇"
     }
   },
   {
@@ -876,7 +876,7 @@
     "placeName": {
       "en": "Leynode Mnemo",
       "ja": "レイノード・メモリス",
-      "souma": "雷诺德·记忆"
+      "souma": "地场节点·忆"
     }
   },
   {
@@ -886,7 +886,7 @@
     "placeName": {
       "en": "Leynode Pyro",
       "ja": "レイノード・ファイア",
-      "souma": "雷诺德·火"
+      "souma": "地场节点·火"
     }
   },
   {
@@ -896,7 +896,7 @@
     "placeName": {
       "en": "Leynode Aero",
       "ja": "レイノード・ウィンド",
-      "souma": "雷诺德·风"
+      "souma": "地场节点·风"
     }
   }
 ]
