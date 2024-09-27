@@ -6732,7 +6732,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     1196: [
       {
-        Name: getSource('莫古力攻略组', 'https://www.bilibili.com/video/BV1CApeeEEGd/'),
+        Name: getSource('莫古力', 'https://www.bilibili.com/video/BV1CApeeEEGd/'),
         Text: `/p ■游龙绕场旋转(月环)         | ■嘴部发光(扇形)
 /p ＆火阶段雷分散&冰上雷下 |    MT/D1 ／＼ST/D2
 /p  MT/D1　ST/D2            　| H1/D3／　  　＼H2/D4
@@ -6746,7 +6746,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 大圈：西北 MT        东北 ST
 /p 分摊:西H1D1D3　东H2D2D4`,
       },
-      { Name: getSource('MMW攻略组', `https://www.bilibili.com/video/BV1G7pEe9E5Z`), Text: `/p ■环分摊/冰雷分散 |■扇形分摊
+      { Name: getSource('MMW', `https://www.bilibili.com/video/BV1G7pEe9E5Z`), Text: `/p ■环分摊/冰雷分散 |■扇形分摊
 /p MT/D1　ST/D2 　|　MT/D1／＼ST/D2
 /p H1/D3　H2/D4　 |H1/D3／　　＼H2/D4
 /p ■远离分摊
@@ -6773,6 +6773,39 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
       },
     ],
     1201: [
+      {
+        Name: getSource('莫古力', `https://www.bilibili.com/video/BV1aBsaeeE8W`),
+        Text: `/p ～莫古力系列～首饰神专用宏
+/p ～佐拉加歼殛战～
+/p ◆情感投射・爆发(分摊线)
+/p H1→H2→D4→D3→D2→D1→ST→MT
+/p ◆无双之击(二人蓝圈分摊)
+/p  ————场外新平台————
+/p H1/D3 MT/D1 ST/D2 H2/D4
+/p ◆小世界②黄标 ｜
+/p ————BOSS ————
+/p ｜MT/D1｜ST/D2 ｜ 
+/p ｜-——-— ｜-—-——｜
+/p ｜H1/D3｜H2/D4｜  
+`,
+      },
+      {
+        Name: getSource('MMW', `https://www.bilibili.com/video/BV1sztheREVR`),
+        Text: `/p 【分摊线】（日服）
+/p H1→H2→D4→D3→D2→D1→ST→MT
+/p 【分摊线】（美服）
+/p MT→ST→D1→D2→H1→H2→D3→D4
+/p 【22分摊】
+/p 　　　　 BOSS
+/p H1/D3 MT/D1 ST/D2 H2/D4
+/p 风火剑分散
+/p ===风火行===
+/p D1 MT ST D2
+/p D3 H1 H2 D4
+/p 双半场分散（以Boss面向为基准）
+/p MT/D1 ST/D2
+/p H1/D3 H2/D4`,
+      },
       {
         Name: 'Game8(ハムカツ式)',
         Text: `/p 【プロジェクション・バースト(頭割り)】
@@ -7034,6 +7067,7 @@ fastPP(`{"Name":"Witch Hunt","MapID":992,"A":{"X":100.0,"Y":0.0,"Z":90.0,"ID":0,
 fastPP(`{"Name":"通用标点","MapID":833,"A":{"X":92.5,"Y":0,"Z":92.5,"ID":0,"Active":true},"B":{"X":107.5,"Y":0,"Z":92.5,"ID":1,"Active":true},"C":{"X":81,"Y":0,"Z":94,"ID":3,"Active":true},"D":{"X":119,"Y":0,"Z":94,"ID":2,"Active":true},"One":{"X":95,"Y":0,"Z":95,"ID":4,"Active":true},"Two":{"X":105,"Y":0,"Z":95,"ID":5,"Active":true},"Three":{"X":95,"Y":0,"Z":105,"ID":6,"Active":true},"Four":{"X":105,"Y":0,"Z":105,"ID":7,"Active":true}}`)
 // 佐拉加
 fastPP(`{"Name":"莫古力","MapID":996,"A":{"X":100,"Y":0,"Z":88,"ID":0,"Active":true},"B":{"X":112,"Y":0,"Z":100,"ID":1,"Active":true},"C":{"X":100,"Y":0,"Z":112,"ID":2,"Active":true},"D":{"X":88,"Y":0,"Z":100,"ID":3,"Active":true},"One":{"X":0,"Y":0,"Z":0,"ID":4,"Active":false},"Two":{"X":0,"Y":0,"Z":0,"ID":5,"Active":false},"Three":{"X":0,"Y":0,"Z":0,"ID":6,"Active":false},"Four":{"X":0,"Y":0,"Z":0,"ID":7,"Active":false}}`)
+fastPP(`{"Name":"Conga","MapID":996,"A":{"X":100.0,"Y":0.0,"Z":87.5,"ID":0,"Active":true},"B":{"X":100.0,"Y":0.0,"Z":102.5,"ID":1,"Active":true},"C":{"X":94.5,"Y":0.0,"Z":77.8,"ID":2,"Active":true},"D":{"X":100.0,"Y":0.0,"Z":117.5,"ID":3,"Active":true},"One":{"X":100.0,"Y":0.0,"Z":95.0,"ID":4,"Active":true},"Two":{"X":100.0,"Y":0.0,"Z":110.0,"ID":5,"Active":true},"Three":{"X":105.5,"Y":0.0,"Z":77.8,"ID":6,"Active":true},"Four":{"X":100.0,"Y":0.0,"Z":125.0,"ID":7,"Active":true}}`)
 
 const syncMap: Record<string, string> = {
   1076: '1075', // 希拉狄哈水道
