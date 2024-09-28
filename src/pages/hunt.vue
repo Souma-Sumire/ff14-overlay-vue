@@ -45,7 +45,7 @@ const GMAE_VERSION = {
 type GameVersion = keyof typeof GMAE_VERSION
 type FilterType = '1-3' | '4-6' | '1' | '2' | '3' | '4' | '5' | '6' | '1-2'
 type ZoneIdType = typeof zoneList[number]
-type LegalInstance = 1 | 2 | 3 | 6
+type LegalInstance = 1 | 2 | 3 | 4 | 5 | 6
 type Server = 'Global' | 'CN'
 
 // 将来追加地图时，在zoneList添加新的zoneId，在zoneInstanceLength中添加对应的分线数量，在getZoneGameVersion中添加对应的游戏版本
@@ -131,7 +131,6 @@ function getSrc(_gameVersion: GameVersion, id: string): string {
   const result = `//souma.diemoe.net/m/${id.split('/')[0]}/${id.replace('/', '.')}.jpg`
   // const result = `//xivapi.com/m/${id.split('/')[0]}/${id.replace('/', '.')}.jpg`
   return result
-  // TODO: 目前咖啡cafemaker不提供maps的图片资源 Issues: https://github.com/thewakingsands/cafemaker/issues/15
 }
 
 // agree first is default
@@ -139,6 +138,8 @@ const filterValue: Record<LegalInstance, FilterType[]> = {
   1: ['1'],
   2: ['1-2', '1', '2'],
   3: ['1-3', '1', '2', '3'],
+  4: ['1-3', '4-6', '1', '2', '3', '4', '5', '6'],
+  5: ['1-3', '4-6', '1', '2', '3', '4', '5', '6'],
   6: ['1-3', '4-6', '1', '2', '3', '4', '5', '6'],
 }
 
@@ -922,9 +923,9 @@ function getInstanceLengthByZoneId(zoneId: ZoneIdType): LegalInstance {
     // 国服 7.0
       case ZoneId.Urqopacha:
       case ZoneId.Kozamauka:
+        return 6
       case ZoneId.YakTel:
       case ZoneId.Shaaloani:
-        return 6
       case ZoneId.HeritageFound:
       case ZoneId.LivingMemory:
         return 3
@@ -993,15 +994,20 @@ onMounted(async () => {
     </h3>
     <el-col>
       <el-row>
-        <el-form>
+        <el-form inline>
           <el-form-item label="资料片">
-            <div flex w-70>
+            <div flex w-40>
               <el-select v-model="gameVersion" placeholder="请选择">
                 <el-option v-for="[value, label] in Object.entries(GMAE_VERSION)" :key="value" :label="label" :value="value" />
               </el-select>
-              <div w-60 p-l-2>
-                分线方式：{{ server === 'Global' ? '国际服' : '国服' }}
-              </div>
+            </div>
+          </el-form-item>
+          <el-form-item label="分线方式">
+            <div flex w-30>
+              <el-select v-model="server" placeholder="请选择">
+                <el-option label="国际服" value="Global" />
+                <el-option label="中国服" value="CN" />
+              </el-select>
             </div>
           </el-form-item>
         </el-form>
@@ -1028,7 +1034,7 @@ onMounted(async () => {
       <el-row>
         <el-checkbox v-model="showNumber" label="显示数字" w-15 />
         <el-checkbox v-model="playSound" label="启用音效" />
-        <div v-show="playSound" class="flex items-center" p-l-2 w-40>
+        <div v-show="playSound" class="flex items-center" w-40 p-l-2>
           <el-slider v-model="soundVolume" :min="0" :max="1" :step="0.1" size="small" class="flex-grow" />
           <el-button size="small" m-l-1 @click="doSound">
             试听
