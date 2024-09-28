@@ -906,28 +906,11 @@ function cleanUpExpiredData(): Promise<void> {
 
 // 手动维护分线数
 function getInstanceLengthByZoneId(zoneId: ZoneIdType): LegalInstance {
-  const maxInsByData = Math.max(...monstersData.value.filter(item => item.zoneId === zoneId).map(item => item.instance))
-  return Math.max(maxInsByData, (() => {
-    if (server.value === 'Global') {
-      switch (zoneId) {
-      // 国际服 7.0
-        case ZoneId.Urqopacha:
-        case ZoneId.Kozamauka:
-        case ZoneId.YakTel:
-        case ZoneId.Shaaloani:
-        case ZoneId.HeritageFound:
-        case ZoneId.LivingMemory:
-          return 3
-        default:
-          return 1
-      }
-    }
-
+  if (server.value === 'Global') {
     switch (zoneId) {
-    // 国服 7.0
+      // 国际服 7.0
       case ZoneId.Urqopacha:
       case ZoneId.Kozamauka:
-        return 6
       case ZoneId.YakTel:
       case ZoneId.Shaaloani:
       case ZoneId.HeritageFound:
@@ -936,7 +919,21 @@ function getInstanceLengthByZoneId(zoneId: ZoneIdType): LegalInstance {
       default:
         return 1
     }
-  })()) as LegalInstance
+  }
+
+  switch (zoneId) {
+    // 国服 7.0
+    case ZoneId.Urqopacha:
+    case ZoneId.Kozamauka:
+      return 6
+    case ZoneId.YakTel:
+    case ZoneId.Shaaloani:
+    case ZoneId.HeritageFound:
+    case ZoneId.LivingMemory:
+      return 3
+    default:
+      return 1
+  }
 }
 
 onMounted(async () => {
