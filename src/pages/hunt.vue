@@ -182,10 +182,14 @@ const zoneFilter = computed(() => Object.fromEntries(zoneList.map(zoneId => [zon
 const showNumber = useStorage('souma-hunt-show-number', true)
 const playSound = useStorage('souma-hunt-play-sound', false)
 const soundVolume = useStorage('souma-hunt-sound-volume', 0.2)
-const filterConfig = computed(() => (Object.fromEntries(zoneList.map(zoneId => [zoneId, filterValue[getInstanceLengthByZoneId(zoneId)][0]])) as Record<ZoneIdType, FilterType>))
+const filterConfig = ref({} as Record<ZoneIdType, FilterType>)
 const playerZoneId = useStorage('souma-hunt-zone-id', ref(-1))
 const savedInstance = useStorage('souma-hunt-save-instance', playerInstance.value)
 const usePostNamazu = useStorage('souma-hunt-use-post-namazu', false)
+
+watchEffect(() => {
+  filterConfig.value = Object.fromEntries(zoneList.map(zoneId => [zoneId, filterValue[getInstanceLengthByZoneId(zoneId)][0]])) as Record<ZoneIdType, FilterType>
+})
 
 function zoneInstanceMax(zoneId: ZoneIdType): number {
   return Math.max(...(zoneFilter.value[zoneId].filter(item => /^[1-6]$/.test(item)).map(item => Number(item)))) * 2
