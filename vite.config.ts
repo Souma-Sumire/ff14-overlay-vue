@@ -21,7 +21,7 @@ export default defineConfig({
   base: '/ff14-overlay-vue/',
   build: {
     outDir: './dist',
-    emptyOutDir: true, // 构建时清空outDir目录
+    // emptyOutDir: true, // 构建时清空outDir目录
     rollupOptions: {
       output: {
         //   chunkFileNames: "assets/js/[name].js",
