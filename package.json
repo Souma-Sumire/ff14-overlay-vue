@@ -11,13 +11,8 @@
     "submodule": "git submodule update --remote",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "generate-aethercurrent": "node scripts/generate-aethercurrent.cjs",
-    "generate-aetheryte": "node scripts/generate-aetheryte.cjs",
-    "generate-map": "node scripts/generate-map.cjs",
-    "generate-action": "node scripts/generate-action.cjs",
-    "generate-status": "node scripts/generate-status.cjs",
-    "generate-contentFinderCondition": "node scripts/generate-contentFinderCondition.cjs",
-    "cjs": "node scripts/generate-aethercurrent.cjs && node scripts/generate-aetheryte.cjs && node scripts/generate-map.cjs && node scripts/generate-action.cjs && node scripts/generate-status.cjs && node scripts/generate-contentFinderCondition.cjs"
+    "cjs": "node scripts/generate-aethercurrent.cjs && node scripts/generate-aetheryte.cjs && node scripts/generate-map.cjs && node scripts/generate-action.cjs && node scripts/generate-status.cjs && node scripts/generate-contentFinderCondition.cjs",
+    "generate-status-compare": "node scripts/generate-contentFinderCondition.cjs"
   },
   "dependencies": {
     "@babel/core": "^7.25.2",
