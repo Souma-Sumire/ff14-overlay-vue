@@ -1646,7 +1646,7 @@
     "description": {
       "ja": "<hex:020869E4E94518FF46><hex:020842E0E94947FF1F>リフルジェントアロー<hex:FF1C>ストレートショット<hex:03><hex:FF1C>ストレートショット<hex:03>および<hex:02084EE4E94518FF34><hex:020830E0E94949FF16>シャドウバイト<hex:FF13>ワイドボレー<hex:03><hex:FF13>ワイドボレー<hex:03>を実行できる状態。<hex:02100103><hex:020869E4E94518FF46><hex:020842E0E94947FF1F>リフルジェントアロー<hex:FF1C>ストレートショット<hex:03><hex:FF1C>ストレートショット<hex:03>を実行する場合は3回分のダメージを与え、<hex:02084EE4E94518FF34><hex:020830E0E94949FF16>シャドウバイト<hex:FF13>ワイドボレー<hex:03><hex:FF13>ワイドボレー<hex:03>を実行する場合は威力を上昇させる。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503><hex:02083EE4E94518FF29><hex:020825E0E94947FF10>Refulgent Arrow<hex:FF0E>Straight Shot<hex:03><hex:FF0E>Straight Shot<hex:03><hex:0249020103><hex:0248020103> and <hex:024804F201F403><hex:024904F201F503><hex:020835E4E94518FF22><hex:02081EE0E94949FF0B>Shadowbite<hex:FF0C>Wide Volley<hex:03><hex:FF0C>Wide Volley<hex:03><hex:0249020103><hex:0248020103>.<hex:02100103><hex:024804F201F403><hex:024904F201F503><hex:02083EE4E94518FF29><hex:020825E0E94947FF10>Refulgent Arrow<hex:FF0E>Straight Shot<hex:03><hex:FF0E>Straight Shot<hex:03><hex:0249020103><hex:0248020103> will strike the selected target three times, while <hex:024804F201F403><hex:024904F201F503><hex:020835E4E94518FF22><hex:02081EE0E94949FF0B>Shadowbite<hex:FF0C>Wide Volley<hex:03><hex:FF0C>Wide Volley<hex:03><hex:0249020103><hex:0248020103>'s potency will be increased.",
-      "souma": ""
+      "souma": "可以发动<hex:020836E4E94518FF22><hex:02081EE0E94947FF0A>辉煌箭<hex:FF0D>直线射击<hex:03><hex:FF0D>直线射击<hex:03>或<hex:020836E4E94518FF22><hex:02081EE0E94949FF0A>影噬箭<hex:FF0D>广域群射<hex:03><hex:FF0D>广域群射<hex:03><hex:02100103>发动<hex:020836E4E94518FF22><hex:02081EE0E94947FF0A>辉煌箭<hex:FF0D>直线射击<hex:03><hex:FF0D>直线射击<hex:03>时造成3次伤害，发动<hex:020836E4E94518FF22><hex:02081EE0E94949FF0A>影噬箭<hex:FF0D>广域群射<hex:03><hex:FF0D>广域群射<hex:03>时威力提升"
     },
     "icon": "10356"
   },
@@ -15127,7 +15127,7 @@
     "description": {
       "ja": "受けるダメージの一部が軽減される状態。<hex:0208F20314E0E9495FFFF2030A><hex:0208F20304E4E94502FF74><hex:02100103>ランパート効果アップ修得後追加効果：自身に対するＨＰ回復効果を向上させる。<hex:FFF20287><hex:0208F20281E4E94514FF74><hex:02100103>ランパート効果アップ修得後追加効果：自身に対するＨＰ回復効果を向上させる。<hex:FFF20204><hex:0208F201FEE4E94504FF74><hex:02100103>ランパート効果アップ修得後追加効果：自身に対するＨＰ回復効果を向上させる。<hex:FFF20181><hex:0208F2017BE4E94516FF74><hex:02100103>ランパート効果アップ修得後追加効果：自身に対するＨＰ回復効果を向上させる。<hex:FFF0FF><hex:0208F0FAE4E94521FF74><hex:02100103>ランパート効果アップ修得後追加効果：自身に対するＨＰ回復効果を向上させる。<hex:FF80><hex:02087CE4E94526FF74><hex:02100103>ランパート効果アップ修得後追加効果：自身に対するＨＰ回復効果を向上させる。<hex:FF01><hex:03><hex:03><hex:03><hex:03><hex:03><hex:03><hex:FF01><hex:03>",
       "en": "Damage taken is reduced<hex:0208F20180E0E9495FFFF20176><hex:0208F20170E4E94502FF32> and HP recovery via healing actions is increased<hex:FFF20135><hex:0208F2012FE4E94514FF32> and HP recovery via healing actions is increased<hex:FFF0F5><hex:0208F0F0E4E94504FF32> and HP recovery via healing actions is increased<hex:FFB8><hex:0208B4E4E94516FF32> and HP recovery via healing actions is increased<hex:FF7B><hex:020877E4E94521FF32> and HP recovery via healing actions is increased<hex:FF3E><hex:02083AE4E94526FF32> and HP recovery via healing actions is increased<hex:FF01><hex:03><hex:03><hex:03><hex:03><hex:03><hex:03><hex:FF01><hex:03>.",
-      "souma": ""
+      "souma": "减轻所受到的伤害<hex:0208F20134E0E9495FFFF2012A><hex:0208F20124E4E94502FF26><hex:02100103>自身所受的治疗效果提高<hex:FFF0F6><hex:0208F0F1E4E94514FF26><hex:02100103>自身所受的治疗效果提高<hex:FFC5><hex:0208C1E4E94504FF26><hex:02100103>自身所受的治疗效果提高<hex:FF94><hex:020890E4E94516FF26><hex:02100103>自身所受的治疗效果提高<hex:FF63><hex:02085FE4E94521FF26><hex:02100103>自身所受的治疗效果提高<hex:FF32><hex:02082EE4E94526FF26><hex:02100103>自身所受的治疗效果提高<hex:FF01><hex:03><hex:03><hex:03><hex:03><hex:03><hex:03><hex:FF01><hex:03>"
     },
     "icon": "13911"
   },
@@ -15361,7 +15361,7 @@
     "description": {
       "ja": "一部を除くすべてのノックバックと引き寄せを無効化する状態。<hex:02100103>攻撃を受けると、攻撃者にスロウを付与する。",
       "en": "Slowing enemies when attacked. Immune to most knockback and draw-in effects.",
-      "souma": "除特定攻击之外击退与吸引无效<hex:02100103>受到攻击时对攻击者附加减速状态"
+      "souma": "除特定攻击之外击退与吸引无效<hex:02100103>受到物理攻击时对攻击者附加减速状态"
     },
     "icon": "13915"
   },
@@ -15491,7 +15491,7 @@
     "description": {
       "ja": "このステータスを付与した白魔道士が実行する一部の回復魔法の回復効果を受けると、自身のＨＰを追加で回復させる効果が発動する状態。",
       "en": "Sins are confessed. Additional HP is recovered when receiving the healing effect of certain spells cast by the white mage who granted this effect.",
-      "souma": "成为白魔法师全大赦的对象"
+      "souma": "附加此效果的白魔法师发动部分治疗魔法恢复自身体力时，会产生额外的恢复效果"
     },
     "icon": "12637"
   },
@@ -16349,7 +16349,7 @@
     "description": {
       "ja": "獲得経験値など、一部のF.A.T.E.報酬が増加する状態。",
       "en": "Certain rewards earned from FATEs are dramatically increased.",
-      "souma": "完成危命任务获得的经验值增加，部分危命任务奖励增加"
+      "souma": "完成危命任务获得的部分奖励增加"
     },
     "icon": "16225"
   },
@@ -16362,7 +16362,7 @@
     "description": {
       "ja": "獲得経験値など、一部のF.A.T.E.報酬が増加する状態。",
       "en": "Certain rewards earned from FATEs are dramatically increased.",
-      "souma": "完成危命任务获得的经验值增加，部分危命任务奖励增加"
+      "souma": "完成危命任务获得的部分奖励增加"
     },
     "icon": "16226"
   },
@@ -24201,7 +24201,7 @@
     "description": {
       "ja": "次に実行する1回の「鼓舞激励の策」「<hex:02084BE4E9451DFF31><hex:02082DE0E94961FF13>意気軒昂の策<hex:FF13>士気高揚の策<hex:03><hex:FF13>士気高揚の策<hex:03>」「不撓不屈の策」「深謀遠慮の策」について、ＭＰや「エーテルフロー」を消費することなく実行することができ、かつ必ずクリティカルヒットする状態。",
       "en": "The next <hex:024804F201F403><hex:024904F201F503>Adloquium<hex:0249020103><hex:0248020103>, <hex:024804F201F403><hex:024904F201F503><hex:02082CE4E9451DFF1E><hex:02081AE0E94961FF0C>Concitation<hex:FF07>Succor<hex:03><hex:FF07>Succor<hex:03><hex:0249020103><hex:0248020103>, <hex:024804F201F403><hex:024904F201F503>Indomitability<hex:0249020103><hex:0248020103>, or <hex:024804F201F403><hex:024904F201F503>Excogitation<hex:0249020103><hex:0248020103> executed will cost no MP or <hex:024804F201FA03><hex:024904F201FB03>Aetherflow<hex:0249020103><hex:0248020103> stacks and will restore critical HP.",
-      "souma": "下一次发动的鼓舞激励之策、<hex:02084BE4E9451DFF31><hex:02082DE0E94961FF13>意气轩昂之策<hex:FF13>士气高扬之策<hex:03><hex:FF13>士气高扬之策<hex:03>、不屈不挠之策、深谋远虑之策，无需消耗魔力和以太超流，并且必定暴击"
+      "souma": "下一次发动的鼓舞激励之策、<hex:02084BE4E9451DFF31><hex:02082DE0E94961FF13>意气轩昂之策<hex:FF13>士气高扬之策<hex:03><hex:FF13>士气高扬之策<hex:03>、不屈不挠之策、深谋远虑之策，无需消耗魔力或以太超流，并且必定暴击"
     },
     "icon": "12813"
   },
@@ -24214,7 +24214,7 @@
     "description": {
       "ja": "十分なインナービーストが蓄積されるとデシメートがカオティックサイクロンに変化する状態。<hex:02100103>インナーカオス修得後はフェルクリーヴもインナーカオスに変化する。",
       "en": "Accumulating sufficient wrath in the <hex:024804F201F403><hex:024904F201F503>Beast Gauge<hex:0249020103><hex:0248020103> will upgrade <hex:024804F201F403><hex:024904F201F503>Decimate<hex:0249020103><hex:0248020103> to <hex:024804F201F403><hex:024904F201F503>Chaotic Cyclone<hex:0249020103><hex:0248020103>.<hex:02100103><hex:024804F201F403><hex:024904F201F503>Fell Cleave<hex:0249020103><hex:0248020103> will be upgraded to <hex:024804F201F403><hex:024904F201F503>Inner Chaos<hex:0249020103><hex:0248020103> once learned.",
-      "souma": "地毁人亡变为混沌旋风<hex:02100103>习得狂魂后追加效果：裂石飞环变为狂魂"
+      "souma": "兽魂足够时，地毁人亡变为混沌旋风<hex:02100103>习得狂魂后，裂石飞环变为狂魂"
     },
     "icon": "12560"
   },
@@ -25163,7 +25163,7 @@
     "description": {
       "ja": "ブラッドスピラーとクワイタスをブラックブラッドの消費無しで実行でき、かつ命中時に自身のＭＰを回復する状態。",
       "en": "Blackblood cost for <hex:024804F201F403><hex:024904F201F503>Bloodspiller<hex:0249020103><hex:0248020103> and <hex:024804F201F403><hex:024904F201F503>Quietus<hex:0249020103><hex:0248020103> is nullified, and restoring MP when landing either weaponskill.",
-      "souma": "不需要消耗暗血就可以发动血溅和寂灭"
+      "souma": "不需要消耗暗血就可以发动血溅和寂灭，且命中时恢复自身魔力"
     },
     "icon": "17147"
   },
@@ -32924,7 +32924,7 @@
     "description": {
       "ja": "攻撃魔法の命中時に、指定したパーティメンバーに対してＨＰ回復効果を発動させる状態。",
       "en": "Triggers a healing effect on a player under the effect of <hex:024804F201FA03><hex:024904F201FB03>Kardion<hex:0249020103><hex:0248020103> granted by you upon landing attack magic.",
-      "souma": "发动攻击魔法时令指定的队员恢复体力"
+      "souma": "攻击魔法命中时令指定的队员恢复体力"
     },
     "icon": "12951"
   },
@@ -32937,7 +32937,7 @@
     "description": {
       "ja": "この効果を付与した賢者が攻撃魔法を命中させると、自身に対してＨＰ回復効果が発動する状態。",
       "en": "Triggers a healing effect when the sage who applied this status lands attack magic.",
-      "souma": "为自身附加此效果的贤者发动攻击魔法时，自身体力恢复"
+      "souma": "附加此效果的贤者发动攻击魔法命中时，自身体力恢复"
     },
     "icon": "12952"
   },
@@ -33977,7 +33977,7 @@
     "description": {
       "ja": "<hex:0208F20130E4E94520FFF0E8><hex:0208F0E3E0E94924FF9D>一部のウェポンスキルの威力が上昇し、ヒートブラスト<hex:020833E4E94520FF2B><hex:020827E0E94935FF1F>およびオートボウガン<hex:FF01><hex:03><hex:FF01><hex:03>を実行できる状態。<hex:FF40>一部のウェポンスキルの威力が上昇する状態。<hex:03><hex:FF40>一部のウェポンスキルの威力が上昇する状態。<hex:03>",
       "en": "<hex:0208F20122E4E94520FFF0E7><hex:0208F0E2E0E94924FFA9>Potency of single-target weaponskills is increased. Able to execute <hex:024804F201F403><hex:024904F201F503>Heat Blast<hex:0249020103><hex:0248020103><hex:02083FE4E94520FF37><hex:020833E0E94935FF2B> and <hex:024804F201F403><hex:024904F201F503>Auto Crossbow<hex:0249020103><hex:0248020103><hex:FF01><hex:03><hex:FF01><hex:03><hex:FF33>Potency of single-target weaponskills is increased<hex:03><hex:FF33>Potency of single-target weaponskills is increased<hex:03>.",
-      "souma": "<hex:020899E4E94520FF79><hex:020875E0E94924FF55>部分战技威力提高，可以发动热冲击<hex:020821E4E94520FF19><hex:020815E0E94935FF0D>和自动弩<hex:FF01><hex:03><hex:FF01><hex:03><hex:FF19>部分战技威力提高<hex:03><hex:FF19>部分战技威力提高<hex:03>"
+      "souma": "<hex:0208C3E4E94520FFA3><hex:02089FE0E94924FF7F>部分战技威力提高，可以发动<hex:020830E4E94520FF1F><hex:02081BE0E94945FF0A>烈焰弹<hex:FF0A>热冲击<hex:03><hex:FF0A>热冲击<hex:03><hex:020821E4E94520FF19><hex:020815E0E94935FF0D>和自动弩<hex:FF01><hex:03><hex:FF01><hex:03><hex:FF19>部分战技威力提高<hex:03><hex:FF19>部分战技威力提高<hex:03>"
     },
     "icon": "18385"
   },
@@ -33990,7 +33990,7 @@
     "description": {
       "ja": "次に実行する<hex:02082AE4E9451FFF22><hex:02081EE0E94961FF16>是生滅法および<hex:FF01><hex:03><hex:FF01><hex:03>六道輪廻の威力が上昇する状態。",
       "en": "Next <hex:02083CE4E9451FFF34><hex:020830E0E94961FF28><hex:024804F201F403><hex:024904F201F503>Zesho Meppo<hex:0249020103><hex:0248020103> or <hex:FF01><hex:03><hex:FF01><hex:03><hex:024804F201F403><hex:024904F201F503>Bhavacakra<hex:0249020103><hex:0248020103> will deal increased damage.",
-      "souma": "下次发动六道轮回的威力上升"
+      "souma": "下次发动<hex:020824E4E9451FFF1C><hex:020818E0E94961FF10>是生灭法或<hex:FF01><hex:03><hex:FF01><hex:03>六道轮回的威力上升"
     },
     "icon": "12914"
   },
@@ -35875,7 +35875,7 @@
     "description": {
       "ja": "次に実行するハルパーを、詠唱時間無しで唱えられる状態。<hex:02100103>さらに、ハルパーを実行するとヘルズイングレスとヘルズイーグレスのリキャストタイムを短縮する。",
       "en": "Next <hex:024804F201F403><hex:024904F201F503>Harpe<hex:0249020103><hex:0248020103> requires no time to cast and will reduce the recast timer of <hex:024804F201F403><hex:024904F201F503>Hell's Ingress<hex:0249020103><hex:0248020103> and <hex:024804F201F403><hex:024904F201F503>Hell's Egress<hex:0249020103><hex:0248020103>.",
-      "souma": "下次发动勾刃不需要咏唱时间"
+      "souma": "下次发动勾刃不需要咏唱时间<hex:02100103>同时，发动勾刃可以缩短地狱入境和地狱出境的复唱时间"
     },
     "icon": "12939"
   },
@@ -36299,12 +36299,12 @@
     "name": {
       "ja": "毒",
       "en": "Poison",
-      "souma": "毒"
+      "souma": "毒素"
     },
     "description": {
       "ja": "毒に冒された状態。ＨＰが徐々に失われる。",
       "en": "Toxins are causing damage over time.",
-      "souma": "毒に冒された状態。ＨＰが徐々に失われる。"
+      "souma": "身体被毒素侵蚀，体力逐渐流失"
     },
     "icon": "17001"
   },
@@ -41642,12 +41642,12 @@
     "name": {
       "ja": "過負荷",
       "en": "Overload",
-      "souma": "过载"
+      "souma": "超负荷"
     },
     "description": {
       "ja": "限界を超える力を引き出し、体組織に過大な負荷がかかっている状態。ＨＰが徐々に失われる。",
       "en": "Unleashing power beyond physical limitations and taking damage over time.",
-      "souma": ""
+      "souma": "激发出超越极限的力量后身体负荷过大，体力逐渐流失"
     },
     "icon": "15528"
   },
@@ -45607,12 +45607,12 @@
     "name": {
       "ja": "鋭牙【側撃】",
       "en": "Flankstung Venom",
-      "souma": "锐牙·侧击"
+      "souma": "侧击锐牙"
     },
     "description": {
       "ja": "牙の構えから繰り出す特定のアクションの威力を上昇させる状態。",
       "en": "Potency of <hex:024804F201F403><hex:024904F201F503>Flanksting Strike<hex:0249020103><hex:0248020103> is increased.",
-      "souma": "提升从牙之架势发动的特定动作威力"
+      "souma": "从齿牙体势发动的特定技能威力提高"
     },
     "icon": "13751"
   },
@@ -45620,12 +45620,12 @@
     "name": {
       "ja": "鋭牙【側裂】",
       "en": "Flanksbane Venom",
-      "souma": "锐牙·侧裂"
+      "souma": "侧裂锐牙"
     },
     "description": {
       "ja": "牙の構えから繰り出す特定のアクションの威力を上昇させる状態。",
       "en": "Potency of <hex:024804F201F403><hex:024904F201F503>Flanksbane Fang<hex:0249020103><hex:0248020103> is increased.",
-      "souma": "提升从牙之架势发动的特定动作威力"
+      "souma": "从齿牙体势发动的特定技能威力提高"
     },
     "icon": "13752"
   },
@@ -45633,12 +45633,12 @@
     "name": {
       "ja": "鋭牙【背撃】",
       "en": "Hindstung Venom",
-      "souma": "锐牙·背击"
+      "souma": "背击锐牙"
     },
     "description": {
       "ja": "牙の構えから繰り出す特定のアクションの威力を上昇させる状態。",
       "en": "Potency of <hex:024804F201F403><hex:024904F201F503>Hindsting Strike<hex:0249020103><hex:0248020103> is increased.",
-      "souma": "提升从牙之架势发动的特定动作威力"
+      "souma": "从齿牙体势发动的特定技能威力提高"
     },
     "icon": "13753"
   },
@@ -45646,12 +45646,12 @@
     "name": {
       "ja": "鋭牙【背裂】",
       "en": "Hindsbane Venom",
-      "souma": "锐牙·背裂"
+      "souma": "背裂锐牙"
     },
     "description": {
       "ja": "牙の構えから繰り出す特定のアクションの威力を上昇させる状態。",
       "en": "Potency of <hex:024804F201F403><hex:024904F201F503>Hindsbane Fang<hex:0249020103><hex:0248020103> is increased.",
-      "souma": "提升从牙之架势发动的特定动作威力"
+      "souma": "从齿牙体势发动的特定技能威力提高"
     },
     "icon": "13754"
   },
@@ -45659,12 +45659,12 @@
     "name": {
       "ja": "大鋭牙【乱撃】",
       "en": "Grimhunter's Venom",
-      "souma": "大锐牙·乱击"
+      "souma": "乱击锐牙"
     },
     "description": {
       "ja": "牙の構えから繰り出す特定のアクションの威力を上昇させる状態。",
       "en": "Potency of <hex:024804F201F403><hex:024904F201F503>Jagged Maw<hex:0249020103><hex:0248020103> is increased.",
-      "souma": "提升从牙之架势发动的特定动作威力"
+      "souma": "从齿牙体势发动的特定技能威力提高"
     },
     "icon": "13755"
   },
@@ -45672,12 +45672,12 @@
     "name": {
       "ja": "大鋭牙【乱裂】",
       "en": "Grimskin's Venom",
-      "souma": "大锐牙·乱裂"
+      "souma": "乱裂锐牙"
     },
     "description": {
       "ja": "牙の構えから繰り出す特定のアクションの威力を上昇させる状態。",
       "en": "Potency of <hex:024804F201F403><hex:024904F201F503>Bloodied Maw<hex:0249020103><hex:0248020103> is increased.",
-      "souma": "提升从牙之架势发动的特定动作威力"
+      "souma": "从齿牙体势发动的特定技能威力提高"
     },
     "icon": "13756"
   },
@@ -45685,12 +45685,12 @@
     "name": {
       "ja": "双鋭牙【連撃】",
       "en": "Hunter's Venom",
-      "souma": "双锐牙·连击"
+      "souma": "连击双锐牙"
     },
     "description": {
       "ja": "牙の構えから繰り出す特定のアクションの威力を上昇させる状態。",
       "en": "Potency of <hex:024804F201F403><hex:024904F201F503>Twinfang Bite<hex:0249020103><hex:0248020103> is increased.",
-      "souma": "提升从牙之架势发动的特定动作威力"
+      "souma": "从齿牙体势发动的特定技能威力提高"
     },
     "icon": "13763"
   },
@@ -45698,12 +45698,12 @@
     "name": {
       "ja": "双鋭牙【乱撃】",
       "en": "Swiftskin's Venom",
-      "souma": "双锐牙·乱击"
+      "souma": "乱击双锐牙"
     },
     "description": {
       "ja": "牙の構えから繰り出す特定のアクションの威力を上昇させる状態。",
       "en": "Potency of <hex:024804F201F403><hex:024904F201F503>Twinblood Bite<hex:0249020103><hex:0248020103> is increased.",
-      "souma": "提升从牙之架势发动的特定动作威力"
+      "souma": "从齿牙体势发动的特定技能威力提高"
     },
     "icon": "13764"
   },
@@ -45711,12 +45711,12 @@
     "name": {
       "ja": "双鋭牙【連閃】",
       "en": "Fellhunter's Venom",
-      "souma": "双锐牙·连闪"
+      "souma": "连闪双锐牙"
     },
     "description": {
       "ja": "牙の構えから繰り出す特定のアクションの威力を上昇させる状態。",
       "en": "Potency of <hex:024804F201F403><hex:024904F201F503>Twinfang Thresh<hex:0249020103><hex:0248020103> is increased.",
-      "souma": "提升从牙之架势发动的特定动作威力"
+      "souma": "从齿牙体势发动的特定技能威力提高"
     },
     "icon": "13765"
   },
@@ -45724,12 +45724,12 @@
     "name": {
       "ja": "双鋭牙【乱閃】",
       "en": "Fellskin's Venom",
-      "souma": "双锐牙·乱闪"
+      "souma": "乱闪双锐牙"
     },
     "description": {
       "ja": "牙の構えから繰り出す特定のアクションの威力を上昇させる状態。",
       "en": "Potency of <hex:024804F201F403><hex:024904F201F503>Twinblood Thresh<hex:0249020103><hex:0248020103> is increased.",
-      "souma": "提升从牙之架势发动的特定动作威力"
+      "souma": "从齿牙体势发动的特定技能威力提高"
     },
     "icon": "13766"
   },
@@ -45737,12 +45737,12 @@
     "name": {
       "ja": "飛鋭尾【連尾】",
       "en": "Poised for Twinfang",
-      "souma": "飞锐尾·连尾"
+      "souma": "连尾锐尾"
     },
     "description": {
       "ja": "蛇の構えから繰り出す特定のアクションの威力を上昇させる状態。",
       "en": "Potency of <hex:024804F201F403><hex:024904F201F503>Uncoiled Twinfang<hex:0249020103><hex:0248020103> is increased.",
-      "souma": "提升从牙之架势发动的特定动作威力"
+      "souma": "从蝰蛇体势发动的特定技能威力提高"
     },
     "icon": "13771"
   },
@@ -45750,12 +45750,12 @@
     "name": {
       "ja": "飛鋭尾【乱尾】",
       "en": "Poised for Twinblood",
-      "souma": "飞锐尾·乱尾"
+      "souma": "乱尾锐尾"
     },
     "description": {
       "ja": "蛇の構えから繰り出す特定のアクションの威力を上昇させる状態。",
       "en": "Potency of <hex:024804F201F403><hex:024904F201F503>Uncoiled Twinblood<hex:0249020103><hex:0248020103> is increased.",
-      "souma": "提升从牙之架势发动的特定动作威力"
+      "souma": "从蝰蛇体势发动的特定技能威力提高"
     },
     "icon": "13772"
   },
@@ -45763,12 +45763,12 @@
     "name": {
       "ja": "惨毒",
       "en": "Noxious Gnash",
-      "souma": "惨毒"
+      "souma": "毒烈"
     },
     "description": {
       "ja": "この効果を付与したプレイヤーから受けるダメージが増加する状態。",
       "en": "Damage taken from the viper who applied this effect is increased.",
-      "souma": "受到附加此效果的玩家攻击的伤害增加"
+      "souma": "受到施加此状态的玩家攻击时所受伤害增加"
     },
     "icon": "13773"
   },
@@ -45807,7 +45807,7 @@
     "description": {
       "ja": "祖霊の魂を降ろした状態。",
       "en": "Tapped into the strength of your hunter forebears.",
-      "souma": "降下祖灵之魂"
+      "souma": "祖灵之魂降临"
     },
     "icon": "13776"
   },
@@ -45820,7 +45820,7 @@
     "description": {
       "ja": "祖霊降ろしを、霊力を消費せずに実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Reawaken<hex:0249020103><hex:0248020103> while ignoring <hex:024804F201F403><hex:024904F201F503>Serpent Offerings Gauge<hex:0249020103><hex:0248020103> cost.",
-      "souma": "可以不消耗灵力发动祖灵之魂"
+      "souma": "发动祖灵降临不消耗灵力值"
     },
     "icon": "13777"
   },
@@ -45828,12 +45828,12 @@
     "name": {
       "ja": "蛇鋭牙【咬創】",
       "en": "Honed Steel",
-      "souma": "蛇锐牙·咬创"
+      "souma": "咬噬锐牙"
     },
     "description": {
       "ja": "牙の構えから繰り出す特定のアクションの威力を上昇させる状態。",
       "en": "Potency of <hex:024804F201F403><hex:024904F201F503>Steel Fangs<hex:0249020103><hex:0248020103> and <hex:024804F201F403><hex:024904F201F503>Steel Maw<hex:0249020103><hex:0248020103> is increased.",
-      "souma": "从牙之姿态发动特定动作时威力上升"
+      "souma": "从齿牙体势发动的特定技能威力提高"
     },
     "icon": "13757"
   },
@@ -45841,12 +45841,12 @@
     "name": {
       "ja": "サブトラクティブパレット",
       "en": "Subtractive Palette",
-      "souma": "减色技法"
+      "souma": "减色混合"
     },
     "description": {
       "ja": "色魔法の性質が変化した状態。",
       "en": "The properties of your pictomancy spells have changed.",
-      "souma": "绘灵魔法性质发生变化"
+      "souma": "调色魔法的性质发生变化"
     },
     "icon": "18673"
   },
@@ -45854,12 +45854,12 @@
     "name": {
       "ja": "色魔法2実行可",
       "en": "Aetherhues",
-      "souma": "绘灵魔法2预备"
+      "souma": "以太色调"
     },
     "description": {
       "ja": "グリーン、イエローの魔法を実行できる状態。",
       "en": "Able to cast green and yellow magicks.",
-      "souma": "可以施展翠绿、明黄魔法"
+      "souma": "可以发动绿色或纯黄色魔法"
     },
     "icon": "13801"
   },
@@ -45867,12 +45867,12 @@
     "name": {
       "ja": "色魔法3実行可",
       "en": "Aetherhues II",
-      "souma": "绘灵魔法3预备"
+      "souma": "以太色调II"
     },
     "description": {
       "ja": "ブルー、マゼンタの魔法を実行できる状態。",
       "en": "Able to cast blue and magenta magicks.",
-      "souma": "可以施展湛蓝、品红魔法"
+      "souma": "可以发动蓝色或品红色魔法"
     },
     "icon": "13802"
   },
@@ -45880,12 +45880,12 @@
     "name": {
       "ja": "レインボードリップ効果アップ",
       "en": "Rainbow Bright",
-      "souma": "彩虹滴流效果提高"
+      "souma": "彩虹点滴效果提高"
     },
     "description": {
       "ja": "次に実行するレインボードリップのリキャストタイムが短縮され、さらに詠唱時間無しで唱えられる状態。",
       "en": "Next <hex:024804F201F403><hex:024904F201F503>Rainbow Drip<hex:0249020103><hex:0248020103> will require no time to cast, and will have a reduced recast timer.",
-      "souma": "下一次发动彩虹滴落的复唱时间缩短，且不需要咏唱时间"
+      "souma": "下次发动彩虹点滴不需要咏唱时间，且复唱时间缩短"
     },
     "icon": "13805"
   },
@@ -45893,7 +45893,7 @@
     "name": {
       "ja": "ハンマーコンボ実行可",
       "en": "Hammer Time",
-      "souma": "重锤连击预备"
+      "souma": "重锤连击"
     },
     "description": {
       "ja": "ハンマーコンボを実行できる状態。",
@@ -45906,12 +45906,12 @@
     "name": {
       "ja": "スタープリズム実行可",
       "en": "Starstruck",
-      "souma": "星光棱镜预备"
+      "souma": "天星棱光预备"
     },
     "description": {
       "ja": "スタープリズムを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Star Prism<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动星光棱镜"
+      "souma": "可以发动天星棱光"
     },
     "icon": "13806"
   },
@@ -45919,7 +45919,7 @@
     "name": {
       "ja": "スタープリズム",
       "en": "Star Prism",
-      "souma": "星光棱镜"
+      "souma": "天星棱光"
     },
     "description": {
       "ja": "連続してＨＰが回復している状態。",
@@ -45932,7 +45932,7 @@
     "name": {
       "ja": "スマッジ",
       "en": "Smudge",
-      "souma": "晕彩"
+      "souma": "速涂"
     },
     "description": {
       "ja": "移動速度が上昇した状態。",
@@ -45945,7 +45945,7 @@
     "name": {
       "ja": "イマジンスカイ",
       "en": "Starry Muse",
-      "souma": "星空具现"
+      "souma": "星空构想"
     },
     "description": {
       "ja": "与ダメージが上昇した状態。",
@@ -45971,7 +45971,7 @@
     "name": {
       "ja": "テンペラグラッサ",
       "en": "Tempera Grassa",
-      "souma": "油性坦培拉"
+      "souma": "油性坦培拉涂层"
     },
     "description": {
       "ja": "一定量のダメージを軽減する状態。",
@@ -45984,12 +45984,12 @@
     "name": {
       "ja": "インスタレーション",
       "en": "Hyperphantasia",
-      "souma": "装置艺术"
+      "souma": "绘灵幻景"
     },
     "description": {
       "ja": "イマジンスカイの空間アートを展開している状態。",
       "en": "Starry Muse is deployed.",
-      "souma": "展开星空具现的空间艺术"
+      "souma": "将星空实体化展开艺术空间"
     },
     "icon": "18155"
   },
@@ -45997,12 +45997,12 @@
     "name": {
       "ja": "インスタレーション［被］",
       "en": "Inspiration",
-      "souma": "艺术灵感"
+      "souma": "绘画装置"
     },
     "description": {
       "ja": "イマジンスカイの恩恵により、魔法のキャストタイムとリキャストタイムが短縮された状態。",
       "en": "Inspired by <hex:024804F201F403><hex:024904F201F503>Starry Muse<hex:0249020103><hex:0248020103>, your spell cast and recast times are reduced.",
-      "souma": "因星空具现的恩惠而魔法咏唱时间和复唱时间缩短"
+      "souma": "受星空的影响，魔法的咏唱时间和复唱时间有所缩短"
     },
     "icon": "13811"
   },
@@ -46010,12 +46010,12 @@
     "name": {
       "ja": "サブトラクティブパレット実行可",
       "en": "Subtractive Spectrum",
-      "souma": "减色技法预备"
+      "souma": "减色混合预备"
     },
     "description": {
       "ja": "サブトラクティブパレットを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Subtractive Palette<hex:0249020103><hex:0248020103> without cost.",
-      "souma": "可以发动减色技法"
+      "souma": "可以发动减色混合"
     },
     "icon": "13813"
   },
@@ -46028,7 +46028,7 @@
     "description": {
       "ja": "ホワイトペイントが1スタックのみブラックペイントに変化する状態。",
       "en": "One stack of <hex:024804F201FA03><hex:024904F201FB03>White Paint<hex:0249020103><hex:0248020103> has been converted to <hex:024804F201FA03><hex:024904F201FB03>Black Paint<hex:0249020103><hex:0248020103>.",
-      "souma": "1层白色颜料变为黑色颜料"
+      "souma": "1档白色颜料变为黑色颜料"
     },
     "icon": "13814"
   },
@@ -47024,12 +47024,12 @@
     "name": {
       "ja": "蛇鋭牙【穿裂】",
       "en": "Honed Reavers",
-      "souma": "蛇锐牙·穿裂"
+      "souma": "穿裂锐牙"
     },
     "description": {
       "ja": "牙の構えから繰り出す特定のアクションの威力を上昇させる状態。",
       "en": "Potency of <hex:024804F201F403><hex:024904F201F503>Reaving Fangs<hex:0249020103><hex:0248020103> and <hex:024804F201F403><hex:024904F201F503>Reaving Maw<hex:0249020103><hex:0248020103> is increased.",
-      "souma": "从牙之姿态发动特定动作时威力上升"
+      "souma": "从齿牙体势发动的特定技能威力提高"
     },
     "icon": "13758"
   },
@@ -47232,12 +47232,12 @@
     "name": {
       "ja": "脳しんとう［弱］",
       "en": "Trauma",
-      "souma": "轻微脑震荡"
+      "souma": "轻度脑震荡"
     },
     "description": {
       "ja": "激しく揺れ動かされた状態。スタック数が増えると、脳しんとう状態が付与される。",
       "en": "Suffering injuries from a powerful attack. Increased trauma will result in a <hex:024804F201FA03><hex:024904F201FB03>Concussion<hex:0249020103><hex:0248020103>.",
-      "souma": "剧烈摇晃。层数增加时，会被赋予脑震荡"
+      "souma": "受到强烈冲击，积累档数过多会陷入脑震荡状态"
     },
     "icon": "17936"
   },
@@ -47289,7 +47289,7 @@
     "description": {
       "ja": "瞳に魔力を宿した状態。特定の行動を実行すると「猛禽の眼」が発動する。",
       "en": "Eyes have been infused with aether, enhancing vision. Performing certain actions will trigger Eye of the Fierce.",
-      "souma": "魔力寄宿于瞳孔。执行特定行动时会发动“猛禽之眼”"
+      "souma": "眼瞳中蕴藏着魔力，采取特定行动后会发动猛禽之眼。"
     },
     "icon": "18913"
   },
@@ -47315,7 +47315,7 @@
     "description": {
       "ja": "アポリオンの翅が強化された状態。",
       "en": "Apollyon's wings are enhanced.",
-      "souma": "阿波罗之翼强化"
+      "souma": "亚波伦强化了自己的翅膀"
     },
     "icon": "14136"
   },
@@ -47323,12 +47323,12 @@
     "name": {
       "ja": "鎌強化",
       "en": "Apex Blades",
-      "souma": "镰刀强化"
+      "souma": "大镰强化"
     },
     "description": {
       "ja": "アポリオンの鎌が強化された状態。",
       "en": "Apollyon's blades are enhanced.",
-      "souma": "阿波罗之镰强化"
+      "souma": "亚波伦强化了自己的大镰"
     },
     "icon": "14137"
   },
@@ -47336,12 +47336,12 @@
     "name": {
       "ja": "激怒",
       "en": "Fury",
-      "souma": "激怒"
+      "souma": "狂怒"
     },
     "description": {
       "ja": "怒りにより、与ダメージが上昇した状態。",
       "en": "Unbridled rage is increasing damage dealt.",
-      "souma": "因愤怒而提升造成伤害"
+      "souma": "愤怒无法抑制，攻击所造成的伤害提高"
     },
     "icon": "14155"
   },
@@ -47349,12 +47349,12 @@
     "name": {
       "ja": "活性化",
       "en": "Vitalized",
-      "souma": "光呼吸"
+      "souma": "激活"
     },
     "description": {
       "ja": "ドラウジーの踊りで活性化した状態。",
       "en": "Invigorated by Drowsie's dancing.",
-      "souma": "被昏睡之舞活化"
+      "souma": "被瞌睡怪的舞蹈激活了"
     },
     "icon": "19541"
   },
@@ -47362,12 +47362,12 @@
     "name": {
       "ja": "活性化",
       "en": "Vitalized",
-      "souma": "光呼吸"
+      "souma": "激活"
     },
     "description": {
       "ja": "ドラウジーの踊りで活性化した状態。",
       "en": "Invigorated by Drowsie's dancing.",
-      "souma": "被昏睡之舞活化"
+      "souma": "被瞌睡怪的舞蹈激活了"
     },
     "icon": "19541"
   },
@@ -47388,12 +47388,12 @@
     "name": {
       "ja": "結晶付着［弱］",
       "en": "Seed Crystals",
-      "souma": "强结晶附着[弱]"
+      "souma": "附着结晶"
     },
     "description": {
       "ja": "身体に結晶が付着し、移動できなくなった状態。効果時間が終了すると、「結晶付着[強]」に変化する。",
       "en": "Heavy crystals are encasing your lower body. Will bear a <hex:024804F201FA03><hex:024904F201FB03>Crystal Burden<hex:0249020103><hex:0248020103> when this effect expires.",
-      "souma": "身体附着结晶，无法移动。效果时间结束后，变为“结晶附着[强]”"
+      "souma": "身体被结晶附着，无法移动，效果时间结束后变为结晶禁锢状态"
     },
     "icon": "14125"
   },
@@ -47401,12 +47401,12 @@
     "name": {
       "ja": "結晶付着［強］",
       "en": "Crystal Burden",
-      "souma": "弱结晶附着[强]"
+      "souma": "结晶禁锢"
     },
     "description": {
       "ja": "身体に結晶が付着して移動できなくなり、あらゆる行動が遅くなった状態。効果時間が終了すると、結晶化状態になる。",
       "en": "Heavy crystals are encasing your body, preventing movement and slowing activity. Will become <hex:024804F201FA03><hex:024904F201FB03>Crystallized<hex:0249020103><hex:0248020103> when this effect expires.",
-      "souma": "身体附着结晶无法移动，所有行动变慢。效果时间结束后，变为结晶化"
+      "souma": "身体被结晶禁锢，无法移动且一切行动变得迟缓，效果时间结束后变为结晶化状态"
     },
     "icon": "14125"
   },
@@ -47419,7 +47419,7 @@
     "description": {
       "ja": "身体が結晶に覆われ、身動きが取れない状態。効果時間が終了すると、戦闘不能状態になる。",
       "en": "Completely encased in crystal and unable to move or breathe. KO is imminent.",
-      "souma": "身体被结晶覆盖，无法行动。效果时间结束后，变为无法战斗"
+      "souma": "身体结晶化，无法作出任何行动，效果时间结束后陷入无法战斗状态"
     },
     "icon": "14125"
   },
@@ -47427,12 +47427,12 @@
     "name": {
       "ja": "匠の好機",
       "en": "Expedience",
-      "souma": "工匠良机"
+      "souma": "工匠的良机"
     },
     "description": {
       "ja": "ヘイスティタッチがデアリングタッチに変化している状態。",
       "en": "<hex:024804F201F403><hex:024904F201F503>Hasty Touch<hex:0249020103><hex:0248020103> is upgraded to <hex:024804F201F403><hex:024904F201F503>Daring Touch<hex:0249020103><hex:0248020103>.",
-      "souma": "仓促变为大胆加工"
+      "souma": "仓促变为冒进"
     },
     "icon": "16128"
   },
@@ -47440,12 +47440,12 @@
     "name": {
       "ja": "匠の絶技",
       "en": "Trained Perfection",
-      "souma": "工匠绝技"
+      "souma": "工匠的绝技"
     },
     "description": {
       "ja": "一度だけ、耐久の消費が無効化される状態。",
       "en": "Durability loss of next action is reduced to zero.",
-      "souma": "一次性使耐久消耗无效"
+      "souma": "下一次操作不消耗耐久"
     },
     "icon": "16129"
   },
@@ -47458,7 +47458,7 @@
     "description": {
       "ja": "重力の乱れにより、宙に浮いた状態。",
       "en": "Hovering above the ground due to a disturbance in gravity.",
-      "souma": "重力紊乱，漂浮在空中"
+      "souma": "重力陷入混乱，身体漂浮在空中"
     },
     "icon": "14127"
   },
@@ -47466,12 +47466,12 @@
     "name": {
       "ja": "空間掌握：石光",
       "en": "Authority's Gaze",
-      "souma": "空间掌握：石光"
+      "souma": "空间掌控：石化光"
     },
     "description": {
       "ja": "アブソリュート・オーソリティの影響を受けた状態。効果時間が終了すると、周囲に石化の光を放つ。",
       "en": "Under <hex:024804F201F403><hex:024904F201F503>Absolute Authority<hex:0249020103><hex:0248020103>. Will unleash a petrifying light upon those nearby when this effect expires.",
-      "souma": "受绝对权威影响。效果时间结束时，向周围放出石化之光"
+      "souma": "受到绝对君权的影响，效果时间结束时向周围发射石化光"
     },
     "icon": "14128"
   },
@@ -47479,12 +47479,12 @@
     "name": {
       "ja": "火の災禍",
       "en": "Calamity's Flames",
-      "souma": "火之灾祸"
+      "souma": "火之灾变"
     },
     "description": {
       "ja": "火属性の魔力がまとわりついた状態。効果時間が終了すると、スカージ・オフ・ファイアが発動する。",
       "en": "Inundated with fire-aspected aether. <hex:024804F201F403><hex:024904F201F503>Scourge of Fire<hex:0249020103><hex:0248020103> will be triggered when this effect expires.",
-      "souma": "缠绕火属性魔力。效果时间结束时，发动火焰灾祸"
+      "souma": "被火属性魔力包围，效果时间结束时会发动火之灾变"
     },
     "icon": "14156"
   },
@@ -47492,12 +47492,12 @@
     "name": {
       "ja": "火の災禍［強］",
       "en": "Calamity's Inferno",
-      "souma": "火之灾祸[强]"
+      "souma": "火之灾厄"
     },
     "description": {
       "ja": "火属性の魔力がまとわりついた状態。効果時間が終了すると、連続してスカージ・オフ・ファイアが発動する。",
       "en": "Inundated with fire-aspected aether. <hex:024804F201F403><hex:024904F201F503>Scourge of Fire<hex:0249020103><hex:0248020103> will be triggered in succession when this effect expires.",
-      "souma": "缠绕火属性魔力。效果时间结束时，连续发动火焰灾祸"
+      "souma": "被火属性魔力包围，效果时间结束时会连续发动火之灾变"
     },
     "icon": "14157"
   },
@@ -47505,12 +47505,12 @@
     "name": {
       "ja": "火の災禍［弱］",
       "en": "Calamity's Embers",
-      "souma": "火之灾祸[弱]"
+      "souma": "火之灾害"
     },
     "description": {
       "ja": "火属性の魔力がまとわりついた状態。効果時間が終了すると、スカージ・オフ・ファイアが発動する。",
       "en": "Inundated with fire-aspected aether. <hex:024804F201F403><hex:024904F201F503>Scourge of Fire<hex:0249020103><hex:0248020103> will be triggered when this effect expires.",
-      "souma": "缠绕火属性魔力。效果时间结束时，发动火焰灾祸"
+      "souma": "被火属性魔力包围，效果时间结束时会发动火之灾变"
     },
     "icon": "14158"
   },
@@ -47518,12 +47518,12 @@
     "name": {
       "ja": "氷の災禍",
       "en": "Calamity's Frost",
-      "souma": "冰之灾祸"
+      "souma": "冰之灾变"
     },
     "description": {
       "ja": "氷属性の魔力がまとわりついた状態。効果時間が終了すると、地面に氷塊が発生する。",
       "en": "Inundated with ice-aspected aether. An ice boulder will spawn on the ground when this effect expires.",
-      "souma": "缠绕冰属性魔力。效果时间结束时，地面产生冰块"
+      "souma": "被冰属性魔力包围，效果时间结束时会在地面生成冰块"
     },
     "icon": "14159"
   },
@@ -47531,12 +47531,12 @@
     "name": {
       "ja": "氷の災禍［強］",
       "en": "Calamity's Bite",
-      "souma": "冰之灾祸[强]"
+      "souma": "冰之灾厄"
     },
     "description": {
       "ja": "氷属性の魔力がまとわりついた状態。効果時間が終了すると、スカージ・オブ・アイスが発動する。",
       "en": "Inundated with ice-aspected aether. <hex:024804F201F403><hex:024904F201F503>Scourge of Ice<hex:0249020103><hex:0248020103> will be executed when this effect expires.",
-      "souma": "缠绕冰属性魔力。效果时间结束时，发动冰冻灾祸"
+      "souma": "被冰属性魔力包围，效果时间结束时会发动冰之灾变"
     },
     "icon": "14160"
   },
@@ -47544,12 +47544,12 @@
     "name": {
       "ja": "氷の災禍［弱］",
       "en": "Calamity's Chill",
-      "souma": "冰之灾祸[弱]"
+      "souma": "冰之灾害"
     },
     "description": {
       "ja": "氷属性の魔力がまとわりついた状態。効果時間が終了すると冷却状態となり、移動し続けなければ氷結状態になる。",
       "en": "Inundated with ice-aspected aether. Will trigger <hex:024804F201FA03><hex:024904F201FB03>Freezing Up<hex:0249020103><hex:0248020103> when this effect expires, resulting in <hex:024804F201FA03><hex:024904F201FB03>Deep Freeze<hex:0249020103><hex:0248020103> if not continuously in motion.",
-      "souma": "缠绕冰属性魔力。效果时间结束时变为冷却状态，不持续移动则会冻结"
+      "souma": "被冰属性魔力包围，效果时间结束时会陷入冷却状态，在冷却状态下不持续移动会陷入冻结状态"
     },
     "icon": "14161"
   },
@@ -47557,12 +47557,12 @@
     "name": {
       "ja": "雷の災禍",
       "en": "Calamity's Bolt",
-      "souma": "雷之灾祸"
+      "souma": "雷之灾变"
     },
     "description": {
       "ja": "雷属性の魔力がまとわりついた状態。効果時間が終了すると、スカージ・オブ・サンダーが発動する。",
       "en": "Inundated with lightning-aspected aether. <hex:024804F201F403><hex:024904F201F503>Scourge of Thunder<hex:0249020103><hex:0248020103> will be triggered when this effect expires.",
-      "souma": "缠绕雷属性魔力。效果时间结束时，发动雷霆灾祸"
+      "souma": "被雷属性魔力包围，效果时间结束时会发动雷之灾变"
     },
     "icon": "14162"
   },
@@ -47570,12 +47570,12 @@
     "name": {
       "ja": "雷の災禍［強］",
       "en": "Calamity's Fulgur",
-      "souma": "雷之灾祸[强]"
+      "souma": "雷之灾厄"
     },
     "description": {
       "ja": "雷属性の魔力がまとわりついた状態。効果時間が終了すると、スカージ・オブ・サンダーが発動する。",
       "en": "Inundated with lightning-aspected aether. <hex:024804F201F403><hex:024904F201F503>Scourge of Thunder<hex:0249020103><hex:0248020103> will be triggered when this effect expires.",
-      "souma": "缠绕雷属性魔力。效果时间结束时，发动雷霆灾祸"
+      "souma": "被雷属性魔力包围，效果时间结束时会发动雷之灾变"
     },
     "icon": "14163"
   },
@@ -47588,7 +47588,7 @@
     "description": {
       "ja": "呪いにより、カウント0で戦闘不能に陥る状態。",
       "en": "An ancient curse has been placed upon you, resulting in certain death when the counter reaches zero.",
-      "souma": "被诅咒，计数为0时陷入无法战斗状态"
+      "souma": "被大蛇诅咒，倒计时为0时会陷入无法战斗状态"
     },
     "icon": "14126"
   },
@@ -47609,12 +47609,12 @@
     "name": {
       "ja": "ゲベート実行可",
       "en": "Supplication Ready",
-      "souma": "祈愿剑预备"
+      "souma": "祈告剑预备"
     },
     "description": {
       "ja": "ゲベートを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Supplication<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动祈愿剑"
+      "souma": "可以发动祈告剑"
     },
     "icon": "12523"
   },
@@ -47622,12 +47622,12 @@
     "name": {
       "ja": "グラブカッマー実行可",
       "en": "Sepulchre Ready",
-      "souma": "埋葬剑预备"
+      "souma": "葬送剑预备"
     },
     "description": {
       "ja": "グラブカッマーを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Sepulchre<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动埋葬剑"
+      "souma": "可以发动葬送剑"
     },
     "icon": "12524"
   },
@@ -47635,7 +47635,7 @@
     "name": {
       "ja": "エクストリームガード",
       "en": "Guardian",
-      "souma": "极限防御"
+      "souma": "极致防御"
     },
     "description": {
       "ja": "受けるダメージの一部が軽減される状態。",
@@ -47648,7 +47648,7 @@
     "name": {
       "ja": "エクストリームガード［バリア］",
       "en": "Guardian's Will",
-      "souma": "极限防御[防护罩]"
+      "souma": "极致护盾"
     },
     "description": {
       "ja": "一定量のダメージを軽減する状態。",
@@ -47661,12 +47661,12 @@
     "name": {
       "ja": "ブレード・オブ・オナー実行可",
       "en": "Blade of Honor Ready",
-      "souma": "荣誉之剑预备"
+      "souma": "荣耀之剑预备"
     },
     "description": {
       "ja": "ブレード・オブ・オナーを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Blade of Honor<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动荣誉之剑"
+      "souma": "可以发动荣耀之剑"
     },
     "icon": "13052"
   },
@@ -47674,12 +47674,12 @@
     "name": {
       "ja": "ダムネーション",
       "en": "Damnation",
-      "souma": "天谴"
+      "souma": "戮罪"
     },
     "description": {
       "ja": "受けるダメージが軽減され、かつ物理攻撃を受けた場合に、反撃ダメージを与える状態。<hex:02100103>さらに、ダメージを受けるか、ダメージを受けることなく効果時間が経過すると、自身に継続回復効果が付与される。",
       "en": "Damage taken is reduced while inflicting a portion of sustained damage back to its source. HP will be restored over time when effect expires.",
-      "souma": "受到的伤害减轻，受到物理攻击时会反击<hex:02100103>此外，受到伤害或效果时间结束时，获得持续回复效果"
+      "souma": "受到攻击的伤害减少并且受到物理攻击时会发动反击<hex:02100103>同时，受到伤害或持续时间结束后，为自身附加持续恢复体力的效果"
     },
     "icon": "12568"
   },
@@ -47687,12 +47687,12 @@
     "name": {
       "ja": "原初の鼓動",
       "en": "Burgeoning Fury",
-      "souma": "原初的鼓动"
+      "souma": "原初的搏动"
     },
     "description": {
       "ja": "原初の鼓動が蓄積された状態。3スタック付与されると「原初の激震実行可」に変化する。",
       "en": "Fury is building within you. At 3 stacks, effect changes to <hex:024804F201FA03><hex:024904F201FB03>Wrathful<hex:0249020103><hex:0248020103>, allowing you to execute <hex:024804F201F403><hex:024904F201F503>Primal Wrath<hex:0249020103><hex:0248020103>.",
-      "souma": "积累原初的脉动。累积3层后变为“可发动原初的震动”"
+      "souma": "身体里积蓄着原初的搏动，积蓄3档后该状态变为原初的怒震预备"
     },
     "icon": "18147"
   },
@@ -47700,12 +47700,12 @@
     "name": {
       "ja": "ルイネーター実行可",
       "en": "Primal Ruination Ready",
-      "souma": "蛮荒废灭预备"
+      "souma": "尽毁预备"
     },
     "description": {
       "ja": "ルイネーターを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Primal Ruination<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动蛮荒废灭"
+      "souma": "可以发动尽毁"
     },
     "icon": "12569"
   },
@@ -47713,7 +47713,7 @@
     "name": {
       "ja": "シャドウヴィジル",
       "en": "Shadowed Vigil",
-      "souma": "暗影守护"
+      "souma": "暗影卫"
     },
     "description": {
       "ja": "受けるダメージの一部が軽減される状態。",
@@ -47731,7 +47731,7 @@
     "description": {
       "ja": "レッドデリリアムおよびインペイルメントを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Scarlet Delirium<hex:0249020103><hex:0248020103> and <hex:024804F201F403><hex:024904F201F503>Impalement<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动猩乱或刺刑"
+      "souma": "可以发动血红乱或刺穿"
     },
     "icon": "17147"
   },
@@ -47739,12 +47739,12 @@
     "name": {
       "ja": "ディセスティーム実行可",
       "en": "Scorn",
-      "souma": "轻蔑预备"
+      "souma": "掠影的蔑视预备"
     },
     "description": {
       "ja": "ディセスティームを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Disesteem<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动轻蔑"
+      "souma": "可以发动掠影的蔑视"
     },
     "icon": "13126"
   },
@@ -47778,12 +47778,12 @@
     "name": {
       "ja": "ハートコンボ実行可",
       "en": "Ready to Reign",
-      "souma": "心连击预备"
+      "souma": "心有灵狮"
     },
     "description": {
       "ja": "ハートコンボを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Reign of Beasts<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动心连击"
+      "souma": "可以发动心有灵狮连击"
     },
     "icon": "13621"
   },
@@ -47843,12 +47843,12 @@
     "name": {
       "ja": "ドラゴンライズ実行可",
       "en": "Dragon's Flight",
-      "souma": "龙腾冲预备"
+      "souma": "龙炎升预备"
     },
     "description": {
       "ja": "ドラゴンライズを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Rise of the Dragon<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动龙腾冲"
+      "souma": "可以发动龙炎升"
     },
     "icon": "12587"
   },
@@ -47856,12 +47856,12 @@
     "name": {
       "ja": "スタークロッサー実行可",
       "en": "Starcross Ready",
-      "souma": "破星冲预备"
+      "souma": "渡星冲预备"
     },
     "description": {
       "ja": "スタークロッサーを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Starcross<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动破星冲"
+      "souma": "可以发动渡星冲"
     },
     "icon": "12588"
   },
@@ -47895,7 +47895,7 @@
     "name": {
       "ja": "毒盛の術",
       "en": "Dokumori",
-      "souma": "毒盛之术"
+      "souma": "介毒之术"
     },
     "description": {
       "ja": "受けるダメージが増加する状態。",
@@ -47960,12 +47960,12 @@
     "name": {
       "ja": "天眼通：生",
       "en": "Tengentsu's Foresight",
-      "souma": "天眼通：生"
+      "souma": "通天眼"
     },
     "description": {
       "ja": "受けるダメージの一部が軽減され、かつ連続してＨＰが回復している状態。",
       "en": "Damage taken is reduced and regenerating HP over time.",
-      "souma": "减轻所受到的伤害，并且体力逐渐恢复"
+      "souma": "减轻所受到的伤害，同时体力会随时间逐渐恢复"
     },
     "icon": "13317"
   },
@@ -47991,7 +47991,7 @@
     "description": {
       "ja": "天下五剣が天道五剣に、乱れ雪月花が天道雪月花に変化する状態。",
       "en": "<hex:024804F201F403><hex:024904F201F503>Tenka Goken<hex:0249020103><hex:0248020103> is upgraded to <hex:024804F201F403><hex:024904F201F503>Tendo Goken<hex:0249020103><hex:0248020103>, and <hex:024804F201F403><hex:024904F201F503>Midare Setsugekka<hex:0249020103><hex:0248020103> is upgraded to <hex:024804F201F403><hex:024904F201F503>Tendo Setsugekka<hex:0249020103><hex:0248020103>.",
-      "souma": "天下五剑变为天道五剑，乱雪月花变为天道雪月花"
+      "souma": "天下五剑变为天道五剑，纷乱雪月花变为天道雪月花"
     },
     "icon": "13319"
   },
@@ -47999,12 +47999,12 @@
     "name": {
       "ja": "サクリフィキウム実行可",
       "en": "Oblatio",
-      "souma": "祭献预备"
+      "souma": "祭牲预备"
     },
     "description": {
       "ja": "サクリフィキウムを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Sacrificium<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动祭献"
+      "souma": "可以发动祭牲"
     },
     "icon": "12941"
   },
@@ -48017,7 +48017,7 @@
     "description": {
       "ja": "エクスジビトゥ、エクスギャロウズ、エクスギロティンを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Executioner's Gibbet<hex:0249020103><hex:0248020103>, <hex:024804F201F403><hex:024904F201F503>Executioner's Gallows<hex:0249020103><hex:0248020103>, and <hex:024804F201F403><hex:024904F201F503>Executioner's Guillotine<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动绞决行刑、缢杀行刑、断首行刑"
+      "souma": "可以发动绞决处刑、缢杀处刑、断首处刑"
     },
     "icon": "17198"
   },
@@ -48025,12 +48025,12 @@
     "name": {
       "ja": "ペルフェクティオ待機",
       "en": "Perfectio Occulta",
-      "souma": "完美成全待命"
+      "souma": "补完"
     },
     "description": {
       "ja": "効果中にコムニオを実行すると「ペルフェクティオ実行可」に変化する状態。",
       "en": "Grants <hex:024804F201FA03><hex:024904F201FB03>Perfectio Parata<hex:0249020103><hex:0248020103> upon executing <hex:024804F201F403><hex:024904F201F503>Communio<hex:0249020103><hex:0248020103>.",
-      "souma": "效果中发动圣餐后变为“可发动完美”"
+      "souma": "持续时间内发动团契，该状态变为完人预备"
     },
     "icon": "12942"
   },
@@ -48038,12 +48038,12 @@
     "name": {
       "ja": "ペルフェクティオ実行可",
       "en": "Perfectio Parata",
-      "souma": "完美成全预备"
+      "souma": "完人预备"
     },
     "description": {
       "ja": "ペルフェクティオを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Perfectio<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动完美成全"
+      "souma": "可以发动完人"
     },
     "icon": "12943"
   },
@@ -48056,7 +48056,7 @@
     "description": {
       "ja": "<hex:020869E4E94518FF46><hex:020842E0E94947FF1F>リフルジェントアロー<hex:FF1C>ストレートショット<hex:03><hex:FF1C>ストレートショット<hex:03><hex:0208F0E6E4E94518FF85><hex:020881E0E94949FF1F>およびシャドウバイト<hex:FF5B><hex:020857E0E9491AFF4F><hex:02084BE4E94506FF1C>およびワイドボレー<hex:FF28><hex:020824E4E94518FF1C>およびワイドボレー<hex:FF01><hex:03><hex:03><hex:FF01><hex:03><hex:03><hex:FF5B><hex:020857E0E9491AFF4F><hex:02084BE4E94506FF1C>およびワイドボレー<hex:FF28><hex:020824E4E94518FF1C>およびワイドボレー<hex:FF01><hex:03><hex:03><hex:FF01><hex:03><hex:03>を実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503><hex:02083EE4E94518FF29><hex:020825E0E94947FF10>Refulgent Arrow<hex:FF0E>Straight Shot<hex:03><hex:FF0E>Straight Shot<hex:03><hex:0249020103><hex:0248020103><hex:0208F20123E4E94518FFA8><hex:0208A4E0E94949FF28> and <hex:024804F201F403><hex:024904F201F503>Shadowbite<hex:0249020103><hex:0248020103><hex:FF75><hex:020871E0E9491AFF69><hex:020865E4E94506FF29> and <hex:024804F201F403><hex:024904F201F503>Wide Volley<hex:0249020103><hex:0248020103><hex:FF35><hex:020831E4E94518FF29> and <hex:024804F201F403><hex:024904F201F503>Wide Volley<hex:0249020103><hex:0248020103><hex:FF01><hex:03><hex:03><hex:FF01><hex:03><hex:03><hex:FF75><hex:020871E0E9491AFF69><hex:020865E4E94506FF29> and <hex:024804F201F403><hex:024904F201F503>Wide Volley<hex:0249020103><hex:0248020103><hex:FF35><hex:020831E4E94518FF29> and <hex:024804F201F403><hex:024904F201F503>Wide Volley<hex:0249020103><hex:0248020103><hex:FF01><hex:03><hex:03><hex:FF01><hex:03><hex:03>",
-      "souma": "可以发动<hex:020869E4E94518FF46><hex:020842E0E94947FF1F>辉煌箭　　　　　　　<hex:FF1C>直线射击　　　　　<hex:03><hex:FF1C>直线射击　　　　　<hex:03><hex:0208F0E6E4E94518FF85><hex:020881E0E94949FF1F>与影噬箭　　　　　　<hex:FF5B><hex:020857E0E9491AFF4F><hex:02084BE4E94506FF1C>与广域群射　　　　<hex:FF28><hex:020824E4E94518FF1C>与广域群射　　　　<hex:FF01><hex:03><hex:03><hex:FF01><hex:03><hex:03><hex:FF5B><hex:020857E0E9491AFF4F><hex:02084BE4E94506FF1C>与广域群射　　　　<hex:FF28><hex:020824E4E94518FF1C>与广域群射　　　　<hex:FF01><hex:03><hex:03><hex:FF01><hex:03><hex:03>"
+      "souma": "可以发动<hex:020836E4E94518FF22><hex:02081EE0E94947FF0A>辉煌箭<hex:FF0D>直线射击<hex:03><hex:FF0D>直线射击<hex:03><hex:0208A5E4E94518FF5B><hex:020857E0E94949FF0D>或影噬箭<hex:FF43><hex:02083FE0E9491AFF37><hex:020833E4E94506FF10>或广域群射<hex:FF1C><hex:020818E4E94518FF10>或广域群射<hex:FF01><hex:03><hex:03><hex:FF01><hex:03><hex:03><hex:FF43><hex:02083FE0E9491AFF37><hex:020833E4E94506FF10>或广域群射<hex:FF1C><hex:020818E4E94518FF10>或广域群射<hex:FF01><hex:03><hex:03><hex:FF01><hex:03><hex:03>"
     },
     "icon": "13075"
   },
@@ -48064,12 +48064,12 @@
     "name": {
       "ja": "レゾナンスアロー実行可",
       "en": "Resonant Arrow Ready",
-      "souma": "震荡箭预备"
+      "souma": "共鸣箭预备"
     },
     "description": {
       "ja": "レゾナンスアローを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Resonant Arrow<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动震荡箭"
+      "souma": "可以发动共鸣箭"
     },
     "icon": "13076"
   },
@@ -48077,12 +48077,12 @@
     "name": {
       "ja": "光神のアンコール実行可",
       "en": "Radiant Encore Ready",
-      "souma": "光明神的安可曲预备"
+      "souma": "光明神的返场余音预备"
     },
     "description": {
       "ja": "光神のアンコールを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Radiant Encore<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动光明神的安可曲"
+      "souma": "可以发动光明神的返场余音"
     },
     "icon": "13077"
   },
@@ -48103,12 +48103,12 @@
     "name": {
       "ja": "エクスカベーター実行可",
       "en": "Excavator Ready",
-      "souma": "掘进器预备"
+      "souma": "掘地飞轮预备"
     },
     "description": {
       "ja": "エクスカベーターを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Excavator<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动掘进器"
+      "souma": "可以发动掘地飞轮"
     },
     "icon": "13023"
   },
@@ -48116,12 +48116,12 @@
     "name": {
       "ja": "フルメタルバースト実行可",
       "en": "Full Metal Machinist",
-      "souma": "全金属领域预备"
+      "souma": "全金属爆发预备"
     },
     "description": {
       "ja": "フルメタルバーストを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Full Metal Field<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动全金属领域"
+      "souma": "可以发动全金属爆发"
     },
     "icon": "13024"
   },
@@ -48129,12 +48129,12 @@
     "name": {
       "ja": "ラストダンス実行可",
       "en": "Last Dance Ready",
-      "souma": "最后舞步预备"
+      "souma": "落幕舞预备"
     },
     "description": {
       "ja": "ラストダンスを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Last Dance<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动最后舞步"
+      "souma": "可以发动落幕舞"
     },
     "icon": "13727"
   },
@@ -48142,12 +48142,12 @@
     "name": {
       "ja": "フィニシングムーブ実行可",
       "en": "Finishing Move Ready",
-      "souma": "终结舞步预备"
+      "souma": "结束动作预备"
     },
     "description": {
       "ja": "フィニシングムーブを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Finishing Move<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动终结舞步"
+      "souma": "可以发动结束动作"
     },
     "icon": "13728"
   },
@@ -48155,12 +48155,12 @@
     "name": {
       "ja": "暁の舞い実行可",
       "en": "Dance of the Dawn Ready",
-      "souma": "黎明舞预备"
+      "souma": "拂晓舞预备"
     },
     "description": {
       "ja": "暁の舞いを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Dance of the Dawn<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动黎明舞"
+      "souma": "可以发动拂晓舞"
     },
     "icon": "13729"
   },
@@ -48168,7 +48168,7 @@
     "name": {
       "ja": "サンダー系魔法実行可",
       "en": "Thunderhead",
-      "souma": "雷系魔法预备"
+      "souma": "云砧"
     },
     "description": {
       "ja": "サンダー系魔法を実行できる状態。",
@@ -48207,12 +48207,12 @@
     "name": {
       "ja": "シアリングスパーク実行可",
       "en": "Ruby's Glimmer",
-      "souma": "灼热光辉预备"
+      "souma": "灼热之闪预备"
     },
     "description": {
       "ja": "シアリングスパークを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Searing Flash<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动灼热光辉"
+      "souma": "可以发动灼热之闪"
     },
     "icon": "12750"
   },
@@ -48220,12 +48220,12 @@
     "name": {
       "ja": "ルクス・ソラリス実行可",
       "en": "Refulgent Lux",
-      "souma": "阳炎灵光预备"
+      "souma": "日光普照预备"
     },
     "description": {
       "ja": "ルクス・ソラリスを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Lux Solaris<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动阳炎灵光"
+      "souma": "可以发动日光普照"
     },
     "icon": "12751"
   },
@@ -48233,12 +48233,12 @@
     "name": {
       "ja": "魔法剣コンボ実行可",
       "en": "Magicked Swordplay",
-      "souma": "魔法剑连击预备"
+      "souma": "魔法剑术"
     },
     "description": {
       "ja": "魔法剣コンボを実行できる状態。",
       "en": "Able to execute enchanted sword skills without cost.",
-      "souma": "可以发动魔法剑连击"
+      "souma": "可以发动魔法剑术连击"
     },
     "icon": "18665"
   },
@@ -48246,12 +48246,12 @@
     "name": {
       "ja": "ブライヤー・クロゼ実行可",
       "en": "Thorned Flourish",
-      "souma": "荆棘绞剑预备"
+      "souma": "荆棘环绕预备"
     },
     "description": {
       "ja": "ブライヤー・クロゼを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Vice of Thorns<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动荆棘绞剑"
+      "souma": "可以发动荆棘环绕"
     },
     "icon": "13411"
   },
@@ -48259,12 +48259,12 @@
     "name": {
       "ja": "ノーブルインパクト実行可",
       "en": "Grand Impact Ready",
-      "souma": "崇高冲击预备"
+      "souma": "显贵冲击预备"
     },
     "description": {
       "ja": "ノーブルインパクトを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Grand Impact<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动崇高冲击"
+      "souma": "可以发动显贵冲击"
     },
     "icon": "13412"
   },
@@ -48272,12 +48272,12 @@
     "name": {
       "ja": "プリフルジェンス実行可",
       "en": "Prefulgence Ready",
-      "souma": "辉煌预备"
+      "souma": "光芒四射预备"
     },
     "description": {
       "ja": "プリフルジェンスを実行できる状態。",
       "en": "Able to cast <hex:024804F201F403><hex:024904F201F503>Prefulgence<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动辉煌"
+      "souma": "可以发动光芒四射"
     },
     "icon": "13413"
   },
@@ -48285,12 +48285,12 @@
     "name": {
       "ja": "グレアジャ実行可",
       "en": "Sacred Sight",
-      "souma": "闪曜预备"
+      "souma": "闪飒预备"
     },
     "description": {
       "ja": "グレアジャを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Glare IV<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动闪曜"
+      "souma": "可以发动闪飒"
     },
     "icon": "18669"
   },
@@ -48298,7 +48298,7 @@
     "name": {
       "ja": "メディガ",
       "en": "Medica III",
-      "souma": "医澈"
+      "souma": "医养"
     },
     "description": {
       "ja": "連続してＨＰが回復している状態。",
@@ -48311,12 +48311,12 @@
     "name": {
       "ja": "ディヴァインカレス実行可",
       "en": "Divine Grace",
-      "souma": "神慰预备"
+      "souma": "神爱抚预备"
     },
     "description": {
       "ja": "ディヴァインカレスを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Divine Caress<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动神慰"
+      "souma": "可以发动神爱抚"
     },
     "icon": "12640"
   },
@@ -48350,12 +48350,12 @@
     "name": {
       "ja": "セラフィズム",
       "en": "Seraphism",
-      "souma": "炽天化身"
+      "souma": "炽天附体"
     },
     "description": {
       "ja": "自身と周囲のパーティメンバーのＨＰを継続回復している状態。",
       "en": "Self and nearby party members are regenerating HP over time.",
-      "souma": "自身和周围队友持续回复体力"
+      "souma": "持续恢复自身及周围队员的体力"
     },
     "icon": "12820"
   },
@@ -48363,7 +48363,7 @@
     "name": {
       "ja": "セラフィズム：効果",
       "en": "Seraphism",
-      "souma": "炽天化身"
+      "souma": "炽天之光"
     },
     "description": {
       "ja": "連続してＨＰが回復している状態。",
@@ -48532,7 +48532,7 @@
     "name": {
       "ja": "フィロソフィア",
       "en": "Philosophia",
-      "souma": "哲理"
+      "souma": "智慧之爱"
     },
     "description": {
       "ja": "回復魔法の回復量が向上した状態。",
@@ -48545,12 +48545,12 @@
     "name": {
       "ja": "エウダイモニア",
       "en": "Eudaimonia",
-      "souma": "至善"
+      "souma": "幸福"
     },
     "description": {
       "ja": "この効果を付与した賢者が魔法を命中させると、自身に対してＨＰ回復効果が発動する状態。",
       "en": "Additional HP is recovered when the sage who granted this effect lands any spell.",
-      "souma": "施加此效果的贤者命中魔法时，自身获得体力回复效果"
+      "souma": "附加此效果的贤者发动魔法命中时，自身体力恢复"
     },
     "icon": "12975"
   },
@@ -48558,7 +48558,7 @@
     "name": {
       "ja": "ダムネーション［被］",
       "en": "Primeval Impulse",
-      "souma": "诅咒[被]"
+      "souma": "讨罪"
     },
     "description": {
       "ja": "連続してＨＰが回復している状態。",
@@ -48571,12 +48571,12 @@
     "name": {
       "ja": "原初の激震実行可",
       "en": "Wrathful",
-      "souma": "原初的激震预备"
+      "souma": "原初的怒震预备"
     },
     "description": {
       "ja": "原初の激震を実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Primal Wrath<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动原初的激震"
+      "souma": "可以发动原初的怒震"
     },
     "icon": "12571"
   },
@@ -48584,7 +48584,7 @@
     "name": {
       "ja": "シャドウヴィジル［被］",
       "en": "Vigilant",
-      "souma": "暗影守望[被]"
+      "souma": "影卫"
     },
     "description": {
       "ja": "ＨＰが一定割合を下回るか効果時間が経過すると、回復効果が発動する状態。",
@@ -48597,7 +48597,7 @@
     "name": {
       "ja": "ディヴァインカレス［バリア］",
       "en": "Divine Caress",
-      "souma": "神慰[防护罩]"
+      "souma": "神爱抚"
     },
     "description": {
       "ja": "一定量のダメージを軽減する状態。",
@@ -48610,7 +48610,7 @@
     "name": {
       "ja": "ディヴァインカレス［回］",
       "en": "Divine Aura",
-      "souma": "神慰[回]"
+      "souma": "神爱环"
     },
     "description": {
       "ja": "連続してＨＰが回復している状態。",
@@ -48641,7 +48641,7 @@
     "description": {
       "ja": "この効果を付与したプレイヤーから受けるダメージが増加する状態。",
       "en": "Sustaining increased damage from target who executed <hex:024804F201F403><hex:024904F201F503>Kunai's Bane<hex:0249020103><hex:0248020103>.",
-      "souma": "受到附加此效果的玩家攻击的伤害增加"
+      "souma": "受到施加此状态的玩家攻击时所受伤害增加"
     },
     "icon": "12923"
   },
@@ -48649,12 +48649,12 @@
     "name": {
       "ja": "大物の知識",
       "en": "Big-game Fishing",
-      "souma": "大物的知识"
+      "souma": "大鱼知识"
     },
     "description": {
       "ja": "ラージサイズ釣り上げ時に、サイズの大きい個体がかかりやすくなった状態。",
       "en": "Large-sized fish when caught are more likely to be an especially large specimen.",
-      "souma": "钓起大型鱼时，更容易钓到体型较大的个体"
+      "souma": "钓上大尺寸的鱼时，尺寸比通常情况更大的概率提高"
     },
     "icon": "11122"
   },
@@ -48680,7 +48680,7 @@
     "description": {
       "ja": "心神喪失した状態。移動した際に、指カーソルの方向へ動いてしまう。",
       "en": "Overcome with confusion and can only move in the direction indicated.",
-      "souma": "精神失常的状态，只能朝光标指示的方向移动"
+      "souma": "精神失常，无法做出任何行动，精神恢复正常后，清除所有仇恨"
     },
     "icon": "15809"
   },
@@ -48688,12 +48688,12 @@
     "name": {
       "ja": "プライミングタッチ",
       "en": "Priming Touch",
-      "souma": "预备之触"
+      "souma": "预备碰触"
     },
     "description": {
       "ja": "「慎重純化」の追加効果発生率が倍になっている状態。",
       "en": "Chance your next use of a meticulous action will not affect integrity is doubled.",
-      "souma": "“谨慎纯化”的额外效果发生率翻倍"
+      "souma": "慎重提纯的追加效果发生率翻倍"
     },
     "icon": "16025"
   },
@@ -48701,12 +48701,12 @@
     "name": {
       "ja": "強活眼",
       "en": "Collector's High Standard",
-      "souma": "强活眼"
+      "souma": "强化洞察"
     },
     "description": {
       "ja": "「大胆純化」の収集価値上昇量、「慎重純化」の追加効果発生率が高くなっている状態。",
       "en": "Effectiveness of brazen actions are increased. Chance meticulous actions do not affect integrity is also increased.",
-      "souma": "“大胆纯化”的收集价值提升量和“谨慎纯化”的额外效果发生率提高"
+      "souma": "大胆提纯的收藏价值上升量和慎重提纯的追加效果发生率提高"
     },
     "icon": "16026"
   },
@@ -48714,12 +48714,12 @@
     "name": {
       "ja": "決意の咆哮",
       "en": "Roar of Conviction",
-      "souma": "决意的咆哮"
+      "souma": "坚意咆哮"
     },
     "description": {
       "ja": "決意を胸に、心が高揚した状態。<hex:02100103>与ダメージが上昇する。",
       "en": "Determination fills the heart and damage dealt is increased.",
-      "souma": "心怀决意，情绪高涨<hex:02100103>造成的伤害提高"
+      "souma": "心中充满坚定的意志和决心，情绪高涨<hex:02100103>攻击造成的伤害提高"
     },
     "icon": "14191"
   },
@@ -49039,12 +49039,12 @@
     "name": {
       "ja": "遅効性神経毒",
       "en": "Delayed Neurotoxicity",
-      "souma": "慢性神经毒"
+      "souma": "缓释型神经毒素"
     },
     "description": {
       "ja": "身体に遅効性の毒が回っている状態。効果時間が終了すると行動できなくなる。",
       "en": "Poison spreads throughout the body, promising to paralyze after an allotted time has passed.",
-      "souma": "体内有慢性毒素。效果时间结束后无法行动"
+      "souma": "身体被缓释型毒素侵蚀，效果时间结束时陷入无法行动状态"
     },
     "icon": "15420"
   },
@@ -49065,7 +49065,7 @@
     "name": {
       "ja": "トラルの意地",
       "en": "Turali Will",
-      "souma": "图拉尔的意志"
+      "souma": "图拉尔的坚毅"
     },
     "description": {
       "ja": "一部を除くすべてのダメージを無効化する状態。",
@@ -49078,12 +49078,12 @@
     "name": {
       "ja": "ナイスヘッド",
       "en": "Benoggined",
-      "souma": "漂亮的头球"
+      "souma": "好脑袋"
     },
     "description": {
       "ja": "ナイスヘッドにされ、移動速度が低下した状態。アクション実行不可。",
       "en": "Crowned with a weighty mascot noggin, reducing movement speed and inhibiting the use of actions.",
-      "souma": "被好头击中，移动速度降低。无法发动动作"
+      "souma": "被换上了好脑袋，移动速度降低，无法发动技能"
     },
     "icon": "14176"
   },
@@ -49096,7 +49096,7 @@
     "description": {
       "ja": "霊体に変身し障害物をすり抜けられるが、特定の攻撃で大ダメージを受けてしまう状態。",
       "en": "An incorporeal form is enabling you to pass through obstacles, but additional damage is taken from certain attacks.",
-      "souma": "变身为灵体可穿过障碍物，但受到特定攻击会遭受大量伤害"
+      "souma": "变成可以穿过障碍物的灵体，遭受特定攻击时所受伤害大幅提高"
     },
     "icon": "14177"
   },
@@ -49104,12 +49104,12 @@
     "name": {
       "ja": "迷惑",
       "en": "Nuisance",
-      "souma": "困扰"
+      "souma": "添乱"
     },
     "description": {
       "ja": "人に迷惑をかけてしまう状態。フェザーサークルの放った特定の攻撃が自身からも発動する。",
       "en": "Causing trouble to others. Will be compelled to release Feather Ray's special attack when cast.",
-      "souma": "给他人造成麻烦。羽毛圈发动的特定攻击也会从自身发动"
+      "souma": "身体会不受控制地重复羽环鳐发动过的特定攻击，给其他人添乱"
     },
     "icon": "14178"
   },
@@ -49130,7 +49130,7 @@
     "name": {
       "ja": "ロネークの心臓［被］",
       "en": "Rroneek's Favor",
-      "souma": "犎牛的心脏[被]"
+      "souma": "犎牛的心血"
     },
     "description": {
       "ja": "連続してＨＰが回復している状態。",
@@ -49161,7 +49161,7 @@
     "description": {
       "ja": "大地の如く揺るがぬ決意で、受けるダメージの一部が軽減される状態。",
       "en": "By the strength of immovable conviction, damage taken is reduced.",
-      "souma": "如大地般坚定的决心，受到的部分伤害减轻"
+      "souma": "如大地般坚定的决心使自身所受伤害降低"
     },
     "icon": "16306"
   },
@@ -49174,7 +49174,7 @@
     "description": {
       "ja": "大地の慈愛を得て、受けるダメージの一部が軽減される状態。",
       "en": "By the blessing of the land, damage taken is reduced.",
-      "souma": "获得大地的慈爱，受到的部分伤害减轻"
+      "souma": "获得大地的慈爱，自身所受伤害降低"
     },
     "icon": "16306"
   },
@@ -49195,7 +49195,7 @@
     "name": {
       "ja": "ヴァルメディカラ",
       "en": "Vermedica II",
-      "souma": "战愈"
+      "souma": "赤医济"
     },
     "description": {
       "ja": "連続してＨＰが回復している状態。",
@@ -49208,12 +49208,12 @@
     "name": {
       "ja": "筋力の超薬",
       "en": "Strengthening Stimulant",
-      "souma": "超级肌力药"
+      "souma": "肌肉猛药"
     },
     "description": {
       "ja": "超薬の効果により筋力が増幅した状態。身体能力が大幅に強化される。",
       "en": "An alchemical tonic is granting preternatural strength. Physical abilities are greatly enhanced.",
-      "souma": "超级药剂效果增强肌力。身体能力大幅提升"
+      "souma": "猛药强化了肌肉，身体素质大幅提高"
     },
     "icon": "14164"
   },
@@ -49221,12 +49221,12 @@
     "name": {
       "ja": "集中力の超薬",
       "en": "Concentration Concentrate",
-      "souma": "超级集中药"
+      "souma": "注意力猛药"
     },
     "description": {
       "ja": "超薬の効果により集中力が増幅した状態。魔法詠唱がダメージによって中断されない。",
       "en": "An alchemical tonic is improving concentration. Spells cannot be interrupted by taking damage.",
-      "souma": "超级药剂效果增强集中力。魔法咏唱不会被伤害打断"
+      "souma": "猛药强化了注意力，受到伤害时不再会打断魔法咏唱"
     },
     "icon": "14165"
   },
@@ -49234,12 +49234,12 @@
     "name": {
       "ja": "魔力の超薬",
       "en": "Mana Medication",
-      "souma": "超级魔力药"
+      "souma": "魔力猛药"
     },
     "description": {
       "ja": "超薬の効果により魔力が増幅した状態。ＭＰが連続で回復し続ける。",
       "en": "An alchemical tonic is amplifying magical abilities. MP is recovering continuously over time.",
-      "souma": "超级药剂效果增强魔力。魔力持续恢复"
+      "souma": "猛药强化了魔力，魔力会随时间逐渐恢复"
     },
     "icon": "14166"
   },
@@ -49260,12 +49260,12 @@
     "name": {
       "ja": "超薬副作用",
       "en": "Overmedicated",
-      "souma": "超药副作用"
+      "souma": "猛药副作用"
     },
     "description": {
       "ja": "超薬の副作用を受けている状態。",
       "en": "Experiencing debilitating side effects caused by tonic overdose.",
-      "souma": "受到超级药剂的副作用"
+      "souma": "猛药对身体产生了副作用"
     },
     "icon": "14167"
   },
@@ -49338,12 +49338,12 @@
     "name": {
       "ja": "幻覚：錯視",
       "en": "Delusions",
-      "souma": "幻觉：错视"
+      "souma": "幻视"
     },
     "description": {
       "ja": "目にした対象を別のものだと認識してしまう状態。",
       "en": "Exposure to the Heartsting's toxins is causing hallucinations.",
-      "souma": "将看到的对象误认为其他事物"
+      "souma": "会把所见的事物看成别的东西"
     },
     "icon": "14168"
   },
@@ -49351,12 +49351,12 @@
     "name": {
       "ja": "幻覚：錯視",
       "en": "Delusions",
-      "souma": "幻觉：错视"
+      "souma": "幻视"
     },
     "description": {
       "ja": "目にした対象を別のものだと認識してしまう状態。",
       "en": "Exposure to the Heartsting's toxins is causing hallucinations.",
-      "souma": "将看到的对象误认为其他事物"
+      "souma": "会把所见的事物看成别的东西"
     },
     "icon": "14168"
   },
@@ -49364,12 +49364,12 @@
     "name": {
       "ja": "大型魚確率上昇",
       "en": "Ambitious Lure",
-      "souma": "大型鱼几率上升"
+      "souma": "大型鱼类概率提升"
     },
     "description": {
       "ja": "大型の魚がかかりやすくなった状態。<hex:02100103>スタック数が増えるほど、大型の魚がかかりやすくなる。<hex:02100103>3スタック付与されると、アンビシャスルアーが使用不能になる。",
       "en": "Increased chance of landing large-sized fish. Chance increases with additional stacks. <hex:024804F201F403><hex:024904F201F503>Ambitious Lure<hex:0249020103><hex:0248020103> cannot be used after reaching 3 stacks.",
-      "souma": "更容易钓到大型鱼<hex:02100103>堆叠数越多，越容易钓到大型鱼<hex:02100103>累积3层后，无法使用雄心诱饵"
+      "souma": "大型鱼类咬钩概率提升<hex:02100103>概率会随档数的提高而提高<hex:02100103>累积3档后无法再发动雄心之饵"
     },
     "icon": "18905"
   },
@@ -49377,12 +49377,12 @@
     "name": {
       "ja": "小型魚確率上昇",
       "en": "Modest Lure",
-      "souma": "小型鱼几率上升"
+      "souma": "小型鱼类概率提升"
     },
     "description": {
       "ja": "小型の魚がかかりやすくなった状態。<hex:02100103>スタック数が増えるほど、小型の魚がかかりやすくなる。<hex:02100103>3スタック付与されると、モデストルアーが使用不能になる。",
       "en": "Increased chance of landing small-sized fish. Chance increases with additional stacks. <hex:024804F201F403><hex:024904F201F503>Modest Lure<hex:0249020103><hex:0248020103> cannot be used after reaching 3 stacks.",
-      "souma": "更容易钓到小型鱼<hex:02100103>堆叠数越多，越容易钓到小型鱼<hex:02100103>累积3层后，无法使用谦虚诱饵"
+      "souma": "小型鱼类咬钩概率提升<hex:02100103>概率会随档数的提高而提高<hex:02100103>累积3档后无法再发动谦逊之饵"
     },
     "icon": "18909"
   },
@@ -49434,7 +49434,7 @@
     "description": {
       "ja": "一連の放電現象の最後に、十字型に放電する状態。",
       "en": "Launching an electrical barrage ending in cross-shaped discharge.",
-      "souma": "一系列放电现象的最后，以十字形放电"
+      "souma": "在连续放电的最后发动十字形放电"
     },
     "icon": "14153"
   },
@@ -49442,12 +49442,12 @@
     "name": {
       "ja": "Ｘ字型放電",
       "en": "X Marks the Shock",
-      "souma": "X字放电"
+      "souma": "乂字放电"
     },
     "description": {
       "ja": "一連の放電現象の最後に、Ｘ字型に放電する状態。",
       "en": "Launching an electrical barrage ending in X-shaped discharge.",
-      "souma": "一系列放电现象的最后，以X字形放电"
+      "souma": "在连续放电的最后发动乂字形放电"
     },
     "icon": "14154"
   },
@@ -49455,12 +49455,12 @@
     "name": {
       "ja": "雷気蓄積",
       "en": "Electrical Charge",
-      "souma": "雷气积累"
+      "souma": "电气积蓄"
     },
     "description": {
       "ja": "雷気を蓄積し、スタック数のぶんだけ放電できる状態。",
       "en": "Storing large quantities of lightning. Electrical discharge is released based on the number of stacks.",
-      "souma": "积累雷气，可根据堆叠数放电"
+      "souma": "体内积蓄着电气，会根据累计档数放电"
     },
     "icon": "17721"
   },
@@ -49468,12 +49468,12 @@
     "name": {
       "ja": "雷気性麻痺",
       "en": "Numbing Current",
-      "souma": "雷气性麻痹"
+      "souma": "电气麻痹"
     },
     "description": {
       "ja": "雷気で痺れて動けない状態。特定の雷属性攻撃を受けた際の被ダメージが大幅に増加する。",
       "en": "Paralyzed by an electric shock and unable to move. Damage taken by lightning-aspected attacks is greatly increased.",
-      "souma": "被雷气麻痹无法行动。受到特定雷属性攻击时，受到的伤害大幅增加"
+      "souma": "被电气麻痹，无法移动。遭受特定的雷属性攻击时，所受伤害大幅提高"
     },
     "icon": "15229"
   },
@@ -49525,7 +49525,7 @@
     "description": {
       "ja": "回復魔法の回復量が上昇した状態。",
       "en": "Healing magic potency is increased.",
-      "souma": "回复魔法的回复量提高"
+      "souma": "治疗魔法的治疗量提高，且减少周围队员受到的伤害"
     },
     "icon": "12634"
   },
@@ -49546,7 +49546,7 @@
     "name": {
       "ja": "メディガ",
       "en": "Medica III",
-      "souma": "医澈"
+      "souma": "医养"
     },
     "description": {
       "ja": "連続してＨＰが回復している状態。",
@@ -49559,7 +49559,7 @@
     "name": {
       "ja": "サイオンズ・メディガ",
       "en": "Medica III of the Seventh Dawn",
-      "souma": "血盟医澈"
+      "souma": "血盟医养"
     },
     "description": {
       "ja": "連続してＨＰが回復している状態。",
@@ -49577,7 +49577,7 @@
     "description": {
       "ja": "一定量のダメージを軽減する状態。",
       "en": "A magicked barrier is nullifying damage.",
-      "souma": "抵消一定伤害"
+      "souma": "发动治疗魔法的治疗量提高"
     },
     "icon": "13255"
   },
@@ -49590,7 +49590,7 @@
     "description": {
       "ja": "自身にこのステータスを付与した占星術師が「ミクロコスモス」を実行することで、自身のＨＰを回復させる効果が発動する状態。",
       "en": "Restores HP when the astrologian who granted this effect executes <hex:024804F201F403><hex:024904F201F503>Microcosmos<hex:0249020103><hex:0248020103>.",
-      "souma": "为自身施加此状态的占星术士发动“小宇宙”时，自身体力回复效果发动"
+      "souma": "持续时间结束或附加此效果的占星术士发动小宇宙时恢复自身体力，恢复效果量根据附加大宇宙效果后受到的伤害量而变化"
     },
     "icon": "13263"
   },
@@ -49676,12 +49676,12 @@
     "name": {
       "ja": "玉乗り",
       "en": "On a Roll",
-      "souma": "滚球"
+      "souma": "骑滚球"
     },
     "description": {
       "ja": "ボールの上に乗っている状態。",
       "en": "Having a ball on a ball.",
-      "souma": "站在球上"
+      "souma": "骑上了滚球"
     },
     "icon": "14175"
   },
@@ -49832,12 +49832,12 @@
     "name": {
       "ja": "逆手順",
       "en": "Inverse Operations",
-      "souma": "反向顺序"
+      "souma": "逆向"
     },
     "description": {
       "ja": "一連の行動を、逆の手順で実行しようとしている状態。",
       "en": "Prepared to systemically work backwards.",
-      "souma": "试图以相反的顺序发动一系列动作"
+      "souma": "按逆向顺序采取一系列行动"
     },
     "icon": "14208"
   },
@@ -49845,12 +49845,12 @@
     "name": {
       "ja": "気まぐれな瞳",
       "en": "Wandering Eyes",
-      "souma": "反复无常之瞳"
+      "souma": "随心所欲的眼睛"
     },
     "description": {
       "ja": "瞳を見なかった者に呪いをかける状態。",
       "en": "Cursing all who look away.",
-      "souma": "对未看到瞳孔的人施加诅咒"
+      "souma": "对没有看向眼睛的人施加诅咒"
     },
     "icon": "14209"
   },
@@ -49863,7 +49863,7 @@
     "description": {
       "ja": "灼熱波になると天気予報を発している状態。特定の行動ののち、火属性魔法を実行する。",
       "en": "All are advised to prepare for fire-aspected damage.",
-      "souma": "预报热浪。特定动作后，发动火属性魔法"
+      "souma": "预报天气即将转变为热浪，特定行动后发动火属性魔法"
     },
     "icon": "14210"
   },
@@ -49876,7 +49876,7 @@
     "description": {
       "ja": "雷波になると天気予報を発している状態。特定の行動ののち、雷属性魔法を実行する。",
       "en": "All are advised to prepare for lightning-aspected damage.",
-      "souma": "预报雷波。特定动作后，发动雷属性魔法"
+      "souma": "预报天气即将转变为雷波，特定行动后发动雷属性魔法"
     },
     "icon": "14211"
   },
@@ -49889,7 +49889,7 @@
     "description": {
       "ja": "暴風になると天気予報を発している状態。特定の行動ののち、風属性魔法を実行する。",
       "en": "All are advised to prepare for wind-aspected damage.",
-      "souma": "预报暴风。特定动作后，发动风属性魔法"
+      "souma": "预报天气即将转变为暴风，特定行动后发动风属性魔法"
     },
     "icon": "14212"
   },
@@ -49902,7 +49902,7 @@
     "description": {
       "ja": "吹雪になると天気予報を発している状態。特定の行動ののち、氷属性魔法を実行する。",
       "en": "All are advised to prepare for ice-aspected damage.",
-      "souma": "预报暴雪。特定动作后，发动冰属性魔法"
+      "souma": "预报天气即将转变为暴雪，特定行动后发动冰属性魔法"
     },
     "icon": "14213"
   },
@@ -49975,12 +49975,12 @@
     "name": {
       "ja": "左回転の構え",
       "en": "Left Windup",
-      "souma": "左旋姿态"
+      "souma": "左转向准备"
     },
     "description": {
       "ja": "左回転からの連続攻撃を行う構えをとった状態。",
       "en": "Ready to unleash a series of blows, starting with a leftward spin.",
-      "souma": "摆出左旋连续攻击的姿势"
+      "souma": "准备在连续攻击中向左转向"
     },
     "icon": "15426"
   },
@@ -49988,12 +49988,12 @@
     "name": {
       "ja": "右回転の構え",
       "en": "Right Windup",
-      "souma": "右旋姿态"
+      "souma": "右转向准备"
     },
     "description": {
       "ja": "右回転からの連続攻撃を行う構えをとった状態。",
       "en": "Ready to unleash a series of blows, starting with a rightward spin.",
-      "souma": "摆出右旋连续攻击的姿势"
+      "souma": "准备在连续攻击中向右转向"
     },
     "icon": "15425"
   },
@@ -50001,12 +50001,12 @@
     "name": {
       "ja": "左回転の構え",
       "en": "Left Windup",
-      "souma": "左旋姿态"
+      "souma": "左转向准备"
     },
     "description": {
       "ja": "左回転からの連続攻撃を行う構えをとった状態。",
       "en": "Ready to unleash a series of blows, starting with a leftward spin.",
-      "souma": "摆出左旋连续攻击的姿势"
+      "souma": "准备在连续攻击中向左转向"
     },
     "icon": "15426"
   },
@@ -50014,12 +50014,12 @@
     "name": {
       "ja": "右回転の構え",
       "en": "Right Windup",
-      "souma": "右旋姿态"
+      "souma": "右转向准备"
     },
     "description": {
       "ja": "右回転からの連続攻撃を行う構えをとった状態。",
       "en": "Ready to unleash a series of blows, starting with a rightward spin.",
-      "souma": "摆出右旋连续攻击的姿势"
+      "souma": "准备在连续攻击中向右转向"
     },
     "icon": "15425"
   },
@@ -50027,12 +50027,12 @@
     "name": {
       "ja": "おうえん",
       "en": "Shining Encouragement",
-      "souma": "加油"
+      "souma": "鼓劲"
     },
     "description": {
       "ja": "セートジャに応援され、やる気が満ちた状態。",
       "en": "Spurred on by Ceetol Ja's heartfelt support.",
-      "souma": "受塞特加的鼓舞，充满干劲"
+      "souma": "收到了西托加的鼓劲，干劲十足"
     },
     "icon": "14207"
   },
@@ -50040,12 +50040,12 @@
     "name": {
       "ja": "堅き護り",
       "en": "Unbroken Mettle",
-      "souma": "坚固防护"
+      "souma": "牢固的防御"
     },
     "description": {
       "ja": "堅牢な魔法障壁に護られた状態。",
       "en": "Protected by the Steelhog's magicked barrier.",
-      "souma": "被坚固的魔法屏障保护"
+      "souma": "被牢固的魔法障壁保护着"
     },
     "icon": "14201"
   },
@@ -50053,12 +50053,12 @@
     "name": {
       "ja": "綻んだ護り",
       "en": "Fractured Mettle",
-      "souma": "破裂防护"
+      "souma": "龟裂的防御"
     },
     "description": {
       "ja": "綻んだ魔法障壁に護られた状態。",
       "en": "Protected by a damaged magicked barrier.",
-      "souma": "被有裂缝的魔法屏障保护"
+      "souma": "被龟裂的魔法障壁保护着"
     },
     "icon": "14202"
   },
@@ -50066,12 +50066,12 @@
     "name": {
       "ja": "綻び：右",
       "en": "Rightward Fracture",
-      "souma": "裂缝：右"
+      "souma": "右侧裂痕"
     },
     "description": {
       "ja": "魔法障壁に綻びが生じた状態。右側からの攻撃で大ダメージを受ける。",
       "en": "Magicked barrier is cracking under pressure. Damage dealt from the right is greatly increased.",
-      "souma": "魔法屏障出现裂缝。从右侧受到攻击会遭受大量伤害"
+      "souma": "魔法障壁出现裂痕，从右侧袭来的伤害大幅提高"
     },
     "icon": "14203"
   },
@@ -50079,12 +50079,12 @@
     "name": {
       "ja": "綻び：左",
       "en": "Leftward Fracture",
-      "souma": "裂缝：左"
+      "souma": "左侧裂痕"
     },
     "description": {
       "ja": "魔法障壁に綻びが生じた状態。左側からの攻撃で大ダメージを受ける。",
       "en": "Magicked barrier is cracking under pressure. Damage dealt from the left is greatly increased.",
-      "souma": "魔法屏障出现裂缝。从左侧受到攻击会遭受大量伤害"
+      "souma": "魔法障壁出现裂痕，从左侧袭来的伤害大幅提高"
     },
     "icon": "14204"
   },
@@ -50092,12 +50092,12 @@
     "name": {
       "ja": "綻び：前",
       "en": "綻び：前",
-      "souma": "裂缝：前"
+      "souma": "前方裂痕"
     },
     "description": {
       "ja": "魔法障壁に綻びが生じた状態。正面からの攻撃で大ダメージを受ける。",
       "en": "魔法障壁に綻びが生じた状態。正面からの攻撃で大ダメージを受ける。",
-      "souma": "魔法屏障出现裂缝。从正面受到攻击会遭受大量伤害"
+      "souma": "魔法障壁出现裂痕，从正面袭来的伤害大幅提高"
     },
     "icon": "14205"
   },
@@ -50105,12 +50105,12 @@
     "name": {
       "ja": "綻び：後",
       "en": "Backward Fracture",
-      "souma": "裂缝：后"
+      "souma": "后方裂痕"
     },
     "description": {
       "ja": "魔法障壁に綻びが生じた状態。背面からの攻撃で大ダメージを受ける。",
       "en": "Magicked barrier is cracking under pressure. Damage dealt from the rear is greatly increased.",
-      "souma": "魔法屏障出现裂缝。从背面受到攻击会遭受大量伤害"
+      "souma": "魔法障壁出现裂痕，从背面袭来的伤害大幅提高"
     },
     "icon": "14206"
   },
@@ -50209,12 +50209,12 @@
     "name": {
       "ja": "プロジェクション［被］",
       "en": "Projection",
-      "souma": "投影[被]"
+      "souma": "被投影"
     },
     "description": {
       "ja": "ゾラージャの意志が投影されつつある状態。特定のエーテルに触れると、自身の肉体が勝手にゾラージャの攻撃を発動する。",
       "en": "Zoraal Ja's will is being projected upon you. Contact with specific flows of aether will provoke an attack.",
-      "souma": "佐拉加的意志正在投射。接触特定以太时，自身肉体会自动发动佐拉加的攻击"
+      "souma": "被佐拉加的意志投影，接触特定以太后，肉体会不受控制地发动佐拉加的攻击"
     },
     "icon": "14214"
   },
@@ -50300,12 +50300,12 @@
     "name": {
       "ja": "早口",
       "en": "Twisted Tongue",
-      "souma": "绕口令"
+      "souma": "语速飞快"
     },
     "description": {
       "ja": "本気を出して、早口になった状態。",
       "en": "Talking fast and bringing all to bear.",
-      "souma": "认真起来，说话变快"
+      "souma": "拿出了真本事，语速变得飞快"
     },
     "icon": "15008"
   },
@@ -50318,7 +50318,7 @@
     "description": {
       "ja": "祭器の力で深い眠りに落ちている状態。",
       "en": "The sacred treasure is inducing a deep slumber.",
-      "souma": "被祭器的力量陷入深度睡眠"
+      "souma": "在祭器之力的影响下陷入深度睡眠"
     },
     "icon": "15013"
   },
@@ -50331,7 +50331,7 @@
     "description": {
       "ja": "祭器の力で深い眠りに落ちている状態。",
       "en": "The sacred treasure is inducing a deep slumber.",
-      "souma": "被祭器的力量陷入深度睡眠"
+      "souma": "在祭器之力的影响下陷入深度睡眠"
     },
     "icon": "15013"
   },
@@ -50344,7 +50344,7 @@
     "description": {
       "ja": "テントーワの防御壁で、睡魔から護られた状態。",
       "en": "Tentoawa is driving away the tendrils of sleep.",
-      "souma": "被坦托瓦的防御墙保护，免受睡魔侵扰"
+      "souma": "在特恩托瓦的防御壁的保护下免于睡魔侵扰"
     },
     "icon": "14834"
   },
@@ -50365,12 +50365,12 @@
     "name": {
       "ja": "磁力【＋】",
       "en": "Positive Charge",
-      "souma": "磁力（+）"
+      "souma": "正极磁力"
     },
     "description": {
       "ja": "【＋】の磁力を帯びた状態。",
       "en": "Exhibiting a positive magnetic charge.",
-      "souma": "身体带有正极性磁力"
+      "souma": "身上带有正极磁力"
     },
     "icon": "15663"
   },
@@ -50378,12 +50378,12 @@
     "name": {
       "ja": "磁力【－】",
       "en": "Negative Charge",
-      "souma": "磁力（-）"
+      "souma": "负极磁力"
     },
     "description": {
       "ja": "【－】の磁力を帯びた状態。",
       "en": "Exhibiting a negative magnetic charge.",
-      "souma": "身体带有负极性磁力"
+      "souma": "身上带有负极磁力"
     },
     "icon": "15664"
   },
@@ -50396,7 +50396,7 @@
     "description": {
       "ja": "吹雪になるとの予報を、灼熱波になると訂正している状態。特定の行動ののち、火属性魔法を実行する。",
       "en": "Apologies for the error. All are advised to prepare for fire-aspected damage.",
-      "souma": "将暴雪预报更正为热浪。特定动作后，发动火属性魔法"
+      "souma": "将暴雪预报修正为热浪预报，特定行动后发动火属性魔法"
     },
     "icon": "14217"
   },
@@ -50409,7 +50409,7 @@
     "description": {
       "ja": "暴風になるとの予報を、吹雪になると訂正している状態。特定の行動ののち、氷属性魔法を実行する。",
       "en": "Apologies for the error. All are advised to prepare for ice-aspected damage.",
-      "souma": "将暴风预报更正为暴雪。特定动作后，发动冰属性魔法"
+      "souma": "将暴风预报修正为暴雪预报，特定行动后发动冰属性魔法"
     },
     "icon": "14220"
   },
@@ -50422,7 +50422,7 @@
     "description": {
       "ja": "灼熱波になるとの予報を、雷波になると訂正している状態。特定の行動ののち、雷属性魔法を実行する。",
       "en": "Apologies for the error. All are advised to prepare for lightning-aspected damage.",
-      "souma": "将热浪预报更正为雷波。特定动作后，发动雷属性魔法"
+      "souma": "将热浪预报修正为雷波预报，特定行动后发动雷属性魔法"
     },
     "icon": "14218"
   },
@@ -50435,7 +50435,7 @@
     "description": {
       "ja": "雷波になるとの予報を、暴風になると訂正している状態。特定の行動ののち、風属性魔法を実行する。",
       "en": "Apologies for the error. All are advised to prepare for wind-aspected damage.",
-      "souma": "将雷波预报更正为暴风。特定动作后，发动风属性魔法"
+      "souma": "将雷波预报修正为暴风预报，特定行动后发动风属性魔法"
     },
     "icon": "14219"
   },
@@ -50448,7 +50448,7 @@
     "description": {
       "ja": "祖霊の魂を降ろした状態。",
       "en": "Tapped into the strength of your hunter forebears.",
-      "souma": "降下祖灵之魂"
+      "souma": "祖灵之魂降临"
     },
     "icon": "13776"
   },
@@ -50474,7 +50474,7 @@
     "description": {
       "ja": "身動きが取れないが、受けるダメージが軽減され、さらに「浄化」で解除することができる状態異常効果と、ノックバック、引き寄せの効果を無効化する状態。",
       "en": "Though unable to move, damage taken is reduced. All <hex:024804F201FA03><hex:024904F201FB03>Stun<hex:0249020103><hex:0248020103>, <hex:024804F201FA03><hex:024904F201FB03>Heavy<hex:0249020103><hex:0248020103>, <hex:024804F201FA03><hex:024904F201FB03>Bind<hex:0249020103><hex:0248020103>, <hex:024804F201FA03><hex:024904F201FB03>Silence<hex:0249020103><hex:0248020103>, <hex:024804F201FA03><hex:024904F201FB03>Half-asleep<hex:0249020103><hex:0248020103>, <hex:024804F201FA03><hex:024904F201FB03>Sleep<hex:0249020103><hex:0248020103>, <hex:024804F201FA03><hex:024904F201FB03>Deep Freeze<hex:0249020103><hex:0248020103>, knockback, and draw-in effects are nullified.",
-      "souma": "无法行动，但受到的伤害减轻，并且可用“净化”解除的状态异常效果、击退和吸引效果无效"
+      "souma": "无法自由活动，但受到攻击的伤害减少，同时不受能通过净化解除的异常状态以及击退、吸引的效果影响"
     },
     "icon": "14992"
   },
@@ -50482,7 +50482,7 @@
     "name": {
       "ja": "蛇鱗［バリア］",
       "en": "Armored Scales",
-      "souma": "蛇鳞[防护罩]"
+      "souma": "蛇鳞甲"
     },
     "description": {
       "ja": "一定量のダメージを軽減する状態。",
@@ -50500,7 +50500,7 @@
     "description": {
       "ja": "「蛇鱗撃」が「血気蛇鱗撃」に変化した状態。",
       "en": "<hex:024804F201F403><hex:024904F201F503>Backlash<hex:0249020103><hex:0248020103> is upgraded to <hex:024804F201F403><hex:024904F201F503>Furious Backlash<hex:0249020103><hex:0248020103>.",
-      "souma": "“蛇鳞击”变为“血气蛇鳞击”"
+      "souma": "蛇鳞击变为血气蛇鳞击"
     },
     "icon": "14994"
   },
@@ -50508,12 +50508,12 @@
     "name": {
       "ja": "惨毒",
       "en": "Noxious Gnash",
-      "souma": "惨毒"
+      "souma": "毒烈"
     },
     "description": {
       "ja": "この効果を付与したプレイヤーから受けるダメージが増加する状態。",
       "en": "Damage taken from the viper who applied this effect is increased.",
-      "souma": "受到附加此效果的玩家攻击的伤害增加"
+      "souma": "受到施加此状态的玩家攻击时所受伤害增加"
     },
     "icon": "14995"
   },
@@ -50521,12 +50521,12 @@
     "name": {
       "ja": "色魔法2実行可",
       "en": "Aetherhues",
-      "souma": "绘灵魔法2预备"
+      "souma": "以太色调"
     },
     "description": {
       "ja": "グリーン、イエローの魔法を実行できる状態。",
       "en": "Able to cast green and yellow magicks.",
-      "souma": "可以发动翠绿、明黄魔法"
+      "souma": "可以发动绿色或纯黄色魔法"
     },
     "icon": "13801"
   },
@@ -50534,12 +50534,12 @@
     "name": {
       "ja": "色魔法3実行可",
       "en": "Aetherhues II",
-      "souma": "绘灵魔法3预备"
+      "souma": "以太色调II"
     },
     "description": {
       "ja": "ブルー、マゼンタの魔法を実行できる状態。",
       "en": "Able to cast blue and magenta magicks.",
-      "souma": "可以发动湛蓝、品红魔法"
+      "souma": "可以发动蓝色或品红色魔法"
     },
     "icon": "13802"
   },
@@ -50547,12 +50547,12 @@
     "name": {
       "ja": "サブトラクティブパレット",
       "en": "Subtractive Palette",
-      "souma": "减色技法"
+      "souma": "减色混合"
     },
     "description": {
       "ja": "色魔法の性質が変化した状態。",
       "en": "The properties of your pictomancy spells have changed.",
-      "souma": "绘灵魔法性质发生变化"
+      "souma": "调色魔法的性质发生变化"
     },
     "icon": "14996"
   },
@@ -50560,12 +50560,12 @@
     "name": {
       "ja": "モーグリシンボル",
       "en": "Moogle Portrait",
-      "souma": "莫古力量谱"
+      "souma": "莫古力标识"
     },
     "description": {
       "ja": "モーグリストリームを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Mog of the Ages<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动莫古力之流"
+      "souma": "可以发动莫古力激流"
     },
     "icon": "14713"
   },
@@ -50573,12 +50573,12 @@
     "name": {
       "ja": "マディーンシンボル",
       "en": "Madeen Portrait",
-      "souma": "马蒂恩量谱"
+      "souma": "马蒂恩标识"
     },
     "description": {
       "ja": "マディーンレトリビューションを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Retribution of the Madeen<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动马蒂恩之裁"
+      "souma": "可以发动马蒂恩惩罚"
     },
     "icon": "14714"
   },
@@ -50586,12 +50586,12 @@
     "name": {
       "ja": "ピクトポンポン",
       "en": "Pom Motif",
-      "souma": "绒球意象"
+      "souma": "绒球彩绘"
     },
     "description": {
       "ja": "イマジンポンポンを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Pom Muse<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动绒球具现"
+      "souma": "可以发动绒球构想"
     },
     "icon": "14701"
   },
@@ -50599,12 +50599,12 @@
     "name": {
       "ja": "ピクトウィング",
       "en": "Wing Motif",
-      "souma": "飞翼意象"
+      "souma": "翅膀彩绘"
     },
     "description": {
       "ja": "イマジンウィングを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Winged Muse<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动飞翼具现"
+      "souma": "可以发动翅膀构想"
     },
     "icon": "14702"
   },
@@ -50612,12 +50612,12 @@
     "name": {
       "ja": "ピクトクロ―",
       "en": "Claw Motif",
-      "souma": "意象量谱"
+      "souma": "兽爪彩绘"
     },
     "description": {
       "ja": "イマジンクローを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Clawed Muse<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动利爪具现"
+      "souma": "可以发动兽爪构想"
     },
     "icon": "14703"
   },
@@ -50625,12 +50625,12 @@
     "name": {
       "ja": "ピクトファング",
       "en": "Maw Motif",
-      "souma": "尖牙意象"
+      "souma": "尖牙彩绘"
     },
     "description": {
       "ja": "イマジンファングを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Fanged Muse<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动尖牙具现"
+      "souma": "可以发动尖牙构想"
     },
     "icon": "14704"
   },
@@ -50638,12 +50638,12 @@
     "name": {
       "ja": "イマジンポンポン",
       "en": "Pom Muse",
-      "souma": "绒球具现"
+      "souma": "绒球构想"
     },
     "description": {
       "ja": "与ダメージと自身からのＨＰ回復効果が上昇した状態。",
       "en": "Damage dealt and potency of HP restoration actions are increased.",
-      "souma": "造成的伤害和自身体力回复效果提高"
+      "souma": "发动攻击所造成的伤害及自身发动的体力恢复效果提高"
     },
     "icon": "14705"
   },
@@ -50651,12 +50651,12 @@
     "name": {
       "ja": "イマジンウィング",
       "en": "Winged Muse",
-      "souma": "飞翼具现"
+      "souma": "翅膀构想"
     },
     "description": {
       "ja": "魔法のキャストタイムとリキャストタイムが短縮され、さらに移動速度が上昇した状態。",
       "en": "Spell cast and recast time are reduced. Movement speed is also increased.",
-      "souma": "魔法咏唱时间和复唱时间缩短，移动速度提高"
+      "souma": "魔法的咏唱时间和复唱时间缩短，同时移动速度提高"
     },
     "icon": "14706"
   },
@@ -50664,7 +50664,7 @@
     "name": {
       "ja": "イマジンクロー",
       "en": "Clawed Muse",
-      "souma": "利爪具现"
+      "souma": "兽爪构想"
     },
     "description": {
       "ja": "受けるダメージが増加し、かつ自身に対するＨＰ回復効果が低下した状態。",
@@ -50677,7 +50677,7 @@
     "name": {
       "ja": "イマジンファング",
       "en": "Fanged Muse",
-      "souma": "尖牙具现"
+      "souma": "尖牙构想"
     },
     "description": {
       "ja": "ＨＰが徐々に失われる状態。",
@@ -50690,7 +50690,7 @@
     "name": {
       "ja": "スマッジ",
       "en": "Smudge",
-      "souma": "晕彩"
+      "souma": "速涂"
     },
     "description": {
       "ja": "移動速度が上昇した状態。",
@@ -50716,7 +50716,7 @@
     "name": {
       "ja": "テンペラグラッサ",
       "en": "Tempera Grassa",
-      "souma": "油性坦培拉"
+      "souma": "油性坦培拉涂层"
     },
     "description": {
       "ja": "一定量のダメージを軽減する状態。",
@@ -50729,12 +50729,12 @@
     "name": {
       "ja": "ウォール・オブ・ファット",
       "en": "Advent of Chocobastion",
-      "souma": "胆固醇之墙"
+      "souma": "胖胖之墙"
     },
     "description": {
       "ja": "ウォール・オブ・ファットを生成している状態。",
       "en": "Manifesting an area of protection.",
-      "souma": "生成胆固醇之墙"
+      "souma": "产生胖胖之墙"
     },
     "icon": "14997"
   },
@@ -50742,7 +50742,7 @@
     "name": {
       "ja": "ウォール・オブ・ファット［被］",
       "en": "Chocobastion",
-      "souma": "胆固醇之墙[被]"
+      "souma": "胖胖之壁"
     },
     "description": {
       "ja": "受けるダメージの一部が軽減され、かつ自身に対するＨＰ回復効果を向上させる状態。",
@@ -50755,12 +50755,12 @@
     "name": {
       "ja": "スタープリズム実行可",
       "en": "Starstruck",
-      "souma": "星光棱镜预备"
+      "souma": "天星棱光预备"
     },
     "description": {
       "ja": "スタープリズムを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Star Prism<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动星光棱镜"
+      "souma": "可以发动天星棱光"
     },
     "icon": "13806"
   },
@@ -50768,7 +50768,7 @@
     "name": {
       "ja": "スタープリズム",
       "en": "Star Prism",
-      "souma": "星光棱镜"
+      "souma": "天星棱光"
     },
     "description": {
       "ja": "連続してＨＰが回復している状態。",
@@ -50807,12 +50807,12 @@
     "name": {
       "ja": "災厄の炎",
       "en": "Perpetual Conflagration",
-      "souma": "灾厄之火"
+      "souma": "灾祸之炎"
     },
     "description": {
       "ja": "ヴァリガルマンダの炎で焼かれている状態。ＨＰが徐々に失われ、かつ受けるダメージが増加する。<hex:02100103>なお、この炎はヴァリガルマンダが倒れるまで消えない。",
       "en": "Valigarmanda's flames are slowly consuming you, causing damage over time and increasing damage taken. This effect will not expire until Valigarmanda is defeated.",
-      "souma": "被艳翼蛇鸟之炎灼烧。体力逐渐减少，受到的伤害增加<hex:02100103>此炎直到艳翼蛇鸟倒下才会消失"
+      "souma": "被艳翼蛇鸟的火焰持续烧灼，体力逐渐流失，受到攻击的伤害增加<hex:02100103>该状态只有打倒艳翼蛇鸟才会消失"
     },
     "icon": "14221"
   },
@@ -50820,12 +50820,12 @@
     "name": {
       "ja": "ＨＰ吸収攻撃",
       "en": "Life Siphon",
-      "souma": "体力吸收攻击"
+      "souma": "吸血攻击"
     },
     "description": {
       "ja": "攻撃にＨＰ吸収効果が付与された状態。",
       "en": "Attacks generate HP equal to the amount of damage dealt.",
-      "souma": "攻击附加体力吸收效果"
+      "souma": "攻击附带吸收体力的效果"
     },
     "icon": "14216"
   },
@@ -50833,12 +50833,12 @@
     "name": {
       "ja": "ドラフトポンポン",
       "en": "Pom Sketch",
-      "souma": "绒球草稿"
+      "souma": "绒球素描"
     },
     "description": {
       "ja": "ピクトポンポンを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Pom Motif<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动绒球意象"
+      "souma": "可以发动绒球彩绘"
     },
     "icon": "14709"
   },
@@ -50846,12 +50846,12 @@
     "name": {
       "ja": "ドラフトウィング",
       "en": "Wing Sketch",
-      "souma": "飞翼草稿"
+      "souma": "翅膀素描"
     },
     "description": {
       "ja": "ピクトウィングを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Wing Motif<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动飞翼意象"
+      "souma": "可以发动翅膀彩绘"
     },
     "icon": "14710"
   },
@@ -50859,12 +50859,12 @@
     "name": {
       "ja": "ドラフトクロ―",
       "en": "Claw Sketch",
-      "souma": "利爪草稿"
+      "souma": "兽爪素描"
     },
     "description": {
       "ja": "ピクトクローを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Claw Motif<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动利爪意象"
+      "souma": "可以发动兽爪彩绘"
     },
     "icon": "14711"
   },
@@ -50872,12 +50872,12 @@
     "name": {
       "ja": "ドラフトファング",
       "en": "Maw Sketch",
-      "souma": "尖牙草稿"
+      "souma": "尖牙素描"
     },
     "description": {
       "ja": "ピクトファングを実行できる状態。",
       "en": "Able to execute <hex:024804F201F403><hex:024904F201F503>Maw Motif<hex:0249020103><hex:0248020103>.",
-      "souma": "可以发动尖牙意象"
+      "souma": "可以发动尖牙彩绘"
     },
     "icon": "14712"
   },
@@ -50890,7 +50890,7 @@
     "description": {
       "ja": "祭器の力で、他者に擬態している状態。",
       "en": "Mimicking the form of another through the power of the Dreamweave Cocoon.",
-      "souma": "被祭器的力量变为他人的样子"
+      "souma": "在祭器之力下拟态成了其他人"
     },
     "icon": "14215"
   },
@@ -50898,12 +50898,12 @@
     "name": {
       "ja": "黄金の決意",
       "en": "Dawn's Resolve",
-      "souma": "黄金决意"
+      "souma": "金曦之决意"
     },
     "description": {
       "ja": "ウクラマトの決意に背を押され、己の限界を超えた状態。",
       "en": "Inspired by Wuk Lamat's unyielding will and defying all mortal limits.",
-      "souma": "受乌克·拉玛特的决心鼓舞，超越自身极限"
+      "souma": "在乌克·拉玛特决意的激励下超越了极限"
     },
     "icon": "14131"
   },
@@ -50911,12 +50911,12 @@
     "name": {
       "ja": "空間掌握：制動",
       "en": "Authority's Hold",
-      "souma": "空间掌握：制动"
+      "souma": "空间掌控：制动"
     },
     "description": {
       "ja": "アブソリュート・オーソリティの影響を受けた状態。この状態の効果が切れる際に動いていた場合、爆発する。",
       "en": "Under <hex:024804F201F403><hex:024904F201F503>Absolute Authority<hex:0249020103><hex:0248020103>. Any movement when effect wears off will result in detonation.",
-      "souma": "受绝对权威影响。此状态效果结束时若在移动，则会爆炸"
+      "souma": "受到绝对君权的影响，效果时间结束时若处于移动状态，将发生爆炸"
     },
     "icon": "14130"
   },
@@ -50955,7 +50955,7 @@
     "description": {
       "ja": "次の攻撃に影響する、特殊な構えをとった状態。",
       "en": "Taking an honorable battle stance that will affect the next attack.",
-      "souma": "摆出影响下次攻击的特殊姿势"
+      "souma": "摆出影响下次攻击的特殊架势"
     },
     "icon": "18214"
   },
@@ -50976,12 +50976,12 @@
     "name": {
       "ja": "エーテルストック",
       "en": "Aetherstock",
-      "souma": "以太储存"
+      "souma": "以太积蓄"
     },
     "description": {
       "ja": "属性エーテルを身体に蓄積し、攻撃のあとに放出する状態。",
       "en": "Storing elemental aether in the body. The aether is released upon attacking.",
-      "souma": "身体积累属性以太，攻击后释放"
+      "souma": "身体积蓄属性以太，于攻击后释放"
     },
     "icon": "14226"
   },
@@ -50994,7 +50994,7 @@
     "description": {
       "ja": "霊体に変身し障害物をすり抜けられるが、特定の攻撃で大ダメージを受けてしまう状態。",
       "en": "An incorporeal form is enabling you to pass through obstacles, but additional damage is taken from certain attacks.",
-      "souma": "变身为灵体可穿过障碍物，但受到特定攻击会遭受大量伤害"
+      "souma": "变成可以穿过障碍物的灵体，遭受特定攻击时所受伤害大幅提高"
     },
     "icon": "15797"
   },
@@ -51007,7 +51007,7 @@
     "description": {
       "ja": "徐々に熱せられつつある状態。効果終了時にヒート状態になる。",
       "en": "Body is slowly heating up. Will become <hex:024804F201FA03><hex:024904F201FB03>Pyretic<hex:0249020103><hex:0248020103> when this effect expires.",
-      "souma": "逐渐变热，效果结束时会陷入过热状态"
+      "souma": "逐渐变热，效果结束时会陷入热病状态"
     },
     "icon": "15459"
   },
@@ -51015,12 +51015,12 @@
     "name": {
       "ja": "熱支配：熱",
       "en": "Heatstroke",
-      "souma": "热控制：热"
+      "souma": "热能支配：热"
     },
     "description": {
       "ja": "熱支配により、熱せられつつある状態。効果終了時にヒート状態になる。",
       "en": "Body heat is being manipulated. Will become <hex:024804F201FA03><hex:024904F201FB03>Pyretic<hex:0249020103><hex:0248020103> when this effect expires.",
-      "souma": "受热支配影响，正在被加热。效果结束时进入热状态"
+      "souma": "受热能支配影响，身体逐渐升温，效果结束时会陷入热病状态"
     },
     "icon": "15459"
   },
@@ -51028,12 +51028,12 @@
     "name": {
       "ja": "熱支配：冷",
       "en": "Cold Sweats",
-      "souma": "热控制：冷"
+      "souma": "热能支配：冷"
     },
     "description": {
       "ja": "熱支配により、冷やされつつある状態。効果終了時に冷却状態になる。",
       "en": "Body heat is being manipulated. Will freeze up when this effect expires.",
-      "souma": "受热支配影响，正在被冷却。效果结束时进入冷却状态"
+      "souma": "受热能支配影响，身体逐渐降温，效果结束时会陷入冷却状态"
     },
     "icon": "15238"
   },
@@ -51080,12 +51080,12 @@
     "name": {
       "ja": "ニア・フレンジー",
       "en": "Bee Be Gone",
-      "souma": "近距离狂乱"
+      "souma": "近处怒刺"
     },
     "description": {
       "ja": "怒りにより、与ダメージが上昇した状態。近くにいるプレイヤーを見境なく攻撃する。",
       "en": "Unbridled rage is increasing damage dealt. Standing too close will provoke an attack.",
-      "souma": "因愤怒造成的伤害提高。无差别攻击附近的玩家"
+      "souma": "愤怒使自身造成的伤害提高，毫不留情地持续攻击近处的玩家"
     },
     "icon": "14155"
   },
@@ -51093,12 +51093,12 @@
     "name": {
       "ja": "ファー・フレンジー",
       "en": "Bee Be Here",
-      "souma": "远距离狂乱"
+      "souma": "远处怒刺"
     },
     "description": {
       "ja": "怒りにより、与ダメージが上昇した状態。遠くにいるプレイヤーを見境なく攻撃する。",
       "en": "Unbridled rage is increasing damage dealt. Standing too far away will provoke an attack.",
-      "souma": "因愤怒造成的伤害提高。无差别攻击远处的玩家"
+      "souma": "愤怒使自身造成的伤害提高，毫不留情地持续攻击远处的玩家"
     },
     "icon": "14155"
   },
@@ -51132,12 +51132,12 @@
     "name": {
       "ja": "回転の構え：左",
       "en": "Leftward Omen",
-      "souma": "旋转姿态：左"
+      "souma": "转向准备：左"
     },
     "description": {
       "ja": "次に実行する攻撃を、左方向に実行する状態。",
       "en": "The next attack will be executed from the left.",
-      "souma": "下次攻击将向左方发动"
+      "souma": "下次攻击对左侧发动"
     },
     "icon": "15426"
   },
@@ -51145,12 +51145,12 @@
     "name": {
       "ja": "回転の構え：右",
       "en": "Rightward Omen",
-      "souma": "旋转姿态：右"
+      "souma": "转向准备：右"
     },
     "description": {
       "ja": "次に実行する攻撃を、右方向に実行する状態。",
       "en": "The next attack will be executed from the right.",
-      "souma": "下次攻击将向右方发动"
+      "souma": "下次攻击对右侧发动"
     },
     "icon": "15425"
   },
@@ -51158,12 +51158,12 @@
     "name": {
       "ja": "回転の構え：前",
       "en": "Forward Omen",
-      "souma": "旋转姿态：前"
+      "souma": "转向准备：前"
     },
     "description": {
       "ja": "次に実行する攻撃を、前方向に実行する状態。",
       "en": "The next attack will be executed from the front.",
-      "souma": "下次攻击将向前方发动"
+      "souma": "下次攻击对前方发动"
     },
     "icon": "15424"
   },
@@ -51171,12 +51171,12 @@
     "name": {
       "ja": "回転の構え：後",
       "en": "Rearward Omen",
-      "souma": "旋转姿态：后"
+      "souma": "转向准备：后"
     },
     "description": {
       "ja": "次に実行する攻撃を、後方向に実行する状態。",
       "en": "The next attack will be executed from the rear.",
-      "souma": "下次攻击将向后方发动"
+      "souma": "下次攻击对后方发动"
     },
     "icon": "15423"
   },
@@ -51184,12 +51184,12 @@
     "name": {
       "ja": "回転の構え：左",
       "en": "Leftward Omen",
-      "souma": "旋转姿态：左"
+      "souma": "转向准备：左"
     },
     "description": {
       "ja": "次に実行する攻撃を、左方向に実行する状態。",
       "en": "The next attack will be executed from the left.",
-      "souma": "下次攻击将向左方发动"
+      "souma": "下次攻击对左侧发动"
     },
     "icon": "15426"
   },
@@ -51197,12 +51197,12 @@
     "name": {
       "ja": "回転の構え：右",
       "en": "Rightward Omen",
-      "souma": "旋转姿态：右"
+      "souma": "转向准备：右"
     },
     "description": {
       "ja": "次に実行する攻撃を、右方向に実行する状態。",
       "en": "The next attack will be executed from the right.",
-      "souma": "下次攻击将向右方发动"
+      "souma": "下次攻击对右侧发动"
     },
     "icon": "15425"
   },
@@ -51215,7 +51215,7 @@
     "description": {
       "ja": "受けるダメージの一部が軽減される状態。<hex:02100103>さらに自身に対するＨＰ回復効果を向上させる。",
       "en": "Damage taken is reduced and HP recovery via healing actions is increased.",
-      "souma": "受到的部分伤害减轻<hex:02100103>同时提高对自身的体力回复效果"
+      "souma": "减轻所受到的伤害<hex:02100103>同时自身所受的治疗魔法效果提高"
     },
     "icon": "13911"
   },
@@ -51228,7 +51228,7 @@
     "description": {
       "ja": "受けるダメージの一部が軽減される状態。<hex:02100103>さらに自身に対するＨＰ回復効果を向上させる。",
       "en": "Damage taken is reduced and HP recovery via healing actions is increased.",
-      "souma": "受到的部分伤害减轻<hex:02100103>同时提高对自身的体力回复效果。"
+      "souma": "减轻所受到的伤害<hex:02100103>同时自身所受的治疗魔法效果提高"
     },
     "icon": "13911"
   },
@@ -51236,7 +51236,7 @@
     "name": {
       "ja": "ブラーシャの熱血",
       "en": "Blood of the Br'aax",
-      "souma": "布拉莎的热血"
+      "souma": "狞豹的热血"
     },
     "description": {
       "ja": "受けるダメージが軽減され、かつ物理攻撃を受けた場合に、反撃ダメージを与える状態。",
