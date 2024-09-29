@@ -20,11 +20,11 @@ const tableData: Menu[] = [
     src: 'keigennRecord2.webp',
   },
   {
-    title: '[悬浮窗] 全副本发宏/标点',
+    title: '[网页] 全副本发宏/标点',
     type: '悬浮窗',
-    path: 'zoneMacro',
+    path: 'zoneMacro?OVERLAY_WS=ws://127.0.0.1:10501/ws',
     src: 'zoneMacro.webp',
-    comment: '当开启 OverlayPlugin WSServer 后，可<a href="/#/zoneMacro?OVERLAY_WS=ws://127.0.0.1:10501/ws">在浏览器中使用</a>，操作不再局促',
+    comment: '需开启 ACT WebSocket Server',
   },
   {
     title: '[悬浮窗] 治疗/减伤时间轴',
@@ -32,12 +32,12 @@ const tableData: Menu[] = [
     path: 'timeline',
     src: 'timeline.webp',
   },
-  // {
-  //   title: '[悬浮窗] OBS 自动录制',
-  //   type: '悬浮窗',
-  //   path: 'obs',
-  //   comment: '满足条件时自动开启 OBS 录屏',
-  // },
+  {
+    title: '[悬浮窗] OBS 自动录制（计划重构）',
+    type: '悬浮窗',
+    path: 'obs',
+    comment: '满足条件时自动开启 OBS 录屏',
+  },
   {
     title: '[悬浮窗] 施法监控',
     type: '悬浮窗',
@@ -83,6 +83,12 @@ const tableData: Menu[] = [
     type: '悬浮窗',
     path: 'okVpr',
     comment: '<a href="#/okVpr">版本A</a>，进附体时不会重置热键栏适合直接设置成单独键位的情况（我自己没用过，不知道好不好用）\n<a href="#/okVpr2">版本B</a>，进附体时会重置热键栏适合设置成平时按的键位的情况（我自己没用过，不知道好不好用）',
+  },
+  {
+    title: '[悬浮窗] 技能监控（不再维护）',
+    type: '悬浮窗',
+    path: 'obs',
+    comment: '仅存档，不再维护。替代品：<a href="https://github.com/0ceal0t/JobBars">JobBars</a>',
   },
   {
     title: '国际服汉化补丁',
