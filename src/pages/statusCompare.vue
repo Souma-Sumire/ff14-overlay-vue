@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import status705 from '@/resources/status-compare-705.json'
 import status701 from '@/resources/status-compare-701.json'
-import status700 from '@/resources/status-compare-700.json'
-import status658hf2 from '@/resources/status-compare-658hf2.json'
+// import status700 from '@/resources/status-compare-700.json'
+// import status658hf2 from '@/resources/status-compare-658hf2.json'
 import { completeIcon, statusData } from '@/resources/status'
 
 interface Compare { id: string, name: { ja: string, en: string, cn: string }, description: { ja: string, en: string, cn: string }, icon: string, classJobCategory: number }
 
 const typeMap = {
-  '7.05': compareStatus(status705, status701),
-  '7.01': compareStatus(status701, status700),
-  '7.00': compareStatus(status700, status658hf2),
+  7.05: compareStatus(status705, status701),
+  // '7.01': compareStatus(status701, status700),
+  // '7.00': compareStatus(status700, status658hf2),
 }
 const type = ref(Object.keys(typeMap)[0] as unknown as keyof typeof typeMap)
 const onlyAllClasses = ref(true)
