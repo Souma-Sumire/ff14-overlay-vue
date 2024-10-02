@@ -7028,9 +7028,9 @@ fastPP(
   )}","MapID":946,"A":{"X":-199.954,"Y":-195.0,"Z":-11.785,"ID":0,"Active":true},"B":{"X":-187.473,"Y":-195.0,"Z":-0.102,"ID":1,"Active":true},"C":{"X":-199.985,"Y":-195.0,"Z":11.857,"ID":2,"Active":true},"D":{"X":-212.558,"Y":-195.0,"Z":-0.023,"ID":3,"Active":true},"One":{"X":-194.177,"Y":-195.0,"Z":3.905,"ID":4,"Active":true},"Two":{"X":-205.843,"Y":-195.0,"Z":3.943,"ID":5,"Active":true},"Three":{"X":-194.272,"Y":-195.0,"Z":-3.841,"ID":6,"Active":true},"Four":{"X":-205.776,"Y":-195.0,"Z":-3.99,"ID":7,"Active":true}}`,
 )
 
-fastPP(
-  `{"Name":"幻骑神","MapID":963,"A":{"X":0,"Y":0.039,"Z":-20,"ID":0,"Active":true},"B":{"X":20,"Y":0.039,"Z":0,"ID":1,"Active":true},"C":{"X":0,"Y":0.039,"Z":20,"ID":2,"Active":true},"D":{"X":-20,"Y":0.039,"Z":0,"ID":3,"Active":true},"One":{"X":-8.61,"Y":0.039,"Z":-18.052,"ID":4,"Active":true},"Two":{"X":8.61,"Y":0.039,"Z":-18.052,"ID":5,"Active":true},"Three":{"X":8.61,"Y":0.039,"Z":18.052,"ID":6,"Active":true},"Four":{"X":0.0,"Y":0.0,"Z":0.0,"ID":7,"Active":false}}`,
-)
+// fastPP(
+//   `{"Name":"幻骑神","MapID":963,"A":{"X":0,"Y":0.039,"Z":-20,"ID":0,"Active":true},"B":{"X":20,"Y":0.039,"Z":0,"ID":1,"Active":true},"C":{"X":0,"Y":0.039,"Z":20,"ID":2,"Active":true},"D":{"X":-20,"Y":0.039,"Z":0,"ID":3,"Active":true},"One":{"X":-8.61,"Y":0.039,"Z":-18.052,"ID":4,"Active":true},"Two":{"X":8.61,"Y":0.039,"Z":-18.052,"ID":5,"Active":true},"Three":{"X":8.61,"Y":0.039,"Z":18.052,"ID":6,"Active":true},"Four":{"X":0.0,"Y":0.0,"Z":0.0,"ID":7,"Active":false}}`,
+// )
 
 fastPP(
   `{"Name":"${getSource(
