@@ -9,7 +9,6 @@ import {
 import NetRegexes from '../../cactbot/resources/netregexes'
 import logDefinitions from '../../cactbot/resources/netlog_defs'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
-import testLog from '@/components/testLog.vue'
 import {
   processAbilityLine,
   processFlags,
@@ -1000,7 +999,7 @@ const test = {
         假状态
       </vxe-button>
     </div>
-    <testLog m-1 @before-handle="beforeHandle" @after-handle="afterHandle" @handle-line="handleLine" />
+    <TestLog m-1 @before-handle="beforeHandle" @after-handle="afterHandle" @handle-line="handleLine" />
   </div>
 </template>
 

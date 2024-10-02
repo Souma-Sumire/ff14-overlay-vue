@@ -83,6 +83,9 @@ importers:
       vue-draggable-plus:
         specifier: 0.2.0-beta.2
         version: 0.2.0-beta.2
+      vue-i18n:
+        specifier: '10'
+        version: 10.0.3(vue@3.4.38(typescript@5.5.4))
       vue-lazyload:
         specifier: ^3.0.0
         version: 3.0.0
@@ -637,6 +640,18 @@ packages:
 
   '@iconify/utils@2.1.30':
     resolution: {integrity: sha512-bY0IO5xLOlbzJBnjWLxknp6Sss3yla03sVY9VeUz9nT6dbc+EGKlLfCt+6uytJnWm5CUvTF/BNotsLWF7kI61A==}
+
+  '@intlify/core-base@10.0.3':
+    resolution: {integrity: sha512-ysJnTGDtuXPa6R2Ii4JIvfMVvDahUUny3aY8+P4r6/0TYHkblgzIMjV6cAn60em67AB0M7OWNAdcAVfWWeN8Qg==}
+    engines: {node: '>= 16'}
+
+  '@intlify/message-compiler@10.0.3':
+    resolution: {integrity: sha512-KC2fG8nCzSYmXjHptEt6i/xM3k6S2szsPaHDCRgWKEYAbeHe6JFm6X4KRw3Csy112A8CxpavMi1dh3h7khwV5w==}
+    engines: {node: '>= 16'}
+
+  '@intlify/shared@10.0.3':
+    resolution: {integrity: sha512-PWxrCb6fDlnoGLnXLlWu6d7o/HdWACB9TjRnpLro+9uyfqgWA9hvqg5vekcPRyraTieV5srCbTk/ldYw9V3LHw==}
+    engines: {node: '>= 16'}
 
   '@johnsoncodehk/html2pug@1.0.0':
     resolution: {integrity: sha512-TAs9NvSxC2ceT11h9Hck/p4No3lyaAtYUfV0ttPgImLxfbrAtvID5pdQVC5j1hYa/0oMg+Q4Xq91yihSgeAmgQ==}
@@ -3798,6 +3813,12 @@ packages:
     peerDependencies:
       eslint: '>=6.0.0'
 
+  vue-i18n@10.0.3:
+    resolution: {integrity: sha512-8ul2S4Hy9orKs7eOlkw/zqnVu98GttUdyIMRyjoMpv6hFPxnybgBLdep/UCmdan5kUHyxqMnr2cGHTBuPBYJaw==}
+    engines: {node: '>= 16'}
+    peerDependencies:
+      vue: ^3.0.0
+
   vue-lazyload@3.0.0:
     resolution: {integrity: sha512-h2keL/Rj550dLgesgOtXJS9qOiSMmuJNeVlfNAYV1/IYwOQYaWk5mFJlwRxmZDK9YC5gECcFLYYj7z1lKSf9ug==}
 
@@ -4448,6 +4469,18 @@ snapshots:
       mlly: 1.7.1
     transitivePeerDependencies:
       - supports-color
+
+  '@intlify/core-base@10.0.3':
+    dependencies:
+      '@intlify/message-compiler': 10.0.3
+      '@intlify/shared': 10.0.3
+
+  '@intlify/message-compiler@10.0.3':
+    dependencies:
+      '@intlify/shared': 10.0.3
+      source-map-js: 1.2.0
+
+  '@intlify/shared@10.0.3': {}
 
   '@johnsoncodehk/html2pug@1.0.0':
     dependencies:
@@ -8212,6 +8245,13 @@ snapshots:
       semver: 7.6.3
     transitivePeerDependencies:
       - supports-color
+
+  vue-i18n@10.0.3(vue@3.4.38(typescript@5.5.4)):
+    dependencies:
+      '@intlify/core-base': 10.0.3
+      '@intlify/shared': 10.0.3
+      '@vue/devtools-api': 6.6.3
+      vue: 3.4.38(typescript@5.5.4)
 
   vue-lazyload@3.0.0: {}
 
