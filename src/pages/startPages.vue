@@ -24,7 +24,7 @@ const tableData: Menu[] = [
     type: '悬浮窗',
     path: 'zoneMacro?OVERLAY_WS=ws://127.0.0.1:10501/ws',
     src: 'zoneMacro.webp',
-    comment: '需开启 ACT WebSocket Server',
+    comment: '需开启 ACT.OverlayPlugin WSServer\n 喊话、标点需<a href="https://github.com/Natsukage/PostNamazu">鲶鱼精邮差</a>',
   },
   {
     title: '[悬浮窗] 治疗/减伤时间轴',
