@@ -7,16 +7,13 @@ const castingMonitorStore = useCastingMonitorStore()
 const displayAA = Number(
   /^(?:1|true|yes|on|open|enabled)$/i.test(params.get('displayAA') ?? ''),
 )
-const displayGCD = Number(
-  /^(?:1|true|yes|on|open|enabled)$/i.test(params.get('displayGCD') ?? params.get('displayGCDSpace') ?? ''),
-)
 </script>
 
 <template>
   <div w-100vw flex="~ nowrap" class="main">
     <div
       v-for="(item) in castingMonitorStore.castData" :key="item.key" :data-casterId="item.casterId"
-      :class="`images ${item.class} logLine${item.logLine} displayAA${displayAA} displayGCD${displayGCD}`"
+      :class="`images ${item.class} logLine${item.logLine} displayAA${displayAA}`"
       :style="`--animeDuration: ${castingMonitorStore.config.duration}s;`"
     >
       <img :src="item.src" class="action-icon" height="40" loading="lazy" @error="handleImgError">
@@ -52,10 +49,6 @@ const displayGCD = Number(
     display: flex;
     align-items: center;
     justify-content: center;
-
-    &.displayGCD1 {
-      bottom: 18px;
-    }
 
     &.logLine14 {
       filter: opacity(0.5);
