@@ -14,7 +14,6 @@ import zoneInfo from '@/resources/zoneInfo'
   TODO:
   [ ] 设置录像文件名的格式
   [ ] 设置录像路径，不同区域录像文件分开存放
-  [ ] 大型任务区分8人副本与24人副本
 */
 
 const { t } = useI18n()
@@ -23,10 +22,11 @@ type ConditionType = 'enter' | 'combatStart' | 'combatEnd' | 'countdown' | 'wipe
 type ContentUsedType = typeof CONTENT_TYPES[number]
 const userConfig = useStorage('obs-user-config', { host: 4455, password: '' })
 const userContentSetting = useStorage('obs-user-content-setting', [] as Settings[])
+const userContentSettingExtra = useStorage('obs-user-content-setting-extra', { limitToEightOrLess: true })
 const isFirstTime = useStorage('obs-is-first-time', true)
 const actReady = ref(false)
 const debug = ref(false)
-const partyLogList = ref([] as string[])
+let partyLength: number = 0
 const playerContentType = ref('' as keyof typeof ContentType)
 
 function checkWebSocket(): Promise<void> {
@@ -219,11 +219,6 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
     if (match) {
       const splitLine = line.split('|')
       switch (regexName) {
-        case 'partyList':
-        {
-          partyLogList.value = match.groups?.list?.split('|') ?? []
-          break
-        }
         case 'inCombat':
         {
           const inACTCombat = splitLine[logDefinitions.InCombat.fields.inACTCombat] === '1'
@@ -255,9 +250,16 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
   }
 }
 
+const handlePartyChanged: EventMap['PartyChanged'] = (e) => {
+  partyLength = e.party.length
+}
+
 function checkCondition(condition: ConditionType) {
   const recording = obs.status.recording
   if (!userContentSetting.value.find(item => item.type === playerContentType.value && item[condition])) {
+    return
+  }
+  if (playerContentType.value === 'Raids' && userContentSettingExtra.value.limitToEightOrLess && partyLength > 8) {
     return
   }
   switch (condition) {
@@ -284,12 +286,15 @@ onMounted(async () => {
   obs.connect()
   addOverlayListener('ChangeZone', handleChangeZone)
   addOverlayListener('LogLine', handleLogLine)
+  addOverlayListener('PartyChanged', handlePartyChanged)
   initializeContentSettings()
 })
 
 onUnmounted(() => {
   obs.disconnect()
   removeOverlayListener('ChangeZone', handleChangeZone)
+  removeOverlayListener('LogLine', handleLogLine)
+  removeOverlayListener('PartyChanged', handlePartyChanged)
 })
 </script>
 
@@ -441,6 +446,20 @@ onUnmounted(() => {
               </el-table-column>
             </el-table-column>
           </el-table>
+        </el-card>
+        <el-card class="table-card">
+          <template #header>
+            <div class="card-header">
+              <span>{{ t('Extra Rule') }}</span>
+            </div>
+          </template>
+          <el-form label-position="top" class="extra-rule-form">
+            <el-form-item :label="t('Raids')">
+              <el-checkbox v-model="userContentSettingExtra.limitToEightOrLess">
+                {{ t('limitToEightOrLess') }}
+              </el-checkbox>
+            </el-form-item>
+          </el-form>
         </el-card>
         <el-alert
           class="instruction-alert"
