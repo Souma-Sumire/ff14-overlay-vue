@@ -86,10 +86,10 @@ tuanfuTTS: 是否开启团辅TTS，默认true
   {
     title: '[悬浮窗] 施法监控（技能展示）',
     type: '悬浮窗',
-    path: 'castingMonitor?duration=25&displayAA=false&api=cafemaker&showHeader=true&syncFocusWS=false',
+    path: 'castingMonitor?duration=15&displayAA=false&api=cafemaker&showHeader=true&syncFocusWS=false',
     src: 'castingMonitor.webp',
     comment: `URL地址栏参数说明：
-duration: 图片从右划到左的动画持续时间（越短速度越快），默认25
+duration: 图片从右划到左的动画持续时间（越短速度越快），默认15
 displayAA: 是否显示自动攻击，默认false
 api: 技能图标图床来源，国内建议cafemaker，外网则选择xivapi，默认cafemaker
 showHeader: 是否显示悬浮窗头部的队员选择器（用于切换监控目标），默认true
