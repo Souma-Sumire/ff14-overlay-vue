@@ -22,7 +22,7 @@ type ConditionType = 'enter' | 'combatStart' | 'combatEnd' | 'countdown' | 'wipe
 type ContentUsedType = typeof CONTENT_TYPES[number]
 const userConfig = useStorage('obs-user-config', { host: 4455, password: '' })
 const userContentSetting = useStorage('obs-user-content-setting', [] as Settings[])
-const userContentSettingExtra = useStorage('obs-user-content-setting-extra', { limitToEightOrLess: true })
+const userContentSettingExtra = useStorage('obs-user-content-setting-extra', { raidLimitToEightOrLess: true, pvpLimitToEightOrLess: true })
 const isFirstTime = useStorage('obs-is-first-time', true)
 const actReady = ref(false)
 const debug = ref(false)
@@ -259,7 +259,10 @@ function checkCondition(condition: ConditionType) {
   if (!userContentSetting.value.find(item => item.type === playerContentType.value && item[condition])) {
     return
   }
-  if (playerContentType.value === 'Raids' && userContentSettingExtra.value.limitToEightOrLess && partyLength > 8) {
+  if (playerContentType.value === 'Raids' && userContentSettingExtra.value.raidLimitToEightOrLess && partyLength > 8) {
+    return
+  }
+  if (playerContentType.value === 'Pvp' && userContentSettingExtra.value.pvpLimitToEightOrLess && partyLength > 5) {
     return
   }
   switch (condition) {
@@ -361,6 +364,13 @@ onUnmounted(() => {
 
       <!-- 已连接状态 -->
       <div v-else>
+        <el-alert
+          class="instruction-alert"
+          type="info"
+          :description="t('hideTutorial')"
+          :closable="false"
+          show-icon
+        />
         <el-card v-if="debug" class="status-card">
           <template #header>
             <div class="card-header">
@@ -411,35 +421,35 @@ onUnmounted(() => {
             </div>
           </template>
           <el-table :data="userContentSetting" style="width: 100%" :border="true" stripe>
-            <el-table-column prop="type" :label="t('Type')" min-width="120">
+            <el-table-column prop="type" :label="t('Type')" min-width="130">
               <template #default="scope">
                 <span>{{ t(scope.row.type) }}</span>
               </template>
             </el-table-column>
             <el-table-column :label="t('Start When')" align="center">
-              <el-table-column prop="enter" :label="t('Enter Zone')" align="center" width="100">
+              <el-table-column prop="enter" :label="t('Enter Zone')" align="center" min-width="100">
                 <template #default="scope">
                   <el-switch v-model="scope.row.enter" />
                 </template>
               </el-table-column>
-              <el-table-column prop="countdown" :label="t('CountDown')" align="center" width="100">
+              <el-table-column prop="countdown" :label="t('CountDown')" align="center" min-width="100">
                 <template #default="scope">
                   <el-switch v-model="scope.row.countdown" />
                 </template>
               </el-table-column>
-              <el-table-column prop="combatStart" :label="t('CombatStart')" align="center" width="100">
+              <el-table-column prop="combatStart" :label="t('CombatStart')" align="center" min-width="100">
                 <template #default="scope">
                   <el-switch v-model="scope.row.combat" />
                 </template>
               </el-table-column>
             </el-table-column>
             <el-table-column :label="t('End When')" align="center">
-              <el-table-column prop="combatEnd" :label="t('CombatEnd')" align="center" width="100">
+              <el-table-column prop="combatEnd" :label="t('CombatEnd')" align="center" min-width="100">
                 <template #default="scope">
                   <el-switch v-model="scope.row.leave" />
                 </template>
               </el-table-column>
-              <el-table-column prop="wipe" :label="t('Wipe')" align="center" width="100">
+              <el-table-column prop="wipe" :label="t('Wipe')" align="center" min-width="100">
                 <template #default="scope">
                   <el-switch v-model="scope.row.wipe" />
                 </template>
@@ -455,19 +465,17 @@ onUnmounted(() => {
           </template>
           <el-form label-position="top" class="extra-rule-form">
             <el-form-item :label="t('Raids')">
-              <el-checkbox v-model="userContentSettingExtra.limitToEightOrLess">
-                {{ t('limitToEightOrLess') }}
+              <el-checkbox v-model="userContentSettingExtra.raidLimitToEightOrLess">
+                {{ t('RaidsLimitToEightOrLess') }}
+              </el-checkbox>
+            </el-form-item>
+            <el-form-item :label="t('Pvp')">
+              <el-checkbox v-model="userContentSettingExtra.pvpLimitToEightOrLess">
+                {{ t('PvpLimitToEightOrLess') }}
               </el-checkbox>
             </el-form-item>
           </el-form>
         </el-card>
-        <el-alert
-          class="instruction-alert"
-          type="info"
-          :description="t('hideTutorial')"
-          :closable="false"
-          show-icon
-        />
       </div>
     </main>
   </div>
