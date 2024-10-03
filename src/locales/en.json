@@ -1,0 +1,6 @@
+{
+  "Connecting": "Connecting...",
+  "obsTutorial": "Open OBS → Tools → WebSocket Server Settings → Enable WebSocket Server → Show Connection Info → Obtain Port and Password",
+  "inputTutorial": "Can't type? First click on ACT, then click on this floating window to enter normally.",
+  "hideTutorial": "After completing all settings, in OverlayPlugin, uncheck [Show Overlay] to hide this page."
+}
