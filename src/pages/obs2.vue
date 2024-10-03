@@ -259,6 +259,13 @@ onUnmounted(() => {
         <el-alert
           class="instruction-alert"
           type="info"
+          :description="t('overlayTutorial')"
+          :closable="false"
+          show-icon
+        />
+        <el-alert
+          class="instruction-alert"
+          type="info"
           :description="t('obsTutorial')"
           :closable="false"
           show-icon

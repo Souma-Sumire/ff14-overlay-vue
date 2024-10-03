@@ -43,6 +43,12 @@
   "Password": "パスワード",
   "None": "なし",
   "hideTutorial": "すべての設定が完了したら、OverlayPluginで「オーバーレイを表示」のチェックを外して、このページを非表示にします。",
-  "Connect To OBS": "OBSに接続",
-  "obsTutorial": "OBSを開く → ツール → WebSocketサーバー設定 → WebSocketサーバーを有効にする → 接続情報を表示 → ポートとパスワードを取得する"
+  "obsTutorial": "2. OBSを開く → ツール → WebSocketサーバー設定 → WebSocketサーバーを有効にする → 接続情報を表示 → ポートとパスワードを取得する",
+  "Connecting": "接続を試みています...",
+  "No": "いいえ",
+  "Yes": "はい",
+  "Instructions": "使用方法",
+  "inputTutorial": "3. 入力できない場合は、まずACTをクリックし、次にこのオーバーレイウィンドウをクリックすると、通常の入力が可能になります",
+  "Connect to OBS": "OBSに接続",
+  "overlayTutorial": "1. ACTでこのページをデータ統計用のオーバーレイウィンドウとして追加してください"
 }
