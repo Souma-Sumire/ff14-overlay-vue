@@ -38,12 +38,8 @@ onMounted(() => {
 
 <style scoped>
 .select-wrapper {
-  position: relative;
   display: flex;
   align-items: center;
-  background-color: #f0f0f0;
-  border-radius: 20px;
-  padding: 2px 8px;
 }
 
 .globe-icon {
