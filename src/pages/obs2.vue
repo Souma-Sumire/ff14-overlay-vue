@@ -10,6 +10,7 @@ import zoneInfo from '@/resources/zoneInfo'
 
 /*
   TODO:
+  [ ] 未检测到ACT环境（cactbotRequest）时，先让用户在ACT悬浮窗中添加本悬浮窗
   [ ] 设置录像文件名的格式
   [ ] 设置录像路径，不同区域录像文件分开存放
   [ ] 大型任务区分8人副本与24人副本
@@ -45,7 +46,7 @@ function initialization() {
     isFirstTime.value = false
     // 大型任务、绝境战默认开启
     userContentSetting.value = [
-      ...defaultEnabled.map(type => ({ type, enter: true, countdown: true, combat: false, leave: true, wipe: true })),
+      ...defaultEnabled.map(type => ({ type, enter: false, countdown: true, combat: false, leave: true, wipe: true })),
       ...contentUsed.filter(type => !defaultEnabled.includes(type)).map(type => ({ type, enter: false, countdown: false, combat: false, leave: false, wipe: false })),
     ]
   }
