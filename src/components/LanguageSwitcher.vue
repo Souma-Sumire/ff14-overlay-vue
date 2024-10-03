@@ -16,10 +16,6 @@ watch(currentLocale, (newLocale) => {
   locale.value = newLocale
 })
 
-function changeLanguage() {
-  locale.value = currentLocale.value
-}
-
 onMounted(() => {
   locale.value = currentLocale.value
 })
@@ -33,23 +29,14 @@ onMounted(() => {
         <line x1="2" y1="12" x2="22" y2="12" />
         <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
       </svg>
-      <select v-model="currentLocale" class="language-select" @change="changeLanguage">
-        <option v-for="(lang, key) in availableLocales" :key="key" :value="lang">
-          {{ languages[lang] }}
-        </option>
-      </select>
-      <span class="select-arrow" />
+      <el-select v-model="currentLocale" size="small" class="language-select">
+        <el-option v-for="(lang, key) in availableLocales" :key="key" :value="lang" :label="languages[lang]" />
+      </el-select>
     </div>
   </div>
 </template>
 
 <style scoped>
-.language-switcher {
-  display: inline-flex;
-  align-items: center;
-  margin: 10px 0;
-}
-
 .select-wrapper {
   position: relative;
   display: flex;
@@ -67,32 +54,6 @@ onMounted(() => {
 }
 
 .language-select {
-  appearance: none;
-  background: transparent;
-  border: none;
-  font-size: 14px;
-  padding: 5px 20px 5px 5px;
-  cursor: pointer;
-  outline: none;
-}
-
-.select-arrow {
-  position: absolute;
-  right: 8px;
-  width: 0;
-  height: 0;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 4px solid #007bff;
-  pointer-events: none;
-}
-
-.language-select:focus + .select-arrow {
-  border-top-color: #0056b3;
-}
-
-.language-select option {
-  background-color: white;
-  color: #333;
+  width: 5.5em;
 }
 </style>
