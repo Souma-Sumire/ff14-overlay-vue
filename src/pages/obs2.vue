@@ -6,25 +6,28 @@ import type { EventMap } from 'cactbot/types/event'
 import { useI18n } from 'vue-i18n'
 import ContentType from '../../cactbot/resources/content_type'
 import { addOverlayListener, callOverlayHandler, removeOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
+import NetRegexes, { commonNetRegex } from '../../cactbot/resources/netregexes'
+import logDefinitions from '../../cactbot/resources/netlog_defs'
 import zoneInfo from '@/resources/zoneInfo'
 
 /*
   TODO:
-  [ ] 未检测到ACT环境（cactbotRequest）时，先让用户在ACT悬浮窗中添加本悬浮窗
   [ ] 设置录像文件名的格式
   [ ] 设置录像路径，不同区域录像文件分开存放
   [ ] 大型任务区分8人副本与24人副本
 */
 
 const { t } = useI18n()
-interface Settings { type: ContentUsedType, enter: boolean, countdown: boolean, combat: boolean, leave: boolean, wipe: boolean }
-type ConditionType = 'enter' | 'leave' | 'countdown' | 'combat' | 'wipe'
-type ContentUsedType = typeof contentUsed[number]
+interface Settings { type: ContentUsedType, enter: boolean, countdown: boolean, combatStart: boolean, combatEnd: boolean, wipe: boolean }
+type ConditionType = 'enter' | 'combatStart' | 'combatEnd' | 'countdown' | 'wipe'
+type ContentUsedType = typeof CONTENT_TYPES[number]
 const userConfig = useStorage('obs-user-config', { host: 4455, password: '' })
 const userContentSetting = useStorage('obs-user-content-setting', [] as Settings[])
 const isFirstTime = useStorage('obs-is-first-time', true)
 const actReady = ref(false)
 const debug = ref(false)
+const partyLogList = ref([] as string[])
+const playerContentType = ref('' as keyof typeof ContentType)
 
 function checkWebSocket(): Promise<void> {
   return new Promise((resolve) => {
@@ -40,7 +43,13 @@ function checkWebSocket(): Promise<void> {
   })
 }
 
-const contentUsed = [
+const REGEXES: Record<string, RegExp> = {
+  inCombat: NetRegexes.inCombat(),
+  countdown: NetRegexes.countdown(),
+  wipe: commonNetRegex.wipe,
+} as const
+
+const CONTENT_TYPES = [
   'Raids', // 大型任务
   'UltimateRaids', // 绝境战
   'Dungeons', // 地牢（四人副本）
@@ -56,26 +65,26 @@ const contentUsed = [
   'Pvp', // PVP
 ] as const
 
-function initialization() {
+function initializeContentSettings() {
   const defaultEnabled: ContentUsedType[] = ['Raids', 'UltimateRaids']
   if (isFirstTime.value) {
     isFirstTime.value = false
     // 大型任务、绝境战默认开启
     userContentSetting.value = [
-      ...defaultEnabled.map(type => ({ type, enter: false, countdown: true, combat: false, leave: true, wipe: true })),
-      ...contentUsed.filter(type => !defaultEnabled.includes(type)).map(type => ({ type, enter: false, countdown: false, combat: false, leave: false, wipe: false })),
+      ...defaultEnabled.map(type => ({ type, enter: false, countdown: true, combatStart: false, combatEnd: true, wipe: true })),
+      ...CONTENT_TYPES.filter(type => !defaultEnabled.includes(type)).map(type => ({ type, enter: false, countdown: false, combatStart: false, combatEnd: false, wipe: false })),
     ]
   }
   else {
     // 清理不存在的类型
-    userContentSetting.value = userContentSetting.value.filter(item => contentUsed.includes(item.type))
+    userContentSetting.value = userContentSetting.value.filter(item => CONTENT_TYPES.includes(item.type))
     // 加入缺少的类型
-    const missingTypes = contentUsed.filter(type => !userContentSetting.value.some(item => item.type === type)).map((v) => {
-      return defaultEnabled.includes(v) ? { type: v, enter: false, countdown: true, combat: false, leave: true, wipe: true } : { type: v, enter: false, countdown: false, combat: false, leave: false, wipe: false }
+    const missingTypes = CONTENT_TYPES.filter(type => !userContentSetting.value.some(item => item.type === type)).map((v) => {
+      return defaultEnabled.includes(v) ? { type: v, enter: false, countdown: true, combatStart: false, combatEnd: true, wipe: true } : { type: v, enter: false, countdown: false, combatStart: false, combatEnd: false, wipe: false }
     })
     userContentSetting.value.push(...missingTypes)
   }
-  userContentSetting.value.sort((a, b) => contentUsed.indexOf(a.type) - contentUsed.indexOf(b.type))
+  userContentSetting.value.sort((a, b) => CONTENT_TYPES.indexOf(a.type) - CONTENT_TYPES.indexOf(b.type))
 }
 
 class Obs {
@@ -194,22 +203,67 @@ const handleChangeZone: EventMap['ChangeZone'] = (e) => {
     if (Object.prototype.hasOwnProperty.call(ContentType, key)) {
       const element = ContentType[key as keyof typeof ContentType]
       if (element === contentType) {
-        checkCondition(key as keyof typeof ContentType, 'enter')
+        playerContentType.value = key as keyof typeof ContentType
+        checkCondition('enter')
         return
       }
     }
   }
 }
 
-function checkCondition(contentType: keyof typeof ContentType, condition: ConditionType) {
+const handleLogLine: EventMap['LogLine'] = (e) => {
+  const line = e.rawLine
+  for (const regexName in REGEXES) {
+    const regex = REGEXES[regexName]
+    const match = regex.exec(line)
+    if (match) {
+      const splitLine = line.split('|')
+      switch (regexName) {
+        case 'partyList':
+        {
+          partyLogList.value = match.groups?.list?.split('|') ?? []
+          break
+        }
+        case 'inCombat':
+        {
+          const inACTCombat = splitLine[logDefinitions.InCombat.fields.inACTCombat] === '1'
+          const inGameCombat = splitLine[logDefinitions.InCombat.fields.inGameCombat] === '1'
+          if (inACTCombat && inGameCombat) {
+            checkCondition('combatStart')
+            return
+          }
+          if (!inACTCombat && !inGameCombat) {
+            checkCondition('combatEnd')
+            return
+          }
+          break
+        }
+        case 'countdown':
+        {
+          checkCondition('countdown')
+          break
+        }
+        case 'wipe':
+        {
+          checkCondition('wipe')
+          break
+        }
+        default:
+          break
+      }
+    }
+  }
+}
+
+function checkCondition(condition: ConditionType) {
   const recording = obs.status.recording
-  if (!userContentSetting.value.find(item => item.type === contentType && item[condition])) {
+  if (!userContentSetting.value.find(item => item.type === playerContentType.value && item[condition])) {
     return
   }
   switch (condition) {
     case 'enter':
     case 'countdown':
-    case 'combat':
+    case 'combatStart':
       if (!recording) {
         obs.startRecord()
       }
@@ -217,7 +271,7 @@ function checkCondition(contentType: keyof typeof ContentType, condition: Condit
         obs.splitRecord()
       }
       return
-    case 'leave':
+    case 'combatEnd':
     case 'wipe':
       if (recording) {
         obs.stopRecord()
@@ -229,7 +283,8 @@ onMounted(async () => {
   await checkWebSocket()
   obs.connect()
   addOverlayListener('ChangeZone', handleChangeZone)
-  initialization()
+  addOverlayListener('LogLine', handleLogLine)
+  initializeContentSettings()
 })
 
 onUnmounted(() => {
@@ -367,14 +422,14 @@ onUnmounted(() => {
                   <el-switch v-model="scope.row.countdown" />
                 </template>
               </el-table-column>
-              <el-table-column prop="combat" :label="t('InCombat')" align="center" width="100">
+              <el-table-column prop="combatStart" :label="t('CombatStart')" align="center" width="100">
                 <template #default="scope">
                   <el-switch v-model="scope.row.combat" />
                 </template>
               </el-table-column>
             </el-table-column>
             <el-table-column :label="t('End When')" align="center">
-              <el-table-column prop="leave" :label="t('Leave Zone')" align="center" width="100">
+              <el-table-column prop="combatEnd" :label="t('CombatEnd')" align="center" width="100">
                 <template #default="scope">
                   <el-switch v-model="scope.row.leave" />
                 </template>
