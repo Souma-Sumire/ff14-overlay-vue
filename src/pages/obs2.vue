@@ -5,7 +5,7 @@ import type { Reactive } from 'vue'
 import type { EventMap } from 'cactbot/types/event'
 import { useI18n } from 'vue-i18n'
 import ContentType from '../../cactbot/resources/content_type'
-import { addOverlayListener, removeOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
+import { addOverlayListener, callOverlayHandler, removeOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import zoneInfo from '@/resources/zoneInfo'
 
 /*
@@ -23,6 +23,22 @@ type ContentUsedType = typeof contentUsed[number]
 const userConfig = useStorage('obs-user-config', { host: 4455, password: '' })
 const userContentSetting = useStorage('obs-user-content-setting', [] as Settings[])
 const isFirstTime = useStorage('obs-is-first-time', true)
+const actReady = ref(false)
+const debug = ref(false)
+
+function checkWebSocket(): Promise<void> {
+  return new Promise((resolve) => {
+    callOverlayHandler({ call: 'cactbotRequestState' }).then(() => {
+      actReady.value = true
+      resolve()
+    })
+    setTimeout(() => {
+      if (!actReady.value) {
+        checkWebSocket()
+      }
+    }, 3000)
+  })
+}
 
 const contentUsed = [
   'Raids', // 大型任务
@@ -209,7 +225,8 @@ function checkCondition(contentType: keyof typeof ContentType, condition: Condit
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await checkWebSocket()
   obs.connect()
   addOverlayListener('ChangeZone', handleChangeZone)
   initialization()
@@ -227,8 +244,18 @@ onUnmounted(() => {
       <h1>{{ t('OBS Auto Record V2') }}</h1>
       <LanguageSwitcher />
     </header>
+    <el-card v-if="!actReady" class="act-not-ready-card">
+      <template #header>
+        <div class="card-header">
+          <span>{{ t('ACT Not Ready') }}</span>
+        </div>
+      </template>
+      <div class="act-not-ready-content">
+        <p>{{ t('overlayTutorial') }}</p>
+      </div>
+    </el-card>
 
-    <main>
+    <main v-if="actReady">
       <!-- 连接表单 -->
       <el-card v-if="!obs.status.connected" class="connection-card">
         <template #header>
@@ -251,18 +278,11 @@ onUnmounted(() => {
               :disabled="obs.status.connecting || !userConfig.host || !userConfig.password"
               @click="obs.connect()"
             >
-              {{ obs.status.connecting ? t('Connecting...') : t('Connect') }}
+              {{ obs.status.connecting ? t('Connecting') : t('Connect') }}
             </el-button>
           </el-form-item>
         </el-form>
         <el-divider>{{ t('Instructions') }}</el-divider>
-        <el-alert
-          class="instruction-alert"
-          type="info"
-          :description="t('overlayTutorial')"
-          :closable="false"
-          show-icon
-        />
         <el-alert
           class="instruction-alert"
           type="info"
@@ -281,7 +301,7 @@ onUnmounted(() => {
 
       <!-- 已连接状态 -->
       <div v-else>
-        <el-card class="status-card">
+        <el-card v-if="debug" class="status-card">
           <template #header>
             <div class="card-header">
               <span>{{ t('Connection Status') }}</span>
@@ -324,13 +344,6 @@ onUnmounted(() => {
             </el-button>
           </div>
         </el-card>
-        <el-alert
-          class="instruction-alert"
-          type="info"
-          :description="t('hideTutorial')"
-          :closable="false"
-          show-icon
-        />
         <el-card class="table-card">
           <template #header>
             <div class="card-header">
@@ -374,13 +387,32 @@ onUnmounted(() => {
             </el-table-column>
           </el-table>
         </el-card>
+        <el-alert
+          class="instruction-alert"
+          type="info"
+          :description="t('hideTutorial')"
+          :closable="false"
+          show-icon
+        />
       </div>
     </main>
   </div>
 </template>
 
+<style>
+::-webkit-scrollbar {
+  display: none;
+}
+</style>
+
 <style scoped>
+h1{
+  padding: 0;
+  margin: 0;
+}
+
 .obs-container {
+  background-color: white;
   max-width: 900px;
   margin: 0 auto;
   padding: 20px;
@@ -393,9 +425,10 @@ header {
   margin-bottom: 30px;
 }
 
+.act-not-ready-card,
 .connection-card {
   max-width: 500px;
-  margin: 0 auto;
+  margin: 0 auto 20px;
 }
 
 .connection-form {
@@ -425,28 +458,16 @@ header {
   margin-bottom: 20px;
 }
 
-.button-container {
-  display: flex;
-  justify-content: space-around;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
 .table-card {
   margin-top: 20px;
 }
 
-.disconnect-button {
-  margin-left: 10px;
+.obs-container {
+  padding: 10px;
 }
 
-@media (max-width: 768px) {
-  .obs-container {
-    padding: 10px;
-  }
-
-  .connection-card {
-    max-width: 100%;
-  }
+.act-not-ready-card,
+.connection-card {
+  max-width: 100%;
 }
 </style>
