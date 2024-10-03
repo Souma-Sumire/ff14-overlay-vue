@@ -15,8 +15,22 @@ const tableData: Menu[] = [
   {
     title: '[悬浮窗] 减伤监控2',
     type: '悬浮窗/网页',
-    path: 'keigennRecord2',
-    comment: '可以添加到 ACT 悬浮窗中用于实时监控。也可以在浏览器中打开，导入日志分析过往记录',
+    path: 'keigennRecord2?scale=1&showHeader=true&showIcon=true&showName=false&abbrId=true&anonymous=true&replaceWithYou=false&parseAA=true&parseDoT=false&minimize=false&actionCN=true&statusCN=true',
+    comment: `可以添加到 ACT 悬浮窗中用于实时监控。也可以在浏览器中打开，导入日志分析过往记录。
+URL地址栏参数说明：
+scale: 缩放倍率，默认1
+showHeader: 显示表头，默认true
+showIcon: 显示目标图标，默认true
+showName: 显示目标ID，默认false
+abbrId: 目标ID缩写（只有在showName=true时才有效），默认true
+anonymous: 目标ID改为职业名（只有在showName=true时才有效），默认true
+replaceWithYou: 目标是玩家本人替换为YOU（只有在showName=true时才有效），默认false
+parseAA: 解析自动攻击（仅影响新记录，历史结果不会同步改变），默认true
+parseDoT: 解析DoT仅影响新记录，历史结果不会同步改变），默认false
+minimize: 启动时迷你化，默认false
+actionCN: action显示中文化，默认true
+statusCN: status显示中文化，默认true
+    `,
     src: 'keigennRecord2.webp',
   },
   {
@@ -45,10 +59,17 @@ const tableData: Menu[] = [
     comment: '满足条件时自动开启 OBS 录屏',
   },
   {
-    title: '[悬浮窗] 施法监控',
+    title: '[悬浮窗] 施法监控（技能展示）',
     type: '悬浮窗',
-    path: 'castingMonitor?duration=25&energySaving=true&displayAA=false&displayGCDSpace=false&api=cafemaker&syncFocusWS=true&showHeader=true',
+    path: 'castingMonitor?duration=25&displayAA=false&api=cafemaker&showHeader=true&syncFocusWS=false',
     src: 'castingMonitor.webp',
+    comment: `URL地址栏参数说明：
+duration: 图片从右划到左的动画持续时间（越短速度越快）
+displayAA: 是否显示自动攻击
+api: 技能图标图床来源，国内建议cafemaker，外网则选择xivapi
+showHeader: 是否显示悬浮窗头部的队员选择器（用于切换监控目标）
+syncFocusWS: 是否同步监控目标至通过 WebSocket 连接的其他页面（例如OBS） 
+`,
   },
   {
     title: '[悬浮窗] 读条汉化',
@@ -61,7 +82,12 @@ const tableData: Menu[] = [
     title: '[悬浮窗] 团辅监控',
     type: '悬浮窗',
     path: 'https://souma.diemoe.net/dist/keySkillTimer.html?international=false&dajinengTTS=true&jianshangTTS=true&tuanfuTTS=true',
-    comment: '',
+    comment: `URL地址栏参数说明：
+international: 是否采用国际服技改数据
+dajinengTTS: 是否开启大技能TTS（坦克无敌不包含在内，因为 Cactbot 已有对应功能）
+jianshangTTS: 是否开启减伤TTS
+tuanfuTTS: 是否开启团辅TTS
+`,
     src: 'keySkillTimer.webp',
   },
   {
@@ -71,10 +97,10 @@ const tableData: Menu[] = [
     comment: `速刷用，显示小队成员的现有护盾值。
 
 URL地址栏参数说明：
-lineHeight 行高
-fontSize 字体尺寸
-type 显示方式 1=仅显示百分比 2=仅显示数值 3=同时显示
-showSettings 显示排序设置与人名
+lineHeight: 行高
+fontSize: 字体尺寸
+type: 显示方式 1=仅显示百分比 2=仅显示数值 3=同时显示
+showSettings: 显示排序设置与人名
 
 用之前需要将排序设置与游戏内的'小队列表'-'职能内排序顺序'保持一致
 设置好了将showSettings改为0隐藏
@@ -99,7 +125,7 @@ showSettings 显示排序设置与人名
     title: '[悬浮窗] DNC 触发倒计时显示',
     type: '悬浮窗',
     path: 'jobs/dnc',
-    comment: '在技能上显示buff消失倒计时，防止你丢失触发。仅包含6.X技能。7.0舞者过于蠢，我不玩了',
+    comment: '在技能上显示buff消失倒计时，防止你丢失触发。仅包含6.X技能。7.0未适配，因为改的太蠢，我不玩了',
     src: 'dnc.webp',
   },
   {
