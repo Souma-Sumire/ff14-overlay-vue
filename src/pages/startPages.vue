@@ -17,6 +17,7 @@ const tableData: Menu[] = [
     type: '悬浮窗/网页',
     path: 'keigennRecord2?scale=1&showHeader=true&showIcon=true&showName=false&abbrId=true&anonymous=true&replaceWithYou=false&parseAA=true&parseDoT=false&minimize=false&actionCN=true&statusCN=true',
     comment: `可以添加到 ACT 悬浮窗中用于实时监控。也可以在浏览器中打开，导入日志分析过往记录。
+
 URL地址栏参数说明：
 scale: 缩放倍率，默认1
 showHeader: 显示表头，默认true
@@ -26,7 +27,7 @@ abbrId: 目标ID缩写（只有在showName=true时才有效），默认true
 anonymous: 目标ID改为职业名（只有在showName=true时才有效），默认true
 replaceWithYou: 目标是玩家本人替换为YOU（只有在showName=true时才有效），默认false
 parseAA: 解析自动攻击（仅影响新记录，历史结果不会同步改变），默认true
-parseDoT: 解析DoT仅影响新记录，历史结果不会同步改变），默认false
+parseDoT: 解析DoT（仅影响新记录，历史结果不会同步改变），默认false
 minimize: 启动时迷你化，默认false
 actionCN: action显示中文化，默认true
 statusCN: status显示中文化，默认true
@@ -34,23 +35,22 @@ statusCN: status显示中文化，默认true
     src: 'keigennRecord2.webp',
   },
   {
-    title: '[网页] 全副本发宏/标点',
+    title: '全副本发宏/标点',
     type: '悬浮窗',
     path: 'zoneMacro?OVERLAY_WS=ws://127.0.0.1:10501/ws',
     src: 'zoneMacro.webp',
     comment: '需开启 ACT.OverlayPlugin WSServer\n 喊话、标点需<a href="https://github.com/Natsukage/PostNamazu">鲶鱼精邮差</a>',
   },
   {
-    title: '[悬浮窗] 治疗/减伤时间轴',
-    type: '悬浮窗',
-    path: 'timeline',
-    src: 'timeline.webp',
+    title: '狩猎车头找怪工具',
+    type: '网页',
+    path: 'hunt',
   },
   {
-    title: '[悬浮窗] OBS 自动录制（不再维护）',
+    title: '[悬浮窗] 我 TM 现在在几线？',
     type: '悬浮窗',
-    path: 'obs',
-    comment: '满足条件时自动开启 OBS 录屏',
+    path: 'instancedAreaInfo',
+    comment: '一个简单的小工具，显示你当前在几线。',
   },
   {
     title: '[悬浮窗] OBS 自动录制 2（新）',
@@ -59,16 +59,41 @@ statusCN: status显示中文化，默认true
     comment: '满足条件时自动开启 OBS 录屏',
   },
   {
+    title: '[悬浮窗] OBS 自动录制（不再维护）',
+    type: '悬浮窗',
+    path: 'obs',
+    comment: '满足条件时自动开启 OBS 录屏',
+  },
+  {
+    title: '[悬浮窗] 团辅监控',
+    type: '悬浮窗',
+    path: 'https://souma.diemoe.net/dist/keySkillTimer.html?international=false&dajinengTTS=true&jianshangTTS=true&tuanfuTTS=true',
+    comment: `URL地址栏参数说明：
+international: 是否采用国际服技改数据，默认false
+dajinengTTS: 是否开启大技能TTS（坦克无敌不包含在内，因为 Cactbot 已有对应功能），默认true
+jianshangTTS: 是否开启减伤TTS，默认true
+tuanfuTTS: 是否开启团辅TTS，默认true
+`,
+    src: 'keySkillTimer.webp',
+  },
+  {
+    title: '[悬浮窗] 治疗/减伤时间轴',
+    type: '悬浮窗',
+    path: 'timeline',
+    src: 'timeline.webp',
+    comment: '适用于副职快速抄轴、打小抄等。可以实现简单的阶段同步，但面对血量轴/双轴等复杂情况时表现不佳。',
+  },
+  {
     title: '[悬浮窗] 施法监控（技能展示）',
     type: '悬浮窗',
     path: 'castingMonitor?duration=25&displayAA=false&api=cafemaker&showHeader=true&syncFocusWS=false',
     src: 'castingMonitor.webp',
     comment: `URL地址栏参数说明：
-duration: 图片从右划到左的动画持续时间（越短速度越快）
-displayAA: 是否显示自动攻击
-api: 技能图标图床来源，国内建议cafemaker，外网则选择xivapi
-showHeader: 是否显示悬浮窗头部的队员选择器（用于切换监控目标）
-syncFocusWS: 是否同步监控目标至通过 WebSocket 连接的其他页面（例如OBS） 
+duration: 图片从右划到左的动画持续时间（越短速度越快），默认25
+displayAA: 是否显示自动攻击，默认false
+api: 技能图标图床来源，国内建议cafemaker，外网则选择xivapi，默认cafemaker
+showHeader: 是否显示悬浮窗头部的队员选择器（用于切换监控目标），默认true
+syncFocusWS: 是否同步监控目标至通过 WebSocket 连接的其他页面（例如OBS），默认false
 `,
   },
   {
@@ -79,31 +104,16 @@ syncFocusWS: 是否同步监控目标至通过 WebSocket 连接的其他页面�
     src: 'castingToChinese.webp',
   },
   {
-    title: '[悬浮窗] 团辅监控',
-    type: '悬浮窗',
-    path: 'https://souma.diemoe.net/dist/keySkillTimer.html?international=false&dajinengTTS=true&jianshangTTS=true&tuanfuTTS=true',
-    comment: `URL地址栏参数说明：
-international: 是否采用国际服技改数据
-dajinengTTS: 是否开启大技能TTS（坦克无敌不包含在内，因为 Cactbot 已有对应功能）
-jianshangTTS: 是否开启减伤TTS
-tuanfuTTS: 是否开启团辅TTS
-`,
-    src: 'keySkillTimer.webp',
-  },
-  {
     title: '[悬浮窗] 盾值显示',
     type: '悬浮窗',
     path: 'showBarrier?lineHeight=1&fontSize=26&type=1&showSettings=1',
     comment: `速刷用，显示小队成员的现有护盾值。
 
 URL地址栏参数说明：
-lineHeight: 行高
-fontSize: 字体尺寸
-type: 显示方式 1=仅显示百分比 2=仅显示数值 3=同时显示
-showSettings: 显示排序设置与人名
-
-用之前需要将排序设置与游戏内的'小队列表'-'职能内排序顺序'保持一致
-设置好了将showSettings改为0隐藏
+lineHeight: 行高，默认1
+fontSize: 字体尺寸，默认26
+type: 显示方式 1=仅显示百分比 2=仅显示数值 3=同时显示，默认1
+showSettings: 显示排序设置与人名，默认1，即显示，使用之前需要将其与游戏内的'小队列表'-'职能内排序顺序'保持一致，设置好了再改为0隐藏
 
 盾值百分比为四舍五入，数值也是根据百分比计算的值，故都存在误差，无法更精准。
 `,
@@ -114,12 +124,6 @@ showSettings: 显示排序设置与人名
     path: 'https://souma.diemoe.net/dist/limitBreakTip.html?LBMax=30000&automatic=220',
     comment: '速刷用，记录LB奖励数值。',
     src: 'limitBreakTip.webp',
-  },
-  {
-    title: '[悬浮窗] 我 TM 现在在几线？',
-    type: '悬浮窗',
-    path: 'instancedAreaInfo',
-    comment: '狩猎用，简单显示你当前在几线。',
   },
   {
     title: '[悬浮窗] DNC 触发倒计时显示',
@@ -151,11 +155,6 @@ showSettings: 显示排序设置与人名
     type: '网页',
     path: 'https://github.com/Souma-Sumire/raidboss-user-js-public',
     comment: '前往Github项目了解详情',
-  },
-  {
-    title: '狩猎 车头找怪工具',
-    type: '网页',
-    path: 'hunt',
   },
   {
     title: '简易风脉地图',
