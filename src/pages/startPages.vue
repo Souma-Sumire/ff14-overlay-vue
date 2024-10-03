@@ -39,6 +39,12 @@ const tableData: Menu[] = [
     comment: '满足条件时自动开启 OBS 录屏',
   },
   {
+    title: '[悬浮窗] OBS 自动录制2（测试中）',
+    type: '悬浮窗',
+    path: 'obs2',
+    comment: '满足条件时自动开启 OBS 录屏',
+  },
+  {
     title: '[悬浮窗] 施法监控',
     type: '悬浮窗',
     path: 'castingMonitor?duration=25&energySaving=true&displayAA=false&displayGCDSpace=false&api=cafemaker&syncFocusWS=true&showHeader=true',
