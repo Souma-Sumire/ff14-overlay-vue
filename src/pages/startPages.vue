@@ -33,13 +33,13 @@ const tableData: Menu[] = [
     src: 'timeline.webp',
   },
   {
-    title: '[悬浮窗] OBS 自动录制（计划重构）',
+    title: '[悬浮窗] OBS 自动录制（不再维护）',
     type: '悬浮窗',
     path: 'obs',
     comment: '满足条件时自动开启 OBS 录屏',
   },
   {
-    title: '[悬浮窗] OBS 自动录制2（测试中）',
+    title: '[悬浮窗] OBS 自动录制 2（新）',
     type: '悬浮窗',
     path: 'obs2',
     comment: '满足条件时自动开启 OBS 录屏',
@@ -65,6 +65,24 @@ const tableData: Menu[] = [
     src: 'keySkillTimer.webp',
   },
   {
+    title: '[悬浮窗] 盾值显示',
+    type: '悬浮窗',
+    path: 'showBarrier?lineHeight=1&fontSize=26&type=1&showSettings=1',
+    comment: `速刷用，显示小队成员的现有护盾值。
+
+URL地址栏参数说明：
+lineHeight 行高
+fontSize 字体尺寸
+type 显示方式 1=仅显示百分比 2=仅显示数值 3=同时显示
+showSettings 显示排序设置与人名
+
+用之前需要将排序设置与游戏内的'小队列表'-'职能内排序顺序'保持一致
+设置好了将showSettings改为0隐藏
+
+盾值百分比为四舍五入，数值也是根据百分比计算的值，故都存在误差，无法更精准。
+`,
+  },
+  {
     title: '[悬浮窗] LB 额外增长监控',
     type: '悬浮窗',
     path: 'https://souma.diemoe.net/dist/limitBreakTip.html?LBMax=30000&automatic=220',
@@ -75,7 +93,7 @@ const tableData: Menu[] = [
     title: '[悬浮窗] 我 TM 现在在几线？',
     type: '悬浮窗',
     path: 'instancedAreaInfo',
-    comment: '狩猎用，显示你当前在几线。',
+    comment: '狩猎用，简单显示你当前在几线。',
   },
   {
     title: '[悬浮窗] DNC 触发倒计时显示',
@@ -88,7 +106,7 @@ const tableData: Menu[] = [
     title: '[悬浮窗] 一键 VPR 连击',
     type: '悬浮窗',
     path: 'okVpr',
-    comment: '<a href="#/okVpr">版本A</a>，进附体时不会重置热键栏适合直接设置成单独键位的情况（我自己没用过，不知道好不好用）\n<a href="#/okVpr2">版本B</a>，进附体时会重置热键栏适合设置成平时按的键位的情况（我自己没用过，不知道好不好用）',
+    comment: '<a href="#/okVpr">版本A</a>，进附体时不会重置热键栏，适合直接设置成单独键位（我没用过，不知道好不好用）\n<a href="#/okVpr2">版本B</a>，进附体时会重置热键栏，适合设置成平时按的键位（我没用过，不知道好不好用）',
   },
   {
     title: '[悬浮窗] 技能监控（不再维护）',
