@@ -62,9 +62,9 @@ export const useKeigennRecord2Store = defineStore('keigennRecord2', {
 
 function parseParams<T>(v: string, def: T): T {
   if (typeof def === 'boolean') {
-    if (v === '0')
+    if (v === '0' || v.toLocaleLowerCase() === 'false')
       return false as T
-    if (v === '1')
+    if (v === '1' || v.toLocaleLowerCase() === 'true')
       return true as T
     return def
   }
