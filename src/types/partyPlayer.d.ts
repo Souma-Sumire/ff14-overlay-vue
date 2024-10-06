@@ -7,5 +7,4 @@ export interface Player {
 
 export interface PlayerRuntime extends Player {
   rp?: string
-  specify?: boolean
 }

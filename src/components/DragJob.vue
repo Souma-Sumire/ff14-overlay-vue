@@ -54,7 +54,7 @@ const jobsListAll = Object.values(jobsList).flat()
 const jobs = jobsListAll.map((v) => {
   return {
     name: Util.nameToFullName(Util.jobEnumToJob(v)).simple1,
-    id: v,
+    job: v,
   }
 })
 const jobList: RemovableRef<
@@ -62,29 +62,29 @@ const jobList: RemovableRef<
     Role,
     {
       name: string
-      id: number
+      job: number
     }[]
   >
 > = useStorage(
   'cactbotRuntime-jobList',
   (() => {
-    const res = {} as Record<Role, { name: string, id: number }[]>
+    const res = {} as Record<Role, { name: string, job: number }[]>
     for (const role of roles.map(v => v.role)) {
       res[role] = jobs
-        .filter(v => jobsList[role].includes(v.id))
+        .filter(v => jobsList[role].includes(v.job))
         .sort(
-          (a, b) => jobsList[role].indexOf(a.id) - jobsList[role].indexOf(b.id),
+          (a, b) => jobsList[role].indexOf(a.job) - jobsList[role].indexOf(b.job),
         )
     }
     return res
   })(),
 )
 
-if (jobList.value.dps.findIndex(v => v.id === 41) === -1) {
-  jobList.value.dps.push({ name: '蛇', id: 41 })
+if (jobList.value.dps.findIndex(v => v.job === 41) === -1) {
+  jobList.value.dps.push({ name: '蛇', job: 41 })
 }
-if (jobList.value.dps.findIndex(v => v.id === 42) === -1) {
-  jobList.value.dps.push({ name: '绘', id: 42 })
+if (jobList.value.dps.findIndex(v => v.job === 42) === -1) {
+  jobList.value.dps.push({ name: '绘', job: 42 })
 }
 
 function onUpdate() {
@@ -92,7 +92,7 @@ function onUpdate() {
     'updateSortArr',
     Object.values(jobList.value)
       .flat()
-      .map(v => v.id),
+      .map(v => v.job),
   )
 }
 </script>
@@ -114,8 +114,8 @@ function onUpdate() {
       @update="onUpdate"
     >
       <div
-        v-for="item in jobList[role.role]" v-show="!!props.party.find((v) => v.job === 36) ? true : item.id !== 36"
-        :key="item.id" :class="`${free || isJobInParty(item.id)
+        v-for="item in jobList[role.role]" v-show="!!props.party.find((v) => v.job === 36) ? true : item.job !== 36"
+        :key="item.job" :class="`${free || isJobInParty(item.job)
           ? `draggable bg-${role.color} cursor-move`
           : 'no-draggable bg-gray-700/50 opacity-75'
         } rounded p-l-0.6 p-r-0.6 p-t-0 p-b-0.3 m-0 color-white`"

@@ -34,8 +34,7 @@ const fakeParty: PlayerRuntime[] = [
   { id: '10000008', name: '虚构诗人', job: 23, inParty: true },
   { id: '10000007', name: '虚构召唤', job: 27, inParty: true },
 ]
-const _party: PlayerRuntime[] = []
-const data = useStorage('cactbotRuntime-data', { party: _party })
+const data = useStorage('cactbotRuntime-data', { party: [] as PlayerRuntime[] })
 const showTips = useStorage('cactbotRuntime-showTips', ref(true))
 const roleSelectLength = useStorage('cactbotRuntime-roleSelectLength', {
   tank: 0,
@@ -126,13 +125,11 @@ function defaultPartySort() {
 }
 
 function handleSelectChange(i: number): void {
-  data.value.party[i].specify = true
   const t = data.value.party.find(
     v => v.rp === data.value.party[i].rp && v.id !== data.value.party[i].id,
   )
   if (t) {
     t.rp = getRP(t)
-    t.specify = true
   }
   broadcastParty()
 }
@@ -155,7 +152,7 @@ function broadcastParty(): void {
     ...roleAssignLocationNames.none,
   ]
   data.value.party.sort(
-    (a, b) => sortArr.indexOf(a.rp ?? '') - sortArr.indexOf(b.rp ?? ''),
+    (a, b) => sortArr.indexOf(a.rp ?? 'unknown') - sortArr.indexOf(b.rp ?? 'unknown'),
   )
   callOverlayHandler({
     call: 'broadcast',
@@ -202,7 +199,7 @@ onMounted(() => {
     data.value.party = e.party
       .filter(v => v.inParty)
       .map((p) => {
-        return { ...p, rp: '', specify: false }
+        return { ...p, rp: 'unknown' }
       })
     updateData()
   })
@@ -231,7 +228,7 @@ function testParty() {
   data.value.party = e.party
     .filter(v => v.inParty)
     .map((p) => {
-      return { ...p, rp: '', specify: false }
+      return { ...p, rp: 'unknown' }
     })
   updateData()
 }
