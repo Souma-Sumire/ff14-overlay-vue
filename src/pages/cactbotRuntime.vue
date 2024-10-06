@@ -120,6 +120,9 @@ function defaultPartySort() {
   )
   for (const v of data.value.party) {
     v.rp = undefined
+  }
+  // 2次循环不能合并
+  for (const v of data.value.party) {
     v.rp = getRP(v)
   }
 }
