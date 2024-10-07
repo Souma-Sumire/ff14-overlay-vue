@@ -8,7 +8,7 @@ import ContentType from '../../cactbot/resources/content_type'
 import { addOverlayListener, callOverlayHandler, removeOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import NetRegexes, { commonNetRegex } from '../../cactbot/resources/netregexes'
 import logDefinitions from '../../cactbot/resources/netlog_defs'
-import zoneInfo from '@/resources/zoneInfo'
+import ZoneInfo from '@/resources/zoneInfo'
 
 /*
   TODO:
@@ -22,12 +22,10 @@ type ConditionType = 'enter' | 'combatStart' | 'combatEnd' | 'countdown' | 'wipe
 type ContentUsedType = typeof CONTENT_TYPES[number]
 const userConfig = useStorage('obs-user-config', { host: 4455, password: '' })
 const userContentSetting = useStorage('obs-user-content-setting', [] as Settings[])
-const userContentSettingExtra = useStorage('obs-user-content-setting-extra', { raidLimitToEightOrLess: true, pvpLimitToEightOrLess: true })
 const isFirstTime = useStorage('obs-is-first-time', true)
 const actReady = ref(false)
 const debug = ref(false)
-let partyLength: number = 0
-const playerContentType = ref('' as keyof typeof ContentType)
+const playerZoneInfo = ref({} as typeof ZoneInfo[number])
 
 function checkWebSocket(): Promise<void> {
   return new Promise((resolve) => {
@@ -50,9 +48,11 @@ const REGEXES: Record<string, RegExp> = {
 } as const
 
 const CONTENT_TYPES = [
+  'Savage', // 零式
+  'Extreme', // 歼殛战
+  'Ultimate', // 绝境战
+  'Dungeons', // 四人副本
   'Raids', // 大型任务
-  'UltimateRaids', // 绝境战
-  'Dungeons', // 地牢（四人副本）
   'Trials', // 讨伐任务
   'VCDungeonFinder', // 多变迷宫
   'DeepDungeons', // 深层迷宫
@@ -66,7 +66,7 @@ const CONTENT_TYPES = [
 ] as const
 
 function initializeContentSettings() {
-  const defaultEnabled: ContentUsedType[] = ['Raids', 'UltimateRaids']
+  const defaultEnabled: ContentUsedType[] = ['Savage', 'Extreme', 'Ultimate']
   if (isFirstTime.value) {
     isFirstTime.value = false
     // 大型任务、绝境战默认开启
@@ -198,17 +198,8 @@ const obs = new Obs()
 
 const handleChangeZone: EventMap['ChangeZone'] = (e) => {
   const zoneID = e.zoneID
-  const contentType = zoneInfo[zoneID]?.contentType
-  for (const key in ContentType) {
-    if (Object.prototype.hasOwnProperty.call(ContentType, key)) {
-      const element = ContentType[key as keyof typeof ContentType]
-      if (element === contentType) {
-        playerContentType.value = key as keyof typeof ContentType
-        checkCondition('enter')
-        return
-      }
-    }
-  }
+  const zoneInfo = ZoneInfo[zoneID]
+  playerZoneInfo.value = zoneInfo
 }
 
 const handleLogLine: EventMap['LogLine'] = (e) => {
@@ -250,19 +241,43 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
   }
 }
 
-const handlePartyChanged: EventMap['PartyChanged'] = (e) => {
-  partyLength = e.party.length
+function getZoneType(zoneInfo: (typeof ZoneInfo)[number]): typeof CONTENT_TYPES[number] {
+  switch (zoneInfo.contentType) {
+    case ContentType.UltimateRaids:
+      return 'Ultimate'
+    case ContentType.Pvp:
+      return 'Pvp'
+    case ContentType.DeepDungeons:
+      return 'DeepDungeons'
+    case ContentType.VCDungeonFinder:
+      return 'VCDungeonFinder'
+    case ContentType.Trials:
+      if (zoneInfo.name.fr?.includes('(extrême)'))
+        return 'Extreme'
+      return 'Trials'
+    case ContentType.Raids:
+      if (zoneInfo.name.en?.includes('(Savage)'))
+        return 'Savage'
+      return 'Raids'
+    case ContentType.DisciplesOfTheLand:
+      return 'DisciplesOfTheLand'
+    case ContentType.Eureka:
+      return 'Eureka'
+    case ContentType.GrandCompany:
+      return 'GrandCompany'
+    case ContentType.QuestBattles:
+      return 'QuestBattles'
+    case ContentType.TreasureHunt:
+      return 'TreasureHunt'
+    default:
+      throw new Error(`Unknown content type: ${zoneInfo.contentType}`)
+  }
 }
 
 function checkCondition(condition: ConditionType) {
   const recording = obs.status.recording
-  if (!userContentSetting.value.find(item => item.type === playerContentType.value && item[condition])) {
-    return
-  }
-  if (playerContentType.value === 'Raids' && userContentSettingExtra.value.raidLimitToEightOrLess && partyLength > 8) {
-    return
-  }
-  if (playerContentType.value === 'Pvp' && userContentSettingExtra.value.pvpLimitToEightOrLess && partyLength > 5) {
+  const zoneType = getZoneType(playerZoneInfo.value)
+  if (!userContentSetting.value.find(item => item.type === zoneType && item[condition])) {
     return
   }
   switch (condition) {
@@ -289,7 +304,6 @@ onMounted(async () => {
   obs.connect()
   addOverlayListener('ChangeZone', handleChangeZone)
   addOverlayListener('LogLine', handleLogLine)
-  addOverlayListener('PartyChanged', handlePartyChanged)
   initializeContentSettings()
 })
 
@@ -297,7 +311,6 @@ onUnmounted(() => {
   obs.disconnect()
   removeOverlayListener('ChangeZone', handleChangeZone)
   removeOverlayListener('LogLine', handleLogLine)
-  removeOverlayListener('PartyChanged', handlePartyChanged)
 })
 </script>
 
@@ -456,25 +469,6 @@ onUnmounted(() => {
               </el-table-column>
             </el-table-column>
           </el-table>
-        </el-card>
-        <el-card class="table-card">
-          <template #header>
-            <div class="card-header">
-              <span>{{ t('Extra Rule') }}</span>
-            </div>
-          </template>
-          <el-form label-position="top" class="extra-rule-form">
-            <el-form-item :label="t('Raids')">
-              <el-checkbox v-model="userContentSettingExtra.raidLimitToEightOrLess">
-                {{ t('RaidsLimitToEightOrLess') }}
-              </el-checkbox>
-            </el-form-item>
-            <el-form-item :label="t('Pvp')">
-              <el-checkbox v-model="userContentSettingExtra.pvpLimitToEightOrLess">
-                {{ t('PvpLimitToEightOrLess') }}
-              </el-checkbox>
-            </el-form-item>
-          </el-form>
         </el-card>
       </div>
     </main>
