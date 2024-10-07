@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { RequestBatchRequest } from 'obs-websocket-js'
 import OBSWebSocket from 'obs-websocket-js'
 import { VxeUI } from 'vxe-table'
 import type { Reactive } from 'vue'
@@ -10,17 +11,11 @@ import NetRegexes, { commonNetRegex } from '../../cactbot/resources/netregexes'
 import logDefinitions from '../../cactbot/resources/netlog_defs'
 import ZoneInfo from '@/resources/zoneInfo'
 
-/*
-  TODO:
-  [ ] 设置录像文件名的格式
-  [ ] 设置录像路径，不同区域录像文件分开存放
-*/
-
 const { t } = useI18n()
 interface Settings { type: ContentUsedType, enter: boolean, countdown: boolean, combatStart: boolean, combatEnd: boolean, wipe: boolean }
 type ConditionType = 'enter' | 'combatStart' | 'combatEnd' | 'countdown' | 'wipe'
 type ContentUsedType = typeof CONTENT_TYPES[number]
-const userConfig = useStorage('obs-user-config', { host: 4455, password: '' })
+const userConfig = useStorage('obs-user-config', { host: 4455, password: '', path: '', fileName: '' }, localStorage, { writeDefaults: true })
 const userContentSetting = useStorage('obs-user-content-setting', [] as Settings[])
 const isFirstTime = useStorage('obs-is-first-time', true)
 const actReady = ref(false)
@@ -63,7 +58,11 @@ const CONTENT_TYPES = [
   'QuestBattles', // 任务剧情
   'TreasureHunt', // 挖宝
   'Pvp', // PVP
+  'Default', // 其他
 ] as const
+
+const DEFAULT_ENABLE_SETTINGS = { enter: false, countdown: true, combatStart: false, combatEnd: true, wipe: true }
+const DEFAULT_DISABLE_SETTINGS = { enter: false, countdown: false, combatStart: false, combatEnd: false, wipe: false }
 
 function initializeContentSettings() {
   const defaultEnabled: ContentUsedType[] = ['Savage', 'Extreme', 'Ultimate']
@@ -71,16 +70,16 @@ function initializeContentSettings() {
     isFirstTime.value = false
     // 大型任务、绝境战默认开启
     userContentSetting.value = [
-      ...defaultEnabled.map(type => ({ type, enter: false, countdown: true, combatStart: false, combatEnd: true, wipe: true })),
-      ...CONTENT_TYPES.filter(type => !defaultEnabled.includes(type)).map(type => ({ type, enter: false, countdown: false, combatStart: false, combatEnd: false, wipe: false })),
+      ...defaultEnabled.map(type => ({ type, ...DEFAULT_ENABLE_SETTINGS })),
+      ...CONTENT_TYPES.filter(type => !defaultEnabled.includes(type)).map(type => ({ type, ...DEFAULT_DISABLE_SETTINGS })),
     ]
   }
   else {
     // 清理不存在的类型
     userContentSetting.value = userContentSetting.value.filter(item => CONTENT_TYPES.includes(item.type))
     // 加入缺少的类型
-    const missingTypes = CONTENT_TYPES.filter(type => !userContentSetting.value.some(item => item.type === type)).map((v) => {
-      return defaultEnabled.includes(v) ? { type: v, enter: false, countdown: true, combatStart: false, combatEnd: true, wipe: true } : { type: v, enter: false, countdown: false, combatStart: false, combatEnd: false, wipe: false }
+    const missingTypes = CONTENT_TYPES.filter(type => !userContentSetting.value.some(item => item.type === type) && type !== 'Default').map((v) => {
+      return defaultEnabled.includes(v) ? { type: v, ...DEFAULT_ENABLE_SETTINGS } : { type: v, ...DEFAULT_DISABLE_SETTINGS }
     })
     userContentSetting.value.push(...missingTypes)
   }
@@ -166,6 +165,16 @@ class Obs {
       })
     }).finally(() => {
       this.status.connecting = false
+      if (!userConfig.value.path) {
+        this.ws.call('GetRecordDirectory').then((v) => {
+          if (v.recordDirectory) {
+            userConfig.value.path = v.recordDirectory
+          }
+        })
+      }
+      if (!userConfig.value.fileName) {
+        userConfig.value.fileName = '%CCYY-%MM-%DD %hh-%mm-%ss'
+      }
     })
   }
 
@@ -173,7 +182,8 @@ class Obs {
     this.ws.disconnect()
   }
 
-  startRecord() {
+  async startRecord() {
+    await this.setProfileParameter()
     this.ws.call('StartRecord')
   }
 
@@ -189,9 +199,30 @@ class Obs {
     })
   }
 
-  // setPath(path: string) {
-  //   this.ws.call('SetProfileParameter')
-  // }
+  async setProfileParameter() {
+    const filePath = userConfig.value.path
+    const fileName = userConfig.value.fileName
+    const requests: RequestBatchRequest[] = []
+    requests.push({
+      requestType: 'SetProfileParameter',
+      requestData: {
+        parameterCategory: 'AdvOut',
+        parameterName: 'RecFilePath',
+        parameterValue: filePath,
+      },
+    })
+    requests.push({
+      requestType: 'SetProfileParameter',
+      requestData: {
+        parameterCategory: 'Output',
+        parameterName: 'FilenameFormatting',
+        parameterValue: fileName,
+      },
+    })
+    userConfig.value.path = filePath
+    userConfig.value.fileName = fileName
+    return this.ws.callBatch(requests)
+  }
 }
 
 const obs = new Obs()
@@ -247,6 +278,8 @@ function getZoneType(zoneInfo: (typeof ZoneInfo)[number]): typeof CONTENT_TYPES[
       return 'Ultimate'
     case ContentType.Pvp:
       return 'Pvp'
+    case ContentType.Dungeons:
+      return 'Dungeons'
     case ContentType.DeepDungeons:
       return 'DeepDungeons'
     case ContentType.VCDungeonFinder:
@@ -270,7 +303,7 @@ function getZoneType(zoneInfo: (typeof ZoneInfo)[number]): typeof CONTENT_TYPES[
     case ContentType.TreasureHunt:
       return 'TreasureHunt'
     default:
-      throw new Error(`Unknown content type: ${zoneInfo.contentType}`)
+      return 'Default'
   }
 }
 
@@ -425,6 +458,35 @@ onUnmounted(() => {
             >
               {{ t('Split Record') }}
             </el-button>
+            <el-button
+              type="primary"
+              @click="obs.setProfileParameter()"
+            >
+              {{ t('Set Recording Name') }}
+            </el-button>
+          </div>
+        </el-card>
+        <el-card class="profile-card">
+          <template #header>
+            <div class="card-header">
+              <span>{{ t('Recording Profile') }}</span>
+            </div>
+          </template>
+          <div class="profile-info">
+            <el-form label-position="top" class="content-form">
+              <el-form-item :label="t('Record Path')">
+                <el-input v-model="userConfig.path" :placeholder="t('recordPathPlaceholder')" />
+                <div class="file-path-explanation">
+                  {{ t('filePathExplanation') }}
+                </div>
+              </el-form-item>
+              <el-form-item :label="t('Record File Name')">
+                <el-input v-model="userConfig.fileName" :placeholder="t('recordFileNamePlaceholder')" />
+                <div class="file-name-explanation">
+                  {{ t('fileNameExplanation') }}
+                </div>
+              </el-form-item>
+            </el-form>
           </div>
         </el-card>
         <el-card class="table-card">
@@ -434,35 +496,35 @@ onUnmounted(() => {
             </div>
           </template>
           <el-table :data="userContentSetting" style="width: 100%" :border="true" stripe>
-            <el-table-column prop="type" :label="t('Type')" min-width="130">
+            <el-table-column prop="type" :label="t('Type')" min-width="130" fixed>
               <template #default="scope">
                 <span>{{ t(scope.row.type) }}</span>
               </template>
             </el-table-column>
             <el-table-column :label="t('Start When')" align="center">
-              <el-table-column prop="enter" :label="t('Enter Zone')" align="center" min-width="100">
+              <el-table-column prop="enter" :label="t('Enter Zone')" align="center" min-width="95">
                 <template #default="scope">
                   <el-switch v-model="scope.row.enter" />
                 </template>
               </el-table-column>
-              <el-table-column prop="countdown" :label="t('CountDown')" align="center" min-width="100">
+              <el-table-column prop="countdown" :label="t('CountDown')" align="center" min-width="95">
                 <template #default="scope">
                   <el-switch v-model="scope.row.countdown" />
                 </template>
               </el-table-column>
-              <el-table-column prop="combatStart" :label="t('CombatStart')" align="center" min-width="100">
+              <el-table-column prop="combatStart" :label="t('CombatStart')" align="center" min-width="95">
                 <template #default="scope">
                   <el-switch v-model="scope.row.combatStart" />
                 </template>
               </el-table-column>
             </el-table-column>
             <el-table-column :label="t('End When')" align="center">
-              <el-table-column prop="combatEnd" :label="t('CombatEnd')" align="center" min-width="100">
+              <el-table-column prop="combatEnd" :label="t('CombatEnd')" align="center" min-width="95">
                 <template #default="scope">
                   <el-switch v-model="scope.row.combatEnd" />
                 </template>
               </el-table-column>
-              <el-table-column prop="wipe" :label="t('Wipe')" align="center" min-width="100">
+              <el-table-column prop="wipe" :label="t('Wipe')" align="center" min-width="95">
                 <template #default="scope">
                   <el-switch v-model="scope.row.wipe" />
                 </template>
@@ -482,14 +544,8 @@ onUnmounted(() => {
 </style>
 
 <style scoped>
-h1{
-  padding: 0;
-  margin: 0;
-}
-
 .obs-container {
-  background-color: white;
-  max-width: 900px;
+  max-width: 800px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -498,25 +554,34 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  border-bottom: 1px solid #dcdfe6;
+}
+
+h1{
+  font-size: 24px;
+  color: #303133;
 }
 
 .act-not-ready-card,
-.connection-card {
-  max-width: 500px;
-  margin: 0 auto 20px;
+.connection-card,
+.status-card,
+.table-card,
+.profile-card {
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 }
 
 .connection-form {
-  margin-bottom: 20px;
+  padding: 5px;
 }
 
 .connect-button {
   width: 100%;
+  margin-top: 10px;
 }
 
 .card-header {
-  font-size: 18px;
   font-weight: bold;
   display: flex;
   justify-content: space-between;
@@ -524,22 +589,38 @@ header {
 }
 
 .instruction-alert {
-  margin-top: 10px;
-}
-.status-card {
-  margin-bottom: 20px;
+  margin-top: 15px;
+  margin-bottom: 15px;
 }
 
 .status-info {
   margin-bottom: 20px;
 }
 
-.table-card {
+.status-card{
   margin-top: 20px;
 }
 
-.obs-container {
-  padding: 10px;
+.button-container {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.button-container .el-button:first-child {
+  margin-left: 12.5px;
+}
+
+.button-container .el-button {
+  flex: 1;
+  min-width: 120px;
+}
+
+.file-path-explanation,
+.file-name-explanation {
+  font-size: 12px;
+  color: #909399;
 }
 
 .act-not-ready-card,
