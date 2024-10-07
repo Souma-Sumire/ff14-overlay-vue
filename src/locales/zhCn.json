@@ -49,10 +49,11 @@
   "hideTutorial": "一切设置妥当后，在 OverlayPlugin 悬浮窗插件中，取消勾选 [显示悬浮窗] 以隐藏本页面",
   "overlayTutorial": "在 ACT 中添加本页面作为数据统计悬浮窗",
   "ACT Not Ready": "ACT 未连接",
-  "CombatEnd": "战斗结束",
+  "CombatEnd": "离开战斗",
   "CountDown": "倒计时开始",
-  "CombatStart": "战斗开始",
+  "CombatStart": "进入战斗",
   "Extra Rule": "额外规则",
   "RaidsLimitToEightOrLess": "队员数量小于等于 8 人时才录制（用于排除 24 人本）",
-  "PvpLimitToEightOrLess": "队员数量小于等于 5 人时才录制（用于排除 72 人战场）"
+  "PvpLimitToEightOrLess": "队员数量小于等于 5 人时才录制（用于排除 72 人战场）",
+  "Leave Zone": "离开区域"
 }
