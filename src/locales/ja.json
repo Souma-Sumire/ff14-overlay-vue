@@ -3,7 +3,6 @@
   "passwordPlaceholder": "WebSocketサーバーパスワード",
   "Connect": "接続",
   "Raids": "レイド",
-  "UltimateRaids": "絶難易度レイド",
   "Dungeons": "ダンジョン",
   "Trials": "討伐・討滅戦",
   "VCDungeonFinder": "変動ダンジョン",
@@ -54,5 +53,9 @@
   "ACT Not Ready": "ACT未接続",
   "Extra Rule": "追加ルール",
   "RaidsLimitToEightOrLess": "メンバー数が8以下の場合に録画（24人を除くため）",
-  "PvpLimitToEightOrLess": "メンバー数が5以下の場合に録画（72人を除くため）"
+  "PvpLimitToEightOrLess": "メンバー数が5以下の場合に録画（72人を除くため）",
+  "Leave Zone": "エリア出場",
+  "Savage": "零式",
+  "Extreme": "極",
+  "Ultimate": "絶"
 }

@@ -2,7 +2,6 @@
   "portPlaceholder": "WebSocket 服务器端口",
   "passwordPlaceholder": "WebSocket 服务器密码",
   "Raids": "大型任务",
-  "UltimateRaids": "绝境战",
   "Dungeons": "迷宫挑战",
   "Trials": "讨伐歼灭战",
   "VCDungeonFinder": "多变迷宫",
@@ -55,5 +54,8 @@
   "Extra Rule": "额外规则",
   "RaidsLimitToEightOrLess": "队员数量小于等于 8 人时才录制（用于排除 24 人本）",
   "PvpLimitToEightOrLess": "队员数量小于等于 5 人时才录制（用于排除 72 人战场）",
-  "Leave Zone": "离开区域"
+  "Leave Zone": "离开区域",
+  "Savage": "零式",
+  "Extreme": "极神",
+  "Ultimate": "绝本"
 }

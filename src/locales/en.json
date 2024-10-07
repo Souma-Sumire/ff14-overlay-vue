@@ -46,7 +46,6 @@
   "TreasureHunt": "TreasureHunt",
   "Trials": "Trials",
   "Type": "Type",
-  "UltimateRaids": "Ultimate",
   "User Content Settings": "User Content Settings",
   "VCDungeonFinder": "VCD",
   "Wipe": "Wipe",
@@ -54,5 +53,10 @@
   "passwordPlaceholder": "WebSocket Server Password",
   "portPlaceholder": "WebSocket Server Port",
   "RaidsLimitToEightOrLess": "Record only when the number of team members is less than or equal to 8 (to exclude 24 person content)",
-  "PvpLimitToEightOrLess": "Record only when the number of team members is less than or equal to 5 (to exclude 72 person content)"
+  "PvpLimitToEightOrLess": "Record only when the number of team members is less than or equal to 5 (to exclude 72 person content)",
+  "Leave Zone": "Leave Zone",
+  "Savage": "Savage",
+  "Extreme": "Extreme",
+  "Ultimate": "Ultimate"
+
 }
