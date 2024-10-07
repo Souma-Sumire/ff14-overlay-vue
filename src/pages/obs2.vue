@@ -439,14 +439,14 @@ onUnmounted(() => {
               </el-table-column>
               <el-table-column prop="combatStart" :label="t('CombatStart')" align="center" min-width="100">
                 <template #default="scope">
-                  <el-switch v-model="scope.row.combat" />
+                  <el-switch v-model="scope.row.combatStart" />
                 </template>
               </el-table-column>
             </el-table-column>
             <el-table-column :label="t('End When')" align="center">
               <el-table-column prop="combatEnd" :label="t('CombatEnd')" align="center" min-width="100">
                 <template #default="scope">
-                  <el-switch v-model="scope.row.leave" />
+                  <el-switch v-model="scope.row.combatEnd" />
                 </template>
               </el-table-column>
               <el-table-column prop="wipe" :label="t('Wipe')" align="center" min-width="100">
