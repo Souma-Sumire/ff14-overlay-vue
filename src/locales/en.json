@@ -55,6 +55,12 @@
   "Leave Zone": "Leave Zone",
   "Savage": "Savage",
   "Extreme": "Extreme",
-  "Ultimate": "Ultimate"
-
+  "Ultimate": "Ultimate",
+  "fileNameExplanation": "%CCYY: Year, %MM: Month, %DD: Day, %hh: Hour, %mm: Minute, %ss: Second",
+  "Recording Profile": "Recording Profile",
+  "Record Path": "Path",
+  "Record File Name": "File Name",
+  "recordPathPlaceholder": "Please enter the path to save the recording file",
+  "recordFileNamePlaceholder": "Please enter the file name of the recording file",
+  "filePathExplanation": "Make sure the path exists"
 }

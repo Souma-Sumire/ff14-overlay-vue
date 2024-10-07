@@ -55,5 +55,12 @@
   "Leave Zone": "エリア出場",
   "Savage": "零式",
   "Extreme": "極",
-  "Ultimate": "絶"
+  "Ultimate": "絶",
+  "fileNameExplanation": "%CCYY: 年、%MM: 月、%DD: 日、%hh: 時、%mm: 分、%ss: 秒",
+  "Recording Profile": "録音プロファイル",
+  "Record Path": "パス",
+  "Record File Name": "ファイル名",
+  "recordPathPlaceholder": "録音ファイルを保存するパスを入力してください",
+  "recordFileNamePlaceholder": "録音ファイルのファイル名を入力してください",
+  "filePathExplanation": "パスが存在することを確認してください"
 }

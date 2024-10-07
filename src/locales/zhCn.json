@@ -55,5 +55,17 @@
   "Leave Zone": "离开区域",
   "Savage": "零式",
   "Extreme": "极神",
-  "Ultimate": "绝本"
+  "Ultimate": "绝本",
+  "Rules": "使用子文件夹",
+  "FoldersByCategory": "按副本类型",
+  "FolderByContent": "按副本名称",
+  "FileName": "文件名",
+  "Record Path": "路径",
+  "Record File Name": "文件名",
+  "recordPathPlaceholder": "请填写路径",
+  "recordFileNamePlaceholder": "请填写文件名",
+  "fileNameExplanation": "%CCYY: 年, %MM: 月, %DD: 日, %hh: 时, %mm: 分, %ss: 秒",
+  "Recording Profile": "录制资料",
+  "filePathExplanation": "须保证目录存在",
+  "Set Recording Name": "设置路径"
 }
