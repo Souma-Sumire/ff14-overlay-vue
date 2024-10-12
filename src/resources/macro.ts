@@ -1656,59 +1656,6 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
           },
         },
       },
-      {
-        Name: '绝神兵三连桶',
-        Place: {
-          A: {
-            X: 100.563751,
-            Y: -0.00000190734863,
-            Z: 93.5459,
-            Active: true,
-          },
-          B: {
-            X: 106.757942,
-            Y: -0.00000381469727,
-            Z: 99.5804443,
-            Active: true,
-          },
-          C: {
-            X: 100.4052,
-            Y: -0.00000381469727,
-            Z: 105.739433,
-            Active: true,
-          },
-          D: {
-            X: 92.96501,
-            Y: 0.00000762939453,
-            Z: 99.20858,
-            Active: true,
-          },
-          One: {
-            X: 100.186066,
-            Y: 0,
-            Z: 99.2162247,
-            Active: true,
-          },
-          Two: {
-            X: 0,
-            Y: 0,
-            Z: 0,
-            Active: false,
-          },
-          Three: {
-            X: 0,
-            Y: 0,
-            Z: 0,
-            Active: false,
-          },
-          Four: {
-            X: 0,
-            Y: 0,
-            Z: 0,
-            Active: false,
-          },
-        },
-      },
     ],
     778: [
       {
