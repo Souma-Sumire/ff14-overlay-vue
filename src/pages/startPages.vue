@@ -141,7 +141,7 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
   {
     title: '[悬浮窗] 技能监控（不再维护）',
     type: '悬浮窗',
-    path: 'obs',
+    path: 'https://souma.diemoe.net/dist/teamWatch.html',
     comment: '仅存档，不再维护。替代品：<a href="https://github.com/0ceal0t/JobBars">JobBars</a>',
   },
   {
