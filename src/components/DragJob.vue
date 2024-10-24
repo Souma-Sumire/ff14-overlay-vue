@@ -66,7 +66,7 @@ const jobList: RemovableRef<
     }[]
   >
 > = useStorage(
-  'cactbotRuntime-jobList',
+  'cactbotRuntime-job-list',
   (() => {
     const res = {} as Record<Role, { name: string, job: number }[]>
     for (const role of roles.map(v => v.role)) {
