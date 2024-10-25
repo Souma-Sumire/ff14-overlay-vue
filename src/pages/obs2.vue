@@ -145,7 +145,7 @@ class Obs {
     })
   }
 
-  connect() {
+  connect(callback?: () => void) {
     if (!(userConfig.value.host && userConfig.value.password)) {
       return
     }
@@ -163,6 +163,9 @@ class Obs {
         status: 'success',
         duration: 2000,
       })
+      if (callback) {
+        callback()
+      }
     }).finally(() => {
       this.status.connecting = false
       if (!userConfig.value.path) {
@@ -308,7 +311,6 @@ function getZoneType(zoneInfo: (typeof ZoneInfo)[number]): typeof CONTENT_TYPES[
 }
 
 function checkCondition(condition: ConditionType) {
-  const recording = obs.status.recording
   const zoneType = getZoneType(playerZoneInfo.value)
   if (!userContentSetting.value.find(item => item.type === zoneType && item[condition])) {
     return
@@ -317,7 +319,12 @@ function checkCondition(condition: ConditionType) {
     case 'enter':
     case 'countdown':
     case 'combatStart':
-      if (!recording) {
+      if (!obs.status.connected) {
+        obs.connect(() => {
+          obs.startRecord()
+        })
+      }
+      else if (!obs.status.recording) {
         obs.startRecord()
       }
       else {
@@ -326,7 +333,7 @@ function checkCondition(condition: ConditionType) {
       return
     case 'combatEnd':
     case 'wipe':
-      if (recording) {
+      if (obs.status.recording) {
         obs.stopRecord()
       }
   }
