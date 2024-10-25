@@ -145,7 +145,7 @@ class Obs {
     })
   }
 
-  connect() {
+  connect(callback?: () => void) {
     if (!(userConfig.value.host && userConfig.value.password)) {
       return
     }
@@ -174,6 +174,10 @@ class Obs {
       }
       if (!userConfig.value.fileName) {
         userConfig.value.fileName = '%CCYY-%MM-%DD %hh-%mm-%ss'
+      }
+    }).then(() => {
+      if (callback) {
+        callback()
       }
     })
   }
@@ -317,6 +321,11 @@ function checkCondition(condition: ConditionType) {
     case 'enter':
     case 'countdown':
     case 'combatStart':
+      if (!obs.status.connected) {
+        obs.connect(() => {
+          obs.startRecord()
+        })
+      }
       if (!recording) {
         obs.startRecord()
       }
