@@ -79,9 +79,9 @@ tuanfuTTS: 是否开启团辅TTS，默认true
   {
     title: '[悬浮窗] 治疗/减伤时间轴',
     type: '悬浮窗',
-    path: 'timeline',
+    path: 'timeline?showSettings=true',
     src: 'timeline.webp',
-    comment: '适用于副职快速抄轴、打小抄等。可以实现简单的阶段同步，但面对血量轴/双轴等复杂情况时表现不佳。',
+    comment: '适用于副职快速抄轴、打小抄等。可以实现简单的阶段同步，但面对血量轴/双轴等复杂情况时表现不佳。\n\n需在ACT中使用，且在ACT的悬浮窗右上角的齿轮按钮进入设置。\n若在浏览器中编辑，需启动ACT WSServer并使用<a href="/ff14-overlay-vue/#/timelineSettings?OVERLAY_WS=ws://127.0.0.1:10501/ws">这个链接</a>\n\nURL地址栏参数说明：\nshowSettings: 是否显示小齿轮，默认true',
   },
   {
     title: '[悬浮窗] 施法监控（技能展示）',

@@ -93,8 +93,8 @@ function broadcastData(): void {
   if (urlTool({ url: location.href })?.OVERLAY_WS) {
     applyData()
     Swal.fire({
-      title: '已尝试进行通信,请检查ACT悬浮窗是否接收',
-      text: '若无法通信，可将本页面直接添加到ACT悬浮窗进行编辑，设置将会自动保存。（编辑后刷新一下时间轴网页）',
+      title: '已尝试进行通信，请检查ACT悬浮窗是否接收',
+      text: '若无法通信，请检查ACT OverlayPlugin WSServer是否开启，并使本页面url参数中的端口号与其保持一致：OVERLAY_WS=ws://127.0.0.1:端口号/ws',
     })
   }
   else {

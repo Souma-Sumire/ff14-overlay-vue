@@ -29,10 +29,13 @@ const condition = useStorage('timeline-condition', {
   zoneId: '0',
   job: 'NONE',
 } as ITimelineCondition)
+const params = new URLSearchParams(location.hash.split('?')[1])
 const devMode = ref(
   window.location.href.match(/localhost/)
-  || new URLSearchParams(location.hash.split('?')[1]).get('dev') === '1',
+  || params.get('dev') === '1',
 )
+const showSettings = ref(params.get('showSettings') !== 'false')
+
 // 保存最后一次选择的时间轴，用于团灭时重新加载
 // let lastUsedTimeline: ITimeline;
 
@@ -314,6 +317,7 @@ function init() {
 <template>
   <div id="wrapper">
     <svg
+      v-if="showSettings"
       v-show="baseTimeMs === 0"
       t="1652767124032"
       class="icon"
