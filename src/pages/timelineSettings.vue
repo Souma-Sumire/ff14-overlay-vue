@@ -331,17 +331,17 @@ function openMarkdown() {
   <el-container class="container">
     <el-header>
       <el-button type="primary" @click="newDemoTimeline()">
-        新建
+        新建：Demo
       </el-button>
-      <el-button @click="fflogsImportClick()">
-        从FFlogs导入
+      <el-button type="primary" @click="fflogsImportClick()">
+        新建：从 FFlogs 生成
       </el-button>
       <el-button
         color="#626aef"
         style="color: white"
         @click="showSettings = !showSettings"
       >
-        时间轴设置
+        设置
       </el-button>
       <el-button @click="importTimelines()">
         导入
@@ -350,7 +350,7 @@ function openMarkdown() {
         全部导出
       </el-button>
       <el-button v-if="isWSMode" type="success" @click="broadcastData()">
-        通过WS发送到悬浮窗
+        将浏览器数据通过WS发送到ACT悬浮窗
       </el-button>
       <el-button @click="openMarkdown()">
         查看语法
@@ -417,14 +417,14 @@ function openMarkdown() {
         <el-row class="timeline-info">
           <div>
             <p class="timeline-info-config">
-              <span>名称：</span>
+              <span>显示名称：</span>
               <el-input
                 v-model="timelineCurrentlyEditing.timeline.name"
                 class="timeline-info-name"
               />
             </p>
             <p class="timeline-info-config">
-              <span>地图：</span>
+              <span>限定地图：</span>
               <el-select
                 v-model="timelineCurrentlyEditing.timeline.condition.zoneId"
                 filterable
@@ -438,7 +438,7 @@ function openMarkdown() {
               </el-select>
             </p>
             <p class="timeline-info-config">
-              <span>职业：</span>
+              <span>限定职业：</span>
               <el-select
                 v-model="timelineCurrentlyEditing.timeline.condition.job"
                 required
@@ -453,14 +453,14 @@ function openMarkdown() {
               </el-select>
             </p>
             <p class="timeline-info-config">
-              <span>来源：</span>
+              <span>战斗来源：</span>
               <el-input
                 v-model="timelineCurrentlyEditing.timeline.codeFight"
                 disabled
               />
             </p>
             <p class="timeline-info-config">
-              <span>创建：</span>
+              <span>创建时间：</span>
               <el-input
                 v-model="timelineCurrentlyEditing.timeline.create"
                 disabled
@@ -575,13 +575,14 @@ function openMarkdown() {
     justify-content: space-between;
     .timeline-info-config {
       display: flex;
+      margin-right: 10px;
       span {
         white-space: nowrap;
       }
     }
     :deep(.el-input) {
-      max-width: 200px;
-      margin-right: 5px;
+      max-width: 160px;
+      // margin-right: 5px;
     }
     .timeline-timeline-view {
       margin-top: 1em;
