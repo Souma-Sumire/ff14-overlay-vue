@@ -7,7 +7,7 @@
     "dev": "vite",
     "tsc": "vue-tsc --noEmit",
     "github-build": "vite build",
-    "build": "npm run cjs && vite build",
+    "build": "npm run submodule && npm run cjs && vite build",
     "preview": "vite preview",
     "submodule": "git submodule update --remote",
     "lint": "eslint .",
