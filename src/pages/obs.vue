@@ -610,10 +610,10 @@ header {
     .btns {
       background-color: white;
       float: left;
-      padding: 0.1rem 0rem 1rem 0.1rem !important;
-      margin: 0rem 0.2rem 0rem 0rem !important;
       height: 1rem !important;
       width: 1.25rem !important;
+      padding: 0.1rem !important;
+      margin: 0.1rem !important;
     }
   }
 }
