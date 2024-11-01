@@ -417,7 +417,7 @@ onMounted(() => {
       </el-space>
     </el-main>
     <div class="menu" :class="websocketConnected ? 'websocketConnected' : 'websocketDisconnected'">
-      <el-button v-if="!websocketConnected" size="small" @click="macroStore.toggleShow()">
+      <el-button v-if="websocketConnected" size="small" @click="macroStore.toggleShow()">
         隐藏页面
       </el-button>
       <el-button type="success" size="small" @click="macroStore.newOne('macro')">
@@ -440,10 +440,10 @@ onMounted(() => {
       <el-button type="danger" size="small" @click="macroStore.resetAllData()">
         恢复全部
       </el-button>
-      <form v-if="!websocketConnected" bg-white style="font-size: 12px">
+      <form v-if="websocketConnected" bg-white style="font-size: 12px">
         <el-switch v-model="hideOnStartup" size="small" />默认最小化
       </form>
-      <i v-if="!websocketConnected" class="vxe-icon-arrow-down">菜单</i>
+      <i v-if="websocketConnected" class="vxe-icon-arrow-down">菜单</i>
     </div>
   </el-container>
 </template>
