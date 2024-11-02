@@ -54,10 +54,11 @@ const usedZoneInfo = [
   ...preSortZoneInfo.filter(v => v.contentType === undefined || !showContentTypes.includes(v.contentType)),
 ]
 
-const websocketConnected = ref(false)
+const useType = ref('ws' as 'ws' | 'act')
 
 async function onLoad() {
   if (window.location.href.indexOf('OVERLAY_WS') > 0) {
+    useType.value = 'ws'
     let resolvePromise: (value: boolean | PromiseLike<boolean>) => void
     const promise = new Promise<boolean>((resolve) => {
       resolvePromise = resolve
@@ -69,7 +70,6 @@ async function onLoad() {
           ElMessageBox.close()
           res(true)
           resolvePromise(true)
-          websocketConnected.value = true
         })
       }),
       new Promise<boolean>((res) => {
@@ -99,11 +99,13 @@ async function onLoad() {
           clearInterval(loop)
           ElMessageBox.close()
           resolvePromise(true)
-          websocketConnected.value = true
         })
       }, 1000)
     }
     return promise
+  }
+  else {
+    useType.value = 'act'
   }
 }
 
@@ -416,8 +418,8 @@ onMounted(() => {
         </el-card>
       </el-space>
     </el-main>
-    <div class="menu" :class="websocketConnected ? 'websocketConnected' : 'websocketDisconnected'">
-      <el-button v-if="!websocketConnected" size="small" @click="macroStore.toggleShow()">
+    <div class="menu" :class="useType">
+      <el-button v-if="useType === 'act'" size="small" @click="macroStore.toggleShow()">
         隐藏页面
       </el-button>
       <el-button type="success" size="small" @click="macroStore.newOne('macro')">
@@ -440,10 +442,10 @@ onMounted(() => {
       <el-button type="danger" size="small" @click="macroStore.resetAllData()">
         恢复全部
       </el-button>
-      <form v-if="!websocketConnected" bg-white style="font-size: 12px">
+      <form v-if="useType === 'act'" style="font-size: 12px;background-color: rgba(255, 255,255,0.5)">
         <el-switch v-model="hideOnStartup" size="small" />默认最小化
       </form>
-      <i v-if="!websocketConnected" class="vxe-icon-arrow-down">菜单</i>
+      <i v-if="useType === 'act'" class="vxe-icon-arrow-down">菜单</i>
     </div>
   </el-container>
 </template>
@@ -511,7 +513,7 @@ body {
   position: fixed;
   top: 0;
   right: 0;
-  &.websocketDisconnected{
+  &.act{
     transform: translateY(calc(-100% + 1rem));
     opacity: 0.5;
     z-index: 100;
