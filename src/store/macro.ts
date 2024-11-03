@@ -31,15 +31,15 @@ export const useMacroStore = defineStore('macro', {
   state: () => {
     return {
       data: useStorage('my-macros', reactive(defaultMacro)),
-      selectZone: useStorage('my-zone', ref('1003')),
-      zoneNow: useStorage('my-zone-now', ref('129')),
+      selectZone: useStorage('my-zone', ref('1226')),
+      zoneNow: useStorage('my-zone-now', ref('1226')),
       fastEntrance: [
-        { text: '极首饰', value: '1201' },
-        { text: '极武器', value: '1196' },
-        { text: 'R1S', value: '1226' },
-        { text: 'R2S', value: '1228' },
-        { text: 'R3S', value: '1230' },
-        { text: 'R4S', value: '1232' },
+        { text: '佐拉加', value: '1201' },
+        { text: '艳翼蛇鸟', value: '1196' },
+        { text: 'M1S', value: '1226' },
+        { text: 'M2S', value: '1228' },
+        { text: 'M3S', value: '1230' },
+        { text: 'M4S', value: '1232' },
       ],
       show,
       toggleShow,
