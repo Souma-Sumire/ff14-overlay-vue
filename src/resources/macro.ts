@@ -6864,7 +6864,7 @@ for (const key in defaultMacro.zoneId) {
     }
   }
 }
-export { defaultMacro }
+
 function getSource(title: string, href: string): string {
   return `<a href='${href}'target='_blank'>${title}</a>`
 }
@@ -7030,3 +7030,5 @@ Object.entries(syncMap).forEach(([savage, normal]) => {
     ...(defaultMacro.zoneId[normal] ?? []).filter(v => 'Place' in v).map(v => ({ ...v, Name: v.Name.replace('异闻', '零式') })),
   ]
 })
+
+export { defaultMacro, syncMap }

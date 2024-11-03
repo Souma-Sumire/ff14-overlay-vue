@@ -2,6 +2,7 @@
 import { useMacroStore } from '@/store/macro'
 import type { WayMarkInfo, WayMarkKeys } from '@/types/PostNamazu'
 import type { MacroInfoPlace } from '@/types/macro'
+import { syncMap } from '@/resources/macro'
 
 const props = defineProps({
   macro: { type: Object as () => MacroInfoPlace, required: true },
@@ -22,7 +23,7 @@ const markMap: Record<WayMarkKeys, string> = {
 }
 
 // 多变迷宫地图ID
-const specialMap = [1069, 1075, 1076, 1137, 1155, 1156, 1176, 1179, 1180]
+const specialMap = Object.entries(syncMap).flat().map(v => Number(v))
 const marks = Object.keys(markMap) as WayMarkKeys[]
 const markViewSize = 180
 const markViewScale = 3
