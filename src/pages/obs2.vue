@@ -323,11 +323,18 @@ function checkCondition(condition: ConditionType) {
         obs.connect(() => {
           obs.startRecord()
         })
+        return
       }
-      else if (!obs.status.recording) {
+
+      // 未录制，则开始录制
+      if (obs.status.recording === false) {
         obs.startRecord()
+        return
       }
-      else {
+
+      // 已在录制，则切割录制
+      // 但排除combatStart，因为如果战斗开始是时已经在录制了，表明目前处于由倒计时发起的录制动作中，我们不希望倒计时过程会单独被分割出来。
+      if (obs.status.recording === true && condition !== 'combatStart') {
         obs.splitRecord()
       }
       return
