@@ -6874,6 +6874,63 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 　H1　ST　 H2` },
     ],
     1232: [
+      { Name: getSource('苏帕酱噗', 'https://www.bilibili.com/video/BV1JtDQYVEKp'), Text: `/p ■闪电猎巫ーーーー■圆轮・轮圆式猎巫ーーーーーー
+/p D3 D4                       D3 MT D4
+/p MT ST                        D1 ☆ D2
+/p D1 D2                       H1 ST H2
+/p H1 H2
+/p ■第1次雷转质展开ーーーーーーーーーーーーー
+/p MT D2 D4 | ☆　ST/D2 H2/D4
+/p D1 ST  H2  | MT/D1
+/p D3 H1 角    | H1/D3          角
+/p ■第2次雷转质展开（长1长2当作长2长3）
+/p 基本散开     |3次 ■■■ 3次  西：TH 东：DPS
+/p D3 MT D4 |    ■   ■   ■      22秒：3次 or 2次
+/p H1 ☆ H2   |    2次 ■ 2次     42秒：2次 or 1次
+/p D1 ST D2  |  ■ ■ 他 ■ ■
+/p ・分摊（长1长2当作长2长3）・分散(北基准)
+/p TH3次：B,D DPS3次：中央 | D3
+/p TH2次：A     DPS2次：C      | MT  H1
+/p                                                     | D1☆　ST
+/p                                                     | D2  H2
+/p                                                     | D4
+/p ■3连炮ーーーーーーーー雷转质移植※以C为12点
+/p   紫                            ｜
+/p 箭头                            | D3/MT   ST/D4
+/p 蓝 蓝 ※TH靠场外    |              ☆
+/p 蓝 蓝 ※DPS靠场内 | H1/D1   D2/H2
+/p 箭头                           | 
+/p   紫                             | 
+
+` },
+      { Name: getSource('MMW', 'https://www.bilibili.com/video/BV1BiDyY9Ei3'), Text: `/p ■开场分散ーーーー■狩猎站位（DN式）ーーーーーー
+/p D3 D4 　 　 　 　D3 MT D4
+/p MT ST 　 　 　 　D1 ☆ D2
+/p D1 D2 　 　 　 　H1 ST H2
+/p H1 H2
+/p ■雷转质1 分散 / 分摊（面向BOSS）ーーーーーーーー
+/p MT D2 D4 　 　| ☆　ST/D2 H2/D4
+/p D1 ST H2 　 　| MT/D1
+/p D3 H1 雷 　 | H1/D3
+/p ■雷转质2 基本分散 / 点名安置 以T型AOE为12点
+/p 　 | 多 ■■■ 多 　 安全区6点
+/p D3 MT D4 | ■ ■ ■ 　 左半场TH 右半场DPS
+/p H1 ☆ H2 | 少 　 ■ 　 少 第一轮22s：3层多2层少
+/p D1 ST D2 | ■ ■ ○ ■ ■ 第二轮42s：2层多1层少
+/p 以A点为基准 根据半场刀换位（多D和D1站位与BOSS重合）
+/p ■ーーーー分摊雷站位 / 分散雷站位ーーーーーーーーーー
+/p ｜ D3 D3
+/p 　 少TN ｜ H1　 MT 　H1
+/p 多TN　多D 多TN ｜　 ST D1　ST
+/p 　 　 少D　 　 ｜ H2 　 D2　 　H2
+/p 　 　 　 　 　 　 ｜ D4 　 D4
+/p ■分组炮站位ーーーーーー■转场分散分组（BOSS面向基准）
+/p 　 蓄雷 　 圆环点名 　 ｜
+/p 　 远近 　 面向BOSS 　 ｜ 　D3/MT　 ST/D4
+/p 圆环 圆环 TH左 　 　 ｜ 　 　 　 　☆
+/p 圆环 　 圆环 DPS右　 　｜ 　 H1/D1 　D2/H2
+/p 　 远近 　 　 　 　 　 　 ｜※顺时针→逆时针往返躲避地火
+/p 蓄雷 ｜` },
       { Name: 'Game8(8月5日最终修正版)', Text: `/p ■縦散開ーーーー■円輪・輪円（DN式）ーーーーーー
 /p   D3 D4                   D3  MT  D4
 /p   MT ST                   D1   ☆   D2
@@ -6901,6 +6958,19 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p  青         青 ※DPS内側  |    H1/D1    D2/H2
 /p  　 誘電                         |   ※自分のペアの基本散開位置と往復
 /p        紫` },
+      {
+        Name: getSource('通用', 'https://www.bilibili.com/video/BV1JtDQYVEKp'),
+        Place: {
+          A: { X: 100.0, Y: 0.0, Z: 90.0, ID: 0, Active: true },
+          B: { X: 110.0, Y: 0.0, Z: 100.0, ID: 1, Active: true },
+          C: { X: 100.0, Y: 0.0, Z: 110.0, ID: 2, Active: true },
+          D: { X: 90.0, Y: 0.0, Z: 100.0, ID: 3, Active: true },
+          One: { X: 95.0, Y: 0.0, Z: 95.0, ID: 4, Active: true },
+          Two: { X: 105.0, Y: 0.0, Z: 95.0, ID: 5, Active: true },
+          Three: { X: 105.0, Y: 0.0, Z: 105.0, ID: 6, Active: true },
+          Four: { X: 95.0, Y: 0.0, Z: 105.0, ID: 7, Active: true },
+        },
+      },
     ],
   },
 }
