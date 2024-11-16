@@ -313,6 +313,10 @@ function getZoneType(zoneInfo: (typeof ZoneInfo)[number]): typeof CONTENT_TYPES[
 function checkCondition(condition: ConditionType) {
   const zoneType = getZoneType(playerZoneInfo.value)
   if (!userContentSetting.value.find(item => item.type === zoneType && item[condition])) {
+    if (condition === 'enter') {
+      // 上一次录制战斗通关，则这次切换场地（且不需要切割）时结束录制。
+      obs.stopRecord()
+    }
     return
   }
   switch (condition) {
@@ -562,6 +566,7 @@ onUnmounted(() => {
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
+  background-color: #fff
 }
 
 header {
