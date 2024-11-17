@@ -139,10 +139,11 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
     comment: '<a href="#/okVpr">版本A</a>，进附体时不会重置热键栏，适合直接设置成单独键位（我没用过，不知道好不好用）\n<a href="#/okVpr2">版本B</a>，进附体时会重置热键栏，适合设置成平时按的键位（我没用过，不知道好不好用）',
   },
   {
-    title: '[悬浮窗] 技能监控（不再维护）',
+    title: '[悬浮窗] 技能监控',
     type: '悬浮窗',
     path: 'https://souma.diemoe.net/dist/teamWatch.html',
-    comment: '仅存档，不再维护。替代品：<a href="https://github.com/0ceal0t/JobBars">JobBars</a>',
+    comment: '可以实现对大部分技能的CD监控。现已进入维护阶段，不再新增特性或修正 BUG。',
+    src: 'teamWatch.webp',
   },
   {
     title: '国际服汉化补丁',
