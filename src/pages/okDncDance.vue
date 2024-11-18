@@ -164,7 +164,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div bg-white p-l-3>
+  <div p-l-3 bg-white>
     <el-form label-width="9rem" style="max-width: 300px">
       <el-form-item label="Action语言" style="width:14em">
         <el-select v-model="config.lang" size="small">

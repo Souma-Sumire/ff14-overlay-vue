@@ -147,7 +147,7 @@ onMounted(() => {
   <el-container
 
     v-show="macroStore.show"
-    absolute left-0 top-0 m-0 rd-1 p-0
+    top-0 p-0 absolute left-0 m-0 rd-1
     class="elcontainer"
   >
     <el-header flex="~ wrap gap1" height="auto" class="elheader">
