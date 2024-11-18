@@ -373,15 +373,22 @@ onMounted(() => {
                 size="small"
                 @click="macroStore.doLocalWayMark(macro.Place)"
               >
-                本地标点
+                本地标
               </el-button>
-              <!-- <el-button
+              <el-button
+                type="primary"
+                size="small"
+                @click="macroStore.doPartyWayMark(macro.Place)"
+              >
+                公开标
+              </el-button>
+              <el-button
                 type="primary"
                 size="small"
                 @click="macroStore.doSlotWayMark(macro.Place)"
               >
-                插槽
-              </el-button> -->
+                写插槽
+              </el-button>
               <el-button
                 :icon="CopyDocument"
                 size="small"

@@ -348,8 +348,12 @@ export const useMacroStore = defineStore('macro', {
       macroCommand(text, 'e')
     },
     doLocalWayMark(place: PPJSON): void {
-      doWayMarks(place)
-      ElMessage.success('已标点')
+      doWayMarks(place, true)
+      ElMessage.success('已本地标点')
+    },
+    doPartyWayMark(place: PPJSON): void {
+      doWayMarks(place, false)
+      ElMessage.success('已公开标点')
     },
     doSlotWayMark(place: PPJSON): void {
       ElMessageBox({

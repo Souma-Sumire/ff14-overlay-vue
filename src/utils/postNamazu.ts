@@ -9,11 +9,11 @@ export function doTextCommand(text: string) {
     p: text,
   })
 }
-export function doWayMarks(json: PPJSON) {
+export function doWayMarks(json: PPJSON, localOnly: boolean = true) {
   return callOverlayHandler({
     call: 'PostNamazu',
     c: 'DoWaymarks',
-    p: JSON.stringify(json),
+    p: JSON.stringify({ ...json, LocalOnly: localOnly }),
   })
 }
 
