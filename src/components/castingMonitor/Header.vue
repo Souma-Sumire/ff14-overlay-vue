@@ -32,7 +32,7 @@ const showHeader = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(
   </div>
 </template>
 
-<stype lang="scss" scoped>
+<style lang="scss" scoped>
 .header-layout {
   padding: 0;
   height: 0px;
@@ -63,4 +63,4 @@ const showHeader = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(
     }
   }
 }
-</stype>
+</style>
