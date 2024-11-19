@@ -3114,9 +3114,9 @@ P2BOSS出现，MT带到场边，ST带力和斧去另外一边
 /p 【ノック・オブ・ヴォロク(ペア割)】
 /p 　　　　　ボス
 /p H1/D3 MT/D1 ST/D2 H2/D4`}],1226:[{Name:o("苏帕酱噗","https://www.bilibili.com/video/BV1dhyHYME2Z"),Text:`/p 【基本散开】 ｜【扇形引导】
-/p D3 MT D4 ｜ MTD3
-/p H1　☆　H2 ｜　H1D1 ☆ H2D4
-/p D1 ST D2 ｜ STD2
+/p D3 MT D4     ｜             MTD3
+/p H1  ☆  H2     ｜　H1D1 ☆ H2D4
+/p D1 ST   D2     ｜              STD2
 /p 【交叉尖甲】（十字引导）
 /p 先TH　后DPS　※22分摊从扇形诱导位置逆时针移动
 /p 【冲击波（击退）】
@@ -3127,7 +3127,8 @@ P2BOSS出现，MT带到场边，ST带力和斧去另外一边
 /p 【猫猫雨（接线+远近分摊）】（DTTT）
 /p 第1轮 D1左 D2右
 /p 第2~4轮 MT中心偏左上 ST中心偏右上 2裸吃34无敌
-/p MTST诱导近分摊，其他人在C诱导远分摊`},{Name:"Game8",Text:`/p 　【基本散開】 　 　｜【扇範囲誘導】(全てボス基準)
+/p MTST诱导近分摊，其他人在C诱导远分摊
+`},{Name:"Game8",Text:`/p 　【基本散開】 　 　｜【扇範囲誘導】(全てボス基準)
   /p 　D3 　MT 　D4 　 ｜ 　 　 　 MTD3
   /p 　H1　ボス　H2 　｜　H1D1 　ボス 　H2D4
   /p 　D1 　ST 　D2 　 ｜　 　 　 　STD2
@@ -3141,10 +3142,10 @@ P2BOSS出现，MT带到场边，ST带力和斧去另外一边
   /p 【レイニングキャッツ】(タンク無敵)
   /p 　北西:MT→MT(無敵)→MT(無敵)→D1　南側タゲサ：H1D1D2
   /p 　北東:ST →ST(無敵) →ST(無敵) →D2 　 南側外周：H2D3D4`}],1228:[{Name:o("苏帕酱噗","https://www.bilibili.com/video/BV1bwy9Y7ELV"),Text:`/p ■基本散开
-/p D3 MT D4 D3 D4 MT/D3 ST/D4
-/p H1 ☆ H2 MT ST H1/D1 D2/H2
-/p D1 ST D2 D1 D2
-/p H1 H2
+/p D3 MT D4   D3 D4   MT/D3 ST/D4
+/p H1  ☆  H2   MT ST    H1/D1 D2/H2
+/p D1 ST  D2   D1 D2
+/p                        H1 H2
 /p ■1运
 /p 近战：♡2 正面（北）起点顺时针分摊　远程：♡3
 /p ■2运
@@ -3168,14 +3169,14 @@ P2BOSS出现，MT带到场边，ST带力和斧去另外一边
 /p ■3rdライヴ
 /p デバフ捨て、塔踏みはペア割基準
 /p ■ブラックハート
-/p 8方向散会　HPが戻り次第、早いペア順に中央集合`}],1230:[{Name:o("苏帕酱噗","https://www.bilibili.com/video/BV1hZSJYzEEa"),Text:`/p ■八重分散ーーーーーー■四重二二ーーーーーー
-/p D3 MT D4 MT/D3 H2/D4
-/p H1 ★ H2 ★
-/p D1 ST D2 H1/D1 ST/D2
+/p 8方向散会　HPが戻り次第、早いペア順に中央集合`}],1230:[{Name:o("苏帕酱噗","https://www.bilibili.com/video/BV1hZSJYzEEa"),Text:`/p ■八重分散ーーー■四重二二ーーーーーー
+/p D3 MT D4            MT/D3  H2/D4
+/p H1  ★  H2                         ★
+/p D1 ST  D2             H1/D1  ST/D2
 /p ■强袭俯冲·分散ーーーーーー■强袭俯冲·分摊ーーーーーー
-/p MT　★　ST ★
-/p D1　D2 MT/D1 D2/ST
-/p D3　H1　H2　D4 D3/H1 H2/D4
+/p   MT   ★    ST                                         ★
+/p       D1   D2                               MT/D1 D2/ST
+/p D3  H1  H2  D4                      D3/H1 H2/D4
 /p ■野蛮爆炸（击退塔）
 /p 1塔　近战组西/北 远程组东/南
 /p 2塔　面朝场中 MTD1H1D3往左 STD2H2D4往右
@@ -3186,9 +3187,9 @@ P2BOSS出现，MT带到场边，ST带力和斧去另外一边
 /p 找线：A顺时针 MT→ST→H1→H2　D1→D2→D3→D4
 /p 踩线：短→长　MT→ST→H1→H2　D1→D2→D3→D4
 /p ■超华丽野蛮旋火·分散站位（近战字母点，远程四角）
-/p D3　MT　D4
-/p D1 ★ D2
-/p H1　ST H2`},{Name:"Game8",Text:`/p ■基本散開ーーーーーー■4ウェイーーーーーー
+/p D3     MT     D4
+/p D1     ★      D2
+/p H1     ST     H2`},{Name:"Game8",Text:`/p ■基本散開ーーーーーー■4ウェイーーーーーー
 /p 　D3 MT D4 　 　 　 　MT/D3 　 　 H2/D4
 /p 　H1 ★ H2 　 　 　 　 　 　 　 　★
 /p 　D1 ST D2 　 　 　 　 H1/D1 　 　 ST/D2
@@ -3226,6 +3227,7 @@ P2BOSS出现，MT带到场边，ST带力和斧去另外一边
 /p D3 MT D4 |    ■   ■   ■      22秒：3次 or 2次
 /p H1 ☆ H2   |    2次 ■ 2次     42秒：2次 or 1次
 /p D1 ST D2  |  ■ ■ 他 ■ ■
+
 /p ・分摊（长1长2当作长2长3）・分散(北基准)
 /p TH3次：B,D DPS3次：中央 | D3
 /p TH2次：A     DPS2次：C      | MT  H1
@@ -3239,7 +3241,6 @@ P2BOSS出现，MT带到场边，ST带力和斧去另外一边
 /p 蓝 蓝 ※DPS靠场内 | H1/D1   D2/H2
 /p 箭头                           | 
 /p   紫                             | 
-
 `},{Name:o("MMW","https://www.bilibili.com/video/BV1BiDyY9Ei3"),Text:`/p ■开场分散ーーーー■狩猎站位（DN式）ーーーーーー
 /p D3 D4 　 　 　 　D3 MT D4
 /p MT ST 　 　 　 　D1 ☆ D2
