@@ -38,7 +38,7 @@ const displayAA = Number(
 .main {
   position: relative;
   min-height: 60px;
-  height: 100vh;
+  height: calc(100vh - 60px);
 
   .images {
     position: absolute;
