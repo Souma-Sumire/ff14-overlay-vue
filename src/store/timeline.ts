@@ -175,16 +175,20 @@ export const useTimelineStore = defineStore('timeline', {
         Reflect.deleteProperty(v.condition, 'job')
       }
       this.allTimelines.sort((a, b) => {
-        // a.condition.job === b.condition.job
-        //   ? Number(a.condition.zoneId) - Number(b.condition.zoneId)
-        //   : Util.jobToJobEnum(a.condition.job) - Util.jobToJobEnum(b.condition.job),
-        if (Number(a.condition.zoneId) === Number(b.condition.zoneId)) {
-          return (
-            Util.jobToJobEnum(a.condition.jobs[0])
-            - Util.jobToJobEnum(b.condition.jobs[0])
-          )
+        const mapDiff = Number(a.condition.zoneId) - Number(b.condition.zoneId)
+        if (mapDiff !== 0) {
+          return mapDiff
         }
-        return Number(a.condition.zoneId) - Number(b.condition.zoneId)
+        const nameDiff = a.name.localeCompare(b.name)
+        if (nameDiff !== 0) {
+          return nameDiff
+        }
+        const jobDiff = Util.jobToJobEnum(a.condition.jobs[0])
+          - Util.jobToJobEnum(b.condition.jobs[0])
+        if (jobDiff !== 0) {
+          return jobDiff
+        }
+        return a.create.localeCompare(b.create)
       })
     },
     updateFilters(target: string, value: number[]) {
