@@ -323,7 +323,7 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
     `导入${fflogsQueryConfig.player?.name}`,
     {
       zoneId: fflogsQueryConfig.zoneID.toString(),
-      job: (fflogsQueryConfig.player?.icon as Job) ?? 'NONE',
+      jobs: [(fflogsQueryConfig.player?.icon as Job) ?? 'NONE'],
     },
     fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline,
     `${fflogsQueryConfig.code}#fight=${fflogsQueryConfig.fightIndex + 1}`,

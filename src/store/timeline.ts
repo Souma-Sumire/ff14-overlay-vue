@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import Swal from 'sweetalert2'
 import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
 import Util from '../utils/util'
-import type { FFIcon } from '@/types/fflogs'
 import {
   type ITimeline,
   type ITimelineCondition,
@@ -17,18 +16,16 @@ import {
 class Timeline implements ITimeline {
   constructor(
     name: string,
-    condition: ITimelineCondition,
+    playerState: ITimelineCondition,
     timeline: string,
     codeFight: string,
   ) {
-    if (Util.iconToJobEnum(condition.job as FFIcon)) {
-      // 突然有一天数据格式不一致了 可能是fflogs改返回值了?
-      condition.job = Util.jobEnumToJob(
-        Util.iconToJobEnum(condition.job as FFIcon),
-      )
-    }
+    // if (Util.iconToJobEnum(playerState.jobs[0] as FFIcon)) {
+    //   // 突然有一天数据格式不一致了 可能是fflogs改返回值了?
+    //   playerState.jobs[0] = Util.jobEnumToJob(Util.iconToJobEnum(playerState.jobs[0] as FFIcon))
+    // }
     this.name = name
-    this.condition = condition
+    this.condition = playerState
     this.timeline = timeline
     this.codeFight = codeFight
     this.create = new Date().toLocaleString()
@@ -95,7 +92,7 @@ export const useTimelineStore = defineStore('timeline', {
   actions: {
     newTimeline(
       title = 'Demo',
-      condition: ITimelineCondition = { zoneId: '0', job: 'NONE' },
+      condition: ITimelineCondition = { zoneId: '0', jobs: ['NONE'] },
       rawTimeline = `# 注释的内容不会被解析
 # "<技能名>"会被解析为图片 紧接着一个波浪线可快捷重复技能名
 -20 "<中间学派>~刷盾"
@@ -131,12 +128,12 @@ export const useTimelineStore = defineStore('timeline', {
       )
       return result
     },
-    getTimeline(condition: ITimelineCondition): ITimeline[] {
+    getTimeline(playerState: ITimelineCondition): ITimeline[] {
       return this.allTimelines.filter((t) => {
         return (
           (t.condition.zoneId === '0'
-          || t.condition.zoneId === condition.zoneId)
-          && (t.condition.job === 'NONE' || t.condition.job === condition.job)
+          || t.condition.zoneId === playerState.zoneId)
+          && (t.condition.jobs.includes('NONE') || t.condition.jobs.includes(playerState.jobs[0]))
         )
       })
     },
@@ -158,23 +155,33 @@ export const useTimelineStore = defineStore('timeline', {
         Object.assign(this, JSON.parse(ls))
         this.sortTimelines()
       }
+
       for (const v of this.allTimelines) {
-        if (Util.iconToJobEnum(v.condition.job as FFIcon)) {
-          v.condition.job = Util.jobEnumToJob(
-            Util.iconToJobEnum(v.condition.job as FFIcon),
-          )
+      //   if (Util.iconToJobEnum(v.condition.job as FFIcon)) {
+      //     v.condition.job = Util.jobEnumToJob(
+      //       Util.iconToJobEnum(v.condition.job as FFIcon),
+      //     )
+      //   }
+        if (v.condition.jobs === undefined) {
+          v.condition.jobs = [(v.condition as any).job]
         }
       }
     },
     sortTimelines() {
+      for (const v of this.allTimelines) {
+        if (v.condition.jobs === undefined) {
+          v.condition.jobs = [(v.condition as any).job]
+        }
+        Reflect.deleteProperty(v.condition, 'job')
+      }
       this.allTimelines.sort((a, b) => {
         // a.condition.job === b.condition.job
         //   ? Number(a.condition.zoneId) - Number(b.condition.zoneId)
         //   : Util.jobToJobEnum(a.condition.job) - Util.jobToJobEnum(b.condition.job),
         if (Number(a.condition.zoneId) === Number(b.condition.zoneId)) {
           return (
-            Util.jobToJobEnum(a.condition.job)
-            - Util.jobToJobEnum(b.condition.job)
+            Util.jobToJobEnum(a.condition.jobs[0])
+            - Util.jobToJobEnum(b.condition.jobs[0])
           )
         }
         return Number(a.condition.zoneId) - Number(b.condition.zoneId)

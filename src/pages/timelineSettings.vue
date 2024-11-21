@@ -4,6 +4,7 @@ import Swal from 'sweetalert2'
 import moment from 'moment'
 import type { EventMap } from 'cactbot/types/event'
 import { ElLoading, ElMessage, ElMessageBox } from 'element-plus'
+import type { Job } from 'cactbot/types/job'
 import { addOverlayListener, callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 import zoneInfo from '@/resources/zoneInfo'
 import { parseTimeline, useTimelineStore } from '@/store/timeline'
@@ -28,7 +29,7 @@ const showSettings = ref(false)
 const timelineCurrentlyEditing: { timeline: ITimeline } = reactive({
   timeline: {
     name: '空',
-    condition: { zoneId: '0', job: 'NONE' },
+    condition: { zoneId: '0', jobs: ['NONE'] },
     timeline: '空',
     codeFight: '空',
     create: '空',
@@ -55,11 +56,7 @@ async function updateTransmissionTimeline() {
     timelineCurrentlyEditing.timeline.timeline,
   )
 }
-const debounceJobCN = useDebounce(
-  computed(() => Util.getBattleJobs2()),
-  500,
-  { maxWait: 5000 },
-)
+const debounceJobCN: Job[] = [...Util.getBattleJobs3(), 'NONE']
 init()
 
 function init(): void {
@@ -108,7 +105,7 @@ function resetCurrentlyTimeline(): void {
   simulatedCombatTime.value = -30
   timelineCurrentlyEditing.timeline = {
     name: '空',
-    condition: { zoneId: '0', job: 'NONE' },
+    condition: { zoneId: '0', jobs: ['NONE'] },
     timeline: '空',
     codeFight: '空',
     create: '空',
@@ -218,6 +215,11 @@ function importTimelines(): void {
           )
           timelineStore.sortTimelines()
         }
+        for (const timeline of timelineStore.allTimelines) {
+          if (timeline.condition.jobs === undefined) {
+            timeline.condition.jobs = [(timeline.condition as any).job]
+          }
+        }
       }
       catch (e) {
         Swal.fire({
@@ -309,6 +311,12 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
     loading.close()
     const data = (e.msg as { data: typeof timelineStore.$state }).data
     if (timelineStore.allTimelines.length === 0 && data.allTimelines.length > timelineStore.allTimelines.length) {
+      for (const v of data.allTimelines) {
+        if (v.condition.jobs === undefined) {
+          v.condition.jobs = [(v.condition as any).job]
+        }
+        Reflect.deleteProperty(v.condition, 'job')
+      }
       timelineStore.allTimelines = data.allTimelines
       timelineStore.configValues = data.configValues
       timelineStore.showStyle = data.showStyle
@@ -349,6 +357,11 @@ function sendDataToACT() {
   })
 }
 
+function getLabel(job: Job): string {
+  const res = Util.nameToFullName(job)?.cn ?? `job`
+  return res === '冒险者' ? '全部职业' : res
+}
+
 onMounted(() => {
   addOverlayListener('BroadcastMessage', handleBroadcastMessage)
   const unwatch = watch(wsConnected, (val) => {
@@ -364,9 +377,9 @@ onMounted(() => {
   <el-container class="container">
     <el-header>
       <el-row m-b-5>
-        <el-alert title="为防止用户数据意外丢失，在编辑完成后，你需要手动点击右侧绿色「将改动应用到 ACT 悬浮窗中」按钮，才会使得改动应用到悬浮窗中。" type="info" />
+        <el-alert title="为防止用户数据意外丢失，在编辑完成后，你需要手动点击右侧绿色「应用」按钮，才会使得改动应用到悬浮窗中。" type="info" :closable="false" />
       </el-row>
-      <el-row :gutter="10" align="middle" justify="space-between">
+      <el-row align="middle">
         <el-col :span="20">
           <el-space wrap>
             <el-button-group>
@@ -398,7 +411,7 @@ onMounted(() => {
 
             <el-button-group>
               <el-button type="success" @click="sendDataToACT()">
-                将改动应用到 ACT 悬浮窗中
+                应用
               </el-button>
             </el-button-group>
           </el-space>
@@ -416,6 +429,7 @@ onMounted(() => {
     </el-header>
     <timeline-settings-dialog v-model="showSettings" @save="handleSettingsSave" />
     <el-main>
+      <br>
       <timeline-fflogs-import
         v-if="showFFlogs"
         :filters="timelineFilters"
@@ -463,14 +477,15 @@ onMounted(() => {
             <p class="timeline-info-config">
               <span>限定职业：</span>
               <el-select
-                v-model="timelineCurrentlyEditing.timeline.condition.job"
+                v-model="timelineCurrentlyEditing.timeline.condition.jobs"
+                multiple
                 required
                 placeholder="职业"
               >
                 <el-option
                   v-for="job in debounceJobCN"
                   :key="job"
-                  :label="Util.nameToFullName(job).cn"
+                  :label="getLabel(job)"
                   :value="job"
                 />
               </el-select>
@@ -554,7 +569,7 @@ onMounted(() => {
           </el-table-column>
           <el-table-column prop="conditon" label="职业">
             <template #default="scope">
-              {{ Util.nameToFullName(scope.row.condition.job).cn }}
+              {{ scope.row.condition.jobs.map((v: Job) => Util.nameToFullName(v).cn).join('、') }}
             </template>
           </el-table-column>
           <el-table-column fixed="right" label="操作" width="100">
@@ -588,6 +603,7 @@ onMounted(() => {
   margin-left: 12px;
 }
 .container {
+  min-width: 925px;
   max-width: 1200px;
   margin: 0 auto;
   .timeline-info {
@@ -600,6 +616,7 @@ onMounted(() => {
     .timeline-info-config {
       display: flex;
       margin-right: 10px;
+      max-width: 16em;
       span {
         white-space: nowrap;
       }

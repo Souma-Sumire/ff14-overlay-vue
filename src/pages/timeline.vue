@@ -25,9 +25,9 @@ const offsetTimeMS = ref(0) // sync产生的时间轴偏移 会在baseTimeMs后�
 let doTTS = false // 防止tts重复
 
 // 每次get时间轴时被传入的条件对象
-const condition = useStorage('timeline-condition', {
+const playerState = useStorage('timeline-condition-2', {
   zoneId: '0',
-  job: 'NONE',
+  jobs: ['NONE'],
 } as ITimelineCondition)
 const params = new URLSearchParams(location.hash.split('?')[1])
 const devMode = ref(
@@ -47,11 +47,11 @@ onMounted(() => {
 })
 
 // 从数据列表中根据玩家职业与地区获得一个或多个时间轴
-function getTimeline(condition: ITimelineCondition) {
+function getTimeline() {
   stopTimeline()
   timelinePageData.loadedTimeline.length = 0
   timelinePageData.optionalTimeline.length = 0
-  const candidate: ITimeline[] = timelineStore.getTimeline(condition)
+  const candidate: ITimeline[] = timelineStore.getTimeline(playerState.value)
   if (candidate.length === 1) {
     // 单个结果
     mountTimeline(candidate[0])
@@ -181,7 +181,7 @@ function handleLogEvent(e: { detail: { logs: string[] } }) {
         ?.name
       if (name) {
         const timeline = timelineStore
-          .getTimeline(condition.value)
+          .getTimeline(playerState.value)
           .find(c => c.name === name)
         if (timeline) {
           mountTimeline(timeline, false)
@@ -209,20 +209,17 @@ function syncTimeline(targetTime: number) {
 
 // 玩家状态（职业）
 const handlePlayerChangedEvent: EventMap['onPlayerChangedEvent'] = (e) => {
-  if (e.detail.job !== condition.value.job) {
-    condition.value.job = e.detail.job
-    getTimeline(condition.value)
-  }
-  else {
-    condition.value.job = e.detail.job
+  playerState.value.jobs[0] = e.detail.job
+  if (e.detail.job !== playerState.value.jobs[0]) {
+    getTimeline()
   }
 }
 
 // 切换场景
 const handleChangeZone: EventMap['ChangeZone'] = (e) => {
-  condition.value.zoneId = String(e.zoneID)
+  playerState.value.zoneId = String(e.zoneID)
   // lastUsedTimeline = { name: "", condition: { zoneId: "", job: "NONE" }, timeline: "", codeFight: "", create: "" };
-  getTimeline(condition.value)
+  getTimeline()
 }
 
 // 调用TTS
@@ -277,6 +274,12 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
     }
 
     function update() {
+      for (const v of data.allTimelines) {
+        if (v.condition.jobs === undefined) {
+          v.condition.jobs = [(v.condition as any).job]
+        }
+        Reflect.deleteProperty(v.condition, 'job')
+      }
       timelineStore.allTimelines = data.allTimelines
       timelineStore.configValues = data.configValues
       timelineStore.showStyle = data.showStyle
@@ -288,7 +291,7 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
         duration: 0,
         showClose: true,
       })
-      getTimeline(condition.value) // 获取新数据之后查询一次
+      getTimeline() // 获取新数据之后查询一次
     }
   }
   if ((e.msg as any).type === 'get') {
@@ -324,7 +327,7 @@ function init() {
       backdrop: false,
     })
   }
-  getTimeline(condition.value)
+  getTimeline()
 }
 </script>
 
@@ -342,7 +345,7 @@ function init() {
         :key="index"
         @click="selectedTimeline(item)"
       >
-        {{ item.condition.job }} - {{ item.name }}
+        {{ item.name }}
       </li>
     </ul>
     <timeline-timeline-show
