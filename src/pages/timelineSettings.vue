@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import ClipboardJS from 'clipboard'
 import Swal from 'sweetalert2'
 import moment from 'moment'
 import type { EventMap } from 'cactbot/types/event'
 import { ElLoading, ElMessage, ElMessageBox } from 'element-plus'
 import type { Job } from 'cactbot/types/job'
+import * as LZString from 'lz-string'
 import { addOverlayListener, callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 import zoneInfo from '@/resources/zoneInfo'
 import { parseTimeline, useTimelineStore } from '@/store/timeline'
@@ -15,6 +15,7 @@ import 'animate.css'
 // import { p8sTimeline } from "@/resources/timelineTemplate";
 import router from '@/router'
 import { useWebSocket } from '@/utils/useWebSocket'
+import { copyToClipboard } from '@/utils/clipboard'
 
 const { wsConnected } = useWebSocket()
 const simulatedCombatTime = ref(0)
@@ -155,80 +156,228 @@ function loadTimelineStoreData(): void {
   timelineStore.loadTimelineSettings()
 }
 
-function exportTimeline(timelineArr: ITimeline[]): void {
-  const clipboard = new ClipboardJS('.export', {
-    text: () => {
-      return JSON.stringify(timelineArr)
+function exportTimeline(timelineArr: ITimeline[]) {
+  const text = JSON.stringify(timelineArr)
+  const zip = JSON.parse(text)
+  for (const timeline of zip) {
+    // 去除所有#开头的注释行
+    timeline.timeline = timeline.timeline.replace(/^#.*\n/gm, '')
+  }
+  const ziped = JSON.stringify(zip)
+
+  // 压缩原始数据和去除注释后的数据
+  const compressedText = LZString.compressToBase64(text)
+  const compressedZiped = LZString.compressToBase64(ziped)
+
+  const fullSize = compressedText.length
+  const optimizedSize = compressedZiped.length
+
+  // 如果两种方案大小相同，直接导出完整版本
+  if (fullSize === optimizedSize) {
+    copyToClipboard(compressedText)
+      .then(() => {
+        ElMessage({
+          message: '数据复制成功，已写入剪切板。',
+          type: 'success',
+          duration: 2000,
+        })
+      })
+      .catch(() => {
+        ElMessage({
+          message: '复制失败，请手动复制！',
+          type: 'error',
+          duration: 3000,
+        })
+      })
+    return
+  }
+
+  const sizeReduction = ((fullSize - optimizedSize) / fullSize * 100).toFixed(2)
+
+  ElMessageBox.confirm(
+    `
+     1. 完整版本（包含注释）<br>
+     &nbsp;&nbsp;&nbsp;- 大小：${fullSize} 字节<br>
+     &nbsp;&nbsp;&nbsp;- 包含所有时间轴信息和注释<br><br>
+     2. 优化版本（不含注释）<br>
+     &nbsp;&nbsp;&nbsp;- 大小：${optimizedSize} 字节<br>
+     &nbsp;&nbsp;&nbsp;- 节省 ${sizeReduction}% 的空间<br>
+     &nbsp;&nbsp;&nbsp;- 仅包含必要的时间轴数据`,
+    '请选择导出版本：',
+    {
+      confirmButtonText: '导出优化版本',
+      cancelButtonText: '导出完整版本',
+      distinguishCancelAndClose: true,
+      closeOnClickModal: false,
+      closeOnPressEscape: false,
+      dangerouslyUseHTMLString: true,
+      showClose: true,
+      type: 'info',
+      callback: (action: string) => {
+        if (action === 'cancel' || action === 'confirm') {
+          const finalCompressed = action === 'confirm' ? compressedZiped : compressedText
+          copyToClipboard(finalCompressed)
+            .then(() => {
+              ElMessage({
+                message: '压缩数据复制成功，已写入剪切板。',
+                type: 'success',
+                duration: 2000,
+              })
+            })
+            .catch(() => {
+              ElMessage({
+                message: '复制失败，请手动复制！',
+                type: 'error',
+                duration: 3000,
+              })
+            })
+        }
+      },
     },
-  })
-  clipboard.on('success', () => {
-    Swal.fire({
-      position: 'top-end',
-      icon: 'success',
-      title: '复制成功，已写入剪切板。',
-      showConfirmButton: false,
-      timer: 1500,
-    })
-    clipboard.destroy()
-  })
-  clipboard.on('error', () => {
-    Swal.fire('复制失败，请手动复制！', JSON.stringify([timelineArr]))
-    clipboard.destroy()
-  })
+  )
 }
 
 function importTimelines(): void {
-  Swal.fire({
-    title: '输入导出的字符串',
-    input: 'text',
-    returnInputValueOnDeny: true,
-    showDenyButton: true,
-    denyButtonText: '覆盖',
-    showConfirmButton: true,
-    confirmButtonText: '追加',
-    showCancelButton: true,
-    cancelButtonText: '放弃',
-  }).then((result) => {
-    if (result.isConfirmed || result.isDenied) {
+  ElMessageBox.prompt('请输入导出的字符串', '导入时间轴', {
+    confirmButtonText: '解析',
+    cancelButtonText: '取消',
+    inputType: 'textarea',
+    inputValidator: (value) => {
+      if (!value) {
+        return '请输入导出的字符串'
+      }
+
+      let parsedData: ITimeline[]
       try {
-        if (result.isDenied) {
-          Swal.fire({
-            title: '这将丢失目前拥有的所有数据，你确定要覆盖吗？',
-            showConfirmButton: false,
-            showDenyButton: true,
-            denyButtonText: '确定覆盖',
-            showCancelButton: true,
-            cancelButtonText: '取消',
-          }).then((res) => {
-            if (res.isDenied) {
-              timelineStore.allTimelines.length = 0
-              timelineStore.allTimelines.push(
-                ...(JSON.parse(result.value) as ITimeline[]),
-              )
-              timelineStore.sortTimelines()
-            }
+        // 首先尝试作为JSON解析
+        parsedData = JSON.parse(value)
+      }
+      catch {
+        // 如果JSON解析失败，尝试解压缩
+        try {
+          const decompressed = LZString.decompressFromBase64(value)
+          parsedData = JSON.parse(decompressed)
+        }
+        catch {
+          return '无法解析输入的数据，请确保输入正确的JSON或压缩后的字符串。'
+        }
+      }
+
+      // 验证解析后的数据
+      if (!Array.isArray(parsedData)) {
+        return '导入的数据格式不正确。'
+      }
+
+      if (parsedData.length === 0) {
+        return '导入的数据不包含任何时间轴。'
+      }
+
+      // 验证通过，返回true
+      return true
+    },
+    inputErrorMessage: '无效的输入',
+  }).then(({ value }) => {
+    let parsedData: ITimeline[]
+    try {
+      parsedData = JSON.parse(value)
+    }
+    catch {
+      const decompressed = LZString.decompressFromBase64(value)
+      parsedData = JSON.parse(decompressed)
+    }
+
+    const timelineCount = parsedData.length
+    const titles = parsedData.map(timeline => `「${timeline.name}」`).join(', ')
+
+    ElMessageBox({
+      title: '确认',
+      message: `导入 ${timelineCount} 个时间轴：\n${titles}\n？`,
+      showCancelButton: true,
+      showConfirmButton: true,
+      confirmButtonText: '覆盖',
+      cancelButtonText: '追加',
+      distinguishCancelAndClose: true,
+      type: 'warning',
+      callback: (action: string) => {
+        if (action === 'confirm') {
+          // 添加二次确认
+          ElMessageBox.confirm(
+            '覆盖操作将删除所有现有的时间轴。确定要继续吗？',
+            '二次确认',
+            {
+              confirmButtonText: '确定覆盖',
+              cancelButtonText: '取消',
+              type: 'warning',
+            },
+          ).then(() => {
+            // 用户确认覆盖
+            performImport(parsedData, true)
+          }).catch(() => {
+            // 用户取消覆盖操作
           })
         }
-        else {
-          timelineStore.allTimelines.push(
-            ...(JSON.parse(result.value) as ITimeline[]),
-          )
-          timelineStore.sortTimelines()
+        else if (action === 'cancel') {
+          // 直接执行追加操作
+          performImport(parsedData, false)
         }
-        for (const timeline of timelineStore.allTimelines) {
-          if (timeline.condition.jobs === undefined) {
-            timeline.condition.jobs = [(timeline.condition as any).job]
-          }
-        }
-      }
-      catch (e) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Oops...',
-          text: e as string,
-        })
-      }
+        // 如果 action 是 'close'，用户关闭了对话框，不执行任何操作
+      },
+    })
+  }).catch(() => {
+    // 用户取消输入
+  })
+}
+
+function performImport(parsedData: ITimeline[], overwrite: boolean): void {
+  if (overwrite) {
+    timelineStore.allTimelines.length = 0
+  }
+  timelineStore.allTimelines.push(...parsedData)
+  timelineStore.sortTimelines()
+
+  for (const timeline of timelineStore.allTimelines) {
+    if (timeline.condition.jobs === undefined) {
+      timeline.condition.jobs = [(timeline.condition as any).job]
     }
+  }
+  resetCurrentlyTimeline()
+
+  if (overwrite) {
+    ElMessage({
+      type: 'success',
+      message: '覆盖成功！',
+      duration: 2000,
+    })
+    return
+  }
+
+  // 追加操作
+
+  const uniqueTimelines: ITimeline[] = []
+  const seen = new Set()
+
+  for (const timeline of timelineStore.allTimelines) {
+    const timelineString = JSON.stringify({
+      name: timeline.name,
+      condition: timeline.condition,
+      timeline: timeline.timeline,
+      codeFight: timeline.codeFight,
+      create: timeline.create,
+    })
+
+    if (!seen.has(timelineString)) {
+      seen.add(timelineString)
+      uniqueTimelines.push(timeline)
+    }
+  }
+  const removedCount = timelineStore.allTimelines.length - uniqueTimelines.length
+
+  timelineStore.allTimelines = uniqueTimelines
+
+  ElMessage({
+    message: `追加成功！共导入 ${parsedData.length} 个时间轴，但其中 ${removedCount} 个重复，已自动移除。`,
+    type: 'success',
+    duration: 3000,
   })
 }
 
@@ -481,6 +630,8 @@ onMounted(() => {
                 multiple
                 required
                 placeholder="职业"
+                collapse-tags
+                collapse-tags-tooltip
               >
                 <el-option
                   v-for="job in debounceJobCN"
@@ -517,14 +668,7 @@ onMounted(() => {
               </el-button>
             </el-row>
             <el-row>
-              <el-button
-                :span="12"
-                type="danger"
-                @click="deleteTimeline(timelineCurrentlyEditing.timeline)"
-              >
-                删除
-              </el-button>
-              <el-button :span="12" @click="resetCurrentlyTimeline()">
+              <el-button :span="24" @click="resetCurrentlyTimeline()">
                 隐藏编辑界面
               </el-button>
             </el-row>
@@ -572,7 +716,7 @@ onMounted(() => {
               {{ scope.row.condition.jobs.map((v: Job) => Util.nameToFullName(v).cn).join('、') }}
             </template>
           </el-table-column>
-          <el-table-column fixed="right" label="操作" width="100">
+          <el-table-column fixed="right" label="操作" width="150">
             <template #default="scope">
               <el-button
                 type="primary"
@@ -580,6 +724,13 @@ onMounted(() => {
                 @click="editTimeline(scope.row)"
               >
                 编辑
+              </el-button>
+              <el-button
+                type="danger"
+                size="small"
+                @click="deleteTimeline(scope.row)"
+              >
+                删除
               </el-button>
             </template>
           </el-table-column>
@@ -616,7 +767,7 @@ onMounted(() => {
     .timeline-info-config {
       display: flex;
       margin-right: 10px;
-      max-width: 16em;
+      width: 15em;
       span {
         white-space: nowrap;
       }
