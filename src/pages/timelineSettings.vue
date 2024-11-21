@@ -3,7 +3,7 @@ import ClipboardJS from 'clipboard'
 import Swal from 'sweetalert2'
 import moment from 'moment'
 import type { EventMap } from 'cactbot/types/event'
-import { ElLoading, ElMessage } from 'element-plus'
+import { ElLoading, ElMessage, ElMessageBox } from 'element-plus'
 import { addOverlayListener, callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 import zoneInfo from '@/resources/zoneInfo'
 import { parseTimeline, useTimelineStore } from '@/store/timeline'
@@ -339,6 +339,16 @@ function requestACTData() {
   }, 5000)
 }
 
+function sendDataToACT() {
+  ElMessageBox.confirm('你确定要将当前数据发送至 ACT 悬浮窗吗？悬浮窗中的内容将会被覆盖！', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(() => {
+    sendBroadcastData('post', timelineStore.$state)
+  })
+}
+
 onMounted(() => {
   addOverlayListener('BroadcastMessage', handleBroadcastMessage)
   const unwatch = watch(wsConnected, (val) => {
@@ -347,19 +357,15 @@ onMounted(() => {
       unwatch()
     }
   })
-  watchEffect(
-    () => {
-      if (wsConnected.value) {
-        sendBroadcastData('post', timelineStore.$state)
-      }
-    },
-  )
 })
 </script>
 
 <template>
   <el-container class="container">
     <el-header>
+      <el-row m-b-5>
+        <el-alert title="为防止用户数据意外丢失，在编辑完成后，你需要手动点击右侧绿色「将改动应用到 ACT 悬浮窗中」按钮，才会使得改动应用到悬浮窗中。" type="info" />
+      </el-row>
       <el-row :gutter="10" align="middle" justify="space-between">
         <el-col :span="20">
           <el-space wrap>
@@ -387,6 +393,12 @@ onMounted(() => {
             <el-button-group>
               <el-button @click="openMarkdown()">
                 时间轴语法
+              </el-button>
+            </el-button-group>
+
+            <el-button-group>
+              <el-button type="success" @click="sendDataToACT()">
+                将改动应用到 ACT 悬浮窗中
               </el-button>
             </el-button-group>
           </el-space>
@@ -576,7 +588,7 @@ onMounted(() => {
   margin-left: 12px;
 }
 .container {
-  max-width: 1080px;
+  max-width: 1200px;
   margin: 0 auto;
   .timeline-info {
     display: flex;

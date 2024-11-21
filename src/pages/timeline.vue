@@ -2,7 +2,7 @@
 import Swal from 'sweetalert2'
 import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
 import type { EventMap } from 'cactbot/types/event'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   addOverlayListener,
   callOverlayHandler,
@@ -252,18 +252,44 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
   }
   if ((e.msg as any).type === 'post') {
     const data = (e.msg as { data: typeof timelineStore.$state }).data
-    timelineStore.allTimelines = data.allTimelines
-    timelineStore.configValues = data.configValues
-    timelineStore.showStyle = data.showStyle
-    timelineStore.saveTimelineSettings()
-    ElMessage.closeAll()
-    ElMessage({
-      message: '已更新数据',
-      type: 'success',
-      duration: 0,
-      showClose: true,
-    })
-    getTimeline(condition.value) // 获取新数据之后查询一次
+    if (data.allTimelines.length < timelineStore.allTimelines.length - 1) {
+      ElMessageBox.confirm(
+        data.allTimelines.length === 0 ? '传入数据为空. 确定要清空数据吗?' : '你删除了2条以上的时间轴. 确定吗?',
+        '警告',
+        {
+          confirmButtonText: '确认',
+          cancelButtonText: '取消',
+          type: 'warning',
+        },
+      )
+        .then(() => {
+          update()
+        })
+        .catch(() => {
+          ElMessage({
+            type: 'info',
+            message: '操作已取消',
+          })
+        })
+    }
+    else {
+      update()
+    }
+
+    function update() {
+      timelineStore.allTimelines = data.allTimelines
+      timelineStore.configValues = data.configValues
+      timelineStore.showStyle = data.showStyle
+      timelineStore.saveTimelineSettings()
+      ElMessage.closeAll()
+      ElMessage({
+        message: '已更新数据',
+        type: 'success',
+        duration: 0,
+        showClose: true,
+      })
+      getTimeline(condition.value) // 获取新数据之后查询一次
+    }
   }
   if ((e.msg as any).type === 'get') {
     sendBroadcastData('post', timelineStore.$state) // 发送数据
