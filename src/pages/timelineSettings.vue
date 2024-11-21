@@ -36,6 +36,7 @@ const timelineCurrentlyEditing: { timeline: ITimeline } = reactive({
 })
 const transmissionTimeline = ref([] as ITimelineLine[])
 let loading: any = null
+let keepRetrying = false
 
 resetCurrentlyTimeline()
 
@@ -304,6 +305,7 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
     return
   }
   if ((e.msg as any).type === 'post') {
+    keepRetrying = false
     loading.close()
     const data = (e.msg as { data: typeof timelineStore.$state }).data
     if (timelineStore.allTimelines.length === 0 && data.allTimelines.length > timelineStore.allTimelines.length) {
@@ -321,12 +323,20 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
 }
 
 function requestACTData() {
+  keepRetrying = true
   loading = ElLoading.service({
     lock: true,
-    text: '正在请求数据，请确保ACT与时间轴悬浮窗已开启...，若1秒内仍未获取到数据，请检查ACT状态，随后刷新页面重试。',
+    text: `正在请求数据，请确保ACT与时间轴悬浮窗已开启...，若 3 秒内仍未获取到数据，请检查ACT状态，且确认 timeline 悬浮窗已开启。`,
     background: 'rgba(0, 0, 0, 0.7)',
   })
+
   sendBroadcastData('get')
+  setTimeout(() => {
+    if (keepRetrying) {
+      ElMessage.info('重新尝试获取数据...')
+      requestACTData()
+    }
+  }, 5000)
 }
 
 onMounted(() => {
