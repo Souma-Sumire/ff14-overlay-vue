@@ -69,10 +69,10 @@ const showStyleTranslate: ShowStyleTranslate = {
 }
 
 const showStyle: ShowStyle = {
-  '--timeline-width': 180,
-  '--font-size': 18,
-  '--opacity': 0.33,
-  '--normal-scale': 0.5,
+  '--timeline-width': 200,
+  '--font-size': 16,
+  '--opacity': 0.5,
+  '--normal-scale': 0.66,
   '--up-coming-scale': 1,
   '--tras-duration': 1,
 }

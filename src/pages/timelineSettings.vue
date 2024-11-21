@@ -2,7 +2,9 @@
 import ClipboardJS from 'clipboard'
 import Swal from 'sweetalert2'
 import moment from 'moment'
-import { callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
+import type { EventMap } from 'cactbot/types/event'
+import { ElLoading, ElMessage } from 'element-plus'
+import { addOverlayListener, callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 import zoneInfo from '@/resources/zoneInfo'
 import { parseTimeline, useTimelineStore } from '@/store/timeline'
 import type { ITimeline, ITimelineLine } from '@/types/timeline'
@@ -11,7 +13,9 @@ import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
 import 'animate.css'
 // import { p8sTimeline } from "@/resources/timelineTemplate";
 import router from '@/router'
+import { useWebSocket } from '@/utils/useWebSocket'
 
+const { wsConnected } = useWebSocket()
 const simulatedCombatTime = ref(0)
 const timelineStore = useTimelineStore()
 const timelines = toRef(timelineStore, 'allTimelines')
@@ -30,8 +34,8 @@ const timelineCurrentlyEditing: { timeline: ITimeline } = reactive({
     create: '空',
   },
 })
-const isWSMode = location.href.includes('OVERLAY_WS=')
 const transmissionTimeline = ref([] as ITimelineLine[])
+let loading: any = null
 
 resetCurrentlyTimeline()
 
@@ -75,53 +79,28 @@ function init(): void {
   }
   loadTimelineStoreData()
   timelineStore.sortTimelines()
-  saveTimelineStoreData()
 }
 
-function applyData(): void {
+// 发送数据
+function sendBroadcastData(type: 'get' | 'post', data: any = {}): void {
   callOverlayHandler({
     call: 'broadcast',
-    source: 'soumuaTimelineSetting',
+    source: 'soumaTimelineSettings',
     msg: {
-      store: timelineStore.$state,
+      type,
+      data,
     },
   })
-}
-
-// 通信数据
-function broadcastData(): void {
-  if (urlTool({ url: location.href })?.OVERLAY_WS) {
-    applyData()
-    Swal.fire({
-      title: '已尝试进行通信，请检查ACT悬浮窗是否接收',
-      text: '若无法通信，请检查ACT OverlayPlugin WSServer是否开启，并使本页面url参数中的端口号与其保持一致：OVERLAY_WS=ws://127.0.0.1:端口号/ws',
-    })
-  }
-  else {
-    Swal.fire({
-      icon: 'error',
-      title: '目前与ACT断开了连接。',
-      text: '请启用ACT OverlayPlugin WSServer，并使本页面url参数中的端口号与其保持一致：OVERLAY_WS=ws://127.0.0.1:端口号/ws"',
-    })
-  }
-}
-
-// 获取URL参数
-function urlTool({ url }: { url: string }) {
-  const array = url.split('?')?.pop()?.split('&')
-  const res: Record<string, string> = {}
-  if (array) {
-    for (const ele of array) {
-      const dataArr = ele.split('=')
-      res[dataArr[0]] = dataArr[1]
-    }
-  }
-  return res
 }
 
 function fflogsImportClick(): void {
   showFFlogs.value = !showFFlogs.value
   resetCurrentlyTimeline()
+}
+
+function openDocs(): void {
+  const href = 'https://docs.qq.com/sheet/DTWxKT3lFbmpDV3Fm?tab=5ovrc8'
+  window.open(href, '_blank')
 }
 
 function resetCurrentlyTimeline(): void {
@@ -176,17 +155,6 @@ function deleteTimeline(target: ITimeline): void {
 // 初始化时load
 function loadTimelineStoreData(): void {
   timelineStore.loadTimelineSettings()
-  Reflect.deleteProperty(timelineStore.configValues, 'refreshRateMs')
-}
-
-// 开启watch去save
-function saveTimelineStoreData(): void {
-  watchEffect(
-    () => {
-      timelineStore.saveTimelineSettings()
-    },
-    { flush: 'post' },
-  )
 }
 
 function exportTimeline(timelineArr: ITimeline[]): void {
@@ -325,40 +293,106 @@ function openMarkdown() {
   const href = router.resolve({ path: '/timelineHelp' }).href
   window.open(href, '_blank')
 }
+
+function handleSettingsSave(settings: typeof timelineStore) {
+  timelineStore.configValues = settings.configValues
+  timelineStore.showStyle = settings.showStyle
+}
+
+const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
+  if (e.source !== 'soumaTimeline') {
+    return
+  }
+  if ((e.msg as any).type === 'post') {
+    loading.close()
+    const data = (e.msg as { data: typeof timelineStore.$state }).data
+    if (timelineStore.allTimelines.length === 0 && data.allTimelines.length > timelineStore.allTimelines.length) {
+      timelineStore.allTimelines = data.allTimelines
+      timelineStore.configValues = data.configValues
+      timelineStore.showStyle = data.showStyle
+      ElMessage.closeAll()
+      ElMessage({
+        message: '数据获取成功',
+        type: 'success',
+        duration: 3000,
+      })
+    }
+  }
+}
+
+function requestACTData() {
+  loading = ElLoading.service({
+    lock: true,
+    text: '正在请求数据，请确保ACT与时间轴悬浮窗已开启...，若1秒内仍未获取到数据，请检查ACT状态，随后刷新页面重试。',
+    background: 'rgba(0, 0, 0, 0.7)',
+  })
+  sendBroadcastData('get')
+}
+
+onMounted(() => {
+  addOverlayListener('BroadcastMessage', handleBroadcastMessage)
+  const unwatch = watch(wsConnected, (val) => {
+    if (val) {
+      requestACTData()
+      unwatch()
+    }
+  })
+  watchEffect(
+    () => {
+      if (wsConnected.value) {
+        sendBroadcastData('post', timelineStore.$state)
+      }
+    },
+  )
+})
 </script>
 
 <template>
   <el-container class="container">
     <el-header>
-      <el-button type="primary" @click="newDemoTimeline()">
-        新建：Demo
-      </el-button>
-      <el-button type="primary" @click="fflogsImportClick()">
-        新建：从 FFlogs 生成
-      </el-button>
-      <el-button
-        color="#626aef"
-        style="color: white"
-        @click="showSettings = !showSettings"
-      >
-        设置
-      </el-button>
-      <el-button @click="importTimelines()">
-        导入
-      </el-button>
-      <el-button class="export" @click="exportTimeline(timelines)">
-        全部导出
-      </el-button>
-      <el-button v-if="isWSMode" type="success" @click="broadcastData()">
-        将浏览器数据通过WS发送到ACT悬浮窗
-      </el-button>
-      <el-button @click="openMarkdown()">
-        查看语法
-      </el-button>
-      <!-- <el-button v-if="!isWSMode" type="success" @click="applyData()">应用</el-button> -->
-      <!-- <el-button @click="createP8STimeline()">P8S门神模板</el-button> -->
-      <!-- <el-button @click="clearLocalStorage()">清理LocalStorage缓存</el-button> -->
+      <el-row :gutter="10" align="middle" justify="space-between">
+        <el-col :span="20">
+          <el-space wrap>
+            <el-button-group>
+              <el-button type="primary" @click="fflogsImportClick()">
+                从 FFlogs 生成
+              </el-button>
+              <el-button type="primary" @click="openDocs()">
+                从 在线文档 获取
+              </el-button>
+              <el-button type="primary" @click="newDemoTimeline()">
+                手动编写
+              </el-button>
+            </el-button-group>
+
+            <el-button-group>
+              <el-button @click="importTimelines()">
+                导入字符串
+              </el-button>
+              <el-button class="export" @click="exportTimeline(timelines)">
+                导出全部
+              </el-button>
+            </el-button-group>
+
+            <el-button-group>
+              <el-button @click="openMarkdown()">
+                时间轴语法
+              </el-button>
+            </el-button-group>
+          </el-space>
+        </el-col>
+        <el-col :span="4" style="text-align: right;">
+          <el-button
+            color="#626aef"
+            style="color: white"
+            @click="showSettings = true"
+          >
+            设置
+          </el-button>
+        </el-col>
+      </el-row>
     </el-header>
+    <timeline-settings-dialog v-model="showSettings" @save="handleSettingsSave" />
     <el-main>
       <timeline-fflogs-import
         v-if="showFFlogs"
@@ -368,39 +402,6 @@ function openMarkdown() {
         @new-timeline="timelineStore.newTimeline"
         @update-filters="timelineStore.updateFilters"
       />
-      <el-card v-show="showSettings" class="box-card">
-        <el-descriptions title="时间轴参数" size="small" border>
-          <el-descriptions-item
-            v-for="(_value, key, index) in timelineStore.configValues"
-            :key="index"
-            :label="timelineStore.configTranslate[key]"
-            label-align="right"
-            width="16em"
-          >
-            <el-input-number
-              v-model="timelineStore.configValues[key]"
-              :min="0"
-              :step="0.1"
-            />
-          </el-descriptions-item>
-        </el-descriptions>
-        <br>
-        <el-descriptions size="small" title="时间轴样式" border>
-          <el-descriptions-item
-            v-for="(_value, key, index) in timelineStore.showStyle"
-            :key="index"
-            :label="timelineStore.showStyleTranslate[key]"
-            label-align="right"
-            width="16em"
-          >
-            <el-input-number
-              v-model="timelineStore.showStyle[key]"
-              :min="0"
-              :step="0.01"
-            />
-          </el-descriptions-item>
-        </el-descriptions>
-      </el-card>
       <br>
       <el-card v-show="timelineCurrentlyEditing.timeline.create !== '空'">
         <div class="slider-demo-block">
@@ -566,6 +567,7 @@ function openMarkdown() {
 }
 .container {
   max-width: 1080px;
+  margin: 0 auto;
   .timeline-info {
     display: flex;
     flex-wrap: nowrap;
