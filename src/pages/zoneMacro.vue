@@ -8,17 +8,14 @@ import {
   Edit,
   Position,
 } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import {
-  addOverlayListener,
-  callOverlayHandler,
-} from '../../cactbot/resources/overlay_plugin_api'
+import { ElMessage } from 'element-plus'
+import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import ContentType from '../../cactbot/resources/content_type'
 import { defaultMacro } from '@/resources/macro'
 import zoneInfo from '@/resources/zoneInfo'
 import { useMacroStore } from '@/store/macro'
 import 'github-markdown-css/github-markdown-light.css'
-import actWS from '@/assets/actWS.webp'
+import { useWebSocket } from '@/utils/useWebSocket'
 
 const macroStore = useMacroStore()
 const hideOnStartup = useStorage('zoneMacroHideOnStartup', ref(false))
@@ -54,66 +51,14 @@ const usedZoneInfo = [
   ...preSortZoneInfo.filter(v => v.contentType === undefined || !showContentTypes.includes(v.contentType)),
 ]
 
-const useType = ref('ws' as 'ws' | 'act')
+const useType = ref(undefined as 'overlay' | 'websocket' | undefined)
 
-async function onLoad() {
-  if (window.location.href.indexOf('OVERLAY_WS') > 0) {
-    useType.value = 'ws'
-    let resolvePromise: (value: boolean | PromiseLike<boolean>) => void
-    const promise = new Promise<boolean>((resolve) => {
-      resolvePromise = resolve
-    })
-
-    const websocket = await Promise.race<Promise<boolean>>([
-      new Promise<boolean>((res) => {
-        void callOverlayHandler({ call: 'cactbotRequestState' }).then(() => {
-          ElMessageBox.close()
-          res(true)
-          resolvePromise(true)
-        })
-      }),
-      new Promise<boolean>((res) => {
-        window.setTimeout(() => {
-          res(false)
-        }, 250)
-      }),
-    ])
-    if (!websocket) {
-      ElMessageBox.alert(
-        `请先启动ACT WS，再打开此页面<img src='${actWS}' style='width:100%'>`,
-        '未检测到ACT连接',
-        {
-          dangerouslyUseHTMLString: true,
-          closeOnClickModal: false,
-          showClose: false,
-          closeOnPressEscape: false,
-          closeOnHashChange: false,
-          showCancelButton: true,
-          showConfirmButton: false,
-          cancelButtonText: '我偏要看看',
-          buttonSize: 'small',
-        },
-      ).catch(() => { })
-      const loop = setInterval(() => {
-        void callOverlayHandler({ call: 'cactbotRequestState' }).then(() => {
-          clearInterval(loop)
-          ElMessageBox.close()
-          resolvePromise(true)
-        })
-      }, 1000)
-    }
-    return promise
-  }
-  else {
-    useType.value = 'act'
-  }
-}
+const { useType: _useType } = useWebSocket({ allowClose: true })
+useType.value = _useType.value
 
 onMounted(() => {
-  // addOverlayListener("onGameExistsEvent", macroStore.handleGameExists);
   addOverlayListener('ChangeZone', macroStore.handleChangeZone)
   addOverlayListener('LogLine', macroStore.handleLogLine)
-  // startOverlayEvents();
   watchEffect(() => {
     if (
       (macroStore.data.zoneId[macroStore.selectZone] === undefined
@@ -132,7 +77,6 @@ onMounted(() => {
     },
     { immediate: true },
   )
-  onLoad()
   macroStore.updateZone()
 })
 </script>
@@ -426,7 +370,7 @@ onMounted(() => {
       </el-space>
     </el-main>
     <div class="menu" :class="useType">
-      <el-button v-if="useType === 'act'" size="small" @click="macroStore.toggleShow()">
+      <el-button v-if="useType === 'overlay'" size="small" @click="macroStore.toggleShow()">
         隐藏页面
       </el-button>
       <el-button type="success" size="small" @click="macroStore.newOne('macro')">
@@ -449,10 +393,10 @@ onMounted(() => {
       <el-button type="danger" size="small" @click="macroStore.resetAllData()">
         恢复全部
       </el-button>
-      <form v-if="useType === 'act'" style="font-size: 12px;background-color: rgba(255, 255,255,0.5)">
+      <form v-if="useType === 'overlay'" style="font-size: 12px;background-color: rgba(255, 255,255,0.5)">
         <el-switch v-model="hideOnStartup" size="small" />默认最小化
       </form>
-      <i v-if="useType === 'act'" class="vxe-icon-arrow-down">菜单</i>
+      <i v-if="useType === 'overlay'" class="vxe-icon-arrow-down">菜单</i>
     </div>
   </el-container>
 </template>
