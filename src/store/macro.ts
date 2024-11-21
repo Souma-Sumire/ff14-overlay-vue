@@ -1,6 +1,5 @@
 /* eslint-disable regexp/no-super-linear-backtracking */
 import { defineStore } from 'pinia'
-import ClipboardJS from 'clipboard'
 import { ElInputNumber, ElMessage, ElMessageBox } from 'element-plus'
 import {
   getMapIDByTerritoryType,
@@ -17,6 +16,7 @@ import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import { defaultMacro } from './../resources/macro'
 import type { MacroInfoMacro, MacroInfoPlace } from '@/types/macro'
 import type { PPJSON, QueueArr, Slot, WayMarkKeys } from '@/types/PostNamazu'
+import { copyToClipboard } from '@/utils/clipboard'
 
 let partyLen = 0
 const slotIndex = useStorage('macro-slot-index', 5)
@@ -308,30 +308,18 @@ export const useMacroStore = defineStore('macro', {
       const json = JSON.parse(JSON.stringify(macro.Place))
       json.MapID = getMapIDByTerritoryType(Number(this.selectZone))
       json.Name = macro.Name
-      const clipboard = new ClipboardJS('.export', {
-        text: () => {
-          return JSON.stringify({
-            Name: json.Name,
-            MapID: json.MapID,
-            A: json.A,
-            B: json.B,
-            C: json.C,
-            D: json.D,
-            One: json.One,
-            Two: json.Two,
-            Three: json.Three,
-            Four: json.Four,
-          })
-        },
-      })
-      clipboard.on('success', () => {
-        ElMessage.success('已复制到剪贴板')
-        clipboard.destroy()
-      })
-      clipboard.on('error', () => {
-        ElMessageBox.alert(JSON.stringify(json), 'Export Waymarks')
-        clipboard.destroy()
-      })
+      copyToClipboard(JSON.stringify({
+        Name: json.Name,
+        MapID: json.MapID,
+        A: json.A,
+        B: json.B,
+        C: json.C,
+        D: json.D,
+        One: json.One,
+        Two: json.Two,
+        Three: json.Three,
+        Four: json.Four,
+      }))
     },
     sendMacroParty(text: string): void {
       ElMessageBox.confirm('确定要发送到队伍频道吗?', '警告', {
