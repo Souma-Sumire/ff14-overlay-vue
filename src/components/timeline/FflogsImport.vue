@@ -55,7 +55,7 @@ const timelineStore = useTimelineStore()
 
 // fflogs导入第1步：用户点击查询按钮
 function queryFFlogsReportFights(url: string) {
-  Swal.fire({ text: '正在解析数据 (步骤1/3)', showConfirmButton: false })
+  Swal.fire({ text: '正在解析数据 (步骤1/3)', showConfirmButton: false, allowOutsideClick: false, allowEscapeKey: false })
   claerFFlogsQueryConfig()
   queryText.value = QueryTextEnum.querying
   const reg = url.match(urlRe)
@@ -161,6 +161,8 @@ async function queryFFlogsReportEvents() {
   Swal.fire({
     text: '正在解析数据，请耐心等待。(步骤2/3)',
     showConfirmButton: false,
+    allowOutsideClick: false,
+    allowEscapeKey: false,
   })
   const resEvents: FFlogsApiV1ReportEvents[] = []
   fflogsQueryConfig.abilityFilterEvents.length = 0
@@ -256,7 +258,7 @@ async function queryFFlogsReportEvents() {
 
 // fflogs导入第4步：用户选好了过滤器
 function handeleFFlogsQueryResultFriendiesListFilter() {
-  Swal.fire({ text: '正在解析数据 (步骤3/3)', showConfirmButton: false })
+  Swal.fire({ text: '正在解析数据 (步骤3/3)', showConfirmButton: false, allowOutsideClick: false, allowEscapeKey: false })
   // 保存过滤器
   if (fflogsQueryConfig.player?.icon) {
     emits(
