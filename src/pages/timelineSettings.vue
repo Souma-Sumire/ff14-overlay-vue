@@ -506,11 +506,6 @@ function sendDataToACT() {
   })
 }
 
-function getLabel(job: Job): string {
-  const res = Util.nameToFullName(job)?.cn ?? `job`
-  return res === '冒险者' ? '全部职业' : res
-}
-
 onMounted(() => {
   addOverlayListener('BroadcastMessage', handleBroadcastMessage)
   const unwatch = watch(wsConnected, (val) => {
@@ -636,7 +631,7 @@ onMounted(() => {
                 <el-option
                   v-for="job in debounceJobCN"
                   :key="job"
-                  :label="getLabel(job)"
+                  :label="(Util.nameToFullName(job)?.cn ?? job).replace('冒险者', '全部职业')"
                   :value="job"
                 />
               </el-select>
@@ -713,7 +708,7 @@ onMounted(() => {
           </el-table-column>
           <el-table-column prop="conditon" label="职业">
             <template #default="scope">
-              {{ scope.row.condition.jobs.map((v: Job) => Util.nameToFullName((v.toUpperCase() as Job))?.cn ?? v).join('、') }}
+              {{ scope.row.condition.jobs.map((v: Job) => Util.nameToFullName((v.toUpperCase() as Job))?.cn ?? v).join('、').replace('冒险者', '全部职业') }}
             </template>
           </el-table-column>
           <el-table-column fixed="right" label="操作" width="150">
