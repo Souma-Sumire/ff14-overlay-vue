@@ -238,7 +238,7 @@ function exportTimeline(timelineArr: ITimeline[]) {
 }
 
 function importTimelines(): void {
-  ElMessageBox.prompt('请输入导出的字符串', '导入时间轴', {
+  ElMessageBox.prompt('请输入导出的字符串（支持多行导入）', '导入时间轴', {
     confirmButtonText: '解析',
     cancelButtonText: '取消',
     inputType: 'textarea',
@@ -247,28 +247,35 @@ function importTimelines(): void {
         return '请输入导出的字符串'
       }
 
-      let parsedData: ITimeline[]
-      try {
-        // 首先尝试作为JSON解析
-        parsedData = JSON.parse(value)
-      }
-      catch {
-        // 如果JSON解析失败，尝试解压缩
+      const lines = value.split('\n').filter(line => line.trim() !== '')
+      let allParsedData: ITimeline[] = []
+
+      for (const line of lines) {
+        let parsedData: ITimeline[]
         try {
-          const decompressed = LZString.decompressFromBase64(value)
-          parsedData = JSON.parse(decompressed)
+          // 首先尝试作为JSON解析
+          parsedData = JSON.parse(line)
         }
         catch {
-          return '无法解析输入的数据，请确保输入正确的JSON或压缩后的字符串。'
+          // 如果JSON解析失败，尝试解压缩
+          try {
+            const decompressed = LZString.decompressFromBase64(line)
+            parsedData = JSON.parse(decompressed)
+          }
+          catch {
+            return `无法解析输入的数据：${line}，请确保每行都是正确的JSON或压缩后的字符串。`
+          }
         }
+
+        // 验证解析后的数据
+        if (!Array.isArray(parsedData)) {
+          return `导入的数据格式不正确：${line}`
+        }
+
+        allParsedData = allParsedData.concat(parsedData)
       }
 
-      // 验证解析后的数据
-      if (!Array.isArray(parsedData)) {
-        return '导入的数据格式不正确。'
-      }
-
-      if (parsedData.length === 0) {
+      if (allParsedData.length === 0) {
         return '导入的数据不包含任何时间轴。'
       }
 
@@ -277,17 +284,23 @@ function importTimelines(): void {
     },
     inputErrorMessage: '无效的输入',
   }).then(({ value }) => {
-    let parsedData: ITimeline[]
-    try {
-      parsedData = JSON.parse(value)
-    }
-    catch {
-      const decompressed = LZString.decompressFromBase64(value)
-      parsedData = JSON.parse(decompressed)
+    const lines = value.split('\n').filter(line => line.trim() !== '')
+    let allParsedData: ITimeline[] = []
+
+    for (const line of lines) {
+      let parsedData: ITimeline[]
+      try {
+        parsedData = JSON.parse(line)
+      }
+      catch {
+        const decompressed = LZString.decompressFromBase64(line)
+        parsedData = JSON.parse(decompressed)
+      }
+      allParsedData = allParsedData.concat(parsedData)
     }
 
-    const timelineCount = parsedData.length
-    const titles = parsedData.map(timeline => `「${timeline.name}」`).join(', ')
+    const timelineCount = allParsedData.length
+    const titles = allParsedData.map(timeline => `「${timeline.name}」`).join(', ')
 
     ElMessageBox({
       title: '确认',
@@ -313,7 +326,7 @@ function importTimelines(): void {
           ).then(({ value }) => {
             if (value === '我确认') {
               // 用户确认覆盖
-              performImport(parsedData, true)
+              performImport(allParsedData, true)
             }
           }).catch(() => {
             // 用户取消覆盖操作或输入不正确
@@ -321,7 +334,7 @@ function importTimelines(): void {
         }
         else if (action === 'confirm') {
           // 直接执行追加操作
-          performImport(parsedData, false)
+          performImport(allParsedData, false)
         }
         // 如果 action 是 'close'，用户关闭了对话框，不执行任何操作
       },
@@ -378,7 +391,7 @@ function performImport(parsedData: ITimeline[], overwrite: boolean): void {
   timelineStore.allTimelines = uniqueTimelines
 
   ElMessage({
-    message: `追加成功！共导入 ${parsedData.length} 个时间轴，但其中 ${removedCount} 个重复，已自动移除。`,
+    message: `追加成功！共导入 ${parsedData.length} 个时间轴${removedCount > 0 ? `，但其中 ${removedCount} 个重复，已自动移除。` : ''}`,
     type: 'success',
     duration: 3000,
   })
