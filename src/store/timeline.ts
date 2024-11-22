@@ -17,16 +17,16 @@ import type { FFIcon } from '@/types/fflogs'
 class Timeline implements ITimeline {
   constructor(
     name: string,
-    playerState: ITimelineCondition,
+    condition: ITimelineCondition,
     timeline: string,
     codeFight: string,
   ) {
-    if (Util.iconToJobEnum(playerState.jobs[0] as FFIcon)) {
+    if (Util.iconToJobEnum(condition.jobs[0] as FFIcon)) {
       // 突然有一天数据格式不一致了 可能是fflogs改返回值了?
-      playerState.jobs[0] = Util.jobEnumToJob(Util.iconToJobEnum(playerState.jobs[0] as FFIcon))
+      condition.jobs[0] = Util.jobEnumToJob(Util.iconToJobEnum(condition.jobs[0] as FFIcon))
     }
     this.name = name
-    this.condition = playerState
+    this.condition = condition
     this.timeline = timeline
     this.codeFight = codeFight
     this.create = new Date().toLocaleString()
@@ -158,13 +158,13 @@ export const useTimelineStore = defineStore('timeline', {
       }
 
       for (const v of this.allTimelines) {
+        if (v.condition.jobs === undefined) {
+          v.condition.jobs = [(v.condition as any).job]
+        }
         if (Util.iconToJobEnum(v.condition.jobs[0] as FFIcon)) {
           v.condition.jobs[0] = Util.jobEnumToJob(
             Util.iconToJobEnum(v.condition.jobs[0] as FFIcon),
           )
-        }
-        if (v.condition.jobs === undefined) {
-          v.condition.jobs = [(v.condition as any).job]
         }
       }
     },
