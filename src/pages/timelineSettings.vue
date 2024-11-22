@@ -294,29 +294,32 @@ function importTimelines(): void {
       message: `导入 ${timelineCount} 个时间轴：\n${titles}\n？`,
       showCancelButton: true,
       showConfirmButton: true,
-      confirmButtonText: '覆盖',
-      cancelButtonText: '追加',
+      confirmButtonText: '追加',
+      cancelButtonText: '覆盖',
       distinguishCancelAndClose: true,
       type: 'warning',
       callback: (action: string) => {
-        if (action === 'confirm') {
-          // 添加二次确认
-          ElMessageBox.confirm(
-            '覆盖操作将删除所有现有的时间轴。确定要继续吗？',
+        if (action === 'cancel') {
+          ElMessageBox.prompt(
+            '覆盖操作将删除所有现有的时间轴。请输入"我确认"以继续。',
             '二次确认',
             {
               confirmButtonText: '确定覆盖',
               cancelButtonText: '取消',
+              inputPattern: /^我确认$/,
+              inputErrorMessage: '请输入"我确认"以确认覆盖操作',
               type: 'warning',
             },
-          ).then(() => {
-            // 用户确认覆盖
-            performImport(parsedData, true)
+          ).then(({ value }) => {
+            if (value === '我确认') {
+              // 用户确认覆盖
+              performImport(parsedData, true)
+            }
           }).catch(() => {
-            // 用户取消覆盖操作
+            // 用户取消覆盖操作或输入不正确
           })
         }
-        else if (action === 'cancel') {
+        else if (action === 'confirm') {
           // 直接执行追加操作
           performImport(parsedData, false)
         }
