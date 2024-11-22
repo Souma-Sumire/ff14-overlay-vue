@@ -464,7 +464,7 @@ body {
   position: fixed;
   top: 0;
   right: 0;
-  &.act{
+  &.overlay{
     transform: translateY(calc(-100% + 1rem));
     opacity: 0.5;
     z-index: 100;
