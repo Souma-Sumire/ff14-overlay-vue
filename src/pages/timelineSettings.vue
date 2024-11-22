@@ -713,7 +713,7 @@ onMounted(() => {
           </el-table-column>
           <el-table-column prop="conditon" label="职业">
             <template #default="scope">
-              {{ scope.row.condition.jobs.map((v: Job) => Util.nameToFullName(v).cn).join('、') }}
+              {{ scope.row.condition.jobs.map((v: Job) => Util.nameToFullName((v.toUpperCase() as Job))?.cn ?? v).join('、') }}
             </template>
           </el-table-column>
           <el-table-column fixed="right" label="操作" width="150">

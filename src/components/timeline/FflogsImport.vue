@@ -64,7 +64,7 @@ function queryFFlogsReportFights(url: string) {
       icon: 'error',
       title: 'FF logs API Key 未填写',
       footer:
-        '<a href="https://cn.fflogs.com/profile">点击这里，在最下方起名，然后获得你的V1 Client Key</a>',
+        '<a href="https://cn.fflogs.com/profile">点击这里，在最下方起名，然后获得你的 V1客户端密钥</a>',
     })
     queryText.value = QueryTextEnum.query
   }
