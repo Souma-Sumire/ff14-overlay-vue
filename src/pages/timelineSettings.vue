@@ -483,7 +483,7 @@ function requestACTData() {
   keepRetrying = true
   loading = ElLoading.service({
     lock: true,
-    text: `正在请求数据，请确保ACT与时间轴悬浮窗已开启...，若 3 秒内仍未获取到数据，请检查ACT状态，且确认 timeline 悬浮窗已开启。`,
+    text: `正在请求数据，请确保 ACT 与悬浮窗已开启...，若 3 秒内仍未获取到数据，请检查 ACT 状态，且确认 timeline 悬浮窗已开启，或刷新页面重连。`,
     background: 'rgba(0, 0, 0, 0.7)',
   })
 
