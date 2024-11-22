@@ -3607,6 +3607,19 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     949: [
       {
+        Name: '果子',
+        Place: {
+          A: { X: -0.051, Y: 75, Z: -84.346, Active: true },
+          B: { X: 9.639, Y: 75, Z: -75.061, Active: true },
+          C: { X: -0.019, Y: 75, Z: -65.039, Active: true },
+          D: { X: -9.623, Y: 75, Z: -75.007, Active: true },
+          One: { X: -7.198, Y: 75, Z: -68.006, Active: true },
+          Two: { X: 7.079, Y: 75, Z: -68.021, Active: true },
+          Three: { X: -7.006, Y: 75, Z: -82.012, Active: true },
+          Four: { X: 7.124, Y: 75, Z: -82.047, Active: true },
+        },
+      },
+      {
         Name: 'E12S',
         Place: {
           A: {
