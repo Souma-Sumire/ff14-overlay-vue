@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import Swal from 'sweetalert2'
 import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
+import { ElMessage } from 'element-plus'
 
 interface resJson {
   url: string
@@ -64,7 +64,6 @@ onMounted(() => {
       throw res.status
     })
     .then((res) => {
-      Swal.close()
       fileName.value = res.assets.find((v: { name: string }) =>
         /v.+\.exe$/.test(v.name),
       ).name
@@ -78,11 +77,7 @@ onMounted(() => {
     })
 })
 function showErrorPopup(message: string) {
-  Swal.fire({
-    icon: 'error',
-    title: '错误',
-    text: message,
-  })
+  ElMessage.error(message)
 }
 </script>
 

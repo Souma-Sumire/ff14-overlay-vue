@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import Swal from 'sweetalert2'
 import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
 import type { EventMap } from 'cactbot/types/event'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -76,14 +75,7 @@ async function mountTimeline(timeline: ITimeline, stopLoadedTimeline = true) {
   if (timeline?.timeline) {
     timelinePageData.loadedTimeline = await parseTimeline(timeline.timeline)
     timelinePageData.loadedTimeline.sort((a, b) => a.time - b.time)
-    Swal.fire({
-      position: 'top-end',
-      icon: 'success',
-      text: `加载了${timeline.name}`,
-      showConfirmButton: false,
-      timer: 1000,
-      backdrop: false,
-    })
+    ElMessage.success(`加载了${timeline.name}`)
     // lastUsedTimeline = timeline;
   }
   setTimeout(() => {
@@ -320,16 +312,16 @@ function init() {
   addOverlayListener('onInCombatChangedEvent', handleInCombatChanged)
   // startOverlayEvents();
   timelineStore.loadTimelineSettings()
-  if (!Swal.isVisible()) {
-    Swal.fire({
-      text: `${timelineStore.allTimelines.length}条时间轴已就绪`,
-      showConfirmButton: false,
-      timer: 1500,
-      backdrop: false,
-    })
-  }
+  ElMessage({
+    message: `${timelineStore.allTimelines.length}条时间轴已就绪`,
+    type: 'info',
+    duration: 1500,
+    showClose: true,
+  })
   getTimeline()
 }
+// eslint-disable-next-line no-console
+console.log('使用souma时间轴的小朋友们，你们好。我不是雷军。通知一下，现在没有小齿轮了，请用你的浏览器打开：https://souma.diemoe.net/ff14-overlay-vue/#/timelineSettings?OVERLAY_WS=ws://127.0.0.1:10501/ws')
 </script>
 
 <template>
