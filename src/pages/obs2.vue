@@ -234,6 +234,7 @@ const handleChangeZone: EventMap['ChangeZone'] = (e) => {
   const zoneID = e.zoneID
   const zoneInfo = ZoneInfo[zoneID]
   playerZoneInfo.value = zoneInfo
+  checkCondition('enter')
 }
 
 const handleLogLine: EventMap['LogLine'] = (e) => {
