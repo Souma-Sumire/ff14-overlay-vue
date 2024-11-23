@@ -94,6 +94,8 @@ displayAA: 是否显示自动攻击，默认false
 api: 技能图标图床来源，国内建议cafemaker，外网则选择xivapi，默认cafemaker
 showHeader: 是否显示悬浮窗头部的队员选择器（用于切换监控目标），默认true
 syncFocusWS: 是否同步监控目标至通过 WebSocket 连接的其他页面（例如OBS），默认false
+
+若使用时感觉有点卡，技能图是一段一段的挪动的，可以在悬浮窗的[高级]设置，增加[最大帧速率（FPS）]到60。
 `,
   },
   {
