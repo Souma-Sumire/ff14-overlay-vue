@@ -494,14 +494,10 @@ function sendDataToACT() {
   })
 }
 
-function clearTimelines() {
+function revertTimeline() {
   timelineStore.allTimelines.length = 0
   resetCurrentlyTimeline()
-  ElMessage({
-    message: '已清空所有时间轴',
-    type: 'success',
-    duration: 2000,
-  })
+  requestACTData()
 }
 
 onMounted(() => {
@@ -552,11 +548,8 @@ onMounted(() => {
         </el-space>
 
         <el-space>
-          <el-button color="#a0d911" style="color: white" size="small" @click="clearTimelines">
+          <el-button color="#a0d911" style="color: white" size="small" @click="revertTimeline">
             恢复至之前的时间轴
-          </el-button>
-          <el-button type="danger" size="small" @click="clearTimelines">
-            删除全部时间轴
           </el-button>
           <el-button color="#626aef" style="color: white" size="small" @click="showSettings = true">
             设置
