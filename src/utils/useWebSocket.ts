@@ -30,7 +30,8 @@ function addOverlayWsParam() {
 
 export function useWebSocket(config: {
   allowClose: boolean
-} = { allowClose: false }) {
+  addWsParam: boolean
+} = { allowClose: false, addWsParam: true }) {
   const wsConnected = ref(undefined as boolean | undefined)
   const userIgnoredWarning = ref(false)
   const useType = ref(undefined as 'overlay' | 'websocket' | undefined)
@@ -82,7 +83,7 @@ export function useWebSocket(config: {
         handleDisconnection()
       }
     })
-    if (!window.location.href.includes('OVERLAY_WS')) {
+    if (!window.location.href.includes('OVERLAY_WS') && config.addWsParam) {
       useType.value = 'websocket'
       addOverlayWsParam()
     }

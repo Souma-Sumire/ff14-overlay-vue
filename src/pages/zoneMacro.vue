@@ -51,7 +51,7 @@ const usedZoneInfo = [
   ...preSortZoneInfo.filter(v => v.contentType === undefined || !showContentTypes.includes(v.contentType)),
 ]
 
-const { useType } = useWebSocket({ allowClose: true })
+const { useType } = useWebSocket({ allowClose: true, addWsParam: false })
 
 onMounted(() => {
   addOverlayListener('ChangeZone', macroStore.handleChangeZone)
