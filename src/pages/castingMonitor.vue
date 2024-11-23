@@ -79,6 +79,10 @@ setInterval(() => {
     padding:0;
   }
 }
+.header-layout{
+  width: 100%;
+  position: absolute;
+}
 .common-layout :hover {
   ::v-deep(.header-layout .job-lists) {
     transform: translateY(0px);

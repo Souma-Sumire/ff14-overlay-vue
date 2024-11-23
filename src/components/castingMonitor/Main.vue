@@ -10,7 +10,7 @@ const displayAA = Number(
 </script>
 
 <template>
-  <div w-100vw flex="~ nowrap" class="main">
+  <div w-100vw flex="~ nowrap" class="main" m-t-1>
     <div
       v-for="(item) in castingMonitorStore.castData" :key="item.key" :data-casterId="item.casterId"
       :class="`images ${item.class} logLine${item.logLine} displayAA${displayAA}`"
@@ -37,8 +37,9 @@ const displayAA = Number(
 
 .main {
   position: relative;
+  top: -4px;
   min-height: 60px;
-  height: calc(100vh - 60px);
+  height: calc(100vh);
 
   .images {
     position: absolute;

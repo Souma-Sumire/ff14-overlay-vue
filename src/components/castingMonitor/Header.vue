@@ -37,8 +37,10 @@ const showHeader = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(
   padding: 0;
   height: 0px;
   z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   .job-lists {
-    margin: 0;
     padding: 0.25em 0.5em;
     transition: all 0.3s ease-in-out;
     border: none;
