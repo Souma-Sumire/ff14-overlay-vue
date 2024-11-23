@@ -278,6 +278,7 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
         if (v.condition.jobs === undefined) {
           v.condition.jobs = [(v.condition as any).job]
         }
+        v.condition.jobs.sort((a, b) => timelineStore.jobList.indexOf(a) - timelineStore.jobList.indexOf(b))
         Reflect.deleteProperty(v.condition, 'job')
       }
       timelineStore.allTimelines = data.allTimelines

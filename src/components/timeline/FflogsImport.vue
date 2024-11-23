@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import axios from 'axios'
-import Swal from 'sweetalert2'
 import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
 import type { Job } from 'cactbot/types/job'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { factory } from '@/utils/timelineSpecialRules'
 import type {
   FFlogsApiV1ReportEvents,
@@ -36,7 +36,7 @@ const emits = defineEmits<{
 
 enum QueryTextEnum {
   query = '查询',
-  querying = '正在请求',
+  querying = '正在查询...',
 }
 
 const urlRe = /(?<=^|\/)(?<code>\w{16,})\/?#fight=(?<fight>\d+|last)/
@@ -47,6 +47,8 @@ const regexType: Partial<Record<FFlogsType, string>> = {
 const queryText = ref(QueryTextEnum.query)
 const inputUrl = ref('')
 const addTTS = ref(false)
+const isLoading = ref(false)
+const currentStep = ref(0)
 
 const fflogsQueryConfig = reactive({} as FFlogsQuery)
 claerFFlogsQueryConfig()
@@ -54,211 +56,192 @@ claerFFlogsQueryConfig()
 const timelineStore = useTimelineStore()
 
 // fflogs导入第1步：用户点击查询按钮
-function queryFFlogsReportFights(url: string) {
-  Swal.fire({ text: '正在解析数据 (步骤1/3)', showConfirmButton: false, allowOutsideClick: false, allowEscapeKey: false })
+async function queryFFlogsReportFights(url: string) {
+  isLoading.value = true
   claerFFlogsQueryConfig()
   queryText.value = QueryTextEnum.querying
   const reg = url.match(urlRe)
   if (!timelineStore.settings.api) {
-    Swal.fire({
-      icon: 'error',
-      title: 'FF logs API Key 未填写',
-      footer:
-        '<a href="https://cn.fflogs.com/profile">点击这里，在最下方起名，然后获得你的 V1客户端密钥</a>',
+    ElMessageBox.alert('请在FF Logs个人设置页面获取V1 API Key', 'FF logs API Key 未填写', {
+      confirmButtonText: '确定',
+      type: 'error',
+      dangerouslyUseHTMLString: true,
+      message: '<a href="https://cn.fflogs.com/profile">点击这里，在最下方填写 V1 客户名称并点击确认后，获取你的 V1 客户端密钥</a>',
     })
     queryText.value = QueryTextEnum.query
+    isLoading.value = false
+    return
   }
-  else if (!reg) {
-    Swal.fire({
-      icon: 'error',
-      title: 'FF logs 战斗记录链接 未填写',
-      footer: '例如：aaAAAAaAAAaAaa11#fight=18',
+  if (!reg) {
+    ElMessageBox.alert('请正确填写FF Logs链接', 'FF Logs链接格式错误', {
+      confirmButtonText: '确定',
+      type: 'error',
     })
     queryText.value = QueryTextEnum.query
+    isLoading.value = false
+    return
   }
-  else if (reg) {
-    fflogsQueryConfig.code = reg.groups?.code ?? ''
-    axios
-      .get(
-        `https://cn.fflogs.com/v1/report/fights/${fflogsQueryConfig.code}?api_key=${timelineStore.settings.api}`,
-      )
-      .then((res) => {
-        fflogsQueryConfig.bossIDs = (
-          res.data.enemies as {
-            id: number
-            type: string
-          }[]
-        )
-          .filter(arr => arr.type === 'Boss')
-          .map(boss => boss.id)
-        fflogsQueryConfig.fightIndex
-          = (reg?.groups?.fight === 'last'
-            ? res.data.fights.length
-            : Number.parseInt(reg?.groups?.fight ?? '0')) - 1
-        const fight = res.data.fights[fflogsQueryConfig.fightIndex]
-        fflogsQueryConfig.zoneID = fight.zoneID
-        fflogsQueryConfig.start = fight.start_time
-        fflogsQueryConfig.end = fight.end_time
-        fflogsQueryConfig.friendlies = (
-          res.data.friendlies as Friendlies[]
-        ).filter(
-          value =>
-            value.icon !== 'LimitBreak'
-            && value.fights.find(f => f.id === fflogsQueryConfig.fightIndex + 1),
-        )
-        queryText.value = QueryTextEnum.query
-        fflogsQueryConfig.abilityFilterEvents.length = 0
-        fflogsQueryConfig.abilityFilterCandidate.length = 0
-        Swal.fire('在列表中选择一名玩家')
-      })
-      .catch((e) => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Oops...(步骤1)',
-          text: e,
-        })
-        queryText.value = QueryTextEnum.query
-      })
+
+  fflogsQueryConfig.code = reg.groups?.code ?? ''
+  try {
+    const res = await axios.get(
+      `https://cn.fflogs.com/v1/report/fights/${fflogsQueryConfig.code}?api_key=${timelineStore.settings.api}`,
+    )
+    fflogsQueryConfig.bossIDs = (
+      res.data.enemies as {
+        id: number
+        type: string
+      }[]
+    )
+      .filter(arr => arr.type === 'Boss')
+      .map(boss => boss.id)
+    fflogsQueryConfig.fightIndex
+      = (reg?.groups?.fight === 'last'
+        ? res.data.fights.length
+        : Number.parseInt(reg?.groups?.fight ?? '0')) - 1
+    const fight = res.data.fights[fflogsQueryConfig.fightIndex]
+    fflogsQueryConfig.zoneID = fight.zoneID
+    fflogsQueryConfig.start = fight.start_time
+    fflogsQueryConfig.end = fight.end_time
+    fflogsQueryConfig.friendlies = (
+      res.data.friendlies as Friendlies[]
+    ).filter(
+      value =>
+        value.icon !== 'LimitBreak'
+        && value.fights.find(f => f.id === fflogsQueryConfig.fightIndex + 1),
+    )
+    queryText.value = QueryTextEnum.query
+    fflogsQueryConfig.abilityFilterEvents.length = 0
+    fflogsQueryConfig.abilityFilterCandidate.length = 0
+    isLoading.value = false
+    currentStep.value = 1
   }
-  else {
-    Swal.fire({
-      icon: 'error',
-      title: 'url链接格式错误',
-      footer: `验证规则：${urlRe.toString().replaceAll(/\?<\w+>/g, '')}`,
+  catch (e) {
+    ElMessageBox.alert(`请检查您的FF Logs链接是否正确,并确保您有权限访问该报告。错误详情: ${e}`, '无法获取战斗数据', {
+      confirmButtonText: '确定',
+      type: 'error',
+      dangerouslyUseHTMLString: true,
     })
     queryText.value = QueryTextEnum.query
+    isLoading.value = false
   }
 }
 
 // fflogs导入第2步：用户选定了具体玩家
 async function handleFFlogsQueryResultFriendliesList(player: Friendlies) {
+  isLoading.value = true
+  currentStep.value = 2
   fflogsQueryConfig.player = player
   // 进入第三步
-  await queryFFlogsReportEvents()
-    .then(() => {
-      fflogsQueryConfig.abilityFilterCandidate
-        = fflogsQueryConfig.abilityFilterEvents.reduce((total, event) => {
-          if (
-            event.sourceIsFriendly
-            && !total.find(v => v.actionId === event.actionId)
-          ) {
-            total.push(event)
-          }
-          return total
-        }, [] as FFlogsStance)
+  try {
+    await queryFFlogsReportEvents()
+    fflogsQueryConfig.abilityFilterCandidate
+      = fflogsQueryConfig.abilityFilterEvents.reduce((total, event) => {
+        if (
+          event.sourceIsFriendly
+          && !total.find(v => v.actionId === event.actionId)
+        ) {
+          total.push(event)
+        }
+        return total
+      }, [] as FFlogsStance)
+    isLoading.value = false
+  }
+  catch (e) {
+    ElMessageBox.alert(`请稍后重试。如果问题持续存在,请检查您的网络连接。错误详情: ${e}`, '获取玩家技能数据失败', {
+      confirmButtonText: '确定',
+      type: 'error',
     })
-    .catch((e) => {
-      Swal.fire({
-        icon: 'error',
-        title: 'Oops...(步骤2)',
-        text: e,
-      })
-    })
+    isLoading.value = false
+  }
 }
 
 // fflogs导入第3步：通过API获取选定玩家所有casts
 async function queryFFlogsReportEvents() {
-  Swal.fire({
-    text: '正在解析数据，请耐心等待。(步骤2/3)',
-    showConfirmButton: false,
-    allowOutsideClick: false,
-    allowEscapeKey: false,
-  })
   const resEvents: FFlogsApiV1ReportEvents[] = []
   fflogsQueryConfig.abilityFilterEvents.length = 0
   async function queryFriendly(startTime: number) {
-    await axios
-      .get(
+    try {
+      const res = await axios.get(
         `https://cn.fflogs.com/v1/report/events/casts/${fflogsQueryConfig.code}?start=${startTime}&end=${fflogsQueryConfig.end}&hostility=0&sourceid=${fflogsQueryConfig.player?.id}&api_key=${timelineStore.settings.api}`,
       )
-      .then(
-        async (res: {
-          data: {
-            events: FFlogsApiV1ReportEvents[]
-            nextPageTimestamp?: number
-          }
-        }) => {
-          resEvents.push(...res.data.events)
-          if (
-            res.data.nextPageTimestamp
-            && res.data.nextPageTimestamp > 0
-            && res.data.nextPageTimestamp < fflogsQueryConfig.end
-          ) {
-            await queryFriendly(res.data.nextPageTimestamp)
-          }
-        },
-      )
-      .catch((e) => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Oops...(步骤3.1)',
-          text: e,
-        })
+      resEvents.push(...res.data.events)
+      if (
+        res.data.nextPageTimestamp
+        && res.data.nextPageTimestamp > 0
+        && res.data.nextPageTimestamp < fflogsQueryConfig.end
+      ) {
+        await queryFriendly(res.data.nextPageTimestamp)
+      }
+    }
+    catch (e) {
+      ElMessageBox.alert(`请稍后重试。如果问题持续存在,请检查您的网络连接。错误详情: ${e}`, '获取友方技能数据失败', {
+        confirmButtonText: '确定',
+        type: 'error',
       })
+    }
   }
   async function queryEnemies(startTime: number, index: number) {
     if (index >= 0) {
-      await axios
-        .get(
+      try {
+        const res = await axios.get(
           `https://cn.fflogs.com/v1/report/events/casts/${fflogsQueryConfig.code}?start=${startTime}&end=${fflogsQueryConfig.end}&hostility=1&sourceid=${fflogsQueryConfig.bossIDs[index]}&api_key=${timelineStore.settings.api}`,
         )
-        .then(async (res) => {
-          resEvents.push(...res.data.events)
-          if (
-            res.data.nextPageTimestamp
-            && res.data.nextPageTimestamp > 0
-            && res.data.nextPageTimestamp < fflogsQueryConfig.end
-          ) {
-            await queryEnemies(res.data.nextPageTimestamp, index)
-          }
+        resEvents.push(...res.data.events)
+        if (
+          res.data.nextPageTimestamp
+          && res.data.nextPageTimestamp > 0
+          && res.data.nextPageTimestamp < fflogsQueryConfig.end
+        ) {
+          await queryEnemies(res.data.nextPageTimestamp, index)
+        }
 
-          if (index < fflogsQueryConfig.bossIDs.length - 1)
-            await queryEnemies(startTime, index + 1)
+        if (index < fflogsQueryConfig.bossIDs.length - 1)
+          await queryEnemies(startTime, index + 1)
+      }
+      catch (e) {
+        ElMessageBox.alert(`请稍后重试。如果问题持续存在,请检查您的网络连接。错误详情: ${e}`, '获取敌方技能数据失败', {
+          confirmButtonText: '确定',
+          type: 'error',
         })
-        .catch((e) => {
-          Swal.fire({
-            icon: 'error',
-            title: 'Oops...(步骤3.2)',
-            text: e,
-          })
-        })
+      }
     }
   }
-  const friendlyPromise = await queryFriendly(fflogsQueryConfig.start)
-  const enemiesPromise = await queryEnemies(fflogsQueryConfig.start, 0)
-  await Promise.all([friendlyPromise, enemiesPromise]).then(() => {
-    for (const event of resEvents) {
-      if (event.type === 'begincast' && event.sourceIsFriendly)
-        continue
-      // const action = actionStore.getActionById(event.ability.guid);
-      fflogsQueryConfig.abilityFilterEvents.push({
-        time: Number(
-          ((event.timestamp - fflogsQueryConfig.start) / 1000).toFixed(1),
-        ),
-        type: event.type,
-        actionName: getActionChinese(event.ability.guid) ?? event.ability.name,
-        actionId: event.ability.guid,
-        sourceIsFriendly: event.sourceIsFriendly,
-        url:
-          event?.ability?.abilityIcon.replace('-', '/').replace('.png', '')
-          ?? '000000/000405',
-        window: undefined,
-      })
-    }
-    if (
-      fflogsQueryConfig.player?.icon
-      && props.filters[fflogsQueryConfig.player.icon]
-    ) {
-      fflogsQueryConfig.abilityFilterSelected
-        = props.filters[fflogsQueryConfig.player.icon]
-    }
-    Swal.fire('请在技能过滤器中选择需要的技能')
-  })
+  await Promise.all([
+    queryFriendly(fflogsQueryConfig.start),
+    queryEnemies(fflogsQueryConfig.start, 0),
+  ])
+
+  for (const event of resEvents) {
+    if (event.type === 'begincast' && event.sourceIsFriendly)
+      continue
+    fflogsQueryConfig.abilityFilterEvents.push({
+      time: Number(
+        ((event.timestamp - fflogsQueryConfig.start) / 1000).toFixed(1),
+      ),
+      type: event.type,
+      actionName: getActionChinese(event.ability.guid) ?? event.ability.name,
+      actionId: event.ability.guid,
+      sourceIsFriendly: event.sourceIsFriendly,
+      url:
+        event?.ability?.abilityIcon.replace('-', '/').replace('.png', '')
+        ?? '000000/000405',
+      window: undefined,
+    })
+  }
+  if (
+    fflogsQueryConfig.player?.icon
+    && props.filters[fflogsQueryConfig.player.icon]
+  ) {
+    fflogsQueryConfig.abilityFilterSelected
+      = props.filters[fflogsQueryConfig.player.icon]
+  }
 }
 
 // fflogs导入第4步：用户选好了过滤器
 function handeleFFlogsQueryResultFriendiesListFilter() {
-  Swal.fire({ text: '正在解析数据 (步骤3/3)', showConfirmButton: false, allowOutsideClick: false, allowEscapeKey: false })
+  isLoading.value = true
+  currentStep.value = 3
   // 保存过滤器
   if (fflogsQueryConfig.player?.icon) {
     emits(
@@ -267,22 +250,7 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
       JSON.parse(JSON.stringify(fflogsQueryConfig.abilityFilterSelected)),
     )
   }
-  // 询问是否添加TTS
-  // let addTTS = false;
-  // Swal.fire({
-  //   title: "是否为所有技能添加TTS语音?",
-  //   showDenyButton: true,
-  //   showCancelButton: false,
-  //   confirmButtonText: "是",
-  //   denyButtonText: `否`,
-  // }).then(
-  //   (result) => {
-  //     if (result.isConfirmed) {
-  //       addTTS = true;
-  //     } else if (result.isDenied) {
-  //       addTTS = false;
-  //     }
-  // 解析处理格式化一条龙
+
   fflogsQueryConfig.abilityFilterEvents = fflogsQueryConfig.abilityFilterEvents
     .filter((event) => {
       return (
@@ -330,17 +298,14 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
   )
   claerFFlogsQueryConfig()
   emits('showFFlogsToggle')
-  Swal.fire({
-    position: 'top-end',
-    icon: 'success',
-    title: '已生成新时间轴',
-    showConfirmButton: false,
-    timer: 1500,
+  ElMessage({
+    message: '已生成新时间轴',
+    type: 'success',
+    duration: 1500,
   })
-  // },
-  // }
-  // );
+  isLoading.value = false
 }
+
 // fflogs相关配置初始化
 function claerFFlogsQueryConfig() {
   fflogsQueryConfig.code = ''
@@ -356,42 +321,81 @@ function claerFFlogsQueryConfig() {
   fflogsQueryConfig.zoneID = 0
   fflogsQueryConfig.bossIDs = []
 }
+
+function openFFLogsProfile() {
+  window.open('https://cn.fflogs.com/profile', '_blank')
+}
 </script>
 
 <template>
-  <el-form :inline="true" class="fflogs-query">
-    <el-form-item label="FF logs 战斗" style="width: 450px">
-      <el-input v-model="inputUrl" placeholder="reports/AAAaAaAAaa1aA1aA#fight=3" autocomplete="on" />
-    </el-form-item>
-    <el-form-item label="FF logs V1 Key" style="width: 450px">
-      <el-input v-model="timelineStore.settings.api" />
-    </el-form-item>
-    <el-form-item label="添加TTS" style="width: 100px">
-      <el-switch v-model="addTTS" />
-    </el-form-item>
-    <el-form-item>
-      <el-button :disabled="queryText === QueryTextEnum.querying" type="primary" @click="queryFFlogsReportFights(inputUrl)">
-        {{ queryText }}
-      </el-button>
-    </el-form-item>
-  </el-form>
-  <div class="fflogs-query-result-friendlies">
-    <el-row>
+  <el-steps :active="currentStep" class="steps-guide" align-center>
+    <el-step title="输入链接" />
+    <el-step title="选择玩家" />
+    <el-step title="过滤技能" />
+    <el-step title="生成时间轴" />
+  </el-steps>
+
+  <el-card v-if="currentStep === 0" class="input-section">
+    <el-form label-width="150px" class="fflogs-form">
+      <el-form-item label="FF logs 战斗链接">
+        <el-input
+          v-model="inputUrl"
+          placeholder="AAAaAaAAaa1aA1aA#fight=3"
+          autocomplete="on"
+        />
+      </el-form-item>
+      <el-form-item label="FF logs V1 Key">
+        <el-input
+          v-model="timelineStore.settings.api"
+          placeholder="在FF Logs个人设置页面获取V1 API Key"
+        >
+          <template #append>
+            <el-tooltip
+              content="点击前往FF Logs个人设置页面，在最下方填写V1客户名称并点击确认后，获取你的V1客户端密钥"
+              placement="top"
+              effect="light"
+            >
+              <el-button
+                type="primary"
+                link
+                @click="openFFLogsProfile"
+              >
+                如何获取
+              </el-button>
+            </el-tooltip>
+          </template>
+        </el-input>
+      </el-form-item>
+      <el-form-item label="使用 TTS">
+        <el-switch v-model="addTTS" />
+      </el-form-item>
+      <el-form-item>
+        <el-button
+          :disabled="queryText === QueryTextEnum.querying"
+          type="primary"
+          @click="queryFFlogsReportFights(inputUrl)"
+        >
+          {{ queryText }}
+        </el-button>
+      </el-form-item>
+    </el-form>
+  </el-card>
+
+  <div class="query-results">
+    <el-card v-if="currentStep === 1 && (fflogsQueryConfig.friendlies.length > 0 && fflogsQueryConfig.abilityFilterEvents.length === 0)" class="player-selection">
       <el-table
-        v-show="fflogsQueryConfig.abilityFilterEvents.length === 0"
-        :data="fflogsQueryConfig.friendlies.filter((v) => v.icon !== 'NPC')"
+        :data="fflogsQueryConfig.friendlies.filter((v) => !['NPC'].includes(v.icon))"
         stripe
         border
-        class="fflogs-query-result-friendlies-list"
+        class="friendlies-table"
       >
-        <el-table-column prop="name" label="玩家名称" min-width="60px" />
-        <el-table-column prop="server" label="服务器" min-width="60px" />
-        <el-table-column label="职业" min-width="60px">
+        <el-table-column prop="name" label="玩家名称" />
+        <el-table-column label="职业">
           <template #default="{ row }">
             {{ Util.nameToFullName(Util.jobEnumToJob(Util.iconToJobEnum(row.icon))).cn }}
           </template>
         </el-table-column>
-        <el-table-column label="选定" min-width="20px">
+        <el-table-column label="选定" width="100" align="center">
           <template #default="scope">
             <el-button type="primary" size="small" @click="handleFFlogsQueryResultFriendliesList(scope.row)">
               选择
@@ -399,76 +403,120 @@ function claerFFlogsQueryConfig() {
           </template>
         </el-table-column>
       </el-table>
-    </el-row>
-    <el-row v-show="fflogsQueryConfig.abilityFilterEvents.length > 0" class="fflogs-query-result-friendlies-ability-filter-select">
-      <el-col :span="20">
-        <el-select v-model="fflogsQueryConfig.abilityFilterSelected" multiple placeholder="技能过滤器" :fit-input-width="true">
+    </el-card>
+
+    <el-card v-if="currentStep === 2" class="ability-filter">
+      <div class="ability-filter-container">
+        <el-select
+          v-model="fflogsQueryConfig.abilityFilterSelected"
+          multiple
+          placeholder="选择需要导入的技能"
+          :fit-input-width="true"
+          class="ability-filter-select"
+        >
           <el-option
             v-for="rule in fflogsQueryConfig.abilityFilterCandidate"
             :key="rule.actionId"
-            class="ability-filter-li"
             :value="rule.actionId"
             :label="rule.actionName"
+            class="ability-filter-option"
           >
             <img
               :src="getImgSrc(`/i/${rule.url}.png`)"
-              class="ability-filter-li-icon"
-              title=""
+              class="ability-filter-icon"
+              :alt="rule.actionName"
               :onerror="handleImgError"
-            >{{ rule.actionName }}
+            >
+            <span>{{ rule.actionName }}</span>
           </el-option>
         </el-select>
-      </el-col>
-      <el-col :span="4">
-        <el-button type="success" @click="handeleFFlogsQueryResultFriendiesListFilter()">
-          选择好了
+        <el-button type="success" class="filter-confirm-btn" @click="handeleFFlogsQueryResultFriendiesListFilter">
+          生成时间轴
         </el-button>
-      </el-col>
-    </el-row>
+      </div>
+    </el-card>
   </div>
 </template>
 
 <style lang="scss" scoped>
-.ability-filter-li {
-  display: inline-flex;
-  align-items: center;
-  width: 200px;
-  .ability-filter-li-icon {
-    padding-right: 0.2em;
-    height: 34px;
-  }
+.guide {
+  margin-bottom: 20px;
+  text-align: center;
 }
 
-.fflogs-query {
-  background-color: aliceblue;
-  // padding: ;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  align-items: flex-end;
-  :deep(.el-form-item){
-    margin: 10px;
-  }
+.steps-guide {
+  margin-bottom: 20px;
 }
-.fflogs-query-result-friendlies {
-  margin: 10px 0px;
-  .fflogs-query-result-friendlies-list {
-    width: 1040px;
-    ul {
-      list-style-type: none;
-    }
-  }
-  :deep(.fflogs-query-result-friendlies-ability-filter-select) {
-    margin: 10px;
-    .el-select {
-      width: 1040px;
-      max-width: 100%;
-    }
-    .el-button {
-      margin: 0px 10px;
-      width: 1040px;
-      max-width: 100%;
-    }
-  }
+
+.input-section {
+  margin-bottom: 20px;
+}
+
+.fflogs-form {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.query-results {
+  margin-top: 20px;
+}
+
+.player-selection, .ability-filter {
+  margin-bottom: 20px;
+}
+
+.friendlies-table {
+  width: 100%;
+}
+
+.ability-filter-container {
+  display: flex;
+  align-items: center;
+}
+
+.ability-filter-select {
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+.ability-filter-option {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+}
+
+.ability-filter-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  object-fit: contain;
+}
+
+.filter-confirm-btn {
+  flex-shrink: 0;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  color: white;
+}
+
+.custom-message-box {
+  max-width: 500px;
+  width: 90%;
+}
+
+.custom-message-box .el-message-box__content {
+  word-break: break-word;
 }
 </style>

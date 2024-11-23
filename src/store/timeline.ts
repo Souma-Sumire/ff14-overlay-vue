@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
-import Swal from 'sweetalert2'
 import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
+import { ElMessage } from 'element-plus'
 import Util from '../utils/util'
+import type { Job } from '../../cactbot/types/job'
 import {
   type ITimeline,
   type ITimelineCondition,
@@ -87,6 +88,7 @@ export const useTimelineStore = defineStore('timeline', {
       filters: {} as Record<string, number[]>,
       showStyle,
       showStyleTranslate,
+      jobList: [...Util.getBattleJobs3(), 'NONE'] as Job[],
     }
   },
   getters: {},
@@ -112,13 +114,7 @@ export const useTimelineStore = defineStore('timeline', {
         new Timeline(title, condition, rawTimeline, codeFight),
       )
       this.sortTimelines()
-      void Swal.fire({
-        position: 'center',
-        icon: 'success',
-        title: `“${title}”已创建`,
-        showConfirmButton: false,
-        timer: 1000,
-      })
+      ElMessage.success('新建时间轴成功')
       // 如果严谨点应该还要比较create 但重复的demo选错又能怎么样呢
       const result = this.allTimelines.findIndex(
         t =>
@@ -161,6 +157,7 @@ export const useTimelineStore = defineStore('timeline', {
         if (v.condition.jobs === undefined) {
           v.condition.jobs = [(v.condition as any).job]
         }
+        v.condition.jobs.sort((a, b) => this.jobList.indexOf(a) - this.jobList.indexOf(b))
         if (Util.iconToJobEnum(v.condition.jobs[0] as FFIcon)) {
           v.condition.jobs[0] = Util.jobEnumToJob(
             Util.iconToJobEnum(v.condition.jobs[0] as FFIcon),
@@ -173,6 +170,7 @@ export const useTimelineStore = defineStore('timeline', {
         if (v.condition.jobs === undefined) {
           v.condition.jobs = [(v.condition as any).job]
         }
+        v.condition.jobs.sort((a, b) => this.jobList.indexOf(a) - this.jobList.indexOf(b))
         Reflect.deleteProperty(v.condition, 'job')
       }
       this.allTimelines.sort((a, b) => {

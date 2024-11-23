@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import Swal from 'sweetalert2'
 import moment from 'moment'
 import type { EventMap } from 'cactbot/types/event'
 import { ElLoading, ElMessage, ElMessageBox } from 'element-plus'
@@ -17,7 +16,7 @@ import router from '@/router'
 import { useWebSocket } from '@/utils/useWebSocket'
 import { copyToClipboard } from '@/utils/clipboard'
 
-const { wsConnected } = useWebSocket()
+const { wsConnected } = useWebSocket({ allowClose: true, addWsParam: true })
 const simulatedCombatTime = ref(0)
 const timelineStore = useTimelineStore()
 const timelines = toRef(timelineStore, 'allTimelines')
@@ -25,7 +24,7 @@ const timelineFilters = toRef(timelineStore, 'filters')
 const highDifficultZoneId: { id: string, name: string }[] = [
   { id: '0', name: '任意' },
 ]
-const showFFlogs = ref(false)
+const showFFlogsDialog = ref(false)
 const showSettings = ref(false)
 const timelineCurrentlyEditing: { timeline: ITimeline } = reactive({
   timeline: {
@@ -57,7 +56,6 @@ async function updateTransmissionTimeline() {
     timelineCurrentlyEditing.timeline.timeline,
   )
 }
-const debounceJobCN: Job[] = [...Util.getBattleJobs3(), 'NONE']
 init()
 
 function init(): void {
@@ -93,7 +91,7 @@ function sendBroadcastData(type: 'get' | 'post', data: any = {}): void {
 }
 
 function fflogsImportClick(): void {
-  showFFlogs.value = !showFFlogs.value
+  showFFlogsDialog.value = true
   resetCurrentlyTimeline()
 }
 
@@ -131,23 +129,20 @@ function editTimeline(timeline: ITimeline): void {
 
 // 删除某时间轴 来自点击事件
 function deleteTimeline(target: ITimeline): void {
-  Swal.fire({
-    title: `确定要删除${target.name}吗？`,
-    text: '这将无法撤回！',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: '确认删除',
-    cancelButtonText: '取消',
-  }).then((result) => {
-    if (result.isConfirmed) {
-      resetCurrentlyTimeline()
-      timelines.value.splice(
-        timelines.value.findIndex(v => v === target),
-        1,
-      )
-    }
+  ElMessageBox.confirm(
+    `确定要删除「${target.name}」吗？`,
+    '删除时间轴',
+    {
+      confirmButtonText: '确认删除',
+      cancelButtonText: '取消',
+      type: 'warning',
+    },
+  ).then(() => {
+    resetCurrentlyTimeline()
+    timelines.value.splice(
+      timelines.value.findIndex(v => v === target),
+      1,
+    )
   })
 }
 
@@ -432,30 +427,6 @@ function timelineTimeFormat() {
       },
     )
 }
-// function clearLocalStorage() {
-//   Swal.fire({
-//     title: "确定删除相关LocalStorage吗？",
-//     text: "仅有当图片/技能缓存需要强制刷新时你才需要这样做。",
-//     icon: "warning",
-//     showCancelButton: true,
-//     confirmButtonColor: "#3085d6",
-//     cancelButtonColor: "gray",
-//     confirmButtonText: "确定",
-//     cancelButtonText: "取消",
-//   }).then((v) => {
-//     if (v.isConfirmed) {
-//       localStorage.removeItem("souma-img-cache");
-//       localStorage.removeItem("souma-action-cache");
-//       Swal.fire({
-//         position: "top-end",
-//         icon: "success",
-//         title: "已清理",
-//         showConfirmButton: false,
-//         timer: 1500,
-//       });
-//     }
-//   });
-// }
 
 function openMarkdown() {
   const href = router.resolve({ path: '/timelineHelp' }).href
@@ -480,6 +451,7 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
         if (v.condition.jobs === undefined) {
           v.condition.jobs = [(v.condition as any).job]
         }
+        v.condition.jobs.sort((a, b) => timelineStore.jobList.indexOf(a) - timelineStore.jobList.indexOf(b))
         Reflect.deleteProperty(v.condition, 'job')
       }
       timelineStore.allTimelines = data.allTimelines
@@ -522,6 +494,16 @@ function sendDataToACT() {
   })
 }
 
+function clearTimelines() {
+  timelineStore.allTimelines.length = 0
+  resetCurrentlyTimeline()
+  ElMessage({
+    message: '已清空所有时间轴',
+    type: 'success',
+    duration: 2000,
+  })
+}
+
 onMounted(() => {
   addOverlayListener('BroadcastMessage', handleBroadcastMessage)
   const unwatch = watch(wsConnected, (val) => {
@@ -535,70 +517,84 @@ onMounted(() => {
 
 <template>
   <el-container class="container">
-    <el-header>
-      <el-row m-b-5>
-        <el-alert title="为防止用户数据意外丢失，在编辑完成后，你需要手动点击右侧绿色「应用」按钮，才会使得改动应用到悬浮窗中。" type="info" :closable="false" />
-      </el-row>
-      <el-row align="middle">
-        <el-col :span="20">
-          <el-space wrap>
-            <el-button-group>
-              <el-button type="primary" @click="fflogsImportClick()">
-                从 FFlogs 生成
-              </el-button>
-              <el-button type="primary" @click="openDocs()">
-                从 在线文档 获取
-              </el-button>
-              <el-button type="primary" @click="newDemoTimeline()">
-                手动编写
-              </el-button>
-            </el-button-group>
+    <timeline-settings-dialog v-model="showSettings" @save="handleSettingsSave" />
+    <el-header class="flex-header">
+      <el-row justify="space-between" align="middle" m-b-2>
+        <el-space wrap :size="10">
+          <el-button-group>
+            <el-button type="primary" size="small" @click="fflogsImportClick">
+              从 FFlogs 生成
+            </el-button>
+            <el-button type="primary" size="small" @click="openDocs">
+              从 在线文档 获取
+            </el-button>
+            <el-button type="primary" size="small" @click="newDemoTimeline">
+              手动编写
+            </el-button>
+          </el-button-group>
 
-            <el-button-group>
-              <el-button @click="importTimelines()">
-                导入字符串
-              </el-button>
-              <el-button class="export" @click="exportTimeline(timelines)">
-                导出全部
-              </el-button>
-            </el-button-group>
+          <el-button-group>
+            <el-button size="small" @click="importTimelines">
+              导入字符串
+            </el-button>
+            <el-button size="small" class="export" @click="exportTimeline(timelines)">
+              导出全部
+            </el-button>
+          </el-button-group>
 
-            <el-button-group>
-              <el-button @click="openMarkdown()">
-                时间轴语法
-              </el-button>
-            </el-button-group>
+          <el-button size="small" @click="openMarkdown">
+            时间轴语法
+          </el-button>
 
-            <el-button-group>
-              <el-button type="success" @click="sendDataToACT()">
-                应用
-              </el-button>
-            </el-button-group>
-          </el-space>
-        </el-col>
-        <el-col :span="4" style="text-align: right;">
-          <el-button
-            color="#626aef"
-            style="color: white"
-            @click="showSettings = true"
-          >
+          <el-button type="success" size="small" @click="sendDataToACT">
+            应用
+          </el-button>
+        </el-space>
+
+        <el-space>
+          <el-button color="#a0d911" style="color: white" size="small" @click="clearTimelines">
+            恢复至之前的时间轴
+          </el-button>
+          <el-button type="danger" size="small" @click="clearTimelines">
+            删除全部时间轴
+          </el-button>
+          <el-button color="#626aef" style="color: white" size="small" @click="showSettings = true">
             设置
           </el-button>
-        </el-col>
+        </el-space>
       </el-row>
+      <div class="alerts-container">
+        <el-alert
+          title="编辑完成后,需手动点击「应用」按钮"
+          show-icon
+          type="info"
+          :closable="false"
+          class="alert-item"
+        />
+        <el-alert
+          title="当你误操作但尚未点击「应用」时，可点击「恢复至之前的时间轴」，则会恢复到当前 ACT 悬浮窗中保存的数据"
+          show-icon
+          type="warning"
+          :closable="false"
+          class="alert-item"
+        />
+      </div>
     </el-header>
-    <timeline-settings-dialog v-model="showSettings" @save="handleSettingsSave" />
     <el-main>
-      <br>
-      <timeline-fflogs-import
-        v-if="showFFlogs"
-        :filters="timelineFilters"
-        @clear-currently-timeline="resetCurrentlyTimeline"
-        @show-f-flogs-toggle="() => (showFFlogs = !showFFlogs)"
-        @new-timeline="timelineStore.newTimeline"
-        @update-filters="timelineStore.updateFilters"
-      />
-      <br>
+      <el-dialog
+        v-model="showFFlogsDialog"
+        title="从 FFlogs 生成时间轴"
+        width="80%"
+        :before-close="() => showFFlogsDialog = false"
+      >
+        <timeline-fflogs-import
+          :filters="timelineFilters"
+          @clear-currently-timeline="resetCurrentlyTimeline"
+          @show-f-flogs-toggle="() => (showFFlogsDialog = false)"
+          @new-timeline="timelineStore.newTimeline"
+          @update-filters="timelineStore.updateFilters"
+        />
+      </el-dialog>
       <el-card v-show="timelineCurrentlyEditing.timeline.create !== '空'">
         <div class="slider-demo-block">
           <span>模拟时间：</span>
@@ -645,7 +641,7 @@ onMounted(() => {
                 collapse-tags-tooltip
               >
                 <el-option
-                  v-for="job in debounceJobCN"
+                  v-for="job in timelineStore.jobList"
                   :key="job"
                   :label="(Util.nameToFullName(job)?.cn ?? job).replace('冒险者', '全部职业')"
                   :value="job"
@@ -755,6 +751,11 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
+.flex-header {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+}
 .slider-demo-block {
   display: flex;
   align-items: center;
@@ -797,22 +798,21 @@ onMounted(() => {
       // overflow-x: hidden;
     }
   }
-  .timelinesList {
-    list-style: circle;
-    padding: 0;
-    margin: 0;
-    margin-left: 1em;
-    li {
-      cursor: pointer;
-      font-size: 16px;
-      font-family: "Microsoft YaHei";
-      padding: 5px;
-      transition-duration: 0.5s;
-      animation-duration: 1s;
-      &:hover {
-        background-color: rgba($color: gray, $alpha: 0.1);
-      }
-    }
-  }
+}
+:deep(.el-dialog__body) {
+  padding: 20px;
+}
+
+.alerts-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.alert-item {
+  margin-bottom: 5px;
+}
+
+.alert-item:last-child {
+  margin-bottom: 0;
 }
 </style>
