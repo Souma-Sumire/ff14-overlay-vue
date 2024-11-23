@@ -36,7 +36,7 @@ statusCN: status显示中文化，默认true
   },
   {
     title: '全副本发宏/标点',
-    type: '悬浮窗',
+    type: '网页',
     path: 'zoneMacro?OVERLAY_WS=ws://127.0.0.1:10501/ws',
     src: 'zoneMacro.webp',
     comment: '需开启 ACT.OverlayPlugin WSServer\n 喊话、标点需<a href="https://github.com/Natsukage/PostNamazu">鲶鱼精邮差</a>',
@@ -81,7 +81,7 @@ tuanfuTTS: 是否开启团辅TTS，默认true
     type: '悬浮窗',
     path: 'timeline',
     src: 'timeline.webp',
-    comment: '适用于副职快速抄轴、打小抄等。可以实现简单的阶段同步，但面对血量轴/双轴等复杂情况时表现不佳。\n\n编辑时间轴：启动ACT WSServer，在浏览器中打开<a href="/ff14-overlay-vue/#/timelineSettings?OVERLAY_WS=ws://127.0.0.1:10501/ws">这个链接</a>，数据会自动更新到悬浮窗中，此时切换到悬浮窗应当提示‘已更新数据’。',
+    comment: '编辑时间轴：在浏览器中打开<a href="/ff14-overlay-vue/#/timelineSettings?OVERLAY_WS=ws://127.0.0.1:10501/ws">这个网页</a>',
   },
   {
     title: '[悬浮窗] 施法监控（技能展示）',
@@ -175,15 +175,19 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
     <el-container>
       <el-form>
         <el-form-item label="联系我：" label-width="auto" style="margin-bottom: 0; padding-left: 1rem;">
-          <div style="display: flex; align-items: center; gap: 16px;">
-            <a href="https://github.com/Souma-Sumire" target="_blank" style="text-decoration: none;">
+          <div class="contact-info">
+            <a href="https://github.com/Souma-Sumire" target="_blank" class="contact-link">
               Github
             </a>
-            <a href="https://space.bilibili.com/1443740" target="_blank" style="text-decoration: none;">
+            <a href="https://space.bilibili.com/1443740" target="_blank" class="contact-link">
               Bilibili
             </a>
-            <span style="font-weight: bold; color: #f00;">
+            <span class="qq-group">QQ群: 231937107</span>
+            <span class="warning-text">
               其余账号均为山寨，请勿相信任何信息
+            </span>
+            <span>
+              本人无国服最终幻想14账号（已卖），请勿打扰同名的其他玩家
             </span>
           </div>
         </el-form-item>
@@ -235,5 +239,32 @@ a:hover {
 img {
   object-fit: cover;
   max-width: 400px;
+}
+
+.contact-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.contact-link {
+  text-decoration: none;
+  color: #409EFF;
+  font-weight: bold;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.qq-group {
+  font-weight: bold;
+  color: #67C23A;
+}
+
+.warning-text {
+  font-weight: bold;
+  color: #F56C6C;
 }
 </style>
