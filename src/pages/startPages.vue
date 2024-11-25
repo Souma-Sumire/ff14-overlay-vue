@@ -13,6 +13,30 @@ function generateUrl(url: string) {
 }
 const tableData: Menu[] = [
   {
+    title: '国际服汉化补丁',
+    type: '网页',
+    path: 'https://github.com/Souma-Sumire/FFXIVChnTextPatch-Souma/',
+    comment: '前往Github项目了解详情',
+  },
+  {
+    title: 'Cactbot Raidboss 自定义文件',
+    type: '网页',
+    path: 'https://github.com/Souma-Sumire/raidboss-user-js-public',
+    comment: '俗称轮椅，使用我的自定义文件覆盖默认触发器，前往Github项目了解详情',
+  },
+  {
+    title: 'FFLOGS 上传器 加速下载',
+    type: '网页',
+    path: 'fflogsUploaderDownload',
+  },
+  {
+    title: '[悬浮窗] 治疗/减伤时间轴',
+    type: '悬浮窗',
+    path: 'timeline',
+    src: 'timeline.webp',
+    comment: '编辑时间轴：在浏览器中打开<a href="/ff14-overlay-vue/#/timelineSettings?OVERLAY_WS=ws://127.0.0.1:10501/ws">这个网页</a>',
+  },
+  {
     title: '[悬浮窗] 减伤监控2',
     type: '悬浮窗/网页',
     path: 'keigennRecord2?scale=1&showHeader=true&showIcon=true&showName=false&abbrId=true&anonymous=true&replaceWithYou=false&parseAA=true&parseDoT=false&minimize=false&actionCN=true&statusCN=true',
@@ -42,29 +66,6 @@ statusCN: status显示中文化，默认true
     comment: '需开启 ACT.OverlayPlugin WSServer\n 喊话、标点需<a href="https://github.com/Natsukage/PostNamazu">鲶鱼精邮差</a>',
   },
   {
-    title: '狩猎车头找怪工具',
-    type: '网页',
-    path: 'hunt',
-  },
-  {
-    title: '[悬浮窗] 我 TM 现在在几线？',
-    type: '悬浮窗',
-    path: 'instancedAreaInfo',
-    comment: '一个简单的小工具，显示你当前在几线。',
-  },
-  {
-    title: '[悬浮窗] OBS 自动录制 2（新）',
-    type: '悬浮窗',
-    path: 'obs2',
-    comment: '满足条件时自动开启 OBS 录屏',
-  },
-  {
-    title: '[悬浮窗] OBS 自动录制（不再维护）',
-    type: '悬浮窗',
-    path: 'obs',
-    comment: '满足条件时自动开启 OBS 录屏',
-  },
-  {
     title: '[悬浮窗] 团辅监控',
     type: '悬浮窗',
     path: 'https://souma.diemoe.net/dist/keySkillTimer.html?international=false&dajinengTTS=true&jianshangTTS=true&tuanfuTTS=true',
@@ -73,15 +74,17 @@ international: 是否采用国际服技改数据，默认false
 dajinengTTS: 是否开启大技能TTS（坦克无敌不包含在内，因为 Cactbot 已有对应功能），默认true
 jianshangTTS: 是否开启减伤TTS，默认true
 tuanfuTTS: 是否开启团辅TTS，默认true
+
+该悬浮窗过于老旧，无法自定义技能。
 `,
     src: 'keySkillTimer.webp',
   },
   {
-    title: '[悬浮窗] 治疗/减伤时间轴',
+    title: '[悬浮窗] 技能监控',
     type: '悬浮窗',
-    path: 'timeline',
-    src: 'timeline.webp',
-    comment: '编辑时间轴：在浏览器中打开<a href="/ff14-overlay-vue/#/timelineSettings?OVERLAY_WS=ws://127.0.0.1:10501/ws">这个网页</a>',
+    path: 'https://souma.diemoe.net/dist/teamWatch.html',
+    comment: '可以实现对大部分技能的CD监控。\n现已进入维护阶段，不再新增特性。\n不支持“释放某技能时减少某技能N秒冷却”的特性。\n老用户如果有6.0的缓存，更新7.0之后用会有问题，请在设置页清除一次数据。',
+    src: 'teamWatch.webp',
   },
   {
     title: '[悬浮窗] 施法监控（技能展示）',
@@ -104,6 +107,18 @@ syncFocusWS: 是否同步监控目标至通过 WebSocket 连接的其他页面�
     path: 'castingToChinese',
     comment: '',
     src: 'castingToChinese.webp',
+  },
+  {
+    title: '[悬浮窗] OBS 自动录制 2（新）',
+    type: '悬浮窗',
+    path: 'obs2',
+    comment: '满足条件时自动开启 OBS 录屏',
+  },
+  {
+    title: '[悬浮窗] OBS 自动录制（旧）',
+    type: '悬浮窗',
+    path: 'obs',
+    comment: '满足条件时自动开启 OBS 录屏',
   },
   {
     title: '[悬浮窗] 盾值显示',
@@ -141,42 +156,40 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
     comment: '<a href="#/okVpr">版本A</a>，进附体时不会重置热键栏，适合直接设置成单独键位（我没用过，不知道好不好用）\n<a href="#/okVpr2">版本B</a>，进附体时会重置热键栏，适合设置成平时按的键位（我没用过，不知道好不好用）',
   },
   {
-    title: '[悬浮窗] 技能监控',
+    title: '[悬浮窗] 我 TM 现在在几线？',
     type: '悬浮窗',
-    path: 'https://souma.diemoe.net/dist/teamWatch.html',
-    comment: '可以实现对大部分技能的CD监控。现已进入维护阶段，不再新增特性或修正 BUG。',
-    src: 'teamWatch.webp',
+    path: 'instancedAreaInfo',
+    comment: '狩猎常用，一个简单的小工具，显示你当前在几线。',
   },
   {
-    title: '国际服汉化补丁',
+    title: '狩猎车头找怪工具',
     type: '网页',
-    path: 'https://github.com/Souma-Sumire/FFXIVChnTextPatch-Souma/',
-    comment: '前往Github项目了解详情',
-  },
-  {
-    title: '个人修改版 Cactbot Raidboss',
-    type: '网页',
-    path: 'https://github.com/Souma-Sumire/raidboss-user-js-public',
-    comment: '前往Github项目了解详情',
+    path: 'hunt',
   },
   {
     title: '简易风脉地图',
     type: '网页',
     path: 'aether',
   },
-  {
-    title: 'FFLOGS 上传器 加速下载',
-    type: '网页',
-    path: 'fflogsUploaderDownload',
-  },
 ]
 </script>
 
 <template>
-  <div class="common-layout" bt-white>
-    <el-container>
-      <el-form>
-        <el-form-item label="联系我：" label-width="auto" style="margin-bottom: 0; padding-left: 1rem;">
+  <div class="common-layout">
+    <el-container class="main-container">
+      <el-header>
+        <h1 class="main-title">
+          主页导航
+        </h1>
+      </el-header>
+
+      <el-main>
+        <el-card class="contact-card">
+          <template #header>
+            <div class="card-header">
+              <span>联系我</span>
+            </div>
+          </template>
           <div class="contact-info">
             <a href="https://github.com/Souma-Sumire" target="_blank" class="contact-link">
               Github
@@ -188,36 +201,31 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
             <span class="warning-text">
               其余账号均为山寨，请勿相信任何信息
             </span>
-            <span>
+            <span class="info-text">
               本人无国服最终幻想14账号（已卖），请勿打扰同名的其他玩家
             </span>
           </div>
-        </el-form-item>
-      </el-form>
+        </el-card>
 
-      <el-header><h1>主页导航</h1></el-header>
-      <el-main>
         <vxe-table
-          :data="tableData"
-
-          stripe border
-          :row-config="{ height: 100 }"
+          :data="tableData" stripe border :row-config="{ height: 120, hover: true }"
+          :scroll-x="{ enabled: true }" :fit="true" :auto-resize="true" class="custom-table"
         >
-          <vxe-column width="250" title="名称">
+          <vxe-column width="250" title="名称" class-name="column-title">
             <template #default="{ row }">
-              <router-link v-if="!(row.path.startsWith('http'))" :to="row.path">
+              <router-link v-if="!(row.path.startsWith('http'))" :to="row.path" class="table-link">
                 {{ row.title }}
               </router-link>
-              <a v-else :href="row.path" target="_blank">{{ row.title }} </a>
+              <a v-else :href="row.path" target="_blank" class="table-link">{{ row.title }} </a>
             </template>
           </vxe-column>
-          <vxe-column width="420" title="预览">
+          <vxe-column width="400" title="预览" class-name="column-title">
             <template #default="{ row: { src } }">
-              <img v-if="src" v-lazy="generateUrl(src).pathname">
+              <img v-if="src" v-lazy="generateUrl(src).pathname" class="preview-image">
               <i v-if="!src">无</i>
             </template>
           </vxe-column>
-          <vxe-column field="comment" title="描述">
+          <vxe-column field="comment" title="描述" min-width="600" class-name="column-title">
             <template #default="{ row }">
               <span v-html="row.comment" />
             </template>
@@ -228,25 +236,37 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
   </div>
 </template>
 
+<style>
+body {
+  margin: 0;
+}
+</style>
+
 <style lang="scss" scoped>
-a,
-a:visited,
-a:link,
-a:hover {
-  color: blue;
+.common-layout {
+  background-color: #f5f7fa;
+  color: #333;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  line-height: 1.6;
 }
-a:hover {
-  text-decoration: underline;
+
+.main-container {
+  max-width: 1440px;
+  margin: 0 auto;
 }
-img {
-  object-fit: cover;
-  max-width: 400px;
+
+.contact-card {
+  margin-bottom: 30px;
+
+  .card-header {
+    font-weight: bold;
+  }
 }
 
 .contact-info {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
   flex-wrap: wrap;
 }
 
@@ -254,8 +274,10 @@ img {
   text-decoration: none;
   color: #409EFF;
   font-weight: bold;
+  transition: color 0.3s;
 
   &:hover {
+    color: #66b1ff;
     text-decoration: underline;
   }
 }
@@ -268,5 +290,39 @@ img {
 .warning-text {
   font-weight: bold;
   color: #F56C6C;
+}
+
+.info-text {
+  color: #909399;
+}
+
+.custom-table {
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+.column-title {
+  background-color: #f0f2f5;
+  font-weight: bold;
+}
+
+.table-link {
+  color: #409EFF;
+  text-decoration: none;
+  transition: color 0.3s;
+
+  &:hover {
+    color: #66b1ff;
+    text-decoration: underline;
+  }
+}
+
+img {
+  object-fit: contain;
+  max-width: 100%;
+  width: auto;
+  height: auto;
 }
 </style>
