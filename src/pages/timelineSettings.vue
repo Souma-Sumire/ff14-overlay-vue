@@ -761,7 +761,7 @@ onMounted(() => {
 .container {
   min-width: 925px;
   max-width: 1200px;
-  margin: 0 auto;
+  margin: 10px auto;
   .timeline-info {
     display: flex;
     flex-wrap: nowrap;
