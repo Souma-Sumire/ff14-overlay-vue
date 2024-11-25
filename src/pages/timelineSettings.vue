@@ -446,24 +446,22 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
     keepRetrying = false
     loading.close()
     const data = (e.msg as { data: typeof timelineStore.$state }).data
-    if (timelineStore.allTimelines.length === 0 && data.allTimelines.length > timelineStore.allTimelines.length) {
-      for (const v of data.allTimelines) {
-        if (v.condition.jobs === undefined) {
-          v.condition.jobs = [(v.condition as any).job]
-        }
-        v.condition.jobs.sort((a, b) => timelineStore.jobList.indexOf(a) - timelineStore.jobList.indexOf(b))
-        Reflect.deleteProperty(v.condition, 'job')
+    for (const v of data.allTimelines) {
+      if (v.condition.jobs === undefined) {
+        v.condition.jobs = [(v.condition as any).job]
       }
-      timelineStore.allTimelines = data.allTimelines
-      timelineStore.configValues = data.configValues
-      timelineStore.showStyle = data.showStyle
-      ElMessage.closeAll()
-      ElMessage({
-        message: '数据获取成功',
-        type: 'success',
-        duration: 3000,
-      })
+      v.condition.jobs.sort((a, b) => timelineStore.jobList.indexOf(a) - timelineStore.jobList.indexOf(b))
+      Reflect.deleteProperty(v.condition, 'job')
     }
+    timelineStore.allTimelines = data.allTimelines
+    timelineStore.configValues = data.configValues
+    timelineStore.showStyle = data.showStyle
+    ElMessage.closeAll()
+    ElMessage({
+      message: '数据获取成功',
+      type: 'success',
+      duration: 3000,
+    })
   }
 }
 
@@ -471,7 +469,7 @@ function requestACTData() {
   keepRetrying = true
   loading = ElLoading.service({
     lock: true,
-    text: `正在请求数据，请确保 ACT 与悬浮窗已开启...，若 3 秒内仍未获取到数据，请检查 ACT 状态，且确认 timeline 悬浮窗已开启，或刷新页面重连。`,
+    text: `正在请求数据，请确保 ACT 与悬浮窗已开启...，若 10 秒内仍未获取到数据，请检查 ACT 状态，且确认 timeline 悬浮窗已开启，或刷新页面重连。`,
     background: 'rgba(0, 0, 0, 0.7)',
   })
 
@@ -495,7 +493,7 @@ function sendDataToACT() {
 }
 
 function revertTimeline() {
-  timelineStore.allTimelines.length = 0
+  // timelineStore.allTimelines.length = 0
   resetCurrentlyTimeline()
   requestACTData()
 }
@@ -504,7 +502,9 @@ onMounted(() => {
   addOverlayListener('BroadcastMessage', handleBroadcastMessage)
   const unwatch = watch(wsConnected, (val) => {
     if (val) {
-      requestACTData()
+      if (timelineStore.allTimelines.length === 0) {
+        requestACTData()
+      }
       unwatch()
     }
   })
@@ -565,7 +565,7 @@ onMounted(() => {
           class="alert-item"
         />
         <el-alert
-          title="当你误操作但尚未点击「应用」时，可点击「恢复至之前的时间轴」，则会恢复到当前 ACT 悬浮窗中保存的数据"
+          title="当你误操作或数据与 ACT 悬浮窗中的数据不符，且尚未点击「应用」时，可点击「恢复至之前的时间轴」，则会恢复到当前 ACT 悬浮窗中保存的数据"
           show-icon
           type="warning"
           :closable="false"
