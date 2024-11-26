@@ -39,11 +39,12 @@ const tableData: Menu[] = [
   {
     title: '[悬浮窗] 减伤监控2',
     type: '悬浮窗/网页',
-    path: 'keigennRecord2?scale=1&showHeader=true&showIcon=true&showName=false&abbrId=true&anonymous=true&replaceWithYou=false&parseAA=true&parseDoT=false&minimize=false&actionCN=true&statusCN=true',
+    path: 'keigennRecord2?scale=1&opacity=0.8&showHeader=true&showIcon=true&showName=false&abbrId=true&anonymous=true&replaceWithYou=false&parseAA=true&parseDoT=false&minimize=false&actionCN=true&statusCN=true',
     comment: `可以添加到 ACT 悬浮窗中用于实时监控。也可以在浏览器中打开，导入日志分析过往记录。
 
 URL地址栏参数说明：
 scale: 缩放倍率，默认1
+opacity: 悬浮窗透明度，0为完全透明，1为完全不透明，默认0.8
 showHeader: 显示表头，默认true
 showIcon: 显示目标图标，默认true
 showName: 显示目标ID，默认false
