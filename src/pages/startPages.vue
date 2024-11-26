@@ -44,6 +44,7 @@ const tableData: Menu[] = [
 
 URL地址栏参数说明：
 scale: 缩放倍率，默认1
+opacity: 悬浮窗透明度，0为完全透明，1为完全不透明，默认0.8
 showHeader: 显示表头，默认true
 showIcon: 显示目标图标，默认true
 showName: 显示目标ID，默认false

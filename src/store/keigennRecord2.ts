@@ -8,6 +8,7 @@ export const useKeigennRecord2Store = defineStore('keigennRecord2', {
     return {
       userOptions: {
         scale: parseParams(params.scale as string, 1), // 缩放倍率
+        opacity: parseParams(params.opacity as string, 0.8), // 透明度
         showHeader: parseParams(params.showHeader as string, true), // 显示表头
         showIcon: parseParams(params.showIcon as string, true), // 显示目标图标
         showName: parseParams(params.showName as string, false), // 显示目标ID
