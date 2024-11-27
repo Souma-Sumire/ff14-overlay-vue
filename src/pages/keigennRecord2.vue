@@ -62,6 +62,7 @@ const style = {
   '--vxe-ui-row-height-mini': `${30 * userOptions.scale}px`,
   '--vxe-input-height-mini': `${20 * userOptions.scale}px`,
   '--vxe-select-option-height-mini': `${24 * userOptions.scale}px`,
+  '--vxe-ui-layout-background-color': `rgba(12, 12, 12, ${userOptions.opacity})`,
 }
 
 const maxStorage = {
@@ -1019,7 +1020,6 @@ html {
   margin: 0;
   overflow: hidden;
   --vxe-ui-input-height-mini: 20px;
-  --vxe-ui-layout-background-color: rgba(12, 12, 12, 0.8);
   --vxe-ui-table-header-background-color: rgba(12, 12, 12, 0);
   --vxe-ui-table-header-font-color: #ddd;
   --vxe-ui-base-border-radius: 0;
