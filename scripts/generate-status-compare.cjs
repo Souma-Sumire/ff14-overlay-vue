@@ -3,7 +3,7 @@ const fs = require('fs-extra')
 const iconv = require('iconv-lite')
 const { csvPaths } = require('./paths.cjs')
 
-const VERSION = '710'
+const VERSION = '711'
 
 const fileValues = {}
 function readFile(fileName, path) {

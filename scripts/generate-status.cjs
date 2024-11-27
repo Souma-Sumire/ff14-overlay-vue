@@ -28,9 +28,9 @@ Promise.all([
     if (['key', '#', 'offset', 'int32', '0'].includes(row[0])) {
       return
     }
-    if (row[1] === '') {
-      return
-    }
+    // if (row[1] === '') {
+    //   return
+    // }
     const ja = fileValues['status_ja.csv'].find(r => r[0] === row[0])
     result[row[0]] = [row[1], ja[3], ja[6]]
   })

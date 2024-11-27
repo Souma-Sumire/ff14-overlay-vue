@@ -303,6 +303,7 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
     type: 'success',
     duration: 1500,
   })
+  currentStep.value = 1
   isLoading.value = false
 }
 

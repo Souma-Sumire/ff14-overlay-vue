@@ -1,16 +1,18 @@
 <script setup lang="ts">
+import status711 from '@/resources/status-compare-711.json'
 import status710 from '@/resources/status-compare-710.json'
-import status705 from '@/resources/status-compare-705.json'
-import status701 from '@/resources/status-compare-701.json'
-// import status700 from '@/resources/status-compare-700.json'
-// import status658hf2 from '@/resources/status-compare-658hf2.json'
+// // import status705 from '@/resources/status-compare-705.json'
+// // import status701 from '@/resources/status-compare-701.json'
+// // import status700 from '@/resources/status-compare-700.json'
+// // import status658hf2 from '@/resources/status-compare-658hf2.json'
 import { completeIcon, statusData } from '@/resources/status'
 
 interface Compare { id: string, name: { ja: string, en: string, cn: string }, description: { ja: string, en: string, cn: string }, icon: string, classJobCategory: number }
 
 const typeMap = {
-  7.10: compareStatus(status710, status705),
-  7.05: compareStatus(status705, status701),
+  7.11: compareStatus(status711, status710),
+  // 7.10: compareStatus(status710, status705),
+  // 7.05: compareStatus(status705, status701),
   // '7.01': compareStatus(status701, status700),
   // '7.00': compareStatus(status700, status658hf2),
 }
@@ -25,7 +27,10 @@ function compareStatus(newStatus: any, oldStatus: any) {
   for (const key in newStatus) {
     if (!Object.prototype.hasOwnProperty.call(oldStatus, key)) {
       const { name, description, icon } = newStatus[key as keyof typeof newStatus]
-      result.push({ id: key, name, description, icon: completeIcon(Number(icon)), classJobCategory: statusData[key as unknown as keyof typeof statusData][2] })
+      if (name === '') {
+        continue
+      }
+      result.push({ id: key, name, description, icon: completeIcon(Number(icon)), classJobCategory: statusData[key as unknown as keyof typeof statusData]?.[2] ?? 'unknown' })
     }
   }
   return result
