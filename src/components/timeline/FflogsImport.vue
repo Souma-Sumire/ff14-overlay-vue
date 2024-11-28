@@ -2,7 +2,7 @@
 import axios from 'axios'
 import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
 import type { Job } from 'cactbot/types/job'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
 import { factory } from '@/utils/timelineSpecialRules'
 import type {
   FFlogsApiV1ReportEvents,
@@ -49,6 +49,7 @@ const inputUrl = ref('')
 const addTTS = ref(false)
 const isLoading = ref(false)
 const currentStep = ref(0)
+const confirmEnabled = ref(false)
 
 const fflogsQueryConfig = reactive({} as FFlogsQuery)
 claerFFlogsQueryConfig()
@@ -158,6 +159,7 @@ async function handleFFlogsQueryResultFriendliesList(player: Friendlies) {
 
 // fflogs导入第3步：通过API获取选定玩家所有casts
 async function queryFFlogsReportEvents() {
+  confirmEnabled.value = false
   const resEvents: FFlogsApiV1ReportEvents[] = []
   fflogsQueryConfig.abilityFilterEvents.length = 0
   async function queryFriendly(startTime: number) {
@@ -236,6 +238,7 @@ async function queryFFlogsReportEvents() {
     fflogsQueryConfig.abilityFilterSelected
       = props.filters[fflogsQueryConfig.player.icon]
   }
+  confirmEnabled.value = true
 }
 
 // fflogs导入第4步：用户选好了过滤器
@@ -298,12 +301,7 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
   )
   claerFFlogsQueryConfig()
   emits('showFFlogsToggle')
-  ElMessage({
-    message: '已生成新时间轴',
-    type: 'success',
-    duration: 1500,
-  })
-  currentStep.value = 1
+  currentStep.value = 0
   isLoading.value = false
 }
 
@@ -329,13 +327,19 @@ function openFFLogsProfile() {
 </script>
 
 <template>
+  <el-button
+    position-absolute
+    z-999
+    :style="currentStep > 0 ? {} : { visibility: 'hidden', pointerEvent: 'none' }" type="primary" text class="guide" @click="currentStep--"
+  >
+    上一步
+  </el-button>
   <el-steps :active="currentStep" class="steps-guide" align-center>
     <el-step title="输入链接" />
     <el-step title="选择玩家" />
     <el-step title="过滤技能" />
     <el-step title="生成时间轴" />
   </el-steps>
-
   <el-card v-if="currentStep === 0" class="input-section">
     <el-form label-width="150px" class="fflogs-form">
       <el-form-item label="FF logs 战斗链接">
@@ -431,8 +435,8 @@ function openFFLogsProfile() {
             <span>{{ rule.actionName }}</span>
           </el-option>
         </el-select>
-        <el-button type="success" class="filter-confirm-btn" @click="handeleFFlogsQueryResultFriendiesListFilter">
-          生成时间轴
+        <el-button type="success" class="filter-confirm-btn" :disabled="!confirmEnabled" @click="handeleFFlogsQueryResultFriendiesListFilter">
+          {{ confirmEnabled ? '生成时间轴' : '加载中...' }}
         </el-button>
       </div>
     </el-card>
