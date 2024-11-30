@@ -225,7 +225,7 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
         if (logLine === 14 && cast1000Ms) {
           setTimeout(
             () => {
-              this.castData = this.castData.filter(v => v.key !== key)
+              this.castData = this.castData.filter(v => v?.key !== key)
             },
             cast1000Ms * 1000 - 500,
           )

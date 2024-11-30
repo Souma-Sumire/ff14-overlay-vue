@@ -201,8 +201,8 @@ function syncTimeline(targetTime: number) {
 
 // 玩家状态（职业）
 const handlePlayerChangedEvent: EventMap['onPlayerChangedEvent'] = (e) => {
-  playerState.value.jobs[0] = e.detail.job
-  if (e.detail.job !== playerState.value.jobs[0]) {
+  if (playerState.value.jobs[0] !== e.detail.job) {
+    playerState.value.jobs[0] = e.detail.job
     getTimeline()
   }
 }

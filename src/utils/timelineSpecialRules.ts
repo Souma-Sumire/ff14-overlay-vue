@@ -47,8 +47,8 @@ windowAction.set(0x4879, { type: 'cast', window: [67, 67], once: true }) // 神�
 windowAction.set(0x4A8B, { type: 'cast', window: [900, 0], once: true }) // unknown
 
 // 绝伊甸
-windowAction.set(0x9CFF, { type: 'begincast', window: [100, 0], once: true }) // P2 四重强击
-windowAction.set(0x9D49, { type: 'begincast', window: [100, 0], once: true }) // P3 地狱审判
+windowAction.set(0x9CFF, { type: 'begincast', window: [200, 20], once: true }) // P2 四重强击
+windowAction.set(0x9D49, { type: 'begincast', window: [500, 20], once: true }) // P3 地狱审判
 
 export function factory(events: FFlogsStance): FFlogsStance {
   const statistics = new Map<number, number>()
