@@ -7149,6 +7149,8 @@ fastPP(`{"Name":"通用标点","MapID":833,"A":{"X":92.5,"Y":0,"Z":92.5,"ID":0,"
 fastPP(`{"Name":"莫古力","MapID":996,"A":{"X":100,"Y":0,"Z":88,"ID":0,"Active":true},"B":{"X":112,"Y":0,"Z":100,"ID":1,"Active":true},"C":{"X":100,"Y":0,"Z":112,"ID":2,"Active":true},"D":{"X":88,"Y":0,"Z":100,"ID":3,"Active":true},"One":{"X":0,"Y":0,"Z":0,"ID":4,"Active":false},"Two":{"X":0,"Y":0,"Z":0,"ID":5,"Active":false},"Three":{"X":0,"Y":0,"Z":0,"ID":6,"Active":false},"Four":{"X":0,"Y":0,"Z":0,"ID":7,"Active":false}}`)
 fastPP(`{"Name":"Conga","MapID":996,"A":{"X":100.0,"Y":0.0,"Z":87.5,"ID":0,"Active":true},"B":{"X":100.0,"Y":0.0,"Z":102.5,"ID":1,"Active":true},"C":{"X":94.5,"Y":0.0,"Z":77.8,"ID":2,"Active":true},"D":{"X":100.0,"Y":0.0,"Z":117.5,"ID":3,"Active":true},"One":{"X":100.0,"Y":0.0,"Z":95.0,"ID":4,"Active":true},"Two":{"X":100.0,"Y":0.0,"Z":110.0,"ID":5,"Active":true},"Three":{"X":105.5,"Y":0.0,"Z":77.8,"ID":6,"Active":true},"Four":{"X":100.0,"Y":0.0,"Z":125.0,"ID":7,"Active":true}}`)
 
+// 伊甸
+fastPP(`{"Name":"伊甸自用","MapID":1006,"A":{"X":100,"Y":0,"Z":90,"Active":true},"B":{"X":110,"Y":0,"Z":100,"Active":true},"C":{"X":100,"Y":0,"Z":110,"Active":true},"D":{"X":90,"Y":0,"Z":100,"Active":true},"One":{"X":92.73,"Y":0,"Z":92.73,"Active":true},"Two":{"X":107.27,"Y":0,"Z":92.73,"Active":true},"Three":{"X":107.27,"Y":0,"Z":107.27,"Active":true},"Four":{"X":92.73,"Y":0,"Z":107.27,"Active":true}}`)
 const syncMap: Record<string, string> = {
   1076: '1075', // 希拉狄哈水道
   1156: '1155', // 六根山
