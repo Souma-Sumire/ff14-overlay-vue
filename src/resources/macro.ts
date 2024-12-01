@@ -6160,7 +6160,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
       {
         Name: 'P9S Game8原版',
         Text: `/p ■基本散開    ■ペア十字(X字反時計回り)
-/p D3 MT D4         MT/D3 
+/p D3 MT D4         MT/D3
 /p H1 ★ H2       H1/D1 ★ H2/D4
 /p D1 ST D2          ST/D2
 /p ■古式破砕拳(4:4頭割り)
@@ -6190,7 +6190,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 　　　　H1 　　　　　｜ 分摊横排在南
 /p 　　D3 　　 D4 　　　｜ 线不交叉
 /p 　　　　H2 　　　　　｜
-/p 
+/p
 /p ■分摊/分散
 /p 西岛/半场刀/震击---------------炮台------------
 /p MT D1 　　　　　　　｜ D1 / MT ST / D2
@@ -6204,11 +6204,11 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 自西向东 H1MT → D3MT → D1MT → MT
 /p 自东向西 H2ST  → D4ST   → D2ST  → ST
 /p 第3炮调整角度射向第4炮
-/p 
+/p
 /p ■魔殿震击额外站位1
 /p D1　D2　D3　D4
 /p MT　ST 　H1　H2
-/p 
+/p
 /p ■魔殿震击额外站位2
 /p 分摊为22时
 /p D1　MT　ST 　D2
@@ -6232,7 +6232,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 　　　　H1 　　　　　｜ 頭割り南で横並び
 /p 　　D3 　　 D4 　　　｜ 線クロスしない
 /p 　　　　H2 　　　　　｜
-/p 
+/p
 /p ■ボンド
 /p -西島/片面/震撃---------------ﾀﾚｯﾄ------------
 /p MT D1 　　　　　　　｜ D1 / MT ST / D2
@@ -6246,11 +6246,11 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 西 H1MT → D3MT → D1MT → MT
 /p 東 H2ST → D4ST → D2ST → ST
 /p 3番レーザーは4番タレットに向けて角度調整
-/p 
+/p
 /p ■魔殿の震撃ボンド
 /p D1　D2　D3　D4
 /p MT　ST 　H1　H2
-/p 
+/p
 /p ■魔殿の震撃ボンド
 /p ダブル(22)MT組:ST組
 /p D1　MT　ST 　D2
@@ -6653,13 +6653,13 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         /p ■地雷魔纹────■召唤小怪
         /p                           │(外侧小怪)
         /p  ■■■ ② 12或23 │ Ｔ         H
-        /p  ■■■②  的情况   │           
+        /p  ■■■②  的情况   │
         /p  ■■    ①  22调整  │ D1       D2
         /p  ③
         /p ■平面爆雷（十字火）
-        /p ■■■■□  
-        /p ■■12■■          
-        /p ■■34■■       
+        /p ■■■■□
+        /p ■■12■■
+        /p ■■34■■
         /p 白球为右上角的新12点
         /p 12层：BOSS脚下，2不动，北边炸完1去北
         /p 34层：BOSS南边一格，3不动，4剩1层去南`,
@@ -6670,7 +6670,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         /p    T
         /p D2    H
         /p    D1
-        /p ■飞镖盘1优先级  
+        /p ■飞镖盘1优先级
         /p 蓝T 红DPS 黄H ※飞镖点两个D，D2补颜色
         /p ■飞镖盘2
         /p 以外周轮盘安全两色+AoE覆盖方向为北
@@ -6744,9 +6744,9 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p H1/D3 MT/D1 ST/D2 H2/D4
 /p ◆小世界②黄标 ｜
 /p ————BOSS ————
-/p ｜MT/D1｜ST/D2 ｜ 
+/p ｜MT/D1｜ST/D2 ｜
 /p ｜-——-— ｜-—-——｜
-/p ｜H1/D3｜H2/D4｜  
+/p ｜H1/D3｜H2/D4｜
 `,
       },
       {
@@ -6914,8 +6914,8 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 箭头                            | D3/MT   ST/D4
 /p 蓝 蓝 ※TH靠场外    |              ☆
 /p 蓝 蓝 ※DPS靠场内 | H1/D1   D2/H2
-/p 箭头                           | 
-/p   紫                             | 
+/p 箭头                           |
+/p   紫                             |
 ` },
       { Name: getSource('MMW', 'https://www.bilibili.com/video/BV1BiDyY9Ei3'), Text: `/p ■开场分散ーーーー■狩猎站位（DN式）ーーーーーー
 /p D3 D4 　 　 　 　D3 MT D4
