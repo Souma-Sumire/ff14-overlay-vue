@@ -281,8 +281,8 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
       ElMessage({
         message: '已更新数据',
         type: 'success',
-        duration: 0,
-        showClose: true,
+        duration: 5000,
+        showClose: false,
       })
       getTimeline() // 获取新数据之后查询一次
     }

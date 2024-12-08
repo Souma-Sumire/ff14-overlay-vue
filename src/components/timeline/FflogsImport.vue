@@ -301,7 +301,9 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
   )
   claerFFlogsQueryConfig()
   emits('showFFlogsToggle')
-  currentStep.value = 0
+  setTimeout(() => {
+    currentStep.value = 0
+  }, 500)
   isLoading.value = false
 }
 
@@ -342,7 +344,7 @@ function openFFLogsProfile() {
   </el-steps>
   <el-card v-if="currentStep === 0" class="input-section">
     <el-form label-width="150px" class="fflogs-form">
-      <el-form-item label="FF logs 战斗链接">
+      <el-form-item label="FF Logs 战斗链接">
         <el-input
           v-model="inputUrl"
           placeholder="AAAaAaAAaa1aA1aA#fight=3"
@@ -352,11 +354,12 @@ function openFFLogsProfile() {
       <el-form-item label="FF logs V1 Key">
         <el-input
           v-model="timelineStore.settings.api"
-          placeholder="在FF Logs个人设置页面获取V1 API Key"
+          placeholder="在 FF Logs 个人设置页面获取 V1 API Key"
+          type="password"
         >
           <template #append>
             <el-tooltip
-              content="点击前往FF Logs个人设置页面，在最下方填写V1客户名称并点击确认后，获取你的V1客户端密钥"
+              content="点击前往 FF Logs 个人设置页面，在最下方填写 V1客户名称 并点击确认后，再获取你的 V1 客户端密钥"
               placement="top"
               effect="light"
             >
@@ -387,7 +390,7 @@ function openFFLogsProfile() {
   </el-card>
 
   <div class="query-results">
-    <el-card v-if="currentStep === 1 && (fflogsQueryConfig.friendlies.length > 0 && fflogsQueryConfig.abilityFilterEvents.length === 0)" class="player-selection">
+    <el-card v-if="currentStep === 1" class="player-selection">
       <el-table
         :data="fflogsQueryConfig.friendlies.filter((v) => !['NPC'].includes(v.icon))"
         stripe
@@ -412,7 +415,14 @@ function openFFLogsProfile() {
 
     <el-card v-if="currentStep === 2" class="ability-filter">
       <div class="ability-filter-container">
+        <div v-if="!confirmEnabled" class="loading-abilities">
+          <el-icon class="is-loading">
+            <Loading />
+          </el-icon>
+          <span>正在加载技能列表...</span>
+        </div>
         <el-select
+          v-if="confirmEnabled"
           v-model="fflogsQueryConfig.abilityFilterSelected"
           multiple
           placeholder="选择需要导入的技能"
@@ -435,8 +445,8 @@ function openFFLogsProfile() {
             <span>{{ rule.actionName }}</span>
           </el-option>
         </el-select>
-        <el-button type="success" class="filter-confirm-btn" :disabled="!confirmEnabled" @click="handeleFFlogsQueryResultFriendiesListFilter">
-          {{ confirmEnabled ? '生成时间轴' : '加载中...' }}
+        <el-button v-if="confirmEnabled" type="success" class="filter-confirm-btn" :disabled="!confirmEnabled" @click="handeleFFlogsQueryResultFriendiesListFilter">
+          {{ '生成时间轴' }}
         </el-button>
       </div>
     </el-card>

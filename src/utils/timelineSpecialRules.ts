@@ -49,6 +49,8 @@ windowAction.set(0x4A8B, { type: 'cast', window: [900, 0], once: true }) // unkn
 // 绝伊甸
 windowAction.set(0x9CFF, { type: 'begincast', window: [200, 20], once: true }) // P2 四重强击
 windowAction.set(0x9D49, { type: 'begincast', window: [500, 20], once: true }) // P3 地狱审判
+windowAction.set(0x9D36, { type: 'begincast', window: [999, 30], once: true }) // P4 具象化
+windowAction.set(0x9D72, { type: 'begincast', window: [30, 30], once: true }) // P5 光尘之剑
 
 export function factory(events: FFlogsStance): FFlogsStance {
   // const statistics = new Map<number, number>()

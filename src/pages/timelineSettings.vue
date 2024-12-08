@@ -143,6 +143,8 @@ function deleteTimeline(target: ITimeline): void {
       timelines.value.findIndex(v => v === target),
       1,
     )
+  }).catch(() => {
+    // 用户取消操作
   })
 }
 
@@ -558,7 +560,7 @@ onMounted(() => {
       </el-row>
       <div class="alerts-container">
         <el-alert
-          title="编辑完成后,需手动点击「应用」按钮"
+          title="编辑完成后，需手动点击「应用」按钮"
           show-icon
           type="info"
           :closable="false"

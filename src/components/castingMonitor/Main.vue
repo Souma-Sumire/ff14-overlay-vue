@@ -12,7 +12,8 @@ const displayAA = Number(
 <template>
   <div w-100vw flex="~ nowrap" class="main" m-t-1>
     <div
-      v-for="(item) in castingMonitorStore.castData" :key="item.key" :data-casterId="item.casterId"
+      v-for="(item) in castingMonitorStore.castData.filter(v => v.key)" :key="item.key"
+      :data-casterId="item.casterId"
       :class="`images ${item.class} logLine${item.logLine} displayAA${displayAA}`"
       :style="`--animeDuration: ${castingMonitorStore.config.duration}s;`"
     >
