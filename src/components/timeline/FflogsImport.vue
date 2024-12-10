@@ -67,7 +67,7 @@ async function queryFFlogsReportFights(url: string) {
       confirmButtonText: '确定',
       type: 'error',
       dangerouslyUseHTMLString: true,
-      message: '<a href="https://cn.fflogs.com/profile">点击这里，在最下方填写 V1 客户名称并点击确认后，获取你的 V1 客户端密钥</a>',
+      message: '<a href="https://cn.fflogs.com/profile">点击这里，在最下方<strong>填写 V1 客户名称并点击确认</strong>后，获取你的 V1 客户端密钥</a>',
     })
     queryText.value = QueryTextEnum.query
     isLoading.value = false
@@ -118,7 +118,15 @@ async function queryFFlogsReportFights(url: string) {
     currentStep.value = 1
   }
   catch (e) {
-    ElMessageBox.alert(`请检查您的FF Logs链接是否正确，并确保您有权限访问该报告。错误详情: ${e}`, '无法获取战斗数据', {
+    ElMessageBox.alert(`
+  <h3 style="margin-bottom: 10px;">可能的原因：</h3>
+  <ul style="padding-left: 20px; margin-bottom: 10px;">
+    <li> <strong>90%概率</strong>：你没有<strong style="color: red;">先起名</strong>再获取 V1 客户端密钥</li>
+    <li> <strong>5%概率</strong>：该战斗记录是私人或匿名模式</li>
+    <li> <strong>5%概率</strong>：网络异常</li>
+  </ul>
+<p class="error-details"><strong>错误：</strong>${e}</p>
+`, '请求失败', {
       confirmButtonText: '确定',
       type: 'error',
       dangerouslyUseHTMLString: true,
