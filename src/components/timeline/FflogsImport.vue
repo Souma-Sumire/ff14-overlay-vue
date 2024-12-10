@@ -39,7 +39,7 @@ enum QueryTextEnum {
   querying = '正在查询...',
 }
 
-const urlRe = /(?<=^|\/)(?<code>\w{16,})\/?#fight=(?<fight>\d+|last)/
+const urlRe = /(?<=^|\/)(?<code>\w{16,})[#?]fight=(?<fight>\d+|last)/
 const regexType: Partial<Record<FFlogsType, string>> = {
   begincast: '14',
   cast: '1[56]',
@@ -118,7 +118,7 @@ async function queryFFlogsReportFights(url: string) {
     currentStep.value = 1
   }
   catch (e) {
-    ElMessageBox.alert(`请检查您的FF Logs链接是否正确,并确保您有权限访问该报告。错误详情: ${e}`, '无法获取战斗数据', {
+    ElMessageBox.alert(`请检查您的FF Logs链接是否正确，并确保您有权限访问该报告。错误详情: ${e}`, '无法获取战斗数据', {
       confirmButtonText: '确定',
       type: 'error',
       dangerouslyUseHTMLString: true,
@@ -347,7 +347,7 @@ function openFFLogsProfile() {
       <el-form-item label="FF Logs 战斗链接">
         <el-input
           v-model="inputUrl"
-          placeholder="AAAaAaAAaa1aA1aA#fight=3"
+          placeholder="https://www.fflogs.com/reports/AAAaAaAAaa1aA1aA?fight=1"
           autocomplete="on"
         />
       </el-form-item>
