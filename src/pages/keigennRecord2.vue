@@ -1185,7 +1185,7 @@ main {
 
 .status {
   position: relative;
-  top: -0.4em;
+  top: -0.2em;
   object-fit: cover;
 }
 
@@ -1204,7 +1204,7 @@ main {
   position: absolute;
   text-align: center;
   left: 50%;
-  bottom: -1.1em;
+  bottom: -1.15em;
   transform: translateX(-50%) scale(0.725);
   transform-origin: top center;
   font-size: calc(var(--vxe-font-size-mini));
