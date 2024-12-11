@@ -3,6 +3,13 @@ import { ElMessageBox } from 'element-plus'
 import { callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 import actWS from '@/assets/actWS.webp'
 
+function isIE() {
+  const userAgent = window.navigator.userAgent
+  const isMSIE = userAgent.includes('MSIE ') // IE 10 及以下
+  const isTrident = userAgent.includes('Trident/') // IE 11
+  return isMSIE || isTrident
+}
+
 function addOverlayWsParam() {
   const currentUrl = window.location.href
   const [basePart, hashPart = ''] = currentUrl.split('#')
@@ -75,6 +82,14 @@ export function useWebSocket(config: {
     }
   }
   onMounted(() => {
+    if (isIE()) {
+      ElMessageBox.alert('不支持 IE 浏览器，请使用 Chrome、Firefox、Edge 等现代浏览器访问。', '提示', {
+        type: 'error',
+        showConfirmButton: false,
+        showClose: false,
+      })
+      return
+    }
     watch(wsConnected, (value) => {
       if (value) {
         ElMessageBox.close()
