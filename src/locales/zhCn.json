@@ -67,5 +67,6 @@
   "fileNameExplanation": "%CCYY: 年, %MM: 月, %DD: 日, %hh: 时, %mm: 分, %ss: 秒",
   "Recording Profile": "录制资料",
   "filePathExplanation": "须保证目录存在",
-  "Set Recording Name": "设置路径"
+  "Set Recording Name": "设置路径",
+  "Default": "未归类"
 }

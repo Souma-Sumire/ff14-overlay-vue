@@ -62,5 +62,6 @@
   "Record File Name": "File Name",
   "recordPathPlaceholder": "Please enter the path to save the recording file",
   "recordFileNamePlaceholder": "Please enter the file name of the recording file",
-  "filePathExplanation": "Make sure the path exists"
+  "filePathExplanation": "Make sure the path exists",
+  "Default": "Default"
 }
