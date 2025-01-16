@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { RequestBatchRequest } from 'obs-websocket-js'
 import OBSWebSocket from 'obs-websocket-js'
-import { VxeUI } from 'vxe-table'
+// import { VxeUI } from 'vxe-table'
 import type { Reactive } from 'vue'
 import type { EventMap } from 'cactbot/types/event'
 import { useI18n } from 'vue-i18n'
@@ -103,13 +103,13 @@ class Obs {
     this.status.recording = false
     this.status.outputActive = false
     this.status.outputPath = ''
-    VxeUI.modal.close()
-    VxeUI.modal.message({
-      title: t('OBS Connection'),
-      content: t('OBS Connection Error'),
-      status: 'warning',
-      duration: 2000,
-    })
+    // VxeUI.modal.close()
+    // VxeUI.modal.message({
+    //   title: t('OBS Connection'),
+    //   content: t('OBS Connection Error'),
+    //   status: 'warning',
+    //   duration: 2000,
+    // })
   }
 
   handleConnectionClosed = () => {
@@ -118,13 +118,13 @@ class Obs {
     this.status.recording = false
     this.status.outputActive = false
     this.status.outputPath = ''
-    VxeUI.modal.close()
-    VxeUI.modal.message({
-      title: t('OBS Connection'),
-      content: t('OBS Connection Closed'),
-      status: 'warning',
-      duration: 2000,
-    })
+    // VxeUI.modal.close()
+    // VxeUI.modal.message({
+    //   title: t('OBS Connection'),
+    //   content: t('OBS Connection Closed'),
+    //   status: 'warning',
+    //   duration: 2000,
+    // })
   }
 
   constructor() {
@@ -160,19 +160,19 @@ class Obs {
         this.status.outputActive = v.outputActive
       })
       this.status.connected = true
-      VxeUI.modal.close()
-      VxeUI.modal.message({
-        title: t('OBS Connection'),
-        content: t('OBS Connection Opened'),
-        status: 'success',
-        duration: 2000,
-      })
+      // VxeUI.modal.close()
+      // VxeUI.modal.message({
+      //   title: t('OBS Connection'),
+      //   content: t('OBS Connection Opened'),
+      //   status: 'success',
+      //   duration: 2000,
+      // })
       if (callback) {
         callback()
       }
     }).finally(() => {
       this.status.connecting = false
-      if (!userConfig.value.path) {
+      if (!userConfig.value.path && this.status.connected) {
         this.ws.call('GetRecordDirectory').then((v) => {
           if (v.recordDirectory) {
             userConfig.value.path = v.recordDirectory
@@ -428,6 +428,13 @@ onUnmounted(() => {
           class="instruction-alert"
           type="info"
           :description="t('inputTutorial')"
+          :closable="false"
+          show-icon
+        />
+        <el-alert
+          class="instruction-alert"
+          type="info"
+          :description="t('firewallTutorial')"
           :closable="false"
           show-icon
         />

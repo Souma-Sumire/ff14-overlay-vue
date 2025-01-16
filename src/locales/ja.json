@@ -64,5 +64,6 @@
   "recordFileNamePlaceholder": "録音ファイルのファイル名を入力してください",
   "filePathExplanation": "パスが存在することを確認してください",
   "Default": "Default",
-  "Chaotic": "滅"
+  "Chaotic": "滅",
+  "firewallTutorial": "パスワードが正しい場合、Windows Defender ファイアウォールが接続をブロックしているかどうかを確認してください"
 }

@@ -69,5 +69,6 @@
   "filePathExplanation": "须保证目录存在",
   "Set Recording Name": "设置路径",
   "Default": "未归类",
-  "Chaotic": "24人灭本"
+  "Chaotic": "24人灭本",
+  "firewallTutorial": "若确定密码正确，却始终连接失败，请检查 Windows Defender 防火墙"
 }

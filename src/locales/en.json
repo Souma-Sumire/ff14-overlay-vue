@@ -64,5 +64,6 @@
   "recordFileNamePlaceholder": "Please enter the file name of the recording file",
   "filePathExplanation": "Make sure the path exists",
   "Default": "Default",
-  "Chaotic": "Chaotic"
+  "Chaotic": "Chaotic",
+  "firewallTutorial": "If the password is correct, please check if Windows Defender Firewall is blocking the connection"
 }
