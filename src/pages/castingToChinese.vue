@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import { getActionChinese } from '@/resources/actionChinese'
 import { getActionChineseTemp } from '@/resources/actionChineseTemp'
+import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
 const params = new URLSearchParams(window.location.href.split('?')[1])
 

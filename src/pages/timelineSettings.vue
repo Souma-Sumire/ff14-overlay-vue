@@ -1,20 +1,20 @@
 <script lang="ts" setup>
-import moment from 'moment'
-import type { EventMap } from 'cactbot/types/event'
-import { ElLoading, ElMessage, ElMessageBox } from 'element-plus'
-import type { Job } from 'cactbot/types/job'
-import * as LZString from 'lz-string'
-import { addOverlayListener, callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
-import zoneInfo from '@/resources/zoneInfo'
-import { parseTimeline, useTimelineStore } from '@/store/timeline'
 import type { ITimeline, ITimelineLine } from '@/types/timeline'
-import Util from '@/utils/util'
-import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
-import 'animate.css'
+import type { EventMap } from 'cactbot/types/event'
+import type { Job } from 'cactbot/types/job'
+import zoneInfo from '@/resources/zoneInfo'
 // import { p8sTimeline } from "@/resources/timelineTemplate";
 import router from '@/router'
-import { useWebSocket } from '@/utils/useWebSocket'
+import { parseTimeline, useTimelineStore } from '@/store/timeline'
 import { copyToClipboard } from '@/utils/clipboard'
+import { useWebSocket } from '@/utils/useWebSocket'
+import Util from '@/utils/util'
+import { ElLoading, ElMessage, ElMessageBox } from 'element-plus'
+import * as LZString from 'lz-string'
+import moment from 'moment'
+import { addOverlayListener, callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
+import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
+import 'animate.css'
 
 const { wsConnected } = useWebSocket({ allowClose: true, addWsParam: true })
 const simulatedCombatTime = ref(0)
@@ -402,11 +402,11 @@ const timeMinuteSecondDisplay = computed(() => {
   return `${
     (simulatedCombatTime.value < 0 ? '-' : '')
     + (
-      Array(2).join('0')
+      Array.from({ length: 2 }).join('0')
       + (Math.floor(simulatedCombatTime.value / 60)
-      + (simulatedCombatTime.value < 0 ? 1 : 0))
+        + (simulatedCombatTime.value < 0 ? 1 : 0))
     ).slice(-2)
-  }:${(Array(2).join('0') + Math.floor(simulatedCombatTime.value % 60)).slice(
+  }:${(Array.from({ length: 2 }).join('0') + Math.floor(simulatedCombatTime.value % 60)).slice(
     -2,
   )}`
 })

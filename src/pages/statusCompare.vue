@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import status711 from '@/resources/status-compare-711.json'
-import status710 from '@/resources/status-compare-710.json'
 // // import status705 from '@/resources/status-compare-705.json'
 // // import status701 from '@/resources/status-compare-701.json'
 // // import status700 from '@/resources/status-compare-700.json'
 // // import status658hf2 from '@/resources/status-compare-658hf2.json'
 import { completeIcon, statusData } from '@/resources/status'
+import status710 from '@/resources/status-compare-710.json'
+import status711 from '@/resources/status-compare-711.json'
 
 interface Compare { id: string, name: { ja: string, en: string, cn: string }, description: { ja: string, en: string, cn: string }, icon: string, classJobCategory: number }
 

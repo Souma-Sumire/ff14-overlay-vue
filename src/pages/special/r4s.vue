@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { addOverlayListener, callOverlayHandler } from '../../../cactbot/resources/overlay_plugin_api'
 import type { EventMap } from '../../../cactbot/types/event'
 import NetRegexes from '../../../cactbot/resources/netregexes'
+import { addOverlayListener, callOverlayHandler } from '../../../cactbot/resources/overlay_plugin_api'
 
 const regexes: Record<string, RegExp> = {
   gainsEffects: NetRegexes.gainsEffect({ effectId: ['F9F', '343'], targetId: '1[a-zA-Z0-9]{7}' }),

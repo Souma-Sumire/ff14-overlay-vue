@@ -1,7 +1,7 @@
-import { onMounted, ref, watch } from 'vue'
-import { ElMessageBox } from 'element-plus'
-import { callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 import actWS from '@/assets/actWS.webp'
+import { ElMessageBox } from 'element-plus'
+import { onMounted, ref, watch } from 'vue'
+import { callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 
 function isIE() {
   const userAgent = window.navigator.userAgent

@@ -111,7 +111,8 @@ function format(str: string) {
     .replaceAll(
       '<hex:024804F201F403><hex:024904F201F503>',
       '<span style="color:#ff7b1a;">',
-    ).replaceAll(/(<)(hex:[^>]+)(>)/g, '&lt;$2&gt;')
+    )
+    .replaceAll(/(<)(hex:[^>]+)(>)/g, '&lt;$2&gt;')
 }
 
 function onChange() {

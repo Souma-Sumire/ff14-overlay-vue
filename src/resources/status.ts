@@ -26,7 +26,7 @@ export function stackUrl(url: string, stack: number) {
   return stack > 1 && stack <= 16
     ? url.substring(0, 7)
     + (
-      Array(6).join('0')
+      Array.from({ length: 6 }).join('0')
       + (Number.parseInt(url.substring(7)) + stack - 1)
     ).slice(-6)
     : url

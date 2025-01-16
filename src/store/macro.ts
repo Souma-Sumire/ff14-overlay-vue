@@ -1,6 +1,10 @@
 /* eslint-disable regexp/no-super-linear-backtracking */
-import { defineStore } from 'pinia'
+import type { MacroInfoMacro, MacroInfoPlace } from '@/types/macro'
+import type { PPJSON, QueueArr, Slot, WayMarkKeys } from '@/types/PostNamazu'
+import { copyToClipboard } from '@/utils/clipboard'
 import { ElInputNumber, ElMessage, ElMessageBox } from 'element-plus'
+import { defineStore } from 'pinia'
+import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import {
   getMapIDByTerritoryType,
   getTerritoryTypeByMapID,
@@ -12,11 +16,7 @@ import {
   doTextCommand,
   doWayMarks,
 } from '../utils/postNamazu'
-import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import { defaultMacro } from './../resources/macro'
-import type { MacroInfoMacro, MacroInfoPlace } from '@/types/macro'
-import type { PPJSON, QueueArr, Slot, WayMarkKeys } from '@/types/PostNamazu'
-import { copyToClipboard } from '@/utils/clipboard'
 
 let partyLen = 0
 const slotIndex = useStorage('macro-slot-index', 5)
@@ -276,14 +276,14 @@ export const useMacroStore = defineStore('macro', {
       if (
         ('Text' in macro && (macro?.Text ?? '').length <= 5)
         || ('Place' in macro
-        && macro.Place.A?.Active === false
-        && macro.Place.B?.Active === false
-        && macro.Place.C?.Active === false
-        && macro.Place.D?.Active === false
-        && macro.Place.One?.Active === false
-        && macro.Place.Two?.Active === false
-        && macro.Place.Three?.Active === false
-        && macro.Place.Four?.Active === false
+          && macro.Place.A?.Active === false
+          && macro.Place.B?.Active === false
+          && macro.Place.C?.Active === false
+          && macro.Place.D?.Active === false
+          && macro.Place.One?.Active === false
+          && macro.Place.Two?.Active === false
+          && macro.Place.Three?.Active === false
+          && macro.Place.Four?.Active === false
         )
       ) {
         const index = this.data.zoneId[this.selectZone].indexOf(macro)

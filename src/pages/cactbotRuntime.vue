@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import 'animate.css'
+import type { PlayerRuntime } from '@/types/partyPlayer'
+import type { Role } from '../../cactbot/types/job'
+import Util, { jobEnumOrder } from '@/utils/util'
 import { VxeUI } from 'vxe-table'
 import {
   addOverlayListener,
   callOverlayHandler,
 } from '../../cactbot/resources/overlay_plugin_api'
-import type { Role } from '../../cactbot/types/job'
-import Util, { jobEnumOrder } from '@/utils/util'
-import type { PlayerRuntime } from '@/types/partyPlayer'
+import 'animate.css'
 
 VxeUI.setTheme('dark')
 
@@ -16,9 +16,7 @@ VxeUI.setTheme('dark')
 // );
 
 function createRPArr(r: 'T' | 'H' | 'D' | 'C' | 'G' | 'N', l: number, start: number = 0) {
-  return Array(l)
-    .fill(r)
-    .map((v, i) => v + (+i + 1 + start))
+  return Array.from({ length: l }, () => r).map((v, i) => v + (+i + 1 + start))
 }
 
 const dialogVisible = ref(false)

@@ -1,7 +1,4 @@
-import { defineStore } from 'pinia'
-import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
-import { ElMessage } from 'element-plus'
-import Util from '../utils/util'
+import type { FFIcon } from '@/types/fflogs'
 import type { Job } from '../../cactbot/types/job'
 import {
   type ITimeline,
@@ -13,7 +10,10 @@ import {
   type TimelineConfigTranslate,
   type TimelineConfigValues,
 } from '@/types/timeline'
-import type { FFIcon } from '@/types/fflogs'
+import { ElMessage } from 'element-plus'
+import { defineStore } from 'pinia'
+import Util from '../utils/util'
+import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
 
 class Timeline implements ITimeline {
   constructor(
@@ -129,7 +129,7 @@ export const useTimelineStore = defineStore('timeline', {
       return this.allTimelines.filter((t) => {
         return (
           (t.condition.zoneId === '0'
-          || t.condition.zoneId === playerState.zoneId)
+            || t.condition.zoneId === playerState.zoneId)
           && (t.condition.jobs.includes('NONE') || t.condition.jobs.includes(playerState.jobs[0]))
         )
       })
@@ -232,8 +232,7 @@ export async function parseTimeline(
     const windowAfter = match[0].match(
       /(?<=window ?[-:：\d.]+,)[-:：\d.]+/,
     )?.[0]
-    const tts = match[0].match(/ tts ?["'“”](?<tts>[^"'“”]+)["'“”]/)?.groups
-      ?.tts
+    const tts = match[0].match(/ tts ?["'“”](?<tts>[^"'“”]+)["'“”]/)?.groups?.tts
     const ttsSim = / tts(?: |$)/.test(match[0])
       ? Array.from(parseAction(match.groups?.action ?? ''))?.[0]?.groups?.name
       : undefined

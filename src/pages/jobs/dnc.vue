@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { RemovableRef } from '@vueuse/core'
+import type { EventMap } from '../../../cactbot/types/event'
 import {
   addOverlayListener,
   removeOverlayListener,
 } from '../../../cactbot/resources/overlay_plugin_api'
-import type { EventMap } from '../../../cactbot/types/event'
 
 const now = ref(0)
 const game = reactive({

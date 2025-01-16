@@ -1,15 +1,15 @@
 <script setup lang="ts">
+import type { EventMap } from 'cactbot/types/event'
 import type { RequestBatchRequest } from 'obs-websocket-js'
-import OBSWebSocket from 'obs-websocket-js'
 // import { VxeUI } from 'vxe-table'
 import type { Reactive } from 'vue'
-import type { EventMap } from 'cactbot/types/event'
+import ZoneInfo from '@/resources/zoneInfo'
+import OBSWebSocket from 'obs-websocket-js'
 import { useI18n } from 'vue-i18n'
 import ContentType from '../../cactbot/resources/content_type'
-import { addOverlayListener, callOverlayHandler, removeOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
-import NetRegexes, { commonNetRegex } from '../../cactbot/resources/netregexes'
 import logDefinitions from '../../cactbot/resources/netlog_defs'
-import ZoneInfo from '@/resources/zoneInfo'
+import NetRegexes, { commonNetRegex } from '../../cactbot/resources/netregexes'
+import { addOverlayListener, callOverlayHandler, removeOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
 const { t } = useI18n()
 interface Settings { type: ContentUsedType, enter: boolean, countdown: boolean, combatStart: boolean, combatEnd: boolean, wipe: boolean }

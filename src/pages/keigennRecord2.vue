@@ -1,31 +1,31 @@
 <script setup lang="ts">
+import type { Encounter, Keigenn, RowVO, Status } from '@/types/keigennRecord2'
+import type { Player } from '@/types/partyPlayer'
 import type { Ref } from 'vue'
+import { getActionChinese } from '@/resources/actionChinese'
+import { completeIcon, stackUrl } from '@/resources/status'
+import { useKeigennRecord2Store } from '@/store/keigennRecord2'
+import { deepClone } from '@/utils/deepClone'
+import {
+  processAbilityLine,
+  processFlags,
+  translationFlags,
+} from '@/utils/flags'
+import {
+  getKeigenn,
+  universalVulnerableEnemy,
+  universalVulnerableFriendly,
+} from '@/utils/keigenn'
+import Util from '@/utils/util'
 import {
   type VxeTableEvents,
   type VxeTableInstance,
   type VxeTablePropTypes,
   VxeUI,
 } from 'vxe-table'
-import NetRegexes from '../../cactbot/resources/netregexes'
 import logDefinitions from '../../cactbot/resources/netlog_defs'
+import NetRegexes from '../../cactbot/resources/netregexes'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
-import {
-  processAbilityLine,
-  processFlags,
-  translationFlags,
-} from '@/utils/flags'
-import Util from '@/utils/util'
-import { getActionChinese } from '@/resources/actionChinese'
-import { completeIcon, stackUrl } from '@/resources/status'
-import { deepClone } from '@/utils/deepClone'
-import type { Player } from '@/types/partyPlayer'
-import type { Encounter, Keigenn, RowVO, Status } from '@/types/keigennRecord2'
-import { useKeigennRecord2Store } from '@/store/keigennRecord2'
-import {
-  getKeigenn,
-  universalVulnerableEnemy,
-  universalVulnerableFriendly,
-} from '@/utils/keigenn'
 
 VxeUI.setTheme('dark')
 
@@ -45,14 +45,14 @@ const size = {
   action: 65 * userOptions.scale,
   target:
     ((userOptions.showIcon ? 24 : 0)
-    + (userOptions.showName
-      ? userOptions.anonymous
-      || (!userOptions.anonymous && userOptions.abbrId)
-        ? 24
-        : 36
-      : 0)
+      + (userOptions.showName
+        ? userOptions.anonymous
+        || (!userOptions.anonymous && userOptions.abbrId)
+          ? 24
+          : 36
+        : 0)
       + 7)
-      * userOptions.scale,
+    * userOptions.scale,
   amount: 44 * userOptions.scale,
 }
 
@@ -177,13 +177,13 @@ function handleLine(line: string) {
             if (!keigenn) {
               const vulnerable
                 = (targetId.startsWith('1')
-                && universalVulnerableFriendly.get(
-                  Number.parseInt(effectId, 16).toString(),
-                ))
-                || (targetId.startsWith('4')
-                && universalVulnerableEnemy.get(
-                  Number.parseInt(effectId, 16).toString(),
-                ))
+                  && universalVulnerableFriendly.get(
+                    Number.parseInt(effectId, 16).toString(),
+                  ))
+                  || (targetId.startsWith('4')
+                    && universalVulnerableEnemy.get(
+                      Number.parseInt(effectId, 16).toString(),
+                    ))
               if (!vulnerable)
                 return
               const fullIcon = completeIcon(vulnerable.icon)
@@ -439,7 +439,7 @@ function handleLine(line: string) {
                 const id: number = Number(rsvMatch.groups?.id)
                 action
                   = rsvData.value[id]
-                  ?? rawAblityName.match(/^_(?<id>rsv_\d+)_/)?.groups?.id
+                    ?? rawAblityName.match(/^_(?<id>rsv_\d+)_/)?.groups?.id
               }
               else {
                 action = action.replace(/unknown_.*/, '攻击')
@@ -458,7 +458,7 @@ function handleLine(line: string) {
                 ) ?? '???'
               const maxHp
                 = Number(splitLine[logDefinitions.Ability.fields.targetMaxHp])
-                ?? '???'
+                  ?? '???'
               const source
                 = splitLine[logDefinitions.Ability.fields.source] ?? '???'
               const target
@@ -488,8 +488,8 @@ function handleLine(line: string) {
                       = remain >= 999
                         ? ''
                         : remain.toFixed(
-                          remain > 0.05 && remain < 0.95 ? 1 : 0,
-                        )
+                            remain > 0.05 && remain < 0.95 ? 1 : 0,
+                          )
                     // 有时会有过期很久的遗留的buff?
                     return Number(v.remainingDuration) > -3
                   }),
@@ -1005,6 +1005,8 @@ const test = {
 </template>
 
 <style lang="scss">
+@use "vxe-table/styles/index.scss";
+
 .vxe-header--column {
   line-height: 1.75em !important;
 
@@ -1079,8 +1081,6 @@ img:not([src]) {
 .vxe-ui--filter-wrapper:not(.is--multiple) {
   text-align: left !important;
 }
-
-@import "vxe-table/styles/index.scss";
 
 ::-webkit-scrollbar {
   width: 7px;

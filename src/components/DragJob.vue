@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import type { Player } from '@/types/partyPlayer'
 import type { RemovableRef } from '@vueuse/core'
-import { ref } from 'vue'
-import { type UseDraggableReturn, VueDraggable } from 'vue-draggable-plus'
 import type { Role } from '../../cactbot/types/job'
 import Util from '@/utils/util'
-import type { Player } from '@/types/partyPlayer'
+import { ref } from 'vue'
+import { type UseDraggableReturn, VueDraggable } from 'vue-draggable-plus'
 
 const props = withDefaults(defineProps<Props>(), {})
 const emit = defineEmits<(e: 'updateSortArr', id: number[]) => void>()
@@ -109,8 +109,8 @@ function onUpdate() {
     </vxe-checkbox>
     <VueDraggable
       v-for="(role, index) in roles" :key="index" ref="el" v-model="jobList[role.role]"
-      :disabled="!isDisabled" animation="150" ghost-class="ghost"
-      class="m-b-0.25 m-t-0.25 flex flex-row gap-0.25 rounded p-0" filter=".no-draggable" :force-fallback="true"
+      :disabled="!isDisabled" :animation="150" ghost-class="ghost"
+      class="p-0 m-b-0.25 m-t-0.25 flex flex-row gap-0.25 rounded" filter=".no-draggable" :force-fallback="true"
       @update="onUpdate"
     >
       <div

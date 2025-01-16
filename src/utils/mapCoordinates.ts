@@ -54,4 +54,4 @@ function worldToMapCoordinates(worldXZCoordinates: Vector2, mapOffset: Vector2, 
   const pixelCoordinates = getPixelCoordinates(worldXZCoordinates, mapOffset, mapSizeFactor)
   return getGameMapCoordinates(pixelCoordinates, mapSizeFactor)
 }
-export { Vector2, getPixelCoordinates, getGameMapCoordinates, worldToMapCoordinates, getWorldCoordinates }
+export { getGameMapCoordinates, getPixelCoordinates, getWorldCoordinates, Vector2, worldToMapCoordinates }

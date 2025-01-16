@@ -1,6 +1,6 @@
+import type { PPJSON, QueueArr, Slot } from '@/types/PostNamazu'
 import { callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 import { getMapIDByTerritoryType } from '../resources/contentFinderCondition'
-import type { PPJSON, QueueArr, Slot } from '@/types/PostNamazu'
 
 export function doTextCommand(text: string) {
   return callOverlayHandler({

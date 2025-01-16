@@ -1,9 +1,4 @@
 <script lang="ts" setup>
-import axios from 'axios'
-import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
-import type { Job } from 'cactbot/types/job'
-import { ElMessageBox } from 'element-plus'
-import { factory } from '@/utils/timelineSpecialRules'
 import type {
   FFlogsApiV1ReportEvents,
   FFlogsQuery,
@@ -11,11 +6,16 @@ import type {
   FFlogsType,
   Friendlies,
 } from '@/types/fflogs'
-import Util from '@/utils/util'
-import { getActionChinese } from '@/resources/actionChinese'
 import type { ITimelineCondition } from '@/types/timeline'
+import type { Job } from 'cactbot/types/job'
+import { getActionChinese } from '@/resources/actionChinese'
 import { useTimelineStore } from '@/store/timeline'
+import { factory } from '@/utils/timelineSpecialRules'
+import Util from '@/utils/util'
 import { getImgSrc, handleImgError } from '@/utils/xivapi'
+import axios from 'axios'
+import { ElMessageBox } from 'element-plus'
+import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
 
 const props = defineProps<{
   filters: Record<string, number[]>
@@ -266,7 +266,7 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
     .filter((event) => {
       return (
         (event.sourceIsFriendly
-        && fflogsQueryConfig.abilityFilterSelected.includes(event.actionId))
+          && fflogsQueryConfig.abilityFilterSelected.includes(event.actionId))
         || !event.sourceIsFriendly
       )
     })
@@ -338,9 +338,8 @@ function openFFLogsProfile() {
 
 <template>
   <el-button
-    position-absolute
-    z-999
-    :style="currentStep > 0 ? {} : { visibility: 'hidden', pointerEvent: 'none' }" type="primary" text class="guide" @click="currentStep--"
+
+    :style="currentStep > 0 ? {} : { visibility: 'hidden', pointerEvent: 'none' }" type="primary" text position-absolute z-999 class="guide" @click="currentStep--"
   >
     上一步
   </el-button>

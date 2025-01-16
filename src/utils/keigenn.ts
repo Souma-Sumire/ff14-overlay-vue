@@ -1,6 +1,6 @@
-import { completeIcon, statusData } from '../resources/status'
-import { chinese, global } from '../resources/keigenn'
 import type { Keigenn, Server } from '@/types/keigennRecord2'
+import { chinese, global } from '../resources/keigenn'
+import { completeIcon, statusData } from '../resources/status'
 
 const keigennMap: Map<string, Keigenn> = new Map()
 

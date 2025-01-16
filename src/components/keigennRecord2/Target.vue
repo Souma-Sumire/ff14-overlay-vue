@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 import type { RowVO } from '@/types/keigennRecord2'
+import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 import { getImgSrc, handleImgError } from '@/utils/xivapi'
 
 const props = defineProps({

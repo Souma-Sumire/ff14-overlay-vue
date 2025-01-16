@@ -1,13 +1,13 @@
 <script setup lang="ts">
+import type { EventMap } from 'cactbot/types/event'
 import OBSWebSocket, { type RequestBatchRequest } from 'obs-websocket-js'
 import { VXETable } from 'vxe-table'
-import type { EventMap } from 'cactbot/types/event'
 import ContentType from '../../cactbot/resources/content_type'
-import ZoneInfo from '../resources/zoneInfo'
-import UserConfig from '../../cactbot/resources/user_config'
 import { commonNetRegex } from '../../cactbot/resources/netregexes'
-import { LocaleNetRegex } from '../../cactbot/resources/translations'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
+import { LocaleNetRegex } from '../../cactbot/resources/translations'
+import UserConfig from '../../cactbot/resources/user_config'
+import ZoneInfo from '../resources/zoneInfo'
 
 const defaultEntireForZones: number[] = [
   ContentType.DutyRoulette,

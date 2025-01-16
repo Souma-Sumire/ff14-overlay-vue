@@ -4,17 +4,17 @@ import jsx from '@vitejs/plugin-vue-jsx'
 import { presetAttributify, presetIcons, presetUno } from 'unocss'
 import Unocss from 'unocss/vite'
 import AutoImport from 'unplugin-auto-import/vite'
-import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import Components from 'unplugin-vue-components/vite'
 import { defineConfig } from 'vite'
 import viteCompression from 'vite-plugin-compression'
 import Markdown from 'vite-plugin-md'
 import Pages from 'vite-plugin-pages'
-import {
-  VxeTableResolve,
-  createStyleImportPlugin,
-} from 'vite-plugin-style-import'
 import sassDts from 'vite-plugin-sass-dts'
+import {
+  createStyleImportPlugin,
+  VxeTableResolve,
+} from 'vite-plugin-style-import'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -22,30 +22,33 @@ export default defineConfig({
   build: {
     outDir: './dist',
     // emptyOutDir: true, // 构建时清空outDir目录
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
     rollupOptions: {
       output: {
-        //   chunkFileNames: "assets/js/[name].js",
-        //   entryFileNames: "assets/js/[name].js",
-        //   assetFileNames: "assets/[ext]/[name].[ext]",
-        manualChunks(id) {
-          if (id.includes('node_modules'))
-            return 'vendor'
+        manualChunks: {
+          'vue-vendor': ['vue', 'vue-router', 'pinia', 'vue-i18n'],
+          'element-plus': ['element-plus'],
+          'obs': ['obs-websocket-js'],
+          'utils': ['moment', 'axios', 'lodash'],
         },
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash].js',
+        assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
       },
     },
     chunkSizeWarningLimit: 2000,
-    // sourcemap: true,
-    // minify: "terser",
-    // terserOptions: {
-    // compress: {
-    // drop_console: true,
-    // drop_debugger: true,
-    // },
-    // },
+    reportCompressedSize: false,
+    sourcemap: false,
   },
   plugins: [
     vue({
-      include: [/\.vue$/, /\.md$/], // <--
+      include: [/\.vue$/, /\.md$/],
     }),
     jsx(),
     Markdown(),
@@ -60,19 +63,16 @@ export default defineConfig({
       dts: './src/types/auto-imports.d.ts',
       resolvers: [ElementPlusResolver()],
       eslintrc: {
-        enabled: true, // Default `false`
-        filepath: './.eslintrc-auto-import.json', // Default `./.eslintrc-auto-import.json`
-        globalsPropValue: true, // Default `true`, (true | false | 'readonly' | 'readable' | 'writable' | 'writeable')
+        enabled: true,
+        filepath: './.eslintrc-auto-import.json',
+        globalsPropValue: true,
       },
     }),
     viteCompression({
-      // verbose: false,
-      // filter: /\.(js|mjs|json|css)$/,
-      // disable: false,
-      // threshold: 1025,
-      // algorithm: "gzip",
-      // ext: ".gz",
-      // deleteOriginFile: true,
+      algorithm: 'gzip',
+      ext: '.gz',
+      threshold: 1024,
+      deleteOriginFile: false,
     }),
     Unocss({
       presets: [presetUno(), presetAttributify(), presetIcons()],
@@ -90,5 +90,30 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+  },
+  server: {
+    host: true,
+    port: 3000,
+    open: true,
+    cors: true,
+    strictPort: false,
+    hmr: {
+      overlay: false,
+    },
+  },
+  preview: {
+    port: 5000,
+    open: true,
+    cors: true,
+  },
+  optimizeDeps: {
+    include: [
+      'vue',
+      'vue-router',
+      'pinia',
+      'element-plus',
+      '@vueuse/core',
+      'axios',
+    ],
   },
 })

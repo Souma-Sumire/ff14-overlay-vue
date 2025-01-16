@@ -718,4 +718,4 @@ const chinese: (Omit<Keigenn, 'fullIcon'> & { fullIcon?: string })[] = [
 ]
 const global: typeof chinese = [...chinese]
 
-export { global, chinese }
+export { chinese, global }

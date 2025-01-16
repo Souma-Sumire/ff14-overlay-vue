@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 import type { PerformanceType, RowVO } from '@/types/keigennRecord2'
+import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 import { translationFlags } from '@/utils/flags'
 import { multiplierEffect } from '@/utils/keigenn'
 import { getImgSrc, handleImgError } from '@/utils/xivapi'

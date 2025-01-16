@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { defaultMacro } from '@/resources/macro'
+import zoneInfo from '@/resources/zoneInfo'
+import { useMacroStore } from '@/store/macro'
+import { useWebSocket } from '@/utils/useWebSocket'
 import {
   ChatDotSquare,
   ChatSquare,
@@ -9,13 +13,9 @@ import {
   Position,
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import ContentType from '../../cactbot/resources/content_type'
-import { defaultMacro } from '@/resources/macro'
-import zoneInfo from '@/resources/zoneInfo'
-import { useMacroStore } from '@/store/macro'
+import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import 'github-markdown-css/github-markdown-light.css'
-import { useWebSocket } from '@/utils/useWebSocket'
 
 const macroStore = useMacroStore()
 const hideOnStartup = useStorage('zoneMacroHideOnStartup', ref(false))
@@ -59,7 +59,7 @@ onMounted(() => {
   watchEffect(() => {
     if (
       (macroStore.data.zoneId[macroStore.selectZone] === undefined
-      || macroStore.data.zoneId[macroStore.selectZone]?.length === 0)
+        || macroStore.data.zoneId[macroStore.selectZone]?.length === 0)
       && defaultMacro.zoneId[macroStore.selectZone]
     ) {
       ElMessage.success('用户数据为空，加载默认数据')
@@ -88,7 +88,7 @@ onMounted(() => {
   <el-container
 
     v-show="macroStore.show"
-    top-0 p-0 absolute left-0 m-0 rd-1
+    p-0 top-0 m-0 absolute left-0 rd-1
     class="elcontainer"
   >
     <el-header flex="~ wrap gap1" height="auto" class="elheader">

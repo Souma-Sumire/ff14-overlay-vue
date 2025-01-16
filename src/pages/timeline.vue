@@ -1,17 +1,17 @@
 <script lang="ts" setup>
-import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
-import type { EventMap } from 'cactbot/types/event'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import {
-  addOverlayListener,
-  callOverlayHandler,
-} from '../../cactbot/resources/overlay_plugin_api'
-import { parseTimeline, useTimelineStore } from '@/store/timeline'
 import type {
   ITimeline,
   ITimelineCondition,
   ITimelineLine,
 } from '@/types/timeline'
+import type { EventMap } from 'cactbot/types/event'
+import { parseTimeline, useTimelineStore } from '@/store/timeline'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import {
+  addOverlayListener,
+  callOverlayHandler,
+} from '../../cactbot/resources/overlay_plugin_api'
+import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
 
 const timelineStore = useTimelineStore()
 const timelinePageData = reactive({
@@ -169,8 +169,7 @@ function handleLogEvent(e: { detail: { logs: string[] } }) {
     }
     if (/^.{14} ChatLog 00:0038::/.test(log)) {
       // echo
-      const name = log.match(/^.{14} ChatLog 00:0038::(?<name>.+)$/)?.groups
-        ?.name
+      const name = log.match(/^.{14} ChatLog 00:0038::(?<name>.+)$/)?.groups?.name
       if (name) {
         const timeline = timelineStore
           .getTimeline(playerState.value)

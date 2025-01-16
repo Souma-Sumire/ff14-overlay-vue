@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import { getImgSrcByActionId } from '@/utils/xivapi'
+import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
 addOverlayListener('LogLine', handleLogLine)
 // startOverlayEvents();

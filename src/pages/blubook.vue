@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ElMessage, ElMessageBox } from 'element-plus'
 import type { Ref } from 'vue'
 import { completeIcon } from '@/resources/status'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 interface AozAction {
   ID: number
@@ -2122,11 +2122,11 @@ const showAozAction = computed(() => {
     return (
       (notLearnedOnly.value ? !learned.value[v.Number.toString()] : true)
       && (reg.test(v.Name)
-      || reg.test(v.Number.toString())
-      || reg.test(v.Description)
-      || reg.test(v.Stats)
-      || reg.test(v.AozDescription)
-      || reg.test(v.Learn))
+        || reg.test(v.Number.toString())
+        || reg.test(v.Description)
+        || reg.test(v.Stats)
+        || reg.test(v.AozDescription)
+        || reg.test(v.Learn))
     )
   })
   return res
@@ -2262,10 +2262,13 @@ function handleBatchLearning(): void {
 </template>
 
 <style scoped lang="scss">
+@use 'sass:math';
+
 :deep(em) {
   font-style: normal;
   background-color: rgb(255, 150, 0);
 }
+
 .app {
   font-family: Microsoft YaHei, sans-serif;
   position: relative;
@@ -2337,7 +2340,7 @@ function handleBatchLearning(): void {
       @for $i from 1 through 200 {
         &:nth-child(#{$i}) {
           $j: ($i - 1) % 16 + 1;
-          top: calc(156px + (96px) * #{floor(calc(($j - 1) / 4))});
+          top: calc(156px + (96px) * #{math.floor(calc(($j - 1) / 4))});
           left: calc(174px + (108px) * #{($j - 1) % 4});
         }
       }

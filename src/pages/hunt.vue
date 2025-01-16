@@ -1,17 +1,17 @@
 <script setup lang="ts">
+import type { PPJSON, WayMarkKeys } from '@/types/PostNamazu'
 import type { EventMap } from 'cactbot/types/event'
+import ActWS from '@/assets/actWS.webp'
+import Aetherytes from '@/resources/aetherytes.json'
+import Map from '@/resources/map.json'
+import zoneInfo from '@/resources/zoneInfo'
+import { getPixelCoordinates, Vector2 } from '@/utils/mapCoordinates'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import LZString from 'lz-string'
 import HuntData, { type HuntEntry } from '../../cactbot/resources/hunt'
 import { addOverlayListener, callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 import sonar from '../../cactbot/resources/sounds/freesound/sonar.webm'
 import ZoneId from '../../cactbot/resources/zone_id'
-import { Vector2, getPixelCoordinates } from '@/utils/mapCoordinates'
-import zoneInfo from '@/resources/zoneInfo'
-import Map from '@/resources/map.json'
-import Aetherytes from '@/resources/aetherytes.json'
-import ActWS from '@/assets/actWS.webp'
-import type { PPJSON, WayMarkKeys } from '@/types/PostNamazu'
 
 type DiscoveredMonsters = Array<{
   timestamp: number
@@ -894,10 +894,9 @@ function cleanUpExpiredData(): Promise<void> {
           type: '',
         }).then(() => {
           clearMonsterCurrentGameVerion()
-        }).catch(() => { })
-          .finally(() => {
-            resolve(undefined)
-          })
+        }).catch(() => { }).finally(() => {
+          resolve(undefined)
+        })
       }
       resolve(undefined)
     }

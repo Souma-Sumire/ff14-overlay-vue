@@ -1,5 +1,5 @@
-import { defineStore } from 'pinia'
 import { loadKeigenn } from '@/utils/keigenn'
+import { defineStore } from 'pinia'
 
 const params = useUrlSearchParams('hash')
 

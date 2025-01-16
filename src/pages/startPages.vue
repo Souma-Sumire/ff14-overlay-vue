@@ -209,7 +209,7 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
         </el-card>
 
         <vxe-table
-          :data="tableData" stripe border :row-config="{ height: 120, hover: true }"
+          :data="tableData" stripe border :row-config="{ height: 120, isHover: true }"
           :scroll-x="{ enabled: true }" :fit="true" :auto-resize="true" class="custom-table"
         >
           <vxe-column width="250" title="名称" class-name="column-title">

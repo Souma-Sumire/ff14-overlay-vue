@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useMacroStore } from '@/store/macro'
-import type { WayMarkInfo, WayMarkKeys } from '@/types/PostNamazu'
 import type { MacroInfoPlace } from '@/types/macro'
+import type { WayMarkInfo, WayMarkKeys } from '@/types/PostNamazu'
 import { syncMap } from '@/resources/macro'
+import { useMacroStore } from '@/store/macro'
 
 const props = defineProps({
   macro: { type: Object as () => MacroInfoPlace, required: true },

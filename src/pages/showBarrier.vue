@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
-import NetRegexes from '../../cactbot/resources/netregexes'
 import type { Party } from '../../cactbot/types/event'
 import { jobEnumOrder } from '@/utils/util'
+import NetRegexes from '../../cactbot/resources/netregexes'
+import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
 const regexes: Record<string, RegExp> = {
   statusEffectExplicit: NetRegexes.statusEffectExplicit(),
@@ -17,6 +17,8 @@ enum ShowType {
   AMOUNT = '2',
   BOTH = '3',
 }
+
+let timer: NodeJS.Timeout | number = 0
 
 const party = ref([] as PartyMember[])
 const povId = ref('')
@@ -70,7 +72,6 @@ function getString(p: PartyMember) {
   return `${p.barrierPercent}%(${p.barrierAmount})`
 }
 
-let timer = 0
 onMounted(() => {
   addOverlayListener('LogLine', (e) => {
     handleLine(e.rawLine)

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import NetRegexes from '../../cactbot/resources/netregexes'
-import { addOverlayListener, callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 import type { QueueArr } from '@/types/PostNamazu'
 import { doQueueActions } from '@/utils/postNamazu'
+import NetRegexes from '../../cactbot/resources/netregexes'
+import { addOverlayListener, callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 
 type Lang = 'cn' | 'en' | 'ja'
 

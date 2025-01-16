@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { ITimelineLine } from '@/types/timeline'
 import { useTimelineStore } from '@/store/timeline'
 
 interface Props {
@@ -23,31 +24,46 @@ const dialogVisible = computed({
 })
 
 const testCombatTime = ref(-15)
-const testTimeline = ref([
+const testTimeline = ref<ITimelineLine[]>([
   {
     time: -15,
     action: '<圣光幕帘>~',
     show: true,
+    windowBefore: 0,
+    windowAfter: 0,
+    alertAlready: false,
   },
   {
     time: -2,
     action: '<圣灵>~',
     show: true,
+    windowBefore: 0,
+    windowAfter: 0,
+    alertAlready: false,
   },
   {
     time: 0,
     action: '战斗开始！',
     show: true,
+    windowBefore: 0,
+    windowAfter: 0,
+    alertAlready: false,
   },
   {
     time: 3,
     action: '<挑衅>~',
     show: true,
+    windowBefore: 0,
+    windowAfter: 0,
+    alertAlready: false,
   },
   {
     time: 5,
     action: '<神圣领域>~',
     show: true,
+    windowBefore: 0,
+    windowAfter: 0,
+    alertAlready: false,
   },
 
 ])

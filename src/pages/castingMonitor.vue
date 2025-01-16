@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import { useCastingMonitorStore } from '@/store/castingMonitor'
+import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
 const castingMonitorStore = useCastingMonitorStore()
 const dev = location.href.includes('localhost')
