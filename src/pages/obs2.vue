@@ -62,11 +62,11 @@ const CONTENT_TYPES = [
   'Default', // 其他
 ] as const
 
-const DEFAULT_ENABLE_SETTINGS = { enter: false, countdown: true, combatStart: false, combatEnd: true, wipe: true }
+const DEFAULT_ENABLE_SETTINGS = { enter: false, countdown: true, combatStart: true, combatEnd: true, wipe: true }
 const DEFAULT_DISABLE_SETTINGS = { enter: false, countdown: false, combatStart: false, combatEnd: false, wipe: false }
 
 function initializeContentSettings() {
-  const defaultEnabled: ContentUsedType[] = ['Savage', 'Extreme', 'Ultimate', 'Chaotic']
+  const defaultEnabled: ContentUsedType[] = ['Savage', 'Extreme', 'Ultimate', 'Chaotic', 'Default']
   if (isFirstTime.value) {
     isFirstTime.value = false
     // 大型任务、绝境战默认开启
