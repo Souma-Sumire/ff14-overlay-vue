@@ -45,6 +45,7 @@ const REGEXES: Record<string, RegExp> = {
 const CONTENT_TYPES = [
   'Savage', // 零式
   'Extreme', // 歼殛战
+  'Chaotic', // 破灭站
   'Ultimate', // 绝境战
   'Dungeons', // 四人副本
   'Raids', // 大型任务
@@ -65,7 +66,7 @@ const DEFAULT_ENABLE_SETTINGS = { enter: false, countdown: true, combatStart: fa
 const DEFAULT_DISABLE_SETTINGS = { enter: false, countdown: false, combatStart: false, combatEnd: false, wipe: false }
 
 function initializeContentSettings() {
-  const defaultEnabled: ContentUsedType[] = ['Savage', 'Extreme', 'Ultimate']
+  const defaultEnabled: ContentUsedType[] = ['Savage', 'Extreme', 'Ultimate', 'Chaotic']
   if (isFirstTime.value) {
     isFirstTime.value = false
     // 大型任务、绝境战默认开启
@@ -281,6 +282,8 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
 
 function getZoneType(zoneInfo: (typeof ZoneInfo)[number]): typeof CONTENT_TYPES[number] {
   switch (zoneInfo.contentType) {
+    case ContentType.ChaoticAllianceRaid:
+      return 'Chaotic'
     case ContentType.UltimateRaids:
       return 'Ultimate'
     case ContentType.Pvp:

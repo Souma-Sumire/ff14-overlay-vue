@@ -63,5 +63,6 @@
   "recordPathPlaceholder": "録音ファイルを保存するパスを入力してください",
   "recordFileNamePlaceholder": "録音ファイルのファイル名を入力してください",
   "filePathExplanation": "パスが存在することを確認してください",
-  "Default": "Default"
+  "Default": "Default",
+  "Chaotic": "滅"
 }
