@@ -6986,6 +6986,40 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         },
       },
     ],
+    1243: [
+      { Name: getSource('子言', 'https://www.bilibili.com/video/BV1fsqWYeEDT/'), Text: `/p 【风阶段】
+/p 分摊MT组 　 　锁D
+/p 　锁TH 　 　分摊ST组
+/p 【土阶段】
+/p D1/MT 　ST/D2 　■塔2优先级：上:近战>坦克>远程>治疗:下
+/p D3/H1 　H2/D4 　■陨石：前：近战　后：坦克
+/p 【陨石挡球】→左上开始走コ字路线
+/p 【绝对君权】
+/p D1/MT 　 　 　 D2/ST 　
+/p D3/H1 　分摊 　 D4/H2
+/p 【冰阶段】
+/p 　南冰：外侧→上桥 　内侧→下桥
+/p 东西冰：上侧→下桥 　下侧→上桥
+/p ■截线：①D1D2→②MTST→③④MTST无敌` },
+      {
+        Name: 'ハムカツ式',
+        Text: `/p 【ヴァーチャルシフト1回目】
+/p 頭割MT組 　 　鎖D
+/p 　鎖TH 　 　頭割ST組
+/p 【ヴァーチャルシフト2回目】
+/p D1/MT 　ST/D2 　■塔2優先度：上:近接>タンク>遠隔>ヒラ:下
+/p D3/H1 　H2/D4 　■岩設置：前：近接　後：タンク
+/p 【グラビティブロウ】→左上からコの字
+/p 【アブソリュートオーソリティ】
+/p D1/MT 　 　 　D2/ST 　※近い距離減衰同士で孤独処理
+/p D3/H1 　頭 　 D4/H2
+/p 【ヴァーチャルシフト3回目】
+/p 　南氷：外側→上の橋 　内側→下の橋
+/p 東西氷：上側→下の橋 　下側→上の橋
+/p ■南寄り4人が近い橋で先に戻る→北4人は自分が使った橋で戻る
+/p ■線取：①D1D2→②MTST素受け→③④MTST無敵受け`,
+      },
+    ],
   },
 }
 for (const key in defaultMacro.zoneId) {
@@ -7151,6 +7185,9 @@ fastPP(`{"Name":"Conga","MapID":996,"A":{"X":100.0,"Y":0.0,"Z":87.5,"ID":0,"Acti
 
 // 伊甸
 fastPP(`{"Name":"伊甸自用","MapID":1006,"A":{"X":100,"Y":0,"Z":90,"Active":true},"B":{"X":110,"Y":0,"Z":100,"Active":true},"C":{"X":100,"Y":0,"Z":110,"Active":true},"D":{"X":90,"Y":0,"Z":100,"Active":true},"One":{"X":92.73,"Y":0,"Z":92.73,"Active":true},"Two":{"X":107.27,"Y":0,"Z":92.73,"Active":true},"Three":{"X":107.27,"Y":0,"Z":107.27,"Active":true},"Four":{"X":92.73,"Y":0,"Z":107.27,"Active":true}}`)
+// 极女王
+fastPP(`{"Name":"Sphene EX (Braindead)","MapID":1017,"A":{"X":108.7,"Y":0.0,"Z":86.7,"ID":0,"Active":true},"B":{"X":104.0,"Y":0.0,"Z":94.0,"ID":1,"Active":true},"C":{"X":108.0,"Y":0.0,"Z":98.0,"ID":2,"Active":true},"D":{"X":112.0,"Y":0.0,"Z":102.0,"ID":3,"Active":true},"One":{"X":91.3,"Y":0.0,"Z":86.7,"ID":4,"Active":true},"Two":{"X":96.0,"Y":0.0,"Z":94.0,"ID":5,"Active":true},"Three":{"X":92.0,"Y":0.0,"Z":98.0,"ID":6,"Active":true},"Four":{"X":88.0,"Y":0.0,"Z":102.0,"ID":7,"Active":true}}`)
+
 const syncMap: Record<string, string> = {
   1076: '1075', // 希拉狄哈水道
   1156: '1155', // 六根山
