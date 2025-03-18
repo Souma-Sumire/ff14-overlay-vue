@@ -434,7 +434,7 @@ body {
   width: 100%;
 }
 .elheader {
-  padding-left: 0.25rem;
+  padding-left: 0.25rem !important;
   .fastEntrance {
     max-height: 0;
     opacity: 0;
