@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { MacroInfoPlace } from '@/types/macro'
 import type { WayMarkInfo, WayMarkKeys } from '@/types/PostNamazu'
-import { syncMap } from '@/resources/macro'
+// import { syncMap } from '@/resources/macro'
 import { useMacroStore } from '@/store/macro'
 
 const props = defineProps({
@@ -23,7 +23,7 @@ const markMap: Record<WayMarkKeys, string> = {
 }
 
 // 多变迷宫地图ID
-const specialMap = Object.entries(syncMap).flat().map(v => Number(v))
+// const specialMap = Object.entries(syncMap).flat().map(v => Number(v))
 const marks = Object.keys(markMap) as WayMarkKeys[]
 const markViewSize = 180
 const markViewScale = 3
@@ -32,28 +32,28 @@ const markViewFontSize = 19
 watch(
   () => macroStore.selectZone,
   () => {
-    if (specialMap.includes(Number(macroStore.selectZone))) {
-      offset.active = true
-      const ave = { x: 0, y: 0, count: 0 }
-      for (const key in props.macro.Place) {
-        const e = props.macro.Place[
-          key as keyof typeof props.macro.Place
-        ] as WayMarkInfo
-        if (e.Active !== true)
-          continue
+    // if (specialMap.includes(Number(macroStore.selectZone))) {
+    offset.active = true
+    const ave = { x: 0, y: 0, count: 0 }
+    for (const key in props.macro.Place) {
+      const e = props.macro.Place[
+        key as keyof typeof props.macro.Place
+      ] as WayMarkInfo
+      if (e.Active !== true)
+        continue
 
-        ave.x += Number(e.X)
-        ave.y += Number(e.Z)
-        ave.count++
-      }
-      offset.x = ave.x / ave.count
-      offset.y = ave.y / ave.count
+      ave.x += Number(e.X)
+      ave.y += Number(e.Z)
+      ave.count++
     }
-    else {
-      offset.active = false
-      offset.x = 0
-      offset.y = 0
-    }
+    offset.x = ave.x / ave.count
+    offset.y = ave.y / ave.count
+    // }
+    // else {
+    //   offset.active = false
+    //   offset.x = 0
+    //   offset.y = 0
+    // }
   },
   { immediate: true },
 )

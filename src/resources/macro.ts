@@ -6680,7 +6680,10 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     348: [
       {
-        Name: getSource('奶油咖啡', 'https://www.bilibili.com/video/BV1xF411G7rd/'),
+        Name: getSource(
+          '奶油咖啡',
+          'https://www.bilibili.com/video/BV1xF411G7rd/',
+        ),
         Text: `/p 究极神兵击退撞球
         /p 当前MT：向北击退（不撞球）
         /p 当前ST：向东击退/防击退（全减撞东）
@@ -6692,7 +6695,10 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     1196: [
       {
-        Name: getSource('莫古力', 'https://www.bilibili.com/video/BV1CApeeEEGd/'),
+        Name: getSource(
+          '莫古力',
+          'https://www.bilibili.com/video/BV1CApeeEEGd/',
+        ),
         Text: `/p ■游龙绕场旋转(月环)         | ■嘴部发光(扇形)
 /p ＆火阶段雷分散&冰上雷下 |    MT/D1 ／＼ST/D2
 /p  MT/D1　ST/D2            　| H1/D3／　  　＼H2/D4
@@ -6706,7 +6712,9 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 大圈：西北 MT        东北 ST
 /p 分摊:西H1D1D3　东H2D2D4`,
       },
-      { Name: getSource('MMW', `https://www.bilibili.com/video/BV1G7pEe9E5Z`), Text: `/p ■环分摊/冰雷分散 |■扇形分摊
+      {
+        Name: getSource('MMW', `https://www.bilibili.com/video/BV1G7pEe9E5Z`),
+        Text: `/p ■环分摊/冰雷分散 |■扇形分摊
 /p MT/D1　ST/D2 　|　MT/D1／＼ST/D2
 /p H1/D3　H2/D4　 |H1/D3／　　＼H2/D4
 /p ■远离分摊
@@ -6716,7 +6724,8 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 左 MTH1D1D3　右 STH2D2D4
 /p ■冰灾祸死刑+分摊
 /p 左上 MT　右上 ST
-/p 分摊 左 H1D1D3　右 H2D2D4` },
+/p 分摊 左 H1D1D3　右 H2D2D4`,
+      },
       {
         Name: 'Game8(ハムカツ式)',
         Text: `/p ■風 災禍（雷氷） |■口腔に魔力(扇)
@@ -6734,7 +6743,10 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     1201: [
       {
-        Name: getSource('莫古力', `https://www.bilibili.com/video/BV1aBsaeeE8W`),
+        Name: getSource(
+          '莫古力',
+          `https://www.bilibili.com/video/BV1aBsaeeE8W`,
+        ),
         Text: `/p ～莫古力系列～首饰神专用宏
 /p ～佐拉加歼殛战～
 /p ◆情感投射・爆发(分摊线)
@@ -6776,7 +6788,12 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
       },
     ],
     1226: [
-      { Name: getSource('苏帕酱噗', 'https://www.bilibili.com/video/BV1dhyHYME2Z'), Text: `/p 【基本散开】 ｜【扇形引导】
+      {
+        Name: getSource(
+          '苏帕酱噗',
+          'https://www.bilibili.com/video/BV1dhyHYME2Z',
+        ),
+        Text: `/p 【基本散开】 ｜【扇形引导】
 /p D3 MT D4     ｜             MTD3
 /p H1  ☆  H2     ｜　H1D1 ☆ H2D4
 /p D1 ST   D2     ｜              STD2
@@ -6791,8 +6808,11 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 第1轮 D1左 D2右
 /p 第2~4轮 MT中心偏左上 ST中心偏右上 2裸吃34无敌
 /p MTST诱导近分摊，其他人在C诱导远分摊
-` },
-      { Name: 'Game8', Text: `/p 　【基本散開】 　 　｜【扇範囲誘導】(全てボス基準)
+`,
+      },
+      {
+        Name: 'Game8',
+        Text: `/p 　【基本散開】 　 　｜【扇範囲誘導】(全てボス基準)
   /p 　D3 　MT 　D4 　 ｜ 　 　 　 MTD3
   /p 　H1　ボス　H2 　｜　H1D1 　ボス 　H2D4
   /p 　D1 　ST 　D2 　 ｜　 　 　 　STD2
@@ -6805,10 +6825,16 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
   /p 　T 　 　D　 　H
   /p 【レイニングキャッツ】(タンク無敵)
   /p 　北西:MT→MT(無敵)→MT(無敵)→D1　南側タゲサ：H1D1D2
-  /p 　北東:ST →ST(無敵) →ST(無敵) →D2 　 南側外周：H2D3D4` },
+  /p 　北東:ST →ST(無敵) →ST(無敵) →D2 　 南側外周：H2D3D4`,
+      },
     ],
     1228: [
-      { Name: getSource('苏帕酱噗', 'https://www.bilibili.com/video/BV1bwy9Y7ELV'), Text: `/p ■基本散开
+      {
+        Name: getSource(
+          '苏帕酱噗',
+          'https://www.bilibili.com/video/BV1bwy9Y7ELV',
+        ),
+        Text: `/p ■基本散开
 /p D3 MT D4   D3 D4   MT/D3 ST/D4
 /p H1  ☆  H2   MT ST    H1/D1 D2/H2
 /p D1 ST  D2   D1 D2
@@ -6822,8 +6848,11 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p ■3运
 /p 大圈：X字；踩塔：X字
 /p ■软狂暴
-/p 初始标准8方 毒7s时去场中` },
-      { Name: 'Game8', Text: `/p ■基本散開
+/p 初始标准8方 毒7s时去场中`,
+      },
+      {
+        Name: 'Game8',
+        Text: `/p ■基本散開
 /p D3 MT D4　 　D3 D4 　 　MT/D3 　ST/D4
 /p H1 ☆ H2 　 　 MT ST 　 　 H1/D1 　 D2/H2
 /p D1 ST D2 　 　 D1 D2
@@ -6837,10 +6866,16 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p ■3rdライヴ
 /p デバフ捨て、塔踏みはペア割基準
 /p ■ブラックハート
-/p 8方向散会　HPが戻り次第、早いペア順に中央集合` },
+/p 8方向散会　HPが戻り次第、早いペア順に中央集合`,
+      },
     ],
     1230: [
-      { Name: getSource('苏帕酱噗', 'https://www.bilibili.com/video/BV1hZSJYzEEa'), Text: `/p ■八重分散ーーー■四重二二ーーーーーー
+      {
+        Name: getSource(
+          '苏帕酱噗',
+          'https://www.bilibili.com/video/BV1hZSJYzEEa',
+        ),
+        Text: `/p ■八重分散ーーー■四重二二ーーーーーー
 /p D3 MT D4            MT/D3  H2/D4
 /p H1  ★  H2                         ★
 /p D1 ST  D2             H1/D1  ST/D2
@@ -6860,8 +6895,11 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p ■超华丽野蛮旋火·分散站位（近战字母点，远程四角）
 /p D3     MT     D4
 /p D1     ★      D2
-/p H1     ST     H2` },
-      { Name: 'Game8', Text: `/p ■基本散開ーーーーーー■4ウェイーーーーーー
+/p H1     ST     H2`,
+      },
+      {
+        Name: 'Game8',
+        Text: `/p ■基本散開ーーーーーー■4ウェイーーーーーー
 /p 　D3 MT D4 　 　 　 　MT/D3 　 　 H2/D4
 /p 　H1 ★ H2 　 　 　 　 　 　 　 　★
 /p 　D1 ST D2 　 　 　 　 H1/D1 　 　 ST/D2
@@ -6885,10 +6923,16 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p ■極盛り式スピニングファイヤー(アタッチ)ーー
 /p 　D3　MT　D4
 /p 　D1 　★ 　D2
-/p 　H1　ST　 H2` },
+/p 　H1　ST　 H2`,
+      },
     ],
     1232: [
-      { Name: getSource('苏帕酱噗', 'https://www.bilibili.com/video/BV1JtDQYVEKp'), Text: `/p ■闪电猎巫ーーーー■圆轮・轮圆式猎巫ーーーーーー
+      {
+        Name: getSource(
+          '苏帕酱噗',
+          'https://www.bilibili.com/video/BV1JtDQYVEKp',
+        ),
+        Text: `/p ■闪电猎巫ーーーー■圆轮・轮圆式猎巫ーーーーーー
 /p D3 D4                       D3 MT D4
 /p MT ST                        D1 ☆ D2
 /p D1 D2                       H1 ST H2
@@ -6916,8 +6960,11 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 蓝 蓝 ※DPS靠场内 | H1/D1   D2/H2
 /p 箭头                           |
 /p   紫                             |
-` },
-      { Name: getSource('MMW', 'https://www.bilibili.com/video/BV1BiDyY9Ei3'), Text: `/p ■开场分散ーーーー■狩猎站位（DN式）ーーーーーー
+`,
+      },
+      {
+        Name: getSource('MMW', 'https://www.bilibili.com/video/BV1BiDyY9Ei3'),
+        Text: `/p ■开场分散ーーーー■狩猎站位（DN式）ーーーーーー
 /p D3 D4 　 　 　 　D3 MT D4
 /p MT ST 　 　 　 　D1 ☆ D2
 /p D1 D2 　 　 　 　H1 ST H2
@@ -6944,8 +6991,11 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 圆环 圆环 TH左 　 　 ｜ 　 　 　 　☆
 /p 圆环 　 圆环 DPS右　 　｜ 　 H1/D1 　D2/H2
 /p 　 远近 　 　 　 　 　 　 ｜※顺时针→逆时针往返躲避地火
-/p 蓄雷 ｜` },
-      { Name: 'Game8(8月5日最终修正版)', Text: `/p ■縦散開ーーーー■円輪・輪円（DN式）ーーーーーー
+/p 蓄雷 ｜`,
+      },
+      {
+        Name: 'Game8(8月5日最终修正版)',
+        Text: `/p ■縦散開ーーーー■円輪・輪円（DN式）ーーーーーー
 /p   D3 D4                   D3  MT  D4
 /p   MT ST                   D1   ☆   D2
 /p   D1 D2                   H1  ST   H2
@@ -6971,7 +7021,8 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p  青         青 ※TH外側    |                 ☆
 /p  青         青 ※DPS内側  |    H1/D1    D2/H2
 /p  　 誘電                         |   ※自分のペアの基本散開位置と往復
-/p        紫` },
+/p        紫`,
+      },
       {
         Name: getSource('通用', 'https://www.bilibili.com/video/BV1JtDQYVEKp'),
         Place: {
@@ -6987,7 +7038,9 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
       },
     ],
     1243: [
-      { Name: getSource('子言', 'https://www.bilibili.com/video/BV1fsqWYeEDT/'), Text: `/p 【风阶段】
+      {
+        Name: getSource('子言', 'https://www.bilibili.com/video/BV1fsqWYeEDT/'),
+        Text: `/p 【风阶段】
 /p 分摊MT组 　 　锁D
 /p 　锁TH 　 　分摊ST组
 /p 【土阶段】
@@ -7000,7 +7053,8 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 【冰阶段】
 /p 　南冰：外侧→上桥 　内侧→下桥
 /p 东西冰：上侧→下桥 　下侧→上桥
-/p ■截线：①D1D2→②MTST→③④MTST无敌` },
+/p ■截线：①D1D2→②MTST→③④MTST无敌`,
+      },
       {
         Name: 'ハムカツ式',
         Text: `/p 【ヴァーチャルシフト1回目】
@@ -7018,6 +7072,165 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 東西氷：上側→下の橋 　下側→上の橋
 /p ■南寄り4人が近い橋で先に戻る→北4人は自分が使った橋で戻る
 /p ■線取：①D1D2→②MTST素受け→③④MTST無敵受け`,
+      },
+    ],
+    1257: [
+      {
+        Name: 'Game8',
+        Text: `/p 【ジングル固定】|【ナイトフィーバー】|【ウェーブオンウェーブ】
+/p 　　H1　　　　 |　　MT　 ST　　　　|　　MT　 ST
+/p MT　　遠D　　 | 　H1　　　　 H2　　 |　　D1　 D2
+/p ST　　 近D　　 | 　D3　 　　　D4　　|　　 H1 　H2
+/p 　　H2　　　　|　　　D1　 D2　　　 |　　 D3　 D4
+/p 【ディスコ1回目】西:MT組 東:ST組 内周:近接 外周:遠隔
+/p 【音響爆弾】北から秒数短い順にペア整列
+/p 【フロッグダンサー1回目】|【ディスコ・ダンサー2回目/後半ダンシング】
+/p MT組:北西 ST組:南東 　　| 　(扇誘導) TH→DPS
+/p 　ペア頭割り:横隣り　　　|
+/p 　　　　 ★　　　　　　　|　MTD3　　H2D4
+/p 　MT/ST　 D1/D2　　　|　　　　　★
+/p 　H1/H2　 D3/D4　　　|　　H1D1　　 STD2`,
+      },
+      {
+        Name: 'Standard',
+        Place: {
+          Name: 'Standard',
+          MapID: 1020,
+          A: { X: 100.0, Y: 0.0, Z: 92.5, ID: 0, Active: true },
+          B: { X: 107.5, Y: 0.0, Z: 100.0, ID: 1, Active: true },
+          C: { X: 100.0, Y: 0.0, Z: 107.5, ID: 2, Active: true },
+          D: { X: 92.5, Y: 0.0, Z: 100.0, ID: 3, Active: true },
+          One: { X: 87.5, Y: 0.0, Z: 87.5, ID: 4, Active: true },
+          Two: { X: 112.5, Y: 0.0, Z: 87.5, ID: 5, Active: true },
+          Three: { X: 112.5, Y: 0.0, Z: 112.5, ID: 6, Active: true },
+          Four: { X: 87.5, Y: 0.0, Z: 112.5, ID: 7, Active: true },
+        },
+      },
+    ],
+    1259: [
+      {
+        Name: 'Game8',
+        Text: `/p ■基本散開:ねばねば(北基準、Tボス下)■カラークラッシュ（2:2:2:2）
+/p 　 D3 D4　 　 | 　 　 　　　ボス
+/p H1　☆　H2　| 　H1D3　MTD1　STD2
+/p 　 D1 D2 　 　|　　　　　 H2D4　4:4は←MT組ST組→
+/p ■砂漠フェーズ
+/p ▼サボテン避け(北) 　　 ▼サボテン+流砂(北基準)
+/p 　　　6人 　　　　｜　北西H1　北東6人
+/p 　T　 　　　 D　　｜　予備　 　 南東H2
+/p ■爆弾捨て(流砂北)
+/p H1/D3 MT/D1 ST/D2 H2/D4 /p ■雑魚フェーズ（倒す順：ジャバ＞キャット＞フェザー＞ムー＞ヤーン）※リキャバースト
+/p wave1：MTムー　ST＋近接ヤーン（リキャバーストで処理）　遠隔キャット　ヤーンの場所に遠隔ヒラ集合
+/p wave2：D側フェザーD3　B側フェザーH2　北から捨てる　MTムーを東→西フェザーへ誘導　他全員で範囲焼き
+/p wave3：ジャバ＋ムー行進(スタン：MT→D1→D2)　STヤーン北東待機　バインドヒラ南東
+/p wave4：MTムーC　STヤーンA(スタン：ST→D1→D2)　D側フェザーD3　B側フェザーD4 南側から捨てる　MTムーを東→西フェザーへ誘導
+/p ■山川　　　　　　　 　 ■雷雲
+/p 火：内側MTH1D1D2　　 　 　雷雲見て
+/p 　　外側STH2D3D4　　TH←左　他　右→DPS
+/p 雷：基本散会
+/p ■マグマ　　　　　 　 　 ■塔2回目
+/p D3H1　北　D4H2　 　4・2・2の場合：近接4人基準時計or反時計
+/p ※※※※※※※※※※ 　中央見て左←【D1MTSTD2】【D3H1】【D4H2】→右
+/p 　　 MT　　ST　　　 　 　　　　▼南8塔の場合
+/p 　　 D1　　D2　　　　　　　　H2　D3　D4
+/p 頭割り：H誘導　　　　　　H1　D1　 MT　 ST 　D2`,
+      },
+      {
+        Name: 'Standard',
+        Place: {
+          Name: 'Standard',
+          MapID: 1022,
+          A: { X: 100.0, Y: 0.0, Z: 92.0, ID: 0, Active: true },
+          B: { X: 108.0, Y: 0.0, Z: 100.0, ID: 1, Active: true },
+          C: { X: 100.0, Y: 0.0, Z: 108.0, ID: 2, Active: true },
+          D: { X: 92.0, Y: 0.0, Z: 100.0, ID: 3, Active: true },
+          One: { X: 92.0, Y: 0.0, Z: 92.0, ID: 4, Active: true },
+          Two: { X: 108.0, Y: 0.0, Z: 92.0, ID: 5, Active: true },
+          Three: { X: 108.0, Y: 0.0, Z: 108.0, ID: 6, Active: true },
+          Four: { X: 92.0, Y: 0.0, Z: 108.0, ID: 7, Active: true },
+        },
+      },
+    ],
+    1261: [
+      {
+        Name: 'Game8',
+        Text: `
+/p 【スキャッターシード一回目】
+/p (種捨て)　　　　　　(エラプ)
+/p 　D3/MT　　 ST/D4 　近接:南内側開始→上→中央→下
+/p 　 　 　 　 ★ 　 　　 　遠隔:D北H南開始→東西→最後中央寄せ
+/p 　H1/D1　　 D2/H2 (頭割り)MT組:西 ST組:東
+/p 【ソーンスマッシュ 】　｜ 【ブルートグラワー】
+/p ※ボス向き基準　 　 　｜ D1　　★　　D2
+/p 　　D3　 MT　 D4　 ｜ 　 MT　　　ST
+/p 　　H1 　 ★ 　 H2　 ｜ H1 　 　 　 　H2
+/p 　　D1 　 ST 　D2　 ｜ 　 D3　　　D4
+/p 【ソーンデスマッチ・ビルディング いしあ式】
+/p (奇数)3回目安置 (13捨て位置)近D:④ TH:② 遠D:⑥
+/p ①　　MT　 　②　 　H1　 　③　(ペア頭割り)
+/p 　D1　 　ST　 　H2　 　D3　　 MTD1:①　STD2:②
+/p ④　　D2　 　⑤　 　D4　 　⑥　H1D3:③　H2D4:⑤
+/p 【ソーンデスマッチ・ウォール】
+/p 　　　 MT/D3　　　　※石化視線：北西/南東避け
+/p 　　　　　　　　　　　 雑魚石化後処理
+/p H1/D1　★　H2/D2
+/p 　　　　
+/p 　 　 　ST/D4
+/p 【スキャッターシード二回目】※近接北西集合
+/p 近接AOE:北西から時計周り→南西安置 (遠隔)シード十字捨て 南側外周避け
+/p 遠隔AOE:最外周捨て→中央安置 (近接)シード十字内側捨て(外から2マス) 中央避け
+/p 【ウェポンツイン+ブロウシード】※一回目マップ北基準 二回目ラリアット後のボス北基準
+/p (一回目) 　 　　　　　｜(二回目)　 ★
+/p MT/D3 　　ST/D4　 ｜　MT/D1　 　ST/D2
+/p 　 　　　★ 　 　 　　 ｜
+/p H1/D1 　　H2/D2　｜　H1/D3　 　H2/D4`,
+      },
+      {
+        Name: 'P1数字+P3字母',
+        Place: {
+          Name: 'Standard',
+          MapID: 1024,
+          A: { X: 90.0, Y: -200.0, Z: -5.0, ID: 0, Active: true },
+          B: { X: 110.0, Y: -200.0, Z: -5.0, ID: 1, Active: true },
+          C: { X: 110.0, Y: -200.0, Z: 15.0, ID: 2, Active: true },
+          D: { X: 90.0, Y: -200.0, Z: 15.0, ID: 3, Active: true },
+          One: { X: 91.0, Y: 0.0, Z: 91.0, ID: 4, Active: true },
+          Two: { X: 109.0, Y: 0.0, Z: 91.0, ID: 5, Active: true },
+          Three: { X: 109.0, Y: 0.0, Z: 109.0, ID: 6, Active: true },
+          Four: { X: 91.0, Y: 0.0, Z: 109.0, ID: 7, Active: true },
+        },
+      },
+      {
+        Name: 'P3',
+        Place: {
+          Name: 'P3',
+          MapID: 1024,
+          A: { X: 100.0, Y: -200.0, Z: -5.0, ID: 0, Active: true },
+          B: { X: 110.0, Y: -200.0, Z: 5.0, ID: 1, Active: true },
+          C: { X: 100.0, Y: -200.0, Z: 15.0, ID: 2, Active: true },
+          D: { X: 90.0, Y: -200.0, Z: 5.0, ID: 3, Active: true },
+          One: { X: 90.0, Y: -200.0, Z: -5.0, ID: 4, Active: true },
+          Two: { X: 110.0, Y: -200.0, Z: -5.0, ID: 5, Active: true },
+          Three: { X: 110.0, Y: -200.0, Z: 15.0, ID: 6, Active: true },
+          Four: { X: 90.0, Y: -200.0, Z: 15.0, ID: 7, Active: true },
+        },
+      },
+    ],
+    1263: [
+      {
+        Name: 'Standard',
+        Place: {
+          Name: 'M8S Phase 1 Markers',
+          MapID: 1026,
+          A: { X: 100.0, Y: 0.0, Z: 89.331, ID: 0, Active: true },
+          B: { X: 110.796, Y: 0.0, Z: 100.0, ID: 1, Active: true },
+          C: { X: 100.0, Y: 0.0, Z: 110.996, ID: 2, Active: true },
+          D: { X: 88.61, Y: 0.0, Z: 100.0, ID: 3, Active: true },
+          One: { X: 92.0, Y: 0.0, Z: 92.0, ID: 4, Active: true },
+          Two: { X: 108.0, Y: 0.0, Z: 92.0, ID: 5, Active: true },
+          Three: { X: 108.0, Y: 0.0, Z: 108.0, ID: 6, Active: true },
+          Four: { X: 92.0, Y: 0.0, Z: 108.0, ID: 7, Active: true },
+        },
       },
     ],
   },
@@ -7167,26 +7380,48 @@ fastPP(
   )}","MapID":979,"A":{"X":-200,"Y":-200.0,"Z":-18.55,"ID":0,"Active":true},"B":{"X":-181.45,"Y":-200.0,"Z":0,"ID":1,"Active":true},"C":{"X":-200,"Y":-200.0,"Z":18.55,"ID":2,"Active":true},"D":{"X":-218.55,"Y":-200.0,"Z":0,"ID":3,"Active":true},"One":{"X":-186.883,"Y":-200.0,"Z":-13.117,"ID":4,"Active":true},"Two":{"X":-186.883,"Y":-200.0,"Z":13.117,"ID":5,"Active":true},"Three":{"X":-213.117,"Y":-200.0,"Z":13.117,"ID":6,"Active":true},"Four":{"X":-213.117,"Y":-200.0,"Z":-13.117,"ID":7,"Active":true}}`,
 )
 // R1S
-fastPP(`{"Name":"【通用】Numbers for Sleepy Cats","MapID":986,"A":{"X":100.0,"Y":0.0,"Z":90.0,"ID":0,"Active":true},"B":{"X":110.0,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":110.0,"ID":2,"Active":true},"D":{"X":90.0,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":90.0,"Y":0.0,"Z":95.0,"ID":4,"Active":true},"Two":{"X":110.0,"Y":0.0,"Z":95.0,"ID":5,"Active":true},"Three":{"X":110.0,"Y":0.0,"Z":105.0,"ID":6,"Active":true},"Four":{"X":90.0,"Y":0.0,"Z":105.0,"ID":7,"Active":true}}`)
+fastPP(
+  `{"Name":"【通用】Numbers for Sleepy Cats","MapID":986,"A":{"X":100.0,"Y":0.0,"Z":90.0,"ID":0,"Active":true},"B":{"X":110.0,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":110.0,"ID":2,"Active":true},"D":{"X":90.0,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":90.0,"Y":0.0,"Z":95.0,"ID":4,"Active":true},"Two":{"X":110.0,"Y":0.0,"Z":95.0,"ID":5,"Active":true},"Three":{"X":110.0,"Y":0.0,"Z":105.0,"ID":6,"Active":true},"Four":{"X":90.0,"Y":0.0,"Z":105.0,"ID":7,"Active":true}}`,
+)
 
 // R2S
-fastPP(`{"Name":"【通用】Standard/Clocks","MapID":988,"A":{"X":100.0,"Y":0.0,"Z":85.0,"ID":0,"Active":true},"B":{"X":115.0,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":115.0,"ID":2,"Active":true},"D":{"X":85.0,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":90.0,"Y":0.0,"Z":90.0,"ID":4,"Active":true},"Two":{"X":110.0,"Y":0.0,"Z":90.0,"ID":5,"Active":true},"Three":{"X":110.0,"Y":0.0,"Z":110.0,"ID":6,"Active":true},"Four":{"X":90.0,"Y":0.0,"Z":110.0,"ID":7,"Active":true}}`)
-fastPP(`{"Name":"Uptime Defamations","MapID":988,"A":{"X":100.0,"Y":0.0,"Z":92.5,"ID":0,"Active":true},"B":{"X":0.0,"Y":0.0,"Z":0.0,"ID":1,"Active":false},"C":{"X":0.0,"Y":0.0,"Z":0.0,"ID":2,"Active":false},"D":{"X":0.0,"Y":0.0,"Z":0.0,"ID":3,"Active":false},"One":{"X":83.0,"Y":0.0,"Z":92.5,"ID":4,"Active":true},"Two":{"X":117.0,"Y":0.0,"Z":92.5,"ID":5,"Active":true},"Three":{"X":108.5,"Y":0.0,"Z":107.5,"ID":6,"Active":true},"Four":{"X":91.5,"Y":0.0,"Z":107.5,"ID":7,"Active":true}}`)
-fastPP(`{"Name":"Outer/Centerstage","MapID":988,"A":{"X":100.0,"Y":0.0,"Z":92.0,"ID":0,"Active":true},"B":{"X":108.0,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":108.0,"ID":2,"Active":true},"D":{"X":92.0,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":90.0,"Y":0.0,"Z":90.0,"ID":4,"Active":true},"Two":{"X":110.0,"Y":0.0,"Z":90.0,"ID":5,"Active":true},"Three":{"X":110.0,"Y":0.0,"Z":110.0,"ID":6,"Active":true},"Four":{"X":90.0,"Y":0.0,"Z":110.0,"ID":7,"Active":true}}`)
+fastPP(
+  `{"Name":"【通用】Standard/Clocks","MapID":988,"A":{"X":100.0,"Y":0.0,"Z":85.0,"ID":0,"Active":true},"B":{"X":115.0,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":115.0,"ID":2,"Active":true},"D":{"X":85.0,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":90.0,"Y":0.0,"Z":90.0,"ID":4,"Active":true},"Two":{"X":110.0,"Y":0.0,"Z":90.0,"ID":5,"Active":true},"Three":{"X":110.0,"Y":0.0,"Z":110.0,"ID":6,"Active":true},"Four":{"X":90.0,"Y":0.0,"Z":110.0,"ID":7,"Active":true}}`,
+)
+fastPP(
+  `{"Name":"Uptime Defamations","MapID":988,"A":{"X":100.0,"Y":0.0,"Z":92.5,"ID":0,"Active":true},"B":{"X":0.0,"Y":0.0,"Z":0.0,"ID":1,"Active":false},"C":{"X":0.0,"Y":0.0,"Z":0.0,"ID":2,"Active":false},"D":{"X":0.0,"Y":0.0,"Z":0.0,"ID":3,"Active":false},"One":{"X":83.0,"Y":0.0,"Z":92.5,"ID":4,"Active":true},"Two":{"X":117.0,"Y":0.0,"Z":92.5,"ID":5,"Active":true},"Three":{"X":108.5,"Y":0.0,"Z":107.5,"ID":6,"Active":true},"Four":{"X":91.5,"Y":0.0,"Z":107.5,"ID":7,"Active":true}}`,
+)
+fastPP(
+  `{"Name":"Outer/Centerstage","MapID":988,"A":{"X":100.0,"Y":0.0,"Z":92.0,"ID":0,"Active":true},"B":{"X":108.0,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":108.0,"ID":2,"Active":true},"D":{"X":92.0,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":90.0,"Y":0.0,"Z":90.0,"ID":4,"Active":true},"Two":{"X":110.0,"Y":0.0,"Z":90.0,"ID":5,"Active":true},"Three":{"X":110.0,"Y":0.0,"Z":110.0,"ID":6,"Active":true},"Four":{"X":90.0,"Y":0.0,"Z":110.0,"ID":7,"Active":true}}`,
+)
 // R3S
-fastPP(`{"Name":"Safespots for Clone Dash","MapID":990,"A":{"X":100.0,"Y":0.0,"Z":93.0,"ID":0,"Active":true},"B":{"X":107.0,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":107.0,"ID":2,"Active":true},"D":{"X":93.0,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":94.0,"Y":0.0,"Z":94.0,"ID":4,"Active":true},"Two":{"X":106.0,"Y":0.0,"Z":94.0,"ID":5,"Active":true},"Three":{"X":106.0,"Y":0.0,"Z":106.0,"ID":6,"Active":true},"Four":{"X":94.0,"Y":0.0,"Z":106.0,"ID":7,"Active":true}}`)
+fastPP(
+  `{"Name":"Safespots for Clone Dash","MapID":990,"A":{"X":100.0,"Y":0.0,"Z":93.0,"ID":0,"Active":true},"B":{"X":107.0,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":107.0,"ID":2,"Active":true},"D":{"X":93.0,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":94.0,"Y":0.0,"Z":94.0,"ID":4,"Active":true},"Two":{"X":106.0,"Y":0.0,"Z":94.0,"ID":5,"Active":true},"Three":{"X":106.0,"Y":0.0,"Z":106.0,"ID":6,"Active":true},"Four":{"X":94.0,"Y":0.0,"Z":106.0,"ID":7,"Active":true}}`,
+)
 // R4S
-fastPP(`{"Name":"Witch Hunt","MapID":992,"A":{"X":100.0,"Y":0.0,"Z":90.0,"ID":0,"Active":true},"B":{"X":110.0,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":110.0,"ID":2,"Active":true},"D":{"X":90.0,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":93.0,"Y":0.0,"Z":93.0,"ID":4,"Active":true},"Two":{"X":107.0,"Y":0.0,"Z":93.0,"ID":5,"Active":true},"Three":{"X":107.0,"Y":0.0,"Z":107.0,"ID":6,"Active":true},"Four":{"X":93.0,"Y":0.0,"Z":107.0,"ID":7,"Active":true}}`)
+fastPP(
+  `{"Name":"Witch Hunt","MapID":992,"A":{"X":100.0,"Y":0.0,"Z":90.0,"ID":0,"Active":true},"B":{"X":110.0,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":110.0,"ID":2,"Active":true},"D":{"X":90.0,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":93.0,"Y":0.0,"Z":93.0,"ID":4,"Active":true},"Two":{"X":107.0,"Y":0.0,"Z":93.0,"ID":5,"Active":true},"Three":{"X":107.0,"Y":0.0,"Z":107.0,"ID":6,"Active":true},"Four":{"X":93.0,"Y":0.0,"Z":107.0,"ID":7,"Active":true}}`,
+)
 // 艳翼蛇鸟
-fastPP(`{"Name":"通用标点","MapID":833,"A":{"X":92.5,"Y":0,"Z":92.5,"ID":0,"Active":true},"B":{"X":107.5,"Y":0,"Z":92.5,"ID":1,"Active":true},"C":{"X":81,"Y":0,"Z":94,"ID":3,"Active":true},"D":{"X":119,"Y":0,"Z":94,"ID":2,"Active":true},"One":{"X":95,"Y":0,"Z":95,"ID":4,"Active":true},"Two":{"X":105,"Y":0,"Z":95,"ID":5,"Active":true},"Three":{"X":95,"Y":0,"Z":105,"ID":6,"Active":true},"Four":{"X":105,"Y":0,"Z":105,"ID":7,"Active":true}}`)
+fastPP(
+  `{"Name":"通用标点","MapID":833,"A":{"X":92.5,"Y":0,"Z":92.5,"ID":0,"Active":true},"B":{"X":107.5,"Y":0,"Z":92.5,"ID":1,"Active":true},"C":{"X":81,"Y":0,"Z":94,"ID":3,"Active":true},"D":{"X":119,"Y":0,"Z":94,"ID":2,"Active":true},"One":{"X":95,"Y":0,"Z":95,"ID":4,"Active":true},"Two":{"X":105,"Y":0,"Z":95,"ID":5,"Active":true},"Three":{"X":95,"Y":0,"Z":105,"ID":6,"Active":true},"Four":{"X":105,"Y":0,"Z":105,"ID":7,"Active":true}}`,
+)
 // 佐拉加
-fastPP(`{"Name":"莫古力","MapID":996,"A":{"X":100,"Y":0,"Z":88,"ID":0,"Active":true},"B":{"X":112,"Y":0,"Z":100,"ID":1,"Active":true},"C":{"X":100,"Y":0,"Z":112,"ID":2,"Active":true},"D":{"X":88,"Y":0,"Z":100,"ID":3,"Active":true},"One":{"X":0,"Y":0,"Z":0,"ID":4,"Active":false},"Two":{"X":0,"Y":0,"Z":0,"ID":5,"Active":false},"Three":{"X":0,"Y":0,"Z":0,"ID":6,"Active":false},"Four":{"X":0,"Y":0,"Z":0,"ID":7,"Active":false}}`)
-fastPP(`{"Name":"Conga","MapID":996,"A":{"X":100.0,"Y":0.0,"Z":87.5,"ID":0,"Active":true},"B":{"X":100.0,"Y":0.0,"Z":102.5,"ID":1,"Active":true},"C":{"X":94.5,"Y":0.0,"Z":77.8,"ID":2,"Active":true},"D":{"X":100.0,"Y":0.0,"Z":117.5,"ID":3,"Active":true},"One":{"X":100.0,"Y":0.0,"Z":95.0,"ID":4,"Active":true},"Two":{"X":100.0,"Y":0.0,"Z":110.0,"ID":5,"Active":true},"Three":{"X":105.5,"Y":0.0,"Z":77.8,"ID":6,"Active":true},"Four":{"X":100.0,"Y":0.0,"Z":125.0,"ID":7,"Active":true}}`)
+fastPP(
+  `{"Name":"莫古力","MapID":996,"A":{"X":100,"Y":0,"Z":88,"ID":0,"Active":true},"B":{"X":112,"Y":0,"Z":100,"ID":1,"Active":true},"C":{"X":100,"Y":0,"Z":112,"ID":2,"Active":true},"D":{"X":88,"Y":0,"Z":100,"ID":3,"Active":true},"One":{"X":0,"Y":0,"Z":0,"ID":4,"Active":false},"Two":{"X":0,"Y":0,"Z":0,"ID":5,"Active":false},"Three":{"X":0,"Y":0,"Z":0,"ID":6,"Active":false},"Four":{"X":0,"Y":0,"Z":0,"ID":7,"Active":false}}`,
+)
+fastPP(
+  `{"Name":"Conga","MapID":996,"A":{"X":100.0,"Y":0.0,"Z":87.5,"ID":0,"Active":true},"B":{"X":100.0,"Y":0.0,"Z":102.5,"ID":1,"Active":true},"C":{"X":94.5,"Y":0.0,"Z":77.8,"ID":2,"Active":true},"D":{"X":100.0,"Y":0.0,"Z":117.5,"ID":3,"Active":true},"One":{"X":100.0,"Y":0.0,"Z":95.0,"ID":4,"Active":true},"Two":{"X":100.0,"Y":0.0,"Z":110.0,"ID":5,"Active":true},"Three":{"X":105.5,"Y":0.0,"Z":77.8,"ID":6,"Active":true},"Four":{"X":100.0,"Y":0.0,"Z":125.0,"ID":7,"Active":true}}`,
+)
 
 // 伊甸
-fastPP(`{"Name":"伊甸自用","MapID":1006,"A":{"X":100,"Y":0,"Z":90,"Active":true},"B":{"X":110,"Y":0,"Z":100,"Active":true},"C":{"X":100,"Y":0,"Z":110,"Active":true},"D":{"X":90,"Y":0,"Z":100,"Active":true},"One":{"X":92.73,"Y":0,"Z":92.73,"Active":true},"Two":{"X":107.27,"Y":0,"Z":92.73,"Active":true},"Three":{"X":107.27,"Y":0,"Z":107.27,"Active":true},"Four":{"X":92.73,"Y":0,"Z":107.27,"Active":true}}`)
+fastPP(
+  `{"Name":"伊甸自用","MapID":1006,"A":{"X":100,"Y":0,"Z":90,"Active":true},"B":{"X":110,"Y":0,"Z":100,"Active":true},"C":{"X":100,"Y":0,"Z":110,"Active":true},"D":{"X":90,"Y":0,"Z":100,"Active":true},"One":{"X":92.73,"Y":0,"Z":92.73,"Active":true},"Two":{"X":107.27,"Y":0,"Z":92.73,"Active":true},"Three":{"X":107.27,"Y":0,"Z":107.27,"Active":true},"Four":{"X":92.73,"Y":0,"Z":107.27,"Active":true}}`,
+)
 // 极女王
-fastPP(`{"Name":"Sphene EX (Braindead)","MapID":1017,"A":{"X":108.7,"Y":0.0,"Z":86.7,"ID":0,"Active":true},"B":{"X":104.0,"Y":0.0,"Z":94.0,"ID":1,"Active":true},"C":{"X":108.0,"Y":0.0,"Z":98.0,"ID":2,"Active":true},"D":{"X":112.0,"Y":0.0,"Z":102.0,"ID":3,"Active":true},"One":{"X":91.3,"Y":0.0,"Z":86.7,"ID":4,"Active":true},"Two":{"X":96.0,"Y":0.0,"Z":94.0,"ID":5,"Active":true},"Three":{"X":92.0,"Y":0.0,"Z":98.0,"ID":6,"Active":true},"Four":{"X":88.0,"Y":0.0,"Z":102.0,"ID":7,"Active":true}}`)
+fastPP(
+  `{"Name":"Sphene EX (Braindead)","MapID":1017,"A":{"X":108.7,"Y":0.0,"Z":86.7,"ID":0,"Active":true},"B":{"X":104.0,"Y":0.0,"Z":94.0,"ID":1,"Active":true},"C":{"X":108.0,"Y":0.0,"Z":98.0,"ID":2,"Active":true},"D":{"X":112.0,"Y":0.0,"Z":102.0,"ID":3,"Active":true},"One":{"X":91.3,"Y":0.0,"Z":86.7,"ID":4,"Active":true},"Two":{"X":96.0,"Y":0.0,"Z":94.0,"ID":5,"Active":true},"Three":{"X":92.0,"Y":0.0,"Z":98.0,"ID":6,"Active":true},"Four":{"X":88.0,"Y":0.0,"Z":102.0,"ID":7,"Active":true}}`,
+)
 
 const syncMap: Record<string, string> = {
   1076: '1075', // 希拉狄哈水道
@@ -7197,9 +7432,13 @@ const syncMap: Record<string, string> = {
 Object.entries(syncMap).forEach(([savage, normal]) => {
   defaultMacro.zoneId[savage] = [
     ...(defaultMacro.zoneId[savage] ?? []).filter(v => 'Text' in v),
-    ...(defaultMacro.zoneId[normal] ?? []).filter(v => 'Text' in v).map(v => ({ ...v, Name: v.Name.replace('异闻', '零式') })),
+    ...(defaultMacro.zoneId[normal] ?? [])
+      .filter(v => 'Text' in v)
+      .map(v => ({ ...v, Name: v.Name.replace('异闻', '零式') })),
     ...(defaultMacro.zoneId[savage] ?? []).filter(v => 'Place' in v),
-    ...(defaultMacro.zoneId[normal] ?? []).filter(v => 'Place' in v).map(v => ({ ...v, Name: v.Name.replace('异闻', '零式') })),
+    ...(defaultMacro.zoneId[normal] ?? [])
+      .filter(v => 'Place' in v)
+      .map(v => ({ ...v, Name: v.Name.replace('异闻', '零式') })),
   ]
 })
 
