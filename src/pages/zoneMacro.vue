@@ -56,21 +56,19 @@ const { useType } = useWebSocket({ allowClose: true, addWsParam: false })
 onMounted(() => {
   addOverlayListener('ChangeZone', macroStore.handleChangeZone)
   addOverlayListener('LogLine', macroStore.handleLogLine)
-  watchEffect(() => {
-    if (
-      (macroStore.data.zoneId[macroStore.selectZone] === undefined
-        || macroStore.data.zoneId[macroStore.selectZone]?.length === 0)
-      && defaultMacro.zoneId[macroStore.selectZone]
-    ) {
-      ElMessage.success('用户数据为空，加载默认数据')
-      macroStore.data.zoneId[macroStore.selectZone]
-        = defaultMacro.zoneId[macroStore.selectZone]
-    }
-  })
   watch(
     toRef(macroStore, 'selectZone'),
     () => {
       macroStore.formatSelectZoneWaymarkPlaceData(macroStore.selectZone)
+      if (
+        (macroStore.data.zoneId[macroStore.selectZone] === undefined
+          || macroStore.data.zoneId[macroStore.selectZone]?.length === 0)
+        && defaultMacro.zoneId[macroStore.selectZone]
+      ) {
+        ElMessage.success('用户数据为空，加载默认数据')
+        macroStore.data.zoneId[macroStore.selectZone]
+        = defaultMacro.zoneId[macroStore.selectZone]
+      }
     },
     { immediate: true },
   )

@@ -27,10 +27,30 @@ addOverlayListener('PartyChanged', (e) => {
 
 const [show, toggleShow] = useToggle(true)
 
+function safeParseJson(input: string) {
+  try {
+    // 尝试直接解析
+    return JSON.parse(input)
+  }
+  catch (e) {
+    // 解析失败，再尝试移除尾逗号后重新解析
+    try {
+      void e
+      const cleaned = input.replace(/,(\s*[}\]])/g, '$1')
+      return JSON.parse(cleaned)
+    }
+    catch (e) {
+      void e
+      // 两次都失败就说明真的是非法 JSON
+      throw new Error(`无法解析 JSON 数据`)
+    }
+  }
+}
+
 export const useMacroStore = defineStore('macro', {
   state: () => {
     return {
-      data: useStorage('my-macros', reactive(defaultMacro)),
+      data: useStorage('my-macros', defaultMacro),
       selectZone: useStorage('my-zone', ref('1226')),
       zoneNow: useStorage('my-zone-now', ref('1226')),
       fastEntrance: [
@@ -133,10 +153,6 @@ export const useMacroStore = defineStore('macro', {
       }
     },
     newOne(type: 'macro' | 'place' = 'macro') {
-      for (const x in this.data.zoneId) {
-        for (const y in this.data.zoneId[x])
-          Reflect.deleteProperty(this.data.zoneId[x][y], 'Editable')
-      }
       const selectZoneId = Number(this.selectZone)
       if (this.data.zoneId[selectZoneId] === undefined)
         this.data.zoneId[selectZoneId] = []
@@ -206,71 +222,65 @@ export const useMacroStore = defineStore('macro', {
         cancelButtonText: '取消',
         inputPattern: /^(\{.*\})$/,
         inputErrorMessage: '无效的格式',
-      })
-        .then(async ({ value }) => {
-          const json = Object.assign(
-            { MapID: -1, Name: 'json' },
-            Object.assign(blank, JSON.parse(value)),
-          )
-          const selectMapID = getMapIDByTerritoryType(selectZoneId)
-          const selectZone = zoneInfo[selectZoneId]
-          const JSONZone = zoneInfo[getTerritoryTypeByMapID(json.MapID)]
-          let flag = true
-          if (json.MapID !== selectMapID) {
-            const confirm = await ElMessageBox.confirm(
-              `PPJSON中的地图${JSONZone.name.cn ?? JSONZone.name.ja ?? `${JSONZone.name.en}`
-              }(${json.MapID})), 与当前选择的地图${selectZone.name.cn
+      }).then(async ({ value }) => {
+        const json = Object.assign(
+          { MapID: -1, Name: '用户导入' },
+          Object.assign(blank, safeParseJson(value)),
+        )
+        const selectMapID = getMapIDByTerritoryType(selectZoneId)
+        const selectZone = zoneInfo[selectZoneId]
+        const JSONZone = zoneInfo[getTerritoryTypeByMapID(json.MapID)]
+        let flag = true
+        if (JSONZone === undefined) {
+          json.MapID = selectMapID
+        }
+        else if (json.MapID !== selectMapID) {
+          const confirm = await ElMessageBox.confirm(
+            `PPJSON中的地图${
+              JSONZone.name.cn ?? JSONZone.name.ja ?? `${JSONZone.name.en}`
+            }(${json.MapID})), 与当前选择的地图${
+              selectZone.name.cn
               ?? selectZone.name.ja
               ?? `${selectZone.name.en}`
-              }(${selectMapID})不一致, 是否继续?`,
-              '警告',
-              {
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-                type: 'warning',
-              },
-            )
-            if (confirm !== 'confirm')
-              flag = false
-          }
-          if (!flag)
-            return
-          const targetMacro = this.newOne('place') as MacroInfoPlace
-          targetMacro.Name = json.Name
-          targetMacro.Place = json
-          Reflect.deleteProperty(targetMacro, 'Editable')
-          const oX = selectZone.offsetX - JSONZone.offsetX
-          const oY = selectZone.offsetY - JSONZone.offsetY
-          try {
-            (
-              [
-                'A',
-                'B',
-                'C',
-                'D',
-                'One',
-                'Two',
-                'Three',
-                'Four',
-              ] as WayMarkKeys[]
-            ).forEach((key) => {
-              // biome-ignore lint/style/noNonNullAssertion: <explanation>
-              targetMacro.Place[key]!.X -= oX
-              // biome-ignore lint/style/noNonNullAssertion: <explanation>
-              targetMacro.Place[key]!.Z -= oY
-            })
-          }
-          catch (e) {
-            // 为什么catch里不传参还会报错啊？？？
-            void e
-            ElMessage.error('解析失败')
-            return
-          }
-          Reflect.deleteProperty(targetMacro.Place, 'MapID')
-          Reflect.deleteProperty(targetMacro.Place, 'Name')
-          ElMessage.success('导入成功')
-        })
-        .catch(() => ElMessage.error('解析失败'))
+            }(${selectMapID})不一致, 是否继续?`,
+            '警告',
+            {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning',
+            },
+          )
+          if (confirm !== 'confirm')
+            flag = false
+        }
+        if (!flag)
+          return
+        const targetMacro = this.newOne('place') as MacroInfoPlace
+        targetMacro.Name = json.Name
+        targetMacro.Place = json
+        Reflect.deleteProperty(targetMacro, 'Editable')
+        const oX = selectZone.offsetX - (JSONZone?.offsetX ?? 0)
+        const oY = selectZone.offsetY - (JSONZone?.offsetY ?? 0)
+        try {
+          (
+            ['A', 'B', 'C', 'D', 'One', 'Two', 'Three', 'Four'] as WayMarkKeys[]
+          ).forEach((key) => {
+            // biome-ignore lint/style/noNonNullAssertion: <explanation>
+            targetMacro.Place[key]!.X -= oX
+            // biome-ignore lint/style/noNonNullAssertion: <explanation>
+            targetMacro.Place[key]!.Z -= oY
+          })
+        }
+        catch (e) {
+          // 为什么catch里不传参还会报错啊？？？
+          void e
+          ElMessage.error('解析失败')
+          return
+        }
+        Reflect.deleteProperty(targetMacro.Place, 'MapID')
+        Reflect.deleteProperty(targetMacro.Place, 'Name')
+        ElMessage.success('导入成功')
+      })
     },
     deleteMacro(macro: MacroInfoMacro | MacroInfoPlace): void {
       if (
@@ -283,8 +293,7 @@ export const useMacroStore = defineStore('macro', {
           && macro.Place.One?.Active === false
           && macro.Place.Two?.Active === false
           && macro.Place.Three?.Active === false
-          && macro.Place.Four?.Active === false
-        )
+          && macro.Place.Four?.Active === false)
       ) {
         const index = this.data.zoneId[this.selectZone].indexOf(macro)
         if (index > -1)
@@ -301,25 +310,27 @@ export const useMacroStore = defineStore('macro', {
             if (index > -1)
               this.data.zoneId[this.selectZone].splice(index, 1)
           })
-          .catch(() => { })
+          .catch(() => {})
       }
     },
     exportWaymarksJson(macro: MacroInfoPlace): void {
       const json = JSON.parse(JSON.stringify(macro.Place))
       json.MapID = getMapIDByTerritoryType(Number(this.selectZone))
       json.Name = macro.Name
-      copyToClipboard(JSON.stringify({
-        Name: json.Name,
-        MapID: json.MapID,
-        A: json.A,
-        B: json.B,
-        C: json.C,
-        D: json.D,
-        One: json.One,
-        Two: json.Two,
-        Three: json.Three,
-        Four: json.Four,
-      }))
+      copyToClipboard(
+        JSON.stringify({
+          Name: json.Name,
+          MapID: json.MapID,
+          A: json.A,
+          B: json.B,
+          C: json.C,
+          D: json.D,
+          One: json.One,
+          Two: json.Two,
+          Three: json.Three,
+          Four: json.Four,
+        }),
+      )
     },
     sendMacroParty(text: string): void {
       ElMessageBox.confirm('确定要发送到队伍频道吗?', '警告', {
@@ -330,7 +341,7 @@ export const useMacroStore = defineStore('macro', {
         .then(() => {
           macroCommand(text, 'p')
         })
-        .catch(() => { })
+        .catch(() => {})
     },
     sendMacroEcho(text: string): void {
       macroCommand(text, 'e')
@@ -368,7 +379,7 @@ export const useMacroStore = defineStore('macro', {
           )
           ElMessage.success(`已尝试写入至插槽${slotIndex.value}`)
         })
-        .catch(() => { })
+        .catch(() => {})
     },
     positioning(): void {
       this.selectZone = this.zoneNow
@@ -418,7 +429,7 @@ export const useMacroStore = defineStore('macro', {
           }
           return
         }
-        const echoSlot = (e.line[4]).match(
+        const echoSlot = e.line[4].match(
           /^(?:标点|标记|场景标记|place|biaodian)(?:插槽|预设)?\s*(?<slot>[1-5])?.*?(?<mark>[!！])?\s*$/i,
         )
         if (echoSlot) {
@@ -472,7 +483,7 @@ export const useMacroStore = defineStore('macro', {
           this.formatSelectZoneWaymarkPlaceData(this.selectZone)
           ElMessage.success('重置成功')
         })
-        .catch(() => { })
+        .catch(() => {})
     },
     resetAllData(): void {
       ElMessageBox.confirm('要重置所有数据吗？', '提示', {
@@ -492,7 +503,7 @@ export const useMacroStore = defineStore('macro', {
             ElMessage.success('重置成功')
           })
         })
-        .catch(() => { })
+        .catch(() => {})
     },
     updateZone(): void {
       for (const key in this.data.zoneId) {

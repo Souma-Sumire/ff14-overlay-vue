@@ -60,6 +60,3 @@ app.use(VueLazyload)
 app.use(i18n)
 
 app.mount('#app')
-
-// eslint-disable-next-line no-console
-console.log('请勿在 NGA 论坛发帖询问 Souma 项目相关问题，我已退出该论坛，无法查看或回复您的主题帖。')
