@@ -12,7 +12,6 @@ import {
   Edit,
   Position,
 } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
 import ContentType from '../../cactbot/resources/content_type'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import 'github-markdown-css/github-markdown-light.css'
@@ -21,7 +20,6 @@ const macroStore = useMacroStore()
 const hideOnStartup = useStorage('zoneMacroHideOnStartup', ref(false))
 if (hideOnStartup.value)
   macroStore.show = false
-macroStore.formatAllWaymarkPlaceData()
 
 const showContentTypes: number[] = [
   ContentType.Dungeons, // 4人迷宫
@@ -55,24 +53,20 @@ const { useType } = useWebSocket({ allowClose: true, addWsParam: false })
 
 onMounted(() => {
   addOverlayListener('ChangeZone', macroStore.handleChangeZone)
-  addOverlayListener('LogLine', macroStore.handleLogLine)
   watch(
     toRef(macroStore, 'selectZone'),
     () => {
-      macroStore.formatSelectZoneWaymarkPlaceData(macroStore.selectZone)
-      if (
-        (macroStore.data.zoneId[macroStore.selectZone] === undefined
-          || macroStore.data.zoneId[macroStore.selectZone]?.length === 0)
-        && defaultMacro.zoneId[macroStore.selectZone]
-      ) {
-        ElMessage.success('用户数据为空，加载默认数据')
-        macroStore.data.zoneId[macroStore.selectZone]
-        = defaultMacro.zoneId[macroStore.selectZone]
-      }
+      const data = macroStore.data.zoneId[macroStore.selectZone]?.map((v) => {
+        const { Editable, ...r } = v
+        return r
+      }) || defaultMacro.zoneId[macroStore.selectZone] || []
+
+      const userData = data.filter(v => v.Deletability)
+      const nativeData = defaultMacro.zoneId[macroStore.selectZone] ?? []
+      macroStore.data.zoneId[macroStore.selectZone] = [...nativeData, ...userData]
     },
     { immediate: true },
   )
-  macroStore.updateZone()
 })
 </script>
 
@@ -86,7 +80,7 @@ onMounted(() => {
   <el-container
 
     v-show="macroStore.show"
-    p-0 top-0 m-0 absolute left-0 rd-1
+    top-0 p-0 m-0 absolute left-0 rd-1
     class="elcontainer"
   >
     <el-header flex="~ wrap gap1" height="auto" class="elheader">
@@ -138,16 +132,13 @@ onMounted(() => {
         style="font-size: 12px"
       >
         <el-card
-          v-for="(macro, index) in macroStore.data.zoneId[
-            macroStore.selectZone
-          ]"
+          v-for="(macro, index) in macroStore.data.zoneId[macroStore.selectZone]"
           :key="index"
           shadow="hover"
           class="main-box-card"
         >
           <p
             v-show="!macro.Editable"
-
             m-b-2 m-t-2 font-bold
             v-html="macro.Name"
           />
@@ -312,21 +303,21 @@ onMounted(() => {
                 size="small"
                 @click="macroStore.doLocalWayMark(macro.Place)"
               >
-                本地标
+                本地
               </el-button>
               <el-button
                 type="primary"
                 size="small"
                 @click="macroStore.doPartyWayMark(macro.Place)"
               >
-                公开标
+                公开
               </el-button>
               <el-button
                 type="primary"
                 size="small"
                 @click="macroStore.doSlotWayMark(macro.Place)"
               >
-                写插槽
+                插槽
               </el-button>
               <el-button
                 :icon="CopyDocument"
@@ -368,14 +359,14 @@ onMounted(() => {
       <el-button v-if="useType === 'overlay'" size="small" @click="macroStore.toggleShow()">
         隐藏页面
       </el-button>
-      <el-button type="success" size="small" @click="macroStore.newOne('macro')">
+      <el-button type="success" size="small" @click="macroStore.newMacro()">
         新增宏
       </el-button>
       <el-button
         type="success"
         size="small"
         color="#3375b9"
-        @click="macroStore.newOne('place')"
+        @click="macroStore.newPlace()"
       >
         新增标点
       </el-button>

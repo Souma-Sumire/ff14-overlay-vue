@@ -1,39 +1,31 @@
 <script setup lang="ts">
 import type { MacroInfoPlace } from '@/types/macro'
-import type { WayMarkInfo, WayMarkKeys } from '@/types/PostNamazu'
-// import { syncMap } from '@/resources/macro'
+import type { WayMarkInfo } from '@/types/PostNamazu'
 import { useMacroStore } from '@/store/macro'
 
-const props = defineProps({
-  macro: { type: Object as () => MacroInfoPlace, required: true },
-})
+const props = defineProps({ macro: { type: Object as () => MacroInfoPlace, required: true } })
 
 const macroStore = useMacroStore()
 
-const offset = { x: 0, y: 0, active: false }
-const markMap: Record<WayMarkKeys, string> = {
-  A: 'A',
-  B: 'B',
-  C: 'C',
-  D: 'D',
-  One: '1',
-  Two: '2',
-  Three: '3',
-  Four: '4',
-}
+const offset = { x: 100, y: 100 }
+const markMap = [
+  'A',
+  'B',
+  'C',
+  'D',
+  '1',
+  '2',
+  '3',
+  '4',
+]
 
-// 多变迷宫地图ID
-// const specialMap = Object.entries(syncMap).flat().map(v => Number(v))
-const marks = Object.keys(markMap) as WayMarkKeys[]
 const markViewSize = 180
 const markViewScale = 3
 const markViewFontSize = 19
 
 watch(
-  () => macroStore.selectZone,
+  () => props.macro.Place,
   () => {
-    // if (specialMap.includes(Number(macroStore.selectZone))) {
-    offset.active = true
     const ave = { x: 0, y: 0, count: 0 }
     for (const key in props.macro.Place) {
       const e = props.macro.Place[
@@ -46,23 +38,22 @@ watch(
       ave.y += Number(e.Z)
       ave.count++
     }
-    offset.x = ave.x / ave.count
-    offset.y = ave.y / ave.count
-    // }
-    // else {
-    //   offset.active = false
-    //   offset.x = 0
-    //   offset.y = 0
-    // }
+    if (ave.count === 0) {
+      offset.x = -macroStore.defaultX
+      offset.y = -macroStore.defaultY
+    }
+    else {
+      offset.x = ave.x / ave.count
+      offset.y = ave.y / ave.count
+    }
   },
   { immediate: true },
 )
 
-function getOffset(v: number, offset: number) {
-  return Math.min(
-    markViewSize,
-    Math.max(0, (v + offset) * markViewScale + markViewSize / 2),
-  )
+function getOffset(v: { X: number, Z: number }) {
+  const left = `${Math.min(markViewSize, Math.max(0, (v.X - offset.x) * markViewScale + markViewSize / 2))}px`
+  const top = `${Math.min(markViewSize, Math.max(0, (v.Z - offset.y) * markViewScale + markViewSize / 2))}px`
+  return { left, top }
 }
 </script>
 
@@ -76,21 +67,12 @@ function getOffset(v: number, offset: number) {
     }"
   >
     <span
-      v-for="(mark, index) in marks"
-      :key="index"
-      :class="`markIcon` + ` ` + `markIcon${mark}`"
-      :style="{
-        left: `${getOffset(
-          Number(macro.Place[mark]?.X),
-          offset.active ? -offset.x : macroStore.defaultX,
-        )}px`,
-        top: `${getOffset(
-          Number(macro.Place[mark]?.Z),
-          offset.active ? -offset.y : macroStore.defaultY,
-        )}px`,
-      }"
+      v-for="(v, k, i) in props.macro.Place"
+      :key="i"
+      :class="`markIcon` + ` ` + `markIcon${k}`"
+      :style="getOffset(v)"
     >
-      {{ macro.Place[mark]?.Active ? markMap[mark] ?? mark : "" }}
+      {{ v.Active ? markMap[i] : "" }}
     </span>
   </div>
 </template>

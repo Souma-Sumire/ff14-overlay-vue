@@ -1,4 +1,4 @@
-import type { PPJSON, QueueArr, Slot } from '@/types/PostNamazu'
+import type { PPJSON, QueueArr, Slot, WayMarkObj } from '@/types/PostNamazu'
 import { callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 import { getMapIDByTerritoryType } from '../resources/contentFinderCondition'
 
@@ -9,7 +9,7 @@ export function doTextCommand(text: string) {
     p: text,
   })
 }
-export function doWayMarks(json: PPJSON, localOnly: boolean = true) {
+export function doWayMarks(json: WayMarkObj, localOnly: boolean = true) {
   return callOverlayHandler({
     call: 'PostNamazu',
     c: 'DoWaymarks',
@@ -17,13 +17,12 @@ export function doWayMarks(json: PPJSON, localOnly: boolean = true) {
   })
 }
 
-export function doInsertPreset(mapID: number, json: PPJSON, slot: Slot = 1) {
-  json.MapID = getMapIDByTerritoryType(mapID)
-  json.Name = `Slot${slot}`
+export function doInsertPreset(mapID: number, json: WayMarkObj, slot: Slot = 1) {
+  const ppJson: PPJSON = { ...json, MapID: getMapIDByTerritoryType(mapID), Name: `Slot${slot}` }
   return callOverlayHandler({
     call: 'PostNamazu',
     c: 'DoInsertPreset',
-    p: JSON.stringify(json),
+    p: JSON.stringify(ppJson),
   })
 }
 

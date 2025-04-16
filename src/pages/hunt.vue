@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PPJSON, WayMarkKeys } from '@/types/PostNamazu'
+import type { WayMarkObj } from '@/types/PostNamazu'
 import type { EventMap } from 'cactbot/types/event'
 import ActWS from '@/assets/actWS.webp'
 import Aetherytes from '@/resources/aetherytes.json'
@@ -168,7 +168,7 @@ const server = useStorage('souma-hunt-server', 'Global' as Server)
 const IMG_RAW_SIZE = 2048
 const IMG_SHOW_SIZE = 596
 const INSTANCE_STRING = ''
-const waymarkKeys: WayMarkKeys[] = ['One', 'Two', 'Three', 'Four', 'A', 'B', 'C', 'D'] as const
+const waymarkKeys: (keyof WayMarkObj)[] = ['One', 'Two', 'Three', 'Four', 'A', 'B', 'C', 'D'] as const
 const IMG_SCALE = IMG_SHOW_SIZE / IMG_RAW_SIZE
 const playerInstance = ref(-1)
 const DEV_MODE = window.location.hostname === 'localhost' as const
@@ -526,7 +526,16 @@ function updateWaymarks() {
     return
   }
   const monsters = monstersData.value.filter(item => item.zoneId === playerZoneId.value && item.instance === playerInstance.value).sort((a, b) => a.number - b.number)
-  const waymarks: PPJSON = {}
+  const waymarks: WayMarkObj = {
+    A: { X: 0, Y: 0, Z: 0, Active: false },
+    B: { X: 0, Y: 0, Z: 0, Active: false },
+    C: { X: 0, Y: 0, Z: 0, Active: false },
+    D: { X: 0, Y: 0, Z: 0, Active: false },
+    One: { X: 0, Y: 0, Z: 0, Active: false },
+    Two: { X: 0, Y: 0, Z: 0, Active: false },
+    Three: { X: 0, Y: 0, Z: 0, Active: false },
+    Four: { X: 0, Y: 0, Z: 0, Active: false },
+  }
   waymarkKeys.forEach((key, index) => {
     const item = monsters[index]
     if (item) {

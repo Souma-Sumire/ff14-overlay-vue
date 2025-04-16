@@ -17,8 +17,8 @@ export type WayMarkKeys =
   | 'Three'
   | 'Four'
 
-export type WayMarkJSON = Partial<{ [key in WayMarkKeys]?: WayMarkInfo }>
-export type PPJSON = WayMarkJSON & { Name?: string, MapID?: number }
+export type WayMarkObj = { [key in WayMarkKeys]: WayMarkInfo }
+export type PPJSON = WayMarkObj & { Name: string, MapID: number }
 
 export type QueueArr = {
   c: Exclude<PostNamazuCall, 'DoQueueActions'> | 'qid' | 'stop'

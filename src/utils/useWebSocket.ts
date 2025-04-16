@@ -35,13 +35,15 @@ function addOverlayWsParam() {
   location.reload()
 }
 
-export function useWebSocket(config: {
-  allowClose: boolean
-  addWsParam: boolean
-} = { allowClose: false, addWsParam: true }) {
+export function useWebSocket(
+  config: {
+    allowClose: boolean
+    addWsParam: boolean
+  } = { allowClose: false, addWsParam: true },
+) {
   const wsConnected = ref(undefined as boolean | undefined)
   const userIgnoredWarning = ref(false)
-  const useType = ref(undefined as 'overlay' | 'websocket' | undefined)
+  const useType = ref('overlay' as 'overlay' | 'websocket' | undefined)
 
   function check() {
     Promise.race([
@@ -54,9 +56,11 @@ export function useWebSocket(config: {
     ])
       .then(() => {
         wsConnected.value = true
+        useType.value = 'websocket'
       })
       .catch(() => {
         wsConnected.value = false
+        useType.value = 'overlay'
       })
   }
 
@@ -83,11 +87,15 @@ export function useWebSocket(config: {
   }
   onMounted(() => {
     if (isIE()) {
-      ElMessageBox.alert('不支持 IE 浏览器，请使用 Chrome、Firefox、Edge 等现代浏览器访问。', '提示', {
-        type: 'error',
-        showConfirmButton: false,
-        showClose: false,
-      })
+      ElMessageBox.alert(
+        '不支持 IE 浏览器，请使用 Chrome、Firefox、Edge 等现代浏览器访问。',
+        '提示',
+        {
+          type: 'error',
+          showConfirmButton: false,
+          showClose: false,
+        },
+      )
       return
     }
     watch(wsConnected, (value) => {
@@ -99,11 +107,7 @@ export function useWebSocket(config: {
       }
     })
     if (!window.location.href.includes('OVERLAY_WS') && config.addWsParam) {
-      useType.value = 'websocket'
       addOverlayWsParam()
-    }
-    else {
-      useType.value = 'overlay'
     }
     check()
     setInterval(() => {
