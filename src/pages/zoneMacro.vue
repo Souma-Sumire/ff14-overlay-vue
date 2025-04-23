@@ -27,6 +27,7 @@ const showContentTypes: number[] = [
   ContentType.Raids, // 大型Raid
   ContentType.VCDungeonFinder, // 多变迷宫
   ContentType.UltimateRaids, // 绝境战
+  ContentType.ChaoticAllianceRaid, // 诛灭战
 ]
 
 const preSortZoneInfo = Object.entries(zoneInfo).map(([id, info]) => {
@@ -46,6 +47,7 @@ const usedZoneInfo = [
   ...preSortZoneInfo.filter(v => v.contentType === ContentType.VCDungeonFinder), // 多变迷宫
   ...preSortZoneInfo.filter(v => v.contentType === ContentType.UltimateRaids), // 绝境战
   ...preSortZoneInfo.filter(v => v.contentType === ContentType.DeepDungeons), // 深层迷宫
+  ...preSortZoneInfo.filter(v => v.contentType === ContentType.ChaoticAllianceRaid), // 诛灭战
   ...preSortZoneInfo.filter(v => v.contentType === undefined || !showContentTypes.includes(v.contentType)),
 ]
 

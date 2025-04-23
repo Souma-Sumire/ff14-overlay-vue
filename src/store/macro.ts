@@ -51,6 +51,7 @@ export const useMacroStore = defineStore('macro', {
         { text: 'M7S', value: '1261' },
         { text: 'M8S', value: '1263' },
         { text: '绝伊甸', value: '1238' },
+        { text: '灭暗云', value: '1241' },
       ],
       show,
       toggleShow,
