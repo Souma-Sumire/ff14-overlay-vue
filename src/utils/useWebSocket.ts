@@ -109,10 +109,12 @@ export function useWebSocket(
     if (!window.location.href.includes('OVERLAY_WS') && config.addWsParam) {
       addOverlayWsParam()
     }
-    check()
-    setInterval(() => {
+    if (window.location.href.includes('OVERLAY_WS')) {
       check()
-    }, 3000)
+      setInterval(() => {
+        check()
+      }, 3000)
+    }
   })
 
   return { wsConnected, useType }

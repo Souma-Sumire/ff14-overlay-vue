@@ -356,7 +356,7 @@ onMounted(() => {
       </el-space>
     </el-main>
     <div class="menu" :class="useType">
-      <el-button v-if="useType === 'overlay'" size="small" @click="macroStore.toggleShow()">
+      <el-button v-if="useType === 'overlay'" size="small" m-l-12px @click="macroStore.toggleShow()">
         隐藏页面
       </el-button>
       <el-button type="success" size="small" @click="macroStore.newMacro()">
