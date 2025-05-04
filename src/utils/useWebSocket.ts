@@ -43,7 +43,7 @@ export function useWebSocket(
 ) {
   const wsConnected = ref(undefined as boolean | undefined)
   const userIgnoredWarning = ref(false)
-  const useType = ref('overlay' as 'overlay' | 'websocket' | undefined)
+  const useType = ref('overlay' as 'overlay' | 'websocket')
 
   function check() {
     Promise.race([
@@ -55,12 +55,17 @@ export function useWebSocket(
       }),
     ])
       .then(() => {
-        wsConnected.value = true
-        useType.value = 'websocket'
+        if (window.location.href.includes('OVERLAY_WS')) {
+          wsConnected.value = true
+          useType.value = 'websocket'
+        }
       })
       .catch(() => {
-        wsConnected.value = false
-        useType.value = 'overlay'
+        if (window.location.href.includes('OVERLAY_WS')) {
+          setTimeout(() => {
+            check()
+          }, 3000)
+        }
       })
   }
 
@@ -109,12 +114,7 @@ export function useWebSocket(
     if (!window.location.href.includes('OVERLAY_WS') && config.addWsParam) {
       addOverlayWsParam()
     }
-    if (window.location.href.includes('OVERLAY_WS')) {
-      check()
-      setInterval(() => {
-        check()
-      }, 3000)
-    }
+    check()
   })
 
   return { wsConnected, useType }
