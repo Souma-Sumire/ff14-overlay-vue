@@ -60,3 +60,10 @@ app.use(VueLazyload)
 app.use(i18n)
 
 app.mount('#app')
+
+const { protocol, hostname, href } = window.location
+const isLocal = ['localhost', '127.0.0.1', '::1'].includes(hostname)
+
+if (protocol === 'http:' && !isLocal) {
+  window.location.href = href.replace('http:', 'https:')
+}

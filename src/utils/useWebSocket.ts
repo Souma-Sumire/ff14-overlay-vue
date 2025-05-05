@@ -61,6 +61,8 @@ export function useWebSocket(
         }
       })
       .catch(() => {
+        wsConnected.value = false
+        useType.value = 'overlay'
         if (window.location.href.includes('OVERLAY_WS')) {
           setTimeout(() => {
             check()
