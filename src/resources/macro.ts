@@ -1,5 +1,5 @@
-import type { PPJSON } from '@/types/PostNamazu'
 import type { ZoneIdInfo } from '../types/macro'
+import type { PPJSON } from '@/types/PostNamazu'
 import { getTerritoryTypeByMapID } from './contentFinderCondition'
 
 const defaultMacro: { zoneId: ZoneIdInfo } = {

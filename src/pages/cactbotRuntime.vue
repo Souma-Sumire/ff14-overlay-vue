@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { PlayerRuntime } from '@/types/partyPlayer'
 import type { Role } from '../../cactbot/types/job'
-import Util, { jobEnumOrder } from '@/utils/util'
+import type { PlayerRuntime } from '@/types/partyPlayer'
 import { VxeUI } from 'vxe-table'
+import Util, { jobEnumOrder } from '@/utils/util'
 import {
   addOverlayListener,
   callOverlayHandler,

@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { Job } from 'cactbot/types/job'
 import type {
   FFlogsApiV1ReportEvents,
   FFlogsQuery,
@@ -7,14 +8,13 @@ import type {
   Friendlies,
 } from '@/types/fflogs'
 import type { ITimelineCondition } from '@/types/timeline'
-import type { Job } from 'cactbot/types/job'
+import axios from 'axios'
+import { ElMessageBox } from 'element-plus'
 import { getActionChinese } from '@/resources/actionChinese'
 import { useTimelineStore } from '@/store/timeline'
 import { factory } from '@/utils/timelineSpecialRules'
 import Util from '@/utils/util'
 import { getImgSrc, handleImgError } from '@/utils/xivapi'
-import axios from 'axios'
-import { ElMessageBox } from 'element-plus'
 import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
 
 const props = defineProps<{

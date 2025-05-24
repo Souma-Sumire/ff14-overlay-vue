@@ -1,12 +1,12 @@
 <script lang="ts" setup>
+import type { EventMap } from 'cactbot/types/event'
 import type {
   ITimeline,
   ITimelineCondition,
   ITimelineLine,
 } from '@/types/timeline'
-import type { EventMap } from 'cactbot/types/event'
-import { parseTimeline, useTimelineStore } from '@/store/timeline'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { parseTimeline, useTimelineStore } from '@/store/timeline'
 import {
   addOverlayListener,
   callOverlayHandler,

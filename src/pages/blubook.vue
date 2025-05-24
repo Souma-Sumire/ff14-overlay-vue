@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Ref } from 'vue'
-import { completeIcon } from '@/resources/status'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { completeIcon } from '@/resources/status'
 
 interface AozAction {
   ID: number

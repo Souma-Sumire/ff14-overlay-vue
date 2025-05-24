@@ -1,7 +1,13 @@
 <script setup lang="ts">
+import type { Ref } from 'vue'
 import type { Encounter, Keigenn, RowVO, Status } from '@/types/keigennRecord2'
 import type { Player } from '@/types/partyPlayer'
-import type { Ref } from 'vue'
+import {
+  type VxeTableEvents,
+  type VxeTableInstance,
+  type VxeTablePropTypes,
+  VxeUI,
+} from 'vxe-table'
 import { getActionChinese } from '@/resources/actionChinese'
 import { completeIcon, stackUrl } from '@/resources/status'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
@@ -17,12 +23,6 @@ import {
   universalVulnerableFriendly,
 } from '@/utils/keigenn'
 import Util from '@/utils/util'
-import {
-  type VxeTableEvents,
-  type VxeTableInstance,
-  type VxeTablePropTypes,
-  VxeUI,
-} from 'vxe-table'
 import logDefinitions from '../../cactbot/resources/netlog_defs'
 import NetRegexes from '../../cactbot/resources/netregexes'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'

@@ -1,5 +1,7 @@
-import type { FFIcon } from '@/types/fflogs'
 import type { Job } from '../../cactbot/types/job'
+import type { FFIcon } from '@/types/fflogs'
+import { ElMessage } from 'element-plus'
+import { defineStore } from 'pinia'
 import {
   type ITimeline,
   type ITimelineCondition,
@@ -10,8 +12,6 @@ import {
   type TimelineConfigTranslate,
   type TimelineConfigValues,
 } from '@/types/timeline'
-import { ElMessage } from 'element-plus'
-import { defineStore } from 'pinia'
 import Util from '../utils/util'
 import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
 

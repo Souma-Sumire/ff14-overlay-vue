@@ -294,6 +294,10 @@
     "useSSRWidth": true,
     "useTemplateRef": true,
     "watchDeep": true,
-    "watchImmediate": true
+    "watchImmediate": true,
+    "Slot": true,
+    "Slots": true,
+    "createRef": true,
+    "useCountdown": true
   }
 }

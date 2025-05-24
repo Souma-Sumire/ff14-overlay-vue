@@ -9,7 +9,15 @@ function getName(line: string[]): string {
   const id = Number.parseInt(line[4], 16)
   const sourceId = line[2]
   const rawText = line[5]
-  return getActionChineseTemp(id) || getActionChinese(id) || (void (sourceId.startsWith('4') && !rawText.includes('unknown') && console.error(`未找到动作 ${id} ${rawText}`)) || rawText)
+  const temp = getActionChineseTemp(id)
+  if (temp)
+    return temp
+  const name = getActionChinese(id)
+  if (name)
+    return name
+  if (sourceId.startsWith('4') && !rawText.includes('unknown'))
+    console.error(`未找到动作 ${id} ${rawText}`)
+  return rawText
 }
 
 class Cast {

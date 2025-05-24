@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { Player } from '@/types/partyPlayer'
 import type { RemovableRef } from '@vueuse/core'
 import type { Role } from '../../cactbot/types/job'
-import Util from '@/utils/util'
+import type { Player } from '@/types/partyPlayer'
 import { ref } from 'vue'
 import { type UseDraggableReturn, VueDraggable } from 'vue-draggable-plus'
+import Util from '@/utils/util'
 
 const props = withDefaults(defineProps<Props>(), {})
 const emit = defineEmits<(e: 'updateSortArr', id: number[]) => void>()
