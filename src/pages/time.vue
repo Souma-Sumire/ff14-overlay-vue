@@ -33,7 +33,7 @@ if (mode === 'combat' || mode === 'both') {
       const minutes = duration.minutes()
       const seconds = duration.seconds()
       const millisecondsString = duration.milliseconds().toString().padStart(3, '0')
-      gameCombatTime.value = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}.${millisecondsString}`
+      gameCombatTime.value = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}<small>.${millisecondsString}</small>`
     }
     requestAnimationFrame(update)
   })
@@ -42,8 +42,8 @@ if (mode === 'combat' || mode === 'both') {
 if (mode === 'logline' || mode === 'both') {
   const handleLogLine: EventMap['LogLine'] = (e) => {
     if (e.line[0] !== '00') {
-      lastLogTime.value
-        = e?.line?.[1]?.match(/(?<=T)\d\d:\d\d:\d\d\.\d\d\d/)?.[0] ?? ''
+      const match = e.line[1].match(/(?<=T)(\d\d:\d\d:\d\d)\.(\d\d\d)/)!
+      lastLogTime.value = `${match[1]}<small>.${match[2]}</small>`
     }
   }
   addOverlayListener('LogLine', handleLogLine)
@@ -52,8 +52,8 @@ if (mode === 'logline' || mode === 'both') {
 
 <template>
   <div>
-    <span v-if="mode === 'combat' || mode === 'both'" v-show="gameActiveTime >= 0"> {{ gameCombatTime }} </span>
-    <span v-if="mode === 'logline' || mode === 'both'"> {{ lastLogTime }} </span>
+    <span v-if="mode === 'combat' || mode === 'both'" v-show="gameActiveTime >= 0" v-html="gameCombatTime" />
+    <span v-if="mode === 'logline' || mode === 'both'" v-html="lastLogTime" />
   </div>
 </template>
 
@@ -65,5 +65,10 @@ span {
   font-weight: bold;
   padding: 0 5px;
   margin-right: 5px;
+
+  :deep(small) {
+    font-size: 0.7em;
+  }
+
 }
 </style>
