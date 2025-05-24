@@ -16,25 +16,18 @@ const tableData: Menu[] = [
     title: '国际服汉化补丁',
     type: '网页',
     path: 'https://github.com/Souma-Sumire/FFXIVChnTextPatch-Souma/',
-    comment: '前往Github项目了解详情',
+    comment: '前往Github查看详情',
   },
   {
     title: 'Cactbot Raidboss 自定义文件',
     type: '网页',
     path: 'https://github.com/Souma-Sumire/raidboss-user-js-public',
-    comment: '俗称轮椅，使用我的自定义文件覆盖默认触发器，前往Github项目了解详情',
+    comment: '俗称轮椅TTS。前往Github查看详情',
   },
   {
     title: 'FFLOGS 上传器 加速下载',
     type: '网页',
     path: 'fflogsUploaderDownload',
-  },
-  {
-    title: '[悬浮窗] 治疗/减伤时间轴',
-    type: '悬浮窗',
-    path: 'timeline',
-    src: 'timeline.webp',
-    comment: '编辑时间轴：在浏览器中打开<a href="/ff14-overlay-vue/#/timelineSettings?OVERLAY_WS=ws://127.0.0.1:10501/ws">这个网页</a>',
   },
   {
     title: '[悬浮窗] 减伤监控2',
@@ -58,6 +51,14 @@ actionCN: action显示中文化，默认true
 statusCN: status显示中文化，默认true
     `,
     src: 'keigennRecord2.webp',
+  },
+  {
+    title: '[悬浮窗] 治疗/减伤时间轴',
+    type: '悬浮窗',
+    path: 'timeline',
+    src: 'timeline.webp',
+    comment: `自定义的时间轴提醒，支持FFLogs一键抄轴。
+    <a href="/ff14-overlay-vue/#/timelineSettings?OVERLAY_WS=ws://127.0.0.1:10501/ws">编辑时间轴请在浏览器中打开这里</a>（曾经的小齿轮）`,
   },
   {
     title: '全副本发宏/标点',
@@ -110,16 +111,19 @@ syncFocusWS: 是否同步监控目标至通过 WebSocket 连接的其他页面�
     src: 'castingToChinese.webp',
   },
   {
-    title: '[悬浮窗] OBS 自动录制 2（新）',
+    title: '[悬浮窗] OBS 自动录制 2',
     type: '悬浮窗',
     path: 'obs2',
     comment: '满足条件时自动开启 OBS 录屏',
   },
   {
-    title: '[悬浮窗] OBS 自动录制（旧）',
+    title: '[OBS悬浮窗] 战斗时长显示',
     type: '悬浮窗',
-    path: 'obs',
-    comment: '满足条件时自动开启 OBS 录屏',
+    path: 'time?mode=combat&OVERLAY_WS=ws://127.0.0.1:10501/ws',
+    comment: `在OBS中添加“浏览器”，以便在录像中显示战斗时间。
+URL地址栏参数说明：
+mode: 显示模式，默认combat，值为：combat（战斗时间）/logline（日志时间）/both（同时显示）`,
+    src: 'time.webp',
   },
   {
     title: '[悬浮窗] 盾值显示',
@@ -144,31 +148,18 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
     src: 'limitBreakTip.webp',
   },
   {
-    title: '[悬浮窗] DNC 触发倒计时显示',
-    type: '悬浮窗',
-    path: 'jobs/dnc',
-    comment: '在技能上显示buff消失倒计时，防止你丢失触发。仅包含6.X技能。7.0未适配，因为改的太蠢，我不玩了',
-    src: 'dnc.webp',
-  },
-  {
-    title: '[悬浮窗] 一键 VPR 连击',
-    type: '悬浮窗',
-    path: 'okVpr',
-    comment: '<a href="#/okVpr">版本A</a>，进附体时不会重置热键栏，适合直接设置成单独键位（我没用过，不知道好不好用）\n<a href="#/okVpr2">版本B</a>，进附体时会重置热键栏，适合设置成平时按的键位（我没用过，不知道好不好用）',
-  },
-  {
     title: '[悬浮窗] 我 TM 现在在几线？',
     type: '悬浮窗',
     path: 'instancedAreaInfo',
-    comment: '狩猎常用，一个简单的小工具，显示你当前在几线。',
+    comment: '显示你当前在几线。',
   },
   {
-    title: '狩猎车头找怪工具',
+    title: '[网页] 狩猎找A怪地图',
     type: '网页',
     path: 'hunt',
   },
   {
-    title: '简易风脉地图',
+    title: '[网页] 风脉地图',
     type: '网页',
     path: 'aether',
   },
@@ -209,7 +200,7 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
         </el-card>
 
         <vxe-table
-          :data="tableData" stripe border :row-config="{ height: 120, isHover: true }"
+          :data="tableData" stripe border :row-config="{ isHover: true }"
           :scroll-x="{ enabled: true }" :fit="true" :auto-resize="true" class="custom-table"
         >
           <vxe-column width="250" title="名称" class-name="column-title">
