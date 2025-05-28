@@ -8,7 +8,7 @@ import type {
   Friendlies,
 } from '@/types/fflogs'
 import type { ITimelineCondition } from '@/types/timeline'
-import axios from 'axios'
+import { Loading } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 import { getActionChinese } from '@/resources/actionChinese'
 import { useTimelineStore } from '@/store/timeline'
@@ -85,11 +85,16 @@ async function queryFFlogsReportFights(url: string) {
 
   fflogsQueryConfig.code = reg.groups?.code ?? ''
   try {
-    const res = await axios.get(
+    const res = await fetch(
       `https://cn.fflogs.com/v1/report/fights/${fflogsQueryConfig.code}?api_key=${timelineStore.settings.api}`,
-    )
+    ).then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      return response.json()
+    })
     fflogsQueryConfig.bossIDs = (
-      res.data.enemies as {
+      res.enemies as {
         id: number
         type: string
       }[]
@@ -98,14 +103,14 @@ async function queryFFlogsReportFights(url: string) {
       .map(boss => boss.id)
     fflogsQueryConfig.fightIndex
       = (reg?.groups?.fight === 'last'
-        ? res.data.fights.length
+        ? res.fights.length
         : Number.parseInt(reg?.groups?.fight ?? '0')) - 1
-    const fight = res.data.fights[fflogsQueryConfig.fightIndex]
+    const fight = res.fights[fflogsQueryConfig.fightIndex]
     fflogsQueryConfig.zoneID = fight.zoneID
     fflogsQueryConfig.start = fight.start_time
     fflogsQueryConfig.end = fight.end_time
     fflogsQueryConfig.friendlies = (
-      res.data.friendlies as Friendlies[]
+      res.friendlies as Friendlies[]
     ).filter(
       value =>
         value.icon !== 'LimitBreak'
@@ -172,16 +177,21 @@ async function queryFFlogsReportEvents() {
   fflogsQueryConfig.abilityFilterEvents.length = 0
   async function queryFriendly(startTime: number) {
     try {
-      const res = await axios.get(
+      const res = await fetch(
         `https://cn.fflogs.com/v1/report/events/casts/${fflogsQueryConfig.code}?start=${startTime}&end=${fflogsQueryConfig.end}&hostility=0&sourceid=${fflogsQueryConfig.player?.id}&api_key=${timelineStore.settings.api}`,
-      )
-      resEvents.push(...res.data.events)
+      ).then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        return response.json()
+      })
+      resEvents.push(...res.events)
       if (
-        res.data.nextPageTimestamp
-        && res.data.nextPageTimestamp > 0
-        && res.data.nextPageTimestamp < fflogsQueryConfig.end
+        res.nextPageTimestamp
+        && res.nextPageTimestamp > 0
+        && res.nextPageTimestamp < fflogsQueryConfig.end
       ) {
-        await queryFriendly(res.data.nextPageTimestamp)
+        await queryFriendly(res.nextPageTimestamp)
       }
     }
     catch (e) {
@@ -194,16 +204,21 @@ async function queryFFlogsReportEvents() {
   async function queryEnemies(startTime: number, index: number) {
     if (index >= 0) {
       try {
-        const res = await axios.get(
+        const res = await fetch(
           `https://cn.fflogs.com/v1/report/events/casts/${fflogsQueryConfig.code}?start=${startTime}&end=${fflogsQueryConfig.end}&hostility=1&sourceid=${fflogsQueryConfig.bossIDs[index]}&api_key=${timelineStore.settings.api}`,
-        )
-        resEvents.push(...res.data.events)
+        ).then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+          }
+          return response.json()
+        })
+        resEvents.push(...res.events)
         if (
-          res.data.nextPageTimestamp
-          && res.data.nextPageTimestamp > 0
-          && res.data.nextPageTimestamp < fflogsQueryConfig.end
+          res.nextPageTimestamp
+          && res.nextPageTimestamp > 0
+          && res.nextPageTimestamp < fflogsQueryConfig.end
         ) {
-          await queryEnemies(res.data.nextPageTimestamp, index)
+          await queryEnemies(res.nextPageTimestamp, index)
         }
 
         if (index < fflogsQueryConfig.bossIDs.length - 1)
@@ -390,6 +405,9 @@ function openFFLogsProfile() {
           type="primary"
           @click="queryFFlogsReportFights(inputUrl)"
         >
+          <el-icon v-if="isLoading" class="is-loading">
+            <Loading />
+          </el-icon>
           {{ queryText }}
         </el-button>
       </el-form-item>
