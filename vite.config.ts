@@ -113,7 +113,6 @@ export default defineConfig({
       'pinia',
       'element-plus',
       '@vueuse/core',
-      'axios',
     ],
   },
 })
