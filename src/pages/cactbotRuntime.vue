@@ -2,7 +2,7 @@
 import type { Role } from '../../cactbot/types/job'
 import type { PlayerRuntime } from '@/types/partyPlayer'
 import { VxeUI } from 'vxe-table'
-import Util, { jobEnumOrder } from '@/utils/util'
+import Util from '@/utils/util'
 import {
   addOverlayListener,
   callOverlayHandler,
@@ -20,17 +20,17 @@ function createRPArr(r: 'T' | 'H' | 'D' | 'C' | 'G' | 'N', l: number, start: num
 }
 
 const dialogVisible = ref(false)
-const defaultSortArray = useStorage('cactbotRuntime-sortArr', jobEnumOrder)
+const sortArray = useStorage('cactbotRuntime-sortArr', [] as number[])
 
 const fakeParty: PlayerRuntime[] = [
-  { id: '10000001', name: '虚构战士', job: 21, inParty: true },
+  { id: '10000001', name: '虚构暗骑', job: 32, inParty: true },
   { id: '10000002', name: '虚构骑士', job: 19, inParty: true },
   { id: '10000003', name: '虚构占星', job: 33, inParty: true },
   { id: '10000004', name: '虚构学者', job: 28, inParty: true },
   { id: '10000005', name: '虚构忍者', job: 30, inParty: true },
-  { id: '10000006', name: '虚构武士', job: 34, inParty: true },
-  { id: '10000008', name: '虚构诗人', job: 23, inParty: true },
-  { id: '10000007', name: '虚构召唤', job: 27, inParty: true },
+  { id: '10000006', name: '虚构龙骑', job: 22, inParty: true },
+  { id: '10000008', name: '虚构舞者', job: 38, inParty: true },
+  { id: '10000007', name: '虚构画家', job: 42, inParty: true },
 ]
 const data = useStorage('cactbotRuntime-data', { party: [] as PlayerRuntime[] })
 const showTips = useStorage('cactbotRuntime-showTips', ref(true))
@@ -113,8 +113,8 @@ function getJobClassification(job: number): Role {
 function defaultPartySort() {
   data.value.party.sort(
     (a, b) =>
-      defaultSortArray.value.indexOf(a.job)
-      - defaultSortArray.value.indexOf(b.job),
+      sortArray.value.indexOf(a.job)
+      - sortArray.value.indexOf(b.job),
   )
   for (const v of data.value.party) {
     v.rp = undefined
@@ -171,7 +171,7 @@ function onMouseOut(): void {
 }
 
 function updateSortArr(arr: number[]) {
-  defaultSortArray.value = arr
+  sortArray.value = arr
   updateData()
 }
 

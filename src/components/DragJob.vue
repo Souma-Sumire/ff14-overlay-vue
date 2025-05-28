@@ -95,6 +95,10 @@ function onUpdate() {
       .map(v => v.job),
   )
 }
+
+onMounted(() => {
+  onUpdate()
+})
 </script>
 
 <template>
