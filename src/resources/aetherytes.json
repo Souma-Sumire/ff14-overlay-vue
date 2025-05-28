@@ -908,5 +908,55 @@
       "ja": "レイノード・ウィンド",
       "souma": "地场节点·风"
     }
+  },
+  {
+    "x": 1854,
+    "y": 328,
+    "territory": "0",
+    "placeName": {
+      "en": "Expedition Base Camp",
+      "ja": "探査隊のベースキャンプ",
+      "souma": ""
+    }
+  },
+  {
+    "x": 851,
+    "y": 413,
+    "territory": "0",
+    "placeName": {
+      "en": "The Wanderer's Haven",
+      "ja": "放浪神聖域跡前",
+      "souma": ""
+    }
+  },
+  {
+    "x": 666,
+    "y": 903,
+    "territory": "0",
+    "placeName": {
+      "en": "Crystallized Caverns",
+      "ja": "水晶洞窟前",
+      "souma": ""
+    }
+  },
+  {
+    "x": 1330,
+    "y": 1330,
+    "territory": "0",
+    "placeName": {
+      "en": "Eldergrowth",
+      "ja": "古樹の湿原前",
+      "souma": ""
+    }
+  },
+  {
+    "x": 640,
+    "y": 1305,
+    "territory": "0",
+    "placeName": {
+      "en": "Stonemarsh",
+      "ja": "石塔水沼前",
+      "souma": ""
+    }
   }
 ]
