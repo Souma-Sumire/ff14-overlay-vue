@@ -916,7 +916,7 @@
     "placeName": {
       "en": "Expedition Base Camp",
       "ja": "探査隊のベースキャンプ",
-      "souma": ""
+      "souma": "探险队前线营地"
     }
   },
   {
@@ -926,7 +926,7 @@
     "placeName": {
       "en": "The Wanderer's Haven",
       "ja": "放浪神聖域跡前",
-      "souma": ""
+      "souma": "流浪神圣域遗址前"
     }
   },
   {
@@ -936,7 +936,7 @@
     "placeName": {
       "en": "Crystallized Caverns",
       "ja": "水晶洞窟前",
-      "souma": ""
+      "souma": "水晶洞窟入口"
     }
   },
   {
@@ -946,7 +946,7 @@
     "placeName": {
       "en": "Eldergrowth",
       "ja": "古樹の湿原前",
-      "souma": ""
+      "souma": "古树湿原入口"
     }
   },
   {
@@ -956,7 +956,7 @@
     "placeName": {
       "en": "Stonemarsh",
       "ja": "石塔水沼前",
-      "souma": ""
+      "souma": "石塔沼泽入口"
     }
   }
 ]
