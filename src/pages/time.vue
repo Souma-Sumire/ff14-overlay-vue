@@ -52,8 +52,8 @@ if (mode === 'logline' || mode === 'both') {
 
 <template>
   <div>
-    <span v-if="mode === 'combat' || mode === 'both'" v-show="gameActiveTime >= 0" v-html="gameCombatTime" />
     <span v-if="mode === 'logline' || mode === 'both'" v-html="lastLogTime" />
+    <span v-if="mode === 'combat' || mode === 'both'" v-show="gameActiveTime >= 0" v-html="gameCombatTime" />
   </div>
 </template>
 
