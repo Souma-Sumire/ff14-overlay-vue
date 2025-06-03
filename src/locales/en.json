@@ -65,5 +65,7 @@
   "filePathExplanation": "Make sure the path exists",
   "Default": "Default",
   "Chaotic": "Chaotic",
-  "firewallTutorial": "If the password is correct, please check if Windows Defender Firewall is blocking the connection"
+  "firewallTutorial": "If the password is correct, please check if Windows Defender Firewall is blocking the connection",
+  "OccultCrescent": "Occult Crescent",
+  "SocietyQuests": "Society Quests"
 }

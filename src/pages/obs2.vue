@@ -54,7 +54,9 @@ const CONTENT_TYPES = [
   'DeepDungeons', // 深层迷宫
   'Guildhests', // 行会令
   'DisciplesOfTheLand', // 出海垂钓、云冠群岛
+  'OccultCrescent', // 新月岛
   'Eureka', // 尤雷卡
+  'SocietyQuests', // 宇宙探索
   'GrandCompany', // 金蝶游乐场
   'QuestBattles', // 任务剧情
   'TreasureHunt', // 挖宝
@@ -237,6 +239,9 @@ const obs = new Obs()
 const handleChangeZone: EventMap['ChangeZone'] = (e) => {
   const zoneID = e.zoneID
   const zoneInfo = ZoneInfo[zoneID]
+  if (zoneInfo === undefined) {
+    return
+  }
   playerZoneInfo.value = zoneInfo
   checkCondition('enter')
 }
@@ -312,6 +317,10 @@ function getZoneType(zoneInfo: (typeof ZoneInfo)[number]): typeof CONTENT_TYPES[
       return 'QuestBattles'
     case ContentType.TreasureHunt:
       return 'TreasureHunt'
+    case ContentType.SocietyQuests:
+      return 'SocietyQuests'
+    case ContentType.OccultCrescent:
+      return 'OccultCrescent'
     default:
       return 'Default'
   }

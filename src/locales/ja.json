@@ -65,5 +65,7 @@
   "filePathExplanation": "パスが存在することを確認してください",
   "Default": "Default",
   "Chaotic": "滅",
-  "firewallTutorial": "パスワードが正しい場合、Windows Defender ファイアウォールが接続をブロックしているかどうかを確認してください"
+  "firewallTutorial": "パスワードが正しい場合、Windows Defender ファイアウォールが接続をブロックしているかどうかを確認してください",
+  "SocietyQuests": "友好部族クエスト",
+  "OccultCrescent": "蜃気楼の島 クレセントアイル"
 }
