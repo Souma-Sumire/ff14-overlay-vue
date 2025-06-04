@@ -22,12 +22,22 @@ if (hideOnStartup.value)
   macroStore.show = false
 
 const showContentTypes: number[] = [
-  ContentType.Dungeons, // 4人迷宫
-  ContentType.Trials, // 讨伐战
-  ContentType.Raids, // 大型Raid
-  ContentType.VCDungeonFinder, // 多变迷宫
+  ContentType.OccultCrescent, // 新月岛
   ContentType.UltimateRaids, // 绝境战
   ContentType.ChaoticAllianceRaid, // 诛灭战
+  ContentType.Raids, // 大型任务
+  ContentType.Dungeons, // 四人副本
+  ContentType.Trials, // 讨伐任务
+  ContentType.VCDungeonFinder, // 多变迷宫
+  ContentType.DeepDungeons, // 深层迷宫
+  ContentType.Guildhests, // 行会令
+  ContentType.DisciplesOfTheLand, // 出海垂钓、云冠群岛
+  ContentType.Eureka, // 尤雷卡
+  ContentType.SocietyQuests, // 宇宙探索
+  ContentType.GrandCompany, // 金蝶游乐场
+  ContentType.QuestBattles, // 任务剧情
+  ContentType.TreasureHunt, // 挖宝
+  ContentType.Pvp, // PVP
 ]
 
 const preSortZoneInfo = Object.entries(zoneInfo).map(([id, info]) => {
@@ -41,13 +51,22 @@ const preSortZoneInfo = Object.entries(zoneInfo).map(([id, info]) => {
 })
 
 const usedZoneInfo = [
-  ...preSortZoneInfo.filter(v => v.contentType === ContentType.Dungeons), // 4人迷宫
-  ...preSortZoneInfo.filter(v => v.contentType === ContentType.Trials), // 讨伐战
-  ...preSortZoneInfo.filter(v => v.contentType === ContentType.Raids), // 大型Raid
-  ...preSortZoneInfo.filter(v => v.contentType === ContentType.VCDungeonFinder), // 多变迷宫
+  ...preSortZoneInfo.filter(v => v.contentType === ContentType.OccultCrescent), // 新月岛
   ...preSortZoneInfo.filter(v => v.contentType === ContentType.UltimateRaids), // 绝境战
-  ...preSortZoneInfo.filter(v => v.contentType === ContentType.DeepDungeons), // 深层迷宫
   ...preSortZoneInfo.filter(v => v.contentType === ContentType.ChaoticAllianceRaid), // 诛灭战
+  ...preSortZoneInfo.filter(v => v.contentType === ContentType.Raids), // 大型任务
+  ...preSortZoneInfo.filter(v => v.contentType === ContentType.Dungeons), // 四人副本
+  ...preSortZoneInfo.filter(v => v.contentType === ContentType.Trials), // 讨伐任务
+  ...preSortZoneInfo.filter(v => v.contentType === ContentType.VCDungeonFinder), // 多变迷宫
+  ...preSortZoneInfo.filter(v => v.contentType === ContentType.DeepDungeons), // 深层迷宫
+  ...preSortZoneInfo.filter(v => v.contentType === ContentType.Guildhests), // 行会令
+  ...preSortZoneInfo.filter(v => v.contentType === ContentType.DisciplesOfTheLand), // 出海垂钓、云冠群岛
+  ...preSortZoneInfo.filter(v => v.contentType === ContentType.Eureka), // 尤雷卡
+  ...preSortZoneInfo.filter(v => v.contentType === ContentType.SocietyQuests), // 宇宙探索
+  ...preSortZoneInfo.filter(v => v.contentType === ContentType.GrandCompany), // 金蝶游乐场
+  ...preSortZoneInfo.filter(v => v.contentType === ContentType.QuestBattles), // 任务剧情
+  ...preSortZoneInfo.filter(v => v.contentType === ContentType.TreasureHunt), // 挖宝
+  ...preSortZoneInfo.filter(v => v.contentType === ContentType.Pvp), // PVP
   ...preSortZoneInfo.filter(v => v.contentType === undefined || !showContentTypes.includes(v.contentType)),
 ]
 

@@ -3876,6 +3876,60 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         },
       },
     ],
+    1252: [
+      {
+        Name: '老一',
+        Place: {
+          A: { X: 700.0, Y: -481.0, Z: 360.0, ID: 0, Active: true },
+          B: { X: 0.0, Y: 0.0, Z: 0.0, ID: 1, Active: false },
+          C: { X: 700.0, Y: -481.0, Z: 400.0, ID: 2, Active: true },
+          D: { X: 0.0, Y: 0.0, Z: 0.0, ID: 3, Active: false },
+          One: { X: 690.0, Y: -481.0, Z: 370.0, ID: 4, Active: true },
+          Two: { X: 710.0, Y: -481.0, Z: 370.0, ID: 5, Active: true },
+          Three: { X: 710.0, Y: -481.0, Z: 390.0, ID: 6, Active: true },
+          Four: { X: 690.0, Y: -481.0, Z: 390.0, ID: 7, Active: true },
+        },
+      },
+      {
+        Name: '老二（温度计极限位置）',
+        Place: {
+          A: { X: -800.0, Y: -876.0, Z: 349.0, ID: 0, Active: true },
+          B: { X: -789.0, Y: -876.0, Z: 360.0, ID: 1, Active: true },
+          C: { X: -800.0, Y: -876.0, Z: 371.0, ID: 2, Active: true },
+          D: { X: -811.0, Y: -876.0, Z: 360.0, ID: 3, Active: true },
+          One: { X: -807.778, Y: -876.0, Z: 352.222, ID: 4, Active: true },
+          Two: { X: -792.222, Y: -876.0, Z: 352.222, ID: 5, Active: true },
+          Three: { X: -792.222, Y: -876.0, Z: 367.778, ID: 6, Active: true },
+          Four: { X: -807.778, Y: -876.0, Z: 367.778, ID: 7, Active: true },
+        },
+      },
+      {
+        Name: '老三（标点外侧为十字范围边界）',
+        Place: {
+          A: { X: -337.0, Y: -840.0, Z: 147.0, ID: 0, Active: true },
+          B: { X: -327.0, Y: -840.0, Z: 157.0, ID: 1, Active: true },
+          C: { X: -337.0, Y: -840.0, Z: 167.0, ID: 2, Active: true },
+          D: { X: -347.0, Y: -840.0, Z: 157.0, ID: 3, Active: true },
+          One: { X: -344.0, Y: -840.0, Z: 150.0, ID: 4, Active: true },
+          Two: { X: -330.0, Y: -840.0, Z: 150.0, ID: 5, Active: true },
+          Three: { X: -330.0, Y: -840.0, Z: 164.0, ID: 6, Active: true },
+          Four: { X: -344.0, Y: -840.0, Z: 164.0, ID: 7, Active: true },
+        },
+      },
+      {
+        Name: '老四（标点中心为钢铁月环范围）',
+        Place: {
+          A: { X: 682.6795, Y: -476.0, Z: -684.0, ID: 0, Active: true },
+          B: { X: 700.0, Y: -476.0, Z: -654.0, ID: 1, Active: true },
+          C: { X: 717.3205, Y: -476.0, Z: -684.0, ID: 2, Active: true },
+          D: { X: 0.0, Y: 0.0, Z: 0.0, ID: 3, Active: false },
+          One: { X: 700.0, Y: -476.0, Z: -684.0, ID: 4, Active: true },
+          Two: { X: 691.3397, Y: -476.0, Z: -669.0, ID: 5, Active: true },
+          Three: { X: 708.6603, Y: -476.0, Z: -669.0, ID: 6, Active: true },
+          Four: { X: 0.0, Y: 0.0, Z: 0.0, ID: 7, Active: false },
+        },
+      },
+    ],
     1257: [
       {
         Name: 'Game8',
