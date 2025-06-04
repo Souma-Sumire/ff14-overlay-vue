@@ -198,11 +198,11 @@ export const useMacroStore = defineStore('macro', {
     },
     doLocalWayMark(place: WayMarkObj): void {
       doWayMarks(place, true)
-      ElMessage.success('已本地标点')
+      ElMessage.success('已尝试本地标点')
     },
     doPartyWayMark(place: WayMarkObj): void {
       doWayMarks(place, false)
-      ElMessage.success('已公开标点')
+      ElMessage.success('已尝试公开标点')
     },
     doSlotWayMark(place: WayMarkObj): void {
       ElMessageBox({
