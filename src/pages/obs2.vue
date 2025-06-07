@@ -12,7 +12,7 @@ import NetRegexes, { commonNetRegex } from '../../cactbot/resources/netregexes'
 import { addOverlayListener, callOverlayHandler, removeOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
 const { t } = useI18n()
-interface Settings { type: ContentUsedType, enter: boolean, countdown: boolean, combatStart: boolean, combatEnd: boolean, wipe: boolean }
+interface Settings { type: ContentUsedType, enter: boolean, countdown: boolean, combatStart: boolean, combatEnd: boolean, wipe: boolean, partyLength: number }
 type ConditionType = 'enter' | 'combatStart' | 'combatEnd' | 'countdown' | 'wipe'
 type ContentUsedType = typeof CONTENT_TYPES[number]
 const userConfig = useStorage('obs-user-config', { host: 4455, password: '', path: '', fileName: '' }, localStorage, { writeDefaults: true })
@@ -20,9 +20,14 @@ const userContentSetting = useStorage('obs-user-content-setting', [] as Settings
 const isFirstTime = useStorage('obs-is-first-time', true)
 const actReady = ref(false)
 const debug = ref(false)
-const playerZoneInfo = ref({} as typeof ZoneInfo[number])
+const playerInfo = ref({
+  zone: {} as typeof ZoneInfo[number],
+  partyLength: 1,
+})
 
 function checkWebSocket(): Promise<void> {
+  if (debug.value)
+    return Promise.resolve()
   return new Promise((resolve) => {
     callOverlayHandler({ call: 'cactbotRequestState' }).then(() => {
       actReady.value = true
@@ -45,8 +50,9 @@ const REGEXES: Record<string, RegExp> = {
 const CONTENT_TYPES = [
   'Savage', // 零式
   'Extreme', // 歼殛战
-  'Chaotic', // 破灭站
+  'Chaotic', // 破灭战
   'Ultimate', // 绝境战
+  'OccultCrescent', // 新月岛
   'Dungeons', // 四人副本
   'Raids', // 大型任务
   'Trials', // 讨伐任务
@@ -54,7 +60,6 @@ const CONTENT_TYPES = [
   'DeepDungeons', // 深层迷宫
   'Guildhests', // 行会令
   'DisciplesOfTheLand', // 出海垂钓、云冠群岛
-  'OccultCrescent', // 新月岛
   'Eureka', // 尤雷卡
   'SocietyQuests', // 宇宙探索
   'GrandCompany', // 金蝶游乐场
@@ -64,11 +69,11 @@ const CONTENT_TYPES = [
   'Default', // 其他
 ] as const
 
-const DEFAULT_ENABLE_SETTINGS = { enter: false, countdown: true, combatStart: true, combatEnd: true, wipe: true }
-const DEFAULT_DISABLE_SETTINGS = { enter: false, countdown: false, combatStart: false, combatEnd: false, wipe: false }
+const DEFAULT_ENABLE_SETTINGS = { enter: false, countdown: true, combatStart: true, combatEnd: true, wipe: true, partyLength: 4 }
+const DEFAULT_DISABLE_SETTINGS = { enter: false, countdown: false, combatStart: false, combatEnd: false, wipe: false, partyLength: 1 }
 
 function initializeContentSettings() {
-  const defaultEnabled: ContentUsedType[] = ['Savage', 'Extreme', 'Ultimate', 'Chaotic', 'Default']
+  const defaultEnabled: ContentUsedType[] = ['Savage', 'Extreme', 'Ultimate', 'Chaotic', 'OccultCrescent', 'Default']
   if (isFirstTime.value) {
     isFirstTime.value = false
     // 大型任务、绝境战默认开启
@@ -87,6 +92,10 @@ function initializeContentSettings() {
     userContentSetting.value.push(...missingTypes)
   }
   userContentSetting.value.sort((a, b) => CONTENT_TYPES.indexOf(a.type) - CONTENT_TYPES.indexOf(b.type))
+  // 补全可能因新增而缺失的设置项
+  userContentSetting.value = userContentSetting.value.map(item => ({ ...(defaultEnabled.includes(item.type) ? DEFAULT_ENABLE_SETTINGS : DEFAULT_DISABLE_SETTINGS), ...item }))
+  // eslint-disable-next-line no-console
+  console.log('User content settings initialized:', userContentSetting.value)
 }
 
 class Obs {
@@ -242,7 +251,7 @@ const handleChangeZone: EventMap['ChangeZone'] = (e) => {
   if (zoneInfo === undefined) {
     return
   }
-  playerZoneInfo.value = zoneInfo
+  playerInfo.value.zone = zoneInfo
   checkCondition('enter')
 }
 
@@ -327,7 +336,7 @@ function getZoneType(zoneInfo: (typeof ZoneInfo)[number]): typeof CONTENT_TYPES[
 }
 
 function checkCondition(condition: ConditionType) {
-  const zoneType = getZoneType(playerZoneInfo.value)
+  const zoneType = getZoneType(playerInfo.value.zone)
   if (!userContentSetting.value.find(item => item.type === zoneType && item[condition])) {
     if (condition === 'enter' && obs.status.recording) {
       // 上一次录制战斗通关，则这次切换场地（且不需要切割）时结束录制。
@@ -335,6 +344,10 @@ function checkCondition(condition: ConditionType) {
     }
     return
   }
+  if (playerInfo.value.partyLength >= (userContentSetting.value.find(item => item.type === zoneType)?.partyLength ?? 1)) {
+    return
+  }
+
   switch (condition) {
     case 'enter':
     case 'countdown':
@@ -353,7 +366,7 @@ function checkCondition(condition: ConditionType) {
       }
 
       // 已在录制，则切割录制
-      // 但排除combatStart，因为如果战斗开始是时已经在录制了，表明目前处于由倒计时发起的录制动作中，我们不希望倒计时过程会单独被分割出来。
+      // 但排除combatStart，因为如果战斗开始时已经在录制了，表明目前处于由倒计时发起的录制动作中，我们不希望倒计时过程会单独被分割出来。
       if (obs.status.recording === true && condition !== 'combatStart') {
         obs.splitRecord()
       }
@@ -366,11 +379,16 @@ function checkCondition(condition: ConditionType) {
   }
 }
 
+const handlePartyChanged: EventMap['PartyChanged'] = (ev) => {
+  playerInfo.value.partyLength = ev.party.map(v => v.inParty)?.length || 1
+}
+
 onMounted(async () => {
   await checkWebSocket()
   obs.connect()
   addOverlayListener('ChangeZone', handleChangeZone)
   addOverlayListener('LogLine', handleLogLine)
+  addOverlayListener('PartyChanged', handlePartyChanged)
   initializeContentSettings()
 })
 
@@ -387,7 +405,7 @@ onUnmounted(() => {
       <h1>{{ t('OBS Auto Record V2') }}</h1>
       <LanguageSwitcher />
     </header>
-    <el-card v-if="!actReady" class="act-not-ready-card">
+    <el-card v-if="!actReady || debug" class="act-not-ready-card">
       <template #header>
         <div class="card-header">
           <span>{{ t('ACT Not Ready') }}</span>
@@ -398,9 +416,9 @@ onUnmounted(() => {
       </div>
     </el-card>
 
-    <main v-if="actReady">
+    <main v-if="actReady || debug">
       <!-- 连接表单 -->
-      <el-card v-if="!obs.status.connected" class="connection-card">
+      <el-card v-if="!obs.status.connected && !debug" class="connection-card">
         <template #header>
           <div class="card-header">
             <span>{{ t('Connect to OBS') }}</span>
@@ -418,7 +436,7 @@ onUnmounted(() => {
               type="primary"
               class="connect-button"
               :loading="obs.status.connecting"
-              :disabled="obs.status.connecting || !userConfig.host || !userConfig.password"
+              :disabled="obs.status.connecting || !userConfig.host"
               @click="obs.connect()"
             >
               {{ obs.status.connecting ? t('Connecting') : t('Connect') }}
@@ -570,6 +588,18 @@ onUnmounted(() => {
                   <el-switch v-model="scope.row.wipe" />
                 </template>
               </el-table-column>
+            </el-table-column>
+            <el-table-column :label="t('When Party')" align="center" min-width="100">
+              <template #default="scope">
+                <el-input-number
+                  v-model="scope.row.partyLength"
+                  :min="1"
+                  :max="8"
+                  style="width: 80px;"
+                  size="small"
+                  class="party-length-input"
+                />
+              </template>
             </el-table-column>
           </el-table>
         </el-card>

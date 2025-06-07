@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { EventMap } from 'cactbot/types/event'
 import OBSWebSocket, { type RequestBatchRequest } from 'obs-websocket-js'
-import { VXETable } from 'vxe-table'
+import { VxeUI } from 'vxe-table'
 import ContentType from '../../cactbot/resources/content_type'
 import { commonNetRegex } from '../../cactbot/resources/netregexes'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
@@ -70,7 +70,7 @@ async function connect(init = false) {
       obs.call('GetRecordStatus').then((v) => {
         status.recording = v.outputActive
       })
-      VXETable.modal.message({
+      VxeUI.modal.message({
         content: '连接成功',
         status: 'success',
         width: '7rem',
@@ -85,7 +85,7 @@ async function connect(init = false) {
     .catch(() => {
       status.connected = false
       if (init) {
-        VXETable.modal.message({
+        VxeUI.modal.message({
           content: '连接失败',
           status: 'error',
           width: '7rem',
@@ -361,7 +361,7 @@ onMounted(async () => {
     await connect(true)
   }
   else {
-    VXETable.modal.alert({
+    VxeUI.modal.alert({
       content: '先锁定悬浮窗，再填写端口与密码',
       title: '初次使用',
       width: '80%',
@@ -440,7 +440,7 @@ onMounted(async () => {
           type="text"
           status="info"
           @click="
-            VXETable.modal.message({
+            VxeUI.modal.message({
               content: '先点击ACT，再点击悬浮窗，即可正常输入',
             })
           "

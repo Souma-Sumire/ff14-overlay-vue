@@ -54,8 +54,8 @@
   "Extra Rule": "额外规则",
   "Leave Zone": "离开区域",
   "Savage": "零式",
-  "Extreme": "极神",
-  "Ultimate": "绝本",
+  "Extreme": "歼殛战",
+  "Ultimate": "绝境战",
   "Rules": "使用子文件夹",
   "FoldersByCategory": "按副本类型",
   "FolderByContent": "按副本名称",
@@ -69,8 +69,9 @@
   "filePathExplanation": "须保证目录存在",
   "Set Recording Name": "设置路径",
   "Default": "未归类",
-  "Chaotic": "24人灭本",
-  "firewallTutorial": "若确定密码正确，却始终连接失败，请检查 Windows Defender 防火墙",
-  "SocietyQuests": "友好部族任务（宇宙探索？）",
-  "OccultCrescent": "蜃景幻界 新月岛"
+  "Chaotic": "破灭战",
+  "firewallTutorial": "若确定密码正确，却始终连接失败，请检查 Windows Defender 防火墙。",
+  "SocietyQuests": "友好部族任务",
+  "OccultCrescent": "蜃景幻界 新月岛",
+  "When Party": "当小队人数>="
 }
