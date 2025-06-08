@@ -94,8 +94,6 @@ function initializeContentSettings() {
   userContentSetting.value.sort((a, b) => CONTENT_TYPES.indexOf(a.type) - CONTENT_TYPES.indexOf(b.type))
   // 补全可能因新增而缺失的设置项
   userContentSetting.value = userContentSetting.value.map(item => ({ ...(defaultEnabled.includes(item.type) ? DEFAULT_ENABLE_SETTINGS : DEFAULT_DISABLE_SETTINGS), ...item }))
-  // eslint-disable-next-line no-console
-  console.log('User content settings initialized:', userContentSetting.value)
 }
 
 class Obs {
@@ -344,7 +342,9 @@ function checkCondition(condition: ConditionType) {
     }
     return
   }
-  if (playerInfo.value.partyLength >= (userContentSetting.value.find(item => item.type === zoneType)?.partyLength ?? 1)) {
+
+  if (playerInfo.value.partyLength < (userContentSetting.value.find(item => item.type === zoneType)?.partyLength ?? 1)) {
+    // 如果当前玩家人数小于设置的最小人数，则不进行录制。
     return
   }
 
