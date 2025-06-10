@@ -343,15 +343,14 @@ function checkCondition(condition: ConditionType) {
     return
   }
 
-  if (playerInfo.value.partyLength < (userContentSetting.value.find(item => item.type === zoneType)?.partyLength ?? 1)) {
-    // 如果当前玩家人数小于设置的最小人数，则不进行录制。
-    return
-  }
-
   switch (condition) {
     case 'enter':
     case 'countdown':
     case 'combatStart':
+      if (playerInfo.value.partyLength < (userContentSetting.value.find(item => item.type === zoneType)?.partyLength ?? 1)) {
+        // 如果当前玩家人数小于设置的最小人数，则不进行录制。
+        return
+      }
       if (!obs.status.connected) {
         obs.connect(() => {
           obs.startRecord()
