@@ -117,7 +117,6 @@ onMounted(() => {
         <el-select
           v-model="macroStore.selectZone"
           size="small"
-
           style="width: 10rem"
           filterable m-3px
           placeholder="Select"
@@ -130,7 +129,7 @@ onMounted(() => {
           />
         </el-select>
       </el-space>
-      <el-space class="fastEntrance">
+      <el-space :class="useType === 'overlay' ? 'fastEntrance' : ''">
         <el-button-group flex="~ ! wrap">
           <el-button
             v-for="(entrance, index) in macroStore.fastEntrance"
@@ -242,7 +241,7 @@ onMounted(() => {
           </div>
           <div v-if="'Place' in macro">
             <el-space v-show="macro.Editable">
-              <el-table :data="Object.entries(macro.Place)" border size="small">
+              <el-table :data="Object.entries(macro.Place).filter(v => ['A', 'B', 'C', 'D', 'One', 'Two', 'Three', 'Four'].includes(v[0]))" border size="small">
                 <el-table-column
                   v-if="macro.Editable"
                   align="center"
@@ -377,31 +376,31 @@ onMounted(() => {
       </el-space>
     </el-main>
     <div class="menu" :class="useType">
-      <el-button v-if="useType === 'overlay'" size="small" m-l-12px @click="macroStore.toggleShow()">
+      <el-button v-if="useType === 'overlay'" size="small" w-20 @click="macroStore.toggleShow()">
         隐藏页面
       </el-button>
-      <el-button type="success" size="small" @click="macroStore.newMacro()">
+      <el-button type="success" size="small" w-20 @click="macroStore.newMacro()">
         新增宏
       </el-button>
       <el-button
         type="success"
-        size="small"
+        w-20 size="small"
         color="#3375b9"
         @click="macroStore.newPlace()"
       >
         新增标点
       </el-button>
-      <el-button color="#BA5783" size="small" @click="macroStore.importPPJSON()">
+      <el-button color="#BA5783" size="small" w-20 @click="macroStore.importPPJSON()">
         导入PP
       </el-button>
-      <el-button type="warning" size="small" @click="macroStore.resetZone()">
+      <el-button type="warning" size="small" w-20 @click="macroStore.resetZone()">
         恢复本图
       </el-button>
-      <el-button type="danger" size="small" @click="macroStore.resetAllData()">
+      <el-button type="danger" size="small" w-20 @click="macroStore.resetAllData()">
         恢复全部
       </el-button>
       <form v-if="useType === 'overlay'" style="font-size: 12px;background-color: rgba(255, 255,255,0.5)">
-        <el-switch v-model="hideOnStartup" size="small" />默认最小化
+        <el-switch v-model="hideOnStartup" size="small" />默认缩小
       </form>
       <i v-if="useType === 'overlay'" class="vxe-icon-arrow-down">菜单</i>
     </div>
