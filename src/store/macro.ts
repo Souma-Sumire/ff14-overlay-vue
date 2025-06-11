@@ -107,13 +107,13 @@ export const useMacroStore = defineStore('macro', {
         })
       }
     },
-    newPlace(place?: WayMarkObj) {
+    newPlace(place?: (WayMarkObj & { Name?: string, MapID?: number })) {
       const selectZoneId = Number(this.selectZone)
       if (this.data.zoneId[selectZoneId] === undefined)
         this.data.zoneId[selectZoneId] = []
       if (this.data.zoneId[selectZoneId]) {
         this.data.zoneId[selectZoneId].push({
-          Name: 'New WayMark',
+          Name: place?.Name ?? 'New WayMark',
           Editable: true,
           Deletability: true,
           Place: structuredClone(Object.assign(this.blankWaymark, place)),
