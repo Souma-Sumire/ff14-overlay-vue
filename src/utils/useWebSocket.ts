@@ -1,6 +1,6 @@
-import actWS from '@/assets/actWS.webp'
 import { ElMessageBox } from 'element-plus'
 import { onMounted, ref, watch } from 'vue'
+import actWS from '@/assets/actWS.webp'
 import { callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 
 function isIE() {
