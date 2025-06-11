@@ -3991,6 +3991,19 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Text: '/p 【スキャッターシード一回目】\n/p (種捨て)　　　　　　(エラプ)\n/p 　D3/MT　　 ST/D4 　近接:南内側開始→上→中央→下\n/p 　 　 　 　 ★ 　 　　 　遠隔:D北H南開始→東西→最後中央寄せ\n/p 　H1/D1　　 D2/H2 (頭割り)MT組:西 ST組:東\n/p 【ソーンスマッシュ 】　｜ 【ブルートグラワー】\n/p ※ボス向き基準　 　 　｜ D1　　★　　D2\n/p 　　D3　 MT　 D4　 ｜ 　 MT　　　ST\n/p 　　H1 　 ★ 　 H2　 ｜ H1 　 　 　 　H2\n/p 　　D1 　 ST 　D2　 ｜ 　 D3　　　D4\n/p 【ソーンデスマッチ・ビルディング いしあ式】\n/p (奇数)3回目安置 (13捨て位置)近D:④ TH:② 遠D:⑥\n/p ①　　MT　 　②　 　H1　 　③　(ペア頭割り)\n/p 　D1　 　ST　 　H2　 　D3　　 MTD1:①　STD2:②\n/p ④　　D2　 　⑤　 　D4　 　⑥　H1D3:③　H2D4:⑤\n/p 【ソーンデスマッチ・ウォール】\n/p 　　　 MT/D3　　　　※石化視線：北西/南東避け\n/p 　　　　　　　　　　　 雑魚石化後処理\n/p H1/D1　★　H2/D2\n/p\n/p 　 　 　ST/D4\n/p 【スキャッターシード二回目】※近接北西集合\n/p 近接AOE:北西から時計周り→南西安置 (遠隔)シード十字捨て 南側外周避け\n/p 遠隔AOE:最外周捨て→中央安置 (近接)シード十字内側捨て(外から2マス) 中央避け\n/p 【ウェポンツイン+ブロウシード】※一回目マップ北基準 二回目ラリアット後のボス北基準\n/p (一回目) 　 　　　　　｜(二回目)　 ★\n/p MT/D3 　　ST/D4　 ｜　MT/D1　 　ST/D2\n/p 　 　　　★ 　 　 　　 ｜\n/p H1/D1 　　H2/D2　｜　H1/D3　 　H2/D4',
       },
       {
+        Name: 'nukemaru',
+        Place: {
+          A: { X: 100, Y: -200, Z: -5, ID: 0, Active: true },
+          B: { X: 103.5, Y: 0, Z: 1.6, ID: 1, Active: true },
+          C: { X: 100, Y: -200, Z: 15, ID: 2, Active: true },
+          D: { X: 96.5, Y: 0, Z: 8.4, ID: 3, Active: true },
+          One: { X: 90, Y: -200, Z: -5, ID: 4, Active: true },
+          Two: { X: 110, Y: -200, Z: -5, ID: 5, Active: true },
+          Three: { X: 110, Y: -200, Z: 15, ID: 6, Active: true },
+          Four: { X: 90, Y: -200, Z: 15, ID: 7, Active: true },
+        },
+      },
+      {
         Name: 'P1数字+P3字母',
         Place: {
           A: { X: 90, Y: -200, Z: -5, ID: 0, Active: true },
@@ -4018,6 +4031,19 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
       },
     ],
     1263: [
+      {
+        Name: 'M8S Aligned with Phase 2 C',
+        Place: {
+          A: { X: 100, Y: 0, Z: 88, ID: 0, Active: true },
+          B: { X: 112, Y: 0, Z: 100, ID: 1, Active: true },
+          C: { X: 100, Y: -150, Z: 118, ID: 2, Active: true },
+          D: { X: 88, Y: 0, Z: 100, ID: 3, Active: true },
+          One: { X: 91.51472, Y: 0, Z: 91.51472, ID: 4, Active: true },
+          Two: { X: 108.48528, Y: 0, Z: 91.51472, ID: 5, Active: true },
+          Three: { X: 108.48528, Y: 0, Z: 108.48528, ID: 6, Active: true },
+          Four: { X: 91.51472, Y: 0, Z: 108.48528, ID: 7, Active: true },
+        },
+      },
       {
         Name: 'Standard',
         Place: {
