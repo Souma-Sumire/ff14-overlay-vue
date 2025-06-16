@@ -3936,6 +3936,19 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Text: '/p 【ジングル固定】|【ナイトフィーバー】|【ウェーブオンウェーブ】\n/p 　　H1　　　　 |　　MT　 ST　　　　|　　MT　 ST\n/p MT　　遠D　　 | 　H1　　　　 H2　　 |　　D1　 D2\n/p ST　　 近D　　 | 　D3　 　　　D4　　|　　 H1 　H2\n/p 　　H2　　　　|　　　D1　 D2　　　 |　　 D3　 D4\n/p 【ディスコ1回目】西:MT組 東:ST組 内周:近接 外周:遠隔\n/p 【音響爆弾】北から秒数短い順にペア整列\n/p 【フロッグダンサー1回目】|【ディスコ・ダンサー2回目/後半ダンシング】\n/p MT組:北西 ST組:南東 　　| 　(扇誘導) TH→DPS\n/p 　ペア頭割り:横隣り　　　|\n/p 　　　　 ★　　　　　　　|　MTD3　　H2D4\n/p 　MT/ST　 D1/D2　　　|　　　　　★\n/p 　H1/H2　 D3/D4　　　|　　H1D1　　 STD2',
       },
       {
+        Name: getSource('XivStrat', 'https://xivstrat.com/'),
+        Place: {
+          A: { X: 100, Z: 90, Y: 0, Active: true },
+          B: { X: 110, Z: 100, Y: 0, Active: true },
+          C: { X: 100, Z: 110, Y: 0, Active: true },
+          D: { X: 90, Z: 100, Y: 0, Active: true },
+          One: { X: 87.5, Z: 87.5, Y: 0, Active: true },
+          Two: { X: 112.5, Z: 87.5, Y: 0, Active: true },
+          Three: { X: 112.5, Z: 112.5, Y: 0, Active: true },
+          Four: { X: 87.5, Z: 112.5, Y: 0, Active: true },
+        },
+      },
+      {
         Name: 'Standard',
         Place: {
           A: { X: 100, Y: 0, Z: 92.5, ID: 0, Active: true },
@@ -3968,6 +3981,19 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Text: '/p ■基本散開:ねばねば(北基準、Tボス下)■カラークラッシュ（2:2:2:2）\n/p 　 D3 D4　 　 | 　 　 　　　ボス\n/p H1　☆　H2　| 　H1D3　MTD1　STD2\n/p 　 D1 D2 　 　|　　　　　 H2D4　4:4は←MT組ST組→\n/p ■砂漠フェーズ\n/p ▼サボテン避け(北) 　　 ▼サボテン+流砂(北基準)\n/p 　　　6人 　　　　｜　北西H1　北東6人\n/p 　T　 　　　 D　　｜　予備　 　 南東H2\n/p ■爆弾捨て(流砂北)\n/p H1/D3 MT/D1 ST/D2 H2/D4 /p ■雑魚フェーズ（倒す順：ジャバ＞キャット＞フェザー＞ムー＞ヤーン）※リキャバースト\n/p wave1：MTムー　ST＋近接ヤーン（リキャバーストで処理）　遠隔キャット　ヤーンの場所に遠隔ヒラ集合\n/p wave2：D側フェザーD3　B側フェザーH2　北から捨てる　MTムーを東→西フェザーへ誘導　他全員で範囲焼き\n/p wave3：ジャバ＋ムー行進(スタン：MT→D1→D2)　STヤーン北東待機　バインドヒラ南東\n/p wave4：MTムーC　STヤーンA(スタン：ST→D1→D2)　D側フェザーD3　B側フェザーD4 南側から捨てる　MTムーを東→西フェザーへ誘導\n/p ■山川　　　　　　　 　 ■雷雲\n/p 火：内側MTH1D1D2　　 　 　雷雲見て\n/p 　　外側STH2D3D4　　TH←左　他　右→DPS\n/p 雷：基本散会\n/p ■マグマ　　　　　 　 　 ■塔2回目\n/p H1D3　北　D4H2　 　4・2・2の場合：近接4人基準時計or反時計\n/p ※※※※※※※※※※ 　中央見て左←【D1MTSTD2】【D3H1】【D4H2】→右\n/p 　　 MT　　ST　　　 　 　　　　▼南8塔の場合\n/p 　　 D1　　D2　　　　　　　　H2　D3　D4\n/p 頭割り：H誘導　　　　　　H1　D1　 MT　 ST 　D2',
       },
       {
+        Name: getSource('XivStrat', 'https://xivstrat.com/'),
+        Place: {
+          A: { X: 0 + 100, Z: -10 + 100, Y: 0, Active: true },
+          B: { X: 10 + 100, Z: 0 + 100, Y: 0, Active: true },
+          C: { X: 0 + 100, Z: 10 + 100, Y: 0, Active: true },
+          D: { X: -10 + 100, Z: 0 + 100, Y: 0, Active: true },
+          One: { X: -10 + 100, Z: -10 + 100, Y: 0, Active: true },
+          Two: { X: 10 + 100, Z: -10 + 100, Y: 0, Active: true },
+          Three: { X: 10 + 100, Z: 10 + 100, Y: 0, Active: true },
+          Four: { X: -10 + 100, Z: 10 + 100, Y: 0, Active: true },
+        },
+      },
+      {
         Name: 'Standard',
         Place: {
           A: { X: 100, Y: 0, Z: 92, ID: 0, Active: true },
@@ -3985,10 +4011,6 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
       {
         Name: 'Game8(4.17)',
         Text: '/p 【スキャッターシード1回目】\n/p 【種】D3/MT　　 ST/D4　 |【エラプ】近接:南内側開始→上→中央→下\n/p 　　 　　　　　★ 　　 　 　 | 遠隔:D北H南開始→東西→最後中央寄せ\n/p 　　　H1/D1　　 D2/H2　|(頭割り)MT組:西 ST組:東\n/p 【ブルートグラワー】　→　D1　★　D2\n/p ーーーーーーーーーーー 　 MT　　　ST\n/p 【ソーンスマッシュ】　　|　H1　 　　H2\n/p ボス向き基準基本散開　 |　D3　 　　D4\n/p 【ソーンデスマッチ・ビルディング さり式】 茨:東西D3南:D4\n/p ①　　★　　②　　　　　③　(種捨て)\n/p 　　　安　　　　安　　　　　D1D2:奇①偶a\n/p 　a　　　 b 　 　　　　 c　　 TH:奇②偶b\n/p 　d←D3偶数安置　　 　　 　 D3:奇③偶c/奇④偶a\n/p 　　　　　　　　　 e　　　　D4:奇⑤偶e\n/p ④　　　　　⑤　　　　　　　(頭割り)MTD1①/STD2②/D3H1③か④/D4H2⑤\n/p 【ソーンデスマッチ・ウォール】\n/p 　　　 MT/D3　　　　※石化視線：北西/南東避け\n/p 　　　　　　　　　　　 雑魚石化後処理\n/p H1/D1　★　H2/D2\n/p 　　　　\n/p 　 　 　ST/D4\n/p 【スキャッターシード二回目】※近接北西集合\n/p 近接AOE:北西から時計周り→南西安置 (遠隔)シード十字捨て 南側外周避け\n/p 遠隔AOE:最外周捨て→中央安置 (近接)シード十字内側捨て(外から2マス) 中央避け\n/p 【ウェポンツイン+ブロウシード】※一回目マップ北基準 二回目ラリアット後のボス北基準\n/p (一回目) 　 　　　　　｜(二回目)　 ★\n/p MT/D3 　　ST/D4　 ｜　MT/D1　 　ST/D2\n/p 　 　　　★ 　 　 　　 ｜\n/p H1/D1 　　H2/D2　｜　H1/D3　 　H2/D4',
-      },
-      {
-        Name: 'Game8(4.10)',
-        Text: '/p 【スキャッターシード一回目】\n/p (種捨て)　　　　　　(エラプ)\n/p 　D3/MT　　 ST/D4 　近接:南内側開始→上→中央→下\n/p 　 　 　 　 ★ 　 　　 　遠隔:D北H南開始→東西→最後中央寄せ\n/p 　H1/D1　　 D2/H2 (頭割り)MT組:西 ST組:東\n/p 【ソーンスマッシュ 】　｜ 【ブルートグラワー】\n/p ※ボス向き基準　 　 　｜ D1　　★　　D2\n/p 　　D3　 MT　 D4　 ｜ 　 MT　　　ST\n/p 　　H1 　 ★ 　 H2　 ｜ H1 　 　 　 　H2\n/p 　　D1 　 ST 　D2　 ｜ 　 D3　　　D4\n/p 【ソーンデスマッチ・ビルディング いしあ式】\n/p (奇数)3回目安置 (13捨て位置)近D:④ TH:② 遠D:⑥\n/p ①　　MT　 　②　 　H1　 　③　(ペア頭割り)\n/p 　D1　 　ST　 　H2　 　D3　　 MTD1:①　STD2:②\n/p ④　　D2　 　⑤　 　D4　 　⑥　H1D3:③　H2D4:⑤\n/p 【ソーンデスマッチ・ウォール】\n/p 　　　 MT/D3　　　　※石化視線：北西/南東避け\n/p 　　　　　　　　　　　 雑魚石化後処理\n/p H1/D1　★　H2/D2\n/p\n/p 　 　 　ST/D4\n/p 【スキャッターシード二回目】※近接北西集合\n/p 近接AOE:北西から時計周り→南西安置 (遠隔)シード十字捨て 南側外周避け\n/p 遠隔AOE:最外周捨て→中央安置 (近接)シード十字内側捨て(外から2マス) 中央避け\n/p 【ウェポンツイン+ブロウシード】※一回目マップ北基準 二回目ラリアット後のボス北基準\n/p (一回目) 　 　　　　　｜(二回目)　 ★\n/p MT/D3 　　ST/D4　 ｜　MT/D1　 　ST/D2\n/p 　 　　　★ 　 　 　　 ｜\n/p H1/D1 　　H2/D2　｜　H1/D3　 　H2/D4',
       },
       {
         Name: 'nukemaru',
@@ -4032,6 +4054,19 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     1263: [
       {
+        Name: getSource('XivStrat', 'https://xivstrat.com/'),
+        Place: {
+          A: { X: 0 + 100, Z: -8.5 + 100, Y: 0, Active: true },
+          B: { X: 8.5 + 100, Z: 0 + 100, Y: 0, Active: true },
+          C: { X: 0 + 100, Z: 8.5 + 100, Y: 0, Active: true },
+          D: { X: -8.5 + 100, Z: 0 + 100, Y: 0, Active: true },
+          One: { X: -6 + 100, Z: -6 + 100, Y: 0, Active: true },
+          Two: { X: 6 + 100, Z: -6 + 100, Y: 0, Active: true },
+          Three: { X: 6 + 100, Z: 6 + 100, Y: 0, Active: true },
+          Four: { X: -6 + 100, Z: 6 + 100, Y: 0, Active: true },
+        },
+      },
+      {
         Name: 'M8S Aligned with Phase 2 C',
         Place: {
           A: { X: 100, Y: 0, Z: 88, ID: 0, Active: true },
@@ -4072,9 +4107,9 @@ fastPP(`{"Name":"Standard","MapID":1010,"A":{"X":70.0,"Y":0.0,"Z":100.0,"ID":0,"
 fastPP(`{"Name":"Briars","MapID":1010,"A":{"X":70.0,"Y":0.0,"Z":92.0,"ID":0,"Active":true},"B":{"X":130.0,"Y":0.0,"Z":92.0,"ID":1,"Active":true},"C":{"X":130.0,"Y":0.0,"Z":108.0,"ID":2,"Active":true},"D":{"X":70.0,"Y":0.0,"Z":107.0,"ID":3,"Active":true},"One":{"X":87.0,"Y":0.0,"Z":96.0,"ID":4,"Active":true},"Two":{"X":113.0,"Y":0.0,"Z":96.0,"ID":5,"Active":true},"Three":{"X":113.0,"Y":0.0,"Z":104.0,"ID":6,"Active":true},"Four":{"X":87.0,"Y":0.0,"Z":104.0,"ID":7,"Active":true}}
   `)
 
-// function getSource(title: string, href: string): string {
-//   return `<a href='${href}'target='_blank'>${title}</a>`
-// }
+function getSource(title: string, href: string): string {
+  return `<a href='${href}'target='_blank'>${title}</a>`
+}
 
 function fastPP(jsonstr: string): void {
   const d = JSON.parse(jsonstr) as Partial<PPJSON>
