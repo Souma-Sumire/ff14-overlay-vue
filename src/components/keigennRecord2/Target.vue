@@ -70,5 +70,6 @@ function onError(e: Event) {
 .cj3 {
   width: 2.75em;
   left: -4px;
+  top: 1px;
 }
 </style>
