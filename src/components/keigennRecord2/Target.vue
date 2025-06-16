@@ -1,25 +1,40 @@
 <script setup lang="ts">
+import type { FFIcon } from '@/types/fflogs'
 import type { RowVO } from '@/types/keigennRecord2'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
-import { getImgSrc, handleImgError } from '@/utils/xivapi'
 
 const props = defineProps({
   row: { type: Object as () => RowVO, required: true },
 })
 const store = useKeigennRecord2Store()
+
+const imageError = ref(false)
+
+function getIconSrc(jobIcon: FFIcon, type: number) {
+  const jobName = jobIcon.replace(/([A-Z])/g, ' $1').trim()
+  return `https://souma.diemoe.net/resources/img/cj${type}/${jobName}.png`
+}
+function onError(e: Event) {
+  imageError.value = true
+  const img = e.target as HTMLImageElement
+  img.style.display = 'none'
+  console.error('Failed to load image:', props.row.jobIcon)
+}
 </script>
 
 <template>
   <div>
     <span v-if="store.userOptions.showIcon" class="target">
       <img
-        class="jobIcon"
-        :src="getImgSrc(`/cj/companion/${props.row.jobIcon}.png`)"
-        alt=""
+        v-if="!imageError"
+        :class="`jobIcon cj${store.userOptions.iconType}`"
+        :src="getIconSrc(props.row.jobIcon, store.userOptions.iconType) ?? ''"
+        :alt="props.row.jobIcon"
         :data-job="store.userOptions.showName ? '' : props.row.job"
         loading="lazy"
-        @error="handleImgError"
+        @error="onError"
       >
+      <span v-else class="alt-text">{{ props.row.target }}</span>
 
       <span
         v-if="store.userOptions.showName"
@@ -45,4 +60,15 @@ const store = useKeigennRecord2Store()
   </div>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.jobIcon {
+  width: 2em;
+  object-fit: cover;
+  vertical-align: middle;
+  position: relative;
+}
+.cj3 {
+  width: 2.75em;
+  left: -4px;
+}
+</style>

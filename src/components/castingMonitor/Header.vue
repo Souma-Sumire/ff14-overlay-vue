@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import { useCastingMonitorStore } from '@/store/castingMonitor'
 import Util from '@/utils/util'
-import { getClassjobIconSrc, handleImgError } from '@/utils/xivapi'
+import { handleImgError } from '@/utils/xivapi'
 
 const params = new URLSearchParams(window.location.href.split('?')[1])
+
+function getClassjobIconSrc(jobEnum: number): string {
+  const job = Util.jobEnumToJob(jobEnum)
+  const fullName = Util.nameToFullName(job)
+  return `https://souma.diemoe.net/resources/img/cj2/${fullName.en}.png`
+}
 
 const castingMonitorStore = useCastingMonitorStore()
 watchEffect(() => {

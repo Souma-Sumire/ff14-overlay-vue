@@ -11,6 +11,7 @@ export const useKeigennRecord2Store = defineStore('keigennRecord2', {
         opacity: parseParams(params.opacity as string, 0.8), // 透明度
         showHeader: parseParams(params.showHeader as string, true), // 显示表头
         showIcon: parseParams(params.showIcon as string, true), // 显示目标图标
+        iconType: parseParams(params.iconType as string, 3), // 目标图标类型
         showName: parseParams(params.showName as string, false), // 显示目标ID
         abbrId: parseParams(params.abbrId as string, true), // 目标ID缩写
         anonymous: parseParams(params.anonymous as string, true), // 目标ID改为职业名

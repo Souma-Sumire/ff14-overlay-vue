@@ -10,7 +10,7 @@ export interface RowVO {
   target: string
   targetId: string
   job: string
-  jobIcon: string
+  jobIcon: FFIcon
   jobEnum: number
   amount: number
   keigenns: Status[]

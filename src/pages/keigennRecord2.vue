@@ -379,7 +379,7 @@ function handleLine(line: string) {
               Util.jobEnumToJob(targetJob),
             ).simple2
             const jobEnum = targetJob
-            const jobIcon = Util.jobEnumToIcon(jobEnum).toLowerCase()
+            const jobIcon = Util.jobEnumToIcon(jobEnum)
             // dot/hot日志的source不准确 故无法计算目标减
             addRow({
               timestamp,
@@ -475,7 +475,7 @@ function handleLine(line: string) {
                 Util.jobEnumToJob(targetJob),
               ).simple2
               const jobEnum = targetJob
-              const jobIcon = Util.jobEnumToIcon(jobEnum).toLowerCase()
+              const jobIcon = Util.jobEnumToIcon(jobEnum)
               const keigenns = deepClone(
                 Object.values(statusData.friendly[targetId] ?? [])
                   .concat(Object.values(statusData.enemy[source] ?? []))
@@ -848,7 +848,7 @@ const test = {
       target: povName.value,
       targetId: '1234567890',
       job: '战士',
-      jobIcon: 'warrior',
+      jobIcon: 'Warrior',
       jobEnum: 0,
       amount: 1000,
       keigenns: [
@@ -954,8 +954,8 @@ const test = {
       <vxe-table
         ref="xTable" size="mini" class="vxe-table" show-overflow="tooltip" round height="100%"
         :scroll-y="{ enabled: true }" :loading="loading" :show-header="userOptions.showHeader"
-        :data="data[select].table" :row-config="{ isHover: true, height: size.line_height }" :header-cell-style="{
-          padding: '0px',
+        :data="data[select].table" :row-config="{ isHover: true }" :cell-config="{ height: size.line_height }" :header-cell-style="{
+          padding: '0px', top: '-0.5em',
         }" :menu-config="menuConfig" @cell-menu="cellContextMenuEvent" @menu-click="contextMenuClickEvent"
       >
         <vxe-column :width="size.time" field="time" title="时间" align="center" />
@@ -1007,8 +1007,12 @@ const test = {
 <style lang="scss">
 @use "vxe-table/styles/index.scss";
 
+.vxe-table--header-wrapper {
+  height: 20px;
+}
+
 .vxe-header--column {
-  line-height: 1.75em !important;
+  line-height: 20px;
 
   .vxe-cell {
     white-space: nowrap !important;
@@ -1139,7 +1143,7 @@ header {
 
   .select {
     transition: width 0.15s ease-in-out;
-    width: 4.75em;
+    width: 4.7em;
     z-index: 15;
     position: absolute;
     right: var(--vxe-input-height-mini);
@@ -1177,20 +1181,14 @@ main {
   --vxe-ui-layout-background-color: transparent;
 }
 
-.jobIcon {
-  width: 2em;
-  object-fit: cover;
-  vertical-align: middle;
-}
-
 .status {
   position: relative;
-  top: -0.2em;
+  top: -0.225em;
   object-fit: cover;
 }
 
 .statusIcon {
-  width: 1.6em;
+  width: 1.44em;
   object-fit: cover;
   vertical-align: middle;
 }
@@ -1204,8 +1202,8 @@ main {
   position: absolute;
   text-align: center;
   left: 50%;
-  bottom: -1.15em;
-  transform: translateX(-50%) scale(0.725);
+  bottom: -1.1em;
+  transform: translateX(-50%) scale(0.60);
   transform-origin: top center;
   font-size: calc(var(--vxe-font-size-mini));
   font-family: emoji;

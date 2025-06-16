@@ -295,7 +295,13 @@ const nameToFullName: Record<
     simple1: '骑',
     simple2: '骑士',
   },
-  MNK: { en: 'Monk', ja: 'モンク', cn: '武僧', simple1: '僧', simple2: '武僧' },
+  MNK: {
+    en: 'Monk',
+    ja: 'モンク',
+    cn: '武僧',
+    simple1: '僧',
+    simple2: '武僧',
+  },
   WAR: {
     en: 'Warrior',
     ja: '戦士',
@@ -359,7 +365,13 @@ const nameToFullName: Record<
     simple1: '双',
     simple2: '双剑',
   },
-  NIN: { en: 'Ninja', ja: '忍者', cn: '忍者', simple1: '忍', simple2: '忍者' },
+  NIN: {
+    en: 'Ninja',
+    ja: '忍者',
+    cn: '忍者',
+    simple1: '忍',
+    simple2: '忍者',
+  },
   MCH: {
     en: 'Machinist',
     ja: '機工士',
@@ -381,7 +393,13 @@ const nameToFullName: Record<
     simple1: '占',
     simple2: '占星',
   },
-  SAM: { en: 'Samurai', ja: '侍', cn: '武士', simple1: '武', simple2: '武士' },
+  SAM: {
+    en: 'Samurai',
+    ja: '侍',
+    cn: '武士',
+    simple1: '武',
+    simple2: '武士',
+  },
   RDM: {
     en: 'Red Mage',
     ja: '赤魔道士',
@@ -417,9 +435,27 @@ const nameToFullName: Record<
     simple1: '镰',
     simple2: '钐镰',
   },
-  SGE: { en: 'Sage', ja: '賢者', cn: '贤者', simple1: '贤', simple2: '贤者' },
-  VPR: { en: 'Viper', ja: 'ヴァイパー', cn: '蛇武士', simple1: '蛇', simple2: '蛇武' },
-  PCT: { en: 'Pictomancer', ja: 'ピクトマンサー', cn: '绘灵法师', simple1: '绘', simple2: '绘灵' },
+  SGE: {
+    en: 'Sage',
+    ja: '賢者',
+    cn: '贤者',
+    simple1: '贤',
+    simple2: '贤者',
+  },
+  VPR: {
+    en: 'Viper',
+    ja: 'ヴァイパー',
+    cn: '蛇武士',
+    simple1: '蛇',
+    simple2: '蛇武',
+  },
+  PCT: {
+    en: 'Pictomancer',
+    ja: 'ピクトマンサー',
+    cn: '绘灵法师',
+    simple1: '绘',
+    simple2: '绘灵',
+  },
 }
 const allJobs = Object.keys(nameToJobEnum) as Job[]
 const allIcons = Object.keys(iconToJobEnum) as Icon[]
@@ -485,8 +521,7 @@ const cleanseJobs: Job[] = ['BLU', 'BRD', ...healerJobs]
 
 const jobToRoleMap: Map<Job, Role> = (() => {
   const addToMap = (map: Map<Job, Role>, jobs: Job[], role: Role) => {
-    for (const job of jobs)
-      map.set(job, role)
+    for (const job of jobs) map.set(job, role)
   }
 
   const map: Map<Job, Role> = new Map([['NONE', 'none']])

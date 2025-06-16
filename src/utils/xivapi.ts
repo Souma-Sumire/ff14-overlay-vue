@@ -1,5 +1,3 @@
-import Util from './util'
-
 const params = new URLSearchParams(window.location.href.split('?')[1])
 
 const api = params.get('api')
@@ -92,14 +90,6 @@ export async function getFullImgSrc(icon: string, itemIsHQ = false) {
     ICON_REGEX,
     (_match, p1, p2) => `${p1}/${itemIsHQ ? 'hq/' : ''}${p2}.png`,
   )
-}
-
-export function getClassjobIconSrc(jobEnum: number): string {
-  const job = Util.jobEnumToJob(jobEnum)
-  const fullName = Util.nameToFullName(job)
-  return `${site.first}/cj/companion/${fullName.en
-    .toLowerCase()
-    .replaceAll(/\s/g, '')}.png`
 }
 
 export async function getImgSrcByActionId(id: number): Promise<string> {
