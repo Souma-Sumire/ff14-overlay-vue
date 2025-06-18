@@ -362,7 +362,6 @@ function openFFLogsProfile() {
     <el-step title="输入链接" />
     <el-step title="选择玩家" />
     <el-step title="过滤技能" />
-    <el-step title="生成时间轴" />
   </el-steps>
   <el-card v-if="currentStep === 0" class="input-section">
     <el-form label-width="150px" class="fflogs-form">

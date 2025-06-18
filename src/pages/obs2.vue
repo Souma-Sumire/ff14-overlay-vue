@@ -44,14 +44,15 @@ const userContentSetting = useStorage(
 )
 const isFirstTime = useStorage('obs-is-first-time', true)
 const actReady = ref(false)
-const debug = ref(false)
+const params = useUrlSearchParams('hash')
+const dev = params.dev === '1'
 const playerInfo = ref({
   zone: {} as (typeof ZoneInfo)[number],
   partyLength: 1,
 })
 
 function checkWebSocket(): Promise<void> {
-  if (debug.value)
+  if (dev)
     return Promise.resolve()
   return new Promise((resolve) => {
     callOverlayHandler({ call: 'cactbotRequestState' }).then(() => {
@@ -169,6 +170,7 @@ class Obs {
   }>
 
   handleConnectionError = () => {
+    Log('OBS connection error')
     this.status.connecting = false
     this.status.connected = false
     this.status.recording = false
@@ -184,6 +186,7 @@ class Obs {
   }
 
   handleConnectionClosed = () => {
+    Log('OBS connection closed')
     this.status.connecting = false
     this.status.connected = false
     this.status.recording = false
@@ -198,6 +201,17 @@ class Obs {
     // })
   }
 
+  handleRecordStateChanged = (e: {
+    outputActive: boolean
+    outputState: string
+    outputPath: string
+  }) => {
+    this.status.connected = true
+    this.status.recording = e.outputState === 'OBS_WEBSOCKET_OUTPUT_STARTED'
+    this.status.outputActive = e.outputActive
+    this.status.outputPath = e.outputPath || ''
+  }
+
   constructor() {
     this.ws = new OBSWebSocket()
     this.status = reactive({
@@ -209,15 +223,11 @@ class Obs {
     })
     this.ws.on('ConnectionClosed', this.handleConnectionClosed)
     this.ws.on('ConnectionError', this.handleConnectionError)
-    this.ws.on('RecordStateChanged', (e) => {
-      this.status.connected = true
-      this.status.recording = e.outputState === 'OBS_WEBSOCKET_OUTPUT_STARTED'
-      this.status.outputActive = e.outputActive
-      this.status.outputPath = e.outputPath
-    })
+    this.ws.on('RecordStateChanged', this.handleRecordStateChanged)
   }
 
   connect(callback?: () => void) {
+    Log('Attempting to connect to OBS')
     if (!(userConfig.value.host && userConfig.value.password)) {
       return
     }
@@ -263,19 +273,23 @@ class Obs {
   }
 
   disconnect() {
+    Log('Disconnecting from OBS')
     this.ws.disconnect()
   }
 
   async startRecord() {
+    Log('Starting recording')
     await this.setProfileParameter()
     this.ws.call('StartRecord')
   }
 
   stopRecord() {
+    Log('Stopping recording')
     this.ws.call('StopRecord')
   }
 
   splitRecord() {
+    Log('Splitting recording')
     this.ws.call('StopRecord').finally(() => {
       setTimeout(() => {
         this.ws.call('StartRecord')
@@ -312,6 +326,7 @@ class Obs {
 const obs = new Obs()
 
 const handleChangeZone: EventMap['ChangeZone'] = (e) => {
+  Log('Zone changed:', e)
   const zoneID = e.zoneID
   const zoneInfo = ZoneInfo[zoneID]
   if (zoneInfo === undefined) {
@@ -359,10 +374,12 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
   }
 }
 
-function getZoneType(
-  zoneInfo: (typeof ZoneInfo)[number],
-): (typeof CONTENT_TYPES)[number] {
-  switch (zoneInfo.contentType) {
+function getZoneType(zoneInfo: (typeof ZoneInfo)[number]): (typeof CONTENT_TYPES)[number] {
+  const contentType = zoneInfo.contentType
+  const zoneNameFr = zoneInfo.name?.fr
+  const zoneNameEn = zoneInfo.name?.en
+
+  switch (contentType) {
     case ContentType.ChaoticAllianceRaid:
       return 'Chaotic'
     case ContentType.UltimateRaids:
@@ -376,11 +393,11 @@ function getZoneType(
     case ContentType.VCDungeonFinder:
       return 'VCDungeonFinder'
     case ContentType.Trials:
-      if (zoneInfo.name.fr?.includes('(extrême)'))
+      if (zoneNameFr?.includes('(extrême)'))
         return 'Extreme'
       return 'Trials'
     case ContentType.Raids:
-      if (zoneInfo.name.en?.includes('(Savage)'))
+      if (zoneNameEn?.includes('(Savage)'))
         return 'Savage'
       return 'Raids'
     case ContentType.DisciplesOfTheLand:
@@ -402,9 +419,30 @@ function getZoneType(
   }
 }
 
+function Log(...args: any[]) {
+  if (dev) {
+    // eslint-disable-next-line no-console
+    console.log('[OBS Auto Record]', ...args)
+  }
+}
+
 function checkCondition(condition: ConditionType) {
+  Log('checkCondition', condition)
   const zoneType = getZoneType(playerInfo.value.zone)
-  const rule = userContentSetting.value.find(item => item.type === zoneType)!
+  const rule = userContentSetting.value.find(item => item.type === zoneType)
+
+  if (!rule) {
+    console.error('Rule not found for zone type:', zoneType)
+    return
+  }
+
+  if (!rule[condition]) {
+    // 如果当前条件不满足，则不进行录制
+    Log('Condition not met:', condition)
+    return
+  }
+  Log('Condition met:', condition, 'for zone type:', zoneType)
+
   if (rule.enter === false && condition === 'enter' && obs.status.recording) {
     // 上一次录制战斗通关，则这次切换场地（且不需要切割）时结束录制。
     obs.stopRecord()
@@ -447,6 +485,7 @@ function checkCondition(condition: ConditionType) {
 }
 
 const handlePartyChanged: EventMap['PartyChanged'] = (ev) => {
+  Log('Party changed:', ev)
   playerInfo.value.partyLength = ev.party.map(v => v.inParty)?.length || 1
 }
 
@@ -472,7 +511,7 @@ onUnmounted(() => {
       <h1>{{ t("OBS Auto Record V2") }}</h1>
       <LanguageSwitcher />
     </header>
-    <el-card v-if="!actReady || debug" class="act-not-ready-card">
+    <el-card v-if="!actReady || dev" class="act-not-ready-card">
       <template #header>
         <div class="card-header">
           <span>{{ t("ACT Not Ready") }}</span>
@@ -483,9 +522,9 @@ onUnmounted(() => {
       </div>
     </el-card>
 
-    <main v-if="actReady || debug">
+    <main v-if="actReady || dev">
       <!-- 连接表单 -->
-      <el-card v-if="!obs.status.connected && !debug" class="connection-card">
+      <el-card v-if="!obs.status.connected && !dev" class="connection-card">
         <template #header>
           <div class="card-header">
             <span>{{ t("Connect to OBS") }}</span>
@@ -550,7 +589,7 @@ onUnmounted(() => {
           :closable="false"
           show-icon
         />
-        <el-card v-if="debug" class="status-card">
+        <el-card v-if="dev" class="status-card">
           <template #header>
             <div class="card-header">
               <span>{{ t("Connection Status") }}</span>
@@ -654,6 +693,22 @@ onUnmounted(() => {
             </el-table-column>
             <el-table-column :label="t('Start When')" align="center">
               <el-table-column
+                :label="t('When Party')"
+                align="center"
+                min-width="100"
+              >
+                <template #default="scope">
+                  <el-input-number
+                    v-model="scope.row.partyLength"
+                    :min="1"
+                    :max="8"
+                    style="width: 80px"
+                    size="small"
+                    class="party-length-input"
+                  />
+                </template>
+              </el-table-column>
+              <el-table-column
                 prop="enter"
                 :label="t('Enter Zone')"
                 align="center"
@@ -705,22 +760,6 @@ onUnmounted(() => {
                   <el-switch v-model="scope.row.wipe" />
                 </template>
               </el-table-column>
-            </el-table-column>
-            <el-table-column
-              :label="t('When Party')"
-              align="center"
-              min-width="100"
-            >
-              <template #default="scope">
-                <el-input-number
-                  v-model="scope.row.partyLength"
-                  :min="1"
-                  :max="8"
-                  style="width: 80px"
-                  size="small"
-                  class="party-length-input"
-                />
-              </template>
             </el-table-column>
           </el-table>
         </el-card>

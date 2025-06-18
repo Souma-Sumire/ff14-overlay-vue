@@ -44,6 +44,7 @@ export function useWebSocket(
   const wsConnected = ref(undefined as boolean | undefined)
   const userIgnoredWarning = ref(false)
   const useType = ref('overlay' as 'overlay' | 'websocket')
+  let timer: NodeJS.Timeout | null = null
 
   function check() {
     Promise.race([
@@ -55,6 +56,7 @@ export function useWebSocket(
       }),
     ])
       .then(() => {
+        timer && clearTimeout(timer)
         if (window.location.href.includes('OVERLAY_WS')) {
           wsConnected.value = true
           useType.value = 'websocket'
@@ -63,12 +65,13 @@ export function useWebSocket(
       .catch(() => {
         wsConnected.value = false
         useType.value = 'overlay'
-        if (window.location.href.includes('OVERLAY_WS')) {
-          setTimeout(() => {
-            check()
-          }, 3000)
-        }
       })
+  }
+
+  if (window.location.href.includes('OVERLAY_WS')) {
+    timer = setInterval(() => {
+      check()
+    }, 3000)
   }
 
   function handleDisconnection() {
@@ -84,7 +87,7 @@ export function useWebSocket(
           closeOnHashChange: false,
           showCancelButton: config.allowClose,
           showConfirmButton: false,
-          cancelButtonText: '我偏要看看',
+          cancelButtonText: '用不了也要看',
           buttonSize: 'small',
         },
       ).catch(() => {

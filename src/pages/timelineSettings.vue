@@ -160,14 +160,14 @@ function exportTimeline(timelineArr: ITimeline[]) {
     // 去除所有#开头的注释行
     timeline.timeline = timeline.timeline.replace(/^#.*\n/gm, '')
   }
-  const ziped = JSON.stringify(zip)
+  const zipped = JSON.stringify(zip)
 
   // 压缩原始数据和去除注释后的数据
   const compressedText = LZString.compressToBase64(text)
-  const compressedZiped = LZString.compressToBase64(ziped)
+  const compressedZipped = LZString.compressToBase64(zipped)
 
   const fullSize = compressedText.length
-  const optimizedSize = compressedZiped.length
+  const optimizedSize = compressedZipped.length
 
   // 如果两种方案大小相同，直接导出完整版本
   if (fullSize === optimizedSize) {
@@ -212,7 +212,7 @@ function exportTimeline(timelineArr: ITimeline[]) {
       type: 'info',
       callback: (action: string) => {
         if (action === 'cancel' || action === 'confirm') {
-          const finalCompressed = action === 'confirm' ? compressedZiped : compressedText
+          const finalCompressed = action === 'confirm' ? compressedZipped : compressedText
           copyToClipboard(finalCompressed)
             .then(() => {
               ElMessage({
@@ -471,7 +471,7 @@ function requestACTData() {
   keepRetrying = true
   loading = ElLoading.service({
     lock: true,
-    text: `正在请求数据，请确保 ACT 与悬浮窗已开启...，若 10 秒内仍未获取到数据，请检查 ACT 状态，且确认 timeline 悬浮窗已开启，或刷新页面重连。`,
+    text: `正在请求数据，请确保 ACT 悬浮窗已开启...，若 10 秒内仍未获取到数据，请检查 ACT WebSocket 服务状态，且确认 timeline 悬浮窗已开启。`,
     background: 'rgba(0, 0, 0, 0.7)',
   })
 
@@ -485,19 +485,29 @@ function requestACTData() {
 }
 
 function sendDataToACT() {
-  ElMessageBox.confirm('你确定要将当前数据发送至 ACT 悬浮窗吗？悬浮窗中的内容将会被覆盖！', '提示', {
+  ElMessageBox.confirm('要将当前数据发送至 ACT 悬浮窗吗？悬浮窗中的内容将会被覆盖！', '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning',
   }).then(() => {
     sendBroadcastData('post', timelineStore.$state)
-  })
+  }).catch(() => { })
 }
 
 function revertTimeline() {
   // timelineStore.allTimelines.length = 0
-  resetCurrentlyTimeline()
-  requestACTData()
+  ElMessageBox.confirm(
+    '要读取 ACT 悬浮窗数据吗？你将丢失所有未应用的修改！',
+    '读取悬浮窗数据',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    },
+  ).then(() => {
+    resetCurrentlyTimeline()
+    requestACTData()
+  }).catch(() => { })
 }
 
 onMounted(() => {
@@ -543,15 +553,11 @@ onMounted(() => {
           <el-button size="small" @click="openMarkdown">
             时间轴语法
           </el-button>
-
-          <el-button type="success" size="small" @click="sendDataToACT">
-            应用
-          </el-button>
         </el-space>
 
         <el-space>
           <el-button color="#a0d911" style="color: white" size="small" @click="revertTimeline">
-            恢复至之前的时间轴
+            读取来自悬浮窗的数据
           </el-button>
           <el-button color="#626aef" style="color: white" size="small" @click="showSettings = true">
             设置
@@ -559,20 +565,9 @@ onMounted(() => {
         </el-space>
       </el-row>
       <div class="alerts-container">
-        <el-alert
-          title="编辑完成后，需手动点击「应用」按钮"
-          show-icon
-          type="info"
-          :closable="false"
-          class="alert-item"
-        />
-        <el-alert
-          title="当你误操作或数据与 ACT 悬浮窗中的数据不符，且尚未点击「应用」时，可点击「恢复至之前的时间轴」，则会恢复到当前 ACT 悬浮窗中保存的数据"
-          show-icon
-          type="warning"
-          :closable="false"
-          class="alert-item"
-        />
+        <el-button type="success" size="default" @click="sendDataToACT">
+          编辑完毕后，点击这里应用，将编辑器数据发送至悬浮窗
+        </el-button>
       </div>
     </el-header>
     <el-main>
@@ -704,7 +699,7 @@ onMounted(() => {
       <el-card v-if="timelines.length > 0">
         <el-table :data="timelines" style="width: 100%" stripe>
           <el-table-column prop="name" label="名称" />
-          <el-table-column prop="conditon" label="地图" sortable>
+          <el-table-column prop="condition" label="地图" sortable>
             <template #default="scope">
               {{
                 highDifficultZoneId.find(
@@ -713,7 +708,7 @@ onMounted(() => {
               }}
             </template>
           </el-table-column>
-          <el-table-column prop="conditon" label="职业">
+          <el-table-column prop="condition" label="职业">
             <template #default="scope">
               {{ scope.row.condition.jobs.map((v: Job) => Util.nameToFullName((v.toUpperCase() as Job))?.cn ?? v).join('、').replace('冒险者', '全部职业') }}
             </template>
@@ -796,18 +791,5 @@ onMounted(() => {
 }
 :deep(.el-dialog__body) {
   padding: 20px;
-}
-
-.alerts-container {
-  display: flex;
-  flex-direction: column;
-}
-
-.alert-item {
-  margin-bottom: 5px;
-}
-
-.alert-item:last-child {
-  margin-bottom: 0;
 }
 </style>

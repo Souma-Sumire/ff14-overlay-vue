@@ -3,15 +3,17 @@ import type { EventMap } from 'cactbot/types/event'
 import type { WayMarkObj } from '@/types/PostNamazu'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import LZString from 'lz-string'
-import ActWS from '@/assets/actWS.webp'
 import Aetherytes from '@/resources/aetherytes.json'
 import Map from '@/resources/map.json'
 import zoneInfo from '@/resources/zoneInfo'
 import { getPixelCoordinates, Vector2 } from '@/utils/mapCoordinates'
+import { useWebSocket } from '@/utils/useWebSocket'
 import HuntData, { type HuntEntry } from '../../cactbot/resources/hunt'
 import { addOverlayListener, callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 import sonar from '../../cactbot/resources/sounds/freesound/sonar.webm'
 import ZoneId from '../../cactbot/resources/zone_id'
+
+const { wsConnected } = useWebSocket({ allowClose: true, addWsParam: true })
 
 type DiscoveredMonsters = Array<{
   timestamp: number
@@ -174,7 +176,6 @@ const playerInstance = ref(-1)
 const DEV_MODE = window.location.hostname === 'localhost' as const
 const nameToHuntEntry: Record<string, HuntEntry> = {}
 const mergedByOtherNodes = new Set<string>()
-const websocketConnected = ref(false)
 const gameVersion = useStorage('souma-hunt-game-version', '7.0' as GameVersion)
 const allMonstersData = useStorage('souma-hunt-monsters-2', [] as DiscoveredMonsters)
 const monstersData = computed(() => allMonstersData.value.filter(v => (zoneListUsed.value.filter(z => getZoneGameVersion(z) === gameVersion.value)).includes(v.zoneId as ZoneIdType)))
@@ -210,59 +211,6 @@ for (const hunt of Object.values(HuntData)) {
       nameToHuntEntry[name.toLowerCase()] = { id, rank, name }
     }
   })
-}
-
-// 如果url标签里没有OVERLAY_WS，则自动为用户添加
-if (!window.location.href.includes('OVERLAY_WS')) {
-  window.location.href += `?OVERLAY_WS=ws://127.0.0.1:10501/ws`
-}
-async function checkWebSocket(): Promise<any> {
-  let resolvePromise: (value: boolean | PromiseLike<boolean>) => void
-  const promise = new Promise<boolean>((resolve) => {
-    resolvePromise = resolve
-  })
-
-  const websocket = await Promise.race<Promise<boolean>>([
-    new Promise<boolean>((res) => {
-      void callOverlayHandler({ call: 'cactbotRequestState' }).then(() => {
-        ElMessageBox.close()
-        res(true)
-        resolvePromise(true)
-        websocketConnected.value = true
-      })
-    }),
-    new Promise<boolean>((res) => {
-      window.setTimeout(() => {
-        res(false)
-      }, 250)
-    }),
-  ])
-  if (!websocket) {
-    ElMessageBox.alert(
-      `请先启动ACT WS，再打开此页面<img src='${ActWS}' style='width:100%'>`,
-      '未检测到ACT连接',
-      {
-        dangerouslyUseHTMLString: true,
-        closeOnClickModal: false,
-        showClose: false,
-        closeOnPressEscape: false,
-        closeOnHashChange: false,
-        showCancelButton: true,
-        showConfirmButton: false,
-        cancelButtonText: '我偏要看看',
-        buttonSize: 'small',
-      },
-    ).catch(() => { })
-    const loop = setInterval(() => {
-      void callOverlayHandler({ call: 'cactbotRequestState' }).then(() => {
-        clearInterval(loop)
-        ElMessageBox.close()
-        resolvePromise(true)
-        websocketConnected.value = true
-      })
-    }, 1000)
-  }
-  return promise
 }
 
 function calcDistance(x: number, y: number, x2: number, y2: number) {
@@ -961,7 +909,17 @@ onMounted(async () => {
   if (monstersData.value.length === 0) {
     clearFilter()
   }
-  await checkWebSocket()
+  await (async () => {
+    return new Promise<void>((resolve) => {
+      // 等待ACTWebSocket连接成功
+      const interval = setInterval(() => {
+        if (wsConnected.value) {
+          clearInterval(interval)
+          resolve()
+        }
+      }, 1000)
+    })
+  })()
   addOverlayListener('LogLine', handleLogLine)
   addOverlayListener('ChangeZone', handleChangeZone)
   addOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
@@ -998,7 +956,7 @@ onMounted(async () => {
 
 <template>
   <div :style="COLOR_STYLE">
-    <h3 v-if="!websocketConnected">
+    <h3 v-if="!wsConnected">
       无法连接到ACTWebSocket，找怪功能无法工作，但你可以导入导出数据。
     </h3>
     <el-col>
