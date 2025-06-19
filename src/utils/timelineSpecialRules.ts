@@ -52,6 +52,18 @@ windowAction.set(0x9D49, { type: 'begincast', window: [500, 20], once: true }) /
 windowAction.set(0x9D36, { type: 'begincast', window: [999, 30], once: true }) // P4 具象化
 windowAction.set(0x9D72, { type: 'begincast', window: [30, 30], once: true }) // P5 光尘之剑
 
+// 绝神兵未实测
+windowAction.set(0x2B5F, { type: 'begincast', window: [310, 30], once: true }) // P2 深红旋风
+windowAction.set(0x2CFD, { type: 'begincast', window: [600, 30], once: true }) // P3 大地粉碎
+windowAction.set(0x2B72, { type: 'begincast', window: [100, 30], once: true }) // P4 雾散爆发
+windowAction.set(0x2B87, { type: 'begincast', window: [60, 60], once: true }) // 魔导核爆
+windowAction.set(0x2B76, { type: 'begincast', window: [100, 100], once: true }) // 追击之究极幻想
+windowAction.set(0x2D4C, { type: 'begincast', window: [100, 100], once: true }) // 爆击之究极幻想
+windowAction.set(0X2D4D, { type: 'begincast', window: [100, 100], once: true }) // 乱击之究极幻想
+
+
+
+
 export function factory(events: FFlogsStance): FFlogsStance {
   // const statistics = new Map<number, number>()
   // events
