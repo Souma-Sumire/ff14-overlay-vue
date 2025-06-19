@@ -470,6 +470,7 @@ body {
   position: fixed;
   top: 0;
   right: 0;
+  align-items: flex-end;
   &.overlay{
     transform: translateY(calc(-100% + 1rem));
     opacity: 0.5;
@@ -481,9 +482,6 @@ body {
         opacity: 0;
       }
     }
-  }
-  .el-button {
-    margin: 0;
   }
   [class*="vxe-"] {
     text-align: center;
