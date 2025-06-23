@@ -216,7 +216,7 @@ function exportTimeline(timelineArr: ITimeline[]) {
           copyToClipboard(finalCompressed)
             .then(() => {
               ElMessage({
-                message: '压缩数据复制成功，已写入剪切板。',
+                message: '数据复制成功，已写入剪切板。',
                 type: 'success',
                 duration: 2000,
               })
