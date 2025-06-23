@@ -3981,7 +3981,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Text: '/p ■基本散開:ねばねば(北基準、Tボス下)■カラークラッシュ（2:2:2:2）\n/p 　 D3 D4　 　 | 　 　 　　　ボス\n/p H1　☆　H2　| 　H1D3　MTD1　STD2\n/p 　 D1 D2 　 　|　　　　　 H2D4　4:4は←MT組ST組→\n/p ■砂漠フェーズ\n/p ▼サボテン避け(北) 　　 ▼サボテン+流砂(北基準)\n/p 　　　6人 　　　　｜　北西H1　北東6人\n/p 　T　 　　　 D　　｜　予備　 　 南東H2\n/p ■爆弾捨て(流砂北)\n/p H1/D3 MT/D1 ST/D2 H2/D4 /p ■雑魚フェーズ（倒す順：ジャバ＞キャット＞フェザー＞ムー＞ヤーン）※リキャバースト\n/p wave1：MTムー　ST＋近接ヤーン（リキャバーストで処理）　遠隔キャット　ヤーンの場所に遠隔ヒラ集合\n/p wave2：D側フェザーD3　B側フェザーH2　北から捨てる　MTムーを東→西フェザーへ誘導　他全員で範囲焼き\n/p wave3：ジャバ＋ムー行進(スタン：MT→D1→D2)　STヤーン北東待機　バインドヒラ南東\n/p wave4：MTムーC　STヤーンA(スタン：ST→D1→D2)　D側フェザーD3　B側フェザーD4 南側から捨てる　MTムーを東→西フェザーへ誘導\n/p ■山川　　　　　　　 　 ■雷雲\n/p 火：内側MTH1D1D2　　 　 　雷雲見て\n/p 　　外側STH2D3D4　　TH←左　他　右→DPS\n/p 雷：基本散会\n/p ■マグマ　　　　　 　 　 ■塔2回目\n/p H1D3　北　D4H2　 　4・2・2の場合：近接4人基準時計or反時計\n/p ※※※※※※※※※※ 　中央見て左←【D1MTSTD2】【D3H1】【D4H2】→右\n/p 　　 MT　　ST　　　 　 　　　　▼南8塔の場合\n/p 　　 D1　　D2　　　　　　　　H2　D3　D4\n/p 頭割り：H誘導　　　　　　H1　D1　 MT　 ST 　D2',
       },
       {
-        Name: getSource('纸Sama', 'https://www.bilibili.com/video/BV1PdKszCEUJ/'),
+        Name: getSource('纸Sama P4雷分散标点', 'https://www.bilibili.com/video/BV1PdKszCEUJ/'),
         Place: {
           A: { X: 100, Z: 87, Y: 0, Active: true },
           B: { X: 113, Z: 100, Y: 0, Active: true },
