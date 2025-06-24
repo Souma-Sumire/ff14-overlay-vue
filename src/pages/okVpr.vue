@@ -34,7 +34,7 @@ const step: Record<Lang, string[]> = {
   ja: ['壱の牙【咬創】', '壱の牙【惨毒】'],
 }
 
-const config = useStorage('okDncDanceSettings', {
+const config = useStorage('okVpr1Settings', {
   lang: 'cn' as Lang,
   hotbar: {
     standard: [2, 1],
