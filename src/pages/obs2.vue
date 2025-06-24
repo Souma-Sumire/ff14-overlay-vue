@@ -20,6 +20,7 @@ interface Settings {
   type: ContentUsedType
   enter: boolean
   countdown: boolean
+  countdownCancel: boolean
   combatStart: boolean
   combatEnd: boolean
   wipe: boolean
@@ -30,6 +31,7 @@ type ConditionType =
   | 'combatStart'
   | 'combatEnd'
   | 'countdown'
+  | 'countdownCancel'
   | 'wipe'
 type ContentUsedType = (typeof CONTENT_TYPES)[number]
 const userConfig = useStorage(
@@ -70,6 +72,7 @@ function checkWebSocket(): Promise<void> {
 const REGEXES: Record<string, RegExp> = {
   inCombat: NetRegexes.inCombat(),
   countdown: NetRegexes.countdown(),
+  countdownCancel: NetRegexes.countdownCancel(),
   wipe: commonNetRegex.wipe,
 } as const
 
@@ -98,6 +101,7 @@ const CONTENT_TYPES = [
 const DEFAULT_ENABLE_SETTINGS = {
   enter: false,
   countdown: true,
+  countdownCancel: true,
   combatStart: true,
   combatEnd: true,
   wipe: true,
@@ -106,6 +110,7 @@ const DEFAULT_ENABLE_SETTINGS = {
 const DEFAULT_DISABLE_SETTINGS = {
   enter: false,
   countdown: false,
+  countdownCancel: false,
   combatStart: false,
   combatEnd: false,
   wipe: false,
@@ -363,6 +368,10 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
           checkCondition('countdown')
           break
         }
+        case 'countdownCancel': {
+          checkCondition('countdownCancel')
+          break
+        }
         case 'wipe': {
           checkCondition('wipe')
           break
@@ -476,6 +485,7 @@ function checkCondition(condition: ConditionType) {
         obs.splitRecord()
       }
       return
+    case 'countdownCancel':
     case 'combatEnd':
     case 'wipe':
       if (obs.status.recording) {
@@ -532,73 +542,37 @@ onUnmounted(() => {
         </template>
         <el-form label-position="top" class="connection-form">
           <el-form-item :label="t('Port')">
-            <el-input
-              v-model="userConfig.host"
-              :placeholder="t('portPlaceholder')"
-            />
+            <el-input v-model="userConfig.host" :placeholder="t('portPlaceholder')" />
           </el-form-item>
           <el-form-item :label="t('Password')">
-            <el-input
-              v-model="userConfig.password"
-              :placeholder="t('passwordPlaceholder')"
-              type="password"
-            />
+            <el-input v-model="userConfig.password" :placeholder="t('passwordPlaceholder')" type="password" />
           </el-form-item>
           <el-form-item>
             <el-button
-              type="primary"
-              class="connect-button"
-              :loading="obs.status.connecting"
-              :disabled="obs.status.connecting || !userConfig.host"
-              @click="obs.connect()"
+              type="primary" class="connect-button" :loading="obs.status.connecting"
+              :disabled="obs.status.connecting || !userConfig.host" @click="obs.connect()"
             >
               {{ obs.status.connecting ? t("Connecting") : t("Connect") }}
             </el-button>
           </el-form-item>
         </el-form>
         <el-divider>{{ t("Instructions") }}</el-divider>
+        <el-alert class="instruction-alert" type="info" :description="t('obsTutorial')" :closable="false" show-icon />
+        <el-alert class="instruction-alert" type="info" :description="t('inputTutorial')" :closable="false" show-icon />
         <el-alert
-          class="instruction-alert"
-          type="info"
-          :description="t('obsTutorial')"
-          :closable="false"
-          show-icon
-        />
-        <el-alert
-          class="instruction-alert"
-          type="info"
-          :description="t('inputTutorial')"
-          :closable="false"
-          show-icon
-        />
-        <el-alert
-          class="instruction-alert"
-          type="info"
-          :description="t('firewallTutorial')"
-          :closable="false"
+          class="instruction-alert" type="info" :description="t('firewallTutorial')" :closable="false"
           show-icon
         />
       </el-card>
 
       <!-- 已连接状态 -->
       <div v-else>
-        <el-alert
-          class="instruction-alert"
-          type="info"
-          :description="t('hideTutorial')"
-          :closable="false"
-          show-icon
-        />
+        <el-alert class="instruction-alert" type="info" :description="t('hideTutorial')" :closable="false" show-icon />
         <el-card v-if="dev" class="status-card">
           <template #header>
             <div class="card-header">
               <span>{{ t("Connection Status") }}</span>
-              <el-button
-                type="danger"
-                size="small"
-                class="disconnect-button"
-                @click="obs.disconnect()"
-              >
+              <el-button type="danger" size="small" class="disconnect-button" @click="obs.disconnect()">
                 {{ t("Disconnect") }}
               </el-button>
             </div>
@@ -615,22 +589,19 @@ onUnmounted(() => {
           </div>
           <div class="button-container">
             <el-button
-              :disabled="!obs.status.connected || obs.status.recording"
-              type="primary"
+              :disabled="!obs.status.connected || obs.status.recording" type="primary"
               @click="obs.startRecord()"
             >
               {{ t("Start Record") }}
             </el-button>
             <el-button
-              :disabled="!obs.status.connected || !obs.status.recording"
-              type="danger"
+              :disabled="!obs.status.connected || !obs.status.recording" type="danger"
               @click="obs.stopRecord()"
             >
               {{ t("Stop Record") }}
             </el-button>
             <el-button
-              :disabled="!obs.status.connected || !obs.status.recording"
-              type="warning"
+              :disabled="!obs.status.connected || !obs.status.recording" type="warning"
               @click="obs.splitRecord()"
             >
               {{ t("Split Record") }}
@@ -649,19 +620,13 @@ onUnmounted(() => {
           <div class="profile-info">
             <el-form label-position="top" class="content-form">
               <el-form-item :label="t('Record Path')">
-                <el-input
-                  v-model="userConfig.path"
-                  :placeholder="t('recordPathPlaceholder')"
-                />
+                <el-input v-model="userConfig.path" :placeholder="t('recordPathPlaceholder')" />
                 <div class="file-path-explanation">
                   {{ t("filePathExplanation") }}
                 </div>
               </el-form-item>
               <el-form-item :label="t('Record File Name')">
-                <el-input
-                  v-model="userConfig.fileName"
-                  :placeholder="t('recordFileNamePlaceholder')"
-                />
+                <el-input v-model="userConfig.fileName" :placeholder="t('recordFileNamePlaceholder')" />
                 <div class="file-name-explanation">
                   {{ t("fileNameExplanation") }}
                 </div>
@@ -675,89 +640,51 @@ onUnmounted(() => {
               <span>{{ t("User Content Settings") }}</span>
             </div>
           </template>
-          <el-table
-            :data="userContentSetting"
-            style="width: 100%"
-            :border="true"
-            stripe
-          >
-            <el-table-column
-              prop="type"
-              :label="t('Type')"
-              min-width="130"
-              fixed
-            >
+          <el-table :data="userContentSetting" style="width: 100%" :border="true" stripe>
+            <el-table-column prop="type" :label="t('Type')" min-width="120" fixed>
               <template #default="scope">
                 <span>{{ t(scope.row.type) }}</span>
               </template>
             </el-table-column>
             <el-table-column :label="t('Start When')" align="center">
-              <el-table-column
-                :label="t('When Party')"
-                align="center"
-                min-width="100"
-              >
+              <el-table-column :label="t('When Party')" align="center" min-width="110">
                 <template #default="scope">
                   <el-input-number
-                    v-model="scope.row.partyLength"
-                    :min="1"
-                    :max="8"
-                    style="width: 80px"
-                    size="small"
+                    v-model="scope.row.partyLength" :min="1" :max="8" style="width: 85px" size="small"
                     class="party-length-input"
                   />
                 </template>
               </el-table-column>
-              <el-table-column
-                prop="enter"
-                :label="t('Enter Zone')"
-                align="center"
-                min-width="95"
-              >
+              <el-table-column prop="enter" :label="t('Enter Zone')" align="center" min-width="95">
                 <template #default="scope">
                   <el-switch v-model="scope.row.enter" />
                 </template>
               </el-table-column>
-              <el-table-column
-                prop="countdown"
-                :label="t('CountDown')"
-                align="center"
-                min-width="95"
-              >
+              <el-table-column prop="countdown" :label="t('CountDown')" align="center" min-width="95">
                 <template #default="scope">
                   <el-switch v-model="scope.row.countdown" />
                 </template>
               </el-table-column>
-              <el-table-column
-                prop="combatStart"
-                :label="t('CombatStart')"
-                align="center"
-                min-width="95"
-              >
+              <el-table-column prop="combatStart" :label="t('CombatStart')" align="center" min-width="95">
                 <template #default="scope">
                   <el-switch v-model="scope.row.combatStart" />
                 </template>
               </el-table-column>
             </el-table-column>
             <el-table-column :label="t('End When')" align="center">
-              <el-table-column
-                prop="combatEnd"
-                :label="t('CombatEnd')"
-                align="center"
-                min-width="95"
-              >
+              <el-table-column prop="combatEnd" :label="t('CombatEnd')" align="center" min-width="95">
                 <template #default="scope">
                   <el-switch v-model="scope.row.combatEnd" />
                 </template>
               </el-table-column>
-              <el-table-column
-                prop="wipe"
-                :label="t('Wipe')"
-                align="center"
-                min-width="95"
-              >
+              <el-table-column prop="wipe" :label="t('Wipe')" align="center" min-width="95">
                 <template #default="scope">
                   <el-switch v-model="scope.row.wipe" />
+                </template>
+              </el-table-column>
+              <el-table-column prop="countdown" :label="t('CountDownCancel')" align="center" min-width="95">
+                <template #default="scope">
+                  <el-switch v-model="scope.row.countdownCancel" />
                 </template>
               </el-table-column>
             </el-table-column>
@@ -776,7 +703,7 @@ onUnmounted(() => {
 
 <style scoped>
 .obs-container {
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 20px;
   background-color: #fff;
