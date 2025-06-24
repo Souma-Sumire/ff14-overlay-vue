@@ -112,6 +112,20 @@ syncFocusWS: 是否同步监控目标至通过 WebSocket 连接的其他页面�
     src: 'castingToChinese.webp',
   },
   {
+    title: '[悬浮窗] 盾姿提醒',
+    type: '悬浮窗',
+    path: 'enmity',
+    comment: `仅坦克职业生效
+倒计时开始时，如果小队内没有坦克开盾，醒目文字提醒"没人开盾"。
+倒计时10秒时，如果小队内有0个坦克开盾，语音提醒"没人开盾"。
+倒计时10秒时，如果小队内有2个坦克开盾，语音提醒"双T都开盾了"。
+开场20秒后，如果小队内有2个坦克，且另一个坦克开盾了，且你没有开盾，语音提醒"ST开盾"。
+
+URL地址栏参数说明：
+stRemind: 控制是否开启开场20秒后的提醒，默认true，即开启。false为关闭。
+`,
+  },
+  {
     title: '[悬浮窗] OBS 自动录制 2',
     type: '悬浮窗',
     path: 'obs2',
@@ -201,8 +215,8 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
         </el-card>
 
         <vxe-table
-          :data="tableData" stripe border :row-config="{ isHover: true }"
-          :scroll-x="{ enabled: true }" :fit="true" :auto-resize="true" class="custom-table"
+          :data="tableData" stripe border :row-config="{ isHover: true }" :scroll-x="{ enabled: true }"
+          :fit="true" :auto-resize="true" class="custom-table"
         >
           <vxe-column width="250" title="名称" class-name="column-title">
             <template #default="{ row }">
