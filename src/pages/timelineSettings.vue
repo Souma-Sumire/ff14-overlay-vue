@@ -468,10 +468,12 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
 }
 
 function requestACTData() {
+  const timelineUrl = router.resolve({ path: '/timeline' })
+  const fullPath = `${window.location.protocol}//${window.location.host}/ff14-overlay-vue/${timelineUrl.href}`
   keepRetrying = true
   loading = ElLoading.service({
     lock: true,
-    text: `正在请求数据，请确保 ACT 悬浮窗已开启...，若 10 秒内仍未获取到数据，请检查 ACT WebSocket 服务状态，且确认 timeline 悬浮窗已开启。`,
+    text: `正在请求数据，请确保 ACT 中已添加并启用此悬浮窗：${fullPath}`,
     background: 'rgba(0, 0, 0, 0.7)',
   })
 
