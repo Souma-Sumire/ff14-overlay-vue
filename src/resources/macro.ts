@@ -1,3 +1,4 @@
+/* eslint-disable no-irregular-whitespace */
 import type { ZoneIdInfo } from '../types/macro'
 import type { PPJSON } from '@/types/PostNamazu'
 import { getTerritoryTypeByMapID } from './contentFinderCondition'
@@ -3932,11 +3933,27 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     1257: [
       {
+        Name: getSource('XivStrat M5S', 'https://xivstrat.com/07/m5s'),
+        Text: `/p  【职能分摊分散】|  【钢铁月环八方】       |【地火分摊分散】
+/p 　 　H1　　　　  |　　 MT　    ST　     　 |　D3　 D4
+/p  MT　　 远D　　 | 　H1　　　　 H2　　 |　H1　 H2
+/p  ST　　   近D　    | 　D3　 　　　D4　　 |　D1 　D2
+/p  　　H2　　　　  |　  　D1　 D2　　　   |　MT 　ST
+/p 【第一次地板】西:MT组 东:ST组 内:近战 外:远程
+/p 【αβ撞毒】从北到南倒计时从短到长排队
+/p       【地板蓝火】              |          【诱导扇形】
+/p            D3     D4    　 　   | 　        TH→DPS
+/p 　D3 MT　 ST D4    　 　|
+/p 　            ★        　　　　|　     MTD3　　STD4
+/p 　H1 D1　 D2 H2  　　  |　　　　  　★
+/p 　      H1　 H2       　　   |　　 H1D1　　 H2D2`,
+      },
+      {
         Name: 'Game8',
         Text: '/p 【ジングル固定】|【ナイトフィーバー】|【ウェーブオンウェーブ】\n/p 　　H1　　　　 |　　MT　 ST　　　　|　　MT　 ST\n/p MT　　遠D　　 | 　H1　　　　 H2　　 |　　D1　 D2\n/p ST　　 近D　　 | 　D3　 　　　D4　　|　　 H1 　H2\n/p 　　H2　　　　|　　　D1　 D2　　　 |　　 D3　 D4\n/p 【ディスコ1回目】西:MT組 東:ST組 内周:近接 外周:遠隔\n/p 【音響爆弾】北から秒数短い順にペア整列\n/p 【フロッグダンサー1回目】|【ディスコ・ダンサー2回目/後半ダンシング】\n/p MT組:北西 ST組:南東 　　| 　(扇誘導) TH→DPS\n/p 　ペア頭割り:横隣り　　　|\n/p 　　　　 ★　　　　　　　|　MTD3　　H2D4\n/p 　MT/ST　 D1/D2　　　|　　　　　★\n/p 　H1/H2　 D3/D4　　　|　　H1D1　　 STD2',
       },
       {
-        Name: getSource('XivStrat', 'https://xivstrat.com/'),
+        Name: getSource('XivStrat M5S', 'https://xivstrat.com/07/m5s'),
         Place: {
           A: { X: 100, Z: 90, Y: 0, Active: true },
           B: { X: 110, Z: 100, Y: 0, Active: true },
@@ -3977,11 +3994,50 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     1259: [
       {
+        Name: getSource('XivStrat M6S', 'https://xivstrat.com/07/m6s'),
+        Text: `/p ■ 基本分散 (BOSS面基、TBOSS脚下)
+/p 　      D3  D4
+/p      H1　☆ 　H2
+/p      　 D1  D2 
+/p ■ 击飞分摊（2:2:2:2）
+/p 　 　 　     BOSS
+/p    MTD1　H1D3　STD2
+/p 　　　　   H2D4
+/p ■ 44分摊：←MT组 ST组→
+/p ■ 沙漠阶段
+/p ▼ 仙人掌(A点躲避) 　 ▼ 流沙双奶分散(场基) 　 ▼ 流沙双奶分散(危险角基)
+/p 　　　6人 　　　 　｜　H1　   6人         ｜　H2　   6人
+/p 　D　 　　　T　　  ｜　备选　 H2          ｜　危险　 H1
+/p ■ 炸弹(流沙北)
+/p H1/D3 MT/D1 ST/D2 H2/D4
+/p ■ 山川　　　　　　　    ■ 雷云
+/p 火：外侧MTH1D1D2　　 　 　 雷云为北
+/p 　　内侧STH2D3D4　　TH←左　人群　右→DPS
+/p 雷：D3              D4
+/p         D1    MT    ST
+/p         H1    D2    H2
+/p ■ 踩塔　　　　　 　       ■ 第二次塔
+/p H2D4　北　H1D3　 　4・2・2塔：近战4人基准顺逆时针
+/p ※※※※※※※※※※ 　面向场中左←【D1MTSTD2】【H1D3】【H2D4】→右
+/p 　　 MT　　ST　　　 　 　　　　▼ 南8塔
+/p 　　 D1　　D2　　　　　　　　H1　MT　H2
+/p 分摊：D诱导　　　　　  　D3　D1　 ST　 D2 　D4
+/p ■小怪阶段（击杀顺序：马＞猫＞鱼＞松鼠＞羊）
+/p wave1：MT松鼠　ST羊  近战羊→松鼠　远程羊→猫　远程奶妈羊脚下集合
+/p wave2：D3引导D鱼　H2引导B鱼　北侧放水圈　MT拉松鼠到东→西鱼　其他DPS群攻
+/p wave3：MT松鼠跟着马移动(眩晕：MT→D1→D2)　ST羊B点待机　点名奶妈东南
+/p wave4：MT松鼠C　ST羊A(眩晕马：ST→MT→D1)　点名奶妈东南
+/p D3拉D鱼　D4拉B鱼 北侧放水圈　MT拉松鼠到东鱼 ST拉羊到西鱼/p         D1    MT    ST`,
+      },
+      {
         Name: 'Game8',
         Text: '/p ■基本散開:ねばねば(北基準、Tボス下)■カラークラッシュ（2:2:2:2）\n/p 　 D3 D4　 　 | 　 　 　　　ボス\n/p H1　☆　H2　| 　H1D3　MTD1　STD2\n/p 　 D1 D2 　 　|　　　　　 H2D4　4:4は←MT組ST組→\n/p ■砂漠フェーズ\n/p ▼サボテン避け(北) 　　 ▼サボテン+流砂(北基準)\n/p 　　　6人 　　　　｜　北西H1　北東6人\n/p 　T　 　　　 D　　｜　予備　 　 南東H2\n/p ■爆弾捨て(流砂北)\n/p H1/D3 MT/D1 ST/D2 H2/D4 /p ■雑魚フェーズ（倒す順：ジャバ＞キャット＞フェザー＞ムー＞ヤーン）※リキャバースト\n/p wave1：MTムー　ST＋近接ヤーン（リキャバーストで処理）　遠隔キャット　ヤーンの場所に遠隔ヒラ集合\n/p wave2：D側フェザーD3　B側フェザーH2　北から捨てる　MTムーを東→西フェザーへ誘導　他全員で範囲焼き\n/p wave3：ジャバ＋ムー行進(スタン：MT→D1→D2)　STヤーン北東待機　バインドヒラ南東\n/p wave4：MTムーC　STヤーンA(スタン：ST→D1→D2)　D側フェザーD3　B側フェザーD4 南側から捨てる　MTムーを東→西フェザーへ誘導\n/p ■山川　　　　　　　 　 ■雷雲\n/p 火：内側MTH1D1D2　　 　 　雷雲見て\n/p 　　外側STH2D3D4　　TH←左　他　右→DPS\n/p 雷：基本散会\n/p ■マグマ　　　　　 　 　 ■塔2回目\n/p H1D3　北　D4H2　 　4・2・2の場合：近接4人基準時計or反時計\n/p ※※※※※※※※※※ 　中央見て左←【D1MTSTD2】【D3H1】【D4H2】→右\n/p 　　 MT　　ST　　　 　 　　　　▼南8塔の場合\n/p 　　 D1　　D2　　　　　　　　H2　D3　D4\n/p 頭割り：H誘導　　　　　　H1　D1　 MT　 ST 　D2',
       },
       {
-        Name: getSource('纸Sama P4雷分散标点', 'https://www.bilibili.com/video/BV1PdKszCEUJ/'),
+        Name: getSource(
+          '纸Sama P4雷分散标点',
+          'https://www.bilibili.com/video/BV1PdKszCEUJ/',
+        ),
         Place: {
           A: { X: 100, Z: 87, Y: 0, Active: true },
           B: { X: 113, Z: 100, Y: 0, Active: true },
@@ -3994,7 +4050,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         },
       },
       {
-        Name: getSource('XivStrat', 'https://xivstrat.com/'),
+        Name: getSource('XivStrat M6S', 'https://xivstrat.com/07/m6s'),
         Place: {
           A: { X: 0 + 100, Z: -10 + 100, Y: 0, Active: true },
           B: { X: 10 + 100, Z: 0 + 100, Y: 0, Active: true },
@@ -4067,7 +4123,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     1263: [
       {
-        Name: getSource('XivStrat', 'https://xivstrat.com/'),
+        Name: getSource('XivStrat M8S', 'https://xivstrat.com/07/m8s'),
         Place: {
           A: { X: 0 + 100, Z: -8.5 + 100, Y: 0, Active: true },
           B: { X: 8.5 + 100, Z: 0 + 100, Y: 0, Active: true },
