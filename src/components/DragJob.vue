@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import type { RemovableRef } from '@vueuse/core'
+import type { UseDraggableReturn } from 'vue-draggable-plus'
 import type { Role } from '../../cactbot/types/job'
 import type { Player } from '@/types/partyPlayer'
 import { ref } from 'vue'
-import { type UseDraggableReturn, VueDraggable } from 'vue-draggable-plus'
+import { VueDraggable } from 'vue-draggable-plus'
 import Util from '@/utils/util'
 
 const props = withDefaults(defineProps<Props>(), {})

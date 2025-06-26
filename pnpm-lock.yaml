@@ -8,30 +8,9 @@ importers:
 
   .:
     dependencies:
-      '@babel/core':
-        specifier: ^7.27.4
-        version: 7.27.4
       '@element-plus/icons-vue':
         specifier: ^2.3.1
         version: 2.3.1(vue@3.5.17(typescript@5.8.3))
-      '@johnsoncodehk/html2pug':
-        specifier: ^1.0.0
-        version: 1.0.0
-      '@jridgewell/sourcemap-codec':
-        specifier: ^1.5.0
-        version: 1.5.0
-      '@volar/pug-language-service':
-        specifier: ^1.0.24
-        version: 1.0.24
-      '@volar/typescript-language-service':
-        specifier: ^1.0.1
-        version: 1.0.1
-      '@vue/compiler-sfc':
-        specifier: ^3.5.17
-        version: 3.5.17
-      '@vue/language-service':
-        specifier: ^2.2.10
-        version: 2.2.10(typescript@5.8.3)
       '@vueuse/core':
         specifier: ^13.4.0
         version: 13.4.0(vue@3.5.17(typescript@5.8.3))
@@ -50,9 +29,6 @@ importers:
       hover.css:
         specifier: ^2.3.2
         version: 2.3.2
-      install:
-        specifier: ^0.13.0
-        version: 0.13.0
       lz-string:
         specifier: ^1.5.0
         version: 1.5.0
@@ -80,12 +56,6 @@ importers:
       vue-router:
         specifier: ^4.5.1
         version: 4.5.1(vue@3.5.17(typescript@5.8.3))
-      vue-tsc:
-        specifier: ^2.2.10
-        version: 2.2.10(typescript@5.8.3)
-      vuedraggable:
-        specifier: ^4.1.0
-        version: 4.1.0(vue@3.5.17(typescript@5.8.3))
       vxe-pc-ui:
         specifier: ^4.6.35
         version: 4.6.35(vue@3.5.17(typescript@5.8.3))
@@ -99,6 +69,15 @@ importers:
       '@antfu/eslint-config':
         specifier: ^4.16.1
         version: 4.16.1(@unocss/eslint-plugin@66.3.2(eslint@9.29.0(jiti@2.4.2))(typescript@5.8.3))(@vue/compiler-sfc@3.5.17)(eslint@9.29.0(jiti@2.4.2))(typescript@5.8.3)(vitest@0.25.8(happy-dom@8.9.0)(sass@1.89.2)(terser@5.43.1))
+      '@babel/core':
+        specifier: ^7.27.4
+        version: 7.27.4
+      '@johnsoncodehk/html2pug':
+        specifier: ^1.0.0
+        version: 1.0.0
+      '@jridgewell/sourcemap-codec':
+        specifier: ^1.5.0
+        version: 1.5.0
       '@types/node':
         specifier: ^24.0.4
         version: 24.0.4
@@ -117,6 +96,18 @@ importers:
       '@vitejs/plugin-vue-jsx':
         specifier: ^5.0.0
         version: 5.0.0(vite@7.0.0(@types/node@24.0.4)(jiti@2.4.2)(sass-embedded@1.83.4)(sass@1.89.2)(terser@5.43.1)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))
+      '@volar/pug-language-service':
+        specifier: ^1.0.24
+        version: 1.0.24
+      '@volar/typescript-language-service':
+        specifier: ^1.0.1
+        version: 1.0.1
+      '@vue/compiler-sfc':
+        specifier: ^3.5.17
+        version: 3.5.17
+      '@vue/language-service':
+        specifier: ^2.2.10
+        version: 2.2.10(typescript@5.8.3)
       csv-parser:
         specifier: ^3.2.0
         version: 3.2.0
@@ -2575,10 +2566,6 @@ packages:
     resolution: {integrity: sha512-QAgPDQMEgrDssk1XiwwHoOGYF9BAbUcc1+j+FhEvaOt8/cKRqyLn0U5qA6F74fGhTMGxf92pOvPBeh29jQJDTQ==}
     engines: {node: '>=12.0.0'}
 
-  install@0.13.0:
-    resolution: {integrity: sha512-zDml/jzr2PKU9I8J/xyZBQn8rPCAY//UOYNmR01XwNwyfhEWObo2SWfSl1+0tm1u6PhxLwDnfsT/6jB7OUxqFA==}
-    engines: {node: '>= 0.10'}
-
   is-arrayish@0.2.1:
     resolution: {integrity: sha512-zz06S8t0ozoDXMG+ube26zeCTNXcKIPJZJi8hBrF4idCLms4CG9QtK7qBl1boi5ODzFpjswb5JPmHCbMpjaYzg==}
 
@@ -3632,9 +3619,6 @@ packages:
   snake-case@3.0.4:
     resolution: {integrity: sha512-LAOh4z89bGQvl9pFfNF8V146i7o7/CqFPbqzYgP+yYzDIDeS9HaNFtXABamRW+AQzEVODcvE79ljJ+8a9YSdMg==}
 
-  sortablejs@1.14.0:
-    resolution: {integrity: sha512-pBXvQCs5/33fdN1/39pPL0NZF20LeRbLQ5jtnheIPN9JQAaufGjKdWduZn4U7wCtVuzKhmRkI0DFYHYRbB2H1w==}
-
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
@@ -4203,12 +4187,6 @@ packages:
     peerDependencies:
       vue: ^3.2.0
 
-  vue-tsc@2.2.10:
-    resolution: {integrity: sha512-jWZ1xSaNbabEV3whpIDMbjVSVawjAyW+x1n3JeGQo7S0uv2n9F/JMgWW90tGWNFRKya4YwKMZgCtr0vRAM7DeQ==}
-    hasBin: true
-    peerDependencies:
-      typescript: '>=5.0.0'
-
   vue@3.5.17:
     resolution: {integrity: sha512-LbHV3xPN9BeljML+Xctq4lbz2lVHCR6DtbpTf5XIO6gugpXUN49j2QQPcMj086r9+AkJ0FfUT8xjulKKBkkr9g==}
     peerDependencies:
@@ -4216,11 +4194,6 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
-
-  vuedraggable@4.1.0:
-    resolution: {integrity: sha512-FU5HCWBmsf20GpP3eudURW3WdWTKIbEIQxh9/8GE806hydR9qZqRRxRE3RjqX7PkuLuMQG/A7n3cfj9rCEchww==}
-    peerDependencies:
-      vue: ^3.0.1
 
   vxe-pc-ui@4.6.35:
     resolution: {integrity: sha512-pAWcgPMwjIY387Bg1Mvqe0uV663dwYK0AJKUnHZGxlYHo/PNlSl9j3pvcy5DRhmuywqliP3aPPprxowQkJXF+Q==}
@@ -7082,8 +7055,6 @@ snapshots:
       through: 2.3.8
       wrap-ansi: 7.0.0
 
-  install@0.13.0: {}
-
   is-arrayish@0.2.1:
     optional: true
 
@@ -8288,8 +8259,6 @@ snapshots:
       dot-case: 3.0.4
       tslib: 2.8.1
 
-  sortablejs@1.14.0: {}
-
   source-map-js@1.2.1: {}
 
   source-map-support@0.5.21:
@@ -8870,12 +8839,6 @@ snapshots:
       '@vue/devtools-api': 6.6.4
       vue: 3.5.17(typescript@5.8.3)
 
-  vue-tsc@2.2.10(typescript@5.8.3):
-    dependencies:
-      '@volar/typescript': 2.4.15
-      '@vue/language-core': 2.2.10(typescript@5.8.3)
-      typescript: 5.8.3
-
   vue@3.5.17(typescript@5.8.3):
     dependencies:
       '@vue/compiler-dom': 3.5.17
@@ -8885,11 +8848,6 @@ snapshots:
       '@vue/shared': 3.5.17
     optionalDependencies:
       typescript: 5.8.3
-
-  vuedraggable@4.1.0(vue@3.5.17(typescript@5.8.3)):
-    dependencies:
-      sortablejs: 1.14.0
-      vue: 3.5.17(typescript@5.8.3)
 
   vxe-pc-ui@4.6.35(vue@3.5.17(typescript@5.8.3)):
     dependencies:
