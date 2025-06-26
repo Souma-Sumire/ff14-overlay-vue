@@ -5,9 +5,9 @@ import type { ITimeline, ITimelineLine } from '@/types/timeline'
 import { ElLoading, ElMessage, ElMessageBox } from 'element-plus'
 import * as LZString from 'lz-string'
 import moment from 'moment'
-import zoneInfo from '@/resources/zoneInfo'
 // import { p8sTimeline } from "@/resources/timelineTemplate";
-import router from '@/router'
+import { useRouter } from 'vue-router'
+import zoneInfo from '@/resources/zoneInfo'
 import { parseTimeline, useTimelineStore } from '@/store/timeline'
 import { copyToClipboard } from '@/utils/clipboard'
 import { useWebSocket } from '@/utils/useWebSocket'
@@ -15,6 +15,7 @@ import Util from '@/utils/util'
 import { addOverlayListener, callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 import 'animate.css'
 
+const router = useRouter()
 const { wsConnected } = useWebSocket({ allowClose: true, addWsParam: true })
 const simulatedCombatTime = ref(0)
 const timelineStore = useTimelineStore()

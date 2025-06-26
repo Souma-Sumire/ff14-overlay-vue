@@ -15,6 +15,7 @@ const routeTitles = new Map(
     castingMonitor: '施法监控',
     castingToChinese: '读条汉化',
     dsrp6: '绝龙诗 P6 修血简易记录',
+    enmity: '开盾提醒',
     fflogsUploaderDownload: '今天 FFLogsUploader 更新了吗？',
     ffxivAxisWebFont: 'FFXIV Axis 字体',
     hexcode: 'hexcode 简易工具',

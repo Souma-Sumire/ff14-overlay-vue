@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
 onMounted(() => {
-  import('@/router').then((router) => {
-    router.default.push('/startPages')
-  },
-  )
+  router.push('/startPages')
 })
 </script>
 
@@ -11,6 +12,4 @@ onMounted(() => {
   <div />
 </template>
 
-<style scoped lang='scss'>
-
-</style>
+<style scoped lang='scss'></style>
