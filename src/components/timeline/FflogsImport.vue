@@ -15,7 +15,6 @@ import { useTimelineStore } from '@/store/timeline'
 import { factory } from '@/utils/timelineSpecialRules'
 import Util from '@/utils/util'
 import { getImgSrc, handleImgError } from '@/utils/xivapi'
-import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
 
 const props = defineProps<{
   filters: Record<string, number[]>

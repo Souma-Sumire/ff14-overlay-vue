@@ -13,7 +13,6 @@ import { copyToClipboard } from '@/utils/clipboard'
 import { useWebSocket } from '@/utils/useWebSocket'
 import Util from '@/utils/util'
 import { addOverlayListener, callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
-import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
 import 'animate.css'
 
 const { wsConnected } = useWebSocket({ allowClose: true, addWsParam: true })

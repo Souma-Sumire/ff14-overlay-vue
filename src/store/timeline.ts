@@ -1,19 +1,14 @@
 import type { Job } from '../../cactbot/types/job'
 import type { FFIcon } from '@/types/fflogs'
+import type { ITimeline, ITimelineCondition, ITimelineLine, ShowStyle, ShowStyleTranslate, TimelineConfigTranslate, TimelineConfigValues } from '@/types/timeline'
 import { ElMessage } from 'element-plus'
 import { defineStore } from 'pinia'
 import {
-  type ITimeline,
-  type ITimelineCondition,
-  type ITimelineLine,
-  type ShowStyle,
-  type ShowStyleTranslate,
+
   TimelineConfigEnum,
-  type TimelineConfigTranslate,
-  type TimelineConfigValues,
+
 } from '@/types/timeline'
 import Util from '../utils/util'
-import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
 
 class Timeline implements ITimeline {
   constructor(

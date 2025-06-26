@@ -11,7 +11,6 @@ import {
   addOverlayListener,
   callOverlayHandler,
 } from '../../cactbot/resources/overlay_plugin_api'
-import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
 
 const timelineStore = useTimelineStore()
 const timelinePageData = reactive({

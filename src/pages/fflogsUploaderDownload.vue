@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ElMessage } from 'element-plus'
-import '@sweetalert2/theme-bootstrap-4/bootstrap-4.scss'
 
 interface resJson {
   url: string
