@@ -26,13 +26,13 @@ interface Settings {
   wipe: boolean
   partyLength: number
 }
-type ConditionType =
-  | 'enter'
-  | 'combatStart'
-  | 'combatEnd'
-  | 'countdown'
-  | 'countdownCancel'
-  | 'wipe'
+type ConditionType
+  = | 'enter'
+    | 'combatStart'
+    | 'combatEnd'
+    | 'countdown'
+    | 'countdownCancel'
+    | 'wipe'
 type ContentUsedType = (typeof CONTENT_TYPES)[number]
 const userConfig = useStorage(
   'obs-user-config',

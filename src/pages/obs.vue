@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { EventMap } from 'cactbot/types/event'
-import OBSWebSocket, { type RequestBatchRequest } from 'obs-websocket-js'
+import type { RequestBatchRequest } from 'obs-websocket-js'
+import OBSWebSocket from 'obs-websocket-js'
 import { VxeUI } from 'vxe-table'
 import ContentType from '../../cactbot/resources/content_type'
 import { commonNetRegex } from '../../cactbot/resources/netregexes'

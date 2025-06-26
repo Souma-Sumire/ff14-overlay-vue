@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import type { Ref } from 'vue'
+import type { VxeTableEvents, VxeTableInstance, VxeTablePropTypes } from 'vxe-table'
 import type { Encounter, Keigenn, RowVO, Status } from '@/types/keigennRecord2'
 import type { Player } from '@/types/partyPlayer'
 import {
-  type VxeTableEvents,
-  type VxeTableInstance,
-  type VxeTablePropTypes,
+
   VxeUI,
 } from 'vxe-table'
 import { getActionChinese } from '@/resources/actionChinese'
