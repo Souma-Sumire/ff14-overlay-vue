@@ -41,6 +41,15 @@ export default defineConfig({
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
       },
+      onwarn(warning, warn) {
+        if (
+          warning.code === 'EVAL'
+          && warning.id?.includes('cactbot/resources/user_config.ts')
+        ) {
+          return
+        }
+        warn(warning)
+      },
     },
     chunkSizeWarningLimit: 2000,
     reportCompressedSize: false,
