@@ -30,6 +30,12 @@ const tableData: Menu[] = [
     path: 'fflogsUploaderDownload',
   },
   {
+    title: '[网页] ACT 自助测试',
+    type: '网页',
+    path: 'test',
+    comment: `供用户自行检测ACT是否处于正常运行状态。`,
+  },
+  {
     title: '[悬浮窗] 减伤监控2',
     type: '悬浮窗/网页',
     path: 'keigennRecord2?scale=1&opacity=0.8&showHeader=true&showIcon=true&showName=false&abbrId=true&iconType=3&anonymous=true&replaceWithYou=false&parseAA=true&parseDoT=false&minimize=false&actionCN=true&statusCN=true',
@@ -62,7 +68,7 @@ statusCN: status显示中文化，默认true
     <a href="/ff14-overlay-vue/#/timelineSettings?OVERLAY_WS=ws://127.0.0.1:10501/ws">编辑时间轴请在浏览器中打开这里</a>（曾经的小齿轮）`,
   },
   {
-    title: '全副本发宏/标点',
+    title: '[网页] 全副本发宏/标点',
     type: '网页',
     path: 'zoneMacro?OVERLAY_WS=ws://127.0.0.1:10501/ws',
     src: 'zoneMacro.webp',
