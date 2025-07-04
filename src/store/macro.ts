@@ -181,6 +181,7 @@ export const useMacroStore = defineStore('macro', {
           Four: json.Four,
         }),
       )
+      ElMessage.success('已复制到剪贴板')
     },
     sendMacroParty(text: string): void {
       ElMessageBox.confirm('确定要发送到队伍频道吗?', '警告', {

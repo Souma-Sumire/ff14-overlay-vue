@@ -189,7 +189,7 @@ onMounted(() => {
                     <span v-show="true">{{ scope.row[0] }}</span>
                   </template>
                 </el-table-column>
-                <el-table-column align="center" label="X" width="140">
+                <el-table-column align="center" label="X（左右）" width="140">
                   <template #default="scope">
                     <span v-show="!macro.Editable">{{ scope.row.X }}</span>
                     <el-input-number
@@ -198,7 +198,7 @@ onMounted(() => {
                     />
                   </template>
                 </el-table-column>
-                <el-table-column align="center" label="Z" width="140">
+                <el-table-column align="center" label="Z（上下）" width="140">
                   <template #default="scope">
                     <span v-show="!macro.Editable">{{ scope.row.Z }}</span>
                     <el-input-number
@@ -207,12 +207,12 @@ onMounted(() => {
                     />
                   </template>
                 </el-table-column>
-                <el-table-column v-if="false" align="center" label="Y" width="85">
+                <el-table-column align="center" label="Y（高度）" width="140">
                   <template #default="scope">
                     <span v-show="!macro.Editable">{{ scope.row.Y }}</span>
-                    <el-input
-                      v-show="macro.Editable" v-model="scope.row[1].Y" type="number" :precision="2" size="small"
-                      controls-position="right"
+                    <el-input-number
+                      v-show="macro.Editable" v-model="scope.row[1].Y" controls-position="right"
+                      :step="0.1" :precision="2" size="small"
                     />
                   </template>
                 </el-table-column>
@@ -233,13 +233,15 @@ onMounted(() => {
               <el-button type="primary" size="small" @click="macroStore.doPartyWayMark(macro.Place)">
                 公开
               </el-button>
-              <el-button type="primary" size="small" @click="macroStore.doSlotWayMark(macro.Place)">
+              <!-- <el-button type="primary" size="small" @click="macroStore.doSlotWayMark(macro.Place)">
                 插槽
-              </el-button>
+              </el-button> -->
               <el-button
                 :icon="CopyDocument" size="small" class="export"
                 @click="macroStore.exportWaymarksJson(macro)"
-              />
+              >
+                复制
+              </el-button>
               <el-button
                 v-if="macro.Deletability" :icon="Edit" size="small"
                 @click="macroStore.editMacroPlace(macro)"
