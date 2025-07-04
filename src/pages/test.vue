@@ -308,7 +308,7 @@ addOverlayListener('LogLine', onLogLine)
           <i class="el-icon-cpu" /> OverlayPlugin 日志测试（常用部分）
         </div>
         <div class="header-tip">
-          如果无法触发这部分事件，说明你需要更新 OverlayPlugin插件。
+          如果无法触发这部分事件，说明你需要更新 OverlayPlugin 插件。
         </div>
         <el-row :gutter="12">
           <el-col v-for="(event, key) in overlayPluginLogRegexes" :key="key" :xs="24" :sm="12" :md="8" :lg="6">
