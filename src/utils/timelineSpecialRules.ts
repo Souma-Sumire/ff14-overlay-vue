@@ -61,17 +61,25 @@ windowAction.set(0x2B76, { type: 'begincast', window: [100, 100], once: true }) 
 windowAction.set(0x2D4C, { type: 'begincast', window: [100, 100], once: true }) // 爆击之究极幻想
 windowAction.set(0x2D4D, { type: 'begincast', window: [100, 100], once: true }) // 乱击之究极幻想
 
-export function factory(events: FFlogsStance): FFlogsStance {
-  // const statistics = new Map<number, number>()
-  // events
-  // .filter(e => e.type === 'begincast')
-  // .map(e =>
-  // statistics.set(e.actionId, (statistics.get(e.actionId) ?? 0) + 1),
-  // ) // 统计每一个ability出现的次数
-  for (const event of events) {
-    // if (statistics.get(event.actionId) === 1 && event.type === 'begincast')
-    //   event.window = [12, 12] // 为独一无二的能力赋予window，不能太长了，否则双轴boss会出问题。
+// M5S
+windowAction.set(0xA721, { type: 'begincast', window: [9.6, 2], once: true }) // 经典铭心
+windowAction.set(0xA756, { type: 'cast', window: [77.2, 30], once: true }) // 激热跳舞街
+windowAction.set(0xA76F, { type: 'cast', window: [30, 30], once: true }) // 在这停顿！
+windowAction.set(0xA723, { type: 'cast', window: [30, 30], once: true }) // 欢庆时刻
+windowAction.set(0xA770, { type: 'cast', window: [30, 30], once: true }) // 在这停顿！
+windowAction.set(0xA722, { type: 'cast', window: [30, 30], once: true }) // 经典铭心
 
+// M8S
+windowAction.set(0xA74F, { type: 'cast', window: [10, 10], once: true }) // 空间斩
+windowAction.set(0xA3D0, { type: 'begincast', window: [10, 10], once: true }) // 风之狼吼
+windowAction.set(0xA3D3, { type: 'begincast', window: [10, 10], once: true }) // 土之狼吼
+windowAction.set(0xA749, { type: 'cast', window: [400, 10], once: true }) // 风尘光狼斩
+windowAction.set(0xA3F1, { type: 'begincast', window: [10, 10], once: true }) // 空间灭斩
+windowAction.set(0xA38F, { type: 'cast', window: [140, 0], once: true }) // --middle--
+windowAction.set(0xA82D, { type: 'cast', window: [610, 0], once: true }) // --sync--
+
+export function factory(events: FFlogsStance): FFlogsStance {
+  for (const event of events) {
     const w = windowAction.get(event.actionId)
     if (w?.type === event.type)
       event.window = w?.window
