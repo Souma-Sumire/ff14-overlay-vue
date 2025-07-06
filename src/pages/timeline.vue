@@ -240,8 +240,9 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
   if ((e.msg as any).type === 'post') {
     const data = (e.msg as { data: typeof timelineStore.$state }).data
     if (data.allTimelines.length < timelineStore.allTimelines.length - 1) {
+      void ElMessage.closeAll()
       ElMessageBox.confirm(
-        data.allTimelines.length === 0 ? '传入数据为空. 确定要清空数据吗?' : '你删除了2条以上的时间轴. 确定吗?',
+        data.allTimelines.length === 0 ? '传入数据为空. 确定要清空数据吗?' : `此次编辑将删除了${timelineStore.allTimelines.length - data.allTimelines.length}条时间轴. 确定吗?`,
         '警告',
         {
           confirmButtonText: '确认',

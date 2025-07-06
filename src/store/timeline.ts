@@ -1,13 +1,18 @@
 import type { Job } from '../../cactbot/types/job'
 import type { FFIcon } from '@/types/fflogs'
-import type { ITimeline, ITimelineCondition, ITimelineLine, ShowStyle, ShowStyleTranslate, TimelineConfigTranslate, TimelineConfigValues } from '@/types/timeline'
+import type {
+  ITimeline,
+  ITimelineCondition,
+  ITimelineLine,
+  ShowStyle,
+  ShowStyleTranslate,
+  TimelineConfigTranslate,
+  TimelineConfigValues,
+} from '@/types/timeline'
 import { ElMessage } from 'element-plus'
 import { defineStore } from 'pinia'
-import {
-
-  TimelineConfigEnum,
-
-} from '@/types/timeline'
+import { TimelineConfigEnum } from '@/types/timeline'
+// import Regexes from '../../cactbot/resources/regexes'
 import Util from '../utils/util'
 
 class Timeline implements ITimeline {
@@ -19,7 +24,9 @@ class Timeline implements ITimeline {
   ) {
     if (Util.iconToJobEnum(condition.jobs[0] as FFIcon)) {
       // 突然有一天数据格式不一致了 可能是fflogs改返回值了?
-      condition.jobs[0] = Util.jobEnumToJob(Util.iconToJobEnum(condition.jobs[0] as FFIcon))
+      condition.jobs[0] = Util.jobEnumToJob(
+        Util.iconToJobEnum(condition.jobs[0] as FFIcon),
+      )
     }
     this.name = name
     this.condition = condition
@@ -74,8 +81,6 @@ const showStyle: ShowStyle = {
 export const useTimelineStore = defineStore('timeline', {
   state: () => {
     return {
-      // reg: reg,
-      // timelineLegalRegular: new RegExp(reg, "gm"),
       allTimelines: [] as ITimeline[],
       configValues,
       configTranslate,
@@ -88,6 +93,24 @@ export const useTimelineStore = defineStore('timeline', {
   },
   getters: {},
   actions: {
+    normalizeJobConditions(timeline: ITimeline) {
+      if (!timeline.condition.jobs) {
+        timeline.condition.jobs = [(timeline.condition as any).job]
+        Reflect.deleteProperty(timeline.condition, 'job')
+      }
+      timeline.condition.jobs.sort(
+        (a, b) => this.jobList.indexOf(a) - this.jobList.indexOf(b),
+      )
+      if (
+        timeline.condition.jobs[0]
+        && Util.iconToJobEnum(timeline.condition.jobs[0] as FFIcon)
+      ) {
+        timeline.condition.jobs[0] = Util.jobEnumToJob(
+          Util.iconToJobEnum(timeline.condition.jobs[0] as FFIcon),
+        )
+      }
+    },
+
     newTimeline(
       title = 'Demo',
       condition: ITimelineCondition = { zoneId: '0', jobs: ['NONE'] },
@@ -125,49 +148,57 @@ export const useTimelineStore = defineStore('timeline', {
         return (
           (t.condition.zoneId === '0'
             || t.condition.zoneId === playerState.zoneId)
-          && (t.condition.jobs.includes('NONE') || t.condition.jobs.includes(playerState.jobs[0]))
+          && (t.condition.jobs.includes('NONE')
+            || t.condition.jobs.includes(playerState.jobs[0]))
         )
       })
     },
     saveTimelineSettings() {
-      localStorage.setItem(
-        'timelines',
-        JSON.stringify({
-          allTimelines: this.allTimelines,
-          configValues: this.configValues,
-          settings: this.settings,
-          showStyle: this.showStyle,
-          filters: this.filters,
-        }),
-      )
+      try {
+        localStorage.setItem(
+          'timelines',
+          JSON.stringify({
+            allTimelines: this.allTimelines,
+            configValues: this.configValues,
+            settings: this.settings,
+            showStyle: this.showStyle,
+            filters: this.filters,
+          }),
+        )
+      }
+      catch (e) {
+        console.error('Failed to save timeline settings:', e)
+        ElMessage.error('保存时间轴设置失败')
+      }
     },
     loadTimelineSettings() {
       const ls = localStorage.getItem('timelines')
       if (ls) {
         Object.assign(this, JSON.parse(ls))
+        this.allTimelines.forEach((timeline) => {
+          this.normalizeJobConditions(timeline)
+        })
         this.sortTimelines()
       }
-
-      for (const v of this.allTimelines) {
-        if (v.condition.jobs === undefined) {
-          v.condition.jobs = [(v.condition as any).job]
+      try {
+        const ls = localStorage.getItem('timelines')
+        if (ls) {
+          Object.assign(this, JSON.parse(ls))
+          this.allTimelines.forEach((timeline) => {
+            this.normalizeJobConditions(timeline)
+          })
+          this.sortTimelines()
         }
-        v.condition.jobs.sort((a, b) => this.jobList.indexOf(a) - this.jobList.indexOf(b))
-        if (Util.iconToJobEnum(v.condition.jobs[0] as FFIcon)) {
-          v.condition.jobs[0] = Util.jobEnumToJob(
-            Util.iconToJobEnum(v.condition.jobs[0] as FFIcon),
-          )
-        }
+      }
+      catch (e) {
+        console.error('Failed to load timeline settings:', e)
+        ElMessage.error('加载时间轴设置失败')
       }
     },
     sortTimelines() {
-      for (const v of this.allTimelines) {
-        if (v.condition.jobs === undefined) {
-          v.condition.jobs = [(v.condition as any).job]
-        }
-        v.condition.jobs.sort((a, b) => this.jobList.indexOf(a) - this.jobList.indexOf(b))
-        Reflect.deleteProperty(v.condition, 'job')
-      }
+      this.allTimelines.forEach((timeline) => {
+        this.normalizeJobConditions(timeline)
+      })
       this.allTimelines.sort((a, b) => {
         const mapDiff = Number(a.condition.zoneId) - Number(b.condition.zoneId)
         if (mapDiff !== 0) {
@@ -177,8 +208,9 @@ export const useTimelineStore = defineStore('timeline', {
         if (nameDiff !== 0) {
           return nameDiff
         }
-        const jobDiff = Util.jobToJobEnum(a.condition.jobs[0])
-          - Util.jobToJobEnum(b.condition.jobs[0])
+        const jobDiff
+          = Util.jobToJobEnum(a.condition.jobs[0])
+            - Util.jobToJobEnum(b.condition.jobs[0])
         if (jobDiff !== 0) {
           return jobDiff
         }
@@ -193,14 +225,13 @@ export const useTimelineStore = defineStore('timeline', {
 
 function parseTime(time: string): number {
   const timeFormatType = time.match(
-    /^(?<negative>-)?(?<mm>[^:：]+):(?<ss>[^:：]+)$/,
+    /^(?<negative>-)?(?<mm>\d+):(?<ss>\d+(?:\.\d*)?)$/,
   )
   if (timeFormatType) {
-    return (
-      Number.parseFloat(timeFormatType.groups?.mm ?? '0') * 60
-      + Number.parseFloat(timeFormatType.groups?.ss ?? '0')
-      * (timeFormatType.groups?.negative ? -1 : 1)
-    )
+    const minutes = Number(timeFormatType.groups?.mm || '0')
+    const seconds = Number(timeFormatType.groups?.ss || '0')
+    const sign = timeFormatType.groups?.negative ? -1 : 1
+    return sign * (minutes * 60 + seconds)
   }
   return Number.parseFloat(time)
 }
@@ -212,14 +243,14 @@ export async function parseTimeline(
   rawTimeline: string,
 ): Promise<ITimelineLine[]> {
   const total: ITimelineLine[] = []
-  const matchs = [
+  const matches = [
     ...rawTimeline.matchAll(
       // eslint-disable-next-line regexp/no-super-linear-backtracking
       /^\s*(?<time>[-:：\d.]+)\s+(?<action>(?:--|["'“”])[^"'\n]+?(?:--|["'“”])).*$/gm,
     ),
   ]
-  for (let i = 0; i < matchs.length; i++) {
-    const match = matchs[i]
+  for (let i = 0; i < matches.length; i++) {
+    const match = matches[i]
     const jump = match[0].match(/(?<=jump ?)[-:：\d.]+/)?.[0]
     const sync = match[0].match(/(?<=sync(?:\.once)? ?\/).+(?=\/)/)?.[0]
     const syncOnce = /sync\.once/.test(match[0])

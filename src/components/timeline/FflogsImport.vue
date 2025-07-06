@@ -29,7 +29,6 @@ const emits = defineEmits<{
     codeFight: string,
   ): unknown
   (e: 'showFFlogsToggle'): void
-  (e: 'clearCurrentlyTimeline'): void
   (e: 'updateFilters', target: string, value: number[]): void
 }>()
 
