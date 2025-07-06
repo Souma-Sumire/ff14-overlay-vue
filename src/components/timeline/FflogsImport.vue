@@ -12,6 +12,7 @@ import { Loading } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 import { getActionChinese } from '@/resources/actionChinese'
 import { useTimelineStore } from '@/store/timeline'
+import { CacheManager } from '@/utils/cacheManager'
 import { factory } from '@/utils/timelineSpecialRules'
 import Util from '@/utils/util'
 import { getImgSrc, handleImgError } from '@/utils/xivapi'
@@ -47,6 +48,32 @@ claerFFlogsQueryConfig()
 
 const timelineStore = useTimelineStore()
 
+const fflogsCache = new CacheManager({ prefix: 'fflogs:', maxSize: 2 * 1024 * 1024, cleanupRatio: 0.25 })
+
+function getCache<T>(key: string): T | null {
+  const cached = fflogsCache.get<any>(key)
+  if (!cached)
+    return null
+  try {
+    return JSON.parse(cached) as T
+  }
+  catch {
+    return null
+  }
+}
+
+function setCache<T>(key: string, data: T, ttl = 60 * 60 * 1000): void {
+  const cache = {
+    data,
+    expire: Date.now() + ttl,
+  }
+  fflogsCache.set(key, JSON.stringify(cache), ttl)
+}
+
+function isCacheValid(cache: { data: any, expire: number }) {
+  return cache && cache.expire > Date.now()
+}
+
 // fflogs导入第1步：用户点击查询按钮
 async function queryFFlogsReportFights(url: string) {
   isLoading.value = true
@@ -76,14 +103,23 @@ async function queryFFlogsReportFights(url: string) {
 
   fflogsQueryConfig.code = reg.groups?.code ?? ''
   try {
-    const res = await fetch(
-      `https://cn.fflogs.com/v1/report/fights/${fflogsQueryConfig.code}?api_key=${timelineStore.settings.api}`,
-    ).then((response) => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      return response.json()
-    })
+    const fightCacheKey = `fflogs:fights:${fflogsQueryConfig.code}`
+    const cachedFight = getCache<any>(fightCacheKey)
+    let res: any
+
+    if (cachedFight && isCacheValid(cachedFight)) {
+      res = cachedFight.data
+    }
+    else {
+      res = await fetch(
+        `https://cn.fflogs.com/v1/report/fights/${fflogsQueryConfig.code}?api_key=${timelineStore.settings.api}`,
+      ).then((response) => {
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`)
+        return response.json()
+      })
+      setCache(fightCacheKey, res)
+    }
     fflogsQueryConfig.bossIDs = (
       res.enemies as {
         id: number
@@ -168,14 +204,23 @@ async function queryFFlogsReportEvents() {
   fflogsQueryConfig.abilityFilterEvents.length = 0
   async function queryFriendly(startTime: number) {
     try {
-      const res = await fetch(
-        `https://cn.fflogs.com/v1/report/events/casts/${fflogsQueryConfig.code}?start=${startTime}&end=${fflogsQueryConfig.end}&hostility=0&sourceid=${fflogsQueryConfig.player?.id}&api_key=${timelineStore.settings.api}`,
-      ).then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-        return response.json()
-      })
+      const friendlyCacheKey = `fflogs:events:friendly:${fflogsQueryConfig.code}:${startTime}:${fflogsQueryConfig.player?.id}`
+      const cachedFriendly = getCache<any>(friendlyCacheKey)
+      let res: any
+
+      if (cachedFriendly && isCacheValid(cachedFriendly)) {
+        res = cachedFriendly.data
+      }
+      else {
+        res = await fetch(
+          `https://cn.fflogs.com/v1/report/events/casts/${fflogsQueryConfig.code}?start=${startTime}&end=${fflogsQueryConfig.end}&hostility=0&sourceid=${fflogsQueryConfig.player?.id}&api_key=${timelineStore.settings.api}`,
+        ).then((response) => {
+          if (!response.ok)
+            throw new Error(`HTTP error! status: ${response.status}`)
+          return response.json()
+        })
+        setCache(friendlyCacheKey, res)
+      }
       resEvents.push(...res.events)
       if (
         res.nextPageTimestamp
@@ -195,14 +240,23 @@ async function queryFFlogsReportEvents() {
   async function queryEnemies(startTime: number, index: number) {
     if (index >= 0) {
       try {
-        const res = await fetch(
-          `https://cn.fflogs.com/v1/report/events/casts/${fflogsQueryConfig.code}?start=${startTime}&end=${fflogsQueryConfig.end}&hostility=1&sourceid=${fflogsQueryConfig.bossIDs[index]}&api_key=${timelineStore.settings.api}`,
-        ).then((response) => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`)
-          }
-          return response.json()
-        })
+        const enemyCacheKey = `fflogs:events:enemy:${fflogsQueryConfig.code}:${startTime}:${fflogsQueryConfig.bossIDs[index]}`
+        const cachedEnemy = getCache<any>(enemyCacheKey)
+        let res: any
+
+        if (cachedEnemy && isCacheValid(cachedEnemy)) {
+          res = cachedEnemy.data
+        }
+        else {
+          res = await fetch(
+            `https://cn.fflogs.com/v1/report/events/casts/${fflogsQueryConfig.code}?start=${startTime}&end=${fflogsQueryConfig.end}&hostility=1&sourceid=${fflogsQueryConfig.bossIDs[index]}&api_key=${timelineStore.settings.api}`,
+          ).then((response) => {
+            if (!response.ok)
+              throw new Error(`HTTP error! status: ${response.status}`)
+            return response.json()
+          })
+          setCache(enemyCacheKey, res)
+        }
         resEvents.push(...res.events)
         if (
           res.nextPageTimestamp
@@ -340,6 +394,10 @@ function claerFFlogsQueryConfig() {
 function openFFLogsProfile() {
   window.open('https://cn.fflogs.com/profile', '_blank')
 }
+
+onMounted(() => {
+  fflogsCache.clearExpired()
+})
 </script>
 
 <template>
