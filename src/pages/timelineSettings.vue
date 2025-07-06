@@ -28,7 +28,7 @@ const timelines = toRef(timelineStore, 'allTimelines')
 const timelineFilters = toRef(timelineStore, 'filters')
 
 const simulatedCombatTime = ref(0)
-const realtimeMode = useLocalStorage('realtimeMode', false)
+const realtimeMode = useLocalStorage('realtimeMode', true)
 
 const selectedTimelines = ref<ITimeline[]>([])
 const isAllSelected = ref(false)
@@ -76,8 +76,7 @@ function closeDialog() {
 }
 
 function newDemoTimeline(): void {
-  timelineCurrentlyEditing.value = timelineStore.allTimelines[timelineStore.newTimeline()]
-  updateTransmissionTimeline()
+  editTimeline(timelineStore.allTimelines[timelineStore.newTimeline()])
 }
 
 function updateTransmissionTimeline() {
@@ -152,25 +151,23 @@ function toggleSelectAll() {
 }
 
 function toggleRealTimeMode() {
-  if (!realtimeMode.value) {
-    ElMessageBox.confirm(
-      '开启实时更新模式后，你不再需要手动点击\'应用\'按钮了，所有改动将立即生效。',
-      '提示',
-      {
-        confirmButtonText: '开启实时更新模式',
-        cancelButtonText: '再想想',
-        type: 'warning',
-      },
-    )
-      .then(() => {
-        realtimeMode.value = true
+  ElMessageBox.confirm(
+    realtimeMode.value
+      ? '关闭实时更新模式后，你需要手动点击\'应用\'按钮，数据才会发送至悬浮窗。'
+      : '开启实时更新模式后，你不再需要手动点击\'应用\'按钮了，所有改动将立即生效。',
+    '提示',
+    {
+      confirmButtonText: realtimeMode.value ? '关闭实时更新模式' : '开启实时更新模式',
+      cancelButtonText: '再想想',
+      type: 'warning',
+    },
+  )
+    .then(() => {
+      realtimeMode.value = !realtimeMode.value
+      if (realtimeMode.value)
         sendBroadcastData('post', timelineStore.$state)
-      })
-      .catch(() => {})
-  }
-  else {
-    realtimeMode.value = false
-  }
+    })
+    .catch(() => {})
 }
 
 function exportSelectedTimelines() {
@@ -623,10 +620,6 @@ init()
             </el-button>
           </el-button-group>
 
-          <el-button size="small" @click="openMarkdown">
-            时间轴语法
-          </el-button>
-
           <el-button-group>
             <el-button
               size="small"
@@ -886,6 +879,9 @@ init()
             </el-button>
             <el-button type="primary" @click="timelineTimeFormat()">
               切换时间格式
+            </el-button>
+            <el-button @click="openMarkdown">
+              时间轴语法
             </el-button>
           </el-space>
         </div>
