@@ -92,6 +92,7 @@ function updateTransmissionTimeline() {
   parseTimeline(timelineCurrentlyEditing.value.timeline).then((result) => {
     transmissionTimeline.value = result
   })
+  simulatedCombatTime.value = -timelineStore.configValues.preBattle
 }
 
 function timelineTimeFormat() {
@@ -671,8 +672,7 @@ init()
         <timeline-fflogs-import
           :filters="timelineFilters"
           @show-f-flogs-toggle="() => (showFFlogsDialog = false)"
-          @new-timeline="timelineStore.newTimeline"
-          @update-filters="timelineStore.updateFilters"
+          @edit-timeline="editTimeline"
         />
       </el-dialog>
       <el-card v-if="timelines.length > 0">
@@ -837,7 +837,7 @@ init()
         <div class="slider-demo-block">
           <el-slider
             v-model="simulatedCombatTime"
-            :min="-30"
+            :min="-timelineStore.configValues.preBattle"
             :max="maxSlider"
             :step="0.1"
           />

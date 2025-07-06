@@ -7,7 +7,7 @@ import type {
   FFlogsType,
   Friendlies,
 } from '@/types/fflogs'
-import type { ITimelineCondition } from '@/types/timeline'
+import type { ITimeline } from '@/types/timeline'
 import { Loading } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 import { getActionChinese } from '@/resources/actionChinese'
@@ -21,15 +21,8 @@ const props = defineProps<{
 }>()
 
 const emits = defineEmits<{
-  (
-    e: 'newTimeline',
-    title: string,
-    condition: ITimelineCondition,
-    rawTimeline: string,
-    codeFight: string,
-  ): unknown
   (e: 'showFFlogsToggle'): void
-  (e: 'updateFilters', target: string, value: number[]): void
+  (e: 'editTimeline', timeline: ITimeline): void
 }>()
 
 enum QueryTextEnum {
@@ -268,8 +261,7 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
   currentStep.value = 3
   // 保存过滤器
   if (fflogsQueryConfig.player?.icon) {
-    emits(
-      'updateFilters',
+    timelineStore.updateFilters(
       fflogsQueryConfig.player?.icon,
       JSON.parse(JSON.stringify(fflogsQueryConfig.abilityFilterSelected)),
     )
@@ -310,8 +302,8 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
         }`
       })
       .join('\n')
-  emits(
-    'newTimeline',
+
+  const index = timelineStore.newTimeline(
     `导入${fflogsQueryConfig.player?.name}`,
     {
       zoneId: fflogsQueryConfig.zoneID.toString(),
@@ -322,6 +314,7 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
   )
   claerFFlogsQueryConfig()
   emits('showFFlogsToggle')
+  emits('editTimeline', timelineStore.allTimelines[index])
   setTimeout(() => {
     currentStep.value = 0
   }, 500)
@@ -375,6 +368,7 @@ function openFFLogsProfile() {
           v-model="timelineStore.settings.api"
           placeholder="在 FF Logs 个人设置页面获取 V1 API Key"
           type="password"
+          show-password
         >
           <template #append>
             <el-tooltip
