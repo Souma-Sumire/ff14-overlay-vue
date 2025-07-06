@@ -542,6 +542,10 @@ function handleClipboardCopy(
     .catch(() => ElMessage.error(errorMsg))
 }
 
+function tableRowClassName({ row }: { row: ITimeline }) {
+  return row === timelineCurrentlyEditing.value ? 'editing-row' : ''
+}
+
 onMounted(() => {
   addOverlayListener('BroadcastMessage', handleBroadcastMessage)
 
@@ -707,6 +711,7 @@ init()
 
         <el-table
           :data="timelines"
+          :row-class-name="tableRowClassName"
           style="width: 100%"
           stripe
           @selection-change="
@@ -936,5 +941,11 @@ init()
 
 .timeline-header {
   flex-wrap: wrap;
+}
+
+:deep(.editing-row) {
+  font-weight: bold;
+  filter: brightness(90%);
+
 }
 </style>
