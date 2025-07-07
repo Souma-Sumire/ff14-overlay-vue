@@ -116,18 +116,7 @@ export const useTimelineStore = defineStore('timeline', {
     newTimeline(
       title = 'Demo',
       condition: ITimelineCondition = { zoneId: '0', jobs: ['NONE'] },
-      rawTimeline = `# 注释的内容不会被解析
-# "<技能名>"会被解析为图片 紧接着一个波浪线可快捷重复技能名
--20 "<中间学派>~刷盾"
-0 "战斗开始" tts "冲呀"
-# 当sync在window的范围内被满足时将进行时间同步
-30 "一运" sync / 14:4.{7}:[^:]*:AAAA:/ window 2.5,2.5
-# 当存在jump时会进跳转至jump时间
-50 "变异化型:蛇" sync / 14:4.{7}:[^:]*:BBBB:/ window 2.5,2.5 jump 1000
-50 "变异化型:兽" sync / 14:4.{7}:[^:]*:CCCC:/ window 2.5,2.5 jump 2000
-1000 "蛇轴"
-2000 "兽轴"
-`,
+      rawTimeline = '',
       codeFight = '用户创建',
     ): number {
       this.allTimelines.push(
