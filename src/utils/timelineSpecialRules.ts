@@ -81,10 +81,11 @@ windowAction.set(0xA82D, { type: 'cast', window: [60, 60], syncOnce: true, battl
 export function factory(events: FFlogsStance): FFlogsStance {
   for (const event of events) {
     const w = windowAction.get(event.actionId)
-    if (w?.type === event.type)
+    if (w?.type === event.type) {
       event.window = w?.window
-    event.syncOnce = Boolean(w?.syncOnce)
-    event.battleOnce = Boolean(w?.battleOnce)
+      event.syncOnce = Boolean(w?.syncOnce)
+      event.battleOnce = Boolean(w?.battleOnce)
+    }
   }
   return events
 }
