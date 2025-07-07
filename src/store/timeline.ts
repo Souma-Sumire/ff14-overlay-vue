@@ -10,9 +10,11 @@ import type {
   TimelineConfigValues,
 } from '@/types/timeline'
 import { ElMessage } from 'element-plus'
+import JSON5 from 'json5'
 import { defineStore } from 'pinia'
 import { TimelineConfigEnum } from '@/types/timeline'
-// import Regexes from '../../cactbot/resources/regexes'
+import logDefinitions from '../../cactbot/resources/netlog_defs'
+import Regexes from '../../cactbot/resources/regexes'
 import Util from '../utils/util'
 
 class Timeline implements ITimeline {
@@ -235,8 +237,21 @@ function parseTime(time: string): number {
   }
   return Number.parseFloat(time)
 }
+
 export function parseAction(text: string) {
   return text.matchAll(/<(?<name>[^<>]*?)!?>(?<repeat>~)?/g)
+}
+
+const syncRegex = new RegExp(
+  `(?:[^#]*?\\s)?(?<netRegexType>${Object.keys(logDefinitions).join('|')
+  })\\s*(?<netRegex>\\{.*\\})(?<args>\\s.*)?$`,
+)
+
+const regexStr = {
+  ActorControl: 'network6d',
+  StartsUsing: 'startsUsing',
+  Ability: 'ability',
+  InCombat: 'inCombat',
 }
 
 export async function parseTimeline(
@@ -250,9 +265,10 @@ export async function parseTimeline(
     ),
   ]
   for (let i = 0; i < matches.length; i++) {
+    let sync: RegExp | undefined
     const match = matches[i]
     const jump = match[0].match(/(?<=jump ?)[-:：\d.]+/)?.[0]
-    const sync = match[0].match(/(?<=sync(?:\.once)? ?\/).+(?=\/)/)?.[0]
+    const normalSync = match[0].match(/(?<=sync(?:\.once)? ?\/).+(?=\/)/)?.[0]
     const syncOnce = /sync\.once/.test(match[0])
     const windowBefore = match[0].match(/(?<=window ?)[-:：\d.]+/)?.[0]
     const windowAfter = match[0].match(
@@ -262,12 +278,30 @@ export async function parseTimeline(
     const ttsSim = / tts(?: |$)/.test(match[0])
       ? Array.from(parseAction(match.groups?.action ?? ''))?.[0]?.groups?.name
       : undefined
+    const cactbotSync = syncRegex.exec(match[0])?.groups
+    const cactbotRegexType = cactbotSync?.netRegexType
+    const params = JSON5.parse(cactbotSync?.netRegex ?? '{}')
+    Reflect.deleteProperty(params, 'source')
+    if (cactbotRegexType) {
+      try {
+        const key = regexStr[cactbotRegexType as keyof typeof regexStr] ?? cactbotRegexType.toLowerCase() as keyof typeof Regexes
+        const regex = Regexes[key as keyof typeof Regexes] as (params: any) => RegExp
+        const result: RegExp = regex({ ...params, capture: false })
+        sync = result
+      }
+      catch (e) {
+        ElMessage.error(`${cactbotRegexType}尚未支持，请联系作者。${e}`)
+      }
+    }
+    else {
+      sync = normalSync ? new RegExp(normalSync) : undefined
+    }
 
     total.push({
       time: parseTime(match.groups?.time ?? '0'),
       action: match.groups?.action || '',
       alertAlready: false,
-      sync: sync ? new RegExp(sync) : undefined,
+      sync,
       syncOnce,
       syncAlready: false,
       show: !sync,
