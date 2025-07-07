@@ -1,5 +1,7 @@
 # 时间轴语法
 
+你不需要按照时间顺序编写时间轴，程序会自动按照时间顺序显示。
+
 ## 显式语句（你实际上能在悬浮窗中看到的部分）
 
 ### 显式语句格式
@@ -22,6 +24,12 @@
 
 ## 匹配语句（隐藏的、用于匹配时间轴的）
 
+大部分情况下，你不需要手动编写这些匹配语句。
+
+在没有血量轴或快慢轴的 BOSS 战斗中，不需要编写匹配语句。
+
+在使用FFLOGS导入时，会自动生成部分匹配语句，你可以在 [timelineSpecialRules.ts](https://github.com/Souma-Sumire/ff14-overlay-vue/blob/main/src/utils/timelineSpecialRules.ts) 查看全部预置规则。
+
 ### 匹配语句格式
 
 ```text
@@ -31,8 +39,8 @@
 ### 匹配语句参数
 
 - sync 正则表达式
-  - 填入一个标准的 Javascript 正则表达式。用于匹配日志，若匹配成功，则触发同步（参考下方window、jump的说明）
-  - 事件修饰符：你可以在 sync 后面添加 `.once` 修饰符，来确保该正则表达式在整场战斗中仅会被匹配一次，如 `sync.once /正则表达式/`
+  - 一个标准的 Javascript 正则表达式。用于匹配 ACT LogLine 日志，若匹配成功，则触发同步（参考下方window、jump的说明）
+  - 事件修饰符：可以在 sync 后面添加 `.once` 修饰符，来设置该条目在整场战斗中仅会被匹配一次，如 `sync.once /正则表达式/`
 
 - window 数字,数字
   - 控制 sync 匹配的时间范围，第一个数字代表向前的时间范围，第二个数字代表向后的时间范围
@@ -44,7 +52,3 @@
   - 只支持秒数格式，如 `120`
   - 例如，在：`120 "分支判断" sync /正则表达式/ window 20,5 jump 300`，当正则表达式匹配，且当前战斗时间处于第 100 ~ 125 秒内，时间轴会跳转至第 300 秒
   - 跳转至 0 意味着停止时间轴
-
-### 自动匹配规则
-
-使用FFLOGS导入时，会自动生成部分匹配语句，你可以在 [timelineSpecialRules.ts](https://github.com/Souma-Sumire/ff14-overlay-vue/blob/main/src/utils/timelineSpecialRules.ts) 查看全部预置规则
