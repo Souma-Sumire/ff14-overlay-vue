@@ -5,7 +5,7 @@ import type {
   ITimelineCondition,
   ITimelineLine,
 } from '@/types/timeline'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { parseTimeline, useTimelineStore } from '@/store/timeline'
 import {
   addOverlayListener,
@@ -239,52 +239,25 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
   }
   if ((e.msg as any).type === 'post') {
     const data = (e.msg as { data: typeof timelineStore.$state }).data
-    if (data.allTimelines.length < timelineStore.allTimelines.length - 1) {
-      void ElMessage.closeAll()
-      ElMessageBox.confirm(
-        data.allTimelines.length === 0 ? '传入数据为空. 确定要清空数据吗?' : `此次编辑将删除了${timelineStore.allTimelines.length - data.allTimelines.length}条时间轴. 确定吗?`,
-        '警告',
-        {
-          confirmButtonText: '确认',
-          cancelButtonText: '取消',
-          type: 'warning',
-        },
-      )
-        .then(() => {
-          update()
-        })
-        .catch(() => {
-          ElMessage({
-            type: 'info',
-            message: '操作已取消',
-          })
-        })
-    }
-    else {
-      update()
-    }
-
-    function update() {
-      for (const v of data.allTimelines) {
-        if (v.condition.jobs === undefined) {
-          v.condition.jobs = [(v.condition as any).job]
-        }
-        v.condition.jobs.sort((a, b) => timelineStore.jobList.indexOf(a) - timelineStore.jobList.indexOf(b))
-        Reflect.deleteProperty(v.condition, 'job')
+    for (const v of data.allTimelines) {
+      if (v.condition.jobs === undefined) {
+        v.condition.jobs = [(v.condition as any).job]
       }
-      timelineStore.allTimelines = data.allTimelines
-      timelineStore.configValues = data.configValues
-      timelineStore.showStyle = data.showStyle
-      timelineStore.saveTimelineSettings()
-      ElMessage.closeAll()
-      ElMessage({
-        message: '已更新数据',
-        type: 'success',
-        duration: 5000,
-        showClose: false,
-      })
-      getTimeline() // 获取新数据之后查询一次
+      v.condition.jobs.sort((a, b) => timelineStore.jobList.indexOf(a) - timelineStore.jobList.indexOf(b))
+      Reflect.deleteProperty(v.condition, 'job')
     }
+    timelineStore.allTimelines = data.allTimelines
+    timelineStore.configValues = data.configValues
+    timelineStore.showStyle = data.showStyle
+    timelineStore.saveTimelineSettings()
+    ElMessage.closeAll()
+    ElMessage({
+      message: '已更新数据',
+      type: 'success',
+      duration: 5000,
+      showClose: false,
+    })
+    getTimeline() // 获取新数据之后查询一次
   }
   if ((e.msg as any).type === 'get') {
     sendBroadcastData('post', timelineStore.$state) // 发送数据
@@ -319,8 +292,6 @@ function init() {
   })
   getTimeline()
 }
-// eslint-disable-next-line no-console
-console.log('使用souma时间轴的小朋友们，你们好。我不是雷军。通知一下，现在没有小齿轮了，请用你的浏览器打开：https://souma.diemoe.net/ff14-overlay-vue/#/timelineSettings?OVERLAY_WS=ws://127.0.0.1:10501/ws')
 </script>
 
 <template>
