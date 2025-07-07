@@ -45,7 +45,7 @@ windowAction.set(0x4854, { type: 'cast', window: [250, 65], syncOnce: true, batt
 windowAction.set(0x485A, { type: 'begincast', window: [500, 500], syncOnce: true, battleOnce: true }) // 时间停止
 windowAction.set(0x4878, { type: 'begincast', window: [67, 67], syncOnce: true }) // 神圣审判
 windowAction.set(0x4879, { type: 'cast', window: [67, 67], syncOnce: true }) // 神圣审判
-windowAction.set(0x4A8B, { type: 'cast', window: [900, 0], syncOnce: true, battleOnce: true }) // unknown
+windowAction.set(0x4A8B, { type: 'cast', window: [900, 200], syncOnce: true, battleOnce: true }) // unknown
 
 // 绝伊甸
 windowAction.set(0x9CFF, { type: 'begincast', window: [200, 20], syncOnce: true }) // P2 四重强击
@@ -71,12 +71,12 @@ windowAction.set(0xA770, { type: 'cast', window: [30, 30], syncOnce: false }) //
 
 // M8S
 windowAction.set(0xA3DA, { type: 'begincast', window: [10, 10], syncOnce: false }) // 空间斩
-windowAction.set(0xA3D0, { type: 'begincast', window: [10, 10], syncOnce: true }) // 风之狼吼
-windowAction.set(0xA3D3, { type: 'begincast', window: [10, 10], syncOnce: true }) // 土之狼吼
-windowAction.set(0xA749, { type: 'begincast', window: [400, 10], syncOnce: true, battleOnce: true }) // 风尘光狼斩
-windowAction.set(0xA3F1, { type: 'begincast', window: [10, 10], syncOnce: true }) // 空间灭斩
-windowAction.set(0xA38F, { type: 'cast', window: [140, 0], syncOnce: true, battleOnce: true }) // --middle--
-windowAction.set(0xA82D, { type: 'cast', window: [610, 0], syncOnce: true, battleOnce: true }) // --sync--
+windowAction.set(0xA3D0, { type: 'begincast', window: [20, 30], syncOnce: true }) // 风之狼吼
+windowAction.set(0xA3D3, { type: 'begincast', window: [20, 20], syncOnce: true }) // 土之狼吼
+windowAction.set(0xA749, { type: 'begincast', window: [60, 60], syncOnce: true, battleOnce: true }) // 风尘光狼斩
+windowAction.set(0xA3F1, { type: 'begincast', window: [20, 20], syncOnce: true }) // 空间灭斩
+windowAction.set(0xA38F, { type: 'cast', window: [60, 60], syncOnce: true, battleOnce: true }) // --middle--
+windowAction.set(0xA82D, { type: 'cast', window: [60, 60], syncOnce: true, battleOnce: true }) // --sync--
 
 export function factory(events: FFlogsStance): FFlogsStance {
   for (const event of events) {
