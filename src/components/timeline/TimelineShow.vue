@@ -108,7 +108,7 @@ function preloadImage(url: string): Promise<void> {
         }"
       />
       <section>
-        <span v-html="renderHTML(item.action)" /><span class="countdown">{{ (item.time - runtime).toFixed(1) }} </span>
+        <span v-html="renderHTML(item.action ?? '')" /><span class="countdown">{{ (item.time - runtime).toFixed(1) }} </span>
       </section>
     </li>
   </ul>
