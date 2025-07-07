@@ -184,7 +184,7 @@ function exportTimeline(timelineArr: ITimeline[]) {
   const zip = JSON.parse(text)
   for (const timeline of zip) {
     // 去除所有#开头的注释行
-    timeline.timeline = timeline.timeline.replace(/^#.*\n/gm, '')
+    timeline.timeline = timeline.timeline.replace(/^#.*(?:\n|$)/gm, '')
   }
   const zipped = JSON.stringify(zip)
 
