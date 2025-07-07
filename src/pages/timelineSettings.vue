@@ -543,6 +543,24 @@ function tableRowClassName({ row }: { row: ITimeline }) {
   return row === timelineCurrentlyEditing.value ? 'editing-row' : ''
 }
 
+function optimizedSize() {
+  ElMessageBox.confirm(
+    '要删除所有的注释行，仅保留必要的时间轴数据吗？',
+    '提示',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'info',
+    },
+  )
+    .then(() => {
+      timelineCurrentlyEditing.value.timeline
+        = timelineCurrentlyEditing.value.timeline.replace(/^#.*(?:\n|$)/gm, '')
+      ElMessage.success('完成')
+    })
+    .catch(() => {})
+}
+
 onMounted(() => {
   addOverlayListener('BroadcastMessage', handleBroadcastMessage)
 
@@ -884,6 +902,9 @@ init()
             </el-button>
             <el-button @click="openMarkdown">
               时间轴语法
+            </el-button>
+            <el-button @click="optimizedSize()">
+              删除注释行
             </el-button>
           </el-space>
         </div>

@@ -354,15 +354,14 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
         }
 
         if (
-          /unknown/.test(actionName)
-          || (/^(?:攻击|attack|攻撃)$/i.test(actionName) && !window)
+          (/^(?:攻击|attack|攻撃)$/i.test(actionName) && !window)
           || (type === 'cast' && !window)
         ) {
           return `# ${time} "${actionName}"`
         }
 
         const source = fflogsQueryConfig.enemies.find(e => e.id === sourceID)
-        if (source?.type === 'NPC' && !window)
+        if ((source?.type === 'NPC' || /unknown/.test(actionName)) && !window)
           return null
 
         const hexId = actionId.toString(16).toUpperCase()
