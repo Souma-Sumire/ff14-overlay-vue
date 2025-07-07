@@ -347,6 +347,7 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
           window,
           sourceIsFriendly,
           syncOnce,
+          battleOnce,
         } = item
 
         if (sourceIsFriendly) {
@@ -356,6 +357,7 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
         if (
           (/^(?:攻击|attack|攻撃)$/i.test(actionName) && !window)
           || (type === 'cast' && !window)
+          || fflogsQueryConfig.battleSyncedIDs.includes(actionId)
         ) {
           return `# ${time} "${actionName}"`
         }
@@ -366,7 +368,9 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
 
         const hexId = actionId.toString(16).toUpperCase()
         const syncLine = `${time} "${actionName}" sync${syncOnce ? '.once' : ''} /^.{14} \\w+ ${regexType[type]}:4.{7}:[^:]+:${hexId}:/`
-
+        if (battleOnce && window) {
+          fflogsQueryConfig.battleSyncedIDs.push(actionId)
+        }
         return window
           ? `${syncLine} window ${window.join(',')}`
           : `# ${syncLine}`
@@ -406,6 +410,8 @@ function claerFFlogsQueryConfig() {
   fflogsQueryConfig.player = undefined
   fflogsQueryConfig.zoneID = 0
   fflogsQueryConfig.bossIDs = []
+  fflogsQueryConfig.enemies = []
+  fflogsQueryConfig.battleSyncedIDs = []
 }
 
 function openFFLogsProfile() {

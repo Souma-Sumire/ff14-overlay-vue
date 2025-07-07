@@ -18,6 +18,7 @@ export interface ITimelineLine {
   action?: string
   sync?: RegExp
   syncOnce?: boolean
+  battleOnce?: boolean
   syncAlready?: boolean
   show: boolean
   windowBefore: number

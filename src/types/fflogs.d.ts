@@ -76,6 +76,7 @@ export type FFlogsStance = {
   url: string
   window?: Array<number>
   syncOnce?: boolean
+  battleOnce?: boolean
   sourceID: number
 }[]
 
@@ -93,6 +94,7 @@ export interface FFlogsQuery {
   player?: Friendlies
   bossIDs: number[]
   enemies: { name: string, id: number, guid: number, type: string, icon: string }[]
+  battleSyncedIDs: number[]
 }
 
 export interface FFlogsApiV1ReportEvents {
