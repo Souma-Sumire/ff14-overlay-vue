@@ -31,6 +31,7 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
+        hashCharacters: 'hex',
         manualChunks: {
           'vue-vendor': ['vue', 'vue-router', 'pinia', 'vue-i18n'],
           'element-plus': ['element-plus'],
