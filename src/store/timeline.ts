@@ -266,10 +266,11 @@ export async function parseTimeline(
   ]
   for (let i = 0; i < matches.length; i++) {
     let sync: RegExp | undefined
+    let onceSync: boolean = false
     const match = matches[i]
     const jump = match[0].match(/(?<=jump ?)[-:：\d.]+/)?.[0]
     const normalSync = match[0].match(/(?<=sync(?:\.once)? ?\/).+(?=\/)/)?.[0]
-    const syncOnce = /sync\.once/.test(match[0])
+    const normalOnce = /sync\.once/.test(match[0])
     const windowBefore = match[0].match(/(?<=window ?)[-:：\d.]+/)?.[0]
     const windowAfter = match[0].match(
       /(?<=window ?[-:：\d.]+,)[-:：\d.]+/,
@@ -286,15 +287,18 @@ export async function parseTimeline(
       try {
         const key = regexStr[cactbotRegexType as keyof typeof regexStr] ?? cactbotRegexType.toLowerCase() as keyof typeof Regexes
         const regex = Regexes[key as keyof typeof Regexes] as (params: any) => RegExp
-        const result: RegExp = regex({ ...params, capture: false })
+        const { once, ...paramsWithoutOnce } = params
+        const result: RegExp = regex({ ...paramsWithoutOnce, capture: false })
         sync = result
+        onceSync = once
       }
       catch (e) {
-        ElMessage.error(`${cactbotRegexType}尚未支持，请联系作者。${e}`)
+        console.error(`Failed to parse ${cactbotRegexType} regex:`, e)
       }
     }
     else {
       sync = normalSync ? new RegExp(normalSync) : undefined
+      onceSync = normalOnce
     }
 
     total.push({
@@ -302,7 +306,7 @@ export async function parseTimeline(
       action: match.groups?.action || '',
       alertAlready: false,
       sync,
-      syncOnce,
+      syncOnce: onceSync,
       syncAlready: false,
       show: !sync,
       windowBefore: Number.parseFloat(windowBefore || windowAfter || '2.5'),

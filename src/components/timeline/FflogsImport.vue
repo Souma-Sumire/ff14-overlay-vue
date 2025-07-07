@@ -4,7 +4,6 @@ import type {
   FFlogsApiV1ReportEvents,
   FFlogsQuery,
   FFlogsStance,
-  FFlogsType,
   Friendlies,
 } from '@/types/fflogs'
 import type { ITimeline } from '@/types/timeline'
@@ -32,10 +31,6 @@ enum QueryTextEnum {
 }
 
 const urlRe = /(?<=^|\/)(?<code>\w{16,})[#?]fight=(?<fight>\d+|last)/
-const regexType: Partial<Record<FFlogsType, string>> = {
-  begincast: '14',
-  cast: '1[56]',
-}
 const queryText = ref(QueryTextEnum.query)
 const inputUrl = ref('')
 const addTTS = ref(false)
@@ -367,7 +362,8 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
           return null
 
         const hexId = actionId.toString(16).toUpperCase()
-        const syncLine = `${time} "${actionName}" sync${syncOnce ? '.once' : ''} /^.{14} \\w+ ${regexType[type]}:4.{7}:[^:]+:${hexId}:/`
+        const regexType = type === 'begincast' ? 'StartsUsing' : 'Ability'
+        const syncLine = `${time} "${actionName}" ${regexType} { id: "${hexId}"${syncOnce ? ', once: true' : ''} }`
         if (battleOnce && window) {
           fflogsQueryConfig.battleSyncedIDs.push(actionId)
         }
