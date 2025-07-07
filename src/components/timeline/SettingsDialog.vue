@@ -75,6 +75,7 @@ const testTimeline = ref<ITimelineLine[]>([
     :modal="true"
     overflow
     :close-on-click-modal="false"
+    :close-on-press-escape="false"
     custom-class="timeline-dialog"
     width="600px"
     :append-to-body="true"

@@ -15,7 +15,7 @@ export interface ITimelineCondition {
 
 export interface ITimelineLine {
   time: number
-  action: string
+  action?: string
   sync?: RegExp
   syncOnce?: boolean
   syncAlready?: boolean
@@ -25,6 +25,7 @@ export interface ITimelineLine {
   jump?: number
   alertAlready: boolean
   tts?: string
+  label?: string
 }
 
 export enum TimelineConfigEnum {

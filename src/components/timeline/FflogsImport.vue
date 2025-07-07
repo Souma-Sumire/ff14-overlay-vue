@@ -126,8 +126,9 @@ async function queryFFlogsReportFights(url: string) {
         type: string
       }[]
     )
-      .filter(arr => arr.type === 'Boss')
+      .filter(arr => ['Boss', 'NPC'].includes(arr.type))
       .map(boss => boss.id)
+    fflogsQueryConfig.enemies = res.enemies.slice()
     fflogsQueryConfig.fightIndex
       = (reg?.groups?.fight === 'last'
         ? res.fights.length
@@ -297,6 +298,7 @@ async function queryFFlogsReportEvents() {
         event?.ability?.abilityIcon.replace('-', '/').replace('.png', '')
         ?? '000000/000405',
       window: undefined,
+      sourceID: event.sourceID,
     })
   }
   if (
@@ -336,25 +338,41 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
   fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline
     = fflogsQueryConfig.abilityFilterEvents
       .map((item) => {
-        if (item.sourceIsFriendly) {
-          return `${item.time} "<${item.actionName}>~"${
-            addTTS.value ? ` tts "${item.actionName}"` : ''
-          }`
-        }
-        if (
-          /^(?:攻击|attack|攻撃)$|^unknown/i.test(item.actionName)
-          || (item.type === 'cast' && item.window === undefined)
-        ) {
-          return `# ${item.time} "${item.actionName}"`
+        const {
+          time,
+          actionName,
+          actionId,
+          type,
+          sourceID,
+          window,
+          sourceIsFriendly,
+          syncOnce,
+        } = item
+
+        if (sourceIsFriendly) {
+          return `${time} "<${actionName}>~"${addTTS.value ? ` tts "${actionName}"` : ''}`
         }
 
-        // 只匹配开始施法或符合特殊规则的window
-        return `${item.time} "${item.actionName}" sync /^.{14} \\w+ ${
-          regexType[item.type]
-        }:4.{7}:[^:]+:${item.actionId.toString(16).toUpperCase()}:/${
-          item.window ? ` window ${item.window.join(',')}` : ''
-        }`
+        if (
+          /unknown/.test(actionName)
+          || (/^(?:攻击|attack|攻撃)$/i.test(actionName) && !window)
+          || (type === 'cast' && !window)
+        ) {
+          return `# ${time} "${actionName}"`
+        }
+
+        const source = fflogsQueryConfig.enemies.find(e => e.id === sourceID)
+        if (source?.type === 'NPC' && !window)
+          return null
+
+        const hexId = actionId.toString(16).toUpperCase()
+        const syncLine = `${time} "${actionName}" sync${syncOnce ? '.once' : ''} /^.{14} \\w+ ${regexType[type]}:4.{7}:[^:]+:${hexId}:/`
+
+        return window
+          ? `${syncLine} window ${window.join(',')}`
+          : `# ${syncLine}`
       })
+      .filter(item => item !== null)
       .join('\n')
 
   const index = timelineStore.newTimeline(

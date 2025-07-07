@@ -36,7 +36,7 @@ const dialogVisible = ref(false)
 const showFFlogsDialog = ref(false)
 const showSettings = ref(false)
 
-const timelineCurrentlyEditing = ref<ITimeline>({
+const timelineCurrentlyEditing = useLocalStorage<ITimeline>('timelineCurrentlyEditing', {
   name: '空',
   condition: { zoneId: '0', jobs: ['NONE'] },
   timeline: '空',
@@ -61,7 +61,7 @@ const timeMinuteSecondDisplay = computed(() => {
 
 const maxSlider = computed(() => {
   parseTimeline(timelineCurrentlyEditing.value.timeline)
-  const maxTime = Math.max(...transmissionTimeline.value.map(v => v.time)) || 550
+  const maxTime = Math.max(...transmissionTimeline.value.map(v => v.time), 550)
   return maxTime + 30
 })
 
@@ -665,6 +665,7 @@ init()
         title="从 FFlogs 生成时间轴"
         width="80%"
         :before-close="() => (showFFlogsDialog = false)"
+        :close-on-press-escape="false"
       >
         <timeline-fflogs-import
           :filters="timelineFilters"
@@ -781,6 +782,7 @@ init()
       width="65%"
       style="min-width: 550px; max-width: 1000px"
       :close-on-click-modal="false"
+      :close-on-press-escape="false"
     >
       <div class="editor-dialog-content">
         <el-row class="timeline-header" :gutter="10">
