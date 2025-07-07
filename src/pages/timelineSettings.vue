@@ -35,6 +35,7 @@ const isAllSelected = ref(false)
 const dialogVisible = ref(false)
 const showFFlogsDialog = ref(false)
 const showSettings = ref(false)
+const dialogTableVisible = ref(false)
 
 const timelineCurrentlyEditing = useLocalStorage<ITimeline>('timelineCurrentlyEditing', {
   name: '空',
@@ -561,6 +562,10 @@ function optimizedSize() {
     .catch(() => {})
 }
 
+function showDialog() {
+  dialogTableVisible.value = true
+}
+
 onMounted(() => {
   addOverlayListener('BroadcastMessage', handleBroadcastMessage)
 
@@ -606,6 +611,21 @@ init()
 
 <template>
   <el-container class="container">
+    <el-dialog v-model="dialogTableVisible" title="时间轴解析结果" center align-center draggable width="80%">
+      <el-table :data="transmissionTimeline">
+        <el-table-column property="time" label="time" min-width="60" />
+        <el-table-column property="action" label="action" min-width="150" />
+        <el-table-column property="sync" label="sync" min-width="200" />
+        <el-table-column property="syncOnce" label="once" min-width="100" />
+        <el-table-column label="window" min-width="100">
+          <template #default="{ row }">
+            {{ row.windowBefore }},{{ row.windowAfter }}
+          </template>
+        </el-table-column>
+        <el-table-column property="jump" label="jump" min-width="100" />
+        <el-table-column property="tts" label="tts" min-width="150" />
+      </el-table>
+    </el-dialog>
     <timeline-settings-dialog
       v-model="showSettings"
       @save="handleSettingsSave"
@@ -905,6 +925,9 @@ init()
             </el-button>
             <el-button @click="optimizedSize()">
               删除注释行
+            </el-button>
+            <el-button type="danger" @click="showDialog">
+              展示调试信息
             </el-button>
           </el-space>
         </div>
