@@ -17,6 +17,7 @@ import {
   addOverlayListener,
   callOverlayHandler,
 } from '../../cactbot/resources/overlay_plugin_api'
+import recommendedTimeline from '../resources/recommendedTimeline.json'
 
 import 'animate.css'
 
@@ -566,6 +567,10 @@ function showDialog() {
   dialogTableVisible.value = true
 }
 
+function loadRecommendedTimeline() {
+  performImport(recommendedTimeline as ITimeline[], false)
+}
+
 onMounted(() => {
   addOverlayListener('BroadcastMessage', handleBroadcastMessage)
 
@@ -657,29 +662,20 @@ init()
               导出全部
             </el-button>
           </el-button-group>
-
-          <el-button-group>
-            <el-button
-              size="small"
-              :type="realtimeMode ? 'success' : 'default'"
-              @click="toggleRealTimeMode"
-            >
-              {{
-                realtimeMode ? "实时更新模式：开启中" : "实时更新模式：关闭中"
-              }}
-            </el-button>
-          </el-button-group>
+          <el-button color="#543d6c" size="small" @click="loadRecommendedTimeline">
+            作者推荐：SPJP（MMW/XIVStrat）M5S~M8S 通用时间轴
+          </el-button>
         </el-space>
 
         <el-space>
           <el-button
-            v-if="!realtimeMode"
-            color="#a0d911"
-            style="color: white"
             size="small"
-            @click="revertTimeline"
+            :type="realtimeMode ? 'success' : 'default'"
+            @click="toggleRealTimeMode"
           >
-            读取来自悬浮窗的数据
+            {{
+              realtimeMode ? "实时更新模式：开启中" : "实时更新模式：关闭中"
+            }}
           </el-button>
           <el-button
             color="#626aef"
@@ -687,15 +683,23 @@ init()
             size="small"
             @click="showSettings = true"
           >
-            设置
+            时间轴参数设置
           </el-button>
         </el-space>
       </el-row>
-      <div v-if="!realtimeMode" class="alerts-container">
-        <el-button type="success" size="default" @click="sendDataToACT">
-          编辑完毕后，点击这里应用，将编辑器数据发送至悬浮窗
+      <el-space v-if="!realtimeMode" class="alerts-container">
+        <el-button
+          v-if="!realtimeMode"
+          color="#a0d911"
+          style="color: white"
+          @click="revertTimeline"
+        >
+          1. 读取来自悬浮窗的数据
         </el-button>
-      </div>
+        <el-button type="success" @click="sendDataToACT">
+          2. 编辑完毕后，点击这里应用，将编辑器数据发送至悬浮窗
+        </el-button>
+      </el-space>
     </el-header>
     <el-main>
       <el-dialog
@@ -746,6 +750,7 @@ init()
           :row-class-name="tableRowClassName"
           style="width: 100%"
           stripe
+          :default-sort="{ prop: 'condition', order: 'ascending' }"
           @selection-change="
             (selection) => {
               selectedTimelines = selection;
@@ -757,7 +762,6 @@ init()
             type="selection"
             width="55"
             align="center"
-            :selectable="() => true"
           >
             <template #header>
               <el-checkbox v-model="isAllSelected" @change="toggleSelectAll" />

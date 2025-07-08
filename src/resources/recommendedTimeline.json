@@ -1,0 +1,374 @@
+[
+    {
+        "name": "SPJP(mmw/xivstrat) M5S D1",
+        "condition": {
+            "zoneId": "1257",
+            "jobs": [
+                "MNK",
+                "DRG",
+                "NIN",
+                "SAM",
+                "RPR",
+                "VPR"
+            ]
+        },
+        "timeline": "01:02 \"<牵制>~\"\n03:57 \"<牵制>~\"\n05:54 \"<牵制>~\"\n09:18 \"<牵制>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:36:54"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M5S D2",
+        "condition": {
+            "zoneId": "1257",
+            "jobs": [
+                "MNK",
+                "DRG",
+                "NIN",
+                "SAM",
+                "RPR",
+                "VPR"
+            ]
+        },
+        "timeline": "00:55 \"<牵制>~\"\n02:33 \"<牵制>~\"\n04:38 \"<牵制>~\"\n06:22 \"<牵制>~\"\n09:09 \"<牵制>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:36:54"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M5S D3",
+        "condition": {
+            "zoneId": "1257",
+            "jobs": [
+                "BRD",
+                "DNC",
+                "MCH"
+            ]
+        },
+        "timeline": "01:02 \"<行吟>~\"\n03:57 \"<行吟>~\"\n05:54 \"<行吟>~\"\n09:18 \"<行吟>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:36:54"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M5S D4",
+        "condition": {
+            "zoneId": "1257",
+            "jobs": [
+                "RDM",
+                "BLM",
+                "SMN",
+                "PCT"
+            ]
+        },
+        "timeline": "01:02 \"<昏乱>~\"\n03:57 \"<昏乱>~\"\n05:54 \"<昏乱>~\"\n09:18 \"<昏乱>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:36:54"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M5S MT",
+        "condition": {
+            "zoneId": "1257",
+            "jobs": [
+                "PLD",
+                "WAR",
+                "DRK",
+                "GNB"
+            ]
+        },
+        "timeline": "01:02 \"<雪仇>~\"\n02:05 \"<雪仇>~\"\n04:38 \"<雪仇>~\"\n05:54 \"<雪仇>~\"\n07:57 \"<雪仇>~\"\n09:18 \"<雪仇>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:33:41"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M5S ST",
+        "condition": {
+            "zoneId": "1257",
+            "jobs": [
+                "PLD",
+                "WAR",
+                "DRK",
+                "GNB"
+            ]
+        },
+        "timeline": "00:55 \"<雪仇>~\"\n01:58 \"<雪仇>~\"\n03:57 \"<雪仇>~\"\n05:12 \"<雪仇>~\"\n06:22 \"<雪仇>~\"\n08:49 \"<雪仇>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:36:14"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M6S D1",
+        "condition": {
+            "zoneId": "1259",
+            "jobs": [
+                "MNK",
+                "DRG",
+                "NIN",
+                "SAM",
+                "RPR",
+                "VPR"
+            ]
+        },
+        "timeline": "00:05 \"<牵制>~\"\n03:08 \"<牵制>~\"\n05:02 \"<牵制>~\"\n06:49 \"<牵制>~\"\n09:56 \"<牵制>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:36:54"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M6S D2",
+        "condition": {
+            "zoneId": "1259",
+            "jobs": [
+                "MNK",
+                "DRG",
+                "NIN",
+                "SAM",
+                "RPR",
+                "VPR"
+            ]
+        },
+        "timeline": "00:52 \"<牵制>~\"\n02:25 \"<牵制>~\"\n04:56 \"<牵制>~\"\n06:27 \"<牵制>~\"\n08:34 \"<牵制>~\"\n10:08 \"<牵制>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:36:54"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M6S D3",
+        "condition": {
+            "zoneId": "1259",
+            "jobs": [
+                "BRD",
+                "DNC",
+                "MCH"
+            ]
+        },
+        "timeline": "00:52 \"<行吟>~\"\n02:25 \"<行吟>~\"\n04:56 \"<行吟>~\"\n06:27 \"<行吟>~\"\n08:34 \"<行吟>~\"\n10:08 \"<行吟>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:36:54"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M6S D4",
+        "condition": {
+            "zoneId": "1259",
+            "jobs": [
+                "RDM",
+                "BLM",
+                "SMN",
+                "PCT"
+            ]
+        },
+        "timeline": "00:05 \"<昏乱>~\"\n03:08 \"<昏乱>~\"\n05:02 \"<昏乱>~\"\n06:49 \"<昏乱>~\"\n09:56 \"<昏乱>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:36:54"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M6S MT",
+        "condition": {
+            "zoneId": "1259",
+            "jobs": [
+                "PLD",
+                "WAR",
+                "DRK",
+                "GNB"
+            ]
+        },
+        "timeline": "00:05 \"<雪仇>~\"\n01:06 \"<雪仇>~\"\n02:07 \"<雪仇>~\"\n03:08 \"<雪仇>~\"\n05:02 \"<雪仇>~\"\n06:25 \"<雪仇>~\"\n07:29 \"<雪仇>~\"\n08:34 \"<雪仇>~\"\n09:56 \"<雪仇>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:33:41"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M6S ST",
+        "condition": {
+            "zoneId": "1259",
+            "jobs": [
+                "PLD",
+                "WAR",
+                "DRK",
+                "GNB"
+            ]
+        },
+        "timeline": "00:52 \"<雪仇>~\"\n02:25 \"<雪仇>~\"\n06:49 \"<雪仇>~\"\n09:07 \"<雪仇>~\"\n10:08 \"<雪仇>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:36:14"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M7S D1",
+        "condition": {
+            "zoneId": "1261",
+            "jobs": [
+                "MNK",
+                "DRG",
+                "NIN",
+                "SAM",
+                "RPR",
+                "VPR"
+            ]
+        },
+        "timeline": "0:05 \"<牵制>~\"\n2:23 \"<牵制>~\"\n4:38 \"<牵制>~\"\n6:17 \"<牵制>~\"\n9:07 \"<牵制>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:36:54"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M7S D2",
+        "condition": {
+            "zoneId": "1261",
+            "jobs": [
+                "MNK",
+                "DRG",
+                "NIN",
+                "SAM",
+                "RPR",
+                "VPR"
+            ]
+        },
+        "timeline": "0:52 \"<牵制>~\"\n3:04 \"<牵制>~\"\n5:30 \"<牵制>~\"\n7:18 \"<牵制>~\"\n8:56 \"<牵制>~\"\n10:35 \"<牵制>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:36:54"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M7S D3",
+        "condition": {
+            "zoneId": "1261",
+            "jobs": [
+                "BRD",
+                "DNC",
+                "MCH"
+            ]
+        },
+        "timeline": "0:05 \"<行吟>~\"\n1:36 \"<行吟>~\"\n3:29 \"<行吟>~\"\n5:38 \"<行吟>~\"\n7:18 \"<行吟>~\"\n8:56 \"<行吟>~\"\n10:35 \"<行吟>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:36:54"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M7S D4",
+        "condition": {
+            "zoneId": "1261",
+            "jobs": [
+                "RDM",
+                "BLM",
+                "SMN",
+                "PCT"
+            ]
+        },
+        "timeline": "0:05 \"<昏乱>~\"\n1:36 \"<昏乱>~\"\n3:07 \"<昏乱>~\"\n4:38 \"<昏乱>~\"\n6:17 \"<昏乱>~\"\n9:07 \"<昏乱>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:36:54"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M7S MT",
+        "condition": {
+            "zoneId": "1261",
+            "jobs": [
+                "PLD",
+                "WAR",
+                "DRK",
+                "GNB"
+            ]
+        },
+        "timeline": "0:05 \"<雪仇>~\"\n2:01 \"<雪仇>~\"\n3:04 \"<雪仇>~\"\n4:06 \"<雪仇>~\"\n5:07 \"<雪仇>~\"\n6:17 \"<雪仇>~\"\n7:18 \"<雪仇>~\"\n9:07 \"<雪仇>~\"\n10:35 \"<雪仇>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:33:41"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M7S ST",
+        "condition": {
+            "zoneId": "1261",
+            "jobs": [
+                "PLD",
+                "WAR",
+                "DRK",
+                "GNB"
+            ]
+        },
+        "timeline": "0:52 \"<雪仇>~\"\n2:23 \"<雪仇>~\"\n3:29 \"<雪仇>~\"\n4:30 \"<雪仇>~\"\n5:38 \"<雪仇>~\"\n6:42 \"<雪仇>~\"\n8:56 \"<雪仇>~\"\n10:08 \"<雪仇>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:36:14"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M8S D1",
+        "condition": {
+            "zoneId": "1263",
+            "jobs": [
+                "MNK",
+                "DRG",
+                "NIN",
+                "SAM",
+                "RPR",
+                "VPR"
+            ]
+        },
+        "timeline": "00:40.0 \"<牵制>~\"\n02:42.0 \"<牵制>~\"\n04:13.0 \"<牵制>~\"\n06:18.0 \"<牵制>~\"\n06:49.2 \"--sync--\" Ability { id: \"A82D\", once: true } window 60,60\n08:29.0 \"<牵制>~\"\n10:40.0 \"<牵制>~\"\n12:20.0 \"<牵制>~\"\n13:50.0 \"<牵制>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:36:54"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M8S D2",
+        "condition": {
+            "zoneId": "1263",
+            "jobs": [
+                "MNK",
+                "DRG",
+                "NIN",
+                "SAM",
+                "RPR",
+                "VPR"
+            ]
+        },
+        "timeline": "00:03.0 \"<牵制>~\"\n01:41.0 \"<牵制>~\"\n05:01.0 \"<牵制>~\"\n06:49.2 \"--sync--\" Ability { id: \"A82D\", once: true } window 60,60\n07:44.0 \"<牵制>~\"\n09:30.0 \"<牵制>~\"\n13:41.0 \"<牵制>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:36:54"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M8S D3",
+        "condition": {
+            "zoneId": "1263",
+            "jobs": [
+                "BRD",
+                "DNC",
+                "MCH"
+            ]
+        },
+        "timeline": "00:03.0 \"<行吟>~\"\n01:41.0 \"<行吟>~\"\n03:18.0 \"<行吟>~\"\n06:18.0 \"<行吟>~\"\n06:49.2 \"--sync--\" Ability { id: \"A82D\", once: true } window 60,60\n08:29.0 \"<行吟>~\"\n10:40.0 \"<行吟>~\"\n13:41.0 \"<行吟>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:36:54"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M8S D4",
+        "condition": {
+            "zoneId": "1263",
+            "jobs": [
+                "RDM",
+                "BLM",
+                "SMN",
+                "PCT"
+            ]
+        },
+        "timeline": "00:40.0 \"<昏乱>~\"\n02:42.0 \"<昏乱>~\"\n04:13.0 \"<昏乱>~\"\n06:18.0 \"<昏乱>~\"\n06:49.2 \"--sync--\" Ability { id: \"A82D\", once: true } window 60,60\n08:29.0 \"<昏乱>~\"\n10:40.0 \"<昏乱>~\"\n12:20.0 \"<昏乱>~\"\n13:50.0 \"<昏乱>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:36:54"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M8S MT",
+        "condition": {
+            "zoneId": "1263",
+            "jobs": [
+                "PLD",
+                "WAR",
+                "DRK",
+                "GNB"
+            ]
+        },
+        "timeline": "00:03.0 \"<雪仇>~\"\n01:04.0 \"<雪仇>~\"\n02:16.0 \"<雪仇>~\"\n04:09.0 \"<雪仇>~\"\n05:57.0 \"<雪仇>~\"\n06:49.2 \"--sync--\" Ability { id: \"A82D\", once: true } window 60,60\n07:44.0 \"<雪仇>~\"\n09:00.0 \"<雪仇>~\"\n10:40.0 \"<雪仇>~\"\n12:22.0 \"<雪仇>~\"\n13:42.0 \"<雪仇>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:33:41"
+    },
+    {
+        "name": "SPJP(mmw/xivstrat) M8S ST",
+        "condition": {
+            "zoneId": "1263",
+            "jobs": [
+                "PLD",
+                "WAR",
+                "DRK",
+                "GNB"
+            ]
+        },
+        "timeline": "00:15.0 \"<雪仇>~\"\n01:41.0 \"<雪仇>~\"\n02:42.0 \"<雪仇>~\"\n05:01.0 \"<雪仇>~\"\n06:18.0 \"<雪仇>~\"\n06:49.2 \"--sync--\" Ability { id: \"A82D\", once: true } window 60,60\n08:29.0 \"<雪仇>~\"\n09:30.0 \"<雪仇>~\"\n10:58.0 \"<雪仇>~\"\n12:05.0 \"<雪仇>~\"\n13:23.0 \"<雪仇>~\"",
+        "codeFight": "用户创建",
+        "create": "2025/7/8 08:36:14"
+    }
+]
