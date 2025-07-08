@@ -78,11 +78,7 @@ const timeMinuteSecondDisplay = computed(() => {
   return `${isNegative ? '-' : ''}${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 })
 
-const maxSlider = computed(() => {
-  parseTimeline(timelineCurrentlyEditing.value.timeline)
-  const maxTime = Math.max(...transmissionTimeline.value.map(v => v.time), 550)
-  return maxTime + 30
-})
+const maxSlider = ref(0)
 
 function editTimeline(timeline: ITimeline): void {
   timelineCurrentlyEditing.value = timeline
@@ -109,8 +105,10 @@ function updateTransmissionTimeline() {
   }]
   parseTimeline(timelineCurrentlyEditing.value.timeline).then((result) => {
     transmissionTimeline.value = result
+    const maxTime = Math.max(...transmissionTimeline.value.map(v => v.time), 550)
+    maxSlider.value = maxTime + 30
+    simulatedCombatTime.value = -timelineStore.configValues.preBattle
   })
-  simulatedCombatTime.value = -timelineStore.configValues.preBattle
 }
 
 function timelineTimeFormat() {
@@ -548,15 +546,11 @@ onMounted(() => {
     }
   })
 
-  watch(
-    () => timelineStore.$state,
-    () => {
-      if (wsConnected.value) {
-        sendBroadcastData('post', timelineStore.$state)
-      }
-    },
-    { deep: true },
-  )
+  watch(timelineStore.$state, () => {
+    if (wsConnected.value) {
+      sendBroadcastData('post', timelineStore.$state)
+    }
+  }, { deep: true })
 })
 
 function init(): void {
@@ -938,6 +932,7 @@ init()
 .container {
   min-width: 925px;
   max-width: 1200px;
+  margin: auto;
 }
 
 .timeline-editor-body {
@@ -968,6 +963,7 @@ init()
 }
 
 .editor-dialog-content {
+  padding: 0.1em;
   overflow-x: hidden;
   max-width: 100%;
 }

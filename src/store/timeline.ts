@@ -270,7 +270,14 @@ export async function parseTimeline(
       : undefined
     const cactbotSync = syncRegex.exec(match[0])?.groups
     const cactbotRegexType = cactbotSync?.netRegexType
-    const params = JSON5.parse(cactbotSync?.netRegex ?? '{}')
+    let params: any = {}
+    try {
+      params = JSON5.parse(cactbotSync?.netRegex ?? '{}')
+    }
+    catch (e) {
+      ElMessage.error({ type: 'error', message: `“${match[0] ?? ''}”解析失败：${e}` })
+      break
+    }
     Reflect.deleteProperty(params, 'source')
     if (cactbotRegexType) {
       try {

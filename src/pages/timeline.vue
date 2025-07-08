@@ -220,6 +220,16 @@ function cactbotSay(text: string, force = false) {
     callOverlayHandler({ call: 'cactbotSay', text })
 }
 
+function testAlert() {
+  ElMessage.closeAll()
+  ElMessage({
+    message: '已更新数据',
+    type: 'success',
+    duration: 0,
+    showClose: true,
+  })
+}
+
 // 发送数据
 function sendBroadcastData(type: 'get' | 'post', data: any = {}): void {
   callOverlayHandler({
@@ -254,8 +264,8 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
     ElMessage({
       message: '已更新数据',
       type: 'success',
-      duration: 5000,
-      showClose: false,
+      duration: 0,
+      showClose: true,
     })
     getTimeline() // 获取新数据之后查询一次
   }
@@ -331,6 +341,9 @@ function init() {
     </button>
     <button v-if="devMode" @click="cactbotSay('今天天气真不错', true)">
       TTS测试
+    </button>
+    <button v-if="devMode" @click="testAlert">
+      弹窗测试
     </button>
     <span v-if="devMode" style="color: white; background-color: black">{{
       runtimeTimeSeconds
