@@ -29,7 +29,6 @@ const timelines = toRef(timelineStore, 'allTimelines')
 const timelineFilters = toRef(timelineStore, 'filters')
 
 const simulatedCombatTime = ref(0)
-const realtimeMode = useLocalStorage('realtimeMode', true)
 
 const selectedTimelines = ref<ITimeline[]>([])
 const isAllSelected = ref(false)
@@ -150,26 +149,6 @@ function deleteSelectedTimelines() {
 function toggleSelectAll() {
   isAllSelected.value = !isAllSelected.value
   selectedTimelines.value = isAllSelected.value ? [...timelines.value] : []
-}
-
-function toggleRealTimeMode() {
-  ElMessageBox.confirm(
-    realtimeMode.value
-      ? '关闭实时更新模式后，你需要手动点击\'应用\'按钮，数据才会发送至悬浮窗。'
-      : '开启实时更新模式后，你不再需要手动点击\'应用\'按钮了，所有改动将立即生效。',
-    '提示',
-    {
-      confirmButtonText: realtimeMode.value ? '关闭实时更新模式' : '开启实时更新模式',
-      cancelButtonText: '再想想',
-      type: 'warning',
-    },
-  )
-    .then(() => {
-      realtimeMode.value = !realtimeMode.value
-      if (realtimeMode.value)
-        sendBroadcastData('post', timelineStore.$state)
-    })
-    .catch(() => {})
 }
 
 function exportSelectedTimelines() {
@@ -422,38 +401,6 @@ function sendBroadcastData(type: 'get' | 'post', data: any = {}) {
   })
 }
 
-function sendDataToACT() {
-  ElMessageBox.confirm(
-    '要将当前数据发送至 ACT 悬浮窗吗？悬浮窗中的内容将会被覆盖！',
-    '提示',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    },
-  )
-    .then(() => {
-      sendBroadcastData('post', timelineStore.$state)
-    })
-    .catch(() => {})
-}
-
-function revertTimeline() {
-  ElMessageBox.confirm(
-    '要读取 ACT 悬浮窗数据吗？你将丢失所有未应用的修改！',
-    '读取悬浮窗数据',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    },
-  )
-    .then(() => {
-      requestACTData()
-    })
-    .catch(() => {})
-}
-
 function requestACTData() {
   const timelineUrl = router.resolve({ path: '/timeline' })
   const fullPath = `${window.location.protocol}//${window.location.host}/ff14-overlay-vue/${timelineUrl.href}`
@@ -586,7 +533,7 @@ onMounted(() => {
   watch(
     () => timelineStore.$state,
     () => {
-      if (wsConnected.value && realtimeMode.value) {
+      if (wsConnected.value) {
         sendBroadcastData('post', timelineStore.$state)
       }
     },
@@ -636,8 +583,8 @@ init()
       @save="handleSettingsSave"
     />
     <el-header class="flex-header">
-      <el-row justify="space-between" align="middle" m-b-2>
-        <el-space wrap :size="10">
+      <el-row justify="space-between" align="middle">
+        <el-space>
           <el-button-group>
             <el-button type="primary" size="small" @click="fflogsImportClick">
               从 FFlogs 生成
@@ -649,6 +596,9 @@ init()
               手动编写
             </el-button>
           </el-button-group>
+          <el-button color="#543d6c" size="small" @click="loadRecommendedTimeline">
+            导入 SPJP M5S~M8S 时间轴
+          </el-button>
 
           <el-button-group>
             <el-button size="small" @click="importTimelines">
@@ -662,44 +612,19 @@ init()
               导出全部
             </el-button>
           </el-button-group>
-          <el-button color="#543d6c" size="small" @click="loadRecommendedTimeline">
-            作者推荐：SPJP（MMW/XIVStrat）M5S~M8S 通用时间轴
-          </el-button>
         </el-space>
 
         <el-space>
-          <el-button
-            size="small"
-            :type="realtimeMode ? 'success' : 'default'"
-            @click="toggleRealTimeMode"
-          >
-            {{
-              realtimeMode ? "实时更新模式：开启中" : "实时更新模式：关闭中"
-            }}
-          </el-button>
           <el-button
             color="#626aef"
             style="color: white"
             size="small"
             @click="showSettings = true"
           >
-            时间轴参数设置
+            参数设置
           </el-button>
         </el-space>
       </el-row>
-      <el-space v-if="!realtimeMode" class="alerts-container">
-        <el-button
-          v-if="!realtimeMode"
-          color="#a0d911"
-          style="color: white"
-          @click="revertTimeline"
-        >
-          1. 读取来自悬浮窗的数据
-        </el-button>
-        <el-button type="success" @click="sendDataToACT">
-          2. 编辑完毕后，点击这里应用，将编辑器数据发送至悬浮窗
-        </el-button>
-      </el-space>
     </el-header>
     <el-main>
       <el-dialog
@@ -950,7 +875,6 @@ init()
 .container {
   min-width: 925px;
   max-width: 1200px;
-  margin: 10px auto;
 }
 
 .timeline-editor-body {
