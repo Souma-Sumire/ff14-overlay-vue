@@ -51,6 +51,24 @@ const highDifficultZoneId: { id: string, name: string }[] = [{ id: '0', name: '�
 let loading: any = null
 let keepRetrying = false
 
+const keyword = ref('')
+const selectedZoneId = ref('')
+const selectedJob = ref('')
+
+const filteredTimelines = computed(() => {
+  return timelines.value.filter((timeline) => {
+    const nameMatch = timeline.name.toLowerCase().includes(keyword.value.toLowerCase())
+
+    const zoneMatch
+      = !selectedZoneId.value || timeline.condition.zoneId === selectedZoneId.value
+
+    const jobMatch
+      = !selectedJob.value || timeline.condition.jobs.includes(selectedJob.value as Job)
+
+    return nameMatch && zoneMatch && jobMatch
+  })
+})
+
 const timeMinuteSecondDisplay = computed(() => {
   const time = simulatedCombatTime.value
   const isNegative = time < 0
@@ -644,11 +662,57 @@ init()
         <div
           class="batch-operations"
           style="
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-          "
+    margin-bottom: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 10px;
+  "
         >
+          <div style="display: flex; gap: 10px; flex-wrap: wrap">
+            <el-input
+              v-model="keyword"
+              placeholder="搜索名称..."
+              clearable
+              size="small"
+              style="width: 180px"
+            />
+            <el-select
+              v-model="selectedZoneId"
+              placeholder="筛选地图"
+              clearable
+              size="small"
+              style="width: 180px"
+            >
+              <el-option label="全部地图" value="" />
+              <el-option
+                v-for="zone in highDifficultZoneId"
+                :key="zone.id"
+                :label="zone.name"
+                :value="zone.id"
+              />
+            </el-select>
+            <el-select
+              v-model="selectedJob"
+              placeholder="筛选职业"
+              clearable
+              size="small"
+              style="width: 180px"
+            >
+              <el-option label="全部职业" value="" />
+              <el-option
+                v-for="job in timelineStore.jobList"
+                :key="job"
+                :label="(Util.nameToFullName(job)?.cn ?? job).replace('冒险者', '全部职业')"
+                :value="job"
+              />
+            </el-select>
+          </div>
+          <div v-show="keyword || selectedZoneId || selectedJob">
+            <el-text type="info">
+              筛选结果：共 {{ filteredTimelines.length }} 个时间轴
+            </el-text>
+          </div>
           <div>
             <el-button
               type="primary"
@@ -662,16 +726,15 @@ init()
               type="danger"
               size="small"
               :disabled="selectedTimelines.length === 0"
-              style="margin-right: 10px"
+              style="margin-left: 10px"
               @click="deleteSelectedTimelines"
             >
               批量删除 ({{ selectedTimelines.length }})
             </el-button>
           </div>
         </div>
-
         <el-table
-          :data="timelines"
+          :data="filteredTimelines"
           :row-class-name="tableRowClassName"
           style="width: 100%"
           stripe
@@ -736,7 +799,7 @@ init()
           </el-table-column>
         </el-table>
       </el-card>
-      <el-card v-if="timelines.length === 0">
+      <el-card v-else>
         <el-empty description="点击上方新建或导入一个时间轴吧~" />
       </el-card>
     </el-main>
