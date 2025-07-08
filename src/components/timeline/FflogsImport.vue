@@ -57,7 +57,7 @@ function getCache<T>(key: string): T | null {
   }
 }
 
-function setCache<T>(key: string, data: T, ttl = 60 * 60 * 1000): void {
+function setCache<T>(key: string, data: T, ttl = 3 * 24 * 60 * 60 * 1000): void {
   const cache = {
     data,
     expire: Date.now() + ttl,

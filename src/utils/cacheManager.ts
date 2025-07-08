@@ -58,7 +58,7 @@ export class CacheManager {
     }
   }
 
-  public set<T>(key: string, data: T, ttl = 3600_000): void {
+  public set<T>(key: string, data: T, ttl = 259_200_000): void {
     const fullKey = this.buildKey(key)
     const payload: CacheEntry<T> = {
       data,
