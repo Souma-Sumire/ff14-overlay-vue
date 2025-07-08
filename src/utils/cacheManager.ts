@@ -4,122 +4,112 @@ interface CacheEntry<T> {
 }
 
 interface CacheManagerOptions {
-  prefix?: string
+  key?: string
   maxSize?: number // in bytes
   cleanupRatio?: number // 0.0 ~ 1.0
 }
 
 export class CacheManager {
-  private prefix: string
+  private storageKey: string
   private maxSize: number
   private cleanupRatio: number
 
   constructor(options?: CacheManagerOptions) {
-    this.prefix = options?.prefix ?? 'cache:'
+    this.storageKey = options?.key ?? 'cache:all'
     this.maxSize = options?.maxSize ?? 2 * 1024 * 1024 // 2MB
     this.cleanupRatio = options?.cleanupRatio ?? 0.25
   }
 
-  private buildKey(key: string): string {
-    return this.prefix + key
+  private loadAll(): Record<string, CacheEntry<any>> {
+    try {
+      const raw = localStorage.getItem(this.storageKey)
+      return raw ? JSON.parse(raw) : {}
+    }
+    catch {
+      return {}
+    }
   }
 
-  private getAllCacheKeys(): string[] {
-    return Object.keys(localStorage).filter(k => k.startsWith(this.prefix))
-  }
-
-  private getTotalSize(): number {
-    return this.getAllCacheKeys().reduce((sum, key) => {
-      const val = localStorage.getItem(key)
-      return sum + (val ? new Blob([val]).size : 0)
-    }, 0)
-  }
-
-  private cleanupOldEntries() {
-    const entries: { key: string, expire: number }[] = []
-
-    for (const key of this.getAllCacheKeys()) {
+  private saveAll(data: Record<string, CacheEntry<any>>): void {
+    try {
+      localStorage.setItem(this.storageKey, JSON.stringify(data))
+    }
+    catch {
+      this.cleanupOldEntries(data)
       try {
-        const raw = localStorage.getItem(key)
-        if (!raw)
-          continue
-        const parsed = JSON.parse(raw)
-        entries.push({ key, expire: parsed.expire ?? 0 })
+        localStorage.setItem(this.storageKey, JSON.stringify(data))
       }
-      catch {
-        localStorage.removeItem(key)
+      catch (e) {
+        console.warn('[CacheManager] Failed to save after cleanup', e)
       }
     }
+  }
 
-    entries.sort((a, b) => a.expire - b.expire)
+  private getTotalSize(data: Record<string, CacheEntry<any>>): number {
+    return new Blob([JSON.stringify(data)]).size
+  }
+
+  private cleanupOldEntries(data: Record<string, CacheEntry<any>>): void {
+    const entries = Object.entries(data)
+    const sortable = entries.map(([key, value]) => ({
+      key,
+      expire: value?.expire ?? 0,
+    }))
+
+    sortable.sort((a, b) => a.expire - b.expire)
     const count = Math.ceil(entries.length * this.cleanupRatio)
     for (let i = 0; i < count; i++) {
-      localStorage.removeItem(entries[i].key)
+      delete data[sortable[i].key]
     }
   }
 
-  public set<T>(key: string, data: T, ttl = 259_200_000): void {
-    const fullKey = this.buildKey(key)
-    const payload: CacheEntry<T> = {
-      data,
+  public set<T>(key: string, value: T, ttl = 259_200_000): void {
+    const all = this.loadAll()
+    all[key] = {
+      data: value,
       expire: Date.now() + ttl,
     }
 
-    try {
-      localStorage.setItem(fullKey, JSON.stringify(payload))
-    }
-    catch {
-      this.cleanupOldEntries()
-      try {
-        localStorage.setItem(fullKey, JSON.stringify(payload))
-      }
-      catch (e) {
-        console.warn(`[CacheManager] Failed to save cache "${fullKey}" after cleanup`, e)
-      }
+    if (this.getTotalSize(all) > this.maxSize) {
+      this.cleanupOldEntries(all)
     }
 
-    if (this.getTotalSize() > this.maxSize) {
-      this.cleanupOldEntries()
-    }
+    this.saveAll(all)
   }
 
   public get<T>(key: string): T | null {
-    const fullKey = this.buildKey(key)
-    try {
-      const raw = localStorage.getItem(fullKey)
-      if (!raw)
-        return null
-      const parsed: CacheEntry<T> = JSON.parse(raw)
-      if (parsed.expire < Date.now()) {
-        localStorage.removeItem(fullKey)
-        return null
-      }
-      return parsed.data
-    }
-    catch {
-      localStorage.removeItem(fullKey)
+    const all = this.loadAll()
+    const entry = all[key]
+    if (!entry)
+      return null
+
+    if (entry.expire < Date.now()) {
+      delete all[key]
+      this.saveAll(all)
       return null
     }
+
+    return entry.data
   }
 
   public clearExpired(): void {
+    const all = this.loadAll()
     const now = Date.now()
-    for (const key of this.getAllCacheKeys()) {
-      try {
-        const parsed = JSON.parse(localStorage.getItem(key)!)
-        if (!parsed.expire || parsed.expire < now) {
-          localStorage.removeItem(key)
-        }
+    let changed = false
+
+    for (const key in all) {
+      if (!all[key].expire || all[key].expire < now) {
+        delete all[key]
+        changed = true
       }
-      catch {
-        localStorage.removeItem(key)
-      }
+    }
+
+    if (changed) {
+      this.saveAll(all)
     }
   }
 
   public clearAll(): void {
-    for (const key of this.getAllCacheKeys()) {
-      localStorage.removeItem(key)
-    }
+    localStorage.removeItem(this.storageKey)
   }
 }

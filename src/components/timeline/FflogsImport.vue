@@ -43,7 +43,7 @@ claerFFlogsQueryConfig()
 
 const timelineStore = useTimelineStore()
 
-const fflogsCache = new CacheManager({ prefix: 'fflogs:', maxSize: 2 * 1024 * 1024, cleanupRatio: 0.25 })
+const fflogsCache = new CacheManager({ key: 'souma-fflogs-cache', maxSize: 2 * 1024 * 1024, cleanupRatio: 0.25 })
 
 function getCache<T>(key: string): T | null {
   const cached = fflogsCache.get<any>(key)
@@ -98,7 +98,7 @@ async function queryFFlogsReportFights(url: string) {
 
   fflogsQueryConfig.code = reg.groups?.code ?? ''
   try {
-    const fightCacheKey = `fflogs:fights:${fflogsQueryConfig.code}`
+    const fightCacheKey = `fights:${fflogsQueryConfig.code}`
     const cachedFight = getCache<any>(fightCacheKey)
     let res: any
 
@@ -200,7 +200,7 @@ async function queryFFlogsReportEvents() {
   fflogsQueryConfig.abilityFilterEvents.length = 0
   async function queryFriendly(startTime: number) {
     try {
-      const friendlyCacheKey = `fflogs:events:friendly:${fflogsQueryConfig.code}:${startTime}:${fflogsQueryConfig.player?.id}`
+      const friendlyCacheKey = `events:friendly:${fflogsQueryConfig.code}:${startTime}:${fflogsQueryConfig.player?.id}`
       const cachedFriendly = getCache<any>(friendlyCacheKey)
       let res: any
 
@@ -236,7 +236,7 @@ async function queryFFlogsReportEvents() {
   async function queryEnemies(startTime: number, index: number) {
     if (index >= 0) {
       try {
-        const enemyCacheKey = `fflogs:events:enemy:${fflogsQueryConfig.code}:${startTime}:${fflogsQueryConfig.bossIDs[index]}`
+        const enemyCacheKey = `events:enemy:${fflogsQueryConfig.code}:${startTime}:${fflogsQueryConfig.bossIDs[index]}`
         const cachedEnemy = getCache<any>(enemyCacheKey)
         let res: any
 
