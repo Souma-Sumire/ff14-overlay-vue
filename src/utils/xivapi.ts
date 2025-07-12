@@ -133,7 +133,7 @@ export async function getActionByChineseName(name: string) {
   }
   catch (error) {
     console.error(`Failed to get action by name: ${error}`)
-    throw new Error('Failed to retrieve action data')
+    throw new Error(`Failed to get action by name: ${error}`)
   }
 }
 

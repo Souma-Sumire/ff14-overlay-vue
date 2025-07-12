@@ -36,7 +36,7 @@ function handleError(error: Error): void {
   ElMessage.error({
     dangerouslyUseHTMLString: true,
     message: `<pre style="white-space: pre-wrap;">${error.stack || error.message}</pre>`,
-    duration: 0,
+    duration: 5000,
     showClose: true,
   })
 }

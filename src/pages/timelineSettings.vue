@@ -154,10 +154,10 @@ function deleteSelectedTimelines() {
     },
   )
     .then(() => {
+      ElMessage.success(`成功删除 ${selectedTimelines.value.length} 个时间轴`)
       timelines.value = timelines.value.filter(t => !selectedTimelines.value.includes(t))
       selectedTimelines.value = []
       isAllSelected.value = false
-      ElMessage.success(`成功删除 ${selectedTimelines.value.length} 个时间轴`)
     })
     .catch(() => {})
 }
@@ -932,7 +932,7 @@ init()
 .container {
   min-width: 925px;
   max-width: 1200px;
-  margin: auto;
+  margin: 8px auto;
 }
 
 .timeline-editor-body {
