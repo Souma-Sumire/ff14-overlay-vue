@@ -210,7 +210,7 @@ function cactbotSay(text: string, force = false) {
 function testAlert() {
   ElMessage.closeAll()
   ElMessage({
-    message: '已更新数据',
+    message: '弹窗测试',
     type: 'success',
     duration: 0,
     showClose: true,
