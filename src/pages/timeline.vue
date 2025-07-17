@@ -165,18 +165,6 @@ function handleLogEvent(e: { detail: { logs: string[] } }) {
         syncTimeline(timelineSync.jump || timelineSync.time)
       }
     }
-    if (/^.{14} ChatLog 00:0038::/.test(log)) {
-      // echo
-      const name = log.match(/^.{14} ChatLog 00:0038::(?<name>.+)$/)?.groups?.name
-      if (name) {
-        const timeline = timelineStore
-          .getTimeline(playerState.value)
-          .find(c => c.name === name)
-        if (timeline) {
-          mountTimeline(timeline, false)
-        }
-      }
-    }
   }
 }
 
