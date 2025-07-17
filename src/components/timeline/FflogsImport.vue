@@ -30,7 +30,7 @@ enum QueryTextEnum {
   querying = '正在查询...',
 }
 
-const urlRe = /(?<=^|\/)(?<code>\w{16,})[#?]fight=(?<fight>\d+|last)/
+const urlRe = /(?<=^|\/)(?<code>(?:a:)?\w{16,})[#?]fight=(?<fight>\d+|last)/
 const queryText = ref(QueryTextEnum.query)
 const inputUrl = ref('')
 const addTTS = ref(false)
