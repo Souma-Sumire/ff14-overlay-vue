@@ -1,8 +1,9 @@
 <script lang="ts" setup>
 import type { EventMap } from 'cactbot/types/event'
 import type { Job } from 'cactbot/types/job'
+import type { NotificationHandle } from 'element-plus'
 import type { ITimeline, ITimelineLine } from '@/types/timeline'
-import { ElLoading, ElMessage, ElMessageBox } from 'element-plus'
+import { ElLoading, ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 
 import * as LZString from 'lz-string'
 import moment from 'moment'
@@ -545,10 +546,19 @@ onMounted(() => {
       unwatch()
     }
   })
-
+  let e: NotificationHandle | undefined
   watch(timelineStore.$state, () => {
     if (wsConnected.value) {
       sendBroadcastData('post', timelineStore.$state)
+    }
+    else {
+      e?.close()
+      e = ElNotification({
+        title: '你修改了时间轴，但',
+        message: h('i', { style: 'color: #f00' }, '改动未应用，直到你成功连接到 WebSocket。'),
+        showClose: false,
+        duration: 0,
+      })
     }
   }, { deep: true })
 })
@@ -975,6 +985,5 @@ init()
 :deep(.editing-row) {
   font-weight: bold;
   filter: brightness(90%);
-
 }
 </style>
