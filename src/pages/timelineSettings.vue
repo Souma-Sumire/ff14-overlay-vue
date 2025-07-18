@@ -56,6 +56,8 @@ const keyword = ref('')
 const selectedZoneId = ref('')
 const selectedJob = ref('')
 
+let elN: NotificationHandle | undefined
+
 const filteredTimelines = computed(() => {
   return timelines.value.filter((timeline) => {
     const nameMatch = timeline.name.toLowerCase().includes(keyword.value.toLowerCase())
@@ -544,16 +546,20 @@ onMounted(() => {
         requestACTData()
       }
       unwatch()
+      if (elN) {
+        sendBroadcastData('post', timelineStore.$state)
+        elN.close()
+      }
     }
   })
-  let e: NotificationHandle | undefined
+
   watch(timelineStore.$state, () => {
     if (wsConnected.value) {
       sendBroadcastData('post', timelineStore.$state)
     }
     else {
-      e?.close()
-      e = ElNotification({
+      elN?.close()
+      elN = ElNotification({
         title: '你修改了时间轴，但',
         message: h('i', { style: 'color: #f00' }, '改动未应用，直到你成功连接到 WebSocket。'),
         showClose: false,
