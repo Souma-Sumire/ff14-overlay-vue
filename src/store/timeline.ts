@@ -249,8 +249,7 @@ export async function parseTimeline(
   const total: ITimelineLine[] = []
   const matches = [
     ...rawTimeline.matchAll(
-      // eslint-disable-next-line regexp/no-super-linear-backtracking
-      /^\s*(?<time>[-:：\d.]+)\s+(?<action>(?:--|["'“”])[^"'\n]+?(?:--|["'“”])).*$/gm,
+      /^\s*(?<time>[-:：\d.]+)\s+(?<action>["'“”][^"'“”]*["'“”]).*$/gm,
     ),
   ]
   for (let i = 0; i < matches.length; i++) {
@@ -266,7 +265,10 @@ export async function parseTimeline(
     )?.[0]
     const tts = match[0].match(/ tts ?["'“”](?<tts>[^"'“”]+)["'“”]/)?.groups?.tts
     const ttsSim = / tts(?: |$)/.test(match[0])
-      ? Array.from(parseAction(match.groups?.action ?? ''))?.[0]?.groups?.name
+      ? Array.from(parseAction(match.groups?.action ?? ''))
+          .map(item => item?.groups?.name)
+          .filter(Boolean)
+          .join(', ')
       : undefined
     const cactbotSync = syncRegex.exec(match[0])?.groups
     const cactbotRegexType = cactbotSync?.netRegexType
@@ -282,11 +284,10 @@ export async function parseTimeline(
     if (cactbotRegexType) {
       try {
         const key = regexStr[cactbotRegexType as keyof typeof regexStr] ?? cactbotRegexType.toLowerCase() as keyof typeof Regexes
+        onceSync = / once/.test(match[0]) || params.once
+        Reflect.deleteProperty(params, 'once')
         const regex = Regexes[key as keyof typeof Regexes] as (params: any) => RegExp
-        const { once, ...paramsWithoutOnce } = params
-        const result: RegExp = regex({ ...paramsWithoutOnce, capture: false })
-        sync = result
-        onceSync = once
+        sync = regex({ ...params, capture: false })
       }
       catch (e) {
         console.error(`Failed to parse ${cactbotRegexType} regex:`, e)
@@ -308,7 +309,7 @@ export async function parseTimeline(
       windowBefore: Number.parseFloat(windowBefore || windowAfter || '2.5'),
       windowAfter: Number.parseFloat(windowAfter || windowBefore || '2.5'),
       jump: jump ? Number.parseFloat(jump) : undefined,
-      tts: tts || ttsSim,
+      tts: sync ? undefined : (tts || ttsSim),
     })
   }
   total.sort((a, b) => a.time - b.time)

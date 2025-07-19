@@ -553,6 +553,9 @@ onMounted(() => {
     }
   })
 
+  // 语法破坏性改动
+  timelineStore.allTimelines.forEach(v => v.timeline = v.timeline.replaceAll(/^(?<a>.+), once: true(?<b>.+)$/gm, '$<a>$<b> once'))
+
   watch(timelineStore.$state, () => {
     if (wsConnected.value) {
       sendBroadcastData('post', timelineStore.$state)
@@ -591,19 +594,39 @@ init()
 
 <template>
   <el-container class="container">
-    <el-dialog v-model="dialogTableVisible" title="时间轴解析结果" center align-center draggable width="80%">
+    <el-dialog v-model="dialogTableVisible" title="时间轴解析结果" align-center center draggable width="80%">
       <el-table :data="transmissionTimeline">
         <el-table-column property="time" label="time" min-width="60" />
-        <el-table-column property="action" label="action" min-width="150" />
-        <el-table-column property="sync" label="sync" min-width="200" />
-        <el-table-column property="syncOnce" label="once" min-width="100" />
-        <el-table-column label="window" min-width="100">
+        <el-table-column property="action" label="action" width="150">
           <template #default="{ row }">
-            {{ row.windowBefore }},{{ row.windowAfter }}
+            {{ row.action.replaceAll(/(^['"“”]|['"“”]$)/g, '') }}
           </template>
         </el-table-column>
-        <el-table-column property="jump" label="jump" min-width="100" />
-        <el-table-column property="tts" label="tts" min-width="150" />
+        <el-table-column property="sync" label="sync" min-width="200">
+          <template #default="{ row }">
+            {{ row.sync ? row.sync : '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column property="syncOnce" label="once" min-width="100">
+          <template #default="{ row }">
+            {{ row.syncOnce ? '✅' : '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="window" min-width="100">
+          <template #default="{ row }">
+            {{ row.sync ? `${row.windowBefore},${row.windowAfter}` : '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column property="jump" label="jump" min-width="100">
+          <template #default="{ row }">
+            {{ row.jump ? row.jump : '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column property="tts" label="tts" min-width="150">
+          <template #default="{ row }">
+            {{ row.tts ? row.tts : '-' }}
+          </template>
+        </el-table-column>
       </el-table>
     </el-dialog>
     <timeline-settings-dialog

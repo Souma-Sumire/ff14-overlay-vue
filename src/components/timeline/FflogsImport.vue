@@ -363,12 +363,12 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
 
         const hexId = actionId.toString(16).toUpperCase()
         const regexType = type === 'begincast' ? 'StartsUsing' : 'Ability'
-        const syncLine = `${time} "${actionName}" ${regexType} { id: "${hexId}"${syncOnce ? ', once: true' : ''} }`
+        const syncLine = `${time} "${actionName}" ${regexType} { id: "${hexId}" }`
         if (battleOnce && window) {
           fflogsQueryConfig.battleSyncedIDs.push(actionId)
         }
         return window
-          ? `${syncLine} window ${window.join(',')}`
+          ? `${syncLine} window ${window.join(',')} ${syncOnce ? 'once' : ''}`
           : `# ${syncLine}`
       })
       .filter(item => item !== null)
