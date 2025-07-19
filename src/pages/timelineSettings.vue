@@ -1015,4 +1015,8 @@ init()
   font-weight: bold;
   filter: brightness(90%);
 }
+
+:deep(.editor-dialog-content){
+  padding: 0.2em;
+}
 </style>
