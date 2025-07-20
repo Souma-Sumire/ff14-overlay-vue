@@ -5,6 +5,7 @@ import type {
   ITimelineCondition,
   ITimelineLine,
 } from '@/types/timeline'
+import { Check } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { parseTimeline, useTimelineStore } from '@/store/timeline'
 import {
@@ -16,6 +17,7 @@ const timelineStore = useTimelineStore()
 const timelinePageData = reactive({
   loadedTimeline: [] as ITimelineLine[], // 显示在页面上的时间轴
   optionalTimeline: [] as ITimeline[], // 有多个供选择的时间轴
+  selectedOptionalTimeline: null as ITimeline | null, // 用户选择的可选时间轴
 })
 const baseTimeMs = ref(0) // 战斗开始时间 每场战斗中这个值应该是固定的
 const runtimeTimeSeconds = ref(0 - timelineStore.configValues.preBattle) // 当前进行到多少秒了 相对与baseTime来说 （战斗时间）  时间轴时间将以他为基准进行计算
@@ -57,6 +59,7 @@ function getTimeline() {
   else if (candidate.length > 1) {
     // 多个结果
     timelinePageData.optionalTimeline = candidate
+    mountTimeline(candidate[0])
   }
 }
 
@@ -67,6 +70,7 @@ function selectedTimeline(timeline: ITimeline) {
 
 // 载入时间轴页面
 async function mountTimeline(timeline: ITimeline, stopLoadedTimeline = true) {
+  timelinePageData.selectedOptionalTimeline = timeline
   if (stopLoadedTimeline) {
     stopTimeline()
   }
@@ -74,8 +78,6 @@ async function mountTimeline(timeline: ITimeline, stopLoadedTimeline = true) {
   if (timeline?.timeline) {
     timelinePageData.loadedTimeline = await parseTimeline(timeline.timeline)
     timelinePageData.loadedTimeline.sort((a, b) => a.time - b.time)
-    ElMessage.success(`加载了${timeline.name}`)
-    // lastUsedTimeline = timeline;
   }
   setTimeout(() => {
     doTTS = true
@@ -84,7 +86,6 @@ async function mountTimeline(timeline: ITimeline, stopLoadedTimeline = true) {
 
 // 停止当前
 function stopTimeline() {
-  // clearInterval(Number(runtimeTimer));
   baseTimeMs.value = 0
   runtimeTimeSeconds.value = 0 - timelineStore.configValues.preBattle
   offsetTimeMS.value = 0
@@ -145,12 +146,10 @@ function handleLogEvent(e: { detail: { logs: string[] } }) {
     ) {
       // 团灭
       stopTimeline()
-      // mountTimeline(lastUsedTimeline);
     }
     else {
       // 是否触发了某行的sync
       const timelineSync = syncLines.value.find((item) => {
-        // console.log(item.sync, log);
         return (
           item.sync
           && ((item.syncOnce && !item.syncAlready) || !item.syncOnce)
@@ -195,7 +194,6 @@ const handlePlayerChangedEvent: EventMap['onPlayerChangedEvent'] = (e) => {
 // 切换场景
 const handleChangeZone: EventMap['ChangeZone'] = (e) => {
   playerState.value.zoneId = String(e.zoneID)
-  // lastUsedTimeline = { name: "", condition: { zoneId: "", job: "NONE" }, timeline: "", codeFight: "", create: "" };
   getTimeline()
 }
 
@@ -279,13 +277,12 @@ function init() {
   addOverlayListener('ChangeZone', handleChangeZone)
   addOverlayListener('BroadcastMessage', handleBroadcastMessage)
   addOverlayListener('onInCombatChangedEvent', handleInCombatChanged)
-  // startOverlayEvents();
   timelineStore.loadTimelineSettings()
   ElMessage({
     message: `${timelineStore.allTimelines.length}条时间轴已就绪`,
     type: 'info',
-    duration: 1500,
-    showClose: true,
+    duration: 1000,
+    showClose: false,
   })
   getTimeline()
 }
@@ -300,11 +297,16 @@ function init() {
       "
       class="optionalTimelines"
     >
+      <span style="color: white; text-shadow: 1px 1px 1px black, -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black;">选择一个时间轴</span>
       <li
         v-for="(item, index) in timelinePageData.optionalTimeline"
         :key="index"
+        :class="timelinePageData.selectedOptionalTimeline === item ? 'active' : ''"
         @click="selectedTimeline(item)"
       >
+        <el-icon v-if="timelinePageData.selectedOptionalTimeline === item">
+          <Check />
+        </el-icon>
         {{ item.name }}
       </li>
     </ul>
@@ -359,7 +361,6 @@ function init() {
   .icon {
     background-color: rgba($color: #000000, $alpha: 0.01);
     cursor: pointer;
-    // filter: brightness(0.8);
     filter: drop-shadow(1px 2px 1px black);
     fill: blueviolet;
     opacity: 0.8;
@@ -375,20 +376,18 @@ function init() {
     }
   }
   .optionalTimelines {
-    display: flex;
-    list-style: none;
-    flex-direction: column;
-    font-size: 16px;
-    font-weight: bold;
-    line-height: 2em;
+    font-size: 18px;
     li {
       background-color: lightblue;
-      margin: 2px;
-      padding-left: 12px;
+      margin: 1px 0px;
+      padding: 1px 2px;
+      white-space: nowrap;
       &:hover {
         cursor: pointer;
-        transition-duration: 0.2s;
-        font-size: 20px;
+        text-decoration: underline;
+      }
+      &.active {
+        font-weight: bold;
       }
     }
   }
