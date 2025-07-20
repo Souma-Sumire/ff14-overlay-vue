@@ -304,10 +304,10 @@ function init() {
         :class="timelinePageData.selectedOptionalTimeline === item ? 'active' : ''"
         @click="selectedTimeline(item)"
       >
+        {{ item.name }}
         <el-icon v-if="timelinePageData.selectedOptionalTimeline === item">
           <Check />
         </el-icon>
-        {{ item.name }}
       </li>
     </ul>
     <timeline-timeline-show
@@ -382,6 +382,8 @@ function init() {
       margin: 1px 0px;
       padding: 1px 2px;
       white-space: nowrap;
+      font-size: 14px;
+      letter-spacing: -0.5px;
       &:hover {
         cursor: pointer;
         text-decoration: underline;
