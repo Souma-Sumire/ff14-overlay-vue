@@ -567,6 +567,7 @@ onMounted(() => {
         message: h('i', { style: 'color: #f00' }, '改动未应用，直到你成功连接到 WebSocket。'),
         showClose: false,
         duration: 0,
+        position: 'bottom-left',
       })
     }
   }, { deep: true })
