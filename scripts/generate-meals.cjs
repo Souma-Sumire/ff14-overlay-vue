@@ -6,6 +6,26 @@ const { csvPaths } = require("./paths.cjs");
 async function processCSVFiles() {
   const item = {};
   const itemAction = {};
+  const itemFood = {};
+  const baseParam = {};
+
+  await new Promise((resolve) =>
+    fs
+      .createReadStream(`${csvPaths.souma}BaseParam.csv`)
+      .pipe(iconv.decodeStream("utf8"))
+      .pipe(csv({ headers: false }))
+      .on("data", (row) => (baseParam[row[0]] = row[1]))
+      .on("end", resolve)
+  );
+
+  await new Promise((resolve) =>
+    fs
+      .createReadStream(`${csvPaths.ja}ItemFood.csv`)
+      .pipe(iconv.decodeStream("utf8"))
+      .pipe(csv({ headers: false }))
+      .on("data", (row) => (itemFood[row[0]] = row))
+      .on("end", resolve)
+  );
 
   await new Promise((resolve) =>
     fs
@@ -35,7 +55,7 @@ async function processCSVFiles() {
       .pipe(iconv.decodeStream("utf8"))
       .pipe(csv({ headers: false }))
       .on("data", (row) => {
-        if (row[16] === "46") {
+        if (row[16] === "46" && itemAction[row[31]] !== "0") {
           if (!item[row[0]]) item[row[0]] = {};
           item[row[0]].ItemActionData0 = itemAction[row[31]];
         }
@@ -45,9 +65,34 @@ async function processCSVFiles() {
 
   const transformed = {};
   for (const [_, { Name, ItemActionData0 }] of Object.entries(item)) {
-    if (ItemActionData0 && ItemActionData0 !== "0" && Name) {
-      transformed[ItemActionData0] = Name;
-    }
+    const food = itemFood[ItemActionData0];
+    if (!food) continue;
+
+    const ParamsValues = [
+      {
+        "Params": baseParam[food[2]],
+        "Value": food[4],
+        "Max": food[5],
+        "Value{HQ}": food[6],
+        "Max{HQ}": food[7],
+      },
+      {
+        "Params": baseParam[food[8]],
+        "Value": food[10],
+        "Max": food[11],
+        "Value{HQ}": food[12],
+        "Max{HQ}": food[13],
+      },
+      {
+        "Params": baseParam[food[14]],
+        "Value": food[16],
+        "Max": food[17],
+        "Value{HQ}": food[18],
+        "Max{HQ}": food[19],
+      },
+    ].filter((p) => p.Params && p.Params.length > 0);
+
+    transformed[ItemActionData0] = { Name, ParamsValues };
   }
 
   await fs.outputJson("src/resources/mealsItemActionData0.json", transformed, {
