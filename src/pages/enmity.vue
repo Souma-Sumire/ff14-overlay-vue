@@ -196,7 +196,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <el-card v-if="!actReady || dev">
+  <el-card v-if="!(actReady || dev)">
     <h1>{{ "在 ACT 中添加本页面作为数据统计悬浮窗" }}</h1>
   </el-card>
   <strong v-show="noEnmity">没人开盾</strong>
