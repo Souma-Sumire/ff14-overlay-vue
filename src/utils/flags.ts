@@ -22,38 +22,23 @@ export type DamageType
 export function translationFlags(
   typeString: DamageEffect | DamageProperties | DamageType,
 ): string {
-  switch (typeString) {
-    case 'dodge':
-      return '闪避'
-    case 'damage done':
-      return '击中'
-    case 'blocked damage':
-      return '格挡'
-    case 'parried damage':
-      return '招架'
-    case 'instant death':
-      return '即死'
-    case 'heal':
-      return '治疗'
-    case 'crit heal':
-      return '暴击治疗'
-    case 'damage':
-      return '普通'
-    case 'crit damage':
-      return '暴击'
-    case 'direct hit damage':
-      return '直击'
-    case 'crit direct hit damage':
-      return '直暴'
-    case 'physics':
-      return '物理'
-    case 'magic':
-      return '魔法'
-    case 'darkness':
-      return '暗黑'
-    default:
-      throw new Error('Unknown type')
-  }
+  return {
+    'dodge': '闪避',
+    'damage done': '击中',
+    'blocked damage': '格挡',
+    'parried damage': '招架',
+    'instant death': '即死',
+    'heal': '治疗',
+    'crit heal': '暴击治疗',
+    'damage': '普通',
+    'crit damage': '暴击',
+    'direct hit damage': '直击',
+    'crit direct hit damage': '直暴',
+    'physics': '物理',
+    'magic': '魔法',
+    'darkness': '暗黑',
+    'dot': '持续伤害',
+  }[typeString]
 }
 
 export function processFlags(flag: string) {
