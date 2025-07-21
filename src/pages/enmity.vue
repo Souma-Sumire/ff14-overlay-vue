@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { EventMap, Party } from 'cactbot/types/event'
+import type { CombatantState } from '@/types/combatant'
 import Util, { iconToJobEnum } from '@/utils/util'
 import NetRegexes from '../../cactbot/resources/netregexes'
 import {
@@ -7,64 +8,6 @@ import {
   callOverlayHandler,
   removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
-
-interface CombatantState {
-  OwnerID: number
-  Type: number
-  MonsterType: number
-  Status: number
-  AggressionStatus: number
-  IsTargetable: boolean
-  Name: string
-  Radius: number
-  BNpcID: number
-  CurrentMP: number
-  IsCasting1: number
-  BNpcNameID: number
-  TransformationId: number
-  WeaponId: number
-  TargetID: number
-  ModelStatus: number
-  ID: number
-  Job: number
-  CurrentHP: number
-  MaxHP: number
-  PosX: number
-  PosY: number
-  PosZ: number
-  Heading: number
-  Distance: null
-  EffectiveDistance: null
-  Effects: Effect[]
-  MaxMP: number
-  Level: number
-  WorldID: number
-  CurrentWorldID: number
-  NPCTargetID: number
-  CurrentGP: number
-  MaxGP: number
-  CurrentCP: number
-  MaxCP: number
-  PCTargetID: number
-  IsCasting2: number
-  CastBuffID: number
-  CastTargetID: number
-  CastGroundTargetX: number
-  CastGroundTargetY: number
-  CastGroundTargetZ: number
-  CastDurationCurrent: number
-  CastDurationMax: number
-  PartyType: number
-  WorldName: string
-}
-
-interface Effect {
-  BuffID: number
-  Stack: number
-  Timer: number
-  ActorID: number
-  isOwner: boolean
-}
 
 let povCharID = 0
 const party: Ref<Party[]> = ref([])
