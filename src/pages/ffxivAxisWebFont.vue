@@ -150,6 +150,14 @@
         </tr>
         <tr>
           <td class="ffxiv">
+            
+          </td>
+          <td>e038</td>
+          <td><code>&lt;i class="xiv rlv"&gt;&lt;/i&gt;</code></td>
+          <td>义军等级（博兹雅南方战线）</td>
+        </tr>
+        <tr>
+          <td class="ffxiv">
             
           </td>
           <td>e039</td>
@@ -209,9 +217,7 @@
             
           </td>
           <td>e040</td>
-          <td>
-            <code>&lt;i class="xiv auto-translate-left"&gt;&lt;/i&gt;</code>
-          </td>
+          <td><code>&lt;i class="xiv auto-translate-left"&gt;&lt;/i&gt;</code></td>
           <td>定型文-左</td>
         </tr>
         <tr>
@@ -219,9 +225,7 @@
             
           </td>
           <td>e041</td>
-          <td>
-            <code>&lt;i class="xiv auto-translate-right"&gt;&lt;/i&gt;</code>
-          </td>
+          <td><code>&lt;i class="xiv auto-translate-right"&gt;&lt;/i&gt;</code></td>
           <td>定型文-右</td>
         </tr>
         <tr>
@@ -317,9 +321,7 @@
             
           </td>
           <td>e051</td>
-          <td>
-            <code>&lt;i class="xiv mouse-left-button"&gt;&lt;/i&gt;</code>
-          </td>
+          <td><code>&lt;i class="xiv mouse-left-button"&gt;&lt;/i&gt;</code></td>
           <td>鼠标左键</td>
         </tr>
         <tr>
@@ -327,9 +329,7 @@
             
           </td>
           <td>e052</td>
-          <td>
-            <code>&lt;i class="xiv mouse-right-button"&gt;&lt;/i&gt;</code>
-          </td>
+          <td><code>&lt;i class="xiv mouse-right-button"&gt;&lt;/i&gt;</code></td>
           <td>鼠标右键</td>
         </tr>
         <tr>
@@ -337,9 +337,7 @@
             
           </td>
           <td>e053</td>
-          <td>
-            <code>&lt;i class="xiv mouse-left-right-button"&gt;&lt;/i&gt;</code>
-          </td>
+          <td><code>&lt;i class="xiv mouse-left-right-button"&gt;&lt;/i&gt;</code></td>
           <td>疑似鼠标左右键</td>
         </tr>
         <tr>
@@ -347,9 +345,7 @@
             
           </td>
           <td>e054</td>
-          <td>
-            <code>&lt;i class="xiv mouse-scroll-whell"&gt;&lt;/i&gt;</code>
-          </td>
+          <td><code>&lt;i class="xiv mouse-scroll-whell"&gt;&lt;/i&gt;</code></td>
           <td>鼠标滚轮（大厅介绍用）</td>
         </tr>
         <tr>
@@ -1173,9 +1169,7 @@
             
           </td>
           <td>e0bf</td>
-          <td>
-            <code>&lt;i class="xiv quest-job-specific"&gt;&lt;/i&gt;</code>
-          </td>
+          <td><code>&lt;i class="xiv quest-job-specific"&gt;&lt;/i&gt;</code></td>
           <td>职业固定任务</td>
         </tr>
         <tr>
@@ -1337,6 +1331,7 @@
 
 <style scoped lang="scss">
 @import url(../css/ffxiv-axis-font-icons.css);
+
 .xiv,
 .ffxiv {
   font-family: "FFXIV";
