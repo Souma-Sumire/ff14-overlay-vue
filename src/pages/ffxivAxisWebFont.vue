@@ -2,6 +2,9 @@
 
 <template>
   <div>
+    <a href="https://github.com/thewakingsands/ffxiv-axis-font-icons">
+      数据来自@thewakingsands/ffxiv-axis-font-icons
+    </a>
     <table>
       <thead>
         <tr>
