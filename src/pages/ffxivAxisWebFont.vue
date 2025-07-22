@@ -153,11 +153,19 @@
         </tr>
         <tr>
           <td class="ffxiv">
+            
+          </td>
+          <td>e037</td>
+          <td><code>&lt;i class="xiv e037"&gt;&lt;/i&gt;</code></td>
+          <td>学识等级（新月岛）</td>
+        </tr>
+        <tr>
+          <td class="ffxiv">
             
           </td>
           <td>e038</td>
           <td><code>&lt;i class="xiv rlv"&gt;&lt;/i&gt;</code></td>
-          <td>义军等级（博兹雅南方战线）</td>
+          <td>义军等级（南方博兹雅战线）</td>
         </tr>
         <tr>
           <td class="ffxiv">
