@@ -1,7 +1,8 @@
 <script setup lang="ts"></script>
 
 <template>
-  <div>
+  <div class="container">
+    <h1>Icons in FFXIV Axis font</h1>
     <a href="https://github.com/thewakingsands/ffxiv-axis-font-icons">
       数据来自@thewakingsands/ffxiv-axis-font-icons
     </a>
@@ -1345,6 +1346,24 @@
 
 .xiv,
 .ffxiv {
-  font-family: "FFXIV";
+  font-family: FFXIV;
+}
+
+.container {
+  margin: 0 2em 2em;
+}
+table {
+  border-collapse: collapse;
+}
+td, th {
+  border: 1px solid #d6d3cd;
+  padding: 4px 8px;
+  line-height: 1.5;
+}
+tr:hover {
+  background: #f1f1f1;
+}
+td:first-child{
+  text-align:center
 }
 </style>
