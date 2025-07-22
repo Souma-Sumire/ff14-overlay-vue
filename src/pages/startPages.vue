@@ -30,6 +30,13 @@ const tableData: Menu[] = [
     path: 'fflogsUploaderDownload',
   },
   {
+    title: '[悬浮窗] 食物警察',
+    type: '悬浮窗',
+    path: 'food',
+    src: 'food.webp',
+    comment: `检查食物剩余时间。仅在6人以上小队且至少有1人吃食物才生效。\n平时会简易显示，当鼠标移入后显示食物加成属性。再次移入后显示食物名称。`,
+  },
+  {
     title: '[网页] ACT 自助测试',
     type: '网页',
     path: 'test',
