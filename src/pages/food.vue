@@ -17,14 +17,12 @@ const uiData: Ref<Players[]> = useStorage('souma-food-ui-data', [])
 const actReady = ref(false)
 const params = useUrlSearchParams('hash')
 const dev = params.dev === '1'
-const demo = ref(
-  document.getElementById('unlocked')?.style?.display === 'flex' || dev,
-)
+const demo = ref((document.getElementById('unlocked')?.style?.display === 'flex') || dev)
 const display = computed(
   () =>
     (party.value.length >= 6
       && uiData.value.filter(v => v.food).length >= 1)
-    || demo,
+    || (demo.value),
 )
 
 function checkAct(): Promise<void> {
