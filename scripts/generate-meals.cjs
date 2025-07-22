@@ -58,13 +58,14 @@ async function processCSVFiles() {
         if (row[16] === "46" && itemAction[row[31]] !== "0") {
           if (!item[row[0]]) item[row[0]] = {};
           item[row[0]].ItemActionData0 = itemAction[row[31]];
+          item[row[0]].Level = row[12];
         }
       })
       .on("end", resolve)
   );
 
   const transformed = {};
-  for (const [_, { Name, ItemActionData0 }] of Object.entries(item)) {
+  for (const [_, { Name, ItemActionData0, Level }] of Object.entries(item)) {
     const food = itemFood[ItemActionData0];
     if (!food) continue;
 
@@ -92,7 +93,7 @@ async function processCSVFiles() {
       },
     ].filter((p) => p.Params && p.Params.length > 0);
 
-    transformed[ItemActionData0] = { Name, ParamsValues };
+    transformed[ItemActionData0] = { Name, ParamsValues, Level };
   }
 
   await fs.outputJson("src/resources/mealsItemActionData0.json", transformed, {
