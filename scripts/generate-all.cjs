@@ -8,6 +8,7 @@ const scripts = [
   "generate-status.cjs",
   "generate-contentFinderCondition.cjs",
   "generate-meals.cjs",
+  // "generate-world.cjs",
 ];
 
 for (const script of scripts) {

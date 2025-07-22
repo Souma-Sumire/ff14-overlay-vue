@@ -30,6 +30,13 @@ const tableData: Menu[] = [
     path: 'fflogsUploaderDownload',
   },
   {
+    title: '[悬浮窗] 雷达',
+    type: '悬浮窗',
+    path: 'radar',
+    src: 'radar.webp',
+    comment: '找人用。地图为指北。PVP区域自动禁用。',
+  },
+  {
     title: '[悬浮窗] 食物警察',
     type: '悬浮窗',
     path: 'food',

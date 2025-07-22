@@ -102,5 +102,3 @@ async function processCSVFiles() {
 }
 
 processCSVFiles()
-  .then(() => console.log("CSV processing completed!"))
-  .catch(console.error);
