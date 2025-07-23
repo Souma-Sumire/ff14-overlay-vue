@@ -27,7 +27,7 @@
 
 ## 🔍 匹配语句（时间轴同步规则）
 
-通常无需手动编写。FFLOGS导入会自动生成，完整规则见 [timelineSpecialRules.ts](https://github.com/Souma-Sumire/ff14-overlay-vue/blob/main/src/utils/timelineSpecialRules.ts)
+通常无需手动编写。FFLOGS导入会自动生成，完整规则见 [timelineSpecialRules.ts](https://github.com/Souma-Sumire/ff14-overlay-vue/blob/main/src/services/timelineSpecialRules.ts)
 
 ### ✅ 新语法（推荐）
 

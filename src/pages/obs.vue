@@ -373,203 +373,205 @@ onMounted(async () => {
 </script>
 
 <template>
-  <header v-show="showHeader">
-    <div>
-      <i
-        v-show="status.connected"
-        class="vxe-icon-dot icon"
-        :style="{
-          color: status.recording ? 'red' : 'gray',
-          textShadow: '0px  0px 3px black',
-          margin: '1px',
-        }"
-      />
-      <vxe-button
-        v-show="status.connected && !status.recording"
-        class="btns"
-        icon="vxe-icon-caret-right"
-        @click="start('manual', false, true)"
-      />
-      <vxe-button
-        v-show="status.connected && status.recording"
-        class="btns"
-        icon="vxe-icon-close"
-        size="mini"
-        @click="stop('manual')"
-      />
-      <vxe-button
-        v-show="status.connected && status.recording"
-        class="btns"
-        icon="vxe-icon-cut"
-        size="mini"
-        @click="start('manual', true, true)"
-      />
-      <vxe-button
-        class="btns settings"
-        icon="vxe-icon-setting"
-        size="mini"
-        @click="toggleWindow('settings')"
-      />
-    </div>
-  </header>
-  <main v-show="showSettings">
-    <vxe-form
-      :data="config"
-      :collapse-status="!showMore"
-      custom-layout
-      size="mini"
-    >
-      <vxe-form-item v-show="showSettings" span="24" class-name="hidePageBtn">
-        <vxe-button
-          size="mini"
-          content="隐藏页面"
-          icon="vxe-icon-eye-fill-close"
-          @click="toggleWindow('header')"
-        />
-      </vxe-form-item>
-      <vxe-form-item span="24" field="host" title="OBS服务器端口">
-        <vxe-input
-          v-model="config.host"
-          type="number"
-          size="small"
-          style="width: 70%; margin-right: -5px"
+  <CommonActWrapper>
+    <header v-show="showHeader">
+      <div>
+        <i
+          v-show="status.connected"
+          class="vxe-icon-dot icon"
+          :style="{
+            color: status.recording ? 'red' : 'gray',
+            textShadow: '0px  0px 3px black',
+            margin: '1px',
+          }"
         />
         <vxe-button
-          content="无法输入"
+          v-show="status.connected && !status.recording"
+          class="btns"
+          icon="vxe-icon-caret-right"
+          @click="start('manual', false, true)"
+        />
+        <vxe-button
+          v-show="status.connected && status.recording"
+          class="btns"
+          icon="vxe-icon-close"
           size="mini"
-          icon="vxe-icon-question"
-          type="text"
-          status="info"
-          @click="
-            VxeUI.modal.message({
-              content: '先点击ACT，再点击悬浮窗，即可正常输入',
-            })
-          "
+          @click="stop('manual')"
         />
-      </vxe-form-item>
-      <vxe-form-item span="24" field="password" title="OBS服务器密码">
-        <vxe-input
-          v-model="password"
-          size="small"
-          placeholder="密码"
-          type="password"
+        <vxe-button
+          v-show="status.connected && status.recording"
+          class="btns"
+          icon="vxe-icon-cut"
+          size="mini"
+          @click="start('manual', true, true)"
         />
-      </vxe-form-item>
-      <vxe-form-item span="24" field="inCombatStart" title="进入战斗自动录制">
-        <vxe-switch
-          v-model="config.inCombatStart"
-          open-label="是"
-          close-label="否"
+        <vxe-button
+          class="btns settings"
+          icon="vxe-icon-setting"
+          size="mini"
+          @click="toggleWindow('settings')"
         />
-      </vxe-form-item>
-      <vxe-form-item
-        span="24"
-        field="suffixByZone"
-        title="录像文件名添加副本名后缀"
+      </div>
+    </header>
+    <main v-show="showSettings">
+      <vxe-form
+        :data="config"
+        :collapse-status="!showMore"
+        custom-layout
+        size="mini"
       >
-        <vxe-switch
-          v-model="config.suffixByZone"
-          open-label="是"
-          close-label="否"
-        />
-      </vxe-form-item>
-      <vxe-form-item span="24" field="greaterThan" title="小队多于">
-        <vxe-input
-          v-model="config.greaterThan"
-          size="small"
-          type="integer"
-          min="0"
-          max="8"
-          style="width: 3rem"
-        />
-        人自动录制（8:永不自动）
-      </vxe-form-item>
-      <vxe-form-item
-        span="24"
-        field="autoForZones"
-        title="进入区域自动录制"
-        class-name="zoneAuto"
-        folding
-        title-overflow
-      >
-        <vxe-checkbox-group v-model="config.autoForZones">
-          <vxe-checkbox
-            :label="ContentType.UltimateRaids"
-            content="绝境战"
+        <vxe-form-item v-show="showSettings" span="24" class-name="hidePageBtn">
+          <vxe-button
+            size="mini"
+            content="隐藏页面"
+            icon="vxe-icon-eye-fill-close"
+            @click="toggleWindow('header')"
           />
-          <vxe-checkbox
-            :label="ContentType.Raids"
-            content="大型Raid"
+        </vxe-form-item>
+        <vxe-form-item span="24" field="host" title="OBS服务器端口">
+          <vxe-input
+            v-model="config.host"
+            type="number"
+            size="small"
+            style="width: 70%; margin-right: -5px"
           />
-          <vxe-checkbox
-            :label="ContentType.Trials"
-            content="讨伐战"
+          <vxe-button
+            content="无法输入"
+            size="mini"
+            icon="vxe-icon-question"
+            type="text"
+            status="info"
+            @click="
+              VxeUI.modal.message({
+                content: '先点击ACT，再点击悬浮窗，即可正常输入',
+              })
+            "
           />
-          <vxe-checkbox
-            :label="ContentType.VCDungeonFinder"
-            content="异闻迷宫"
+        </vxe-form-item>
+        <vxe-form-item span="24" field="password" title="OBS服务器密码">
+          <vxe-input
+            v-model="password"
+            size="small"
+            placeholder="密码"
+            type="password"
           />
-          <vxe-checkbox
-            :label="ContentType.DeepDungeons"
-            content="深层迷宫"
+        </vxe-form-item>
+        <vxe-form-item span="24" field="inCombatStart" title="进入战斗自动录制">
+          <vxe-switch
+            v-model="config.inCombatStart"
+            open-label="是"
+            close-label="否"
           />
-          <vxe-checkbox
-            :label="ContentType.Dungeons"
-            content="4人迷宫"
+        </vxe-form-item>
+        <vxe-form-item
+          span="24"
+          field="suffixByZone"
+          title="录像文件名添加副本名后缀"
+        >
+          <vxe-switch
+            v-model="config.suffixByZone"
+            open-label="是"
+            close-label="否"
           />
-          <vxe-checkbox :label="ContentType.Pvp" content="PVP" />
-        </vxe-checkbox-group>
-      </vxe-form-item>
-      <vxe-form-item
-        span="24"
-        title="录像目录（须保证目录存在，可留空）"
-        folding
-      />
-      <vxe-form-item span="24" title="默认" folding class-name="recPaths">
-        <vxe-input
-          v-model="config.recFilePaths.default"
-          size="small"
-          placeholder="留空则使用OBS录像目录"
-          spellcheck="false"
+        </vxe-form-item>
+        <vxe-form-item span="24" field="greaterThan" title="小队多于">
+          <vxe-input
+            v-model="config.greaterThan"
+            size="small"
+            type="integer"
+            min="0"
+            max="8"
+            style="width: 3rem"
+          />
+          人自动录制（8:永不自动）
+        </vxe-form-item>
+        <vxe-form-item
+          span="24"
+          field="autoForZones"
+          title="进入区域自动录制"
+          class-name="zoneAuto"
+          folding
+          title-overflow
+        >
+          <vxe-checkbox-group v-model="config.autoForZones">
+            <vxe-checkbox
+              :label="ContentType.UltimateRaids"
+              content="绝境战"
+            />
+            <vxe-checkbox
+              :label="ContentType.Raids"
+              content="大型Raid"
+            />
+            <vxe-checkbox
+              :label="ContentType.Trials"
+              content="讨伐战"
+            />
+            <vxe-checkbox
+              :label="ContentType.VCDungeonFinder"
+              content="异闻迷宫"
+            />
+            <vxe-checkbox
+              :label="ContentType.DeepDungeons"
+              content="深层迷宫"
+            />
+            <vxe-checkbox
+              :label="ContentType.Dungeons"
+              content="4人迷宫"
+            />
+            <vxe-checkbox :label="ContentType.Pvp" content="PVP" />
+          </vxe-checkbox-group>
+        </vxe-form-item>
+        <vxe-form-item
+          span="24"
+          title="录像目录（须保证目录存在，可留空）"
+          folding
         />
-      </vxe-form-item>
-      <vxe-form-item span="24" title="高难" folding class-name="recPaths">
-        <vxe-input
-          v-model="config.recFilePaths.ultimateOrRaidOrTrials"
-          size="small"
-          placeholder="绝&零式&极神"
-          spellcheck="false"
-        />
-      </vxe-form-item>
-      <vxe-form-item span="24" title="深层" folding class-name="recPaths">
-        <vxe-input
-          v-model="config.recFilePaths.vcOrDeepDungeons"
-          size="small"
-          placeholder="深层&异闻迷宫"
-          spellcheck="false"
-        />
-      </vxe-form-item>
-      <vxe-form-item span="24" title="PVP" folding class-name="recPaths">
-        <vxe-input
-          v-model="config.recFilePaths.pvp"
-          size="small"
-          placeholder="玩家对战"
-          spellcheck="false"
-        />
-      </vxe-form-item>
-      <vxe-form-item span="24" collapse-node>
-        <vxe-button
-          size="mini"
-          status="primary"
-          icon="vxe-icon-swap"
-          content="连接"
-          @click="connect(true)"
-        />
+        <vxe-form-item span="24" title="默认" folding class-name="recPaths">
+          <vxe-input
+            v-model="config.recFilePaths.default"
+            size="small"
+            placeholder="留空则使用OBS录像目录"
+            spellcheck="false"
+          />
+        </vxe-form-item>
+        <vxe-form-item span="24" title="高难" folding class-name="recPaths">
+          <vxe-input
+            v-model="config.recFilePaths.ultimateOrRaidOrTrials"
+            size="small"
+            placeholder="绝&零式&极神"
+            spellcheck="false"
+          />
+        </vxe-form-item>
+        <vxe-form-item span="24" title="深层" folding class-name="recPaths">
+          <vxe-input
+            v-model="config.recFilePaths.vcOrDeepDungeons"
+            size="small"
+            placeholder="深层&异闻迷宫"
+            spellcheck="false"
+          />
+        </vxe-form-item>
+        <vxe-form-item span="24" title="PVP" folding class-name="recPaths">
+          <vxe-input
+            v-model="config.recFilePaths.pvp"
+            size="small"
+            placeholder="玩家对战"
+            spellcheck="false"
+          />
+        </vxe-form-item>
+        <vxe-form-item span="24" collapse-node>
+          <vxe-button
+            size="mini"
+            status="primary"
+            icon="vxe-icon-swap"
+            content="连接"
+            @click="connect(true)"
+          />
         <!-- <vxe-button v-show="!status.connected" type="text" status="danger" size="mini" icon="vxe-icon-warning-circle" content="未连接"></vxe-button>
         <vxe-button v-show="status.connected" type="text" status="success" size="mini" icon="vxe-icon-success-circle" content="已连接"></vxe-button> -->
-      </vxe-form-item>
-    </vxe-form>
-  </main>
+        </vxe-form-item>
+      </vxe-form>
+    </main>
+  </CommonActwrapper>
 </template>
 
 <style lang="scss">

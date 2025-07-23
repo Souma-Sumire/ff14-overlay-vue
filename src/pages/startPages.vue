@@ -296,6 +296,7 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
 <style scoped lang="scss">
 :global(body) {
   margin: 0;
+  padding: 0;
 }
 
 .common-layout {

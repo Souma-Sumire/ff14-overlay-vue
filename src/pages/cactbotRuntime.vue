@@ -2,6 +2,7 @@
 import type { Role } from '../../cactbot/types/job'
 import type { PlayerRuntime } from '@/types/partyPlayer'
 import { VxeUI } from 'vxe-table'
+import { useDevMode } from '@/composables/useDevMode'
 import Util from '@/utils/util'
 import {
   addOverlayListener,
@@ -67,9 +68,9 @@ function getOptions(job: number) {
     return i < roleSelectLength.value[classification]
   })
 }
-const isDev = location.href.includes('localhost')
+const dev = useDevMode()
 const mouseEnter = ref(false)
-const playerName = ref(isDev ? fakeParty[2].name : '')
+const playerName = ref(dev.value ? fakeParty[2].name : '')
 
 function getJobClassification(job: number): Role {
   if ([1, 3, 19, 21, 32, 37].includes(job))
@@ -195,7 +196,7 @@ onMounted(() => {
     if (showTips.value)
       dialogVisible.value = true
 
-    if (isDev && e.party.length === 0)
+    if (dev.value && e.party.length === 0)
       return
     data.value.party = e.party
       .filter(v => v.inParty)
@@ -205,7 +206,7 @@ onMounted(() => {
     updateData()
   })
   addOverlayListener('ChangePrimaryPlayer', (e) => {
-    if (!isDev)
+    if (!dev.value)
       playerName.value = e.charName
   })
   addOverlayListener('BroadcastMessage', (e) => {
@@ -236,75 +237,77 @@ function testParty() {
 </script>
 
 <template>
-  <div @mouseenter="onMouseOver" @mouseleave="onMouseOut">
-    <span v-show="data.party.length <= 1" class="text-white text-shadow-sm text-shadow-color-black">...</span>
-    <vxe-modal
-      v-model="dialogVisible" size="small" :position="{
-        left: 10,
-        top: 10,
-      }" width="90vw" @close="
-        dialogVisible = false;
-        showTips = false;
-      "
-    >
-      <template #title>
-        <span>用法</span>
-      </template>
-      <template #default>
-        <p>使悬浮窗的位置分配对应游戏内的实际位置（D1D2等）</p>
-        <ul>
-          <li>临时：下拉选择框修改。</li>
-          <li>长期：用鼠标拖动职能顺序。</li>
-        </ul>
-      </template>
-    </vxe-modal>
-    <main
-      :style="{
-        width: mouseEnter
-          ? `${18 + +(data.party.find((v) => v.job === 36) ? 1 : 0)}em`
-          : '4em',
-      }"
-    >
-      <div class="players">
-        <transition-group
-          name="animate__animated animate__bounce" enter-active-class="animate__fadeInLeft"
-          leave-active-class="animate__fadeOutLeft"
-        >
-          <section
-            v-for="(member, i) in data.party" v-show="data.party.length > 1
-              && (mouseEnter || member.name === playerName)
-            " :key="member.id" flex="~ nowrap" :style="{
-              opacity: mouseEnter ? 1 : 0.5,
-            }" class="player"
-          >
-            <vxe-select v-model="member.rp" size="mini" class-name="select" @change="handleSelectChange(i)">
-              <vxe-option v-for="(item, index) in getOptions(member.job)" :key="index" :value="item" :label="item" />
-            </vxe-select>
-            <!-- <span class="name" :class="aprilFoolSDay ? 'aprilFoolSDay' : ''"> -->
-            <span class="name">
-              {{ getJobName(member.job) }}
-              {{ mouseEnter ? getPlayerName(member.name) : "" }}
-            </span>
-          </section>
-        </transition-group>
-      </div>
-      <DragJob v-show="mouseEnter" :party="data.party" m-b-1 p-1 @update-sort-arr="updateSortArr" />
-    </main>
-    <div v-if="isDev" style="position: fixed; bottom: 0">
-      <button
-        @click=" {
-          data.party = data.party.filter((v) => v.name === playerName);
-          updateData();
-        }
+  <CommonActWrapper>
+    <div @mouseenter="onMouseOver" @mouseleave="onMouseOut">
+      <span v-show="data.party.length <= 1" class="text-white text-shadow-sm text-shadow-color-black">...</span>
+      <vxe-modal
+        v-model="dialogVisible" size="small" :position="{
+          left: 10,
+          top: 10,
+        }" width="90vw" @close="
+          dialogVisible = false;
+          showTips = false;
         "
       >
-        测试单人
-      </button>
-      <button @click="testParty">
-        测试组队
-      </button>
+        <template #title>
+          <span>用法</span>
+        </template>
+        <template #default>
+          <p>使悬浮窗的位置分配对应游戏内的实际位置（D1D2等）</p>
+          <ul>
+            <li>临时：下拉选择框修改。</li>
+            <li>长期：用鼠标拖动职能顺序。</li>
+          </ul>
+        </template>
+      </vxe-modal>
+      <main
+        :style="{
+          width: mouseEnter
+            ? `${18 + +(data.party.find((v) => v.job === 36) ? 1 : 0)}em`
+            : '4em',
+        }"
+      >
+        <div class="players">
+          <transition-group
+            name="animate__animated animate__bounce" enter-active-class="animate__fadeInLeft"
+            leave-active-class="animate__fadeOutLeft"
+          >
+            <section
+              v-for="(member, i) in data.party" v-show="data.party.length > 1
+                && (mouseEnter || member.name === playerName)
+              " :key="member.id" flex="~ nowrap" :style="{
+                opacity: mouseEnter ? 1 : 0.5,
+              }" class="player"
+            >
+              <vxe-select v-model="member.rp" size="mini" class-name="select" @change="handleSelectChange(i)">
+                <vxe-option v-for="(item, index) in getOptions(member.job)" :key="index" :value="item" :label="item" />
+              </vxe-select>
+              <!-- <span class="name" :class="aprilFoolSDay ? 'aprilFoolSDay' : ''"> -->
+              <span class="name">
+                {{ getJobName(member.job) }}
+                {{ mouseEnter ? getPlayerName(member.name) : "" }}
+              </span>
+            </section>
+          </transition-group>
+        </div>
+        <CommonDragJob v-show="mouseEnter" :party="data.party" m-b-1 p-1 @update-sort-arr="updateSortArr" />
+      </main>
+      <div v-if="dev" style="position: fixed; bottom: 0">
+        <button
+          @click=" {
+            data.party = data.party.filter((v) => v.name === playerName);
+            updateData();
+          }
+          "
+        >
+          测试单人
+        </button>
+        <button @click="testParty">
+          测试组队
+        </button>
+      </div>
     </div>
-  </div>
+  </CommonActWrapper>
 </template>
 
 <style lang="scss">

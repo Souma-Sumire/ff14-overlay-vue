@@ -7,6 +7,7 @@ import type {
 } from '@/types/timeline'
 import { Check } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { useDevMode } from '@/composables/useDevMode'
 import { parseTimeline, useTimelineStore } from '@/store/timeline'
 import {
   addOverlayListener,
@@ -29,11 +30,7 @@ const playerState = useStorage('timeline-condition-2', {
   zoneId: '0',
   jobs: ['NONE'],
 } as ITimelineCondition)
-const params = new URLSearchParams(location.hash.split('?')[1])
-const devMode = ref(
-  window.location.href.match(/localhost/)
-  || params.get('dev') === '1',
-)
+const dev = useDevMode()
 
 const syncLines = computed(() =>
   timelinePageData.loadedTimeline.filter(item => item.sync),
@@ -289,55 +286,57 @@ function init() {
 </script>
 
 <template>
-  <div id="wrapper">
-    <ul
-      v-if="
-        timelinePageData.optionalTimeline.length
-          && runtimeTimeSeconds <= -timelineStore.configValues.preBattle
-      "
-      class="optionalTimelines"
-    >
-      <span style="color: white; text-shadow: 1px 1px 1px black, -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black;">选择一个时间轴</span>
-      <li
-        v-for="(item, index) in timelinePageData.optionalTimeline"
-        :key="index"
-        :class="timelinePageData.selectedOptionalTimeline === item ? 'active' : ''"
-        @click="selectedTimeline(item)"
+  <CommonActWrapper>
+    <div id="wrapper">
+      <ul
+        v-if="
+          timelinePageData.optionalTimeline.length
+            && runtimeTimeSeconds <= -timelineStore.configValues.preBattle
+        "
+        class="optionalTimelines"
       >
-        {{ item.name }}
-        <el-icon v-if="timelinePageData.selectedOptionalTimeline === item">
-          <Check />
-        </el-icon>
-      </li>
-    </ul>
-    <timeline-timeline-show
-      :config="timelineStore.configValues"
-      :lines="timelinePageData.loadedTimeline"
-      :runtime="runtimeTimeSeconds"
-      :show-style="timelineStore.showStyle"
-    />
-    <button v-if="devMode" @click="startTimeline(30)">
-      开始从-30
-    </button>
-    <button v-if="devMode" @click="startTimeline(0)">
-      开始从0
-    </button>
-    <button v-if="devMode" @click="stopTimeline()">
-      团灭
-    </button>
-    <button v-if="devMode" @click="fakeJump(1000)">
-      跳转1000测试
-    </button>
-    <button v-if="devMode" @click="cactbotSay('今天天气真不错', true)">
-      TTS测试
-    </button>
-    <button v-if="devMode" @click="testAlert">
-      弹窗测试
-    </button>
-    <span v-if="devMode" style="color: white; background-color: black">{{
-      runtimeTimeSeconds
-    }}</span>
-  </div>
+        <span style="color: white; text-shadow: 1px 1px 1px black, -1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black;">选择一个时间轴</span>
+        <li
+          v-for="(item, index) in timelinePageData.optionalTimeline"
+          :key="index"
+          :class="timelinePageData.selectedOptionalTimeline === item ? 'active' : ''"
+          @click="selectedTimeline(item)"
+        >
+          {{ item.name }}
+          <el-icon v-if="timelinePageData.selectedOptionalTimeline === item">
+            <Check />
+          </el-icon>
+        </li>
+      </ul>
+      <timeline-timeline-show
+        :config="timelineStore.configValues"
+        :lines="timelinePageData.loadedTimeline"
+        :runtime="runtimeTimeSeconds"
+        :show-style="timelineStore.showStyle"
+      />
+      <button v-if="dev" @click="startTimeline(30)">
+        开始从-30
+      </button>
+      <button v-if="dev" @click="startTimeline(0)">
+        开始从0
+      </button>
+      <button v-if="dev" @click="stopTimeline()">
+        团灭
+      </button>
+      <button v-if="dev" @click="fakeJump(1000)">
+        跳转1000测试
+      </button>
+      <button v-if="dev" @click="cactbotSay('今天天气真不错', true)">
+        TTS测试
+      </button>
+      <button v-if="dev" @click="testAlert">
+        弹窗测试
+      </button>
+      <span v-if="dev" style="color: white; background-color: black">{{
+        runtimeTimeSeconds
+      }}</span>
+    </div>
+  </CommonActwrapper>
 </template>
 
 <style lang="scss">

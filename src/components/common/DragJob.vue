@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { RemovableRef } from '@vueuse/core'
 import type { UseDraggableReturn } from 'vue-draggable-plus'
-import type { Role } from '../../cactbot/types/job'
+import type { Role } from '../../../cactbot/types/job'
 import type { Player } from '@/types/partyPlayer'
 import { ref } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'

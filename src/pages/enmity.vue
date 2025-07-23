@@ -11,9 +11,7 @@ import {
 
 let povCharID = 0
 const party: Ref<Party[]> = ref([])
-const actReady = ref(false)
 const params = useUrlSearchParams('hash')
-const dev = params.dev === '1'
 const noEnmity = ref(false)
 const TANK_JOBS = [
   iconToJobEnum.Paladin,
@@ -27,22 +25,6 @@ const TANK_STATUS_IDS = [
   743, // Dark Knight - Grit
   1833, // Gunbreaker - Royal Guard
 ]
-
-function checkAct(): Promise<void> {
-  if (dev)
-    return Promise.resolve()
-  return new Promise((resolve) => {
-    callOverlayHandler({ call: 'cactbotRequestState' }).then(() => {
-      actReady.value = true
-      resolve()
-    })
-    setTimeout(() => {
-      if (!actReady.value) {
-        checkAct()
-      }
-    }, 3000)
-  })
-}
 
 let intervalTimer: NodeJS.Timeout | undefined
 let timeoutTimer: NodeJS.Timeout | undefined
@@ -178,7 +160,6 @@ const handleChangePrimaryPlayer: EventMap['ChangePrimaryPlayer'] = (e) => {
 }
 
 onMounted(() => {
-  checkAct()
   addOverlayListener('LogLine', handleLogLine)
   addOverlayListener('PartyChanged', handlePartyChanged)
   addOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
@@ -196,10 +177,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <el-card v-if="!(actReady || dev)">
-    <h1>{{ "在 ACT 中添加本页面作为数据统计悬浮窗" }}</h1>
-  </el-card>
-  <strong v-show="noEnmity">没人开盾</strong>
+  <CommonActWrapper>
+    <strong v-show="noEnmity">没人开盾</strong>
+  </CommonActwrapper>
 </template>
 
 <style scoped lang="scss">

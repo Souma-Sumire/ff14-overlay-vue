@@ -56,7 +56,9 @@ function handleLogLine(event: { line: string[] }): void {
 </script>
 
 <template>
-  <h5>{{ simpleMode ? "" : zoneName }}{{ zoneInstanced }}</h5>
+  <CommonActWrapper>
+    <h5>{{ simpleMode ? "" : zoneName }}{{ zoneInstanced }}</h5>
+  </CommonActwrapper>
 </template>
 
 <style lang="scss" scoped>

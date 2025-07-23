@@ -23,7 +23,6 @@ export const useKeigennRecord2Store = defineStore('keigennRecord2', {
         statusCN: parseParams(params.statusCN as string, true), // status显示中文化
       },
       isBrowser: false,
-      isLocalhost: false,
     }
   },
   getters: {
@@ -34,11 +33,10 @@ export const useKeigennRecord2Store = defineStore('keigennRecord2', {
     },
   },
   actions: {
-    recheckIsDev() {
+    checkIsBrowser() {
       this.isBrowser = !window.OverlayPluginApi && !params.OVERLAY_WS && !params.HOST_PORT
-      this.isLocalhost = location.hostname === 'localhost'
       if (this.isBrowser)
-        setTimeout(() => this.recheckIsDev(), 1000)
+        setTimeout(() => this.checkIsBrowser(), 1000)
     },
     formatterName(v: string) {
       return v

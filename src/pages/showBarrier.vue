@@ -115,33 +115,35 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
-    <ul>
-      <li v-for="p in party" :key="p.id">
-        <span v-show="showSettings" m-r-2>{{ p.name }}</span><span
-          :style="
-            p.barrierPercent === 0
-              ? {
-                opacity: 0.25,
-                color: 'white',
-              }
-              : {
-                opacity: 1,
-                color: '#f5da3c',
-              }
-          "
-        >{{ getString(p) }}</span>
-      </li>
-    </ul>
-    <DragJob
-      v-show="showSettings"
-      style="z-index: 10000"
-      :party="party"
-      m-b-1
-      p-1
-      @update-sort-arr="updateSortArr"
-    />
-  </div>
+  <CommonActWrapper>
+    <div>
+      <ul>
+        <li v-for="p in party" :key="p.id">
+          <span v-show="showSettings" m-r-2>{{ p.name }}</span><span
+            :style="
+              p.barrierPercent === 0
+                ? {
+                  opacity: 0.25,
+                  color: 'white',
+                }
+                : {
+                  opacity: 1,
+                  color: '#f5da3c',
+                }
+            "
+          >{{ getString(p) }}</span>
+        </li>
+      </ul>
+      <CommonDragJob
+        v-show="showSettings"
+        style="z-index: 10000"
+        :party="party"
+        m-b-1
+        p-1
+        @update-sort-arr="updateSortArr"
+      />
+    </div>
+  </CommonActWrapper>
 </template>
 
 <style scoped lang="scss">

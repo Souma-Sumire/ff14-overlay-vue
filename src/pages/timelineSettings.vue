@@ -9,10 +9,10 @@ import * as LZString from 'lz-string'
 import moment from 'moment'
 import { useRouter } from 'vue-router'
 
+import { useWebSocket } from '@/composables/useWebSocket'
 import zoneInfo from '@/resources/zoneInfo'
 import { parseTimeline, useTimelineStore } from '@/store/timeline'
 import { copyToClipboard } from '@/utils/clipboard'
-import { useWebSocket } from '@/utils/useWebSocket'
 import Util from '@/utils/util'
 import {
   addOverlayListener,

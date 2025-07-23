@@ -124,219 +124,221 @@ function resetSettings() {
 </script>
 
 <template>
-  <div class="container">
-    <el-header v-show="showSettings" class="settings">
-      <form>
-        宽度:
-        <el-input-number
-          v-model="settings.width"
-          :min="20"
-          :max="1000"
-          size="small"
-          controls-position="right"
-        />
-      </form>
-      <form>显示倒计时: <el-switch v-model="settings.showCountdown" /></form>
-      <form>显示进度条: <el-switch v-model="settings.showProgress" /></form>
-      <form>显示中文: <el-switch v-model="settings.showActionChinese" /></form>
-      <form>显示ID: <el-switch v-model="settings.showActionID" /></form>
-      <form>
-        延迟(ms):
-        <el-input-number
-          v-model="settings.ping"
-          :min="0"
-          :max="10000"
-          size="small"
-          controls-position="right"
-        />
-      </form>
-      <form>
-        保留(ms):
-        <el-input-number
-          v-model="settings.keep"
-          :min="0"
-          :max="100000"
-          size="small"
-          controls-position="right"
-        />
-      </form>
-      <form>
-        进度条偏移X:
-        <el-input-number
-          v-model="settings.offsetProgressX"
-          :min="-1000"
-          :max="1000"
-          size="small"
-        />
-      </form>
-      <form>
-        进度条偏移Y:
-        <el-input-number
-          v-model="settings.offsetProgressY"
-          :min="-1000"
-          :max="1000"
-          size="small"
-          controls-position="right"
-        />
-      </form>
-      <form>
-        倒计时偏移X:
-        <el-input-number
-          v-model="settings.offsetCountdownX"
-          :min="-1000"
-          :max="1000"
-          size="small"
-        />
-      </form>
-      <form>
-        倒计时偏移Y:
-        <el-input-number
-          v-model="settings.offsetCountdownY"
-          :min="-1000"
-          :max="1000"
-          size="small"
-          controls-position="right"
-        />
-      </form>
-      <form>
-        中文偏移X:
-        <el-input-number
-          v-model="settings.offsetActionChineseX"
-          :min="-1000"
-          :max="1000"
-          size="small"
-        />
-      </form>
-      <form>
-        中文偏移Y:
-        <el-input-number
-          v-model="settings.offsetActionChineseY"
-          :min="-1000"
-          :max="1000"
-          size="small"
-          controls-position="right"
-        />
-      </form>
-      <form>
-        ID偏移X:
-        <el-input-number
-          v-model="settings.offsetActionIDX"
-          :min="-1000"
-          :max="1000"
-          size="small"
-        />
-      </form>
-      <form>
-        ID偏移Y:
-        <el-input-number
-          v-model="settings.offsetActionIDY"
-          :min="-1000"
-          :max="1000"
-          size="small"
-          controls-position="right"
-        />
-      </form>
-      <form>
-        倒计时字号(px):
-        <el-input-number
-          v-model="settings.fontSizeCountDown"
-          :min="1"
-          :max="100"
-          size="small"
-          controls-position="right"
-        />
-      </form>
-      <form>
-        中文字号(px):
-        <el-input-number
-          v-model="settings.fontSizeActionName"
-          :min="1"
-          :max="100"
-          size="small"
-          controls-position="right"
-        />
-      </form>
-      <form style="width: 10rem">
-        字体:
-        <el-input
-          v-model="settings.fontFamily"
-          size="small"
-          clearable
-          @clear="settings.fontFamily = 'SmartisanHei'"
-        />
-      </form>
-      <form class="noCSS">
-        <el-select
-          v-model="settings.targetKey"
-          placeholder="Select"
-          size="small"
-          :teleported="false"
-        >
-          <el-option
-            v-for="item in targetOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
+  <CommonActWrapper>
+    <div class="container">
+      <el-header v-show="showSettings" class="settings">
+        <form>
+          宽度:
+          <el-input-number
+            v-model="settings.width"
+            :min="20"
+            :max="1000"
+            size="small"
+            controls-position="right"
           />
-        </el-select>
-      </form>
-      <form class="noCSS">
-        <el-popconfirm
-          :teleported="false"
-          title="确定要重置？"
-          @confirm="resetSettings"
-        >
-          <template #reference>
-            <el-button>重置全部用户设置</el-button>
-          </template>
-        </el-popconfirm>
-      </form>
-    </el-header>
-    <el-main
-      v-show="
-        data.targetCast && now - data.targetCast.overTime + ping < settings.keep
-      "
-      :style="{ fontFamily: settings.fontFamily }"
-    >
-      <div
-        :style="{ fontSize: `${settings.fontSizeCountDown}px` }"
-        class="countdown"
-      >
-        {{
-          Math.max(
-            ((data.targetCast?.overTime ?? 1) - now - ping) / 1000,
-            0,
-          ).toFixed(2)
-        }}
-      </div>
-      <el-progress
-        :percentage="
-          Math.min(
-            ((now - (data.targetCast?.startTime ?? 1) + ping)
-              / (data.targetCast?.castTime ?? 1))
-              * 100,
-            100,
-          )
+        </form>
+        <form>显示倒计时: <el-switch v-model="settings.showCountdown" /></form>
+        <form>显示进度条: <el-switch v-model="settings.showProgress" /></form>
+        <form>显示中文: <el-switch v-model="settings.showActionChinese" /></form>
+        <form>显示ID: <el-switch v-model="settings.showActionID" /></form>
+        <form>
+          延迟(ms):
+          <el-input-number
+            v-model="settings.ping"
+            :min="0"
+            :max="10000"
+            size="small"
+            controls-position="right"
+          />
+        </form>
+        <form>
+          保留(ms):
+          <el-input-number
+            v-model="settings.keep"
+            :min="0"
+            :max="100000"
+            size="small"
+            controls-position="right"
+          />
+        </form>
+        <form>
+          进度条偏移X:
+          <el-input-number
+            v-model="settings.offsetProgressX"
+            :min="-1000"
+            :max="1000"
+            size="small"
+          />
+        </form>
+        <form>
+          进度条偏移Y:
+          <el-input-number
+            v-model="settings.offsetProgressY"
+            :min="-1000"
+            :max="1000"
+            size="small"
+            controls-position="right"
+          />
+        </form>
+        <form>
+          倒计时偏移X:
+          <el-input-number
+            v-model="settings.offsetCountdownX"
+            :min="-1000"
+            :max="1000"
+            size="small"
+          />
+        </form>
+        <form>
+          倒计时偏移Y:
+          <el-input-number
+            v-model="settings.offsetCountdownY"
+            :min="-1000"
+            :max="1000"
+            size="small"
+            controls-position="right"
+          />
+        </form>
+        <form>
+          中文偏移X:
+          <el-input-number
+            v-model="settings.offsetActionChineseX"
+            :min="-1000"
+            :max="1000"
+            size="small"
+          />
+        </form>
+        <form>
+          中文偏移Y:
+          <el-input-number
+            v-model="settings.offsetActionChineseY"
+            :min="-1000"
+            :max="1000"
+            size="small"
+            controls-position="right"
+          />
+        </form>
+        <form>
+          ID偏移X:
+          <el-input-number
+            v-model="settings.offsetActionIDX"
+            :min="-1000"
+            :max="1000"
+            size="small"
+          />
+        </form>
+        <form>
+          ID偏移Y:
+          <el-input-number
+            v-model="settings.offsetActionIDY"
+            :min="-1000"
+            :max="1000"
+            size="small"
+            controls-position="right"
+          />
+        </form>
+        <form>
+          倒计时字号(px):
+          <el-input-number
+            v-model="settings.fontSizeCountDown"
+            :min="1"
+            :max="100"
+            size="small"
+            controls-position="right"
+          />
+        </form>
+        <form>
+          中文字号(px):
+          <el-input-number
+            v-model="settings.fontSizeActionName"
+            :min="1"
+            :max="100"
+            size="small"
+            controls-position="right"
+          />
+        </form>
+        <form style="width: 10rem">
+          字体:
+          <el-input
+            v-model="settings.fontFamily"
+            size="small"
+            clearable
+            @clear="settings.fontFamily = 'SmartisanHei'"
+          />
+        </form>
+        <form class="noCSS">
+          <el-select
+            v-model="settings.targetKey"
+            placeholder="Select"
+            size="small"
+            :teleported="false"
+          >
+            <el-option
+              v-for="item in targetOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </form>
+        <form class="noCSS">
+          <el-popconfirm
+            :teleported="false"
+            title="确定要重置？"
+            @confirm="resetSettings"
+          >
+            <template #reference>
+              <el-button>重置全部用户设置</el-button>
+            </template>
+          </el-popconfirm>
+        </form>
+      </el-header>
+      <el-main
+        v-show="
+          data.targetCast && now - data.targetCast.overTime + ping < settings.keep
         "
-        :stroke-width="8"
-        :indeterminate="false"
-        :show-text="false"
-        color="#fbfff9"
-        class="progress"
-      />
-      <div class="actionID">
-        {{ data.targetCast?.actionId }}({{
-          data.targetCast?.actionId.toString(16).toUpperCase()
-        }})
-      </div>
-      <div
-        :style="{ fontSize: `${settings.fontSizeActionName}px` }"
-        class="actionChinese"
+        :style="{ fontFamily: settings.fontFamily }"
       >
-        {{ data.targetCast?.name }}
-      </div>
-    </el-main>
-  </div>
+        <div
+          :style="{ fontSize: `${settings.fontSizeCountDown}px` }"
+          class="countdown"
+        >
+          {{
+            Math.max(
+              ((data.targetCast?.overTime ?? 1) - now - ping) / 1000,
+              0,
+            ).toFixed(2)
+          }}
+        </div>
+        <el-progress
+          :percentage="
+            Math.min(
+              ((now - (data.targetCast?.startTime ?? 1) + ping)
+                / (data.targetCast?.castTime ?? 1))
+                * 100,
+              100,
+            )
+          "
+          :stroke-width="8"
+          :indeterminate="false"
+          :show-text="false"
+          color="#fbfff9"
+          class="progress"
+        />
+        <div class="actionID">
+          {{ data.targetCast?.actionId }}({{
+            data.targetCast?.actionId.toString(16).toUpperCase()
+          }})
+        </div>
+        <div
+          :style="{ fontSize: `${settings.fontSizeActionName}px` }"
+          class="actionChinese"
+        >
+          {{ data.targetCast?.name }}
+        </div>
+      </el-main>
+    </div>
+  </CommonActwrapper>
 </template>
 
 <style lang="scss" scoped>

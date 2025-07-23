@@ -8,10 +8,10 @@ import {
   Edit,
   Position,
 } from '@element-plus/icons-vue'
+import { useWebSocket } from '@/composables/useWebSocket'
 import { defaultMacro } from '@/resources/macro'
 import zoneInfo from '@/resources/zoneInfo'
 import { useMacroStore } from '@/store/macro'
-import { useWebSocket } from '@/utils/useWebSocket'
 import ContentType from '../../cactbot/resources/content_type'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import 'github-markdown-css/github-markdown-light.css'

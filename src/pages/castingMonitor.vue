@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { useDevMode } from '@/composables/useDevMode'
 import { useCastingMonitorStore } from '@/store/castingMonitor'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
 const castingMonitorStore = useCastingMonitorStore()
-const dev = location.href.includes('localhost')
+const dev = useDevMode()
+
 onMounted(() => {
   addOverlayListener(
     'ChangePrimaryPlayer',
@@ -18,14 +20,7 @@ onMounted(() => {
       ).targetId
     }
   })
-  // startOverlayEvents();
 })
-// const show = ref(false)
-// setInterval(() => {
-//   show.value
-//     = Date.now() - castingMonitorStore.lastPush
-//     < castingMonitorStore.config.duration * 2 * 1000
-// }, 1000)
 
 setInterval(() => {
   castingMonitorStore.cleanUpExpired()
@@ -33,33 +28,35 @@ setInterval(() => {
 </script>
 
 <template>
-  <div class="common-layout">
-    <el-container items-center>
-      <el-header class="header-layout">
-        <casting-monitor-header />
-      </el-header>
-      <el-main>
-        <casting-monitor-main />
-      </el-main>
-    </el-container>
-    <footer v-if="dev">
-      <el-button @click="castingMonitorStore.testParty(true)">
-        虚假小队
-      </el-button>
-      <el-button @click="castingMonitorStore.testParty(false)">
-        单人
-      </el-button>
-      <el-button @click="castingMonitorStore.testAction()">
-        Action
-      </el-button>
+  <CommonActWrapper>
+    <div class="common-layout">
+      <el-container items-center>
+        <el-header class="header-layout">
+          <casting-monitor-header />
+        </el-header>
+        <el-main>
+          <casting-monitor-main />
+        </el-main>
+      </el-container>
+      <footer v-if="dev">
+        <el-button @click="castingMonitorStore.testParty(true)">
+          虚假小队
+        </el-button>
+        <el-button @click="castingMonitorStore.testParty(false)">
+          单人
+        </el-button>
+        <el-button @click="castingMonitorStore.testAction()">
+          Action
+        </el-button>
       <!-- <el-button @click="castingMonitorStore.testItem()">
         Item
       </el-button>
       <el-button @click="castingMonitorStore.testItemHQ()">
         ItemHQ
       </el-button> -->
-    </footer>
-  </div>
+      </footer>
+    </div>
+  </CommonActwrapper>
 </template>
 
 <style lang="scss">

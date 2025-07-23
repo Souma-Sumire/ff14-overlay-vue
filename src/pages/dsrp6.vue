@@ -65,36 +65,38 @@ async function handleLogLine(e: { line: string[] }): Promise<void> {
 </script>
 
 <template>
-  <div id="container">
-    <main>
-      <ul v-if="actionTimeline.show">
-        <li class="li-head">
-          <aside>秒</aside>
-          <h5>邪龙</h5>
-          <h5>圣龙</h5>
-        </li>
-        <li v-for="(second, i) in actionTimeline.data" :key="i" class="li-main">
-          <aside>{{ i }}</aside>
-          <div class="xie">
-            {{ second?.xieHP ?? "" }}%<img
-              v-for="(src, j) in second?.xie"
-              :key="j"
-              :src="src"
-              alt=""
-            >
-          </div>
-          <div class="sheng">
-            {{ second?.shengHP ?? "" }}%<img
-              v-for="(src, j) in second?.sheng"
-              :key="j"
-              :src="src"
-              alt=""
-            >
-          </div>
-        </li>
-      </ul>
-    </main>
-  </div>
+  <CommonActWrapper>
+    <div id="container">
+      <main>
+        <ul v-if="actionTimeline.show">
+          <li class="li-head">
+            <aside>秒</aside>
+            <h5>邪龙</h5>
+            <h5>圣龙</h5>
+          </li>
+          <li v-for="(second, i) in actionTimeline.data" :key="i" class="li-main">
+            <aside>{{ i }}</aside>
+            <div class="xie">
+              {{ second?.xieHP ?? "" }}%<img
+                v-for="(src, j) in second?.xie"
+                :key="j"
+                :src="src"
+                alt=""
+              >
+            </div>
+            <div class="sheng">
+              {{ second?.shengHP ?? "" }}%<img
+                v-for="(src, j) in second?.sheng"
+                :key="j"
+                :src="src"
+                alt=""
+              >
+            </div>
+          </li>
+        </ul>
+      </main>
+    </div>
+  </CommonActwrapper>
 </template>
 
 <style lang="scss">

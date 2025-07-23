@@ -2,11 +2,12 @@
 import type { EventMap } from 'cactbot/types/event'
 import type { RequestBatchRequest } from 'obs-websocket-js'
 import type { Reactive } from 'vue'
-import type { ContentUsedType } from '@/utils/useZone'
+import type { ContentUsedType } from '@/composables/useZone'
 import OBSWebSocket from 'obs-websocket-js'
 import { useI18n } from 'vue-i18n'
+import { useDevMode } from '@/composables/useDevMode'
+import { CONTENT_TYPES, useZone } from '@/composables/useZone'
 import ZoneInfo from '@/resources/zoneInfo'
-import { CONTENT_TYPES, useZone } from '@/utils/useZone'
 import logDefinitions from '../../cactbot/resources/netlog_defs'
 import NetRegexes, { commonNetRegex } from '../../cactbot/resources/netregexes'
 import {
@@ -48,12 +49,11 @@ const userContentSetting = useStorage(
 )
 const isFirstTime = useStorage('obs-is-first-time', true)
 const actReady = ref(false)
-const params = useUrlSearchParams('hash')
-const dev = params.dev === '1'
+const dev = useDevMode()
 const partyLength = ref(1)
 
 function checkWebSocket(): Promise<void> {
-  if (dev)
+  if (dev.value)
     return Promise.resolve()
   return new Promise((resolve) => {
     callOverlayHandler({ call: 'cactbotRequestState' }).then(() => {
@@ -360,7 +360,7 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
 }
 
 function Log(...args: any[]) {
-  if (dev) {
+  if (dev.value) {
     // eslint-disable-next-line no-console
     console.log('[OBS Auto Record]', ...args)
   }
@@ -447,183 +447,185 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="obs-container">
-    <header>
-      <h1>{{ t("OBS Auto Record V2") }}</h1>
-      <LanguageSwitcher />
-    </header>
-    <el-card v-if="!actReady || dev" class="act-not-ready-card">
-      <template #header>
-        <div class="card-header">
-          <span>{{ t("ACT Not Ready") }}</span>
-        </div>
-      </template>
-      <div class="act-not-ready-content">
-        <p>{{ t("overlayTutorial") }}</p>
-      </div>
-    </el-card>
-
-    <main v-if="actReady || dev">
-      <!-- 连接表单 -->
-      <el-card v-if="!obs.status.connected && !dev" class="connection-card">
+  <CommonActWrapper>
+    <div class="obs-container">
+      <header>
+        <h1>{{ t("OBS Auto Record V2") }}</h1>
+        <CommonLanguageSwitcher />
+      </header>
+      <el-card v-if="!actReady || dev" class="act-not-ready-card">
         <template #header>
           <div class="card-header">
-            <span>{{ t("Connect to OBS") }}</span>
+            <span>{{ t("ACT Not Ready") }}</span>
           </div>
         </template>
-        <el-form label-position="top" class="connection-form">
-          <el-form-item :label="t('Port')">
-            <el-input v-model="userConfig.host" :placeholder="t('portPlaceholder')" />
-          </el-form-item>
-          <el-form-item :label="t('Password')">
-            <el-input v-model="userConfig.password" :placeholder="t('passwordPlaceholder')" type="password" />
-          </el-form-item>
-          <el-form-item>
-            <el-button
-              type="primary" class="connect-button" :loading="obs.status.connecting"
-              :disabled="obs.status.connecting || !userConfig.host" @click="obs.connect()"
-            >
-              {{ obs.status.connecting ? t("Connecting") : t("Connect") }}
-            </el-button>
-          </el-form-item>
-        </el-form>
-        <el-divider>{{ t("Instructions") }}</el-divider>
-        <el-alert class="instruction-alert" type="info" :description="t('obsTutorial')" :closable="false" show-icon />
-        <el-alert class="instruction-alert" type="info" :description="t('inputTutorial')" :closable="false" show-icon />
-        <el-alert
-          class="instruction-alert" type="info" :description="t('firewallTutorial')" :closable="false"
-          show-icon
-        />
+        <div class="act-not-ready-content">
+          <p>{{ t("overlayTutorial") }}</p>
+        </div>
       </el-card>
 
-      <!-- 已连接状态 -->
-      <div v-else>
-        <el-alert class="instruction-alert" type="info" :description="t('hideTutorial')" :closable="false" show-icon />
-        <el-card v-if="dev" class="status-card">
+      <main v-if="actReady || dev">
+        <!-- 连接表单 -->
+        <el-card v-if="!obs.status.connected && !dev" class="connection-card">
           <template #header>
             <div class="card-header">
-              <span>{{ t("Connection Status") }}</span>
-              <el-button type="danger" size="small" class="disconnect-button" @click="obs.disconnect()">
-                {{ t("Disconnect") }}
+              <span>{{ t("Connect to OBS") }}</span>
+            </div>
+          </template>
+          <el-form label-position="top" class="connection-form">
+            <el-form-item :label="t('Port')">
+              <el-input v-model="userConfig.host" :placeholder="t('portPlaceholder')" />
+            </el-form-item>
+            <el-form-item :label="t('Password')">
+              <el-input v-model="userConfig.password" :placeholder="t('passwordPlaceholder')" type="password" />
+            </el-form-item>
+            <el-form-item>
+              <el-button
+                type="primary" class="connect-button" :loading="obs.status.connecting"
+                :disabled="obs.status.connecting || !userConfig.host" @click="obs.connect()"
+              >
+                {{ obs.status.connecting ? t("Connecting") : t("Connect") }}
+              </el-button>
+            </el-form-item>
+          </el-form>
+          <el-divider>{{ t("Instructions") }}</el-divider>
+          <el-alert class="instruction-alert" type="info" :description="t('obsTutorial')" :closable="false" show-icon />
+          <el-alert class="instruction-alert" type="info" :description="t('inputTutorial')" :closable="false" show-icon />
+          <el-alert
+            class="instruction-alert" type="info" :description="t('firewallTutorial')" :closable="false"
+            show-icon
+          />
+        </el-card>
+
+        <!-- 已连接状态 -->
+        <div v-else>
+          <el-alert class="instruction-alert" type="info" :description="t('hideTutorial')" :closable="false" show-icon />
+          <el-card v-if="dev" class="status-card">
+            <template #header>
+              <div class="card-header">
+                <span>{{ t("Connection Status") }}</span>
+                <el-button type="danger" size="small" class="disconnect-button" @click="obs.disconnect()">
+                  {{ t("Disconnect") }}
+                </el-button>
+              </div>
+            </template>
+            <div class="status-info">
+              <el-descriptions direction="vertical" :column="1" border>
+                <el-descriptions-item :label="t('Recording')">
+                  {{ obs.status.recording ? t("Yes") : t("No") }}
+                </el-descriptions-item>
+                <el-descriptions-item :label="t('Output Path')">
+                  {{ obs.status.outputPath || t("None") }}
+                </el-descriptions-item>
+              </el-descriptions>
+            </div>
+            <div class="button-container">
+              <el-button
+                :disabled="!obs.status.connected || obs.status.recording" type="primary"
+                @click="obs.startRecord()"
+              >
+                {{ t("Start Record") }}
+              </el-button>
+              <el-button
+                :disabled="!obs.status.connected || !obs.status.recording" type="danger"
+                @click="obs.stopRecord()"
+              >
+                {{ t("Stop Record") }}
+              </el-button>
+              <el-button
+                :disabled="!obs.status.connected || !obs.status.recording" type="warning"
+                @click="obs.splitRecord()"
+              >
+                {{ t("Split Record") }}
+              </el-button>
+              <el-button type="primary" @click="obs.setProfileParameter()">
+                {{ t("Set Recording Name") }}
               </el-button>
             </div>
-          </template>
-          <div class="status-info">
-            <el-descriptions direction="vertical" :column="1" border>
-              <el-descriptions-item :label="t('Recording')">
-                {{ obs.status.recording ? t("Yes") : t("No") }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="t('Output Path')">
-                {{ obs.status.outputPath || t("None") }}
-              </el-descriptions-item>
-            </el-descriptions>
-          </div>
-          <div class="button-container">
-            <el-button
-              :disabled="!obs.status.connected || obs.status.recording" type="primary"
-              @click="obs.startRecord()"
-            >
-              {{ t("Start Record") }}
-            </el-button>
-            <el-button
-              :disabled="!obs.status.connected || !obs.status.recording" type="danger"
-              @click="obs.stopRecord()"
-            >
-              {{ t("Stop Record") }}
-            </el-button>
-            <el-button
-              :disabled="!obs.status.connected || !obs.status.recording" type="warning"
-              @click="obs.splitRecord()"
-            >
-              {{ t("Split Record") }}
-            </el-button>
-            <el-button type="primary" @click="obs.setProfileParameter()">
-              {{ t("Set Recording Name") }}
-            </el-button>
-          </div>
-        </el-card>
-        <el-card class="profile-card">
-          <template #header>
-            <div class="card-header">
-              <span>{{ t("Recording Profile") }}</span>
+          </el-card>
+          <el-card class="profile-card">
+            <template #header>
+              <div class="card-header">
+                <span>{{ t("Recording Profile") }}</span>
+              </div>
+            </template>
+            <div class="profile-info">
+              <el-form label-position="top" class="content-form">
+                <el-form-item :label="t('Record Path')">
+                  <el-input v-model="userConfig.path" :placeholder="t('recordPathPlaceholder')" />
+                  <div class="file-path-explanation">
+                    {{ t("filePathExplanation") }}
+                  </div>
+                </el-form-item>
+                <el-form-item :label="t('Record File Name')">
+                  <el-input v-model="userConfig.fileName" :placeholder="t('recordFileNamePlaceholder')" />
+                  <div class="file-name-explanation">
+                    {{ t("fileNameExplanation") }}
+                  </div>
+                </el-form-item>
+              </el-form>
             </div>
-          </template>
-          <div class="profile-info">
-            <el-form label-position="top" class="content-form">
-              <el-form-item :label="t('Record Path')">
-                <el-input v-model="userConfig.path" :placeholder="t('recordPathPlaceholder')" />
-                <div class="file-path-explanation">
-                  {{ t("filePathExplanation") }}
-                </div>
-              </el-form-item>
-              <el-form-item :label="t('Record File Name')">
-                <el-input v-model="userConfig.fileName" :placeholder="t('recordFileNamePlaceholder')" />
-                <div class="file-name-explanation">
-                  {{ t("fileNameExplanation") }}
-                </div>
-              </el-form-item>
-            </el-form>
-          </div>
-        </el-card>
-        <el-card class="table-card">
-          <template #header>
-            <div class="card-header">
-              <span>{{ t("User Content Settings") }}</span>
-            </div>
-          </template>
-          <el-table :data="userContentSetting" style="width: 100%" :border="true" stripe>
-            <el-table-column prop="type" :label="t('Type')" min-width="120" fixed>
-              <template #default="scope">
-                <span>{{ t(scope.row.type) }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column :label="t('Start When')" align="center">
-              <el-table-column :label="t('When Party')" align="center" min-width="110">
+          </el-card>
+          <el-card class="table-card">
+            <template #header>
+              <div class="card-header">
+                <span>{{ t("User Content Settings") }}</span>
+              </div>
+            </template>
+            <el-table :data="userContentSetting" style="width: 100%" :border="true" stripe>
+              <el-table-column prop="type" :label="t('Type')" min-width="120" fixed>
                 <template #default="scope">
-                  <el-input-number
-                    v-model="scope.row.partyLength" :min="1" :max="8" style="width: 85px" size="small"
-                    class="party-length-input"
-                  />
+                  <span>{{ t(scope.row.type) }}</span>
                 </template>
               </el-table-column>
-              <el-table-column prop="enter" :label="t('Enter Zone')" align="center" min-width="95">
-                <template #default="scope">
-                  <el-switch v-model="scope.row.enter" />
-                </template>
+              <el-table-column :label="t('Start When')" align="center">
+                <el-table-column :label="t('When Party')" align="center" min-width="110">
+                  <template #default="scope">
+                    <el-input-number
+                      v-model="scope.row.partyLength" :min="1" :max="8" style="width: 85px" size="small"
+                      class="party-length-input"
+                    />
+                  </template>
+                </el-table-column>
+                <el-table-column prop="enter" :label="t('Enter Zone')" align="center" min-width="95">
+                  <template #default="scope">
+                    <el-switch v-model="scope.row.enter" />
+                  </template>
+                </el-table-column>
+                <el-table-column prop="countdown" :label="t('CountDown')" align="center" min-width="95">
+                  <template #default="scope">
+                    <el-switch v-model="scope.row.countdown" />
+                  </template>
+                </el-table-column>
+                <el-table-column prop="combatStart" :label="t('CombatStart')" align="center" min-width="95">
+                  <template #default="scope">
+                    <el-switch v-model="scope.row.combatStart" />
+                  </template>
+                </el-table-column>
               </el-table-column>
-              <el-table-column prop="countdown" :label="t('CountDown')" align="center" min-width="95">
-                <template #default="scope">
-                  <el-switch v-model="scope.row.countdown" />
-                </template>
+              <el-table-column :label="t('End When')" align="center">
+                <el-table-column prop="combatEnd" :label="t('CombatEnd')" align="center" min-width="95">
+                  <template #default="scope">
+                    <el-switch v-model="scope.row.combatEnd" />
+                  </template>
+                </el-table-column>
+                <el-table-column prop="wipe" :label="t('Wipe')" align="center" min-width="95">
+                  <template #default="scope">
+                    <el-switch v-model="scope.row.wipe" />
+                  </template>
+                </el-table-column>
+                <el-table-column prop="countdown" :label="t('CountDownCancel')" align="center" min-width="95">
+                  <template #default="scope">
+                    <el-switch v-model="scope.row.countdownCancel" />
+                  </template>
+                </el-table-column>
               </el-table-column>
-              <el-table-column prop="combatStart" :label="t('CombatStart')" align="center" min-width="95">
-                <template #default="scope">
-                  <el-switch v-model="scope.row.combatStart" />
-                </template>
-              </el-table-column>
-            </el-table-column>
-            <el-table-column :label="t('End When')" align="center">
-              <el-table-column prop="combatEnd" :label="t('CombatEnd')" align="center" min-width="95">
-                <template #default="scope">
-                  <el-switch v-model="scope.row.combatEnd" />
-                </template>
-              </el-table-column>
-              <el-table-column prop="wipe" :label="t('Wipe')" align="center" min-width="95">
-                <template #default="scope">
-                  <el-switch v-model="scope.row.wipe" />
-                </template>
-              </el-table-column>
-              <el-table-column prop="countdown" :label="t('CountDownCancel')" align="center" min-width="95">
-                <template #default="scope">
-                  <el-switch v-model="scope.row.countdownCancel" />
-                </template>
-              </el-table-column>
-            </el-table-column>
-          </el-table>
-        </el-card>
-      </div>
-    </main>
-  </div>
+            </el-table>
+          </el-card>
+        </div>
+      </main>
+    </div>
+  </CommonActwrapper>
 </template>
 
 <style scoped lang="scss">

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { EventMap, PluginCombatantState } from 'cactbot/types/event'
-import { ElMessage } from 'element-plus'
-import { useZone } from '@/utils/useZone'
+import { useZone } from '@/composables/useZone'
 import NetRegexes from '../../cactbot/resources/netregexes'
 import {
   addOverlayListener,
@@ -9,7 +8,6 @@ import {
   removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
 
-const actReady = ref(false)
 const searchTargetName = ref('')
 const searchTargets = ref<PluginCombatantState[]>([])
 const currentTargetIndex = ref(0)
@@ -63,8 +61,10 @@ function drawRadar() {
   const search = searchTargets.value[currentTargetIndex.value]
   const primary = combatants.value.find(c => c.Name === primaryPlayer.value)
   if (!search) {
-    searchTargetName.value = ''
-    ElMessage('找不到目标')
+    ctx.clearRect(0, 0, size.value, size.value)
+    ctx.fillStyle = '#fff'
+    ctx.font = '20px Arial'
+    ctx.fillText('找不到目标', centerX.value - 100, centerY.value - 50)
     return
   }
   if (!primary)
@@ -164,25 +164,12 @@ async function getCombatants() {
 
 async function update() {
   await getCombatants()
-  if (zoneType.value === 'Pvp' || !searchTargetName.value || !primaryPlayer.value || !actReady.value) {
+  if (zoneType.value === 'Pvp' || !searchTargetName.value || !primaryPlayer.value) {
     searchTargetName.value = ''
     return
   }
   drawRadar()
   setTimeout(update, 100)
-}
-
-function checkAct(): Promise<void> {
-  return new Promise((resolve) => {
-    callOverlayHandler({ call: 'cactbotRequestState' }).then(() => {
-      actReady.value = true
-      resolve()
-    })
-    setTimeout(() => {
-      if (!actReady.value)
-        checkAct()
-    }, 3000)
-  })
 }
 
 const handleLogLine: EventMap['LogLine'] = (e) => {
@@ -219,7 +206,6 @@ onMounted(() => {
   ctx = canvas.value?.getContext('2d') ?? null
   if (ctx)
     ctx.scale(devicePixelRatio.value, devicePixelRatio.value)
-  checkAct()
   addOverlayListener('LogLine', handleLogLine)
   addOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
   window.addEventListener('resize', handleResize)
@@ -235,57 +221,56 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="radar-container">
-    <el-alert
-      v-if="unlocked"
-      class="el-alert-info"
-      type="info"
-      :closable="false"
-      show-icon
-      title="宏命令：/e find 目标名称"
-      description="名称允许部分匹配"
-    />
-    <el-card v-if="!actReady" class="activation-prompt">
-      <h1>在 ACT 中添加本页面作为数据统计悬浮窗</h1>
-    </el-card>
-    <div v-show="actReady && searchTargetName" class="radar-wrapper">
-      <button
-        v-if="searchTargets.length > 1"
-        class="nav-arrow left-arrow"
-        :disabled="searchTargets.length <= 1"
-        aria-label="上一目标"
-        @click="currentTargetIndex = (currentTargetIndex - 1 + searchTargets.length) % searchTargets.length"
-      >
-        ←
-      </button>
-
-      <button
-        v-if="searchTargets.length > 1"
-        class="nav-arrow right-arrow"
-        :disabled="searchTargets.length <= 1"
-        aria-label="下一目标"
-        @click="currentTargetIndex = (currentTargetIndex + 1) % searchTargets.length"
-      >
-        →
-      </button>
-
-      <div class="target-header">
-        <span class="target-name">{{ searchTargets[currentTargetIndex]?.Name ?? '' }}</span>
-        <button class="cancel-btn" @click="searchTargetName = ''; searchTargets = [];">
-          取消
+  <CommonActWrapper>
+    <div class="radar-container">
+      <el-alert
+        v-if="unlocked"
+        class="el-alert-info"
+        type="info"
+        :closable="false"
+        show-icon
+        title="宏命令：/e find 目标名称"
+        description="名称允许部分匹配"
+      />
+      <div v-show="searchTargetName" class="radar-wrapper">
+        <button
+          v-if="searchTargets.length > 1"
+          class="nav-arrow left-arrow"
+          :disabled="searchTargets.length <= 1"
+          aria-label="上一目标"
+          @click="currentTargetIndex = (currentTargetIndex - 1 + searchTargets.length) % searchTargets.length"
+        >
+          ←
         </button>
-      </div>
-      <div class="radar-canvas-container">
-        <canvas
-          ref="canvas"
-          class="radar-canvas"
-          :width="size * devicePixelRatio"
-          :height="size * devicePixelRatio"
-          :style="{ width: `${size}px`, height: `${size}px` }"
-        />
+
+        <button
+          v-if="searchTargets.length > 1"
+          class="nav-arrow right-arrow"
+          :disabled="searchTargets.length <= 1"
+          aria-label="下一目标"
+          @click="currentTargetIndex = (currentTargetIndex + 1) % searchTargets.length"
+        >
+          →
+        </button>
+
+        <div class="target-header">
+          <span class="target-name">{{ searchTargets[currentTargetIndex]?.Name ?? '' }}</span>
+          <button class="cancel-btn" @click="searchTargetName = ''; searchTargets = [];">
+            取消
+          </button>
+        </div>
+        <div class="radar-canvas-container">
+          <canvas
+            ref="canvas"
+            class="radar-canvas"
+            :width="size * devicePixelRatio"
+            :height="size * devicePixelRatio"
+            :style="{ width: `${size}px`, height: `${size}px` }"
+          />
+        </div>
       </div>
     </div>
-  </div>
+  </CommonActwrapper>
 </template>
 
 <style scoped lang="scss">

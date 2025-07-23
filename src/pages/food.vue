@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import type { EventMap } from 'cactbot/types/event'
 import type { Food, Players } from '@/types/food'
-import { demoFoodData } from '@/components/food/demoFoodData'
-import { useZone } from '@/utils/useZone'
+import { useZone } from '@/composables/useZone'
+import { demoFoodData } from '@/mock/demoFoodData'
 import Util from '@/utils/util'
 import NetRegexes from '../../cactbot/resources/netregexes'
-import {
-  addOverlayListener,
-  callOverlayHandler,
-  removeOverlayListener,
+import { addOverlayListener, removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
 import mealsItemActionData0 from '../resources/mealsItemActionData0.json'
 
@@ -16,9 +13,6 @@ const { zoneType } = useZone()
 const party: Ref<{ id: string, name: string, jobName: string }[]> = ref([])
 const effectData = new Map<string, Food>()
 const uiData: Ref<Players[]> = useStorage('souma-food-ui-data', [])
-const actReady = ref(false)
-const params = useUrlSearchParams('hash')
-const dev = params.dev === '1'
 const demo = ref(document.getElementById('unlocked')?.style?.display === 'flex')
 const orderedUiData = computed(() => demo.value ? demoFoodData : uiData.value.slice().sort((a, b) => getOrder(a) - getOrder(b)))
 const display = computed(
@@ -30,22 +24,6 @@ const display = computed(
     )
     || demo.value,
 )
-
-function checkAct(): Promise<void> {
-  if (dev)
-    return Promise.resolve()
-  return new Promise((resolve) => {
-    callOverlayHandler({ call: 'cactbotRequestState' }).then(() => {
-      actReady.value = true
-      resolve()
-    })
-    setTimeout(() => {
-      if (!actReady.value) {
-        checkAct()
-      }
-    }, 3000)
-  })
-}
 
 const netRegexs = {
   gainsEffect: NetRegexes.gainsEffect({ effectId: '30' }),
@@ -162,7 +140,6 @@ function getOrder(item: Players) {
 }
 
 onMounted(() => {
-  checkAct()
   addOverlayListener('LogLine', handleLogLine)
   addOverlayListener('PartyChanged', handlePartyChanged)
 
@@ -186,46 +163,45 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="container" :class="{ demo }">
-    <el-card v-if="!(actReady || dev)" class="act-not-ready">
-      <h1>{{ "在 ACT 中添加本页面作为数据统计悬浮窗" }}</h1>
-    </el-card>
-    <div v-else-if="display" class="party-list">
-      <p
-        v-for="item in orderedUiData"
-        :key="item.id"
-        class="party-member"
-        :style="{ order: getOrder(item) }"
-      >
-        <span class="job-name">{{ item.jobName }}</span>
+  <CommonActWrapper>
+    <div class="container" :class="{ demo }">
+      <div v-if="display" class="party-list">
+        <p
+          v-for="item in orderedUiData"
+          :key="item.id"
+          class="party-member"
+          :style="{ order: getOrder(item) }"
+        >
+          <span class="job-name">{{ item.jobName }}</span>
 
-        <span class="food-status">
-          <template v-if="item.food">
-            <span class="food-name-wrapper">
-              <span class="food-params">{{
-                `(${item.food.level})${getFoodParams(item.food.params, item.food.hq)}`
-              }}</span>
-              <span class="food-name">{{ item.food.name }}</span>
-              <i class="xiv hq" :class="{ invisible: !item.food.hq }" />
-            </span>
-            <span
-              class="food-timer"
-              :class="[item.food.durationSeconds <= 60 ? 'danger' : (item.food.durationSeconds <= 600 ? 'warning' : 'normal')]"
-            >
-              {{ getText(item.food.durationSeconds) }}
-            </span>
-          </template>
-          <template v-else>
-            <span class="food-name-wrapper" />
-            <span class="food-timer no-food">无食物</span>
-          </template>
+          <span class="food-status">
+            <template v-if="item.food">
+              <span class="food-name-wrapper">
+                <span class="food-params">{{
+                  `(${item.food.level})${getFoodParams(item.food.params, item.food.hq)}`
+                }}</span>
+                <span class="food-name">{{ item.food.name }}</span>
+                <i class="xiv hq" :class="{ invisible: !item.food.hq }" />
+              </span>
+              <span
+                class="food-timer"
+                :class="[item.food.durationSeconds <= 60 ? 'danger' : (item.food.durationSeconds <= 600 ? 'warning' : 'normal')]"
+              >
+                {{ getText(item.food.durationSeconds) }}
+              </span>
+            </template>
+            <template v-else>
+              <span class="food-name-wrapper" />
+              <span class="food-timer no-food">无食物</span>
+            </template>
+          </span>
+        </p>
+        <span v-if="demo" class="demo-text">
+          当前为演示数据，锁定后将显示真实数据（仅在小队人数>=6，且至少有1人吃食物时显示）
         </span>
-      </p>
-      <span v-if="demo" class="demo-text">
-        当前为演示数据，锁定后将显示真实数据（仅在小队人数>=6，且至少有1人吃食物时显示）
-      </span>
+      </div>
     </div>
-  </div>
+  </CommonActwrapper>
 </template>
 
 <style scoped lang="scss">

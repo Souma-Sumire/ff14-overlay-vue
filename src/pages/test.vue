@@ -1,7 +1,7 @@
 <!-- eslint-disable no-console -->
 <script setup lang="ts">
 import type { EventMap } from '../../cactbot/types/event'
-import { useWebSocket } from '@/utils/useWebSocket'
+import { useWebSocket } from '@/composables/useWebSocket'
 import NetRegexes from '../../cactbot/resources/netregexes'
 import {
   addOverlayListener,

@@ -4,11 +4,12 @@ import type { HuntEntry } from '../../cactbot/resources/hunt'
 import type { WayMarkObj } from '@/types/PostNamazu'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import LZString from 'lz-string'
+import { useDevMode } from '@/composables/useDevMode'
+import { useWebSocket } from '@/composables/useWebSocket'
 import Aetherytes from '@/resources/aetherytes.json'
 import Map from '@/resources/map.json'
 import zoneInfo from '@/resources/zoneInfo'
 import { getPixelCoordinates, Vector2 } from '@/utils/mapCoordinates'
-import { useWebSocket } from '@/utils/useWebSocket'
 import HuntData from '../../cactbot/resources/hunt'
 import { addOverlayListener, callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 import sonar from '../../cactbot/resources/sounds/freesound/sonar.webm'
@@ -174,7 +175,7 @@ const INSTANCE_STRING = ''
 const waymarkKeys: (keyof WayMarkObj)[] = ['One', 'Two', 'Three', 'Four', 'A', 'B', 'C', 'D'] as const
 const IMG_SCALE = IMG_SHOW_SIZE / IMG_RAW_SIZE
 const playerInstance = ref(-1)
-const DEV_MODE = window.location.hostname === 'localhost' as const
+const dev = useDevMode()
 const nameToHuntEntry: Record<string, HuntEntry> = {}
 const mergedByOtherNodes = new Set<string>()
 const gameVersion = useStorage('souma-hunt-game-version', '7.0' as GameVersion)
@@ -926,7 +927,7 @@ onMounted(async () => {
   addOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
   ElMessageBox.close()
   await cleanUpExpiredData()
-  if (DEV_MODE) {
+  if (dev.value) {
     ElMessage.success('处于开发模式下，默认选择1线')
     playerInstance.value = 1
     savedInstance.value = 1
@@ -1014,7 +1015,7 @@ onMounted(async () => {
       </el-row>
     </el-col>
     <el-row class="map-container" flex="~ wrap" m-t-1>
-      <el-row v-if="DEV_MODE">
+      <el-row v-if="dev">
         DEV：
         <el-button type="warning" @click="testMonster">
           添加怪物
@@ -1029,7 +1030,7 @@ onMounted(async () => {
     </el-row>
     <div class="map-container" flex="~ wrap">
       <div v-for="(m, i) in zoneListUsed" :key="m" class="map-info" flex="~ col" position-relative>
-        <h3 class="map-title" :style="{ width: `${IMG_SHOW_SIZE}px` }" position-absolute mb-0 ml-2 mt-1 p0>
+        <h3 class="map-title" :style="{ width: `${IMG_SHOW_SIZE}px` }" ml-2 position-absolute mb-0 mt-1 p0>
           {{ getMapName(m, i) }}
         </h3>
         <ul class="options" position-absolute mt-1 p0 right-0 top-0 mr-2>
