@@ -451,7 +451,10 @@ onUnmounted(() => {
     <div class="obs-container">
       <header>
         <h1>{{ t("OBS Auto Record V2") }}</h1>
-        <CommonLanguageSwitcher />
+        <div class="button-container">
+          <CommonThemeToggle />
+          <CommonLanguageSwitcher />
+        </div>
       </header>
       <el-card v-if="!actReady || dev" class="act-not-ready-card">
         <template #header>
@@ -637,7 +640,6 @@ onUnmounted(() => {
   max-width: 900px;
   margin: 0 auto;
   padding: 20px;
-  background-color: #fff;
 }
 
 header {
@@ -649,7 +651,6 @@ header {
 
 h1 {
   font-size: 24px;
-  color: #303133;
 }
 
 .act-not-ready-card,
@@ -710,7 +711,6 @@ h1 {
 .file-path-explanation,
 .file-name-explanation {
   font-size: 12px;
-  color: #909399;
 }
 
 .act-not-ready-card,

@@ -207,13 +207,12 @@ addOverlayListener('LogLine', onLogLine)
             自助测试页
           </h1>
         </div>
-        <div style="text-align: right">
-          <p style="margin: 0; font-size: 15px">
-            <i class="el-icon-time" /> 系统时间: {{ systemTime || "无数据" }}
-          </p>
+        <div style="text-align: right" flex="~ gap-2">
+          <i class="el-icon-time" /> 系统时间: {{ systemTime || "无数据" }}
           <el-button type="primary" size="small" @click="tts(`测试TTS${new Date().getTime().toString().slice(-4)}`)">
-            <i class="el-icon-microphone" /> 测试TTS
+            测试TTS
           </el-button>
+          <CommonThemeToggle />
         </div>
       </div>
 
@@ -336,7 +335,6 @@ addOverlayListener('LogLine', onLogLine)
 <style scoped lang="scss">
 body {
   font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
-  background-color: #f5f7fa;
   margin: 0;
   padding: 20px;
   color: #333;
@@ -345,7 +343,6 @@ body {
 .container {
   max-width: 1280px;
   margin: auto;
-  background: white;
   border-radius: 8px;
   padding: 16px 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -381,12 +378,10 @@ body {
 
 .event-card.success {
   border-left: 3px solid #67c23a;
-  background-color: #f0fff4;
 }
 
 .event-card.danger {
   border-left: 3px solid #f56c6c;
-  background-color: #fff0f0;
 }
 
 .card-title {
@@ -428,7 +423,6 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 6px 10px;
-  background: #f8f8f8;
   border-radius: 4px;
   border-left: 4px solid #409eff;
 }

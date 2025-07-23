@@ -667,6 +667,7 @@ init()
         </el-space>
 
         <el-space>
+          <CommonThemeToggle />
           <el-button
             color="#626aef"
             style="color: white"
@@ -1014,7 +1015,6 @@ init()
 
 :deep(.editing-row) {
   font-weight: bold;
-  filter: brightness(90%);
 }
 
 :deep(.editor-dialog-content){

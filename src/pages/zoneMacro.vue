@@ -129,7 +129,7 @@ onMounted(() => {
           v-for="(macro, index) in macroStore.data.zoneId[macroStore.selectZone]" :key="index" shadow="hover"
           class="main-box-card"
         >
-          <p v-show="!macro.Editable" m-b-2 m-t-2 font-bold v-html="macro.Name" />
+          <p v-show="!macro.Editable" font-bold m-b-2 m-t-2 v-html="macro.Name" />
           <el-input v-show="macro.Editable" v-model="macro.Name" size="small" placeholder="宏标题" />
           <div v-if="'Text' in macro">
             <article v-if="!macro.Editable">
@@ -263,6 +263,7 @@ onMounted(() => {
       </el-space>
     </el-main>
     <div class="menu" :class="useType">
+      <CommonThemeToggle />
       <el-button v-if="useType === 'overlay'" size="small" w-20 @click="macroStore.toggleShow()">
         隐藏页面
       </el-button>
@@ -281,7 +282,7 @@ onMounted(() => {
       <el-button type="danger" size="small" w-20 @click="macroStore.resetAllData()">
         恢复全部
       </el-button>
-      <form v-if="useType === 'overlay'" style="font-size: 12px;background-color: rgba(255, 255,255,0.5)">
+      <form v-if="useType === 'overlay'" style="font-size: 12px;">
         <el-switch v-model="hideOnStartup" size="small" />默认缩小
       </form>
       <i v-if="useType === 'overlay'" class="vxe-icon-arrow-down">菜单</i>
@@ -303,18 +304,9 @@ onMounted(() => {
   height: 5px;
 }
 
-::-webkit-scrollbar-track {
-  background-color: rgba(51, 51, 51, 1);
-}
-
 ::-webkit-scrollbar-thumb {
   height: 30px;
   border-radius: 5px;
-  background-color: rgba(216, 216, 216, 0.4);
-}
-
-::-webkit-scrollbar-thumb:active {
-  background-color: rgba(160, 160, 160, 1);
 }
 
 html,
@@ -327,7 +319,6 @@ body {
 }
 
 .elcontainer {
-  background-color: white;
   height: 100%;
   width: 100%;
 }
@@ -351,7 +342,6 @@ body {
 }
 
 .menu {
-  background: transparent;
   width: auto;
   height: auto;
   margin: 0.2rem;

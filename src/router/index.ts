@@ -41,12 +41,10 @@ for (const route of router.getRoutes()) {
 
 router.afterEach((to, from) => {
   document.title = to.meta.title?.toString() ?? ''
-  if (from.name === 'startPages' && to.name === 'zoneMacro') {
-    // 刷新页面，否则不会建立WS连接
-    window.location.reload()
-  }
-  if (to.name === 'startPages' && from.name !== undefined && to.name !== from.name) {
-    // 防止子页面的style污染主页的样式
+  if (
+    (from.name === 'startPages' && to.name !== 'startPages')
+    || (to.name === 'startPages' && from.name && from.name !== 'startPages')
+  ) {
     window.location.reload()
   }
 })

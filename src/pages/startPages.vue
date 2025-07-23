@@ -8,9 +8,11 @@ interface Menu {
   comment?: string
   src?: string
 }
+
 function generateUrl(url: string) {
-  return new URL(`../assets/screenshots/${url}`, import.meta.url)
+  return new URL(`../assets/screenshots/${url}`, import.meta.url).href
 }
+
 const tableData: Menu[] = [
   {
     title: '国际服汉化补丁',
@@ -54,7 +56,6 @@ const tableData: Menu[] = [
     type: '悬浮窗/网页',
     path: 'keigennRecord2?scale=1&opacity=0.8&showHeader=true&showIcon=true&showName=false&abbrId=true&iconType=3&anonymous=true&replaceWithYou=false&parseAA=true&parseDoT=false&minimize=false&actionCN=true&statusCN=true',
     comment: `可以添加到 ACT 悬浮窗中用于实时监控。也可以在浏览器中打开，导入日志分析过往记录。
-
 URL地址栏参数说明：
 scale: 缩放倍率，默认1
 opacity: 悬浮窗透明度，0为完全透明，1为完全不透明，默认0.8
@@ -79,7 +80,7 @@ statusCN: status显示中文化，默认true
     path: 'timeline',
     src: 'timeline.webp',
     comment: `自定义的时间轴提醒，支持FFLogs一键抄轴。
-    <a href="/ff14-overlay-vue/#/timelineSettings?OVERLAY_WS=ws://127.0.0.1:10501/ws">编辑时间轴请在浏览器中打开这里</a>（曾经的小齿轮）`,
+<a href="/ff14-overlay-vue/#/timelineSettings?OVERLAY_WS=ws://127.0.0.1:10501/ws">编辑时间轴请在浏览器中打开这里</a>（曾经的小齿轮）`,
   },
   {
     title: '[网页] 全副本发宏/标点',
@@ -87,7 +88,7 @@ statusCN: status显示中文化，默认true
     path: 'zoneMacro?OVERLAY_WS=ws://127.0.0.1:10501/ws',
     src: 'zoneMacro.webp',
     comment:
-      '需开启 ACT.OverlayPlugin WSServer\n 喊话、标点需<a href="https://github.com/Natsukage/PostNamazu">鲶鱼精邮差</a>',
+      '需开启 ACT.OverlayPlugin WSServer\n喊话、标点需<a href="https://github.com/Natsukage/PostNamazu">鲶鱼精邮差</a>',
   },
   {
     title: '[悬浮窗] 团辅监控',
@@ -201,39 +202,49 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
     path: 'aether',
   },
 ]
+
+const tableDataWithSrc = tableData.map((item) => {
+  if (item.src) {
+    item.src = generateUrl(item.src)
+  }
+  return item
+})
 </script>
 
 <template>
   <div class="common-layout">
     <el-container class="main-container">
       <el-header>
-        <h1 class="main-title">
-          主页导航
-        </h1>
+        <div class="header-content">
+          <h1 class="main-title">
+            主页导航
+          </h1>
+          <CommonThemeToggle />
+        </div>
       </el-header>
 
       <el-main>
-        <el-card class="contact-card">
+        <el-card class="contact-card" shadow="hover">
           <template #header>
             <div class="card-header">
               <span>联系我</span>
             </div>
           </template>
           <div class="contact-info">
-            <a
+            <el-link
               href="https://github.com/Souma-Sumire"
               target="_blank"
-              class="contact-link"
+              type="primary"
             >
               Github
-            </a>
-            <a
+            </el-link>
+            <el-link
               href="https://space.bilibili.com/1443740"
               target="_blank"
-              class="contact-link"
+              type="primary"
             >
               Bilibili
-            </a>
+            </el-link>
             <span class="qq-group">QQ群: 231937107</span>
             <span class="warning-text">
               其余账号均为山寨，请勿相信任何信息
@@ -244,17 +255,8 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
           </div>
         </el-card>
 
-        <vxe-table
-          :data="tableData"
-          stripe
-          border
-          :row-config="{ isHover: true }"
-          :scroll-x="{ enabled: true }"
-          :fit="true"
-          :auto-resize="true"
-          class="custom-table"
-        >
-          <vxe-column width="250" title="名称" class-name="column-title">
+        <el-table :data="tableDataWithSrc" stripe border style="width: 100%">
+          <el-table-column prop="title" label="名称" width="250">
             <template #default="{ row }">
               <router-link
                 v-if="!row.path.startsWith('http')"
@@ -263,31 +265,34 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
               >
                 {{ row.title }}
               </router-link>
-              <a v-else :href="row.path" target="_blank" class="table-link">{{ row.title }}
-              </a>
+              <el-link v-else :href="row.path" target="_blank" type="primary">
+                {{ row.title }}
+              </el-link>
             </template>
-          </vxe-column>
-          <vxe-column width="400" title="预览" class-name="column-title">
-            <template #default="{ row: { src } }">
-              <img
-                v-if="src"
-                v-lazy="generateUrl(src).pathname"
-                class="preview-image"
-              >
-              <i v-if="!src">无</i>
-            </template>
-          </vxe-column>
-          <vxe-column
-            field="comment"
-            title="描述"
-            min-width="600"
-            class-name="column-title"
-          >
+          </el-table-column>
+
+          <el-table-column label="预览" width="300">
             <template #default="{ row }">
-              <span v-html="row.comment" />
+              <el-image
+                v-if="row.src"
+                :src="row.src"
+                fit="cover"
+                :preview-src-list="[row.src]"
+                preview-teleported
+                hide-on-click-modal
+                lazy
+                loading="lazy"
+              />
+              <i v-else>无</i>
             </template>
-          </vxe-column>
-        </vxe-table>
+          </el-table-column>
+
+          <el-table-column prop="comment" label="描述" min-width="600">
+            <template #default="{ row }">
+              <div class="comment-text" v-html="row.comment" />
+            </template>
+          </el-table-column>
+        </el-table>
       </el-main>
     </el-container>
   </div>
@@ -300,8 +305,8 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
 }
 
 .common-layout {
-  background-color: #f5f7fa;
-  color: #333;
+  background-color: var(--el-bg-color);
+  color: var(--el-text-color-primary);
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   line-height: 1.6;
 }
@@ -313,6 +318,7 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
 
 .contact-card {
   margin-bottom: 30px;
+  background-color: var(--el-bg-color);
 
   .card-header {
     font-weight: bold;
@@ -324,18 +330,6 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
   align-items: center;
   gap: 20px;
   flex-wrap: wrap;
-}
-
-.contact-link {
-  text-decoration: none;
-  color: #409eff;
-  font-weight: bold;
-  transition: color 0.3s;
-
-  &:hover {
-    color: #66b1ff;
-    text-decoration: underline;
-  }
 }
 
 .qq-group {
@@ -352,33 +346,32 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
   color: #909399;
 }
 
-.custom-table {
-  background-color: #fff;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-}
-
-.column-title {
-  background-color: #f0f2f5;
-  font-weight: bold;
-}
-
 .table-link {
-  color: #409eff;
+  color: var(--el-color-primary);
   text-decoration: none;
   transition: color 0.3s;
 
   &:hover {
-    color: #66b1ff;
+    color: var(--el-color-primary-light-3);
     text-decoration: underline;
   }
 }
 
-img {
-  object-fit: contain;
-  max-width: 100%;
-  width: auto;
-  height: auto;
+.preview-image {
+  max-width: 360px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.comment-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
 }
 </style>

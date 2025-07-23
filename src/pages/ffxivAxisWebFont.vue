@@ -2,10 +2,14 @@
 
 <template>
   <div class="container">
+    <span style="position: absolute; top: 2em; right: 2em;">
+      <CommonThemeToggle />
+    </span>
     <h1>Icons in FFXIV Axis font</h1>
     <a href="https://github.com/thewakingsands/ffxiv-axis-font-icons">
       数据来自@thewakingsands/ffxiv-axis-font-icons
     </a>
+
     <table>
       <thead>
         <tr>
@@ -1360,9 +1364,7 @@ td, th {
   padding: 4px 8px;
   line-height: 1.5;
 }
-tr:hover {
-  background: #f1f1f1;
-}
+
 td:first-child{
   text-align:center
 }

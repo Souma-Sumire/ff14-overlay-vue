@@ -961,6 +961,9 @@ onMounted(async () => {
     <h3 v-if="!wsConnected">
       无法连接到ACTWebSocket，找怪功能无法工作，但你可以导入导出数据。
     </h3>
+    <span style="position: absolute; top: 1em; right: 1em; z-index: 22;">
+      <CommonThemeToggle />
+    </span>
     <el-col>
       <el-row>
         <el-form inline>

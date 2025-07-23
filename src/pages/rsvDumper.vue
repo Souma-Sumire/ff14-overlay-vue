@@ -102,10 +102,13 @@ function byteArrayToHex(bytes: Uint8Array, bytesPerLine = 16): string {
 </script>
 
 <template>
-  <div class="p-6 bg-gray-900 min-h-screen text-gray-200">
-    <h1 class="text-2xl font-bold mb-4 text-white">
+  <div class="p-6 min-h-screen">
+    <h1 class="text-2xl font-bold mb-4">
       FFXIV RSV Dumper
     </h1>
+    <span style="position: absolute; top: 2em; right: 2em;">
+      <CommonThemeToggle />
+    </span>
 
     <el-upload
       drag
@@ -167,57 +170,11 @@ function byteArrayToHex(bytes: Uint8Array, bytesPerLine = 16): string {
 :global(body) {
   padding: 0;
   margin: 0;
-  background: #111827;
-  color: white;
-}
-
-:global(.el-table) {
-  background: #1e293b;
-  color: #e2e8f0;
-}
-
-:global(.el-table th) {
-  background: #334155;
-  color: #f1f5f9;
-}
-
-:global(.el-dialog) {
-  background: #1e293b;
-  color: #e2e8f0;
-}
-
-:global(.el-button--primary) {
-  background-color: #3b82f6;
-  border-color: #3b82f6;
-}
-
-:global(.el-upload) {
-  background: #1e293b;
-  border: 2px dashed #475569;
-  color: #cbd5e1;
 }
 
 .upload-box {
-  background: #1f2937;
-  border: 2px dashed #4b5563;
   padding: 20px;
   border-radius: 8px;
-  color: #9ca3af;
   text-align: center;
-}
-
-.el-table {
-  background: #111827;
-  color: #e5e7eb;
-}
-
-.el-table th {
-  background: #1f2937;
-  color: #f3f4f6;
-}
-
-.el-dialog {
-  background: #1f2937;
-  color: #e5e7eb;
 }
 </style>
