@@ -1,7 +1,7 @@
 import path from 'node:path'
 import vue from '@vitejs/plugin-vue'
 import jsx from '@vitejs/plugin-vue-jsx'
-import { presetAttributify, presetIcons, presetUno } from 'unocss'
+import { presetAttributify, presetIcons, presetWind3 } from 'unocss'
 import Unocss from 'unocss/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
@@ -85,7 +85,7 @@ export default defineConfig({
       deleteOriginFile: false,
     }),
     Unocss({
-      presets: [presetUno(), presetAttributify(), presetIcons()],
+      presets: [presetWind3(), presetIcons(), presetAttributify()],
     }),
     Pages(),
     createStyleImportPlugin({
