@@ -17,12 +17,14 @@ const uiData: Ref<Players[]> = useStorage('souma-food-ui-data', [])
 const actReady = ref(false)
 const params = useUrlSearchParams('hash')
 const dev = params.dev === '1'
-const demo = ref((document.getElementById('unlocked')?.style?.display === 'flex') || dev)
+const demo = ref(
+  document.getElementById('unlocked')?.style?.display === 'flex' || dev,
+)
 const display = computed(
   () =>
     (party.value.length >= 6
       && uiData.value.filter(v => v.food).length >= 1)
-    || (demo.value),
+    || demo.value,
 )
 
 function checkAct(): Promise<void> {
@@ -168,7 +170,7 @@ onUnmounted(() => {
 
 <template>
   <div class="container" :class="{ demo }">
-    <el-card v-if="!(actReady || dev)">
+    <el-card v-if="!(actReady || dev)" class="act-not-ready">
       <h1>{{ "在 ACT 中添加本页面作为数据统计悬浮窗" }}</h1>
     </el-card>
     <div v-else-if="display" class="party-list">
@@ -389,6 +391,19 @@ body {
 @media (max-width: 8em), (max-height: 8em) {
   .demo-text {
     display: none;
+  }
+}
+.act-not-ready {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  border: 1px solid #444;
+  h1 {
+    color: #eee;
+    font-size: 1.2rem;
+    margin: 0;
   }
 }
 </style>
