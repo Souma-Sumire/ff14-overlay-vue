@@ -6,7 +6,7 @@ export const demoFoodData: Players[] = [
     name: '1',
     jobName: '白魔',
     food: {
-      durationSeconds: 3594,
+      durationSeconds: 14,
       expiredMillisecond: 1753140603605,
       name: '奶酪莫雷特',
       level: 740,
@@ -238,4 +238,4 @@ export const demoFoodData: Players[] = [
       hq: true,
     },
   },
-]
+].sort((a, b) => (a.food?.durationSeconds ?? 0) - (b.food?.durationSeconds ?? 0))

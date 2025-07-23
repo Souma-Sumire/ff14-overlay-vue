@@ -19,9 +19,8 @@ const uiData: Ref<Players[]> = useStorage('souma-food-ui-data', [])
 const actReady = ref(false)
 const params = useUrlSearchParams('hash')
 const dev = params.dev === '1'
-const demo = ref(
-  document.getElementById('unlocked')?.style?.display === 'flex' || dev,
-)
+const demo = ref(document.getElementById('unlocked')?.style?.display === 'flex')
+const orderedUiData = computed(() => demo.value ? demoFoodData : uiData.value.slice().sort((a, b) => getOrder(a) - getOrder(b)))
 const display = computed(
   () =>
     (
@@ -53,28 +52,26 @@ const netRegexs = {
   losesEffect: NetRegexes.losesEffect({ effectId: '30' }),
 }
 
-function updateFriendlyCombatants() {
-  if (demo.value) {
-    uiData.value = demoFoodData.sort(
-      (a, b) => (a.food?.durationSeconds ?? 0) - (b.food?.durationSeconds ?? 0),
-    )
-    return
-  }
-  for (const [id, food] of effectData.entries()) {
-    if (food.expiredMillisecond < Date.now()) {
-      effectData.delete(id)
+function fullUpdateFriendlyCombatants() {
+  uiData.value = party.value.map(v => ({ ...v, food: effectData.get(v.id) }))
+}
+
+function tickUpdateDuration() {
+  const now = Date.now()
+  let needUpdate = false
+
+  for (const [_, food] of effectData) {
+    const remaining = Math.floor((food.expiredMillisecond - now) / 1000)
+
+    if (food.durationSeconds !== remaining) {
+      food.durationSeconds = remaining
+      needUpdate = true
     }
-    else {
-      food.durationSeconds = Math.floor(
-        (food.expiredMillisecond - Date.now()) / 1000,
-      )
-    }
   }
-  uiData.value = party.value
-    .map(v => ({ ...v, food: effectData.get(v.id) }))
-    .sort(
-      (a, b) => (a.food?.durationSeconds ?? 0) - (b.food?.durationSeconds ?? 0),
-    )
+
+  if (needUpdate) {
+    fullUpdateFriendlyCombatants()
+  }
 }
 
 const handleLogLine: EventMap['LogLine'] = (e) => {
@@ -95,14 +92,15 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
         hq: id >= 10000,
         level: Number(data0.Level),
       })
-      updateFriendlyCombatants()
+
+      fullUpdateFriendlyCombatants()
     }
   }
   else if (e.line[0] === '30') {
     const matches = netRegexs.losesEffect.exec(e.rawLine)
     if (matches && matches.groups) {
       effectData.delete(matches.groups.targetId)
-      updateFriendlyCombatants()
+      fullUpdateFriendlyCombatants()
     }
   }
 }
@@ -115,6 +113,7 @@ const handlePartyChanged: EventMap['PartyChanged'] = (e) => {
       jobName: Util.nameToFullName(Util.jobEnumToJob(v.job)).simple2,
     }
   })
+  fullUpdateFriendlyCombatants()
 }
 
 const replaceMap: Record<string, string> = {
@@ -149,21 +148,34 @@ function getFoodParams(params: Food['params'], hq: boolean): string {
   // return p.map(v => `${v.Params} +${v['Value{HQ}']}%（上限${v['Max{HQ}']})`).join('<br>')
 }
 
-function getMinutes(seconds: number): string {
+function getText(seconds: number): string {
+  if (seconds < 60)
+    return `${seconds}秒`
   const m = Math.floor(seconds / 60)
-  return m > 59 ? '>1小时' : `${m}分钟`
+  return m >= 60 ? '>1小时' : `${m}分钟`
+}
+
+function getOrder(item: Players) {
+  if (!item.food)
+    return 9999
+  return item.food.durationSeconds
 }
 
 onMounted(() => {
   checkAct()
   addOverlayListener('LogLine', handleLogLine)
   addOverlayListener('PartyChanged', handlePartyChanged)
-  updateFriendlyCombatants()
+
+  fullUpdateFriendlyCombatants()
+
   setInterval(() => {
-    updateFriendlyCombatants()
+    if (!demo.value)
+      tickUpdateDuration()
   }, 1_000)
+
   document.addEventListener('onOverlayStateUpdate', (e) => {
     demo.value = e?.detail?.isLocked === false
+    fullUpdateFriendlyCombatants()
   })
 })
 
@@ -179,7 +191,12 @@ onUnmounted(() => {
       <h1>{{ "在 ACT 中添加本页面作为数据统计悬浮窗" }}</h1>
     </el-card>
     <div v-else-if="display" class="party-list">
-      <p v-for="item in uiData" :key="item.id" class="party-member">
+      <p
+        v-for="item in orderedUiData"
+        :key="item.id"
+        class="party-member"
+        :style="{ order: getOrder(item) }"
+      >
         <span class="job-name">{{ item.jobName }}</span>
 
         <span class="food-status">
@@ -193,9 +210,9 @@ onUnmounted(() => {
             </span>
             <span
               class="food-timer"
-              :class="[item.food.durationSeconds <= 600 ? 'warning' : 'normal']"
+              :class="[item.food.durationSeconds <= 60 ? 'danger' : (item.food.durationSeconds <= 600 ? 'warning' : 'normal')]"
             >
-              {{ getMinutes(item.food.durationSeconds) }}
+              {{ getText(item.food.durationSeconds) }}
             </span>
           </template>
           <template v-else>
@@ -360,6 +377,9 @@ onUnmounted(() => {
   width: 4em;
   text-align: right;
 
+  &.danger {
+    color: #ff6b6b;
+  }
   &.normal {
     color: #6bff6b;
   }
