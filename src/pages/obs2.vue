@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import type { EventMap } from 'cactbot/types/event'
 import type { RequestBatchRequest } from 'obs-websocket-js'
-// import { VxeUI } from 'vxe-table'
 import type { Reactive } from 'vue'
+import type { ContentUsedType } from '@/utils/useZone'
 import OBSWebSocket from 'obs-websocket-js'
 import { useI18n } from 'vue-i18n'
 import ZoneInfo from '@/resources/zoneInfo'
-import ContentType from '../../cactbot/resources/content_type'
+import { CONTENT_TYPES, useZone } from '@/utils/useZone'
 import logDefinitions from '../../cactbot/resources/netlog_defs'
 import NetRegexes, { commonNetRegex } from '../../cactbot/resources/netregexes'
 import {
@@ -33,7 +33,9 @@ type ConditionType
     | 'countdown'
     | 'countdownCancel'
     | 'wipe'
-type ContentUsedType = (typeof CONTENT_TYPES)[number]
+
+const { zoneType } = useZone()
+
 const userConfig = useStorage(
   'obs-user-config',
   { host: 4455, password: '', path: '', fileName: '' },
@@ -48,10 +50,7 @@ const isFirstTime = useStorage('obs-is-first-time', true)
 const actReady = ref(false)
 const params = useUrlSearchParams('hash')
 const dev = params.dev === '1'
-const playerInfo = ref({
-  zone: {} as (typeof ZoneInfo)[number],
-  partyLength: 1,
-})
+const partyLength = ref(1)
 
 function checkWebSocket(): Promise<void> {
   if (dev)
@@ -75,28 +74,6 @@ const REGEXES: Record<string, RegExp> = {
   countdownCancel: NetRegexes.countdownCancel(),
   wipe: commonNetRegex.wipe,
 } as const
-
-const CONTENT_TYPES = [
-  'Savage', // 零式
-  'Extreme', // 歼殛战
-  'Chaotic', // 破灭战
-  'Ultimate', // 绝境战
-  'OccultCrescent', // 新月岛
-  'Dungeons', // 四人副本
-  'Raids', // 大型任务
-  'Trials', // 讨伐任务
-  'VCDungeonFinder', // 多变迷宫
-  'DeepDungeons', // 深层迷宫
-  'Guildhests', // 行会令
-  'DisciplesOfTheLand', // 出海垂钓、云冠群岛
-  'Eureka', // 尤雷卡
-  'SocietyQuests', // 宇宙探索
-  'GrandCompany', // 金蝶游乐场
-  'QuestBattles', // 任务剧情
-  'TreasureHunt', // 挖宝
-  'Pvp', // PVP
-  'Default', // 其他
-] as const
 
 const DEFAULT_ENABLE_SETTINGS = {
   enter: false,
@@ -337,7 +314,6 @@ const handleChangeZone: EventMap['ChangeZone'] = (e) => {
   if (zoneInfo === undefined) {
     return
   }
-  playerInfo.value.zone = zoneInfo
   checkCondition('enter')
 }
 
@@ -383,51 +359,6 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
   }
 }
 
-function getZoneType(zoneInfo: (typeof ZoneInfo)[number]): (typeof CONTENT_TYPES)[number] {
-  const contentType = zoneInfo.contentType
-  const zoneNameFr = zoneInfo.name?.fr
-  const zoneNameEn = zoneInfo.name?.en
-
-  switch (contentType) {
-    case ContentType.ChaoticAllianceRaid:
-      return 'Chaotic'
-    case ContentType.UltimateRaids:
-      return 'Ultimate'
-    case ContentType.Pvp:
-      return 'Pvp'
-    case ContentType.Dungeons:
-      return 'Dungeons'
-    case ContentType.DeepDungeons:
-      return 'DeepDungeons'
-    case ContentType.VCDungeonFinder:
-      return 'VCDungeonFinder'
-    case ContentType.Trials:
-      if (zoneNameFr?.includes('(extrême)'))
-        return 'Extreme'
-      return 'Trials'
-    case ContentType.Raids:
-      if (zoneNameEn?.includes('(Savage)'))
-        return 'Savage'
-      return 'Raids'
-    case ContentType.DisciplesOfTheLand:
-      return 'DisciplesOfTheLand'
-    case ContentType.Eureka:
-      return 'Eureka'
-    case ContentType.GrandCompany:
-      return 'GrandCompany'
-    case ContentType.QuestBattles:
-      return 'QuestBattles'
-    case ContentType.TreasureHunt:
-      return 'TreasureHunt'
-    case ContentType.SocietyQuests:
-      return 'SocietyQuests'
-    case ContentType.OccultCrescent:
-      return 'OccultCrescent'
-    default:
-      return 'Default'
-  }
-}
-
 function Log(...args: any[]) {
   if (dev) {
     // eslint-disable-next-line no-console
@@ -437,11 +368,11 @@ function Log(...args: any[]) {
 
 function checkCondition(condition: ConditionType) {
   Log('checkCondition', condition)
-  const zoneType = getZoneType(playerInfo.value.zone)
-  const rule = userContentSetting.value.find(item => item.type === zoneType)
+
+  const rule = userContentSetting.value.find(item => item.type === zoneType.value)
 
   if (!rule) {
-    console.error('Rule not found for zone type:', zoneType)
+    console.error('Rule not found for zone type:', zoneType.value)
     return
   }
 
@@ -450,7 +381,7 @@ function checkCondition(condition: ConditionType) {
     Log('Condition not met:', condition)
     return
   }
-  Log('Condition met:', condition, 'for zone type:', zoneType)
+  Log('Condition met:', condition, 'for zone type:', zoneType.value)
 
   if (rule.enter === false && condition === 'enter' && obs.status.recording) {
     // 上一次录制战斗通关，则这次切换场地（且不需要切割）时结束录制。
@@ -462,7 +393,7 @@ function checkCondition(condition: ConditionType) {
     case 'enter':
     case 'countdown':
     case 'combatStart':
-      if (playerInfo.value.partyLength < rule.partyLength) {
+      if (partyLength.value < rule.partyLength) {
         // 如果当前玩家人数小于设置的最小人数，则不进行录制。
         return
       }
@@ -496,7 +427,7 @@ function checkCondition(condition: ConditionType) {
 
 const handlePartyChanged: EventMap['PartyChanged'] = (ev) => {
   Log('Party changed:', ev)
-  playerInfo.value.partyLength = ev.party.map(v => v.inParty)?.length || 1
+  partyLength.value = ev.party.map(v => v.inParty)?.length || 1
 }
 
 onMounted(async () => {

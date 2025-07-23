@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import type { EventMap, PluginCombatantState } from 'cactbot/types/event'
 import { ElMessage } from 'element-plus'
-import ZoneInfo from '@/resources/zoneInfo'
-import ContentType from '../../cactbot/resources/content_type'
+import { useZone } from '@/utils/useZone'
 import NetRegexes from '../../cactbot/resources/netregexes'
 import {
   addOverlayListener,
@@ -17,7 +16,6 @@ const currentTargetIndex = ref(0)
 const primaryPlayer = ref('')
 const combatants = ref<PluginCombatantState[]>([])
 const netRegexs = { echo: NetRegexes.echo({ line: 'find\\s*(?<target>.+)' }) }
-const isPvp = ref(false)
 const canvas = useTemplateRef<HTMLCanvasElement>('canvas')
 let ctx: CanvasRenderingContext2D | null = null
 const devicePixelRatio = ref(window.devicePixelRatio || 1)
@@ -25,6 +23,7 @@ const size = ref(Math.min(window.innerWidth, window.innerHeight) - 80)
 const detectionRadius = computed(() => size.value / 2 - 20)
 const distanceScale = 0.1
 const unlocked = ref(document.getElementById('unlocked')?.style?.display === 'flex')
+const { zoneType } = useZone()
 
 const colors = {
   radarRing: '#0f0',
@@ -165,7 +164,7 @@ async function getCombatants() {
 
 async function update() {
   await getCombatants()
-  if (isPvp.value || !searchTargetName.value || !primaryPlayer.value || !actReady.value) {
+  if (zoneType.value === 'Pvp' || !searchTargetName.value || !primaryPlayer.value || !actReady.value) {
     searchTargetName.value = ''
     return
   }
@@ -203,10 +202,6 @@ const handleChangePrimaryPlayer: EventMap['ChangePrimaryPlayer'] = (e) => {
   primaryPlayer.value = e.charName
 }
 
-const handleChangeZone: EventMap['ChangeZone'] = (e) => {
-  isPvp.value = ZoneInfo[e.zoneID]?.contentType === ContentType.Pvp
-}
-
 function handleResize() {
   size.value = Math.min(window.innerWidth, window.innerHeight) - 80
   devicePixelRatio.value = window.devicePixelRatio || 1
@@ -227,7 +222,6 @@ onMounted(() => {
   checkAct()
   addOverlayListener('LogLine', handleLogLine)
   addOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
-  addOverlayListener('ChangeZone', handleChangeZone)
   window.addEventListener('resize', handleResize)
   document.addEventListener('onOverlayStateUpdate', handleOverlayStateUpdate)
 })
@@ -235,7 +229,6 @@ onMounted(() => {
 onUnmounted(() => {
   removeOverlayListener('LogLine', handleLogLine)
   removeOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
-  removeOverlayListener('ChangeZone', handleChangeZone)
   window.removeEventListener('resize', handleResize)
   document.removeEventListener('onOverlayStateUpdate', handleOverlayStateUpdate)
 })

@@ -2,6 +2,7 @@
 import type { EventMap } from 'cactbot/types/event'
 import type { Food, Players } from '@/types/food'
 import { demoFoodData } from '@/components/food/demoFoodData'
+import { useZone } from '@/utils/useZone'
 import Util from '@/utils/util'
 import NetRegexes from '../../cactbot/resources/netregexes'
 import {
@@ -11,6 +12,7 @@ import {
 } from '../../cactbot/resources/overlay_plugin_api'
 import mealsItemActionData0 from '../resources/mealsItemActionData0.json'
 
+const { zoneType } = useZone()
 const party: Ref<{ id: string, name: string, jobName: string }[]> = ref([])
 const effectData = new Map<string, Food>()
 const uiData: Ref<Players[]> = useStorage('souma-food-ui-data', [])
@@ -22,8 +24,11 @@ const demo = ref(
 )
 const display = computed(
   () =>
-    (party.value.length >= 6
-      && uiData.value.filter(v => v.food).length >= 1)
+    (
+      zoneType.value !== 'Pvp'
+      && party.value.length >= 6
+      && uiData.value.filter(v => v.food).length >= 1
+    )
     || demo.value,
 )
 
@@ -103,7 +108,7 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
 }
 
 const handlePartyChanged: EventMap['PartyChanged'] = (e) => {
-  party.value = e.party.map((v) => {
+  party.value = e.party.filter(v => v.inParty).map((v) => {
     return {
       id: v.id,
       name: v.name,
