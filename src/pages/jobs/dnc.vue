@@ -375,14 +375,12 @@ const type = 'style'
   </component>
 </template>
 
-<style>
-body {
+<style scoped lang="scss">
+:global(body) {
   padding: 0;
   margin: 0;
 }
-</style>
 
-<style scoped lang="scss">
 * {
   user-select: none !important;
 }

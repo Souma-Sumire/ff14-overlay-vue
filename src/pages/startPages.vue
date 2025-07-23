@@ -86,7 +86,8 @@ statusCN: status显示中文化，默认true
     type: '网页',
     path: 'zoneMacro?OVERLAY_WS=ws://127.0.0.1:10501/ws',
     src: 'zoneMacro.webp',
-    comment: '需开启 ACT.OverlayPlugin WSServer\n 喊话、标点需<a href="https://github.com/Natsukage/PostNamazu">鲶鱼精邮差</a>',
+    comment:
+      '需开启 ACT.OverlayPlugin WSServer\n 喊话、标点需<a href="https://github.com/Natsukage/PostNamazu">鲶鱼精邮差</a>',
   },
   {
     title: '[悬浮窗] 团辅监控',
@@ -106,7 +107,8 @@ tuanfuTTS: 是否开启团辅TTS，默认true
     title: '[悬浮窗] 技能监控',
     type: '悬浮窗',
     path: 'https://souma.diemoe.net/dist/teamWatch.html',
-    comment: '可以实现对大部分技能的CD监控。\n现已进入维护阶段，不再新增特性。\n不支持“释放某技能时减少某技能N秒冷却”的特性。\n老用户如果有6.0的缓存，更新7.0之后用会有问题，请在设置页清除一次数据。',
+    comment:
+      '可以实现对大部分技能的CD监控。\n现已进入维护阶段，不再新增特性。\n不支持“释放某技能时减少某技能N秒冷却”的特性。\n老用户如果有6.0的缓存，更新7.0之后用会有问题，请在设置页清除一次数据。',
     src: 'teamWatch.webp',
   },
   {
@@ -218,10 +220,18 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
             </div>
           </template>
           <div class="contact-info">
-            <a href="https://github.com/Souma-Sumire" target="_blank" class="contact-link">
+            <a
+              href="https://github.com/Souma-Sumire"
+              target="_blank"
+              class="contact-link"
+            >
               Github
             </a>
-            <a href="https://space.bilibili.com/1443740" target="_blank" class="contact-link">
+            <a
+              href="https://space.bilibili.com/1443740"
+              target="_blank"
+              class="contact-link"
+            >
               Bilibili
             </a>
             <span class="qq-group">QQ群: 231937107</span>
@@ -235,24 +245,44 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
         </el-card>
 
         <vxe-table
-          :data="tableData" stripe border :row-config="{ isHover: true }" :scroll-x="{ enabled: true }"
-          :fit="true" :auto-resize="true" class="custom-table"
+          :data="tableData"
+          stripe
+          border
+          :row-config="{ isHover: true }"
+          :scroll-x="{ enabled: true }"
+          :fit="true"
+          :auto-resize="true"
+          class="custom-table"
         >
           <vxe-column width="250" title="名称" class-name="column-title">
             <template #default="{ row }">
-              <router-link v-if="!(row.path.startsWith('http'))" :to="row.path" class="table-link">
+              <router-link
+                v-if="!row.path.startsWith('http')"
+                :to="row.path"
+                class="table-link"
+              >
                 {{ row.title }}
               </router-link>
-              <a v-else :href="row.path" target="_blank" class="table-link">{{ row.title }} </a>
+              <a v-else :href="row.path" target="_blank" class="table-link">{{ row.title }}
+              </a>
             </template>
           </vxe-column>
           <vxe-column width="400" title="预览" class-name="column-title">
             <template #default="{ row: { src } }">
-              <img v-if="src" v-lazy="generateUrl(src).pathname" class="preview-image">
+              <img
+                v-if="src"
+                v-lazy="generateUrl(src).pathname"
+                class="preview-image"
+              >
               <i v-if="!src">无</i>
             </template>
           </vxe-column>
-          <vxe-column field="comment" title="描述" min-width="600" class-name="column-title">
+          <vxe-column
+            field="comment"
+            title="描述"
+            min-width="600"
+            class-name="column-title"
+          >
             <template #default="{ row }">
               <span v-html="row.comment" />
             </template>
@@ -263,17 +293,15 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
   </div>
 </template>
 
-<style>
-body {
+<style scoped lang="scss">
+:global(body) {
   margin: 0;
 }
-</style>
 
-<style lang="scss" scoped>
 .common-layout {
   background-color: #f5f7fa;
   color: #333;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   line-height: 1.6;
 }
 
@@ -299,7 +327,7 @@ body {
 
 .contact-link {
   text-decoration: none;
-  color: #409EFF;
+  color: #409eff;
   font-weight: bold;
   transition: color 0.3s;
 
@@ -311,12 +339,12 @@ body {
 
 .qq-group {
   font-weight: bold;
-  color: #67C23A;
+  color: #67c23a;
 }
 
 .warning-text {
   font-weight: bold;
-  color: #F56C6C;
+  color: #f56c6c;
 }
 
 .info-text {
@@ -336,7 +364,7 @@ body {
 }
 
 .table-link {
-  color: #409EFF;
+  color: #409eff;
   text-decoration: none;
   transition: color 0.3s;
 

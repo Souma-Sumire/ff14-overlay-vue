@@ -695,13 +695,11 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style>
-::-webkit-scrollbar {
+<style scoped lang="scss">
+:global(:-webkit-scrollbar) {
   display: none;
 }
-</style>
 
-<style scoped>
 .obs-container {
   max-width: 900px;
   margin: 0 auto;

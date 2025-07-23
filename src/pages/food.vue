@@ -206,8 +206,15 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style>
-body {
+<style scoped lang="scss">
+@import url(../css/ffxiv-axis-font-icons.css);
+
+.xiv,
+.ffxiv {
+  font-family: "FFXIV";
+}
+
+:global(body) {
   background-color: transparent;
   margin: 0;
   padding: 2px;
@@ -215,17 +222,8 @@ body {
   line-height: 1.2;
 }
 
-::-webkit-scrollbar {
+:global(::-webkit-scrollbar) {
   display: none;
-}
-</style>
-
-<style scoped lang="scss">
-@import url(../css/ffxiv-axis-font-icons.css);
-
-.xiv,
-.ffxiv {
-  font-family: "FFXIV";
 }
 
 .container {

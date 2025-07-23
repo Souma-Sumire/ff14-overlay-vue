@@ -1112,18 +1112,16 @@ onMounted(async () => {
   </div>
 </template>
 
-<style>
-html {
+<style scoped lang='scss'>
+:global(html) {
   overflow: -moz-scrollbars-none;
   -ms-overflow-style: none;
 }
 
-html::-webkit-scrollbar {
-  display: none;
+:global(html::-webkit-scrollbar){
+    display: none;
 }
-</style>
 
-<style scoped lang='scss'>
 .menu {
   display: flex;
   flex-wrap: nowrap;
