@@ -8,7 +8,7 @@ const actReady = useActReady()
   <el-card v-if="!actReady" class="act-not-ready">
     <h1> 在 ACT 中添加本页面作为数据统计悬浮窗</h1>
   </el-card>
-  <div v-else>
+  <div v-show="actReady">
     <slot />
   </div>
 </template>

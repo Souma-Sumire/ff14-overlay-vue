@@ -56,15 +56,13 @@ function updateSearchTargets() {
 }
 
 function drawRadar() {
-  if (!ctx)
-    return
+  if (!ctx) {
+    throw new Error('canvas context is null')
+  }
   const search = searchTargets.value[currentTargetIndex.value]
   const primary = combatants.value.find(c => c.Name === primaryPlayer.value)
   if (!search) {
     ctx.clearRect(0, 0, size.value, size.value)
-    ctx.fillStyle = '#fff'
-    ctx.font = '20px Arial'
-    ctx.fillText('找不到目标', centerX.value - 100, centerY.value - 50)
     return
   }
   if (!primary)
@@ -254,7 +252,7 @@ onUnmounted(() => {
         </button>
 
         <div class="target-header">
-          <span class="target-name">{{ searchTargets[currentTargetIndex]?.Name ?? '' }}</span>
+          <span class="target-name">{{ searchTargets[currentTargetIndex]?.Name ?? '【未找到目标】' }}</span>
           <button class="cancel-btn" @click="searchTargetName = ''; searchTargets = [];">
             取消
           </button>
