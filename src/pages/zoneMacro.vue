@@ -70,7 +70,7 @@ const usedZoneInfo = [
   ...preSortZoneInfo.filter(v => v.contentType === undefined || !showContentTypes.includes(v.contentType)),
 ]
 
-const { useType } = useWebSocket({ allowClose: true, addWsParam: false })
+useWebSocket({ allowClose: false, addWsParam: true })
 
 onMounted(() => {
   addOverlayListener('ChangeZone', macroStore.handleChangeZone)
@@ -92,11 +92,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <i
-    v-show="!macroStore.show" class="vxe-icon-search-zoom-in"
-    style="position: fixed; top: 0; right: 0; color: white; cursor: pointer" @click="macroStore.toggleShow()"
-  />
-  <el-container v-show="macroStore.show" top-0 p-0 m-0 absolute left-0 rd-1 class="elcontainer">
+  <el-container v-show="macroStore.show" p-0 top-0 m-0 absolute left-0 rd-1 class="elcontainer">
     <el-header flex="~ wrap gap1" height="auto" class="elheader">
       <el-space>
         <el-button type="primary" size="small" :icon="Position" @click="macroStore.positioning()">
@@ -112,7 +108,7 @@ onMounted(() => {
           />
         </el-select>
       </el-space>
-      <el-space :class="useType === 'overlay' ? 'fastEntrance' : ''">
+      <el-space>
         <el-button-group flex="~ ! wrap">
           <el-button
             v-for="(entrance, index) in macroStore.fastEntrance" :key="index" bg plain color="rgb(24,34,44)"
@@ -262,11 +258,8 @@ onMounted(() => {
         </el-card>
       </el-space>
     </el-main>
-    <div class="menu" :class="useType">
+    <div class="menu">
       <CommonThemeToggle />
-      <el-button v-if="useType === 'overlay'" size="small" w-20 @click="macroStore.toggleShow()">
-        隐藏页面
-      </el-button>
       <el-button type="success" size="small" w-20 @click="macroStore.newMacro()">
         新增宏
       </el-button>
@@ -282,10 +275,6 @@ onMounted(() => {
       <el-button type="danger" size="small" w-20 @click="macroStore.resetAllData()">
         恢复全部
       </el-button>
-      <form v-if="useType === 'overlay'" style="font-size: 12px;">
-        <el-switch v-model="hideOnStartup" size="small" />默认缩小
-      </form>
-      <i v-if="useType === 'overlay'" class="vxe-icon-arrow-down">菜单</i>
     </div>
   </el-container>
 </template>
@@ -354,26 +343,6 @@ body {
   top: 0;
   right: 0;
   align-items: flex-end;
-
-  &.overlay {
-    transform: translateY(calc(-100% + 1rem));
-    opacity: 0.5;
-    z-index: 100;
-
-    &:hover {
-      transform: translateY(0);
-      opacity: 1;
-
-      [class*="vxe-"] {
-        opacity: 0;
-      }
-    }
-  }
-
-  [class*="vxe-"] {
-    text-align: center;
-    font-size: 14px;
-  }
 }
 
 .main-box-card {

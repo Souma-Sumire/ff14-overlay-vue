@@ -4,15 +4,11 @@ import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 import { createI18n } from 'vue-i18n'
 import VueLazyload from 'vue-lazyload'
-import VxeUI from 'vxe-pc-ui'
-import VXETable from 'vxe-table'
 import App from './App.vue'
 import en from './locales/en.json'
 import ja from './locales/ja.json'
 import zhCn from './locales/zhCn.json'
 import router from './router'
-import 'vxe-table/lib/style.css'
-import 'vxe-pc-ui/lib/style.css'
 import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import 'virtual:uno.css'
@@ -54,8 +50,6 @@ window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => 
 app.use(router)
 app.use(head)
 app.use(pinia)
-app.use(VxeUI)
-app.use(VXETable)
 app.use(VueLazyload)
 app.use(i18n)
 

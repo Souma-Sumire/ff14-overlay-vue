@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ElLoading } from 'element-plus'
+
 const emits = defineEmits<{
   (e: 'handleLine', line: string): unknown
   (e: 'beforeHandle'): void
@@ -16,12 +18,21 @@ async function onChange(e: Event) {
 
   emits('beforeHandle')
 
+  const instance = ElLoading.service({
+    fullscreen: true,
+    text: '正在解析……请稍候',
+    lock: true,
+    spinner: '<div style="width:0;height:0"></div>',
+  })
+
   for (let i = 0; i < files.length; i++) {
     const file = files[i]
     const text = await file.text()
     for (const line of text.split('\n'))
       emits('handleLine', line)
   }
+
+  instance.close()
 
   emits('afterHandle')
   select.value?.classList.remove('drag')

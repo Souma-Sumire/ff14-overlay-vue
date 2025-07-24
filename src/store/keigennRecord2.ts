@@ -1,26 +1,23 @@
+import { useUrlSearchParams } from '@vueuse/core'
 import { defineStore } from 'pinia'
+import { computed } from 'vue'
 import { loadKeigenn } from '@/utils/keigenn'
 
 const params = useUrlSearchParams('hash')
 
-export const useKeigennRecord2Store = defineStore('keigennRecord2', {
+export const useKeigennRecord2Store = defineStore('keigennRecord2.1', {
   state: () => {
     return {
       userOptions: {
-        scale: parseParams(params.scale as string, 1), // 缩放倍率
-        opacity: parseParams(params.opacity as string, 0.8), // 透明度
-        showHeader: parseParams(params.showHeader as string, true), // 显示表头
-        showIcon: parseParams(params.showIcon as string, true), // 显示目标图标
-        iconType: parseParams(params.iconType as string, 3), // 目标图标类型
-        showName: parseParams(params.showName as string, false), // 显示目标ID
-        abbrId: parseParams(params.abbrId as string, true), // 目标ID缩写
-        anonymous: parseParams(params.anonymous as string, true), // 目标ID改为职业名
-        replaceWithYou: parseParams(params.replaceWithYou as string, false), // 目标是玩家本人替换为YOU
-        parseAA: parseParams(params.parseAA as string, true), // 解析自动攻击（旧结果不会跟随改变）
-        parseDoT: parseParams(params.parseDoT as string, false), // 解析DoT（旧结果不会跟随改变）
-        minimize: parseParams(params.minimize as string, false), // 启动时迷你化
-        actionCN: parseParams(params.actionCN as string, true), // action显示中文化
-        statusCN: parseParams(params.statusCN as string, true), // status显示中文化
+        scale: computed(() => parseParams(params.scale as string, 1)), // 缩放倍率
+        opacity: computed(() => parseParams(params.opacity as string, 0.9)), // 透明度
+        targetType: computed(() => parseParams(params.targetType as 'icon' | 'job', 'icon')), // 显示目标图标
+        iconType: computed(() => parseParams(params.iconType as string, 3)), // 目标图标类型
+        parseAA: computed(() => parseParams(params.parseAA as string, true)), // 解析自动攻击（旧结果不会跟随改变）
+        parseDoT: computed(() => parseParams(params.parseDoT as string, false)), // 解析DoT（旧结果不会跟随改变）
+        minimize: computed(() => parseParams(params.minimize as string, false)), // 启动时迷你化
+        actionCN: computed(() => parseParams(params.actionCN as string, true)), // action显示中文化
+        statusCN: computed(() => parseParams(params.statusCN as string, true)), // status显示中文化
       },
       isBrowser: false,
     }
@@ -44,16 +41,10 @@ export const useKeigennRecord2Store = defineStore('keigennRecord2', {
     initEnvironment(name: string) {
       if (/^[A-Z]\S+ [A-Z]\S+$/.test(name)) {
         // 国际服
-        if (this.userOptions.abbrId) {
-          this.formatterName = (v: string) =>
-            v.replace(/^([A-Z])\S+ ([A-Z])\S+$/, '$1.$2.')
-        }
         loadKeigenn('Global')
       }
       else {
         // 国服
-        if (this.userOptions.abbrId)
-          this.formatterName = (v: string) => v.substring(0, 2)
         loadKeigenn('Chinese')
       }
     },

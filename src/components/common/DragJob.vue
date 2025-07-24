@@ -74,7 +74,8 @@ const jobList: RemovableRef<
       res[role] = jobs
         .filter(v => jobsList[role].includes(v.job))
         .sort(
-          (a, b) => jobsList[role].indexOf(a.job) - jobsList[role].indexOf(b.job),
+          (a, b) =>
+            jobsList[role].indexOf(a.job) - jobsList[role].indexOf(b.job),
         )
     }
     return res
@@ -104,25 +105,47 @@ onMounted(() => {
 
 <template>
   <div flex="~ col" style="position: relative">
-    <vxe-checkbox
-      v-model="free" size="mini"
+    <el-checkbox
+      v-model="free"
+      size="small"
       style="
-      --vxe-primary-color:none;
-      position: absolute; top: 0.25rem; right: 0.25rem;background:rgba(30, 30, 30, 0.33);color: white;border-radius: 0.25rem;padding: 0.08rem 0.16rem;font-size: 0.75rem;line-height: 1;box-shadow: 0 0 2px black;"
+        position: absolute;
+        top: 0.25rem;
+        right: 0.25rem;
+        background: rgba(30, 30, 30, 0.33);
+        color: white;
+        padding: 0 3px;
+        margin: 0;
+        font-size:12px;
+        height: 1.5em;
+        box-shadow: 0 0 2px black;
+      "
     >
       解除限制
-    </vxe-checkbox>
+    </el-checkbox>
     <VueDraggable
-      v-for="(role, index) in roles" :key="index" ref="el" v-model="jobList[role.role]"
-      :disabled="!isDisabled" :animation="150" ghost-class="ghost"
-      class="p-0 m-b-0.25 m-t-0.25 flex flex-row gap-0.25 rounded" filter=".no-draggable" :force-fallback="true"
+      v-for="(role, index) in roles"
+      :key="index"
+      ref="el"
+      v-model="jobList[role.role]"
+      :disabled="!isDisabled"
+      :animation="150"
+      ghost-class="ghost"
+      class="p-0 m-b-0.25 m-t-0.25 flex flex-row gap-0.25 rounded"
+      filter=".no-draggable"
+      :force-fallback="true"
       @update="onUpdate"
     >
       <div
-        v-for="item in jobList[role.role]" v-show="!!props.party.find((v) => v.job === 36) ? true : item.job !== 36"
-        :key="item.job" :class="`${free || isJobInParty(item.job)
-          ? `draggable bg-${role.color} cursor-move`
-          : 'no-draggable bg-gray-700/50 opacity-75'
+        v-for="item in jobList[role.role]"
+        v-show="
+          !!props.party.find((v) => v.job === 36) ? true : item.job !== 36
+        "
+        :key="item.job"
+        :class="`${
+          free || isJobInParty(item.job)
+            ? `draggable bg-${role.color} cursor-move`
+            : 'no-draggable bg-gray-700/50 opacity-75'
         } rounded p-l-0.6 p-r-0.6 p-t-0 p-b-0.3 m-0 color-white`"
       >
         {{ item.name }}

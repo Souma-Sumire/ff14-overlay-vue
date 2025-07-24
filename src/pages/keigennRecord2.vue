@@ -1,22 +1,16 @@
 <script setup lang="ts">
 import type { Ref } from 'vue'
-import type {
-  VxeTableEvents,
-  VxeTableInstance,
-  VxeTablePropTypes,
-} from 'vxe-table'
 import type { Encounter, Keigenn, RowVO, Status } from '@/types/keigennRecord2'
 import type { Player } from '@/types/partyPlayer'
-import { VxeUI } from 'vxe-table'
+import { ZoomIn, ZoomOut } from '@element-plus/icons-vue'
+import { useDark } from '@vueuse/core'
+import { useDevMode } from '@/composables/useDevMode'
 import { getActionChinese } from '@/resources/actionChinese'
 import { completeIcon, stackUrl } from '@/resources/status'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 import { deepClone } from '@/utils/deepClone'
-import {
-  processAbilityLine,
-  processFlags,
-  translationFlags,
-} from '@/utils/flags'
+import { processAbilityLine, processFlags } from '@/utils/flags'
+
 import {
   getKeigenn,
   universalVulnerableEnemy,
@@ -27,60 +21,30 @@ import logDefinitions from '../../cactbot/resources/netlog_defs'
 import NetRegexes from '../../cactbot/resources/netregexes'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
-VxeUI.setTheme('dark')
+const dev = useDevMode()
+
+useDark()
 
 const store = useKeigennRecord2Store()
 const userOptions = store.userOptions
 // 某些情况下OverlayPluginApi并不会立即被挂在到window上。用户上报，未复现。
 store.checkIsBrowser()
 
+const minimize = ref(userOptions.minimize)
+
 const actionKey = computed(() =>
   userOptions.actionCN ? 'actionCN' : 'action',
 )
-const minimize = ref(userOptions.minimize)
 
-const size = {
-  line_height: 28 * userOptions.scale,
-  time: 35 * userOptions.scale,
-  action: 65 * userOptions.scale,
-  target:
-    ((userOptions.showIcon ? 24 : 0)
-      + (userOptions.showName
-        ? userOptions.anonymous
-        || (!userOptions.anonymous && userOptions.abbrId)
-          ? 24
-          : 36
-        : 0)
-      + 7)
-    * userOptions.scale,
-  amount: 44 * userOptions.scale,
-}
-
-const style = {
-  '--vxe-font-size-mini': `${12 * userOptions.scale}px`,
-  '--vxe-ui-row-line-height': `${30 * userOptions.scale}px`,
-  '--vxe-ui-row-height-mini': `${30 * userOptions.scale}px`,
-  '--vxe-input-height-mini': `${20 * userOptions.scale}px`,
-  '--vxe-select-option-height-mini': `${24 * userOptions.scale}px`,
-  '--vxe-ui-layout-background-color': `rgba(12, 12, 12, ${userOptions.opacity})`,
-}
-
-const maxStorage = {
-  runtime: 99,
-  localStorage: 3,
-}
+const maxStorage = 5
 
 const loading = ref(false)
-
-// let lastPush: number = Date.now();
-// let lastScroll: number = 0;
+let saveEnable: boolean = false
 
 interface PlayerSP extends Player {
   timestamp: number
 }
 
-const xTable = ref<VxeTableInstance>()
-// const allowAutoScroll = ref(true);
 const povName = useStorage('keigenn-record-2-pov-name', '')
 const povId = useStorage('keigenn-record-2-pov-id', '')
 const partyLogList = useStorage('keigenn-record-2-party-list', [] as string[])
@@ -94,7 +58,13 @@ const partyEventParty = useStorage(
 )
 const select = ref(0)
 const data = ref<Encounter[]>([
-  { zoneName: '', duration: '00:00', table: [], key: 'init', timestamp: -1 },
+  {
+    zoneName: '',
+    duration: '00:00',
+    table: shallowReactive([]),
+    key: 'init',
+    timestamp: -1,
+  },
 ])
 const regexes: Record<string, RegExp> = {
   rsv: /^262\|(?<timestamp>[^|]*)\|[^|]*\|[^|]*\|_rsv_(?<id>\d+)_[^|]+\|(?<real>[^|]*)\|/i,
@@ -138,13 +108,25 @@ function resetLine(line: Encounter) {
 
 function beforeHandle() {
   loading.value = true
+  saveEnable = false
   combatTimeStamp.value = 0
   select.value = 0
-  data.value.length = 1
+  data.value.length = 0
+  data.value.push({
+    zoneName: '',
+    duration: '00:00',
+    table: shallowReactive([]),
+    key: 'placeholder',
+    timestamp: -1,
+  })
   resetLine(data.value[0])
 }
 
 function afterHandle() {
+  data.value = data.value.filter(
+    v => v.duration !== '00:00' && v.table.length !== 0,
+  )
+  saveEnable = true
   saveStorage()
   loading.value = false
 }
@@ -270,17 +252,19 @@ function handleLine(line: string) {
             splitLine[logDefinitions.RemovedCombatant.fields.id],
           )
           break
-        case 'primaryPlayer': {
-          povId.value = splitLine[logDefinitions.ChangedPlayer.fields.id]
-          const _povName = splitLine[logDefinitions.ChangedPlayer.fields.name]
-          if (povName.value === _povName)
-            return
-          povName.value = _povName
-          store.initEnvironment(
-            splitLine[logDefinitions.ChangedPlayer.fields.name],
-          )
+        case 'primaryPlayer':
+          {
+            povId.value = splitLine[logDefinitions.ChangedPlayer.fields.id]
+            const _povName
+              = splitLine[logDefinitions.ChangedPlayer.fields.name]
+            if (povName.value === _povName)
+              return
+            povName.value = _povName
+            store.initEnvironment(
+              splitLine[logDefinitions.ChangedPlayer.fields.name],
+            )
+          }
           break
-        }
         case 'partyList':
           partyLogList.value = match.groups?.list?.split('|') ?? []
           break
@@ -303,21 +287,21 @@ function handleLine(line: string) {
             ).getTime()
             if (inACTCombat || inGameCombat) {
               // new combat
-              if (combatTimeStamp.value > 0)
+              if (combatTimeStamp.value > 0) {
                 return
-              if (data.value[0].key === 'placeholder') {
+              }
+              else if (data.value[0].key === 'placeholder') {
                 data.value.splice(0, 1)
               }
               if (data.value[0].table.length !== 0) {
-                data.value[0] = markRaw(data.value[0])
                 data.value.unshift({
                   zoneName: '',
                   duration: '00:00',
-                  table: [],
+                  table: shallowReactive([]),
                   key: splitLine[logDefinitions.InCombat.fields.timestamp],
                   timestamp: timeStamp,
                 })
-                if (data.value.length >= maxStorage.runtime)
+                if (data.value.length >= maxStorage)
                   data.value.splice(data.value.length - 1, 1)
               }
               combatTimeStamp.value = timeStamp
@@ -384,6 +368,7 @@ function handleLine(line: string) {
             const jobIcon = Util.jobEnumToIcon(jobEnum)
             // dot/hot日志的source不准确 故无法计算目标减
             addRow({
+              key: data.value[0].table.length.toString(),
               time: formattedTime,
               id: undefined,
               action: which,
@@ -496,6 +481,7 @@ function handleLine(line: string) {
                   }),
               )
               addRow({
+                key: data.value[0].table.length.toString(),
                 time: formattedTime,
                 id,
                 action,
@@ -521,8 +507,8 @@ function handleLine(line: string) {
                 ).getTime() - combatTimeStamp.value,
               )
             }
-            break
           }
+          break
         default:
           break
       }
@@ -548,6 +534,7 @@ function stopCombat(timeStamp: number) {
   if (combatTimeStamp.value === 0)
     return
   data.value[0].duration = formatTime(timeStamp - combatTimeStamp.value)
+  data.value[0] = markRaw(data.value[0])
   combatTimeStamp.value = 0
   statusData.friendly = {}
   statusData.enemy = {}
@@ -555,14 +542,17 @@ function stopCombat(timeStamp: number) {
 }
 
 function saveStorage() {
+  if (!saveEnable) {
+    return
+  }
   localStorage.setItem(
     STORAGE_KEY,
     JSON.stringify(
       data.value
-        .filter(v => v.key !== 'placeholder' && v.duration !== '00:00' && v.timestamp > 0)
+        .filter(v => v.key !== 'placeholder' && v.timestamp > 0)
         .slice()
         .sort((a, b) => b.timestamp - a.timestamp)
-        .slice(0, maxStorage.runtime),
+        .slice(0, maxStorage),
     ),
   )
 }
@@ -577,6 +567,8 @@ function loadStorage() {
     }
     catch (e) {
       console.error(e)
+      data.value.length = 0
+      throw e
     }
   }
 }
@@ -588,32 +580,6 @@ function formatTime(time: number) {
     second < 10 ? '0' : ''
   }${second}`
 }
-
-const actionOptions = computed(() => {
-  const result = new Set(
-    data.value[select.value].table.map(v =>
-      userOptions.actionCN ? v.actionCN : v.action,
-    ),
-  )
-  return Array.from(result).map(v => ({ label: v, value: v }))
-})
-
-const targetOptions = computed(() => {
-  const targetToJob: Record<string, string> = {}
-  const result = new Set(
-    data.value[select.value].table
-      .slice()
-      .sort((a, b) => Util.enumSortMethod(a.jobEnum, b.jobEnum))
-      .map((item) => {
-        targetToJob[item.target] = item.job
-        return item.target
-      }),
-  )
-  return Array.from(result).map(item => ({
-    label: `${targetToJob[item]}（${item}）`,
-    value: item,
-  }))
-})
 
 if (store.isBrowser)
   povName.value = '测试用户'
@@ -642,210 +608,37 @@ onMounted(() => {
     povName.value = e.charName
     povId.value = Number(e.charID).toString(16).toUpperCase()
   })
-  // startOverlayEvents();
-})
-
-function doCopy(row: RowVO) {
-  const {
-    // action,
-    actionCN,
-    amount,
-    job,
-    keigenns,
-    // source,
-    // target,
-    time,
-    type,
-  } = row
-  const sp
-    = row.effect === 'damage done' ? '' : `,${translationFlags(row.effect)}`
-  const result = `${time} ${job} ${actionCN} ${amount.toLocaleString()}(${translationFlags(type)}) 减伤:${
-    keigenns.length === 0 && sp === ''
-      ? '无'
-      : keigenns
-        .map(k => (userOptions.statusCN ? k.name : k.effect))
-        .join(',') + sp
-  } HP:${row.currentHp}/${
-    row.maxHp
-  }(${Math.round((row.currentHp / row.maxHp) * 100)}%)+盾:${Math.round(
-    (row.maxHp * +row.shield) / 100,
-  )}(${row.shield}%)`
-  copyText(result)
-}
-
-function copyText(text: string) {
-  navigator.clipboard.writeText(text).catch(() => {
-    const input = document.createElement('input')
-    input.value = text
-    document.body.appendChild(input)
-    input.select()
-    document.execCommand('copy')
-    document.body.removeChild(input)
-  })
-  VxeUI.modal.close()
-  VxeUI.modal.message({
-    content: '已复制到剪贴板',
-    status: 'success',
-    duration: 800,
-  })
-}
-
-const focusing = ref({ target: false, action: false })
-const focusRow: Ref<RowVO | undefined> = ref()
-
-const menuConfig = reactive<VxeTablePropTypes.MenuConfig<RowVO>>({
-  className: 'my-menus',
-  trigger: 'cell',
-  visibleMethod({ row }) {
-    return !!row
-  },
-  body: { options: [] },
-})
-
-watchEffect(() => {
-  if (menuConfig.body?.options && xTable.value) {
-    menuConfig.body.options[0] = [
-      {
-        code: 'clearFilterAction',
-        name: '取消技能筛选',
-        prefixIcon: 'vxe-icon-funnel-clear',
-        className: 'my-clear-filter',
-        visible: focusing.value.action,
-        disabled: false,
-      },
-      {
-        code: 'filterSelectAction',
-        name: focusRow.value?.[actionKey.value]
-          ? `只看 ${focusRow.value?.[actionKey.value]}`
-          : '只看该技能',
-        prefixIcon: 'vxe-icon-info-circle',
-        visible: !focusing.value.action,
-        disabled: false,
-      },
-      {
-        code: 'clearFilterTarget',
-        name: '取消玩家筛选',
-        prefixIcon: 'vxe-icon-funnel-clear',
-        visible: focusing.value.target,
-        disabled: false,
-      },
-      {
-        code: 'filterSelectTarget',
-        name: focusRow.value?.target
-          ? `只看 [${focusRow.value.job}] ${focusRow.value.target}`
-          : '只看该玩家',
-        prefixIcon: 'vxe-icon-user-fill',
-        visible: !focusing.value.target,
-        disabled: false,
-      },
-    ]
-  }
 })
 
 function clickMinimize() {
   minimize.value = !minimize.value
-  // if (minimize.value === false && userOptions.pushMode) {
-  //   lastPush = Date.now();
-  //   requestAnimationFrame(() => scroll());
-  // }
 }
 
-const cellClickEvent: VxeTableEvents.CellClick<RowVO> = ({ row }) => {
-  if (!row) {
-    VxeUI.modal.message({
-      content: '未选中有效数据行',
-      status: 'error',
-    })
-    return
-  }
-  doCopy(row)
-}
-
-const cellContextMenuEvent: VxeTableEvents.CellMenu<RowVO> = ({ row }) => {
-  const $table = xTable.value
-  if (!row) {
-    return
-  }
-  if ($table) {
-    $table.setCurrentRow(row)
-    focusRow.value = row
-  }
-}
-
-const contextMenuClickEvent: VxeTableEvents.MenuClick<RowVO> = ({
-  menu,
-  row,
-}) => {
-  const $table = xTable.value
-
-  switch (menu.code) {
-    case 'clearFilterTarget':
-      if ($table) {
-        $table.clearFilter($table.getColumnByField('target'))
-        focusing.value.target = false
-      }
-      break
-    case 'clearFilterAction':
-      if ($table) {
-        $table.clearFilter($table.getColumnByField(actionKey.value))
-        focusing.value.action = false
-      }
-      break
-    case 'filterSelectTarget':
-      if ($table) {
-        const col = $table.getColumnByField('target')
-        if (col) {
-          const option = col.filters.find(v => v.value === row.target)
-          if (!option)
-            return
-          option.checked = true
-          $table.updateData().then(() => {
-            $table.scrollToRow(row)
-            focusing.value.target = true
-          })
-        }
-      }
-      break
-    case 'filterSelectAction':
-      if ($table) {
-        const col = $table.getColumnByField(actionKey.value)
-        if (col) {
-          const option = col.filters.find(
-            v => v.value === row[actionKey.value],
-          )
-          if (!option)
-            return
-
-          option.checked = true
-          $table.updateData().then(() => {
-            $table.scrollToRow(row)
-            focusing.value.action = true
-          })
-        }
-      }
-      break
-    default:
-      break
-  }
+function test() {
+  const last = data.value[0].table[0]
+  const d = { ...last, key: crypto.randomUUID() }
+  data.value[0].table.unshift(d)
 }
 </script>
 
 <template>
   <div
     class="wrapper"
-    :style="style"
-    :class="store.isBrowser ? 'is-browser' : 'not-browser'"
+    :style="{ '--scale': userOptions.scale, '--opacity': userOptions.opacity }"
+    @contextmenu.prevent
   >
-    <header v-if="userOptions.showHeader">
+    <header>
       <div class="header-select">
-        <vxe-select
+        <el-select
           v-show="!minimize"
           v-model="select"
-          size="mini"
+          size="small"
           class="combat-select"
           popup-class-name="combat-select-popup"
+          :offset="0"
+          :show-arrow="false"
         >
-          <vxe-option
+          <el-option
             v-for="i in data.length"
             :key="`${data[i - 1].key}-${data[i - 1].duration}-${
               data[i - 1].zoneName
@@ -853,87 +646,25 @@ const contextMenuClickEvent: VxeTableEvents.MenuClick<RowVO> = ({
             :value="i - 1"
             :label="`${data[i - 1].duration} ${data[i - 1].zoneName}`"
           />
-        </vxe-select>
+        </el-select>
       </div>
-      <vxe-button
+      <el-button
         class="minimize"
         :class="minimize ? 'in-minimize' : 'not-minimize'"
-        :icon="minimize ? 'vxe-icon-fullscreen' : 'vxe-icon-minimize'"
+        :icon="minimize ? ZoomIn : ZoomOut"
+        circle
         :style="{ opacity: minimize ? 0.5 : 1 }"
         @click="clickMinimize"
       />
     </header>
-    <main v-show="!minimize">
-      <vxe-table
-        ref="xTable"
-        size="mini"
-        class="vxe-table"
-        show-overflow="tooltip"
-        round
-        height="100%"
-        :scroll-y="{ enabled: true }"
-        :loading="loading"
-        :show-header="userOptions.showHeader"
-        :data="data[select].table"
-        :row-config="{ isHover: true }"
-        :cell-config="{ height: size.line_height }"
-        :header-cell-style="{
-          padding: '0px',
-          top: '-0.5em',
-        }"
-        :menu-config="menuConfig"
-        @cell-click="cellClickEvent"
-        @cell-menu="cellContextMenuEvent"
-        @menu-click="contextMenuClickEvent"
-      >
-        <vxe-column
-          :width="size.time"
-          field="time"
-          title="时间"
-          align="center"
-        />
-        <vxe-column
-          :width="size.action"
-          :field="userOptions.actionCN ? 'actionCN' : 'action'"
-          title="技能"
-          :filters="actionOptions"
-          :filter-multiple="false"
-          :resizable="true"
-          align="center"
-        />
-        <vxe-column
-          :width="size.target"
-          field="target"
-          title="标"
-          :filters="targetOptions"
-          :filter-multiple="false"
-          :resizable="!userOptions.anonymous && !userOptions.abbrId"
-          align="left"
-          header-align="center"
-          :header-class-name="
-            userOptions.showName
-              ? 'target-name-column-full'
-              : 'target-name-column-abbr'
-          "
-        >
-          <template #default="{ row }">
-            <KeigennRecord2Target :row="row" />
-          </template>
-        </vxe-column>
-        <vxe-column :width="size.amount" title="伤害" header-align="center">
-          <template #default="{ row }">
-            <KeigennRecord2Amount :row="row" />
-          </template>
-        </vxe-column>
-        <vxe-column title="减伤" align="left">
-          <template #default="{ row }">
-            <KeigennRecord2StatusShow :row="row" />
-          </template>
-        </vxe-column>
-      </vxe-table>
+    <main v-show="!minimize" style="height: 100%">
+      <KeigennRecord2Table :rows="data[select].table" :action-key="actionKey" />
     </main>
   </div>
   <div v-if="store.isBrowser" class="testLog">
+    <el-button v-if="dev" @click="test">
+      测试
+    </el-button>
     <CommonTestLog
       m-1
       @before-handle="beforeHandle"
@@ -944,55 +675,22 @@ const contextMenuClickEvent: VxeTableEvents.MenuClick<RowVO> = ({
 </template>
 
 <style lang="scss">
-@use "vxe-table/styles/index.scss";
-
-.vxe-table--header-wrapper {
-  height: 20px;
-}
-
-.vxe-header--column {
-  line-height: 20px;
-
-  .vxe-cell {
-    white-space: nowrap !important;
-  }
-}
-
-body,
-html {
+body {
   background: transparent;
   padding: 0;
   margin: 0;
   overflow: hidden;
-  --vxe-ui-input-height-mini: 20px;
-  --vxe-ui-table-header-background-color: rgba(12, 12, 12, 0);
-  --vxe-ui-table-header-font-color: #ddd;
-  --vxe-ui-base-border-radius: 0;
 }
 
 * {
   user-select: none;
 }
 
-.vxe-body--row {
-  &:hover {
-    cursor: pointer;
-  }
-}
-
 img[src=""],
 img:not([src]) {
-  // opacity: 0;
-  // display: none;
   &::after {
     content: attr(data-job);
   }
-}
-
-.vxe-cell {
-  padding-left: 2px !important;
-  padding-right: 2px !important;
-  overflow: visible !important;
 }
 
 .minimize {
@@ -1002,8 +700,8 @@ img:not([src]) {
   margin-left: auto !important;
   margin-right: 0 !important;
   border: none !important;
-  width: 20px !important;
-  height: 20px !important;
+  width: 22px !important;
+  height: 22px !important;
   z-index: 13;
 
   i {
@@ -1012,15 +710,11 @@ img:not([src]) {
 }
 
 .not-minimize {
-  background-color: transparent;
+  background-color: rgba(20, 20, 20, 0.4);
 }
 
-.vxe-select-option {
-  max-width: calc(100% - 2px) !important;
-}
-
-.vxe-ui--filter-wrapper:not(.is--multiple) {
-  text-align: left !important;
+.in-minimize {
+  background-color: rgba(20, 20, 20, 1);
 }
 
 ::-webkit-scrollbar {
@@ -1042,30 +736,8 @@ img:not([src]) {
   background-color: rgba(160, 160, 160, 1);
 }
 
-.el-popper {
-  min-width: 0 !important;
-  width: auto !important;
-}
-
-.my-el-popover {
-  font-size: var(--vxe-font-size-mini) !important;
-  padding: 0.5em !important;
-  white-space: nowrap;
-
-  & > div[role="title"] {
-    font-size: calc(var(--vxe-font-size-mini) * 1.2) !important;
-    font-weight: bold;
-    margin-bottom: 0.2em !important;
-  }
-}
-
-.target {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-
 .wrapper {
+  zoom: var(--scale,1);
   padding: 0;
   margin: 0;
   height: calc(100vh);
@@ -1073,21 +745,46 @@ img:not([src]) {
   position: relative;
 }
 
+.el-select__placeholder {
+  text-overflow: clip;
+}
+
+// el-select 选中之后的文本
+.el-select__placeholder.is-transparent {
+  color: #ffffff;
+}
+
+// el-select 下拉箭头
+.el-select__suffix {
+  width: 5px;
+  position: relative;
+  right: 0.6em;
+}
+
+// el-select 下拉框整体
+.el-select-dropdown__list {
+  padding: 0;
+}
+
+// el-option 下拉框选项
+.el-select-dropdown__item {
+  padding: 0 0.5em;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
 header {
-  height: var(--vxe-input-height-mini);
   width: 100%;
   display: flex;
 
+  // 战斗记录选择器
   .combat-select {
-    width: 4.7em;
+    width: 1.5em;
     z-index: 15;
     position: absolute;
-    right: var(--vxe-input-height-mini);
-
-    &:hover {
-      background-color: #151515;
-      width: calc(100% - var(--vxe-input-height-mini) - 0.2em);
-    }
+    right: 24px;
+    background-color: rgba(20, 20, 20, 0.4);
+    height: 22px;
   }
 
   .combat-select-popup {
@@ -1095,105 +792,11 @@ header {
   }
 }
 
-.vxe-input--suffix {
-  width: 0.85em;
-  transform: translateX(-0.5em);
-}
-
 main {
   position: absolute;
   top: 0px;
   bottom: 0px;
   width: 100%;
-  --vxe-ui-font-color: rgb(219, 224, 230);
-}
-
-.vxe-context-menu--link {
-  --vxe-ui-font-color: rgb(219, 224, 230);
-}
-
-// .vxe-table {
-// $text-color: rgba(#444, 0.5);
-// text-shadow: 1px 1px 2px $text-color, -1px -1px 2px $text-color,    1px -1px 2px $text-color, -1px 1px 2px $text-color;
-// }
-
-.vxe-table--body {
-  --vxe-ui-layout-background-color: transparent;
-}
-
-.status {
-  position: relative;
-  top: -0.225em;
-  object-fit: cover;
-}
-
-.statusIcon {
-  width: 1.44em;
-  object-fit: cover;
-  vertical-align: middle;
-}
-
-.status::before {
-  content: attr(data-duration);
-  // vertical-align: bottom;
-  height: 1em;
-  line-height: 1em;
-  z-index: 1;
-  position: absolute;
-  text-align: center;
-  left: 50%;
-  bottom: -1.1em;
-  transform: translateX(-50%) scale(0.60);
-  transform-origin: top center;
-  font-size: calc(var(--vxe-font-size-mini));
-  font-family: emoji;
-}
-
-.status[data-sourcePov="true"]::before {
-  color: aquamarine;
-}
-
-.physics {
-  color: rgb(255, 100, 100);
-}
-
-.magic {
-  color: rgb(100, 200, 255);
-}
-
-.darkness {
-  color: rgb(255, 100, 255);
-}
-
-.unuseful {
-  filter: grayscale(100%);
-}
-
-.half-useful {
-  filter: grayscale(50%);
-}
-
-.useful {
-  filter: grayscale(0%);
-}
-
-.lethal {
-  // 红色下划线
-  border-bottom: 1px dashed red;
-}
-
-.vxe-ui--header-wrapper {
-  background-color: #222;
-  color: #fff;
-}
-
-.vxe-ui--header-wrapper .vxe-header--column {
-  color: #fff;
-}
-
-.vxe-context-menu--option-wrapper,
-.vxe-ui--context-menu-clild-wrapper {
-  border: none;
 }
 
 .testLog {
@@ -1209,47 +812,8 @@ main {
   }
 }
 
-.YOU {
-  font-weight: bolder;
-  $color: rgba(3, 169, 244, 0.4);
-  text-shadow:
-    -1px 0 3px $color,
-    0 1px 3px $color,
-    1px 0 3px $color,
-    0 -1px 3px $color;
-}
-
-.my-menus {
-  background-color: #252525;
-  overflow: hidden;
-}
-
-.my-menus .vxe-ctxmenu--link {
-  width: 200px;
-}
-
-.my-menus .vxe-context-menu--link {
-  padding-right: 0.2em;
-}
-
-.my-copy-item {
-  font-weight: 700;
-}
-
-.my-clear-filter {
-  font-style: oblique;
-}
-
-.amount {
-  display: flex;
-  justify-content: flex-end;
-}
-
-// .target-name-column-abbr {
-//   transform: translateX(0em);
-// }
-
-.is-browser {
-  background-color: #fff;
+.el-table-v2__main {
+  background-color: rgba(20, 20, 20, var(--opacity));
+  border-radius: 6px;
 }
 </style>

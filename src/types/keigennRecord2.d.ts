@@ -1,6 +1,7 @@
 import type { DamageEffect, DamageType } from '@/utils/flags'
 
 export interface RowVO {
+  key: string
   time: string
   id?: string
   actionCN: string

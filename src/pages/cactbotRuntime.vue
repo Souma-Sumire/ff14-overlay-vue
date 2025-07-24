@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Role } from '../../cactbot/types/job'
 import type { PlayerRuntime } from '@/types/partyPlayer'
-import { VxeUI } from 'vxe-table'
+import { useDark } from '@vueuse/core'
 import { useDevMode } from '@/composables/useDevMode'
 import Util from '@/utils/util'
 import {
@@ -10,13 +10,15 @@ import {
 } from '../../cactbot/resources/overlay_plugin_api'
 import 'animate.css'
 
-VxeUI.setTheme('dark')
+useDark()
 
-// const aprilFoolSDay = ref(
-//   new Date().getMonth() === 3 && new Date().getDate() === 1
-// );
+const mouseEnter = ref(false)
 
-function createRPArr(r: 'T' | 'H' | 'D' | 'C' | 'G' | 'N', l: number, start: number = 0) {
+function createRPArr(
+  r: 'T' | 'H' | 'D' | 'C' | 'G' | 'N',
+  l: number,
+  start: number = 0,
+) {
   return Array.from({ length: l }, () => r).map((v, i) => v + (+i + 1 + start))
 }
 
@@ -33,7 +35,9 @@ const fakeParty: PlayerRuntime[] = [
   { id: '10000008', name: '虚构舞者', job: 38, inParty: true },
   { id: '10000007', name: '虚构画家', job: 42, inParty: true },
 ]
-const data = useStorage('cactbotRuntime-data', { party: [] as PlayerRuntime[] })
+const data = useStorage('cactbotRuntime-data', {
+  party: [] as PlayerRuntime[],
+})
 const showTips = useStorage('cactbotRuntime-showTips', ref(true))
 const roleSelectLength = useStorage('cactbotRuntime-roleSelectLength', {
   tank: 0,
@@ -69,7 +73,6 @@ function getOptions(job: number) {
   })
 }
 const dev = useDevMode()
-const mouseEnter = ref(false)
 const playerName = ref(dev.value ? fakeParty[2].name : '')
 
 function getJobClassification(job: number): Role {
@@ -113,9 +116,7 @@ function getJobClassification(job: number): Role {
 
 function defaultPartySort() {
   data.value.party.sort(
-    (a, b) =>
-      sortArray.value.indexOf(a.job)
-      - sortArray.value.indexOf(b.job),
+    (a, b) => sortArray.value.indexOf(a.job) - sortArray.value.indexOf(b.job),
   )
   for (const v of data.value.party) {
     v.rp = undefined
@@ -154,21 +155,14 @@ function broadcastParty(): void {
     ...roleAssignLocationNames.none,
   ]
   data.value.party.sort(
-    (a, b) => sortArr.indexOf(a.rp ?? 'unknown') - sortArr.indexOf(b.rp ?? 'unknown'),
+    (a, b) =>
+      sortArr.indexOf(a.rp ?? 'unknown') - sortArr.indexOf(b.rp ?? 'unknown'),
   )
   callOverlayHandler({
     call: 'broadcast',
     source: 'soumaRuntimeJS',
     msg: { party: data.value.party },
   })
-}
-
-function onMouseOver(): void {
-  mouseEnter.value = true
-}
-
-function onMouseOut(): void {
-  mouseEnter.value = false
 }
 
 function updateSortArr(arr: number[]) {
@@ -180,10 +174,6 @@ function getJobName(job: number) {
   return Util.nameToFullName(Util.jobEnumToJob(job)).simple1
 }
 
-function getPlayerName(name: string) {
-  return name
-}
-
 function updateData() {
   defaultPartySort()
   updateRoleSelectLength()
@@ -191,6 +181,11 @@ function updateData() {
 }
 
 onMounted(() => {
+  document.body.addEventListener('mouseenter', () => (mouseEnter.value = true))
+  document.body.addEventListener(
+    'mouseleave',
+    () => (mouseEnter.value = false),
+  )
   broadcastParty()
   addOverlayListener('PartyChanged', (e) => {
     if (showTips.value)
@@ -219,7 +214,6 @@ onMounted(() => {
       broadcastParty()
     }
   })
-  // startOverlayEvents();
 })
 
 function testParty() {
@@ -238,18 +232,21 @@ function testParty() {
 
 <template>
   <CommonActWrapper>
-    <div @mouseenter="onMouseOver" @mouseleave="onMouseOut">
-      <span v-show="data.party.length <= 1" class="text-white text-shadow-sm text-shadow-color-black">...</span>
-      <vxe-modal
-        v-model="dialogVisible" size="small" :position="{
+    <div class="cactbot-runtime">
+      <el-dialog
+        v-model="dialogVisible"
+        size="small"
+        :position="{
           left: 10,
           top: 10,
-        }" width="90vw" @close="
+        }"
+        width="90vw"
+        @close="
           dialogVisible = false;
           showTips = false;
         "
       >
-        <template #title>
+        <template #header>
           <span>用法</span>
         </template>
         <template #default>
@@ -259,38 +256,45 @@ function testParty() {
             <li>长期：用鼠标拖动职能顺序。</li>
           </ul>
         </template>
-      </vxe-modal>
-      <main
-        :style="{
-          width: mouseEnter
-            ? `${18 + +(data.party.find((v) => v.job === 36) ? 1 : 0)}em`
-            : '4em',
-        }"
-      >
-        <div class="players">
-          <transition-group
-            name="animate__animated animate__bounce" enter-active-class="animate__fadeInLeft"
-            leave-active-class="animate__fadeOutLeft"
-          >
-            <section
-              v-for="(member, i) in data.party" v-show="data.party.length > 1
-                && (mouseEnter || member.name === playerName)
-              " :key="member.id" flex="~ nowrap" :style="{
-                opacity: mouseEnter ? 1 : 0.5,
-              }" class="player"
-            >
-              <vxe-select v-model="member.rp" size="mini" class-name="select" @change="handleSelectChange(i)">
-                <vxe-option v-for="(item, index) in getOptions(member.job)" :key="index" :value="item" :label="item" />
-              </vxe-select>
-              <!-- <span class="name" :class="aprilFoolSDay ? 'aprilFoolSDay' : ''"> -->
-              <span class="name">
-                {{ getJobName(member.job) }}
-                {{ mouseEnter ? getPlayerName(member.name) : "" }}
-              </span>
-            </section>
-          </transition-group>
+      </el-dialog>
+      <main>
+        <div v-if="!mouseEnter" class="you">
+          {{ data.party.find((v) => v.name === playerName)?.rp ?? "" }}
         </div>
-        <CommonDragJob v-show="mouseEnter" :party="data.party" m-b-1 p-1 @update-sort-arr="updateSortArr" />
+        <div v-else class="players">
+          <section
+            v-for="(member, i) in data.party"
+            :key="member.id"
+            class="player"
+            :class="{ 'is-you': member.name === playerName }"
+          >
+            <el-select
+              v-model="member.rp"
+              size="small"
+              class="select"
+              fit-input-width
+              placement="right"
+              :offset="8"
+              @change="handleSelectChange(i)"
+            >
+              <el-option
+                v-for="(item, index) in getOptions(member.job)"
+                :key="index"
+                :value="item"
+                :label="item"
+              />
+            </el-select>
+            <span class="job-name">{{ getJobName(member.job) }}</span>
+            <span v-if="mouseEnter" class="player-name">{{ member.name }}</span>
+          </section>
+          <CommonDragJob
+            v-if="mouseEnter"
+            class="drag-job"
+            :party="data.party"
+            p-1
+            @update-sort-arr="updateSortArr"
+          />
+        </div>
       </main>
       <div v-if="dev" style="position: fixed; bottom: 0">
         <button
@@ -310,117 +314,107 @@ function testParty() {
   </CommonActWrapper>
 </template>
 
-<style lang="scss">
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-
-::-webkit-scrollbar-track {
-  background-color: rgba(51, 51, 51, 1);
-}
-
-::-webkit-scrollbar-thumb {
-  height: 30px;
-  border-radius: 5px;
-  background-color: rgba(216, 216, 216, 0.4);
-}
-
-::-webkit-scrollbar-thumb:active {
-  background-color: rgba(160, 160, 160, 1);
-}
-
-* {
-  user-select: none;
-}
-</style>
-
-<style lang="scss" scoped>
-main {
-  background-color: rgba(0, 0, 0, 0.1);
-  padding: 0;
+<style scoped lang="scss">
+:global(body) {
   margin: 0;
-  border-radius: 5px;
-  transition-timing-function: ease-in-out;
+  padding: 0;
+  overflow: hidden;
+}
+
+// el-select 选中之后的文本
+:global(.el-select__placeholder.is-transparent) {
+  color: #ffffff;
+}
+
+// el-select 布局
+:global(.el-select--small .el-select__wrapper) {
+  padding: 1px 4px;
+}
+
+// el-select 下拉箭头
+:global(.el-select__suffix) {
+  position: absolute;
+  transform: scale(0.8, 1);
+  right: 0;
+}
+
+// el-select 下拉框整体
+:global(.el-select-dropdown__list) {
+  padding: 0;
+}
+
+// el-option 下拉框选项
+:global(.el-select-dropdown__item) {
+  padding: 0 0.5em;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+main {
+  padding: 0.3em;
+  width: min-content;
+  background-color: rgba(255, 255, 255, 0.01);
+  font-size: 14px;
+}
+
+.cactbot-runtime {
+  margin-top: 1.8em;
+  user-select: none;
+  --el-fill-color-blank: #2d2d2d;
+
+  .job-name,
+  .player-name,
+  .you {
+    font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    color: #e0e0e0;
+    text-shadow:
+      1px 1px 2px rgba(0, 0, 0, 0.5),
+      -1px -1px 2px rgba(0, 0, 0, 0.5),
+      1px -1px 2px rgba(0, 0, 0, 0.5),
+      -1px 1px 2px rgba(0, 0, 0, 0.5);
+  }
+
+  .you {
+    color: #ffffff;
+  }
 
   .players {
-    margin-left: 1px;
-    $shadowColor: rgba(0, 0, 0, 0.25);
-    $text-shadow: 1px 1px 2px $shadowColor, -1px -1px 2px $shadowColor,
-      1px -1px 2px $shadowColor, -1px 1px 2px $shadowColor;
-    $line-height: 1.5em;
+    width: min-content;
+  }
 
-    .player {
-      transition-property: all;
-      transition-duration: 0.3s;
-      transition-timing-function: ease-in-out;
-      animation-duration: 0.2s;
-      animation-timing-function: ease-in-out;
-      height: $line-height;
-      line-height: $line-height;
+  .player {
+    width: min-content;
+    display: flex;
+    align-items: center;
+    padding: 1.5px 2px;
+    border-radius: 0.2rem;
 
-      .select {
-        width: 3.25em;
-        --vxe-ui-input-height-mini: $line-height;
-        --vxe-ui-font-color: white;
-        --vxe-ui-layout-background-color: rgba(12, 12, 12, 0.9);
-        --vxe-ui-input-placeholder-color: white;
-
-        :deep(.vxe-input--inner) {
-          color: white;
-          font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
-          font-size: 16px;
-          font-weight: 700;
-          background-color: rgba(0, 0, 0, 0.01);
-          padding: 0 0 0 0.4em;
-          text-shadow: $text-shadow;
-        }
-
-        :deep(.vxe-input--suffix) {
-          background: none;
-        }
-
-        :deep(.vxe-input--suffix-icon) {
-          height: $line-height;
-          line-height: $line-height;
-          background: none;
-          padding-right: 0;
-        }
-
-        :deep(.vxe-icon-caret-down) {
-          background: none;
-        }
-      }
-
-      .name {
-        white-space: nowrap;
-        color: white;
-        text-shadow: $text-shadow;
-        // &.aprilFoolSDay {
-        //   animation: shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both
-        //     infinite;
-        //   @keyframes shake {
-        //     10%,
-        //     90% {
-        //       transform: translateX(-4px);
-        //     }
-        //     20%,
-        //     80% {
-        //       transform: translateX(4px);
-        //     }
-        //     30%,
-        //     50%,
-        //     70% {
-        //       transform: translateX(-4px);
-        //     }
-        //     40%,
-        //     60% {
-        //       transform: translateX(4px);
-        //     }
-        //   }
-        // }
-      }
+    &.is-you {
+      background: rgba(0, 122, 255, 0.2);
     }
   }
+
+  .select {
+    width: 2.4em;
+    margin-right: 0.1em;
+  }
+
+  .job-name {
+    font-weight: 600;
+    margin: 0 0.2em;
+    color: #ffffff;
+  }
+
+  .player-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #ffffff;
+  }
+}
+
+.drag-job {
+  background-color: rgba(255, 255, 255, 0.01);
+  float: left;
 }
 </style>

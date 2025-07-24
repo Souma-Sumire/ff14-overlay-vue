@@ -32,8 +32,6 @@
     "vue-i18n": "^11.1.7",
     "vue-lazyload": "^3.0.0",
     "vue-router": "^4.5.1",
-    "vxe-pc-ui": "^4.6.35",
-    "vxe-table": "^4.13.48",
     "xe-utils": "^3.7.5"
   },
   "devDependencies": {

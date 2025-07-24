@@ -23,38 +23,15 @@ function onError(e: Event) {
 </script>
 
 <template>
-  <div>
-    <span v-if="store.userOptions.showIcon" class="target">
-      <img
-        v-if="!imageError"
-        :class="`jobIcon cj${store.userOptions.iconType}`"
-        :src="getIconSrc(props.row.jobIcon, store.userOptions.iconType)"
-        :alt="props.row.jobIcon"
-        :data-job="store.userOptions.showName ? '' : props.row.job"
-        @error="onError"
-      >
-      <span v-else class="alt-text">{{ props.row.job }}</span>
-      <span
-        v-if="store.userOptions.showName"
-        :class="`job ${props.row.jobIcon} ${
-          props.row.targetId === props.row.povId ? 'YOU' : ''
-        }`"
-        :style="
-          !store.userOptions.abbrId && store.userOptions.showName
-            ? { overflow: 'hidden', textOverflow: 'ellipsis' }
-            : {}
-        "
-      >
-        {{
-          props.row.targetId === props.row.povId
-            && store.userOptions.replaceWithYou
-            ? "YOU"
-            : store.userOptions.anonymous
-              ? props.row.job
-              : store.formatterName(props.row.target)
-        }}
-      </span>
-    </span>
+  <div class="target">
+    <img
+      v-if="!imageError && store.userOptions.targetType === 'icon'"
+      :class="`jobIcon cj${store.userOptions.iconType}`"
+      :src="getIconSrc(props.row.jobIcon, store.userOptions.iconType)"
+      :alt="props.row.jobIcon"
+      @error="onError"
+    >
+    <span v-else class="alt-text">{{ props.row.job }}</span>
   </div>
 </template>
 
@@ -65,9 +42,29 @@ function onError(e: Event) {
   vertical-align: middle;
   position: relative;
 }
+
+.cj1{
+  top:1px
+}
+
 .cj3 {
-  width: 2.75em;
-  left: -4px;
+  width: 32px;
   top: 1px;
+}
+
+.target {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.YOU {
+  font-weight: bolder;
+  $color: rgba(3, 169, 244, 0.4);
+  text-shadow:
+    -1px 0 3px $color,
+    0 1px 3px $color,
+    1px 0 3px $color,
+    0 -1px 3px $color;
 }
 </style>
