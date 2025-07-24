@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import type { Ref } from 'vue'
-import type { VxeTableEvents, VxeTableInstance, VxeTablePropTypes } from 'vxe-table'
+import type {
+  VxeTableEvents,
+  VxeTableInstance,
+  VxeTablePropTypes,
+} from 'vxe-table'
 import type { Encounter, Keigenn, RowVO, Status } from '@/types/keigennRecord2'
 import type { Player } from '@/types/partyPlayer'
-import {
-
-  VxeUI,
-} from 'vxe-table'
+import { VxeUI } from 'vxe-table'
 import { getActionChinese } from '@/resources/actionChinese'
 import { completeIcon, stackUrl } from '@/resources/status'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
@@ -93,7 +94,7 @@ const partyEventParty = useStorage(
 )
 const select = ref(0)
 const data = ref<Encounter[]>([
-  { zoneName: '', duration: '00:00', table: [], key: 'init' },
+  { zoneName: '', duration: '00:00', table: [], key: 'init', timestamp: -1 },
 ])
 const regexes: Record<string, RegExp> = {
   rsv: /^262\|(?<timestamp>[^|]*)\|[^|]*\|[^|]*\|_rsv_(?<id>\d+)_[^|]+\|(?<real>[^|]*)\|/i,
@@ -314,6 +315,7 @@ function handleLine(line: string) {
                   duration: '00:00',
                   table: [],
                   key: splitLine[logDefinitions.InCombat.fields.timestamp],
+                  timestamp: timeStamp,
                 })
                 if (data.value.length >= maxStorage.runtime)
                   data.value.splice(data.value.length - 1, 1)
@@ -334,7 +336,8 @@ function handleLine(line: string) {
           {
             const id = Number(match.groups?.id as string)
             const real = splitLine[logDefinitions.RSVData.fields.value]
-            rsvData.value[Number(id)] = real
+            if (id && real)
+              rsvData.value[Number(id)] = real
           }
           break
         case 'networkDoT':
@@ -381,7 +384,6 @@ function handleLine(line: string) {
             const jobIcon = Util.jobEnumToIcon(jobEnum)
             // dot/hot日志的source不准确 故无法计算目标减
             addRow({
-              timestamp,
               time: formattedTime,
               id: undefined,
               action: which,
@@ -494,7 +496,6 @@ function handleLine(line: string) {
                   }),
               )
               addRow({
-                timestamp,
                 time: formattedTime,
                 id,
                 action,
@@ -540,12 +541,7 @@ function getJobById(targetId: string): number {
 }
 
 function addRow(row: RowVO) {
-  // if (userOptions.pushMode) {
-  //   data.value[0].table.push(row);
-  //   lastPush = Date.now();
-  // } else {
   data.value[0].table.unshift(row)
-  // }
 }
 
 function stopCombat(timeStamp: number) {
@@ -561,7 +557,13 @@ function stopCombat(timeStamp: number) {
 function saveStorage() {
   localStorage.setItem(
     STORAGE_KEY,
-    JSON.stringify(data.value.slice(0, maxStorage.localStorage)),
+    JSON.stringify(
+      data.value
+        .filter(v => v.key !== 'placeholder' && v.duration !== '00:00' && v.timestamp > 0)
+        .slice()
+        .sort((a, b) => b.timestamp - a.timestamp)
+        .slice(0, maxStorage.runtime),
+    ),
   )
 }
 
@@ -582,7 +584,8 @@ function loadStorage() {
 function formatTime(time: number) {
   const minute = Math.max(Math.floor(time / 60000), 0)
   const second = Math.max(Math.floor((time - minute * 60000) / 1000), 0)
-  return `${minute < 10 ? '0' : ''}${minute}:${second < 10 ? '0' : ''
+  return `${minute < 10 ? '0' : ''}${minute}:${
+    second < 10 ? '0' : ''
   }${second}`
 }
 
@@ -625,9 +628,7 @@ onMounted(() => {
       Reflect.deleteProperty(jobMap.value, id)
   }
   loadStorage()
-  if (!store.isBrowser && data.value[0].key !== 'placeholder') {
-    data.value.unshift({ duration: '00:00', table: [], zoneName: '', key: 'placeholder' })
-  }
+
   addOverlayListener('LogLine', (e) => {
     handleLine(e.rawLine)
   })
@@ -658,12 +659,14 @@ function doCopy(row: RowVO) {
   } = row
   const sp
     = row.effect === 'damage done' ? '' : `,${translationFlags(row.effect)}`
-  const result = `${time} ${job} ${actionCN} ${amount.toLocaleString()}(${translationFlags(type)}) 减伤:${keigenns.length === 0 && sp === ''
-    ? '无'
-    : keigenns
-      .map(k => (userOptions.statusCN ? k.name : k.effect))
-      .join(',') + sp
-  } HP:${row.currentHp}/${row.maxHp
+  const result = `${time} ${job} ${actionCN} ${amount.toLocaleString()}(${translationFlags(type)}) 减伤:${
+    keigenns.length === 0 && sp === ''
+      ? '无'
+      : keigenns
+        .map(k => (userOptions.statusCN ? k.name : k.effect))
+        .join(',') + sp
+  } HP:${row.currentHp}/${
+    row.maxHp
   }(${Math.round((row.currentHp / row.maxHp) * 100)}%)+盾:${Math.round(
     (row.maxHp * +row.shield) / 100,
   )}(${row.shield}%)`
@@ -679,7 +682,12 @@ function copyText(text: string) {
     document.execCommand('copy')
     document.body.removeChild(input)
   })
-  VxeUI.modal.message({ content: '已复制到剪贴板', status: 'success' })
+  VxeUI.modal.close()
+  VxeUI.modal.message({
+    content: '已复制到剪贴板',
+    status: 'success',
+    duration: 800,
+  })
 }
 
 const focusing = ref({ target: false, action: false })
@@ -687,20 +695,16 @@ const focusRow: Ref<RowVO | undefined> = ref()
 
 const menuConfig = reactive<VxeTablePropTypes.MenuConfig<RowVO>>({
   className: 'my-menus',
-  body: {
-    options: [],
+  trigger: 'cell',
+  visibleMethod({ row }) {
+    return !!row
   },
+  body: { options: [] },
 })
 
 watchEffect(() => {
   if (menuConfig.body?.options && xTable.value) {
     menuConfig.body.options[0] = [
-      {
-        code: 'copy',
-        name: '复制详情',
-        prefixIcon: 'vxe-icon-copy',
-        className: 'my-copy-item',
-      },
       {
         code: 'clearFilterAction',
         name: '取消技能筛选',
@@ -728,7 +732,7 @@ watchEffect(() => {
       {
         code: 'filterSelectTarget',
         name: focusRow.value?.target
-          ? `只看[${focusRow.value.job}] ${focusRow.value.target}`
+          ? `只看 [${focusRow.value.job}] ${focusRow.value.target}`
           : '只看该玩家',
         prefixIcon: 'vxe-icon-user-fill',
         visible: !focusing.value.target,
@@ -746,8 +750,22 @@ function clickMinimize() {
   // }
 }
 
+const cellClickEvent: VxeTableEvents.CellClick<RowVO> = ({ row }) => {
+  if (!row) {
+    VxeUI.modal.message({
+      content: '未选中有效数据行',
+      status: 'error',
+    })
+    return
+  }
+  doCopy(row)
+}
+
 const cellContextMenuEvent: VxeTableEvents.CellMenu<RowVO> = ({ row }) => {
   const $table = xTable.value
+  if (!row) {
+    return
+  }
   if ($table) {
     $table.setCurrentRow(row)
     focusRow.value = row
@@ -761,16 +779,6 @@ const contextMenuClickEvent: VxeTableEvents.MenuClick<RowVO> = ({
   const $table = xTable.value
 
   switch (menu.code) {
-    case 'copy':
-      if (!row) {
-        VxeUI.modal.message({
-          content: '未选中有效数据行',
-          status: 'error',
-        })
-        return
-      }
-      doCopy(row)
-      break
     case 'clearFilterTarget':
       if ($table) {
         $table.clearFilter($table.getColumnByField('target'))
@@ -820,152 +828,93 @@ const contextMenuClickEvent: VxeTableEvents.MenuClick<RowVO> = ({
       break
   }
 }
-
-const test = {
-  clearData: () => {
-    select.value = 0
-    data.value.length = 0
-    data.value.push({
-      key: Date.now().toString(),
-      zoneName: '测试地区',
-      duration: '00:00',
-      table: [],
-    })
-    combatTimeStamp.value = 0
-    statusData.friendly = {}
-    statusData.enemy = {}
-    saveStorage()
-  },
-  fakeData: () => {
-    data.value[0].table.push({
-      timestamp: 10000,
-      time: data.value[0].table.length.toString(),
-      id: undefined,
-      action: '测试动作',
-      actionCN: '测试动作',
-      source: '测试敌人',
-      target: povName.value,
-      targetId: '1234567890',
-      job: '战士',
-      jobIcon: 'Warrior',
-      jobEnum: 0,
-      amount: 1000,
-      keigenns: [
-        {
-          name: '整体盾',
-          count: 0,
-          effect: '整体盾',
-          effectId: 'D25',
-          source: '芸豆角包子',
-          sourceId: '1011A008',
-          target: '芸豆角包子',
-          targetId: '1011A008',
-          expirationTimestamp: 1712757148883,
-          performance: {
-            physics: 1,
-            magic: 1,
-            darkness: 1,
-          },
-          fullIcon: '012000/012972',
-          isPov: false,
-          remainingDuration: '14',
-        },
-        {
-          name: '整体论',
-          count: 0,
-          effect: '整体论',
-          effectId: 'BBB',
-          source: '芸豆角包子',
-          sourceId: '1011A008',
-          target: '芸豆角包子',
-          targetId: '1011A008',
-          expirationTimestamp: 1712757138883,
-          performance: {
-            physics: 1,
-            magic: 1,
-            darkness: 1,
-          },
-          fullIcon: '012000/012971',
-          isPov: false,
-          remainingDuration: '4',
-        },
-        {
-          name: '均衡预后',
-          count: 0,
-          effect: '均衡预后',
-          effectId: 'A31',
-          source: '芸豆角包子',
-          sourceId: '1011A008',
-          target: '芸豆角包子',
-          targetId: '1011A008',
-          expirationTimestamp: 1712757153915,
-          performance: {
-            physics: 1,
-            magic: 1,
-            darkness: 1,
-          },
-          fullIcon: '012000/012954',
-          isPov: false,
-          remainingDuration: '19',
-        },
-      ],
-      currentHp: 1000,
-      maxHp: 1000,
-      effect: 'damage done',
-      type: 'magic',
-      shield: '0',
-      povId: povId.value,
-    })
-    saveStorage()
-  },
-  fakeLogDamage: () => {
-    combatTimeStamp.value = Date.now()
-    handleLine(
-      `21|${new Date()}|4000044A|万魔殿|829A|尖脚|${povId.value}|${povName.value
-      }|720203|B0F10000|9F0E|8200000|1B|829A8000|0|0|0|0|0|0|0|0|0|0|155065|155065|10000|10000|||94.62|98.28|0.00|-3.13|44|44|0|10000|||92.00|100.00|0.00|0.00|000010B3|0|1|fd5fa47ff773c3ca`,
-    )
-  },
-  fakeLogStatus: () => {
-    handleLine(
-      `26|${new Date()}|59|复仇|15.00|${povId.value}|${povName.value}|${povId.value
-      }|${povName.value}|64|129221|129221|b6388ee76760c33b`,
-    )
-  },
-}
 </script>
 
 <template>
-  <div class="wrapper" :style="style" :class="store.isBrowser ? 'is-browser' : 'not-browser'">
+  <div
+    class="wrapper"
+    :style="style"
+    :class="store.isBrowser ? 'is-browser' : 'not-browser'"
+  >
     <header v-if="userOptions.showHeader">
-      <vxe-select v-show="!minimize" v-model="select" size="mini" class="select">
-        <vxe-option
-          v-for="i in data.length" :key="`${data[i - 1].key}-${data[i - 1].duration}-${data[i - 1].zoneName
-          }`" :value="i - 1" :label="`${data[i - 1].duration} ${data[i - 1].zoneName}`"
-        />
-      </vxe-select>
+      <div class="header-select">
+        <vxe-select
+          v-show="!minimize"
+          v-model="select"
+          size="mini"
+          class="combat-select"
+          popup-class-name="combat-select-popup"
+        >
+          <vxe-option
+            v-for="i in data.length"
+            :key="`${data[i - 1].key}-${data[i - 1].duration}-${
+              data[i - 1].zoneName
+            }`"
+            :value="i - 1"
+            :label="`${data[i - 1].duration} ${data[i - 1].zoneName}`"
+          />
+        </vxe-select>
+      </div>
       <vxe-button
-        class="minimize" :class="minimize ? 'in-minimize' : 'not-minimize'"
-        :icon="minimize ? 'vxe-icon-fullscreen' : 'vxe-icon-minimize'" :style="{ opacity: minimize ? 0.5 : 1 }"
+        class="minimize"
+        :class="minimize ? 'in-minimize' : 'not-minimize'"
+        :icon="minimize ? 'vxe-icon-fullscreen' : 'vxe-icon-minimize'"
+        :style="{ opacity: minimize ? 0.5 : 1 }"
         @click="clickMinimize"
       />
     </header>
     <main v-show="!minimize">
       <vxe-table
-        ref="xTable" size="mini" class="vxe-table" show-overflow="tooltip" round height="100%"
-        :scroll-y="{ enabled: true }" :loading="loading" :show-header="userOptions.showHeader"
-        :data="data[select].table" :row-config="{ isHover: true }" :cell-config="{ height: size.line_height }" :header-cell-style="{
-          padding: '0px', top: '-0.5em',
-        }" :menu-config="menuConfig" @cell-menu="cellContextMenuEvent" @menu-click="contextMenuClickEvent"
+        ref="xTable"
+        size="mini"
+        class="vxe-table"
+        show-overflow="tooltip"
+        round
+        height="100%"
+        :scroll-y="{ enabled: true }"
+        :loading="loading"
+        :show-header="userOptions.showHeader"
+        :data="data[select].table"
+        :row-config="{ isHover: true }"
+        :cell-config="{ height: size.line_height }"
+        :header-cell-style="{
+          padding: '0px',
+          top: '-0.5em',
+        }"
+        :menu-config="menuConfig"
+        @cell-click="cellClickEvent"
+        @cell-menu="cellContextMenuEvent"
+        @menu-click="contextMenuClickEvent"
       >
-        <vxe-column :width="size.time" field="time" title="时间" align="center" />
         <vxe-column
-          :width="size.action" :field="userOptions.actionCN ? 'actionCN' : 'action'" title="技能"
-          :filters="actionOptions" :filter-multiple="false" :resizable="false" align="center"
+          :width="size.time"
+          field="time"
+          title="时间"
+          align="center"
         />
         <vxe-column
-          :width="size.target" field="target" title="目标" :filters="targetOptions" :filter-multiple="false"
-          :resizable="!userOptions.anonymous && !userOptions.abbrId" align="left" header-align="center"
-          :header-class-name="userOptions.showName ? 'target-name-column-full' : 'target-name-column-abbr'"
+          :width="size.action"
+          :field="userOptions.actionCN ? 'actionCN' : 'action'"
+          title="技能"
+          :filters="actionOptions"
+          :filter-multiple="false"
+          :resizable="true"
+          align="center"
+        />
+        <vxe-column
+          :width="size.target"
+          field="target"
+          title="标"
+          :filters="targetOptions"
+          :filter-multiple="false"
+          :resizable="!userOptions.anonymous && !userOptions.abbrId"
+          align="left"
+          header-align="center"
+          :header-class-name="
+            userOptions.showName
+              ? 'target-name-column-full'
+              : 'target-name-column-abbr'
+          "
         >
           <template #default="{ row }">
             <KeigennRecord2Target :row="row" />
@@ -985,21 +934,12 @@ const test = {
     </main>
   </div>
   <div v-if="store.isBrowser" class="testLog">
-    <div v-if="false" class="test-buttons">
-      <vxe-button class="test-button" type="primary" @click="test.clearData">
-        清空
-      </vxe-button>
-      <vxe-button class="test-button" type="primary" @click="test.fakeData">
-        假条目
-      </vxe-button>
-      <vxe-button class="test-button" type="primary" @click="test.fakeLogDamage">
-        假伤害
-      </vxe-button>
-      <vxe-button class="test-button" type="primary" @click="test.fakeLogStatus">
-        假状态
-      </vxe-button>
-    </div>
-    <CommonTestLog m-1 @before-handle="beforeHandle" @after-handle="afterHandle" @handle-line="handleLine" />
+    <CommonTestLog
+      m-1
+      @before-handle="beforeHandle"
+      @after-handle="afterHandle"
+      @handle-line="handleLine"
+    />
   </div>
 </template>
 
@@ -1042,7 +982,6 @@ html {
 
 img[src=""],
 img:not([src]) {
-
   // opacity: 0;
   // display: none;
   &::after {
@@ -1074,7 +1013,6 @@ img:not([src]) {
 
 .not-minimize {
   background-color: transparent;
-  ;
 }
 
 .vxe-select-option {
@@ -1114,7 +1052,7 @@ img:not([src]) {
   padding: 0.5em !important;
   white-space: nowrap;
 
-  &>div[role="title"] {
+  & > div[role="title"] {
     font-size: calc(var(--vxe-font-size-mini) * 1.2) !important;
     font-weight: bold;
     margin-bottom: 0.2em !important;
@@ -1140,8 +1078,7 @@ header {
   width: 100%;
   display: flex;
 
-  .select {
-    transition: width 0.15s ease-in-out;
+  .combat-select {
     width: 4.7em;
     z-index: 15;
     position: absolute;
@@ -1149,8 +1086,12 @@ header {
 
     &:hover {
       background-color: #151515;
-      width: calc(100% - var(--vxe-input-height-mini));
+      width: calc(100% - var(--vxe-input-height-mini) - 0.2em);
     }
+  }
+
+  .combat-select-popup {
+    left: 0 !important;
   }
 }
 
@@ -1271,7 +1212,10 @@ main {
 .YOU {
   font-weight: bolder;
   $color: rgba(3, 169, 244, 0.4);
-  text-shadow: -1px 0 3px $color, 0 1px 3px $color, 1px 0 3px $color,
+  text-shadow:
+    -1px 0 3px $color,
+    0 1px 3px $color,
+    1px 0 3px $color,
     0 -1px 3px $color;
 }
 
@@ -1301,9 +1245,9 @@ main {
   justify-content: flex-end;
 }
 
-.target-name-column-abbr {
-  transform: translateX(-0.75em);
-}
+// .target-name-column-abbr {
+//   transform: translateX(0em);
+// }
 
 .is-browser {
   background-color: #fff;

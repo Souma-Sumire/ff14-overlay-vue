@@ -28,14 +28,12 @@ function onError(e: Event) {
       <img
         v-if="!imageError"
         :class="`jobIcon cj${store.userOptions.iconType}`"
-        :src="getIconSrc(props.row.jobIcon, store.userOptions.iconType) ?? ''"
+        :src="getIconSrc(props.row.jobIcon, store.userOptions.iconType)"
         :alt="props.row.jobIcon"
         :data-job="store.userOptions.showName ? '' : props.row.job"
-        loading="lazy"
         @error="onError"
       >
-      <span v-else class="alt-text">{{ props.row.target }}</span>
-
+      <span v-else class="alt-text">{{ props.row.job }}</span>
       <span
         v-if="store.userOptions.showName"
         :class="`job ${props.row.jobIcon} ${

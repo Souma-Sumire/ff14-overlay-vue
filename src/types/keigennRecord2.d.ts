@@ -1,7 +1,6 @@
 import type { DamageEffect, DamageType } from '@/utils/flags'
 
 export interface RowVO {
-  timestamp: number
   time: string
   id?: string
   actionCN: string
@@ -43,6 +42,7 @@ export interface Encounter {
   zoneName: string
   duration: string
   table: RowVO[]
+  timestamp: number
 }
 
 export type KeigennType = 'multiplier' | 'absorbed'
