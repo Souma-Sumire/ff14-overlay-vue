@@ -34,6 +34,7 @@ const actionKey = computed(() =>
   userOptions.actionCN ? 'actionCN' : 'action',
 )
 
+// 太大会爆储存（5M）
 const maxStorage = 5
 
 const loading = ref(false)
@@ -125,7 +126,8 @@ function afterHandle() {
     v => v.duration !== '00:00' && v.table.length !== 0,
   )
   saveEnable = true
-  saveStorage()
+  // 手动解析时，不应该保存，否则只会保留最后5次战斗
+  // saveStorage()
   loading.value = false
 }
 

@@ -310,6 +310,12 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
   line-height: var(--row-height);
 }
 
+// amount列样式（允许超出单元格宽度）
+:global(.col-amount) {
+  overflow: visible !important;
+  // z-index: 2; // 在图标上方
+}
+
 // 表头Select去掉边框
 :global(.el-select__wrapper) {
   box-shadow: none !important;
