@@ -301,6 +301,11 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
   padding: 0 2px;
 }
 
+// 表格行指针手势
+:global(.el-table-v2__row) {
+  cursor: pointer;
+}
+
 // action列样式
 :global(.col-action) {
   display: block;
