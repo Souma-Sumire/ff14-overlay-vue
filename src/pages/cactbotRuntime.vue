@@ -10,8 +10,6 @@ import {
 } from '../../cactbot/resources/overlay_plugin_api'
 import 'animate.css'
 
-useDark()
-
 const mouseEnter = ref(false)
 
 function createRPArr(
@@ -181,6 +179,12 @@ function updateData() {
 }
 
 onMounted(() => {
+  const isDark = useDark()
+  const toggleDark = useToggle(isDark)
+  if (isDark.value === false) {
+    // 固定使用深色主题
+    toggleDark()
+  }
   document.body.addEventListener('mouseenter', () => (mouseEnter.value = true))
   document.body.addEventListener(
     'mouseleave',

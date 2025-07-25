@@ -23,8 +23,6 @@ import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
 const dev = useDevMode()
 
-useDark()
-
 const store = useKeigennRecord2Store()
 const userOptions = store.userOptions
 // 某些情况下OverlayPluginApi并不会立即被挂在到window上。用户上报，未复现。
@@ -588,6 +586,12 @@ if (povName.value !== '')
   store.initEnvironment(povName.value)
 
 onMounted(() => {
+  const isDark = useDark()
+  const toggleDark = useToggle(isDark)
+  if (isDark.value === false) {
+    // 固定使用深色主题
+    toggleDark()
+  }
   for (const id in jobMap.value) {
     const element = jobMap.value[id]
     if (Date.now() - element.timestamp > 1000 * 60 * 60 * 24 * 1)
