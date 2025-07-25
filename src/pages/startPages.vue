@@ -54,7 +54,7 @@ const tableData: Menu[] = [
   {
     title: '[悬浮窗] 减伤监控2',
     type: '悬浮窗/网页',
-    path: 'keigennRecord2?scale=1&opacity=0.9&targetType=icon&iconType=3&anonymous=1&parseAA=1&parseDoT=0&minimize=0&actionCN=1&statusCN=1',
+    path: 'keigennRecord2?scale=1&opacity=0.9&targetType=icon&iconType=3&parseAA=1&parseDoT=0&minimize=0&actionCN=1&statusCN=1',
     comment: `可以添加到 ACT 悬浮窗中用于实时监控。也可以在浏览器中打开，导入日志分析过往记录。
 URL地址栏参数说明：
 scale: 缩放倍率，默认1

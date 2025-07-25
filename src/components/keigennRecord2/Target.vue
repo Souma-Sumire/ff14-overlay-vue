@@ -14,18 +14,21 @@ function getIconSrc(jobIcon: FFIcon, type: number) {
   const jobName = jobIcon.replace(/([A-Z])/g, ' $1').trim()
   return `https://souma.diemoe.net/resources/img/cj${type}/${jobName}.png`
 }
+
 function onError(e: Event) {
   imageError.value = true
   const img = e.target as HTMLImageElement
   img.style.display = 'none'
   console.error('Failed to load image:', props.row.jobIcon)
 }
+
+const showIcon = computed(() => !imageError.value && (store.userOptions.targetType === 'icon'))
 </script>
 
 <template>
   <div class="target">
     <img
-      v-if="!imageError && store.userOptions.targetType === 'icon'"
+      v-if="showIcon"
       :class="`jobIcon cj${store.userOptions.iconType}`"
       :src="getIconSrc(props.row.jobIcon, store.userOptions.iconType)"
       :alt="props.row.jobIcon"

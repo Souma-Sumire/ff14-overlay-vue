@@ -62,5 +62,9 @@ function parseParams<T>(v: string, def: T): T {
   if (typeof def === 'number')
     return Number.isNaN(+v) ? def : (+v as T)
 
+  if (typeof def === 'string') {
+    return v as T
+  }
+
   return def
 }
