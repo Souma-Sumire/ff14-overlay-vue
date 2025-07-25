@@ -179,7 +179,7 @@ function updateData() {
 }
 
 onMounted(() => {
-  const isDark = useDark()
+  const isDark = useDark({ storageKey: 'cactbot-runtime-theme' })
   const toggleDark = useToggle(isDark)
   if (isDark.value === false) {
     // 固定使用深色主题

@@ -588,7 +588,7 @@ if (povName.value !== '')
   store.initEnvironment(povName.value)
 
 onMounted(() => {
-  const isDark = useDark()
+  const isDark = useDark({ storageKey: 'keigenn-record-2-theme' })
   const toggleDark = useToggle(isDark)
   if (isDark.value === false) {
     // 固定使用深色主题
