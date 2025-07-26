@@ -1033,7 +1033,7 @@ onMounted(async () => {
     </el-row>
     <div class="map-container" flex="~ wrap">
       <div v-for="(m, i) in zoneListUsed" :key="m" class="map-info" flex="~ col" position-relative>
-        <h3 class="map-title" :style="{ width: `${IMG_SHOW_SIZE}px` }" ml-2 position-absolute mb-0 mt-1 p0>
+        <h3 class="map-title" :style="{ width: `${IMG_SHOW_SIZE}px` }" position-absolute ml-2 mb-0 mt-1 p0>
           {{ getMapName(m, i) }}
         </h3>
         <ul class="options" position-absolute mt-1 p0 right-0 top-0 mr-2>

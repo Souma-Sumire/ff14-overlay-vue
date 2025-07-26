@@ -138,8 +138,8 @@ onMounted(() => {
         v-show="showSettings"
         style="z-index: 10000"
         :party="party"
-        m-b-1
-        p-1
+
+        p-1 m-b-1
         @update-sort-arr="updateSortArr"
       />
     </div>

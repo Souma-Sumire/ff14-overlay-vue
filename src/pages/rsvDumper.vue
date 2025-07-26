@@ -159,7 +159,7 @@ function byteArrayToHex(bytes: Uint8Array, bytesPerLine = 16): string {
       width="50%"
       :append-to-body="true"
     >
-      <pre class="bg-black text-green-400 p-3 rounded text-xs overflow-auto">
+      <pre class="rounded bg-black text-green-400 p-3 text-xs overflow-auto">
 {{ currentHexDump }}
       </pre>
     </el-dialog>
