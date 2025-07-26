@@ -8,18 +8,15 @@ for (const key in STATUS) {
 }
 
 export function completeIcon(icon: number): string {
-  if (typeof icon === 'number') {
-    let head = [...'000000']
-    const iconStr = icon.toString()
-    if (iconStr.length > 3) {
-      const temp = [...iconStr].slice(0, iconStr.length - 3).concat(...'000')
-      head = [...head.slice(0, 6 - temp.length), ...temp]
-    }
-    let foot = [...'000000']
-    foot = [...foot.slice(0, 6 - iconStr.length), ...iconStr]
-    return `${head.join('')}/${foot.join('')}`
+  let head = [...'000000']
+  const iconStr = icon.toString()
+  if (iconStr.length > 3) {
+    const temp = [...iconStr].slice(0, iconStr.length - 3).concat(...'000')
+    head = [...head.slice(0, 6 - temp.length), ...temp]
   }
-  throw new Error('icon is not a number')
+  let foot = [...'000000']
+  foot = [...foot.slice(0, 6 - iconStr.length), ...iconStr]
+  return `${head.join('')}/${foot.join('')}`
 }
 
 export function stackUrl(url: string, stack: number) {

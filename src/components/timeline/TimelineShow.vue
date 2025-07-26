@@ -5,7 +5,8 @@ import type {
   TimelineConfigValues,
 } from '@/types/timeline'
 import { parseAction } from '@/store/timeline'
-import { getActionByChineseName, getFullImgSrc } from '@/utils/xivapi'
+import { chineseToIcon } from '@/utils/chineseToIcon'
+import { getFullImgSrc } from '@/utils/xivapi'
 
 const props = defineProps<{
   config: TimelineConfigValues
@@ -54,20 +55,20 @@ function getSkillImage(name: string): string {
     return imageMap[name] as string
 
   if (typeof imageMap[name] === 'undefined') {
+    const icon = chineseToIcon(name)
     // 仅请求一次，无论成功失败都不会再调用
-    imageMap[name] = getActionByChineseName(name).then((res) => {
-      if (res?.Icon) {
-        getFullImgSrc(res.Icon).then((url) => {
-          preloadImage(url)
-            .then(() => {
-              imageMap[name] = url
-            })
-            .catch(() => {
-              imageMap[name] = PLACEHOLDER
-            })
-        })
-      }
-    })
+    imageMap[name] = PLACEHOLDER
+    if (icon) {
+      getFullImgSrc(icon).then((url) => {
+        preloadImage(url)
+          .then(() => {
+            imageMap[name] = url
+          })
+          .catch(() => {
+            imageMap[name] = PLACEHOLDER
+          })
+      })
+    }
   }
 
   return PLACEHOLDER

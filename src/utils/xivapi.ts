@@ -20,22 +20,6 @@ interface CachedAction {
   expirationTime: number
 }
 
-const cacheExpirationTime = {
-  get random() {
-    return Math.floor(Math.random() * 86400000 * 11) + 86400000 * 25
-  },
-}
-
-const userAction = new Map(
-  Object.entries({
-    任务指令: '/i/000000/000123.png',
-    冲刺: '/i/000000/000104.png',
-    坐骑: '/i/000000/000118.png',
-    攻击: '/i/000000/000101.png',
-    腐秽大地: '/i/003000/003090.png',
-  }),
-)
-
 const ACTION_CACHE_KEY = 'souma-action-cache'
 const cachedActionData: CachedAction[] = JSON.parse(
   localStorage.getItem(ACTION_CACHE_KEY) || '[]',
@@ -96,45 +80,6 @@ export async function getImgSrcByActionId(id: number): Promise<string> {
   const res = await parseAction('action', id, ['Icon'])
 
   return getFullImgSrc(res.Icon)
-}
-
-export async function getActionByChineseName(name: string) {
-  const customAction = userAction.get(name)
-  if (customAction)
-    return { ActionCategoryTargetID: 0, ID: 0, Icon: customAction }
-
-  const cachedAction = cachedActionData.find(v => v.name === name)
-  if (cachedAction?.action)
-    return cachedAction.action
-
-  try {
-    const response = await requestPromise([
-      `https://${siteList.cafe
-      }/search?filters=ClassJobLevel>0&indexes=action&string=${encodeURIComponent(
-        name,
-      )}`,
-    ])
-
-    const result = response.Results[0]
-
-    if (result) {
-      const expirationTime = Date.now() + cacheExpirationTime.random
-      const newCachedAction: CachedAction = {
-        name,
-        action: result,
-        expirationTime,
-      }
-      cachedActionData.push(newCachedAction)
-      localStorage.setItem(ACTION_CACHE_KEY, JSON.stringify(cachedActionData))
-
-      return result
-    }
-    return { ActionCategoryTargetID: 0, ID: 0, Icon: '/i/000000/000405.png' }
-  }
-  catch (error) {
-    console.error(`Failed to get action by name: ${error}`)
-    throw new Error(`Failed to get action by name: ${error}`)
-  }
 }
 
 async function timeoutPromise<T>(
