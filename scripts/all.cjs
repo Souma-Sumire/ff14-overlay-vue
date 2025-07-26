@@ -8,6 +8,7 @@ const scripts = [
   'status.cjs',
   'contentFinderCondition.cjs',
   'meals.cjs',
+  'chinese2Icon.cjs',
   // "world.cjs",
 ]
 

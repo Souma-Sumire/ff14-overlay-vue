@@ -4,7 +4,6 @@ const iconv = require('iconv-lite')
 const { csvPaths } = require('./paths.cjs')
 
 const id2Name = {}
-// const id2ClassJobLevel = {}
 
 Promise.all([
   new Promise((resolve) => {
@@ -12,7 +11,7 @@ Promise.all([
       .pipe(iconv.decodeStream('utf8'))
       .pipe(csv({ headers: false }))
       .on('data', (row) => {
-        if (['key', '#', 'offset', 'int32', '0'].includes(row[0])) {
+        if (['key', '#', 'offset', 'int32', '0'].includes(row[0]) || row[1] === '') {
           return
         }
         id2Name[row[0]] = row[1]
