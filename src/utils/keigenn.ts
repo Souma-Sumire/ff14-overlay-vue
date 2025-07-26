@@ -1,4 +1,5 @@
-import type { Keigenn, Server } from '@/types/keigennRecord2'
+import type { DamageType } from './flags'
+import type { Keigenn, Server, Status } from '@/types/keigennRecord2'
 import { chinese, global } from '../resources/keigenn'
 import { completeIcon, statusData } from '../resources/status'
 
@@ -27,12 +28,33 @@ export function getKeigenn(decId: string): Keigenn | undefined {
   return keigennMap.get(decId)
 }
 
-export function multiplierEffect(multiplier: number) {
-  if (multiplier === 1)
+export function multiplierEffect(status: Status, damageType: DamageType): 'useful' | 'unuseful' | 'half-useful' {
+  if (status.type === 'absorbed') {
+    // 护盾类技能永远有效
     return 'useful'
-  if (multiplier === 0)
+  }
+  else if (damageType === 'dot' || damageType === 'darkness') {
+    // DOT、真实伤害永远无效
     return 'unuseful'
-  return 'half-useful'
+  }
+  else if (
+    // 真无敌
+    (status.performance.darkness === 0 && status.performance.magic === 0 && status.performance.physics === 0)
+    // 死斗、行尸走肉
+    || (status.performance.darkness === 1 && status.performance.magic === 1 && status.performance.physics === 1)
+  ) {
+    return 'useful'
+  }
+
+  const other = damageType === 'physics' ? 'magic' : 'physics'
+  // 半效减伤
+  const a = (100 - status.performance[damageType] * 100) * 2
+  const b = (100 - status.performance[other] * 100)
+  if (a === b)
+    return 'half-useful'
+
+  // 1=没减伤，0=完全100%减伤
+  return status.performance[damageType] === 1 ? 'unuseful' : 'useful'
 }
 
 const regFriendly

@@ -119,6 +119,8 @@ function beforeHandle() {
     timestamp: -1,
   })
   resetLine(data.value[0])
+  // 保存一个空的战斗数据，防止在数据更新后，用户每次都会加载之前的缓存
+  saveStorage()
 }
 
 function afterHandle() {
@@ -191,6 +193,7 @@ function handleLine(line: string) {
               = timestamp + Number.parseFloat(duration) * 1000
             const status: Status = {
               name: keigenn.name,
+              type: keigenn.type,
               count,
               effect,
               effectId,

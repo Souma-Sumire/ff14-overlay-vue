@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PerformanceType, RowVO } from '@/types/keigennRecord2'
+import type { RowVO } from '@/types/keigennRecord2'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 import { translationFlags } from '@/utils/flags'
 import { multiplierEffect } from '@/utils/keigenn'
@@ -26,9 +26,7 @@ const icon4k = keigennRecord2Store.icon4k
         :data-sourcePov="keigenn.isPov"
       >
         <img
-          :class="`statusIcon ${multiplierEffect(
-            keigenn.performance[row.type as keyof PerformanceType],
-          )}`"
+          :class="`statusIcon ${multiplierEffect(keigenn, props.row.type)}`"
           :src="getImgSrc(`/i/${keigenn.fullIcon}${icon4k}.png`)"
           :alt="keigenn.effect"
           loading="lazy"
@@ -37,7 +35,7 @@ const icon4k = keigennRecord2Store.icon4k
       </span>
     </span>
     <span>
-      {{ row.effect === "damage done" ? "" : translationFlags(row.effect) }}
+      {{ props.row.effect === "damage done" ? "" : translationFlags(props.row.effect) }}
     </span>
   </div>
 </template>
@@ -84,7 +82,7 @@ const icon4k = keigennRecord2Store.icon4k
 
 // 半效的减伤
 .half-useful {
-  filter: grayscale(50%);
+  filter: grayscale(60%);
 }
 
 // 有用的减伤

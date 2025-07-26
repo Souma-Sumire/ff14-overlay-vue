@@ -23,6 +23,7 @@ export interface RowVO {
 }
 
 export interface Status {
+  type: KeigennType
   name: string
   count: number
   effect: string
