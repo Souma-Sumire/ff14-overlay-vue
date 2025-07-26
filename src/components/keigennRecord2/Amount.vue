@@ -79,21 +79,6 @@ const remainPercent = computed(
   color: rgb(255, 100, 255);
 }
 
-// 无效的减伤
-.unuseful {
-  filter: grayscale(100%);
-}
-
-// 半效的减伤
-.half-useful {
-  filter: grayscale(50%);
-}
-
-// 有用的减伤
-.useful {
-  filter: grayscale(0%);
-}
-
 // 伤害数值
 .amount {
   display: flex;

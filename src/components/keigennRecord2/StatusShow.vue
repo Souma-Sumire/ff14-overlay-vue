@@ -76,4 +76,19 @@ const icon4k = keigennRecord2Store.icon4k
 .status[data-sourcePov="true"]::before {
   color: aquamarine;
 }
+
+// 无效的减伤
+.unuseful {
+  filter: grayscale(100%);
+}
+
+// 半效的减伤
+.half-useful {
+  filter: grayscale(50%);
+}
+
+// 有用的减伤
+.useful {
+  filter: grayscale(0%);
+}
 </style>
