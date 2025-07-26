@@ -877,7 +877,7 @@ init()
               }}
             </template>
           </el-table-column>
-          <el-table-column fixed="right" label="操作" width="150">
+          <el-table-column label="操作" width="150">
             <template #default="scope">
               <el-button
                 type="primary"
@@ -1007,16 +1007,16 @@ init()
             <el-button @click="exportTimelines([currentTimelineEditing])">
               导出
             </el-button>
-            <el-button type="primary" @click="timelineTimeFormat()">
+            <el-button @click="timelineTimeFormat()">
               切换时间格式
             </el-button>
             <el-button @click="openMarkdown">
               时间轴语法
             </el-button>
             <el-button @click="removeCommentsInTimeline()">
-              删除注释行
+              去除注释行
             </el-button>
-            <el-button type="danger" @click="showTimelineTableDialog">
+            <el-button @click="showTimelineTableDialog">
               展示调试信息
             </el-button>
           </el-space>
@@ -1027,6 +1027,9 @@ init()
 </template>
 
 <style lang="scss" scoped>
+:global(body) {
+  margin: 0;
+}
 .flex-header {
   display: flex;
   flex-direction: column;
@@ -1080,7 +1083,7 @@ init()
   font-weight: bold;
 }
 
-:deep(.editor-dialog-content){
+:deep(.editor-dialog-content) {
   padding: 0.2em;
 }
 </style>
