@@ -33,7 +33,7 @@ function renderHTML(text: string): string {
         item[0],
         `${
           src
-            ? `<div class="skill_icon"><img src="${src}" style="background-image: url('${PLACEHOLDER}')" loading="auto"/></div>`
+            ? `<div class="skill_icon"><img src="${src}" loading="auto"/></div>`
             : ''
         }<span>${item.groups?.repeat ? item.groups?.name : ''}</span>`,
       )
