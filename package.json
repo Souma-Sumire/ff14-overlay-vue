@@ -12,7 +12,7 @@
     "submodule": "git submodule update --remote",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "cjs": "node scripts/generate-all.cjs"
+    "cjs": "node scripts/all.cjs"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",

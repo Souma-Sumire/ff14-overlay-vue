@@ -13,7 +13,8 @@ function readFile(fileName, path) {
       .on('data', (row) => {
         fileValues[fileName] = fileValues[fileName] || []
         fileValues[fileName].push(row)
-      }).on('end', () => {
+      })
+      .on('end', () => {
         resolve('end')
       })
   })

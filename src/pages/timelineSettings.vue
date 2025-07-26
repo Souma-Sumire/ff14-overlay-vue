@@ -26,7 +26,7 @@ const router = useRouter()
 const { wsConnected } = useWebSocket({ allowClose: true, addWsParam: true })
 
 const timelineStore = useTimelineStore()
-const timelines = toRef(timelineStore, 'allTimelines')
+const allTimelinesRef = toRef(timelineStore, 'allTimelines')
 const timelineFilters = toRef(timelineStore, 'filters')
 
 const simulatedCombatTime = ref(0)
@@ -38,7 +38,10 @@ const showFFlogsDialog = ref(false)
 const showSettings = ref(false)
 const dialogTableVisible = ref(false)
 
-const timelineCurrentlyEditing = useLocalStorage<ITimeline>('timelineCurrentlyEditing', {
+let syncTimeoutTimer: NodeJS.Timeout | undefined
+let syncFailNotification: NotificationHandle | undefined
+
+const currentTimelineEditing = useLocalStorage<ITimeline>('timelineCurrentlyEditing', {
   name: '空',
   condition: { zoneId: '0', jobs: ['NONE'] },
   timeline: '空',
@@ -46,8 +49,8 @@ const timelineCurrentlyEditing = useLocalStorage<ITimeline>('timelineCurrentlyEd
   create: '空',
 })
 
-const transmissionTimeline = ref([] as ITimelineLine[])
-const highDifficultZoneId: { id: string, name: string }[] = [{ id: '0', name: '任意' }]
+const parsedTimelineLines = ref([] as ITimelineLine[])
+const highDifficultyZones: { id: string, name: string }[] = [{ id: '0', name: '任意' }]
 
 let loading: any = null
 let keepRetrying = false
@@ -56,10 +59,10 @@ const keyword = ref('')
 const selectedZoneId = ref('')
 const selectedJob = ref('')
 
-let elN: NotificationHandle | undefined
+let wsWarningNotification: NotificationHandle | undefined
 
 const filteredTimelines = computed(() => {
-  return timelines.value.filter((timeline) => {
+  return allTimelinesRef.value.filter((timeline) => {
     const nameMatch = timeline.name.toLowerCase().includes(keyword.value.toLowerCase())
 
     const zoneMatch
@@ -84,7 +87,7 @@ const timeMinuteSecondDisplay = computed(() => {
 const maxSlider = ref(0)
 
 function editTimeline(timeline: ITimeline): void {
-  timelineCurrentlyEditing.value = timeline
+  currentTimelineEditing.value = timeline
   dialogVisible.value = true
   updateTransmissionTimeline()
 }
@@ -93,12 +96,12 @@ function closeDialog() {
   dialogVisible.value = false
 }
 
-function newDemoTimeline(): void {
+function createNewTimeline(): void {
   editTimeline(timelineStore.allTimelines[timelineStore.newTimeline()])
 }
 
 function updateTransmissionTimeline() {
-  transmissionTimeline.value = [{
+  parsedTimelineLines.value = [{
     time: 0,
     action: '正在加载...',
     show: true,
@@ -106,24 +109,21 @@ function updateTransmissionTimeline() {
     windowAfter: 0,
     alertAlready: true,
   }]
-  parseTimeline(timelineCurrentlyEditing.value.timeline).then((result) => {
-    transmissionTimeline.value = result
-    const maxTime = Math.max(...transmissionTimeline.value.map(v => v.time), 550)
+  parseTimeline(currentTimelineEditing.value.timeline).then((result) => {
+    parsedTimelineLines.value = result
+    const maxTime = Math.max(...parsedTimelineLines.value.map(v => v.time), 550)
     maxSlider.value = maxTime + 30
     simulatedCombatTime.value = -timelineStore.configValues.preBattle
   })
 }
 
 function timelineTimeFormat() {
-  timelineCurrentlyEditing.value.timeline = timelineCurrentlyEditing.value.timeline.replaceAll(
-    /(?<=^|#\s*)(?<time>[:：\d.]+)/gm,
-    (searchValue: string | RegExp, _replaceValue: string): string => {
-      if (/^\d+:\d+(?:\.\d{1,2})?$/.test(searchValue.toString())) {
-        return moment.duration(`00:${searchValue.toString()}`).as('seconds').toString()
-      }
-      return moment.utc(Number.parseFloat(searchValue.toString()) * 1000).format('mm:ss.S')
-    },
-  )
+  currentTimelineEditing.value.timeline = currentTimelineEditing.value.timeline
+    .replaceAll(/(?<=^|#\s*)(\d+:\d+(?:\.\d{1,2})?|\d+(?:\.\d+)?)/gm, (match) => {
+      return match.includes(':')
+        ? moment.duration(`00:${match}`).as('seconds').toString()
+        : moment.utc(Number(match) * 1000).format('mm:ss.S')
+    })
 }
 
 function deleteTimeline(target: ITimeline): void {
@@ -133,12 +133,12 @@ function deleteTimeline(target: ITimeline): void {
     type: 'warning',
   })
     .then(() => {
-      timelines.value.splice(timelines.value.findIndex(v => v === target), 1)
+      allTimelinesRef.value.splice(allTimelinesRef.value.findIndex(v => v === target), 1)
     })
     .catch(() => {})
 }
 
-function deleteSelectedTimelines() {
+function batchDeleteTimelines() {
   if (selectedTimelines.value.length === 0) {
     ElMessage.warning('请选择要删除的时间轴')
     return
@@ -158,7 +158,7 @@ function deleteSelectedTimelines() {
   )
     .then(() => {
       ElMessage.success(`成功删除 ${selectedTimelines.value.length} 个时间轴`)
-      timelines.value = timelines.value.filter(t => !selectedTimelines.value.includes(t))
+      allTimelinesRef.value = allTimelinesRef.value.filter(t => !selectedTimelines.value.includes(t))
       selectedTimelines.value = []
       isAllSelected.value = false
     })
@@ -167,19 +167,19 @@ function deleteSelectedTimelines() {
 
 function toggleSelectAll() {
   isAllSelected.value = !isAllSelected.value
-  selectedTimelines.value = isAllSelected.value ? [...timelines.value] : []
+  selectedTimelines.value = isAllSelected.value ? [...allTimelinesRef.value] : []
 }
 
-function exportSelectedTimelines() {
+function batchExportTimelines() {
   if (selectedTimelines.value.length === 0) {
     ElMessage.warning('请选择要导出的时间轴')
     return
   }
 
-  exportTimeline(selectedTimelines.value)
+  exportTimelines(selectedTimelines.value)
 }
 
-function exportTimeline(timelineArr: ITimeline[]) {
+function exportTimelines(timelineArr: ITimeline[]) {
   const text = JSON.stringify(timelineArr)
   const zip = JSON.parse(text)
   for (const timeline of zip) {
@@ -197,7 +197,7 @@ function exportTimeline(timelineArr: ITimeline[]) {
 
   // 如果两种方案大小相同，直接导出完整版本
   if (fullSize === optimizedSize) {
-    handleClipboardCopy(
+    copyToClipboardWithMsg(
       compressedText,
       '数据复制成功，已写入剪切板。',
       '复制失败，请手动复制！',
@@ -232,7 +232,7 @@ function exportTimeline(timelineArr: ITimeline[]) {
         if (action === 'cancel' || action === 'confirm') {
           const finalCompressed
             = action === 'confirm' ? compressedZipped : compressedText
-          handleClipboardCopy(
+          copyToClipboardWithMsg(
             finalCompressed,
             '数据复制成功，已写入剪切板。',
             '复制失败，请手动复制！',
@@ -243,7 +243,7 @@ function exportTimeline(timelineArr: ITimeline[]) {
   )
 }
 
-function importTimelines(): void {
+function importTimelineData(): void {
   ElMessageBox.prompt('请输入导出的字符串（支持多行导入）', '导入时间轴', {
     confirmButtonText: '解析',
     cancelButtonText: '取消',
@@ -336,7 +336,7 @@ function importTimelines(): void {
               .then(({ value }) => {
                 if (value === '我确认') {
                   // 用户确认覆盖
-                  performImport(allParsedData, true)
+                  saveImportedTimelines(allParsedData, true)
                 }
               })
               .catch(() => {
@@ -345,7 +345,7 @@ function importTimelines(): void {
           }
           else if (action === 'confirm') {
             // 直接执行追加操作
-            performImport(allParsedData, false)
+            saveImportedTimelines(allParsedData, false)
           }
           // 如果 action 是 'close'，用户关闭了对话框，不执行任何操作
         },
@@ -356,7 +356,7 @@ function importTimelines(): void {
     })
 }
 
-function performImport(parsedData: ITimeline[], overwrite: boolean): void {
+function saveImportedTimelines(parsedData: ITimeline[], overwrite: boolean): void {
   if (overwrite) {
     timelineStore.allTimelines.length = 0
   }
@@ -420,7 +420,7 @@ function sendBroadcastData(type: 'get' | 'post', data: any = {}) {
   })
 }
 
-function requestACTData() {
+function requestACTTimelineData() {
   const timelineUrl = router.resolve({ path: '/timeline' })
   const fullPath = `${window.location.protocol}//${window.location.host}/ff14-overlay-vue/${timelineUrl.href}`
 
@@ -436,7 +436,7 @@ function requestACTData() {
   setTimeout(() => {
     if (keepRetrying) {
       ElMessage.info('重新尝试获取数据...')
-      requestACTData()
+      requestACTTimelineData()
     }
   }, 5000)
 }
@@ -445,6 +445,7 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
   if (e.source !== 'soumaTimeline')
     return
   if ((e.msg as any).type === 'post') {
+    // 得到 timeline 中储存的数据（仅在网页无数据时才会触发）
     keepRetrying = false
     loading.close()
 
@@ -472,9 +473,36 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
       duration: 3000,
     })
   }
+  else if ((e.msg as any).type === 'success') {
+    // timeline 回报 数据同步成功
+    if (syncTimeoutTimer) {
+      clearTimeout(syncTimeoutTimer)
+      syncTimeoutTimer = undefined
+    }
+    if (syncFailNotification) {
+      syncFailNotification.close()
+      syncFailNotification = undefined
+    }
+    ElNotification.closeAll()
+    ElNotification({
+      message: '数据同步成功',
+      type: 'success',
+      duration: 1000,
+      position: 'bottom-left',
+      icon: 'el-icon-success',
+      zIndex: 1,
+      showClose: false,
+    })
+  }
+  else if ((e.msg as any).type === 'hello') {
+    // timeline 主动告知 上线
+    if (syncFailNotification) {
+      syncData()
+    }
+  }
 }
 
-function loadTimelineStoreData() {
+function loadTimelineSettings() {
   timelineStore.loadTimelineSettings()
 }
 
@@ -492,12 +520,12 @@ function fflogsImportClick() {
   showFFlogsDialog.value = true
 }
 
-function handleSettingsSave(settings: typeof timelineStore) {
+function saveSettingsChanges(settings: typeof timelineStore) {
   timelineStore.configValues = settings.configValues
   timelineStore.showStyle = settings.showStyle
 }
 
-function handleClipboardCopy(
+function copyToClipboardWithMsg(
   text: string,
   successMsg = '复制成功',
   errorMsg = '复制失败',
@@ -508,10 +536,10 @@ function handleClipboardCopy(
 }
 
 function tableRowClassName({ row }: { row: ITimeline }) {
-  return row === timelineCurrentlyEditing.value ? 'editing-row' : ''
+  return row === currentTimelineEditing.value ? 'editing-row' : ''
 }
 
-function optimizedSize() {
+function removeCommentsInTimeline() {
   ElMessageBox.confirm(
     '要删除所有的注释行，仅保留必要的时间轴数据吗？',
     '提示',
@@ -522,19 +550,59 @@ function optimizedSize() {
     },
   )
     .then(() => {
-      timelineCurrentlyEditing.value.timeline
-        = timelineCurrentlyEditing.value.timeline.replace(/^#.*(?:\n|$)/gm, '')
+      currentTimelineEditing.value.timeline
+        = currentTimelineEditing.value.timeline.replace(/^#.*(?:\n|$)/gm, '')
       ElMessage.success('完成')
     })
     .catch(() => {})
 }
 
-function showDialog() {
+function showTimelineTableDialog() {
   dialogTableVisible.value = true
 }
 
 function loadRecommendedTimeline() {
-  performImport(recommendedTimeline as ITimeline[], false)
+  saveImportedTimelines(recommendedTimeline as ITimeline[], false)
+}
+
+function syncData() {
+  sendBroadcastData('post', timelineStore.$state)
+
+  clearTimeout(syncTimeoutTimer)
+  syncTimeoutTimer = setTimeout(() => {
+    const timelineUrl = router.resolve({ path: '/timeline' })
+    const fullPath = `${window.location.protocol}//${window.location.host}/ff14-overlay-vue/${timelineUrl.href}`
+
+    syncFailNotification?.close()
+    syncFailNotification = ElNotification({
+      title: '同步数据失败',
+      message: h('div', { style: 'color:#f00' }, [
+        h('div', [
+          '请确保你已正确启用了 ',
+          h('a', {
+            href: fullPath,
+            target: '_blank',
+            style: 'color:#f00; text-decoration: underline;',
+          }, '此悬浮窗'),
+          '。',
+        ]),
+      ]),
+      showClose: false,
+      duration: 0,
+      position: 'bottom-left',
+    })
+  }, 500)
+}
+
+function showWsWarningNotification() {
+  wsWarningNotification?.close()
+  wsWarningNotification = ElNotification({
+    title: '你修改了时间轴，但',
+    message: h('i', { style: 'color: #f00' }, '改动未应用，直到你成功连接到 WebSocket。'),
+    showClose: false,
+    duration: 0,
+    position: 'bottom-left',
+  })
 }
 
 onMounted(() => {
@@ -543,12 +611,12 @@ onMounted(() => {
   const unwatch = watch(wsConnected, (val) => {
     if (val) {
       if (timelineStore.allTimelines.length === 0) {
-        requestACTData()
+        requestACTTimelineData()
       }
       unwatch()
-      if (elN) {
-        sendBroadcastData('post', timelineStore.$state)
-        elN.close()
+      if (wsWarningNotification) {
+        wsWarningNotification.close()
+        syncData()
       }
     }
   })
@@ -556,21 +624,16 @@ onMounted(() => {
   // 语法破坏性改动
   timelineStore.allTimelines.forEach(v => v.timeline = v.timeline.replaceAll(/^(?<a>.+), once: true(?<b>.+)$/gm, '$<a>$<b> once'))
 
-  watch(timelineStore.$state, () => {
+  const syncDataDebounced = useDebounceFn(() => {
     if (wsConnected.value) {
-      sendBroadcastData('post', timelineStore.$state)
+      syncData()
     }
     else {
-      elN?.close()
-      elN = ElNotification({
-        title: '你修改了时间轴，但',
-        message: h('i', { style: 'color: #f00' }, '改动未应用，直到你成功连接到 WebSocket。'),
-        showClose: false,
-        duration: 0,
-        position: 'bottom-left',
-      })
+      showWsWarningNotification()
     }
-  }, { deep: true })
+  }, 500)
+
+  watch(() => timelineStore.$state, syncDataDebounced, { deep: true })
 })
 
 function init(): void {
@@ -579,14 +642,14 @@ function init(): void {
       const element = zoneInfo[key]
       switch (element.contentType) {
         case 4: case 5: case 28:
-          highDifficultZoneId.push({
+          highDifficultyZones.push({
             id: key,
             name: element.name?.cn ?? element.name?.ja ?? key,
           })
       }
     }
   }
-  loadTimelineStoreData()
+  loadTimelineSettings()
   timelineStore.sortTimelines()
 }
 
@@ -596,7 +659,7 @@ init()
 <template>
   <el-container class="container">
     <el-dialog v-model="dialogTableVisible" title="时间轴解析结果" align-center center draggable width="80%">
-      <el-table :data="transmissionTimeline">
+      <el-table :data="parsedTimelineLines">
         <el-table-column property="time" label="time" min-width="60" />
         <el-table-column property="action" label="action" width="150">
           <template #default="{ row }">
@@ -632,7 +695,7 @@ init()
     </el-dialog>
     <timeline-settings-dialog
       v-model="showSettings"
-      @save="handleSettingsSave"
+      @save="saveSettingsChanges"
     />
     <el-header class="flex-header">
       <el-row justify="space-between" align="middle">
@@ -644,7 +707,7 @@ init()
             <el-button type="primary" size="small" @click="openDocs">
               从 在线文档 获取
             </el-button>
-            <el-button type="primary" size="small" @click="newDemoTimeline">
+            <el-button type="primary" size="small" @click="createNewTimeline">
               手动编写
             </el-button>
           </el-button-group>
@@ -653,13 +716,13 @@ init()
           </el-button>
 
           <el-button-group>
-            <el-button size="small" @click="importTimelines">
+            <el-button size="small" @click="importTimelineData">
               导入字符串
             </el-button>
             <el-button
               size="small"
               class="export"
-              @click="exportTimeline(timelines)"
+              @click="exportTimelines(allTimelinesRef)"
             >
               导出全部
             </el-button>
@@ -693,7 +756,7 @@ init()
           @edit-timeline="editTimeline"
         />
       </el-dialog>
-      <el-card v-if="timelines.length > 0">
+      <el-card v-if="allTimelinesRef.length > 0">
         <div
           class="batch-operations"
           style="
@@ -721,7 +784,7 @@ init()
             >
               <el-option label="全部地图" value="" />
               <el-option
-                v-for="zone in highDifficultZoneId"
+                v-for="zone in highDifficultyZones"
                 :key="zone.id"
                 :label="zone.name"
                 :value="zone.id"
@@ -753,7 +816,7 @@ init()
               type="primary"
               size="small"
               :disabled="selectedTimelines.length === 0"
-              @click="exportSelectedTimelines"
+              @click="batchExportTimelines"
             >
               批量导出 ({{ selectedTimelines.length }})
             </el-button>
@@ -762,7 +825,7 @@ init()
               size="small"
               :disabled="selectedTimelines.length === 0"
               style="margin-left: 10px"
-              @click="deleteSelectedTimelines"
+              @click="batchDeleteTimelines"
             >
               批量删除 ({{ selectedTimelines.length }})
             </el-button>
@@ -777,7 +840,7 @@ init()
           @selection-change="
             (selection) => {
               selectedTimelines = selection;
-              isAllSelected = selection.length === timelines.length;
+              isAllSelected = selection.length === allTimelinesRef.length;
             }
           "
         >
@@ -795,7 +858,7 @@ init()
           <el-table-column prop="condition" label="地图" sortable>
             <template #default="scope">
               {{
-                highDifficultZoneId.find(
+                highDifficultyZones.find(
                   (value) => value.id === scope.row.condition.zoneId,
                 )?.name
               }}
@@ -853,23 +916,23 @@ init()
         <el-row class="timeline-header" :gutter="10">
           <el-col :span="14">
             <el-form-item label="名称">
-              <el-input v-model="timelineCurrentlyEditing.name" />
+              <el-input v-model="currentTimelineEditing.name" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="来源">
-              <el-input v-model="timelineCurrentlyEditing.codeFight" disabled />
+              <el-input v-model="currentTimelineEditing.codeFight" disabled />
             </el-form-item>
           </el-col>
           <el-col :span="22">
             <el-form-item label="地图">
               <el-select
-                v-model="timelineCurrentlyEditing.condition.zoneId"
+                v-model="currentTimelineEditing.condition.zoneId"
                 filterable
                 style="width: 100%"
               >
                 <el-option
-                  v-for="zone in highDifficultZoneId"
+                  v-for="zone in highDifficultyZones"
                   :key="zone.id"
                   :label="zone.name"
                   :value="zone.id"
@@ -880,7 +943,7 @@ init()
           <el-col :span="22">
             <el-form-item label="职业">
               <el-select
-                v-model="timelineCurrentlyEditing.condition.jobs"
+                v-model="currentTimelineEditing.condition.jobs"
                 multiple
               >
                 <el-option
@@ -919,7 +982,7 @@ init()
         <el-row class="timeline-editor-body" :gutter="10">
           <el-col>
             <el-input
-              v-model="timelineCurrentlyEditing.timeline"
+              v-model="currentTimelineEditing.timeline"
               :style="{
                 width: `calc(100% - ${timelineStore.showStyle['--timeline-width']}px)`,
               }"
@@ -933,7 +996,7 @@ init()
           <timeline-timeline-show
             :style="{ position: 'absolute', right: 0, top: 0 }"
             :config="timelineStore.configValues"
-            :lines="transmissionTimeline"
+            :lines="parsedTimelineLines"
             :runtime="simulatedCombatTime"
             :show-style="timelineStore.showStyle"
           />
@@ -941,7 +1004,7 @@ init()
 
         <div style="margin-top: 1em">
           <el-space>
-            <el-button @click="exportTimeline([timelineCurrentlyEditing])">
+            <el-button @click="exportTimelines([currentTimelineEditing])">
               导出
             </el-button>
             <el-button type="primary" @click="timelineTimeFormat()">
@@ -950,10 +1013,10 @@ init()
             <el-button @click="openMarkdown">
               时间轴语法
             </el-button>
-            <el-button @click="optimizedSize()">
+            <el-button @click="removeCommentsInTimeline()">
               删除注释行
             </el-button>
-            <el-button type="danger" @click="showDialog">
+            <el-button type="danger" @click="showTimelineTableDialog">
               展示调试信息
             </el-button>
           </el-space>

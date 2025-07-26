@@ -41,6 +41,7 @@ const loadedTimelineTTS = computed(() =>
 
 onMounted(() => {
   init()
+  sendBroadcastData('hello')
 })
 
 // 从数据列表中根据玩家职业与地区获得一个或多个时间轴
@@ -213,7 +214,7 @@ function testAlert() {
 }
 
 // 发送数据
-function sendBroadcastData(type: 'get' | 'post', data: any = {}): void {
+function sendBroadcastData(type: 'get' | 'post' | 'success' | 'hello', data: any = {}): void {
   callOverlayHandler({
     call: 'broadcast',
     source: 'soumaTimeline',
@@ -246,10 +247,11 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
     ElMessage({
       message: '已更新数据',
       type: 'success',
-      duration: 0,
-      showClose: true,
+      duration: 3000,
+      showClose: false,
     })
     getTimeline() // 获取新数据之后查询一次
+    sendBroadcastData('success')
   }
   if ((e.msg as any).type === 'get') {
     sendBroadcastData('post', timelineStore.$state) // 发送数据
