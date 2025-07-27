@@ -21,56 +21,63 @@ const hideOnStartup = useStorage('zoneMacroHideOnStartup', ref(false))
 if (hideOnStartup.value)
   macroStore.show = false
 
-const showContentTypes: number[] = [
-  ContentType.OccultCrescent, // 新月岛
-  ContentType.UltimateRaids, // 绝境战
-  ContentType.ChaoticAllianceRaid, // 诛灭战
-  ContentType.Raids, // 大型任务
-  ContentType.Dungeons, // 四人副本
-  ContentType.Trials, // 讨伐任务
-  ContentType.VCDungeonFinder, // 多变迷宫
-  ContentType.DeepDungeons, // 深层迷宫
-  ContentType.Guildhests, // 行会令
-  ContentType.DisciplesOfTheLand, // 出海垂钓、云冠群岛
-  ContentType.Eureka, // 尤雷卡
-  ContentType.SocietyQuests, // 宇宙探索
-  ContentType.GrandCompany, // 金蝶游乐场
-  ContentType.QuestBattles, // 任务剧情
-  ContentType.TreasureHunt, // 挖宝
-  ContentType.Pvp, // PVP
+const contentTypeLabel: { type: number, label: string }[] = [
+  { type: ContentType.UltimateRaids, label: '绝境战' },
+  { type: ContentType.OccultCrescent, label: '新月岛' },
+  { type: ContentType.ChaoticAllianceRaid, label: '诛灭战' },
+  { type: ContentType.Raids, label: '大型任务' },
+  { type: ContentType.Dungeons, label: '四人副本' },
+  { type: ContentType.Trials, label: '讨伐任务' },
+  { type: ContentType.VCDungeonFinder, label: '多变迷宫' },
+  { type: ContentType.DeepDungeons, label: '深层迷宫' },
+  { type: ContentType.DisciplesOfTheLand, label: '采集/垂钓' },
+  { type: ContentType.Eureka, label: '尤雷卡' },
 ]
 
-const preSortZoneInfo = Object.entries(zoneInfo).map(([id, info]) => {
-  return { id, ...info }
-}).sort((a, b) => {
-  if (a.exVersion !== b.exVersion)
-    return a.exVersion - b.exVersion
-  if (a.contentType === ContentType.Raids && b.contentType === ContentType.Raids && b.name.ja && a.name.ja)
-    return a.name.ja.localeCompare(b.name.ja)
-  return Number(a.id) - Number(b.id)
+const showContentTypes = contentTypeLabel.map(v => v.type)
+
+const groupedZoneOptions = computed(() => {
+  const groups: Record<string, { value: string, label: string }[]> = {}
+
+  Object.entries(zoneInfo)
+    .map(([id, info]) => ({ id, ...info }))
+    .sort((a, b) => {
+      if (a.exVersion !== b.exVersion)
+        return a.exVersion - b.exVersion
+      if (
+        a.contentType === ContentType.Raids
+        && b.contentType === ContentType.Raids
+        && b.name.ja
+        && a.name.ja
+      ) {
+        return a.name.ja.localeCompare(b.name.ja)
+      }
+      return Number(a.id) - Number(b.id)
+    })
+    .filter(v =>
+      (!v.name.en.startsWith('(')
+        && v.contentType
+        && showContentTypes.includes(v.contentType))
+      || macroStore.selectZone === v.id,
+    )
+    .forEach((v) => {
+      const label = contentTypeLabel.find(ct => ct.type === v.contentType)!.label;
+      (groups[label] ??= []).push({
+        value: v.id,
+        label: v.name?.cn ?? `${v.name.en} / ${v.name.ja}`,
+      })
+    })
+
+  return Object.entries(groups)
+    .map(([label, options]) => ({ label, options }))
+    .sort((a, b) => {
+      const aIndex = contentTypeLabel.findIndex(ct => ct.label === a.label)
+      const bIndex = contentTypeLabel.findIndex(ct => ct.label === b.label)
+      return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex)
+    })
 })
 
-const usedZoneInfo = [
-  ...preSortZoneInfo.filter(v => v.contentType === ContentType.OccultCrescent), // 新月岛
-  ...preSortZoneInfo.filter(v => v.contentType === ContentType.UltimateRaids), // 绝境战
-  ...preSortZoneInfo.filter(v => v.contentType === ContentType.ChaoticAllianceRaid), // 诛灭战
-  ...preSortZoneInfo.filter(v => v.contentType === ContentType.Raids), // 大型任务
-  ...preSortZoneInfo.filter(v => v.contentType === ContentType.Dungeons), // 四人副本
-  ...preSortZoneInfo.filter(v => v.contentType === ContentType.Trials), // 讨伐任务
-  ...preSortZoneInfo.filter(v => v.contentType === ContentType.VCDungeonFinder), // 多变迷宫
-  ...preSortZoneInfo.filter(v => v.contentType === ContentType.DeepDungeons), // 深层迷宫
-  ...preSortZoneInfo.filter(v => v.contentType === ContentType.Guildhests), // 行会令
-  ...preSortZoneInfo.filter(v => v.contentType === ContentType.DisciplesOfTheLand), // 出海垂钓、云冠群岛
-  ...preSortZoneInfo.filter(v => v.contentType === ContentType.Eureka), // 尤雷卡
-  ...preSortZoneInfo.filter(v => v.contentType === ContentType.SocietyQuests), // 宇宙探索
-  ...preSortZoneInfo.filter(v => v.contentType === ContentType.GrandCompany), // 金蝶游乐场
-  ...preSortZoneInfo.filter(v => v.contentType === ContentType.QuestBattles), // 任务剧情
-  ...preSortZoneInfo.filter(v => v.contentType === ContentType.TreasureHunt), // 挖宝
-  ...preSortZoneInfo.filter(v => v.contentType === ContentType.Pvp), // PVP
-  ...preSortZoneInfo.filter(v => v.contentType === undefined || !showContentTypes.includes(v.contentType)),
-]
-
-useWebSocket({ allowClose: false, addWsParam: true })
+useWebSocket({ allowClose: true, addWsParam: true })
 
 onMounted(() => {
   addOverlayListener('ChangeZone', macroStore.handleChangeZone)
@@ -92,20 +99,28 @@ onMounted(() => {
 </script>
 
 <template>
-  <el-container v-show="macroStore.show" p-0 top-0 m-0 absolute left-0 rd-1 class="elcontainer">
-    <el-header flex="~ wrap gap1" height="auto" class="elheader">
+  <el-container v-show="macroStore.show" class="elcontainer">
+    <el-header flex="~ wrap" height="auto" class="elheader">
       <el-space>
-        <el-button type="primary" size="small" :icon="Position" @click="macroStore.positioning()">
-          当前
-        </el-button>
+        <el-button type="primary" size="small" :icon="Position" @click="macroStore.positioning()" />
         <el-select
-          v-model="macroStore.selectZone" size="small" style="width: 10rem" filterable m-3px
-          placeholder="Select"
+          v-model="macroStore.selectZone"
+          size="small"
+          filterable m-3px
+          style="width: 16rem"
         >
-          <el-option
-            v-for="(item) in usedZoneInfo.filter(v => (!v.name.en.startsWith('(') && v.contentType && showContentTypes.includes(v.contentType)) || macroStore.selectZone === v.id)"
-            :key="item.id" :label="`${item.name?.cn ?? `${item.name.en} / ${item.name.ja}`}`" :value="item.id"
-          />
+          <el-option-group
+            v-for="group in groupedZoneOptions"
+            :key="group.label"
+            :label="group.label"
+          >
+            <el-option
+              v-for="item in group.options"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-option-group>
         </el-select>
       </el-space>
       <el-space>
@@ -428,5 +443,12 @@ $color4: rgba(128, 0, 128, 1);
 .markIconD,
 .markIconFour {
   text-shadow: 0 0 1px $color4, 0 0 2px $color4, 0 0 3px $color4;
+}
+
+.el-select-group__title{
+  font-weight: bold;
+  font-size: 12px;
+  color: var(--el-text-color-regular);
+  padding-left: 1em;
 }
 </style>
