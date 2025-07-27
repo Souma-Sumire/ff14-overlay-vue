@@ -140,7 +140,7 @@ export const useTimelineStore = defineStore('timeline', {
           (t.condition.zoneId === '0'
             || t.condition.zoneId === playerState.zoneId)
           && (t.condition.jobs.includes('NONE')
-            || t.condition.jobs.includes(playerState.jobs[0]))
+            || t.condition.jobs.includes(playerState.jobs[0]!))
         )
       })
     },
@@ -200,8 +200,8 @@ export const useTimelineStore = defineStore('timeline', {
           return nameDiff
         }
         const jobDiff
-          = Util.jobToJobEnum(a.condition.jobs[0])
-            - Util.jobToJobEnum(b.condition.jobs[0])
+          = Util.jobToJobEnum(a.condition.jobs[0]!)
+            - Util.jobToJobEnum(b.condition.jobs[0]!)
         if (jobDiff !== 0) {
           return jobDiff
         }
@@ -255,7 +255,7 @@ export async function parseTimeline(
   for (let i = 0; i < matches.length; i++) {
     let sync: RegExp | undefined
     let onceSync: boolean = false
-    const match = matches[i]
+    const match = matches[i]!
     const jump = match[0].match(/(?<=jump ?)[-:：\d.]+/)?.[0]
     const normalSync = match[0].match(/(?<=sync(?:\.once)? ?\/).+(?=\/)/)?.[0]
     const normalOnce = /sync\.once/.test(match[0])

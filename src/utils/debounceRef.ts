@@ -1,7 +1,7 @@
 import { customRef } from 'vue'
 
 export function debounceRef<T>(value: T, duration = 1000) {
-  let timer: NodeJS.Timeout | null = null
+  let timer: number | null = null
 
   return customRef((track, trigger) => {
     return {
@@ -15,7 +15,7 @@ export function debounceRef<T>(value: T, duration = 1000) {
 
         // biome-ignore lint/style/noParameterAssign:
         value = val
-        timer = setTimeout(() => {
+        timer = window.setTimeout(() => {
           trigger()
           timer = null // 清除定时器引用
         }, duration)

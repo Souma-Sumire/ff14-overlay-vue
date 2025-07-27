@@ -23,7 +23,7 @@ function addOverlayWsParam() {
   })
   newHashQuery += `OVERLAY_WS=ws://127.0.0.1:10501/ws`
 
-  let newUrl = basePart
+  let newUrl = basePart!
   if (hashPath) {
     newUrl += `#${hashPath}`
     if (newHashQuery) {
@@ -44,7 +44,7 @@ export function useWebSocket(
   const wsConnected = ref(undefined as boolean | undefined)
   const userIgnoredWarning = ref(false)
   const useType = ref('overlay' as 'overlay' | 'websocket')
-  let timer: NodeJS.Timeout | null = null
+  let timer: number | null = null
 
   function check() {
     Promise.race([
@@ -69,7 +69,7 @@ export function useWebSocket(
   }
 
   if (window.location.href.includes('OVERLAY_WS')) {
-    timer = setInterval(() => {
+    timer = window.setInterval(() => {
       check()
     }, 3000)
   }

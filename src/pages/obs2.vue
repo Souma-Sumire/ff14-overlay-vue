@@ -68,7 +68,7 @@ function checkWebSocket(): Promise<void> {
   })
 }
 
-const REGEXES: Record<string, RegExp> = {
+const REGEXES = {
   inCombat: NetRegexes.inCombat(),
   countdown: NetRegexes.countdown(),
   countdownCancel: NetRegexes.countdownCancel(),
@@ -320,7 +320,7 @@ const handleChangeZone: EventMap['ChangeZone'] = (e) => {
 const handleLogLine: EventMap['LogLine'] = (e) => {
   const line = e.rawLine
   for (const regexName in REGEXES) {
-    const regex = REGEXES[regexName]
+    const regex = REGEXES[regexName as keyof typeof REGEXES]
     const match = regex.exec(line)
     if (match) {
       const splitLine = line.split('|')

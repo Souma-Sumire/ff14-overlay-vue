@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { EventMap } from 'cactbot/types/event'
+import type { EventMap } from '../../cactbot/types/event'
 import moment from 'moment'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
@@ -42,7 +42,7 @@ if (mode === 'combat' || mode === 'both') {
 if (mode === 'logline' || mode === 'both') {
   const handleLogLine: EventMap['LogLine'] = (e) => {
     if (e.line[0] !== '00') {
-      const match = e.line[1].match(/(?<=T)(\d\d:\d\d:\d\d)\.(\d\d\d)/)!
+      const match = e.line[1]!.match(/(?<=T)(\d\d:\d\d:\d\d)\.(\d\d\d)/)!
       lastLogTime.value = `${match[1]}<small>.${match[2]}</small>`
     }
   }

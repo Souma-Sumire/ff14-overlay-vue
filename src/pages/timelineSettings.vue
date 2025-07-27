@@ -38,7 +38,7 @@ const showFFlogsDialog = ref(false)
 const showSettings = ref(false)
 const dialogTableVisible = ref(false)
 
-let syncTimeoutTimer: NodeJS.Timeout | undefined
+let syncTimeoutTimer: number | undefined
 let syncFailNotification: NotificationHandle | undefined
 
 const currentTimelineEditing = useLocalStorage<ITimeline>('timelineCurrentlyEditing', {
@@ -97,7 +97,7 @@ function closeDialog() {
 }
 
 function createNewTimeline(): void {
-  editTimeline(timelineStore.allTimelines[timelineStore.newTimeline()])
+  editTimeline(timelineStore.allTimelines[timelineStore.newTimeline()]!)
 }
 
 function updateTransmissionTimeline() {
@@ -639,7 +639,7 @@ onMounted(() => {
 function init(): void {
   for (const key in zoneInfo) {
     if (Object.prototype.hasOwnProperty.call(zoneInfo, key)) {
-      const element = zoneInfo[key]
+      const element = zoneInfo[key]!
       switch (element.contentType) {
         case 4: case 5: case 28:
           highDifficultyZones.push({

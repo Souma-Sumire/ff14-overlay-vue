@@ -4,7 +4,7 @@ import { jobEnumOrder } from '@/utils/util'
 import NetRegexes from '../../cactbot/resources/netregexes'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
-const regexes: Record<string, RegExp> = {
+const regexes = {
   statusEffectExplicit: NetRegexes.statusEffectExplicit(),
 }
 
@@ -18,7 +18,7 @@ enum ShowType {
   BOTH = '3',
 }
 
-let timer: NodeJS.Timeout | number = 0
+let timer: number | number = 0
 
 const party = ref([] as PartyMember[])
 const povId = ref('')

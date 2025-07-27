@@ -52,12 +52,12 @@ function getTimeline() {
   const candidate: ITimeline[] = timelineStore.getTimeline(playerState.value)
   if (candidate.length === 1) {
     // 单个结果
-    mountTimeline(candidate[0])
+    mountTimeline(candidate[0]!)
   }
   else if (candidate.length > 1) {
     // 多个结果
     timelinePageData.optionalTimeline = candidate
-    mountTimeline(candidate[0])
+    mountTimeline(candidate[0]!)
   }
 }
 

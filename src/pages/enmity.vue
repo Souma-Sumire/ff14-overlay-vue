@@ -26,8 +26,8 @@ const TANK_STATUS_IDS = [
   1833, // Gunbreaker - Royal Guard
 ]
 
-let intervalTimer: NodeJS.Timeout | undefined
-let timeoutTimer: NodeJS.Timeout | undefined
+let intervalTimer: number | undefined
+let timeoutTimer: number | undefined
 const netRegexs = {
   countdown: NetRegexes.countdown(),
   countdownCancel: NetRegexes.countdownCancel(),
@@ -139,7 +139,7 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
           .then(({ enmityTanks, partyCombatState }) => {
             // 如果小队内有2个坦克，且另一个坦克开盾了，且你没有开盾
             const partyTanksLength = partyCombatState.filter(v => Util.isTankJob(Util.jobEnumToJob(v.Job))).length
-            if (partyTanksLength === 2 && enmityTanks.length === 1 && enmityTanks[0].ID !== povCharID) {
+            if (partyTanksLength === 2 && enmityTanks.length === 1 && enmityTanks[0]?.ID !== povCharID) {
               say('ST开盾')
             }
           })

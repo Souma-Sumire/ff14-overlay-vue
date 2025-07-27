@@ -18,7 +18,7 @@ const actionTimeline: {
 const HP = { xie: 0, sheng: 0 }
 let baseTime = 0
 async function handleLogLine(e: { line: string[] }): Promise<void> {
-  if (e.line[0] === '20' && /^6D41$/.test(e.line[4])) {
+  if (e.line[0] === '20' && /^6D41$/.test(e.line[4]!)) {
     actionTimeline.data.length = 0
     actionTimeline.show = true
     actionTimeline.data.push({ xie: [], sheng: [], xieHP: '0', shengHP: '0' })
@@ -27,7 +27,7 @@ async function handleLogLine(e: { line: string[] }): Promise<void> {
       baseTime = 0
     }, 7700)
   }
-  else if (e.line[0] === '20' && /^(?:63C8|6D21)$/.test(e.line[4])) {
+  else if (e.line[0] === '20' && /^(?:63C8|6D21)$/.test(e.line[4]!)) {
     actionTimeline.data.length = 0
     actionTimeline.show = false
     actionTimeline.data.push({ xie: [], sheng: [], xieHP: '0', shengHP: '0' })
@@ -49,13 +49,13 @@ async function handleLogLine(e: { line: string[] }): Promise<void> {
         shengHP: HP.sheng.toFixed(1),
       }
     }
-    const img = await getImgSrcByActionId(Number.parseInt(e.line[4], 16))
-    if (targetName.xie.includes(e.line[7])) {
+    const img = await getImgSrcByActionId(Number.parseInt(e.line[4]!, 16))
+    if (targetName.xie.includes(e.line[7]!)) {
       HP.xie = (Number(e.line[24]) / Number(e.line[25])) * 100
       actionTimeline.data[timeIndex].xie.push(img)
       actionTimeline.data[timeIndex].xieHP = HP.xie.toFixed(1)
     }
-    else if (targetName.sheng.includes(e.line[7])) {
+    else if (targetName.sheng.includes(e.line[7]!)) {
       HP.sheng = (Number(e.line[24]) / Number(e.line[25])) * 100
       actionTimeline.data[timeIndex].sheng.push(img)
       actionTimeline.data[timeIndex].shengHP = HP.sheng.toFixed(1)

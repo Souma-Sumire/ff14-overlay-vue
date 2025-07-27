@@ -125,7 +125,7 @@ function byteArrayToHex(bytes: Uint8Array, bytesPerLine = 16): string {
     let asciiPart = ''
     for (let j = 0; j < bytesPerLine; j++) {
       if (i + j < bytes.length) {
-        const b = bytes[i + j]
+        const b = bytes[i + j]!
         hexPart += `${hexChars[b >> 4]}${hexChars[b & 15]} `
         asciiPart += b >= 32 && b < 127 ? String.fromCharCode(b) : '.'
       }

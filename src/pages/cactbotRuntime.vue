@@ -32,7 +32,7 @@ const fakeParty: PlayerRuntime[] = [
   { id: '10000006', name: '虚构龙骑', job: 22, inParty: true },
   { id: '10000008', name: '虚构舞者', job: 38, inParty: true },
   { id: '10000007', name: '虚构画家', job: 42, inParty: true },
-]
+] as const
 const data = useStorage('cactbotRuntime-data', {
   party: [] as PlayerRuntime[],
 })
@@ -71,7 +71,7 @@ function getOptions(job: number) {
   })
 }
 const dev = useDevMode()
-const playerName = ref(dev.value ? fakeParty[2].name : '')
+const playerName = ref(dev.value ? fakeParty[2]!.name : '')
 
 function getJobClassification(job: number): Role {
   if ([1, 3, 19, 21, 32, 37].includes(job))
@@ -127,7 +127,7 @@ function defaultPartySort() {
 
 function handleSelectChange(i: number): void {
   const t = data.value.party.find(
-    v => v.rp === data.value.party[i].rp && v.id !== data.value.party[i].id,
+    v => v.rp === data.value.party[i]!.rp && v.id !== data.value.party[i]!.id,
   )
   if (t) {
     t.rp = getRP(t)

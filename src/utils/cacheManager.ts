@@ -59,7 +59,7 @@ export class CacheManager {
     sortable.sort((a, b) => a.expire - b.expire)
     const count = Math.ceil(entries.length * this.cleanupRatio)
     for (let i = 0; i < count; i++) {
-      delete data[sortable[i].key]
+      delete data[sortable[i]!.key]
     }
   }
 
@@ -98,7 +98,7 @@ export class CacheManager {
     let changed = false
 
     for (const key in all) {
-      if (!all[key].expire || all[key].expire < now) {
+      if (!all[key]!.expire || all[key]!.expire < now) {
         delete all[key]
         changed = true
       }

@@ -117,7 +117,7 @@ onMounted(() => {
       return
 
     if (needsSteps.length && curStep < needsSteps.length) {
-      const stepAction = step[config.value.lang][['Emboite', 'Entrechat', 'Jete', 'Pirouette'].indexOf(needsSteps[curStep])]
+      const stepAction = step[config.value.lang][['Emboite', 'Entrechat', 'Jete', 'Pirouette'].indexOf(needsSteps[curStep]!)]
       doTextCommand(`/hotbar set ${stepAction} ${config.value.hotbar[needsSteps.length === 2 ? 'standard' : 'technical'].join(' ')}`)
       const currentStep = e.detail.jobDetail?.currentStep
       if (combatState.inGameCombat === false && combatState && currentStep !== undefined && config.value.autoDance) {

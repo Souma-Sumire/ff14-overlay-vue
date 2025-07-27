@@ -1,6 +1,5 @@
 import path from 'node:path'
 import vue from '@vitejs/plugin-vue'
-import jsx from '@vitejs/plugin-vue-jsx'
 import { presetAttributify, presetIcons, presetWind3 } from 'unocss'
 import Unocss from 'unocss/vite'
 import AutoImport from 'unplugin-auto-import/vite'
@@ -60,14 +59,7 @@ export default defineConfig({
     vue({
       include: [/\.vue$/, /\.md$/],
     }),
-    jsx(),
     Markdown(),
-    Components({
-      resolvers: [ElementPlusResolver()],
-      deep: true,
-      dts: './src/types/components.d.ts',
-      directoryAsNamespace: true,
-    }),
     AutoImport({
       imports: ['vue', '@vueuse/core'],
       dts: './src/types/auto-imports.d.ts',
@@ -77,6 +69,12 @@ export default defineConfig({
         filepath: './.eslintrc-auto-import.json',
         globalsPropValue: true,
       },
+    }),
+    Components({
+      resolvers: [ElementPlusResolver()],
+      deep: true,
+      dts: './src/types/components.d.ts',
+      directoryAsNamespace: true,
     }),
     viteCompression({
       algorithm: 'gzip',

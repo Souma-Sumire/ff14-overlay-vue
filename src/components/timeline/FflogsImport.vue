@@ -301,7 +301,7 @@ async function queryFFlogsReportEvents() {
     && props.filters[fflogsQueryConfig.player.icon]
   ) {
     fflogsQueryConfig.abilityFilterSelected
-      = props.filters[fflogsQueryConfig.player.icon]
+      = props.filters[fflogsQueryConfig.player.icon]!
   }
   confirmEnabled.value = true
 }
@@ -385,7 +385,7 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
   )
   claerFFlogsQueryConfig()
   emits('showFFlogsToggle')
-  emits('editTimeline', timelineStore.allTimelines[index])
+  emits('editTimeline', timelineStore.allTimelines[index]!)
   setTimeout(() => {
     currentStep.value = 0
   }, 500)

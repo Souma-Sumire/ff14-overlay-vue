@@ -251,7 +251,7 @@ function mergeOverlapMonsters() {
         if (index2 > 0)
           mergedByOtherNodes.add(item2.id)
       })
-      tooClose[0].text = getMultipleText(tooClose)
+      tooClose[0]!.text = getMultipleText(tooClose)
     }
     else {
       tooClose.forEach((item2) => {
@@ -310,7 +310,7 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
     return
   }
   if (event.line[0] === '00' && event.line[2] === '0039') {
-    const match = event.line[4].match(new RegExp(`(?:当前所在副本区为“|You are now in the instanced area |インスタンスエリア「)(?<zoneName>.+?)(?<zoneInstanced>[${INSTANCE_STRING}]).*`))
+    const match = event.line[4]!.match(new RegExp(`(?:当前所在副本区为“|You are now in the instanced area |インスタンスエリア「)(?<zoneName>.+?)(?<zoneInstanced>[${INSTANCE_STRING}]).*`))
     if (match && match.groups && match.groups.zoneInstanced) {
       playerInstance.value = INSTANCE_STRING.indexOf(match.groups.zoneInstanced) + 1
       savedInstance.value = playerInstance.value
@@ -320,14 +320,14 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
     }
   }
   else if (event.line[0] === '03') {
-    const name = event.line[3]
+    const name = event.line[3]!
     const hunt = nameToHuntEntry[name.toLowerCase()]
     const rank = hunt?.rank
     if (hunt && rank === 'A') {
       gameVersion.value = getZoneGameVersion(playerZoneId.value as ZoneIdType)
       const instance = playerInstance.value
       const timestamp = new Date().getTime()
-      const id = event.line[2]
+      const id = event.line[2]!
       const worldX = Number(event.line[17])
       const worldY = Number(event.line[18])
       const worldZ = Number(event.line[19])
@@ -447,20 +447,20 @@ function testMonster() {
   const scale = 2;
   (async () => {
     clearMonsterCurrentGameVerion()
-    await addTestMonster(zoneListUsed.value[0], 1, 30 * scale)
-    await addTestMonster(zoneListUsed.value[0], 1, 30 * scale)
-    await addTestMonster(zoneListUsed.value[0], 2, 30 * scale)
-    await addTestMonster(zoneListUsed.value[0], 2, 30 * scale)
-    await addTestMonster(zoneListUsed.value[0], 3, 90 * scale)
-    await addTestMonster(zoneListUsed.value[0], 3, 90 * scale)
-    await addTestMonster(zoneListUsed.value[0], 4, 120 * scale)
-    await addTestMonster(zoneListUsed.value[0], 4, 120 * scale)
-    await addTestMonster(zoneListUsed.value[0], 5, 150 * scale)
-    await addTestMonster(zoneListUsed.value[0], 5, 150 * scale)
-    await addTestMonster(zoneListUsed.value[0], 6, 180 * scale)
-    await addTestMonster(zoneListUsed.value[0], 6, 180 * scale)
-    await addTestMonster(zoneListUsed.value[1], 1, 60 * scale)
-    await addTestMonster(zoneListUsed.value[1], 1, 60 * scale)
+    await addTestMonster(zoneListUsed.value[0]!, 1, 30 * scale)
+    await addTestMonster(zoneListUsed.value[0]!, 1, 30 * scale)
+    await addTestMonster(zoneListUsed.value[0]!, 2, 30 * scale)
+    await addTestMonster(zoneListUsed.value[0]!, 2, 30 * scale)
+    await addTestMonster(zoneListUsed.value[0]!, 3, 90 * scale)
+    await addTestMonster(zoneListUsed.value[0]!, 3, 90 * scale)
+    await addTestMonster(zoneListUsed.value[0]!, 4, 120 * scale)
+    await addTestMonster(zoneListUsed.value[0]!, 4, 120 * scale)
+    await addTestMonster(zoneListUsed.value[0]!, 5, 150 * scale)
+    await addTestMonster(zoneListUsed.value[0]!, 5, 150 * scale)
+    await addTestMonster(zoneListUsed.value[0]!, 6, 180 * scale)
+    await addTestMonster(zoneListUsed.value[0]!, 6, 180 * scale)
+    await addTestMonster(zoneListUsed.value[1]!, 1, 60 * scale)
+    await addTestMonster(zoneListUsed.value[1]!, 1, 60 * scale)
   })()
   // setTimeout(() => {
   //   handleLogLine({ type: 'LogLine', rawLine: '', line: ['25', '', monsterIds[2]] })
@@ -544,7 +544,7 @@ function oneMapClear(zoneId: ZoneIdType) {
     },
   ).then(() => {
     allMonstersData.value = allMonstersData.value.filter(item => item.zoneId !== zoneId)
-    filterConfig.value[zoneId] = zoneFilter.value[zoneId as ZoneIdType][0]
+    filterConfig.value[zoneId] = zoneFilter.value[zoneId as ZoneIdType][0]!
     mergeOverlapMonsters()
   })
 }
@@ -552,7 +552,7 @@ function oneMapClear(zoneId: ZoneIdType) {
 function clearFilter() {
   for (const zoneId in filterConfig.value) {
     const z = Number(zoneId)
-    filterConfig.value[z as ZoneIdType] = zoneFilter.value[z as ZoneIdType][0]
+    filterConfig.value[z as ZoneIdType] = zoneFilter.value[z as ZoneIdType][0]!
   }
 }
 
@@ -572,8 +572,8 @@ function isShow(item: DiscoveredMonsters[number]): boolean {
   const showType = getShowType(item)
   if (showType.includes('-')) {
     const filterInstance = showType.split('-').map(v => Number(v))
-    const max = filterInstance[filterInstance.length - 1]
-    const min = filterInstance[0]
+    const max = filterInstance[filterInstance.length - 1]!
+    const min = filterInstance[0]!
     return item.instance >= min && item.instance <= max
   }
   return item.instance.toString() === showType
@@ -635,8 +635,8 @@ function oneMapInstanceExport(zoneId: number) {
   const instance = filterConfig.value[zoneId as keyof typeof filterConfig.value]
   if (instance.includes('-')) {
     const filterInstance = instance.split('-').map(v => Number(v))
-    const max = filterInstance[filterInstance.length - 1]
-    const min = filterInstance[0]
+    const max = filterInstance[filterInstance.length - 1]!
+    const min = filterInstance[0]!
     const data = monstersData.value.filter(item => item.zoneId === zoneId && item.instance >= min && item.instance <= max)
     if (!data) {
       throw new Error('找不到该地图')
@@ -729,8 +729,8 @@ function importOneZoneStr() {
   }).then(({ value }) => {
     const decompressedText = LZString.decompressFromEncodedURIComponent(value)
     const data = JSON.parse(decompressedText) as DiscoveredMonsters
-    const mapName = Map[data[0].zoneId as unknown as keyof typeof Map].name.souma
-    const targetMonsters = monstersData.value.filter(item => item.zoneId === data[0].zoneId)
+    const mapName = Map[data[0]!.zoneId as unknown as keyof typeof Map].name.souma
+    const targetMonsters = monstersData.value.filter(item => item.zoneId === data[0]!.zoneId)
     Promise.race(
       [
         ElMessageBox.confirm(`要舍弃当前的数据，并替换为导入的数据吗？`, `你的「${mapName}」上还有怪物！`, {
@@ -741,7 +741,7 @@ function importOneZoneStr() {
         targetMonsters.length === 0 ? Promise.resolve() : new Promise(() => {}),
       ],
     ).then(() => {
-      allMonstersData.value = [...allMonstersData.value.filter(item => item.zoneId !== data[0].zoneId), ...data]
+      allMonstersData.value = [...allMonstersData.value.filter(item => item.zoneId !== data[0]!.zoneId), ...data]
       mergeOverlapMonsters()
       ElMessageBox.close()
       ElNotification({
@@ -782,9 +782,9 @@ function importOneInstanceStr() {
   }).then(({ value }) => {
     const decompressedText = LZString.decompressFromEncodedURIComponent(value)
     const data = JSON.parse(decompressedText) as DiscoveredMonsters
-    const mapName = Map[data[0].zoneId as unknown as keyof typeof Map].name.souma
-    const instanceName = data[0].instance.toString()
-    const targetMonsters = monstersData.value.filter(item => item.zoneId === data[0].zoneId && item.instance === data[0].instance)
+    const mapName = Map[data[0]!.zoneId as unknown as keyof typeof Map]!.name.souma
+    const instanceName = data[0]!.instance.toString()
+    const targetMonsters = monstersData.value.filter(item => item.zoneId === data[0]!.zoneId && item.instance === data[0]!.instance)
     Promise.race(
       [
         ElMessageBox.confirm(`要舍弃当前的数据，并替换为导入的数据吗？`, `你的「${mapName}」的${instanceName}线上还有怪物！`, {
@@ -795,7 +795,7 @@ function importOneInstanceStr() {
         targetMonsters.length === 0 ? Promise.resolve() : new Promise(() => {}),
       ],
     ).then(() => {
-      allMonstersData.value = [...allMonstersData.value.filter(item => item.zoneId !== data[0].zoneId || item.instance !== data[0].instance), ...data]
+      allMonstersData.value = [...allMonstersData.value.filter(item => item.zoneId !== data[0]!.zoneId || item.instance !== data[0]!.instance), ...data]
       mergeOverlapMonsters()
       ElMessageBox.close()
       ElNotification({
@@ -820,7 +820,7 @@ function getMapName(zoneId: ZoneIdType, i: number): string {
 }
 
 function getStyle(item: DiscoveredMonsters[number]): { [key: string]: string } {
-  const zone = zoneInfo[item.zoneId]
+  const zone = zoneInfo[item.zoneId]!
   const sizeFactor = zone.sizeFactor
   const offsetX = zone.offsetX
   const offsetY = zone.offsetY
@@ -842,7 +842,7 @@ function cleanUpExpiredData(): Promise<void> {
     ElMessage.info(`已清理${allMonstersData.value.length}条过期数据`)
   }
   const monstersSorted = monstersData.value.toSorted((a, b) => b.timestamp - a.timestamp)
-  const lastUpadateTime = monstersSorted.length > 0 ? monstersSorted[0].timestamp : 0
+  const lastUpadateTime = monstersSorted.length > 0 ? monstersSorted[0]!.timestamp : 0
   return new Promise((resolve) => {
     if (lastUpadateTime > 0) {
       if (Date.now() - lastUpadateTime > 1000 * 60 * 60 * 4) {

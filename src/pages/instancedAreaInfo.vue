@@ -24,20 +24,20 @@ function urlTool(url: string) {
     return null
   for (const ele of array) {
     const dataArr = ele.split('=')
-    data[dataArr[0] as keyof typeof data] = dataArr[1]
+    data[dataArr[0]! as keyof typeof data]! = dataArr[1]!
   }
   return data
 }
 function handleLogLine(event: { line: string[] }): void {
   if (event.line[0] === '00' && event.line[2] === '0039') {
     const match
-      = event.line[4].match(
+      = event.line[4]!.match(
         /当前所在副本区为“(?<zoneName>[^”]+)(?<zoneInstanced>[])”/,
       )
-      ?? event.line[4].match(
+      ?? event.line[4]!.match(
         /You are now in the instanced area (?<zoneName>.+?)(?<zoneInstanced>[])”/,
       )
-      ?? event.line[4].match(
+      ?? event.line[4]!.match(
         /インスタンスエリア「(?<zoneName>.+?)(?<zoneInstanced>[])」/,
       )
     if (match) {
@@ -49,7 +49,7 @@ function handleLogLine(event: { line: string[] }): void {
     }
   }
   else if (event.line[0] === '01') {
-    zoneName.value = event.line[3]
+    zoneName.value = event.line[3]!
     zoneInstanced.value = ''
   }
 }

@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "jsx": "preserve",
-    "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "useDefineForClassFields": true,
+    "target": "ESNext",
+
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+
     "baseUrl": "./",
     "module": "ESNext",
     "moduleResolution": "Bundler",
@@ -13,36 +13,27 @@
     },
     "resolveJsonModule": true,
     "types": ["vite/client", "element-plus/global"],
+
     "allowJs": true,
     "strict": true,
     "strictFunctionTypes": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
     "alwaysStrict": true,
+
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
+    "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "outDir": "./dist",
     "sourceMap": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "verbatimModuleSyntax": true,
     "skipLibCheck": true
   },
-  "include": [
-    "src/types/components.d.ts",
-    "src/types/auto-imports.d.ts",
-    "src/**/*.ts",
-    "src/**/*.d.ts",
-    "src/**/*.tsx",
-    "src/**/*.vue",
-    "vite.config.ts"
-  ],
-  "exclude": [
-    "./dist",
-    "**/*.spec.ts",
-    "cactbot",
-    "node_modules"
-  ]
+  "include": ["src", "vite.config.ts"],
+  "exclude": ["node_modules", "dist", "cactbot"]
 }

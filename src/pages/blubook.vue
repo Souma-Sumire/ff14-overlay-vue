@@ -2145,9 +2145,9 @@ function handleError(e: Event, index: number): void {
   const imageElement = e.target as HTMLImageElement
   if (/xivapi.com/.test(imageElement.src))
     return
-  aozActionRef.value[index - 1].Icon = aozActionRef.value[
+  aozActionRef.value[index - 1]!.Icon = aozActionRef.value[
     index - 1
-  ].Icon.replace('cafemaker.wakingsands.com', 'xivapi.com')
+  ]!.Icon.replace('cafemaker.wakingsands.com', 'xivapi.com')
 }
 
 function handleActionClick(_e: Event, index: number): void {
@@ -2175,7 +2175,7 @@ function handleBatchLearning(): void {
       for (const n of value.split(',')) {
         if (/^\d+[\-~]\d+$/.test(n)) {
           const [min, max] = n.split(/[\-~]/).map(Number)
-          for (let i = min; i <= max; i++)
+          for (let i = min!; i <= max!; i++)
             learned.value[i.toString()] = true
         }
         else {
@@ -2234,28 +2234,28 @@ function handleBatchLearning(): void {
       </div>
       <div class="actionDetails">
         <div class="Number">
-          {{ aozActionRef[selectIndex].Number }}
+          {{ aozActionRef[selectIndex]!.Number }}
         </div>
-        <div class="Name" v-html="highlight(aozActionRef[selectIndex].Name)" />
-        <img class="IconHD" :src="`${tempIcon ?? aozActionRef[selectIndex].Icon}`" draggable="false" @error="handleError($event, selectIndex)">
-        <div class="Stats" v-html="highlight(aozActionRef[selectIndex].Stats)" />
+        <div class="Name" v-html="highlight(aozActionRef[selectIndex]!.Name)" />
+        <img class="IconHD" :src="`${tempIcon ?? aozActionRef[selectIndex]!.Icon}`" draggable="false" @error="handleError($event, selectIndex)">
+        <div class="Stats" v-html="highlight(aozActionRef[selectIndex]!.Stats)" />
         <div class="Cast100ms">
-          <span style="color: #00c2c2">咏唱时间：</span>{{ aozActionRef[selectIndex].Cast100ms / 10 }}
+          <span style="color: #00c2c2">咏唱时间：</span>{{ aozActionRef[selectIndex]!.Cast100ms / 10 }}
         </div>
         <div class="Recast100ms">
-          <span style="color: #00c2c2">复唱时间：</span>{{ aozActionRef[selectIndex].Recast100ms / 10 }}
+          <span style="color: #00c2c2">复唱时间：</span>{{ aozActionRef[selectIndex]!.Recast100ms / 10 }}
         </div>
         <div
           class="Description"
-          :style="{ height: `${(aozActionRef[selectIndex].AozDescription.length === 0 ? 64 : 0) + 96}px` }"
-          v-html="highlight(aozActionRef[selectIndex].Description)"
+          :style="{ height: `${(aozActionRef[selectIndex]!.AozDescription.length === 0 ? 64 : 0) + 96}px` }"
+          v-html="highlight(aozActionRef[selectIndex]!.Description)"
         />
         <div
           class="AozDescription"
-          :style="{ height: `${aozActionRef[selectIndex].AozDescription.length > 0 ? 64 : 0}px` }"
-          v-html="highlight(aozActionRef[selectIndex].AozDescription)"
+          :style="{ height: `${aozActionRef[selectIndex]!.AozDescription.length > 0 ? 64 : 0}px` }"
+          v-html="highlight(aozActionRef[selectIndex]!.AozDescription)"
         />
-        <div class="Learn" v-html="highlight(aozActionRef[selectIndex].Learn)" />
+        <div class="Learn" v-html="highlight(aozActionRef[selectIndex]!.Learn)" />
       </div>
     </div>
   </div>

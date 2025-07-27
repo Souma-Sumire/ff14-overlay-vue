@@ -118,7 +118,7 @@ function beforeHandle() {
     key: 'placeholder',
     timestamp: -1,
   })
-  resetLine(data.value[0])
+  resetLine(data.value[0]!)
   // 保存一个空的战斗数据，防止在数据更新后，用户每次都会加载之前的缓存
   saveStorage()
 }
@@ -135,39 +135,36 @@ function afterHandle() {
 
 function handleLine(line: string) {
   for (const regexName in regexes) {
-    const regex = regexes[regexName]
+    const regex = regexes[regexName]!
     const match = regex.exec(line)
     if (match) {
       const splitLine = line.split('|')
       switch (regexName) {
         case 'statusEffectExplicit':
-          if (match.groups?.targetId.startsWith('1'))
-            shieldData[match.groups?.targetId] = match.groups?.currentShield
+          if (match.groups?.targetId!.startsWith('1'))
+            shieldData[match.groups!.targetId!] = match.groups!.currentShield!
 
           break
         case 'gainsEffect':
           {
-            const effectId
-              = splitLine[logDefinitions.GainsEffect.fields.effectId]
-            const effect = splitLine[logDefinitions.GainsEffect.fields.effect]
-            const target = splitLine[logDefinitions.GainsEffect.fields.target]
-            const targetId
-              = splitLine[logDefinitions.GainsEffect.fields.targetId]
+            const effectId = splitLine[logDefinitions.GainsEffect.fields.effectId]!
+            const effect = splitLine[logDefinitions.GainsEffect.fields.effect]!
+            const target = splitLine[logDefinitions.GainsEffect.fields.target]!
+            const targetId = splitLine[logDefinitions.GainsEffect.fields.targetId]!
             const count = Number.parseInt(
-              splitLine[logDefinitions.GainsEffect.fields.count],
+              splitLine[logDefinitions.GainsEffect.fields.count]!,
               16,
             )
             let keigenn: Keigenn | undefined = getKeigenn(effectId)
             if (!keigenn) {
-              const vulnerable
-                = (targetId.startsWith('1')
-                  && universalVulnerableFriendly.get(
+              const vulnerable = (targetId.startsWith('1')
+                && universalVulnerableFriendly.get(
+                  Number.parseInt(effectId, 16).toString(),
+                ))
+                || (targetId.startsWith('4')
+                  && universalVulnerableEnemy.get(
                     Number.parseInt(effectId, 16).toString(),
                   ))
-                  || (targetId.startsWith('4')
-                    && universalVulnerableEnemy.get(
-                      Number.parseInt(effectId, 16).toString(),
-                    ))
               if (!vulnerable)
                 return
               const fullIcon = completeIcon(vulnerable.icon)
@@ -181,16 +178,13 @@ function handleLine(line: string) {
                 isFriendly: vulnerable.isFriendly,
               }
             }
-            const duration
-              = splitLine[logDefinitions.GainsEffect.fields.duration]
-            const source = splitLine[logDefinitions.GainsEffect.fields.source]
-            const sourceId
-              = splitLine[logDefinitions.GainsEffect.fields.sourceId]
+            const duration = splitLine[logDefinitions.GainsEffect.fields.duration]!
+            const source = splitLine[logDefinitions.GainsEffect.fields.source]!
+            const sourceId = splitLine[logDefinitions.GainsEffect.fields.sourceId]!
             const timestamp = new Date(
-              splitLine[logDefinitions.GainsEffect.fields.timestamp],
+              splitLine[logDefinitions.GainsEffect.fields.timestamp]!,
             ).getTime()
-            const expirationTimestamp
-              = timestamp + Number.parseFloat(duration) * 1000
+            const expirationTimestamp = timestamp + Number.parseFloat(duration) * 1000
             const status: Status = {
               name: keigenn.name,
               type: keigenn.type,
@@ -222,11 +216,9 @@ function handleLine(line: string) {
           break
         case 'losesEffect':
           {
-            const target = splitLine[logDefinitions.LosesEffect.fields.target]
-            const targetId
-              = splitLine[logDefinitions.LosesEffect.fields.targetId]
-            const effectId
-              = splitLine[logDefinitions.LosesEffect.fields.effectId]
+            const target = splitLine[logDefinitions.LosesEffect.fields.target]!
+            const targetId = splitLine[logDefinitions.LosesEffect.fields.targetId]!
+            const effectId = splitLine[logDefinitions.LosesEffect.fields.effectId]!
             if (targetId.startsWith('1')) {
               if (statusData.friendly[targetId])
                 Reflect.deleteProperty(statusData.friendly[targetId], effectId)
@@ -239,11 +231,9 @@ function handleLine(line: string) {
           break
         case 'addCombatant':
           if (splitLine[logDefinitions.AddedCombatant.fields.job] !== '00') {
-            const job = splitLine[logDefinitions.AddedCombatant.fields.job]
-            const timestamp = new Date(
-              splitLine[logDefinitions.AddedCombatant.fields.timestamp],
-            ).getTime()
-            jobMap.value[splitLine[logDefinitions.AddedCombatant.fields.id]] = {
+            const job = splitLine[logDefinitions.AddedCombatant.fields.job]!
+            const timestamp = new Date(splitLine[logDefinitions.AddedCombatant.fields.timestamp]!).getTime()
+            jobMap.value[splitLine[logDefinitions.AddedCombatant.fields.id]!] = {
               job: Number.parseInt(job, 16),
               timestamp,
             }
@@ -252,19 +242,18 @@ function handleLine(line: string) {
         case 'removingCombatant':
           Reflect.deleteProperty(
             jobMap.value,
-            splitLine[logDefinitions.RemovedCombatant.fields.id],
+            splitLine[logDefinitions.RemovedCombatant.fields.id]!,
           )
           break
         case 'primaryPlayer':
           {
             povId.value = splitLine[logDefinitions.ChangedPlayer.fields.id]
-            const _povName
-              = splitLine[logDefinitions.ChangedPlayer.fields.name]
+            const _povName = splitLine[logDefinitions.ChangedPlayer.fields.name]
             if (povName.value === _povName)
               return
             povName.value = _povName
             store.initEnvironment(
-              splitLine[logDefinitions.ChangedPlayer.fields.name],
+              splitLine[logDefinitions.ChangedPlayer.fields.name]!,
             )
           }
           break
@@ -275,40 +264,38 @@ function handleLine(line: string) {
           zoneName.value = splitLine[logDefinitions.ChangeZone.fields.name]
           stopCombat(
             new Date(
-              splitLine[logDefinitions.ChangeZone.fields.timestamp],
+              splitLine[logDefinitions.ChangeZone.fields.timestamp]!,
             ).getTime(),
           )
           break
         case 'inCombat':
           {
-            const inACTCombat
-              = splitLine[logDefinitions.InCombat.fields.inACTCombat] === '1'
-            const inGameCombat
-              = splitLine[logDefinitions.InCombat.fields.inGameCombat] === '1'
+            const inACTCombat = splitLine[logDefinitions.InCombat.fields.inACTCombat] === '1'
+            const inGameCombat = splitLine[logDefinitions.InCombat.fields.inGameCombat] === '1'
             const timeStamp = new Date(
-              splitLine[logDefinitions.InCombat.fields.timestamp],
+              splitLine[logDefinitions.InCombat.fields.timestamp]!,
             ).getTime()
             if (inACTCombat || inGameCombat) {
               // new combat
               if (combatTimeStamp.value > 0) {
                 return
               }
-              else if (data.value[0].key === 'placeholder') {
+              else if (data.value[0]!.key === 'placeholder') {
                 data.value.splice(0, 1)
               }
-              if (data.value[0].table.length !== 0) {
+              if (data.value[0]!.table.length !== 0) {
                 data.value.unshift({
                   zoneName: '',
                   duration: '00:00',
                   table: shallowReactive([]),
-                  key: splitLine[logDefinitions.InCombat.fields.timestamp],
+                  key: splitLine[logDefinitions.InCombat.fields.timestamp]!,
                   timestamp: timeStamp,
                 })
                 if (data.value.length >= maxStorage)
                   data.value.splice(data.value.length - 1, 1)
               }
               combatTimeStamp.value = timeStamp
-              data.value[0].zoneName = zoneName.value
+              data.value[0]!.zoneName = zoneName.value
               select.value = 0
               return
             }
@@ -331,8 +318,8 @@ function handleLine(line: string) {
           if (!userOptions.parseDoT)
             return
           {
-            const which = splitLine[logDefinitions.NetworkDoT.fields.which]
-            const targetId = splitLine[logDefinitions.NetworkDoT.fields.id]
+            const which = splitLine[logDefinitions.NetworkDoT.fields.which]!
+            const targetId = splitLine[logDefinitions.NetworkDoT.fields.id]!
             if (
               which !== 'DoT'
               || targetId.startsWith('4')
@@ -345,8 +332,8 @@ function handleLine(line: string) {
               return
             }
 
-            const target = splitLine[logDefinitions.NetworkDoT.fields.name]
-            const damage = splitLine[logDefinitions.NetworkDoT.fields.damage]
+            const target = splitLine[logDefinitions.NetworkDoT.fields.name]!
+            const damage = splitLine[logDefinitions.NetworkDoT.fields.damage]!
             const amount = Number.parseInt(damage, 16)
             const timestamp = new Date(
               splitLine[logDefinitions.Ability.fields.timestamp] ?? '???',
@@ -357,10 +344,9 @@ function handleLine(line: string) {
             const maxHp = Number(
               splitLine[logDefinitions.NetworkDoT.fields.maxHp],
             )
-            const time
-              = combatTimeStamp.value === 0
-                ? 0
-                : timestamp - combatTimeStamp.value
+            const time = combatTimeStamp.value === 0
+              ? 0
+              : timestamp - combatTimeStamp.value
             const formattedTime = formatTime(time)
             const targetJob = getJobById(targetId)
             // const targetJob = jobMap.value[targetId].job ?? target.substring(0, 2);
@@ -371,7 +357,7 @@ function handleLine(line: string) {
             const jobIcon = Util.jobEnumToIcon(jobEnum)
             // dot/hot日志的source不准确 故无法计算目标减
             addRow({
-              key: data.value[0].table.length.toString(),
+              key: data.value[0]!.table.length.toString(),
               time: formattedTime,
               id: undefined,
               action: which,
@@ -388,7 +374,7 @@ function handleLine(line: string) {
               maxHp,
               effect: 'damage done',
               type: 'dot',
-              shield: shieldData[targetId],
+              shield: shieldData[targetId] ?? '0',
               povId: povId.value,
             })
           }
@@ -399,10 +385,8 @@ function handleLine(line: string) {
           {
             const ability = processAbilityLine(splitLine)
             if (ability.isAttack && ability.amount >= 0) {
-              const sourceId
-                = splitLine[logDefinitions.Ability.fields.sourceId] ?? '???'
-              const targetId
-                = splitLine[logDefinitions.Ability.fields.targetId] ?? '???'
+              const sourceId = splitLine[logDefinitions.Ability.fields.sourceId] ?? '???'
+              const targetId = splitLine[logDefinitions.Ability.fields.targetId] ?? '???'
               if (!(sourceId.startsWith('4') && targetId.startsWith('1')))
                 return
 
@@ -419,16 +403,13 @@ function handleLine(line: string) {
               const timestamp = new Date(
                 splitLine[logDefinitions.Ability.fields.timestamp] ?? '???',
               ).getTime()
-              const rawAblityName
-                = splitLine[logDefinitions.Ability.fields.ability]
+              const rawAblityName = splitLine[logDefinitions.Ability.fields.ability]!
               const rsvMatch = rawAblityName.match(/^_rsv_(?<id>\d+)_/)
               const id = splitLine[logDefinitions.Ability.fields.id] ?? '???'
               let action = rawAblityName
               if (rsvMatch) {
                 const id: number = Number(rsvMatch.groups?.id)
-                action
-                  = rsvData.value[id]
-                    ?? rawAblityName.match(/^_(?<id>rsv_\d+)_/)?.groups?.id
+                action = (rsvData.value[id] ?? rawAblityName.match(/^_(?<id>rsv_\d+)_/)?.groups?.id)!
               }
               else {
                 action = action.replace(/unknown_.*/, '攻击')
@@ -441,22 +422,17 @@ function handleLine(line: string) {
               }
               const cn = getActionChinese(Number.parseInt(id, 16))
               const actionCN = cn && cn !== '' ? cn : action
-              const currentHp
-                = Number(
-                  splitLine[logDefinitions.Ability.fields.targetCurrentHp],
-                ) ?? '???'
-              const maxHp
-                = Number(splitLine[logDefinitions.Ability.fields.targetMaxHp])
-                  ?? '???'
-              const source
-                = splitLine[logDefinitions.Ability.fields.source] ?? '???'
-              const target
-                = splitLine[logDefinitions.Ability.fields.target] ?? '???'
+              const currentHp = Number(
+                splitLine[logDefinitions.Ability.fields.targetCurrentHp],
+              ) ?? '???'
+              const maxHp = Number(splitLine[logDefinitions.Ability.fields.targetMaxHp])
+                ?? '???'
+              const source = splitLine[logDefinitions.Ability.fields.source] ?? '???'
+              const target = splitLine[logDefinitions.Ability.fields.target] ?? '???'
               const { effect, type } = processFlags(ability.flags)
-              const time
-                = combatTimeStamp.value === 0
-                  ? 0
-                  : timestamp - combatTimeStamp.value
+              const time = combatTimeStamp.value === 0
+                ? 0
+                : timestamp - combatTimeStamp.value
               const formattedTime = formatTime(time)
               const targetJob = getJobById(targetId)
               // const targetJob = jobMap.value[targetId].job ?? target.substring(0, 2);
@@ -473,18 +449,17 @@ function handleLine(line: string) {
                       0,
                       (v.expirationTimestamp - timestamp) / 1000,
                     )
-                    v.remainingDuration
-                      = remain >= 999
-                        ? ''
-                        : remain.toFixed(
-                            remain > 0.05 && remain < 0.95 ? 1 : 0,
-                          )
+                    v.remainingDuration = remain >= 999
+                      ? ''
+                      : remain.toFixed(
+                          remain > 0.05 && remain < 0.95 ? 1 : 0,
+                        )
                     // 有时会有过期很久的遗留的buff?
                     return Number(v.remainingDuration) > -3
                   }),
               )
               addRow({
-                key: data.value[0].table.length.toString(),
+                key: data.value[0]!.table.length.toString(),
                 time: formattedTime,
                 id,
                 action,
@@ -501,12 +476,12 @@ function handleLine(line: string) {
                 maxHp,
                 effect,
                 type,
-                shield: shieldData[match.groups?.targetId ?? ''],
+                shield: shieldData[match.groups!.targetId!] ?? '0',
                 povId: povId.value,
               })
-              data.value[0].duration = formatTime(
+              data.value[0]!.duration = formatTime(
                 new Date(
-                  splitLine[logDefinitions.Ability.fields.timestamp],
+                  splitLine[logDefinitions.Ability.fields.timestamp]!,
                 ).getTime() - combatTimeStamp.value,
               )
             }
@@ -520,24 +495,24 @@ function handleLine(line: string) {
 }
 
 function getJobById(targetId: string): number {
-  const fromJobMap = jobMap.value[targetId]
+  const fromJobMap = jobMap.value[targetId]!
   const fromPartyEvent = partyEventParty.value.find(
     v => v.id === targetId,
   ) ?? { job: 0, timestamp: 0 }
   return [fromJobMap, fromPartyEvent].sort(
     (a, b) => b.timestamp - a.timestamp,
-  )[0].job
+  )[0]!.job
 }
 
 function addRow(row: RowVO) {
-  data.value[0].table.unshift(row)
+  data.value[0]!.table.unshift(row)
 }
 
 function stopCombat(timeStamp: number) {
   if (combatTimeStamp.value === 0)
     return
-  data.value[0].duration = formatTime(timeStamp - combatTimeStamp.value)
-  data.value[0] = markRaw(data.value[0])
+  data.value[0]!.duration = formatTime(timeStamp - combatTimeStamp.value)
+  data.value[0] = markRaw(data.value[0]!)
   combatTimeStamp.value = 0
   statusData.friendly = {}
   statusData.enemy = {}
@@ -598,7 +573,7 @@ onMounted(() => {
     toggleDark()
   }
   for (const id in jobMap.value) {
-    const element = jobMap.value[id]
+    const element = jobMap.value[id]!
     if (Date.now() - element.timestamp > 1000 * 60 * 60 * 24 * 1)
       Reflect.deleteProperty(jobMap.value, id)
   }
@@ -624,9 +599,9 @@ function clickMinimize() {
 }
 
 function test() {
-  const last = data.value[0].table[0]
+  const last = data.value[0]!.table[0]!
   const d = { ...last, key: crypto.randomUUID() }
-  data.value[0].table.unshift(d)
+  data.value[0]!.table.unshift(d)
 }
 </script>
 
@@ -649,11 +624,11 @@ function test() {
         >
           <el-option
             v-for="i in data.length"
-            :key="`${data[i - 1].key}-${data[i - 1].duration}-${
-              data[i - 1].zoneName
+            :key="`${data[i - 1]!.key}-${data[i - 1]!.duration}-${
+              data[i - 1]!.zoneName
             }`"
             :value="i - 1"
-            :label="`${data[i - 1].duration} ${data[i - 1].zoneName}`"
+            :label="`${data[i - 1]!.duration} ${data[i - 1]!.zoneName}`"
           />
         </el-select>
       </div>
@@ -667,7 +642,7 @@ function test() {
       />
     </header>
     <main v-show="!minimize" style="height: 100%">
-      <KeigennRecord2Table :rows="data[select].table" :action-key="actionKey" />
+      <KeigennRecord2Table :rows="data[select]!.table" :action-key="actionKey" />
     </main>
   </div>
   <div v-if="store.isBrowser" class="testLog">

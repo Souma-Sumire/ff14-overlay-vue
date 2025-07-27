@@ -117,7 +117,7 @@ function getFoodParams(params: Food['params'], hq: boolean): string {
 
   return p.replace(
     /信念|耐力|咏唱速度|技能速度|暴击|坚韧|信仰/g,
-    m => replaceMap[m],
+    m => replaceMap[m] || m,
   )
   // const p = params.filter(v => v.Params !== '耐力' && v.Params)
   // if (hq) {

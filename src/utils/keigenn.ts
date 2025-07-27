@@ -11,7 +11,7 @@ export function loadKeigenn(server: 'Chinese' | 'Global'): void {
   if (loadedDataLang !== server || keigennMap.size === 0) {
     keigennMap.clear()
     for (const keigenn of server === 'Chinese' ? chinese : global) {
-      const icon = statusData[keigenn.id][1]
+      const icon = statusData[keigenn.id]![1]
       keigenn.fullIcon = completeIcon(icon)
       keigennMap.set(
         keigenn.id.toString(16).toUpperCase().padStart(2, '0'),

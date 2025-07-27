@@ -78,7 +78,7 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
   actions: {
     testAction(): void {
       const actionId
-        = testActions[Math.floor(Math.random() * testActions.length)]
+        = testActions[Math.floor(Math.random() * testActions.length)]!
       void this.pushAction(Date.now(), 15, '青魔技能随机', this.focusTargetId, actionId)
       // this.pushAction(
       //   Date.now(),
@@ -264,9 +264,9 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
         void this.pushAction(
           Date.now(),
           14,
-          e.line[5],
-          e.line[2],
-          Number.parseInt(e.line[4], 16),
+          e.line[5]!,
+          e.line[2]!,
+          Number.parseInt(e.line[4]!, 16),
           Number(e.line[8]),
         )
       }
@@ -274,9 +274,9 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
         void this.pushAction(
           Date.now(),
           15,
-          e.line[5],
-          e.line[2],
-          Number.parseInt(e.line[4], 16),
+          e.line[5]!,
+          e.line[2]!,
+          Number.parseInt(e.line[4]!, 16),
         )
       }
     },

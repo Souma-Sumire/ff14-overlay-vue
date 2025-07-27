@@ -6,9 +6,9 @@ import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 const params = new URLSearchParams(window.location.href.split('?')[1])
 
 function getName(line: string[]): string {
-  const id = Number.parseInt(line[4], 16)
-  const sourceId = line[2]
-  const rawText = line[5]
+  const id = Number.parseInt(line[4]!, 16)
+  const sourceId = line[2]!
+  const rawText = line[5]!
   const temp = getActionChineseTemp(id)
   if (temp)
     return temp
@@ -31,7 +31,7 @@ class Cast {
     this.startTime = Date.now()
     this.castTime = Number(line[8]) * 1000
     this.overTime = this.startTime + this.castTime
-    this.actionId = Number.parseInt(line[4], 16)
+    this.actionId = Number.parseInt(line[4]!, 16)
   }
 }
 
@@ -99,9 +99,9 @@ addOverlayListener(
 
 addOverlayListener('LogLine', (e: { line: string[] }) => {
   if (e.line[0] === '20')
-    casting.set(Number.parseInt(e.line[2], 16), new Cast(e.line))
+    casting.set(Number.parseInt(e.line[2]!, 16), new Cast(e.line))
   else if (e.line[0] === '23')
-    casting.delete(Number.parseInt(e.line[2], 16))
+    casting.delete(Number.parseInt(e.line[2]!, 16))
 })
 
 addOverlayListener('ChangeZone', () => casting.clear())

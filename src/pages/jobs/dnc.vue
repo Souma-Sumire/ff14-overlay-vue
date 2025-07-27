@@ -140,9 +140,9 @@ const handleOnLogEvent: EventMap['LogLine'] = (e) => {
   if (
     e.line[5] === game.playerId
     && (e.line[0] === '26' || e.line[0] === '30')
-    && game.status.has(e.line[2])
+    && game.status.has(e.line[2]!)
   ) {
-    game.status.set(e.line[2], e.line[0] === '26' ? Date.now() : 0)
+    game.status.set(e.line[2]!, e.line[0] === '26' ? Date.now() : 0)
   }
   else if (
     e.line[2] === game.playerId

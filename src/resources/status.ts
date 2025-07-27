@@ -4,7 +4,7 @@ const _STATUS = STATUS as unknown as Record<string, [string, number, number]>
 
 for (const key in STATUS) {
   const element = STATUS[key as keyof typeof STATUS]
-  _STATUS[key] = [element[0], Number.parseInt(element[1]), Number.parseInt(element[2])]
+  _STATUS[key] = [element[0]!, Number.parseInt(element[1]!), Number.parseInt(element[2]!)]
 }
 
 export function completeIcon(icon: number): string {

@@ -86,9 +86,9 @@ async function timeoutPromise<T>(
   promise: Promise<T>,
   timeout: number,
 ): Promise<T> {
-  let timeoutId: NodeJS.Timeout
+  let timeoutId: number
   const timeoutPromise = new Promise<T>((_, reject) => {
-    timeoutId = setTimeout(() => {
+    timeoutId = window.setTimeout(() => {
       reject(new Error('Promise timed out'))
     }, timeout)
   })

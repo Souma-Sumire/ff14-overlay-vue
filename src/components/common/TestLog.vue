@@ -26,7 +26,7 @@ async function onChange(e: Event) {
   })
 
   for (let i = 0; i < files.length; i++) {
-    const file = files[i]
+    const file = files[i]!
     const text = await file.text()
     for (const line of text.split('\n'))
       emits('handleLine', line)

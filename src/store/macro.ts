@@ -145,9 +145,9 @@ export const useMacroStore = defineStore('macro', {
           && macro.Place.Three.Active === false
           && macro.Place.Four.Active === false)
       ) {
-        const index = this.data.zoneId[this.selectZone].indexOf(macro)
+        const index = this.data.zoneId[this.selectZone]!.indexOf(macro)
         if (index > -1)
-          this.data.zoneId[this.selectZone].splice(index, 1)
+          this.data.zoneId[this.selectZone]!.splice(index, 1)
       }
       else {
         ElMessageBox.confirm('确定要删除吗?', '警告', {
@@ -156,9 +156,9 @@ export const useMacroStore = defineStore('macro', {
           type: 'warning',
         })
           .then(() => {
-            const index = this.data.zoneId[this.selectZone].indexOf(macro)
+            const index = this.data.zoneId[this.selectZone]!.indexOf(macro)
             if (index > -1)
-              this.data.zoneId[this.selectZone].splice(index, 1)
+              this.data.zoneId[this.selectZone]!.splice(index, 1)
           })
           .catch(() => {})
       }
@@ -251,8 +251,8 @@ export const useMacroStore = defineStore('macro', {
         type: 'warning',
       })
         .then(() => {
-          this.data.zoneId[this.selectZone].length = 0
-          this.data.zoneId[this.selectZone].push(
+          this.data.zoneId[this.selectZone]!.length = 0
+          this.data.zoneId[this.selectZone]!.push(
             ...JSON.parse(JSON.stringify(defaultMacro.zoneId[this.selectZone])),
           )
           ElMessage.success('重置成功')
@@ -291,7 +291,7 @@ export function cleanMacro(text: string): string {
 
 export function getZoneIDByZoneName(ZoneName: string) {
   for (const zoneId in zoneInfo) {
-    const zone = zoneInfo[zoneId]
+    const zone = zoneInfo[zoneId]!
     for (const lang in zone.name) {
       const zoneName = zone.name[lang as keyof typeof zone.name]
       if (
