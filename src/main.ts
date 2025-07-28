@@ -9,6 +9,7 @@ import en from './locales/en.json'
 import ja from './locales/ja.json'
 import zhCn from './locales/zhCn.json'
 import router from './router'
+import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import 'virtual:uno.css'
 
