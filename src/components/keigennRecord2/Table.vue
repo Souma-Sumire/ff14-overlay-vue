@@ -7,6 +7,7 @@ import { computed } from 'vue'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 import { copyToClipboard } from '@/utils/clipboard'
 import { translationFlags } from '@/utils/flags'
+import Util from '@/utils/util'
 import Amount from './Amount.vue'
 import StatusShow from './StatusShow.vue'
 import Target from './Target.vue'
@@ -19,14 +20,6 @@ const props = defineProps<{
 const store = useKeigennRecord2Store()
 const userOptions = store.userOptions
 const contextMenu = useTemplateRef<HTMLElement>('contextMenu')
-
-const size = {
-  line_height: 28,
-  time: 40,
-  action: 64,
-  target: 32,
-  amount: 45,
-}
 
 const actionFilter = ref('') // 技能筛选
 const targetFilter = ref('') // 目标筛选
@@ -47,10 +40,21 @@ const actionOptions = computed(() => [
   ...Array.from(new Set(props.rows.map(r => r[props.actionKey] as string))),
 ])
 
-const targetOptions = computed(() => [
-  ALL_STR,
-  ...Array.from(new Set(props.rows.map(r => r.job))),
-])
+const targetOptions = computed(() => {
+  const players = Array.from(
+    new Map(props.rows.map(row => [row.target, row])).values(),
+  )
+  return [
+    { label: '[取消筛选]', value: '', job: -1 },
+    ...players.map(row => ({
+      label: `${row.job}(${row.target})`,
+      value: row.target,
+      job: row.jobEnum,
+    })),
+  ].sort((a, b) => {
+    return Util.enumSortMethod(a.job, b.job)
+  })
+})
 
 function filterByAction() {
   if (contextMenuRow.value) {
@@ -67,7 +71,7 @@ function filterByAction() {
 
 function filterByTarget() {
   if (contextMenuRow.value) {
-    const val = contextMenuRow.value.job
+    const val = contextMenuRow.value.target
     if (targetFilter.value === val) {
       targetFilter.value = '' // 取消筛选
     }
@@ -81,13 +85,9 @@ function filterByTarget() {
 const tableData = computed(() =>
   props.rows.filter((row) => {
     const actionMatch
-      = !actionFilter.value
-        || actionFilter.value === ALL_STR
-        || row[props.actionKey] === actionFilter.value
+      = !actionFilter.value || actionFilter.value === ALL_STR || row[props.actionKey] === actionFilter.value
     const targetMatch
-      = !targetFilter.value
-        || targetFilter.value === ALL_STR
-        || row.job === targetFilter.value
+      = !targetFilter.value || targetFilter.value === ALL_STR || row.target === targetFilter.value
     return actionMatch && targetMatch
   }),
 )
@@ -97,7 +97,7 @@ const columns = computed<Column[]>(() => [
     key: 'time',
     title: '时间',
     dataKey: 'time',
-    width: size.time,
+    width: 40,
     align: 'center' as const,
     class: 'col-time',
   },
@@ -105,7 +105,7 @@ const columns = computed<Column[]>(() => [
     key: 'action',
     title: '技能',
     dataKey: props.actionKey as string,
-    width: size.action,
+    width: 64,
     align: 'center' as const,
     class: 'col-action',
     headerCellRenderer: () =>
@@ -134,7 +134,7 @@ const columns = computed<Column[]>(() => [
     key: 'target',
     title: '职业',
     dataKey: 'target',
-    width: size.target,
+    width: 32,
     align: 'center' as const,
     class: 'col-target',
     headerCellRenderer: () =>
@@ -146,17 +146,19 @@ const columns = computed<Column[]>(() => [
             modelValue: targetFilter.value,
             placeholder: '职业',
             clearable: false,
-            style: `width:4.5em`,
+            style: `width:4.7em;text-overflow:clip;white-space:nowrap`,
+            class: 'col-target-select',
             teleported: false,
-            onChange: (v: string) =>
-              (targetFilter.value = v === ALL_STR ? '' : v),
+            onChange: (v: string) => {
+              targetFilter.value = v === ALL_STR ? '' : v
+            },
           },
           () =>
             targetOptions.value.map(t =>
               h(ElOption, {
-                key: t,
-                label: t,
-                value: t,
+                key: t.value,
+                label: t.label,
+                value: t.value,
               }),
             ),
         ),
@@ -168,7 +170,7 @@ const columns = computed<Column[]>(() => [
     key: 'amount',
     title: '伤害',
     dataKey: 'amount',
-    width: size.amount,
+    width: 45,
     align: 'right' as const,
     class: 'col-amount',
     cellRenderer: ({ rowData }: { rowData: RowVO }) =>
@@ -178,7 +180,7 @@ const columns = computed<Column[]>(() => [
     key: 'keigenns',
     title: '减伤',
     dataKey: 'keigenns',
-    width: 0,
+    width: 100,
     align: 'left' as const,
     flexGrow: 1,
     class: 'col-keigenns',
@@ -204,14 +206,12 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
       shield,
     } = rowData
     const sp = effect === 'damage done' ? '' : `,${translationFlags(effect)}`
-    const result = `${time} ${job} ${actionCN} ${amount.toLocaleString()}(${translationFlags(type)}) 减伤:${
-      keigenns.length === 0 && sp === ''
-        ? '无'
-        : keigenns
-          .map(k => (userOptions.statusCN ? k.name : k.effect))
-          .join(',') + sp
-    } HP:${currentHp}/${
-      maxHp
+    const result = `${time} ${job} ${actionCN} ${amount.toLocaleString()}(${translationFlags(type)}) 减伤:${keigenns.length === 0 && sp === ''
+      ? '无'
+      : keigenns
+        .map(k => (userOptions.statusCN ? k.name : k.effect))
+        .join(',') + sp
+    } HP:${currentHp}/${maxHp
     }(${Math.round((currentHp / maxHp) * 100)}%)+盾:${Math.round(
       (maxHp * +shield) / 100,
     )}(${shield}%)`
@@ -236,23 +236,12 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
   <el-auto-resizer style="height: 100%; width: 100%">
     <template #default="{ height, width }">
       <el-table-v2
-        header-class="keigenn-table-header"
-        class="keigenn-table"
-        :style="{ '--row-height': `${size.line_height}px` }"
-        :columns="columns"
-        :data="tableData"
-        :width="width"
-        :height="height"
-        :row-height="size.line_height"
-        :header-height="24"
-        row-key="key"
-        scrollbar-always-on
+        header-class="keigenn-table-header" class="keigenn-table" :columns="columns" :data="tableData"
+        :width="width" :height="height" :row-height="28" :header-height="24" row-key="key" scrollbar-always-on
         :row-event-handlers="rowEventHandlers"
       />
       <div
-        v-if="contextMenuVisible"
-        ref="contextMenu"
-        class="context-menu"
+        v-if="contextMenuVisible" ref="contextMenu" class="context-menu"
         :style="{ top: `${contextMenuY}px`, left: `${contextMenuX}px` }"
       >
         <ul>
@@ -265,7 +254,7 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
           </li>
           <li @click="filterByTarget">
             {{
-              targetFilter === contextMenuRow?.job
+              targetFilter === contextMenuRow?.target
                 ? `取消筛选 [${contextMenuRow?.job ?? "此职业"}]`
                 : `只看 [${contextMenuRow?.job ?? "此职业"}]`
             }}
@@ -279,61 +268,6 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
 <style scoped lang="scss">
 .keigenn-table {
   font-size: 12px;
-}
-
-:global(.header-filter) {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  align-items: center;
-  position: fixed;
-}
-
-/* 表头不换行 */
-:global(.keigenn-table .el-table-v2__header-cell) {
-  white-space: nowrap !important;
-  // background-color: rgba(20, 20, 20, var(--opacity));
-  background-color: transparent;
-}
-
-// 表格列间隔
-:global(.el-table-v2__row-cell) {
-  padding: 0 2px;
-}
-
-// 表格行指针手势
-:global(.el-table-v2__row) {
-  cursor: pointer;
-}
-
-// action列样式
-:global(.col-action) {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  line-height: var(--row-height);
-}
-
-// amount列样式（允许超出单元格宽度）
-:global(.col-amount) {
-  overflow: visible !important;
-  // z-index: 2; // 在图标上方
-}
-
-// 表头Select去掉边框
-:global(.el-select__wrapper) {
-  box-shadow: none !important;
-}
-
-// 正在筛选 改变文字颜色
-:global(.el-select__placeholder) {
-  color: var(--el-color-primary) !important;
-}
-
-// 未筛选 文字颜色
-:global(.el-select__placeholder.is-transparent) {
-  color: unset !important;
 }
 
 .context-menu {
@@ -373,4 +307,6 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
 .context-menu ul li:active {
   background-color: var(--el-color-primary-dark-2);
 }
+
+
 </style>

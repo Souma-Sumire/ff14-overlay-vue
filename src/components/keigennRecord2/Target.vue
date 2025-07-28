@@ -22,7 +22,7 @@ function onError(e: Event) {
   console.error('Failed to load image:', props.row.jobIcon)
 }
 
-const showIcon = computed(() => !imageError.value && (store.userOptions.targetType === 'icon'))
+const showIcon = computed(() => !imageError.value && ((store.userOptions.targetType ?? 'icon') === 'icon'))
 </script>
 
 <template>

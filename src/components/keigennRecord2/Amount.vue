@@ -62,6 +62,7 @@ const remainPercent = computed(
 
 .row-info li {
   margin-bottom: 2px;
+  // 不换行
 }
 
 // 物理

@@ -35,7 +35,7 @@ const actionKey = computed(() =>
 )
 
 // 太大会爆储存（5M）
-const maxStorage = 5
+const maxStorage = 3
 
 const loading = ref(false)
 let saveEnable: boolean = false
@@ -452,8 +452,8 @@ function handleLine(line: string) {
                     v.remainingDuration = remain >= 999
                       ? ''
                       : remain.toFixed(
-                          remain > 0.05 && remain < 0.95 ? 1 : 0,
-                        )
+                        remain > 0.05 && remain < 0.95 ? 1 : 0,
+                      )
                     // 有时会有过期很久的遗留的buff?
                     return Number(v.remainingDuration) > -3
                   }),
@@ -554,9 +554,8 @@ function loadStorage() {
 function formatTime(time: number) {
   const minute = Math.max(Math.floor(time / 60000), 0)
   const second = Math.max(Math.floor((time - minute * 60000) / 1000), 0)
-  return `${minute < 10 ? '0' : ''}${minute}:${
-    second < 10 ? '0' : ''
-  }${second}`
+  return `${minute < 10 ? '0' : ''}${minute}:${second < 10 ? '0' : ''
+    }${second}`
 }
 
 if (store.isBrowser)
@@ -606,60 +605,51 @@ function test() {
 </script>
 
 <template>
-  <div
-    class="wrapper"
-    :style="{ '--scale': userOptions.scale, '--opacity': userOptions.opacity }"
-    @contextmenu.prevent
-  >
+  <div class="wrapper" :style="{ '--scale': userOptions.scale, '--opacity': userOptions.opacity }" @contextmenu.prevent>
     <header>
       <div class="header-select">
-        <el-select
-          v-show="!minimize"
-          v-model="select"
-          size="small"
-          class="combat-select"
-          popup-class-name="combat-select-popup"
-          :offset="0"
-          :show-arrow="false"
-        >
-          <el-option
-            v-for="i in data.length"
-            :key="`${data[i - 1]!.key}-${data[i - 1]!.duration}-${
-              data[i - 1]!.zoneName
-            }`"
-            :value="i - 1"
-            :label="`${data[i - 1]!.duration} ${data[i - 1]!.zoneName}`"
-          />
+        <el-select v-show="!minimize" v-model="select" size="small" class="combat-select"
+          :class="store.isBrowser ? 'browser' : 'act'" popup-class-name="combat-select-popup" :offset="0"
+          :show-arrow="false">
+          <el-option v-for="i in data.length" :key="`${data[i - 1]!.key}-${data[i - 1]!.duration}-${data[i - 1]!.zoneName
+            }`" :value="i - 1" :label="`${data[i - 1]!.duration} ${data[i - 1]!.zoneName}`" />
         </el-select>
       </div>
-      <el-button
-        class="minimize"
-        :class="minimize ? 'in-minimize' : 'not-minimize'"
-        :icon="minimize ? ZoomIn : ZoomOut"
-        circle
-        :style="{ opacity: minimize ? 0.5 : 1 }"
-        @click="clickMinimize"
-      />
+      <el-button v-if="!store.isBrowser" class="minimize" :class="minimize ? 'in-minimize' : 'not-minimize'"
+        :icon="minimize ? ZoomIn : ZoomOut" circle :style="{ opacity: minimize ? 0.5 : 1 }" @click="clickMinimize" />
     </header>
     <main v-show="!minimize" style="height: 100%">
       <KeigennRecord2Table :rows="data[select]!.table" :action-key="actionKey" />
     </main>
   </div>
-  <div v-if="store.isBrowser" class="testLog">
+  <div v-if="store.isBrowser || dev" class="testLog">
     <el-button v-if="dev" @click="test">
       测试
     </el-button>
-    <CommonTestLog
-      m-1
-      @before-handle="beforeHandle"
-      @after-handle="afterHandle"
-      @handle-line="handleLine"
-    />
+    <CommonTestLog m-1 @before-handle="beforeHandle" @after-handle="afterHandle" @handle-line="handleLine" />
   </div>
 </template>
 
-<style lang="scss">
-body {
+<style>
+.el-select__suffix {
+  position: relative;
+  width: 0px;
+  right: 15px;
+}
+
+.combat-select .el-select__suffix {
+  width: 14px;
+  right: 7px
+}
+
+.col-target-select .el-select__placeholder {
+  overflow: hidden;
+  text-overflow: clip;
+  width: 2em;
+}
+</style>
+<style lang="scss" scoped>
+:global(body) {
   background: transparent;
   padding: 0;
   margin: 0;
@@ -675,6 +665,27 @@ img:not([src]) {
   &::after {
     content: attr(data-job);
   }
+}
+
+header {
+  width: 100%;
+  display: flex;
+}
+
+main {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  width: 100%;
+}
+
+.wrapper {
+  zoom: var(--scale, 1);
+  padding: 0;
+  margin: 0;
+  height: 100vh;
+  width: 100%;
+  position: relative;
 }
 
 .minimize {
@@ -701,103 +712,102 @@ img:not([src]) {
   background-color: rgba(20, 20, 20, 1);
 }
 
-::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+/* ===== Element Plus 样式重写 ===== */
+:global(.el-table-v2__main) {
+  background-color: rgba(20, 20, 20, var(--opacity));
+  border-radius: 6px;
 }
 
-::-webkit-scrollbar-track {
-  background-color: rgba(51, 51, 51, 1);
-}
-
-::-webkit-scrollbar-thumb {
-  height: 30px;
-  border-radius: 4px;
-  background-color: rgba(180, 180, 180, 0.75);
-}
-
-::-webkit-scrollbar-thumb:active {
-  background-color: rgba(160, 160, 160, 1);
-}
-
-.wrapper {
-  zoom: var(--scale,1);
-  padding: 0;
-  margin: 0;
-  height: calc(100vh);
-  width: 100%;
-  position: relative;
-}
-
-.el-select__placeholder {
-  text-overflow: clip;
-}
-
-// el-select 选中之后的文本
-.el-select__placeholder.is-transparent {
-  color: #ffffff;
-}
-
-// el-select 下拉箭头
-.el-select__suffix {
-  width: 5px;
-  position: relative;
-  right: 0.6em;
-}
-
-// el-select 下拉框整体
-.el-select-dropdown__list {
+// el-select 下拉范围
+:global(.el-select-dropdown__list) {
   padding: 0;
 }
 
-// el-option 下拉框选项
-.el-select-dropdown__item {
+// el-option 下拉选项
+:global(.el-select-dropdown__item) {
   padding: 0 0.5em;
+}
+
+// 让表头显示完整
+:global(.header-filter) {
+  position: fixed;
+}
+
+// 表格列间隔
+:global(.el-table-v2__row-cell) {
+  padding: 0 2px;
+}
+
+// 表格行指针手势
+:global(.el-table-v2__row) {
+  cursor: pointer;
+}
+
+// action列样式
+:global(.col-action) {
+  display: block;
   overflow: hidden;
-  text-overflow: clip;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 28px;
 }
 
-header {
-  width: 100%;
-  display: flex;
-
-  // 战斗记录选择器
-  .combat-select {
-    width: 1.5em;
-    z-index: 15;
-    position: absolute;
-    right: 24px;
-    background-color: rgba(20, 20, 20, 0.4);
-    height: 22px;
-  }
-
-  .combat-select-popup {
-    left: 0 !important;
-  }
+// amount列样式（允许超出单元格宽度）
+:global(.col-amount) {
+  overflow: visible !important;
+  z-index: 2; // 在图标上方
 }
 
-main {
+// 表头筛选去掉边框
+:global(.el-select__wrapper) {
+  box-shadow: none !important;
+}
+
+// 正在筛选 改变文字颜色
+:global(.el-select__placeholder) {
+  color: var(--el-color-primary) !important;
+}
+
+// 未筛选 文字颜色
+:global(.el-select__placeholder.is-transparent) {
+  color: unset !important;
+}
+
+/* ===== 战斗记录选择器 ===== */
+.combat-select {
+  height: 21px;
   position: absolute;
-  top: 0px;
-  bottom: 0px;
-  width: 100%;
+  top: 1px;
+  z-index: 15;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(200, 200, 200, 0.2);
+}
+
+.combat-select.act {
+  width: 1.5em;
+  right: 24px;
+  background-color: rgba(20, 20, 20, 0.4);
+}
+
+.combat-select.browser {
+  width: 16em;
+  right: 2px;
+}
+
+.combat-select-popup {
+  left: 0 !important;
 }
 
 .testLog {
   position: fixed;
   opacity: 0.8;
   right: 0;
+  bottom: 0;
   z-index: 10;
   transition: all 0.2s ease-in-out;
-  bottom: 0;
 
   &:hover {
     opacity: 1;
   }
-}
-
-.el-table-v2__main {
-  background-color: rgba(20, 20, 20, var(--opacity));
-  border-radius: 6px;
 }
 </style>

@@ -17,35 +17,45 @@ const icon4k = keigennRecord2Store.icon4k
   <div v-if="props.row.type === 'dot'">
     （不支持）
   </div>
-  <div v-else>
+  <div v-else class="status-container">
     <span v-for="(keigenn, index) in props.row.keigenns" :key="index">
       <span
-        class="status"
-        :title="`${userOptions.statusCN ? keigenn.name : keigenn.effect}(${keigenn.source})`"
-        :data-duration="keigenn.remainingDuration"
-        :data-sourcePov="keigenn.isPov"
+        class="status" :title="`${userOptions.statusCN ? keigenn.name : keigenn.effect}(${keigenn.source})`"
+        :data-duration="keigenn.remainingDuration" :data-sourcePov="keigenn.isPov"
       >
         <img
           :class="`statusIcon ${multiplierEffect(keigenn, props.row.type)}`"
-          :src="getImgSrc(`/i/${keigenn.fullIcon}${icon4k}.png`)"
-          :alt="keigenn.effect"
-          loading="lazy"
+          :src="getImgSrc(`/i/${keigenn.fullIcon}${icon4k}.png`)" :alt="keigenn.effect" loading="lazy"
           @error="handleImgError"
         >
       </span>
     </span>
-    <span>
+    <span class="flags">
       {{ props.row.effect === "damage done" ? "" : translationFlags(props.row.effect) }}
     </span>
   </div>
 </template>
 
 <style scoped lang="scss">
-// 图标整体上移
+.status-container {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  align-items: center;
+  align-content: center;
+  justify-content: flex-start;
+}
+
+// 图标整体
 .status {
+  object-fit: cover;
   position: relative;
   top: -2px;
   object-fit: cover;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: flex-end;
 }
 
 // 图标大小
@@ -58,16 +68,11 @@ const icon4k = keigennRecord2Store.icon4k
 // 持续时间
 .status::before {
   content: attr(data-duration);
-  height: 1em;
-  line-height: 1em;
   z-index: 1;
   position: absolute;
-  text-align: center;
-  left: 50%;
-  bottom: -1.1em;
-  transform: translateX(-50%) scale(0.7);
-  transform-origin: top center;
+  bottom: -8px;
   font-family: emoji;
+  transform: scale(0.6);
 }
 
 // 由玩家释放的状态
