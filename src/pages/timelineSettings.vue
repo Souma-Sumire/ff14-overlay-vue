@@ -569,7 +569,7 @@ function syncData() {
   sendBroadcastData('post', timelineStore.$state)
 
   clearTimeout(syncTimeoutTimer)
-  syncTimeoutTimer = setTimeout(() => {
+  syncTimeoutTimer = window.setTimeout(() => {
     const timelineUrl = router.resolve({ path: '/timeline' })
     const fullPath = `${window.location.protocol}//${window.location.host}/ff14-overlay-vue/${timelineUrl.href}`
 

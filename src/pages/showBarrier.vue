@@ -100,7 +100,7 @@ onMounted(() => {
         handlePartyChanged()
       }
       else {
-        timer = setInterval(() => {
+        timer = window.setInterval(() => {
           if (povId.value) {
             handlePartyChanged()
             clearInterval(timer)

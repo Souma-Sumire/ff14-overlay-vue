@@ -914,7 +914,7 @@ onMounted(async () => {
   await (async () => {
     return new Promise<void>((resolve) => {
       // 等待ACTWebSocket连接成功
-      const interval = setInterval(() => {
+      const interval = window.setInterval(() => {
         if (wsConnected.value) {
           clearInterval(interval)
           resolve()

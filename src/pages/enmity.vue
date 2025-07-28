@@ -62,7 +62,7 @@ async function getEnmityCombatants() {
 
 function checkInterval() {
   clearTimers()
-  intervalTimer = setInterval(() => {
+  intervalTimer = window.setInterval(() => {
     // 倒计时中持续检查
     getEnmityCombatants()
       .then(({ enmityTanks }) => {
@@ -95,7 +95,7 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
   const countdown = netRegexs.countdown.exec(e.rawLine)?.groups?.countdownTime
   if (countdown !== undefined) {
     checkInterval()
-    timeoutTimer = setTimeout(
+    timeoutTimer = window.setTimeout(
       () => {
         // 倒计时10秒
         getEnmityCombatants()
@@ -134,7 +134,7 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
     const { inACTCombat, inGameCombat } = netRegexs.inCombat.exec(e.rawLine)!.groups || {}
     if (inACTCombat === '1' && inGameCombat === '1') {
       checkInterval()
-      timeoutTimer = setTimeout(() => {
+      timeoutTimer = window.setTimeout(() => {
         getEnmityCombatants()
           .then(({ enmityTanks, partyCombatState }) => {
             // 如果小队内有2个坦克，且另一个坦克开盾了，且你没有开盾
