@@ -38,7 +38,45 @@ function safeParseJson(input: string) {
   }
 }
 
-export const useMacroStore = defineStore('macro', {
+function cleanMacro(text: string): string {
+  let res = text
+  res = res.replaceAll(/\n{2,}/g, '\n')
+  res = res.replaceAll(/^\s+/gm, '')
+  res = res.replaceAll(/ /g, '\xA0')
+  return res
+}
+
+function getZoneIDByZoneName(ZoneName: string) {
+  for (const zoneId in zoneInfo) {
+    const zone = zoneInfo[zoneId]!
+    for (const lang in zone.name) {
+      const zoneName = zone.name[lang as keyof typeof zone.name]
+      if (
+        zoneName?.toUpperCase() === ZoneName.toUpperCase()
+        || zoneName === ZoneName.replaceAll(/[()]/g, '')
+      ) {
+        return zoneId
+      }
+    }
+  }
+}
+
+function macroCommand(text: string, channel: 'e' | 'p') {
+  if (channel === 'p' && partyLen === 0)
+    doTextCommand('/e 单人时无法发送小队宏<se.3>')
+  const macros = text.replaceAll(/^\s*\/[pe]\s/gm, '').split('\n')
+  const queue: QueueArr = macros.map((m) => {
+    return {
+      c: 'DoTextCommand',
+      p: `/${channel} ${m}`,
+      d: 125,
+    }
+  })
+  doQueueActions(queue)
+  ElMessage.success('已发送')
+}
+
+const useMacroStore = defineStore('macro', {
   state: () => {
     return {
       data: useStorage('my-macros', defaultMacro),
@@ -281,40 +319,4 @@ export const useMacroStore = defineStore('macro', {
   },
 })
 
-export function cleanMacro(text: string): string {
-  let res = text
-  res = res.replaceAll(/\n{2,}/g, '\n')
-  res = res.replaceAll(/^\s+/gm, '')
-  res = res.replaceAll(/ /g, '\xA0')
-  return res
-}
-
-export function getZoneIDByZoneName(ZoneName: string) {
-  for (const zoneId in zoneInfo) {
-    const zone = zoneInfo[zoneId]!
-    for (const lang in zone.name) {
-      const zoneName = zone.name[lang as keyof typeof zone.name]
-      if (
-        zoneName?.toUpperCase() === ZoneName.toUpperCase()
-        || zoneName === ZoneName.replaceAll(/[()]/g, '')
-      ) {
-        return zoneId
-      }
-    }
-  }
-}
-
-async function macroCommand(text: string, channel: 'e' | 'p') {
-  if (channel === 'p' && partyLen === 0)
-    doTextCommand('/e 单人时无法发送小队宏<se.3>')
-  const macros = text.replaceAll(/^\s*\/[pe]\s/gm, '').split('\n')
-  const queue: QueueArr = macros.map((m) => {
-    return {
-      c: 'DoTextCommand',
-      p: `/${channel} ${m}`,
-      d: 125,
-    }
-  })
-  doQueueActions(queue)
-  ElMessage.success('已发送')
-}
+export { useMacroStore }

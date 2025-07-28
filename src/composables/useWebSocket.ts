@@ -92,6 +92,8 @@ export function useWebSocket(
         },
       ).catch(() => {
         userIgnoredWarning.value = true
+        if (timer)
+          clearInterval(timer)
       })
     }
   }

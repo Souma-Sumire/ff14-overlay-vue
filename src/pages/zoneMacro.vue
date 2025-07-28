@@ -21,6 +21,8 @@ const hideOnStartup = useStorage('zoneMacroHideOnStartup', ref(false))
 if (hideOnStartup.value)
   macroStore.show = false
 
+useWebSocket({ allowClose: true, addWsParam: true })
+
 const contentTypeLabel: { type: number, label: string }[] = [
   { type: ContentType.UltimateRaids, label: '绝境战' },
   { type: ContentType.OccultCrescent, label: '新月岛' },
@@ -61,8 +63,12 @@ const groupedZoneOptions = computed(() => {
       || macroStore.selectZone === v.id,
     )
     .forEach((v) => {
-      const label = contentTypeLabel.find(ct => ct.type === v.contentType)!.label;
-      (groups[label] ??= []).push({
+      const label = contentTypeLabel.find(ct => ct.type === v.contentType)?.label ?? '临时'
+
+      if (groups[label] === undefined)
+        groups[label] = []
+
+      groups[label]!.push({
         value: v.id,
         label: v.name?.cn ?? `${v.name.en} / ${v.name.ja}`,
       })
@@ -76,8 +82,6 @@ const groupedZoneOptions = computed(() => {
       return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex)
     })
 })
-
-useWebSocket({ allowClose: true, addWsParam: true })
 
 onMounted(() => {
   addOverlayListener('ChangeZone', macroStore.handleChangeZone)
