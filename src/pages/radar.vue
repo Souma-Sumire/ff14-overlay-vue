@@ -19,9 +19,9 @@ let ctx: CanvasRenderingContext2D | null = null
 const devicePixelRatio = ref(window.devicePixelRatio || 1)
 const size = ref(Math.min(window.innerWidth, window.innerHeight) - 80)
 const detectionRadius = computed(() => size.value / 2 - 20)
-const distanceScale = 0.1
 const unlocked = ref(document.getElementById('unlocked')?.style?.display === 'flex')
 const { zoneType } = useZone()
+const searchType: Ref<'single' | 'all'> = ref('single')
 
 const colors = {
   radarRing: '#0f0',
@@ -30,6 +30,7 @@ const colors = {
   target: '#ff0',
   directionLine: '#f00',
   distanceText: '#fff',
+  nameText: '#fff',
 }
 
 const sizes = {
@@ -37,7 +38,6 @@ const sizes = {
   targetMarker: 3,
   directionLineWidth: 2,
   directionIndicator: 6,
-  font: '10px Arial',
 }
 
 const centerX = computed(() => size.value / 2)
@@ -56,6 +56,8 @@ function updateSearchTargets() {
 }
 
 function drawRadar() {
+  searchType.value = 'single'
+  const distanceScale = 0.5
   if (!ctx) {
     throw new Error('canvas context is null')
   }
@@ -151,8 +153,132 @@ function drawRadar() {
 
   // === 距离文本 ===
   ctx.fillStyle = colors.distanceText
-  ctx.font = sizes.font
+  ctx.font = '10px Arial'
   ctx.fillText(`${distance.toFixed(1)}y`, px + 5, py - 5)
+}
+
+function calculatePosition(c: {
+  PosX: number
+  PosY: number
+}, primary: {
+  PosX: number
+  PosY: number
+}, distanceScale: number): { px: number, py: number } {
+  const dx = c.PosX - primary.PosX
+  const dy = c.PosY - primary.PosY
+  let px = centerX.value + dx / distanceScale
+  let py = centerY.value + dy / distanceScale
+
+  const dist = Math.hypot(px - centerX.value, py - centerY.value)
+  if (dist > detectionRadius.value) {
+    const ratio = detectionRadius.value / dist
+    px = centerX.value + (px - centerX.value) * ratio
+    py = centerY.value + (py - centerY.value) * ratio
+  }
+
+  return { px, py }
+}
+
+function drawAll() {
+  searchType.value = 'all'
+  const distanceScale = 1
+  if (!ctx)
+    throw new Error('canvas context is null')
+
+  const primary = combatants.value.find(c => c.Name === primaryPlayer.value)
+  const searchs = combatants.value.filter(c => c.Name !== primaryPlayer.value && c.ID)
+
+  if (!primary)
+    return
+
+  ctx.clearRect(0, 0, size.value, size.value)
+
+  // === 雷达背景 ===
+  ctx.strokeStyle = colors.radarRing
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.arc(centerX.value, centerY.value, detectionRadius.value, 0, 2 * Math.PI)
+  ctx.stroke()
+
+  // === 坐标轴 ===
+  ctx.strokeStyle = colors.axis
+  ctx.beginPath()
+  ctx.moveTo(centerX.value - detectionRadius.value, centerY.value)
+  ctx.lineTo(centerX.value + detectionRadius.value, centerY.value)
+  ctx.moveTo(centerX.value, centerY.value - detectionRadius.value)
+  ctx.lineTo(centerX.value, centerY.value + detectionRadius.value)
+  ctx.stroke()
+
+  // 先缓存所有目标的位置
+  const positions = new Map<string, { px: number, py: number }>()
+  for (const c of searchs) {
+    positions.set(c.ID!.toString(), calculatePosition(c, primary, distanceScale))
+  }
+
+  // 画连线
+  for (const c of searchs) {
+    const pos = positions.get(c.ID!.toString())
+    if (!pos)
+      continue
+    ctx.strokeStyle = colors.directionLine
+    ctx.lineWidth = sizes.directionLineWidth
+    ctx.beginPath()
+    ctx.moveTo(centerX.value, centerY.value)
+    ctx.lineTo(pos.px, pos.py)
+    ctx.stroke()
+  }
+
+  // 画红点
+  for (const c of searchs) {
+    const pos = positions.get(c.ID!.toString())
+    if (!pos)
+      continue
+    ctx.fillStyle = colors.target
+    ctx.beginPath()
+    ctx.arc(pos.px, pos.py, sizes.targetMarker, 0, 2 * Math.PI)
+    ctx.fill()
+  }
+
+  // 画名字
+  for (const c of searchs) {
+    const pos = positions.get(c.ID!.toString())
+    if (!pos)
+      continue
+    const name = c.Name ?? ''
+    const textWidth = ctx.measureText(name).width
+
+    ctx.shadowColor = 'black'
+    ctx.shadowBlur = 1
+    ctx.shadowOffsetX = 1
+    ctx.shadowOffsetY = 1
+
+    ctx.fillStyle = colors.nameText
+    ctx.font = '8px Arial'
+    ctx.fillText(name, pos.px - textWidth / 2, pos.py - sizes.targetMarker - 3)
+
+    ctx.shadowColor = 'transparent'
+    ctx.shadowBlur = 0
+    ctx.shadowOffsetX = 0
+    ctx.shadowOffsetY = 0
+  }
+
+  // === 玩家指示三角形 ===
+  const rotation = -(primary.Heading ?? 0) + Math.PI
+  ctx.save()
+  ctx.translate(centerX.value, centerY.value)
+  ctx.rotate(rotation)
+  ctx.fillStyle = colors.player
+
+  const h = sizes.playerMarker
+  const halfBase = h / 3
+  const centerOffset = h * -0.2
+  ctx.beginPath()
+  ctx.moveTo(0, -h / 2 + centerOffset)
+  ctx.lineTo(-halfBase, h / 2 + centerOffset)
+  ctx.lineTo(halfBase, h / 2 + centerOffset)
+  ctx.closePath()
+  ctx.fill()
+  ctx.restore()
 }
 
 async function getCombatants() {
@@ -166,7 +292,12 @@ async function update() {
     searchTargetName.value = ''
     return
   }
-  drawRadar()
+  if (searchTargetName.value === '*') {
+    drawAll()
+  }
+  else {
+    drawRadar()
+  }
   setTimeout(update, 100)
 }
 
@@ -222,47 +353,38 @@ onUnmounted(() => {
   <CommonActWrapper>
     <div class="radar-container">
       <el-alert
-        v-if="unlocked"
-        class="el-alert-info"
-        type="info"
-        :closable="false"
-        show-icon
-        title="宏命令：/e find 目标名称"
-        description="名称允许部分匹配"
+        v-if="unlocked" class="el-alert-info" type="info" :closable="false" show-icon title="宏命令：/e find 目标名称"
+        description="名称允许部分匹配，输入*可查看所有目标"
       />
       <div v-show="searchTargetName" class="radar-wrapper">
-        <button
-          v-if="searchTargets.length > 1"
-          class="nav-arrow left-arrow"
-          :disabled="searchTargets.length <= 1"
-          aria-label="上一目标"
-          @click="currentTargetIndex = (currentTargetIndex - 1 + searchTargets.length) % searchTargets.length"
-        >
-          ←
-        </button>
-
-        <button
-          v-if="searchTargets.length > 1"
-          class="nav-arrow right-arrow"
-          :disabled="searchTargets.length <= 1"
-          aria-label="下一目标"
-          @click="currentTargetIndex = (currentTargetIndex + 1) % searchTargets.length"
-        >
-          →
-        </button>
+        <div v-if="searchTargets.length > 1">
+          <button
+            class="nav-arrow left-arrow" :disabled="searchTargets.length <= 1"
+            aria-label="上一目标"
+            @click="currentTargetIndex = (currentTargetIndex - 1 + searchTargets.length) % searchTargets.length"
+          >
+            ←
+          </button>
+          <span>
+            （{{ currentTargetIndex + 1 }} / {{ searchTargets.length }}）
+          </span>
+          <button
+            class="nav-arrow right-arrow" :disabled="searchTargets.length <= 1"
+            aria-label="下一目标" @click="currentTargetIndex = (currentTargetIndex + 1) % searchTargets.length"
+          >
+            →
+          </button>
+        </div>
 
         <div class="target-header">
-          <span class="target-name">{{ searchTargets[currentTargetIndex]?.Name ?? '【未找到目标】' }}</span>
+          <span v-if="searchType === 'single'" class="target-name">{{ searchTargets[currentTargetIndex]?.Name ?? `【未找到${searchTargetName}】` }}</span>
           <button class="cancel-btn" @click="searchTargetName = ''; searchTargets = [];">
             取消
           </button>
         </div>
         <div class="radar-canvas-container">
           <canvas
-            ref="canvas"
-            class="radar-canvas"
-            :width="size * devicePixelRatio"
-            :height="size * devicePixelRatio"
+            ref="canvas" class="radar-canvas" :width="size * devicePixelRatio" :height="size * devicePixelRatio"
             :style="{ width: `${size}px`, height: `${size}px` }"
           />
         </div>
@@ -276,16 +398,24 @@ onUnmounted(() => {
   font-family: 'Microsoft YaHei', sans-serif;
   color: white;
   position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  display: flex; justify-content: center; align-items: center;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   user-select: none;
   overflow: hidden;
 
   .activation-prompt {
     background-color: rgba(0, 0, 0, 0.7);
     border: 1px solid #444;
+
     h1 {
-      color: #eee; font-size: 1.2rem; margin: 0;
+      color: #eee;
+      font-size: 1.2rem;
+      margin: 0;
     }
   }
 }
@@ -297,8 +427,11 @@ onUnmounted(() => {
   width: fit-content;
 
   .target-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 10px; padding: 0 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 0 5px;
 
     .target-name {
       font-size: 1.1rem;
@@ -325,7 +458,8 @@ onUnmounted(() => {
     }
   }
 }
-.el-alert-info{
+
+.el-alert-info {
   position: fixed;
   z-index: -9;
 }
