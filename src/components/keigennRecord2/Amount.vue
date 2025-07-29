@@ -42,6 +42,12 @@ const displayAmount = computed(() => amount.toLocaleString())
 const displayTitle = computed(() => userOptions.actionCN ? props.row.actionCN : props.row.action)
 const damageTypeClass = type
 const isLethalHit = isLethal(props.row)
+const hint = (() => {
+  const shieldText = shieldValue > 0 ? '有盾不准' : ''
+  const debuffText = keigenns.find(k => k.name.includes('受伤加重')) ? '不算易伤' : ''
+  const parts = [shieldText, debuffText].filter(Boolean)
+  return parts.length ? `（${parts.join('、')}）` : ''
+})()
 </script>
 
 <template>
@@ -67,14 +73,14 @@ const isLethalHit = isLethal(props.row)
         伤害: <span :class="damageTypeClass">{{ displayAmount }}</span>
       </li>
       <li>血量剩余: {{ remainHp }} ({{ remainPercent }}%)</li>
-      <template v-if="damageReduction < 1">
+      <template v-if="damageReduction < 1 && type !== 'dot'">
         <hr class="divider">
         <li>玩家减伤率: <strong>{{ damageReductionDisplay }}%</strong></li>
         <li>
           倒推裸吃伤害:
           <span :class="damageTypeClass">{{ originalDamageDisplay }}</span>
         </li>
-        <li>（有盾不准、不计算易伤数值）</li>
+        <li> {{ hint }}</li>
       </template>
     </ul>
   </el-popover>
