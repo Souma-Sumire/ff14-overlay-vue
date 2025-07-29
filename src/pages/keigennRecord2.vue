@@ -452,8 +452,8 @@ function handleLine(line: string) {
                     v.remainingDuration = remain >= 999
                       ? ''
                       : remain.toFixed(
-                        remain > 0.05 && remain < 0.95 ? 1 : 0,
-                      )
+                          remain > 0.05 && remain < 0.95 ? 1 : 0,
+                        )
                     // 有时会有过期很久的遗留的buff?
                     return Number(v.remainingDuration) > -3
                   }),
@@ -555,7 +555,7 @@ function formatTime(time: number) {
   const minute = Math.max(Math.floor(time / 60000), 0)
   const second = Math.max(Math.floor((time - minute * 60000) / 1000), 0)
   return `${minute < 10 ? '0' : ''}${minute}:${second < 10 ? '0' : ''
-    }${second}`
+  }${second}`
 }
 
 if (store.isBrowser)
@@ -608,15 +608,21 @@ function test() {
   <div class="wrapper" :style="{ '--scale': userOptions.scale, '--opacity': userOptions.opacity }" @contextmenu.prevent>
     <header>
       <div class="header-select">
-        <el-select v-show="!minimize" v-model="select" size="small" class="combat-select"
+        <el-select
+          v-show="!minimize" v-model="select" size="small" class="combat-select"
           :class="store.isBrowser ? 'browser' : 'act'" popup-class-name="combat-select-popup" :offset="0"
-          :show-arrow="false">
-          <el-option v-for="i in data.length" :key="`${data[i - 1]!.key}-${data[i - 1]!.duration}-${data[i - 1]!.zoneName
-            }`" :value="i - 1" :label="`${data[i - 1]!.duration} ${data[i - 1]!.zoneName}`" />
+          :show-arrow="false"
+        >
+          <el-option
+            v-for="i in data.length" :key="`${data[i - 1]!.key}-${data[i - 1]!.duration}-${data[i - 1]!.zoneName
+            }`" :value="i - 1" :label="`${data[i - 1]!.duration} ${data[i - 1]!.zoneName}`"
+          />
         </el-select>
       </div>
-      <el-button v-if="!store.isBrowser" class="minimize" :class="minimize ? 'in-minimize' : 'not-minimize'"
-        :icon="minimize ? ZoomIn : ZoomOut" circle :style="{ opacity: minimize ? 0.5 : 1 }" @click="clickMinimize" />
+      <el-button
+        v-if="!store.isBrowser" class="minimize" :class="minimize ? 'in-minimize' : 'not-minimize'"
+        :icon="minimize ? ZoomIn : ZoomOut" circle :style="{ opacity: minimize ? 0.5 : 1 }" @click="clickMinimize"
+      />
     </header>
     <main v-show="!minimize" style="height: 100%">
       <KeigennRecord2Table :rows="data[select]!.table" :action-key="actionKey" />
@@ -648,6 +654,7 @@ function test() {
   width: 2em;
 }
 </style>
+
 <style lang="scss" scoped>
 :global(body) {
   background: transparent;
