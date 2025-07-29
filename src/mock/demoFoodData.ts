@@ -1,6 +1,6 @@
 import type { Players } from '@/types/food'
 
-export const demoFoodData: Players[] = [
+const demoFoodData: Players[] = [
   {
     id: '1',
     name: '1',
@@ -239,3 +239,5 @@ export const demoFoodData: Players[] = [
     },
   },
 ].sort((a, b) => (a.food?.durationSeconds ?? 0) - (b.food?.durationSeconds ?? 0))
+
+export { demoFoodData }

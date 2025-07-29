@@ -139,6 +139,11 @@ function getOrder(item: Players) {
   return item.food.durationSeconds
 }
 
+function handleOverlayStateUpdate(e: CustomEvent<{ isLocked: boolean }>) {
+  demo.value = e?.detail?.isLocked === false
+  fullUpdateFriendlyCombatants()
+}
+
 onMounted(() => {
   addOverlayListener('LogLine', handleLogLine)
   addOverlayListener('PartyChanged', handlePartyChanged)
@@ -150,15 +155,13 @@ onMounted(() => {
       tickUpdateDuration()
   }, 1_000)
 
-  document.addEventListener('onOverlayStateUpdate', (e) => {
-    demo.value = e?.detail?.isLocked === false
-    fullUpdateFriendlyCombatants()
-  })
+  document.addEventListener('onOverlayStateUpdate', handleOverlayStateUpdate)
 })
 
 onUnmounted(() => {
   removeOverlayListener('LogLine', handleLogLine)
   removeOverlayListener('PartyChanged', handlePartyChanged)
+  document.removeEventListener('onOverlayStateUpdate', handleOverlayStateUpdate)
 })
 </script>
 

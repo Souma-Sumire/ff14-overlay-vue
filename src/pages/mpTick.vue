@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
+import type { EventMap } from 'cactbot/types/event'
+import { addOverlayListener, removeOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
 let playerID: string
 
@@ -16,9 +17,24 @@ function anime() {
   })
 }
 
+const handleChangePrimaryPlayer: EventMap['ChangePrimaryPlayer'] = (e) => {
+  playerID = e.charID.toString(16).toUpperCase()
+}
+
+const handleLogLine: EventMap['LogLine'] = (e) => {
+  if (e.line[0] === '39' && e.line[2] === playerID && e.line[6] === e.line[7]) {
+    anime()
+  }
+}
+
 onMounted(() => {
-  addOverlayListener('ChangePrimaryPlayer', e => (playerID = e.charID.toString(16).toUpperCase()))
-  addOverlayListener('LogLine', e => (e.line[0] === '39' && e.line[2] === playerID && e.line[6] === e.line[7] ? anime() : ''))
+  addOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
+  addOverlayListener('LogLine', handleLogLine)
+})
+
+onUnmounted(() => {
+  removeOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
+  removeOverlayListener('LogLine', handleLogLine)
 })
 </script>
 
