@@ -118,22 +118,24 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <el-button v-if="dev || demo" type="primary" class="test-btn" @click="handleTest">
-    测试
-  </el-button>
-  <main>
-    <article id="show">
-      {{ (state.lbNow * 100).toFixed(2) }}%
-    </article>
-    <article id="extra">
-      <p v-for="(entry, index) in extraEntries" :key="index" class="anime" :data-time="entry.time">
-        +{{ entry.value }}%
-      </p>
-    </article>
-    <aside id="extraAll">
-      {{ (state.lbExtraAll * 100).toFixed(0) }}%
-    </aside>
-  </main>
+  <CommonActWrapper>
+    <el-button v-if="dev || demo" type="primary" class="test-btn" @click="handleTest">
+      测试
+    </el-button>
+    <main>
+      <article id="show">
+        {{ (state.lbNow * 100).toFixed(2) }}%
+      </article>
+      <article id="extra">
+        <p v-for="(entry, index) in extraEntries" :key="index" class="anime" :data-time="entry.time">
+          +{{ entry.value }}%
+        </p>
+      </article>
+      <aside id="extraAll">
+        {{ (state.lbExtraAll * 100).toFixed(0) }}%
+      </aside>
+    </main>
+  </CommonActWrapper>
 </template>
 
 <style lang="scss" scoped>

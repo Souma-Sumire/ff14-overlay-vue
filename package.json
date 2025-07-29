@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
-    "@vueuse/core": "^13.5.0",
+    "@vueuse/core": "^13.6.0",
     "@vueuse/head": "^2.0.0",
     "animate.css": "^4.1.1",
     "element-plus": "^2.10.4",
@@ -42,7 +42,7 @@
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
     "@unocss/eslint-plugin": "^66.3.3",
-    "@vitejs/plugin-vue": "^6.0.0",
+    "@vitejs/plugin-vue": "^6.0.1",
     "@volar/pug-language-service": "^1.0.24",
     "@volar/typescript-language-service": "^1.0.1",
     "@vue/compiler-sfc": "^3.5.18",

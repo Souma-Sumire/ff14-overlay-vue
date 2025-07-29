@@ -6,7 +6,7 @@ import { ElMessage, ElOption, ElSelect } from 'element-plus'
 import { computed } from 'vue'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 import { copyToClipboard } from '@/utils/clipboard'
-import { translationFlags } from '@/utils/flags'
+import { translationDamageType, translationFlags } from '@/utils/flags'
 import Util from '@/utils/util'
 import Amount from './Amount.vue'
 import StatusShow from './StatusShow.vue'
@@ -206,7 +206,7 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
       shield,
     } = rowData
     const sp = effect === 'damage done' ? '' : `,${translationFlags(effect)}`
-    const result = `${time} ${job} ${actionCN} ${amount.toLocaleString()}(${translationFlags(type)}) 减伤:${keigenns.length === 0 && sp === ''
+    const result = `${time} ${job} ${actionCN} ${amount.toLocaleString()}(${translationDamageType(type)}) 减伤:${keigenns.length === 0 && sp === ''
       ? '无'
       : keigenns
         .map(k => (userOptions.statusCN ? k.name : k.effect))
