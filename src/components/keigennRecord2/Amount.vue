@@ -1,52 +1,81 @@
 <script setup lang="ts">
-import type { RowVO } from '@/types/keigennRecord2'
+import type { PerformanceType, RowVO } from '@/types/keigennRecord2'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 import { isLethal } from '@/utils/keigennRecord2'
 
-const props = defineProps({
-  row: { type: Object as () => RowVO, required: true },
-})
+const props = defineProps<{ row: RowVO }>()
 const store = useKeigennRecord2Store()
 const userOptions = store.userOptions
 
-const shieldValue = computed(
-  () => Math.round((props.row.maxHp * +props.row.shield) / 100),
-)
-const hpPercent = computed(
-  () => Math.round((props.row.currentHp / props.row.maxHp) * 100),
-)
-const remainHp = computed(() => props.row.currentHp - props.row.amount)
-const remainPercent = computed(
-  () => Math.round((remainHp.value / props.row.maxHp) * 100),
-)
+const { amount, maxHp, currentHp, shield, source, target, type, keigenns, effect } = props.row
+
+const shieldValue = Math.round((maxHp * +shield) / 100)
+const hpPercent = Math.round((currentHp / maxHp) * 100)
+const remainHp = currentHp - amount
+const remainPercent = Math.round((remainHp / maxHp) * 100)
+
+let damageReduction = 0
+// 即死、闪避
+if (effect !== 'instant death' && effect !== 'dodge') {
+  let flagMultiplier = 1
+  // 格挡20%
+  if (effect === 'blocked damage')
+    flagMultiplier = 0.8
+  // 招架15%
+  else if (effect === 'parried damage')
+    flagMultiplier = 0.85
+
+  let reductionMultiplier = 1
+  for (const k of keigenns) {
+    if (k.type !== 'absorbed') {
+      reductionMultiplier *= k.performance[type as keyof PerformanceType] ?? 1
+    }
+  }
+
+  damageReduction = 1 - reductionMultiplier * flagMultiplier
+}
+
+const originalDamage = amount && Math.round((amount + shieldValue) / (1 - damageReduction)) || 0
+const originalDamageDisplay = originalDamage.toLocaleString()
+const damageReductionDisplay = (damageReduction * 100).toFixed(2)
+const displayAmount = computed(() => amount.toLocaleString())
+const displayTitle = computed(() => userOptions.actionCN ? props.row.actionCN : props.row.action)
+const damageTypeClass = type
+const isLethalHit = isLethal(props.row)
 </script>
 
 <template>
   <el-popover
-    append-to=".wrapper"
-    :title="userOptions.actionCN ? props.row.actionCN : props.row.action"
-    trigger="hover"
-    :enterable="false"
-    :hide-after="0"
+    append-to=".wrapper" :title="displayTitle" trigger="hover" :enterable="false" :hide-after="0"
+    :width="220"
   >
     <template #reference>
       <span class="amount">
-        <span :class="props.row.type">
-          <span :class="`${isLethal(row) ? 'lethal' : ''}`">
-            {{ row.amount.toLocaleString().padStart(3, "\u3000") }}
+        <span :class="damageTypeClass">
+          <span :class="{ lethal: isLethalHit }">
+            {{ displayAmount }}
           </span>
         </span>
       </span>
     </template>
     <ul class="row-info">
-      <li>来源: {{ props.row.source }}</li>
-      <li>目标: {{ props.row.target }}</li>
-      <li>护盾: {{ shieldValue }} ({{ props.row.shield }}%)</li>
-      <li>血量: {{ props.row.currentHp }}/{{ props.row.maxHp }} ({{ hpPercent }}%)</li>
+      <li>来源: {{ source }}</li>
+      <li>目标: {{ target }}</li>
+      <li>护盾: {{ shieldValue }} ({{ shield }}%)</li>
+      <li>血量: {{ currentHp }}/{{ maxHp }} ({{ hpPercent }}%)</li>
       <li>
-        伤害: <span :class="props.row.type">{{ props.row.amount }}</span>
+        伤害: <span :class="damageTypeClass">{{ displayAmount }}</span>
       </li>
-      <li>剩余: {{ remainHp }} ({{ remainPercent }}%)</li>
+      <li>血量剩余: {{ remainHp }} ({{ remainPercent }}%)</li>
+      <template v-if="damageReduction < 1">
+        <hr class="divider">
+        <li>玩家减伤率: <strong>{{ damageReductionDisplay }}%</strong></li>
+        <li>
+          倒推裸吃伤害:
+          <span :class="damageTypeClass">{{ originalDamageDisplay }}</span>
+        </li>
+        <li>（有盾不准、不计算易伤数值）</li>
+      </template>
     </ul>
   </el-popover>
 </template>

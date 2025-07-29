@@ -307,6 +307,4 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
 .context-menu ul li:active {
   background-color: var(--el-color-primary-dark-2);
 }
-
-
 </style>

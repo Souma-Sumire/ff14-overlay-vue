@@ -21,7 +21,7 @@ export type DamageType
 
 export function translationFlags(
   typeString: DamageEffect | DamageProperties | DamageType,
-): string {
+) {
   return {
     'dodge': '闪避',
     'damage done': '击中',
