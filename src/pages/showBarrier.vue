@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { Party } from '../../cactbot/types/event'
-import { jobEnumOrder } from '@/utils/util'
+import { usePartySortStore } from '@/store/partySort'
 import NetRegexes from '../../cactbot/resources/netregexes'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
+
+const storePartySort = usePartySortStore()
 
 const regexes = {
   statusEffectExplicit: NetRegexes.statusEffectExplicit(),
@@ -49,12 +51,6 @@ function handleLine(line: string) {
   }
 }
 
-const sortRules = useStorage('cactbotRuntime-sortArr', jobEnumOrder)
-
-function updateSortArr(arr: number[]) {
-  sortRules.value = arr
-}
-
 function handlePartyChanged() {
   party.value.sort((a, b) => {
     if (a.id === povId.value) {
@@ -66,7 +62,7 @@ function handlePartyChanged() {
     if (a.job === b.job) {
       return b.id.localeCompare(a.id)
     }
-    return sortRules.value.indexOf(a.job) - sortRules.value.indexOf(b.job)
+    return storePartySort.arr.indexOf(a.job) - storePartySort.arr.indexOf(b.job)
   })
 }
 
@@ -93,7 +89,7 @@ onMounted(() => {
     povId.value = Number(e.charID).toString(16).toUpperCase()
   })
   watch(
-    [party, povId, sortRules],
+    [party, povId, storePartySort.arr],
     () => {
       clearInterval(timer)
       if (povId.value) {
@@ -138,9 +134,7 @@ onMounted(() => {
         v-show="showSettings"
         style="z-index: 10000"
         :party="party"
-
         p-1 m-b-1
-        @update-sort-arr="updateSortArr"
       />
     </div>
   </CommonActWrapper>

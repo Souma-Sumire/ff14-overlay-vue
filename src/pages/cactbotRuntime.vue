@@ -3,6 +3,7 @@ import type { Role } from '../../cactbot/types/job'
 import type { PlayerRuntime } from '@/types/partyPlayer'
 import { useDark } from '@vueuse/core'
 import { useDevMode } from '@/composables/useDevMode'
+import { usePartySortStore } from '@/store/partySort'
 import Util from '@/utils/util'
 import {
   addOverlayListener,
@@ -10,6 +11,7 @@ import {
 } from '../../cactbot/resources/overlay_plugin_api'
 import 'animate.css'
 
+const storePartySort = usePartySortStore()
 const mouseEnter = ref(false)
 
 function createRPArr(
@@ -21,7 +23,6 @@ function createRPArr(
 }
 
 const dialogVisible = ref(false)
-const sortArray = useStorage('cactbotRuntime-sortArr', [] as number[])
 
 const fakeParty: PlayerRuntime[] = [
   { id: '10000001', name: '虚构暗骑', job: 32, inParty: true },
@@ -114,7 +115,7 @@ function getJobClassification(job: number): Role {
 
 function defaultPartySort() {
   data.value.party.sort(
-    (a, b) => sortArray.value.indexOf(a.job) - sortArray.value.indexOf(b.job),
+    (a, b) => storePartySort.arr.indexOf(a.job) - storePartySort.arr.indexOf(b.job),
   )
   for (const v of data.value.party) {
     v.rp = undefined
@@ -163,16 +164,11 @@ function broadcastParty(): void {
   })
 }
 
-function updateSortArr(arr: number[]) {
-  sortArray.value = arr
-  updateData()
-}
-
 function getJobName(job: number) {
   return Util.nameToFullName(Util.jobEnumToJob(job)).simple1
 }
 
-function updateData() {
+function onUpdate() {
   defaultPartySort()
   updateRoleSelectLength()
   broadcastParty()
@@ -202,7 +198,7 @@ onMounted(() => {
       .map((p) => {
         return { ...p, rp: 'unknown' }
       })
-    updateData()
+    onUpdate()
   })
   addOverlayListener('ChangePrimaryPlayer', (e) => {
     if (!dev.value)
@@ -230,7 +226,7 @@ function testParty() {
     .map((p) => {
       return { ...p, rp: 'unknown' }
     })
-  updateData()
+  onUpdate()
 }
 </script>
 
@@ -238,14 +234,10 @@ function testParty() {
   <CommonActWrapper>
     <div class="cactbot-runtime">
       <el-dialog
-        v-model="dialogVisible"
-        size="small"
-        :position="{
+        v-model="dialogVisible" size="small" :position="{
           left: 10,
           top: 10,
-        }"
-        width="90vw"
-        @close="
+        }" width="90vw" @close="
           dialogVisible = false;
           showTips = false;
         "
@@ -267,44 +259,26 @@ function testParty() {
         </div>
         <div v-else class="players">
           <section
-            v-for="(member, i) in data.party"
-            :key="member.id"
-            class="player"
+            v-for="(member, i) in data.party" :key="member.id" class="player"
             :class="{ 'is-you': member.name === playerName }"
           >
             <el-select
-              v-model="member.rp"
-              size="small"
-              class="select"
-              fit-input-width
-              placement="right"
-              :offset="8"
+              v-model="member.rp" size="small" class="select" fit-input-width placement="right" :offset="8"
               @change="handleSelectChange(i)"
             >
-              <el-option
-                v-for="(item, index) in getOptions(member.job)"
-                :key="index"
-                :value="item"
-                :label="item"
-              />
+              <el-option v-for="(item, index) in getOptions(member.job)" :key="index" :value="item" :label="item" />
             </el-select>
             <span class="job-name">{{ getJobName(member.job) }}</span>
             <span v-if="mouseEnter" class="player-name">{{ member.name }}</span>
           </section>
-          <CommonDragJob
-            v-if="mouseEnter"
-            class="drag-job"
-            :party="data.party"
-            p-1
-            @update-sort-arr="updateSortArr"
-          />
+          <CommonDragJob v-if="mouseEnter" class="drag-job" :party="data.party" p-1 @update="onUpdate" />
         </div>
       </main>
       <div v-if="dev" style="position: fixed; bottom: 0">
         <button
           @click=" {
             data.party = data.party.filter((v) => v.name === playerName);
-            updateData();
+            onUpdate();
           }
           "
         >
