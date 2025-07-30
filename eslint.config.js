@@ -8,4 +8,7 @@ export default antfu({
     'node_modules',
     'src/resources/**.json',
   ],
+  rules: {
+    'node/prefer-global/process': 'off',
+  },
 })
