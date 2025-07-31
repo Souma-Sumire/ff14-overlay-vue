@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { UploadProps } from 'element-plus'
 import { useDark } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
 import { ref } from 'vue'
@@ -33,8 +34,8 @@ function showHex(row: Result) {
 }
 
 // 处理文件上传
-async function onFileChange(file: any) {
-  const rawFile = file.raw as File
+const handleChange: UploadProps['onChange'] = async (uploadFile) => {
+  const rawFile = uploadFile.raw as File
   const text = await rawFile.text()
   const lines = text.split(/\r?\n/)
 
@@ -189,7 +190,7 @@ function saveResultsToFile() {
       :show-file-list="false"
       accept=".log,.txt"
       class="upload-box"
-      @change="onFileChange"
+      @change="handleChange"
     >
       <i class="el-icon-upload" />
       <div class="el-upload__text">
