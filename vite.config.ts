@@ -82,9 +82,7 @@ export default defineConfig({
       threshold: 1024,
       deleteOriginFile: false,
     }),
-    Unocss({
-      presets: [presetWind3(), presetIcons(), presetAttributify()],
-    }),
+    Unocss(),
     Pages(),
     createStyleImportPlugin({
       resolves: [VxeTableResolve()],

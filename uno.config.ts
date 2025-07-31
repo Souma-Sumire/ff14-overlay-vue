@@ -1,4 +1,8 @@
-// uno.config.ts
-import { defineConfig } from 'unocss'
+import { defineConfig, presetAttributify, presetWind3 } from 'unocss'
 
-export default defineConfig({})
+export default defineConfig({
+  presets: [
+    presetAttributify({ /* preset options */}),
+    presetWind3(),
+  ],
+})
