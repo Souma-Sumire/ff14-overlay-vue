@@ -7,8 +7,9 @@ import type {
 } from '@/types/timeline'
 import { Check } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { useDevMode } from '@/composables/useDevMode'
+import { useDev } from '@/composables/useDev'
 import { parseTimeline, useTimelineStore } from '@/store/timeline'
+import { tts } from '@/utils/tts'
 import {
   addOverlayListener,
   callOverlayHandler,
@@ -30,7 +31,7 @@ const playerState = useStorage('timeline-condition-2', {
   zoneId: '0',
   jobs: ['NONE'],
 } as ITimelineCondition)
-const dev = useDevMode()
+const dev = useDev()
 
 const syncLines = computed(() =>
   timelinePageData.loadedTimeline.filter(item => item.sync),
@@ -200,7 +201,7 @@ function cactbotSay(text: string, force = false) {
   if (!text)
     return
   if (doTTS || force)
-    callOverlayHandler({ call: 'cactbotSay', text })
+    tts(text)
 }
 
 function testAlert() {
@@ -328,7 +329,7 @@ function init() {
       <button v-if="dev" @click="fakeJump(1000)">
         跳转1000测试
       </button>
-      <button v-if="dev" @click="cactbotSay('今天天气真不错', true)">
+      <button v-if="dev" @click="tts('今天天气真不错')">
         TTS测试
       </button>
       <button v-if="dev" @click="testAlert">

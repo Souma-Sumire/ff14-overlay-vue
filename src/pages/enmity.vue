@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { EventMap, Party } from 'cactbot/types/event'
 import type { CombatantState } from '@/types/combatant'
-import Util, { iconToJobEnum } from '@/utils/util'
+import { tts } from '@/utils/tts'
+import Util from '@/utils/util'
 import NetRegexes from '../../cactbot/resources/netregexes'
 import {
   addOverlayListener,
@@ -14,10 +15,10 @@ const party: Ref<Party[]> = ref([])
 const params = useUrlSearchParams('hash')
 const noEnmity = ref(false)
 const TANK_JOBS = [
-  iconToJobEnum.Paladin,
-  iconToJobEnum.Warrior,
-  iconToJobEnum.DarkKnight,
-  iconToJobEnum.Gunbreaker,
+  Util.iconToJobEnum('Paladin'),
+  Util.iconToJobEnum('Warrior'),
+  Util.iconToJobEnum('DarkKnight'),
+  Util.iconToJobEnum('Gunbreaker'),
 ]
 const TANK_STATUS_IDS = [
   2843, // Paladin - Iron Will
@@ -87,10 +88,6 @@ function clearTimers() {
     clearInterval(intervalTimer)
 }
 
-function say(text: string) {
-  callOverlayHandler({ call: 'cactbotSay', text })
-}
-
 const handleLogLine: EventMap['LogLine'] = (e) => {
   const countdown = netRegexs.countdown.exec(e.rawLine)?.groups?.countdownTime
   if (countdown !== undefined) {
@@ -102,11 +99,11 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
           .then(({ enmityTanks }) => {
             if (enmityTanks.length === 2) {
               // 2个T开盾 语音提示
-              say('双T都开盾了')
+              tts('双T都开盾了')
             }
             if (enmityTanks.length === 0) {
               // 0个T开盾 语音提示
-              say('没人开盾')
+              tts('没人开盾')
             }
           })
           .catch(() => {
@@ -140,7 +137,7 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
             // 如果小队内有2个坦克，且另一个坦克开盾了，且你没有开盾
             const partyTanksLength = partyCombatState.filter(v => Util.isTankJob(Util.jobEnumToJob(v.Job))).length
             if (partyTanksLength === 2 && enmityTanks.length === 1 && enmityTanks[0]?.ID !== povCharID) {
-              say('ST开盾')
+              tts('ST开盾')
             }
           })
           .catch(() => {

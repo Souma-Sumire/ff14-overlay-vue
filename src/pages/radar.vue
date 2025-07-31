@@ -19,7 +19,6 @@ let ctx: CanvasRenderingContext2D | null = null
 const devicePixelRatio = ref(window.devicePixelRatio || 1)
 const size = ref(Math.min(window.innerWidth, window.innerHeight) - 80)
 const detectionRadius = computed(() => size.value / 2 - 20)
-const unlocked = ref(document.getElementById('unlocked')?.style?.display === 'flex')
 const { zoneType } = useZone()
 const searchType: Ref<'single' | 'all'> = ref('single')
 
@@ -327,10 +326,6 @@ function handleResize() {
   }
 }
 
-function handleOverlayStateUpdate(e: CustomEvent<{ isLocked: boolean }>) {
-  unlocked.value = e?.detail?.isLocked === false
-}
-
 onMounted(() => {
   ctx = canvas.value?.getContext('2d') ?? null
   if (ctx)
@@ -338,24 +333,24 @@ onMounted(() => {
   addOverlayListener('LogLine', handleLogLine)
   addOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
   window.addEventListener('resize', handleResize)
-  document.addEventListener('onOverlayStateUpdate', handleOverlayStateUpdate)
 })
 
 onUnmounted(() => {
   removeOverlayListener('LogLine', handleLogLine)
   removeOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
   window.removeEventListener('resize', handleResize)
-  document.removeEventListener('onOverlayStateUpdate', handleOverlayStateUpdate)
 })
 </script>
 
 <template>
   <CommonActWrapper>
-    <div class="radar-container">
+    <template #readme>
       <el-alert
-        v-if="unlocked" class="el-alert-info" type="info" :closable="false" show-icon title="宏命令：/e find 目标名称"
-        description="名称允许部分匹配，输入*可查看所有目标"
+        class="el-alert-info" type="info" :closable="false" show-icon title="宏命令：/e find 目标名称"
+        description="名称允许部分匹配。若输入*可查看所有目标"
       />
+    </template>
+    <div class="radar-container">
       <div v-show="searchTargetName" class="radar-wrapper">
         <div v-if="searchTargets.length > 1">
           <button
@@ -461,6 +456,10 @@ onUnmounted(() => {
 
 .el-alert-info {
   position: fixed;
-  z-index: -9;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 24em;
+  z-index: 999;
 }
 </style>

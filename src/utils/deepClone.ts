@@ -2,24 +2,29 @@ export const deepClone = (() => {
   if (typeof structuredClone === 'function')
     return structuredClone
 
-  return (obj: any) => {
+  return <T>(obj: T) => {
     if (obj === null || typeof obj !== 'object')
       return obj
 
     if (obj instanceof Date)
-      return new Date(obj.getTime())
+      return new Date(obj.getTime()) as T
 
     if (obj instanceof RegExp)
-      return new RegExp(obj.source, obj.flags)
+      return new RegExp(obj.source, obj.flags) as T
 
     if (Array.isArray(obj))
-      return obj.map(item => deepClone(item))
+      return obj.map(item => deepClone(item)) as T
 
-    const res = new obj.constructor()
-    for (const key in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, key))
-        res[key] = deepClone(obj[key])
+    if (Object.getPrototypeOf(obj) === Object.prototype) {
+      const result: Record<string | number | symbol, unknown> = {}
+      for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          result[key] = deepClone((obj as Record<string, unknown>)[key])
+        }
+      }
+      return result as T
     }
-    return res
+
+    return obj as T
   }
 })()

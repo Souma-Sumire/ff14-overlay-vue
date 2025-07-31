@@ -4,7 +4,7 @@ import ZoneInfo from '@/resources/zoneInfo'
 import ContentType from '../../cactbot/resources/content_type'
 import { addOverlayListener, removeOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
-export const CONTENT_TYPES = [
+const CONTENT_TYPES = [
   'Savage', // 零式
   'Extreme', // 歼殛战
   'Chaotic', // 破灭战
@@ -26,7 +26,7 @@ export const CONTENT_TYPES = [
   'Default', // 其他
 ] as const
 
-export type ContentUsedType = (typeof CONTENT_TYPES)[number]
+type ContentUsedType = (typeof CONTENT_TYPES)[number]
 
 function getZoneType(zoneInfo: (typeof ZoneInfo)[number]): ContentUsedType {
   const contentType = zoneInfo.contentType
@@ -73,7 +73,7 @@ function getZoneType(zoneInfo: (typeof ZoneInfo)[number]): ContentUsedType {
   }
 }
 
-export function useZone() {
+function useZone() {
   const zoneType = ref<ContentUsedType>('Default')
   const zoneID = ref(0)
 
@@ -97,4 +97,10 @@ export function useZone() {
     zoneID,
     zoneType,
   }
+}
+
+export {
+  CONTENT_TYPES,
+  type ContentUsedType,
+  useZone,
 }

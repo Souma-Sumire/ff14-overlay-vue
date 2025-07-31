@@ -3,8 +3,6 @@ import { getActionChinese } from '@/resources/actionChinese'
 import { getActionChineseTemp } from '@/resources/actionChineseTemp'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
-const params = new URLSearchParams(window.location.href.split('?')[1])
-
 function getName(line: string[]): string {
   const id = Number.parseInt(line[4]!, 16)
   const sourceId = line[2]!
@@ -85,10 +83,6 @@ const offsetProgressY = computed(() => `${settings.value.offsetProgressY * -1}px
 const casting = new Map()
 const now = ref(0)
 const ping = settings.value.ping
-const showSettings = ref(
-  /^(?:1|true|on)$/i.test(params.get('showSettings') || '')
-  || document.getElementById('unlocked')?.style?.display === 'flex',
-)
 
 addOverlayListener(
   'EnmityTargetData',
@@ -113,10 +107,6 @@ requestAnimationFrame(function update() {
   requestAnimationFrame(update)
 })
 
-document.addEventListener('onOverlayStateUpdate', (e) => {
-  showSettings.value = e?.detail?.isLocked === false
-})
-
 function resetSettings() {
   localStorage.removeItem('castingToChinese')
   location.reload()
@@ -125,8 +115,8 @@ function resetSettings() {
 
 <template>
   <CommonActWrapper>
-    <div class="container">
-      <el-header v-show="showSettings" class="settings">
+    <template #readme>
+      <el-header class="settings">
         <form>
           宽度:
           <el-input-number
@@ -293,6 +283,8 @@ function resetSettings() {
           </el-popconfirm>
         </form>
       </el-header>
+    </template>
+    <div class="container">
       <el-main
         v-show="
           data.targetCast && now - data.targetCast.overTime + ping < settings.keep

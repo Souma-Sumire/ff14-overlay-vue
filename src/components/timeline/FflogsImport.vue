@@ -493,7 +493,7 @@ onMounted(() => {
         <el-table-column prop="name" label="玩家名称" />
         <el-table-column label="职业">
           <template #default="{ row }">
-            {{ Util.nameToFullName(Util.jobEnumToJob(Util.iconToJobEnum(row.icon))).cn }}
+            {{ Util.jobToFullName(Util.jobEnumToJob(Util.iconToJobEnum(row.icon))).cn }}
           </template>
         </el-table-column>
         <el-table-column label="选定" width="100" align="center">

@@ -134,7 +134,7 @@ onMounted(() => {
         v-show="showSettings"
         style="z-index: 10000"
         :party="party"
-        p-1 m-b-1
+        m-b-1 p-1
       />
     </div>
   </CommonActWrapper>

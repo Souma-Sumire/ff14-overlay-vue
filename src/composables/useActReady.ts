@@ -1,8 +1,8 @@
 import { onMounted, ref } from 'vue'
 import { callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
-import { useDevMode } from './useDevMode'
+import { useDev } from './useDev'
 
-const dev = useDevMode()
+const dev = useDev()
 
 export function useActReady() {
   const actReady = ref(false)

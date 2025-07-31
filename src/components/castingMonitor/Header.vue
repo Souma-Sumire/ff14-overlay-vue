@@ -7,7 +7,7 @@ const params = new URLSearchParams(window.location.href.split('?')[1])
 
 function getClassjobIconSrc(jobEnum: number): string {
   const job = Util.jobEnumToJob(jobEnum)
-  const fullName = Util.nameToFullName(job)
+  const fullName = Util.jobToFullName(job)
   return `https://souma.diemoe.net/resources/img/cj2/${fullName.en}.png`
 }
 
@@ -32,7 +32,7 @@ const showHeader = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(
     >
       <div flex="~ nowrap items-end" style="align-items: flex-end; gap: 0.1rem">
         <img :src="item.src" style="height: 1.25em" loading="lazy" :onerror="handleImgError">
-        {{ Util.nameToFullName(Util.jobEnumToJob(item.job as number)).simple2 }}
+        {{ Util.jobToFullName(Util.jobEnumToJob(item.job as number)).simple2 }}
       </div>
     </button>
   </div>

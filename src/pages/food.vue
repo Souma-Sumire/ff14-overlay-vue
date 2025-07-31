@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { EventMap } from 'cactbot/types/event'
 import type { Food, Players } from '@/types/food'
+import { useDemo } from '@/composables/useDemo'
 import { useZone } from '@/composables/useZone'
 import { demoFoodData } from '@/mock/demoFoodData'
 import Util from '@/utils/util'
@@ -13,17 +14,21 @@ const { zoneType } = useZone()
 const party: Ref<{ id: string, name: string, jobName: string }[]> = ref([])
 const effectData = new Map<string, Food>()
 const uiData: Ref<Players[]> = useStorage('souma-food-ui-data', [])
-const demo = ref(document.getElementById('unlocked')?.style?.display === 'flex')
+const demo = useDemo()
 const orderedUiData = computed(() => demo.value ? demoFoodData : uiData.value.slice().sort((a, b) => getOrder(a) - getOrder(b)))
 const display = computed(
   () =>
     (
       zoneType.value !== 'Pvp'
       && party.value.length >= 6
-      && uiData.value.filter(v => v.food).length >= 1
+      && uiData.value.filter(v => v.food).length >= uiData.value.length * 0.5
     )
     || demo.value,
 )
+
+watch(demo, () => {
+  fullUpdateFriendlyCombatants()
+})
 
 const netRegexs = {
   gainsEffect: NetRegexes.gainsEffect({ effectId: '30' }),
@@ -88,7 +93,7 @@ const handlePartyChanged: EventMap['PartyChanged'] = (e) => {
     return {
       id: v.id,
       name: v.name,
-      jobName: Util.nameToFullName(Util.jobEnumToJob(v.job)).simple2,
+      jobName: Util.jobToFullName(Util.jobEnumToJob(v.job)).simple2,
     }
   })
   fullUpdateFriendlyCombatants()
@@ -139,11 +144,6 @@ function getOrder(item: Players) {
   return item.food.durationSeconds
 }
 
-function handleOverlayStateUpdate(e: CustomEvent<{ isLocked: boolean }>) {
-  demo.value = e?.detail?.isLocked === false
-  fullUpdateFriendlyCombatants()
-}
-
 onMounted(() => {
   addOverlayListener('LogLine', handleLogLine)
   addOverlayListener('PartyChanged', handlePartyChanged)
@@ -154,19 +154,21 @@ onMounted(() => {
     if (!demo.value)
       tickUpdateDuration()
   }, 1_000)
-
-  document.addEventListener('onOverlayStateUpdate', handleOverlayStateUpdate)
 })
 
 onUnmounted(() => {
   removeOverlayListener('LogLine', handleLogLine)
   removeOverlayListener('PartyChanged', handlePartyChanged)
-  document.removeEventListener('onOverlayStateUpdate', handleOverlayStateUpdate)
 })
 </script>
 
 <template>
   <CommonActWrapper>
+    <template #readme>
+      <span class="demo-text">
+        当前为演示数据，锁定后将显示真实数据（仅在小队人数>=6，且至少有50%人吃食物时才显示）
+      </span>
+    </template>
     <div class="container" :class="{ demo }">
       <div v-if="display" class="party-list">
         <p
@@ -199,9 +201,6 @@ onUnmounted(() => {
             </template>
           </span>
         </p>
-        <span v-if="demo" class="demo-text">
-          当前为演示数据，锁定后将显示真实数据（仅在小队人数>=6，且至少有1人吃食物时显示）
-        </span>
       </div>
     </div>
   </CommonActwrapper>

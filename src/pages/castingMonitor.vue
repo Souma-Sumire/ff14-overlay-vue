@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { useDevMode } from '@/composables/useDevMode'
+import { useDev } from '@/composables/useDev'
 import { useCastingMonitorStore } from '@/store/castingMonitor'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
 const castingMonitorStore = useCastingMonitorStore()
-const dev = useDevMode()
+const dev = useDev()
 
 onMounted(() => {
   addOverlayListener(

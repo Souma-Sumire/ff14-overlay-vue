@@ -51,7 +51,7 @@ const jobsList = buildJobsList()
 
 const allJobsWithName = Object.values(jobsList).flat().map((v) => {
   return {
-    name: Util.nameToFullName(Util.jobEnumToJob(v)).simple1,
+    name: Util.jobToFullName(Util.jobEnumToJob(v)).simple1,
     job: v,
   }
 })
@@ -103,7 +103,7 @@ function handleJobListUpdate() {
     </el-checkbox>
     <VueDraggable
       v-for="(role, index) in ROLES" :key="index" v-model="sortableJobList[role.role]" :animation="150"
-      ghost-class="ghost" class="p-0 m-b-0.25 m-t-0.25 flex flex-row gap-0.25 rounded" filter=".no-draggable"
+      ghost-class="ghost" class="m-b-0.25 m-t-0.25 flex flex-row gap-0.25 rounded p-0" filter=".no-draggable"
       :force-fallback="true" @update="handleJobListUpdate"
     >
       <div

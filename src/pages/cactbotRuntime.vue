@@ -2,7 +2,7 @@
 import type { Role } from '../../cactbot/types/job'
 import type { PlayerRuntime } from '@/types/partyPlayer'
 import { useDark } from '@vueuse/core'
-import { useDevMode } from '@/composables/useDevMode'
+import { useDev } from '@/composables/useDev'
 import { usePartySortStore } from '@/store/partySort'
 import Util from '@/utils/util'
 import {
@@ -71,7 +71,7 @@ function getOptions(job: number) {
     return i < roleSelectLength.value[classification]
   })
 }
-const dev = useDevMode()
+const dev = useDev()
 const playerName = ref(dev.value ? fakeParty[2]!.name : '')
 
 function getJobClassification(job: number): Role {
@@ -165,7 +165,7 @@ function broadcastParty(): void {
 }
 
 function getJobName(job: number) {
-  return Util.nameToFullName(Util.jobEnumToJob(job)).simple1
+  return Util.jobToFullName(Util.jobEnumToJob(job)).simple1
 }
 
 function onUpdate() {

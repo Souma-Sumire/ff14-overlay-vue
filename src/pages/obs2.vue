@@ -5,7 +5,7 @@ import type { Reactive } from 'vue'
 import type { ContentUsedType } from '@/composables/useZone'
 import OBSWebSocket from 'obs-websocket-js'
 import { useI18n } from 'vue-i18n'
-import { useDevMode } from '@/composables/useDevMode'
+import { useDev } from '@/composables/useDev'
 import { CONTENT_TYPES, useZone } from '@/composables/useZone'
 import ZoneInfo from '@/resources/zoneInfo'
 import logDefinitions from '../../cactbot/resources/netlog_defs'
@@ -49,7 +49,7 @@ const userContentSetting = useStorage(
 )
 const isFirstTime = useStorage('obs-is-first-time', true)
 const actReady = ref(false)
-const dev = useDevMode()
+const dev = useDev()
 const partyLength = ref(1)
 
 function checkWebSocket(): Promise<void> {

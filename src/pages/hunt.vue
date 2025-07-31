@@ -4,7 +4,7 @@ import type { HuntEntry } from '../../cactbot/resources/hunt'
 import type { WayMarkObj } from '@/types/PostNamazu'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import LZString from 'lz-string'
-import { useDevMode } from '@/composables/useDevMode'
+import { useDev } from '@/composables/useDev'
 import { useWebSocket } from '@/composables/useWebSocket'
 import Aetherytes from '@/resources/aetherytes.json'
 import Map from '@/resources/map.json'
@@ -175,7 +175,7 @@ const INSTANCE_STRING = ''
 const waymarkKeys: (keyof WayMarkObj)[] = ['One', 'Two', 'Three', 'Four', 'A', 'B', 'C', 'D'] as const
 const IMG_SCALE = IMG_SHOW_SIZE / IMG_RAW_SIZE
 const playerInstance = ref(-1)
-const dev = useDevMode()
+const dev = useDev()
 const nameToHuntEntry: Record<string, HuntEntry> = {}
 const mergedByOtherNodes = new Set<string>()
 const gameVersion = useStorage('souma-hunt-game-version', '7.0' as GameVersion)

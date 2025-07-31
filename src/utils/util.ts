@@ -1,7 +1,7 @@
 import type { Job, Role } from '../../cactbot/types/job'
 import type { FFIcon as Icon } from '../types/fflogs'
 
-export const iconToJobEnum: Record<Icon, number> = {
+const iconToJobEnum: Record<Icon, number> = {
   NONE: 0,
   Gladiator: 1,
   Pugilist: 2,
@@ -47,7 +47,7 @@ export const iconToJobEnum: Record<Icon, number> = {
   Pictomancer: 42,
 }
 
-export const nameToJobEnum: Record<Job, number> = {
+const nameToJobEnum: Record<Job, number> = {
   NONE: 0,
   GLA: 1,
   PGL: 2,
@@ -541,7 +541,7 @@ const Util = {
   },
   jobEnumToIcon: (id: number) => {
     const icon = allIcons.find((icon: Icon) => iconToJobEnum[icon] === id)
-    return icon ?? 'none'
+    return icon ?? 'NONE'
   },
   jobToJobEnum: (job: Job) => nameToJobEnum[job],
   jobToRole: (job: Job) => {
@@ -571,14 +571,11 @@ const Util = {
   getBattleJobs2: (): readonly Job[] => battleJobs2,
   getBattleJobs3: (): readonly Job[] =>
     battleJobs.filter(v => !baseJob.includes(v)),
-  nameToFullName: (job: Job) => {
+  jobToFullName: (job: Job) => {
     return nameToFullName[job]
   },
   iconToJobEnum: (icon: Icon) => {
     return iconToJobEnum[icon] ?? 0
-  },
-  nameToJobEnum: (job: Job) => {
-    return nameToJobEnum[job] ?? 0
   },
   enumSortMethod: (a: number, b: number) => {
     return jobEnumOrder.indexOf(a) - jobEnumOrder.indexOf(b)

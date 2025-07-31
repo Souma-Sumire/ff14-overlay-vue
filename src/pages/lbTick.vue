@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { EventMap } from 'cactbot/types/event'
-import { useDevMode } from '@/composables/useDevMode'
+import { useDemo } from '@/composables/useDemo'
+import { useDev } from '@/composables/useDev'
 import { testLimitBreak } from '@/mock/demoLimitBreak'
 import { addOverlayListener, removeOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
@@ -9,12 +10,17 @@ interface Entry {
   time: string
 }
 
-const dev = useDevMode()
+const dev = useDev()
 const LBMax = 30000
 const autoParam = 220
 const LBAutomaticBaseline = Math.ceil(((autoParam / LBMax) * 1000)) / 1000
-const demo = ref(document.getElementById('unlocked')?.style?.display === 'flex')
 const stopTest = ref<(() => void) | undefined>()
+
+const demo = useDemo()
+watch(demo, () => {
+  stopTest.value?.()
+  clearState()
+})
 
 const state = reactive({
   lbNow: 0,
@@ -94,12 +100,6 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
   }
 }
 
-function handleOverlayStateUpdate(e: CustomEvent<{ isLocked: boolean }>) {
-  demo.value = e?.detail?.isLocked === false
-  stopTest.value?.()
-  clearState()
-}
-
 function handleTest() {
   stopTest.value = testLimitBreak(handleLogLine, 4)
 }
@@ -107,13 +107,11 @@ function handleTest() {
 onMounted(() => {
   addOverlayListener('ChangeZone', clearState)
   addOverlayListener('LogLine', handleLogLine)
-  document.addEventListener('onOverlayStateUpdate', handleOverlayStateUpdate)
 })
 
 onUnmounted(() => {
   removeOverlayListener('ChangeZone', clearState)
   removeOverlayListener('LogLine', handleLogLine)
-  document.removeEventListener('onOverlayStateUpdate', handleOverlayStateUpdate)
 })
 </script>
 

@@ -1,3 +1,4 @@
+import type { FFIcon } from '@/types/fflogs'
 import type { DamageEffect, DamageType } from '@/utils/flags'
 
 export interface RowVO {

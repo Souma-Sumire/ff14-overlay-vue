@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { useActReady } from '@/composables/useActReady'
+import { useDemo } from '@/composables/useDemo'
 
 const actReady = useActReady()
+const demo = useDemo()
 </script>
 
 <template>
@@ -9,7 +11,11 @@ const actReady = useActReady()
     <h1> 在 ACT 中添加本页面作为数据统计悬浮窗</h1>
   </el-card>
   <div v-show="actReady">
+    <!-- 默认插槽内容 -->
     <slot />
+
+    <!-- 悬浮窗未锁定时，显示的内容 -->
+    <slot v-if="demo" name="readme" />
   </div>
 </template>
 

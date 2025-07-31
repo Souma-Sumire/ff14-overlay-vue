@@ -801,7 +801,7 @@ init()
               <el-option
                 v-for="job in timelineStore.jobList"
                 :key="job"
-                :label="(Util.nameToFullName(job)?.cn ?? job).replace('冒险者', '全部职业')"
+                :label="(Util.jobToFullName(job)?.cn ?? job).replace('冒险者', '全部职业')"
                 :value="job"
               />
             </el-select>
@@ -870,7 +870,7 @@ init()
                 scope.row.condition.jobs
                   .map(
                     (v: Job) =>
-                      Util.nameToFullName(v.toUpperCase() as Job)?.cn ?? v,
+                      Util.jobToFullName(v.toUpperCase() as Job)?.cn ?? v,
                   )
                   .join("、")
                   .replace("冒险者", "全部职业")
@@ -950,7 +950,7 @@ init()
                   v-for="job in timelineStore.jobList"
                   :key="job"
                   :label="
-                    (Util.nameToFullName(job)?.cn ?? job).replace(
+                    (Util.jobToFullName(job)?.cn ?? job).replace(
                       '冒险者',
                       '全部职业',
                     )

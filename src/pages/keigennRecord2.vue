@@ -4,7 +4,7 @@ import type { Encounter, Keigenn, RowVO, Status } from '@/types/keigennRecord2'
 import type { Player } from '@/types/partyPlayer'
 import { ZoomIn, ZoomOut } from '@element-plus/icons-vue'
 import { useDark } from '@vueuse/core'
-import { useDevMode } from '@/composables/useDevMode'
+import { useDev } from '@/composables/useDev'
 import { getActionChinese } from '@/resources/actionChinese'
 import { completeIcon, stackUrl } from '@/resources/status'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
@@ -21,7 +21,7 @@ import logDefinitions from '../../cactbot/resources/netlog_defs'
 import NetRegexes from '../../cactbot/resources/netregexes'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
-const dev = useDevMode()
+const dev = useDev()
 
 const store = useKeigennRecord2Store()
 const userOptions = store.userOptions
@@ -350,7 +350,7 @@ function handleLine(line: string) {
             const formattedTime = formatTime(time)
             const targetJob = getJobById(targetId)
             // const targetJob = jobMap.value[targetId].job ?? target.substring(0, 2);
-            const job = Util.nameToFullName(
+            const job = Util.jobToFullName(
               Util.jobEnumToJob(targetJob),
             ).simple2
             const jobEnum = targetJob
@@ -436,7 +436,7 @@ function handleLine(line: string) {
               const formattedTime = formatTime(time)
               const targetJob = getJobById(targetId)
               // const targetJob = jobMap.value[targetId].job ?? target.substring(0, 2);
-              const job = Util.nameToFullName(
+              const job = Util.jobToFullName(
                 Util.jobEnumToJob(targetJob),
               ).simple2
               const jobEnum = targetJob

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { RemovableRef } from '@vueuse/core'
 import type { EventMap } from '../../../cactbot/types/event'
+import { useDemo } from '@/composables/useDemo'
 import {
   addOverlayListener,
   removeOverlayListener,
@@ -54,9 +55,7 @@ const settings: RemovableRef<Settings> = useStorage(
   localStorage,
   { mergeDefaults: true },
 )
-const showSettings = ref(
-  document.getElementById('unlocked')?.style?.display === 'flex',
-)
+const demo = useDemo()
 const data = reactive([
   {
     id: 'combo',
@@ -185,10 +184,6 @@ onMounted(() => {
   addOverlayListener('onPlayerDied', handlePlayerDied)
   addOverlayListener('LogLine', handleOnLogEvent)
   addOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
-  // startOverlayEvents();
-  document.addEventListener('onOverlayStateUpdate', (e) => {
-    showSettings.value = e?.detail?.isLocked === false
-  })
 })
 onBeforeUnmount(() => {
   removeOverlayListener('onPlayerDied', handlePlayerDied)
@@ -204,7 +199,7 @@ const type = 'style'
 
 <template>
   <div class="dnc-overlay">
-    <header v-show="showSettings" class="settings">
+    <header v-show="demo" class="settings">
       <form>
         连击X:
         <el-input-number
@@ -362,10 +357,10 @@ const type = 'style'
     <main>
       <div v-for="item in data" :key="item.id">
         <span
-          :class="item.cd <= settings.warn && !showSettings ? 'warning' : ''"
+          :class="item.cd <= settings.warn && !demo ? 'warning' : ''"
           :style="item.style"
         >
-          {{ item.cd >= 0 ? item.cd : showSettings ? "30" : settings.zeroStr }}
+          {{ item.cd >= 0 ? item.cd : demo ? "30" : settings.zeroStr }}
         </span>
       </div>
     </main>

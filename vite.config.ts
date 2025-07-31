@@ -1,6 +1,5 @@
 import path from 'node:path'
 import vue from '@vitejs/plugin-vue'
-import { presetAttributify, presetIcons, presetWind3 } from 'unocss'
 import Unocss from 'unocss/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
