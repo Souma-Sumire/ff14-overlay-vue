@@ -46,7 +46,7 @@
     "@volar/pug-language-service": "^1.0.24",
     "@volar/typescript-language-service": "^1.0.1",
     "@vue/compiler-sfc": "^3.5.18",
-    "@vue/language-service": "^2.2.12",
+    "@vue/language-service": "^3.0.4",
     "csv-parser": "^3.2.0",
     "csv-writer": "^1.6.0",
     "cz-conventional-changelog-zh": "^0.0.2",
