@@ -30,7 +30,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
   const demo = useDemo()
 
   const party = ref<Party[]>([])
-  const keySkillsData = useStorage('keySkills', { chinese: skillChinese, global: skillGlobal })
+  const keySkillsData = useStorage('keySkills-fix', { chinese: skillChinese, global: skillGlobal })
   const language = ref<'chinese' | 'global'>('chinese')
   const skillStates = reactive<Record<string, SkillState>>({})
 

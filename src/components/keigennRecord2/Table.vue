@@ -128,7 +128,7 @@ const columns = computed<Column[]>(() => [
             ),
         ),
       ]),
-    cellRenderer: ({ rowData }: { rowData: RowVO }) => rowData[props.actionKey],
+    cellRenderer: ({ rowData }) => h('span', rowData[props.actionKey] ?? ''),
   },
   {
     key: 'target',
