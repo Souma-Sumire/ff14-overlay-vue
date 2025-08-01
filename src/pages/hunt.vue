@@ -962,20 +962,20 @@ onMounted(async () => {
       无法连接到ACTWebSocket，找怪功能无法工作，但你可以导入导出数据。
     </h3>
     <span style="position: absolute; top: 1em; right: 1em; z-index: 22;">
-      <CommonThemeToggle />
+      <CommonThemeToggle storage-key="hunt-theme" />
     </span>
     <el-col>
       <el-row>
         <el-form inline>
           <el-form-item label="资料片">
-            <div flex w-40>
+            <div w-40 flex>
               <el-select v-model="gameVersion" placeholder="请选择">
                 <el-option v-for="[value, label] in Object.entries(GMAE_VERSION)" :key="value" :label="label" :value="value" />
               </el-select>
             </div>
           </el-form-item>
           <el-form-item label="分线方式">
-            <div flex w-30>
+            <div w-30 flex>
               <el-select v-model="server" placeholder="请选择">
                 <el-option label="国际服" value="Global" />
                 <el-option label="中国服" value="CN" />
@@ -1033,10 +1033,10 @@ onMounted(async () => {
     </el-row>
     <div class="map-container" flex="~ wrap">
       <div v-for="(m, i) in zoneListUsed" :key="m" class="map-info" flex="~ col" position-relative>
-        <h3 class="map-title" :style="{ width: `${IMG_SHOW_SIZE}px` }" position-absolute ml-2 mb-0 mt-1 p0>
+        <h3 class="map-title" :style="{ width: `${IMG_SHOW_SIZE}px` }" position-absolute mb-0 ml-2 mt-1 p0>
           {{ getMapName(m, i) }}
         </h3>
-        <ul class="options" position-absolute mt-1 p0 right-0 top-0 mr-2>
+        <ul class="options" position-absolute right-0 top-0 mr-2 mt-1 p0>
           <li class="option">
             <el-button size="small" w-5em @click="oneMapClear(m)">
               本图清空

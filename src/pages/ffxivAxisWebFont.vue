@@ -3,7 +3,7 @@
 <template>
   <div class="container">
     <span style="position: absolute; top: 2em; right: 2em;">
-      <CommonThemeToggle />
+      <CommonThemeToggle storage-key="ffxiv-axis-font-icons-theme" />
     </span>
     <h1>Icons in FFXIV Axis font</h1>
     <a href="https://github.com/thewakingsands/ffxiv-axis-font-icons">

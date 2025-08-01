@@ -36,13 +36,15 @@ const defaultRoleCount: Partial<Record<Role, number>> = {
 }
 
 class RandomPartyGenerator {
-  readonly size: number
   readonly party: Ref<Party[]>
 
-  constructor(n: number) {
-    this.size = n
+  constructor() {
     this.party = ref<Party[]>([])
     this.shuffle() // 初始化一次
+  }
+
+  fullPary() {
+    this.party.value = fullParty.slice()
   }
 
   /**
@@ -53,6 +55,7 @@ class RandomPartyGenerator {
     const count = { ...defaultRoleCount, ...roleCount }
     const shuffled = [...fullParty].sort(() => Math.random() - 0.5)
     const result: Party[] = []
+    const size = Object.values(count).reduce((a, b) => a + b, 0)
 
     for (const member of shuffled) {
       const job = Util.jobEnumToJob(member.job)
@@ -62,7 +65,7 @@ class RandomPartyGenerator {
         continue
       count[role] = c - 1
       result.push(member)
-      if (result.length >= this.size)
+      if (result.length >= size)
         break
     }
     this.party.value = result

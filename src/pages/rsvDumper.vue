@@ -174,13 +174,13 @@ function saveResultsToFile() {
 </script>
 
 <template>
-  <div class="p-6 min-h-screen">
-    <h1 class="text-2xl font-bold mb-4">
+  <div class="min-h-screen p-6">
+    <h1 class="mb-4 text-2xl font-bold">
       FFXIV RSV Dumper
     </h1>
 
     <span style="position: absolute; top: 2em; right: 2em">
-      <CommonThemeToggle />
+      <CommonThemeToggle storage-key="rsv-dumper-theme" />
     </span>
 
     <el-upload
@@ -241,7 +241,7 @@ function saveResultsToFile() {
       :append-to-body="true"
     >
       <pre
-        class="rounded bg-black text-green-400 p-3 text-xs overflow-auto"
+        class="overflow-auto rounded bg-black p-3 text-xs text-green-400"
       >{{ currentHexDump }}</pre>
     </el-dialog>
   </div>

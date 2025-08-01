@@ -1,11 +1,13 @@
 import type { Party } from 'cactbot/types/event'
 import type { KeySkillEntity } from '@/types/keySkill'
+import { useStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
-import { reactive } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useDemo } from '@/composables/useDemo'
 import { useDev } from '@/composables/useDev'
 import { RandomPartyGenerator } from '@/mock/demoKeySkillParty'
-import { useKeySkill } from '@/resources/raidbuffs'
+import { skillChinese, skillGlobal } from '@/resources/raidbuffs'
+import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 import { tts } from '@/utils/tts'
 import Util from '@/utils/util'
 
@@ -14,40 +16,39 @@ interface SkillState {
   isRecast: boolean
   durationLeft: number
   recastLeft: number
-  interval?: number
   text: string
   active: boolean
   animationKey: number
+  clipPercent: number
+  rafId?: number
 }
 
-const { keySkills, loadData } = useKeySkill()
-
-const generator = new RandomPartyGenerator(8)
-
-function isFunctionValue<T, Args extends any[] = any[]>(value: T | ((...args: Args) => T)): value is (...args: Args) => T {
-  return typeof value === 'function'
-}
+const generator = new RandomPartyGenerator()
 
 const useKeySkillStore = defineStore('keySkill', () => {
   const dev = useDev()
   const demo = useDemo()
 
   const party = ref<Party[]>([])
+  const keySkillsData = useStorage('keySkills', { chinese: skillChinese, global: skillGlobal })
+  const language = ref<'chinese' | 'global'>('chinese')
   const skillStates = reactive<Record<string, SkillState>>({})
 
-  const speed = computed(() => (dev.value || demo.value) ? 5 : 1)
+  const loadedSkills = computed(() => keySkillsData.value[language.value])
+
+  const speed = ref(1)
 
   const usedSkills = computed(() => {
     const result: KeySkillEntity[] = []
     const currentParty = computed(() => (dev.value || demo.value) ? generator.party.value : party.value)
 
     for (const player of currentParty.value) {
-      for (const skill of keySkills.value) {
-        if ((skill.job.includes(player.job)) && (player.level === undefined || skill.level <= player.level)) {
-          const duration = isFunctionValue(skill.duration) ? skill.duration(player.level || 999) : skill.duration
-          const id = isFunctionValue(skill.id) ? skill.id(player.level || 999) : skill.id
-          const recast1000ms = isFunctionValue(skill.recast1000ms) ? skill.recast1000ms(player.level || 999) : skill.recast1000ms
-          const level = isFunctionValue(skill.level) ? skill.level(player.level || 999) : skill.level
+      for (const skill of loadedSkills.value) {
+        if ((skill.job.includes(player.job)) && (player.level === undefined || (skill.minLevel <= player.level))) {
+          const duration = parseDynamicValue(skill.duration, player.level || 999)
+          const id = parseDynamicValue(skill.id, player.level || 999)
+          const recast1000ms = parseDynamicValue(skill.recast1000ms, player.level || 999)
+          const minLevel = parseDynamicValue(skill.minLevel, player.level || 999)
           const owner: KeySkillEntity['owner'] = {
             id: player.id,
             name: player.name,
@@ -55,21 +56,24 @@ const useKeySkillStore = defineStore('keySkill', () => {
             jobName: Util.jobToFullName(Util.jobEnumToJob(player.job)).simple1,
             hasDuplicate: false,
           }
-          const key = `${id}-${player.id}`
-          result.push({ ...skill, duration, id, owner, key, level, recast1000ms })
+          const key = `${player.id}-${id}`
+          const src = idToSrc(id)
+          const tts = skill.tts
+          const line = skill.line
+          const job = skill.job
+          result.push({ duration, id, owner, key, minLevel, recast1000ms, src, tts, line, job })
         }
       }
     }
-
     for (const res of result) {
       res.owner.hasDuplicate = result.some(v => v.id === res.id && v.owner.id !== res.owner.id)
     }
 
-    result.sort((a, b) => keySkills.value.findIndex(v => v.id === a.id) - keySkills.value.findIndex(v => v.id === b.id))
+    result.sort((a, b) => loadedSkills.value.findIndex(v => v.id === a.id) - loadedSkills.value.findIndex(v => v.id === b.id))
     return result
   })
 
-  function triggerSkill(skillId: number, ownerID: string) {
+  function triggerSkill(skillId: number, ownerID: string, speak: boolean) {
     const skill = usedSkills.value.find(v => v.id === skillId && v.owner.id === ownerID)
     if (!skill)
       return
@@ -77,43 +81,75 @@ const useKeySkillStore = defineStore('keySkill', () => {
     const key = skill.key
     const { duration, recast1000ms: recast } = skill
 
-    if (skillStates[key]?.interval)
-      clearInterval(skillStates[key].interval)
+    // 取消之前动画
+    if (skillStates[key]?.rafId)
+      cancelAnimationFrame(skillStates[key].rafId)
 
     const state = reactive<SkillState>({
-      startTime: Date.now(),
+      startTime: performance.now(),
       isRecast: duration === 0,
       durationLeft: duration,
       recastLeft: recast - duration,
       text: (duration || recast).toString(),
       active: true,
       animationKey: Date.now(),
+      clipPercent: 0,
+      rafId: undefined,
     })
 
-    state.interval = window.setInterval(() => {
+    const speedValue = speed.value
+    const start = performance.now()
+    const durationMs = (duration) * 1000
+    const recastMs = (recast - duration) * 1000
+
+    function update() {
+      const now = performance.now()
+      const elapsed = (now - start) * speedValue
       if (!state.isRecast) {
-        state.durationLeft--
-        if (state.durationLeft <= 0) {
-          state.isRecast = true
+        // 持续时间阶段
+        if (elapsed < durationMs) {
+          const remain = durationMs - elapsed
+          state.durationLeft = Math.ceil(remain / 1000)
+          state.text = state.durationLeft.toString()
+          state.clipPercent = (remain / durationMs) * 100
         }
-        state.text = state.durationLeft.toString()
+        else {
+          // 进入冷却阶段
+          state.isRecast = true
+          state.startTime = now
+          state.clipPercent = 0
+        }
       }
       else {
-        state.recastLeft--
-        state.text = state.recastLeft.toString()
-        if (state.recastLeft <= 0) {
-          clearInterval(state.interval)
-          state.interval = undefined
+        // 冷却阶段
+        const recastElapsed = elapsed - durationMs
+        if (recastElapsed < recastMs) {
+          const remain = recastMs - recastElapsed
+          state.recastLeft = Math.ceil(remain / 1000)
+          state.text = state.recastLeft.toString()
+          state.clipPercent = (recastElapsed / recastMs) * 100
+        }
+        else {
+          // 动画结束
           state.text = ''
-          state.isRecast = false
           state.active = false
-          Reflect.deleteProperty(skillStates, skillId)
+          state.isRecast = false
+          state.clipPercent = 0
+          if (state.rafId)
+            cancelAnimationFrame(state.rafId)
+          state.rafId = undefined
+          Reflect.deleteProperty(skillStates, key)
+          return
         }
       }
-    }, 1000 / speed.value)
+      state.rafId = requestAnimationFrame(update)
+    }
 
+    state.rafId = requestAnimationFrame(update)
     skillStates[key] = state
-    tts(skill.tts)
+    if (speak) {
+      tts(skill.tts)
+    }
   }
 
   function wipe() {
@@ -121,8 +157,8 @@ const useKeySkillStore = defineStore('keySkill', () => {
       const state = skillStates[key]
       if (!state)
         continue
-      clearInterval(state.interval)
-      state.interval = undefined
+      if (state.rafId)
+        cancelAnimationFrame(state.rafId)
       state.text = ''
       state.active = false
     }
@@ -130,6 +166,10 @@ const useKeySkillStore = defineStore('keySkill', () => {
 
   function shuffle() {
     generator.shuffle()
+  }
+
+  function demoFullParty() {
+    generator.fullPary()
   }
 
   return {
@@ -141,8 +181,10 @@ const useKeySkillStore = defineStore('keySkill', () => {
     usedSkills,
     triggerSkill,
     wipe,
-    loadData,
     shuffle,
+    demoFullParty,
+    language,
+    keySkillsData,
   }
 })
 

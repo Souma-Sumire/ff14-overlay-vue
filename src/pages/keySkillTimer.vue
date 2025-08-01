@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import type { EventMap } from 'cactbot/types/event'
+import type { EventMap } from '../../cactbot/types/event'
 import type { KeySkillEntity } from '@/types/keySkill'
 import { useDemo } from '@/composables/useDemo'
 import { useDev } from '@/composables/useDev'
 import { useZone } from '@/composables/useZone'
-import { completeIcon } from '@/resources/status'
 import { useKeySkillStore } from '@/store/keySkills'
 import { compareSame } from '@/utils/compareSaveAction'
 import {
@@ -31,7 +30,7 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
     const skillId = Number.parseInt(e.line[4]!, 16)
     const skillIdCompare = compareSame(skillId)
     const casterIdHex = e.line[2]!
-    storeKeySkill.triggerSkill(skillIdCompare, casterIdHex)
+    storeKeySkill.triggerSkill(skillIdCompare, casterIdHex, true)
   }
   else if (e.line[0] === '33' && ['40000010', '4000000F'].includes(e.line[3]!)) {
     storeKeySkill.wipe()
@@ -39,16 +38,12 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
 }
 
 const handleChangePrimaryPlayer: EventMap['ChangePrimaryPlayer'] = (e) => {
-  storeKeySkill.loadData(e.charName.includes(' ') ? 'global' : 'cn')
+  storeKeySkill.language = (e.charName.includes(' ') ? 'global' : 'chinese')
 }
 
-function getSrc(icon: number) {
-  return `//cafemaker.wakingsands.com/i/${completeIcon(icon)}_hr1.png`
-}
-
-function testTrigger(skill: KeySkillEntity) {
+function testTrigger(skill: KeySkillEntity, tts: boolean) {
   if (dev || demo) {
-    storeKeySkill.triggerSkill(skill.id, skill.owner.id)
+    storeKeySkill.triggerSkill(skill.id, skill.owner.id, tts)
   }
 }
 
@@ -62,15 +57,22 @@ onUnmounted(() => {
   removeOverlayListener('PartyChanged', handlePartyChanged)
   removeOverlayListener('LogLine', handleLogLine)
   removeOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
-  Object.values(storeKeySkill.skillStates).forEach(s =>
-    clearInterval(s.interval),
+  Object.values(storeKeySkill.skillStates).forEach((s) => {
+    if (s.rafId)
+      cancelAnimationFrame(s.rafId)
+  },
   )
 })
 
-function triggerAll() {
+function triggerAll(speed: number) {
+  storeKeySkill.speed = speed
   storeKeySkill.usedSkills.forEach((skill) => {
-    storeKeySkill.triggerSkill(skill.id, skill.owner.id)
+    storeKeySkill.triggerSkill(skill.id, skill.owner.id, false)
   })
+}
+
+function showSettings() {
+  window.open('/#/keySkillTimerSettings', '_blank')
 }
 </script>
 
@@ -78,8 +80,8 @@ function triggerAll() {
   <CommonActWrapper>
     <template #readme>
       <span class="demo-text">
-        当前为演示数据，锁定后将显示真实数据，请尽量拉大窗口
-        <el-button type="primary" @click="() => storeKeySkill.shuffle()">生成随机小队</el-button>
+        当前为演示数据，锁定后将显示真实数据。<br>
+        请尽量拉宽窗口，点击技能可模拟触发。
       </span>
     </template>
     <div v-if="!isPvp" class="key-skills-timer-container">
@@ -88,8 +90,11 @@ function triggerAll() {
           v-for="(skill) in storeKeySkill.usedSkills"
           :key="skill.key"
           class="buff-container"
-          :class="`line${skill.line + 1}`"
-          @click="testTrigger(skill)"
+          :class="`line${skill.line}`"
+          :style="{
+            zIndex: (demo || dev ? 99 : undefined),
+          }"
+          @click="() => demo || dev ? testTrigger(skill, true) : null"
         >
           <div class="buff-filter">
             <span
@@ -102,16 +107,13 @@ function triggerAll() {
             >
               {{ storeKeySkill.skillStates[skill.key]?.text || "" }}
             </span>
-            <img :src="getSrc(skill.icon)">
+            <img :src="skill.src">
             <div
               v-if="storeKeySkill.skillStates[skill.key]?.active"
               :key="storeKeySkill.skillStates[skill.key]?.startTime || 0"
               class="cooldown-layer"
               :style="{
-                '--duration': `${skill.duration / storeKeySkill.speed}s`,
-                '--recast': `${
-                  (skill.recast1000ms - skill.duration) / storeKeySkill.speed
-                }s`,
+                clipPath: `inset(${storeKeySkill.skillStates[skill.key]?.clipPercent ?? 0}% 0 0 0)`,
               }"
             />
           </div>
@@ -121,13 +123,27 @@ function triggerAll() {
         </div>
       </div>
     </div>
-    <div v-if="dev" class="test">
-      <button @click="triggerAll">
-        triggerAll
-      </button>
-      <button @click="storeKeySkill.wipe">
-        wipe
-      </button>
+    <div v-if="dev || demo" class="test">
+      <el-button @click="storeKeySkill.demoFullParty">
+        模拟全部职业
+      </el-button>
+      <el-button
+        @click="() => storeKeySkill.shuffle()"
+      >
+        模拟8人小队
+      </el-button>
+      <el-button v-if="dev" @click="() => triggerAll(1)">
+        测试触发(1X)
+      </el-button>
+      <el-button v-if="dev" @click="() => triggerAll(5)">
+        测试触发(5X)
+      </el-button>
+      <el-button @click="storeKeySkill.wipe">
+        模拟团灭
+      </el-button>
+      <el-button type="primary" @click="showSettings">
+        设置
+      </el-button>
     </div>
   </CommonActWrapper>
 </template>
@@ -197,42 +213,14 @@ img {
   width: 40px;
   height: 40px;
   z-index: 2;
-  animation: cooldown-stage1 var(--duration) linear 0s forwards,
-    cooldown-stage2 var(--recast) linear var(--duration) forwards;
   pointer-events: none;
   background-color: rgba(0, 0, 0, 0.75);
 }
 
-@keyframes cooldown-stage1 {
-  from {
-    clip-path: inset(100% 0 0 0);
+@for $i from 1 through 99 {
+ .line#{$i} {
+    grid-row: $i;
   }
-
-  to {
-    clip-path: inset(0% 0 0 0);
-  }
-}
-
-@keyframes cooldown-stage2 {
-  from {
-    clip-path: inset(0% 0 0 0);
-  }
-
-  to {
-    clip-path: inset(100% 0 0 0);
-  }
-}
-
-.line1 {
-  grid-row: 1;
-}
-
-.line2 {
-  grid-row: 2;
-}
-
-.line3 {
-  grid-row: 3;
 }
 
 img {
@@ -270,5 +258,9 @@ img {
   z-index: 200;
   font-size: 16px;
   overflow: hidden;
+}
+.test{
+  position:fixed;
+  z-index: 200;
 }
 </style>

@@ -167,9 +167,8 @@ onMounted(() => {
           <!-- 宏标题 -->
           <p
             v-show="!macro.Editable"
-            font-bold
-            m-b-2
-            m-t-2
+
+            m-b-2 m-t-2 font-bold
             v-html="macro.Name"
           />
           <el-input
@@ -402,7 +401,7 @@ onMounted(() => {
 
     <!-- 底部菜单区域 -->
     <div class="menu">
-      <CommonThemeToggle />
+      <CommonThemeToggle storage-key="zone-macro-theme" />
       <el-button type="success" size="small" w-20 @click="macroStore.newMacro()">
         新增宏
       </el-button>

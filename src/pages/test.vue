@@ -212,7 +212,7 @@ addOverlayListener('LogLine', onLogLine)
           <el-button type="primary" size="small" @click="tts(`测试TTS${new Date().getTime().toString().slice(-4)}`)">
             测试TTS
           </el-button>
-          <CommonThemeToggle />
+          <CommonThemeToggle storage-key="test-theme" />
         </div>
       </div>
 

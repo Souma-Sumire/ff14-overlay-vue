@@ -86,17 +86,10 @@ statusCN: status名称中文化，默认开
       '需开启 ACT.OverlayPlugin WSServer\n喊话、标点需<a href="https://github.com/Natsukage/PostNamazu">鲶鱼精邮差</a>',
   },
   {
-    title: '[悬浮窗] 团辅监控',
+    title: '[悬浮窗] （团辅）关键技能监控2',
     type: '悬浮窗',
-    path: 'https://souma.diemoe.net/dist/keySkillTimer.html?international=false&dajinengTTS=true&jianshangTTS=true&tuanfuTTS=true',
-    comment: `URL地址栏参数说明：
-international: 是否采用国际服技改数据，默认false
-dajinengTTS: 是否开启大技能TTS（坦克无敌不包含在内，因为 Cactbot 已有对应功能），默认true
-jianshangTTS: 是否开启减伤TTS，默认true
-tuanfuTTS: 是否开启团辅TTS，默认true
-
-该悬浮窗过于老旧，无法自定义技能。
-`,
+    path: 'keySkillTimer',
+    comment: `2025年重构版，支持更多功能。`,
     src: 'keySkillTimer.webp',
   },
   {
@@ -214,7 +207,7 @@ const tableDataWithSrc = tableData.map((item) => {
           <h1 class="main-title">
             主页导航
           </h1>
-          <CommonThemeToggle />
+          <CommonThemeToggle storage-key="start-pages-theme" />
         </div>
       </el-header>
 
@@ -294,11 +287,6 @@ const tableDataWithSrc = tableData.map((item) => {
 </template>
 
 <style scoped lang="scss">
-:global(body) {
-  margin: 0;
-  padding: 0;
-}
-
 .common-layout {
   background-color: var(--el-bg-color);
   color: var(--el-text-color-primary);

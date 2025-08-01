@@ -730,7 +730,7 @@ init()
         </el-space>
 
         <el-space>
-          <CommonThemeToggle />
+          <CommonThemeToggle storage-key="timeline-settings-theme" />
           <el-button
             color="#626aef"
             style="color: white"

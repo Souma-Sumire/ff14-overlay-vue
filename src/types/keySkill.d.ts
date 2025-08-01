@@ -1,19 +1,21 @@
 import type { FFIcon } from '@/types/fflogs'
 
-type DynamicValue<T> = T | ((level: number) => T)
+type DynamicValue = number | string
 
 interface KeySkill {
-  id: DynamicValue<number>
+  // 此key是对于技能来说的，而不是技能的具体实例
+  key: string
+  id: DynamicValue
   tts: string
-  duration: DynamicValue<number>
-  recast1000ms: DynamicValue<number>
+  duration: DynamicValue
+  recast1000ms: DynamicValue
   job: number[]
   line: number
-  level: number
-  icon: number
+  minLevel: number
 }
 
 interface KeySkillEntity {
+  // 此key是对于某个具体玩家的技能实例来说的，同一个技能可能有多个实例，两个key不同
   key: string
   id: number
   tts: string
@@ -21,8 +23,8 @@ interface KeySkillEntity {
   recast1000ms: number
   job: number[]
   line: number
-  level: number
-  icon: number
+  minLevel: number
+  src: string
   owner: {
     id: string
     name: string

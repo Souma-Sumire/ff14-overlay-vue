@@ -1,14 +1,12 @@
 import chinese2IconRaw from '@/resources/chinese2Icon.json'
-import { completeIcon } from '@/resources/status'
 
 const chineseToIconMap: Record<string, string> = chinese2IconRaw
 
 const userActionMap = new Map([
-  ['任务指令', '000123'],
-  ['冲刺', '000104'],
-  ['坐骑', '000118'],
-  ['攻击', '000101'],
-  ['腐秽大地', '003090'],
+  ['任务指令', 123],
+  ['冲刺', 104],
+  ['坐骑', 118],
+  ['攻击', 101],
 ])
 
 const chineseAbbreviationMap = new Map([
@@ -191,16 +189,17 @@ const chineseAbbreviationMap = new Map([
   ['黑豆', '彗星之黑'],
 ])
 
-export function chineseToIcon(chinese: string): string | undefined {
+function chineseToIcon(chinese: string): number | undefined {
   chinese = chineseAbbreviationMap.get(chinese.toUpperCase()) ?? chinese
 
-  const iconStr = userActionMap.get(chinese) ?? chineseToIconMap[chinese]
+  const iconStr = userActionMap.get(chinese)?.toString() ?? chineseToIconMap[chinese]
   const iconNum = Number(iconStr)
 
   if (!iconStr || Number.isNaN(iconNum) || iconNum === 0) {
     console.warn(`Invalid or missing icon for key: "${chinese}"`)
     return undefined
   }
-
-  return `/i/${completeIcon(iconNum)}.png`
+  return iconNum
 }
+
+export { chineseToIcon, chineseToIconMap }

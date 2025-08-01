@@ -4,6 +4,7 @@ import type {
   ShowStyle,
   TimelineConfigValues,
 } from '@/types/timeline'
+import { completeIcon } from '@/resources/status'
 import { parseAction } from '@/store/timeline'
 import { chineseToIcon } from '@/utils/chineseToIcon'
 import { getFullImgSrc } from '@/utils/xivapi'
@@ -55,7 +56,7 @@ function getSkillImage(name: string): string {
     return imageMap[name] as string
 
   if (typeof imageMap[name] === 'undefined') {
-    const icon = chineseToIcon(name)
+    const icon = `/i/${completeIcon(chineseToIcon(name) ?? 405)}.png`
     // 仅请求一次，无论成功失败都不会再调用
     imageMap[name] = PLACEHOLDER
     if (icon) {

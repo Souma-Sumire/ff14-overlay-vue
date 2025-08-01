@@ -452,7 +452,7 @@ onUnmounted(() => {
       <header>
         <h1>{{ t("OBS Auto Record V2") }}</h1>
         <div class="button-container">
-          <CommonThemeToggle />
+          <CommonThemeToggle storage-key="obs-2-theme" />
           <CommonLanguageSwitcher />
         </div>
       </header>

@@ -24,10 +24,11 @@ async function readCsv(filePath, handler) {
 
   await Promise.all([
     readCsv(`${csvPaths.souma}Action.csv`, (row) => {
-      id2Name[row[0]] = row[1]
+      if (row[1] !== '')
+        id2Name[row[0]] = row[1]
     }),
     readCsv(`${csvPaths.ja}Action.csv`, (row) => {
-      if (Number(row[13]) > 0) {
+      if (Number(row[13]) > 0 && row[3] !== '405') {
         id2ClassJobLevel[row[0]] = row[13]
         id2Icon[row[0]] = row[3]
       }
