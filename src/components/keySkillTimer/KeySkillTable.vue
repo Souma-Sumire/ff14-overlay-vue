@@ -113,7 +113,7 @@ watch(
       </template>
     </el-table-column>
 
-    <el-table-column label="冷却时间 (秒)" width="140">
+    <el-table-column label="冷却时间 (秒)" width="180">
       <template #default="{ row }">
         <el-input v-model="row.recast1000ms" size="small" />
       </template>

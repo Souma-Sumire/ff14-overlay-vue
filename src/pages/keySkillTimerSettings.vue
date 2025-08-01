@@ -163,19 +163,93 @@ onBeforeUnmount(() => {
   observedImages.clear()
 })
 
-function onImgRef(
-  el: Element | ComponentPublicInstance | null,
-) {
+function onImgRef(el: Element | ComponentPublicInstance | null) {
   if (el && el instanceof HTMLImageElement) {
     lazyLoadImage(el)
   }
+}
+
+const dialogStyle = ref<Record<string, string>>({
+  position: 'fixed',
+  top: '50px',
+  left: '50px',
+  width: '400px',
+  height: '400px',
+  zIndex: '1000',
+})
+
+let startX = 0
+let startY = 0
+let originX = 0
+let originY = 0
+let dragging = false
+
+let dragTarget: HTMLElement | null = null
+
+function onMouseDown(e: MouseEvent) {
+  e.preventDefault()
+  const dialog = document.querySelector('.search-dialog') as HTMLElement
+  if (!dialog)
+    return
+
+  dragTarget = dialog
+
+  const rect = dialog.getBoundingClientRect()
+  startX = e.clientX
+  startY = e.clientY
+  originX = rect.left
+  originY = rect.top
+  dragging = true
+
+  window.addEventListener('mousemove', onMouseMove)
+  window.addEventListener('mouseup', onMouseUp, { once: true })
+}
+
+function onMouseMove(e: MouseEvent) {
+  if (!dragging || !dragTarget)
+    return
+
+  const dx = e.clientX - startX
+  const dy = e.clientY - startY
+
+  const newLeft = Math.max(0, originX + dx)
+  const newTop = Math.max(0, originY + dy)
+
+  dragTarget.style.left = `${newLeft}px`
+  dragTarget.style.top = `${newTop}px`
+}
+
+function onMouseUp() {
+  dragging = false
+  dragTarget = null
+  window.removeEventListener('mousemove', onMouseMove)
 }
 </script>
 
 <template>
   <div class="page-container">
-    <el-dialog v-model="showDialog" width="500">
-      <el-form label-width="100px">
+    <el-card
+      v-if="showDialog"
+      class="search-dialog"
+      :style="dialogStyle"
+      body-style="padding: 0.5em 1em"
+    >
+      <div
+        class="search-dialog-header"
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        "
+      >
+        <h4 class="dialog-drag-handle" @mousedown="onMouseDown">
+          拖动这里可以移动
+        </h4>
+        <el-button size="small" @click="showDialog = false">
+          关闭
+        </el-button>
+      </div>
+      <el-form label-width="5em">
         <el-form-item label="技能名称">
           <el-input
             v-model="searchText"
@@ -202,7 +276,7 @@ function onImgRef(
           <el-table-column prop="name" label="技能名称" />
         </el-table>
       </div>
-    </el-dialog>
+    </el-card>
     <el-header class="header">
       <el-button size="small" type="success" @click="addSkill(activeTab)">
         新增技能
@@ -261,5 +335,20 @@ function onImgRef(
   gap: 0.5em;
   height: 40px;
   padding: 0;
+}
+.dialog-drag-handle {
+  cursor: move;
+  user-select: none;
+  padding: 6px 12px;
+  flex: 1;
+  margin: 0.8em 0.4em;
+  padding: 0.2em 0;
+  text-align: center;
+  cursor: move;
+  user-select: none;
+  font-weight: none;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  color:gray;
+  font-size: 12px;
 }
 </style>
