@@ -32,6 +32,16 @@ const tableData: Menu[] = [
     path: 'fflogsUploaderDownload',
   },
   {
+    title: '[悬浮窗] 关键技能监控2',
+    type: '悬浮窗',
+    path: 'keySkillTimer?scale=1&opacity=1',
+    comment: `（以前叫团辅监控）2025年重构版，支持完全自定义。并保留原版本的所有特性。
+URL地址栏参数说明：
+scale: 缩放倍率，默认1
+opacity: 背景不透明度，默认1`,
+    src: 'keySkillTimer.webp',
+  },
+  {
     title: '[悬浮窗] 雷达',
     type: '悬浮窗',
     path: 'radar',
@@ -84,13 +94,6 @@ statusCN: status名称中文化，默认开
     src: 'zoneMacro.webp',
     comment:
       '需开启 ACT.OverlayPlugin WSServer\n喊话、标点需<a href="https://github.com/Natsukage/PostNamazu">鲶鱼精邮差</a>',
-  },
-  {
-    title: '[悬浮窗] （团辅）关键技能监控2',
-    type: '悬浮窗',
-    path: 'keySkillTimer',
-    comment: `2025年重构版，支持更多功能。`,
-    src: 'keySkillTimer.webp',
   },
   {
     title: '[悬浮窗] 技能监控',

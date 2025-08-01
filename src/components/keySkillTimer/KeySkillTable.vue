@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { KeySkill } from '@/types/keySkill'
-import { useDev } from '@/composables/useDev'
 import { idToSrc } from '@/utils/dynamicValue'
 import Util from '@/utils/util'
 
@@ -8,11 +7,9 @@ const props = defineProps<{
   data: KeySkill[]
 }>()
 const emit = defineEmits<{
-  (e: 'add'): void
   (e: 'delete', key: string): void
   (e: 'move', fromIndex: number, toIndex: number): void
 }>()
-const dev = useDev()
 const jobList = Object.freeze(Util.getBattleJobs())
 
 const jobOptions = markRaw(
@@ -21,25 +18,9 @@ const jobOptions = markRaw(
     label: Util.jobToFullName(job)?.cn ?? job,
   })),
 )
-
-function deleteNum(n: number) {
-  const keys = props.data.map(v => v.key)
-  keys.length = n
-  for (const key of keys) {
-    emit('delete', key)
-  }
-}
 </script>
 
 <template>
-  <div style="margin-bottom: 10px">
-    <el-button type="primary" size="small" @click="emit('add')">
-      新增技能
-    </el-button>
-    <el-button v-if="dev" type="danger" size="small" @click="deleteNum(10)">
-      删除10个
-    </el-button>
-  </div>
   <el-table
     :data="props.data"
     border

@@ -124,20 +124,21 @@ function importData(): void {
 <template>
   <div class="page-container">
     <el-header class="header">
-      <div class="left">
-        <CommonThemeToggle storage-key="key-skill-timer-2" />
-      </div>
-      <div class="right">
-        <el-button type="primary" size="small" @click="exportData">
-          导出（国服+国际服）
+      <el-button size="small" type="success" @click="addSkill(activeTab)">
+        新增技能
+      </el-button>
+      <el-button-group>
+        <el-button size="small" @click="exportData">
+          导出
         </el-button>
-        <el-button type="primary" size="small" @click="importData">
+        <el-button size="small" @click="importData">
           导入
         </el-button>
-        <el-button type="danger" size="small" @click="resetToDefault">
-          重置{{ tabLabels[activeTab] }}为默认
-        </el-button>
-      </div>
+      </el-button-group>
+      <el-button size="small" type="danger" @click="resetToDefault">
+        恢复默认
+      </el-button>
+      <CommonThemeToggle storage-key="key-skill-timer-2" />
     </el-header>
     <el-tabs
       v-model="activeTab"
@@ -148,7 +149,6 @@ function importData(): void {
       <el-tab-pane :label="tabLabels.chinese" name="chinese">
         <KeySkillTable
           v-model:data="storeKeySkill.keySkillsData.chinese"
-          @add="addSkill('chinese')"
           @delete="key => deleteSkill('chinese', key)"
           @move="(from, to) => moveSkill('chinese', from, to)"
         />
@@ -156,7 +156,6 @@ function importData(): void {
       <el-tab-pane :label="tabLabels.global" name="global">
         <KeySkillTable
           v-model:data="storeKeySkill.keySkillsData.global"
-          @add="addSkill('global')"
           @delete="key => deleteSkill('global', key)"
           @move="(from, to) => moveSkill('global', from, to)"
         />
@@ -174,8 +173,9 @@ function importData(): void {
 
 .header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
+  gap: 2em;
   height: 40px;
   padding: 0;
 }

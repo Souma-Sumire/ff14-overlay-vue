@@ -11,6 +11,7 @@ import {
   removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
 
+const params = useUrlSearchParams('hash')
 const storeKeySkill = useKeySkillStore()
 const { zoneType } = useZone()
 const isPvp = computed(() => zoneType.value === 'Pvp')
@@ -84,7 +85,7 @@ function showSettings() {
         请尽量拉宽窗口，点击技能可模拟触发。
       </span>
     </template>
-    <div v-if="!isPvp" class="key-skills-timer-container">
+    <div v-if="!isPvp" class="key-skills-timer-container" :style="{ '--scale': params.scale?.toString(), '--opacity': params.opacity?.toString() }">
       <div class="skills-grid">
         <div
           v-for="(skill) in storeKeySkill.usedSkills"
@@ -156,6 +157,11 @@ function showSettings() {
 
 <style scoped lang="scss">
 @use "@/styles/job.scss";
+
+.key-skills-timer-container{
+  zoom: var(--scale, 1);
+  opacity: var(--opacity, 1);
+}
 
 .skills-grid {
   overflow: hidden;
