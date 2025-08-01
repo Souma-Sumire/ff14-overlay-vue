@@ -118,7 +118,10 @@ function showSettings() {
               }"
             />
           </div>
-          <span v-if="skill.owner.hasDuplicate" :class="`job ${skill.owner.jobIcon.toLowerCase()}`">
+          <span v-if="skill.owner.hasDuplicate.skill" :class="`job has-duplicate duplicate-skill ${skill.owner.jobIcon.toLowerCase()}`">
+            {{ skill.owner.name }}
+          </span>
+          <span v-else-if="skill.owner.hasDuplicate.job" :class="`job has-duplicate duplicate-job ${skill.owner.jobIcon.toLowerCase()}`">
             {{ skill.owner.jobName }}
           </span>
         </div>
@@ -237,11 +240,20 @@ img {
   -ms-user-drag: none;
 }
 
-.job {
+.has-duplicate {
   position: absolute;
   bottom: -8px;
   z-index: 3;
   font-size: 12.5px;
+}
+
+.duplicate-skill{
+  // 不换行
+  white-space: nowrap;
+  // 只显示前三个字
+  text-overflow: ellipsis;
+  overflow: hidden;
+  width: 3em;
 }
 
 .demo-text {

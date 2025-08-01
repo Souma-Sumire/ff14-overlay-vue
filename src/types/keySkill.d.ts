@@ -28,9 +28,13 @@ interface KeySkillEntity {
   owner: {
     id: string
     name: string
+    job: number
     jobIcon: FFIcon
     jobName: string
-    hasDuplicate: boolean
+    hasDuplicate: {
+      skill: boolean
+      job: boolean
+    }
   }
 }
 

@@ -36,6 +36,7 @@ function idToSrc(id: number | string) {
   if (typeof id === 'string') {
     id = parseDynamicValue(id, 999)
   }
+
   const chinese = getActionChinese(id) || getActionChinese(compareSame(id))
   if (!chinese) {
     // console.warn(`找不到动作中文: ${id}`)
@@ -43,7 +44,7 @@ function idToSrc(id: number | string) {
   }
   const icon = chineseToIcon(chinese)
   if (!icon) {
-    // console.warn(`找不到动作图标: ${chinese}`)
+    // console.warn(`找不到动作图标: ${chinese}, icon: ${icon}`)
     return ''
   }
   return iconToSrc(icon)

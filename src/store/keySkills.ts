@@ -52,9 +52,13 @@ const useKeySkillStore = defineStore('keySkill', () => {
           const owner: KeySkillEntity['owner'] = {
             id: player.id,
             name: player.name,
+            job: player.job,
             jobIcon: Util.jobEnumToIcon(player.job),
             jobName: Util.jobToFullName(Util.jobEnumToJob(player.job)).simple1,
-            hasDuplicate: false,
+            hasDuplicate: {
+              skill: false,
+              job: false,
+            },
           }
           const key = `${player.id}-${id}`
           const src = idToSrc(id)
@@ -66,10 +70,20 @@ const useKeySkillStore = defineStore('keySkill', () => {
       }
     }
     for (const res of result) {
-      res.owner.hasDuplicate = result.some(v => v.id === res.id && v.owner.id !== res.owner.id)
+      res.owner.hasDuplicate = {
+        skill: result.some(v => v.id === res.id && v.owner.id !== res.owner.id),
+        job: result.some(v => v.owner.job === res.owner.job && v.owner.id !== res.owner.id),
+      }
     }
 
-    result.sort((a, b) => loadedSkills.value.findIndex(v => v.id === a.id) - loadedSkills.value.findIndex(v => v.id === b.id))
+    result.sort((a, b) => {
+      const aIndex = loadedSkills.value.findIndex(v => v.id === a.id)
+      const bIndex = loadedSkills.value.findIndex(v => v.id === b.id)
+      if (aIndex === bIndex) {
+        return Util.enumSortMethod(a.owner.job, b.owner.job)
+      }
+      return aIndex - bIndex
+    })
     return result
   })
 
