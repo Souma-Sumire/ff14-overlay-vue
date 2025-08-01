@@ -38,7 +38,7 @@ const tableData: Menu[] = [
     comment: `（以前叫团辅监控）2025年重构版，支持完全自定义。并保留原版本的所有特性。
 URL地址栏参数说明：
 scale: 缩放倍率，默认1
-opacity: 背景不透明度，默认1`,
+opacity: 不透明度，默认1`,
     src: 'keySkillTimer.webp',
   },
   {

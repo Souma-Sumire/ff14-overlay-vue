@@ -3,9 +3,12 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import * as LZString from 'lz-string'
 import { ref } from 'vue'
 import KeySkillTable from '@/components/keySkillTimer/KeySkillTable.vue'
+import { actionId2ClassJobLevel } from '@/resources/action2ClassJobLevel'
+import { actionChinese } from '@/resources/actionChinese'
 import { skillChinese, skillGlobal } from '@/resources/raidbuffs'
 import { useKeySkillStore } from '@/store/keySkills'
 import { copyToClipboard } from '@/utils/clipboard'
+import { idToSrc } from '@/utils/dynamicValue'
 
 const storeKeySkill = useKeySkillStore()
 
@@ -119,13 +122,93 @@ function importData(): void {
     })
     .catch(() => {})
 }
+
+const showDialog = ref(false)
+const searchText = ref('')
+const searchResult = ref<Array<{ id: number, name: string }>>([])
+watch(searchText, (value) => {
+  if (value) {
+    const result = []
+    for (const [id, name] of Object.entries(actionChinese)) {
+      if (name.includes(value)) {
+        const idNumber = Number(id)
+        const useful = actionId2ClassJobLevel(idNumber)
+        if (useful) {
+          result.push({ id: idNumber, name })
+        }
+      }
+    }
+    searchResult.value = result
+  }
+})
+
+const observedImages = new Map<Element, () => void>()
+
+function lazyLoadImage(el: HTMLImageElement) {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        const img = entry.target as HTMLImageElement
+        img.src = img.dataset.src!
+        observer.unobserve(img)
+      }
+    })
+  })
+  observer.observe(el)
+  observedImages.set(el, () => observer.unobserve(el))
+}
+
+onBeforeUnmount(() => {
+  observedImages.forEach(unobserve => unobserve())
+  observedImages.clear()
+})
+
+function onImgRef(
+  el: Element | ComponentPublicInstance | null,
+) {
+  if (el && el instanceof HTMLImageElement) {
+    lazyLoadImage(el)
+  }
+}
 </script>
 
 <template>
   <div class="page-container">
+    <el-dialog v-model="showDialog" width="500">
+      <el-form label-width="100px">
+        <el-form-item label="技能名称">
+          <el-input
+            v-model="searchText"
+            clearable
+            placeholder="请输入技能名称"
+          />
+        </el-form-item>
+      </el-form>
+      <div style="height: 300px; overflow-y: auto">
+        <el-table :data="searchResult" style="width: 100%">
+          <el-table-column label="预览" width="60" align="center">
+            <template #default="{ row }">
+              <img
+                :ref="onImgRef"
+                :data-src="idToSrc(row.id)"
+                src="data:image/gif;base64,R0lGODlhEAAQAPIAAP///wAAAMLCwgAAACH5BAEAAAIALAAAAAAQABAAAAM6CLrc/jDKSau9OOvNu/9gKI5kaZ5oqub5bSqVefrb7r3rtf1B7n8fqw7GZ0cL+o8P8fAQA7"
+                loading="lazy"
+                style="width: 24px; height: 24px"
+                alt=""
+              >
+            </template>
+          </el-table-column>
+          <el-table-column prop="id" label="技能ID（十进制）" />
+          <el-table-column prop="name" label="技能名称" />
+        </el-table>
+      </div>
+    </el-dialog>
     <el-header class="header">
       <el-button size="small" type="success" @click="addSkill(activeTab)">
         新增技能
+      </el-button>
+      <el-button size="small" type="info" @click="showDialog = true">
+        搜索技能ID
       </el-button>
       <el-button-group>
         <el-button size="small" @click="exportData">
@@ -149,14 +232,14 @@ function importData(): void {
       <el-tab-pane :label="tabLabels.chinese" name="chinese">
         <KeySkillTable
           v-model:data="storeKeySkill.keySkillsData.chinese"
-          @delete="key => deleteSkill('chinese', key)"
+          @delete="(key) => deleteSkill('chinese', key)"
           @move="(from, to) => moveSkill('chinese', from, to)"
         />
       </el-tab-pane>
       <el-tab-pane :label="tabLabels.global" name="global">
         <KeySkillTable
           v-model:data="storeKeySkill.keySkillsData.global"
-          @delete="key => deleteSkill('global', key)"
+          @delete="(key) => deleteSkill('global', key)"
           @move="(from, to) => moveSkill('global', from, to)"
         />
       </el-tab-pane>
@@ -175,7 +258,7 @@ function importData(): void {
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  gap: 2em;
+  gap: 0.5em;
   height: 40px;
   padding: 0;
 }

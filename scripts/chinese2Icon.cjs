@@ -29,6 +29,8 @@ async function readCsv(filePath, handler) {
     }),
     readCsv(`${csvPaths.ja}Action.csv`, (row) => {
       if (Number(row[13]) > 0 && row[3] !== '405') {
+        // row[3] = icon
+        // row[13] = class job level
         id2ClassJobLevel[row[0]] = row[13]
         id2Icon[row[0]] = row[3]
       }
@@ -42,4 +44,5 @@ async function readCsv(filePath, handler) {
   )
 
   fs.outputJsonSync('src/resources/chinese2Icon.json', result, { spaces: 2 })
+  fs.outputJsonSync('src/resources/action2ClassJobLevel.json', id2ClassJobLevel, { spaces: 2 })
 })()

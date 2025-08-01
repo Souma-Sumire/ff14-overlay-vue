@@ -18,6 +18,27 @@ const jobOptions = markRaw(
     label: Util.jobToFullName(job)?.cn ?? job,
   })),
 )
+
+// src 防抖
+const debouncedSrcMap = ref(new Map<string, string>())
+const timers: Record<string, number | undefined> = {}
+watch(
+  () => props.data.map(row => ({ key: row.key, id: row.id })),
+  (newList) => {
+    newList.forEach(({ key, id }) => {
+      // 清除旧定时器
+      if (timers[key])
+        clearTimeout(timers[key])
+      // 新定时器，延迟1秒更新
+      timers[key] = window.setTimeout(() => {
+        debouncedSrcMap.value.set(key, idToSrc(id))
+        // 触发响应更新 map
+        debouncedSrcMap.value = new Map(debouncedSrcMap.value)
+      }, 1000)
+    })
+  },
+  { immediate: true, deep: true },
+)
 </script>
 
 <template>
@@ -70,7 +91,7 @@ const jobOptions = markRaw(
     </el-table-column>
     <el-table-column label="预览" width="50" align="center">
       <template #default="{ row }">
-        <img :src="idToSrc(row.id)" class="icon">
+        <img :src="debouncedSrcMap.get(row.key) ?? idToSrc(row.id)" class="icon">
       </template>
     </el-table-column>
 

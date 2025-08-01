@@ -196,7 +196,6 @@ function chineseToIcon(chinese: string): number | undefined {
   const iconNum = Number(iconStr)
 
   if (!iconStr || Number.isNaN(iconNum) || iconNum === 0) {
-    console.warn(`Invalid or missing icon for key: "${chinese}"`)
     return undefined
   }
   return iconNum
