@@ -33,13 +33,16 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
     const casterIdHex = e.line[2]!
     storeKeySkill.triggerSkill(skillIdCompare, casterIdHex, true)
   }
-  else if (e.line[0] === '33' && ['40000010', '4000000F'].includes(e.line[3]!)) {
+  else if (
+    e.line[0] === '33'
+    && ['40000010', '4000000F'].includes(e.line[3]!)
+  ) {
     storeKeySkill.wipe()
   }
 }
 
 const handleChangePrimaryPlayer: EventMap['ChangePrimaryPlayer'] = (e) => {
-  storeKeySkill.language = (e.charName.includes(' ') ? 'global' : 'chinese')
+  storeKeySkill.language = e.charName.includes(' ') ? 'global' : 'chinese'
 }
 
 function testTrigger(skill: KeySkillEntity, tts: boolean) {
@@ -61,8 +64,7 @@ onUnmounted(() => {
   Object.values(storeKeySkill.skillStates).forEach((s) => {
     if (s.rafId)
       cancelAnimationFrame(s.rafId)
-  },
-  )
+  })
 })
 
 function triggerAll(speed: number) {
@@ -85,17 +87,24 @@ function showSettings() {
         请尽量拉宽窗口，点击技能可模拟触发。
       </span>
     </template>
-    <div v-if="!isPvp" class="key-skills-timer-container" :style="{ '--scale': params.scale?.toString(), '--opacity': params.opacity?.toString() }">
+    <div
+      v-if="!isPvp"
+      class="key-skills-timer-container"
+      :style="{
+        '--scale': params.scale?.toString(),
+        '--opacity': params.opacity?.toString(),
+      }"
+    >
       <div class="skills-grid">
         <div
-          v-for="(skill) in storeKeySkill.usedSkills"
+          v-for="skill in storeKeySkill.usedSkills"
           :key="skill.key"
           class="buff-container"
           :class="`line${skill.line}`"
           :style="{
-            zIndex: (demo || dev ? 99 : undefined),
+            zIndex: demo || dev ? 99 : undefined,
           }"
-          @click="() => demo || dev ? testTrigger(skill, true) : null"
+          @click="() => (demo || dev ? testTrigger(skill, true) : null)"
         >
           <div class="buff-filter">
             <span
@@ -114,15 +123,27 @@ function showSettings() {
               :key="storeKeySkill.skillStates[skill.key]?.startTime || 0"
               class="cooldown-layer"
               :style="{
-                clipPath: `inset(${storeKeySkill.skillStates[skill.key]?.clipPercent ?? 0}% 0 0 0)`,
+                clipPath: `inset(${
+                  storeKeySkill.skillStates[skill.key]?.clipPercent ?? 0
+                }% 0 0 0)`,
               }"
             />
           </div>
-          <span v-if="skill.owner.hasDuplicate.skill" :class="`job has-duplicate duplicate-skill ${skill.owner.jobIcon.toLowerCase()}`">
-            {{ skill.owner.name }}
-          </span>
-          <span v-else-if="skill.owner.hasDuplicate.job" :class="`job has-duplicate duplicate-job ${skill.owner.jobIcon.toLowerCase()}`">
-            {{ skill.owner.jobName }}
+          <span
+            v-if="
+              skill.owner.hasDuplicate.skill || skill.owner.hasDuplicate.job
+            "
+            :class="`job has-duplicate ${
+              skill.owner.hasDuplicate.job
+                ? 'duplicate-show-name'
+                : 'duplicate-show-job-name'
+            } ${skill.owner.jobIcon.toLowerCase()}`"
+          >
+            {{
+              skill.owner.hasDuplicate.job
+                ? skill.owner.name
+                : skill.owner.jobName
+            }}
           </span>
         </div>
       </div>
@@ -131,9 +152,7 @@ function showSettings() {
       <el-button @click="storeKeySkill.demoFullParty">
         模拟全部职业
       </el-button>
-      <el-button
-        @click="() => storeKeySkill.shuffle()"
-      >
+      <el-button @click="() => storeKeySkill.shuffle()">
         模拟8人小队
       </el-button>
       <el-button v-if="dev" @click="() => triggerAll(1)">
@@ -161,7 +180,7 @@ function showSettings() {
 <style scoped lang="scss">
 @use "@/styles/job.scss";
 
-.key-skills-timer-container{
+.key-skills-timer-container {
   zoom: var(--scale, 1);
   opacity: var(--opacity, 1);
 }
@@ -227,7 +246,7 @@ img {
 }
 
 @for $i from 1 through 99 {
- .line#{$i} {
+  .line#{$i} {
     grid-row: $i;
   }
 }
@@ -247,13 +266,15 @@ img {
   font-size: 12.5px;
 }
 
-.duplicate-skill{
+.duplicate-show-name {
   // 不换行
   white-space: nowrap;
-  // 只显示前三个字
   text-overflow: ellipsis;
-  overflow: hidden;
-  width: 3em;
+  overflow: auto;
+  text-align: center;
+  width: 5em;
+  font-size: 8px;
+  padding: 0 4px;
 }
 
 .demo-text {
@@ -267,18 +288,15 @@ img {
   background-color: rgba(20, 20, 20, 0.4);
   color: white;
   font-size: 12px;
-  text-shadow:
-    1px 1px 1px #000,
-    -1px -1px 1px #000,
-    1px -1px 1px #000,
+  text-shadow: 1px 1px 1px #000, -1px -1px 1px #000, 1px -1px 1px #000,
     -1px 1px 1px #000;
 
   z-index: 200;
   font-size: 16px;
   overflow: hidden;
 }
-.test{
-  position:fixed;
+.test {
+  position: fixed;
   z-index: 200;
 }
 </style>
