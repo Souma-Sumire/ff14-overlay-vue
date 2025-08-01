@@ -48,6 +48,6 @@ Promise.all([
       },
     }
   })
-  fs.outputJsonSync('src/resources/aetherytes.json', aetherytes, { spaces: 2 })
+  fs.outputJsonSync('src/resources/aetherytes.json', aetherytes)
   // console.log('Data generated successfully.')
 })

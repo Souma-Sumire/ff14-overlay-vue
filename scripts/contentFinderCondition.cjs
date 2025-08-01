@@ -34,6 +34,6 @@ Promise.all([
     const key = ((ja && ja !== '0') ? ja : cn) ?? ja
     result[row[0]] = key
   })
-  fs.outputJsonSync('src/resources/contentFinderCondition.json', result, { spaces: 2 })
+  fs.outputJsonSync('src/resources/contentFinderCondition.json', result)
   // console.log('Data generated successfully.')
 })

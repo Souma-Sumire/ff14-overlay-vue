@@ -1,4 +1,7 @@
-import actionChinese from './actionChinese.json'
+import LZString from 'lz-string'
+import actionChineseZipped from './actionChinese.json'
+
+const actionChinese = LZString.decompressFromBase64(actionChineseZipped)
 
 const actionChineseMap = new Map(Object.entries(actionChinese))
 

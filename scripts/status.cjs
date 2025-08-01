@@ -35,6 +35,6 @@ Promise.all([
     const ja = fileValues['status_ja.csv'].find(r => r[0] === row[0])
     result[row[0]] = [row[1], ja[3], ja[6]]
   })
-  fs.outputJsonSync('src/resources/status.json', result, { spaces: 2 })
+  fs.outputJsonSync('src/resources/status.json', result)
   // console.log('Data generated successfully.')
 })

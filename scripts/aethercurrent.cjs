@@ -51,7 +51,7 @@ Promise.all([
     return { x: row[1], y: row[2], z: row[3], territory, name: { ja, cn, en }, game: { x: pixelCoordinates.x, y: pixelCoordinates.y }, id, exVersion, data }
   },
   )
-  fs.outputJsonSync('src/resources/aethercurrent.json', result, { spaces: 2 })
+  fs.outputJsonSync('src/resources/aethercurrent.json', result)
   // console.log('Data generated successfully.')
 })
 

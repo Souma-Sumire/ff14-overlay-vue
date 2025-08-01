@@ -1,6 +1,7 @@
 const csv = require('csv-parser')
 const fs = require('fs-extra')
 const iconv = require('iconv-lite')
+const LZString = require('lz-string')
 const { csvPaths } = require('./paths.cjs')
 
 const id2Name = {}
@@ -21,5 +22,6 @@ Promise.all([
       })
   }),
 ]).then(() => {
-  fs.outputJsonSync('src/resources/actionChinese.json', id2Name, { spaces: 2 })
+  const zipped = LZString.compressToBase64(JSON.stringify(id2Name))
+  fs.outputJsonSync('src/resources/actionChinese.json', zipped)
 })

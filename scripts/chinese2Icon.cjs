@@ -43,6 +43,6 @@ async function readCsv(filePath, handler) {
       .map(([id, name]) => [name, id2Icon[id]]),
   )
 
-  fs.outputJsonSync('src/resources/chinese2Icon.json', result, { spaces: 2 })
-  fs.outputJsonSync('src/resources/action2ClassJobLevel.json', id2ClassJobLevel, { spaces: 2 })
+  fs.outputJsonSync('src/resources/chinese2Icon.json', result)
+  fs.outputJsonSync('src/resources/action2ClassJobLevel.json', id2ClassJobLevel)
 })()
