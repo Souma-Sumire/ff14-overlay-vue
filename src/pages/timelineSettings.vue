@@ -20,8 +20,6 @@ import {
 } from '../../cactbot/resources/overlay_plugin_api'
 import recommendedTimeline from '../resources/recommendedTimeline.json'
 
-import 'animate.css'
-
 const router = useRouter()
 const { wsConnected } = useWebSocket({ allowClose: true, addWsParam: true })
 

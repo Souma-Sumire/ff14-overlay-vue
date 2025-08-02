@@ -9,7 +9,6 @@ import {
   addOverlayListener,
   callOverlayHandler,
 } from '../../cactbot/resources/overlay_plugin_api'
-import 'animate.css'
 
 const storePartySort = usePartySortStore()
 const mouseEnter = ref(false)
