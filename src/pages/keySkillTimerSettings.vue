@@ -186,6 +186,15 @@ let dragging = false
 
 let dragTarget: HTMLElement | null = null
 
+function updateDialogPosition(left: number, top: number) {
+  if (dragTarget) {
+    dragTarget.style.left = `${left}px`
+    dragTarget.style.top = `${top}px`
+  }
+  dialogStyle.value.left = `${left}px`
+  dialogStyle.value.top = `${top}px`
+}
+
 function onMouseDown(e: MouseEvent) {
   e.preventDefault()
   const dialog = document.querySelector('.search-dialog') as HTMLElement
@@ -193,7 +202,6 @@ function onMouseDown(e: MouseEvent) {
     return
 
   dragTarget = dialog
-
   const rect = dialog.getBoundingClientRect()
   startX = e.clientX
   startY = e.clientY
@@ -208,15 +216,11 @@ function onMouseDown(e: MouseEvent) {
 function onMouseMove(e: MouseEvent) {
   if (!dragging || !dragTarget)
     return
-
   const dx = e.clientX - startX
   const dy = e.clientY - startY
-
   const newLeft = Math.max(0, originX + dx)
   const newTop = Math.max(0, originY + dy)
-
-  dragTarget.style.left = `${newLeft}px`
-  dragTarget.style.top = `${newTop}px`
+  updateDialogPosition(newLeft, newTop)
 }
 
 function onMouseUp() {
@@ -348,7 +352,10 @@ function onMouseUp() {
   user-select: none;
   font-weight: none;
   border: 1px solid rgba(0, 0, 0, 0.3);
-  color:gray;
+  color: gray;
   font-size: 12px;
+}
+.search-dialog {
+  transition: none;
 }
 </style>
