@@ -14,23 +14,6 @@ import {
   VxeTableResolve,
 } from 'vite-plugin-style-import'
 
-const manualChunkGroups: [string, RegExp][] = [
-  // node_modules
-  ['element-plus', /node_modules\/.*element-plus/],
-  ['vue', /node_modules\/.*(?:vue|pinia)/],
-  ['vendor', /node_modules/],
-
-  // resources 拆分
-  ['res-keigenn', /src\/resources\/keigenn\//],
-  ['res-action', /src\/resources\/.*action/],
-  ['res-status', /src\/resources\/.*status/],
-  ['res-zoneInfo', /src\/resources\/.*zoneInfo/],
-  ['res-macro', /src\/resources\/.*macro/],
-
-  // cactbot
-  ['cactbot', /cactbot\//],
-]
-
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '/ff14-overlay-vue/',
@@ -47,13 +30,11 @@ export default defineConfig({
     rollupOptions: {
       output: {
         hashCharacters: 'hex',
-        manualChunks(id) {
-          const relPath = path.relative(__dirname, id).replace(/\\/g, '/')
-          for (const [chunkName, pattern] of manualChunkGroups) {
-            if (pattern.test(relPath))
-              return chunkName
-          }
-          return null
+        manualChunks: {
+          'vue-vendor': ['vue', 'vue-router', 'pinia', 'vue-i18n'],
+          'element-plus': ['element-plus'],
+          'obs': ['obs-websocket-js'],
+          'utils': ['moment'],
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
