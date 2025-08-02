@@ -30,12 +30,6 @@ export default defineConfig({
     rollupOptions: {
       output: {
         hashCharacters: 'hex',
-        manualChunks: {
-          'vue-vendor': ['vue', 'vue-router', 'pinia', 'vue-i18n'],
-          'element-plus': ['element-plus'],
-          'obs': ['obs-websocket-js'],
-          'utils': ['moment'],
-        },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
