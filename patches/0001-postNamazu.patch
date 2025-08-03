@@ -30,7 +30,7 @@ index 42634b8cd..459f60931 100644
 +    c: PostNamazuCall;
 +    p: string;
 +    d?: number;
-+}) => void;
++}) => Promise<void>;
 +
  export type OverlayHandlerAll = {
    'broadcast': BroadcastHandler;
