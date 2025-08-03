@@ -2,7 +2,6 @@
 import { ElMessage, ElMessageBox } from 'element-plus'
 import * as LZString from 'lz-string'
 import { ref } from 'vue'
-import KeySkillTable from '@/components/keySkillTimer/KeySkillTable.vue'
 import { actionId2ClassJobLevel } from '@/resources/action2ClassJobLevel'
 import { actionChinese } from '@/resources/actionChinese'
 import { skillChinese, skillGlobal } from '@/resources/raidbuffs'
@@ -308,14 +307,14 @@ function onMouseUp() {
       class="tabs"
     >
       <el-tab-pane :label="tabLabels.chinese" name="chinese">
-        <KeySkillTable
+        <KeySkillTimerSettingsTable
           v-model:data="storeKeySkill.keySkillsData.chinese"
           @delete="(key) => deleteSkill('chinese', key)"
           @move="(from, to) => moveSkill('chinese', from, to)"
         />
       </el-tab-pane>
       <el-tab-pane :label="tabLabels.global" name="global">
-        <KeySkillTable
+        <KeySkillTimerSettingsTable
           v-model:data="storeKeySkill.keySkillsData.global"
           @delete="(key) => deleteSkill('global', key)"
           @move="(from, to) => moveSkill('global', from, to)"

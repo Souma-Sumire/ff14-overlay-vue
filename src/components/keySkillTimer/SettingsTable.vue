@@ -1,15 +1,20 @@
 <script setup lang="ts">
 import type { KeySkill } from '@/types/keySkill'
+import { useKeySkillStore } from '@/store/keySkills'
 import { idToSrc } from '@/utils/dynamicValue'
 import Util from '@/utils/util'
 
 const props = defineProps<{
   data: KeySkill[]
 }>()
+
 const emit = defineEmits<{
   (e: 'delete', key: string): void
   (e: 'move', fromIndex: number, toIndex: number): void
 }>()
+
+const storeKeySKill = useKeySkillStore()
+
 const jobList = Object.freeze(Util.getBattleJobs())
 
 const jobOptions = markRaw(
@@ -102,8 +107,11 @@ watch(
     </el-table-column>
 
     <el-table-column label="TTS" width="100">
+      <template #header>
+          TTS
+      </template>
       <template #default="{ row }">
-        <el-input v-model="row.tts" size="small" />
+        <el-input v-model="row.tts" size="small" :disabled="!storeKeySKill.enableTts[storeKeySKill.language]" />
       </template>
     </el-table-column>
 
