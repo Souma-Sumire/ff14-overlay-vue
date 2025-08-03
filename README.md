@@ -37,6 +37,12 @@ OverlayPlugin 悬浮窗插件 > 新建 > 名称：_任意_，预设：'_自定�
    git submodule update --init --recursive
    ```
 
+   - 更新 Cactbot 子模块：
+
+        ```bash
+        git submodule update --remote --recursive
+        ```
+
 1. 应用补丁：
 
    ```bash
@@ -55,5 +61,5 @@ OverlayPlugin 悬浮窗插件 > 新建 > 名称：_任意_，预设：'_自定�
 1. 构建项目：
 
      ```bash
-     pnpm build
+     pnpm vite build
      ```
