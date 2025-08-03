@@ -32,6 +32,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
   const party = ref<Party[]>([])
   const keySkillsData = useStorage('keySkills-fix', { chinese: skillChinese, global: skillGlobal })
   const language = ref<'chinese' | 'global'>('chinese')
+  const enableTts = useStorage('keySkills-enable-tts', { chinese: true, global: true })
   const skillStates = reactive<Record<string, SkillState>>({})
 
   const loadedSkills = computed(() => keySkillsData.value[language.value])
@@ -161,7 +162,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
 
     state.rafId = requestAnimationFrame(update)
     skillStates[key] = state
-    if (speak) {
+    if (speak && enableTts.value[language.value]) {
       tts(skill.tts)
     }
   }
@@ -199,6 +200,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
     demoFullParty,
     language,
     keySkillsData,
+    enableTts,
   }
 })
 

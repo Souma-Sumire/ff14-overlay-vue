@@ -108,7 +108,10 @@ watch(
 
     <el-table-column label="TTS" width="100">
       <template #header>
+        <el-form>
           TTS
+          <el-switch v-model="storeKeySKill.enableTts[storeKeySKill.language]" size="small" />
+        </el-form>
       </template>
       <template #default="{ row }">
         <el-input v-model="row.tts" size="small" :disabled="!storeKeySKill.enableTts[storeKeySKill.language]" />
