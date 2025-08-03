@@ -9,11 +9,51 @@
 
 OverlayPlugin 悬浮窗插件 > 新建 > 名称：_任意_，预设：'_自定义悬浮窗_'，类型：'__数据统计__'
 
-### 直接在浏览器里用
+1. 打开 ACT > OverlayPlugin 插件
+1. 点击 “新建”
+1. 设置如下：
+    - 名称：任意名称
+    - 预设：选择“自定义悬浮窗”
+    - 类型：选择“数据统计”
 
-使用部分子页面时，如果你希望在浏览器中使用，则通过在url后添加 `?OVERLAY_WS=ws://127.0.0.1:10501/ws` 且开启 ACT 中的 ACT WS Server 功能，便可以在浏览器中获取数据。可获得更好的操作体验。
+## 开发指南
 
-## 开发笔记
+### 一、环境准备
 
-- 更新 Cactbot 模块 `git submodule update --remote`
-- 添加 PostNamazu 事件声明 / 兼容 Hash 路由模式  `git apply patches/0001-postNamazu.patch patches/0002-hash-mode.patch`
+1. [Node.js（LTS 版本）](https://nodejs.org/en/download)
+1. [pnpm 包管理器](https://pnpm.io/installation)
+
+### 二、启动项目
+
+1. 安装依赖：
+
+   ```bash
+   pnpm install
+   ```
+
+1. 初始化 Cactbot 子模块：
+
+   ```bash
+   git submodule update --init --recursive
+   ```
+
+1. 应用补丁：
+
+   ```bash
+   git apply patches/0001-postNamazu.patch patches/0002-hash-mode.patch
+   ```
+
+1. 启动开发模式：
+
+     ```bash
+     pnpm dev
+     ```
+
+   > __测试模式：__
+   > 大部分页面，可以通过在url添加dev参数来进入测试模式。例如：`http://localhost:3000/ff14-overlay-vue/#/keySkillTimer?dev=1`
+
+1. 构建项目：
+
+     ```bash
+     pnpm build
+     ```
