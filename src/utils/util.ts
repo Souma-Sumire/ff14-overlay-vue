@@ -105,7 +105,19 @@ const baseJob = [
   'THM', // 咒术师
 ]
 
-export const jobEnumOrder = [
+const baseJobEnumConverted: Record<number, number> = {
+  1: 19, // 剑术师 - 骑士
+  3: 21, // 斧术师 - 战士
+  6: 24, // 幻术师 - 白魔法师
+  29: 30, // 双剑师 - 忍者
+  2: 20, // 格斗家 - 武僧
+  4: 22, // 枪术师 - 龙骑士
+  5: 23, // 弓箭手 - 吟游诗人
+  26: 27, // 秘术师 - 召唤师
+  7: 25, // 咒术师 - 黑魔法师
+} as const
+
+const jobEnumOrder = [
   3, // MRD 斧术师
   21, // WAR 战士
   1, // GLA 剑术师
@@ -580,6 +592,10 @@ const Util = {
   enumSortMethod: (a: number, b: number) => {
     return jobEnumOrder.indexOf(a) - jobEnumOrder.indexOf(b)
   },
-} as const
+  baseJobEnumConverted: (jobEnum: number): number => {
+    return baseJobEnumConverted[jobEnum] ?? jobEnum
+  },
+  isBaseJob: (job: Job) => baseJob.includes(job),
+}
 
 export default Util

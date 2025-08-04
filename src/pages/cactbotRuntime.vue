@@ -1,290 +1,274 @@
 <script setup lang="ts">
-import type { Role } from '../../cactbot/types/job'
-import type { PlayerRuntime } from '@/types/partyPlayer'
-import { useDark } from '@vueuse/core'
+import type { EventMap } from 'cactbot/types/event'
+import type {
+  Player,
+  PlayerRuntime as PlayerWithRp,
+  Role,
+} from '@/types/partyPlayer'
+import { VueDraggable } from 'vue-draggable-plus'
 import { useDev } from '@/composables/useDev'
+import { RandomPartyGenerator } from '@/mock/demoParty'
 import { usePartySortStore } from '@/store/partySort'
 import Util from '@/utils/util'
 import {
   addOverlayListener,
   callOverlayHandler,
+  removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
 
+const usedRole: Role[] = ['tank', 'healer', 'dps'] as const
 const storePartySort = usePartySortStore()
 const mouseEnter = ref(false)
+const dev = useDev()
+const generator = new RandomPartyGenerator()
+const fakeParty = generator.party
+const state = reactive({
+  party: dev.value ? fakeParty.value.slice() : ([] as Player[]),
+  partySorted: {
+    tank: [] as Player[],
+    healer: [] as Player[],
+    dps: [] as Player[],
+  },
+})
 
-function createRPArr(
-  r: 'T' | 'H' | 'D' | 'C' | 'G' | 'N',
-  l: number,
-  start: number = 0,
-) {
+function createRPArr(r: 'T' | 'H' | 'D', l: number, start: number = 0) {
   return Array.from({ length: l }, () => r).map((v, i) => v + (+i + 1 + start))
 }
 
-const dialogVisible = ref(false)
-
-const fakeParty: PlayerRuntime[] = [
-  { id: '10000001', name: '虚构暗骑', job: 32, inParty: true },
-  { id: '10000002', name: '虚构骑士', job: 19, inParty: true },
-  { id: '10000003', name: '虚构占星', job: 33, inParty: true },
-  { id: '10000004', name: '虚构学者', job: 28, inParty: true },
-  { id: '10000005', name: '虚构忍者', job: 30, inParty: true },
-  { id: '10000006', name: '虚构龙骑', job: 22, inParty: true },
-  { id: '10000008', name: '虚构舞者', job: 38, inParty: true },
-  { id: '10000007', name: '虚构画家', job: 42, inParty: true },
-] as const
-const data = useStorage('cactbotRuntime-data', {
-  party: [] as PlayerRuntime[],
-})
-const showTips = useStorage('cactbotRuntime-showTips', ref(true))
-const roleSelectLength = useStorage('cactbotRuntime-roleSelectLength', {
-  tank: 0,
-  healer: 0,
-  dps: 0,
-  crafter: 0,
-  gatherer: 0,
-  none: 0,
-} as Record<Role, number>)
-const roleAssignLocationNames = {
-  tank: ['MT', 'ST', ...createRPArr('T', 6, 2)],
-  healer: [...createRPArr('H', 8)],
-  dps: [...createRPArr('D', 8)],
-  crafter: [...createRPArr('C', 8)],
-  gatherer: [...createRPArr('G', 8)],
-  none: [...createRPArr('N', 8)],
-} as Record<Role, string[]>
-
-function updateRoleSelectLength(): void {
-  for (const role in roleSelectLength.value) {
-    if (Object.prototype.hasOwnProperty.call(roleSelectLength.value, role)) {
-      roleSelectLength.value[role as Role] = data.value.party.reduce(
-        (p, c) => (getJobClassification(c.job) === role ? p + 1 : p),
-        0,
-      )
-    }
-  }
-}
-function getOptions(job: number) {
-  const classification = getJobClassification(job)
-  return roleAssignLocationNames[classification].filter((_v, i) => {
-    return i < roleSelectLength.value[classification]
-  })
-}
-const dev = useDev()
-const playerName = ref(dev.value ? fakeParty[2]!.name : '')
-
-function getJobClassification(job: number): Role {
-  if ([1, 3, 19, 21, 32, 37].includes(job))
-    return 'tank'
-  if ([6, 24, 28, 33, 40].includes(job))
-    return 'healer'
-  if (
-    [
-      2,
-      4,
-      5,
-      7,
-      20,
-      22,
-      23,
-      25,
-      26,
-      27,
-      29,
-      30,
-      31,
-      34,
-      35,
-      36,
-      38,
-      39,
-      41,
-      42,
-    ].includes(job)
-  ) {
-    return 'dps'
-  }
-
-  if (Util.isCraftingJob(Util.jobEnumToJob(job)))
-    return 'crafter'
-  if (Util.isGatheringJob(Util.jobEnumToJob(job)))
-    return 'gatherer'
-  return 'none'
+const roleAssignLocationNames: Record<Role, string[]> = {
+  tank: ['MT', 'ST', ...createRPArr('T', 22, 2)],
+  healer: [...createRPArr('H', 24)],
+  dps: [...createRPArr('D', 24)],
 }
 
-function defaultPartySort() {
-  data.value.party.sort(
-    (a, b) => storePartySort.arr.indexOf(a.job) - storePartySort.arr.indexOf(b.job),
-  )
-  for (const v of data.value.party) {
-    v.rp = undefined
-  }
-  // 2次循环不能合并
-  for (const v of data.value.party) {
-    v.rp = getRP(v)
-  }
-}
+const playerName = ref(dev.value ? fakeParty.value[0]!.name : '')
 
-function handleSelectChange(i: number): void {
-  const t = data.value.party.find(
-    v => v.rp === data.value.party[i]!.rp && v.id !== data.value.party[i]!.id,
-  )
-  if (t) {
-    t.rp = getRP(t)
-  }
-  broadcastParty()
-}
-
-function getRP(player: PlayerRuntime): string {
-  return (
-    roleAssignLocationNames[getJobClassification(player.job)].find(
-      role => !data.value.party.find(v => v.rp === role),
-    ) ?? 'unknown'
-  )
-}
-
-function broadcastParty(): void {
-  const sortArr = [
-    ...roleAssignLocationNames.tank,
-    ...roleAssignLocationNames.healer,
-    ...roleAssignLocationNames.dps,
-    ...roleAssignLocationNames.crafter,
-    ...roleAssignLocationNames.gatherer,
-    ...roleAssignLocationNames.none,
+function broadcast(): void {
+  const rps = [
+    ...roleAssignLocationNames.tank.slice(0, state.partySorted.tank.length),
+    ...roleAssignLocationNames.healer.slice(0, state.partySorted.healer.length),
+    ...roleAssignLocationNames.dps.slice(0, state.partySorted.dps.length),
   ]
-  data.value.party.sort(
-    (a, b) =>
-      sortArr.indexOf(a.rp ?? 'unknown') - sortArr.indexOf(b.rp ?? 'unknown'),
-  )
+
+  const msgParty: PlayerWithRp[] = [
+    ...state.partySorted.tank,
+    ...state.partySorted.healer,
+    ...state.partySorted.dps,
+  ].map((v, i) => {
+    return { ...v, rp: rps[i] }
+  })
+  // console.log('广播组队信息', JSON.stringify(msgParty.map(v => (v.name))))
   callOverlayHandler({
     call: 'broadcast',
     source: 'soumaRuntimeJS',
-    msg: { party: data.value.party },
+    msg: { party: msgParty },
   })
 }
 
-function getJobName(job: number) {
-  return Util.jobToFullName(Util.jobEnumToJob(job)).simple1
-}
-
-function onUpdate() {
-  defaultPartySort()
-  updateRoleSelectLength()
-  broadcastParty()
-}
-
-onMounted(() => {
-  const isDark = useDark({ storageKey: 'cactbot-runtime-theme' })
-  const toggleDark = useToggle(isDark)
-  if (isDark.value === false) {
-    // 固定使用深色主题
-    toggleDark()
-  }
-  document.body.addEventListener('mouseenter', () => (mouseEnter.value = true))
-  document.body.addEventListener(
-    'mouseleave',
-    () => (mouseEnter.value = false),
+function sortParty() {
+  // console.log('原始组队信息', JSON.stringify(state.party.map(v => (v.name))))
+  const res = state.party
+    .slice()
+    .sort(
+      (a, b) =>
+        storePartySort.arr.indexOf(Util.baseJobEnumConverted(a.job))
+        - storePartySort.arr.indexOf(Util.baseJobEnumConverted(b.job)),
+    )
+  state.partySorted.tank = res.filter(v =>
+    Util.isTankJob(Util.jobEnumToJob(v.job)),
   )
-  broadcastParty()
-  addOverlayListener('PartyChanged', (e) => {
-    if (showTips.value)
-      dialogVisible.value = true
+  state.partySorted.healer = res.filter(v =>
+    Util.isHealerJob(Util.jobEnumToJob(v.job)),
+  )
+  state.partySorted.dps = res.filter(v =>
+    Util.isDpsJob(Util.jobEnumToJob(v.job)),
+  )
+  broadcast()
+}
 
+function onRuleUpdated() {
+  sortParty()
+}
+
+function onTempRuleUpdate() {
+  broadcast()
+}
+
+const eventHandlers: {
+  mouseEnter: () => void
+  mouseLeave: () => void
+  partyChanged: EventMap['PartyChanged']
+  changePrimaryPlayer: EventMap['ChangePrimaryPlayer']
+  broadcastMessage: EventMap['BroadcastMessage']
+} = {
+  mouseEnter: () => {
+    mouseEnter.value = true
+  },
+  mouseLeave: () => {
+    mouseEnter.value = false
+  },
+  partyChanged: (e) => {
     if (dev.value && e.party.length === 0)
       return
-    data.value.party = e.party
-      .filter(v => v.inParty)
-      .map((p) => {
-        return { ...p, rp: 'unknown' }
-      })
-    onUpdate()
-  })
-  addOverlayListener('ChangePrimaryPlayer', (e) => {
-    if (!dev.value)
+
+    state.party = e.party.filter(v => v.inParty)
+  },
+  changePrimaryPlayer: (e) => {
+    if (dev.value)
       playerName.value = e.charName
-  })
-  addOverlayListener('BroadcastMessage', (e) => {
+  },
+  broadcastMessage: (e) => {
     if (
       e.source === 'soumaUserJS'
       && typeof e.msg === 'object'
       && e.msg !== null
       && Reflect.get(e.msg, 'text') === 'requestData'
     ) {
-      broadcastParty()
+      broadcast()
     }
-  })
+  },
+}
+
+onMounted(() => {
+  document.body.addEventListener('mouseenter', eventHandlers.mouseEnter)
+  document.body.addEventListener('mouseleave', eventHandlers.mouseLeave)
+  addOverlayListener('PartyChanged', eventHandlers.partyChanged)
+  addOverlayListener('ChangePrimaryPlayer', eventHandlers.changePrimaryPlayer)
+  addOverlayListener('BroadcastMessage', eventHandlers.broadcastMessage)
+  watch(
+    state.party,
+    () => {
+      sortParty()
+    },
+    { immediate: true },
+  )
 })
 
-function testParty() {
-  const e = { party: fakeParty }
-  if (showTips.value)
-    dialogVisible.value = true
+onUnmounted(() => {
+  document.body.removeEventListener('mouseenter', eventHandlers.mouseEnter)
+  document.body.removeEventListener('mouseleave', eventHandlers.mouseLeave)
+  removeOverlayListener('PartyChanged', eventHandlers.partyChanged)
+  removeOverlayListener(
+    'ChangePrimaryPlayer',
+    eventHandlers.changePrimaryPlayer,
+  )
+  removeOverlayListener('BroadcastMessage', eventHandlers.broadcastMessage)
+})
 
-  data.value.party = e.party
-    .filter(v => v.inParty)
-    .map((p) => {
-      return { ...p, rp: 'unknown' }
-    })
-  onUpdate()
+function testSolo() {
+  state.party.length = 0
+  state.party.push(fakeParty.value.find(v => v.name === playerName.value)!)
+}
+
+function testParty() {
+  playerName.value = fakeParty.value[0]!.name
+  state.party.length = 0
+  state.party.push(...fakeParty.value)
+}
+
+function testShuffleParty() {
+  generator.shuffle({
+    dps: 4,
+    healer: 2,
+    tank: 2,
+    crafter: 3,
+    gatherer: 3,
+    none: 3,
+  })
+  testParty()
 }
 </script>
 
 <template>
   <CommonActWrapper>
-    <div class="cactbot-runtime">
-      <el-dialog
-        v-model="dialogVisible" size="small" :position="{
-          left: 10,
-          top: 10,
-        }" width="90vw" @close="
-          dialogVisible = false;
-          showTips = false;
-        "
-      >
-        <template #header>
-          <span>用法</span>
-        </template>
-        <template #default>
-          <p>使悬浮窗的位置分配对应游戏内的实际位置（D1D2等）</p>
-          <ul>
-            <li>临时：下拉选择框修改。</li>
-            <li>长期：用鼠标拖动职能顺序。</li>
-          </ul>
-        </template>
-      </el-dialog>
+    <template #readme>
+      <span class="demo-text">
+        <p>使悬浮窗的位置分配对应游戏内的实际位置</p>
+        <ul>
+          <li>每次小队变化时，会按规则进行排序</li>
+          <li>你可以上下拖拽玩家名称，临时调整</li>
+          <!-- <li>
+            只有在需要分配位置的本里时，才会显示界面，盛夏农庄除外（测试用）
+          </li> -->
+        </ul>
+      </span>
+    </template>
+    <div class="cactbot-runtime-container">
       <main>
-        <div v-if="!mouseEnter" class="you">
-          {{ data.party.find((v) => v.name === playerName)?.rp ?? "" }}
-        </div>
-        <div v-else class="players">
-          <section
-            v-for="(member, i) in data.party" :key="member.id" class="player"
-            :class="{ 'is-you': member.name === playerName }"
-          >
-            <el-select
-              v-model="member.rp" size="small" class="select" fit-input-width placement="right" :offset="8"
-              @change="handleSelectChange(i)"
+        <div class="players" flex="~ nowrap gap-1">
+          <div class="fixed-rp">
+            <div
+              v-for="(role, roleIndex) in usedRole"
+              :key="`fixed-rp-${role}`"
+              class="player-role"
             >
-              <el-option v-for="(item, index) in getOptions(member.job)" :key="index" :value="item" :label="item" />
-            </el-select>
-            <span class="job-name">{{ getJobName(member.job) }}</span>
-            <span v-if="mouseEnter" class="player-name">{{ member.name }}</span>
-          </section>
-          <CommonDragJob v-if="mouseEnter" class="drag-job" :party="data.party" p-1 @update="onUpdate" />
+              <div
+                v-for="(member, i) in state.partySorted[role]"
+                :key="i"
+                style="
+                  overflow: hidden;
+                  white-space: nowrap;
+                  text-overflow: ellipsis;
+                "
+              >
+                <span v-show="mouseEnter || member.name === playerName">{{
+                  roleAssignLocationNames[role][i]
+                }}</span>
+              </div>
+              <el-divider
+                v-if="
+                  state.partySorted[role].length > 0
+                    && roleIndex < 2
+                    && mouseEnter
+                "
+              />
+            </div>
+          </div>
+          <div class="fixed-player">
+            <VueDraggable
+              v-for="(role, index) in usedRole"
+              :key="`fixed-player-${role}`"
+              v-model="state.partySorted[role]"
+              :animation="200"
+              ghost-class="ghost"
+              :force-fallback="true"
+              filter=".no-draggable"
+              @update="onTempRuleUpdate"
+            >
+              <div
+                v-for="member in state.partySorted[role]"
+                v-show="mouseEnter"
+                :key="member.id"
+                class="player-line"
+              >
+                <span>{{ member.name }}</span>
+              </div>
+              <el-divider
+                v-if="
+                  state.partySorted[role].length > 0 && index < 2 && mouseEnter
+                "
+                class="no-draggable"
+              />
+            </VueDraggable>
+          </div>
+        </div>
+        <div class="drag-job">
+          <CommonDragJob
+            v-if="mouseEnter"
+            :party="state.party"
+            @update="onRuleUpdated"
+          />
         </div>
       </main>
       <div v-if="dev" style="position: fixed; bottom: 0">
-        <button
-          @click=" {
-            data.party = data.party.filter((v) => v.name === playerName);
-            onUpdate();
-          }
-          "
-        >
+        <button @click="testSolo">
           测试单人
         </button>
         <button @click="testParty">
           测试组队
+        </button>
+        <button @click="testShuffleParty">
+          测试随机组队
         </button>
       </div>
     </div>
@@ -293,105 +277,71 @@ function testParty() {
 
 <style scoped lang="scss">
 :global(body) {
-  margin: 0;
-  padding: 0;
   overflow: hidden;
 }
 
-// el-select 选中之后的文本
-:global(.el-select__placeholder.is-transparent) {
-  color: #ffffff;
-}
-
-// el-select 布局
-:global(.el-select--small .el-select__wrapper) {
-  padding: 1px 4px;
-}
-
-// el-select 下拉箭头
-:global(.el-select__suffix) {
-  position: absolute;
-  transform: scale(0.8, 1);
+.demo-text {
+  position: fixed;
+  top: 0;
+  left: 0;
   right: 0;
-}
-
-// el-select 下拉框整体
-:global(.el-select-dropdown__list) {
-  padding: 0;
-}
-
-// el-option 下拉框选项
-:global(.el-select-dropdown__item) {
+  text-shadow: 1px 1px 1px #000, -1px -1px 1px #000, 1px -1px 1px #000,
+    -1px 1px 1px #000;
+  opacity: 1;
+  color: lightblue;
+  background-color: rgba(20, 20, 20, 0.8);
   padding: 0 0.5em;
-  overflow: hidden;
-  text-overflow: clip;
+  margin: 0em;
+  max-width: 24em;
+  ul {
+    padding-left: 2em;
+  }
 }
 
-main {
-  padding: 0.3em;
-  width: min-content;
-  background-color: rgba(255, 255, 255, 0.01);
-  font-size: 14px;
-}
-
-.cactbot-runtime {
-  margin-top: 1.8em;
+.cactbot-runtime-container {
+  padding: 0.2em;
   user-select: none;
-  --el-fill-color-blank: #2d2d2d;
+  max-width: 18em;
+}
 
-  .job-name,
-  .player-name,
-  .you {
-    font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
-    color: #e0e0e0;
-    text-shadow:
-      1px 1px 2px rgba(0, 0, 0, 0.5),
-      -1px -1px 2px rgba(0, 0, 0, 0.5),
-      1px -1px 2px rgba(0, 0, 0, 0.5),
-      -1px 1px 2px rgba(0, 0, 0, 0.5);
-  }
+.players {
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5), -1px -1px 2px rgba(0, 0, 0, 0.5),
+    1px -1px 2px rgba(0, 0, 0, 0.5), -1px 1px 2px rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.5);
+  width: min-content;
+  padding: 0 0em 0 0.2em;
+  margin-bottom: 1em;
+}
 
-  .you {
-    color: #ffffff;
-  }
-
-  .players {
-    width: min-content;
-  }
-
-  .player {
-    width: min-content;
-    display: flex;
-    align-items: center;
-    padding: 1.5px 2px;
-    border-radius: 0.2rem;
-
-    &.is-you {
-      background: rgba(0, 122, 255, 0.2);
-    }
-  }
-
-  .select {
-    width: 2.4em;
-    margin-right: 0.1em;
-  }
-
-  .job-name {
-    font-weight: 600;
-    margin: 0 0.2em;
-    color: #ffffff;
-  }
-
-  .player-name {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: #ffffff;
+.player-line {
+  white-space: nowrap;
+  padding-right: 0.4em;
+  &:hover {
+    cursor: pointer;
   }
 }
 
 .drag-job {
-  background-color: rgba(255, 255, 255, 0.01);
-  float: left;
+  position: relative;
+  // 创建一个几乎不可见的区域连接两个区域，以保持hover效果
+  &:before {
+    content: "";
+    position: absolute;
+    top: -1em;
+    background-color: rgba(0, 0, 0, 0.01);
+    z-index: -1;
+    width: 8em;
+    height: 2em;
+  }
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.ghost {
+  opacity: 0;
+}
+
+.el-divider {
+  margin: 0.1em 0;
 }
 </style>
