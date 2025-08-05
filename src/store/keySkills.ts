@@ -61,13 +61,13 @@ const useKeySkillStore = defineStore('keySkill', () => {
               job: false,
             },
           }
-          const key = skill.key
+          const skillKey = skill.key
           const instanceKey = `${player.id}-${id}`
           const src = idToSrc(id)
           const tts = skill.tts
           const line = skill.line
           const job = skill.job
-          result.push({ duration, id, owner, key, minLevel, recast1000ms, src, tts, line, job, instanceKey })
+          result.push({ duration, id, owner, skillKey, minLevel, recast1000ms, src, tts, line, job, instanceKey })
         }
       }
     }
@@ -79,8 +79,8 @@ const useKeySkillStore = defineStore('keySkill', () => {
     }
 
     result.sort((a, b) => {
-      const aIndex = loadedSkills.value.findIndex(v => v.key === a.key)
-      const bIndex = loadedSkills.value.findIndex(v => v.key === b.key)
+      const aIndex = loadedSkills.value.findIndex(v => v.key === a.skillKey)
+      const bIndex = loadedSkills.value.findIndex(v => v.key === b.skillKey)
       if (aIndex === bIndex) {
         return Util.enumSortMethod(a.owner.job, b.owner.job)
       }
@@ -94,7 +94,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
     if (!skill)
       return
 
-    const key = skill.key
+    const key = skill.instanceKey
     const { duration, recast1000ms: recast } = skill
 
     // 取消之前动画

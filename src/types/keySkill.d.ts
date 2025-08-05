@@ -16,7 +16,7 @@ interface KeySkill {
 
 interface KeySkillEntity {
   // 此key是对于技能来说的，而不是技能的具体实例
-  key: string
+  skillKey: string
   // 此key是对于某个具体玩家的技能实例来说的，同一个技能可能有多个实例
   instanceKey: string
   id: number

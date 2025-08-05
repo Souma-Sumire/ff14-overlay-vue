@@ -110,21 +110,21 @@ function showSettings() {
             <span
               class="duration"
               :class="[
-                storeKeySkill.skillStates[skill.key]?.isRecast
+                storeKeySkill.skillStates[skill.instanceKey]?.isRecast
                   ? 'cooldown'
                   : 'active',
               ]"
             >
-              {{ storeKeySkill.skillStates[skill.key]?.text || "" }}
+              {{ storeKeySkill.skillStates[skill.instanceKey]?.text || "" }}
             </span>
             <img :src="skill.src">
             <div
-              v-if="storeKeySkill.skillStates[skill.key]?.active"
-              :key="storeKeySkill.skillStates[skill.key]?.startTime || 0"
+              v-if="storeKeySkill.skillStates[skill.instanceKey]?.active"
+              :key="storeKeySkill.skillStates[skill.instanceKey]?.startTime || 0"
               class="cooldown-layer"
               :style="{
                 clipPath: `inset(${
-                  storeKeySkill.skillStates[skill.key]?.clipPercent ?? 0
+                  storeKeySkill.skillStates[skill.instanceKey]?.clipPercent ?? 0
                 }% 0 0 0)`,
               }"
             />
