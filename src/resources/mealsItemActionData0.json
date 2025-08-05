@@ -10071,5 +10071,45 @@
       }
     ],
     "Level": "740"
+  },
+  "694": {
+    "Name": "",
+    "ParamsValues": [
+      {
+        "Params": "制作力",
+        "Value": "21",
+        "Max": "80",
+        "Value{HQ}": "26",
+        "Max{HQ}": "100"
+      },
+      {
+        "Params": "加工精度",
+        "Value": "4",
+        "Max": "92",
+        "Value{HQ}": "5",
+        "Max{HQ}": "115"
+      }
+    ],
+    "Level": "750"
+  },
+  "695": {
+    "Name": "",
+    "ParamsValues": [
+      {
+        "Params": "获得力",
+        "Value": "6",
+        "Max": "150",
+        "Value{HQ}": "7",
+        "Max{HQ}": "188"
+      },
+      {
+        "Params": "鉴别力",
+        "Value": "2",
+        "Max": "77",
+        "Value{HQ}": "3",
+        "Max{HQ}": "97"
+      }
+    ],
+    "Level": "750"
   }
 }
