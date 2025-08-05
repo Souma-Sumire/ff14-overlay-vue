@@ -98,7 +98,7 @@ function showSettings() {
       <div class="skills-grid">
         <div
           v-for="skill in storeKeySkill.usedSkills"
-          :key="skill.key"
+          :key="skill.instanceKey"
           class="buff-container"
           :class="`line${skill.line}`"
           :style="{
@@ -242,7 +242,7 @@ img {
   height: 40px;
   z-index: 2;
   pointer-events: none;
-  background-color: rgba(0, 0, 0, 0.75);
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
 @for $i from 1 through 99 {

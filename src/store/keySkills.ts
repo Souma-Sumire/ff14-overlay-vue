@@ -61,12 +61,13 @@ const useKeySkillStore = defineStore('keySkill', () => {
               job: false,
             },
           }
-          const key = `${player.id}-${id}`
+          const key = skill.key
+          const instanceKey = `${player.id}-${id}`
           const src = idToSrc(id)
           const tts = skill.tts
           const line = skill.line
           const job = skill.job
-          result.push({ duration, id, owner, key, minLevel, recast1000ms, src, tts, line, job })
+          result.push({ duration, id, owner, key, minLevel, recast1000ms, src, tts, line, job, instanceKey })
         }
       }
     }
@@ -78,8 +79,8 @@ const useKeySkillStore = defineStore('keySkill', () => {
     }
 
     result.sort((a, b) => {
-      const aIndex = loadedSkills.value.findIndex(v => v.id === a.id)
-      const bIndex = loadedSkills.value.findIndex(v => v.id === b.id)
+      const aIndex = loadedSkills.value.findIndex(v => v.key === a.key)
+      const bIndex = loadedSkills.value.findIndex(v => v.key === b.key)
       if (aIndex === bIndex) {
         return Util.enumSortMethod(a.owner.job, b.owner.job)
       }
