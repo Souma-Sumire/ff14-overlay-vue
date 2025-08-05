@@ -156,6 +156,7 @@ onUnmounted(() => {
 })
 
 function testSolo() {
+  playerName.value = fakeParty.value[0]!.name
   state.party.length = 0
   state.party.push(fakeParty.value.find(v => v.name === playerName.value)!)
 }
