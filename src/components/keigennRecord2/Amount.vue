@@ -1,28 +1,12 @@
 <script setup lang="ts">
 import type { PerformanceType, RowVO } from '@/types/keigennRecord2'
-import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 import { isLethal } from '@/utils/keigennRecord2'
 
 const props = defineProps<{ row: RowVO }>()
-const store = useKeigennRecord2Store()
-const userOptions = store.userOptions
-
-const {
-  amount,
-  maxHp,
-  currentHp,
-  shield,
-  source,
-  target,
-  type,
-  keigenns,
-  effect,
-} = props.row
-
+const { amount, maxHp, currentHp, shield, source, type, keigenns, effect }
+  = props.row
 const shieldValue = Math.round((maxHp * +shield) / 100)
 const hpPercent = Math.round((currentHp / maxHp) * 100)
-const remainHp = currentHp - amount
-const remainPercent = Math.round((remainHp / maxHp) * 100)
 
 let damageReduction = 0
 // 即死、闪避
@@ -45,7 +29,8 @@ if (effect !== 'instant death' && effect !== 'dodge') {
   damageReduction = 1 - reductionMultiplier * flagMultiplier
 }
 
-const originalDamage = amount && Math.round((amount + shieldValue) / (1 - damageReduction)) || 0
+const originalDamage
+  = (amount && Math.round((amount + shieldValue) / (1 - damageReduction))) || 0
 const originalDamageDisplay = originalDamage.toLocaleString()
 const damageReductionDisplay = (damageReduction * 100).toFixed(2)
 const displayAmount = computed(() => amount.toLocaleString())
@@ -53,7 +38,9 @@ const damageTypeClass = type
 const isLethalHit = isLethal(props.row)
 const hint = (() => {
   const shieldText = shieldValue > 0 ? '有盾不准' : ''
-  const debuffText = keigenns.find(k => k.name.includes('受伤加重')) ? '不算易伤' : ''
+  const debuffText = keigenns.find(k => k.name.includes('受伤加重'))
+    ? '不算易伤'
+    : ''
   const parts = [shieldText, debuffText].filter(Boolean)
   return parts.length ? `（${parts.join('、')}）` : ''
 })()
@@ -89,7 +76,7 @@ const hint = (() => {
           倒推裸吃伤害:
           <span :class="damageTypeClass">{{ originalDamageDisplay }}</span>
         </li>
-        <li> {{ hint }}</li>
+        <li>{{ hint }}</li>
       </template>
     </ul>
   </el-popover>
