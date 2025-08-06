@@ -19,7 +19,7 @@ const dev = useDev()
 const demo = useDemo()
 
 const handlePartyChanged: EventMap['PartyChanged'] = (e) => {
-  storeKeySkill.party = e.party
+  storeKeySkill.party = e.party.filter(v => v.inParty)
 }
 
 const handleLogLine: EventMap['LogLine'] = (e) => {
