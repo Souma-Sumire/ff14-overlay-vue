@@ -7,7 +7,17 @@ const props = defineProps<{ row: RowVO }>()
 const store = useKeigennRecord2Store()
 const userOptions = store.userOptions
 
-const { amount, maxHp, currentHp, shield, source, target, type, keigenns, effect } = props.row
+const {
+  amount,
+  maxHp,
+  currentHp,
+  shield,
+  source,
+  target,
+  type,
+  keigenns,
+  effect,
+} = props.row
 
 const shieldValue = Math.round((maxHp * +shield) / 100)
 const hpPercent = Math.round((currentHp / maxHp) * 100)
@@ -39,7 +49,6 @@ const originalDamage = amount && Math.round((amount + shieldValue) / (1 - damage
 const originalDamageDisplay = originalDamage.toLocaleString()
 const damageReductionDisplay = (damageReduction * 100).toFixed(2)
 const displayAmount = computed(() => amount.toLocaleString())
-const displayTitle = computed(() => userOptions.actionCN ? props.row.actionCN : props.row.action)
 const damageTypeClass = type
 const isLethalHit = isLethal(props.row)
 const hint = (() => {
@@ -52,8 +61,11 @@ const hint = (() => {
 
 <template>
   <el-popover
-    append-to=".wrapper" :title="displayTitle" trigger="hover" :enterable="false" :hide-after="0"
-    :width="220"
+    append-to=".wrapper"
+    trigger="hover"
+    :enterable="false"
+    :hide-after="0"
+    :width="180"
   >
     <template #reference>
       <span class="amount">
@@ -65,17 +77,14 @@ const hint = (() => {
       </span>
     </template>
     <ul class="row-info">
-      <li>来源: {{ source }}</li>
-      <li>目标: {{ target }}</li>
-      <li>护盾: {{ shieldValue }} ({{ shield }}%)</li>
-      <li>血量: {{ currentHp }}/{{ maxHp }} ({{ hpPercent }}%)</li>
-      <li>
-        伤害: <span :class="damageTypeClass">{{ displayAmount }}</span>
-      </li>
-      <li>血量剩余: {{ remainHp }} ({{ remainPercent }}%)</li>
+      <li>伤害来源: {{ source }}</li>
+      <li>玩家护盾: {{ shield }}%</li>
+      <li>玩家血量: {{ hpPercent }}%</li>
       <template v-if="damageReduction < 1 && type !== 'dot'">
-        <hr class="divider">
-        <li>玩家减伤率: <strong>{{ damageReductionDisplay }}%</strong></li>
+        <el-divider />
+        <li>
+          玩家减伤率: <strong>{{ damageReductionDisplay }}%</strong>
+        </li>
         <li>
           倒推裸吃伤害:
           <span :class="damageTypeClass">{{ originalDamageDisplay }}</span>
@@ -124,5 +133,10 @@ const hint = (() => {
 // 致命伤害
 .lethal {
   border-bottom: 1px dashed red;
+}
+
+.el-divider {
+  padding: 0;
+  margin: 0.5em 0;
 }
 </style>
