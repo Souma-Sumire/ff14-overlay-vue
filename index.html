@@ -14,6 +14,15 @@
         }
       })();
     </script>
+    <script>
+      (function () {
+        var redirect = sessionStorage.redirect;
+        delete sessionStorage.redirect;
+        if (redirect && redirect != location.href) {
+          history.replaceState(null, null, redirect);
+        }
+      })();
+    </script>
     <script type="module" crossorigin src="/ff14-overlay-vue/assets/index.js"></script>
     <link rel="stylesheet" crossorigin href="/ff14-overlay-vue/assets/index.css">
   </head>
