@@ -430,13 +430,11 @@ body {
 .info-key {
   font-weight: 500;
   font-size: 13px;
-  color: #606266;
   white-space: nowrap;
 }
 
 .info-val {
   font-size: 13px;
-  color: #303133;
   font-family: monospace;
   word-break: break-all;
   text-align: right;

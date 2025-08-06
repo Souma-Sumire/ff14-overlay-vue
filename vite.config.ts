@@ -29,10 +29,9 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        hashCharacters: 'hex',
-        chunkFileNames: 'assets/[name]-[hash].js',
-        entryFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]',
+        chunkFileNames: 'assets/[name].js',
+        entryFileNames: 'assets/[name].js',
+        assetFileNames: 'assets/[name].[ext]',
       },
       onwarn(warning, warn) {
         if (
