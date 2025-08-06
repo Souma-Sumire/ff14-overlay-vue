@@ -21,9 +21,8 @@ const storePartySort = usePartySortStore()
 const mouseEnter = ref(false)
 const dev = useDev()
 const generator = new RandomPartyGenerator()
-const fakeParty = generator.party
 const state = reactive({
-  party: dev.value ? fakeParty.value.slice() : ([] as Player[]),
+  party: [] as Player[],
   partySorted: {
     tank: [] as Player[],
     healer: [] as Player[],
@@ -41,7 +40,7 @@ const roleAssignLocationNames: Record<Role, string[]> = {
   dps: [...createRPArr('D', 24)],
 }
 
-const playerName = ref(dev.value ? fakeParty.value[0]!.name : '')
+const playerName = ref('')
 
 function broadcast(): void {
   const rps = [
@@ -110,12 +109,14 @@ const eventHandlers: {
   partyChanged: (e) => {
     if (dev.value && e.party.length === 0)
       return
-
     state.party = e.party.filter(v => v.inParty)
+    sortParty()
   },
   changePrimaryPlayer: (e) => {
-    if (dev.value)
-      playerName.value = e.charName
+    if (dev.value) {
+      return
+    }
+    playerName.value = e.charName
   },
   broadcastMessage: (e) => {
     if (
@@ -132,16 +133,9 @@ const eventHandlers: {
 onMounted(() => {
   document.body.addEventListener('mouseenter', eventHandlers.mouseEnter)
   document.body.addEventListener('mouseleave', eventHandlers.mouseLeave)
-  addOverlayListener('PartyChanged', eventHandlers.partyChanged)
   addOverlayListener('ChangePrimaryPlayer', eventHandlers.changePrimaryPlayer)
+  addOverlayListener('PartyChanged', eventHandlers.partyChanged)
   addOverlayListener('BroadcastMessage', eventHandlers.broadcastMessage)
-  watch(
-    state.party,
-    () => {
-      sortParty()
-    },
-    { immediate: true },
-  )
 })
 
 onUnmounted(() => {
@@ -156,15 +150,15 @@ onUnmounted(() => {
 })
 
 function testSolo() {
-  playerName.value = fakeParty.value[0]!.name
-  state.party.length = 0
-  state.party.push(fakeParty.value.find(v => v.name === playerName.value)!)
+  playerName.value = generator.party.value[0]!.name
+  state.party = generator.party.value.filter(v => v.name === playerName.value)
+  sortParty()
 }
 
 function testParty() {
-  playerName.value = fakeParty.value[0]!.name
-  state.party.length = 0
-  state.party.push(...fakeParty.value)
+  playerName.value = generator.party.value[0]!.name
+  state.party = generator.party.value
+  sortParty()
 }
 
 function testShuffleParty() {
