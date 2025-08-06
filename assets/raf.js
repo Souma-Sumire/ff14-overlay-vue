@@ -1,1 +1,1 @@
-import{az as e}from"./index.js";const a=a=>e?window.requestAnimationFrame(a):setTimeout(a,16),i=a=>e?window.cancelAnimationFrame(a):clearTimeout(a);export{i as c,a as r};
+import{aa as a}from"./index.js";const e=e=>a?window.requestAnimationFrame(e):setTimeout(e,16),i=e=>a?window.cancelAnimationFrame(e):clearTimeout(e);export{i as c,e as r};
