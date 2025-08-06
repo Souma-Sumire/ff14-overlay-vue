@@ -5,6 +5,15 @@
     <link rel="icon" href="/ff14-overlay-vue/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title></title>
+    <script>
+      (function () {
+        if (location.hash && location.hash.startsWith('#/')) {
+          const newPath = location.pathname.replace(/\/$/, '') + location.hash.slice(1);
+          const query = location.search;
+          location.replace(newPath + query);
+        }
+      })();
+    </script>
     <script type="module" crossorigin src="/ff14-overlay-vue/assets/index.js"></script>
     <link rel="stylesheet" crossorigin href="/ff14-overlay-vue/assets/index.css">
   </head>
