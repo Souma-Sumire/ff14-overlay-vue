@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import type { KeySkill } from '@/types/keySkill'
 import { useKeySkillStore } from '@/store/keySkills'
 import { idToSrc } from '@/utils/dynamicValue'
 import Util from '@/utils/util'
 
 const props = defineProps<{
-  data: KeySkill[]
+  lang: 'chinese' | 'global'
 }>()
 
 const emit = defineEmits<{
@@ -14,6 +13,7 @@ const emit = defineEmits<{
 }>()
 
 const storeKeySKill = useKeySkillStore()
+const data = computed(() => storeKeySKill.keySkillsData[props.lang])
 
 const jobList = Object.freeze(Util.getBattleJobs())
 
@@ -28,7 +28,7 @@ const jobOptions = markRaw(
 const debouncedSrcMap = ref(new Map<string, string>())
 const timers: Record<string, number | undefined> = {}
 watch(
-  () => props.data.map(row => ({ key: row.key, id: row.id })),
+  () => data.value.map(row => ({ key: row.key, id: row.id })),
   (newList) => {
     newList.forEach(({ key, id }) => {
       // 清除旧定时器
@@ -48,7 +48,7 @@ watch(
 
 <template>
   <el-table
-    :data="props.data"
+    :data="data"
     border
     size="small"
     :row-key="(row) => row.key"
@@ -74,7 +74,7 @@ watch(
             link
             size="small"
             type="primary"
-            :disabled="$index === props.data.length - 1"
+            :disabled="$index === data.length - 1"
             class="arrow"
             @click="emit('move', $index, $index + 1)"
           >
@@ -96,7 +96,10 @@ watch(
     </el-table-column>
     <el-table-column label="预览" width="50" align="center">
       <template #default="{ row }">
-        <img :src="debouncedSrcMap.get(row.key) ?? idToSrc(row.id)" class="icon">
+        <img
+          :src="debouncedSrcMap.get(row.key) ?? idToSrc(row.id)"
+          class="icon"
+        >
       </template>
     </el-table-column>
 
@@ -110,11 +113,15 @@ watch(
       <template #header>
         <el-form>
           TTS
-          <el-switch v-model="storeKeySKill.enableTts[storeKeySKill.language]" size="small" />
+          <el-switch v-model="storeKeySKill.enableTts[lang]" size="small" />
         </el-form>
       </template>
       <template #default="{ row }">
-        <el-input v-model="row.tts" size="small" :disabled="!storeKeySKill.enableTts[storeKeySKill.language]" />
+        <el-input
+          v-model="row.tts"
+          size="small"
+          :disabled="!storeKeySKill.enableTts[lang]"
+        />
       </template>
     </el-table-column>
 

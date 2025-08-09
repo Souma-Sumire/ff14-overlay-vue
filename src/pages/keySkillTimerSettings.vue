@@ -306,18 +306,16 @@ function onMouseUp() {
       type="border-card"
       class="tabs"
     >
-      <el-tab-pane :label="tabLabels.chinese" name="chinese">
+      <el-tab-pane
+        v-for="lang in (Object.keys(tabLabels) as (keyof typeof tabLabels)[])"
+        :key="lang"
+        :label="tabLabels[lang]"
+        :name="lang"
+      >
         <KeySkillTimerSettingsTable
-          v-model:data="storeKeySkill.keySkillsData.chinese"
-          @delete="(key) => deleteSkill('chinese', key)"
-          @move="(from, to) => moveSkill('chinese', from, to)"
-        />
-      </el-tab-pane>
-      <el-tab-pane :label="tabLabels.global" name="global">
-        <KeySkillTimerSettingsTable
-          v-model:data="storeKeySkill.keySkillsData.global"
-          @delete="(key) => deleteSkill('global', key)"
-          @move="(from, to) => moveSkill('global', from, to)"
+          :lang="lang"
+          @delete="(key) => deleteSkill(lang, key)"
+          @move="(from, to) => moveSkill(lang, from, to)"
         />
       </el-tab-pane>
     </el-tabs>
