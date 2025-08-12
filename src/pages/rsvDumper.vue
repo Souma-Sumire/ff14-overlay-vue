@@ -62,7 +62,8 @@ const handleChange: UploadProps['onChange'] = async (uploadFile) => {
 
     unique.add(key)
 
-    const type = typeKeyMap[key.slice(-19) as keyof typeof typeKeyMap] || 'Unknown'
+    const type
+      = typeKeyMap[key.slice(-19) as keyof typeof typeKeyMap] || 'Unknown'
     const id = Number(key.match(/_rsv_(\d+)_/)?.[1])
 
     results.value.push({
@@ -78,7 +79,12 @@ function convertLogLineToBytes(hexStrings: string[]): Uint8Array {
   const bytes: number[] = []
   for (const hex of hexStrings) {
     const value = Number.parseInt(hex, 16) >>> 0
-    bytes.push(value & 0xFF, (value >> 8) & 0xFF, (value >> 16) & 0xFF, (value >> 24) & 0xFF)
+    bytes.push(
+      value & 0xFF,
+      (value >> 8) & 0xFF,
+      (value >> 16) & 0xFF,
+      (value >> 24) & 0xFF,
+    )
   }
   return new Uint8Array(bytes)
 }
@@ -103,30 +109,82 @@ function includesBytes(source: Uint8Array, search: Uint8Array): boolean {
 // 解析 RSV 字节数据，解码字符串和生成 HexDump
 function parseRsvBytes(bytes: Uint8Array) {
   return {
-    str1: decodeCString(bytes.slice(2)),
-    str2: decodeCString(bytes.slice(50)),
+    str1: decodeBytesSmart(bytes.slice(2)),
+    str2: decodeBytesSmart(bytes.slice(50)),
     hexDump: byteArrayToHex(bytes),
   }
 }
 
-// 解码 C 风格字符串（遇到 '\0' 截断）
-function decodeCString(bytes: Uint8Array): string {
+function decodeBytesSmart(bytes: Uint8Array): string {
   const zeroIndex = bytes.indexOf(0)
-  const realBytes = zeroIndex !== -1 ? bytes.slice(0, zeroIndex) : bytes
-  return new TextDecoder('utf-8').decode(realBytes)
+  const buffer = zeroIndex !== -1 ? bytes.slice(0, zeroIndex) : bytes
+
+  let out = ''
+  const decoder = new TextDecoder()
+  let normalRun: number[] = []
+  let hexRun: number[] = []
+
+  const flushNormalRun = () => {
+    if (normalRun.length) {
+      out += decoder.decode(Uint8Array.from(normalRun))
+      normalRun = []
+    }
+  }
+  const flushHexRun = () => {
+    if (hexRun.length) {
+      out += `<hex:${hexRun
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('')
+        .toUpperCase()}>`
+      hexRun = []
+    }
+  }
+
+  // 找正文起始（跳过0和不可打印）
+  let start = 0
+  for (; start < buffer.length; start++) {
+    const b = buffer[start]!
+    if (b !== 0 && b >= 0x20)
+      break
+  }
+  const trimmed = buffer.slice(start)
+
+  for (const b of trimmed) {
+    if (b === 0 || b <= 0x1F || b === 0x7F) {
+      flushNormalRun()
+      hexRun.push(b)
+    }
+    else {
+      flushHexRun()
+      normalRun.push(b)
+    }
+  }
+
+  flushNormalRun()
+  flushHexRun()
+
+  // 去除末尾纯00的hex标记
+  return out.replace(/(<hex:(00)+>)$/, '')
 }
 
 // 生成格式化的 HexDump 字符串
 function byteArrayToHex(bytes: Uint8Array, bytesPerLine = 16): string {
+  // 去除尾部连续的0
+  let end = bytes.length
+  while (end > 0 && bytes[end - 1] === 0) {
+    end--
+  }
+  const trimmed = bytes.slice(0, end)
+
   const hexChars = '0123456789ABCDEF'
   const lines: string[] = []
 
-  for (let i = 0; i < bytes.length; i += bytesPerLine) {
+  for (let i = 0; i < trimmed.length; i += bytesPerLine) {
     let hexPart = ''
     let asciiPart = ''
     for (let j = 0; j < bytesPerLine; j++) {
-      if (i + j < bytes.length) {
-        const b = bytes[i + j]!
+      if (i + j < trimmed.length) {
+        const b = trimmed[i + j]!
         hexPart += `${hexChars[b >> 4]}${hexChars[b & 15]} `
         asciiPart += b >= 32 && b < 127 ? String.fromCharCode(b) : '.'
       }
@@ -240,9 +298,9 @@ function saveResultsToFile() {
       width="50%"
       :append-to-body="true"
     >
-      <pre
-        class="overflow-auto rounded bg-black p-3 text-xs text-green-400"
-      >{{ currentHexDump }}</pre>
+      <pre class="overflow-auto rounded bg-black p-3 text-xs text-green-400">{{
+        currentHexDump
+      }}</pre>
     </el-dialog>
   </div>
 </template>
