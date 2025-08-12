@@ -132,7 +132,8 @@ function getZoneGameVersion(zoneId: ZoneIdType): GameVersion {
 }
 
 function getSrc(_gameVersion: GameVersion, id: string): string {
-  const result = `//souma.diemoe.net/m/${id.split('/')[0]}/${id.replace('/', '.')}.jpg`
+  const result = `https://v2.xivapi.com/api/asset/map/${id}`
+  // const result = `//souma.diemoe.net/m/${id.split('/')[0]}/${id.replace('/', '.')}.jpg`
   // const result = `//xivapi.com/m/${id.split('/')[0]}/${id.replace('/', '.')}.jpg`
   return result
 }

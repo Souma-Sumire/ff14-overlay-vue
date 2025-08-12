@@ -54,7 +54,7 @@ const selectExVersion = ref(exVersions[0])
         <div style="position:relative;user-select: none">
           <img
             :style="{ width: `${IMG_SHOW_SIZE}px` }"
-            :src="`https://xivapi.com/m/${map.id.split('/')[0]}/${map.id.replace('/', '.')}.jpg`"
+            :src="`https://v2.xivapi.com/api/asset/map/${map.id}`"
           >
           <article>
             <div
