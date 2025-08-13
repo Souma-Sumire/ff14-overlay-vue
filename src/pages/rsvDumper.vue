@@ -115,6 +115,12 @@ function parseRsvBytes(bytes: Uint8Array) {
   }
 }
 
+// function decodeCString(bytes: Uint8Array): string {
+//   const zeroIndex = bytes.indexOf(0)
+//   const realBytes = zeroIndex !== -1 ? bytes.slice(0, zeroIndex) : bytes
+//   return new TextDecoder('utf-8').decode(realBytes)
+// }
+
 function decodeBytesSmart(bytes: Uint8Array): string {
   const zeroIndex = bytes.indexOf(0)
   const buffer = zeroIndex !== -1 ? bytes.slice(0, zeroIndex) : bytes
