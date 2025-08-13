@@ -97,6 +97,7 @@ function handleJobListUpdate() {
         font-size:12px;
         height: 1.5em;
         box-shadow: 0 0 2px black;
+        z-index: 0;
       "
     >
       解除限制
