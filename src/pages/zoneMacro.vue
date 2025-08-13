@@ -8,6 +8,7 @@ import {
   Edit,
   Position,
 } from '@element-plus/icons-vue'
+import { useDev } from '@/composables/useDev'
 import { useWebSocket } from '@/composables/useWebSocket'
 import { defaultMacro } from '@/resources/macro'
 import zoneInfo from '@/resources/zoneInfo'
@@ -16,12 +17,14 @@ import ContentType from '../../cactbot/resources/content_type'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import 'github-markdown-css/github-markdown-light.css'
 
+const dev = useDev()
 const macroStore = useMacroStore()
 const hideOnStartup = useStorage('zoneMacroHideOnStartup', ref(false))
 if (hideOnStartup.value)
   macroStore.show = false
 
-useWebSocket({ allowClose: true, addWsParam: true })
+if (!dev.value)
+  useWebSocket({ allowClose: true, addWsParam: true })
 
 const contentTypeLabel: { type: number, label: string }[] = [
   { type: ContentType.UltimateRaids, label: '绝境战' },
@@ -56,14 +59,17 @@ const groupedZoneOptions = computed(() => {
       }
       return Number(a.id) - Number(b.id)
     })
-    .filter(v =>
-      (!v.name.en.startsWith('(')
-        && v.contentType
-        && showContentTypes.includes(v.contentType))
-      || macroStore.selectZone === v.id,
+    .filter(
+      v =>
+        (!v.name.en.startsWith('(')
+          && v.contentType
+          && showContentTypes.includes(v.contentType))
+        || macroStore.selectZone === v.id,
     )
     .forEach((v) => {
-      const label = contentTypeLabel.find(ct => ct.type === v.contentType)?.label ?? '临时'
+      const label
+        = contentTypeLabel.find(ct => ct.type === v.contentType)?.label
+          ?? '临时'
 
       if (groups[label] === undefined)
         groups[label] = []
@@ -88,14 +94,20 @@ onMounted(() => {
   watch(
     toRef(macroStore, 'selectZone'),
     () => {
-      const data = macroStore.data.zoneId[macroStore.selectZone]?.map((v) => {
-        const { Editable, ...r } = v
-        return r
-      }) || defaultMacro.zoneId[macroStore.selectZone] || []
+      const data
+        = macroStore.data.zoneId[macroStore.selectZone]?.map((v) => {
+          const { Editable, ...r } = v
+          return r
+        })
+        || defaultMacro.zoneId[macroStore.selectZone]
+        || []
 
       const userData = data.filter(v => v.Deletability)
       const nativeData = defaultMacro.zoneId[macroStore.selectZone] ?? []
-      macroStore.data.zoneId[macroStore.selectZone] = [...nativeData, ...userData]
+      macroStore.data.zoneId[macroStore.selectZone] = [
+        ...nativeData,
+        ...userData,
+      ]
     },
     { immediate: true },
   )
@@ -159,7 +171,9 @@ onMounted(() => {
       <el-space wrap alignment="flex-start" style="font-size: 12px">
         <!-- 每个宏卡片 -->
         <el-card
-          v-for="(macro, index) in macroStore.data.zoneId[macroStore.selectZone]"
+          v-for="(macro, index) in macroStore.data.zoneId[
+            macroStore.selectZone
+          ]"
           :key="index"
           shadow="hover"
           class="main-box-card"
@@ -167,8 +181,9 @@ onMounted(() => {
           <!-- 宏标题 -->
           <p
             v-show="!macro.Editable"
-
-            m-b-2 m-t-2 font-bold
+            m-b-2
+            m-t-2
+            font-bold
             v-html="macro.Name"
           />
           <el-input
@@ -259,9 +274,20 @@ onMounted(() => {
           <div v-if="'Place' in macro">
             <el-space v-show="macro.Editable">
               <el-table
-                :data="Object.entries(macro.Place).filter(v =>
-                  ['A', 'B', 'C', 'D', 'One', 'Two', 'Three', 'Four'].includes(v[0]),
-                )"
+                :data="
+                  Object.entries(macro.Place).filter((v) =>
+                    [
+                      'A',
+                      'B',
+                      'C',
+                      'D',
+                      'One',
+                      'Two',
+                      'Three',
+                      'Four',
+                    ].includes(v[0]),
+                  )
+                "
                 border
                 size="small"
               >
@@ -332,7 +358,11 @@ onMounted(() => {
 
             <!-- 显示标记组件 -->
             <el-space>
-              <ZoneMacroMarksDiv :macro="macro" />
+              <ZoneMacroMarksDiv
+                :key="JSON.stringify(macro.Place) + macro.Name + index"
+                :macro="macro"
+                :zone-id="macroStore.selectZone"
+              />
             </el-space>
 
             <!-- 标点按钮（非编辑） -->
@@ -402,19 +432,45 @@ onMounted(() => {
     <!-- 底部菜单区域 -->
     <div class="menu">
       <CommonThemeToggle storage-key="zone-macro-theme" />
-      <el-button type="success" size="small" w-20 @click="macroStore.newMacro()">
+      <el-button
+        type="success"
+        size="small"
+        w-20
+        @click="macroStore.newMacro()"
+      >
         新增宏
       </el-button>
-      <el-button type="success" size="small" w-20 color="#3375b9" @click="macroStore.newPlace()">
+      <el-button
+        type="success"
+        size="small"
+        w-20
+        color="#3375b9"
+        @click="macroStore.newPlace()"
+      >
         新增标点
       </el-button>
-      <el-button size="small" w-20 color="#BA5783" @click="macroStore.importPPJSON()">
+      <el-button
+        size="small"
+        w-20
+        color="#BA5783"
+        @click="macroStore.importPPJSON()"
+      >
         导入PP
       </el-button>
-      <el-button type="warning" size="small" w-20 @click="macroStore.resetZone()">
+      <el-button
+        type="warning"
+        size="small"
+        w-20
+        @click="macroStore.resetZone()"
+      >
         恢复本图
       </el-button>
-      <el-button type="danger" size="small" w-20 @click="macroStore.resetAllData()">
+      <el-button
+        type="danger"
+        size="small"
+        w-20
+        @click="macroStore.resetAllData()"
+      >
         恢复全部
       </el-button>
     </div>
@@ -488,9 +544,8 @@ body {
 }
 
 .main-box-card {
-
   // max-width: 500px;
-  >.el-card__body {
+  > .el-card__body {
     padding: 0.7em;
   }
 
@@ -534,45 +589,7 @@ body {
   // }
 }
 
-.markIcon {
-  position: absolute;
-  text-align: center;
-  transform: translate(-50%, -50%);
-  font-weight: bold;
-  color: white;
-  -webkit-text-stroke: 1px rgba(50, 50, 50, 1);
-  z-index: 10;
-  overflow: hidden;
-  padding: 5px;
-  user-select: none;
-}
-
-$color1: rgba(255, 0, 0, 1);
-$color2: rgba(255, 255, 0, 1);
-$color3: rgba(0, 0, 255, 1);
-$color4: rgba(128, 0, 128, 1);
-
-.markIconA,
-.markIconOne {
-  text-shadow: 0 0 1px $color1, 0 0 2px $color1, 0 0 3px $color1;
-}
-
-.markIconB,
-.markIconTwo {
-  text-shadow: 0 0 1px $color2, 0 0 2px $color2, 0 0 3px $color2;
-}
-
-.markIconC,
-.markIconThree {
-  text-shadow: 0 0 1px $color3, 0 0 2px $color3, 0 0 3px $color3;
-}
-
-.markIconD,
-.markIconFour {
-  text-shadow: 0 0 1px $color4, 0 0 2px $color4, 0 0 3px $color4;
-}
-
-.el-select-group__title{
+.el-select-group__title {
   font-weight: bold;
   font-size: 12px;
   color: var(--el-text-color-regular);
