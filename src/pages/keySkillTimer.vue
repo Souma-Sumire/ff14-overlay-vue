@@ -75,7 +75,7 @@ function triggerAll(speed: number) {
 }
 
 function showSettings() {
-  window.open('/#/keySkillTimerSettings', '_blank')
+  window.open(`${import.meta.env.BASE_URL}#/keySkillTimerSettings`, '_blank')
 }
 </script>
 
