@@ -3,8 +3,14 @@ import routes from '~pages'
 
 const router = createRouter({
   history: createWebHashHistory(),
-  // history: createWebHistory(),
-  routes,
+  routes: [
+    ...routes,
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'NotFound',
+      component: () => import('@/pages/404.vue'),
+    },
+  ],
 })
 
 const routeTitles = new Map(
@@ -18,15 +24,16 @@ const routeTitles = new Map(
     enmity: '开盾提醒',
     fflogsUploaderDownload: '今天 FFLogsUploader 更新了吗？',
     ffxivAxisWebFont: 'FFXIV Axis 字体',
+    food: '食物警察',
     hexcode: 'hexcode 简易工具',
     hunt: '有车吗？',
     instancedAreaInfo: '我 TM 现在在几线？',
     keigennRecord2: '减伤监控 2',
-    obs: 'OBS 自动录制',
     obs2: 'OBS 自动录制 2',
+    radar: '雷达',
     showBarrier: '盾值显示',
     startPages: '主页导航',
-    statusCompare: '版本新增状态一览',
+    test: '自助测试',
     time: '显示时间',
     timeline: '自定义时间轴',
     timelineHelp: '自定义时间轴帮助',
