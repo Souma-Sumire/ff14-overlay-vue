@@ -12,9 +12,24 @@ const props = defineProps({
   size: { type: Number, default: 256 },
 })
 
+const spMaps = [
+  '1252', // 力之塔
+  '1075', // 希拉狄哈水道
+  '1076', // 希拉狄哈水道 异闻
+  '1155', // 六根山
+  '1156', // 六根山 异闻
+  '1179', // 阿罗阿罗岛
+  '1180', // 阿罗阿罗岛 异闻
+]
+
 const macroStore = useMacroStore()
+const isSpMap = computed(() => {
+  return spMaps.includes(macroStore.selectZone)
+})
 
 const mapSrc = (() => {
+  if (isSpMap.value)
+    return undefined
   const id = macroStore.selectZone
   if (id === undefined)
     return undefined
@@ -37,18 +52,11 @@ function getPix(v: { X: number, Z: number }) {
   return getPixelCoordinates(worldXZCoordinates, mapOffset, sizeFactor)
 }
 
-function getOffset(v: { X: number, Z: number }) {
-  const pixelCoordinates = getPix(v)
-  return {
-    '--left': `${pixelCoordinates.x}px`,
-    '--top': `${pixelCoordinates.y}px`,
-  }
-}
-
 // 拖拽与缩放状态
 const offsetX = ref(0)
 const offsetY = ref(0)
 const scale = ref(0.75)
+const fontSize = ref(isSpMap.value ? 16 : 24)
 
 const minScale = 0.2
 const maxScale = 4
@@ -91,10 +99,17 @@ function onWheel(e: WheelEvent) {
   scale.value = newScale
 }
 
-const markFontSize = computed(() => {
-  const size = Math.max((1 / scale.value) * 24, 24)
-  return `${size}px`
-})
+function getOffset(v: { X: number, Z: number }) {
+  const pixelCoordinates = getPix(v)
+  const size = Math.max((1 / scale.value) * fontSize.value, fontSize.value)
+  return {
+    '--left': `${pixelCoordinates.x}px`,
+    '--top': `${pixelCoordinates.y}px`,
+    'font-size': `${size}px`,
+    'font-shadow': `${size / 12}px`,
+    '--text-stroke': `${fontSize.value / 36}px rgba(50, 50, 50, 1)`,
+  }
+}
 
 // 动态裁剪容器样式
 const cropStyle: ComputedRef<CSSProperties> = computed(() => ({
@@ -179,7 +194,7 @@ onMounted(() => {
       const maxInitialScale = 1
       newScale = Math.min(maxInitialScale, Math.max(minScale, newScale * 0.8))
 
-      scale.value = newScale
+      scale.value = isSpMap.value ? 2 : newScale
 
       // 根据中心点重新计算偏移量，考虑缩放和坐标系翻转
       offsetX.value
@@ -207,7 +222,7 @@ onMounted(() => {
         v-for="(v, k, i) in props.macro.Place"
         :key="i"
         :class="`markIcon markIcon${k}`"
-        :style="[getOffset(v), { fontSize: markFontSize }]"
+        :style="[getOffset(v)]"
       >
         {{ v.Active ? markMap[i] : "" }}
       </span>
@@ -241,9 +256,10 @@ onMounted(() => {
   transform: translate(-50%, -50%);
   font-weight: bold;
   color: white;
-  -webkit-text-stroke: 0.03em rgba(50, 50, 50, 1);
+  -webkit-text-stroke: var(--text-stroke);
   z-index: 10;
   padding: 0.5em;
+  font-size: var(--font-size, 24px);
 }
 
 $color1: rgba(255, 0, 0, 1);
@@ -253,21 +269,25 @@ $color4: rgba(128, 0, 128, 1);
 
 .markIconA,
 .markIconOne {
-  text-shadow: 0 0 1px $color1, 0 0 2px $color1, 0 0 3px $color1;
+  text-shadow: 0 0 var(--font-shadow, 1px) $color1, 0 0 2px $color1,
+    0 0 3px $color1;
 }
 
 .markIconB,
 .markIconTwo {
-  text-shadow: 0 0 1px $color2, 0 0 2px $color2, 0 0 3px $color2;
+  text-shadow: 0 0 var(--font-shadow, 1px) $color2, 0 0 2px $color2,
+    0 0 3px $color2;
 }
 
 .markIconC,
 .markIconThree {
-  text-shadow: 0 0 1px $color3, 0 0 2px $color3, 0 0 3px $color3;
+  text-shadow: 0 0 var(--font-shadow, 1px) $color3, 0 0 2px $color3,
+    0 0 3px $color3;
 }
 
 .markIconD,
 .markIconFour {
-  text-shadow: 0 0 1px $color4, 0 0 2px $color4, 0 0 3px $color4;
+  text-shadow: 0 0 var(--font-shadow, 1px) $color4, 0 0 2px $color4,
+    0 0 3px $color4;
 }
 </style>
