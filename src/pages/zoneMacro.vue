@@ -179,13 +179,7 @@ onMounted(() => {
           class="main-box-card"
         >
           <!-- 宏标题 -->
-          <p
-            v-show="!macro.Editable"
-            m-b-2
-            m-t-2
-            font-bold
-            v-html="macro.Name"
-          />
+          <p v-show="!macro.Editable" class="macro-title" v-html="macro.Name" />
           <el-input
             v-show="macro.Editable"
             v-model="macro.Name"
@@ -594,5 +588,13 @@ body {
   font-size: 12px;
   color: var(--el-text-color-regular);
   padding-left: 1em;
+}
+.macro-title {
+  margin: 0.2em;
+  font-weight: bold;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  max-width: 13em;
 }
 </style>
