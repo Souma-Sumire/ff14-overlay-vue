@@ -55,8 +55,8 @@ function getPix(v: { X: number, Z: number }) {
 // 拖拽与缩放状态
 const offsetX = ref(0)
 const offsetY = ref(0)
-const scale = ref(0.75)
-const fontSize = ref(isSpMap.value ? 16 : 24)
+const scale = ref(0)
+const fontSize = ref(isSpMap.value ? 12 : 18)
 
 const minScale = 0.2
 const maxScale = 4
@@ -106,8 +106,6 @@ function getOffset(v: { X: number, Z: number }) {
     '--left': `${pixelCoordinates.x}px`,
     '--top': `${pixelCoordinates.y}px`,
     '--font-size': `${size}px`,
-    '--font-shadow': `0.2em`,
-    '--text-stroke': `0.01em rgba(50, 50, 50, 0.5)`,
   }
 }
 
@@ -191,10 +189,9 @@ onMounted(() => {
       // 限制缩放范围
       let newScale = Math.min(scaleX, scaleY)
       // 初始化最大缩放限制
-      const maxInitialScale = 1
-      newScale = Math.min(maxInitialScale, Math.max(minScale, newScale * 0.4))
+      newScale = Math.min(1, Math.max(0.5, newScale * 0.3))
 
-      scale.value = isSpMap.value ? 1.5 : newScale
+      scale.value = isSpMap.value ? newScale * 2 : newScale
 
       // 根据中心点重新计算偏移量，考虑缩放和坐标系翻转
       offsetX.value
@@ -232,6 +229,7 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
+@use "sass:color";
 .crop-custom {
   user-select: none;
   pointer-events: none;
@@ -256,7 +254,6 @@ onMounted(() => {
   transform: translate(-50%, -50%);
   font-weight: bold;
   color: white;
-  -webkit-text-stroke: var(--text-stroke);
   z-index: 10;
   padding: 0.5em;
   font-size: var(--font-size, 24px);
@@ -269,26 +266,22 @@ $color4: rgba(128, 0, 128, 1);
 
 .markIconA,
 .markIconOne {
-  text-shadow: 0 0 var(--font-shadow, 1px) $color1, 0 0 2px $color1,
-    0 0 3px $color1;
+  text-shadow: 0 0 0.2em $color1, 0 0 0.3em $color1, 0 0 0.4em $color1;
 }
 
 .markIconB,
 .markIconTwo {
-  text-shadow: 0 0 var(--font-shadow, 1px) $color2, 0 0 2px $color2,
-    0 0 3px $color2;
-  -webkit-text-stroke: 0.03em darken($color2, 20%);
+  text-shadow: 0px 0px 0.15em rgb(125, 125, 125), 0 0 0.1em $color2,
+    0 0 0.2em $color2, 0 0 0.3em $color2;
 }
 
 .markIconC,
 .markIconThree {
-  text-shadow: 0 0 var(--font-shadow, 1px) $color3, 0 0 2px $color3,
-    0 0 3px $color3;
+  text-shadow: 0 0 0.2em $color3, 0 0 0.3em $color3, 0 0 0.4em $color3;
 }
 
 .markIconD,
 .markIconFour {
-  text-shadow: 0 0 var(--font-shadow, 1px) $color4, 0 0 2px $color4,
-    0 0 3px $color4;
+  text-shadow: 0 0 0.2em $color4, 0 0 0.3em $color4, 0 0 0.4em $color4;
 }
 </style>
