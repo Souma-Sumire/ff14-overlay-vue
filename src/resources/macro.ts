@@ -3879,7 +3879,72 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     1252: [
       {
-        Name: '老一',
+        Name: '[鸟区]老一(北CBA南123)',
+        Place: {
+          A: { X: 714, Z: 361, Y: -481, Active: true },
+          B: { X: 700, Z: 347, Y: -481, Active: true },
+          C: { X: 686, Z: 361, Y: -481, Active: true },
+          D: { X: 0, Y: 0, Z: 0, Active: false },
+          One: { X: 686, Z: 397, Y: -481, Active: true },
+          Two: { X: 700, Z: 411, Y: -481, Active: true },
+          Three: { X: 714, Z: 397, Y: -481, Active: true },
+          Four: { X: 0, Y: 0, Z: 0, Active: false },
+        },
+      },
+      {
+        Name: '[鸟区]老二(斜点【非】极限温度计位置)',
+        Place: {
+          A: { X: -800, Z: 344, Y: -876, Active: true },
+          B: { X: -785, Z: 360, Y: -876, Active: true },
+          C: { X: -800, Z: 375, Y: -876, Active: true },
+          D: { X: -815, Z: 360, Y: -876, Active: true },
+          One: { X: -810, Z: 349, Y: -876, Active: true },
+          Two: { X: -790, Z: 349, Y: -876, Active: true },
+          Three: { X: -790, Z: 372, Y: -876, Active: true },
+          Four: { X: -810, Z: 372, Y: -876, Active: true },
+        },
+      },
+      {
+        Name: '[鸟区]老二(斜点极限温度计位置)',
+        Place: {
+          A: { X: -800, Z: 345, Y: -876, Active: true },
+          B: { X: -785, Z: 360, Y: -876, Active: true },
+          C: { X: -800, Z: 375, Y: -876, Active: true },
+          D: { X: -815, Z: 360, Y: -876, Active: true },
+          One: { X: -807.778, Z: 352.222, Y: -876, Active: true },
+          Two: { X: -792.222, Z: 352.222, Y: -876, Active: true },
+          Three: { X: -792.222, Z: 367.778, Y: -876, Active: true },
+          Four: { X: -807.778, Z: 367.778, Y: -876, Active: true },
+        },
+      },
+      {
+        Name: '[鸟区]老三(标点为十字极限位置)',
+        Place: {
+          A: { X: -337.0, Y: -840.0, Z: 147.0, Active: true },
+          B: { X: -327.0, Y: -840.0, Z: 157.0, Active: true },
+          C: { X: -337.0, Y: -840.0, Z: 167.0, Active: true },
+          D: { X: -347.0, Y: -840.0, Z: 157.0, Active: true },
+          One: { X: -344.0, Y: -840.0, Z: 150.0, Active: true },
+          Two: { X: -330.0, Y: -840.0, Z: 150.0, Active: true },
+          Three: { X: -330.0, Y: -840.0, Z: 164.0, Active: true },
+          Four: { X: -344.0, Y: -840.0, Z: 164.0, Active: true },
+        },
+      },
+      {
+        Name: '[鸟区]老四(方块外ABC方块内123)(标点【中心】为钢铁月环范围)',
+        Place: {
+          A: { X: 700, Z: -684, Y: -476, Active: true },
+          B: { X: 709, Z: -669, Y: -476, Active: true },
+          C: { X: 691, Z: -669, Y: -476, Active: true },
+          D: { X: 0, Y: 0, Z: 0, Active: false },
+          One: { X: 683, Z: -684, Y: -476, Active: true },
+          Two: { X: 717, Z: -684, Y: -476, Active: true },
+          Three: { X: 700, Z: -654, Y: -476, Active: true },
+          Four: { X: 0, Y: 0, Z: 0, Active: false },
+        },
+      },
+      {
+        Name: '[国际服]老一',
         Place: {
           A: { X: 700.0, Y: -481.0, Z: 360.0, ID: 0, Active: true },
           B: { X: 0.0, Y: 0.0, Z: 0.0, ID: 1, Active: false },
@@ -3892,7 +3957,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         },
       },
       {
-        Name: '老二（温度计极限位置）',
+        Name: '[国际服]老二（温度计极限位置）',
         Place: {
           A: { X: -800.0, Y: -876.0, Z: 349.0, ID: 0, Active: true },
           B: { X: -789.0, Y: -876.0, Z: 360.0, ID: 1, Active: true },
@@ -3905,7 +3970,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         },
       },
       {
-        Name: '老三（标点外侧为十字范围边界）',
+        Name: '[国际服]老三（标点外侧为十字范围边界）',
         Place: {
           A: { X: -337.0, Y: -840.0, Z: 147.0, ID: 0, Active: true },
           B: { X: -327.0, Y: -840.0, Z: 157.0, ID: 1, Active: true },
@@ -3918,7 +3983,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         },
       },
       {
-        Name: '老四（标点中心为钢铁月环范围）',
+        Name: '[国际服]老四（标点中心为钢铁月环范围）',
         Place: {
           A: { X: 682.6795, Y: -476.0, Z: -684.0, ID: 0, Active: true },
           B: { X: 700.0, Y: -476.0, Z: -654.0, ID: 1, Active: true },
