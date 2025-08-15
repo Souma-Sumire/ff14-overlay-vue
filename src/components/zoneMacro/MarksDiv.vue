@@ -9,7 +9,7 @@ import { getPixelCoordinates, Vector2 } from '@/utils/mapCoordinates'
 
 const props = defineProps({
   macro: { type: Object as () => MacroInfoPlace, required: true },
-  size: { type: Number, default: 256 },
+  size: { type: Number, default: 180 },
 })
 
 const spMaps = [
@@ -105,9 +105,9 @@ function getOffset(v: { X: number, Z: number }) {
   return {
     '--left': `${pixelCoordinates.x}px`,
     '--top': `${pixelCoordinates.y}px`,
-    'font-size': `${size}px`,
-    'font-shadow': `${size / 12}px`,
-    '--text-stroke': `${fontSize.value / 36}px rgba(50, 50, 50, 1)`,
+    '--font-size': `${size}px`,
+    '--font-shadow': `0.2em`,
+    '--text-stroke': `0.01em rgba(50, 50, 50, 0.5)`,
   }
 }
 
@@ -192,9 +192,9 @@ onMounted(() => {
       let newScale = Math.min(scaleX, scaleY)
       // 初始化最大缩放限制
       const maxInitialScale = 1
-      newScale = Math.min(maxInitialScale, Math.max(minScale, newScale * 0.8))
+      newScale = Math.min(maxInitialScale, Math.max(minScale, newScale * 0.4))
 
-      scale.value = isSpMap.value ? 2 : newScale
+      scale.value = isSpMap.value ? 1.5 : newScale
 
       // 根据中心点重新计算偏移量，考虑缩放和坐标系翻转
       offsetX.value
@@ -277,6 +277,7 @@ $color4: rgba(128, 0, 128, 1);
 .markIconTwo {
   text-shadow: 0 0 var(--font-shadow, 1px) $color2, 0 0 2px $color2,
     0 0 3px $color2;
+  -webkit-text-stroke: 0.03em darken($color2, 20%);
 }
 
 .markIconC,
