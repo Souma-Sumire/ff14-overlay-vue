@@ -152,6 +152,9 @@ const eventHandlers: {
 }
 
 function tempNotification() {
+  if (!showNotification.value) {
+    return
+  }
   ElMessageBox.confirm(
     '即日起，本悬浮窗将只在高难副本中显示，平时隐藏。',
     '公告',
