@@ -21,6 +21,7 @@
     "element-plus": "^2.10.5",
     "github-markdown-css": "^5.8.1",
     "hover.css": "^2.3.2",
+    "idb": "^8.0.3",
     "json5": "^2.2.3",
     "lz-string": "^1.5.0",
     "moment": "^2.30.1",
