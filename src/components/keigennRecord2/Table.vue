@@ -24,6 +24,17 @@ const contextMenu = useTemplateRef<HTMLElement>('contextMenu')
 const actionFilter = ref('') // 技能筛选
 const targetFilter = ref('') // 目标筛选
 
+watch(
+  () => props.rows,
+  (rows) => {
+    if (rows.length === 0) {
+      actionFilter.value = ''
+      targetFilter.value = ''
+    }
+  },
+  { immediate: true },
+)
+
 const contextMenuVisible = ref(false)
 const contextMenuX = ref(0)
 const contextMenuY = ref(0)
