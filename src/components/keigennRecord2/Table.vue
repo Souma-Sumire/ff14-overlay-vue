@@ -46,15 +46,13 @@ onClickOutside(contextMenu, () => {
 
 const ALL_STR = '[取消筛选]'
 
-const actionOptions = computed(() => [
-  ALL_STR,
-  ...Array.from(new Set(props.rows.map(r => r[props.actionKey] as string))),
-])
+const actionOptions = computed(() => {
+  const actions = Array.from(new Set(props.rows.map(r => r[props.actionKey] as string)))
+  return [{ label: '[取消筛选]', value: '' }, ...actions.map(action => ({ label: action, value: action }))]
+})
 
 const targetOptions = computed(() => {
-  const players = Array.from(
-    new Map(props.rows.map(row => [row.target, row])).values(),
-  )
+  const players = Array.from(new Map(props.rows.map(row => [row.target, row])).values())
   return [
     { label: '[取消筛选]', value: '', job: -1 },
     ...players.map(row => ({
@@ -95,10 +93,8 @@ function filterByTarget() {
 
 const tableData = computed(() =>
   props.rows.filter((row) => {
-    const actionMatch
-      = !actionFilter.value || actionFilter.value === ALL_STR || row[props.actionKey] === actionFilter.value
-    const targetMatch
-      = !targetFilter.value || targetFilter.value === ALL_STR || row.target === targetFilter.value
+    const actionMatch = !actionFilter.value || actionFilter.value === ALL_STR || row[props.actionKey] === actionFilter.value
+    const targetMatch = !targetFilter.value || targetFilter.value === ALL_STR || row.target === targetFilter.value
     return actionMatch && targetMatch
   }),
 )
@@ -130,13 +126,9 @@ const columns = computed<Column[]>(() => [
             clearable: false,
             style: `width:4.5em`,
             teleported: false,
-            onChange: (v: string) =>
-              (actionFilter.value = v === ALL_STR ? '' : v),
+            onChange: (v: string) => (actionFilter.value = v === ALL_STR ? '' : v),
           },
-          () =>
-            actionOptions.value.map(a =>
-              h(ElOption, { key: a, label: a, value: a }),
-            ),
+          () => actionOptions.value.map(a => h(ElOption, { key: a.value, label: a.label, value: a.value })),
         ),
       ]),
     cellRenderer: ({ rowData }) => h('span', rowData[props.actionKey] ?? ''),
@@ -174,8 +166,7 @@ const columns = computed<Column[]>(() => [
             ),
         ),
       ]),
-    cellRenderer: ({ rowData }: { rowData: RowVO }) =>
-      h(Target, { row: rowData }),
+    cellRenderer: ({ rowData }: { rowData: RowVO }) => h(Target, { row: rowData }),
   },
   {
     key: 'amount',
@@ -184,8 +175,7 @@ const columns = computed<Column[]>(() => [
     width: 45,
     align: 'right' as const,
     class: 'col-amount',
-    cellRenderer: ({ rowData }: { rowData: RowVO }) =>
-      h(Amount, { row: rowData }),
+    cellRenderer: ({ rowData }: { rowData: RowVO }) => h(Amount, { row: rowData }),
   },
   {
     key: 'keigenns',
@@ -195,8 +185,7 @@ const columns = computed<Column[]>(() => [
     align: 'left' as const,
     flexGrow: 1,
     class: 'col-keigenns',
-    cellRenderer: ({ rowData }: { rowData: RowVO }) =>
-      h(StatusShow, { row: rowData }),
+    cellRenderer: ({ rowData }: { rowData: RowVO }) => h(StatusShow, { row: rowData }),
   },
 ])
 
@@ -204,28 +193,11 @@ let msgHdl: MessageHandler | null = null
 
 const rowEventHandlers = computed<RowEventHandlers>(() => ({
   onClick: ({ rowData }: { rowData: RowVO }) => {
-    const {
-      actionCN,
-      amount,
-      job,
-      keigenns,
-      time,
-      type,
-      effect,
-      currentHp,
-      maxHp,
-      shield,
-    } = rowData
+    const { actionCN, amount, job, keigenns, time, type, effect, currentHp, maxHp, shield } = rowData
     const sp = effect === 'damage done' ? '' : `,${translationFlags(effect)}`
-    const result = `${time} ${job} ${actionCN} ${amount.toLocaleString()}(${translationDamageType(type)}) 减伤:${keigenns.length === 0 && sp === ''
-      ? '无'
-      : keigenns
-        .map(k => (userOptions.statusCN ? k.name : k.effect))
-        .join(',') + sp
-    } HP:${currentHp}/${maxHp
-    }(${Math.round((currentHp / maxHp) * 100)}%)+盾:${Math.round(
-      (maxHp * +shield) / 100,
-    )}(${shield}%)`
+    const result = `${time} ${job} ${actionCN} ${amount.toLocaleString()}(${translationDamageType(type)}) 减伤:${
+      keigenns.length === 0 && sp === '' ? '无' : keigenns.map(k => (userOptions.statusCN ? k.name : k.effect)).join(',') + sp
+    } HP:${currentHp}/${maxHp}(${Math.round((currentHp / maxHp) * 100)}%)+盾:${Math.round((maxHp * +shield) / 100)}(${shield}%)`
     copyToClipboard(result)
       .then(() => {
         msgHdl?.close()
@@ -247,14 +219,19 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
   <el-auto-resizer style="height: 100%; width: 100%">
     <template #default="{ height, width }">
       <el-table-v2
-        header-class="keigenn-table-header" class="keigenn-table" :columns="columns" :data="tableData"
-        :width="width" :height="height" :row-height="28" :header-height="24" row-key="key" scrollbar-always-on
+        header-class="keigenn-table-header"
+        class="keigenn-table"
+        :columns="columns"
+        :data="tableData"
+        :width="width"
+        :height="height"
+        :row-height="28"
+        :header-height="24"
+        row-key="key"
+        scrollbar-always-on
         :row-event-handlers="rowEventHandlers"
       />
-      <div
-        v-if="contextMenuVisible" ref="contextMenu" class="context-menu"
-        :style="{ top: `${contextMenuY}px`, left: `${contextMenuX}px` }"
-      >
+      <div v-if="contextMenuVisible" ref="contextMenu" class="context-menu" :style="{ top: `${contextMenuY}px`, left: `${contextMenuX}px` }">
         <ul>
           <li @click="filterByAction">
             {{
@@ -264,11 +241,7 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
             }}
           </li>
           <li @click="filterByTarget">
-            {{
-              targetFilter === contextMenuRow?.target
-                ? `取消筛选 [${contextMenuRow?.job ?? "此职业"}]`
-                : `只看 [${contextMenuRow?.job ?? "此职业"}]`
-            }}
+            {{ targetFilter === contextMenuRow?.target ? `取消筛选 [${contextMenuRow?.job ?? "此职业"}]` : `只看 [${contextMenuRow?.job ?? "此职业"}]` }}
           </li>
         </ul>
       </div>
