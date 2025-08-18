@@ -8,7 +8,6 @@ import type {
 import { ElMessageBox } from 'element-plus'
 import { VueDraggable } from 'vue-draggable-plus'
 import { useDev } from '@/composables/useDev'
-import { useZone } from '@/composables/useZone'
 import { RandomPartyGenerator } from '@/mock/demoParty'
 import { usePartySortStore } from '@/store/partySort'
 import Util from '@/utils/util'
@@ -18,24 +17,6 @@ import {
   removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
 
-const { zoneType, zoneID } = useZone()
-const showTemplete = computed(() => {
-  // 中拉诺西亚（盛夏农庄）
-  if (zoneID.value === 134)
-    return true
-  // 零式、绝本、多变、未归类
-  switch (zoneType.value) {
-    case 'Savage':
-    case 'Ultimate':
-    case 'VCDungeonFinder':
-    case 'Default':
-      return true
-    default:
-      // TODO: 用户过渡期结束后删除本方法
-      tempNotification()
-      return false
-  }
-})
 const showNotification = useStorage('cactbotRuntime-showNotification', true)
 const usedRole: Role[] = ['tank', 'healer', 'dps'] as const
 const storePartySort = usePartySortStore()
@@ -225,12 +206,11 @@ function testShuffleParty() {
         <ul>
           <li>每次小队变化时，会按规则进行排序</li>
           <li>你可以上下拖拽玩家名称，临时调整</li>
-          <li>只有在高难本里时，才会显示界面。（盛夏农庄除外）</li>
         </ul>
       </span>
     </template>
     <div class="cactbot-runtime-container">
-      <main v-show="showTemplete">
+      <main>
         <div class="players" flex="~ nowrap gap-1">
           <div class="fixed-rp">
             <div
