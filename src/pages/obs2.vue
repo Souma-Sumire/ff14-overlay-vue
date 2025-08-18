@@ -448,14 +448,15 @@ onUnmounted(() => {
 
 <template>
   <CommonActWrapper>
-    <div class="obs-container">
-      <header>
+    <el-card class="obs-container">
+      <el-header>
         <h1>{{ t("OBS Auto Record V2") }}</h1>
         <div class="button-container">
           <CommonThemeToggle storage-key="obs-2-theme" />
           <CommonLanguageSwitcher />
         </div>
-      </header>
+      </el-header>
+
       <el-card v-if="!actReady || dev" class="act-not-ready-card">
         <template #header>
           <div class="card-header">
@@ -467,7 +468,7 @@ onUnmounted(() => {
         </div>
       </el-card>
 
-      <main v-if="actReady || dev">
+      <el-main v-if="actReady || dev">
         <!-- 连接表单 -->
         <el-card v-if="!obs.status.connected && !dev" class="connection-card">
           <template #header>
@@ -626,31 +627,16 @@ onUnmounted(() => {
             </el-table>
           </el-card>
         </div>
-      </main>
-    </div>
+      </el-main>
+    </el-card>
   </CommonActwrapper>
 </template>
 
 <style scoped lang="scss">
-:global(:-webkit-scrollbar) {
-  display: none;
-}
-
-.obs-container {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
 header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #dcdfe6;
-}
-
-h1 {
-  font-size: 24px;
 }
 
 .act-not-ready-card,
