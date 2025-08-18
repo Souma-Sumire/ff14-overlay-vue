@@ -77,7 +77,7 @@ const statusData: {
   friendly: {},
   enemy: {},
 }
-const db = useIndexedDB<Encounter>('souma', STORAGE_KEY)
+const db = useIndexedDB<Encounter>(STORAGE_KEY)
 
 function beforeHandle() {
   loading.value = true
@@ -437,7 +437,7 @@ async function loadStorage() {
     const loadData = await db.getAll()
     if (loadData.length) {
       data.value.length = 0
-      data.value.push(...loadData)
+      data.value.push(...loadData.reverse())
     }
   }
   catch (e) {

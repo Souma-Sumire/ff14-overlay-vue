@@ -1,56 +1,37 @@
 import type { IDBPDatabase } from 'idb'
 import { openDB } from 'idb'
 
+const DB_NAME = 'souma'
 let dbPromise: Promise<IDBPDatabase> | null = null
 
-export function useIndexedDB<T extends { key: string }>(
-  dbName: string = 'app-db',
-  storeName: string = 'data',
-) {
-  async function getDB(): Promise<IDBPDatabase> {
-    if (!dbPromise) {
-      dbPromise = openDB(dbName, 1, {
-        upgrade(db) {
-          if (!db.objectStoreNames.contains(storeName)) {
-            db.createObjectStore(storeName, { keyPath: 'key' })
-          }
-        },
-      })
-    }
-    return dbPromise
+async function getDB(storeName: string) {
+  if (!dbPromise) {
+    dbPromise = openDB(DB_NAME, 1, {
+      upgrade(db) {
+        if (!db.objectStoreNames.contains(storeName)) {
+          db.createObjectStore(storeName, { keyPath: 'key' })
+        }
+      },
+    })
   }
+  return dbPromise
+}
+
+export function useIndexedDB<T extends { key: string }>(storeName: string) {
+  const withDB = async <R>(fn: (db: IDBPDatabase) => Promise<R>) =>
+    fn(await getDB(storeName))
 
   return {
-    async getAll(): Promise<T[]> {
-      const db = await getDB()
-      return db.getAll(storeName)
-    },
-
-    async get(key: string): Promise<T | undefined> {
-      const db = await getDB()
-      return db.get(storeName, key)
-    },
-
-    async set(item: T): Promise<IDBValidKey> {
-      const db = await getDB()
-      return db.put(storeName, item)
-    },
-
-    async bulkSet(items: T[]): Promise<void> {
-      const db = await getDB()
-      const tx = db.transaction(storeName, 'readwrite')
-      items.forEach(item => tx.store.put(item))
-      await tx.done
-    },
-
-    async remove(key: string): Promise<void> {
-      const db = await getDB()
-      await db.delete(storeName, key)
-    },
-
-    async clear(): Promise<void> {
-      const db = await getDB()
-      await db.clear(storeName)
-    },
+    getAll: () => withDB(db => db.getAll(storeName)),
+    get: (key: string) => withDB(db => db.get(storeName, key)),
+    set: (item: T) => withDB(db => db.put(storeName, item)),
+    bulkSet: (items: T[]) =>
+      withDB(async (db) => {
+        const tx = db.transaction(storeName, 'readwrite')
+        for (const item of items) tx.store.put(item)
+        await tx.done
+      }),
+    remove: (key: string) => withDB(db => db.delete(storeName, key)),
+    clear: () => withDB(db => db.clear(storeName)),
   }
 }
