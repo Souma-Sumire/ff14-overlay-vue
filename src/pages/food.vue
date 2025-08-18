@@ -8,7 +8,7 @@ import Util from '@/utils/util'
 import NetRegexes from '../../cactbot/resources/netregexes'
 import { addOverlayListener, removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
-import mealsItemActionData0 from '../resources/mealsItemActionData0.json'
+import meals from '../resources/meals.json'
 
 const { zoneType } = useZone()
 const party: Ref<{ id: string, name: string, jobName: string }[]> = ref([])
@@ -65,7 +65,7 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
       const id = Number.parseInt(count, 16)
       const key = (id >= 10000 ? id - 10000 : id).toString()
       const data0
-        = mealsItemActionData0[key as keyof typeof mealsItemActionData0]
+        = meals[key as keyof typeof meals]
       effectData.set(matches.groups.targetId, {
         durationSeconds: Number.parseFloat(matches.groups.duration),
         expiredMillisecond:
