@@ -3892,6 +3892,19 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         },
       },
       {
+        Name: '[猪区]老一(321ABC)',
+        Place: {
+          A: { X: 691, Z: 397, Y: -481, Active: true },
+          B: { X: 700, Z: 406, Y: -481, Active: true },
+          C: { X: 709, Z: 397, Y: -481, Active: true },
+          D: { X: 0, Y: 0, Z: 0, Active: false },
+          One: { X: 709, Z: 360, Y: -481, Active: true },
+          Two: { X: 700, Z: 351, Y: -481, Active: true },
+          Three: { X: 691, Z: 361, Y: -481, Active: true },
+          Four: { X: 0, Y: 0, Z: 0, Active: false },
+        },
+      },
+      {
         Name: '[鸟区]老二(斜点【非】极限温度计位置)',
         Place: {
           A: { X: -800, Z: 344, Y: -876, Active: true },
@@ -3941,6 +3954,19 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
           Two: { X: 717, Z: -684, Y: -476, Active: true },
           Three: { X: 700, Z: -654, Y: -476, Active: true },
           Four: { X: 0, Y: 0, Z: 0, Active: false },
+        },
+      },
+      {
+        Name: '[猪区]老四',
+        Place: {
+          A: { X: 695, Z: -684, Y: -476, Active: true },
+          B: { X: 696, Z: -666, Y: -476, Active: true },
+          C: { X: 710, Z: -676, Y: -476, Active: true },
+          D: { X: 708, Z: -682, Y: -476, Active: true },
+          One: { X: 690, Z: -673, Y: -476, Active: true },
+          Two: { X: 705, Z: -666, Y: -476, Active: true },
+          Three: { X: 705, Z: -683, Y: -476, Active: true },
+          Four: { X: 726, Z: -678, Y: -476, Active: true },
         },
       },
       {
