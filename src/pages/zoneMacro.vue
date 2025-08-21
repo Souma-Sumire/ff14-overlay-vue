@@ -120,30 +120,10 @@ onMounted(() => {
     <el-header flex="~ wrap" height="auto" class="elheader">
       <!-- 位置与选择区域 -->
       <el-space>
-        <el-button
-          type="primary"
-          size="small"
-          :icon="Position"
-          @click="macroStore.positioning()"
-        />
-        <el-select
-          v-model="macroStore.selectZone"
-          size="small"
-          filterable
-          m-3px
-          style="width: 16rem"
-        >
-          <el-option-group
-            v-for="group in groupedZoneOptions"
-            :key="group.label"
-            :label="group.label"
-          >
-            <el-option
-              v-for="item in group.options"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
+        <el-button type="primary" size="small" :icon="Position" @click="macroStore.positioning()" />
+        <el-select v-model="macroStore.selectZone" size="small" filterable m-3px style="width: 16rem">
+          <el-option-group v-for="group in groupedZoneOptions" :key="group.label" :label="group.label">
+            <el-option v-for="item in group.options" :key="item.value" :label="item.label" :value="item.value" />
           </el-option-group>
         </el-select>
       </el-space>
@@ -152,13 +132,8 @@ onMounted(() => {
       <el-space>
         <el-button-group flex="~ ! wrap">
           <el-button
-            v-for="(entrance, index) in macroStore.fastEntrance"
-            :key="index"
-            bg
-            plain
-            color="rgb(24,34,44)"
-            size="small"
-            @click="macroStore.selectZone = entrance.value"
+            v-for="(entrance, index) in macroStore.fastEntrance" :key="index" bg plain color="rgb(24,34,44)"
+            size="small" @click="macroStore.selectZone = entrance.value"
           >
             {{ entrance.text }}
           </el-button>
@@ -173,69 +148,47 @@ onMounted(() => {
         <el-card
           v-for="(macro, index) in macroStore.data.zoneId[
             macroStore.selectZone
-          ]"
-          :key="index"
-          shadow="hover"
-          class="main-box-card"
+          ]" :key="index" shadow="hover" class="main-box-card"
         >
+          <div class="badge-group">
+            <span v-if="macro.Deletability" class="subtle-badge from-user">用户</span>
+            <span v-else class="subtle-badge from-native">内置</span>
+          </div>
           <!-- 宏标题 -->
           <p v-show="!macro.Editable" class="macro-title" v-html="macro.Name" />
           <el-input
-            v-show="macro.Editable"
-            v-model="macro.Name"
-            size="small"
-            placeholder="宏标题"
+            v-show="macro.Editable" v-model="macro.Name" size="small" placeholder="宏标题"
+            style="width: calc(100% - 2em)"
           />
 
           <!-- 宏文本 -->
           <div v-if="'Text' in macro">
             <article v-if="!macro.Editable">
-              <div
-                v-for="(m, o) in macro.Text?.split('\n')"
-                :key="o"
-                class="macroText"
-              >
+              <div v-for="(m, o) in macro.Text?.split('\n')" :key="o" class="macroText">
                 {{ m }}
               </div>
             </article>
             <el-input
-              v-show="macro.Editable"
-              v-model="macro.Text"
-              type="textarea"
-              size="small"
-              placeholder="宏文本"
-              wrap="off"
-              :autosize="{ minRows: 3 }"
-              style="width: 450px"
+              v-show="macro.Editable" v-model="macro.Text" type="textarea" size="small" placeholder="宏文本"
+              wrap="off" :autosize="{ minRows: 3 }" style="width: 450px;max-width: calc(100% - 2em);"
             />
 
             <!-- 非编辑状态按钮 -->
             <el-row
-              v-if="!macro.Editable"
-              class="buttonArea"
-              :style="{
+              v-if="!macro.Editable" class="buttonArea" :style="{
                 maxHeight: macro.Editable ? '100px' : null,
                 opacity: macro.Editable ? 1 : null,
               }"
             >
               <el-button
-                v-if="macro.Deletability"
-                :icon="Edit"
-                size="small"
+                v-if="macro.Deletability" :icon="Edit" size="small"
                 @click="macroStore.editMacroMacro(macro)"
               />
-              <el-button
-                :icon="ChatSquare"
-                type="info"
-                size="small"
-                @click="macroStore.sendMacroEcho(macro.Text)"
-              >
+              <el-button :icon="ChatSquare" type="info" size="small" @click="macroStore.sendMacroEcho(macro.Text)">
                 默语
               </el-button>
               <el-button
-                :icon="ChatDotSquare"
-                type="primary"
-                size="small"
+                :icon="ChatDotSquare" type="primary" size="small"
                 @click="macroStore.sendMacroParty(macro.Text)"
               >
                 小队
@@ -244,19 +197,11 @@ onMounted(() => {
 
             <!-- 编辑状态按钮 -->
             <el-row v-if="macro.Editable" class="buttonAreaEditing">
-              <el-button
-                type="success"
-                size="small"
-                :icon="Check"
-                @click="macroStore.submitMacroMacro(macro)"
-              >
+              <el-button type="success" size="small" :icon="Check" @click="macroStore.submitMacroMacro(macro)">
                 完成
               </el-button>
               <el-button
-                v-if="macro.Deletability"
-                type="danger"
-                size="small"
-                :icon="Delete"
+                v-if="macro.Deletability" type="danger" size="small" :icon="Delete"
                 @click="macroStore.deleteMacro(macro)"
               >
                 删除
@@ -268,31 +213,24 @@ onMounted(() => {
           <div v-if="'Place' in macro">
             <el-space v-show="macro.Editable">
               <el-table
-                :data="
-                  Object.entries(macro.Place).filter((v) =>
-                    [
-                      'A',
-                      'B',
-                      'C',
-                      'D',
-                      'One',
-                      'Two',
-                      'Three',
-                      'Four',
-                    ].includes(v[0]),
-                  )
-                "
-                border
-                size="small"
+                :data="Object.entries(macro.Place).filter((v) =>
+                  [
+                    'A',
+                    'B',
+                    'C',
+                    'D',
+                    'One',
+                    'Two',
+                    'Three',
+                    'Four',
+                  ].includes(v[0]),
+                )
+                " border size="small"
               >
                 <!-- 启用 -->
                 <el-table-column align="center" label="启用" width="50">
                   <template #default="scope">
-                    <el-switch
-                      v-model="scope.row[1].Active"
-                      size="small"
-                      style="--el-switch-on-color: #13ce66"
-                    />
+                    <el-switch v-model="scope.row[1].Active" size="small" style="--el-switch-on-color: #13ce66" />
                   </template>
                 </el-table-column>
 
@@ -304,46 +242,37 @@ onMounted(() => {
                 </el-table-column>
 
                 <!-- X轴 -->
-                <el-table-column align="center" label="X（左右）" width="140">
+                <el-table-column align="center" label="X（左右）" width="120">
                   <template #default="scope">
                     <span v-show="!macro.Editable">{{ scope.row.X }}</span>
                     <el-input-number
-                      v-show="macro.Editable"
-                      v-model="scope.row[1].X"
-                      :step="0.1"
-                      :precision="2"
-                      controls-position="right"
-                      size="small"
+                      v-show="macro.Editable" v-model="scope.row[1].X" :step="0.1" :precision="2"
+                      controls-position="right" size="small"
+                      style="width: 8.5em"
                     />
                   </template>
                 </el-table-column>
 
                 <!-- Z轴 -->
-                <el-table-column align="center" label="Z（上下）" width="140">
+                <el-table-column align="center" label="Z（上下）" width="120">
                   <template #default="scope">
                     <span v-show="!macro.Editable">{{ scope.row.Z }}</span>
                     <el-input-number
-                      v-show="macro.Editable"
-                      v-model="scope.row[1].Z"
-                      :step="0.1"
-                      :precision="2"
-                      controls-position="right"
-                      size="small"
+                      v-show="macro.Editable" v-model="scope.row[1].Z" :step="0.1" :precision="2"
+                      controls-position="right" size="small"
+                      style="width: 8.5em"
                     />
                   </template>
                 </el-table-column>
 
                 <!-- Y轴 -->
-                <el-table-column align="center" label="Y（高度）" width="140">
+                <el-table-column align="center" label="Y（高度）" width="120">
                   <template #default="scope">
                     <span v-show="!macro.Editable">{{ scope.row.Y }}</span>
                     <el-input-number
-                      v-show="macro.Editable"
-                      v-model="scope.row[1].Y"
-                      :step="0.1"
-                      :precision="2"
-                      controls-position="right"
-                      size="small"
+                      v-show="macro.Editable" v-model="scope.row[1].Y" :step="0.1" :precision="2"
+                      controls-position="right" size="small"
+                      style="width: 8.5em"
                     />
                   </template>
                 </el-table-column>
@@ -353,66 +282,38 @@ onMounted(() => {
             <!-- 显示标记组件 -->
             <el-space>
               <ZoneMacroMarksDiv
-                :key="JSON.stringify(macro.Place) + macro.Name + index"
-                :macro="macro"
+                :key="JSON.stringify(macro.Place) + macro.Name + index" :macro="macro"
                 :zone-id="macroStore.selectZone"
               />
             </el-space>
 
             <!-- 标点按钮（非编辑） -->
             <el-row
-              v-if="!macro.Editable"
-              class="buttonArea"
-              :style="{
+              v-if="!macro.Editable" class="buttonArea" :style="{
                 maxHeight: macro.Editable ? '100px' : null,
                 opacity: macro.Editable ? 1 : null,
               }"
             >
-              <el-button
-                type="primary"
-                size="small"
-                @click="macroStore.doLocalWayMark(macro.Place)"
-              >
+              <el-button type="primary" size="small" @click="macroStore.doLocalWayMark(macro.Place)">
                 本地
               </el-button>
-              <el-button
-                type="primary"
-                size="small"
-                @click="macroStore.doPartyWayMark(macro.Place)"
-              >
+              <el-button type="primary" size="small" @click="macroStore.doPartyWayMark(macro.Place)">
                 公开
               </el-button>
+              <el-button :icon="CopyDocument" size="small" class="export" @click="macroStore.exportWaymarksJson(macro)" />
               <el-button
-                :icon="CopyDocument"
-                size="small"
-                class="export"
-                @click="macroStore.exportWaymarksJson(macro)"
-              >
-                复制
-              </el-button>
-              <el-button
-                v-if="macro.Deletability"
-                :icon="Edit"
-                size="small"
+                v-if="macro.Deletability" :icon="Edit" size="small"
                 @click="macroStore.editMacroPlace(macro)"
               />
             </el-row>
 
             <!-- 标点按钮（编辑） -->
             <el-row v-if="macro.Editable" class="buttonAreaEditing">
-              <el-button
-                type="success"
-                size="small"
-                :icon="Check"
-                @click="macroStore.submitMacroPlace(macro)"
-              >
+              <el-button type="success" size="small" :icon="Check" @click="macroStore.submitMacroPlace(macro)">
                 完成
               </el-button>
               <el-button
-                v-if="macro.Deletability"
-                type="danger"
-                size="small"
-                :icon="Delete"
+                v-if="macro.Deletability" type="danger" size="small" :icon="Delete"
                 @click="macroStore.deleteMacro(macro)"
               >
                 删除
@@ -426,45 +327,19 @@ onMounted(() => {
     <!-- 底部菜单区域 -->
     <div class="menu">
       <CommonThemeToggle storage-key="zone-macro-theme" />
-      <el-button
-        type="success"
-        size="small"
-        w-20
-        @click="macroStore.newMacro()"
-      >
+      <el-button type="success" size="small" w-20 @click="macroStore.newMacro()">
         新增宏
       </el-button>
-      <el-button
-        type="success"
-        size="small"
-        w-20
-        color="#3375b9"
-        @click="macroStore.newPlace()"
-      >
+      <el-button type="success" size="small" w-20 color="#3375b9" @click="macroStore.newPlace()">
         新增标点
       </el-button>
-      <el-button
-        size="small"
-        w-20
-        color="#BA5783"
-        @click="macroStore.importPPJSON()"
-      >
+      <el-button size="small" w-20 color="#BA5783" @click="macroStore.importPPJSON()">
         导入PP
       </el-button>
-      <el-button
-        type="warning"
-        size="small"
-        w-20
-        @click="macroStore.resetZone()"
-      >
+      <el-button type="warning" size="small" w-20 @click="macroStore.resetZone()">
         恢复本图
       </el-button>
-      <el-button
-        type="danger"
-        size="small"
-        w-20
-        @click="macroStore.resetAllData()"
-      >
+      <el-button type="danger" size="small" w-20 @click="macroStore.resetAllData()">
         恢复全部
       </el-button>
     </div>
@@ -538,8 +413,10 @@ body {
 }
 
 .main-box-card {
+  position: relative;
+
   // max-width: 500px;
-  > .el-card__body {
+  >.el-card__body {
     padding: 0.7em;
   }
 
@@ -560,6 +437,9 @@ body {
     overflow: hidden;
     opacity: 0.5;
     transition: all 0.1s ease-in-out;
+    >.el-button{
+      margin: 0.1em;
+    }
   }
 
   &:hover {
@@ -589,6 +469,7 @@ body {
   color: var(--el-text-color-regular);
   padding-left: 1em;
 }
+
 .macro-title {
   margin: 0.2em;
   font-weight: bold;
@@ -596,5 +477,38 @@ body {
   word-break: break-word;
   white-space: normal;
   max-width: 13em;
+}
+
+.badge-group {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+}
+
+.subtle-badge {
+  user-select: none;
+  pointer-events: none;
+  padding: 1px 3px;
+  font-size: 9px;
+  line-height: 1;
+  white-space: nowrap;
+  border-radius: 999px;
+  border: 1px solid;
+  background-color: var(--el-bg-color);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+
+  &.from-user {
+    background-color: #13ce66;
+    border-color: #13ce66;
+    color: #fff;
+  }
+
+  &.from-native {
+    background-color: #975b00;
+    border-color: #975b00;
+    color: #fff;
+    filter: grayscale(20%);
+    opacity: 0.8;
+  }
 }
 </style>
