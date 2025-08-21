@@ -168,7 +168,7 @@ const useMacroStore = defineStore('macro', {
         const json = Object.assign(this.blankWaymark, safeParseJson(value))
         this.newPlace(json)
         ElMessage.success('导入成功')
-      })
+      }, () => {})
     },
     deleteMacro(macro: MacroInfoMacro | MacroInfoPlace): void {
       if (
