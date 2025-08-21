@@ -247,8 +247,7 @@ onMounted(() => {
                     <span v-show="!macro.Editable">{{ scope.row.X }}</span>
                     <el-input-number
                       v-show="macro.Editable" v-model="scope.row[1].X" :step="0.1" :precision="2"
-                      controls-position="right" size="small"
-                      style="width: 8.5em"
+                      controls-position="right" size="small" style="width: 8.5em"
                     />
                   </template>
                 </el-table-column>
@@ -259,8 +258,7 @@ onMounted(() => {
                     <span v-show="!macro.Editable">{{ scope.row.Z }}</span>
                     <el-input-number
                       v-show="macro.Editable" v-model="scope.row[1].Z" :step="0.1" :precision="2"
-                      controls-position="right" size="small"
-                      style="width: 8.5em"
+                      controls-position="right" size="small" style="width: 8.5em"
                     />
                   </template>
                 </el-table-column>
@@ -271,8 +269,7 @@ onMounted(() => {
                     <span v-show="!macro.Editable">{{ scope.row.Y }}</span>
                     <el-input-number
                       v-show="macro.Editable" v-model="scope.row[1].Y" :step="0.1" :precision="2"
-                      controls-position="right" size="small"
-                      style="width: 8.5em"
+                      controls-position="right" size="small" style="width: 8.5em"
                     />
                   </template>
                 </el-table-column>
@@ -300,7 +297,10 @@ onMounted(() => {
               <el-button type="primary" size="small" @click="macroStore.doPartyWayMark(macro.Place)">
                 公开
               </el-button>
-              <el-button :icon="CopyDocument" size="small" class="export" @click="macroStore.exportWaymarksJson(macro)" />
+              <el-button
+                :icon="CopyDocument" size="small" class="export"
+                @click="macroStore.exportWaymarksJson(macro)"
+              />
               <el-button
                 v-if="macro.Deletability" :icon="Edit" size="small"
                 @click="macroStore.editMacroPlace(macro)"
@@ -437,7 +437,8 @@ body {
     overflow: hidden;
     opacity: 0.5;
     transition: all 0.1s ease-in-out;
-    >.el-button{
+
+    >.el-button {
       margin: 0.1em;
     }
   }
