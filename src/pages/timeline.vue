@@ -140,7 +140,7 @@ function handleLogEvent(e: { detail: { logs: string[] } }) {
       startTimeline(Number.parseInt(regex?.groups?.cd || '0'))
     }
     else if (
-      /^.{14} Director 21:.{8}:4000000F/.test(log)
+      /^.{14} Director 21:.{8}:400000(?:0F|10|03)/.test(log)
       || /^.{14} ChatLog 00:0038::end$/.test(log)
     ) {
       // 团灭
