@@ -43,10 +43,14 @@ function tickUpdateDuration() {
   const now = Date.now()
   let needUpdate = false
 
-  for (const [_, food] of effectData) {
+  for (const [key, food] of effectData) {
     const remaining = Math.floor((food.expiredMillisecond - now) / 1000)
-
-    if (food.durationSeconds !== remaining) {
+    if (remaining < 0) {
+      // 食物过期了，但由于某种情况没有收到losesEffect，手动删除
+      effectData.delete(key)
+      needUpdate = true
+    }
+    else if (food.durationSeconds !== remaining) {
       food.durationSeconds = remaining
       needUpdate = true
     }
