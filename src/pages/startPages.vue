@@ -46,11 +46,12 @@ opacity: 不透明度，默认1`,
     isNew: true,
   },
   {
-    title: '[ACT悬浮窗] 读条汉化',
+    title: '[ACT悬浮窗] 我 TM 现在在几线？',
     type: '悬浮窗',
-    path: 'castingToChinese',
-    comment: '更多自定义功能见悬浮窗设置（取消锁定后显示）。',
-    src: 'castingToChinese.webp',
+    path: 'instancedAreaInfo',
+    src: 'instancedAreaInfo.webp',
+    comment: '显示你当前在几线 / 新月岛显示编号',
+    isNew: true,
   },
   {
     title: '[ACT悬浮窗] 食物警察',
@@ -166,10 +167,11 @@ showSettings: 显示排序设置与人名，默认1，即显示，使用之前�
 `,
   },
   {
-    title: '[ACT悬浮窗] 我 TM 现在在几线？',
+    title: '[ACT悬浮窗] 读条汉化',
     type: '悬浮窗',
-    path: 'instancedAreaInfo',
-    comment: '显示你当前在几线。',
+    path: 'castingToChinese',
+    comment: '更多自定义功能见悬浮窗设置（取消锁定后显示）。',
+    src: 'castingToChinese.webp',
   },
   {
     title: '[ACT悬浮窗] OBS 自动录制 2',
@@ -241,28 +243,15 @@ const tableDataWithSrc = tableData.map((item) => {
             </div>
           </template>
           <div class="contact-info">
-            <el-link
-              href="https://github.com/Souma-Sumire"
-              target="_blank"
-              type="primary"
-            >
+            <el-link href="https://github.com/Souma-Sumire" target="_blank" type="primary">
               Github
             </el-link>
-            <el-link
-              href="https://space.bilibili.com/1443740"
-              target="_blank"
-              type="primary"
-            >
+            <el-link href="https://space.bilibili.com/1443740" target="_blank" type="primary">
               Bilibili
             </el-link>
             <span class="qq-group">
               <a target="_blank" href="https://qm.qq.com/q/yOQQhcaITK">
-                <img
-                  border="0"
-                  src="//pub.idqqimg.com/wpa/images/group.png"
-                  alt="艾欧泽亚不是法外之地"
-                  title="艾欧泽亚不是法外之地"
-                >
+                <img border="0" src="//pub.idqqimg.com/wpa/images/group.png" alt="艾欧泽亚不是法外之地" title="艾欧泽亚不是法外之地">
               </a>
             </span>
             <span class="warning-text">其余账号均为山寨，请勿相信任何信息</span>
@@ -270,52 +259,25 @@ const tableDataWithSrc = tableData.map((item) => {
         </el-card>
 
         <div class="masonry">
-          <div
-            v-for="item in tableDataWithSrc"
-            :key="item.title"
-            class="masonry-item"
-          >
-            <el-card
-              shadow="hover"
-              class="menu-card"
-              :body-style="{ padding: '10px' }"
-            >
+          <div v-for="item in tableDataWithSrc" :key="item.title" class="masonry-item">
+            <el-card shadow="hover" class="menu-card" :body-style="{ padding: '10px' }">
               <div class="card-header-row">
                 <div class="badge-group">
                   <span v-if="item.isNew" class="subtle-badge floating new">✨ 新</span>
-                  <span
-                    v-if="item.isRecommended"
-                    class="subtle-badge floating recommended"
-                  >🔥 推荐</span>
+                  <span v-if="item.isRecommended" class="subtle-badge floating recommended">🔥 推荐</span>
                 </div>
-                <router-link
-                  v-if="!item.path.startsWith('http')"
-                  :to="item.path"
-                  class="card-title card-link"
-                >
+                <router-link v-if="!item.path.startsWith('http')" :to="item.path" class="card-title card-link">
                   {{ item.title }}
                 </router-link>
-                <a
-                  v-else
-                  :href="item.path"
-                  target="_blank"
-                  class="card-title card-link"
-                >
+                <a v-else :href="item.path" target="_blank" class="card-title card-link">
                   {{ item.title }}
                 </a>
               </div>
 
               <div class="card-comment" v-html="item.comment" />
               <el-image
-                v-if="item.src"
-                :src="item.src"
-                fit="contain"
-                lazy
-                class="card-image"
-                :preview-src-list="[item.src]"
-                preview-teleported
-                hide-on-click-modal
-                :style="{
+                v-if="item.src" :src="item.src" fit="contain" lazy class="card-image"
+                :preview-src-list="[item.src]" preview-teleported hide-on-click-modal :style="{
                   height: item.imageHeihgt ? `${item.imageHeihgt}px` : 'auto',
                 }"
               />
