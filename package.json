@@ -7,12 +7,12 @@
     "dev": "vite",
     "tsc": "tsc --noEmit",
     "github-build": "vite build",
-    "build": "npm run submodule && npm run cts && vite build",
+    "build": "npm run submodule && npm run tsx && vite build",
     "preview": "vite preview",
     "submodule": "git submodule update --remote",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "cts": "npx tsx scripts/all.ts"
+    "tsx": "npx tsx scripts/all.ts"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
