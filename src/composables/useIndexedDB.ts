@@ -22,16 +22,16 @@ export function useIndexedDB<T extends { key: string }>(storeName: string) {
     fn(await getDB(storeName))
 
   return {
-    getAll: () => withDB(db => db.getAll(storeName)),
-    get: (key: string) => withDB(db => db.get(storeName, key)),
-    set: (item: T) => withDB(db => db.put(storeName, item)),
+    getAll: () => withDB((db) => db.getAll(storeName)),
+    get: (key: string) => withDB((db) => db.get(storeName, key)),
+    set: (item: T) => withDB((db) => db.put(storeName, item)),
     bulkSet: (items: T[]) =>
       withDB(async (db) => {
         const tx = db.transaction(storeName, 'readwrite')
         for (const item of items) tx.store.put(item)
         await tx.done
       }),
-    remove: (key: string) => withDB(db => db.delete(storeName, key)),
-    clear: () => withDB(db => db.clear(storeName)),
+    remove: (key: string) => withDB((db) => db.delete(storeName, key)),
+    clear: () => withDB((db) => db.clear(storeName)),
   }
 }

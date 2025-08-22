@@ -4,7 +4,11 @@ const _STATUS = STATUS as unknown as Record<string, [string, number, number]>
 
 for (const key in STATUS) {
   const element = STATUS[key as keyof typeof STATUS]
-  _STATUS[key] = [element[0]!, Number.parseInt(element[1]!), Number.parseInt(element[2]!)]
+  _STATUS[key] = [
+    element[0]!,
+    Number.parseInt(element[1]!),
+    Number.parseInt(element[2]!),
+  ]
 }
 
 export function completeIcon(icon: number): string {
@@ -21,11 +25,11 @@ export function completeIcon(icon: number): string {
 
 export function stackUrl(url: string, stack: number) {
   return stack > 1 && stack <= 16
-    ? url.substring(0, 7)
-    + (
-      Array.from({ length: 6 }).join('0')
-      + (Number.parseInt(url.substring(7)) + stack - 1)
-    ).slice(-6)
+    ? url.substring(0, 7) +
+        (
+          Array.from({ length: 6 }).join('0') +
+          (Number.parseInt(url.substring(7)) + stack - 1)
+        ).slice(-6)
     : url
 }
 // A: =B5&": ["""&C5&""", "&E5&"],"

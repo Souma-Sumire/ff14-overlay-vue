@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const params = new URLSearchParams(window.location.href.split('?')[1])
 
 const api = params.get('api')
@@ -9,7 +10,7 @@ const siteList = {
 
 export const hostCache = new Map()
 
-export const site: { first: string, second: string } = {
+export const site: { first: string; second: string } = {
   first: `https://${api?.toLowerCase() === 'xivapi' ? siteList.xivapi : siteList.cafe}`,
   second: `https://${api?.toLowerCase() === 'xivapi' ? siteList.cafe : siteList.xivapi}`,
 }
@@ -46,8 +47,7 @@ export async function parseAction(
     const result = await requestPromise(urls, { mode: 'cors' })
     hostCache.set(actionId, result)
     return result
-  }
-  catch (error) {
+  } catch (error) {
     console.error(`Failed to parse action: ${error}`)
     return Promise.resolve({
       ActionCategoryTargetID: 0,
@@ -103,15 +103,12 @@ async function requestPromise(
 ): Promise<any> {
   const _options = Object.assign({ cache: 'force-cache' }, options)
   for (const url of urls) {
-    try {
-      const response = await timeoutPromise(fetch(url, _options), 3000)
-      if (response.ok) {
-        const json = await response.json()
-        const host = new URL(url).host
-        return { ...json, Host: host }
-      }
+    const response = await timeoutPromise(fetch(url, _options), 3000)
+    if (response.ok) {
+      const json = await response.json()
+      const host = new URL(url).host
+      return { ...json, Host: host }
     }
-    catch {}
   }
   throw new Error('All fetch attempts failed.')
 }
@@ -128,18 +125,14 @@ export function getImgSrc(src: string): string {
 export function handleImgError(event: Event) {
   const target = event.target as HTMLImageElement
   const path = target.src.match(/(?<=\.\w+)\/.+$/)?.[0]
-  if (!path || target.src === '')
-    return
+  if (!path || target.src === '') return
   if (/pictomancer\.png$/.test(target.src)) {
     target.src = '//souma.diemoe.net/resources/img/pictomancer.png'
-  }
-  else if (/viper\.png$/.test(target.src)) {
+  } else if (/viper\.png$/.test(target.src)) {
     target.src = '//souma.diemoe.net/resources/img/viper.png'
-  }
-  else if (target.src.includes(site.first)) {
+  } else if (target.src.includes(site.first)) {
     target.src = target.src.replace(site.first, site.second)
-  }
-  else {
+  } else {
     target.src = ''
   }
   imgCache.set(path, target.src)

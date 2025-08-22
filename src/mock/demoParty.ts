@@ -75,7 +75,10 @@ class RandomPartyGenerator {
    * 随机生成新队伍
    * @param roleCount 队伍构成，默认tank:2, healer:2, dps:4
    */
-  shuffle(roleCount: Partial<Record<Role, number>> = defaultRoleCount, options: { includeBaseJob?: boolean } = { includeBaseJob: false }) {
+  shuffle(
+    roleCount: Partial<Record<Role, number>> = defaultRoleCount,
+    options: { includeBaseJob?: boolean } = { includeBaseJob: false },
+  ) {
     const count = { ...defaultRoleCount, ...roleCount }
     const result: Party[] = []
     const usedParty = fullParty.filter((member) => {
@@ -92,8 +95,7 @@ class RandomPartyGenerator {
         return Util.jobToRole(job) === role
       })
 
-      if (candidates.length === 0)
-        continue
+      if (candidates.length === 0) continue
 
       for (let i = 0; i < total; i++) {
         const random = pickRandom(candidates)

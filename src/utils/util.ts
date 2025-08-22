@@ -165,7 +165,7 @@ const jobEnumOrder = [
 
 const nameToFullName: Record<
   Job,
-  { en: string, ja: string, cn: string, simple1: string, simple2: string }
+  { en: string; ja: string; cn: string; simple1: string; simple2: string }
 > = {
   NONE: {
     en: 'Adventurer',
@@ -582,7 +582,7 @@ const Util = {
   getBattleJobs: (): readonly Job[] => battleJobs,
   getBattleJobs2: (): readonly Job[] => battleJobs2,
   getBattleJobs3: (): readonly Job[] =>
-    battleJobs.filter(v => !baseJob.includes(v)),
+    battleJobs.filter((v) => !baseJob.includes(v)),
   jobToFullName: (job: Job) => {
     return nameToFullName[job]
   },

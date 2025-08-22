@@ -56,7 +56,9 @@ export function useWebSocket(
       }),
     ])
       .then(() => {
-        timer && clearTimeout(timer)
+        if (timer) {
+          clearTimeout(timer)
+        }
         if (window.location.href.includes('OVERLAY_WS')) {
           wsConnected.value = true
           useType.value = 'websocket'
@@ -92,8 +94,7 @@ export function useWebSocket(
         },
       ).catch(() => {
         userIgnoredWarning.value = true
-        if (timer)
-          clearInterval(timer)
+        if (timer) clearInterval(timer)
       })
     }
   }
@@ -113,8 +114,7 @@ export function useWebSocket(
     watch(wsConnected, (value) => {
       if (value) {
         ElMessageBox.close()
-      }
-      else {
+      } else {
         handleDisconnection()
       }
     })

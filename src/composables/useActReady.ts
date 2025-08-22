@@ -18,8 +18,7 @@ export function useActReady() {
         resolve()
       })
       setTimeout(() => {
-        if (!actReady.value)
-          checkAct()
+        if (!actReady.value) checkAct()
       }, 3000)
     })
   }

@@ -1,52 +1,46 @@
-type DamageEffect
-  = | 'dodge' // 闪避
-    | 'damage done' // 击中
-    | 'blocked damage' // 格挡
-    | 'parried damage' // 招架
-    | 'instant death' // 即死
-    | 'heal' // 治疗
-    | 'crit heal' // 暴击治疗
+type DamageEffect =
+  | 'dodge' // 闪避
+  | 'damage done' // 击中
+  | 'blocked damage' // 格挡
+  | 'parried damage' // 招架
+  | 'instant death' // 即死
+  | 'heal' // 治疗
+  | 'crit heal' // 暴击治疗
 
-type DamageProperties
-  = | 'damage' // 普通
-    | 'crit damage' // 暴击
-    | 'direct hit damage' // 直击
-    | 'crit direct hit damage' // 直暴;
+type DamageProperties =
+  | 'damage' // 普通
+  | 'crit damage' // 暴击
+  | 'direct hit damage' // 直击
+  | 'crit direct hit damage' // 直暴;
 
-type DamageType
-  = | 'physics' // 物理
-    | 'magic' // 魔法
-    | 'darkness' // 暗黑;
-    | 'dot'
+type DamageType =
+  | 'physics' // 物理
+  | 'magic' // 魔法
+  | 'darkness' // 暗黑;
+  | 'dot'
 
-function translationFlags(
-  typeString: DamageEffect,
-): string {
+function translationFlags(typeString: DamageEffect): string {
   return {
-    'dodge': '闪避',
+    dodge: '闪避',
     'damage done': '击中',
     'blocked damage': '格挡',
     'parried damage': '招架',
     'instant death': '即死',
-    'heal': '治疗',
+    heal: '治疗',
     'crit heal': '暴击治疗',
   }[typeString]
 }
 
-function translationDamageProperties(
-  str: DamageProperties,
-) {
+function translationDamageProperties(str: DamageProperties) {
   return {
-    'damage': '普通',
+    damage: '普通',
     'crit damage': '暴击',
     'direct hit damage': '直击',
     'crit direct hit damage': '直暴',
   }[str]
 }
 
-function translationDamageType(
-  str: DamageType,
-) {
+function translationDamageType(str: DamageType) {
   return {
     physics: '物理',
     magic: '魔法',
@@ -170,11 +164,9 @@ function processAbilityLine(splitLine: string[]) {
 }
 
 function UnscrambleDamage(field?: string): number {
-  if (field === undefined)
-    return 0
+  if (field === undefined) return 0
   const len = field.length
-  if (len <= 4)
-    return 0
+  if (len <= 4) return 0
   // Get the left two bytes as damage.
   let damage = Number.parseInt(field.slice(0, len - 4), 16)
   // Check for third byte == 0x40.

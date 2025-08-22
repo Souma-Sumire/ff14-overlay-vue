@@ -7,11 +7,9 @@ function copyToClipboard(text: string): Promise<void> {
     try {
       document.execCommand('copy')
       resolve()
-    }
-    catch (err) {
+    } catch (err) {
       reject(err)
-    }
-    finally {
+    } finally {
       document.body.removeChild(textarea)
     }
   })
@@ -43,7 +41,8 @@ function copyImage(src: string): Promise<void> {
       document.body.removeChild(div)
       selection.removeAllRanges()
 
-      ok ? resolve() : reject(new Error('execCommand copy 失败'))
+      if (ok) resolve()
+      else reject(new Error('execCommand copy 失败'))
     }
 
     img.onerror = () => reject(new Error('图片加载失败'))

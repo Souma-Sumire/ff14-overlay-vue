@@ -43,9 +43,16 @@ app.config.errorHandler = (err: unknown) => {
 }
 
 // 未捕获的Promise错误处理
-window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
-  handleError(event.reason instanceof Error ? event.reason : new Error(String(event.reason)))
-})
+window.addEventListener(
+  'unhandledrejection',
+  (event: PromiseRejectionEvent) => {
+    handleError(
+      event.reason instanceof Error
+        ? event.reason
+        : new Error(String(event.reason)),
+    )
+  },
+)
 
 app.use(router)
 app.use(head)

@@ -4,9 +4,9 @@ export interface Food {
   name: string
   hq: boolean
   params: {
-    'Params': string
-    'Value': string
-    'Max': string
+    Params: string
+    Value: string
+    Max: string
     'Value{HQ}': string
     'Max{HQ}': string
   }[]

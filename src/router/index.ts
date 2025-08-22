@@ -42,15 +42,14 @@ const routeTitles = new Map(
   }),
 )
 for (const route of router.getRoutes()) {
-  route.meta.title
-    = routeTitles.get(route.name?.toString() ?? '') ?? route.name
+  route.meta.title = routeTitles.get(route.name?.toString() ?? '') ?? route.name
 }
 
 router.afterEach((to, from) => {
   document.title = to.meta.title?.toString() ?? ''
   if (
-    (from.name === 'startPages' && to.name !== 'startPages')
-    || (to.name === 'startPages' && from.name && from.name !== 'startPages')
+    (from.name === 'startPages' && to.name !== 'startPages') ||
+    (to.name === 'startPages' && from.name && from.name !== 'startPages')
   ) {
     window.location.reload()
   }

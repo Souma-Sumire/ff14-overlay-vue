@@ -6,7 +6,12 @@ import { copyToClipboard } from '@/utils/clipboard'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import { getMapIDByTerritoryType } from '../resources/contentFinderCondition'
 import zoneInfo from '../resources/zoneInfo'
-import { doInsertPreset, doQueueActions, doTextCommand, doWayMarks } from '../utils/postNamazu'
+import {
+  doInsertPreset,
+  doQueueActions,
+  doTextCommand,
+  doWayMarks,
+} from '../utils/postNamazu'
 import { defaultMacro } from './../resources/macro'
 
 let partyLen = 0
@@ -22,15 +27,13 @@ function safeParseJson(input: string) {
   try {
     // 尝试直接解析
     return JSON.parse(input)
-  }
-  catch (e) {
+  } catch (e) {
     // 解析失败，再尝试移除尾逗号后重新解析
     try {
       void e
       const cleaned = input.replace(/,(\s*[}\]])/g, '$1')
       return JSON.parse(cleaned)
-    }
-    catch (e) {
+    } catch (e) {
       void e
       // 两次都失败就说明真的是非法 JSON
       throw new Error(`无法解析 JSON 数据`)
@@ -52,8 +55,8 @@ function getZoneIDByZoneName(ZoneName: string) {
     for (const lang in zone.name) {
       const zoneName = zone.name[lang as keyof typeof zone.name]
       if (
-        zoneName?.toUpperCase() === ZoneName.toUpperCase()
-        || zoneName === ZoneName.replaceAll(/[()]/g, '')
+        zoneName?.toUpperCase() === ZoneName.toUpperCase() ||
+        zoneName === ZoneName.replaceAll(/[()]/g, '')
       ) {
         return zoneId
       }
@@ -145,7 +148,7 @@ const useMacroStore = defineStore('macro', {
         })
       }
     },
-    newPlace(place?: (WayMarkObj & { Name?: string, MapID?: number })) {
+    newPlace(place?: WayMarkObj & { Name?: string; MapID?: number }) {
       const selectZoneId = Number(this.selectZone)
       if (this.data.zoneId[selectZoneId] === undefined)
         this.data.zoneId[selectZoneId] = []
@@ -164,30 +167,31 @@ const useMacroStore = defineStore('macro', {
         cancelButtonText: '取消',
         inputPattern: /^(\{.*\})$/,
         inputErrorMessage: '无效的格式',
-      }).then(async ({ value }) => {
-        const json = Object.assign(this.blankWaymark, safeParseJson(value))
-        this.newPlace(json)
-        ElMessage.success('导入成功')
-      }, () => {})
+      }).then(
+        async ({ value }) => {
+          const json = Object.assign(this.blankWaymark, safeParseJson(value))
+          this.newPlace(json)
+          ElMessage.success('导入成功')
+        },
+        () => {},
+      )
     },
     deleteMacro(macro: MacroInfoMacro | MacroInfoPlace): void {
       if (
-        ('Text' in macro && (macro?.Text ?? '').length <= 5)
-        || ('Place' in macro
-          && macro.Place.A.Active === false
-          && macro.Place.B.Active === false
-          && macro.Place.C.Active === false
-          && macro.Place.D.Active === false
-          && macro.Place.One.Active === false
-          && macro.Place.Two.Active === false
-          && macro.Place.Three.Active === false
-          && macro.Place.Four.Active === false)
+        ('Text' in macro && (macro?.Text ?? '').length <= 5) ||
+        ('Place' in macro &&
+          macro.Place.A.Active === false &&
+          macro.Place.B.Active === false &&
+          macro.Place.C.Active === false &&
+          macro.Place.D.Active === false &&
+          macro.Place.One.Active === false &&
+          macro.Place.Two.Active === false &&
+          macro.Place.Three.Active === false &&
+          macro.Place.Four.Active === false)
       ) {
         const index = this.data.zoneId[this.selectZone]!.indexOf(macro)
-        if (index > -1)
-          this.data.zoneId[this.selectZone]!.splice(index, 1)
-      }
-      else {
+        if (index > -1) this.data.zoneId[this.selectZone]!.splice(index, 1)
+      } else {
         ElMessageBox.confirm('确定要删除吗?', '警告', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
@@ -195,8 +199,7 @@ const useMacroStore = defineStore('macro', {
         })
           .then(() => {
             const index = this.data.zoneId[this.selectZone]!.indexOf(macro)
-            if (index > -1)
-              this.data.zoneId[this.selectZone]!.splice(index, 1)
+            if (index > -1) this.data.zoneId[this.selectZone]!.splice(index, 1)
           })
           .catch(() => {})
       }
@@ -248,10 +251,10 @@ const useMacroStore = defineStore('macro', {
         title: '选择插槽',
         message: () =>
           h(ElInputNumber, {
-            'modelValue': slotIndex.value,
-            'min': 1,
-            'max': 30,
-            'size': 'large',
+            modelValue: slotIndex.value,
+            min: 1,
+            max: 30,
+            size: 'large',
             'onUpdate:modelValue': (val) => {
               slotIndex.value = val
             },

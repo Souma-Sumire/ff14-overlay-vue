@@ -12,8 +12,12 @@ function useDemo() {
   onMounted(() => {
     listeners++
     if (!initialized) {
-      demo.value = document.getElementById('unlocked')?.style?.display === 'flex'
-      document.addEventListener('onOverlayStateUpdate', handleOverlayStateUpdate)
+      demo.value =
+        document.getElementById('unlocked')?.style?.display === 'flex'
+      document.addEventListener(
+        'onOverlayStateUpdate',
+        handleOverlayStateUpdate,
+      )
       initialized = true
     }
   })
@@ -21,7 +25,10 @@ function useDemo() {
   onUnmounted(() => {
     listeners--
     if (listeners <= 0 && initialized) {
-      document.removeEventListener('onOverlayStateUpdate', handleOverlayStateUpdate)
+      document.removeEventListener(
+        'onOverlayStateUpdate',
+        handleOverlayStateUpdate,
+      )
       initialized = false
     }
   })

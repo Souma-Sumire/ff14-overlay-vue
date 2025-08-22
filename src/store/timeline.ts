@@ -96,16 +96,12 @@ export const useTimelineStore = defineStore('timeline', {
   getters: {},
   actions: {
     normalizeJobConditions(timeline: ITimeline) {
-      if (!timeline.condition.jobs) {
-        timeline.condition.jobs = [(timeline.condition as any).job]
-        Reflect.deleteProperty(timeline.condition, 'job')
-      }
       timeline.condition.jobs.sort(
         (a, b) => this.jobList.indexOf(a) - this.jobList.indexOf(b),
       )
       if (
-        timeline.condition.jobs[0]
-        && Util.iconToJobEnum(timeline.condition.jobs[0] as FFIcon)
+        timeline.condition.jobs[0] &&
+        Util.iconToJobEnum(timeline.condition.jobs[0] as FFIcon)
       ) {
         timeline.condition.jobs[0] = Util.jobEnumToJob(
           Util.iconToJobEnum(timeline.condition.jobs[0] as FFIcon),
@@ -126,21 +122,21 @@ export const useTimelineStore = defineStore('timeline', {
       ElMessage.success('新建时间轴成功')
       // 如果严谨点应该还要比较create 但重复的demo选错又能怎么样呢
       const result = this.allTimelines.findIndex(
-        t =>
-          t.timeline === rawTimeline
-          && t.name === title
-          && JSON.stringify(t.condition) === JSON.stringify(condition)
-          && t.codeFight === codeFight,
+        (t) =>
+          t.timeline === rawTimeline &&
+          t.name === title &&
+          JSON.stringify(t.condition) === JSON.stringify(condition) &&
+          t.codeFight === codeFight,
       )
       return result
     },
     getTimeline(playerState: ITimelineCondition): ITimeline[] {
       return this.allTimelines.filter((t) => {
         return (
-          (t.condition.zoneId === '0'
-            || t.condition.zoneId === playerState.zoneId)
-          && (t.condition.jobs.includes('NONE')
-            || t.condition.jobs.includes(playerState.jobs[0]!))
+          (t.condition.zoneId === '0' ||
+            t.condition.zoneId === playerState.zoneId) &&
+          (t.condition.jobs.includes('NONE') ||
+            t.condition.jobs.includes(playerState.jobs[0]!))
         )
       })
     },
@@ -156,8 +152,7 @@ export const useTimelineStore = defineStore('timeline', {
             filters: this.filters,
           }),
         )
-      }
-      catch (e) {
+      } catch (e) {
         console.error('Failed to save timeline settings:', e)
         ElMessage.error('保存时间轴设置失败')
       }
@@ -180,8 +175,7 @@ export const useTimelineStore = defineStore('timeline', {
           })
           this.sortTimelines()
         }
-      }
-      catch (e) {
+      } catch (e) {
         console.error('Failed to load timeline settings:', e)
         ElMessage.error('加载时间轴设置失败')
       }
@@ -199,9 +193,9 @@ export const useTimelineStore = defineStore('timeline', {
         if (nameDiff !== 0) {
           return nameDiff
         }
-        const jobDiff
-          = Util.jobToJobEnum(a.condition.jobs[0]!)
-            - Util.jobToJobEnum(b.condition.jobs[0]!)
+        const jobDiff =
+          Util.jobToJobEnum(a.condition.jobs[0]!) -
+          Util.jobToJobEnum(b.condition.jobs[0]!)
         if (jobDiff !== 0) {
           return jobDiff
         }
@@ -232,8 +226,9 @@ export function parseAction(text: string) {
 }
 
 const syncRegex = new RegExp(
-  `(?:[^#]*?\\s)?(?<netRegexType>${Object.keys(logDefinitions).join('|')
-  })\\s*(?<netRegex>\\{.*\\})(?<args>\\s.*)?$`,
+  `(?:[^#]*?\\s)?(?<netRegexType>${Object.keys(logDefinitions).join(
+    '|',
+  )})\\s*(?<netRegex>\\{.*\\})(?<args>\\s.*)?$`,
 )
 
 const regexStr = {
@@ -263,37 +258,43 @@ export async function parseTimeline(
     const windowAfter = match[0].match(
       /(?<=window ?[-:：\d.]+,)[-:：\d.]+/,
     )?.[0]
-    const tts = match[0].match(/ tts ?["'“”](?<tts>[^"'“”]+)["'“”]/)?.groups?.tts
+    const tts = match[0].match(/ tts ?["'“”](?<tts>[^"'“”]+)["'“”]/)?.groups
+      ?.tts
     const ttsSim = / tts(?: |$)/.test(match[0])
       ? Array.from(parseAction(match.groups?.action ?? ''))
-          .map(item => item?.groups?.name)
+          .map((item) => item?.groups?.name)
           .filter(Boolean)
           .join(', ')
       : undefined
     const cactbotSync = syncRegex.exec(match[0])?.groups
     const cactbotRegexType = cactbotSync?.netRegexType
-    let params: any = {}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let params = {} as any
     try {
       params = JSON5.parse(cactbotSync?.netRegex ?? '{}')
-    }
-    catch (e) {
-      ElMessage.error({ type: 'error', message: `“${match[0] ?? ''}”解析失败：${e}` })
+    } catch (e) {
+      ElMessage.error({
+        type: 'error',
+        message: `“${match[0] ?? ''}”解析失败：${e}`,
+      })
       break
     }
     Reflect.deleteProperty(params, 'source')
     if (cactbotRegexType) {
       try {
-        const key = regexStr[cactbotRegexType as keyof typeof regexStr] ?? cactbotRegexType.toLowerCase() as keyof typeof Regexes
+        const key =
+          regexStr[cactbotRegexType as keyof typeof regexStr] ??
+          (cactbotRegexType.toLowerCase() as keyof typeof Regexes)
         onceSync = / once/.test(match[0]) || params.once
         Reflect.deleteProperty(params, 'once')
-        const regex = Regexes[key as keyof typeof Regexes] as (params: any) => RegExp
+        const regex = Regexes[key as keyof typeof Regexes] as (
+          params: unknown,
+        ) => RegExp
         sync = regex({ ...params, capture: false })
-      }
-      catch (e) {
+      } catch (e) {
         console.error(`Failed to parse ${cactbotRegexType} regex:`, e)
       }
-    }
-    else {
+    } else {
       sync = normalSync ? new RegExp(normalSync) : undefined
       onceSync = normalOnce
     }
@@ -309,7 +310,7 @@ export async function parseTimeline(
       windowBefore: Number.parseFloat(windowBefore || windowAfter || '2.5'),
       windowAfter: Number.parseFloat(windowAfter || windowBefore || '2.5'),
       jump: jump ? Number.parseFloat(jump) : undefined,
-      tts: sync ? undefined : (tts || ttsSim),
+      tts: sync ? undefined : tts || ttsSim,
     })
   }
   total.sort((a, b) => a.time - b.time)

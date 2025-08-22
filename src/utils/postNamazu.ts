@@ -17,8 +17,16 @@ export function doWayMarks(json: WayMarkObj, localOnly: boolean = true) {
   })
 }
 
-export function doInsertPreset(mapID: number, json: WayMarkObj, slot: Slot = 1) {
-  const ppJson: PPJSON = { ...json, MapID: getMapIDByTerritoryType(mapID), Name: `Slot${slot}` }
+export function doInsertPreset(
+  mapID: number,
+  json: WayMarkObj,
+  slot: Slot = 1,
+) {
+  const ppJson: PPJSON = {
+    ...json,
+    MapID: getMapIDByTerritoryType(mapID),
+    Name: `Slot${slot}`,
+  }
   return callOverlayHandler({
     call: 'PostNamazu',
     c: 'DoInsertPreset',

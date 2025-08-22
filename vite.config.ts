@@ -35,8 +35,8 @@ export default defineConfig({
       },
       onwarn(warning, warn) {
         if (
-          warning.code === 'EVAL'
-          && warning.id?.includes('cactbot/resources/user_config.ts')
+          warning.code === 'EVAL' &&
+          warning.id?.includes('cactbot/resources/user_config.ts')
         ) {
           return
         }
@@ -105,12 +105,6 @@ export default defineConfig({
     cors: true,
   },
   optimizeDeps: {
-    include: [
-      'vue',
-      'vue-router',
-      'pinia',
-      'element-plus',
-      '@vueuse/core',
-    ],
+    include: ['vue', 'vue-router', 'pinia', 'element-plus', '@vueuse/core'],
   },
 })

@@ -2,7 +2,10 @@ import type { EventMap } from '../../cactbot/types/event'
 import { onMounted, onUnmounted, ref } from 'vue'
 import ZoneInfo from '@/resources/zoneInfo'
 import ContentType from '../../cactbot/resources/content_type'
-import { addOverlayListener, removeOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
+import {
+  addOverlayListener,
+  removeOverlayListener,
+} from '../../cactbot/resources/overlay_plugin_api'
 
 const CONTENT_TYPES = [
   'Savage', // 零式
@@ -47,12 +50,10 @@ function getZoneType(zoneInfo: (typeof ZoneInfo)[number]): ContentUsedType {
     case ContentType.VCDungeonFinder:
       return 'VCDungeonFinder'
     case ContentType.Trials:
-      if (zoneNameFr?.includes('(extrême)'))
-        return 'Extreme'
+      if (zoneNameFr?.includes('(extrême)')) return 'Extreme'
       return 'Trials'
     case ContentType.Raids:
-      if (zoneNameEn?.includes('(Savage)'))
-        return 'Savage'
+      if (zoneNameEn?.includes('(Savage)')) return 'Savage'
       return 'Raids'
     case ContentType.DisciplesOfTheLand:
       return 'DisciplesOfTheLand'
@@ -80,8 +81,7 @@ function useZone() {
   const handleChangeZone: EventMap['ChangeZone'] = (e) => {
     zoneID.value = e.zoneID
     const zoneInfo = ZoneInfo[zoneID.value]
-    if (!zoneInfo)
-      return
+    if (!zoneInfo) return
     zoneType.value = getZoneType(zoneInfo)
   }
 
@@ -99,8 +99,4 @@ function useZone() {
   }
 }
 
-export {
-  CONTENT_TYPES,
-  type ContentUsedType,
-  useZone,
-}
+export { CONTENT_TYPES, type ContentUsedType, useZone }
