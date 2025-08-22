@@ -6,4 +6,4 @@ const csvPaths = {
   souma: 'E:/Github/FFXIVChnTextPatch-Souma/resource/rawexd/',
 }
 
-module.exports = { csvPaths }
+export { csvPaths }

@@ -1,18 +1,13 @@
 <script setup lang="ts">
 import { getActionChinese } from '@/resources/actionChinese'
-import { getActionChineseTemp } from '@/resources/actionChineseTemp'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
 function getName(line: string[]): string {
   const id = Number.parseInt(line[4]!, 16)
   const sourceId = line[2]!
   const rawText = line[5]!
-  const temp = getActionChineseTemp(id)
-  if (temp)
-    return temp
   const name = getActionChinese(id)
-  if (name)
-    return name
+  if (name) return name
   if (sourceId.startsWith('4') && !rawText.includes('unknown'))
     console.error(`未找到动作 ${id} ${rawText}`)
   return rawText
@@ -44,58 +39,70 @@ const targetOptions = [
     label: '焦点目标',
   },
 ]
-const settings
-  = ref({
-    width: 265,
-    showCountdown: false,
-    showProgress: false,
-    showActionChinese: true,
-    showActionID: false,
-    offsetProgressX: 0,
-    offsetProgressY: -22,
-    offsetCountdownX: 265 - 25,
-    offsetCountdownY: -5,
-    offsetActionChineseX: 265 + 10,
-    offsetActionChineseY: -45,
-    offsetActionIDX: 10,
-    offsetActionIDY: -5,
-    ping: 80,
-    keep: 100,
-    fontSizeCountDown: 17,
-    fontSizeActionName: 20,
-    fontFamily: 'SmartisanHei',
-    targetKey: 'Target' as 'Target' | 'Focus',
-  })
-useStorage('castingToChineseFix', settings, localStorage, { mergeDefaults: true })
+const settings = ref({
+  width: 265,
+  showCountdown: false,
+  showProgress: false,
+  showActionChinese: true,
+  showActionID: false,
+  offsetProgressX: 0,
+  offsetProgressY: -22,
+  offsetCountdownX: 265 - 25,
+  offsetCountdownY: -5,
+  offsetActionChineseX: 265 + 10,
+  offsetActionChineseY: -45,
+  offsetActionIDX: 10,
+  offsetActionIDY: -5,
+  ping: 80,
+  keep: 100,
+  fontSizeCountDown: 17,
+  fontSizeActionName: 20,
+  fontFamily: 'SmartisanHei',
+  targetKey: 'Target' as 'Target' | 'Focus',
+})
+useStorage('castingToChineseFix', settings, localStorage, {
+  mergeDefaults: true,
+})
 const windowWidth = computed(() => `${settings.value.width}px`)
 const opacityCountdown = computed(() => (settings.value.showCountdown ? 1 : 0))
 const opacityProgress = computed(() => (settings.value.showProgress ? 1 : 0))
-const opacityActionChinese = computed(() => settings.value.showActionChinese ? 1 : 0)
+const opacityActionChinese = computed(() =>
+  settings.value.showActionChinese ? 1 : 0
+)
 const opacityActionID = computed(() => (settings.value.showActionID ? 1 : 0))
 const offsetCountdownX = computed(() => `${settings.value.offsetCountdownX}px`)
-const offsetCountdownY = computed(() => `${settings.value.offsetCountdownY * -1}px`)
-const offsetActionChineseX = computed(() => `${settings.value.offsetActionChineseX}px`)
-const offsetActionChineseY = computed(() => `${settings.value.offsetActionChineseY * -1}px`)
+const offsetCountdownY = computed(
+  () => `${settings.value.offsetCountdownY * -1}px`
+)
+const offsetActionChineseX = computed(
+  () => `${settings.value.offsetActionChineseX}px`
+)
+const offsetActionChineseY = computed(
+  () => `${settings.value.offsetActionChineseY * -1}px`
+)
 const offsetActionIDX = computed(() => `${settings.value.offsetActionIDX}px`)
-const offsetActionIDY = computed(() => `${settings.value.offsetActionIDY * -1}px`)
+const offsetActionIDY = computed(
+  () => `${settings.value.offsetActionIDY * -1}px`
+)
 const offsetProgressX = computed(() => `${settings.value.offsetProgressX}px`)
-const offsetProgressY = computed(() => `${settings.value.offsetProgressY * -1}px`)
+const offsetProgressY = computed(
+  () => `${settings.value.offsetProgressY * -1}px`
+)
 const casting = new Map()
 const now = ref(0)
 const ping = settings.value.ping
 
 addOverlayListener(
   'EnmityTargetData',
-  (e: { Target: { ID: number } | null, Focus: { ID: number } | null }) => {
+  (e: { Target: { ID: number } | null; Focus: { ID: number } | null }) => {
     data.targetCast = casting.get(e[settings.value.targetKey]?.ID)
-  },
+  }
 )
 
 addOverlayListener('LogLine', (e: { line: string[] }) => {
   if (e.line[0] === '20')
     casting.set(Number.parseInt(e.line[2]!, 16), new Cast(e.line))
-  else if (e.line[0] === '23')
-    casting.delete(Number.parseInt(e.line[2]!, 16))
+  else if (e.line[0] === '23') casting.delete(Number.parseInt(e.line[2]!, 16))
 })
 
 addOverlayListener('ChangeZone', () => casting.clear())
@@ -129,7 +136,9 @@ function resetSettings() {
         </form>
         <form>显示倒计时: <el-switch v-model="settings.showCountdown" /></form>
         <form>显示进度条: <el-switch v-model="settings.showProgress" /></form>
-        <form>显示中文: <el-switch v-model="settings.showActionChinese" /></form>
+        <form>
+          显示中文: <el-switch v-model="settings.showActionChinese" />
+        </form>
         <form>显示ID: <el-switch v-model="settings.showActionID" /></form>
         <form>
           延迟(ms):
@@ -287,7 +296,8 @@ function resetSettings() {
     <div class="container">
       <el-main
         v-show="
-          data.targetCast && now - data.targetCast.overTime + ping < settings.keep
+          data.targetCast &&
+          now - data.targetCast.overTime + ping < settings.keep
         "
         :style="{ fontFamily: settings.fontFamily }"
       >
@@ -298,17 +308,17 @@ function resetSettings() {
           {{
             Math.max(
               ((data.targetCast?.overTime ?? 1) - now - ping) / 1000,
-              0,
+              0
             ).toFixed(2)
           }}
         </div>
         <el-progress
           :percentage="
             Math.min(
-              ((now - (data.targetCast?.startTime ?? 1) + ping)
-                / (data.targetCast?.castTime ?? 1))
-                * 100,
-              100,
+              ((now - (data.targetCast?.startTime ?? 1) + ping) /
+                (data.targetCast?.castTime ?? 1)) *
+                100,
+              100
             )
           "
           :stroke-width="8"
@@ -330,11 +340,11 @@ function resetSettings() {
         </div>
       </el-main>
     </div>
-  </CommonActwrapper>
+  </CommonActWrapper>
 </template>
 
 <style lang="scss" scoped>
-.container{
+.container {
   overflow: hidden;
   position: absolute;
   width: 100%;

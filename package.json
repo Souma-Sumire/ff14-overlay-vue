@@ -7,12 +7,12 @@
     "dev": "vite",
     "tsc": "tsc --noEmit",
     "github-build": "vite build",
-    "build": "npm run submodule && npm run cjs && vite build",
+    "build": "npm run submodule && npm run cts && vite build",
     "preview": "vite preview",
     "submodule": "git submodule update --remote",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "cjs": "node scripts/all.cjs"
+    "cts": "npx tsx scripts/all.ts"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
@@ -38,6 +38,7 @@
     "@eslint/js": "^9.33.0",
     "@johnsoncodehk/html2pug": "^1.0.0",
     "@jridgewell/sourcemap-codec": "^1.5.4",
+    "@types/fs-extra": "^11.0.4",
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
     "@unocss/eslint-plugin": "^66.4.0",
@@ -61,6 +62,7 @@
     "sass": "^1.89.2",
     "sass-loader": "^16.0.5",
     "terser": "^5.43.1",
+    "tsx": "^4.20.4",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.40.0",
     "unocss": "^66.4.0",

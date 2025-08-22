@@ -34,6 +34,6 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true
   },
-  "include": ["src", "vite.config.ts"],
+  "include": ["src", "scripts", "./*.config.ts"],
   "exclude": ["node_modules", "dist", "cactbot"]
 }

@@ -14,21 +14,7 @@ export default [
   // 禁用所有与 Prettier 冲突的规则
   prettierConfig,
   {
-    files: ['**/*.cjs'],
-    languageOptions: {
-      sourceType: 'commonjs',
-      globals: {
-        ...globals.node,
-      },
-    },
-    rules: {
-      // 在这里禁用所有与 TypeScript 相关的规则，因为这些文件是纯 JavaScript
-      '@typescript-eslint/no-require-imports': 'off',
-      // 其他你希望禁用的规则...
-    },
-  },
-  {
-    files: ['**/*.ts', '**/*.tsx'],
+    files: ['*.ts', '**/*.ts', '**/*.tsx'],
     plugins: {
       prettier,
     },
@@ -50,12 +36,6 @@ export default [
   },
 
   {
-    ignores: [
-      'node_modules/',
-      'dist/',
-      'cactbot/',
-      'src/resources/**.json',
-      'uno.config.ts',
-    ],
+    ignores: ['node_modules/', 'dist/', 'cactbot/', 'src/resources/**.json'],
   },
 ]
