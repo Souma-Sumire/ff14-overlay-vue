@@ -38,13 +38,13 @@ const handleChangeZone: EventMap['ChangeZone'] = async (e) => {
 
   if (!history) {
     islandHistory.set(islandId, { timestamp: now, count: islandHistory.size + 1 })
-    const text = `${islandId}号岛，第一次来，现在总共遇到了${islandHistory.size}个岛`
+    const text = `这个岛第一次来，现在总共遇到了${islandHistory.size}个岛`
     callOverlayHandler({ call: 'cactbotSay', text })
   }
   else {
     const timeDiff = now - history.timestamp
     const timeText = timeDiff < 60000 ? `${Math.floor(timeDiff / 1000)}秒` : `${Math.floor(timeDiff / 60000)}分钟`
-    const text = `${islandId}号岛，${timeText}前来过，是第${history.count}个遇到的岛`
+    const text = `这个岛${timeText}前来过，是第${history.count}个遇到的岛`
     history.timestamp = now
     callOverlayHandler({ call: 'cactbotSay', text })
   }
