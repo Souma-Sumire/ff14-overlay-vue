@@ -1,48 +1,56 @@
-From 72fb49f77981934f4f102d15fce36c906edef6f2 Mon Sep 17 00:00:00 2001
+From a0cb4b0989127c1ee820c9a7c1db35253c0486a1 Mon Sep 17 00:00:00 2001
 From: Souma-Sumire <553469159@qq.com>
-Date: Tue, 12 Mar 2024 03:10:25 +0800
+Date: Sat, 23 Aug 2025 23:47:51 +0800
 Subject: [PATCH] PostNamazu
 
 ---
- types/event.d.ts | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ cactbot/types/event.d.ts | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
 diff --git a/cactbot/types/event.d.ts b/cactbot/types/event.d.ts
-index 42634b8cd..459f60931 100644
+index d99c42d18..34dc54879 100644
 --- a/cactbot/types/event.d.ts
 +++ b/cactbot/types/event.d.ts
-@@ -478,6 +478,23 @@ type CactbotChooseDirectoryHandler = (msg: {
+@@ -524,6 +524,30 @@ type CactbotChooseDirectoryHandler = (msg: {
    call: 'cactbotChooseDirectory';
  }) => { data: string } | undefined;
  
 +export type PostNamazuCall =
-+  | "DoTextCommand"
-+  | "command"
-+  | "DoWaymarks"
-+  | "place"
-+  | "mark"
-+  | "DoInsertPreset"
-+  | "preset"
-+  | "DoQueueActions";
++  | 'DoTextCommand'
++  | 'command'
++  | 'DoWaymarks'
++  | 'place'
++  | 'mark'
++  | 'DoInsertPreset'
++  | 'preset'
++  | 'DoQueueActions';
 +
 +type PostNamazuHandler = (msg: {
-+    call: "PostNamazu";
-+    c: PostNamazuCall;
-+    p: string;
-+    d?: number;
++  call: 'PostNamazu';
++  c: PostNamazuCall;
++  p: string;
++  d?: number;
 +}) => Promise<void>;
++
++type GetLanguageHandler = (msg: { call: 'getLanguage' }) => {
++  language: string;
++  languageId: string;
++  region: string;
++  regionId: string;
++};
 +
  export type OverlayHandlerAll = {
    'broadcast': BroadcastHandler;
    'subscribe': SubscribeHandler;
-@@ -491,6 +508,7 @@ export type OverlayHandlerAll = {
+@@ -537,6 +561,8 @@ export type OverlayHandlerAll = {
    'cactbotSaveData': CactbotSaveDataHandler;
    'cactbotLoadData': CactbotLoadDataHandler;
    'cactbotChooseDirectory': CactbotChooseDirectoryHandler;
 +  'postNamazu': PostNamazuHandler;
++  'getLanguage': GetLanguageHandler;
  };
  
  export type OverlayHandlerTypes = keyof OverlayHandlerAll;
 -- 
-2.41.0.windows.1
+2.45.1.windows.1
 
