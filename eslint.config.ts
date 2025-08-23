@@ -1,41 +1,41 @@
+import type { Linter } from 'eslint'
 import globals from 'globals'
 import js from '@eslint/js'
 import tseslint from 'typescript-eslint'
 import prettier from 'eslint-plugin-prettier'
 import prettierConfig from 'eslint-config-prettier'
 
-export default [
-  // 基础 ESLint 推荐规则
+const config: Linter.Config[] = [
   js.configs.recommended,
 
-  // TypeScript 相关的推荐规则
   ...tseslint.configs.recommended,
 
-  // 禁用所有与 Prettier 冲突的规则
-  prettierConfig,
   {
-    files: ['*.ts', '**/*.ts', '**/*.tsx'],
-    plugins: {
-      prettier,
-    },
+    files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        project: true,
-        tsconfigRootDir: import.meta.dirname,
+        project: ['./tsconfig.json'],
+        tsconfigRootDir: __dirname,
       },
       globals: {
         ...globals.browser,
         ...globals.node,
       },
     },
+    plugins: {
+      prettier,
+    },
     rules: {
-      // 开启 Prettier 规则
       'prettier/prettier': 'error',
     },
   },
 
+  prettierConfig,
+
   {
-    ignores: ['node_modules/', 'dist/', 'cactbot/', 'src/resources/**.json'],
+    ignores: ['node_modules/', 'dist/', 'cactbot/', 'src/resources/**/*.json'],
   },
 ]
+
+export default config
