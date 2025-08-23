@@ -13,7 +13,7 @@ export function useActReady() {
       return
     }
     await new Promise<void>((resolve) => {
-      callOverlayHandler({ call: 'cactbotRequestState' }).then(() => {
+      callOverlayHandler({ call: 'getLanguage' }).then(() => {
         actReady.value = true
         resolve()
       })
