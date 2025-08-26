@@ -5,7 +5,7 @@ import { defineStore } from 'pinia'
 import { copyToClipboard } from '@/utils/clipboard'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import { getMapIDByTerritoryType } from '../resources/contentFinderCondition'
-import zoneInfo from '../resources/zoneInfo'
+import { ZoneInfo } from '../resources/zoneInfo'
 import {
   doInsertPreset,
   doQueueActions,
@@ -50,8 +50,8 @@ function cleanMacro(text: string): string {
 }
 
 function getZoneIDByZoneName(ZoneName: string) {
-  for (const zoneId in zoneInfo) {
-    const zone = zoneInfo[zoneId]!
+  for (const zoneId in ZoneInfo) {
+    const zone = ZoneInfo[zoneId]!
     for (const lang in zone.name) {
       const zoneName = zone.name[lang as keyof typeof zone.name]
       if (
@@ -100,14 +100,14 @@ const useMacroStore = defineStore('macro', {
   },
   getters: {
     defaultX: (state) => {
-      return zoneInfo[Number(state.selectZone)]?.offsetX ?? 0
+      return ZoneInfo[Number(state.selectZone)]?.offsetX ?? 0
     },
     defaultY: (state) => {
-      return zoneInfo[Number(state.selectZone)]?.offsetY ?? 0
+      return ZoneInfo[Number(state.selectZone)]?.offsetY ?? 0
     },
     blankWaymark: (state) => {
-      const defaultX = zoneInfo[Number(state.selectZone)]?.offsetX ?? 0
-      const defaultY = zoneInfo[Number(state.selectZone)]?.offsetY ?? 0
+      const defaultX = ZoneInfo[Number(state.selectZone)]?.offsetX ?? 0
+      const defaultY = ZoneInfo[Number(state.selectZone)]?.offsetY ?? 0
       return {
         A: { X: -defaultX, Y: 0, Z: -defaultY, Active: false },
         B: { X: -defaultX, Y: 0, Z: -defaultY, Active: false },

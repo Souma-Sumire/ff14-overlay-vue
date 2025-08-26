@@ -3,7 +3,7 @@ import type { CSSProperties } from 'vue'
 import type { MacroInfoPlace } from '@/types/macro'
 import { computed, ref } from 'vue'
 import Map from '@/resources/map.json'
-import ZoneInfo from '@/resources/zoneInfo'
+import { ZoneInfo } from '@/resources/zoneInfo'
 import { useMacroStore } from '@/store/macro'
 import { getPixelCoordinates, Vector2 } from '@/utils/mapCoordinates'
 
@@ -28,20 +28,17 @@ const isSpMap = computed(() => {
 })
 
 const mapSrc = (() => {
-  if (isSpMap.value)
-    return undefined
+  if (isSpMap.value) return undefined
   const id = macroStore.selectZone
-  if (id === undefined)
-    return undefined
+  if (id === undefined) return undefined
   const map = Map[id as keyof typeof Map]
-  if (map === undefined)
-    return undefined
+  if (map === undefined) return undefined
   return `https://v2.xivapi.com/api/asset/map/${map.id}`
 })()
 
 const markMap = ['A', 'B', 'C', 'D', '1', '2', '3', '4']
 
-function getPix(v: { X: number, Z: number }) {
+function getPix(v: { X: number; Z: number }) {
   const id = macroStore.selectZone!
   const zone = ZoneInfo[Number(id)]!
   const sizeFactor = zone.sizeFactor
@@ -73,8 +70,7 @@ function onMouseDown(e: MouseEvent) {
 }
 function onMouseMove(e: MouseEvent) {
   e.preventDefault()
-  if (!isDragging.value)
-    return
+  if (!isDragging.value) return
   offsetX.value = e.clientX - dragStartX
   offsetY.value = e.clientY - dragStartY
 }
@@ -99,7 +95,7 @@ function onWheel(e: WheelEvent) {
   scale.value = newScale
 }
 
-function getOffset(v: { X: number, Z: number }) {
+function getOffset(v: { X: number; Z: number }) {
   const pixelCoordinates = getPix(v)
   const size = Math.max((1 / scale.value) * fontSize.value, fontSize.value)
   return {
@@ -137,7 +133,7 @@ onMounted(() => {
     () => props.macro.Place,
     () => {
       const activePoints = Object.values(props.macro.Place).filter(
-        p => p.Active,
+        (p) => p.Active
       )
       if (activePoints.length === 0) {
         scale.value = 0.5
@@ -153,7 +149,7 @@ onMounted(() => {
           acc.y += Number(p.Z) + macroStore.defaultY
           return acc
         },
-        { x: 0, y: 0 },
+        { x: 0, y: 0 }
       )
       ave.x /= activePoints.length
       ave.y /= activePoints.length
@@ -194,12 +190,12 @@ onMounted(() => {
       scale.value = isSpMap.value ? newScale * 2 : newScale
 
       // 根据中心点重新计算偏移量，考虑缩放和坐标系翻转
-      offsetX.value
-        = props.size / 2 - ((centerPix.x - 1024) * -1 + 1024) * scale.value
-      offsetY.value
-        = props.size / 2 - ((centerPix.y - 1024) * -1 + 1024) * scale.value
+      offsetX.value =
+        props.size / 2 - ((centerPix.x - 1024) * -1 + 1024) * scale.value
+      offsetY.value =
+        props.size / 2 - ((centerPix.y - 1024) * -1 + 1024) * scale.value
     },
-    { immediate: true },
+    { immediate: true }
   )
 })
 </script>
@@ -221,15 +217,15 @@ onMounted(() => {
         :class="`markIcon markIcon${k}`"
         :style="[getOffset(v)]"
       >
-        {{ v.Active ? markMap[i] : "" }}
+        {{ v.Active ? markMap[i] : '' }}
       </span>
-      <img :src="mapSrc" alt="">
+      <img :src="mapSrc" alt="" />
     </div>
   </div>
 </template>
 
 <style scoped lang="scss">
-@use "sass:color";
+@use 'sass:color';
 .crop-custom {
   user-select: none;
   pointer-events: none;

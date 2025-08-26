@@ -11,7 +11,7 @@ import {
 import { useDev } from '@/composables/useDev'
 import { useWebSocket } from '@/composables/useWebSocket'
 import { defaultMacro } from '@/resources/macro'
-import zoneInfo from '@/resources/zoneInfo'
+import { ZoneInfo } from '@/resources/zoneInfo'
 import { useMacroStore } from '@/store/macro'
 import ContentType from '../../cactbot/resources/content_type'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
@@ -44,7 +44,7 @@ const showContentTypes = contentTypeLabel.map(v => v.type)
 const groupedZoneOptions = computed(() => {
   const groups: Record<string, { value: string, label: string }[]> = {}
 
-  Object.entries(zoneInfo)
+  Object.entries(ZoneInfo)
     .map(([id, info]) => ({ id, ...info }))
     .sort((a, b) => {
       if (a.exVersion !== b.exVersion)

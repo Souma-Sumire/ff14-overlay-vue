@@ -1,6 +1,6 @@
 import type { EventMap } from '../../cactbot/types/event'
 import { onMounted, onUnmounted, ref } from 'vue'
-import ZoneInfo from '@/resources/zoneInfo'
+import { ZoneInfo } from '@/resources/zoneInfo'
 import ContentType from '../../cactbot/resources/content_type'
 import {
   addOverlayListener,

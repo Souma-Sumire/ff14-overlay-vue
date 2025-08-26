@@ -8,10 +8,13 @@ import { useDev } from '@/composables/useDev'
 import { useWebSocket } from '@/composables/useWebSocket'
 import Aetherytes from '@/resources/aetherytes.json'
 import Map from '@/resources/map.json'
-import zoneInfo from '@/resources/zoneInfo'
+import { ZoneInfo } from '@/resources/zoneInfo'
 import { getPixelCoordinates, Vector2 } from '@/utils/mapCoordinates'
 import HuntData from '../../cactbot/resources/hunt'
-import { addOverlayListener, callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
+import {
+  addOverlayListener,
+  callOverlayHandler,
+} from '../../cactbot/resources/overlay_plugin_api'
 import sonar from '../../cactbot/resources/sounds/freesound/sonar.webm'
 import ZoneId from '../../cactbot/resources/zone_id'
 
@@ -48,7 +51,7 @@ const GMAE_VERSION = {
 
 type GameVersion = keyof typeof GMAE_VERSION
 type FilterType = '1-3' | '4-6' | '1' | '2' | '3' | '4' | '5' | '6' | '1-2'
-type ZoneIdType = typeof zoneList[number]
+type ZoneIdType = (typeof zoneList)[number]
 type LegalInstance = 1 | 2 | 3 | 4 | 5 | 6
 type Server = 'Global' | 'CN'
 
@@ -148,17 +151,9 @@ const filterValue: Record<LegalInstance, FilterType[]> = {
   6: ['1-3', '4-6', '1', '2', '3', '4', '5', '6'],
 }
 
-const INS_BG_COLOR = [
-  '255, 0, 0',
-  '255, 255, 0',
-  '0, 128, 255',
-]
+const INS_BG_COLOR = ['255, 0, 0', '255, 255, 0', '0, 128, 255']
 
-const INS_TEXT_COLOR = [
-  '255, 0, 0',
-  '240, 255, 0',
-  '0, 222, 255',
-]
+const INS_TEXT_COLOR = ['255, 0, 0', '240, 255, 0', '0, 222, 255']
 
 const COLOR_STYLE = {
   '--ins1-color': `rgba(${INS_BG_COLOR[0]},0.4)`,
@@ -173,30 +168,70 @@ const server = useStorage('souma-hunt-server', 'Global' as Server)
 const IMG_RAW_SIZE = 2048
 const IMG_SHOW_SIZE = 596
 const INSTANCE_STRING = ''
-const waymarkKeys: (keyof WayMarkObj)[] = ['One', 'Two', 'Three', 'Four', 'A', 'B', 'C', 'D'] as const
+const waymarkKeys: (keyof WayMarkObj)[] = [
+  'One',
+  'Two',
+  'Three',
+  'Four',
+  'A',
+  'B',
+  'C',
+  'D',
+] as const
 const IMG_SCALE = IMG_SHOW_SIZE / IMG_RAW_SIZE
 const playerInstance = ref(-1)
 const dev = useDev()
 const nameToHuntEntry: Record<string, HuntEntry> = {}
 const mergedByOtherNodes = new Set<string>()
 const gameVersion = useStorage('souma-hunt-game-version', '7.0' as GameVersion)
-const allMonstersData = useStorage('souma-hunt-monsters-2', [] as DiscoveredMonsters)
-const monstersData = computed(() => allMonstersData.value.filter(v => (zoneListUsed.value.filter(z => getZoneGameVersion(z) === gameVersion.value)).includes(v.zoneId as ZoneIdType)))
-const zoneFilter = computed(() => Object.fromEntries(zoneList.map(zoneId => [zoneId, filterValue[getInstanceLengthByZoneId(zoneId)]])) as Record<ZoneIdType, FilterType[]>)
+const allMonstersData = useStorage(
+  'souma-hunt-monsters-2',
+  [] as DiscoveredMonsters
+)
+const monstersData = computed(() =>
+  allMonstersData.value.filter((v) =>
+    zoneListUsed.value
+      .filter((z) => getZoneGameVersion(z) === gameVersion.value)
+      .includes(v.zoneId as ZoneIdType)
+  )
+)
+const zoneFilter = computed(
+  () =>
+    Object.fromEntries(
+      zoneList.map((zoneId) => [
+        zoneId,
+        filterValue[getInstanceLengthByZoneId(zoneId)],
+      ])
+    ) as Record<ZoneIdType, FilterType[]>
+)
 const showNumber = useStorage('souma-hunt-show-number', true)
 const playSound = useStorage('souma-hunt-play-sound', false)
 const soundVolume = useStorage('souma-hunt-sound-volume', 0.2)
 const filterConfig = ref({} as Record<ZoneIdType, FilterType>)
 const playerZoneId = useStorage('souma-hunt-zone-id', ref(-1))
-const savedInstance = useStorage('souma-hunt-save-instance', playerInstance.value)
+const savedInstance = useStorage(
+  'souma-hunt-save-instance',
+  playerInstance.value
+)
 const usePostNamazu = useStorage('souma-hunt-use-post-namazu', false)
 
 watchEffect(() => {
-  filterConfig.value = Object.fromEntries(zoneList.map(zoneId => [zoneId, filterValue[getInstanceLengthByZoneId(zoneId)][0]])) as Record<ZoneIdType, FilterType>
+  filterConfig.value = Object.fromEntries(
+    zoneList.map((zoneId) => [
+      zoneId,
+      filterValue[getInstanceLengthByZoneId(zoneId)][0],
+    ])
+  ) as Record<ZoneIdType, FilterType>
 })
 
 function zoneInstanceMax(zoneId: ZoneIdType): number {
-  return Math.max(...(zoneFilter.value[zoneId].filter(item => /^[1-6]$/.test(item)).map(item => Number(item)))) * 2
+  return (
+    Math.max(
+      ...zoneFilter.value[zoneId]
+        .filter((item) => /^[1-6]$/.test(item))
+        .map((item) => Number(item))
+    ) * 2
+  )
 }
 
 for (const hunt of Object.values(HuntData)) {
@@ -209,8 +244,7 @@ for (const hunt of Object.values(HuntData)) {
       name.forEach((n) => {
         nameToHuntEntry[n.toLowerCase()] = { id, rank, name: n }
       })
-    }
-    else {
+    } else {
       nameToHuntEntry[name.toLowerCase()] = { id, rank, name }
     }
   })
@@ -230,31 +264,42 @@ function getColorDom(monster: DiscoveredMonsters[number]): string {
 }
 
 function getMultipleText(monsters: DiscoveredMonsters[number][]): string {
-  return monsters.toSorted((a, b) => a.instance - b.instance).map((item) => {
-    return getColorDom(item)
-  }).join(' ')
+  return monsters
+    .toSorted((a, b) => a.instance - b.instance)
+    .map((item) => {
+      return getColorDom(item)
+    })
+    .join(' ')
 }
 
 function mergeOverlapMonsters() {
   // 将Monters中同一张地图内坐标过近的怪物合并为一个
   mergedByOtherNodes.clear()
-  monstersData.value.forEach(item => item.text = getColorDom(item))
+  monstersData.value.forEach((item) => (item.text = getColorDom(item)))
   monstersData.value.forEach((item) => {
     if (!isShow(item) || mergedByOtherNodes.has(item.id)) {
       return
     }
     const tooClose = monstersData.value.filter((item2) => {
-      const distance = calcDistance(item.worldX, item.worldY, item2.worldX, item2.worldY)
-      return isShow(item2) && !mergedByOtherNodes.has(item2.id) && item2.zoneId === item.zoneId && (distance.both < 35)
+      const distance = calcDistance(
+        item.worldX,
+        item.worldY,
+        item2.worldX,
+        item2.worldY
+      )
+      return (
+        isShow(item2) &&
+        !mergedByOtherNodes.has(item2.id) &&
+        item2.zoneId === item.zoneId &&
+        distance.both < 35
+      )
     })
     if (tooClose.length >= 2) {
       tooClose.forEach((item2, index2) => {
-        if (index2 > 0)
-          mergedByOtherNodes.add(item2.id)
+        if (index2 > 0) mergedByOtherNodes.add(item2.id)
       })
       tooClose[0]!.text = getMultipleText(tooClose)
-    }
-    else {
+    } else {
       tooClose.forEach((item2) => {
         item2.text = getColorDom(item2)
       })
@@ -269,7 +314,10 @@ function mergeOverlapMonsters() {
 
 function checkImmediatelyMonster() {
   const timestamp = new Date().getTime()
-  const monsters = monstersData.value.filter(item => item.zoneId === playerZoneId.value && timestamp - item.timestamp < 5000)
+  const monsters = monstersData.value.filter(
+    (item) =>
+      item.zoneId === playerZoneId.value && timestamp - item.timestamp < 5000
+  )
   monsters.forEach((item) => {
     // eslint-disable-next-line no-console
     console.log(`触发了5秒规则`)
@@ -277,7 +325,7 @@ function checkImmediatelyMonster() {
     // number等于 从1、2、3、4、5、6中寻找第一个不在 monsters 中存在的number
     let number = -1
     for (let i = 1; i <= 6; i++) {
-      if (!monsters.some(item => item.number === i)) {
+      if (!monsters.some((item) => item.number === i)) {
         number = i
         break
       }
@@ -311,16 +359,20 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
     return
   }
   if (event.line[0] === '00' && event.line[2] === '0039') {
-    const match = event.line[4]!.match(new RegExp(`(?:当前所在副本区为“|You are now in the instanced area |インスタンスエリア「)(?<zoneName>.+?)(?<zoneInstanced>[${INSTANCE_STRING}]).*`))
+    const match = event.line[4]!.match(
+      new RegExp(
+        `(?:当前所在副本区为“|You are now in the instanced area |インスタンスエリア「)(?<zoneName>.+?)(?<zoneInstanced>[${INSTANCE_STRING}]).*`
+      )
+    )
     if (match && match.groups && match.groups.zoneInstanced) {
-      playerInstance.value = INSTANCE_STRING.indexOf(match.groups.zoneInstanced) + 1
+      playerInstance.value =
+        INSTANCE_STRING.indexOf(match.groups.zoneInstanced) + 1
       savedInstance.value = playerInstance.value
       ElMessageBox.close()
       checkImmediatelyMonster()
       updateWaymarks()
     }
-  }
-  else if (event.line[0] === '03') {
+  } else if (event.line[0] === '03') {
     const name = event.line[3]!
     const hunt = nameToHuntEntry[name.toLowerCase()]
     const rank = hunt?.rank
@@ -332,21 +384,28 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
       const worldX = Number(event.line[17])
       const worldY = Number(event.line[18])
       const worldZ = Number(event.line[19])
-      const exist = allMonstersData.value.find(item => item.id === event.line[2] && item.zoneId === playerZoneId.value && item.instance === instance)
+      const exist = allMonstersData.value.find(
+        (item) =>
+          item.id === event.line[2] &&
+          item.zoneId === playerZoneId.value &&
+          item.instance === instance
+      )
       if (exist) {
         // 已经添加过了，更新坐标，且不是合并的情况
         exist.timestamp = timestamp
         exist.worldX = worldX
         exist.worldY = worldY
         exist.worldZ = worldZ
-      }
-      else {
+      } else {
         // 新添加
-        const monsters = allMonstersData.value.filter(item => item.zoneId === playerZoneId.value && item.instance === instance)
+        const monsters = allMonstersData.value.filter(
+          (item) =>
+            item.zoneId === playerZoneId.value && item.instance === instance
+        )
         // number等于 从1、2、3、4、5、6中寻找第一个不在 monsters 中存在的number
         let number = -1
         for (let i = 1; i <= 6; i++) {
-          if (!monsters.some(item => item.number === i)) {
+          if (!monsters.some((item) => item.number === i)) {
             number = i
             break
           }
@@ -374,10 +433,11 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
       updateWaymarks()
       // console.debug(`find: ${name} in ${Map[playerZoneId.value as ZoneIdType].name.souma} ins${playerInstance.value},(${worldX}, ${worldY}, ${worldZ})`)
     }
-  }
-  else if (event.line[0] === '25') {
+  } else if (event.line[0] === '25') {
     const id = event.line[2]
-    allMonstersData.value = allMonstersData.value.filter(item => item.id !== id)
+    allMonstersData.value = allMonstersData.value.filter(
+      (item) => item.id !== id
+    )
     mergeOverlapMonsters()
     updateWaymarks()
   }
@@ -396,7 +456,11 @@ function randomString() {
   return str
 }
 
-async function addTestMonster(zoneId: number, instance: number, randomRange: number) {
+async function addTestMonster(
+  zoneId: number,
+  instance: number,
+  randomRange: number
+) {
   playerInstance.value = instance
   playerZoneId.value = zoneId
   handleLogLine({
@@ -445,8 +509,8 @@ function clearMonsterCurrentGameVerion() {
 }
 
 function testMonster() {
-  const scale = 2;
-  (async () => {
+  const scale = 2
+  ;(async () => {
     clearMonsterCurrentGameVerion()
     await addTestMonster(zoneListUsed.value[0]!, 1, 30 * scale)
     await addTestMonster(zoneListUsed.value[0]!, 1, 30 * scale)
@@ -476,7 +540,13 @@ function updateWaymarks() {
   if (!usePostNamazu.value) {
     return
   }
-  const monsters = monstersData.value.filter(item => item.zoneId === playerZoneId.value && item.instance === playerInstance.value).sort((a, b) => a.number - b.number)
+  const monsters = monstersData.value
+    .filter(
+      (item) =>
+        item.zoneId === playerZoneId.value &&
+        item.instance === playerInstance.value
+    )
+    .sort((a, b) => a.number - b.number)
   const waymarks: WayMarkObj = {
     A: { X: 0, Y: 0, Z: 0, Active: false },
     B: { X: 0, Y: 0, Z: 0, Active: false },
@@ -496,22 +566,29 @@ function updateWaymarks() {
         Z: item.worldY, // 是故意调换的
         Active: true,
       }
+    } else {
+      waymarks[key] = { X: 0, Y: 0, Z: 0, Active: false }
     }
-    else { waymarks[key] = { X: 0, Y: 0, Z: 0, Active: false } }
   })
-  callOverlayHandler({ call: 'PostNamazu', c: 'DoWaymarks', p: JSON.stringify(waymarks) })
+  callOverlayHandler({
+    call: 'PostNamazu',
+    c: 'DoWaymarks',
+    p: JSON.stringify(waymarks),
+  })
 }
 
 function clearMonster() {
   // 二次确认
   ElMessageBox.confirm(
-    `确定要清空「${GMAE_VERSION[gameVersion.value as GameVersion]}」全部已发现的怪物吗？`,
+    `确定要清空「${
+      GMAE_VERSION[gameVersion.value as GameVersion]
+    }」全部已发现的怪物吗？`,
     '全部清空',
     {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning',
-    },
+    }
   ).then(() => {
     clearMonsterCurrentGameVerion()
     clearFilter()
@@ -521,15 +598,19 @@ function clearMonster() {
 function oneMapInstanceClear(zoneId: number) {
   const instance = filterConfig.value[zoneId as keyof typeof filterConfig.value]
   ElMessageBox.confirm(
-    `确定要清空「${Map[zoneId as ZoneIdType].name.souma}」的${instance}线的怪物吗？`,
+    `确定要清空「${
+      Map[zoneId as ZoneIdType].name.souma
+    }」的${instance}线的怪物吗？`,
     `${instance}线清空`,
     {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning',
-    },
+    }
   ).then(() => {
-    allMonstersData.value = allMonstersData.value.filter(item => !(item.zoneId === zoneId && item.instance === Number(instance)))
+    allMonstersData.value = allMonstersData.value.filter(
+      (item) => !(item.zoneId === zoneId && item.instance === Number(instance))
+    )
     mergeOverlapMonsters()
   })
 }
@@ -542,9 +623,11 @@ function oneMapClear(zoneId: ZoneIdType) {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning',
-    },
+    }
   ).then(() => {
-    allMonstersData.value = allMonstersData.value.filter(item => item.zoneId !== zoneId)
+    allMonstersData.value = allMonstersData.value.filter(
+      (item) => item.zoneId !== zoneId
+    )
     filterConfig.value[zoneId] = zoneFilter.value[zoneId as ZoneIdType][0]!
     mergeOverlapMonsters()
   })
@@ -572,7 +655,7 @@ function getShowType(item: DiscoveredMonsters[number]): FilterType {
 function isShow(item: DiscoveredMonsters[number]): boolean {
   const showType = getShowType(item)
   if (showType.includes('-')) {
-    const filterInstance = showType.split('-').map(v => Number(v))
+    const filterInstance = showType.split('-').map((v) => Number(v))
     const max = filterInstance[filterInstance.length - 1]!
     const min = filterInstance[0]!
     return item.instance >= min && item.instance <= max
@@ -581,19 +664,25 @@ function isShow(item: DiscoveredMonsters[number]): boolean {
 }
 
 function handlePointClick(item: DiscoveredMonsters[number]): void {
-  const sameInstance = monstersData.value.filter(item2 => item2.zoneId === item.zoneId && item2.instance === item.instance)
-  const sameInstanceMaxNumber = Math.max(...sameInstance.map(item2 => item2.number))
+  const sameInstance = monstersData.value.filter(
+    (item2) => item2.zoneId === item.zoneId && item2.instance === item.instance
+  )
+  const sameInstanceMaxNumber = Math.max(
+    ...sameInstance.map((item2) => item2.number)
+  )
   sameInstance.forEach((item2) => {
     if (item2.number === sameInstanceMaxNumber) {
       item2.number = 1
-    }
-    else {
+    } else {
       item2.number += 1
     }
   })
   // 更新文本
   mergeOverlapMonsters()
-  if (item.instance === playerInstance.value && item.zoneId === playerZoneId.value) {
+  if (
+    item.instance === playerInstance.value &&
+    item.zoneId === playerZoneId.value
+  ) {
     // 更新标点
     updateWaymarks()
   }
@@ -625,7 +714,7 @@ function exportStr() {
 }
 
 function oneMapExport(zoneId: number) {
-  const data = monstersData.value.filter(item => item.zoneId === zoneId)
+  const data = monstersData.value.filter((item) => item.zoneId === zoneId)
   if (!data) {
     throw new Error('找不到该地图')
   }
@@ -635,17 +724,21 @@ function oneMapExport(zoneId: number) {
 function oneMapInstanceExport(zoneId: number) {
   const instance = filterConfig.value[zoneId as keyof typeof filterConfig.value]
   if (instance.includes('-')) {
-    const filterInstance = instance.split('-').map(v => Number(v))
+    const filterInstance = instance.split('-').map((v) => Number(v))
     const max = filterInstance[filterInstance.length - 1]!
     const min = filterInstance[0]!
-    const data = monstersData.value.filter(item => item.zoneId === zoneId && item.instance >= min && item.instance <= max)
+    const data = monstersData.value.filter(
+      (item) =>
+        item.zoneId === zoneId && item.instance >= min && item.instance <= max
+    )
     if (!data) {
       throw new Error('找不到该地图')
     }
     exportSth(data)
-  }
-  else {
-    const data = monstersData.value.filter(item => item.zoneId === zoneId && item.instance === Number(instance))
+  } else {
+    const data = monstersData.value.filter(
+      (item) => item.zoneId === zoneId && item.instance === Number(instance)
+    )
     if (!data) {
       throw new Error('找不到该地图')
     }
@@ -661,44 +754,58 @@ function importStr() {
     inputValue: '',
     inputValidator: (value) => {
       try {
-        const decompressedText = LZString.decompressFromEncodedURIComponent(value)
+        const decompressedText =
+          LZString.decompressFromEncodedURIComponent(value)
         const data = JSON.parse(decompressedText)
         if (!Array.isArray(data)) {
           return '数据格式错误'
         }
-        if (data.every(v => getZoneGameVersion(v.zoneId) !== gameVersion.value)) {
-          return `该字符串不属于「${GMAE_VERSION[gameVersion.value as GameVersion]}」，请检查`
+        if (
+          data.every((v) => getZoneGameVersion(v.zoneId) !== gameVersion.value)
+        ) {
+          return `该字符串不属于「${
+            GMAE_VERSION[gameVersion.value as GameVersion]
+          }」，请检查`
         }
         return true
-      }
-      catch (error) {
+      } catch (error) {
         void error
         return '数据格式错误'
       }
     },
   }).then(({ value }) => {
-    Promise.race(
-      [
-        ElMessageBox.confirm('要舍弃当前的数据，并全部替换为导入的数据吗？', '你的地图上还有怪物！', {
+    Promise.race([
+      ElMessageBox.confirm(
+        '要舍弃当前的数据，并全部替换为导入的数据吗？',
+        '你的地图上还有怪物！',
+        {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning',
-        }),
-        monstersData.value.length === 0 ? Promise.resolve() : new Promise(() => {}),
-      ],
-    ).then(() => {
-      const decompressedText = LZString.decompressFromEncodedURIComponent(value)
-      const data = JSON.parse(decompressedText) as DiscoveredMonsters
-      const otherGameVersion = allMonstersData.value.filter(v => getZoneGameVersion(v.zoneId as ZoneIdType) !== gameVersion.value)
-      allMonstersData.value = [...otherGameVersion, ...data]
-      mergeOverlapMonsters()
-      ElMessageBox.close()
-      ElNotification({
-        title: '导入成功',
-        message: `已导入${data.length}条数据`,
-        type: 'success',
+        }
+      ),
+      monstersData.value.length === 0
+        ? Promise.resolve()
+        : new Promise(() => {}),
+    ])
+      .then(() => {
+        const decompressedText =
+          LZString.decompressFromEncodedURIComponent(value)
+        const data = JSON.parse(decompressedText) as DiscoveredMonsters
+        const otherGameVersion = allMonstersData.value.filter(
+          (v) =>
+            getZoneGameVersion(v.zoneId as ZoneIdType) !== gameVersion.value
+        )
+        allMonstersData.value = [...otherGameVersion, ...data]
+        mergeOverlapMonsters()
+        ElMessageBox.close()
+        ElNotification({
+          title: '导入成功',
+          message: `已导入${data.length}条数据`,
+          type: 'success',
+        })
       })
-    }).catch(() => { })
+      .catch(() => {})
   })
 }
 
@@ -710,9 +817,10 @@ function importOneZoneStr() {
     inputValue: '',
     inputValidator: (value) => {
       try {
-        const decompressedText = LZString.decompressFromEncodedURIComponent(value)
+        const decompressedText =
+          LZString.decompressFromEncodedURIComponent(value)
         const data = JSON.parse(decompressedText) as DiscoveredMonsters
-        const zoneIds = new Set(data.map(item => item.zoneId))
+        const zoneIds = new Set(data.map((item) => item.zoneId))
         if (zoneIds.size !== 1) {
           return '导入的字符串不止一个地图，你是不是选错了？'
         }
@@ -720,8 +828,7 @@ function importOneZoneStr() {
           return '数据格式错误'
         }
         return true
-      }
-      catch (error) {
+      } catch (error) {
         // 为什么catch里不传参还会报错啊？？？
         void error
         return '数据格式错误'
@@ -730,27 +837,39 @@ function importOneZoneStr() {
   }).then(({ value }) => {
     const decompressedText = LZString.decompressFromEncodedURIComponent(value)
     const data = JSON.parse(decompressedText) as DiscoveredMonsters
-    const mapName = Map[data[0]!.zoneId as unknown as keyof typeof Map].name.souma
-    const targetMonsters = monstersData.value.filter(item => item.zoneId === data[0]!.zoneId)
-    Promise.race(
-      [
-        ElMessageBox.confirm(`要舍弃当前的数据，并替换为导入的数据吗？`, `你的「${mapName}」上还有怪物！`, {
+    const mapName =
+      Map[data[0]!.zoneId as unknown as keyof typeof Map].name.souma
+    const targetMonsters = monstersData.value.filter(
+      (item) => item.zoneId === data[0]!.zoneId
+    )
+    Promise.race([
+      ElMessageBox.confirm(
+        `要舍弃当前的数据，并替换为导入的数据吗？`,
+        `你的「${mapName}」上还有怪物！`,
+        {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning',
-        }),
-        targetMonsters.length === 0 ? Promise.resolve() : new Promise(() => {}),
-      ],
-    ).then(() => {
-      allMonstersData.value = [...allMonstersData.value.filter(item => item.zoneId !== data[0]!.zoneId), ...data]
-      mergeOverlapMonsters()
-      ElMessageBox.close()
-      ElNotification({
-        title: '导入成功',
-        message: `已导入${data.length}条数据`,
-        type: 'success',
+        }
+      ),
+      targetMonsters.length === 0 ? Promise.resolve() : new Promise(() => {}),
+    ])
+      .then(() => {
+        allMonstersData.value = [
+          ...allMonstersData.value.filter(
+            (item) => item.zoneId !== data[0]!.zoneId
+          ),
+          ...data,
+        ]
+        mergeOverlapMonsters()
+        ElMessageBox.close()
+        ElNotification({
+          title: '导入成功',
+          message: `已导入${data.length}条数据`,
+          type: 'success',
+        })
       })
-    }).catch(() => { })
+      .catch(() => {})
   })
 }
 
@@ -762,10 +881,11 @@ function importOneInstanceStr() {
     inputValue: '',
     inputValidator: (value) => {
       try {
-        const decompressedText = LZString.decompressFromEncodedURIComponent(value)
+        const decompressedText =
+          LZString.decompressFromEncodedURIComponent(value)
         const data = JSON.parse(decompressedText) as DiscoveredMonsters
-        const zoneIds = new Set(data.map(item => item.zoneId))
-        const instanceIds = new Set(data.map(item => item.instance))
+        const zoneIds = new Set(data.map((item) => item.zoneId))
+        const instanceIds = new Set(data.map((item) => item.instance))
         if (zoneIds.size !== 1 || instanceIds.size !== 1) {
           return '导入的字符串不止一个地图或线，你是不是选错了？'
         }
@@ -773,8 +893,7 @@ function importOneInstanceStr() {
           return '数据格式错误'
         }
         return true
-      }
-      catch (error) {
+      } catch (error) {
         // 为什么catch里不传参还会报错啊？？？
         void error
         return '数据格式错误'
@@ -783,28 +902,43 @@ function importOneInstanceStr() {
   }).then(({ value }) => {
     const decompressedText = LZString.decompressFromEncodedURIComponent(value)
     const data = JSON.parse(decompressedText) as DiscoveredMonsters
-    const mapName = Map[data[0]!.zoneId as unknown as keyof typeof Map]!.name.souma
+    const mapName =
+      Map[data[0]!.zoneId as unknown as keyof typeof Map]!.name.souma
     const instanceName = data[0]!.instance.toString()
-    const targetMonsters = monstersData.value.filter(item => item.zoneId === data[0]!.zoneId && item.instance === data[0]!.instance)
-    Promise.race(
-      [
-        ElMessageBox.confirm(`要舍弃当前的数据，并替换为导入的数据吗？`, `你的「${mapName}」的${instanceName}线上还有怪物！`, {
+    const targetMonsters = monstersData.value.filter(
+      (item) =>
+        item.zoneId === data[0]!.zoneId && item.instance === data[0]!.instance
+    )
+    Promise.race([
+      ElMessageBox.confirm(
+        `要舍弃当前的数据，并替换为导入的数据吗？`,
+        `你的「${mapName}」的${instanceName}线上还有怪物！`,
+        {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning',
-        }),
-        targetMonsters.length === 0 ? Promise.resolve() : new Promise(() => {}),
-      ],
-    ).then(() => {
-      allMonstersData.value = [...allMonstersData.value.filter(item => item.zoneId !== data[0]!.zoneId || item.instance !== data[0]!.instance), ...data]
-      mergeOverlapMonsters()
-      ElMessageBox.close()
-      ElNotification({
-        title: '导入成功',
-        message: `已导入${data.length}条数据`,
-        type: 'success',
+        }
+      ),
+      targetMonsters.length === 0 ? Promise.resolve() : new Promise(() => {}),
+    ])
+      .then(() => {
+        allMonstersData.value = [
+          ...allMonstersData.value.filter(
+            (item) =>
+              item.zoneId !== data[0]!.zoneId ||
+              item.instance !== data[0]!.instance
+          ),
+          ...data,
+        ]
+        mergeOverlapMonsters()
+        ElMessageBox.close()
+        ElNotification({
+          title: '导入成功',
+          message: `已导入${data.length}条数据`,
+          type: 'success',
+        })
       })
-    }).catch(() => { })
+      .catch(() => {})
   })
 }
 
@@ -816,18 +950,29 @@ function doSound() {
 
 function getMapName(zoneId: ZoneIdType, i: number): string {
   const instanceMax = zoneInstanceMax(zoneId)
-  const instanceNow = monstersData.value.filter(item => item.zoneId === zoneId).length
-  return `${i + 1}图 ${Map[zoneId].name.souma} / ${Map[zoneId].name.ja} / ${Map[zoneId].name.en} （${instanceNow}/${instanceMax}）${instanceNow === instanceMax ? '✅' : ''}`
+  const instanceNow = monstersData.value.filter(
+    (item) => item.zoneId === zoneId
+  ).length
+  return `${i + 1}图 ${Map[zoneId].name.souma} / ${Map[zoneId].name.ja} / ${
+    Map[zoneId].name.en
+  } （${instanceNow}/${instanceMax}）${instanceNow === instanceMax ? '✅' : ''}`
 }
 
 function getStyle(item: DiscoveredMonsters[number]): { [key: string]: string } {
-  const zone = zoneInfo[item.zoneId]!
+  const zone = ZoneInfo[item.zoneId]!
   const sizeFactor = zone.sizeFactor
   const offsetX = zone.offsetX
   const offsetY = zone.offsetY
-  const worldXZCoordinates = new Vector2(Number(item.worldX), Number(item.worldY))
+  const worldXZCoordinates = new Vector2(
+    Number(item.worldX),
+    Number(item.worldY)
+  )
   const mapOffset = new Vector2(offsetX, offsetY)
-  const pixelCoordinates = getPixelCoordinates(worldXZCoordinates, mapOffset, sizeFactor)
+  const pixelCoordinates = getPixelCoordinates(
+    worldXZCoordinates,
+    mapOffset,
+    sizeFactor
+  )
   return {
     position: 'absolute',
     left: `${pixelCoordinates.x * IMG_SCALE}px`,
@@ -838,25 +983,38 @@ function getStyle(item: DiscoveredMonsters[number]): { [key: string]: string } {
 function cleanUpExpiredData(): Promise<void> {
   const before = allMonstersData.value.length
   // 无提醒的清理超过24小时的怪物数据
-  allMonstersData.value = allMonstersData.value.filter(item => item.timestamp > 0 && item.timestamp > Date.now() - 1000 * 60 * 60 * 24)
+  allMonstersData.value = allMonstersData.value.filter(
+    (item) =>
+      item.timestamp > 0 && item.timestamp > Date.now() - 1000 * 60 * 60 * 24
+  )
   if (before !== allMonstersData.value.length) {
     ElMessage.info(`已清理${allMonstersData.value.length}条过期数据`)
   }
-  const monstersSorted = monstersData.value.toSorted((a, b) => b.timestamp - a.timestamp)
-  const lastUpadateTime = monstersSorted.length > 0 ? monstersSorted[0]!.timestamp : 0
+  const monstersSorted = monstersData.value.toSorted(
+    (a, b) => b.timestamp - a.timestamp
+  )
+  const lastUpadateTime =
+    monstersSorted.length > 0 ? monstersSorted[0]!.timestamp : 0
   return new Promise((resolve) => {
     if (lastUpadateTime > 0) {
       if (Date.now() - lastUpadateTime > 1000 * 60 * 60 * 4) {
         // 上次更新时间距离现在超过4小时，提醒用户数据可能已经过期
-        ElMessageBox.confirm('尚存有4小时前的怪物数据，可能已经过期，是否清空？', '数据过期', {
-          confirmButtonText: '全部清空',
-          cancelButtonText: '取消',
-          type: '',
-        }).then(() => {
-          clearMonsterCurrentGameVerion()
-        }).catch(() => { }).finally(() => {
-          resolve(undefined)
-        })
+        ElMessageBox.confirm(
+          '尚存有4小时前的怪物数据，可能已经过期，是否清空？',
+          '数据过期',
+          {
+            confirmButtonText: '全部清空',
+            cancelButtonText: '取消',
+            type: '',
+          }
+        )
+          .then(() => {
+            clearMonsterCurrentGameVerion()
+          })
+          .catch(() => {})
+          .finally(() => {
+            resolve(undefined)
+          })
       }
       resolve(undefined)
     }
@@ -897,17 +1055,27 @@ function getInstanceLengthByZoneId(zoneId: ZoneIdType): LegalInstance {
 
 onMounted(async () => {
   // 预加载音频文件，避免需要时才加载
-  watch(playSound, (value) => {
-    if (value) {
-      const audio = new Audio(sonar)
-      audio.volume = 0
-      audio.play()
-    }
-  }, { immediate: true })
+  watch(
+    playSound,
+    (value) => {
+      if (value) {
+        const audio = new Audio(sonar)
+        audio.volume = 0
+        audio.play()
+      }
+    },
+    { immediate: true }
+  )
 
-  watch(gameVersion, () => {
-    zoneListUsed.value = zoneList.filter(zoneId => getZoneGameVersion(zoneId) === gameVersion.value)
-  }, { immediate: true })
+  watch(
+    gameVersion,
+    () => {
+      zoneListUsed.value = zoneList.filter(
+        (zoneId) => getZoneGameVersion(zoneId) === gameVersion.value
+      )
+    },
+    { immediate: true }
+  )
 
   if (monstersData.value.length === 0) {
     clearFilter()
@@ -932,8 +1100,7 @@ onMounted(async () => {
     ElMessage.success('处于开发模式下，默认选择1线')
     playerInstance.value = 1
     savedInstance.value = 1
-  }
-  else {
+  } else {
     ElMessageBox.prompt('请切一次线，或者手动指定', '你在几线', {
       confirmButtonText: '确认',
       inputPattern: /^[1-6]$/,
@@ -943,17 +1110,23 @@ onMounted(async () => {
       closeOnClickModal: false,
       closeOnPressEscape: false,
       closeOnHashChange: false,
-      inputValue: (savedInstance.value > 0 ? savedInstance.value : 1).toString(),
+      inputValue: (savedInstance.value > 0
+        ? savedInstance.value
+        : 1
+      ).toString(),
+    }).then(({ value }) => {
+      playerInstance.value = Number(value)
+      savedInstance.value = playerInstance.value
     })
-      .then(({ value }) => {
-        playerInstance.value = Number(value)
-        savedInstance.value = playerInstance.value
-      })
   }
 
-  watch(gameVersion, () => {
-    cleanUpExpiredData()
-  }, { immediate: false })
+  watch(
+    gameVersion,
+    () => {
+      cleanUpExpiredData()
+    },
+    { immediate: false }
+  )
 })
 </script>
 
@@ -962,7 +1135,7 @@ onMounted(async () => {
     <h3 v-if="!wsConnected">
       无法连接到ACTWebSocket，找怪功能无法工作，但你可以导入导出数据。
     </h3>
-    <span style="position: absolute; top: 1em; right: 1em; z-index: 22;">
+    <span style="position: absolute; top: 1em; right: 1em; z-index: 22">
       <CommonThemeToggle storage-key="hunt-theme" />
     </span>
     <el-col>
@@ -971,7 +1144,12 @@ onMounted(async () => {
           <el-form-item label="资料片">
             <div w-40 flex>
               <el-select v-model="gameVersion" placeholder="请选择">
-                <el-option v-for="[value, label] in Object.entries(GMAE_VERSION)" :key="value" :label="label" :value="value" />
+                <el-option
+                  v-for="[value, label] in Object.entries(GMAE_VERSION)"
+                  :key="value"
+                  :label="label"
+                  :value="value"
+                />
               </el-select>
             </div>
           </el-form-item>
@@ -988,15 +1166,9 @@ onMounted(async () => {
     </el-col>
     <el-col class="menu">
       <el-row>
-        <el-button type="primary" @click="clearMonster">
-          全部清空
-        </el-button>
-        <el-button text bg @click="exportStr">
-          全部导出
-        </el-button>
-        <el-button text bg @click="importStr">
-          全部导入
-        </el-button>
+        <el-button type="primary" @click="clearMonster"> 全部清空 </el-button>
+        <el-button text bg @click="exportStr"> 全部导出 </el-button>
+        <el-button text bg @click="importStr"> 全部导入 </el-button>
         <el-button text bg @click="importOneZoneStr">
           单独导入某个图
         </el-button>
@@ -1008,10 +1180,15 @@ onMounted(async () => {
         <el-checkbox v-model="showNumber" label="显示数字" w-15 />
         <el-checkbox v-model="playSound" label="启用音效" />
         <div v-show="playSound" class="flex items-center" w-40 p-l-2>
-          <el-slider v-model="soundVolume" :min="0" :max="1" :step="0.1" size="small" class="flex-grow" />
-          <el-button size="small" m-l-1 @click="doSound">
-            试听
-          </el-button>
+          <el-slider
+            v-model="soundVolume"
+            :min="0"
+            :max="1"
+            :step="0.1"
+            size="small"
+            class="flex-grow"
+          />
+          <el-button size="small" m-l-1 @click="doSound"> 试听 </el-button>
         </div>
       </el-row>
       <el-row p-l-3>
@@ -1021,20 +1198,30 @@ onMounted(async () => {
     <el-row class="map-container" flex="~ wrap" m-t-1>
       <el-row v-if="dev">
         DEV：
-        <el-button type="warning" @click="testMonster">
-          添加怪物
-        </el-button>
+        <el-button type="warning" @click="testMonster"> 添加怪物 </el-button>
         <el-button type="warning" @click="mergeOverlapMonsters">
           合并怪物
         </el-button>
-        <el-button type="warning" @click="testPostnamazu">
-          邮差标点
-        </el-button>
+        <el-button type="warning" @click="testPostnamazu"> 邮差标点 </el-button>
       </el-row>
     </el-row>
     <div class="map-container" flex="~ wrap">
-      <div v-for="(m, i) in zoneListUsed" :key="m" class="map-info" flex="~ col" position-relative>
-        <h3 class="map-title" :style="{ width: `${IMG_SHOW_SIZE}px` }" position-absolute mb-0 ml-2 mt-1 p0>
+      <div
+        v-for="(m, i) in zoneListUsed"
+        :key="m"
+        class="map-info"
+        flex="~ col"
+        position-relative
+      >
+        <h3
+          class="map-title"
+          :style="{ width: `${IMG_SHOW_SIZE}px` }"
+          position-absolute
+          mb-0
+          ml-2
+          mt-1
+          p0
+        >
           {{ getMapName(m, i) }}
         </h3>
         <ul class="options" position-absolute right-0 top-0 mr-2 mt-1 p0>
@@ -1049,24 +1236,56 @@ onMounted(async () => {
             </el-button>
           </li>
           <li v-show="getInstanceLengthByZoneId(m) !== 1" class="option">
-            <el-button v-show="!(getInstanceLengthByZoneId(m) !== 1 && filterConfig[m]?.includes('-'))" size="small" w-5em @click="oneMapInstanceClear(m)">
+            <el-button
+              v-show="
+                !(
+                  getInstanceLengthByZoneId(m) !== 1 &&
+                  filterConfig[m]?.includes('-')
+                )
+              "
+              size="small"
+              w-5em
+              @click="oneMapInstanceClear(m)"
+            >
               {{ filterConfig[m] }}线清空
             </el-button>
           </li>
           <li v-show="getInstanceLengthByZoneId(m) !== 1" class="option">
-            <el-button v-show="!(getInstanceLengthByZoneId(m) !== 1 && filterConfig[m]?.includes('-'))" size="small" w-5em @click="oneMapInstanceExport(m)">
+            <el-button
+              v-show="
+                !(
+                  getInstanceLengthByZoneId(m) !== 1 &&
+                  filterConfig[m]?.includes('-')
+                )
+              "
+              size="small"
+              w-5em
+              @click="oneMapInstanceExport(m)"
+            >
               {{ filterConfig[m] }}线导出
             </el-button>
           </li>
         </ul>
         <aside
           v-show="getInstanceLengthByZoneId(m) !== 1"
-          class="map-filter" position-absolute style="top:2em;" ml-2
+          class="map-filter"
+          position-absolute
+          style="top: 2em"
+          ml-2
           flex="~ justify-start"
           :style="{ width: `${IMG_SHOW_SIZE}px` }"
         >
-          <el-radio-group v-model="filterConfig[m]" size="small" @change="mergeOverlapMonsters">
-            <el-radio-button v-for="item in zoneFilter[m]" :key="item" :label="item" :value="item" />
+          <el-radio-group
+            v-model="filterConfig[m]"
+            size="small"
+            @change="mergeOverlapMonsters"
+          >
+            <el-radio-button
+              v-for="item in zoneFilter[m]"
+              :key="item"
+              :label="item"
+              :value="item"
+            />
           </el-radio-group>
         </aside>
         <div
@@ -1074,13 +1293,20 @@ onMounted(async () => {
           :style="{ width: `${IMG_SHOW_SIZE}px`, height: `${IMG_SHOW_SIZE}px` }"
         >
           <img
-            alt="map" :src="getSrc(getZoneGameVersion(m), Map[m].id)"
-            :style="{ width: `${IMG_SHOW_SIZE}px`, height: `${IMG_SHOW_SIZE}px` }"
-          >
+            alt="map"
+            :src="getSrc(getZoneGameVersion(m), Map[m].id)"
+            :style="{
+              width: `${IMG_SHOW_SIZE}px`,
+              height: `${IMG_SHOW_SIZE}px`,
+            }"
+          />
 
           <div
-            v-for="(aItem, aIndex) in Aetherytes.filter(a => a.territory === m.toString())"
-            :key="`${aItem.territory}-${aIndex}`" :style="{
+            v-for="(aItem, aIndex) in Aetherytes.filter(
+              (a) => a.territory === m.toString()
+            )"
+            :key="`${aItem.territory}-${aIndex}`"
+            :style="{
               position: 'absolute',
               left: `${(aItem.x - 1) * IMG_SCALE}px`,
               top: `${(aItem.y - 1) * IMG_SCALE}px`,
@@ -1093,16 +1319,20 @@ onMounted(async () => {
               placement="top"
             >
               <img
-                class="aetherytes" alt="aetheryte" src="//cafemaker.wakingsands.com/img-misc/mappy/aetheryte.png"
+                class="aetherytes"
+                alt="aetheryte"
+                src="//cafemaker.wakingsands.com/img-misc/mappy/aetheryte.png"
                 :style="{ height: `${IMG_SHOW_SIZE / 20}px` }"
-              >
+              />
             </el-tooltip>
           </div>
           <div>
             <article>
               <div
-                v-for="(item) in monstersData.filter((item) => item.zoneId === m)" v-show="isShow(item)"
-                :key="`${item.zoneId}-${item.id}`" :style="getStyle(item)"
+                v-for="item in monstersData.filter((item) => item.zoneId === m)"
+                v-show="isShow(item)"
+                :key="`${item.zoneId}-${item.id}`"
+                :style="getStyle(item)"
               >
                 <div class="point" @click="handlePointClick(item)">
                   <div :class="`point-inner ${getBackgroundColor(item)}`" />
@@ -1117,14 +1347,14 @@ onMounted(async () => {
   </div>
 </template>
 
-<style scoped lang='scss'>
+<style scoped lang="scss">
 :global(html) {
   overflow: -moz-scrollbars-none;
   -ms-overflow-style: none;
 }
 
-:global(html::-webkit-scrollbar){
-    display: none;
+:global(html::-webkit-scrollbar) {
+  display: none;
 }
 
 .menu {
@@ -1169,7 +1399,6 @@ onMounted(async () => {
   justify-content: center;
   user-select: none;
   cursor: pointer;
-
 }
 
 .map-title {
@@ -1184,7 +1413,7 @@ onMounted(async () => {
   z-index: 3;
 
   .el-radio-button {
-    opacity: 0.0;
+    opacity: 0;
     transition: opacity 0.3s ease-in-out, width 0.6s ease-in-out;
 
     &.is-active {

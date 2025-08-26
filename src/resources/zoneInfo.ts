@@ -1,6 +1,19 @@
+import type { LocaleText } from '../../cactbot/types/trigger'
 import data from '../../cactbot/resources/zone_info'
 
-const zoneInfo = Object.assign(
+type ZoneInfoType = {
+  [zoneId: number]: {
+    readonly exVersion: number
+    readonly contentType?: number
+    readonly name: LocaleText
+    readonly offsetX: number
+    readonly offsetY: number
+    readonly sizeFactor: number
+    readonly weatherRate: number
+  }
+}
+
+const ZoneInfo: ZoneInfoType = Object.assign(
   {
     967: {
       exVersion: 3,
@@ -67,5 +80,6 @@ const zoneInfo = Object.assign(
     },
   },
   data,
-) as typeof data
-export default zoneInfo
+)
+
+export { ZoneInfo, type ZoneInfoType }
