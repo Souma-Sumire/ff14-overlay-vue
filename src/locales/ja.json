@@ -56,7 +56,7 @@
   "Savage": "零式",
   "Extreme": "極",
   "Ultimate": "絶",
-  "fileNameExplanation": "%CCYY: 年、%MM: 月、%DD: 日、%hh: 時、%mm: 分、%ss: 秒",
+  "fileNameExplanation": "%CCYY: 年、%MM: 月、%DD: 日、%hh: 時、%mm: 分、%ss: 秒, ${zoneName}クエストタイトル",
   "Recording Profile": "録音プロファイル",
   "Record Path": "パス",
   "Record File Name": "ファイル名",

@@ -64,7 +64,7 @@
   "Record File Name": "文件名",
   "recordPathPlaceholder": "请填写路径",
   "recordFileNamePlaceholder": "请填写文件名",
-  "fileNameExplanation": "%CCYY: 年, %MM: 月, %DD: 日, %hh: 时, %mm: 分, %ss: 秒",
+  "fileNameExplanation": "%CCYY: 年, %MM: 月, %DD: 日, %hh: 时, %mm: 分, %ss: 秒, ${zoneName}副本名称",
   "Recording Profile": "录制资料",
   "filePathExplanation": "须保证目录存在",
   "Set Recording Name": "设置路径",

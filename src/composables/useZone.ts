@@ -81,7 +81,10 @@ function useZone() {
   const handleChangeZone: EventMap['ChangeZone'] = (e) => {
     zoneID.value = e.zoneID
     const zoneInfo = ZoneInfo[zoneID.value]
-    if (!zoneInfo) return
+    if (!zoneInfo) {
+      zoneType.value = 'Default'
+      return
+    }
     zoneType.value = getZoneType(zoneInfo)
   }
 

@@ -56,7 +56,7 @@
   "Savage": "Savage",
   "Extreme": "Extreme",
   "Ultimate": "Ultimate",
-  "fileNameExplanation": "%CCYY: Year, %MM: Month, %DD: Day, %hh: Hour, %mm: Minute, %ss: Second",
+  "fileNameExplanation": "%CCYY: Year, %MM: Month, %DD: Day, %hh: Hour, %mm: Minute, %ss: Second, ${zoneName} Contents Name",
   "Recording Profile": "Recording Profile",
   "Record Path": "Path",
   "Record File Name": "File Name",
