@@ -10,7 +10,7 @@ import {
 const CONTENT_TYPES = [
   'Savage', // 零式
   'Extreme', // 歼殛战
-  'Chaotic', // 破灭战
+  'Chaotic', // 诛灭战
   'Ultimate', // 绝境战
   'OccultCrescent', // 新月岛
   'Dungeons', // 四人副本
