@@ -55,7 +55,6 @@ const userContentSetting = useStorage(
   'obs-user-content-setting',
   [] as Settings[]
 )
-const isFirstTime = useStorage('obs-is-first-time', true)
 const dev = useDev()
 const partyLength = ref(1)
 
@@ -119,8 +118,7 @@ function initializeContentSettings() {
     'OccultCrescent',
     'Default',
   ]
-  if (isFirstTime.value) {
-    isFirstTime.value = false
+  if (userContentSetting.value.length === 0) {
     userContentSetting.value = [
       ...defaultEnabled.map((type) => ({ type, ...DEFAULT_ENABLE_SETTINGS })),
       ...CONTENT_TYPES.filter((type) => !defaultEnabled.includes(type)).map(
@@ -223,17 +221,17 @@ class Obs {
     this.ws.on('RecordStateChanged', this.handleRecordStateChanged)
   }
 
-  async connect(): Promise<void> {
+  async connect() {
     Log('Connecting to OBS')
     if (!userConfig.value.host) {
       ElMessage({
         type: 'error',
         message: t('host required'),
       })
-      return Promise.reject()
+      return
     }
     if (this.status.connecting) {
-      return Promise.reject()
+      return
     }
     this.status.connecting = true
     return this.ws
@@ -421,7 +419,9 @@ function checkCondition(condition: ConditionType) {
 
       if (!obs.status.connected) {
         obs.connect()?.then(() => {
-          obs.startRecord()
+          if (obs.status.connected) {
+            obs.startRecord()
+          }
         })
         return
       }
@@ -456,7 +456,10 @@ const handlePartyChanged: EventMap['PartyChanged'] = (ev) => {
 
 onMounted(async () => {
   await waitACT()
-  await obs.connect()
+  obs.connect()
+  while (!obs.status.connected) {
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+  }
   addOverlayListener('ChangeZone', handleChangeZone)
   addOverlayListener('LogLine', handleLogLine)
   addOverlayListener('PartyChanged', handlePartyChanged)
