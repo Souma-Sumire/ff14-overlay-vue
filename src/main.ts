@@ -12,6 +12,7 @@ import router from './router'
 import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import 'virtual:uno.css'
+import { checkReferrer } from './utils/checkReferrer'
 
 const app = createApp(App)
 const head = createHead()
@@ -31,7 +32,9 @@ function handleError(error: Error): void {
   console.error(error)
   ElMessage.error({
     dangerouslyUseHTMLString: true,
-    message: `<pre style="white-space: pre-wrap;">${error.stack || error.message}</pre>`,
+    message: `<pre style="white-space: pre-wrap;">${
+      error.stack || error.message
+    }</pre>`,
     duration: 5000,
     showClose: true,
   })
@@ -60,6 +63,7 @@ app.use(pinia)
 app.use(VueLazyload)
 app.use(i18n)
 
+checkReferrer()
 app.mount('#app')
 
 const { protocol, hostname, href } = window.location
