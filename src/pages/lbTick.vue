@@ -111,9 +111,9 @@ onUnmounted(() => {
       测试
     </el-button>
     <div class="lb-container">
-      <p id="percent">{{ (state.ratio * 100).toFixed(2) }}%</p>
+      <p id="percent">LB:{{ (state.ratio * 100).toFixed(2) }}%</p>
       <p id="bonusTotal">
-        {{ ((state.bonusTotal / LB_MAX) * 100).toFixed(0) }}%
+        奖励:{{ ((state.bonusTotal / LB_MAX) * 100).toFixed(0) }}%
       </p>
       <div id="extra">
         <p v-for="item in state.chainList" :key="item.key" class="anime">
@@ -145,10 +145,6 @@ onUnmounted(() => {
 }
 
 #percent {
-  &::before {
-    content: 'LB:';
-  }
-
   font-size: 14px;
   text-shadow: -1px 0 1.5px rgb(145, 186, 94), 0 1.5px 1.5px rgb(145, 186, 94),
     1px 0 1.5px rgb(145, 186, 94), 0 -1.5px 1.5px rgb(145, 186, 94);
@@ -161,10 +157,6 @@ onUnmounted(() => {
 }
 
 #bonusTotal {
-  &::before {
-    content: '奖励:';
-  }
-
   position: absolute;
   top: 21px;
   right: 4px;
@@ -184,26 +176,21 @@ onUnmounted(() => {
     height: 0px;
     font-size: 0.5em;
   }
-
   4% {
     opacity: 1;
     height: 26px;
     font-size: 1.2em;
   }
-
   6% {
     font-size: 1em;
   }
-
   70% {
     opacity: 1;
   }
-
   90% {
     opacity: 0;
     height: 26px;
   }
-
   100% {
     opacity: 0;
     height: 0px;

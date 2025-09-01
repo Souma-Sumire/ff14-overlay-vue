@@ -1,41 +1,52 @@
-import type { Linter } from 'eslint'
-import globals from 'globals'
 import js from '@eslint/js'
+import globals from 'globals'
 import tseslint from 'typescript-eslint'
-import prettier from 'eslint-plugin-prettier'
-import prettierConfig from 'eslint-config-prettier'
+import pluginVue from 'eslint-plugin-vue'
+import { defineConfig } from 'eslint/config'
 
-const config: Linter.Config[] = [
-  js.configs.recommended,
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
-  ...tseslint.configs.recommended,
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
+const autoImportConfigPath = path.resolve(
+  __dirname,
+  '.eslintrc-auto-import.json'
+)
+const autoImportGlobals: Record<string, boolean | 'readonly'> = JSON.parse(
+  fs.readFileSync(autoImportConfigPath, 'utf-8')
+).globals
+
+export default defineConfig([
   {
-    files: ['**/*.ts', '**/*.tsx'],
-    languageOptions: {
-      parser: tseslint.parser,
-      parserOptions: {
-        project: ['./tsconfig.json'],
-        tsconfigRootDir: __dirname,
-      },
-      globals: {
-        ...globals.browser,
-        ...globals.node,
-      },
-    },
-    plugins: {
-      prettier,
-    },
+    ignores: ['dist/', 'node_modules/', 'cactbot/'],
+  },
+  {
+    files: ['**/*.{js,mjs,cjs,ts,mts,cts,vue}'],
+    plugins: { js },
+    extends: ['js/recommended'],
+    languageOptions: { globals: { ...globals.browser, ...autoImportGlobals } },
     rules: {
-      'prettier/prettier': 'error',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          args: 'all',
+          argsIgnorePattern: '^_',
+          caughtErrors: 'all',
+          caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
+      ],
     },
   },
-
-  prettierConfig,
-
+  tseslint.configs.recommended,
+  pluginVue.configs['flat/essential'],
   {
-    ignores: ['node_modules/', 'dist/', 'cactbot/', 'src/resources/**/*.json'],
+    files: ['**/*.vue'],
+    languageOptions: { parserOptions: { parser: tseslint.parser } },
   },
-]
-
-export default config
+])
