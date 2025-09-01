@@ -122,15 +122,16 @@ UserConfig.getUserConfigLocation('soumatest', options, () => {
   userConfig.value.DisplayLanguage = options.DisplayLanguage!
   userConfig.value.SystemInfo = options.SystemInfo!
   userConfig.value.CactbotUserDirectory = (
-    UserConfig.savedConfig.general as { [key: string]: any }
+    UserConfig.savedConfig.general as { [key: string]: unknown }
   ).CactbotUserDirectory! as string
   userConfig.value.DefaultAlertOutput = (
-    UserConfig.savedConfig.raidboss as { [key: string]: any }
+    UserConfig.savedConfig.raidboss as { [key: string]: unknown }
   ).DefaultAlertOutput! as string
 })
 
-const eventEventRes: Ref<{ [key: string]: any }> = ref({})
+const eventEventRes: Ref<{ [key: string]: unknown }> = ref({})
 
+ 
 function onEvent(ev: any) {
   if (ev.type === 'EnmityTargetData' && !ev.Target) {
     return

@@ -377,9 +377,8 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
   }
 }
 
-function Log(...args: any[]) {
+function Log(...args: unknown[]) {
   if (dev.value) {
-    // eslint-disable-next-line no-console
     console.log('[OBS Auto Record]', ...args)
   }
 }

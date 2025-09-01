@@ -268,7 +268,6 @@ export async function parseTimeline(
       : undefined
     const cactbotSync = syncRegex.exec(match[0])?.groups
     const cactbotRegexType = cactbotSync?.netRegexType
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let params = {} as any
     try {
       params = JSON5.parse(cactbotSync?.netRegex ?? '{}')

@@ -339,8 +339,8 @@ function handleLine(line: string) {
               }
               const cn = getActionChinese(Number.parseInt(id, 16))
               const actionCN = cn && cn !== '' ? cn : action
-              const currentHp = Number(splitLine[logDefinitions.Ability.fields.targetCurrentHp]) ?? '???'
-              const maxHp = Number(splitLine[logDefinitions.Ability.fields.targetMaxHp]) ?? '???'
+              const currentHp = Number(splitLine[logDefinitions.Ability.fields.targetCurrentHp])
+              const maxHp = Number(splitLine[logDefinitions.Ability.fields.targetMaxHp])
               const source = splitLine[logDefinitions.Ability.fields.source] ?? '???'
               const target = splitLine[logDefinitions.Ability.fields.target] ?? '???'
               const { effect, type } = processFlags(ability.flags)

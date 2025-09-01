@@ -319,7 +319,6 @@ function checkImmediatelyMonster() {
       item.zoneId === playerZoneId.value && timestamp - item.timestamp < 5000
   )
   monsters.forEach((item) => {
-    // eslint-disable-next-line no-console
     console.log(`触发了5秒规则`)
     item.instance = playerInstance.value
     // number等于 从1、2、3、4、5、6中寻找第一个不在 monsters 中存在的number
@@ -349,7 +348,6 @@ const handleChangeZone: EventMap['ChangeZone'] = (event) => {
 
 const handleChangePrimaryPlayer: EventMap['ChangePrimaryPlayer'] = (event) => {
   server.value = /^[A-Z]\S+ [A-Z]\S+$/.test(event.charName) ? 'Global' : 'CN'
-  // eslint-disable-next-line no-console
   console.log(`当前模式: ${server.value}`)
 }
 

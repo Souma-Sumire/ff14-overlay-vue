@@ -2173,8 +2173,8 @@ function handleBatchLearning(): void {
   })
     .then(({ value }) => {
       for (const n of value.split(',')) {
-        if (/^\d+[\-~]\d+$/.test(n)) {
-          const [min, max] = n.split(/[\-~]/).map(Number)
+        if (/^\d+[-~]\d+$/.test(n)) {
+          const [min, max] = n.split(/[-~]/).map(Number)
           for (let i = min!; i <= max!; i++)
             learned.value[i.toString()] = true
         }

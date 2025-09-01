@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 const params = new URLSearchParams(window.location.href.split('?')[1])
 
 const api = params.get('api')
