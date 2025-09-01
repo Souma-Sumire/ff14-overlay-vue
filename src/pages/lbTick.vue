@@ -7,9 +7,12 @@ import {
   addOverlayListener,
   removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
+import { useZone } from '@/composables/useZone'
 
+const { zoneType } = useZone()
 const dev = useDev()
 const demo = useDemo()
+const display = computed(() => zoneType.value !== 'Pvp')
 
 const LB_MAX = 30000
 const LB_INCREMENT = 220
@@ -33,6 +36,9 @@ function handleClear() {
 }
 
 const handleLogLine: EventMap['LogLine'] = (e) => {
+  if (!display.value) {
+    return
+  }
   if (e.line[0] === '36') {
     const now = parseInt(e.line[2]!, 16)
     const add = now - state.prev
@@ -110,7 +116,7 @@ onUnmounted(() => {
     >
       测试
     </el-button>
-    <div class="lb-container">
+    <div class="lb-container" v-show="display">
       <p id="percent">LB:{{ (state.ratio * 100).toFixed(2) }}%</p>
       <p id="bonusTotal">
         奖励:{{ ((state.bonusTotal / LB_MAX) * 100).toFixed(0) }}%
