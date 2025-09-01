@@ -3,225 +3,210 @@ import type { EventMap } from 'cactbot/types/event'
 import { useDemo } from '@/composables/useDemo'
 import { useDev } from '@/composables/useDev'
 import { testLimitBreak } from '@/mock/demoLimitBreak'
-import { addOverlayListener, removeOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
-
-interface Entry {
-  value: number
-  time: string
-}
+import {
+  addOverlayListener,
+  removeOverlayListener,
+} from '../../cactbot/resources/overlay_plugin_api'
 
 const dev = useDev()
-const LBMax = 30000
-const autoParam = 220
-const LBAutomaticBaseline = Math.ceil(((autoParam / LBMax) * 1000)) / 1000
+const demo = useDemo()
+
+const LB_MAX = 30000
+const LB_INCREMENT = 220
+
 const stopTest = ref<(() => void) | undefined>()
 
-const demo = useDemo()
-watch(demo, () => {
-  stopTest.value?.()
-  clearState()
-})
-
 const state = reactive({
-  lbNow: 0,
-  lbBefore: 0,
-  lbAddUp: 0,
-  lbExtraAll: 0,
-  extraEntries: [] as Entry[],
+  prev: 0, // 记录上一次LB 进度，用于比较增值
+  ratio: 0, // LB 进度
+  bonusTotal: 0, // 全局LB 总奖励值
+  chain: 0, // 单次LB 连续奖励
+  chainList: [] as { key: string; num: number; timestamp: number }[], // 奖励数值储存
 })
 
-const extraEntries = ref<Entry[]>([])
-
-function clearState() {
-  state.lbExtraAll = 0
-  state.lbNow = 0
-  state.extraEntries = []
-  state.lbAddUp = 0
-  state.lbBefore = 0
-}
-
-function isLimitBreakGain(add: number) {
-  return add > LBAutomaticBaseline
-}
-
-function isContinuous(last: Entry | undefined, newValue: number) {
-  return !!last && (last.value === newValue - 1 || last.value === newValue - 5)
-}
-
-function addExtraEntry(newValue: number) {
-  const last = extraEntries.value.at(-1)
-  if (isContinuous(last, newValue) && extraEntries.value.length) {
-    extraEntries.value[extraEntries.value.length - 1]!.value = newValue
-  }
-  else {
-    const entry: Entry = {
-      value: newValue,
-      time: new Intl.DateTimeFormat('default', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      }).format(new Date()),
-    }
-    extraEntries.value.push(entry)
-
-    // 5秒后移除
-    setTimeout(() => {
-      const index = extraEntries.value.indexOf(entry)
-      if (index !== -1)
-        extraEntries.value.splice(index, 1)
-    }, 5000)
-  }
+function handleClear() {
+  state.prev = 0
+  state.ratio = 0
+  state.chain = 0
+  state.chainList = []
+  state.bonusTotal = 0
 }
 
 const handleLogLine: EventMap['LogLine'] = (e) => {
-  const line = e.line
-  if (line[0] === '36') {
-    const now = Number.parseInt(line[2]!, 16) / LBMax
-    const lbAdd = now - state.lbBefore
-    state.lbNow = now
+  if (e.line[0] === '36') {
+    const now = parseInt(e.line[2]!, 16)
+    const add = now - state.prev
+    state.prev = now
+    state.ratio = now / LB_MAX
 
-    if (isLimitBreakGain(lbAdd)) {
-      state.lbAddUp += lbAdd
-      state.lbExtraAll += lbAdd
+    if (now === 0 || add < -0.1) {
+      // 重置 / 消耗
+      state.chain = 0
+      state.chainList = []
+    } else if (add > LB_INCREMENT) {
+      // 奖池还在累计
+      state.chain += add
+      state.bonusTotal += add
 
-      const newValue = Math.round(state.lbAddUp * 100)
-      addExtraEntry(newValue)
+      const last = state.chainList[state.chainList.length - 1]
+      if (
+        last &&
+        last.timestamp + 1000 > new Date(e.line[1]!).getTime() &&
+        (last.num === state.chain - LB_MAX / 100 ||
+          last.num === state.chain - LB_MAX / 500)
+      ) {
+        state.chainList[state.chainList.length - 1]!.num = state.chain
+      } else {
+        state.chainList.push({
+          key: crypto.randomUUID(),
+          num: state.chain,
+          timestamp: new Date(e.line[1]!).getTime(),
+        })
+      }
+    } else {
+      // 随战斗时间自然增加的
+      state.chain = 0
+      return
     }
-    else {
-      state.lbAddUp = 0
-    }
-
-    state.lbBefore = now
-    if (lbAdd < -0.1)
-      clearState()
-  }
-  else if (line[0] === '33' && ['40000010', '4000000F'].includes(line[3]!)) {
-    clearState()
+  } else if (
+    e.line[0] === '33' &&
+    ['40000010', '4000000F'].includes(e.line[3]!)
+  ) {
+    handleClear()
   }
 }
 
 function handleTest() {
-  stopTest.value = testLimitBreak(handleLogLine, 4)
+  stopTest.value?.()
+  stopTest.value = testLimitBreak(handleLogLine, 1)
 }
 
+watch(
+  () => [demo.value, dev.value],
+  () => {
+    stopTest.value?.()
+    handleClear()
+  }
+)
+
 onMounted(() => {
-  addOverlayListener('ChangeZone', clearState)
+  addOverlayListener('ChangeZone', handleClear)
   addOverlayListener('LogLine', handleLogLine)
 })
 
 onUnmounted(() => {
-  removeOverlayListener('ChangeZone', clearState)
+  removeOverlayListener('ChangeZone', handleClear)
   removeOverlayListener('LogLine', handleLogLine)
 })
 </script>
 
 <template>
   <CommonActWrapper>
-    <el-button v-if="dev || demo" type="primary" class="test-btn" @click="handleTest">
+    <el-button
+      v-if="dev || demo"
+      type="primary"
+      class="test-btn"
+      @click="handleTest"
+    >
       测试
     </el-button>
-    <main>
-      <article id="show">
-        {{ (state.lbNow * 100).toFixed(2) }}%
-      </article>
-      <article id="extra">
-        <p v-for="(entry, index) in extraEntries" :key="index" class="anime" :data-time="entry.time">
-          +{{ entry.value }}%
+    <div class="lb-container">
+      <p id="percent">{{ (state.ratio * 100).toFixed(2) }}%</p>
+      <p id="bonusTotal">
+        {{ ((state.bonusTotal / LB_MAX) * 100).toFixed(0) }}%
+      </p>
+      <div id="extra">
+        <p v-for="item in state.chainList" :key="item.key" class="anime">
+          +{{ ((item.num / LB_MAX) * 100).toFixed(0) }}%
         </p>
-      </article>
-      <aside id="extraAll">
-        {{ (state.lbExtraAll * 100).toFixed(0) }}%
-      </aside>
-    </main>
+      </div>
+    </div>
   </CommonActWrapper>
 </template>
 
 <style lang="scss" scoped>
 .test-btn {
-    position: fixed;
-    right: 0.5em;
-    top: 5em;
-    z-index: 30;
+  position: fixed;
+  right: 0.5em;
+  top: 5em;
+  z-index: 30;
 }
 
-main {
-    font-size: 20px;
-    color: white;
-    padding: 2px 4px;
+.lb-container {
+  font-size: 20px;
+  color: white;
+  padding: 2px 4px;
 
-    * {
-        box-sizing: border-box;
-        padding: 0;
-        margin: 0;
-    }
+  * {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+  }
 }
 
-#show {
-    &::before {
-        content: "LB:";
-    }
+#percent {
+  &::before {
+    content: 'LB:';
+  }
 
-    font-size: 14px;
-    text-shadow: -1px 0 1.5px rgb(145, 186, 94),
-    0 1.5px 1.5px rgb(145, 186, 94),
-    1px 0 1.5px rgb(145, 186, 94),
-    0 -1.5px 1.5px rgb(145, 186, 94);
+  font-size: 14px;
+  text-shadow: -1px 0 1.5px rgb(145, 186, 94), 0 1.5px 1.5px rgb(145, 186, 94),
+    1px 0 1.5px rgb(145, 186, 94), 0 -1.5px 1.5px rgb(145, 186, 94);
 }
 
 #extra {
-    text-shadow: -1px 0 2px rgb(169, 26, 22), 0 1.5px 2px rgb(169, 26, 22), 1px 0 2px rgb(169, 26, 22), 0 -1.5px 2px rgb(169, 26, 22);
-    font-weight: bold;
+  text-shadow: -1px 0 2px rgb(169, 26, 22), 0 1.5px 2px rgb(169, 26, 22),
+    1px 0 2px rgb(169, 26, 22), 0 -1.5px 2px rgb(169, 26, 22);
+  font-weight: bold;
 }
 
-#extraAll {
-    &::before {
-        content: "奖励:";
-    }
+#bonusTotal {
+  &::before {
+    content: '奖励:';
+  }
 
-    position: absolute;
-    top: 21px;
-    right: 4px;
-    font-size: 14px;
-    text-shadow: -1px 0 2px rgb(169, 26, 22),
-    0 1.5px 2px rgb(169, 26, 22),
-    1px 0 2px rgb(169, 26, 22),
-    0 -1.5px 2px rgb(169, 26, 22);
+  position: absolute;
+  top: 21px;
+  right: 4px;
+  font-size: 14px;
+  text-shadow: -1px 0 2px rgb(169, 26, 22), 0 1.5px 2px rgb(169, 26, 22),
+    1px 0 2px rgb(169, 26, 22), 0 -1.5px 2px rgb(169, 26, 22);
 }
 
 .anime {
-    animation: anime 5s;
-    animation-fill-mode: forwards;
+  animation: anime 5s;
+  animation-fill-mode: forwards;
 }
 
 @keyframes anime {
-    0% {
-        opacity: 0;
-        height: 0px;
-        font-size: 0.5em;
-    }
+  0% {
+    opacity: 0;
+    height: 0px;
+    font-size: 0.5em;
+  }
 
-    4% {
-        opacity: 1;
-        height: 26px;
-        font-size: 1.2em;
-    }
+  4% {
+    opacity: 1;
+    height: 26px;
+    font-size: 1.2em;
+  }
 
-    6% {
-        font-size: 1em;
-    }
+  6% {
+    font-size: 1em;
+  }
 
-    70% {
-        opacity: 1;
-    }
+  70% {
+    opacity: 1;
+  }
 
-    90% {
-        opacity: 0;
-        height: 26px;
-    }
+  90% {
+    opacity: 0;
+    height: 26px;
+  }
 
-    100% {
-        opacity: 0;
-        height: 0px;
-    }
+  100% {
+    opacity: 0;
+    height: 0px;
+  }
 }
 </style>
