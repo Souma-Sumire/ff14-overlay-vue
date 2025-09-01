@@ -1,4 +1,4 @@
-const blockedHosts = ['shimo.im']
+const blockedHosts = ['shimo.im', 'vfiles.gtimg.cn', 'pan.baidu.com']
 
 export function checkReferrer() {
   const ref = document.referrer
