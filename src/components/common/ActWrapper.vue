@@ -2,15 +2,22 @@
 import { useActReady } from '@/composables/useActReady'
 import { useDemo } from '@/composables/useDemo'
 
+const params = useUrlSearchParams('hash')
 const actReady = useActReady()
 const demo = useDemo()
 </script>
 
 <template>
   <el-card v-if="!actReady" class="act-not-ready">
-    <h1> 在 ACT 中添加本页面作为数据统计悬浮窗</h1>
+    <h1>在 ACT 中添加本页面作为数据统计悬浮窗</h1>
   </el-card>
-  <div v-show="actReady">
+  <div
+    v-show="actReady"
+    :style="{
+      zoom: params.scale?.toString(),
+      opacity: params.opacity?.toString(),
+    }"
+  >
     <!-- 默认插槽内容 -->
     <slot />
 
