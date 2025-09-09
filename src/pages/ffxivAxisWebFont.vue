@@ -161,8 +161,8 @@
             
           </td>
           <td>e037</td>
-          <td><code>&lt;i class="xiv e037"&gt;&lt;/i&gt;</code></td>
-          <td>学识等级（新月岛）</td>
+          <td><code>&lt;i class="xiv klv"&gt;&lt;/i&gt;</code></td>
+          <td>知见等级（蜃景幻界新月岛）</td>
         </tr>
         <tr>
           <td class="ffxiv">

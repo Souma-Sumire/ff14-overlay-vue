@@ -112,6 +112,12 @@ i.xiv.interact::before {
 i.xiv.e035::before {
   content: "\e035";
 }
+i.xiv.klv::before {
+  content: "\e037";
+}
+i.xiv.e037::before {
+  content: "\e037";
+}
 i.xiv.rlv::before {
   content: "\e038";
 }
