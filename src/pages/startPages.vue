@@ -363,6 +363,38 @@ const tableDataWithSrc = tableData.map((item) => {
             </el-card>
           </div>
         </div>
+        <el-divider />
+        <blockquote
+          class="mx-auto max-w-prose text-left italic text-base leading-relaxed pl-4 border-l-4 border-current"
+        >
+          Als die Nazis die Kommunisten holten,<br />
+          起初，他们追杀共产党人，<br />
+          habe ich geschwiegen;<br />
+          我没有站出来说话，<br />
+          ich war ja kein Kommunist.<br />
+          因为我不是共产党人。<br /><br />
+
+          Als sie die Sozialdemokraten einsperrten,<br />
+          接着，他们监禁社会民主党人，<br />
+          habe ich geschwiegen;<br />
+          我没有站出来说话，<br />
+          ich war ja kein Sozialdemokrat.<br />
+          因为我不是社会民主党人。<br /><br />
+
+          Als sie die Gewerkschafter holten,<br />
+          后来，他们追杀工会成员，<br />
+          habe ich geschwiegen;<br />
+          我没有站出来说话，<br />
+          ich war ja kein Gewerkschafter.<br />
+          因为我不是工会成员。<br /><br />
+
+          Als sie mich holten,<br />
+          最后，他们来追杀我，<br />
+          gab es keinen mehr, der protestieren konnte.<br />
+          却再也没有人站出来抗议了。<br /><br />
+
+          — Martin Niemöller
+        </blockquote>
       </el-main>
     </el-container>
   </div>
