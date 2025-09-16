@@ -8966,25 +8966,25 @@
   "1279": {
     "id": "x6c1/00",
     "name": {
-      "cn": "",
+      "cn": "巡梦金库",
       "en": "Vault Oneiron",
       "ja": "ボルト・オネイロン",
-      "souma": "梦幻之门·奥内伊隆"
+      "souma": "巡梦金库"
     }
   },
   "1291": {
     "id": "c1w2/02",
     "name": {
-      "cn": "",
+      "cn": "法恩娜行星",
       "en": "Phaenna",
       "ja": "惑星パエンナ",
-      "souma": "帕恩纳星"
+      "souma": "法恩娜行星"
     }
   },
   "1292": {
     "id": "x6d8/01",
     "name": {
-      "cn": "",
+      "cn": "中央终端",
       "en": "The Meso Terminal",
       "ja": "メインターミナル",
       "souma": "中央终端"
@@ -8993,46 +8993,46 @@
   "1293": {
     "id": "s5p6/00",
     "name": {
-      "cn": "",
+      "cn": "海岸斗场",
       "en": "The Bayside Battleground",
       "ja": "ベイサイド・バトルグラウンド",
-      "souma": "海湾战场"
+      "souma": "海岸斗场"
     }
   },
   "1294": {
     "id": "s5p6/00",
     "name": {
-      "cn": "",
+      "cn": "海岸斗场",
       "en": "The Bayside Battleground",
       "ja": "ベイサイド・バトルグラウンド",
-      "souma": "海湾战场"
+      "souma": "海岸斗场"
     }
   },
   "1295": {
     "id": "x6fe/01",
     "name": {
-      "cn": "",
+      "cn": "死亡满溢之地",
       "en": "The Ageless Necropolis",
       "ja": "死の満ちる地",
-      "souma": "死之满地"
+      "souma": "死亡满溢之地"
     }
   },
   "1296": {
     "id": "x6fe/01",
     "name": {
-      "cn": "",
+      "cn": "死亡满溢之地",
       "en": "The Ageless Necropolis",
       "ja": "死の満ちる地",
-      "souma": "死之满地"
+      "souma": "死亡满溢之地"
     }
   },
   "1299": {
     "id": "x6eb/00",
     "name": {
-      "cn": "",
+      "cn": "仓库栋10-29",
       "en": "Containment Complex 10-29",
       "ja": "格納殻10-29",
-      "souma": "收纳舱10-29"
+      "souma": "仓库栋10-29"
     }
   },
   "1302": {
@@ -9056,7 +9056,7 @@
   "1304": {
     "id": "z6r2/01",
     "name": {
-      "cn": "",
+      "cn": "桑多利亚：第二巡行",
       "en": "San d'Oria: The Second Walk",
       "ja": "サンドリア：ザ・セカンドウォーク",
       "souma": "桑多利亚：第二巡行"
@@ -9083,10 +9083,10 @@
   "1312": {
     "id": "x6fe/01",
     "name": {
-      "cn": "",
+      "cn": "死亡满溢之地",
       "en": "The Ageless Necropolis",
       "ja": "死の満ちる地",
-      "souma": "死之满地"
+      "souma": "死亡满溢之地"
     }
   }
 }
