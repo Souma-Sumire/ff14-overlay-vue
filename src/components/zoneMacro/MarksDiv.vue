@@ -53,7 +53,7 @@ function getPix(v: { X: number; Z: number }) {
 const offsetX = ref(0)
 const offsetY = ref(0)
 const scale = ref(0)
-const fontSize = ref(isSpMap.value ? 12 : 18)
+const fontSize = ref(isSpMap.value ? 12 : 16)
 
 const minScale = 0.2
 const maxScale = 4
@@ -185,7 +185,7 @@ onMounted(() => {
       // 限制缩放范围
       let newScale = Math.min(scaleX, scaleY)
       // 初始化最大缩放限制
-      newScale = Math.min(1, Math.max(0.5, newScale * 0.3))
+      newScale = Math.min(1, Math.max(0.5, newScale * 0.5))
 
       scale.value = isSpMap.value ? newScale * 2 : newScale
 

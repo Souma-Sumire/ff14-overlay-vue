@@ -86,7 +86,7 @@ const useMacroStore = defineStore('macro', {
       selectZone: useStorage('my-zone', ref('1226')),
       zoneNow: useStorage('my-zone-now', ref('1226')),
       fastEntrance: [
-        { text: '极泽', value: '1271' },
+        { text: '极永暗', value: '1296' },
         { text: '力之塔', value: '1252' },
         { text: 'M5S', value: '1257' },
         { text: 'M6S', value: '1259' },

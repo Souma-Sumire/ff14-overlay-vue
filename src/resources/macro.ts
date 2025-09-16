@@ -4127,7 +4127,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
       {
         Name: getSource(
           '纸Sama P4雷分散标点',
-          'https://www.bilibili.com/video/BV1PdKszCEUJ/',
+          'https://www.bilibili.com/video/BV1PdKszCEUJ/'
         ),
         Place: {
           A: { X: 100, Z: 87, Y: 0, Active: true },
@@ -4229,7 +4229,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
       {
         Name: getSource(
           'XivStrat改本体C',
-          'https://nga.178.com/read.php?tid=44529364',
+          'https://nga.178.com/read.php?tid=44529364'
         ),
         Place: {
           A: { X: 100.0, Y: 0.0, Z: 91.5, ID: 0, Active: true },
@@ -4275,6 +4275,23 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Text: '/p 【塔踏み 】 　 　 |【クライムクロス】\n/p D3MT　 D4ST 　| 　 MT 　ST 　※基本THタゲサ内開始\n/p 　　　　　　　 　| H1　 　　 H2\n/p D1H1　 D2H2 　| D3　　 　 D4\n/p 　　　　　　　 　| 　 D1　 D2\n/p 【雑魚フェーズ】→西TH　東DPS\n/p 【魔法陣展開：三式】くらぽん式\n/p 【魔法陣展開：四式】\n/p 薔薇床設置　　　茨頭割り：南集合→西TH　東DPS\n/p 　　 中央 　　 ※頭割り時薔薇床踏む\n/p D1MT　 D2ST\n/p D3H1　 D4H2',
       },
     ],
+    1296: [
+      {
+        Name: 'Game8',
+        Text: `/p 基本散開/ペア　 　 ┃ メメント・モリ+闇の一撃
+/p MT D1 D2 ST　 　┃ 　 白　　│ 　 黒
+/p H1 D3 D4 H2　　┃ D1　D2 │MT　ST
+/p ※グランドクロス　 ┃ H1　H2 │
+/p 時計ずれ 　　　 　 ┃ D3　D4 │
+/p ------------------------------------------------------------------
+/p 集団恐慌 　　　│ D1+D2：①→④→⑦→⑨
+/p 　⑨　　　⑦　 │ D3+D4：②→③→⑧→⑩
+/p ③　　①　　④ │ H1：②→⑤→⑧→⑩
+/p ⑤　　②　　⑥ │ H2：②→⑥→⑦→⑨
+/p 　⑧　　　⑩ 　│ MT：①→⑤→強攻撃
+/p 　　　　　　　 │ ST：①→⑥→強攻撃`,
+      },
+    ],
   },
 }
 
@@ -4282,6 +4299,15 @@ fastPP(`{"Name":"Standard","MapID":1010,"A":{"X":70.0,"Y":0.0,"Z":100.0,"ID":0,"
   `)
 fastPP(`{"Name":"Briars","MapID":1010,"A":{"X":70.0,"Y":0.0,"Z":92.0,"ID":0,"Active":true},"B":{"X":130.0,"Y":0.0,"Z":92.0,"ID":1,"Active":true},"C":{"X":130.0,"Y":0.0,"Z":108.0,"ID":2,"Active":true},"D":{"X":70.0,"Y":0.0,"Z":107.0,"ID":3,"Active":true},"One":{"X":87.0,"Y":0.0,"Z":96.0,"ID":4,"Active":true},"Two":{"X":113.0,"Y":0.0,"Z":96.0,"ID":5,"Active":true},"Three":{"X":113.0,"Y":0.0,"Z":104.0,"ID":6,"Active":true},"Four":{"X":87.0,"Y":0.0,"Z":104.0,"ID":7,"Active":true}}
   `)
+// 極永遠の闇討滅戦
+fastPP(`{"Name":"Clockspots","MapID":1062,"A":{"X":100.0,"Y":0.0,"Z":91.0,"ID":0,"Active":true},"B":{"X":109.0,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":109.0,"ID":2,"Active":true},"D":{"X":91.0,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":93.64,"Y":0.0,"Z":93.64,"ID":7,"Active":true},"Two":{"X":106.36,"Y":0.0,"Z":93.64,"ID":4,"Active":true},"Three":{"X":106.36,"Y":0.0,"Z":106.36,"ID":5,"Active":true},"Four":{"X":93.64,"Y":0.0,"Z":106.36,"ID":6,"Active":true}}
+`)
+fastPP(`{"Name":"Edges","MapID":1062,"A":{"X":100.0,"Y":0.0,"Z":91.0,"ID":0,"Active":true},"B":{"X":109.0,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":109.0,"ID":2,"Active":true},"D":{"X":91.0,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":95.0,"Y":0.0,"Z":86.5,"ID":4,"Active":true},"Two":{"X":105.0,"Y":0.0,"Z":86.5,"ID":5,"Active":true},"Three":{"X":105.0,"Y":0.0,"Z":106.0,"ID":6,"Active":true},"Four":{"X":95.0,"Y":0.0,"Z":106.0,"ID":7,"Active":true}}
+`)
+fastPP(`{"Name":"JP","MapID":1062,"A":{"X":100.0,"Y":0.0,"Z":92.0,"ID":0,"Active":true},"B":{"X":108.0,"Y":0.0,"Z":100.0,"ID":1,"Active":true},"C":{"X":100.0,"Y":0.0,"Z":108.0,"ID":2,"Active":true},"D":{"X":92.0,"Y":0.0,"Z":100.0,"ID":3,"Active":true},"One":{"X":95.0,"Y":0.0,"Z":86.5,"ID":4,"Active":true},"Two":{"X":105.0,"Y":0.0,"Z":86.5,"ID":5,"Active":true},"Three":{"X":103.0,"Y":0.0,"Z":92.0,"ID":6,"Active":true},"Four":{"X":97.0,"Y":0.0,"Z":92.0,"ID":7,"Active":true}}
+`)
+fastPP(`{"Name":"Four Seasons","MapID":1062,"A":{"X":83.25,"Y":0.0,"Z":92.0,"ID":0,"Active":true},"B":{"X":116.75,"Y":0.0,"Z":92.0,"ID":1,"Active":true},"C":{"X":108.0,"Y":0.0,"Z":98.0,"ID":2,"Active":true},"D":{"X":92.0,"Y":0.0,"Z":98.0,"ID":3,"Active":true},"One":{"X":95.0,"Y":0.0,"Z":86.0,"ID":4,"Active":true},"Two":{"X":105.0,"Y":0.0,"Z":86.0,"ID":5,"Active":true},"Three":{"X":102.2,"Y":0.0,"Z":92.667,"ID":6,"Active":true},"Four":{"X":97.8,"Y":0.0,"Z":92.674,"ID":7,"Active":true}}
+`)
 
 function getSource(title: string, href: string): string {
   return `<a href='${href}'target='_blank'>${title}</a>`
