@@ -147,7 +147,7 @@ function getText(seconds: number): string {
 }
 
 function getOrder(item: Players) {
-  if (!item.food) return 9999
+  if (!item.food) return -9999
   return item.food.durationSeconds
 }
 
