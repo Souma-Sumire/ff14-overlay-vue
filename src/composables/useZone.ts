@@ -13,6 +13,7 @@ const CONTENT_TYPES = [
   'Chaotic', // 诛灭战
   'Ultimate', // 绝境战
   'OccultCrescent', // 新月岛
+  'SaveTheQueen', // 神佑女王（BZY）
   'Dungeons', // 四人副本
   'Raids', // 大型任务
   'Trials', // 讨伐任务
@@ -69,6 +70,8 @@ function getZoneType(zoneInfo: (typeof ZoneInfo)[number]): ContentUsedType {
       return 'SocietyQuests'
     case ContentType.OccultCrescent:
       return 'OccultCrescent'
+    case ContentType.SaveTheQueen:
+      return 'SaveTheQueen'
     default:
       return 'Default'
   }

@@ -49,20 +49,20 @@ function cleanMacro(text: string): string {
   return res
 }
 
-function getZoneIDByZoneName(ZoneName: string) {
-  for (const zoneId in ZoneInfo) {
-    const zone = ZoneInfo[zoneId]!
-    for (const lang in zone.name) {
-      const zoneName = zone.name[lang as keyof typeof zone.name]
-      if (
-        zoneName?.toUpperCase() === ZoneName.toUpperCase() ||
-        zoneName === ZoneName.replaceAll(/[()]/g, '')
-      ) {
-        return zoneId
-      }
-    }
-  }
-}
+// function getZoneIDByZoneName(ZoneName: string) {
+//   for (const zoneId in ZoneInfo) {
+//     const zone = ZoneInfo[zoneId]!
+//     for (const lang in zone.name) {
+//       const zoneName = zone.name[lang as keyof typeof zone.name]
+//       if (
+//         zoneName?.toUpperCase() === ZoneName.toUpperCase() ||
+//         zoneName === ZoneName.replaceAll(/[()]/g, '')
+//       ) {
+//         return zoneId
+//       }
+//     }
+//   }
+// }
 
 function macroCommand(text: string, channel: 'e' | 'p') {
   if (channel === 'p' && partyLen === 0)
@@ -83,8 +83,9 @@ const useMacroStore = defineStore('macro', {
   state: () => {
     return {
       data: useStorage('my-macros', defaultMacro),
-      selectZone: useStorage('my-zone', ref('1226')),
-      zoneNow: useStorage('my-zone-now', ref('1226')),
+      selectZone: useStorage('my-zone', '1226'),
+      zoneNow: useStorage('my-zone-now', '1226'),
+      zoneNowName: useStorage('my-zone-now-name', ''),
       fastEntrance: [
         { text: '极永暗', value: '1296' },
         { text: '力之塔', value: '1252' },
@@ -173,7 +174,7 @@ const useMacroStore = defineStore('macro', {
           this.newPlace(json)
           ElMessage.success('导入成功')
         },
-        () => {},
+        () => {}
       )
     },
     deleteMacro(macro: MacroInfoMacro | MacroInfoPlace): void {
@@ -220,7 +221,7 @@ const useMacroStore = defineStore('macro', {
           Two: json.Two,
           Three: json.Three,
           Four: json.Four,
-        }),
+        })
       )
       ElMessage.success('已复制到剪贴板')
     },
@@ -267,7 +268,7 @@ const useMacroStore = defineStore('macro', {
           doInsertPreset(
             Number(this.selectZone),
             place,
-            slotIndex.value as Slot,
+            slotIndex.value as Slot
           )
           ElMessage.success(`已尝试写入至插槽${slotIndex.value}`)
         })
@@ -282,8 +283,8 @@ const useMacroStore = defineStore('macro', {
     }): void {
       this.selectZone = e.zoneID.toString()
       this.zoneNow = e.zoneID.toString()
-      getZoneIDByZoneName(e.zoneName)
-      // || ElMessage(`未知区域 ${e.zoneName} ${e.zoneID}`)
+      this.zoneNowName = e.zoneName
+      // getZoneIDByZoneName(e.zoneName) || ElMessage(`未知区域 ${e.zoneName} ${e.zoneID}`)
     },
     resetZone(): void {
       ElMessageBox.confirm('确定要重置当前地图的所有标点吗？', '提示', {
@@ -294,7 +295,7 @@ const useMacroStore = defineStore('macro', {
         .then(() => {
           this.data.zoneId[this.selectZone]!.length = 0
           this.data.zoneId[this.selectZone]!.push(
-            ...JSON.parse(JSON.stringify(defaultMacro.zoneId[this.selectZone])),
+            ...JSON.parse(JSON.stringify(defaultMacro.zoneId[this.selectZone]))
           )
           ElMessage.success('重置成功')
         })

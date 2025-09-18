@@ -16,77 +16,157 @@ import { useMacroStore } from '@/store/macro'
 import ContentType from '../../cactbot/resources/content_type'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import 'github-markdown-css/github-markdown-light.css'
+import type { CascaderOption } from 'element-plus'
 
 const dev = useDev()
 const macroStore = useMacroStore()
 const hideOnStartup = useStorage('zoneMacroHideOnStartup', ref(false))
-if (hideOnStartup.value)
-  macroStore.show = false
+if (hideOnStartup.value) macroStore.show = false
 
-if (!dev.value)
-  useWebSocket({ allowClose: true, addWsParam: true })
+if (!dev.value) useWebSocket({ allowClose: true, addWsParam: true })
 
-const contentTypeLabel: { type: number, label: string }[] = [
-  { type: ContentType.UltimateRaids, label: '绝境战' },
-  { type: ContentType.OccultCrescent, label: '新月岛' },
-  { type: ContentType.ChaoticAllianceRaid, label: '诛灭战' },
+const contentTypeLabel: { type: number; label: string }[] = [
+  { type: ContentType.Dungeons, label: '四人迷宫' },
+  { type: ContentType.Trials, label: '讨伐歼灭战' },
   { type: ContentType.Raids, label: '大型任务' },
-  { type: ContentType.Dungeons, label: '四人副本' },
-  { type: ContentType.Trials, label: '讨伐任务' },
+  { type: ContentType.ChaoticAllianceRaid, label: '诛灭战' },
+  { type: ContentType.UltimateRaids, label: '绝境战' },
   { type: ContentType.VCDungeonFinder, label: '多变迷宫' },
   { type: ContentType.DeepDungeons, label: '深层迷宫' },
   { type: ContentType.DisciplesOfTheLand, label: '采集/垂钓' },
   { type: ContentType.Eureka, label: '尤雷卡' },
+  { type: ContentType.SaveTheQueen, label: '博兹雅' },
+  { type: ContentType.OccultCrescent, label: '新月岛' },
 ]
 
-const showContentTypes = contentTypeLabel.map(v => v.type)
+const showContentTypes = contentTypeLabel.map((v) => v.type)
 
 const groupedZoneOptions = computed(() => {
-  const groups: Record<string, { value: string, label: string }[]> = {}
+  const options: CascaderOption[] = []
+  if (macroStore.zoneNow && !(macroStore.zoneNow in macroStore.data.zoneId)) {
+    options.push({
+      label: '用户当前位置',
+      value: macroStore.zoneNow,
+      children: [],
+    })
+  }
+  contentTypeLabel.forEach((ct) => {
+    if (ct.type === ContentType.Trials) {
+      options.push({
+        label: ct.label,
+        value: ContentType.Trials,
+        children: [
+          {
+            label: '歼殛战',
+            value: '歼殛战',
+            children: [],
+          },
+          {
+            label: '幻巧战',
+            value: '幻巧战',
+            children: [],
+          },
+          {
+            label: '歼灭战',
+            value: '歼灭战',
+            children: [],
+          },
+        ],
+      })
+    } else if (ct.type === ContentType.Raids) {
+      options.push({
+        label: ct.label,
+        value: ContentType.Raids,
+        children: [
+          {
+            label: '零式',
+            value: '零式',
+            children: [],
+          },
+          {
+            label: '普通',
+            value: '普通',
+            children: [],
+          },
+        ],
+      })
+    } else
+      options.push({
+        label: ct.label,
+        value: ct.type,
+        children: [],
+      })
+  })
 
   Object.entries(ZoneInfo)
     .map(([id, info]) => ({ id, ...info }))
     .sort((a, b) => {
-      if (a.exVersion !== b.exVersion)
-        return a.exVersion - b.exVersion
+      if (a.exVersion !== b.exVersion) return b.exVersion - a.exVersion
       if (
-        a.contentType === ContentType.Raids
-        && b.contentType === ContentType.Raids
-        && b.name.ja
-        && a.name.ja
+        a.contentType === ContentType.Raids &&
+        b.contentType === ContentType.Raids &&
+        b.name.ja &&
+        a.name.ja
       ) {
         return a.name.ja.localeCompare(b.name.ja)
       }
       return Number(a.id) - Number(b.id)
     })
     .filter(
-      v =>
-        (!v.name.en.startsWith('(')
-          && v.contentType
-          && showContentTypes.includes(v.contentType))
-        || macroStore.selectZone === v.id,
+      (v) =>
+        !v.name.en.startsWith('(') &&
+        v.contentType &&
+        showContentTypes.includes(v.contentType)
     )
     .forEach((v) => {
-      const label
-        = contentTypeLabel.find(ct => ct.type === v.contentType)?.label
-          ?? '临时'
+      const value = v.id
+      const label =
+        `[${+v.exVersion + 2}.0] ` +
+        (v.name?.cn ?? `${v.name.en} / ${v.name.ja}`)
+      if (v.contentType === ContentType.Trials) {
+        const trialsOptions = options.find(
+          (ct) => ct.value === ContentType.Trials
+        )
+        if (!trialsOptions) return
 
-      if (groups[label] === undefined)
-        groups[label] = []
+        let targetCategory = '歼灭战'
+        if (v.name.en.includes('(Extreme)')) {
+          targetCategory = '歼殛战'
+        } else if (v.name.en.includes('(Unreal)')) {
+          targetCategory = '幻巧战'
+        }
 
-      groups[label]!.push({
-        value: v.id,
-        label: v.name?.cn ?? `${v.name.en} / ${v.name.ja}`,
-      })
+        const categoryNode = trialsOptions.children!.find(
+          (ct) => ct.value === targetCategory
+        )
+        if (categoryNode) {
+          categoryNode.children!.push({ value, label })
+        }
+      } else if (v.contentType === ContentType.Raids) {
+        const raidsOptions = options.find(
+          (ct) => ct.value === ContentType.Raids
+        )
+        if (!raidsOptions) return
+
+        const targetCategory = v.name.en.includes('(Savage)') ? '零式' : '普通'
+        const categoryNode = raidsOptions.children!.find(
+          (ct) => ct.value === targetCategory
+        )
+        if (categoryNode) {
+          categoryNode.children!.push({ value, label })
+        }
+      } else {
+        const contentNode = options.find((ct) => ct.value === v.contentType)
+        if (contentNode) {
+          contentNode.children!.push({ value, label })
+        }
+      }
     })
-
-  return Object.entries(groups)
-    .map(([label, options]) => ({ label, options }))
-    .sort((a, b) => {
-      const aIndex = contentTypeLabel.findIndex(ct => ct.label === a.label)
-      const bIndex = contentTypeLabel.findIndex(ct => ct.label === b.label)
-      return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex)
-    })
+  return options.sort((a, b) => {
+    const aIndex = contentTypeLabel.findIndex((ct) => ct.label === a.label)
+    const bIndex = contentTypeLabel.findIndex((ct) => ct.label === b.label)
+    return (aIndex === -1 ? -999 : aIndex) - (bIndex === -1 ? -999 : bIndex)
+  })
 })
 
 onMounted(() => {
@@ -94,22 +174,22 @@ onMounted(() => {
   watch(
     toRef(macroStore, 'selectZone'),
     () => {
-      const data
-        = macroStore.data.zoneId[macroStore.selectZone]?.map((v) => {
+      const data =
+        macroStore.data.zoneId[macroStore.selectZone]?.map((v) => {
           const { Editable, ...r } = v
           return r
-        })
-        || defaultMacro.zoneId[macroStore.selectZone]
-        || []
+        }) ||
+        defaultMacro.zoneId[macroStore.selectZone] ||
+        []
 
-      const userData = data.filter(v => v.Deletability)
+      const userData = data.filter((v) => v.Deletability)
       const nativeData = defaultMacro.zoneId[macroStore.selectZone] ?? []
       macroStore.data.zoneId[macroStore.selectZone] = [
         ...nativeData,
         ...userData,
       ]
     },
-    { immediate: true },
+    { immediate: true }
   )
 })
 </script>
@@ -120,20 +200,35 @@ onMounted(() => {
     <el-header flex="~ wrap" height="auto" class="elheader">
       <!-- 位置与选择区域 -->
       <el-space>
-        <el-button type="primary" size="small" :icon="Position" @click="macroStore.positioning()" />
-        <el-select v-model="macroStore.selectZone" size="small" filterable m-3px style="width: 16rem">
-          <el-option-group v-for="group in groupedZoneOptions" :key="group.label" :label="group.label">
-            <el-option v-for="item in group.options" :key="item.value" :label="item.label" :value="item.value" />
-          </el-option-group>
-        </el-select>
+        <el-button
+          type="primary"
+          size="small"
+          :icon="Position"
+          @click="macroStore.positioning()"
+        />
+        <el-cascader
+          placeholder="选择区域"
+          v-model="macroStore.selectZone"
+          :options="groupedZoneOptions"
+          size="small"
+          :show-all-levels="true"
+          :props="{ emitPath: false }"
+          style="width: 26em"
+          filterable
+        />
       </el-space>
 
       <!-- 快捷区域按钮 -->
       <el-space>
         <el-button-group flex="~ ! wrap">
           <el-button
-            v-for="(entrance, index) in macroStore.fastEntrance" :key="index" bg plain color="rgb(24,34,44)"
-            size="small" @click="macroStore.selectZone = entrance.value"
+            v-for="(entrance, index) in macroStore.fastEntrance"
+            :key="index"
+            bg
+            plain
+            color="rgb(24,34,44)"
+            size="small"
+            @click="macroStore.selectZone = entrance.value"
           >
             {{ entrance.text }}
           </el-button>
@@ -148,47 +243,76 @@ onMounted(() => {
         <el-card
           v-for="(macro, index) in macroStore.data.zoneId[
             macroStore.selectZone
-          ]" :key="index" shadow="hover" class="main-box-card"
+          ]"
+          :key="index"
+          shadow="hover"
+          class="main-box-card"
         >
           <div class="badge-group">
-            <span v-if="macro.Deletability" class="subtle-badge from-user">用户</span>
+            <span v-if="macro.Deletability" class="subtle-badge from-user"
+              >用户</span
+            >
             <span v-else class="subtle-badge from-native">内置</span>
           </div>
           <!-- 宏标题 -->
           <p v-show="!macro.Editable" class="macro-title" v-html="macro.Name" />
           <el-input
-            v-show="macro.Editable" v-model="macro.Name" size="small" placeholder="宏标题"
+            v-show="macro.Editable"
+            v-model="macro.Name"
+            size="small"
+            placeholder="宏标题"
             style="width: calc(100% - 2em)"
           />
 
           <!-- 宏文本 -->
           <div v-if="'Text' in macro">
             <article v-if="!macro.Editable">
-              <div v-for="(m, o) in macro.Text?.split('\n')" :key="o" class="macroText">
+              <div
+                v-for="(m, o) in macro.Text?.split('\n')"
+                :key="o"
+                class="macroText"
+              >
                 {{ m }}
               </div>
             </article>
             <el-input
-              v-show="macro.Editable" v-model="macro.Text" type="textarea" size="small" placeholder="宏文本"
-              wrap="off" :autosize="{ minRows: 3 }" style="width: 450px;max-width: calc(100% - 2em);"
+              v-show="macro.Editable"
+              v-model="macro.Text"
+              type="textarea"
+              size="small"
+              placeholder="宏文本"
+              wrap="off"
+              :autosize="{ minRows: 3 }"
+              style="width: 450px; max-width: calc(100% - 2em)"
             />
 
             <!-- 非编辑状态按钮 -->
             <el-row
-              v-if="!macro.Editable" class="buttonArea" :style="{
+              v-if="!macro.Editable"
+              class="buttonArea"
+              :style="{
                 maxHeight: macro.Editable ? '100px' : null,
                 opacity: macro.Editable ? 1 : null,
               }"
             >
               <el-button
-                v-if="macro.Deletability" :icon="Edit" size="small"
+                v-if="macro.Deletability"
+                :icon="Edit"
+                size="small"
                 @click="macroStore.editMacroMacro(macro)"
               />
-              <el-button :icon="ChatSquare" type="info" size="small" @click="macroStore.sendMacroEcho(macro.Text)">
+              <el-button
+                :icon="ChatSquare"
+                type="info"
+                size="small"
+                @click="macroStore.sendMacroEcho(macro.Text)"
+              >
                 默语
               </el-button>
               <el-button
-                :icon="ChatDotSquare" type="primary" size="small"
+                :icon="ChatDotSquare"
+                type="primary"
+                size="small"
                 @click="macroStore.sendMacroParty(macro.Text)"
               >
                 小队
@@ -197,11 +321,19 @@ onMounted(() => {
 
             <!-- 编辑状态按钮 -->
             <el-row v-if="macro.Editable" class="buttonAreaEditing">
-              <el-button type="success" size="small" :icon="Check" @click="macroStore.submitMacroMacro(macro)">
+              <el-button
+                type="success"
+                size="small"
+                :icon="Check"
+                @click="macroStore.submitMacroMacro(macro)"
+              >
                 完成
               </el-button>
               <el-button
-                v-if="macro.Deletability" type="danger" size="small" :icon="Delete"
+                v-if="macro.Deletability"
+                type="danger"
+                size="small"
+                :icon="Delete"
                 @click="macroStore.deleteMacro(macro)"
               >
                 删除
@@ -213,24 +345,31 @@ onMounted(() => {
           <div v-if="'Place' in macro">
             <el-space v-show="macro.Editable">
               <el-table
-                :data="Object.entries(macro.Place).filter((v) =>
-                  [
-                    'A',
-                    'B',
-                    'C',
-                    'D',
-                    'One',
-                    'Two',
-                    'Three',
-                    'Four',
-                  ].includes(v[0]),
-                )
-                " border size="small"
+                :data="
+                  Object.entries(macro.Place).filter((v) =>
+                    [
+                      'A',
+                      'B',
+                      'C',
+                      'D',
+                      'One',
+                      'Two',
+                      'Three',
+                      'Four',
+                    ].includes(v[0])
+                  )
+                "
+                border
+                size="small"
               >
                 <!-- 启用 -->
                 <el-table-column align="center" label="启用" width="50">
                   <template #default="scope">
-                    <el-switch v-model="scope.row[1].Active" size="small" style="--el-switch-on-color: #13ce66" />
+                    <el-switch
+                      v-model="scope.row[1].Active"
+                      size="small"
+                      style="--el-switch-on-color: #13ce66"
+                    />
                   </template>
                 </el-table-column>
 
@@ -246,8 +385,13 @@ onMounted(() => {
                   <template #default="scope">
                     <span v-show="!macro.Editable">{{ scope.row.X }}</span>
                     <el-input-number
-                      v-show="macro.Editable" v-model="scope.row[1].X" :step="0.1" :precision="2"
-                      controls-position="right" size="small" style="width: 8.5em"
+                      v-show="macro.Editable"
+                      v-model="scope.row[1].X"
+                      :step="0.1"
+                      :precision="2"
+                      controls-position="right"
+                      size="small"
+                      style="width: 8.5em"
                     />
                   </template>
                 </el-table-column>
@@ -257,8 +401,13 @@ onMounted(() => {
                   <template #default="scope">
                     <span v-show="!macro.Editable">{{ scope.row.Z }}</span>
                     <el-input-number
-                      v-show="macro.Editable" v-model="scope.row[1].Z" :step="0.1" :precision="2"
-                      controls-position="right" size="small" style="width: 8.5em"
+                      v-show="macro.Editable"
+                      v-model="scope.row[1].Z"
+                      :step="0.1"
+                      :precision="2"
+                      controls-position="right"
+                      size="small"
+                      style="width: 8.5em"
                     />
                   </template>
                 </el-table-column>
@@ -268,8 +417,13 @@ onMounted(() => {
                   <template #default="scope">
                     <span v-show="!macro.Editable">{{ scope.row.Y }}</span>
                     <el-input-number
-                      v-show="macro.Editable" v-model="scope.row[1].Y" :step="0.1" :precision="2"
-                      controls-position="right" size="small" style="width: 8.5em"
+                      v-show="macro.Editable"
+                      v-model="scope.row[1].Y"
+                      :step="0.1"
+                      :precision="2"
+                      controls-position="right"
+                      size="small"
+                      style="width: 8.5em"
                     />
                   </template>
                 </el-table-column>
@@ -279,41 +433,64 @@ onMounted(() => {
             <!-- 显示标记组件 -->
             <el-space>
               <ZoneMacroMarksDiv
-                :key="JSON.stringify(macro.Place) + macro.Name + index" :macro="macro"
+                :key="JSON.stringify(macro.Place) + macro.Name + index"
+                :macro="macro"
                 :zone-id="macroStore.selectZone"
               />
             </el-space>
 
             <!-- 标点按钮（非编辑） -->
             <el-row
-              v-if="!macro.Editable" class="buttonArea" :style="{
+              v-if="!macro.Editable"
+              class="buttonArea"
+              :style="{
                 maxHeight: macro.Editable ? '100px' : null,
                 opacity: macro.Editable ? 1 : null,
               }"
             >
-              <el-button type="primary" size="small" @click="macroStore.doLocalWayMark(macro.Place)">
+              <el-button
+                type="primary"
+                size="small"
+                @click="macroStore.doLocalWayMark(macro.Place)"
+              >
                 本地
               </el-button>
-              <el-button type="primary" size="small" @click="macroStore.doPartyWayMark(macro.Place)">
+              <el-button
+                type="primary"
+                size="small"
+                @click="macroStore.doPartyWayMark(macro.Place)"
+              >
                 公开
               </el-button>
               <el-button
-                :icon="CopyDocument" size="small" class="export"
+                :icon="CopyDocument"
+                size="small"
+                class="export"
                 @click="macroStore.exportWaymarksJson(macro)"
               />
               <el-button
-                v-if="macro.Deletability" :icon="Edit" size="small"
+                v-if="macro.Deletability"
+                :icon="Edit"
+                size="small"
                 @click="macroStore.editMacroPlace(macro)"
               />
             </el-row>
 
             <!-- 标点按钮（编辑） -->
             <el-row v-if="macro.Editable" class="buttonAreaEditing">
-              <el-button type="success" size="small" :icon="Check" @click="macroStore.submitMacroPlace(macro)">
+              <el-button
+                type="success"
+                size="small"
+                :icon="Check"
+                @click="macroStore.submitMacroPlace(macro)"
+              >
                 完成
               </el-button>
               <el-button
-                v-if="macro.Deletability" type="danger" size="small" :icon="Delete"
+                v-if="macro.Deletability"
+                type="danger"
+                size="small"
+                :icon="Delete"
                 @click="macroStore.deleteMacro(macro)"
               >
                 删除
@@ -327,19 +504,45 @@ onMounted(() => {
     <!-- 底部菜单区域 -->
     <div class="menu">
       <CommonThemeToggle storage-key="zone-macro-theme" />
-      <el-button type="success" size="small" w-20 @click="macroStore.newMacro()">
+      <el-button
+        type="success"
+        size="small"
+        w-20
+        @click="macroStore.newMacro()"
+      >
         新增宏
       </el-button>
-      <el-button type="success" size="small" w-20 color="#3375b9" @click="macroStore.newPlace()">
+      <el-button
+        type="success"
+        size="small"
+        w-20
+        color="#3375b9"
+        @click="macroStore.newPlace()"
+      >
         新增标点
       </el-button>
-      <el-button size="small" w-20 color="#BA5783" @click="macroStore.importPPJSON()">
+      <el-button
+        size="small"
+        w-20
+        color="#BA5783"
+        @click="macroStore.importPPJSON()"
+      >
         导入PP
       </el-button>
-      <el-button type="warning" size="small" w-20 @click="macroStore.resetZone()">
+      <el-button
+        type="warning"
+        size="small"
+        w-20
+        @click="macroStore.resetZone()"
+      >
         恢复本图
       </el-button>
-      <el-button type="danger" size="small" w-20 @click="macroStore.resetAllData()">
+      <el-button
+        type="danger"
+        size="small"
+        w-20
+        @click="macroStore.resetAllData()"
+      >
         恢复全部
       </el-button>
     </div>
@@ -347,11 +550,11 @@ onMounted(() => {
 </template>
 
 <style lang="scss">
-@import "@/css/ffxiv-axis-font-icons.css";
+@import '@/css/ffxiv-axis-font-icons.css';
 
 * {
-  font-family: "FFXIV", "Helvetica Neue", Helvetica, "PingFang SC",
-    "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+  font-family: 'FFXIV', 'Helvetica Neue', Helvetica, 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
   pointer-events: initial;
 }
 
@@ -380,21 +583,8 @@ body {
 }
 
 .elheader {
-  padding-left: 0.25rem !important;
-
-  .fastEntrance {
-    max-height: 0;
-    opacity: 0;
-    transition: all 0.1s;
-    width: 100%;
-  }
-
-  &:hover {
-    .fastEntrance {
-      max-height: 2.5rem;
-      opacity: 1;
-    }
-  }
+  padding: 0.1rem 0.3rem;
+  gap: 0.25rem;
 }
 
 .menu {
@@ -416,7 +606,7 @@ body {
   position: relative;
 
   // max-width: 500px;
-  >.el-card__body {
+  > .el-card__body {
     padding: 0.7em;
   }
 
@@ -438,7 +628,7 @@ body {
     opacity: 0.5;
     transition: all 0.1s ease-in-out;
 
-    >.el-button {
+    > .el-button {
       margin: 0.1em;
     }
   }
@@ -497,7 +687,6 @@ body {
   border: 1px solid;
   background-color: var(--el-bg-color);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
-
   &.from-user {
     background-color: #13ce66;
     border-color: #13ce66;
