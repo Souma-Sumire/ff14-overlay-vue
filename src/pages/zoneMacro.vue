@@ -12,7 +12,11 @@ import { useDev } from '@/composables/useDev'
 import { useWebSocket } from '@/composables/useWebSocket'
 import { defaultMacro } from '@/resources/macro'
 import { ZoneInfo } from '@/resources/zoneInfo'
-import { useMacroStore } from '@/store/macro'
+import {
+  contentTypeLabel,
+  showContentTypes,
+  useMacroStore,
+} from '@/store/macro'
 import ContentType from '../../cactbot/resources/content_type'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import 'github-markdown-css/github-markdown-light.css'
@@ -25,31 +29,8 @@ if (hideOnStartup.value) macroStore.show = false
 
 if (!dev.value) useWebSocket({ allowClose: true, addWsParam: true })
 
-const contentTypeLabel: { type: number; label: string }[] = [
-  { type: ContentType.Dungeons, label: '四人迷宫' },
-  { type: ContentType.Trials, label: '讨伐歼灭战' },
-  { type: ContentType.Raids, label: '大型任务' },
-  { type: ContentType.ChaoticAllianceRaid, label: '诛灭战' },
-  { type: ContentType.UltimateRaids, label: '绝境战' },
-  { type: ContentType.VCDungeonFinder, label: '多变迷宫' },
-  { type: ContentType.DeepDungeons, label: '深层迷宫' },
-  { type: ContentType.DisciplesOfTheLand, label: '采集/垂钓' },
-  { type: ContentType.Eureka, label: '尤雷卡' },
-  { type: ContentType.SaveTheQueen, label: '博兹雅' },
-  { type: ContentType.OccultCrescent, label: '新月岛' },
-]
-
-const showContentTypes = contentTypeLabel.map((v) => v.type)
-
 const groupedZoneOptions = computed(() => {
   const options: CascaderOption[] = []
-  if (macroStore.zoneNow && !(macroStore.zoneNow in macroStore.data.zoneId)) {
-    options.push({
-      label: '用户当前位置',
-      value: macroStore.zoneNow,
-      children: [],
-    })
-  }
   contentTypeLabel.forEach((ct) => {
     if (ct.type === ContentType.Trials) {
       options.push({
@@ -162,10 +143,16 @@ const groupedZoneOptions = computed(() => {
         }
       }
     })
+
+  options.push({
+    label: '通用（未分类区域）',
+    value: '-1',
+  })
+
   return options.sort((a, b) => {
     const aIndex = contentTypeLabel.findIndex((ct) => ct.label === a.label)
     const bIndex = contentTypeLabel.findIndex((ct) => ct.label === b.label)
-    return (aIndex === -1 ? -999 : aIndex) - (bIndex === -1 ? -999 : bIndex)
+    return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex)
   })
 })
 
@@ -213,7 +200,7 @@ onMounted(() => {
           size="small"
           :show-all-levels="true"
           :props="{ emitPath: false }"
-          style="width: 26em"
+          style="width: 30em"
           filterable
         />
       </el-space>
@@ -239,8 +226,18 @@ onMounted(() => {
     <!-- 主体区域 -->
     <el-main style="padding: 0.25rem; margin: 0">
       <el-space wrap alignment="flex-start" style="font-size: 12px">
+        <el-empty
+          w-100
+          :image-size="150"
+          description="此区域没有数据"
+          v-if="
+            macroStore.data.zoneId[macroStore.selectZone] === undefined ||
+            macroStore.data.zoneId[macroStore.selectZone]!.length === 0
+          "
+        />
         <!-- 每个宏卡片 -->
         <el-card
+          v-else
           v-for="(macro, index) in macroStore.data.zoneId[
             macroStore.selectZone
           ]"

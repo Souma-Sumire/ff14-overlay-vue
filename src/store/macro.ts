@@ -1,6 +1,7 @@
 import type { MacroInfoMacro, MacroInfoPlace } from '@/types/macro'
 import type { QueueArr, Slot, WayMarkObj } from '@/types/PostNamazu'
 import { ElInputNumber, ElMessage, ElMessageBox } from 'element-plus'
+import ContentType from '../../cactbot/resources/content_type'
 import { defineStore } from 'pinia'
 import { copyToClipboard } from '@/utils/clipboard'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
@@ -16,6 +17,22 @@ import { defaultMacro } from './../resources/macro'
 
 let partyLen = 0
 const slotIndex = useStorage('macro-slot-index', 5)
+
+const contentTypeLabel: { type: number; label: string }[] = [
+  { type: ContentType.Dungeons, label: '四人迷宫' },
+  { type: ContentType.Trials, label: '讨伐歼灭战' },
+  { type: ContentType.Raids, label: '大型任务' },
+  { type: ContentType.ChaoticAllianceRaid, label: '诛灭战' },
+  { type: ContentType.UltimateRaids, label: '绝境战' },
+  { type: ContentType.VCDungeonFinder, label: '多变迷宫' },
+  { type: ContentType.DeepDungeons, label: '深层迷宫' },
+  { type: ContentType.DisciplesOfTheLand, label: '采集/垂钓' },
+  { type: ContentType.Eureka, label: '尤雷卡' },
+  { type: ContentType.SaveTheQueen, label: '博兹雅' },
+  { type: ContentType.OccultCrescent, label: '新月岛' },
+]
+
+const showContentTypes = contentTypeLabel.map((v) => v.type)
 
 addOverlayListener('PartyChanged', (e) => {
   partyLen = e.party.length
@@ -275,16 +292,17 @@ const useMacroStore = defineStore('macro', {
         .catch(() => {})
     },
     positioning(): void {
-      this.selectZone = this.zoneNow
+      this.selectZone = this.data.zoneId[Number(this.zoneNow)]
+        ? this.zoneNow
+        : '-1'
     },
     handleChangeZone(e: {
       zoneID: { toString: () => string }
       zoneName: string
     }): void {
-      this.selectZone = e.zoneID.toString()
       this.zoneNow = e.zoneID.toString()
       this.zoneNowName = e.zoneName
-      // getZoneIDByZoneName(e.zoneName) || ElMessage(`未知区域 ${e.zoneName} ${e.zoneID}`)
+      this.positioning()
     },
     resetZone(): void {
       ElMessageBox.confirm('确定要重置当前地图的所有标点吗？', '提示', {
@@ -323,4 +341,4 @@ const useMacroStore = defineStore('macro', {
   },
 })
 
-export { useMacroStore }
+export { useMacroStore, contentTypeLabel, showContentTypes }
