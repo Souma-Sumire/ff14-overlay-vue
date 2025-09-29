@@ -39,7 +39,7 @@ export function useWebSocket(
   config: {
     allowClose: boolean
     addWsParam: boolean
-  } = { allowClose: false, addWsParam: true },
+  } = { allowClose: false, addWsParam: true }
 ) {
   const wsConnected = ref(undefined as boolean | undefined)
   const userIgnoredWarning = ref(false)
@@ -78,8 +78,9 @@ export function useWebSocket(
 
   function handleDisconnection() {
     if (!userIgnoredWarning.value) {
+      ElMessageBox.close()
       ElMessageBox.alert(
-        `请按照下图设置<img src='${actWS}' style='width:100%'>`,
+        `请按照下图设置<img src='${actWS}' style='width:100%'><ul><li>若使用呆萌整合 ACT，需要启动过一次 FF14 游戏本体，OverlayPlugin悬浮窗插件才能成功加载。加载完成后可以关闭游戏。（有意见请找呆萌）</li><li>若 10501 端口被占用，可以随便换一个端口再试（需同时修改网页 url 参数与上图中的“IP地址”设置）。</li><ul>`,
         config.allowClose ? '未连接到 ACT' : '未连接到 ACT，无法使用',
         {
           dangerouslyUseHTMLString: true,
@@ -91,7 +92,7 @@ export function useWebSocket(
           showConfirmButton: false,
           cancelButtonText: '用不了也要看',
           buttonSize: 'small',
-        },
+        }
       ).catch(() => {
         userIgnoredWarning.value = true
         if (timer) clearInterval(timer)
@@ -107,7 +108,7 @@ export function useWebSocket(
           type: 'error',
           showConfirmButton: false,
           showClose: false,
-        },
+        }
       )
       return
     }
