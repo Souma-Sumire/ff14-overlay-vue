@@ -395,7 +395,7 @@ function saveImportedTimelines(
 
   for (const timeline of timelineStore.allTimelines) {
     if (timeline.condition.jobs === undefined) {
-      timeline.condition.jobs = [(timeline.condition as any).job]
+      timeline.condition.jobs = [(timeline.condition as any)?.job ?? 'NONE']
     }
   }
 
