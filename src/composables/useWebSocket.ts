@@ -48,7 +48,7 @@ export function useWebSocket(
 
   function check() {
     Promise.race([
-      callOverlayHandler({ call: 'cactbotRequestState' }),
+      callOverlayHandler({ call: 'getLanguage' }),
       new Promise((_resolve, reject) => {
         setTimeout(() => {
           reject(new Error('Timeout'))
