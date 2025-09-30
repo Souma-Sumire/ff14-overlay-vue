@@ -111,9 +111,9 @@ const tableData = computed(() =>
 )
 
 function getReductionColor(reduction: number) {
-  const CURVE_CAP_PERCENTAGE = 0.4 // 封顶百分比 （也就是减伤达到40%时，颜色变为最亮）
+  const CURVE_CAP_PERCENTAGE = 0.5 // 封顶百分比 （也就是减伤达到50%时，颜色变为最亮）
   const CURVE_POWER = 0.8 // 曲率，值越小，颜色变化越大
-  const GRAY_START = 100 // 起始的灰度值
+  const GRAY_START = 88 // 起始的灰度值
   const START_COLOR = [GRAY_START, GRAY_START, GRAY_START]
   const TARGET_COLOR = [50, 250, 200] // 最高点RGB值
   const cappedReduction = Math.min(1, reduction / CURVE_CAP_PERCENTAGE)
