@@ -14,7 +14,7 @@ export const useKeigennRecord2Store = defineStore('keigennRecord2.1', {
         targetType: computed(() =>
           parseParams(params.targetType as 'icon' | 'job', 'icon'),
         ), // 显示目标图标
-        iconType: computed(() => parseParams(params.iconType as string, 3)), // 目标图标类型
+        iconType: computed(() => parseParams(params.iconType as string, 2)), // 目标图标类型
         parseAA: computed(() => parseParams(params.parseAA as string, true)), // 解析自动攻击（旧结果不会跟随改变）
         parseDoT: computed(() => parseParams(params.parseDoT as string, false)), // 解析DoT（旧结果不会跟随改变）
         minimize: computed(() => parseParams(params.minimize as string, false)), // 启动时迷你化

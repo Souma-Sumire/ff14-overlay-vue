@@ -2,6 +2,7 @@
 import type { FFIcon } from '@/types/fflogs'
 import type { RowVO } from '@/types/keigennRecord2'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
+import { isLethal } from '@/utils/keigennRecord2'
 
 const props = defineProps({
   row: { type: Object as () => RowVO, required: true },
@@ -22,23 +23,48 @@ function onError(e: Event) {
   console.error('Failed to load image:', props.row.jobIcon)
 }
 
-const showIcon = computed(() => !imageError.value && ((store.userOptions.targetType ?? 'icon') === 'icon'))
+const showIcon = computed(
+  () => !imageError.value && (store.userOptions.targetType ?? 'icon') === 'icon'
+)
+
+const isLethalIcon = computed(() => isLethal(props.row))
 </script>
 
 <template>
   <div class="target">
     <img
       v-if="showIcon"
-      :class="`jobIcon cj${store.userOptions.iconType}`"
+      :class="`jobIcon cj${store.userOptions.iconType} ${
+        isLethalIcon ? 'lethal-icon' : ''
+      }`"
       :src="getIconSrc(props.row.jobIcon, store.userOptions.iconType)"
       :alt="props.row.jobIcon"
       @error="onError"
-    >
+    />
     <span v-else class="alt-text">{{ props.row.job }}</span>
+    <span v-if="isLethalIcon" class="lethal-emoji"> 💀 </span>
   </div>
 </template>
 
 <style scoped lang="scss">
+.lethal-icon {
+  filter: grayscale(100%) brightness(80%);
+  // transform-style: preserve-3d;
+  transform: 
+  // rotateX(30deg)
+    rotateZ(-90deg);
+}
+
+.lethal-emoji {
+  position: absolute;
+  color: red;
+  text-shadow: -1px 0 0 black, 0 1px 0 black, 1px 0 0 black, 0 -1px 0 black;
+  top: -0.3em;
+  left: -0.6em;
+  opacity: 0.9;
+  font-size: 0.8em;
+}
+
 .jobIcon {
   width: 2em;
   object-fit: cover;
@@ -46,8 +72,8 @@ const showIcon = computed(() => !imageError.value && ((store.userOptions.targetT
   position: relative;
 }
 
-.cj1{
-  top:1px
+.cj1 {
+  top: 1px;
 }
 
 .cj3 {
@@ -59,15 +85,14 @@ const showIcon = computed(() => !imageError.value && ((store.userOptions.targetT
   display: flex;
   flex-direction: row;
   align-items: center;
+  position: relative;
+  // perspective: 30px;
 }
 
 .YOU {
   font-weight: bolder;
   $color: rgba(3, 169, 244, 0.4);
-  text-shadow:
-    -1px 0 3px $color,
-    0 1px 3px $color,
-    1px 0 3px $color,
+  text-shadow: -1px 0 3px $color, 0 1px 3px $color, 1px 0 3px $color,
     0 -1px 3px $color;
 }
 </style>

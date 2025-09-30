@@ -14,24 +14,32 @@ const icon4k = keigennRecord2Store.icon4k
 </script>
 
 <template>
-  <div v-if="props.row.type === 'dot'">
-    （不支持）
-  </div>
+  <div v-if="props.row.type === 'dot'">（不支持）</div>
   <div v-else class="status-container">
     <span v-for="(keigenn, index) in props.row.keigenns" :key="index">
       <span
-        class="status" :title="`${userOptions.statusCN ? keigenn.name : keigenn.effect}(${keigenn.source})`"
-        :data-duration="keigenn.remainingDuration" :data-sourcePov="keigenn.isPov"
+        class="status"
+        :title="`${userOptions.statusCN ? keigenn.name : keigenn.effect}(${
+          keigenn.source
+        })`"
+        :data-duration="keigenn.remainingDuration"
+        :data-sourcePov="keigenn.isPov"
       >
         <img
           :class="`statusIcon ${multiplierEffect(keigenn, props.row.type)}`"
-          :src="getImgSrc(`/i/${keigenn.fullIcon}${icon4k}.png`)" :alt="keigenn.effect" loading="lazy"
+          :src="getImgSrc(`/i/${keigenn.fullIcon}${icon4k}.png`)"
+          :alt="keigenn.effect"
+          loading="lazy"
           @error="handleImgError"
-        >
+        />
       </span>
     </span>
     <span class="flags">
-      {{ props.row.effect === "damage done" ? "" : translationFlags(props.row.effect) }}
+      {{
+        props.row.effect === 'damage done'
+          ? ''
+          : translationFlags(props.row.effect)
+      }}
     </span>
   </div>
 </template>
@@ -76,7 +84,7 @@ const icon4k = keigennRecord2Store.icon4k
 }
 
 // 由玩家释放的状态
-.status[data-sourcePov="true"]::before {
+.status[data-sourcePov='true']::before {
   color: aquamarine;
 }
 
