@@ -21,6 +21,7 @@ export interface RowVO {
   type: DamageType
   shield: string
   povId: string
+  reduction: number
 }
 
 export interface Status {

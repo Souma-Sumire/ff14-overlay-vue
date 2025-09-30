@@ -32,7 +32,7 @@ watch(
       targetFilter.value = ''
     }
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 const contextMenuVisible = ref(false)
@@ -47,15 +47,22 @@ onClickOutside(contextMenu, () => {
 const ALL_STR = '[取消筛选]'
 
 const actionOptions = computed(() => {
-  const actions = Array.from(new Set(props.rows.map(r => r[props.actionKey] as string)))
-  return [{ label: '[取消筛选]', value: '' }, ...actions.map(action => ({ label: action, value: action }))]
+  const actions = Array.from(
+    new Set(props.rows.map((r) => r[props.actionKey] as string))
+  )
+  return [
+    { label: '[取消筛选]', value: '' },
+    ...actions.map((action) => ({ label: action, value: action })),
+  ]
 })
 
 const targetOptions = computed(() => {
-  const players = Array.from(new Map(props.rows.map(row => [row.target, row])).values())
+  const players = Array.from(
+    new Map(props.rows.map((row) => [row.target, row])).values()
+  )
   return [
     { label: '[取消筛选]', value: '', job: -1 },
-    ...players.map(row => ({
+    ...players.map((row) => ({
       label: `${row.job}(${row.target})`,
       value: row.target,
       job: row.jobEnum,
@@ -70,8 +77,7 @@ function filterByAction() {
     const val = contextMenuRow.value[props.actionKey] as string
     if (actionFilter.value === val) {
       actionFilter.value = '' // 取消筛选
-    }
-    else {
+    } else {
       actionFilter.value = val // 设置筛选
     }
     contextMenuVisible.value = false
@@ -83,8 +89,7 @@ function filterByTarget() {
     const val = contextMenuRow.value.target
     if (targetFilter.value === val) {
       targetFilter.value = '' // 取消筛选
-    }
-    else {
+    } else {
       targetFilter.value = val // 设置筛选
     }
     contextMenuVisible.value = false
@@ -93,11 +98,37 @@ function filterByTarget() {
 
 const tableData = computed(() =>
   props.rows.filter((row) => {
-    const actionMatch = !actionFilter.value || actionFilter.value === ALL_STR || row[props.actionKey] === actionFilter.value
-    const targetMatch = !targetFilter.value || targetFilter.value === ALL_STR || row.target === targetFilter.value
+    const actionMatch =
+      !actionFilter.value ||
+      actionFilter.value === ALL_STR ||
+      row[props.actionKey] === actionFilter.value
+    const targetMatch =
+      !targetFilter.value ||
+      targetFilter.value === ALL_STR ||
+      row.target === targetFilter.value
     return actionMatch && targetMatch
-  }),
+  })
 )
+
+function getReductionColor(reduction: number) {
+  const CURVE_CAP_PERCENTAGE = 0.4 // 封顶百分比 （也就是减伤达到40%时，颜色变为最亮）
+  const CURVE_POWER = 0.8 // 曲率，值越小，颜色变化越大
+  const GRAY_START = 100 // 起始的灰度值
+  const START_COLOR = [GRAY_START, GRAY_START, GRAY_START]
+  const TARGET_COLOR = [50, 250, 200] // 最高点RGB值
+  const cappedReduction = Math.min(1, reduction / CURVE_CAP_PERCENTAGE)
+  const colorIndex = Math.min(9, Math.floor(cappedReduction * 10))
+  const linearProgress = colorIndex / 9
+  const curvedProgress = Math.pow(linearProgress, CURVE_POWER)
+  const r =
+    START_COLOR[0]! + (TARGET_COLOR[0]! - START_COLOR[0]!) * curvedProgress
+  const g =
+    START_COLOR[1]! + (TARGET_COLOR[1]! - START_COLOR[1]!) * curvedProgress
+  const b =
+    START_COLOR[2]! + (TARGET_COLOR[2]! - START_COLOR[2]!) * curvedProgress
+
+  return `rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}, 1)`
+}
 
 const columns = computed<Column[]>(() => [
   {
@@ -126,9 +157,13 @@ const columns = computed<Column[]>(() => [
             clearable: false,
             style: `width:4.5em`,
             teleported: false,
-            onChange: (v: string) => (actionFilter.value = v === ALL_STR ? '' : v),
+            onChange: (v: string) =>
+              (actionFilter.value = v === ALL_STR ? '' : v),
           },
-          () => actionOptions.value.map(a => h(ElOption, { key: a.value, label: a.label, value: a.value })),
+          () =>
+            actionOptions.value.map((a) =>
+              h(ElOption, { key: a.value, label: a.label, value: a.value })
+            )
         ),
       ]),
     cellRenderer: ({ rowData }) => h('span', rowData[props.actionKey] ?? ''),
@@ -157,16 +192,17 @@ const columns = computed<Column[]>(() => [
             },
           },
           () =>
-            targetOptions.value.map(t =>
+            targetOptions.value.map((t) =>
               h(ElOption, {
                 key: t.value,
                 label: t.label,
                 value: t.value,
-              }),
-            ),
+              })
+            )
         ),
       ]),
-    cellRenderer: ({ rowData }: { rowData: RowVO }) => h(Target, { row: rowData }),
+    cellRenderer: ({ rowData }: { rowData: RowVO }) =>
+      h(Target, { row: rowData }),
   },
   {
     key: 'amount',
@@ -175,17 +211,39 @@ const columns = computed<Column[]>(() => [
     width: 45,
     align: 'right' as const,
     class: 'col-amount',
-    cellRenderer: ({ rowData }: { rowData: RowVO }) => h(Amount, { row: rowData }),
+    cellRenderer: ({ rowData }: { rowData: RowVO }) =>
+      h(Amount, { row: rowData }),
+  },
+  {
+    key: 'reduction',
+    title: '减伤',
+    dataKey: 'reduction',
+    width: 35,
+    align: 'right' as const,
+    class: 'col-amount',
+    headerCellRenderer: () => h('div', { class: 'header-reduction' }, '减伤'),
+    cellRenderer: ({ rowData }: { rowData: RowVO }) =>
+      h(
+        'span',
+        {
+          class: 'col-reduction',
+          style: {
+            color: getReductionColor(rowData.reduction),
+          },
+        },
+        `${(rowData.reduction * 100).toFixed(0)}`
+      ),
   },
   {
     key: 'keigenns',
-    title: '减伤',
+    title: '状态',
     dataKey: 'keigenns',
     width: 100,
     align: 'left' as const,
     flexGrow: 1,
     class: 'col-keigenns',
-    cellRenderer: ({ rowData }: { rowData: RowVO }) => h(StatusShow, { row: rowData }),
+    cellRenderer: ({ rowData }: { rowData: RowVO }) =>
+      h(StatusShow, { row: rowData }),
   },
 ])
 
@@ -193,11 +251,31 @@ let msgHdl: MessageHandler | null = null
 
 const rowEventHandlers = computed<RowEventHandlers>(() => ({
   onClick: ({ rowData }: { rowData: RowVO }) => {
-    const { actionCN, amount, job, keigenns, time, type, effect, currentHp, maxHp, shield } = rowData
+    const {
+      actionCN,
+      amount,
+      job,
+      keigenns,
+      time,
+      type,
+      effect,
+      currentHp,
+      maxHp,
+      shield,
+      reduction,
+    } = rowData
     const sp = effect === 'damage done' ? '' : `,${translationFlags(effect)}`
-    const result = `${time} ${job} ${actionCN} ${amount.toLocaleString()}(${translationDamageType(type)}) 减伤:${
-      keigenns.length === 0 && sp === '' ? '无' : keigenns.map(k => (userOptions.statusCN ? k.name : k.effect)).join(',') + sp
-    } HP:${currentHp}/${maxHp}(${Math.round((currentHp / maxHp) * 100)}%)+盾:${Math.round((maxHp * +shield) / 100)}(${shield}%)`
+    const result = `${time} ${job} ${actionCN} ${amount.toLocaleString()}(${translationDamageType(
+      type
+    )}) 减伤(${(reduction * 100).toFixed(0)}%):${
+      keigenns.length === 0 && sp === ''
+        ? '无'
+        : keigenns
+            .map((k) => (userOptions.statusCN ? k.name : k.effect))
+            .join(',') + sp
+    } HP:${currentHp}/${maxHp}(${Math.round(
+      (currentHp / maxHp) * 100
+    )}%)+盾:${Math.round((maxHp * +shield) / 100)}(${shield}%)`
     copyToClipboard(result)
       .then(() => {
         msgHdl?.close()
@@ -205,7 +283,7 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
       })
       .catch(() => ElMessage.error('复制失败'))
   },
-  onContextmenu: ({ rowData, event }: { rowData: RowVO, event: Event }) => {
+  onContextmenu: ({ rowData, event }: { rowData: RowVO; event: Event }) => {
     const mouseEvent = event as MouseEvent
     contextMenuRow.value = rowData
     contextMenuX.value = mouseEvent.clientX
@@ -231,17 +309,26 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
         scrollbar-always-on
         :row-event-handlers="rowEventHandlers"
       />
-      <div v-if="contextMenuVisible" ref="contextMenu" class="context-menu" :style="{ top: `${contextMenuY}px`, left: `${contextMenuX}px` }">
+      <div
+        v-if="contextMenuVisible"
+        ref="contextMenu"
+        class="context-menu"
+        :style="{ top: `${contextMenuY}px`, left: `${contextMenuX}px` }"
+      >
         <ul>
           <li @click="filterByAction">
             {{
-              actionFilter === (contextMenuRow?.[actionKey] ?? "")
-                ? `取消筛选 [${contextMenuRow?.[actionKey] ?? "此技能"}]`
-                : `只看 [${contextMenuRow?.[actionKey] ?? "此技能"}]`
+              actionFilter === (contextMenuRow?.[actionKey] ?? '')
+                ? `取消筛选 [${contextMenuRow?.[actionKey] ?? '此技能'}]`
+                : `只看 [${contextMenuRow?.[actionKey] ?? '此技能'}]`
             }}
           </li>
           <li @click="filterByTarget">
-            {{ targetFilter === contextMenuRow?.target ? `取消筛选 [${contextMenuRow?.job ?? "此职业"}]` : `只看 [${contextMenuRow?.job ?? "此职业"}]` }}
+            {{
+              targetFilter === contextMenuRow?.target
+                ? `取消筛选 [${contextMenuRow?.job ?? '此职业'}]`
+                : `只看 [${contextMenuRow?.job ?? '此职业'}]`
+            }}
           </li>
         </ul>
       </div>
@@ -290,5 +377,17 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
 
 .context-menu ul li:active {
   background-color: var(--el-color-primary-dark-2);
+}
+
+:deep(.col-reduction) {
+  &::after {
+    content: '%';
+    font-size: 0.66em;
+  }
+}
+
+:deep(.header-reduction){
+  white-space: nowrap;
+  margin-right: -0.6em;
 }
 </style>
