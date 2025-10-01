@@ -111,7 +111,11 @@ const groupedZoneOptions = computed(() => {
         if (!trialsOptions) return
 
         let targetCategory = '歼灭战'
-        if (v.name.en.includes('(Extreme)')) {
+        if (
+          v.name.en.includes('(Extreme)') ||
+          v.name.ja?.startsWith('極') ||
+          v.name.fr?.includes('(extrême)')
+        ) {
           targetCategory = '歼殛战'
         } else if (v.name.en.includes('(Unreal)')) {
           targetCategory = '幻巧战'
