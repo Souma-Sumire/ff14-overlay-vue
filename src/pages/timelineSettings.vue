@@ -977,7 +977,29 @@ init()
           </el-col>
           <el-col :span="8">
             <el-form-item label="来源">
-              <el-input v-model="currentTimelineEditing.codeFight" disabled />
+              <el-link
+                :href="`https://cn.fflogs.com/reports/${currentTimelineEditing.codeFight.replace(
+                  '#',
+                  '?'
+                )}&type=damage-done`"
+                v-if="currentTimelineEditing.codeFight !== '用户创建'"
+                target="_blank"
+              >
+                <img
+                  class="site-logo"
+                  src="https://assets.rpglogs.cn/img/ff/favicon.png?v=4"
+                  alt="FF Logs"
+                  style="width: 34px; height: 33.4688px"
+                />{{ currentTimelineEditing.codeFight }}</el-link
+              >
+              <input
+                type="text"
+                :value="`${currentTimelineEditing.codeFight}（${currentTimelineEditing.create}）`"
+                w-80
+                p-1.3
+                v-else
+                disabled
+              />
             </el-form-item>
           </el-col>
           <el-col :span="22">
