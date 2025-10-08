@@ -138,6 +138,7 @@ const columns = computed<Column[]>(() => [
     width: 40,
     align: 'center' as const,
     class: 'col-time',
+    headerCellRenderer: () => h('div', { class: 'header-time' }, '时间'),
   },
   {
     key: 'action',
@@ -386,8 +387,12 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
   }
 }
 
-:deep(.header-reduction){
+:deep(.header-reduction) {
   white-space: nowrap;
   margin-right: -0.6em;
+}
+
+:deep(.header-time) {
+  white-space: nowrap;
 }
 </style>
