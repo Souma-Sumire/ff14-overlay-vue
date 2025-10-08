@@ -8972,6 +8972,15 @@
       "souma": "巡梦金库"
     }
   },
+  "1280": {
+    "id": "default/00",
+    "name": {
+      "cn": "",
+      "en": "Pilgrim's Traverse",
+      "ja": "ピルグリム・トラバース",
+      "souma": "巡礼之路"
+    }
+  },
   "1291": {
     "id": "c1w2/02",
     "name": {
@@ -9026,6 +9035,15 @@
       "souma": "死亡满溢之地"
     }
   },
+  "1297": {
+    "id": "y6e5/02",
+    "name": {
+      "cn": "",
+      "en": "Zirgorteh the Open-armed",
+      "ja": "ジィゴーテー拝壇",
+      "souma": "基格特祭坛"
+    }
+  },
   "1299": {
     "id": "x6eb/00",
     "name": {
@@ -9033,6 +9051,24 @@
       "en": "Containment Complex 10-29",
       "ja": "格納殻10-29",
       "souma": "仓库栋10-29"
+    }
+  },
+  "1300": {
+    "id": "x6ff/01",
+    "name": {
+      "cn": "",
+      "en": "The Windward Wilds",
+      "ja": "隔ての荒地",
+      "souma": "阻隔荒地"
+    }
+  },
+  "1301": {
+    "id": "x6ff/02",
+    "name": {
+      "cn": "",
+      "en": "The Windward Wilds",
+      "ja": "隔ての荒地",
+      "souma": "阻隔荒地"
     }
   },
   "1302": {
@@ -9069,6 +9105,15 @@
       "en": "Haunted Manor",
       "ja": "亡霊屋敷 ホーンテッドマナー",
       "souma": "亡灵府邸闹鬼庄园"
+    }
+  },
+  "1306": {
+    "id": "x6ff/01",
+    "name": {
+      "cn": "",
+      "en": "The Windward Wilds",
+      "ja": "隔ての荒地",
+      "souma": "阻隔荒地"
     }
   },
   "1309": {
