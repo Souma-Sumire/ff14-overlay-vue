@@ -43,10 +43,22 @@ const isLethalIcon = computed(() => isLethal(props.row))
     />
     <span v-else class="alt-text">{{ props.row.job }}</span>
     <span v-if="isLethalIcon" class="lethal-emoji"> 💀 </span>
+    <span v-if="props.row.hasDuplicate" class="has-duplicate">
+      {{ store.formatterName(props.row.target) }}
+    </span>
   </div>
 </template>
 
 <style scoped lang="scss">
+.has-duplicate {
+  position: absolute;
+  font-size: 8px;
+  width: 24px;
+  text-align: center;
+  top: 10px;
+  text-shadow: -1px 0 0 black, 0 1px 0 black, 1px 0 0 black, 0 -1px 0 black;
+}
+
 .lethal-icon {
   filter: grayscale(100%) brightness(80%);
   // transform-style: preserve-3d;

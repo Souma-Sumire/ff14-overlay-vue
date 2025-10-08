@@ -13,6 +13,7 @@ export interface RowVO {
   job: string
   jobIcon: FFIcon
   jobEnum: number
+  hasDuplicate: boolean
   amount: number
   keigenns: Status[]
   currentHp: number

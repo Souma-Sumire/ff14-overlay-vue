@@ -251,7 +251,9 @@ function handleLine(line: string) {
           }
           break
         case 'partyList':
-          partyLogList.value = match.groups?.list?.split('|') ?? []
+          partyLogList.value = (match.groups?.list?.split('|') ?? []).filter(
+            Boolean
+          )
           break
         case 'changeZone':
           zoneName.value = splitLine[logDefinitions.ChangeZone.fields.name]
@@ -339,7 +341,7 @@ function handleLine(line: string) {
                 ? 0
                 : timestamp - combatTimeStamp.value
             const formattedTime = formatTime(time)
-            const targetJob = getJobById(targetId)
+            const { job: targetJob, hasDuplicate } = getJobById(targetId)
             // const targetJob = jobMap.value[targetId].job ?? target.substring(0, 2);
             const job = Util.jobToFullName(Util.jobEnumToJob(targetJob)).simple2
             const jobEnum = targetJob
@@ -357,6 +359,7 @@ function handleLine(line: string) {
               job,
               jobIcon,
               jobEnum,
+              hasDuplicate,
               amount,
               keigenns: [],
               currentHp,
@@ -430,8 +433,7 @@ function handleLine(line: string) {
                   ? 0
                   : timestamp - combatTimeStamp.value
               const formattedTime = formatTime(time)
-              const targetJob = getJobById(targetId)
-              // const targetJob = jobMap.value[targetId].job ?? target.substring(0, 2);
+              const { job: targetJob, hasDuplicate } = getJobById(targetId)
               const job = Util.jobToFullName(
                 Util.jobEnumToJob(targetJob)
               ).simple2
@@ -485,6 +487,7 @@ function handleLine(line: string) {
                 job,
                 jobIcon,
                 jobEnum,
+                hasDuplicate,
                 amount,
                 keigenns,
                 currentHp,
@@ -510,14 +513,25 @@ function handleLine(line: string) {
   }
 }
 
-function getJobById(targetId: string): number {
+function getJobById(targetId: string) {
   const fromJobMap = jobMap.value[targetId]!
   const fromPartyEvent = partyEventParty.value.find(
     (v) => v.id === targetId
   ) ?? { job: 0, timestamp: 0 }
-  return [fromJobMap, fromPartyEvent].sort(
-    (a, b) => b.timestamp - a.timestamp
-  )[0]!.job
+  const need =
+    fromJobMap.timestamp > fromPartyEvent.timestamp
+      ? fromJobMap
+      : fromPartyEvent
+
+  const hasDuplicate =
+    need === fromJobMap
+      ? Object.entries(jobMap.value).some(
+          ([id, job]) => id !== targetId && (job.job === need.job) && partyLogList.value.includes(id)
+        )
+      : partyEventParty.value.some(
+          (v) => v.id !== targetId && v.job === need.job
+        )
+  return { job: need.job, hasDuplicate }
 }
 
 function addRow(row: RowVO) {

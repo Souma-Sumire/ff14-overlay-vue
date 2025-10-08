@@ -5,14 +5,17 @@ import { loadKeigenn } from '@/utils/keigenn'
 
 const params = useUrlSearchParams('hash')
 
-export const useKeigennRecord2Store = defineStore('keigennRecord2.1', {
+export const useKeigennRecord2Store = defineStore('keigennRecord2', {
   state: () => {
     return {
+      environment: useStorage('keigennRecord2-environment', 'Chinese') as Ref<
+        'Chinese' | 'Global'
+      >,
       userOptions: {
         scale: computed(() => parseParams(params.scale as string, 1)), // 缩放倍率
         opacity: computed(() => parseParams(params.opacity as string, 0.9)), // 透明度
         targetType: computed(() =>
-          parseParams(params.targetType as 'icon' | 'job', 'icon'),
+          parseParams(params.targetType as 'icon' | 'job', 'icon')
         ), // 显示目标图标
         iconType: computed(() => parseParams(params.iconType as string, 2)), // 目标图标类型
         parseAA: computed(() => parseParams(params.parseAA as string, true)), // 解析自动攻击（旧结果不会跟随改变）
@@ -38,16 +41,22 @@ export const useKeigennRecord2Store = defineStore('keigennRecord2.1', {
       if (this.isBrowser) setTimeout(() => this.checkIsBrowser(), 1000)
     },
     formatterName(v: string) {
+      if (this.environment === 'Chinese') {
+        return `${v.at(0)}..${v.at(-1)}`
+      } else if (this.environment === 'Global') {
+        return v.replace(/^([A-Z])\S+ ([A-Z])\S+/, '$1.$2')
+      }
       return v
     },
     initEnvironment(name: string) {
       if (/^[A-Z]\S+ [A-Z]\S+$/.test(name)) {
         // 国际服
-        loadKeigenn('Global')
+        this.environment = 'Global'
       } else {
         // 国服
-        loadKeigenn('Chinese')
+        this.environment = 'Chinese'
       }
+      loadKeigenn(this.environment)
     },
   },
 })
