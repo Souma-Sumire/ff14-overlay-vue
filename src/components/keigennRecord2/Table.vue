@@ -51,7 +51,7 @@ const actionOptions = computed(() => {
     new Set(props.rows.map((r) => r[props.actionKey] as string))
   )
   return [
-    { label: '[取消筛选]', value: '' },
+    { label: ALL_STR, value: '' },
     ...actions.map((action) => ({ label: action, value: action })),
   ]
 })
@@ -61,7 +61,7 @@ const targetOptions = computed(() => {
     new Map(props.rows.map((row) => [row.target, row])).values()
   )
   return [
-    { label: '[取消筛选]', value: '', job: -1 },
+    { label: ALL_STR, value: '', job: -1 },
     ...players.map((row) => ({
       label: `${row.job}(${row.target})`,
       value: row.target,
