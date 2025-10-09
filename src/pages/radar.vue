@@ -287,6 +287,7 @@ async function getCombatants() {
 
 async function update() {
   await getCombatants()
+  updateSearchTargets()
   if (zoneType.value === 'Pvp' || !searchTargetName.value || !primaryPlayer.value) {
     searchTargetName.value = ''
     return
@@ -306,7 +307,6 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
     if (matches?.groups?.target) {
       searchTargetName.value = matches.groups.target
       getCombatants().then(() => {
-        updateSearchTargets()
         update()
       })
     }
