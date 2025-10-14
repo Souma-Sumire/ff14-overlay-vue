@@ -8,7 +8,7 @@ import type { EnmityTargetCombatant, EventMap } from 'cactbot/types/event'
 
 const mapIds = [1281, 1282, 1283, 1284, 1285, 1286, 1287, 1288, 1289, 1290]
 
-const inPt = ref(false)
+const inPt = useStorage('inPt', false)
 
 const tarIns = ref<EnmityTargetCombatant | null>(null)
 const tarData = ref({} as EnemyData | undefined)
@@ -46,17 +46,32 @@ onMounted(() => {
 onUnmounted(() => {
   removeOverlayListener('ChangeZone', handleChangeZone)
 })
+
+const getEmoji = (str: string = '未知') => {
+  const s = str ?? ''
+  return {
+    视觉: '👁️',
+    听觉: '👂',
+    范围: '⭕',
+    简单: '🟢',
+    中等: '🟡',
+    困难: '🔴',
+    危险: '🚨',
+    小心: '⚠️',
+    未知: '❔︎',
+  }[s]
+}
 </script>
 
 <template>
   <CommonActWrapper>
-    <div class="container" v-if="inPt && tarIns && tarData">
-      <main class="main">
-        <h3>{{ tarIns.Name }}({{ tarIns.BNpcNameID }})</h3>
-        <ul>
-          <li>难度：{{ tarData?.grade ?? '-' }}</li>
-          <li>感知：{{ tarData?.detect ?? '-' }}</li>
-          <li>攻略：{{ tarData?.note ?? '-' }}</li>
+    <div class="container" v-if="inPt">
+      <main class="main" v-show="tarIns">
+        <h3>{{ tarIns?.Name }}({{ tarIns?.BNpcNameID }})</h3>
+        <ul v-show="tarData">
+          <li>评级：{{ getEmoji(tarData?.grade) }}{{ tarData?.grade }}</li>
+          <li>索敌：{{ getEmoji(tarData?.detect) }}{{ tarData?.detect }}</li>
+          <li>笔记：{{ tarData?.note || '无' }}</li>
         </ul>
       </main>
     </div>
@@ -64,10 +79,11 @@ onUnmounted(() => {
 </template>
 
 <style lang="scss" scoped>
+@use 'sass:color';
 $text-color: #fefefd;
 $accent-color: #947b31;
-$shadow-spread: 0.5px;
-$shadow-blur: 2px;
+$shadow-spread: 1.5px;
+$shadow-blur: 2.5px;
 $font-family: 'Microsoft YaHei', sans-serif;
 $font-size: 20px;
 
@@ -79,7 +95,7 @@ $font-size: 20px;
   text-shadow: $shadow-spread 0 $shadow-blur $accent-color,
     -$shadow-spread 0 $shadow-blur $accent-color,
     0 $shadow-spread $shadow-blur $accent-color,
-    0 -$shadow-spread $shadow-blur $accent-color;
+    0 - $shadow-spread $shadow-blur $accent-color;
 
   h3 {
     padding: 5px;
@@ -98,7 +114,7 @@ $font-size: 20px;
 
     &::before {
       content: '◈';
-      color: darken($text-color, 20%);
+      color: color.adjust($text-color, $lightness: -20%);
     }
   }
 }
