@@ -16,6 +16,7 @@ const demo = useDemo()
     :style="{
       zoom: params.scale?.toString(),
       opacity: params.opacity?.toString(),
+      overflow: 'hidden',
     }"
   >
     <!-- 默认插槽内容 -->
