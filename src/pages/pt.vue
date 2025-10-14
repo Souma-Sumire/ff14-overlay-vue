@@ -34,6 +34,9 @@ watch(
       handleEnmityTargetData
     )
   },
+  {
+    immediate: true,
+  }
 )
 
 onMounted(() => {
