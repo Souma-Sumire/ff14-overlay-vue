@@ -16,7 +16,7 @@ const PtEnemies: EnemyDataRecord = {
   14101: { detect: '视觉', grade: '简单', note: '' }, // '漫步石莲猬'
   14102: { detect: '视觉', grade: '简单', note: '' }, // '漫步普卡精'
   14103: { detect: '视觉', grade: '简单', note: '' }, // '漫步鹰蜓'
-  14104: { detect: undefined, grade: '简单', note: '' }, // '漫步苔菇'
+  14104: { detect: '听觉', grade: '简单', note: '' }, // '漫步苔菇'
   14105: { detect: '视觉', grade: '简单', note: '' }, // '漫步花楸'
   14106: { detect: '视觉', grade: '简单', note: '' }, // '漫步杀人蜂'
   14107: { detect: '听觉', grade: '简单', note: '' }, // '漫步铁线莲'
