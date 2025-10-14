@@ -44,7 +44,7 @@
 1. 应用补丁：
 
    ```bash
-   git apply patches/0001-postNamazu.patch patches/0002-hash-mode.patch
+   git apply patches/0001-postNamazu.patch patches/0002-hash-mode.patch patches/0003-event-type.patch
    ```
 
 1. 启动开发模式：
@@ -61,4 +61,3 @@
      ```bash
      pnpm vite build
      ```
-

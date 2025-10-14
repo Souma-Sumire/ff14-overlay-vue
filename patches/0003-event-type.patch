@@ -1,0 +1,49 @@
+From c1cfef19d20234f204c0f5580a273740f71b9290 Mon Sep 17 00:00:00 2001
+From: Souma-Sumire <553469159@qq.com>
+Date: Tue, 14 Oct 2025 14:42:45 +0800
+Subject: [PATCH] event type
+
+---
+ types/event.d.ts | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/cactbot/types/event.d.ts a/cactbot/types/event.d.ts
+index 34dc54879..ce54fef79 100644
+--- a/cactbot/types/event.d.ts
++++ a/cactbot/types/event.d.ts
+@@ -213,6 +213,32 @@ export type EnmityTargetCombatant = {
+     ActorID: number;
+     isOwner: boolean;
+   }[];
++
++  BNpcID: number;
++  CurrentMP: number;
++  IsCasting1: number;
++  BNpcNameID: number;
++  TransformationId: number;
++  WeaponId: number;
++  Heading: number;
++  MaxMP: number;
++  Level: number;
++  WorldID: number;
++  CurrentWorldID: number;
++  NPCTargetID: number;
++  CurrentGP: number;
++  MaxGP: number;
++  CurrentCP: number;
++  MaxCP: number;
++  PCTargetID: number;
++  IsCasting2: number;
++  CastBuffID: number;
++  CastTargetID: number;
++  CastGroundTargetX: number;
++  CastGroundTargetY: number;
++  CastGroundTargetZ: number;
++  CastDurationCurrent: number;
++  CastDurationMax: number;
+ };
+ 
+ export interface EventMap {
+-- 
+2.45.1.windows.1
+
