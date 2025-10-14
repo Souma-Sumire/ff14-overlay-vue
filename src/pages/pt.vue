@@ -26,13 +26,21 @@ const handleChangeZone: EventMap['ChangeZone'] = (e) => {
   inPt.value = mapIds.includes(e.zoneID)
 }
 
+watch(
+  inPt,
+  () => {
+    ;(inPt.value ? addOverlayListener : removeOverlayListener)(
+      'EnmityTargetData',
+      handleEnmityTargetData
+    )
+  },
+)
+
 onMounted(() => {
-  addOverlayListener('EnmityTargetData', handleEnmityTargetData)
   addOverlayListener('ChangeZone', handleChangeZone)
 })
 
 onUnmounted(() => {
-  removeOverlayListener('EnmityTargetData', handleEnmityTargetData)
   removeOverlayListener('ChangeZone', handleChangeZone)
 })
 </script>
