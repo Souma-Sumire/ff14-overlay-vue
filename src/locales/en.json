@@ -72,8 +72,7 @@
   "OccultCrescent": "The Occult Crescent",
   "When Party": "Party Size >=",
   "CountDownCancel": "Countdown Canceled",
-  "Custom Path": "Custom Path by Category",
-  "customPathPlaceholder": "Directory must exist; leave blank for default path",
+  "Custom Path": "Custom Path by Category (Directory must exist)",
   "host required": "Port not entered",
   "size warning": "Please enlarge the window to at least 600px * 300px",
   "Append Content Name": "Append Current Content Name to File Name"

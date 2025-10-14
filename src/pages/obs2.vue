@@ -116,6 +116,7 @@ function initializeContentSettings() {
     'Ultimate',
     'Chaotic',
     'OccultCrescent',
+    'DeepDungeonExtras',
     'Default',
   ]
   if (userContentSetting.value.length === 0) {
@@ -682,6 +683,10 @@ onUnmounted(() => {
                 align="center"
               >
                 <template #default="scope">
+                  <span class="current-type" v-if="zoneType === scope.row.type"
+                    >{{ t('Current') }}<br
+                  /></span>
+
                   <span>{{ t(scope.row.type) }}</span>
                 </template>
               </el-table-column>
@@ -776,7 +781,6 @@ onUnmounted(() => {
                 <template #default="scope">
                   <el-input
                     v-model="scope.row.customPath"
-                    :placeholder="t('customPathPlaceholder')"
                     style="width: 100%"
                   />
                 </template>
@@ -900,5 +904,9 @@ header {
   .obs-container {
     display: none;
   }
+}
+.current-type {
+  color: red;
+  font-weight: bold;
 }
 </style>

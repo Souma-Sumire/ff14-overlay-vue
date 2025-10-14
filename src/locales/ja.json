@@ -72,8 +72,7 @@
   "OccultCrescent": "蜃気楼の島",
   "When Party": "パーティ人数>=",
   "CountDownCancel": "カウントダウン中止時",
-  "Custom Path": "カテゴリ別のカスタムパス",
-  "customPathPlaceholder": "ディレクトリは存在する必要があります。空白の場合はデフォルトパスを使用",
+  "Custom Path": "カテゴリ別のカスタムパス。ディレクトリは存在する必要があります。",
   "host required": "ポートが入力されていません",
   "size warning": "ウィンドウを600px * 300px以上に広げてください",
   "Append Content Name": "ファイル名に現在のコンテンツ名を追記"

@@ -12,6 +12,7 @@ const CONTENT_TYPES = [
   'Extreme', // 歼殛战
   'Chaotic', // 诛灭战
   'Ultimate', // 绝境战
+  'DeepDungeonExtras', // 妖宫诗想
   'OccultCrescent', // 新月岛
   'SaveTheQueen', // 神佑女王（BZY）
   'Dungeons', // 四人副本
@@ -72,6 +73,8 @@ function getZoneType(zoneInfo: (typeof ZoneInfo)[number]): ContentUsedType {
       return 'OccultCrescent'
     case ContentType.SaveTheQueen:
       return 'SaveTheQueen'
+    case ContentType.DeepDungeonExtras:
+      return 'DeepDungeonExtras'
     default:
       return 'Default'
   }

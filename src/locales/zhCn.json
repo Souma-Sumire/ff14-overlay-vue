@@ -73,9 +73,11 @@
   "OccultCrescent": "蜃景幻界",
   "When Party": "小队人数>=",
   "CountDownCancel": "倒计时取消",
-  "Custom Path": "类别自定义储存路径",
-  "customPathPlaceholder": "须保证目录存在，若留空则取默认路径",
+  "Custom Path": "类别自定义储存路径（须保证目录存在，若留空则取默认路径）",
   "host required": "未填写端口号",
   "size warning": "请先拉大窗口，至少600px * 300px",
-  "Append Content Name": "将当前副本名称添加到文件名后"
+  "Append Content Name": "将当前副本名称添加到文件名后",
+  "SaveTheQueen": "博兹雅",
+  "Current": "（当前）",
+  "DeepDungeonExtras": "妖宫/诗想"
 }
