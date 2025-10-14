@@ -25,6 +25,7 @@ const contentTypeLabel: { type: number; label: string }[] = [
   { type: ContentType.ChaoticAllianceRaid, label: '诛灭战' },
   { type: ContentType.UltimateRaids, label: '绝境战' },
   { type: ContentType.VCDungeonFinder, label: '多变迷宫' },
+  { type: ContentType.DeepDungeonExtras, label: '深宫诗想' },
   { type: ContentType.DeepDungeons, label: '深层迷宫' },
   { type: ContentType.DisciplesOfTheLand, label: '采集/垂钓' },
   { type: ContentType.Eureka, label: '尤雷卡' },

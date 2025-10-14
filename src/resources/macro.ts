@@ -4308,6 +4308,10 @@ fastPP(`{"Name":"JP","MapID":1062,"A":{"X":100.0,"Y":0.0,"Z":92.0,"ID":0,"Active
 `)
 fastPP(`{"Name":"Four Seasons","MapID":1062,"A":{"X":83.25,"Y":0.0,"Z":92.0,"ID":0,"Active":true},"B":{"X":116.75,"Y":0.0,"Z":92.0,"ID":1,"Active":true},"C":{"X":108.0,"Y":0.0,"Z":98.0,"ID":2,"Active":true},"D":{"X":92.0,"Y":0.0,"Z":98.0,"ID":3,"Active":true},"One":{"X":95.0,"Y":0.0,"Z":86.0,"ID":4,"Active":true},"Two":{"X":105.0,"Y":0.0,"Z":86.0,"ID":5,"Active":true},"Three":{"X":102.2,"Y":0.0,"Z":92.667,"ID":6,"Active":true},"Four":{"X":97.8,"Y":0.0,"Z":92.674,"ID":7,"Active":true}}
 `)
+// 诗想
+fastPP(
+  `{"Name":"自用","MapID":1063,"A":{"X":-618,"Z":-314,"Y":0,"Active":true},"B":{"X":-610,"Z":-302,"Y":0,"Active":true},"C":{"X":-590,"Z":-293,"Y":0,"Active":true},"D":{"X":-581,"Z":-286,"Y":0,"Active":true},"One":{"X":-606,"Z":-314,"Y":0,"Active":true},"Two":{"X":-594,"Z":-314,"Y":0,"Active":true},"Three":{"X":-594,"Z":-286,"Y":0,"Active":true},"Four":{"X":-606,"Z":-286,"Y":0,"Active":true}}`
+)
 
 function getSource(title: string, href: string): string {
   return `<a href='${href}'target='_blank'>${title}</a>`
