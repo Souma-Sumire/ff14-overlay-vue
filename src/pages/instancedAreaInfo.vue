@@ -70,7 +70,7 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
         ?? e.line[4]!.match(/You are now in the instanced area (.+?)(?<instance>[])”/)
         ?? e.line[4]!.match(/インスタンスエリア「(.+?)(?<instance>[])」/)
     if (match) {
-      state.instanceNum = InstancedEnum[match.groups?.zoneInstanced as keyof typeof InstancedEnum]
+      state.instanceNum = InstancedEnum[match.groups?.instance as keyof typeof InstancedEnum]
     }
   }
   else if (e.line[0] === '01') {
