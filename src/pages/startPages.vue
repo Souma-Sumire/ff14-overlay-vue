@@ -65,6 +65,15 @@ opacity: 不透明度，默认1
 
 更多自定义功能见悬浮窗设置（取消锁定后显示）。`,
     src: 'keySkillTimer.webp',
+  },
+  {
+    title: '[ACT悬浮窗] 妖宫图鉴',
+    type: '悬浮窗',
+    path: 'pt',
+    src: 'pt.webp',
+    comment:
+      '框架完成，缓慢更新怪物数据中，欢迎提交<a href="https://github.com/Souma-Sumire/ff14-overlay-vue">PR</a>。',
+    imageWidth: 350,
     isNew: true,
   },
   {
