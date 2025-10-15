@@ -34,15 +34,22 @@ const isLethalIcon = computed(() => isLethal(props.row))
   <div class="target">
     <img
       v-if="showIcon"
-      :class="`jobIcon cj${store.userOptions.iconType} ${
-        isLethalIcon ? 'lethal-icon' : ''
-      }`"
+      :class="`${store.isBrowser ? 'browser' : 'act'} jobIcon cj${
+        store.userOptions.iconType
+      } ${isLethalIcon ? 'lethal-icon' : ''}`"
       :src="getIconSrc(props.row.jobIcon, store.userOptions.iconType)"
       :alt="props.row.jobIcon"
       @error="onError"
     />
     <span v-else class="alt-text">{{ props.row.job }}</span>
-    <span v-if="isLethalIcon" class="lethal-emoji"> 💀 </span>
+    <span
+      v-if="isLethalIcon"
+      :class="`lethal-emoji ${store.isBrowser ? 'browser' : 'act'} emoji-cj${
+        store.userOptions.iconType
+      }`"
+    >
+      💀
+    </span>
     <span v-if="props.row.hasDuplicate" class="has-duplicate">
       {{ store.formatterName(props.row.target) }}
     </span>
@@ -62,23 +69,45 @@ const isLethalIcon = computed(() => isLethal(props.row))
 .lethal-icon {
   filter: grayscale(100%) brightness(80%);
   // transform-style: preserve-3d;
-  transform: 
-  // rotateX(30deg)
-    rotateZ(-90deg);
+
+  // 同样的css在act悬浮窗与Chrome浏览器悬浮窗的效果不同，原因未知，似乎是因为用到了一些过于新的css属性
+  &.act {
+    transform: translateX(2.5px) rotateZ(-90deg);
+  }
+  &.browser {
+    transform: rotateZ(-90deg);
+  }
 }
 
 .lethal-emoji {
   position: absolute;
   color: red;
   text-shadow: -1px 0 0 black, 0 1px 0 black, 1px 0 0 black, 0 -1px 0 black;
-  top: -0.3em;
-  left: -0.6em;
+  &.act {
+    top: -3px;
+    left: -3.5px;
+  }
+  &.browser {
+    top: -3px;
+    left: -5.5px;
+  }
   opacity: 0.9;
-  font-size: 0.8em;
+  font-size: 9px;
+}
+
+.emoji-cj3 {
+  &.browser {
+    top: 1px;
+    left: 1.5px;
+  }
+  &.act {
+    top: 2px;
+    left: 2px;
+  }
 }
 
 .jobIcon {
-  width: 2em;
+  width: 24px;
   object-fit: cover;
   vertical-align: middle;
   position: relative;
@@ -86,11 +115,29 @@ const isLethalIcon = computed(() => isLethal(props.row))
 
 .cj1 {
   top: 1px;
+  left: -2px;
+}
+
+.cj1.lethal-icon {
+  &.act {
+    left: -0.75px;
+  }
+  &.browser {
+    left: -0.25px;
+  }
+}
+
+.cj2 {
+  right: 4px;
 }
 
 .cj3 {
   width: 32px;
   top: 1px;
+}
+
+.cj4 {
+  right: 2px;
 }
 
 .target {

@@ -843,13 +843,13 @@ main {
   position: absolute;
   top: 1px;
   z-index: 15;
-  border-radius: 4px;
+  border-radius: 2px;
   box-shadow: 0 0 0 1px rgba(200, 200, 200, 0.2);
 }
 
 .combat-select.act {
-  width: 1.5em;
-  right: 24px;
+  width: 24px;
+  right: 26px;
   background-color: rgba(20, 20, 20, 0.4);
 }
 
