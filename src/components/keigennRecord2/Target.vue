@@ -59,17 +59,18 @@ const isLethalIcon = computed(() => isLethal(props.row))
 <style scoped lang="scss">
 .has-duplicate {
   position: absolute;
-  font-size: 8px;
+
+  font-size: 7.5px;
   width: 24px;
   text-align: center;
-  top: 10px;
+  right: 0;
+  bottom: 0;
   text-shadow: -1px 0 0 black, 0 1px 0 black, 1px 0 0 black, 0 -1px 0 black;
 }
 
 .lethal-icon {
   filter: grayscale(100%) brightness(80%);
   // transform-style: preserve-3d;
-
   // 同样的css在act悬浮窗与Chrome浏览器悬浮窗的效果不同，原因未知，似乎是因为用到了一些过于新的css属性
   &.act {
     transform: translateX(2.5px) rotateZ(-90deg);
@@ -91,8 +92,8 @@ const isLethalIcon = computed(() => isLethal(props.row))
     top: -3px;
     left: -5.5px;
   }
-  opacity: 0.9;
-  font-size: 9px;
+  opacity: 0.75;
+  font-size: 8px;
 }
 
 .emoji-cj3 {
@@ -129,6 +130,12 @@ const isLethalIcon = computed(() => isLethal(props.row))
 
 .cj2 {
   right: 4px;
+}
+
+.cj2.lethal-icon {
+  &.act {
+    right: 5px;
+  }
 }
 
 .cj3 {

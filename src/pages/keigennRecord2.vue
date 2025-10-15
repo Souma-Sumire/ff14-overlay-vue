@@ -586,7 +586,7 @@ function formatTime(time: number) {
   return `${minute < 10 ? '0' : ''}${minute}:${second < 10 ? '0' : ''}${second}`
 }
 
-if (store.isBrowser) povName.value = '测试用户'
+// if (store.isBrowser) povName.value = '测试用户'
 
 if (povName.value !== '') store.initEnvironment(povName.value)
 
@@ -816,11 +816,11 @@ main {
   line-height: 28px;
 }
 
-// amount列样式（允许超出单元格宽度）
-:global(.col-amount) {
-  overflow: visible !important;
-  z-index: 2; // 在图标上方
-}
+// // amount列样式（允许超出单元格宽度）
+// :global(.col-amount) {
+//   overflow: visible !important;
+//   z-index: 2; // 在图标上方
+// }
 
 // 表头筛选去掉边框
 :global(.el-select__wrapper) {

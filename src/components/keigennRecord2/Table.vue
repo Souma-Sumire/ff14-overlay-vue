@@ -173,7 +173,7 @@ const columns = computed<Column[]>(() => [
     key: 'target',
     title: '职业',
     dataKey: 'target',
-    width: 32,
+    width: 34,
     align: 'center' as const,
     class: 'col-target',
     headerCellRenderer: () =>
@@ -209,7 +209,7 @@ const columns = computed<Column[]>(() => [
     key: 'amount',
     title: '伤害',
     dataKey: 'amount',
-    width: 45,
+    width: 52,
     align: 'right' as const,
     class: 'col-amount',
     cellRenderer: ({ rowData }: { rowData: RowVO }) =>
@@ -221,13 +221,13 @@ const columns = computed<Column[]>(() => [
     dataKey: 'reduction',
     width: 35,
     align: 'right' as const,
-    class: 'col-amount',
+    class: 'col-reduction',
     headerCellRenderer: () => h('div', { class: 'header-reduction' }, '减伤'),
     cellRenderer: ({ rowData }: { rowData: RowVO }) =>
       h(
         'span',
         {
-          class: 'col-reduction',
+          class: 'col-reduction-number',
           style: {
             color: getReductionColor(rowData.reduction),
           },
@@ -380,7 +380,7 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
   background-color: var(--el-color-primary-dark-2);
 }
 
-:deep(.col-reduction) {
+:deep(.col-reduction-number) {
   &::after {
     content: '%';
     font-size: 0.66em;

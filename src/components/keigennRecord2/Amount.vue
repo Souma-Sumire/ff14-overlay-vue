@@ -83,10 +83,7 @@ const isLethalHit = isLethal(props.row)
 }
 
 // 伤害数值
-.amount {
-  display: flex;
-  justify-content: flex-end;
-}
+// .amount {}
 
 // 致命伤害
 .lethal {
