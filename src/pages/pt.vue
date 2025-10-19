@@ -14,12 +14,13 @@ const tarIns = ref<EnmityTargetCombatant | null>(null)
 const tarData = ref({} as EnemyData | undefined)
 
 const handleEnmityTargetData: EventMap['EnmityTargetData'] = (e) => {
-  tarIns.value = e.Target
-  if (!e.Target?.BNpcNameID) {
+  if (e.Target) {
+    tarIns.value = e.Target
+    tarData.value = PtEnemies[e.Target.BNpcNameID]
+  } else {
+    tarIns.value = null
     tarData.value = undefined
-    return
   }
-  tarData.value = PtEnemies[e.Target.BNpcNameID] || undefined
 }
 
 const handleChangeZone: EventMap['ChangeZone'] = (e) => {
@@ -66,8 +67,8 @@ const getEmoji = (str: string = '未知') => {
 <template>
   <CommonActWrapper>
     <div class="container" v-if="inPt">
-      <main class="main" v-show="tarIns">
-        <h3>{{ tarIns?.Name }}({{ tarIns?.BNpcNameID }})</h3>
+      <main class="main">
+        <h3 v-show="tarIns">{{ tarIns?.Name }}({{ tarIns?.BNpcNameID }})</h3>
         <ul v-show="tarData">
           <li>评级：{{ getEmoji(tarData?.grade) }}{{ tarData?.grade }}</li>
           <li>索敌：{{ getEmoji(tarData?.detect) }}{{ tarData?.detect }}</li>
