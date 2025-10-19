@@ -1,4 +1,12 @@
 {
   "singleQuote": true,
-  "semi": false
+  "semi": false,
+  "overrides": [
+    {
+      "files": "src/resources/pt.ts",
+      "options": {
+        "printWidth": 1000
+      }
+    }
+  ]
 }
