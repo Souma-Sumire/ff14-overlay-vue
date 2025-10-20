@@ -98,16 +98,16 @@ const PtEnemies: EnemyDataRecord = {
   14098: { detect: undefined, grade: undefined, note: undefined }, // '埃米尔仙人刺'
   14099: { detect: undefined, grade: undefined, note: undefined }, // '艾米拉仙人花'
   14165: { detect: undefined, grade: undefined, note: undefined }, // '漫步褐爪'
-  14166: { detect: undefined, grade: undefined, note: undefined }, // '漫步守护者'
+  14166: { detect: '视觉', grade: '简单', note: undefined }, // '漫步守护者'
   14167: { detect: '视觉', grade: '危险', note: '无提示的全场AOE，为270度环形范围，可站在背后或其命中区域内躲避，可利用视线阻挡。可被眩晕。' }, // '漫步沙蛇' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14168: { detect: '视觉', grade: '危险', note: '使所有人进入目押状态，然后释放延迟中等范围AOE。若不熟悉方向错乱机制，建议提前远离' }, // '漫步美甲兽' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14169: { detect: '视觉', grade: '小心', note: '非战斗状态下会施放反击屏障，攻击它会受到秒杀级伤害！' }, // '漫步巨蜥' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14170: { detect: undefined, grade: undefined, note: undefined }, // '漫步邪恶海鸟'
-  14171: { detect: undefined, grade: undefined, note: undefined }, // '漫步帕查玛玛'
+  14171: { detect: '视觉', grade: '简单', note: '读条小扇形' }, // '漫步帕查玛玛'
   14172: { detect: '视觉', grade: '简单', note: '中等宽度的前方扇形提示AOE。' }, // '漫步神香草' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14173: { detect: '视觉', grade: '小心', note: '可被眩晕，会施放超大范围环形AOE及前方扇形攻击。' }, // '漫步恐鹤' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
-  14174: { detect: '视觉', grade: '危险', note: '外环雷：无提示的全场环形AOE。尾镰隐藏的中等范围钢铁。' }, // '漫步吼叫的小豹' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
-  14175: { detect: undefined, grade: undefined, note: '' }, // '漫步狞猫'
+  14174: { detect: '视觉', grade: '危险', note: '外环雷：无提示的全场环形AOE。尾镰：隐藏的中等范围钢铁。高速撞击：直线攻击。' }, // '漫步吼叫的小豹' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
+  14175: { detect: '视觉', grade: '简单', note: '读条小钢铁或大范围扫尾' }, // '漫步狞猫'
   14176: { detect: '视觉', grade: '小心', note: '瞬间将目标拉近，然后施放延迟中等范围的钢铁。' }, // '漫步巨人' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14177: { detect: undefined, grade: undefined, note: undefined }, // '漫步甲虫'
 
