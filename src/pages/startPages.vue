@@ -72,7 +72,7 @@ opacity: 不透明度，默认1
     path: 'pt',
     src: 'pt.webp',
     comment:
-      '框架完成，缓慢更新怪物数据中，欢迎提交<a href="https://github.com/Souma-Sumire/ff14-overlay-vue">PR</a>。',
+      '怪物数据不完整，欢迎提交<a href="https://github.com/Souma-Sumire/ff14-overlay-vue">PR</a>。只支持妖宫，其他深宫暂时不支持。',
     imageWidth: 350,
     isNew: true,
   },
