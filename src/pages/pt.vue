@@ -68,7 +68,9 @@ const getEmoji = (str: string = '未知') => {
   <CommonActWrapper>
     <div class="container" v-if="inPt">
       <main class="main">
-        <h3 v-show="tarIns">{{ tarIns?.Name }}({{ tarIns?.BNpcNameID }})</h3>
+        <h3 v-show="tarIns && tarIns?.BNpcNameID > 0">
+          {{ tarIns?.Name }}({{ tarIns?.BNpcNameID }})
+        </h3>
         <ul v-show="tarData">
           <li>评级：{{ getEmoji(tarData?.grade) }}{{ tarData?.grade }}</li>
           <li>索敌：{{ getEmoji(tarData?.detect) }}{{ tarData?.detect }}</li>
