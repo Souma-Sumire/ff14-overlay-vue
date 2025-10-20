@@ -11,7 +11,6 @@ import logDefinitions from '../../cactbot/resources/netlog_defs'
 import NetRegexes, { commonNetRegex } from '../../cactbot/resources/netregexes'
 import {
   addOverlayListener,
-  callOverlayHandler,
   removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
 import { ElMessage } from 'element-plus'
@@ -37,7 +36,7 @@ type ConditionType =
   | 'wipe'
 
 const { zoneType } = useZone()
-const zoneName = ref('')
+const zoneName = useStorage('obs-zone-name', '')
 
 const userConfig = useStorage(
   'obs-user-config',
@@ -57,29 +56,6 @@ const userContentSetting = useStorage(
 )
 const dev = useDev()
 const partyLength = ref(1)
-
-function waitACT(): Promise<void> {
-  if (dev.value) return Promise.resolve()
-
-  return new Promise<void>((resolve) => {
-    const tryOnce = () => {
-      Promise.race([
-        callOverlayHandler({ call: 'getLanguage' }),
-        new Promise((_, rej) =>
-          setTimeout(() => rej(new Error('Timeout')), 3000)
-        ),
-      ])
-        .then(() => {
-          resolve()
-        })
-        .catch(() => {
-          setTimeout(tryOnce, 0)
-        })
-    }
-
-    tryOnce()
-  })
-}
 
 const REGEXES = {
   inCombat: NetRegexes.inCombat(),
@@ -454,12 +430,8 @@ const handlePartyChanged: EventMap['PartyChanged'] = (ev) => {
   partyLength.value = ev.party.length || 1
 }
 
-onMounted(async () => {
-  await waitACT()
+onMounted(() => {
   obs.connect()
-  while (!obs.status.connected) {
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-  }
   addOverlayListener('ChangeZone', handleChangeZone)
   addOverlayListener('LogLine', handleLogLine)
   addOverlayListener('PartyChanged', handlePartyChanged)
