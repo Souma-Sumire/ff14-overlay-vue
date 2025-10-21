@@ -91,12 +91,10 @@ const PtEnemies: EnemyDataRecord = {
   14162: { detect: undefined, grade: undefined, note: undefined }, // '漫步龙舌兰'
   14163: { detect: undefined, grade: undefined, note: undefined }, // '漫步发芽大口花'
   14164: { detect: undefined, grade: undefined, note: undefined }, // '漫步螳螂'
-  14263: { detect: undefined, grade: undefined, note: undefined }, // '奥古布纳巴里'
+  14263: { detect: '视觉', grade: '简单', note: '不可以长时间站在流沙中。龙卷风需要在倒计时结束时站在流沙里避免被击退。' }, // '奥古布纳巴里' 50层BOSS
 
   // 51-60层
   14097: { detect: '视觉', grade: '中等', note: '小仙人掌对自身所在格造成伤害，大仙人掌对自身及周围9格造成伤害' }, // '元祖马利克刺人仙' 60层BOSS
-  // 14098: { detect: undefined, grade: undefined, note: undefined }, // '埃米尔仙人刺' 60层BOSS ADD
-  // 14099: { detect: undefined, grade: undefined, note: undefined }, // '艾米拉仙人花' 
   14165: { detect: undefined, grade: undefined, note: undefined }, // '漫步褐爪'
   14166: { detect: '视觉', grade: '简单', note: undefined }, // '漫步守护者'
   14167: { detect: '视觉', grade: '危险', note: '无提示的全场AOE，为270度环形范围，可站在背后或其命中区域内躲避，可利用视线阻挡。可被眩晕。' }, // '漫步沙蛇' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
@@ -128,7 +126,7 @@ const PtEnemies: EnemyDataRecord = {
   14190: { detect: undefined, grade: '小心', note: '泥石流：中等范围、延迟释放的宽扇形AOE。' }, // '漫步恩戈齐' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
 
   // 71-80层
-  13968: { detect: undefined, grade: undefined, note: undefined }, // '得到宽恕的亵渎'
+  13968: { detect: '视觉', grade: '小心', note: '紫雷是月环 痛伤是钢铁。红色buff少移动 蓝色buff吃前后刀。' }, // '得到宽恕的亵渎' 80层BOSS
   14191: { detect: '视觉', grade: '小心', note: '（多智兽）读条钢铁，或者读条正面超大扇形' }, // '得到宽恕的不和' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14192: { detect: '视觉', grade: '危险', note: '非战斗状态会释放全屏AOE，进战后会读条释放正面扇形AOE' }, // '得到宽恕的腐化物' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14193: { detect: '视觉', grade: '危险', note: '两种读条，先月环后钢铁，或者先钢铁后月环' }, // '得到宽恕的恶意' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
@@ -144,7 +142,7 @@ const PtEnemies: EnemyDataRecord = {
   14203: { detect: '视觉', grade: '简单', note: '读条小范围顺劈' }, // '漫步铰颌蚁' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
 
   // 81-90层
-  14090: { detect: undefined, grade: undefined, note: undefined }, // '玛拉科达'
+  14090: { detect: '视觉', grade: '小心', note: '发光手一侧的270°半场刀。横断：对boss左右的90°扇形攻击，纵断：对boss前后的90°扇形攻击，同时场边的魔法阵会对所在行或列发动直线攻击。' }, // '玛拉科达' 90层BOSS
   14204: { detect: '视觉', grade: '小心', note: '踢击与扫尾：先读条小范围前方直线AOE，随后在背后顺劈' }, // '漫步卡马' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14205: { detect: '视觉', grade: '危险', note: '非战斗状态下会释放全场AOE。深渊射线：读条极大范围的直线AOE，穿墙！' }, // '被召唤的巴力' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14206: { detect: '范围', grade: '小心', note: '会连续击退四次，然后使用延迟的小范围前方扇形AOE。' }, // '漫步骑士' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
@@ -160,8 +158,8 @@ const PtEnemies: EnemyDataRecord = {
   14216: { detect: '范围', grade: '小心', note: '离他远的时候快速读条大范围扇形AOE，靠近时小范围钢铁' }, // '被召唤的行吟诗人' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
 
   // 91-100层
-  14037: { detect: undefined, grade: undefined, note: undefined }, // '至极悲痛' 99层BOSS（男）
-  14038: { detect: undefined, grade: undefined, note: undefined }, // '被侵蚀的食罪灵' 99层BOSS（女）
+  14037: { detect: '范围', grade: '困难', note: '男，需吃白buff' }, // '至极悲痛' 99层BOSS（男）机制过多，自己看攻略
+  14038: { detect: '范围', grade: '困难', note: '女，需吃黑buff' }, // '被侵蚀的食罪灵' 99层BOSS（女） 机制过多，自己看攻略
   14217: { detect: undefined, grade: '小心', note: '读条三重/四重进行连续强化攻击，随后发动致命的小范围环形AOE。' }, // '漫步狼人' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14218: { detect: undefined, grade: '小心', note: '读条左右刀，记得穿' }, // '被召唤的古辛' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14219: { detect: undefined, grade: '危险', note: '读条穿墙AOE+自爆' }, // '被召唤的梦祸' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
