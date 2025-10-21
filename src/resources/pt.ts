@@ -87,16 +87,16 @@ const PtEnemies: EnemyDataRecord = {
   14158: { detect: '视觉', grade: '小心', note: '先在前方释放冲刺直线AOE，随后无提示地回头再冲刺一次。' }, // '漫步蚁狮' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14159: { detect: undefined, grade: undefined, note: undefined }, // '漫步钳嘴鸟'
   14160: { detect: undefined, grade: undefined, note: undefined }, // '漫步壁崖飞鸢'
-  14161: { detect: '视觉', grade: '小心', note: '愤怒旋风：延迟圆形AOE，会造成无法净化的眩晕，伤害约65K。愤怒一击：延迟小范围直线AOE，伤害约70K。' }, // '漫步武器' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
+  14161: { detect: '视觉', grade: '小心', note: '愤怒旋风：延迟钢铁，会造成无法净化的眩晕，伤害约65K。愤怒一击：延迟小范围直线AOE，伤害约70K。' }, // '漫步武器' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14162: { detect: undefined, grade: undefined, note: undefined }, // '漫步龙舌兰'
   14163: { detect: undefined, grade: undefined, note: undefined }, // '漫步发芽大口花'
   14164: { detect: undefined, grade: undefined, note: undefined }, // '漫步螳螂'
   14263: { detect: undefined, grade: undefined, note: undefined }, // '奥古布纳巴里'
 
   // 51-60层
-  14097: { detect: undefined, grade: undefined, note: undefined }, // '元祖马利克刺人仙'
-  14098: { detect: undefined, grade: undefined, note: undefined }, // '埃米尔仙人刺'
-  14099: { detect: undefined, grade: undefined, note: undefined }, // '艾米拉仙人花'
+  14097: { detect: '视觉', grade: '中等', note: '小仙人掌对自身所在格造成伤害，大仙人掌对自身及周围9格造成伤害' }, // '元祖马利克刺人仙' 60层BOSS
+  // 14098: { detect: undefined, grade: undefined, note: undefined }, // '埃米尔仙人刺' 60层BOSS ADD
+  // 14099: { detect: undefined, grade: undefined, note: undefined }, // '艾米拉仙人花' 
   14165: { detect: undefined, grade: undefined, note: undefined }, // '漫步褐爪'
   14166: { detect: '视觉', grade: '简单', note: undefined }, // '漫步守护者'
   14167: { detect: '视觉', grade: '危险', note: '无提示的全场AOE，为270度环形范围，可站在背后或其命中区域内躲避，可利用视线阻挡。可被眩晕。' }, // '漫步沙蛇' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
@@ -112,15 +112,15 @@ const PtEnemies: EnemyDataRecord = {
   14177: { detect: undefined, grade: undefined, note: undefined }, // '漫步甲虫'
 
   // 61-70层
-  13971: { detect: undefined, grade: undefined, note: undefined }, // '得到宽恕的狂热'
-  14178: { detect: '视觉', grade: '小心', note: '左右刀' }, // '得到宽恕的暴动' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
+  13971: { detect: '视觉', grade: '中等', note: '热切光芒：直线。热切之眼：月环。附带白球，球会按照出现顺序发动月环。' }, // '得到宽恕的狂热' 70层BOSS
+  14178: { detect: '视觉', grade: '小心', note: '左右刀，躲完立即穿到对侧！' }, // '得到宽恕的暴动' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14179: { detect: undefined, grade: '小心', note: '几千针刺：延迟大范围直线AOE。' }, // '得到宽恕的争论' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14180: { detect: undefined, grade: '简单', note: '未终针延迟小范围前方直线AOE。终极针：血量低于10%时的点名狂暴攻击。' }, // '漫步蜂后' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14181: { detect: undefined, grade: '危险', note: '水晶刺：血量低于25%时会反复释放全场AOE，可用视线阻挡。冰雹发射：延迟直线AOE。' }, // '得到宽恕的怨恨' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
-  14182: { detect: '视觉', grade: '小心', note: '执行贯穿：向前冲刺并在终点释放小范围圆形AOE。随后会释放延迟大范围钢铁。' }, // '漫步塔罗斯' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
+  14182: { detect: '视觉', grade: '小心', note: '执行贯穿：向前冲刺并在终点释放小范围钢铁。随后释放延迟大范围钢铁。' }, // '漫步塔罗斯' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14183: { detect: '视觉', grade: '小心', note: '冲顶：快速施放的前方宽扇形延迟AOE。' }, // '漫步壁崖鼹鼠' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
-  14184: { detect: undefined, grade: '简单', note: '在两次“沉岛”圆形提示后施放“岩石崩溃”：延迟全屏大范围十字AOE。' }, // '得到宽恕的偏颇' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
-  14185: { detect: undefined, grade: undefined, note: undefined }, // '得到宽恕的恶作剧'
+  14184: { detect: '视觉', grade: '简单', note: '在两次“沉岛”圆形提示后施放“岩石崩溃”：延迟全屏大范围十字AOE。' }, // '得到宽恕的偏颇' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
+  14185: { detect: '视觉', grade: '简单', note: '掷锤：点名脚底黄圈' }, // '得到宽恕的恶作剧'
   14186: { detect: undefined, grade: '小心', note: '无提示的前方石化攻击（无法背对躲避）。延迟小范围钢铁。' }, // '得到宽恕的贪食' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14187: { detect: '视觉', grade: '危险', note: '隐藏敌人，接近后才会显形。会向你冲撞造成约40K伤害，随后施放快速且延迟小范围钢铁。仅出现于61-64层。' }, // '得到宽恕的疑虑' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14188: { detect: undefined, grade: '危险', note: '【可能是需要诱导】延迟前（或后）方半圆AOE，随后立即在背后（或前面）再释放一次。' }, // '得到宽恕的眷恋' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
