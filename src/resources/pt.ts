@@ -1,5 +1,5 @@
 type EnemyData = {
-  grade?: '简单' | '中等' | '困难' | '危险' | '小心'
+  grade?: '简单' | '小心' | '危险'
   detect?: '视觉' | '听觉' | '范围'
   note?: string
 }
@@ -94,7 +94,7 @@ const PtEnemies: EnemyDataRecord = {
   14263: { detect: '视觉', grade: '简单', note: '不可以长时间站在流沙中。龙卷风需要在倒计时结束时站在流沙里避免被击退。' }, // '奥古布纳巴里' 50层BOSS
 
   // 51-60层
-  14097: { detect: '视觉', grade: '中等', note: '小仙人掌对自身所在格造成伤害，大仙人掌对自身及周围9格造成伤害' }, // '元祖马利克刺人仙' 60层BOSS
+  14097: { detect: '视觉', grade: '小心', note: '小仙人掌对自身所在格造成伤害，大仙人掌对自身及周围9格造成伤害' }, // '元祖马利克刺人仙' 60层BOSS
   14165: { detect: undefined, grade: undefined, note: undefined }, // '漫步褐爪'
   14166: { detect: '视觉', grade: '简单', note: undefined }, // '漫步守护者'
   14167: { detect: '视觉', grade: '危险', note: '无提示的全场AOE，为270度环形范围，可站在背后或其命中区域内躲避，可利用视线阻挡。可被眩晕。' }, // '漫步沙蛇' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
@@ -110,7 +110,7 @@ const PtEnemies: EnemyDataRecord = {
   14177: { detect: undefined, grade: undefined, note: undefined }, // '漫步甲虫'
 
   // 61-70层
-  13971: { detect: '视觉', grade: '中等', note: '热切光芒：直线。热切之眼：月环。附带白球，球会按照出现顺序发动月环。' }, // '得到宽恕的狂热' 70层BOSS
+  13971: { detect: '视觉', grade: '小心', note: '热切光芒：直线。热切之眼：月环。附带白球，球会按照出现顺序发动月环。' }, // '得到宽恕的狂热' 70层BOSS
   14178: { detect: '视觉', grade: '小心', note: '左右刀，躲完立即穿到对侧！' }, // '得到宽恕的暴动' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14179: { detect: undefined, grade: '小心', note: '几千针刺：延迟大范围直线AOE。' }, // '得到宽恕的争论' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14180: { detect: undefined, grade: '简单', note: '未终针延迟小范围前方直线AOE。终极针：血量低于10%时的点名狂暴攻击。' }, // '漫步蜂后' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
@@ -158,8 +158,8 @@ const PtEnemies: EnemyDataRecord = {
   14216: { detect: '范围', grade: '小心', note: '离他远的时候快速读条大范围扇形AOE，靠近时小范围钢铁' }, // '被召唤的行吟诗人' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
 
   // 91-100层
-  14037: { detect: '范围', grade: '困难', note: '男，需吃白buff' }, // '至极悲痛' 99层BOSS（男）机制过多，自己看攻略
-  14038: { detect: '范围', grade: '困难', note: '女，需吃黑buff' }, // '被侵蚀的食罪灵' 99层BOSS（女） 机制过多，自己看攻略
+  14037: { detect: '视觉', grade: '小心', note: '男，需吃白buff' }, // '至极悲痛' 99层BOSS（男）机制过多，自己看攻略
+  14038: { detect: '视觉', grade: '小心', note: '女，需吃黑buff' }, // '被侵蚀的食罪灵' 99层BOSS（女） 机制过多，自己看攻略
   14217: { detect: undefined, grade: '小心', note: '读条三重/四重进行连续强化攻击，随后发动致命的小范围环形AOE。' }, // '漫步狼人' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14218: { detect: undefined, grade: '小心', note: '读条左右刀，记得穿' }, // '被召唤的古辛' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
   14219: { detect: undefined, grade: '危险', note: '读条穿墙AOE+自爆' }, // '被召唤的梦祸' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
