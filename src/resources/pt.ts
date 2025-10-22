@@ -61,36 +61,36 @@ const PtEnemies: EnemyDataRecord = {
   14138: { detect: '视觉', grade: '简单', note: '读条直线攻击' }, // '得到宽恕的不容忍'
 
   // 31-40层
-  13977: { detect: undefined, grade: undefined, note: undefined }, // '得到宽恕的纯真'
-  13978: { detect: undefined, grade: undefined, note: undefined }, // '得到宽恕的奉承'
-  14139: { detect: undefined, grade: '小心', note: '重拳波：跳跃至AOE区域后立刻释放更大的AOE，造成约70K伤害。强冲拳：在近战范围内会被强力击退。' }, // '漫步石兵' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
-  14140: { detect: '视觉', grade: '小心', note: '先在前方释放扇形AOE，随后立刻在背后再释放一次。' }, // '得到宽恕的瘟疫' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
-  14141: { detect: '视觉', grade: '小心', note: '归于尘土：血量低于25%时反复施放全场AOE，致命。平时会为自己增加攻击力造成可观伤害。' }, // '得到宽恕的堕落' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
-  14142: { detect: undefined, grade: undefined, note: undefined }, // '得到宽恕的勒索'
-  14143: { detect: undefined, grade: undefined, note: undefined }, // '得到宽恕的偏见'
-  14144: { detect: '视觉', grade: '小心', note: '前方扇形AOE，范围极大！' }, // '得到宽恕的伪善' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
-  14145: { detect: undefined, grade: '小心', note: '左/右触手：隐藏的半场刀，范围极大！' }, // '得到宽恕的任性' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
-  14146: { detect: '视觉', grade: '简单', note: '非战斗状态下会对你释放小范围圆形攻击，造成非致命伤害（约62K）。' }, // '得到宽恕的嘲弄' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
-  14147: { detect: '视觉', grade: '小心', note: '在低血量时会快速连续释放直线AOE。' }, // '漫步异端审问官' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
-  14148: { detect: '视觉', grade: '简单', note: '远距离时会使用中等范围的扇形AOE，近距离则为小范围环形AOE。' }, // '漫步鸟' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
-  14149: { detect: '视觉', grade: '简单', note: '先是小扇形提示，随后接着大范围扇形AOE。' }, // '漫步石狮' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
-  14150: { detect: undefined, grade: undefined, note: undefined }, // '漫步亚克鲁斯'
-  14151: { detect: '视觉', grade: '小心', note: '飞驰：强力击退，可通过视线躲避。天马嘶啸：延迟小范围钢铁，可通过视线躲避。' }, // '漫步飞马' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
+  13977: { detect: '视觉', grade: '简单', note: '小怪会复读技能：黄色为钢铁 蓝色为击退。可选中后尽快击杀。' }, // '得到宽恕的纯真' 40层BOSS
+  // 13978: { detect: undefined, grade: undefined, note: undefined }, // '得到宽恕的奉承' 40层BOSS小怪
+  14139: { detect: '视觉', grade: '小心', note: '重拳波：跳跃至AOE区域后立刻释放更大的AOE，造成约70K伤害。强冲拳：在近战范围内会被强力击退。' }, // '漫步石兵' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14140: { detect: '视觉', grade: '小心', note: '先在前方释放扇形AOE，随后立刻在背后再释放一次。' }, // '得到宽恕的瘟疫' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14141: { detect: '视觉', grade: '小心', note: '归于尘土：血量低于25%时反复施放全场AOE，致命。平时会为自己增加攻击力造成可观伤害。' }, // '得到宽恕的堕落' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14142: { detect: '视觉', grade: undefined, note: undefined }, // '得到宽恕的勒索'
+  14143: { detect: '视觉', grade: '简单', note: '读条小扇形' }, // '得到宽恕的偏见'
+  14144: { detect: '视觉', grade: '小心', note: '前方扇形AOE，范围极大！' }, // '得到宽恕的伪善' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14145: { detect: undefined, grade: '小心', note: '左/右触手：隐藏的半场刀，范围极大！' }, // '得到宽恕的任性' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14146: { detect: '视觉', grade: '简单', note: '点名脚底黄圈，可打断' }, // '得到宽恕的嘲弄' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14147: { detect: '视觉', grade: '小心', note: '读条小扇形。在低血量时会快速连续释放直线AOE。' }, // '漫步异端审问官' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14148: { detect: '视觉', grade: '简单', note: '巡逻怪。远距离时会使用中等范围的扇形AOE，近距离则为小范围环形AOE。' }, // '漫步鸟' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14149: { detect: '视觉', grade: '简单', note: '先是小扇形提示，随后接着大范围扇形AOE。' }, // '漫步石狮' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14150: { detect: '视觉', grade: '简单', note: '高山气流：前方直条攻击' }, // '漫步亚克鲁斯'
+  14151: { detect: '视觉', grade: '小心', note: '飞驰：强力击退，可通过视线躲避。天马嘶啸：延迟小范围钢铁，可通过视线躲避。' }, // '漫步飞马' 改编自nepufish/ff14-overlay-dungeon-cn项目
 
   // 41-50层
-  14152: { detect: '视觉', grade: '小心', note: '吸引+延迟钢铁' }, // '漫步替身' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
-  14153: { detect: '视觉', grade: '危险', note: '移动极慢，但伤害极高。不要被它碰到！攻击会叠加易伤。还会使用隐藏的步进式环形地震攻击。' }, // '漫步托尔巴龟' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
-  14154: { detect: undefined, grade: undefined, note: undefined }, // '漫步水蚺'
-  14155: { detect: undefined, grade: '简单', note: '延迟小范围前方扇形AOE' }, // '漫步三裂' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
-  14156: { detect: undefined, grade: undefined, note: undefined }, // '漫步蜥蜴'
-  14157: { detect: '视觉', grade: '简单', note: '加速自身，提高攻速。' }, // '漫步白蚁' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
-  14158: { detect: '视觉', grade: '小心', note: '先在前方释放冲刺直线AOE，随后无提示地回头再冲刺一次。' }, // '漫步蚁狮' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
-  14159: { detect: undefined, grade: undefined, note: undefined }, // '漫步钳嘴鸟'
-  14160: { detect: undefined, grade: undefined, note: undefined }, // '漫步壁崖飞鸢'
-  14161: { detect: '视觉', grade: '小心', note: '愤怒旋风：延迟钢铁，会造成无法净化的眩晕，伤害约65K。愤怒一击：延迟小范围直线AOE，伤害约70K。' }, // '漫步武器' 改编自nepufish/ff14-overlay-dungeon-cn项目 未验证
-  14162: { detect: undefined, grade: undefined, note: undefined }, // '漫步龙舌兰'
-  14163: { detect: undefined, grade: undefined, note: undefined }, // '漫步发芽大口花'
-  14164: { detect: undefined, grade: undefined, note: undefined }, // '漫步螳螂'
+  14152: { detect: '视觉', grade: '小心', note: '吸引+延迟钢铁' }, // '漫步替身' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14153: { detect: '视觉', grade: '危险', note: '移动极慢，但伤害极高。不要被它碰到！攻击会叠加易伤。还会使用隐藏的步进式环形地震攻击。' }, // '漫步托尔巴龟' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14154: { detect: '视觉', grade: undefined, note: '读条毒滴牙，可打断，效果未知。' }, // '漫步水蚺'
+  14155: { detect: '视觉', grade: '简单', note: '延迟小范围前方扇形AOE' }, // '漫步三裂' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14156: { detect: '视觉', grade: '简单', note: '点名脚底黄圈' }, // '漫步蜥蜴'
+  14157: { detect: '视觉', grade: '简单', note: '加速自身，提高攻速。' }, // '漫步白蚁' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14158: { detect: '视觉', grade: '小心', note: '先在前方释放冲刺直线AOE，随后无提示地回头再冲刺一次。' }, // '漫步蚁狮' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14159: { detect: '视觉', grade: '简单', note: '点名脚底黄圈' }, // '漫步钳嘴鸟'
+  14160: { detect: '视觉', grade: '简单', note: '读条直线攻击' }, // '漫步壁崖飞鸢'
+  14161: { detect: '视觉', grade: '小心', note: '愤怒旋风：延迟钢铁，会造成无法净化的眩晕，伤害约65K。愤怒一击：延迟小范围直线AOE，伤害约70K。' }, // '漫步武器' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14162: { detect: '视觉', grade: '简单', note: '点名脚底黄圈，可打断' }, // '漫步龙舌兰'
+  14163: { detect: '视觉', grade: '简单', note: '读条扇形' }, // '漫步发芽大口花'
+  14164: { detect: '视觉', grade: '简单', note: '读条小钢铁' }, // '漫步螳螂'
   14263: { detect: '视觉', grade: '简单', note: '不可以长时间站在流沙中。龙卷风需要在倒计时结束时站在流沙里避免被击退。' }, // '奥古布纳巴里' 50层BOSS
 
   // 51-60层
