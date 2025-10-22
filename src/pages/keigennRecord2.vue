@@ -279,17 +279,20 @@ function handleLine(line: string) {
               } else if (data.value[0]!.key === 'placeholder') {
                 data.value.splice(0, 1)
               }
+              const key = splitLine[logDefinitions.InCombat.fields.timestamp]!
               if (data.value[0]!.table.length !== 0) {
                 data.value.unshift({
                   zoneName: '',
                   duration: '00:00',
                   table: shallowReactive([]),
-                  key: splitLine[logDefinitions.InCombat.fields.timestamp]!,
+                  key: key,
                   timestamp: timeStamp,
                 })
               }
               combatTimeStamp.value = timeStamp
               data.value[0]!.zoneName = zoneName.value
+              data.value[0]!.timestamp = timeStamp
+              data.value[0]!.key = key
               select.value = 0
               return
             }
@@ -514,24 +517,27 @@ function handleLine(line: string) {
 }
 
 function getJobById(targetId: string) {
-  const fromJobMap = jobMap.value[targetId]!
+  const fromJobMap = jobMap.value[targetId]
   const fromPartyEvent = partyEventParty.value.find(
     (v) => v.id === targetId
   ) ?? { job: 0, timestamp: 0 }
   const need =
-    fromJobMap.timestamp > fromPartyEvent.timestamp
+    (fromJobMap?.timestamp ?? 0) > fromPartyEvent.timestamp
       ? fromJobMap
       : fromPartyEvent
 
   const hasDuplicate =
     need === fromJobMap
       ? Object.entries(jobMap.value).some(
-          ([id, job]) => id !== targetId && (job.job === need.job) && partyLogList.value.includes(id)
+          ([id, job]) =>
+            id !== targetId &&
+            job.job === need?.job &&
+            partyLogList.value.includes(id)
         )
       : partyEventParty.value.some(
-          (v) => v.id !== targetId && v.job === need.job
+          (v) => v.id !== targetId && v.job === need?.job
         )
-  return { job: need.job, hasDuplicate }
+  return { job: need?.job ?? 0, hasDuplicate }
 }
 
 function addRow(row: RowVO) {
@@ -561,7 +567,6 @@ async function saveStorage() {
         table: rawTable,
       }
     })
-
   await db.clear()
   await db.bulkSet(validData)
 }
