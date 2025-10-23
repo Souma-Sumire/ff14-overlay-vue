@@ -105,8 +105,9 @@ const getEmoji = (str: string = '未知') => {
           <pre>{{ tarData?.note || '无' }}</pre>
         </ul>
       </main>
-      <footer v-if="data.floorTips">
-        <span>本层攻略：{{ data.floorTips }}</span>
+      <footer v-if="data.floorTips && tarData?.detect !== 'Boss'">
+        本阶段攻略：
+        <pre>{{ data.floorTips }}</pre>
       </footer>
     </div>
   </CommonActWrapper>
