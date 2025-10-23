@@ -92,8 +92,13 @@ const getEmoji = (str: string = '未知') => {
 <template>
   <CommonActWrapper>
     <div class="container" v-if="data">
-      <header v-if="traps">
-        {{ traps === 'disappeared' ? '陷阱已清除' : '地图已点亮' }}
+      <header>
+        <pre v-if="data.floorTips && tarData?.detect !== 'Boss'">{{
+          data.floorTips
+        }}</pre>
+        <div v-if="traps">
+          {{ traps === 'disappeared' ? '陷阱已清除' : '地图已点亮' }}
+        </div>
       </header>
       <main class="main">
         <h3 v-show="tarIns && tarData">
@@ -105,10 +110,6 @@ const getEmoji = (str: string = '未知') => {
           <pre>{{ tarData?.note || '无' }}</pre>
         </ul>
       </main>
-      <footer v-if="data.floorTips && tarData?.detect !== 'Boss'">
-        本阶段攻略：
-        <pre>{{ data.floorTips }}</pre>
-      </footer>
     </div>
   </CommonActWrapper>
 </template>
@@ -122,10 +123,11 @@ $shadow-blur: 2.5px;
 $font-family: 'Microsoft YaHei', sans-serif;
 $font-size: 20px;
 
-.main {
+.container {
   font-family: $font-family;
   font-size: $font-size;
   color: $text-color;
+  padding: 0.2em;
 
   text-shadow: $shadow-spread 0 $shadow-blur $accent-color,
     -$shadow-spread 0 $shadow-blur $accent-color,
