@@ -68,13 +68,13 @@ const getEmoji = (str: string = '未知') => {
   <CommonActWrapper>
     <div class="container" v-if="inPt">
       <main class="main">
-        <h3 v-show="tarIns && tarIns?.BNpcNameID > 0">
+        <h3 v-show="tarIns && tarData">
           {{ tarIns?.Name }}({{ tarIns?.BNpcNameID }})
         </h3>
         <ul v-show="tarData">
           <li>评级：{{ getEmoji(tarData?.grade) }}{{ tarData?.grade }}</li>
           <li>索敌：{{ getEmoji(tarData?.detect) }}{{ tarData?.detect }}</li>
-          <li>笔记：{{ tarData?.note || '无' }}</li>
+          <pre>{{ tarData?.note || '无' }}</pre>
         </ul>
       </main>
     </div>
@@ -119,6 +119,10 @@ $font-size: 20px;
       content: '◈';
       color: color.adjust($text-color, $lightness: -20%);
     }
+  }
+
+  pre {
+    white-space: pre-wrap;
   }
 }
 </style>
