@@ -7,12 +7,16 @@ import {
 import type { EnmityTargetCombatant, EventMap } from 'cactbot/types/event'
 import NetRegexes from '../../cactbot/resources/netregexes'
 
-const state = ref({
-  data: undefined as DDInfo | undefined,
-  traps: undefined as undefined | 'disappeared' | 'revealed',
-  tarIns: null as EnmityTargetCombatant | null,
-  tarData: {} as EnemyData | undefined,
-})
+const state = useStorage(
+  'DD',
+  {
+    data: undefined as DDInfo | undefined,
+    traps: undefined as undefined | 'disappeared' | 'revealed',
+    tarIns: null as EnmityTargetCombatant | null,
+    tarData: {} as EnemyData | undefined,
+  },
+  sessionStorage
+)
 
 const netRegexs = {
   logMessage: NetRegexes.systemLogMessage({ id: ['1C50', '1C57', '1C58'] }),
