@@ -526,7 +526,7 @@ const PT: Data = {
     14139: { detect: '视觉', grade: '小心', note: '重拳波：跳跃至AOE区域后立刻释放更大的AOE，造成约70K伤害。\n强冲拳：在近战范围内会被强力击退。' }, // '漫步石兵' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14140: { detect: '视觉', grade: '小心', note: '先在前方释放扇形AOE，随后立刻在背后再释放一次。' }, // '得到宽恕的瘟疫' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14141: { detect: '视觉', grade: '小心', note: '归于尘土：血量低于25%时反复施放全场AOE，致命。\n平时会为自己增加攻击力造成可观伤害。' }, // '得到宽恕的堕落' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14142: { detect: '视觉', grade: undefined, note: undefined }, // '得到宽恕的勒索'
+    14142: { detect: '视觉', grade:  '简单', note: '无' }, // '得到宽恕的勒索'
     14143: { detect: '视觉', grade: '简单', note: '读条小扇形' }, // '得到宽恕的偏见'
     14144: { detect: '视觉', grade: '小心', note: '前方扇形AOE，范围极大！' }, // '得到宽恕的伪善' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14145: { detect: undefined, grade: '小心', note: '左/右触手：隐藏的半场刀，范围极大！' }, // '得到宽恕的任性' 改编自nepufish/ff14-overlay-dungeon-cn项目
