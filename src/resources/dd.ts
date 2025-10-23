@@ -590,16 +590,16 @@ const PT: Data = {
     14191: { detect: '视觉', grade: '小心', note: '读条钢铁 或 正面超大扇形' }, // '得到宽恕的不和' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14192: { detect: '视觉', grade: '危险', note: '非战斗状态会释放全屏AOE\n进战后会读条释放正面扇形AOE' }, // '得到宽恕的腐化物' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14193: { detect: '视觉', grade: '危险', note: '两种读条，先月环后钢铁，或者先钢铁后月环' }, // '得到宽恕的恶意' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14194: { detect: '视觉', grade: '小心', note: '拉怪时会跳向玩家并击退，以及一个毒DOT' }, // '漫步食岩者' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14195: { detect: '视觉', grade: '危险', note: '读条钢铁，死了会自爆！！！！！！' }, // '漫步爆岩怪' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14196: { detect: undefined, grade: undefined, note: undefined }, // '漫步奶油泡芙'
+    14194: { detect: '视觉', grade: '小心', note: '巡逻怪\n拉怪时会跳向玩家并击退，以及一个毒DOT' }, // '漫步食岩者' 改编自nepufish/ff14-overlay-dungeon-cn项目
+    14195: { detect: '视觉', grade: '危险', note: '巡逻怪\n读条钢铁，死了会自爆！！！！！！' }, // '漫步爆岩怪' 改编自nepufish/ff14-overlay-dungeon-cn项目
+    14196: { detect: '视觉', grade: '简单', note: '点名脚下黄圈' }, // '漫步奶油泡芙'
     14197: { detect: '范围', grade: '危险', note: '超级大月环或者十字！注意不要拉在过道上导致无路可走！' }, // '得到宽恕的虚夸' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14198: { detect: undefined, grade: '小心', note: '连续四次正面半圆顺劈' }, // '得到宽恕的傲慢' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14199: { detect: undefined, grade: '小心', note: '读条扇形，或者读条点名一个人的脚下黄圈' }, // '得到宽恕的诽谤' 改编自nepufish/ff14-overlay-dungeon-cn项目
+    14198: { detect: undefined, grade: '小心', note: '巡逻怪\n连续四次正面半圆顺劈' }, // '得到宽恕的傲慢' 改编自nepufish/ff14-overlay-dungeon-cn项目
+    14199: { detect: '范围', grade: '小心', note: '变质岩波：读条扇形\n造山风暴：点名一个人的脚下黄圈' }, // '得到宽恕的诽谤' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14200: { detect: '视觉', grade: '小心', note: '小范围直线AOE，并且偶尔会连续平A两次' }, // '得到宽恕的不信任' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14201: { detect: undefined, grade: '小心', note: '推翻：延迟的小范围钢铁。' }, // '漫步阿米特' 改编自nepufish/ff14-overlay-dungeon-cn项目
+    14201: { detect: '视觉', grade: '小心', note: '推翻：延迟的小范围钢铁。' }, // '漫步阿米特' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14202: { detect: '听觉', grade: '小心', note: '读条中等范围钢铁' }, // '漫步蠕虫' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14203: { detect: '视觉', grade: '简单', note: '读条小范围顺劈' }, // '漫步铰颌蚁' 改编自nepufish/ff14-overlay-dungeon-cn项目
+    14203: { detect: '视觉', grade: '小心', note: '读条无提示的小扇形，秒杀级伤害' }, // '漫步铰颌蚁' 改编自nepufish/ff14-overlay-dungeon-cn项目
     13968: { detect: 'Boss', grade: '小心', note: '紫雷是月环，痛伤是钢铁。\n红色buff少移动 蓝色buff吃前后刀。' }, // '得到宽恕的亵渎' 80层BOSS
 
     // 81-90层
