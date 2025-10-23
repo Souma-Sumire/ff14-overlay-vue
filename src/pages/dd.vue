@@ -1,22 +1,26 @@
 <script setup lang="ts">
-import { PtEnemies, type EnemyData } from '@/resources/pt'
+import { getMaps, type EnemyData, type DDInfo } from '@/resources/dd'
 import {
   addOverlayListener,
   removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
 import type { EnmityTargetCombatant, EventMap } from 'cactbot/types/event'
+import NetRegexes from '../../cactbot/resources/netregexes'
 
-const mapIds = [1281, 1282, 1283, 1284, 1285, 1286, 1287, 1288, 1289, 1290]
-
-const inPt = useStorage('inPt', false)
+const data = useStorage('DD', undefined as DDInfo | undefined)
+const traps = ref(undefined as undefined | 'disappeared' | 'revealed')
 
 const tarIns = ref<EnmityTargetCombatant | null>(null)
 const tarData = ref({} as EnemyData | undefined)
 
+const netRegexs = {
+  logMessage: NetRegexes.systemLogMessage({ id: ['1C50', '1C57', '1C58'] }),
+}
+
 const handleEnmityTargetData: EventMap['EnmityTargetData'] = (e) => {
   if (e.Target) {
     tarIns.value = e.Target
-    tarData.value = PtEnemies[e.Target.BNpcNameID]
+    tarData.value = data.value?.enemiesData[e.Target.BNpcNameID]
   } else {
     tarIns.value = null
     tarData.value = undefined
@@ -24,15 +28,36 @@ const handleEnmityTargetData: EventMap['EnmityTargetData'] = (e) => {
 }
 
 const handleChangeZone: EventMap['ChangeZone'] = (e) => {
-  inPt.value = mapIds.includes(e.zoneID)
+  data.value = getMaps(e.zoneID)
+  traps.value = undefined
+}
+
+const handleLogLine: EventMap['LogLine'] = (e) => {
+  const logMessage = netRegexs.logMessage.exec(e.rawLine)
+  if (logMessage) {
+    // 成功进行了传送！
+    if (logMessage.groups?.id === '1C50') {
+      traps.value = undefined
+      // 这一层的陷阱全部被清除了！
+    } else if (logMessage.groups?.id === '1C57') {
+      traps.value = 'disappeared'
+      // 这一层的地图全部被点亮了！
+    } else if (logMessage.groups?.id === '1C58') {
+      traps.value = 'revealed'
+    }
+  }
 }
 
 watch(
-  inPt,
+  data,
   () => {
-    ;(inPt.value ? addOverlayListener : removeOverlayListener)(
+    ;(data.value ? addOverlayListener : removeOverlayListener)(
       'EnmityTargetData',
       handleEnmityTargetData
+    )
+    ;(data.value ? addOverlayListener : removeOverlayListener)(
+      'LogLine',
+      handleLogLine
     )
   },
   {
@@ -66,7 +91,10 @@ const getEmoji = (str: string = '未知') => {
 
 <template>
   <CommonActWrapper>
-    <div class="container" v-if="inPt">
+    <div class="container" v-if="data">
+      <header v-if="traps">
+        {{ traps === 'disappeared' ? '陷阱已清除' : '地图已点亮' }}
+      </header>
       <main class="main">
         <h3 v-show="tarIns && tarData">
           {{ tarIns?.Name }}({{ tarIns?.BNpcNameID }})
@@ -77,6 +105,9 @@ const getEmoji = (str: string = '未知') => {
           <pre>{{ tarData?.note || '无' }}</pre>
         </ul>
       </main>
+      <footer v-if="data.floorTips">
+        <span>本层攻略：{{ data.floorTips }}</span>
+      </footer>
     </div>
   </CommonActWrapper>
 </template>

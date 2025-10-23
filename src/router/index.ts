@@ -39,7 +39,7 @@ const routeTitles = new Map(
     timelineHelp: '自定义时间轴帮助',
     timelineSettings: '自定义时间轴编辑',
     zoneMacro: '副本宏',
-  }),
+  })
 )
 for (const route of router.getRoutes()) {
   route.meta.title = routeTitles.get(route.name?.toString() ?? '') ?? route.name
@@ -52,6 +52,10 @@ router.afterEach((to, from) => {
     (to.name === 'startPages' && from.name && from.name !== 'startPages')
   ) {
     window.location.reload()
+  }
+  // 子路由改名
+  if (to.fullPath === '/pt') {
+    router.push({ replace: true, path: 'dd' })
   }
 })
 

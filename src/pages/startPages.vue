@@ -69,10 +69,10 @@ opacity: 不透明度，默认1
   {
     title: '[ACT悬浮窗] 妖宫图鉴',
     type: '悬浮窗',
-    path: 'pt',
-    src: 'pt.webp',
+    path: 'dd',
+    src: 'dd.webp',
     comment:
-      '怪物数据不完整，欢迎提交<a href="https://github.com/Souma-Sumire/ff14-overlay-vue">PR</a>。只支持妖宫，其他深宫暂时不支持。',
+      '欢迎提交<a href="https://github.com/Souma-Sumire/ff14-overlay-vue">PR</a>',
     imageWidth: 350,
     isNew: true,
   },

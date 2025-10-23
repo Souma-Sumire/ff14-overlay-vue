@@ -3,7 +3,7 @@
   "semi": false,
   "overrides": [
     {
-      "files": "src/resources/pt.ts",
+      "files": "src/resources/dd.ts",
       "options": {
         "printWidth": 1000
       }
