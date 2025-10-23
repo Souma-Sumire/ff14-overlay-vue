@@ -9,7 +9,9 @@ type EnemyDataRecord = Record<number, EnemyData | undefined>
 // TODO: 所有的 undefined 都代表数据缺失，需要补充完整
 const PtEnemies: EnemyDataRecord = {
   // 通用
+  14264: { grade: '小心', note: '尽快击杀，打断怨念' }, // '拟态怪'
   14265: { grade: '小心', note: '尽快击杀，打断怨念' }, // '拟态怪'
+  14266: { grade: '小心', note: '尽快击杀，打断怨念' }, // '拟态怪'
   14267: { grade: '小心', note: '亡语：眩晕周围' }, // '漫步科柯瑞甘'
 
   // 1-10层
@@ -110,20 +112,20 @@ const PtEnemies: EnemyDataRecord = {
   14177: { detect: '视觉', grade: '简单', note: undefined }, // '漫步甲虫'
 
   // 61-70层
-  13971: { detect: '视觉', grade: '小心', note: '热切光芒：直线。\n热切之眼：月环。\n白球会按照出现顺序发动月环。' }, // '得到宽恕的狂热' 70层BOSS
+  13971: { detect: '视觉', grade: '小心', note: '热切光芒：直线。\n热切之眼：月环。\n白球会按照出现顺序发动月环。\n二千迈纳回转：钢铁\n八重横扫：需要记忆预兆的8次连续扇形。' }, // '得到宽恕的狂热' 70层BOSS
   14178: { detect: '视觉', grade: '危险', note: '左右刀，躲完立即穿到对侧！' }, // '得到宽恕的暴动' 改编自nepufish/ff14-overlay-dungeon-cn项目
-  14179: { detect: undefined, grade: '小心', note: '几千针刺：延迟大范围直线AOE。' }, // '得到宽恕的争论' 改编自nepufish/ff14-overlay-dungeon-cn项目
-  14180: { detect: undefined, grade: '简单', note: '未终针：延迟小范围前方直线AOE。\n终极针：血量低于10%时的点名狂暴攻击。' }, // '漫步蜂后' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14179: { detect: '视觉', grade: '小心', note: '几千针刺：延迟大范围直线AOE。' }, // '得到宽恕的争论' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14180: { detect: '视觉', grade: '简单', note: '未终针：延迟小范围前方直线AOE。\n终极针：血量低于10%时的点名狂暴攻击。\n可以打断。' }, // '漫步蜂后' 改编自nepufish/ff14-overlay-dungeon-cn项目
   14181: { detect: undefined, grade: '危险', note: '水晶刺：血量低于25%时会反复释放全场AOE，可用视线阻挡。\n冰雹发射：延迟直线AOE。' }, // '得到宽恕的怨恨' 改编自nepufish/ff14-overlay-dungeon-cn项目
-  14182: { detect: '视觉', grade: '小心', note: '执行贯穿：向前冲刺并在终点释放小范围钢铁。随后释放延迟大范围钢铁。' }, // '漫步塔罗斯' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14182: { detect: '视觉', grade: '小心', note: '巡逻怪。\n执行贯穿：向前冲刺并在终点释放小范围钢铁，接地震（月环）。' }, // '漫步塔罗斯' 改编自nepufish/ff14-overlay-dungeon-cn项目
   14183: { detect: '视觉', grade: '小心', note: '冲顶：快速施放的前方宽扇形延迟AOE。' }, // '漫步壁崖鼹鼠' 改编自nepufish/ff14-overlay-dungeon-cn项目
-  14184: { detect: '视觉', grade: '简单', note: '在两次“沉岛”圆形提示后施放“岩石崩溃”：延迟全屏大范围十字AOE。' }, // '得到宽恕的偏颇' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14184: { detect: '视觉', grade: '小心', note: '在两次“沉岛”圆形点名后会施放超大范围十字AOE！' }, // '得到宽恕的偏颇' 改编自nepufish/ff14-overlay-dungeon-cn项目
   14185: { detect: '视觉', grade: '简单', note: '巡逻怪。\n掷锤：点名脚底黄圈' }, // '得到宽恕的恶作剧'
-  14186: { detect: undefined, grade: '小心', note: '无提示的前方石化攻击（无法背对躲避）。\n延迟小范围钢铁。' }, // '得到宽恕的贪食' 改编自nepufish/ff14-overlay-dungeon-cn项目
-  14187: { detect: '视觉', grade: '危险', note: '隐藏敌人，接近后才会显形。\n会向你冲撞造成约40K伤害，随后施放快速且延迟小范围钢铁。\n仅出现于61-64层。' }, // '得到宽恕的疑虑' 改编自nepufish/ff14-overlay-dungeon-cn项目
-  14188: { detect: undefined, grade: '危险', note: '【可能是需要诱导】延迟前（或后）方半圆AOE，随后立即在背后（或前面）再释放一次。' }, // '得到宽恕的眷恋' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14186: { detect: '视觉', grade: '小心', note: '无提示的前方石化攻击（无法背对躲避）。\n延迟小范围钢铁。' }, // '得到宽恕的贪食' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14187: { detect: '视觉', grade: '危险', note: '隐身敌人，接近后才会显形。\n会向你冲撞造成约40K伤害，随后施放快速且延迟小范围钢铁。\n仅出现于61-64层。' }, // '得到宽恕的疑虑' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14188: { detect: '视觉', grade: '危险', note: '【可能是需要诱导】延迟前（或后）方半圆AOE，随后立即在背后（或前面）再释放一次。\n可以打断。' }, // '得到宽恕的眷恋' 改编自nepufish/ff14-overlay-dungeon-cn项目
   14189: { detect: '视觉', grade: '小心', note: '读条小钢铁' }, // '漫步诺姆' 改编自nepufish/ff14-overlay-dungeon-cn项目
-  14190: { detect: undefined, grade: '小心', note: '泥石流：中等范围、延迟释放的宽扇形AOE。' }, // '漫步恩戈齐' 改编自nepufish/ff14-overlay-dungeon-cn项目
+  14190: { detect: '视觉', grade: '小心', note: '泥石流：中等范围、延迟释放的宽扇形AOE。' }, // '漫步恩戈齐' 改编自nepufish/ff14-overlay-dungeon-cn项目
 
   // 71-80层
   13968: { detect: '视觉', grade: '小心', note: '紫雷是月环，痛伤是钢铁。\n红色buff少移动 蓝色buff吃前后刀。' }, // '得到宽恕的亵渎' 80层BOSS
