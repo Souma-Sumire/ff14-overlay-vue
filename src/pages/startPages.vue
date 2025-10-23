@@ -67,12 +67,12 @@ opacity: 不透明度，默认1
     src: 'keySkillTimer.webp',
   },
   {
-    title: '[ACT悬浮窗] 妖宫图鉴',
+    title: '[ACT悬浮窗] 深层迷宫图鉴',
     type: '悬浮窗',
     path: 'dd',
     src: 'dd.webp',
     comment:
-      '欢迎提交<a href="https://github.com/Souma-Sumire/ff14-overlay-vue">PR</a>',
+      '覆盖90%怪物，补充数据请提交<a href="https://github.com/Souma-Sumire/ff14-overlay-vue">PR</a>\n死宫天宫优宫数据来自Etest2023，妖宫数据部分来自nepufish。',
     imageWidth: 350,
     isNew: true,
   },
