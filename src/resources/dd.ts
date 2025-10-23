@@ -526,7 +526,7 @@ const PT: Data = {
     14139: { detect: '视觉', grade: '小心', note: '重拳波：跳跃至AOE区域后立刻释放更大的AOE，造成约70K伤害。\n强冲拳：在近战范围内会被强力击退。' }, // '漫步石兵' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14140: { detect: '视觉', grade: '小心', note: '先在前方释放扇形AOE，随后立刻在背后再释放一次。' }, // '得到宽恕的瘟疫' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14141: { detect: '视觉', grade: '小心', note: '归于尘土：血量低于25%时反复施放全场AOE，致命。\n平时会为自己增加攻击力造成可观伤害。' }, // '得到宽恕的堕落' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14142: { detect: '视觉', grade:  '简单', note: '无' }, // '得到宽恕的勒索'
+    14142: { detect: '视觉', grade: '简单', note: '无' }, // '得到宽恕的勒索'
     14143: { detect: '视觉', grade: '简单', note: '读条小扇形' }, // '得到宽恕的偏见'
     14144: { detect: '视觉', grade: '小心', note: '前方扇形AOE，范围极大！' }, // '得到宽恕的伪善' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14145: { detect: undefined, grade: '小心', note: '左/右触手：隐藏的半场刀，范围极大！' }, // '得到宽恕的任性' 改编自nepufish/ff14-overlay-dungeon-cn项目
@@ -605,18 +605,18 @@ const PT: Data = {
     // 81-90层
     14204: { detect: '视觉', grade: '小心', note: '踢击与扫尾：先读条小范围前方直线AOE，随后在背后顺劈' }, // '漫步卡马' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14205: { detect: '视觉', grade: '危险', note: '非战斗状态下会释放全场AOE。\n深渊射线：读条极大范围的直线AOE，穿墙！' }, // '被召唤的巴力' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14206: { detect: '范围', grade: '小心', note: '会连续击退四次，然后使用延迟的小范围前方扇形AOE。' }, // '漫步骑士' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14207: { detect: undefined, grade: '危险', note: '会点名热病，不要移动。可通过视线阻挡来避免。' }, // '被召唤的梦魔' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14208: { detect: '视觉', grade: '小心', note: '连续施放3-4次双重平A后，立即发动秒杀顺劈' }, // '被召唤的洪巴巴' 改编自nepufish/ff14-overlay-dungeon-cn项目
+    14206: { detect: '范围', grade: '小心', note: '巡逻怪\n残杀：会连续击退四次\n风暴斩：前方扇形AOE' }, // '漫步骑士' 改编自nepufish/ff14-overlay-dungeon-cn项目
+    14207: { detect: undefined, grade: '危险', note: '巡逻怪\n会点名热病，不要移动。可通过视线阻挡来避免。' }, // '被召唤的梦魔' 改编自nepufish/ff14-overlay-dungeon-cn项目
+    14208: { detect: '视觉', grade: '小心', note: '巡逻怪\n连续施放3-4次双重平A后，立即发动秒杀顺劈' }, // '被召唤的洪巴巴' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14209: { detect: '视觉', grade: '简单', note: '读条小范围扇形顺劈' }, // '被召唤的格雷姆林' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14210: { detect: '视觉', grade: '小心', note: '读条中等范围扇形\n低血量时会施放长读条的狂暴技能，可能是点名秒杀攻击。' }, // '漫步异豺' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14211: { detect: '视觉', grade: '危险', note: '昏暗：长读条的可打断超宽扇形AOE，不要与“黑暗”混淆。' }, // '漫步卡部斯' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14212: { detect: undefined, grade: undefined, note: undefined }, // '被召唤的小撒旦'
+    14212: { detect: '视觉', grade: '简单', note: '读条脚底黄圈' }, // '被召唤的小撒旦'
     14213: { detect: '视觉', grade: '小心', note: '读条宽扇形顺劈' }, // '被召唤的上级恶魔' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14214: { detect: '视觉', grade: '简单', note: '大凶眼：很大范围的背对' }, // '被召唤的盖因' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14215: { detect: '视觉', grade: '危险', note: '闪雷：读条前方圆形AOE。\n地狱爪击：读条前方扇形AOE。\n拍尾：隐藏的大范围后方扇形AOE。' }, // '被召唤的刻耳柏洛斯' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14216: { detect: '范围', grade: '小心', note: '离他远的时候快速读条大范围扇形AOE，靠近时小范围钢铁' }, // '被召唤的行吟诗人' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14090: { detect: 'Boss', grade: '小心', note: '发光手一侧的270°半场刀。\n横断：对boss左右的90°扇形攻击\n纵断：对boss前后的90°扇形攻击，同时场边的魔法阵会对所在行或列发动直线攻击。' }, // '玛拉科达' 90层BOSS
+    14215: { detect: '视觉', grade: '危险', note: '闪雷：读条前方圆形AOE。\n地狱爪击：读条前方扇形AOE。\n拍尾：隐藏的大范围后方扇形AOE。\n雷光：不可见的点某人脚下的黄圈' }, // '被召唤的刻耳柏洛斯' 改编自nepufish/ff14-overlay-dungeon-cn项目
+    14216: { detect: '范围', grade: '小心', note: '（远离时会释放）昏暗：很大范围扇形\n（靠近时会释放）心魔：小范围钢铁' }, // '被召唤的行吟诗人' 改编自nepufish/ff14-overlay-dungeon-cn项目
+    14090: { detect: 'Boss', grade: '小心', note: '发光手一侧的270°半场刀。\n横断冲：对boss左右的90°扇形攻击\n纵断冲：对boss前后的90°扇形攻击\nX断冲时，场边的魔法阵会对所在行或列发动直线攻击。' }, // '玛拉科达' 90层BOSS
 
     // 91-100层
     14217: { detect: undefined, grade: '小心', note: '读条三重/四重进行连续强化攻击，随后发动致命的小范围环形AOE。' }, // '漫步狼人' 改编自nepufish/ff14-overlay-dungeon-cn项目
