@@ -611,7 +611,7 @@ const PT: Data = {
     14209: { detect: '视觉', grade: '简单', note: '读条小范围扇形顺劈' }, // '被召唤的格雷姆林' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14210: { detect: '视觉', grade: '小心', note: '读条中等范围扇形\n低血量时会施放长读条的狂暴技能，可能是点名秒杀攻击。' }, // '漫步异豺' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14211: { detect: '视觉', grade: '危险', note: '昏暗：长读条的可打断超宽扇形AOE，不要与“黑暗”混淆。' }, // '漫步卡部斯' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14212: { detect: '视觉', grade: '简单', note: '读条脚底黄圈' }, // '被召唤的小撒旦'
+    14212: { detect: '视觉', grade: '简单', note: '读条脚底黄圈，\n冰结陷阱：钢铁' }, // '被召唤的小撒旦'
     14213: { detect: '视觉', grade: '小心', note: '读条宽扇形顺劈' }, // '被召唤的上级恶魔' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14214: { detect: '视觉', grade: '简单', note: '大凶眼：很大范围的背对' }, // '被召唤的盖因' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14215: { detect: '视觉', grade: '危险', note: '闪雷：读条前方圆形AOE。\n地狱爪击：读条前方扇形AOE。\n拍尾：隐藏的大范围后方扇形AOE。\n雷光：不可见的点某人脚下的黄圈' }, // '被召唤的刻耳柏洛斯' 改编自nepufish/ff14-overlay-dungeon-cn项目
@@ -621,15 +621,15 @@ const PT: Data = {
     // 91-100层
     14217: { detect: undefined, grade: '小心', note: '读条三重/四重进行连续强化攻击，随后发动致命的小范围环形AOE。' }, // '漫步狼人' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14218: { detect: undefined, grade: '小心', note: '读条左右刀，记得穿' }, // '被召唤的古辛' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14219: { detect: undefined, grade: '危险', note: '梦祸视线：直线AOE\n死亡会自爆！！！' }, // '被召唤的梦祸' 改编自nepufish/ff14-overlay-dungeon-cn项目
+    14219: { detect: undefined, grade: '危险', note: '梦祸视线：直线AOE\n死亡会自爆！！！（可以隔墙躲避）' }, // '被召唤的梦祸' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14220: { detect: undefined, grade: '小心', note: '点名，必须用墙或者障碍物阻挡' }, // '被召唤的单身汉' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14221: { detect: undefined, grade: '小心', note: '石化需要背对\n怪光线：大范围直线AOE' }, // '被召唤的破坏本能' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14222: { detect: undefined, grade: '小心', note: '读条斜着的左右刀\n前方花蜜喷吐：前方大扇形AOE。' }, // '被召唤的锯齿花' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14223: { detect: '视觉', grade: '简单', note: '根系纠缠：点名脚底黄圈\n藤枝伏地：小扇形' }, // '漫步紫三裂'
+    14222: { detect: undefined, grade: '小心', note: '巡逻怪\n读条斜着的左右刀\n前方花蜜喷吐：前方大扇形AOE。' }, // '被召唤的锯齿花' 改编自nepufish/ff14-overlay-dungeon-cn项目
+    14223: { detect: undefined, grade: '简单', note: '根系纠缠：点名脚底黄圈\n藤枝伏地：小扇形' }, // '漫步紫三裂'
     14224: { detect: '听觉', grade: '小心', note: '读条超长直线AOE（宽），穿墙！' }, // '漫步食人花' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14225: { detect: undefined, grade: '小心', note: '无读条小范围劈后面+读条顺劈，最好去侧面' }, // '被召唤的扎哈克' 改编自nepufish/ff14-overlay-dungeon-cn项目
+    14225: { detect: '视觉', grade: '小心', note: '无读条小范围劈后面+读条顺劈，最好去侧面' }, // '被召唤的扎哈克' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14226: { detect: undefined, grade: '小心', note: '效果未知，建议使用视线阻挡以保安全。' }, // '被召唤的阿刻戎' 改编自nepufish/ff14-overlay-dungeon-cn项目
-    14227: { detect: undefined, grade: '简单', note: '读条钢铁' }, // '被召唤的傀儡' 改编自nepufish/ff14-overlay-dungeon-cn项目
+    14227: { detect: undefined, grade: '简单', note: '巡逻怪\n读条钢铁' }, // '被召唤的傀儡' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14228: { detect: undefined, grade: '简单', note: '读条扇形顺劈' }, // '漫步恶念' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14229: { detect: undefined, grade: '小心', note: '黑暗神圣：点名某人的大黄圈\n生命停止：极快！前方超大扇形！' }, // '被召唤的古恶魔' 改编自nepufish/ff14-overlay-dungeon-cn项目
     14037: { detect: 'Boss', grade: '小心', note: '男，需吃白buff' }, // '至极悲痛' 99层BOSS（男）机制过多，自己看攻略
