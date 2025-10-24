@@ -139,7 +139,7 @@ function updateTransmissionTimeline() {
 function timelineTimeFormat() {
   currentTimelineEditing.value.timeline =
     currentTimelineEditing.value.timeline.replaceAll(
-      /(?<=^|#\s*)(\d+:\d+(?:\.\d{1,2})?|\d+(?:\.\d+)?)/gm,
+      /(?<=^|^#\s*)(\d+:\d+(?:\.\d{1,2})?|\d+(?:\.\d+)?)/gm,
       (match) => {
         return match.includes(':')
           ? moment.duration(`00:${match}`).as('seconds').toString()
