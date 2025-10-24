@@ -15,7 +15,6 @@ import moment from 'moment'
 import { useRouter } from 'vue-router'
 
 import { useWebSocket } from '@/composables/useWebSocket'
-import { ZoneInfo } from '@/resources/zoneInfo'
 import { parseTimeline, useTimelineStore } from '@/store/timeline'
 import { copyToClipboard } from '@/utils/clipboard'
 import Util from '@/utils/util'
@@ -24,6 +23,7 @@ import {
   callOverlayHandler,
 } from '../../cactbot/resources/overlay_plugin_api'
 import recommendedTimeline from '../resources/recommendedTimeline.json'
+import { ZoneInfo } from '@/resources/zoneInfo'
 
 const router = useRouter()
 const { wsConnected } = useWebSocket({ allowClose: true, addWsParam: true })
@@ -56,9 +56,6 @@ const currentTimelineEditing = useLocalStorage<ITimeline>(
 )
 
 const parsedTimelineLines = ref([] as ITimelineLine[])
-const highDifficultyZones: { id: string; name: string }[] = [
-  { id: '0', name: '任意' },
-]
 
 let loading: any = null
 let keepRetrying = false
@@ -642,6 +639,14 @@ function showWsWarningNotification() {
   })
 }
 
+function getMapName(zoneId: number) {
+  const names = ZoneInfo[zoneId]?.name
+  if (!names) {
+    return '未知地图'
+  }
+  return names.cn || `${names.ja} / ${names.en}`
+}
+
 onMounted(() => {
   addOverlayListener('BroadcastMessage', handleBroadcastMessage)
 
@@ -679,20 +684,6 @@ onMounted(() => {
 })
 
 function init(): void {
-  for (const key in ZoneInfo) {
-    if (Object.prototype.hasOwnProperty.call(ZoneInfo, key)) {
-      const element = ZoneInfo[key]!
-      switch (element.contentType) {
-        case 4:
-        case 5:
-        case 28:
-          highDifficultyZones.push({
-            id: key,
-            name: element.name?.cn ?? element.name?.ja ?? key,
-          })
-      }
-    }
-  }
   loadTimelineSettings()
   timelineStore.sortTimelines()
 }
@@ -830,21 +821,13 @@ init()
               size="small"
               style="width: 180px"
             />
-            <el-select
-              v-model="selectedZoneId"
+            <ZoneSelecter
+              v-model:selectZone="selectedZoneId"
               placeholder="筛选地图"
-              clearable
               size="small"
               style="width: 180px"
-            >
-              <el-option label="全部地图" value="" />
-              <el-option
-                v-for="zone in highDifficultyZones"
-                :key="zone.id"
-                :label="zone.name"
-                :value="zone.id"
-              />
-            </el-select>
+              :clearable="true"
+            />
             <el-select
               v-model="selectedJob"
               placeholder="筛选职业"
@@ -913,11 +896,7 @@ init()
           <el-table-column prop="name" label="名称" />
           <el-table-column prop="condition" label="地图" sortable>
             <template #default="scope">
-              {{
-                highDifficultyZones.find(
-                  (value) => value.id === scope.row.condition.zoneId
-                )?.name
-              }}
+              {{ getMapName(scope.row.condition.zoneId) }}
             </template>
           </el-table-column>
           <el-table-column prop="condition" label="职业">
@@ -1004,18 +983,10 @@ init()
           </el-col>
           <el-col :span="22">
             <el-form-item label="地图">
-              <el-select
-                v-model="currentTimelineEditing.condition.zoneId"
-                filterable
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="zone in highDifficultyZones"
-                  :key="zone.id"
-                  :label="zone.name"
-                  :value="zone.id"
-                />
-              </el-select>
+              <ZoneSelecter
+                v-model:selectZone="currentTimelineEditing.condition.zoneId"
+                size="default"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="22">

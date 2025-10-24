@@ -11,16 +11,10 @@ import {
 import { useDev } from '@/composables/useDev'
 import { useWebSocket } from '@/composables/useWebSocket'
 import { defaultMacro } from '@/resources/macro'
-import { ZoneInfo } from '@/resources/zoneInfo'
-import {
-  contentTypeLabel,
-  showContentTypes,
-  useMacroStore,
-} from '@/store/macro'
-import ContentType from '../../cactbot/resources/content_type'
+import { useMacroStore } from '@/store/macro'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import 'github-markdown-css/github-markdown-light.css'
-import type { CascaderOption } from 'element-plus'
+import ZoneSelecter from '@/components/zoneSelecter.vue'
 
 const dev = useDev()
 const macroStore = useMacroStore()
@@ -28,137 +22,6 @@ const hideOnStartup = useStorage('zoneMacroHideOnStartup', ref(false))
 if (hideOnStartup.value) macroStore.show = false
 
 if (!dev.value) useWebSocket({ allowClose: true, addWsParam: true })
-
-const groupedZoneOptions = computed(() => {
-  const options: CascaderOption[] = []
-  contentTypeLabel.forEach((ct) => {
-    if (ct.type === ContentType.Trials) {
-      options.push({
-        label: ct.label,
-        value: ContentType.Trials,
-        children: [
-          {
-            label: '歼殛战',
-            value: '歼殛战',
-            children: [],
-          },
-          {
-            label: '幻巧战',
-            value: '幻巧战',
-            children: [],
-          },
-          {
-            label: '歼灭战',
-            value: '歼灭战',
-            children: [],
-          },
-        ],
-      })
-    } else if (ct.type === ContentType.Raids) {
-      options.push({
-        label: ct.label,
-        value: ContentType.Raids,
-        children: [
-          {
-            label: '零式',
-            value: '零式',
-            children: [],
-          },
-          {
-            label: '普通',
-            value: '普通',
-            children: [],
-          },
-        ],
-      })
-    } else
-      options.push({
-        label: ct.label,
-        value: ct.type,
-        children: [],
-      })
-  })
-
-  Object.entries(ZoneInfo)
-    .map(([id, info]) => ({ id, ...info }))
-    .sort((a, b) => {
-      if (a.exVersion !== b.exVersion) return b.exVersion - a.exVersion
-      if (
-        a.contentType === ContentType.Raids &&
-        b.contentType === ContentType.Raids &&
-        b.name.ja &&
-        a.name.ja
-      ) {
-        return a.name.ja.localeCompare(b.name.ja)
-      }
-      return Number(a.id) - Number(b.id)
-    })
-    .filter(
-      (v) =>
-        !v.name.en.startsWith('(') &&
-        v.contentType &&
-        showContentTypes.includes(v.contentType)
-    )
-    .forEach((v) => {
-      const value = v.id
-      const label =
-        `[${+v.exVersion + 2}.0] ` +
-        (v.name?.cn ?? `${v.name.en} / ${v.name.ja}`)
-      if (v.contentType === ContentType.Trials) {
-        const trialsOptions = options.find(
-          (ct) => ct.value === ContentType.Trials
-        )
-        if (!trialsOptions) return
-
-        let targetCategory = '歼灭战'
-        if (
-          v.name.en.includes('(Extreme)') ||
-          v.name.ja?.startsWith('極') ||
-          v.name.fr?.includes('(extrême)')
-        ) {
-          targetCategory = '歼殛战'
-        } else if (v.name.en.includes('(Unreal)')) {
-          targetCategory = '幻巧战'
-        }
-
-        const categoryNode = trialsOptions.children!.find(
-          (ct) => ct.value === targetCategory
-        )
-        if (categoryNode) {
-          categoryNode.children!.push({ value, label })
-        }
-      } else if (v.contentType === ContentType.Raids) {
-        const raidsOptions = options.find(
-          (ct) => ct.value === ContentType.Raids
-        )
-        if (!raidsOptions) return
-
-        const targetCategory = v.name.en.includes('(Savage)') ? '零式' : '普通'
-        const categoryNode = raidsOptions.children!.find(
-          (ct) => ct.value === targetCategory
-        )
-        if (categoryNode) {
-          categoryNode.children!.push({ value, label })
-        }
-      } else {
-        const contentNode = options.find((ct) => ct.value === v.contentType)
-        if (contentNode) {
-          contentNode.children!.push({ value, label })
-        }
-      }
-    })
-
-  options.push({
-    label: '通用（未分类区域）',
-    value: '-1',
-  })
-
-  return options.sort((a, b) => {
-    const aIndex = contentTypeLabel.findIndex((ct) => ct.label === a.label)
-    const bIndex = contentTypeLabel.findIndex((ct) => ct.label === b.label)
-    return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex)
-  })
-})
 
 onMounted(() => {
   addOverlayListener('ChangeZone', macroStore.handleChangeZone)
@@ -197,16 +60,7 @@ onMounted(() => {
           :icon="Position"
           @click="macroStore.positioning()"
         />
-        <el-cascader
-          placeholder="选择区域"
-          v-model="macroStore.selectZone"
-          :options="groupedZoneOptions"
-          size="small"
-          :show-all-levels="true"
-          :props="{ emitPath: false }"
-          style="width: 30em"
-          filterable
-        />
+        <ZoneSelecter v-model:selectZone="macroStore.selectZone" />
       </el-space>
 
       <!-- 快捷区域按钮 -->
