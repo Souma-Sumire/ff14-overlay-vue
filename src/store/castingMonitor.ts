@@ -1,4 +1,4 @@
-import type { Party } from 'cactbot/types/event'
+import type { Party } from '../../cactbot/types/event'
 import { defineStore } from 'pinia'
 import Util from '@/utils/util'
 import { getFullImgSrc, hostCache, parseAction, site } from '@/utils/xivapi'
@@ -66,7 +66,7 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
         15,
         '青魔技能随机',
         this.focusTargetId,
-        actionId,
+        actionId
       )
       // this.pushAction(
       //   Date.now(),
@@ -114,6 +114,12 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
                 job: 24,
                 inParty: true,
                 worldId: 0,
+                level: 100,
+                contentId: 0,
+                flags: 0,
+                objectId: 0,
+                partyType: 1,
+                territoryType: 0,
               },
               {
                 id: '10000002',
@@ -121,6 +127,12 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
                 job: 25,
                 inParty: true,
                 worldId: 0,
+                level: 100,
+                contentId: 0,
+                flags: 0,
+                objectId: 0,
+                partyType: 1,
+                territoryType: 0,
               },
               {
                 id: '10000004',
@@ -128,6 +140,12 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
                 job: 19,
                 inParty: true,
                 worldId: 0,
+                level: 100,
+                contentId: 0,
+                flags: 0,
+                objectId: 0,
+                partyType: 1,
+                territoryType: 0,
               },
               {
                 id: '10000005',
@@ -135,6 +153,12 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
                 job: 23,
                 inParty: true,
                 worldId: 0,
+                level: 100,
+                contentId: 0,
+                flags: 0,
+                objectId: 0,
+                partyType: 1,
+                territoryType: 0,
               },
               {
                 id: '10000006',
@@ -142,6 +166,12 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
                 job: 39,
                 inParty: true,
                 worldId: 0,
+                level: 100,
+                contentId: 0,
+                flags: 0,
+                objectId: 0,
+                partyType: 1,
+                territoryType: 0,
               },
               {
                 id: '10000007',
@@ -149,6 +179,12 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
                 job: 40,
                 inParty: true,
                 worldId: 0,
+                level: 100,
+                contentId: 0,
+                flags: 0,
+                objectId: 0,
+                partyType: 1,
+                territoryType: 0,
               },
               {
                 id: '10000008',
@@ -156,6 +192,12 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
                 job: 37,
                 inParty: true,
                 worldId: 0,
+                level: 100,
+                contentId: 0,
+                flags: 0,
+                objectId: 0,
+                partyType: 1,
+                territoryType: 0,
               },
               {
                 id: '10000009',
@@ -163,6 +205,12 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
                 job: 38,
                 inParty: true,
                 worldId: 0,
+                level: 100,
+                contentId: 0,
+                flags: 0,
+                objectId: 0,
+                partyType: 1,
+                territoryType: 0,
               },
             ]
           : [],
@@ -174,7 +222,7 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
       abilityName: string,
       casterId: string,
       abilityId: number,
-      cast1000Ms?: number,
+      cast1000Ms?: number
     ): Promise<void> {
       if (
         (this.partyData.length === 0 && casterId === this.playerId) ||
@@ -213,12 +261,9 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
         }
         this.castData.push(cast)
         if (logLine === 14 && cast1000Ms) {
-          setTimeout(
-            () => {
-              this.castData = this.castData.filter((v) => v?.key !== key)
-            },
-            cast1000Ms * 1000 - 500,
-          )
+          setTimeout(() => {
+            this.castData = this.castData.filter((v) => v?.key !== key)
+          }, cast1000Ms * 1000 - 500)
         }
         if (abilityName.startsWith('unknown_')) {
           cast.src = `${site.first}/i/000000/000405.png`
@@ -257,7 +302,7 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
           e.line[5]!,
           e.line[2]!,
           Number.parseInt(e.line[4]!, 16),
-          Number(e.line[8]),
+          Number(e.line[8])
         )
       } else if (
         e.line[0] === '21' ||
@@ -268,7 +313,7 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
           15,
           e.line[5]!,
           e.line[2]!,
-          Number.parseInt(e.line[4]!, 16),
+          Number.parseInt(e.line[4]!, 16)
         )
       }
     },
@@ -303,7 +348,7 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
       }
       if (
         /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(
-          params.get('syncFocusWS') || '',
+          params.get('syncFocusWS') || ''
         )
       ) {
         void callOverlayHandler({

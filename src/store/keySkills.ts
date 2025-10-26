@@ -48,7 +48,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
   const usedSkills = computed(() => {
     const result: KeySkillEntity[] = []
     const currentParty = computed(() =>
-      dev.value || demo.value ? generator.party.value : party.value,
+      dev.value || demo.value ? generator.party.value : party.value
     )
 
     for (const player of currentParty.value) {
@@ -59,16 +59,16 @@ const useKeySkillStore = defineStore('keySkill', () => {
         ) {
           const duration = parseDynamicValue(
             skill.duration,
-            player.level || 999,
+            player.level || 999
           )
           const id = parseDynamicValue(skill.id, player.level || 999)
           const recast1000ms = parseDynamicValue(
             skill.recast1000ms,
-            player.level || 999,
+            player.level || 999
           )
           const minLevel = parseDynamicValue(
             skill.minLevel,
-            player.level || 999,
+            player.level || 999
           )
           const owner: KeySkillEntity['owner'] = {
             id: player.id,
@@ -106,10 +106,10 @@ const useKeySkillStore = defineStore('keySkill', () => {
     for (const res of result) {
       res.owner.hasDuplicate = {
         skill: result.some(
-          (v) => v.id === res.id && v.owner.id !== res.owner.id,
+          (v) => v.id === res.id && v.owner.id !== res.owner.id
         ),
         job: result.some(
-          (v) => v.owner.job === res.owner.job && v.owner.id !== res.owner.id,
+          (v) => v.owner.job === res.owner.job && v.owner.id !== res.owner.id
         ),
       }
     }
@@ -125,9 +125,9 @@ const useKeySkillStore = defineStore('keySkill', () => {
     return result
   })
 
-  function triggerSkill(skillId: number, ownerID: string, speak: boolean) {
+  function triggerSkill(skillIds: number[], ownerID: string, speak: boolean) {
     const skill = usedSkills.value.find(
-      (v) => v.id === skillId && v.owner.id === ownerID,
+      (v) => skillIds.includes(v.id) && v.owner.id === ownerID
     )
     if (!skill) return
 

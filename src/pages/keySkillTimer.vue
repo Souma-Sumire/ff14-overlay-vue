@@ -18,7 +18,7 @@ const dev = useDev()
 const demo = useDemo()
 
 const handlePartyChanged: EventMap['PartyChanged'] = (e) => {
-  storeKeySkill.party = e.party.filter(v => v.inParty)
+  storeKeySkill.party = e.party.filter((v) => v.inParty)
 }
 
 const handleLogLine: EventMap['LogLine'] = (e) => {
@@ -30,11 +30,10 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
     const skillId = Number.parseInt(e.line[4]!, 16)
     const skillIdCompare = compareSame(skillId)
     const casterIdHex = e.line[2]!
-    storeKeySkill.triggerSkill(skillIdCompare, casterIdHex, true)
-  }
-  else if (
-    e.line[0] === '33'
-    && ['40000010', '4000000F'].includes(e.line[3]!)
+    storeKeySkill.triggerSkill([skillId, skillIdCompare], casterIdHex, true)
+  } else if (
+    e.line[0] === '33' &&
+    ['40000010', '4000000F'].includes(e.line[3]!)
   ) {
     storeKeySkill.wipe()
   }
@@ -46,7 +45,7 @@ const handleChangePrimaryPlayer: EventMap['ChangePrimaryPlayer'] = (e) => {
 
 function testTrigger(skill: KeySkillEntity, tts: boolean) {
   if (dev || demo) {
-    storeKeySkill.triggerSkill(skill.id, skill.owner.id, tts)
+    storeKeySkill.triggerSkill([skill.id], skill.owner.id, tts)
   }
 }
 
@@ -61,15 +60,14 @@ onUnmounted(() => {
   removeOverlayListener('LogLine', handleLogLine)
   removeOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
   Object.values(storeKeySkill.skillStates).forEach((s) => {
-    if (s.rafId)
-      cancelAnimationFrame(s.rafId)
+    if (s.rafId) cancelAnimationFrame(s.rafId)
   })
 })
 
 function triggerAll(speed: number) {
   storeKeySkill.speed = speed
   storeKeySkill.usedSkills.forEach((skill) => {
-    storeKeySkill.triggerSkill(skill.id, skill.owner.id, false)
+    storeKeySkill.triggerSkill([skill.id], skill.owner.id, false)
   })
 }
 
@@ -82,14 +80,11 @@ function showSettings() {
   <CommonActWrapper>
     <template #readme>
       <span class="demo-text">
-        当前为演示数据，锁定后将显示真实数据。<br>
+        当前为演示数据，锁定后将显示真实数据。<br />
         请尽量拉宽窗口，点击技能可模拟触发。
       </span>
     </template>
-    <div
-      v-if="!isPvp"
-      class="key-skills-timer-container"
-    >
+    <div v-if="!isPvp" class="key-skills-timer-container">
       <div class="skills-grid">
         <div
           v-for="skill in storeKeySkill.usedSkills"
@@ -110,12 +105,14 @@ function showSettings() {
                   : 'active',
               ]"
             >
-              {{ storeKeySkill.skillStates[skill.instanceKey]?.text || "" }}
+              {{ storeKeySkill.skillStates[skill.instanceKey]?.text || '' }}
             </span>
-            <img :src="skill.src">
+            <img :src="skill.src" />
             <div
               v-if="storeKeySkill.skillStates[skill.instanceKey]?.active"
-              :key="storeKeySkill.skillStates[skill.instanceKey]?.startTime || 0"
+              :key="
+                storeKeySkill.skillStates[skill.instanceKey]?.startTime || 0
+              "
               class="cooldown-layer"
               :style="{
                 clipPath: `inset(${
@@ -144,9 +141,7 @@ function showSettings() {
       </div>
     </div>
     <div v-if="dev || demo" class="test">
-      <el-button @click="storeKeySkill.demoFullParty">
-        模拟全部职业
-      </el-button>
+      <el-button @click="storeKeySkill.demoFullParty"> 模拟全部职业 </el-button>
       <el-button @click="() => storeKeySkill.shuffle()">
         模拟8人小队
       </el-button>
@@ -156,12 +151,8 @@ function showSettings() {
       <el-button v-if="dev" @click="() => triggerAll(5)">
         测试触发(5X)
       </el-button>
-      <el-button @click="storeKeySkill.wipe">
-        模拟团灭
-      </el-button>
-      <el-button type="primary" @click="showSettings">
-        设置
-      </el-button>
+      <el-button @click="storeKeySkill.wipe"> 模拟团灭 </el-button>
+      <el-button type="primary" @click="showSettings"> 设置 </el-button>
     </div>
   </CommonActWrapper>
 </template>
@@ -173,7 +164,7 @@ function showSettings() {
 </style>
 
 <style scoped lang="scss">
-@use "@/styles/job.scss";
+@use '@/styles/job.scss';
 
 .skills-grid {
   overflow: hidden;
