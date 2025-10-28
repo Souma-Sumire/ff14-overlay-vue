@@ -1,6 +1,6 @@
 # 时间轴语法指南
 
-## 📝 显式语句（悬浮窗可见内容）
+## 显式语句（实际悬浮窗可见内容）
 
 ```text
 时间 "提示文本" [tts "语音文本"]
@@ -25,14 +25,16 @@
 
 ---
 
-## 🔍 匹配语句（时间轴同步规则）
+## 匹配语句（用于同步时间，平时看不到）
 
-通常无需手动编写。FFLOGS导入会自动生成，完整规则见 [timelineSpecialRules.ts](https://github.com/Souma-Sumire/ff14-overlay-vue/blob/main/src/services/timelineSpecialRules.ts)
+通常无需手动编写。FFLOGS导入会自动生成，完整规则见 [timelineSpecialRules.ts](https://github.com/Souma-Sumire/ff14-overlay-vue/blob/main/src/services/timelineSpecialRules.ts)。
 
-### ✅ 新语法（推荐）
+若某些副本未自动适配或未正确同步，则需要用户（你）手动编写。
+
+### 语法
 
 ```text
-时间 "注释" 日志类型 { 参数 } [window 前,后] [jump 目标时间] [once]
+时间 "注释" 日志类型 { id: "十六进制ID" } [window 前,后] [jump 目标时间] [once]
 ```
 
 #### 日志类型
@@ -53,41 +55,9 @@
 ### 示例
 
 ```text
-00:10.0 "空间斩" StartsUsing { id: "A3DA" } window 2,4 # BOSS读条A3DA技能且时间处于8~14秒，修正时间至第10秒
-736.5 "Beetle Avatar" Ability { id: "E82" } window 130,10 jump 413.9 # 匹配成功后跳转到413.9秒
-00:21.1 "unknown_a38f" Ability { id: "A38F" } window 9999,9999 once # 全场战斗仅触发一次
+00:10.0 "空间斩" StartsUsing { id: "A3DA" } window 2,4                  # BOSS读条A3DA技能且时间处于8~14秒，修正时间至第10秒
+736.5 "Beetle Avatar" Ability { id: "E82" } window 130,10 jump 413.9   # 匹配成功后跳转到413.9秒，而不是736.5秒
+00:21.1 "unknown_a38f" Ability { id: "A38F" } window 9999,9999 once    # 全场战斗仅触发一次
 ```
 
 ---
-
-### ⚠️ 旧语法（兼容保留）
-
-```text
-时间 "注释" sync[.once] /正则表达式/ [window 前,后] [jump 目标时间]
-```
-
-| 特殊修饰       | 说明                     |
-|----------------|------------------------|
-| `sync.once`    | 整场战斗仅匹配一次       |
-| 正则表达式     | 匹配ACT原始日志          |
-
-### 示例
-
-```text
-652.1 "究极超豪华野蛮大乱击" sync /^.{14} \w+ 14:4.{7}:[^:]+:942B:/ window 12,12
-```
-
----
-
-## 💡 核心功能说明
-
-1. **时间修正**
-
-   当日志事件发生在 `[时间-window前, 时间+window后]` 范围内时：
-   - 自动将时间轴修正到该语句的时间点
-   - 若设置了`jump`，则跳转到指定时间
-
-2. **特殊场景**
-   - 无血量/快慢轴的BOSS无需匹配语句
-   - 分支时间轴使用`jump`实现跳转
-   - `once: true` 或 `sync.once` 防止重复匹配
