@@ -5,7 +5,6 @@ import type {
   PlayerRuntime as PlayerWithRp,
   Role,
 } from '@/types/partyPlayer'
-import { ElMessageBox } from 'element-plus'
 import { VueDraggable } from 'vue-draggable-plus'
 import { useDev } from '@/composables/useDev'
 import { RandomPartyGenerator } from '@/mock/demoParty'
@@ -17,7 +16,6 @@ import {
   removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
 
-const showNotification = useStorage('cactbotRuntime-showNotification', true)
 const usedRole: Role[] = ['tank', 'healer', 'dps'] as const
 const storePartySort = usePartySortStore()
 const mouseEnter = ref(false)
@@ -130,26 +128,6 @@ const eventHandlers: {
       broadcast()
     }
   },
-}
-
-function tempNotification() {
-  if (!showNotification.value) {
-    return
-  }
-  ElMessageBox.confirm(
-    '即日起，本悬浮窗将只在高难副本中显示，平时隐藏。',
-    '公告',
-    {
-      confirmButtonText: '不再提示',
-      cancelButtonText: '关闭',
-      type: 'warning',
-      buttonSize: 'small',
-    },
-  ).then(() => {
-    showNotification.value = false
-  }).catch(() => {
-    // do nothing
-  })
 }
 
 onMounted(() => {
@@ -285,9 +263,6 @@ function testShuffleParty() {
         </button>
         <button @click="testShuffleParty">
           测试随机组队
-        </button>
-        <button @click="tempNotification">
-          测试弹窗
         </button>
       </div>
     </div>
