@@ -4,8 +4,9 @@ import {
   addOverlayListener,
   removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
-import type { EnmityTargetCombatant, EventMap } from 'cactbot/types/event'
+import type { EnmityTargetCombatant, EventMap } from '../../cactbot/types/event'
 import NetRegexes from '../../cactbot/resources/netregexes'
+import { useDev } from '@/composables/useDev'
 import Util from '@/utils/util'
 
 type Abilities = {
@@ -15,6 +16,8 @@ type Abilities = {
   heavy: boolean
   bind: boolean
 }
+
+const dev = useDev()
 
 const state = useStorage(
   'DD',
@@ -187,7 +190,8 @@ const getResist = (k: keyof Abilities) => {
       </header>
       <main class="main">
         <h3 v-show="state.tarIns && state.tarData">
-          {{ state.tarIns?.Name }}({{ state.tarIns?.BNpcNameID }})
+          {{ state.tarIns?.Name
+          }}<span v-if="dev">({{ state.tarIns?.BNpcNameID }})</span>
         </h3>
         <div v-show="state.tarData">
           <div class="tar-info">
@@ -201,7 +205,7 @@ const getResist = (k: keyof Abilities) => {
               <div
                 v-for="(v, k) in state.tarData?.resists"
                 :key="k"
-                v-show="v !== undefined && state.partyAbilities[k]"
+                v-show="dev || (v !== undefined && state.partyAbilities[k])"
                 :class="`icon ${k} ${v ? 'valid' : 'invalid'}`"
               >
                 <div class="icon-text">
