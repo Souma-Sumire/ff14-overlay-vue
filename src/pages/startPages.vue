@@ -72,7 +72,7 @@ opacity: 不透明度，默认1
     path: 'dd',
     src: 'dd.webp',
     comment:
-      '覆盖90%怪物，补充数据请提交<a href="https://github.com/Souma-Sumire/ff14-overlay-vue">PR</a>\n死宫天宫优宫数据来自Etest2023，妖宫数据部分来自nepufish。',
+      '覆盖90%怪物，补充数据请提交<a href="https://github.com/Souma-Sumire/ff14-overlay-vue">PR</a>\n死宫天宫优宫数据来自Etest2023，妖宫初期数据来自nepufish。',
     imageWidth: 350,
     isNew: true,
   },
