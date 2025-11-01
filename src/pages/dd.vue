@@ -14,9 +14,9 @@ const state = useStorage(
     traps: undefined as undefined | 'disappeared' | 'revealed',
     tarIns: null as EnmityTargetCombatant | null,
     tarData: {} as EnemyData | undefined,
-    construct: {
-      '10000008': 0,
-      '10000009': 0,
+    pylons: {
+      return: 0,
+      passage: 0,
     },
   },
   sessionStorage
@@ -29,10 +29,9 @@ const netRegexs = {
       // 进到新的一层会同时出现01和06，暂不知其区别
       '10000001',
       '10000006',
-      // TODO: 确认死、天、U宫的ID是否一致
-      // 再生装置（妖宫）
+      // 再生装置
       '10000008',
-      // 传送装置（妖宫）
+      // 传送装置
       '10000009',
     ],
   }),
@@ -75,12 +74,12 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
     if (['10000008', '10000009'].includes(command)) {
       // 0d02 = 0%
       // 0d11 = 100%
-      state.value.construct[
-        network6d.groups!.command! as keyof typeof state.value.construct
-      ] = parseInt(data0, 16) - 2
+      const key =
+        network6d.groups!.command! === '10000008' ? 'return' : 'passage'
+      state.value.pylons[key] = parseInt(data0, 16) - 2
     } else {
-      state.value.construct[10000008] = 0
-      state.value.construct[10000009] = 0
+      state.value.pylons.return = 0
+      state.value.pylons.passage = 0
     }
     return
   }
@@ -131,8 +130,9 @@ const getEmoji = (str: string = '未知') => {
           {{ state.traps === 'disappeared' ? '陷阱已清除' : '地图已点亮' }}
         </div>
         <div>
-          再生：{{ Math.round((state.construct[10000008] / 9) * 100) }}% /
-          传送：{{ Math.round((state.construct[10000009] / 9) * 100) }}%
+          再生：{{ Math.round((state.pylons.return / 9) * 100) }}% / 传送：{{
+            Math.round((state.pylons.passage / 9) * 100)
+          }}%
         </div>
       </header>
       <main class="main">
