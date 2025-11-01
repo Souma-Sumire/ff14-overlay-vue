@@ -175,10 +175,8 @@ const getResist = (k: keyof Abilities) => {
 <template>
   <CommonActWrapper>
     <div class="container" v-if="state.data">
-      <header>
-        <pre v-if="state.data.floorTips && state.tarData?.detect !== 'Boss'">{{
-          state.data.floorTips
-        }}</pre>
+      <header v-if="state.tarData?.detect !== 'Boss'">
+        <pre v-if="state.data.floorTips">{{ state.data.floorTips }}</pre>
         <div v-if="state.traps">
           {{ state.traps === 'disappeared' ? '陷阱已清除' : '地图已点亮' }}
         </div>
