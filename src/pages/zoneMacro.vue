@@ -15,6 +15,7 @@ import { useMacroStore } from '@/store/macro'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import 'github-markdown-css/github-markdown-light.css'
 import ZoneSelecter from '@/components/zoneSelecter.vue'
+import { getLocaleMessage } from '@/composables/useLang'
 
 const dev = useDev()
 const macroStore = useMacroStore()
@@ -50,9 +51,7 @@ onMounted(() => {
 
 <template>
   <el-container v-show="macroStore.show" class="elcontainer">
-    <!-- 顶部 Header 区域 -->
     <el-header flex="~ wrap" height="auto" class="elheader">
-      <!-- 位置与选择区域 -->
       <el-space>
         <el-button
           type="primary"
@@ -63,7 +62,6 @@ onMounted(() => {
         <ZoneSelecter v-model:selectZone="macroStore.selectZone" />
       </el-space>
 
-      <!-- 快捷区域按钮 -->
       <el-space>
         <el-button-group flex="~ ! wrap">
           <el-button
@@ -75,25 +73,61 @@ onMounted(() => {
             size="small"
             @click="macroStore.selectZone = entrance.value"
           >
-            {{ entrance.text }}
+            {{ getLocaleMessage(entrance.text) }}
           </el-button>
         </el-button-group>
       </el-space>
+      <el-space m-l-2>
+        <div class="menu">
+          <el-button type="success" size="small" @click="macroStore.newMacro()">
+            {{ $t('zoneMacro.newMacro') }}
+          </el-button>
+          <el-button
+            type="success"
+            size="small"
+            color="#3375b9"
+            @click="macroStore.newPlace()"
+          >
+            {{ $t('zoneMacro.newWaymark') }}
+          </el-button>
+          <el-button
+            size="small"
+            color="#BA5783"
+            @click="macroStore.importPPJSON()"
+          >
+            {{ $t('zoneMacro.importPP') }}
+          </el-button>
+          <el-button
+            type="warning"
+            size="small"
+            @click="macroStore.resetZone()"
+          >
+            {{ $t('zoneMacro.resetZone') }}
+          </el-button>
+          <el-button
+            type="danger"
+            size="small"
+            @click="macroStore.resetAllData()"
+          >
+            {{ $t('zoneMacro.resetAll') }}
+          </el-button>
+          <CommonThemeToggle storage-key="zone-macro-theme" m-l-2 m-r-2 />
+          <CommonLanguageSwitcher m-r-2 />
+        </div>
+      </el-space>
     </el-header>
 
-    <!-- 主体区域 -->
     <el-main style="padding: 0.25rem; margin: 0">
       <el-space wrap alignment="flex-start" style="font-size: 12px">
         <el-empty
           w-100
           :image-size="150"
-          description="此区域没有数据"
+          :description="$t('zoneMacro.noDataTip')"
           v-if="
             macroStore.data.zoneId[macroStore.selectZone] === undefined ||
             macroStore.data.zoneId[macroStore.selectZone]!.length === 0
           "
         />
-        <!-- 每个宏卡片 -->
         <el-card
           v-else
           v-for="(macro, index) in macroStore.data.zoneId[
@@ -104,22 +138,22 @@ onMounted(() => {
           class="main-box-card"
         >
           <div class="badge-group">
-            <span v-if="macro.Deletability" class="subtle-badge from-user"
-              >用户</span
-            >
-            <span v-else class="subtle-badge from-native">内置</span>
+            <span v-if="macro.Deletability" class="subtle-badge from-user">{{
+              $t('zoneMacro.badgeUser')
+            }}</span>
+            <span v-else class="subtle-badge from-native">{{
+              $t('zoneMacro.badgeNative')
+            }}</span>
           </div>
-          <!-- 宏标题 -->
           <p v-show="!macro.Editable" class="macro-title" v-html="macro.Name" />
           <el-input
             v-show="macro.Editable"
             v-model="macro.Name"
             size="small"
-            placeholder="宏标题"
+            :placeholder="$t('zoneMacro.placeholderMacroTitle')"
             style="width: calc(100% - 2em)"
           />
 
-          <!-- 宏文本 -->
           <div v-if="'Text' in macro">
             <article v-if="!macro.Editable">
               <div
@@ -135,13 +169,12 @@ onMounted(() => {
               v-model="macro.Text"
               type="textarea"
               size="small"
-              placeholder="宏文本"
+              :placeholder="$t('zoneMacro.placeholderMacroText')"
               wrap="off"
               :autosize="{ minRows: 3 }"
               style="width: 450px; max-width: calc(100% - 2em)"
             />
 
-            <!-- 非编辑状态按钮 -->
             <el-row
               v-if="!macro.Editable"
               class="buttonArea"
@@ -162,7 +195,7 @@ onMounted(() => {
                 size="small"
                 @click="macroStore.sendMacroEcho(macro.Text)"
               >
-                默语
+                {{ $t('zoneMacro.sendEcho') }}
               </el-button>
               <el-button
                 :icon="ChatDotSquare"
@@ -170,11 +203,10 @@ onMounted(() => {
                 size="small"
                 @click="macroStore.sendMacroParty(macro.Text)"
               >
-                小队
+                {{ $t('zoneMacro.sendParty') }}
               </el-button>
             </el-row>
 
-            <!-- 编辑状态按钮 -->
             <el-row v-if="macro.Editable" class="buttonAreaEditing">
               <el-button
                 type="success"
@@ -182,7 +214,7 @@ onMounted(() => {
                 :icon="Check"
                 @click="macroStore.submitMacroMacro(macro)"
               >
-                完成
+                {{ $t('zoneMacro.buttonDone') }}
               </el-button>
               <el-button
                 v-if="macro.Deletability"
@@ -191,12 +223,11 @@ onMounted(() => {
                 :icon="Delete"
                 @click="macroStore.deleteMacro(macro)"
               >
-                删除
+                {{ $t('zoneMacro.buttonDelete') }}
               </el-button>
             </el-row>
           </div>
 
-          <!-- 标点数据 -->
           <div v-if="'Place' in macro">
             <el-space v-show="macro.Editable">
               <el-table
@@ -217,8 +248,11 @@ onMounted(() => {
                 border
                 size="small"
               >
-                <!-- 启用 -->
-                <el-table-column align="center" label="启用" width="50">
+                <el-table-column
+                  align="center"
+                  :label="$t('zoneMacro.tableActive')"
+                  width="50"
+                >
                   <template #default="scope">
                     <el-switch
                       v-model="scope.row[1].Active"
@@ -228,15 +262,21 @@ onMounted(() => {
                   </template>
                 </el-table-column>
 
-                <!-- 标记 -->
-                <el-table-column align="center" label="标记" width="50">
+                <el-table-column
+                  align="center"
+                  :label="$t('zoneMacro.tableMark')"
+                  width="50"
+                >
                   <template #default="scope">
                     <span>{{ scope.row[0] }}</span>
                   </template>
                 </el-table-column>
 
-                <!-- X轴 -->
-                <el-table-column align="center" label="X（左右）" width="120">
+                <el-table-column
+                  align="center"
+                  :label="$t('zoneMacro.tableX')"
+                  width="120"
+                >
                   <template #default="scope">
                     <span v-show="!macro.Editable">{{ scope.row.X }}</span>
                     <el-input-number
@@ -251,8 +291,11 @@ onMounted(() => {
                   </template>
                 </el-table-column>
 
-                <!-- Z轴 -->
-                <el-table-column align="center" label="Z（上下）" width="120">
+                <el-table-column
+                  align="center"
+                  :label="$t('zoneMacro.tableZ')"
+                  width="120"
+                >
                   <template #default="scope">
                     <span v-show="!macro.Editable">{{ scope.row.Z }}</span>
                     <el-input-number
@@ -267,8 +310,11 @@ onMounted(() => {
                   </template>
                 </el-table-column>
 
-                <!-- Y轴 -->
-                <el-table-column align="center" label="Y（高度）" width="120">
+                <el-table-column
+                  align="center"
+                  :label="$t('zoneMacro.tableY')"
+                  width="120"
+                >
                   <template #default="scope">
                     <span v-show="!macro.Editable">{{ scope.row.Y }}</span>
                     <el-input-number
@@ -285,7 +331,6 @@ onMounted(() => {
               </el-table>
             </el-space>
 
-            <!-- 显示标记组件 -->
             <el-space>
               <ZoneMacroMarksDiv
                 :key="JSON.stringify(macro.Place) + macro.Name + index"
@@ -294,7 +339,6 @@ onMounted(() => {
               />
             </el-space>
 
-            <!-- 标点按钮（非编辑） -->
             <el-row
               v-if="!macro.Editable"
               class="buttonArea"
@@ -308,14 +352,14 @@ onMounted(() => {
                 size="small"
                 @click="macroStore.doLocalWayMark(macro.Place)"
               >
-                本地
+                {{ $t('zoneMacro.doLocal') }}
               </el-button>
               <el-button
                 type="primary"
                 size="small"
                 @click="macroStore.doPartyWayMark(macro.Place)"
               >
-                公开
+                {{ $t('zoneMacro.doPublic') }}
               </el-button>
               <el-button
                 :icon="CopyDocument"
@@ -331,7 +375,6 @@ onMounted(() => {
               />
             </el-row>
 
-            <!-- 标点按钮（编辑） -->
             <el-row v-if="macro.Editable" class="buttonAreaEditing">
               <el-button
                 type="success"
@@ -339,7 +382,7 @@ onMounted(() => {
                 :icon="Check"
                 @click="macroStore.submitMacroPlace(macro)"
               >
-                完成
+                {{ $t('zoneMacro.buttonDone') }}
               </el-button>
               <el-button
                 v-if="macro.Deletability"
@@ -348,59 +391,13 @@ onMounted(() => {
                 :icon="Delete"
                 @click="macroStore.deleteMacro(macro)"
               >
-                删除
+                {{ $t('zoneMacro.buttonDelete') }}
               </el-button>
             </el-row>
           </div>
         </el-card>
       </el-space>
     </el-main>
-
-    <!-- 底部菜单区域 -->
-    <div class="menu">
-      <CommonThemeToggle storage-key="zone-macro-theme" />
-      <el-button
-        type="success"
-        size="small"
-        w-20
-        @click="macroStore.newMacro()"
-      >
-        新增宏
-      </el-button>
-      <el-button
-        type="success"
-        size="small"
-        w-20
-        color="#3375b9"
-        @click="macroStore.newPlace()"
-      >
-        新增标点
-      </el-button>
-      <el-button
-        size="small"
-        w-20
-        color="#BA5783"
-        @click="macroStore.importPPJSON()"
-      >
-        导入PP
-      </el-button>
-      <el-button
-        type="warning"
-        size="small"
-        w-20
-        @click="macroStore.resetZone()"
-      >
-        恢复本图
-      </el-button>
-      <el-button
-        type="danger"
-        size="small"
-        w-20
-        @click="macroStore.resetAllData()"
-      >
-        恢复全部
-      </el-button>
-    </div>
   </el-container>
 </template>
 
@@ -445,15 +442,10 @@ body {
 .menu {
   width: auto;
   height: auto;
-  margin: 0.2rem;
+  margin: 0;
   padding: 0;
   display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  transition: all 0.1s;
-  position: fixed;
-  top: 0;
-  right: 0;
+  flex-direction: row;
   align-items: flex-end;
 }
 

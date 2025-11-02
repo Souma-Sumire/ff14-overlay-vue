@@ -53,7 +53,6 @@ type GameVersion = keyof typeof GMAE_VERSION
 type FilterType = '1-3' | '4-6' | '1' | '2' | '3' | '4' | '5' | '6' | '1-2'
 type ZoneIdType = (typeof zoneList)[number]
 type LegalInstance = 1 | 2 | 3 | 4 | 5 | 6
-type Server = 'Global' | 'CN'
 
 // 将来追加地图时，在zoneList添加新的zoneId，在zoneInstanceLength中添加对应的分线数量，在getZoneGameVersion中添加对应的游戏版本
 
@@ -164,7 +163,6 @@ const COLOR_STYLE = {
   '--ins6-color': `rgba(${INS_BG_COLOR[2]},0.4)`,
 }
 
-const server = useStorage('souma-hunt-server', 'Global' as Server)
 const IMG_RAW_SIZE = 2048
 const IMG_SHOW_SIZE = 596
 const INSTANCE_STRING = ''
@@ -346,11 +344,6 @@ const handleChangeZone: EventMap['ChangeZone'] = (event) => {
   playerInstance.value = 1
 }
 
-const handleChangePrimaryPlayer: EventMap['ChangePrimaryPlayer'] = (event) => {
-  server.value = /^[A-Z]\S+ [A-Z]\S+$/.test(event.charName) ? 'Global' : 'CN'
-  console.log(`当前模式: ${server.value}`)
-}
-
 const handleLogLine: EventMap['LogLine'] = (event) => {
   // 如果当前zoneId不在ZONE_LIST中，则不处理
   if (!zoneList.includes(playerZoneId.value as ZoneIdType)) {
@@ -429,7 +422,6 @@ const handleLogLine: EventMap['LogLine'] = (event) => {
       }
       mergeOverlapMonsters()
       updateWaymarks()
-      // console.debug(`find: ${name} in ${Map[playerZoneId.value as ZoneIdType].name.souma} ins${playerInstance.value},(${worldX}, ${worldY}, ${worldZ})`)
     }
   } else if (event.line[0] === '25') {
     const id = event.line[2]
@@ -597,7 +589,7 @@ function oneMapInstanceClear(zoneId: number) {
   const instance = filterConfig.value[zoneId as keyof typeof filterConfig.value]
   ElMessageBox.confirm(
     `确定要清空「${
-      Map[zoneId as ZoneIdType].name.souma
+      Map[zoneId as ZoneIdType].name.cn
     }」的${instance}线的怪物吗？`,
     `${instance}线清空`,
     {
@@ -615,7 +607,7 @@ function oneMapInstanceClear(zoneId: number) {
 
 function oneMapClear(zoneId: ZoneIdType) {
   ElMessageBox.confirm(
-    `要清空「${Map[zoneId as ZoneIdType].name.souma}」的怪物吗？`,
+    `要清空「${Map[zoneId as ZoneIdType].name.cn}」的怪物吗？`,
     '本图清空',
     {
       confirmButtonText: '确定',
@@ -836,7 +828,7 @@ function importOneZoneStr() {
     const decompressedText = LZString.decompressFromEncodedURIComponent(value)
     const data = JSON.parse(decompressedText) as DiscoveredMonsters
     const mapName =
-      Map[data[0]!.zoneId as unknown as keyof typeof Map].name.souma
+      Map[data[0]!.zoneId as unknown as keyof typeof Map].name.cn
     const targetMonsters = monstersData.value.filter(
       (item) => item.zoneId === data[0]!.zoneId
     )
@@ -901,7 +893,7 @@ function importOneInstanceStr() {
     const decompressedText = LZString.decompressFromEncodedURIComponent(value)
     const data = JSON.parse(decompressedText) as DiscoveredMonsters
     const mapName =
-      Map[data[0]!.zoneId as unknown as keyof typeof Map]!.name.souma
+      Map[data[0]!.zoneId as unknown as keyof typeof Map]!.name.cn
     const instanceName = data[0]!.instance.toString()
     const targetMonsters = monstersData.value.filter(
       (item) =>
@@ -951,7 +943,7 @@ function getMapName(zoneId: ZoneIdType, i: number): string {
   const instanceNow = monstersData.value.filter(
     (item) => item.zoneId === zoneId
   ).length
-  return `${i + 1}图 ${Map[zoneId].name.souma} / ${Map[zoneId].name.ja} / ${
+  return `${i + 1}图 ${Map[zoneId].name.cn} / ${Map[zoneId].name.ja} / ${
     Map[zoneId].name.en
   } （${instanceNow}/${instanceMax}）${instanceNow === instanceMax ? '✅' : ''}`
 }
@@ -1021,26 +1013,9 @@ function cleanUpExpiredData(): Promise<void> {
 
 // 手动维护分线数
 function getInstanceLengthByZoneId(zoneId: ZoneIdType): LegalInstance {
-  if (server.value === 'Global') {
-    switch (zoneId) {
-      // 国际服 7.0
-      case ZoneId.Urqopacha:
-      case ZoneId.Kozamauka:
-      case ZoneId.YakTel:
-      case ZoneId.Shaaloani:
-      case ZoneId.HeritageFound:
-      case ZoneId.LivingMemory:
-        return 3
-      default:
-        return 1
-    }
-  }
-
   switch (zoneId) {
-    // 国服 7.0
     case ZoneId.Urqopacha:
     case ZoneId.Kozamauka:
-      return 6
     case ZoneId.YakTel:
     case ZoneId.Shaaloani:
     case ZoneId.HeritageFound:
@@ -1091,7 +1066,6 @@ onMounted(async () => {
   })()
   addOverlayListener('LogLine', handleLogLine)
   addOverlayListener('ChangeZone', handleChangeZone)
-  addOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
   ElMessageBox.close()
   await cleanUpExpiredData()
   if (dev.value) {
@@ -1148,14 +1122,6 @@ onMounted(async () => {
                   :label="label"
                   :value="value"
                 />
-              </el-select>
-            </div>
-          </el-form-item>
-          <el-form-item label="分线方式">
-            <div w-30 flex>
-              <el-select v-model="server" placeholder="请选择">
-                <el-option label="国际服" value="Global" />
-                <el-option label="中国服" value="CN" />
               </el-select>
             </div>
           </el-form-item>
@@ -1313,7 +1279,7 @@ onMounted(async () => {
             <el-tooltip
               class="box-item"
               effect="dark"
-              :content="`${aItem.placeName.souma} / ${aItem.placeName.ja} / ${aItem.placeName.en}`"
+              :content="`${aItem.placeName.cn} / ${aItem.placeName.ja} / ${aItem.placeName.en}`"
               placement="top"
             >
               <img

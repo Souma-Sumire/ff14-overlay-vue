@@ -9,7 +9,7 @@ const dev = useDev()
 onMounted(() => {
   addOverlayListener(
     'ChangePrimaryPlayer',
-    castingMonitorStore.handleChangePrimaryPlayer,
+    castingMonitorStore.handleChangePrimaryPlayer
   )
   addOverlayListener('LogLine', castingMonitorStore.handleLogLine)
   addOverlayListener('PartyChanged', castingMonitorStore.handlePartyChanged)
@@ -40,15 +40,15 @@ setInterval(() => {
       </el-container>
       <footer v-if="dev">
         <el-button @click="castingMonitorStore.testParty(true)">
-          虚假小队
+          {{ $t('castingMonitor.testParty') }}
         </el-button>
         <el-button @click="castingMonitorStore.testParty(false)">
-          单人
+          {{ $t('castingMonitor.testSolo') }}
         </el-button>
         <el-button @click="castingMonitorStore.testAction()">
-          Action
+          {{ $t('castingMonitor.testAction') }}
         </el-button>
-      <!-- <el-button @click="castingMonitorStore.testItem()">
+        <!-- <el-button @click="castingMonitorStore.testItem()">
         Item
       </el-button>
       <el-button @click="castingMonitorStore.testItemHQ()">
@@ -56,7 +56,7 @@ setInterval(() => {
       </el-button> -->
       </footer>
     </div>
-  </CommonActwrapper>
+  </CommonActWrapper>
 </template>
 
 <style lang="scss">
@@ -72,11 +72,11 @@ setInterval(() => {
   left: 0;
   top: 0;
   background-color: rgba($color: #000000, $alpha: 0.2);
-  :deep(.el-main){
-    padding:0;
+  :deep(.el-main) {
+    padding: 0;
   }
 }
-.header-layout{
+.header-layout {
   width: 100%;
   position: absolute;
 }

@@ -1,16 +1,12 @@
 import { useUrlSearchParams } from '@vueuse/core'
 import { defineStore } from 'pinia'
 import { computed } from 'vue'
-import { loadKeigenn } from '@/utils/keigenn'
 
 const params = useUrlSearchParams('hash')
 
 export const useKeigennRecord2Store = defineStore('keigennRecord2', {
   state: () => {
     return {
-      environment: useStorage('keigennRecord2-environment', 'Chinese') as Ref<
-        'Chinese' | 'Global'
-      >,
       userOptions: {
         scale: computed(() => parseParams(params.scale as string, 1)), // 缩放倍率
         opacity: computed(() => parseParams(params.opacity as string, 0.9)), // 透明度
@@ -41,22 +37,11 @@ export const useKeigennRecord2Store = defineStore('keigennRecord2', {
       if (this.isBrowser) setTimeout(() => this.checkIsBrowser(), 1000)
     },
     formatterName(v: string) {
-      if (this.environment === 'Chinese') {
-        return `${v.at(0)}..${v.at(-1)}`
-      } else if (this.environment === 'Global') {
-        return v.replace(/^([A-Z])\S+ ([A-Z])\S+/, '$1.$2')
+      const global = /^([A-Z])\S+ ([A-Z])\S+/
+      if (global.test(v)) {
+        return v.replace(global, '$1.$2')
       }
-      return v
-    },
-    initEnvironment(name: string) {
-      if (/^[A-Z]\S+ [A-Z]\S+$/.test(name)) {
-        // 国际服
-        this.environment = 'Global'
-      } else {
-        // 国服
-        this.environment = 'Chinese'
-      }
-      loadKeigenn(this.environment)
+      return `${v.at(0)}.${v.at(-1)}`
     },
   },
 })

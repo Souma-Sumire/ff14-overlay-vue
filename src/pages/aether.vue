@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { localeToCactbotLang, useLang } from '@/composables/useLang'
 import aethercurrent from '@/resources/aethercurrent.json'
+import type { Lang } from '@/types/lang'
+const { locale } = useLang()
 
 const exVersions = Array.from(
   new Set(
@@ -47,16 +50,20 @@ const IMG_RAW_SIZE = 2048
 const IMG_SHOW_SIZE = 512
 const IMG_SCALE = IMG_SHOW_SIZE / IMG_RAW_SIZE
 const selectExVersion = ref(exVersions[0])
+
+function getName(name: { ja: string; cn?: string; en?: string }) {
+  return name[localeToCactbotLang(locale.value as Lang) as keyof typeof name] ?? name.en
+}
 </script>
 
 <template>
   <el-container class="main-container">
     <el-header class="header-container">
       <div class="header-content">
-        <span class="label">选择资料片：</span>
+        <span class="label">{{ $t('aether.exVersion') }}</span>
         <el-select
           v-model="selectExVersion"
-          placeholder="选择资料片"
+          :placeholder="$t('aether.exVersion')"
           size="large"
           style="width: 15em; font-weight: bold"
         >
@@ -67,6 +74,7 @@ const selectExVersion = ref(exVersions[0])
             :value="version"
           />
         </el-select>
+        <CommonLanguageSwitcher />
       </div>
     </el-header>
 
@@ -76,12 +84,15 @@ const selectExVersion = ref(exVersions[0])
         :key="map.id"
         class="map-card"
       >
-        <h2 class="map-title">{{ map.name.cn ?? map.name.ja }}</h2>
+        <h2 class="map-title">{{ getName(map.name) }}</h2>
         <div class="map-image-wrapper">
           <img
-            :style="{ width: `${IMG_SHOW_SIZE}px`, height: `${IMG_SHOW_SIZE}px` }"
+            :style="{
+              width: `${IMG_SHOW_SIZE}px`,
+              height: `${IMG_SHOW_SIZE}px`,
+            }"
             :src="`https://v2.xivapi.com/api/asset/map/${map.id}`"
-            :alt="map.name.cn ?? map.name.ja"
+            :alt="getName(map.name)"
             class="map-image"
           />
           <article class="points-overlay">

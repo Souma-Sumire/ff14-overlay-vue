@@ -4,46 +4,34 @@ import * as LZString from 'lz-string'
 import { ref } from 'vue'
 import { actionId2ClassJobLevel } from '@/resources/action2ClassJobLevel'
 import { actionChinese } from '@/resources/actionChinese'
-import { skillChinese, skillGlobal } from '@/resources/raidbuffs'
+import { raidbuffs } from '@/resources/raidbuffs'
 import { useKeySkillStore } from '@/store/keySkills'
 import { copyToClipboard } from '@/utils/clipboard'
 import { idToSrc } from '@/utils/dynamicValue'
+import { useLang } from '@/composables/useLang'
+const { t } = useLang()
 
 const storeKeySkill = useKeySkillStore()
 
-const activeTab = ref<'chinese' | 'global'>('chinese')
-
-const tabLabels = {
-  chinese: '国服技能数据',
-  global: '国际服技能数据',
-} as const
-
 function resetToDefault() {
   ElMessageBox.confirm(
-    `是否重置「${
-      tabLabels[activeTab.value]
-    }」为默认技能数据？这将覆盖当前编辑的内容。`,
-    '确认',
+    t('keySkillTimerSettings.resetConfirmMsg'),
+    t('keySkillTimerSettings.confirmTitle'),
     {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+      confirmButtonText: t('keySkillTimerSettings.confirmBtn'),
+      cancelButtonText: t('keySkillTimerSettings.cancelBtn'),
       type: 'warning',
-    },
+    }
   )
     .then(() => {
-      if (activeTab.value === 'chinese') {
-        storeKeySkill.keySkillsData.chinese = [...skillChinese]
-      }
-      else {
-        storeKeySkill.keySkillsData.global = [...skillGlobal]
-      }
-      ElMessage.success(`已重置${tabLabels[activeTab.value]}`)
+      storeKeySkill.keySkillsData.chinese = [...raidbuffs]
+      ElMessage.success(t('keySkillTimerSettings.resetSuccessMsg'))
     })
     .catch(() => {})
 }
 
-function addSkill(tab: 'chinese' | 'global') {
-  storeKeySkill.keySkillsData[tab].unshift({
+function addSkill() {
+  storeKeySkill.keySkillsData.chinese.unshift({
     key: crypto.randomUUID(),
     id: 0,
     tts: '',
@@ -55,20 +43,17 @@ function addSkill(tab: 'chinese' | 'global') {
   })
 }
 
-function deleteSkill(tab: 'chinese' | 'global', key: string) {
-  const skills = storeKeySkill.keySkillsData[tab]
-  const index = skills.findIndex(skill => skill.key === key)
-  if (index !== -1)
-    skills.splice(index, 1)
+function deleteSkill(key: string) {
+  const skills = storeKeySkill.keySkillsData.chinese
+  const index = skills.findIndex((skill) => skill.key === key)
+  if (index !== -1) skills.splice(index, 1)
 }
 
-function moveSkill(tab: 'chinese' | 'global', from: number, to: number) {
-  const skills = storeKeySkill.keySkillsData[tab]
-  if (to < 0 || to >= skills.length || from === to)
-    return
+function moveSkill(from: number, to: number) {
+  const skills = storeKeySkill.keySkillsData.chinese
+  if (to < 0 || to >= skills.length || from === to) return
   const item = skills[from]
-  if (!item)
-    return
+  if (!item) return
   skills.splice(from, 1)
   skills.splice(to, 0, item)
 }
@@ -77,17 +62,17 @@ function exportData() {
   const text = JSON.stringify(storeKeySkill.keySkillsData)
   const zipped = LZString.compressToBase64(text)
   copyToClipboard(zipped)
-    .then(() => ElMessage.success('已复制到剪贴板'))
-    .catch(() => ElMessage.error('复制失败'))
+    .then(() => ElMessage.success(t('keySkillTimerSettings.copySuccess')))
+    .catch(() => ElMessage.error(t('keySkillTimerSettings.copyFailed')))
 }
 
 function importData(): void {
   ElMessageBox.prompt(
-    '请输入导入的技能数据，导入的数据将覆盖当前内容。',
-    '导入',
+    t('keySkillTimerSettings.importPromptMsg'),
+    t('keySkillTimerSettings.importTitle'),
     {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+      confirmButtonText: t('keySkillTimerSettings.confirmBtn'),
+      cancelButtonText: t('keySkillTimerSettings.cancelBtn'),
       inputType: 'textarea',
       inputValidator: (value: string) => {
         try {
@@ -96,14 +81,13 @@ function importData(): void {
           if (typeof json === 'object' && json !== null) {
             return true
           }
-          return '数据格式错误'
-        }
-        catch (e) {
+          return t('keySkillTimerSettings.dataFormatError')
+        } catch (e) {
           const message = e instanceof Error ? e.message : String(e)
-          return `数据格式错误: ${message}`
+          return `${t('keySkillTimerSettings.dataFormatError')}: ${message}`
         }
       },
-    },
+    }
   )
     .then(({ value }) => {
       if (value) {
@@ -111,11 +95,9 @@ function importData(): void {
         const data = JSON.parse(text)
         if (typeof data === 'object' && data !== null) {
           storeKeySkill.keySkillsData.chinese = data.chinese
-          storeKeySkill.keySkillsData.global = data.global
-          ElMessage.success('已导入数据')
-        }
-        else {
-          ElMessage.error('导入数据格式错误')
+          ElMessage.success(t('keySkillTimerSettings.importSuccess'))
+        } else {
+          ElMessage.error(t('keySkillTimerSettings.importFormatError'))
         }
       }
     })
@@ -124,7 +106,7 @@ function importData(): void {
 
 const showDialog = ref(false)
 const searchText = ref('')
-const searchResult = ref<Array<{ id: number, name: string }>>([])
+const searchResult = ref<Array<{ id: number; name: string }>>([])
 watch(searchText, (value) => {
   if (value) {
     const result = []
@@ -158,7 +140,7 @@ function lazyLoadImage(el: HTMLImageElement) {
 }
 
 onBeforeUnmount(() => {
-  observedImages.forEach(unobserve => unobserve())
+  observedImages.forEach((unobserve) => unobserve())
   observedImages.clear()
 })
 
@@ -197,8 +179,7 @@ function updateDialogPosition(left: number, top: number) {
 function onMouseDown(e: MouseEvent) {
   e.preventDefault()
   const dialog = document.querySelector('.search-dialog') as HTMLElement
-  if (!dialog)
-    return
+  if (!dialog) return
 
   dragTarget = dialog
   const rect = dialog.getBoundingClientRect()
@@ -213,8 +194,7 @@ function onMouseDown(e: MouseEvent) {
 }
 
 function onMouseMove(e: MouseEvent) {
-  if (!dragging || !dragTarget)
-    return
+  if (!dragging || !dragTarget) return
   const dx = e.clientX - startX
   const dy = e.clientY - startY
   const newLeft = Math.max(0, originX + dx)
@@ -246,14 +226,14 @@ function onMouseUp() {
         "
       >
         <h4 class="dialog-drag-handle" @mousedown="onMouseDown">
-          拖动这里可以移动
+          {{ $t('keySkillTimerSettings.dragHere') }}
         </h4>
         <el-button size="small" @click="showDialog = false">
-          关闭
+          {{ $t('keySkillTimerSettings.close') }}
         </el-button>
       </div>
       <el-form label-width="5em">
-        <el-form-item label="技能名称">
+        <el-form-item :label="$t('keySkillTimerSettings.skillName')">
           <el-input
             v-model="searchText"
             clearable
@@ -263,7 +243,11 @@ function onMouseUp() {
       </el-form>
       <div style="height: 300px; overflow-y: auto">
         <el-table :data="searchResult" style="width: 100%">
-          <el-table-column label="预览" width="60" align="center">
+          <el-table-column
+            :label="$t('keySkillTimerSettings.preview')"
+            width="60"
+            align="center"
+          >
             <template #default="{ row }">
               <img
                 :ref="onImgRef"
@@ -272,53 +256,46 @@ function onMouseUp() {
                 loading="lazy"
                 style="width: 24px; height: 24px"
                 alt=""
-              >
+              />
             </template>
           </el-table-column>
-          <el-table-column prop="id" label="技能ID（十进制）" />
-          <el-table-column prop="name" label="技能名称" />
+          <el-table-column
+            prop="id"
+            :label="$t('keySkillTimerSettings.skillID')"
+          />
+          <el-table-column
+            prop="name"
+            :label="$t('keySkillTimerSettings.skillName')"
+          />
         </el-table>
       </div>
     </el-card>
     <el-header class="header">
-      <el-button size="small" type="success" @click="addSkill(activeTab)">
-        新增技能
+      <el-button size="small" type="success" @click="addSkill()">
+        {{ $t('keySkillTimerSettings.addSkill') }}
       </el-button>
       <el-button size="small" type="info" @click="showDialog = true">
-        搜索技能ID
+        {{ $t('keySkillTimerSettings.searchSkill') }}
       </el-button>
       <el-button-group>
         <el-button size="small" @click="exportData">
-          导出
+          {{ $t('keySkillTimerSettings.export') }}
         </el-button>
         <el-button size="small" @click="importData">
-          导入
+          {{ $t('keySkillTimerSettings.import') }}
         </el-button>
       </el-button-group>
       <el-button size="small" type="danger" @click="resetToDefault">
-        恢复默认
+        {{ $t('keySkillTimerSettings.restoreDefault') }}
       </el-button>
       <CommonThemeToggle storage-key="key-skill-timer-2" />
+      <CommonLanguageSwitcher />
     </el-header>
-    <el-tabs
-      v-model="activeTab"
-      tab-position="top"
-      type="border-card"
-      class="tabs"
-    >
-      <el-tab-pane
-        v-for="lang in (Object.keys(tabLabels) as (keyof typeof tabLabels)[])"
-        :key="lang"
-        :label="tabLabels[lang]"
-        :name="lang"
-      >
-        <KeySkillTimerSettingsTable
-          :lang="lang"
-          @delete="(key) => deleteSkill(lang, key)"
-          @move="(from, to) => moveSkill(lang, from, to)"
-        />
-      </el-tab-pane>
-    </el-tabs>
+
+    <KeySkillTimerSettingsTable
+      @delete="(key) => deleteSkill(key)"
+      @move="(from, to) => moveSkill(from, to)"
+    />
   </div>
 </template>
 

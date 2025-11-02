@@ -6,7 +6,7 @@ import { computed, reactive, ref } from 'vue'
 import { useDemo } from '@/composables/useDemo'
 import { useDev } from '@/composables/useDev'
 import { RandomPartyGenerator } from '@/mock/demoParty'
-import { skillChinese, skillGlobal } from '@/resources/raidbuffs'
+import { raidbuffs } from '@/resources/raidbuffs'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 import { tts } from '@/utils/tts'
 import Util from '@/utils/util'
@@ -30,18 +30,9 @@ const useKeySkillStore = defineStore('keySkill', () => {
   const demo = useDemo()
 
   const party = ref<Party[]>([])
-  const keySkillsData = useStorage('keySkills-fix', {
-    chinese: skillChinese,
-    global: skillGlobal,
-  })
-  const language = ref<'chinese' | 'global'>('chinese')
-  const enableTts = useStorage('keySkills-enable-tts', {
-    chinese: true,
-    global: true,
-  })
+  const keySkillsData = useStorage('keySkills-fix', { chinese: raidbuffs })
+  const enableTts = useStorage('keySkills-enable-tts', { chinese: true })
   const skillStates = reactive<Record<string, SkillState>>({})
-
-  const loadedSkills = computed(() => keySkillsData.value[language.value])
 
   const speed = ref(1)
 
@@ -52,7 +43,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
     )
 
     for (const player of currentParty.value) {
-      for (const skill of loadedSkills.value) {
+      for (const skill of keySkillsData.value.chinese) {
         if (
           skill.job.includes(player.job) &&
           (player.level === undefined || skill.minLevel <= player.level)
@@ -115,8 +106,12 @@ const useKeySkillStore = defineStore('keySkill', () => {
     }
 
     result.sort((a, b) => {
-      const aIndex = loadedSkills.value.findIndex((v) => v.key === a.skillKey)
-      const bIndex = loadedSkills.value.findIndex((v) => v.key === b.skillKey)
+      const aIndex = keySkillsData.value.chinese.findIndex(
+        (v) => v.key === a.skillKey
+      )
+      const bIndex = keySkillsData.value.chinese.findIndex(
+        (v) => v.key === b.skillKey
+      )
       if (aIndex === bIndex) {
         return Util.enumSortMethod(a.owner.job, b.owner.job)
       }
@@ -195,7 +190,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
 
     state.rafId = requestAnimationFrame(update)
     skillStates[key] = state
-    if (speak && enableTts.value[language.value]) {
+    if (speak && enableTts.value.chinese) {
       tts(skill.tts)
     }
   }
@@ -229,7 +224,6 @@ const useKeySkillStore = defineStore('keySkill', () => {
     wipe,
     shuffle,
     demoFullParty,
-    language,
     keySkillsData,
     enableTts,
   }

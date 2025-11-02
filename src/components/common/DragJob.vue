@@ -12,7 +12,7 @@ const freeMode = ref(false)
 
 const storePartySort = usePartySortStore()
 
-const ROLES: { role: Role, color: string }[] = [
+const ROLES: { role: Role; color: string }[] = [
   { role: 'tank', color: 'blue' },
   { role: 'healer', color: 'green' },
   { role: 'dps', color: 'red' },
@@ -22,7 +22,7 @@ const ROLES: { role: Role, color: string }[] = [
 ]
 
 function isJobInParty(job: number) {
-  return props.party.find(v => v.job === job)
+  return props.party.find((v) => v.job === job)
 }
 
 function buildJobsList(): Record<Role, number[]> {
@@ -43,18 +43,20 @@ function buildJobsList(): Record<Role, number[]> {
             .filter(roleToFilterFn[role])
             .map(Util.jobToJobEnum)
             .sort(Util.enumSortMethod),
-    ]),
+    ])
   ) as Record<Role, number[]>
 }
 
 const jobsList = buildJobsList()
 
-const allJobsWithName = Object.values(jobsList).flat().map((v) => {
-  return {
-    name: Util.jobToFullName(Util.jobEnumToJob(v)).simple1,
-    job: v,
-  }
-})
+const allJobsWithName = Object.values(jobsList)
+  .flat()
+  .map((v) => {
+    return {
+      name: Util.jobToFullName(Util.jobEnumToJob(v)).simple1,
+      job: v,
+    }
+  })
 
 const sortableJobList: RemovableRef<
   Record<
@@ -64,21 +66,26 @@ const sortableJobList: RemovableRef<
       job: number
     }[]
   >
-> = ref((() => {
-  const res = {} as Record<Role, { name: string, job: number }[]>
-  for (const role of ROLES.map(v => v.role)) {
-    res[role] = allJobsWithName
-      .filter(v => jobsList[role].includes(v.job))
-      .sort(
-        (a, b) =>
-          storePartySort.arr.indexOf(a.job) - storePartySort.arr.indexOf(b.job),
-      )
-  }
-  return res
-})())
+> = ref(
+  (() => {
+    const res = {} as Record<Role, { name: string; job: number }[]>
+    for (const role of ROLES.map((v) => v.role)) {
+      res[role] = allJobsWithName
+        .filter((v) => jobsList[role].includes(v.job))
+        .sort(
+          (a, b) =>
+            storePartySort.arr.indexOf(a.job) -
+            storePartySort.arr.indexOf(b.job)
+        )
+    }
+    return res
+  })()
+)
 
 function handleJobListUpdate() {
-  storePartySort.arr = Object.values(sortableJobList.value).flat().map(v => v.job)
+  storePartySort.arr = Object.values(sortableJobList.value)
+    .flat()
+    .map((v) => v.job)
   emit('update')
 }
 </script>
@@ -86,7 +93,9 @@ function handleJobListUpdate() {
 <template>
   <div flex="~ col" style="position: relative">
     <el-checkbox
-      v-model="freeMode" size="small" style="
+      v-model="freeMode"
+      size="small"
+      style="
         position: absolute;
         top: 0.25rem;
         right: 0.25rem;
@@ -94,24 +103,35 @@ function handleJobListUpdate() {
         color: white;
         padding: 0 3px;
         margin: 0;
-        font-size:12px;
+        font-size: 12px;
         height: 1.5em;
         box-shadow: 0 0 2px black;
         z-index: 0;
       "
     >
-      解除限制
+      {{ $t('dragJob.freeMode') }}
     </el-checkbox>
     <VueDraggable
-      v-for="(role, index) in ROLES" :key="index" v-model="sortableJobList[role.role]" :animation="150"
-      ghost-class="ghost" class="m-b-0.25 m-t-0.25 flex flex-row gap-0.25 rounded p-0" filter=".no-draggable"
-      :force-fallback="true" @update="handleJobListUpdate"
+      v-for="(role, index) in ROLES"
+      :key="index"
+      v-model="sortableJobList[role.role]"
+      :animation="150"
+      ghost-class="ghost"
+      class="m-b-0.25 m-t-0.25 flex flex-row gap-0.25 rounded p-0"
+      filter=".no-draggable"
+      :force-fallback="true"
+      @update="handleJobListUpdate"
     >
       <div
-        v-for="item in sortableJobList[role.role]" v-show="!!props.party.find((v) => v.job === 36) ? true : item.job !== 36
-        " :key="item.job" :class="`${freeMode || isJobInParty(item.job)
-          ? `draggable bg-${role.color} cursor-move`
-          : 'no-draggable bg-gray-700/50 opacity-75'
+        v-for="item in sortableJobList[role.role]"
+        v-show="
+          !!props.party.find((v) => v.job === 36) ? true : item.job !== 36
+        "
+        :key="item.job"
+        :class="`${
+          freeMode || isJobInParty(item.job)
+            ? `draggable bg-${role.color} cursor-move`
+            : 'no-draggable bg-gray-700/50 opacity-75'
         } rounded p-l-0.6 p-r-0.6 p-t-0 p-b-0.3 m-0 color-white`"
       >
         {{ item.name }}

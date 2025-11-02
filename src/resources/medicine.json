@@ -3,7 +3,7 @@
     "Name": "意力之药",
     "ParamsValues": [
       {
-        "Params": "精神",
+        "Params": "Mind",
         "Value": "16",
         "Max": "12",
         "Value{HQ}": "20",
@@ -16,7 +16,7 @@
     "Name": "智力之药",
     "ParamsValues": [
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "16",
         "Max": "12",
         "Value{HQ}": "20",
@@ -29,7 +29,7 @@
     "Name": "巧力之药",
     "ParamsValues": [
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "16",
         "Max": "12",
         "Value{HQ}": "20",
@@ -42,7 +42,7 @@
     "Name": "耐力之药",
     "ParamsValues": [
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "16",
         "Max": "12",
         "Value{HQ}": "20",
@@ -55,7 +55,7 @@
     "Name": "刚力之药",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "16",
         "Max": "12",
         "Value{HQ}": "20",
@@ -68,7 +68,7 @@
     "Name": "意力之妙药",
     "ParamsValues": [
       {
-        "Params": "精神",
+        "Params": "Mind",
         "Value": "16",
         "Max": "27",
         "Value{HQ}": "20",
@@ -81,7 +81,7 @@
     "Name": "智力之妙药",
     "ParamsValues": [
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "16",
         "Max": "27",
         "Value{HQ}": "20",
@@ -94,7 +94,7 @@
     "Name": "巧力之妙药",
     "ParamsValues": [
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "16",
         "Max": "27",
         "Value{HQ}": "20",
@@ -107,7 +107,7 @@
     "Name": "耐力之妙药",
     "ParamsValues": [
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "16",
         "Max": "28",
         "Value{HQ}": "20",
@@ -120,7 +120,7 @@
     "Name": "刚力之妙药",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "16",
         "Max": "27",
         "Value{HQ}": "20",
@@ -133,21 +133,21 @@
     "Name": "过属性水晶",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "20",
         "Max": "34",
         "Value{HQ}": "20",
         "Max{HQ}": "34"
       },
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "20",
         "Max": "34",
         "Value{HQ}": "20",
         "Max{HQ}": "34"
       },
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "20",
         "Max": "34",
         "Value{HQ}": "20",
@@ -160,7 +160,7 @@
     "Name": "意力之秘药",
     "ParamsValues": [
       {
-        "Params": "精神",
+        "Params": "Mind",
         "Value": "16",
         "Max": "49",
         "Value{HQ}": "20",
@@ -173,7 +173,7 @@
     "Name": "智力之秘药",
     "ParamsValues": [
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "16",
         "Max": "49",
         "Value{HQ}": "20",
@@ -186,7 +186,7 @@
     "Name": "巧力之秘药",
     "ParamsValues": [
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "16",
         "Max": "49",
         "Value{HQ}": "20",
@@ -199,7 +199,7 @@
     "Name": "耐力之秘药",
     "ParamsValues": [
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "16",
         "Max": "50",
         "Value{HQ}": "20",
@@ -212,7 +212,7 @@
     "Name": "刚力之秘药",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "16",
         "Max": "49",
         "Value{HQ}": "20",
@@ -225,7 +225,7 @@
     "Name": "意力之灵药",
     "ParamsValues": [
       {
-        "Params": "精神",
+        "Params": "Mind",
         "Value": "16",
         "Max": "67",
         "Value{HQ}": "20",
@@ -238,7 +238,7 @@
     "Name": "智力之灵药",
     "ParamsValues": [
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "16",
         "Max": "67",
         "Value{HQ}": "20",
@@ -251,7 +251,7 @@
     "Name": "巧力之灵药",
     "ParamsValues": [
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "16",
         "Max": "67",
         "Value{HQ}": "20",
@@ -264,7 +264,7 @@
     "Name": "耐力之灵药",
     "ParamsValues": [
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "16",
         "Max": "70",
         "Value{HQ}": "20",
@@ -277,7 +277,7 @@
     "Name": "刚力之灵药",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "16",
         "Max": "67",
         "Value{HQ}": "20",
@@ -290,7 +290,7 @@
     "Name": "恢复药",
     "ParamsValues": [
       {
-        "Params": "作业精度",
+        "Params": "Craftsmanship",
         "Value": "12",
         "Max": "16",
         "Value{HQ}": "15",
@@ -303,7 +303,7 @@
     "Name": "刚力之龙药",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "16",
         "Max": "70",
         "Value{HQ}": "20",
@@ -316,7 +316,7 @@
     "Name": "巧力之龙药",
     "ParamsValues": [
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "16",
         "Max": "70",
         "Value{HQ}": "20",
@@ -329,7 +329,7 @@
     "Name": "耐力之龙药",
     "ParamsValues": [
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "16",
         "Max": "71",
         "Value{HQ}": "20",
@@ -342,7 +342,7 @@
     "Name": "智力之龙药",
     "ParamsValues": [
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "16",
         "Max": "70",
         "Value{HQ}": "20",
@@ -355,7 +355,7 @@
     "Name": "意力之龙药",
     "ParamsValues": [
       {
-        "Params": "精神",
+        "Params": "Mind",
         "Value": "16",
         "Max": "70",
         "Value{HQ}": "20",
@@ -368,7 +368,7 @@
     "Name": "刚力之仙药",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "16",
         "Max": "76",
         "Value{HQ}": "20",
@@ -381,7 +381,7 @@
     "Name": "巧力之仙药",
     "ParamsValues": [
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "16",
         "Max": "76",
         "Value{HQ}": "20",
@@ -394,7 +394,7 @@
     "Name": "耐力之仙药",
     "ParamsValues": [
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "16",
         "Max": "75",
         "Value{HQ}": "20",
@@ -407,7 +407,7 @@
     "Name": "智力之仙药",
     "ParamsValues": [
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "16",
         "Max": "76",
         "Value{HQ}": "20",
@@ -420,7 +420,7 @@
     "Name": "意力之仙药",
     "ParamsValues": [
       {
-        "Params": "精神",
+        "Params": "Mind",
         "Value": "16",
         "Max": "76",
         "Value{HQ}": "20",
@@ -433,7 +433,7 @@
     "Name": "刚力之强化仙药",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "16",
         "Max": "81",
         "Value{HQ}": "20",
@@ -446,7 +446,7 @@
     "Name": "巧力之强化仙药",
     "ParamsValues": [
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "16",
         "Max": "81",
         "Value{HQ}": "20",
@@ -459,7 +459,7 @@
     "Name": "耐力之强化仙药",
     "ParamsValues": [
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "16",
         "Max": "82",
         "Value{HQ}": "20",
@@ -472,7 +472,7 @@
     "Name": "智力之强化仙药",
     "ParamsValues": [
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "16",
         "Max": "81",
         "Value{HQ}": "20",
@@ -485,7 +485,7 @@
     "Name": "意力之强化仙药",
     "ParamsValues": [
       {
-        "Params": "精神",
+        "Params": "Mind",
         "Value": "16",
         "Max": "81",
         "Value{HQ}": "20",
@@ -498,7 +498,7 @@
     "Name": "精密药",
     "ParamsValues": [
       {
-        "Params": "分解技能提升率",
+        "Params": "Desynthesis Skill Gain",
         "Value": "30",
         "Max": "0",
         "Value{HQ}": "40",
@@ -511,14 +511,14 @@
     "Name": "解毒药",
     "ParamsValues": [
       {
-        "Params": "信仰",
+        "Params": "Piety",
         "Value": "1",
         "Max": "0",
         "Value{HQ}": "1",
         "Max{HQ}": "0"
       },
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "1",
         "Max": "0",
         "Value{HQ}": "1",
@@ -531,7 +531,7 @@
     "Name": "抗减速剂",
     "ParamsValues": [
       {
-        "Params": "减速耐性",
+        "Params": "Slow Resistance",
         "Value": "15",
         "Max": "0",
         "Value{HQ}": "20",
@@ -544,7 +544,7 @@
     "Name": "抗沉默剂",
     "ParamsValues": [
       {
-        "Params": "静寂耐性",
+        "Params": "Silence Resistance",
         "Value": "15",
         "Max": "0",
         "Value{HQ}": "20",
@@ -557,7 +557,7 @@
     "Name": "抗失明剂",
     "ParamsValues": [
       {
-        "Params": "失明耐性",
+        "Params": "Blind Resistance",
         "Value": "15",
         "Max": "0",
         "Value{HQ}": "20",
@@ -570,7 +570,7 @@
     "Name": "抗毒剂",
     "ParamsValues": [
       {
-        "Params": "中毒耐性",
+        "Params": "Poison Resistance",
         "Value": "15",
         "Max": "0",
         "Value{HQ}": "20",
@@ -583,7 +583,7 @@
     "Name": "抗眩晕剂",
     "ParamsValues": [
       {
-        "Params": "眩晕耐性",
+        "Params": "Stun Resistance",
         "Value": "15",
         "Max": "0",
         "Value{HQ}": "20",
@@ -596,7 +596,7 @@
     "Name": "抗睡眠剂",
     "ParamsValues": [
       {
-        "Params": "睡眠耐性",
+        "Params": "Sleep Resistance",
         "Value": "15",
         "Max": "0",
         "Value{HQ}": "20",
@@ -609,7 +609,7 @@
     "Name": "抗止步剂",
     "ParamsValues": [
       {
-        "Params": "止步耐性",
+        "Params": "Bind Resistance",
         "Value": "15",
         "Max": "0",
         "Value{HQ}": "20",
@@ -622,7 +622,7 @@
     "Name": "抗加重剂",
     "ParamsValues": [
       {
-        "Params": "加重耐性",
+        "Params": "Heavy Resistance",
         "Value": "15",
         "Max": "0",
         "Value{HQ}": "20",
@@ -635,7 +635,7 @@
     "Name": "精炼药",
     "ParamsValues": [
       {
-        "Params": "精炼度提升量",
+        "Params": "Increased Spiritbond Gain",
         "Value": "3",
         "Max": "0",
         "Value{HQ}": "3",
@@ -648,7 +648,7 @@
     "Name": "耐磨剂",
     "ParamsValues": [
       {
-        "Params": "装备损耗耐性",
+        "Params": "Reduced Durability Loss",
         "Value": "30",
         "Max": "0",
         "Value{HQ}": "30",
@@ -661,7 +661,7 @@
     "Name": "名匠药茶",
     "ParamsValues": [
       {
-        "Params": "作业精度",
+        "Params": "Craftsmanship",
         "Value": "2",
         "Max": "20",
         "Value{HQ}": "3",
@@ -674,7 +674,7 @@
     "Name": "巨匠药茶",
     "ParamsValues": [
       {
-        "Params": "加工精度",
+        "Params": "Control",
         "Value": "2",
         "Max": "20",
         "Value{HQ}": "3",
@@ -687,7 +687,7 @@
     "Name": "魔匠药茶",
     "ParamsValues": [
       {
-        "Params": "制作力",
+        "Params": "CP",
         "Value": "4",
         "Max": "10",
         "Value{HQ}": "5",
@@ -700,7 +700,7 @@
     "Name": "强精炼药",
     "ParamsValues": [
       {
-        "Params": "精炼度提升量",
+        "Params": "Increased Spiritbond Gain",
         "Value": "4",
         "Max": "0",
         "Value{HQ}": "5",
@@ -713,7 +713,7 @@
     "Name": "刚力之药汤",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "8",
         "Max": "79",
         "Value{HQ}": "10",
@@ -726,7 +726,7 @@
     "Name": "巧力之药汤",
     "ParamsValues": [
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "8",
         "Max": "79",
         "Value{HQ}": "10",
@@ -739,7 +739,7 @@
     "Name": "耐力之药汤",
     "ParamsValues": [
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "8",
         "Max": "78",
         "Value{HQ}": "10",
@@ -752,7 +752,7 @@
     "Name": "智力之药汤",
     "ParamsValues": [
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "8",
         "Max": "79",
         "Value{HQ}": "10",
@@ -765,7 +765,7 @@
     "Name": "意力之药汤",
     "ParamsValues": [
       {
-        "Params": "精神",
+        "Params": "Mind",
         "Value": "8",
         "Max": "79",
         "Value{HQ}": "10",
@@ -778,7 +778,7 @@
     "Name": "2级刚力之药汤",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "8",
         "Max": "82",
         "Value{HQ}": "10",
@@ -791,7 +791,7 @@
     "Name": "2级巧力之药汤",
     "ParamsValues": [
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "8",
         "Max": "82",
         "Value{HQ}": "10",
@@ -804,7 +804,7 @@
     "Name": "2级耐力之药汤",
     "ParamsValues": [
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "8",
         "Max": "82",
         "Value{HQ}": "10",
@@ -817,7 +817,7 @@
     "Name": "2级智力之药汤",
     "ParamsValues": [
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "8",
         "Max": "82",
         "Value{HQ}": "10",
@@ -830,7 +830,7 @@
     "Name": "2级意力之药汤",
     "ParamsValues": [
       {
-        "Params": "精神",
+        "Params": "Mind",
         "Value": "8",
         "Max": "82",
         "Value{HQ}": "10",
@@ -843,7 +843,7 @@
     "Name": "3级刚力之药汤",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "8",
         "Max": "89",
         "Value{HQ}": "10",
@@ -856,7 +856,7 @@
     "Name": "3级巧力之药汤",
     "ParamsValues": [
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "8",
         "Max": "89",
         "Value{HQ}": "10",
@@ -869,7 +869,7 @@
     "Name": "3级耐力之药汤",
     "ParamsValues": [
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "8",
         "Max": "90",
         "Value{HQ}": "10",
@@ -882,7 +882,7 @@
     "Name": "3级智力之药汤",
     "ParamsValues": [
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "8",
         "Max": "89",
         "Value{HQ}": "10",
@@ -895,7 +895,7 @@
     "Name": "3级意力之药汤",
     "ParamsValues": [
       {
-        "Params": "精神",
+        "Params": "Mind",
         "Value": "8",
         "Max": "89",
         "Value{HQ}": "10",
@@ -908,7 +908,7 @@
     "Name": "刚力之幻药",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "8",
         "Max": "94",
         "Value{HQ}": "10",
@@ -921,7 +921,7 @@
     "Name": "巧力之幻药",
     "ParamsValues": [
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "8",
         "Max": "94",
         "Value{HQ}": "10",
@@ -934,7 +934,7 @@
     "Name": "耐力之幻药",
     "ParamsValues": [
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "8",
         "Max": "95",
         "Value{HQ}": "10",
@@ -947,7 +947,7 @@
     "Name": "智力之幻药",
     "ParamsValues": [
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "8",
         "Max": "94",
         "Value{HQ}": "10",
@@ -960,7 +960,7 @@
     "Name": "意力之幻药",
     "ParamsValues": [
       {
-        "Params": "精神",
+        "Params": "Mind",
         "Value": "8",
         "Max": "94",
         "Value{HQ}": "10",
@@ -973,7 +973,7 @@
     "Name": "名匠药水",
     "ParamsValues": [
       {
-        "Params": "作业精度",
+        "Params": "Craftsmanship",
         "Value": "2",
         "Max": "33",
         "Value{HQ}": "3",
@@ -986,7 +986,7 @@
     "Name": "巨匠药水",
     "ParamsValues": [
       {
-        "Params": "加工精度",
+        "Params": "Control",
         "Value": "2",
         "Max": "34",
         "Value{HQ}": "3",
@@ -999,7 +999,7 @@
     "Name": "魔匠药水",
     "ParamsValues": [
       {
-        "Params": "制作力",
+        "Params": "CP",
         "Value": "5",
         "Max": "13",
         "Value{HQ}": "6",
@@ -1012,7 +1012,7 @@
     "Name": "极精炼药",
     "ParamsValues": [
       {
-        "Params": "精炼度提升量",
+        "Params": "Increased Spiritbond Gain",
         "Value": "5",
         "Max": "0",
         "Value{HQ}": "6",
@@ -1025,7 +1025,7 @@
     "Name": "2级刚力之幻药",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "8",
         "Max": "99",
         "Value{HQ}": "10",
@@ -1038,7 +1038,7 @@
     "Name": "2级巧力之幻药",
     "ParamsValues": [
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "8",
         "Max": "99",
         "Value{HQ}": "10",
@@ -1051,7 +1051,7 @@
     "Name": "2级耐力之幻药",
     "ParamsValues": [
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "8",
         "Max": "99",
         "Value{HQ}": "10",
@@ -1064,7 +1064,7 @@
     "Name": "2级智力之幻药",
     "ParamsValues": [
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "8",
         "Max": "99",
         "Value{HQ}": "10",
@@ -1077,7 +1077,7 @@
     "Name": "2级意力之幻药",
     "ParamsValues": [
       {
-        "Params": "精神",
+        "Params": "Mind",
         "Value": "8",
         "Max": "99",
         "Value{HQ}": "10",
@@ -1090,7 +1090,7 @@
     "Name": "3级刚力之幻药",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "8",
         "Max": "106",
         "Value{HQ}": "10",
@@ -1103,7 +1103,7 @@
     "Name": "3级巧力之幻药",
     "ParamsValues": [
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "8",
         "Max": "106",
         "Value{HQ}": "10",
@@ -1116,7 +1116,7 @@
     "Name": "3级耐力之幻药",
     "ParamsValues": [
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "8",
         "Max": "109",
         "Value{HQ}": "10",
@@ -1129,7 +1129,7 @@
     "Name": "3级智力之幻药",
     "ParamsValues": [
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "8",
         "Max": "106",
         "Value{HQ}": "10",
@@ -1142,7 +1142,7 @@
     "Name": "3级意力之幻药",
     "ParamsValues": [
       {
-        "Params": "精神",
+        "Params": "Mind",
         "Value": "8",
         "Max": "106",
         "Value{HQ}": "10",
@@ -1155,7 +1155,7 @@
     "Name": "4级刚力之幻药",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "8",
         "Max": "115",
         "Value{HQ}": "10",
@@ -1168,7 +1168,7 @@
     "Name": "4级巧力之幻药",
     "ParamsValues": [
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "8",
         "Max": "115",
         "Value{HQ}": "10",
@@ -1181,7 +1181,7 @@
     "Name": "4级耐力之幻药",
     "ParamsValues": [
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "8",
         "Max": "119",
         "Value{HQ}": "10",
@@ -1194,7 +1194,7 @@
     "Name": "4级智力之幻药",
     "ParamsValues": [
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "8",
         "Max": "115",
         "Value{HQ}": "10",
@@ -1207,7 +1207,7 @@
     "Name": "4级意力之幻药",
     "ParamsValues": [
       {
-        "Params": "精神",
+        "Params": "Mind",
         "Value": "8",
         "Max": "115",
         "Value{HQ}": "10",
@@ -1220,7 +1220,7 @@
     "Name": "5级刚力之幻药",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "8",
         "Max": "137",
         "Value{HQ}": "10",
@@ -1233,7 +1233,7 @@
     "Name": "5级巧力之幻药",
     "ParamsValues": [
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "8",
         "Max": "137",
         "Value{HQ}": "10",
@@ -1246,7 +1246,7 @@
     "Name": "5级耐力之幻药",
     "ParamsValues": [
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "8",
         "Max": "136",
         "Value{HQ}": "10",
@@ -1259,7 +1259,7 @@
     "Name": "5级智力之幻药",
     "ParamsValues": [
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "8",
         "Max": "137",
         "Value{HQ}": "10",
@@ -1272,7 +1272,7 @@
     "Name": "5级意力之幻药",
     "ParamsValues": [
       {
-        "Params": "精神",
+        "Params": "Mind",
         "Value": "8",
         "Max": "137",
         "Value{HQ}": "10",
@@ -1285,7 +1285,7 @@
     "Name": "6级刚力之幻药",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "8",
         "Max": "151",
         "Value{HQ}": "10",
@@ -1298,7 +1298,7 @@
     "Name": "6级巧力之幻药",
     "ParamsValues": [
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "8",
         "Max": "151",
         "Value{HQ}": "10",
@@ -1311,7 +1311,7 @@
     "Name": "6级耐力之幻药",
     "ParamsValues": [
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "8",
         "Max": "155",
         "Value{HQ}": "10",
@@ -1324,7 +1324,7 @@
     "Name": "6级智力之幻药",
     "ParamsValues": [
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "8",
         "Max": "151",
         "Value{HQ}": "10",
@@ -1337,7 +1337,7 @@
     "Name": "6级意力之幻药",
     "ParamsValues": [
       {
-        "Params": "精神",
+        "Params": "Mind",
         "Value": "8",
         "Max": "151",
         "Value{HQ}": "10",
@@ -1350,7 +1350,7 @@
     "Name": "名匠药酒",
     "ParamsValues": [
       {
-        "Params": "作业精度",
+        "Params": "Craftsmanship",
         "Value": "2",
         "Max": "40",
         "Value{HQ}": "3",
@@ -1363,7 +1363,7 @@
     "Name": "巨匠药酒",
     "ParamsValues": [
       {
-        "Params": "加工精度",
+        "Params": "Control",
         "Value": "2",
         "Max": "40",
         "Value{HQ}": "3",
@@ -1376,7 +1376,7 @@
     "Name": "魔匠药酒",
     "ParamsValues": [
       {
-        "Params": "制作力",
+        "Params": "CP",
         "Value": "5",
         "Max": "17",
         "Value{HQ}": "6",
@@ -1389,7 +1389,7 @@
     "Name": "7级刚力之幻药",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "8",
         "Max": "178",
         "Value{HQ}": "10",
@@ -1402,7 +1402,7 @@
     "Name": "7级巧力之幻药",
     "ParamsValues": [
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "8",
         "Max": "178",
         "Value{HQ}": "10",
@@ -1415,7 +1415,7 @@
     "Name": "7级耐力之幻药",
     "ParamsValues": [
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "8",
         "Max": "189",
         "Value{HQ}": "10",
@@ -1428,7 +1428,7 @@
     "Name": "7级智力之幻药",
     "ParamsValues": [
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "8",
         "Max": "178",
         "Value{HQ}": "10",
@@ -1441,7 +1441,7 @@
     "Name": "7级意力之幻药",
     "ParamsValues": [
       {
-        "Params": "精神",
+        "Params": "Mind",
         "Value": "8",
         "Max": "178",
         "Value{HQ}": "10",
@@ -1454,21 +1454,21 @@
     "Name": "以太药",
     "ParamsValues": [
       {
-        "Params": "暴击",
+        "Params": "Critical Hit",
         "Value": "8",
         "Max": "82",
         "Value{HQ}": "10",
         "Max{HQ}": "103"
       },
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "8",
         "Max": "114",
         "Value{HQ}": "10",
         "Max{HQ}": "143"
       },
       {
-        "Params": "咏唱速度",
+        "Params": "Spell Speed",
         "Value": "8",
         "Max": "49",
         "Value{HQ}": "10",
@@ -1481,7 +1481,7 @@
     "Name": "8级刚力之幻药",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "8",
         "Max": "209",
         "Value{HQ}": "10",
@@ -1494,7 +1494,7 @@
     "Name": "8级巧力之幻药",
     "ParamsValues": [
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "8",
         "Max": "209",
         "Value{HQ}": "10",
@@ -1507,7 +1507,7 @@
     "Name": "8级耐力之幻药",
     "ParamsValues": [
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "8",
         "Max": "228",
         "Value{HQ}": "10",
@@ -1520,7 +1520,7 @@
     "Name": "8级智力之幻药",
     "ParamsValues": [
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "8",
         "Max": "209",
         "Value{HQ}": "10",
@@ -1533,7 +1533,7 @@
     "Name": "8级意力之幻药",
     "ParamsValues": [
       {
-        "Params": "精神",
+        "Params": "Mind",
         "Value": "8",
         "Max": "209",
         "Value{HQ}": "10",
@@ -1546,7 +1546,7 @@
     "Name": "刚力之宝药",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "8",
         "Max": "280",
         "Value{HQ}": "10",
@@ -1559,7 +1559,7 @@
     "Name": "巧力之宝药",
     "ParamsValues": [
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "8",
         "Max": "280",
         "Value{HQ}": "10",
@@ -1572,7 +1572,7 @@
     "Name": "耐力之宝药",
     "ParamsValues": [
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "8",
         "Max": "284",
         "Value{HQ}": "10",
@@ -1585,7 +1585,7 @@
     "Name": "智力之宝药",
     "ParamsValues": [
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "8",
         "Max": "280",
         "Value{HQ}": "10",
@@ -1598,7 +1598,7 @@
     "Name": "意力之宝药",
     "ParamsValues": [
       {
-        "Params": "精神",
+        "Params": "Mind",
         "Value": "8",
         "Max": "280",
         "Value{HQ}": "10",
@@ -1611,7 +1611,7 @@
     "Name": "名匠药液",
     "ParamsValues": [
       {
-        "Params": "作业精度",
+        "Params": "Craftsmanship",
         "Value": "2",
         "Max": "50",
         "Value{HQ}": "3",
@@ -1624,7 +1624,7 @@
     "Name": "巨匠药液",
     "ParamsValues": [
       {
-        "Params": "加工精度",
+        "Params": "Control",
         "Value": "2",
         "Max": "50",
         "Value{HQ}": "3",
@@ -1637,7 +1637,7 @@
     "Name": "魔匠药液",
     "ParamsValues": [
       {
-        "Params": "制作力",
+        "Params": "CP",
         "Value": "5",
         "Max": "21",
         "Value{HQ}": "6",
@@ -1650,21 +1650,21 @@
     "Name": "超级恢复药",
     "ParamsValues": [
       {
-        "Params": "坚韧",
+        "Params": "Tenacity",
         "Value": "8",
         "Max": "105",
         "Value{HQ}": "10",
         "Max{HQ}": "132"
       },
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "8",
         "Max": "162",
         "Value{HQ}": "10",
         "Max{HQ}": "203"
       },
       {
-        "Params": "信念",
+        "Params": "Determination",
         "Value": "8",
         "Max": "63",
         "Value{HQ}": "10",
@@ -1677,7 +1677,7 @@
     "Name": "2级刚力之宝药",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "8",
         "Max": "313",
         "Value{HQ}": "10",
@@ -1690,7 +1690,7 @@
     "Name": "2级巧力之宝药",
     "ParamsValues": [
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "8",
         "Max": "313",
         "Value{HQ}": "10",
@@ -1703,7 +1703,7 @@
     "Name": "2级耐力之宝药",
     "ParamsValues": [
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "8",
         "Max": "324",
         "Value{HQ}": "10",
@@ -1716,7 +1716,7 @@
     "Name": "2级智力之宝药",
     "ParamsValues": [
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "8",
         "Max": "313",
         "Value{HQ}": "10",
@@ -1729,7 +1729,7 @@
     "Name": "2级意力之宝药",
     "ParamsValues": [
       {
-        "Params": "精神",
+        "Params": "Mind",
         "Value": "8",
         "Max": "313",
         "Value{HQ}": "10",
@@ -1742,7 +1742,7 @@
     "Name": "3级刚力之宝药",
     "ParamsValues": [
       {
-        "Params": "力量",
+        "Params": "Strength",
         "Value": "8",
         "Max": "368",
         "Value{HQ}": "10",
@@ -1755,7 +1755,7 @@
     "Name": "3级巧力之宝药",
     "ParamsValues": [
       {
-        "Params": "灵巧",
+        "Params": "Dexterity",
         "Value": "8",
         "Max": "368",
         "Value{HQ}": "10",
@@ -1768,7 +1768,7 @@
     "Name": "3级耐力之宝药",
     "ParamsValues": [
       {
-        "Params": "耐力",
+        "Params": "Vitality",
         "Value": "8",
         "Max": "393",
         "Value{HQ}": "10",
@@ -1781,7 +1781,7 @@
     "Name": "3级智力之宝药",
     "ParamsValues": [
       {
-        "Params": "智力",
+        "Params": "Intelligence",
         "Value": "8",
         "Max": "368",
         "Value{HQ}": "10",
@@ -1794,7 +1794,7 @@
     "Name": "3级意力之宝药",
     "ParamsValues": [
       {
-        "Params": "精神",
+        "Params": "Mind",
         "Value": "8",
         "Max": "368",
         "Value{HQ}": "10",

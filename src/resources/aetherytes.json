@@ -6,7 +6,7 @@
     "placeName": {
       "en": "Gridania Aetheryte Plaza",
       "ja": "エーテライト・プラザ",
-      "souma": "以太之光广场"
+      "cn": "以太之光广场"
     }
   },
   {
@@ -16,7 +16,7 @@
     "placeName": {
       "en": "Camp Tranquil",
       "ja": "キャンプ・トランキル",
-      "souma": "恬静路营地"
+      "cn": "恬静路营地"
     }
   },
   {
@@ -26,7 +26,7 @@
     "placeName": {
       "en": "Quarrymill",
       "ja": "クォーリーミル",
-      "souma": "石场水车"
+      "cn": "石场水车"
     }
   },
   {
@@ -36,7 +36,7 @@
     "placeName": {
       "en": "Ul'dah Aetheryte Plaza",
       "ja": "エーテライト・プラザ",
-      "souma": "以太之光广场"
+      "cn": "以太之光广场"
     }
   },
   {
@@ -46,7 +46,7 @@
     "placeName": {
       "en": "Limsa Lominsa Aetheryte Plaza",
       "ja": "エーテライト・プラザ",
-      "souma": "以太之光广场"
+      "cn": "以太之光广场"
     }
   },
   {
@@ -56,7 +56,7 @@
     "placeName": {
       "en": "Camp Overlook",
       "ja": "キャンプ・オーバールック",
-      "souma": "瞭望阵营地"
+      "cn": "瞭望阵营地"
     }
   },
   {
@@ -66,7 +66,7 @@
     "placeName": {
       "en": "Wolves' Den Pier",
       "ja": "ウルヴズジェイル係船場",
-      "souma": "狼狱停船场"
+      "cn": "狼狱停船场"
     }
   },
   {
@@ -76,7 +76,7 @@
     "placeName": {
       "en": "Revenant's Toll",
       "ja": "レヴナンツトール",
-      "souma": "丧灵钟"
+      "cn": "丧灵钟"
     }
   },
   {
@@ -86,7 +86,7 @@
     "placeName": {
       "en": "Gold Saucer Aetheryte Plaza",
       "ja": "エーテライト・プラザ",
-      "souma": "以太之光广场"
+      "cn": "以太之光广场"
     }
   },
   {
@@ -96,7 +96,7 @@
     "placeName": {
       "en": "Ishgard Aetheryte Plaza",
       "ja": "エーテライト・プラザ",
-      "souma": "以太之光广场"
+      "cn": "以太之光广场"
     }
   },
   {
@@ -106,7 +106,7 @@
     "placeName": {
       "en": "Falcon's Nest",
       "ja": "ファルコンネスト",
-      "souma": "隼巢"
+      "cn": "隼巢"
     }
   },
   {
@@ -116,7 +116,7 @@
     "placeName": {
       "en": "Tailfeather",
       "ja": "テイルフェザー",
-      "souma": "尾羽集落"
+      "cn": "尾羽集落"
     }
   },
   {
@@ -126,7 +126,7 @@
     "placeName": {
       "en": "Anyx Trine",
       "ja": "不浄の三塔",
-      "souma": "不洁三塔"
+      "cn": "不洁三塔"
     }
   },
   {
@@ -136,7 +136,7 @@
     "placeName": {
       "en": "Zenith",
       "ja": "白亜の宮殿",
-      "souma": "天极白垩宫"
+      "cn": "天极白垩宫"
     }
   },
   {
@@ -146,7 +146,7 @@
     "placeName": {
       "en": "Moghome",
       "ja": "モグモグホーム",
-      "souma": "莫古力之家"
+      "cn": "莫古力之家"
     }
   },
   {
@@ -156,7 +156,7 @@
     "placeName": {
       "en": "Ok' Zundu",
       "ja": "オク・ズンド",
-      "souma": "尊杜集落"
+      "cn": "尊杜集落"
     }
   },
   {
@@ -166,7 +166,7 @@
     "placeName": {
       "en": "Camp Cloudtop",
       "ja": "キャンプ・クラウドトップ",
-      "souma": "云顶营地"
+      "cn": "云顶营地"
     }
   },
   {
@@ -176,7 +176,7 @@
     "placeName": {
       "en": "Helix",
       "ja": "ポート・ヘリックス",
-      "souma": "螺旋港"
+      "cn": "螺旋港"
     }
   },
   {
@@ -186,7 +186,7 @@
     "placeName": {
       "en": "Idyllshire Aetheryte Plaza",
       "ja": "エーテライト・プラザ",
-      "souma": "以太之光广场"
+      "cn": "以太之光广场"
     }
   },
   {
@@ -196,7 +196,7 @@
     "placeName": {
       "en": "Rhalgr's Reach Aetheryte Plaza",
       "ja": "エーテライト・プラザ",
-      "souma": "以太之光广场"
+      "cn": "以太之光广场"
     }
   },
   {
@@ -206,7 +206,7 @@
     "placeName": {
       "en": "The Peering Stones",
       "ja": "ピーリングストーンズ",
-      "souma": "对等石"
+      "cn": "对等石"
     }
   },
   {
@@ -216,7 +216,7 @@
     "placeName": {
       "en": "Castrum Oriens",
       "ja": "カストルム・オリエンス",
-      "souma": "帝国东方堡"
+      "cn": "帝国东方堡"
     }
   },
   {
@@ -226,7 +226,7 @@
     "placeName": {
       "en": "Ala Gannha",
       "ja": "アラガーナ",
-      "souma": "阿拉加纳"
+      "cn": "阿拉加纳"
     }
   },
   {
@@ -236,7 +236,7 @@
     "placeName": {
       "en": "Ala Ghiri",
       "ja": "アラギリ",
-      "souma": "阿拉基利"
+      "cn": "阿拉基利"
     }
   },
   {
@@ -246,7 +246,7 @@
     "placeName": {
       "en": "Porta Praetoria",
       "ja": "ポルタ・プレトリア",
-      "souma": "天营门"
+      "cn": "天营门"
     }
   },
   {
@@ -256,7 +256,7 @@
     "placeName": {
       "en": "The Ala Mhigan Quarter",
       "ja": "アラミガン・クォーター",
-      "souma": "阿拉米格人居住区"
+      "cn": "阿拉米格人居住区"
     }
   },
   {
@@ -266,7 +266,7 @@
     "placeName": {
       "en": "Kugane Aetheryte Plaza",
       "ja": "エーテライト・プラザ",
-      "souma": "以太之光广场"
+      "cn": "以太之光广场"
     }
   },
   {
@@ -276,7 +276,7 @@
     "placeName": {
       "en": "Tamamizu",
       "ja": "碧のタマミズ",
-      "souma": "碧玉水"
+      "cn": "碧玉水"
     }
   },
   {
@@ -286,7 +286,7 @@
     "placeName": {
       "en": "Crick",
       "ja": "筋違砦",
-      "souma": "痉挛寨"
+      "cn": "痉挛寨"
     }
   },
   {
@@ -296,7 +296,7 @@
     "placeName": {
       "en": "Namai",
       "ja": "ナマイ村",
-      "souma": "茨菰村"
+      "cn": "茨菰村"
     }
   },
   {
@@ -306,7 +306,7 @@
     "placeName": {
       "en": "The House of the Fierce",
       "ja": "烈士庵",
-      "souma": "烈士庵"
+      "cn": "烈士庵"
     }
   },
   {
@@ -316,7 +316,7 @@
     "placeName": {
       "en": "Reunion",
       "ja": "再会の市",
-      "souma": "重逢集市"
+      "cn": "重逢集市"
     }
   },
   {
@@ -326,7 +326,7 @@
     "placeName": {
       "en": "The Dawn Throne",
       "ja": "明けの玉座",
-      "souma": "晨曦王座"
+      "cn": "晨曦王座"
     }
   },
   {
@@ -336,7 +336,7 @@
     "placeName": {
       "en": "Dhoro Iloh",
       "ja": "ドーロ・イロー",
-      "souma": "朵洛衣楼"
+      "cn": "朵洛衣楼"
     }
   },
   {
@@ -346,7 +346,7 @@
     "placeName": {
       "en": "Rhalgr's Reach Aetheryte Plaza",
       "ja": "エーテライト・プラザ",
-      "souma": "以太之光广场"
+      "cn": "以太之光广场"
     }
   },
   {
@@ -356,7 +356,7 @@
     "placeName": {
       "en": "Kugane Aetheryte Plaza",
       "ja": "エーテライト・プラザ",
-      "souma": "以太之光广场"
+      "cn": "以太之光广场"
     }
   },
   {
@@ -366,7 +366,7 @@
     "placeName": {
       "en": "Doman Enclave Aetheryte Plaza",
       "ja": "エーテライト・プラザ",
-      "souma": "以太之光广场"
+      "cn": "以太之光广场"
     }
   },
   {
@@ -376,7 +376,7 @@
     "placeName": {
       "en": "Fort Jobb",
       "ja": "ジョッブ砦",
-      "souma": "乔布要塞"
+      "cn": "乔布要塞"
     }
   },
   {
@@ -386,7 +386,7 @@
     "placeName": {
       "en": "The Ostall Imperative",
       "ja": "オスタル厳命城",
-      "souma": "奥斯塔尔严命城"
+      "cn": "奥斯塔尔严命城"
     }
   },
   {
@@ -396,7 +396,7 @@
     "placeName": {
       "en": "Stilltide",
       "ja": "スティルタイド",
-      "souma": "滞潮村"
+      "cn": "滞潮村"
     }
   },
   {
@@ -406,7 +406,7 @@
     "placeName": {
       "en": "Wright",
       "ja": "ライト村",
-      "souma": "工匠村"
+      "cn": "工匠村"
     }
   },
   {
@@ -416,7 +416,7 @@
     "placeName": {
       "en": "Tomra",
       "ja": "トメラの村",
-      "souma": "图姆拉村"
+      "cn": "图姆拉村"
     }
   },
   {
@@ -426,7 +426,7 @@
     "placeName": {
       "en": "Mord Souq",
       "ja": "モルド・スーク",
-      "souma": "鼹灵集市"
+      "cn": "鼹灵集市"
     }
   },
   {
@@ -436,7 +436,7 @@
     "placeName": {
       "en": "The Inn at Journey's Head",
       "ja": "旅立ちの宿",
-      "souma": "上路客店"
+      "cn": "上路客店"
     }
   },
   {
@@ -446,7 +446,7 @@
     "placeName": {
       "en": "Twine",
       "ja": "トゥワイン",
-      "souma": "络尾聚落"
+      "cn": "络尾聚落"
     }
   },
   {
@@ -456,7 +456,7 @@
     "placeName": {
       "en": "Lydha Lran",
       "ja": "リダ・ラーン",
-      "souma": "群花馆"
+      "cn": "群花馆"
     }
   },
   {
@@ -466,7 +466,7 @@
     "placeName": {
       "en": "Pla Enni",
       "ja": "プラ・エンニ茸窟",
-      "souma": "普拉恩尼茸洞"
+      "cn": "普拉恩尼茸洞"
     }
   },
   {
@@ -476,7 +476,7 @@
     "placeName": {
       "en": "Wolekdorf",
       "ja": "ヴォレクドルフ",
-      "souma": "云村"
+      "cn": "云村"
     }
   },
   {
@@ -486,7 +486,7 @@
     "placeName": {
       "en": "Slitherbough",
       "ja": "スリザーバウ",
-      "souma": "蛇行枝"
+      "cn": "蛇行枝"
     }
   },
   {
@@ -496,7 +496,7 @@
     "placeName": {
       "en": "Fanow",
       "ja": "ファノヴの里",
-      "souma": "法诺村"
+      "cn": "法诺村"
     }
   },
   {
@@ -506,7 +506,7 @@
     "placeName": {
       "en": "The Ondo Cups",
       "ja": "オンドの潮溜まり",
-      "souma": "鳍人潮池"
+      "cn": "鳍人潮池"
     }
   },
   {
@@ -516,7 +516,7 @@
     "placeName": {
       "en": "The Macarenses Angle",
       "ja": "マカレンサス広場",
-      "souma": "马克连萨斯广场"
+      "cn": "马克连萨斯广场"
     }
   },
   {
@@ -526,7 +526,7 @@
     "placeName": {
       "en": "The Crystarium Aetheryte Plaza",
       "ja": "エーテライト・プラザ",
-      "souma": "以太之光广场"
+      "cn": "以太之光广场"
     }
   },
   {
@@ -536,7 +536,7 @@
     "placeName": {
       "en": "Eulmore Aetheryte Plaza",
       "ja": "エーテライト・プラザ",
-      "souma": "以太之光广场"
+      "cn": "以太之光广场"
     }
   },
   {
@@ -546,7 +546,7 @@
     "placeName": {
       "en": "Old Sharlayan Aetheryte Plaza",
       "ja": "エーテライト・プラザ",
-      "souma": "以太之光广场"
+      "cn": "以太之光广场"
     }
   },
   {
@@ -556,7 +556,7 @@
     "placeName": {
       "en": "Radz-at-Han Aetheryte Plaza",
       "ja": "エーテライト・プラザ",
-      "souma": "以太之光广场"
+      "cn": "以太之光广场"
     }
   },
   {
@@ -566,7 +566,7 @@
     "placeName": {
       "en": "The Archeion",
       "ja": "アルケイオン保管院",
-      "souma": "公堂保管院"
+      "cn": "公堂保管院"
     }
   },
   {
@@ -576,7 +576,7 @@
     "placeName": {
       "en": "Sharlayan Hamlet",
       "ja": "リトルシャーレアン",
-      "souma": "小萨雷安"
+      "cn": "小萨雷安"
     }
   },
   {
@@ -586,7 +586,7 @@
     "placeName": {
       "en": "Aporia",
       "ja": "アポリア本部",
-      "souma": "无路总部"
+      "cn": "无路总部"
     }
   },
   {
@@ -596,7 +596,7 @@
     "placeName": {
       "en": "Yedlihmad",
       "ja": "イェドリマン",
-      "souma": "新港"
+      "cn": "新港"
     }
   },
   {
@@ -606,7 +606,7 @@
     "placeName": {
       "en": "The Great Work",
       "ja": "デミールの遺烈郷",
-      "souma": "代米尔遗烈乡"
+      "cn": "代米尔遗烈乡"
     }
   },
   {
@@ -616,7 +616,7 @@
     "placeName": {
       "en": "Palaka's Stand",
       "ja": "パーラカの里",
-      "souma": "波洛伽护法村"
+      "cn": "波洛伽护法村"
     }
   },
   {
@@ -626,7 +626,7 @@
     "placeName": {
       "en": "Camp Broken Glass",
       "ja": "キャンプ・ブロークングラス",
-      "souma": "碎璃营地"
+      "cn": "碎璃营地"
     }
   },
   {
@@ -636,7 +636,7 @@
     "placeName": {
       "en": "Tertium",
       "ja": "テルティウム駅",
-      "souma": "第三站"
+      "cn": "第三站"
     }
   },
   {
@@ -646,7 +646,7 @@
     "placeName": {
       "en": "Sinus Lacrimarum",
       "ja": "涙の入江",
-      "souma": "泪湾"
+      "cn": "泪湾"
     }
   },
   {
@@ -656,7 +656,7 @@
     "placeName": {
       "en": "Bestways Burrow",
       "ja": "ベストウェイ・バロー",
-      "souma": "最佳威兔洞"
+      "cn": "最佳威兔洞"
     }
   },
   {
@@ -666,7 +666,7 @@
     "placeName": {
       "en": "Reah Tahra",
       "ja": "リア・ターラ",
-      "souma": "半途终旅"
+      "cn": "半途终旅"
     }
   },
   {
@@ -676,7 +676,7 @@
     "placeName": {
       "en": "Abode of the Ea",
       "ja": "イーアの里",
-      "souma": "异亚村落"
+      "cn": "异亚村落"
     }
   },
   {
@@ -686,7 +686,7 @@
     "placeName": {
       "en": "Base Omicron",
       "ja": "オミクロンベース",
-      "souma": "奥密克戎基地"
+      "cn": "奥密克戎基地"
     }
   },
   {
@@ -696,7 +696,7 @@
     "placeName": {
       "en": "Anagnorisis",
       "ja": "アナグノリシス天測園",
-      "souma": "醒悟天测园"
+      "cn": "醒悟天测园"
     }
   },
   {
@@ -706,7 +706,7 @@
     "placeName": {
       "en": "The Twelve Wonders",
       "ja": "十二節の園",
-      "souma": "十二奇园"
+      "cn": "十二奇园"
     }
   },
   {
@@ -716,7 +716,7 @@
     "placeName": {
       "en": "Poieten Oikos",
       "ja": "ポイエテーン・オイコス",
-      "souma": "创作者之家"
+      "cn": "创作者之家"
     }
   },
   {
@@ -726,7 +726,7 @@
     "placeName": {
       "en": "Tuliyollal Aetheryte Plaza",
       "ja": "エーテライト・プラザ",
-      "souma": "以太之光广场"
+      "cn": "以太之光广场"
     }
   },
   {
@@ -736,7 +736,7 @@
     "placeName": {
       "en": "Solution Nine Aetheryte Plaza",
       "ja": "エーテライト・プラザ",
-      "souma": "以太之光广场"
+      "cn": "以太之光广场"
     }
   },
   {
@@ -746,7 +746,7 @@
     "placeName": {
       "en": "Wachunpelo",
       "ja": "ワチュン・ペロ",
-      "souma": "瓦丘恩佩洛"
+      "cn": "瓦丘恩佩洛"
     }
   },
   {
@@ -756,7 +756,7 @@
     "placeName": {
       "en": "Worlar's Echo",
       "ja": "ウォーラーの残響",
-      "souma": "沃拉的回响"
+      "cn": "沃拉的回响"
     }
   },
   {
@@ -766,7 +766,7 @@
     "placeName": {
       "en": "Ok'hanu",
       "ja": "オック・ハヌ",
-      "souma": "哈努聚落"
+      "cn": "哈努聚落"
     }
   },
   {
@@ -776,7 +776,7 @@
     "placeName": {
       "en": "Many Fires",
       "ja": "朋友の灯火",
-      "souma": "朋友的灯火"
+      "cn": "朋友的灯火"
     }
   },
   {
@@ -786,7 +786,7 @@
     "placeName": {
       "en": "Earthenshire",
       "ja": "アースンシャイア",
-      "souma": "土陶郡"
+      "cn": "土陶郡"
     }
   },
   {
@@ -796,7 +796,7 @@
     "placeName": {
       "en": "Dock Poga",
       "ja": "ポガ停船所",
-      "souma": "水果码头"
+      "cn": "水果码头"
     }
   },
   {
@@ -806,7 +806,7 @@
     "placeName": {
       "en": "Iq Br'aax",
       "ja": "イクブラーシャ",
-      "souma": "红豹村"
+      "cn": "红豹村"
     }
   },
   {
@@ -816,7 +816,7 @@
     "placeName": {
       "en": "Mamook",
       "ja": "マムーク",
-      "souma": "玛穆克"
+      "cn": "玛穆克"
     }
   },
   {
@@ -826,7 +826,7 @@
     "placeName": {
       "en": "Hhusatahwi",
       "ja": "フーサタイ宿場町",
-      "souma": "胡萨塔伊驿镇"
+      "cn": "胡萨塔伊驿镇"
     }
   },
   {
@@ -836,7 +836,7 @@
     "placeName": {
       "en": "Mehwahhetsoan",
       "ja": "メワヘイゾーン",
-      "souma": "美花黑泽恩"
+      "cn": "美花黑泽恩"
     }
   },
   {
@@ -846,7 +846,7 @@
     "placeName": {
       "en": "Sheshenewezi Springs",
       "ja": "シェシェネ青燐泉",
-      "souma": "谢申内青磷泉"
+      "cn": "谢申内青磷泉"
     }
   },
   {
@@ -856,7 +856,7 @@
     "placeName": {
       "en": "Yyasulani Station",
       "ja": "ヤースラニ駅",
-      "souma": "亚斯拉尼站"
+      "cn": "亚斯拉尼站"
     }
   },
   {
@@ -866,7 +866,7 @@
     "placeName": {
       "en": "Electrope Strike",
       "ja": "エレクトロープ採石場",
-      "souma": "雷转质矿场"
+      "cn": "雷转质矿场"
     }
   },
   {
@@ -876,7 +876,7 @@
     "placeName": {
       "en": "The Outskirts",
       "ja": "アウトスカーツ",
-      "souma": "边郊镇"
+      "cn": "边郊镇"
     }
   },
   {
@@ -886,7 +886,7 @@
     "placeName": {
       "en": "Leynode Mnemo",
       "ja": "レイノード・メモリス",
-      "souma": "地场节点·忆"
+      "cn": "地场节点·忆"
     }
   },
   {
@@ -896,7 +896,7 @@
     "placeName": {
       "en": "Leynode Pyro",
       "ja": "レイノード・ファイア",
-      "souma": "地场节点·火"
+      "cn": "地场节点·火"
     }
   },
   {
@@ -906,7 +906,7 @@
     "placeName": {
       "en": "Leynode Aero",
       "ja": "レイノード・ウィンド",
-      "souma": "地场节点·风"
+      "cn": "地场节点·风"
     }
   }
 ]

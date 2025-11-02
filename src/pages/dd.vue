@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { getMaps, type EnemyData, type DDInfo } from '@/resources/dd'
+import {
+  getMaps,
+  type EnemyData,
+  type DDInfo,
+  type langString,
+} from '@/resources/dd'
 import {
   addOverlayListener,
   removeOverlayListener,
@@ -8,6 +13,8 @@ import type { EnmityTargetCombatant, EventMap } from '../../cactbot/types/event'
 import NetRegexes from '../../cactbot/resources/netregexes'
 import { useDev } from '@/composables/useDev'
 import Util from '@/utils/util'
+import { useLang } from '@/composables/useLang'
+import type { Lang } from '@/types/lang'
 
 type Abilities = {
   stun: boolean
@@ -16,6 +23,7 @@ type Abilities = {
   heavy: boolean
   bind: boolean
 }
+const { locale } = useLang()
 
 const dev = useDev()
 
@@ -122,7 +130,6 @@ const handlePartyChanged: EventMap['PartyChanged'] = (e) => {
       bind: acc.bind || Util.canFeint(job),
     }
   }, abilities)
-  console.log(state.value.partyAbilities)
 }
 
 watchEffect(() => {
@@ -146,44 +153,52 @@ onUnmounted(() => {
   removeOverlayListener('PartyChanged', handlePartyChanged)
 })
 
-const getEmoji = (str: string = '未知') => {
+const getEmoji = (str: string = 'unknown') => {
   const s = str ?? ''
   return {
-    视觉: '👁️',
-    听觉: '👂',
-    范围: '⭕',
-    简单: '🟢',
-    中等: '🟡',
-    困难: '🔴',
-    危险: '🚨',
-    小心: '⚠️',
-    未知: '❔︎',
+    visual: '👁️',
+    auditory: '👂',
+    scope: '⭕',
+    easy: '🟢',
+    caution: '⚠️',
+    danger: '🚨',
+    unknown: '❔︎',
   }[s]
 }
 
-const getResist = (k: keyof Abilities) => {
-  return {
-    stun: '眩晕',
-    slow: '减速',
-    sleep: '睡眠',
-    heavy: '加重',
-    bind: '止步',
-  }[k]
+function getLangString(v: langString | string | undefined) {
+  if (v === undefined) {
+    return ''
+  }
+  if (typeof v === 'string') {
+    return v
+  }
+  if (typeof v === 'object') {
+    return v[locale.value as Lang] || v.zhCn || ''
+  }
+  throw new Error('Invalid langString')
 }
 </script>
 
 <template>
   <CommonActWrapper>
     <div class="container" v-if="state.data">
-      <header v-if="state.tarData?.detect !== 'Boss'">
-        <pre v-if="state.data.floorTips">{{ state.data.floorTips }}</pre>
+      <header v-if="state.tarData?.detect !== 'boss'">
+        <pre v-if="state.data.floorTips">{{
+          getLangString(state.data.floorTips)
+        }}</pre>
         <div v-if="state.traps">
-          {{ state.traps === 'disappeared' ? '陷阱已清除' : '地图已点亮' }}
+          {{
+            state.traps === 'disappeared'
+              ? $t('dd.trap_cleared')
+              : $t('dd.map_illuminated')
+          }}
         </div>
         <div>
-          再生：{{ Math.round((state.pylons.return / 9) * 100) }}% / 传送：{{
-            Math.round((state.pylons.passage / 9) * 100)
-          }}%
+          {{ $t('dd.pylon_return') }}:
+          {{ Math.round((state.pylons.return / 9) * 100) }}% /
+          {{ $t('dd.pylon_passage') }}:
+          {{ Math.round((state.pylons.passage / 9) * 100) }}%
         </div>
       </header>
       <main class="main">
@@ -194,12 +209,14 @@ const getResist = (k: keyof Abilities) => {
         <div v-show="state.tarData">
           <div class="tar-info">
             <span>
-              {{ getEmoji(state.tarData?.grade) }}{{ state.tarData?.grade }}
+              {{ getEmoji(state.tarData?.grade)
+              }}{{ $t(state.tarData?.grade || 'unknown') }}
             </span>
             <span>
-              {{ getEmoji(state.tarData?.detect) }}{{ state.tarData?.detect }}
+              {{ getEmoji(state.tarData?.detect)
+              }}{{ $t(state.tarData?.detect || 'unknown') }}
             </span>
-            <div class="resists" v-if="state.tarData?.detect !== 'Boss'">
+            <div class="resists" v-if="state.tarData?.detect !== 'boss'">
               <div
                 v-for="(v, k) in state.tarData?.resists"
                 :key="k"
@@ -207,12 +224,12 @@ const getResist = (k: keyof Abilities) => {
                 :class="`icon ${k} ${v ? 'valid' : 'invalid'}`"
               >
                 <div class="icon-text">
-                  {{ getResist(k) }}
+                  {{ $t(`dd.resists.${k}`) }}
                 </div>
               </div>
             </div>
           </div>
-          <pre>{{ state.tarData?.note || '' }}</pre>
+          <pre>{{ getLangString(state.tarData?.note ?? '') }}</pre>
         </div>
       </main>
     </div>

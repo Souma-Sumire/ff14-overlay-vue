@@ -39,10 +39,6 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
   }
 }
 
-const handleChangePrimaryPlayer: EventMap['ChangePrimaryPlayer'] = (e) => {
-  storeKeySkill.language = e.charName.includes(' ') ? 'global' : 'chinese'
-}
-
 function testTrigger(skill: KeySkillEntity, tts: boolean) {
   if (dev || demo) {
     storeKeySkill.triggerSkill([skill.id], skill.owner.id, tts)
@@ -52,13 +48,11 @@ function testTrigger(skill: KeySkillEntity, tts: boolean) {
 onMounted(() => {
   addOverlayListener('PartyChanged', handlePartyChanged)
   addOverlayListener('LogLine', handleLogLine)
-  addOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
 })
 
 onUnmounted(() => {
   removeOverlayListener('PartyChanged', handlePartyChanged)
   removeOverlayListener('LogLine', handleLogLine)
-  removeOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
   Object.values(storeKeySkill.skillStates).forEach((s) => {
     if (s.rafId) cancelAnimationFrame(s.rafId)
   })
@@ -80,8 +74,8 @@ function showSettings() {
   <CommonActWrapper>
     <template #readme>
       <span class="demo-text">
-        当前为演示数据，锁定后将显示真实数据。<br />
-        请尽量拉宽窗口，点击技能可模拟触发。
+        {{ $t('keySkillTimer.demo-text1') }}<br />
+        {{ $t('keySkillTimer.demo-text2') }}
       </span>
     </template>
     <div v-if="!isPvp" class="key-skills-timer-container">
@@ -141,18 +135,24 @@ function showSettings() {
       </div>
     </div>
     <div v-if="dev || demo" class="test">
-      <el-button @click="storeKeySkill.demoFullParty"> 模拟全部职业 </el-button>
+      <el-button @click="storeKeySkill.demoFullParty">
+        {{ $t('keySkillTimer.test-all-jobs') }}
+      </el-button>
       <el-button @click="() => storeKeySkill.shuffle()">
-        模拟8人小队
+        {{ $t('keySkillTimer.test-8-party') }}
       </el-button>
       <el-button v-if="dev" @click="() => triggerAll(1)">
-        测试触发(1X)
+        {{ $t('keySkillTimer.test-trigger-1x') }}
       </el-button>
       <el-button v-if="dev" @click="() => triggerAll(5)">
-        测试触发(5X)
+        {{ $t('keySkillTimer.test-trigger-5x') }}
       </el-button>
-      <el-button @click="storeKeySkill.wipe"> 模拟团灭 </el-button>
-      <el-button type="primary" @click="showSettings"> 设置 </el-button>
+      <el-button @click="storeKeySkill.wipe">
+        {{ $t('keySkillTimer.test-wipe') }}
+      </el-button>
+      <el-button type="primary" @click="showSettings">
+        {{ $t('keySkillTimer.settings') }}
+      </el-button>
     </div>
   </CommonActWrapper>
 </template>

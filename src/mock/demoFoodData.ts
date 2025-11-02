@@ -12,21 +12,21 @@ const demoFoodData: Players[] = [
       level: 740,
       params: [
         {
-          Params: '暴击',
+          Params: 'Critical Hit',
           Value: '8',
           Max: '113',
           'Value{HQ}': '10',
           'Max{HQ}': '142',
         },
         {
-          Params: '耐力',
+          Params: 'Vitality',
           Value: '8',
           Max: '196',
           'Value{HQ}': '10',
           'Max{HQ}': '246',
         },
         {
-          Params: '咏唱速度',
+          Params: 'Spell Speed',
           Value: '8',
           Max: '68',
           'Value{HQ}': '10',
@@ -48,21 +48,21 @@ const demoFoodData: Players[] = [
       hq: true,
       params: [
         {
-          Params: '咏唱速度',
+          Params: 'Spell Speed',
           Value: '8',
           Max: '78',
           'Value{HQ}': '10',
           'Max{HQ}': '97',
         },
         {
-          Params: '耐力',
+          Params: 'Vitality',
           Value: '8',
           Max: '94',
           'Value{HQ}': '10',
           'Max{HQ}': '118',
         },
         {
-          Params: '信仰',
+          Params: 'Piety',
           Value: '8',
           Max: '46',
           'Value{HQ}': '10',
@@ -83,21 +83,21 @@ const demoFoodData: Players[] = [
       hq: false,
       params: [
         {
-          Params: '信念',
+          Params: 'Determination',
           Value: '8',
           Max: '90',
           'Value{HQ}': '10',
           'Max{HQ}': '113',
         },
         {
-          Params: '耐力',
+          Params: 'Vitality',
           Value: '8',
           Max: '132',
           'Value{HQ}': '10',
           'Max{HQ}': '166',
         },
         {
-          Params: '暴击',
+          Params: 'Critical Hit',
           Value: '8',
           Max: '54',
           'Value{HQ}': '10',
@@ -118,21 +118,21 @@ const demoFoodData: Players[] = [
       level: 710,
       params: [
         {
-          Params: '咏唱速度',
+          Params: 'Spell Speed',
           Value: '8',
           Max: '105',
           'Value{HQ}': '10',
           'Max{HQ}': '132',
         },
         {
-          Params: '耐力',
+          Params: 'Vitality',
           Value: '8',
           Max: '162',
           'Value{HQ}': '10',
           'Max{HQ}': '203',
         },
         {
-          Params: '信仰',
+          Params: 'Piety',
           Value: '8',
           Max: '63',
           'Value{HQ}': '10',
@@ -153,21 +153,21 @@ const demoFoodData: Players[] = [
       level: 740,
       params: [
         {
-          Params: '信念',
+          Params: 'Determination',
           Value: '8',
           Max: '113',
           'Value{HQ}': '10',
           'Max{HQ}': '142',
         },
         {
-          Params: '耐力',
+          Params: 'Vitality',
           Value: '8',
           Max: '196',
           'Value{HQ}': '10',
           'Max{HQ}': '246',
         },
         {
-          Params: '坚韧',
+          Params: 'Tenacity',
           Value: '8',
           Max: '68',
           'Value{HQ}': '10',
@@ -193,14 +193,14 @@ const demoFoodData: Players[] = [
       level: 650,
       params: [
         {
-          Params: '坚韧',
+          Params: 'Tenacity',
           Value: '8',
           Max: '84',
           'Value{HQ}': '10',
           'Max{HQ}': '105',
         },
         {
-          Params: '耐力',
+          Params: 'Vitality',
           Value: '8',
           Max: '121',
           'Value{HQ}': '10',
@@ -221,14 +221,14 @@ const demoFoodData: Players[] = [
       level: 650,
       params: [
         {
-          Params: '信仰',
+          Params: 'Piety',
           Value: '8',
           Max: '84',
           'Value{HQ}': '10',
           'Max{HQ}': '105',
         },
         {
-          Params: '耐力',
+          Params: 'Vitality',
           Value: '8',
           Max: '121',
           'Value{HQ}': '10',

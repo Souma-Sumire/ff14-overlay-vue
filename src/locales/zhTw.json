@@ -1,0 +1,471 @@
+{
+  "404": {
+    "title": "404 找不到頁面",
+    "message": "哎呀，這個頁面被小貓弄丟了…",
+    "back": "返回首頁"
+  },
+  "actWrapper": {
+    "notReady": "請在 ACT 中新增此頁面作為資料統計懸浮窗"
+  },
+  "aether": {
+    "exVersion": "選擇資料片："
+  },
+  "cactbotRuntime": {
+    "usageTitle": "懸浮窗位置分配說明",
+    "usageLine1": "使懸浮窗的位置分配對應遊戲內的實際位置。",
+    "usageLine2": "每次小隊變化時，會按規則進行排序。",
+    "usageLine3": "你可以上下拖曳玩家名稱，臨時調整。",
+    "testSolo": "測試單人",
+    "testParty": "測試組隊",
+    "testShuffleParty": "測試隨機組隊"
+  },
+  "castingMonitor": {
+    "testSolo": "測試單人",
+    "testParty": "測試組隊",
+    "testAction": "測試技能"
+  },
+  "dragJob": {
+    "freeMode": "解除鎖定"
+  },
+  "testLog": {
+    "loading": "正在解析……請稍候",
+    "upload": "上傳或拖入ACT日誌"
+  },
+  "food": {
+    "Determination": "信",
+    "Vitality": "耐",
+    "Spell Speed": "詠",
+    "Skill Speed": "技",
+    "Critical Hit": "暴",
+    "Direct Hit Rate": "直",
+    "Tenacity": "堅",
+    "Piety": "仰",
+    ">1hour": ">1小時",
+    "minutes": "{0}分鐘",
+    "seconds": "{0}秒",
+    "demo-text": "目前為演示資料，鎖定後將顯示真實資料（僅在小隊人數>=6，且至少有50%人吃食物時才顯示）",
+    "no-food": "無食物",
+    "Strength": "力",
+    "Dexterity": "敏",
+    "Intelligence": "智",
+    "Mind": "精",
+    "HP": "體",
+    "MP": "魔",
+    "TP": "技",
+    "GP": "採",
+    "CP": "製",
+    "Craftsmanship": "作",
+    "Control": "加",
+    "Gathering": "獲",
+    "Perception": "鑑"
+  },
+  "obs2": {
+    "portPlaceholder": "WebSocket 伺服器埠",
+    "passwordPlaceholder": "WebSocket 伺服器密碼",
+    "Raids": "大型任務",
+    "Dungeons": "迷宮挑戰",
+    "Trials": "討伐殲滅戰",
+    "VCDungeonFinder": "多變迷宮",
+    "DeepDungeons": "深層迷宮",
+    "Guildhests": "行會令",
+    "DisciplesOfTheLand": "海釣 / 雲島",
+    "Eureka": "優雷卡",
+    "GrandCompany": "金碟遊樂場",
+    "QuestBattles": "任務劇情",
+    "TreasureHunt": "挖寶",
+    "Pvp": "PVP",
+    "OBS Connection": "OBS 連線",
+    "OBS Connection Closed": "OBS 連線失敗",
+    "OBS Connection Error": "OBS 連線錯誤",
+    "OBS Connection Opened": "OBS 連線成功",
+    "Connection Status": "連線狀態",
+    "Disconnect": "斷開連線",
+    "Connected": "已連線",
+    "Recording": "錄製中",
+    "Output Active": "輸出啟用",
+    "Output Path": "輸出路徑",
+    "Recording Controls": "測試面板",
+    "Start Record": "開始錄製",
+    "Stop Record": "停止錄製",
+    "Split Record": "分割錄製",
+    "User Content Settings": "錄製規則",
+    "Type": "副本類型",
+    "Start When": "開始錄製條件",
+    "Enter Zone": "進入區域",
+    "End When": "結束錄製條件",
+    "Wipe": "團滅",
+    "OBS Auto Record V2": "OBS 自動錄製 2",
+    "inputTutorial": "打不了字？先點擊 ACT，再點擊本懸浮窗，即可正常輸入",
+    "IMETutorial": "調不出中文輸入法？在外面打好字，複製貼上進來。",
+    "Port": "埠",
+    "Password": "密碼",
+    "None": "無",
+    "Yes": "是",
+    "No": "否",
+    "obsTutorial": "開啟 OBS → 工具 → WebSocket 伺服器設定 → 開啟 WebSocket 伺服器 → 顯示連線資訊 → 獲得埠與密碼",
+    "Connecting": "正在嘗試連線...",
+    "Connect": "連線",
+    "Instructions": "使用說明",
+    "Connect to OBS": "連線到 OBS",
+    "hideTutorial": "一切設定妥當後，在 OverlayPlugin 懸浮窗插件中，取消勾選 [顯示懸浮窗] 以隱藏本頁面",
+    "overlayTutorial": "在 ACT 中添加本頁面作為數據統計懸浮窗",
+    "ACT Not Ready": "ACT 未連線",
+    "CombatEnd": "離開戰鬥",
+    "CountDown": "倒數計時開始",
+    "CombatStart": "進入戰鬥",
+    "Extra Rule": "額外規則",
+    "Leave Zone": "離開區域",
+    "Savage": "零式",
+    "Extreme": "殲殛戰",
+    "Ultimate": "絕境戰",
+    "FileName": "檔名",
+    "Record Default Path": "預設路徑",
+    "Record File Name": "檔名",
+    "recordPathPlaceholder": "請填寫路徑",
+    "recordFileNamePlaceholder": "請填寫檔名",
+    "fileNameExplanation": "%CCYY: 年, %MM: 月, %DD: 日, %hh: 時, %mm: 分, %ss: 秒",
+    "Recording Profile": "錄製資料",
+    "filePathExplanation": "須保證目錄存在",
+    "Set Recording Name": "設定路徑",
+    "Default": "未歸類",
+    "Chaotic": "誅滅戰",
+    "firewallTutorial": "若確定密碼正確，卻始終連線失敗，請檢查 Windows Defender 防火牆。",
+    "SocietyQuests": "友好部族任務",
+    "OccultCrescent": "蜃景幻界",
+    "When Party": "小隊人數>=",
+    "CountDownCancel": "倒數計時取消",
+    "Custom Path": "類別自定義儲存路徑（須保證目錄存在，若留空則取預設路徑）",
+    "host required": "未填寫埠號",
+    "size warning": "請先拉大視窗，至少600px * 300px",
+    "Append Content Name": "將當前副本名稱新增到檔名後",
+    "SaveTheQueen": "博茲雅",
+    "Current": "（當前）",
+    "DeepDungeonExtras": "妖宮/詩想"
+  },
+  "startPages": {
+    "header": {
+      "title": "首頁導航"
+    },
+    "contact": {
+      "header": "聯絡我",
+      "qq_group_alt": "艾歐澤亞不是法外之地",
+      "warning": "其餘帳號均為山寨，請勿相信任何資訊"
+    },
+    "badge": {
+      "new": "新",
+      "recommended": "推薦"
+    },
+    "menu": {
+      "github_patch": "[GitHub] 國際服漢化補丁",
+      "cactbot_raidboss": "[JS腳本] Cactbot Raidboss 自定義檔案",
+      "fflogs_uploader_download": "[網頁] FFLOGS 上傳器 加速下載",
+      "keigenn_record2": "[ACT懸浮窗] 減傷監控2",
+      "key_skill_timer": "[ACT懸浮窗] 關鍵技能監控2",
+      "dd_atlas": "[ACT懸浮窗] 深層迷宮圖鑑",
+      "zone_macro": "[網頁] 全副本發宏/標點",
+      "food_police": "[ACT懸浮窗] 食物警察",
+      "healing_timeline": "[ACT懸浮窗] 治療/減傷時間軸",
+      "casting_monitor": "[ACT懸浮窗] 施法監控（技能展示）",
+      "instanced_area_info": "[ACT懸浮窗] 我 TM 現在在幾線？",
+      "radar": "[ACT懸浮窗] 雷達",
+      "obs_auto_record2": "[ACT懸浮窗] OBS 自動錄製 2",
+      "team_watch_legacy": "[ACT懸浮窗] 技能監控（計畫報廢/需重構）",
+      "enmity_reminder": "[ACT懸浮窗] 盾姿提醒",
+      "combat_time_obs": "[OBS懸浮窗] 戰鬥時長顯示",
+      "show_barrier": "[ACT懸浮窗] 盾值顯示",
+      "casting_to_chinese": "[ACT懸浮窗] 讀條漢化",
+      "limit_break_tip": "[ACT懸浮窗] LB 額外增長監控",
+      "act_self_test": "[網頁] ACT 自助測試",
+      "hunt_map": "[網頁] 狩獵找A怪地圖",
+      "aether_map": "[網頁] 風脈地圖",
+      "mogstation_patch": "[油猴腳本] MogStation莫古站漢化",
+      "stone_sky_logs": "[油猴腳本] 石之家-修為查詢",
+      "kook_purify": "[油猴腳本] KOOK淨化"
+    },
+    "comment": {
+      "github_patch": "詳見倉庫 README",
+      "cactbot_raidboss": "詳見倉庫 README",
+      "keigenn_record2_params": "可以新增到 ACT 懸浮窗中用於即時監控。也可以在瀏覽器中開啟，匯入日誌分析過往紀錄。\nURL地址欄參數說明：\nscale: 縮放倍率，預設1\nopacity: 懸浮窗不透明度，預設0.9\ntargetType: 目標顯示類型，icon為職業圖標，job為職業名\niconType: 目標圖標類型（可選1~5），預設2\nparseAA: 解析自動攻擊（僅影響新紀錄，歷史結果不會同步改變），預設開\nparseDoT: 解析DoT（僅影響新紀錄，歷史結果不會同步改變），預設關\nminimize: 啟動時迷你化，預設關\nactionCN: action名稱中文化，預設開\nstatusCN: status名稱中文化，預設開\nlang: 語言，預設zhCn，可選en、ja、ko、zhTw、zhCn",
+      "key_skill_timer_params": "URL地址欄參數說明：\nscale: 縮放倍率，預設1\nopacity: 不透明度，預設1\nlang: 語言，預設zhCn，可選en、ja、ko、zhTw、zhCn\n\n更多自訂功能詳見懸浮窗設定（取消鎖定後顯示）。",
+      "dd_atlas": "覆蓋90%怪物，補充資料請提交<a href=\"https://github.com/Souma-Sumire/ff14-overlay-vue\">PR</a>\n死宮天宮優宮資料來自Etest2023，妖宮初期資料來自nepufish。\nURL地址欄參數說明：\nscale: 縮放倍率，預設1\nlang: 語言，預設zhCn，可選en、ja、ko、zhTw、zhCn",
+      "zone_macro": "需開啟 ACT.OverlayPlugin WSServer\n喊話、標點需<a href=\"https://github.com/Natsukage/PostNamazu\">鯰魚精郵差</a>",
+      "food_police": "檢查食物剩餘時間。\n平時會簡易顯示，當滑鼠移入後顯示食物加成屬性。再次移入後顯示食物名稱。（僅在小隊人數>=6，且至少有50%人吃食物時才顯示）\nURL地址欄參數說明：\nscale: 縮放倍率，預設1\nlang: 語言，預設zhCn，可選en、ja、ko、zhTw、zhCn",
+      "healing_timeline": "自訂的時間軸提醒，支援FFLogs一鍵複製時間軸。\n<a href=\"/ff14-overlay-vue/#/timelineSettings?OVERLAY_WS=ws://127.0.0.1:10501/ws\">編輯時間軸請在瀏覽器中開啟這裡</a>（曾經的小齒輪）",
+      "casting_monitor_params": "URL地址欄參數說明：\nduration: 圖片從右劃到左的動畫持續時間（越短速度越快），預設15\ndisplayAA: 是否顯示自動攻擊，預設false\napi: 技能圖標圖床來源，國內建議cafemaker，外網則選擇xivapi，預設cafemaker\nshowHeader: 是否顯示懸浮窗頭部的隊員選擇器（用於切換監控目標），預設true\nsyncFocusWS: 是否同步監控目標至透過 WebSocket 連接的其他頁面（例如OBS），預設false\n\n建議在懸浮窗的[進階]設定，增加[最大影格速率（FPS）]，避免卡頓感。\n",
+      "instanced_area_info": "顯示你當前在幾線 / 新月島顯示唯一編號",
+      "radar": "找人用。地圖為指北。\nPVP區域自動禁用。",
+      "obs_auto_record2": "滿足某些條件時自動控制 OBS 錄屏，提供多種條件控制。",
+      "team_watch_legacy": "可以實現對大部分技能的CD監控。\n現已進入歸檔狀態，不再修正bug。\n不支援“釋放某技能時減少某技能N秒冷卻”的特性。\n老用戶如果有6.0的快取，更新7.0之後用會有問題，請在設定頁清除一次資料。",
+      "enmity_reminder": "僅坦克職業生效\n倒計時開始時，如果小隊內沒有坦克開盾，醒目文字提醒\"沒人開盾\"。\n倒計時10秒時，如果小隊內有0個坦克開盾，語音提醒\"沒人開盾\"。\n倒計時10秒時，如果小隊內有2個坦克開盾，語音提醒\"雙T都開盾了\"。\n開場20秒後，如果小隊內有2個坦克，且另一個坦克開盾了，且你沒有開盾，語音提醒\"ST開盾\"。\n\nURL地址欄參數說明：\nstRemind: 控制是否開啟開場20秒後的提醒，預設true，即開啟。false為關閉。",
+      "combat_time_obs_params": "在OBS中新增「瀏覽器」，以便在錄像中顯示戰鬥時間。\nURL地址欄參數說明：\nmode: 顯示模式，預設combat，值為：combat（戰鬥時間）/logline（日誌時間）/both（同時顯示）",
+      "show_barrier_params": "速刷用，顯示小隊成員的現有護盾值。\n\nURL地址欄參數說明：\nlineHeight: 行高，預設1\nfontSize: 字體尺寸，預設26\ntype: 顯示方式 1=僅顯示百分比 2=僅顯示數值 3=同時顯示，預設1\nshowSettings: 顯示排序設定與人名，預設1，即顯示，使用之前需要將其與遊戲內的'小隊列表'-'職能內排序順序'保持一致，設定好了再改為0隱藏\n\n盾值百分比為四捨五入，數值也是根據百分比計算的值，故都存在誤差，無法更精準。",
+      "casting_to_chinese": "更多自訂功能詳見懸浮窗設定（取消鎖定後顯示）。",
+      "limit_break_tip": "速刷用，記錄LB獎勵數值。",
+      "act_self_test": "供用戶自行檢測ACT是否處於正常運行狀態。",
+      "mogstation_patch": "僅針對日文版莫古站。",
+      "stone_sky_logs": "資料存在72小時快取。點擊水晶圖標則跳轉FFLOGS頁面。",
+      "kook_purify": "隱藏 KOOK 網頁版各種煩人的廣告。屏蔽個性化入場音效。"
+    }
+  },
+  "dd": {
+    "resists": {
+      "stun": "眩暈",
+      "slow": "減速",
+      "sleep": "睡眠",
+      "heavy": "加重",
+      "bind": "定身"
+    }
+  },
+  "keigennRecord": {
+    "source": "傷害來源",
+    "playerShield": "玩家護盾",
+    "playerHp": "玩家血量",
+    "reductionRate": "減傷率",
+    "originalDamage": "倒推裸吃傷害",
+    "noSupport": "（不支援）",
+    "cancelFilter": "[取消篩選]",
+    "time": "時間",
+    "action": "技能",
+    "target": "職業",
+    "amount": "傷害",
+    "reduction": "減傷",
+    "keigenns": "狀態",
+    "none": "無",
+    "hp": "HP",
+    "shield": "盾",
+    "copySuccess": "複製成功",
+    "copyFailed": "複製失敗",
+    "this_skill": "此技能",
+    "this_job": "此職業",
+    "filter": {
+      "action_cancel": "取消篩選 [{actionName}]",
+      "action_only": "只看 [{actionName}]",
+      "target_cancel": "取消篩選 [{jobName}]",
+      "target_only": "只看 [{jobName}]"
+    },
+    "dodge": "閃避",
+    "damage done": "擊中",
+    "blocked damage": "格擋",
+    "parried damage": "招架",
+    "instant death": "即死",
+    "heal": "治療",
+    "crit heal": "暴擊治療",
+    "damage": "普通",
+    "crit damage": "暴擊",
+    "direct hit damage": "直擊",
+    "crit direct hit damage": "直暴",
+    "physics": "物理",
+    "magic": "魔法",
+    "darkness": "暗黑",
+    "dot": "持續傷害"
+  },
+  "keySkillTimer": {
+    "demo-text1": "目前為演示數據，鎖定後將顯示真實數據。",
+    "demo-text2": "請盡量拉寬視窗，點擊技能可模擬觸發。",
+    "test-all-jobs": "模擬全部職業",
+    "test-8-party": "模擬8人小隊",
+    "test-trigger-1x": "測試觸發(1X)",
+    "test-trigger-5x": "測試觸發(5X)",
+    "test-wipe": "模擬隊伍毀滅",
+    "settings": "設定"
+  },
+  "keySkillTimerSettings": {
+    "dragHere": "拖曳此處移動",
+    "close": "關閉",
+    "preview": "預覽",
+    "skillID": "技能ID（十進制）",
+    "skillName": "技能名稱",
+    "addSkill": "新增技能",
+    "searchSkill": "搜尋技能ID",
+    "export": "匯出",
+    "import": "匯入",
+    "restoreDefault": "恢復預設",
+    "chinese": "盛大服",
+    "global": "國際服",
+    "resetConfirmMsg": "是否重置為預設技能資料？這將覆蓋目前編輯的內容。",
+    "confirmTitle": "確認",
+    "confirmBtn": "確定",
+    "cancelBtn": "取消",
+    "resetSuccessMsg": "已重置",
+    "copySuccess": "已複製到剪貼板",
+    "copyFailed": "複製失敗",
+    "importPromptMsg": "請輸入匯入的技能資料，匯入的資料將覆蓋目前內容。",
+    "importTitle": "匯入",
+    "dataFormatError": "資料格式錯誤",
+    "importSuccess": "已匯入資料",
+    "importFormatError": "匯入資料格式錯誤",
+    "col": {
+      "action": "操作",
+      "preview": "預覽",
+      "id": "ID(十進制)",
+      "tts": "TTS",
+      "duration": "持續時間(秒)",
+      "recast": "冷卻時間 (秒)",
+      "job": "適用職業",
+      "minLevel": "最小習得等級",
+      "line": "顯示到第n行"
+    },
+    "deleteBtn": "刪除",
+    "deleteConfirmTitle": "確定刪除嗎？此操作無法撤銷"
+  },
+  "lbTick": {
+    "test": "測試",
+    "lb": "LB:",
+    "bonus": "獎勵:"
+  },
+  "radar": {
+    "macroTitle": "巨集指令：/e find 目標名稱",
+    "macroDesc": "名稱允許部分匹配。若輸入*可查看所有目標",
+    "prevTarget": "上一目標",
+    "nextTarget": "下一目標",
+    "targetNotFound": "【未找到{targetName}】",
+    "cancelBtn": "取消"
+  },
+  "actSelfTest": {
+    "title": "自助測試頁",
+    "systemTime": "系統時間",
+    "noData": "無資料",
+    "testTtsBtn": "測試TTS",
+    "ttsText": "測試TTS",
+    "success": "成功",
+    "untriggered": "未觸發",
+    "try": "請嘗試：",
+    "wsWaiting": "等待 WebSocket 連線...",
+    "configSection": {
+      "title": "用戶配置資訊",
+      "actVersion": "ACT版本",
+      "ffxivPluginVersion": "解析插件版本",
+      "overlayPluginVersion": "OverlayPlugin版本",
+      "cactbotVersion": "Cactbot版本",
+      "parserLanguage": "解析語言",
+      "displayLanguage": "Cactbot 顯示語言",
+      "gameRegion": "遊戲區域",
+      "defaultAlertOutput": "Raidboss 預設輸出",
+      "userDirectory": "用戶資料夾"
+    },
+    "netLogSection": {
+      "title": "ACT 網路日誌測試（常用部分）",
+      "tip": "如果無法觸發這部分事件，說明你需要更新解析插件。"
+    },
+    "opEventSection": {
+      "title": "OverlayPlugin 事件測試（常用部分）",
+      "tip": "如果無法觸發這部分事件，說明你需要更新 OverlayPlugin 插件。"
+    },
+    "opLogSection": {
+      "title": "OverlayPlugin 日誌測試（常用部分）",
+      "tip": "如果無法觸發這部分事件，說明你需要更新 OverlayPlugin 插件。"
+    },
+    "event": {
+      "ChangePrimaryPlayer": {
+        "title": "目前角色",
+        "instruction": "切換角色以觸發事件"
+      },
+      "ChangeZone": {
+        "title": "目前區域",
+        "instruction": "移動一次區域以觸發事件"
+      },
+      "CombatData": {
+        "title": "戰鬥資訊",
+        "instruction": "進入戰鬥以觸發事件"
+      },
+      "EnmityTargetData": {
+        "title": "目標資訊",
+        "instruction": "選中一個目標以觸發事件"
+      },
+      "PartyChanged": {
+        "title": "隊伍列表",
+        "instruction": "切換職業/組隊以觸發事件"
+      },
+      "onGameExistsEvent": {
+        "title": "遊戲存在",
+        "instruction": "開啟遊戲以觸發事件"
+      },
+      "onGameActiveChangedEvent": {
+        "title": "遊戲活動狀態",
+        "instruction": "操作遊戲以觸發事件"
+      },
+      "onInCombatChangedEvent": {
+        "title": "戰鬥狀態",
+        "instruction": "進入戰鬥以觸發事件"
+      },
+      "onZoneChangedEvent": {
+        "title": "區域變化",
+        "instruction": "移動一次區域以觸發事件"
+      },
+      "onPlayerDied": {
+        "title": "玩家死亡",
+        "instruction": "死一次以觸發事件"
+      },
+      "onPlayerChangedEvent": {
+        "title": "玩家變化",
+        "instruction": "移動角色以觸發事件"
+      }
+    },
+    "logInstruction": {
+      "changeZone": "切換地圖",
+      "startsUsing": "讀條技能",
+      "ability": "使用技能",
+      "networkDoT": "獲得 DoT/Hot 效果",
+      "wasDefeated": "被擊倒",
+      "gainsEffect": "獲得buff",
+      "headMarker": "獲得頭頂點名（分攤/分散/死刑/麻將）",
+      "losesEffect": "失去buff",
+      "instanceTrigger": "打本觸發（副本越新越好）",
+      "tether": "獲得連線效果",
+      "systemLogMessage": "系統日誌資訊",
+      "inCombat": "進入戰鬥",
+      "countdown": "開啟倒數計時"
+    }
+  },
+  "websocket": {
+    "disconnectTitleCloseable": "未連線到 ACT",
+    "disconnectTitleRequired": "未連線到 ACT，無法使用",
+    "ignoreWarningBtn": "無法使用也要看",
+    "ieBrowserTitle": "提示",
+    "ieBrowserWarning": "不支援 IE 瀏覽器，請使用 Chrome、Firefox、Edge 等現代瀏覽器訪問。",
+    "disconnectMsg": "請按照下圖設定<img src='{actWS}' style='width:100%'><ul><li>若 10501 埠被佔用，可以隨便換一個埠再試（需同時修改網頁 url 參數與上圖中的“埠”設定）。</li><ul>"
+  },
+  "zoneMacro": {
+    "newMacro": "新增巨集",
+    "newWaymark": "新增標點",
+    "importPP": "匯入PP",
+    "resetZone": "復原本地圖",
+    "resetAll": "復原全部",
+    "noDataTip": "此區域沒有資料",
+    "badgeUser": "用戶",
+    "badgeNative": "內建",
+    "placeholderMacroTitle": "巨集標題",
+    "placeholderMacroText": "巨集文本",
+    "sendEcho": "默語",
+    "sendParty": "小隊",
+    "buttonDone": "完成",
+    "buttonDelete": "刪除",
+    "tableActive": "啟用",
+    "tableMark": "標記",
+    "tableX": "X（左右）",
+    "tableZ": "Z（前後）",
+    "tableY": "Y（高度）",
+    "doLocal": "本地",
+    "doPublic": "公開"
+  },
+  "zoneSelect": {
+    "dungeons": "四人迷宮",
+    "trials": "討伐殲滅戰",
+    "raids": "大型任務",
+    "chaoticAllianceRaid": "誅滅戰",
+    "ultimateRaids": "絕境戰",
+    "vcDungeonFinder": "多變迷宮",
+    "deepDungeonExtras": "深宮詩想",
+    "deepDungeons": "深層迷宮",
+    "disciplesOfTheLand": "採集/垂釣",
+    "eureka": "優雷卡",
+    "saveTheQueen": "博茲雅",
+    "occultCrescent": "新月島",
+    "trialExtreme": "殲殛戰",
+    "trialUnreal": "幻巧戰",
+    "trialNormal": "殲滅戰",
+    "raidSavage": "零式",
+    "raidNormal": "普通",
+    "uncategorized": "未分類區域"
+  }
+}

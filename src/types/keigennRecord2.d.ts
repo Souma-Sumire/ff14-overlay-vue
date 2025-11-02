@@ -66,4 +66,3 @@ export interface Keigenn {
   isFriendly: boolean
   name: string
 }
-export type Server = 'Chinese' | 'Global'

@@ -1,6 +1,6 @@
 import type { Keigenn } from '@/types/keigennRecord2'
 
-const chinese: (Omit<Keigenn, 'fullIcon'> & { fullIcon?: string })[] = [
+const keigenns: (Omit<Keigenn, 'fullIcon'> & { fullIcon?: string })[] = [
   {
     name: '铁壁',
     id: 1191,
@@ -713,6 +713,4 @@ const chinese: (Omit<Keigenn, 'fullIcon'> & { fullIcon?: string })[] = [
     isFriendly: true,
   },
 ]
-const global: typeof chinese = [...chinese]
-
-export { chinese, global }
+export { keigenns }

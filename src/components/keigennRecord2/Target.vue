@@ -12,7 +12,7 @@ const store = useKeigennRecord2Store()
 const imageError = ref(false)
 
 function getIconSrc(jobIcon: FFIcon, type: number) {
-  const jobName = jobIcon.replace(/([A-Z])/g, ' $1').trim()
+  const jobName = jobIcon.replaceAll(/([A-Z])/g, ' $1').trim()
   return `https://souma.diemoe.net/resources/img/cj${type}/${jobName}.png`
 }
 
@@ -73,10 +73,10 @@ const isLethalIcon = computed(() => isLethal(props.row))
   // transform-style: preserve-3d;
   // 同样的css在act悬浮窗与Chrome浏览器悬浮窗的效果不同，原因未知，似乎是因为用到了一些过于新的css属性
   &.act {
-    transform: translateX(2.5px) rotateZ(-90deg);
+    transform: translateX(2.5px);
   }
   &.browser {
-    transform: rotateZ(-90deg);
+    transform: none;
   }
 }
 

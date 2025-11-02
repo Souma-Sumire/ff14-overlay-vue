@@ -114,12 +114,16 @@ onUnmounted(() => {
       class="test-btn"
       @click="handleTest"
     >
-      测试
+      {{ $t('lbTick.test') }}
     </el-button>
     <div class="lb-container" v-show="display">
-      <p id="percent">LB:{{ (state.ratio * 100).toFixed(2) }}%</p>
+      <p id="percent">
+        {{ $t('lbTick.lb') }}{{ (state.ratio * 100).toFixed(2) }}%
+      </p>
       <p id="bonusTotal">
-        奖励:{{ ((state.bonusTotal / LB_MAX) * 100).toFixed(0) }}%
+        {{ $t('lbTick.bonus') }}:{{
+          ((state.bonusTotal / LB_MAX) * 100).toFixed(0)
+        }}%
       </p>
       <div id="extra">
         <p v-for="item in state.chainList" :key="item.key" class="anime">

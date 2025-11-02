@@ -5,27 +5,26 @@ import { createApp } from 'vue'
 import { createI18n } from 'vue-i18n'
 import VueLazyload from 'vue-lazyload'
 import App from './App.vue'
-import en from './locales/en.json'
-import ja from './locales/ja.json'
-import zhCn from './locales/zhCn.json'
 import router from './router'
 import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import 'virtual:uno.css'
 import { checkReferrer } from './utils/checkReferrer'
+import { getInitialLocale, messages } from './utils/getInitialLocale'
+import type { Lang } from './types/lang'
+
+const initialLocale: Lang = getInitialLocale()
 
 const app = createApp(App)
 const head = createHead()
 const pinia = createPinia()
+
 const i18n = createI18n({
   legacy: false,
-  locale: 'zhCn',
-  fallbackLocale: 'en',
-  messages: {
-    en,
-    zhCn,
-    ja,
-  },
+  locale: initialLocale,
+  fallbackLocale: 'zhCn',
+  messages: messages,
+  warnHtmlMessage: false,
 })
 
 function handleError(error: Error): void {
@@ -52,9 +51,9 @@ window.addEventListener(
     handleError(
       event.reason instanceof Error
         ? event.reason
-        : new Error(String(event.reason)),
+        : new Error(String(event.reason))
     )
-  },
+  }
 )
 
 app.use(router)

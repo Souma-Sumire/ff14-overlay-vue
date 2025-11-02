@@ -8,6 +8,9 @@ import {
   callOverlayHandler,
 } from '../../cactbot/resources/overlay_plugin_api'
 import UserConfig from '../../cactbot/resources/user_config'
+import { useLang } from '@/composables/useLang'
+
+const { t } = useLang()
 
 const { wsConnected } = useWebSocket({ addWsParam: true, allowClose: false })
 
@@ -35,7 +38,7 @@ interface SystemInfo {
 
 const options = UserConfig.getDefaultBaseOptions()
 const userConfig = ref<
-  Options & { CactbotUserDirectory: string, DefaultAlertOutput: string }
+  Options & { CactbotUserDirectory: string; DefaultAlertOutput: string }
 >({
   ParserLanguage: '',
   ShortLocale: '',
@@ -70,51 +73,53 @@ function tts(text: string) {
   })
 }
 
-const events = ref({
-  ChangePrimaryPlayer: {
-    title: '当前角色',
-    instruction: '切换角色以触发事件',
-  },
-  ChangeZone: {
-    title: '当前区域',
-    instruction: '移动一次区域以触发事件',
-  },
-  CombatData: {
-    title: '战斗信息',
-    instruction: '进入战斗以触发事件',
-  },
-  EnmityTargetData: {
-    title: '目标信息',
-    instruction: '选中一个目标以触发事件',
-  },
-  PartyChanged: {
-    title: '队伍列表',
-    instruction: '切换职业/组成小队以触发事件',
-  },
-  onGameExistsEvent: {
-    title: '游戏存在',
-    instruction: '打开游戏以触发事件',
-  },
-  onGameActiveChangedEvent: {
-    title: '游戏活动状态',
-    instruction: '操作游戏以触发事件',
-  },
-  onInCombatChangedEvent: {
-    title: '战斗状态',
-    instruction: '进入战斗以触发事件',
-  },
-  onZoneChangedEvent: {
-    title: '区域变化',
-    instruction: '移动一次区域以触发事件',
-  },
-  onPlayerDied: {
-    title: '玩家死亡',
-    instruction: '死一次以触发事件',
-  },
-  onPlayerChangedEvent: {
-    title: '玩家变化',
-    instruction: '移动角色以触发事件',
-  },
+const events = computed(() => {
+  return {
+    ChangePrimaryPlayer: {
+      title: t('actSelfTest.event.ChangePrimaryPlayer.title'),
+      instruction: t('actSelfTest.event.ChangePrimaryPlayer.instruction'),
+    },
+    ChangeZone: {
+      title: t('actSelfTest.event.ChangeZone.title'),
+      instruction: t('actSelfTest.event.ChangeZone.instruction'),
+    },
+    CombatData: {
+      title: t('actSelfTest.event.CombatData.title'),
+      instruction: t('actSelfTest.event.CombatData.instruction'),
+    },
+    EnmityTargetData: {
+      title: t('actSelfTest.event.EnmityTargetData.title'),
+      instruction: t('actSelfTest.event.EnmityTargetData.instruction'),
+    },
+    PartyChanged: {
+      title: t('actSelfTest.event.PartyChanged.title'),
+      instruction: t('actSelfTest.event.PartyChanged.instruction'),
+    },
+    onGameExistsEvent: {
+      title: t('actSelfTest.event.onGameExistsEvent.title'),
+      instruction: t('actSelfTest.event.onGameExistsEvent.instruction'),
+    },
+    onGameActiveChangedEvent: {
+      title: t('actSelfTest.event.onGameActiveChangedEvent.title'),
+      instruction: t('actSelfTest.event.onGameActiveChangedEvent.instruction'),
+    },
+    onInCombatChangedEvent: {
+      title: t('actSelfTest.event.onInCombatChangedEvent.title'),
+      instruction: t('actSelfTest.event.onInCombatChangedEvent.instruction'),
+    },
+    onZoneChangedEvent: {
+      title: t('actSelfTest.event.onZoneChangedEvent.title'),
+      instruction: t('actSelfTest.event.onZoneChangedEvent.instruction'),
+    },
+    onPlayerDied: {
+      title: t('actSelfTest.event.onPlayerDied.title'),
+      instruction: t('actSelfTest.event.onPlayerDied.instruction'),
+    },
+    onPlayerChangedEvent: {
+      title: t('actSelfTest.event.onPlayerChangedEvent.title'),
+      instruction: t('actSelfTest.event.onPlayerChangedEvent.instruction'),
+    },
+  }
 })
 
 UserConfig.getUserConfigLocation('soumatest', options, () => {
@@ -131,7 +136,6 @@ UserConfig.getUserConfigLocation('soumatest', options, () => {
 
 const eventEventRes: Ref<{ [key: string]: unknown }> = ref({})
 
- 
 function onEvent(ev: any) {
   if (ev.type === 'EnmityTargetData' && !ev.Target) {
     return
@@ -141,33 +145,130 @@ function onEvent(ev: any) {
   eventEventRes.value[ev.type] = ev2
 }
 
-const netRegexes = ref({
-  changeZone: { title: 'Line 01 (0x01): ChangeZone', instruction: '切换地图', regex: NetRegexes.changeZone() },
-  addedCombatant: { title: 'Line 03 (0x03): AddCombatant', instruction: '切换地图', regex: NetRegexes.addedCombatant() },
-  removingCombatant: { title: 'Line 04 (0x04): RemoveCombatant', instruction: '切换地图', regex: NetRegexes.removingCombatant() },
-  startsUsing: { title: 'Line 20 (0x14): NetworkStartsCasting', instruction: '读条技能', regex: NetRegexes.startsUsing() },
-  ability: { title: 'Line 21 (0x15): NetworkAbility', instruction: '使用技能', regex: NetRegexes.ability() },
-  networkDoT: { title: 'Line 24 (0x18): NetworkDoT', instruction: '获得 DoT/Hot 效果', regex: NetRegexes.networkDoT() },
-  wasDefeated: { title: 'Line 25 (0x19): NetworkDeath', instruction: '被击倒', regex: NetRegexes.wasDefeated() },
-  gainsEffect: { title: 'Line 26 (0x1A): NetworkBuff', instruction: '获得buff', regex: NetRegexes.gainsEffect() },
-  headMarker: { title: 'Line 27 (0x1B): NetworkTargetIcon', instruction: '获得头顶点名（分摊/分散/死刑/麻将）', regex: NetRegexes.headMarker() },
-  losesEffect: { title: 'Line 30 (0x1E): NetworkBuffRemove', instruction: '失去buff', regex: NetRegexes.losesEffect() },
-  network6d: { title: 'Line 33 (0x21): Network6D', instruction: '打本触发（本越新越好）', regex: NetRegexes.network6d() },
-  tether: { title: 'Line 35 (0x23): NetworkTether', instruction: '获得连线效果', regex: NetRegexes.tether() },
-  map: { title: 'Line 40 (0x28): Map', instruction: '切换地图', regex: NetRegexes.map() },
-  systemLogMessage: { title: 'Line 41 (0x29): SystemLogMessage', instruction: '系统日志信息', regex: NetRegexes.systemLogMessage() },
+const netRegexes = computed(() => {
+  return {
+    changeZone: {
+      title: 'Line 01 (0x01): ChangeZone',
+      instruction: t('actSelfTest.logInstruction.changeZone'),
+      regex: NetRegexes.changeZone(),
+    },
+    addedCombatant: {
+      title: 'Line 03 (0x03): AddCombatant',
+      instruction: t('actSelfTest.logInstruction.changeZone'),
+      regex: NetRegexes.addedCombatant(),
+    },
+    removingCombatant: {
+      title: 'Line 04 (0x04): RemoveCombatant',
+      instruction: t('actSelfTest.logInstruction.changeZone'),
+      regex: NetRegexes.removingCombatant(),
+    },
+    startsUsing: {
+      title: 'Line 20 (0x14): NetworkStartsCasting',
+      instruction: t('actSelfTest.logInstruction.startsUsing'),
+      regex: NetRegexes.startsUsing(),
+    },
+    ability: {
+      title: 'Line 21 (0x15): NetworkAbility',
+      instruction: t('actSelfTest.logInstruction.ability'),
+      regex: NetRegexes.ability(),
+    },
+    networkDoT: {
+      title: 'Line 24 (0x18): NetworkDoT',
+      instruction: t('actSelfTest.logInstruction.networkDoT'),
+      regex: NetRegexes.networkDoT(),
+    },
+    wasDefeated: {
+      title: 'Line 25 (0x19): NetworkDeath',
+      instruction: t('actSelfTest.logInstruction.wasDefeated'),
+      regex: NetRegexes.wasDefeated(),
+    },
+    gainsEffect: {
+      title: 'Line 26 (0x1A): NetworkBuff',
+      instruction: t('actSelfTest.logInstruction.gainsEffect'),
+      regex: NetRegexes.gainsEffect(),
+    },
+    headMarker: {
+      title: 'Line 27 (0x1B): NetworkTargetIcon',
+      instruction: t('actSelfTest.logInstruction.headMarker'),
+      regex: NetRegexes.headMarker(),
+    },
+    losesEffect: {
+      title: 'Line 30 (0x1E): NetworkBuffRemove',
+      instruction: t('actSelfTest.logInstruction.losesEffect'),
+      regex: NetRegexes.losesEffect(),
+    },
+    network6d: {
+      title: 'Line 33 (0x21): Network6D',
+      instruction: t('actSelfTest.logInstruction.instanceTrigger'),
+      regex: NetRegexes.network6d(),
+    },
+    tether: {
+      title: 'Line 35 (0x23): NetworkTether',
+      instruction: t('actSelfTest.logInstruction.tether'),
+      regex: NetRegexes.tether(),
+    },
+    map: {
+      title: 'Line 40 (0x28): Map',
+      instruction: t('actSelfTest.logInstruction.changeZone'),
+      regex: NetRegexes.map(),
+    },
+    systemLogMessage: {
+      title: 'Line 41 (0x29): SystemLogMessage',
+      instruction: t('actSelfTest.logInstruction.systemLogMessage'),
+      regex: NetRegexes.systemLogMessage(),
+    },
+  }
 })
 
-const overlayPluginLogRegexes = ref({
-  mapEffect: { title: 'Line 257 (0x101): MapEffect', instruction: '打本触发（本越新越好）', regex: NetRegexes.mapEffect() },
-  inCombat: { title: 'Line 260 (0x104): InCombat', instruction: '进入战斗', regex: NetRegexes.inCombat() },
-  combatantMemory: { title: 'Line 261 (0x105): CombatantMemory', instruction: '打本触发（本越新越好）', regex: NetRegexes.combatantMemory() },
-  startsUsingExtra: { title: 'Line 263 (0x107): StartsUsingExtra', instruction: '读条技能', regex: NetRegexes.startsUsingExtra() },
-  abilityExtra: { title: 'Line 264 (0x108): AbilityExtra', instruction: '使用技能', regex: NetRegexes.abilityExtra() },
-  countdown: { title: 'Line 268 (0x10C): Countdown', instruction: '开启倒计时', regex: NetRegexes.countdown() },
-  actorMove: { title: 'Line 270 (0x10E): ActorMove', instruction: '打本触发（本越新越好）', regex: NetRegexes.actorMove() },
-  actorSetPos: { title: 'Line 271 (0x10F): ActorSetPos', instruction: '打本触发（本越新越好）', regex: NetRegexes.actorSetPos() },
-  actorControlExtra: { title: 'Line 273 (0x111): ActorControlExtra', instruction: '打本触发（本越新越好）', regex: NetRegexes.actorControlExtra() },
+// 國際化 overlayPluginLogRegexes 對象
+const overlayPluginLogRegexes = computed(() => {
+  return {
+    mapEffect: {
+      title: 'Line 257 (0x101): MapEffect',
+      instruction: t('actSelfTest.logInstruction.instanceTrigger'),
+      regex: NetRegexes.mapEffect(),
+    },
+    inCombat: {
+      title: 'Line 260 (0x104): InCombat',
+      instruction: t('actSelfTest.logInstruction.inCombat'),
+      regex: NetRegexes.inCombat(),
+    },
+    combatantMemory: {
+      title: 'Line 261 (0x105): CombatantMemory',
+      instruction: t('actSelfTest.logInstruction.instanceTrigger'),
+      regex: NetRegexes.combatantMemory(),
+    },
+    startsUsingExtra: {
+      title: 'Line 263 (0x107): StartsUsingExtra',
+      instruction: t('actSelfTest.logInstruction.startsUsing'),
+      regex: NetRegexes.startsUsingExtra(),
+    },
+    abilityExtra: {
+      title: 'Line 264 (0x108): AbilityExtra',
+      instruction: t('actSelfTest.logInstruction.ability'),
+      regex: NetRegexes.abilityExtra(),
+    },
+    countdown: {
+      title: 'Line 268 (0x10C): Countdown',
+      instruction: t('actSelfTest.logInstruction.countdown'),
+      regex: NetRegexes.countdown(),
+    },
+    actorMove: {
+      title: 'Line 270 (0x10E): ActorMove',
+      instruction: t('actSelfTest.logInstruction.instanceTrigger'),
+      regex: NetRegexes.actorMove(),
+    },
+    actorSetPos: {
+      title: 'Line 271 (0x10F): ActorSetPos',
+      instruction: t('actSelfTest.logInstruction.instanceTrigger'),
+      regex: NetRegexes.actorSetPos(),
+    },
+    actorControlExtra: {
+      title: 'Line 273 (0x111): ActorControlExtra',
+      instruction: t('actSelfTest.logInstruction.instanceTrigger'),
+      regex: NetRegexes.actorControlExtra(),
+    },
+  }
 })
 
 const onLogLine: EventMap['LogLine'] = (ev) => {
@@ -178,9 +279,13 @@ const onLogLine: EventMap['LogLine'] = (ev) => {
     }
   }
   for (const key in overlayPluginLogRegexes.value) {
-    const regex = overlayPluginLogRegexes.value[key as keyof typeof overlayPluginLogRegexes.value].regex
+    const regex =
+      overlayPluginLogRegexes.value[
+        key as keyof typeof overlayPluginLogRegexes.value
+      ].regex
     if (regex.test(ev.rawLine)) {
-      eventEventRes.value[key as keyof typeof overlayPluginLogRegexes.value] = true
+      eventEventRes.value[key as keyof typeof overlayPluginLogRegexes.value] =
+        true
     }
   }
 }
@@ -205,22 +310,34 @@ addOverlayListener('LogLine', onLogLine)
       <div class="header">
         <div>
           <h1 style="color: #409eff; margin: 0">
-            自助测试页
+            {{ t('actSelfTest.title') }}
           </h1>
         </div>
         <div style="text-align: right" flex="~ gap-2">
-          <i class="el-icon-time" /> 系统时间: {{ systemTime || "无数据" }}
-          <el-button type="primary" size="small" @click="tts(`测试TTS${new Date().getTime().toString().slice(-4)}`)">
-            测试TTS
+          <i class="el-icon-time" /> {{ t('actSelfTest.systemTime') }}:
+          {{ systemTime || t('actSelfTest.noData') }}
+          <el-button
+            type="primary"
+            size="small"
+            @click="
+              tts(
+                t('actSelfTest.ttsText', {
+                  time: new Date().getTime().toString().slice(-4),
+                })
+              )
+            "
+          >
+            {{ t('actSelfTest.testTtsBtn') }}
           </el-button>
           <CommonThemeToggle storage-key="test-theme" />
+          <CommonLanguageSwitcher />
         </div>
       </div>
 
-      <!-- 用户配置 -->
       <div class="section">
         <div class="section-title">
-          <i class="el-icon-setting" /> 用户配置信息
+          <i class="el-icon-setting" />
+          {{ t('actSelfTest.configSection.title') }}
         </div>
         <el-row :gutter="12">
           <el-col :span="24">
@@ -228,22 +345,33 @@ addOverlayListener('LogLine', onLogLine)
               <div class="info-table">
                 <div
                   v-for="(value, label) in {
-                    'ACT版本': userConfig.SystemInfo.actVersion,
-                    '解析插件版本': userConfig.SystemInfo.ffxivPluginVersion,
-                    'OverlayPlugin版本': userConfig.SystemInfo.overlayPluginVersion,
-                    'Cactbot版本': userConfig.SystemInfo.cactbotVersion,
-                    '解析语言': userConfig.ParserLanguage,
-                    'Cactbot 显示语言': userConfig.DisplayLanguage,
-                    '游戏区域': userConfig.SystemInfo.gameRegion,
-                    'Raidboss 默认输出': userConfig.DefaultAlertOutput,
-                    '用户文件夹': userConfig.CactbotUserDirectory,
-                  }" :key="label" class="info-row"
+                    [t('actSelfTest.configSection.actVersion')]:
+                      userConfig.SystemInfo.actVersion,
+                    [t('actSelfTest.configSection.ffxivPluginVersion')]:
+                      userConfig.SystemInfo.ffxivPluginVersion,
+                    [t('actSelfTest.configSection.overlayPluginVersion')]:
+                      userConfig.SystemInfo.overlayPluginVersion,
+                    [t('actSelfTest.configSection.cactbotVersion')]:
+                      userConfig.SystemInfo.cactbotVersion,
+                    [t('actSelfTest.configSection.parserLanguage')]:
+                      userConfig.ParserLanguage,
+                    [t('actSelfTest.configSection.displayLanguage')]:
+                      userConfig.DisplayLanguage,
+                    [t('actSelfTest.configSection.gameRegion')]:
+                      userConfig.SystemInfo.gameRegion,
+                    [t('actSelfTest.configSection.defaultAlertOutput')]:
+                      userConfig.DefaultAlertOutput,
+                    [t('actSelfTest.configSection.userDirectory')]:
+                      userConfig.CactbotUserDirectory,
+                  }"
+                  :key="label"
+                  class="info-row"
                 >
                   <div class="info-key">
                     {{ label }}
                   </div>
                   <div class="info-val" :class="{ 'no-data': !value }">
-                    {{ value || '无数据' }}
+                    {{ value || t('actSelfTest.noData') }}
                   </div>
                 </div>
               </div>
@@ -252,75 +380,128 @@ addOverlayListener('LogLine', onLogLine)
         </el-row>
       </div>
 
-      <!-- ACT 网络日志测试 -->
       <div class="section">
         <div class="section-title">
-          <i class="el-icon-document" /> ACT 网络日志测试（常用部分）
+          <i class="el-icon-document" />
+          {{ t('actSelfTest.netLogSection.title') }}
         </div>
         <div class="header-tip">
-          如果无法触发这部分事件，说明你需要更新解析插件。
+          {{ t('actSelfTest.netLogSection.tip') }}
         </div>
         <el-row :gutter="12">
-          <el-col v-for="(event, key) in netRegexes" :key="key" :xs="24" :sm="12" :md="8" :lg="6">
-            <el-card class="event-card" :class="eventEventRes[key] ? 'success' : 'danger'">
+          <el-col
+            v-for="(event, key) in netRegexes"
+            :key="key"
+            :xs="24"
+            :sm="12"
+            :md="8"
+            :lg="6"
+          >
+            <el-card
+              class="event-card"
+              :class="eventEventRes[key] ? 'success' : 'danger'"
+            >
               <div class="card-title">
-                {{ netRegexes[key].title }}
-                <el-tag :type="eventEventRes[key] ? 'success' : 'danger'" size="small">
-                  {{ eventEventRes[key] ? '成功' : '未触发' }}
+                {{ event.title }}
+                <el-tag
+                  :type="eventEventRes[key] ? 'success' : 'danger'"
+                  size="small"
+                >
+                  {{
+                    eventEventRes[key]
+                      ? t('actSelfTest.success')
+                      : t('actSelfTest.untriggered')
+                  }}
                 </el-tag>
               </div>
               <div class="event-content">
-                {{ eventEventRes[key] ? '' : '请尝试：' }}{{ event.instruction }}
+                {{ eventEventRes[key] ? '' : t('actSelfTest.try') }}
+                {{ event.instruction }}
               </div>
             </el-card>
           </el-col>
         </el-row>
       </div>
 
-      <!-- OverlayPlugin事件 -->
       <div class="section">
         <div class="section-title">
-          <i class="el-icon-s-data" /> OverlayPlugin 事件测试（常用部分）
+          <i class="el-icon-s-data" />
+          {{ t('actSelfTest.opEventSection.title') }}
         </div>
         <div class="header-tip">
-          如果无法触发这部分事件，说明你需要更新 OverlayPlugin 插件。
+          {{ t('actSelfTest.opEventSection.tip') }}
         </div>
         <el-row :gutter="12">
-          <el-col v-for="(event, key) in events" :key="key" :xs="24" :sm="12" :md="8" :lg="6">
-            <el-card class="event-card" :class="eventEventRes[key] ? 'success' : 'danger'">
+          <el-col
+            v-for="(event, key) in events"
+            :key="key"
+            :xs="24"
+            :sm="12"
+            :md="8"
+            :lg="6"
+          >
+            <el-card
+              class="event-card"
+              :class="eventEventRes[key] ? 'success' : 'danger'"
+            >
               <div class="card-title">
                 {{ event.title }}（{{ key }}）
-                <el-tag :type="eventEventRes[key] ? 'success' : 'danger'" size="small">
-                  {{ eventEventRes[key] ? '成功' : '未触发' }}
+                <el-tag
+                  :type="eventEventRes[key] ? 'success' : 'danger'"
+                  size="small"
+                >
+                  {{
+                    eventEventRes[key]
+                      ? t('actSelfTest.success')
+                      : t('actSelfTest.untriggered')
+                  }}
                 </el-tag>
               </div>
               <div class="event-content">
-                {{ eventEventRes[key] ? '' : '请尝试：' }}{{ event.instruction }}
+                {{ eventEventRes[key] ? '' : t('actSelfTest.try') }}
+                {{ event.instruction }}
               </div>
             </el-card>
           </el-col>
         </el-row>
       </div>
 
-      <!-- OverlayPlugin 日志测试 -->
       <div class="section">
         <div class="section-title">
-          <i class="el-icon-cpu" /> OverlayPlugin 日志测试（常用部分）
+          <i class="el-icon-cpu" /> {{ t('actSelfTest.opLogSection.title') }}
         </div>
         <div class="header-tip">
-          如果无法触发这部分事件，说明你需要更新 OverlayPlugin 插件。
+          {{ t('actSelfTest.opLogSection.tip') }}
         </div>
         <el-row :gutter="12">
-          <el-col v-for="(event, key) in overlayPluginLogRegexes" :key="key" :xs="24" :sm="12" :md="8" :lg="6">
-            <el-card class="event-card" :class="eventEventRes[key] ? 'success' : 'danger'">
+          <el-col
+            v-for="(event, key) in overlayPluginLogRegexes"
+            :key="key"
+            :xs="24"
+            :sm="12"
+            :md="8"
+            :lg="6"
+          >
+            <el-card
+              class="event-card"
+              :class="eventEventRes[key] ? 'success' : 'danger'"
+            >
               <div class="card-title">
                 {{ overlayPluginLogRegexes[key].title }}
-                <el-tag :type="eventEventRes[key] ? 'success' : 'danger'" size="small">
-                  {{ eventEventRes[key] ? '成功' : '未触发' }}
+                <el-tag
+                  :type="eventEventRes[key] ? 'success' : 'danger'"
+                  size="small"
+                >
+                  {{
+                    eventEventRes[key]
+                      ? t('actSelfTest.success')
+                      : t('actSelfTest.untriggered')
+                  }}
                 </el-tag>
               </div>
               <div class="event-content">
-                {{ eventEventRes[key] ? '' : '请尝试：' }}{{ event.instruction }}
+                {{ eventEventRes[key] ? '' : t('actSelfTest.try') }}
+                {{ event.instruction }}
               </div>
             </el-card>
           </el-col>
@@ -328,7 +509,7 @@ addOverlayListener('LogLine', onLogLine)
       </div>
     </div>
     <div v-else>
-      <p>等待 WebSocket 连接...</p>
+      <p>{{ t('actSelfTest.wsWaiting') }}</p>
     </div>
   </div>
 </template>

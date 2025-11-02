@@ -6,11 +6,13 @@ import { ElMessage, ElOption, ElSelect } from 'element-plus'
 import { computed } from 'vue'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 import { copyToClipboard } from '@/utils/clipboard'
-import { translationDamageType, translationFlags } from '@/utils/flags'
 import Util from '@/utils/util'
 import Amount from './Amount.vue'
 import StatusShow from './StatusShow.vue'
 import Target from './Target.vue'
+import { useLang } from '@/composables/useLang'
+
+const { t } = useLang()
 
 const props = defineProps<{
   rows: RowVO[]
@@ -44,7 +46,7 @@ onClickOutside(contextMenu, () => {
   contextMenuVisible.value = false
 })
 
-const ALL_STR = '[取消筛选]'
+const ALL_STR = t('keigennRecord.cancelFilter')
 
 const actionOptions = computed(() => {
   const actions = Array.from(
@@ -133,16 +135,17 @@ function getReductionColor(reduction: number) {
 const columns = computed<Column[]>(() => [
   {
     key: 'time',
-    title: '时间',
+    title: t('keigennRecord.time'),
     dataKey: 'time',
     width: 40,
     align: 'center' as const,
     class: 'col-time',
-    headerCellRenderer: () => h('div', { class: 'header-time' }, '时间'),
+    headerCellRenderer: () =>
+      h('div', { class: 'header-time' }, t('keigennRecord.time')),
   },
   {
     key: 'action',
-    title: '技能',
+    title: t('keigennRecord.action'),
     dataKey: props.actionKey as string,
     width: 64,
     align: 'center' as const,
@@ -154,7 +157,7 @@ const columns = computed<Column[]>(() => [
           {
             size: 'small',
             modelValue: actionFilter.value,
-            placeholder: '技能',
+            placeholder: t('keigennRecord.action'),
             clearable: false,
             style: `width:4.5em`,
             teleported: false,
@@ -171,7 +174,7 @@ const columns = computed<Column[]>(() => [
   },
   {
     key: 'target',
-    title: '职业',
+    title: t('keigennRecord.target'),
     dataKey: 'target',
     width: 34,
     align: 'center' as const,
@@ -183,7 +186,7 @@ const columns = computed<Column[]>(() => [
           {
             size: 'small',
             modelValue: targetFilter.value,
-            placeholder: '职业',
+            placeholder: t('keigennRecord.target'),
             clearable: false,
             style: `width:4.7em;text-overflow:clip;white-space:nowrap`,
             class: 'col-target-select',
@@ -207,7 +210,7 @@ const columns = computed<Column[]>(() => [
   },
   {
     key: 'amount',
-    title: '伤害',
+    title: t('keigennRecord.amount'),
     dataKey: 'amount',
     width: 52,
     align: 'right' as const,
@@ -217,12 +220,13 @@ const columns = computed<Column[]>(() => [
   },
   {
     key: 'reduction',
-    title: '减伤',
+    title: t('keigennRecord.reduction'),
     dataKey: 'reduction',
     width: 35,
     align: 'right' as const,
     class: 'col-reduction',
-    headerCellRenderer: () => h('div', { class: 'header-reduction' }, '减伤'),
+    headerCellRenderer: () =>
+      h('div', { class: 'header-reduction' }, t('keigennRecord.reduction')),
     cellRenderer: ({ rowData }: { rowData: RowVO }) =>
       h(
         'span',
@@ -237,7 +241,7 @@ const columns = computed<Column[]>(() => [
   },
   {
     key: 'keigenns',
-    title: '状态',
+    title: t('keigennRecord.keigenns'),
     dataKey: 'keigenns',
     width: 100,
     align: 'left' as const,
@@ -265,24 +269,30 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
       shield,
       reduction,
     } = rowData
-    const sp = effect === 'damage done' ? '' : `,${translationFlags(effect)}`
-    const result = `${time} ${job} ${actionCN} ${amount.toLocaleString()}(${translationDamageType(
-      type
-    )}) 减伤(${(reduction * 100).toFixed(0)}%):${
+    const sp =
+      effect === 'damage done' ? '' : `,${t(`keigennRecord.${effect}`)}`
+    const result = `${time} ${job} ${actionCN} ${amount.toLocaleString()}(${t(`keigennRecord.${type}`)}) ${t(
+      'keigennRecord.reduction'
+    )}(${(reduction * 100).toFixed(0)}%):${
       keigenns.length === 0 && sp === ''
-        ? '无'
+        ? t('keigennRecord.none')
         : keigenns
             .map((k) => (userOptions.statusCN ? k.name : k.effect))
             .join(',') + sp
-    } HP:${currentHp}/${maxHp}(${Math.round(
+    } ${t('keigennRecord.hp')}}:${currentHp}/${maxHp}(${Math.round(
       (currentHp / maxHp) * 100
-    )}%)+盾:${Math.round((maxHp * +shield) / 100)}(${shield}%)`
+    )}%)+${t('keigennRecord.shield')}:${Math.round(
+      (maxHp * +shield) / 100
+    )}(${shield}%)`
     copyToClipboard(result)
       .then(() => {
         msgHdl?.close()
-        msgHdl = ElMessage.success({ message: '复制成功', duration: 800 })
+        msgHdl = ElMessage.success({
+          message: t('keigennRecord.copySuccess'),
+          duration: 800,
+        })
       })
-      .catch(() => ElMessage.error('复制失败'))
+      .catch(() => ElMessage.error(t('keigennRecord.copyFailed')))
   },
   onContextmenu: ({ rowData, event }: { rowData: RowVO; event: Event }) => {
     const mouseEvent = event as MouseEvent
@@ -320,15 +330,28 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
           <li @click="filterByAction">
             {{
               actionFilter === (contextMenuRow?.[actionKey] ?? '')
-                ? `取消筛选 [${contextMenuRow?.[actionKey] ?? '此技能'}]`
-                : `只看 [${contextMenuRow?.[actionKey] ?? '此技能'}]`
+                ? t('keigennRecord.filter.action_cancel', {
+                    actionName:
+                      contextMenuRow?.[actionKey] ??
+                      t('keigennRecord.this_skill'),
+                  })
+                : t('keigennRecord.filter.action_only', {
+                    actionName:
+                      contextMenuRow?.[actionKey] ??
+                      t('keigennRecord.this_skill'),
+                  })
             }}
           </li>
+
           <li @click="filterByTarget">
             {{
               targetFilter === contextMenuRow?.target
-                ? `取消筛选 [${contextMenuRow?.job ?? '此职业'}]`
-                : `只看 [${contextMenuRow?.job ?? '此职业'}]`
+                ? t('keigennRecord.filter.target_cancel', {
+                    jobName: contextMenuRow?.job ?? t('keigennRecord.this_job'),
+                  })
+                : t('keigennRecord.filter.target_only', {
+                    jobName: contextMenuRow?.job ?? t('keigennRecord.this_job'),
+                  })
             }}
           </li>
         </ul>

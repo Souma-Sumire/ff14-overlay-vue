@@ -1,20 +1,11 @@
-<template>
-  <el-cascader
-    :placeholder="props.placeholder"
-    v-model="localSelectZone"
-    :options="groupedZoneOptions"
-    :show-all-levels="true"
-    :props="{ emitPath: false }"
-    :style="{ width: props.width }"
-    :size="props.size"
-    filterable
-    :clearable="props.clearable"
-  />
-</template>
-
 <script setup lang="ts">
-import { groupedZoneOptions } from '@/resources/contents'
+import { useLang } from '@/composables/useLang'
+import { useZoneOptions } from '@/resources/contents'
 import type { PropType } from 'vue'
+
+const { t } = useLang()
+
+const { groupedZoneOptions } = useZoneOptions(t)
 
 const props = defineProps({
   selectZone: {
@@ -50,3 +41,17 @@ watch(
   (val) => (localSelectZone.value = val)
 )
 </script>
+
+<template>
+  <el-cascader
+    :placeholder="props.placeholder"
+    v-model="localSelectZone"
+    :options="groupedZoneOptions"
+    :show-all-levels="true"
+    :props="{ emitPath: false }"
+    :style="{ width: props.width }"
+    :size="props.size"
+    filterable
+    :clearable="props.clearable"
+  />
+</template>

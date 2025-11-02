@@ -2,6 +2,7 @@ import { ElMessageBox } from 'element-plus'
 import { onMounted, ref, watch } from 'vue'
 import actWS from '@/assets/actWS.webp'
 import { callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
+import { useI18n } from 'vue-i18n'
 
 function isIE() {
   const userAgent = window.navigator.userAgent
@@ -41,6 +42,7 @@ export function useWebSocket(
     addWsParam: boolean
   } = { allowClose: false, addWsParam: true }
 ) {
+  const { t } = useI18n()
   const wsConnected = ref(undefined as boolean | undefined)
   const userIgnoredWarning = ref(false)
   const useType = ref('overlay' as 'overlay' | 'websocket')
@@ -79,31 +81,34 @@ export function useWebSocket(
   function handleDisconnection() {
     if (!userIgnoredWarning.value) {
       ElMessageBox.close()
-      ElMessageBox.alert(
-        `请按照下图设置<img src='${actWS}' style='width:100%'><ul><li>若使用呆萌整合 ACT，需要启动过一次 FF14 游戏本体，OverlayPlugin悬浮窗插件才能成功加载（表现为可以正常查看悬浮窗的列表而非显示一片空白仅有下半控制台）。加载完成后可以关闭游戏。（有意见请找呆萌）</li><li>若 10501 端口被占用，可以随便换一个端口再试（需同时修改网页 url 参数与上图中的“端口”设置）。</li><ul>`,
-        config.allowClose ? '未连接到 ACT' : '未连接到 ACT，无法使用',
-        {
-          dangerouslyUseHTMLString: true,
-          closeOnClickModal: false,
-          showClose: false,
-          closeOnPressEscape: false,
-          closeOnHashChange: false,
-          showCancelButton: config.allowClose,
-          showConfirmButton: false,
-          cancelButtonText: '用不了也要看',
-          buttonSize: 'small',
-        }
-      ).catch(() => {
+
+      const message = t('websocket.disconnectMsg', { actWS: actWS })
+      const title = config.allowClose
+        ? t('websocket.disconnectTitleCloseable')
+        : t('websocket.disconnectTitleRequired')
+
+      ElMessageBox.alert(message, title, {
+        dangerouslyUseHTMLString: true,
+        closeOnClickModal: false,
+        showClose: false,
+        closeOnPressEscape: false,
+        closeOnHashChange: false,
+        showCancelButton: config.allowClose,
+        showConfirmButton: false,
+        cancelButtonText: t('websocket.ignoreWarningBtn'),
+        buttonSize: 'small',
+      }).catch(() => {
         userIgnoredWarning.value = true
         if (timer) clearInterval(timer)
       })
     }
   }
+
   onMounted(() => {
     if (isIE()) {
       ElMessageBox.alert(
-        '不支持 IE 浏览器，请使用 Chrome、Firefox、Edge 等现代浏览器访问。',
-        '提示',
+        t('websocket.ieBrowserWarning'),
+        t('websocket.ieBrowserTitle'),
         {
           type: 'error',
           showConfirmButton: false,

@@ -38,14 +38,18 @@ const isLethalHit = isLethal(props.row)
       </span>
     </template>
     <ul class="row-info">
-      <li>伤害来源: {{ source }}</li>
-      <li>玩家护盾: {{ shield }}%</li>
-      <li>玩家血量: {{ hpPercent }}%</li>
+      <li>{{ $t('keigennRecord.source') }}: {{ source }}</li>
+      <li>{{ $t('keigennRecord.playerShield') }}: {{ shield }}%</li>
+      <li>{{ $t('keigennRecord.playerHp') }}: {{ hpPercent }}%</li>
+
       <template v-if="reduction < 1 && type !== 'dot'">
         <el-divider />
-        <li>减伤率: {{ (reduction * 100).toFixed(3) }}%</li>
         <li>
-          倒推裸吃伤害:
+          {{ $t('keigennRecord.reductionRate') }}:
+          {{ (reduction * 100).toFixed(3) }}%
+        </li>
+        <li>
+          {{ $t('keigennRecord.originalDamage') }}:
           <span :class="damageTypeClass">{{ originalDamageDisplay }}</span>
         </li>
       </template>

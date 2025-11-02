@@ -4,7 +4,6 @@ import type { RequestBatchRequest } from 'obs-websocket-js'
 import type { Reactive } from 'vue'
 import type { ContentUsedType } from '@/composables/useZone'
 import OBSWebSocket from 'obs-websocket-js'
-import { useI18n } from 'vue-i18n'
 import { useDev } from '@/composables/useDev'
 import { CONTENT_TYPES, useZone } from '@/composables/useZone'
 import logDefinitions from '../../cactbot/resources/netlog_defs'
@@ -14,8 +13,10 @@ import {
   removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
 import { ElMessage } from 'element-plus'
+import { useLang } from '@/composables/useLang'
 
-const { t } = useI18n()
+const { t } = useLang()
+
 interface Settings {
   type: ContentUsedType
   enter: boolean
@@ -203,7 +204,7 @@ class Obs {
     if (!userConfig.value.host) {
       ElMessage({
         type: 'error',
-        message: t('host required'),
+        message: t('obs2.host required'),
       })
       return
     }
@@ -318,7 +319,7 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
     const regex = REGEXES[regexName as keyof typeof REGEXES]
     const match = regex.exec(line)
     if (match) {
-      const splitLine = line.split('|')
+      const splitLine = line.split('obs2.|')
       switch (regexName) {
         case 'inCombat': {
           const inACTCombat =
@@ -448,7 +449,7 @@ onUnmounted(() => {
 <template>
   <CommonActWrapper>
     <el-alert
-      :title="t('size warning')"
+      :title="t('obs2.size warning')"
       type="warning"
       center
       show-icon
@@ -457,7 +458,7 @@ onUnmounted(() => {
     />
     <el-card class="obs-container">
       <el-header>
-        <h1>{{ t('OBS Auto Record V2') }}</h1>
+        <h1>{{ t('obs2.OBS Auto Record V2') }}</h1>
         <div class="button-container">
           <CommonThemeToggle storage-key="obs-2-theme" />
           <CommonLanguageSwitcher />
@@ -469,20 +470,20 @@ onUnmounted(() => {
         <el-card v-if="!obs.status.connected" class="connection-card">
           <template #header>
             <div class="card-header">
-              <span>{{ t('Connect to OBS') }}</span>
+              <span>{{ t('obs2.Connect to OBS') }}</span>
             </div>
           </template>
           <el-form label-position="top" class="connection-form">
-            <el-form-item :label="t('Port')">
+            <el-form-item :label="t('obs2.Port')">
               <el-input
                 v-model="userConfig.host"
-                :placeholder="t('portPlaceholder')"
+                :placeholder="t('obs2.portPlaceholder')"
               />
             </el-form-item>
-            <el-form-item :label="t('Password')">
+            <el-form-item :label="t('obs2.Password')">
               <el-input
                 v-model="userConfig.password"
-                :placeholder="t('passwordPlaceholder')"
+                :placeholder="t('obs2.passwordPlaceholder')"
                 type="password"
               />
             </el-form-item>
@@ -494,29 +495,33 @@ onUnmounted(() => {
                 :disabled="obs.status.connecting || !userConfig.host"
                 @click="obs.connect()"
               >
-                {{ obs.status.connecting ? t('Connecting') : t('Connect') }}
+                {{
+                  obs.status.connecting
+                    ? t('obs2.Connecting')
+                    : t('obs2.Connect')
+                }}
               </el-button>
             </el-form-item>
           </el-form>
-          <el-divider>{{ t('Instructions') }}</el-divider>
+          <el-divider>{{ t('obs2.Instructions') }}</el-divider>
           <el-alert
             class="instruction-alert"
             type="info"
-            :description="t('obsTutorial')"
+            :description="t('obs2.obsTutorial')"
             :closable="false"
             show-icon
           />
           <el-alert
             class="instruction-alert"
             type="info"
-            :description="t('inputTutorial')"
+            :description="t('obs2.inputTutorial')"
             :closable="false"
             show-icon
           />
           <el-alert
             class="instruction-alert"
             type="info"
-            :description="t('firewallTutorial')"
+            :description="t('obs2.firewallTutorial')"
             :closable="false"
             show-icon
           />
@@ -527,31 +532,31 @@ onUnmounted(() => {
           <el-alert
             class="instruction-alert"
             type="info"
-            :description="t('hideTutorial')"
+            :description="t('obs2.hideTutorial')"
             :closable="false"
             show-icon
           />
           <el-card v-if="dev" class="status-card">
             <template #header>
               <div class="card-header">
-                <span>{{ t('Connection Status') }}</span>
+                <span>{{ t('obs2.Connection Status') }}</span>
                 <el-button
                   type="danger"
                   size="small"
                   class="disconnect-button"
                   @click="obs.disconnect()"
                 >
-                  {{ t('Disconnect') }}
+                  {{ t('obs2.Disconnect') }}
                 </el-button>
               </div>
             </template>
             <div class="status-info">
               <el-descriptions direction="vertical" :column="1" border>
-                <el-descriptions-item :label="t('Recording')">
-                  {{ obs.status.recording ? t('Yes') : t('No') }}
+                <el-descriptions-item :label="t('obs2.Recording')">
+                  {{ obs.status.recording ? t('obs2.Yes') : t('obs2.No') }}
                 </el-descriptions-item>
-                <el-descriptions-item :label="t('Output Path')">
-                  {{ obs.status.outputPath || t('None') }}
+                <el-descriptions-item :label="t('obs2.Output Path')">
+                  {{ obs.status.outputPath || t('obs2.None') }}
                 </el-descriptions-item>
               </el-descriptions>
             </div>
@@ -561,58 +566,58 @@ onUnmounted(() => {
                 type="primary"
                 @click="obs.startRecord()"
               >
-                {{ t('Start Record') }}
+                {{ t('obs2.Start Record') }}
               </el-button>
               <el-button
                 :disabled="!obs.status.connected || !obs.status.recording"
                 type="danger"
                 @click="obs.stopRecord()"
               >
-                {{ t('Stop Record') }}
+                {{ t('obs2.Stop Record') }}
               </el-button>
               <el-button
                 :disabled="!obs.status.connected || !obs.status.recording"
                 type="warning"
                 @click="obs.splitRecord()"
               >
-                {{ t('Split Record') }}
+                {{ t('obs2.Split Record') }}
               </el-button>
               <el-button
                 type="primary"
                 @click="obs.setProfileParameter('stop')"
               >
-                {{ t('Set Recording Name') }}
+                {{ t('obs2.Set Recording Name') }}
               </el-button>
             </div>
           </el-card>
           <el-card class="profile-card">
             <template #header>
               <div class="card-header">
-                <span>{{ t('Recording Profile') }}</span>
+                <span>{{ t('obs2.Recording Profile') }}</span>
               </div>
             </template>
             <div class="profile-info">
               <el-form label-position="top" class="content-form">
-                <el-form-item :label="t('Record Default Path')">
+                <el-form-item :label="t('obs2.Record Default Path')">
                   <el-input
                     v-model="userConfig.path"
-                    :placeholder="t('recordPathPlaceholder')"
+                    :placeholder="t('obs2.recordPathPlaceholder')"
                   />
                   <el-alert
-                    :description="t('filePathExplanation')"
+                    :description="t('obs2.filePathExplanation')"
                     type="info"
                     show-icon
                     :closable="false"
                   />
                 </el-form-item>
 
-                <el-form-item :label="t('Record File Name')">
+                <el-form-item :label="t('obs2.Record File Name')">
                   <el-input
                     v-model="userConfig.fileName"
-                    :placeholder="t('recordFileNamePlaceholder')"
+                    :placeholder="t('obs2.recordFileNamePlaceholder')"
                   />
                   <el-alert
-                    :description="t('fileNameExplanation')"
+                    :description="t('obs2.fileNameExplanation')"
                     type="info"
                     show-icon
                     :closable="false"
@@ -621,7 +626,7 @@ onUnmounted(() => {
 
                 <el-form-item>
                   <div class="append-content-toggle">
-                    <span>{{ t('Append Content Name') }}</span>
+                    <span>{{ t('obs2.Append Content Name') }}</span>
                     <el-switch v-model="userConfig.appendContentName" />
                   </div>
                 </el-form-item>
@@ -631,14 +636,14 @@ onUnmounted(() => {
           <el-alert
             class="instruction-alert"
             type="info"
-            :description="t('IMETutorial')"
+            :description="t('obs2.IMETutorial')"
             :closable="false"
             show-icon
           />
           <el-card class="table-card">
             <template #header>
               <div class="card-header">
-                <span>{{ t('User Content Settings') }}</span>
+                <span>{{ t('obs2.User Content Settings') }}</span>
               </div>
             </template>
             <el-table
@@ -649,22 +654,22 @@ onUnmounted(() => {
             >
               <el-table-column
                 prop="type"
-                :label="t('Type')"
+                :label="t('obs2.Type')"
                 width="110"
                 fixed
                 align="center"
               >
                 <template #default="scope">
                   <span class="current-type" v-if="zoneType === scope.row.type"
-                    >{{ t('Current') }}<br
+                    >{{ t('obs2.Current') }}<br
                   /></span>
 
                   <span>{{ t(scope.row.type) }}</span>
                 </template>
               </el-table-column>
-              <el-table-column :label="t('Start When')" align="center">
+              <el-table-column :label="t('obs2.Start When')" align="center">
                 <el-table-column
-                  :label="t('When Party')"
+                  :label="t('obs2.When Party')"
                   align="center"
                   width="95"
                 >
@@ -681,7 +686,7 @@ onUnmounted(() => {
                 </el-table-column>
                 <el-table-column
                   prop="enter"
-                  :label="t('Enter Zone')"
+                  :label="t('obs2.Enter Zone')"
                   align="center"
                   width="55"
                 >
@@ -691,7 +696,7 @@ onUnmounted(() => {
                 </el-table-column>
                 <el-table-column
                   prop="countdown"
-                  :label="t('CountDown')"
+                  :label="t('obs2.CountDown')"
                   align="center"
                   width="55"
                 >
@@ -701,7 +706,7 @@ onUnmounted(() => {
                 </el-table-column>
                 <el-table-column
                   prop="combatStart"
-                  :label="t('CombatStart')"
+                  :label="t('obs2.CombatStart')"
                   align="center"
                   width="55"
                 >
@@ -710,10 +715,10 @@ onUnmounted(() => {
                   </template>
                 </el-table-column>
               </el-table-column>
-              <el-table-column :label="t('End When')" align="center">
+              <el-table-column :label="t('obs2.End When')" align="center">
                 <el-table-column
                   prop="combatEnd"
-                  :label="t('CombatEnd')"
+                  :label="t('obs2.CombatEnd')"
                   align="center"
                   width="55"
                 >
@@ -723,7 +728,7 @@ onUnmounted(() => {
                 </el-table-column>
                 <el-table-column
                   prop="wipe"
-                  :label="t('Wipe')"
+                  :label="t('obs2.Wipe')"
                   align="center"
                   width="55"
                 >
@@ -733,7 +738,7 @@ onUnmounted(() => {
                 </el-table-column>
                 <el-table-column
                   prop="countdown"
-                  :label="t('CountDownCancel')"
+                  :label="t('obs2.CountDownCancel')"
                   align="center"
                   width="55"
                 >
@@ -746,7 +751,7 @@ onUnmounted(() => {
                 </el-table-column>
               </el-table-column>
               <el-table-column
-                :label="t('Custom Path')"
+                :label="t('obs2.Custom Path')"
                 align="left"
                 min-width="200"
               >
@@ -762,7 +767,7 @@ onUnmounted(() => {
           <el-alert
             class="instruction-alert"
             type="info"
-            :description="t('hideTutorial')"
+            :description="t('obs2.hideTutorial')"
             :closable="false"
             show-icon
           />

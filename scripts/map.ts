@@ -24,7 +24,7 @@ interface MapResult {
 function readFile(
   fileName: string,
   filePath: string,
-  fileValues: FileValues,
+  fileValues: FileValues
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     fs.createReadStream(filePath)
@@ -54,11 +54,10 @@ const allFiles = [
   { name: 'PlaceName.csv', path: `${csvPaths.ja}PlaceName.csv` },
   { name: 'PlaceName_en.csv', path: `${csvPaths.en}PlaceName.csv` },
   { name: 'PlaceName_cn.csv', path: `${csvPaths.cn}PlaceName.csv` },
-  { name: 'PlaceName_souma.csv', path: `${csvPaths.souma}PlaceName.csv` },
 ]
 
 await Promise.all(
-  allFiles.map((file) => readFile(file.name, file.path, fileValues)),
+  allFiles.map((file) => readFile(file.name, file.path, fileValues))
 )
 
 const res: MapResult = {}
@@ -89,9 +88,8 @@ territoryTypes.forEach((row) => {
   const ja = getPlaceName('PlaceName.csv')
   const en = getPlaceName('PlaceName_en.csv')
   const cn = getPlaceName('PlaceName_cn.csv')
-  const souma = getPlaceName('PlaceName_souma.csv')
 
-  res[row[0]!] = { id, name: { cn, en, ja, souma } }
+  res[row[0]!] = { id, name: { cn, en, ja } }
 })
 
 const outputPath = 'src/resources/map.json'

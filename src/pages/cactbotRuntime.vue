@@ -70,17 +70,17 @@ function sortParty() {
     .slice()
     .sort(
       (a, b) =>
-        storePartySort.arr.indexOf(Util.baseJobEnumConverted(a.job))
-        - storePartySort.arr.indexOf(Util.baseJobEnumConverted(b.job)),
+        storePartySort.arr.indexOf(Util.baseJobEnumConverted(a.job)) -
+        storePartySort.arr.indexOf(Util.baseJobEnumConverted(b.job))
     )
-  state.partySorted.tank = res.filter(v =>
-    Util.isTankJob(Util.jobEnumToJob(v.job)),
+  state.partySorted.tank = res.filter((v) =>
+    Util.isTankJob(Util.jobEnumToJob(v.job))
   )
-  state.partySorted.healer = res.filter(v =>
-    Util.isHealerJob(Util.jobEnumToJob(v.job)),
+  state.partySorted.healer = res.filter((v) =>
+    Util.isHealerJob(Util.jobEnumToJob(v.job))
   )
-  state.partySorted.dps = res.filter(v =>
-    Util.isDpsJob(Util.jobEnumToJob(v.job)),
+  state.partySorted.dps = res.filter((v) =>
+    Util.isDpsJob(Util.jobEnumToJob(v.job))
   )
   broadcast()
 }
@@ -107,9 +107,8 @@ const eventHandlers: {
     mouseEnter.value = false
   },
   partyChanged: (e) => {
-    if (dev.value && e.party.length === 0)
-      return
-    state.party = e.party.filter(v => v.inParty)
+    if (dev.value && e.party.length === 0) return
+    state.party = e.party.filter((v) => v.inParty)
     sortParty()
   },
   changePrimaryPlayer: (e) => {
@@ -120,10 +119,10 @@ const eventHandlers: {
   },
   broadcastMessage: (e) => {
     if (
-      e.source === 'soumaUserJS'
-      && typeof e.msg === 'object'
-      && e.msg !== null
-      && Reflect.get(e.msg, 'text') === 'requestData'
+      e.source === 'soumaUserJS' &&
+      typeof e.msg === 'object' &&
+      e.msg !== null &&
+      Reflect.get(e.msg, 'text') === 'requestData'
     ) {
       broadcast()
     }
@@ -144,16 +143,14 @@ onUnmounted(() => {
   removeOverlayListener('PartyChanged', eventHandlers.partyChanged)
   removeOverlayListener(
     'ChangePrimaryPlayer',
-    eventHandlers.changePrimaryPlayer,
+    eventHandlers.changePrimaryPlayer
   )
   removeOverlayListener('BroadcastMessage', eventHandlers.broadcastMessage)
 })
 
 function testSolo() {
   playerName.value = generator.party.value[0]!.name
-  state.party = generator.party.value.filter(
-    v => v.name === playerName.value,
-  )
+  state.party = generator.party.value.filter((v) => v.name === playerName.value)
   sortParty()
 }
 
@@ -180,10 +177,10 @@ function testShuffleParty() {
   <CommonActWrapper>
     <template #readme>
       <span class="demo-text">
-        <p>使悬浮窗的位置分配对应游戏内的实际位置</p>
+        <p>{{ $t('cactbotRuntime.usageLine1') }}</p>
         <ul>
-          <li>每次小队变化时，会按规则进行排序</li>
-          <li>你可以上下拖拽玩家名称，临时调整</li>
+          <li>{{ $t('cactbotRuntime.usageLine2') }}</li>
+          <li>{{ $t('cactbotRuntime.usageLine3') }}</li>
         </ul>
       </span>
     </template>
@@ -211,9 +208,9 @@ function testShuffleParty() {
               </div>
               <el-divider
                 v-if="
-                  state.partySorted[role].length > 0
-                    && roleIndex < 2
-                    && mouseEnter
+                  state.partySorted[role].length > 0 &&
+                  roleIndex < 2 &&
+                  mouseEnter
                 "
               />
             </div>
@@ -256,13 +253,13 @@ function testShuffleParty() {
       </main>
       <div v-if="dev" style="position: fixed; bottom: 0">
         <button @click="testSolo">
-          测试单人
+          {{ $t('cactbotRuntime.testSolo') }}
         </button>
         <button @click="testParty">
-          测试组队
+          {{ $t('cactbotRuntime.testParty') }}
         </button>
         <button @click="testShuffleParty">
-          测试随机组队
+          {{ $t('cactbotRuntime.testShuffleParty') }}
         </button>
       </div>
     </div>
@@ -320,7 +317,7 @@ function testShuffleParty() {
   position: relative;
   // 创建一个几乎不可见的区域连接两个区域，以保持hover效果
   &:before {
-    content: "";
+    content: '';
     position: absolute;
     top: -1em;
     background-color: rgba(0, 0, 0, 0.01);

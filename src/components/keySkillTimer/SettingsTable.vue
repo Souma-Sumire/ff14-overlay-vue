@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import { localeToCactbotLang, useLang } from '@/composables/useLang'
 import { useKeySkillStore } from '@/store/keySkills'
+import type { Lang } from '@/types/lang'
 import { idToSrc } from '@/utils/dynamicValue'
 import Util from '@/utils/util'
 
-const props = defineProps<{
-  lang: 'chinese' | 'global'
-}>()
+const { locale } = useLang()
 
 const emit = defineEmits<{
   (e: 'delete', key: string): void
@@ -13,27 +13,29 @@ const emit = defineEmits<{
 }>()
 
 const storeKeySKill = useKeySkillStore()
-const data = computed(() => storeKeySKill.keySkillsData[props.lang])
+const data = computed(() => storeKeySKill.keySkillsData.chinese)
 
 const jobList = Object.freeze(Util.getBattleJobs())
 
 const jobOptions = markRaw(
-  jobList.map(job => ({
-    value: Util.jobToJobEnum(job),
-    label: Util.jobToFullName(job)?.cn ?? job,
-  })),
+  jobList.map((job) => {
+    const label = Util.jobToFullName(job)
+    return {
+      value: Util.jobToJobEnum(job),
+      label: label,
+    }
+  })
 )
 
 // src 防抖
 const debouncedSrcMap = ref(new Map<string, string>())
 const timers: Record<string, number | undefined> = {}
 watch(
-  () => data.value.map(row => ({ key: row.key, id: row.id })),
+  () => data.value.map((row) => ({ key: row.key, id: row.id })),
   (newList) => {
     newList.forEach(({ key, id }) => {
       // 清除旧定时器
-      if (timers[key])
-        clearTimeout(timers[key])
+      if (timers[key]) clearTimeout(timers[key])
       // 新定时器，延迟1秒更新
       timers[key] = window.setTimeout(() => {
         debouncedSrcMap.value.set(key, idToSrc(id))
@@ -42,7 +44,7 @@ watch(
       }, 1000)
     })
   },
-  { immediate: true, deep: true },
+  { immediate: true, deep: true }
 )
 </script>
 
@@ -54,7 +56,11 @@ watch(
     :row-key="(row) => row.key"
     :height="620"
   >
-    <el-table-column label="操作" width="80" align="center">
+    <el-table-column
+      :label="$t('keySkillTimerSettings.col.action')"
+      width="80"
+      align="center"
+    >
       <template #default="{ row, $index }">
         <div
           style="display: flex; justify-content: center; gap: 0px"
@@ -81,76 +87,94 @@ watch(
             ↓
           </el-button>
           <el-popconfirm
-            title="确定删除吗？此操作无法撤销"
+            :title="$t('keySkillTimerSettings.deleteConfirmTitle')"
             placement="top-start"
             @confirm="emit('delete', row.key)"
           >
             <template #reference>
               <el-button link type="danger" size="small">
-                删除
+                {{ $t('keySkillTimerSettings.deleteBtn') }}
               </el-button>
             </template>
           </el-popconfirm>
         </div>
       </template>
     </el-table-column>
-    <el-table-column label="预览" width="50" align="center">
+
+    <el-table-column
+      :label="$t('keySkillTimerSettings.col.preview')"
+      width="50"
+      align="center"
+    >
       <template #default="{ row }">
         <img
           :src="debouncedSrcMap.get(row.key) ?? idToSrc(row.id)"
           class="icon"
-        >
+        />
       </template>
     </el-table-column>
 
-    <el-table-column label="ID(十进制)" width="200">
+    <el-table-column :label="$t('keySkillTimerSettings.col.id')" width="200">
       <template #default="{ row }">
         <el-input v-model="row.id" size="small" />
       </template>
     </el-table-column>
 
-    <el-table-column label="TTS" width="100">
+    <el-table-column :label="$t('keySkillTimerSettings.col.tts')" width="100">
       <template #header>
         <el-form>
           TTS
-          <el-switch v-model="storeKeySKill.enableTts[lang]" size="small" />
+          <el-switch v-model="storeKeySKill.enableTts.chinese" size="small" />
         </el-form>
       </template>
       <template #default="{ row }">
         <el-input
           v-model="row.tts"
           size="small"
-          :disabled="!storeKeySKill.enableTts[lang]"
+          :disabled="!storeKeySKill.enableTts.chinese"
         />
       </template>
     </el-table-column>
 
-    <el-table-column label="持续时间(秒)" width="180">
+    <el-table-column
+      :label="$t('keySkillTimerSettings.col.duration')"
+      width="180"
+    >
       <template #default="{ row }">
         <el-input v-model="row.duration" size="small" />
       </template>
     </el-table-column>
 
-    <el-table-column label="冷却时间 (秒)" width="180">
+    <el-table-column
+      :label="$t('keySkillTimerSettings.col.recast')"
+      width="180"
+    >
       <template #default="{ row }">
         <el-input v-model="row.recast1000ms" size="small" />
       </template>
     </el-table-column>
 
-    <el-table-column label="适用职业" min-width="100">
+    <el-table-column
+      :label="$t('keySkillTimerSettings.col.job')"
+      min-width="100"
+    >
       <template #default="{ row }">
         <el-select v-model="row.job" size="small" multiple>
           <el-option
             v-for="option in jobOptions"
             :key="option.value"
-            :label="option.label"
+            :label="option.label[localeToCactbotLang(locale as Lang) as keyof typeof Util.jobToFullName] ?? option.label.en"
             :value="option.value"
           />
         </el-select>
       </template>
     </el-table-column>
 
-    <el-table-column label="最小习得等级" width="90" align="center">
+    <el-table-column
+      :label="$t('keySkillTimerSettings.col.minLevel')"
+      width="90"
+      align="center"
+    >
       <template #default="{ row }">
         <el-input-number
           v-model="row.minLevel"
@@ -162,7 +186,12 @@ watch(
         />
       </template>
     </el-table-column>
-    <el-table-column label="显示到第n行" width="100" align="center">
+
+    <el-table-column
+      :label="$t('keySkillTimerSettings.col.line')"
+      width="100"
+      align="center"
+    >
       <template #default="{ row }">
         <el-input-number
           v-model="row.line"

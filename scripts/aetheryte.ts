@@ -14,7 +14,7 @@ interface AetheryteData {
   placeName: {
     en?: string
     ja?: string
-    souma?: string
+    cn?: string
   }
 }
 
@@ -50,7 +50,7 @@ const allFiles = [
   })),
   { name: 'PlaceName_EN.csv', path: `${csvPaths.en}PlaceName.csv` },
   { name: 'PlaceName_JA.csv', path: `${csvPaths.ja}PlaceName.csv` },
-  { name: 'PlaceName_Souma.csv', path: `${csvPaths.souma}PlaceName.csv` },
+  { name: 'PlaceName_CN.csv', path: `${csvPaths.cn}PlaceName.csv` },
 ]
 
 await Promise.all(
@@ -81,7 +81,7 @@ const aetherytes: AetheryteData[] = fileValues['MapMarker.csv']!.filter(
 
     const placeNameEN = findPlaceName('PlaceName_EN.csv')
     const placeNameJA = findPlaceName('PlaceName_JA.csv')
-    const placeNameSouma = findPlaceName('PlaceName_Souma.csv')
+    const placeNameCN = findPlaceName('PlaceName_CN.csv')
 
     return {
       x: Number(row[1]),
@@ -90,7 +90,7 @@ const aetherytes: AetheryteData[] = fileValues['MapMarker.csv']!.filter(
       placeName: {
         en: placeNameEN,
         ja: placeNameJA,
-        souma: placeNameSouma,
+        cn: placeNameCN,
       },
     } as AetheryteData
   })

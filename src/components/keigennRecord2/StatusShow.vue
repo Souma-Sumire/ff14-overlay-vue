@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { RowVO } from '@/types/keigennRecord2'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
-import { translationFlags } from '@/utils/flags'
 import { multiplierEffect } from '@/utils/keigenn'
 import { getImgSrc, handleImgError } from '@/utils/xivapi'
 
@@ -14,7 +13,7 @@ const icon4k = keigennRecord2Store.icon4k
 </script>
 
 <template>
-  <div v-if="props.row.type === 'dot'">（不支持）</div>
+  <div v-if="props.row.type === 'dot'">{{ $t('keigennRecord.noSupport') }}</div>
   <div v-else class="status-container">
     <span v-for="(keigenn, index) in props.row.keigenns" :key="index">
       <span
@@ -38,7 +37,7 @@ const icon4k = keigennRecord2Store.icon4k
       {{
         props.row.effect === 'damage done'
           ? ''
-          : translationFlags(props.row.effect)
+          : $t(`keigennRecord.${props.row.effect}`)
       }}
     </span>
   </div>

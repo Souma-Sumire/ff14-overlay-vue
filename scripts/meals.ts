@@ -47,8 +47,8 @@ const itemAction: ItemAction = {}
 const itemFood: DataMap<ItemFood> = {}
 const baseParam: BaseParam = {}
 
-await readCSV(`${csvPaths.souma}BaseParam.csv`, (row) => {
-  baseParam[row[0]!] = row[1]!
+await readCSV(`${csvPaths.en}BaseParam.csv`, (row) => {
+  baseParam[row[0]!] = row[2]!
 })
 
 await readCSV(`${csvPaths.ja}ItemFood.csv`, (row) => {
@@ -59,7 +59,7 @@ await readCSV(`${csvPaths.ja}ItemAction.csv`, (row) => {
   itemAction[row[0]!] = row[7]!
 })
 
-await readCSV(`${csvPaths.souma}Item.csv`, (row) => {
+await readCSV(`${csvPaths.cn}Item.csv`, (row) => {
   if (!['key', 'offset', '#', 'int32'].includes(row[0]!)) {
     item[row[0]!] = { ...(item[row[0]!] || {}), Name: row[1] }
   }

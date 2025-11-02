@@ -1,28 +1,18 @@
 import type { DamageType } from './flags'
-import type { Keigenn, Server, Status } from '@/types/keigennRecord2'
-import { chinese, global } from '../resources/keigenn'
+import type { Keigenn, Status } from '@/types/keigennRecord2'
+import { keigenns } from '../resources/keigenn'
 import { completeIcon, statusData } from '../resources/status'
 
 const keigennMap: Map<string, Keigenn> = new Map()
 
-let loadedDataLang: Server = 'Chinese'
-
-export function loadKeigenn(server: 'Chinese' | 'Global'): void {
-  if (loadedDataLang !== server || keigennMap.size === 0) {
-    keigennMap.clear()
-    for (const keigenn of server === 'Chinese' ? chinese : global) {
-      const icon = statusData[keigenn.id]![1]
-      keigenn.fullIcon = completeIcon(icon)
-      keigennMap.set(
-        keigenn.id.toString(16).toUpperCase().padStart(2, '0'),
-        keigenn as Keigenn,
-      )
-    }
-    loadedDataLang = server
-  }
+for (const keigenn of keigenns) {
+  const icon = statusData[keigenn.id]![1]
+  keigenn.fullIcon = completeIcon(icon)
+  keigennMap.set(
+    keigenn.id.toString(16).toUpperCase().padStart(2, '0'),
+    keigenn as Keigenn
+  )
 }
-
-loadKeigenn('Chinese')
 
 export function getKeigenn(decId: string): Keigenn | undefined {
   return keigennMap.get(decId)
@@ -30,7 +20,7 @@ export function getKeigenn(decId: string): Keigenn | undefined {
 
 export function multiplierEffect(
   status: Status,
-  damageType: DamageType,
+  damageType: DamageType
 ): 'useful' | 'unuseful' | 'half-useful' {
   if (status.type === 'absorbed') {
     // 护盾类技能永远有效

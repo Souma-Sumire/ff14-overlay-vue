@@ -12,7 +12,9 @@ import {
   removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
 import meals from '../resources/meals.json'
+import { useLang } from '@/composables/useLang'
 
+const { t } = useLang()
 const { zoneType } = useZone()
 const party: Ref<{ id: string; name: string; jobName: string }[]> = ref([])
 const effectData = new Map<string, Food>()
@@ -108,42 +110,24 @@ const handlePartyChanged: EventMap['PartyChanged'] = (e) => {
   fullUpdateFriendlyCombatants()
 }
 
-const replaceMap: Record<string, string> = {
-  信念: '信',
-  耐力: '耐',
-  咏唱速度: '咏',
-  技能速度: '技',
-  暴击: '暴',
-  坚韧: '坚',
-  信仰: '仰',
-}
-
 function getFoodParams(params: Food['params'], hq: boolean): string {
   const p = params
-    .filter((v) => v.Params !== '耐力' && v.Params)
+    .filter((v) => v.Params !== 'Vitality' && v.Params)
     .sort((a, b) => {
       const aV = hq ? a['Max{HQ}'] : a.Max
       const bV = hq ? b['Max{HQ}'] : b.Max
       return Number.parseInt(aV, 10) - Number.parseInt(bV, 10)
     })
-    .map((v) => v.Params)
+    .map((v) => t(`food.${v.Params}`))
     .join('>')
 
-  return p.replace(
-    /信念|耐力|咏唱速度|技能速度|暴击|坚韧|信仰/g,
-    (m) => replaceMap[m] || m
-  )
-  // const p = params.filter(v => v.Params !== '耐力' && v.Params)
-  // if (hq) {
-  //   return p.map(v => `${v.Params} +${v.Value}%（上限${v.Max}）`).join('<br>')
-  // }
-  // return p.map(v => `${v.Params} +${v['Value{HQ}']}%（上限${v['Max{HQ}']})`).join('<br>')
+  return p
 }
 
 function getText(seconds: number): string {
-  if (seconds < 60) return `${seconds}秒`
+  if (seconds < 60) return t('food.seconds', [seconds])
   const m = Math.floor(seconds / 60)
-  return m >= 60 ? '>1小时' : `${m}分钟`
+  return m >= 60 ? t('food.>1hour') : t('food.minutes', [m])
 }
 
 function getOrder(item: Players) {
@@ -172,7 +156,7 @@ onUnmounted(() => {
   <CommonActWrapper>
     <template #readme>
       <span class="demo-text">
-        当前为演示数据，锁定后将显示真实数据（仅在小队人数>=6，且至少有50%人吃食物时才显示）
+        {{ $t('food.demo-text') }}
       </span>
     </template>
     <div class="container" :class="{ demo }">
@@ -212,7 +196,7 @@ onUnmounted(() => {
             </template>
             <template v-else>
               <span class="food-name-wrapper" />
-              <span class="food-timer no-food">无食物</span>
+              <span class="food-timer no-food">{{ $t('food.no-food') }}</span>
             </template>
           </span>
         </p>
@@ -316,8 +300,8 @@ onUnmounted(() => {
 .food-params,
 .food-name {
   position: absolute;
-  right: 1.4em;
-  max-width: calc(100% - 1.4em);
+  right: 1.0em;
+  max-width: calc(100% - 1.0em);
   text-align: right;
   white-space: nowrap;
   text-overflow: ellipsis;

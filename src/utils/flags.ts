@@ -19,35 +19,6 @@ type DamageType =
   | 'darkness' // 暗黑;
   | 'dot'
 
-function translationFlags(typeString: DamageEffect): string {
-  return {
-    dodge: '闪避',
-    'damage done': '击中',
-    'blocked damage': '格挡',
-    'parried damage': '招架',
-    'instant death': '即死',
-    heal: '治疗',
-    'crit heal': '暴击治疗',
-  }[typeString]
-}
-
-function translationDamageProperties(str: DamageProperties) {
-  return {
-    damage: '普通',
-    'crit damage': '暴击',
-    'direct hit damage': '直击',
-    'crit direct hit damage': '直暴',
-  }[str]
-}
-
-function translationDamageType(str: DamageType) {
-  return {
-    physics: '物理',
-    magic: '魔法',
-    darkness: '暗黑',
-    dot: '持续伤害',
-  }[str]
-}
 
 function processFlags(flag: string) {
   const effect = processEffect(flag)
@@ -184,8 +155,5 @@ export {
   type DamageType,
   processAbilityLine,
   processFlags,
-  translationDamageProperties,
-  translationDamageType,
-  translationFlags,
   UnscrambleDamage,
 }

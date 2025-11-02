@@ -13,7 +13,7 @@ import {
   doWayMarks,
 } from '../utils/postNamazu'
 import { defaultMacro } from './../resources/macro'
-import { contentTypeLabel } from '@/resources/contents'
+import type { Lang } from '@/types/lang'
 
 let partyLen = 0
 const slotIndex = useStorage('macro-slot-index', 5)
@@ -88,14 +88,23 @@ const useMacroStore = defineStore('macro', {
       zoneNow: useStorage('my-zone-now', '1226'),
       zoneNowName: useStorage('my-zone-now-name', ''),
       fastEntrance: [
-        { text: '极永暗', value: '1296' },
-        { text: '力之塔', value: '1252' },
-        { text: 'M5S', value: '1257' },
-        { text: 'M6S', value: '1259' },
-        { text: 'M7S', value: '1261' },
-        { text: 'M8S', value: '1263' },
-        { text: '绝伊甸', value: '1238' },
-      ],
+        {
+          text: { zhCn: '极永暗', en: 'necron-ex', ja: '永遠の闇' },
+          value: '1296',
+        },
+        {
+          text: { zhCn: '力之塔', en: 'Forked Tower: Blood', ja: '力の塔' },
+          value: '1252',
+        },
+        { text: { zhCn: 'M5S' }, value: '1257' },
+        { text: { zhCn: 'M6S' }, value: '1259' },
+        { text: { zhCn: 'M7S' }, value: '1261' },
+        { text: { zhCn: 'M8S' }, value: '1263' },
+        { text: { zhCn: '绝伊甸', en: 'FRU', ja: '絶エデン' }, value: '1238' },
+      ] as {
+        text: Record<Lang, string>
+        value: string
+      }[],
       show,
       toggleShow,
     }
@@ -325,4 +334,4 @@ const useMacroStore = defineStore('macro', {
   },
 })
 
-export { useMacroStore, contentTypeLabel }
+export { useMacroStore }

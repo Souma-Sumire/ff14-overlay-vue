@@ -45,7 +45,6 @@ interface PlayerSP extends Player {
   timestamp: number
 }
 
-const povName = useStorage('keigenn-record-2-pov-name', '')
 const povId = useStorage('keigenn-record-2-pov-id', '')
 const partyLogList = useStorage('keigenn-record-2-party-list', [] as string[])
 const jobMap = useStorage(
@@ -242,12 +241,6 @@ function handleLine(line: string) {
         case 'primaryPlayer':
           {
             povId.value = splitLine[logDefinitions.ChangedPlayer.fields.id]
-            const _povName = splitLine[logDefinitions.ChangedPlayer.fields.name]
-            if (povName.value === _povName) return
-            povName.value = _povName
-            store.initEnvironment(
-              splitLine[logDefinitions.ChangedPlayer.fields.name]!
-            )
           }
           break
         case 'partyList':
@@ -591,10 +584,6 @@ function formatTime(time: number) {
   return `${minute < 10 ? '0' : ''}${minute}:${second < 10 ? '0' : ''}${second}`
 }
 
-// if (store.isBrowser) povName.value = '测试用户'
-
-if (povName.value !== '') store.initEnvironment(povName.value)
-
 onMounted(() => {
   const isDark = useDark({ storageKey: 'keigenn-record-2-theme' })
   const toggleDark = useToggle(isDark)
@@ -619,7 +608,6 @@ onMounted(() => {
     }))
   })
   addOverlayListener('ChangePrimaryPlayer', (e) => {
-    povName.value = e.charName
     povId.value = Number(e.charID).toString(16).toUpperCase()
   })
 })
