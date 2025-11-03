@@ -207,10 +207,21 @@
     "resists": {
       "stun": "スタン",
       "slow": "スロウ",
-      "sleep": "睡眠",
+      "sleep": "スリープ",
       "heavy": "ヘヴィ",
       "bind": "バインド"
-    }
+    },
+    "trap_cleared": "罠を解除しました",
+    "map_illuminated": "マップを照らしました",
+    "pylon_return": "再生",
+    "pylon_passage": "転送",
+    "visual": "視覚",
+    "auditory": "聴覚",
+    "scope": "範囲",
+    "easy": "簡単",
+    "caution": "注意",
+    "danger": "危険",
+    "unknown": "不明"
   },
   "keigennRecord": {
     "source": "発生源",

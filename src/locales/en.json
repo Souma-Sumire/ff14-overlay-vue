@@ -205,12 +205,23 @@
   },
   "dd": {
     "resists": {
-      "stun": "stun",
-      "slow": "slow",
-      "sleep": "sleep",
-      "heavy": "heavy",
-      "bind": "bind"
-    }
+      "stun": "Stun",
+      "slow": "Slow",
+      "sleep": "Sleep",
+      "heavy": "Heavy",
+      "bind": "Bind"
+    },
+    "trap_cleared": "Trap Cleared",
+    "map_illuminated": "Map Illuminated",
+    "pylon_return": "Return",
+    "pylon_passage": "Passage",
+    "visual": "Visual",
+    "auditory": "Auditory",
+    "scope": "Scope",
+    "easy": "Easy",
+    "caution": "Caution",
+    "danger": "Danger",
+    "unknown": "Unknown"
   },
   "keigennRecord": {
     "source": "Source",

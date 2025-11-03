@@ -209,12 +209,23 @@
   },
   "dd": {
     "resists": {
-      "stun": "眩暈",
+      "stun": "暈眩",
       "slow": "減速",
       "sleep": "睡眠",
       "heavy": "加重",
-      "bind": "定身"
-    }
+      "bind": "止步"
+    },
+    "trap_cleared": "陷阱已清除",
+    "map_illuminated": "地圖已點亮",
+    "pylon_return": "再生",
+    "pylon_passage": "傳送",
+    "visual": "視覺",
+    "auditory": "聽覺",
+    "scope": "範圍",
+    "easy": "簡單",
+    "caution": "小心",
+    "danger": "危險",
+    "unknown": "未知"
   },
   "keigennRecord": {
     "source": "傷害來源",
