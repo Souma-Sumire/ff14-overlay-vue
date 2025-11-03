@@ -484,171 +484,171 @@ const PT: Data = {
   zoneIDs: [1281, 1282, 1283, 1284, 1285, 1286, 1287, 1288, 1289, 1290],
   enemiesData: {
     // 通用
-    14264: { grade: 'caution', note: { zhCn: '尽快击杀，打断怨念' } }, // '拟态怪'
-    14265: { grade: 'caution', note: '尽快击杀，打断怨念' }, // '拟态怪'
-    14266: { grade: 'caution', note: '尽快击杀，打断怨念' }, // '拟态怪'
-    14267: { grade: 'caution', note: '亡语：眩晕周围' }, // '漫步科柯瑞甘'
+    14264: { grade: 'caution', note: { zhCn: '尽快击杀，打断怨念' } }, // 拟态怪 mimic ミミック
+    14265: { grade: 'caution', note: '尽快击杀，打断怨念' }, // 拟态怪 mimic ミミック
+    14266: { grade: 'caution', note: '尽快击杀，打断怨念' }, // 拟态怪 mimic ミミック
+    14267: { grade: 'caution', note: '亡语：眩晕周围' }, // 漫步科柯瑞甘 traverse korrigan トラバース・コリガン
 
     // 1-10层
-    14100: { detect: 'visual', grade: 'easy', note: '无' }, // '漫步紫闪蝶'
-    14101: { detect: 'visual', grade: 'easy', note: '无' }, // '漫步石莲猬'
-    14102: { detect: 'visual', grade: 'easy', note: '无' }, // '漫步普卡精'
-    14103: { detect: 'visual', grade: 'easy', note: '无' }, // '漫步鹰蜓'
-    14104: { detect: 'auditory', grade: 'easy', note: '无' }, // '漫步苔菇'
-    14105: { detect: 'visual', grade: 'easy', note: '无' }, // '漫步花楸'
-    14106: { detect: 'visual', grade: 'easy', note: '无' }, // '漫步杀人蜂'
-    14107: { detect: 'auditory', grade: 'easy', note: '无' }, // '漫步铁线莲'
-    14108: { detect: 'visual', grade: 'easy', note: '无' }, // '漫步篮子'
-    14109: { detect: 'visual', grade: 'easy', note: '无' }, // '漫步爱蒂恩蛾'
-    14110: { detect: 'visual', grade: 'easy', note: '巡逻怪' }, // '漫步灌木丛'
-    14111: { detect: 'visual', grade: 'easy', note: '巡逻怪' }, // '漫步吸蜜鹦鹉'
-    14112: { detect: 'auditory', grade: 'easy', note: '巡逻怪' }, // '漫步玫瑰熊'
-    13979: { detect: 'boss', grade: 'caution', note: '小怪会复制BOSS的技能，可选中后尽快击杀。\nBOSS还会释放捕食，记好预兆寻找安全区。' }, // '花人' 10层BOSS
+    14100: { detect: 'visual', grade: 'easy', note: '无' }, // 漫步紫闪蝶 traverse morpho トラバース・パープルモルフォ
+    14101: { detect: 'visual', grade: 'easy', note: '无' }, // 漫步石莲猬 traverse echevore トラバース・エケボア
+    14102: { detect: 'visual', grade: 'easy', note: '无' }, // 漫步普卡精 traverse phooka トラバース・プーカ
+    14103: { detect: 'visual', grade: 'easy', note: '无' }, // 漫步鹰蜓 traverse hawker トラバース・ホーカー
+    14104: { detect: 'auditory', grade: 'easy', note: '无' }, // 漫步苔菇 traverse moss fungus トラバース・モスフングス
+    14105: { detect: 'visual', grade: 'easy', note: '无' }, // 漫步花楸 traverse rowan トラバース・ローワン
+    14106: { detect: 'visual', grade: 'easy', note: '无' }, // 漫步杀人蜂 traverse killer bee トラバース・キラービー
+    14107: { detect: 'auditory', grade: 'easy', note: '无' }, // 漫步铁线莲 traverse clematis トラバース・クレマチス
+    14108: { detect: 'visual', grade: 'easy', note: '无' }, // 漫步篮子 traverse basket トラバース・バスケット
+    14109: { detect: 'visual', grade: 'easy', note: '无' }, // 漫步爱蒂恩蛾 traverse etainmoth トラバース・エーディンモス
+    14110: { detect: 'visual', grade: 'easy', note: '巡逻怪' }, // 漫步灌木丛 traverse shrub トラバース・シュラブレット
+    14111: { detect: 'visual', grade: 'easy', note: '巡逻怪' }, // 漫步吸蜜鹦鹉 traverse lorikeet トラバース・ロリキート
+    14112: { detect: 'auditory', grade: 'easy', note: '巡逻怪' }, // 漫步玫瑰熊 traverse rosebear トラバース・ローズベアー
+    13979: { detect: 'boss', grade: 'caution', note: '小怪会复制BOSS的技能，可选中后尽快击杀。\nBOSS还会释放捕食，记好预兆寻找安全区。' }, // 花人 ornamental leafman 花人
 
     // 11-20层
-    13973: { detect: undefined, grade: undefined, note: undefined }, // '得到宽恕的模仿'
-    14113: { detect: undefined, grade: undefined, note: undefined }, // '得到宽恕的盲从'
-    14114: { detect: undefined, grade: undefined, note: undefined }, // '得到宽恕的无知'
-    14115: { detect: undefined, grade: undefined, note: undefined }, // '得到宽恕的蠢笨'
-    14116: { detect: undefined, grade: undefined, note: undefined }, // '得到宽恕的自负'
-    14117: { detect: undefined, grade: undefined, note: undefined }, // '得到宽恕的暴力'
-    14118: { detect: undefined, grade: undefined, note: undefined }, // '得到宽恕的违命'
-    14119: { detect: undefined, grade: undefined, note: undefined }, // '得到宽恕的欺骗'
-    14120: { detect: undefined, grade: undefined, note: undefined }, // '得到宽恕的轻蔑'
-    14121: { detect: undefined, grade: undefined, note: undefined }, // '得到宽恕的自满'
-    14122: { detect: undefined, grade: undefined, note: undefined }, // '漫步帕克'
-    14123: { detect: undefined, grade: undefined, note: undefined }, // '漫步灌木塑像'
-    14124: { detect: undefined, grade: undefined, note: undefined }, // '漫步豌豆花'
-    14125: { detect: undefined, grade: undefined, note: undefined }, // '漫步幼体龙鸟'
+    13973: { detect: undefined, grade: undefined, note: undefined }, // 得到宽恕的模仿 forgiven emulation フォーギヴン・エミュレーション
+    14113: { detect: undefined, grade: undefined, note: undefined }, // 得到宽恕的盲从 forgiven conformity フォーギヴン・コンフォーミティー
+    14114: { detect: undefined, grade: undefined, note: undefined }, // 得到宽恕的无知 forgiven ignorance フォーギヴン・イグノランス
+    14115: { detect: undefined, grade: undefined, note: undefined }, // 得到宽恕的蠢笨 forgiven folly フォーギヴン・フォリー
+    14116: { detect: undefined, grade: undefined, note: undefined }, // 得到宽恕的自负 forgiven conceit フォーギヴン・コンスィート
+    14117: { detect: undefined, grade: undefined, note: undefined }, // 得到宽恕的暴力 forgiven violence フォーギヴン・ヴァイオレンス
+    14118: { detect: undefined, grade: undefined, note: undefined }, // 得到宽恕的违命 forgiven disobedience フォーギヴン・ディスオビーデアンス
+    14119: { detect: undefined, grade: undefined, note: undefined }, // 得到宽恕的欺骗 forgiven deceit フォーギヴン・デシート
+    14120: { detect: undefined, grade: undefined, note: undefined }, // 得到宽恕的轻蔑 forgiven contempt フォーギヴン・コンテンプト
+    14121: { detect: undefined, grade: undefined, note: undefined }, // 得到宽恕的自满 forgiven complacency フォーギヴン・コンプレイセンシー
+    14122: { detect: undefined, grade: undefined, note: undefined }, // 漫步帕克 traverse Puck トラバース・パック
+    14123: { detect: undefined, grade: undefined, note: undefined }, // 漫步灌木塑像 traverse topiary トラバース・トピアリー
+    14124: { detect: undefined, grade: undefined, note: undefined }, // 漫步豌豆花 traverse Peaseblossom トラバース・ピーズブロッサム
+    14125: { detect: undefined, grade: undefined, note: undefined }, // 漫步幼体龙鸟 traverse tot aevis トラバース・トートエイビス
 
     // 21-30层
-    14126: { detect: 'visual', grade: 'easy', note: '巡逻怪' }, // '得到宽恕的妒忌'
-    14127: { detect: 'visual', grade: 'easy', note: '非战斗状态下会读条玩家脚底黄圈' }, // '得到宽恕的情欲'
-    14128: { detect: undefined, grade: undefined, note: '巡逻怪' }, // '得到宽恕的失调'
-    14129: { detect: 'visual', grade: 'easy', note: undefined }, // '得到宽恕的残忍'
-    14130: { detect: 'visual', grade: 'caution', note: '读条扇形顺劈' }, // '得到宽恕的奢望'
-    14131: { detect: 'visual', grade: 'easy', note: undefined }, // '得到宽恕的侮辱'
-    14132: { detect: 'visual', grade: 'easy', note: undefined }, // '得到宽恕的踌躇'
-    14133: { detect: 'visual', grade: 'easy', note: '读条玩家脚底钢铁' }, // '漫步石像'
-    14134: { detect: 'visual', grade: 'easy', note: undefined }, // '漫步莫高海怪'
-    14135: { detect: 'visual', grade: 'easy', note: undefined }, // '漫步角雉'
-    14136: { detect: undefined, grade: undefined, note: undefined }, // '得到宽恕的贿赂'
-    14137: { detect: 'visual', grade: 'caution', note: '在血量低于25%后，会读条使下一次平A成为秒杀。可以打断。' }, // '漫步冰海天使'
-    14138: { detect: 'visual', grade: 'easy', note: '读条直线攻击' }, // '得到宽恕的不容忍'
-    13863: { detect: 'boss', grade: undefined, note: undefined }, // '得到宽恕的叛逆'
+    14126: { detect: 'visual', grade: 'easy', note: '巡逻怪' }, // 得到宽恕的妒忌 forgiven jealousy フォーギヴン・ジェラシー
+    14127: { detect: 'visual', grade: 'easy', note: '非战斗状态下会读条玩家脚底黄圈' }, // 得到宽恕的情欲 forgiven venery フォーギヴン・ヴェナリー
+    14128: { detect: undefined, grade: undefined, note: '巡逻怪' }, // 得到宽恕的失调 forgiven dissonance フォーギヴン・ディソナンス
+    14129: { detect: 'visual', grade: 'easy', note: undefined }, // 得到宽恕的残忍 forgiven cruelty フォーギヴン・クルエルティー
+    14130: { detect: 'visual', grade: 'caution', note: '读条扇形顺劈' }, // 得到宽恕的奢望 forgiven ambition フォーギヴン・アンビション
+    14131: { detect: 'visual', grade: 'easy', note: undefined }, // 得到宽恕的侮辱 forgiven insult フォーギヴン・インサルト
+    14132: { detect: 'visual', grade: 'easy', note: undefined }, // 得到宽恕的踌躇 forgiven hesitance フォーギヴン・ヘジテンス
+    14133: { detect: 'visual', grade: 'easy', note: '读条玩家脚底钢铁' }, // 漫步石像 traverse statue トラバース・スタチュー
+    14134: { detect: 'visual', grade: 'easy', note: undefined }, // 漫步莫高海怪 traverse morgawr トラバース・モーゴウル
+    14135: { detect: 'visual', grade: 'easy', note: undefined }, // 漫步角雉 traverse tragopan トラバース・トラゴパン
+    14136: { detect: undefined, grade: undefined, note: undefined }, // 得到宽恕的贿赂 forgiven bribery フォーギヴン・ブライバリー
+    14137: { detect: 'visual', grade: 'caution', note: '在血量低于25%后，会读条使下一次平A成为秒杀。可以打断。' }, // 漫步冰海天使 traverse clionid トラバース・クリオニッド
+    14138: { detect: 'visual', grade: 'easy', note: '读条直线攻击' }, // 得到宽恕的不容忍 forgiven intolerance フォーギヴン・イントーラランス
+    13863: { detect: 'boss', grade: undefined, note: undefined }, // 得到宽恕的叛逆 forgiven treachery フォーギヴン・トレチャリー
 
     // 31-40层
-    14139: { detect: 'visual', grade: 'caution', note: '重拳波：跳跃至AOE区域后立刻释放更大的AOE，造成约70K伤害。\n强冲拳：在近战范围内会被强力击退。' }, // '漫步石兵'
-    14140: { detect: 'visual', grade: 'caution', note: '先在前方释放扇形AOE，随后立刻在背后再释放一次。' }, // '得到宽恕的瘟疫'
-    14141: { detect: 'visual', grade: 'caution', note: '归于尘土：血量低于25%时反复施放全场AOE，致命。\n平时会为自己增加攻击力造成可观伤害。' }, // '得到宽恕的堕落'
-    14142: { detect: 'visual', grade: 'easy', note: '无' }, // '得到宽恕的勒索'
-    14143: { detect: 'visual', grade: 'easy', note: '读条小扇形' }, // '得到宽恕的偏见'
-    14144: { detect: 'visual', grade: 'caution', note: '前方扇形AOE，范围极大！' }, // '得到宽恕的伪善'
-    14145: { detect: undefined, grade: 'caution', note: '左/右触手：隐藏的半场刀，范围极大！' }, // '得到宽恕的任性'
-    14146: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈，可打断' }, // '得到宽恕的嘲弄'
-    14147: { detect: 'visual', grade: 'caution', note: '读条小扇形。\n在低血量时会快速连续释放直线AOE。' }, // '漫步异端审问官'
-    14148: { detect: 'visual', grade: 'easy', note: '巡逻怪。\n远距离时会使用中等范围的扇形AOE，近距离则为小范围环形AOE。' }, // '漫步鸟'
-    14149: { detect: 'visual', grade: 'easy', note: '先是小扇形提示，随后接着大范围扇形AOE。' }, // '漫步石狮'
-    14150: { detect: 'visual', grade: 'easy', note: '高山气流：前方直条攻击' }, // '漫步亚克鲁斯'
-    14151: { detect: 'visual', grade: 'caution', note: '飞驰：强力击退，可通过视线躲避。\n天马嘶啸：延迟小范围钢铁，可通过视线躲避。' }, // '漫步飞马'
-    13977: { detect: 'boss', grade: 'easy', note: '小怪会复读技能：黄色为钢铁 蓝色为击退。\n小怪可选中后尽快击杀。' }, // '得到宽恕的纯真' 40层BOSS
+    14139: { detect: 'visual', grade: 'caution', note: '重拳波：跳跃至AOE区域后立刻释放更大的AOE，造成约70K伤害。\n强冲拳：在近战范围内会被强力击退。' }, // 漫步石兵 traverse soldierstone トラバース・ストーンソルジャー
+    14140: { detect: 'visual', grade: 'caution', note: '先在前方释放扇形AOE，随后立刻在背后再释放一次。' }, // 得到宽恕的瘟疫 forgiven plague フォーギヴン・プレイグ
+    14141: { detect: 'visual', grade: 'caution', note: '归于尘土：血量低于25%时反复施放全场AOE，致命。\n平时会为自己增加攻击力造成可观伤害。' }, // 得到宽恕的堕落 forgiven perversion フォーギヴン・パーヴァージョン
+    14142: { detect: 'visual', grade: 'easy', note: '无' }, // 得到宽恕的勒索 forgiven extortion フォーギヴン・エクストーション
+    14143: { detect: 'visual', grade: 'easy', note: '读条小扇形' }, // 得到宽恕的偏见 forgiven prejudice フォーギヴン・プレジュディス
+    14144: { detect: 'visual', grade: 'caution', note: '前方扇形AOE，范围极大！' }, // 得到宽恕的伪善 forgiven hypocrisy フォーギヴン・ヒポクリシー
+    14145: { detect: undefined, grade: 'caution', note: '左/右触手：隐藏的半场刀，范围极大！' }, // 得到宽恕的任性 forgiven petulance フォーギヴン・ペチュランス
+    14146: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈，可打断' }, // 得到宽恕的嘲弄 forgiven mockery フォーギヴン・モッカリィ
+    14147: { detect: 'visual', grade: 'caution', note: '读条小扇形。\n在低血量时会快速连续释放直线AOE。' }, // 漫步异端审问官 traverse inquisitor トラバース・インクイジター
+    14148: { detect: 'visual', grade: 'easy', note: '巡逻怪。\n远距离时会使用中等范围的扇形AOE，近距离则为小范围环形AOE。' }, // 漫步鸟 bird of the traverse バード・オブ・トラバース
+    14149: { detect: 'visual', grade: 'easy', note: '先是小扇形提示，随后接着大范围扇形AOE。' }, // 漫步石狮 traverse lionstone トラバース・ストーンライオン
+    14150: { detect: 'visual', grade: 'easy', note: '高山气流：前方直条攻击' }, // 漫步亚克鲁斯 traverse jaculus トラバース・ヤクルス
+    14151: { detect: 'visual', grade: 'caution', note: '飞驰：强力击退，可通过视线躲避。\n天马嘶啸：延迟小范围钢铁，可通过视线躲避。' }, // 漫步飞马 traverse pegasus トラバース・ペガサス
+    13977: { detect: 'boss', grade: 'easy', note: '小怪会复读技能：黄色为钢铁 蓝色为击退。\n小怪可选中后尽快击杀。' }, // 得到宽恕的纯真 forgiven naivety フォーギヴン・ナイヴテイ
 
     // 41-50层
-    14152: { detect: 'visual', grade: 'caution', note: '吸引+延迟钢铁' }, // '漫步替身'
-    14153: { detect: 'visual', grade: 'danger', note: '移动极慢，但伤害极高。不要被它碰到！\n攻击会叠加易伤。\n还会使用隐藏的步进式环形地震攻击。' }, // '漫步托尔巴龟'
-    14154: { detect: 'visual', grade: undefined, note: '读条毒滴牙，可打断，效果未知。' }, // '漫步水蚺'
-    14155: { detect: 'visual', grade: 'easy', note: '延迟小范围前方扇形AOE' }, // '漫步三裂'
-    14156: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈' }, // '漫步蜥蜴'
-    14157: { detect: 'visual', grade: 'easy', note: '加速自身，提高攻速。' }, // '漫步白蚁'
-    14158: { detect: 'visual', grade: 'caution', note: '先在前方释放冲刺直线AOE，随后无提示地回头再冲刺一次。' }, // '漫步蚁狮'
-    14159: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈' }, // '漫步钳嘴鸟'
-    14160: { detect: 'visual', grade: 'easy', note: '读条直线攻击' }, // '漫步壁崖飞鸢'
-    14161: { detect: 'visual', grade: 'caution', note: '愤怒旋风：延迟钢铁，会造成无法净化的眩晕，伤害约65K。\n愤怒一击：延迟小范围直线AOE，伤害约70K。' }, // '漫步武器'
-    14162: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈，可打断' }, // '漫步龙舌兰'
-    14163: { detect: 'visual', grade: 'easy', note: '读条扇形' }, // '漫步发芽大口花'
-    14164: { detect: 'visual', grade: 'easy', note: '读条小钢铁' }, // '漫步螳螂'
-    14263: { detect: 'boss', grade: 'easy', note: '不可以长时间站在流沙中。\n龙卷风需要在倒计时结束时站在流沙里避免被击退。' }, // '奥古布纳巴里' 50层BOSS
+    14152: { detect: 'visual', grade: 'caution', note: '吸引+延迟钢铁' }, // 漫步替身 traverse petreffigy トラバース・エフィジィ
+    14153: { detect: 'visual', grade: 'danger', note: '移动极慢，但伤害极高。不要被它碰到！\n攻击会叠加易伤。\n还会使用隐藏的步进式环形地震攻击。' }, // 漫步托尔巴龟 traverse troubadour トラバース・トルバ
+    14154: { detect: 'visual', grade: undefined, note: '读条毒滴牙，可打断，效果未知。' }, // 漫步水蚺 traverse anaconda トラバース・アナコンダ
+    14155: { detect: 'visual', grade: 'easy', note: '延迟小范围前方扇形AOE' }, // 漫步三裂 traverse triffid トラバース・トリフィド
+    14156: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈' }, // 漫步蜥蜴 traverse lizard トラバース・リザード
+    14157: { detect: 'visual', grade: 'easy', note: '加速自身，提高攻速。' }, // 漫步白蚁 traverse termite トラバース・ターマイト
+    14158: { detect: 'visual', grade: 'caution', note: '直线冲锋AOE，然后再冲回去。' }, // 漫步蚁狮 traverse antlion トラバース・アントリオン
+    14159: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈' }, // 漫步钳嘴鸟 traverse pincerbeak トラバース・ピンサービーク
+    14160: { detect: 'visual', grade: 'easy', note: '读条直线攻击' }, // 漫步壁崖飞鸢 traverse cliffkite トラバース・クリフカイト
+    14161: { detect: 'visual', grade: 'caution', note: '愤怒旋风：延迟钢铁，会造成无法净化的眩晕，伤害约65K。\n愤怒一击：延迟小范围直线AOE，伤害约70K。' }, // 漫步武器 traverse weapon トラバース・ウェポン
+    14162: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈，可打断' }, // 漫步龙舌兰 traverse agave トラバース・アガベ
+    14163: { detect: 'visual', grade: 'easy', note: '读条扇形' }, // 漫步发芽大口花 traverse germinant トラバース・ジェルミナンツ
+    14164: { detect: 'visual', grade: 'easy', note: '读条小钢铁' }, // 漫步螳螂 traverse mantis トラバース・マンティス
+    14263: { detect: 'boss', grade: 'easy', note: '不可以长时间站在流沙中。\n龙卷风需要在倒计时结束时站在流沙里避免被击退。' }, // 奥古布纳巴里 Ogbunabali オグブナバリ
 
     // 51-60层
-    14165: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈' }, // '漫步褐爪'
-    14166: { detect: 'visual', grade: 'easy', note: undefined }, // '漫步守护者'
-    14167: { detect: 'visual', grade: 'danger', note: '无提示的全场AOE，为270度环形范围，可站在背后或其命中区域内躲避，可利用视线阻挡。可被眩晕。' }, // '漫步沙蛇'
-    14168: { detect: 'visual', grade: 'danger', note: '使所有人进入目押状态，然后释放延迟中等范围AOE，若不熟悉目押机制，建议提前远离。' }, // '漫步美甲兽'
-    14169: { detect: 'visual', grade: 'caution', note: '非战斗状态下会施放反击屏障，物理攻击会受到秒杀级反伤！' }, // '漫步巨蜥'
-    14170: { detect: undefined, grade: undefined, note: undefined }, // '漫步邪恶海鸟'
-    14171: { detect: 'visual', grade: 'easy', note: '读条小扇形' }, // '漫步帕查玛玛'
-    14172: { detect: 'visual', grade: 'easy', note: '中等宽度的前方扇形提示AOE。' }, // '漫步神香草'
-    14173: { detect: 'visual', grade: 'caution', note: '巡逻怪。\n可被眩晕，会施放超大范围环形AOE及前方扇形攻击。' }, // '漫步恐鹤'
-    14174: { detect: 'visual', grade: 'danger', note: '外环雷：无提示的超大月环！\n尾镰：隐藏的中等范围钢铁。\n高速撞击：直线攻击。' }, // '漫步吼叫的小豹'
-    14175: { detect: 'visual', grade: 'easy', note: '读条小钢铁 或 大范围扫尾' }, // '漫步狞猫'
-    14176: { detect: 'visual', grade: 'caution', note: '瞬间将目标拉近，然后施放延迟中等范围的钢铁。' }, // '漫步巨人'
-    14177: { detect: 'visual', grade: 'easy', note: undefined }, // '漫步甲虫'
-    14097: { detect: 'boss', grade: 'caution', note: '小仙人掌对自身所在格造成伤害。\n大仙人掌对自身及周围9格造成伤害' }, // '元祖马利克刺人仙' 60层BOSS
+    14165: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈' }, // 漫步褐爪 traverse tawnyclaw トラバース・ブラウンクロウ
+    14166: { detect: 'visual', grade: 'easy', note: undefined }, // 漫步守护者 traverse guardian トラバース・ガーディアン
+    14167: { detect: 'visual', grade: 'danger', note: '巡逻怪\n读条正面270度攻击，可站在脚下或背后躲避，可利用视线阻挡。', resists: { stun: true } }, // 漫步沙蛇 traverse sand serpent トラバース・サンドサーペント
+    14168: { detect: 'visual', grade: 'danger', note: '读条让所有人进入目押状态。根据动作释放钢铁 或 正面大扇形' }, // 漫步美甲兽 traverse saichania トラバース・サイカニア
+    14169: { detect: 'visual', grade: 'caution', note: '非战斗状态下会施放反击屏障，物理攻击会受到秒杀级反伤！' }, // 漫步巨蜥 traverse monitor トラバース・モニター
+    14170: { detect: 'visual', grade: 'easy', note: '读条面前直条 或 点名黄圈' }, // 漫步邪恶海鸟 traverse fallen aevis トラバース・イビルエイビス
+    14171: { detect: 'visual', grade: 'easy', note: '读条小扇形' }, // 漫步帕查玛玛 traverse Pachamama トラバース・パチャママ
+    14172: { detect: 'visual', grade: 'easy', note: '中等宽度的前方扇形提示AOE。' }, // 漫步神香草 traverse hyssop トラバース・ヒソプ
+    14173: { detect: 'visual', grade: 'caution', note: '巡逻怪。\n会施放超大范围环形AOE及前方扇形攻击。', resists: { stun: true } }, // 漫步恐鹤 traverse phorusrhacos トラバース・フォルスラコス
+    14174: { detect: 'visual', grade: 'danger', note: '外环雷：无提示的超大月环！\n尾镰：隐藏的中等范围钢铁。\n高速撞击：直线攻击。' }, // 漫步吼叫的小豹 traverse howler トラバース・ハウラー
+    14175: { detect: 'visual', grade: 'easy', note: '读条钢铁。背后有人时会释放大范围扫尾' }, // 漫步狞猫 traverse caracal トラバース・カラカル
+    14176: { detect: 'visual', grade: 'caution', note: '瞬间将目标拉近，然后施放延迟中等范围的钢铁。' }, // 漫步巨人 traverse gigant トラバース・ギガント
+    14177: { detect: 'visual', grade: 'easy', note: undefined }, // 漫步甲虫 traverse beetle トラバース・ビートル
+    14097: { detect: 'boss', grade: 'caution', note: '小仙人掌对自身所在格造成伤害。\n大仙人掌对自身及周围9格造成伤害' }, // 元祖马利克刺人仙 ancestral Maliktender 元祖マリクテンダー
 
     // 61-70层
-    14178: { detect: 'visual', grade: 'danger', note: '左右刀，躲完立即穿到对侧！' }, // '得到宽恕的暴动'
-    14179: { detect: 'visual', grade: 'caution', note: '几千针刺：延迟大范围直线AOE。' }, // '得到宽恕的争论'
-    14180: { detect: 'visual', grade: 'easy', note: '未终针：延迟小范围前方直线AOE。\n终极针：血量低于10%时的点名狂暴攻击。\n可以打断。' }, // '漫步蜂后'
-    14181: { detect: undefined, grade: 'danger', note: '水晶刺：血量低于25%时会反复释放全场AOE，可用视线阻挡。\n冰雹发射：延迟直线AOE。' }, // '得到宽恕的怨恨'
-    14182: { detect: 'visual', grade: 'caution', note: '巡逻怪。\n执行贯穿：向前冲刺并在终点释放小范围钢铁，接地震（月环）。' }, // '漫步塔罗斯'
-    14183: { detect: 'visual', grade: 'caution', note: '冲顶：快速施放的前方宽扇形延迟AOE。' }, // '漫步壁崖鼹鼠'
-    14184: { detect: 'visual', grade: 'caution', note: '在两次“沉岛”圆形点名后会施放超大范围十字AOE！' }, // '得到宽恕的偏颇'
-    14185: { detect: 'visual', grade: 'easy', note: '巡逻怪。\n掷锤：点名脚底黄圈' }, // '得到宽恕的恶作剧'
-    14186: { detect: 'visual', grade: 'caution', note: '无提示的前方石化攻击（无法背对躲避）。\n延迟小范围钢铁。' }, // '得到宽恕的贪食'
-    14187: { detect: 'visual', grade: 'danger', note: '隐身敌人，接近后才会显形。\n会向你冲撞造成约40K伤害，随后施放快速且延迟小范围钢铁。\n仅出现于61-64层。' }, // '得到宽恕的疑虑'
-    14188: { detect: 'visual', grade: 'danger', note: '【可能是需要诱导】延迟前（或后）方半圆AOE，随后立即在背后（或前面）再释放一次。\n可以打断。' }, // '得到宽恕的眷恋'
-    14189: { detect: 'visual', grade: 'caution', note: '读条小钢铁' }, // '漫步诺姆'
-    14190: { detect: 'visual', grade: 'caution', note: '泥石流：中等范围、延迟释放的宽扇形AOE。' }, // '漫步恩戈齐'
-    13971: { detect: 'boss', grade: 'caution', note: '热切光芒：直线。\n热切之眼：月环。\n白球会按照出现顺序发动月环。\n二千迈纳回转：钢铁\n八重横扫：需要记忆预兆的8次连续扇形。' }, // '得到宽恕的狂热' 70层BOSS
+    14178: { detect: 'visual', grade: 'danger', note: '左右刀，躲完立即穿到对侧！' }, // 得到宽恕的暴动 forgiven riot フォーギヴン・ライオティング
+    14179: { detect: 'visual', grade: 'caution', note: '几千针刺：延迟大范围直线AOE。' }, // 得到宽恕的争论 forgiven contention フォーギヴン・コンテンション
+    14180: { detect: 'visual', grade: 'easy', note: '未终针：延迟小范围前方直线AOE。\n终极针：血量低于10%时的点名狂暴攻击。\n可以打断。' }, // 漫步蜂后 traverse queen トラバース・クイーンビー
+    14181: { detect: undefined, grade: 'danger', note: '水晶刺：血量低于25%时会反复释放全场AOE，可用视线阻挡。\n冰雹发射：延迟直线AOE。' }, // 得到宽恕的怨恨 forgiven grudge フォーギヴン・グラッジ
+    14182: { detect: 'visual', grade: 'caution', note: '巡逻怪。\n执行贯穿：向前冲刺并在终点释放小范围钢铁，接地震（月环）。' }, // 漫步塔罗斯 traverse Talos トラバース・タロース
+    14183: { detect: 'visual', grade: 'caution', note: '冲顶：快速施放的前方宽扇形延迟AOE。' }, // 漫步壁崖鼹鼠 traverse cliffmole トラバース・クリフモール
+    14184: { detect: 'visual', grade: 'caution', note: '在两次“沉岛”圆形点名后会施放超大范围十字AOE！' }, // 得到宽恕的偏颇 forgiven imparity フォーギヴン・イムパリティー
+    14185: { detect: 'visual', grade: 'easy', note: '巡逻怪。\n掷锤：点名脚底黄圈' }, // 得到宽恕的恶作剧 forgiven mischief フォーギヴン・ミスチーフ
+    14186: { detect: 'visual', grade: 'caution', note: '无提示的前方石化攻击（无法背对躲避）。\n延迟小范围钢铁。' }, // 得到宽恕的贪食 forgiven voracity フォーギヴン・ヴォラシティ
+    14187: { detect: 'visual', grade: 'danger', note: '隐身敌人，接近后才会显形。\n会向你冲撞造成约40K伤害，随后施放快速且延迟小范围钢铁。\n仅出现于61-64层。' }, // 得到宽恕的疑虑 forgiven doubt フォーギヴン・ダウト
+    14188: { detect: 'visual', grade: 'danger', note: '【可能是需要诱导】延迟前（或后）方半圆AOE，随后立即在背后（或前面）再释放一次。\n可以打断。' }, // 得到宽恕的眷恋 forgiven attachment フォーギヴン・アタッチメント
+    14189: { detect: 'visual', grade: 'caution', note: '读条小钢铁' }, // 漫步诺姆 traverse gnome トラバース・ノーム
+    14190: { detect: 'visual', grade: 'caution', note: '泥石流：中等范围、延迟释放的宽扇形AOE。' }, // 漫步恩戈齐 traverse ngozi トラバース・ンゴツィ
+    13971: { detect: 'boss', grade: 'caution', note: '热切光芒：直线。\n热切之眼：月环。\n白球会按照出现顺序发动月环。\n二千迈纳回转：钢铁\n八重横扫：需要记忆预兆的8次连续扇形。' }, // 得到宽恕的狂热 forgiven zeal フォーギヴン・ズィール
 
     // 71-80层
-    14191: { detect: 'visual', grade: 'caution', note: '读条钢铁 或 正面超大扇形' }, // '得到宽恕的不和'
-    14192: { detect: 'visual', grade: 'danger', note: '非战斗状态会释放全屏AOE\n进战后会读条释放正面扇形AOE' }, // '得到宽恕的腐化物'
-    14193: { detect: 'visual', grade: 'danger', note: '两种读条，先月环后钢铁，或者先钢铁后月环' }, // '得到宽恕的恶意'
-    14194: { detect: 'visual', grade: 'caution', note: '巡逻怪\n拉怪时会跳向玩家并击退，以及一个毒DOT' }, // '漫步食岩者'
-    14195: { detect: 'visual', grade: 'danger', note: '巡逻怪\n读条钢铁，死了会自爆！！！！！！' }, // '漫步爆岩怪'
-    14196: { detect: 'visual', grade: 'easy', note: '点名脚下黄圈' }, // '漫步奶油泡芙'
-    14197: { detect: 'scope', grade: 'danger', note: '超级大月环或者十字！注意不要拉在过道上导致无路可走！' }, // '得到宽恕的虚夸'
-    14198: { detect: undefined, grade: 'caution', note: '巡逻怪\n连续四次正面半圆顺劈' }, // '得到宽恕的傲慢'
-    14199: { detect: 'scope', grade: 'caution', note: '变质岩波：读条扇形\n造山风暴：点名一个人的脚下黄圈' }, // '得到宽恕的诽谤'
-    14200: { detect: 'visual', grade: 'caution', note: '小范围直线AOE，并且偶尔会连续平A两次' }, // '得到宽恕的不信任'
-    14201: { detect: 'visual', grade: 'caution', note: '推翻：延迟的小范围钢铁。' }, // '漫步阿米特'
-    14202: { detect: 'auditory', grade: 'caution', note: '读条中等范围钢铁' }, // '漫步蠕虫'
-    14203: { detect: 'visual', grade: 'caution', note: '读条无提示的小扇形，秒杀级伤害' }, // '漫步铰颌蚁'
-    13968: { detect: 'boss', grade: 'caution', note: '紫雷是月环，痛伤是钢铁。\n红色buff少移动 蓝色buff吃前后刀。' }, // '得到宽恕的亵渎' 80层BOSS
+    14191: { detect: 'visual', grade: 'caution', note: '读条钢铁 或 正面超大扇形' }, // 得到宽恕的不和 forgiven dissention フォーギヴン・ディセンション
+    14192: { detect: 'visual', grade: 'danger', note: '非战斗状态会释放全屏AOE\n进战后会读条释放正面扇形AOE' }, // 得到宽恕的腐化物 forgiven corruption フォーギヴン・コラプション
+    14193: { detect: 'visual', grade: 'danger', note: '两种读条，先月环后钢铁，或者先钢铁后月环' }, // 得到宽恕的恶意 forgiven spite フォーギヴン・スパイト
+    14194: { detect: 'visual', grade: 'caution', note: '巡逻怪\n拉怪时会跳向玩家并击退，以及一个毒DOT' }, // 漫步食岩者 traverse stone eater トラバース・ロックイーター
+    14195: { detect: 'visual', grade: 'danger', note: '巡逻怪\n读条钢铁，死了会自爆！！！！！！' }, // 漫步爆岩怪 traverse huldu トラバース・フルドゥ
+    14196: { detect: 'visual', grade: 'easy', note: '点名脚下黄圈' }, // 漫步奶油泡芙 traverse diplomat cream トラバース・ホイップカスタード
+    14197: { detect: 'scope', grade: 'danger', note: '超级大月环或者十字！注意不要拉在过道上导致无路可走！' }, // 得到宽恕的虚夸 forgiven vanity フォーギヴン・ヴァニティー
+    14198: { detect: undefined, grade: 'caution', note: '巡逻怪\n连续四次正面半圆顺劈' }, // 得到宽恕的傲慢 forgiven arrogance フォーギヴン・アロガンス
+    14199: { detect: 'scope', grade: 'caution', note: '变质岩波：读条扇形\n造山风暴：点名一个人的脚下黄圈' }, // 得到宽恕的诽谤 forgiven slander フォーギヴン・スランダー
+    14200: { detect: 'visual', grade: 'caution', note: '小范围直线AOE，并且偶尔会连续平A两次' }, // 得到宽恕的不信任 forgiven unbelief フォーギヴン・アンビリーフ
+    14201: { detect: 'visual', grade: 'caution', note: '推翻：延迟的小范围钢铁。' }, // 漫步阿米特 traverse amemet トラバース・アメミット
+    14202: { detect: 'auditory', grade: 'caution', note: '读条中等范围钢铁' }, // 漫步蠕虫 traverse worm トラバース・ウォーム
+    14203: { detect: 'visual', grade: 'caution', note: '读条无提示的小扇形，秒杀级伤害' }, // 漫步铰颌蚁 traverse scissorjaws トラバース・シザージョウ
+    13968: { detect: 'boss', grade: 'caution', note: '紫雷是月环，痛伤是钢铁。\n红色buff少移动 蓝色buff吃前后刀。' }, // 得到宽恕的亵渎 forgiven profanity フォーギヴン・プロファニティー
 
     // 81-90层
-    14204: { detect: 'visual', grade: 'caution', note: '踢击与扫尾：先读条小范围前方直线AOE，随后在背后顺劈' }, // '漫步卡马'
-    14205: { detect: 'visual', grade: 'danger', note: '非战斗状态下会释放全场AOE。\n深渊射线：读条极大范围的直线AOE，穿墙！' }, // '被召唤的巴力'
-    14206: { detect: 'scope', grade: 'caution', note: '巡逻怪\n残杀：会连续击退四次\n风暴斩：前方扇形AOE' }, // '漫步骑士'
-    14207: { detect: undefined, grade: 'danger', note: '巡逻怪\n会点名热病，不要移动。可通过视线阻挡来避免。' }, // '被召唤的梦魔'
-    14208: { detect: 'visual', grade: 'caution', note: '巡逻怪\n连续施放3-4次双重平A后，立即发动秒杀顺劈' }, // '被召唤的洪巴巴'
-    14209: { detect: 'visual', grade: 'easy', note: '读条小范围扇形顺劈' }, // '被召唤的格雷姆林'
-    14210: { detect: 'visual', grade: 'caution', note: '读条中等范围扇形\n低血量时会施放长读条的狂暴技能，可能是点名秒杀攻击。' }, // '漫步异豺'
-    14211: { detect: 'visual', grade: 'danger', note: '昏暗：长读条的可打断超宽扇形AOE，不要与“黑暗”混淆。' }, // '漫步卡部斯'
-    14212: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈，\n冰结陷阱：钢铁' }, // '被召唤的小撒旦'
-    14213: { detect: 'visual', grade: 'caution', note: '读条宽扇形顺劈' }, // '被召唤的上级恶魔'
-    14214: { detect: 'visual', grade: 'easy', note: '大凶眼：很大范围的背对' }, // '被召唤的盖因'
-    14215: { detect: 'visual', grade: 'danger', note: '闪雷：读条前方圆形AOE。\n地狱爪击：读条前方扇形AOE。\n拍尾：隐藏的大范围后方扇形AOE。\n雷光：不可见的点某人脚下的黄圈' }, // '被召唤的刻耳柏洛斯'
-    14216: { detect: 'scope', grade: 'caution', note: '（远离时会释放）昏暗：很大范围扇形\n（靠近时会释放）心魔：小范围钢铁' }, // '被召唤的行吟诗人'
-    14090: { detect: 'boss', grade: 'caution', note: '发光手一侧的270°半场刀。\n横断冲：对boss左右的90°扇形攻击\n纵断冲：对boss前后的90°扇形攻击\nX断冲时，场边的魔法阵会对所在行或列发动直线攻击。' }, // '玛拉科达' 90层BOSS
+    14204: { detect: 'visual', grade: 'caution', note: '踢击与扫尾：先读条小范围前方直线AOE，随后在背后顺劈' }, // 漫步卡马 traverse cama トラバース・キャマ
+    14205: { detect: 'visual', grade: 'danger', note: '非战斗状态下会释放全场AOE。\n深渊射线：读条极大范围的直线AOE，穿墙！' }, // 被召唤的巴力 invoked Baal インヴォークド・バエル
+    14206: { detect: 'scope', grade: 'caution', note: '巡逻怪\n残杀：会连续击退四次\n风暴斩：前方扇形AOE' }, // 漫步骑士 traverse rider トラバース・ライダー
+    14207: { detect: undefined, grade: 'danger', note: '巡逻怪\n会点名热病，不要移动。可通过视线阻挡来避免。' }, // 被召唤的梦魔 invoked succubus インヴォークド・サキュバス
+    14208: { detect: 'visual', grade: 'caution', note: '巡逻怪\n连续施放3-4次双重平A后，立即发动秒杀顺劈' }, // 被召唤的洪巴巴 invoked Humbaba インヴォークド・フンババ
+    14209: { detect: 'visual', grade: 'easy', note: '读条小范围扇形顺劈' }, // 被召唤的格雷姆林 invoked gremlin インヴォークド・グレムリン
+    14210: { detect: 'visual', grade: 'caution', note: '读条中等范围扇形\n低血量时会施放长读条的狂暴技能，可能是点名秒杀攻击。' }, // 漫步异豺 traverse gnoll トラバース・ノール
+    14211: { detect: 'visual', grade: 'danger', note: '昏暗：长读条的可打断超宽扇形AOE，不要与“黑暗”混淆。' }, // 漫步卡部斯 traverse cubus トラバース・カブス
+    14212: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈，\n冰结陷阱：钢铁' }, // 被召唤的小撒旦 invoked satana インヴォークド・サタナジュニア
+    14213: { detect: 'visual', grade: 'caution', note: '读条宽扇形顺劈' }, // 被召唤的上级恶魔 summoned arch demon サモンド・アークデーモン
+    14214: { detect: 'visual', grade: 'easy', note: '大凶眼：很大范围的背对' }, // 被召唤的盖因 invoked caym インヴォークド・カイム
+    14215: { detect: 'visual', grade: 'danger', note: '闪雷：读条前方圆形AOE。\n地狱爪击：读条前方扇形AOE。\n拍尾：隐藏的大范围后方扇形AOE。\n雷光：不可见的点某人脚下的黄圈' }, // 被召唤的刻耳柏洛斯 invoked Cerberus インヴォークド・ケルベロス
+    14216: { detect: 'scope', grade: 'caution', note: '（远离时会释放）昏暗：很大范围扇形\n（靠近时会释放）心魔：小范围钢铁' }, // 被召唤的行吟诗人 invoked troubadour インヴォークド・トルバドゥール
+    14090: { detect: 'boss', grade: 'caution', note: '发光手一侧的270°半场刀。\n横断冲：对boss左右的90°扇形攻击\n纵断冲：对boss前后的90°扇形攻击\nX断冲时，场边的魔法阵会对所在行或列发动直线攻击。' }, // 玛拉科达 Malacoda マラコーダ
 
     // 91-100层
-    14217: { detect: undefined, grade: 'caution', note: '读条三重/四重进行连续强化攻击，随后发动致命的小范围环形AOE。' }, // '漫步狼人'
-    14218: { detect: undefined, grade: 'caution', note: '读条左右刀，记得穿' }, // '被召唤的古辛'
-    14219: { detect: undefined, grade: 'danger', note: '梦祸视线：直线AOE\n死亡会自爆！！！（可以隔墙躲避）' }, // '被召唤的梦祸'
-    14220: { detect: undefined, grade: 'caution', note: '点名，必须用墙或者障碍物阻挡' }, // '被召唤的单身汉'
-    14221: { detect: undefined, grade: 'caution', note: '石化需要背对\n怪光线：大范围直线AOE' }, // '被召唤的破坏本能'
-    14222: { detect: undefined, grade: 'caution', note: '巡逻怪\n读条斜着的左右刀\n前方花蜜喷吐：前方大扇形AOE。' }, // '被召唤的锯齿花'
-    14223: { detect: undefined, grade: 'easy', note: '根系纠缠：点名脚底黄圈\n藤枝伏地：小扇形' }, // '漫步紫三裂'
-    14224: { detect: 'auditory', grade: 'caution', note: '读条超长直线AOE（宽），穿墙！' }, // '漫步食人花'
-    14225: { detect: 'visual', grade: 'caution', note: '无读条小范围劈后面+读条顺劈，最好去侧面' }, // '被召唤的扎哈克'
-    14226: { detect: undefined, grade: 'caution', note: '效果未知，建议使用视线阻挡以保安全。' }, // '被召唤的阿刻戎'
-    14227: { detect: undefined, grade: 'easy', note: '巡逻怪\n读条钢铁' }, // '被召唤的傀儡'
-    14228: { detect: undefined, grade: 'easy', note: '读条扇形顺劈' }, // '漫步恶念'
-    14229: { detect: undefined, grade: 'caution', note: '黑暗神圣：点名某人的大黄圈\n生命停止：极快！前方超大扇形！' }, // '被召唤的古恶魔'
-    14037: { detect: 'boss', grade: 'caution', note: '男，需吃白buff' }, // '至极悲痛' 99层BOSS（男）机制过多，自己看攻略
-    14038: { detect: 'boss', grade: 'caution', note: '女，需吃黑buff' }, // '被侵蚀的食罪灵' 99层BOSS（女） 机制过多，自己看攻略
+    14217: { detect: undefined, grade: 'caution', note: '读条三重/四重进行连续强化攻击，随后发动致命的小范围环形AOE。' }, // 漫步狼人 traverse warg トラバース・ワーグ
+    14218: { detect: undefined, grade: 'caution', note: '读条左右刀，记得穿' }, // 被召唤的古辛 invoked Gusion インヴォークド・グシオン
+    14219: { detect: undefined, grade: 'danger', note: '梦祸视线：直线AOE\n死亡会自爆！！！（可以隔墙躲避）' }, // 被召唤的梦祸 invoked dreamer インヴォークド・ドリームエビル
+    14220: { detect: undefined, grade: 'caution', note: '点名，必须用墙或者障碍物阻挡' }, // 被召唤的单身汉 invoked bachelor インヴォークド・バチェラー
+    14221: { detect: undefined, grade: 'caution', note: '石化需要背对\n怪光线：大范围直线AOE' }, // 被召唤的破坏本能 invoked Destrudo インヴォークド・デストルドー
+    14222: { detect: undefined, grade: 'caution', note: '巡逻怪\n读条斜着的左右刀\n前方花蜜喷吐：前方大扇形AOE。' }, // 被召唤的锯齿花 invoked sawtooth インヴォークド・ソウトゥース
+    14223: { detect: undefined, grade: 'easy', note: '根系纠缠：点名脚底黄圈\n藤枝伏地：小扇形' }, // 漫步紫三裂 traverse triffid トラバース・ヴァイオレットトリフィド
+    14224: { detect: 'auditory', grade: 'caution', note: '读条超长直线AOE（宽），穿墙！' }, // 漫步食人花 traverse ya-te-veo トラバース・ヤテベオ
+    14225: { detect: 'visual', grade: 'caution', note: '无读条小范围劈后面+读条顺劈，最好去侧面' }, // 被召唤的扎哈克 invoked dahak インヴォークド・ダハーカ
+    14226: { detect: undefined, grade: 'caution', note: '效果未知，建议使用视线阻挡以保安全。' }, // 被召唤的阿刻戎 invoked Acheron インヴォークド・アケローン
+    14227: { detect: undefined, grade: 'easy', note: '巡逻怪\n读条钢铁' }, // 被召唤的傀儡 invoked poppet インヴォークド・パペット
+    14228: { detect: undefined, grade: 'easy', note: '读条扇形顺劈' }, // 漫步恶念 traverse malevolence トラバース・マレヴォレンス
+    14229: { detect: undefined, grade: 'caution', note: '黑暗神圣：点名某人的大黄圈\n生命停止：极快！前方超大扇形！' }, // 被召唤的古恶魔 invoked archaeodemon インヴォークド・アルケオデーモン
+    14037: { detect: 'boss', grade: 'caution', note: '男，需吃白buff' }, // 至极悲痛 Eminent Grief エミネントグリーフ
+    14038: { detect: 'boss', grade: 'caution', note: '女，需吃黑buff' }, // 被侵蚀的食罪灵 devoured eater 侵蝕された罪喰い
   },
   floorTips: {
     0: { zhCn: '`第1~10层`' },
