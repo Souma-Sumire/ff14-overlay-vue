@@ -225,7 +225,14 @@
     "easy": "簡單",
     "caution": "小心",
     "danger": "危險",
-    "unknown": "未知"
+    "unknown": "未知",
+    "test": {
+      "name": "敵人名稱",
+      "note": "怪物攻略筆記",
+      "floor_tips": "樓層提示",
+      "trap_status": "地圖陷阱狀態"
+    },
+    "demo-text": "當前為示範資料，鎖定後將顯示真實資料。"
   },
   "keigennRecord": {
     "source": "傷害來源",

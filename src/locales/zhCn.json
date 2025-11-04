@@ -225,7 +225,15 @@
     "easy": "简单",
     "caution": "小心",
     "danger": "危险",
-    "unknown": "未知"
+    "unknown": "未知",
+    "boss": "BOSS",
+    "test": {
+      "name": "敌人名称",
+      "note": "怪物攻略笔记",
+      "floor_tips": "层数提示",
+      "trap_status": "地图陷阱状态"
+    },
+    "demo-text": "当前为演示数据，锁定后将显示真实数据。"
   },
   "keigennRecord": {
     "source": "伤害来源",

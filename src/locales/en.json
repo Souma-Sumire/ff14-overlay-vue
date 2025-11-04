@@ -221,7 +221,14 @@
     "easy": "Easy",
     "caution": "Caution",
     "danger": "Danger",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "test": {
+      "name": "Enemy Name",
+      "note": "Monster Strategy Notes",
+      "floor_tips": "Floor Tips",
+      "trap_status": "Map Trap Status"
+    },
+    "demo-text": "This is demo data. Real data will be displayed after locking."
   },
   "keigennRecord": {
     "source": "Source",

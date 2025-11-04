@@ -221,7 +221,14 @@
     "easy": "簡単",
     "caution": "注意",
     "danger": "危険",
-    "unknown": "不明"
+    "unknown": "不明",
+    "test": {
+      "name": "敵名称",
+      "note": "モンスター攻略ノート",
+      "floor_tips": "階層ヒント",
+      "trap_status": "マップトラップ状態"
+    },
+    "demo-text": "現在はデモデータです。ロック後に実際のデータが表示されます。"
   },
   "keigennRecord": {
     "source": "発生源",

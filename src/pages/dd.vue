@@ -11,8 +11,8 @@ import {
 } from '../../cactbot/resources/overlay_plugin_api'
 import type { EnmityTargetCombatant, EventMap } from '../../cactbot/types/event'
 import NetRegexes from '../../cactbot/resources/netregexes'
-import { useDev } from '@/composables/useDev'
 import Util from '@/utils/util'
+import { useDemo } from '@/composables/useDemo'
 import { useLang } from '@/composables/useLang'
 import type { Lang } from '@/types/lang'
 
@@ -25,14 +25,14 @@ type Abilities = {
 }
 const { locale } = useLang()
 
-const dev = useDev()
+const demo = useDemo()
 
 const state = useStorage(
   'DD',
   {
     data: undefined as DDInfo | undefined,
     traps: undefined as undefined | 'disappeared' | 'revealed',
-    tarIns: null as EnmityTargetCombatant | null,
+    tarIns: null as Partial<EnmityTargetCombatant> | null,
     tarData: {} as EnemyData | undefined,
     pylons: {
       return: 0,
@@ -65,6 +65,9 @@ const netRegexs = {
 }
 
 const handleEnmityTargetData: EventMap['EnmityTargetData'] = (e) => {
+  if (demo.value) {
+    return
+  }
   if (e.Target) {
     state.value.tarIns = e.Target
     state.value.tarData = state.value.data?.enemiesData[e.Target.BNpcNameID]
@@ -77,6 +80,8 @@ const handleEnmityTargetData: EventMap['EnmityTargetData'] = (e) => {
 const handleChangeZone: EventMap['ChangeZone'] = (e) => {
   state.value.data = getMaps(e.zoneID)
   state.value.traps = undefined
+  state.value.pylons.return = 0
+  state.value.pylons.passage = 0
 }
 
 const handleLogLine: EventMap['LogLine'] = (e) => {
@@ -99,12 +104,11 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
     const command = network6d.groups!.command!
     const data0 = network6d.groups!.data0!
     if (['10000008', '10000009'].includes(command)) {
-      // 0d02 = 0%
-      // 0d11 = 100%
       const key =
         network6d.groups!.command! === '10000008' ? 'return' : 'passage'
-      state.value.pylons[key] = parseInt(data0, 16) - 2
-    } else {
+      state.value.pylons[key] = (parseInt(data0, 16) * 100) / 0x0b
+    } else if (['10000001', '10000006'].includes(command)) {
+      // 新的一层
       state.value.pylons.return = 0
       state.value.pylons.passage = 0
     }
@@ -162,7 +166,7 @@ const getEmoji = (str: string = 'unknown') => {
     easy: '🟢',
     caution: '⚠️',
     danger: '🚨',
-    unknown: '❔︎',
+    unknown: '🤔',
   }[s]
 }
 
@@ -182,45 +186,65 @@ function getLangString(v: langString | string | undefined) {
 
 <template>
   <CommonActWrapper>
-    <div class="container" v-if="state.data">
-      <header v-if="state.tarData?.detect !== 'boss'">
-        <pre v-if="state.data.floorTips">{{
-          getLangString(state.data.floorTips)
+    <template #readme>
+      <span class="demo-text">
+        {{ $t('dd.demo-text') }}
+      </span>
+    </template>
+    <div class="container" v-if="demo || state.data">
+      <header v-if="demo || state.tarData?.detect !== 'boss'">
+        <pre v-if="demo || state.data?.floorTips">{{
+          demo ? $t('dd.test.floor_tips') : getLangString(state.data?.floorTips)
         }}</pre>
-        <div v-if="state.traps">
-          {{
-            state.traps === 'disappeared'
-              ? $t('dd.trap_cleared')
-              : $t('dd.map_illuminated')
-          }}
-        </div>
         <div>
-          {{ $t('dd.pylon_return') }}:
-          {{ Math.round((state.pylons.return / 9) * 100) }}% /
-          {{ $t('dd.pylon_passage') }}:
-          {{ Math.round((state.pylons.passage / 9) * 100) }}%
+          {{ $t('dd.pylon_return') }}: {{ Math.round(state.pylons.return) }}% /
+          {{ $t('dd.pylon_passage') }}: {{ Math.round(state.pylons.passage) }}%
+          <span v-if="demo || state.traps">
+            {{
+              ' / ' +
+              (demo
+                ? $t('dd.test.trap_status')
+                : state.traps === 'disappeared'
+                ? $t('dd.trap_cleared')
+                : $t('dd.map_illuminated'))
+            }}
+          </span>
         </div>
       </header>
       <main class="main">
-        <h3 v-show="state.tarIns && state.tarData">
-          {{ state.tarIns?.Name
-          }}<span v-if="dev">({{ state.tarIns?.BNpcNameID }})</span>
+        <h3 v-show="demo || (state.tarIns && state.tarData)">
+          {{ demo ? $t('dd.test.name') : state.tarIns?.Name }}
         </h3>
-        <div v-show="state.tarData">
+        <div v-show="demo || state.tarData">
           <div class="tar-info">
-            <span>
-              {{ getEmoji(state.tarData?.grade)
-              }}{{ $t(state.tarData?.grade || 'unknown') }}
+            <span class="tar-grade">
+              {{ getEmoji(demo ? 'caution' : state.tarData?.grade)
+              }}{{
+                $t(`dd.${demo ? 'caution' : state.tarData?.grade || 'unknown'}`)
+              }}
             </span>
-            <span>
-              {{ getEmoji(state.tarData?.detect)
-              }}{{ $t(state.tarData?.detect || 'unknown') }}
+            <span class="tar-detect">
+              {{ getEmoji(demo ? 'visual' : state.tarData?.detect)
+              }}{{
+                $t(`dd.${demo ? 'visual' : state.tarData?.detect || 'unknown'}`)
+              }}
             </span>
-            <div class="resists" v-if="state.tarData?.detect !== 'boss'">
+            <div
+              class="resists"
+              v-if="demo || state.tarData?.detect !== 'boss'"
+            >
               <div
-                v-for="(v, k) in state.tarData?.resists"
+                v-for="(v, k) in demo
+                  ? {
+                      stun: true,
+                      sleep: true,
+                      heavy: false,
+                      slow: false,
+                      bind: false,
+                    }
+                  : state.tarData?.resists"
                 :key="k"
-                v-show="dev || (v !== undefined && state.partyAbilities[k])"
+                v-show="demo || (v !== undefined && state.partyAbilities[k])"
                 :class="`icon ${k} ${v ? 'valid' : 'invalid'}`"
               >
                 <div class="icon-text">
@@ -229,7 +253,9 @@ function getLangString(v: langString | string | undefined) {
               </div>
             </div>
           </div>
-          <pre>{{ getLangString(state.tarData?.note ?? '') }}</pre>
+          <pre>{{
+            demo ? $t('dd.test.note') : getLangString(state.tarData?.note ?? '')
+          }}</pre>
         </div>
       </main>
     </div>
@@ -268,7 +294,7 @@ $font-size: 20px;
   font-family: $font-family;
   font-size: $font-size;
   color: $text-color;
-  padding: 0.2em;
+  padding: 0.1em;
 
   text-shadow: $shadow-spread 0 $shadow-blur $accent-color,
     -$shadow-spread 0 $shadow-blur $accent-color,
@@ -290,7 +316,9 @@ $font-size: 20px;
   flex-direction: row;
   flex-wrap: nowrap;
   align-items: flex-start;
-  gap: 5px;
+  gap: 2px;
+  padding: 0;
+  margin: 0;
 }
 
 .resists {
@@ -317,7 +345,6 @@ $font-size: 20px;
   margin-top: -16px;
   white-space: nowrap;
   text-align: center;
-  text-shadow: $shadow-spread 0 $shadow-blur $accent-color;
 }
 
 .stun {
@@ -338,5 +365,29 @@ $font-size: 20px;
 
 .sleep {
   background-image: url('data:image/png;base64,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');
+}
+
+.tar-grade,
+.tar-detect {
+  min-width: 3.5em;
+}
+
+.demo-text {
+  user-select: none;
+  position: fixed;
+  top: 0em;
+  right: 0em;
+  width: min-content;
+  white-space: nowrap;
+  padding: 10px;
+  background-color: rgba(20, 20, 20, 0.4);
+  color: white;
+  font-size: 12px;
+  text-shadow: 1px 1px 1px #000, -1px -1px 1px #000, 1px -1px 1px #000,
+    -1px 1px 1px #000;
+
+  z-index: 200;
+  font-size: 16px;
+  overflow: hidden;
 }
 </style>
