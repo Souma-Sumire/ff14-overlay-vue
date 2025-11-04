@@ -231,7 +231,7 @@ function getLangString(v: langString | string | undefined) {
               }}
             </span>
             <div
-              class="resists"
+              class="vulnerabilities"
               v-if="demo || state.tarData?.detect !== 'boss'"
             >
               <div
@@ -243,13 +243,13 @@ function getLangString(v: langString | string | undefined) {
                       slow: false,
                       bind: false,
                     }
-                  : state.tarData?.resists"
+                  : state.tarData?.vulnerabilities"
                 :key="k"
                 v-show="demo || (v !== undefined && state.partyAbilities[k])"
                 :class="`icon ${k} ${v ? 'valid' : 'invalid'}`"
               >
                 <div class="icon-text">
-                  {{ $t(`dd.resists.${k}`) }}
+                  {{ $t(`dd.vulnerabilities.${k}`) }}
                 </div>
               </div>
             </div>
@@ -322,7 +322,7 @@ $font-size: 20px;
   margin: 0;
 }
 
-.resists {
+.vulnerabilities {
   display: flex;
 }
 

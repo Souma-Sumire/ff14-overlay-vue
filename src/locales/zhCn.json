@@ -208,7 +208,7 @@
     }
   },
   "dd": {
-    "resists": {
+    "vulnerabilities": {
       "stun": "眩晕",
       "slow": "减速",
       "sleep": "睡眠",

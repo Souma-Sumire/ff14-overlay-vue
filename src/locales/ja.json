@@ -204,7 +204,7 @@
     }
   },
   "dd": {
-    "resists": {
+    "vulnerabilities": {
       "stun": "スタン",
       "slow": "スロウ",
       "sleep": "スリープ",
