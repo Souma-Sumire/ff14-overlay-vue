@@ -4292,6 +4292,58 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
 /p 　　　　　　　 │ ST：①→⑥→強攻撃`,
       },
     ],
+    1306: [
+      {
+        Name: getSource('子言', 'https://www.bilibili.com/video/BV15S1qBCEwn'),
+        Text: `/p ■分摊(冲锋后以BOSS为北基准)
+/p 　北MTH1D1D2　南STH2D3D4 ※冲锋前在面朝BOSS左侧集合
+/p ■踩塔
+/p 　D3 MT D4　 
+/p 　MT　　ST 　 
+/p 　D1 ST  D2 　 
+/p ■锁刃跃动
+/p 　右手高(逆时针) 　 左手高(顺时针)
+/p 　 　 　 ４　　 　　　　　４
+/p 　　　　↑　 　 　 　 　　↑
+/p 　１←　他　→３ 　３←　他　→１
+/p 　　　　↓　　　　　　　↓
+/p 　　　　２　　　　　　　 ２
+/p （1/5、2/6、3/7、4/8互换位置）
+/p ■龙闪炮引导：东 → 西 → 东`,
+      },
+      {
+        Name: 'Clocks',
+        Place: {
+          A: { X: 100.0, Y: 0.0, Z: 82.0, ID: 0, Active: true },
+          B: { X: 118.0, Y: 0.0, Z: 100.0, ID: 1, Active: true },
+          C: { X: 100.0, Y: 0.0, Z: 118.0, ID: 2, Active: true },
+          D: { X: 82.0, Y: 0.0, Z: 100.0, ID: 3, Active: true },
+          One: { X: 87.0, Y: 0.0, Z: 87.0, ID: 4, Active: true },
+          Two: { X: 113.0, Y: 0.0, Z: 87.0, ID: 5, Active: true },
+          Three: { X: 113.0, Y: 0.0, Z: 113.0, ID: 6, Active: true },
+          Four: { X: 87.0, Y: 0.0, Z: 113.0, ID: 7, Active: true },
+        },
+      },
+      {
+        Name: getSource('Game8', 'https://game8.jp/ff14/727152'),
+        Text: `
+/p ■頭割り (突進後ボス基準)
+/p 　北MTH1D1D2　南STH2D3D4 ※突進前ボス見て左側に寄る
+/p ■塔 (タンク以外マップ基準)
+/p 　D3 MT D4　 T：MT北/西　ST南/東
+/p 　MT　　ST 　 D：基本散開か基本散開から時計回り
+/p 　D1 ST D2 　 H：Dのフォロー
+/p ■サイコロ
+/p 　右手引き(反時計)　左手引き(時計)
+/p 　 　 　 ４　　 　　　　　４
+/p 　　　　↑　 　 　 　 　　↑
+/p 　１←　他　→３ 　３←　他　→１
+/p 　　　　↓　　　　　　　↓
+/p 　　　　２　　　　　　　 ２
+/p （1/5、2/6、3/7、4/8受けたら交代）
+/p ■ビーム捨て：東 → 西 → 東`,
+      },
+    ],
   },
 }
 

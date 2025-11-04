@@ -77,7 +77,7 @@ onMounted(() => {
           </el-button>
         </el-button-group>
       </el-space>
-      <el-space m-l-2>
+      <el-space>
         <div class="menu">
           <el-button type="success" size="small" @click="macroStore.newMacro()">
             {{ $t('zoneMacro.newMacro') }}
@@ -447,6 +447,9 @@ body {
   display: flex;
   flex-direction: row;
   align-items: flex-end;
+  > button {
+    margin-left: 6px !important;
+  }
 }
 
 .main-box-card {

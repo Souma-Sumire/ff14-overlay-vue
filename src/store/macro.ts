@@ -89,16 +89,12 @@ const useMacroStore = defineStore('macro', {
       zoneNowName: useStorage('my-zone-now-name', ''),
       fastEntrance: [
         {
-          text: { zhCn: '极永暗', en: 'necron-ex', ja: '永遠の闇' },
-          value: '1296',
+          text: { zhCn: '极护龙', en: 'TWW(Extreme)', ja: '極護竜' },
+          value: '1306',
         },
         {
-          text: { zhCn: '诗想EG', en: 'Final Verse (Quantum)', ja: '詩想討滅' },
+          text: { zhCn: '诗想', en: 'Final Verse (Quantum)', ja: '詩想討滅' },
           value: '1311',
-        },
-        {
-          text: { zhCn: '力之塔', en: 'Forked Tower: Blood', ja: '力の塔' },
-          value: '1252',
         },
         { text: { zhCn: 'M5S' }, value: '1257' },
         { text: { zhCn: 'M6S' }, value: '1259' },
