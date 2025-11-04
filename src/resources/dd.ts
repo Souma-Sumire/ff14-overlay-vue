@@ -587,19 +587,19 @@ const PT: Data = {
 
     // 61-70层
     14178: { detect: 'visual', grade: 'danger', note: '左右刀，躲完立即穿到对侧！' }, // 得到宽恕的暴动 forgiven riot フォーギヴン・ライオティング
-    14179: { detect: 'visual', grade: 'caution', note: '几千针刺：延迟大范围直线AOE。' }, // 得到宽恕的争论 forgiven contention フォーギヴン・コンテンション
-    14180: { detect: 'visual', grade: 'easy', note: '未终针：延迟小范围前方直线AOE。\n终极针：血量低于10%时的点名狂暴攻击。\n可以打断。' }, // 漫步蜂后 traverse queen トラバース・クイーンビー
-    14181: { detect: undefined, grade: 'danger', note: '水晶刺：血量低于25%时会反复释放全场AOE，可用视线阻挡。\n冰雹发射：延迟直线AOE。' }, // 得到宽恕的怨恨 forgiven grudge フォーギヴン・グラッジ
+    14179: { detect: 'visual', grade: 'caution', note: '几千针刺：延迟大范围直线AOE。', resists: { stun: true } }, // 得到宽恕的争论 forgiven contention フォーギヴン・コンテンション
+    14180: { detect: 'visual', grade: 'easy', note: '未终针：延迟小范围前方直线AOE。\n终极针：血量低于10%时的点名狂暴攻击。\n可以打断。', resists: { stun: true } }, // 漫步蜂后 traverse queen トラバース・クイーンビー
+    14181: { detect: undefined, grade: 'danger', note: '水晶刺：血量低于25%时会反复释放全场AOE，可用视线阻挡。\n冰雹发射：延迟直线AOE。', resists: { stun: true } }, // 得到宽恕的怨恨 forgiven grudge フォーギヴン・グラッジ
     14182: { detect: 'visual', grade: 'caution', note: '巡逻怪。\n执行贯穿：向前冲刺并在终点释放小范围钢铁，接地震（月环）。' }, // 漫步塔罗斯 traverse Talos トラバース・タロース
-    14183: { detect: 'visual', grade: 'caution', note: '冲顶：快速施放的前方宽扇形延迟AOE。' }, // 漫步壁崖鼹鼠 traverse cliffmole トラバース・クリフモール
-    14184: { detect: 'visual', grade: 'caution', note: '在两次“沉岛”圆形点名后会施放超大范围十字AOE！' }, // 得到宽恕的偏颇 forgiven imparity フォーギヴン・イムパリティー
-    14185: { detect: 'visual', grade: 'easy', note: '巡逻怪。\n掷锤：点名脚底黄圈' }, // 得到宽恕的恶作剧 forgiven mischief フォーギヴン・ミスチーフ
-    14186: { detect: 'visual', grade: 'caution', note: '无提示的前方石化攻击（无法背对躲避）。\n延迟小范围钢铁。' }, // 得到宽恕的贪食 forgiven voracity フォーギヴン・ヴォラシティ
-    14187: { detect: 'visual', grade: 'danger', note: '隐身敌人，接近后才会显形。\n会向你冲撞造成约40K伤害，随后施放快速且延迟小范围钢铁。\n仅出现于61-64层。' }, // 得到宽恕的疑虑 forgiven doubt フォーギヴン・ダウト
-    14188: { detect: 'visual', grade: 'danger', note: '【可能是需要诱导】延迟前（或后）方半圆AOE，随后立即在背后（或前面）再释放一次。\n可以打断。' }, // 得到宽恕的眷恋 forgiven attachment フォーギヴン・アタッチメント
-    14189: { detect: 'visual', grade: 'caution', note: '读条小钢铁' }, // 漫步诺姆 traverse gnome トラバース・ノーム
-    14190: { detect: 'visual', grade: 'caution', note: '泥石流：中等范围、延迟释放的宽扇形AOE。' }, // 漫步恩戈齐 traverse ngozi トラバース・ンゴツィ
-    13971: { detect: 'boss', grade: 'caution', note: '热切光芒：直线。\n热切之眼：月环。\n白球会按照出现顺序发动月环。\n二千迈纳回转：钢铁\n八重横扫：需要记忆预兆的8次连续扇形。' }, // 得到宽恕的狂热 forgiven zeal フォーギヴン・ズィール
+    14183: { detect: 'visual', grade: 'caution', note: '冲顶：快速施放的前方宽扇形延迟AOE。', resists: { stun: true } }, // 漫步壁崖鼹鼠 traverse cliffmole トラバース・クリフモール
+    14184: { detect: 'visual', grade: 'caution', note: '在两次“沉岛”圆形点名后会施放超大范围十字AOE！', resists: { stun: true } }, // 得到宽恕的偏颇 forgiven imparity フォーギヴン・イムパリティー
+    14185: { detect: 'visual', grade: 'easy', note: '巡逻怪。\n掷锤：点名脚底黄圈', resists: { stun: true } }, // 得到宽恕的恶作剧 forgiven mischief フォーギヴン・ミスチーフ
+    14186: { detect: 'visual', grade: 'caution', note: '无提示的前方石化攻击（无法背对躲避）。\n延迟小范围钢铁。', resists: { stun: true } }, // 得到宽恕的贪食 forgiven voracity フォーギヴン・ヴォラシティ
+    14187: { detect: 'visual', grade: 'danger', note: '隐身敌人，接近后才会显形。\n会向你冲撞造成约40K伤害，随后施放快速且延迟小范围钢铁。\n仅出现于61-64层。', resists: { stun: true } }, // 得到宽恕的疑虑 forgiven doubt フォーギヴン・ダウト
+    14188: { detect: 'visual', grade: 'danger', note: '【可能是需要诱导】延迟前（或后）方半圆AOE，随后立即在背后（或前面）再释放一次。\n可以打断。', resists: { stun: true } }, // 得到宽恕的眷恋 forgiven attachment フォーギヴン・アタッチメント
+    14189: { detect: 'visual', grade: 'caution', note: '读条小钢铁', resists: { stun: true } }, // 漫步诺姆 traverse gnome トラバース・ノーム
+    14190: { detect: 'visual', grade: 'caution', note: '泥石流：中等范围、延迟释放的宽扇形AOE。', resists: { stun: true } }, // 漫步恩戈齐 traverse ngozi トラバース・ンゴツィ
+    13971: { detect: 'boss', grade: 'caution', note: '热忱怒视：直线。\n热忱之眼：月环。\n白球会按照出现顺序发动月环。\n二千迈纳回转：钢铁\n八重横扫：需要记忆预兆的8次连续扇形。' }, // 得到宽恕的狂热 forgiven zeal フォーギヴン・ズィール
 
     // 71-80层
     14191: { detect: 'visual', grade: 'caution', note: '读条钢铁 或 正面超大扇形' }, // 得到宽恕的不和 forgiven dissention フォーギヴン・ディセンション
@@ -615,10 +615,10 @@ const PT: Data = {
     14201: { detect: 'visual', grade: 'caution', note: '推翻：延迟的小范围钢铁。' }, // 漫步阿米特 traverse amemet トラバース・アメミット
     14202: { detect: 'auditory', grade: 'caution', note: '读条中等范围钢铁' }, // 漫步蠕虫 traverse worm トラバース・ウォーム
     14203: { detect: 'visual', grade: 'caution', note: '读条无提示的小扇形，秒杀级伤害' }, // 漫步铰颌蚁 traverse scissorjaws トラバース・シザージョウ
-    13968: { detect: 'boss', grade: 'caution', note: '紫雷是月环，痛伤是钢铁。\n红色buff少移动 蓝色buff吃前后刀。' }, // 得到宽恕的亵渎 forgiven profanity フォーギヴン・プロファニティー
+    13968: { detect: 'boss', grade: 'caution', note: '紫雷是月环，伤痛是钢铁。\n红色buff少移动 蓝色buff吃前后刀。' }, // 得到宽恕的亵渎 forgiven profanity フォーギヴン・プロファニティー
 
     // 81-90层
-    14204: { detect: 'visual', grade: 'caution', note: '踢击与扫尾：先读条小范围前方直线AOE，随后在背后顺劈' }, // 漫步卡马 traverse cama トラバース・キャマ
+    14204: { detect: 'visual', grade: 'caution', note: '飞踢后摆尾：先读条小范围前方直线AOE，随后在背后顺劈' }, // 漫步卡马 traverse cama トラバース・キャマ
     14205: { detect: 'visual', grade: 'danger', note: '非战斗状态下会释放全场AOE。\n深渊射线：读条极大范围的直线AOE，穿墙！' }, // 被召唤的巴力 invoked Baal インヴォークド・バエル
     14206: { detect: 'scope', grade: 'caution', note: '巡逻怪\n残杀：会连续击退四次\n风暴斩：前方扇形AOE' }, // 漫步骑士 traverse rider トラバース・ライダー
     14207: { detect: undefined, grade: 'danger', note: '巡逻怪\n会点名热病，不要移动。可通过视线阻挡来避免。' }, // 被召唤的梦魔 invoked succubus インヴォークド・サキュバス
@@ -631,7 +631,7 @@ const PT: Data = {
     14214: { detect: 'visual', grade: 'easy', note: '大凶眼：很大范围的背对' }, // 被召唤的盖因 invoked caym インヴォークド・カイム
     14215: { detect: 'visual', grade: 'danger', note: '闪雷：读条前方圆形AOE。\n地狱爪击：读条前方扇形AOE。\n拍尾：隐藏的大范围后方扇形AOE。\n雷光：不可见的点某人脚下的黄圈' }, // 被召唤的刻耳柏洛斯 invoked Cerberus インヴォークド・ケルベロス
     14216: { detect: 'scope', grade: 'caution', note: '（远离时会释放）昏暗：很大范围扇形\n（靠近时会释放）心魔：小范围钢铁' }, // 被召唤的行吟诗人 invoked troubadour インヴォークド・トルバドゥール
-    14090: { detect: 'boss', grade: 'caution', note: '发光手一侧的270°半场刀。\n横断冲：对boss左右的90°扇形攻击\n纵断冲：对boss前后的90°扇形攻击\nX断冲时，场边的魔法阵会对所在行或列发动直线攻击。' }, // 玛拉科达 Malacoda マラコーダ
+    14090: { detect: 'boss', grade: 'caution', note: '发光手一侧的270°半场刀。\n横断击：对boss左右的90°扇形攻击\n纵断击：对boss前后的90°扇形攻击\nX断击时，场边的魔法阵会对所在行或列发动直线攻击。' }, // 玛拉科达 Malacoda マラコーダ
 
     // 91-100层
     14217: { detect: undefined, grade: 'caution', note: '读条三重/四重进行连续强化攻击，随后发动致命的小范围环形AOE。' }, // 漫步狼人 traverse warg トラバース・ワーグ
