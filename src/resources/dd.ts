@@ -556,13 +556,13 @@ const PT: Data = {
     // 41-50层
     14152: { detect: 'visual', grade: 'caution', note: '吸引+延迟钢铁' }, // 交错路塑像 traverse petreffigy トラバース・エフィジィ
     14153: { detect: 'visual', grade: 'danger', note: '移动极慢，但伤害极高。不要被它碰到！\n攻击会叠加易伤。\n还会使用隐藏的步进式环形地震攻击。' }, // 交错路托尔巴龟 traverse troubadour トラバース・トルバ
-    14154: { detect: 'visual', grade: undefined, note: '读条毒滴牙，可打断，效果未知。' }, // 交错路水蚺 traverse anaconda トラバース・アナコンダ
+    14154: { detect: 'visual', grade: undefined, note: '毒滴牙：使下次平A带毒dot，可打断。' }, // 交错路水蚺 traverse anaconda トラバース・アナコンダ
     14155: { detect: 'visual', grade: 'easy', note: '延迟小范围前方扇形AOE' }, // 交错路三尖树 traverse triffid トラバース・トリフィド
     14156: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈' }, // 交错路蜥蜴 traverse lizard トラバース・リザード
     14157: { detect: 'visual', grade: 'easy', note: '加速自身，提高攻速。' }, // 交错路白蚁 traverse termite トラバース・ターマイト
     14158: { detect: 'visual', grade: 'caution', note: '直线冲锋AOE，然后再冲回去。' }, // 交错路蚁狮 traverse antlion トラバース・アントリオン
-    14159: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈' }, // 交错路钳喙魔鸟 traverse pincerbeak トラバース・ピンサービーク
-    14160: { detect: 'visual', grade: 'easy', note: '读条直线攻击' }, // 交错路飞鸢 traverse cliffkite トラバース・クリフカイト
+    14159: { detect: 'visual', grade: 'easy', note: '大范围钢铁' }, // 交错路钳喙魔鸟 traverse pincerbeak トラバース・ピンサービーク
+    14160: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条直线攻击' }, // 交错路飞鸢 traverse cliffkite トラバース・クリフカイト
     14161: { detect: 'visual', grade: 'caution', note: '愤怒旋风：延迟钢铁，会造成无法净化的眩晕，伤害约65K。\n愤怒一击：延迟小范围直线AOE，伤害约70K。' }, // 交错路兵装 traverse weapon トラバース・ウェポン
     14162: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈，可打断' }, // 交错路龙舌兰 traverse agave トラバース・アガベ
     14163: { detect: 'visual', grade: 'easy', note: '读条扇形' }, // 交错路大口花 traverse germinant トラバース・ジェルミナンツ

@@ -51,7 +51,7 @@ function getInitialLocale(): Lang {
     return urlLang as Lang
   }
 
-  return getBrowserLocale()
+  return getBrowserLocale() ?? 'en' as Lang
 }
 
 export { getInitialLocale, messages }
