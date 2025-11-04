@@ -543,12 +543,12 @@ const PT: Data = {
     14141: { detect: 'visual', grade: 'caution', note: '归于尘土：血量低于25%时反复施放全场AOE，致命。\n平时会为自己增加攻击力造成可观伤害。', vulnerabilities: { stun: true } }, // 得到宽恕的背德 forgiven perversion フォーギヴン・パーヴァージョン
     14142: { detect: 'visual', grade: 'easy', note: '只会平A', vulnerabilities: { stun: true } }, // 得到宽恕的勒索 forgiven extortion フォーギヴン・エクストーション
     14143: { detect: 'visual', grade: 'easy', note: '读条小扇形', vulnerabilities: { stun: true } }, // 得到宽恕的偏见 forgiven prejudice フォーギヴン・プレジュディス
-    14144: { detect: 'visual', grade: 'caution', note: '巡逻怪\n木马：前方扇形AOE，范围极大！', vulnerabilities: { stun: true } }, // 得到宽恕的伪善 forgiven hypocrisy フォーギヴン・ヒポクリシー
+    14144: { detect: 'visual', grade: 'caution', note: '巡逻怪\n木马：前方扇形AOE，范围极大！\n绞刑笼：钢铁', vulnerabilities: { stun: true } }, // 得到宽恕的伪善 forgiven hypocrisy フォーギヴン・ヒポクリシー
     14145: { detect: undefined, grade: 'caution', note: '左/右触手：隐藏的半场刀，范围极大！', vulnerabilities: { stun: true } }, // 得到宽恕的暴躁 forgiven petulance フォーギヴン・ペチュランス
     14146: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈，可打断', vulnerabilities: { stun: true } }, // 得到宽恕的嘲笑 forgiven mockery フォーギヴン・モッカリィ
     14147: { detect: 'visual', grade: 'caution', note: '读条小扇形。\n在低血量时会快速连续释放直线AOE。', vulnerabilities: { stun: true } }, // 交错路判官 traverse inquisitor トラバース・インクイジター
-    14148: { detect: 'visual', grade: 'easy', note: '巡逻怪。\n远距离时会使用中等范围的扇形AOE，近距离则为小范围环形AOE。', vulnerabilities: { stun: true } }, // 交错路妖鸟 bird of the traverse バード・オブ・トラバース
-    14149: { detect: 'visual', grade: 'easy', note: '先是小扇形提示，随后接着大范围扇形AOE。', vulnerabilities: { stun: true } }, // 交错路石狮 traverse lionstone トラバース・ストーンライオン
+    14148: { detect: 'visual', grade: 'easy', note: '巡逻怪。\n远距离时会使用中等范围的扇形AOE，近距离则为小范围钢铁AOE。', vulnerabilities: { stun: true } }, // 交错路妖鸟 bird of the traverse バード・オブ・トラバース
+    14149: { detect: 'visual', grade: 'easy', note: '狮子业火：很长的窄扇形', vulnerabilities: { stun: true } }, // 交错路石狮 traverse lionstone トラバース・ストーンライオン
     14150: { detect: 'visual', grade: 'easy', note: '高山气流：前方直条攻击', vulnerabilities: { stun: true } }, // 交错路飞翼兽 traverse jaculus トラバース・ヤクルス
     14151: { detect: 'visual', grade: 'caution', note: '飞驰：强力击退，可通过视线躲避。\n天马嘶啸：延迟小范围钢铁，可通过视线躲避。', vulnerabilities: { stun: true } }, // 交错路天马 traverse pegasus トラバース・ペガサス
     13977: { detect: 'boss', grade: 'easy', note: '小怪会复读技能：黄色为钢铁 蓝色为击退。\n小怪可选中后尽快击杀。' }, // 得到宽恕的天真 forgiven naivety フォーギヴン・ナイヴテイ
@@ -556,7 +556,7 @@ const PT: Data = {
     // 41-50层
     14152: { detect: 'visual', grade: 'caution', note: '吸引+延迟钢铁', vulnerabilities: { stun: true } }, // 交错路塑像 traverse petreffigy トラバース・エフィジィ
     14153: { detect: 'visual', grade: 'danger', note: '移动极慢，但伤害极高。不要被它碰到！\n攻击会叠加易伤。\n还会使用隐藏的步进式环形地震攻击。', vulnerabilities: { stun: true } }, // 交错路托尔巴龟 traverse troubadour トラバース・トルバ
-    14154: { detect: 'visual', grade: undefined, note: '毒滴牙：使下次平A带毒dot，可打断。', vulnerabilities: { stun: true } }, // 交错路水蚺 traverse anaconda トラバース・アナコンダ
+    14154: { detect: 'visual', grade: 'easy', note: '毒滴牙：使下次平A带毒dot，可打断。', vulnerabilities: { stun: true } }, // 交错路水蚺 traverse anaconda トラバース・アナコンダ
     14155: { detect: 'visual', grade: 'easy', note: '延迟小范围前方扇形AOE' }, // 交错路三尖树 traverse triffid トラバース・トリフィド
     14156: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈', vulnerabilities: { stun: true } }, // 交错路蜥蜴 traverse lizard トラバース・リザード
     14157: { detect: 'visual', grade: 'easy', note: '加速自身，提高攻速。' }, // 交错路白蚁 traverse termite トラバース・ターマイト
