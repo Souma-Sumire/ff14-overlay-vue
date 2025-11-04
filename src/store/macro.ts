@@ -93,6 +93,10 @@ const useMacroStore = defineStore('macro', {
           value: '1296',
         },
         {
+          text: { zhCn: '诗想EG', en: 'Final Verse (Quantum)', ja: '詩想討滅' },
+          value: '1311',
+        },
+        {
           text: { zhCn: '力之塔', en: 'Forked Tower: Blood', ja: '力の塔' },
           value: '1252',
         },
