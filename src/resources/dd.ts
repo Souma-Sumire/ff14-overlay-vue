@@ -589,7 +589,7 @@ const PT: Data = {
     14178: { detect: 'visual', grade: 'danger', note: '左右刀，躲完立即穿到对侧！' }, // 得到宽恕的暴动 forgiven riot フォーギヴン・ライオティング
     14179: { detect: 'visual', grade: 'caution', note: '几千针刺：延迟大范围直线AOE。', vulnerabilities: { stun: true } }, // 得到宽恕的主见 forgiven contention フォーギヴン・コンテンション
     14180: { detect: 'visual', grade: 'easy', note: '未终针：延迟小范围前方直线AOE。\n终极针：血量低于10%时的点名狂暴攻击。\n可以打断。', vulnerabilities: { stun: true } }, // 交错路蜂后 traverse queen トラバース・クイーンビー
-    14181: { detect: undefined, grade: 'danger', note: '水晶刺：血量低于25%时会反复释放全场AOE，可用视线阻挡。\n冰雹发射：延迟直线AOE。', vulnerabilities: { stun: true } }, // 得到宽恕的怨恨 forgiven grudge フォーギヴン・グラッジ
+    14181: { detect: undefined, grade: 'danger', note: '巡逻怪。\n水晶刺：血量低于25%时会反复释放全场AOE，可用视线阻挡。\n冰雹发射：延迟直线AOE。', vulnerabilities: { stun: true } }, // 得到宽恕的怨恨 forgiven grudge フォーギヴン・グラッジ
     14182: { detect: 'visual', grade: 'caution', note: '巡逻怪。\n执行贯穿：向前冲刺并在终点释放小范围钢铁，接地震（月环）。\n平A穿插小死刑' }, // 交错路塔罗斯 traverse Talos トラバース・タロース
     14183: { detect: 'visual', grade: 'caution', note: '冲顶：快速施放的前方宽扇形延迟AOE。', vulnerabilities: { stun: true } }, // 交错路壁崖鼹鼠 traverse cliffmole トラバース・クリフモール
     14184: { detect: 'visual', grade: 'caution', note: '在两次“沉岛”圆形点名后会施放超大范围十字AOE！', vulnerabilities: { stun: true } }, // 得到宽恕的不公 forgiven imparity フォーギヴン・イムパリティー
@@ -602,7 +602,7 @@ const PT: Data = {
     13971: { detect: 'boss', grade: 'caution', note: '热忱怒视：直线。\n热忱之眼：月环。\n白球会按照出现顺序发动月环。\n二千迈纳回转：钢铁\n八重横扫：需要记忆预兆的8次连续扇形。' }, // 得到宽恕的热忱 forgiven zeal フォーギヴン・ズィール
 
     // 71-80层
-    14191: { detect: 'visual', grade: 'caution', note: '读条钢铁 或 正面超大扇形' }, // 得到宽恕的争执 forgiven dissention フォーギヴン・ディセンション
+    14191: { detect: 'visual', grade: 'caution', note: '读条钢铁 或 正面超大扇形，可通过视线回避。' }, // 得到宽恕的争执 forgiven dissention フォーギヴン・ディセンション
     14192: { detect: 'visual', grade: 'danger', note: '非战斗状态会释放全屏AOE\n进战后会读条释放正面扇形AOE' }, // 得到宽恕的腐败 forgiven corruption フォーギヴン・コラプション
     14193: { detect: 'visual', grade: 'danger', note: '两种读条，先月环后钢铁，或者先钢铁后月环' }, // 得到宽恕的恶意 forgiven spite フォーギヴン・スパイト
     14194: { detect: 'visual', grade: 'caution', note: '巡逻怪\n拉怪时会跳向玩家并击退，以及一个毒DOT' }, // 交错路食岩狼 traverse stone eater トラバース・ロックイーター
