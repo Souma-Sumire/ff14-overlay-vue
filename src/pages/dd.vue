@@ -167,6 +167,7 @@ const getEmoji = (str: string = 'unknown') => {
     caution: '⚠️',
     danger: '🚨',
     unknown: '🤔',
+    boss: '👑',
   }[s]
 }
 

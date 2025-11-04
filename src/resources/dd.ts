@@ -539,11 +539,11 @@ const PT: Data = {
 
     // 31-40层
     14139: { detect: 'visual', grade: 'caution', note: '重拳波：跳跃至AOE区域后立刻释放更大的AOE，造成约70K伤害。\n强冲拳：在近战范围内会被强力击退。' }, // 交错路石兵 traverse soldierstone トラバース・ストーンソルジャー
-    14140: { detect: 'visual', grade: 'caution', note: '先在前方释放扇形AOE，随后立刻在背后再释放一次。' }, // 得到宽恕的疫病 forgiven plague フォーギヴン・プレイグ
+    14140: { detect: 'visual', grade: 'caution', note: '巡逻怪\n先在前方释放扇形AOE，随后立刻在背后再释放一次。' }, // 得到宽恕的疫病 forgiven plague フォーギヴン・プレイグ
     14141: { detect: 'visual', grade: 'caution', note: '归于尘土：血量低于25%时反复施放全场AOE，致命。\n平时会为自己增加攻击力造成可观伤害。' }, // 得到宽恕的背德 forgiven perversion フォーギヴン・パーヴァージョン
-    14142: { detect: 'visual', grade: 'easy', note: '无' }, // 得到宽恕的勒索 forgiven extortion フォーギヴン・エクストーション
+    14142: { detect: 'visual', grade: 'easy', note: '只会平A' }, // 得到宽恕的勒索 forgiven extortion フォーギヴン・エクストーション
     14143: { detect: 'visual', grade: 'easy', note: '读条小扇形' }, // 得到宽恕的偏见 forgiven prejudice フォーギヴン・プレジュディス
-    14144: { detect: 'visual', grade: 'caution', note: '前方扇形AOE，范围极大！' }, // 得到宽恕的伪善 forgiven hypocrisy フォーギヴン・ヒポクリシー
+    14144: { detect: 'visual', grade: 'caution', note: '巡逻怪\n木马：前方扇形AOE，范围极大！' }, // 得到宽恕的伪善 forgiven hypocrisy フォーギヴン・ヒポクリシー
     14145: { detect: undefined, grade: 'caution', note: '左/右触手：隐藏的半场刀，范围极大！' }, // 得到宽恕的暴躁 forgiven petulance フォーギヴン・ペチュランス
     14146: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈，可打断' }, // 得到宽恕的嘲笑 forgiven mockery フォーギヴン・モッカリィ
     14147: { detect: 'visual', grade: 'caution', note: '读条小扇形。\n在低血量时会快速连续释放直线AOE。' }, // 交错路判官 traverse inquisitor トラバース・インクイジター
