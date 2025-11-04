@@ -50,7 +50,9 @@ const state = useStorage(
 )
 
 const netRegexs = {
-  logMessage: NetRegexes.systemLogMessage({ id: ['1C50', '1C57', '1C58'] }),
+  logMessage: NetRegexes.systemLogMessage({
+    id: ['1C50', '1C57', '1C58', '2BF3'],
+  }),
   network6d: NetRegexes.network6d({
     command: [
       // 进到新的一层会同时出现01和06，暂不知其区别
@@ -87,16 +89,20 @@ const handleChangeZone: EventMap['ChangeZone'] = (e) => {
 const handleLogLine: EventMap['LogLine'] = (e) => {
   const logMessage = netRegexs.logMessage.exec(e.rawLine)
   if (logMessage) {
-    // 成功进行了传送！
     if (logMessage.groups?.id === '1C50') {
+      // 成功进行了传送！
       state.value.traps = undefined
-      // 这一层的陷阱全部被清除了！
     } else if (logMessage.groups?.id === '1C57') {
+      // 这一层的陷阱全部被清除了！
       state.value.traps = 'disappeared'
-      // 这一层的地图全部被点亮了！
     } else if (logMessage.groups?.id === '1C58') {
+      // 这一层的地图全部被点亮了！
+      state.value.traps = 'revealed'
+    } else if (logMessage.groups?.id === '2BF3') {
+      // 杜松香·敏慧
       state.value.traps = 'revealed'
     }
+
     return
   }
   const network6d = netRegexs.network6d.exec(e.rawLine)
