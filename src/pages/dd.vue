@@ -73,7 +73,7 @@ const closeCount = useStorage('DDCloseCount', 0, localStorage)
 
 const handleEnmityTargetData: EventMap['EnmityTargetData'] = (e) => {
   const delay = Date.now() - lastTime
-  if (lastTime && delay > 50 && !elMsg && closeCount.value < 3) {
+  if (lastTime && delay > 500 && !elMsg && closeCount.value < 3) {
     elMsg = ElMessage({
       showClose: true,
       message: `检测到仇恨刷新间隔过高（${delay}ms）<p>请将<strong>悬浮窗插件-基本设置-仇恨刷新间隔</strong>改为100。</p> <em>点击3次关闭按钮即会永久禁用此提示。</em>`,
