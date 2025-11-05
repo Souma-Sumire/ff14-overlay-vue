@@ -183,7 +183,7 @@
       "cactbot_raidboss": "詳細はリポジトリのREADME参照",
       "keigenn_record2_params": "ACTオーバーレイに追加し、リアルタイム監視に使用可能。ブラウザでログをインポートし、過去記録を分析可能。\nURLパラメータ説明：\nscale: 拡大倍率、デフォルト1\nopacity: 不透明度、デフォルト0.9\ntargetType: 対象表示、iconはジョブアイコン、jobはジョブ名\niconType: 対象アイコン（1～5）、デフォルト2\nparseAA: AA解析（新規ログのみ、履歴は変更不可）、デフォルトON\nparseDoT: DoT解析（新規ログのみ、履歴は変更不可）、デフォルトOFF\nminimize: 起動時最小化、デフォルトOFF\nactionCN: アクション名中国語化、デフォルトON\nstatusCN: ステータス名中国語化、デフォルトON\nlang: 言語、デフォルトzhCn、en/ja/ko/zhTw/zhCn",
       "key_skill_timer_params": "URLパラメータ説明：\nscale: 拡大倍率、デフォルト1\nopacity: 不透明度、デフォルト1\nlang: 言語、デフォルトzhCn、en/ja/ko/zhTw/zhCn\n\nその他設定はオーバーレイ設定（ロック解除後）参照。",
-      "dd_atlas": "90%のモンスターをカバー。データ追加は<a href=\"https://github.com/Souma-Sumire/ff14-overlay-vue\">PR</a>で提出してください\n死宮/天宮/優宮データはEtest2023、妖宮初期データはnepufish提供。\nURLパラメータ説明：\nscale: 拡大倍率、デフォルト1\nlang: 言語、デフォルトzhCn、en/ja/ko/zhTw/zhCn",
+      "dd_atlas": "データ追加は<a href=\"https://github.com/Souma-Sumire/ff14-overlay-vue\">PR</a>で提出してください\n死宮/天宮/優宮データはEtest2023、妖宮初期データはnepufish提供。\nURLパラメータ説明：\nscale: 拡大倍率、デフォルト1\nlang: 言語、デフォルトzhCn、en/ja/ko/zhTw/zhCn",
       "zone_macro": "ACT.OverlayPlugin WSServerの有効化が必要\nシャウト/マーカーは<a href=\"https://github.com/Natsukage/PostNamazu\">PostNamazu</a>が必要",
       "food_police": "食事残り時間チェック。\n通常は簡易表示、マウスオーバーでバフ属性、再度マウスオーバーで食事名を表示。（PT人数6人以上、50%以上食事時に表示）\nURLパラメータ説明：\nscale: 拡大倍率、デフォルト1\nlang: 言語、デフォルトzhCn、en/ja/ko/zhTw/zhCn",
       "healing_timeline": "カスタムタイムライン通知、FFLogsのワンクリック軸コピペ対応。\n<a href=\"/ff14-overlay-vue/#/timelineSettings?OVERLAY_WS=ws://127.0.0.1:10501/ws\">タイムライン編集はこちらをブラウザで開いてください</a>（以前の歯車）",

@@ -187,7 +187,7 @@
       "cactbot_raidboss": "詳見倉庫 README",
       "keigenn_record2_params": "可以新增到 ACT 懸浮窗中用於即時監控。也可以在瀏覽器中開啟，匯入日誌分析過往紀錄。\nURL地址欄參數說明：\nscale: 縮放倍率，預設1\nopacity: 懸浮窗不透明度，預設0.9\ntargetType: 目標顯示類型，icon為職業圖標，job為職業名\niconType: 目標圖標類型（可選1~5），預設2\nparseAA: 解析自動攻擊（僅影響新紀錄，歷史結果不會同步改變），預設開\nparseDoT: 解析DoT（僅影響新紀錄，歷史結果不會同步改變），預設關\nminimize: 啟動時迷你化，預設關\nactionCN: action名稱中文化，預設開\nstatusCN: status名稱中文化，預設開\nlang: 語言，預設zhCn，可選en、ja、ko、zhTw、zhCn",
       "key_skill_timer_params": "URL地址欄參數說明：\nscale: 縮放倍率，預設1\nopacity: 不透明度，預設1\nlang: 語言，預設zhCn，可選en、ja、ko、zhTw、zhCn\n\n更多自訂功能詳見懸浮窗設定（取消鎖定後顯示）。",
-      "dd_atlas": "覆蓋90%怪物，補充資料請提交<a href=\"https://github.com/Souma-Sumire/ff14-overlay-vue\">PR</a>\n死宮天宮優宮資料來自Etest2023，妖宮初期資料來自nepufish。\nURL地址欄參數說明：\nscale: 縮放倍率，預設1\nlang: 語言，預設zhCn，可選en、ja、ko、zhTw、zhCn",
+      "dd_atlas": "補充資料請提交<a href=\"https://github.com/Souma-Sumire/ff14-overlay-vue\">PR</a>\n死宮天宮優宮資料來自Etest2023，妖宮初期資料來自nepufish。\nURL地址欄參數說明：\nscale: 縮放倍率，預設1\nlang: 語言，預設zhCn，可選en、ja、ko、zhTw、zhCn",
       "zone_macro": "需開啟 ACT.OverlayPlugin WSServer\n喊話、標點需<a href=\"https://github.com/Natsukage/PostNamazu\">鯰魚精郵差</a>",
       "food_police": "檢查食物剩餘時間。\n平時會簡易顯示，當滑鼠移入後顯示食物加成屬性。再次移入後顯示食物名稱。（僅在小隊人數>=6，且至少有50%人吃食物時才顯示）\nURL地址欄參數說明：\nscale: 縮放倍率，預設1\nlang: 語言，預設zhCn，可選en、ja、ko、zhTw、zhCn",
       "healing_timeline": "自訂的時間軸提醒，支援FFLogs一鍵複製時間軸。\n<a href=\"/ff14-overlay-vue/#/timelineSettings?OVERLAY_WS=ws://127.0.0.1:10501/ws\">編輯時間軸請在瀏覽器中開啟這裡</a>（曾經的小齒輪）",
