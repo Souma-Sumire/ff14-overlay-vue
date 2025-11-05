@@ -65,7 +65,6 @@ const netRegexs = {
     ],
   }),
 }
-
 const handleEnmityTargetData: EventMap['EnmityTargetData'] = (e) => {
   if (demo.value) {
     return
@@ -161,6 +160,8 @@ onMounted(() => {
 onUnmounted(() => {
   removeOverlayListener('ChangeZone', handleChangeZone)
   removeOverlayListener('PartyChanged', handlePartyChanged)
+  removeOverlayListener('EnmityTargetData', handleEnmityTargetData)
+  removeOverlayListener('LogLine', handleLogLine)
 })
 
 const getEmoji = (str: string = 'unknown') => {

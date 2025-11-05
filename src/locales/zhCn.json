@@ -187,7 +187,7 @@
       "cactbot_raidboss": "俗称的轮椅TTS（实际上这样描述不准确），详见仓库 README",
       "keigenn_record2_params": "可以添加到 ACT 悬浮窗中用于实时监控。也可以在浏览器中打开，导入日志分析过往记录。\nURL地址栏参数说明：\nscale: 缩放倍率，默认1\nopacity: 悬浮窗不透明度，默认0.9\ntargetType: 目标显示类型，icon职业图标，job则是职业名\niconType: 目标图标类型（可选1~5），默认2\nparseAA: 解析自动攻击（仅影响新记录，历史结果不会同步改变），默认开\nparseDoT: 解析DoT（仅影响新记录，历史结果不会同步改变），默认关\nminimize: 启动时迷你化，默认关\nactionCN: action名称中文化，默认开\nstatusCN: status名称中文化，默认开\nlang: 语言，默认zhCn，可选en、ja、ko、zhTw、zhCn",
       "key_skill_timer_params": "URL地址栏参数说明：\nscale: 缩放倍率，默认1\nopacity: 不透明度，默认1\nlang: 语言，默认zhCn，可选en、ja、ko、zhTw、zhCn\n\n更多自定义功能见悬浮窗设置（取消锁定后显示）。",
-      "dd_atlas": "覆盖90%怪物，补充数据请提交<a href=\"https://github.com/Souma-Sumire/ff14-overlay-vue\">PR</a>\n死宫天宫优宫数据来自Etest2023，妖宫初期数据来自nepufish。\nURL地址栏参数说明：\nscale: 缩放倍率，默认1\nlang: 语言，默认zhCn，可选en、ja、ko、zhTw、zhCn",
+      "dd_atlas": "覆盖90%怪物，补充数据请提交<a href=\"https://github.com/Souma-Sumire/ff14-overlay-vue\">PR</a>\n死宫天宫优宫数据来自Etest2023，妖宫初期数据来自nepufish。\nURL地址栏参数说明：\nscale: 缩放倍率，默认1\nlang: 语言，默认zhCn，可选en、ja、ko、zhTw、zhCn\n\n建议将：“悬浮窗插件 - 基本设置 - 仇恨刷新间隔(毫秒)” 改为100或更低，以获得更快的响应。",
       "zone_macro": "需开启 ACT.OverlayPlugin WSServer\n喊话、标点需<a href=\"https://github.com/Natsukage/PostNamazu\">鲶鱼精邮差</a>",
       "food_police": "检查食物剩余时间。\n平时会简易显示，当鼠标移入后显示食物加成属性。再次移入后显示食物名称。（仅在小队人数>=6，且至少有50%人吃食物时才显示）\nURL地址栏参数说明：\nscale: 缩放倍率，默认1\nlang: 语言，默认zhCn，可选en、ja、ko、zhTw、zhCn",
       "healing_timeline": "自定义的时间轴提醒，支持FFLogs一键抄轴。\n<a href=\"/ff14-overlay-vue/#/timelineSettings?OVERLAY_WS=ws://127.0.0.1:10501/ws\">编辑时间轴请在浏览器中打开这里</a>（曾经的小齿轮）",
