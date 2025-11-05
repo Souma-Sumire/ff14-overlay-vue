@@ -5,14 +5,26 @@ type MapKey = 'PT' | 'EO' | 'HoH' | 'PotD'
 type langString = Partial<Record<Lang, string>>
 
 type EnemyData = {
+  // 难度： 简单       小心       危险
   grade?: 'easy' | 'caution' | 'danger'
+  // 感知：  视觉       听觉        范围       BOSS
   detect?: 'visual' | 'auditory' | 'scope' | 'boss'
+  // 攻略笔记。中文用户可直接写字符串。
+  // If your native language is not Chinese and you wish to submit translations.
+  // Please format it like this: {zhCn:'中文笔记', en:'English note', ja:'日本語の備考', zhTw:'中文備註'}}
+  // This instruction also applies to FloorTips.
   note?: string | langString
+  // 抗性弱点
   vulnerabilities?: {
+    // 眩晕
     stun?: boolean
+    // 减速
     slow?: boolean
+    // 沉睡
     sleep?: boolean
+    // 加重
     heavy?: boolean
+    // 止步
     bind?: boolean
   }
 }
