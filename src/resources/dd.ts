@@ -523,19 +523,19 @@ const PT: Data = {
 
     // 21-30层
     14126: { detect: 'visual', grade: 'easy', note: '巡逻怪' }, // 得到宽恕的妒忌 forgiven jealousy フォーギヴン・ジェラシー
-    14127: { detect: 'visual', grade: 'easy', note: '非战斗状态下会读条玩家脚底黄圈', vulnerabilities: { stun: true } }, // 得到宽恕的情欲 forgiven venery フォーギヴン・ヴェナリー
-    14128: { detect: undefined, grade: undefined, note: '巡逻怪', vulnerabilities: { stun: true } }, // 得到宽恕的失调 forgiven dissonance フォーギヴン・ディソナンス
-    14129: { detect: 'visual', grade: 'easy', note: undefined, vulnerabilities: { stun: true } }, // 得到宽恕的残忍 forgiven cruelty フォーギヴン・クルエルティー
+    14127: { detect: 'visual', grade: 'easy', note: '非战斗状态下会读条玩家脚底黄圈\n进入战斗后同样会读条脚底黄圈', vulnerabilities: { stun: true } }, // 得到宽恕的情欲 forgiven venery フォーギヴン・ヴェナリー
+    14128: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条小扇形', vulnerabilities: { stun: true } }, // 得到宽恕的失调 forgiven dissonance フォーギヴン・ディソナンス
+    14129: { detect: 'visual', grade: 'easy', note: '读条直线攻击', vulnerabilities: { stun: true } }, // 得到宽恕的残忍 forgiven cruelty フォーギヴン・クルエルティー
     14130: { detect: 'visual', grade: 'caution', note: '读条扇形顺劈' }, // 得到宽恕的奢望 forgiven ambition フォーギヴン・アンビション
     14131: { detect: 'visual', grade: 'easy', note: undefined }, // 得到宽恕的侮辱 forgiven insult フォーギヴン・インサルト
     14132: { detect: 'visual', grade: 'easy', note: undefined }, // 得到宽恕的踌躇 forgiven hesitance フォーギヴン・ヘジテンス
-    14133: { detect: 'visual', grade: 'easy', note: '读条玩家脚底钢铁', vulnerabilities: { stun: true } }, // 交错路魔像 traverse statue トラバース・スタチュー
+    14133: { detect: 'visual', grade: 'easy', note: '重拳波：跳向玩家+钢铁\n巨像之光：直线攻击', vulnerabilities: { stun: true } }, // 交错路魔像 traverse statue トラバース・スタチュー
     14134: { detect: 'visual', grade: 'easy', note: undefined }, // 交错路莫高海怪 traverse morgawr トラバース・モーゴウル
     14135: { detect: 'visual', grade: 'easy', note: undefined }, // 交错路角雉 traverse tragopan トラバース・トラゴパン
-    14136: { detect: undefined, grade: undefined, note: undefined }, // 得到宽恕的贿赂 forgiven bribery フォーギヴン・ブライバリー
+    14136: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条直线攻击' }, // 得到宽恕的贿赂 forgiven bribery フォーギヴン・ブライバリー
     14137: { detect: 'visual', grade: 'caution', note: '在血量低于25%后，会读条使下一次平A成为秒杀。可以打断。', vulnerabilities: { stun: true } }, // 交错路冰海天使 traverse clionid トラバース・クリオニッド
     14138: { detect: 'visual', grade: 'easy', note: '读条直线攻击' }, // 得到宽恕的狭隘 forgiven intolerance フォーギヴン・イントーラランス
-    13863: { detect: 'boss', grade: undefined, note: undefined }, // 得到宽恕的背信 forgiven treachery フォーギヴン・トレチャリー
+    13863: { detect: 'boss', grade: 'easy', note: '月环会从天而降（伤害不高且无易伤）\n手发光代表左右刀，躲完穿到另一侧\n点名是潜地式波动炮' }, // 得到宽恕的背信 forgiven treachery フォーギヴン・トレチャリー
 
     // 31-40层
     14139: { detect: 'visual', grade: 'caution', note: '重拳波：跳跃至AOE区域后立刻释放更大的AOE，造成约70K伤害。\n强冲拳：在近战范围内会被强力击退。\n冲波炮：长直条AOE。' }, // 交错路石兵 traverse soldierstone トラバース・ストーンソルジャー
