@@ -228,7 +228,11 @@
       "floor_tips": "Floor Tips",
       "trap_status": "Map Trap Status"
     },
-    "demo-text": "This is demo data. Real data will be displayed after locking."
+    "demo-text": "This is demo data. Real data will be displayed after locking.",
+    "highAgroDelayTitle": "High Aggro Update Interval",
+    "highAgroDelayMessage": "High aggro update interval detected ({delay}ms)",
+    "setAgroDelayTip": "Please change the <strong>OverlayPlugin Basic Settings - Aggro Refresh Interval</strong> to 100.",
+    "disableAgroDelayHint": "Click the close button 3 times to permanently disable this message."
   },
   "keigennRecord": {
     "source": "Source",

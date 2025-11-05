@@ -228,7 +228,11 @@
       "floor_tips": "階層ヒント",
       "trap_status": "マップトラップ状態"
     },
-    "demo-text": "現在はデモデータです。ロック後に実際のデータが表示されます。"
+    "demo-text": "現在はデモデータです。ロック後に実際のデータが表示されます。",
+    "highAgroDelayTitle": "ヘイト更新間隔が長すぎます",
+    "highAgroDelayMessage": "ヘイト更新間隔が長すぎます（{delay}ms）",
+    "setAgroDelayTip": "<strong>OverlayPluginの基本設定 - ヘイト更新間隔</strong>を100に変更してください。",
+    "disableAgroDelayHint": "閉じるボタンを3回クリックすると、このアラートは永続的に無効になります。"
   },
   "keigennRecord": {
     "source": "発生源",
