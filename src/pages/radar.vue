@@ -53,7 +53,6 @@ function updateSearchTargets() {
   )
   // const matched = combatants.value.filter(c => c.Name)
   searchTargets.value = matched
-  currentTargetIndex.value = 0
 }
 
 function drawRadar() {
@@ -314,6 +313,7 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
     const matches = netRegexs.echo.exec(e.rawLine)
     if (matches?.groups?.target) {
       searchTargetName.value = matches.groups.target
+      currentTargetIndex.value = 0
       getCombatants().then(() => {
         update()
       })
