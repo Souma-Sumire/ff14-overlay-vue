@@ -15,6 +15,7 @@ import Util from '@/utils/util'
 import { useDemo } from '@/composables/useDemo'
 import { useLang } from '@/composables/useLang'
 import type { Lang } from '@/types/lang'
+import { ElMessage, type MessageHandler } from 'element-plus'
 
 type Abilities = {
   stun: boolean
@@ -65,7 +66,27 @@ const netRegexs = {
     ],
   }),
 }
+
+let lastTime = 0
+let elMsg: MessageHandler | undefined = undefined
+const closeCount = useStorage('DDCloseCount', 0, localStorage)
+
 const handleEnmityTargetData: EventMap['EnmityTargetData'] = (e) => {
+  const delay = Date.now() - lastTime
+  if (lastTime && delay > 50 && !elMsg && closeCount.value < 3) {
+    elMsg = ElMessage({
+      showClose: true,
+      message: `检测到仇恨刷新间隔过高（${delay}ms）<p>请将<strong>悬浮窗插件-基本设置-仇恨刷新间隔</strong>改为100。</p> <em>点击3次关闭按钮即会永久禁用此提示。</em>`,
+      dangerouslyUseHTMLString: true,
+      type: 'warning',
+      grouping: true,
+      duration: 0,
+      onClose: () => {
+        closeCount.value++
+      },
+    })
+  }
+  lastTime = Date.now()
   if (demo.value) {
     return
   }
@@ -155,6 +176,7 @@ watchEffect(() => {
 onMounted(() => {
   addOverlayListener('ChangeZone', handleChangeZone)
   addOverlayListener('PartyChanged', handlePartyChanged)
+  addOverlayListener('EnmityTargetData', handleEnmityTargetData)
 })
 
 onUnmounted(() => {
@@ -291,6 +313,10 @@ $font-size: 20px;
 :global(body::-webkit-scrollbar-thumb) {
   height: 30px;
   border-radius: 5px;
+}
+
+:global(body) {
+  user-select: none;
 }
 
 * {
