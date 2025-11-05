@@ -538,7 +538,7 @@ const PT: Data = {
     13863: { detect: 'boss', grade: 'easy', note: '月环会从天而降（伤害不高且无易伤）\n手发光代表左右刀，躲完穿到另一侧\n点名是潜地式波动炮' }, // 得到宽恕的背信 forgiven treachery フォーギヴン・トレチャリー
 
     // 31-40层
-    14139: { detect: 'visual', grade: 'caution', note: '重拳波：跳跃至AOE区域后立刻释放更大的AOE，造成约70K伤害。\n强冲拳：在近战范围内会被强力击退。\n冲波炮：长直条AOE。' }, // 交错路石兵 traverse soldierstone トラバース・ストーンソルジャー
+    14139: { detect: 'visual', grade: 'caution', note: '重拳波：跳跃玩家+大钢铁\n强冲拳：近战击退\n冲波炮：长直线攻击' }, // 交错路石兵 traverse soldierstone トラバース・ストーンソルジャー
     14140: { detect: 'visual', grade: 'caution', note: '巡逻怪\n读条前方扇形，随后立即在背后再释放一次。' }, // 得到宽恕的疫病 forgiven plague フォーギヴン・プレイグ
     14141: { detect: 'visual', grade: 'caution', note: '归于尘土：血量低于25%时反复施放全场AOE，秒杀级。\n平时会为自己增加攻击力造成可观伤害。', vulnerabilities: { stun: true } }, // 得到宽恕的背德 forgiven perversion フォーギヴン・パーヴァージョン
     14142: { detect: 'visual', grade: 'easy', note: '平A穿插小死刑', vulnerabilities: { stun: true } }, // 得到宽恕的勒索 forgiven extortion フォーギヴン・エクストーション
@@ -551,7 +551,7 @@ const PT: Data = {
     14149: { detect: 'visual', grade: 'easy', note: '狮子业火：很长的窄扇形\n捕猎爪：小扇形', vulnerabilities: { stun: true } }, // 交错路石狮 traverse lionstone トラバース・ストーンライオン
     14150: { detect: 'visual', grade: 'easy', note: '高山气流：前方长直线攻击\n黄金爪：小扇形', vulnerabilities: { stun: true } }, // 交错路飞翼兽 traverse jaculus トラバース・ヤクルス
     14151: { detect: 'visual', grade: 'caution', note: '飞驰：强力击退，可以隔墙躲避。\n天马嘶啸：延迟中范围钢铁，可以隔墙躲避。', vulnerabilities: { stun: true } }, // 交错路天马 traverse pegasus トラバース・ペガサス
-    13977: { detect: 'boss', grade: 'easy', note: '小怪会复读技能：黄色为钢铁 蓝色为击退。\n小怪可选中后尽快击杀。' }, // 得到宽恕的天真 forgiven naivety フォーギヴン・ナイヴテイ
+    13977: { detect: 'boss', grade: 'easy', note: '小怪会复读技能：黄色为钢铁 蓝色为击退。\n小怪可选中后尽快击杀。\nBOSS环浪是月环，圆浪是钢铁。' }, // 得到宽恕的天真 forgiven naivety フォーギヴン・ナイヴテイ
 
     // 41-50层
     14152: { detect: 'visual', grade: 'caution', note: '吸引+延迟钢铁', vulnerabilities: { stun: true } }, // 交错路塑像 traverse petreffigy トラバース・エフィジィ
