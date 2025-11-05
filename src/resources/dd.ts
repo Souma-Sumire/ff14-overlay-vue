@@ -540,22 +540,22 @@ const PT: Data = {
     // 31-40层
     14139: { detect: 'visual', grade: 'caution', note: '重拳波：跳跃至AOE区域后立刻释放更大的AOE，造成约70K伤害。\n强冲拳：在近战范围内会被强力击退。\n冲波炮：长直条AOE。' }, // 交错路石兵 traverse soldierstone トラバース・ストーンソルジャー
     14140: { detect: 'visual', grade: 'caution', note: '巡逻怪\n先在前方释放扇形AOE，随后立刻在背后再释放一次。' }, // 得到宽恕的疫病 forgiven plague フォーギヴン・プレイグ
-    14141: { detect: 'visual', grade: 'caution', note: '归于尘土：血量低于25%时反复施放全场AOE，致命。\n平时会为自己增加攻击力造成可观伤害。', vulnerabilities: { stun: true } }, // 得到宽恕的背德 forgiven perversion フォーギヴン・パーヴァージョン
+    14141: { detect: 'visual', grade: 'caution', note: '归于尘土：血量低于25%时反复施放全场AOE，秒杀级。\n平时会为自己增加攻击力造成可观伤害。', vulnerabilities: { stun: true } }, // 得到宽恕的背德 forgiven perversion フォーギヴン・パーヴァージョン
     14142: { detect: 'visual', grade: 'easy', note: '只会平A', vulnerabilities: { stun: true } }, // 得到宽恕的勒索 forgiven extortion フォーギヴン・エクストーション
     14143: { detect: 'visual', grade: 'easy', note: '读条小扇形', vulnerabilities: { stun: true } }, // 得到宽恕的偏见 forgiven prejudice フォーギヴン・プレジュディス
     14144: { detect: 'visual', grade: 'caution', note: '巡逻怪\n木马：前方扇形AOE，范围极大！\n绞刑笼：钢铁', vulnerabilities: { stun: true } }, // 得到宽恕的伪善 forgiven hypocrisy フォーギヴン・ヒポクリシー
-    14145: { detect: undefined, grade: 'caution', note: '左/右触手：隐藏的半场刀，范围极大！', vulnerabilities: { stun: true } }, // 得到宽恕的暴躁 forgiven petulance フォーギヴン・ペチュランス
+    14145: { detect: undefined, grade: 'caution', note: '左/右触手：不可见的半场刀，范围极大！', vulnerabilities: { stun: true } }, // 得到宽恕的暴躁 forgiven petulance フォーギヴン・ペチュランス
     14146: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈，可打断', vulnerabilities: { stun: true } }, // 得到宽恕的嘲笑 forgiven mockery フォーギヴン・モッカリィ
     14147: { detect: 'visual', grade: 'caution', note: '读条小扇形。\n在低血量时会快速连续释放直线AOE。', vulnerabilities: { stun: true } }, // 交错路判官 traverse inquisitor トラバース・インクイジター
     14148: { detect: 'visual', grade: 'easy', note: '巡逻怪。\n远距离时会使用中等范围的扇形AOE，近距离则为小范围钢铁AOE。', vulnerabilities: { stun: true } }, // 交错路妖鸟 bird of the traverse バード・オブ・トラバース
     14149: { detect: 'visual', grade: 'easy', note: '狮子业火：很长的窄扇形', vulnerabilities: { stun: true } }, // 交错路石狮 traverse lionstone トラバース・ストーンライオン
     14150: { detect: 'visual', grade: 'easy', note: '高山气流：前方直条攻击', vulnerabilities: { stun: true } }, // 交错路飞翼兽 traverse jaculus トラバース・ヤクルス
-    14151: { detect: 'visual', grade: 'caution', note: '飞驰：强力击退，可通过视线躲避。\n天马嘶啸：延迟小范围钢铁，可通过视线躲避。', vulnerabilities: { stun: true } }, // 交错路天马 traverse pegasus トラバース・ペガサス
+    14151: { detect: 'visual', grade: 'caution', note: '飞驰：强力击退，可以隔墙躲避。\n天马嘶啸：延迟小范围钢铁，可以隔墙躲避。', vulnerabilities: { stun: true } }, // 交错路天马 traverse pegasus トラバース・ペガサス
     13977: { detect: 'boss', grade: 'easy', note: '小怪会复读技能：黄色为钢铁 蓝色为击退。\n小怪可选中后尽快击杀。' }, // 得到宽恕的天真 forgiven naivety フォーギヴン・ナイヴテイ
 
     // 41-50层
     14152: { detect: 'visual', grade: 'caution', note: '吸引+延迟钢铁', vulnerabilities: { stun: true } }, // 交错路塑像 traverse petreffigy トラバース・エフィジィ
-    14153: { detect: 'visual', grade: 'danger', note: '移动极慢，但伤害极高。不要被它碰到！\n攻击会叠加易伤。\n还会使用隐藏的步进式环形地震攻击。', vulnerabilities: { stun: true } }, // 交错路托尔巴龟 traverse troubadour トラバース・トルバ
+    14153: { detect: 'visual', grade: 'danger', note: '移动极慢，但伤害极高。不要被它碰到！\n攻击会叠加易伤。\n还会使用不可见的步进式环形地震攻击。', vulnerabilities: { stun: true } }, // 交错路托尔巴龟 traverse troubadour トラバース・トルバ
     14154: { detect: 'visual', grade: 'easy', note: '毒滴牙：使下次平A带毒dot，可打断。', vulnerabilities: { stun: true } }, // 交错路水蚺 traverse anaconda トラバース・アナコンダ
     14155: { detect: 'visual', grade: 'easy', note: '延迟小范围前方扇形AOE' }, // 交错路三尖树 traverse triffid トラバース・トリフィド
     14156: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈', vulnerabilities: { stun: true } }, // 交错路蜥蜴 traverse lizard トラバース・リザード
@@ -572,14 +572,14 @@ const PT: Data = {
     // 51-60层
     14165: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈' }, // 交错路褐钳龙虾 traverse tawnyclaw トラバース・ブラウンクロウ
     14166: { detect: 'visual', grade: 'easy', note: undefined }, // 交错路守卫 traverse guardian トラバース・ガーディアン
-    14167: { detect: 'visual', grade: 'danger', note: '巡逻怪\n读条正面270度攻击，可站在脚下或背后躲避，可利用视线阻挡。', vulnerabilities: { stun: true } }, // 交错路沙地巨蟒 traverse sand serpent トラバース・サンドサーペント
+    14167: { detect: 'visual', grade: 'danger', note: '巡逻怪\n读条正面270度攻击，可站在脚下或背后躲避，可以隔墙躲避。', vulnerabilities: { stun: true } }, // 交错路沙地巨蟒 traverse sand serpent トラバース・サンドサーペント
     14168: { detect: 'visual', grade: 'danger', note: '读条让所有人进入目押状态。根据动作释放钢铁 或 正面大扇形' }, // 交错路美甲兽 traverse saichania トラバース・サイカニア
     14169: { detect: 'visual', grade: 'caution', note: '非战斗状态下会施放反击屏障，物理攻击会受到秒杀级反伤！' }, // 交错路巨蜥 traverse monitor トラバース・モニター
     14170: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条面前直条 或 点名黄圈' }, // 交错路恶魔怪鸟 traverse fallen aevis トラバース・イビルエイビス
     14171: { detect: 'visual', grade: 'easy', note: '读条小扇形' }, // 交错路帕查玛玛 traverse Pachamama トラバース・パチャママ
     14172: { detect: 'visual', grade: 'easy', note: '中等宽度的前方扇形提示AOE。' }, // 交错路海索草 traverse hyssop トラバース・ヒソプ
     14173: { detect: 'visual', grade: 'caution', note: '巡逻怪。\n会施放超大范围的钢铁/月环/扇形。', vulnerabilities: { stun: true } }, // 交错路恐鹤 traverse phorusrhacos トラバース・フォルスラコス
-    14174: { detect: 'visual', grade: 'danger', note: '外环雷：超大月环！可利用视线阻挡\n尾镰：中等范围钢铁。\n高速撞击：直线攻击。' }, // 交错路怒嚎 traverse howler トラバース・ハウラー
+    14174: { detect: 'visual', grade: 'danger', note: '外环雷：超大月环！可以隔墙躲避\n尾镰：中等范围钢铁。\n高速撞击：直线攻击。' }, // 交错路怒嚎 traverse howler トラバース・ハウラー
     14175: { detect: 'visual', grade: 'easy', note: '读条钢铁。背后有人时会释放大范围扫尾' }, // 交错路狞猫 traverse caracal トラバース・カラカル
     14176: { detect: 'visual', grade: 'caution', note: '瞬间将目标拉近，然后施放延迟中等范围的钢铁。\n还会读条小扇形' }, // 交错路巨人 traverse gigant トラバース・ギガント
     14177: { detect: 'visual', grade: 'easy', note: undefined }, // 交错路甲虫 traverse beetle トラバース・ビートル
@@ -589,7 +589,7 @@ const PT: Data = {
     14178: { detect: 'visual', grade: 'danger', note: '左右刀，躲完立即穿到对侧！' }, // 得到宽恕的暴动 forgiven riot フォーギヴン・ライオティング
     14179: { detect: 'visual', grade: 'caution', note: '几千针刺：延迟大范围直线AOE。', vulnerabilities: { stun: true } }, // 得到宽恕的主见 forgiven contention フォーギヴン・コンテンション
     14180: { detect: 'visual', grade: 'easy', note: '未终针：延迟小范围前方直线AOE。\n终极针：血量低于10%时的点名狂暴攻击。\n可以打断。', vulnerabilities: { stun: true } }, // 交错路蜂后 traverse queen トラバース・クイーンビー
-    14181: { detect: undefined, grade: 'danger', note: '巡逻怪。\n水晶刺：血量低于25%时会反复释放全场AOE，可用视线阻挡。\n冰雹发射：延迟直线AOE。', vulnerabilities: { stun: true } }, // 得到宽恕的怨恨 forgiven grudge フォーギヴン・グラッジ
+    14181: { detect: undefined, grade: 'danger', note: '巡逻怪。\n水晶刺：血量低于25%时会反复释放全场AOE，可以隔墙躲避。\n冰雹发射：延迟直线AOE。', vulnerabilities: { stun: true } }, // 得到宽恕的怨恨 forgiven grudge フォーギヴン・グラッジ
     14182: { detect: 'visual', grade: 'caution', note: '巡逻怪。\n执行贯穿：向前冲刺并在终点释放小范围钢铁，接地震（月环）。\n平A穿插小死刑' }, // 交错路塔罗斯 traverse Talos トラバース・タロース
     14183: { detect: 'visual', grade: 'caution', note: '冲顶：快速施放的前方宽扇形延迟AOE。', vulnerabilities: { stun: true } }, // 交错路壁崖鼹鼠 traverse cliffmole トラバース・クリフモール
     14184: { detect: 'visual', grade: 'caution', note: '在两次“沉岛”圆形点名后会施放超大范围十字AOE！', vulnerabilities: { stun: true } }, // 得到宽恕的不公 forgiven imparity フォーギヴン・イムパリティー
@@ -597,12 +597,12 @@ const PT: Data = {
     14186: { detect: 'visual', grade: 'caution', note: '无提示的前方石化攻击（无法背对躲避）。\n延迟小范围钢铁。', vulnerabilities: { stun: true } }, // 得到宽恕的贪食 forgiven voracity フォーギヴン・ヴォラシティ
     14187: { detect: 'visual', grade: 'danger', note: '隐身敌人，接近后才会显形。\n会向你冲撞造成约40K伤害，随后施放快速且延迟小范围钢铁。\n仅出现于61-64层。', vulnerabilities: { stun: true } }, // 得到宽恕的疑念 forgiven doubt フォーギヴン・ダウト
     14188: { detect: 'visual', grade: 'danger', note: '【可能是需要诱导】延迟前（或后）方半圆AOE，随后立即在背后（或前面）再释放一次。\n可以打断。', vulnerabilities: { stun: true } }, // 得到宽恕的依恋 forgiven attachment フォーギヴン・アタッチメント
-    14189: { detect: 'visual', grade: 'caution', note: '平地捶打：隐藏的小钢铁', vulnerabilities: { stun: true } }, // 交错路诺姆 traverse gnome トラバース・ノーム
+    14189: { detect: 'visual', grade: 'caution', note: '平地捶打：不可见的小钢铁', vulnerabilities: { stun: true } }, // 交错路诺姆 traverse gnome トラバース・ノーム
     14190: { detect: 'visual', grade: 'caution', note: '泥石流：中等范围、延迟释放的宽扇形AOE。', vulnerabilities: { stun: true } }, // 交错路恩戈齐 traverse ngozi トラバース・ンゴツィ
     13971: { detect: 'boss', grade: 'caution', note: '热忱怒视：直线。\n热忱之眼：月环。\n白球会按照出现顺序发动月环。\n二千迈纳回转：钢铁\n八重横扫：需要记忆预兆的8次连续扇形。' }, // 得到宽恕的热忱 forgiven zeal フォーギヴン・ズィール
 
     // 71-80层
-    14191: { detect: 'visual', grade: 'caution', note: '读条钢铁 或 正面超大扇形，可通过视线回避。' }, // 得到宽恕的争执 forgiven dissention フォーギヴン・ディセンション
+    14191: { detect: 'visual', grade: 'caution', note: '读条钢铁 或 正面超大扇形，可以隔墙躲避。' }, // 得到宽恕的争执 forgiven dissention フォーギヴン・ディセンション
     14192: { detect: 'visual', grade: 'danger', note: '非战斗状态会释放全屏AOE\n进战后会读条释放正面扇形AOE' }, // 得到宽恕的腐败 forgiven corruption フォーギヴン・コラプション
     14193: { detect: 'visual', grade: 'danger', note: '两种读条，先月环后钢铁，或者先钢铁后月环' }, // 得到宽恕的恶意 forgiven spite フォーギヴン・スパイト
     14194: { detect: 'visual', grade: 'caution', note: '巡逻怪\n拉怪时会跳向玩家并击退，以及一个毒DOT' }, // 交错路食岩狼 traverse stone eater トラバース・ロックイーター
@@ -621,32 +621,32 @@ const PT: Data = {
     14204: { detect: 'visual', grade: 'caution', note: '飞踢后摆尾：先读条小范围前方直线AOE，随后在背后顺劈' }, // 交错路卡玛 traverse cama トラバース・キャマ
     14205: { detect: 'visual', grade: 'danger', note: '非战斗状态下会释放全场AOE。\n深渊射线：读条极大范围的直线AOE，穿墙！' }, // 召引巴尔 invoked Baal インヴォークド・バエル
     14206: { detect: 'scope', grade: 'caution', note: '巡逻怪\n残杀：会连续击退四次\n风暴斩：前方扇形AOE' }, // 交错路骑兵 traverse rider トラバース・ライダー
-    14207: { detect: undefined, grade: 'danger', note: '巡逻怪\n会点名热病，不要移动。可通过视线阻挡来避免。' }, // 召引梦魔 invoked succubus インヴォークド・サキュバス
-    14208: { detect: 'visual', grade: 'caution', note: '巡逻怪\n连续施放3-4次双重平A后，立即发动秒杀顺劈' }, // 召引洪巴巴 invoked Humbaba インヴォークド・フンババ
+    14207: { detect: undefined, grade: 'danger', note: '巡逻怪\n会点名热病，不要移动否则会秒杀级爆炸。可以隔墙躲避。', vulnerabilities: { stun: true } }, // 召引梦魔 invoked succubus インヴォークド・サキュバス
+    14208: { detect: 'visual', grade: 'caution', note: '巡逻怪\n连续施放3-4次双重平A后，立即发动秒杀顺劈。需要尽快击杀。' }, // 召引洪巴巴 invoked Humbaba インヴォークド・フンババ
     14209: { detect: 'visual', grade: 'easy', note: '读条小范围扇形顺劈' }, // 召引格雷姆林 invoked gremlin インヴォークド・グレムリン
     14210: { detect: 'visual', grade: 'caution', note: '读条中等范围扇形\n低血量时会施放长读条的狂暴技能，可能是点名秒杀攻击。' }, // 交错路异豺 traverse gnoll トラバース・ノール
     14211: { detect: 'visual', grade: 'danger', note: '昏暗：长读条的可打断超宽扇形AOE，不要与“黑暗”混淆。' }, // 交错路卡部斯 traverse cubus トラバース・カブス
     14212: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈，\n冰结陷阱：钢铁' }, // 召引小恶灵 invoked satana インヴォークド・サタナジュニア
     14213: { detect: 'visual', grade: 'caution', note: '读条宽扇形顺劈' }, // 召引上级恶魔 summoned arch demon サモンド・アークデーモン
-    14214: { detect: 'visual', grade: 'easy', note: '大凶眼：很大范围的背对' }, // 召引盖因 invoked caym インヴォークド・カイム
-    14215: { detect: 'visual', grade: 'danger', note: '闪雷：读条前方圆形AOE。\n地狱爪击：读条前方扇形AOE。\n拍尾：隐藏的大范围后方扇形AOE。\n雷光：不可见的点某人脚下的黄圈' }, // 召引刻耳柏洛斯 invoked Cerberus インヴォークド・ケルベロス
-    14216: { detect: 'scope', grade: 'caution', note: '（远离时会释放）昏暗：很大范围扇形\n（靠近时会释放）心魔：小范围钢铁' }, // 召引行吟诗人 invoked troubadour インヴォークド・トルバドゥール
+    14214: { detect: 'visual', grade: 'easy', note: '大凶眼：很大范围的背对\n眼光弹：点名脚底黄圈', vulnerabilities: { stun: true } }, // 召引盖因 invoked caym インヴォークド・カイム
+    14215: { detect: 'visual', grade: 'danger', note: '闪雷：读条前方圆形AOE。\n地狱爪击：读条前方扇形AOE。\n摆尾：不可见的大范围后方扇形AOE。\n雷光：不可见的点某人脚下的黄圈' }, // 召引刻耳柏洛斯 invoked Cerberus インヴォークド・ケルベロス
+    14216: { detect: 'scope', grade: 'caution', note: '（远离时会释放）昏暗：很大范围扇形（可以隔墙躲避）\n（靠近时会释放）心魔：小范围钢铁', vulnerabilities: { stun: true } }, // 召引行吟诗人 invoked troubadour インヴォークド・トルバドゥール
     14090: { detect: 'boss', grade: 'caution', note: '发光手一侧的270°半场刀。\n横断击：对boss左右的90°扇形攻击\n纵断击：对boss前后的90°扇形攻击\nX断击时，场边的魔法阵会对所在行或列发动直线攻击。' }, // 马纳果达 Malacoda マラコーダ
 
     // 91-100层
-    14217: { detect: undefined, grade: 'caution', note: '读条三重/四重进行连续强化攻击，随后发动致命的小范围环形AOE。' }, // 交错路座狼 traverse warg トラバース・ワーグ
+    14217: { detect: undefined, grade: 'caution', note: '读条三重/四重进行强化，随后发动秒杀级攻击。' }, // 交错路座狼 traverse warg トラバース・ワーグ
     14218: { detect: undefined, grade: 'caution', note: '读条左右刀，记得穿' }, // 召引古辛 invoked Gusion インヴォークド・グシオン
     14219: { detect: undefined, grade: 'danger', note: '梦祸视线：直线AOE\n死亡会自爆！！！（可以隔墙躲避）' }, // 召引梦祸 invoked dreamer インヴォークド・ドリームエビル
-    14220: { detect: undefined, grade: 'caution', note: '点名，必须用墙或者障碍物阻挡' }, // 召引光棍 invoked bachelor インヴォークド・バチェラー
+    14220: { detect: undefined, grade: 'caution', note: '点名，隔墙躲避', vulnerabilities: { stun: true } }, // 召引光棍 invoked bachelor インヴォークド・バチェラー
     14221: { detect: undefined, grade: 'caution', note: '石化需要背对\n怪光线：大范围直线AOE' }, // 召引破坏本能 invoked Destrudo インヴォークド・デストルドー
-    14222: { detect: undefined, grade: 'caution', note: '巡逻怪\n读条斜着的左右刀\n前方花蜜喷吐：前方大扇形AOE。' }, // 召引锯齿花 invoked sawtooth インヴォークド・ソウトゥース
-    14223: { detect: undefined, grade: 'easy', note: '根系纠缠：点名脚底黄圈\n藤枝伏地：小扇形' }, // 交错路紫罗兰三尖树 traverse triffid トラバース・ヴァイオレットトリフィド
-    14224: { detect: 'auditory', grade: 'caution', note: '读条超长直线AOE（宽），穿墙！' }, // 交错路食人花 traverse ya-te-veo トラバース・ヤテベオ
-    14225: { detect: 'visual', grade: 'caution', note: '无读条小范围劈后面+读条顺劈，最好去侧面' }, // 召引扎哈克 invoked dahak インヴォークド・ダハーカ
-    14226: { detect: undefined, grade: 'caution', note: '效果未知，建议使用视线阻挡以保安全。' }, // 召引阿刻戎 invoked Acheron インヴォークド・アケローン
-    14227: { detect: undefined, grade: 'easy', note: '巡逻怪\n读条钢铁' }, // 召引玩偶 invoked poppet インヴォークド・パペット
+    14222: { detect: undefined, grade: 'caution', note: '巡逻怪\n读条斜着的左右刀\n前方花蜜喷吐：前方大扇形AOE。', vulnerabilities: { stun: true } }, // 召引锯齿花 invoked sawtooth インヴォークド・ソウトゥース
+    14223: { detect: undefined, grade: 'easy', note: '根系纠缠：点名脚底黄圈\n藤枝伏地：小扇形', vulnerabilities: { stun: true } }, // 交错路紫罗兰三尖树 traverse triffid トラバース・ヴァイオレットトリフィド
+    14224: { detect: 'auditory', grade: 'caution', note: '读条超长直线AOE（宽），穿墙！\n黄金粉尘：点名脚底黄圈', vulnerabilities: { stun: true } }, // 交错路食人花 traverse ya-te-veo トラバース・ヤテベオ
+    14225: { detect: 'visual', grade: 'caution', note: '石质吐息：面前大扇形。\n背后有人时，会瞬发秒杀级扫尾。最好去侧面。' }, // 召引扎哈克 invoked dahak インヴォークド・ダハーカ
+    14226: { detect: undefined, grade: 'caution', note: '效果未知，建议隔墙以保安全。' }, // 召引阿刻戎 invoked Acheron インヴォークド・アケローン
+    14227: { detect: undefined, grade: 'easy', note: '巡逻怪\n读条钢铁', vulnerabilities: { stun: true } }, // 召引玩偶 invoked poppet インヴォークド・パペット
     14228: { detect: undefined, grade: 'easy', note: '读条扇形顺劈' }, // 交错路恶意灵 traverse malevolence トラバース・マレヴォレンス
-    14229: { detect: undefined, grade: 'caution', note: '黑暗神圣：点名某人的大黄圈\n生命停止：极快！前方超大扇形！' }, // 召引古恶魔 invoked archaeodemon インヴォークド・アルケオデーモン
+    14229: { detect: undefined, grade: 'caution', note: '黑暗神圣：点名某人的大黄圈\n生命停止：极快！前方超大扇形！', vulnerabilities: { stun: true } }, // 召引古恶魔 invoked archaeodemon インヴォークド・アルケオデーモン
     14037: { detect: 'boss', grade: 'caution', note: '男，需吃白buff' }, // 卓异的悲寂 Eminent Grief エミネントグリーフ
     14038: { detect: 'boss', grade: 'caution', note: '女，需吃黑buff' }, // 被侵蚀的食罪灵 devoured eater 侵蝕された罪喰い
   },
