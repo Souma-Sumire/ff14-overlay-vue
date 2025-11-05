@@ -490,36 +490,36 @@ const PT: Data = {
     14267: { grade: 'caution', note: '一碰就死，亡语会眩晕周围。远距离处理。' }, // 交错路柯瑞甘 traverse korrigan トラバース・コリガン
 
     // 1-10层
-    14100: { detect: 'visual', grade: 'easy', note: '无' }, // 交错路紫闪蝶 traverse morpho トラバース・パープルモルフォ
-    14101: { detect: 'visual', grade: 'easy', note: '无' }, // 交错路石莲猬 traverse echevore トラバース・エケボア
-    14102: { detect: 'visual', grade: 'easy', note: '无', vulnerabilities: { stun: true } }, // 交错路普卡精 traverse phooka トラバース・プーカ
-    14103: { detect: 'visual', grade: 'easy', note: '无' }, // 交错路鹰蜓 traverse hawker トラバース・ホーカー
-    14104: { detect: 'auditory', grade: 'easy', note: '无' }, // 交错路苔菇 traverse moss fungus トラバース・モスフングス
-    14105: { detect: 'visual', grade: 'easy', note: '无' }, // 交错路花楸树 traverse rowan トラバース・ローワン
-    14106: { detect: 'visual', grade: 'easy', note: '无' }, // 交错路杀人蜂 traverse killer bee トラバース・キラービー
-    14107: { detect: 'auditory', grade: 'easy', note: '无' }, // 交错路铁线莲 traverse clematis トラバース・クレマチス
-    14108: { detect: 'visual', grade: 'easy', note: '无' }, // 交错路篮筐 traverse basket トラバース・バスケット
-    14109: { detect: 'visual', grade: 'easy', note: '无' }, // 交错路爱蒂恩蛾 traverse etainmoth トラバース・エーディンモス
+    14100: { detect: 'visual', grade: 'easy', note: '' }, // 交错路紫闪蝶 traverse morpho トラバース・パープルモルフォ
+    14101: { detect: 'visual', grade: 'easy', note: '' }, // 交错路石莲猬 traverse echevore トラバース・エケボア
+    14102: { detect: 'visual', grade: 'easy', note: '', vulnerabilities: { stun: true } }, // 交错路普卡精 traverse phooka トラバース・プーカ
+    14103: { detect: 'visual', grade: 'easy', note: '' }, // 交错路鹰蜓 traverse hawker トラバース・ホーカー
+    14104: { detect: 'auditory', grade: 'easy', note: '' }, // 交错路苔菇 traverse moss fungus トラバース・モスフングス
+    14105: { detect: 'visual', grade: 'easy', note: '' }, // 交错路花楸树 traverse rowan トラバース・ローワン
+    14106: { detect: 'visual', grade: 'easy', note: '' }, // 交错路杀人蜂 traverse killer bee トラバース・キラービー
+    14107: { detect: 'auditory', grade: 'easy', note: '' }, // 交错路铁线莲 traverse clematis トラバース・クレマチス
+    14108: { detect: 'visual', grade: 'easy', note: '' }, // 交错路篮筐 traverse basket トラバース・バスケット
+    14109: { detect: 'visual', grade: 'easy', note: '' }, // 交错路爱蒂恩蛾 traverse etainmoth トラバース・エーディンモス
     14110: { detect: 'visual', grade: 'easy', note: '巡逻怪', vulnerabilities: { stun: true } }, // 交错路草小人 traverse shrub トラバース・シュラブレット
     14111: { detect: 'visual', grade: 'easy', note: '巡逻怪' }, // 交错路鹦鹉 traverse lorikeet トラバース・ロリキート
     14112: { detect: 'auditory', grade: 'easy', note: '巡逻怪' }, // 交错路玫瑰熊 traverse rosebear トラバース・ローズベアー
     13979: { detect: 'boss', grade: 'caution', note: '小怪会复制BOSS的技能，可选中后尽快击杀。\nBOSS还会释放捕食，记好预兆寻找安全区。' }, // 花人 ornamental leafman 花人
 
     // 11-20层
-    13973: { detect: undefined, grade: undefined, note: undefined }, // 得到宽恕的模仿 forgiven emulation フォーギヴン・エミュレーション
-    14113: { detect: undefined, grade: undefined, note: undefined }, // 得到宽恕的盲从 forgiven conformity フォーギヴン・コンフォーミティー
-    14114: { detect: undefined, grade: undefined, note: undefined }, // 得到宽恕的无知 forgiven ignorance フォーギヴン・イグノランス
-    14115: { detect: undefined, grade: undefined, note: undefined }, // 得到宽恕的蠢笨 forgiven folly フォーギヴン・フォリー
-    14116: { detect: undefined, grade: undefined, note: undefined }, // 得到宽恕的自负 forgiven conceit フォーギヴン・コンスィート
-    14117: { detect: undefined, grade: undefined, note: undefined }, // 得到宽恕的暴力 forgiven violence フォーギヴン・ヴァイオレンス
-    14118: { detect: undefined, grade: undefined, note: undefined }, // 得到宽恕的违命 forgiven disobedience フォーギヴン・ディスオビーデアンス
-    14119: { detect: undefined, grade: undefined, note: undefined }, // 得到宽恕的欺骗 forgiven deceit フォーギヴン・デシート
-    14120: { detect: undefined, grade: undefined, note: undefined }, // 得到宽恕的轻蔑 forgiven contempt フォーギヴン・コンテンプト
-    14121: { detect: undefined, grade: undefined, note: undefined, vulnerabilities: { stun: true } }, // 得到宽恕的自满 forgiven complacency フォーギヴン・コンプレイセンシー
-    14122: { detect: undefined, grade: undefined, note: undefined }, // 交错路帕克 traverse Puck トラバース・パック
-    14123: { detect: undefined, grade: undefined, note: undefined }, // 交错路绿雕 traverse topiary トラバース・トピアリー
-    14124: { detect: undefined, grade: undefined, note: undefined }, // 交错路豌豆花 traverse Peaseblossom トラバース・ピーズブロッサム
-    14125: { detect: undefined, grade: undefined, note: undefined }, // 交错路幼体龙鸟 traverse tot aevis トラバース・トートエイビス
+    14113: { detect: 'visual', grade: 'easy', note: '无' }, // 得到宽恕的盲从 forgiven conformity フォーギヴン・コンフォーミティー
+    14114: { detect: 'visual', grade: 'easy', note: '读条直线攻击' }, // 得到宽恕的无知 forgiven ignorance フォーギヴン・イグノランス
+    14115: { detect: 'visual', grade: 'easy', note: '读条钢铁' }, // 得到宽恕的蠢笨 forgiven folly フォーギヴン・フォリー
+    14116: { detect: 'visual', grade: 'easy', note: '读条扇形' }, // 得到宽恕的自负 forgiven conceit フォーギヴン・コンスィート
+    14117: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈' }, // 得到宽恕的暴力 forgiven violence フォーギヴン・ヴァイオレンス
+    14118: { detect: 'visual', grade: 'easy', note: '读条直线攻击' }, // 得到宽恕的违命 forgiven disobedience フォーギヴン・ディスオビーデアンス
+    14119: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条扇形' }, // 得到宽恕的欺骗 forgiven deceit フォーギヴン・デシート
+    14120: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条扇形' }, // 得到宽恕的轻蔑 forgiven contempt フォーギヴン・コンテンプト
+    14121: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈', vulnerabilities: { stun: true } }, // 得到宽恕的自满 forgiven complacency フォーギヴン・コンプレイセンシー
+    14122: { detect: 'auditory', grade: 'easy', note: '读条直线攻击' }, // 交错路帕克 traverse Puck トラバース・パック
+    14123: { detect: 'visual', grade: 'easy', note: '无' }, // 交错路绿雕 traverse topiary トラバース・トピアリー
+    14124: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈' }, // 交错路豌豆花 traverse Peaseblossom トラバース・ピーズブロッサム
+    14125: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条扇形' }, // 交错路幼体龙鸟 traverse tot aevis トラバース・トートエイビス
+    13973: { detect: 'boss', grade: 'easy', note: '4条腿会依次闪烁红光，击退后按照腿发光的顺序依次释放大范围钢铁\n点名是放置冰花' }, // 得到宽恕的模仿 forgiven emulation フォーギヴン・エミュレーション
 
     // 21-30层
     14126: { detect: 'visual', grade: 'easy', note: '巡逻怪' }, // 得到宽恕的妒忌 forgiven jealousy フォーギヴン・ジェラシー
@@ -575,7 +575,7 @@ const PT: Data = {
     14167: { detect: 'visual', grade: 'danger', note: '巡逻怪\n读条正面270度攻击，可站在脚下或背后躲避，可以隔墙躲避。', vulnerabilities: { stun: true } }, // 交错路沙地巨蟒 traverse sand serpent トラバース・サンドサーペント
     14168: { detect: 'visual', grade: 'danger', note: '读条让所有人进入目押状态。根据动作释放钢铁 或 正面大扇形' }, // 交错路美甲兽 traverse saichania トラバース・サイカニア
     14169: { detect: 'visual', grade: 'caution', note: '非战斗状态下会施放反击屏障，物理攻击会受到秒杀级反伤！' }, // 交错路巨蜥 traverse monitor トラバース・モニター
-    14170: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条面前直条 或 点名黄圈' }, // 交错路恶魔怪鸟 traverse fallen aevis トラバース・イビルエイビス
+    14170: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条直线攻击 或 点名黄圈' }, // 交错路恶魔怪鸟 traverse fallen aevis トラバース・イビルエイビス
     14171: { detect: 'visual', grade: 'easy', note: '读条小扇形' }, // 交错路帕查玛玛 traverse Pachamama トラバース・パチャママ
     14172: { detect: 'visual', grade: 'easy', note: '中等宽度的前方扇形提示AOE。' }, // 交错路海索草 traverse hyssop トラバース・ヒソプ
     14173: { detect: 'visual', grade: 'caution', note: '巡逻怪。\n会施放超大范围的钢铁/月环/扇形。', vulnerabilities: { stun: true } }, // 交错路恐鹤 traverse phorusrhacos トラバース・フォルスラコス
@@ -607,10 +607,10 @@ const PT: Data = {
     14193: { detect: 'visual', grade: 'danger', note: '两种读条，先月环后钢铁，或者先钢铁后月环' }, // 得到宽恕的恶意 forgiven spite フォーギヴン・スパイト
     14194: { detect: 'visual', grade: 'caution', note: '巡逻怪\n拉怪时会跳向玩家并击退，以及一个毒DOT' }, // 交错路食岩狼 traverse stone eater トラバース・ロックイーター
     14195: { detect: 'visual', grade: 'danger', note: '巡逻怪\n读条钢铁，死了会自爆！！！！！！' }, // 交错路爆岩怪 traverse huldu トラバース・フルドゥ
-    14196: { detect: 'visual', grade: 'easy', note: '点名脚下黄圈' }, // 交错路泡沫奶黄怪 traverse diplomat cream トラバース・ホイップカスタード
+    14196: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈' }, // 交错路泡沫奶黄怪 traverse diplomat cream トラバース・ホイップカスタード
     14197: { detect: 'scope', grade: 'danger', note: '超级大月环或者十字！注意不要拉在过道上导致无路可走！' }, // 得到宽恕的虚夸 forgiven vanity フォーギヴン・ヴァニティー
     14198: { detect: undefined, grade: 'caution', note: '巡逻怪\n连续四次正面半圆顺劈' }, // 得到宽恕的傲慢 forgiven arrogance フォーギヴン・アロガンス
-    14199: { detect: 'scope', grade: 'caution', note: '变质岩波：读条扇形\n造山风暴：点名一个人的脚下黄圈' }, // 得到宽恕的诋毁 forgiven slander フォーギヴン・スランダー
+    14199: { detect: 'scope', grade: 'caution', note: '变质岩波：读条扇形\n造山风暴：点名一个人的脚底黄圈' }, // 得到宽恕的诋毁 forgiven slander フォーギヴン・スランダー
     14200: { detect: 'visual', grade: 'caution', note: '小范围直线AOE，并且偶尔会连续平A两次' }, // 得到宽恕的怀疑 forgiven unbelief フォーギヴン・アンビリーフ
     14201: { detect: 'visual', grade: 'caution', note: '推翻：延迟的小范围钢铁。' }, // 交错路阿米特 traverse amemet トラバース・アメミット
     14202: { detect: 'auditory', grade: 'caution', note: '读条中等范围钢铁' }, // 交错路巨虫 traverse worm トラバース・ウォーム
