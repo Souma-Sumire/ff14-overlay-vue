@@ -126,8 +126,22 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
     } else if (logMessage.groups?.id === '1C58') {
       // 这一层的地图全部被点亮了！
       state.value.traps = 'revealed'
-    } else if (logMessage.groups?.id === '2BF3') {
-      // 杜松香·敏慧
+    } else if (
+      logMessage.groups?.id === '2BF3' &&
+      logMessage.groups?.param2 === '05'
+    ) {
+      // ChatLog 00:0839::点燃杜松香·安宁召唤了妖灵王的分身！
+      // SystemLogMessage 29:8003EA8E:2BF3:02:XXXXXXXX:05
+      // SystemLogMessage 29:8003EA8F:2BF3:02:XXXXXXXX:05
+
+      // ChatLog 00:0839::点燃杜松香·敏慧召唤了妖灵王的分身！
+      // SystemLogMessage 29:8003EA92:2BF3:02:XXXXXXXX:04
+      // SystemLogMessage 29:8003EA8A:2BF3:02:XXXXXXXX:04
+
+      // ChatLog 00:0839::点燃杜松香·宿命召唤了妖灵王的分身！
+      // SystemLogMessage 29:8003EA91:2BF2:02:XXXXXXXX:05
+      // SystemLogMessage 29:8003EA8A:2BF2:02:XXXXXXXX:05
+
       state.value.traps = 'revealed'
     }
 
