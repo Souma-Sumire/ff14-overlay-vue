@@ -583,34 +583,34 @@ const PT: Data = {
 
     // 51-60层
     14165: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈' }, // 交错路褐钳龙虾 traverse tawnyclaw トラバース・ブラウンクロウ
-    14166: { detect: 'visual', grade: 'easy', note: '只会平A' }, // 交错路守卫 traverse guardian トラバース・ガーディアン
+    14166: { detect: 'visual', grade: 'easy', note: '只会平A', vulnerabilities: { stun: true } }, // 交错路守卫 traverse guardian トラバース・ガーディアン
     14167: { detect: 'visual', grade: 'danger', note: '巡逻怪\n读条正面270度攻击，可站在脚下或背后躲避，可以隔墙躲避。', vulnerabilities: { stun: true } }, // 交错路沙地巨蟒 traverse sand serpent トラバース・サンドサーペント
-    14168: { detect: 'visual', grade: 'danger', note: '读条让所有人进入目押状态。根据动作释放钢铁 或 正面大扇形' }, // 交错路美甲兽 traverse saichania トラバース・サイカニア
-    14169: { detect: 'visual', grade: 'caution', note: '非战斗状态下会施放反击屏障，物理攻击会受到秒杀级反伤！' }, // 交错路巨蜥 traverse monitor トラバース・モニター
-    14170: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条直线攻击 或 点名黄圈' }, // 交错路恶魔怪鸟 traverse fallen aevis トラバース・イビルエイビス
-    14171: { detect: 'visual', grade: 'easy', note: '读条小扇形' }, // 交错路帕查玛玛 traverse Pachamama トラバース・パチャママ
-    14172: { detect: 'auditory', grade: 'easy', note: '中等宽度的前方扇形提示AOE。' }, // 交错路海索草 traverse hyssop トラバース・ヒソプ
-    14173: { detect: 'visual', grade: 'caution', note: '巡逻怪。\n会施放超大范围的钢铁/月环/扇形。', vulnerabilities: { stun: true } }, // 交错路恐鹤 traverse phorusrhacos トラバース・フォルスラコス
-    14174: { detect: 'visual', grade: 'danger', note: '外环雷：超大月环！可以隔墙躲避\n尾镰：中等范围钢铁。\n高速撞击：直线攻击。' }, // 交错路怒嚎 traverse howler トラバース・ハウラー
-    14175: { detect: 'visual', grade: 'easy', note: '读条钢铁。背后有人时会释放大范围扫尾' }, // 交错路狞猫 traverse caracal トラバース・カラカル
-    14176: { detect: 'visual', grade: 'caution', note: '瞬间将目标拉近，然后施放延迟中等范围的钢铁。\n还会读条小扇形' }, // 交错路巨人 traverse gigant トラバース・ギガント
+    14168: { detect: 'visual', grade: 'danger', note: '读条让所有人进入目押状态。根据动作释放钢铁 或 正面大扇形', vulnerabilities: { stun: true } }, // 交错路美甲兽 traverse saichania トラバース・サイカニア
+    14169: { detect: 'visual', grade: 'caution', note: '非战斗状态下会施放反击屏障，物理攻击会受到秒杀级反伤！', vulnerabilities: { stun: true } }, // 交错路巨蜥 traverse monitor トラバース・モニター
+    14170: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条直线攻击 或 点名黄圈', vulnerabilities: { stun: true } }, // 交错路恶魔怪鸟 traverse fallen aevis トラバース・イビルエイビス
+    14171: { detect: 'visual', grade: 'easy', note: '读条小扇形', vulnerabilities: { stun: true } }, // 交错路帕查玛玛 traverse Pachamama トラバース・パチャママ
+    14172: { detect: 'auditory', grade: 'easy', note: '中等宽度的前方扇形提示AOE。', vulnerabilities: { stun: true } }, // 交错路海索草 traverse hyssop トラバース・ヒソプ
+    14173: { detect: 'visual', grade: 'danger', note: '巡逻怪。\n会施放超大范围的钢铁/月环/扇形。', vulnerabilities: { stun: true } }, // 交错路恐鹤 traverse phorusrhacos トラバース・フォルスラコス
+    14174: { detect: 'visual', grade: 'danger', note: '外环雷：超大月环！可以隔墙躲避\n尾镰：中等范围钢铁。\n高速撞击：直线攻击。', vulnerabilities: { stun: true } }, // 交错路怒嚎 traverse howler トラバース・ハウラー
+    14175: { detect: 'visual', grade: 'easy', note: '读条钢铁。背后有人时会释放大范围扫尾', vulnerabilities: { stun: true } }, // 交错路狞猫 traverse caracal トラバース・カラカル
+    14176: { detect: 'visual', grade: 'caution', note: '瞬间将目标拉近，然后施放延迟中等范围的钢铁。\n还会读条小扇形', vulnerabilities: { stun: true } }, // 交错路巨人 traverse gigant トラバース・ギガント
     14177: { detect: 'visual', grade: 'easy', note: '太久没打死会给自己加闪避buff' }, // 交错路甲虫 traverse beetle トラバース・ビートル
     14097: { detect: 'boss', grade: 'caution', note: '小仙人掌对自身所在格造成伤害。\n大仙人掌对自身及周围9格造成伤害' }, // 始祖马利克巨人掌 ancestral Maliktender 元祖マリクテンダー
 
     // 61-70层
-    14178: { detect: 'visual', grade: 'danger', note: '左右刀，躲完立即穿到对侧！' }, // 得到宽恕的暴动 forgiven riot フォーギヴン・ライオティング
+    14178: { detect: 'visual', grade: 'danger', note: '左右刀，躲完立即穿到对侧！', vulnerabilities: { stun: false } }, // 得到宽恕的暴动 forgiven riot フォーギヴン・ライオティング
     14179: { detect: 'visual', grade: 'caution', note: '几千针刺：延迟大范围直线攻击。', vulnerabilities: { stun: true } }, // 得到宽恕的主见 forgiven contention フォーギヴン・コンテンション
-    14180: { detect: 'visual', grade: 'easy', note: '未终针：延迟小范围前方直线攻击。\n终极针：血量低于10%时的点名狂暴攻击。\n可以打断。', vulnerabilities: { stun: true } }, // 交错路蜂后 traverse queen トラバース・クイーンビー
-    14181: { detect: undefined, grade: 'danger', note: '巡逻怪。\n水晶刺：血量低于25%时会反复释放全场AOE，可以隔墙躲避。\n冰雹发射：延迟直线攻击。', vulnerabilities: { stun: true } }, // 得到宽恕的怨恨 forgiven grudge フォーギヴン・グラッジ
-    14182: { detect: 'visual', grade: 'caution', note: '巡逻怪。\n执行贯穿：向前冲刺并在终点释放小范围钢铁，接地震（月环）。\n平A穿插小死刑' }, // 交错路塔罗斯 traverse Talos トラバース・タロース
+    14180: { detect: 'visual', grade: 'easy', note: '未终针：延迟小范围前方直线攻击。\n终极针：血量低于10%时的点名狂暴攻击。', vulnerabilities: { stun: true } }, // 交错路蜂后 traverse queen トラバース・クイーンビー
+    14181: { detect: undefined, grade: 'danger', note: '巡逻怪。\n冰雹发射：延迟直线攻击。\n血量低于25%时会反复释放全场AOE“水晶刺”，可以隔墙躲避。', vulnerabilities: { stun: true } }, // 得到宽恕的怨恨 forgiven grudge フォーギヴン・グラッジ
+    14182: { detect: 'visual', grade: 'caution', note: '巡逻怪。\n执行贯穿：向前冲刺并在终点释放小范围钢铁，接地震（月环）。\n平A穿插小死刑', vulnerabilities: { stun: false } }, // 交错路塔罗斯 traverse Talos トラバース・タロース
     14183: { detect: 'visual', grade: 'caution', note: '冲顶：快速施放的前方宽扇形延迟AOE。', vulnerabilities: { stun: true } }, // 交错路壁崖鼹鼠 traverse cliffmole トラバース・クリフモール
-    14184: { detect: 'auditory', grade: 'caution', note: '在两次“沉岛”圆形点名后会施放超大范围十字AOE！', vulnerabilities: { stun: true } }, // 得到宽恕的不公 forgiven imparity フォーギヴン・イムパリティー
-    14185: { detect: 'visual', grade: 'easy', note: '巡逻怪。\n掷锤：点名脚底黄圈', vulnerabilities: { stun: true } }, // 得到宽恕的捉弄 forgiven mischief フォーギヴン・ミスチーフ
-    14186: { detect: 'visual', grade: 'caution', note: '无提示的前方石化攻击（无法背对躲避）。\n延迟小范围钢铁。', vulnerabilities: { stun: true } }, // 得到宽恕的贪食 forgiven voracity フォーギヴン・ヴォラシティ
+    14184: { detect: 'auditory', grade: 'caution', note: '在两次“沉岛”圆形点名后会施放超大范围十字AOE“岩石崩溃”！', vulnerabilities: { stun: true } }, // 得到宽恕的不公 forgiven imparity フォーギヴン・イムパリティー
+    14185: { detect: 'visual', grade: 'easy', note: '巡逻怪。\n掷锤：点名脚底黄圈\n刺阵：给自己施加减伤buff', vulnerabilities: { stun: true } }, // 得到宽恕的捉弄 forgiven mischief フォーギヴン・ミスチーフ
+    14186: { detect: 'visual', grade: 'danger', note: '无提示的前方扇形石化（无法背对躲避！）吃到基本就死了。\n延迟小范围钢铁。', vulnerabilities: { stun: true } }, // 得到宽恕的贪食 forgiven voracity フォーギヴン・ヴォラシティ
     14187: { detect: 'visual', grade: 'danger', note: '隐身敌人，接近后才会显形。\n会向你冲撞造成约40K伤害，随后施放快速且延迟小范围钢铁。\n仅出现于61-64层。', vulnerabilities: { stun: true } }, // 得到宽恕的疑念 forgiven doubt フォーギヴン・ダウト
-    14188: { detect: 'visual', grade: 'danger', note: '【需要诱导】延迟前（或后）方半圆AOE，随后立即在背后（或前面）再释放一次。\n可以打断。', vulnerabilities: { stun: true } }, // 得到宽恕的依恋 forgiven attachment フォーギヴン・アタッチメント
+    14188: { detect: 'visual', grade: 'danger', note: '【需要诱导】延迟前（或后）方半圆AOE，随后立即在背后（或前面）再释放一次。', vulnerabilities: { stun: true } }, // 得到宽恕的依恋 forgiven attachment フォーギヴン・アタッチメント
     14189: { detect: 'visual', grade: 'caution', note: '平地捶打：不可见的小钢铁', vulnerabilities: { stun: true } }, // 交错路诺姆 traverse gnome トラバース・ノーム
-    14190: { detect: 'visual', grade: 'caution', note: '泥石流：中等范围、延迟释放的宽扇形AOE。', vulnerabilities: { stun: true } }, // 交错路恩戈齐 traverse ngozi トラバース・ンゴツィ
+    14190: { detect: 'visual', grade: 'caution', note: '泥石流：延迟的宽中扇形AOE。\n投石：点名黄圈', vulnerabilities: { stun: true } }, // 交错路恩戈齐 traverse ngozi トラバース・ンゴツィ
     13971: { detect: 'boss', grade: 'caution', note: '热忱怒视：直线。\n热忱之眼：月环。\n白球会按照出现顺序发动月环。\n二千迈纳回转：钢铁\n八重横扫：需要记忆预兆的8次连续扇形。' }, // 得到宽恕的热忱 forgiven zeal フォーギヴン・ズィール
 
     // 71-80层
