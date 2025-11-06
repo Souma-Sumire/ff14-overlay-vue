@@ -78,7 +78,7 @@ const handleEnmityTargetData: EventMap['EnmityTargetData'] = (e) => {
     delay < 2000 &&
     delay > 500 &&
     !elMsg &&
-    closeCount.value < 3
+    closeCount.value === 0
   ) {
     elMsg = ElMessage({
       showClose: true,

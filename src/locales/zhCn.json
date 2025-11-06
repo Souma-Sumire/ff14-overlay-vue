@@ -236,8 +236,8 @@
     "demo-text": "当前为演示数据，锁定后将显示真实数据。",
     "highAgroDelayTitle": "仇恨刷新间隔过高",
     "highAgroDelayMessage": "检测到仇恨刷新间隔过高（{delay}ms）",
-    "setAgroDelayTip": "请将<strong>悬浮窗插件-基本设置-仇恨刷新间隔</strong>改为100。<br />若已改100仍提醒请点击3次关闭按钮。",
-    "disableAgroDelayHint": "点击3次关闭按钮即会永久禁用此提示。"
+    "setAgroDelayTip": "请将<strong>悬浮窗插件-基本设置-仇恨刷新间隔</strong>改为100。",
+    "disableAgroDelayHint": "点击关闭按钮即会永久禁用此提示。"
   },
   "keigennRecord": {
     "source": "伤害来源",

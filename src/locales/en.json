@@ -231,8 +231,8 @@
     "demo-text": "This is demo data. Real data will be displayed after locking.",
     "highAgroDelayTitle": "High Aggro Update Interval",
     "highAgroDelayMessage": "High aggro update interval detected ({delay}ms)",
-    "setAgroDelayTip": "<strong>OverlayPluginの基本設定 - ヘイト更新間隔</strong>を100に変更してください。<br />100に変更後もアラートが表示される場合は、閉じるボタンを3回クリックしてください。",
-    "disableAgroDelayHint": "Click the close button 3 times to permanently disable this message."
+    "setAgroDelayTip": "Please change the <strong>OverlayPlugin Basic Settings - Aggro Refresh Interval</strong> to 100.",
+    "disableAgroDelayHint": "Click the close button to permanently disable this alert."
   },
   "keigennRecord": {
     "source": "Source",
