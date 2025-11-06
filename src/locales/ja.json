@@ -231,7 +231,7 @@
     "demo-text": "現在はデモデータです。ロック後に実際のデータが表示されます。",
     "highAgroDelayTitle": "ヘイト更新間隔が長すぎます",
     "highAgroDelayMessage": "ヘイト更新間隔が長すぎます（{delay}ms）",
-    "setAgroDelayTip": "<strong>OverlayPluginの基本設定 - ヘイト更新間隔</strong>を100に変更してください。",
+    "setAgroDelayTip": "<strong>OverlayPluginの基本設定 - ヘイト更新間隔</strong>を100に変更してください。<br />100に変更後もアラートが表示される場合は、閉じるボタンを3回クリックしてください。",
     "disableAgroDelayHint": "閉じるボタンを3回クリックすると、このアラートは永続的に無効になります。"
   },
   "keigennRecord": {

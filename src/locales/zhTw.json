@@ -235,7 +235,7 @@
     "demo-text": "當前為示範資料，鎖定後將顯示真實資料。",
     "highAgroDelayTitle": "仇恨刷新間隔過高",
     "highAgroDelayMessage": "偵測到仇恨刷新間隔過高（{delay}ms）",
-    "setAgroDelayTip": "請將<strong>懸浮窗插件-基本設定-仇恨刷新間隔</strong>更改為100。",
+    "setAgroDelayTip": "請將<strong>懸浮窗插件-基本設定-仇恨刷新間隔</strong>更改為100。<br />若已更改為100仍提醒，請點擊關閉按鈕3次。",
     "disableAgroDelayHint": "點擊關閉按鈕3次將永久禁用此提示。"
   },
   "keigennRecord": {
