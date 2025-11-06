@@ -496,10 +496,10 @@ const PT: Data = {
   zoneIDs: [1281, 1282, 1283, 1284, 1285, 1286, 1287, 1288, 1289, 1290],
   enemiesData: {
     // 通用
-    14264: { grade: 'caution', note: { zhCn: '尽快击杀，打断怨念' }, vulnerabilities: { stun: true } }, // 拟态怪 mimic ミミック
-    14265: { grade: 'caution', note: '尽快击杀，打断怨念', vulnerabilities: { stun: true } }, // 拟态怪 mimic ミミック
-    14266: { grade: 'caution', note: '尽快击杀，打断怨念', vulnerabilities: { stun: true } }, // 拟态怪 mimic ミミック
-    14267: { grade: 'caution', note: '一碰就死，亡语会眩晕周围。远距离处理。' }, // 交错路柯瑞甘 traverse korrigan トラバース・コリガン
+    14264: { detect: 'scope', grade: 'caution', note: '底层版本，几乎没有抗性\n尽快击杀，打断怨念', vulnerabilities: { stun: true } }, // 拟态怪 mimic ミミック
+    14265: { detect: 'scope', grade: 'caution', note: '中层版本，可以晕\n尽快击杀，打断怨念', vulnerabilities: { stun: true } }, // 拟态怪 mimic ミミック
+    14266: { detect: 'scope', grade: 'caution', note: '深层版本，几乎全抗性\n尽快击杀，打断怨念', vulnerabilities: { stun: false } }, // 拟态怪 mimic ミミック
+    14267: { detect: undefined, grade: 'caution', note: '一碰就死，亡语会眩晕周围。远距离处理。' }, // 交错路柯瑞甘 traverse korrigan トラバース・コリガン
 
     // 1-10层
     14100: { detect: 'visual', grade: 'easy', note: '' }, // 交错路紫闪蝶 traverse morpho トラバース・パープルモルフォ
@@ -663,16 +663,16 @@ const PT: Data = {
     14038: { detect: 'boss', grade: 'caution', note: '女，需吃黑buff' }, // 被侵蚀的食罪灵 devoured eater 侵蝕された罪喰い
   },
   floorTips: {
-    0: '第1~10层',
-    1: '第11~20层',
-    2: '第21~30层',
+    0: '第1~10层：铜宝箱可能出现拟态怪',
+    1: '第11~20层：铜宝箱可能出现拟态怪',
+    2: '第21~30层：铜宝箱可能出现拟态怪',
     3: '第31~40层：银宝箱可能出现拟态怪',
-    4: '第41~50层',
-    5: '第51~60层',
-    6: '第61~70层',
-    7: '第71~80层',
-    8: '第81~90层',
-    9: '第91~100层',
+    4: '第41~50层：银宝箱可能出现拟态怪',
+    5: '第51~60层：银宝箱可能出现拟态怪',
+    6: '第61~70层：金宝箱可能出现拟态怪',
+    7: '第71~80层：金宝箱可能出现拟态怪',
+    8: '第81~90层：金宝箱可能出现拟态怪',
+    9: '第91~99层：金宝箱可能出现拟态怪',
   },
 }
 
