@@ -566,36 +566,36 @@ const PT: Data = {
     13977: { detect: 'boss', grade: 'easy', note: '小怪会复读技能：黄色为钢铁 蓝色为击退。\n小怪可选中后尽快击杀。\nBOSS环浪是月环，圆浪是钢铁。' }, // 得到宽恕的天真 forgiven naivety フォーギヴン・ナイヴテイ
 
     // 41-50层
-    14152: { detect: 'visual', grade: 'caution', note: '吸引+延迟钢铁', vulnerabilities: { stun: true } }, // 交错路塑像 traverse petreffigy トラバース・エフィジィ
-    14153: { detect: 'visual', grade: 'danger', note: '移动极慢，但伤害极高。不要被它碰到！\n攻击会叠加易伤。\n还会使用不可见的步进式环形地震攻击。', vulnerabilities: { stun: true } }, // 交错路托尔巴龟 traverse troubadour トラバース・トルバ
-    14154: { detect: 'visual', grade: 'easy', note: '毒滴牙：使下次平A带毒dot，可打断。', vulnerabilities: { stun: true } }, // 交错路水蚺 traverse anaconda トラバース・アナコンダ
-    14155: { detect: 'visual', grade: 'easy', note: '延迟小范围前方扇形AOE' }, // 交错路三尖树 traverse triffid トラバース・トリフィド
+    14152: { detect: 'visual', grade: 'caution', note: '吸引震动：吸引\n平原震裂：钢铁', vulnerabilities: { stun: true } }, // 交错路塑像 traverse petreffigy トラバース・エフィジィ
+    14153: { detect: 'visual', grade: 'danger', note: '移动极慢，但平A伤害极高且叠加易伤，需要远距离处理。\n龟足踏：钢铁', vulnerabilities: { stun: true } }, // 交错路托尔巴龟 traverse troubadour トラバース・トルバ
+    14154: { detect: 'visual', grade: 'easy', note: '毒滴牙：毒dot，可打断。\n喷毒：点名脚底黄圈', vulnerabilities: { stun: true } }, // 交错路水蚺 traverse anaconda トラバース・アナコンダ
+    14155: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条中等扇形' }, // 交错路三尖树 traverse triffid トラバース・トリフィド
     14156: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈', vulnerabilities: { stun: true } }, // 交错路蜥蜴 traverse lizard トラバース・リザード
-    14157: { detect: 'visual', grade: 'easy', note: '加速自身，提高攻速。' }, // 交错路白蚁 traverse termite トラバース・ターマイト
+    14157: { detect: 'visual', grade: 'easy', note: '巡逻怪\n酸液喷射：小扇形\n太久没打死会给自己“加速”buff。' }, // 交错路白蚁 traverse termite トラバース・ターマイト
     14158: { detect: 'visual', grade: 'caution', note: '直线冲锋AOE，然后再冲回去。' }, // 交错路蚁狮 traverse antlion トラバース・アントリオン
-    14159: { detect: 'visual', grade: 'easy', note: '大范围钢铁', vulnerabilities: { stun: true } }, // 交错路钳喙魔鸟 traverse pincerbeak トラバース・ピンサービーク
+    14159: { detect: 'visual', grade: 'easy', note: '火球：点名脚底黄圈\n尾部碎击：大范围钢铁', vulnerabilities: { stun: true } }, // 交错路钳喙魔鸟 traverse pincerbeak トラバース・ピンサービーク
     14160: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条直线攻击' }, // 交错路飞鸢 traverse cliffkite トラバース・クリフカイト
-    14161: { detect: 'visual', grade: 'caution', note: '愤怒旋风：延迟钢铁，会造成无法净化的眩晕，伤害约65K。\n愤怒一击：延迟小范围直线攻击，伤害约70K。', vulnerabilities: { stun: true } }, // 交错路兵装 traverse weapon トラバース・ウェポン
+    14161: { detect: 'visual', grade: 'caution', note: '愤怒旋风：钢铁，附带无法净化的眩晕\n愤怒一击：短直线攻击', vulnerabilities: { stun: true } }, // 交错路兵装 traverse weapon トラバース・ウェポン
     14162: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈，可打断', vulnerabilities: { stun: true } }, // 交错路龙舌兰 traverse agave トラバース・アガベ
     14163: { detect: 'visual', grade: 'easy', note: '读条扇形', vulnerabilities: { stun: true } }, // 交错路大口花 traverse germinant トラバース・ジェルミナンツ
     14164: { detect: 'visual', grade: 'easy', note: '读条小钢铁' }, // 交错路螳螂 traverse mantis トラバース・マンティス
-    14263: { detect: 'boss', grade: 'easy', note: '不可以长时间站在流沙中。\n龙卷风需要在倒计时结束时站在流沙里避免被击退。' }, // 奥格布那巴利 Ogbunabali オグブナバリ
+    14263: { detect: 'boss', grade: 'caution', note: '不可以长时间站在流沙中否则即死。\n龙卷风需要在倒计时结束时站在流沙里避免被击退。\n进沙坑：四连追踪红圈，秒杀级伤害，判定很慢\n组合技时优先处理四连，龙卷风可以吃药硬吃。' }, // 奥格布那巴利 Ogbunabali オグブナバリ
 
     // 51-60层
-    14165: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈' }, // 交错路褐钳龙虾 traverse tawnyclaw トラバース・ブラウンクロウ
+    14165: { detect: 'visual', grade: 'easy', note: '平A穿插小死刑\n螺旋尾：点名脚底黄圈' }, // 交错路褐钳龙虾 traverse tawnyclaw トラバース・ブラウンクロウ
     14166: { detect: 'visual', grade: 'easy', note: '只会平A', vulnerabilities: { stun: true } }, // 交错路守卫 traverse guardian トラバース・ガーディアン
-    14167: { detect: 'visual', grade: 'danger', note: '巡逻怪\n读条正面270度攻击，可站在脚下或背后躲避，可以隔墙躲避。', vulnerabilities: { stun: true } }, // 交错路沙地巨蟒 traverse sand serpent トラバース・サンドサーペント
+    14167: { detect: 'visual', grade: 'danger', note: '巡逻怪\n大地钻击：正面270度旋体脚，站在脚下或背后躲避，可以隔墙躲避。', vulnerabilities: { stun: true } }, // 交错路沙地巨蟒 traverse sand serpent トラバース・サンドサーペント
     14168: { detect: 'visual', grade: 'danger', note: '读条让所有人进入目押状态。根据动作释放钢铁 或 正面大扇形', vulnerabilities: { stun: true } }, // 交错路美甲兽 traverse saichania トラバース・サイカニア
-    14169: { detect: 'visual', grade: 'caution', note: '非战斗状态下会施放反击屏障，物理攻击会受到秒杀级反伤！', vulnerabilities: { stun: true } }, // 交错路巨蜥 traverse monitor トラバース・モニター
-    14170: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条直线攻击 或 点名黄圈', vulnerabilities: { stun: true } }, // 交错路恶魔怪鸟 traverse fallen aevis トラバース・イビルエイビス
+    14169: { detect: 'visual', grade: 'caution', note: '非战斗状态下会施放“火鳞甲”：物理攻击会受到秒杀级反伤！\n火龙卷：小扇形', vulnerabilities: { stun: true } }, // 交错路巨蜥 traverse monitor トラバース・モニター
+    14170: { detect: 'visual', grade: 'easy', note: '巡逻怪\n火球：点名脚底黄圈\n炽热弥漫：直线攻击', vulnerabilities: { stun: true } }, // 交错路恶魔怪鸟 traverse fallen aevis トラバース・イビルエイビス
     14171: { detect: 'visual', grade: 'easy', note: '读条小扇形', vulnerabilities: { stun: true } }, // 交错路帕查玛玛 traverse Pachamama トラバース・パチャママ
-    14172: { detect: 'auditory', grade: 'easy', note: '中等宽度的前方扇形提示AOE。', vulnerabilities: { stun: true } }, // 交错路海索草 traverse hyssop トラバース・ヒソプ
+    14172: { detect: 'auditory', grade: 'easy', note: '读条中等宽扇形', vulnerabilities: { stun: true } }, // 交错路海索草 traverse hyssop トラバース・ヒソプ
     14173: { detect: 'visual', grade: 'danger', note: '巡逻怪。\n会施放超大范围的钢铁/月环/扇形。', vulnerabilities: { stun: true } }, // 交错路恐鹤 traverse phorusrhacos トラバース・フォルスラコス
-    14174: { detect: 'visual', grade: 'danger', note: '外环雷：超大月环！可以隔墙躲避\n尾镰：中等范围钢铁。\n高速撞击：直线攻击。', vulnerabilities: { stun: true } }, // 交错路怒嚎 traverse howler トラバース・ハウラー
+    14174: { detect: 'visual', grade: 'danger', note: '尾镰：中等范围钢铁。\n高速撞击：直线攻击。\n外环雷：超大月环！可以隔墙躲避', vulnerabilities: { stun: true } }, // 交错路怒嚎 traverse howler トラバース・ハウラー
     14175: { detect: 'visual', grade: 'easy', note: '读条钢铁。背后有人时会释放大范围扫尾', vulnerabilities: { stun: true } }, // 交错路狞猫 traverse caracal トラバース・カラカル
-    14176: { detect: 'visual', grade: 'caution', note: '瞬间将目标拉近，然后施放延迟中等范围的钢铁。\n还会读条小扇形', vulnerabilities: { stun: true } }, // 交错路巨人 traverse gigant トラバース・ギガント
-    14177: { detect: 'visual', grade: 'easy', note: '太久没打死会给自己加闪避buff' }, // 交错路甲虫 traverse beetle トラバース・ビートル
-    14097: { detect: 'boss', grade: 'caution', note: '小仙人掌对自身所在格造成伤害。\n大仙人掌对自身及周围9格造成伤害' }, // 始祖马利克巨人掌 ancestral Maliktender 元祖マリクテンダー
+    14176: { detect: 'visual', grade: 'caution', note: '吸气：吸引\n蛮力金刚臂：钢铁\n蛮力上投：扇形', vulnerabilities: { stun: true } }, // 交错路巨人 traverse gigant トラバース・ギガント
+    14177: { detect: 'visual', grade: 'easy', note: '平A穿插小死刑，太久没打死会给自己加闪避buff' }, // 交错路甲虫 traverse beetle トラバース・ビートル
+    14097: { detect: 'boss', grade: 'caution', note: '小仙人掌对自身所在格造成伤害。\n大仙人掌对自身及周围9格造成伤害\n飞针射击：打前后\n飞针射击+旋转：速度很快，走内圈跟紧\n马利克敕令：1或2进：仙人掌会移动对应步数，找出安全区躲避。' }, // 始祖马利克巨人掌 ancestral Maliktender 元祖マリクテンダー
 
     // 61-70层
     14178: { detect: 'visual', grade: 'danger', note: '左右刀，躲完立即穿到对侧！', vulnerabilities: { stun: false } }, // 得到宽恕的暴动 forgiven riot フォーギヴン・ライオティング
