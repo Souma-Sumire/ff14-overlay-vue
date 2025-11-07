@@ -634,7 +634,7 @@ const PT: Data = {
     14205: { detect: 'visual', grade: 'danger', note: '非战斗状态下会释放全场AOE。\n深渊射线：读条极大范围的直线攻击，穿墙！' }, // 召引巴尔 invoked Baal インヴォークド・バエル
     14206: { detect: 'scope', grade: 'caution', note: '巡逻怪\n残杀：会连续击退四次\n风暴斩：前方扇形AOE' }, // 交错路骑兵 traverse rider トラバース・ライダー
     14207: { detect: 'visual', grade: 'danger', note: '巡逻怪\n会点名热病，不要动否则会秒杀级爆炸。建议隔墙躲避。', vulnerabilities: { stun: true } }, // 召引梦魔 invoked succubus インヴォークド・サキュバス
-    14208: { detect: 'visual', grade: 'caution', note: '巡逻怪\n读条三重/四重强击，攻击对应次数后发动秒杀级攻击。需要尽快击杀。' }, // 召引洪巴巴 invoked Humbaba インヴォークド・フンババ
+    14208: { detect: 'visual', grade: 'caution', note: '巡逻怪\n读条三重/四重强击，攻击对应次数后以当前面向释放秒杀级扇形。' }, // 召引洪巴巴 invoked Humbaba インヴォークド・フンババ
     14209: { detect: 'visual', grade: 'easy', note: '读条小范围扇形\n会上减速debuff' }, // 召引格雷姆林 invoked gremlin インヴォークド・グレムリン
     14210: { detect: 'visual', grade: 'caution', note: '读条中等范围扇形\n低血量时会施放长读条的狂暴技能，可能是点名秒杀攻击。' }, // 交错路异豺 traverse gnoll トラバース・ノール
     14211: { detect: 'visual', grade: 'danger', note: '昏暗：长读条的可打断超宽扇形AOE，不要与“黑暗”混淆。' }, // 交错路卡部斯 traverse cubus トラバース・カブス
@@ -646,7 +646,7 @@ const PT: Data = {
     14090: { detect: 'boss', grade: 'caution', note: '发光手一侧的270°半场刀。\n横断击：对boss左右的90°扇形攻击\n纵断击：对boss前后的90°扇形攻击\nX断击时，场边的魔法阵会对所在行或列发动直线攻击。' }, // 马纳果达 Malacoda マラコーダ
 
     // 91-100层
-    14217: { detect: 'visual', grade: 'caution', note: '读条三重/四重猛击，攻击对应次数后发动秒杀级攻击。需要尽快击杀。' }, // 交错路座狼 traverse warg トラバース・ワーグ
+    14217: { detect: 'visual', grade: 'caution', note: '读条三重/四重猛击，攻击对应次数后以当前面向释放秒杀级扇形。' }, // 交错路座狼 traverse warg トラバース・ワーグ
     14218: { detect: 'visual', grade: 'caution', note: '读条左右刀，记得穿' }, // 召引古辛 invoked Gusion インヴォークド・グシオン
     14219: { detect: 'visual', grade: 'danger', note: '梦祸视线：直线攻击\n死亡会自爆！！！（可以隔墙躲避）' }, // 召引梦祸 invoked dreamer インヴォークド・ドリームエビル
     14220: { detect: 'visual', grade: 'caution', note: '点名，隔墙躲避，随后释放黄圈', vulnerabilities: { stun: true } }, // 召引光棍 invoked bachelor インヴォークド・バチェラー
