@@ -128,7 +128,8 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
       state.value.traps = 'revealed'
     } else if (
       logMessage.groups?.id === '2BF3' &&
-      logMessage.groups?.param2 === '05'
+      logMessage.groups?.param0 === '02' &&
+      logMessage.groups?.param2 === '04'
     ) {
       // ChatLog 00:0839::点燃杜松香·安宁召唤了妖灵王的分身！
       // SystemLogMessage 29:8003EA8E:2BF3:02:XXXXXXXX:05
