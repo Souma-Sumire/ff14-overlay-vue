@@ -13,6 +13,14 @@ type EnemyData = {
   // If your native language is not Chinese and you wish to submit translations.
   // Please format it like this: {zhCn:'中文笔记', en:'English note', ja:'日本語の備考', zhTw:'中文備註'}}
   // This instruction also applies to FloorTips.
+
+  // 如果你正在提交PR：请按照以下格式提交：
+  // 若怪物只有一种能力，直接写能力效果，例如：读条小扇形
+  // 若怪物存在复数能力且初始释放顺序有规律。请按格式“技能名称：技能效果”填写，并按照初始释放顺序排列。例如：“吸气：吸引 \n蛮力金刚臂：钢铁”
+  // 若怪物存在复数能力且初始释放顺序无规律。请按照技能威胁值从低到高排序，并按格式“技能名称：技能效果”填写。例如：“野蛮咬：小死刑 \n黑暗神圣：点名某人的大黄圈\n生命停止：极快的前方超大扇形！”
+  // 若怪物是巡逻怪，请在第一行写'巡逻怪\n'后面再跟上能力效果。例如：“巡逻怪\n读条小扇形”
+  // 若多个怪物拥有相同的机制（不光是你提交的部分，还包括现有数据），请保持全程术语的一致性。
+  // 请全程使用中文半角标点符号。
   note?: string | langString
   // 抗性弱点
   vulnerabilities?: {
