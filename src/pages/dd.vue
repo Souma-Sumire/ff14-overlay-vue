@@ -73,7 +73,9 @@ const closeCount = useStorage('DDCloseCount', 0, localStorage)
 
 const handleEnmityTargetData: EventMap['EnmityTargetData'] = (e) => {
   const delay = Date.now() - lastTime
-  if (
+  if (lastTime && delay > 20 && delay < 150 && elMsg) {
+    elMsg.close()
+  } else if (
     lastTime &&
     delay < 2000 &&
     delay > 500 &&
