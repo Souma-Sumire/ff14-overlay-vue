@@ -319,7 +319,7 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
     const regex = REGEXES[regexName as keyof typeof REGEXES]
     const match = regex.exec(line)
     if (match) {
-      const splitLine = line.split('obs2.|')
+      const splitLine = line.split('|')
       switch (regexName) {
         case 'inCombat': {
           const inACTCombat =
