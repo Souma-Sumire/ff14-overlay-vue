@@ -321,8 +321,8 @@ function getLangString(v: langString | string | undefined) {
 @use 'sass:color';
 $text-color: #fefefd;
 $accent-color: #947b31;
-$shadow-spread: 1.5px;
-$shadow-blur: 2.5px;
+$shadow-spread: -0.07em;
+$shadow-blur: 0.1em;
 $font-family: 'Microsoft YaHei', sans-serif;
 $font-size: 20px;
 
