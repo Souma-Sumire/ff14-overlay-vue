@@ -664,7 +664,7 @@ onUnmounted(() => {
                     >{{ t('obs2.Current') }}<br
                   /></span>
 
-                  <span>{{ t(scope.row.type) }}</span>
+                  <span>{{ t(`obs2.${scope.row.type}`) }}</span>
                 </template>
               </el-table-column>
               <el-table-column :label="t('obs2.Start When')" align="center">
