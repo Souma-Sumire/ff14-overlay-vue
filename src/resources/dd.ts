@@ -510,19 +510,19 @@ const PT: Data = {
     14267: { detect: undefined, grade: 'caution', note: '一碰就死，亡语会眩晕周围。远距离处理。' }, // 交错路柯瑞甘 traverse korrigan トラバース・コリガン
 
     // 1-10层
-    14100: { detect: 'visual', grade: 'easy', note: '', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路紫闪蝶 traverse morpho トラバース・パープルモルフォ
-    14101: { detect: 'visual', grade: 'easy', note: '', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路石莲猬 traverse echevore トラバース・エケボア
-    14102: { detect: 'visual', grade: 'easy', note: '', vulnerabilities: { stun: true, bind: undefined, heavy: undefined, sleep: undefined, slow: undefined } }, // 交错路普卡精 traverse phooka トラバース・プーカ
-    14103: { detect: 'visual', grade: 'easy', note: '', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路鹰蜓 traverse hawker トラバース・ホーカー
-    14104: { detect: 'auditory', grade: 'easy', note: '', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路苔菇 traverse moss fungus トラバース・モスフングス
-    14105: { detect: 'visual', grade: 'easy', note: '', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路花楸树 traverse rowan トラバース・ローワン
-    14106: { detect: 'visual', grade: 'easy', note: '', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路杀人蜂 traverse killer bee トラバース・キラービー
-    14107: { detect: 'auditory', grade: 'easy', note: '', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路铁线莲 traverse clematis トラバース・クレマチス
-    14108: { detect: 'visual', grade: 'easy', note: '', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路篮筐 traverse basket トラバース・バスケット
-    14109: { detect: 'visual', grade: 'easy', note: '', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路爱蒂恩蛾 traverse etainmoth トラバース・エーディンモス
-    14110: { detect: 'visual', grade: 'easy', note: '巡逻怪', vulnerabilities: { stun: true, bind: undefined, heavy: undefined, sleep: undefined, slow: undefined } }, // 交错路草小人 traverse shrub トラバース・シュラブレット
-    14111: { detect: 'visual', grade: 'easy', note: '巡逻怪', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路鹦鹉 traverse lorikeet トラバース・ロリキート
-    14112: { detect: 'auditory', grade: 'easy', note: '巡逻怪', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路玫瑰熊 traverse rosebear トラバース・ローズベアー
+    14100: { detect: 'visual', grade: 'easy', note: '', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路紫闪蝶 traverse morpho トラバース・パープルモルフォ
+    14101: { detect: 'visual', grade: 'easy', note: '', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路石莲猬 traverse echevore トラバース・エケボア
+    14102: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈', vulnerabilities: { stun: true, bind: undefined, heavy: undefined, sleep: undefined, slow: undefined } }, // 交错路普卡精 traverse phooka トラバース・プーカ
+    14103: { detect: 'visual', grade: 'easy', note: '读条扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路鹰蜓 traverse hawker トラバース・ホーカー
+    14104: { detect: 'auditory', grade: 'easy', note: '', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路苔菇 traverse moss fungus トラバース・モスフングス
+    14105: { detect: 'visual', grade: 'easy', note: '读条扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路花楸树 traverse rowan トラバース・ローワン
+    14106: { detect: 'visual', grade: 'easy', note: '读条直线', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路杀人蜂 traverse killer bee トラバース・キラービー
+    14107: { detect: 'auditory', grade: 'easy', note: '读条直线', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路铁线莲 traverse clematis トラバース・クレマチス
+    14108: { detect: 'visual', grade: 'easy', note: '读条钢铁，附带中毒', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路篮筐 traverse basket トラバース・バスケット
+    14109: { detect: 'visual', grade: 'easy', note: '读条扇形，附带睡眠', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路爱蒂恩蛾 traverse etainmoth トラバース・エーディンモス
+    14110: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条直线', vulnerabilities: { stun: true, bind: undefined, heavy: undefined, sleep: undefined, slow: undefined } }, // 交错路草小人 traverse shrub トラバース・シュラブレット
+    14111: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路鹦鹉 traverse lorikeet トラバース・ロリキート
+    14112: { detect: 'auditory', grade: 'easy', note: '巡逻怪\n读条扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路玫瑰熊 traverse rosebear トラバース・ローズベアー
     13979: { detect: 'boss', grade: 'caution', note: '小怪会复制BOSS的技能，可选中后尽快击杀。\nBOSS还会释放捕食，记好预兆寻找安全区。' }, // 花人 ornamental leafman 花人
 
     // 11-20层
