@@ -526,19 +526,19 @@ const PT: Data = {
     13979: { detect: 'boss', grade: 'caution', note: '小怪会复制BOSS的技能，可选中后尽快击杀。\nBOSS还会释放捕食，记好预兆寻找安全区。' }, // 花人 ornamental leafman 花人
 
     // 11-20层
-    14113: { detect: 'visual', grade: 'easy', note: '无', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 得到宽恕的盲从 forgiven conformity フォーギヴン・コンフォーミティー
+    14113: { detect: 'visual', grade: 'easy', note: '无', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 得到宽恕的盲从 forgiven conformity フォーギヴン・コンフォーミティー
     14114: { detect: 'visual', grade: 'easy', note: '读条直线攻击', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 得到宽恕的无知 forgiven ignorance フォーギヴン・イグノランス
-    14115: { detect: 'visual', grade: 'easy', note: '读条钢铁', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 得到宽恕的蠢笨 forgiven folly フォーギヴン・フォリー
+    14115: { detect: 'visual', grade: 'easy', note: '读条钢铁', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 得到宽恕的蠢笨 forgiven folly フォーギヴン・フォリー
     14116: { detect: 'visual', grade: 'easy', note: '读条扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 得到宽恕的自负 forgiven conceit フォーギヴン・コンスィート
-    14117: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 得到宽恕的暴力 forgiven violence フォーギヴン・ヴァイオレンス
+    14117: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 得到宽恕的暴力 forgiven violence フォーギヴン・ヴァイオレンス
     14118: { detect: 'visual', grade: 'easy', note: '读条直线攻击', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 得到宽恕的违命 forgiven disobedience フォーギヴン・ディスオビーデアンス
-    14119: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 得到宽恕的欺骗 forgiven deceit フォーギヴン・デシート
+    14119: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 得到宽恕的欺骗 forgiven deceit フォーギヴン・デシート
     14120: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 得到宽恕的轻蔑 forgiven contempt フォーギヴン・コンテンプト
-    14121: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈', vulnerabilities: { stun: true, bind: undefined, heavy: undefined, sleep: undefined, slow: undefined } }, // 得到宽恕的自满 forgiven complacency フォーギヴン・コンプレイセンシー
+    14121: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈', vulnerabilities: { stun: true, bind: undefined, heavy: undefined, sleep: true, slow: undefined } }, // 得到宽恕的自满 forgiven complacency フォーギヴン・コンプレイセンシー
     14122: { detect: 'auditory', grade: 'easy', note: '读条直线攻击', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路帕克 traverse Puck トラバース・パック
-    14123: { detect: 'visual', grade: 'easy', note: '无', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路绿雕 traverse topiary トラバース・トピアリー
+    14123: { detect: 'visual', grade: 'easy', note: '无', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路绿雕 traverse topiary トラバース・トピアリー
     14124: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路豌豆花 traverse Peaseblossom トラバース・ピーズブロッサム
-    14125: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路幼体龙鸟 traverse tot aevis トラバース・トートエイビス
+    14125: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路幼体龙鸟 traverse tot aevis トラバース・トートエイビス
     13973: { detect: 'boss', grade: 'easy', note: '4条腿会依次闪烁红光，击退后按照腿发光的顺序依次释放大范围钢铁\n点名是放置冰花' }, // 得到宽恕的模仿 forgiven emulation フォーギヴン・エミュレーション
 
     // 21-30层
@@ -548,7 +548,7 @@ const PT: Data = {
     14129: { detect: 'visual', grade: 'easy', note: '读条直线攻击', vulnerabilities: { stun: true, bind: undefined, heavy: undefined, sleep: undefined, slow: undefined } }, // 得到宽恕的残忍 forgiven cruelty フォーギヴン・クルエルティー
     14130: { detect: 'visual', grade: 'caution', note: '读条扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 得到宽恕的奢望 forgiven ambition フォーギヴン・アンビション
     14131: { detect: 'visual', grade: 'easy', note: undefined, vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 得到宽恕的侮辱 forgiven insult フォーギヴン・インサルト
-    14132: { detect: 'visual', grade: 'easy', note: undefined, vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 得到宽恕的踌躇 forgiven hesitance フォーギヴン・ヘジテンス
+    14132: { detect: 'visual', grade: 'easy', note: undefined, vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 得到宽恕的踌躇 forgiven hesitance フォーギヴン・ヘジテンス
     14133: { detect: 'visual', grade: 'easy', note: '重拳波：跳向玩家+钢铁\n巨像之光：直线攻击', vulnerabilities: { stun: true, bind: undefined, heavy: undefined, sleep: undefined, slow: undefined } }, // 交错路魔像 traverse statue トラバース・スタチュー
     14134: { detect: 'visual', grade: 'easy', note: undefined, vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路莫高海怪 traverse morgawr トラバース・モーゴウル
     14135: { detect: 'visual', grade: 'easy', note: undefined, vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路角雉 traverse tragopan トラバース・トラゴパン
@@ -590,19 +590,19 @@ const PT: Data = {
     14263: { detect: 'boss', grade: 'caution', note: '不可以长时间站在流沙中否则即死。\n龙卷风需要在倒计时结束时站在流沙里避免被击退。\n进沙坑：四连追踪红圈，秒杀级伤害，判定很慢\n组合技时优先处理四连，龙卷风可以吃药硬吃。' }, // 奥格布那巴利 Ogbunabali オグブナバリ
 
     // 51-60层
-    14165: { detect: 'visual', grade: 'easy', note: '平A穿插小死刑\n螺旋尾：点名脚底黄圈', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路褐钳龙虾 traverse tawnyclaw トラバース・ブラウンクロウ
+    14165: { detect: 'visual', grade: 'easy', note: '平A穿插小死刑\n螺旋尾：点名脚底黄圈', vulnerabilities: { bind: true, heavy: true, sleep: true, stun: true, slow: true } }, // 交错路褐钳龙虾 traverse tawnyclaw トラバース・ブラウンクロウ
     14166: { detect: 'visual', grade: 'easy', note: '只会平A', vulnerabilities: { stun: true, bind: undefined, heavy: undefined, sleep: undefined, slow: undefined } }, // 交错路守卫 traverse guardian トラバース・ガーディアン
     14167: { detect: 'visual', grade: 'danger', note: '巡逻怪\n大地钻击：正面270度旋体脚，站在脚下或背后躲避，可以隔墙躲避。', vulnerabilities: { stun: true, bind: undefined, heavy: undefined, sleep: undefined, slow: undefined } }, // 交错路沙地巨蟒 traverse sand serpent トラバース・サンドサーペント
     14168: { detect: 'visual', grade: 'danger', note: '读条让所有人进入目押状态。根据动作释放钢铁 或 正面大扇形', vulnerabilities: { stun: true, bind: undefined, heavy: undefined, sleep: undefined, slow: undefined } }, // 交错路美甲兽 traverse saichania トラバース・サイカニア
     14169: { detect: 'visual', grade: 'caution', note: '非战斗状态下会施放“火鳞甲”：物理攻击会受到秒杀级反伤！\n火龙卷：小扇形', vulnerabilities: { stun: true, bind: undefined, heavy: undefined, sleep: undefined, slow: undefined } }, // 交错路巨蜥 traverse monitor トラバース・モニター
     14170: { detect: 'visual', grade: 'easy', note: '巡逻怪\n火球：点名脚底黄圈\n炽热弥漫：直线攻击', vulnerabilities: { stun: true, bind: undefined, heavy: undefined, sleep: undefined, slow: undefined } }, // 交错路恶魔怪鸟 traverse fallen aevis トラバース・イビルエイビス
     14171: { detect: 'visual', grade: 'easy', note: '读条小扇形', vulnerabilities: { stun: true, bind: undefined, heavy: undefined, sleep: undefined, slow: undefined } }, // 交错路帕查玛玛 traverse Pachamama トラバース・パチャママ
-    14172: { detect: 'auditory', grade: 'easy', note: '读条中等宽扇形', vulnerabilities: { stun: true, bind: undefined, heavy: undefined, sleep: undefined, slow: undefined } }, // 交错路海索草 traverse hyssop トラバース・ヒソプ
+    14172: { detect: 'auditory', grade: 'easy', note: '读条中等宽扇形', vulnerabilities: { stun: true, bind: false, heavy: true, sleep: true, slow: true } }, // 交错路海索草 traverse hyssop トラバース・ヒソプ
     14173: { detect: 'visual', grade: 'danger', note: '巡逻怪。\n会施放超大范围的钢铁/月环/扇形。', vulnerabilities: { stun: true, bind: undefined, heavy: undefined, sleep: undefined, slow: undefined } }, // 交错路恐鹤 traverse phorusrhacos トラバース・フォルスラコス
     14174: { detect: 'visual', grade: 'danger', note: '尾镰：中等范围钢铁。\n高速撞击：直线攻击。\n外环雷：超大月环！可以隔墙躲避', vulnerabilities: { stun: true, bind: undefined, heavy: undefined, sleep: undefined, slow: undefined } }, // 交错路怒嚎 traverse howler トラバース・ハウラー
     14175: { detect: 'visual', grade: 'easy', note: '读条钢铁。背后有人时会释放大范围扫尾', vulnerabilities: { stun: true, bind: undefined, heavy: undefined, sleep: undefined, slow: undefined } }, // 交错路狞猫 traverse caracal トラバース・カラカル
     14176: { detect: 'visual', grade: 'caution', note: '吸气：吸引\n蛮力金刚臂：钢铁\n蛮力上投：扇形', vulnerabilities: { stun: true, bind: undefined, heavy: undefined, sleep: undefined, slow: undefined } }, // 交错路巨人 traverse gigant トラバース・ギガント
-    14177: { detect: 'visual', grade: 'easy', note: '平A穿插小死刑，太久没打死会给自己加闪避buff', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路甲虫 traverse beetle トラバース・ビートル
+    14177: { detect: 'visual', grade: 'easy', note: '平A穿插小死刑，太久没打死会给自己加闪避buff', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路甲虫 traverse beetle トラバース・ビートル
     14097: { detect: 'boss', grade: 'caution', note: '小仙人掌对自身所在格造成伤害。\n大仙人掌对自身及周围9格造成伤害\n飞针射击：打前后\n飞针射击+旋转：速度很快，走内圈跟紧\n马利克敕令：1或2进：仙人掌会移动对应步数，找出安全区躲避。' }, // 始祖马利克巨人掌 ancestral Maliktender 元祖マリクテンダー
 
     // 61-70层
