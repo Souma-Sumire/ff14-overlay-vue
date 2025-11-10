@@ -289,18 +289,10 @@ function getLangString(v: langString | string | undefined) {
               v-if="demo || state.tarData?.detect !== 'boss'"
             >
               <div
-                v-for="(v, k) in demo
-                  ? {
-                      stun: true,
-                      heavy: false,
-                      slow: false,
-                      sleep: true,
-                      bind: false,
-                    }
-                  : state.tarData?.vulnerabilities"
+                v-for="k in ['stun', 'heavy', 'slow', 'sleep', 'bind']"
                 :key="k"
-                v-show="demo || (v !== undefined && state.partyAbilities[k])"
-                :class="`icon ${k} ${v ? 'valid' : 'invalid'}`"
+                v-show="demo || (state.tarData?.vulnerabilities?.[k as keyof Abilities] !==undefined && state.partyAbilities[k as keyof Abilities])"
+                :class="`icon ${k} ${state.tarData?.vulnerabilities![k as keyof Abilities] === true ? 'valid' : 'invalid'}`"
               >
                 <div class="icon-text">
                   {{ $t(`dd.vulnerabilities.${k}`) }}
