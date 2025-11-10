@@ -292,9 +292,9 @@ function getLangString(v: langString | string | undefined) {
                 v-for="(v, k) in demo
                   ? {
                       stun: true,
-                      sleep: true,
                       heavy: false,
                       slow: false,
+                      sleep: true,
                       bind: false,
                     }
                   : state.tarData?.vulnerabilities"
@@ -321,23 +321,24 @@ function getLangString(v: langString | string | undefined) {
 @use 'sass:color';
 $text-color: #fefefd;
 $accent-color: #947b31;
-$shadow-spread: -0.07em;
-$shadow-blur: 0.1em;
-$font-family: 'Microsoft YaHei', sans-serif;
-$font-size: 20px;
+$font-family: 'Microsoft YaHei UI', 'Microsoft YaHei', 'PingFang TC',
+  'LiHei Pro', 'Heiti TC', 'Arial', 'Helvetica', sans-serif;
+$font-size: 1.25rem;
+$outline-size: 0.1rem;
+$outline-blur: 0.15rem;
 
 :global(body::-webkit-scrollbar) {
   display: none;
 }
 
 :global(body::-webkit-scrollbar) {
-  width: 5px;
-  height: 5px;
+  width: 0.25rem;
+  height: 0.25rem;
 }
 
 :global(body::-webkit-scrollbar-thumb) {
-  height: 30px;
-  border-radius: 5px;
+  height: 1.5rem;
+  border-radius: 0.25rem;
 }
 
 :global(body) {
@@ -349,19 +350,22 @@ $font-size: 20px;
   margin: 0.1rem;
 }
 
+pre {
+  font-family: $font-family;
+}
+
 .container {
   font-family: $font-family;
   font-size: $font-size;
   color: $text-color;
-  padding: 0.1em;
-
-  text-shadow: $shadow-spread 0 $shadow-blur $accent-color,
-    -$shadow-spread 0 $shadow-blur $accent-color,
-    0 $shadow-spread $shadow-blur $accent-color,
-    0 - $shadow-spread $shadow-blur $accent-color;
+  padding: 0.05rem;
+  text-shadow: -$outline-size 0 $outline-blur $accent-color,
+    0 $outline-size $outline-blur $accent-color,
+    $outline-size 0 $outline-blur $accent-color,
+    0 - $outline-size $outline-blur $accent-color;
 
   h3 {
-    padding: 5px;
+    padding: 0.25rem;
     border-bottom: 1px solid rgba($accent-color, 0.5);
   }
 
@@ -375,7 +379,7 @@ $font-size: 20px;
   flex-direction: row;
   flex-wrap: nowrap;
   align-items: flex-start;
-  gap: 2px;
+  gap: 0.1rem;
   padding: 0;
   margin: 0;
 }
@@ -385,11 +389,13 @@ $font-size: 20px;
 }
 
 .icon {
-  width: 28px;
-  height: 32px;
+  width: 2rem;
+  height: 2.2rem;
+  padding: 0;
+  margin: 0;
   background-size: contain;
   background-repeat: no-repeat;
-  font-size: 11px;
+  font-size: 0.75rem;
 }
 
 .valid {
@@ -397,11 +403,11 @@ $font-size: 20px;
 }
 
 .invalid {
-  filter: grayscale(100%);
+  filter: grayscale(100%) brightness(0.8);
 }
 
 .icon-text {
-  margin-top: -16px;
+  margin-top: -0.8rem;
   white-space: nowrap;
   text-align: center;
 }
@@ -428,25 +434,25 @@ $font-size: 20px;
 
 .tar-grade,
 .tar-detect {
-  min-width: 3.5em;
+  min-width: 3.5rem;
 }
 
 .demo-text {
   user-select: none;
   position: fixed;
-  top: 0em;
-  right: 0em;
+  top: 0rem;
+  right: 0rem;
   width: min-content;
   white-space: nowrap;
-  padding: 10px;
+  padding: 0.5rem;
   background-color: rgba(20, 20, 20, 0.4);
   color: white;
-  font-size: 12px;
-  text-shadow: 1px 1px 1px #000, -1px -1px 1px #000, 1px -1px 1px #000,
-    -1px 1px 1px #000;
+  font-size: 0.6rem;
+  text-shadow: 0.05rem 0.05rem 0.05rem #000, -0.05rem -0.05rem 0.05rem #000,
+    0.05rem -0.05rem 0.05rem #000, -0.05rem 0.05rem 0.05rem #000;
 
   z-index: 200;
-  font-size: 16px;
+  font-size: 0.8rem;
   overflow: hidden;
 }
 </style>
