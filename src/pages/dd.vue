@@ -56,9 +56,10 @@ const netRegexs = {
   }),
   network6d: NetRegexes.network6d({
     command: [
-      // 进到新的一层会同时出现01和06，暂不知其区别
+      // 进到新的一层01
       '10000001',
-      '10000006',
+      // 地图进入会触发 妖雾被清除时会触发 所以不能使用
+      // '10000006',
       // 再生装置
       '10000008',
       // 传送装置
@@ -158,7 +159,7 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
       const key =
         network6d.groups!.command! === '10000008' ? 'return' : 'passage'
       state.value.pylons[key] = (parseInt(data0, 16) * 100) / 0x0b
-    } else if (['10000001', '10000006'].includes(command)) {
+    } else if (['10000001'].includes(command)) {
       // 新的一层
       state.value.pylons.return = 0
       state.value.pylons.passage = 0
