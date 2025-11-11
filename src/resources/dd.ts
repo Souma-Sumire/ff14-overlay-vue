@@ -526,19 +526,19 @@ const PT: Data = {
     13979: { detect: 'boss', grade: 'caution', note: '小怪会复制BOSS的技能，可选中后尽快击杀。\nBOSS还会释放捕食，记好预兆寻找安全区。' }, // 花人 ornamental leafman 花人
 
     // 11-20层
-    14113: { detect: 'visual', grade: 'easy', note: '无', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 得到宽恕的盲从 forgiven conformity フォーギヴン・コンフォーミティー
-    14114: { detect: 'visual', grade: 'easy', note: '读条直线攻击', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 得到宽恕的无知 forgiven ignorance フォーギヴン・イグノランス
-    14115: { detect: 'visual', grade: 'easy', note: '读条钢铁', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 得到宽恕的蠢笨 forgiven folly フォーギヴン・フォリー
-    14116: { detect: 'visual', grade: 'easy', note: '读条扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 得到宽恕的自负 forgiven conceit フォーギヴン・コンスィート
-    14117: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 得到宽恕的暴力 forgiven violence フォーギヴン・ヴァイオレンス
+    14113: { detect: 'visual', grade: 'easy', note: '无', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: true } }, // 得到宽恕的盲从 forgiven conformity フォーギヴン・コンフォーミティー
+    14114: { detect: 'visual', grade: 'easy', note: '读条直线攻击', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: true } }, // 得到宽恕的无知 forgiven ignorance フォーギヴン・イグノランス
+    14115: { detect: 'visual', grade: 'easy', note: '读条钢铁', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: true } }, // 得到宽恕的蠢笨 forgiven folly フォーギヴン・フォリー
+    14116: { detect: 'visual', grade: 'easy', note: '读条扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: true } }, // 得到宽恕的自负 forgiven conceit フォーギヴン・コンスィート
+    14117: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: true } }, // 得到宽恕的暴力 forgiven violence フォーギヴン・ヴァイオレンス
     14118: { detect: 'visual', grade: 'easy', note: '读条直线攻击', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 得到宽恕的违命 forgiven disobedience フォーギヴン・ディスオビーデアンス
     14119: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 得到宽恕的欺骗 forgiven deceit フォーギヴン・デシート
     14120: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 得到宽恕的轻蔑 forgiven contempt フォーギヴン・コンテンプト
-    14121: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈', vulnerabilities: { bind: undefined, heavy: undefined, sleep: true, stun: true, slow: undefined } }, // 得到宽恕的自满 forgiven complacency フォーギヴン・コンプレイセンシー
-    14122: { detect: 'auditory', grade: 'easy', note: '读条直线攻击', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路帕克 traverse Puck トラバース・パック
-    14123: { detect: 'visual', grade: 'easy', note: '无', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路绿雕 traverse topiary トラバース・トピアリー
-    14124: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路豌豆花 traverse Peaseblossom トラバース・ピーズブロッサム
-    14125: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路幼体龙鸟 traverse tot aevis トラバース・トートエイビス
+    14121: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈', vulnerabilities: { bind: undefined, heavy: undefined, sleep: true, stun: true, slow: true } }, // 得到宽恕的自满 forgiven complacency フォーギヴン・コンプレイセンシー
+    14122: { detect: 'auditory', grade: 'easy', note: '读条直线攻击', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: true } }, // 交错路帕克 traverse Puck トラバース・パック
+    14123: { detect: 'visual', grade: 'easy', note: '无', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: true } }, // 交错路绿雕 traverse topiary トラバース・トピアリー
+    14124: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: true } }, // 交错路豌豆花 traverse Peaseblossom トラバース・ピーズブロッサム
+    14125: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: true } }, // 交错路幼体龙鸟 traverse tot aevis トラバース・トートエイビス
     13973: { detect: 'boss', grade: 'easy', note: '4条腿会依次闪烁红光，击退后按照腿发光的顺序依次释放大范围钢铁\n点名是放置冰花' }, // 得到宽恕的模仿 forgiven emulation フォーギヴン・エミュレーション
 
     // 21-30层
@@ -631,7 +631,7 @@ const PT: Data = {
     14197: { detect: 'scope', grade: 'danger', note: '超级大月环或者十字！注意不要拉在过道上导致无路可走！', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: false, slow: undefined } }, // 得到宽恕的虚夸 forgiven vanity フォーギヴン・ヴァニティー
     14198: { detect: 'visual', grade: 'caution', note: '巡逻怪\n连续四次正面半圆扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: false, slow: undefined } }, // 得到宽恕的傲慢 forgiven arrogance フォーギヴン・アロガンス
     14199: { detect: 'scope', grade: 'caution', note: '变质岩波：读条不可见的扇形\n造山风暴：点名不可见的脚底黄圈', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 得到宽恕的诋毁 forgiven slander フォーギヴン・スランダー
-    14200: { detect: 'visual', grade: 'caution', note: '小范围直线攻击，并且偶尔会连续平A两次', vulnerabilities: { sleep: true, bind: undefined, heavy: undefined, stun: true, slow: undefined } }, // 得到宽恕的怀疑 forgiven unbelief フォーギヴン・アンビリーフ
+    14200: { detect: 'visual', grade: 'caution', note: '平A衔接小死刑（较痛）\n读条延迟小直线攻击，秒杀级伤害', vulnerabilities: { sleep: true, bind: undefined, heavy: undefined, stun: true, slow: undefined } }, // 得到宽恕的怀疑 forgiven unbelief フォーギヴン・アンビリーフ
     14201: { detect: 'visual', grade: 'caution', note: '推翻：延迟的小范围钢铁。', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路阿米特 traverse amemet トラバース・アメミット
     14202: { detect: 'auditory', grade: 'caution', note: '读条中等范围钢铁', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路巨虫 traverse worm トラバース・ウォーム
     14203: { detect: 'visual', grade: 'caution', note: '读条延迟小扇形，秒杀级伤害', vulnerabilities: { sleep: true, bind: undefined, heavy: undefined, stun: true, slow: undefined } }, // 交错路铰颌蚁 traverse scissorjaws トラバース・シザージョウ
