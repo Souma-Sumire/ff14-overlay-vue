@@ -506,13 +506,13 @@ const PT: Data = {
     // 通用
     14264: { detect: 'scope', grade: 'caution', note: '底层版本，几乎没有抗性\n尽快击杀，打断怨念', vulnerabilities: { slow: undefined, sleep: undefined, heavy: undefined, stun: true, bind: undefined } }, // 拟态怪 mimic ミミック
     14265: { detect: 'scope', grade: 'caution', note: '中层版本，可以晕\n尽快击杀，打断怨念', vulnerabilities: { slow: undefined, sleep: undefined, heavy: undefined, stun: true, bind: undefined } }, // 拟态怪 mimic ミミック
-    14266: { detect: 'scope', grade: 'caution', note: '深层版本，几乎全抗性\n尽快击杀，打断怨念', vulnerabilities: { slow: undefined, sleep: false, heavy: undefined, stun: false, bind: undefined } }, // 拟态怪 mimic ミミック
-    14267: { detect: undefined, grade: 'caution', note: '一碰就死，亡语会眩晕周围。远距离处理。' }, // 交错路柯瑞甘 traverse korrigan トラバース・コリガン
+    14266: { detect: 'scope', grade: 'caution', note: '深层版本，几乎全抗性\n尽快击杀，打断怨念', vulnerabilities: { slow: undefined, sleep: false, heavy: undefined, stun: false, bind: true } }, // 拟态怪 mimic ミミック
+    14267: { detect: undefined, grade: 'caution', note: '一碰就死，亡语会眩晕周围。远距离处理。', vulnerabilities: { slow: undefined, sleep: undefined, heavy: undefined, stun: undefined, bind: undefined } }, // 交错路柯瑞甘 traverse korrigan トラバース・コリガン
 
     // 1-10层
-    14100: { detect: 'visual', grade: 'easy', note: '', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路紫闪蝶 traverse morpho トラバース・パープルモルフォ
-    14101: { detect: 'visual', grade: 'easy', note: '', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路石莲猬 traverse echevore トラバース・エケボア
-    14102: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路普卡精 traverse phooka トラバース・プーカ
+    14100: { detect: 'visual', grade: 'easy', note: '', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: true } }, // 交错路紫闪蝶 traverse morpho トラバース・パープルモルフォ
+    14101: { detect: 'visual', grade: 'easy', note: '', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: true } }, // 交错路石莲猬 traverse echevore トラバース・エケボア
+    14102: { detect: 'visual', grade: 'easy', note: '读条脚底黄圈', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: true } }, // 交错路普卡精 traverse phooka トラバース・プーカ
     14103: { detect: 'visual', grade: 'easy', note: '读条扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路鹰蜓 traverse hawker トラバース・ホーカー
     14104: { detect: 'auditory', grade: 'easy', note: '', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路苔菇 traverse moss fungus トラバース・モスフングス
     14105: { detect: 'visual', grade: 'easy', note: '读条扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路花楸树 traverse rowan トラバース・ローワン
@@ -560,7 +560,7 @@ const PT: Data = {
     // 31-40层
     14139: { detect: 'visual', grade: 'caution', note: '重拳波：跳跃玩家+大钢铁\n强冲拳：近战击退\n冲波炮：长直线攻击', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路石兵 traverse soldierstone トラバース・ストーンソルジャー
     14140: { detect: 'visual', grade: 'caution', note: '巡逻怪\n读条前方扇形，随后立即在背后再释放一次。', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 得到宽恕的疫病 forgiven plague フォーギヴン・プレイグ
-    14141: { detect: 'visual', grade: 'caution', note: '归于尘土：血量低于25%时反复施放全场AOE，秒杀级。\n平时会为自己增加攻击力造成可观伤害。', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 得到宽恕的背德 forgiven perversion フォーギヴン・パーヴァージョン
+    14141: { detect: 'visual', grade: 'caution', note: '归于尘土：血量低于25%时反复施放全场AOE，约32W伤害。\n平时会为自己增加攻击力造成可观伤害。', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 得到宽恕的背德 forgiven perversion フォーギヴン・パーヴァージョン
     14142: { detect: 'visual', grade: 'easy', note: '平A穿插小死刑', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 得到宽恕的勒索 forgiven extortion フォーギヴン・エクストーション
     14143: { detect: 'visual', grade: 'easy', note: '读条小扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 得到宽恕的偏见 forgiven prejudice フォーギヴン・プレジュディス
     14144: { detect: 'visual', grade: 'caution', note: '巡逻怪\n木马：前方扇形AOE，范围极大！\n绞刑笼：钢铁', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 得到宽恕的伪善 forgiven hypocrisy フォーギヴン・ヒポクリシー
@@ -587,7 +587,7 @@ const PT: Data = {
     14162: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈，可打断', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路龙舌兰 traverse agave トラバース・アガベ
     14163: { detect: 'visual', grade: 'easy', note: '读条扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路大口花 traverse germinant トラバース・ジェルミナンツ
     14164: { detect: 'visual', grade: 'easy', note: '读条小钢铁', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路螳螂 traverse mantis トラバース・マンティス
-    14263: { detect: 'boss', grade: 'caution', note: '不可以长时间站在流沙中否则即死。\n龙卷风需要在倒计时结束时站在流沙里避免被击退。\n进沙坑：四连追踪红圈，秒杀级伤害，判定很慢\n组合技时优先处理四连，龙卷风可以吃药硬吃。' }, // 奥格布那巴利 Ogbunabali オグブナバリ
+    14263: { detect: 'boss', grade: 'caution', note: '不可以长时间站在流沙中否则即死。\n龙卷风需要在倒计时结束时站在流沙里避免被击退。\n进沙坑：四连追踪红圈，约9W伤害，判定很慢\n组合技时优先处理四连，龙卷风可以吃药硬吃。' }, // 奥格布那巴利 Ogbunabali オグブナバリ
 
     // 51-60层
     14165: { detect: 'visual', grade: 'easy', note: '平A穿插小死刑\n螺旋尾：点名脚底黄圈', vulnerabilities: { bind: true, heavy: true, sleep: true, stun: true, slow: true } }, // 交错路褐钳龙虾 traverse tawnyclaw トラバース・ブラウンクロウ
@@ -626,8 +626,8 @@ const PT: Data = {
     14192: { detect: 'visual', grade: 'danger', note: '非战斗状态会释放全屏AOE\n进战后会读条释放正面小扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 得到宽恕的腐败 forgiven corruption フォーギヴン・コラプション
     14193: { detect: 'visual', grade: 'danger', note: '两种读条，先月环后钢铁，或者先钢铁后月环。（月环外圈范围极大）', vulnerabilities: { sleep: false, bind: undefined, heavy: undefined, stun: false, slow: undefined } }, // 得到宽恕的恶意 forgiven spite フォーギヴン・スパイト
     14194: { detect: 'visual', grade: 'caution', note: '巡逻怪\n拉怪时会跳向玩家并击退，以及一个毒DOT', vulnerabilities: { sleep: true, bind: undefined, heavy: undefined, stun: true, slow: undefined } }, // 交错路食岩狼 traverse stone eater トラバース・ロックイーター
-    14195: { detect: 'visual', grade: 'danger', note: '巡逻怪\n读条钢铁，死了会自爆！！！！！！', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: false, slow: undefined } }, // 交错路爆岩怪 traverse huldu トラバース・フルドゥ
-    14196: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈', vulnerabilities: { sleep: true, bind: undefined, heavy: undefined, stun: true, slow: undefined } }, // 交错路泡沫奶黄怪 traverse diplomat cream トラバース・ホイップカスタード
+    14195: { detect: 'visual', grade: 'danger', note: '巡逻怪\n读条钢铁，死了会自爆！！！！！！', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: false, slow: true } }, // 交错路爆岩怪 traverse huldu トラバース・フルドゥ
+    14196: { detect: 'visual', grade: 'easy', note: '点名脚底黄圈', vulnerabilities: { sleep: true, bind: undefined, heavy: undefined, stun: true, slow: true } }, // 交错路泡沫奶黄怪 traverse diplomat cream トラバース・ホイップカスタード
     14197: { detect: 'scope', grade: 'danger', note: '超级大月环或者十字！注意不要拉在过道上导致无路可走！', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: false, slow: undefined } }, // 得到宽恕的虚夸 forgiven vanity フォーギヴン・ヴァニティー
     14198: { detect: 'visual', grade: 'caution', note: '巡逻怪\n连续四次正面半圆扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: false, slow: undefined } }, // 得到宽恕的傲慢 forgiven arrogance フォーギヴン・アロガンス
     14199: { detect: 'scope', grade: 'caution', note: '变质岩波：读条不可见的扇形\n造山风暴：点名不可见的脚底黄圈', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 得到宽恕的诋毁 forgiven slander フォーギヴン・スランダー
