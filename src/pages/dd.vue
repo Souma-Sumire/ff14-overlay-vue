@@ -287,7 +287,10 @@ function getLangString(v: langString | string | undefined) {
             </span>
             <div
               class="vulnerabilities"
-              v-if="demo || state.tarData?.detect !== 'boss'"
+              v-if="
+                state.tarData?.vulnerabilities &&
+                (demo || state.tarData?.detect !== 'boss')
+              "
             >
               <div
                 v-for="k in ['stun', 'heavy', 'slow', 'sleep', 'bind']"
