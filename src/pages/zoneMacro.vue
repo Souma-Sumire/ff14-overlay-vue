@@ -24,6 +24,15 @@ if (hideOnStartup.value) macroStore.show = false
 
 if (!dev.value) useWebSocket({ allowClose: true, addWsParam: true })
 
+const fastEntrance = computed(() => {
+  return macroStore.fastEntrance.map((v) => {
+    return {
+      text: getLocaleMessage(v.text),
+      value: v.value,
+    }
+  })
+})
+
 onMounted(() => {
   addOverlayListener('ChangeZone', macroStore.handleChangeZone)
   watch(
@@ -65,7 +74,7 @@ onMounted(() => {
       <el-space>
         <el-button-group flex="~ ! wrap">
           <el-button
-            v-for="(entrance, index) in macroStore.fastEntrance"
+            v-for="(entrance, index) in fastEntrance"
             :key="index"
             bg
             plain
@@ -73,7 +82,7 @@ onMounted(() => {
             size="small"
             @click="macroStore.selectZone = entrance.value"
           >
-            {{ getLocaleMessage(entrance.text) }}
+            {{ entrance.text }}
           </el-button>
         </el-button-group>
       </el-space>
