@@ -2,6 +2,14 @@ import type { Keigenn } from '@/types/keigennRecord2'
 
 const keigenns: (Omit<Keigenn, 'fullIcon'> & { fullIcon?: string })[] = [
   {
+    // 深层迷宫版本
+    name: '受伤减轻',
+    id: 0x44c,
+    type: 'multiplier',
+    performance: { physics: 0.6, magic: 0.6, darkness: 1 },
+    isFriendly: true,
+  },
+  {
     name: '铁壁',
     id: 1191,
     type: 'multiplier',
