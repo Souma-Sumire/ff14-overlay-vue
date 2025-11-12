@@ -89,11 +89,11 @@ const useMacroStore = defineStore('macro', {
       zoneNowName: useStorage('my-zone-now-name', ''),
       fastEntrance: [
         {
-          text: { zhCn: '极护龙', en: 'TWW(Extreme)', ja: '極護竜' },
+          text: { zhCn: '极护龙', en: 'TWW', ja: '極護竜' },
           value: '1306',
         },
         {
-          text: { zhCn: '诗想', en: 'Final Verse (Quantum)', ja: '詩想討滅' },
+          text: { zhCn: '诗想', en: 'TFV', ja: '詩想討滅' },
           value: '1311',
         },
         { text: { zhCn: 'M5S' }, value: '1257' },
