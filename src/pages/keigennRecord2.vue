@@ -569,7 +569,11 @@ async function loadStorage() {
     const loadData = await db.getAll()
     if (loadData.length) {
       data.value.length = 0
-      data.value.push(...loadData.reverse())
+      data.value.push(
+        ...loadData
+          .filter((v) => v.timestamp > Date.now() - 1000 * 60 * 60 * 24 * 3)
+          .reverse()
+      )
     }
   } catch (e) {
     console.error(e)
