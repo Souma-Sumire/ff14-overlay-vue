@@ -27,6 +27,8 @@ import Util from '@/utils/util'
 import logDefinitions from '../../cactbot/resources/netlog_defs'
 import NetRegexes from '../../cactbot/resources/netregexes'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
+import { ZoneInfo } from '@/resources/zoneInfo'
+import { getCactbotLocaleMessage } from '@/composables/useLang'
 
 const dev = useDev()
 
@@ -248,14 +250,26 @@ function handleLine(line: string) {
             Boolean
           )
           break
-        case 'changeZone':
-          zoneName.value = splitLine[logDefinitions.ChangeZone.fields.name]
+        case 'changeZone': {
+          const zoneId = parseInt(
+            splitLine[logDefinitions.ChangeZone.fields.id]!,
+            16
+          )
+          zoneName.value = splitLine[logDefinitions.ChangeZone.fields.name]!
+          if (ZoneInfo[zoneId]?.name) {
+            const useLangZoneName = getCactbotLocaleMessage(
+              ZoneInfo[zoneId]?.name
+            )
+            if (useLangZoneName && useLangZoneName !== 'Unknown')
+              zoneName.value = useLangZoneName
+          }
           stopCombat(
             new Date(
               splitLine[logDefinitions.ChangeZone.fields.timestamp]!
             ).getTime()
           )
           break
+        }
         case 'inCombat':
           {
             const inACTCombat =
@@ -641,6 +655,19 @@ function test() {
   // const d = { ...last, key: crypto.randomUUID() }
   // data.value[0]!.table.unshift(d)
 }
+
+function formatTimestamp(ms: number): string {
+  const date = new Date(ms)
+
+  const h = date.getHours()
+  const hh = (h % 12 || 12).toString().padStart(2, '0')
+  const mm = date.getMinutes().toString().padStart(2, '0')
+  const ss = date.getSeconds().toString().padStart(2, '0')
+
+  const ampm = h >= 12 ? 'PM' : 'AM'
+
+  return `${hh}:${mm}:${ss} ${ampm}`
+}
 </script>
 
 <template>
@@ -666,7 +693,7 @@ function test() {
             :key="`${data[i - 1]!.key}-${data[i - 1]!.duration}-${data[i - 1]!.zoneName
             }`"
             :value="i - 1"
-            :label="`${data[i - 1]!.duration} ${data[i - 1]!.zoneName}`"
+            :label="`${data[i - 1]!.zoneName}${data[i - 1]!.zoneName === '' ? '' : ` - [${data[i - 1]!.duration}] ${formatTimestamp(data[i - 1]!.timestamp)}`}`"
           />
         </el-select>
       </div>
@@ -859,7 +886,7 @@ main {
 }
 
 .combat-select.browser {
-  width: 16em;
+  width: 18em;
   right: 2px;
 }
 
