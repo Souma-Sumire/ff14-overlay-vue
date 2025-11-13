@@ -266,13 +266,11 @@ function handleLine(line: string) {
               splitLine[logDefinitions.InCombat.fields.timestamp]!
             ).getTime()
             if (inACTCombat || inGameCombat) {
+              const key = splitLine[logDefinitions.InCombat.fields.timestamp]!
               // new combat
               if (combatTimeStamp.value > 0) {
                 return
-              } else if (data.value[0]!.key === 'placeholder') {
-                data.value.splice(0, 1)
               }
-              const key = splitLine[logDefinitions.InCombat.fields.timestamp]!
               if (data.value[0]!.table.length !== 0) {
                 data.value.unshift({
                   zoneName: '',
@@ -552,7 +550,7 @@ async function saveStorage() {
     return
   }
   const validData = data.value
-    .filter((v) => v.key !== 'placeholder' && v.timestamp > 0)
+    .filter((v) => v.key !== 'init' && v.timestamp > 0)
     .map((v) => {
       const rawTable = Array.isArray(v.table) ? toRaw(v.table) : []
       return {
@@ -565,6 +563,7 @@ async function saveStorage() {
 }
 
 async function loadStorage() {
+  select.value = 0
   try {
     const loadData = await db.getAll()
     if (loadData.length) {
@@ -574,6 +573,15 @@ async function loadStorage() {
           .filter((v) => v.timestamp > Date.now() - 1000 * 60 * 60 * 24 * 3)
           .reverse()
       )
+      if (data.value.length === 0) {
+        data.value.push({
+          zoneName: '',
+          duration: '00:00',
+          table: shallowReactive([]),
+          key: 'init',
+          timestamp: -1,
+        })
+      }
     }
   } catch (e) {
     console.error(e)
