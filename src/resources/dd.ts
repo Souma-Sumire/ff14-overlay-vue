@@ -659,7 +659,7 @@ const PT: Data = {
     14216: { detect: 'scope', grade: 'caution', note: '（远离时会释放）昏暗：很大范围扇形（可以隔墙躲避）\n（靠近时会释放）心魔：小范围钢铁', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 召引行吟诗人 invoked troubadour インヴォークド・トルバドゥール
 
     // 91-100层
-    14217: { detect: 'visual', grade: 'caution', note: '读条三重/四重猛击，攻击对应次数后以当前面向释放秒杀级扇形。', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路座狼 traverse warg トラバース・ワーグ
+    14217: { detect: 'visual', grade: 'caution', note: '读条三重/四重猛击，攻击对应次数后以当前面向释放秒杀级钢铁。', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路座狼 traverse warg トラバース・ワーグ
     14218: { detect: 'visual', grade: 'caution', note: '读条左右刀，记得穿', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 召引古辛 invoked Gusion インヴォークド・グシオン
     14219: { detect: 'visual', grade: 'danger', note: '梦祸视线：直线攻击\n死亡会自爆！！！（可以隔墙躲避）', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 召引梦祸 invoked dreamer インヴォークド・ドリームエビル
     14220: { detect: 'visual', grade: 'caution', note: '点名，隔墙躲避，随后释放黄圈', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 召引光棍 invoked bachelor インヴォークド・バチェラー
