@@ -42,7 +42,7 @@ soumaData.forEach((row) => {
   }
 
   const jaRow = jaData.find((r) => r[0] === row[0])
-  if (jaRow) {
+  if (jaRow && row[1]) {
     result[row[0]!] = [row[1]!, jaRow[3]!, jaRow[6]!]
   }
 })
