@@ -645,7 +645,7 @@ const PT: Data = {
     14203: { detect: 'visual', grade: 'caution', note: '读条延迟小扇形，秒杀级伤害', vulnerabilities: { sleep: true, bind: true, heavy: true, stun: true, slow: true } }, // 交错路铰颌蚁 traverse scissorjaws トラバース・シザージョウ
 
     // 81-90层
-    14204: { detect: 'visual', grade: 'caution', note: '飞踢后摆尾：先读条小范围前方直线攻击，随后在背后扇形', vulnerabilities: { bind: undefined, heavy: true, sleep: undefined, stun: true, slow: true } }, // 交错路卡玛 traverse cama トラバース・キャマ
+    14204: { detect: 'visual', grade: 'caution', note: '飞踢后摆尾：先读条小范围前方直线攻击，随后在背后扇形', vulnerabilities: { bind: undefined, heavy: true, sleep: undefined, stun: false, slow: true } }, // 交错路卡玛 traverse cama トラバース・キャマ
     14205: { detect: 'visual', grade: 'danger', note: '非战斗状态下会释放全场AOE。\n深渊射线：读条极大范围的直线攻击，穿墙！', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 召引巴尔 invoked Baal インヴォークド・バエル
     14206: { detect: 'scope', grade: 'caution', note: '巡逻怪\n残杀：会连续击退四次\n风暴斩：前方扇形AOE', vulnerabilities: { bind: true, heavy: true, sleep: undefined, stun: true, slow: true } }, // 交错路骑兵 traverse rider トラバース・ライダー
     14207: { detect: 'visual', grade: 'danger', note: '巡逻怪\n会点名热病，不要动否则会秒杀级爆炸。建议隔墙躲避。', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 召引梦魔 invoked succubus インヴォークド・サキュバス
