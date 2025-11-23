@@ -506,7 +506,8 @@ const PT: Data = {
     // 通用
     14264: { detect: 'scope', grade: 'caution', note: '底层版本，几乎没有抗性\n尽快击杀，打断怨念', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 拟态怪 mimic ミミック
     14265: { detect: 'scope', grade: 'caution', note: '中层版本，可以晕\n尽快击杀，打断怨念', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 拟态怪 mimic ミミック
-    14266: { detect: 'scope', grade: 'caution', note: '深层版本，几乎全抗性\n尽快击杀，打断怨念', vulnerabilities: { bind: true, heavy: undefined, sleep: false, stun: false, slow: undefined } }, // 拟态怪 mimic ミミック
+    14266: { detect: 'scope', grade: 'caution', note: '深层版本，几乎全抗性\n尽快击杀，打断怨念', vulnerabilities: { bind: true, heavy: false, sleep: false, stun: false, slow: undefined } }, // 拟态怪 mimic ミミック
+    // 无感知，不会主动进入战斗
     14267: { grade: 'caution', note: '一碰就死，亡语会眩晕周围。远距离处理。', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路柯瑞甘 traverse korrigan トラバース・コリガン
 
     // BOSS
@@ -602,7 +603,7 @@ const PT: Data = {
     14165: { detect: 'visual', grade: 'easy', note: '平A穿插小死刑\n螺旋尾：点名脚底黄圈', vulnerabilities: { bind: true, heavy: true, sleep: true, stun: true, slow: true } }, // 交错路褐钳龙虾 traverse tawnyclaw トラバース・ブラウンクロウ
     14166: { detect: 'visual', grade: 'easy', note: '只会平A', vulnerabilities: { bind: undefined, heavy: undefined, sleep: true, stun: true, slow: undefined } }, // 交错路守卫 traverse guardian トラバース・ガーディアン
     14167: { detect: 'visual', grade: 'danger', note: '巡逻怪\n大地钻击：正面270度旋体脚，站在脚下或背后躲避，可以隔墙躲避。', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路沙地巨蟒 traverse sand serpent トラバース・サンドサーペント
-    14168: { detect: 'visual', grade: 'danger', note: '读条让所有人进入目押状态。根据动作释放钢铁 或 正面大扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: true, stun: true, slow: undefined } }, // 交错路美甲兽 traverse saichania トラバース・サイカニア
+    14168: { detect: 'visual', grade: 'danger', note: '飞散性惑乱花粉块：让所有人进入目押状态\n迅猛回旋：钢铁\n呵斥：正面大扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: true, stun: true, slow: undefined } }, // 交错路美甲兽 traverse saichania トラバース・サイカニア
     14169: { detect: 'visual', grade: 'caution', note: '非战斗状态下会施放“火鳞甲”：物理攻击会受到秒杀级反伤！\n火龙卷：小扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: true } }, // 交错路巨蜥 traverse monitor トラバース・モニター
     14170: { detect: 'visual', grade: 'easy', note: '巡逻怪\n火球：点名脚底黄圈\n炽热弥漫：直线攻击', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路恶魔怪鸟 traverse fallen aevis トラバース・イビルエイビス
     14171: { detect: 'visual', grade: 'easy', note: '读条小扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: true, stun: true, slow: undefined } }, // 交错路帕查玛玛 traverse Pachamama トラバース・パチャママ
@@ -644,18 +645,18 @@ const PT: Data = {
     14203: { detect: 'visual', grade: 'caution', note: '读条延迟小扇形，秒杀级伤害', vulnerabilities: { sleep: true, bind: true, heavy: true, stun: true, slow: true } }, // 交错路铰颌蚁 traverse scissorjaws トラバース・シザージョウ
 
     // 81-90层
-    14204: { detect: 'visual', grade: 'caution', note: '飞踢后摆尾：先读条小范围前方直线攻击，随后在背后扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: true } }, // 交错路卡玛 traverse cama トラバース・キャマ
+    14204: { detect: 'visual', grade: 'caution', note: '飞踢后摆尾：先读条小范围前方直线攻击，随后在背后扇形', vulnerabilities: { bind: undefined, heavy: true, sleep: undefined, stun: true, slow: true } }, // 交错路卡玛 traverse cama トラバース・キャマ
     14205: { detect: 'visual', grade: 'danger', note: '非战斗状态下会释放全场AOE。\n深渊射线：读条极大范围的直线攻击，穿墙！', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 召引巴尔 invoked Baal インヴォークド・バエル
     14206: { detect: 'scope', grade: 'caution', note: '巡逻怪\n残杀：会连续击退四次\n风暴斩：前方扇形AOE', vulnerabilities: { bind: true, heavy: true, sleep: undefined, stun: true, slow: true } }, // 交错路骑兵 traverse rider トラバース・ライダー
     14207: { detect: 'visual', grade: 'danger', note: '巡逻怪\n会点名热病，不要动否则会秒杀级爆炸。建议隔墙躲避。', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 召引梦魔 invoked succubus インヴォークド・サキュバス
     14208: { detect: 'visual', grade: 'caution', note: '巡逻怪\n读条三重/四重强击，攻击对应次数后以当前面向释放秒杀级扇形。', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: false, slow: true } }, // 召引洪巴巴 invoked Humbaba インヴォークド・フンババ
-    14209: { detect: 'visual', grade: 'easy', note: '读条小范围扇形\n会上减速debuff', vulnerabilities: { bind: undefined, heavy: undefined, sleep: true, stun: true, slow: true } }, // 召引格雷姆林 invoked gremlin インヴォークド・グレムリン
-    14210: { detect: 'visual', grade: 'caution', note: '读条中等范围扇形\n低血量时会施放长读条的狂暴技能，可能是点名秒杀攻击。', vulnerabilities: { bind: undefined, heavy: undefined, sleep: true, stun: true, slow: true } }, // 交错路异豺 traverse gnoll トラバース・ノール
+    14209: { detect: 'visual', grade: 'easy', note: '读条小范围扇形\n会上减速debuff', vulnerabilities: { bind: undefined, heavy: true, sleep: true, stun: true, slow: true } }, // 召引格雷姆林 invoked gremlin インヴォークド・グレムリン
+    14210: { detect: 'visual', grade: 'caution', note: '读条中等范围扇形\n低血量时会施放长读条的狂暴技能，可能是点名秒杀攻击。', vulnerabilities: { bind: undefined, heavy: true, sleep: true, stun: true, slow: true } }, // 交错路异豺 traverse gnoll トラバース・ノール
     14211: { detect: 'visual', grade: 'danger', note: '昏暗：长读条的可打断超宽扇形AOE，不要与“黑暗”混淆。', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 交错路卡部斯 traverse cubus トラバース・カブス
     14212: { detect: 'visual', grade: 'easy', note: '虚空冰冻：脚底黄圈，\n冰结陷阱：钢铁', vulnerabilities: { bind: undefined, heavy: undefined, sleep: true, stun: true, slow: undefined } }, // 召引小恶灵 invoked satana インヴォークド・サタナジュニア
     14213: { detect: 'visual', grade: 'caution', note: '读条宽扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 召引上级恶魔 summoned arch demon サモンド・アークデーモン
-    14214: { detect: 'visual', grade: 'easy', note: '大凶眼：很大范围的背对\n眼光弹：点名脚底黄圈', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: true } }, // 召引盖因 invoked caym インヴォークド・カイム
-    14215: { detect: 'visual', grade: 'danger', note: '闪电：读条前方圆形AOE。\n地狱爪击：读条前方扇形AOE。\n摆尾：不可见的大范围后方扇形AOE。\n雷球：不可见的点某人脚下的黄圈', vulnerabilities: { bind: undefined, heavy: undefined, sleep: true, stun: true, slow: true } }, // 召引刻耳柏洛斯 invoked Cerberus インヴォークド・ケルベロス
+    14214: { detect: 'visual', grade: 'easy', note: '大凶眼：很大范围的背对\n眼光弹：点名脚底黄圈', vulnerabilities: { bind: undefined, heavy: true, sleep: undefined, stun: true, slow: true } }, // 召引盖因 invoked caym インヴォークド・カイム
+    14215: { detect: 'visual', grade: 'danger', note: '闪电：读条前方圆形AOE。\n地狱爪击：读条前方扇形AOE。\n摆尾：不可见的大范围后方扇形AOE。\n雷球：不可见的点某人脚下的黄圈', vulnerabilities: { bind: undefined, heavy: true, sleep: true, stun: true, slow: true } }, // 召引刻耳柏洛斯 invoked Cerberus インヴォークド・ケルベロス
     14216: { detect: 'scope', grade: 'caution', note: '（靠近时会释放）心魔：小范围钢铁\n（远离时会释放）昏暗：极快的大范围扇形（可以隔墙躲避）', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 召引行吟诗人 invoked troubadour インヴォークド・トルバドゥール
 
     // 91-100层
@@ -663,15 +664,15 @@ const PT: Data = {
     14218: { detect: 'visual', grade: 'caution', note: '读条左右刀，记得穿', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 召引古辛 invoked Gusion インヴォークド・グシオン
     14219: { detect: 'visual', grade: 'danger', note: '梦祸视线：直线攻击（穿墙）\n死亡会自爆！！！（可以隔墙躲避）', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 召引梦祸 invoked dreamer インヴォークド・ドリームエビル
     14220: { detect: 'visual', grade: 'caution', note: '点名，隔墙躲避，随后释放黄圈', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 召引光棍 invoked bachelor インヴォークド・バチェラー
-    14221: { detect: 'visual', grade: 'caution', note: '石化需要背对\n怪光线：大范围直线攻击', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 召引破坏本能 invoked Destrudo インヴォークド・デストルドー
+    14221: { detect: 'visual', grade: 'caution', note: '石化需要背对\n怪光线：大范围直线攻击', vulnerabilities: { bind: undefined, heavy: true, sleep: undefined, stun: true, slow: undefined } }, // 召引破坏本能 invoked Destrudo インヴォークド・デストルドー
     14222: { detect: 'auditory', grade: 'caution', note: '巡逻怪\n读条身后危险的180度左右刀\n前方花蜜喷吐：前方大扇形AOE。', vulnerabilities: { bind: true, heavy: true, sleep: undefined, stun: true, slow: undefined } }, // 召引锯齿花 invoked sawtooth インヴォークド・ソウトゥース
     14223: { detect: 'auditory', grade: 'easy', note: '根系纠缠：点名脚底黄圈\n藤枝伏地：小扇形', vulnerabilities: { bind: true, heavy: undefined, sleep: true, stun: true, slow: undefined } }, // 交错路紫罗兰三尖树 traverse triffid トラバース・ヴァイオレットトリフィド
-    14224: { detect: 'auditory', grade: 'caution', note: '腐烂恶臭：超长的宽直线攻击，穿墙！\n黄金粉尘：点名脚底黄圈', vulnerabilities: { bind: undefined, heavy: undefined, sleep: true, stun: true, slow: undefined } }, // 交错路食人花 traverse ya-te-veo トラバース・ヤテベオ
+    14224: { detect: 'auditory', grade: 'caution', note: '腐烂恶臭：超长的宽直线攻击，穿墙！\n黄金粉尘：点名脚底黄圈', vulnerabilities: { bind: undefined, heavy: true, sleep: true, stun: true, slow: undefined } }, // 交错路食人花 traverse ya-te-veo トラバース・ヤテベオ
     14225: { detect: 'visual', grade: 'caution', note: '石质吐息：面前大扇形。\n背后有人时，会瞬发秒杀级扫尾。最好去侧面。', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 召引扎哈克 invoked dahak インヴォークド・ダハーカ
-    14226: { detect: 'visual', grade: 'caution', note: '在它拿剑的方向的大型半圆AOE，秒杀级伤害。（可以隔墙躲避）。', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 召引阿刻戎 invoked Acheron インヴォークド・アケローン
+    14226: { detect: 'visual', grade: 'caution', note: '在它拿剑的方向的大型半圆AOE，秒杀级伤害。（可以隔墙躲避）。', vulnerabilities: { bind: undefined, heavy: true, sleep: undefined, stun: true, slow: undefined } }, // 召引阿刻戎 invoked Acheron インヴォークド・アケローン
     14227: { detect: 'visual', grade: 'easy', note: '巡逻怪\n读条钢铁', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 召引玩偶 invoked poppet インヴォークド・パペット
     14228: { detect: 'visual', grade: 'easy', note: '读条扇形', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: undefined, slow: undefined } }, // 交错路恶意灵 traverse malevolence トラバース・マレヴォレンス
-    14229: { detect: 'visual', grade: 'caution', note: '巡逻怪\n黑暗神圣：点名某人的大黄圈\n生命停止：极快的前方超大扇形！', vulnerabilities: { bind: undefined, heavy: undefined, sleep: undefined, stun: true, slow: undefined } }, // 召引古恶魔 invoked archaeodemon インヴォークド・アルケオデーモン
+    14229: { detect: 'visual', grade: 'caution', note: '巡逻怪\n黑暗神圣：点名某人的大黄圈\n生命停止：极快的前方超大扇形！', vulnerabilities: { bind: undefined, heavy: true, sleep: undefined, stun: true, slow: undefined } }, // 召引古恶魔 invoked archaeodemon インヴォークド・アルケオデーモン
   },
   floorTips: {
     0: '第1~10层：铜宝箱可能出现拟态怪',
