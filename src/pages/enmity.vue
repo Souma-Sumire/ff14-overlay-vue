@@ -1,159 +1,72 @@
 <script setup lang="ts">
 import type { EventMap, Party } from 'cactbot/types/event'
-import type { CombatantState } from '@/types/combatant'
-import { tts } from '@/utils/tts'
 import Util from '@/utils/util'
 import NetRegexes from '../../cactbot/resources/netregexes'
 import {
   addOverlayListener,
-  callOverlayHandler,
   removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
 
-let povCharID = 0
-const party: Ref<Party[]> = ref([])
-const params = useUrlSearchParams('hash')
-const noEnmity = ref(false)
-const TANK_JOBS = [
-  Util.iconToJobEnum('Paladin'),
-  Util.iconToJobEnum('Warrior'),
-  Util.iconToJobEnum('DarkKnight'),
-  Util.iconToJobEnum('Gunbreaker'),
-]
+// const params = useUrlSearchParams('hash')
+
 const TANK_STATUS_IDS = [
-  2843, // Paladin - Iron Will
-  3124, // Warrior - Defiance
-  743, // Dark Knight - Grit
-  1833, // Gunbreaker - Royal Guard
-]
+  '4F', // Paladin - Iron Will
+  '5B', // Warrior - Defiance
+  '2E7', // Dark Knight - Grit
+  '729', // Gunbreaker - Royal Guard
+] as const
 
-let intervalTimer: number | undefined
-let timeoutTimer: number | undefined
 const netRegexs = {
-  countdown: NetRegexes.countdown(),
-  countdownCancel: NetRegexes.countdownCancel(),
-  wipe: NetRegexes.network6d({ command: ['40000010', '4000000F'] }),
-  inCombat: NetRegexes.inCombat(),
+  gainsEffect: NetRegexes.gainsEffect({ effectId: TANK_STATUS_IDS }),
+  losesEffect: NetRegexes.losesEffect({ effectId: TANK_STATUS_IDS }),
 }
+const state = reactive({
+  party: [] as Party[],
+  povCharID: '0',
+  status: new Set<string>(),
+})
 
-async function getEnmityCombatants() {
-  const data = await callOverlayHandler({ call: 'getCombatants' })
-  const partyCombatState: CombatantState[] = data.combatants.filter(c =>
-    party.value.some(p => Number.parseInt(p.id, 16) === c.ID && p.inParty),
-  ) as unknown as CombatantState[]
-  const povJob = partyCombatState.find(c => c.ID === povCharID)?.Job
-  if (povJob === undefined) {
-    console.error('未找到玩家职业')
-    clearTimers()
-    noEnmity.value = false
-    return Promise.reject(new Error('未找到玩家职业'))
-  }
-  if (!TANK_JOBS.includes(povJob)) {
-    // 玩家不是T
-    clearTimers()
-    noEnmity.value = false
-    return Promise.reject(new Error('玩家不是坦克职业'))
-  }
-  // 玩家是T
-  const enmityTanks = partyCombatState.filter(c =>
-    c.Effects.some(e => TANK_STATUS_IDS.includes(e.BuffID)),
+const noEnmity = computed(() => {
+  const tanks = state.party.filter((p) =>
+    Util.isTankJob(Util.jobEnumToJob(p.job))
   )
-  return { enmityTanks, partyCombatState }
-}
-
-function checkInterval() {
-  clearTimers()
-  intervalTimer = window.setInterval(() => {
-    // 倒计时中持续检查
-    getEnmityCombatants()
-      .then(({ enmityTanks }) => {
-        if (enmityTanks.length === 0) {
-          // 没人开盾 文字提醒开盾
-          noEnmity.value = true
-          return
-        }
-        // 有人开盾（无论是谁）
-        noEnmity.value = false
-      })
-      .catch(() => {
-        noEnmity.value = false
-      })
-  }, 500)
-}
-
-function clearTimers() {
-  if (timeoutTimer)
-    clearTimeout(timeoutTimer)
-  if (intervalTimer)
-    clearInterval(intervalTimer)
-}
-
-const handleLogLine: EventMap['LogLine'] = (e) => {
-  const countdown = netRegexs.countdown.exec(e.rawLine)?.groups?.countdownTime
-  if (countdown !== undefined) {
-    checkInterval()
-    timeoutTimer = window.setTimeout(
-      () => {
-        // 倒计时10秒
-        getEnmityCombatants()
-          .then(({ enmityTanks }) => {
-            if (enmityTanks.length === 2) {
-              // 2个T开盾 语音提示
-              tts('双T都开盾了')
-            }
-            if (enmityTanks.length === 0) {
-              // 0个T开盾 语音提示
-              tts('没人开盾')
-            }
-          })
-          .catch(() => {
-            noEnmity.value = false
-          })
-      },
-      (Number.parseInt(countdown) - 10) * 1000,
-    )
+  const playerIsTank = tanks.some((p) => p.id === state.povCharID)
+  if (tanks.length === 0 || state.party.length === 1 || !playerIsTank) {
+    return false
   }
-  else if (netRegexs.countdownCancel.test(e.rawLine)) {
-    // 倒计时取消
-    clearTimers()
-    noEnmity.value = false
-  }
-  else if (netRegexs.wipe.test(e.rawLine)) {
-    // 团灭
-    clearTimers()
-    noEnmity.value = false
-  }
-  else if (netRegexs.inCombat.test(e.rawLine)) {
-    // 战斗开始
-    if (!(params.stRemind !== 'false')) {
-      return
-    }
-    const { inACTCombat, inGameCombat } = netRegexs.inCombat.exec(e.rawLine)!.groups || {}
-    if (inACTCombat === '1' && inGameCombat === '1') {
-      checkInterval()
-      timeoutTimer = window.setTimeout(() => {
-        getEnmityCombatants()
-          .then(({ enmityTanks, partyCombatState }) => {
-            // 如果小队内有2个坦克，且另一个坦克开盾了，且你没有开盾
-            const partyTanksLength = partyCombatState.filter(v => Util.isTankJob(Util.jobEnumToJob(v.Job))).length
-            if (partyTanksLength === 2 && enmityTanks.length === 1 && enmityTanks[0]?.ID !== povCharID) {
-              tts('ST开盾')
-            }
-          })
-          .catch(() => {
-            noEnmity.value = false
-          })
-      }, 20000)
-    }
-  }
-}
+  return !tanks.some((t) => state.status.has(t.id))
+})
 
 const handlePartyChanged: EventMap['PartyChanged'] = (e) => {
-  party.value = e.party
+  state.party = e.party.slice()
+  state.status.forEach((id) => {
+    if (!state.party.some((p) => p.id === id)) {
+      state.status.delete(id)
+    }
+  })
 }
 
 const handleChangePrimaryPlayer: EventMap['ChangePrimaryPlayer'] = (e) => {
-  povCharID = e.charID
+  state.povCharID = e.charID.toString(16).toUpperCase()
+}
+
+const handleLogLine: EventMap['LogLine'] = (e) => {
+  const gains = netRegexs.gainsEffect.exec(e.rawLine)
+  if (gains) {
+    const id = gains.groups?.targetId
+    if (id) {
+      state.status.add(id)
+    }
+    return
+  }
+  const loses = netRegexs.losesEffect.exec(e.rawLine)
+  if (loses) {
+    const id = loses.groups?.targetId
+    if (id) {
+      state.status.delete(id)
+    }
+    return
+  }
 }
 
 onMounted(() => {
@@ -163,10 +76,6 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  if (intervalTimer)
-    clearInterval(intervalTimer)
-  if (timeoutTimer)
-    clearTimeout(timeoutTimer)
   removeOverlayListener('LogLine', handleLogLine)
   removeOverlayListener('PartyChanged', handlePartyChanged)
   removeOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
@@ -175,8 +84,8 @@ onUnmounted(() => {
 
 <template>
   <CommonActWrapper>
-    <strong v-show="noEnmity">没人开盾</strong>
-  </CommonActwrapper>
+    <strong v-show="noEnmity">{{ $t('enmity.no_enmity_active') }}</strong>
+  </CommonActWrapper>
 </template>
 
 <style scoped lang="scss">

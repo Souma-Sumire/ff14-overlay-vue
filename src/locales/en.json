@@ -192,7 +192,7 @@
       "radar": "For locating players. Map is North-up.\nAutomatically disabled in PvP areas.",
       "obs_auto_record2": "Automatically controls OBS recording when certain conditions are met, offering various condition controls.",
       "team_watch_legacy": "Can monitor the cooldown of most skills.\nNow archived; bugs will no longer be fixed.\nDoes not support traits like 'Skill X reduces the cooldown of Skill Y by N seconds'.\nIf old users have 6.0 cache and update to 7.0, problems may occur. Please clear data once in the settings page.",
-      "enmity_reminder": "Only applicable to Tank jobs.\nWhen the countdown starts, if no tank has their stance on, a prominent text alert shows \"No Stance\".\nAt 10 seconds into the countdown, if 0 tanks have their stance on, a voice alert says \"No Stance\".\nAt 10 seconds into the countdown, if 2 tanks have their stance on, a voice alert says \"Both Tanks have their stances on\".\n20 seconds after pull, if there are 2 tanks, the other tank has their stance on, but you do not, a voice alert says \"ST Stance On\".\n\nURL Parameter Descriptions:\nstRemind: Controls whether to enable the alert 20 seconds after pull. Default is true (on); false is off.",
+      "enmity_reminder": "Only effective for Tank roles\nIf no Tank uses their tank stance (enmity), a prominent text alert will display \"No Tank Stance Active\".",
       "combat_time_obs_params": "Add a 'Browser' source in OBS to display combat time in the recording.\nURL Parameter Descriptions:\nmode: Display mode, default 'combat'. Values: combat (combat time) / logline (log time) / both (show both)",
       "show_barrier_params": "For speed runs, displays the current shield value of party members.\n\nURL Parameter Descriptions:\nlineHeight: Line height, default 1\nfontSize: Font size, default 26\ntype: Display type: 1=Percentage only, 2=Value only, 3=Both, default 1\nshowSettings: Display sort settings and names. Default 1 (on). Before use, ensure it matches the 'Party List' - 'Sort Order within Role' in the game. Set to 0 to hide after setup.\n\nShield percentage is rounded, and the value is also calculated based on the percentage, so there may be minor errors, preventing greater precision.",
       "casting_to_chinese": "More customization options are available in the overlay settings (shown when unlocked).",
@@ -485,5 +485,8 @@
     "raidSavage": "Savage Raids",
     "raidNormal": "Normal Raids",
     "uncategorized": "Uncategorized Zones"
+  },
+  "enmity": {
+    "no_enmity_active": "No Tank Stance Active"
   }
 }
