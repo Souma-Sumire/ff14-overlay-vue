@@ -180,10 +180,10 @@ const handlePartyChanged: EventMap['PartyChanged'] = (e) => {
     const job = Util.jobEnumToJob(cur.job)
     return {
       stun: acc.stun || Util.canStun(job),
-      slow: acc.slow || Util.canSilence(job),
+      slow: acc.slow || Util.canSlow(job),
       sleep: acc.sleep || Util.canSleep(job),
-      heavy: acc.heavy || Util.canAddle(job),
-      bind: acc.bind || Util.canFeint(job),
+      heavy: acc.heavy || Util.canHeavy(job),
+      bind: acc.bind || Util.canBind(job),
     }
   }, abilities)
 }

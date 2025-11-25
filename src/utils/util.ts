@@ -530,6 +530,9 @@ const sleepJobs: Job[] = [...casterDpsJobs, ...healerJobs]
 const feintJobs: Job[] = [...meleeDpsJobs]
 const addleJobs: Job[] = [...casterDpsJobs]
 const cleanseJobs: Job[] = ['BLU', 'BRD', ...healerJobs]
+const slowJobs: Job[] = [...tankJobs, ...meleeDpsJobs, ...rangedDpsJobs]
+const heavyJobs: Job[] = [...rangedDpsJobs]
+const bindJobs: Job[] = [...rangedDpsJobs]
 
 const jobToRoleMap: Map<Job, Role> = (() => {
   const addToMap = (map: Map<Job, Role>, jobs: Job[], role: Role) => {
@@ -578,6 +581,9 @@ const Util = {
   canCleanse: (job: Job) => cleanseJobs.includes(job),
   canFeint: (job: Job) => feintJobs.includes(job),
   canAddle: (job: Job) => addleJobs.includes(job),
+  canSlow: (job: Job) => slowJobs.includes(job),
+  canHeavy: (job: Job) => heavyJobs.includes(job),
+  canBind: (job: Job) => bindJobs.includes(job),
   getAllJobs: (): readonly Job[] => allJobs,
   getBattleJobs: (): readonly Job[] => battleJobs,
   getBattleJobs2: (): readonly Job[] => battleJobs2,
