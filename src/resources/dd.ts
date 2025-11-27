@@ -474,7 +474,7 @@ const PotD: Data = {
     5458: { grade: 'caution', detect: 'visual', note: '双重平A', vulnerabilities: { stun: true, heavy: true, sleep: true, bind: true } }, // 深宫雄狮
     5459: { grade: 'danger', detect: 'visual', note: '顺劈dot；\n点名突脸AOE，眩晕+易伤', vulnerabilities: { stun: true } }, // 深宫安祖
     5460: { grade: 'danger', detect: 'visual', note: '顺劈dot', vulnerabilities: { stun: true, heavy: true, sleep: true, bind: true } }, // 深宫白狼
-    5461: { grade: 'danger', detect: 'boss', note: '最刺激的Boss。读条正面120°扇形AOE；\n连续2次读条“大漩涡”放龙卷风\nBOSS去12点或6点面向玩家读条60°扇形AOE“呵斥”\n在15%血量时,连续6s读条“黄道陨石” - 80%血上限伤害，穿无敌' }, // 丹代恩索涅
+    5461: { grade: 'danger', detect: 'boss', note: '最刺激的Boss。读条正面120°扇形AOE；\n连续2次读条“大漩涡”放龙卷风\nBOSS去12点或6点面向玩家读条60°扇形AOE“呵斥”\n在15%血量时,连续6s读条“黄道陨石” - 80%血上限伤害，穿无敌，读条时依旧会平A' }, // 丹代恩索涅
     5462: { grade: 'easy', detect: 'visual', note: '', vulnerabilities: { stun: true, heavy: true, sleep: true, bind: true } }, // 深宫榴弹怪
     5463: { grade: 'caution', detect: 'auditory', note: '双重平A', vulnerabilities: { stun: true, heavy: true, bind: true } }, // 深宫瓦魔蛾幼虫
     5464: { grade: 'danger', detect: 'visual', note: '能别打就别打。瞬发AOE带dot，非T药不回来', vulnerabilities: { heavy: true, bind: true } }, // 水龙
@@ -492,10 +492,25 @@ const PotD: Data = {
     5480: { grade: 'easy', detect: 'scope', note: '', vulnerabilities: { stun: true, heavy: false, bind: false } }, // 深宫元精
   },
   floorTips: {
+    0: `第1~10层`,
+    1: `第11~20层`,
+    2: `第21~30层`,
+    3: `第31~40层`,
     4: `第41~50层：宝箱怪开始免疫眩晕，金宝箱会刷出宝箱怪`,
+    5: `第51~60层`,
+    6: `第61~70层`,
+    7: `第71~80层`,
+    8: `第81~90层`,
     9: `第91~100层：不死族可以用“基路伯化”快速击杀`,
-    17: `第171~180层：这是最后一个掉落“重生”的副本。\n176层起出现visual怪 深宫安祖，单刷注意避让`,
-    18: `第181~190层：巡逻怪深宫加姆，容易初见杀。\n186层起出现visual怪 水龙，注意避让`,
+    10: `第101~110层`,
+    11: `第111~120层`,
+    12: `第121~130层`,
+    13: `第131~140层`,
+    14: `第141~150层`,
+    15: `第151~160层`,
+    16: `第161~170层`,
+    17: `第171~180层：这是最后一个掉落“重生”的副本。\n176层起出现视觉怪 深宫安祖，单刷注意避让`,
+    18: `第181~190层：巡逻怪深宫加姆，容易初见杀。\n186层起出现视觉怪 水龙，注意避让`,
     19: `第191层~200层：大多数敌人被“基路伯化”2-3下击杀，\n但放第三下时可能会先被打死`,
   },
 }
