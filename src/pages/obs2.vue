@@ -646,12 +646,7 @@ onUnmounted(() => {
                 <span>{{ t('obs2.User Content Settings') }}</span>
               </div>
             </template>
-            <el-table
-              :data="userContentSetting"
-              style="width: 100%"
-              :border="true"
-              stripe
-            >
+            <el-table :data="userContentSetting" :border="true" stripe>
               <el-table-column
                 prop="type"
                 :label="t('obs2.Type')"
