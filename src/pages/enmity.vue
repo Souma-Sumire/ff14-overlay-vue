@@ -6,8 +6,9 @@ import {
   addOverlayListener,
   removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
+import { useZone, type ContentUsedType } from '@/composables/useZone'
 
-// const params = useUrlSearchParams('hash')
+const { zoneType } = useZone()
 
 const TANK_STATUS_IDS = [
   '4F', // Paladin - Iron Will
@@ -26,7 +27,34 @@ const state = reactive({
   status: new Set<string>(),
 })
 
+const EffectiveZoneTypes: ContentUsedType[] = [
+  'Savage', // 零式
+  'Extreme', // 歼殛战
+  'Chaotic', // 诛灭战
+  'Ultimate', // 绝境战
+  'DeepDungeonExtras', // 妖宫诗想
+  // 'OccultCrescent', // 新月岛
+  // 'SaveTheQueen', // 神佑女王（BZY）
+  'Dungeons', // 四人副本
+  'Raids', // 大型任务
+  'Trials', // 讨伐任务
+  'VCDungeonFinder', // 多变迷宫
+  'DeepDungeons', // 深层迷宫
+  'Guildhests', // 行会令
+  // 'DisciplesOfTheLand', // 出海垂钓、云冠群岛
+  // 'Eureka', // 尤雷卡
+  // 'SocietyQuests', // 宇宙探索
+  // 'GrandCompany', // 金蝶游乐场
+  // 'QuestBattles', // 任务剧情
+  'TreasureHunt', // 挖宝
+  // 'Pvp', // PVP
+  // 'Default', // 其他
+] as const
+
 const noEnmity = computed(() => {
+  if (!EffectiveZoneTypes.includes(zoneType.value)) {
+    return false
+  }
   const tanks = state.party.filter((p) =>
     Util.isTankJob(Util.jobEnumToJob(p.job))
   )
