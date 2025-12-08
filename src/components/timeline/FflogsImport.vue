@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { Job } from 'cactbot/types/job'
 import type {
+  FFIcon,
   FFlogsApiV1ReportEvents,
   FFlogsQuery,
   FFlogsStance,
@@ -43,21 +44,27 @@ claerFFlogsQueryConfig()
 
 const timelineStore = useTimelineStore()
 
-const fflogsCache = new CacheManager({ key: 'souma-fflogs-cache', maxSize: 2 * 1024 * 1024, cleanupRatio: 0.25 })
+const fflogsCache = new CacheManager({
+  key: 'souma-fflogs-cache',
+  maxSize: 2 * 1024 * 1024,
+  cleanupRatio: 0.25,
+})
 
 function getCache<T>(key: string): T | null {
   const cached = fflogsCache.get<any>(key)
-  if (!cached)
-    return null
+  if (!cached) return null
   try {
     return JSON.parse(cached) as T
-  }
-  catch {
+  } catch {
     return null
   }
 }
 
-function setCache<T>(key: string, data: T, ttl = 3 * 24 * 60 * 60 * 1000): void {
+function setCache<T>(
+  key: string,
+  data: T,
+  ttl = 3 * 24 * 60 * 60 * 1000
+): void {
   const cache = {
     data,
     expire: Date.now() + ttl,
@@ -65,7 +72,7 @@ function setCache<T>(key: string, data: T, ttl = 3 * 24 * 60 * 60 * 1000): void 
   fflogsCache.set(key, JSON.stringify(cache), ttl)
 }
 
-function isCacheValid(cache: { data: any, expire: number }) {
+function isCacheValid(cache: { data: any; expire: number }) {
   return cache && cache.expire > Date.now()
 }
 
@@ -76,12 +83,17 @@ async function queryFFlogsReportFights(url: string) {
   queryText.value = QueryTextEnum.querying
   const reg = url.match(urlRe)
   if (!timelineStore.settings.api) {
-    ElMessageBox.alert('请在FF Logs个人设置页面获取V1 API Key', 'FF logs API Key 未填写', {
-      confirmButtonText: '确定',
-      type: 'error',
-      dangerouslyUseHTMLString: true,
-      message: '<a href="https://cn.fflogs.com/profile">点击这里，在最下方<strong>填写 V1 客户名称并点击确认</strong>后，获取你的 V1 客户端密钥</a>',
-    })
+    ElMessageBox.alert(
+      '请在FF Logs个人设置页面获取V1 API Key',
+      'FF logs API Key 未填写',
+      {
+        confirmButtonText: '确定',
+        type: 'error',
+        dangerouslyUseHTMLString: true,
+        message:
+          '<a href="https://cn.fflogs.com/profile">点击这里，在最下方<strong>填写 V1 客户名称并点击确认</strong>后，获取你的 V1 客户端密钥</a>',
+      }
+    )
     queryText.value = QueryTextEnum.query
     isLoading.value = false
     return
@@ -104,10 +116,9 @@ async function queryFFlogsReportFights(url: string) {
 
     if (cachedFight && isCacheValid(cachedFight)) {
       res = cachedFight.data
-    }
-    else {
+    } else {
       res = await fetch(
-        `https://cn.fflogs.com/v1/report/fights/${fflogsQueryConfig.code}?api_key=${timelineStore.settings.api}`,
+        `https://cn.fflogs.com/v1/report/fights/${fflogsQueryConfig.code}?api_key=${timelineStore.settings.api}`
       ).then((response) => {
         if (!response.ok)
           throw new Error(`HTTP error! status: ${response.status}`)
@@ -121,32 +132,30 @@ async function queryFFlogsReportFights(url: string) {
         type: string
       }[]
     )
-      .filter(arr => ['Boss', 'NPC'].includes(arr.type))
-      .map(boss => boss.id)
+      .filter((arr) => ['Boss', 'NPC'].includes(arr.type))
+      .map((boss) => boss.id)
     fflogsQueryConfig.enemies = res.enemies.slice()
-    fflogsQueryConfig.fightIndex
-      = (reg?.groups?.fight === 'last'
+    fflogsQueryConfig.fightIndex =
+      (reg?.groups?.fight === 'last'
         ? res.fights.length
         : Number.parseInt(reg?.groups?.fight ?? '0')) - 1
     const fight = res.fights[fflogsQueryConfig.fightIndex]
     fflogsQueryConfig.zoneID = fight.zoneID
     fflogsQueryConfig.start = fight.start_time
     fflogsQueryConfig.end = fight.end_time
-    fflogsQueryConfig.friendlies = (
-      res.friendlies as Friendlies[]
-    ).filter(
-      value =>
-        value.icon !== 'LimitBreak'
-        && value.fights.find(f => f.id === fflogsQueryConfig.fightIndex + 1),
+    fflogsQueryConfig.friendlies = (res.friendlies as Friendlies[]).filter(
+      (value) =>
+        value.icon !== 'LimitBreak' &&
+        value.fights.find((f) => f.id === fflogsQueryConfig.fightIndex + 1)
     )
     queryText.value = QueryTextEnum.query
     fflogsQueryConfig.abilityFilterEvents.length = 0
     fflogsQueryConfig.abilityFilterCandidate.length = 0
     isLoading.value = false
     currentStep.value = 1
-  }
-  catch (e) {
-    ElMessageBox.alert(`
+  } catch (e) {
+    ElMessageBox.alert(
+      `
   <h3 style="margin-bottom: 10px;">可能的原因：</h3>
   <ul style="padding-left: 20px; margin-bottom: 10px;">
     <li> <strong>90%概率</strong>：你没有<strong style="color: red;">先起名</strong>再获取 V1 客户端密钥</li>
@@ -154,11 +163,14 @@ async function queryFFlogsReportFights(url: string) {
     <li> <strong>5%概率</strong>：网络异常</li>
   </ul>
 <p class="error-details"><strong>错误：</strong>${e}</p>
-`, '请求失败', {
-      confirmButtonText: '确定',
-      type: 'error',
-      dangerouslyUseHTMLString: true,
-    })
+`,
+      '请求失败',
+      {
+        confirmButtonText: '确定',
+        type: 'error',
+        dangerouslyUseHTMLString: true,
+      }
+    )
     queryText.value = QueryTextEnum.query
     isLoading.value = false
   }
@@ -172,23 +184,26 @@ async function handleFFlogsQueryResultFriendliesList(player: Friendlies) {
   // 进入第三步
   try {
     await queryFFlogsReportEvents()
-    fflogsQueryConfig.abilityFilterCandidate
-      = fflogsQueryConfig.abilityFilterEvents.reduce((total, event) => {
+    fflogsQueryConfig.abilityFilterCandidate =
+      fflogsQueryConfig.abilityFilterEvents.reduce((total, event) => {
         if (
-          event.sourceIsFriendly
-          && !total.find(v => v.actionId === event.actionId)
+          event.sourceIsFriendly &&
+          !total.find((v) => v.actionId === event.actionId)
         ) {
           total.push(event)
         }
         return total
       }, [] as FFlogsStance)
     isLoading.value = false
-  }
-  catch (e) {
-    ElMessageBox.alert(`请稍后重试。如果问题持续存在,请检查您的网络连接。错误详情: ${e}`, '获取玩家技能数据失败', {
-      confirmButtonText: '确定',
-      type: 'error',
-    })
+  } catch (e) {
+    ElMessageBox.alert(
+      `请稍后重试。如果问题持续存在,请检查您的网络连接。错误详情: ${e}`,
+      '获取玩家技能数据失败',
+      {
+        confirmButtonText: '确定',
+        type: 'error',
+      }
+    )
     isLoading.value = false
   }
 }
@@ -206,10 +221,9 @@ async function queryFFlogsReportEvents() {
 
       if (cachedFriendly && isCacheValid(cachedFriendly)) {
         res = cachedFriendly.data
-      }
-      else {
+      } else {
         res = await fetch(
-          `https://cn.fflogs.com/v1/report/events/casts/${fflogsQueryConfig.code}?start=${startTime}&end=${fflogsQueryConfig.end}&hostility=0&sourceid=${fflogsQueryConfig.player?.id}&api_key=${timelineStore.settings.api}`,
+          `https://cn.fflogs.com/v1/report/events/casts/${fflogsQueryConfig.code}?start=${startTime}&end=${fflogsQueryConfig.end}&hostility=0&sourceid=${fflogsQueryConfig.player?.id}&api_key=${timelineStore.settings.api}`
         ).then((response) => {
           if (!response.ok)
             throw new Error(`HTTP error! status: ${response.status}`)
@@ -219,18 +233,21 @@ async function queryFFlogsReportEvents() {
       }
       resEvents.push(...res.events)
       if (
-        res.nextPageTimestamp
-        && res.nextPageTimestamp > 0
-        && res.nextPageTimestamp < fflogsQueryConfig.end
+        res.nextPageTimestamp &&
+        res.nextPageTimestamp > 0 &&
+        res.nextPageTimestamp < fflogsQueryConfig.end
       ) {
         await queryFriendly(res.nextPageTimestamp)
       }
-    }
-    catch (e) {
-      ElMessageBox.alert(`请稍后重试。如果问题持续存在,请检查您的网络连接。错误详情: ${e}`, '获取友方技能数据失败', {
-        confirmButtonText: '确定',
-        type: 'error',
-      })
+    } catch (e) {
+      ElMessageBox.alert(
+        `请稍后重试。如果问题持续存在,请检查您的网络连接。错误详情: ${e}`,
+        '获取友方技能数据失败',
+        {
+          confirmButtonText: '确定',
+          type: 'error',
+        }
+      )
     }
   }
   async function queryEnemies(startTime: number, index: number) {
@@ -242,10 +259,9 @@ async function queryFFlogsReportEvents() {
 
         if (cachedEnemy && isCacheValid(cachedEnemy)) {
           res = cachedEnemy.data
-        }
-        else {
+        } else {
           res = await fetch(
-            `https://cn.fflogs.com/v1/report/events/casts/${fflogsQueryConfig.code}?start=${startTime}&end=${fflogsQueryConfig.end}&hostility=1&sourceid=${fflogsQueryConfig.bossIDs[index]}&api_key=${timelineStore.settings.api}`,
+            `https://cn.fflogs.com/v1/report/events/casts/${fflogsQueryConfig.code}?start=${startTime}&end=${fflogsQueryConfig.end}&hostility=1&sourceid=${fflogsQueryConfig.bossIDs[index]}&api_key=${timelineStore.settings.api}`
           ).then((response) => {
             if (!response.ok)
               throw new Error(`HTTP error! status: ${response.status}`)
@@ -255,21 +271,24 @@ async function queryFFlogsReportEvents() {
         }
         resEvents.push(...res.events)
         if (
-          res.nextPageTimestamp
-          && res.nextPageTimestamp > 0
-          && res.nextPageTimestamp < fflogsQueryConfig.end
+          res.nextPageTimestamp &&
+          res.nextPageTimestamp > 0 &&
+          res.nextPageTimestamp < fflogsQueryConfig.end
         ) {
           await queryEnemies(res.nextPageTimestamp, index)
         }
 
         if (index < fflogsQueryConfig.bossIDs.length - 1)
           await queryEnemies(startTime, index + 1)
-      }
-      catch (e) {
-        ElMessageBox.alert(`请稍后重试。如果问题持续存在,请检查您的网络连接。错误详情: ${e}`, '获取敌方技能数据失败', {
-          confirmButtonText: '确定',
-          type: 'error',
-        })
+      } catch (e) {
+        ElMessageBox.alert(
+          `请稍后重试。如果问题持续存在,请检查您的网络连接。错误详情: ${e}`,
+          '获取敌方技能数据失败',
+          {
+            confirmButtonText: '确定',
+            type: 'error',
+          }
+        )
       }
     }
   }
@@ -279,29 +298,28 @@ async function queryFFlogsReportEvents() {
   ])
 
   for (const event of resEvents) {
-    if (event.type === 'begincast' && event.sourceIsFriendly)
-      continue
+    if (event.type === 'begincast' && event.sourceIsFriendly) continue
     fflogsQueryConfig.abilityFilterEvents.push({
       time: Number(
-        ((event.timestamp - fflogsQueryConfig.start) / 1000).toFixed(1),
+        ((event.timestamp - fflogsQueryConfig.start) / 1000).toFixed(1)
       ),
       type: event.type,
       actionName: getActionChinese(event.ability.guid) ?? event.ability.name,
       actionId: event.ability.guid,
       sourceIsFriendly: event.sourceIsFriendly,
       url:
-        event?.ability?.abilityIcon.replace('-', '/').replace('.png', '')
-        ?? '000000/000405',
+        event?.ability?.abilityIcon.replace('-', '/').replace('.png', '') ??
+        '000000/000405',
       window: undefined,
       sourceID: event.sourceID,
     })
   }
   if (
-    fflogsQueryConfig.player?.icon
-    && props.filters[fflogsQueryConfig.player.icon]
+    fflogsQueryConfig.player?.icon &&
+    props.filters[fflogsQueryConfig.player.icon]
   ) {
-    fflogsQueryConfig.abilityFilterSelected
-      = props.filters[fflogsQueryConfig.player.icon]!
+    fflogsQueryConfig.abilityFilterSelected =
+      props.filters[fflogsQueryConfig.player.icon]!
   }
   confirmEnabled.value = true
 }
@@ -314,24 +332,24 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
   if (fflogsQueryConfig.player?.icon) {
     timelineStore.updateFilters(
       fflogsQueryConfig.player?.icon,
-      JSON.parse(JSON.stringify(fflogsQueryConfig.abilityFilterSelected)),
+      JSON.parse(JSON.stringify(fflogsQueryConfig.abilityFilterSelected))
     )
   }
 
   fflogsQueryConfig.abilityFilterEvents = fflogsQueryConfig.abilityFilterEvents
     .filter((event) => {
       return (
-        (event.sourceIsFriendly
-          && fflogsQueryConfig.abilityFilterSelected.includes(event.actionId))
-        || !event.sourceIsFriendly
+        (event.sourceIsFriendly &&
+          fflogsQueryConfig.abilityFilterSelected.includes(event.actionId)) ||
+        !event.sourceIsFriendly
       )
     })
     .sort((a, b) => a.time - b.time)
   fflogsQueryConfig.abilityFilterEvents = factory(
-    fflogsQueryConfig.abilityFilterEvents,
+    fflogsQueryConfig.abilityFilterEvents
   )
-  fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline
-    = fflogsQueryConfig.abilityFilterEvents
+  fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline =
+    fflogsQueryConfig.abilityFilterEvents
       .map((item) => {
         const {
           time,
@@ -346,18 +364,20 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
         } = item
 
         if (sourceIsFriendly) {
-          return `${time} "<${actionName}>~"${addTTS.value ? ` tts "${actionName}"` : ''}`
+          return `${time} "<${actionName}>~"${
+            addTTS.value ? ` tts "${actionName}"` : ''
+          }`
         }
 
         if (
-          (/^(?:攻击|attack|攻撃)$/i.test(actionName) && !window)
-          || (type === 'cast' && !window)
-          || fflogsQueryConfig.battleSyncedIDs.includes(actionId)
+          (/^(?:攻击|attack|攻撃)$/i.test(actionName) && !window) ||
+          (type === 'cast' && !window) ||
+          fflogsQueryConfig.battleSyncedIDs.includes(actionId)
         ) {
           return `# ${time} "${actionName}"`
         }
 
-        const source = fflogsQueryConfig.enemies.find(e => e.id === sourceID)
+        const source = fflogsQueryConfig.enemies.find((e) => e.id === sourceID)
         if ((source?.type === 'NPC' || /unknown/.test(actionName)) && !window)
           return null
 
@@ -371,7 +391,7 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
           ? `${syncLine} window ${window.join(',')} ${syncOnce ? 'once' : ''}`
           : `# ${syncLine}`
       })
-      .filter(item => item !== null)
+      .filter((item) => item !== null)
       .join('\n')
 
   const index = timelineStore.newTimeline(
@@ -381,7 +401,7 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
       jobs: [(fflogsQueryConfig.player?.icon as Job) ?? 'NONE'],
     },
     fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline,
-    `${fflogsQueryConfig.code}#fight=${fflogsQueryConfig.fightIndex + 1}`,
+    `${fflogsQueryConfig.code}#fight=${fflogsQueryConfig.fightIndex + 1}`
   )
   claerFFlogsQueryConfig()
   emits('showFFlogsToggle')
@@ -414,6 +434,10 @@ function openFFLogsProfile() {
   window.open('https://cn.fflogs.com/profile', '_blank')
 }
 
+function getJobStr(icon: FFIcon) {
+  return Util.jobToFullName(Util.jobEnumToJob(Util.iconToJobEnum(icon))).cn
+}
+
 onMounted(() => {
   fflogsCache.clearExpired()
 })
@@ -421,8 +445,15 @@ onMounted(() => {
 
 <template>
   <el-button
-
-    :style="currentStep > 0 ? {} : { visibility: 'hidden', pointerEvent: 'none' }" type="primary" text position-absolute z-999 class="guide" @click="currentStep--"
+    :style="
+      currentStep > 0 ? {} : { visibility: 'hidden', pointerEvent: 'none' }
+    "
+    type="primary"
+    text
+    position-absolute
+    z-999
+    class="guide"
+    @click="currentStep--"
   >
     上一步
   </el-button>
@@ -453,11 +484,7 @@ onMounted(() => {
               placement="top"
               effect="light"
             >
-              <el-button
-                type="primary"
-                link
-                @click="openFFLogsProfile"
-              >
+              <el-button type="primary" link @click="openFFLogsProfile">
                 如何获取
               </el-button>
             </el-tooltip>
@@ -485,7 +512,9 @@ onMounted(() => {
   <div class="query-results">
     <el-card v-if="currentStep === 1" class="player-selection">
       <el-table
-        :data="fflogsQueryConfig.friendlies.filter((v) => !['NPC'].includes(v.icon))"
+        :data="
+          fflogsQueryConfig.friendlies.filter((v) => !['NPC'].includes(v.icon))
+        "
         stripe
         border
         class="friendlies-table"
@@ -493,12 +522,16 @@ onMounted(() => {
         <el-table-column prop="name" label="玩家名称" />
         <el-table-column label="职业">
           <template #default="{ row }">
-            {{ Util.jobToFullName(Util.jobEnumToJob(Util.iconToJobEnum(row.icon))).cn }}
+            {{ getJobStr(row.icon) }}
           </template>
         </el-table-column>
         <el-table-column label="选定" width="100" align="center">
           <template #default="scope">
-            <el-button type="primary" size="small" @click="handleFFlogsQueryResultFriendliesList(scope.row)">
+            <el-button
+              type="primary"
+              size="small"
+              @click="handleFFlogsQueryResultFriendliesList(scope.row)"
+            >
               选择
             </el-button>
           </template>
@@ -534,11 +567,17 @@ onMounted(() => {
               class="ability-filter-icon"
               :alt="rule.actionName"
               :onerror="handleImgError"
-            >
+            />
             <span>{{ rule.actionName }}</span>
           </el-option>
         </el-select>
-        <el-button v-if="confirmEnabled" type="success" class="filter-confirm-btn" :disabled="!confirmEnabled" @click="handeleFFlogsQueryResultFriendiesListFilter">
+        <el-button
+          v-if="confirmEnabled"
+          type="success"
+          class="filter-confirm-btn"
+          :disabled="!confirmEnabled"
+          @click="handeleFFlogsQueryResultFriendiesListFilter"
+        >
           {{ '生成时间轴' }}
         </el-button>
       </div>
@@ -569,7 +608,8 @@ onMounted(() => {
   margin-top: 20px;
 }
 
-.player-selection, .ability-filter {
+.player-selection,
+.ability-filter {
   margin-bottom: 20px;
 }
 

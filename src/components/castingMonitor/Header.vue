@@ -17,22 +17,40 @@ watchEffect(() => {
     item.src = getClassjobIconSrc(item.job)
 })
 const showHeader = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(
-  params.get('showHeader') || 'true',
+  params.get('showHeader') || 'true'
 )
+
+function getJobStr(job: number): string {
+  return Util.jobToFullName(Util.jobEnumToJob(job)).simple2
+}
 </script>
 
 <template>
-  <div v-if="showHeader && castingMonitorStore.partyData.length > 1" z-100 flex="~ gap0 wrap" class="header-layout">
+  <div
+    v-if="showHeader && castingMonitorStore.partyData.length > 1"
+    z-100
+    flex="~ gap0 wrap"
+    class="header-layout"
+  >
     <button
       v-for="(item, index) in castingMonitorStore.partyDataFormatted"
       :key="index"
       class="job-lists"
-      :class=" castingMonitorStore.focusTargetId === item.id ? 'job-lists-focus' : '' "
-      m-0 p-0 @click="castingMonitorStore.handleClickChangeTarget(item.id)"
+      :class="
+        castingMonitorStore.focusTargetId === item.id ? 'job-lists-focus' : ''
+      "
+      m-0
+      p-0
+      @click="castingMonitorStore.handleClickChangeTarget(item.id)"
     >
       <div flex="~ nowrap items-end" style="align-items: flex-end; gap: 0.1rem">
-        <img :src="item.src" style="height: 1.25em" loading="lazy" :onerror="handleImgError">
-        {{ Util.jobToFullName(Util.jobEnumToJob(item.job as number)).simple2 }}
+        <img
+          :src="item.src"
+          style="height: 1.25em"
+          loading="lazy"
+          :onerror="handleImgError"
+        />
+        {{ getJobStr(item.job) }}
       </div>
     </button>
   </div>
@@ -53,7 +71,7 @@ const showHeader = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(
     background-color: transparent;
     cursor: pointer;
     color: white;
-    font-family: "微软雅黑";
+    font-family: '微软雅黑';
     text-shadow: -1px 0 2px #000, 0 1px 2px #000, 1px 0 2px #000,
       0 -1px 2px #000;
     &:hover {

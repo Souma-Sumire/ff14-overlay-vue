@@ -647,6 +647,13 @@ function getMapName(zoneId: number) {
   return names.cn || `${names.ja} / ${names.en}`
 }
 
+function getLabel(job: Job) {
+  return (Util.jobToFullName(job.toUpperCase() as Job)?.cn ?? job).replace(
+    '冒险者',
+    '全部职业'
+  )
+}
+
 onMounted(() => {
   addOverlayListener('BroadcastMessage', handleBroadcastMessage)
 
@@ -839,12 +846,7 @@ init()
               <el-option
                 v-for="job in timelineStore.jobList"
                 :key="job"
-                :label="
-                  (Util.jobToFullName(job)?.cn ?? job).replace(
-                    '冒险者',
-                    '全部职业'
-                  )
-                "
+                :label="getLabel(job)"
                 :value="job"
               />
             </el-select>
@@ -903,10 +905,7 @@ init()
             <template #default="scope">
               {{
                 scope.row.condition.jobs
-                  .map(
-                    (v: Job) =>
-                      Util.jobToFullName(v.toUpperCase() as Job)?.cn ?? v
-                  )
+                  .map((v: Job) => getLabel(v))
                   .join('、')
                   .replace('冒险者', '全部职业')
               }}
@@ -998,12 +997,7 @@ init()
                 <el-option
                   v-for="job in timelineStore.jobList"
                   :key="job"
-                  :label="
-                    (Util.jobToFullName(job)?.cn ?? job).replace(
-                      '冒险者',
-                      '全部职业'
-                    )
-                  "
+                  :label="getLabel(job)"
                   :value="job"
                 />
               </el-select>

@@ -46,6 +46,25 @@ watch(
   },
   { immediate: true, deep: true }
 )
+
+function getLabel(option: {
+  value: number
+  label: {
+    en: string
+    ja: string
+    cn: string
+    simple1: string
+    simple2: string
+  }
+}) {
+  return (
+    option.label[
+      localeToCactbotLang(
+        locale.value as Lang
+      ) as keyof typeof Util.jobToFullName
+    ] ?? option.label.en
+  )
+}
 </script>
 
 <template>
@@ -163,7 +182,7 @@ watch(
           <el-option
             v-for="option in jobOptions"
             :key="option.value"
-            :label="option.label[localeToCactbotLang(locale as Lang) as keyof typeof Util.jobToFullName] ?? option.label.en"
+            :label="getLabel(option)"
             :value="option.value"
           />
         </el-select>

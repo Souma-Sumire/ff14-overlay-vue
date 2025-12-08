@@ -54,7 +54,7 @@ type FilterType = '1-3' | '4-6' | '1' | '2' | '3' | '4' | '5' | '6' | '1-2'
 type ZoneIdType = (typeof zoneList)[number]
 type LegalInstance = 1 | 2 | 3 | 4 | 5 | 6
 
-// 将来追加地图时，在zoneList添加新的zoneId，在zoneInstanceLength中添加对应的分线数量，在getZoneGameVersion中添加对应的游戏版本
+// 将来追加地图时，在zoneList添加新的zoneId，在getInstanceLengthByZoneId中添加对应的分线数量，在getZoneGameVersion中添加对应的游戏版本
 
 // 全部地图ID
 const zoneList = [
@@ -827,8 +827,7 @@ function importOneZoneStr() {
   }).then(({ value }) => {
     const decompressedText = LZString.decompressFromEncodedURIComponent(value)
     const data = JSON.parse(decompressedText) as DiscoveredMonsters
-    const mapName =
-      Map[data[0]!.zoneId as unknown as keyof typeof Map].name.cn
+    const mapName = Map[data[0]!.zoneId as unknown as keyof typeof Map].name.cn
     const targetMonsters = monstersData.value.filter(
       (item) => item.zoneId === data[0]!.zoneId
     )
@@ -892,8 +891,7 @@ function importOneInstanceStr() {
   }).then(({ value }) => {
     const decompressedText = LZString.decompressFromEncodedURIComponent(value)
     const data = JSON.parse(decompressedText) as DiscoveredMonsters
-    const mapName =
-      Map[data[0]!.zoneId as unknown as keyof typeof Map]!.name.cn
+    const mapName = Map[data[0]!.zoneId as unknown as keyof typeof Map]!.name.cn
     const instanceName = data[0]!.instance.toString()
     const targetMonsters = monstersData.value.filter(
       (item) =>
@@ -1024,6 +1022,10 @@ function getInstanceLengthByZoneId(zoneId: ZoneIdType): LegalInstance {
     default:
       return 1
   }
+}
+
+function getAetherytes(m: number) {
+  return Aetherytes.filter((a) => a.territory === m.toString())
 }
 
 onMounted(async () => {
@@ -1266,9 +1268,7 @@ onMounted(async () => {
           />
 
           <div
-            v-for="(aItem, aIndex) in Aetherytes.filter(
-              (a) => a.territory === m.toString()
-            )"
+            v-for="(aItem, aIndex) in getAetherytes(m)"
             :key="`${aItem.territory}-${aIndex}`"
             :style="{
               position: 'absolute',
