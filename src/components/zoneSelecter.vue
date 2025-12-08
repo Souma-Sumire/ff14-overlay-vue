@@ -6,7 +6,7 @@ import ContentType from '../../cactbot/resources/content_type'
 import { getCactbotLocaleMessage } from '@/composables/useLang'
 import { ZoneInfo } from '@/resources/zoneInfo'
 
-const { t } = useLang()
+const { t, setLang } = useLang()
 
 const groupedZoneOptions = computed(() => {
   const contentTypeLabel: { type: number; label: string }[] = [
@@ -203,6 +203,10 @@ watch(
   () => props.selectZone,
   (val) => (localSelectZone.value = val)
 )
+
+onMounted(() => {
+  setLang('zhCn')
+})
 </script>
 
 <template>

@@ -11,7 +11,15 @@ function useLang() {
   watch(i18n.locale, (locale) => {
     localeRef.value = locale as Lang
   })
-  return i18n
+  function setLang(lang: Lang) {
+    i18n.locale.value = lang
+    localeRef.value = lang
+  }
+
+  return {
+    ...i18n,
+    setLang,
+  }
 }
 
 const l: Record<Lang, CLang> = {
