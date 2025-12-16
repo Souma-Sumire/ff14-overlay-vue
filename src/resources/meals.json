@@ -10111,5 +10111,275 @@
       }
     ],
     "Level": "750"
+  },
+  "699": {
+    "Name": "炖剑山芋",
+    "ParamsValues": [
+      {
+        "Params": "Direct Hit Rate",
+        "Value": "8",
+        "Max": "120",
+        "Value{HQ}": "10",
+        "Max{HQ}": "151"
+      },
+      {
+        "Params": "Vitality",
+        "Value": "8",
+        "Max": "237",
+        "Value{HQ}": "10",
+        "Max{HQ}": "297"
+      },
+      {
+        "Params": "Determination",
+        "Value": "8",
+        "Max": "72",
+        "Value{HQ}": "10",
+        "Max{HQ}": "91"
+      }
+    ],
+    "Level": "770"
+  },
+  "700": {
+    "Name": "剑山芋沙拉",
+    "ParamsValues": [
+      {
+        "Params": "Skill Speed",
+        "Value": "8",
+        "Max": "120",
+        "Value{HQ}": "10",
+        "Max{HQ}": "151"
+      },
+      {
+        "Params": "Vitality",
+        "Value": "8",
+        "Max": "237",
+        "Value{HQ}": "10",
+        "Max{HQ}": "297"
+      },
+      {
+        "Params": "Direct Hit Rate",
+        "Value": "8",
+        "Max": "72",
+        "Value{HQ}": "10",
+        "Max{HQ}": "91"
+      }
+    ],
+    "Level": "770"
+  },
+  "701": {
+    "Name": "烤干酪辣味玉米片",
+    "ParamsValues": [
+      {
+        "Params": "Critical Hit",
+        "Value": "8",
+        "Max": "120",
+        "Value{HQ}": "10",
+        "Max{HQ}": "151"
+      },
+      {
+        "Params": "Vitality",
+        "Value": "8",
+        "Max": "237",
+        "Value{HQ}": "10",
+        "Max{HQ}": "297"
+      },
+      {
+        "Params": "Skill Speed",
+        "Value": "8",
+        "Max": "72",
+        "Value{HQ}": "10",
+        "Max{HQ}": "91"
+      }
+    ],
+    "Level": "770"
+  },
+  "702": {
+    "Name": "焦糖爆米花",
+    "ParamsValues": [
+      {
+        "Params": "Determination",
+        "Value": "8",
+        "Max": "120",
+        "Value{HQ}": "10",
+        "Max{HQ}": "151"
+      },
+      {
+        "Params": "Vitality",
+        "Value": "8",
+        "Max": "237",
+        "Value{HQ}": "10",
+        "Max{HQ}": "297"
+      },
+      {
+        "Params": "Critical Hit",
+        "Value": "8",
+        "Max": "72",
+        "Value{HQ}": "10",
+        "Max{HQ}": "91"
+      }
+    ],
+    "Level": "770"
+  },
+  "703": {
+    "Name": "梅干星磅蛋糕",
+    "ParamsValues": [
+      {
+        "Params": "Piety",
+        "Value": "8",
+        "Max": "120",
+        "Value{HQ}": "10",
+        "Max{HQ}": "151"
+      },
+      {
+        "Params": "Vitality",
+        "Value": "8",
+        "Max": "237",
+        "Value{HQ}": "10",
+        "Max{HQ}": "297"
+      },
+      {
+        "Params": "Determination",
+        "Value": "8",
+        "Max": "72",
+        "Value{HQ}": "10",
+        "Max{HQ}": "91"
+      }
+    ],
+    "Level": "770"
+  },
+  "704": {
+    "Name": "梅干灵矿蛋糕",
+    "ParamsValues": [
+      {
+        "Params": "Spell Speed",
+        "Value": "8",
+        "Max": "120",
+        "Value{HQ}": "10",
+        "Max{HQ}": "151"
+      },
+      {
+        "Params": "Vitality",
+        "Value": "8",
+        "Max": "237",
+        "Value{HQ}": "10",
+        "Max{HQ}": "297"
+      },
+      {
+        "Params": "Piety",
+        "Value": "8",
+        "Max": "72",
+        "Value{HQ}": "10",
+        "Max{HQ}": "91"
+      }
+    ],
+    "Level": "770"
+  },
+  "705": {
+    "Name": "犎牛奶汁焗菜",
+    "ParamsValues": [
+      {
+        "Params": "Spell Speed",
+        "Value": "8",
+        "Max": "120",
+        "Value{HQ}": "10",
+        "Max{HQ}": "151"
+      },
+      {
+        "Params": "Vitality",
+        "Value": "8",
+        "Max": "237",
+        "Value{HQ}": "10",
+        "Max{HQ}": "297"
+      },
+      {
+        "Params": "Direct Hit Rate",
+        "Value": "8",
+        "Max": "72",
+        "Value{HQ}": "10",
+        "Max{HQ}": "91"
+      }
+    ],
+    "Level": "770"
+  },
+  "706": {
+    "Name": "新薯浓汤",
+    "ParamsValues": [
+      {
+        "Params": "Critical Hit",
+        "Value": "8",
+        "Max": "120",
+        "Value{HQ}": "10",
+        "Max{HQ}": "151"
+      },
+      {
+        "Params": "Vitality",
+        "Value": "8",
+        "Max": "237",
+        "Value{HQ}": "10",
+        "Max{HQ}": "297"
+      },
+      {
+        "Params": "Spell Speed",
+        "Value": "8",
+        "Max": "72",
+        "Value{HQ}": "10",
+        "Max{HQ}": "91"
+      }
+    ],
+    "Level": "770"
+  },
+  "707": {
+    "Name": "蛤蜊糕",
+    "ParamsValues": [
+      {
+        "Params": "Tenacity",
+        "Value": "8",
+        "Max": "120",
+        "Value{HQ}": "10",
+        "Max{HQ}": "151"
+      },
+      {
+        "Params": "Vitality",
+        "Value": "8",
+        "Max": "237",
+        "Value{HQ}": "10",
+        "Max{HQ}": "297"
+      },
+      {
+        "Params": "Determination",
+        "Value": "8",
+        "Max": "72",
+        "Value{HQ}": "10",
+        "Max{HQ}": "91"
+      }
+    ],
+    "Level": "770"
+  },
+  "708": {
+    "Name": "圆蛤羹",
+    "ParamsValues": [
+      {
+        "Params": "Determination",
+        "Value": "8",
+        "Max": "120",
+        "Value{HQ}": "10",
+        "Max{HQ}": "151"
+      },
+      {
+        "Params": "Vitality",
+        "Value": "8",
+        "Max": "237",
+        "Value{HQ}": "10",
+        "Max{HQ}": "297"
+      },
+      {
+        "Params": "Tenacity",
+        "Value": "8",
+        "Max": "72",
+        "Value{HQ}": "10",
+        "Max{HQ}": "91"
+      }
+    ],
+    "Level": "770"
   }
 }

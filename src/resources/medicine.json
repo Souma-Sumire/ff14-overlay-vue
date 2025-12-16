@@ -1802,5 +1802,97 @@
       }
     ],
     "Level": "740"
+  },
+  "700": {
+    "Name": "高级以太药",
+    "ParamsValues": [
+      {
+        "Params": "Skill Speed",
+        "Value": "8",
+        "Max": "120",
+        "Value{HQ}": "10",
+        "Max{HQ}": "151"
+      },
+      {
+        "Params": "Vitality",
+        "Value": "8",
+        "Max": "237",
+        "Value{HQ}": "10",
+        "Max{HQ}": "297"
+      },
+      {
+        "Params": "Direct Hit Rate",
+        "Value": "8",
+        "Max": "72",
+        "Value{HQ}": "10",
+        "Max{HQ}": "91"
+      }
+    ],
+    "Level": "35"
+  },
+  "709": {
+    "Name": "4级刚力之宝药",
+    "ParamsValues": [
+      {
+        "Params": "Strength",
+        "Value": "8",
+        "Max": "432",
+        "Value{HQ}": "10",
+        "Max{HQ}": "541"
+      }
+    ],
+    "Level": "770"
+  },
+  "710": {
+    "Name": "4级巧力之宝药",
+    "ParamsValues": [
+      {
+        "Params": "Dexterity",
+        "Value": "8",
+        "Max": "432",
+        "Value{HQ}": "10",
+        "Max{HQ}": "541"
+      }
+    ],
+    "Level": "770"
+  },
+  "711": {
+    "Name": "4级耐力之宝药",
+    "ParamsValues": [
+      {
+        "Params": "Vitality",
+        "Value": "8",
+        "Max": "476",
+        "Value{HQ}": "10",
+        "Max{HQ}": "595"
+      }
+    ],
+    "Level": "770"
+  },
+  "712": {
+    "Name": "4级智力之宝药",
+    "ParamsValues": [
+      {
+        "Params": "Intelligence",
+        "Value": "8",
+        "Max": "432",
+        "Value{HQ}": "10",
+        "Max{HQ}": "541"
+      }
+    ],
+    "Level": "770"
+  },
+  "713": {
+    "Name": "4级意力之宝药",
+    "ParamsValues": [
+      {
+        "Params": "Mind",
+        "Value": "8",
+        "Max": "432",
+        "Value{HQ}": "10",
+        "Max{HQ}": "541"
+      }
+    ],
+    "Level": "770"
   }
 }
