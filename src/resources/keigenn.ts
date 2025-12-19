@@ -298,6 +298,13 @@ const keigenns: (Omit<Keigenn, 'fullIcon'> & { fullIcon?: string })[] = [
     isFriendly: true,
   },
   {
+    name: '告解', // 全大赦
+    id: 1219,
+    type: 'multiplier',
+    performance: { physics: 0.9, magic: 0.9, darkness: 1 },
+    isFriendly: true,
+  },
+  {
     name: '节制',
     id: 1873,
     type: 'multiplier',
