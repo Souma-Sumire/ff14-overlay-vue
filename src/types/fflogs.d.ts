@@ -81,6 +81,7 @@ export type FFlogsStance = {
 }[]
 
 export interface FFlogsQuery {
+  type: 'friendies' | 'enemies'
   code: string
   fightIndex: number
   start: number
@@ -89,6 +90,7 @@ export interface FFlogsQuery {
   abilityFilterEvents: FFlogsStance
   abilityFilterCandidate: FFlogsStance
   abilityFilterSelected: number[]
+  enemiesAbilityFilterSelected: string[]
   abilityFilterEventsAfterFilterRawTimeline: string
   zoneID: number
   player?: Friendlies

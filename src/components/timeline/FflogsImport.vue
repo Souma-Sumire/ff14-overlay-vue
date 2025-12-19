@@ -128,8 +128,12 @@ async function queryFFlogsReportFights(url: string) {
     }
     fflogsQueryConfig.bossIDs = (
       res.enemies as {
+        name: string
         id: number
-        type: string
+        guid: number
+        type: 'NPC' | 'Boss'
+        icon: 'NPC' | 'Boss'
+        fights: { id: number; instances: number; groups: number }[]
       }[]
     )
       .filter((arr) => ['Boss', 'NPC'].includes(arr.type))
@@ -148,6 +152,11 @@ async function queryFFlogsReportFights(url: string) {
         value.icon !== 'LimitBreak' &&
         value.fights.find((f) => f.id === fflogsQueryConfig.fightIndex + 1)
     )
+    fflogsQueryConfig.friendlies.sort((a, b) => {
+      const aEnum = Util.iconToJobEnum(a.icon as FFIcon)
+      const bEnum = Util.iconToJobEnum(b.icon as FFIcon)
+      return Util.enumSortMethod(aEnum, bEnum)
+    })
     queryText.value = QueryTextEnum.query
     fflogsQueryConfig.abilityFilterEvents.length = 0
     fflogsQueryConfig.abilityFilterCandidate.length = 0
@@ -181,19 +190,39 @@ async function handleFFlogsQueryResultFriendliesList(player: Friendlies) {
   isLoading.value = true
   currentStep.value = 2
   fflogsQueryConfig.player = player
+  fflogsQueryConfig.type = 'friendies'
+  fflogsQueryConfig.abilityFilterEvents.length = 0
+  fflogsQueryConfig.abilityFilterCandidate.length = 0
+  fflogsQueryConfig.enemiesAbilityFilterSelected.length = 0
   // 进入第三步
   try {
     await queryFFlogsReportEvents()
     fflogsQueryConfig.abilityFilterCandidate =
-      fflogsQueryConfig.abilityFilterEvents.reduce((total, event) => {
-        if (
-          event.sourceIsFriendly &&
-          !total.find((v) => v.actionId === event.actionId)
-        ) {
-          total.push(event)
-        }
-        return total
-      }, [] as FFlogsStance)
+      fflogsQueryConfig.abilityFilterEvents
+        .reduce((total, event) => {
+          if (
+            event.sourceIsFriendly &&
+            !total.find((v) => v.actionId === event.actionId)
+          ) {
+            total.push(event)
+          }
+          return total
+        }, [] as FFlogsStance)
+        .sort((a, b) => a.time - b.time)
+    if (
+      fflogsQueryConfig.player?.icon &&
+      props.filters[fflogsQueryConfig.player.icon]
+    ) {
+      fflogsQueryConfig.abilityFilterSelected = props.filters[
+        fflogsQueryConfig.player.icon
+      ]! as number[]
+    }
+    fflogsQueryConfig.abilityFilterSelected =
+      fflogsQueryConfig.abilityFilterSelected.filter((v) => {
+        return fflogsQueryConfig.abilityFilterCandidate.find(
+          (e) => e.actionId === v
+        )
+      })
     isLoading.value = false
   } catch (e) {
     ElMessageBox.alert(
@@ -213,6 +242,7 @@ async function queryFFlogsReportEvents() {
   confirmEnabled.value = false
   const resEvents: FFlogsApiV1ReportEvents[] = []
   fflogsQueryConfig.abilityFilterEvents.length = 0
+  fflogsQueryConfig.enemiesAbilityFilterSelected.length = 0
   async function queryFriendly(startTime: number) {
     try {
       const friendlyCacheKey = `events:friendly:${fflogsQueryConfig.code}:${startTime}:${fflogsQueryConfig.player?.id}`
@@ -314,13 +344,6 @@ async function queryFFlogsReportEvents() {
       sourceID: event.sourceID,
     })
   }
-  if (
-    fflogsQueryConfig.player?.icon &&
-    props.filters[fflogsQueryConfig.player.icon]
-  ) {
-    fflogsQueryConfig.abilityFilterSelected =
-      props.filters[fflogsQueryConfig.player.icon]!
-  }
   confirmEnabled.value = true
 }
 
@@ -411,9 +434,168 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
   }, 500)
   isLoading.value = false
 }
+// fflogs导入第B2步：用户选定了敌人
+async function handleFFlogsQueryResultEnemiesList() {
+  isLoading.value = true
+  currentStep.value = 2
+  fflogsQueryConfig.type = 'enemies'
+  fflogsQueryConfig.abilityFilterEvents.length = 0
+  fflogsQueryConfig.abilityFilterCandidate.length = 0
+  // 进入第三B步
+  try {
+    await queryFFlogsReportEventsEnemies()
+    fflogsQueryConfig.abilityFilterCandidate =
+      fflogsQueryConfig.abilityFilterEvents
+        .reduce((total, item) => {
+          if (
+            item.sourceIsFriendly === false &&
+            !total.find((v) => v.actionName === item.actionName)
+          ) {
+            total.push(item)
+          }
+          return total
+        }, [] as FFlogsStance)
+        .sort((a, b) => a.time - b.time)
+    fflogsQueryConfig.enemiesAbilityFilterSelected =
+      fflogsQueryConfig.enemiesAbilityFilterSelected.filter((v) => {
+        return fflogsQueryConfig.abilityFilterCandidate.find(
+          (e) => e.actionName === v
+        )
+      })
+    isLoading.value = false
+  } catch (e) {
+    ElMessageBox.alert(
+      `请稍后重试。如果问题持续存在,请检查您的网络连接。错误详情: ${e}`,
+      '获取敌人技能数据失败',
+      {
+        confirmButtonText: '确定',
+        type: 'error',
+      }
+    )
+    isLoading.value = false
+  }
+}
+
+// fflogs导入第B3步：通过API获取选定玩家所有casts
+async function queryFFlogsReportEventsEnemies() {
+  confirmEnabled.value = false
+  const resEvents: FFlogsApiV1ReportEvents[] = []
+  fflogsQueryConfig.abilityFilterEvents.length = 0
+  fflogsQueryConfig.enemiesAbilityFilterSelected.length = 0
+  async function queryEnemies(startTime: number, index: number) {
+    if (index >= 0) {
+      try {
+        const enemyCacheKey = `events:enemy:${fflogsQueryConfig.code}:${startTime}:${fflogsQueryConfig.bossIDs[index]}`
+        const cachedEnemy = getCache<any>(enemyCacheKey)
+        let res: any
+
+        if (cachedEnemy && isCacheValid(cachedEnemy)) {
+          res = cachedEnemy.data
+        } else {
+          res = await fetch(
+            `https://cn.fflogs.com/v1/report/events/casts/${fflogsQueryConfig.code}?start=${startTime}&end=${fflogsQueryConfig.end}&hostility=1&sourceid=${fflogsQueryConfig.bossIDs[index]}&api_key=${timelineStore.settings.api}`
+          ).then((response) => {
+            if (!response.ok)
+              throw new Error(`HTTP error! status: ${response.status}`)
+            return response.json()
+          })
+          setCache(enemyCacheKey, res)
+        }
+        resEvents.push(...res.events)
+        if (
+          res.nextPageTimestamp &&
+          res.nextPageTimestamp > 0 &&
+          res.nextPageTimestamp < fflogsQueryConfig.end
+        ) {
+          await queryEnemies(res.nextPageTimestamp, index)
+        }
+
+        if (index < fflogsQueryConfig.bossIDs.length - 1)
+          await queryEnemies(startTime, index + 1)
+      } catch (e) {
+        ElMessageBox.alert(
+          `请稍后重试。如果问题持续存在,请检查您的网络连接。错误详情: ${e}`,
+          '获取敌方技能数据失败',
+          {
+            confirmButtonText: '确定',
+            type: 'error',
+          }
+        )
+      }
+    }
+  }
+  await Promise.all([queryEnemies(fflogsQueryConfig.start, 0)])
+
+  for (const event of resEvents) {
+    fflogsQueryConfig.abilityFilterEvents.push({
+      time: Number(
+        ((event.timestamp - fflogsQueryConfig.start) / 1000).toFixed(1)
+      ),
+      type: event.type,
+      actionName: getActionChinese(event.ability.guid) ?? event.ability.name,
+      actionId: event.ability.guid,
+      sourceIsFriendly: false,
+      url: '',
+      window: undefined,
+      sourceID: event.sourceID,
+    })
+  }
+  confirmEnabled.value = true
+  fflogsQueryConfig.enemiesAbilityFilterSelected.length = 0
+  const uniActionNames = Array.from(
+    new Set(fflogsQueryConfig.abilityFilterEvents.map((e) => e.actionName))
+  )
+  fflogsQueryConfig.enemiesAbilityFilterSelected.push(...uniActionNames)
+}
+
+// fflogs导入第B4步：用户选好了过滤器
+function handeleFFlogsQueryResultEnemiesListFilter() {
+  // isLoading.value = true
+  currentStep.value = 3
+  // 保存过滤器
+  // timelineStore.updateFilters(
+  //   'ENEMIES',
+  //   JSON.parse(
+  //     JSON.stringify(fflogsQueryConfig.enemiesAbilityFilterSelected)
+  //   ) as string[]
+  // )
+  fflogsQueryConfig.abilityFilterEvents = fflogsQueryConfig.abilityFilterEvents
+    .filter((event) =>
+      fflogsQueryConfig.enemiesAbilityFilterSelected.includes(event.actionName)
+    )
+    .sort((a, b) => a.time - b.time)
+  fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline =
+    fflogsQueryConfig.abilityFilterEvents
+      .map((item) => {
+        const { time, actionName, actionId, type } = item
+        const regexType = type === 'begincast' ? 'StartsUsing' : 'Ability'
+        const hexId = actionId.toString(16).toUpperCase()
+        const source = fflogsQueryConfig.enemies.find(
+          (e) => e.id === item.sourceID
+        )
+        const sourceType = source?.type === 'BOSS' ? 'BOSS' : '分身'
+        const sourceName = source?.name ?? '未知'
+
+        return `${time} "${actionName}" ${regexType} { id: "${hexId}" } #${sourceName}（${sourceType}）`
+      })
+      .join('\n')
+  const index = timelineStore.newTimeline(
+    `BOSS时间轴（使用前请删除非必要的正则）`,
+    { zoneId: fflogsQueryConfig.zoneID.toString(), jobs: [] },
+    fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline,
+    `${fflogsQueryConfig.code}#fight=${fflogsQueryConfig.fightIndex + 1}`
+  )
+  claerFFlogsQueryConfig()
+  emits('showFFlogsToggle')
+  emits('editTimeline', timelineStore.allTimelines[index]!)
+  setTimeout(() => {
+    currentStep.value = 0
+  }, 500)
+}
 
 // fflogs相关配置初始化
 function claerFFlogsQueryConfig() {
+  fflogsQueryConfig.type = 'friendies'
   fflogsQueryConfig.code = ''
   fflogsQueryConfig.fightIndex = 0
   fflogsQueryConfig.start = 0
@@ -422,6 +604,7 @@ function claerFFlogsQueryConfig() {
   fflogsQueryConfig.abilityFilterEvents = []
   fflogsQueryConfig.abilityFilterCandidate = []
   fflogsQueryConfig.abilityFilterSelected = []
+  fflogsQueryConfig.enemiesAbilityFilterSelected = []
   fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline = ''
   fflogsQueryConfig.player = undefined
   fflogsQueryConfig.zoneID = 0
@@ -458,8 +641,8 @@ onMounted(() => {
     上一步
   </el-button>
   <el-steps :active="currentStep" class="steps-guide" align-center>
-    <el-step title="输入链接" />
-    <el-step title="选择玩家" />
+    <el-step title="导入战斗" />
+    <el-step title="选择目标" />
     <el-step title="过滤技能" />
   </el-steps>
   <el-card v-if="currentStep === 0" class="input-section">
@@ -490,9 +673,6 @@ onMounted(() => {
             </el-tooltip>
           </template>
         </el-input>
-      </el-form-item>
-      <el-form-item label="使用 TTS">
-        <el-switch v-model="addTTS" />
       </el-form-item>
       <el-form-item>
         <el-button
@@ -537,6 +717,11 @@ onMounted(() => {
           </template>
         </el-table-column>
       </el-table>
+      <div flex="~" m-t-10>
+        <el-button type="info" @click="handleFFlogsQueryResultEnemiesList()"
+          >不选择玩家，而是生成BOSS时间轴</el-button
+        >
+      </div>
     </el-card>
 
     <el-card v-if="currentStep === 2" class="ability-filter">
@@ -547,39 +732,75 @@ onMounted(() => {
           </el-icon>
           <span>正在加载技能列表...</span>
         </div>
-        <el-select
-          v-if="confirmEnabled"
-          v-model="fflogsQueryConfig.abilityFilterSelected"
-          multiple
-          placeholder="选择需要导入的技能"
-          :fit-input-width="true"
-          class="ability-filter-select"
+        <template
+          v-if="confirmEnabled && fflogsQueryConfig.type === 'friendies'"
         >
-          <el-option
-            v-for="rule in fflogsQueryConfig.abilityFilterCandidate"
-            :key="rule.actionId"
-            :value="rule.actionId"
-            :label="rule.actionName"
-            class="ability-filter-option"
+          <el-select
+            v-model="fflogsQueryConfig.abilityFilterSelected"
+            multiple
+            placeholder="选择需要导入的技能"
+            :fit-input-width="true"
+            class="ability-filter-select"
+            filterable
           >
-            <img
-              :src="getImgSrc(`/i/${rule.url}.png`)"
-              class="ability-filter-icon"
-              :alt="rule.actionName"
-              :onerror="handleImgError"
-            />
-            <span>{{ rule.actionName }}</span>
-          </el-option>
-        </el-select>
-        <el-button
-          v-if="confirmEnabled"
-          type="success"
-          class="filter-confirm-btn"
-          :disabled="!confirmEnabled"
-          @click="handeleFFlogsQueryResultFriendiesListFilter"
+            <el-option
+              v-for="rule in fflogsQueryConfig.abilityFilterCandidate"
+              :key="rule.actionId"
+              :value="rule.actionId"
+              :label="rule.actionName"
+              class="ability-filter-option"
+            >
+              <img
+                :src="getImgSrc(`/i/${rule.url}.png`)"
+                class="ability-filter-icon"
+                :alt="rule.actionName"
+                :onerror="handleImgError"
+              />
+              <span>{{ rule.actionName }}</span>
+            </el-option>
+          </el-select>
+          <el-form-item label="添加 TTS 语法" w-60 m-t-3>
+            <el-switch v-model="addTTS" />
+          </el-form-item>
+          <el-button
+            type="success"
+            class="filter-confirm-btn"
+            :disabled="!confirmEnabled"
+            @click="handeleFFlogsQueryResultFriendiesListFilter"
+          >
+            {{ '生成玩家时间轴' }}
+          </el-button>
+        </template>
+        <template
+          v-else-if="confirmEnabled && fflogsQueryConfig.type === 'enemies'"
         >
-          {{ '生成时间轴' }}
-        </el-button>
+          <el-select
+            v-if="confirmEnabled"
+            v-model="fflogsQueryConfig.enemiesAbilityFilterSelected"
+            multiple
+            placeholder="选择需要导入的技能"
+            :fit-input-width="true"
+            class="ability-filter-select"
+            filterable
+          >
+            <el-option
+              v-for="rule in fflogsQueryConfig.abilityFilterCandidate"
+              :key="rule.actionName"
+              :value="rule.actionName"
+              class="ability-filter-option"
+            >
+              <span> {{ rule.actionName }} </span>
+            </el-option>
+          </el-select>
+          <el-button
+            type="success"
+            class="filter-confirm-btn"
+            :disabled="!confirmEnabled"
+            @click="handeleFFlogsQueryResultEnemiesListFilter"
+          >
+            {{ '生成敌人时间轴' }}
+          </el-button>
+        </template>
       </div>
     </el-card>
   </div>
@@ -630,7 +851,10 @@ onMounted(() => {
 .ability-filter-option {
   display: inline-flex;
   align-items: center;
-  padding: 5px 10px;
+  padding: auto 1px;
+  border: 1px dashed rgba(128, 128, 128, 0.3);
+  border-radius: 4px;
+  margin: 3px;
 }
 
 .ability-filter-icon {
