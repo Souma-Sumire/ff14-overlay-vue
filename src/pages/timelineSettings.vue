@@ -22,7 +22,7 @@ import {
   addOverlayListener,
   callOverlayHandler,
 } from '../../cactbot/resources/overlay_plugin_api'
-import recommendedTimeline from '../resources/recommendedTimeline.json'
+// import recommendedTimeline from '../resources/recommendedTimeline.json'
 import { ZoneInfo } from '@/resources/zoneInfo'
 
 const router = useRouter()
@@ -587,9 +587,9 @@ function showTimelineTableDialog() {
   dialogTableVisible.value = true
 }
 
-function loadRecommendedTimeline() {
-  saveImportedTimelines(recommendedTimeline as ITimeline[], false)
-}
+// function loadRecommendedTimeline() {
+//   saveImportedTimelines(recommendedTimeline as ITimeline[], false)
+// }
 
 function syncData() {
   sendBroadcastData('post', timelineStore.$state)
@@ -760,13 +760,13 @@ init()
               手动编写
             </el-button>
           </el-button-group>
-          <el-button
+          <!-- <el-button
             color="#543d6c"
             size="small"
             @click="loadRecommendedTimeline"
           >
             导入 SPJP M5S~M8S 时间轴
-          </el-button>
+          </el-button> -->
 
           <el-button-group>
             <el-button size="small" @click="importTimelineData">
@@ -802,6 +802,7 @@ init()
         width="80%"
         :before-close="() => (showFFlogsDialog = false)"
         :close-on-press-escape="false"
+        :close-on-click-modal="false"
       >
         <timeline-fflogs-import
           :filters="timelineFilters"
