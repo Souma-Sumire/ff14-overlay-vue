@@ -3,7 +3,10 @@
   "semi": false,
   "overrides": [
     {
-      "files": "src/resources/dd.ts",
+      "files": [
+        "src/resources/dd.ts",
+        "src/services/timelineSpecialRules.ts"
+      ],
       "options": {
         "printWidth": 1000
       }
