@@ -573,9 +573,8 @@ function handeleFFlogsQueryResultEnemiesListFilter() {
         const source = fflogsQueryConfig.enemies.find(
           (e) => e.id === item.sourceID
         )
-        const sourceType = source?.type === 'BOSS' ? 'BOSS' : '分身'
+        const sourceType = source?.type === "Boss" ? 'Boss' : '分身'
         const sourceName = source?.name ?? '未知'
-
         return `${time} "${actionName}" ${regexType} { id: "${hexId}" } #${sourceName}（${sourceType}）`
       })
       .join('\n')
