@@ -23,9 +23,15 @@ const handleChangeZone: EventMap['ChangeZone'] = async (e) => {
     state.islandId = 0
     return
   }
-  const dummy = (await callOverlayHandler({ call: 'getCombatants' }))
-    .combatants
-    .filter(v => v.BNpcNameID === 541 && v.ID)
+  const dummy = (await callOverlayHandler({ call: 'getCombatants' })).combatants
+    .filter(
+      (v) =>
+        v.Name &&
+        v.ID &&
+        v.ID.toString(16).startsWith('4') &&
+        ['木人', 'striking dummy'].includes(v.Name)
+    )
+    // .filter(v => v.BNpcNameID === 541 && v.ID)
     .sort((a, b) => a.ID! - b.ID!)[0]
   if (!dummy) {
     return
