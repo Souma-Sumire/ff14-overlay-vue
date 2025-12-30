@@ -572,8 +572,7 @@ async function saveStorage() {
         table: rawTable,
       }
     })
-  await db.clear()
-  await db.bulkSet(validData)
+  await db.replaceAll(validData)
 }
 
 async function loadStorage() {
