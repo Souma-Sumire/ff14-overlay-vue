@@ -58,6 +58,18 @@ const userContentSetting = useStorage(
 const dev = useDev()
 const partyLength = ref(1)
 
+// 迷你模式状态：首次使用时为 false（展开模式），之后默认为 true（迷你模式）
+const hasUsedBefore = localStorage.getItem('obs-has-used-before')
+const isMiniMode = useStorage(
+  'obs-mini-mode',
+  hasUsedBefore === null ? false : true
+)
+
+// 标记已经使用过
+if (hasUsedBefore === null) {
+  localStorage.setItem('obs-has-used-before', 'true')
+}
+
 const REGEXES = {
   inCombat: NetRegexes.inCombat(),
   countdown: NetRegexes.countdown(),
@@ -72,7 +84,7 @@ const DEFAULT_ENABLE_SETTINGS: Omit<Settings, 'type'> = {
   combatStart: true,
   combatEnd: true,
   wipe: true,
-  partyLength: 4,
+  partyLength: 1,
   customPath: '',
 }
 const DEFAULT_DISABLE_SETTINGS: Omit<Settings, 'type'> = {
@@ -444,339 +456,579 @@ onUnmounted(() => {
   removeOverlayListener('ChangeZone', handleChangeZone)
   removeOverlayListener('LogLine', handleLogLine)
 })
+
+// 获取当前区域类型对应的规则
+const currentRule = computed(() => {
+  return userContentSetting.value.find((item) => item.type === zoneType.value)
+})
+
+// 表格行类名方法 - 高亮当前类型
+const tableRowClassName = ({ row }: { row: Settings }) => {
+  return row.type === zoneType.value ? 'current-zone-row' : ''
+}
 </script>
 
 <template>
   <CommonActWrapper>
-    <el-alert
-      :title="t('obs2.size warning')"
-      type="warning"
-      center
-      show-icon
-      :closable="false"
-      class="window-size-warning"
-    />
-    <el-card class="obs-container">
-      <el-header>
-        <h1>{{ t('obs2.OBS Auto Record V2') }}</h1>
-        <div class="button-container">
-          <CommonThemeToggle storage-key="obs-2-theme" />
-          <CommonLanguageSwitcher />
+    <!-- 迷你模式 -->
+    <div v-if="isMiniMode" class="mini-mode">
+      <!-- 录像状态红点 -->
+      <div
+        class="recording-dot"
+        :class="{ 'is-recording': obs.status.recording }"
+      ></div>
+
+      <!-- 区域名称（滚动） + 区域类型（固定） -->
+      <div class="zone-info">
+        <div class="zone-name-wrapper">
+          <div class="zone-name">{{ zoneName || t('obs2.Unknown') }}</div>
         </div>
-      </el-header>
+        <div class="zone-type">{{ zoneType ? `（${t(`obs2.${zoneType}`)}）` : '' }}</div>
+      </div>
 
-      <el-main>
-        <!-- 连接表单 -->
-        <el-card v-if="!obs.status.connected" class="connection-card">
-          <template #header>
-            <div class="card-header">
-              <span>{{ t('obs2.Connect to OBS') }}</span>
-            </div>
-          </template>
-          <el-form label-position="top" class="connection-form">
-            <el-form-item :label="t('obs2.Port')">
-              <el-input
-                v-model="userConfig.host"
-                :placeholder="t('obs2.portPlaceholder')"
-              />
-            </el-form-item>
-            <el-form-item :label="t('obs2.Password')">
-              <el-input
-                v-model="userConfig.password"
-                :placeholder="t('obs2.passwordPlaceholder')"
-                type="password"
-              />
-            </el-form-item>
-            <el-form-item>
-              <el-button
-                type="primary"
-                class="connect-button"
-                :loading="obs.status.connecting"
-                :disabled="obs.status.connecting || !userConfig.host"
-                @click="obs.connect()"
-              >
-                {{
-                  obs.status.connecting
-                    ? t('obs2.Connecting')
-                    : t('obs2.Connect')
-                }}
-              </el-button>
-            </el-form-item>
-          </el-form>
-          <el-divider>{{ t('obs2.Instructions') }}</el-divider>
-          <el-alert
-            class="instruction-alert"
-            type="info"
-            :description="t('obs2.obsTutorial')"
-            :closable="false"
-            show-icon
-          />
-          <el-alert
-            class="instruction-alert"
-            type="info"
-            :description="t('obs2.inputTutorial')"
-            :closable="false"
-            show-icon
-          />
-          <el-alert
-            class="instruction-alert"
-            type="info"
-            :description="t('obs2.firewallTutorial')"
-            :closable="false"
-            show-icon
-          />
-        </el-card>
+      <!-- 规则状态 -->
+      <div class="rules-status">
+        <span
+          class="rule-item"
+          :class="{ active: currentRule?.enter }"
+          title="进入区域"
+          >进</span
+        >
+        <span
+          class="rule-item"
+          :class="{ active: currentRule?.countdown }"
+          title="倒计时"
+          >倒</span
+        >
+        <span
+          class="rule-item"
+          :class="{ active: currentRule?.combatStart }"
+          title="战斗开始"
+          >战</span
+        >
+        <span
+          class="rule-item"
+          :class="{ active: currentRule?.combatEnd }"
+          title="战斗结束"
+          >结</span
+        >
+        <span
+          class="rule-item"
+          :class="{ active: currentRule?.wipe }"
+          title="灭团"
+          >灭</span
+        >
+      </div>
 
-        <!-- 已连接状态 -->
-        <div v-else>
-          <el-alert
-            class="instruction-alert"
-            type="info"
-            :description="t('obs2.hideTutorial')"
-            :closable="false"
-            show-icon
-          />
-          <el-card v-if="dev" class="status-card">
+      <!-- 设置按钮 -->
+      <button class="settings-btn" @click="isMiniMode = false" title="展开详情">
+        ⚙
+      </button>
+    </div>
+
+    <!-- 详情模式 -->
+    <template v-else>
+      <el-alert
+        :title="t('obs2.size warning')"
+        type="warning"
+        center
+        show-icon
+        :closable="false"
+        class="window-size-warning"
+      />
+      <el-card class="obs-container">
+        <el-header>
+          <h1>{{ t('obs2.OBS Auto Record V2') }}</h1>
+          <div class="button-container">
+            <el-button size="small" @click="isMiniMode = true">
+              {{ t('obs2.Mini Mode') }}
+            </el-button>
+            <CommonThemeToggle storage-key="obs-2-theme" />
+            <CommonLanguageSwitcher />
+          </div>
+        </el-header>
+
+        <el-main>
+          <!-- 连接表单 -->
+          <el-card v-if="!obs.status.connected" class="connection-card">
             <template #header>
               <div class="card-header">
-                <span>{{ t('obs2.Connection Status') }}</span>
+                <span>{{ t('obs2.Connect to OBS') }}</span>
+              </div>
+            </template>
+            <el-form label-position="top" class="connection-form">
+              <el-form-item :label="t('obs2.Port')">
+                <el-input
+                  v-model="userConfig.host"
+                  :placeholder="t('obs2.portPlaceholder')"
+                />
+              </el-form-item>
+              <el-form-item :label="t('obs2.Password')">
+                <el-input
+                  v-model="userConfig.password"
+                  :placeholder="t('obs2.passwordPlaceholder')"
+                  type="password"
+                />
+              </el-form-item>
+              <el-form-item>
                 <el-button
-                  type="danger"
-                  size="small"
-                  class="disconnect-button"
-                  @click="obs.disconnect()"
+                  type="primary"
+                  class="connect-button"
+                  :loading="obs.status.connecting"
+                  :disabled="obs.status.connecting || !userConfig.host"
+                  @click="obs.connect()"
                 >
-                  {{ t('obs2.Disconnect') }}
+                  {{
+                    obs.status.connecting
+                      ? t('obs2.Connecting')
+                      : t('obs2.Connect')
+                  }}
+                </el-button>
+              </el-form-item>
+            </el-form>
+            <el-divider>{{ t('obs2.Instructions') }}</el-divider>
+            <el-alert
+              class="instruction-alert"
+              type="info"
+              :description="t('obs2.obsTutorial')"
+              :closable="false"
+              show-icon
+            />
+            <el-alert
+              class="instruction-alert"
+              type="info"
+              :description="t('obs2.inputTutorial')"
+              :closable="false"
+              show-icon
+            />
+            <el-alert
+              class="instruction-alert"
+              type="info"
+              :description="t('obs2.firewallTutorial')"
+              :closable="false"
+              show-icon
+            />
+          </el-card>
+
+          <!-- 已连接状态 -->
+          <div v-else>
+            <el-card v-if="dev" class="status-card">
+              <template #header>
+                <div class="card-header">
+                  <span>{{ t('obs2.Connection Status') }}</span>
+                  <el-button
+                    type="danger"
+                    size="small"
+                    class="disconnect-button"
+                    @click="obs.disconnect()"
+                  >
+                    {{ t('obs2.Disconnect') }}
+                  </el-button>
+                </div>
+              </template>
+              <div class="status-info">
+                <el-descriptions direction="vertical" :column="1" border>
+                  <el-descriptions-item :label="t('obs2.Recording')">
+                    {{ obs.status.recording ? t('obs2.Yes') : t('obs2.No') }}
+                  </el-descriptions-item>
+                  <el-descriptions-item :label="t('obs2.Output Path')">
+                    {{ obs.status.outputPath || t('obs2.None') }}
+                  </el-descriptions-item>
+                </el-descriptions>
+              </div>
+              <div class="button-container">
+                <el-button
+                  :disabled="!obs.status.connected || obs.status.recording"
+                  type="primary"
+                  @click="obs.startRecord()"
+                >
+                  {{ t('obs2.Start Record') }}
+                </el-button>
+                <el-button
+                  :disabled="!obs.status.connected || !obs.status.recording"
+                  type="danger"
+                  @click="obs.stopRecord()"
+                >
+                  {{ t('obs2.Stop Record') }}
+                </el-button>
+                <el-button
+                  :disabled="!obs.status.connected || !obs.status.recording"
+                  type="warning"
+                  @click="obs.splitRecord()"
+                >
+                  {{ t('obs2.Split Record') }}
+                </el-button>
+                <el-button
+                  type="primary"
+                  @click="obs.setProfileParameter('stop')"
+                >
+                  {{ t('obs2.Set Recording Name') }}
                 </el-button>
               </div>
-            </template>
-            <div class="status-info">
-              <el-descriptions direction="vertical" :column="1" border>
-                <el-descriptions-item :label="t('obs2.Recording')">
-                  {{ obs.status.recording ? t('obs2.Yes') : t('obs2.No') }}
-                </el-descriptions-item>
-                <el-descriptions-item :label="t('obs2.Output Path')">
-                  {{ obs.status.outputPath || t('obs2.None') }}
-                </el-descriptions-item>
-              </el-descriptions>
-            </div>
-            <div class="button-container">
-              <el-button
-                :disabled="!obs.status.connected || obs.status.recording"
-                type="primary"
-                @click="obs.startRecord()"
-              >
-                {{ t('obs2.Start Record') }}
-              </el-button>
-              <el-button
-                :disabled="!obs.status.connected || !obs.status.recording"
-                type="danger"
-                @click="obs.stopRecord()"
-              >
-                {{ t('obs2.Stop Record') }}
-              </el-button>
-              <el-button
-                :disabled="!obs.status.connected || !obs.status.recording"
-                type="warning"
-                @click="obs.splitRecord()"
-              >
-                {{ t('obs2.Split Record') }}
-              </el-button>
-              <el-button
-                type="primary"
-                @click="obs.setProfileParameter('stop')"
-              >
-                {{ t('obs2.Set Recording Name') }}
-              </el-button>
-            </div>
-          </el-card>
-          <el-card class="profile-card">
-            <template #header>
-              <div class="card-header">
-                <span>{{ t('obs2.Recording Profile') }}</span>
+            </el-card>
+            <el-card class="profile-card">
+              <template #header>
+                <div class="card-header">
+                  <span>{{ t('obs2.Recording Profile') }}</span>
+                </div>
+              </template>
+              <div class="profile-info">
+                <el-form label-position="top" class="content-form">
+                  <el-form-item :label="t('obs2.Record Default Path')">
+                    <el-input
+                      v-model="userConfig.path"
+                      :placeholder="t('obs2.recordPathPlaceholder')"
+                    />
+                    <el-alert
+                      :description="t('obs2.filePathExplanation')"
+                      type="info"
+                      show-icon
+                      :closable="false"
+                    />
+                  </el-form-item>
+
+                  <el-form-item :label="t('obs2.Record File Name')">
+                    <el-input
+                      v-model="userConfig.fileName"
+                      :placeholder="t('obs2.recordFileNamePlaceholder')"
+                    />
+                    <el-alert
+                      :description="t('obs2.fileNameExplanation')"
+                      type="info"
+                      show-icon
+                      :closable="false"
+                    />
+                  </el-form-item>
+
+                  <el-form-item>
+                    <div class="append-content-toggle">
+                      <span>{{ t('obs2.Append Content Name') }}</span>
+                      <el-switch v-model="userConfig.appendContentName" />
+                    </div>
+                  </el-form-item>
+                </el-form>
               </div>
-            </template>
-            <div class="profile-info">
-              <el-form label-position="top" class="content-form">
-                <el-form-item :label="t('obs2.Record Default Path')">
-                  <el-input
-                    v-model="userConfig.path"
-                    :placeholder="t('obs2.recordPathPlaceholder')"
-                  />
-                  <el-alert
-                    :description="t('obs2.filePathExplanation')"
-                    type="info"
-                    show-icon
-                    :closable="false"
-                  />
-                </el-form-item>
-
-                <el-form-item :label="t('obs2.Record File Name')">
-                  <el-input
-                    v-model="userConfig.fileName"
-                    :placeholder="t('obs2.recordFileNamePlaceholder')"
-                  />
-                  <el-alert
-                    :description="t('obs2.fileNameExplanation')"
-                    type="info"
-                    show-icon
-                    :closable="false"
-                  />
-                </el-form-item>
-
-                <el-form-item>
-                  <div class="append-content-toggle">
-                    <span>{{ t('obs2.Append Content Name') }}</span>
-                    <el-switch v-model="userConfig.appendContentName" />
-                  </div>
-                </el-form-item>
-              </el-form>
-            </div>
-          </el-card>
-          <el-alert
-            class="instruction-alert"
-            type="info"
-            :description="t('obs2.IMETutorial')"
-            :closable="false"
-            show-icon
-          />
-          <el-card class="table-card">
-            <template #header>
-              <div class="card-header">
-                <span>{{ t('obs2.User Content Settings') }}</span>
-              </div>
-            </template>
-            <el-table :data="userContentSetting" :border="true" stripe>
-              <el-table-column
-                prop="type"
-                :label="t('obs2.Type')"
-                width="110"
-                fixed
-                align="center"
+            </el-card>
+            <el-alert
+              class="instruction-alert"
+              type="info"
+              :description="t('obs2.IMETutorial')"
+              :closable="false"
+              show-icon
+            />
+            <el-card class="table-card">
+              <template #header>
+                <div class="card-header">
+                  <span>{{ t('obs2.User Content Settings') }}</span>
+                </div>
+              </template>
+              <el-table
+                :data="userContentSetting"
+                :border="true"
+                stripe
+                :row-class-name="tableRowClassName"
               >
-                <template #default="scope">
-                  <span class="current-type" v-if="zoneType === scope.row.type"
-                    >{{ t('obs2.Current') }}<br
-                  /></span>
-
-                  <span>{{ t(`obs2.${scope.row.type}`) }}</span>
-                </template>
-              </el-table-column>
-              <el-table-column :label="t('obs2.Start When')" align="center">
                 <el-table-column
-                  :label="t('obs2.When Party')"
+                  prop="type"
+                  :label="t('obs2.Type')"
+                  width="100"
+                  fixed
                   align="center"
-                  width="95"
                 >
                   <template #default="scope">
-                    <el-input-number
-                      v-model="scope.row.partyLength"
-                      :min="1"
-                      :max="48"
-                      style="width: 65px"
-                      size="small"
-                      controls-position="right"
+                    <span
+                      class="current-type"
+                      v-if="zoneType === scope.row.type"
+                      >{{ t('obs2.Current') }}<br
+                    /></span>
+
+                    <span>{{
+                      scope.row.type ? t(`obs2.${scope.row.type}`) : ''
+                    }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column :label="t('obs2.Start When')" align="center">
+                  <el-table-column :label="t('obs2.When Party')" align="center" width="70">
+                    <template #default="scope">
+                      <el-input-number
+                        v-model="scope.row.partyLength"
+                        :min="1"
+                        :max="48"
+                        style="width: 40px"
+                        size="small"
+                        :controls="false"
+                      />
+                    </template>
+                  </el-table-column>
+                  <el-table-column
+                    prop="enter"
+                    :label="t('obs2.Enter Zone')"
+                    align="center"
+                    width="50"
+                  >
+                    <template #default="scope">
+                      <el-checkbox v-model="scope.row.enter" />
+                    </template>
+                  </el-table-column>
+                  <el-table-column
+                    prop="countdown"
+                    :label="t('obs2.CountDown')"
+                    align="center"
+                    width="55"
+                  >
+                    <template #default="scope">
+                      <el-checkbox v-model="scope.row.countdown" />
+                    </template>
+                  </el-table-column>
+                  <el-table-column
+                    prop="combatStart"
+                    :label="t('obs2.CombatStart')"
+                    align="center"
+                    width="55"
+                  >
+                    <template #default="scope">
+                      <el-checkbox v-model="scope.row.combatStart" />
+                    </template>
+                  </el-table-column>
+                </el-table-column>
+                <el-table-column :label="t('obs2.End When')" align="center">
+                  <el-table-column
+                    prop="combatEnd"
+                    :label="t('obs2.CombatEnd')"
+                    align="center"
+                    width="55"
+                  >
+                    <template #default="scope">
+                      <el-checkbox v-model="scope.row.combatEnd" />
+                    </template>
+                  </el-table-column>
+                  <el-table-column
+                    prop="wipe"
+                    :label="t('obs2.Wipe')"
+                    align="center"
+                    width="50"
+                  >
+                    <template #default="scope">
+                      <el-checkbox v-model="scope.row.wipe" />
+                    </template>
+                  </el-table-column>
+                  <el-table-column
+                    prop="countdown"
+                    :label="t('obs2.CountDownCancel')"
+                    align="center"
+                    width="60"
+                  >
+                    <template #default="scope">
+                      <el-checkbox v-model="scope.row.countdownCancel" />
+                    </template>
+                  </el-table-column>
+                </el-table-column>
+                <el-table-column
+                  :label="t('obs2.Custom Path')"
+                  align="left"
+                  min-width="200"
+                >
+                  <template #default="scope">
+                    <el-input
+                      v-model="scope.row.customPath"
+                      style="width: 100%"
                     />
                   </template>
                 </el-table-column>
-                <el-table-column
-                  prop="enter"
-                  :label="t('obs2.Enter Zone')"
-                  align="center"
-                  width="55"
-                >
-                  <template #default="scope">
-                    <el-switch v-model="scope.row.enter" size="small" />
-                  </template>
-                </el-table-column>
-                <el-table-column
-                  prop="countdown"
-                  :label="t('obs2.CountDown')"
-                  align="center"
-                  width="55"
-                >
-                  <template #default="scope">
-                    <el-switch v-model="scope.row.countdown" size="small" />
-                  </template>
-                </el-table-column>
-                <el-table-column
-                  prop="combatStart"
-                  :label="t('obs2.CombatStart')"
-                  align="center"
-                  width="55"
-                >
-                  <template #default="scope">
-                    <el-switch v-model="scope.row.combatStart" size="small" />
-                  </template>
-                </el-table-column>
-              </el-table-column>
-              <el-table-column :label="t('obs2.End When')" align="center">
-                <el-table-column
-                  prop="combatEnd"
-                  :label="t('obs2.CombatEnd')"
-                  align="center"
-                  width="55"
-                >
-                  <template #default="scope">
-                    <el-switch v-model="scope.row.combatEnd" size="small" />
-                  </template>
-                </el-table-column>
-                <el-table-column
-                  prop="wipe"
-                  :label="t('obs2.Wipe')"
-                  align="center"
-                  width="55"
-                >
-                  <template #default="scope">
-                    <el-switch v-model="scope.row.wipe" size="small" />
-                  </template>
-                </el-table-column>
-                <el-table-column
-                  prop="countdown"
-                  :label="t('obs2.CountDownCancel')"
-                  align="center"
-                  width="55"
-                >
-                  <template #default="scope">
-                    <el-switch
-                      v-model="scope.row.countdownCancel"
-                      size="small"
-                    />
-                  </template>
-                </el-table-column>
-              </el-table-column>
-              <el-table-column
-                :label="t('obs2.Custom Path')"
-                align="left"
-                min-width="200"
-              >
-                <template #default="scope">
-                  <el-input
-                    v-model="scope.row.customPath"
-                    style="width: 100%"
-                  />
-                </template>
-              </el-table-column>
-            </el-table>
-          </el-card>
-          <el-alert
-            class="instruction-alert"
-            type="info"
-            :description="t('obs2.hideTutorial')"
-            :closable="false"
-            show-icon
-          />
-        </div>
-      </el-main>
-    </el-card>
+              </el-table>
+            </el-card>
+          </div>
+        </el-main>
+      </el-card>
+    </template>
   </CommonActWrapper>
 </template>
 
 <style scoped lang="scss">
+// 迷你模式
+.mini-mode {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  background: transparent;
+  height: auto;
+  min-height: 24px;
+  font-size: 13px;
+  user-select: none;
+  overflow: visible;
+  color: #fff;
+  text-shadow: -1px 0 2px #000, 0 1px 2px #000, 1px 0 2px #000;
+
+  // 横向居中
+  width: fit-content;
+  margin: 0 auto;
+}
+
+// 录像状态红点
+.recording-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #666;
+  flex-shrink: 0;
+  align-self: center;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.9), 0 0 3px rgba(0, 0, 0, 0.7);
+
+  &.is-recording {
+    background-color: #ff3333;
+    box-shadow: 0 0 4px rgba(255, 50, 50, 1), 0 0 6px rgba(255, 0, 0, 0.8),
+      0 0 2px rgba(0, 0, 0, 0.9);
+  }
+}
+
+// 区域信息容器
+.zone-info {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  overflow: visible;
+}
+
+// 区域名称包装器
+.zone-name-wrapper {
+  max-width: 140px;
+  overflow: visible;
+  position: relative;
+
+  &:hover .zone-name {
+    animation-play-state: running;
+  }
+}
+
+.zone-name {
+  white-space: nowrap;
+  display: inline-block;
+
+  animation: scroll-text 8s linear infinite;
+  animation-play-state: paused;
+
+  @keyframes scroll-text {
+    0%,
+    20% {
+      transform: translateX(0);
+    }
+    80%,
+    100% {
+      transform: translateX(calc(-100% + 140px));
+    }
+  }
+}
+
+// 区域类型
+.zone-type {
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-weight: bold;
+}
+
+// 规则状态容器
+.rules-status {
+  display: flex;
+  gap: 0;
+  flex-shrink: 0;
+  margin-left: 1px;
+}
+
+// 规则项
+.rule-item {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  text-align: center;
+  font-size: 12px;
+  cursor: default;
+
+  // 未开启
+  color: rgba(255, 255, 255, 0.35);
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.9), 1px 1px 1px rgba(0, 0, 0, 0.7);
+
+  // 激活状态
+  &.active {
+    color: #fff;
+    font-weight: 500;
+    text-shadow: 0 0 3px rgba(255, 235, 0, 1), 0 0 5px rgba(255, 210, 0, 1),
+      0 0 7px rgba(255, 180, 0, 0.8), 0 0 1px rgba(0, 0, 0, 1);
+  }
+}
+
+// 设置按钮
+.settings-btn {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  margin: 0 0 0 1px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(90, 90, 90, 0.7);
+  backdrop-filter: blur(4px);
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: rgba(110, 110, 110, 0.8);
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+// 详情模式样式
 header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+:deep(.el-main) {
+  padding: 0 !important;
+}
+
+:deep(.el-card) {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.obs-container {
+  margin: 0 !important;
+}
+
+.mini-mode-toggle-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  margin: 0;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(80, 80, 80, 0.6);
+  backdrop-filter: blur(4px);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+
+  &:active {
+    transform: scale(0.95);
+  }
 }
 
 .act-not-ready-card,
@@ -784,18 +1036,18 @@ header {
 .status-card,
 .table-card,
 .profile-card {
-  margin-bottom: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  margin-bottom: 6px;
+  border-radius: 6px;
+  box-shadow: 0 1px 8px 0 rgba(0, 0, 0, 0.1);
 }
 
 .connection-form {
-  padding: 5px;
+  padding: 0;
 }
 
 .connect-button {
   width: 100%;
-  margin-top: 10px;
+  margin-top: 5px;
 }
 
 .card-header {
@@ -806,27 +1058,27 @@ header {
 }
 
 .instruction-alert {
-  margin-top: 15px;
-  margin-bottom: 15px;
+  margin-top: 8px;
+  margin-bottom: 8px;
 }
 
 .status-info {
-  margin-bottom: 20px;
+  margin-bottom: 6px;
 }
 
 .status-card {
-  margin-top: 20px;
+  margin-top: 6px;
 }
 
 .button-container {
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .button-container .el-button:first-child {
-  margin-left: 12.5px;
+  margin-left: 8px;
 }
 
 .button-container .el-button {
@@ -847,11 +1099,120 @@ header {
 :deep(.el-table__body .el-input__inner) {
   transform: translateX(-4px);
 }
+
 :deep(table > thead > tr > th > div) {
   font-size: 12px;
-  padding: 0 4px !important;
-  line-height: 1.5 !important;
+  padding: 2px 4px !important;
+  line-height: 1.2 !important;
 }
+
+:deep(.el-table) {
+  font-size: 12px;
+}
+
+:deep(.el-table th.el-table__cell) {
+  padding: 2px 0;
+}
+
+:deep(.el-table td.el-table__cell) {
+  padding: 2px 0;
+}
+
+:deep(.el-table .cell) {
+  padding: 0 4px;
+  line-height: 1.3;
+}
+
+:deep(.el-checkbox) {
+  height: 18px;
+
+  .el-checkbox__inner {
+    width: 14px;
+    height: 14px;
+  }
+
+  .el-checkbox__label {
+    display: none;
+  }
+}
+
+:deep(.el-input-number) {
+  line-height: 1.2;
+}
+
+:deep(.el-input-number__inner) {
+  height: 26px;
+  line-height: 26px;
+}
+
+.table-card {
+  max-height: 450px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-card :deep(.el-card__body) {
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+:deep(.el-table__body-wrapper) {
+  overflow: auto !important;
+}
+
+// 美化滚动条
+.table-card,
+.table-card :deep(.el-card__body),
+:deep(.el-table__body-wrapper) {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(100, 100, 100, 0.6);
+    border-radius: 4px;
+
+    &:hover {
+      background: rgba(120, 120, 120, 0.8);
+    }
+
+    &:active {
+      background: rgba(140, 140, 140, 0.9);
+    }
+  }
+
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 100, 100, 0.6) rgba(0, 0, 0, 0.1);
+}
+
+:deep(.el-card__body) {
+  padding: 8px;
+}
+
+:deep(.el-card__header) {
+  padding: 6px 8px;
+}
+
+:deep(.el-form-item) {
+  margin-bottom: 8px;
+}
+
+:deep(.el-alert) {
+  padding: 4px 8px;
+}
+
+:deep(.el-divider) {
+  margin: 8px 0;
+}
+
 .window-size-warning {
   display: none;
   text-align: center;
@@ -880,5 +1241,55 @@ header {
 .current-type {
   color: red;
   font-weight: bold;
+}
+
+:deep(.current-zone-row) {
+  background-color: rgba(64, 158, 255, 0.08) !important;
+
+  &:hover > td {
+    background-color: rgba(64, 158, 255, 0.12) !important;
+  }
+}
+
+:deep(.el-input-number.is-without-controls) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  .el-input {
+    width: 100%;
+  }
+
+  .el-input__wrapper {
+    padding: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  .el-input__inner {
+    padding: 0 !important;
+    text-align: center !important;
+    width: 100% !important;
+    display: block !important;
+    appearance: none;
+    -moz-appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  }
+}
+
+:deep(.el-table .cell .el-checkbox) {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+:deep(.el-table--striped .el-table__body tr.el-table__row--striped td) {
+  background-color: rgba(0, 0, 0, 0.02);
 }
 </style>
