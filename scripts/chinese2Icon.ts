@@ -17,7 +17,7 @@ function readCsv(
       .pipe(iconv.decodeStream('utf8'))
       .pipe(csv({ headers: false }))
       .on('data', (row: string[]) => {
-        if (!['key', '#', 'offset', 'int32', '0'].includes(row[0]!)) {
+        if (!['key', '#', 'offset', 'int32', '0'].includes(row[0]!.toLocaleLowerCase())) {
           handler(row)
         }
       })

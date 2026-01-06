@@ -60,7 +60,7 @@ await readCSV(`${csvPaths.ja}ItemAction.csv`, (row) => {
 })
 
 await readCSV(`${csvPaths.cn}Item.csv`, (row) => {
-  if (!['key', 'offset', '#', 'int32'].includes(row[0]!)) {
+  if (!['key', 'offset', '#', 'int32'].includes(row[0]!.toLocaleLowerCase())) {
     item[row[0]!] = { ...(item[row[0]!] || {}), Name: row[1] }
   }
 })

@@ -16,7 +16,7 @@ await new Promise<void>((resolve, reject) => {
     .pipe(csv({ headers: false }))
     .on('data', (row: string[]) => {
       if (
-        ['key', '#', 'offset', 'int32', '0'].includes(row[0]!) ||
+        ['key', '#', 'offset', 'int32', '0'].includes(row[0]!.toLocaleLowerCase()) ||
         row[1] === ''
       ) {
         return

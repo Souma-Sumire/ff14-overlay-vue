@@ -48,7 +48,7 @@ const cnData = fileValues['contentFinderCondition_cn.csv']!
 
 jaData.forEach((row) => {
   // 跳过不必要的行
-  if (['key', '#', 'offset', 'int32'].includes(row[0]!)) {
+  if (['key', '#', 'offset', 'int32'].includes(row[0]!.toLocaleLowerCase())) {
     return
   }
 

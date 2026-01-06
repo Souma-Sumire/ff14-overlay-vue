@@ -37,7 +37,7 @@ const soumaData = fileValues['status.csv']!
 const jaData = fileValues['status_ja.csv']!
 
 soumaData.forEach((row) => {
-  if (['key', '#', 'offset', 'int32', '0'].includes(row[0]!)) {
+  if (['key', '#', 'offset', 'int32', '0'].includes(row[0]!.toLocaleLowerCase())) {
     return
   }
 
