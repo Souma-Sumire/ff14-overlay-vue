@@ -94,7 +94,6 @@
     "Enter Zone": "Enter Zone",
     "End When": "End Recording When",
     "Wipe": "Wipe",
-    "OBS Auto Record V2": "OBS Auto Record V2",
     "inputTutorial": "Cannot type? Click on ACT, then on this overlay to enable input.",
     "Port": "Port",
     "Password": "Password",
@@ -142,7 +141,14 @@
     "Current": "(Current)",
     "DeepDungeonExtras": "Deep Dungeon Extras",
     "Mini Mode": "Mini Mode",
-    "Unknown": "Unknown"
+    "Unknown": "Unknown",
+    "OBS Not Connected": "OBS Not Connected",
+    "connection failed": "Connection Failed",
+    "EnterShort": "En",
+    "CountdownShort": "CD",
+    "CombatStartShort": "St",
+    "CombatEndShort": "Ed",
+    "WipeShort": "Wp"
   },
   "startPages": {
     "header": {

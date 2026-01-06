@@ -58,17 +58,8 @@ const userContentSetting = useStorage(
 const dev = useDev()
 const partyLength = ref(1)
 
-// 迷你模式状态：首次使用时为 false（展开模式），之后默认为 true（迷你模式）
-const hasUsedBefore = localStorage.getItem('obs-has-used-before')
-const isMiniMode = useStorage(
-  'obs-mini-mode',
-  hasUsedBefore === null ? false : true
-)
-
-// 标记已经使用过
-if (hasUsedBefore === null) {
-  localStorage.setItem('obs-has-used-before', 'true')
-}
+const hasUsedBefore = useStorage('obs-has-used-before', false)
+const isMiniMode = ref(hasUsedBefore.value)
 
 const REGEXES = {
   inCombat: NetRegexes.inCombat(),
@@ -167,6 +158,7 @@ class Obs {
     outputActive: boolean
     outputPath: string
   }>
+  connectingPromise: Promise<void> | null = null
 
   handleConnectionError = () => {
     Log('OBS connection error')
@@ -211,50 +203,62 @@ class Obs {
     this.ws.on('RecordStateChanged', this.handleRecordStateChanged)
   }
 
-  async connect() {
-    Log('Connecting to OBS')
-    if (!userConfig.value.host) {
-      ElMessage({
-        type: 'error',
-        message: t('obs2.host required'),
-      })
-      return
-    }
-    if (this.status.connecting) {
-      return
-    }
-    this.status.connecting = true
-    return this.ws
-      .connect(
-        `ws://127.0.0.1:${userConfig.value.host}`,
-        userConfig.value.password
-      )
-      .then(() => {
-        Log('Connected to OBS')
-        this.ws.call('GetRecordStatus').then((v) => {
-          this.status.recording = v.outputActive
-          this.status.outputActive = v.outputActive
+  async connect(): Promise<void> {
+    if (this.status.connected) return Promise.resolve()
+    if (this.connectingPromise) return this.connectingPromise
+
+    this.connectingPromise = (async () => {
+      Log('Connecting to OBS')
+      if (!userConfig.value.host) {
+        ElMessage({
+          type: 'error',
+          message: t('obs2.host required'),
+          duration: 1000,
         })
+        return
+      }
+
+      this.status.connecting = true
+      try {
+        await this.ws.connect(
+          `ws://127.0.0.1:${userConfig.value.host}`,
+          userConfig.value.password
+        )
+        Log('Connected to OBS')
+        const recordStatus = await this.ws.call('GetRecordStatus')
+        this.status.recording = recordStatus.outputActive
+        this.status.outputActive = recordStatus.outputActive
         this.status.connected = true
+
         if (!userConfig.value.path) {
-          this.ws.call('GetRecordDirectory').then((v) => {
-            if (v.recordDirectory) {
-              userConfig.value.path = v.recordDirectory
-              userContentSetting.value.forEach((item) => {
-                if (item.customPath === '') {
-                  item.customPath = v.recordDirectory
-                }
-              })
-            }
-          })
+          const v = await this.ws.call('GetRecordDirectory')
+          if (v.recordDirectory) {
+            userConfig.value.path = v.recordDirectory
+            userContentSetting.value.forEach((item) => {
+              if (item.customPath === '') {
+                item.customPath = v.recordDirectory
+              }
+            })
+          }
         }
         if (!userConfig.value.fileName) {
           userConfig.value.fileName = '%CCYY-%MM-%DD %hh-%mm-%ss'
         }
-      })
-      .finally(() => {
+        hasUsedBefore.value = true
+      } catch (e) {
+        Log('OBS connection failed', e)
+        ElMessage({
+          type: 'error',
+          message: t('obs2.connection failed'),
+          duration: 1000,
+        })
+      } finally {
         this.status.connecting = false
-      })
+        this.connectingPromise = null
+      }
+    })()
+
+    return this.connectingPromise
   }
 
   disconnect() {
@@ -472,52 +476,64 @@ const tableRowClassName = ({ row }: { row: Settings }) => {
   <CommonActWrapper>
     <!-- 迷你模式 -->
     <div v-if="isMiniMode" class="mini-mode">
-      <!-- 录像状态红点 -->
-      <div
-        class="recording-dot"
-        :class="{ 'is-recording': obs.status.recording }"
-      ></div>
+      <template v-if="obs.status.connected">
+        <!-- 录像状态红点 -->
+        <div
+          class="recording-dot"
+          :class="{ 'is-recording': obs.status.recording }"
+        ></div>
 
-      <!-- 区域名称（滚动） + 区域类型（固定） -->
-      <div class="zone-info">
-        <div class="zone-name-wrapper">
-          <div class="zone-name">{{ zoneName || t('obs2.Unknown') }}</div>
+        <!-- 区域名称 + 区域类型 -->
+        <div class="zone-info">
+          <div class="zone-name-wrapper">
+            <div class="zone-name">{{ zoneName || t('obs2.Unknown') }}</div>
+          </div>
+          <div class="zone-type">
+            {{ zoneType ? `（${t(`obs2.${zoneType}`)}）` : '' }}
+          </div>
         </div>
-        <div class="zone-type">{{ zoneType ? `（${t(`obs2.${zoneType}`)}）` : '' }}</div>
-      </div>
 
-      <!-- 规则状态 -->
-      <div class="rules-status">
-        <span
-          class="rule-item"
-          :class="{ active: currentRule?.enter }"
-          title="进入区域"
-          >进</span
-        >
-        <span
-          class="rule-item"
-          :class="{ active: currentRule?.countdown }"
-          title="倒计时"
-          >倒</span
-        >
-        <span
-          class="rule-item"
-          :class="{ active: currentRule?.combatStart }"
-          title="战斗开始"
-          >战</span
-        >
-        <span
-          class="rule-item"
-          :class="{ active: currentRule?.combatEnd }"
-          title="战斗结束"
-          >结</span
-        >
-        <span
-          class="rule-item"
-          :class="{ active: currentRule?.wipe }"
-          title="灭团"
-          >灭</span
-        >
+        <!-- 规则状态 -->
+        <div class="rules-status">
+          <span
+            class="rule-item"
+            :class="{ active: currentRule?.enter }"
+            :title="t('obs2.Enter Zone')"
+          >
+            {{ t('obs2.EnterShort') }}
+          </span>
+          <span
+            class="rule-item"
+            :class="{ active: currentRule?.countdown }"
+            :title="t('obs2.CountDown')"
+          >
+            {{ t('obs2.CountdownShort') }}
+          </span>
+          <span
+            class="rule-item"
+            :class="{ active: currentRule?.combatStart }"
+            :title="t('obs2.CombatStart')"
+          >
+            {{ t('obs2.CombatStartShort') }}
+          </span>
+          <span
+            class="rule-item"
+            :class="{ active: currentRule?.combatEnd }"
+            :title="t('obs2.CombatEnd')"
+          >
+            {{ t('obs2.CombatEndShort') }}
+          </span>
+          <span
+            class="rule-item"
+            :class="{ active: currentRule?.wipe }"
+            :title="t('obs2.Wipe')"
+          >
+            {{ t('obs2.WipeShort') }}
+          </span>
+        </div>
+      </template>
+      <div v-else class="obs-status-text">
+        {{ t('obs2.OBS Not Connected') }}
       </div>
 
       <!-- 设置按钮 -->
@@ -528,6 +544,33 @@ const tableRowClassName = ({ row }: { row: Settings }) => {
 
     <!-- 详情模式 -->
     <template v-else>
+      <div class="mode-switch-container">
+        <!-- 占位符：镜像迷你模式的内容以实现按钮对齐 -->
+        <div class="mini-mode-placeholder" style="visibility: hidden; pointer-events: none;">
+          <template v-if="obs.status.connected">
+            <div class="recording-dot"></div>
+            <div class="zone-info">
+              <div class="zone-name-wrapper"><div class="zone-name">{{ zoneName || t('obs2.Unknown') }}</div></div>
+              <div class="zone-type">{{ zoneType ? `（${t(`obs2.${zoneType}`)}）` : '' }}</div>
+            </div>
+            <div class="rules-status">
+              <span class="rule-item">{{ t('obs2.EnterShort') }}</span>
+              <span class="rule-item">{{ t('obs2.CountdownShort') }}</span>
+              <span class="rule-item">{{ t('obs2.CombatStartShort') }}</span>
+              <span class="rule-item">{{ t('obs2.CombatEndShort') }}</span>
+              <span class="rule-item">{{ t('obs2.WipeShort') }}</span>
+            </div>
+          </template>
+          <div v-else class="obs-status-text">
+            {{ t('obs2.OBS Not Connected') }}
+          </div>
+        </div>
+
+        <el-button size="small" @click="isMiniMode = true" class="mini-toggle-btn">
+          {{ t('obs2.Mini Mode') }}
+        </el-button>
+      </div>
+
       <el-alert
         :title="t('obs2.size warning')"
         type="warning"
@@ -537,23 +580,16 @@ const tableRowClassName = ({ row }: { row: Settings }) => {
         class="window-size-warning"
       />
       <el-card class="obs-container">
-        <el-header>
-          <h1>{{ t('obs2.OBS Auto Record V2') }}</h1>
-          <div class="button-container">
-            <el-button size="small" @click="isMiniMode = true">
-              {{ t('obs2.Mini Mode') }}
-            </el-button>
-            <CommonThemeToggle storage-key="obs-2-theme" />
-            <CommonLanguageSwitcher />
-          </div>
-        </el-header>
-
         <el-main>
           <!-- 连接表单 -->
           <el-card v-if="!obs.status.connected" class="connection-card">
             <template #header>
               <div class="card-header">
                 <span>{{ t('obs2.Connect to OBS') }}</span>
+                <div class="header-actions">
+                  <CommonThemeToggle storage-key="obs-2-theme" />
+                  <CommonLanguageSwitcher />
+                </div>
               </div>
             </template>
             <el-form label-position="top" class="connection-form">
@@ -670,6 +706,10 @@ const tableRowClassName = ({ row }: { row: Settings }) => {
               <template #header>
                 <div class="card-header">
                   <span>{{ t('obs2.Recording Profile') }}</span>
+                  <div class="header-actions">
+                    <CommonThemeToggle storage-key="obs-2-theme" />
+                    <CommonLanguageSwitcher />
+                  </div>
                 </div>
               </template>
               <div class="profile-info">
@@ -720,6 +760,10 @@ const tableRowClassName = ({ row }: { row: Settings }) => {
               <template #header>
                 <div class="card-header">
                   <span>{{ t('obs2.User Content Settings') }}</span>
+                  <div class="header-actions">
+                    <CommonThemeToggle storage-key="obs-2-theme" />
+                    <CommonLanguageSwitcher />
+                  </div>
                 </div>
               </template>
               <el-table
@@ -748,7 +792,11 @@ const tableRowClassName = ({ row }: { row: Settings }) => {
                   </template>
                 </el-table-column>
                 <el-table-column :label="t('obs2.Start When')" align="center">
-                  <el-table-column :label="t('obs2.When Party')" align="center" width="70">
+                  <el-table-column
+                    :label="t('obs2.When Party')"
+                    align="center"
+                    width="70"
+                  >
                     <template #default="scope">
                       <el-input-number
                         v-model="scope.row.partyLength"
@@ -846,7 +894,8 @@ const tableRowClassName = ({ row }: { row: Settings }) => {
 
 <style scoped lang="scss">
 // 迷你模式
-.mini-mode {
+.mini-mode,
+.mini-mode-placeholder {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -862,7 +911,15 @@ const tableRowClassName = ({ row }: { row: Settings }) => {
 
   // 横向居中
   width: fit-content;
+}
+
+.mini-mode {
   margin: 0 auto;
+}
+
+.mini-mode-placeholder {
+  // 占位符不需要 margin auto，它靠 container 居中
+  padding-right: 0; // 移除右侧 padding 以抵消设置按钮的紧凑感
 }
 
 // 录像状态红点
@@ -959,6 +1016,16 @@ const tableRowClassName = ({ row }: { row: Settings }) => {
   }
 }
 
+// OBS 状态文字
+.obs-status-text {
+  font-size: 12px;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
 // 设置按钮
 .settings-btn {
   width: 22px;
@@ -988,11 +1055,13 @@ const tableRowClassName = ({ row }: { row: Settings }) => {
   }
 }
 
-// 详情模式样式
-header {
+// 详情模式控制条
+.mode-switch-container {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 :deep(.el-main) {
@@ -1008,26 +1077,33 @@ header {
   margin: 0 !important;
 }
 
-.mini-mode-toggle-btn {
-  width: 24px;
+.mini-toggle-btn {
+  padding: 0 12px;
   height: 24px;
-  padding: 0;
-  margin: 0;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(80, 80, 80, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(80, 80, 80, 0.7);
   backdrop-filter: blur(4px);
   border-radius: 4px;
   cursor: pointer;
-  font-size: 16px;
-  line-height: 1;
+  font-size: 13px;
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  color: #fff;
+  transition: all 0.2s ease;
+  
+  // 添加阴影
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+
+  &:hover {
+    background: rgba(100, 100, 100, 0.8);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+  }
 
   &:active {
     transform: scale(0.95);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   }
 }
 
@@ -1055,6 +1131,13 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex: 1;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .instruction-alert {

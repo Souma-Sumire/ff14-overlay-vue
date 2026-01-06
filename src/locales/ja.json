@@ -94,7 +94,6 @@
     "Enter Zone": "ゾーン進入時",
     "End When": "録画終了条件",
     "Wipe": "ワイプ時",
-    "OBS Auto Record V2": "OBS 自動録画 2",
     "inputTutorial": "文字入力ができない場合：ACTをクリックし、次にこのオーバーレイをクリックすると入力可能になります。",
     "Port": "ポート",
     "Password": "パスワード",
@@ -142,7 +141,14 @@
     "Current": "(現在)",
     "DeepDungeonExtras": "ディープダンジョン外伝",
     "Mini Mode": "ミニモード",
-    "Unknown": "未知"
+    "Unknown": "未知",
+    "OBS Not Connected": "OBS 未接続",
+    "connection failed": "接続失敗",
+    "EnterShort": "入",
+    "CountdownShort": "数",
+    "CombatStartShort": "始",
+    "CombatEndShort": "終",
+    "WipeShort": "全"
   },
   "startPages": {
     "header": {

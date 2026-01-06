@@ -94,7 +94,6 @@
     "Enter Zone": "進入區域",
     "End When": "結束錄製條件",
     "Wipe": "團滅",
-    "OBS Auto Record V2": "OBS 自動錄製 2",
     "inputTutorial": "打不了字？先點擊 ACT，再點擊本懸浮窗，即可正常輸入",
     "IMETutorial": "調不出中文輸入法？在外面打好字，複製貼上進來。",
     "Port": "埠",
@@ -142,7 +141,14 @@
     "Current": "（當前）",
     "DeepDungeonExtras": "妖宮/詩想",
     "Mini Mode": "迷你模式",
-    "Unknown": "未知"
+    "Unknown": "未知",
+    "OBS Not Connected": "OBS 未連線",
+    "connection failed": "連線失敗",
+    "EnterShort": "進",
+    "CountdownShort": "倒",
+    "CombatStartShort": "戰",
+    "CombatEndShort": "結",
+    "WipeShort": "滅"
   },
   "startPages": {
     "header": {
