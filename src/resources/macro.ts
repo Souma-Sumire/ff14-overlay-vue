@@ -4364,6 +4364,15 @@ fastPP(`{"Name":"Four Seasons","MapID":1062,"A":{"X":83.25,"Y":0.0,"Z":92.0,"ID"
 fastPP(
   `{"Name":"自用","MapID":1063,"A":{"X":-618,"Z":-314,"Y":0,"Active":true},"B":{"X":-610,"Z":-302,"Y":0,"Active":true},"C":{"X":-590,"Z":-293,"Y":0,"Active":true},"D":{"X":-581,"Z":-286,"Y":0,"Active":true},"One":{"X":-606,"Z":-314,"Y":0,"Active":true},"Two":{"X":-594,"Z":-314,"Y":0,"Active":true},"Three":{"X":-594,"Z":-286,"Y":0,"Active":true},"Four":{"X":-606,"Z":-286,"Y":0,"Active":true}}`
 )
+// M9S
+fastPP(`{"Name":"M9S","MapID":1069,"A":{"X":100,"Z":90,"Y":0,"Active":true},"B":{"X":110,"Z":100,"Y":0,"Active":true},"C":{"X":100,"Z":110,"Y":0,"Active":true},"D":{"X":90,"Z":100,"Y":0,"Active":true},"One":{"X":90,"Z":90,"Y":0,"Active":true},"Two":{"X":110,"Z":90,"Y":0,"Active":true},"Three":{"X":110,"Z":110,"Y":0,"Active":true},"Four":{"X":90,"Z":110,"Y":0,"Active":true}}`)
+// M10S
+fastPP(`{"Name":"M10S","MapID":1071,"A":{"X":100,"Z":87,"Y":0,"Active":true},"B":{"X":113,"Z":100,"Y":0,"Active":true},"C":{"X":100,"Z":113,"Y":0,"Active":true},"D":{"X":87,"Z":100,"Y":0,"Active":true},"One":{"X":87,"Z":87,"Y":0,"Active":true},"Two":{"X":113,"Z":87,"Y":0,"Active":true},"Three":{"X":113,"Z":113,"Y":0,"Active":true},"Four":{"X":87,"Z":113,"Y":0,"Active":true}}`)
+// M11S
+fastPP(`{"Name":"M11S","MapID":1073,"A":{"X":100,"Z":87,"Y":0,"Active":true},"B":{"X":113,"Z":100,"Y":0,"Active":true},"C":{"X":100,"Z":113,"Y":0,"Active":true},"D":{"X":87,"Z":100,"Y":0,"Active":true},"One":{"X":87,"Z":87,"Y":0,"Active":true},"Two":{"X":113,"Z":87,"Y":0,"Active":true},"Three":{"X":113,"Z":113,"Y":0,"Active":true},"Four":{"X":87,"Z":113,"Y":0,"Active":true}}`)
+// M12S
+fastPP(`{"Name":"M12S","MapID":1075,"A":{"X":100,"Y":0,"Z":92,"ID":0,"Active":true},"B":{"X":108,"Y":0,"Z":100,"ID":1,"Active":true},"C":{"X":100,"Y":0,"Z":108,"ID":2,"Active":true},"D":{"X":92,"Y":0,"Z":100,"ID":3,"Active":true},"One":{"X":92,"Y":0,"Z":92,"ID":4,"Active":true},"Two":{"X":108,"Y":0,"Z":92,"ID":5,"Active":true},"Three":{"X":108,"Y":0,"Z":108,"ID":6,"Active":true},"Four":{"X":92,"Y":0,"Z":108,"ID":7,"Active":true}}`)
+
 
 function getSource(title: string, href: string): string {
   return `<a href='${href}'target='_blank'>${title}</a>`

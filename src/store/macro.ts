@@ -96,10 +96,10 @@ const useMacroStore = defineStore('macro', {
           text: { zhCn: '诗想', en: 'TFV', ja: '詩想討滅' },
           value: '1311',
         },
-        { text: { zhCn: 'M5S' }, value: '1257' },
-        { text: { zhCn: 'M6S' }, value: '1259' },
-        { text: { zhCn: 'M7S' }, value: '1261' },
-        { text: { zhCn: 'M8S' }, value: '1263' },
+        { text: { zhCn: 'M9S' }, value: '1321' },
+        { text: { zhCn: 'M10S' }, value: '1323' },
+        { text: { zhCn: 'M11S' }, value: '1325' },
+        { text: { zhCn: 'M12S' }, value: '1327' },
         { text: { zhCn: '绝伊甸', en: 'FRU', ja: '絶エデン' }, value: '1238' },
       ] as {
         text: Record<Lang, string>
