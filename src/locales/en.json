@@ -131,12 +131,18 @@
     "firewallTutorial": "If the password is correct but the connection fails, please check Windows Defender Firewall.",
     "SocietyQuests": "Tribal Quests",
     "OccultCrescent": "The Occult Crescent",
-    "When Party": "Party Size >=",
+    "When Party": "Party≥",
     "CountDownCancel": "Countdown Canceled",
     "Custom Path": "Custom Path by Category (Directory must exist)",
     "host required": "Port not entered",
     "size warning": "Please enlarge the window to at least 600px * 300px",
-    "Append Content Name": "Append Current Content Name to File Name"
+    "Append Content Name": "Append Current Content Name to File Name",
+    "IMETutorial": "Cannot use IME? Type outside and copy-paste it here.",
+    "SaveTheQueen": "Save the Queen (Bozja)",
+    "Current": "(Current)",
+    "DeepDungeonExtras": "Deep Dungeon Extras",
+    "Mini Mode": "Mini Mode",
+    "Unknown": "Unknown"
   },
   "startPages": {
     "header": {

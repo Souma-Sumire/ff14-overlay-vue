@@ -131,12 +131,18 @@
     "firewallTutorial": "パスワードが正しいのに接続できない場合は、Windows Defender ファイアウォールを確認してください。",
     "SocietyQuests": "友好部族クエスト",
     "OccultCrescent": "蜃気楼の島",
-    "When Party": "パーティ人数>=",
+    "When Party": "人数≥",
     "CountDownCancel": "カウントダウン中止時",
     "Custom Path": "カテゴリ別のカスタムパス。ディレクトリは存在する必要があります。",
     "host required": "ポートが入力されていません",
     "size warning": "ウィンドウを600px * 300px以上に広げてください",
-    "Append Content Name": "ファイル名に現在のコンテンツ名を追記"
+    "Append Content Name": "ファイル名に現在のコンテンツ名を追記",
+    "IMETutorial": "文字入力ができない場合：外部で入力してコピー＆ペーストしてください。",
+    "SaveTheQueen": "セイブ・ザ・クイーン (ボズヤ)",
+    "Current": "(現在)",
+    "DeepDungeonExtras": "ディープダンジョン外伝",
+    "Mini Mode": "ミニモード",
+    "Unknown": "未知"
   },
   "startPages": {
     "header": {

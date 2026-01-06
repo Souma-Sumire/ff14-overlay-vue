@@ -132,7 +132,7 @@
     "firewallTutorial": "若確定密碼正確，卻始終連線失敗，請檢查 Windows Defender 防火牆。",
     "SocietyQuests": "友好部族任務",
     "OccultCrescent": "蜃景幻界",
-    "When Party": "小隊人數>=",
+    "When Party": "人數≥",
     "CountDownCancel": "倒數計時取消",
     "Custom Path": "類別自定義儲存路徑（須保證目錄存在，若留空則取預設路徑）",
     "host required": "未填寫埠號",
@@ -140,7 +140,9 @@
     "Append Content Name": "將當前副本名稱新增到檔名後",
     "SaveTheQueen": "博茲雅",
     "Current": "（當前）",
-    "DeepDungeonExtras": "妖宮/詩想"
+    "DeepDungeonExtras": "妖宮/詩想",
+    "Mini Mode": "迷你模式",
+    "Unknown": "未知"
   },
   "startPages": {
     "header": {
