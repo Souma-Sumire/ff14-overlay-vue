@@ -39,8 +39,12 @@ const mapSrc = (() => {
 const markMap = ['A', 'B', 'C', 'D', '1', '2', '3', '4']
 
 function getPix(v: { X: number; Z: number }) {
-  const id = macroStore.selectZone!
-  const zone = ZoneInfo[Number(id)]!
+  const id = macroStore.selectZone
+  const zone = ZoneInfo[Number(id)] ?? {
+    sizeFactor: 100,
+    offsetX: 0,
+    offsetY: 0,
+  }
   const sizeFactor = zone.sizeFactor
   const offsetX = zone.offsetX
   const offsetY = zone.offsetY
