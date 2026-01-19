@@ -15,10 +15,16 @@ import { useMacroStore } from '@/store/macro'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import 'github-markdown-css/github-markdown-light.css'
 import ZoneSelecter from '@/components/zoneSelecter.vue'
-import { getLocaleMessage, getCactbotLocaleMessage } from '@/composables/useLang'
+import {
+  getLocaleMessage,
+  getCactbotLocaleMessage,
+} from '@/composables/useLang'
 import type { WayMark, UISaveData } from '@/types/uisave'
 import { parseUISave, MARKER_MAP } from '@/utils/uisaveParser'
-import { getMapIDByTerritoryType, getTerritoryTypeByMapID } from '@/resources/contentFinderCondition'
+import {
+  getMapIDByTerritoryType,
+  getTerritoryTypeByMapID,
+} from '@/resources/contentFinderCondition'
 import { ZoneInfo } from '@/resources/zoneInfo'
 import WaymarkDisplay from '@/components/uisaveEditor/WaymarkDisplay.vue'
 import { View } from '@element-plus/icons-vue'
@@ -59,7 +65,7 @@ const displayedWaymarks = computed(() => {
   let marks = uisaveData.value.wayMarks
     .map((mark, index) => ({ mark, index }))
     .filter((m) => m.mark.regionID !== 0)
-  
+
   if (onlyCurrentZone.value) {
     marks = marks.filter((m) => m.mark.regionID === currentMapID.value)
   }
@@ -73,12 +79,7 @@ async function onFileChange(e: Event) {
   try {
     uisaveData.value = await parseUISave(await file.arrayBuffer())
     importDialogVisible.value = true
-    
-    // Auto-check only if current zone has data
-    const hasCurrentZoneData = uisaveData.value.wayMarks.some(
-      (m) => m.regionID !== 0 && m.regionID === currentMapID.value
-    )
-    onlyCurrentZone.value = hasCurrentZoneData
+    onlyCurrentZone.value = false
   } catch (err) {
     ElMessage.error('Parse failed: ' + err)
   } finally {
@@ -104,7 +105,7 @@ function doImportUISAVE() {
         }
       }
     })
-    
+
     // Add new place macro
     macroStore.newPlace({
       ...place,
@@ -114,7 +115,9 @@ function doImportUISAVE() {
     })
   })
   importDialogVisible.value = false
-  ElMessage.success(t('zoneMacro.importSelected', [selectedWaymarks.value.length]))
+  ElMessage.success(
+    t('zoneMacro.importSelected', [selectedWaymarks.value.length]),
+  )
 }
 
 function getZoneName(mapID: number) {
@@ -126,7 +129,9 @@ function getZoneName(mapID: number) {
 }
 
 function sortByMapName(a: { mark: WayMark }, b: { mark: WayMark }) {
-  return getZoneName(a.mark.regionID).localeCompare(getZoneName(b.mark.regionID))
+  return getZoneName(a.mark.regionID).localeCompare(
+    getZoneName(b.mark.regionID),
+  )
 }
 
 onMounted(() => {
@@ -149,88 +154,82 @@ onMounted(() => {
         ...userData,
       ]
     },
-    { immediate: true }
+    { immediate: true },
   )
 })
 </script>
 
 <template>
   <el-container v-show="macroStore.show" class="elcontainer">
-    <el-header flex="~ wrap" height="auto" class="elheader">
-      <el-space>
-        <el-button
-          type="primary"
-          size="small"
-          :icon="Position"
-          @click="macroStore.positioning()"
-        />
+    <el-header height="auto" class="elheader">
+      <div class="header-row">
+        <el-tooltip content="定位到当前区域" placement="bottom">
+          <el-button
+            type="primary"
+            size="small"
+            :icon="Position"
+            circle
+            @click="macroStore.positioning()"
+          />
+        </el-tooltip>
         <ZoneSelecter v-model:selectZone="macroStore.selectZone" />
-      </el-space>
 
-      <el-space>
-        <el-button-group flex="~ ! wrap">
+        <div class="fast-entrance-group">
           <el-button
             v-for="(entrance, index) in fastEntrance"
             :key="index"
-            bg
             plain
-            color="rgb(24,34,44)"
             size="small"
             @click="macroStore.selectZone = entrance.value"
           >
             {{ entrance.text }}
           </el-button>
-        </el-button-group>
-      </el-space>
-      <el-space>
-        <div class="menu">
-          <el-button type="success" size="small" @click="macroStore.newMacro()">
-            {{ $t('zoneMacro.newMacro') }}
-          </el-button>
-          <el-button
-            type="success"
-            size="small"
-            color="#3375b9"
-            @click="macroStore.newPlace()"
-          >
-            {{ $t('zoneMacro.newWaymark') }}
-          </el-button>
-          <el-button
-            size="small"
-            color="#BA5783"
-            @click="macroStore.importPPJSON()"
-          >
-            {{ $t('zoneMacro.importPP') }}
-          </el-button>
-          <el-button
-            size="small"
-            color="#9D5C63"
-            @click="fileInput?.click()"
-          >
-            {{ $t('zoneMacro.importUISAVE') }}
-          </el-button>
-          <el-button
-            type="warning"
-            size="small"
-            @click="macroStore.resetZone()"
-          >
-            {{ $t('zoneMacro.resetZone') }}
-          </el-button>
-          <el-button
-            type="danger"
-            size="small"
-            @click="macroStore.resetAllData()"
-          >
-            {{ $t('zoneMacro.resetAll') }}
-          </el-button>
-          <CommonThemeToggle storage-key="zone-macro-theme" m-l-2 m-r-2 />
-          <CommonLanguageSwitcher m-r-2 />
         </div>
-      </el-space>
+      </div>
+
+      <div class="header-row">
+        <el-button type="success" size="small" @click="macroStore.newMacro()">
+          {{ $t('zoneMacro.newMacro') }}
+        </el-button>
+        <el-button type="primary" size="small" @click="macroStore.newPlace()">
+          {{ $t('zoneMacro.newWaymark') }}
+        </el-button>
+
+        <el-divider direction="vertical" class="toolbar-divider" />
+
+        <el-button
+          size="small"
+          color="#BA5783"
+          @click="macroStore.importPPJSON()"
+        >
+          {{ $t('zoneMacro.importPP') }}
+        </el-button>
+        <el-button size="small" color="#9D5C63" @click="fileInput?.click()">
+          {{ $t('zoneMacro.importUISAVE') }}
+        </el-button>
+
+        <el-divider direction="vertical" class="toolbar-divider" />
+
+        <el-button type="warning" size="small" @click="macroStore.resetZone()">
+          {{ $t('zoneMacro.resetZone') }}
+        </el-button>
+        <el-button
+          type="danger"
+          size="small"
+          @click="macroStore.resetAllData()"
+        >
+          {{ $t('zoneMacro.resetAll') }}
+        </el-button>
+
+        <el-divider direction="vertical" class="toolbar-divider" />
+
+        <CommonThemeToggle storage-key="zone-macro-theme" />
+        <CommonLanguageSwitcher />
+      </div>
     </el-header>
 
-    <el-main style="padding: 0.25rem; margin: 0">
-      <el-space wrap alignment="flex-start" style="font-size: 12px">
+    <el-main class="main-content">
+      <el-space wrap alignment="flex-start" class="macro-grid">
         <el-empty
           w-100
           :image-size="150"
@@ -267,7 +266,7 @@ onMounted(() => {
           />
 
           <div v-if="'Text' in macro">
-            <article v-if="!macro.Editable">
+            <article v-if="!macro.Editable" class="macro-content">
               <div
                 v-for="(m, o) in macro.Text?.split('\n')"
                 :key="o"
@@ -354,7 +353,7 @@ onMounted(() => {
                       'Two',
                       'Three',
                       'Four',
-                    ].includes(v[0])
+                    ].includes(v[0]),
                   )
                 "
                 border
@@ -510,7 +509,7 @@ onMounted(() => {
         </el-card>
       </el-space>
     </el-main>
-    
+
     <input
       ref="fileInput"
       type="file"
@@ -526,10 +525,13 @@ onMounted(() => {
     >
       <div style="margin-bottom: 10px">
         <el-checkbox v-model="onlyCurrentZone">{{
-          $t('zoneMacro.onlyCurrentZone', [currentMapID, getZoneName(currentMapID)])
+          $t('zoneMacro.onlyCurrentZone', [
+            currentMapID,
+            getZoneName(currentMapID),
+          ])
         }}</el-checkbox>
       </div>
-      
+
       <el-table
         :data="displayedWaymarks"
         style="width: 100%"
@@ -569,7 +571,11 @@ onMounted(() => {
             {{ getZoneName(row.mark.regionID) }}
           </template>
         </el-table-column>
-        <el-table-column :label="$t('zoneMacro.preview')" width="70" align="center">
+        <el-table-column
+          :label="$t('zoneMacro.preview')"
+          width="70"
+          align="center"
+        >
           <template #default="{ row }">
             <el-popover placement="left" :width="280" trigger="hover">
               <template #reference>
@@ -593,8 +599,14 @@ onMounted(() => {
 
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="importDialogVisible = false">{{ $t('zoneMacro.cancel') }}</el-button>
-          <el-button type="primary" @click="doImportUISAVE" :disabled="selectedWaymarks.length === 0">
+          <el-button @click="importDialogVisible = false">{{
+            $t('zoneMacro.cancel')
+          }}</el-button>
+          <el-button
+            type="primary"
+            @click="doImportUISAVE"
+            :disabled="selectedWaymarks.length === 0"
+          >
             {{ $t('zoneMacro.importSelected', [selectedWaymarks.length]) }}
           </el-button>
         </div>
@@ -606,20 +618,44 @@ onMounted(() => {
 <style lang="scss">
 @import '@/css/ffxiv-axis-font-icons.css';
 
+$main-font: 'FFXIV', 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
+  'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+
 * {
-  font-family: 'FFXIV', 'Helvetica Neue', Helvetica, 'PingFang SC',
-    'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+  font-family: $main-font;
   pointer-events: initial;
 }
 
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+
+  .dark & {
+    background: rgba(0, 0, 0, 0.3);
+  }
 }
 
 ::-webkit-scrollbar-thumb {
-  height: 30px;
-  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .dark & {
+    background: rgba(255, 255, 255, 0.15);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+  }
 }
 
 html,
@@ -628,129 +664,454 @@ body {
   width: 100%;
   margin: 0;
   padding: 0;
-  opacity: 0.98;
+  background: #f5f7fa;
+}
+
+:global(.dark) {
+  html,
+  body {
+    background: #121212;
+  }
 }
 
 .elcontainer {
-  height: 100%;
+  height: 100vh;
   width: 100%;
+  background: #f5f7fa;
+  display: flex;
+  flex-direction: column;
+
+  .dark & {
+    background: #121212;
+  }
 }
 
 .elheader {
-  padding: 0.1rem 0.3rem;
-  gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  background: #ffffff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .dark & {
+    background: #1e1e1e;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .header-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .fast-entrance-group {
+    display: flex;
+    gap: 0;
+    flex-wrap: wrap;
+  }
+
+  :deep(.el-button) {
+    transition: all 0.2s ease;
+    border-radius: 6px;
+    font-size: 13px;
+    white-space: nowrap;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
 }
 
 .menu {
-  width: auto;
+  width: 100%;
   height: auto;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: row;
-  align-items: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+
   > button {
-    margin-left: 6px !important;
+    margin-left: 0 !important;
+    border-radius: 6px;
+    font-size: 12px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+  }
+}
+
+.toolbar-actions {
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.action-group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.toolbar-divider {
+  height: 24px;
+  margin: 0 8px;
+
+  .dark & {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.fast-entrance-group {
+  flex-wrap: wrap;
+}
+
+.fast-entrance-btn {
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
   }
 }
 
 .main-box-card {
   position: relative;
+  border-radius: 12px !important;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
-  // max-width: 500px;
-  > .el-card__body {
-    padding: 0.7em;
-  }
-
-  :deep(a) {
-    color: blue;
-    padding: 0.5em;
-    font-weight: 700;
-    font-size: 14px;
-  }
-
-  .buttonAreaEditing {
-    margin-top: 5px;
-  }
-
-  .buttonArea {
-    margin-top: 5px;
-    max-height: 0;
-    overflow: hidden;
-    opacity: 0.5;
-    transition: all 0.1s ease-in-out;
-
-    > .el-button {
-      margin: 0.1em;
-    }
+  .dark & {
+    background: #1e1e1e;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   }
 
   &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    border-color: #d1d5db;
+
+    .dark & {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
     .buttonArea {
       opacity: 1;
       max-height: 100px;
     }
   }
 
+  > .el-card__body {
+    padding: 0.75em;
+  }
+
+  :deep(a) {
+    color: #409eff;
+    padding: 0.5em;
+    font-weight: 600;
+    font-size: 13px;
+    text-decoration: none;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: #66b1ff;
+    }
+
+    .dark & {
+      color: #66b3ff;
+
+      &:hover {
+        color: #99ccff;
+      }
+    }
+  }
+
+  .buttonAreaEditing {
+    margin-top: 10px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+
+    .el-button {
+      border-radius: 6px;
+      font-size: 12px;
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: translateY(-1px);
+      }
+    }
+  }
+
+  .buttonArea {
+    margin-top: 10px;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: all 0.25s ease;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+
+    > .el-button {
+      margin: 0;
+      border-radius: 6px;
+      font-size: 12px;
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: translateY(-1px);
+      }
+    }
+  }
+
+  .macro-content {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 8px 0 0 0;
+    transition: all 0.3s ease;
+  }
+
   .macroText {
     white-space: pre;
     text-overflow: ellipsis;
     overflow: hidden;
-    line-height: 1.5;
-  }
+    line-height: 1.6;
+    font-size: 12px;
+    color: #4a5568;
+    transition: all 0.3s ease;
 
-  // @media screen and (max-width: 600px) {
-  //   .macroText {
-  //     white-space: normal;
-  //   }
-  // }
+    .dark & {
+      color: #cbd5e1;
+    }
+  }
 }
 
 .el-select-group__title {
-  font-weight: bold;
+  font-weight: 600;
   font-size: 12px;
   color: var(--el-text-color-regular);
   padding-left: 1em;
 }
 
 .macro-title {
-  margin: 0.2em;
-  font-weight: bold;
+  margin: 0 0 0.5em 0;
+  font-weight: 600;
+  font-size: 14px;
   overflow-wrap: break-word;
   word-break: break-word;
   white-space: normal;
-  max-width: 13em;
+  max-width: 100%;
+  color: #2d3748;
+  line-height: 1.4;
+  transition: color 0.3s ease;
+
+  .dark & {
+    color: #f0f0f0;
+  }
 }
 
 .badge-group {
   position: absolute;
-  top: 2px;
-  right: 2px;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
 }
 
 .subtle-badge {
   user-select: none;
   pointer-events: none;
-  padding: 1px 3px;
-  font-size: 9px;
-  line-height: 1;
+  padding: 4px 10px;
+  font-size: 10px;
+  line-height: 1.3;
+  font-weight: 600;
   white-space: nowrap;
-  border-radius: 999px;
-  border: 1px solid;
-  background-color: var(--el-bg-color);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  letter-spacing: 0.3px;
+  transition: all 0.3s ease;
+
   &.from-user {
-    background-color: #13ce66;
-    border-color: #13ce66;
+    background: #10b981;
     color: #fff;
+
+    .dark & {
+      background: #10b981;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+    }
   }
 
   &.from-native {
-    background-color: #975b00;
-    border-color: #975b00;
+    background: #f59e0b;
     color: #fff;
-    filter: grayscale(20%);
-    opacity: 0.8;
+
+    .dark & {
+      background: #f59e0b;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+    }
+  }
+}
+
+.main-content {
+  padding: 1rem;
+  margin: 0;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.macro-grid {
+  font-size: 13px;
+}
+
+:deep(.el-main) {
+  background: transparent;
+  padding: 1rem !important;
+  flex: 1;
+  overflow-y: auto;
+
+  .el-space {
+    width: 100%;
+    gap: 0.75rem !important;
+  }
+
+  .el-empty {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+
+    .dark & {
+      background: #1e1e1e;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  .el-input__wrapper {
+    border-radius: 6px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      box-shadow: 0 0 0 1px var(--el-color-primary-light-7);
+    }
+
+    .dark &:hover {
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+    }
+  }
+
+  .el-textarea__inner {
+    border-radius: 6px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    line-height: 1.6;
+  }
+
+  .el-table {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+
+    .dark & {
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+    }
+  }
+}
+
+:deep(.el-dialog) {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  background: #ffffff;
+  transition: all 0.3s ease;
+
+  .dark & {
+    background: #1e1e1e;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  }
+
+  .el-dialog__header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1.5rem 1.75rem;
+    border-bottom: none;
+
+    .el-dialog__title {
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 17px;
+    }
+
+    .el-dialog__headerbtn {
+      .el-dialog__close {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 20px;
+        transition: color 0.2s ease;
+
+        &:hover {
+          color: #ffffff;
+        }
+      }
+    }
+  }
+
+  .el-dialog__body {
+    padding: 1.75rem;
+  }
+
+  .el-dialog__footer {
+    padding: 1.25rem 1.75rem;
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+
+    .dark & {
+      background: #1e1e1e;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.main-box-card {
+  animation: fadeIn 0.35s ease-out;
+  animation-fill-mode: both;
+
+  @for $i from 1 through 20 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{$i * 0.04}s;
+    }
   }
 }
 </style>
