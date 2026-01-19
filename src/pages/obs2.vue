@@ -483,13 +483,10 @@ const tableRowClassName = ({ row }: { row: Settings }) => {
           :class="{ 'is-recording': obs.status.recording }"
         ></div>
 
-        <!-- 区域名称 + 区域类型 -->
+        <!-- 区域名称 -->
         <div class="zone-info">
           <div class="zone-name-wrapper">
             <div class="zone-name">{{ zoneName || t('obs2.Unknown') }}</div>
-          </div>
-          <div class="zone-type">
-            {{ zoneType ? `（${t(`obs2.${zoneType}`)}）` : '' }}
           </div>
         </div>
 
