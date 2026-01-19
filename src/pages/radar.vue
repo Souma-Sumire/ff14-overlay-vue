@@ -357,8 +357,8 @@ onUnmounted(() => {
         type="info"
         :closable="false"
         show-icon
-        :title="$t('radar.macroTitle')"
-        :description="$t('radar.macroDesc')"
+        :title="$t('radar.radarTitle')"
+        :description="$t('radar.radarDesc')"
       />
     </template>
     <div class="radar-container">

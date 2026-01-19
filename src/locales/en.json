@@ -161,6 +161,7 @@
     },
     "badge": {
       "new": "New",
+      "hot": "Hot",
       "recommended": "Recommended"
     },
     "menu": {
@@ -188,7 +189,8 @@
       "aether_map": "[Web] Aetheryte Map",
       "mogstation_patch": "[Tampermonkey] MogStation Chinese Translation",
       "stone_sky_logs": "[Tampermonkey] Stone-Sky Logs Query",
-      "kook_purify": "[Tampermonkey] KOOK Purification"
+      "kook_purify": "[Tampermonkey] KOOK Purification",
+      "uisave_editor": "[Web] UISAVE.DAT (Waymark) Editor"
     },
     "comment": {
       "github_patch": "See README in the repository for details.",
@@ -212,7 +214,9 @@
       "act_self_test": "Allows users to self-check if ACT is running correctly.",
       "mogstation_patch": "Only for the Japanese version of the Mog Station.",
       "stone_sky_logs": "Data is cached for 72 hours. Clicking the Crystal icon jumps to the FFLogs page.",
-      "kook_purify": "Hides various annoying ads on the KOOK web version. Blocks personalized entry sound effects."
+      "kook_purify": "Hides various annoying ads on the KOOK web version. Blocks personalized entry sound effects.",
+      "uisave_editor": "A tool for parsing and editing UISAVE.DAT (Waymark) files. Code referenced from {0}.",
+      "uisave_editor_credits": "ff14_config_editor"
     }
   },
   "dd": {
@@ -344,8 +348,8 @@
     "bonus": "Bonus:"
   },
   "radar": {
-    "macroTitle": "Macro: /e find Target Name",
-    "macroDesc": "Partial matching is allowed for the name. Enter * to see all targets.",
+    "radarTitle": "Macro command: /e find TargetName",
+    "radarDesc": "Partial matching is allowed. Enter * to view all targets.",
     "prevTarget": "Previous Target",
     "nextTarget": "Next Target",
     "targetNotFound": "[{targetName} Not Found]",

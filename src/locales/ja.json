@@ -161,6 +161,7 @@
     },
     "badge": {
       "new": "新",
+      "hot": "人気",
       "recommended": "推奨"
     },
     "menu": {
@@ -188,7 +189,8 @@
       "aether_map": "[ウェブ] エーテライトマップ",
       "mogstation_patch": "[Tampermonkey] モグステーション中国語化",
       "stone_sky_logs": "[Tampermonkey] 石の家-スキルログ照会",
-      "kook_purify": "[Tampermonkey] KOOK浄化"
+      "kook_purify": "[Tampermonkey] KOOK浄化",
+      "uisave_editor": "[ウェブ] UISAVE.DAT（フィールドマーカー）エディタ"
     },
     "comment": {
       "github_patch": "詳細はリポジトリのREADME参照",
@@ -212,7 +214,9 @@
       "act_self_test": "ACTが正常に動作しているかユーザーが自己診断するためのツール。",
       "mogstation_patch": "日本語版モグステーションのみ対象。",
       "stone_sky_logs": "データは72時間キャッシュ。水晶アイコンクリックでFFLOGSページへ遷移。",
-      "kook_purify": "KOOKウェブ版の煩わしい広告を非表示。個別入場SEをブロック。"
+      "kook_purify": "KOOKウェブ版の煩わしい広告を非表示。個別入場SEをブロック。",
+      "uisave_editor": "UISAVE.DAT（フィールドマーカー）ファイルの解析および編集を行うためのツールです。コードは {0} を参考にしています。",
+      "uisave_editor_credits": "ff14_config_editor"
     }
   },
   "dd": {
@@ -344,8 +348,8 @@
     "bonus": "ボーナス:"
   },
   "radar": {
-    "macroTitle": "マクロ: /e find 対象名称",
-    "macroDesc": "名称は部分一致で検索可能。*を入力すると全対象を表示。",
+    "radarTitle": "マクロコマンド：/e find ターゲット名",
+    "radarDesc": "部分一致が可能です。* を入力すると全ターゲットを表示します。",
     "prevTarget": "前の対象",
     "nextTarget": "次の対象",
     "targetNotFound": "[{targetName}が見つかりません]",

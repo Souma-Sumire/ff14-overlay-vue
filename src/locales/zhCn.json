@@ -161,11 +161,13 @@
     },
     "badge": {
       "new": "新",
+      "hot": "热门",
       "recommended": "推荐"
     },
     "menu": {
       "github_patch": "[GitHub] 国际服汉化补丁",
       "cactbot_raidboss": "[JS脚本] Cactbot Raidboss 自定义文件",
+      "uisave_editor": "[网页] UISAVE.DAT（场地标点）编辑器",
       "fflogs_uploader_download": "[网页] FFLOGS 上传器 加速下载",
       "keigenn_record2": "[ACT悬浮窗] 减伤监控2",
       "key_skill_timer": "[ACT悬浮窗] 关键技能监控2",
@@ -212,7 +214,9 @@
       "act_self_test": "供用户自行检测ACT是否处于正常运行状态。",
       "mogstation_patch": "仅针对日文版莫古站。",
       "stone_sky_logs": "数据存在72小时缓存。点击水晶图标则跳转FFLOGS页面。",
-      "kook_purify": "隐藏 KOOK 网页版各种烦人的广告。屏蔽个性化入场音效。"
+      "kook_purify": "隐藏 KOOK 网页版各种烦人的广告。屏蔽个性化入场音效。",
+      "uisave_editor": "对UISAVE.DAT（场地标点）文件进行解析和编辑的工具。代码参考自 {0} 。",
+      "uisave_editor_credits": "ff14_config_editor"
     }
   },
   "dd": {
@@ -345,8 +349,8 @@
     "bonus": "奖励:"
   },
   "radar": {
-    "macroTitle": "宏命令：/e find 目标名称",
-    "macroDesc": "名称允许部分匹配。若输入*可查看所有目标",
+    "radarTitle": "宏命令：/e find 目标名称",
+    "radarDesc": "名称允许部分匹配。若输入*可查看所有目标",
     "prevTarget": "上一目标",
     "nextTarget": "下一目标",
     "targetNotFound": "【未找到{targetName}】",

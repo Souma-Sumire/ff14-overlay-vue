@@ -161,6 +161,7 @@
     },
     "badge": {
       "new": "新",
+      "hot": "熱門",
       "recommended": "推薦"
     },
     "menu": {
@@ -188,7 +189,8 @@
       "aether_map": "[網頁] 風脈地圖",
       "mogstation_patch": "[油猴腳本] MogStation莫古站漢化",
       "stone_sky_logs": "[油猴腳本] 石之家-修為查詢",
-      "kook_purify": "[油猴腳本] KOOK淨化"
+      "kook_purify": "[油猴腳本] KOOK淨化",
+      "uisave_editor": "[網頁] UISAVE.DAT（場地標點）編輯器"
     },
     "comment": {
       "github_patch": "詳見倉庫 README",
@@ -212,7 +214,9 @@
       "act_self_test": "供用戶自行檢測ACT是否處於正常運行狀態。",
       "mogstation_patch": "僅針對日文版莫古站。",
       "stone_sky_logs": "資料存在72小時快取。點擊水晶圖標則跳轉FFLOGS頁面。",
-      "kook_purify": "隱藏 KOOK 網頁版各種煩人的廣告。屏蔽個性化入場音效。"
+      "kook_purify": "隱藏 KOOK 網頁版各種煩人的廣告。屏蔽個性化入場音效。",
+      "uisave_editor": "對UISAVE.DAT（場地標點）文件進行解析和編輯的工具。代碼參考自 {0} 。",
+      "uisave_editor_credits": "ff14_config_editor"
     }
   },
   "dd": {
@@ -344,8 +348,8 @@
     "bonus": "獎勵:"
   },
   "radar": {
-    "macroTitle": "巨集指令：/e find 目標名稱",
-    "macroDesc": "名稱允許部分匹配。若輸入*可查看所有目標",
+    "radarTitle": "宏命令：/e find 目標名稱",
+    "radarDesc": "名稱允許部分匹配。若輸入*可查看所有目標",
     "prevTarget": "上一目標",
     "nextTarget": "下一目標",
     "targetNotFound": "【未找到{targetName}】",
