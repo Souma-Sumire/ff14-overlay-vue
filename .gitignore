@@ -1,8 +1,46 @@
+# Dependencies
 node_modules
-.DS_Store
+
+# Build outputs
 dist
 dist-ssr
 *.local
+
+# Auto-generated files
 components.d.ts
 auto-imports.d.ts
 .eslintrc-auto-import.json
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Cache
+.cache
+.temp
+.tmp
+*.tsbuildinfo

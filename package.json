@@ -1,5 +1,5 @@
 {
-  "name": "vite-project",
+  "name": "ff14-overlay-vue",
   "type": "module",
   "version": "1.0.0",
   "packageManager": "pnpm@10.18.2+sha512.9fb969fa749b3ade6035e0f109f0b8a60b5d08a1a87fdf72e337da90dcc93336e2280ca4e44f2358a649b83c17959e9993e777c2080879f3801e6f0d999ad3dd",
@@ -72,7 +72,6 @@
     "vite-plugin-md": "^0.22.5",
     "vite-plugin-pages": "^0.33.1",
     "vite-plugin-sass-dts": "^1.3.34",
-    "vite-plugin-style-import": "^2.0.0",
     "vue-eslint-parser": "^10.2.0"
   }
 }

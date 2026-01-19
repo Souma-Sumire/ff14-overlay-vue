@@ -389,18 +389,19 @@ watch(
 
 .masonry {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(300px, 440px));
   grid-auto-rows: 10px;
   gap: 0 20px;
   margin-top: 16px;
   align-items: start;
+  justify-content: center;
 
   @media (max-width: 1200px) {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(300px, 440px));
   }
 
   @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(300px, 440px);
   }
 }
 

@@ -9,10 +9,7 @@ import viteCompression from 'vite-plugin-compression'
 import Markdown from 'vite-plugin-md'
 import Pages from 'vite-plugin-pages'
 import sassDts from 'vite-plugin-sass-dts'
-import {
-  createStyleImportPlugin,
-  VxeTableResolve,
-} from 'vite-plugin-style-import'
+
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -76,9 +73,6 @@ export default defineConfig({
     }),
     Unocss(),
     Pages(),
-    createStyleImportPlugin({
-      resolves: [VxeTableResolve()],
-    }),
     sassDts(),
   ],
   define: {
