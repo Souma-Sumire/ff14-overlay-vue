@@ -24,7 +24,8 @@ function onError(e: Event) {
 }
 
 const showIcon = computed(
-  () => !imageError.value && (store.userOptions.targetType ?? 'icon') === 'icon'
+  () =>
+    !imageError.value && (store.userOptions.targetType ?? 'icon') === 'icon',
 )
 
 const isLethalIcon = computed(() => isLethal(props.row))
@@ -58,35 +59,37 @@ const isLethalIcon = computed(() => isLethal(props.row))
 
 <style scoped lang="scss">
 .has-duplicate {
+  zoom: 0.8;
   position: absolute;
-
-  font-size: 7.5px;
-  width: 24px;
+  width: auto;
   text-align: center;
-  right: 0;
+  font-weight: normal;
+  right: 5px;
   bottom: 0;
-  text-shadow: -1px 0 0 black, 0 1px 0 black, 1px 0 0 black, 0 -1px 0 black;
+  text-shadow:
+    -0.8px 0 0 black,
+    0 0.8px 0 black,
+    0.8px 0 0 black,
+    0 -0.8px 0 black;
+  white-space: nowrap;
 }
 
 .lethal-icon {
   filter: grayscale(100%) brightness(80%);
-  // transform-style: preserve-3d;
-  // 同样的css在act悬浮窗与Chrome浏览器悬浮窗的效果不同，原因未知，似乎是因为用到了一些过于新的css属性
-  &.act {
-    transform: translateX(2.5px);
-  }
-  &.browser {
-    transform: none;
-  }
 }
 
 .lethal-emoji {
   position: absolute;
   color: red;
-  text-shadow: -1px 0 0 black, 0 1px 0 black, 1px 0 0 black, 0 -1px 0 black;
+  text-shadow:
+    -1px 0 0 black,
+    0 1px 0 black,
+    1px 0 0 black,
+    0 -1px 0 black;
   &.act {
     top: -3px;
-    left: -3.5px;
+    left: -7px;
+    zoom: 0.7;
   }
   &.browser {
     top: -3px;
@@ -119,23 +122,8 @@ const isLethalIcon = computed(() => isLethal(props.row))
   left: -2px;
 }
 
-.cj1.lethal-icon {
-  &.act {
-    left: -0.75px;
-  }
-  &.browser {
-    left: -0.25px;
-  }
-}
-
 .cj2 {
   right: 4px;
-}
-
-.cj2.lethal-icon {
-  &.act {
-    right: 5px;
-  }
 }
 
 .cj3 {
@@ -158,7 +146,10 @@ const isLethalIcon = computed(() => isLethal(props.row))
 .YOU {
   font-weight: bolder;
   $color: rgba(3, 169, 244, 0.4);
-  text-shadow: -1px 0 3px $color, 0 1px 3px $color, 1px 0 3px $color,
+  text-shadow:
+    -1px 0 3px $color,
+    0 1px 3px $color,
+    1px 0 3px $color,
     0 -1px 3px $color;
 }
 </style>
