@@ -55,7 +55,7 @@ export default defineConfig({
     AutoImport({
       imports: ['vue', '@vueuse/core'],
       dts: './src/types/auto-imports.d.ts',
-      resolvers: [ElementPlusResolver()],
+      resolvers: [ElementPlusResolver({ importStyle: false })],
       eslintrc: {
         enabled: true,
         filepath: './.eslintrc-auto-import.json',
@@ -63,7 +63,7 @@ export default defineConfig({
       },
     }),
     Components({
-      resolvers: [ElementPlusResolver()],
+      resolvers: [ElementPlusResolver({ importStyle: false })],
       deep: true,
       dts: './src/types/components.d.ts',
       directoryAsNamespace: true,

@@ -724,25 +724,6 @@ function formatTimestamp(ms: number): string {
   </div>
 </template>
 
-<style>
-.el-select__suffix {
-  position: relative;
-  width: 0px;
-  right: 15px;
-}
-
-.combat-select .el-select__suffix {
-  width: 14px;
-  right: 7px;
-}
-
-.col-target-select .el-select__placeholder {
-  overflow: hidden;
-  text-overflow: clip;
-  width: 2em;
-}
-</style>
-
 <style lang="scss" scoped>
 :global(body) {
   background: transparent;
@@ -753,6 +734,24 @@ function formatTimestamp(ms: number): string {
 
 * {
   user-select: none;
+}
+
+// 限制对 Element Plus 内部样式的修改，使用 :deep
+:deep(.el-select__suffix) {
+  position: relative;
+  width: 0px;
+  right: 15px;
+}
+
+.combat-select :deep(.el-select__suffix) {
+  width: 14px;
+  right: 7px;
+}
+
+:deep(.col-target-select .el-select__placeholder) {
+  overflow: hidden;
+  text-overflow: clip;
+  width: 2em;
 }
 
 img[src=''],
@@ -807,39 +806,33 @@ main {
   background-color: rgba(20, 20, 20, 1);
 }
 
-/* ===== Element Plus 样式重写 ===== */
-:global(.el-table-v2__main) {
+/* ===== Element Plus 穿透样式 ===== */
+:deep(.el-table-v2__main) {
   background-color: rgba(20, 20, 20, var(--opacity));
   border-radius: 6px;
 }
 
-// el-select 下拉范围
-:global(.el-select-dropdown__list) {
+:deep(.el-select-dropdown__list) {
   padding: 0;
 }
 
-// el-option 下拉选项
-:global(.el-select-dropdown__item) {
+:deep(.el-select-dropdown__item) {
   padding: 0 0.5em;
 }
 
-// 让表头显示完整
-:global(.header-filter) {
+:deep(.header-filter) {
   position: fixed;
 }
 
-// 表格列间隔
-:global(.el-table-v2__row-cell) {
+:deep(.el-table-v2__row-cell) {
   padding: 0 2px;
 }
 
-// 表格行指针手势
-:global(.el-table-v2__row) {
+:deep(.el-table-v2__row) {
   cursor: pointer;
 }
 
-// action列样式
-:global(.col-action) {
+:deep(.col-action) {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -847,24 +840,15 @@ main {
   line-height: 28px;
 }
 
-// // amount列样式（允许超出单元格宽度）
-// :global(.col-amount) {
-//   overflow: visible !important;
-//   z-index: 2; // 在图标上方
-// }
-
-// 表头筛选去掉边框
-:global(.el-select__wrapper) {
+:deep(.el-select__wrapper) {
   box-shadow: none !important;
 }
 
-// 正在筛选 改变文字颜色
-:global(.el-select__placeholder) {
+:deep(.el-select__placeholder) {
   color: var(--el-color-primary) !important;
 }
 
-// 未筛选 文字颜色
-:global(.el-select__placeholder.is-transparent) {
+:deep(.el-select__placeholder.is-transparent) {
   color: unset !important;
 }
 
@@ -889,7 +873,7 @@ main {
   right: 2px;
 }
 
-.combat-select-popup {
+:deep(.combat-select-popup) {
   left: 0 !important;
 }
 
