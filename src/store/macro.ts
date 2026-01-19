@@ -4,7 +4,10 @@ import { ElInputNumber, ElMessage, ElMessageBox } from 'element-plus'
 import { defineStore } from 'pinia'
 import { copyToClipboard } from '@/utils/clipboard'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
-import { getMapIDByTerritoryType } from '../resources/contentFinderCondition'
+import {
+  getMapIDByTerritoryType,
+  getTerritoryTypeByMapID,
+} from '../resources/contentFinderCondition'
 import { ZoneInfo } from '../resources/zoneInfo'
 import {
   doInsertPreset,
@@ -159,14 +162,21 @@ const useMacroStore = defineStore('macro', {
         })
       }
     },
-    newPlace(place?: WayMarkObj & { Name?: string; MapID?: number }) {
-      const selectZoneId = Number(this.selectZone)
+    newPlace(place?: WayMarkObj & { Name?: string; MapID?: number; Editable?: boolean }) {
+      let selectZoneId = Number(this.selectZone)
+      if (place?.MapID) {
+        const tType = getTerritoryTypeByMapID(place.MapID)
+        if (tType && !isNaN(tType)) {
+          selectZoneId = tType
+        }
+      }
+
       if (this.data.zoneId[selectZoneId] === undefined)
         this.data.zoneId[selectZoneId] = []
       if (this.data.zoneId[selectZoneId]) {
-        this.data.zoneId[selectZoneId].push({
+        this.data.zoneId[selectZoneId]!.push({
           Name: place?.Name ?? 'New WayMark',
-          Editable: true,
+          Editable: place?.Editable ?? true,
           Deletability: true,
           Place: structuredClone(Object.assign(this.blankWaymark, place)),
         })

@@ -15,7 +15,17 @@ import { useMacroStore } from '@/store/macro'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import 'github-markdown-css/github-markdown-light.css'
 import ZoneSelecter from '@/components/zoneSelecter.vue'
-import { getLocaleMessage } from '@/composables/useLang'
+import { getLocaleMessage, getCactbotLocaleMessage } from '@/composables/useLang'
+import type { WayMark, UISaveData } from '@/types/uisave'
+import { parseUISave, MARKER_MAP } from '@/utils/uisaveParser'
+import { getMapIDByTerritoryType, getTerritoryTypeByMapID } from '@/resources/contentFinderCondition'
+import { ZoneInfo } from '@/resources/zoneInfo'
+import WaymarkDisplay from '@/components/uisaveEditor/WaymarkDisplay.vue'
+import { View } from '@element-plus/icons-vue'
+import { useI18n } from 'vue-i18n'
+import { ElMessage } from 'element-plus'
+
+const { t } = useI18n()
 
 const dev = useDev()
 const macroStore = useMacroStore()
@@ -32,6 +42,92 @@ const fastEntrance = computed(() => {
     }
   })
 })
+
+// UISAVE Import Logic
+const fileInput = ref<HTMLInputElement | null>(null)
+const uisaveData = ref<UISaveData | null>(null)
+const importDialogVisible = ref(false)
+const onlyCurrentZone = ref(true)
+const selectedWaymarks = ref<{ mark: WayMark; index: number }[]>([])
+
+const currentMapID = computed(() => {
+  return getMapIDByTerritoryType(Number(macroStore.selectZone))
+})
+
+const displayedWaymarks = computed(() => {
+  if (!uisaveData.value) return []
+  let marks = uisaveData.value.wayMarks
+    .map((mark, index) => ({ mark, index }))
+    .filter((m) => m.mark.regionID !== 0)
+  
+  if (onlyCurrentZone.value) {
+    marks = marks.filter((m) => m.mark.regionID === currentMapID.value)
+  }
+  return marks
+})
+
+async function onFileChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  try {
+    uisaveData.value = await parseUISave(await file.arrayBuffer())
+    importDialogVisible.value = true
+    
+    // Auto-check only if current zone has data
+    const hasCurrentZoneData = uisaveData.value.wayMarks.some(
+      (m) => m.regionID !== 0 && m.regionID === currentMapID.value
+    )
+    onlyCurrentZone.value = hasCurrentZoneData
+  } catch (err) {
+    ElMessage.error('Parse failed: ' + err)
+  } finally {
+    input.value = ''
+  }
+}
+
+function handleSelectionChange(val: { mark: WayMark; index: number }[]) {
+  selectedWaymarks.value = val
+}
+
+function doImportUISAVE() {
+  selectedWaymarks.value.forEach(({ mark: m }) => {
+    const place: any = {}
+    MARKER_MAP.forEach((def) => {
+      const p = m[def.key]
+      if (p) {
+        place[def.key] = {
+          X: p.x / 1000,
+          Y: p.y / 1000,
+          Z: p.z / 1000,
+          Active: (m.enableFlag & def.bit) > 0,
+        }
+      }
+    })
+    
+    // Add new place macro
+    macroStore.newPlace({
+      ...place,
+      Name: `Imported ${new Date(m.timestamp * 1000).toLocaleString()}`,
+      MapID: m.regionID,
+      Editable: false,
+    })
+  })
+  importDialogVisible.value = false
+  ElMessage.success(t('zoneMacro.importSelected', [selectedWaymarks.value.length]))
+}
+
+function getZoneName(mapID: number) {
+  const territoryType = getTerritoryTypeByMapID(mapID)
+  if (!territoryType) return 'Unknown'
+  const info = ZoneInfo[territoryType]
+  if (!info) return 'Unknown'
+  return getCactbotLocaleMessage(info.name)
+}
+
+function sortByMapName(a: { mark: WayMark }, b: { mark: WayMark }) {
+  return getZoneName(a.mark.regionID).localeCompare(getZoneName(b.mark.regionID))
+}
 
 onMounted(() => {
   addOverlayListener('ChangeZone', macroStore.handleChangeZone)
@@ -105,6 +201,13 @@ onMounted(() => {
             @click="macroStore.importPPJSON()"
           >
             {{ $t('zoneMacro.importPP') }}
+          </el-button>
+          <el-button
+            size="small"
+            color="#9D5C63"
+            @click="fileInput?.click()"
+          >
+            {{ $t('zoneMacro.importUISAVE') }}
           </el-button>
           <el-button
             type="warning"
@@ -407,6 +510,96 @@ onMounted(() => {
         </el-card>
       </el-space>
     </el-main>
+    
+    <input
+      ref="fileInput"
+      type="file"
+      accept=".DAT,.dat"
+      style="display: none"
+      @change="onFileChange"
+    />
+
+    <el-dialog
+      v-model="importDialogVisible"
+      :title="$t('zoneMacro.uisaveDialogTitle')"
+      width="800px"
+    >
+      <div style="margin-bottom: 10px">
+        <el-checkbox v-model="onlyCurrentZone">{{
+          $t('zoneMacro.onlyCurrentZone', [currentMapID, getZoneName(currentMapID)])
+        }}</el-checkbox>
+      </div>
+      
+      <el-table
+        :data="displayedWaymarks"
+        style="width: 100%"
+        height="400"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" width="40" />
+        <el-table-column
+          :label="$t('zoneMacro.slot')"
+          width="80"
+          align="center"
+          sortable
+          sort-by="index"
+        >
+          <template #default="{ row }">
+            {{ row.index + 1 }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="mark.regionID"
+          :label="$t('zoneMacro.mapID')"
+          width="100"
+          sortable
+          sort-by="mark.regionID"
+        >
+          <template #default="{ row }">
+            {{ row.mark.regionID }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          :label="$t('zoneMacro.mapName')"
+          sortable
+          :sort-method="sortByMapName"
+          min-width="150"
+        >
+          <template #default="{ row }">
+            {{ getZoneName(row.mark.regionID) }}
+          </template>
+        </el-table-column>
+        <el-table-column :label="$t('zoneMacro.preview')" width="70" align="center">
+          <template #default="{ row }">
+            <el-popover placement="left" :width="280" trigger="hover">
+              <template #reference>
+                <el-button :icon="View" circle size="small" />
+              </template>
+              <WaymarkDisplay :waymark="row.mark" :size="250" />
+            </el-popover>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :label="$t('zoneMacro.timestamp')"
+          width="160"
+          sortable
+          sort-by="mark.timestamp"
+        >
+          <template #default="{ row }">
+            {{ new Date(row.mark.timestamp * 1000).toLocaleString() }}
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="importDialogVisible = false">{{ $t('zoneMacro.cancel') }}</el-button>
+          <el-button type="primary" @click="doImportUISAVE" :disabled="selectedWaymarks.length === 0">
+            {{ $t('zoneMacro.importSelected', [selectedWaymarks.length]) }}
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </el-container>
 </template>
 

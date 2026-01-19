@@ -38,6 +38,7 @@ const routeTitles = new Map(
     timeline: '自定义时间轴',
     timelineHelp: '自定义时间轴帮助',
     timelineSettings: '自定义时间轴编辑',
+    uisaveEditor: '场景标点编辑器',
     zoneMacro: '副本宏',
   })
 )
