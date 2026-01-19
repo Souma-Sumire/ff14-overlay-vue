@@ -214,7 +214,7 @@ watch(
                   preview-teleported
                   hide-on-click-modal
                   :style="{
-                    height: item.imageHeihgt ? `${item.imageHeihgt}px` : 'auto',
+                    height: item.imageHeight ? `${item.imageHeight}px` : 'auto',
                     width: item.imageWidth ? `${item.imageWidth}px` : 'auto',
                   }"
                 />

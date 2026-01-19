@@ -6,7 +6,7 @@ export interface Menu {
   path: string;
   comment?: string;
   src?: string;
-  imageHeihgt?: number;
+  imageHeight?: number;
   imageWidth?: number;
   isNew?: boolean;
   isHot?: boolean;
@@ -22,6 +22,7 @@ export const MENU_ORDER: string[] = [
   'startPages.menu.key_skill_timer',
   'startPages.menu.zone_macro',
   'startPages.menu.obs_auto_record2',
+  'startPages.menu.cactbot_raidboss',
   'startPages.menu.casting_monitor',
   'startPages.menu.food_police',
   'startPages.menu.instanced_area_info',
@@ -33,7 +34,6 @@ export const MENU_ORDER: string[] = [
   'startPages.menu.limit_break_tip',
   'startPages.menu.show_barrier',
   'startPages.menu.github_patch',
-  'startPages.menu.cactbot_raidboss',
   'startPages.menu.fflogs_uploader_download',
   'startPages.menu.team_watch_legacy',
   'startPages.menu.act_self_test',
@@ -105,12 +105,18 @@ export const getRawMenuData = (locale: string, t: (key: string, args?: any[]) =>
     imageWidth: 350,
   },
   {
+    title: 'startPages.menu.obs_auto_record2',
+    type: '悬浮窗',
+    path: 'obs2',
+    comment: 'startPages.comment.obs_auto_record2',
+  },
+  {
     title: 'startPages.menu.food_police',
     type: '悬浮窗',
     path: `food?lang=${locale}`,
     src: 'food.webp',
     comment: 'startPages.comment.food_police',
-    imageHeihgt: 136,
+    imageHeight: 136,
   },
   {
     title: 'startPages.menu.healing_timeline',
@@ -118,7 +124,7 @@ export const getRawMenuData = (locale: string, t: (key: string, args?: any[]) =>
     path: 'timeline',
     src: 'timeline.webp',
     comment: 'startPages.comment.healing_timeline',
-    imageHeihgt: 154,
+    imageHeight: 154,
     isHot: true,
   },
   {
@@ -134,7 +140,7 @@ export const getRawMenuData = (locale: string, t: (key: string, args?: any[]) =>
     path: 'instancedAreaInfo',
     src: 'instancedAreaInfo.webp',
     comment: 'startPages.comment.instanced_area_info',
-    imageHeihgt: 100,
+    imageHeight: 100,
   },
   {
     title: 'startPages.menu.casting_to_chinese',
@@ -142,7 +148,7 @@ export const getRawMenuData = (locale: string, t: (key: string, args?: any[]) =>
     path: 'castingToChinese',
     comment: 'startPages.comment.casting_to_chinese',
     src: 'castingToChinese.webp',
-    imageHeihgt: 80,
+    imageHeight: 80,
   },
   {
     title: 'startPages.menu.aether_map',
@@ -164,7 +170,7 @@ export const getRawMenuData = (locale: string, t: (key: string, args?: any[]) =>
     path: 'radar',
     src: 'radar.webp',
     comment: 'startPages.comment.radar',
-    imageHeihgt: 180,
+    imageHeight: 180,
   },
   {
     title: 'startPages.menu.enmity_reminder',
