@@ -5,6 +5,7 @@ export interface Menu {
   type: MenuType;
   path: string;
   comment?: string;
+  commentArgs?: (string | number)[];
   src?: string;
   imageHeight?: number;
   imageWidth?: number;
@@ -43,7 +44,7 @@ export const MENU_ORDER: string[] = [
   'startPages.menu.kook_purify',
 ];
 
-export const getRawMenuData = (locale: string, t: (key: string, args?: any[]) => string): Menu[] => [
+export const getRawMenuData = (locale: string, t: (key: string, args?: (string | number)[]) => string): Menu[] => [
   {
     title: 'startPages.menu.github_patch',
     type: '网页/工具',
@@ -60,9 +61,10 @@ export const getRawMenuData = (locale: string, t: (key: string, args?: any[]) =>
     title: 'startPages.menu.uisave_editor',
     type: '网页/工具',
     path: 'uisaveEditor',
-    comment: t('startPages.comment.uisave_editor', [
+    comment: 'startPages.comment.uisave_editor',
+    commentArgs: [
       `<a href="https://github.com/MisakaCirno/ff14_config_editor/" target="_blank">${t('startPages.comment.uisave_editor_credits')}</a>`,
-    ]),
+    ],
     isNew: true,
   },
   {
@@ -93,6 +95,9 @@ export const getRawMenuData = (locale: string, t: (key: string, args?: any[]) =>
     path: `dd?scale=1&lang=${locale}`,
     src: 'dd.webp',
     comment: 'startPages.comment.dd_atlas',
+    commentArgs: [
+      '<a href="https://github.com/Souma-Sumire/ff14-overlay-vue" target="_blank">PR</a>',
+    ],
     imageWidth: 350,
     isHot: true,
   },
@@ -102,6 +107,9 @@ export const getRawMenuData = (locale: string, t: (key: string, args?: any[]) =>
     path: `zoneMacro?OVERLAY_WS=ws://127.0.0.1:10501/ws&lang=${locale}`,
     src: 'zoneMacro.webp',
     comment: 'startPages.comment.zone_macro',
+    commentArgs: [
+      `<a href="https://github.com/Natsukage/PostNamazu" target="_blank">${t('startPages.comment.post_namazu')}</a>`,
+    ],
     imageWidth: 350,
   },
   {
@@ -124,6 +132,9 @@ export const getRawMenuData = (locale: string, t: (key: string, args?: any[]) =>
     path: 'timeline',
     src: 'timeline.webp',
     comment: 'startPages.comment.healing_timeline',
+    commentArgs: [
+      `<a href="/ff14-overlay-vue/#/timelineSettings?OVERLAY_WS=ws://127.0.0.1:10501/ws" target="_blank">${t('startPages.comment.healing_timeline_link')}</a>`,
+    ],
     imageHeight: 154,
     isHot: true,
   },

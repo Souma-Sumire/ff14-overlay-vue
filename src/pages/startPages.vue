@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { type ComponentPublicInstance } from 'vue'
 import { useLang } from '@/composables/useLang'
 import { getRawMenuData, MENU_ORDER, type Menu } from '@/resources/menuData'
 
@@ -13,11 +14,11 @@ function generateUrl(url: string) {
 }
 
 const tableData: Ref<ExtendedMenu[]> = ref([])
-const cardRefs = new Map<string, any>()
+const itemRefs = ref<Record<string, HTMLElement>>({})
 
-function setCardRef(el: any, item: ExtendedMenu) {
+function setCardRef(el: ComponentPublicInstance | Element | null, item: ExtendedMenu) {
   if (el) {
-    cardRefs.set(item.title, el.$el || el)
+    itemRefs.value[item.title] = (el instanceof Element ? el : el.$el) as HTMLElement
   }
 }
 
@@ -25,7 +26,7 @@ function updateSpans() {
   const rowHeight = 10
   const gap = 20
   tableData.value.forEach((item) => {
-    const el = cardRefs.get(item.title)
+    const el = itemRefs.value[item.title]
     if (el) {
       const height = el.getBoundingClientRect().height
       item.span = Math.ceil((height + gap) / rowHeight)
@@ -192,7 +193,7 @@ watch(
                 <div
                   v-if="item.comment"
                   class="card-comment"
-                  v-html="t(item.comment)"
+                  v-html="item.commentArgs ? t(item.comment, item.commentArgs) : t(item.comment)"
                   :style="{
                     marginLeft:
                       item.direction === 'row-reverse' ? '0.5em' : '0px',
