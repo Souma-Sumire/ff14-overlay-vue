@@ -22,7 +22,7 @@ defineProps<{
 }>()
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .player-display {
   display: inline-flex;
   align-items: center;
@@ -43,5 +43,9 @@ defineProps<{
   min-width: 0;
   flex: 1;
   color: #334155;
+
+  :global(.dark) & {
+    color: #f1f5f9;
+  }
 }
 </style>

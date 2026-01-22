@@ -29,7 +29,7 @@ const routeTitles = new Map(
     hunt: '有车吗？',
     instancedAreaInfo: '我 TM 现在在几线？',
     keigennRecord2: '减伤监控 2',
-    lootHistory: '装备获取历史分析',
+    lootHistory: '装备分配助手',
     obs2: 'OBS 自动录制 2',
     radar: '雷达',
     showBarrier: '盾值显示',

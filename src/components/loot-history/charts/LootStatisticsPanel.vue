@@ -45,11 +45,16 @@ defineProps<{
 }>()
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .stats-panel {
   padding: 16px;
   background: #f8fafc;
   min-height: 400px;
+  transition: background-color 0.3s;
+
+  :global(.dark) & {
+    background: #161823;
+  }
 }
 
 .charts-grid {
@@ -59,15 +64,10 @@ defineProps<{
 }
 
 .charts-grid > * {
-  min-width: 0; /* 确保 grid item 可以缩小，防止被 ECharts 撑开 */
+  min-width: 0; 
 }
 
-/* .charts-grid > :last-child {
-  grid-column: auto;
-  grid-column: span 2;
-} */
 
-/* 移动端适配：如果屏幕太小，强制单列 */
 @media (max-width: 1000px) {
   .charts-grid {
     grid-template-columns: 1fr;

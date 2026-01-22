@@ -31,7 +31,7 @@ function updateValue(val: 'part' | 'drop') {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .sort-segmented {
   display: flex;
   padding: 4px 8px;
@@ -50,16 +50,30 @@ function updateValue(val: 'part' | 'drop') {
   user-select: none;
   background: transparent;
   border: none;
-}
 
-.segment-item:hover {
-  color: #3b82f6;
-  background: #f0f9ff;
-}
+  &:hover {
+    color: #3b82f6;
+    background: #f0f9ff;
+  }
 
-.segment-item.is-active {
-  background: #eff6ff;
-  color: #3b82f6;
-  font-weight: 700;
+  &.is-active {
+    background: #eff6ff;
+    color: #3b82f6;
+    font-weight: 700;
+  }
+
+  :global(.dark) & {
+    color: #94a3b8;
+
+    &:hover {
+      background: rgba(59, 130, 246, 0.1);
+      color: #3b82f6;
+    }
+
+    &.is-active {
+      background: rgba(59, 130, 246, 0.2);
+      color: #3b82f6;
+    }
+  }
 }
 </style>

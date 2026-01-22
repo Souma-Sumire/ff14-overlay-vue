@@ -42,6 +42,7 @@
             <el-icon class="guide-icon"><UploadFilled /></el-icon>
             <span>释放文件以导入备份</span>
           </div>
+
           <div class="path-toolbar">
             <el-button
               type="primary"
@@ -113,9 +114,15 @@
               <span>手动添加</span>
             </el-button>
           </div>
+
+          <!-- Controls moved here -->
+          <div class="control-right" style="margin-left: auto">
+            <CommonThemeToggle storage-key="loot-history-theme" />
+          </div>
         </div>
 
         <div class="filter-panel">
+          <!-- Filter Panel Content Remains Identical -->
           <div class="filter-section">
             <div class="sec-header">
               <div class="sec-title-group">
@@ -335,11 +342,7 @@
                       <template v-if="availableSeries.length > 0">
                         <div
                           class="pop-title"
-                          style="
-                            margin: 8px 0 4px;
-                            border-top: 1px solid #f1f5f9;
-                            padding-top: 8px;
-                          "
+                          style="margin: 8px 0 4px; padding-top: 8px"
                         >
                           屏蔽装备系列
                         </div>
@@ -411,12 +414,7 @@
           >
             <el-tab-pane label="按玩家" name="summary">
               <div class="tabs-sort-control">
-                <LootSortSegmented
-                  v-model="summarySortMode"
-                  @update:model-value="
-                    dbConfig.set({ key: 'summarySortMode', value: $event })
-                  "
-                />
+                <LootSortSegmented v-model="summarySortMode" />
               </div>
               <div class="summary-grid has-sort-control">
                 <div
@@ -453,12 +451,7 @@
 
             <el-tab-pane label="按部位" name="slot">
               <div class="tabs-sort-control">
-                <LootSortSegmented
-                  v-model="slotSortMode"
-                  @update:model-value="
-                    dbConfig.set({ key: 'slotSortMode', value: $event })
-                  "
-                />
+                <LootSortSegmented v-model="slotSortMode" />
               </div>
               <div class="summary-grid slot-grid has-sort-control">
                 <div
@@ -498,12 +491,7 @@
 
             <el-tab-pane label="按CD周" name="week">
               <div class="tabs-sort-control">
-                <LootSortSegmented
-                  v-model="weekSortMode"
-                  @update:model-value="
-                    dbConfig.set({ key: 'weekSortMode', value: $event })
-                  "
-                />
+                <LootSortSegmented v-model="weekSortMode" />
               </div>
               <div class="week-content-wrapper">
                 <div
@@ -559,7 +547,9 @@
                                 />
                               </div>
                               <div class="week-row-main">
-                                <span class="week-item-name">{{ rec.item }}</span>
+                                <span class="week-item-name">{{
+                                  rec.item
+                                }}</span>
                                 <el-icon
                                   v-if="
                                     rawSuspiciousKeys.has(rec.key) &&
@@ -626,7 +616,7 @@
               </el-popover>
             </el-tab-pane>
 
-            <el-tab-pane label="图表分析" name="chart">
+            <el-tab-pane label="图表分析" name="chart" lazy>
               <LootStatisticsPanel
                 :records="filteredRecords"
                 :players="visibleAllPlayers"
@@ -638,17 +628,23 @@
               />
             </el-tab-pane>
 
+            <el-tab-pane label="BIS分配" name="bis">
+              <BisAllocator
+                v-model="bisConfig"
+                v-model:sortMode="bisSortMode"
+                :players="visibleAllPlayers"
+                :records="filteredRecords"
+                :get-player-role="getPlayerRole"
+                :show-only-role="showOnlyRole"
+              />
+            </el-tab-pane>
+
             <el-tab-pane label="详细记录" name="list">
               <div class="list-container-el">
                 <el-table
                   :data="paginatedRecords"
                   style="width: 100%"
-                  :header-cell-style="{
-                    background: '#f8fafc',
-                    fontWeight: 800,
-                    color: '#64748b',
-                    fontSize: '12px',
-                  }"
+                  class="loot-record-table"
                   cell-class-name="loot-cell"
                 >
                   <el-table-column label="周" width="60" align="center">
@@ -697,6 +693,26 @@
                           :get-player-role="getPlayerRole"
                         />
                       </div>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="操作" width="60" align="center">
+                    <template #default="scope">
+                      <el-popconfirm
+                        title="确定永久删除吗？"
+                        confirm-button-text="删除"
+                        cancel-button-text="取消"
+                        @confirm="deleteRecord(scope.row)"
+                      >
+                        <template #reference>
+                          <el-button
+                            type="danger"
+                            :icon="Delete"
+                            size="small"
+                            circle
+                            plain
+                          />
+                        </template>
+                      </el-popconfirm>
                     </template>
                   </el-table-column>
                 </el-table>
@@ -1078,13 +1094,14 @@ import {
   RefreshRight,
 } from '@element-plus/icons-vue'
 import LogParserWorker from '@/workers/logParser.ts?worker'
-import LootPlayerRoll from '@/components/LootPlayerRoll.vue'
-import PlayerDisplay from '@/components/PlayerDisplay.vue'
-import LootSortSegmented from '@/components/LootSortSegmented.vue'
-import LootStatisticsPanel from '@/components/loot-charts/LootStatisticsPanel.vue'
+import LootPlayerRoll from '@/components/loot-history/LootPlayerRoll.vue'
+import PlayerDisplay from '@/components/loot-history/PlayerDisplay.vue'
+import LootSortSegmented from '@/components/loot-history/LootSortSegmented.vue'
+import LootStatisticsPanel from '@/components/loot-history/charts/LootStatisticsPanel.vue'
+import RoleBadge from '@/components/loot-history/RoleBadge.vue'
+import BisAllocator, { type BisConfig } from '@/components/loot-history/BisAllocator.vue'
 
 const parserWorker = new LogParserWorker()
-
 
 const GAME_VERSION_CONFIG = {
   // 零式首周开始时间
@@ -1110,8 +1127,11 @@ const isLoading = ref(false)
 const loadingProgress = ref(0)
 const lootRecords = ref<LootRecord[]>([])
 const existingKeys = ref(new Set<string>())
+const blacklistedKeys = ref(new Set<string>())
 const itemVisibility = ref<Record<string, boolean>>({})
-const viewMode = ref<'list' | 'summary' | 'slot' | 'week' | 'chart'>('summary')
+const viewMode = ref<'list' | 'summary' | 'slot' | 'week' | 'chart' | 'bis'>(
+  'summary',
+)
 const currentHandle = ref<FileSystemDirectoryHandle | null>(null)
 
 const showTimeSetup = ref(false)
@@ -1119,11 +1139,13 @@ const showRoleDialog = ref(false)
 
 const playerVisibility = ref<Record<string, boolean>>({})
 const recordWeekCorrections = ref<Record<string, number>>({})
+const bisConfig = ref<BisConfig>({ playerBis: {} })
 
 // 排序模式：'part' (部位排序) | 'drop' (掉落排序)
 const summarySortMode = ref<'part' | 'drop'>('part')
 const slotSortMode = ref<'part' | 'drop'>('part')
 const weekSortMode = ref<'part' | 'drop'>('drop')
+const bisSortMode = ref<'part' | 'drop'>('part')
 
 const playerMapping = ref<Record<string, string>>({})
 
@@ -1212,6 +1234,7 @@ watch(
     syncEndDate,
     viewMode,
     isRaidFilterActive,
+    bisConfig,
     playerMapping,
     playerRoles,
     showOnlyRole,
@@ -1220,6 +1243,11 @@ watch(
     systemFilterSettings,
     isOnlyRaidMembersActive,
     recordWeekCorrections,
+    summarySortMode,
+    slotSortMode,
+    weekSortMode,
+    bisSortMode,
+    blacklistedKeys,
   ],
   async () => {
     await dbConfig.set({
@@ -1247,6 +1275,10 @@ watch(
       value: isRaidFilterActive.value,
     })
     await dbConfig.set({
+      key: 'bisConfig',
+      value: JSON.parse(JSON.stringify(bisConfig.value)),
+    })
+    await dbConfig.set({
       key: 'hideUnselectedItems',
       value: hideUnselectedItems.value,
     })
@@ -1270,6 +1302,14 @@ watch(
     await dbConfig.set({
       key: 'systemFilterSettings',
       value: JSON.parse(JSON.stringify(systemFilterSettings.value)),
+    })
+    await dbConfig.set({ key: 'summarySortMode', value: summarySortMode.value })
+    await dbConfig.set({ key: 'slotSortMode', value: slotSortMode.value })
+    await dbConfig.set({ key: 'weekSortMode', value: weekSortMode.value })
+    await dbConfig.set({ key: 'bisSortMode', value: bisSortMode.value })
+    await dbConfig.set({
+      key: 'blacklistedKeys',
+      value: Array.from(blacklistedKeys.value),
     })
   },
   { deep: true },
@@ -1325,7 +1365,8 @@ onMounted(async () => {
           c.value === 'summary' ||
           c.value === 'slot' ||
           c.value === 'week' ||
-          c.value === 'chart')
+          c.value === 'chart' ||
+          c.value === 'bis')
       )
         viewMode.value = c.value
       if (c.key === 'hideUnselectedItems') hideUnselectedItems.value = !!c.value
@@ -1346,6 +1387,10 @@ onMounted(async () => {
       if (c.key === 'summarySortMode') summarySortMode.value = c.value || 'part'
       if (c.key === 'slotSortMode') slotSortMode.value = c.value || 'part'
       if (c.key === 'weekSortMode') weekSortMode.value = c.value || 'drop'
+      if (c.key === 'bisSortMode') bisSortMode.value = c.value || 'part'
+      if (c.key === 'blacklistedKeys')
+        blacklistedKeys.value = new Set(c.value || [])
+      if (c.key === 'bisConfig') bisConfig.value = c.value || { playerBis: {} }
     })
 
     const handleEntry = await dbHandle.get('current-log-dir')
@@ -1734,7 +1779,11 @@ const displaySlots = computed(() => {
     (s) => slotSummary.value[s] && Object.keys(slotSummary.value[s]).length > 0,
   )
   const dynamic = Object.keys(slotSummary.value)
-    .filter((k) => !(PART_ORDER as unknown as string[]).includes(k) && !(DROP_ORDER as unknown as string[]).includes(k))
+    .filter(
+      (k) =>
+        !(PART_ORDER as unknown as string[]).includes(k) &&
+        !(DROP_ORDER as unknown as string[]).includes(k),
+    )
     .sort((a, b) => {
       const getCount = (key: string) =>
         Object.values(slotSummary.value[key] || {}).reduce(
@@ -1774,7 +1823,10 @@ const zeroWeekStart = computed(() => {
 })
 
 function getFormattedWeekLabel(weekRangeLabel: string) {
-  const { label } = getFormattedWeekLabelUtil(weekRangeLabel, zeroWeekStart.value)
+  const { label } = getFormattedWeekLabelUtil(
+    weekRangeLabel,
+    zeroWeekStart.value,
+  )
   return label
 }
 
@@ -2005,6 +2057,30 @@ async function setLogPath() {
   }
 }
 
+async function deleteRecord(record: LootRecord) {
+  try {
+    // 1. 从内存中删除
+    const index = lootRecords.value.findIndex((r) => r.key === record.key)
+    if (index !== -1) {
+      lootRecords.value.splice(index, 1)
+    }
+
+    // 2. 从数据库中删除
+    await dbRecords.remove(record.key)
+
+    // 3. 从现有 key 集合中删除
+    existingKeys.value.delete(record.key)
+
+    // 4. 加入黑名单（防止以后再解析回来）
+    blacklistedKeys.value.add(record.key)
+
+    ElMessage.success('记录已永久删除')
+  } catch (err) {
+    console.error('Delete error:', err)
+    ElMessage.error('删除失败')
+  }
+}
+
 async function startInitialSync() {
   showTimeSetup.value = false
   await syncLogFiles()
@@ -2094,7 +2170,7 @@ async function syncLogFiles() {
       } = await parseLogWithWorker(text)
 
       for (const r of records) {
-        if (!localKeys.has(r.key)) {
+        if (!localKeys.has(r.key) && !blacklistedKeys.value.has(r.key)) {
           localKeys.add(r.key)
           allNewRecords.push(r)
         }
@@ -2686,7 +2762,8 @@ async function processImportJSON(json: any) {
           ? key
           : `${ts}_${item}_${player}_${Math.random().toString(36).slice(2)}`
 
-      if (currentKeys.has(recordKey)) continue
+      if (currentKeys.has(recordKey) || blacklistedKeys.value.has(recordKey))
+        continue
 
       const sig = `${ts}|${item}|${player}`
       if (!existingSigs.has(sig)) {
@@ -2847,7 +2924,127 @@ async function clearDatabase() {
 }
 </script>
 
-<style scoped>
+<style lang="scss">
+:root {
+  --ffxiv-stripe-color: rgba(0, 0, 0, 0.08);
+  --ffxiv-diagonal-texture: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 12px,
+    var(--ffxiv-stripe-color) 12px,
+    var(--ffxiv-stripe-color) 24px
+  );
+}
+
+html, body {
+  
+  overflow-y: overlay; 
+  background-color: #f8fafc !important;
+  color-scheme: light;
+  margin: 0;
+  
+  padding: 0 !important; 
+}
+
+html.dark, html.dark body {
+  background-color: #161823 !important;
+  color-scheme: dark;
+  --ffxiv-stripe-color: rgba(255, 255, 255, 0.08);
+}
+
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 5px;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ffxiv-diagonal-bg {
+  background-image: var(--ffxiv-diagonal-texture);
+}
+
+.ffxiv-diagonal-mask {
+  position: relative !important;
+  
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-user-drag: none !important;
+  -webkit-touch-callout: none !important;
+  cursor: not-allowed !important;
+
+  &::after {
+    content: '' !important;
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: var(
+      --ffxiv-mask-z,
+      9999
+    ) !important; 
+    background: var(--ffxiv-mask-bg, transparent) !important;
+    background-image: var(--ffxiv-diagonal-texture) !important;
+    pointer-events: auto !important; 
+    cursor: not-allowed !important;
+  }
+
+  
+  * {
+    pointer-events: none !important;
+    user-select: none !important;
+    -webkit-user-drag: none !important;
+    -webkit-user-select: none !important;
+  }
+}
+
+.section-mask {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  cursor: not-allowed !important;
+  user-select: none !important;
+  -webkit-user-drag: none !important;
+  pointer-events: auto !important; 
+  --mask-overlay: linear-gradient(
+    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0.4)
+  );
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none; 
+    background: var(--mask-overlay);
+    background-image: var(--ffxiv-diagonal-texture);
+  }
+}
+
+html.dark .section-mask {
+  --mask-overlay: linear-gradient(
+    rgba(22, 24, 35, 0.8),
+    rgba(22, 24, 35, 0.95)
+  );
+}
+
+.path-toolbar {
+  .date-picker-el,
+  .range-sep {
+    transform: translateY(-1.5px) !important;
+  }
+}
+</style>
+
+<style lang="scss" scoped>
 .app-container {
   min-height: 100vh;
   background-color: #f8fafc;
@@ -2866,8 +3063,10 @@ async function clearDatabase() {
 
 .app-header {
   height: 48px;
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
   padding: 0 24px;
   display: flex;
   justify-content: center;
@@ -2880,7 +3079,8 @@ async function clearDatabase() {
   width: 100%;
   max-width: 1400px;
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .brand h1 {
@@ -2946,21 +3146,6 @@ async function clearDatabase() {
   height: 20px;
   background: #e2e8f0;
   margin: 0 4px;
-}
-.date-picker-el {
-  width: 154px !important;
-  height: 28px !important;
-  display: inline-flex;
-  align-items: center;
-}
-.range-sep {
-  color: #94a3b8;
-  font-weight: bold;
-  font-size: 11px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  height: 28px;
 }
 .path-toolbar :deep(.el-button) {
   height: 28px !important;
@@ -3190,32 +3375,6 @@ async function clearDatabase() {
   align-content: flex-start;
   background: #fdfdfd;
   position: relative;
-}
-
-.section-mask {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 100;
-  cursor: not-allowed;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.4)),
-    repeating-linear-gradient(
-      -45deg,
-      transparent,
-      transparent 12px,
-      rgba(203, 213, 225, 0.15) 12px,
-      rgba(203, 213, 225, 0.15) 24px
-    );
-  background-attachment: fixed;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.02);
 }
 
 .mask-content {
@@ -4500,6 +4659,13 @@ async function clearDatabase() {
   display: inline-flex;
 }
 
+.loot-record-table :deep(th.el-table__cell) {
+  background-color: #f8fafc;
+  color: #64748b;
+  font-weight: 800;
+  font-size: 12px;
+}
+
 .role-settings-dialog :deep(.el-dialog__body) {
   padding-top: 10px;
 }
@@ -4507,5 +4673,313 @@ async function clearDatabase() {
 .role-settings-dialog :deep(.el-dialog__footer) {
   border-top: 1px solid #f1f5f9;
   padding-top: 20px;
+}
+</style>
+
+<style lang="scss">
+.control-bar {
+  margin: 0 auto 12px;
+  width: calc(100% - 48px);
+  max-width: 1400px;
+  padding: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.control-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+html.dark {
+  .app-container {
+    background-color: #161823;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .app-header {
+    background: rgba(22, 24, 35, 0.85);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .filter-section,
+  .summary-card,
+  .list-container-el,
+  .initial-loading,
+  .summary-grid,
+  .setup-form,
+  .role-setup-item,
+  .suggestion-box,
+  .context-menu,
+  .selector-tags {
+    background-color: #252632;
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .sec-header,
+  .summary-header,
+  .role-config-header,
+  .menu-info-header,
+  .context-menu-header {
+    background: #252632;
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .sec-body,
+  .mapping-tag {
+    background-color: #161823;
+  }
+
+  .mode-tabs-el .el-tab-pane {
+    background-color: #252632;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  .mode-tabs-el .el-tabs__header .el-tabs__item {
+    background-color: #161823 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .mode-tabs-el .el-tabs__header .el-tabs__item.is-active {
+    background-color: #252632 !important;
+    color: #60a5fa !important;
+    border-bottom-color: #252632 !important;
+  }
+
+  .summary-item,
+  .week-record-row,
+  .menu-divider,
+  .role-divider,
+  .divider,
+  .mapping-list {
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+    border-top-color: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .week-record-row:last-child,
+  .summary-item:last-child {
+    border-bottom: none;
+  }
+
+  .s-name,
+  .item-text,
+  .title-main,
+  .week-item-name,
+  .week-player-name,
+  .setup-label,
+  .menu-action-item,
+  .context-menu-item,
+  .selector-title,
+  .switch-label,
+  .player-name-text {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  .hint-small,
+  .hint-txt,
+  .no-rolls-hint,
+  .no-winner,
+  .time-date,
+  .col-week,
+  .menu-info-header {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .soft-action-btn,
+  .hint-action {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border-color: transparent !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.15) !important;
+      color: #ffffff !important;
+    }
+  }
+
+  .path-toolbar .el-input__wrapper {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: none !important;
+  }
+  .path-toolbar .el-input__inner {
+    color: rgba(255, 255, 255, 0.9) !important;
+    background-color: transparent !important;
+  }
+  .path-toolbar .el-input__wrapper:hover,
+  .path-toolbar .el-input__wrapper.is-focus {
+    background-color: rgba(255, 255, 255, 0.12) !important;
+  }
+
+  .el-table {
+    --el-table-bg-color: #252632;
+    --el-table-tr-bg-color: #252632;
+    --el-table-header-bg-color: #252632;
+    --el-table-border-color: rgba(255, 255, 255, 0.06);
+    background-color: #252632;
+  }
+
+  .loot-record-table th.el-table__cell {
+    background-color: #252632 !important;
+    color: rgba(255, 255, 255, 0.7);
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .el-table__row:hover > td {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+  }
+
+  .week-record-row:hover {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+  }
+  .menu-action-item:hover,
+  .summary-card:hover,
+  .context-menu-item:hover {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .week-record-row.is-suspicious {
+    background-color: rgba(255, 77, 79, 0.15) !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 77, 79, 0.2);
+    .week-item-name {
+      color: #ffabadd9 !important;
+    }
+  }
+  .week-record-row.is-suspicious:hover {
+    background-color: rgba(255, 77, 79, 0.2) !important;
+  }
+
+  .week-record-row.is-corrected {
+    background-color: rgba(94, 129, 244, 0.15) !important;
+    box-shadow: inset 0 0 0 1px rgba(94, 129, 244, 0.2);
+    .week-item-name {
+      color: #8baaffd1 !important;
+    }
+  }
+
+  .context-menu-popper {
+    background: #252632 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5) !important;
+  }
+  .pop-title {
+    color: rgba(255, 255, 255, 0.9);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .v-divider,
+  .act-divider {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .el-dialog {
+    background-color: #252632;
+    border-color: rgba(255, 255, 255, 0.1);
+    .el-dialog__title {
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
+  .role-settings-dialog .el-dialog__footer {
+    border-top-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .el-pagination {
+    --el-pagination-bg-color: transparent;
+    --el-pagination-button-bg-color: rgba(255, 255, 255, 0.08);
+    --el-pagination-button-color: rgba(255, 255, 255, 0.5);
+    --el-pagination-button-disabled-bg-color: transparent;
+    --el-pagination-hover-color: #60a5fa;
+  }
+
+  .el-check-tag {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.6);
+
+    &.is-checked {
+      background-color: rgba(255, 255, 255, 0.15);
+      color: #60a5fa;
+      font-weight: 600;
+    }
+
+    &:not(.is-checked):hover {
+      background-color: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    &:not(.is-checked) {
+      --el-tag-bg-color: rgba(255, 255, 255, 0.08);
+      --el-tag-text-color: rgba(255, 255, 255, 0.6);
+      --el-tag-border-color: transparent;
+    }
+  }
+
+  .el-checkbox__label {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .loading-txt {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .stats-panel {
+    background-color: #161823 !important;
+  }
+
+  .chart-container {
+    background-color: #252632 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .chart-title {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  .chart-subtitle {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  .bis-view-panel,
+  .bis-config-panel {
+    background-color: #252632 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .bis-table th,
+  .sticky-col {
+    background-color: #252632 !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .bis-table td {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  .status-need {
+    background-color: rgba(16, 185, 129, 0.2) !important;
+    color: #34d399 !important;
+  }
+
+  .status-greed {
+    background-color: rgba(245, 158, 11, 0.15) !important;
+    color: #fbbf24 !important;
+  }
+
+  .status-greed-tome {
+    background-color: rgba(56, 189, 248, 0.15) !important;
+    color: #38bdf8 !important;
+  }
+
+  .status-pass {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+    color: rgba(255, 255, 255, 0.3) !important;
+  }
+
+  .config-table .check-cell:hover {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+  }
 }
 </style>

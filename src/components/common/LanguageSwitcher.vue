@@ -52,7 +52,7 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 .select-wrapper {
   display: flex;
   align-items: center;
@@ -63,9 +63,26 @@ onMounted(() => {
   height: 18px;
   color: #007bff;
   margin-right: 5px;
+
+  :global(.dark) & {
+    color: #3b82f6;
+  }
 }
 
 .language-select {
   width: 5.5em;
+
+  :deep(.el-input__wrapper) {
+    :global(.dark) & {
+      background-color: #1e293b;
+      box-shadow: 0 0 0 1px #334155 inset;
+    }
+  }
+
+  :deep(.el-input__inner) {
+    :global(.dark) & {
+      color: #f1f5f9;
+    }
+  }
 }
 </style>

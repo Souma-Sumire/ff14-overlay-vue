@@ -8,6 +8,7 @@
         class="echarts-instance" 
         :option="option" 
         :update-options="{ notMerge: true }" 
+        :theme="isDark ? 'dark' : ''"
         autoresize 
       />
     </div>
@@ -27,9 +28,14 @@ import {
   TitleComponent,
   MarkLineComponent,
 } from 'echarts/components'
+import { useDark } from '@vueuse/core'
 import type { LootRecord } from '@/utils/lootParser'
 import { getRoleColor, getRoleDisplayName } from '@/utils/lootParser'
 import { getChartLabelRich, formatChartPlayerLabel } from '@/utils/chartUtils'
+
+const isDark = useDark({
+  storageKey: 'loot-history-theme',
+})
 
 use([
   CanvasRenderer,
@@ -104,6 +110,7 @@ const option = computed(() => {
   })
 
   return {
+    backgroundColor: 'transparent',
     animation: false,
     title: { show: false, text: visibility },
     tooltip: {
@@ -152,13 +159,27 @@ const option = computed(() => {
           return formatChartPlayerLabel(value, rawRole, props.playerVisibility)
         },
         rich: getChartLabelRich(props.playerVisibility),
+        color: isDark.value ? '#e2e8f0' : '#64748b',
       },
+      axisLine: {
+        lineStyle: {
+          color: isDark.value ? 'rgba(255,255,255,0.1)' : '#e2e8f0',
+        }
+      }
     },
     yAxis: {
       type: 'value',
       min: 0,
       max: 100,
       name: '平均点数',
+      splitLine: {
+        lineStyle: {
+          color: isDark.value ? 'rgba(255,255,255,0.06)' : '#f1f5f9',
+        }
+      },
+      axisLabel: {
+        color: isDark.value ? '#94a3b8' : '#64748b',
+      }
     },
     series: [
       {
@@ -177,7 +198,7 @@ const option = computed(() => {
           show: true,
           position: 'top',
           formatter: (p: any) => p.value > 0 ? p.value.toFixed(1) : '',
-          color: '#333',
+          color: isDark.value ? '#f1f5f9' : '#1e293b',
         },
         markLine: {
           data: [{ type: 'average', name: '平均' }],
@@ -199,7 +220,7 @@ const option = computed(() => {
 })
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .chart-container {
   background: white;
   border-radius: 12px;
@@ -209,6 +230,12 @@ const option = computed(() => {
   flex-direction: column;
   height: 400px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  transition: all 0.3s ease;
+
+  :global(.dark) & {
+    background-color: #252632;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
 }
 
 .chart-header {
@@ -220,12 +247,21 @@ const option = computed(() => {
   font-size: 16px;
   font-weight: 700;
   color: #1e293b;
+  transition: color 0.3s;
+
+  :global(.dark) & {
+    color: rgba(255, 255, 255, 0.9);
+  }
 }
 
 .chart-subtitle {
   font-size: 12px;
   color: #64748b;
   margin-top: 4px;
+
+  :global(.dark) & {
+    color: #94a3b8;
+  }
 }
 
 .chart-body {

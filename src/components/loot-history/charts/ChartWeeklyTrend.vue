@@ -8,6 +8,7 @@
         class="echarts-instance" 
         :option="option" 
         :update-options="{ notMerge: true }" 
+        :theme="isDark ? 'dark' : ''"
         autoresize 
       />
     </div>
@@ -26,9 +27,15 @@ import {
   VisualMapComponent,
   TitleComponent,
 } from 'echarts/components'
+import { useDark } from '@vueuse/core'
 import type { LootRecord } from '@/utils/lootParser'
 import { getRoleDisplayName } from '@/utils/lootParser'
 import { getChartLabelRich, formatChartPlayerLabel } from '@/utils/chartUtils'
+import { getRaidWeekStart, getRaidWeekLabel, getFormattedWeekLabel } from '@/utils/raidWeekUtils'
+
+const isDark = useDark({
+  storageKey: 'loot-history-theme',
+})
 
 use([
   CanvasRenderer,
@@ -49,8 +56,6 @@ const props = defineProps<{
   syncStartDate?: string | Date
   playerVisibility?: 'all' | 'role' | 'job' | 'initial'
 }>()
-
-import { getRaidWeekStart, getRaidWeekLabel, getFormattedWeekLabel } from '@/utils/raidWeekUtils'
 
 const zeroWeekStart = computed(() => {
   if (!props.syncStartDate) return null
@@ -142,6 +147,7 @@ const option = computed(() => {
   })
 
   return {
+    backgroundColor: 'transparent',
     animation: false,
     title: {
       show: false,
@@ -194,6 +200,7 @@ const option = computed(() => {
            return formatChartPlayerLabel(value, rawRole, props.playerVisibility)
         },
         rich: getChartLabelRich(props.playerVisibility),
+        color: isDark.value ? '#e2e8f0' : '#64748b',
       }
     },
     yAxis: {
@@ -205,7 +212,7 @@ const option = computed(() => {
       axisLine: { show: false },
       axisLabel: {
         fontSize: 12,
-        color: '#64748b'
+        color: isDark.value ? '#e2e8f0' : '#64748b'
       }
     },
     visualMap: {
@@ -219,18 +226,18 @@ const option = computed(() => {
       itemHeight: 15,
       type: 'piecewise',
       pieces: [
-           {value: 0, color: '#f8fafc', label: '无'}, 
-           {value: 1, color: '#fff7ed', label: '1'}, 
-           {value: 2, color: '#ffedd5', label: '2'}, 
-           {value: 3, color: '#fed7aa', label: '3'}, 
-           {value: 4, color: '#fdba74', label: '4'}, 
-           {value: 5, color: '#f97316', label: '5'}, 
-           {value: 6, color: '#ea580c', label: '6'}, 
-           {value: 7, color: '#c2410c', label: '7'}, 
-           {min: 8, color: '#9a3412', label: '8+'}    
+           {value: 0, color: isDark.value ? '#1b1c26' : '#f8fafc', label: '无'}, 
+           {value: 1, color: isDark.value ? '#450a0a' : '#fff7ed', label: '1'}, 
+           {value: 2, color: isDark.value ? '#7f1d1d' : '#ffedd5', label: '2'}, 
+           {value: 3, color: isDark.value ? '#b91c1c' : '#fed7aa', label: '3'}, 
+           {value: 4, color: isDark.value ? '#c2410c' : '#fdba74', label: '4'}, 
+           {value: 5, color: isDark.value ? '#ea580c' : '#f97316', label: '5'}, 
+           {value: 6, color: isDark.value ? '#f97316' : '#ea580c', label: '6'}, 
+           {value: 7, color: isDark.value ? '#facc15' : '#c2410c', label: '7'}, 
+           {min: 8, color: isDark.value ? '#fef08a' : '#9a3412', label: '8+'}    
       ],
       textStyle: {
-        color: '#64748b'
+        color: isDark.value ? '#94a3b8' : '#64748b'
       }
     },
     series: [{
@@ -246,13 +253,13 @@ const option = computed(() => {
       },
       itemStyle: {
         borderRadius: 4,
-        borderColor: '#fff',
+        borderColor: isDark.value ? '#252632' : '#fff', 
         borderWidth: 2
       },
       emphasis: {
         itemStyle: {
           shadowBlur: 10,
-          shadowColor: 'rgba(0, 0, 0, 0.2)'
+          shadowColor: 'rgba(0, 0, 0, 0.4)'
         }
       }
     }]
@@ -260,7 +267,7 @@ const option = computed(() => {
 })
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .chart-container {
   background: white;
   border-radius: 12px;
@@ -268,9 +275,14 @@ const option = computed(() => {
   padding: 16px;
   display: flex;
   flex-direction: column;
-  /* 热力图需要根据内容自动撑高，不能固定高度 */
   min-height: 400px; 
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: all 0.3s ease;
+
+  :global(.dark) & {
+    background-color: #252632;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
 }
 
 .chart-header {
@@ -282,12 +294,21 @@ const option = computed(() => {
   font-size: 16px;
   font-weight: 700;
   color: #1e293b;
+  transition: color 0.3s;
+
+  :global(.dark) & {
+    color: rgba(255, 255, 255, 0.9);
+  }
 }
 
 .chart-subtitle {
   font-size: 12px;
   color: #64748b;
   margin-top: 4px;
+
+  :global(.dark) & {
+    color: #94a3b8;
+  }
 }
 
 .chart-body {
