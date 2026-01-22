@@ -30,4 +30,5 @@ export interface UISaveData {
   markerHeader: Uint8Array
   markerTail: Uint8Array
   otherSections: Uint8Array // 其他section的原始数据
+  belongsToWaymarkDat?: boolean // 是否属于 WAYMARK.DAT 格式
 }

@@ -142,7 +142,37 @@ function exportFile() {
     payloadUnknown,
     fileFormatVersion,
     fileUnknown,
+    belongsToWaymarkDat,
   } = parsedData.value
+
+  if (belongsToWaymarkDat) {
+    const final = new Uint8Array(wayMarks.length * 104)
+    wayMarks.forEach((wm, i) => {
+      const offset = i * 104
+      const view = new DataView(final.buffer, final.byteOffset + offset, 104)
+      MARKER_MAP.forEach((m, idx) => {
+        view.setInt32(idx * 12, wm[m.key].x, true)
+        view.setInt32(idx * 12 + 4, wm[m.key].y, true)
+        view.setInt32(idx * 12 + 8, wm[m.key].z, true)
+      })
+      final[offset + 96] = wm.enableFlag
+      final[offset + 97] = wm.unknown
+      view.setUint16(98, wm.regionID, true)
+      view.setInt32(100, wm.timestamp, true)
+    })
+
+    const url = URL.createObjectURL(
+      new Blob([final], { type: 'application/octet-stream' }),
+    )
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'WAYMARK.DAT'
+    a.click()
+    URL.revokeObjectURL(url)
+    hasUnsavedChanges.value = false
+    ElMessage.success(t('uisaveEditor.exportSuccess'))
+    return
+  }
 
   const markerData = new Uint8Array(
     16 + wayMarks.length * 104 + markerTail.length,
@@ -849,6 +879,7 @@ const onDragLeave = () => {
     display: grid;
     grid-template-columns: repeat(auto-fill, 580px);
     gap: 20px;
+    justify-content: center;
   }
 
   .waymark-card {

@@ -14,10 +14,47 @@ export const MARKER_MAP = [
   { key: 'Four', label: '4', bit: 0x80, id: 7 },
 ] as const
 
+
+function parseWaymarkEntry(view: DataView, offset: number, buffer: Uint8Array): WayMark {
+  const wm: any = {
+    enableFlag: buffer[offset + 96] ?? 0,
+    unknown: buffer[offset + 97] ?? 0,
+    regionID: view.getUint16(offset + 98, true),
+    timestamp: view.getInt32(offset + 100, true),
+  }
+  MARKER_MAP.forEach((m, idx) => {
+    wm[m.key] = {
+      x: view.getInt32(offset + idx * 12, true),
+      y: view.getInt32(offset + idx * 12 + 4, true),
+      z: view.getInt32(offset + idx * 12 + 8, true),
+    }
+  })
+  return wm as WayMark
+}
+
 export async function parseUISave(buffer: ArrayBuffer): Promise<UISaveData> {
   const data = new Uint8Array(buffer)
   const view = new DataView(data.buffer)
-  
+
+  // Detection for raw WAYMARK.DAT (30 slots * 104 bytes = 3120 bytes)
+  if (data.length === 3120) {
+    const wayMarks: WayMark[] = []
+    for (let i = 0; i < 30; i++) {
+      wayMarks.push(parseWaymarkEntry(view, i * 104, data))
+    }
+    return {
+      fileFormatVersion: new Uint8Array(8),
+      fileUnknown: new Uint8Array(4),
+      payloadUnknown: new Uint8Array(8),
+      userID: 0n,
+      wayMarks,
+      markerHeader: new Uint8Array(16),
+      markerTail: new Uint8Array(0),
+      otherSections: new Uint8Array(0),
+      belongsToWaymarkDat: true,
+    }
+  }
+
   // Basic validation (length check?)
   if (data.length < 16) throw new Error('File too small')
 
@@ -34,37 +71,14 @@ export async function parseUISave(buffer: ArrayBuffer): Promise<UISaveData> {
   while (decOffset < decrypted.length - 2) {
     const index = dView.getInt16(decOffset, true)
     const length = dView.getInt32(decOffset + 8, true)
-    const sectionData = decrypted.slice(
-      decOffset + 16,
-      decOffset + 16 + length,
-    )
-    const sectionFull = decrypted.slice(
-      decOffset,
-      decOffset + 16 + length + 4,
-    )
+    const sectionData = decrypted.slice(decOffset + 16, decOffset + 16 + length)
+    const sectionFull = decrypted.slice(decOffset, decOffset + 16 + length + 4)
 
     if (index === 17) {
       markerHeader = sectionData.slice(0, 16)
+      const sView = new DataView(sectionData.buffer, sectionData.byteOffset)
       for (let i = 16; i + 104 <= sectionData.length; i += 104) {
-        const sView = new DataView(
-          sectionData.buffer,
-          sectionData.byteOffset + i,
-          104,
-        )
-        const wm: any = {
-          enableFlag: sectionData[i + 96] ?? 0,
-          unknown: sectionData[i + 97] ?? 0,
-          regionID: sView.getUint16(98, true),
-          timestamp: sView.getInt32(100, true),
-        }
-        MARKER_MAP.forEach((m, idx) => {
-          wm[m.key] = {
-            x: sView.getInt32(idx * 12, true),
-            y: sView.getInt32(idx * 12 + 4, true),
-            z: sView.getInt32(idx * 12 + 8, true),
-          }
-        })
-        wayMarks.push(wm as WayMark)
+        wayMarks.push(parseWaymarkEntry(sView, i, sectionData))
       }
       markerTail = sectionData.slice(wayMarks.length * 104 + 16)
     } else {
