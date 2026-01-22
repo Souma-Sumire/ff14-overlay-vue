@@ -25,7 +25,9 @@
         <div v-if="isLoading" class="loading-overlay">
           <div class="spinner"></div>
           <div class="loading-txt">解析中 {{ loadingProgress }}%</div>
-          <div v-if="currentParsingFile" class="loading-sub-txt">{{ currentParsingFile }}</div>
+          <div v-if="currentParsingFile" class="loading-sub-txt">
+            {{ currentParsingFile }}
+          </div>
         </div>
       </transition>
 
@@ -98,17 +100,20 @@
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item command="import">
-                    <el-icon><Upload /></el-icon>导入备份 (JSON) <span class="op-hint">(仅限掉落记录)</span>
+                    <el-icon><Upload /></el-icon>导入备份 (JSON)
+                    <span class="op-hint">(仅限掉落记录)</span>
                   </el-dropdown-item>
                   <el-dropdown-item command="export">
-                    <el-icon><Download /></el-icon>导出备份 (JSON) <span class="op-hint">(仅限掉落记录)</span>
+                    <el-icon><Download /></el-icon>导出备份 (JSON)
+                    <span class="op-hint">(仅限掉落记录)</span>
                   </el-dropdown-item>
                   <el-dropdown-item
                     command="clear"
                     divided
                     style="color: #f56c6c"
                   >
-                    <el-icon><Delete /></el-icon>清空数据库 <span class="op-hint">(仅限掉落记录)</span>
+                    <el-icon><Delete /></el-icon>清空数据库
+                    <span class="op-hint">(仅限掉落记录)</span>
                   </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
@@ -118,9 +123,84 @@
               <el-icon><Plus /></el-icon>
               <span>手动添加</span>
             </el-button>
+
+            <el-popover
+              placement="bottom-end"
+              :width="480"
+              trigger="click"
+              popper-class="guide-popover-popper"
+            >
+              <template #reference>
+                <el-button plain class="tool-btn">
+                  <el-icon><QuestionFilled /></el-icon>
+                  <span>使用指南</span>
+                </el-button>
+              </template>
+
+              <div class="guide-content-popover">
+                <section class="guide-section">
+                  <h4>
+                    <el-icon><InfoFilled /></el-icon> 这是什么？
+                  </h4>
+                  <p>
+                    这是一个专门为 FFXIV
+                    固定队设计的<strong>掉落历史统计</strong>与
+                    <strong>BIS 分配管理</strong>工具。它能自动从你的 ACT
+                    日志中记录战利品信息，并以此为基础提供自动化的分配建议与数据分析。
+                  </p>
+                </section>
+
+                <section class="guide-section">
+                  <h4>
+                    <el-icon><Monitor /></el-icon> 注意事项
+                  </h4>
+                  <div class="warning-box">
+                    <ul>
+                      <li>
+                        <strong>保持 ACT 运行：</strong
+                        >且未勾选“隐藏聊天日志(隐私保护)”。
+                      </li>
+                      <li>
+                        <strong>请勿提前退本：</strong>
+                        一定要等装备分完了再退本！以保证日志完整。
+                      </li>
+                    </ul>
+                  </div>
+                </section>
+
+                <section class="guide-section">
+                  <h4>
+                    <el-icon><Mouse /></el-icon> 快速上手
+                  </h4>
+                  <ol>
+                    <li>
+                      <strong>配置人员：</strong>
+                      在左上方“固定队 - 职位设置”中绑定队员 ID。
+                    </li>
+                    <li>
+                      <strong>BIS 规划：</strong>
+                      切换至“BIS分配”页签，录入全队成员的毕业装备需求。
+                    </li>
+                    <li>
+                      <strong>一键分配：</strong>
+                      副本结束后，可参考“BIS分配”页签的建议进行分配。
+                    </li>
+                  </ol>
+                </section>
+
+                <section class="guide-section">
+                  <h4>
+                    <el-icon><EditPen /></el-icon> 漏了记录怎么办？
+                  </h4>
+                  <p>
+                    如果因意外（如掉线、忘开 ACT
+                    等）漏掉记录，请点击主界面右上角的“<strong>手动添加</strong>”补全。手动添加的记录也会参与
+                    BIS 统计与分配计算。
+                  </p>
+                </section>
+              </div>
+            </el-popover>
           </div>
-
-
         </div>
 
         <div class="filter-panel">
@@ -132,14 +212,134 @@
                   >👥 玩家 ({{ visiblePlayerCount }})</span
                 >
                 <div class="header-sep"></div>
-                <el-button
-                  @click="showRoleDialog = true"
-                  size="small"
-                  class="soft-action-btn primary"
+                <el-popover
+                  placement="bottom"
+                  :width="360"
+                  trigger="click"
+                  popper-class="role-settings-popper"
                 >
-                  <el-icon><User /></el-icon>
-                  <span>固定队职位设置</span>
-                </el-button>
+                  <template #reference>
+                    <el-button size="small" class="soft-action-btn primary">
+                      <el-icon><User /></el-icon>
+                      <span>固定队 - 职位设置</span>
+                    </el-button>
+                  </template>
+
+                  <div class="role-settings-content-popover">
+                    <div class="role-grid">
+                      <div
+                        v-for="role in ROLE_DEFINITIONS"
+                        :key="role"
+                        class="role-setup-item"
+                      >
+                        <div class="role-setup-label">
+                          <role-badge :role="role" />
+                        </div>
+                        <el-select
+                          v-model="playerRoles[role]"
+                          placeholder="选择玩家"
+                          filterable
+                          clearable
+                          size="small"
+                          style="flex: 1"
+                        >
+                          <el-option
+                            v-for="p in allPlayers.filter(
+                              (p) =>
+                                p === playerRoles[role] ||
+                                !assignedPlayers.has(p),
+                            )"
+                            :key="p"
+                            :label="p"
+                            :value="p"
+                          />
+                        </el-select>
+                      </div>
+                    </div>
+
+                    <div class="role-divider">特殊分组</div>
+
+                    <div class="special-role-section">
+                      <div class="special-role-group">
+                        <div class="group-title">临时替补</div>
+                        <div class="special-list">
+                          <template
+                            v-for="(p, role) in playerRoles"
+                            :key="role"
+                          >
+                            <div
+                              v-if="role.startsWith('SUB:')"
+                              class="special-item"
+                            >
+                              <el-tag
+                                closable
+                                @close="delete playerRoles[role]"
+                              >
+                                {{ p }}
+                              </el-tag>
+                            </div>
+                          </template>
+                          <el-select
+                            placeholder="添加替补"
+                            filterable
+                            size="small"
+                            @change="addSpecialRole($event, 'SUB')"
+                            value=""
+                            style="width: 120px"
+                          >
+                            <el-option
+                              v-for="p in allPlayers.filter(
+                                (p) => !assignedPlayers.has(p),
+                              )"
+                              :key="p"
+                              :label="p"
+                              :value="p"
+                            />
+                          </el-select>
+                        </div>
+                      </div>
+
+                      <div class="special-role-group">
+                        <div class="group-title">已离队</div>
+                        <div class="special-list">
+                          <template
+                            v-for="(p, role) in playerRoles"
+                            :key="role"
+                          >
+                            <div
+                              v-if="role.startsWith('LEFT:')"
+                              class="special-item"
+                            >
+                              <el-tag
+                                closable
+                                @close="delete playerRoles[role]"
+                              >
+                                {{ p }}
+                              </el-tag>
+                            </div>
+                          </template>
+                          <el-select
+                            placeholder="标记离队"
+                            filterable
+                            size="small"
+                            @change="addSpecialRole($event, 'LEFT')"
+                            value=""
+                            style="width: 120px"
+                          >
+                            <el-option
+                              v-for="p in allPlayers.filter(
+                                (p) => !assignedPlayers.has(p),
+                              )"
+                              :key="p"
+                              :label="p"
+                              :value="p"
+                            />
+                          </el-select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </el-popover>
                 <div class="header-sep"></div>
                 <label class="switch-box">
                   <el-switch
@@ -157,7 +357,7 @@
                   placement="bottom"
                   title="未完成职位设置"
                   :width="220"
-                  content="需在“职位设置”中填满 MT~D4 共 8 个核心职位后方可开启"
+                  content="需在左侧“职位设置”中完成所有职位后方可开启"
                   :disabled="isRaidRolesComplete"
                 >
                   <template #reference>
@@ -653,7 +853,12 @@
                   <el-table-column label="周" width="60" align="center">
                     <template #default="scope">
                       <div class="col-week">
-                        W{{ getRaidWeekIndex(scope.row.timestamp, GAME_VERSION_CONFIG.RAID_START_TIME) }}
+                        W{{
+                          getRaidWeekIndex(
+                            scope.row.timestamp,
+                            GAME_VERSION_CONFIG.RAID_START_TIME,
+                          )
+                        }}
                       </div>
                     </template>
                   </el-table-column>
@@ -828,7 +1033,7 @@
               </div>
             </div>
             <div class="empty-hint" style="margin-top: 24px">
-              <el-button @click="currentHandle = null" plain
+              <el-button @click="currentHandle = null" plain size="large"
                 >返回重选</el-button
               >
               <el-button type="primary" size="large" @click="startInitialSync">
@@ -887,7 +1092,11 @@
                   size="large"
                   >导入备份 (支持拖入)</el-button
                 >
-                <el-button v-if="!isSyncing" @click="showTimeSetup = true" plain
+                <el-button
+                  v-if="!isSyncing"
+                  @click="showTimeSetup = true"
+                  plain
+                  size="large"
                   >调整时间范围</el-button
                 >
               </div>
@@ -937,109 +1146,6 @@
           </span>
         </template>
       </el-dialog>
-
-      <el-dialog
-        v-model="showRoleDialog"
-        title="成员职位设置"
-        width="540px"
-        class="role-settings-dialog"
-        destroy-on-close
-      >
-        <div class="role-grid">
-          <div
-            v-for="role in ROLE_DEFINITIONS"
-            :key="role"
-            class="role-setup-item"
-          >
-            <div class="role-setup-label">
-              <role-badge :role="role" />
-            </div>
-            <el-select
-              v-model="playerRoles[role]"
-              placeholder="选择玩家"
-              filterable
-              clearable
-              size="default"
-              style="flex: 1"
-            >
-              <el-option
-                v-for="p in allPlayers.filter(
-                  (p) => p === playerRoles[role] || !assignedPlayers.has(p),
-                )"
-                :key="p"
-                :label="p"
-                :value="p"
-              />
-            </el-select>
-          </div>
-        </div>
-
-        <div class="role-divider">特殊分组</div>
-
-        <div class="special-role-section">
-          <div class="special-role-group">
-            <div class="group-title">临时替补</div>
-            <div class="special-list">
-              <template v-for="(p, role) in playerRoles" :key="role">
-                <div v-if="role.startsWith('SUB:')" class="special-item">
-                  <el-tag closable @close="delete playerRoles[role]">
-                    {{ p }}
-                  </el-tag>
-                </div>
-              </template>
-              <el-select
-                placeholder="添加替补"
-                filterable
-                size="small"
-                @change="addSpecialRole($event, 'SUB')"
-                value=""
-                style="width: 120px"
-              >
-                <el-option
-                  v-for="p in allPlayers.filter((p) => !assignedPlayers.has(p))"
-                  :key="p"
-                  :label="p"
-                  :value="p"
-                />
-              </el-select>
-            </div>
-          </div>
-
-          <div class="special-role-group">
-            <div class="group-title">已离队</div>
-            <div class="special-list">
-              <template v-for="(p, role) in playerRoles" :key="role">
-                <div v-if="role.startsWith('LEFT:')" class="special-item">
-                  <el-tag closable @close="delete playerRoles[role]">
-                    {{ p }}
-                  </el-tag>
-                </div>
-              </template>
-              <el-select
-                placeholder="标记离队"
-                filterable
-                size="small"
-                @change="addSpecialRole($event, 'LEFT')"
-                value=""
-                style="width: 120px"
-              >
-                <el-option
-                  v-for="p in allPlayers.filter((p) => !assignedPlayers.has(p))"
-                  :key="p"
-                  :label="p"
-                  :value="p"
-                />
-              </el-select>
-            </div>
-          </div>
-        </div>
-
-        <template #footer>
-          <el-button @click="showRoleDialog = false" type="primary"
-            >完成</el-button
-          >
-        </template>
-      </el-dialog>
     </template>
 
     <input
@@ -1087,6 +1193,7 @@ import {
   FolderOpened,
   Delete,
   Plus,
+  QuestionFilled,
   Search,
   User,
   Setting,
@@ -1099,6 +1206,10 @@ import {
   Timer,
   RefreshLeft,
   RefreshRight,
+  InfoFilled,
+  Monitor,
+  Mouse,
+  EditPen,
 } from '@element-plus/icons-vue'
 import LogParserWorker from '@/workers/logParser.ts?worker'
 import LootPlayerRoll from '@/components/loot-history/LootPlayerRoll.vue'
@@ -1106,9 +1217,9 @@ import PlayerDisplay from '@/components/loot-history/PlayerDisplay.vue'
 import LootSortSegmented from '@/components/loot-history/LootSortSegmented.vue'
 import LootStatisticsPanel from '@/components/loot-history/charts/LootStatisticsPanel.vue'
 import RoleBadge from '@/components/loot-history/RoleBadge.vue'
-import BisAllocator, { type BisConfig } from '@/components/loot-history/BisAllocator.vue'
-
-const parserWorker = new LogParserWorker()
+import BisAllocator, {
+  type BisConfig,
+} from '@/components/loot-history/BisAllocator.vue'
 
 const GAME_VERSION_CONFIG = {
   // 零式首周开始时间
@@ -1143,7 +1254,6 @@ const viewMode = ref<'list' | 'summary' | 'slot' | 'week' | 'chart' | 'bis'>(
 const currentHandle = ref<FileSystemDirectoryHandle | null>(null)
 
 const showTimeSetup = ref(false)
-const showRoleDialog = ref(false)
 
 const playerVisibility = ref<Record<string, boolean>>({})
 const recordWeekCorrections = ref<Record<string, number>>({})
@@ -1512,7 +1622,6 @@ onUnmounted(() => {
   document.body.removeEventListener('dragleave', handleGlobalDragLeave)
   document.body.removeEventListener('drop', handleGlobalDrop)
   window.removeEventListener('click', closeContextMenu)
-  parserWorker.terminate()
 })
 
 function closeContextMenu() {
@@ -1678,7 +1787,6 @@ watch(isRaidRolesComplete, (newVal) => {
   }
 })
 
-
 const SLOT_DEFINITIONS = PART_ORDER
 
 function getItemSortPriority(
@@ -1806,8 +1914,6 @@ const displaySlots = computed(() => {
   return [...predefined, ...dynamic]
 })
 
-
-
 function getRecordRaidWeekLabel(record: LootRecord) {
   const offset = recordWeekCorrections.value[record.key] || 0
   return getRaidWeekLabel(record.timestamp, offset).label
@@ -1818,10 +1924,7 @@ const zeroWeekStart = computed(() => {
 })
 
 function getRecordFormattedWeekLabel(weekRangeLabel: string) {
-  const { label } = getFormattedWeekLabel(
-    weekRangeLabel,
-    zeroWeekStart.value,
-  )
+  const { label } = getFormattedWeekLabel(weekRangeLabel, zeroWeekStart.value)
   return label
 }
 
@@ -1862,7 +1965,6 @@ const rawSuspiciousKeys = computed(() => {
   const keys = new Set<string>()
   const rawSummary: Record<string, LootRecord[]> = {}
   filteredRecords.value.forEach((r) => {
-    // 复用 getRaidWeekLabel，确保周转场逻辑与格式与全局统一
     const { label: weekLabel } = getRaidWeekLabel(r.timestamp)
     if (!rawSummary[weekLabel]) rawSummary[weekLabel] = []
     rawSummary[weekLabel].push(r)
@@ -2149,44 +2251,50 @@ async function syncLogFiles() {
       return
     }
 
-    const CHUNK_SIZE = 10; // Batch process files to keep UI responsive
+    const CHUNK_SIZE = 10 // Batch process files to keep UI responsive
+    let completedCount = 0 // 原子计数器，跟踪已完成的文件数
+
     for (let i = 0; i < filesToRead.length; i += CHUNK_SIZE) {
-      const chunk = filesToRead.slice(i, i + CHUNK_SIZE);
-      const chunkPromises = chunk.map(async (target, idx) => {
-        currentParsingFile.value = target.name;
-        const file = await target.handle.getFile();
+      const chunk = filesToRead.slice(i, i + CHUNK_SIZE)
+      const chunkPromises = chunk.map(async (target) => {
+        currentParsingFile.value = target.name
+        const file = await target.handle.getFile()
         // Use a faster way to load large files
-        const text = await file.text();
-        
+        const text = await file.text()
+
         const {
           records,
           players: filePlayers,
           items: fileItems,
-        } = await parseLogWithWorker(text);
+        } = await parseLogWithWorker(text)
 
         for (const r of records) {
           if (!localKeys.has(r.key) && !blacklistedKeys.value.has(r.key)) {
-            localKeys.add(r.key);
-            allNewRecords.push(r);
+            localKeys.add(r.key)
+            allNewRecords.push(r)
           }
         }
 
-        filePlayers.forEach((p) => batchSeenPlayers.add(p));
-        fileItems.forEach((i) => batchSeenItems.add(i));
+        filePlayers.forEach((p) => batchSeenPlayers.add(p))
+        fileItems.forEach((i) => batchSeenItems.add(i))
 
         if (!target.name.includes(todayStr)) {
           processedFiles.value[target.name] = {
             size: file.size,
             mtime: file.lastModified,
-          };
+          }
         }
-        
-        loadingProgress.value = Math.round(((i + idx + 1) / filesToRead.length) * 100);
-      });
 
-      await Promise.all(chunkPromises);
+        // 文件完成后递增计数器并更新进度
+        completedCount++
+        loadingProgress.value = Math.round(
+          (completedCount / filesToRead.length) * 100,
+        )
+      })
+
+      await Promise.all(chunkPromises)
       // Small delay to let UI update
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0))
     }
 
     if (allNewRecords.length > 0) {
@@ -2246,13 +2354,20 @@ function parseLogWithWorker(text: string): Promise<{
   items: string[]
 }> {
   return new Promise((resolve, reject) => {
-    parserWorker.onmessage = (e) => {
+    // 为每个解析任务创建独立的 worker 实例，避免并发冲突
+    const worker = new LogParserWorker()
+
+    worker.onmessage = (e) => {
       resolve(e.data)
+      worker.terminate() // 解析完成后立即终止 worker
     }
-    parserWorker.onerror = (e) => {
+
+    worker.onerror = (e) => {
       reject(e)
+      worker.terminate() // 出错时也要终止 worker
     }
-    parserWorker.postMessage(text)
+
+    worker.postMessage(text)
   })
 }
 
@@ -2267,11 +2382,7 @@ function isSystemFiltered(item: string) {
     return true
   if (systemFilterSettings.value.book && item.endsWith('断章')) return true
   if (systemFilterSettings.value.totem && item.endsWith('图腾')) return true
-  if (
-    systemFilterSettings.value.other &&
-    item.includes('经验值')
-  )
-    return true
+  if (systemFilterSettings.value.other && item.includes('经验值')) return true
 
   if (!RAID_REGEX.test(item)) {
     const match = item.match(EQUIP_SERIES_REGEX)
@@ -2581,12 +2692,16 @@ const importInputRef = ref<HTMLInputElement | null>(null)
 
 function handleDataCommand(command: string) {
   if (command === 'clear') {
-    ElMessageBox.confirm('确定清空所有掉落记录？此操作不可恢复。<br/><small style="color: #64748b">注意：此操作仅清空<b>掉落历史</b>。您的 BIS 配置、固定队角色设置及人员映射将全部保留。</small>', '警告', {
-      confirmButtonText: '确定清空',
-      cancelButtonText: '取消',
-      type: 'warning',
-      dangerouslyUseHTMLString: true,
-    })
+    ElMessageBox.confirm(
+      '确定清空所有掉落记录？此操作不可恢复。<br/><small style="color: #64748b">注意：此操作仅清空<b>掉落历史</b>。您的 BIS 配置、固定队角色设置及人员映射将全部保留。</small>',
+      '警告',
+      {
+        confirmButtonText: '确定清空',
+        cancelButtonText: '取消',
+        type: 'warning',
+        dangerouslyUseHTMLString: true,
+      },
+    )
       .then(() => {
         clearDatabase()
       })
@@ -2936,22 +3051,24 @@ async function clearDatabase() {
   );
 }
 
-html, body {
-  
-  overflow-y: overlay; 
+html,
+body,
+#app {
+  height: 100%;
+  width: 100%;
+  overflow: hidden !important;
   background-color: #f8fafc !important;
   color-scheme: light;
   margin: 0;
-  
-  padding: 0 !important; 
+  padding: 0 !important;
 }
 
-html.dark, html.dark body {
-  background-color: #161823 !important;
+html.dark,
+html.dark body {
+  background-color: #0f172a !important;
   color-scheme: dark;
   --ffxiv-stripe-color: rgba(255, 255, 255, 0.08);
 }
-
 
 ::-webkit-scrollbar {
   width: 10px;
@@ -2975,7 +3092,6 @@ html.dark ::-webkit-scrollbar-thumb {
 
 .ffxiv-diagonal-mask {
   position: relative !important;
-  
   user-select: none !important;
   -webkit-user-select: none !important;
   -webkit-user-drag: none !important;
@@ -2986,17 +3102,13 @@ html.dark ::-webkit-scrollbar-thumb {
     content: '' !important;
     position: absolute !important;
     inset: 0 !important;
-    z-index: var(
-      --ffxiv-mask-z,
-      9999
-    ) !important; 
+    z-index: var(--ffxiv-mask-z, 9999) !important;
     background: var(--ffxiv-mask-bg, transparent) !important;
     background-image: var(--ffxiv-diagonal-texture) !important;
-    pointer-events: auto !important; 
+    pointer-events: auto !important;
     cursor: not-allowed !important;
   }
 
-  
   * {
     pointer-events: none !important;
     user-select: none !important;
@@ -3012,7 +3124,7 @@ html.dark ::-webkit-scrollbar-thumb {
   cursor: not-allowed !important;
   user-select: none !important;
   -webkit-user-drag: none !important;
-  pointer-events: auto !important; 
+  pointer-events: auto !important;
   --mask-overlay: linear-gradient(
     rgba(255, 255, 255, 0.2),
     rgba(255, 255, 255, 0.4)
@@ -3023,7 +3135,7 @@ html.dark ::-webkit-scrollbar-thumb {
     position: absolute;
     inset: 0;
     z-index: 10;
-    pointer-events: none; 
+    pointer-events: none;
     background: var(--mask-overlay);
     background-image: var(--ffxiv-diagonal-texture);
   }
@@ -3049,11 +3161,19 @@ html.dark .section-mask {
   right: 12px;
   z-index: 10000;
 }
+
+.guide-popover-popper,
+.role-settings-popper {
+  padding: 0 !important;
+}
 </style>
 
 <style lang="scss" scoped>
 .app-container {
-  min-height: 100vh;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
   background-color: #f8fafc;
   font-family:
     'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
@@ -4655,36 +4775,36 @@ html.dark .drop-hint {
   font-size: 32px;
   margin-bottom: 4px;
 }
+.role-settings-content-popover {
+  padding: 12px 14px;
+}
 
 .role-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  padding: 8px 0;
+  gap: 4px 8px;
+  padding: 0;
 }
 
 .role-setup-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: #f8fafc;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  gap: 6px;
 }
 
 .role-setup-label {
   flex-shrink: 0;
-  width: 36px;
+  width: 24px;
   display: flex;
   justify-content: center;
+  transform: scale(0.85);
 }
 
 .role-divider {
-  margin: 24px 0 16px;
-  padding-bottom: 8px;
+  margin: 10px 0 6px;
+  padding-bottom: 2px;
   border-bottom: 1px dashed #e2e8f0;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   color: #64748b;
   display: flex;
@@ -4693,17 +4813,17 @@ html.dark .drop-hint {
 
 .role-divider::before {
   content: '';
-  width: 4px;
-  height: 14px;
+  width: 2px;
+  height: 10px;
   background: #3b82f6;
-  margin-right: 8px;
+  margin-right: 4px;
   border-radius: 2px;
 }
 
 .special-role-section {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 8px;
 }
 
 .special-role-group {
@@ -4737,13 +4857,124 @@ html.dark .drop-hint {
   font-size: 12px;
 }
 
-.role-settings-dialog :deep(.el-dialog__body) {
-  padding-top: 10px;
-}
+.guide-content-popover {
+  padding: 20px 24px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #334155;
 
-.role-settings-dialog :deep(.el-dialog__footer) {
-  border-top: 1px solid #f1f5f9;
-  padding-top: 20px;
+  .guide-section {
+    margin-bottom: 20px;
+
+    .el-icon {
+      color: #3b82f6;
+      vertical-align: text-bottom;
+      margin-right: 4px;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    h4 {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+      line-height: 1.4;
+      color: #0f172a;
+
+      .el-icon {
+        font-size: 15px;
+      }
+    }
+
+    p {
+      margin: 0 0 6px 0;
+      line-height: 1.5;
+      color: #334155;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    ol,
+    ul {
+      margin: 6px 0;
+      padding-left: 20px;
+
+      li {
+        margin-bottom: 4px;
+        line-height: 1.5;
+        color: #334155;
+        padding-left: 2px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        strong {
+          color: #1e293b;
+          font-weight: 600;
+        }
+      }
+    }
+
+    code {
+      display: inline-block;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', 'Consolas', monospace;
+      font-size: 12px;
+      font-weight: 500;
+      background-color: #f1f5f9;
+      color: #3b82f6;
+      line-height: 1.4;
+      margin: 0 2px;
+    }
+  }
+
+  .warning-box {
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    border-radius: 6px;
+    padding: 6px 12px;
+    margin: 8px 0;
+    background-color: #fffbeb;
+
+    p {
+      margin: 0 0 4px 0;
+      color: #92400e;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      strong {
+        color: #b45309;
+        font-weight: 700;
+      }
+    }
+
+    ul {
+      margin: 4px 0 0 0;
+      padding-left: 18px;
+
+      li {
+        margin-bottom: 2px;
+        color: #92400e;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        strong {
+          color: #b45309;
+        }
+      }
+    }
+  }
 }
 </style>
 
@@ -4825,7 +5056,7 @@ html.dark {
 
   .empty-desc,
   .loading-subtitle {
-     color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.5);
   }
 
   .setup-label {
@@ -4993,12 +5224,10 @@ html.dark {
       color: rgba(255, 255, 255, 0.9);
     }
   }
-  .role-settings-dialog .el-dialog__footer {
-    border-top-color: rgba(255, 255, 255, 0.08);
-  }
 
-  /* Standardizing buttons in guide/forms */
-  .el-button:not(.el-button--primary):not(.el-button--danger):not(.el-button--info) {
+  .el-button:not(.el-button--primary):not(.el-button--danger):not(
+      .el-button--info
+    ) {
     background-color: rgba(255, 255, 255, 0.05) !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
     color: rgba(255, 255, 255, 0.9) !important;
@@ -5012,7 +5241,7 @@ html.dark {
 
   .initial-loading,
   .empty-container {
-      background-color: #161823 !important;
+    background-color: #161823 !important;
   }
 
   .el-pagination {
@@ -5136,6 +5365,58 @@ html.dark {
 
   .config-table .check-cell:hover {
     background-color: rgba(255, 255, 255, 0.05) !important;
+  }
+
+  .guide-popover-popper {
+    background-color: #252632 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+
+    .el-popper__arrow::before {
+      background-color: #252632 !important;
+      border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .guide-content-popover {
+      .guide-section {
+        margin-bottom: 20px;
+
+        h4 {
+          color: rgba(255, 255, 255, 0.95);
+        }
+
+        p,
+        li {
+          color: rgba(255, 255, 255, 0.75);
+          &::marker {
+            color: rgba(255, 255, 255, 0.35);
+          }
+        }
+
+        strong {
+          color: #60a5fa;
+        }
+      }
+
+      .warning-box {
+        background-color: rgba(234, 179, 8, 0.08);
+        border-color: rgba(234, 179, 8, 0.25);
+        border-radius: 6px;
+
+        p,
+        li {
+          color: rgba(255, 255, 255, 0.85);
+        }
+
+        strong {
+          color: #facc15;
+        }
+      }
+
+      code {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #60a5fa;
+      }
+    }
   }
 }
 </style>

@@ -42,6 +42,7 @@ export const MENU_ORDER: string[] = [
   'startPages.menu.mogstation_patch',
   'startPages.menu.stone_sky_logs',
   'startPages.menu.kook_purify',
+  'startPages.menu.loot_history',
 ];
 
 export const getRawMenuData = (locale: string, t: (key: string, args?: (string | number)[]) => string): Menu[] => [
@@ -239,5 +240,12 @@ export const getRawMenuData = (locale: string, t: (key: string, args?: (string |
     type: '网页/工具',
     path: 'https://greasyfork.org/zh-CN/scripts/546095-kook%E5%87%80%E5%8C%96',
     comment: 'startPages.comment.kook_purify',
+  },
+  {
+    title: 'startPages.menu.loot_history',
+    type: '网页/工具',
+    path: 'lootHistory',
+    comment: 'startPages.comment.loot_history',
+    isNew: true,
   },
 ];

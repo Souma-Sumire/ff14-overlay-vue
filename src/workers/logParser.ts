@@ -112,21 +112,13 @@ self.onmessage = (e: MessageEvent) => {
   const players = new Set<string>()
   const items = new Set<string>()
 
-  // Optimization: use a simple loop and pre-check line length
-  const len = lines.length
-  for (let i = 0; i < len; i++) {
+  for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
     if (!line) continue
-    
     const result = parseLine(line, tempRolls, items, players)
     if (result) {
-      if (Array.isArray(result)) {
-        for (let j = 0; j < result.length; j++) {
-          newRecords.push(result[j]!)
-        }
-      } else {
-        newRecords.push(result)
-      }
+      if (Array.isArray(result)) newRecords.push(...result)
+      else newRecords.push(result)
     }
   }
   
