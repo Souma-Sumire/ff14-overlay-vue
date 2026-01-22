@@ -74,3 +74,12 @@ export function getFormattedWeekLabel(
     index: weekIndex,
   }
 }
+
+export function getRaidWeekIndex(
+  currentDate: Date | string | number,
+  zeroWeekDate: Date | string | number,
+): number {
+  const currentStart = getRaidWeekStart(new Date(currentDate))
+  const zeroStart = getRaidWeekStart(new Date(zeroWeekDate))
+  return getWeekIndexFromStart(currentStart, zeroStart)
+}

@@ -200,20 +200,20 @@ const option = computed(() => {
           formatter: (p: any) => p.value > 0 ? p.value.toFixed(1) : '',
           color: isDark.value ? '#f1f5f9' : '#1e293b',
         },
-        markLine: {
-          data: [{ type: 'average', name: '平均' }],
-          symbol: 'none',
-          lineStyle: {
-            color: '#999',
-            type: 'dashed'
-          },
-          label: {
-            position: 'start',
-            formatter: '{b}',
-            color: '#64748b',
-            padding: [0, 8, 0, 0] // 稍微加点右边距，别贴太死
+          markLine: {
+            data: [{ type: 'average', name: '平均' }],
+            symbol: 'none',
+            lineStyle: {
+              color: isDark.value ? 'rgba(255,255,255,0.4)' : '#999',
+              type: 'dashed'
+            },
+            label: {
+              position: 'start',
+              formatter: '{b}',
+              color: isDark.value ? '#94a3b8' : '#64748b',
+              padding: [0, 8, 0, 0]
+            }
           }
-        }
       },
     ],
   }

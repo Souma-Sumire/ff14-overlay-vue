@@ -386,22 +386,24 @@ const LAYER_CONFIG = [
 </script>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import type { LootRecord } from '@/utils/lootParser'
-
-import PlayerDisplay from './PlayerDisplay.vue'
+import { getRoleType } from '@/utils/lootParser'
 import {
-  Setting,
-  Warning,
-  List,
-  Right,
   ArrowDown,
+  List,
   QuestionFilled,
+  Right,
+  Setting,
   User,
+  Warning,
 } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { computed, ref, watch } from 'vue'
+
 import { PART_ORDER } from '@/utils/lootParser'
 import { getCurrentWeekNumber } from '@/utils/raidWeekUtils'
+
+import PlayerDisplay from './PlayerDisplay.vue'
 
 function generateEquipLines(rows: BisRow[]): string[] {
   const lines: string[] = []
@@ -482,6 +484,7 @@ const props = defineProps<{
   records: LootRecord[]
   modelValue: BisConfig | LegacyBisConfig | undefined
   getPlayerRole?: (name: string) => string | null | undefined
+  getActualPlayer?: (p: string) => string
   showOnlyRole?: boolean
 }>()
 
@@ -737,7 +740,8 @@ function getObtainedCount(player: string, row: BisRow): number {
   if (keywords.length === 0) return 0
 
   return props.records.filter((r) => {
-    if (r.player !== player) return false
+    const actual = props.getActualPlayer ? props.getActualPlayer(r.player) : r.player
+    if (actual !== player) return false
     return keywords.some((k) => r.item.includes(k))
   }).length
 }
@@ -837,27 +841,26 @@ watch(
       return
     }
 
-    let migrated: BisConfig = { playerBis: {} }
-    const raw = JSON.parse(JSON.stringify(newVal))
-
-    if (isLegacyConfig(raw)) {
+    if (isLegacyConfig(newVal)) {
+      const migrated: BisConfig = { playerBis: {} }
+      const raw = JSON.parse(JSON.stringify(newVal))
       Object.keys(raw.playerBis).forEach((player) => {
         migrated.playerBis[player] = {}
         const list = raw.playerBis[player]
         if (list) {
-          list.forEach((id) => {
+          list.forEach((id: string) => {
             if (migrated.playerBis[player]) {
               migrated.playerBis[player]![id] = 'raid'
             }
           })
         }
       })
-    } else {
-      migrated = raw as BisConfig
-    }
-
-    if (JSON.stringify(migrated) !== JSON.stringify(config.value)) {
       config.value = migrated
+    } else {
+      const standard = newVal as BisConfig
+      if (JSON.stringify(standard) !== JSON.stringify(config.value)) {
+        config.value = standard
+      }
     }
 
     if (!isConfigComplete.value) {
@@ -912,15 +915,7 @@ function getCellClass(player: string, row: BisRow): string {
   return excludedPlayers.value.has(player) ? `${base} is-excluded` : base
 }
 
-function getRoleGroupClass(role: string | null | undefined) {
-  if (!role) return ''
-  const r = role.toUpperCase()
-  if (r.includes('MT') || r.includes('ST') || r === 'TANK') return 'role-tank'
-  if (r.includes('H1') || r.includes('H2') || r === 'HEALER')
-    return 'role-healer'
-  if (r.match(/D\d/) || r === 'DPS') return 'role-dps'
-  return ''
-}
+const getRoleGroupClass = getRoleType
 </script>
 
 <style lang="scss" scoped>
@@ -1477,6 +1472,25 @@ html.dark {
 
     .row-header {
       color: #94a3b8;
+    }
+
+    .bis-onboarding {
+      background: #16171f;
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .onboarding-card {
+      h3 {
+        color: rgba(255, 255, 255, 0.9);
+      }
+      p {
+        color: #94a3b8;
+      }
+    }
+
+    .icon-circle {
+      background: rgba(59, 130, 246, 0.1);
+      color: #3b82f6;
     }
   }
 }

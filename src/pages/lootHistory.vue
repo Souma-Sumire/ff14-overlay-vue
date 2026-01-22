@@ -25,6 +25,7 @@
         <div v-if="isLoading" class="loading-overlay">
           <div class="spinner"></div>
           <div class="loading-txt">解析中 {{ loadingProgress }}%</div>
+          <div v-if="currentParsingFile" class="loading-sub-txt">{{ currentParsingFile }}</div>
         </div>
       </transition>
 
@@ -97,17 +98,17 @@
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item command="import">
-                    <el-icon><Upload /></el-icon>导入备份 (JSON) <span class="op-hint">(不含 BIS 配置)</span>
+                    <el-icon><Upload /></el-icon>导入备份 (JSON) <span class="op-hint">(仅限掉落记录)</span>
                   </el-dropdown-item>
                   <el-dropdown-item command="export">
-                    <el-icon><Download /></el-icon>导出备份 (JSON) <span class="op-hint">(不含 BIS 配置)</span>
+                    <el-icon><Download /></el-icon>导出备份 (JSON) <span class="op-hint">(仅限掉落记录)</span>
                   </el-dropdown-item>
                   <el-dropdown-item
                     command="clear"
                     divided
                     style="color: #f56c6c"
                   >
-                    <el-icon><Delete /></el-icon>清空数据库 <span class="op-hint">(不影响 BIS 配置)</span>
+                    <el-icon><Delete /></el-icon>清空数据库 <span class="op-hint">(仅限掉落记录)</span>
                   </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
@@ -506,7 +507,7 @@
                     @contextmenu.prevent
                   >
                     <div class="summary-header">
-                      {{ getFormattedWeekLabel(week) }}
+                      {{ getRecordFormattedWeekLabel(week) }}
                     </div>
                     <div class="week-list-body">
                       <div
@@ -636,6 +637,7 @@
                 :players="visibleAllPlayers"
                 :records="filteredRecords"
                 :get-player-role="getPlayerRole"
+                :get-actual-player="getActualPlayer"
                 :show-only-role="showOnlyRole"
               />
             </el-tab-pane>
@@ -651,7 +653,7 @@
                   <el-table-column label="周" width="60" align="center">
                     <template #default="scope">
                       <div class="col-week">
-                        W{{ getRawRaidWeekNum(scope.row.timestamp) }}
+                        W{{ getRaidWeekIndex(scope.row.timestamp, GAME_VERSION_CONFIG.RAID_START_TIME) }}
                       </div>
                     </template>
                   </el-table-column>
@@ -1070,9 +1072,17 @@ import {
   sanitizeItemName,
   sanitizePlayerName,
   ROLE_DEFINITIONS,
+  PART_ORDER,
+  DROP_ORDER,
   type RollInfo,
   type LootRecord,
 } from '@/utils/lootParser'
+import {
+  getRaidWeekStart,
+  getRaidWeekLabel,
+  getFormattedWeekLabel,
+  getRaidWeekIndex,
+} from '@/utils/raidWeekUtils'
 import {
   FolderOpened,
   Delete,
@@ -1122,6 +1132,7 @@ const dbHandle = useIndexedDB<{
 const isInitializing = ref(true)
 const isLoading = ref(false)
 const loadingProgress = ref(0)
+const currentParsingFile = ref('')
 const lootRecords = ref<LootRecord[]>([])
 const existingKeys = ref(new Set<string>())
 const blacklistedKeys = ref(new Set<string>())
@@ -1667,7 +1678,6 @@ watch(isRaidRolesComplete, (newVal) => {
   }
 })
 
-import { PART_ORDER, DROP_ORDER } from '@/utils/lootParser'
 
 const SLOT_DEFINITIONS = PART_ORDER
 
@@ -1796,31 +1806,19 @@ const displaySlots = computed(() => {
   return [...predefined, ...dynamic]
 })
 
-import {
-  getRaidWeekStart,
-  getRaidWeekLabel as getRaidWeekLabelUtil,
-  getFormattedWeekLabel as getFormattedWeekLabelUtil,
-} from '@/utils/raidWeekUtils'
 
-function getRawRaidWeekNum(dateInput: Date | string) {
-  const date = new Date(dateInput)
-  const start = new Date(GAME_VERSION_CONFIG.RAID_START_TIME).getTime()
-  const weekStart = getRaidWeekStart(date).getTime()
-  const diff = weekStart - start
-  return Math.max(1, Math.round(diff / (7 * 24 * 60 * 60 * 1000)) + 1)
-}
 
-function getRaidWeekLabel(record: LootRecord) {
+function getRecordRaidWeekLabel(record: LootRecord) {
   const offset = recordWeekCorrections.value[record.key] || 0
-  return getRaidWeekLabelUtil(record.timestamp, offset).label
+  return getRaidWeekLabel(record.timestamp, offset).label
 }
 
 const zeroWeekStart = computed(() => {
   return getRaidWeekStart(new Date(syncStartDate.value))
 })
 
-function getFormattedWeekLabel(weekRangeLabel: string) {
-  const { label } = getFormattedWeekLabelUtil(
+function getRecordFormattedWeekLabel(weekRangeLabel: string) {
+  const { label } = getFormattedWeekLabel(
     weekRangeLabel,
     zeroWeekStart.value,
   )
@@ -1842,7 +1840,7 @@ function toggleWeekCorrection(record: LootRecord) {
 const weekSummary = computed(() => {
   const summary: Record<string, Record<string, LootRecord[]>> = {}
   filteredRecords.value.forEach((r) => {
-    const week = getRaidWeekLabel(r)
+    const week = getRecordRaidWeekLabel(r)
     if (!summary[week]) summary[week] = {}
     const p = getActualPlayer(r.player)
     if (!summary[week][p]) summary[week][p] = []
@@ -1862,14 +1860,10 @@ const weekSummary = computed(() => {
 
 const rawSuspiciousKeys = computed(() => {
   const keys = new Set<string>()
-  // 按照原始时间（不考虑手动偏移）进行周汇总
   const rawSummary: Record<string, LootRecord[]> = {}
   filteredRecords.value.forEach((r) => {
-    const date = new Date(r.timestamp)
-    const weekStart = getRaidWeekStart(date)
-    const weekLabel = `${weekStart.toLocaleDateString()} - ${new Date(
-      weekStart.getTime() + 6 * 24 * 60 * 60 * 1000,
-    ).toLocaleDateString()}`
+    // 复用 getRaidWeekLabel，确保周转场逻辑与格式与全局统一
+    const { label: weekLabel } = getRaidWeekLabel(r.timestamp)
     if (!rawSummary[weekLabel]) rawSummary[weekLabel] = []
     rawSummary[weekLabel].push(r)
   })
@@ -1879,7 +1873,7 @@ const rawSuspiciousKeys = computed(() => {
     const itemsMap: Record<string, LootRecord[]> = {}
     allRecords.forEach((r) => {
       if (!itemsMap[r.item]) itemsMap[r.item] = []
-      itemsMap[r.item]?.push(r)
+      itemsMap[r.item]!.push(r)
     })
 
     const anchorTimestamps: number[] = []
@@ -2155,34 +2149,44 @@ async function syncLogFiles() {
       return
     }
 
-    for (let i = 0; i < filesToRead.length; i++) {
-      const target = filesToRead[i]!
-      const file = await target.handle.getFile()
-      const text = await file.text()
+    const CHUNK_SIZE = 10; // Batch process files to keep UI responsive
+    for (let i = 0; i < filesToRead.length; i += CHUNK_SIZE) {
+      const chunk = filesToRead.slice(i, i + CHUNK_SIZE);
+      const chunkPromises = chunk.map(async (target, idx) => {
+        currentParsingFile.value = target.name;
+        const file = await target.handle.getFile();
+        // Use a faster way to load large files
+        const text = await file.text();
+        
+        const {
+          records,
+          players: filePlayers,
+          items: fileItems,
+        } = await parseLogWithWorker(text);
 
-      const {
-        records,
-        players: filePlayers,
-        items: fileItems,
-      } = await parseLogWithWorker(text)
-
-      for (const r of records) {
-        if (!localKeys.has(r.key) && !blacklistedKeys.value.has(r.key)) {
-          localKeys.add(r.key)
-          allNewRecords.push(r)
+        for (const r of records) {
+          if (!localKeys.has(r.key) && !blacklistedKeys.value.has(r.key)) {
+            localKeys.add(r.key);
+            allNewRecords.push(r);
+          }
         }
-      }
 
-      filePlayers.forEach((p) => batchSeenPlayers.add(p))
-      fileItems.forEach((i) => batchSeenItems.add(i))
+        filePlayers.forEach((p) => batchSeenPlayers.add(p));
+        fileItems.forEach((i) => batchSeenItems.add(i));
 
-      if (!target.name.includes(todayStr)) {
-        processedFiles.value[target.name] = {
-          size: file.size,
-          mtime: file.lastModified,
+        if (!target.name.includes(todayStr)) {
+          processedFiles.value[target.name] = {
+            size: file.size,
+            mtime: file.lastModified,
+          };
         }
-      }
-      loadingProgress.value = Math.round(((i + 1) / filesToRead.length) * 100)
+        
+        loadingProgress.value = Math.round(((i + idx + 1) / filesToRead.length) * 100);
+      });
+
+      await Promise.all(chunkPromises);
+      // Small delay to let UI update
+      await new Promise(r => setTimeout(r, 0));
     }
 
     if (allNewRecords.length > 0) {
@@ -2265,7 +2269,7 @@ function isSystemFiltered(item: string) {
   if (systemFilterSettings.value.totem && item.endsWith('图腾')) return true
   if (
     systemFilterSettings.value.other &&
-    (item.includes('经验值') || item.includes('金币'))
+    item.includes('经验值')
   )
     return true
 
@@ -2577,7 +2581,7 @@ const importInputRef = ref<HTMLInputElement | null>(null)
 
 function handleDataCommand(command: string) {
   if (command === 'clear') {
-    ElMessageBox.confirm('确定清空所有掉落记录？此操作不可恢复。<br/><small style="color: #64748b">注意：此操作不会删除已完成的 <b>BIS 配置</b>和固定队设置。</small>', '警告', {
+    ElMessageBox.confirm('确定清空所有掉落记录？此操作不可恢复。<br/><small style="color: #64748b">注意：此操作仅清空<b>掉落历史</b>。您的 BIS 配置、固定队角色设置及人员映射将全部保留。</small>', '警告', {
       confirmButtonText: '确定清空',
       cancelButtonText: '取消',
       type: 'warning',
@@ -2686,7 +2690,7 @@ async function processImportJSON(json: any) {
 
     const recordCount = json.r.length
     await ElMessageBox.confirm(
-      `准备导入 ${recordCount} 条记录。导入将合并到现有数据中(相同记录会被跳过)。<br/><small style="color: #64748b">注意：备份文件不包含 <b>BIS 配置</b>，导入不会更改您当前的设置。</small>`,
+      `准备导入 ${recordCount} 条记录。导入将合并到现有数据中(相同记录会被跳过)。<br/><small style="color: #64748b">注意：备份文件仅包含<b>掉落历史</b>。导入不会覆盖您的 BIS 配置、角色设置或人员映射。</small>`,
       '导入数据',
       {
         confirmButtonText: '开始导入',
@@ -2881,11 +2885,8 @@ function formatTime(date: Date) {
   return `${date.getFullYear()}/${m}/${d} ${hh}:${mm}`
 }
 
-function getWinnerRoll(record: LootRecord) {
-  return record.rolls.find((r) => r.player === record.player)
-}
 function getWinnerRollInfo(record: LootRecord): RollInfo | null {
-  const roll = getWinnerRoll(record)
+  const roll = record.rolls.find((r) => r.player === record.player)
   if (roll) return roll
 
   if (record.player) {
@@ -3249,6 +3250,28 @@ html.dark .section-mask {
   padding: 8px 8px;
   background: white;
   border-bottom: 1px solid #f1f5f9;
+}
+
+.loading-txt {
+  margin-top: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.loading-sub-txt {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #94a3b8;
+  width: 240px;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html.dark .loading-sub-txt {
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .sec-title-group {
@@ -4829,6 +4852,10 @@ html.dark {
     color: #60a5fa !important;
     border-bottom-color: #252632 !important;
   }
+  .status-pass {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+    color: #475569 !important;
+  }
 
   .summary-item,
   .week-record-row,
@@ -5033,6 +5060,32 @@ html.dark {
   .chart-container {
     background-color: #252632 !important;
     border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .summary-header {
+    background-color: #1e1f29 !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .summary-card {
+    background-color: #252632 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .summary-card:hover {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    background-color: #2a2b36 !important;
+  }
+
+  .count-single {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+  }
+
+  .week-list-divider {
+    border-top-color: rgba(255, 255, 255, 0.06) !important;
   }
 
   .chart-title {

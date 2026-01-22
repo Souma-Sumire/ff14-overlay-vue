@@ -20,9 +20,7 @@ const itemNameCache = new Map<string, string>()
 export function sanitizeItemName(name: string): string {
   if (itemNameCache.has(name)) return itemNameCache.get(name)!
   let clean = name.replace(/[\ue000-\uf8ff]/g, '')
-  while (/^[""「『]|[""」』]$/.test(clean)) {
-    clean = clean.replace(/^[""「『]|[""」』]$/g, '').trim()
-  }
+  clean = clean.replace(/^["「『]|["」』]$/g, '').trim()
   const res = clean.trim()
   itemNameCache.set(name, res)
   return res
@@ -56,10 +54,11 @@ export const ROLE_DEFINITIONS = [
 
 export function getRoleType(role: string | null | undefined) {
   if (!role) return ''
-  if (role.startsWith('LEFT:')) return 'role-left'
-  if (role.startsWith('SUB:')) return 'role-sub'
-  if (['MT', 'ST'].includes(role)) return 'role-tank'
-  if (['H1', 'H2'].includes(role)) return 'role-healer'
+  const r = role.toUpperCase()
+  if (r.startsWith('LEFT:')) return 'role-left'
+  if (r.startsWith('SUB:')) return 'role-sub'
+  if (r.startsWith('MT') || r.startsWith('ST')) return 'role-tank'
+  if (r.startsWith('H1') || r.startsWith('H2')) return 'role-healer'
   return 'role-dps'
 }
 
@@ -67,9 +66,8 @@ export function getRoleColor(role: string | null | undefined) {
   if (!role) return '#6366f1' // Default Indigo
   if (role.startsWith('LEFT:')) return '#64748b' // Gray
   if (role.startsWith('SUB:')) return '#f59e0b' // Orange
-  if (['MT', 'ST', 'Tank'].includes(role)) return '#3b82f6' // Blue
-  if (['H1', 'H2', 'Healer'].includes(role)) return '#10b981' // Green
-  // DPS
+  if (['MT', 'ST'].includes(role)) return '#3b82f6' // Blue
+  if (['H1', 'H2'].includes(role)) return '#10b981' // Green
   return '#ef4444' // Red
 }
 
