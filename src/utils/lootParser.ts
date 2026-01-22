@@ -84,7 +84,7 @@ export function getRollTypeName(type: string) {
     {
       need: '需求',
       greed: '贪婪',
-      assign: '队长分配',
+      assign: '分配获得',
       direct: '直接获得',
       manual: '手动添加',
     }[type] || type
@@ -92,7 +92,15 @@ export function getRollTypeName(type: string) {
 }
 
 export function getRollTypeIcon(type: string) {
-  return { need: '需', greed: '贪', manual: '手' }[type] || '?'
+  return (
+    {
+      need: '需',
+      greed: '贪',
+      manual: '手',
+      assign: '分配',
+      direct: '直接',
+    }[type] || '?'
+  )
 }
 
 export enum PartOrder {

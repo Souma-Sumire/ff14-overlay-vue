@@ -42,6 +42,23 @@ export function getRaidWeekLabel(
   }
 }
 
+export function getWeekIndexFromStart(current: Date, start: Date): number {
+  const diff = current.getTime() - start.getTime()
+  // 1 week = 604800000 ms
+  return Math.round(diff / 604800000) + 1
+}
+
+export function getCurrentWeekNumber(timestamps: (number | string | Date)[]): number {
+  if (!timestamps || timestamps.length === 0) return 1
+  const times = timestamps.map((t) => new Date(t).getTime())
+  const firstTime = Math.min(...times)
+
+  const zeroWeekStart = getRaidWeekStart(new Date(firstTime))
+  const currentWeekStart = getRaidWeekStart(new Date())
+
+  return getWeekIndexFromStart(currentWeekStart, zeroWeekStart)
+}
+
 export function getFormattedWeekLabel(
   weekRangeLabel: string,
   zeroWeekStart: Date | null,
@@ -51,9 +68,7 @@ export function getFormattedWeekLabel(
   const startStr = weekRangeLabel.split(' - ')[0]
   const currentStart = new Date(startStr + ' 16:00:00')
 
-  const diff = currentStart.getTime() - zeroWeekStart.getTime()
-  // 1 week = 604800000 ms
-  const weekIndex = Math.round(diff / 604800000) + 1
+  const weekIndex = getWeekIndexFromStart(currentStart, zeroWeekStart)
   return {
     label: `第 ${weekIndex} 周 (${weekRangeLabel})`,
     index: weekIndex,

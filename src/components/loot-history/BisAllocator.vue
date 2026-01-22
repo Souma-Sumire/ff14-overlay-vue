@@ -9,7 +9,7 @@
         class="setup-trigger-btn"
       >
         <el-icon style="margin-right: 4px"><Setting /></el-icon>
-        <span>设定 BIS</span>
+        <span>配置 BIS</span>
         <span v-if="!isConfigComplete" class="dot-warn"></span>
       </el-button>
 
@@ -18,24 +18,96 @@
         <span>配置未准备就绪</span>
       </div>
 
-      <div style="flex: 1"></div>
+      <el-dropdown
+        v-if="isConfigComplete"
+        trigger="click"
+        @command="handleCopyMacro"
+      >
+        <el-button size="small">
+          复制分配宏<el-icon class="el-icon--right"><arrow-down /></el-icon>
+        </el-button>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item command="all"> 全层 </el-dropdown-item>
+            <el-dropdown-item
+              v-for="layer in layeredViewRows"
+              :key="layer.name"
+              :command="layer"
+              divided
+            >
+              {{ layer.name }}
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
 
-      <el-button v-if="isConfigComplete" size="small" @click="copyTextTable">
-        复制文本表格
-      </el-button>
+      <el-popover
+        placement="top"
+        title="分配宏生成规则"
+        :width="320"
+        trigger="hover"
+      >
+        <template #reference>
+          <el-icon class="macro-help-icon"><QuestionFilled /></el-icon>
+        </template>
+        <div class="macro-help-content">
+          <div class="intro">生成可以直接在游戏内发送的分配宏（/p）。</div>
+          <div class="rule-item">
+            <strong>1. 优先需求</strong>
+            <span>仅显示BIS设为“零式”且尚未获得的玩家。</span>
+          </div>
+          <div class="rule-item">
+            <strong>2. 次选贪婪</strong>
+            <span>若无需求者，显示其余尚未获得的玩家。</span>
+          </div>
+          <div class="rule-item">
+            <strong>3. 兜底机制</strong>
+            <span>若全员不需要，显示“随便ROLL”。</span>
+          </div>
+        </div>
+      </el-popover>
+
+      <el-dropdown trigger="click" :hide-on-click="false" max-height="400px">
+        <el-button size="small" type="warning" plain style="margin-left: 12px">
+          <el-icon style="margin-right: 4px"><User /></el-icon>
+          有人请假
+        </el-button>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item v-for="p in eligiblePlayers" :key="p">
+              <el-checkbox
+                :model-value="excludedPlayers.has(p)"
+                @change="togglePlayerExclusion(p)"
+                size="small"
+                style="width: 100%"
+              >
+                {{ props.getPlayerRole?.(p) || p }}
+                <span
+                  v-if="excludedPlayers.has(p)"
+                  style="font-size: 12px; color: #909399; margin-left: 4px"
+                  >(请假)</span
+                >
+              </el-checkbox>
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
     </div>
 
-    <!-- Main View: Recommendation Table -->
     <div v-if="isConfigComplete" class="bis-view-panel">
       <div class="table-container">
         <table class="bis-table">
           <thead>
             <tr>
-              <th class="sticky-col col-layer" style="z-index: 30">层级</th>
+              <th class="sticky-col col-layer" style="z-index: 30"></th>
               <th class="sticky-col col-item" style="z-index: 30">
                 装备 \ 玩家
               </th>
-              <th v-for="p in eligiblePlayers" :key="p">
+              <th
+                v-for="p in eligiblePlayers"
+                :key="p"
+                :class="{ 'is-excluded': excludedPlayers.has(p) }"
+              >
                 <PlayerDisplay
                   :name="p"
                   :role="getPlayerRole?.(p)"
@@ -87,14 +159,13 @@
       </div>
     </div>
 
-    <!-- Big Placeholder when incomplete -->
     <div v-else class="bis-onboarding">
       <div class="onboarding-card">
         <div class="icon-circle">
           <el-icon><List /></el-icon>
         </div>
         <h3>开启 BIS 分配</h3>
-        <p>你还没有为团队成员设定 BIS，无法生成分配推荐。</p>
+        <p>尚未配置团队成员的 BIS，无法生成分配推荐。</p>
         <el-button type="primary" size="large" @click="showConfigDialog = true">
           立即开始配置
         </el-button>
@@ -120,6 +191,7 @@
                   :key="p"
                   :class="[
                     { 'header-incomplete': !isPlayerComplete(p) },
+                    { 'is-excluded': excludedPlayers.has(p) },
                     getRoleGroupClass(getPlayerRole?.(p)),
                   ]"
                 >
@@ -187,10 +259,10 @@
           <div class="footer-left">
             <el-button-group>
               <el-button size="default" @click="exportBisData"
-                >导出 BIS 字符串</el-button
+                >导出配置字符串</el-button
               >
               <el-button size="default" @click="importBisData"
-                >导入 BIS 字符串</el-button
+                >导入配置字符串</el-button
               >
             </el-button-group>
           </div>
@@ -210,7 +282,6 @@
       </template>
     </el-dialog>
 
-    <!-- Import Diff Confirmation Dialog -->
     <el-dialog
       v-model="showImportConfirmDialog"
       title="确认导入 BIS 配置"
@@ -237,7 +308,11 @@
             <span class="diff-tag update" v-else>更新</span>
           </div>
           <div class="diff-items">
-            <div v-for="(change, idx) in diff.changes" :key="idx" class="diff-row">
+            <div
+              v-for="(change, idx) in diff.changes"
+              :key="idx"
+              class="diff-row"
+            >
               <span class="diff-label">{{ change.label }}</span>
               <div class="diff-values">
                 <span class="val old">{{ change.oldVal }}</span>
@@ -303,10 +378,10 @@ export const DEFAULT_ROWS: BisRow[] = [
 ]
 
 const LAYER_CONFIG = [
-  { name: '一层', items: ['earring', 'necklace', 'bracelet', 'ring'] },
-  { name: '二层', items: ['head', 'hands', 'feet', 'tome', 'coating'] },
-  { name: '三层', items: ['body', 'legs', 'solvent', 'twine'] },
-  { name: '四层', items: ['weapon'] },
+  { name: '1层', items: ['earring', 'necklace', 'bracelet', 'ring'] },
+  { name: '2层', items: ['head', 'hands', 'feet', 'tome', 'coating'] },
+  { name: '3层', items: ['body', 'legs', 'solvent', 'twine'] },
+  { name: '4层', items: ['weapon'] },
 ]
 </script>
 
@@ -316,8 +391,91 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { LootRecord } from '@/utils/lootParser'
 
 import PlayerDisplay from './PlayerDisplay.vue'
-import { Setting, Warning, List, Right } from '@element-plus/icons-vue'
-import { PART_ORDER, DROP_ORDER } from '@/utils/lootParser'
+import {
+  Setting,
+  Warning,
+  List,
+  Right,
+  ArrowDown,
+  QuestionFilled,
+  User,
+} from '@element-plus/icons-vue'
+import { PART_ORDER } from '@/utils/lootParser'
+import { getCurrentWeekNumber } from '@/utils/raidWeekUtils'
+
+function generateEquipLines(rows: BisRow[]): string[] {
+  const lines: string[] = []
+  rows.forEach((row) => {
+    const needs: string[] = []
+    const greeds: string[] = []
+
+    eligiblePlayers.value.forEach((p) => {
+      if (excludedPlayers.value.has(p)) return
+
+      let displayName = props.getPlayerRole?.(p) || p
+      displayName = displayName.replace(/^LEFT:/, '').trim()
+
+      const status = getLogicStatus(p, row)
+      if (status === 'need') {
+        needs.push(displayName)
+      } else if (status === 'greed') {
+        greeds.push(displayName)
+      }
+    })
+
+    let content = ''
+    if (needs.length > 0) {
+      content = needs.join('、')
+    } else if (greeds.length > 0) {
+      content = greeds.join('、')
+    } else {
+      content = '随便ROLL'
+    }
+
+    lines.push(`/p ${row.name}：${content}`)
+  })
+  return lines
+}
+
+function getFF14WeekNumber(): number {
+  if (!props.records || props.records.length === 0) return 1
+  return getCurrentWeekNumber(props.records.map((r) => r.timestamp))
+}
+
+function handleCopyMacro(command: { name: string; rows: BisRow[] } | 'all') {
+  const now = new Date()
+  const weekNum = getFF14WeekNumber()
+  const dateStr = `${now.getMonth() + 1}月${now.getDate()}日`
+  let text = ''
+  let message = ''
+
+  if (command === 'all') {
+    const lines = [`/p <第${weekNum}周分配优先级> ${dateStr}`]
+
+    layeredViewRows.value.forEach((layer) => {
+      lines.push(...generateEquipLines(layer.rows))
+    })
+
+    text = lines.join('\n')
+    message = '已复制全层宏 (共' + lines.length + '行)'
+  } else {
+    const lines = [`/p <第${weekNum}周${command.name}分配优先级> ${dateStr}`]
+    lines.push(...generateEquipLines(command.rows))
+    text = lines.join('\n')
+    message = `已复制 ${command.name} 分配宏`
+  }
+
+  if (!text) return
+
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      ElMessage.success(message)
+    })
+    .catch(() => {
+      ElMessage.error('复制失败')
+    })
+}
 
 const props = defineProps<{
   players: string[]
@@ -332,10 +490,19 @@ const emit = defineEmits<{
 }>()
 
 const showConfigDialog = ref(false)
+const excludedPlayers = ref<Set<string>>(new Set())
 
 const config = ref<BisConfig>({
   playerBis: {},
 })
+
+function togglePlayerExclusion(player: string) {
+  if (excludedPlayers.value.has(player)) {
+    excludedPlayers.value.delete(player)
+  } else {
+    excludedPlayers.value.add(player)
+  }
+}
 
 function exportBisData() {
   const parts = eligiblePlayers.value.map((p) => {
@@ -367,40 +534,47 @@ function importBisData() {
     customClass: 'bis-import-message-box',
     inputValidator: (value) => {
       if (!value) return '内容不能为空'
-      const parts = value.trim().split(';').filter((p) => p.trim())
+      const parts = value
+        .trim()
+        .split(';')
+        .filter((p) => p.trim())
       if (parts.length === 0) return '格式错误：无法识别有效的分隔符'
 
       let validCount = 0
-      
+
       for (const part of parts) {
         const segs = part.split(':')
-        
+
         if (segs.length !== 3) {
           return `数据格式错误："${part.slice(0, 10)}..."`
         }
 
         const [name, , data] = segs
-        
-        // 检查数据部分长度和内容
-        if (!data || data.length !== DEFAULT_ROWS.length || !/^[0-9]+$/.test(data)) {
-           return `数据校验失败：玩家 "${name || '未知'}" 的配置已损坏`
+
+        if (
+          !data ||
+          data.length !== DEFAULT_ROWS.length ||
+          !/^[0-9]+$/.test(data)
+        ) {
+          return `数据校验失败：玩家 "${name || '未知'}" 的配置已损坏`
         }
 
-        // 仅统计在这个队里的有效数据
         if (name && eligiblePlayers.value.includes(name)) {
-           validCount++
+          validCount++
         }
       }
 
       if (validCount === 0) return '未找到匹配当前团队的有效配置数据'
       return true
     },
-  }).then(({ value }) => {
-    if (!value) return
-    parseAndPreviewBisData(value)
-  }).catch(() => {
-    // 用户取消
-  })  
+  })
+    .then(({ value }) => {
+      if (!value) return
+      parseAndPreviewBisData(value)
+    })
+    .catch(() => {
+      // 用户取消
+    })
 }
 
 interface BisChange {
@@ -424,7 +598,7 @@ function getValDisplay(row: BisRow, val: BisValue | undefined): string {
   if (row.type === 'toggle') {
     if (val === 'raid') return '零式'
     if (val === 'tome') return '点数'
-    return '未设置'
+    return '未配置'
   }
   return (val || 1).toString()
 }
@@ -443,19 +617,18 @@ function parseAndPreviewBisData(rawInput: string) {
       const segs = part.split(':')
       if (segs.length < 3) return
       const [name, roleStr, data] = segs
-      
-      // 1. 校验名字是否存在于 eligiblePlayers
+
       if (!name || !eligiblePlayers.value.includes(name)) return // 名字不匹配直接忽略
 
-      // 2. 校验职业是否匹配 (可选，严格模式)
       const currentRole = props.getPlayerRole?.(name)
-      // 如果字符串里有职业信息且当前能获取到职业，则进行简单比对
-      // 注意：roleStr 可能是 "D1", "Warrior" 等，这里做宽松匹配或直接跳过，既然要求匹配，我们假设必须一致
-      // 但考虑到字符串生成时可能是 'Unknown'，这里主要校验 ID
-      // 用户要求“职位和ID匹配”，我们检查 roleStr 是否与 getPlayerRole 返回的一致
-      if (currentRole && roleStr && roleStr !== 'Unknown' && currentRole !== roleStr) {
-         // 职业不匹配，跳过
-         return 
+      if (
+        currentRole &&
+        roleStr &&
+        roleStr !== 'Unknown' &&
+        currentRole !== roleStr
+      ) {
+        // 职业不匹配，跳过
+        return
       }
 
       if (!data || data.length !== DEFAULT_ROWS.length) return
@@ -466,8 +639,8 @@ function parseAndPreviewBisData(rawInput: string) {
       DEFAULT_ROWS.forEach((row, idx) => {
         const char = data[idx]
         if (!char || !/[0-9]/.test(char)) {
-            isValidRow = false
-            return
+          isValidRow = false
+          return
         }
 
         if (row.type === 'toggle') {
@@ -481,20 +654,14 @@ function parseAndPreviewBisData(rawInput: string) {
 
       if (!isValidRow) return
 
-      // 计算差异
       const currentConfig = (name && config.value.playerBis[name]) || {}
       const changes: BisChange[] = []
       let hasChanges = false
 
-      DEFAULT_ROWS.forEach(row => {
+      DEFAULT_ROWS.forEach((row) => {
         const oldV = currentConfig[row.id]
         const newV = newConfig[row.id]
-        
-        // 比较逻辑：如果不一致，添加差异
-        // 注意 undefined 和 1 (count default) 的比较
-        // 还有 toggle 的 undefined 和 'raid'/'tome'
-        
-        // 简化比较：转成 display string 比较
+
         const sOld = getValDisplay(row, oldV)
         const sNew = getValDisplay(row, newV)
 
@@ -503,7 +670,7 @@ function parseAndPreviewBisData(rawInput: string) {
           changes.push({
             label: row.name,
             oldVal: sOld,
-            newVal: sNew
+            newVal: sNew,
           })
         }
       })
@@ -514,7 +681,7 @@ function parseAndPreviewBisData(rawInput: string) {
           role: currentRole || roleStr || 'Unknown',
           isNew: Object.keys(currentConfig).length === 0,
           changes,
-          newConfig
+          newConfig,
         })
       }
     })
@@ -526,7 +693,6 @@ function parseAndPreviewBisData(rawInput: string) {
 
     importDiffs.value = diffs
     showImportConfirmDialog.value = true
-
   } catch (e: any) {
     console.error(e)
     ElMessage.error(e.message || '解析失败')
@@ -535,15 +701,67 @@ function parseAndPreviewBisData(rawInput: string) {
 
 function confirmImportBis() {
   const newPlayerBis = { ...config.value.playerBis }
-  importDiffs.value.forEach(diff => {
+  importDiffs.value.forEach((diff) => {
     newPlayerBis[diff.name] = {
       ...newPlayerBis[diff.name],
-      ...diff.newConfig
+      ...diff.newConfig,
     }
   })
   config.value.playerBis = newPlayerBis
   showImportConfirmDialog.value = false
   ElMessage.success(`成功更新 ${importDiffs.value.length} 位玩家配置`)
+}
+
+function setBis(player: string, rowId: string, type: BisValue) {
+  if (!config.value.playerBis[player]) config.value.playerBis[player] = {}
+  const current = config.value.playerBis[player]![rowId]
+  if (current === type) {
+    delete config.value.playerBis[player]![rowId]
+  } else {
+    config.value.playerBis[player]![rowId] = type
+  }
+}
+
+function setNeededCount(player: string, rowId: string, count: number) {
+  if (!config.value.playerBis[player]) config.value.playerBis[player] = {}
+  config.value.playerBis[player]![rowId] = count
+}
+
+function getObtainedCount(player: string, row: BisRow): number {
+  if (!props.records) return 0
+  const keywords = row.keywords
+    .replace(/，/g, ',')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+  if (keywords.length === 0) return 0
+
+  return props.records.filter((r) => {
+    if (r.player !== player) return false
+    return keywords.some((k) => r.item.includes(k))
+  }).length
+}
+
+function hasObtained(player: string, row: BisRow): boolean {
+  return getObtainedCount(player, row) > 0
+}
+
+function getLogicStatus(
+  player: string,
+  row: BisRow,
+): 'need' | 'greed' | 'pass' {
+  if (row.type === 'count') {
+    const needed = getNeededCount(player, row.id)
+    return getObtainedCount(player, row) >= needed ? 'pass' : 'need'
+  }
+  if (hasObtained(player, row)) return 'pass'
+  return getBisValue(player, row.id) === 'raid' ? 'need' : 'greed'
+}
+
+function getStatusBaseText(player: string, row: BisRow): string {
+  if (row.type === 'count' && getNeededCount(player, row.id) === 0) return '无需'
+  const status = getLogicStatus(player, row)
+  return STATUS_MAP[status]?.text || ''
 }
 
 const layeredViewRows = computed(() => {
@@ -555,18 +773,6 @@ const layeredViewRows = computed(() => {
       name: layer.name,
       rows,
     }
-  })
-})
-
-const viewRows = computed(() => {
-  const order = DROP_ORDER as string[]
-  return [...DEFAULT_ROWS].sort((a, b) => {
-    const ia = order.indexOf(a.keywords)
-    const ib = order.indexOf(b.keywords)
-    if (ia === -1 && ib === -1) return 0
-    if (ia === -1) return 1
-    if (ib === -1) return -1
-    return ia - ib
   })
 })
 
@@ -604,6 +810,7 @@ const isConfigComplete = computed(() => {
   if (!eligiblePlayers.value || eligiblePlayers.value.length === 0) return false
 
   for (const p of eligiblePlayers.value) {
+    if (excludedPlayers.value.has(p)) continue
     for (const row of DEFAULT_ROWS) {
       if (row.type === 'toggle' && !config.value.playerBis[p]?.[row.id]) {
         return false
@@ -661,7 +868,9 @@ watch(
 )
 
 const incompletePlayerCount = computed(() => {
-  return eligiblePlayers.value.filter((p) => !isPlayerComplete(p)).length
+  return eligiblePlayers.value.filter(
+    (p) => !excludedPlayers.value.has(p) && !isPlayerComplete(p),
+  ).length
 })
 
 watch(
@@ -674,106 +883,33 @@ watch(
   { deep: true },
 )
 
-function isRaidBis(player: string, rowId: string) {
-  return config.value.playerBis[player]?.[rowId] === 'raid'
-}
-
-function isTomeBis(player: string, rowId: string) {
-  return config.value.playerBis[player]?.[rowId] === 'tome'
-}
-
-function getBisValue(player: string, rowId: string): BisValue | undefined {
-  return config.value.playerBis[player]?.[rowId]
-}
-
-function getNeededCount(player: string, rowId: string): number {
-  const val = config.value.playerBis[player]?.[rowId]
-  return typeof val === 'number' ? val : 1
-}
-
-function setBis(player: string, rowId: string, type: BisValue) {
-  if (!config.value.playerBis[player]) {
-    config.value.playerBis[player] = {}
-  }
-
-  const current = config.value.playerBis[player]![rowId]
-
-  if (current === type) {
-    delete config.value.playerBis[player]![rowId]
-  } else {
-    config.value.playerBis[player]![rowId] = type
-  }
-}
-
-function setNeededCount(player: string, rowId: string, count: number) {
-  if (!config.value.playerBis[player]) {
-    config.value.playerBis[player] = {}
-  }
-  config.value.playerBis[player]![rowId] = count
-}
-
-function getObtainedCount(player: string, row: BisRow): number {
-  if (!props.records) return 0
-  const keywords = row.keywords
-    .replace(/，/g, ',')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean)
-  if (keywords.length === 0) return 0
-
-  return props.records.filter((r) => {
-    if (r.player !== player) return false
-    return keywords.some((k) => r.item.includes(k))
-  }).length
-}
-
-function hasObtained(player: string, row: BisRow): boolean {
-  return getObtainedCount(player, row) > 0
-}
-
-function getLogicStatus(
-  player: string,
-  row: BisRow,
-): 'need' | 'greed' | 'pass' {
-  if (row.type === 'count') {
-    const needed = getNeededCount(player, row.id)
-    const obtained = getObtainedCount(player, row)
-    return obtained >= needed ? 'pass' : 'need'
-  }
-
-  if (hasObtained(player, row)) return 'pass'
-
-  const val = getBisValue(player, row.id)
-  if (val === 'raid') return 'need'
-
-  return 'greed'
-}
-
 const STATUS_MAP = {
   pass: { text: '放弃', class: 'status-pass' },
   need: { text: '需求', class: 'status-need' },
   greed: { text: '贪婪', class: 'status-greed-tome' },
 } as const
 
-function getStatusBaseText(player: string, row: BisRow): string {
-  if (row.type === 'count' && getNeededCount(player, row.id) === 0) return '无需'
-  const status = getLogicStatus(player, row)
-  return STATUS_MAP[status]?.text || ''
+function getBisValue(player: string, rowId: string): BisValue | undefined {
+  return config.value.playerBis[player]?.[rowId]
 }
 
-function getDisplayText(player: string, row: BisRow): string {
-  const baseText = getStatusBaseText(player, row)
-  const needed = getNeededCount(player, row.id)
-  // 只有当是数量型物品且需求量大于 1 时，才显示进度括号
-  if (row.type === 'count' && baseText !== '无需' && needed > 1) {
-    return `${baseText} (${getObtainedCount(player, row)}/${needed})`
-  }
-  return baseText
+function isRaidBis(player: string, rowId: string) {
+  return getBisValue(player, rowId) === 'raid'
+}
+
+function isTomeBis(player: string, rowId: string) {
+  return getBisValue(player, rowId) === 'tome'
+}
+
+function getNeededCount(player: string, rowId: string): number {
+  const val = getBisValue(player, rowId)
+  return typeof val === 'number' ? val : 1
 }
 
 function getCellClass(player: string, row: BisRow): string {
   const status = getLogicStatus(player, row)
-  return STATUS_MAP[status]?.class || ''
+  const base = STATUS_MAP[status]?.class || ''
+  return excludedPlayers.value.has(player) ? `${base} is-excluded` : base
 }
 
 function getRoleGroupClass(role: string | null | undefined) {
@@ -784,22 +920,6 @@ function getRoleGroupClass(role: string | null | undefined) {
     return 'role-healer'
   if (r.match(/D\d/) || r === 'DPS') return 'role-dps'
   return ''
-}
-
-
-function copyTextTable() {
-  let text = '\t' + eligiblePlayers.value.join('\t') + '\n'
-  viewRows.value.forEach((row) => {
-    const line = [row.name]
-    eligiblePlayers.value.forEach((p) => {
-      line.push(getDisplayText(p, row))
-    })
-    text += line.join('\t') + '\n'
-  })
-
-  navigator.clipboard.writeText(text).then(() => {
-    ElMessage.success('已复制到剪贴板')
-  })
 }
 </script>
 
@@ -823,6 +943,64 @@ function copyTextTable() {
 .setup-trigger-btn {
   position: relative;
   font-weight: 600;
+}
+
+.macro-help-icon {
+  color: #94a3b8;
+  cursor: pointer;
+  margin-left: 4px;
+  font-size: 16px;
+  outline: none;
+
+  &:hover {
+    color: #475569;
+  }
+}
+
+.macro-help-content {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #334155;
+
+  html.dark & {
+    color: #e2e8f0;
+  }
+
+  .intro {
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e2e8f0;
+
+    html.dark & {
+      color: #94a3b8;
+      border-color: #334155;
+    }
+  }
+
+  .rule-item {
+    margin-bottom: 8px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      display: block;
+      color: #3b82f6;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    span {
+      display: block;
+      color: #475569;
+      html.dark & {
+        color: #cbd5e1;
+      }
+    }
+  }
 }
 
 .dot-warn {
@@ -894,9 +1072,9 @@ function copyTextTable() {
 
 .bis-config-dialog {
   :deep(.el-dialog) {
-    width: fit-content !important; 
+    width: fit-content !important;
     min-width: 600px;
-    max-width: 95vw !important; 
+    max-width: 95vw !important;
     margin: 0 auto;
     border-radius: 12px;
     overflow: hidden;
@@ -925,7 +1103,7 @@ function copyTextTable() {
   flex: 1;
   overflow: auto;
   border-radius: 6px;
-  background: #f8fafc; 
+  background: #f8fafc;
   padding: 12px;
   padding-top: 0;
   box-shadow: none;
@@ -945,7 +1123,7 @@ function copyTextTable() {
 }
 
 .table-scroll-wrapper {
-  margin: 0 auto; 
+  margin: 0 auto;
   width: fit-content;
   max-width: 100%;
   border: 1px solid #475569;
@@ -955,7 +1133,6 @@ function copyTextTable() {
   max-height: 75vh;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 
-  
   -webkit-mask-image: -webkit-radial-gradient(white, black);
   mask-image: radial-gradient(white, black);
 
@@ -975,7 +1152,7 @@ function copyTextTable() {
   td {
     box-sizing: border-box;
     text-align: center;
-    width: 72px;  
+    width: 72px;
     padding: 0 !important;
     height: 32px;
     border-right: 1px solid #cbd5e1;
@@ -983,12 +1160,12 @@ function copyTextTable() {
     vertical-align: middle;
 
     &:last-child {
-      border-right: 1px solid #475569; 
+      border-right: 1px solid #475569;
     }
   }
 
   tr:last-child td {
-    border-bottom: 1px solid #475569; 
+    border-bottom: 1px solid #475569;
   }
 
   th {
@@ -997,8 +1174,8 @@ function copyTextTable() {
     font-weight: 700;
     white-space: nowrap;
     color: #475569;
-    border-top: 1px solid #475569; 
-    border-bottom: 1px solid #94a3b8; 
+    border-top: 1px solid #475569;
+    border-bottom: 1px solid #94a3b8;
   }
 
   tr.is-layer-end td {
@@ -1006,15 +1183,15 @@ function copyTextTable() {
   }
 
   .col-layer {
-    width: 32px; 
+    width: 32px;
     left: 0;
-    border-left: 1px solid #475569; 
+    border-left: 1px solid #475569;
     border-right: 1px solid #475569;
   }
 
   .col-item {
     width: 70px;
-    left: 32px; 
+    left: 32px;
     font-weight: 700;
     color: #334155;
     border-right: 1px solid #475569;
@@ -1024,11 +1201,12 @@ function copyTextTable() {
     background: #f8fafc;
     color: #1e293b;
     font-weight: 800;
-    font-size: 12px;
+    font-size: 11px;
     writing-mode: vertical-rl;
-    letter-spacing: 1px;
+    text-orientation: upright;
+    letter-spacing: 0;
     padding: 0;
-    line-height: 1;
+    line-height: 1.1;
     text-shadow: none;
     border-bottom-color: #475569;
   }
@@ -1038,42 +1216,37 @@ function copyTextTable() {
   }
 
   &.config-table {
-    width: max-content; 
-    
+    width: max-content;
+
     border: none !important;
 
-    
     tr:first-child th {
       border-top: none !important;
     }
 
-    
     .sticky-col {
       width: 100px;
       border-left: none !important;
       border-right: 1px solid #475569;
     }
-    
-    
+
     th:last-child,
     td:last-child {
       border-right: none !important;
     }
 
-    
     tr:last-child td {
       border-bottom: none !important;
     }
 
     th,
     td {
-      width: 120px; 
+      width: 120px;
       border-right: 1px solid #cbd5e1;
       border-bottom: 1px solid #cbd5e1;
     }
   }
 
-  
   tbody tr,
   tbody tr:hover,
   tbody tr:hover > td,
@@ -1114,9 +1287,10 @@ function copyTextTable() {
 .incomplete-label {
   font-size: 10px;
   font-weight: bold;
-  color: #ef4444 !important;
+  color: #f87171 !important;
   margin-top: 2px;
 }
+
 
 .sticky-col {
   position: sticky;
@@ -1147,13 +1321,13 @@ function copyTextTable() {
 
 .split-cell {
   background: #f1f5f9;
-  border-radius: 6px;
+  border-radius: 8px;
   margin: 0 auto;
-  padding: 2px;
+  padding: 3px;
   display: flex;
-  gap: 2px;
-  width: 84px;
-  height: 24px;
+  gap: 4px;
+  width: 92px;
+  height: 28px;
   border: 1px solid #e2e8f0;
   cursor: pointer;
   box-sizing: border-box;
@@ -1164,28 +1338,29 @@ function copyTextTable() {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #64748b;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  letter-spacing: 0.5px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 1px;
+  white-space: nowrap;
 
   &.left-raid.active {
-    background: #818cf8;
+    background: #6366f1;
     color: #fff;
-    box-shadow: 0 1px 2px rgba(99, 102, 241, 0.2);
+    box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
   }
 
   &.right-tome.active {
     background: #0ea5e9;
     color: #fff;
-    box-shadow: 0 1px 2px rgba(14, 165, 233, 0.2);
+    box-shadow: 0 2px 4px rgba(14, 165, 233, 0.3);
   }
 
   &:not(.active):hover {
-    background: rgba(255, 255, 255, 0.8);
-    color: #475569;
+    background: #fff;
+    color: #64748b;
   }
 }
 
@@ -1203,7 +1378,8 @@ function copyTextTable() {
     padding-right: 30px;
     box-shadow: 0 0 0 1px #e2e8f0 inset;
     background-color: #f8fafc;
-    &:hover, &.is-focus {
+    &:hover,
+    &.is-focus {
       box-shadow: 0 0 0 1px #3b82f6 inset;
     }
   }
@@ -1233,111 +1409,75 @@ function copyTextTable() {
   gap: 16px;
 }
 
-:global(.dark) .bis-allocator {
-  .config-header-actions {
-    background: #1e1f29;
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .bis-view-panel {
-    background: #16171f;
-    border-color: rgba(255, 255, 255, 0.08);
-    box-shadow: none;
-  }
-
-  .table-scroll-wrapper {
-    background: #16171f;
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .bis-table {
-    th,
-    td {
-      border-right-color: #334155;
-      border-bottom-color: #1e1f29;
-    }
-
-    th {
-      border-top-color: #1e293b;
+html.dark {
+  .bis-allocator {
+    .config-header-actions {
       background: #1e1f29;
-      color: #94a3b8;
-      border-bottom-color: #475569;
+      border-color: rgba(255, 255, 255, 0.1);
     }
 
-    tr.is-layer-end td {
-      border-bottom-color: #475569;
+    .bis-view-panel {
+      background: #16171f;
+      border-color: rgba(255, 255, 255, 0.08);
+      box-shadow: none;
     }
 
-    .col-layer {
-      background: #1e1f29;
-      border-left-color: #475569;
-      border-right-color: #475569;
-    }
+    .bis-table {
+      th,
+      td {
+        border-right-color: #334155;
+        border-bottom-color: #1e1f29;
+      }
 
-    .col-item {
-      background: #1e1f29;
-      border-right-color: #475569;
-    }
+      th {
+        border-top-color: #1e293b;
+        background: #1e1f29;
+        color: #94a3b8;
+        border-bottom-color: #475569;
+      }
 
-    .layer-cell {
-      background: #1e1f29;
-      color: #cbd5e1;
-      border-bottom-color: #475569;
-    }
+      tr.is-layer-end td {
+        border-bottom-color: #475569;
+      }
 
-    td.col-item {
-      background: #1e1f29;
-    }
+      .col-layer {
+        background: #1e1f29;
+        border-left-color: #475569;
+        border-right-color: #475569;
+      }
 
-    
-    .status-need {
-      background-color: #064e3b !important;
-      color: #6ee7b7 !important;
-    }
-    .status-greed-tome {
-      background-color: #0c4a6e !important;
-      color: #7dd3fc !important;
-    }
-    .status-pass {
-      background-color: #1e293b !important;
-      color: #64748b !important;
-    }
-  }
+      .col-item {
+        background: #1e1f29;
+        border-right-color: #475569;
+      }
 
-  .split-cell {
-    background: #0f1016;
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-  .half-cell:not(.active) {
-    color: #475569;
-    &:hover {
-      background: rgba(255, 255, 255, 0.05);
-      color: #94a3b8;
-    }
-  }
+      .layer-cell {
+        background: #1e1f29;
+        color: #cbd5e1;
+        border-bottom-color: #475569;
+      }
 
-  .mini-stepper {
-    :deep(.el-input__wrapper) {
-      background-color: #0f1016;
-      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-    }
-    :deep(.el-input-number__increase),
-    :deep(.el-input-number__decrease) {
-      background: #1e1f29;
-      border-left-color: rgba(255, 255, 255, 0.1);
-      color: #94a3b8;
-      &:hover {
-        background: #2d2e3a;
-        color: #fff;
+      td.col-item {
+        background: #1e1f29;
+      }
+
+      .status-need {
+        background-color: #064e3b !important;
+        color: #6ee7b7 !important;
+      }
+      .status-greed-tome {
+        background-color: #0c4a6e !important;
+        color: #7dd3fc !important;
+      }
+      .status-pass {
+        background-color: #1e293b !important;
+        color: #64748b !important;
       }
     }
-    :deep(.el-input__inner) {
-      color: #cbd5e1;
-    }
-  }
 
-  .row-header {
-    color: #94a3b8;
+    .row-header {
+      color: #94a3b8;
+    }
   }
 }
 
@@ -1421,7 +1561,7 @@ function copyTextTable() {
     border-bottom: none;
     padding-bottom: 0;
   }
-  
+
   html.dark & {
     border-bottom-color: #334155;
   }
@@ -1436,23 +1576,160 @@ function copyTextTable() {
   display: flex;
   align-items: center;
   gap: 8px;
-  
+
   .val {
     font-weight: 600;
-    
+
     &.old {
       color: #94a3b8;
       text-decoration: line-through;
     }
-    
+
     &.new {
       color: #3b82f6;
     }
   }
 }
+
+.is-excluded {
+  opacity: 0.4;
+  text-decoration: line-through;
+  filter: grayscale(1);
+  background-color: rgba(0, 0, 0, 0.02) !important;
+
+  html.dark & {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+  }
+}
 </style>
 
 <style lang="scss">
+html.dark {
+  .bis-config-dialog,
+  .bis-import-message-box {
+    .el-dialog,
+    .el-message-box {
+      background-color: #1a1b26;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .table-scroll-wrapper {
+      background: #1a1b26; 
+      border-color: #2d2e3d;
+      &::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: #2d2e3d;
+        border-radius: 4px;
+      }
+    }
+
+    .bis-table {
+      background-color: #1a1b26;
+      border-top: 1px solid #2d2e3d;
+
+      th {
+        background-color: #1a1b26 !important;
+        color: #9ca3af;
+        border-right-color: #2d2e3d;
+        border-bottom: 2px solid #232433;
+        font-weight: 600;
+      }
+
+      td {
+        background-color: #1a1b26 !important;
+        border-right-color: #2d2e3d;
+        border-bottom-color: #232433;
+        color: #d1d5db;
+      }
+
+      tr:hover td {
+        background-color: rgba(255, 255, 255, 0.02);
+      }
+    }
+
+    .header-incomplete {
+      background-color: rgba(244, 63, 94, 0.1) !important;
+      color: #fb7185 !important;
+    }
+
+
+    .split-cell {
+      background: #1a1b26;
+      border-color: #2d2e3d;
+      padding: 3px;
+    }
+
+    .half-cell:not(.active) {
+      color: #4b5563;
+      &:hover {
+        background: rgba(255, 255, 255, 0.04);
+        color: #9ca3af;
+      }
+    }
+
+    .half-cell.active {
+      &.left-raid {
+        background: #4f46e5;
+        box-shadow:
+          0 4px 6px -1px rgba(0, 0, 0, 0.3),
+          0 0 10px rgba(79, 70, 229, 0.2);
+      }
+      &.right-tome {
+        background: #0284c7;
+        box-shadow:
+          0 4px 6px -1px rgba(0, 0, 0, 0.3),
+          0 0 10px rgba(2, 132, 199, 0.2);
+      }
+    }
+
+    .mini-stepper {
+      .el-input__wrapper {
+        background-color: #1a1b26 !important;
+        border: 1px solid #2d2e3d !important;
+        box-shadow: none !important;
+      }
+      .el-input-number__increase,
+      .el-input-number__decrease {
+        background: #11121d !important;
+        border-color: #2d2e3d !important;
+        color: #6b7280 !important;
+        &:hover {
+          background: #1a1b26 !important;
+          color: #3b82f6 !important;
+        }
+      }
+      .el-input__inner {
+        color: #e5e7eb !important;
+      }
+    }
+
+    .row-header {
+      color: #9ca3af;
+      background-color: #1a1b26 !important;
+    }
+
+    .sticky-col {
+      background-color: #1a1b26 !important;
+      border-right-color: #2d2e3d !important;
+    }
+  }
+
+  .bis-import-message-box {
+    .el-textarea__inner {
+      background-color: #11121d;
+      color: #d1d5db;
+      border-color: #2d2e3d;
+      &:focus {
+        border-color: #3b82f6;
+      }
+    }
+  }
+}
+
 .bis-import-message-box {
   .el-textarea__inner {
     min-height: 84px !important;

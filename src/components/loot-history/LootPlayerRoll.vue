@@ -47,24 +47,13 @@ const props = defineProps<{
 const role = computed(() => props.getPlayerRole(props.roll.player))
 
 const rollTypeClass = computed(() => {
-  if (props.roll.type === 'assign') return 'type-assign'
-  if (props.roll.type === 'direct') return 'type-direct'
   return `type-${props.roll.type}`
 })
 
-const rollTypeIcon = computed(() => {
-  if (props.roll.type === 'assign') return '分配'
-  if (props.roll.type === 'direct') return '直接'
-  return getRollTypeIcon(props.roll.type)
-})
+const rollTypeIcon = computed(() => getRollTypeIcon(props.roll.type))
 
 const rollTitle = computed(() => {
-  const typeName =
-    props.roll.type === 'assign'
-      ? '分配获得'
-      : props.roll.type === 'direct'
-        ? '直接获得'
-        : getRollTypeName(props.roll.type)
+  const typeName = getRollTypeName(props.roll.type)
   return `${props.roll.player} ${typeName} ${props.roll.value ?? ''}`
 })
 

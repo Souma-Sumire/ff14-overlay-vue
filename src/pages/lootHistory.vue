@@ -16,6 +16,10 @@
       </div>
     </transition>
 
+    <div class="theme-toggle-fixed">
+      <CommonThemeToggle storage-key="loot-history-theme" />
+    </div>
+
     <template v-if="!isInitializing">
       <transition name="fade">
         <div v-if="isLoading" class="loading-overlay">
@@ -93,17 +97,17 @@
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item command="import">
-                    <el-icon><Upload /></el-icon>导入备份 (JSON)
+                    <el-icon><Upload /></el-icon>导入备份 (JSON) <span class="op-hint">(不含 BIS 配置)</span>
                   </el-dropdown-item>
                   <el-dropdown-item command="export">
-                    <el-icon><Download /></el-icon>导出备份 (JSON)
+                    <el-icon><Download /></el-icon>导出备份 (JSON) <span class="op-hint">(不含 BIS 配置)</span>
                   </el-dropdown-item>
                   <el-dropdown-item
                     command="clear"
                     divided
                     style="color: #f56c6c"
                   >
-                    <el-icon><Delete /></el-icon>清空数据库
+                    <el-icon><Delete /></el-icon>清空数据库 <span class="op-hint">(不影响 BIS 配置)</span>
                   </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
@@ -115,10 +119,7 @@
             </el-button>
           </div>
 
-          <!-- Controls moved here -->
-          <div class="control-right" style="margin-left: auto">
-            <CommonThemeToggle storage-key="loot-history-theme" />
-          </div>
+
         </div>
 
         <div class="filter-panel">
@@ -882,16 +883,12 @@
                   @click="importInputRef?.click()"
                   plain
                   size="large"
-                  >导入备份</el-button
+                  >导入备份 (支持拖入)</el-button
                 >
                 <el-button v-if="!isSyncing" @click="showTimeSetup = true" plain
                   >调整时间范围</el-button
                 >
               </div>
-
-              <p class="hint-txt">
-                仅支持 Chrome/Edge 等现代浏览器，需授予文件夹读取权限。
-              </p>
             </div>
           </template>
         </div>
@@ -2580,10 +2577,11 @@ const importInputRef = ref<HTMLInputElement | null>(null)
 
 function handleDataCommand(command: string) {
   if (command === 'clear') {
-    ElMessageBox.confirm('确定清空所有记录？此操作不可恢复。', '警告', {
+    ElMessageBox.confirm('确定清空所有掉落记录？此操作不可恢复。<br/><small style="color: #64748b">注意：此操作不会删除已完成的 <b>BIS 配置</b>和固定队设置。</small>', '警告', {
       confirmButtonText: '确定清空',
       cancelButtonText: '取消',
       type: 'warning',
+      dangerouslyUseHTMLString: true,
     })
       .then(() => {
         clearDatabase()
@@ -2688,12 +2686,13 @@ async function processImportJSON(json: any) {
 
     const recordCount = json.r.length
     await ElMessageBox.confirm(
-      `准备导入 ${recordCount} 条记录。导入将合并到现有数据中(相同记录会被跳过)。是否继续？`,
+      `准备导入 ${recordCount} 条记录。导入将合并到现有数据中(相同记录会被跳过)。<br/><small style="color: #64748b">注意：备份文件不包含 <b>BIS 配置</b>，导入不会更改您当前的设置。</small>`,
       '导入数据',
       {
         confirmButtonText: '开始导入',
         cancelButtonText: '取消',
         type: 'warning',
+        dangerouslyUseHTMLString: true,
       },
     )
 
@@ -3042,6 +3041,13 @@ html.dark .section-mask {
     transform: translateY(-1.5px) !important;
   }
 }
+
+.theme-toggle-fixed {
+  position: fixed;
+  top: 10px;
+  right: 12px;
+  z-index: 10000;
+}
 </style>
 
 <style lang="scss" scoped>
@@ -3146,6 +3152,12 @@ html.dark .section-mask {
   height: 20px;
   background: #e2e8f0;
   margin: 0 4px;
+}
+.op-hint {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-left: 4px;
+  font-weight: normal;
 }
 .path-toolbar :deep(.el-button) {
   height: 28px !important;
@@ -4390,6 +4402,11 @@ html.dark .section-mask {
   background: #fbfcfe;
 }
 
+html.dark .empty-placeholder:hover {
+  background: transparent;
+  border-color: #60a5fa;
+}
+
 .empty-container {
   display: flex;
   align-items: center;
@@ -4427,6 +4444,27 @@ html.dark .section-mask {
 .empty-hint {
   display: flex;
   gap: 16px;
+  justify-content: center;
+}
+
+.drop-hint {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+  opacity: 0.8;
+}
+
+.drop-hint::before {
+  content: '💡';
+  font-size: 14px;
+}
+
+html.dark .drop-hint {
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .empty-hint :deep(.el-button) {
@@ -4521,6 +4559,11 @@ html.dark .section-mask {
   background-color: rgba(236, 245, 255, 0.95);
   border: 2px dashed #409eff;
   border-radius: 8px;
+
+  html.dark & {
+    background-color: rgba(37, 38, 50, 0.95);
+    border-color: #3b82f6;
+  }
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4556,6 +4599,11 @@ html.dark .section-mask {
   background-color: rgba(255, 255, 255, 0.95);
   border: 2px dashed #409eff;
   border-radius: 12px;
+
+  html.dark & {
+    background-color: rgba(37, 38, 50, 0.95);
+    border-color: #3b82f6;
+  }
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4730,8 +4778,41 @@ html.dark {
   }
 
   .sec-body,
-  .mapping-tag {
+  .mapping-tag,
+  .empty-container,
+  .initial-loading {
     background-color: #161823;
+  }
+
+  .loading-card,
+  .setup-form,
+  .loading-overlay {
+    background-color: #252632;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .loading-overlay {
+    background-color: rgba(22, 24, 35, 0.85);
+  }
+
+  .empty-title,
+  .loading-title {
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  .empty-desc,
+  .loading-subtitle {
+     color: rgba(255, 255, 255, 0.5);
+  }
+
+  .setup-label {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .spinner-large,
+  .spinner {
+    border-color: rgba(255, 255, 255, 0.1);
+    border-top-color: #3b82f6;
   }
 
   .mode-tabs-el .el-tab-pane {
@@ -4787,6 +4868,10 @@ html.dark {
   .col-week,
   .menu-info-header {
     color: rgba(255, 255, 255, 0.5);
+  }
+
+  .hint-txt {
+    border-top-color: rgba(255, 255, 255, 0.06) !important;
   }
 
   .soft-action-btn,
@@ -4883,6 +4968,24 @@ html.dark {
   }
   .role-settings-dialog .el-dialog__footer {
     border-top-color: rgba(255, 255, 255, 0.08);
+  }
+
+  /* Standardizing buttons in guide/forms */
+  .el-button:not(.el-button--primary):not(.el-button--danger):not(.el-button--info) {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1) !important;
+      border-color: #60a5fa !important;
+      color: #60a5fa !important;
+    }
+  }
+
+  .initial-loading,
+  .empty-container {
+      background-color: #161823 !important;
   }
 
   .el-pagination {
