@@ -191,7 +191,7 @@
       "mogstation_patch": "[油猴脚本] MogStation莫古站汉化",
       "stone_sky_logs": "[油猴脚本] 石之家-修为查询",
       "kook_purify": "[油猴脚本] KOOK净化",
-      "loot_history": "[网页/工具] 零式分配与 BIS 管理"
+      "loot_history": "[网页/工具] 固定队装备分配与 BIS 管理工具"
     },
     "comment": {
       "github_patch": "详见仓库 README",
@@ -221,7 +221,7 @@
       "kook_purify": "隐藏 KOOK 网页版各种烦人的广告。屏蔽个性化入场音效。",
       "uisave_editor": "对UISAVE.DAT（场地标点）文件进行解析和编辑的工具。代码参考自 {0} 。",
       "uisave_editor_credits": "ff14_config_editor",
-      "loot_history": "自动解析 ACT 日志中的掉落与 Roll 点记录。支持多周统计、BIS 分配建议、自动生成分配宏等功能。"
+      "loot_history": "自动记录零式战利品掉落与 Roll 点记录。支持多种统计、BIS 分配建议等功能。"
     }
   },
   "dd": {

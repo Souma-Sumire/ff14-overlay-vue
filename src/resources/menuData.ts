@@ -16,6 +16,7 @@ export interface Menu {
 }
 
 export const MENU_ORDER: string[] = [
+  'startPages.menu.loot_history',
   'startPages.menu.uisave_editor',
   'startPages.menu.dd_atlas',
   'startPages.menu.keigenn_record2',
@@ -42,7 +43,6 @@ export const MENU_ORDER: string[] = [
   'startPages.menu.mogstation_patch',
   'startPages.menu.stone_sky_logs',
   'startPages.menu.kook_purify',
-  'startPages.menu.loot_history',
 ];
 
 export const getRawMenuData = (locale: string, t: (key: string, args?: (string | number)[]) => string): Menu[] => [
