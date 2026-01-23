@@ -1464,7 +1464,7 @@ const EQUIP_ROLES = [
 ]
 const EQUIP_ROLES_STR = EQUIP_ROLES.join('|')
 const RAID_REGEX = new RegExp(
-  `(武器箱|${GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD}(?!${EQUIP_ROLES_STR})|规格神典石|强化药|硬化药|强化纤维|神典石)`,
+  `(${GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD}武器箱|${GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD}(?!${EQUIP_ROLES_STR})|规格神典石|强化药|硬化药|强化纤维|神典石)`,
 )
 const EQUIP_SERIES_REGEX = new RegExp(`(?<series>.+)(${EQUIP_ROLES_STR}).+`)
 const showOnlyRole = ref(false)
@@ -1871,7 +1871,9 @@ const isBisConfigComplete = computed(() => {
   if (!isRaidRolesComplete.value) return false
   // 仅对正式职位的成员（MT/ST/H1/H2/D1/D2/D3/D4）检查 BIS 完整性
   // 只要有一个职位的 BIS 没填完，就算不完整
-  return ROLE_DEFINITIONS.every((role) => isPlayerComplete(bisConfig.value, role))
+  return ROLE_DEFINITIONS.every((role) =>
+    isPlayerComplete(bisConfig.value, role),
+  )
 })
 
 const selectablePlayersForMerge = computed(() => {
