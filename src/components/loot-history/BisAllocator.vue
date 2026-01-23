@@ -182,9 +182,35 @@
       align-center
     >
       <div class="bis-config-panel-container">
-        <div class="bis-storage-info">
-          <el-icon><InfoFilled /></el-icon>
-          <span>提示：此 BIS 设置跟随职位（MT/ST等），不跟随具体玩家。</span>
+        <div class="bis-config-header-row">
+          <div class="bis-storage-info">
+            <el-icon><InfoFilled /></el-icon>
+            <span>提示：此 BIS 设置跟随职位（MT/ST等），不跟随具体玩家。</span>
+          </div>
+          <div class="planned-weeks-config">
+            <span class="label">你们计划清几周CD：</span>
+            <el-input-number
+              v-model="config.plannedWeeks"
+              :min="1"
+              :max="16"
+              size="small"
+              controls-position="right"
+              class="weeks-stepper"
+            />
+          </div>
+        </div>
+        <div v-if="validationAlerts.length > 0" class="validation-alerts">
+          <div
+            v-for="alert in validationAlerts"
+            :key="alert.id"
+            :class="['validation-alert', alert.type]"
+          >
+            <el-icon class="alert-icon">
+              <InfoFilled v-if="alert.type === 'info'" />
+              <Warning v-else />
+            </el-icon>
+            <span class="alert-msg">{{ alert.message }}</span>
+          </div>
         </div>
         <div class="table-scroll-wrapper">
           <table class="bis-table config-table">
@@ -373,6 +399,7 @@ import {
   Setting,
   User,
   InfoFilled,
+  Warning,
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { computed, ref, watch } from 'vue'
@@ -474,6 +501,7 @@ const excludedPlayers = ref<Set<string>>(new Set())
 
 const config = ref<BisConfig>({
   playerBis: {},
+  plannedWeeks: 8,
 })
 
 function togglePlayerExclusion(player: string) {
@@ -509,7 +537,10 @@ function exportBisData() {
     }).join('')
     return `${p}:${role}:${data}`
   })
-  const str = parts.join(';')
+  let str = parts.join(';')
+  if (config.value.plannedWeeks) {
+    str += `;weeks:${config.value.plannedWeeks}`
+  }
   navigator.clipboard.writeText(str).then(() => {
     ElMessage.success('设置字符串已复制到剪贴板')
   })
@@ -603,14 +634,22 @@ function parseAndPreviewBisData(rawInput: string) {
 
     const diffs: PlayerDiff[] = []
 
+    importWeeks.value = undefined
     parts.forEach((part) => {
+      if (part.startsWith('weeks:')) {
+        const weeks = parseInt(part.split(':')[1] || '0')
+        if (!isNaN(weeks)) {
+          importWeeks.value = weeks
+        }
+        return
+      }
       const segs = part.split(':')
       if (segs.length < 3) return
       const [name, roleStr, data] = segs
 
-      if (!name || !eligiblePlayers.value.includes(name)) return // 名字不匹配直接忽略
+      if (!name || !eligiblePlayers.value.includes(name as string)) return // 名字不匹配直接忽略
 
-      const currentRole = props.getPlayerRole?.(name)
+      const currentRole = props.getPlayerRole?.(name as string)
       if (
         currentRole &&
         roleStr &&
@@ -644,7 +683,7 @@ function parseAndPreviewBisData(rawInput: string) {
 
       if (!isValidRow) return
 
-      const storageKey = getStorageKey(name)
+      const storageKey = getStorageKey(name as string)
       const currentConfig =
         (storageKey && config.value.playerBis[storageKey]) || {}
       const changes: BisChange[] = []
@@ -692,6 +731,13 @@ function parseAndPreviewBisData(rawInput: string) {
 }
 
 function confirmImportBis() {
+  confirmImportAction()
+}
+
+// 稍微重构一下以支持周数导入
+const importWeeks = ref<number | undefined>(undefined)
+
+function confirmImportAction() {
   const newPlayerBis = { ...config.value.playerBis }
   importDiffs.value.forEach((diff) => {
     const storageKey = getStorageKey(diff.name)
@@ -701,6 +747,9 @@ function confirmImportBis() {
     }
   })
   config.value.playerBis = newPlayerBis
+  if (importWeeks.value !== undefined) {
+    config.value.plannedWeeks = importWeeks.value
+  }
   showImportConfirmDialog.value = false
   ElMessage.success(`成功更新 ${importDiffs.value.length} 位玩家设置`)
 }
@@ -839,7 +888,10 @@ watch(
     } else {
       const standard = newVal as BisConfig
       if (JSON.stringify(standard) !== JSON.stringify(config.value)) {
-        config.value = standard
+        config.value = {
+          ...standard,
+          plannedWeeks: standard.plannedWeeks ?? 8,
+        }
       }
     }
   },
@@ -892,6 +944,41 @@ function getCellClass(player: string, row: BisRow): string {
 }
 
 const getRoleGroupClass = getRoleType
+
+const validationAlerts = computed(() => {
+  const alerts: { id: string; type: 'info' | 'warning'; message: string }[] = []
+  const weeks = config.value.plannedWeeks || 8
+
+  const itemsToValidate = [
+    { id: 'coating', name: '硬化药' },
+    { id: 'twine', name: '强化纤维' },
+    { id: 'tome', name: '神典石' },
+    { id: 'solvent', name: '强化药' },
+  ]
+
+  itemsToValidate.forEach((item) => {
+    let total = 0
+    eligiblePlayers.value.forEach((p) => {
+      total += getNeededCount(p, item.id)
+    })
+
+    if (total > weeks) {
+      alerts.push({
+        id: item.id,
+        type: 'warning',
+        message: `${item.name}: 总需求(${total}) 大于 计划周数(${weeks})，这是不可能的分配。`,
+      })
+    } else if (total < weeks) {
+      alerts.push({
+        id: item.id,
+        type: 'info',
+        message: `${item.name}: 总需求(${total}) 小于 计划周数(${weeks})。`,
+      })
+    }
+  })
+
+  return alerts
+})
 </script>
 
 <style lang="scss" scoped>
@@ -1073,6 +1160,88 @@ const getRoleGroupClass = getRoleType
   html.dark & {
     background: rgba(255, 255, 255, 0.05);
     color: #94a3b8;
+  }
+}
+
+.bis-config-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+
+  .bis-storage-info {
+    margin-bottom: 0;
+    flex: 1;
+  }
+}
+
+.planned-weeks-config {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f1f5f9;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+
+  html.dark & {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    html.dark & {
+      color: #94a3b8;
+    }
+  }
+
+  .weeks-stepper {
+    width: 80px !important;
+  }
+}
+
+.validation-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.validation-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.info {
+    background: #f0f9ff;
+    color: #0369a1;
+    border: 1px solid #e0f2fe;
+    html.dark & {
+      background: rgba(14, 165, 233, 0.1);
+      border-color: rgba(14, 165, 233, 0.2);
+    }
+  }
+
+  &.warning {
+    background: #fff1f2;
+    color: #be123c;
+    border: 1px solid #ffe4e6;
+    html.dark & {
+      background: rgba(244, 63, 94, 0.1);
+      border-color: rgba(244, 63, 94, 0.2);
+    }
+  }
+
+  .alert-icon {
+    font-size: 14px;
   }
 }
 

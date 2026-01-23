@@ -11,6 +11,7 @@ export type BisValue = 'raid' | 'tome' | number
 
 export interface BisConfig {
   playerBis: Record<string, Record<string, BisValue>>
+  plannedWeeks?: number
 }
 
 export interface LegacyBisConfig {
@@ -42,6 +43,7 @@ export const LAYER_CONFIG = [
   { name: '4层', items: ['weapon'] },
 ]
 
+
 export function isPlayerComplete(config: BisConfig, playerOrRole: string) {
   if (!config?.playerBis?.[playerOrRole]) return false
   for (const row of DEFAULT_ROWS) {
@@ -50,4 +52,24 @@ export function isPlayerComplete(config: BisConfig, playerOrRole: string) {
     }
   }
   return true
+}
+
+export function isBisItem(
+  row: BisRow,
+  playerBis: Record<string, BisValue>,
+): boolean {
+  if (!playerBis) return false
+  return row.type === 'toggle'
+    ? playerBis[row.id] === 'raid'
+    : typeof playerBis[row.id] === 'number' && (playerBis[row.id] as number) > 0
+}
+
+export function countObtainedItems(
+  row: BisRow,
+  obtainedItems: Record<string, number>,
+): number {
+  return Object.entries(obtainedItems).reduce(
+    (sum, [name, c]) => (name.includes(row.keywords) ? sum + c : sum),
+    0,
+  )
 }

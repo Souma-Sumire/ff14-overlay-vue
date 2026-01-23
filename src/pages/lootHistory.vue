@@ -802,6 +802,8 @@
               </template>
               <div class="tabs-sort-control">
                 <LootSortSegmented v-model="summarySortMode" />
+                <div class="v-divider-mini"></div>
+                <LootDisplayFilterSegmented v-model="playerSummaryFilterMode" />
               </div>
               <div class="summary-grid has-sort-control">
                 <div
@@ -816,21 +818,18 @@
                       :show-only-role="showOnlyRole"
                     />
                   </div>
-                  <div
-                    v-for="itemName in getSortedItemsInPlayerSummary(player)"
-                    :key="itemName"
-                    class="summary-item"
-                  >
-                    <span class="s-name">{{ itemName }}</span>
-                    <span
-                      :class="[
-                        'count-badge',
-                        (playerSummary[player]?.[itemName] ?? 0) > 1
-                          ? 'count-many'
-                          : 'count-single',
-                      ]"
-                      >x{{ playerSummary[player]?.[itemName] ?? 0 }}</span
+                  <div>
+                    <div
+                      v-for="item in getFilteredItemsInPlayerSummary(player)"
+                      :key="item.name"
+                      class="summary-item"
+                      :class="{ 'is-not-obtained': item.count === 0 }"
                     >
+                      <span class="s-name" :title="item.name">{{
+                        item.name
+                      }}</span>
+                      <SummaryItemTags :item="item" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -848,6 +847,8 @@
               </template>
               <div class="tabs-sort-control">
                 <LootSortSegmented v-model="slotSortMode" />
+                <div class="v-divider-mini"></div>
+                <LootDisplayFilterSegmented v-model="slotSummaryFilterMode" />
               </div>
               <div class="summary-grid slot-grid has-sort-control">
                 <div
@@ -860,9 +861,14 @@
                     <div
                       v-for="player in getSortedPlayersInSlot(
                         slotSummary[slot] || {},
+                        slot,
                       )"
                       :key="player"
                       class="summary-item"
+                      :class="{
+                        'is-not-obtained':
+                          (slotSummary[slot]?.[player] || 0) === 0,
+                      }"
                     >
                       <PlayerDisplay
                         class="s-name"
@@ -870,15 +876,17 @@
                         :role="getPlayerRole(player)"
                         :show-only-role="showOnlyRole"
                       />
-                      <span
-                        :class="[
-                          'count-badge',
-                          (slotSummary[slot]?.[player] || 0) > 1
-                            ? 'count-many'
-                            : 'count-single',
-                        ]"
-                        >x{{ slotSummary[slot]?.[player] || 0 }}</span
-                      >
+                      <div class="s-right-group">
+                        <SummaryItemTags
+                          :item="
+                            getSlotItemTagInfo(
+                              player,
+                              slot,
+                              slotSummary[slot]?.[player] || 0,
+                            )
+                          "
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1351,8 +1359,19 @@ import PlayerDisplay from '@/components/loot-history/PlayerDisplay.vue'
 import LootSortSegmented from '@/components/loot-history/LootSortSegmented.vue'
 import LootStatisticsPanel from '@/components/loot-history/charts/LootStatisticsPanel.vue'
 import RoleBadge from '@/components/loot-history/RoleBadge.vue'
+import LootDisplayFilterSegmented, {
+  type DisplayFilterMode,
+} from '@/components/loot-history/LootDisplayFilterSegmented.vue'
 import BisAllocator from '@/components/loot-history/BisAllocator.vue'
-import { isPlayerComplete, type BisConfig } from '@/utils/bisUtils'
+import SummaryItemTags from '@/components/loot-history/SummaryItemTags.vue'
+import {
+  DEFAULT_ROWS,
+  LAYER_CONFIG,
+  isPlayerComplete,
+  isBisItem,
+  countObtainedItems,
+  type BisConfig,
+} from '@/utils/bisUtils'
 
 const GAME_VERSION_CONFIG = {
   // 零式首周开始时间
@@ -1426,6 +1445,9 @@ function confirmMergeSelection() {
     selectionForMerge.value = []
   }
 }
+
+const playerSummaryFilterMode = ref<DisplayFilterMode>('obtained')
+const slotSummaryFilterMode = ref<DisplayFilterMode>('obtained')
 
 function addMapping(from?: string, to?: string) {
   if (from && to) {
@@ -1507,6 +1529,7 @@ watch(
     bisSortMode,
     blacklistedKeys,
     hideEmptyPlayers,
+    playerSummaryFilterMode,
   ],
   async () => {
     await dbConfig.set({
@@ -1566,6 +1589,14 @@ watch(
     await dbConfig.set({ key: 'slotSortMode', value: slotSortMode.value })
     await dbConfig.set({ key: 'weekSortMode', value: weekSortMode.value })
     await dbConfig.set({ key: 'bisSortMode', value: bisSortMode.value })
+    await dbConfig.set({
+      key: 'playerSummaryFilterMode',
+      value: playerSummaryFilterMode.value,
+    })
+    await dbConfig.set({
+      key: 'slotSummaryFilterMode',
+      value: slotSummaryFilterMode.value,
+    })
     await dbConfig.set({
       key: 'blacklistedKeys',
       value: Array.from(blacklistedKeys.value),
@@ -1657,6 +1688,10 @@ onMounted(async () => {
       if (c.key === 'blacklistedKeys')
         blacklistedKeys.value = new Set(c.value || [])
       if (c.key === 'bisConfig') bisConfig.value = c.value || { playerBis: {} }
+      if (c.key === 'playerSummaryFilterMode')
+        playerSummaryFilterMode.value = c.value || 'obtained'
+      if (c.key === 'slotSummaryFilterMode')
+        slotSummaryFilterMode.value = c.value || 'obtained'
     })
 
     const handleEntry = await dbHandle.get('current-log-dir')
@@ -1900,7 +1935,15 @@ const selectablePlayersForMerge = computed(() => {
 })
 
 const sortedSummaryPlayers = computed(() => {
-  const players = visibleAllPlayers.value
+  let players = visibleAllPlayers.value
+  const filterMode = playerSummaryFilterMode.value
+
+  if (filterMode === 'needed') {
+    players = players.filter((p) => {
+      const role = getPlayerRole(p)
+      return role && !role.startsWith('LEFT:') && !role.startsWith('SUB:')
+    })
+  }
   const summary = playerSummary.value
   const counts: Record<string, number> = {}
   players.forEach((p) => {
@@ -1914,6 +1957,7 @@ const sortedSummaryPlayers = computed(() => {
 
 const visibleAllPlayers = computed(() => {
   let players = allPlayers.value
+
   if (hideUnselectedPlayers.value) {
     players = players.filter((p) => isPlayerChecked(p))
   }
@@ -2005,7 +2049,9 @@ function getItemSortPriority(
   mode: 'part' | 'drop' = 'part',
 ): number {
   const order = mode === 'part' ? PART_ORDER : DROP_ORDER
-  const index = order.findIndex((def) => item.includes(def))
+  const index = order.findIndex(
+    (def) => item.includes(def) || def.includes(item),
+  )
   if (index !== -1) return index
   if (RAID_REGEX.test(item)) return 50
   return 100
@@ -2080,17 +2126,52 @@ const slotSummary = computed(() => {
 })
 
 const displaySlots = computed(() => {
-  const predefined = (
-    slotSortMode.value === 'part' ? PART_ORDER : DROP_ORDER
-  ).filter(
-    (s) => slotSummary.value[s] && Object.keys(slotSummary.value[s]).length > 0,
+  const filterMode = slotSummaryFilterMode.value
+  const predefinedList = slotSortMode.value === 'part' ? PART_ORDER : DROP_ORDER
+
+  const predefined = predefinedList.filter((s) => {
+    // 全显模式下展示所有预定义部位
+    if (filterMode === 'all') return true
+
+    const hasObtained =
+      slotSummary.value[s] && Object.keys(slotSummary.value[s]).length > 0
+    if (hasObtained) return true
+
+    // 需看模式下：检查是否有核心固定队成员需要它
+    if (filterMode === 'needed') {
+      const row = DEFAULT_ROWS.find((r) => r.name === s || r.keywords === s)
+      if (!row) return false
+
+      // 仅检查 8 个核心职位
+      const coreRoles = Object.keys(playerRoles.value).filter(
+        (r) => !r.startsWith('LEFT:') && !r.startsWith('SUB:'),
+      )
+      return coreRoles.some((role) => {
+        const pName = playerRoles.value[role]
+        if (!pName) return false
+        const summary = playerSummary.value[pName] || {}
+
+        // 此处逻辑需与 calculateTargetRequirement 保持一致，但因为在 computed 中，直接手写简单判定或提取函数
+        const count = countObtainedItems(row, summary)
+        const targetReq = calculateTargetRequirement(row, pName)
+        return count < targetReq
+      })
+    }
+    return false
+  })
+
+  // 动态产生的（不在预定义列表中的）只有在有记录时才显示
+  const dynamicItems = Object.keys(slotSummary.value).filter(
+    (k) =>
+      !(PART_ORDER as unknown as string[]).includes(k) &&
+      !(DROP_ORDER as unknown as string[]).includes(k),
   )
-  const dynamic = Object.keys(slotSummary.value)
-    .filter(
-      (k) =>
-        !(PART_ORDER as unknown as string[]).includes(k) &&
-        !(DROP_ORDER as unknown as string[]).includes(k),
-    )
+
+  const dynamic = dynamicItems
+    .filter((k) => {
+      const hasObtained = Object.keys(slotSummary.value[k] || {}).length > 0
+      return hasObtained // 动态部位只显示已获得的，因为无法确定 BIS 需求
+    })
     .sort((a, b) => {
       const getCount = (key: string) =>
         Object.values(slotSummary.value[key] || {}).reduce(
@@ -2660,6 +2741,41 @@ function toggleItemVisibility(item: string) {
   itemVisibility.value[item] = !currentVisible
 }
 
+/**
+ * 【核心逻辑】计算玩家对某个物品的目标需求量
+ * 彻底解决“默认1个”与“BIS数量”逻辑不统一的问题
+ */
+function calculateTargetRequirement(row: any, player: string) {
+  const roleKey = getPlayerRole(player) || player
+  const bis = (bisConfig.value.playerBis || {})[roleKey] || {}
+
+  if (row.type === 'count' && bis[row.id] === 0) {
+    return 0
+  }
+
+  // 1. 基础 BIS 判定
+  const isBis = isBisItem(row, bis)
+
+  if (isBis) {
+    return row.type === 'count' ? (bis[row.id] as number) || 0 : 1
+  }
+
+  // 2. 非 BIS 状态下的“保底一人一个”判定
+  // 规则：所有基础部位装备箱（排除武器箱）+ 纤维 + 药
+  const isStandardBox = row.type === 'toggle' && row.id !== 'weapon'
+  const isUpgradeMaterial =
+    row.id === 'twine' ||
+    row.id === 'coating' ||
+    row.id === 'solvent' ||
+    row.id === 'tome'
+
+  if (isStandardBox || isUpgradeMaterial) {
+    return 1
+  }
+
+  return 0
+}
+
 function addSpecialRole(p: string, type: 'SUB' | 'LEFT') {
   if (!p) return
   const exists = Object.entries(playerRoles.value).some(
@@ -2707,19 +2823,192 @@ function comparePlayersByRole(
   return a.localeCompare(b)
 }
 
-function getSortedPlayersInSlot(summary: Record<string, number>) {
-  if (!summary) return []
-  return Object.keys(summary).sort(comparePlayersByRole)
+function getSortedPlayersInSlot(
+  summary: Record<string, number>,
+  slotName: string,
+) {
+  const filterMode = slotSummaryFilterMode.value
+  const row = DEFAULT_ROWS.find(
+    (r) => r.name === slotName || r.keywords === slotName,
+  )
+  if (!row)
+    return Object.keys(summary || {}).sort((a, b) =>
+      comparePlayersByRole(a, b, summary || {}),
+    )
+
+  const activeMembersNames = Object.entries(playerRoles.value)
+    .filter(([role, name]) => name && !role.startsWith('LEFT:'))
+    .map(([_, name]) => name)
+
+  const allPlayersInSlot = Array.from(
+    new Set([...Object.keys(summary || {}), ...activeMembersNames]),
+  )
+  const result: string[] = []
+
+  allPlayersInSlot.forEach((p) => {
+    const role = getPlayerRole(p)
+    const isLeftOrSub = role?.startsWith('LEFT:') || role?.startsWith('SUB:')
+    if (filterMode === 'needed' && isLeftOrSub) return
+
+    const count = summary?.[p] || 0
+    const targetReq = calculateTargetRequirement(row, p)
+
+    if (filterMode === 'all') {
+      if (count > 0 || activeMembersNames.includes(p)) result.push(p)
+    } else if (filterMode === 'obtained') {
+      if (count > 0) result.push(p)
+    } else if (filterMode === 'needed') {
+      if (!isLeftOrSub && count < targetReq) result.push(p)
+    }
+  })
+
+  return result.sort((a, b) => comparePlayersByRole(a, b, summary || {}))
 }
 
-function getSortedItemsInPlayerSummary(playerName: string) {
-  const itemsInSummary = playerSummary.value[playerName] || {}
-  return Object.keys(itemsInSummary).sort((a, b) => {
-    return (
-      getItemSortPriority(a, summarySortMode.value) -
-      getItemSortPriority(b, summarySortMode.value)
-    )
+function getSlotItemTagInfo(player: string, slotName: string, count: number) {
+  const row = DEFAULT_ROWS.find(
+    (r) => r.name === slotName || r.keywords === slotName,
+  )
+  if (!row) {
+    const isRandomWeapon =
+      slotName.startsWith(GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD) &&
+      RAID_REGEX.test(slotName)
+
+    return {
+      count,
+      isRandomWeapon,
+      layerName: isRandomWeapon ? '4层' : undefined,
+    }
+  }
+
+  const roleKey = getPlayerRole(player)
+  const isRegularRole = roleKey && ROLE_DEFINITIONS.includes(roleKey as any)
+  if (!isRegularRole) {
+    return {
+      count,
+      layerName: LAYER_CONFIG.find((l) => l.items.includes(row.id))?.name,
+    }
+  }
+
+  const bis = (bisConfig.value.playerBis || {})[roleKey] || {}
+  const hasConfig = bis[row.id] !== undefined
+  const targetReq = calculateTargetRequirement(row, player)
+
+  const isBisValue = isBisItem(row, bis)
+
+  const layer = LAYER_CONFIG.find((l) => l.items.includes(row.id))
+
+  return {
+    count,
+    isBis: hasConfig ? isBisValue : undefined,
+    isBisFalse: !isBisValue && targetReq > 0,
+    layerName: layer?.name,
+  }
+}
+
+function getFilteredItemsInPlayerSummary(player: string) {
+  const obtainedItemsMap = playerSummary.value[player] || {}
+  const categoryCounts: Record<string, number> = {}
+  const consumedItemNames = new Set<string>()
+
+  // 1. 归类已获得物品
+  DEFAULT_ROWS.forEach((row) => {
+    categoryCounts[row.id] = 0
+    Object.entries(obtainedItemsMap).forEach(([itemName, count]) => {
+      const c = (count as number) || 0
+      if (itemName.includes(row.keywords)) {
+        categoryCounts[row.id] = (categoryCounts[row.id] || 0) + c
+        consumedItemNames.add(itemName)
+      }
+    })
   })
+
+  const results: {
+    name: string
+    count: number
+    isBis?: boolean
+    id?: string
+    isRandomWeapon?: boolean
+    layerName?: string
+  }[] = []
+
+  const roleKey = getPlayerRole(player)
+  const isRegularRole = roleKey && ROLE_DEFINITIONS.includes(roleKey as any)
+  const hasRole = isRegularRole
+  const playerBis = (bisConfig.value?.playerBis || {})[roleKey || player] || {}
+
+  DEFAULT_ROWS.forEach((row) => {
+    const count = categoryCounts[row.id]
+    const targetReq = calculateTargetRequirement(row, player)
+
+    let shouldShow = false
+    const cVal = count || 0
+
+    if (playerSummaryFilterMode.value === 'all') {
+      shouldShow = true
+    } else if (cVal > 0) {
+      shouldShow = true
+    } else if (playerSummaryFilterMode.value === 'needed') {
+      if (cVal < targetReq) shouldShow = true
+    }
+
+    if (shouldShow) {
+      const layer = LAYER_CONFIG.find((l) => l.items.includes(row.id))
+      results.push({
+        name: row.keywords || row.name,
+        count: cVal,
+        isBis: hasRole && playerBis[row.id] !== undefined ? targetReq > 0 : undefined,
+        id: row.id,
+        layerName: layer ? layer.name : undefined,
+      })
+    }
+  })
+
+  const isComplete = isPlayerComplete(
+    bisConfig.value,
+    getPlayerRole(player) || player,
+  )
+
+  // 3. 处理杂项（识别随武）
+  Object.entries(obtainedItemsMap).forEach(([itemName, count]) => {
+    if (!consumedItemNames.has(itemName)) {
+      const isRandomWeapon =
+        itemName.startsWith(GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD) &&
+        RAID_REGEX.test(itemName)
+      results.push({
+        name: itemName,
+        count,
+        isRandomWeapon,
+        isBis: isRandomWeapon ? undefined : (hasRole && isComplete) ? false : undefined,
+        layerName: isRandomWeapon ? '4层' : undefined,
+      })
+    }
+  })
+
+  const mode = summarySortMode.value
+  results.sort((a, b) => {
+    const ia = getItemSortPriority(
+      a.id
+        ? DEFAULT_ROWS.find((r) => r.id === a.id)?.keywords || a.name
+        : a.name,
+      mode,
+    )
+    const ib = getItemSortPriority(
+      b.id
+        ? DEFAULT_ROWS.find((r) => r.id === b.id)?.keywords || b.name
+        : b.name,
+      mode,
+    )
+    if (ia !== ib) return ia - ib
+    return a.name.localeCompare(b.name)
+  })
+
+  if (playerSummaryFilterMode.value === 'obtained') {
+    return results.filter((i) => i.count > 0)
+  } else if (playerSummaryFilterMode.value === 'needed') {
+    return results.filter((i) => i.count === 0)
+  }
+  return results
 }
 
 function getPlayerRole(player: string) {
@@ -4334,6 +4623,9 @@ html.dark .loading-sub-txt {
   top: 8px;
   left: 8px;
   z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .menu-action-item {
@@ -4427,23 +4719,60 @@ html.dark .loading-sub-txt {
 .summary-item:last-child {
   border-bottom: none;
 }
-.count-badge {
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-weight: 700;
-  font-size: 10px;
-  font-family: 'JetBrains Mono', monospace;
+.summary-layer-section {
+  display: flex;
+  border-bottom: 1px solid #e2e8f0;
+  html.dark & {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
 }
-.count-single {
+.summary-layer-section:last-child {
+  border-bottom: none;
+}
+.layer-sidebar {
+  width: 24px;
   background: #f8fafc;
-  color: #94a3b8;
-  border: 1px solid #f1f5f9;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: #64748b;
+  writing-mode: vertical-lr;
+  text-orientation: upright;
+  letter-spacing: -1px;
+  padding: 8px 0;
+  flex-shrink: 0;
+  min-height: 32px;
+  html.dark & {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #94a3b8;
+  }
 }
-
-.count-many {
-  background: #fef2f2;
-  color: #ef4444;
-  border: 1px solid #fee2e2;
+.layer-rows {
+  flex: 1;
+  min-width: 0;
+}
+.layer-rows .summary-item {
+  border-bottom: 1px solid #f8fafc;
+}
+.layer-rows .summary-item:last-child {
+  border-bottom: none;
+}
+.summary-item.is-not-obtained {
+  opacity: 0.5;
+  filter: grayscale(0.8);
+}
+.summary-item.is-not-obtained .s-name {
+  color: #94a3b8;
+  font-weight: 400;
+}
+.summary-item.is-not-obtained .count-badge {
+  background: transparent;
+  color: #cbd5e1;
+  border-color: #e2e8f0;
 }
 
 .pagination-el-container {
@@ -5909,6 +6238,16 @@ html.dark {
       text-align: center;
       font-style: italic;
     }
+  }
+}
+
+.v-divider-mini {
+  width: 1px;
+  height: 14px;
+  background: #e2e8f0;
+  margin: 0 4px;
+  html.dark & {
+    background: rgba(255, 255, 255, 0.1);
   }
 }
 </style>
