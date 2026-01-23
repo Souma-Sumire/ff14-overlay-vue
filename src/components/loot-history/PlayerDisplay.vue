@@ -44,7 +44,7 @@ defineProps<{
   flex: 1;
   color: #334155;
 
-  :global(.dark) & {
+  html.dark & {
     color: #f1f5f9;
   }
 }

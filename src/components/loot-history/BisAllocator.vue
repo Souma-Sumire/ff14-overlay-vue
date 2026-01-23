@@ -9,14 +9,9 @@
         class="setup-trigger-btn"
       >
         <el-icon style="margin-right: 4px"><Setting /></el-icon>
-        <span>配置 BIS</span>
+        <span>设置 BIS</span>
         <span v-if="!isConfigComplete" class="dot-warn"></span>
       </el-button>
-
-      <div v-if="!isConfigComplete" class="incomplete-warning">
-        <el-icon><Warning /></el-icon>
-        <span>配置未准备就绪</span>
-      </div>
 
       <el-dropdown
         v-if="isConfigComplete"
@@ -42,6 +37,7 @@
       </el-dropdown>
 
       <el-popover
+        v-if="isConfigComplete"
         placement="top"
         title="分配宏生成规则"
         :width="320"
@@ -67,10 +63,15 @@
         </div>
       </el-popover>
 
-      <el-dropdown trigger="click" :hide-on-click="false" max-height="400px">
+      <el-dropdown
+        trigger="click"
+        :hide-on-click="false"
+        max-height="400px"
+        v-if="isConfigComplete"
+      >
         <el-button size="small" type="warning" plain style="margin-left: 12px">
           <el-icon style="margin-right: 4px"><User /></el-icon>
-          有人请假
+          设置请假
         </el-button>
         <template #dropdown>
           <el-dropdown-menu>
@@ -165,9 +166,9 @@
           <el-icon><List /></el-icon>
         </div>
         <h3>开启 BIS 分配</h3>
-        <p>尚未配置团队成员的 BIS，无法生成分配推荐。</p>
+        <p>尚未设置团队成员的 BIS，无法生成分配推荐。</p>
         <el-button type="primary" size="large" @click="showConfigDialog = true">
-          立即开始配置
+          立即开始设置
         </el-button>
       </div>
     </div>
@@ -181,6 +182,10 @@
       align-center
     >
       <div class="bis-config-panel-container">
+        <div class="bis-storage-info">
+          <el-icon><InfoFilled /></el-icon>
+          <span>提示：此 BIS 设置跟随职位（MT/ST等），不跟随具体玩家。</span>
+        </div>
         <div class="table-scroll-wrapper">
           <table class="bis-table config-table">
             <thead>
@@ -190,7 +195,12 @@
                   v-for="p in eligiblePlayers"
                   :key="p"
                   :class="[
-                    { 'header-incomplete': !isPlayerComplete(p) },
+                    {
+                      'header-incomplete': !checkPlayerComplete(
+                        config,
+                        getStorageKey(p),
+                      ),
+                    },
                     { 'is-excluded': excludedPlayers.has(p) },
                     getRoleGroupClass(getPlayerRole?.(p)),
                   ]"
@@ -201,7 +211,9 @@
                       :role="getPlayerRole?.(p)"
                       :show-only-role="showOnlyRole"
                     />
-                    <span v-if="!isPlayerComplete(p)" class="incomplete-label"
+                    <span
+                      v-if="!checkPlayerComplete(config, getStorageKey(p))"
+                      class="incomplete-label"
                       >（未填写）</span
                     >
                   </div>
@@ -258,21 +270,23 @@
         <div class="dialog-footer">
           <div class="footer-left">
             <el-button-group>
-              <el-button size="default" @click="exportBisData"
-                >导出配置字符串</el-button
+              <el-button size="small" @click="exportBisData" 
+                >导出设置字符串</el-button
               >
-              <el-button size="default" @click="importBisData"
-                >导入配置字符串</el-button
+              <el-button size="small" @click="importBisData"
+                >导入设置字符串</el-button
               >
             </el-button-group>
           </div>
           <div class="footer-right">
-            <span v-if="!isConfigComplete" class="config-status-msg">
-              还剩 {{ incompletePlayerCount }} 位成员未配置完成
-            </span>
+            <div class="config-status-msg">
+              <span v-if="incompletePlayerCount > 0">
+                还剩 {{ incompletePlayerCount }} 个职位的 BIS 尚未填完
+              </span>
+            </div>
             <el-button
               type="primary"
-              size="large"
+              size="small"
               @click="showConfigDialog = false"
             >
               完成并关闭
@@ -284,7 +298,7 @@
 
     <el-dialog
       v-model="showImportConfirmDialog"
-      title="确认导入 BIS 配置"
+      title="确认导入 BIS 设置"
       width="600px"
       append-to-body
       destroy-on-close
@@ -295,7 +309,7 @@
       </div>
       <div v-else class="import-diff-container">
         <p class="import-summary">
-          检测到 {{ importDiffs.length }} 位玩家的配置变更。
+          检测到 {{ importDiffs.length }} 位玩家的设置变更。
         </p>
         <div v-for="diff in importDiffs" :key="diff.name" class="diff-card">
           <div class="diff-header">
@@ -304,7 +318,7 @@
               :role="diff.role"
               :show-only-role="false"
             />
-            <span class="diff-tag" v-if="diff.isNew">新配置</span>
+            <span class="diff-tag" v-if="diff.isNew">新设置</span>
             <span class="diff-tag update" v-else>更新</span>
           </div>
           <div class="diff-items">
@@ -339,55 +353,18 @@
   </div>
 </template>
 
-<script lang="ts">
-import { PartOrder } from '@/utils/lootParser'
-
-export interface BisRow {
-  id: string
-  name: string
-  keywords: string
-  type: 'toggle' | 'count'
-}
-
-export type BisValue = 'raid' | 'tome' | number
-
-export interface BisConfig {
-  playerBis: Record<string, Record<string, BisValue>>
-}
-
-export interface LegacyBisConfig {
-  playerBis: Record<string, string[]>
-}
-
-// prettier-ignore
-export const DEFAULT_ROWS: BisRow[] = [
-  { id: 'earring', name: '耳部', keywords: PartOrder.EarringBox, type: 'toggle' },
-  { id: 'necklace', name: '颈部', keywords: PartOrder.NecklaceBox, type: 'toggle' },
-  { id: 'bracelet', name: '腕部', keywords: PartOrder.BraceletBox, type: 'toggle' },
-  { id: 'ring', name: '指环', keywords: PartOrder.RingBox, type: 'toggle' },
-  { id: 'head', name: '头部', keywords: PartOrder.HeadBox, type: 'toggle' },
-  { id: 'hands', name: '手臂', keywords: PartOrder.HandsBox, type: 'toggle' },
-  { id: 'feet', name: '脚部', keywords: PartOrder.FeetBox, type: 'toggle' },
-  { id: 'body', name: '身体', keywords: PartOrder.BodyBox, type: 'toggle' },
-  { id: 'legs', name: '腿部', keywords: PartOrder.LegsBox, type: 'toggle' },
-  { id: 'weapon', name: '武器箱', keywords: PartOrder.WeaponBox, type: 'toggle' },
-  { id: 'twine', name: '强化纤维', keywords: PartOrder.Coating, type: 'count' },
-  { id: 'coating', name: '硬化药', keywords: PartOrder.Twine, type: 'count' },
-  { id: 'tome', name: '神典石', keywords: PartOrder.Tome, type: 'count' },
-  { id: 'solvent', name: '强化药', keywords: PartOrder.Solvent, type: 'count' },
-]
-
-const LAYER_CONFIG = [
-  { name: '1层', items: ['earring', 'necklace', 'bracelet', 'ring'] },
-  { name: '2层', items: ['head', 'hands', 'feet', 'tome', 'coating'] },
-  { name: '3层', items: ['body', 'legs', 'solvent', 'twine'] },
-  { name: '4层', items: ['weapon'] },
-]
-</script>
-
 <script setup lang="ts">
+import {
+  DEFAULT_ROWS,
+  LAYER_CONFIG,
+  type BisConfig,
+  type BisRow,
+  type BisValue,
+  type LegacyBisConfig,
+  isPlayerComplete as checkPlayerComplete,
+} from '@/utils/bisUtils'
 import type { LootRecord } from '@/utils/lootParser'
-import { getRoleType } from '@/utils/lootParser'
+import { getRoleType, ROLE_DEFINITIONS } from '@/utils/lootParser'
 import {
   ArrowDown,
   List,
@@ -395,7 +372,7 @@ import {
   Right,
   Setting,
   User,
-  Warning,
+  InfoFilled,
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { computed, ref, watch } from 'vue'
@@ -507,11 +484,21 @@ function togglePlayerExclusion(player: string) {
   }
 }
 
+function getStorageKey(player: string): string {
+  if (!props.getPlayerRole) return player
+  const role = props.getPlayerRole(player)
+  if (role && !role.startsWith('LEFT:') && !role.startsWith('SUB:')) {
+    return role
+  }
+  return player
+}
+
 function exportBisData() {
   const parts = eligiblePlayers.value.map((p) => {
     const role = props.getPlayerRole?.(p) || 'Unknown'
+    const storageKey = getStorageKey(p)
     const data = DEFAULT_ROWS.map((row) => {
-      const val = config.value.playerBis[p]?.[row.id]
+      const val = config.value.playerBis[storageKey]?.[row.id]
       if (row.type === 'toggle') {
         if (val === 'raid') return '1'
         if (val === 'tome') return '2'
@@ -524,12 +511,12 @@ function exportBisData() {
   })
   const str = parts.join(';')
   navigator.clipboard.writeText(str).then(() => {
-    ElMessage.success('配置字符串已复制到剪贴板')
+    ElMessage.success('设置字符串已复制到剪贴板')
   })
 }
 
 function importBisData() {
-  ElMessageBox.prompt('请粘贴 BIS 配置字符串', '导入配置', {
+  ElMessageBox.prompt('请粘贴 BIS 设置字符串', '导入设置', {
     confirmButtonText: '下一步',
     cancelButtonText: '取消',
     inputType: 'textarea',
@@ -559,7 +546,7 @@ function importBisData() {
           data.length !== DEFAULT_ROWS.length ||
           !/^[0-9]+$/.test(data)
         ) {
-          return `数据校验失败：玩家 "${name || '未知'}" 的配置已损坏`
+          return `数据校验失败：玩家 "${name || '未知'}" 的设置已损坏`
         }
 
         if (name && eligiblePlayers.value.includes(name)) {
@@ -567,7 +554,7 @@ function importBisData() {
         }
       }
 
-      if (validCount === 0) return '未找到匹配当前团队的有效配置数据'
+      if (validCount === 0) return '未找到匹配当前团队的有效设置数据'
       return true
     },
   })
@@ -601,7 +588,7 @@ function getValDisplay(row: BisRow, val: BisValue | undefined): string {
   if (row.type === 'toggle') {
     if (val === 'raid') return '零式'
     if (val === 'tome') return '点数'
-    return '未配置'
+    return '未设置'
   }
   return (val || 1).toString()
 }
@@ -657,7 +644,9 @@ function parseAndPreviewBisData(rawInput: string) {
 
       if (!isValidRow) return
 
-      const currentConfig = (name && config.value.playerBis[name]) || {}
+      const storageKey = getStorageKey(name)
+      const currentConfig =
+        (storageKey && config.value.playerBis[storageKey]) || {}
       const changes: BisChange[] = []
       let hasChanges = false
 
@@ -690,7 +679,7 @@ function parseAndPreviewBisData(rawInput: string) {
     })
 
     if (diffs.length === 0) {
-      ElMessage.info('未检测到有效的配置变更，或玩家信息不匹配。')
+      ElMessage.info('未检测到有效的设置变更，或玩家信息不匹配。')
       return
     }
 
@@ -705,29 +694,34 @@ function parseAndPreviewBisData(rawInput: string) {
 function confirmImportBis() {
   const newPlayerBis = { ...config.value.playerBis }
   importDiffs.value.forEach((diff) => {
-    newPlayerBis[diff.name] = {
-      ...newPlayerBis[diff.name],
+    const storageKey = getStorageKey(diff.name)
+    newPlayerBis[storageKey] = {
+      ...newPlayerBis[storageKey],
       ...diff.newConfig,
     }
   })
   config.value.playerBis = newPlayerBis
   showImportConfirmDialog.value = false
-  ElMessage.success(`成功更新 ${importDiffs.value.length} 位玩家配置`)
+  ElMessage.success(`成功更新 ${importDiffs.value.length} 位玩家设置`)
 }
 
 function setBis(player: string, rowId: string, type: BisValue) {
-  if (!config.value.playerBis[player]) config.value.playerBis[player] = {}
-  const current = config.value.playerBis[player]![rowId]
+  const storageKey = getStorageKey(player)
+  if (!config.value.playerBis[storageKey])
+    config.value.playerBis[storageKey] = {}
+  const current = config.value.playerBis[storageKey]![rowId]
   if (current === type) {
-    delete config.value.playerBis[player]![rowId]
+    delete config.value.playerBis[storageKey]![rowId]
   } else {
-    config.value.playerBis[player]![rowId] = type
+    config.value.playerBis[storageKey]![rowId] = type
   }
 }
 
 function setNeededCount(player: string, rowId: string, count: number) {
-  if (!config.value.playerBis[player]) config.value.playerBis[player] = {}
-  config.value.playerBis[player]![rowId] = count
+  const storageKey = getStorageKey(player)
+  if (!config.value.playerBis[storageKey])
+    config.value.playerBis[storageKey] = {}
+  config.value.playerBis[storageKey]![rowId] = count
 }
 
 function getObtainedCount(player: string, row: BisRow): number {
@@ -740,7 +734,9 @@ function getObtainedCount(player: string, row: BisRow): number {
   if (keywords.length === 0) return 0
 
   return props.records.filter((r) => {
-    const actual = props.getActualPlayer ? props.getActualPlayer(r.player) : r.player
+    const actual = props.getActualPlayer
+      ? props.getActualPlayer(r.player)
+      : r.player
     if (actual !== player) return false
     return keywords.some((k) => r.item.includes(k))
   }).length
@@ -763,7 +759,8 @@ function getLogicStatus(
 }
 
 function getStatusBaseText(player: string, row: BisRow): string {
-  if (row.type === 'count' && getNeededCount(player, row.id) === 0) return '无需'
+  if (row.type === 'count' && getNeededCount(player, row.id) === 0)
+    return '无需'
   const status = getLogicStatus(player, row)
   return STATUS_MAP[status]?.text || ''
 }
@@ -811,33 +808,16 @@ const eligiblePlayers = computed(() => {
 })
 
 const isConfigComplete = computed(() => {
-  if (!eligiblePlayers.value || eligiblePlayers.value.length === 0) return false
-
-  for (const p of eligiblePlayers.value) {
-    if (excludedPlayers.value.has(p)) continue
-    for (const row of DEFAULT_ROWS) {
-      if (row.type === 'toggle' && !config.value.playerBis[p]?.[row.id]) {
-        return false
-      }
-    }
+  for (const role of ROLE_DEFINITIONS) {
+    if (!checkPlayerComplete(config.value, role)) return false
   }
   return true
 })
-
-function isPlayerComplete(player: string) {
-  for (const row of DEFAULT_ROWS) {
-    if (row.type === 'toggle' && !config.value.playerBis[player]?.[row.id]) {
-      return false
-    }
-  }
-  return true
-}
 
 watch(
   () => props.modelValue,
   (newVal) => {
     if (!newVal) {
-      if (!isConfigComplete.value) showConfigDialog.value = true
       return
     }
 
@@ -862,17 +842,13 @@ watch(
         config.value = standard
       }
     }
-
-    if (!isConfigComplete.value) {
-      showConfigDialog.value = true
-    }
   },
   { immediate: true, deep: true },
 )
 
 const incompletePlayerCount = computed(() => {
-  return eligiblePlayers.value.filter(
-    (p) => !excludedPlayers.value.has(p) && !isPlayerComplete(p),
+  return ROLE_DEFINITIONS.filter(
+    (role) => !checkPlayerComplete(config.value, role),
   ).length
 })
 
@@ -893,7 +869,7 @@ const STATUS_MAP = {
 } as const
 
 function getBisValue(player: string, rowId: string): BisValue | undefined {
-  return config.value.playerBis[player]?.[rowId]
+  return config.value.playerBis[getStorageKey(player)]?.[rowId]
 }
 
 function isRaidBis(player: string, rowId: string) {
@@ -998,32 +974,6 @@ const getRoleGroupClass = getRoleType
   }
 }
 
-.dot-warn {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 8px;
-  height: 8px;
-  background: #f56c6c;
-  border-radius: 50%;
-  border: 1.5px solid white;
-  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.1);
-
-  html.dark & {
-    border-color: #1e1f29;
-    box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.1);
-  }
-}
-
-.incomplete-warning {
-  color: #f56c6c;
-  font-size: 13px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
 .bis-onboarding {
   flex: 1;
   display: flex;
@@ -1106,6 +1056,23 @@ const getRoleGroupClass = getRoleType
   .table-container {
     max-width: 1400px;
     margin: 0 auto;
+  }
+}
+
+.bis-storage-info {
+  font-size: 12px;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  html.dark & {
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
   }
 }
 
@@ -1285,7 +1252,6 @@ const getRoleGroupClass = getRoleType
   color: #f87171 !important;
   margin-top: 2px;
 }
-
 
 .sticky-col {
   position: sticky;
@@ -1629,7 +1595,7 @@ html.dark {
     }
 
     .table-scroll-wrapper {
-      background: #1a1b26; 
+      background: #1a1b26;
       border-color: #2d2e3d;
       &::-webkit-scrollbar {
         width: 8px;
@@ -1669,7 +1635,6 @@ html.dark {
       background-color: rgba(244, 63, 94, 0.1) !important;
       color: #fb7185 !important;
     }
-
 
     .split-cell {
       background: #1a1b26;

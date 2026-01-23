@@ -1,0 +1,40 @@
+// 常用组件定位补丁
+.el-button,
+.soft-action-btn,
+.tool-btn,
+.setup-trigger-btn,
+.mini-tag-el {
+  position: relative !important;
+}
+
+@keyframes dot-warn-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(245, 108, 108, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 4px rgba(245, 108, 108, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 108, 108, 0);
+  }
+}
+
+.dot-warn {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 8px;
+  height: 8px;
+  background: #f56c6c;
+  border-radius: 50%;
+  border: 1.5px solid white;
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  pointer-events: none;
+  animation: dot-warn-pulse 2s infinite;
+
+  html.dark & {
+    border-color: #1e1f29;
+    box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.1);
+  }
+}

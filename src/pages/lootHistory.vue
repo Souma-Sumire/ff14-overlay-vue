@@ -23,10 +23,65 @@
     <template v-if="!isInitializing">
       <transition name="fade">
         <div v-if="isLoading" class="loading-overlay">
-          <div class="spinner"></div>
-          <div class="loading-txt">解析中 {{ loadingProgress }}%</div>
-          <div v-if="currentParsingFile" class="loading-sub-txt">
-            {{ currentParsingFile }}
+          <div class="loading-card-wide">
+            <div class="loading-header">
+              <div class="spinner-small"></div>
+              <span class="loading-title"
+                >解析中... {{ loadingProgress }}%</span
+              >
+            </div>
+            <div class="parsing-lists">
+              <div class="list-col">
+                <div class="list-head">
+                  已完成 ({{ parsedLogFiles.length }})
+                </div>
+                <div class="list-body">
+                  <transition-group name="list">
+                    <div
+                      v-for="file in parsedLogFiles"
+                      :key="file.name"
+                      class="file-item done"
+                    >
+                      <div class="file-info-left">
+                        <el-icon><Check /></el-icon>
+                        <span class="file-name" :title="file.name">{{
+                          file.name
+                        }}</span>
+                      </div>
+                      <span class="file-size">{{
+                        formatFileSize(file.size)
+                      }}</span>
+                    </div>
+                  </transition-group>
+                </div>
+              </div>
+              <div class="list-divider"></div>
+              <div class="list-col">
+                <div class="list-head">
+                  待处理 ({{ pendingLogFiles.length }})
+                </div>
+                <div class="list-body">
+                  <div
+                    v-for="file in pendingLogFiles.slice(0, 50)"
+                    :key="file.name"
+                    class="file-item pending"
+                  >
+                    <div class="file-info-left">
+                      <el-icon><Timer /></el-icon>
+                      <span class="file-name" :title="file.name">{{
+                        file.name
+                      }}</span>
+                    </div>
+                    <span class="file-size">{{
+                      formatFileSize(file.size)
+                    }}</span>
+                  </div>
+                  <div v-if="pendingLogFiles.length > 50" class="more-hint">
+                    ...还有 {{ pendingLogFiles.length - 50 }} 个文件
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </transition>
@@ -52,12 +107,15 @@
 
           <div class="path-toolbar">
             <el-button
-              type="primary"
+              :type="isSyncNeeded ? 'warning' : 'primary'"
               size="small"
               :loading="isSyncing"
               @click="syncLogFiles"
             >
-              {{ isSyncing ? '同步中' : '立即同步' }}
+              {{
+                isSyncing ? '同步中' : isSyncNeeded ? '需要同步' : '立即同步'
+              }}
+              <span v-if="isSyncNeeded" class="dot-warn"></span>
             </el-button>
 
             <el-date-picker
@@ -68,7 +126,6 @@
               format="YYYY/MM/DD HH:mm"
               value-format="YYYY-MM-DDTHH:mm"
               :clearable="false"
-              @change="handleSyncDateChange"
               class="date-picker-el"
             />
             <span class="range-sep">-</span>
@@ -80,15 +137,19 @@
               format="YYYY/MM/DD HH:mm"
               value-format="YYYY-MM-DDTHH:mm"
               clearable
-              @change="handleSyncDateChange"
               class="date-picker-el"
             />
 
-            <div class="v-divider"></div>
-
             <el-button @click="setLogPath" plain class="tool-btn">
               <el-icon><FolderOpened /></el-icon>
-              <span>切换目录</span>
+              <span>日志目录</span>
+            </el-button>
+
+            <div class="v-divider"></div>
+
+            <el-button @click="openManualAddDialog" plain class="tool-btn">
+              <el-icon><Plus /></el-icon>
+              <span>手动添加</span>
             </el-button>
 
             <el-dropdown trigger="click" @command="handleDataCommand">
@@ -119,10 +180,7 @@
               </template>
             </el-dropdown>
 
-            <el-button @click="openManualAddDialog" plain class="tool-btn">
-              <el-icon><Plus /></el-icon>
-              <span>手动添加</span>
-            </el-button>
+            <div class="v-divider"></div>
 
             <el-popover
               placement="bottom-end"
@@ -222,6 +280,7 @@
                     <el-button size="small" class="soft-action-btn primary">
                       <el-icon><User /></el-icon>
                       <span>固定队 - 职位设置</span>
+                      <span v-if="!isRaidRolesComplete" class="dot-warn"></span>
                     </el-button>
                   </template>
 
@@ -237,14 +296,17 @@
                         </div>
                         <el-select
                           v-model="playerRoles[role]"
-                          placeholder="选择玩家"
+                          placeholder="选择/输入玩家"
                           filterable
+                          allow-create
+                          default-first-option
                           clearable
                           size="small"
                           style="flex: 1"
+                          :teleported="false"
                         >
                           <el-option
-                            v-for="p in allPlayers.filter(
+                            v-for="p in playersForSelection.filter(
                               (p) =>
                                 p === playerRoles[role] ||
                                 !assignedPlayers.has(p),
@@ -280,15 +342,18 @@
                             </div>
                           </template>
                           <el-select
-                            placeholder="添加替补"
+                            placeholder="添加/输入替补"
                             filterable
+                            allow-create
+                            default-first-option
                             size="small"
                             @change="addSpecialRole($event, 'SUB')"
                             value=""
                             style="width: 120px"
+                            :teleported="false"
                           >
                             <el-option
-                              v-for="p in allPlayers.filter(
+                              v-for="p in playersForSelection.filter(
                                 (p) => !assignedPlayers.has(p),
                               )"
                               :key="p"
@@ -319,15 +384,18 @@
                             </div>
                           </template>
                           <el-select
-                            placeholder="标记离队"
+                            placeholder="添加/输入离队"
                             filterable
+                            allow-create
+                            default-first-option
                             size="small"
                             @change="addSpecialRole($event, 'LEFT')"
                             value=""
                             style="width: 120px"
+                            :teleported="false"
                           >
                             <el-option
-                              v-for="p in allPlayers.filter(
+                              v-for="p in playersForSelection.filter(
                                 (p) => !assignedPlayers.has(p),
                               )"
                               :key="p"
@@ -341,52 +409,64 @@
                   </div>
                 </el-popover>
                 <div class="header-sep"></div>
-                <label class="switch-box">
-                  <el-switch
-                    v-model="showOnlyRole"
-                    size="small"
-                    style="
-                      --el-switch-on-color: #3b82f6;
-                      --el-switch-off-color: #cbd5e1;
-                    "
-                  />
-                  <span class="switch-label">只显示职位</span>
-                </label>
-                <div class="header-sep"></div>
-                <el-popover
-                  placement="bottom"
-                  title="未完成职位设置"
-                  :width="220"
-                  content="需在左侧“职位设置”中完成所有职位后方可开启"
+                <el-tooltip
                   :disabled="isRaidRolesComplete"
+                  :content="ROLE_SETTING_HINT"
+                  placement="top"
                 >
-                  <template #reference>
-                    <div
-                      class="switch-container"
+                  <label class="switch-box">
+                    <el-switch
+                      v-model="showOnlyRole"
+                      :disabled="!isRaidRolesComplete"
+                      size="small"
                       style="
-                        display: inline-flex;
-                        align-items: center;
-                        gap: 6px;
+                        --el-switch-on-color: #3b82f6;
+                        --el-switch-off-color: #cbd5e1;
                       "
+                    />
+                    <span
+                      class="switch-label"
+                      :style="{ opacity: isRaidRolesComplete ? 1 : 0.5 }"
+                      >只显示职位</span
                     >
-                      <el-switch
-                        v-model="isOnlyRaidMembersActive"
-                        :disabled="!isRaidRolesComplete"
-                        size="small"
-                        style="--el-switch-on-color: #3b82f6"
-                      />
-                      <span
-                        class="switch-label"
-                        :style="{
-                          opacity: isRaidRolesComplete ? 1 : 0.5,
-                          fontSize: '12px',
-                        }"
-                      >
-                        只看固定队
-                      </span>
-                    </div>
-                  </template>
-                </el-popover>
+                  </label>
+                </el-tooltip>
+                <div class="header-sep"></div>
+                <el-tooltip
+                  :disabled="isRaidRolesComplete"
+                  :content="ROLE_SETTING_HINT"
+                  placement="top"
+                >
+                  <div
+                    class="switch-container"
+                    style="display: inline-flex; align-items: center; gap: 6px"
+                  >
+                    <el-switch
+                      v-model="isOnlyRaidMembersActive"
+                      :disabled="!isRaidRolesComplete"
+                      size="small"
+                      style="--el-switch-on-color: #3b82f6"
+                    />
+                    <span
+                      class="switch-label"
+                      :style="{
+                        opacity: isRaidRolesComplete ? 1 : 0.5,
+                        fontSize: '12px',
+                      }"
+                    >
+                      只看固定队
+                    </span>
+                  </div>
+                </el-tooltip>
+                <div class="header-sep" v-if="!isOnlyRaidMembersActive"></div>
+                <label class="switch-box" v-if="!isOnlyRaidMembersActive">
+                  <el-switch
+                    v-model="hideEmptyPlayers"
+                    size="small"
+                    style="--el-switch-on-color: #3b82f6"
+                  />
+                  <span class="switch-label">隐藏无记录玩家</span>
+                </label>
               </div>
               <div class="acts">
                 <el-popover placement="bottom" :width="320" trigger="click">
@@ -478,7 +558,6 @@
                 :key="p"
                 :checked="isPlayerChecked(p)"
                 :class="{
-                  'auto-disabled-tag': isPlayerAutoDisabled(p),
                   'readonly-tag': isOnlyRaidMembersActive,
                 }"
                 @click.stop="handlePlayerClick($event, p)"
@@ -496,20 +575,35 @@
             <div class="sec-header">
               <div class="sec-title-group">
                 <span class="title-main">📦 物品 ({{ visibleItemCount }})</span>
+                <label class="switch-box">
+                  <el-switch
+                    v-model="isRaidFilterActive"
+                    size="small"
+                    style="--el-switch-on-color: #3b82f6"
+                  />
+                  <span class="switch-label">只看零式掉落</span>
+                </label>
                 <div class="header-sep"></div>
                 <el-popover
                   placement="bottom-start"
-                  :width="200"
+                  :width="220"
                   trigger="click"
                 >
                   <template #reference>
-                    <el-button size="small" class="soft-action-btn"
-                      >杂物屏蔽设置</el-button
-                    >
+                    <el-button size="small" class="soft-action-btn primary">
+                      <el-icon style="margin-right: 4px"><Setting /></el-icon>
+                      杂物屏蔽设置
+                    </el-button>
                   </template>
                   <div class="filter-popover">
-                    <div class="pop-title">屏蔽杂物</div>
-                    <div class="filter-list">
+                    <div class="pop-title">屏蔽杂物 (非零式模式下生效)</div>
+                    <div
+                      class="filter-list"
+                      :style="{
+                        opacity: isRaidFilterActive ? 0.5 : 1,
+                        pointerEvents: isRaidFilterActive ? 'none' : 'auto',
+                      }"
+                    >
                       <el-checkbox
                         v-model="systemFilterSettings.cards"
                         label="九宫幻卡"
@@ -569,18 +663,6 @@
                     </div>
                   </div>
                 </el-popover>
-                <div class="header-sep"></div>
-                <label class="switch-box">
-                  <el-switch
-                    v-model="isRaidFilterActive"
-                    size="small"
-                    style="
-                      --el-switch-on-color: #3b82f6;
-                      --el-switch-off-color: #cbd5e1;
-                    "
-                  />
-                  <span class="switch-label">只看零式掉落</span>
-                </label>
               </div>
               <div class="acts">
                 <span class="hint-small"
@@ -595,7 +677,6 @@
                 :key="item"
                 :checked="isItemChecked(item)"
                 :class="{
-                  'auto-disabled-tag': isItemAutoDisabled(item),
                   'readonly-tag': isRaidFilterActive,
                 }"
                 @click.stop="handleItemClick($event, item)"
@@ -614,7 +695,111 @@
             class="mode-tabs-el"
             type="card"
           >
-            <el-tab-pane label="按玩家" name="summary">
+            <el-tab-pane label="详细记录" name="list">
+              <div class="list-container-el">
+                <el-table
+                  :data="paginatedRecords"
+                  style="width: 100%"
+                  class="loot-record-table"
+                  cell-class-name="loot-cell"
+                >
+                  <el-table-column label="周" width="60" align="center">
+                    <template #default="scope">
+                      <div class="col-week">
+                        W{{
+                          getRaidWeekIndex(
+                            scope.row.timestamp,
+                            GAME_VERSION_CONFIG.RAID_START_TIME,
+                          )
+                        }}
+                      </div>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="时间" width="140">
+                    <template #default="scope">
+                      <div class="col-time">
+                        <span class="time-date">{{
+                          formatTime(scope.row.timestamp)
+                        }}</span>
+                      </div>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="物品" width="300">
+                    <template #default="scope">
+                      <div class="col-item">
+                        <span class="item-text">{{ scope.row.item }}</span>
+                      </div>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="获得者" width="200">
+                    <template #default="scope">
+                      <LootPlayerRoll
+                        v-if="getWinnerRollInfo(scope.row)"
+                        :roll="getWinnerRollInfo(scope.row)!"
+                        is-winner
+                        :show-only-role="showOnlyRole"
+                        :get-player-role="getPlayerRole"
+                      />
+                      <div v-else class="no-winner">未分配</div>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="其他 Roll 点记录">
+                    <template #default="scope">
+                      <div class="col-rolls">
+                        <LootPlayerRoll
+                          v-for="roll in getOtherRolls(scope.row)"
+                          :key="roll.player"
+                          :roll="roll"
+                          :show-only-role="showOnlyRole"
+                          :get-player-role="getPlayerRole"
+                        />
+                      </div>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="操作" width="60" align="center">
+                    <template #default="scope">
+                      <el-popconfirm
+                        title="确定永久删除吗？"
+                        confirm-button-text="删除"
+                        cancel-button-text="取消"
+                        @confirm="deleteRecord(scope.row)"
+                      >
+                        <template #reference>
+                          <el-button
+                            type="danger"
+                            :icon="Delete"
+                            size="small"
+                            circle
+                            plain
+                          />
+                        </template>
+                      </el-popconfirm>
+                    </template>
+                  </el-table-column>
+                </el-table>
+
+                <div class="pagination-box">
+                  <el-pagination
+                    v-model:current-page="currentPage"
+                    :page-size="50"
+                    layout="total, prev, pager, next"
+                    :total="filteredRecords.length"
+                    small
+                  />
+                </div>
+              </div>
+            </el-tab-pane>
+
+            <el-tab-pane name="summary" :disabled="!isRaidRolesComplete">
+              <template #label>
+                <el-tooltip
+                  :disabled="isRaidRolesComplete"
+                  :content="ROLE_SETTING_HINT"
+                  placement="top"
+                >
+                  <span>按玩家</span>
+                </el-tooltip>
+              </template>
               <div class="tabs-sort-control">
                 <LootSortSegmented v-model="summarySortMode" />
               </div>
@@ -651,7 +836,16 @@
               </div>
             </el-tab-pane>
 
-            <el-tab-pane label="按部位" name="slot">
+            <el-tab-pane name="slot" :disabled="!isRaidRolesComplete">
+              <template #label>
+                <el-tooltip
+                  :disabled="isRaidRolesComplete"
+                  :content="ROLE_SETTING_HINT"
+                  placement="top"
+                >
+                  <span>按部位</span>
+                </el-tooltip>
+              </template>
               <div class="tabs-sort-control">
                 <LootSortSegmented v-model="slotSortMode" />
               </div>
@@ -691,7 +885,16 @@
               </div>
             </el-tab-pane>
 
-            <el-tab-pane label="按CD周" name="week">
+            <el-tab-pane name="week" :disabled="!isRaidRolesComplete">
+              <template #label>
+                <el-tooltip
+                  :disabled="isRaidRolesComplete"
+                  :content="ROLE_SETTING_HINT"
+                  placement="top"
+                >
+                  <span>按CD周</span>
+                </el-tooltip>
+              </template>
               <div class="tabs-sort-control">
                 <LootSortSegmented v-model="weekSortMode" />
               </div>
@@ -818,7 +1021,16 @@
               </el-popover>
             </el-tab-pane>
 
-            <el-tab-pane label="图表分析" name="chart" lazy>
+            <el-tab-pane name="chart" :disabled="!isRaidRolesComplete" lazy>
+              <template #label>
+                <el-tooltip
+                  :disabled="isRaidRolesComplete"
+                  :content="ROLE_SETTING_HINT"
+                  placement="top"
+                >
+                  <span>图表分析</span>
+                </el-tooltip>
+              </template>
               <LootStatisticsPanel
                 :records="filteredRecords"
                 :players="visibleAllPlayers"
@@ -830,7 +1042,23 @@
               />
             </el-tab-pane>
 
-            <el-tab-pane label="BIS分配" name="bis">
+            <el-tab-pane name="bis" :disabled="!isRaidRolesComplete">
+              <template #label>
+                <el-tooltip
+                  :disabled="isRaidRolesComplete"
+                  :content="ROLE_SETTING_HINT"
+                  placement="top"
+                >
+                  <div style="display: flex; align-items: center; gap: 4px">
+                    <span>BIS分配</span>
+                    <span
+                      v-if="isRaidRolesComplete && !isBisConfigComplete"
+                      class="dot-warn"
+                      style="margin: 0"
+                    ></span>
+                  </div>
+                </el-tooltip>
+              </template>
               <BisAllocator
                 v-model="bisConfig"
                 v-model:sortMode="bisSortMode"
@@ -840,101 +1068,6 @@
                 :get-actual-player="getActualPlayer"
                 :show-only-role="showOnlyRole"
               />
-            </el-tab-pane>
-
-            <el-tab-pane label="详细记录" name="list">
-              <div class="list-container-el">
-                <el-table
-                  :data="paginatedRecords"
-                  style="width: 100%"
-                  class="loot-record-table"
-                  cell-class-name="loot-cell"
-                >
-                  <el-table-column label="周" width="60" align="center">
-                    <template #default="scope">
-                      <div class="col-week">
-                        W{{
-                          getRaidWeekIndex(
-                            scope.row.timestamp,
-                            GAME_VERSION_CONFIG.RAID_START_TIME,
-                          )
-                        }}
-                      </div>
-                    </template>
-                  </el-table-column>
-                  <el-table-column label="时间" width="140">
-                    <template #default="scope">
-                      <div class="col-time">
-                        <span class="time-date">{{
-                          formatTime(scope.row.timestamp)
-                        }}</span>
-                      </div>
-                    </template>
-                  </el-table-column>
-                  <el-table-column label="物品" width="300">
-                    <template #default="scope">
-                      <div class="col-item">
-                        <span class="item-text">{{ scope.row.item }}</span>
-                      </div>
-                    </template>
-                  </el-table-column>
-                  <el-table-column label="获得者" width="200">
-                    <template #default="scope">
-                      <LootPlayerRoll
-                        v-if="getWinnerRollInfo(scope.row)"
-                        :roll="getWinnerRollInfo(scope.row)!"
-                        is-winner
-                        :show-only-role="showOnlyRole"
-                        :get-player-role="getPlayerRole"
-                      />
-                      <div v-else class="no-winner">未分配</div>
-                    </template>
-                  </el-table-column>
-                  <el-table-column label="其他 Roll 点记录">
-                    <template #default="scope">
-                      <div class="col-rolls">
-                        <LootPlayerRoll
-                          v-for="roll in getOtherRolls(scope.row)"
-                          :key="roll.player"
-                          :roll="roll"
-                          :show-only-role="showOnlyRole"
-                          :get-player-role="getPlayerRole"
-                        />
-                      </div>
-                    </template>
-                  </el-table-column>
-                  <el-table-column label="操作" width="60" align="center">
-                    <template #default="scope">
-                      <el-popconfirm
-                        title="确定永久删除吗？"
-                        confirm-button-text="删除"
-                        cancel-button-text="取消"
-                        @confirm="deleteRecord(scope.row)"
-                      >
-                        <template #reference>
-                          <el-button
-                            type="danger"
-                            :icon="Delete"
-                            size="small"
-                            circle
-                            plain
-                          />
-                        </template>
-                      </el-popconfirm>
-                    </template>
-                  </el-table-column>
-                </el-table>
-
-                <div class="pagination-box">
-                  <el-pagination
-                    v-model:current-page="currentPage"
-                    :page-size="50"
-                    layout="total, prev, pager, next"
-                    :total="filteredRecords.length"
-                    small
-                  />
-                </div>
-              </div>
             </el-tab-pane>
           </el-tabs>
 
@@ -1210,6 +1343,7 @@ import {
   Monitor,
   Mouse,
   EditPen,
+  Check,
 } from '@element-plus/icons-vue'
 import LogParserWorker from '@/workers/logParser.ts?worker'
 import LootPlayerRoll from '@/components/loot-history/LootPlayerRoll.vue'
@@ -1217,9 +1351,8 @@ import PlayerDisplay from '@/components/loot-history/PlayerDisplay.vue'
 import LootSortSegmented from '@/components/loot-history/LootSortSegmented.vue'
 import LootStatisticsPanel from '@/components/loot-history/charts/LootStatisticsPanel.vue'
 import RoleBadge from '@/components/loot-history/RoleBadge.vue'
-import BisAllocator, {
-  type BisConfig,
-} from '@/components/loot-history/BisAllocator.vue'
+import BisAllocator from '@/components/loot-history/BisAllocator.vue'
+import { isPlayerComplete, type BisConfig } from '@/utils/bisUtils'
 
 const GAME_VERSION_CONFIG = {
   // 零式首周开始时间
@@ -1227,6 +1360,9 @@ const GAME_VERSION_CONFIG = {
   // 零式装备/道具系列的关键词
   RAID_SERIES_KEYWORD: '总冠军',
 }
+
+const ROLE_SETTING_HINT =
+  '需在左上方“固定队 - 职位设置”中完成所有职位后方可开启'
 
 interface DBConfig {
   key: string
@@ -1243,7 +1379,9 @@ const dbHandle = useIndexedDB<{
 const isInitializing = ref(true)
 const isLoading = ref(false)
 const loadingProgress = ref(0)
-const currentParsingFile = ref('')
+
+const parsedLogFiles = ref<{ name: string; size: number }[]>([])
+const pendingLogFiles = ref<{ name: string; size: number }[]>([])
 const lootRecords = ref<LootRecord[]>([])
 const existingKeys = ref(new Set<string>())
 const blacklistedKeys = ref(new Set<string>())
@@ -1312,6 +1450,7 @@ const processedFiles = ref<Record<string, { size: number; mtime: number }>>({})
 const syncStartDate = ref(GAME_VERSION_CONFIG.RAID_START_TIME)
 const syncEndDate = ref<string | null>(null)
 const isRaidFilterActive = ref(false)
+const isSyncNeeded = ref(false)
 const isOnlyRaidMembersActive = ref(false)
 const EQUIP_ROLES = [
   '御敌',
@@ -1331,6 +1470,7 @@ const EQUIP_SERIES_REGEX = new RegExp(`(?<series>.+)(${EQUIP_ROLES_STR}).+`)
 const showOnlyRole = ref(false)
 const hideUnselectedItems = ref(false)
 const hideUnselectedPlayers = ref(false)
+const hideEmptyPlayers = ref(true)
 const systemFilterSettings = ref({
   cards: true,
   materia: true,
@@ -1366,6 +1506,7 @@ watch(
     weekSortMode,
     bisSortMode,
     blacklistedKeys,
+    hideEmptyPlayers,
   ],
   async () => {
     await dbConfig.set({
@@ -1432,6 +1573,13 @@ watch(
   },
   { deep: true },
 )
+
+// 当时间范围调整时，标记需要同步
+watch([syncStartDate, syncEndDate], () => {
+  if (!isInitializing.value) {
+    isSyncNeeded.value = true
+  }
+})
 
 onMounted(async () => {
   isInitializing.value = true
@@ -1529,6 +1677,10 @@ onMounted(async () => {
     document.body.addEventListener('dragleave', handleGlobalDragLeave)
     document.body.addEventListener('drop', handleGlobalDrop)
     window.addEventListener('click', closeContextMenu)
+
+    if (!isRaidRolesComplete.value && viewMode.value !== 'list') {
+      viewMode.value = 'list'
+    }
   } catch (e) {
     console.error('Failed to load DB:', e)
   } finally {
@@ -1674,13 +1826,28 @@ const mergeSuggestions = computed(() => {
   return suggestions.sort((a, b) => b.confidence - a.confidence).slice(0, 5)
 })
 
+const playerTotalItemsMap = computed(() => {
+  const counts: Record<string, number> = {}
+  lootRecords.value.forEach((r) => {
+    const p = getActualPlayer(r.player)
+    counts[p] = (counts[p] || 0) + 1
+  })
+  return counts
+})
+
 const allPlayers = computed(() => {
   const players = new Set<string>()
   lootRecords.value.forEach((record) => {
     players.add(getActualPlayer(record.player))
     record.rolls.forEach((roll) => players.add(getActualPlayer(roll.player)))
   })
-  return Array.from(players).sort(comparePlayersByRole)
+  // 即使没有掉落记录，也将已设置职位的玩家加入列表
+  Object.values(playerRoles.value).forEach((p) => {
+    if (p) players.add(getActualPlayer(p))
+  })
+  return Array.from(players).sort((a, b) =>
+    comparePlayersByRole(a, b, playerTotalItemsMap.value),
+  )
 })
 const availableSeries = computed(() => {
   const seriesSet = new Set<string>()
@@ -1698,6 +1865,13 @@ const assignedPlayers = computed(() => {
 })
 const isRaidRolesComplete = computed(() => {
   return ROLE_DEFINITIONS.every((role) => !!playerRoles.value[role])
+})
+
+const isBisConfigComplete = computed(() => {
+  if (!isRaidRolesComplete.value) return false
+  // 仅对正式职位的成员（MT/ST/H1/H2/D1/D2/D3/D4）检查 BIS 完整性
+  // 只要有一个职位的 BIS 没填完，就算不完整
+  return ROLE_DEFINITIONS.every((role) => isPlayerComplete(bisConfig.value, role))
 })
 
 const selectablePlayersForMerge = computed(() => {
@@ -1724,12 +1898,44 @@ const selectablePlayersForMerge = computed(() => {
 })
 
 const sortedSummaryPlayers = computed(() => {
-  return Object.keys(playerSummary.value).sort(comparePlayersByRole)
+  const players = visibleAllPlayers.value
+  const summary = playerSummary.value
+  const counts: Record<string, number> = {}
+  players.forEach((p) => {
+    counts[p] = Object.values(summary[p] || {}).reduce(
+      (sum, val) => sum + val,
+      0,
+    )
+  })
+  return [...players].sort((a, b) => comparePlayersByRole(a, b, counts))
 })
 
 const visibleAllPlayers = computed(() => {
-  if (!hideUnselectedPlayers.value) return allPlayers.value
-  return allPlayers.value.filter((p) => isPlayerChecked(p))
+  let players = allPlayers.value
+  if (hideUnselectedPlayers.value) {
+    players = players.filter((p) => isPlayerChecked(p))
+  }
+  if (hideEmptyPlayers.value) {
+    players = players.filter((p) => {
+      // 检查该玩家在当前过滤条件下是否有记录
+      return (
+        playerSummary.value[p] && Object.keys(playerSummary.value[p]).length > 0
+      )
+    })
+  }
+  return players
+})
+
+const playersWithRecords = computed(() => {
+  return allPlayers.value.filter((p) => {
+    return (
+      playerSummary.value[p] && Object.keys(playerSummary.value[p]).length > 0
+    )
+  })
+})
+
+const playersForSelection = computed(() => {
+  return hideEmptyPlayers.value ? playersWithRecords.value : allPlayers.value
 })
 
 const visibleUniqueItems = computed(() => {
@@ -1785,6 +1991,9 @@ watch(isRaidRolesComplete, (newVal) => {
   if (!newVal && isOnlyRaidMembersActive.value) {
     isOnlyRaidMembersActive.value = false
   }
+  if (!newVal) {
+    viewMode.value = 'list'
+  }
 })
 
 const SLOT_DEFINITIONS = PART_ORDER
@@ -1799,25 +2008,6 @@ function getItemSortPriority(
   if (RAID_REGEX.test(item)) return 50
   return 100
 }
-
-const itemWinnerMap = computed(() => {
-  const map = new Map<string, Set<string>>()
-  lootRecords.value.forEach((r) => {
-    if (!map.has(r.item)) map.set(r.item, new Set())
-    map.get(r.item)!.add(getActualPlayer(r.player))
-  })
-  return map
-})
-
-const playerItemMap = computed(() => {
-  const map = new Map<string, Set<string>>()
-  lootRecords.value.forEach((r) => {
-    const p = getActualPlayer(r.player)
-    if (!map.has(p)) map.set(p, new Set())
-    map.get(p)!.add(r.item)
-  })
-  return map
-})
 
 const visibleItemCount = computed(() => {
   return uniqueItems.value.filter((i) => isItemChecked(i)).length
@@ -1999,6 +2189,17 @@ const rawSuspiciousKeys = computed(() => {
     }
 
     allRecords.forEach((r) => {
+      // 限定条件1: 道具名称符合 RAID_REGEX
+      if (!RAID_REGEX.test(r.item)) return
+
+      // 限定条件2: 获得时间在周二 16:00~19:00 之间
+      const date = r.timestamp
+      const dayOfWeek = date.getDay() // 0=周日, 1=周一, 2=周二...
+      const hour = date.getHours()
+
+      if (dayOfWeek !== 2) return // 不是周二
+      if (hour < 16 || hour >= 19) return // 不在 16:00~19:00 之间
+
       const ts = r.timestamp.getTime()
       if (anchorTimestamps.some((ats) => Math.abs(ts - ats) <= 5 * 60 * 1000)) {
         keys.add(r.key)
@@ -2066,7 +2267,6 @@ const contextMenuRecord = ref<LootRecord | null>(null)
 const isMenuVisible = ref(false)
 const contextMenuPosition = ref({ x: 0, y: 0 })
 
-// 虚拟引用对象，提供给 Popover 用于定位
 const contextMenuRef = {
   getBoundingClientRect: () =>
     ({
@@ -2109,12 +2309,6 @@ function resetFilters() {
   syncEndDate.value = null
 }
 
-function handleSyncDateChange() {
-  if (currentHandle.value && !isSyncing.value) {
-    syncLogFiles()
-  }
-}
-
 async function setLogPath() {
   try {
     const showPicker = (
@@ -2134,6 +2328,7 @@ async function setLogPath() {
       await dbRecords.clear()
       await dbConfig.set({ key: 'processedFiles', value: {} })
       processedFiles.value = {}
+      recordWeekCorrections.value = {}
       lootRecords.value = []
       existingKeys.value.clear()
       itemVisibility.value = {}
@@ -2181,6 +2376,7 @@ async function startInitialSync() {
 
 async function syncLogFiles() {
   if (isSyncing.value || !currentHandle.value) return
+  isSyncNeeded.value = false
 
   interface FileSystemDirectoryHandleExtended {
     queryPermission(options: {
@@ -2210,7 +2406,11 @@ async function syncLogFiles() {
     const syncEndTs = syncEndDate.value
       ? new Date(syncEndDate.value).getTime()
       : Infinity
-    const filesToRead: { handle: FileSystemFileHandle; name: string }[] = []
+    const filesToRead: {
+      handle: FileSystemFileHandle
+      name: string
+      size: number
+    }[] = []
 
     const isFirstSync = existingKeys.value.size === 0
     const localKeys = new Set(existingKeys.value)
@@ -2222,8 +2422,14 @@ async function syncLogFiles() {
       if (entry.kind === 'file' && entry.name.toLowerCase().endsWith('.log')) {
         const name = entry.name
         const file = await (entry as FileSystemFileHandle).getFile()
+        if (file.size < 10) continue
+
         if (name.includes(todayStr)) {
-          filesToRead.push({ handle: entry as FileSystemFileHandle, name })
+          filesToRead.push({
+            handle: entry as FileSystemFileHandle,
+            name,
+            size: file.size,
+          })
           continue
         }
         const match = name.match(/_(\d{8})(?:\.|_)/)
@@ -2240,7 +2446,11 @@ async function syncLogFiles() {
           !processedFiles.value[name] &&
           Date.now() - file.lastModified < 60 * 24 * 3600 * 1000
         ) {
-          filesToRead.push({ handle: entry as FileSystemFileHandle, name })
+          filesToRead.push({
+            handle: entry as FileSystemFileHandle,
+            name,
+            size: file.size,
+          })
         }
       }
     }
@@ -2251,15 +2461,21 @@ async function syncLogFiles() {
       return
     }
 
-    const CHUNK_SIZE = 10 // Batch process files to keep UI responsive
-    let completedCount = 0 // 原子计数器，跟踪已完成的文件数
+    filesToRead.sort((a, b) => a.name.localeCompare(b.name))
+
+    const CHUNK_SIZE = 10
+    parsedLogFiles.value = []
+    pendingLogFiles.value = filesToRead.map((f) => ({
+      name: f.name,
+      size: f.size,
+    }))
+
+    let completedCount = 0
 
     for (let i = 0; i < filesToRead.length; i += CHUNK_SIZE) {
       const chunk = filesToRead.slice(i, i + CHUNK_SIZE)
       const chunkPromises = chunk.map(async (target) => {
-        currentParsingFile.value = target.name
         const file = await target.handle.getFile()
-        // Use a faster way to load large files
         const text = await file.text()
 
         const {
@@ -2285,15 +2501,23 @@ async function syncLogFiles() {
           }
         }
 
-        // 文件完成后递增计数器并更新进度
         completedCount++
         loadingProgress.value = Math.round(
           (completedCount / filesToRead.length) * 100,
         )
+
+        parsedLogFiles.value.push({
+          name: target.name,
+          size: target.size,
+        })
+        parsedLogFiles.value.sort((a, b) => a.name.localeCompare(b.name))
+
+        pendingLogFiles.value = pendingLogFiles.value.filter(
+          (n) => n.name !== target.name,
+        )
       })
 
       await Promise.all(chunkPromises)
-      // Small delay to let UI update
       await new Promise((r) => setTimeout(r, 0))
     }
 
@@ -2331,6 +2555,15 @@ async function syncLogFiles() {
           showClose: true,
         })
       }
+
+      if (!isRaidRolesComplete.value && isFirstSync) {
+        ElMessage.warning({
+          message:
+            '解析成功，请先在「固定队 - 职位设置」中完成所有职位的设置，以开启更多功能。',
+          duration: 10000,
+          showClose: true,
+        })
+      }
     }
 
     logPath.value = currentHandle.value.name
@@ -2354,17 +2587,16 @@ function parseLogWithWorker(text: string): Promise<{
   items: string[]
 }> {
   return new Promise((resolve, reject) => {
-    // 为每个解析任务创建独立的 worker 实例，避免并发冲突
     const worker = new LogParserWorker()
 
     worker.onmessage = (e) => {
       resolve(e.data)
-      worker.terminate() // 解析完成后立即终止 worker
+      worker.terminate()
     }
 
     worker.onerror = (e) => {
       reject(e)
-      worker.terminate() // 出错时也要终止 worker
+      worker.terminate()
     }
 
     worker.postMessage(text)
@@ -2397,57 +2629,13 @@ function isSystemFiltered(item: string) {
 }
 
 function isItemChecked(item: string) {
-  const baseVisible = isRaidFilterActive.value
+  return isRaidFilterActive.value
     ? RAID_REGEX.test(item)
     : itemVisibility.value[item] !== false
-  if (!baseVisible) return false
-
-  if (RAID_REGEX.test(item)) return true
-
-  const winners = itemWinnerMap.value.get(item)
-  if (winners) {
-    const anyWinnerVisible = Array.from(winners).some(
-      (p) => playerVisibility.value[p] !== false,
-    )
-    if (!anyWinnerVisible) return false
-  }
-  return true
 }
 
 function isPlayerChecked(p: string) {
-  if (playerVisibility.value[p] === false) return false
-
-  if (getPlayerRole(p)) return true
-
-  const items = playerItemMap.value.get(p)
-  if (!items) return false
-  return Array.from(items).some((itemName) => {
-    if (isSystemFiltered(itemName)) return false
-    return isRaidFilterActive.value
-      ? RAID_REGEX.test(itemName)
-      : itemVisibility.value[itemName] !== false
-  })
-}
-
-function isItemAutoDisabled(item: string) {
-  if (isItemChecked(item)) return false
-  return itemVisibility.value[item] !== false
-}
-
-function isPlayerAutoDisabled(p: string) {
-  if (getPlayerRole(p)) return false
-
-  const items = playerItemMap.value.get(p)
-  if (!items) return true
-
-  const hasVisibleItems = Array.from(items).some((itemName) => {
-    if (isSystemFiltered(itemName)) return false
-    return itemVisibility.value[itemName] !== false
-  })
-
-  if (!hasVisibleItems) return true
-
-  return false
+  return playerVisibility.value[p] !== false
 }
 
 function handleItemClick(e: MouseEvent, item: string) {
@@ -2467,19 +2655,7 @@ function handleItemClick(e: MouseEvent, item: string) {
 
 function toggleItemVisibility(item: string) {
   const currentVisible = itemVisibility.value[item] !== false
-  const nextVisible = !currentVisible
-  itemVisibility.value[item] = nextVisible
-
-  if (nextVisible) {
-    const winners = itemWinnerMap.value.get(item)
-    if (winners) {
-      winners.forEach((p) => {
-        if (playerVisibility.value[p] === false) {
-          playerVisibility.value[p] = true
-        }
-      })
-    }
-  }
+  itemVisibility.value[item] = !currentVisible
 }
 
 function addSpecialRole(p: string, type: 'SUB' | 'LEFT') {
@@ -2498,7 +2674,11 @@ function addSpecialRole(p: string, type: 'SUB' | 'LEFT') {
   playerRoles.value[roleKey] = p
 }
 
-function comparePlayersByRole(a: string, b: string) {
+function comparePlayersByRole(
+  a: string,
+  b: string,
+  customCounts?: Record<string, number>,
+) {
   const roleA = getPlayerRole(a)
   const roleB = getPlayerRole(b)
 
@@ -2515,6 +2695,12 @@ function comparePlayersByRole(a: string, b: string) {
   const pB = getRolePriority(roleB)
 
   if (pA !== pB) return pA - pB
+
+  // 职能相同时，按照获取到的装备数量降序排列
+  const counts = customCounts || playerTotalItemsMap.value
+  const cA = counts[a] || 0
+  const cB = counts[b] || 0
+  if (cA !== cB) return cB - cA
 
   return a.localeCompare(b)
 }
@@ -2673,13 +2859,14 @@ async function submitManualRecord() {
 
   await dbRecords.set(JSON.parse(JSON.stringify(record)))
 
-  lootRecords.value.push(record)
   if (itemVisibility.value[record.item] === undefined) {
     itemVisibility.value[record.item] = true
   }
   if (playerVisibility.value[getActualPlayer(record.player)] === undefined) {
     playerVisibility.value[getActualPlayer(record.player)] = true
   }
+
+  lootRecords.value = [...lootRecords.value, record]
 
   showManualAddDialog.value = false
   ElMessage.success({
@@ -2777,6 +2964,7 @@ function exportData() {
         roles: playerRoles.value,
         filter: systemFilterSettings.value,
         raidActive: isOnlyRaidMembersActive.value,
+        weekCorrections: recordWeekCorrections.value,
       },
     }
 
@@ -2835,6 +3023,12 @@ async function processImportJSON(json: any) {
       }
       if (json.c.raidActive !== undefined)
         isOnlyRaidMembersActive.value = json.c.raidActive
+      if (json.c.weekCorrections) {
+        recordWeekCorrections.value = {
+          ...recordWeekCorrections.value,
+          ...json.c.weekCorrections,
+        }
+      }
     }
 
     const existingSigs = new Set(
@@ -3000,6 +3194,11 @@ function formatTime(date: Date) {
   return `${date.getFullYear()}/${m}/${d} ${hh}:${mm}`
 }
 
+function formatFileSize(bytes: number) {
+  if (bytes === 0) return '0 MB'
+  return (bytes / (1024 * 1024)).toFixed(2) + ' MB'
+}
+
 function getWinnerRollInfo(record: LootRecord): RollInfo | null {
   const roll = record.rolls.find((r) => r.player === record.player)
   if (roll) return roll
@@ -3035,6 +3234,7 @@ async function clearDatabase() {
   lootRecords.value = []
   existingKeys.value.clear()
   processedFiles.value = {}
+  recordWeekCorrections.value = {}
   ElMessage.success({ message: '数据库已清空', showClose: true })
 }
 </script>
@@ -3239,7 +3439,6 @@ html.dark .section-mask {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 0 4px;
   border-radius: 6px;
   flex-shrink: 0;
   height: 32px;
@@ -4314,6 +4513,155 @@ html.dark .loading-sub-txt {
   color: #1e293b;
 }
 
+.loading-card-wide {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  width: 800px;
+  max-width: 95vw;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  text-align: left;
+
+  .loading-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .spinner-small {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #e2e8f0;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  .loading-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+  }
+
+  .parsing-lists {
+    display: flex;
+    height: 500px;
+    gap: 16px;
+  }
+
+  .list-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  .list-divider {
+    width: 1px;
+    background: #f1f5f9;
+    margin: 0 4px;
+  }
+
+  .list-head {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .list-body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 4px;
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    font-size: 12px;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: #e2e8f0;
+      border-radius: 3px;
+    }
+  }
+
+  .file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    margin-bottom: 2px;
+    transition: all 0.2s;
+    overflow: hidden;
+
+    .file-info-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+
+      .el-icon {
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+
+      .file-name {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+
+    .file-size {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      opacity: 0.7;
+      flex-shrink: 0;
+      min-width: 70px;
+      text-align: right;
+    }
+
+    &.done {
+      color: #059669;
+      background: #ecfdf5;
+
+      .el-icon {
+        color: #10b981;
+      }
+    }
+
+    &.pending {
+      color: #94a3b8;
+
+      .el-icon {
+        opacity: 0.6;
+      }
+    }
+  }
+
+  .more-hint {
+    padding: 8px;
+    color: #cbd5e1;
+    text-align: center;
+    font-style: italic;
+    font-size: 12px;
+  }
+}
+
 .empty-state {
   text-align: center;
   padding: 80px 0;
@@ -4857,6 +5205,13 @@ html.dark .drop-hint {
   font-size: 12px;
 }
 
+.loot-record-table :deep(th.el-table__cell) {
+  background-color: #f8fafc;
+  color: #64748b;
+  font-weight: 800;
+  font-size: 12px;
+}
+
 .guide-content-popover {
   padding: 20px 24px;
   font-size: 13px;
@@ -5113,8 +5468,7 @@ html.dark {
   .menu-action-item,
   .context-menu-item,
   .selector-title,
-  .switch-label,
-  .player-name-text {
+  .switch-label {
     color: rgba(255, 255, 255, 0.9) !important;
   }
 
@@ -5416,6 +5770,142 @@ html.dark {
         background-color: rgba(255, 255, 255, 0.1);
         color: #60a5fa;
       }
+    }
+  }
+
+  .loading-card-wide {
+    background: #252632;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 24px;
+    width: 800px;
+    max-width: 95vw;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+
+    .loading-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .spinner-small {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .loading-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .parsing-lists {
+      display: flex;
+      height: 500px;
+      gap: 16px;
+    }
+
+    .list-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .list-divider {
+      width: 1px;
+      background: rgba(255, 255, 255, 0.1);
+      margin: 0 4px;
+    }
+
+    .list-head {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 8px;
+    }
+
+    .list-body {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 4px;
+      font-family: 'JetBrains Mono', 'Consolas', monospace;
+      font-size: 12px;
+
+      &::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+      }
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-bottom: 2px;
+      overflow: hidden;
+
+      .file-info-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        flex: 1;
+
+        .el-icon {
+          font-size: 14px;
+          flex-shrink: 0;
+        }
+
+        .file-name {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+
+      .file-size {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        opacity: 0.5;
+        flex-shrink: 0;
+        min-width: 70px;
+        text-align: right;
+      }
+
+      &.done {
+        color: #34d399;
+        background: rgba(16, 185, 129, 0.1);
+      }
+
+      &.pending {
+        color: rgba(255, 255, 255, 0.4);
+      }
+    }
+
+    .more-hint {
+      padding: 8px;
+      color: rgba(255, 255, 255, 0.3);
+      text-align: center;
+      font-style: italic;
     }
   }
 }
