@@ -1,1 +1,0 @@
-import{t as i}from"./index-C7F9eYiu.js";function o(o,d,n){return void 0===n&&(n=d,d=void 0),void 0!==n&&(n=(n=i(n))==n?n:0),void 0!==d&&(d=(d=i(d))==d?d:0),function(i,o,d){return i==i&&(void 0!==d&&(i=i<=d?i:d),void 0!==o&&(i=i>=o?i:o)),i}(i(o),d,n)}export{o as c};
