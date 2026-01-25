@@ -242,6 +242,39 @@
                       class="incomplete-label"
                       >（未填写）</span
                     >
+                    <div class="preset-apply-zone">
+                      <el-dropdown
+                        v-if="getPresetsForRole(getPlayerRole?.(p)).length > 0"
+                        trigger="click"
+                        @command="(cmd: any) => applyPreset(p, cmd)"
+                      >
+                        <el-button
+                          size="small"
+                          plain
+                          type="primary"
+                          class="preset-btn"
+                        >
+                          <el-icon class="magic-icon"><MagicStick /></el-icon>
+                          <span>一键预设</span>
+                        </el-button>
+                        <template #dropdown>
+                          <el-dropdown-menu class="bis-preset-dropdown">
+                            <el-dropdown-item
+                              v-for="preset in getPresetsForRole(
+                                getPlayerRole?.(p),
+                              )"
+                              :key="preset.name"
+                              :command="preset"
+                            >
+                              <div class="preset-item-content">
+                                <el-icon><MagicStick /></el-icon>
+                                <span>{{ preset.name }}</span>
+                              </div>
+                            </el-dropdown-item>
+                          </el-dropdown-menu>
+                        </template>
+                      </el-dropdown>
+                    </div>
                   </div>
                 </th>
               </tr>
@@ -400,6 +433,7 @@ import {
   User,
   InfoFilled,
   Warning,
+  MagicStick,
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { computed, ref, watch } from 'vue'
@@ -408,6 +442,7 @@ import { PART_ORDER } from '@/utils/lootParser'
 import { getCurrentWeekNumber } from '@/utils/raidWeekUtils'
 
 import PlayerDisplay from './PlayerDisplay.vue'
+import { getPresetsForRole, type BisPreset } from '@/utils/bisPresets'
 
 function generateEquipLines(rows: BisRow[]): string[] {
   const lines: string[] = []
@@ -771,6 +806,18 @@ function setNeededCount(player: string, rowId: string, count: number) {
   config.value.playerBis[storageKey]![rowId] = count
 }
 
+function applyPreset(player: string, preset: BisPreset) {
+  const storageKey = getStorageKey(player)
+  if (!config.value.playerBis[storageKey]) {
+    config.value.playerBis[storageKey] = {}
+  }
+
+  // 直接合并预设配置
+  Object.assign(config.value.playerBis[storageKey], preset.config)
+
+  ElMessage.success(`已应用预设: ${preset.name} (${player})`)
+}
+
 function getObtainedCount(player: string, row: BisRow): number {
   if (!props.records) return 0
   const keywords = row.keywords
@@ -799,6 +846,7 @@ function getLogicStatus(
 ): 'need' | 'greed' | 'pass' {
   if (row.type === 'count') {
     const needed = getNeededCount(player, row.id)
+    if (needed === 0) return 'greed'
     return getObtainedCount(player, row) >= needed ? 'pass' : 'need'
   }
   if (hasObtained(player, row)) return 'pass'
@@ -806,8 +854,6 @@ function getLogicStatus(
 }
 
 function getStatusBaseText(player: string, row: BisRow): string {
-  if (row.type === 'count' && getNeededCount(player, row.id) === 0)
-    return '无需'
   const status = getLogicStatus(player, row)
   return STATUS_MAP[status]?.text || ''
 }
@@ -932,7 +978,9 @@ function isTomeBis(player: string, rowId: string) {
 
 function getNeededCount(player: string, rowId: string): number {
   const val = getBisValue(player, rowId)
-  return typeof val === 'number' ? val : 1
+  if (typeof val === 'number') return val
+  // 神典石和强化药默认限制为 0，纤维和硬化药默认为 1
+  return ['tome', 'solvent'].includes(rowId) ? 0 : 1
 }
 
 function getCellClass(player: string, row: BisRow): string {
@@ -1417,7 +1465,8 @@ const validationAlerts = computed(() => {
   font-size: 10px;
   font-weight: bold;
   color: #f87171 !important;
-  margin-top: 2px;
+  margin-top: 1px;
+  margin-bottom: 2px;
 }
 
 .sticky-col {
@@ -1522,6 +1571,43 @@ const validationAlerts = computed(() => {
       background: #eff6ff;
     }
   }
+}
+
+.preset-apply-zone {
+  margin-top: 6px;
+  display: flex;
+  justify-content: center;
+}
+
+.preset-btn {
+  height: 22px !important;
+  padding: 0 8px !important;
+  font-size: 11px !important;
+  border-radius: 4px !important;
+  background: rgba(99, 102, 241, 0.05) !important;
+  border: 1px solid rgba(99, 102, 241, 0.2) !important;
+  transition: all 0.2s ease !important;
+  font-weight: 600 !important;
+
+  &:hover {
+    background: #6366f1 !important;
+    color: #fff !important;
+    border-color: #6366f1 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+  }
+
+  .magic-icon {
+    margin-right: 4px;
+    font-size: 12px;
+  }
+}
+
+.preset-item-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
 }
 
 .dialog-footer {
