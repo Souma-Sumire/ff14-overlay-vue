@@ -237,43 +237,44 @@
                       :role="getPlayerRole?.(p)"
                       :show-only-role="showOnlyRole"
                     />
-                    <span
-                      v-if="!checkPlayerComplete(config, getStorageKey(p))"
-                      class="incomplete-label"
-                      >（未填写）</span
-                    >
-                    <div class="preset-apply-zone">
-                      <el-dropdown
-                        v-if="getPresetsForRole(getPlayerRole?.(p)).length > 0"
-                        trigger="click"
-                        @command="(cmd: any) => applyPreset(p, cmd)"
+                    <div class="header-action-area">
+                      <span
+                        v-if="!checkPlayerComplete(config, getStorageKey(p))"
+                        class="incomplete-label"
+                        >未填写</span
                       >
-                        <el-button
-                          size="small"
-                          plain
-                          type="primary"
-                          class="preset-btn"
+                      <div class="preset-apply-zone">
+                        <el-dropdown
+                          v-if="getPresetsForRole(getPlayerRole?.(p)).length > 0"
+                          trigger="click"
+                          @command="(cmd: any) => applyPreset(p, cmd)"
+                          popper-class="bis-preset-popper"
                         >
-                          <el-icon class="magic-icon"><MagicStick /></el-icon>
-                          <span>一键预设</span>
-                        </el-button>
-                        <template #dropdown>
-                          <el-dropdown-menu class="bis-preset-dropdown">
-                            <el-dropdown-item
-                              v-for="preset in getPresetsForRole(
-                                getPlayerRole?.(p),
-                              )"
-                              :key="preset.name"
-                              :command="preset"
-                            >
-                              <div class="preset-item-content">
-                                <el-icon><MagicStick /></el-icon>
-                                <span>{{ preset.name }}</span>
-                              </div>
-                            </el-dropdown-item>
-                          </el-dropdown-menu>
-                        </template>
-                      </el-dropdown>
+                          <el-button
+                            size="small"
+                            class="preset-btn"
+                          >
+                            <el-icon class="magic-icon"><MagicStick /></el-icon>
+                            <span>一键预设</span>
+                          </el-button>
+                          <template #dropdown>
+                            <el-dropdown-menu class="bis-preset-dropdown">
+                              <el-dropdown-item
+                                v-for="preset in getPresetsForRole(
+                                  getPlayerRole?.(p),
+                                )"
+                                :key="preset.name"
+                                :command="preset"
+                              >
+                                <div class="preset-item-content">
+                                  <el-icon><MagicStick /></el-icon>
+                                  <span>{{ preset.name }}</span>
+                                </div>
+                              </el-dropdown-item>
+                            </el-dropdown-menu>
+                          </template>
+                        </el-dropdown>
+                      </div>
                     </div>
                   </div>
                 </th>
@@ -1422,6 +1423,11 @@ const validationAlerts = computed(() => {
       border-right: 1px solid #cbd5e1;
       border-bottom: 1px solid #cbd5e1;
     }
+    
+    th {
+      height: auto !important;
+      padding: 8px 0 !important;
+    }
   }
 
   tbody tr,
@@ -1461,12 +1467,23 @@ const validationAlerts = computed(() => {
   line-height: 1.2;
 }
 
+.header-action-area {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
 .incomplete-label {
   font-size: 10px;
-  font-weight: bold;
-  color: #f87171 !important;
-  margin-top: 1px;
-  margin-bottom: 2px;
+  font-weight: 700;
+  color: #fff !important;
+  background: #f87171;
+  padding: 1px 6px;
+  border-radius: 10px;
+  line-height: 1.2;
+  box-shadow: 0 2px 4px rgba(248, 113, 113, 0.2);
 }
 
 .sticky-col {
@@ -1574,40 +1591,65 @@ const validationAlerts = computed(() => {
 }
 
 .preset-apply-zone {
-  margin-top: 6px;
   display: flex;
   justify-content: center;
 }
 
 .preset-btn {
-  height: 22px !important;
-  padding: 0 8px !important;
+  height: 24px !important;
+  padding: 0 10px !important;
   font-size: 11px !important;
-  border-radius: 4px !important;
-  background: rgba(99, 102, 241, 0.05) !important;
-  border: 1px solid rgba(99, 102, 241, 0.2) !important;
-  transition: all 0.2s ease !important;
+  border-radius: 12px !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #64748b !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
   font-weight: 600 !important;
 
   &:hover {
-    background: #6366f1 !important;
-    color: #fff !important;
-    border-color: #6366f1 !important;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+    background: #f1f5f9 !important;
+    color: #334155 !important;
+    border-color: #cbd5e1 !important;
+    transform: translateY(-1.5px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 
   .magic-icon {
     margin-right: 4px;
     font-size: 12px;
+    color: #f59e0b; /* Amber icon for 'Magic' feel without clashing bg */
   }
 }
 
 .preset-item-content {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 2px 0;
+  gap: 10px;
+  padding: 4px 0;
+  font-weight: 500;
+  
+  .el-icon {
+    color: #f59e0b;
+    font-size: 14px;
+  }
+}
+
+html.dark {
+  .preset-btn {
+    background: #1e1f29 !important;
+    border-color: #334155 !important;
+    color: #94a3b8 !important;
+
+    &:hover {
+      background: #2a2b36 !important;
+      color: #e2e8f0 !important;
+      border-color: #475569 !important;
+    }
+  }
 }
 
 .dialog-footer {
