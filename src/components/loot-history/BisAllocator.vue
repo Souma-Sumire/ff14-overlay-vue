@@ -560,16 +560,18 @@ function exportBisData() {
   const parts = eligiblePlayers.value.map((p) => {
     const role = props.getPlayerRole?.(p) || 'Unknown'
     const storageKey = getStorageKey(p)
-    const data = DEFAULT_ROWS.map((row) => {
+    const dataBinary = DEFAULT_ROWS.map((row) => {
       const val = config.value.playerBis[storageKey]?.[row.id]
       if (row.type === 'toggle') {
-        if (val === 'raid') return '1'
-        if (val === 'tome') return '2'
-        return '0'
+        // 1=零式, 0=点数 (或未设置)
+        return val === 'raid' ? '1' : '0'
       } else {
-        return (typeof val === 'number' ? val : 1).toString()
+        // 如果有数量则为 1，否则为 0 (符合 1-count 规则)
+        return typeof val === 'number' && val > 0 ? '1' : '0'
       }
     }).join('')
+    // 将 14 位二进制字符串转换为 36 进制进行压缩
+    const data = parseInt(dataBinary, 2).toString(36)
     return `${p}:${role}:${data}`
   })
   let str = parts.join(';')
@@ -605,11 +607,7 @@ function importBisData() {
 
         const [name, , data] = segs
 
-        if (
-          !data ||
-          data.length !== DEFAULT_ROWS.length ||
-          !/^[0-9]+$/.test(data)
-        ) {
+        if (!data || !/^[0-9a-z]+$/i.test(data)) {
           return `数据校验失败：玩家 "${name || '未知'}" 的设置已损坏`
         }
 
@@ -678,9 +676,11 @@ function parseAndPreviewBisData(rawInput: string) {
       }
       const segs = part.split(':')
       if (segs.length < 3) return
-      const [name, roleStr, data] = segs
+      const name = segs[0]
+      const roleStr = segs[1]
+      const data = segs[2]
 
-      if (!name || !eligiblePlayers.value.includes(name as string)) return // 名字不匹配直接忽略
+      if (!name || !data || !eligiblePlayers.value.includes(name)) return // 名字不匹配直接忽略
 
       const currentRole = props.getPlayerRole?.(name as string)
       if (
@@ -693,24 +693,30 @@ function parseAndPreviewBisData(rawInput: string) {
         return
       }
 
-      if (!data || data.length !== DEFAULT_ROWS.length) return
+      // 判定是否是旧版（14位纯数字）还是新版（压缩后的Base36）
+      const dataBinary =
+        data.length === DEFAULT_ROWS.length && /^[012]+$/.test(data)
+          ? data
+          : parseInt(data, 36).toString(2).padStart(DEFAULT_ROWS.length, '0')
 
       const newConfig: Record<string, BisValue> = {}
       let isValidRow = true
 
       DEFAULT_ROWS.forEach((row, idx) => {
-        const char = data[idx]
-        if (!char || !/[0-9]/.test(char)) {
+        const char = dataBinary[idx]
+        if (!char) {
           isValidRow = false
           return
         }
 
         if (row.type === 'toggle') {
+          // 在新版二进制中：1=raid, 0=tome
+          // 为兼容旧版：1=raid, 2=tome, 0=none
           if (char === '1') newConfig[row.id] = 'raid'
-          else if (char === '2') newConfig[row.id] = 'tome'
+          else newConfig[row.id] = 'tome'
         } else {
-          const num = parseInt(char)
-          newConfig[row.id] = isNaN(num) ? 1 : num
+          // 在新版二进制中：1=1, 0=0
+          newConfig[row.id] = char === '1' ? 1 : 0
         }
       })
 
