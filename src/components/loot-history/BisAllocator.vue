@@ -329,7 +329,7 @@
         <div class="dialog-footer">
           <div class="footer-left">
             <el-button-group>
-              <el-button size="small" @click="exportBisData" 
+              <el-button size="small" @click="exportBisData"
                 >导出设置字符串</el-button
               >
               <el-button size="small" @click="importBisData"
@@ -1013,12 +1013,6 @@ const validationAlerts = computed(() => {
         id: item.id,
         type: 'warning',
         message: `${item.name}: 总需求(${total}) 大于 计划周数(${weeks})，这是不可能的分配。`,
-      })
-    } else if (total < weeks) {
-      alerts.push({
-        id: item.id,
-        type: 'info',
-        message: `${item.name}: 总需求(${total}) 小于 计划周数(${weeks})。`,
       })
     }
   })
