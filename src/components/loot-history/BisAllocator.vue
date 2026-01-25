@@ -538,9 +538,6 @@ function exportBisData() {
     return `${p}:${role}:${data}`
   })
   let str = parts.join(';')
-  if (config.value.plannedWeeks) {
-    str += `;weeks:${config.value.plannedWeeks}`
-  }
   navigator.clipboard.writeText(str).then(() => {
     ElMessage.success('设置字符串已复制到剪贴板')
   })
@@ -564,6 +561,7 @@ function importBisData() {
       let validCount = 0
 
       for (const part of parts) {
+        if (part.startsWith('weeks:')) continue
         const segs = part.split(':')
 
         if (segs.length !== 3) {
