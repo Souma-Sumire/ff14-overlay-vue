@@ -330,10 +330,10 @@
           <div class="footer-left">
             <el-button-group>
               <el-button size="small" @click="exportBisData"
-                >导出设置字符串</el-button
+                >导出 BIS 设置</el-button
               >
               <el-button size="small" @click="importBisData"
-                >导入设置字符串</el-button
+                >导入 BIS 设置</el-button
               >
             </el-button-group>
           </div>
@@ -576,12 +576,12 @@ function exportBisData() {
   })
   let str = parts.join(';')
   navigator.clipboard.writeText(str).then(() => {
-    ElMessage.success('设置字符串已复制到剪贴板')
+    ElMessage.success('BIS 设置已复制到剪贴板')
   })
 }
 
 function importBisData() {
-  ElMessageBox.prompt('请粘贴 BIS 设置字符串', '导入设置', {
+  ElMessageBox.prompt('请粘贴 BIS 设置字符串', '导入 BIS 设置', {
     confirmButtonText: '下一步',
     cancelButtonText: '取消',
     inputType: 'textarea',
