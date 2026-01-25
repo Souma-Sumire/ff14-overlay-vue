@@ -13,7 +13,9 @@ on:
     paths-ignore:
       - '*.md'
     types:
-      - closed
+      - opened
+      - synchronize
+      - reopened
 
 permissions:
   pages: write
@@ -51,6 +53,7 @@ jobs:
         run: pnpm run github-build
 
       - name: Deploy to GitHub Pages
+        if: github.event_name != 'pull_request'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
