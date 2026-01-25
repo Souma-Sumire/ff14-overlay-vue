@@ -11,7 +11,7 @@ export interface BisPreset {
 // javascript:(function(){const slotMap={"武器":"weapon","头部":"head","身体":"body","手部":"hands","腿部":"legs","脚部":"feet","耳饰":"earring","项链":"necklace","手镯":"bracelet","戒指":"ring"};const jobName=document.querySelector(".condition_job-name")?.innerText.trim()||document.querySelector(".gears_job-name")?.innerText.trim()||document.querySelector(".mdc-top-app-bar__title")?.innerText.trim()||"未知职业";const getRoleType=(j)=>{if(/^(战士|绝枪战士|暗黑骑士|骑士)/.test(j))return"tank";if(/^(白魔法师|占星术士|学者|贤者)/.test(j))return"healer";return"dps"};const config={};const rings=[];const rows=document.querySelectorAll("tr.gears_item:not(.-food)");rows.forEach(tr=>{const slotText=tr.querySelector(".gears_inline-slot")?.innerText.trim();const nameText=tr.querySelector(".gears_name")?.innerText.trim();if(slotText==="戒指"){rings.push(nameText.includes("零式")?"raid":"tome");return}const id=slotMap[slotText];if(id&&nameText){config[id]=nameText.includes("零式")?"raid":"tome"}});if(rings.length>0){config.ring=rings.includes("raid")?"raid":"tome"}config.twine=1;config.coating=1;config.tome=config.weapon==="tome"?1:0;config.solvent=config.weapon==="tome"?1:0;const preset={name:"孤风行 - "+jobName,roleType:getRoleType(jobName),config:config};const json=JSON.stringify(preset,null,2).replace(/"(\w+)":/g,"$1:")+",";function copy(text){const t=document.createElement("textarea");t.value=text;document.body.appendChild(t);t.select();try{document.execCommand("copy");alert("提取成功！\n职业："+jobName+"\n戒指逻辑："+(config.ring==="raid"?"已设为零式":"已设为点数"))}catch(e){prompt("请手动复制：",text)}document.body.removeChild(t)}copy(json)})();
 export const BIS_PRESETS: BisPreset[] = [
   {
-    name: '孤风行 - 坦克通用',
+    name: '孤风行 7.4 - 坦克通用',
     roleType: 'tank',
     config: {
       weapon: 'raid',
@@ -31,7 +31,7 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: '孤风行 - 白贤2.42',
+    name: '孤风行 7.4 - 白贤2.42',
     roleType: 'healer',
     config: {
       weapon: 'raid',
@@ -51,7 +51,7 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: '孤风行 - 白贤2.43',
+    name: '孤风行 7.4 - 白贤2.43',
     roleType: 'healer',
     config: {
       weapon: 'raid',
@@ -71,7 +71,7 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: '孤风行 - 4奶通用',
+    name: '孤风行 7.4 - 4奶通用',
     roleType: 'healer',
     config: {
       weapon: 'raid',
@@ -91,7 +91,7 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: '孤风行 - 学者2.31',
+    name: '孤风行 7.4 - 学者2.31',
     roleType: 'healer',
     config: {
       weapon: 'raid',
@@ -111,7 +111,7 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: "孤风行 - 制敌",
+    name: "孤风行 7.4 - 龙镰通用",
     roleType: "dps",
     config: {
       weapon: "raid",
@@ -131,7 +131,7 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: "孤风行 - 武僧1.94",
+    name: "孤风行 7.4 - 武僧1.94",
     roleType: "dps",
     config: {
       weapon: "raid",
@@ -151,7 +151,7 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: "孤风行 - 武僧1.94（兼容武士）",
+    name: "孤风行 7.4 - 武僧1.94（兼容武士）",
     roleType: "dps",
     config: {
       weapon: "raid",
@@ -171,7 +171,7 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: "孤风行 - 武僧1.93",
+    name: "孤风行 7.4 - 武僧1.93",
     roleType: "dps",
     config: {
       weapon: "raid",
@@ -191,7 +191,7 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: "孤风行 - 武士2.14",
+    name: "孤风行 7.4 - 武士2.14",
     roleType: "dps",
     config: {
       weapon: "raid",
@@ -211,7 +211,7 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: "孤风行 - 武士2.17",
+    name: "孤风行 7.4 - 武士2.17",
     roleType: "dps",
     config: {
       weapon: "raid",
@@ -231,7 +231,7 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: "孤风行 - 蝰蛇剑士2.12",
+    name: "孤风行 7.4 - 蝰蛇剑士2.12",
     roleType: "dps",
     config: {
       weapon: "raid",
@@ -251,7 +251,7 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: "孤风行 - 蝰蛇剑士2.08（兼容忍者远敏）",
+    name: "孤风行 7.4 - 蝰蛇剑士2.08（兼容忍者远敏）",
     roleType: "dps",
     config: {
       weapon: "raid",
@@ -271,7 +271,7 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: "孤风行 - 蝰蛇剑士2.08",
+    name: "孤风行 7.4 - 蝰蛇剑士2.08",
     roleType: "dps",
     config: {
       weapon: "raid",
@@ -291,7 +291,7 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: "孤风行 - 忍者",
+    name: "孤风行 7.4 - 忍者",
     roleType: "dps",
     config: {
       weapon: "raid",
@@ -311,7 +311,7 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: "孤风行 - 远敏通用",
+    name: "孤风行 7.4 - 远敏通用",
     roleType: "dps",
     config: {
       weapon: "raid",
@@ -331,7 +331,7 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: "孤风行 - 诗舞最优",
+    name: "孤风行 7.4 - 诗舞最优",
     roleType: "dps",
     config: {
       weapon: "raid",
@@ -351,7 +351,7 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: "孤风行 - 赤画2.50/黑魔2.45",
+    name: "孤风行 7.4 - 赤画2.50/黑魔2.45",
     roleType: "dps",
     config: {
       weapon: "raid",
@@ -371,7 +371,7 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: "孤风行 - 赤画召2.48",
+    name: "孤风行 7.4 - 赤画召2.48",
     roleType: "dps",
     config: {
       weapon: "raid",
@@ -391,7 +391,7 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: "孤风行 - 黑魔法师2.17",
+    name: "孤风行 7.4 - 黑魔法师2.17",
     roleType: "dps",
     config: {
       weapon: "raid",
