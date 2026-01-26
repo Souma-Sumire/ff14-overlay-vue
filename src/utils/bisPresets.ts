@@ -134,7 +134,28 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: '孤风行 7.4 - 武僧1.94',
+    name: '孤风行 7.4 - 武士2.17',
+    roleType: 'dps',
+    specificRoles: ['D1', 'D2'],
+    config: {
+      weapon: 'raid',
+      head: 'raid',
+      body: 'tome',
+      hands: 'raid',
+      legs: 'raid',
+      feet: 'tome',
+      earring: 'tome',
+      necklace: 'tome',
+      bracelet: 'raid',
+      ring: 'raid',
+      twine: 1,
+      coating: 1,
+      tome: 0,
+      solvent: 0,
+    },
+  },
+  {
+    name: '孤风行 7.4 - 武士2.14/武僧1.94',
     roleType: 'dps',
     specificRoles: ['D1', 'D2'],
     config: {
@@ -197,49 +218,7 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: '孤风行 7.4 - 武士2.14',
-    roleType: 'dps',
-    specificRoles: ['D1', 'D2'],
-    config: {
-      weapon: 'raid',
-      head: 'raid',
-      body: 'tome',
-      hands: 'raid',
-      legs: 'raid',
-      feet: 'raid',
-      earring: 'tome',
-      necklace: 'tome',
-      bracelet: 'raid',
-      ring: 'raid',
-      twine: 1,
-      coating: 1,
-      tome: 0,
-      solvent: 0,
-    },
-  },
-  {
-    name: '孤风行 7.4 - 武士2.17',
-    roleType: 'dps',
-    specificRoles: ['D1', 'D2'],
-    config: {
-      weapon: 'raid',
-      head: 'raid',
-      body: 'tome',
-      hands: 'raid',
-      legs: 'raid',
-      feet: 'tome',
-      earring: 'tome',
-      necklace: 'tome',
-      bracelet: 'raid',
-      ring: 'raid',
-      twine: 1,
-      coating: 1,
-      tome: 0,
-      solvent: 0,
-    },
-  },
-  {
-    name: '孤风行 7.4 - 蝰蛇剑士2.12',
+    name: '孤风行 7.4 - 忍者/蝰蛇剑士2.12(2.08)',
     roleType: 'dps',
     specificRoles: ['D1', 'D2'],
     config: {
@@ -270,48 +249,6 @@ export const BIS_PRESETS: BisPreset[] = [
       hands: 'raid',
       legs: 'raid',
       feet: 'raid',
-      earring: 'raid',
-      necklace: 'raid',
-      bracelet: 'tome',
-      ring: 'raid',
-      twine: 1,
-      coating: 1,
-      tome: 0,
-      solvent: 0,
-    },
-  },
-  {
-    name: '孤风行 7.4 - 蝰蛇剑士2.08',
-    roleType: 'dps',
-    specificRoles: ['D1', 'D2'],
-    config: {
-      weapon: 'raid',
-      head: 'raid',
-      body: 'tome',
-      hands: 'tome',
-      legs: 'raid',
-      feet: 'tome',
-      earring: 'raid',
-      necklace: 'raid',
-      bracelet: 'tome',
-      ring: 'raid',
-      twine: 1,
-      coating: 1,
-      tome: 0,
-      solvent: 0,
-    },
-  },
-  {
-    name: '孤风行 7.4 - 忍者',
-    roleType: 'dps',
-    specificRoles: ['D1', 'D2'],
-    config: {
-      weapon: 'raid',
-      head: 'raid',
-      body: 'tome',
-      hands: 'tome',
-      legs: 'raid',
-      feet: 'tome',
       earring: 'raid',
       necklace: 'raid',
       bracelet: 'tome',
@@ -365,28 +302,7 @@ export const BIS_PRESETS: BisPreset[] = [
     },
   },
   {
-    name: '孤风行 7.4 - 赤画2.50/黑魔2.45',
-    roleType: 'dps',
-    specificRoles: ['D4'],
-    config: {
-      weapon: 'raid',
-      head: 'raid',
-      body: 'raid',
-      hands: 'raid',
-      legs: 'tome',
-      feet: 'tome',
-      earring: 'raid',
-      necklace: 'tome',
-      bracelet: 'tome',
-      ring: 'raid',
-      twine: 1,
-      coating: 1,
-      tome: 0,
-      solvent: 0,
-    },
-  },
-  {
-    name: '孤风行 7.4 - 赤画召2.48',
+    name: '孤风行 7.4 - 赤画2.50(2.48)/黑魔2.45',
     roleType: 'dps',
     specificRoles: ['D4'],
     config: {
@@ -453,4 +369,30 @@ export function getPresetsForRole(role: string | null | undefined): {
   )
 
   return { recommended, others }
+}
+
+// 查重逻辑：检测是否存在内容完全一致但名字不同的预设
+function checkDuplicatePresets() {
+  const seen = new Map<string, string>()
+  BIS_PRESETS.forEach((p) => {
+    // 创建一个不包含名字的副本用于比较
+    const compareData = {
+      roleType: p.roleType,
+      specificRoles: p.specificRoles ? [...p.specificRoles].sort() : undefined,
+      config: p.config,
+    }
+    const key = JSON.stringify(compareData)
+
+    if (seen.has(key)) {
+      console.warn(
+        `[BisPreset] 检测到重复预设内容: "${p.name}" 与 "${seen.get(key)}" 的配置完全一致。`,
+      )
+    } else {
+      seen.set(key, p.name)
+    }
+  })
+}
+
+if (typeof window !== 'undefined') {
+  setTimeout(checkDuplicatePresets, 1000) // 延迟执行确保控制台可读性
 }
