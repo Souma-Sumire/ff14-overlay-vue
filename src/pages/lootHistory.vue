@@ -2140,6 +2140,7 @@ onMounted(async () => {
     document.body.addEventListener('dragleave', handleGlobalDragLeave)
     document.body.addEventListener('drop', handleGlobalDrop)
     window.addEventListener('click', closeContextMenu)
+    window.addEventListener('keydown', handleGlobalKeydown)
 
     if (!isRaidRolesComplete.value && viewMode.value !== 'list') {
       viewMode.value = 'list'
@@ -2237,6 +2238,7 @@ onUnmounted(() => {
   document.body.removeEventListener('dragleave', handleGlobalDragLeave)
   document.body.removeEventListener('drop', handleGlobalDrop)
   window.removeEventListener('click', closeContextMenu)
+  window.removeEventListener('keydown', handleGlobalKeydown)
 })
 
 function closeContextMenu() {
@@ -2338,6 +2340,55 @@ const isBisConfigComplete = computed(() => {
     isPlayerComplete(bisConfig.value, role),
   )
 })
+
+function handleGlobalKeydown(e: KeyboardEvent) {
+  const target = e.target as HTMLElement
+  const isInput =
+    ['INPUT', 'TEXTAREA'].includes(target.tagName) || target.isContentEditable
+
+  if (e.key === 'Escape') {
+    if (activeWinnerPopoverKey.value) {
+      activeWinnerPopoverKey.value = null
+      return
+    }
+    if (isMenuVisible.value) {
+      isMenuVisible.value = false
+      return
+    }
+    if (showManualAddDialog.value) {
+      showManualAddDialog.value = false
+      return
+    }
+    if (showExportDialog.value) {
+      showExportDialog.value = false
+      return
+    }
+    if (showImportConfirmDialog.value) {
+      showImportConfirmDialog.value = false
+      return
+    }
+    if (showClearDialog.value) {
+      showClearDialog.value = false
+      return
+    }
+    if (showTimeSetup.value) {
+      showTimeSetup.value = false
+      return
+    }
+  }
+
+  if (!isInput && !e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey) {
+    if (e.key === '1') {
+      viewMode.value = 'list'
+    } else if (isRaidRolesComplete.value) {
+      if (e.key === '2') viewMode.value = 'summary'
+      if (e.key === '3') viewMode.value = 'slot'
+      if (e.key === '4') viewMode.value = 'week'
+      if (e.key === '5') viewMode.value = 'chart'
+      if (e.key === '6') viewMode.value = 'bis'
+    }
+  }
+}
 
 const selectablePlayersForMerge = computed(() => {
   const players = new Set<string>()
