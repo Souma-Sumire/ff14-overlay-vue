@@ -145,7 +145,7 @@
                               <PlayerDisplay
                                 :name="p"
                                 :role="getPlayerRole?.(p)"
-                                :show-only-role="false"
+                                :show-only-role="showOnlyRole"
                               />
                               <span :class="['mini-status-tag', getOriginalStatus(p, row)]">
                                 {{ STATUS_MAP[getOriginalStatus(p, row)].text }}
@@ -468,7 +468,7 @@
             <PlayerDisplay
               :name="diff.name"
               :role="diff.role"
-              :show-only-role="false"
+              :show-only-role="showOnlyRole"
             />
             <span class="diff-tag" v-if="diff.isNew">新设置</span>
             <span class="diff-tag update" v-else>更新</span>
@@ -520,7 +520,7 @@
             <PlayerDisplay
               :name="pendingPresetData.diff.name"
               :role="pendingPresetData.diff.role"
-              :show-only-role="false"
+              :show-only-role="showOnlyRole"
             />
             <span class="diff-tag" v-if="pendingPresetData.diff.isNew">新设置</span>
             <span class="diff-tag update" v-else>更新</span>

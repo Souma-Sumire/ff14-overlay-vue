@@ -816,7 +816,7 @@
                                 <PlayerDisplay
                                   :name="p"
                                   :role="getPlayerRole(p)"
-                                  :show-only-role="false"
+                                  :show-only-role="showOnlyRole"
                                 />
                               </div>
                             </el-option>
