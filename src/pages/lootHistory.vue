@@ -1105,7 +1105,19 @@
         <div class="empty-placeholder compact-guide">
           <!-- 状态 1: 未设置目录 -->
           <template v-if="!currentHandle">
-            <div class="empty-guide-main">
+            <div class="empty-guide-main" style="position: relative">
+              <div
+                v-if="isDragOverWindow"
+                class="setup-drag-zone"
+                :class="{ 'is-active': isDragOverZone }"
+                @drop.stop.prevent="handleZoneDrop"
+                @dragover.prevent
+                @dragenter="isDragOverZone = true"
+                @dragleave="isDragOverZone = false"
+              >
+                <el-icon class="guide-icon"><UploadFilled /></el-icon>
+                <span>释放文件以导入备份</span>
+              </div>
               <div class="empty-info-side">
                 <div class="empty-title">欢迎使用 Loot History</div>
                 <p class="empty-desc">
@@ -1116,21 +1128,17 @@
                   <el-button type="primary" size="large" @click="setLogPath">
                     选择日志目录
                   </el-button>
+                  <el-button
+                    type="info"
+                    plain
+                    size="large"
+                    @click="importInputRef?.click()"
+                  >
+                    导入备份数据
+                  </el-button>
                 </div>
               </div>
-              <div class="guide-img-box" style="position: relative">
-                <div
-                  v-if="isDragOverWindow"
-                  class="setup-drag-zone"
-                  :class="{ 'is-active': isDragOverZone }"
-                  @drop.stop.prevent="handleZoneDrop"
-                  @dragover.prevent
-                  @dragenter="isDragOverZone = true"
-                  @dragleave="isDragOverZone = false"
-                >
-                  <el-icon class="guide-icon"><UploadFilled /></el-icon>
-                  <span>释放文件以导入备份</span>
-                </div>
+              <div class="guide-img-box">
                 <img
                   src="@/assets/screenshots/lootHistoryGuide.jpg"
                   alt="Guide"
@@ -1231,7 +1239,7 @@
                   @click="importInputRef?.click()"
                   plain
                   size="large"
-                  >导入备份 (支持拖入)</el-button
+                  >导入备份数据</el-button
                 >
                 <el-button
                   v-if="!isSyncing"
