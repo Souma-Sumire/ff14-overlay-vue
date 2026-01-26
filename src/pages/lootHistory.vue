@@ -828,6 +828,16 @@
                         placement="bottom"
                         :width="240"
                         trigger="click"
+                        popper-class="winner-change-popper"
+                        :visible="activeWinnerPopoverKey === scope.row.key"
+                        @update:visible="(val: boolean) => {
+                          if (val) {
+                            activeWinnerPopoverKey = scope.row.key;
+                            popoverOpenedWithCorrection[scope.row.key] = !!recordPlayerCorrections[scope.row.key];
+                          } else {
+                            if (activeWinnerPopoverKey === scope.row.key) activeWinnerPopoverKey = null;
+                          }
+                        }"
                       >
                         <template #reference>
                           <div
@@ -882,11 +892,24 @@
                           </div>
                         </template>
                         <div class="winner-change-popover">
-                          <div class="popover-title">
-                            变更获得者（将掉落算到他人头上）
+                          <div class="popover-header">
+                            <div class="popover-title">变更获得者</div>
+                            <el-button
+                              v-if="popoverOpenedWithCorrection[scope.row.key]"
+                              type="primary"
+                              link
+                              size="small"
+                              class="restore-btn"
+                              @click="handleWinnerChange(scope.row, scope.row.player)"
+                            >
+                              恢复原始记录
+                            </el-button>
+                          </div>
+                          <div class="popover-desc">
+                            将掉落记录手动转移至其他玩家名下
                           </div>
                           <el-select
-                            :model-value="scope.row.player"
+                            :model-value="getRecordPlayer(scope.row)"
                             placeholder="选择新获得者"
                             filterable
                             size="small"
@@ -1802,6 +1825,11 @@ const showTimeSetup = ref(false)
 const playerVisibility = ref<Record<string, boolean>>({})
 const recordWeekCorrections = ref<Record<string, number>>({})
 const recordPlayerCorrections = ref<Record<string, string>>({})
+const activeWinnerPopoverKey = ref<string | null>(null)
+const popoverOpenedWithCorrection = ref<Record<string, boolean>>({})
+const pendingWinnerChange = ref<{ record: LootRecord; newPlayer: string } | null>(
+  null,
+)
 const bisConfig = ref<BisConfig>({ playerBis: {} })
 
 // 排序模式：'part' (部位排序) | 'drop' (掉落排序)
@@ -4148,6 +4176,20 @@ async function confirmClear() {
 
 async function handleWinnerChange(record: LootRecord, newPlayer: string) {
   if (!newPlayer) return
+  pendingWinnerChange.value = { record, newPlayer }
+  activeWinnerPopoverKey.value = null
+
+  setTimeout(() => {
+    if (pendingWinnerChange.value) {
+      applyPendingWinnerChange()
+    }
+  }, 75)
+}
+
+async function applyPendingWinnerChange() {
+  if (!pendingWinnerChange.value) return
+  const { record, newPlayer } = pendingWinnerChange.value
+
   const newMap = { ...recordPlayerCorrections.value }
   if (newPlayer === record.player) {
     delete newMap[record.key]
@@ -4155,6 +4197,7 @@ async function handleWinnerChange(record: LootRecord, newPlayer: string) {
     newMap[record.key] = newPlayer
   }
   recordPlayerCorrections.value = newMap
+
   ElMessage.success({
     message:
       newPlayer === record.player
@@ -4162,6 +4205,9 @@ async function handleWinnerChange(record: LootRecord, newPlayer: string) {
         : `已将物品重新分配给 ${newPlayer}`,
     showClose: true,
   })
+
+  // 清空待处理状态
+  pendingWinnerChange.value = null
 }
 </script>
 
@@ -7489,15 +7535,43 @@ html.dark {
   }
 }
 
+.winner-change-popper.el-popper {
+  transition:
+    opacity 0.08s linear,
+    transform 0.08s ease-out !important;
+}
+
 .winner-change-popover {
   padding: 4px;
-  .popover-title {
-    font-size: 12px;
-    font-weight: bold;
+  .popover-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+
+    .popover-title {
+      font-weight: bold;
+      font-size: 14px;
+      color: #1e293b;
+      margin-bottom: 0;
+
+      html.dark & {
+        color: #f1f5f9;
+      }
+    }
+
+    .restore-btn {
+      padding: 0;
+      font-size: 12px;
+      height: auto;
+    }
+  }
+
+  .popover-desc {
+    font-size: 11px;
     color: #64748b;
-    margin-bottom: 8px;
-    padding-bottom: 4px;
-    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 12px;
+    opacity: 0.8;
   }
 }
 
