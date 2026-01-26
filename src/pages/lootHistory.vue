@@ -2639,13 +2639,24 @@ async function syncLogFiles() {
         })
       }
 
-      if (!isRaidRolesComplete.value && isFirstSync) {
-        ElMessage.warning({
-          message:
-            '解析成功，请先在「固定队 - 职位设置」中完成所有职位的设置，以开启更多功能。',
-          duration: 10000,
-          showClose: true,
-        })
+      if (isFirstSync) {
+        const uniqueSavageDrops = new Set(
+          lootRecords.value
+            .filter((r) => RAID_REGEX.test(r.item))
+            .map((r) => r.item),
+        )
+        if (uniqueSavageDrops.size >= 12) {
+          isRaidFilterActive.value = true
+        }
+
+        if (!isRaidRolesComplete.value) {
+          ElMessage.warning({
+            message:
+              '解析成功，请先在「固定队 - 职位设置」中完成所有职位的设置，以开启更多功能。',
+            duration: 10000,
+            showClose: true,
+          })
+        }
       }
     }
 
