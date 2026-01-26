@@ -180,10 +180,9 @@ const option = computed(() => {
     },
     grid: {
       top: 40,
-      bottom: 10,
-      left: 10,
-      right: 10,
-      containLabel: true 
+      bottom: '2%',
+      left: '2%',
+      right: '2%',
     },
     xAxis: {
       position: 'bottom',

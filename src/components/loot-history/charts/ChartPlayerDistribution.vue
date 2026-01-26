@@ -103,11 +103,10 @@ const option = computed(() => {
       },
     },
     grid: {
-      left: 10,
-      right: 20,
-      bottom: 10,
+      left: '2%',
+      right: '2%',
+      bottom: '10%',
       top: '10%',
-      containLabel: true,
     },
     xAxis: {
       type: 'category',
