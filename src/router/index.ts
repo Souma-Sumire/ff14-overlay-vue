@@ -53,6 +53,29 @@ router.afterEach((to, _from) => {
   if (to.fullPath === '/pt') {
     router.push({ replace: true, path: 'dd' })
   }
+
+  // 重置 body 和 html 的样式,防止某些页面设置全局样式后影响其他页面
+  // 某些页面(如 zoneMacro, timelineSettings 等)会设置 :global(body) 样式
+  // 这会导致离开这些页面后,其他页面无法正常滚动或出现样式残留
+  const body = document.body
+  const html = document.documentElement
+
+  // 只重置可能影响滚动和显示的关键属性
+  if (body.style.height === '100%' || body.style.height === '100vh') {
+    body.style.height = ''
+  }
+  if (body.style.overflow === 'hidden') {
+    body.style.overflow = ''
+  }
+  if (body.style.backgroundColor) {
+    body.style.backgroundColor = ''
+  }
+  if (html.style.height === '100%' || html.style.height === '100vh') {
+    html.style.height = ''
+  }
+  if (html.style.overflow === 'hidden') {
+    html.style.overflow = ''
+  }
 })
 
 export default router
