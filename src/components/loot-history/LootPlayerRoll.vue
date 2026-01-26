@@ -21,7 +21,7 @@
       </span>
 
       <!-- Roll Value -->
-      <span v-if="hasValue" class="mr-val">
+      <span v-if="hasValue && roll.type !== 'replace'" class="mr-val">
         {{ roll.value !== null ? roll.value : '-' }}
       </span>
     </div>
@@ -62,7 +62,11 @@ const hasValue = computed(() => {
 })
 
 const isSpecialType = computed(() => {
-  return props.roll.type === 'assign' || props.roll.type === 'direct'
+  return (
+    props.roll.type === 'assign' ||
+    props.roll.type === 'direct' ||
+    props.roll.type === 'replace'
+  )
 })
 </script>
 
@@ -124,8 +128,8 @@ const isSpecialType = computed(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 11px;
   font-weight: 800;
+  white-space: nowrap;
 
   html.dark & {
     color: rgba(255, 255, 255, 0.4); 
@@ -160,6 +164,12 @@ const isSpecialType = computed(() => {
   color: #64748b;
   html.dark & {
     color: #94a3b8;
+  }
+}
+.type-replace {
+  color: #6366f1;
+  html.dark & {
+    color: #818cf8;
   }
 }
 

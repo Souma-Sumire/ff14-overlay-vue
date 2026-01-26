@@ -2,7 +2,7 @@ import { worldNames } from '@/resources/worlds'
 
 export interface RollInfo {
   player: string
-  type: 'need' | 'greed' | 'assign' | 'direct' | 'manual'
+  type: 'need' | 'greed' | 'assign' | 'direct' | 'manual' | 'replace'
   value: number | null
 }
 
@@ -82,9 +82,10 @@ export function getRollTypeName(type: string) {
     {
       need: '需求',
       greed: '贪婪',
-      assign: '分配获得',
-      direct: '直接获得',
-      manual: '手动添加',
+      assign: '分配',
+      direct: '获得',
+      manual: '手动',
+      replace: '替换',
     }[type] || type
   )
 }
@@ -95,8 +96,9 @@ export function getRollTypeIcon(type: string) {
       need: '需',
       greed: '贪',
       manual: '手',
-      assign: '分配',
-      direct: '直接',
+      assign: '配',
+      direct: '直',
+      replace: '换',
     }[type] || '?'
   )
 }

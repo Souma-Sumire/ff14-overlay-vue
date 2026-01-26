@@ -474,10 +474,13 @@
                   </template>
                   <div class="popover-form">
                     <div class="merge-selector-box">
-                      <div class="selector-title">合并玩家记录：</div>
+                      <div class="selector-title">永久合并玩家记录：</div>
                       <div class="merge-guide-desc">
                         1. 先点击选择<span class="text-hide">将被合并(隐身)</span>的角色<br/>
                         2. 再点击选择<span class="text-show">最终显示(大号)</span>的角色
+                      </div>
+                      <div class="merge-guide-desc">
+                        如果只希望临时改变某些掉落物归属权，可到“详情记录”中修改单条物品的归属信息。
                       </div>
                       <div class="selector-tags">
                         <el-check-tag
@@ -739,23 +742,87 @@
                       </div>
                     </template>
                   </el-table-column>
-                  <el-table-column label="物品" width="300">
+                  <el-table-column label="物品" width="220">
                     <template #default="scope">
                       <div class="col-item">
                         <span class="item-text">{{ scope.row.item }}</span>
                       </div>
                     </template>
                   </el-table-column>
-                  <el-table-column label="获得者" width="200">
+                  <el-table-column label="获得者" width="260">
                     <template #default="scope">
-                      <LootPlayerRoll
-                        v-if="getWinnerRollInfo(scope.row)"
-                        :roll="getWinnerRollInfo(scope.row)!"
-                        is-winner
-                        :show-only-role="showOnlyRole"
-                        :get-player-role="getPlayerRole"
-                      />
-                      <div v-else class="no-winner">未分配</div>
+                      <el-popover placement="bottom" :width="240" trigger="click">
+                        <template #reference>
+                          <div class="winner-selector-trigger" title="点击修改获得者">
+                            <div v-if="recordPlayerCorrections[scope.row.key]" class="correction-winner-display">
+                              <div class="original-row" title="原始记录获得者">
+                                <span class="correction-label">原始记录:</span>
+                                <LootPlayerRoll
+                                  v-if="getOriginalRollInfo(scope.row)"
+                                  :roll="getOriginalRollInfo(scope.row)!"
+                                  :show-only-role="showOnlyRole"
+                                  :get-player-role="getPlayerRole"
+                                  class="original-display"
+                                />
+                                <PlayerDisplay
+                                  v-else
+                                  :name="scope.row.player"
+                                  :role="getPlayerRole(scope.row.player)"
+                                  :show-only-role="showOnlyRole"
+                                  class="original-display"
+                                />
+                              </div>
+                              <div class="corrected-row">
+                                <el-icon class="correction-arrow"><BottomRight /></el-icon>
+                                <LootPlayerRoll
+                                  v-if="getWinnerRollInfo(scope.row)"
+                                  :roll="getWinnerRollInfo(scope.row)!"
+                                  is-winner
+                                  :show-only-role="showOnlyRole"
+                                  :get-player-role="getPlayerRole"
+                                />
+                              </div>
+                            </div>
+                            <template v-else>
+                              <LootPlayerRoll
+                                v-if="getWinnerRollInfo(scope.row)"
+                                :roll="getWinnerRollInfo(scope.row)!"
+                                is-winner
+                                :show-only-role="showOnlyRole"
+                                :get-player-role="getPlayerRole"
+                              />
+                              <div v-else class="no-winner">未分配</div>
+                            </template>
+                            <el-icon class="winner-edit-icon"><Edit /></el-icon>
+                          </div>
+                        </template>
+                        <div class="winner-change-popover">
+                          <div class="popover-title">变更获得者（将掉落算到他人头上）</div>
+                          <el-select
+                            :model-value="scope.row.player"
+                            placeholder="选择新获得者"
+                            filterable
+                            size="small"
+                            class="winner-select-bar"
+                            @change="(val: string) => handleWinnerChange(scope.row, val)"
+                          >
+                            <el-option
+                              v-for="p in allPlayers"
+                              :key="p"
+                              :label="p"
+                              :value="p"
+                            >
+                              <div class="select-player-row">
+                                <PlayerDisplay
+                                  :name="p"
+                                  :role="getPlayerRole(p)"
+                                  :show-only-role="false"
+                                />
+                              </div>
+                            </el-option>
+                          </el-select>
+                        </div>
+                      </el-popover>
                     </template>
                   </el-table-column>
                   <el-table-column label="其他 Roll 点记录">
@@ -1055,7 +1122,7 @@
                 </el-tooltip>
               </template>
               <LootStatisticsPanel
-                :records="filteredRecords"
+                :records="normalizedRecords"
                 :players="visibleAllPlayers"
                 :get-actual-player="getActualPlayer"
                 :get-player-role="getPlayerRole"
@@ -1086,7 +1153,7 @@
                 v-model="bisConfig"
                 v-model:sortMode="bisSortMode"
                 :players="visibleAllPlayers"
-                :records="filteredRecords"
+                :records="normalizedRecords"
                 :get-player-role="getPlayerRole"
                 :get-actual-player="getActualPlayer"
                 :show-only-role="showOnlyRole"
@@ -1443,6 +1510,9 @@ import {
   EditPen,
   Check,
   CircleCheckFilled,
+  Edit,
+  Right,
+  BottomRight,
 } from '@element-plus/icons-vue'
 import LogParserWorker from '@/workers/logParser.ts?worker'
 import LootPlayerRoll from '@/components/loot-history/LootPlayerRoll.vue'
@@ -1533,6 +1603,7 @@ const showTimeSetup = ref(false)
 
 const playerVisibility = ref<Record<string, boolean>>({})
 const recordWeekCorrections = ref<Record<string, number>>({})
+const recordPlayerCorrections = ref<Record<string, string>>({})
 const bisConfig = ref<BisConfig>({ playerBis: {} })
 
 // 排序模式：'part' (部位排序) | 'drop' (掉落排序)
@@ -1546,6 +1617,11 @@ const playerMapping = ref<Record<string, string>>({})
 function getActualPlayer(name: string): string {
   if (!playerMapping.value) return name
   return playerMapping.value[name] || name
+}
+
+function getRecordPlayer(record: LootRecord): string {
+  const corrected = recordPlayerCorrections.value[record.key]
+  return corrected || record.player
 }
 
 const selectionForMerge = ref<string[]>([])
@@ -1642,6 +1718,7 @@ watch(
     systemFilterSettings,
     isOnlyRaidMembersActive,
     recordWeekCorrections,
+    recordPlayerCorrections,
     summarySortMode,
     slotSortMode,
     weekSortMode,
@@ -1662,6 +1739,10 @@ watch(
     await dbConfig.set({
       key: 'weekCorrections',
       value: JSON.parse(JSON.stringify(recordWeekCorrections.value)),
+    })
+    await dbConfig.set({
+      key: 'playerCorrections',
+      value: JSON.parse(JSON.stringify(recordPlayerCorrections.value)),
     })
     await dbConfig.set({ key: 'logPath', value: logPath.value })
     await dbConfig.set({
@@ -1773,6 +1854,8 @@ onMounted(async () => {
       if (c.key === 'processedFiles') processedFiles.value = c.value || {}
       if (c.key === 'weekCorrections')
         recordWeekCorrections.value = c.value || {}
+      if (c.key === 'playerCorrections')
+        recordPlayerCorrections.value = c.value || {}
       if (c.key === 'syncStartDate' && c.value) syncStartDate.value = c.value
       if (c.key === 'syncEndDate') syncEndDate.value = c.value || null
       if (
@@ -1983,7 +2066,7 @@ const mergeSuggestions = computed(() => {
 const playerTotalItemsMap = computed(() => {
   const counts: Record<string, number> = {}
   lootRecords.value.forEach((r) => {
-    const p = getActualPlayer(r.player)
+    const p = getActualPlayer(getRecordPlayer(r))
     counts[p] = (counts[p] || 0) + 1
   })
   return counts
@@ -1992,7 +2075,7 @@ const playerTotalItemsMap = computed(() => {
 const allPlayers = computed(() => {
   const players = new Set<string>()
   lootRecords.value.forEach((record) => {
-    players.add(getActualPlayer(record.player))
+    players.add(getActualPlayer(getRecordPlayer(record)))
     record.rolls.forEach((roll) => players.add(getActualPlayer(roll.player)))
   })
   // 即使没有掉落记录，也将已设置职位的玩家加入列表
@@ -2188,7 +2271,7 @@ const filteredRecords = computed(() => {
   const result = lootRecords.value.filter((record) => {
     if (isSystemFiltered(record.item)) return false
 
-    if (playerVisibility.value[getActualPlayer(record.player)] === false)
+    if (playerVisibility.value[getActualPlayer(getRecordPlayer(record))] === false)
       return false
 
     if (itemVisibility.value[record.item] === false) return false
@@ -2203,10 +2286,17 @@ const filteredRecords = computed(() => {
   return result.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
 })
 
+const normalizedRecords = computed(() => {
+  return filteredRecords.value.map((r) => ({
+    ...r,
+    player: getRecordPlayer(r),
+  }))
+})
+
 const playerSummary = computed(() => {
   const summary: Record<string, Record<string, number>> = {}
   filteredRecords.value.forEach((record) => {
-    const p = getActualPlayer(record.player)
+    const p = getActualPlayer(getRecordPlayer(record))
     const i = record.item
     if (!summary[p]) summary[p] = {}
     if (!summary[p][i]) summary[p][i] = 0
@@ -2236,7 +2326,7 @@ const slotSummary = computed(() => {
     if (!summary[slot]) summary[slot] = {}
     const currentSlot = summary[slot]!
 
-    const p = getActualPlayer(record.player)
+    const p = getActualPlayer(getRecordPlayer(record))
 
     if (!currentSlot[p]) currentSlot[p] = 0
     currentSlot[p]++
@@ -2337,7 +2427,7 @@ const weekSummary = computed(() => {
   filteredRecords.value.forEach((r) => {
     const week = getRecordRaidWeekLabel(r)
     if (!summary[week]) summary[week] = {}
-    const p = getActualPlayer(r.player)
+    const p = getActualPlayer(getRecordPlayer(r))
     if (!summary[week][p]) summary[week][p] = []
     summary[week][p].push(r)
   })
@@ -3735,10 +3825,10 @@ function formatFileSize(bytes: number) {
   return (bytes / (1024 * 1024)).toFixed(2) + ' MB'
 }
 
-function getWinnerRollInfo(record: LootRecord): RollInfo | null {
+function getOriginalRollInfo(record: LootRecord): RollInfo | null {
   const roll = record.rolls.find((r) => r.player === record.player)
   if (roll) return roll
-
+  
   if (record.player) {
     const type: RollInfo['type'] = record.isManual
       ? 'manual'
@@ -3747,6 +3837,35 @@ function getWinnerRollInfo(record: LootRecord): RollInfo | null {
         : 'direct'
     return {
       player: record.player,
+      type,
+      value: null,
+    }
+  }
+  return null
+}
+
+function getWinnerRollInfo(record: LootRecord): RollInfo | null {
+  const correctedPlayer = getRecordPlayer(record)
+  const isCorrected = !!recordPlayerCorrections.value[record.key]
+
+  if (isCorrected) {
+    return {
+      player: correctedPlayer,
+      type: 'replace',
+      value: null,
+    }
+  }
+
+  const roll = record.rolls.find((r) => r.player === correctedPlayer)
+  if (roll) return roll
+
+  if (correctedPlayer) {
+    const type: RollInfo['type'] = record.isManual
+      ? 'manual'
+      : (record.isAssign ? 'assign' : 'direct')
+      
+    return {
+      player: correctedPlayer,
       type,
       value: null,
     }
@@ -3772,6 +3891,21 @@ async function clearDatabase() {
   processedFiles.value = {}
   recordWeekCorrections.value = {}
   ElMessage.success({ message: '数据库已清空', showClose: true })
+}
+
+async function handleWinnerChange(record: LootRecord, newPlayer: string) {
+  if (!newPlayer) return
+  const newMap = { ...recordPlayerCorrections.value }
+  if (newPlayer === record.player) {
+    delete newMap[record.key]
+  } else {
+    newMap[record.key] = newPlayer
+  }
+  recordPlayerCorrections.value = newMap
+  ElMessage.success({
+    message: newPlayer === record.player ? '已恢复原始获得者' : `已将物品重新分配给 ${newPlayer}`,
+    showClose: true,
+  })
 }
 </script>
 
@@ -4385,13 +4519,12 @@ html.dark .loading-sub-txt {
 .selector-tags {
   scrollbar-gutter: stable;
   margin-bottom: 12px;
-  padding: 8px;
   background: white;
   border-radius: 8px;
   border: 1px solid var(--border-light);
   box-sizing: border-box;
   width: 100%;
-  max-height: 260px;
+  max-height: 275px;
   overflow-y: auto;
   overflow-x: hidden;
 
@@ -6677,4 +6810,102 @@ html.dark {
   }
 }
 
+.winner-selector-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  position: relative;
+  min-width: 120px;
+
+  &:hover {
+    background: #f1f5f9;
+    .winner-edit-icon {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+  }
+
+  html.dark &:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .winner-edit-icon {
+    opacity: 0.3;
+    transition: all 0.2s;
+    font-size: 14px;
+    color: #3b82f6;
+    margin-left: auto;
+  }
+
+  .correction-winner-display {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    line-height: 1.1;
+
+    .original-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #7f8ea3;
+      margin-left: 2px;
+      margin-bottom: 2px;
+      
+      .correction-label {
+        font-weight: 800;
+        font-size: 10px;
+        opacity: 0.7;
+        white-space: nowrap;
+      }
+      
+      .original-display {
+        opacity: 0.6;
+        transform: scale(0.92);
+        transform-origin: left center;
+      }
+    }
+
+    .corrected-row {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      margin-left: 10px;
+      
+      .correction-arrow {
+        color: #94a3b8;
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+    }
+  }
+}
+
+.winner-change-popover {
+  padding: 4px;
+  .popover-title {
+    font-size: 12px;
+    font-weight: bold;
+    color: #64748b;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+}
+
+.winner-select-bar {
+  width: 100%;
+}
+
+.select-player-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
 </style>
