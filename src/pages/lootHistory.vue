@@ -1454,12 +1454,21 @@
       >
         <div class="export-selection-list">
           <el-checkbox v-model="exportForm.loot"
-            >掉落记录 ({{ lootRecords.length }})</el-checkbox
+            >{{ LABELS.LOOT }} ({{ lootRecords.length }})</el-checkbox
           >
-          <el-checkbox v-model="exportForm.bis">BIS 分配配置</el-checkbox>
-          <el-checkbox v-model="exportForm.roles">固定队职位设置</el-checkbox>
+          <el-checkbox v-model="exportForm.roles">{{ LABELS.ROLES }}</el-checkbox>
+          <el-checkbox v-model="exportForm.bis">{{ LABELS.BIS }}</el-checkbox>
           <el-checkbox v-model="exportForm.mapping"
-            >人员合并/映射项</el-checkbox
+            >{{ LABELS.MAPPING }}</el-checkbox
+          >
+          <el-checkbox v-model="exportForm.weekCorrection"
+            >{{ LABELS.WEEK_CORRECTION }}</el-checkbox
+          >
+          <el-checkbox v-model="exportForm.playerCorrection"
+            >{{ LABELS.PLAYER_CORRECTION }}</el-checkbox
+          >
+          <el-checkbox v-model="exportForm.settings"
+            >{{ LABELS.SETTINGS }}</el-checkbox
           >
         </div>
         <template #footer>
@@ -1485,7 +1494,7 @@
               v-model="importForm.loot"
               :disabled="!importDataPending.r?.length"
             >
-              掉落记录 ({{ importDataPending.r?.length || 0 }} 条)
+              {{ LABELS.LOOT }} ({{ importDataPending.r?.length || 0 }} 条)
               <span
                 v-if="!importDataPending.r?.length"
                 class="import-not-found-hint"
@@ -1503,7 +1512,7 @@
                 !importDataPending.c?.bis
               "
             >
-              BIS 分配配置
+              {{ LABELS.BIS }}
               <span
                 v-if="
                   !importDataPending.bisConfig &&
@@ -1521,7 +1530,7 @@
               v-model="importForm.roles"
               :disabled="!importDataPending.c?.roles"
             >
-              固定队职位设置
+              {{ LABELS.ROLES }}
               <span
                 v-if="!importDataPending.c?.roles"
                 class="import-not-found-hint"
@@ -1535,7 +1544,7 @@
               v-model="importForm.mapping"
               :disabled="!importDataPending.c?.map"
             >
-              人员合并/映射项
+              {{ LABELS.MAPPING }}
               <span
                 v-if="!importDataPending.c?.map"
                 class="import-not-found-hint"
@@ -1547,25 +1556,84 @@
                 >(与现有记录一致)</span
               >
             </el-checkbox>
+            <el-checkbox
+              v-model="importForm.weekCorrection"
+              :disabled="!importDataPending.c?.weekCorrections"
+            >
+              {{ LABELS.WEEK_CORRECTION }}
+              <span
+                v-if="!importDataPending.c?.weekCorrections"
+                class="import-not-found-hint"
+                >- 未发现数据</span
+              >
+              <span
+                v-else-if="!importDiffs.weekCorrection"
+                class="import-identical-hint"
+                >(一致)</span
+              >
+            </el-checkbox>
+            <el-checkbox
+              v-model="importForm.playerCorrection"
+              :disabled="!importDataPending.c?.playerCorrections"
+            >
+              {{ LABELS.PLAYER_CORRECTION }}
+              <span
+                v-if="!importDataPending.c?.playerCorrections"
+                class="import-not-found-hint"
+                >- 未发现数据</span
+              >
+              <span
+                v-else-if="!importDiffs.playerCorrection"
+                class="import-identical-hint"
+                >(一致)</span
+              >
+            </el-checkbox>
+            <el-checkbox
+              v-model="importForm.settings"
+              :disabled="!importDataPending.c?.filter && importDataPending.c?.raidActive === undefined"
+            >
+              {{ LABELS.SETTINGS }}
+              <span
+                v-if="!importDataPending.c?.filter && importDataPending.c?.raidActive === undefined"
+                class="import-not-found-hint"
+                >- 未发现数据</span
+              >
+              <span
+                v-else-if="!importDiffs.settings"
+                class="import-identical-hint"
+                >(一致)</span
+              >
+            </el-checkbox>
           </div>
           <div
             class="import-warning-info"
             v-if="
               (importForm.bis && importDiffs.bis) ||
               (importForm.roles && importDiffs.roles) ||
-              (importForm.mapping && importDiffs.mapping)
+              (importForm.mapping && importDiffs.mapping) ||
+              (importForm.weekCorrection && importDiffs.weekCorrection) ||
+              (importForm.playerCorrection && importDiffs.playerCorrection) ||
+              (importForm.settings && importDiffs.settings)
             "
           >
             <el-icon><Warning /></el-icon>
-            <span>职位与 BIS 设置导入后将覆盖当前配置</span>
+            <span>所选配置项导入后将覆盖当前设置</span>
           </div>
           <div
             class="import-success-info"
             v-else-if="
-              (importForm.bis || importForm.roles || importForm.mapping) &&
+              (importForm.bis ||
+                importForm.roles ||
+                importForm.mapping ||
+                importForm.weekCorrection ||
+                importForm.playerCorrection ||
+                importForm.settings) &&
               !importDiffs.bis &&
               !importDiffs.roles &&
-              !importDiffs.mapping
+              !importDiffs.mapping &&
+              !importDiffs.weekCorrection &&
+              !importDiffs.playerCorrection &&
+              !importDiffs.settings
             "
           >
             <el-icon><CircleCheckFilled /></el-icon>
@@ -1632,14 +1700,17 @@
           <div class="clear-selection-header">
             <p class="clear-warning-text">请选择要彻底删除的数据项：</p>
             <div class="clear-quick-actions">
-              <el-button link type="primary" size="small" @click="clearForm = { loot: true, bis: true, roles: true, mapping: true }">全选</el-button>
-              <el-button link size="small" @click="clearForm = { loot: !clearForm.loot, bis: !clearForm.bis, roles: !clearForm.roles, mapping: !clearForm.mapping }">反选</el-button>
+              <el-button link type="primary" size="small" @click="clearForm = { loot: true, bis: true, roles: true, mapping: true, weekCorrection: true, playerCorrection: true, settings: true }">全选</el-button>
+              <el-button link size="small" @click="clearForm = { loot: !clearForm.loot, bis: !clearForm.bis, roles: !clearForm.roles, mapping: !clearForm.mapping, weekCorrection: !clearForm.weekCorrection, playerCorrection: !clearForm.playerCorrection, settings: !clearForm.settings }">反选</el-button>
             </div>
           </div>
-          <el-checkbox v-model="clearForm.loot">掉落历史记录 ({{ lootRecords.length }})</el-checkbox>
-          <el-checkbox v-model="clearForm.bis">BIS 分配配置</el-checkbox>
-          <el-checkbox v-model="clearForm.roles">固定队职位设置</el-checkbox>
-          <el-checkbox v-model="clearForm.mapping">人员合并/映射项</el-checkbox>
+          <el-checkbox v-model="clearForm.loot">{{ LABELS.LOOT }} ({{ lootRecords.length }})</el-checkbox>
+          <el-checkbox v-model="clearForm.roles">{{ LABELS.ROLES }}</el-checkbox>
+          <el-checkbox v-model="clearForm.bis">{{ LABELS.BIS }}</el-checkbox>
+          <el-checkbox v-model="clearForm.mapping">{{ LABELS.MAPPING }}</el-checkbox>
+          <el-checkbox v-model="clearForm.weekCorrection">{{ LABELS.WEEK_CORRECTION }}</el-checkbox>
+          <el-checkbox v-model="clearForm.playerCorrection">{{ LABELS.PLAYER_CORRECTION }}</el-checkbox>
+          <el-checkbox v-model="clearForm.settings">{{ LABELS.SETTINGS }} (重置)</el-checkbox>
         </div>
         <div class="clear-danger-hint">
           <el-icon><Warning /></el-icon>
@@ -1751,6 +1822,16 @@ const GAME_VERSION_CONFIG = {
   RAID_SERIES_KEYWORD: '总冠军',
 }
 
+const LABELS = {
+  LOOT: '装备掉落/拿装备记录',
+  ROLES: '固定队成员',
+  BIS: '毕业装备需求 (BIS)',
+  MAPPING: '角色合并映射',
+  WEEK_CORRECTION: '手动修改过的CD周数',
+  PLAYER_CORRECTION: '手动修改过的装备获得者',
+  SETTINGS: '过滤和排序偏好',
+}
+
 const ROLE_SETTING_HINT =
   '需在左上方“固定队 - 职位设置”中完成所有职位后方可开启'
 
@@ -1789,18 +1870,27 @@ const exportForm = ref({
   bis: true,
   roles: true,
   mapping: true,
+  weekCorrection: true,
+  playerCorrection: true,
+  settings: true,
 })
 const importForm = ref({
   loot: true,
   bis: true,
   roles: true,
   mapping: true,
+  weekCorrection: true,
+  playerCorrection: true,
+  settings: true,
 })
 const importDiffs = ref({
   loot: true,
   bis: true,
   roles: true,
   mapping: true,
+  weekCorrection: true,
+  playerCorrection: true,
+  settings: true,
 })
 const importDataPending = ref<any>(null)
 const manualForm = ref({
@@ -1815,6 +1905,9 @@ const clearForm = ref({
   bis: false,
   roles: false,
   mapping: false,
+  weekCorrection: false,
+  playerCorrection: false,
+  settings: false,
 })
 
 const showTimeSetup = ref(false)
@@ -3730,6 +3823,9 @@ function handleDataCommand(command: string) {
       bis: false,
       roles: false,
       mapping: false,
+      weekCorrection: false,
+      playerCorrection: false,
+      settings: false,
     }
     showClearDialog.value = true
   } else if (command === 'export') {
@@ -3810,9 +3906,16 @@ async function confirmExport() {
     if (exportForm.value.mapping) config.map = playerMapping.value
     if (exportForm.value.roles) config.roles = playerRoles.value
     if (exportForm.value.bis) config.bisConfig = bisConfig.value
-    config.filter = systemFilterSettings.value
-    config.raidActive = isOnlyRaidMembersActive.value
-    config.weekCorrections = recordWeekCorrections.value
+    if (exportForm.value.settings) {
+      config.filter = systemFilterSettings.value
+      config.raidActive = isOnlyRaidMembersActive.value
+    }
+    if (exportForm.value.weekCorrection) {
+      config.weekCorrections = recordWeekCorrections.value
+    }
+    if (exportForm.value.playerCorrection) {
+      config.playerCorrections = recordPlayerCorrections.value
+    }
 
     data.c = config
 
@@ -3845,6 +3948,13 @@ async function processImportJSON(json: any) {
     const hasBis = !!(json.c?.bisConfig || json.bisConfig || json.c?.bis)
     const hasRoles = !!json.c?.roles && Object.keys(json.c.roles).length > 0
     const hasMapping = !!json.c?.map && Object.keys(json.c.map).length > 0
+    const hasCorrectionWeek =
+      !!json.c?.weekCorrections &&
+      Object.keys(json.c.weekCorrections).length > 0
+    const hasCorrectionPlayer =
+      !!json.c?.playerCorrections &&
+      Object.keys(json.c.playerCorrections).length > 0
+    const hasSettings = json.c?.filter || json.c?.raidActive !== undefined
 
     const isLocalBisEmpty =
       !bisConfig.value ||
@@ -3852,6 +3962,10 @@ async function processImportJSON(json: any) {
       Object.keys(bisConfig.value.playerBis).length === 0
     const isLocalRolesEmpty = Object.keys(playerRoles.value).length === 0
     const isLocalMappingEmpty = Object.keys(playerMapping.value).length === 0
+    const isLocalWeekCorrectionEmpty =
+      Object.keys(recordWeekCorrections.value).length === 0
+    const isLocalPlayerCorrectionEmpty =
+      Object.keys(recordPlayerCorrections.value).length === 0
 
     // 计算掉落记录差异
     let newLootCount = 0
@@ -3899,6 +4013,20 @@ async function processImportJSON(json: any) {
       mapping:
         hasMapping &&
         JSON.stringify(playerMapping.value) !== JSON.stringify(json.c.map),
+      weekCorrection:
+        hasCorrectionWeek &&
+        JSON.stringify(recordWeekCorrections.value) !==
+          JSON.stringify(json.c.weekCorrections || {}),
+      playerCorrection:
+        hasCorrectionPlayer &&
+        JSON.stringify(recordPlayerCorrections.value) !==
+          JSON.stringify(json.c.playerCorrections || {}),
+      settings:
+        hasSettings &&
+        (JSON.stringify(systemFilterSettings.value) !==
+          JSON.stringify(json.c.filter || systemFilterSettings.value) ||
+          isOnlyRaidMembersActive.value !==
+            (json.c.raidActive ?? isOnlyRaidMembersActive.value)),
     }
 
     importForm.value = {
@@ -3906,6 +4034,15 @@ async function processImportJSON(json: any) {
       bis: hasBis && isLocalBisEmpty && importDiffs.value.bis,
       roles: hasRoles && isLocalRolesEmpty && importDiffs.value.roles,
       mapping: hasMapping && isLocalMappingEmpty && importDiffs.value.mapping,
+      weekCorrection:
+        hasCorrectionWeek &&
+        isLocalWeekCorrectionEmpty &&
+        importDiffs.value.weekCorrection,
+      playerCorrection:
+        hasCorrectionPlayer &&
+        isLocalPlayerCorrectionEmpty &&
+        importDiffs.value.playerCorrection,
+      settings: hasSettings && importDiffs.value.settings,
     }
 
     importDataPending.value = json
@@ -3938,18 +4075,30 @@ async function confirmImport() {
         if (incomingBis) bisConfig.value = incomingBis
       }
 
-      if (json.c.filter) {
-        systemFilterSettings.value = {
-          ...systemFilterSettings.value,
-          ...json.c.filter,
+      if (importForm.value.settings) {
+        if (json.c.filter) {
+          systemFilterSettings.value = {
+            ...systemFilterSettings.value,
+            ...json.c.filter,
+          }
+        }
+        if (json.c.raidActive !== undefined)
+          isOnlyRaidMembersActive.value = json.c.raidActive
+      }
+      if (importForm.value.weekCorrection) {
+        if (json.c.weekCorrections) {
+          recordWeekCorrections.value = {
+            ...recordWeekCorrections.value,
+            ...json.c.weekCorrections,
+          }
         }
       }
-      if (json.c.raidActive !== undefined)
-        isOnlyRaidMembersActive.value = json.c.raidActive
-      if (json.c.weekCorrections) {
-        recordWeekCorrections.value = {
-          ...recordWeekCorrections.value,
-          ...json.c.weekCorrections,
+      if (importForm.value.playerCorrection) {
+        if (json.c.playerCorrections) {
+          recordPlayerCorrections.value = {
+            ...recordPlayerCorrections.value,
+            ...json.c.playerCorrections,
+          }
         }
       }
     }
@@ -4196,11 +4345,32 @@ async function confirmClear() {
     lootRecords.value = []
     existingKeys.value.clear()
     processedFiles.value = {}
-    recordWeekCorrections.value = {}
-    recordPlayerCorrections.value = {}
-    tasks.push(dbConfig.remove('weekCorrections'))
-    tasks.push(dbConfig.remove('playerCorrections'))
     tasks.push(dbConfig.remove('processedFiles'))
+  }
+
+  if (clearForm.value.weekCorrection) {
+    recordWeekCorrections.value = {}
+    tasks.push(dbConfig.remove('weekCorrections'))
+  }
+
+  if (clearForm.value.playerCorrection) {
+    recordPlayerCorrections.value = {}
+    tasks.push(dbConfig.remove('playerCorrections'))
+  }
+
+  if (clearForm.value.settings) {
+    systemFilterSettings.value = {
+      cards: true,
+      materia: true,
+      music: true,
+      book: true,
+      totem: true,
+      other: true,
+      maskedSeries: [],
+    }
+    isOnlyRaidMembersActive.value = false
+    tasks.push(dbConfig.remove('systemFilterSettings'))
+    tasks.push(dbConfig.remove('isOnlyRaidMembersActive'))
   }
 
   if (clearForm.value.bis) {
