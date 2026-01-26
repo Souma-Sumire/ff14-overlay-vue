@@ -920,9 +920,9 @@
                             "
                           >
                             <el-option
-                              v-for="p in allPlayers"
+                              v-for="p in visibleAllPlayers"
                               :key="p"
-                              :label="p"
+                              :label="(showOnlyRole && getPlayerRole(p)) || p"
                               :value="p"
                             >
                               <div class="select-player-row">
