@@ -171,7 +171,11 @@
                         }"
                       >
                         <template v-if="customAllocations[row.id]">
-                          <span class="p-role">{{ props.getPlayerRole?.(customAllocations[row.id]!) || customAllocations[row.id] }}</span>
+                          <PlayerDisplay
+                            :name="customAllocations[row.id]!"
+                            :role="props.getPlayerRole?.(customAllocations[row.id]!)"
+                            :show-only-role="showOnlyRole"
+                          />
                           <span class="p-status">已分配</span>
                         </template>
                         <template v-else>

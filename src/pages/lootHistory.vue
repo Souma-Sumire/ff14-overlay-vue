@@ -474,14 +474,36 @@
                   </template>
                   <div class="popover-form">
                     <div class="merge-selector-box">
-                      <div class="selector-title">永久合并玩家记录：</div>
                       <div class="merge-guide-desc">
-                        1. 先点击选择<span class="text-hide">将被合并(隐身)</span>的角色<br/>
-                        2. 再点击选择<span class="text-show">最终显示(大号)</span>的角色
+                        <el-icon><InfoFilled /></el-icon>
+                        <div class="guide-content">
+                          <p>合并角色将<strong>永久归并</strong>两者的所有历史记录。</p>
+                          <p>若仅需修正单次分配错误，请直接在“详情记录”中点击姓名进行修改。</p>
+                        </div>
                       </div>
-                      <div class="merge-guide-desc">
-                        如果只希望临时改变某些掉落物归属权，可到“详情记录”中修改单条物品的归属信息。
+
+                      <div class="procedure-steps-compact">
+                        <div
+                          class="step-dot hide"
+                          :class="{
+                            'is-active': selectionForMerge.length === 0,
+                          }"
+                        >
+                          <span class="step-num">1</span>
+                          <span class="step-label">被合角色</span>
+                        </div>
+                        <el-icon class="step-arrow"><Right /></el-icon>
+                        <div
+                          class="step-dot show"
+                          :class="{
+                            'is-active': selectionForMerge.length === 1,
+                          }"
+                        >
+                          <span class="step-num">2</span>
+                          <span class="step-label">目标角色</span>
+                        </div>
                       </div>
+
                       <div class="selector-tags">
                         <el-check-tag
                           v-for="p in selectablePlayersForMerge"
@@ -489,23 +511,45 @@
                           :checked="selectionForMerge.includes(p)"
                           @change="handlePlayerSelectForMerge(p)"
                           class="merge-check-tag"
+                          :class="[
+                            selectionForMerge[0] === p ? 'is-hiding' : '',
+                            selectionForMerge[1] === p ? 'is-showing' : '',
+                          ]"
                         >
-                          <span class="tag-label-name">{{ p }}</span>
-                          <span v-if="selectionForMerge[0] === p" class="tag-role-hint hide">将被隐身</span>
-                          <span v-if="selectionForMerge[1] === p" class="tag-role-hint show">最终显示</span>
+                          <PlayerDisplay
+                            :name="p"
+                            :role="getPlayerRole(p)"
+                            :show-only-role="showOnlyRole"
+                            class="tag-label-name"
+                          />
+                          <div
+                            v-if="selectionForMerge[0] === p"
+                            class="selection-badge hide"
+                          >
+                            <el-icon><View /></el-icon>
+                            <span>隐身角色</span>
+                          </div>
+                          <div
+                            v-if="selectionForMerge[1] === p"
+                            class="selection-badge show"
+                          >
+                            <el-icon><Star /></el-icon>
+                            <span>主角色</span>
+                          </div>
                         </el-check-tag>
                       </div>
+
                       <div
                         class="merge-actions"
                         v-if="selectionForMerge.length === 2"
                       >
                         <el-button
                           type="primary"
-                          size="small"
+                          size="default"
                           @click="confirmMergeSelection"
-                          style="width: 100%"
+                          class="confirm-merge-btn-new"
                         >
-                          确认将 {{ selectionForMerge[0] }} 合并至 {{ selectionForMerge[1] }}
+                          确认将数据合并
                         </el-button>
                       </div>
                     </div>
@@ -526,7 +570,17 @@
                           class="suggest-btn"
                           @click="addMapping(s.from, s.to)"
                         >
-                          {{ s.from }} → {{ s.to }}
+                          <PlayerDisplay
+                            :name="s.from"
+                            :role="getPlayerRole(s.from)"
+                            :show-only-role="showOnlyRole"
+                          />
+                          <el-icon style="margin: 0 4px"><Right /></el-icon>
+                          <PlayerDisplay
+                            :name="s.to"
+                            :role="getPlayerRole(s.to)"
+                            :show-only-role="showOnlyRole"
+                          />
                           <span class="conf-text">({{ s.confidence }}%)</span>
                         </el-button>
                       </div>
@@ -545,17 +599,25 @@
                         >
                           <div class="map-from">
                             <span class="map-tag-hint">隐身</span>
-                            {{ from }}
+                            <PlayerDisplay
+                              :name="from"
+                              :role="getPlayerRole(from)"
+                              :show-only-role="showOnlyRole"
+                            />
                           </div>
                           <el-icon class="map-arrow"><Right /></el-icon>
                           <div class="map-to">
                             <span class="map-tag-hint">显示</span>
-                            {{ to }}
+                            <PlayerDisplay
+                              :name="to"
+                              :role="getPlayerRole(to)"
+                              :show-only-role="showOnlyRole"
+                            />
                           </div>
-                          <el-button 
-                            link 
-                            type="danger" 
-                            :icon="Delete" 
+                          <el-button
+                            link
+                            type="danger"
+                            :icon="Delete"
                             @click="removeMapping(from)"
                             class="map-remove"
                           />
@@ -751,10 +813,20 @@
                   </el-table-column>
                   <el-table-column label="获得者" width="260">
                     <template #default="scope">
-                      <el-popover placement="bottom" :width="240" trigger="click">
+                      <el-popover
+                        placement="bottom"
+                        :width="240"
+                        trigger="click"
+                      >
                         <template #reference>
-                          <div class="winner-selector-trigger" title="点击修改获得者">
-                            <div v-if="recordPlayerCorrections[scope.row.key]" class="correction-winner-display">
+                          <div
+                            class="winner-selector-trigger"
+                            title="点击修改获得者"
+                          >
+                            <div
+                              v-if="recordPlayerCorrections[scope.row.key]"
+                              class="correction-winner-display"
+                            >
                               <div class="original-row" title="原始记录获得者">
                                 <span class="correction-label">原始记录:</span>
                                 <LootPlayerRoll
@@ -773,7 +845,9 @@
                                 />
                               </div>
                               <div class="corrected-row">
-                                <el-icon class="correction-arrow"><BottomRight /></el-icon>
+                                <el-icon class="correction-arrow"
+                                  ><BottomRight
+                                /></el-icon>
                                 <LootPlayerRoll
                                   v-if="getWinnerRollInfo(scope.row)"
                                   :roll="getWinnerRollInfo(scope.row)!"
@@ -797,14 +871,19 @@
                           </div>
                         </template>
                         <div class="winner-change-popover">
-                          <div class="popover-title">变更获得者（将掉落算到他人头上）</div>
+                          <div class="popover-title">
+                            变更获得者（将掉落算到他人头上）
+                          </div>
                           <el-select
                             :model-value="scope.row.player"
                             placeholder="选择新获得者"
                             filterable
                             size="small"
                             class="winner-select-bar"
-                            @change="(val: string) => handleWinnerChange(scope.row, val)"
+                            @change="
+                              (val: string) =>
+                                handleWinnerChange(scope.row, val)
+                            "
                           >
                             <el-option
                               v-for="p in allPlayers"
@@ -1343,15 +1422,21 @@
         append-to-body
       >
         <div class="export-selection-list">
-          <el-checkbox v-model="exportForm.loot">掉落记录 ({{ lootRecords.length }})</el-checkbox>
+          <el-checkbox v-model="exportForm.loot"
+            >掉落记录 ({{ lootRecords.length }})</el-checkbox
+          >
           <el-checkbox v-model="exportForm.bis">BIS 分配配置</el-checkbox>
           <el-checkbox v-model="exportForm.roles">固定队职位设置</el-checkbox>
-          <el-checkbox v-model="exportForm.mapping">人员合并/映射项</el-checkbox>
+          <el-checkbox v-model="exportForm.mapping"
+            >人员合并/映射项</el-checkbox
+          >
         </div>
         <template #footer>
           <span class="dialog-footer">
             <el-button @click="showExportDialog = false">取消</el-button>
-            <el-button type="primary" @click="confirmExport">立即导出</el-button>
+            <el-button type="primary" @click="confirmExport"
+              >立即导出</el-button
+            >
           </span>
         </template>
       </el-dialog>
@@ -1365,41 +1450,103 @@
         <div v-if="importDataPending" class="import-preview-box">
           <p class="import-hint-text">发现备份文件，请选择要导入的部分：</p>
           <div class="import-selection-list">
-            <el-checkbox v-model="importForm.loot" :disabled="!importDataPending.r?.length">
+            <el-checkbox
+              v-model="importForm.loot"
+              :disabled="!importDataPending.r?.length"
+            >
               掉落记录 ({{ importDataPending.r?.length || 0 }} 条)
-              <span v-if="!importDataPending.r?.length" class="import-not-found-hint">- 备份文件中未发现记录</span>
-              <span v-else-if="!importDiffs.loot" class="import-identical-hint">(与现有记录一致)</span>
+              <span
+                v-if="!importDataPending.r?.length"
+                class="import-not-found-hint"
+                >- 备份文件中未发现记录</span
+              >
+              <span v-else-if="!importDiffs.loot" class="import-identical-hint"
+                >(与现有记录一致)</span
+              >
             </el-checkbox>
-            <el-checkbox v-model="importForm.bis" :disabled="!importDataPending.bisConfig && !importDataPending.c?.bisConfig && !importDataPending.c?.bis">
+            <el-checkbox
+              v-model="importForm.bis"
+              :disabled="
+                !importDataPending.bisConfig &&
+                !importDataPending.c?.bisConfig &&
+                !importDataPending.c?.bis
+              "
+            >
               BIS 分配配置
-              <span v-if="!importDataPending.bisConfig && !importDataPending.c?.bisConfig && !importDataPending.c?.bis" class="import-not-found-hint">- 备份文件中未发现数据</span>
-              <span v-else-if="!importDiffs.bis" class="import-identical-hint">(与现有配置一致)</span>
+              <span
+                v-if="
+                  !importDataPending.bisConfig &&
+                  !importDataPending.c?.bisConfig &&
+                  !importDataPending.c?.bis
+                "
+                class="import-not-found-hint"
+                >- 备份文件中未发现数据</span
+              >
+              <span v-else-if="!importDiffs.bis" class="import-identical-hint"
+                >(与现有配置一致)</span
+              >
             </el-checkbox>
-            <el-checkbox v-model="importForm.roles" :disabled="!importDataPending.c?.roles">
+            <el-checkbox
+              v-model="importForm.roles"
+              :disabled="!importDataPending.c?.roles"
+            >
               固定队职位设置
-              <span v-if="!importDataPending.c?.roles" class="import-not-found-hint">- 备份文件中未发现数据</span>
-              <span v-else-if="!importDiffs.roles" class="import-identical-hint">(与现有设置一致)</span>
+              <span
+                v-if="!importDataPending.c?.roles"
+                class="import-not-found-hint"
+                >- 备份文件中未发现数据</span
+              >
+              <span v-else-if="!importDiffs.roles" class="import-identical-hint"
+                >(与现有设置一致)</span
+              >
             </el-checkbox>
-            <el-checkbox v-model="importForm.mapping" :disabled="!importDataPending.c?.map">
+            <el-checkbox
+              v-model="importForm.mapping"
+              :disabled="!importDataPending.c?.map"
+            >
               人员合并/映射项
-              <span v-if="!importDataPending.c?.map" class="import-not-found-hint">- 备份文件中未发现数据</span>
-              <span v-else-if="!importDiffs.mapping" class="import-identical-hint">(与现有记录一致)</span>
+              <span
+                v-if="!importDataPending.c?.map"
+                class="import-not-found-hint"
+                >- 备份文件中未发现数据</span
+              >
+              <span
+                v-else-if="!importDiffs.mapping"
+                class="import-identical-hint"
+                >(与现有记录一致)</span
+              >
             </el-checkbox>
           </div>
-          <div class="import-warning-info" v-if="(importForm.bis && importDiffs.bis) || (importForm.roles && importDiffs.roles) || (importForm.mapping && importDiffs.mapping)">
+          <div
+            class="import-warning-info"
+            v-if="
+              (importForm.bis && importDiffs.bis) ||
+              (importForm.roles && importDiffs.roles) ||
+              (importForm.mapping && importDiffs.mapping)
+            "
+          >
             <el-icon><Warning /></el-icon>
             <span>职位与 BIS 设置导入后将覆盖当前配置</span>
           </div>
-          <div class="import-success-info" v-else-if="(importForm.bis || importForm.roles || importForm.mapping) && !importDiffs.bis && !importDiffs.roles && !importDiffs.mapping">
+          <div
+            class="import-success-info"
+            v-else-if="
+              (importForm.bis || importForm.roles || importForm.mapping) &&
+              !importDiffs.bis &&
+              !importDiffs.roles &&
+              !importDiffs.mapping
+            "
+          >
             <el-icon><CircleCheckFilled /></el-icon>
             <span>所选配置项已与本地同步，无需重复导入</span>
           </div>
-
         </div>
         <template #footer>
           <span class="dialog-footer">
             <el-button @click="showImportConfirmDialog = false">取消</el-button>
-            <el-button type="primary" @click="confirmImport">确认导入</el-button>
+            <el-button type="primary" @click="confirmImport"
+              >确认导入</el-button
+            >
           </span>
         </template>
       </el-dialog>
@@ -2133,7 +2280,7 @@ const selectablePlayersForMerge = computed(() => {
       const actual = getActualPlayer(p)
       return isPlayerChecked(actual)
     })
-    .sort()
+    .sort((a, b) => comparePlayersByRole(a, b, playerTotalItemsMap.value))
 })
 
 const sortedSummaryPlayers = computed(() => {
@@ -2163,7 +2310,7 @@ const visibleAllPlayers = computed(() => {
   if (hideUnselectedPlayers.value) {
     players = players.filter((p) => isPlayerChecked(p))
   }
-  if (hideEmptyPlayers.value) {
+  if (hideEmptyPlayers.value && !isOnlyRaidMembersActive.value) {
     players = players.filter((p) => {
       // 检查该玩家在当前过滤条件下是否有记录
       return (
@@ -2271,7 +2418,9 @@ const filteredRecords = computed(() => {
   const result = lootRecords.value.filter((record) => {
     if (isSystemFiltered(record.item)) return false
 
-    if (playerVisibility.value[getActualPlayer(getRecordPlayer(record))] === false)
+    if (
+      playerVisibility.value[getActualPlayer(getRecordPlayer(record))] === false
+    )
       return false
 
     if (itemVisibility.value[record.item] === false) return false
@@ -2398,7 +2547,11 @@ const displaySlots = computed(() => {
 
 function getRecordRaidWeekLabel(record: LootRecord) {
   const offset = recordWeekCorrections.value[record.key] || 0
-  return getRaidWeekLabel(record.timestamp, offset, GAME_VERSION_CONFIG.RAID_START_TIME).label
+  return getRaidWeekLabel(
+    record.timestamp,
+    offset,
+    GAME_VERSION_CONFIG.RAID_START_TIME,
+  ).label
 }
 
 const zeroWeekStart = computed(() => {
@@ -2816,7 +2969,7 @@ async function syncLogFiles() {
 
       lootRecords.value.push(...allNewRecords)
       existingKeys.value = localKeys
-      
+
       handlePotentialDuplicates(allNewRecords, 'sync')
 
       let visUpdated = false
@@ -3177,7 +3330,10 @@ function getFilteredItemsInPlayerSummary(player: string) {
       results.push({
         name: row.keywords || row.name,
         count: cVal,
-        isBis: hasRole && playerBis[row.id] !== undefined ? targetReq > 0 : undefined,
+        isBis:
+          hasRole && playerBis[row.id] !== undefined
+            ? targetReq > 0
+            : undefined,
         id: row.id,
         layerName: layer ? layer.name : undefined,
       })
@@ -3199,7 +3355,11 @@ function getFilteredItemsInPlayerSummary(player: string) {
         name: itemName,
         count,
         isRandomWeapon,
-        isBis: isRandomWeapon ? undefined : (hasRole && isComplete) ? false : undefined,
+        isBis: isRandomWeapon
+          ? undefined
+          : hasRole && isComplete
+            ? false
+            : undefined,
         layerName: isRandomWeapon ? '4层' : undefined,
       })
     }
@@ -3284,7 +3444,10 @@ function findManualDuplicates(incomingRecords: LootRecord[]): LootRecord[] {
   return toDelete
 }
 
-async function handlePotentialDuplicates(incomingRecords: LootRecord[], context: 'sync' | 'import') {
+async function handlePotentialDuplicates(
+  incomingRecords: LootRecord[],
+  context: 'sync' | 'import',
+) {
   const overlaps = findManualDuplicates(incomingRecords)
   if (overlaps.length === 0) return
 
@@ -3563,7 +3726,10 @@ async function processImportJSON(json: any) {
     const hasRoles = !!json.c?.roles && Object.keys(json.c.roles).length > 0
     const hasMapping = !!json.c?.map && Object.keys(json.c.map).length > 0
 
-    const isLocalBisEmpty = !bisConfig.value || !bisConfig.value.playerBis || Object.keys(bisConfig.value.playerBis).length === 0
+    const isLocalBisEmpty =
+      !bisConfig.value ||
+      !bisConfig.value.playerBis ||
+      Object.keys(bisConfig.value.playerBis).length === 0
     const isLocalRolesEmpty = Object.keys(playerRoles.value).length === 0
     const isLocalMappingEmpty = Object.keys(playerMapping.value).length === 0
 
@@ -3586,10 +3752,12 @@ async function processImportJSON(json: any) {
         const player = playerDict[rec[2]]
         const key = rec[3]
         if (!item || !player) continue
-        
-        const recordKey = key && typeof key === 'string' ? key : `${ts}_${item}_${player}`
-        if (currentKeys.has(recordKey) || blacklistedKeys.value.has(recordKey)) continue
-        
+
+        const recordKey =
+          key && typeof key === 'string' ? key : `${ts}_${item}_${player}`
+        if (currentKeys.has(recordKey) || blacklistedKeys.value.has(recordKey))
+          continue
+
         const sig = `${ts}|${item}|${player}`
         if (!existingSigs.has(sig)) {
           newLootCount++
@@ -3601,9 +3769,16 @@ async function processImportJSON(json: any) {
     const incomingBis = json.c?.bisConfig || json.bisConfig || json.c?.bis
     importDiffs.value = {
       loot: hasLoot && newLootCount > 0,
-      bis: hasBis && JSON.stringify(bisConfig.value?.playerBis || {}) !== JSON.stringify(incomingBis?.playerBis || incomingBis || {}),
-      roles: hasRoles && JSON.stringify(playerRoles.value) !== JSON.stringify(json.c.roles),
-      mapping: hasMapping && JSON.stringify(playerMapping.value) !== JSON.stringify(json.c.map),
+      bis:
+        hasBis &&
+        JSON.stringify(bisConfig.value?.playerBis || {}) !==
+          JSON.stringify(incomingBis?.playerBis || incomingBis || {}),
+      roles:
+        hasRoles &&
+        JSON.stringify(playerRoles.value) !== JSON.stringify(json.c.roles),
+      mapping:
+        hasMapping &&
+        JSON.stringify(playerMapping.value) !== JSON.stringify(json.c.map),
     }
 
     importForm.value = {
@@ -3642,7 +3817,7 @@ async function confirmImport() {
         const incomingBis = json.c.bisConfig || json.bisConfig
         if (incomingBis) bisConfig.value = incomingBis
       }
-      
+
       if (json.c.filter) {
         systemFilterSettings.value = {
           ...systemFilterSettings.value,
@@ -3727,7 +3902,7 @@ async function confirmImport() {
             new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
         )
         existingKeys.value = new Set(lootRecords.value.map((r) => r.key))
-        
+
         handlePotentialDuplicates(newRecords, 'import')
 
         ElMessage.success({
@@ -3828,7 +4003,7 @@ function formatFileSize(bytes: number) {
 function getOriginalRollInfo(record: LootRecord): RollInfo | null {
   const roll = record.rolls.find((r) => r.player === record.player)
   if (roll) return roll
-  
+
   if (record.player) {
     const type: RollInfo['type'] = record.isManual
       ? 'manual'
@@ -3862,8 +4037,10 @@ function getWinnerRollInfo(record: LootRecord): RollInfo | null {
   if (correctedPlayer) {
     const type: RollInfo['type'] = record.isManual
       ? 'manual'
-      : (record.isAssign ? 'assign' : 'direct')
-      
+      : record.isAssign
+        ? 'assign'
+        : 'direct'
+
     return {
       player: correctedPlayer,
       type,
@@ -3903,7 +4080,10 @@ async function handleWinnerChange(record: LootRecord, newPlayer: string) {
   }
   recordPlayerCorrections.value = newMap
   ElMessage.success({
-    message: newPlayer === record.player ? '已恢复原始获得者' : `已将物品重新分配给 ${newPlayer}`,
+    message:
+      newPlayer === record.player
+        ? '已恢复原始获得者'
+        : `已将物品重新分配给 ${newPlayer}`,
     showClose: true,
   })
 }
@@ -4487,97 +4667,285 @@ html.dark .loading-sub-txt {
 .popover-form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  width: 280px;
+  gap: 16px;
+  width: 320px;
   max-width: 100%;
   box-sizing: border-box;
 }
 
 .merge-selector-box {
-  margin-bottom: 8px;
   width: 100%;
 }
+
 .selector-title {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
-  color: var(--text-secondary);
-  margin-bottom: 6px;
-}
-.merge-guide-desc {
-  font-size: 12px;
-  line-height: 1.6;
-  color: #64748b;
+  color: #1e293b;
   margin-bottom: 12px;
-  padding: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  &::before {
+    content: '';
+    width: 3px;
+    height: 14px;
+    background: #3b82f6;
+    border-radius: 2px;
+  }
+}
+
+.procedure-steps-compact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
   background: #f8fafc;
-  border-radius: 6px;
-  border-left: 3px solid #cbd5e1;
-  .text-hide { color: #ef4444; font-weight: bold; margin: 0 2px; }
-  .text-show { color: #3b82f6; font-weight: bold; margin: 0 2px; }
+  padding: 8px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  border: 1px solid #e2e8f0;
+
+  .step-dot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0.4;
+    transition: all 0.2s;
+
+    &.is-active {
+      opacity: 1;
+      font-weight: bold;
+    }
+
+    .step-num {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #cbd5e1;
+      color: white;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step-label {
+      font-size: 12px;
+    }
+
+    &.hide.is-active .step-num {
+      background: #ef4444;
+    }
+    &.show.is-active .step-num {
+      background: #3b82f6;
+    }
+  }
+
+  .step-arrow {
+    color: #cbd5e1;
+    font-size: 12px;
+  }
+}
+
+.merge-guide-desc {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #64748b;
+  padding: 10px 12px;
+  background: #f0f9ff;
+  border-radius: 10px;
+  border: 1px solid #e0f2fe;
+  margin-bottom: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+
+  .el-icon {
+    font-size: 14px;
+    color: #3b82f6;
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+
+  .guide-content {
+    flex: 1;
+    strong {
+      color: #0369a1;
+      font-weight: 800;
+    }
+    p {
+      margin: 0;
+      &:first-child { margin-bottom: 4px; }
+    }
+  }
 }
 
 .selector-tags {
-  scrollbar-gutter: stable;
-  margin-bottom: 12px;
-  background: white;
-  border-radius: 8px;
-  border: 1px solid var(--border-light);
-  box-sizing: border-box;
-  width: 100%;
-  max-height: 275px;
-  overflow-y: auto;
-  overflow-x: hidden;
-
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
-  align-content: start;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 2px;
+  margin-bottom: 12px;
 }
 
-.selector-tags :deep(.el-check-tag) {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 48px;
-  padding: 4px;
-  font-size: 13px;
-  font-weight: normal;
-  box-sizing: border-box;
-  margin: 0;
-  border-radius: 6px;
-  transition: all 0.2s;
-  border: 1px solid transparent;
+.merge-check-tag {
+  height: 36px !important;
+  min-height: 36px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 8px !important;
+  margin: 0 !important;
+  background: white !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  transition: all 0.2s !important;
+  cursor: pointer;
+  position: relative;
+
+  &:hover {
+    border-color: #3b82f6 !important;
+    background: #f8fbff !important;
+  }
 
   &.is-checked {
-    background: #eff6ff;
-    border-color: #3b82f6;
+    &.is-hiding {
+      background: #fee2e2 !important;
+      border-color: #ef4444 !important;
+    }
+    &.is-showing {
+      background: #dbeafe !important;
+      border-color: #3b82f6 !important;
+    }
   }
 
   .tag-label-name {
-    width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    text-align: center;
+    transform: scale(0.9);
   }
 
-  .tag-role-hint {
-    font-size: 10px;
-    font-weight: bold;
+  .selection-badge {
+    position: absolute;
+    top: -1px;
+    right: -1px;
     padding: 1px 4px;
-    border-radius: 3px;
-    margin-top: 2px;
-    transform: scale(0.9);
+    border-radius: 0 6px 0 6px;
+    font-size: 8px;
+    font-weight: 800;
+    color: white;
+    z-index: 10;
+
+    span {
+      display: none;
+    } /* 这么窄的地方就不写字了 */
 
     &.hide {
-      background: #fee2e2;
-      color: #ef4444;
+      background: #ef4444;
     }
     &.show {
-      background: #dcfce7;
-      color: #10b981;
+      background: #3b82f6;
+    }
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.confirm-merge-btn-new {
+  width: 100%;
+  height: 36px !important;
+  border-radius: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.mapping-box {
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 16px;
+}
+
+.mapping-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mapping-item-row {
+  display: flex;
+  align-items: center;
+  background: white;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  gap: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    border-color: #cbd5e1;
+  }
+
+  .map-from,
+  .map-to {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+
+    .map-tag-hint {
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      padding: 1px 4px;
+      border-radius: 4px;
+      width: fit-content;
+    }
+  }
+
+  .map-from .map-tag-hint {
+    background: #fee2e2;
+    color: #ef4444;
+  }
+  .map-to .map-tag-hint {
+    background: #dbeafe;
+    color: #3b82f6;
+  }
+
+  .map-arrow {
+    color: #cbd5e1;
+    font-size: 16px;
+  }
+
+  .map-remove {
+    margin-left: 2px;
+    opacity: 0.4;
+    &:hover {
+      opacity: 1;
     }
   }
 }
@@ -4627,7 +4995,8 @@ html.dark .loading-sub-txt {
   border: 1px solid #e2e8f0;
   gap: 6px;
 
-  .map-from, .map-to {
+  .map-from,
+  .map-to {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -4666,14 +5035,61 @@ html.dark .loading-sub-txt {
 }
 
 html.dark {
-  .merge-guide-desc {
-    background: rgba(255, 255, 255, 0.03);
-    border-left-color: rgba(255, 255, 255, 0.1);
+  .procedure-steps-compact {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    .step-dot .step-num {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .step-dot.hide.is-active .step-num {
+      background: #ef4444;
+    }
+    .step-dot.show.is-active .step-num {
+      background: #3b82f6;
+    }
   }
+
+  .merge-guide-desc {
+    background: rgba(59, 130, 246, 0.05);
+    border-color: rgba(59, 130, 246, 0.1);
+    color: rgba(255, 255, 255, 0.5);
+    .guide-content strong {
+      color: #7dd3fc;
+    }
+    .el-icon {
+      color: #60a5fa;
+    }
+  }
+
+  .merge-check-tag {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+
+    &:hover {
+      border-color: #3b82f6 !important;
+    }
+
+    &.is-checked {
+      &.is-hiding {
+        border-color: #ef4444 !important;
+        background: rgba(239, 68, 68, 0.1) !important;
+      }
+      &.is-showing {
+        border-color: #3b82f6 !important;
+        background: rgba(59, 130, 246, 0.1) !important;
+      }
+    }
+  }
+
+  .mapping-box {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
   .mapping-item-row {
     background: rgba(255, 255, 255, 0.03);
     border-color: rgba(255, 255, 255, 0.08);
-    .map-from, .map-to {
+    .map-from,
+    .map-to {
       color: rgba(255, 255, 255, 0.9);
     }
   }
@@ -6741,7 +7157,8 @@ html.dark {
   }
 }
 
-.export-selection-list, .import-selection-list {
+.export-selection-list,
+.import-selection-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -6856,14 +7273,14 @@ html.dark {
       color: #7f8ea3;
       margin-left: 2px;
       margin-bottom: 2px;
-      
+
       .correction-label {
         font-weight: 800;
         font-size: 10px;
         opacity: 0.7;
         white-space: nowrap;
       }
-      
+
       .original-display {
         opacity: 0.6;
         transform: scale(0.92);
@@ -6876,7 +7293,7 @@ html.dark {
       align-items: center;
       gap: 2px;
       margin-left: 10px;
-      
+
       .correction-arrow {
         color: #94a3b8;
         font-size: 14px;

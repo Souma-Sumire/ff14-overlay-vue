@@ -54,7 +54,8 @@ const rollTypeIcon = computed(() => getRollTypeIcon(props.roll.type))
 
 const rollTitle = computed(() => {
   const typeName = getRollTypeName(props.roll.type)
-  return `${props.roll.player} ${typeName} ${props.roll.value ?? ''}`
+  const displayName = (props.showOnlyRole && role.value) ? role.value : props.roll.player
+  return `${displayName} ${typeName} ${props.roll.value ?? ''}`
 })
 
 const hasValue = computed(() => {
