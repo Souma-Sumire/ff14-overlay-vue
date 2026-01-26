@@ -162,11 +162,9 @@
                 <el-dropdown-menu>
                   <el-dropdown-item command="import">
                     <el-icon><Upload /></el-icon>导入备份 (JSON)
-                    <span class="op-hint">(仅限掉落记录)</span>
                   </el-dropdown-item>
                   <el-dropdown-item command="export">
                     <el-icon><Download /></el-icon>导出备份 (JSON)
-                    <span class="op-hint">(仅限掉落记录)</span>
                   </el-dropdown-item>
                   <el-dropdown-item
                     command="clear"
@@ -174,7 +172,6 @@
                     style="color: #f56c6c"
                   >
                     <el-icon><Delete /></el-icon>清空数据库
-                    <span class="op-hint">(仅限掉落记录)</span>
                   </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
@@ -1255,6 +1252,73 @@
       </div>
 
       <el-dialog
+        v-model="showExportDialog"
+        title="选择导出内容"
+        width="360px"
+        append-to-body
+      >
+        <div class="export-selection-list">
+          <el-checkbox v-model="exportForm.loot">掉落记录 ({{ lootRecords.length }})</el-checkbox>
+          <el-checkbox v-model="exportForm.bis">BIS 分配配置</el-checkbox>
+          <el-checkbox v-model="exportForm.roles">固定队职位设置</el-checkbox>
+          <el-checkbox v-model="exportForm.mapping">人员合并/映射项</el-checkbox>
+        </div>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button @click="showExportDialog = false">取消</el-button>
+            <el-button type="primary" @click="confirmExport">立即导出</el-button>
+          </span>
+        </template>
+      </el-dialog>
+
+      <el-dialog
+        v-model="showImportConfirmDialog"
+        title="选择导入内容"
+        width="400px"
+        append-to-body
+      >
+        <div v-if="importDataPending" class="import-preview-box">
+          <p class="import-hint-text">发现备份文件，请选择要导入的部分：</p>
+          <div class="import-selection-list">
+            <el-checkbox v-model="importForm.loot" :disabled="!importDataPending.r?.length">
+              掉落记录 ({{ importDataPending.r?.length || 0 }} 条)
+              <span v-if="!importDataPending.r?.length" class="import-not-found-hint">- 备份文件中未发现记录</span>
+              <span v-else-if="!importDiffs.loot" class="import-identical-hint">(与现有记录一致)</span>
+            </el-checkbox>
+            <el-checkbox v-model="importForm.bis" :disabled="!importDataPending.bisConfig && !importDataPending.c?.bisConfig && !importDataPending.c?.bis">
+              BIS 分配配置
+              <span v-if="!importDataPending.bisConfig && !importDataPending.c?.bisConfig && !importDataPending.c?.bis" class="import-not-found-hint">- 备份文件中未发现数据</span>
+              <span v-else-if="!importDiffs.bis" class="import-identical-hint">(与现有配置一致)</span>
+            </el-checkbox>
+            <el-checkbox v-model="importForm.roles" :disabled="!importDataPending.c?.roles">
+              固定队职位设置
+              <span v-if="!importDataPending.c?.roles" class="import-not-found-hint">- 备份文件中未发现数据</span>
+              <span v-else-if="!importDiffs.roles" class="import-identical-hint">(与现有设置一致)</span>
+            </el-checkbox>
+            <el-checkbox v-model="importForm.mapping" :disabled="!importDataPending.c?.map">
+              人员合并/映射项
+              <span v-if="!importDataPending.c?.map" class="import-not-found-hint">- 备份文件中未发现数据</span>
+              <span v-else-if="!importDiffs.mapping" class="import-identical-hint">(与现有记录一致)</span>
+            </el-checkbox>
+          </div>
+          <div class="import-warning-info" v-if="(importForm.bis && importDiffs.bis) || (importForm.roles && importDiffs.roles) || (importForm.mapping && importDiffs.mapping)">
+            <el-icon><Warning /></el-icon>
+            <span>职位与 BIS 设置导入后将覆盖当前配置</span>
+          </div>
+          <div class="import-success-info" v-else-if="(importForm.bis || importForm.roles || importForm.mapping) && !importDiffs.bis && !importDiffs.roles && !importDiffs.mapping">
+            <el-icon><CircleCheckFilled /></el-icon>
+            <span>所选配置项已与本地同步，无需重复导入</span>
+          </div>
+
+        </div>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button @click="showImportConfirmDialog = false">取消</el-button>
+            <el-button type="primary" @click="confirmImport">确认导入</el-button>
+          </span>
+        </template>
+      </el-dialog>
+      <el-dialog
         v-model="showManualAddDialog"
         title="手动添加记录"
         width="400px"
@@ -1360,6 +1424,7 @@ import {
   Mouse,
   EditPen,
   Check,
+  CircleCheckFilled,
 } from '@element-plus/icons-vue'
 import LogParserWorker from '@/workers/logParser.ts?worker'
 import LootPlayerRoll from '@/components/loot-history/LootPlayerRoll.vue'
@@ -1417,6 +1482,34 @@ const viewMode = ref<'list' | 'summary' | 'slot' | 'week' | 'chart' | 'bis'>(
   'summary',
 )
 const currentHandle = ref<FileSystemDirectoryHandle | null>(null)
+
+const showManualAddDialog = ref(false)
+const showExportDialog = ref(false)
+const showImportConfirmDialog = ref(false)
+const exportForm = ref({
+  loot: true,
+  bis: true,
+  roles: true,
+  mapping: true,
+})
+const importForm = ref({
+  loot: true,
+  bis: true,
+  roles: true,
+  mapping: true,
+})
+const importDiffs = ref({
+  loot: true,
+  bis: true,
+  roles: true,
+  mapping: true,
+})
+const importDataPending = ref<any>(null)
+const manualForm = ref({
+  timestamp: '',
+  item: '',
+  player: '',
+})
 
 const showTimeSetup = ref(false)
 
@@ -2436,7 +2529,7 @@ async function setLogPath() {
   }
 }
 
-async function deleteRecord(record: LootRecord) {
+async function deleteRecord(record: LootRecord, silent = false) {
   try {
     // 1. 从内存中删除
     const index = lootRecords.value.findIndex((r) => r.key === record.key)
@@ -2453,10 +2546,10 @@ async function deleteRecord(record: LootRecord) {
     // 4. 加入黑名单（防止以后再解析回来）
     blacklistedKeys.value.add(record.key)
 
-    ElMessage.success('记录已永久删除')
+    if (!silent) ElMessage.success('记录已永久删除')
   } catch (err) {
     console.error('Delete error:', err)
-    ElMessage.error('删除失败')
+    if (!silent) ElMessage.error('删除失败')
   }
 }
 
@@ -2617,6 +2710,8 @@ async function syncLogFiles() {
 
       lootRecords.value.push(...allNewRecords)
       existingKeys.value = localKeys
+      
+      handlePotentialDuplicates(allNewRecords, 'sync')
 
       let visUpdated = false
       const newIV = { ...itemVisibility.value }
@@ -3056,6 +3151,58 @@ function togglePlayerVisibility(player: string) {
   playerVisibility.value[player] = !(playerVisibility.value[player] !== false)
 }
 
+function findManualDuplicates(incomingRecords: LootRecord[]): LootRecord[] {
+  const manualRecords = lootRecords.value.filter((r) => r.isManual)
+  if (manualRecords.length === 0) return []
+
+  const toDelete: LootRecord[] = []
+  const incomingMap = new Map<string, Set<string>>() // date_item -> set of normalized players
+
+  incomingRecords.forEach((real) => {
+    if (real.isManual) return
+    const date = new Date(real.timestamp).toLocaleDateString()
+    const key = `${date}|${real.item}`
+    if (!incomingMap.has(key)) incomingMap.set(key, new Set())
+    incomingMap.get(key)!.add(getActualPlayer(real.player))
+  })
+
+  manualRecords.forEach((manual) => {
+    const date = new Date(manual.timestamp).toLocaleDateString()
+    const key = `${date}|${manual.item}`
+    const players = incomingMap.get(key)
+    if (players && players.has(getActualPlayer(manual.player))) {
+      toDelete.push(manual)
+    }
+  })
+
+  return toDelete
+}
+
+async function handlePotentialDuplicates(incomingRecords: LootRecord[], context: 'sync' | 'import') {
+  const overlaps = findManualDuplicates(incomingRecords)
+  if (overlaps.length === 0) return
+
+  const sourceName = context === 'sync' ? '同步的日志' : '导入的数据'
+  try {
+    await ElMessageBox.confirm(
+      `在${sourceName}中发现了 ${overlaps.length} 条与现有手动记录重合的数据（同日期、同玩家、同物品）。<br/><br/>是否删除这些手动记录，以真实的解析数据为准？`,
+      '发现重复记录',
+      {
+        confirmButtonText: '删除手动记录',
+        cancelButtonText: '全部保留',
+        type: 'info',
+        dangerouslyUseHTMLString: true,
+      },
+    )
+    for (const rec of overlaps) {
+      await deleteRecord(rec, true)
+    }
+    ElMessage.success(`已清理 ${overlaps.length} 条手动记录`)
+  } catch {
+    // 用户取消删除
+  }
+}
+
 async function copyToClipboard(text: string) {
   try {
     await navigator.clipboard.writeText(text)
@@ -3085,13 +3232,6 @@ function selectRaidLoot() {
     toggleAllPlayers(true)
   }
 }
-
-const showManualAddDialog = ref(false)
-const manualForm = ref({
-  timestamp: '',
-  item: '',
-  player: '',
-})
 
 function openManualAddDialog() {
   manualForm.value = {
@@ -3213,6 +3353,10 @@ function handleDataCommand(command: string) {
 }
 
 function exportData() {
+  showExportDialog.value = true
+}
+
+async function confirmExport() {
   try {
     const uniqueItems = new Set<string>()
     const uniquePlayers = new Set<string>()
@@ -3237,46 +3381,51 @@ function exportData() {
     const ROLL_TYPES = ['need', 'greed', 'assign', 'direct', 'manual']
     const rollTypeMap = new Map(ROLL_TYPES.map((t, i) => [t, i]))
 
-    const data = {
+    const data: any = {
       v: 4,
       base: minTs,
       dicts: {
         i: itemDict,
         p: playerDict,
       },
-      r: lootRecords.value.map((rec) => {
-        const t =
-          rec.timestamp instanceof Date
-            ? rec.timestamp.getTime()
-            : rec.timestamp
+      r: exportForm.value.loot
+        ? lootRecords.value.map((rec) => {
+            const t =
+              rec.timestamp instanceof Date
+                ? rec.timestamp.getTime()
+                : rec.timestamp
 
-        const row: any[] = [
-          t - minTs,
-          itemMap.get(rec.item),
-          playerMap.get(rec.player),
-          rec.key,
-        ]
+            const row: any[] = [
+              t - minTs,
+              itemMap.get(rec.item),
+              playerMap.get(rec.player),
+              rec.key,
+            ]
 
-        if (rec.rolls && rec.rolls.length > 0) {
-          row.push(rec.rolls.length)
-          rec.rolls.forEach((r) => {
-            row.push(playerMap.get(r.player))
-            row.push(r.value)
-            row.push(rollTypeMap.get(r.type) ?? 0)
+            if (rec.rolls && rec.rolls.length > 0) {
+              row.push(rec.rolls.length)
+              rec.rolls.forEach((r) => {
+                row.push(playerMap.get(r.player))
+                row.push(r.value)
+                row.push(rollTypeMap.get(r.type) ?? 0)
+              })
+            } else {
+              row.push(0)
+            }
+            return row
           })
-        } else {
-          row.push(0)
-        }
-        return row
-      }),
-      c: {
-        map: playerMapping.value,
-        roles: playerRoles.value,
-        filter: systemFilterSettings.value,
-        raidActive: isOnlyRaidMembersActive.value,
-        weekCorrections: recordWeekCorrections.value,
-      },
+        : [],
     }
+
+    const config: any = {}
+    if (exportForm.value.mapping) config.map = playerMapping.value
+    if (exportForm.value.roles) config.roles = playerRoles.value
+    if (exportForm.value.bis) config.bisConfig = bisConfig.value
+    config.filter = systemFilterSettings.value
+    config.raidActive = isOnlyRaidMembersActive.value
+    config.weekCorrections = recordWeekCorrections.value
+
+    data.c = config
 
     const blob = new Blob([JSON.stringify(data)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -3287,6 +3436,7 @@ function exportData() {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
+    showExportDialog.value = false
     ElMessage.success({ message: '数据已导出', showClose: true })
   } catch (e) {
     console.error(e)
@@ -3301,18 +3451,75 @@ async function processImportJSON(json: any) {
       return
     }
 
-    const recordCount = json.r.length
-    await ElMessageBox.confirm(
-      `准备导入 ${recordCount} 条记录。导入将合并到现有数据中(相同记录会被跳过)。<br/><small style="color: #64748b">注意：备份文件仅包含<b>掉落历史</b>。导入不会覆盖您的 BIS 配置、角色设置或人员映射。</small>`,
-      '导入数据',
-      {
-        confirmButtonText: '开始导入',
-        cancelButtonText: '取消',
-        type: 'warning',
-        dangerouslyUseHTMLString: true,
-      },
-    )
+    // 初始化导入勾选逻辑：备份中有数据，且本地尚无配置时，默认勾选
+    const hasLoot = !!json.r?.length
+    const hasBis = !!(json.c?.bisConfig || json.bisConfig || json.c?.bis)
+    const hasRoles = !!json.c?.roles && Object.keys(json.c.roles).length > 0
+    const hasMapping = !!json.c?.map && Object.keys(json.c.map).length > 0
 
+    const isLocalBisEmpty = !bisConfig.value || !bisConfig.value.playerBis || Object.keys(bisConfig.value.playerBis).length === 0
+    const isLocalRolesEmpty = Object.keys(playerRoles.value).length === 0
+    const isLocalMappingEmpty = Object.keys(playerMapping.value).length === 0
+
+    // 计算掉落记录差异
+    let newLootCount = 0
+    if (hasLoot) {
+      const existingSigs = new Set(
+        lootRecords.value.map(
+          (r) => `${new Date(r.timestamp).getTime()}|${r.item}|${r.player}`,
+        ),
+      )
+      const currentKeys = new Set(lootRecords.value.map((r) => r.key))
+      const baseTs = json.base || 0
+      const itemDict = json.dicts?.i || []
+      const playerDict = json.dicts?.p || []
+
+      for (const rec of json.r) {
+        const ts = baseTs + rec[0]
+        const item = itemDict[rec[1]]
+        const player = playerDict[rec[2]]
+        const key = rec[3]
+        if (!item || !player) continue
+        
+        const recordKey = key && typeof key === 'string' ? key : `${ts}_${item}_${player}`
+        if (currentKeys.has(recordKey) || blacklistedKeys.value.has(recordKey)) continue
+        
+        const sig = `${ts}|${item}|${player}`
+        if (!existingSigs.has(sig)) {
+          newLootCount++
+        }
+      }
+    }
+
+    // 计算差异
+    const incomingBis = json.c?.bisConfig || json.bisConfig || json.c?.bis
+    importDiffs.value = {
+      loot: hasLoot && newLootCount > 0,
+      bis: hasBis && JSON.stringify(bisConfig.value?.playerBis || {}) !== JSON.stringify(incomingBis?.playerBis || incomingBis || {}),
+      roles: hasRoles && JSON.stringify(playerRoles.value) !== JSON.stringify(json.c.roles),
+      mapping: hasMapping && JSON.stringify(playerMapping.value) !== JSON.stringify(json.c.map),
+    }
+
+    importForm.value = {
+      loot: importDiffs.value.loot, // 只有发现新记录才默认勾选
+      bis: hasBis && isLocalBisEmpty && importDiffs.value.bis,
+      roles: hasRoles && isLocalRolesEmpty && importDiffs.value.roles,
+      mapping: hasMapping && isLocalMappingEmpty && importDiffs.value.mapping,
+    }
+
+    importDataPending.value = json
+    showImportConfirmDialog.value = true
+  } catch (_err) {
+    console.error(_err)
+    ElMessage.error({ message: '解析出错', showClose: true })
+  }
+}
+
+async function confirmImport() {
+  const json = importDataPending.value
+  if (!json) return
+
+  try {
     const loading = ElMessage({
       message: '正在导入数据...',
       duration: 0,
@@ -3321,10 +3528,15 @@ async function processImportJSON(json: any) {
     })
 
     if (json.c) {
-      if (json.c.map)
+      if (importForm.value.mapping && json.c.map)
         playerMapping.value = { ...playerMapping.value, ...json.c.map }
-      if (json.c.roles)
+      if (importForm.value.roles && json.c.roles)
         playerRoles.value = { ...playerRoles.value, ...json.c.roles }
+      if (importForm.value.bis) {
+        const incomingBis = json.c.bisConfig || json.bisConfig
+        if (incomingBis) bisConfig.value = incomingBis
+      }
+      
       if (json.c.filter) {
         systemFilterSettings.value = {
           ...systemFilterSettings.value,
@@ -3341,92 +3553,90 @@ async function processImportJSON(json: any) {
       }
     }
 
-    const existingSigs = new Set(
-      lootRecords.value.map(
-        (r) => `${new Date(r.timestamp).getTime()}|${r.item}|${r.player}`,
-      ),
-    )
-    const currentKeys = new Set(lootRecords.value.map((r) => r.key))
+    if (importForm.value.loot && json.r && json.r.length > 0) {
+      const existingSigs = new Set(
+        lootRecords.value.map(
+          (r) => `${new Date(r.timestamp).getTime()}|${r.item}|${r.player}`,
+        ),
+      )
+      const currentKeys = new Set(lootRecords.value.map((r) => r.key))
 
-    const newRecords: LootRecord[] = []
-    const baseTs = json.base || 0
-    const itemDict = json.dicts?.i || []
-    const playerDict = json.dicts?.p || []
-    const ROLL_TYPES = ['need', 'greed', 'assign', 'direct', 'manual']
+      const newRecords: LootRecord[] = []
+      const baseTs = json.base || 0
+      const itemDict = json.dicts?.i || []
+      const playerDict = json.dicts?.p || []
+      const ROLL_TYPES = ['need', 'greed', 'assign', 'direct', 'manual']
 
-    for (const rec of json.r) {
-      const ts = baseTs + rec[0]
-      const item = itemDict[rec[1]]
-      const player = playerDict[rec[2]]
+      for (const rec of json.r) {
+        const ts = baseTs + rec[0]
+        const item = itemDict[rec[1]]
+        const player = playerDict[rec[2]]
+        const key = rec[3]
+        const rCount = rec[4]
 
-      const key = rec[3]
+        const rolls = [] as any[]
+        if (rCount > 0) {
+          let cursor = 5
+          for (let i = 0; i < rCount; i++) {
+            if (cursor + 2 >= rec.length) break
+            rolls.push({
+              player: playerDict[rec[cursor]],
+              value: rec[cursor + 1],
+              type: ROLL_TYPES[rec[cursor + 2]] || 'need',
+            })
+            cursor += 3
+          }
+        }
 
-      const rCount = rec[4]
+        if (!item || !player) continue
 
-      const rolls = [] as any[]
-      if (rCount > 0) {
-        let cursor = 5
-        for (let i = 0; i < rCount; i++) {
-          if (cursor + 2 >= rec.length) break
-          rolls.push({
-            player: playerDict[rec[cursor]],
-            value: rec[cursor + 1],
-            type: ROLL_TYPES[rec[cursor + 2]] || 'need',
-          })
-          cursor += 3
+        const recordKey =
+          key && typeof key === 'string'
+            ? key
+            : `${ts}_${item}_${player}_${Math.random().toString(36).slice(2)}`
+
+        if (currentKeys.has(recordKey) || blacklistedKeys.value.has(recordKey))
+          continue
+
+        const sig = `${ts}|${item}|${player}`
+        if (!existingSigs.has(sig)) {
+          newRecords.push({
+            key: recordKey,
+            timestamp: new Date(ts),
+            item,
+            player,
+            rolls,
+            source: 'import',
+            id: '',
+          } as LootRecord)
+          existingSigs.add(sig)
+          currentKeys.add(recordKey)
         }
       }
 
-      if (!item || !player) continue
+      if (newRecords.length > 0) {
+        await dbRecords.bulkSet(JSON.parse(JSON.stringify(newRecords)))
+        lootRecords.value = [...lootRecords.value, ...newRecords].sort(
+          (a, b) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+        )
+        existingKeys.value = new Set(lootRecords.value.map((r) => r.key))
+        
+        handlePotentialDuplicates(newRecords, 'import')
 
-      const recordKey =
-        key && typeof key === 'string'
-          ? key
-          : `${ts}_${item}_${player}_${Math.random().toString(36).slice(2)}`
-
-      if (currentKeys.has(recordKey) || blacklistedKeys.value.has(recordKey))
-        continue
-
-      const sig = `${ts}|${item}|${player}`
-      if (!existingSigs.has(sig)) {
-        newRecords.push({
-          key: recordKey,
-          timestamp: new Date(ts),
-          item,
-          player,
-          rolls,
-          source: 'import',
-          id: '',
-        } as LootRecord)
-        existingSigs.add(sig)
-        currentKeys.add(recordKey)
+        ElMessage.success({
+          message: `成功导入 ${newRecords.length} 条新记录`,
+          showClose: true,
+        })
       }
     }
 
-    if (newRecords.length > 0) {
-      await dbRecords.bulkSet(JSON.parse(JSON.stringify(newRecords)))
-      lootRecords.value = [...lootRecords.value, ...newRecords].sort(
-        (a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-      )
-      newRecords.forEach((r) => currentKeys.add(r.key))
-      existingKeys.value = new Set(lootRecords.value.map((r) => r.key))
-      ElMessage.success({
-        message: `成功导入 ${newRecords.length} 条新记录`,
-        showClose: true,
-      })
-    } else {
-      ElMessage.info({
-        message: '未发现新记录，所有数据已存在',
-        showClose: true,
-      })
-    }
     loading.close()
-  } catch (_err) {
-    if (_err !== 'cancel') {
-      console.error(_err)
-      ElMessage.error({ message: '导入出错', showClose: true })
-    }
+    showImportConfirmDialog.value = false
+    importDataPending.value = null
+  } catch (err) {
+    console.error(err)
+    ElMessage.error({ message: '导入失败', showClose: true })
   }
 }
 
@@ -6269,4 +6479,74 @@ html.dark {
     background: rgba(255, 255, 255, 0.1);
   }
 }
+
+.export-selection-list, .import-selection-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.import-preview-box {
+  .import-hint-text {
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: #64748b;
+  }
+}
+
+.import-warning-info {
+  margin-top: 20px;
+  padding: 10px 12px;
+  background-color: #fff7ed;
+  border: 1px solid #ffedd5;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #c2410c;
+  font-size: 12px;
+
+  .el-icon {
+    font-size: 16px;
+  }
+}
+
+.import-success-info {
+  margin-top: 20px;
+  padding: 10px 12px;
+  background-color: #f0fdf4;
+  border: 1px solid #dcfce7;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #16a34a;
+  font-size: 12px;
+
+  .el-icon {
+    font-size: 16px;
+  }
+}
+
+.import-identical-hint {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-left: 8px;
+  font-weight: normal;
+}
+
+html.dark {
+  .import-warning-info {
+    background-color: rgba(194, 65, 12, 0.1);
+    border-color: rgba(194, 65, 12, 0.2);
+    color: #fb923c;
+  }
+  .import-success-info {
+    background-color: rgba(22, 163, 74, 0.1);
+    border-color: rgba(22, 163, 74, 0.2);
+    color: #4ade80;
+  }
+}
+
 </style>
