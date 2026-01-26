@@ -70,19 +70,21 @@ function updateValue(val: DisplayFilterMode) {
     color: #3b82f6;
     font-weight: 700;
   }
+}
+</style>
 
-  :global(.dark) & {
-    color: #94a3b8;
+<style lang="scss">
+html.dark .filter-segmented .segment-item {
+  color: #94a3b8;
 
-    &:hover {
-      background: rgba(59, 130, 246, 0.1);
-      color: #3b82f6;
-    }
+  &:hover {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+  }
 
-    &.is-active {
-      background: rgba(59, 130, 246, 0.2);
-      color: #3b82f6;
-    }
+  &.is-active {
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
   }
 }
 </style>

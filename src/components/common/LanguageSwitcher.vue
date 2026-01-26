@@ -63,26 +63,34 @@ onMounted(() => {
   height: 18px;
   color: #007bff;
   margin-right: 5px;
-
-  :global(.dark) & {
-    color: #3b82f6;
-  }
 }
 
 .language-select {
   width: 5.5em;
 
   :deep(.el-input__wrapper) {
-    :global(.dark) & {
-      background-color: #1e293b;
-      box-shadow: 0 0 0 1px #334155 inset;
-    }
+    background-color: transparent;
   }
 
   :deep(.el-input__inner) {
-    :global(.dark) & {
-      color: #f1f5f9;
-    }
+    color: inherit;
+  }
+}
+</style>
+
+<style lang="scss">
+html.dark .language-switcher .globe-icon {
+  color: #3b82f6;
+}
+
+html.dark .language-switcher .language-select {
+  .el-input__wrapper {
+    background-color: #1e293b;
+    box-shadow: 0 0 0 1px #334155 inset;
+  }
+
+  .el-input__inner {
+    color: #f1f5f9;
   }
 }
 </style>

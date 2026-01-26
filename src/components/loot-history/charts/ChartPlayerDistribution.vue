@@ -180,11 +180,6 @@ const option = computed(() => {
   height: 400px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.02);
   transition: all 0.3s ease;
-
-  :global(.dark) & {
-    background-color: #252632;
-    border-color: rgba(255, 255, 255, 0.08);
-  }
 }
 
 .chart-header {
@@ -197,20 +192,12 @@ const option = computed(() => {
   font-weight: 700;
   color: #1e293b;
   transition: color 0.3s;
-
-  :global(.dark) & {
-    color: rgba(255, 255, 255, 0.9);
-  }
 }
 
 .chart-subtitle {
   font-size: 12px;
   color: #64748b;
   margin-top: 4px;
-
-  :global(.dark) & {
-    color: #94a3b8;
-  }
 }
 
 .chart-body {
@@ -224,5 +211,20 @@ const option = computed(() => {
   width: 100%;
   height: 100%;
   min-height: 300px;
+}
+</style>
+
+<style lang="scss">
+html.dark .chart-container {
+  background-color: #252632;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+html.dark .chart-title {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+html.dark .chart-subtitle {
+  color: #94a3b8;
 }
 </style>

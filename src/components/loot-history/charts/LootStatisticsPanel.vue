@@ -51,10 +51,6 @@ defineProps<{
   background: #f8fafc;
   min-height: 400px;
   transition: background-color 0.3s;
-
-  :global(.dark) & {
-    background: #161823;
-  }
 }
 
 .charts-grid {
@@ -72,5 +68,11 @@ defineProps<{
   .charts-grid {
     grid-template-columns: 1fr;
   }
+}
+</style>
+
+<style lang="scss">
+html.dark .stats-panel {
+  background: #161823;
 }
 </style>
