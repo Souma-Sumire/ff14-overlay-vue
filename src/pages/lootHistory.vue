@@ -474,15 +474,22 @@
                   </template>
                   <div class="popover-form">
                     <div class="merge-selector-box">
-                      <div class="selector-title">选择两个玩家进行合并：</div>
+                      <div class="selector-title">合并玩家记录：</div>
+                      <div class="merge-guide-desc">
+                        1. 先点击选择<span class="text-hide">将被合并(隐身)</span>的角色<br/>
+                        2. 再点击选择<span class="text-show">最终显示(大号)</span>的角色
+                      </div>
                       <div class="selector-tags">
                         <el-check-tag
                           v-for="p in selectablePlayersForMerge"
                           :key="p"
                           :checked="selectionForMerge.includes(p)"
                           @change="handlePlayerSelectForMerge(p)"
+                          class="merge-check-tag"
                         >
-                          {{ p }}
+                          <span class="tag-label-name">{{ p }}</span>
+                          <span v-if="selectionForMerge[0] === p" class="tag-role-hint hide">将被隐身</span>
+                          <span v-if="selectionForMerge[1] === p" class="tag-role-hint show">最终显示</span>
                         </el-check-tag>
                       </div>
                       <div
@@ -495,8 +502,7 @@
                           @click="confirmMergeSelection"
                           style="width: 100%"
                         >
-                          确认合并: {{ selectionForMerge[0] }} ->
-                          {{ selectionForMerge[1] }}
+                          确认将 {{ selectionForMerge[0] }} 合并至 {{ selectionForMerge[1] }}
                         </el-button>
                       </div>
                     </div>
@@ -529,16 +535,28 @@
                     >
                       <div class="selector-title">当前合并映射:</div>
                       <div class="mapping-list">
-                        <el-tag
+                        <div
                           v-for="(to, from) in playerMapping"
                           :key="from"
-                          closable
-                          size="small"
-                          type="info"
-                          @close="removeMapping(from)"
+                          class="mapping-item-row"
                         >
-                          {{ from }} → {{ to }}
-                        </el-tag>
+                          <div class="map-from">
+                            <span class="map-tag-hint">隐身</span>
+                            {{ from }}
+                          </div>
+                          <el-icon class="map-arrow"><Right /></el-icon>
+                          <div class="map-to">
+                            <span class="map-tag-hint">显示</span>
+                            {{ to }}
+                          </div>
+                          <el-button 
+                            link 
+                            type="danger" 
+                            :icon="Delete" 
+                            @click="removeMapping(from)"
+                            class="map-remove"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -4349,7 +4367,19 @@ html.dark .loading-sub-txt {
   font-size: 11px;
   font-weight: 800;
   color: var(--text-secondary);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+}
+.merge-guide-desc {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #64748b;
+  margin-bottom: 12px;
+  padding: 8px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border-left: 3px solid #cbd5e1;
+  .text-hide { color: #ef4444; font-weight: bold; margin: 0 2px; }
+  .text-show { color: #3b82f6; font-weight: bold; margin: 0 2px; }
 }
 
 .selector-tags {
@@ -4373,19 +4403,50 @@ html.dark .loading-sub-txt {
 
 .selector-tags :deep(.el-check-tag) {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 32px;
-  padding: 0 4px;
+  height: 48px;
+  padding: 4px;
   font-size: 13px;
   font-weight: normal;
   box-sizing: border-box;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   margin: 0;
-  border-radius: 4px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+
+  &.is-checked {
+    background: #eff6ff;
+    border-color: #3b82f6;
+  }
+
+  .tag-label-name {
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .tag-role-hint {
+    font-size: 10px;
+    font-weight: bold;
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin-top: 2px;
+    transform: scale(0.9);
+
+    &.hide {
+      background: #fee2e2;
+      color: #ef4444;
+    }
+    &.show {
+      background: #dcfce7;
+      color: #10b981;
+    }
+  }
 }
 
 .selector-tags::-webkit-scrollbar {
@@ -4414,6 +4475,75 @@ html.dark .loading-sub-txt {
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
+}
+
+.mapping-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.mapping-item-row {
+  display: flex;
+  align-items: center;
+  background: #f8fafc;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  gap: 6px;
+
+  .map-from, .map-to {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1e293b;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .map-tag-hint {
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    opacity: 0.6;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+
+  .map-arrow {
+    color: #94a3b8;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .map-remove {
+    flex-shrink: 0;
+    padding: 2px !important;
+    height: auto !important;
+    &:hover {
+      color: #ef4444;
+    }
+  }
+}
+
+html.dark {
+  .merge-guide-desc {
+    background: rgba(255, 255, 255, 0.03);
+    border-left-color: rgba(255, 255, 255, 0.1);
+  }
+  .mapping-item-row {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+    .map-from, .map-to {
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
 }
 .role-config-list {
   display: flex;
