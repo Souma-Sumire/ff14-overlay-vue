@@ -10,7 +10,6 @@ import Markdown from 'vite-plugin-md'
 import Pages from 'vite-plugin-pages'
 import sassDts from 'vite-plugin-sass-dts'
 
-
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '/ff14-overlay-vue/',
@@ -29,6 +28,40 @@ export default defineConfig({
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('element-plus')) {
+              return 'vendor-element-plus'
+            }
+            if (id.includes('echarts') || id.includes('vue-echarts')) {
+              return 'vendor-echarts'
+            }
+            if (
+              id.includes('vue') ||
+              id.includes('pinia') ||
+              id.includes('vue-router')
+            ) {
+              return 'vendor-vue'
+            }
+            return 'vendor-other'
+          }
+
+          if (id.includes('/src/components/common/')) {
+            return 'shared-common'
+          }
+
+          if (
+            id.includes('/src/utils/') ||
+            id.includes('/src/store/') ||
+            id.includes('/src/composables/')
+          ) {
+            return 'shared-core'
+          }
+
+          if (id.includes('cactbot/')) {
+            return 'cactbot'
+          }
+        },
       },
       onwarn(warning, warn) {
         if (
