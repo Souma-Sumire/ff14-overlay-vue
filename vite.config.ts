@@ -10,6 +10,28 @@ import Markdown from 'vite-plugin-md'
 import Pages from 'vite-plugin-pages'
 import sassDts from 'vite-plugin-sass-dts'
 
+function injectBuildTime() {
+  return {
+    name: 'inject-build-time',
+    transformIndexHtml(html: string) {
+      const buildTime = new Date().toLocaleString('zh-CN', {
+        timeZone: 'Asia/Shanghai',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      })
+      return html.replace(
+        '</head>',
+        `  <meta name="build-time" content="${buildTime}" />\n  </head>`
+      )
+    },
+  }
+}
+
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '/ff14-overlay-vue/',
@@ -107,6 +129,7 @@ export default defineConfig({
     Unocss(),
     Pages(),
     sassDts(),
+    injectBuildTime(),
   ],
   define: {
     __VUE_OPTIONS_API__: false,
