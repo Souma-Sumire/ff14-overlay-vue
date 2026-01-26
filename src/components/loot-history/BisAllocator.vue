@@ -245,9 +245,10 @@
                       >
                       <div class="preset-apply-zone">
                         <el-dropdown
-                          v-if="getPresetsForRole(getPlayerRole?.(p)).length > 0"
+                          v-if="hasAnyPresets(p)"
                           trigger="click"
                           @command="(cmd: any) => applyPreset(p, cmd)"
+                          @visible-change="(v: boolean) => !v && expandedPlayerPresets.delete(p)"
                           popper-class="bis-preset-popper"
                         >
                           <el-button
@@ -259,10 +260,9 @@
                           </el-button>
                           <template #dropdown>
                             <el-dropdown-menu class="bis-preset-dropdown">
+                              <!-- 推荐预设 -->
                               <el-dropdown-item
-                                v-for="preset in getPresetsForRole(
-                                  getPlayerRole?.(p),
-                                )"
+                                v-for="preset in getPresetsForRole(getPlayerRole?.(p)).recommended"
                                 :key="preset.name"
                                 :command="preset"
                               >
@@ -271,6 +271,48 @@
                                   <span>{{ preset.name }}</span>
                                 </div>
                               </el-dropdown-item>
+                              
+                              <!-- 逻辑：如果没有推荐项，直接显示全部；如果有且未展开，显示展开按钮 -->
+                              <template v-if="getPresetsForRole(getPlayerRole?.(p)).recommended.length === 0">
+                                <el-dropdown-item
+                                  v-for="preset in getPresetsForRole(getPlayerRole?.(p)).others"
+                                  :key="preset.name"
+                                  :command="preset"
+                                >
+                                  <div class="preset-item-content">
+                                    <el-icon><MagicStick /></el-icon>
+                                    <span>{{ preset.name }}</span>
+                                  </div>
+                                </el-dropdown-item>
+                              </template>
+
+                              <template v-else-if="getPresetsForRole(getPlayerRole?.(p)).others.length > 0">
+                                <div 
+                                  v-if="!expandedPlayerPresets.has(p)"
+                                  class="preset-expand-divider"
+                                  @click.stop="expandedPlayerPresets.add(p)"
+                                >
+                                  <div class="divider-line"></div>
+                                  <div class="expand-action">
+                                    <span>更多同职能预设</span>
+                                    <el-icon><ArrowDown /></el-icon>
+                                  </div>
+                                  <div class="divider-line"></div>
+                                </div>
+                                <template v-else>
+                                  <el-dropdown-item
+                                    v-for="(preset, idx) in getPresetsForRole(getPlayerRole?.(p)).others"
+                                    :key="preset.name"
+                                    :command="preset"
+                                    :divided="idx === 0"
+                                  >
+                                    <div class="preset-item-content">
+                                      <el-icon><MagicStick /></el-icon>
+                                      <span>{{ preset.name }}</span>
+                                    </div>
+                                  </el-dropdown-item>
+                                </template>
+                              </template>
                             </el-dropdown-menu>
                           </template>
                         </el-dropdown>
@@ -404,6 +446,57 @@
             type="primary"
             @click="confirmImportBis"
             :disabled="importDiffs.length === 0"
+          >
+            确认应用
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <el-dialog
+      v-model="showPresetConfirmDialog"
+      title="确认预设变更"
+      width="600px"
+      append-to-body
+      destroy-on-close
+      align-center
+    >
+      <div v-if="pendingPresetData?.diff" class="import-diff-container">
+        <p class="import-summary">
+          应用 [{{ pendingPresetData.preset.name }}] 将会产生以下变更：
+        </p>
+        <div class="diff-card">
+          <div class="diff-header">
+            <PlayerDisplay
+              :name="pendingPresetData.diff.name"
+              :role="pendingPresetData.diff.role"
+              :show-only-role="false"
+            />
+            <span class="diff-tag" v-if="pendingPresetData.diff.isNew">新设置</span>
+            <span class="diff-tag update" v-else>更新</span>
+          </div>
+          <div class="diff-items">
+            <div
+              v-for="(change, idx) in pendingPresetData.diff.changes"
+              :key="idx"
+              class="diff-row"
+            >
+              <span class="diff-label">{{ change.label }}</span>
+              <div class="diff-values">
+                <span class="val old">{{ change.oldVal }}</span>
+                <el-icon><Right /></el-icon>
+                <span class="val new">{{ change.newVal }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <div class="dialog-footer" style="justify-content: flex-end; gap: 12px">
+          <el-button @click="showPresetConfirmDialog = false">取消</el-button>
+          <el-button
+            type="primary"
+            @click="confirmApplyPreset"
           >
             确认应用
           </el-button>
@@ -645,7 +738,9 @@ interface PlayerDiff {
 }
 
 const showImportConfirmDialog = ref(false)
+const showPresetConfirmDialog = ref(false)
 const importDiffs = ref<PlayerDiff[]>([])
+const pendingPresetData = ref<{ player: string; preset: BisPreset; diff: PlayerDiff | null } | null>(null)
 
 function getValDisplay(row: BisRow, val: BisValue | undefined): string {
   if (row.type === 'toggle') {
@@ -815,13 +910,57 @@ function setNeededCount(player: string, rowId: string, count: number) {
 
 function applyPreset(player: string, preset: BisPreset) {
   const storageKey = getStorageKey(player)
+  const currentConfig = config.value.playerBis[storageKey] || {}
+  const newConfig = { ...preset.config }
+  
+  const changes: BisChange[] = []
+  DEFAULT_ROWS.forEach((row) => {
+    const oldV = currentConfig[row.id]
+    const newV = newConfig[row.id]
+
+    const sOld = getValDisplay(row, oldV)
+    const sNew = getValDisplay(row, newV)
+
+    if (sOld !== sNew) {
+      changes.push({
+        label: row.name,
+        oldVal: sOld,
+        newVal: sNew,
+      })
+    }
+  })
+
+  if (changes.length === 0) {
+    ElMessage.info('当前设置已是最新预设，无需更改')
+    return
+  }
+
+  const diff: PlayerDiff = {
+    name: player,
+    role: props.getPlayerRole?.(player) || 'Unknown',
+    isNew: Object.keys(currentConfig).length === 0,
+    changes,
+    newConfig,
+  }
+
+  pendingPresetData.value = { player, preset, diff }
+  showPresetConfirmDialog.value = true
+}
+
+function confirmApplyPreset() {
+  if (!pendingPresetData.value?.diff) return
+  
+  const { player, preset, diff } = pendingPresetData.value
+  const storageKey = getStorageKey(player)
+  
   if (!config.value.playerBis[storageKey]) {
     config.value.playerBis[storageKey] = {}
   }
 
-  // 直接合并预设配置
-  Object.assign(config.value.playerBis[storageKey], preset.config)
-
+  Object.assign(config.value.playerBis[storageKey], diff.newConfig)
+  
+  showPresetConfirmDialog.value = false
+  pendingPresetData.value = null
   ElMessage.success(`已应用预设: ${preset.name} (${player})`)
 }
 
@@ -906,6 +1045,14 @@ function isEligible(player: string) {
 const eligiblePlayers = computed(() => {
   return props.players.filter(isEligible)
 })
+
+const expandedPlayerPresets = ref<Set<string>>(new Set())
+
+function hasAnyPresets(player: string) {
+  const role = props.getPlayerRole?.(player)
+  const presets = getPresetsForRole(role)
+  return presets.recommended.length > 0 || presets.others.length > 0
+}
 
 const isConfigComplete = computed(() => {
   for (const role of ROLE_DEFINITIONS) {
@@ -1494,6 +1641,66 @@ const validationAlerts = computed(() => {
 
 .bis-table th.sticky-col {
   z-index: 20;
+}
+
+.preset-expand-divider {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+
+  .divider-line {
+    flex: 1;
+    height: 1px;
+    background: #e2e8f0;
+
+    html.dark & {
+      background: #334155;
+    }
+  }
+
+  .expand-action {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 8px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #94a3b8;
+    white-space: nowrap;
+
+    &:hover {
+      color: #3b82f6;
+    }
+  }
+
+  &:hover {
+    .expand-action {
+      color: #3b82f6;
+    }
+    .divider-line {
+      background: #cbd5e1;
+    }
+  }
+}
+
+.bis-preset-dropdown {
+  max-height: 320px;
+  overflow-y: auto;
+  
+  :deep(.el-dropdown-menu__item) {
+    padding: 0 8px;
+    line-height: 20px;
+    height: auto;
+    font-size: 12px;
+
+    .el-icon {
+      font-size: 12px;
+      margin-right: 4px;
+    }
+  }
 }
 
 .status-need {
