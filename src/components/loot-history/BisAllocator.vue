@@ -431,9 +431,9 @@
             >
               <span class="diff-label">{{ change.label }}</span>
               <div class="diff-values">
-                <span class="val old">{{ change.oldVal }}</span>
+                <span class="val old" :class="getValClass(change.oldVal)">{{ change.oldVal }}</span>
                 <el-icon><Right /></el-icon>
-                <span class="val new">{{ change.newVal }}</span>
+                <span class="val new" :class="getValClass(change.newVal)">{{ change.newVal }}</span>
               </div>
             </div>
           </div>
@@ -483,9 +483,9 @@
             >
               <span class="diff-label">{{ change.label }}</span>
               <div class="diff-values">
-                <span class="val old">{{ change.oldVal }}</span>
+                <span class="val old" :class="getValClass(change.oldVal)">{{ change.oldVal }}</span>
                 <el-icon><Right /></el-icon>
-                <span class="val new">{{ change.newVal }}</span>
+                <span class="val new" :class="getValClass(change.newVal)">{{ change.newVal }}</span>
               </div>
             </div>
           </div>
@@ -751,6 +751,12 @@ function getValDisplay(row: BisRow, val: BisValue | undefined): string {
   return (val || 1).toString()
 }
 
+function getValClass(val: string) {
+  if (val === '零式') return 'is-raid'
+  if (val === '点数') return 'is-tome'
+  return ''
+}
+
 function parseAndPreviewBisData(rawInput: string) {
   try {
     const trimmedVal = rawInput.trim()
@@ -931,7 +937,7 @@ function applyPreset(player: string, preset: BisPreset) {
   })
 
   if (changes.length === 0) {
-    ElMessage.info('当前设置已是最新预设，无需更改')
+    ElMessage.info('当前设置与预设相同，无需更改')
     return
   }
 
@@ -1835,7 +1841,7 @@ const validationAlerts = computed(() => {
 .preset-item-content {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 2px;
   padding: 4px 0;
   font-weight: 500;
   
@@ -2060,15 +2066,30 @@ html.dark {
   gap: 8px;
 
   .val {
-    font-weight: 600;
+    font-weight: 700;
 
     &.old {
       color: #94a3b8;
       text-decoration: line-through;
+      opacity: 0.6;
     }
 
     &.new {
       color: #3b82f6;
+    }
+
+    &.is-raid {
+      color: #15803d !important;
+      html.dark & {
+        color: #6ee7b7 !important;
+      }
+    }
+
+    &.is-tome {
+      color: #0369a1 !important;
+      html.dark & {
+        color: #7dd3fc !important;
+      }
     }
   }
 }
