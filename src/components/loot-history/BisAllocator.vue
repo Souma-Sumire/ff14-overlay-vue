@@ -63,36 +63,6 @@
         </div>
       </el-popover>
 
-      <el-dropdown
-        trigger="click"
-        :hide-on-click="false"
-        max-height="400px"
-        v-if="isConfigComplete"
-      >
-        <el-button size="small" type="warning" plain style="margin-left: 12px">
-          <el-icon style="margin-right: 4px"><User /></el-icon>
-          设置请假
-        </el-button>
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item v-for="p in eligiblePlayers" :key="p">
-              <el-checkbox
-                :model-value="excludedPlayers.has(p)"
-                @change="togglePlayerExclusion(p)"
-                size="small"
-                style="width: 100%"
-              >
-                {{ props.getPlayerRole?.(p) || p }}
-                <span
-                  v-if="excludedPlayers.has(p)"
-                  style="font-size: 12px; color: #909399; margin-left: 4px"
-                  >(请假)</span
-                >
-              </el-checkbox>
-            </el-dropdown-item>
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
     </div>
 
     <div v-if="isConfigComplete" class="bis-view-panel">
@@ -109,11 +79,26 @@
                 :key="p"
                 :class="{ 'is-excluded': excludedPlayers.has(p) }"
               >
-                <PlayerDisplay
-                  :name="p"
-                  :role="getPlayerRole?.(p)"
-                  :show-only-role="showOnlyRole"
-                />
+                <div class="premium-header-player">
+                  <PlayerDisplay
+                    :name="p"
+                    :role="getPlayerRole?.(p)"
+                    :show-only-role="showOnlyRole"
+                  />
+                  <div 
+                    class="leave-tag-trigger" 
+                    :class="{ 'is-away': excludedPlayers.has(p), 'is-disabled': isPlayerAssigned(p) }"
+                    @click.stop="isPlayerAssigned(p) ? null : togglePlayerExclusion(p)"
+                  >
+                    <template v-if="excludedPlayers.has(p)">
+                      <span>已请假</span>
+                    </template>
+                    <template v-else>
+                      <el-icon style="margin-right: 2px"><User /></el-icon>
+                      <span>请假</span>
+                    </template>
+                  </div>
+                </div>
               </th>
             </tr>
           </thead>
@@ -131,7 +116,72 @@
                 >
                   {{ layer.name }}
                 </td>
-                <td class="sticky-col col-item row-header">{{ row.name }}</td>
+                <td class="sticky-col col-item row-header">
+                  <div class="equip-cell-content">
+                    <span>{{ row.name }}</span>
+                    <el-tooltip
+                      v-model:visible="tooltipsOpen[row.id]"
+                      placement="right"
+                      trigger="click"
+                      popper-class="captain-player-tooltip-new"
+                      effect="dark"
+                      :offset="15"
+                      :hide-after="0"
+                    >
+                      <template #content>
+                        <div class="tooltip-title">将 <span>{{ row.name }}</span> 分配给</div>
+                        <div class="tooltip-player-list">
+                          <div
+                            v-for="p in eligiblePlayers"
+                            :key="p"
+                            class="tooltip-player-item"
+                            :class="{
+                              'is-disabled': excludedPlayers.has(p),
+                              'is-active': customAllocations[row.id] === p
+                            }"
+                            @click="!excludedPlayers.has(p) && (customAllocations[row.id] = p)"
+                          >
+                            <div class="player-option-item">
+                              <PlayerDisplay
+                                :name="p"
+                                :role="getPlayerRole?.(p)"
+                                :show-only-role="false"
+                              />
+                              <span :class="['mini-status-tag', getOriginalStatus(p, row)]">
+                                {{ STATUS_MAP[getOriginalStatus(p, row)].text }}
+                              </span>
+                            </div>
+                          </div>
+                          <div v-if="customAllocations[row.id]" class="tooltip-divider"></div>
+                          <div
+                            v-if="customAllocations[row.id]"
+                            class="tooltip-player-item clear-btn"
+                            @click="customAllocations[row.id] = ''"
+                          >
+                            <el-icon><Delete /></el-icon>
+                            <span>取消分配</span>
+                          </div>
+                        </div>
+                      </template>
+                      <div 
+                        class="assign-tag-trigger" 
+                        :class="{ 
+                          'is-active': customAllocations[row.id],
+                          'is-open': tooltipsOpen[row.id]
+                        }"
+                      >
+                        <template v-if="customAllocations[row.id]">
+                          <span class="p-role">{{ props.getPlayerRole?.(customAllocations[row.id]!) || customAllocations[row.id] }}</span>
+                          <span class="p-status">已分配</span>
+                        </template>
+                        <template v-else>
+                          <el-icon style="margin-right: 2px"><Plus /></el-icon>
+                          <span>分配</span>
+                        </template>
+                      </div>
+                    </el-tooltip>
+                  </div>
+                </td>
                 <td
                   v-for="p in eligiblePlayers"
                   :key="p"
@@ -524,10 +574,12 @@ import {
   QuestionFilled,
   Right,
   Setting,
-  User,
   InfoFilled,
   Warning,
   MagicStick,
+  Delete,
+  Plus,
+  User,
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { computed, ref, watch } from 'vue'
@@ -538,11 +590,22 @@ import { getCurrentWeekNumber } from '@/utils/raidWeekUtils'
 import PlayerDisplay from './PlayerDisplay.vue'
 import { getPresetsForRole, type BisPreset } from '@/utils/bisPresets'
 
+const tooltipsOpen = ref<Record<string, boolean>>({})
+
 function generateEquipLines(rows: BisRow[]): string[] {
   const lines: string[] = []
   rows.forEach((row) => {
     const needs: string[] = []
     const greeds: string[] = []
+
+    // 队长分配具有最高优先级
+    if (customAllocations.value[row.id]) {
+      const p = customAllocations.value[row.id]!
+      let displayName = props.getPlayerRole?.(p) || p
+      displayName = displayName.replace(/^LEFT:/, '').trim()
+      lines.push(`/p ${row.name}：${displayName} (队长分配)`)
+      return
+    }
 
     eligiblePlayers.value.forEach((p) => {
       if (excludedPlayers.value.has(p)) return
@@ -627,6 +690,11 @@ const emit = defineEmits<{
 
 const showConfigDialog = ref(false)
 const excludedPlayers = ref<Set<string>>(new Set())
+const customAllocations = ref<Record<string, string>>({})
+
+function isPlayerAssigned(player: string): boolean {
+  return Object.values(customAllocations.value).includes(player)
+}
 
 const config = ref<BisConfig>({
   playerBis: {},
@@ -995,6 +1063,27 @@ function hasObtained(player: string, row: BisRow): boolean {
 function getLogicStatus(
   player: string,
   row: BisRow,
+): 'need' | 'greed' | 'pass' | 'assigned' {
+  const customAlloc = customAllocations.value[row.id]
+  
+  // 队长分配具有最高优先级
+  if (customAlloc) {
+    if (customAlloc === player) return 'assigned'
+    return 'pass' // 有分配时，其余所有人显示为放弃
+  }
+
+  if (row.type === 'count') {
+    const needed = getNeededCount(player, row.id)
+    if (needed === 0) return 'greed'
+    return getObtainedCount(player, row) >= needed ? 'pass' : 'need'
+  }
+  if (hasObtained(player, row)) return 'pass'
+  return getBisValue(player, row.id) === 'raid' ? 'need' : 'greed'
+}
+
+function getOriginalStatus(
+  player: string,
+  row: BisRow,
 ): 'need' | 'greed' | 'pass' {
   if (row.type === 'count') {
     const needed = getNeededCount(player, row.id)
@@ -1122,6 +1211,7 @@ const STATUS_MAP = {
   pass: { text: '放弃', class: 'status-pass' },
   need: { text: '需求', class: 'status-need' },
   greed: { text: '贪婪', class: 'status-greed-tome' },
+  assigned: { text: '分配', class: 'status-assigned' },
 } as const
 
 function getBisValue(player: string, rowId: string): BisValue | undefined {
@@ -1404,6 +1494,231 @@ const validationAlerts = computed(() => {
   }
 }
 
+.captain-alloc-menu {
+  width: 240px;
+  padding: 0;
+  // 移除自定义背景和边框，使用 Element Plus 默认风格
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+
+  .captain-menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px 4px;
+    font-size: 11px;
+    font-weight: bold;
+    color: #94a3b8 !important; // 强制灰蓝色
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    
+    span {
+      color: #94a3b8 !important; // 再次确保文字不红
+    }
+    
+    .el-button {
+      padding: 0;
+      height: auto;
+      font-size: 11px;
+      color: #f87171 !important; // 仅清空按钮红
+    }
+  }
+
+  .captain-menu-scroll {
+    max-height: 480px;
+    overflow-y: auto;
+    padding-bottom: 4px;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 2px;
+    }
+  }
+
+  .layer-group-title {
+    padding: 4px 16px 2px;
+    font-size: 10px;
+    font-weight: bold;
+    color: #3b82f6;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    opacity: 0.8;
+  }
+
+  .alloc-row-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0px 12px 0px 16px; // 极致压缩垂直间距
+    gap: 4px; // 缩小 gap
+
+    .item-name {
+      font-size: 11px;
+      color: #71717a;
+      white-space: nowrap;
+      html.dark & {
+        color: #a1a1aa;
+      }
+    }
+
+    .compact-assign-trigger {
+      width: 90px;
+      height: 18px; // 强制更矮
+      background: rgba(0, 0, 0, 0.03);
+      border: 1px solid #e4e7ed;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      .trigger-text {
+        font-size: 10px; // 字体微调
+        color: #71717a;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .trigger-icon {
+        font-size: 9px;
+        color: #94a3b8;
+      }
+
+      &:hover {
+        background: #fff;
+        border-color: #3b82f6;
+        .trigger-text { color: #3b82f6; }
+      }
+
+      &.has-val {
+        background: #f0fdf4;
+        border-color: #bbf7d0;
+        .trigger-text { color: #16a34a; font-weight: 700; }
+      }
+
+      html.dark & {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: #334155;
+        .trigger-text { color: #9ca3af; }
+        
+        &:hover {
+          background: rgba(255, 255, 255, 0.08);
+          border-color: #3b82f6;
+        }
+
+        &.has-val {
+          background: rgba(16, 185, 129, 0.1);
+          border-color: rgba(16, 185, 129, 0.2);
+          .trigger-text { color: #10b981; }
+        }
+      }
+    }
+  }
+}
+
+.exclude-players-menu {
+  width: 200px;
+  padding: 0;
+
+  .captain-menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px 4px;
+    font-size: 11px;
+    font-weight: bold;
+    color: #94a3b8 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+
+    span {
+      color: #94a3b8 !important;
+    }
+
+    .el-button {
+      padding: 0;
+      height: auto;
+      font-size: 11px;
+      color: #f87171 !important;
+    }
+  }
+  
+  .exclude-menu-scroll {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 4px 0;
+  }
+}
+
+.player-option-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px; // 缩小 gap
+}
+
+// 队长分配专用下拉框样式
+.captain-player-popper {
+  :deep(.el-select-dropdown__wrap) {
+    max-height: none !important; // 移除滚动条高度限制
+  }
+  :deep(.el-select-dropdown__list) {
+    padding: 2px 0;
+  }
+  :deep(.el-select-dropdown__item) {
+    height: 26px !important; // 压缩行高
+    line-height: 26px !important;
+    padding: 0 12px;
+    
+    &.is-disabled {
+      background-color: transparent !important;
+    }
+  }
+}
+
+.mini-status-tag {
+  font-size: 10px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-weight: bold;
+  line-height: 1;
+  
+  &.need {
+    color: #16a34a;
+    background: #f0fdf4;
+    html.dark & {
+      color: #4ade80;
+      background: rgba(22, 163, 74, 0.2);
+    }
+  }
+  &.greed {
+    color: #0284c7;
+    background: #f0f9ff;
+    html.dark & {
+      color: #38bdf8;
+      background: rgba(12, 74, 110, 0.2);
+    }
+  }
+  &.pass {
+    color: #94a3b8;
+    background: #f8fafc;
+    html.dark & {
+      color: #64748b;
+      background: rgba(255, 255, 255, 0.05);
+    }
+  }
+}
+
+
+
 .validation-alerts {
   display: flex;
   flex-direction: column;
@@ -1521,7 +1836,7 @@ const validationAlerts = computed(() => {
   }
 
   .col-item {
-    width: 70px;
+    width: 60px;
     left: 32px;
     font-weight: 700;
     color: #334155;
@@ -1556,7 +1871,7 @@ const validationAlerts = computed(() => {
     }
 
     .sticky-col {
-      width: 100px;
+      width: 85px;
       border-left: none !important;
       border-right: 1px solid #475569;
     }
@@ -1591,6 +1906,205 @@ const validationAlerts = computed(() => {
     background: none !important;
   }
 }
+
+.premium-header-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 0;
+  
+  .leave-tag-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 18px;
+    min-width: 48px;
+    padding: 0 4px;
+    border-radius: 4px;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 10px;
+    cursor: pointer;
+    user-select: none;
+    font-weight: 500;
+    opacity: 0.45;
+    transition: opacity 0.2s ease;
+    border: 1px solid transparent;
+
+    span { color: inherit; }
+
+    &:hover:not(.is-disabled) {
+      opacity: 1;
+      background: rgba(59, 130, 246, 0.08);
+      color: #3b82f6;
+      border-color: rgba(59, 130, 246, 0.15);
+    }
+
+    &.is-away {
+      opacity: 1 !important;
+      background: #f87171 !important;
+      color: #ffffff !important;
+      font-weight: bold;
+      box-shadow: 0 2px 4px rgba(248, 113, 113, 0.3);
+      border: none;
+      
+      span {
+        color: #ffffff !important;
+      }
+      
+      &:hover {
+        background: #ef4444 !important;
+      }
+    }
+
+    &.is-disabled {
+      opacity: 0.1;
+      cursor: not-allowed;
+    }
+
+    html.dark & {
+      color: #64748b;
+      
+      &:hover:not(.is-disabled) {
+        background: rgba(255, 255, 255, 0.05);
+        color: #f1f5f9;
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      &.is-away {
+        background: #ef4444 !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        border: none;
+        
+        span {
+          color: #ffffff !important;
+        }
+      }
+    }
+  }
+
+  // 移除容器悬停触发 opacity 的逻辑，因为现在默认就有 0.45 透明度
+}
+
+.equip-cell-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px;
+  gap: 4px;
+  height: 100%;
+
+  span {
+    font-size: 11px;
+    color: #475569;
+    font-weight: 700;
+    white-space: nowrap;
+    html.dark & { color: #94a3b8; }
+  }
+
+  .assign-tag-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 18px;
+    min-width: 48px;
+    padding: 0 4px;
+    border-radius: 4px;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 10px;
+    cursor: pointer;
+    user-select: none;
+    font-weight: 500;
+    opacity: 0.45;
+    transition: opacity 0.2s ease;
+    border: 1px solid transparent;
+
+    span { color: inherit; }
+
+    &.is-open {
+      opacity: 1 !important;
+      background: #dcfce7 !important; 
+      color: #10b981 !important;
+      border-color: #10b981 !important;
+      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.15) !important;
+      
+      span { 
+        color: #10b981 !important; 
+        font-weight: 900 !important;
+      }
+    }
+
+    &:hover {
+      opacity: 1;
+      background: rgba(16, 185, 129, 0.08);
+      color: #10b981;
+      border-color: rgba(16, 185, 129, 0.15);
+    }
+
+    &.is-active {
+      opacity: 1 !important; // 已分配状态常驻
+      background: #10b981 !important;
+      color: #ffffff !important;
+      font-weight: bold;
+      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+      border: none;
+      
+      span {
+        color: #ffffff !important;
+      }
+      
+      &:hover {
+        background: #059669 !important;
+      }
+
+      .p-role {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0 3px;
+        border-radius: 2px;
+        margin-right: 3px;
+        font-size: 9px;
+      }
+      .p-status {
+        font-size: 9px;
+      }
+    }
+
+    html.dark & {
+      color: #64748b;
+
+      &.is-open {
+        opacity: 1 !important;
+        background: rgba(16, 185, 129, 0.35) !important; 
+        color: #34d399 !important;
+        border-color: #10b981 !important;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2) !important;
+        
+        span { color: #34d399 !important; }
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: #10b981;
+        border-color: rgba(16, 185, 129, 0.2);
+      }
+
+      &.is-active {
+        background: #10b981 !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        border: none;
+        
+        span {
+          color: #ffffff !important;
+        }
+      }
+    }
+  }
+}
+
 
 .cell-status-container {
   display: flex;
@@ -1720,6 +2234,15 @@ const validationAlerts = computed(() => {
 .status-pass {
   background-color: #f8fafc !important;
   color: #94a3b8 !important;
+}
+.status-assigned {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+  font-weight: 800;
+  border: 1px solid #10b981;
+  box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.2);
+  transform: scale(1.02);
+  z-index: 1;
 }
 
 .row-header {
@@ -1942,6 +2465,14 @@ html.dark {
         background-color: #1e293b !important;
         color: #64748b !important;
       }
+      .status-assigned {
+        background-color: #10b981 !important;
+        color: #064e3b !important;
+        font-weight: 800;
+        border-color: #34d399;
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+        transform: scale(1.02);
+      }
     }
 
     .row-header {
@@ -2116,8 +2647,9 @@ html.dark {
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
     }
+  }
 
-    .table-scroll-wrapper {
+  .table-scroll-wrapper {
       background: #1a1b26;
       border-color: #2d2e3d;
       &::-webkit-scrollbar {
@@ -2130,94 +2662,93 @@ html.dark {
       }
     }
 
-    .bis-table {
-      background-color: #1a1b26;
-      border-top: 1px solid #2d2e3d;
+  .bis-table {
+    background-color: #1a1b26;
+    border-top: 1px solid #2d2e3d;
 
-      th {
-        background-color: #1a1b26 !important;
-        color: #9ca3af;
-        border-right-color: #2d2e3d;
-        border-bottom: 2px solid #232433;
-        font-weight: 600;
-      }
-
-      td {
-        background-color: #1a1b26 !important;
-        border-right-color: #2d2e3d;
-        border-bottom-color: #232433;
-        color: #d1d5db;
-      }
-
-      tr:hover td {
-        background-color: rgba(255, 255, 255, 0.02);
-      }
-    }
-
-    .header-incomplete {
-      background-color: rgba(244, 63, 94, 0.1) !important;
-      color: #fb7185 !important;
-    }
-
-    .split-cell {
-      background: #1a1b26;
-      border-color: #2d2e3d;
-      padding: 3px;
-    }
-
-    .half-cell:not(.active) {
-      color: #4b5563;
-      &:hover {
-        background: rgba(255, 255, 255, 0.04);
-        color: #9ca3af;
-      }
-    }
-
-    .half-cell.active {
-      &.left-raid {
-        background: #4f46e5;
-        box-shadow:
-          0 4px 6px -1px rgba(0, 0, 0, 0.3),
-          0 0 10px rgba(79, 70, 229, 0.2);
-      }
-      &.right-tome {
-        background: #0284c7;
-        box-shadow:
-          0 4px 6px -1px rgba(0, 0, 0, 0.3),
-          0 0 10px rgba(2, 132, 199, 0.2);
-      }
-    }
-
-    .mini-stepper {
-      .el-input__wrapper {
-        background-color: #1a1b26 !important;
-        border: 1px solid #2d2e3d !important;
-        box-shadow: none !important;
-      }
-      .el-input-number__increase,
-      .el-input-number__decrease {
-        background: #11121d !important;
-        border-color: #2d2e3d !important;
-        color: #6b7280 !important;
-        &:hover {
-          background: #1a1b26 !important;
-          color: #3b82f6 !important;
-        }
-      }
-      .el-input__inner {
-        color: #e5e7eb !important;
-      }
-    }
-
-    .row-header {
+    th {
+      background-color: #1a1b26 !important;
       color: #9ca3af;
-      background-color: #1a1b26 !important;
+      border-right-color: #2d2e3d;
+      border-bottom: 2px solid #232433;
+      font-weight: 600;
     }
 
-    .sticky-col {
+    td {
       background-color: #1a1b26 !important;
-      border-right-color: #2d2e3d !important;
+      border-right-color: #2d2e3d;
+      border-bottom-color: #232433;
+      color: #d1d5db;
     }
+
+    tr:hover td {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+  }
+
+  .header-incomplete {
+    background-color: rgba(244, 63, 94, 0.1) !important;
+    color: #fb7185 !important;
+  }
+
+  .split-cell {
+    background: #1a1b26;
+    border-color: #2d2e3d;
+    padding: 3px;
+  }
+
+  .half-cell:not(.active) {
+    color: #4b5563;
+    &:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: #9ca3af;
+    }
+  }
+
+  .half-cell.active {
+    &.left-raid {
+      background: #4f46e5;
+      box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.3),
+        0 0 10px rgba(79, 70, 229, 0.2);
+    }
+    &.right-tome {
+      background: #0284c7;
+      box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.3),
+        0 0 10px rgba(2, 132, 199, 0.2);
+    }
+  }
+
+  .mini-stepper {
+    .el-input__wrapper {
+      background-color: #1a1b26 !important;
+      border: 1px solid #2d2e3d !important;
+      box-shadow: none !important;
+    }
+    .el-input-number__increase,
+    .el-input-number__decrease {
+      background: #11121d !important;
+      border-color: #2d2e3d !important;
+      color: #6b7280 !important;
+      &:hover {
+        background: #1a1b26 !important;
+        color: #3b82f6 !important;
+      }
+    }
+    .el-input__inner {
+      color: #e5e7eb !important;
+    }
+  }
+
+  .row-header {
+    color: #9ca3af;
+    background-color: #1a1b26 !important;
+  }
+
+  .sticky-col {
+    background-color: #1a1b26 !important;
+    border-right-color: #2d2e3d !important;
   }
 
   .bis-import-message-box {
@@ -2237,6 +2768,109 @@ html.dark {
     min-height: 84px !important;
     font-family: 'JetBrains Mono', monospace;
     font-size: 12px;
+  }
+}
+</style>
+
+<style lang="scss">
+// 队长分配专用下拉框全局样式 (处理 Teleport)
+.el-popper.captain-player-popper,
+.el-popper.captain-player-tooltip-new {
+  background: #ffffff !important;
+  border: 1px solid #e4e7ed !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  padding: 4px !important;
+  
+  .el-select-dropdown__wrap {
+    max-height: none !important;
+  }
+
+  .tooltip-title {
+    padding: 4px 8px;
+    font-size: 14px;
+    color: #475569;
+    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 8px;
+    font-weight: 600;
+    
+    span {
+      font-weight: 700; 
+      color: #1e293b;
+      margin: 0 2px;
+    }
+
+    html.dark & {
+      color: #94a3b8;
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+      span { color: #f1f5f9; }
+    }
+  }
+  
+  .tooltip-player-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 140px;
+  }
+
+  .tooltip-player-item {
+    padding: 2px 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+
+    &:hover:not(.is-disabled) {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    &.is-active {
+      background: rgba(59, 130, 246, 0.1);
+    }
+    &.is-disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    
+    &.clear-btn {
+      color: #f87171;
+      font-size: 10px;
+      font-weight: bold;
+      text-align: center;
+      padding: 4px 0;
+      &:hover { background: rgba(248, 113, 113, 0.05); }
+    }
+  }
+
+  .tooltip-divider {
+    height: 1px;
+    background: #e4e7ed;
+    margin: 3px 0;
+  }
+
+  .el-popper__arrow {
+    &::before {
+      background: #ffffff !important;
+      border: 1px solid #e4e7ed !important;
+      border-top: none !important; // 移除旋转后的“右侧”边框
+      border-right: none !important; // 移除旋转后的“右侧”边框
+    }
+  }
+
+  html.dark & {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+
+    .tooltip-player-item:hover:not(.is-disabled) {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .tooltip-divider { background: #334155; }
+    
+    .el-popper__arrow::before {
+      background: #1e293b !important;
+      border: 1px solid #334155 !important;
+      border-top: none !important;
+      border-right: none !important;
+    }
   }
 }
 </style>
