@@ -2,7 +2,6 @@
   <div
     class="mini-roll"
     :class="[rollTypeClass, { 'winner-badge': isWinner }]"
-    :title="rollTitle"
   >
     <PlayerDisplay
       :name="roll.player"
@@ -34,7 +33,6 @@ import PlayerDisplay from './PlayerDisplay.vue'
 import {
   type RollInfo,
   getRollTypeIcon,
-  getRollTypeName,
 } from '@/utils/lootParser'
 
 const props = defineProps<{
@@ -51,12 +49,6 @@ const rollTypeClass = computed(() => {
 })
 
 const rollTypeIcon = computed(() => getRollTypeIcon(props.roll.type))
-
-const rollTitle = computed(() => {
-  const typeName = getRollTypeName(props.roll.type)
-  const displayName = (props.showOnlyRole && role.value) ? role.value : props.roll.player
-  return `${displayName} ${typeName} ${props.roll.value ?? ''}`
-})
 
 const hasValue = computed(() => {
   return props.roll.type !== 'assign' && props.roll.type !== 'direct'

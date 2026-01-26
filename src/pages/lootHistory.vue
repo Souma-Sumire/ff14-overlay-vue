@@ -842,7 +842,6 @@
                         <template #reference>
                           <div
                             class="winner-selector-trigger"
-                            title="点击修改获得者"
                           >
                             <div
                               v-if="recordPlayerCorrections[scope.row.key]"
@@ -1185,8 +1184,6 @@
                 </div>
               </div>
 
-              <!-- Singleton Context Menu -->
-              <!-- Singleton Context Menu (Elegant Virtual Trigger) -->
               <el-popover
                 v-model:visible="isMenuVisible"
                 :virtual-ref="contextMenuRef"
