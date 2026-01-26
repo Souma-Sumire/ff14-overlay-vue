@@ -21,6 +21,7 @@ export function getRaidWeekStart(date: Date) {
 export function getRaidWeekLabel(
   dateInput: Date | string,
   offset: number = 0,
+  zeroWeekDate?: Date | string | number,
 ): { label: string; start: Date; end: Date } {
   const date = new Date(dateInput)
   if (offset !== 0) {
@@ -35,8 +36,15 @@ export function getRaidWeekLabel(
   const fmt = (dt: Date) =>
     `${dt.getFullYear()}/${String(dt.getMonth() + 1).padStart(2, '0')}/${String(dt.getDate()).padStart(2, '0')}`
 
+  let labelStr = `${fmt(start)} - ${fmt(end)}`
+  if (zeroWeekDate) {
+    const zeroStart = getRaidWeekStart(new Date(zeroWeekDate))
+    const weekIndex = getWeekIndexFromStart(start, zeroStart)
+    labelStr = `第 ${weekIndex} 周 (${labelStr})`
+  }
+
   return {
-    label: `${fmt(start)} - ${fmt(end)}`,
+    label: labelStr,
     start,
     end,
   }
@@ -65,10 +73,23 @@ export function getFormattedWeekLabel(
 ): { label: string; index: number } {
   if (!zeroWeekStart) return { label: weekRangeLabel, index: 0 }
 
-  const startStr = weekRangeLabel.split(' - ')[0]
+  // 兼容 "第 1 周 (2026/01/06 - 2026/01/13)"、"W1 (2026/01/06 - 2026/01/13)" 和 "2026/01/06 - 2026/01/13"
+  const dateMatch = weekRangeLabel.match(/(\d{4}\/\d{2}\/\d{2})/)
+  if (!dateMatch) return { label: weekRangeLabel, index: 0 }
+
+  const startStr = dateMatch[1]
   const currentStart = new Date(startStr + ' 16:00:00')
 
   const weekIndex = getWeekIndexFromStart(currentStart, zeroWeekStart)
+  
+  // 如果原始标签已经包含周号（第...周 或 W...），直接返回
+  if ((weekRangeLabel.includes('周') || weekRangeLabel.includes('W')) && weekRangeLabel.includes('(')) {
+    return {
+      label: weekRangeLabel,
+      index: weekIndex,
+    }
+  }
+
   return {
     label: `第 ${weekIndex} 周 (${weekRangeLabel})`,
     index: weekIndex,

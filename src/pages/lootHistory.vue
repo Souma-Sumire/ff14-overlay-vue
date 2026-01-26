@@ -2290,11 +2290,11 @@ const displaySlots = computed(() => {
 
 function getRecordRaidWeekLabel(record: LootRecord) {
   const offset = recordWeekCorrections.value[record.key] || 0
-  return getRaidWeekLabel(record.timestamp, offset).label
+  return getRaidWeekLabel(record.timestamp, offset, GAME_VERSION_CONFIG.RAID_START_TIME).label
 }
 
 const zeroWeekStart = computed(() => {
-  return getRaidWeekStart(new Date(syncStartDate.value))
+  return getRaidWeekStart(new Date(GAME_VERSION_CONFIG.RAID_START_TIME))
 })
 
 function getRecordFormattedWeekLabel(weekRangeLabel: string) {
@@ -2487,9 +2487,7 @@ function resetFilters() {
   itemVisibility.value = {}
   playerVisibility.value = {}
   isRaidFilterActive.value = false
-  syncStartDate.value =
-    zeroWeekStart.value?.toISOString().slice(0, 16) ||
-    GAME_VERSION_CONFIG.RAID_START_TIME
+  syncStartDate.value = GAME_VERSION_CONFIG.RAID_START_TIME
   syncEndDate.value = null
 }
 
