@@ -1602,6 +1602,36 @@
           </span>
         </template>
       </el-dialog>
+      <el-dialog
+        v-model="showClearDialog"
+        title="清空数据选项"
+        width="400px"
+        append-to-body
+      >
+        <div class="clear-selection-list">
+          <div class="clear-selection-header">
+            <p class="clear-warning-text">请选择要彻底删除的数据项：</p>
+            <div class="clear-quick-actions">
+              <el-button link type="primary" size="small" @click="clearForm = { loot: true, bis: true, roles: true, mapping: true }">全选</el-button>
+              <el-button link size="small" @click="clearForm = { loot: !clearForm.loot, bis: !clearForm.bis, roles: !clearForm.roles, mapping: !clearForm.mapping }">反选</el-button>
+            </div>
+          </div>
+          <el-checkbox v-model="clearForm.loot">掉落历史记录 ({{ lootRecords.length }})</el-checkbox>
+          <el-checkbox v-model="clearForm.bis">BIS 分配配置</el-checkbox>
+          <el-checkbox v-model="clearForm.roles">固定队职位设置</el-checkbox>
+          <el-checkbox v-model="clearForm.mapping">人员合并/映射项</el-checkbox>
+        </div>
+        <div class="clear-danger-hint">
+          <el-icon><Warning /></el-icon>
+          <span>选中的数据将被永久删除，无法撤销。</span>
+        </div>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button @click="showClearDialog = false">取消</el-button>
+            <el-button type="danger" @click="confirmClear">确定清空</el-button>
+          </span>
+        </template>
+      </el-dialog>
     </template>
 
     <input
@@ -1671,6 +1701,8 @@ import {
   Edit,
   Right,
   BottomRight,
+  Star,
+  View,
 } from '@element-plus/icons-vue'
 import LogParserWorker from '@/workers/logParser.ts?worker'
 import LootPlayerRoll from '@/components/loot-history/LootPlayerRoll.vue'
@@ -1755,6 +1787,14 @@ const manualForm = ref({
   timestamp: '',
   item: '',
   player: '',
+})
+
+const showClearDialog = ref(false)
+const clearForm = ref({
+  loot: true,
+  bis: false,
+  roles: false,
+  mapping: false,
 })
 
 const showTimeSetup = ref(false)
@@ -3609,20 +3649,13 @@ const importInputRef = ref<HTMLInputElement | null>(null)
 
 function handleDataCommand(command: string) {
   if (command === 'clear') {
-    ElMessageBox.confirm(
-      '确定清空所有掉落记录？此操作不可恢复。<br/><small style="color: #64748b">注意：此操作仅清空<b>掉落历史</b>。您的 BIS 配置、固定队角色设置及人员映射将全部保留。</small>',
-      '警告',
-      {
-        confirmButtonText: '确定清空',
-        cancelButtonText: '取消',
-        type: 'warning',
-        dangerouslyUseHTMLString: true,
-      },
-    )
-      .then(() => {
-        clearDatabase()
-      })
-      .catch(() => {})
+    clearForm.value = {
+      loot: true,
+      bis: false,
+      roles: false,
+      mapping: false,
+    }
+    showClearDialog.value = true
   } else if (command === 'export') {
     exportData()
   } else if (command === 'import') {
@@ -4072,13 +4105,45 @@ function getOtherRolls(record: LootRecord): RollInfo[] {
     })
 }
 
-async function clearDatabase() {
-  await dbRecords.clear()
-  lootRecords.value = []
-  existingKeys.value.clear()
-  processedFiles.value = {}
-  recordWeekCorrections.value = {}
-  ElMessage.success({ message: '数据库已清空', showClose: true })
+async function confirmClear() {
+  const selectedCount = Object.values(clearForm.value).filter(Boolean).length
+  if (selectedCount === 0) {
+    showClearDialog.value = false
+    return
+  }
+
+  showClearDialog.value = false
+  const tasks: Promise<any>[] = []
+
+  if (clearForm.value.loot) {
+    tasks.push(dbRecords.clear())
+    lootRecords.value = []
+    existingKeys.value.clear()
+    processedFiles.value = {}
+    recordWeekCorrections.value = {}
+    recordPlayerCorrections.value = {}
+    tasks.push(dbConfig.remove('weekCorrections'))
+    tasks.push(dbConfig.remove('playerCorrections'))
+    tasks.push(dbConfig.remove('processedFiles'))
+  }
+
+  if (clearForm.value.bis) {
+    bisConfig.value = { playerBis: {} }
+    tasks.push(dbConfig.remove('bisConfig'))
+  }
+
+  if (clearForm.value.roles) {
+    playerRoles.value = {}
+    tasks.push(dbConfig.remove('playerRoles'))
+  }
+
+  if (clearForm.value.mapping) {
+    playerMapping.value = {}
+    tasks.push(dbConfig.remove('playerMapping'))
+  }
+
+  await Promise.all(tasks)
+  ElMessage.success({ message: '所选数据已清空', showClose: true })
 }
 
 async function handleWinnerChange(record: LootRecord, newPlayer: string) {
@@ -7234,11 +7299,56 @@ html.dark {
 }
 
 .export-selection-list,
-.import-selection-list {
+.import-selection-list,
+.clear-selection-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 8px 0;
+}
+
+.clear-selection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.clear-warning-text {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+.clear-quick-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.clear-danger-hint {
+  margin-top: 20px;
+  padding: 12px;
+  background: #fff1f2;
+  border-radius: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #e11d48;
+  font-size: 12px;
+  line-height: 1.6;
+  border: 1px solid #ffe4e6;
+
+  .el-icon {
+    font-size: 16px;
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+
+  html.dark & {
+    background: rgba(239, 68, 68, 0.05);
+    border-color: rgba(239, 68, 68, 0.1);
+    color: #fb7185;
+  }
 }
 
 .import-preview-box {
