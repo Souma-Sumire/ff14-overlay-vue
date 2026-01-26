@@ -8,10 +8,21 @@
   >
     <transition name="fade">
       <div v-if="isInitializing" class="initial-loading">
-        <div class="loading-card">
-          <div class="spinner-large"></div>
-          <div class="loading-title">正在准备数据...</div>
-          <p class="loading-subtitle">初次加载可能需要一些时间</p>
+        <div class="skeleton-layout">
+          <div class="skeleton-header">
+            <div class="skeleton-item brand"></div>
+            <div class="skeleton-item toolbar"></div>
+          </div>
+          <div class="skeleton-page-main">
+            <div class="skeleton-item control"></div>
+            <div class="skeleton-filters">
+              <div class="skeleton-item filter-box"></div>
+              <div class="skeleton-item filter-box"></div>
+            </div>
+            <div class="skeleton-content-grid">
+              <div v-for="i in 8" :key="i" class="skeleton-item card"></div>
+            </div>
+          </div>
         </div>
       </div>
     </transition>
@@ -5698,31 +5709,96 @@ html.dark {
   inset: 0;
   background: #f8fafc;
   z-index: 5000;
+  overflow: hidden;
+}
+
+.skeleton-layout {
+  width: 100%;
+  height: 100%;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
 }
-.loading-card {
+
+.skeleton-header {
+  height: 48px;
+  padding: 0 24px;
   background: white;
-  padding: 48px;
-  border-radius: 20px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-  text-align: center;
-  border: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  .brand { width: 140px; height: 24px; }
+  .toolbar { width: 400px; height: 24px; }
 }
-.spinner-large {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f1f5f9;
-  border-top-color: #3b82f6;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto 16px;
-}
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+
+.skeleton-page-main {
+  flex: 1;
+  padding: 24px;
+  max-width: 1400px;
+  width: calc(100% - 48px);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  
+  .control { width: 100%; height: 40px; border-radius: 8px; }
+  .skeleton-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    .filter-box { width: 100%; height: 120px; border-radius: 12px; }
   }
+}
+
+.skeleton-content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  .card { height: 160px; border-radius: 12px; }
+}
+
+.skeleton-item {
+  background: #edf2f7;
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.4) 50%,
+      transparent 100%
+    );
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+html.dark {
+  .initial-loading { background: #0f172a; }
+  .skeleton-header { background: #1e293b; border-color: rgba(255, 255, 255, 0.05); }
+  .skeleton-item {
+    background: rgba(255, 255, 255, 0.05);
+    &::after {
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.03) 50%,
+        transparent 100%
+      );
+    }
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .loading-overlay {
