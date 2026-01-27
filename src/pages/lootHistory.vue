@@ -2524,6 +2524,25 @@ const sortedSummaryPlayers = computed(() => {
   return [...players].sort((a, b) => comparePlayersByRole(a, b, counts))
 })
 
+const playersWithRecordsMatchingItemFilters = computed(() => {
+  const set = new Set<string>()
+  const startTs = new Date(syncStartDate.value).getTime()
+  const endTs = syncEndDate.value ? new Date(syncEndDate.value).getTime() : Infinity
+
+  lootRecords.value.forEach((r) => {
+    // 1. 系统过滤（如屏蔽屏蔽乐谱等）
+    if (isSystemFiltered(r.item)) return
+    // 2. 物品筛选（用户在界面上选中的物品）
+    if (itemVisibility.value[r.item] === false) return
+    // 3. 时间范围
+    const ts = r.timestamp.getTime()
+    if (ts < startTs || ts > endTs) return
+
+    set.add(getActualPlayer(getRecordPlayer(r)))
+  })
+  return set
+})
+
 const visibleAllPlayers = computed(() => {
   let players = allPlayers.value
 
@@ -2532,25 +2551,19 @@ const visibleAllPlayers = computed(() => {
   }
   if (hideEmptyPlayers.value && !isOnlyRaidMembersActive.value) {
     players = players.filter((p) => {
-      // 检查该玩家在当前过滤条件下是否有记录
-      return (
-        playerSummary.value[p] && Object.keys(playerSummary.value[p]).length > 0
-      )
+      // 检查该玩家在当前物品/时间/系统过滤条件下是否有记录
+      return playersWithRecordsMatchingItemFilters.value.has(p)
     })
   }
   return players
 })
 
-const playersWithRecords = computed(() => {
-  return allPlayers.value.filter((p) => {
-    return (
-      playerSummary.value[p] && Object.keys(playerSummary.value[p]).length > 0
-    )
-  })
-})
-
 const playersForSelection = computed(() => {
-  return hideEmptyPlayers.value ? playersWithRecords.value : allPlayers.value
+  return hideEmptyPlayers.value
+    ? allPlayers.value.filter((p) =>
+        playersWithRecordsMatchingItemFilters.value.has(p),
+      )
+    : allPlayers.value
 })
 
 const visibleUniqueItems = computed(() => {
