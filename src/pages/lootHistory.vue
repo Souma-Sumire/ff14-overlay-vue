@@ -2025,7 +2025,6 @@ const saveConfigDebounced = (() => {
   }
 })()
 
-// 用于性能优化的影子对象，记录上一次保存的值
 const lastSavedState = new Map<string, string>()
 
 watch(
