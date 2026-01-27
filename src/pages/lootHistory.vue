@@ -2363,10 +2363,11 @@ watch(
   { deep: true },
 )
 
-// 当时间范围调整时，标记需要同步
+// 当时间范围调整时，标记需要同步并自动执行同步
 watch([syncStartDate, syncEndDate], () => {
   if (!isInitializing.value) {
     isSyncNeeded.value = true
+    syncLogFiles()
   }
 })
 
@@ -2474,8 +2475,15 @@ onMounted(async () => {
     window.addEventListener('click', closeContextMenu)
     window.addEventListener('keydown', handleGlobalKeydown)
 
+    window.addEventListener('visibilitychange', handleVisibilityChange)
+
     if (!isRaidRolesComplete.value && viewMode.value !== 'list') {
       viewMode.value = 'list'
+    }
+
+    // 初始加载完成后，如果不是第一次同步，自动进行一次同步
+    if (lootRecords.value.length > 0) {
+      syncLogFiles()
     }
   } catch (e) {
     console.error('Failed to load DB:', e)
@@ -2483,6 +2491,12 @@ onMounted(async () => {
     isInitializing.value = false
   }
 })
+
+function handleVisibilityChange() {
+  if (document.visibilityState === 'visible' && lootRecords.value.length > 0) {
+    syncLogFiles()
+  }
+}
 
 const isDragOverWindow = ref(false)
 const isDragOverZone = ref(false)
@@ -2571,6 +2585,7 @@ onUnmounted(() => {
   document.body.removeEventListener('drop', handleGlobalDrop)
   window.removeEventListener('click', closeContextMenu)
   window.removeEventListener('keydown', handleGlobalKeydown)
+  window.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 
 function closeContextMenu() {
@@ -3306,7 +3321,10 @@ async function syncLogFiles() {
   }
 
   isSyncing.value = true
-  isLoading.value = true
+  const isFirstSync = existingKeys.value.size === 0
+  if (isFirstSync) {
+    isLoading.value = true
+  }
   loadingProgress.value = 0
 
   try {
@@ -3321,7 +3339,6 @@ async function syncLogFiles() {
       size: number
     }[] = []
 
-    const isFirstSync = existingKeys.value.size === 0
     const localKeys = new Set(existingKeys.value)
     const allNewRecords: LootRecord[] = []
     const batchSeenPlayers = new Set<string>()
