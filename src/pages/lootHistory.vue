@@ -122,6 +122,7 @@
               size="small"
               :loading="isSyncing"
               @click="syncLogFiles"
+              class="sync-btn-fixed"
             >
               {{
                 isSyncing ? '同步中' : isSyncNeeded ? '需要同步' : '立即同步'
@@ -7316,6 +7317,31 @@ html.dark .drop-hint {
   display: flex;
   justify-content: space-between;
   align-items: center;
+
+  .sync-btn-fixed {
+    width: 92px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    white-space: nowrap;
+    transition: none !important;
+    padding: 0; /* 使用固定宽度时，减小 padding 扰动 */
+    
+    :deep(span) {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  .dot-warn {
+    width: 6px;
+    height: 6px;
+    background-color: #f59e0b;
+    border-radius: 50%;
+    margin-left: 4px;
+    flex-shrink: 0;
+  }
 }
 
 .control-right {
