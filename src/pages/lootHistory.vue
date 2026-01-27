@@ -483,7 +483,12 @@
                 </label>
               </div>
               <div class="acts">
-                <el-popover placement="bottom" :width="320" trigger="click">
+                <el-popover 
+                  v-model:visible="isMergePanelActive"
+                  placement="bottom" 
+                  :width="320" 
+                  trigger="click"
+                >
                   <template #reference>
                     <el-button size="small" class="soft-action-btn"
                       >合并大小号</el-button
@@ -834,121 +839,56 @@
                   </el-table-column>
                   <el-table-column label="获得者" width="260">
                     <template #default="scope">
-                      <el-popover
-                        placement="bottom"
-                        :width="240"
-                        trigger="click"
-                        popper-class="winner-change-popper"
-                        :visible="activeWinnerPopoverKey === scope.row.key"
-                        @update:visible="
-                          (val: boolean) => {
-                            if (val) {
-                              activeWinnerPopoverKey = scope.row.key
-                              popoverOpenedWithCorrection[scope.row.key] =
-                                !!recordPlayerCorrections[scope.row.key]
-                            } else {
-                              if (activeWinnerPopoverKey === scope.row.key)
-                                activeWinnerPopoverKey = null
-                            }
-                          }
-                        "
+                      <div 
+                        class="winner-selector-trigger" 
+                        @click.stop="openWinnerPopover($event, scope.row)"
                       >
-                        <template #reference>
-                          <div class="winner-selector-trigger">
-                            <div
-                              v-if="recordPlayerCorrections[scope.row.key]"
-                              class="correction-winner-display"
-                            >
-                              <div class="original-row" title="原始记录获得者">
-                                <span class="correction-label">原始记录:</span>
-                                <LootPlayerRoll
-                                  v-if="getOriginalRollInfo(scope.row)"
-                                  :roll="getOriginalRollInfo(scope.row)!"
-                                  :show-only-role="showOnlyRole"
-                                  :get-player-role="getPlayerRole"
-                                  class="original-display"
-                                />
-                                <PlayerDisplay
-                                  v-else
-                                  :name="scope.row.player"
-                                  :role="getPlayerRole(scope.row.player)"
-                                  :show-only-role="showOnlyRole"
-                                  class="original-display"
-                                />
-                              </div>
-                              <div class="corrected-row">
-                                <el-icon class="correction-arrow"
-                                  ><BottomRight
-                                /></el-icon>
-                                <LootPlayerRoll
-                                  v-if="getWinnerRollInfo(scope.row)"
-                                  :roll="getWinnerRollInfo(scope.row)!"
-                                  is-winner
-                                  :show-only-role="showOnlyRole"
-                                  :get-player-role="getPlayerRole"
-                                />
-                              </div>
-                            </div>
-                            <template v-else>
-                              <LootPlayerRoll
-                                v-if="getWinnerRollInfo(scope.row)"
-                                :roll="getWinnerRollInfo(scope.row)!"
-                                is-winner
-                                :show-only-role="showOnlyRole"
-                                :get-player-role="getPlayerRole"
-                              />
-                              <div v-else class="no-winner">未分配</div>
-                            </template>
-                            <el-icon class="winner-edit-icon"><Edit /></el-icon>
+                        <div
+                          v-if="recordPlayerCorrections[scope.row.key]"
+                          class="correction-winner-display"
+                        >
+                          <div class="original-row" title="原始记录获得者">
+                            <span class="correction-label">原始记录:</span>
+                            <LootPlayerRoll
+                              v-if="getOriginalRollInfo(scope.row)"
+                              :roll="getOriginalRollInfo(scope.row)!"
+                              :show-only-role="showOnlyRole"
+                              :get-player-role="getPlayerRole"
+                              class="original-display"
+                            />
+                            <PlayerDisplay
+                              v-else
+                              :name="scope.row.player"
+                              :role="getPlayerRole(scope.row.player)"
+                              :show-only-role="showOnlyRole"
+                              class="original-display"
+                            />
                           </div>
-                        </template>
-                        <div class="winner-change-popover">
-                          <div class="popover-header">
-                            <div class="popover-title">变更获得者</div>
-                            <el-button
-                              v-if="popoverOpenedWithCorrection[scope.row.key]"
-                              type="primary"
-                              link
-                              size="small"
-                              class="restore-btn"
-                              @click="
-                                handleWinnerChange(scope.row, scope.row.player)
-                              "
-                            >
-                              恢复原始记录
-                            </el-button>
+                          <div class="corrected-row">
+                            <el-icon class="correction-arrow"
+                              ><BottomRight
+                            /></el-icon>
+                            <LootPlayerRoll
+                              v-if="getWinnerRollInfo(scope.row)"
+                              :roll="getWinnerRollInfo(scope.row)!"
+                              is-winner
+                              :show-only-role="showOnlyRole"
+                              :get-player-role="getPlayerRole"
+                            />
                           </div>
-                          <div class="popover-desc">
-                            将掉落记录手动转移至其他玩家名下
-                          </div>
-                          <el-select
-                            :model-value="getRecordPlayer(scope.row)"
-                            placeholder="选择新获得者"
-                            filterable
-                            size="small"
-                            class="winner-select-bar"
-                            @change="
-                              (val: string) =>
-                                handleWinnerChange(scope.row, val)
-                            "
-                          >
-                            <el-option
-                              v-for="p in visibleAllPlayers"
-                              :key="p"
-                              :label="(showOnlyRole && getPlayerRole(p)) || p"
-                              :value="p"
-                            >
-                              <div class="select-player-row">
-                                <PlayerDisplay
-                                  :name="p"
-                                  :role="getPlayerRole(p)"
-                                  :show-only-role="showOnlyRole"
-                                />
-                              </div>
-                            </el-option>
-                          </el-select>
                         </div>
-                      </el-popover>
+                        <template v-else>
+                          <LootPlayerRoll
+                            v-if="getWinnerRollInfo(scope.row)"
+                            :roll="getWinnerRollInfo(scope.row)!"
+                            is-winner
+                            :show-only-role="showOnlyRole"
+                            :get-player-role="getPlayerRole"
+                          />
+                          <div v-else class="no-winner">未分配</div>
+                        </template>
+                        <el-icon class="winner-edit-icon"><Edit /></el-icon>
+                      </div>
                     </template>
                   </el-table-column>
                   <el-table-column label="其他 Roll 点记录">
@@ -1137,15 +1077,6 @@
                           v-for="(rec, idx) in recordsGroup"
                           :key="rec.key"
                         >
-                          <el-tooltip
-                            v-if="true"
-                            :disabled="
-                              !rawSuspiciousKeys.has(rec.key) ||
-                              recordWeekCorrections[rec.key] !== undefined
-                            "
-                            content="可能归属周错误（通常发生在周二压线进本）。点击可选择将其归入上一周。"
-                            placement="top"
-                          >
                             <div
                               class="summary-item week-record-row"
                               :class="{
@@ -1158,6 +1089,8 @@
                                 handleRecordTrigger($event, rec)
                               "
                               @click.stop="handleRecordTrigger($event, rec)"
+                              @mouseenter="handleWeekItemEnter($event, rec)"
+                              @mouseleave="handleWeekItemLeave"
                             >
                               <div class="week-row-aside">
                                 <PlayerDisplay
@@ -1186,7 +1119,6 @@
                                 /></el-icon>
                               </div>
                             </div>
-                          </el-tooltip>
                           <div
                             v-if="shouldShowWeekDivider(recordsGroup, idx)"
                             class="week-list-divider"
@@ -1198,15 +1130,26 @@
                 </div>
               </div>
 
-              <el-popover
-                v-model:visible="isMenuVisible"
-                :virtual-ref="contextMenuRef"
+               <el-tooltip
+                v-model:visible="isSharedTooltipVisible"
+                :virtual-ref="sharedTooltipRef"
                 virtual-triggering
-                popper-class="context-menu-popper"
-                :width="180"
-                :show-arrow="false"
-                placement="bottom-start"
-              >
+                placement="top"
+                :content="weekTooltipContent"
+                popper-class="week-suspicious-tooltip"
+              />
+
+                <el-popover
+                  v-model:visible="isMenuVisible"
+                  :virtual-ref="contextMenuRef"
+                  virtual-triggering
+                  :persistent="false"
+                  :hide-after="0"
+                  popper-class="context-menu-popper"
+                  :width="180"
+                  :show-arrow="false"
+                  placement="bottom-start"
+                >
                 <div v-if="contextMenuRecord" class="custom-context-menu">
                   <div class="menu-info-header">
                     <el-icon><Calendar /></el-icon>
@@ -1302,6 +1245,60 @@
               >
             </div>
           </div>
+
+          <!-- 共享的获得者变更 Popover -->
+          <el-popover
+            :visible="!!popoverTargetRecord"
+            :virtual-ref="popoverTriggerRef"
+            virtual-triggering
+            :persistent="false"
+            :hide-after="0"
+            placement="bottom"
+            :width="240"
+            popper-class="winner-change-popper"
+          >
+            <div v-if="popoverTargetRecord" class="winner-change-popover">
+              <div class="popover-header">
+                <div class="popover-title">变更获得者</div>
+                <el-button
+                  v-if="popoverOpenedWithCorrection[popoverTargetRecord.key]"
+                  type="primary"
+                  link
+                  size="small"
+                  class="restore-btn"
+                  @click="handleWinnerChange(popoverTargetRecord, popoverTargetRecord.player)"
+                >
+                  恢复原始记录
+                </el-button>
+              </div>
+              <div class="popover-desc">
+                将掉落记录手动转移至其他玩家名下
+              </div>
+              <el-select
+                :model-value="getRecordPlayer(popoverTargetRecord)"
+                placeholder="选择新获得者"
+                filterable
+                size="small"
+                class="winner-select-bar"
+                @change="(val: string) => handleWinnerChange(popoverTargetRecord!, val)"
+              >
+                <el-option
+                  v-for="p in visibleAllPlayers"
+                  :key="p"
+                  :label="(showOnlyRole && getPlayerRole(p)) || p"
+                  :value="p"
+                >
+                  <div class="select-player-row">
+                    <PlayerDisplay
+                      :name="p"
+                      :role="getPlayerRole(p)"
+                      :show-only-role="showOnlyRole"
+                    />
+                  </div>
+                </el-option>
+              </el-select>
+            </div>
+          </el-popover>
         </div>
       </main>
 
@@ -1465,8 +1462,9 @@
         title="选择导出内容"
         width="360px"
         append-to-body
+        destroy-on-close
       >
-        <div class="export-selection-list">
+        <div v-if="showExportDialog" class="export-selection-list">
           <el-checkbox v-model="exportForm.loot"
             >{{ LABELS.LOOT }} ({{ lootRecords.length }})</el-checkbox
           >
@@ -1487,7 +1485,7 @@
             LABELS.SETTINGS
           }}</el-checkbox>
         </div>
-        <template #footer>
+        <template #footer v-if="showExportDialog">
           <span class="dialog-footer">
             <el-button @click="showExportDialog = false">取消</el-button>
             <el-button type="primary" @click="confirmExport"
@@ -1502,8 +1500,9 @@
         title="选择导入内容"
         width="400px"
         append-to-body
+        destroy-on-close
       >
-        <div v-if="importDataPending" class="import-preview-box">
+        <div v-if="showImportConfirmDialog && importDataPending" class="import-preview-box">
           <p class="import-hint-text">发现备份文件，请选择要导入的部分：</p>
           <div class="import-selection-list">
             <el-checkbox
@@ -1569,7 +1568,7 @@
               <span
                 v-else-if="!importDiffs.mapping"
                 class="import-identical-hint"
-                >(与现有记录一致)</span
+                >(与现有设置一致)</span
               >
             </el-checkbox>
             <el-checkbox
@@ -1585,7 +1584,7 @@
               <span
                 v-else-if="!importDiffs.weekCorrection"
                 class="import-identical-hint"
-                >(一致)</span
+                >(与现有设置一致)</span
               >
             </el-checkbox>
             <el-checkbox
@@ -1601,7 +1600,7 @@
               <span
                 v-else-if="!importDiffs.playerCorrection"
                 class="import-identical-hint"
-                >(一致)</span
+                >(与现有设置一致)</span
               >
             </el-checkbox>
             <el-checkbox
@@ -1623,7 +1622,7 @@
               <span
                 v-else-if="!importDiffs.settings"
                 class="import-identical-hint"
-                >(一致)</span
+                >(与现有设置一致)</span
               >
             </el-checkbox>
           </div>
@@ -1677,8 +1676,9 @@
         title="清空数据选项"
         width="400px"
         append-to-body
+        destroy-on-close
       >
-        <div class="clear-selection-list">
+        <div v-if="showClearDialog" class="clear-selection-list">
           <div class="clear-selection-header">
             <p class="clear-warning-text">请选择要彻底删除的数据项：</p>
             <div class="clear-quick-actions">
@@ -1753,8 +1753,9 @@
         title="手动添加记录"
         width="400px"
         append-to-body
+        destroy-on-close
       >
-        <el-form label-width="80px">
+        <el-form v-if="showManualAddDialog" label-width="80px">
           <el-form-item label="时间">
             <el-date-picker
               v-model="manualForm.timestamp"
@@ -1795,9 +1796,10 @@
         title="自定义修正管理"
         width="850px"
         append-to-body
+        destroy-on-close
         class="premium-correction-dialog"
       >
-        <div class="premium-correction-layout">
+        <div v-if="showCustomCorrectionDialog" class="premium-correction-layout">
           <div class="correction-sidebar">
             <div 
               class="nav-item" 
@@ -1919,7 +1921,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch, shallowRef, nextTick } from 'vue'
 import { useIndexedDB } from '@/composables/useIndexedDB'
 import {
   ElMessageBox,
@@ -2032,12 +2034,13 @@ const dbHandle = useIndexedDB<{
 }>('loot-history-handle')
 
 const isInitializing = ref(true)
+const isMergePanelActive = ref(false)
 const isLoading = ref(false)
 const loadingProgress = ref(0)
 
 const parsedLogFiles = ref<{ name: string; size: number }[]>([])
 const pendingLogFiles = ref<{ name: string; size: number }[]>([])
-const lootRecords = ref<LootRecord[]>([])
+const lootRecords = shallowRef<LootRecord[]>([])
 const existingKeys = ref(new Set<string>())
 const blacklistedKeys = ref(new Set<string>())
 const itemVisibility = ref<Record<string, boolean>>({})
@@ -2099,7 +2102,8 @@ const showTimeSetup = ref(false)
 const playerVisibility = ref<Record<string, boolean>>({})
 const recordWeekCorrections = ref<Record<string, number>>({})
 const recordPlayerCorrections = ref<Record<string, string>>({})
-const activeWinnerPopoverKey = ref<string | null>(null)
+const popoverTargetRecord = ref<LootRecord | null>(null)
+const popoverTriggerRef = ref()
 const popoverOpenedWithCorrection = ref<Record<string, boolean>>({})
 const pendingWinnerChange = ref<{
   record: LootRecord
@@ -2111,6 +2115,7 @@ const activeCorrectionTab = ref('player')
 const bisConfig = ref<BisConfig>({ playerBis: {} })
 
 const filteredPlayerCorrections = computed(() => {
+  if (!showCustomCorrectionDialog.value) return []
   const list: any[] = []
   const recordMap = new Map(lootRecords.value.map(r => [r.key, r]))
 
@@ -2137,6 +2142,7 @@ const filteredPlayerCorrections = computed(() => {
 })
 
 const filteredWeekCorrections = computed(() => {
+  if (!showCustomCorrectionDialog.value) return []
   const list: any[] = []
   const recordMap = new Map(lootRecords.value.map(r => [r.key, r]))
 
@@ -2347,11 +2353,9 @@ watch(
     const pendingUpdates: { key: string; value: any }[] = []
 
     for (const { key, value } of rawConfigs) {
-      // 快速序列化进行对比
       const serialized =
         typeof value === 'object' ? JSON.stringify(value) : String(value)
       if (lastSavedState.get(key) !== serialized) {
-        // 发现变化，加入待更新列表
         pendingUpdates.push({
           key,
           value: typeof value === 'object' ? JSON.parse(serialized) : value,
@@ -2367,7 +2371,6 @@ watch(
   { deep: true },
 )
 
-// 当时间范围调整时，标记需要同步并自动执行同步
 watch([syncStartDate, syncEndDate], () => {
   if (!isInitializing.value) {
     isSyncNeeded.value = true
@@ -2477,6 +2480,7 @@ onMounted(async () => {
     document.body.addEventListener('drop', handleGlobalDrop)
     window.addEventListener('click', closeContextMenu)
     window.addEventListener('keydown', handleGlobalKeydown)
+    window.addEventListener('click', handleWindowClick)
 
     window.addEventListener('visibilitychange', handleVisibilityChange)
 
@@ -2486,9 +2490,13 @@ onMounted(async () => {
         syncLogFiles()
       }, 300)
     }
-  } catch (e) {
-    console.error('Failed to load DB:', e)
-  } finally {
+    // 7. 完成初始化，稍微延迟以确保数据稳定后再开启渲染
+    await nextTick()
+    setTimeout(() => {
+      isInitializing.value = false
+    }, 50)
+  } catch (err) {
+    console.error('Initialize error:', err)
     isInitializing.value = false
   }
 })
@@ -2502,6 +2510,33 @@ function handleVisibilityChange() {
 const isDragOverWindow = ref(false)
 const isDragOverZone = ref(false)
 let dragLeaveTimer: any = null
+
+const isSharedTooltipVisible = ref(false)
+const sharedTooltipRef = ref()
+const weekTooltipContent = ref('')
+
+function handleWeekItemEnter(e: MouseEvent, rec: LootRecord) {
+  if (rawSuspiciousKeys.value.has(rec.key) && recordWeekCorrections.value[rec.key] === undefined) {
+    sharedTooltipRef.value = e.currentTarget
+    weekTooltipContent.value = "可能归属周错误（通常发生在周二压线进本）。点击可选择将其归入上一周。"
+    isSharedTooltipVisible.value = true
+  }
+}
+
+function handleWeekItemLeave() {
+  isSharedTooltipVisible.value = false
+}
+
+function handleWindowClick(e: MouseEvent) {
+  if (popoverTargetRecord.value) {
+    const popper = document.querySelector('.winner-change-popper')
+    const isInsidePopper = popper?.contains(e.target as Node)
+    const isTrigger = (e.target as HTMLElement).closest('.winner-selector-trigger')
+    if (!isInsidePopper && !isTrigger) {
+      popoverTargetRecord.value = null
+    }
+  }
+}
 
 function handleGlobalDragOver(e: DragEvent) {
   e.preventDefault()
@@ -2587,6 +2622,7 @@ onUnmounted(() => {
   window.removeEventListener('click', closeContextMenu)
   window.removeEventListener('keydown', handleGlobalKeydown)
   window.removeEventListener('visibilitychange', handleVisibilityChange)
+  window.removeEventListener('click', handleWindowClick)
 })
 
 function closeContextMenu() {
@@ -2594,6 +2630,7 @@ function closeContextMenu() {
 }
 
 const playerNetwork = computed(() => {
+  if (isInitializing.value || !isMergePanelActive.value || lootRecords.value.length === 0) return new Map<string, Set<string>>()
   const networks = new Map<string, Set<string>>()
   lootRecords.value.forEach((record) => {
     const party = new Set([record.player, ...record.rolls.map((r) => r.player)])
@@ -2609,6 +2646,7 @@ const playerNetwork = computed(() => {
 })
 
 const mergeSuggestions = computed(() => {
+  if (isInitializing.value || !isMergePanelActive.value || playerNetwork.value.size === 0) return []
   const suggestions: { from: string; to: string; confidence: number }[] = []
   const ps = Array.from(playerNetwork.value.keys())
 
@@ -2649,6 +2687,7 @@ const playerTotalItemsMap = computed(() => {
 })
 
 const allPlayers = computed(() => {
+  if (isInitializing.value) return []
   const players = new Set<string>()
   lootRecords.value.forEach((record) => {
     players.add(getActualPlayer(getRecordPlayer(record)))
@@ -2695,8 +2734,8 @@ function handleGlobalKeydown(e: KeyboardEvent) {
     ['INPUT', 'TEXTAREA'].includes(target.tagName) || target.isContentEditable
 
   if (e.key === 'Escape') {
-    if (activeWinnerPopoverKey.value) {
-      activeWinnerPopoverKey.value = null
+    if (popoverTargetRecord.value) {
+      popoverTargetRecord.value = null
       return
     }
     if (isMenuVisible.value) {
@@ -2838,6 +2877,7 @@ const visibleUniqueItems = computed(() => {
 })
 
 const uniqueItems = computed(() => {
+  if (isInitializing.value) return []
   const items = new Set(
     lootRecords.value
       .filter((r) => !isSystemFiltered(r.item))
@@ -2888,29 +2928,29 @@ function getItemSortPriority(
   return 100
 }
 
-const visibleItemCount = computed(() => {
-  return uniqueItems.value.filter((i) => isItemChecked(i)).length
-})
+const visibleItemCount = computed(() => visibleUniqueItems.value.length)
 
-const visiblePlayerCount = computed(() => {
-  return allPlayers.value.filter((p) => isPlayerChecked(p)).length
-})
+const visiblePlayerCount = computed(() => visibleAllPlayers.value.length)
 
 const filteredRecords = computed(() => {
+  if (isInitializing.value) return []
+  const startTs = new Date(syncStartDate.value).getTime()
+  const endTs = syncEndDate.value ? new Date(syncEndDate.value).getTime() : Infinity
+  
+  // 预先缓存过滤条件以减少闭包内的重复计算
+  const itemVis = itemVisibility.value
+  const playerVis = playerVisibility.value
+
   const result = lootRecords.value.filter((record) => {
     if (isSystemFiltered(record.item)) return false
 
-    if (
-      playerVisibility.value[getActualPlayer(getRecordPlayer(record))] === false
-    )
-      return false
+    const player = getActualPlayer(getRecordPlayer(record))
+    if (playerVis[player] === false) return false
 
-    if (itemVisibility.value[record.item] === false) return false
+    if (itemVis[record.item] === false) return false
 
     const ts = record.timestamp.getTime()
-    if (ts < new Date(syncStartDate.value).getTime()) return false
-    if (syncEndDate.value && ts > new Date(syncEndDate.value).getTime())
-      return false
+    if (ts < startTs || ts > endTs) return false
 
     return true
   })
@@ -2925,6 +2965,7 @@ const normalizedRecords = computed(() => {
 })
 
 const playerSummary = computed(() => {
+  if (isInitializing.value) return {}
   const summary: Record<string, Record<string, number>> = {}
   filteredRecords.value.forEach((record) => {
     const p = getActualPlayer(getRecordPlayer(record))
@@ -2942,6 +2983,7 @@ function getItemSlot(itemName: string): string {
 }
 
 const slotSummary = computed(() => {
+  if (isInitializing.value) return {}
   const summary: Record<string, Record<string, number>> = {}
   SLOT_DEFINITIONS.forEach((s) => {
     summary[s] = {}
@@ -2970,19 +3012,16 @@ const displaySlots = computed(() => {
   const predefinedList = slotSortMode.value === 'part' ? PART_ORDER : DROP_ORDER
 
   const predefined = predefinedList.filter((s) => {
-    // 全显模式下展示所有预定义部位
     if (filterMode === 'all') return true
 
     const hasObtained =
       slotSummary.value[s] && Object.keys(slotSummary.value[s]).length > 0
     if (hasObtained) return true
 
-    // 需看模式下：检查是否有核心固定队成员需要它
     if (filterMode === 'needed') {
       const row = DEFAULT_ROWS.find((r) => r.name === s || r.keywords === s)
       if (!row) return false
 
-      // 仅检查 8 个核心职位
       const coreRoles = Object.keys(playerRoles.value).filter(
         (r) => !r.startsWith('LEFT:') && !r.startsWith('SUB:'),
       )
@@ -2991,7 +3030,6 @@ const displaySlots = computed(() => {
         if (!pName) return false
         const summary = playerSummary.value[pName] || {}
 
-        // 此处逻辑需与 calculateTargetRequirement 保持一致，但因为在 computed 中，直接手写简单判定或提取函数
         const count = countObtainedItems(row, summary)
         const targetReq = calculateTargetRequirement(row, pName)
         return count < targetReq
@@ -3000,7 +3038,6 @@ const displaySlots = computed(() => {
     return false
   })
 
-  // 动态产生的（不在预定义列表中的）只有在有记录时才显示
   const dynamicItems = Object.keys(slotSummary.value).filter(
     (k) =>
       !(PART_ORDER as unknown as string[]).includes(k) &&
@@ -3010,7 +3047,7 @@ const displaySlots = computed(() => {
   const dynamic = dynamicItems
     .filter((k) => {
       const hasObtained = Object.keys(slotSummary.value[k] || {}).length > 0
-      return hasObtained // 动态部位只显示已获得的，因为无法确定 BIS 需求
+      return hasObtained 
     })
     .sort((a, b) => {
       const getCount = (key: string) =>
@@ -3221,6 +3258,23 @@ function handleCorrectionClick() {
   isMenuVisible.value = false
 }
 
+function openWinnerPopover(e: MouseEvent, record: LootRecord) {
+  if (popoverTargetRecord.value?.key === record.key) {
+    popoverTargetRecord.value = null
+    return
+  }
+  popoverTriggerRef.value = e.currentTarget
+  popoverTargetRecord.value = record
+  popoverOpenedWithCorrection.value[record.key] = !!recordPlayerCorrections.value[record.key]
+}
+
+watch(() => popoverTargetRecord.value, (newVal) => {
+  if (!newVal) {
+    popoverTriggerRef.value = null
+  }
+})
+
+
 const paginatedRecords = computed(() => {
   const start = (currentPage.value - 1) * pageSize
   return filteredRecords.value.slice(start, start + pageSize)
@@ -3344,6 +3398,7 @@ async function syncLogFiles() {
       handle: FileSystemFileHandle
       name: string
       size: number
+      startByte: number
     }[] = []
 
     const localKeys = new Set(existingKeys.value)
@@ -3355,13 +3410,8 @@ async function syncLogFiles() {
       if (entry.kind === 'file' && entry.name.toLowerCase().endsWith('.log')) {
         const name = entry.name
 
-        // 1. 优先通过文件名跳过已知且非当日的文件
         const isToday = name.includes(todayStr)
-        if (!isToday && processedFiles.value[name]) {
-          continue
-        }
 
-        // 2. 检查文件名中的日期是否在同步范围内
         const match = name.match(/_(\d{8})(?:\.|_)/)
         if (match && match[1]) {
           const fileDateStr = `${match[1].slice(0, 4)}-${match[1].slice(4, 6)}-${match[1].slice(6, 8)} 00:00:00`
@@ -3371,35 +3421,37 @@ async function syncLogFiles() {
           }
         }
 
-        // 3. 只有通过了初步筛选，才获取昂贵的 File 对象进行精确判断
         const file = await (entry as FileSystemFileHandle).getFile()
         if (file.size < 10) continue
 
-        if (isToday) {
-          filesToRead.push({
-            handle: entry as FileSystemFileHandle,
-            name,
-            size: file.size,
-          })
-          continue
-        }
+        const prev = processedFiles.value[name]
+        let startByte = 0
 
-        // 如果名字没有正则日期，根据最后修改时间过滤
-        if (!match) {
-          if (file.lastModified < syncStartTs || file.lastModified > syncEndTs)
+        if (prev) {
+          if (file.size === prev.size && file.lastModified <= prev.mtime) {
             continue
+          }
+          if (file.size > prev.size) {
+            startByte = prev.size
+          }
+        } else {
+          if (!isToday) {
+            if (!match) {
+              if (
+                file.lastModified < syncStartTs ||
+                file.lastModified > syncEndTs
+              )
+                continue
+            }
+          }
         }
 
-        if (
-          !processedFiles.value[name] &&
-          Date.now() - file.lastModified < 60 * 24 * 3600 * 1000
-        ) {
-          filesToRead.push({
-            handle: entry as FileSystemFileHandle,
-            name,
-            size: file.size,
-          })
-        }
+        filesToRead.push({
+          handle: entry as FileSystemFileHandle,
+          name,
+          size: file.size,
+          startByte,
+        })
       }
     }
 
@@ -3415,7 +3467,7 @@ async function syncLogFiles() {
     parsedLogFiles.value = []
     pendingLogFiles.value = filesToRead.map((f) => ({
       name: f.name,
-      size: f.size,
+      size: f.size - f.startByte, 
     }))
 
     let completedCount = 0
@@ -3424,7 +3476,7 @@ async function syncLogFiles() {
       const chunk = filesToRead.slice(i, i + CHUNK_SIZE)
       const chunkPromises = chunk.map(async (target) => {
         const file = await target.handle.getFile()
-        const text = await file.text()
+        const text = await file.slice(target.startByte).text()
 
         const {
           records,
@@ -3442,11 +3494,9 @@ async function syncLogFiles() {
         filePlayers.forEach((p) => batchSeenPlayers.add(p))
         fileItems.forEach((i) => batchSeenItems.add(i))
 
-        if (!target.name.includes(todayStr)) {
-          processedFiles.value[target.name] = {
-            size: file.size,
-            mtime: file.lastModified,
-          }
+        processedFiles.value[target.name] = {
+          size: file.size,
+          mtime: file.lastModified,
         }
 
         completedCount++
@@ -3472,7 +3522,7 @@ async function syncLogFiles() {
     if (allNewRecords.length > 0) {
       await dbRecords.bulkSet(JSON.parse(JSON.stringify(allNewRecords)))
 
-      lootRecords.value.push(...allNewRecords)
+      lootRecords.value = [...lootRecords.value, ...allNewRecords]
       existingKeys.value = localKeys
 
       handlePotentialDuplicates(allNewRecords, 'sync')
@@ -4355,8 +4405,9 @@ async function confirmImport() {
   const json = importDataPending.value
   if (!json) return
 
+  let loading
   try {
-    const loading = ElMessage({
+    loading = ElMessage({
       message: '正在导入数据...',
       duration: 0,
       type: 'info',
@@ -4479,21 +4530,23 @@ async function confirmImport() {
 
         handlePotentialDuplicates(newRecords, 'import')
 
-        ElMessage.success({
-          message: `成功导入 ${newRecords.length} 条新记录`,
-          showClose: true,
-        })
       }
     }
 
-    loading.close()
+    ElMessage.success({
+      message: '数据导入已完成',
+      showClose: true,
+    })
     showImportConfirmDialog.value = false
     importDataPending.value = null
   } catch (err) {
     console.error(err)
     ElMessage.error({ message: '导入失败', showClose: true })
+  } finally {
+    loading?.close()
   }
 }
+
 
 function processImportFile(file: File) {
   const reader = new FileReader()
@@ -4700,7 +4753,7 @@ async function confirmClear() {
 async function handleWinnerChange(record: LootRecord, newPlayer: string) {
   if (!newPlayer) return
   pendingWinnerChange.value = { record, newPlayer }
-  activeWinnerPopoverKey.value = null
+  popoverTargetRecord.value = null
 
   setTimeout(() => {
     if (pendingWinnerChange.value) {
@@ -6308,6 +6361,10 @@ html.dark {
   flex: 1;
   min-width: 0;
 }
+.summary-item {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 40px;
+}
 .layer-rows .summary-item {
   border-bottom: 1px solid #f8fafc;
 }
@@ -7179,6 +7236,12 @@ html.dark .drop-hint {
   font-weight: 800;
   font-size: 12px;
 }
+
+.loot-record-table :deep(.el-table__row) {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 48px;
+}
+
 
 .loot-record-table :deep(th.el-table__cell) {
   background-color: #f8fafc;
