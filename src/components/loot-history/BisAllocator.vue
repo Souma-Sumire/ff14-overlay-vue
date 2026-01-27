@@ -62,7 +62,6 @@
           </div>
         </div>
       </el-popover>
-
     </div>
 
     <div v-if="isConfigComplete" class="bis-view-panel">
@@ -85,10 +84,15 @@
                     :role="getPlayerRole?.(p)"
                     :show-only-role="showOnlyRole"
                   />
-                  <div 
-                    class="leave-tag-trigger" 
-                    :class="{ 'is-away': excludedPlayers.has(p), 'is-disabled': isPlayerAssigned(p) }"
-                    @click.stop="isPlayerAssigned(p) ? null : togglePlayerExclusion(p)"
+                  <div
+                    class="leave-tag-trigger"
+                    :class="{
+                      'is-away': excludedPlayers.has(p),
+                      'is-disabled': isPlayerAssigned(p),
+                    }"
+                    @click.stop="
+                      isPlayerAssigned(p) ? null : togglePlayerExclusion(p)
+                    "
                   >
                     <template v-if="excludedPlayers.has(p)">
                       <span>已请假</span>
@@ -129,7 +133,9 @@
                       :hide-after="0"
                     >
                       <template #content>
-                        <div class="tooltip-title">将 <span>{{ row.name }}</span> 分配给</div>
+                        <div class="tooltip-title">
+                          将 <span>{{ row.name }}</span> 分配给
+                        </div>
                         <div class="tooltip-player-list">
                           <div
                             v-for="p in eligiblePlayers"
@@ -137,9 +143,12 @@
                             class="tooltip-player-item"
                             :class="{
                               'is-disabled': excludedPlayers.has(p),
-                              'is-active': customAllocations[row.id] === p
+                              'is-active': customAllocations[row.id] === p,
                             }"
-                            @click="!excludedPlayers.has(p) && (customAllocations[row.id] = p)"
+                            @click="
+                              !excludedPlayers.has(p) &&
+                              (customAllocations[row.id] = p)
+                            "
                           >
                             <div class="player-option-item">
                               <PlayerDisplay
@@ -147,12 +156,20 @@
                                 :role="getPlayerRole?.(p)"
                                 :show-only-role="showOnlyRole"
                               />
-                              <span :class="['mini-status-tag', getOriginalStatus(p, row)]">
+                              <span
+                                :class="[
+                                  'mini-status-tag',
+                                  getOriginalStatus(p, row),
+                                ]"
+                              >
                                 {{ STATUS_MAP[getOriginalStatus(p, row)].text }}
                               </span>
                             </div>
                           </div>
-                          <div v-if="customAllocations[row.id]" class="tooltip-divider"></div>
+                          <div
+                            v-if="customAllocations[row.id]"
+                            class="tooltip-divider"
+                          ></div>
                           <div
                             v-if="customAllocations[row.id]"
                             class="tooltip-player-item clear-btn"
@@ -163,17 +180,19 @@
                           </div>
                         </div>
                       </template>
-                      <div 
-                        class="assign-tag-trigger" 
-                        :class="{ 
+                      <div
+                        class="assign-tag-trigger"
+                        :class="{
                           'is-active': customAllocations[row.id],
-                          'is-open': tooltipsOpen[row.id]
+                          'is-open': tooltipsOpen[row.id],
                         }"
                       >
                         <template v-if="customAllocations[row.id]">
                           <PlayerDisplay
                             :name="customAllocations[row.id]!"
-                            :role="props.getPlayerRole?.(customAllocations[row.id]!)"
+                            :role="
+                              props.getPlayerRole?.(customAllocations[row.id]!)
+                            "
                             :show-only-role="showOnlyRole"
                           />
                           <span class="p-status">已分配</span>
@@ -302,23 +321,39 @@
                           v-if="hasAnyPresets(p)"
                           trigger="click"
                           @command="(cmd: any) => applyPreset(p, cmd)"
-                          @visible-change="(v: boolean) => !v && expandedPlayerPresets.delete(p)"
+                          @visible-change="
+                            (v: boolean) =>
+                              !v && expandedPlayerPresets.delete(p)
+                          "
                           popper-class="bis-preset-popper"
                         >
                           <el-button
                             size="small"
                             class="preset-btn"
-                            :class="{ 'is-matched': getCurrentMatchedPresetName(p) }"
+                            :class="{
+                              'is-matched': getCurrentMatchedPresetName(p),
+                            }"
                           >
-                            <el-icon class="magic-icon"><MagicStick /></el-icon>
-                            <span v-if="getCurrentMatchedPresetName(p)" class="matched-name-inline" :title="getCurrentMatchedPresetName(p)">{{ getCurrentMatchedPresetName(p) }}</span>
+                            <el-icon
+                              v-if="!getCurrentMatchedPresetName(p)"
+                              class="magic-icon"
+                              ><MagicStick
+                            /></el-icon>
+                            <span
+                              v-if="getCurrentMatchedPresetName(p)"
+                              class="matched-name-inline"
+                              :title="getCurrentMatchedPresetName(p) ?? ''"
+                              >{{ getCurrentMatchedPresetName(p) }}</span
+                            >
                             <span v-else>一键预设</span>
                           </el-button>
                           <template #dropdown>
                             <el-dropdown-menu class="bis-preset-dropdown">
                               <!-- 推荐预设 -->
                               <el-dropdown-item
-                                v-for="preset in getPresetsForRole(getPlayerRole?.(p)).recommended"
+                                v-for="preset in getPresetsForRole(
+                                  getPlayerRole?.(p),
+                                ).recommended"
                                 :key="preset.name"
                                 :command="preset"
                               >
@@ -327,11 +362,18 @@
                                   <span>{{ preset.name }}</span>
                                 </div>
                               </el-dropdown-item>
-                              
+
                               <!-- 逻辑：如果没有推荐项，直接显示全部；如果有且未展开，显示展开按钮 -->
-                              <template v-if="getPresetsForRole(getPlayerRole?.(p)).recommended.length === 0">
+                              <template
+                                v-if="
+                                  getPresetsForRole(getPlayerRole?.(p))
+                                    .recommended.length === 0
+                                "
+                              >
                                 <el-dropdown-item
-                                  v-for="preset in getPresetsForRole(getPlayerRole?.(p)).others"
+                                  v-for="preset in getPresetsForRole(
+                                    getPlayerRole?.(p),
+                                  ).others"
                                   :key="preset.name"
                                   :command="preset"
                                 >
@@ -342,8 +384,13 @@
                                 </el-dropdown-item>
                               </template>
 
-                              <template v-else-if="getPresetsForRole(getPlayerRole?.(p)).others.length > 0">
-                                <div 
+                              <template
+                                v-else-if="
+                                  getPresetsForRole(getPlayerRole?.(p)).others
+                                    .length > 0
+                                "
+                              >
+                                <div
                                   v-if="!expandedPlayerPresets.has(p)"
                                   class="preset-expand-divider"
                                   @click.stop="expandedPlayerPresets.add(p)"
@@ -357,7 +404,9 @@
                                 </div>
                                 <template v-else>
                                   <el-dropdown-item
-                                    v-for="(preset, idx) in getPresetsForRole(getPlayerRole?.(p)).others"
+                                    v-for="(preset, idx) in getPresetsForRole(
+                                      getPlayerRole?.(p),
+                                    ).others"
                                     :key="preset.name"
                                     :command="preset"
                                     :divided="idx === 0"
@@ -487,9 +536,13 @@
             >
               <span class="diff-label">{{ change.label }}</span>
               <div class="diff-values">
-                <span class="val old" :class="getValClass(change.oldVal)">{{ change.oldVal }}</span>
+                <span class="val old" :class="getValClass(change.oldVal)">{{
+                  change.oldVal
+                }}</span>
                 <el-icon><Right /></el-icon>
-                <span class="val new" :class="getValClass(change.newVal)">{{ change.newVal }}</span>
+                <span class="val new" :class="getValClass(change.newVal)">{{
+                  change.newVal
+                }}</span>
               </div>
             </div>
           </div>
@@ -528,7 +581,9 @@
               :role="pendingPresetData.diff.role"
               :show-only-role="showOnlyRole"
             />
-            <span class="diff-tag" v-if="pendingPresetData.diff.isNew">新设置</span>
+            <span class="diff-tag" v-if="pendingPresetData.diff.isNew"
+              >新设置</span
+            >
             <span class="diff-tag update" v-else>更新</span>
           </div>
           <div class="diff-items">
@@ -539,9 +594,13 @@
             >
               <span class="diff-label">{{ change.label }}</span>
               <div class="diff-values">
-                <span class="val old" :class="getValClass(change.oldVal)">{{ change.oldVal }}</span>
+                <span class="val old" :class="getValClass(change.oldVal)">{{
+                  change.oldVal
+                }}</span>
                 <el-icon><Right /></el-icon>
-                <span class="val new" :class="getValClass(change.newVal)">{{ change.newVal }}</span>
+                <span class="val new" :class="getValClass(change.newVal)">{{
+                  change.newVal
+                }}</span>
               </div>
             </div>
           </div>
@@ -550,10 +609,7 @@
       <template #footer>
         <div class="dialog-footer" style="justify-content: flex-end; gap: 12px">
           <el-button @click="showPresetConfirmDialog = false">取消</el-button>
-          <el-button
-            type="primary"
-            @click="confirmApplyPreset"
-          >
+          <el-button type="primary" @click="confirmApplyPreset">
             确认应用
           </el-button>
         </div>
@@ -725,7 +781,9 @@ function getStorageKey(player: string): string {
 }
 
 function exportBisData() {
-  const parts = ROLE_DEFINITIONS.filter(role => !!config.value.playerBis[role]).map((role) => {
+  const parts = ROLE_DEFINITIONS.filter(
+    (role) => !!config.value.playerBis[role],
+  ).map((role) => {
     const dataBinary = DEFAULT_ROWS.map((row) => {
       const val = config.value.playerBis[role]?.[row.id]
       if (row.type === 'toggle') {
@@ -809,7 +867,11 @@ interface PlayerDiff {
 const showImportConfirmDialog = ref(false)
 const showPresetConfirmDialog = ref(false)
 const importDiffs = ref<PlayerDiff[]>([])
-const pendingPresetData = ref<{ player: string; preset: BisPreset; diff: PlayerDiff | null } | null>(null)
+const pendingPresetData = ref<{
+  player: string
+  preset: BisPreset
+  diff: PlayerDiff | null
+} | null>(null)
 
 function getValDisplay(row: BisRow, val: BisValue | undefined): string {
   if (row.type === 'toggle') {
@@ -853,10 +915,14 @@ function parseAndPreviewBisData(rawInput: string) {
       if (!role || !data || !ROLE_DEFINITIONS.includes(role as any)) return
 
       // 找到本地对应职位的玩家名（用于预览显示）
-      const localPlayers = eligiblePlayers.value.filter(p => props.getPlayerRole?.(p) === role)
+      const localPlayers = eligiblePlayers.value.filter(
+        (p) => props.getPlayerRole?.(p) === role,
+      )
       const pName = localPlayers[0] || role
 
-      const dataBinary = parseInt(data, 36).toString(2).padStart(DEFAULT_ROWS.length, '0')
+      const dataBinary = parseInt(data, 36)
+        .toString(2)
+        .padStart(DEFAULT_ROWS.length, '0')
 
       const newConfig: Record<string, BisValue> = {}
       DEFAULT_ROWS.forEach((row, idx) => {
@@ -953,7 +1019,7 @@ function applyPreset(player: string, preset: BisPreset) {
   const storageKey = getStorageKey(player)
   const currentConfig = config.value.playerBis[storageKey] || {}
   const newConfig = { ...preset.config }
-  
+
   const changes: BisChange[] = []
   DEFAULT_ROWS.forEach((row) => {
     const oldV = currentConfig[row.id]
@@ -990,16 +1056,16 @@ function applyPreset(player: string, preset: BisPreset) {
 
 function confirmApplyPreset() {
   if (!pendingPresetData.value?.diff) return
-  
+
   const { player, preset, diff } = pendingPresetData.value
   const storageKey = getStorageKey(player)
-  
+
   if (!config.value.playerBis[storageKey]) {
     config.value.playerBis[storageKey] = {}
   }
 
   Object.assign(config.value.playerBis[storageKey], diff.newConfig)
-  
+
   showPresetConfirmDialog.value = false
   pendingPresetData.value = null
   ElMessage.success(`已应用预设: ${preset.name} (${player})`)
@@ -1032,7 +1098,7 @@ function getLogicStatus(
   row: BisRow,
 ): 'need' | 'greed' | 'pass' | 'assigned' {
   const customAlloc = customAllocations.value[row.id]
-  
+
   // 队长分配具有最高优先级
   if (customAlloc) {
     if (customAlloc === player) return 'assigned'
@@ -1113,14 +1179,14 @@ const expandedPlayerPresets = ref<Set<string>>(new Set())
 function getCurrentMatchedPresetName(player: string) {
   const role = props.getPlayerRole?.(player)
   if (!role) return null
-  
+
   const storageKey = getStorageKey(player)
   const currentConfig = config.value.playerBis[storageKey]
   if (!currentConfig || Object.keys(currentConfig).length === 0) return null
-  
+
   const { recommended, others } = getPresetsForRole(role)
   const allPresets = [...recommended, ...others]
-  
+
   for (const preset of allPresets) {
     let isMatch = true
     for (const key of Object.keys(preset.config)) {
@@ -1503,11 +1569,11 @@ const validationAlerts = computed(() => {
     color: #94a3b8 !important; // 强制灰蓝色
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    
+
     span {
       color: #94a3b8 !important; // 再次确保文字不红
     }
-    
+
     .el-button {
       padding: 0;
       height: auto;
@@ -1585,20 +1651,27 @@ const validationAlerts = computed(() => {
       &:hover {
         background: #fff;
         border-color: #3b82f6;
-        .trigger-text { color: #3b82f6; }
+        .trigger-text {
+          color: #3b82f6;
+        }
       }
 
       &.has-val {
         background: #f0fdf4;
         border-color: #bbf7d0;
-        .trigger-text { color: #16a34a; font-weight: 700; }
+        .trigger-text {
+          color: #16a34a;
+          font-weight: 700;
+        }
       }
 
       html.dark & {
         background: rgba(255, 255, 255, 0.05);
         border-color: #334155;
-        .trigger-text { color: #9ca3af; }
-        
+        .trigger-text {
+          color: #9ca3af;
+        }
+
         &:hover {
           background: rgba(255, 255, 255, 0.08);
           border-color: #3b82f6;
@@ -1607,7 +1680,9 @@ const validationAlerts = computed(() => {
         &.has-val {
           background: rgba(16, 185, 129, 0.1);
           border-color: rgba(16, 185, 129, 0.2);
-          .trigger-text { color: #10b981; }
+          .trigger-text {
+            color: #10b981;
+          }
         }
       }
     }
@@ -1640,7 +1715,7 @@ const validationAlerts = computed(() => {
       color: #f87171 !important;
     }
   }
-  
+
   .exclude-menu-scroll {
     max-height: 300px;
     overflow-y: auto;
@@ -1668,7 +1743,7 @@ const validationAlerts = computed(() => {
     height: 26px !important; // 压缩行高
     line-height: 26px !important;
     padding: 0 12px;
-    
+
     &.is-disabled {
       background-color: transparent !important;
     }
@@ -1681,7 +1756,7 @@ const validationAlerts = computed(() => {
   border-radius: 4px;
   font-weight: bold;
   line-height: 1;
-  
+
   &.need {
     color: #16a34a;
     background: #f0fdf4;
@@ -1707,8 +1782,6 @@ const validationAlerts = computed(() => {
     }
   }
 }
-
-
 
 .validation-alerts {
   display: flex;
@@ -1878,11 +1951,11 @@ const validationAlerts = computed(() => {
 
     th,
     td {
-      width: 120px;
+      width: 140px;
       border-right: 1px solid #cbd5e1;
       border-bottom: 1px solid #cbd5e1;
     }
-    
+
     th {
       height: auto !important;
       padding: 8px 0 !important;
@@ -1904,7 +1977,7 @@ const validationAlerts = computed(() => {
   align-items: center;
   gap: 4px;
   padding: 6px 0;
-  
+
   .leave-tag-trigger {
     display: flex;
     align-items: center;
@@ -1923,7 +1996,9 @@ const validationAlerts = computed(() => {
     transition: opacity 0.2s ease;
     border: 1px solid transparent;
 
-    span { color: inherit; }
+    span {
+      color: inherit;
+    }
 
     &:hover:not(.is-disabled) {
       opacity: 1;
@@ -1939,11 +2014,11 @@ const validationAlerts = computed(() => {
       font-weight: bold;
       box-shadow: 0 2px 4px rgba(248, 113, 113, 0.3);
       border: none;
-      
+
       span {
         color: #ffffff !important;
       }
-      
+
       &:hover {
         background: #ef4444 !important;
       }
@@ -1956,7 +2031,7 @@ const validationAlerts = computed(() => {
 
     html.dark & {
       color: #64748b;
-      
+
       &:hover:not(.is-disabled) {
         background: rgba(255, 255, 255, 0.05);
         color: #f1f5f9;
@@ -1968,7 +2043,7 @@ const validationAlerts = computed(() => {
         color: #ffffff !important;
         box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
         border: none;
-        
+
         span {
           color: #ffffff !important;
         }
@@ -1992,7 +2067,9 @@ const validationAlerts = computed(() => {
     color: #475569;
     font-weight: 700;
     white-space: nowrap;
-    html.dark & { color: #94a3b8; }
+    html.dark & {
+      color: #94a3b8;
+    }
   }
 
   .assign-tag-trigger {
@@ -2013,17 +2090,19 @@ const validationAlerts = computed(() => {
     transition: opacity 0.2s ease;
     border: 1px solid transparent;
 
-    span { color: inherit; }
+    span {
+      color: inherit;
+    }
 
     &.is-open {
       opacity: 1 !important;
-      background: #dcfce7 !important; 
+      background: #dcfce7 !important;
       color: #10b981 !important;
       border-color: #10b981 !important;
       box-shadow: 0 2px 4px rgba(16, 185, 129, 0.15) !important;
-      
-      span { 
-        color: #10b981 !important; 
+
+      span {
+        color: #10b981 !important;
         font-weight: 900 !important;
       }
     }
@@ -2042,11 +2121,11 @@ const validationAlerts = computed(() => {
       font-weight: bold;
       box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
       border: none;
-      
+
       span {
         color: #ffffff !important;
       }
-      
+
       &:hover {
         background: #059669 !important;
       }
@@ -2068,12 +2147,14 @@ const validationAlerts = computed(() => {
 
       &.is-open {
         opacity: 1 !important;
-        background: rgba(16, 185, 129, 0.35) !important; 
+        background: rgba(16, 185, 129, 0.35) !important;
         color: #34d399 !important;
         border-color: #10b981 !important;
         box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2) !important;
-        
-        span { color: #34d399 !important; }
+
+        span {
+          color: #34d399 !important;
+        }
       }
 
       &:hover {
@@ -2087,7 +2168,7 @@ const validationAlerts = computed(() => {
         color: #ffffff !important;
         box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
         border: none;
-        
+
         span {
           color: #ffffff !important;
         }
@@ -2095,7 +2176,6 @@ const validationAlerts = computed(() => {
     }
   }
 }
-
 
 .cell-status-container {
   display: flex;
@@ -2200,7 +2280,7 @@ const validationAlerts = computed(() => {
 .bis-preset-dropdown {
   max-height: 320px;
   overflow-y: auto;
-  
+
   :deep(.el-dropdown-menu__item) {
     padding: 0 8px;
     line-height: 20px;
@@ -2323,20 +2403,21 @@ const validationAlerts = computed(() => {
 }
 
 .preset-btn {
-  height: 24px !important;
-  padding: 0 10px !important;
-  font-size: 11px !important;
-  border-radius: 12px !important;
-  background: #f8fafc !important;
-  border: 1px solid #e2e8f0 !important;
-  color: #64748b !important;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  font-weight: 600 !important;
+  height: 20px;
+  padding: 0 6px;
+  overflow: hidden;
+  font-size: 10px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
 
   &:hover {
-    background: #f1f5f9 !important;
-    color: #334155 !important;
-    border-color: #cbd5e1 !important;
+    background: #f1f5f9;
+    color: #334155;
+    border-color: #cbd5e1;
     transform: translateY(-1.5px);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   }
@@ -2346,9 +2427,30 @@ const validationAlerts = computed(() => {
   }
 
   .magic-icon {
-    margin-right: 4px;
-    font-size: 12px;
+    margin-right: 2px;
+    font-size: 10px;
     color: #f59e0b; /* Amber icon for 'Magic' feel without clashing bg */
+    flex-shrink: 0;
+  }
+
+  &.is-matched {
+    color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    background: #eff6ff !important;
+
+    html.dark & {
+      background: rgba(59, 130, 246, 0.1) !important;
+    }
+  }
+
+  .matched-name-inline {
+    display: inline-block;
+    max-width: 105px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: normal;
+    font-size: 10px;
   }
 }
 
@@ -2358,7 +2460,7 @@ const validationAlerts = computed(() => {
   gap: 2px;
   padding: 4px 0;
   font-weight: 500;
-  
+
   .el-icon {
     color: #f59e0b;
     font-size: 14px;
@@ -2641,17 +2743,17 @@ html.dark {
   }
 
   .table-scroll-wrapper {
-      background: #1a1b26;
-      border-color: #2d2e3d;
-      &::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
-      &::-webkit-scrollbar-thumb {
-        background: #2d2e3d;
-        border-radius: 4px;
-      }
+    background: #1a1b26;
+    border-color: #2d2e3d;
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
     }
+    &::-webkit-scrollbar-thumb {
+      background: #2d2e3d;
+      border-radius: 4px;
+    }
+  }
 
   .bis-table {
     background-color: #1a1b26;
@@ -2771,7 +2873,7 @@ html.dark {
   border: 1px solid #e4e7ed !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
   padding: 4px !important;
-  
+
   .el-select-dropdown__wrap {
     max-height: none !important;
   }
@@ -2783,9 +2885,9 @@ html.dark {
     border-bottom: 1px solid #f1f5f9;
     margin-bottom: 8px;
     font-weight: 600;
-    
+
     span {
-      font-weight: 700; 
+      font-weight: 700;
       color: #1e293b;
       margin: 0 2px;
     }
@@ -2793,10 +2895,12 @@ html.dark {
     html.dark & {
       color: #94a3b8;
       border-bottom-color: rgba(255, 255, 255, 0.1);
-      span { color: #f1f5f9; }
+      span {
+        color: #f1f5f9;
+      }
     }
   }
-  
+
   .tooltip-player-list {
     display: flex;
     flex-direction: column;
@@ -2820,14 +2924,16 @@ html.dark {
       opacity: 0.3;
       cursor: not-allowed;
     }
-    
+
     &.clear-btn {
       color: #f87171;
       font-size: 10px;
       font-weight: bold;
       text-align: center;
       padding: 4px 0;
-      &:hover { background: rgba(248, 113, 113, 0.05); }
+      &:hover {
+        background: rgba(248, 113, 113, 0.05);
+      }
     }
   }
 
@@ -2854,8 +2960,10 @@ html.dark {
     .tooltip-player-item:hover:not(.is-disabled) {
       background: rgba(255, 255, 255, 0.1);
     }
-    .tooltip-divider { background: #334155; }
-    
+    .tooltip-divider {
+      background: #334155;
+    }
+
     .el-popper__arrow::before {
       background: #1e293b !important;
       border: 1px solid #334155 !important;

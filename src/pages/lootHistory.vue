@@ -488,8 +488,12 @@
                       <div class="merge-guide-desc">
                         <el-icon><InfoFilled /></el-icon>
                         <div class="guide-content">
-                          <p>合并角色将<strong>永久归并</strong>两者的所有历史记录。</p>
-                          <p>若仅需修正单次分配错误，请直接在“详情记录”中点击姓名进行修改。</p>
+                          <p>
+                            合并角色将<strong>永久归并</strong>两者的所有历史记录。
+                          </p>
+                          <p>
+                            若仅需修正单次分配错误，请直接在“详情记录”中点击姓名进行修改。
+                          </p>
                         </div>
                       </div>
 
@@ -830,19 +834,21 @@
                         trigger="click"
                         popper-class="winner-change-popper"
                         :visible="activeWinnerPopoverKey === scope.row.key"
-                        @update:visible="(val: boolean) => {
-                          if (val) {
-                            activeWinnerPopoverKey = scope.row.key;
-                            popoverOpenedWithCorrection[scope.row.key] = !!recordPlayerCorrections[scope.row.key];
-                          } else {
-                            if (activeWinnerPopoverKey === scope.row.key) activeWinnerPopoverKey = null;
+                        @update:visible="
+                          (val: boolean) => {
+                            if (val) {
+                              activeWinnerPopoverKey = scope.row.key
+                              popoverOpenedWithCorrection[scope.row.key] =
+                                !!recordPlayerCorrections[scope.row.key]
+                            } else {
+                              if (activeWinnerPopoverKey === scope.row.key)
+                                activeWinnerPopoverKey = null
+                            }
                           }
-                        }"
+                        "
                       >
                         <template #reference>
-                          <div
-                            class="winner-selector-trigger"
-                          >
+                          <div class="winner-selector-trigger">
                             <div
                               v-if="recordPlayerCorrections[scope.row.key]"
                               class="correction-winner-display"
@@ -899,7 +905,9 @@
                               link
                               size="small"
                               class="restore-btn"
-                              @click="handleWinnerChange(scope.row, scope.row.player)"
+                              @click="
+                                handleWinnerChange(scope.row, scope.row.player)
+                              "
                             >
                               恢复原始记录
                             </el-button>
@@ -1456,20 +1464,22 @@
           <el-checkbox v-model="exportForm.loot"
             >{{ LABELS.LOOT }} ({{ lootRecords.length }})</el-checkbox
           >
-          <el-checkbox v-model="exportForm.roles">{{ LABELS.ROLES }}</el-checkbox>
+          <el-checkbox v-model="exportForm.roles">{{
+            LABELS.ROLES
+          }}</el-checkbox>
           <el-checkbox v-model="exportForm.bis">{{ LABELS.BIS }}</el-checkbox>
-          <el-checkbox v-model="exportForm.mapping"
-            >{{ LABELS.MAPPING }}</el-checkbox
-          >
-          <el-checkbox v-model="exportForm.weekCorrection"
-            >{{ LABELS.WEEK_CORRECTION }}</el-checkbox
-          >
-          <el-checkbox v-model="exportForm.playerCorrection"
-            >{{ LABELS.PLAYER_CORRECTION }}</el-checkbox
-          >
-          <el-checkbox v-model="exportForm.settings"
-            >{{ LABELS.SETTINGS }}</el-checkbox
-          >
+          <el-checkbox v-model="exportForm.mapping">{{
+            LABELS.MAPPING
+          }}</el-checkbox>
+          <el-checkbox v-model="exportForm.weekCorrection">{{
+            LABELS.WEEK_CORRECTION
+          }}</el-checkbox>
+          <el-checkbox v-model="exportForm.playerCorrection">{{
+            LABELS.PLAYER_CORRECTION
+          }}</el-checkbox>
+          <el-checkbox v-model="exportForm.settings">{{
+            LABELS.SETTINGS
+          }}</el-checkbox>
         </div>
         <template #footer>
           <span class="dialog-footer">
@@ -1590,11 +1600,17 @@
             </el-checkbox>
             <el-checkbox
               v-model="importForm.settings"
-              :disabled="!importDataPending.c?.filter && importDataPending.c?.raidActive === undefined"
+              :disabled="
+                !importDataPending.c?.filter &&
+                importDataPending.c?.raidActive === undefined
+              "
             >
               {{ LABELS.SETTINGS }}
               <span
-                v-if="!importDataPending.c?.filter && importDataPending.c?.raidActive === undefined"
+                v-if="
+                  !importDataPending.c?.filter &&
+                  importDataPending.c?.raidActive === undefined
+                "
                 class="import-not-found-hint"
                 >- 未发现数据</span
               >
@@ -1700,17 +1716,60 @@
           <div class="clear-selection-header">
             <p class="clear-warning-text">请选择要彻底删除的数据项：</p>
             <div class="clear-quick-actions">
-              <el-button link type="primary" size="small" @click="clearForm = { loot: true, bis: true, roles: true, mapping: true, weekCorrection: true, playerCorrection: true, settings: true }">全选</el-button>
-              <el-button link size="small" @click="clearForm = { loot: !clearForm.loot, bis: !clearForm.bis, roles: !clearForm.roles, mapping: !clearForm.mapping, weekCorrection: !clearForm.weekCorrection, playerCorrection: !clearForm.playerCorrection, settings: !clearForm.settings }">反选</el-button>
+              <el-button
+                link
+                type="primary"
+                size="small"
+                @click="
+                  clearForm = {
+                    loot: true,
+                    bis: true,
+                    roles: true,
+                    mapping: true,
+                    weekCorrection: true,
+                    playerCorrection: true,
+                    settings: true,
+                  }
+                "
+                >全选</el-button
+              >
+              <el-button
+                link
+                size="small"
+                @click="
+                  clearForm = {
+                    loot: !clearForm.loot,
+                    bis: !clearForm.bis,
+                    roles: !clearForm.roles,
+                    mapping: !clearForm.mapping,
+                    weekCorrection: !clearForm.weekCorrection,
+                    playerCorrection: !clearForm.playerCorrection,
+                    settings: !clearForm.settings,
+                  }
+                "
+                >反选</el-button
+              >
             </div>
           </div>
-          <el-checkbox v-model="clearForm.loot">{{ LABELS.LOOT }} ({{ lootRecords.length }})</el-checkbox>
-          <el-checkbox v-model="clearForm.roles">{{ LABELS.ROLES }}</el-checkbox>
+          <el-checkbox v-model="clearForm.loot"
+            >{{ LABELS.LOOT }} ({{ lootRecords.length }})</el-checkbox
+          >
+          <el-checkbox v-model="clearForm.roles">{{
+            LABELS.ROLES
+          }}</el-checkbox>
           <el-checkbox v-model="clearForm.bis">{{ LABELS.BIS }}</el-checkbox>
-          <el-checkbox v-model="clearForm.mapping">{{ LABELS.MAPPING }}</el-checkbox>
-          <el-checkbox v-model="clearForm.weekCorrection">{{ LABELS.WEEK_CORRECTION }}</el-checkbox>
-          <el-checkbox v-model="clearForm.playerCorrection">{{ LABELS.PLAYER_CORRECTION }}</el-checkbox>
-          <el-checkbox v-model="clearForm.settings">{{ LABELS.SETTINGS }} (重置)</el-checkbox>
+          <el-checkbox v-model="clearForm.mapping">{{
+            LABELS.MAPPING
+          }}</el-checkbox>
+          <el-checkbox v-model="clearForm.weekCorrection">{{
+            LABELS.WEEK_CORRECTION
+          }}</el-checkbox>
+          <el-checkbox v-model="clearForm.playerCorrection">{{
+            LABELS.PLAYER_CORRECTION
+          }}</el-checkbox>
+          <el-checkbox v-model="clearForm.settings"
+            >{{ LABELS.SETTINGS }} (重置)</el-checkbox
+          >
         </div>
         <div class="clear-danger-hint">
           <el-icon><Warning /></el-icon>
@@ -1918,9 +1977,10 @@ const recordWeekCorrections = ref<Record<string, number>>({})
 const recordPlayerCorrections = ref<Record<string, string>>({})
 const activeWinnerPopoverKey = ref<string | null>(null)
 const popoverOpenedWithCorrection = ref<Record<string, boolean>>({})
-const pendingWinnerChange = ref<{ record: LootRecord; newPlayer: string } | null>(
-  null,
-)
+const pendingWinnerChange = ref<{
+  record: LootRecord
+  newPlayer: string
+} | null>(null)
 const bisConfig = ref<BisConfig>({ playerBis: {} })
 
 // 排序模式：'part' (部位排序) | 'drop' (掉落排序)
@@ -2091,10 +2151,14 @@ watch(
 
     for (const { key, value } of rawConfigs) {
       // 快速序列化进行对比
-      const serialized = typeof value === 'object' ? JSON.stringify(value) : String(value)
+      const serialized =
+        typeof value === 'object' ? JSON.stringify(value) : String(value)
       if (lastSavedState.get(key) !== serialized) {
         // 发现变化，加入待更新列表
-        pendingUpdates.push({ key, value: typeof value === 'object' ? JSON.parse(serialized) : value })
+        pendingUpdates.push({
+          key,
+          value: typeof value === 'object' ? JSON.parse(serialized) : value,
+        })
         lastSavedState.set(key, serialized)
       }
     }
@@ -2512,7 +2576,9 @@ const sortedSummaryPlayers = computed(() => {
 const playersWithRecordsMatchingItemFilters = computed(() => {
   const set = new Set<string>()
   const startTs = new Date(syncStartDate.value).getTime()
-  const endTs = syncEndDate.value ? new Date(syncEndDate.value).getTime() : Infinity
+  const endTs = syncEndDate.value
+    ? new Date(syncEndDate.value).getTime()
+    : Infinity
 
   lootRecords.value.forEach((r) => {
     // 1. 系统过滤（如屏蔽屏蔽乐谱等）
@@ -3324,10 +3390,6 @@ function toggleItemVisibility(item: string) {
   itemVisibility.value[item] = !currentVisible
 }
 
-/**
- * 【核心逻辑】计算玩家对某个物品的目标需求量
- * 彻底解决“默认1个”与“BIS数量”逻辑不统一的问题
- */
 function calculateTargetRequirement(row: any, player: string) {
   const roleKey = getPlayerRole(player)
   if (!roleKey) return 0
@@ -3337,15 +3399,12 @@ function calculateTargetRequirement(row: any, player: string) {
     return 0
   }
 
-  // 1. 基础 BIS 判定
   const isBis = isBisItem(row, bis)
 
   if (isBis) {
     return row.type === 'count' ? (bis[row.id] as number) || 0 : 1
   }
 
-  // 2. 非 BIS 状态下的“保底一人一个”判定
-  // 规则：所有基础部位装备箱（排除武器箱）+ 纤维 + 药
   const isStandardBox = row.type === 'toggle' && row.id !== 'weapon'
   const isUpgradeMaterial =
     row.id === 'twine' ||
@@ -5130,7 +5189,9 @@ html.dark .loading-sub-txt {
     }
     p {
       margin: 0;
-      &:first-child { margin-bottom: 4px; }
+      &:first-child {
+        margin-bottom: 4px;
+      }
     }
   }
 }
@@ -6070,8 +6131,14 @@ html.dark {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  .brand { width: 140px; height: 24px; }
-  .toolbar { width: 400px; height: 24px; }
+  .brand {
+    width: 140px;
+    height: 24px;
+  }
+  .toolbar {
+    width: 400px;
+    height: 24px;
+  }
 }
 
 .skeleton-page-main {
@@ -6083,13 +6150,21 @@ html.dark {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  
-  .control { width: 100%; height: 40px; border-radius: 8px; }
+
+  .control {
+    width: 100%;
+    height: 40px;
+    border-radius: 8px;
+  }
   .skeleton-filters {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    .filter-box { width: 100%; height: 120px; border-radius: 12px; }
+    .filter-box {
+      width: 100%;
+      height: 120px;
+      border-radius: 12px;
+    }
   }
 }
 
@@ -6097,7 +6172,10 @@ html.dark {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
-  .card { height: 160px; border-radius: 12px; }
+  .card {
+    height: 160px;
+    border-radius: 12px;
+  }
 }
 
 .skeleton-item {
@@ -6106,7 +6184,7 @@ html.dark {
   overflow: hidden;
 
   &::after {
-    content: "";
+    content: '';
     position: absolute;
     inset: 0;
     transform: translateX(-100%);
@@ -6121,12 +6199,19 @@ html.dark {
 }
 
 @keyframes shimmer {
-  100% { transform: translateX(100%); }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 html.dark {
-  .initial-loading { background: #0f172a; }
-  .skeleton-header { background: #1e293b; border-color: rgba(255, 255, 255, 0.05); }
+  .initial-loading {
+    background: #0f172a;
+  }
+  .skeleton-header {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, 0.05);
+  }
   .skeleton-item {
     background: rgba(255, 255, 255, 0.05);
     &::after {
@@ -6141,7 +6226,9 @@ html.dark {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-overlay {
