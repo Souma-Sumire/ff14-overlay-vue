@@ -80,7 +80,7 @@ export default defineConfig({
             return 'shared-core'
           }
 
-          if (id.includes('cactbot/')) {
+          if (id.includes('cactbot/') && !id.includes('user_config.ts')) {
             return 'cactbot'
           }
         },
