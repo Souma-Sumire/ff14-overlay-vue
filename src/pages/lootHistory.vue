@@ -188,6 +188,11 @@
               </template>
             </el-dropdown>
 
+            <el-button plain class="tool-btn" @click="showCustomCorrectionDialog = true">
+              <el-icon><RefreshLeft /></el-icon>
+              <span>自定义修正管理</span>
+            </el-button>
+
             <div class="v-divider"></div>
 
             <el-popover
@@ -1665,47 +1670,7 @@
           </span>
         </template>
       </el-dialog>
-      <el-dialog
-        v-model="showManualAddDialog"
-        title="手动添加记录"
-        width="400px"
-        append-to-body
-      >
-        <el-form label-width="80px">
-          <el-form-item label="时间">
-            <el-date-picker
-              v-model="manualForm.timestamp"
-              type="datetime"
-              placeholder="选择获得时间"
-              style="width: 100%"
-            />
-          </el-form-item>
-          <el-form-item label="物品">
-            <el-autocomplete
-              v-model="manualForm.item"
-              :fetch-suggestions="querySearchItems"
-              placeholder="请输入物品名称"
-              style="width: 100%"
-            />
-          </el-form-item>
-          <el-form-item label="获得者">
-            <el-autocomplete
-              v-model="manualForm.player"
-              :fetch-suggestions="querySearchPlayers"
-              placeholder="请输入玩家名称"
-              style="width: 100%"
-            />
-          </el-form-item>
-        </el-form>
-        <template #footer>
-          <span class="dialog-footer">
-            <el-button @click="showManualAddDialog = false">取消</el-button>
-            <el-button type="primary" @click="submitManualRecord"
-              >确定添加</el-button
-            >
-          </span>
-        </template>
-      </el-dialog>
+
       <el-dialog
         v-model="showClearDialog"
         title="清空数据选项"
@@ -1781,6 +1746,164 @@
             <el-button type="danger" @click="confirmClear">确定清空</el-button>
           </span>
         </template>
+      </el-dialog>
+      <el-dialog
+        v-model="showManualAddDialog"
+        title="手动添加记录"
+        width="400px"
+        append-to-body
+      >
+        <el-form label-width="80px">
+          <el-form-item label="时间">
+            <el-date-picker
+              v-model="manualForm.timestamp"
+              type="datetime"
+              placeholder="选择获得时间"
+              style="width: 100%"
+            />
+          </el-form-item>
+          <el-form-item label="物品">
+            <el-autocomplete
+              v-model="manualForm.item"
+              :fetch-suggestions="querySearchItems"
+              placeholder="请输入物品名称"
+              style="width: 100%"
+            />
+          </el-form-item>
+          <el-form-item label="获得者">
+            <el-autocomplete
+              v-model="manualForm.player"
+              :fetch-suggestions="querySearchPlayers"
+              placeholder="请输入玩家名称"
+              style="width: 100%"
+            />
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button @click="showManualAddDialog = false">取消</el-button>
+            <el-button type="primary" @click="submitManualRecord"
+              >确定添加</el-button
+            >
+          </span>
+        </template>
+      </el-dialog>
+
+      <el-dialog
+        v-model="showCustomCorrectionDialog"
+        title="自定义修正管理"
+        width="850px"
+        append-to-body
+        class="premium-correction-dialog"
+      >
+        <div class="premium-correction-layout">
+          <div class="correction-sidebar">
+            <div 
+              class="nav-item" 
+              :class="{ active: activeCorrectionTab === 'player' }"
+              @click="activeCorrectionTab = 'player'"
+            >
+              <div class="nav-icon"><el-icon><User /></el-icon></div>
+              <div class="nav-content">
+                <div class="nav-title">获得者修正</div>
+                <div class="nav-status">{{ filteredPlayerCorrections.length }} 个条目</div>
+              </div>
+            </div>
+            <div 
+              class="nav-item" 
+              :class="{ active: activeCorrectionTab === 'week' }"
+              @click="activeCorrectionTab = 'week'"
+            >
+              <div class="nav-icon"><el-icon><Calendar /></el-icon></div>
+              <div class="nav-content">
+                <div class="nav-title">CD周数修正</div>
+                <div class="nav-status">{{ filteredWeekCorrections.length }} 个条目</div>
+              </div>
+            </div>
+            
+            <div class="sidebar-footer">
+              <el-input
+                v-model="correctionSearch"
+                placeholder="搜索内容..."
+                prefix-icon="Search"
+                size="small"
+                clearable
+              />
+            </div>
+          </div>
+
+          <div class="correction-main">
+            <div class="main-header">
+              <h3>
+                {{ activeCorrectionTab === 'player' ? '获得者修正管理' : 'CD周数修正管理' }}
+              </h3>
+              <p>可以撤销手动进行的改动，恢复最原始的系统记录。</p>
+            </div>
+
+            <div class="correction-grid-wrapper scroll-thin">
+              <div 
+                v-for="item in (activeCorrectionTab === 'player' ? filteredPlayerCorrections : filteredWeekCorrections)" 
+                :key="item.key"
+                class="correction-card-compact"
+              >
+                <div class="card-main-row">
+                  <div class="item-primary-info">
+                    <div class="item-name" :title="item.itemName">{{ item.itemName }}</div>
+                    <div class="item-time">{{ formatTime(item.record.timestamp) }}</div>
+                  </div>
+                  
+                  <div class="card-comparison-inline">
+                    <div class="comp-box old">
+                      <div class="value">
+                        <template v-if="activeCorrectionTab === 'player'">
+                          <PlayerDisplay :name="item.oldVal" :role="getPlayerRole(item.oldVal)" :show-only-role="false" />
+                        </template>
+                        <template v-else>
+                          <span class="week-text">{{ item.oldVal }}</span>
+                        </template>
+                      </div>
+                    </div>
+                    
+                    <div class="comp-arrow">
+                      <el-icon><Right /></el-icon>
+                    </div>
+                    
+                    <div class="comp-box new">
+                      <div class="value">
+                        <template v-if="activeCorrectionTab === 'player'">
+                          <PlayerDisplay :name="item.newVal" :role="getPlayerRole(item.newVal)" :show-only-role="false" />
+                        </template>
+                        <template v-else>
+                          <span class="week-text">{{ item.newVal }}</span>
+                        </template>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="card-actions">
+                    <el-button 
+                      type="primary" 
+                      link 
+                      size="small"
+                      @click="restoreCorrection(item)"
+                    >
+                      <el-icon><RefreshLeft /></el-icon>
+                      还原
+                    </el-button>
+                  </div>
+                </div>
+              </div>
+
+              <div 
+                v-if="(activeCorrectionTab === 'player' ? filteredPlayerCorrections : filteredWeekCorrections).length === 0" 
+                class="premium-empty"
+              >
+                <el-icon class="empty-icon"><CircleCheckFilled /></el-icon>
+                <p>暂无符合条件的修正项</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </el-dialog>
     </template>
 
@@ -1981,7 +2104,77 @@ const pendingWinnerChange = ref<{
   record: LootRecord
   newPlayer: string
 } | null>(null)
+const showCustomCorrectionDialog = ref(false)
+const correctionSearch = ref('')
+const activeCorrectionTab = ref('player')
 const bisConfig = ref<BisConfig>({ playerBis: {} })
+
+const filteredPlayerCorrections = computed(() => {
+  const list: any[] = []
+  const recordMap = new Map(lootRecords.value.map(r => [r.key, r]))
+
+  Object.entries(recordPlayerCorrections.value).forEach(([key, newVal]) => {
+    const record = recordMap.get(key)
+    if (!record) return
+    list.push({
+      key,
+      type: 'player',
+      itemName: record.item,
+      oldVal: record.player,
+      newVal: newVal,
+      record
+    })
+  })
+
+  if (!correctionSearch.value) return list
+  const s = correctionSearch.value.toLowerCase()
+  return list.filter(item => 
+    item.itemName.toLowerCase().includes(s) || 
+    item.oldVal.toString().toLowerCase().includes(s) || 
+    item.newVal.toString().toLowerCase().includes(s)
+  )
+})
+
+const filteredWeekCorrections = computed(() => {
+  const list: any[] = []
+  const recordMap = new Map(lootRecords.value.map(r => [r.key, r]))
+
+  Object.entries(recordWeekCorrections.value).forEach(([key, newVal]) => {
+    const record = recordMap.get(key)
+    if (!record) return
+    const oldIdx = getRaidWeekIndex(record.timestamp, GAME_VERSION_CONFIG.RAID_START_TIME)
+    const targetIdx = oldIdx + (newVal as number)
+    list.push({
+      key,
+      type: 'week',
+      itemName: record.item,
+      oldVal: `第 ${oldIdx} 周`,
+      newVal: `第 ${targetIdx} 周`,
+      record
+    })
+  })
+
+  if (!correctionSearch.value) return list
+  const s = correctionSearch.value.toLowerCase()
+  return list.filter(item => 
+    item.itemName.toLowerCase().includes(s) || 
+    item.oldVal.toString().toLowerCase().includes(s) || 
+    item.newVal.toString().toLowerCase().includes(s)
+  )
+})
+
+function restoreCorrection(item: any) {
+  if (item.type === 'player') {
+    const newMap = { ...recordPlayerCorrections.value }
+    delete newMap[item.key]
+    recordPlayerCorrections.value = newMap
+  } else {
+    const newMap = { ...recordWeekCorrections.value }
+    delete newMap[item.key]
+    recordWeekCorrections.value = newMap
+  }
+  ElMessage.success('已还原该条修正项')
+}
 
 // 排序模式：'part' (部位排序) | 'drop' (掉落排序)
 const summarySortMode = ref<'part' | 'drop'>('part')
@@ -7903,5 +8096,217 @@ html.dark {
   align-items: center;
   gap: 8px;
   width: 100%;
+}
+
+.premium-correction-dialog {
+  .el-dialog__header {
+    margin-right: 0 !important;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f1f5f9;
+    html.dark & { border-color: rgba(255, 255, 255, 0.05); }
+  }
+  .el-dialog__body {
+    padding: 0 !important;
+    overflow: hidden;
+  }
+}
+
+.premium-correction-layout {
+  display: flex;
+  height: 550px;
+  background: #ffffff;
+  
+  html.dark & {
+    background: #1a1b26;
+  }
+
+  .correction-sidebar {
+    width: 200px;
+    background: #f8fafc;
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 0;
+
+    html.dark & {
+      background: rgba(255, 255, 255, 0.02);
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-item {
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      border-left: 3px solid transparent;
+      margin-bottom: 4px;
+
+      &:hover {
+        background: rgba(59, 130, 246, 0.05);
+      }
+
+      &.active {
+        background: #fff;
+        border-left-color: #3b82f6;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        
+        html.dark & { background: rgba(59, 130, 246, 0.1); }
+
+        .nav-title { color: #1e293b; font-weight: 700; html.dark & { color: #f1f5f9; } }
+      }
+
+      .nav-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        color: #64748b;
+        font-size: 18px;
+        
+        html.dark & { background: #2d2e3d; color: #94a3b8; }
+        
+        .el-icon { font-size: 18px; }
+      }
+
+      &.active .nav-icon {
+        background: #3b82f6;
+        color: #fff;
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+      }
+
+      .nav-content {
+        .nav-title { font-size: 14px; color: #64748b; margin-bottom: 2px; }
+        .nav-status { font-size: 12px; color: #94a3b8; }
+      }
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 0 20px;
+    }
+  }
+
+  .correction-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 20px 24px;
+
+    .main-header {
+      margin-bottom: 16px;
+      h3 { font-size: 16px; font-weight: 800; color: #1e293b; margin: 0 0 4px 0; html.dark & { color: #f1f5f9; } }
+      p { color: #64748b; margin: 0; font-size: 12px; }
+    }
+
+    .correction-grid-wrapper {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 8px;
+      padding-top: 4px; /* 为 hover 上浮效果留出空间 */
+      
+      &::-webkit-scrollbar { width: 5px; }
+      &::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+    }
+
+    .correction-card-compact {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      
+      &:hover {
+        transform: translateX(4px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        border-color: #3b82f6;
+      }
+
+      html.dark & {
+        background: #252632;
+        border-color: rgba(255, 255, 255, 0.05);
+        &:hover { border-color: #3b82f6; background: #2d2e3d; }
+      }
+
+      .card-main-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .item-primary-info {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        .item-name { 
+          font-weight: 700; 
+          color: #1e293b; 
+          font-size: 13px; 
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          line-height: 1.2;
+          html.dark & { color: #f1f5f9; } 
+        }
+        .item-time { font-size: 10px; color: #94a3b8; font-family: 'JetBrains Mono', monospace; opacity: 0.6; line-height: 1.2; margin-top: 1px; }
+      }
+
+      .card-comparison-inline {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #f8fafc;
+        border-radius: 6px;
+        padding: 4px 10px;
+        min-width: 280px;
+        
+        html.dark & { background: rgba(0, 0, 0, 0.2); }
+
+        .comp-box {
+          flex: 1;
+          display: flex;
+          justify-content: center;
+          .value { 
+            font-size: 12px; 
+            .week-text { font-weight: 700; color: #64748b; html.dark & { color: #94a3b8; } } 
+          }
+        }
+
+        .comp-arrow {
+          color: #94a3b8;
+          font-size: 12px;
+          opacity: 0.4;
+        }
+
+        .new .value .week-text { color: #10b981; }
+      }
+
+      .card-actions {
+        margin-left: 4px;
+        .el-button { font-weight: 600; font-size: 11px; padding: 4px 0; }
+      }
+    }
+  }
+}
+
+.premium-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #94a3b8;
+  opacity: 0.6;
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  p { font-size: 13px; margin: 0; }
 }
 </style>
