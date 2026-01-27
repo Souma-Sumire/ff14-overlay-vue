@@ -998,7 +998,7 @@
               </div>
             </el-tab-pane>
 
-            <el-tab-pane name="summary" :disabled="!isRaidRolesComplete">
+            <el-tab-pane name="summary" :disabled="!isRaidRolesComplete" lazy>
               <template #label>
                 <el-tooltip
                   :disabled="isRaidRolesComplete"
@@ -1043,7 +1043,7 @@
               </div>
             </el-tab-pane>
 
-            <el-tab-pane name="slot" :disabled="!isRaidRolesComplete">
+            <el-tab-pane name="slot" :disabled="!isRaidRolesComplete" lazy>
               <template #label>
                 <el-tooltip
                   :disabled="isRaidRolesComplete"
@@ -1101,7 +1101,7 @@
               </div>
             </el-tab-pane>
 
-            <el-tab-pane name="week" :disabled="!isRaidRolesComplete">
+            <el-tab-pane name="week" :disabled="!isRaidRolesComplete" lazy>
               <template #label>
                 <el-tooltip
                   :disabled="isRaidRolesComplete"
@@ -1256,7 +1256,7 @@
               />
             </el-tab-pane>
 
-            <el-tab-pane name="bis" :disabled="!isRaidRolesComplete">
+            <el-tab-pane name="bis" :disabled="!isRaidRolesComplete" lazy>
               <template #label>
                 <el-tooltip
                   :disabled="isRaidRolesComplete"
