@@ -308,9 +308,11 @@
                           <el-button
                             size="small"
                             class="preset-btn"
+                            :class="{ 'is-matched': getCurrentMatchedPresetName(p) }"
                           >
                             <el-icon class="magic-icon"><MagicStick /></el-icon>
-                            <span>一键预设</span>
+                            <span v-if="getCurrentMatchedPresetName(p)" class="matched-name-inline" :title="getCurrentMatchedPresetName(p)">{{ getCurrentMatchedPresetName(p) }}</span>
+                            <span v-else>一键预设</span>
                           </el-button>
                           <template #dropdown>
                             <el-dropdown-menu class="bis-preset-dropdown">
@@ -723,22 +725,17 @@ function getStorageKey(player: string): string {
 }
 
 function exportBisData() {
-  const parts = eligiblePlayers.value.map((p) => {
-    const role = props.getPlayerRole?.(p) || 'Unknown'
-    const storageKey = getStorageKey(p)
+  const parts = ROLE_DEFINITIONS.filter(role => !!config.value.playerBis[role]).map((role) => {
     const dataBinary = DEFAULT_ROWS.map((row) => {
-      const val = config.value.playerBis[storageKey]?.[row.id]
+      const val = config.value.playerBis[role]?.[row.id]
       if (row.type === 'toggle') {
-        // 1=零式, 0=点数 (或未设置)
         return val === 'raid' ? '1' : '0'
       } else {
-        // 如果有数量则为 1，否则为 0 (符合 1-count 规则)
         return typeof val === 'number' && val > 0 ? '1' : '0'
       }
     }).join('')
-    // 将 14 位二进制字符串转换为 36 进制进行压缩
     const data = parseInt(dataBinary, 2).toString(36)
-    return `${p}:${role}:${data}`
+    return `${role}:${data}`
   })
   let str = parts.join(';')
   navigator.clipboard.writeText(str).then(() => {
@@ -767,17 +764,17 @@ function importBisData() {
         if (part.startsWith('weeks:')) continue
         const segs = part.split(':')
 
-        if (segs.length !== 3) {
+        if (segs.length !== 2) {
           return `数据格式错误："${part.slice(0, 10)}..."`
         }
 
-        const [name, , data] = segs
+        const [role, data] = segs
 
         if (!data || !/^[0-9a-z]+$/i.test(data)) {
-          return `数据校验失败：玩家 "${name || '未知'}" 的设置已损坏`
+          return `数据校验失败：职位 "${role || '未知'}" 的设置已损坏`
         }
 
-        if (name && eligiblePlayers.value.includes(name)) {
+        if (ROLE_DEFINITIONS.includes(role as any)) {
           validCount++
         }
       }
@@ -849,80 +846,47 @@ function parseAndPreviewBisData(rawInput: string) {
         return
       }
       const segs = part.split(':')
-      if (segs.length < 3) return
-      const name = segs[0]
-      const roleStr = segs[1]
-      const data = segs[2]
+      if (segs.length !== 2) return
+      const role = segs[0]
+      const data = segs[1]
 
-      if (!name || !data || !eligiblePlayers.value.includes(name)) return // 名字不匹配直接忽略
+      if (!role || !data || !ROLE_DEFINITIONS.includes(role as any)) return
 
-      const currentRole = props.getPlayerRole?.(name as string)
-      if (
-        currentRole &&
-        roleStr &&
-        roleStr !== 'Unknown' &&
-        currentRole !== roleStr
-      ) {
-        // 职业不匹配，跳过
-        return
-      }
+      // 找到本地对应职位的玩家名（用于预览显示）
+      const localPlayers = eligiblePlayers.value.filter(p => props.getPlayerRole?.(p) === role)
+      const pName = localPlayers[0] || role
 
-      // 判定是否是旧版（14位纯数字）还是新版（压缩后的Base36）
-      const dataBinary =
-        data.length === DEFAULT_ROWS.length && /^[012]+$/.test(data)
-          ? data
-          : parseInt(data, 36).toString(2).padStart(DEFAULT_ROWS.length, '0')
+      const dataBinary = parseInt(data, 36).toString(2).padStart(DEFAULT_ROWS.length, '0')
 
       const newConfig: Record<string, BisValue> = {}
-      let isValidRow = true
-
       DEFAULT_ROWS.forEach((row, idx) => {
         const char = dataBinary[idx]
-        if (!char) {
-          isValidRow = false
-          return
-        }
-
         if (row.type === 'toggle') {
-          // 在新版二进制中：1=raid, 0=tome
-          // 为兼容旧版：1=raid, 2=tome, 0=none
-          if (char === '1') newConfig[row.id] = 'raid'
-          else newConfig[row.id] = 'tome'
+          newConfig[row.id] = char === '1' ? 'raid' : 'tome'
         } else {
-          // 在新版二进制中：1=1, 0=0
           newConfig[row.id] = char === '1' ? 1 : 0
         }
       })
 
-      if (!isValidRow) return
-
-      const storageKey = getStorageKey(name as string)
-      const currentConfig =
-        (storageKey && config.value.playerBis[storageKey]) || {}
+      const currentConfig = config.value.playerBis[role] || {}
       const changes: BisChange[] = []
       let hasChanges = false
 
       DEFAULT_ROWS.forEach((row) => {
         const oldV = currentConfig[row.id]
         const newV = newConfig[row.id]
-
         const sOld = getValDisplay(row, oldV)
         const sNew = getValDisplay(row, newV)
-
         if (sOld !== sNew) {
           hasChanges = true
-          changes.push({
-            label: row.name,
-            oldVal: sOld,
-            newVal: sNew,
-          })
+          changes.push({ label: row.name, oldVal: sOld, newVal: sNew })
         }
       })
 
       if (hasChanges) {
         diffs.push({
-          name: name!,
-          role: currentRole || roleStr || 'Unknown',
+          name: pName,
+          role: role,
           isNew: Object.keys(currentConfig).length === 0,
           changes,
           newConfig,
@@ -931,7 +895,7 @@ function parseAndPreviewBisData(rawInput: string) {
     })
 
     if (diffs.length === 0) {
-      ElMessage.info('未检测到有效的设置变更，或玩家信息不匹配。')
+      ElMessage.info('未检测到有效的设置变更。')
       return
     }
 
@@ -953,9 +917,8 @@ const importWeeks = ref<number | undefined>(undefined)
 function confirmImportAction() {
   const newPlayerBis = { ...config.value.playerBis }
   importDiffs.value.forEach((diff) => {
-    const storageKey = getStorageKey(diff.name)
-    newPlayerBis[storageKey] = {
-      ...newPlayerBis[storageKey],
+    newPlayerBis[diff.role] = {
+      ...newPlayerBis[diff.role],
       ...diff.newConfig,
     }
   })
@@ -964,7 +927,7 @@ function confirmImportAction() {
     config.value.plannedWeeks = importWeeks.value
   }
   showImportConfirmDialog.value = false
-  ElMessage.success(`成功更新 ${importDiffs.value.length} 位玩家设置`)
+  ElMessage.success(`成功更新 ${importDiffs.value.length} 个职位的配置`)
 }
 
 function setBis(player: string, rowId: string, type: BisValue) {
@@ -1146,6 +1109,30 @@ const eligiblePlayers = computed(() => {
 })
 
 const expandedPlayerPresets = ref<Set<string>>(new Set())
+
+function getCurrentMatchedPresetName(player: string) {
+  const role = props.getPlayerRole?.(player)
+  if (!role) return null
+  
+  const storageKey = getStorageKey(player)
+  const currentConfig = config.value.playerBis[storageKey]
+  if (!currentConfig || Object.keys(currentConfig).length === 0) return null
+  
+  const { recommended, others } = getPresetsForRole(role)
+  const allPresets = [...recommended, ...others]
+  
+  for (const preset of allPresets) {
+    let isMatch = true
+    for (const key of Object.keys(preset.config)) {
+      if (currentConfig[key] !== preset.config[key]) {
+        isMatch = false
+        break
+      }
+    }
+    if (isMatch) return preset.name
+  }
+  return null
+}
 
 function hasAnyPresets(player: string) {
   const role = props.getPlayerRole?.(player)

@@ -1813,6 +1813,7 @@ import {
   isBisItem,
   countObtainedItems,
   type BisConfig,
+  type BisValue,
 } from '@/utils/bisUtils'
 
 const GAME_VERSION_CONFIG = {
@@ -3328,7 +3329,8 @@ function toggleItemVisibility(item: string) {
  * 彻底解决“默认1个”与“BIS数量”逻辑不统一的问题
  */
 function calculateTargetRequirement(row: any, player: string) {
-  const roleKey = getPlayerRole(player) || player
+  const roleKey = getPlayerRole(player)
+  if (!roleKey) return 0
   const bis = (bisConfig.value.playerBis || {})[roleKey] || {}
 
   if (row.type === 'count' && bis[row.id] === 0) {
@@ -3515,9 +3517,8 @@ function getFilteredItemsInPlayerSummary(player: string) {
   }[] = []
 
   const roleKey = getPlayerRole(player)
-  const isRegularRole = roleKey && ROLE_DEFINITIONS.includes(roleKey as any)
-  const hasRole = isRegularRole
-  const playerBis = (bisConfig.value?.playerBis || {})[roleKey || player] || {}
+  const hasRole = !!(roleKey && ROLE_DEFINITIONS.includes(roleKey as any))
+  const playerBis = (bisConfig.value?.playerBis || {})[roleKey || ''] || {}
 
   DEFAULT_ROWS.forEach((row) => {
     const count = categoryCounts[row.id]
@@ -3894,7 +3895,14 @@ async function confirmExport() {
     const config: any = {}
     if (exportForm.value.mapping) config.map = playerMapping.value
     if (exportForm.value.roles) config.roles = playerRoles.value
-    if (exportForm.value.bis) config.bisConfig = bisConfig.value
+    if (exportForm.value.bis) {
+      const filteredBis: BisConfig = { playerBis: {} }
+      ROLE_DEFINITIONS.forEach((role) => {
+        const data = bisConfig.value.playerBis?.[role]
+        if (data) filteredBis.playerBis[role] = data
+      })
+      config.bisConfig = filteredBis
+    }
     if (exportForm.value.settings) {
       config.filter = systemFilterSettings.value
       config.raidActive = isOnlyRaidMembersActive.value
@@ -3992,10 +4000,20 @@ async function processImportJSON(json: any) {
     const incomingBis = json.c?.bisConfig || json.bisConfig || json.c?.bis
     importDiffs.value = {
       loot: hasLoot && newLootCount > 0,
-      bis:
-        hasBis &&
-        JSON.stringify(bisConfig.value?.playerBis || {}) !==
-          JSON.stringify(incomingBis?.playerBis || incomingBis || {}),
+      bis: (() => {
+        if (!hasBis) return false
+        const localFiltered: Record<string, Record<string, BisValue>> = {}
+        const incomingFiltered: Record<string, Record<string, BisValue>> = {}
+        ROLE_DEFINITIONS.forEach((role) => {
+          if (bisConfig.value.playerBis?.[role])
+            localFiltered[role] = bisConfig.value.playerBis[role]
+          if (incomingBis?.playerBis?.[role])
+            incomingFiltered[role] = incomingBis.playerBis[role]
+        })
+        return (
+          JSON.stringify(localFiltered) !== JSON.stringify(incomingFiltered)
+        )
+      })(),
       roles:
         hasRoles &&
         JSON.stringify(playerRoles.value) !== JSON.stringify(json.c.roles),
@@ -4060,8 +4078,15 @@ async function confirmImport() {
       if (importForm.value.roles && json.c.roles)
         playerRoles.value = { ...playerRoles.value, ...json.c.roles }
       if (importForm.value.bis) {
-        const incomingBis = json.c.bisConfig || json.bisConfig
-        if (incomingBis) bisConfig.value = incomingBis
+        const incomingBis = json.c.bisConfig || json.bisConfig || json.c.bis
+        if (incomingBis) {
+          const filtered: BisConfig = { playerBis: {} }
+          ROLE_DEFINITIONS.forEach((role) => {
+            const data = incomingBis.playerBis?.[role]
+            if (data) filtered.playerBis[role] = data
+          })
+          bisConfig.value = filtered
+        }
       }
 
       if (importForm.value.settings) {
