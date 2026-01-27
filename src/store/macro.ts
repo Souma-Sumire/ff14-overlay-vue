@@ -68,7 +68,7 @@ function cleanMacro(text: string): string {
 //   }
 // }
 
-function macroCommand(text: string, channel: 'e' | 'p') {
+async function macroCommand(text: string, channel: 'e' | 'p') {
   if (channel === 'p' && partyLen === 0)
     doTextCommand('/e 单人时无法发送小队宏<se.3>')
   const macros = text.replaceAll(/^\s*\/[pe]\s/gm, '').split('\n')
@@ -79,8 +79,12 @@ function macroCommand(text: string, channel: 'e' | 'p') {
       d: 125,
     }
   })
-  doQueueActions(queue)
-  ElMessage.success('已发送')
+  try {
+    await doQueueActions(queue)
+    ElMessage.success('已发送')
+  } catch (e) {
+    ElMessage.error('发送失败: ' + (e as Error).message || '未知错误')
+  }
 }
 
 const useMacroStore = defineStore('macro', {
@@ -259,13 +263,21 @@ const useMacroStore = defineStore('macro', {
     sendMacroEcho(text: string): void {
       macroCommand(text, 'e')
     },
-    doLocalWayMark(place: WayMarkObj): void {
-      doWayMarks(place, true)
-      ElMessage.success('已尝试本地标点')
+    async doLocalWayMark(place: WayMarkObj): Promise<void> {
+      try {
+        await doWayMarks(place, true)
+        ElMessage.success('已尝试本地标点')
+      } catch (e) {
+        ElMessage.error('本地标点失败: ' + (e as Error).message || '未知错误')
+      }
     },
-    doPartyWayMark(place: WayMarkObj): void {
-      doWayMarks(place, false)
-      ElMessage.success('已尝试公开标点')
+    async doPartyWayMark(place: WayMarkObj): Promise<void> {
+      try {
+        await doWayMarks(place, false)
+        ElMessage.success('已尝试公开标点')
+      } catch (e) {
+        ElMessage.error('公开标点失败: ' + (e as Error).message || '未知错误')
+      }
     },
     doSlotWayMark(place: WayMarkObj): void {
       ElMessageBox({
@@ -284,13 +296,19 @@ const useMacroStore = defineStore('macro', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
       })
-        .then(() => {
-          doInsertPreset(
-            Number(this.selectZone),
-            place,
-            slotIndex.value as Slot
-          )
-          ElMessage.success(`已尝试写入至插槽${slotIndex.value}`)
+        .then(async () => {
+          try {
+            await doInsertPreset(
+              Number(this.selectZone),
+              place,
+              slotIndex.value as Slot,
+            )
+            ElMessage.success(`已尝试写入至插槽${slotIndex.value}`)
+          } catch (e) {
+            ElMessage.error(
+              `写入插槽失败: ` + (e as Error).message || '未知错误',
+            )
+          }
         })
         .catch(() => {})
     },
