@@ -2025,6 +2025,9 @@ const saveConfigDebounced = (() => {
   }
 })()
 
+// 用于性能优化的影子对象，记录上一次保存的值
+const lastSavedState = new Map<string, string>()
+
 watch(
   [
     itemVisibility,
@@ -2055,25 +2058,25 @@ watch(
     slotSummaryFilterMode,
   ],
   () => {
-    const configs = [
-      { key: 'itemVisibility', value: { ...itemVisibility.value } },
-      { key: 'playerVisibility', value: { ...playerVisibility.value } },
-      { key: 'weekCorrections', value: { ...recordWeekCorrections.value } },
-      { key: 'playerCorrections', value: { ...recordPlayerCorrections.value } },
+    const rawConfigs = [
+      { key: 'itemVisibility', value: itemVisibility.value },
+      { key: 'playerVisibility', value: playerVisibility.value },
+      { key: 'weekCorrections', value: recordWeekCorrections.value },
+      { key: 'playerCorrections', value: recordPlayerCorrections.value },
       { key: 'logPath', value: logPath.value },
-      { key: 'processedFiles', value: { ...processedFiles.value } },
+      { key: 'processedFiles', value: processedFiles.value },
       { key: 'syncStartDate', value: syncStartDate.value },
       { key: 'syncEndDate', value: syncEndDate.value },
       { key: 'viewMode', value: viewMode.value },
       { key: 'isRaidFilterActive', value: isRaidFilterActive.value },
-      { key: 'bisConfig', value: { ...bisConfig.value } },
+      { key: 'bisConfig', value: bisConfig.value },
       { key: 'hideUnselectedItems', value: hideUnselectedItems.value },
       { key: 'hideUnselectedPlayers', value: hideUnselectedPlayers.value },
-      { key: 'playerMapping', value: { ...playerMapping.value } },
-      { key: 'playerRoles', value: { ...playerRoles.value } },
+      { key: 'playerMapping', value: playerMapping.value },
+      { key: 'playerRoles', value: playerRoles.value },
       { key: 'showOnlyRole', value: showOnlyRole.value },
       { key: 'isOnlyRaidMembersActive', value: isOnlyRaidMembersActive.value },
-      { key: 'systemFilterSettings', value: { ...systemFilterSettings.value } },
+      { key: 'systemFilterSettings', value: systemFilterSettings.value },
       { key: 'summarySortMode', value: summarySortMode.value },
       { key: 'slotSortMode', value: slotSortMode.value },
       { key: 'weekSortMode', value: weekSortMode.value },
@@ -2083,7 +2086,22 @@ watch(
       { key: 'hideEmptyPlayers', value: hideEmptyPlayers.value },
       { key: 'blacklistedKeys', value: Array.from(blacklistedKeys.value) },
     ]
-    saveConfigDebounced(configs)
+
+    const pendingUpdates: { key: string; value: any }[] = []
+
+    for (const { key, value } of rawConfigs) {
+      // 快速序列化进行对比
+      const serialized = typeof value === 'object' ? JSON.stringify(value) : String(value)
+      if (lastSavedState.get(key) !== serialized) {
+        // 发现变化，加入待更新列表
+        pendingUpdates.push({ key, value: typeof value === 'object' ? JSON.parse(serialized) : value })
+        lastSavedState.set(key, serialized)
+      }
+    }
+
+    if (pendingUpdates.length > 0) {
+      saveConfigDebounced(pendingUpdates)
+    }
   },
   { deep: true },
 )
