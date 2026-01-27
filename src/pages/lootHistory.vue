@@ -2015,6 +2015,16 @@ const systemFilterSettings = ref({
 })
 const playerRoles = ref<Record<string, string>>({})
 
+const saveConfigDebounced = (() => {
+  let timer: any = null
+  return (configs: { key: string; value: any }[]) => {
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(() => {
+      dbConfig.bulkSet(configs)
+    }, 500)
+  }
+})()
+
 watch(
   [
     itemVisibility,
@@ -2042,81 +2052,38 @@ watch(
     blacklistedKeys,
     hideEmptyPlayers,
     playerSummaryFilterMode,
+    slotSummaryFilterMode,
   ],
-  async () => {
-    await dbConfig.set({
-      key: 'itemVisibility',
-      value: JSON.parse(JSON.stringify(itemVisibility.value)),
-    })
-    await dbConfig.set({
-      key: 'playerVisibility',
-      value: JSON.parse(JSON.stringify(playerVisibility.value)),
-    })
-    await dbConfig.set({
-      key: 'weekCorrections',
-      value: JSON.parse(JSON.stringify(recordWeekCorrections.value)),
-    })
-    await dbConfig.set({
-      key: 'playerCorrections',
-      value: JSON.parse(JSON.stringify(recordPlayerCorrections.value)),
-    })
-    await dbConfig.set({ key: 'logPath', value: logPath.value })
-    await dbConfig.set({
-      key: 'processedFiles',
-      value: JSON.parse(JSON.stringify(processedFiles.value)),
-    })
-    await dbConfig.set({ key: 'syncStartDate', value: syncStartDate.value })
-    await dbConfig.set({ key: 'syncEndDate', value: syncEndDate.value })
-    await dbConfig.set({ key: 'viewMode', value: viewMode.value })
-    await dbConfig.set({
-      key: 'isRaidFilterActive',
-      value: isRaidFilterActive.value,
-    })
-    await dbConfig.set({
-      key: 'bisConfig',
-      value: JSON.parse(JSON.stringify(bisConfig.value)),
-    })
-    await dbConfig.set({
-      key: 'hideUnselectedItems',
-      value: hideUnselectedItems.value,
-    })
-    await dbConfig.set({
-      key: 'hideUnselectedPlayers',
-      value: hideUnselectedPlayers.value,
-    })
-    await dbConfig.set({
-      key: 'playerMapping',
-      value: JSON.parse(JSON.stringify(playerMapping.value)),
-    })
-    await dbConfig.set({
-      key: 'playerRoles',
-      value: JSON.parse(JSON.stringify(playerRoles.value)),
-    })
-    await dbConfig.set({ key: 'showOnlyRole', value: showOnlyRole.value })
-    await dbConfig.set({
-      key: 'isOnlyRaidMembersActive',
-      value: isOnlyRaidMembersActive.value,
-    })
-    await dbConfig.set({
-      key: 'systemFilterSettings',
-      value: JSON.parse(JSON.stringify(systemFilterSettings.value)),
-    })
-    await dbConfig.set({ key: 'summarySortMode', value: summarySortMode.value })
-    await dbConfig.set({ key: 'slotSortMode', value: slotSortMode.value })
-    await dbConfig.set({ key: 'weekSortMode', value: weekSortMode.value })
-    await dbConfig.set({ key: 'bisSortMode', value: bisSortMode.value })
-    await dbConfig.set({
-      key: 'playerSummaryFilterMode',
-      value: playerSummaryFilterMode.value,
-    })
-    await dbConfig.set({
-      key: 'slotSummaryFilterMode',
-      value: slotSummaryFilterMode.value,
-    })
-    await dbConfig.set({
-      key: 'blacklistedKeys',
-      value: Array.from(blacklistedKeys.value),
-    })
+  () => {
+    const configs = [
+      { key: 'itemVisibility', value: { ...itemVisibility.value } },
+      { key: 'playerVisibility', value: { ...playerVisibility.value } },
+      { key: 'weekCorrections', value: { ...recordWeekCorrections.value } },
+      { key: 'playerCorrections', value: { ...recordPlayerCorrections.value } },
+      { key: 'logPath', value: logPath.value },
+      { key: 'processedFiles', value: { ...processedFiles.value } },
+      { key: 'syncStartDate', value: syncStartDate.value },
+      { key: 'syncEndDate', value: syncEndDate.value },
+      { key: 'viewMode', value: viewMode.value },
+      { key: 'isRaidFilterActive', value: isRaidFilterActive.value },
+      { key: 'bisConfig', value: { ...bisConfig.value } },
+      { key: 'hideUnselectedItems', value: hideUnselectedItems.value },
+      { key: 'hideUnselectedPlayers', value: hideUnselectedPlayers.value },
+      { key: 'playerMapping', value: { ...playerMapping.value } },
+      { key: 'playerRoles', value: { ...playerRoles.value } },
+      { key: 'showOnlyRole', value: showOnlyRole.value },
+      { key: 'isOnlyRaidMembersActive', value: isOnlyRaidMembersActive.value },
+      { key: 'systemFilterSettings', value: { ...systemFilterSettings.value } },
+      { key: 'summarySortMode', value: summarySortMode.value },
+      { key: 'slotSortMode', value: slotSortMode.value },
+      { key: 'weekSortMode', value: weekSortMode.value },
+      { key: 'bisSortMode', value: bisSortMode.value },
+      { key: 'playerSummaryFilterMode', value: playerSummaryFilterMode.value },
+      { key: 'slotSummaryFilterMode', value: slotSummaryFilterMode.value },
+      { key: 'hideEmptyPlayers', value: hideEmptyPlayers.value },
+      { key: 'blacklistedKeys', value: Array.from(blacklistedKeys.value) },
+    ]
+    saveConfigDebounced(configs)
   },
   { deep: true },
 )
@@ -2546,9 +2513,15 @@ const playersWithRecordsMatchingItemFilters = computed(() => {
 const visibleAllPlayers = computed(() => {
   let players = allPlayers.value
 
-  if (hideUnselectedPlayers.value) {
-    players = players.filter((p) => isPlayerChecked(p))
+  if (isOnlyRaidMembersActive.value) {
+    // 如果开启了“只看固定队”，则强制过滤非固定队成员，且不受 hideUnselectedPlayers 影响
+    players = players.filter((p) => !!getPlayerRole(p))
+  } else {
+    if (hideUnselectedPlayers.value) {
+      players = players.filter((p) => isPlayerChecked(p))
+    }
   }
+
   if (hideEmptyPlayers.value && !isOnlyRaidMembersActive.value) {
     players = players.filter((p) => {
       // 检查该玩家在当前物品/时间/系统过滤条件下是否有记录
@@ -2596,23 +2569,6 @@ watch(
     }
   },
   { immediate: true },
-)
-
-watch(
-  [isOnlyRaidMembersActive, playerRoles, allPlayers],
-  () => {
-    if (isOnlyRaidMembersActive.value) {
-      const newPV: Record<string, boolean> = {}
-      allPlayers.value.forEach((p) => {
-        newPV[p] = !!getPlayerRole(p)
-      })
-      playerVisibility.value = newPV
-      hideUnselectedPlayers.value = true
-    } else {
-      hideUnselectedPlayers.value = false
-    }
-  },
-  { deep: true, immediate: true },
 )
 
 watch(isRaidRolesComplete, (newVal) => {
@@ -3324,6 +3280,9 @@ function isItemChecked(item: string) {
 }
 
 function isPlayerChecked(p: string) {
+  if (isOnlyRaidMembersActive.value) {
+    return !!getPlayerRole(p)
+  }
   return playerVisibility.value[p] !== false
 }
 
