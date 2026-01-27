@@ -3347,10 +3347,28 @@ async function syncLogFiles() {
     for await (const entry of handle.values()) {
       if (entry.kind === 'file' && entry.name.toLowerCase().endsWith('.log')) {
         const name = entry.name
+
+        // 1. 优先通过文件名跳过已知且非当日的文件
+        const isToday = name.includes(todayStr)
+        if (!isToday && processedFiles.value[name]) {
+          continue
+        }
+
+        // 2. 检查文件名中的日期是否在同步范围内
+        const match = name.match(/_(\d{8})(?:\.|_)/)
+        if (match && match[1]) {
+          const fileDateStr = `${match[1].slice(0, 4)}-${match[1].slice(4, 6)}-${match[1].slice(6, 8)} 00:00:00`
+          const fileTs = new Date(fileDateStr).getTime()
+          if (fileTs + 86400000 < syncStartTs || fileTs > syncEndTs) {
+            continue
+          }
+        }
+
+        // 3. 只有通过了初步筛选，才获取昂贵的 File 对象进行精确判断
         const file = await (entry as FileSystemFileHandle).getFile()
         if (file.size < 10) continue
 
-        if (name.includes(todayStr)) {
+        if (isToday) {
           filesToRead.push({
             handle: entry as FileSystemFileHandle,
             name,
@@ -3358,16 +3376,13 @@ async function syncLogFiles() {
           })
           continue
         }
-        const match = name.match(/_(\d{8})(?:\.|_)/)
-        if (match && match[1]) {
-          const fileDateStr = `${match[1].slice(0, 4)}-${match[1].slice(4, 6)}-${match[1].slice(6, 8)} 00:00:00`
-          const fileTs = new Date(fileDateStr).getTime()
-          if (fileTs + 86400000 < syncStartTs) continue
-          if (fileTs > syncEndTs) continue
-        } else {
+
+        // 如果名字没有正则日期，根据最后修改时间过滤
+        if (!match) {
           if (file.lastModified < syncStartTs || file.lastModified > syncEndTs)
             continue
         }
+
         if (
           !processedFiles.value[name] &&
           Date.now() - file.lastModified < 60 * 24 * 3600 * 1000
