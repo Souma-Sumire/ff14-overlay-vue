@@ -2269,6 +2269,9 @@ const systemFilterSettings = ref({
 })
 const playerRoles = ref<Record<string, string>>({})
 
+// 会话内权限缓存，减少 queryPermission 带来的 1s+ 延迟
+let sessionPermissionGranted = false
+
 const saveConfigDebounced = (() => {
   let timer: any = null
   return (configs: { key: string; value: any }[]) => {
@@ -2374,8 +2377,14 @@ watch([syncStartDate, syncEndDate], () => {
 onMounted(async () => {
   isInitializing.value = true
   try {
-    const records = await dbRecords.getAll()
+    // 1. 同时发起多个本地数据库请求，缩短等待时间
+    const [records, configs, handleEntry] = await Promise.all([
+      dbRecords.getAll(),
+      dbConfig.getAll(),
+      dbHandle.get('current-log-dir')
+    ])
 
+    // 2. 先在非响应式变量里处理数据清理
     let hasMigration = false
     const cleanRecords = records.map((r) => {
       const cleanItem = sanitizeItemName(r.item)
@@ -2402,60 +2411,42 @@ onMounted(async () => {
       await dbRecords.bulkSet(JSON.parse(JSON.stringify(cleanRecords)))
     }
 
-    lootRecords.value = cleanRecords
-    cleanRecords.forEach((r) => existingKeys.value.add(r.key))
-
-    const configs = await dbConfig.getAll()
+    // 3. 处理配置项到本地变量，暂不更新 ref
     configs.forEach((c) => {
       if (c.key === 'itemVisibility') itemVisibility.value = c.value
       if (c.key === 'playerVisibility') playerVisibility.value = c.value
       if (c.key === 'logPath') logPath.value = c.value
       if (c.key === 'processedFiles') processedFiles.value = c.value || {}
-      if (c.key === 'weekCorrections')
-        recordWeekCorrections.value = c.value || {}
-      if (c.key === 'playerCorrections')
-        recordPlayerCorrections.value = c.value || {}
+      if (c.key === 'weekCorrections') recordWeekCorrections.value = c.value || {}
+      if (c.key === 'playerCorrections') recordPlayerCorrections.value = c.value || {}
       if (c.key === 'syncStartDate' && c.value) syncStartDate.value = c.value
       if (c.key === 'syncEndDate') syncEndDate.value = c.value || null
       if (
         c.key === 'viewMode' &&
-        (c.value === 'list' ||
-          c.value === 'summary' ||
-          c.value === 'slot' ||
-          c.value === 'week' ||
-          c.value === 'chart' ||
-          c.value === 'bis')
+        ['list', 'summary', 'slot', 'week', 'chart', 'bis'].includes(c.value)
       )
         viewMode.value = c.value
       if (c.key === 'hideUnselectedItems') hideUnselectedItems.value = !!c.value
-      if (c.key === 'hideUnselectedPlayers')
-        hideUnselectedPlayers.value = !!c.value
+      if (c.key === 'hideUnselectedPlayers') hideUnselectedPlayers.value = !!c.value
       if (c.key === 'playerMapping') playerMapping.value = c.value || {}
       if (c.key === 'playerRoles') playerRoles.value = c.value || {}
       if (c.key === 'showOnlyRole') showOnlyRole.value = !!c.value
       if (c.key === 'systemFilterSettings' && c.value) {
-        systemFilterSettings.value = {
-          ...systemFilterSettings.value,
-          ...c.value,
-        }
+        systemFilterSettings.value = { ...systemFilterSettings.value, ...c.value }
       }
       if (c.key === 'isRaidFilterActive') isRaidFilterActive.value = !!c.value
-      if (c.key === 'isOnlyRaidMembersActive')
-        isOnlyRaidMembersActive.value = !!c.value
+      if (c.key === 'isOnlyRaidMembersActive') isOnlyRaidMembersActive.value = !!c.value
       if (c.key === 'summarySortMode') summarySortMode.value = c.value || 'part'
       if (c.key === 'slotSortMode') slotSortMode.value = c.value || 'part'
       if (c.key === 'weekSortMode') weekSortMode.value = c.value || 'drop'
       if (c.key === 'bisSortMode') bisSortMode.value = c.value || 'part'
-      if (c.key === 'blacklistedKeys')
-        blacklistedKeys.value = new Set(c.value || [])
+      if (c.key === 'blacklistedKeys') blacklistedKeys.value = new Set(c.value || [])
       if (c.key === 'bisConfig') bisConfig.value = c.value || { playerBis: {} }
-      if (c.key === 'playerSummaryFilterMode')
-        playerSummaryFilterMode.value = c.value || 'obtained'
-      if (c.key === 'slotSummaryFilterMode')
-        slotSummaryFilterMode.value = c.value || 'obtained'
+      if (c.key === 'playerSummaryFilterMode') playerSummaryFilterMode.value = c.value || 'obtained'
+      if (c.key === 'slotSummaryFilterMode') slotSummaryFilterMode.value = c.value || 'obtained'
     })
 
-    const handleEntry = await dbHandle.get('current-log-dir')
+    // 4. 处理 Handle 和 权限，记录权限缓存
     if (handleEntry && handleEntry.handle) {
       currentHandle.value = handleEntry.handle
       fullLogPath.value = handleEntry.handle.name
@@ -2464,10 +2455,21 @@ onMounted(async () => {
           queryPermission: (o: { mode: string }) => Promise<string>
         }
       ).queryPermission({ mode: 'read' })
-      if (status !== 'granted') {
+      if (status === 'granted') {
+        sessionPermissionGranted = true
+      } else {
         logPath.value = '未授权，请点击同步按钮'
       }
     }
+
+    // 5. 最后一次性赋值数据，触发单一重绘流程
+    lootRecords.value = cleanRecords
+    existingKeys.value = new Set(cleanRecords.map(r => r.key))
+
+    if (!isRaidRolesComplete.value && viewMode.value !== 'list') {
+      viewMode.value = 'list'
+    }
+
     window.addEventListener('paste', handleGlobalPaste)
     document.body.addEventListener('dragover', handleGlobalDragOver)
     document.body.addEventListener('dragleave', handleGlobalDragLeave)
@@ -2477,13 +2479,11 @@ onMounted(async () => {
 
     window.addEventListener('visibilitychange', handleVisibilityChange)
 
-    if (!isRaidRolesComplete.value && viewMode.value !== 'list') {
-      viewMode.value = 'list'
-    }
-
-    // 初始加载完成后，如果不是第一次同步，自动进行一次同步
+    // 初始加载完成后，如果不是第一次同步，自动进行同步
     if (lootRecords.value.length > 0) {
-      syncLogFiles()
+      setTimeout(() => {
+        syncLogFiles()
+      }, 300)
     }
   } catch (e) {
     console.error('Failed to load DB:', e)
@@ -3311,13 +3311,19 @@ async function syncLogFiles() {
     }): Promise<'granted' | 'denied' | 'prompt'>
     values(): AsyncIterableIterator<FileSystemHandle>
   }
+  
   const handle =
     currentHandle.value as unknown as FileSystemDirectoryHandleExtended
 
-  const status = await handle.queryPermission({ mode: 'read' })
-  if (status !== 'granted') {
-    const newStatus = await handle.requestPermission({ mode: 'read' })
-    if (newStatus !== 'granted') return
+  if (!sessionPermissionGranted) {
+    const status = await handle.queryPermission({ mode: 'read' })
+    if (status !== 'granted') {
+      const newStatus = await handle.requestPermission({ mode: 'read' })
+      if (newStatus !== 'granted') {
+        return
+      }
+    }
+    sessionPermissionGranted = true
   }
 
   isSyncing.value = true
