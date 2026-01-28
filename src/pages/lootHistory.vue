@@ -121,7 +121,7 @@
               :type="isSyncNeeded ? 'warning' : 'primary'"
               size="small"
               :loading="isSyncing"
-              @click="syncLogFiles"
+              @click="syncLogFiles(true)"
               class="sync-btn-fixed"
             >
               {{
@@ -129,6 +129,14 @@
               }}
               <span v-if="isSyncNeeded" class="dot-warn"></span>
             </el-button>
+            <div class="sync-status-container">
+              <div v-show="!syncSuccessVisible && lastSyncTime" class="sync-hint-text time-hint">
+                上次同步: {{ lastSyncTime }}
+              </div>
+              <div v-show="syncSuccessVisible" class="sync-hint-text is-success success-hint">
+                同步成功
+              </div>
+            </div>
 
             <el-date-picker
               v-model="syncStartDate"
@@ -1432,7 +1440,7 @@
               <div class="empty-hint">
                 <el-button
                   v-if="!isSyncing"
-                  @click="syncLogFiles"
+                  @click="syncLogFiles(true)"
                   type="primary"
                   size="large"
                   >开始解析数据</el-button
@@ -2109,6 +2117,8 @@ const pendingWinnerChange = ref<{
   record: LootRecord
   newPlayer: string
 } | null>(null)
+const lastSyncTime = ref('')
+const syncSuccessVisible = ref(false)
 const showCustomCorrectionDialog = ref(false)
 const correctionSearch = ref('')
 const activeCorrectionTab = ref('player')
@@ -3350,10 +3360,10 @@ async function deleteRecord(record: LootRecord, silent = false) {
 
 async function startInitialSync() {
   showTimeSetup.value = false
-  await syncLogFiles()
+  await syncLogFiles(true)
 }
 
-async function syncLogFiles() {
+async function syncLogFiles(userInitiated = false) {
   if (isSyncing.value || !currentHandle.value) return
   isSyncNeeded.value = false
 
@@ -3373,6 +3383,10 @@ async function syncLogFiles() {
   if (!sessionPermissionGranted) {
     const status = await handle.queryPermission({ mode: 'read' })
     if (status !== 'granted') {
+      if (!userInitiated) {
+        isSyncNeeded.value = true
+        return
+      }
       const newStatus = await handle.requestPermission({ mode: 'read' })
       if (newStatus !== 'granted') {
         return
@@ -3458,6 +3472,13 @@ async function syncLogFiles() {
     if (filesToRead.length === 0) {
       isSyncing.value = false
       isLoading.value = false
+      lastSyncTime.value = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      if (userInitiated) {
+        syncSuccessVisible.value = true
+        setTimeout(() => {
+          syncSuccessVisible.value = false
+        }, 800)
+      }
       return
     }
 
@@ -3575,6 +3596,13 @@ async function syncLogFiles() {
           })
         }
       }
+    }
+    lastSyncTime.value = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    if (userInitiated) {
+      syncSuccessVisible.value = true
+      setTimeout(() => {
+        syncSuccessVisible.value = false
+      }, 800)
     }
 
     logPath.value = currentHandle.value.name
@@ -8435,5 +8463,26 @@ html.dark {
   opacity: 0.6;
   .empty-icon { font-size: 40px; margin-bottom: 12px; }
   p { font-size: 13px; margin: 0; }
+}
+
+.sync-status-container {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 6px;
+  position: relative;
+  width: 70px;
+  height: 24px;
+}
+.sync-hint-text {
+  font-size: 10px;
+  color: #94a3b8;
+  white-space: nowrap;
+  font-weight: 500;
+  width: 100%;
+  text-align: center;
+}
+.sync-hint-text.is-success {
+  color: #10b981;
+  font-weight: 700;
 }
 </style>
