@@ -70,7 +70,6 @@ const isSpecialType = computed(() => {
   gap: 4px;
   padding: 0 6px 0 2px;
   font-size: 11px;
-  margin: 2px 4px 2px 0;
   cursor: default;
   line-height: 1;
   height: 24px;

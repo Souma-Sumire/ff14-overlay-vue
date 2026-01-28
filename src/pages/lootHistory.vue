@@ -6045,6 +6045,7 @@ html.dark {
   color: #cbd5e1;
   font-style: italic;
   font-size: 11px;
+  padding: 0 4px;
 }
 .week-list-body {
   padding: 4px 0;
@@ -6239,6 +6240,7 @@ html.dark {
   flex-wrap: wrap;
   gap: 4px;
   align-items: center;
+  padding: 2px 0;
 }
 .mr-player {
   max-width: 80px;
@@ -8127,11 +8129,12 @@ html.dark {
 }
 
 .winner-selector-trigger {
-  display: inline-flex;
+  display: flex;
+  width: fit-content;
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  padding: 2px 4px;
+  padding: 2px 4px 2px 0;
   border-radius: 4px;
   transition: all 0.2s;
   position: relative;
