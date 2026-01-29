@@ -3449,7 +3449,7 @@ async function syncLogFiles(userInitiated = false) {
   loadingProgress.value = 0
 
   try {
-    const todayStr = getTodayPattern()
+
     const syncStartTs = new Date(syncStartDate.value).getTime()
     const syncEndTs = syncEndDate.value
       ? new Date(syncEndDate.value).getTime()
@@ -3470,7 +3470,7 @@ async function syncLogFiles(userInitiated = false) {
       if (entry.kind === 'file' && entry.name.toLowerCase().endsWith('.log')) {
         const name = entry.name
 
-        const isToday = name.includes(todayStr)
+
 
         const match = name.match(/_(\d{8})(?:\.|_)/)
         if (match && match[1]) {
@@ -3484,6 +3484,16 @@ async function syncLogFiles(userInitiated = false) {
         const file = await (entry as FileSystemFileHandle).getFile()
         if (file.size < 10) continue
 
+        // 如果文件名不含日期，则必须检查文件修改时间是否在范围内
+        if (!match) {
+          if (
+            file.lastModified < syncStartTs ||
+            file.lastModified > syncEndTs
+          ) {
+            continue
+          }
+        }
+
         const prev = processedFiles.value[name]
         let startByte = 0
 
@@ -3493,16 +3503,6 @@ async function syncLogFiles(userInitiated = false) {
           }
           if (file.size > prev.size) {
             startByte = prev.size
-          }
-        } else {
-          if (!isToday) {
-            if (!match) {
-              if (
-                file.lastModified < syncStartTs ||
-                file.lastModified > syncEndTs
-              )
-                continue
-            }
           }
         }
 
@@ -3661,10 +3661,7 @@ async function syncLogFiles(userInitiated = false) {
   }
 }
 
-function getTodayPattern() {
-  const d = new Date()
-  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`
-}
+
 
 function parseLogWithWorker(text: string): Promise<{
   records: LootRecord[]
