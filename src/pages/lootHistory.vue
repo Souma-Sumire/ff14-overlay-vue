@@ -819,13 +819,57 @@
                 >
                   <el-table-column label="周" width="60" align="center">
                     <template #default="scope">
-                      <div class="col-week">
-                        W{{
-                          getRaidWeekIndex(
-                            scope.row.timestamp,
-                            GAME_VERSION_CONFIG.RAID_START_TIME,
-                          )
-                        }}
+                      <div
+                        class="col-week-interactive"
+                        @click.stop="handleRecordTrigger($event, scope.row)"
+                        @contextmenu.prevent="handleRecordTrigger($event, scope.row)"
+                      >
+                        <div
+                          v-if="recordWeekCorrections[scope.row.key]"
+                          class="week-correction-display"
+                        >
+                          <div class="original-week">
+                            W{{
+                              getRaidWeekIndex(
+                                scope.row.timestamp,
+                                GAME_VERSION_CONFIG.RAID_START_TIME,
+                              )
+                            }}
+                          </div>
+                          <el-icon class="week-arrow"><ArrowDown /></el-icon>
+                          <div class="corrected-week">
+                            W{{
+                              getRaidWeekIndex(
+                                scope.row.timestamp,
+                                GAME_VERSION_CONFIG.RAID_START_TIME,
+                              ) + (recordWeekCorrections[scope.row.key] || 0)
+                            }}
+                          </div>
+                        </div>
+                        <div v-else class="col-week">
+                          W{{
+                            getRaidWeekIndex(
+                              scope.row.timestamp,
+                              GAME_VERSION_CONFIG.RAID_START_TIME,
+                            )
+                          }}
+                          <el-tooltip
+                            placement="top"
+                            :enterable="false"
+                          >
+                            <template #content>
+                              可能归属周错误（通常发生在周二压线进本）。<br/>点击可选择将其归入上一周。
+                            </template>
+                            <el-icon
+                              v-if="
+                                rawSuspiciousKeys.has(scope.row.key) &&
+                                !recordWeekCorrections[scope.row.key]
+                              "
+                              class="week-warning-icon"
+                              ><Warning
+                            /></el-icon>
+                          </el-tooltip>
+                        </div>
                       </div>
                     </template>
                   </el-table-column>
@@ -1147,43 +1191,7 @@
                 popper-class="week-suspicious-tooltip"
               />
 
-                <el-popover
-                  v-model:visible="isMenuVisible"
-                  :virtual-ref="contextMenuRef"
-                  virtual-triggering
-                  :persistent="false"
-                  :hide-after="0"
-                  popper-class="context-menu-popper"
-                  :width="180"
-                  :show-arrow="false"
-                  placement="bottom-start"
-                >
-                <div v-if="contextMenuRecord" class="custom-context-menu">
-                  <div class="menu-info-header">
-                    <el-icon><Calendar /></el-icon>
-                    <span>{{ formatTime(contextMenuRecord.timestamp) }}</span>
-                  </div>
-                  <div class="menu-divider"></div>
-                  <div class="menu-action-item" @click="handleCorrectionClick">
-                    <el-icon class="action-arrow">
-                      <component
-                        :is="
-                          recordWeekCorrections[contextMenuRecord.key]
-                            ? RefreshLeft
-                            : RefreshRight
-                        "
-                      />
-                    </el-icon>
-                    <span class="action-label">
-                      {{
-                        recordWeekCorrections[contextMenuRecord.key]
-                          ? '归回原始周'
-                          : '归入上一周'
-                      }}
-                    </span>
-                  </div>
-                </div>
-              </el-popover>
+
             </el-tab-pane>
 
             <el-tab-pane name="chart" :disabled="!isRaidRolesComplete" lazy>
@@ -1305,6 +1313,44 @@
                   </div>
                 </el-option>
               </el-select>
+            </div>
+          </el-popover>
+
+          <el-popover
+            v-model:visible="isMenuVisible"
+            :virtual-ref="contextMenuRef"
+            virtual-triggering
+            :persistent="false"
+            :hide-after="0"
+            popper-class="context-menu-popper"
+            :width="180"
+            :show-arrow="false"
+            placement="bottom-start"
+          >
+            <div v-if="contextMenuRecord" class="custom-context-menu">
+              <div class="menu-info-header">
+                <el-icon><Calendar /></el-icon>
+                <span>{{ formatTime(contextMenuRecord.timestamp!) }}</span>
+              </div>
+              <div class="menu-divider"></div>
+              <div class="menu-action-item" @click="handleCorrectionClick">
+                <el-icon class="action-arrow">
+                  <component
+                    :is="
+                      recordWeekCorrections[contextMenuRecord.key]
+                        ? RefreshLeft
+                        : RefreshRight
+                    "
+                  />
+                </el-icon>
+                <span class="action-label">
+                  {{
+                    recordWeekCorrections[contextMenuRecord.key]
+                      ? '归回原始周'
+                      : '归入上一周'
+                  }}
+                </span>
+              </div>
             </div>
           </el-popover>
         </div>
@@ -4302,6 +4348,41 @@ async function confirmExport() {
   }
 }
 
+function isDeepEqual(obj1: any, obj2: any): boolean {
+  if (obj1 === obj2) return true
+  if (
+    typeof obj1 !== 'object' ||
+    obj1 === null ||
+    typeof obj2 !== 'object' ||
+    obj2 === null
+  ) {
+    return false
+  }
+
+  if (Array.isArray(obj1) !== Array.isArray(obj2)) return false
+  if (Array.isArray(obj1)) {
+    if (obj1.length !== obj2.length) return false
+    for (let i = 0; i < obj1.length; i++) {
+      if (!isDeepEqual(obj1[i], obj2[i])) return false
+    }
+    return true
+  }
+
+  const keys1 = Object.keys(obj1).sort()
+  const keys2 = Object.keys(obj2).sort()
+
+  if (keys1.length !== keys2.length) return false
+
+  for (let i = 0; i < keys1.length; i++) {
+    const key = keys1[i]
+    if (key === undefined) return false 
+    if (key !== keys2[i]) return false
+    if (!isDeepEqual(obj1[key], obj2[key])) return false
+  }
+
+  return true
+}
+
 async function processImportJSON(json: any) {
   try {
     if (!json.r || !Array.isArray(json.r)) {
@@ -4374,33 +4455,34 @@ async function processImportJSON(json: any) {
         const localFiltered: Record<string, Record<string, BisValue>> = {}
         const incomingFiltered: Record<string, Record<string, BisValue>> = {}
         ROLE_DEFINITIONS.forEach((role) => {
-          if (bisConfig.value.playerBis?.[role])
-            localFiltered[role] = bisConfig.value.playerBis[role]
-          if (incomingBis?.playerBis?.[role])
-            incomingFiltered[role] = incomingBis.playerBis[role]
+          const localMap = bisConfig.value.playerBis
+          if (localMap && localMap[role]) {
+            localFiltered[role] = localMap[role]
+          }
+          const incomingMap = incomingBis?.playerBis
+          if (incomingMap && incomingMap[role]) {
+            incomingFiltered[role] = incomingMap[role]
+          }
         })
-        return (
-          JSON.stringify(localFiltered) !== JSON.stringify(incomingFiltered)
-        )
+        return !isDeepEqual(localFiltered, incomingFiltered)
       })(),
-      roles:
-        hasRoles &&
-        JSON.stringify(playerRoles.value) !== JSON.stringify(json.c.roles),
-      mapping:
-        hasMapping &&
-        JSON.stringify(playerMapping.value) !== JSON.stringify(json.c.map),
+      roles: hasRoles && !isDeepEqual(playerRoles.value, json.c.roles),
+      mapping: hasMapping && !isDeepEqual(playerMapping.value, json.c.map),
       weekCorrection:
         hasCorrectionWeek &&
-        JSON.stringify(recordWeekCorrections.value) !==
-          JSON.stringify(json.c.weekCorrections || {}),
+        !isDeepEqual(recordWeekCorrections.value, json.c.weekCorrections || {}),
       playerCorrection:
         hasCorrectionPlayer &&
-        JSON.stringify(recordPlayerCorrections.value) !==
-          JSON.stringify(json.c.playerCorrections || {}),
+        !isDeepEqual(
+          recordPlayerCorrections.value,
+          json.c.playerCorrections || {},
+        ),
       settings:
         hasSettings &&
-        (JSON.stringify(systemFilterSettings.value) !==
-          JSON.stringify(json.c.filter || systemFilterSettings.value) ||
+        (!isDeepEqual(
+          systemFilterSettings.value,
+          json.c.filter || systemFilterSettings.value,
+        ) ||
           isOnlyRaidMembersActive.value !==
             (json.c.raidActive ?? isOnlyRaidMembersActive.value)),
     }
@@ -8487,5 +8569,41 @@ html.dark {
 .sync-hint-text.is-success {
   color: #10b981;
   font-weight: 700;
+}
+.col-week-interactive {
+  cursor: pointer;
+  padding: 4px 0;
+  &:hover {
+    background-color: rgba(0,0,0,0.02);
+    border-radius: 4px;
+  }
+}
+.week-correction-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+.original-week {
+  text-decoration: line-through;
+  opacity: 0.5;
+  font-size: 10px;
+}
+.corrected-week {
+  color: #3b82f6;
+  font-weight: 800;
+  font-size: 12px;
+}
+.week-arrow {
+  font-size: 10px;
+  color: #94a3b8;
+  margin: -1px 0;
+}
+.week-warning-icon {
+  color: #f97316;
+  font-size: 12px;
+  margin-left: 1px;
+  vertical-align: -2px;
+  animation: suspicious-pulse 2s infinite;
 }
 </style>
