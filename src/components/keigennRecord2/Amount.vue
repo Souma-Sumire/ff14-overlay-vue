@@ -20,13 +20,7 @@ const isLethalHit = isLethal(props.row)
 </script>
 
 <template>
-  <el-popover
-    append-to=".wrapper"
-    trigger="hover"
-    :enterable="false"
-    :hide-after="0"
-    :width="180"
-  >
+  <el-popover append-to=".wrapper" trigger="hover" :enterable="false" :hide-after="0" :width="180">
     <template #reference>
       <span class="amount">
         <span :class="damageTypeClass">
@@ -39,13 +33,13 @@ const isLethalHit = isLethal(props.row)
     <ul class="row-info">
       <li>{{ $t('keigennRecord.source') }}: {{ source }}</li>
       <li>{{ $t('keigennRecord.playerShield') }}: {{ shield }}%</li>
-      <li>{{ $t('keigennRecord.playerHp') }}: {{ hpPercent }}%</li>
+      <li>{{ $t('keigennRecord.playerHp') }}: {{ currentHp.toLocaleString() }}({{ hpPercent }}%)</li>
 
       <template v-if="reduction < 1 && type !== 'dot'">
         <el-divider />
         <li>
           {{ $t('keigennRecord.reductionRate') }}:
-          {{ (reduction * 100).toFixed(3) }}%
+          {{ (reduction * 100).toFixed(2) }}%
         </li>
         <li>
           {{ $t('keigennRecord.originalDamage') }}:
