@@ -25,6 +25,24 @@ export interface RowVO {
   povId: string
   reduction: number
   keySkills: KeySkillSnapshot[]
+  preCalculated: {
+    reductionColor: string
+    amountDisplay: string
+    damageTypeClass: string
+    jobIconSrc: string
+    keigenns: {
+      src: string
+      usefulClass: string
+      title: string
+      duration: string
+      isPov: boolean
+      effect: string
+    }[]
+    originalDamageDisplay: string
+    hpPercent: number
+    coolingDownSkills: KeySkillSnapshot[]
+    readySkills: KeySkillSnapshot[]
+  }
 }
 
 export interface KeySkillSnapshot {
@@ -37,7 +55,7 @@ export interface KeySkillSnapshot {
   ownerId: string
   ownerName: string
   ownerJob: number
-  hasDuplicate: boolean
+  ownerJobName: string
 }
 
 export interface Status {
