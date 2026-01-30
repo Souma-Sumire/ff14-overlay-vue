@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { RowVO } from '@/types/keigennRecord2'
-import { View } from '@element-plus/icons-vue'
+import { MoreFilled } from '@element-plus/icons-vue'
 import Util from '@/utils/util'
 
 const props = defineProps<{
@@ -8,63 +8,59 @@ const props = defineProps<{
 }>()
 
 const coolingDownSkills = computed(() =>
-  props.row.keySkills
-    ?.filter((v) => !v.ready)
-    .sort((a, b) => a.recastLeft - b.recastLeft) ?? []
+  markRaw(
+    props.row.keySkills
+      ?.filter((v) => !v.ready)
+      .sort((a, b) => a.recastLeft - b.recastLeft) ?? []
+  )
 )
 
 const readySkills = computed(() =>
-  props.row.keySkills
-    ?.filter((v) => v.ready)
-    .sort((a, b) => Util.enumSortMethod(a.ownerJob, b.ownerJob)) ?? []
+  markRaw(
+    props.row.keySkills
+      ?.filter((v) => v.ready)
+      .sort((a, b) => Util.enumSortMethod(a.ownerJob, b.ownerJob)) ?? []
+  )
 )
-
-function getJobClass(jobId: number) {
-  const jobObj = Util.jobEnumToJob(jobId)
-  const jobName = Util.jobToFullName(jobObj)
-  return jobName.en?.toLowerCase().replace(' ', '') || ''
-}
 
 function getJobName(jobId: number) {
   const jobObj = Util.jobEnumToJob(jobId)
   const fullName = Util.jobToFullName(jobObj)
   return fullName.simple2 || ''
 }
+
+const popperOptions = {
+  modifiers: [
+    {
+      name: 'preventOverflow',
+      options: {
+        padding: 24,
+      },
+    },
+  ],
+}
 </script>
 
 <template>
-  <el-popover
-    placement="left"
-    :width="'auto'"
-    trigger="hover"
-    popper-class="skill-popover"
-  >
+  <el-popover placement="left" :width="'auto'" trigger="hover" popper-class="skill-popover" transition="none"
+    :show-after="0" :hide-after="0" :popper-options="popperOptions">
     <template #reference>
-      <el-icon class="view-icon"><View /></el-icon>
+      <el-icon class="view-icon">
+        <MoreFilled />
+      </el-icon>
     </template>
+
 
     <template v-if="coolingDownSkills.length > 0">
       <div class="subtitle">{{ $t('keigennRecord.coolingDown') }}</div>
       <div class="skill-grid">
-        <div
-          v-for="skill in coolingDownSkills"
-          :key="`${skill.id}-${skill.ownerId}`"
-          class="skill-wrapper"
-        >
-          <div 
-            class="skill-icon-container"
-            :title="`${skill.ownerName} (${getJobName(skill.ownerJob)})`"
-          >
+        <div v-for="skill in coolingDownSkills" :key="`${skill.id}-${skill.ownerId}`" class="skill-wrapper">
+          <div class="skill-icon-container" :title="`${skill.ownerName} (${getJobName(skill.ownerJob)})`">
             <img :src="skill.icon" class="skill-icon" />
             <div class="skill-overlay" />
             <span class="skill-text">{{ skill.recastLeft }}</span>
           </div>
-          <span
-            class="skill-source job"
-            :class="getJobClass(skill.ownerJob)"
-          >
-            {{ getJobName(skill.ownerJob) }}
-          </span>
+
         </div>
       </div>
     </template>
@@ -73,23 +69,11 @@ function getJobName(jobId: number) {
       <el-divider v-if="coolingDownSkills.length > 0" />
       <div class="subtitle">{{ $t('keigennRecord.ready') || '可用' }}</div>
       <div class="skill-grid">
-        <div
-          v-for="skill in readySkills"
-          :key="`${skill.id}-${skill.ownerId}`"
-          class="skill-wrapper"
-        >
-          <div 
-            class="skill-icon-container"
-            :title="`${skill.ownerName} (${getJobName(skill.ownerJob)})`"
-          >
+        <div v-for="skill in readySkills" :key="`${skill.id}-${skill.ownerId}`" class="skill-wrapper">
+          <div class="skill-icon-container" :title="`${skill.ownerName} (${getJobName(skill.ownerJob)})`">
             <img :src="skill.icon" class="skill-icon" />
           </div>
-          <span
-            class="skill-source job"
-            :class="getJobClass(skill.ownerJob)"
-          >
-            {{ getJobName(skill.ownerJob) }}
-          </span>
+
         </div>
       </div>
     </template>
@@ -105,9 +89,10 @@ function getJobName(jobId: number) {
 
 .view-icon {
   cursor: pointer;
-  font-size: 14px;
-  color: #888;
-
+  font-size: 12px;
+  color: #aaa;
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.5));
+  padding-right: 1px;
   &:hover {
     color: var(--el-color-primary);
   }
@@ -115,16 +100,17 @@ function getJobName(jobId: number) {
 
 .subtitle {
   font-weight: bold;
-  margin: 0 0 4px 0;
+  margin-bottom: 2px;
   font-size: 10px;
-  line-height: title;
-  color: #ddd;
+  line-height: 1;
+  color: #bbb;
 }
 
 .skill-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 2px 2px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 178px;
 }
 
 .skill-wrapper {
@@ -143,7 +129,7 @@ function getJobName(jobId: number) {
   border-radius: 3px;
   overflow: hidden;
   background: #222;
-  box-shadow: 0 0 2px rgba(0,0,0,0.5);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
 }
 
 .skill-icon {
@@ -157,7 +143,7 @@ function getJobName(jobId: number) {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.35);
   z-index: 1;
 }
 
@@ -165,21 +151,18 @@ function getJobName(jobId: number) {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(0.9);
   color: #fff;
-  font-weight: 800;
-  font-size: 11px;
+  font-weight: bold;
+  font-size: 12px;
   z-index: 2;
   line-height: 1;
-  font-family: monospace;
-  text-shadow: 1px 1px 2px #000;
+  font-family: sans-serif;
+  text-shadow: -1px 0 2px #000, 0 1px 2px #000, 1px 0 2px #000, 0 -1px 2px #000;
+  pointer-events: none;
 }
 
-.skill-source {
-  text-align: center;
-  font-size: 9px;
-  white-space: nowrap;
-}
+
 
 .el-divider {
   margin: 2px 0;
@@ -202,11 +185,6 @@ function getJobName(jobId: number) {
   background: #1f1f1f !important;
   border: 1px solid #444 !important;
   color: #eee !important;
-  
-  // 覆盖箭头颜色
-  .el-popper__arrow::before {
-    background: #1f1f1f !important;
-    border: 1px solid #444 !important;
-  }
+
 }
 </style>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Ref } from 'vue'
 import type {
+  CombatDataEvent,
   Encounter,
   Keigenn,
   KeySkillSnapshot,
@@ -604,7 +605,7 @@ function getKeySkillSnapshot(
   // 2. 日志记录的小队
   partyLogList.value.forEach((id) => candidateIds.add(id))
   // 3. 使用过技能的记录 (cooldownTracker)
-  Object.keys(cooldownTracker).forEach((id) => candidateIds.add(id))
+  // Object.keys(cooldownTracker).forEach((id) => candidateIds.add(id))
   // 4. POV
   if (povId.value) candidateIds.add(povId.value)
 
@@ -707,6 +708,7 @@ async function loadStorage() {
       data.value.push(
         ...loadData
           .filter((v) => v.timestamp > Date.now() - 1000 * 60 * 60 * 24 * 3)
+          .sort((a, b) => a.timestamp - b.timestamp)
           .reverse()
       )
       if (data.value.length === 0) {
@@ -758,6 +760,42 @@ onMounted(() => {
   addOverlayListener('ChangePrimaryPlayer', (e) => {
     povId.value = Number(e.charID).toString(16).toUpperCase()
   })
+  addOverlayListener('CombatData', ((e: CombatDataEvent) => {
+    if (combatTimeStamp.value > 0) return
+    if (e.isActive === 'true') {
+      if (e.Encounter?.CurrentZoneName) {
+        zoneName.value = e.Encounter.CurrentZoneName
+      }
+
+      const durationStr = e.Encounter?.duration || '00:00'
+      const parts = durationStr.split(':').map(Number)
+      let durationMs = 0
+      if (parts.length === 3) {
+        durationMs = (parts[0]! * 3600 + parts[1]! * 60 + parts[2]!) * 1000
+      } else if (parts.length === 2) {
+        durationMs = (parts[0]! * 60 + parts[1]!) * 1000
+      }
+      
+      const now = Date.now()
+      const startTime = now - durationMs
+
+      if (data.value[0]!.table.length !== 0) {
+        data.value.unshift({
+          zoneName: '',
+          duration: '00:00',
+          table: shallowReactive([]),
+          key: String(startTime),
+          timestamp: startTime,
+        })
+      }
+
+      data.value[0]!.zoneName = zoneName.value
+      combatTimeStamp.value = startTime
+      data.value[0]!.timestamp = startTime
+      data.value[0]!.key = String(startTime)
+      select.value = 0
+    }
+  }) as any)
 })
 
 function clickMinimize() {

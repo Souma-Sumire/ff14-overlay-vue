@@ -245,7 +245,7 @@ const columns = computed<Column[]>(() => [
     title: t('keigennRecord.keigenns'),
     dataKey: 'keigenns',
     flexGrow: 1,
-    width: 200,
+    width: 100,
     align: 'left' as const,
     class: 'col-keigenns',
     cellRenderer: ({ rowData }: { rowData: RowVO }) =>
@@ -277,7 +277,7 @@ const columns = computed<Column[]>(() => [
           {
             style: {
               position: 'absolute',
-              right: '8px',
+              right: '0px',
               zIndex: 5,
             },
           },
@@ -424,7 +424,6 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
   padding: 4px 20px;
   line-height: 1.5;
   cursor: pointer;
-  transition: background-color 0.2s ease;
   white-space: nowrap;
   color: var(--el-text-color-primary);
 }
