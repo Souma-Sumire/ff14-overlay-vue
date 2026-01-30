@@ -105,7 +105,7 @@ export const getRawMenuData = (locale: string, t: (key: string, args?: (string |
   {
     title: 'startPages.menu.zone_macro',
     type: '网页/工具',
-    path: `zoneMacro?OVERLAY_WS=ws://127.0.0.1:10501/ws&lang=${locale}`,
+    path: `zoneMacro?lang=${locale}`,
     src: 'zoneMacro.webp',
     comment: 'startPages.comment.zone_macro',
     commentArgs: [
@@ -170,7 +170,7 @@ export const getRawMenuData = (locale: string, t: (key: string, args?: (string |
   {
     title: 'startPages.menu.combat_time_obs',
     type: '悬浮窗',
-    path: 'time?mode=combat&OVERLAY_WS=ws://127.0.0.1:10501/ws',
+    path: 'time?mode=combat',
     comment: 'startPages.comment.combat_time_obs_params',
     src: 'time.webp',
     imageWidth: 300,

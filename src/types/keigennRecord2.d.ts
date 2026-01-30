@@ -23,6 +23,20 @@ export interface RowVO {
   shield: string
   povId: string
   reduction: number
+  keySkills: KeySkillSnapshot[]
+}
+
+export interface KeySkillSnapshot {
+  id: number
+  name: string
+  icon: string
+  recast1000ms: number
+  recastLeft: number
+  ready: boolean
+  ownerId: string
+  ownerName: string
+  ownerJob: number
+  hasDuplicate: boolean
 }
 
 export interface Status {

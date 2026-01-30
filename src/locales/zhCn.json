@@ -297,7 +297,10 @@
     "physics": "物理",
     "magic": "魔法",
     "darkness": "暗黑",
-    "dot": "持续伤害"
+    "dot": "持续伤害",
+    "coolingDown": "冷却中",
+    "ready": "可用",
+    "noData": "无数据"
   },
   "keySkillTimer": {
     "demo-text1": "当前为演示数据，锁定后将显示真实数据。",

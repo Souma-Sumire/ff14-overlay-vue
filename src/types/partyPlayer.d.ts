@@ -3,6 +3,7 @@ interface Player {
   name: string
   inParty: boolean
   job: number
+  level: number
 }
 
 interface PlayerRuntime extends Player {

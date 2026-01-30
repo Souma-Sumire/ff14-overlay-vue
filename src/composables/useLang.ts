@@ -8,9 +8,13 @@ const localeRef = ref(urlLang || 'en')
 function useLang() {
   const i18n = useI18n()
   i18n.locale.value = urlLang || i18n.locale.value || 'en'
-  watch(i18n.locale, (locale) => {
-    localeRef.value = locale as Lang
-  })
+  watch(
+    i18n.locale,
+    (locale) => {
+      localeRef.value = locale as Lang
+    },
+    { immediate: true }
+  )
   function setLang(lang: Lang) {
     i18n.locale.value = lang
     localeRef.value = lang
@@ -39,8 +43,9 @@ function getLocaleMessage(text: Record<Lang, string>): string {
 }
 function getCactbotLocaleMessage(text: Partial<Record<CLang, string>>): string {
   if (!text) return 'Unknown'
+  const lang = localeToCactbotLang(localeRef.value)
   return (
-    text[localeRef.value as keyof typeof text] ??
+    text[lang] ??
     text.cn ??
     `${text.en} / ${text.ja}`
   )

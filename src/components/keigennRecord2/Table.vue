@@ -8,6 +8,7 @@ import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 import { copyToClipboard } from '@/utils/clipboard'
 import Util from '@/utils/util'
 import Amount from './Amount.vue'
+import KeySkillsCell from './KeySkillsCell.vue'
 import StatusShow from './StatusShow.vue'
 import Target from './Target.vue'
 import { useLang } from '@/composables/useLang'
@@ -243,12 +244,46 @@ const columns = computed<Column[]>(() => [
     key: 'keigenns',
     title: t('keigennRecord.keigenns'),
     dataKey: 'keigenns',
-    width: 100,
-    align: 'left' as const,
     flexGrow: 1,
+    width: 200,
+    align: 'left' as const,
     class: 'col-keigenns',
     cellRenderer: ({ rowData }: { rowData: RowVO }) =>
       h(StatusShow, { row: rowData }),
+  },
+  {
+    key: 'skills',
+    title: '',
+    dataKey: 'skills',
+    width: 0,
+    align: 'center' as const,
+    class: 'col-skills',
+    cellRenderer: ({ rowData }: { rowData: RowVO }) =>
+      h(
+        'div',
+        {
+          style: {
+            position: 'relative',
+            width: '100%',
+            height: '100%',
+            overflow: 'visible',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+          },
+        },
+        h(
+          'div',
+          {
+            style: {
+              position: 'absolute',
+              right: '8px',
+              zIndex: 5,
+            },
+          },
+          h(KeySkillsCell, { row: rowData })
+        )
+      ),
   },
 ])
 
@@ -417,5 +452,12 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
 
 :deep(.header-time) {
   white-space: nowrap;
+}
+
+:deep(.col-skills) {
+  overflow: visible !important;
+  .el-table-v2__row-cell {
+    overflow: visible !important;
+  }
 }
 </style>

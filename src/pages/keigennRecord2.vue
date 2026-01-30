@@ -3,6 +3,7 @@ import type { Ref } from 'vue'
 import type {
   Encounter,
   Keigenn,
+  KeySkillSnapshot,
   PerformanceType,
   RowVO,
   Status,
@@ -17,6 +18,8 @@ import { completeIcon, stackUrl } from '@/resources/status'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 import { deepClone } from '@/utils/deepClone'
 import { processAbilityLine, processFlags } from '@/utils/flags'
+import { raidbuffs } from '@/resources/raidbuffs'
+import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 
 import {
   getKeigenn,
@@ -28,9 +31,10 @@ import logDefinitions from '../../cactbot/resources/netlog_defs'
 import NetRegexes from '../../cactbot/resources/netregexes'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import { ZoneInfo } from '@/resources/zoneInfo'
-import { getCactbotLocaleMessage } from '@/composables/useLang'
+import { getCactbotLocaleMessage, useLang } from '@/composables/useLang'
 
 const dev = useDev()
+useLang()
 
 const store = useKeigennRecord2Store()
 const userOptions = store.userOptions
@@ -51,7 +55,7 @@ const povId = useStorage('keigenn-record-2-pov-id', '')
 const partyLogList = useStorage('keigenn-record-2-party-list', [] as string[])
 const jobMap = useStorage(
   'keigenn-record-2-job-map',
-  {} as Record<string, { job: number; timestamp: number }>
+  {} as Record<string, { job: number; timestamp: number; name?: string }>
 )
 const partyEventParty = useStorage(
   'keigenn-record-2-party-event-party',
@@ -99,11 +103,16 @@ const statusData: {
   friendly: {},
   enemy: {},
 }
+
+const trackedSkills = raidbuffs.filter((v) => v.line === 1 || v.line === 2)
+let cooldownTracker: Record<string, Record<number, number>> = {}
+
 const db = useIndexedDB<Encounter>(STORAGE_KEY)
 
 function beforeHandle() {
   loading.value = true
   combatTimeStamp.value = 0
+  cooldownTracker = {}
   select.value = 0
   data.value.length = 0
   data.value.push({
@@ -224,6 +233,7 @@ function handleLine(line: string) {
         case 'addCombatant':
           if (splitLine[logDefinitions.AddedCombatant.fields.job] !== '00') {
             const job = splitLine[logDefinitions.AddedCombatant.fields.job]!
+            const name = splitLine[logDefinitions.AddedCombatant.fields.name]!
             const timestamp = new Date(
               splitLine[logDefinitions.AddedCombatant.fields.timestamp]!
             ).getTime()
@@ -231,6 +241,7 @@ function handleLine(line: string) {
               {
                 job: Number.parseInt(job, 16),
                 timestamp,
+                name,
               }
           }
           break
@@ -377,16 +388,36 @@ function handleLine(line: string) {
               shield: shieldData[targetId] ?? '0',
               povId: povId.value,
               reduction: 0,
+              keySkills: [],
             })
           }
           break
         case 'ability':
           if (combatTimeStamp.value === 0) return
           {
+            const sourceId =
+              splitLine[logDefinitions.Ability.fields.sourceId] ?? '???'
+            const id = splitLine[logDefinitions.Ability.fields.id] ?? '???'
+            const timestamp = new Date(
+              splitLine[logDefinitions.Ability.fields.timestamp] ?? '???'
+            ).getTime()
+
+            if (sourceId.startsWith('1')) {
+              const abilityIdDecimal = Number.parseInt(id, 16)
+              const trackedSkill = trackedSkills.find((v) => {
+                const skillId = parseDynamicValue(v.id, 999)
+                return skillId === abilityIdDecimal
+              })
+              if (trackedSkill) {
+                if (!cooldownTracker[sourceId]) {
+                  cooldownTracker[sourceId] = {}
+                }
+                cooldownTracker[sourceId][abilityIdDecimal] = timestamp
+              }
+            }
+
             const ability = processAbilityLine(splitLine)
             if (ability.isAttack && ability.amount >= 0) {
-              const sourceId =
-                splitLine[logDefinitions.Ability.fields.sourceId] ?? '???'
               const targetId =
                 splitLine[logDefinitions.Ability.fields.targetId] ?? '???'
               if (!(sourceId.startsWith('4') && targetId.startsWith('1')))
@@ -408,7 +439,6 @@ function handleLine(line: string) {
               const rawAblityName =
                 splitLine[logDefinitions.Ability.fields.ability]!
               const rsvMatch = rawAblityName.match(/^_rsv_(?<id>\d+)_/)
-              const id = splitLine[logDefinitions.Ability.fields.id] ?? '???'
               let action = rawAblityName
               if (rsvMatch) {
                 const id: number = Number(rsvMatch.groups?.id)
@@ -483,6 +513,7 @@ function handleLine(line: string) {
                 }
                 reduction = 1 - reductionMultiplier * flagMultiplier
               }
+
               addRow({
                 key: data.value[0]!.table.length.toString(),
                 time: formattedTime,
@@ -505,6 +536,7 @@ function handleLine(line: string) {
                 shield,
                 povId: povId.value,
                 reduction,
+                keySkills: getKeySkillSnapshot(timestamp),
               })
               data.value[0]!.duration = formatTime(
                 new Date(
@@ -556,7 +588,98 @@ function stopCombat(timeStamp: number) {
   combatTimeStamp.value = 0
   statusData.friendly = {}
   statusData.enemy = {}
+  cooldownTracker = {}
   saveStorage()
+}
+
+function getKeySkillSnapshot(
+  timestamp: number
+): KeySkillSnapshot[] {
+  const result: KeySkillSnapshot[] = []
+
+  const candidateIds = new Set<string>()
+
+  // 1. 实时小队
+  partyEventParty.value.forEach((p) => candidateIds.add(p.id))
+  // 2. 日志记录的小队
+  partyLogList.value.forEach((id) => candidateIds.add(id))
+  // 3. 使用过技能的记录 (cooldownTracker)
+  Object.keys(cooldownTracker).forEach((id) => candidateIds.add(id))
+  // 4. POV
+  if (povId.value) candidateIds.add(povId.value)
+
+  const players: { id: string; job: number; name: string; level: number }[] = []
+
+  for (const id of candidateIds) {
+    // 优先从 partyEventParty 找 (有准确等级)
+    const p = partyEventParty.value.find((v) => v.id === id)
+    if (p) {
+      players.push({
+        id: p.id,
+        job: p.job,
+        name: p.name,
+        level: p.level,
+      })
+      continue
+    }
+
+    // 其次从 jobMap 找
+    const info = jobMap.value[id]
+    if (info) {
+      players.push({
+        id,
+        job: info.job,
+        name: info.name ?? 'Unknown',
+        level: 999, // 默认满级
+      })
+    }
+  }
+
+  const jobCounts = new Map<number, number>()
+  players.forEach((p) => {
+    jobCounts.set(p.job, (jobCounts.get(p.job) || 0) + 1)
+  })
+
+  for (const player of players) {
+    const level = player.level || 999
+    const hasDuplicate = (jobCounts.get(player.job) || 0) > 1
+    
+    for (const skill of trackedSkills) {
+      if (skill.job.includes(player.job) && skill.minLevel <= level) {
+        const id = parseDynamicValue(skill.id, level)
+        const recast = parseDynamicValue(skill.recast1000ms, level)
+
+        const lastUsed = cooldownTracker[player.id]?.[id] ?? 0
+
+        let ready = true
+        let recastLeft = 0
+
+        if (lastUsed > 0) {
+          const diff = timestamp - lastUsed
+          const recastMs = recast * 1000
+          if (diff < recastMs) {
+            ready = false
+            recastLeft = Math.ceil((recastMs - diff) / 1000)
+          }
+        }
+
+        result.push({
+          id,
+          name: getActionChinese(id) || 'Unknown',
+          icon: idToSrc(id),
+          recast1000ms: recast,
+          recastLeft,
+          ready,
+          ownerId: player.id,
+          ownerName: player.name,
+          ownerJob: player.job,
+          hasDuplicate,
+        })
+      }
+    }
+  }
+
+  return result
 }
 
 async function saveStorage() {

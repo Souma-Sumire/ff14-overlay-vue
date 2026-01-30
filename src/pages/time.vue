@@ -2,6 +2,9 @@
 import type { EventMap } from '../../cactbot/types/event'
 import moment from 'moment'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
+import { useWebSocket } from '@/composables/useWebSocket'
+
+useWebSocket({ allowClose: true, addWsParam: true })
 
 const gameIsActive = ref(false)
 const gameActiveTime = ref(-1)
