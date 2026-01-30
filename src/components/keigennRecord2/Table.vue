@@ -113,13 +113,17 @@ const tableData = computed(() =>
   })
 )
 
+const colorCache = new Map<number, string>()
 function getReductionColor(reduction: number) {
+  const roundedReduction = Math.round(reduction * 100) / 100
+  if (colorCache.has(roundedReduction)) return colorCache.get(roundedReduction)!
+
   const CURVE_CAP_PERCENTAGE = 0.5 // 封顶百分比 （也就是减伤达到50%时，颜色变为最亮）
   const CURVE_POWER = 0.8 // 曲率，值越小，颜色变化越大
   const GRAY_START = 88 // 起始的灰度值
   const START_COLOR = [GRAY_START, GRAY_START, GRAY_START]
   const TARGET_COLOR = [50, 250, 200] // 最高点RGB值
-  const cappedReduction = Math.min(1, reduction / CURVE_CAP_PERCENTAGE)
+  const cappedReduction = Math.min(1, roundedReduction / CURVE_CAP_PERCENTAGE)
   const colorIndex = Math.min(9, Math.floor(cappedReduction * 10))
   const linearProgress = colorIndex / 9
   const curvedProgress = Math.pow(linearProgress, CURVE_POWER)
@@ -130,10 +134,12 @@ function getReductionColor(reduction: number) {
   const b =
     START_COLOR[2]! + (TARGET_COLOR[2]! - START_COLOR[2]!) * curvedProgress
 
-  return `rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}, 1)`
+  const color = `rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}, 1)`
+  colorCache.set(roundedReduction, color)
+  return color
 }
 
-const columns = computed<Column[]>(() => [
+const columns = shallowRef<Column[]>([
   {
     key: 'time',
     title: t('keigennRecord.time'),
@@ -354,7 +360,15 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
         row-key="key"
         scrollbar-always-on
         :row-event-handlers="rowEventHandlers"
-      />
+      >
+        <template #empty>
+          <el-empty
+            :description="
+              store.isBrowser ? $t('keigennRecord.actTip') : undefined
+            "
+          />
+        </template>
+      </el-table-v2>
       <div
         v-if="contextMenuVisible"
         ref="contextMenu"

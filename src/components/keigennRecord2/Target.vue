@@ -28,7 +28,7 @@ const showIcon = computed(
     !imageError.value && (store.userOptions.targetType ?? 'icon') === 'icon',
 )
 
-const isLethalIcon = computed(() => isLethal(props.row))
+const isLethalIcon = isLethal(props.row)
 </script>
 
 <template>

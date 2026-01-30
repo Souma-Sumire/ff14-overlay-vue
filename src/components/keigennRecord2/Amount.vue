@@ -11,11 +11,10 @@ const reduction = props.row.reduction
 const originalDamage =
   (amount && Math.round((amount + shieldValue) / (1 - reduction))) || 0
 const originalDamageDisplay = originalDamage.toLocaleString()
-const displayAmount = computed(() => {
-  return amount > 999_999
+const displayAmount =
+  amount > 999_999
     ? `${(amount / 10_000).toFixed(0)}万`
     : amount.toLocaleString()
-})
 const damageTypeClass = type
 const isLethalHit = isLethal(props.row)
 </script>

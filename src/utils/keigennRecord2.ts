@@ -8,8 +8,9 @@ export const invincibleEffect = [
 ]
 
 export function isLethal(row: RowVO): boolean {
+  // 2%血量以下才算，因为有时候伤害判定的瞬间如果有奶（自动回血？）导致没死，会误报为致死攻击。
   return (
-    row.currentHp - row.amount < 0 &&
+    row.currentHp - row.amount < -row.maxHp * 0.02 &&
     !row.keigenns.find((k) => invincibleEffect.includes(k.effectId))
   )
 }
