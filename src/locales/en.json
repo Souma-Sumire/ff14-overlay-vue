@@ -294,7 +294,8 @@
     "physics": "Physical",
     "magic": "Magic",
     "darkness": "Darkness",
-    "dot": "DoT"
+    "dot": "DoT",
+    "actTip": "This page can be used as an ACT overlay (real-time monitoring) or opened in a browser to import logs for analysis."
   },
   "keySkillTimer": {
     "demo-text1": "This is demo data. Lock the window to display live data.",

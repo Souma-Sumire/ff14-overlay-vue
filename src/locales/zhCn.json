@@ -300,7 +300,8 @@
     "dot": "持续伤害",
     "coolingDown": "冷却中",
     "ready": "可用",
-    "noData": "无数据"
+    "noData": "无数据",
+    "actTip": "本页面可作为 ACT 悬浮窗使用（实时监控），也可在浏览器中打开导入日志进行分析。"
   },
   "keySkillTimer": {
     "demo-text1": "当前为演示数据，锁定后将显示真实数据。",
