@@ -4,6 +4,7 @@ import type { DamageEffect, DamageType } from '@/utils/flags'
 export interface RowVO {
   key: string
   time: string
+  timestamp: number
   id?: string
   actionCN: string
   action: string
@@ -18,8 +19,8 @@ export interface RowVO {
   keigenns: Status[]
   currentHp: number
   maxHp: number
-  effect: DamageEffect
-  type: DamageType
+  effect: DamageEffect | 'death'
+  type: DamageType | 'death'
   shield: string
   povId: string
   reduction: number

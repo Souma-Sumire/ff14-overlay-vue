@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { RowVO } from '@/types/keigennRecord2'
-import { isLethal } from '@/utils/keigennRecord2'
 
 const props = defineProps<{ row: RowVO }>()
 const { amount, maxHp, currentHp, shield, source, type } = props.row
@@ -16,7 +15,6 @@ const displayAmount =
     ? `${(amount / 10_000).toFixed(0)}万`
     : amount.toLocaleString()
 const damageTypeClass = type
-const isLethalHit = isLethal(props.row)
 </script>
 
 <template>
@@ -24,9 +22,7 @@ const isLethalHit = isLethal(props.row)
     <template #reference>
       <span class="amount">
         <span :class="damageTypeClass">
-          <span :class="{ lethal: isLethalHit }">
-            {{ displayAmount }}
-          </span>
+          {{ displayAmount }}
         </span>
       </span>
     </template>
@@ -81,11 +77,6 @@ const isLethalHit = isLethal(props.row)
 
 // 伤害数值
 // .amount {}
-
-// 致命伤害
-.lethal {
-  border-bottom: 1px dashed red;
-}
 
 .el-divider {
   padding: 0;

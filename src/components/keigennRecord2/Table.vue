@@ -26,6 +26,11 @@ const contextMenu = useTemplateRef<HTMLElement>('contextMenu')
 
 const actionFilter = ref('') // 技能筛选
 const targetFilter = ref('') // 目标筛选
+const recapStatus = ref<{
+  startTime: number
+  endTime: number
+  windowBase: number
+} | null>(null)
 
 watch(
   () => props.rows,
@@ -33,6 +38,7 @@ watch(
     if (rows.length === 0) {
       actionFilter.value = ''
       targetFilter.value = ''
+      recapStatus.value = null
     }
   },
   { immediate: true }
@@ -52,7 +58,7 @@ const ALL_STR = t('keigennRecord.cancelFilter')
 const actionOptions = computed(() => {
   const actions = Array.from(
     new Set(props.rows.map((r) => r[props.actionKey] as string))
-  )
+  ).filter((v) => v !== undefined && v !== null)
   return [
     { label: ALL_STR, value: '' },
     ...actions.map((action) => ({ label: action, value: action })),
@@ -61,13 +67,17 @@ const actionOptions = computed(() => {
 
 const targetOptions = computed(() => {
   const players = Array.from(
-    new Map(props.rows.map((row) => [row.target, row])).values()
+    new Map(
+      props.rows
+        .filter((r) => r.targetId)
+        .map((row) => [row.targetId, row])
+    ).values()
   )
   return [
     { label: ALL_STR, value: '', job: -1 },
     ...players.map((row) => ({
       label: `${row.job}(${row.target})`,
-      value: row.target,
+      value: row.targetId,
       job: row.jobEnum,
     })),
   ].sort((a, b) => {
@@ -89,7 +99,7 @@ function filterByAction() {
 
 function filterByTarget() {
   if (contextMenuRow.value) {
-    const val = contextMenuRow.value.target
+    const val = contextMenuRow.value.targetId
     if (targetFilter.value === val) {
       targetFilter.value = '' // 取消筛选
     } else {
@@ -99,8 +109,61 @@ function filterByTarget() {
   }
 }
 
-const tableData = computed(() =>
-  props.rows.filter((row) => {
+function showDeathRecap(row?: RowVO | unknown) {
+  const targetRow =
+    row && typeof row === 'object' && 'key' in row
+      ? (row as RowVO)
+      : contextMenuRow.value
+  if (targetRow && targetRow.type === 'death') {
+    targetFilter.value = targetRow.targetId
+    const deathTime = targetRow.timestamp
+    recapStatus.value = {
+      endTime: deathTime,
+      windowBase: deathTime - 15000,
+      startTime: deathTime - 30000,
+    }
+    actionFilter.value = ''
+    contextMenuVisible.value = false
+  }
+}
+
+function cancelDeathRecap() {
+  recapStatus.value = null
+  targetFilter.value = ''
+}
+
+const tableData = computed(() => {
+  if (recapStatus.value) {
+    const targetId = targetFilter.value
+    const { startTime, endTime, windowBase } = recapStatus.value
+
+    // 获取该玩家死亡前的所有记录
+    const targetRows = props.rows.filter(
+      (r) => r.targetId === targetId && r.timestamp <= endTime
+    )
+
+    // 基础窗口：15秒
+    const rows15 = targetRows.filter((r) => r.timestamp >= windowBase)
+    const nonDeath15Count = rows15.filter((r) => r.type !== 'death').length
+
+    if (nonDeath15Count >= 5) {
+      return rows15
+    }
+
+    // 扩展窗口：直到满足5条或达到设定的起点 (startTime)
+    const rowsMax = targetRows.filter((r) => r.timestamp >= startTime)
+    const nonDeathMax = rowsMax.filter((r) => r.type !== 'death')
+
+    if (nonDeathMax.length >= 5) {
+      // 找到第5条非死亡记录的时间戳，以其作为起始点
+      const fifthRowTime = nonDeathMax[4]!.timestamp
+      return rowsMax.filter((r) => r.timestamp >= fifthRowTime)
+    }
+
+    return rowsMax
+  }
+
+  return props.rows.filter((row) => {
     const actionMatch =
       !actionFilter.value ||
       actionFilter.value === ALL_STR ||
@@ -108,10 +171,10 @@ const tableData = computed(() =>
     const targetMatch =
       !targetFilter.value ||
       targetFilter.value === ALL_STR ||
-      row.target === targetFilter.value
+      row.targetId === targetFilter.value
     return actionMatch && targetMatch
   })
-)
+})
 
 const colorCache = new Map<number, string>()
 function getReductionColor(reduction: number) {
@@ -137,6 +200,10 @@ function getReductionColor(reduction: number) {
   const color = `rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}, 1)`
   colorCache.set(roundedReduction, color)
   return color
+}
+
+const rowClass = ({ rowData }: { rowData: RowVO }) => {
+  return rowData.type === 'death' ? 'row-death' : ''
 }
 
 const columns = shallowRef<Column[]>([
@@ -177,7 +244,42 @@ const columns = shallowRef<Column[]>([
             )
         ),
       ]),
-    cellRenderer: ({ rowData }) => h('span', rowData[props.actionKey] ?? ''),
+    cellRenderer: ({ rowData }) => {
+      if (rowData.type === 'death') {
+        const isTerrain = rowData.source === '地形杀'
+        const isRecapMode = recapStatus.value !== null
+        return h('div', { class: 'death-message-left' }, [
+          h('span', '💀 '),
+          h('span', { class: 'death-target-name' }, rowData.target || '玩家'),
+          isTerrain
+            ? h('span', [
+                h('span', ' 因 '),
+                h('span', { class: 'death-terrain' }, '地形杀'),
+                h('span', ' 倒下了！'),
+              ])
+            : h('span', [
+                h('span', ' 被 '),
+                h('span', { class: 'death-source-name' }, rowData.source || '环境'),
+                h('span', ' 做掉了！'),
+              ]),
+          h(
+            'span',
+            {
+              class: 'death-recap-inline',
+              onClick: () => {
+                if (isRecapMode) {
+                  cancelDeathRecap()
+                } else {
+                  showDeathRecap(rowData)
+                }
+              },
+            },
+            isRecapMode ? ' [退出回放]' : ' [查看死亡回放]'
+          ),
+        ])
+      }
+      return h('span', rowData[props.actionKey] ?? '')
+    },
   },
   {
     key: 'target',
@@ -213,7 +315,7 @@ const columns = shallowRef<Column[]>([
         ),
       ]),
     cellRenderer: ({ rowData }: { rowData: RowVO }) =>
-      h(Target, { row: rowData }),
+      rowData.type === 'death' ? h('div') : h(Target, { row: rowData }),
   },
   {
     key: 'amount',
@@ -223,7 +325,7 @@ const columns = shallowRef<Column[]>([
     align: 'right' as const,
     class: 'col-amount',
     cellRenderer: ({ rowData }: { rowData: RowVO }) =>
-      h(Amount, { row: rowData }),
+      rowData.type === 'death' ? h('div') : h(Amount, { row: rowData }),
   },
   {
     key: 'reduction',
@@ -235,16 +337,18 @@ const columns = shallowRef<Column[]>([
     headerCellRenderer: () =>
       h('div', { class: 'header-reduction' }, t('keigennRecord.reduction')),
     cellRenderer: ({ rowData }: { rowData: RowVO }) =>
-      h(
-        'span',
-        {
-          class: 'col-reduction-number',
-          style: {
-            color: getReductionColor(rowData.reduction),
+      rowData.type === 'death'
+        ? h('div')
+        : h(
+          'span',
+          {
+            class: 'col-reduction-number',
+            style: {
+              color: getReductionColor(rowData.reduction),
+            },
           },
-        },
-        `${(rowData.reduction * 100).toFixed(0)}`
-      ),
+          `${(rowData.reduction * 100).toFixed(0)}`
+        ),
   },
   {
     key: 'keigenns',
@@ -254,8 +358,10 @@ const columns = shallowRef<Column[]>([
     width: 100,
     align: 'left' as const,
     class: 'col-keigenns',
-    cellRenderer: ({ rowData }: { rowData: RowVO }) =>
-      h(StatusShow, { row: rowData }),
+    cellRenderer: ({ rowData }: { rowData: RowVO }) => {
+      if (rowData.type === 'death') return h('div')
+      return h(StatusShow, { row: rowData })
+    },
   },
   {
     key: 'skills',
@@ -287,7 +393,7 @@ const columns = shallowRef<Column[]>([
               zIndex: 5,
             },
           },
-          h(KeySkillsCell, { row: rowData })
+          rowData.type === 'death' ? undefined : h(KeySkillsCell, { row: rowData })
         )
       ),
   },
@@ -297,6 +403,15 @@ let msgHdl: MessageHandler | null = null
 
 const rowEventHandlers = computed<RowEventHandlers>(() => ({
   onClick: ({ rowData }: { rowData: RowVO }) => {
+    const isRecapMode = recapStatus.value !== null
+    if (rowData.type === 'death') {
+      if (isRecapMode) {
+        cancelDeathRecap()
+      } else {
+        showDeathRecap(rowData)
+      }
+      return
+    }
     const {
       actionCN,
       amount,
@@ -314,17 +429,16 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
       effect === 'damage done' ? '' : `,${t(`keigennRecord.${effect}`)}`
     const result = `${time} ${job} ${actionCN} ${amount.toLocaleString()}(${t(`keigennRecord.${type}`)}) ${t(
       'keigennRecord.reduction'
-    )}(${(reduction * 100).toFixed(0)}%):${
-      keigenns.length === 0 && sp === ''
+    )}(${(reduction * 100).toFixed(0)}%):${keigenns.length === 0 && sp === ''
         ? t('keigennRecord.none')
         : keigenns
-            .map((k) => (userOptions.statusCN ? k.name : k.effect))
-            .join(',') + sp
-    } ${t('keigennRecord.hp')}}:${currentHp}(${Math.round(
-      (currentHp / maxHp) * 100
-    )}%)+${t('keigennRecord.shield')}:${Math.round(
-      (maxHp * +shield) / 100
-    )}(${shield}%)`
+          .map((k) => (userOptions.statusCN ? k.name : k.effect))
+          .join(',') + sp
+      } ${t('keigennRecord.hp')}}:${currentHp}(${Math.round(
+        (currentHp / maxHp) * 100
+      )}%)+${t('keigennRecord.shield')}:${Math.round(
+        (maxHp * +shield) / 100
+      )}(${shield}%)`
     copyToClipboard(result)
       .then(() => {
         msgHdl?.close()
@@ -336,6 +450,7 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
       .catch(() => ElMessage.error(t('keigennRecord.copyFailed')))
   },
   onContextmenu: ({ rowData, event }: { rowData: RowVO; event: Event }) => {
+    if (rowData.type === 'death') return
     const mouseEvent = event as MouseEvent
     contextMenuRow.value = rowData
     contextMenuX.value = mouseEvent.clientX
@@ -346,72 +461,93 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
 </script>
 
 <template>
-  <el-auto-resizer style="height: 100%; width: 100%">
-    <template #default="{ height, width }">
-      <el-table-v2
-        header-class="keigenn-table-header"
-        class="keigenn-table"
-        :columns="columns"
-        :data="tableData"
-        :width="width"
-        :height="height"
-        :row-height="28"
-        :header-height="24"
-        row-key="key"
-        scrollbar-always-on
-        :row-event-handlers="rowEventHandlers"
-      >
-        <template #empty>
-          <el-empty
-            :description="
-              store.isBrowser ? $t('keigennRecord.actTip') : undefined
-            "
-          />
-        </template>
-      </el-table-v2>
-      <div
-        v-if="contextMenuVisible"
-        ref="contextMenu"
-        class="context-menu"
-        :style="{ top: `${contextMenuY}px`, left: `${contextMenuX}px` }"
-      >
-        <ul>
-          <li @click="filterByAction">
-            {{
-              actionFilter === (contextMenuRow?.[actionKey] ?? '')
-                ? t('keigennRecord.filter.action_cancel', {
-                    actionName:
-                      contextMenuRow?.[actionKey] ??
-                      t('keigennRecord.this_skill'),
-                  })
-                : t('keigennRecord.filter.action_only', {
-                    actionName:
-                      contextMenuRow?.[actionKey] ??
-                      t('keigennRecord.this_skill'),
-                  })
-            }}
-          </li>
+  <div class="table-container">
+    <div class="table-wrapper">
+      <el-auto-resizer style="height: 100%; width: 100%">
+        <template #default="{ height, width }">
+          <el-table-v2 header-class="keigenn-table-header" class="keigenn-table" :columns="columns" :data="tableData"
+            :width="width" :height="height" :row-height="28" :header-height="24" row-key="key" scrollbar-always-on
+            :row-event-handlers="rowEventHandlers" :row-class="rowClass">
+            <template #empty>
+              <el-empty :description="store.isBrowser ? $t('keigennRecord.actTip') : undefined
+                " />
+            </template>
+          </el-table-v2>
+          <div v-if="contextMenuVisible" ref="contextMenu" class="context-menu"
+            :style="{ top: `${contextMenuY}px`, left: `${contextMenuX}px` }">
+            <ul>
+              <li @click="filterByAction">
+                {{
+                  actionFilter === (contextMenuRow?.[actionKey] ?? '')
+                    ? t('keigennRecord.filter.action_cancel', {
+                      actionName:
+                        contextMenuRow?.[actionKey] ??
+                        t('keigennRecord.this_skill'),
+                    })
+                    : t('keigennRecord.filter.action_only', {
+                      actionName:
+                        contextMenuRow?.[actionKey] ??
+                        t('keigennRecord.this_skill'),
+                    })
+                }}
+              </li>
 
-          <li @click="filterByTarget">
-            {{
-              targetFilter === contextMenuRow?.target
-                ? t('keigennRecord.filter.target_cancel', {
-                    jobName: contextMenuRow?.job ?? t('keigennRecord.this_job'),
-                  })
-                : t('keigennRecord.filter.target_only', {
-                    jobName: contextMenuRow?.job ?? t('keigennRecord.this_job'),
-                  })
-            }}
-          </li>
-        </ul>
-      </div>
-    </template>
-  </el-auto-resizer>
+              <li @click="filterByTarget">
+                {{
+                  targetFilter === contextMenuRow?.targetId
+                    ? t('keigennRecord.filter.target_cancel', {
+                      jobName:
+                        contextMenuRow?.job ?? t('keigennRecord.this_job'),
+                    })
+                    : t('keigennRecord.filter.target_only', {
+                      jobName:
+                        contextMenuRow?.job ?? t('keigennRecord.this_job'),
+                    })
+                }}
+              </li>
+            </ul>
+          </div>
+        </template>
+      </el-auto-resizer>
+    </div>
+  </div>
 </template>
 
 <style scoped lang="scss">
+.table-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-wrapper {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
 .keigenn-table {
   font-size: 12px;
+}
+
+.recap-banner {
+  flex: none;
+  width: 100%;
+  height: 32px;
+  background-color: rgba(168, 26, 26, 0.9);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.exit-btn {
+  margin-left: 15px;
+  cursor: pointer;
+  text-decoration: underline;
+  color: #ffd700;
 }
 
 .context-menu {
@@ -469,8 +605,68 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
 
 :deep(.col-skills) {
   overflow: visible !important;
+
   .el-table-v2__row-cell {
     overflow: visible !important;
+  }
+}
+
+:deep(.row-death) {
+  background-color: rgba(60, 0, 0, 0.4) !important;
+
+  .el-table-v2__row-cell {
+    background-color: transparent !important;
+  }
+}
+
+:deep(.col-action) {
+  overflow: visible !important;
+  .el-table-v2__row-cell {
+    overflow: visible !important;
+  }
+}
+
+:deep(.death-message-left) {
+  color: #888; /* 稍微提亮灰色描述文字 */
+  white-space: nowrap;
+  padding-left: 0;
+  font-size: 11px;
+
+  .death-target-name {
+    color: #88c6ff; /* 柔和天蓝 */
+    font-weight: bold;
+    transition: color 0.2s;
+  }
+
+  .death-source-name {
+    color: #ffa39e; /* 柔和红 */
+    font-weight: bold;
+    transition: color 0.2s;
+  }
+
+  .death-terrain {
+    color: #ffe58f; /* 柔和金 */
+    font-weight: bold;
+    transition: color 0.2s;
+  }
+
+  .death-recap-inline {
+    color: #888; /* 按钮也与辅助文字保持一致的默认色 */
+    font-weight: bold;
+    margin-left: 8px;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+}
+
+/* 悬停时点亮这一行 */
+:deep(.el-table-v2__row:hover) {
+  .death-message-left {
+    color: #aaa;
+    .death-target-name { color: #40a9ff; }
+    .death-source-name { color: #ff7875; }
+    .death-terrain { color: #ffd666; }
+    .death-recap-inline { color: #ff4d4f; }
   }
 }
 </style>

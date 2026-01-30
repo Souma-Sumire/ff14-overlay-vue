@@ -111,6 +111,7 @@ const regexes = {
   statusEffectExplicit: NetRegexes.statusEffectExplicit(),
   gainsEffect: NetRegexes.gainsEffect(),
   losesEffect: NetRegexes.losesEffect(),
+  death: NetRegexes.wasDefeated(),
   inCombat:
     /^260\|(?<timestamp>[^|]*)\|(?<inACTCombat>[^|]*)\|(?<inGameCombat>[^|]*)\|/,
   changeZone: NetRegexes.changeZone(),
@@ -172,7 +173,7 @@ function beforeHandle() {
 
 async function afterHandle() {
   loading.value = false
-  
+
   // 如果有待处理的数据,手动触发批量插入
   if (batchTimer !== null) {
     cancelAnimationFrame(batchTimer)
@@ -182,7 +183,7 @@ async function afterHandle() {
       pendingRows = []
     }
   }
-  
+
   await saveStorage()
   triggerRef(data)
 }
@@ -291,10 +292,10 @@ function handleLine(line: string) {
         if (sourceId.startsWith('1')) {
           const abilityIdDecimal = Number.parseInt(id, 16)
           const level = rawCache.entitiesMap[sourceId]?.level ?? 999
-          
+
           const skillMap = getSkillMapForLevel(level)
           const trackedSkill = skillMap.get(abilityIdDecimal)
-          
+
           if (trackedSkill) {
             if (!cooldownTracker[sourceId]) {
               cooldownTracker[sourceId] = {}
@@ -395,6 +396,7 @@ function handleLine(line: string) {
           addRow({
             key: (rowCounter++).toString(),
             time: formattedTime,
+            timestamp,
             id,
             action,
             actionCN,
@@ -422,6 +424,63 @@ function handleLine(line: string) {
             ).getTime() - combatTimeStamp.value
           )
         }
+      }
+      break
+
+    case '25': // Death
+      {
+        const match = regexes.death.exec(line)
+        if (!match || !match.groups) return
+        const targetId = match.groups.targetId!
+        const target = match.groups.target!
+        const sourceId = match.groups.sourceId!
+        const source = sourceId === 'E0000000' ? '地形杀' : match.groups.source!
+        const rawTimestamp = match.groups.timestamp!
+
+        if (combatTimeStamp.value === 0) return
+
+        if (
+          !(
+            targetId === rawCache.povId ||
+            rawCache.partyLogList.includes(targetId!) ||
+            rawCache.partyEventParty.find((v) => v.id === targetId)
+          )
+        ) {
+          return
+        }
+
+        const timestamp = new Date(rawTimestamp!).getTime()
+        const time = timestamp - combatTimeStamp.value
+        const formattedTime = formatTime(time)
+
+        const { jobEnum, job, jobIcon, hasDuplicate } =
+          getCachedJobInfo(targetId!)
+
+        addRow({
+          key: (rowCounter++).toString(),
+          time: formattedTime,
+          timestamp,
+          id: undefined,
+          action: 'Death',
+          actionCN: '死亡',
+          source: source,
+          target: target,
+          targetId: targetId,
+          job,
+          jobIcon,
+          jobEnum,
+          hasDuplicate,
+          amount: 0,
+          keigenns: [],
+          currentHp: 0,
+          maxHp: 0,
+          effect: 'death',
+          type: 'death',
+          shield: '0',
+          povId: rawCache.povId,
+          reduction: 0,
+          keySkills: getKeySkillSnapshot(timestamp),
+        })
       }
       break
 
@@ -595,14 +654,15 @@ function handleLine(line: string) {
         const time =
           combatTimeStamp.value === 0 ? 0 : timestamp - combatTimeStamp.value
         const formattedTime = formatTime(time)
-        
+
         // 使用缓存的职业信息
         const { jobEnum, job, jobIcon, hasDuplicate } = getCachedJobInfo(targetId)
-        
+
         // dot/hot日志的source不准确 故无法计算目标减
         addRow({
           key: (rowCounter++).toString(),
           time: formattedTime,
+          timestamp,
           id: undefined,
           action: which,
           actionCN: which,
@@ -841,9 +901,9 @@ async function loadStorage() {
           ...v,
           table: reactive(Array.isArray(v.table) ? [...v.table] : []),
         }))
-      
+
       data.value.push(...result)
-      
+
       if (data.value.length === 0) {
         data.value.push({
           zoneName: '',
