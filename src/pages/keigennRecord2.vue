@@ -54,9 +54,9 @@ interface PlayerSP extends Player {
 
 const povId = useStorage('keigenn-record-2-pov-id', '')
 const partyLogList = useStorage('keigenn-record-2-party-list', [] as string[])
-const jobMap = useStorage(
+const entitiesMap = useStorage(
   'keigenn-record-2-job-map',
-  {} as Record<string, { job: number; timestamp: number; name?: string }>
+  {} as Record<string, { job: number; timestamp: number; name: string; level: number }>
 )
 const partyEventParty = useStorage(
   'keigenn-record-2-party-event-party',
@@ -238,17 +238,19 @@ function handleLine(line: string) {
             const timestamp = new Date(
               splitLine[logDefinitions.AddedCombatant.fields.timestamp]!
             ).getTime()
-            jobMap.value[splitLine[logDefinitions.AddedCombatant.fields.id]!] =
-              {
-                job: Number.parseInt(job, 16),
-                timestamp,
-                name,
-              }
+            const level = parseInt(splitLine[logDefinitions.AddedCombatant.fields.level]!, 16);
+            entitiesMap.value[splitLine[logDefinitions.AddedCombatant.fields.id]!] =
+            {
+              job: Number.parseInt(job, 16),
+              timestamp,
+              name,
+              level,
+            }
           }
           break
         case 'removingCombatant':
           Reflect.deleteProperty(
-            jobMap.value,
+            entitiesMap.value,
             splitLine[logDefinitions.RemovedCombatant.fields.id]!
           )
           break
@@ -405,8 +407,9 @@ function handleLine(line: string) {
 
             if (sourceId.startsWith('1')) {
               const abilityIdDecimal = Number.parseInt(id, 16)
+              const level = entitiesMap.value[sourceId]?.level ?? 999
               const trackedSkill = trackedSkills.find((v) => {
-                const skillId = parseDynamicValue(v.id, 999)
+                const skillId = parseDynamicValue(v.id, level)
                 return skillId === abilityIdDecimal
               })
               if (trackedSkill) {
@@ -555,7 +558,7 @@ function handleLine(line: string) {
 }
 
 function getJobById(targetId: string) {
-  const fromJobMap = jobMap.value[targetId]
+  const fromJobMap = entitiesMap.value[targetId]
   const fromPartyEvent = partyEventParty.value.find(
     (v) => v.id === targetId
   ) ?? { job: 0, timestamp: 0 }
@@ -566,15 +569,15 @@ function getJobById(targetId: string) {
 
   const hasDuplicate =
     need === fromJobMap
-      ? Object.entries(jobMap.value).some(
-          ([id, job]) =>
-            id !== targetId &&
-            job.job === need?.job &&
-            partyLogList.value.includes(id)
-        )
+      ? Object.entries(entitiesMap.value).some(
+        ([id, job]) =>
+          id !== targetId &&
+          job.job === need?.job &&
+          partyLogList.value.includes(id)
+      )
       : partyEventParty.value.some(
-          (v) => v.id !== targetId && v.job === need?.job
-        )
+        (v) => v.id !== targetId && v.job === need?.job
+      )
   return { job: need?.job ?? 0, hasDuplicate }
 }
 
@@ -604,15 +607,13 @@ function getKeySkillSnapshot(
   partyEventParty.value.forEach((p) => candidateIds.add(p.id))
   // 2. 日志记录的小队
   partyLogList.value.forEach((id) => candidateIds.add(id))
-  // 3. 使用过技能的记录 (cooldownTracker)
-  // Object.keys(cooldownTracker).forEach((id) => candidateIds.add(id))
-  // 4. POV
+  // 3. POV
   if (povId.value) candidateIds.add(povId.value)
 
   const players: { id: string; job: number; name: string; level: number }[] = []
 
   for (const id of candidateIds) {
-    // 优先从 partyEventParty 找 (有准确等级)
+    // 从 partyEventParty 找
     const p = partyEventParty.value.find((v) => v.id === id)
     if (p) {
       players.push({
@@ -624,14 +625,14 @@ function getKeySkillSnapshot(
       continue
     }
 
-    // 其次从 jobMap 找
-    const info = jobMap.value[id]
+    // 从 jobMap 找
+    const info = entitiesMap.value[id]
     if (info) {
       players.push({
         id,
         job: info.job,
         name: info.name ?? 'Unknown',
-        level: 999, // 默认满级
+        level: info.level,
       })
     }
   }
@@ -644,7 +645,7 @@ function getKeySkillSnapshot(
   for (const player of players) {
     const level = player.level || 999
     const hasDuplicate = (jobCounts.get(player.job) || 0) > 1
-    
+
     for (const skill of trackedSkills) {
       if (skill.job.includes(player.job) && skill.minLevel <= level) {
         const id = parseDynamicValue(skill.id, level)
@@ -741,10 +742,10 @@ onMounted(() => {
     // 固定使用深色主题
     toggleDark()
   }
-  for (const id in jobMap.value) {
-    const element = jobMap.value[id]!
+  for (const id in entitiesMap.value) {
+    const element = entitiesMap.value[id]!
     if (Date.now() - element.timestamp > 1000 * 60 * 60 * 24 * 1)
-      Reflect.deleteProperty(jobMap.value, id)
+      Reflect.deleteProperty(entitiesMap.value, id)
   }
   loadStorage()
 
@@ -775,7 +776,7 @@ onMounted(() => {
       } else if (parts.length === 2) {
         durationMs = (parts[0]! * 60 + parts[1]!) * 1000
       }
-      
+
       const now = Date.now()
       const startTime = now - durationMs
 
@@ -828,57 +829,27 @@ function formatTimestamp(ms: number): string {
 </script>
 
 <template>
-  <div
-    class="wrapper"
-    :style="{ '--scale': userOptions.scale, '--opacity': userOptions.opacity }"
-    @contextmenu.prevent
-  >
+  <div class="wrapper" :style="{ '--scale': userOptions.scale, '--opacity': userOptions.opacity }" @contextmenu.prevent>
     <header>
       <div class="header-select">
-        <el-select
-          v-show="!minimize"
-          v-model="select"
-          size="small"
-          class="combat-select"
-          :class="store.isBrowser ? 'browser' : 'act'"
-          popper-class="combat-select-popup"
-          :offset="0"
-          :show-arrow="false"
-        >
-          <el-option
-            v-for="i in data.length"
-            :key="`${data[i - 1]!.key}-${data[i - 1]!.duration}-${data[i - 1]!.zoneName
-            }`"
-            :value="i - 1"
-            :label="`${data[i - 1]!.zoneName}${data[i - 1]!.zoneName === '' ? '' : ` - [${data[i - 1]!.duration}] ${formatTimestamp(data[i - 1]!.timestamp)}`}`"
-          />
+        <el-select v-show="!minimize" v-model="select" size="small" class="combat-select"
+          :class="store.isBrowser ? 'browser' : 'act'" popper-class="combat-select-popup" :offset="0"
+          :show-arrow="false">
+          <el-option v-for="i in data.length" :key="`${data[i - 1]!.key}-${data[i - 1]!.duration}-${data[i - 1]!.zoneName
+            }`" :value="i - 1"
+            :label="`${data[i - 1]!.zoneName}${data[i - 1]!.zoneName === '' ? '' : ` - [${data[i - 1]!.duration}] ${formatTimestamp(data[i - 1]!.timestamp)}`}`" />
         </el-select>
       </div>
-      <el-button
-        v-if="!store.isBrowser"
-        class="minimize"
-        :class="minimize ? 'in-minimize' : 'not-minimize'"
-        :icon="minimize ? ZoomIn : ZoomOut"
-        circle
-        :style="{ opacity: minimize ? 0.5 : 1 }"
-        @click="clickMinimize"
-      />
+      <el-button v-if="!store.isBrowser" class="minimize" :class="minimize ? 'in-minimize' : 'not-minimize'"
+        :icon="minimize ? ZoomIn : ZoomOut" circle :style="{ opacity: minimize ? 0.5 : 1 }" @click="clickMinimize" />
     </header>
     <main v-show="!minimize" style="height: 100%">
-      <KeigennRecord2Table
-        :rows="data[select]!.table"
-        :action-key="actionKey"
-      />
+      <KeigennRecord2Table :rows="data[select]!.table" :action-key="actionKey" />
     </main>
   </div>
   <div v-if="store.isBrowser || dev" class="testLog">
     <el-button v-if="dev" @click="test"> 测试 </el-button>
-    <CommonTestLog
-      m-1
-      @before-handle="beforeHandle"
-      @after-handle="afterHandle"
-      @handle-line="handleLine"
-    />
+    <CommonTestLog m-1 @before-handle="beforeHandle" @after-handle="afterHandle" @handle-line="handleLine" />
   </div>
 </template>
 
