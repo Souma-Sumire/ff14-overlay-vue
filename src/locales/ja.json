@@ -195,7 +195,7 @@
     "comment": {
       "github_patch": "詳細はリポジトリのREADME参照",
       "cactbot_raidboss": "詳細はリポジトリのREADME参照",
-      "keigenn_record2_params": "ACTオーバーレイに追加し、リアルタイム監視に使用可能。ブラウザでログをインポートし、過去記録を分析可能。\nURLパラメータ説明：\nscale: 拡大倍率、デフォルト1\nopacity: 不透明度、デフォルト0.9\ntargetType: 対象表示、iconはジョブアイコン、jobはジョブ名\niconType: 対象アイコン（1～5）、デフォルト2\nparseAA: AA解析（新規ログのみ、履歴は変更不可）、デフォルトON\nparseDoT: DoT解析（新規ログのみ、履歴は変更不可）、デフォルトOFF\nminimize: 起動時最小化、デフォルトOFF\nactionCN: アクション名中国語化、デフォルトON\nstatusCN: ステータス名中国語化、デフォルトON\nlang: 言語、デフォルトzhCn、en/ja/ko/zhTw/zhCn",
+      "keigenn_record2_params": "ACTオーバーレイに追加し、リアルタイム監視に使用可能。ブラウザでログをインポートし、過去記録を分析可能。\nURLパラメータ説明：\nscale: 拡大倍率、デフォルト1\nopacity: 不透明度、デフォルト0.9\ntargetType: 対象表示、iconはジョブアイコン、jobはジョブ名\niconType: 対象アイコン（1～5）、デフォルト2\nparseAA: AA解析（新規ログのみ、履歴は変更不可）、デフォルトON\nparseDoT: DoT解析（新規ログのみ、履歴は変更不可）、デフォルトOFF\nminimize: 起動時最小化、デフォルトOFF\nactionCN: アクション名中国語化、デフォルトON\nstatusCN: ステータス名中国語化、デフォルトON\norder: 並び順。unshift（デフォルト）は上に表示し、pushは下に表示\nlang: 言語、デフォルトzhCn、en/ja/ko/zhTw/zhCn",
       "key_skill_timer_params": "URLパラメータ説明：\nscale: 拡大倍率、デフォルト1\nopacity: 不透明度、デフォルト1\nlang: 言語、デフォルトzhCn、en/ja/ko/zhTw/zhCn\n\nその他設定はオーバーレイ設定（ロック解除後）参照。",
       "dd_atlas": "データ追加は{0}で提出してください\n死宫/天宫/優宫データはEtest2023、妖宫初期データはnepufish提供。\nURLパラメータ説明：\nscale: 拡大倍率、デフォルト1\nlang: 言語、デフォルトzhCn，en/ja/ko/zhTw/zhCn",
       "dd_atlas_pr": "PR",

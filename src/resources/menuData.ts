@@ -76,7 +76,7 @@ export const getRawMenuData = (locale: string, t: (key: string, args?: (string |
   {
     title: 'startPages.menu.keigenn_record2',
     type: '悬浮窗',
-    path: `keigennRecord2?scale=1&opacity=0.9&targetType=icon&iconType=2&parseAA=1&parseDoT=0&minimize=0&actionCN=1&statusCN=1&lang=${locale}`,
+    path: `keigennRecord2?scale=1&opacity=0.9&targetType=icon&iconType=2&parseAA=1&parseDoT=0&minimize=0&actionCN=1&statusCN=1&order=unshift&lang=${locale}`,
     comment: 'startPages.comment.keigenn_record2_params',
     direction: 'row-reverse',
     src: 'keigennRecord2.webp',

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Column, MessageHandler, RowEventHandlers } from 'element-plus'
+import type { Column, MessageHandler, RowEventHandlers, TableV2Instance } from 'element-plus'
 import type { RowVO } from '@/types/keigennRecord2'
 import { onClickOutside } from '@vueuse/core'
 import { ElMessage, ElOption, ElSelect } from 'element-plus'
@@ -163,6 +163,14 @@ const tableData = computed(() => {
     return rowsMax
   }
 
+  const hasFilter =
+    (actionFilter.value && actionFilter.value !== ALL_STR) ||
+    (targetFilter.value && targetFilter.value !== ALL_STR)
+
+  if (!hasFilter) {
+    return props.rows // 没有筛选时直接返回原引用，保持虚拟列表稳定
+  }
+
   return props.rows.filter((row) => {
     const actionMatch =
       !actionFilter.value ||
@@ -206,7 +214,7 @@ const rowClass = ({ rowData }: { rowData: RowVO }) => {
   return rowData.type === 'death' ? 'row-death' : ''
 }
 
-const columns = shallowRef<Column[]>([
+const columns = computed<Column[]>(() => [
   {
     key: 'time',
     title: t('keigennRecord.time'),
@@ -458,6 +466,17 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
     contextMenuVisible.value = true
   },
 }))
+const tableV2Ref = ref<TableV2Instance | null>(null)
+
+function scrollToBottom() {
+  if (tableV2Ref.value) {
+    tableV2Ref.value.scrollToRow(tableData.value.length - 1)
+  }
+}
+
+defineExpose({
+  scrollToBottom,
+})
 </script>
 
 <template>
@@ -465,7 +484,7 @@ const rowEventHandlers = computed<RowEventHandlers>(() => ({
     <div class="table-wrapper">
       <el-auto-resizer style="height: 100%; width: 100%">
         <template #default="{ height, width }">
-          <el-table-v2 header-class="keigenn-table-header" class="keigenn-table" :columns="columns" :data="tableData"
+          <el-table-v2 ref="tableV2Ref" header-class="keigenn-table-header" class="keigenn-table" :columns="columns" :data="tableData"
             :width="width" :height="height" :row-height="28" :header-height="24" row-key="key" scrollbar-always-on
             :row-event-handlers="rowEventHandlers" :row-class="rowClass">
             <template #empty>

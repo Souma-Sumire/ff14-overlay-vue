@@ -195,7 +195,7 @@
     "comment": {
       "github_patch": "詳見倉庫 README",
       "cactbot_raidboss": "詳見倉庫 README",
-      "keigenn_record2_params": "可以新增到 ACT 懸浮窗中用於即時監控。也可以在瀏覽器中開啟，匯入日誌分析過往紀錄。\nURL地址欄參數說明：\nscale: 縮放倍率，預設1\nopacity: 懸浮窗不透明度，預設0.9\ntargetType: 目標顯示類型，icon為職業圖標，job為職業名\niconType: 目標圖標類型（可選1~5），預設2\nparseAA: 解析自動攻擊（僅影響新紀錄，歷史結果不會同步改變），預設開\nparseDoT: 解析DoT（僅影響新紀錄，歷史結果不會同步改變），預設關\nminimize: 啟動時迷你化，預設關\nactionCN: action名稱中文化，預設開\nstatusCN: status名稱中文化，預設開\nlang: 語言，預設zhCn，可選en、ja、ko、zhTw、zhCn",
+      "keigenn_record2_params": "可以新增到 ACT 懸浮窗中用於即時監控。也可以在瀏覽器中開啟，匯入日誌分析過往紀錄。\nURL地址欄參數說明：\nscale: 縮放倍率，預設1\nopacity: 懸浮窗不透明度，預設0.9\ntargetType: 目標顯示類型，icon為職業圖標，job為職業名\niconType: 目標圖標類型（可選1~5），預設2\nparseAA: 解析自動攻擊（僅影響新紀錄，歷史結果不會同步改變），預設開\nparseDoT: 解析DoT（僅影響新紀錄，歷史結果不會同步改變），預設關\nminimize: 啟動時迷你化，預設關\nactionCN: action名稱中文化，預設開\nstatusCN: status名稱中文化，預設開\norder: 數據排列順序，unshift顯示在上面（預設），push顯示在下面\nlang: 語言，預設zhCn，可選en、ja、ko、zhTw、zhCn",
       "key_skill_timer_params": "URL地址欄參數說明：\nscale: 縮放倍率，預設1\nopacity: 不透明度，預設1\nlang: 語言，預設zhCn，可選en、ja、ko、zhTw、zhCn\n\n更多自訂功能詳見懸浮窗設定（取消鎖定後顯示）。",
       "dd_atlas": "補充資料請提交{0}\n死宮天宮優宮資料來自Etest2023，妖宮初期資料來自nepufish。\nURL地址欄參數說明：\nscale: 縮放倍率，預設1\nlang: 語言，預設zhCn，可選en、ja、ko、zhTw、zhCn",
       "dd_atlas_pr": "PR",

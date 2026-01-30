@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { toRaw, triggerRef, reactive, markRaw } from 'vue'
+import { toRaw, triggerRef, reactive, markRaw, nextTick } from 'vue'
 import type { Ref } from 'vue'
 import type {
   CombatDataEvent,
@@ -41,6 +41,7 @@ const store = useKeigennRecord2Store()
 const userOptions = store.userOptions
 // 某些情况下OverlayPluginApi并不会立即被挂在到window上。用户上报，未复现。
 store.checkIsBrowser()
+const isPush = computed(() => userOptions.order === 'push')
 
 const minimize = ref(userOptions.minimize)
 
@@ -179,7 +180,12 @@ async function afterHandle() {
     cancelAnimationFrame(batchTimer)
     batchTimer = null
     if (pendingRows.length > 0) {
-      data.value[0]!.table.unshift(...pendingRows.reverse())
+      if (isPush.value) {
+        data.value[0]!.table.push(...pendingRows)
+        nextTick(() => tableRef.value?.scrollToBottom())
+      } else {
+        data.value[0]!.table.unshift(...pendingRows.reverse())
+      }
       pendingRows = []
     }
   }
@@ -758,11 +764,17 @@ function getCachedJobInfo(targetId: string): JobInfo {
 let pendingRows: RowVO[] = []
 let batchTimer: number | null = null
 
+const tableRef = ref<any>(null)
 function addRow(row: RowVO) {
   pendingRows.push(markRaw(row))
   if (batchTimer === null) {
     batchTimer = requestAnimationFrame(() => {
-      data.value[0]!.table.unshift(...pendingRows.reverse())
+      if (isPush.value) {
+        data.value[0]!.table.push(...pendingRows)
+        nextTick(() => tableRef.value?.scrollToBottom())
+      } else {
+        data.value[0]!.table.unshift(...pendingRows.reverse())
+      }
       pendingRows = []
       batchTimer = null
     })
@@ -998,18 +1010,42 @@ function clickMinimize() {
 }
 
 function test() {
-  data.value.unshift({
-    zoneName: '',
-    duration: '00:00',
-    table: shallowReactive([]),
-    key: 'test',
+  if (data.value[0]?.key === 'init' || data.value[0] === undefined) {
+    data.value.unshift({
+      zoneName: '',
+      duration: '00:00',
+      table: shallowReactive([]),
+      key: 'test',
+      timestamp: Date.now(),
+    })
+    triggerRef(data)
+    select.value = 0
+  }
+  addRow({
+    key: (rowCounter++).toString(),
+    time: formatTime(Date.now() - (combatTimeStamp.value || Date.now())),
     timestamp: Date.now(),
+    id: 'unknown',
+    action: 'test',
+    actionCN: '测试技能',
+    source: '环境',
+    target: '测试角色',
+    targetId: 'test-id',
+    job: '测试职业',
+    jobIcon: Util.jobEnumToIcon(19),
+    jobEnum: 19,
+    hasDuplicate: false,
+    amount: 12345,
+    keigenns: [],
+    currentHp: 50000,
+    maxHp: 100000,
+    effect: 'damage done',
+    type: 'physics',
+    shield: '10',
+    povId: 'test-id',
+    reduction: 0.1,
+    keySkills: [],
   })
-  triggerRef(data)
-  select.value = 0
-  // const last = data.value[0]!.table[0]!
-  // const d = { ...last, key: crypto.randomUUID() }
-  // data.value[0]!.table.unshift(d)
 }
 
 function formatTimestamp(ms: number): string {
@@ -1039,7 +1075,7 @@ function formatTimestamp(ms: number): string {
         :icon="minimize ? ZoomIn : ZoomOut" circle :style="{ opacity: minimize ? 0.5 : 1 }" @click="clickMinimize" />
     </header>
     <main v-show="!minimize" style="height: 100%">
-      <KeigennRecord2Table :rows="data[select]!.table" :action-key="actionKey" />
+      <KeigennRecord2Table ref="tableRef" :rows="data[select]!.table" :action-key="actionKey" />
     </main>
   </div>
   <div v-if="store.isBrowser || dev" class="testLog">
