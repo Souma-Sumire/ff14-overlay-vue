@@ -781,14 +781,11 @@ function test() {
 function formatTimestamp(ms: number): string {
   const date = new Date(ms)
 
-  const h = date.getHours()
-  const hh = (h % 12 || 12).toString().padStart(2, '0')
+  const h = date.getHours().toString().padStart(2, '0')
   const mm = date.getMinutes().toString().padStart(2, '0')
   const ss = date.getSeconds().toString().padStart(2, '0')
 
-  const ampm = h >= 12 ? 'PM' : 'AM'
-
-  return `${hh}:${mm}:${ss} ${ampm}`
+  return `${h}:${mm}:${ss}`
 }
 </script>
 
@@ -806,7 +803,7 @@ function formatTimestamp(ms: number): string {
           size="small"
           class="combat-select"
           :class="store.isBrowser ? 'browser' : 'act'"
-          popup-class-name="combat-select-popup"
+          popper-class="combat-select-popup"
           :offset="0"
           :show-arrow="false"
         >
@@ -992,7 +989,7 @@ main {
 }
 
 .combat-select.browser {
-  width: 18em;
+  width: 20em;
   right: 2px;
 }
 
@@ -1012,4 +1009,8 @@ main {
     opacity: 1;
   }
 }
+</style>
+
+<style lang="scss">
+@use '@/styles/compact-select.scss';
 </style>

@@ -22,7 +22,7 @@ const readySkills = computed(() =>
 function getJobClass(jobId: number) {
   const jobObj = Util.jobEnumToJob(jobId)
   const jobName = Util.jobToFullName(jobObj)
-  return jobName.en?.toLowerCase() || ''
+  return jobName.en?.toLowerCase().replace(' ', '') || ''
 }
 
 function getJobName(jobId: number) {
