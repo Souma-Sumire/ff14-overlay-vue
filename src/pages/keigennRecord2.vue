@@ -290,7 +290,7 @@ function prepareRowVO(row: Omit<RowVO, 'preCalculated'>): RowVO {
     preCalculated: {
       reductionColor,
       amountDisplay,
-      damageTypeClass: (row.effect === 'heal' || row.effect === 'crit heal') ? 'is-heal' : type,
+      damageTypeClass: (row.effect === 'heal') ? 'is-heal' : type,
       jobIconSrc,
       keigenns: row.keigenns.map((v) => ({
         src: getImgSrc(`/i/${v.fullIcon}${icon4k}.png`),
@@ -605,7 +605,7 @@ function handleLine(line: string) {
             timestamp,
             id: '',
             action: 'Death',
-            actionCN: sourceId === 'E0000000' ? '地形杀' : '环境伤害',
+            actionCN: sourceId === 'E0000000' ? '地形杀' : '死亡',
             source: source,
             target: target,
             targetId: targetId!,
@@ -1022,7 +1022,7 @@ async function saveStorage() {
     return
   }
   const validData = data.value
-    .filter((v) => v.key !== 'init' && v.timestamp > 0)
+    .filter((v) => v.key !== 'init' && v.timestamp > 0 && v.table.length > 0)
     .map((v) => {
       const rawTable = Array.isArray(v.table) ? toRaw(v.table) : []
       return {
@@ -1160,6 +1160,8 @@ onMounted(() => {
 onBeforeUnmount(() => {
   // 保存持久化数据
   savePersistentData()
+  // 尝试保存 IndexedDB 数据
+  saveStorage()
 })
 
 function clickMinimize() {

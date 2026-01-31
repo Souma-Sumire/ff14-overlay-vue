@@ -5,13 +5,13 @@ type DamageEffect =
   | 'parried damage' // 招架
   | 'instant death' // 即死
   | 'heal' // 治疗
-  | 'crit heal' // 暴击治疗
 
 type DamageProperties =
   | 'damage' // 普通
   | 'crit damage' // 暴击
   | 'direct hit damage' // 直击
   | 'crit direct hit damage' // 直暴;
+  | 'crit heal' // 暴击治疗
 
 type DamageType =
   | 'physics' // 物理
@@ -22,7 +22,7 @@ type DamageType =
 
 function processFlags(flag: string) {
   const effect = processEffect(flag)
-  const properties = effect === 'heal' ? 'heal' : processProperties(flag)
+  const properties = processProperties(flag)
   const type = effect === 'heal' ? 'heal' : processType(flag)
   return { effect, properties, type }
 }
@@ -39,8 +39,6 @@ function processEffect(flag: string): DamageEffect {
   switch (true) {
     case flag.endsWith('33'):
       return 'instant death'
-    case /2\w{4}4$/.test(flag):
-      return 'crit heal'
     case flag.endsWith('1'):
       return 'dodge'
     case flag.endsWith('3'):
@@ -62,6 +60,8 @@ function processEffect(flag: string): DamageEffect {
 
 function processProperties(flag: string): DamageProperties {
   switch (true) {
+    case /2\w{4}4$/.test(flag):
+      return 'crit heal'
     case /2\w{3}$/.test(flag):
       return 'crit damage'
     case /4\w{3}$/.test(flag):

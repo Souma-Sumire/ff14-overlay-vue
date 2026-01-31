@@ -9,10 +9,6 @@ import { copyToClipboard } from '@/utils/clipboard'
 import Util from '@/utils/util'
 import { handleImgError } from '@/utils/xivapi'
 import { useLang } from '@/composables/useLang'
-import { useDev } from '@/composables/useDev'
-
-const dev = useDev()
-
 const { t } = useLang()
 
 const props = defineProps<{
@@ -112,7 +108,7 @@ function updateRecapData(deathRow: RowVO) {
   const finalResult = Array.from(new Set(result)).sort((a, b) => b.timestamp - a.timestamp)
 
   recapRows.value = finalResult.map((r) => {
-    const isHeal = r.effect === 'heal' || r.effect === 'crit heal'
+    const isHeal = r.effect === 'heal'
     const isDeath = r.type === 'death'
     const isDamage = !isHeal && r.amount > 0 && !isDeath
 
@@ -141,6 +137,8 @@ function updateRecapData(deathRow: RowVO) {
 }
 
 function handleHover(row: RowVO, mode: 'amount' | 'skills' | 'death-recap', e: MouseEvent) {
+  if (popoverVisible.value && hoveredRow.value?.key === row.key && tooltipMode.value === mode) return
+  
   tooltipMode.value = mode
   if (mode === 'skills') {
     popoverPlacement.value = 'left'
@@ -156,6 +154,55 @@ function handleHover(row: RowVO, mode: 'amount' | 'skills' | 'death-recap', e: M
 }
 
 
+const lastMousePos = { x: 0, y: 0 }
+const handleMouseMove = (e: MouseEvent) => {
+  lastMousePos.x = e.clientX
+  lastMousePos.y = e.clientY
+}
+
+const updateHoverState = (x: number, y: number) => {
+  const el = document.elementFromPoint(x, y)
+  const trigger = el?.closest('[data-row-key][data-hover-mode]') as HTMLElement
+  if (trigger) {
+    const key = trigger.dataset.rowKey
+    const mode = trigger.dataset.hoverMode as any
+    const row = tableData.value.find(r => r.key === key)
+    if (row) {
+      handleHover(row, mode, { currentTarget: trigger } as any)
+      return
+    }
+  }
+  popoverVisible.value = false
+}
+
+let scrollFrame = 0
+const handleScroll = (e: WheelEvent) => {
+  if (contextMenuVisible.value) {
+    contextMenuVisible.value = false
+  }
+  
+  const target = e.target as HTMLElement
+  if (target?.closest('.keigenn-global-popover')) return
+
+  // 使用 rAF 延迟探测，确保滚动后的 DOM 已经更新并稳定
+  cancelAnimationFrame(scrollFrame)
+  scrollFrame = requestAnimationFrame(() => {
+    updateHoverState(lastMousePos.x, lastMousePos.y)
+  })
+}
+
+const tableContainer = useTemplateRef<HTMLElement>('tableContainer')
+
+onMounted(() => {
+  tableContainer.value?.addEventListener('wheel', handleScroll, { passive: true })
+  window.addEventListener('mousemove', handleMouseMove, { passive: true })
+})
+
+onBeforeUnmount(() => {
+  tableContainer.value?.removeEventListener('wheel', handleScroll)
+  window.removeEventListener('mousemove', handleMouseMove)
+})
+
 onClickOutside(contextMenu, () => {
   contextMenuVisible.value = false
 })
@@ -163,7 +210,7 @@ onClickOutside(contextMenu, () => {
 const ALL_STR = t('keigennRecord.cancelFilter')
 
 const actionOptions = computed(() => {
-  const filteredRows = props.rows.filter((r) => store.userOptions.debugShowHeals || (r.effect !== 'heal' && r.effect !== 'crit heal'))
+  const filteredRows = props.rows.filter((r) => store.debugShowHeals || (r.effect !== 'heal'))
   const actions = Array.from(
     new Set(filteredRows.map((r) => r[props.actionKey] as string))
   ).filter((v) => v !== undefined && v !== null)
@@ -174,7 +221,7 @@ const actionOptions = computed(() => {
 })
 
 const targetOptions = computed(() => {
-  const filteredRows = props.rows.filter((r) => store.userOptions.debugShowHeals || (r.effect !== 'heal' && r.effect !== 'crit heal'))
+  const filteredRows = props.rows.filter((r) => store.debugShowHeals || (r.effect !== 'heal'))
   const players = Array.from(
     new Map(
       filteredRows
@@ -219,10 +266,7 @@ function filterByTarget() {
   }
 }
 
-function toggleDebugHeals() {
-  store.userOptions.debugShowHeals = !store.userOptions.debugShowHeals
-  contextMenuVisible.value = false
-}
+
 
 const renderHeader = (title: string, customClass = '') => h('div', { class: ['header-static', customClass] }, title)
 const renderEmpty = () => h('div')
@@ -257,7 +301,7 @@ const FilterHeader = (props: {
 }
 
 const tableData = computed(() => {
-  const baseRows = props.rows.filter((r) => store.userOptions.debugShowHeals || (r.effect !== 'heal' && r.effect !== 'crit heal'))
+  const baseRows = props.rows.filter((r) => store.debugShowHeals || (r.effect !== 'heal'))
   const hasFilter =
     (actionFilter.value && actionFilter.value !== ALL_STR) ||
     (targetFilter.value && targetFilter.value !== ALL_STR)
@@ -312,7 +356,7 @@ const columns: Column[] = [
         const isTerrain = rowData.source === '地形杀'
         return h('div', { class: 'death-message-left' }, [
           h('span', '💀 '),
-          h('span', { class: 'death-target-name' }, rowData.target || '玩家'),
+          h('span', { class: 'death-target-name' }, rowData.target),
           isTerrain
             ? h('span', [
               h('span', ' 因 '),
@@ -321,19 +365,21 @@ const columns: Column[] = [
             ])
             : h('span', [
               h('span', ' 被 '),
-              h('span', { class: 'death-source-name' }, rowData.source || '环境伤害'),
+              h('span', { class: 'death-source-name' }, rowData.source),
               h('span', ' 做掉了！'),
             ]),
-          h(
-            'span',
-            {
-              class: 'death-recap-inline',
-              onMouseenter: (e: MouseEvent) => {
-                handleHover(rowData, 'death-recap', e)
+            h(
+              'span',
+              {
+                class: 'death-recap-inline',
+                'data-row-key': rowData.key,
+                'data-hover-mode': 'death-recap',
+                onMouseenter: (e: MouseEvent) => {
+                  handleHover(rowData, 'death-recap', e)
+                },
               },
-            },
-            ' [死亡回放]'
-          ),
+              ' [死亡回放]'
+            ),
         ])
       }
       return h('span', rowData[props.actionKey] ?? '')
@@ -383,6 +429,8 @@ const columns: Column[] = [
         'span',
         {
           class: 'amount',
+          'data-row-key': rowData.key,
+          'data-hover-mode': 'amount',
           onMouseenter: (e: MouseEvent) => handleHover(rowData, 'amount', e),
         },
         [
@@ -443,7 +491,7 @@ const columns: Column[] = [
           ])
         ),
         h('span', { class: 'flags' },
-          (rowData.effect === 'damage done'||rowData.type==='heal') ? '' : t(`keigennRecord.${rowData.effect}`)
+          (rowData.effect === 'damage done' || rowData.type === 'heal') ? '' : t(`keigennRecord.${rowData.effect}`)
         )
       ])
     },
@@ -475,6 +523,8 @@ const columns: Column[] = [
               'div',
               {
                 class: 'view-icon',
+                'data-row-key': rowData.key,
+                'data-hover-mode': 'skills',
                 onMouseenter: (e: MouseEvent) => handleHover(rowData, 'skills', e),
               },
               [
@@ -550,7 +600,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="table-container">
+  <div ref="tableContainer" class="table-container">
     <div class="table-wrapper">
       <el-auto-resizer style="height: 100%; width: 100%">
         <template #default="{ height, width }">
@@ -595,9 +645,7 @@ defineExpose({
                     })
                 }}
               </li>
-              <li v-if="dev" style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 4px; padding-top: 4px; color: #aaa;" @click="toggleDebugHeals">
-                {{ store.userOptions.debugShowHeals ? '调试：隐藏治疗信息' : '调试：显示治疗信息' }}
-              </li>
+
             </ul>
           </div>
 
@@ -797,6 +845,7 @@ defineExpose({
 
 :deep(.row-death) {
   background-color: rgba(60, 0, 0, 0.4) !important;
+  cursor: default;
 
   .el-table-v2__row-cell {
     background-color: transparent !important;
