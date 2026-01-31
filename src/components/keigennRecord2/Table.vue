@@ -152,9 +152,6 @@ function handleHover(row: RowVO, mode: 'amount' | 'skills' | 'death-recap', e: M
   popoverVisible.value = true
 }
 
-function clearHover() {
-  popoverVisible.value = false
-}
 
 onClickOutside(contextMenu, () => {
   contextMenuVisible.value = false
@@ -325,7 +322,6 @@ const columns: Column[] = [
               onMouseenter: (e: MouseEvent) => {
                 handleHover(rowData, 'death-recap', e)
               },
-              onMouseleave: clearHover,
             },
             ' [死亡回放]'
           ),
@@ -379,7 +375,6 @@ const columns: Column[] = [
         {
           class: 'amount',
           onMouseenter: (e: MouseEvent) => handleHover(rowData, 'amount', e),
-          onMouseleave: clearHover,
         },
         [
           h('span', { class: rowData.preCalculated.damageTypeClass }, rowData.preCalculated.amountDisplay),
@@ -472,7 +467,6 @@ const columns: Column[] = [
               {
                 class: 'view-icon',
                 onMouseenter: (e: MouseEvent) => handleHover(rowData, 'skills', e),
-                onMouseleave: clearHover,
               },
               [
                 h('div', { class: 'dots' }, [h('i'), h('i'), h('i')]),
@@ -1045,11 +1039,14 @@ body .el-popover.keigenn-global-popover {
   }
 }
 
+.col-keigenns,
+.col-time,
 .col-skills {
-  overflow: visible;
+  overflow: visible !important;
 
   .el-table-v2__row-cell {
-    overflow: visible;
+    overflow: visible !important;
+    background-color: transparent !important;
   }
 }
 
@@ -1097,6 +1094,7 @@ body .el-popover.keigenn-global-popover {
   width: auto; /* Allow table to shrink/grow */
   border-collapse: collapse; /* Essential for borders */
   margin: -4px; /* Counteract default spacing if needed, or adjust popover padding */
+  flex-wrap: nowrap;
 
   .recap-header,
   .recap-row {
@@ -1184,8 +1182,8 @@ body .el-popover.keigenn-global-popover {
         align-items: center;
         
         .ability-icon { 
-          width: 16px; 
-          height: 16px; 
+          width: 14px; 
+          height: 14px; 
           object-fit: cover;
           margin-right: 4px;
           flex-shrink: 0;
@@ -1195,43 +1193,6 @@ body .el-popover.keigenn-global-popover {
           color: #64b5f6;
           font-weight: 500;
           font-size: 11px;
-        }
-      }
-    }
-
-    .hp-bar-cell {
-      width: 65px; /* Fixed width for HP bar look */
-      min-width: 65px;
-      height: 100%;
-      vertical-align: middle;
-      padding: 2px 4px;
-      
-      .hp-bar-bg {
-        width: 100%;
-        height: 14px;
-        background: #333;
-        border-radius: 2px;
-        position: relative;
-        overflow: hidden;
-        display: block; /* Ensure block for div inside table cell */
-        
-        .hp-bar-fill {
-          height: 100%;
-          background-color: #4caf50; 
-          background-image: linear-gradient(to right, #4caf50, #81c784);
-        }
-        
-          .hp-text {
-          position: absolute;
-          top: 50%;
-          right: 2px;
-          transform: translateY(-50%);
-          font-family: monospace;
-          color: #fff;
-          font-size: 10px; 
-          white-space: nowrap;
-          text-shadow: 0 0 2px #000, 1px 1px 1px #000;
-          z-index: 1;
         }
       }
     }
@@ -1253,6 +1214,7 @@ body .el-popover.keigenn-global-popover {
       }
 
       .status {
+        height:18px;
         position: relative;
         display: flex;
         align-items: center;
@@ -1264,7 +1226,7 @@ body .el-popover.keigenn-global-popover {
           position: absolute;
           bottom: -4px;
           left: 50%;
-          transform: translateX(-50%) scale(0.85);
+          transform: translateX(-50%) scale(0.7);
           transform-origin: center bottom;
           
           font-family: Arial, sans-serif;
@@ -1293,10 +1255,9 @@ body .el-popover.keigenn-global-popover {
 
       .status-icon {
         display: block;
-        width: 16px; 
-        height: 16px;
+        width: 14px; 
+        height: 18px;
         object-fit: cover;
-        overflow: visible; // 用户强制要求保留以修复显示问题
       }
     }
 
