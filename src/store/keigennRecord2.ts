@@ -17,6 +17,7 @@ export const useKeigennRecord2Store = defineStore('keigennRecord2', {
         actionCN: parseParams(params.actionCN as string, true), // action显示中文化
         statusCN: parseParams(params.statusCN as string, true), // status显示中文化
         order: parseParams(params.order as 'unshift' | 'push', 'unshift'), // 数据排列顺序
+        debugShowHeals: false, // 调试开关：主表显示治疗记录（仅开发者模式可用）
       },
       isBrowser: false,
     }

@@ -9,6 +9,9 @@ import { copyToClipboard } from '@/utils/clipboard'
 import Util from '@/utils/util'
 import { handleImgError } from '@/utils/xivapi'
 import { useLang } from '@/composables/useLang'
+import { useDev } from '@/composables/useDev'
+
+const dev = useDev()
 
 const { t } = useLang()
 
@@ -160,8 +163,9 @@ onClickOutside(contextMenu, () => {
 const ALL_STR = t('keigennRecord.cancelFilter')
 
 const actionOptions = computed(() => {
+  const filteredRows = props.rows.filter((r) => store.userOptions.debugShowHeals || (r.effect !== 'heal' && r.effect !== 'crit heal'))
   const actions = Array.from(
-    new Set(props.rows.map((r) => r[props.actionKey] as string))
+    new Set(filteredRows.map((r) => r[props.actionKey] as string))
   ).filter((v) => v !== undefined && v !== null)
   return [
     { label: ALL_STR, value: '' },
@@ -170,9 +174,10 @@ const actionOptions = computed(() => {
 })
 
 const targetOptions = computed(() => {
+  const filteredRows = props.rows.filter((r) => store.userOptions.debugShowHeals || (r.effect !== 'heal' && r.effect !== 'crit heal'))
   const players = Array.from(
     new Map(
-      props.rows
+      filteredRows
         .filter((r) => r.targetId)
         .map((row) => [row.targetId, row])
     ).values()
@@ -214,7 +219,10 @@ function filterByTarget() {
   }
 }
 
-
+function toggleDebugHeals() {
+  store.userOptions.debugShowHeals = !store.userOptions.debugShowHeals
+  contextMenuVisible.value = false
+}
 
 const renderHeader = (title: string, customClass = '') => h('div', { class: ['header-static', customClass] }, title)
 const renderEmpty = () => h('div')
@@ -249,15 +257,16 @@ const FilterHeader = (props: {
 }
 
 const tableData = computed(() => {
+  const baseRows = props.rows.filter((r) => store.userOptions.debugShowHeals || (r.effect !== 'heal' && r.effect !== 'crit heal'))
   const hasFilter =
     (actionFilter.value && actionFilter.value !== ALL_STR) ||
     (targetFilter.value && targetFilter.value !== ALL_STR)
 
   if (!hasFilter) {
-    return props.rows // 没有筛选时直接返回原引用，保持虚拟列表稳定
+    return baseRows
   }
 
-  return props.rows.filter((row) => {
+  return baseRows.filter((row) => {
     const actionMatch =
       !actionFilter.value ||
       actionFilter.value === ALL_STR ||
@@ -312,7 +321,7 @@ const columns: Column[] = [
             ])
             : h('span', [
               h('span', ' 被 '),
-              h('span', { class: 'death-source-name' }, rowData.source || '环境'),
+              h('span', { class: 'death-source-name' }, rowData.source || '环境伤害'),
               h('span', ' 做掉了！'),
             ]),
           h(
@@ -434,7 +443,7 @@ const columns: Column[] = [
           ])
         ),
         h('span', { class: 'flags' },
-          rowData.effect === 'damage done' ? '' : t(`keigennRecord.${rowData.effect}`)
+          (rowData.effect === 'damage done'||rowData.type==='heal') ? '' : t(`keigennRecord.${rowData.effect}`)
         )
       ])
     },
@@ -585,6 +594,9 @@ defineExpose({
                         contextMenuRow?.job ?? t('keigennRecord.this_job'),
                     })
                 }}
+              </li>
+              <li v-if="dev" style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 4px; padding-top: 4px; color: #aaa;" @click="toggleDebugHeals">
+                {{ store.userOptions.debugShowHeals ? '调试：隐藏治疗信息' : '调试：显示治疗信息' }}
               </li>
             </ul>
           </div>
@@ -915,6 +927,7 @@ defineExpose({
   .physics { color: rgb(255, 100, 100); }
   .magic { color: rgb(100, 200, 255); }
   .darkness { color: rgb(255, 100, 255); }
+  .is-heal { color: #4caf50; }
   .unuseful { opacity: 0.3;}
   .half-useful { opacity: 0.6;}
   .useful { opacity: 1;}

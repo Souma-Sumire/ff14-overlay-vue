@@ -290,7 +290,7 @@ function prepareRowVO(row: Omit<RowVO, 'preCalculated'>): RowVO {
     preCalculated: {
       reductionColor,
       amountDisplay,
-      damageTypeClass: type,
+      damageTypeClass: (row.effect === 'heal' || row.effect === 'crit heal') ? 'is-heal' : type,
       jobIconSrc,
       keigenns: row.keigenns.map((v) => ({
         src: getImgSrc(`/i/${v.fullIcon}${icon4k}.png`),
@@ -432,10 +432,17 @@ function handleLine(line: string) {
         }
 
         const ability = processAbilityLine(splitLine)
-        if (ability.isAttack && ability.amount >= 0) {
-          const targetId =
-            splitLine[logDefinitions.Ability.fields.targetId] ?? '???'
-          if (!(sourceId.startsWith('4') && targetId.startsWith('1'))) return
+        const targetId =
+          splitLine[logDefinitions.Ability.fields.targetId] ?? '???'
+        const isHeal =
+          ability.isHeal && ability.amount > 0 && targetId.startsWith('1')
+        const isDamage =
+          ability.isAttack &&
+          ability.amount >= 0 &&
+          sourceId.startsWith('4') &&
+          targetId.startsWith('1')
+
+        if (isHeal || isDamage) {
 
           if (
             !(
@@ -507,8 +514,8 @@ function handleLine(line: string) {
           const shield = shieldData[targetId] ?? '0'
           const amount = ability.amount
           let reduction = 0
-          // 即死、闪避
-          if (effect !== 'instant death' && effect !== 'dodge') {
+          // 即死、闪避、治疗
+          if (!isHeal && effect !== 'instant death' && effect !== 'dodge') {
             let flagMultiplier = 1
             // 格挡20%
             if (effect === 'blocked damage') flagMultiplier = 0.8
@@ -1179,7 +1186,7 @@ function test() {
       id: 'unknown',
       action: 'test',
       actionCN: '测试技能',
-      source: '环境',
+      source: '环境伤害',
       target: '测试角色',
       targetId: 'test-id',
       job: '测试职业',

@@ -18,12 +18,12 @@ type DamageType =
   | 'magic' // 魔法
   | 'darkness' // 暗黑;
   | 'dot'
-
+  | 'heal'
 
 function processFlags(flag: string) {
   const effect = processEffect(flag)
-  const properties = processProperties(flag)
-  const type = processType(flag)
+  const properties = effect === 'heal' ? 'heal' : processProperties(flag)
+  const type = effect === 'heal' ? 'heal' : processType(flag)
   return { effect, properties, type }
 }
 
