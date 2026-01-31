@@ -61,11 +61,25 @@ const STORAGE_KEYS = {
   PARTY_EVENT: 'keigenn-record-2-party-event-party',
   RSV_DATA: 'souma-keigenn-record-2-rsv-data',
   ZONE_NAME: 'souma-keigenn-record-2-zone-name',
+  VERSION: 'keigenn-record-2-data-version',
 } as const
+
+const DATA_VERSION = 'v20260131'
+let isNewVersion = false
 
 // 从 localStorage 加载持久化数据
 function loadPersistentData() {
   try {
+    const savedVersion = localStorage.getItem(STORAGE_KEYS.VERSION)
+    if (savedVersion !== DATA_VERSION) {
+      Object.values(STORAGE_KEYS).forEach((key) => {
+         if (key !== STORAGE_KEYS.VERSION) localStorage.removeItem(key)
+      })
+      localStorage.setItem(STORAGE_KEYS.VERSION, DATA_VERSION)
+      isNewVersion = true
+      return 
+    }
+
     const savedPovId = localStorage.getItem(STORAGE_KEYS.POV_ID)
     if (savedPovId) povId = savedPovId
 
@@ -1015,29 +1029,35 @@ async function saveStorage() {
 async function loadStorage() {
   select.value = 0
   try {
-    const loadData = await db.getAll()
-    if (loadData.length) {
+    if (isNewVersion) {
+      await db.replaceAll([])
       data.value.length = 0
-      let result = loadData
-        .filter(
-          (v) =>
-            store.isBrowser ||
-            v.timestamp > Date.now() - 1000 * 60 * 60 * 24 * 3,
-        )
-        .sort((a, b) => a.timestamp - b.timestamp)
+    } else {
+      const loadData = await db.getAll()
+      if (loadData.length) {
+        data.value.length = 0
+        let result = loadData
+          .filter(
+            (v) =>
+              store.isBrowser ||
+              v.timestamp > Date.now() - 1000 * 60 * 60 * 24 * 3,
+          )
+          .sort((a, b) => a.timestamp - b.timestamp)
 
-      if (!isPush) {
-        result = result.reverse()
+        if (!isPush) {
+          result = result.reverse()
+        }
+
+        const mappedResult = result.map((v) => ({
+          ...v,
+          table: shallowReactive(Array.isArray(v.table) ? v.table.map((row: RowVO) => markRaw(row)) : []),
+        }))
+
+        data.value.push(...mappedResult)
       }
+    }
 
-      const mappedResult = result.map((v) => ({
-        ...v,
-        table: shallowReactive(Array.isArray(v.table) ? v.table.map((row: RowVO) => markRaw(row)) : []),
-      }))
-
-      data.value.push(...mappedResult)
-
-      if (data.value.length === 0) {
+    if (data.value.length === 0) {
         data.value.push({
           zoneName: '',
           duration: '00:00',
@@ -1047,7 +1067,7 @@ async function loadStorage() {
         })
       }
       triggerRef(data)
-    }
+
   } catch (e) {
     console.error(e)
     data.value.length = 0
