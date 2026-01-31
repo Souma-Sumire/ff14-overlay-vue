@@ -49,46 +49,67 @@ const tooltipMode = ref<'amount' | 'skills' | 'death-recap' | null>(null)
 const popoverVisible = ref(false)
 const popoverPlacement = ref('top')
 
-const recapRows = shallowRef<any[]>([])
+type RecapRow = {
+  key: string
+  timeStr: string
+  amountStr: string
+  amountClass: string
+  actionCN: string
+  isDeath: boolean
+  iconSrc: string
+  keigenns: {
+    src: string
+    usefulClass: string
+    title: string
+    duration: string
+    isPov: boolean
+    effect: string
+  }[]
+}
+
+const recapRows = shallowRef<RecapRow[]>([])
 
 function updateRecapData(deathRow: RowVO) {
   const targetId = deathRow.targetId
   const deathTime = deathRow.timestamp
-  const startTime = deathTime - 25000
+  const startTime = deathTime - 20000
 
-  // 根据排序方向定向查找，避免遍历全量数据
+  // 遍历寻找 deathTime 前 20秒内的所有记录，不再强依赖数组排序方向
   const result: RowVO[] = []
   const deathIndex = props.rows.indexOf(deathRow)
-  
   if (deathIndex === -1) return
 
-  // 判断排序顺序：默认 unshift 为倒序（新->旧）
-  const isDesc = store.userOptions.order === 'unshift'
-
-  if (isDesc) {
-    // 倒序：向后查找更早的时间
-    for (let i = deathIndex; i < props.rows.length; i++) {
-      const r = props.rows[i]
-      if (!r) continue
-      if (r.timestamp < startTime) break
-      if (r.targetId === targetId) {
-        result.push(r)
-      }
-    }
-  } else {
-    // 正序：向前查找更早的时间
-    for (let i = deathIndex; i >= 0; i--) {
-      const r = props.rows[i]
-      if (!r) continue
-      if (r.timestamp < startTime) break
-      if (r.targetId === targetId) {
-        result.push(r)
-      }
+  // 向前后双向搜索，确保在任何排序模式下都能抓到过去 20s 的记录
+  // 1. 向索引小的方向搜
+  for (let i = deathIndex; i >= 0; i--) {
+    const r = props.rows[i]
+    if (!r) continue
+    // 只记录发生在死亡前（或同时）且在 20s window 内的
+    if (r.timestamp <= deathTime && r.timestamp >= startTime) {
+      if (r.targetId === targetId) result.push(r)
+    } else if (r.timestamp < startTime && store.userOptions.order === 'push') {
+      // 在 push 模式下，索引越小时间越早。如果已经比 startTime 还早了，可以直接 break
+      break
     }
   }
 
-  recapRows.value = result.map((r) => {
-    const isHeal = (r.type as any) === 'heal'
+  // 2. 向索引大的方向搜
+  for (let i = deathIndex + 1; i < props.rows.length; i++) {
+    const r = props.rows[i]
+    if (!r) continue
+    if (r.timestamp <= deathTime && r.timestamp >= startTime) {
+      if (r.targetId === targetId) result.push(r)
+    } else if (r.timestamp < startTime && store.userOptions.order === 'unshift') {
+      // 在 unshift 模式下，索引越大时间越早。如果已经比 startTime 还早了，可以直接 break
+      break
+    }
+  }
+
+  // 对结果进行去重并按时间从新到旧排序（死亡 0.0s 在最上面）
+  const finalResult = Array.from(new Set(result)).sort((a, b) => b.timestamp - a.timestamp)
+
+  recapRows.value = finalResult.map((r) => {
+    const isHeal = r.effect === 'heal' || r.effect === 'crit heal'
     const isDeath = r.type === 'death'
     const isDamage = !isHeal && r.amount > 0 && !isDeath
 
@@ -103,19 +124,12 @@ function updateRecapData(deathRow: RowVO) {
     }
     const amountStr = (r.amount > 0 || isHeal) ? (amountPrefix + r.preCalculated.amountDisplay) : r.preCalculated.amountDisplay
 
-    // 修复 HP 条宽度缺失导致的显示错误
-    const hpPct = r.maxHp > 0 ? (r.currentHp / r.maxHp) * 100 : 0
-    const hpWidth = Math.max(0, Math.min(100, hpPct)).toFixed(1) + '%'
-
     return {
       key: r.key,
-      timeStr: ((r.timestamp - deathTime) / 1000).toFixed(1) + 's',
+      timeStr: ((r.timestamp - deathTime) / 1000).toFixed(1).replace('-0.0', '0.0') + 's',
       amountStr,
       amountClass,
       actionCN: r.actionCN,
-      source: r.source,
-      hpText: r.currentHp.toLocaleString(),
-      hpWidth,
       isDeath,
       iconSrc: '',
       keigenns: r.preCalculated.keigenns
@@ -582,8 +596,11 @@ defineExpose({
           </div>
 
           <el-popover v-model:visible="popoverVisible" :virtual-ref="virtualRef" virtual-triggering
-            :placement="popoverPlacement" width="auto" popper-class="keigenn-global-popover" transition="none"
-            :show-after="0" :hide-after="0" :offset="6" :enterable="false">
+            popper-class="keigenn-global-popover" transition="none"
+            :show-after="0" :hide-after="0" :offset="6" :enterable="true" :teleported="true"
+            placement="top"
+            width="auto"
+            :fallback-placements="['top-end', 'top-start', 'bottom', 'bottom-end', 'bottom-start']">
             <template v-if="hoveredRow && tooltipMode === 'amount'">
               <div class="row-info">
                 <div class="info-line">{{ t('keigennRecord.source') }}: {{ hoveredRow.source }}</div>
@@ -639,8 +656,6 @@ defineExpose({
                   <span>{{ t('keigennRecord.time') }}</span>
                   <span class="align-right">{{ t('keigennRecord.amount') }}</span>
                   <span>{{ t('keigennRecord.action') }}</span>
-                  <span>{{ t('keigennRecord.source') }}</span>
-                  <span>HP(之前)</span>
                   <span>{{ t('keigennRecord.keigenns') }}</span>
                 </div>
                 <!-- 列表内容 -->
@@ -655,26 +670,19 @@ defineExpose({
 
                   <!-- Ability -->
                   <div class="ability-cell">
-                     <img v-if="row.iconSrc" :src="row.iconSrc" class="ability-icon" />
-                     <span class="ability-name" :title="row.actionCN">{{ row.actionCN }}</span>
-                  </div>
-
-                  <!-- Source -->
-                  <span class="source" :title="row.source">{{ row.source }}</span>
-
-                  <!-- HP Bar -->
-                  <div class="hp-bar-cell">
-                    <div class="hp-bar-bg">
-                      <div class="hp-bar-fill" :style="{ width: row.hpWidth }"></div>
-                      <span class="hp-text">{{ row.hpText }}</span>
+                    <div class="ability-content">
+                      <img v-if="row.iconSrc" :src="row.iconSrc" class="ability-icon" />
+                      <span class="ability-name" :title="row.actionCN">{{ row.actionCN }}</span>
                     </div>
                   </div>
 
                   <!-- Status -->
                   <div class="status-cell">
-                    <div v-for="(k, idx) in row.keigenns" :key="idx" class="status-wrapper">
-                      <div class="status" :title="k.title" :data-duration="k.duration" :class="{ 'is-pov': k.isPov }">
-                        <img :src="k.src" class="status-icon" :class="k.usefulClass" />
+                    <div class="status-content">
+                      <div v-for="(k, idx) in row.keigenns" :key="idx" class="status-wrapper">
+                        <div class="status" :title="k.title" :data-duration="k.duration" :class="{ 'is-pov': k.isPov }">
+                          <img :src="k.src" class="status-icon" :class="k.usefulClass" />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -808,11 +816,6 @@ defineExpose({
     font-weight: bold;
   }
 
-  .death-source-name {
-    color: #ffa39e;
-    font-weight: bold;
-  }
-
   .death-terrain {
     color: #ffe58f;
     font-weight: bold;
@@ -936,6 +939,20 @@ body .el-popover.keigenn-global-popover {
   font-size: 12px;
   line-height: 1.2;
   pointer-events: none;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 2px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
   .row-info {
     padding: 0;
@@ -1114,6 +1131,7 @@ body .el-popover.keigenn-global-popover {
       vertical-align: middle; /* Ensure vertical centering */
       border-bottom: 1px solid #222;
       border-top: 1px solid transparent; 
+      white-space: nowrap; 
     }
 
     /* Left border effect moved to first cell relative positioning or box-shadow */
@@ -1161,29 +1179,24 @@ body .el-popover.keigenn-global-popover {
     }
 
     .ability-cell {
-      display: flex;
-      align-items: center;
-      /* overflow handled by table cell width naturally expanding */
-      
-      .ability-icon { 
-        width: 16px; 
-        height: 16px; 
-        object-fit: cover;
-        margin-right: 4px;
-        flex-shrink: 0;
+      .ability-content {
+        display: flex;
+        align-items: center;
+        
+        .ability-icon { 
+          width: 16px; 
+          height: 16px; 
+          object-fit: cover;
+          margin-right: 4px;
+          flex-shrink: 0;
+        }
+        .ability-name { 
+          white-space: nowrap; 
+          color: #64b5f6;
+          font-weight: 500;
+          font-size: 11px;
+        }
       }
-      .ability-name { 
-        white-space: nowrap; 
-        color: #64b5f6;
-        font-weight: 500;
-        font-size: 11px;
-      }
-    }
-
-    .source {
-      white-space: nowrap; 
-      font-size: 11px;
-      max-width: 150px; /* Optional cap to prevent super wide tables? */
     }
 
     .hp-bar-cell {
@@ -1224,12 +1237,15 @@ body .el-popover.keigenn-global-popover {
     }
 
     .status-cell {
-      display: flex;
-      column-gap: 0px; 
-      row-gap: 0px; 
-      flex-wrap: wrap;
-      align-items: center;
       padding: 0;
+
+      .status-content {
+        display: flex;
+        column-gap: 0px; 
+        row-gap: 0px; 
+        flex-wrap: wrap;
+        align-items: center;
+      }
       
       .status-wrapper {
         display: flex;
@@ -1241,6 +1257,7 @@ body .el-popover.keigenn-global-popover {
         display: flex;
         align-items: center;
         justify-content: center;
+        overflow: visible;
 
         &::after {
           content: attr(data-duration);
@@ -1279,7 +1296,7 @@ body .el-popover.keigenn-global-popover {
         width: 16px; 
         height: 16px;
         object-fit: cover;
-        overflow: visible; // 不要删除
+        overflow: visible; // 用户强制要求保留以修复显示问题
       }
     }
 

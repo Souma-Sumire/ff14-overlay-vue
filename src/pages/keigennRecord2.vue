@@ -598,7 +598,7 @@ function handleLine(line: string) {
             timestamp,
             id: '',
             action: 'Death',
-            actionCN: '死亡',
+            actionCN: sourceId === 'E0000000' ? '地形杀' : '环境伤害',
             source: source,
             target: target,
             targetId: targetId!,
