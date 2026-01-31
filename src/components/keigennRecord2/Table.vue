@@ -85,7 +85,7 @@ const actionOptions = computed(() => {
     new Set(props.rows.map((r) => r[props.actionKey] as string))
   ).filter((v) => v !== undefined && v !== null)
   return [
-    { label: t('keigennRecord.action'), value: '' },
+    { label: ALL_STR, value: '' },
     ...actions.map((action) => ({ label: action, value: action })),
   ]
 })
@@ -99,9 +99,10 @@ const targetOptions = computed(() => {
     ).values()
   )
   return [
-    { label: t('keigennRecord.target'), value: '', job: -1 },
+    { label: ALL_STR, value: '', job: -1 },
     ...players.map((row) => ({
-      label: `${row.job}(${row.target})`,
+      label: row.job,
+      fullLabel: `${row.job}(${row.target})`,
       value: row.targetId,
       job: row.jobEnum,
     })),
@@ -166,7 +167,7 @@ const renderEmpty = () => h('div')
 
 const FilterHeader = (props: {
   modelValue: string,
-  options: { label: string, value: string }[],
+  options: { label: string, value: string, fullLabel?: string }[],
   placeholder: string,
   width: string,
   onUpdate: (v: string) => void
@@ -183,10 +184,11 @@ const FilterHeader = (props: {
           placeholder: props.placeholder,
           clearable: false,
           style: `width:${props.width}`,
-          teleported: false,
+          teleported: true,
+          popperClass: 'keigenn-header-select-popper',
           onChange: props.onUpdate,
         },
-        () => props.options.map((a) => h(ElOption, { key: a.value, label: a.label, value: a.value }))
+        () => props.options.map((a) => h(ElOption, { key: a.value, label: a.label, value: a.value }, { default: () => a.fullLabel || a.label }))
       ),
     ]
   )
@@ -1018,7 +1020,23 @@ body .el-popover.keigenn-global-popover {
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.8);
       display: inline-block;
+      transition: background 0.2s;
+    }
+  }
+
+  &:hover {
+    .dots i {
+      background: var(--el-color-primary);
     }
   }
 }
 </style>
+
+
+<style lang="scss">
+.keigenn-header-select-popper {
+  margin-top: 0 !important;
+  inset-block-start: 24px !important;
+}
+</style>
+
