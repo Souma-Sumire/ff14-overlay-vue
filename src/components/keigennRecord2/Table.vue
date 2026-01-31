@@ -23,11 +23,6 @@ const contextMenu = useTemplateRef<HTMLElement>('contextMenu')
 
 const actionFilter = ref('') // 技能筛选
 const targetFilter = ref('') // 目标筛选
-const recapStatus = ref<{
-  startTime: number
-  endTime: number
-  windowBase: number
-} | null>(null)
 
 watch(
   () => props.rows,
@@ -35,7 +30,6 @@ watch(
     if (rows.length === 0) {
       actionFilter.value = ''
       targetFilter.value = ''
-      recapStatus.value = null
     }
   },
   { immediate: true }
@@ -48,25 +42,99 @@ const contextMenuRow = ref<RowVO | null>(null)
 
 // 全局浮层控制
 const hoveredRow = ref<RowVO | null>(null)
-const virtualRef = ref({
+const virtualRef = ref<HTMLElement | { getBoundingClientRect: () => DOMRect }>({
   getBoundingClientRect: () => ({ top: 0, left: 0, bottom: 0, right: 0, width: 0, height: 0 } as DOMRect),
 })
-const tooltipMode = ref<'amount' | 'skills' | null>(null)
+const tooltipMode = ref<'amount' | 'skills' | 'death-recap' | null>(null)
 const popoverVisible = ref(false)
 const popoverPlacement = ref('top')
 
-function handleHover(row: RowVO, mode: 'amount' | 'skills', e: MouseEvent) {
+const recapRows = shallowRef<any[]>([])
+
+function updateRecapData(deathRow: RowVO) {
+  const targetId = deathRow.targetId
+  const deathTime = deathRow.timestamp
+  const startTime = deathTime - 25000
+
+  // 根据排序方向定向查找，避免遍历全量数据
+  const result: RowVO[] = []
+  const deathIndex = props.rows.indexOf(deathRow)
+  
+  if (deathIndex === -1) return
+
+  // 判断排序顺序：默认 unshift 为倒序（新->旧）
+  const isDesc = store.userOptions.order === 'unshift'
+
+  if (isDesc) {
+    // 倒序：向后查找更早的时间
+    for (let i = deathIndex; i < props.rows.length; i++) {
+      const r = props.rows[i]
+      if (!r) continue
+      if (r.timestamp < startTime) break
+      if (r.targetId === targetId) {
+        result.push(r)
+      }
+    }
+  } else {
+    // 正序：向前查找更早的时间
+    for (let i = deathIndex; i >= 0; i--) {
+      const r = props.rows[i]
+      if (!r) continue
+      if (r.timestamp < startTime) break
+      if (r.targetId === targetId) {
+        result.push(r)
+      }
+    }
+  }
+
+  recapRows.value = result.map((r) => {
+    const isHeal = (r.type as any) === 'heal'
+    const isDeath = r.type === 'death'
+    const isDamage = !isHeal && r.amount > 0 && !isDeath
+
+    let amountPrefix = ''
+    let amountClass = ''
+    if (isHeal) {
+      amountPrefix = '+'
+      amountClass = 'is-heal'
+    } else if (isDamage) {
+      amountPrefix = '-'
+      amountClass = 'is-damage'
+    }
+    const amountStr = (r.amount > 0 || isHeal) ? (amountPrefix + r.preCalculated.amountDisplay) : r.preCalculated.amountDisplay
+
+    // 修复 HP 条宽度缺失导致的显示错误
+    const hpPct = r.maxHp > 0 ? (r.currentHp / r.maxHp) * 100 : 0
+    const hpWidth = Math.max(0, Math.min(100, hpPct)).toFixed(1) + '%'
+
+    return {
+      key: r.key,
+      timeStr: ((r.timestamp - deathTime) / 1000).toFixed(1) + 's',
+      amountStr,
+      amountClass,
+      actionCN: r.actionCN,
+      source: r.source,
+      hpText: r.currentHp.toLocaleString(),
+      hpWidth,
+      isDeath,
+      iconSrc: '',
+      keigenns: r.preCalculated.keigenns
+    }
+  })
+}
+
+function handleHover(row: RowVO, mode: 'amount' | 'skills' | 'death-recap', e: MouseEvent) {
   tooltipMode.value = mode
   if (mode === 'skills') {
     popoverPlacement.value = 'left'
+  } else if (mode === 'death-recap') {
+    popoverPlacement.value = 'auto'
+    updateRecapData(row)
   } else {
     popoverPlacement.value = 'right'
   }
   hoveredRow.value = row
-  const target = e.currentTarget as HTMLElement
-  virtualRef.value = {
-    getBoundingClientRect: () => target.getBoundingClientRect(),
-  }
+  virtualRef.value = e.currentTarget as HTMLElement
   popoverVisible.value = true
 }
 
@@ -135,32 +203,7 @@ function filterByTarget() {
   }
 }
 
-function showDeathRecap(row?: RowVO | unknown) {
-  const targetRow =
-    row && typeof row === 'object' && 'key' in row
-      ? (row as RowVO)
-      : contextMenuRow.value
-  if (targetRow && targetRow.type === 'death') {
-    targetFilter.value = targetRow.targetId
-    const deathTime = targetRow.timestamp
-    recapStatus.value = {
-      endTime: deathTime,
-      windowBase: deathTime - 15000,
-      startTime: deathTime - 30000,
-    }
-    actionFilter.value = ''
-    contextMenuVisible.value = false
-  }
-}
 
-function cancelDeathRecap() {
-  const wasRecap = recapStatus.value !== null
-  recapStatus.value = null
-  targetFilter.value = ''
-  if (wasRecap && store.userOptions.order === 'push') {
-    nextTick(() => scrollToBottom())
-  }
-}
 
 const renderHeader = (title: string, customClass = '') => h('div', { class: ['header-static', customClass] }, title)
 const renderEmpty = () => h('div')
@@ -195,36 +238,6 @@ const FilterHeader = (props: {
 }
 
 const tableData = computed(() => {
-  if (recapStatus.value) {
-    const targetId = targetFilter.value
-    const { startTime, endTime, windowBase } = recapStatus.value
-
-    // 获取该玩家死亡前的所有记录
-    const targetRows = props.rows.filter(
-      (r) => r.targetId === targetId && r.timestamp <= endTime
-    )
-
-    // 基础窗口：15秒
-    const rows15 = targetRows.filter((r) => r.timestamp >= windowBase)
-    const nonDeath15Count = rows15.filter((r) => r.type !== 'death').length
-
-    if (nonDeath15Count >= 5) {
-      return rows15
-    }
-
-    // 扩展窗口：直到满足5条或达到设定的起点 (startTime)
-    const rowsMax = targetRows.filter((r) => r.timestamp >= startTime)
-    const nonDeathMax = rowsMax.filter((r) => r.type !== 'death')
-
-    if (nonDeathMax.length >= 5) {
-      // 找到第5条非死亡记录的时间戳，以其作为起始点
-      const fifthRowTime = nonDeathMax[4]!.timestamp
-      return rowsMax.filter((r) => r.timestamp >= fifthRowTime)
-    }
-
-    return rowsMax
-  }
-
   const hasFilter =
     (actionFilter.value && actionFilter.value !== ALL_STR) ||
     (targetFilter.value && targetFilter.value !== ALL_STR)
@@ -277,7 +290,6 @@ const columns: Column[] = [
     cellRenderer: ({ rowData }) => {
       if (rowData.type === 'death') {
         const isTerrain = rowData.source === '地形杀'
-        const isRecapMode = recapStatus.value !== null
         return h('div', { class: 'death-message-left' }, [
           h('span', '💀 '),
           h('span', { class: 'death-target-name' }, rowData.target || '玩家'),
@@ -296,16 +308,12 @@ const columns: Column[] = [
             'span',
             {
               class: 'death-recap-inline',
-              onClick: (e: MouseEvent) => {
-                e.stopPropagation()
-                if (isRecapMode && recapStatus.value?.endTime === rowData.timestamp && targetFilter.value === rowData.targetId) {
-                  cancelDeathRecap()
-                } else {
-                  showDeathRecap(rowData)
-                }
+              onMouseenter: (e: MouseEvent) => {
+                handleHover(rowData, 'death-recap', e)
               },
+              onMouseleave: clearHover,
             },
-            isRecapMode && recapStatus.value?.endTime === rowData.timestamp && targetFilter.value === rowData.targetId ? ' [退出回放]' : ' [查看死亡回放]'
+            ' [死亡回放]'
           ),
         ])
       }
@@ -464,15 +472,7 @@ let msgHdl: MessageHandler | null = null
 
 const rowEventHandlers: RowEventHandlers = {
   onClick: ({ rowData }: { rowData: RowVO }) => {
-    const isRecapMode = recapStatus.value !== null
-    if (rowData.type === 'death') {
-      if (isRecapMode && recapStatus.value?.endTime === rowData.timestamp && targetFilter.value === rowData.targetId) {
-        cancelDeathRecap()
-      } else {
-        showDeathRecap(rowData)
-      }
-      return
-    }
+    if (rowData.type === 'death') return
     const {
       actionCN,
       amount,
@@ -581,7 +581,7 @@ defineExpose({
             </ul>
           </div>
 
-          <el-popover v-model:visible="popoverVisible" :virtual-ref="virtualRef" virtual-triggering trigger="hover"
+          <el-popover v-model:visible="popoverVisible" :virtual-ref="virtualRef" virtual-triggering
             :placement="popoverPlacement" width="auto" popper-class="keigenn-global-popover" transition="none"
             :show-after="0" :hide-after="0" :offset="6" :enterable="false">
             <template v-if="hoveredRow && tooltipMode === 'amount'">
@@ -632,6 +632,56 @@ defineExpose({
                 </div>
               </div>
             </template>
+
+            <template v-else-if="hoveredRow && tooltipMode === 'death-recap'">
+              <div class="death-recap-popover">
+                <div class="recap-header">
+                  <span>{{ t('keigennRecord.time') }}</span>
+                  <span class="align-right">{{ t('keigennRecord.amount') }}</span>
+                  <span>{{ t('keigennRecord.action') }}</span>
+                  <span>{{ t('keigennRecord.source') }}</span>
+                  <span>HP(之前)</span>
+                  <span>{{ t('keigennRecord.keigenns') }}</span>
+                </div>
+                <!-- 列表内容 -->
+                <div v-for="row in recapRows" :key="row.key" class="recap-row" :class="{ 'is-death': row.isDeath }">
+                  <!-- Time -->
+                  <span class="time">{{ row.timeStr }}</span>
+                  
+                  <!-- Amount -->
+                  <span class="amount-cell align-right" :class="row.amountClass">
+                    {{ row.amountStr }}
+                  </span>
+
+                  <!-- Ability -->
+                  <div class="ability-cell">
+                     <img v-if="row.iconSrc" :src="row.iconSrc" class="ability-icon" />
+                     <span class="ability-name" :title="row.actionCN">{{ row.actionCN }}</span>
+                  </div>
+
+                  <!-- Source -->
+                  <span class="source" :title="row.source">{{ row.source }}</span>
+
+                  <!-- HP Bar -->
+                  <div class="hp-bar-cell">
+                    <div class="hp-bar-bg">
+                      <div class="hp-bar-fill" :style="{ width: row.hpWidth }"></div>
+                      <span class="hp-text">{{ row.hpText }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Status -->
+                  <div class="status-cell">
+                    <div v-for="(k, idx) in row.keigenns" :key="idx" class="status-wrapper">
+                      <div class="status" :title="k.title" :data-duration="k.duration" :class="{ 'is-pov': k.isPov }">
+                        <img :src="k.src" class="status-icon" :class="k.usefulClass" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+
           </el-popover>
         </template>
       </el-auto-resizer>
@@ -776,14 +826,9 @@ defineExpose({
     text-underline-offset: 2px;
     opacity: 0.8;
     color: inherit;
-
-    &:hover {
-      opacity: 1;
-    }
   }
 }
 
-/* 内联 Target 组件样式 */
 :deep(.target) {
   display: flex;
   flex-direction: row;
@@ -863,19 +908,9 @@ defineExpose({
     object-fit: cover;
     vertical-align: middle;
 
-    &.unuseful {
-      opacity: 0.3;
-    }
-
-    &.half-useful {
-      opacity: 0.6;
-    }
-
-    &.useful {
-      opacity: 1;
-    }
   }
 }
+
 
 
 :deep() {
@@ -883,8 +918,9 @@ defineExpose({
   .physics { color: rgb(255, 100, 100); }
   .magic { color: rgb(100, 200, 255); }
   .darkness { color: rgb(255, 100, 255); }
-
-
+  .unuseful { opacity: 0.3;}
+  .half-useful { opacity: 0.6;}
+  .useful { opacity: 1;}
 }
 
 
@@ -1038,5 +1074,217 @@ body .el-popover.keigenn-global-popover {
   margin-top: 0 !important;
   inset-block-start: 24px !important;
 }
+
+.death-recap-popover {
+  display: table;
+  width: auto; /* Allow table to shrink/grow */
+  border-collapse: collapse; /* Essential for borders */
+  margin: -4px; /* Counteract default spacing if needed, or adjust popover padding */
+
+  .recap-header,
+  .recap-row {
+    display: table-row;
+  }
+
+  /* Header Cells */
+  .recap-header > span {
+    display: table-cell;
+    padding: 4px 6px;
+    font-weight: bold;
+    text-align: left;
+    border-bottom: 2px solid #333;
+    white-space: nowrap;
+    
+    &.align-right { text-align: right; }
+    
+    /* Target specific headers by order to match content alignment */
+    &:nth-child(1) { text-align: right; } /* Time */
+    &:nth-child(2) { text-align: right; } /* Amount */
+  }
+
+  .recap-row {
+    font-size: 12px;
+    line-height: normal; /* Let flex/centering handle align */
+    background-color: transparent; 
+
+    /* Cells */
+    & > * {
+      display: table-cell;
+      padding: 3px 6px; 
+      vertical-align: middle; /* Ensure vertical centering */
+      border-bottom: 1px solid #222;
+      border-top: 1px solid transparent; 
+    }
+
+    /* Left border effect moved to first cell relative positioning or box-shadow */
+    &.is-death {
+      background: rgba(168, 26, 26, 0.2);
+    }
+    
+    /* Simulate the left border on the first cell */
+    &.is-death > *:first-child {
+       position: relative;
+    }
+    &.is-death > *:first-child::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background-color: #ff5252;
+    }
+
+    &:hover {
+      background-color: #222;
+    }
+
+    .align-right { text-align: right; }
+    
+    .time { 
+      color: #888; 
+      font-family: monospace; 
+      font-size: 11px;
+      white-space: nowrap;
+      text-align: right; /* Align numbers */
+    }
+    
+    .amount-cell {
+      font-weight: bold;
+      font-family: monospace;
+      font-size: 11px;
+      white-space: nowrap;
+      text-align: right;
+      padding-right: 4px;
+      &.is-heal { color: #4caf50; }
+      &.is-damage { color: #ff5252; }
+    }
+
+    .ability-cell {
+      display: flex;
+      align-items: center;
+      /* overflow handled by table cell width naturally expanding */
+      
+      .ability-icon { 
+        width: 16px; 
+        height: 16px; 
+        object-fit: cover;
+        margin-right: 4px;
+        flex-shrink: 0;
+      }
+      .ability-name { 
+        white-space: nowrap; 
+        color: #64b5f6;
+        font-weight: 500;
+        font-size: 11px;
+      }
+    }
+
+    .source {
+      white-space: nowrap; 
+      font-size: 11px;
+      max-width: 150px; /* Optional cap to prevent super wide tables? */
+    }
+
+    .hp-bar-cell {
+      width: 65px; /* Fixed width for HP bar look */
+      min-width: 65px;
+      height: 100%;
+      vertical-align: middle;
+      padding: 2px 4px;
+      
+      .hp-bar-bg {
+        width: 100%;
+        height: 14px;
+        background: #333;
+        border-radius: 2px;
+        position: relative;
+        overflow: hidden;
+        display: block; /* Ensure block for div inside table cell */
+        
+        .hp-bar-fill {
+          height: 100%;
+          background-color: #4caf50; 
+          background-image: linear-gradient(to right, #4caf50, #81c784);
+        }
+        
+          .hp-text {
+          position: absolute;
+          top: 50%;
+          right: 2px;
+          transform: translateY(-50%);
+          font-family: monospace;
+          color: #fff;
+          font-size: 10px; 
+          white-space: nowrap;
+          text-shadow: 0 0 2px #000, 1px 1px 1px #000;
+          z-index: 1;
+        }
+      }
+    }
+
+    .status-cell {
+      display: flex;
+      column-gap: 0px; 
+      row-gap: 0px; 
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 0;
+      
+      .status-wrapper {
+        display: flex;
+        padding: 0;
+      }
+
+      .status {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &::after {
+          content: attr(data-duration);
+          position: absolute;
+          bottom: -4px;
+          left: 50%;
+          transform: translateX(-50%) scale(0.85);
+          transform-origin: center bottom;
+          
+          font-family: Arial, sans-serif;
+          font-size: 10px;
+          font-weight: 700;
+          line-height: 1;
+          color: #fff;
+          white-space: nowrap;
+          text-align: center;
+
+          text-shadow: 
+            -1px -1px 0 #000,  
+             1px -1px 0 #000,
+            -1px  1px 0 #000,
+             1px  1px 0 #000;
+          
+          z-index: 10;
+          pointer-events: none;
+          padding: 0;
+        }
+
+        &.is-pov::after {
+          color: #69f0ae;
+        }
+      }
+
+      .status-icon {
+        display: block;
+        width: 16px; 
+        height: 16px;
+        object-fit: cover;
+        overflow: visible; // 不要删除
+      }
+    }
+
+  }
+}
+
 </style>
 

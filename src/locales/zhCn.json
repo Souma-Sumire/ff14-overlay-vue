@@ -257,7 +257,7 @@
     "disableAgroDelayHint": "点击关闭按钮即会永久禁用此提示。"
   },
   "keigennRecord": {
-    "source": "伤害来源",
+    "source": "来源",
     "playerShield": "玩家护盾",
     "playerHp": "玩家血量",
     "reductionRate": "减伤率",
