@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// TODO: 死亡回放：治疗栏目的状态追踪治疗有关的buff
 import { triggerRef, shallowReactive, markRaw, nextTick, shallowRef, ref, onBeforeUnmount } from 'vue'
 import type {
   CombatDataEvent,
@@ -20,7 +21,7 @@ import { multiplierEffect } from '@/utils/keigenn'
 import { getImgSrc } from '@/utils/xivapi'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 import { processAbilityLine, processFlags } from '@/utils/flags'
-import { raidbuffs } from '@/resources/raidbuffs'
+import { keigennSkills } from '@/resources/keigennSkills'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 
 import {
@@ -165,10 +166,10 @@ let statusData: {
   friendly: {},
   enemy: {},
 }
-let cooldownTracker: Record<string, Record<number, number>> = {}
+let cooldownTracker: Record<string, Record<number, number[]>> = {}
 let skillMapCache = new Map<number, Map<number, (typeof trackedSkills)[0]>>()
 
-const trackedSkills = raidbuffs.filter((v) => v.line === 1 || v.line === 2)
+const trackedSkills = keigennSkills
 
 const db = useIndexedDB<Encounter>(STORAGE_KEY)
 
@@ -180,7 +181,7 @@ function getSkillMapForLevel(level: number) {
       if (skill.minLevel > level) continue
       const id = parseDynamicValue(skill.id, level)
       map.set(id, skill)
-    }
+   }
     skillMapCache.set(level, map)
   }
   return map
@@ -306,11 +307,19 @@ function prepareRowVO(row: Omit<RowVO, 'preCalculated'>): RowVO {
       coolingDownSkills:
         row.keySkills
           ?.filter((v) => !v.ready)
-          .sort((a, b) => a.recastLeft - b.recastLeft) ?? [],
+          .sort((a, b) => {
+            if (a.scope !== b.scope) return a.scope === 'party' ? -1 : 1
+            if (a.id !== b.id) return a.id - b.id
+            return a.recastLeft - b.recastLeft
+          }) ?? [],
       readySkills:
         row.keySkills
           ?.filter((v) => v.ready)
-          .sort((a, b) => Util.enumSortMethod(a.ownerJob, b.ownerJob)) ?? [],
+          .sort((a, b) => {
+            if (a.scope !== b.scope) return a.scope === 'party' ? -1 : 1
+            if (a.id !== b.id) return a.id - b.id
+            return Util.enumSortMethod(a.ownerJob, b.ownerJob)
+          }) ?? [],
     },
   }
 }
@@ -428,7 +437,15 @@ function handleLine(line: string) {
             if (!cooldownTracker[sourceId]) {
               cooldownTracker[sourceId] = {}
             }
-            cooldownTracker[sourceId][abilityIdDecimal] = timestamp
+            if (!cooldownTracker[sourceId][abilityIdDecimal]) {
+              cooldownTracker[sourceId][abilityIdDecimal] = []
+            }
+            const history = cooldownTracker[sourceId][abilityIdDecimal]!
+            history.push(timestamp)
+            const maxCharges = trackedSkill.maxCharges || 1
+            if (history.length > maxCharges) {
+              history.shift()
+            }
           }
         }
 
@@ -557,7 +574,7 @@ function handleLine(line: string) {
               shield,
               povId: povId,
               reduction,
-              keySkills: getKeySkillSnapshot(timestamp),
+              keySkills: getKeySkillSnapshot(timestamp, targetId),
             }),
           )
           data.value[0]!.duration = formatTime(
@@ -623,7 +640,7 @@ function handleLine(line: string) {
             shield: '0',
             povId: povId,
             reduction: 0,
-            keySkills: getKeySkillSnapshot(timestamp),
+            keySkills: getKeySkillSnapshot(timestamp, targetId!),
           }),
         )
       }
@@ -727,7 +744,7 @@ function handleLine(line: string) {
     case '02': // PrimaryPlayer
       {
         povId = splitLine[logDefinitions.ChangedPlayer.fields.id]!
-        invalidateJobCache()
+       invalidateJobCache()
       }
       break
 
@@ -962,7 +979,10 @@ function stopCombat(timeStamp: number) {
   saveStorage()
 }
 
-function getKeySkillSnapshot(timestamp: number): KeySkillSnapshot[] {
+function getKeySkillSnapshot(
+  timestamp: number,
+  targetId: string,
+): KeySkillSnapshot[] {
   if (!skillSnapshotSkeletonCache) {
     const candidateIds = new Set<string>()
     partyEventParty.forEach((p) => candidateIds.add(p.id))
@@ -1005,29 +1025,52 @@ function getKeySkillSnapshot(timestamp: number): KeySkillSnapshot[] {
             ownerJob: player.job,
             ownerJobName: Util.jobToFullName(Util.jobEnumToJob(player.job))
               .simple2!,
+            maxCharges: skill.maxCharges || 1,
+            scope: skill.scope,
           }
         })
     })
   }
 
-  return skillSnapshotSkeletonCache.map((item) => {
-    const lastUsed = cooldownTracker[item.ownerId]?.[item.id] ?? 0
-    let ready = true
+  if (!skillSnapshotSkeletonCache) return []
+
+  return skillSnapshotSkeletonCache
+    .filter((v) => (v.scope === 'party' ? true : v.ownerId === targetId))
+    .map((item) => {
+    const history = cooldownTracker[item.ownerId]?.[item.id] ?? []
+    const maxCharges = item.maxCharges || 1
+    const recastMs = item.recast1000ms * 1000
+
+    // 计算每个槽位的冷却结束时间
+    const freeAt = new Array(maxCharges).fill(0)
+    for (let i = 0; i < history.length; i++) {
+      // 第 i 次使用技能消耗一个充能，该充能将在上次冷却结束（或本次使用时间）后 recastMs 恢复
+      const usedAt = history[i]!
+      const prevFreeAt = i > 0 ? freeAt[i - 1]! : 0
+      freeAt[i] = Math.max(usedAt, prevFreeAt) + recastMs
+    }
+
+    let chargesReady = maxCharges - history.length
     let recastLeft = 0
 
-    if (lastUsed > 0) {
-      const diff = timestamp - lastUsed
-      const recastMs = item.recast1000ms * 1000
-      if (diff < recastMs) {
-        ready = false
-        recastLeft = Math.ceil((recastMs - diff) / 1000)
+    // 检查历史记录中哪些充能已经恢复
+    for (let i = 0; i < history.length; i++) {
+      if (timestamp >= freeAt[i]!) {
+        chargesReady++
+      } else {
+        // 第一个还没恢复的充能即为当前的 CD 状态
+        recastLeft = Math.ceil((freeAt[i]! - timestamp) / 1000)
+        break
       }
     }
+
+    const ready = chargesReady > 0
 
     return {
       ...item,
       recastLeft,
       ready,
+      chargesReady,
     }
   })
 }

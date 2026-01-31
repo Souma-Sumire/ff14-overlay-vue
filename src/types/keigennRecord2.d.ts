@@ -1,5 +1,19 @@
 import type { FFIcon } from '@/types/fflogs'
 import type { DamageEffect, DamageType } from '@/utils/flags'
+import type { DynamicValue } from '@/types/keySkill'
+
+export type Scope = 'solo' | 'party'
+
+export { DynamicValue }
+
+export interface KeigennSkill {
+  id: DynamicValue
+  recast1000ms: DynamicValue
+  job: number[]
+  minLevel: number
+  maxCharges?: number
+  scope: Scope
+}
 
 export interface RowVO {
   key: string
@@ -56,6 +70,9 @@ export interface KeySkillSnapshot {
   ownerName: string
   ownerJob: number
   ownerJobName: string
+  chargesReady?: number
+  maxCharges?: number
+  scope: Scope
 }
 
 export interface Status {

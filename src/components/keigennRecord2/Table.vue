@@ -676,13 +676,17 @@ defineExpose({
                 <template v-if="hoveredRow.preCalculated.coolingDownSkills.length > 0">
                   <div class="subtitle">{{ t('keigennRecord.coolingDown') }}</div>
                   <div class="skill-grid">
-                    <div v-for="skill in hoveredRow.preCalculated.coolingDownSkills" :key="`${skill.id}-${skill.ownerId}`" class="skill-wrapper">
-                      <div class="skill-icon-container" :title="`${skill.ownerName} (${skill.ownerJobName})`">
-                        <img :src="skill.icon" class="skill-icon" />
-                        <div class="skill-overlay" />
-                        <span class="skill-text">{{ skill.recastLeft }}</span>
+                    <template v-for="(skill, index) in hoveredRow.preCalculated.coolingDownSkills" :key="`${skill.id}-${skill.ownerId}`">
+                      <div v-if="index > 0 && skill.scope === 'solo' && hoveredRow.preCalculated.coolingDownSkills[index - 1]!.scope === 'party'" class="skill-divider" />
+                      <div class="skill-wrapper">
+                        <div class="skill-icon-container" :title="`${skill.ownerName} (${skill.ownerJobName})`">
+                          <img :src="skill.icon" class="skill-icon" />
+                          <div class="skill-overlay" />
+                          <span class="skill-text">{{ skill.recastLeft }}</span>
+                          <span v-if="skill.maxCharges && skill.maxCharges > 1" class="skill-charges">{{ skill.chargesReady }}</span>
+                        </div>
                       </div>
-                    </div>
+                    </template>
                   </div>
                 </template>
 
@@ -690,11 +694,15 @@ defineExpose({
                   <el-divider v-if="hoveredRow.preCalculated.coolingDownSkills.length > 0" />
                   <div class="subtitle">{{ t('keigennRecord.ready') || '可用' }}</div>
                   <div class="skill-grid">
-                    <div v-for="skill in hoveredRow.preCalculated.readySkills" :key="`${skill.id}-${skill.ownerId}`" class="skill-wrapper">
-                      <div class="skill-icon-container" :title="`${skill.ownerName} (${skill.ownerJobName})`">
-                        <img :src="skill.icon" class="skill-icon" />
+                    <template v-for="(skill, index) in hoveredRow.preCalculated.readySkills" :key="`${skill.id}-${skill.ownerId}`">
+                      <div v-if="index > 0 && skill.scope === 'solo' && hoveredRow.preCalculated.readySkills[index - 1]!.scope === 'party'" class="skill-divider" />
+                      <div class="skill-wrapper">
+                        <div class="skill-icon-container" :title="`${skill.ownerName} (${skill.ownerJobName})`">
+                          <img :src="skill.icon" class="skill-icon" />
+                          <span v-if="skill.maxCharges && skill.maxCharges > 1" class="skill-charges">{{ skill.chargesReady }}</span>
+                        </div>
                       </div>
-                    </div>
+                    </template>
                   </div>
                 </template>
 
@@ -1051,6 +1059,14 @@ body .el-popover.keigenn-global-popover {
       gap: 4px;
       max-width: 178px;
 
+      .skill-divider {
+        width: 1px;
+        height: 18px;
+        background-color: #555;
+        margin: 2px 2px;
+        align-self: center;
+      }
+
       .skill-wrapper {
         display: flex;
         flex-direction: column;
@@ -1087,6 +1103,19 @@ body .el-popover.keigenn-global-popover {
             font-size: 12px;
             z-index: 2;
             text-shadow: -1px 0 2px #000, 0 1px 2px #000, 1px 0 2px #000, 0 -1px 2px #000;
+          }
+
+          .skill-charges {
+            position: absolute;
+            bottom: -1px;
+            right: 0px;
+            transform: scale(0.7);
+            transform-origin: right bottom;
+            color: #fff;
+            font-weight: bold;
+            font-size: 11px;
+            z-index: 3;
+            text-shadow: -1px 0 1.5px #000, 0 1px 1.5px #000, 1px 0 1.5px #000, 0 -1px 1.5px #000;
           }
         }
       }
