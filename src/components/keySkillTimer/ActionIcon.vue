@@ -7,15 +7,12 @@ const props = defineProps<{
 }>()
 
 const src = ref('')
-let timer: number | undefined
+import { actionResourcesLoaded } from '@/resources/actionChinese'
 
 watch(
-  () => props.id,
-  (newId) => {
-    if (timer) clearTimeout(timer)
-    timer = window.setTimeout(() => {
-      src.value = idToSrc(newId)
-    }, 300)
+  [() => props.id, actionResourcesLoaded],
+  ([newId]) => {
+    src.value = idToSrc(newId)
   },
   { immediate: true }
 )

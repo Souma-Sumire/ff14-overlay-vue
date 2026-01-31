@@ -15,7 +15,7 @@ import { ZoomIn, ZoomOut } from '@element-plus/icons-vue'
 import { useDark } from '@vueuse/core'
 import { useDev } from '@/composables/useDev'
 import { useIndexedDB } from '@/composables/useIndexedDB'
-import { getActionChinese } from '@/resources/actionChinese'
+import { getActionChinese, initActionChinese } from '@/resources/actionChinese'
 import { completeIcon, stackUrl } from '@/resources/status'
 import { multiplierEffect } from '@/utils/keigenn'
 import { getImgSrc } from '@/utils/xivapi'
@@ -1147,6 +1147,7 @@ function formatTime(time: number) {
 }
 
 onMounted(() => {
+  initActionChinese()
   // 加载持久化数据
   loadPersistentData()
   

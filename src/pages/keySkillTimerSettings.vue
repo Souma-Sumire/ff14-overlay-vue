@@ -1,18 +1,28 @@
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
 import * as LZString from 'lz-string'
-import { ref, watch } from 'vue'
-import { actionId2ClassJobLevel } from '@/resources/action2ClassJobLevel'
-import { actionChinese } from '@/resources/actionChinese'
+import { ref, watch, shallowRef, onMounted } from 'vue'
+import { getActionChinese, searchActions, initActionChinese } from '@/resources/actionChinese'
 import { raidbuffs } from '@/resources/raidbuffs'
 import { useKeySkillStore } from '@/store/keySkills'
 import { copyToClipboard } from '@/utils/clipboard'
 import { useLang } from '@/composables/useLang'
 import ActionIcon from '@/components/keySkillTimer/ActionIcon.vue'
-import { Plus, Search, Download, Upload, RefreshLeft, Close, CopyDocument } from '@element-plus/icons-vue'
+import { Plus, Search, Download, Upload, RefreshLeft } from '@element-plus/icons-vue'
 
 const { t } = useLang()
 const storeKeySkill = useKeySkillStore()
+const isResourcesLoaded = ref(false)
+
+onMounted(async () => {
+  try {
+    await initActionChinese()
+  } catch (e) {
+    console.error('Failed to load resources', e)
+  } finally {
+    isResourcesLoaded.value = true
+  }
+})
 
 function resetToDefault() {
   ElMessageBox.confirm(
@@ -31,17 +41,18 @@ function resetToDefault() {
     .catch(() => {})
 }
 
-function addSkill() {
+function addSkillById(id: number, name: string | undefined) {
   storeKeySkill.keySkillsData.chinese.unshift({
     key: crypto.randomUUID(),
-    id: 0,
-    tts: '',
+    id: id,
+    tts: name || '',
     duration: 0,
     recast1000ms: 0,
     job: [],
     line: 1,
     minLevel: 1,
   })
+  ElMessage.success(`${t('keySkillTimerSettings.addSkill')}: ${name || id}`)
 }
 
 function deleteSkill(key: string) {
@@ -105,137 +116,82 @@ function importData(): void {
     .catch(() => {})
 }
 
-const showDialog = ref(false)
 const searchText = ref('')
-const searchResult = ref<Array<{ id: number; name: string }>>([])
+const searchResult = shallowRef<Array<{ id: number; name: string }>>([])
 let searchTimeout: number | undefined
 
 watch(searchText, (value) => {
   if (searchTimeout) clearTimeout(searchTimeout)
   searchTimeout = window.setTimeout(() => {
-    if (value) {
-      const result = []
-      for (const [id, name] of Object.entries(actionChinese)) {
-        if (name.includes(value)) {
-          const idNumber = Number(id)
-          const useful = actionId2ClassJobLevel(idNumber)
-          if (useful) {
-            result.push({ id: idNumber, name })
-          }
-        }
-      }
-      searchResult.value = result.slice(0, 50) // Limit results for better performance
-    } else {
-      searchResult.value = []
-    }
+    searchResult.value = searchActions(value)
   }, 300)
 })
-
-const dialogStyle = ref<Record<string, string>>({
-  position: 'fixed',
-  top: '100px',
-  left: '100px',
-  width: '450px',
-  zIndex: '2000',
-})
-
-let dragging = false
-let startX = 0
-let startY = 0
-let originX = 0
-let originY = 0
-
-function onMouseDown(e: MouseEvent) {
-  const dialog = document.querySelector('.search-dialog') as HTMLElement
-  if (!dialog) return
-  const rect = dialog.getBoundingClientRect()
-  startX = e.clientX
-  startY = e.clientY
-  originX = rect.left
-  originY = rect.top
-  dragging = true
-  window.addEventListener('mousemove', onMouseMove)
-  window.addEventListener('mouseup', onMouseUp, { once: true })
-}
-
-function onMouseMove(e: MouseEvent) {
-  if (!dragging) return
-  const dx = e.clientX - startX
-  const dy = e.clientY - startY
-  dialogStyle.value.left = `${Math.max(0, originX + dx)}px`
-  dialogStyle.value.top = `${Math.max(0, originY + dy)}px`
-}
-
-function onMouseUp() {
-  dragging = false
-  window.removeEventListener('mousemove', onMouseMove)
-}
 </script>
 
 <template>
-  <div class="page-container">
-    <transition name="fade">
-      <el-card
-        v-if="showDialog"
-        class="search-dialog"
-        :style="dialogStyle"
-        body-style="padding: 1em"
-      >
-        <template #header>
-          <div class="search-dialog-header" @mousedown="onMouseDown">
-            <span>{{ $t('keySkillTimerSettings.searchSkill') }}</span>
-            <el-button link @click="showDialog = false">
-              <el-icon><Close /></el-icon>
-            </el-button>
-          </div>
-        </template>
-        <el-input
-          v-model="searchText"
-          clearable
-          :placeholder="$t('keySkillTimerSettings.skillName')"
-          :prefix-icon="Search"
-          class="search-input"
-        />
-        <div class="search-results">
-          <el-table :data="searchResult" style="width: 100%" height="350px">
-            <el-table-column
-              :label="$t('keySkillTimerSettings.preview')"
-              width="70"
-              align="center"
-            >
-              <template #default="{ row }">
-                <ActionIcon :id="row.id" />
-              </template>
-            </el-table-column>
-            <el-table-column
-              prop="id"
-              :label="$t('keySkillTimerSettings.skillID')"
-              width="100"
-            />
-            <el-table-column
-              prop="name"
-              :label="$t('keySkillTimerSettings.skillName')"
-            />
-            <el-table-column width="60" align="center">
-              <template #default="{ row }">
-                <el-button link type="primary" @click="copyToClipboard(String(row.id))">
-                  <el-icon><CopyDocument /></el-icon>
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
-      </el-card>
-    </transition>
-
+  <div v-loading.fullscreen.lock="!isResourcesLoaded" class="page-container">
     <div class="header-toolbar">
       <div class="left-tools">
-        <el-button type="success" :icon="Plus" @click="addSkill()">
-          {{ $t('keySkillTimerSettings.addSkill') }}
-        </el-button>
-        <el-button type="primary" :icon="Search" @click="showDialog = true">
-          {{ $t('keySkillTimerSettings.searchSkill') }}
-        </el-button>
+        <el-popover
+          placement="bottom-start"
+          :width="550"
+          trigger="click"
+          popper-class="skill-library-popover"
+        >
+          <template #reference>
+            <el-button type="primary" :icon="Search" :loading="!isResourcesLoaded">
+              {{ $t('keySkillTimerSettings.searchSkill') }}
+            </el-button>
+          </template>
+
+          <el-tabs type="border-card" class="search-tabs">
+            <el-tab-pane :label="$t('keySkillTimerSettings.presets')">
+              <div class="preset-list" style="height: 400px; overflow-y: auto;">
+                <div v-for="skill in raidbuffs" :key="skill.key" class="preset-item">
+                  <div class="preset-info">
+                    <ActionIcon :id="skill.id" :size="24" />
+                    <span class="name">{{ getActionChinese(Number(skill.id)) || skill.tts || $t('keySkillTimerSettings.unknownSkill') }}</span>
+                  </div>
+                  <el-button
+                    link
+                    type="primary"
+                    @click="addSkillById(Number(skill.id), getActionChinese(Number(skill.id)) || skill.tts)"
+                  >
+                    <el-icon><Plus /></el-icon>
+                  </el-button>
+                </div>
+              </div>
+            </el-tab-pane>
+            <el-tab-pane :label="$t('keySkillTimerSettings.searchTab')">
+              <div class="search-drawer-content" style="height: 450px; padding: 12px;">
+                <el-input
+                  v-model="searchText"
+                  clearable
+                  :placeholder="$t('keySkillTimerSettings.skillName')"
+                  :prefix-icon="Search"
+                  style="margin-bottom: 12px;"
+                  size="default"
+                />
+                <el-table :data="searchResult" style="width: 100%" height="390px" size="default">
+                  <el-table-column width="40" align="center">
+                    <template #default="{ row }">
+                      <ActionIcon :id="row.id" :size="20" />
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="id" :label="$t('keySkillTimerSettings.col.shortId')" width="80" />
+                  <el-table-column prop="name" :label="$t('keySkillTimerSettings.skillName')" />
+                  <el-table-column width="50" align="center">
+                    <template #default="{ row }">
+                      <el-button link type="primary" @click="addSkillById(row.id, row.name)">
+                        <el-icon><Plus /></el-icon>
+                      </el-button>
+                    </template>
+                  </el-table-column>
+                </el-table>
+              </div>
+            </el-tab-pane>
+          </el-tabs>
+        </el-popover>
       </div>
       <div class="center-tools">
         <el-button-group>
@@ -300,45 +256,100 @@ function onMouseUp() {
   width: 100%;
   overflow: hidden;
   margin-top: 8px;
-  min-height: 0; /* 关键：允许 flex 子项缩小 */
+  min-height: 0;
 }
 
-.search-dialog {
-  user-select: none;
-  border-radius: 12px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: var(--el-bg-color-overlay);
+:global(.skill-library-popover) {
+  padding: 12px !important;
+  border-radius: 8px !important;
+  box-shadow: var(--el-box-shadow-light) !important;
 }
 
-.search-dialog-header {
+.preset-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.preset-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  cursor: move;
-  padding: 4px 0;
-  font-weight: bold;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--el-border-color-extra-light);
+  transition: all 0.2s;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background-color: var(--el-fill-color-light);
+    border-radius: 4px;
+  }
+
+  .preset-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    
+    .name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--el-text-color-primary);
+    }
+  }
 }
 
-.search-input {
-  margin-bottom: 15px;
-}
-
-.search-results {
-  border-radius: 4px;
+.search-tabs {
+  height: 100%;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
   overflow: hidden;
-}
 
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s, transform 0.3s;
-}
-.fade-enter-from, .fade-leave-to {
-  opacity: 0;
-  transform: translateY(-20px);
-}
+  :deep(.el-tabs__header) {
+    margin: 0 !important;
+    background-color: transparent;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+  }
 
-:deep(.el-card__header) {
-  padding: 10px 15px;
-  background: rgba(255, 255, 255, 0.02);
+  :deep(.el-tabs__nav-wrap) {
+    padding: 0 !important;
+    &::after {
+      display: none;
+    }
+  }
+
+  :deep(.el-tabs__item) {
+    height: 42px !important;
+    line-height: 42px !important;
+    font-size: 14px;
+    padding: 0 20px !important;
+    border-right: 1px solid var(--el-border-color-lighter) !important;
+    
+    &:first-child {
+      border-top-left-radius: 4px;
+    }
+
+    &.is-active {
+      font-weight: bold;
+      color: var(--el-color-primary);
+      background-color: var(--el-bg-color-overlay);
+      border-bottom-color: transparent !important;
+    }
+  }
+
+  :deep(.el-tabs__content) {
+    padding: 0;
+    flex: 1;
+    overflow: hidden;
+    background-color: var(--el-bg-color-overlay);
+  }
+
+  :deep(.el-tab-pane) {
+    height: 100%;
+  }
 }
 </style>

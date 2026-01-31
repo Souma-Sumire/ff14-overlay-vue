@@ -320,7 +320,9 @@
     "skillID": "技能ID（十进制）",
     "skillName": "技能名称",
     "addSkill": "新增技能",
-    "searchSkill": "搜索技能ID",
+    "searchSkill": "技能库",
+    "searchTab": "手动搜索",
+    "presets": "常用预设",
     "export": "导出",
     "import": "导入",
     "restoreDefault": "恢复默认",
@@ -349,8 +351,10 @@
       "minLevel": "最小习得等级",
       "line": "显示到第n行",
       "allJobs": "全职业",
-      "jobsCount": "{count} 个职业"
+      "jobsCount": "{count} 个职业",
+      "shortId": "ID"
     },
+    "unknownSkill": "未知技能",
     "deleteBtn": "删除",
     "deleteConfirmTitle": "确定删除吗？此操作无法撤销"
   },

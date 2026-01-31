@@ -314,7 +314,9 @@
     "skillID": "Skill ID (Decimal)",
     "skillName": "Skill Name",
     "addSkill": "Add Skill",
-    "searchSkill": "Search Skill ID",
+    "searchSkill": "Skill Library",
+    "searchTab": "Manual Search",
+    "presets": "Presets",
     "export": "Export",
     "import": "Import",
     "restoreDefault": "Restore Default",
@@ -343,8 +345,10 @@
       "minLevel": "Min Level",
       "line": "Display Line",
       "allJobs": "All Jobs",
-      "jobsCount": "{count} Jobs"
+      "jobsCount": "{count} Jobs",
+      "shortId": "ID"
     },
+    "unknownSkill": "Unknown Skill",
     "deleteBtn": "Delete",
     "deleteConfirmTitle": "Are you sure you want to delete? This action cannot be undone."
   },

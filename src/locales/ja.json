@@ -314,7 +314,9 @@
     "skillID": "アクションID（10進数）",
     "skillName": "アクション名",
     "addSkill": "アクション追加",
-    "searchSkill": "アクションIDを検索",
+    "searchSkill": "スキルライブラリ",
+    "searchTab": "手動検索",
+    "presets": "プリセット",
     "export": "エクスポート",
     "import": "インポート",
     "restoreDefault": "初期設定に戻す",
@@ -343,8 +345,10 @@
       "minLevel": "最小習得LV",
       "line": "表示行",
       "allJobs": "全ジョブ",
-      "jobsCount": "{count} ジョブ"
+      "jobsCount": "{count} ジョブ",
+      "shortId": "ID"
     },
+    "unknownSkill": "不明なアクション",
     "deleteBtn": "削除",
     "deleteConfirmTitle": "削除しますか？この操作は取り消せません。"
   },

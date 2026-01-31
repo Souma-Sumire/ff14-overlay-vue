@@ -3,6 +3,8 @@ import { useKeySkillStore } from '@/store/keySkills'
 import ActionIcon from './ActionIcon.vue'
 import JobSelector from './JobSelector.vue'
 import { CaretTop, CaretBottom, Delete } from '@element-plus/icons-vue'
+import { searchActions } from '@/resources/actionChinese'
+import { computed } from 'vue'
 
 const emit = defineEmits<{
   (e: 'delete', key: string): void
@@ -11,6 +13,19 @@ const emit = defineEmits<{
 
 const storeKeySKill = useKeySkillStore()
 const data = computed(() => storeKeySKill.keySkillsData.chinese)
+
+const querySearch = (queryString: string, cb: (results: any[]) => void) => {
+  if (queryString) {
+    const results = searchActions(queryString, 50).map((item) => ({
+      value: item.id.toString(),
+      label: item.name,
+      id: item.id,
+    }))
+    cb(results)
+  } else {
+    cb([])
+  }
+}
 </script>
 
 <template>
@@ -68,16 +83,35 @@ const data = computed(() => storeKeySKill.keySkillsData.chinese)
         align="center"
       >
         <template #default="{ row }">
-          <ActionIcon :id="row.id" />
+          <ActionIcon :id="row.id" :key="row.id" />
         </template>
       </el-table-column>
 
       <el-table-column
         :label="$t('keySkillTimerSettings.col.id')"
-        min-width="220"
+        min-width="200"
       >
         <template #default="{ row }">
-          <el-input v-model="row.id" size="small" />
+          <el-autocomplete
+            v-model="row.id"
+            :fetch-suggestions="querySearch"
+            placeholder="..."
+            size="small"
+            style="width: 100%"
+            clearable
+            :trigger-on-focus="false"
+          >
+            <template #default="{ item }">
+              <div style="display: flex; align-items: center; gap: 8px">
+                <ActionIcon :id="item.id" :size="20" :key="item.id" />
+                <span>{{ item.label }}</span>
+                <span
+                  style="color: var(--el-text-color-secondary); font-size: 12px"
+                  >({{ item.value }})</span
+                >
+              </div>
+            </template>
+          </el-autocomplete>
         </template>
       </el-table-column>
 

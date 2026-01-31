@@ -1,6 +1,11 @@
 <script setup lang="ts">
-import { getActionChinese } from '@/resources/actionChinese'
+import { getActionChinese, initActionChinese } from '@/resources/actionChinese'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
+import { onMounted } from 'vue'
+
+onMounted(() => {
+  initActionChinese()
+})
 
 function getName(line: string[]): string {
   const id = Number.parseInt(line[4]!, 16)

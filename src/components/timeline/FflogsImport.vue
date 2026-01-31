@@ -10,13 +10,17 @@ import type {
 import type { ITimeline } from '@/types/timeline'
 import { Loading } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
-import { getActionChinese } from '@/resources/actionChinese'
+import { getActionChinese, initActionChinese } from '@/resources/actionChinese'
 import { factory } from '@/services/timelineSpecialRules'
 import { useTimelineStore } from '@/store/timeline'
 import { CacheManager } from '@/utils/cacheManager'
 import Util from '@/utils/util'
 import { getImgSrc, handleImgError } from '@/utils/xivapi'
 
+onMounted(() => {
+  fflogsCache.clearExpired()
+  initActionChinese()
+})
 const props = defineProps<{
   filters: Record<string, number[]>
 }>()
@@ -620,9 +624,7 @@ function getJobStr(icon: FFIcon) {
   return Util.jobToFullName(Util.jobEnumToJob(Util.iconToJobEnum(icon))).cn
 }
 
-onMounted(() => {
-  fflogsCache.clearExpired()
-})
+
 </script>
 
 <template>

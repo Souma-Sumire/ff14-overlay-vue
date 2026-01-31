@@ -10,6 +10,7 @@ import { raidbuffs } from '@/resources/raidbuffs'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 import { tts } from '@/utils/tts'
 import Util from '@/utils/util'
+import { actionResourcesLoaded } from '@/resources/actionChinese'
 
 interface SkillState {
   startTime: number | null
@@ -30,13 +31,70 @@ const useKeySkillStore = defineStore('keySkill', () => {
   const demo = useDemo()
 
   const party = ref<Party[]>([])
-  const keySkillsData = useStorage('keySkills-fix', { chinese: raidbuffs })
+
+  // 版本管理：用于自动合并开发者新增的默认技能
+  const keySkillsData = useStorage('keySkills-fix', { chinese: [...raidbuffs] })
+
+  // 自动合并逻辑：每当开发者在 raidbuffs.ts 中新增了默认技能，
+  // 用户的本地存储会自动检测到这些通过 key 标识的新技能并将其追加。
+  // 自动合并逻辑：
+  // 1. 迁移与去重：保留用户的第一份数据（可能是魔改过的），将其 Key 更新为静态 Key，并移除后续重复项
+  const defaultSkillMap = new Map<number | string, string>(
+    raidbuffs.map((s) => [s.id, s.key])
+  )
+  const seenDefaultIds = new Set<number | string>()
+
+  keySkillsData.value.chinese = keySkillsData.value.chinese.reduce(
+    (acc, skill) => {
+      // 检查是否为默认提供的技能 ID
+      if (defaultSkillMap.has(skill.id)) {
+        if (seenDefaultIds.has(skill.id)) {
+          // 如果该 ID 已经添加过一次，说明后续的都是 Bug 产生的重复项，直接丢弃
+          return acc
+        }
+        // 第一次遇到该默认技能（保留这份数据，因为它是最早的，可能包含用户修改）
+        seenDefaultIds.add(skill.id)
+
+        // 【关键】执行迁移：如果 Key 还是旧的 UUID，强制更新为新的静态 Key
+        // 这样既保留了用户的配置（TTS/时间等），又修复了 Key 不一致的问题
+        const staticKey = defaultSkillMap.get(skill.id)!
+        if (skill.key !== staticKey) {
+          skill.key = staticKey
+        }
+        acc.push(skill)
+        return acc
+      }
+
+      // 用户自定义的技能（ID 不在默认列表中），直接保留
+      acc.push(skill)
+      return acc
+    },
+    [] as typeof keySkillsData.value.chinese
+  )
+
+  // 2. 补全缺失的默认技能（针对新版本新增的默认技能）
+  const userCurrentKeys = new Set(
+    keySkillsData.value.chinese.map((s) => s.key)
+  )
+  const newDefaultSkills = raidbuffs.filter((s) => !userCurrentKeys.has(s.key))
+
+  if (newDefaultSkills.length > 0) {
+    keySkillsData.value.chinese = [
+      ...keySkillsData.value.chinese,
+      ...newDefaultSkills,
+    ]
+  }
+
   const enableTts = useStorage('keySkills-enable-tts', { chinese: true })
   const skillStates = reactive<Record<string, SkillState>>({})
 
   const speed = ref(1)
 
   const usedSkills = computed(() => {
+    // 确保 actionResourcesLoaded 变化时重新计算
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    actionResourcesLoaded.value
+
     const result: KeySkillEntity[] = []
     const currentParty = computed(() =>
       dev.value || demo.value ? generator.party.value : party.value

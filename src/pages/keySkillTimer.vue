@@ -10,6 +10,7 @@ import {
   addOverlayListener,
   removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
+import { initActionChinese } from '@/resources/actionChinese'
 
 const storeKeySkill = useKeySkillStore()
 const { zoneType } = useZone()
@@ -46,6 +47,7 @@ function testTrigger(skill: KeySkillEntity, tts: boolean) {
 }
 
 onMounted(() => {
+  initActionChinese()
   addOverlayListener('PartyChanged', handlePartyChanged)
   addOverlayListener('LogLine', handleLogLine)
 })

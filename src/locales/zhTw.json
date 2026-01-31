@@ -314,7 +314,9 @@
     "skillID": "技能ID（十進制）",
     "skillName": "技能名稱",
     "addSkill": "新增技能",
-    "searchSkill": "搜尋技能ID",
+    "searchSkill": "技能庫",
+    "searchTab": "手動搜尋",
+    "presets": "常用預設",
     "export": "匯出",
     "import": "匯入",
     "restoreDefault": "恢復預設",
@@ -343,8 +345,10 @@
       "minLevel": "最小習得等級",
       "line": "顯示到第n行",
       "allJobs": "全職業",
-      "jobsCount": "{count} 個職業"
+      "jobsCount": "{count} 個職業",
+      "shortId": "ID"
     },
+    "unknownSkill": "未知技能",
     "deleteBtn": "刪除",
     "deleteConfirmTitle": "確定刪除嗎？此操作無法撤銷"
   },

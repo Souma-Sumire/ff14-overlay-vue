@@ -2,7 +2,7 @@ import type { KeySkill } from '@/types/keySkill'
 
 const raidbuffs: KeySkill[] = [
   {
-    key: crypto.randomUUID(),
+    key: 'preset_30',
     id: 30,
     tts: '',
     duration: 10,
@@ -12,7 +12,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 50,
   }, // 神圣领域 因为跟cactbot的重复报了所以关了
   {
-    key: crypto.randomUUID(),
+    key: 'preset_43',
     id: 43,
     tts: '',
     duration: 10,
@@ -22,7 +22,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 42,
   }, // 死斗 因为跟cactbot的重复报了所以关了
   {
-    key: crypto.randomUUID(),
+    key: 'preset_3638',
     id: 3638,
     tts: '',
     duration: 10,
@@ -32,7 +32,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 50,
   }, // 行尸走肉 因为跟cactbot的重复报了所以关了
   {
-    key: crypto.randomUUID(),
+    key: 'preset_16152',
     id: 16152,
     tts: '',
     duration: 10,
@@ -42,7 +42,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 50,
   }, // 超火流星 因为跟cactbot的重复报了所以关了
   {
-    key: crypto.randomUUID(),
+    key: 'preset_140',
     id: 140,
     tts: '天赐',
     duration: 0,
@@ -52,7 +52,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 50,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_25862',
     id: 25862,
     tts: '礼仪之铃',
     duration: 15,
@@ -62,7 +62,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 90,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_25868',
     id: 25868,
     tts: '跑快快',
     duration: 20,
@@ -72,7 +72,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 90,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_25874',
     id: 25874,
     tts: '大宇宙',
     duration: 15,
@@ -82,7 +82,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 90,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_7549',
     id: 7549,
     tts: '牵制',
     duration: `(lv) => lv>=98 ? 15 : 10`,
@@ -92,7 +92,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 22,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_7560',
     id: 7560,
     tts: '昏乱',
     duration: `(lv) => lv>=98 ? 15 : 10`,
@@ -102,7 +102,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 8,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_7535',
     id: 7535,
     tts: '雪愁',
     duration: `(lv) => lv>=98 ? 15 : 10`,
@@ -112,7 +112,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 22,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_3540',
     id: 3540,
     tts: '幕帘',
     duration: 30,
@@ -122,7 +122,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 56,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_7385',
     id: 7385,
     tts: '大翅膀',
     duration: 5,
@@ -132,7 +132,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 70,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_7388',
     id: 7388,
     tts: '摆脱',
     duration: 15,
@@ -142,7 +142,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 68,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_16471',
     id: 16471,
     tts: '布道',
     duration: 15,
@@ -152,7 +152,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 66,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_16160',
     id: 16160,
     tts: '光心',
     duration: 15,
@@ -162,7 +162,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 64,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_16536',
     id: 16536,
     tts: '节制',
     duration: 20,
@@ -172,7 +172,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 80,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_7405',
     id: 7405,
     tts: '行吟',
     duration: 15,
@@ -182,7 +182,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 62,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_16889',
     id: 16889,
     tts: '策动',
     duration: 15,
@@ -192,7 +192,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 56,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_2887',
     id: 2887,
     tts: '武解',
     duration: 10,
@@ -202,7 +202,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 62,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_16012',
     id: 16012,
     tts: '桑巴',
     duration: 15,
@@ -212,7 +212,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 56,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_25857',
     id: 25857,
     tts: '抗死',
     duration: 10,
@@ -222,7 +222,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 86,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_118',
     id: 118,
     tts: '战歌',
     duration: 20,
@@ -232,7 +232,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 50,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_25785',
     id: 25785,
     tts: '光神曲',
     duration: 20,
@@ -242,7 +242,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 90,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_36957',
     id: `(lv) => lv>=66 ? 36957 : 2248`,
     tts: '背刺',
     duration: 20,
@@ -252,7 +252,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 15,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_2248',
     id: 2248,
     tts: '背刺',
     duration: 20,
@@ -262,7 +262,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 15,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_24405',
     id: 24405,
     tts: '神秘环',
     duration: 20,
@@ -272,7 +272,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 72,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_3557',
     id: 3557,
     tts: '连祷',
     duration: 20,
@@ -282,7 +282,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 52,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_7396',
     id: 7396,
     tts: '义结金兰',
     duration: 20,
@@ -292,7 +292,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 70,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_25801',
     id: 25801,
     tts: '灼热之光',
     duration: 20,
@@ -302,7 +302,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 66,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_34675',
     id: 34675,
     tts: '星空构想',
     duration: 20,
@@ -312,7 +312,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 70,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_7436',
     id: 7436,
     tts: '连环计',
     duration: 20,
@@ -322,7 +322,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 66,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_7520',
     id: 7520,
     tts: '鼓励',
     duration: 20,
@@ -332,7 +332,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 58,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_16196',
     id: 16196,
     tts: '技巧舞',
     duration: 20,
@@ -342,7 +342,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 70,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_16011',
     id: 16011,
     tts: '探戈',
     duration: 20,
@@ -352,7 +352,7 @@ const raidbuffs: KeySkill[] = [
     minLevel: 62,
   },
   {
-    key: crypto.randomUUID(),
+    key: 'preset_16552',
     id: 16552,
     tts: '占卜',
     duration: 20,
