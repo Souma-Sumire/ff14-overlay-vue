@@ -171,6 +171,7 @@ let skillMapCache = new Map<number, Map<number, (typeof trackedSkills)[0]>>()
 const trackedSkills = raidbuffs.filter((v) => v.line === 1 || v.line === 2)
 
 const db = useIndexedDB<Encounter>(STORAGE_KEY)
+
 function getSkillMapForLevel(level: number) {
   let map = skillMapCache.get(level)
   if (!map) {
@@ -210,7 +211,7 @@ function beforeHandle() {
   povId = ''
   rowCounter = 0
   colorCache.clear()
-  jobInfoCache.clear()
+  invalidateJobCache()
   skillMapCache.clear()
   rsvData = {}
 }
@@ -718,6 +719,7 @@ function handleLine(line: string) {
           partyLogList = (match.groups?.list?.split('|') ?? []).filter(
             Boolean,
           )
+          invalidateJobCache()
         }
       }
       break
@@ -725,6 +727,7 @@ function handleLine(line: string) {
     case '02': // PrimaryPlayer
       {
         povId = splitLine[logDefinitions.ChangedPlayer.fields.id]!
+        invalidateJobCache()
       }
       break
 
@@ -748,6 +751,7 @@ function handleLine(line: string) {
             name,
             level,
           }
+          invalidateJobCache()
         }
       }
       break
@@ -765,6 +769,7 @@ function handleLine(line: string) {
         statusData.enemy,
         splitLine[logDefinitions.RemovedCombatant.fields.id]!,
       )
+      invalidateJobCache()
       break
 
     case '262': // RSV
@@ -866,9 +871,11 @@ interface JobInfo {
 }
 
 const jobInfoCache = new Map<string, JobInfo>()
+let skillSnapshotSkeletonCache: Omit<KeySkillSnapshot, 'ready' | 'recastLeft'>[] | null = null
 
 function invalidateJobCache() {
   jobInfoCache.clear()
+  skillSnapshotSkeletonCache = null
 }
 
 function getJobById(targetId: string) {
@@ -956,55 +963,54 @@ function stopCombat(timeStamp: number) {
 }
 
 function getKeySkillSnapshot(timestamp: number): KeySkillSnapshot[] {
-  const candidateIds = new Set<string>()
-  partyEventParty.forEach((p) => candidateIds.add(p.id))
-  partyLogList.forEach((id) => candidateIds.add(id))
-  if (povId) candidateIds.add(povId)
+  if (!skillSnapshotSkeletonCache) {
+    const candidateIds = new Set<string>()
+    partyEventParty.forEach((p) => candidateIds.add(p.id))
+    partyLogList.forEach((id) => candidateIds.add(id))
+    if (povId) candidateIds.add(povId)
 
-  const players: { id: string; job: number; name: string; level: number }[] = []
-  for (const id of candidateIds) {
-    const p = partyEventParty.find((v) => v.id === id)
-    if (p) {
-      players.push({ id: p.id, job: p.job, name: p.name, level: p.level })
-      continue
+    const players: { id: string; job: number; name: string; level: number }[] = []
+    for (const id of candidateIds) {
+      const p = partyEventParty.find((v) => v.id === id)
+      if (p) {
+        players.push({ id: p.id, job: p.job, name: p.name, level: p.level })
+        continue
+      }
+      const info = entitiesMap[id]
+      if (info)
+        players.push({
+          id,
+          job: info.job,
+          name: info.name ?? 'Unknown',
+          level: info.level,
+        })
     }
-    const info = entitiesMap[id]
-    if (info)
-      players.push({
-        id,
-        job: info.job,
-        name: info.name ?? 'Unknown',
-        level: info.level,
-      })
+
+    skillSnapshotSkeletonCache = players.flatMap((player) => {
+      const level = player.level || 999
+      return trackedSkills
+        .filter(
+          (skill) => skill.job.includes(player.job) && skill.minLevel <= level,
+        )
+        .map((skill) => {
+          const id = parseDynamicValue(skill.id, level)
+          const recast = parseDynamicValue(skill.recast1000ms, level)
+          return {
+            id,
+            name: getActionChinese(id) || 'Unknown',
+            icon: idToSrc(id),
+            recast1000ms: recast,
+            ownerId: player.id,
+            ownerName: player.name,
+            ownerJob: player.job,
+            ownerJobName: Util.jobToFullName(Util.jobEnumToJob(player.job))
+              .simple2!,
+          }
+        })
+    })
   }
 
-  const jobCounts = new Map<number, number>()
-  players.forEach((p) => jobCounts.set(p.job, (jobCounts.get(p.job) || 0) + 1))
-
-  const currentSnapshotPlayers = players.flatMap((player) => {
-    const level = player.level || 999
-    return trackedSkills
-      .filter(
-        (skill) => skill.job.includes(player.job) && skill.minLevel <= level,
-      )
-      .map((skill) => {
-        const id = parseDynamicValue(skill.id, level)
-        const recast = parseDynamicValue(skill.recast1000ms, level)
-        return {
-          id,
-          name: getActionChinese(id) || 'Unknown',
-          icon: idToSrc(id),
-          recast1000ms: recast,
-          ownerId: player.id,
-          ownerName: player.name,
-          ownerJob: player.job,
-          ownerJobName: Util.jobToFullName(Util.jobEnumToJob(player.job))
-            .simple2!,
-        }
-      })
-  })
-
-  return currentSnapshotPlayers.map((item) => {
+  return skillSnapshotSkeletonCache.map((item) => {
     const lastUsed = cooldownTracker[item.ownerId]?.[item.id] ?? 0
     let ready = true
     let recastLeft = 0
@@ -1126,6 +1132,7 @@ onMounted(() => {
   })
   addOverlayListener('ChangePrimaryPlayer', (e) => {
     povId = Number(e.charID).toString(16).toUpperCase()
+    invalidateJobCache()
   })
   addOverlayListener('CombatData', ((e: CombatDataEvent) => {
     if (combatTimeStamp > 0) return
