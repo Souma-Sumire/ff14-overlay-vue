@@ -341,7 +341,9 @@
       "recast": "冷卻時間 (秒)",
       "job": "適用職業",
       "minLevel": "最小習得等級",
-      "line": "顯示到第n行"
+      "line": "顯示到第n行",
+      "allJobs": "全職業",
+      "jobsCount": "{count} 個職業"
     },
     "deleteBtn": "刪除",
     "deleteConfirmTitle": "確定刪除嗎？此操作無法撤銷"

@@ -1,16 +1,26 @@
-<script setup>
+<script setup lang="ts">
+import { watch, onMounted } from 'vue'
+import { useStorage } from '@vueuse/core'
 import { useLang } from '@/composables/useLang'
+import type { Lang } from '@/types/lang'
+
+const props = defineProps({
+  teleported: {
+    type: Boolean,
+    default: true,
+  },
+})
 
 const { locale, availableLocales } = useLang()
 
-const languages = {
+const languages: Record<string, string> = {
   zhCn: '简体中文',
   en: 'English',
   ja: '日本語',
   zhTw: '繁體中文',
 }
 
-const currentLocale = useStorage('user-locale', locale.value)
+const currentLocale = useStorage('user-locale', locale.value as Lang)
 
 watch(currentLocale, (newLocale) => {
   locale.value = newLocale
@@ -40,10 +50,15 @@ onMounted(() => {
           d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
         />
       </svg>
-      <el-select v-model="currentLocale" size="small" class="language-select">
+      <el-select
+        v-model="currentLocale"
+        size="small"
+        class="language-select"
+        :teleported="props.teleported"
+      >
         <el-option
-          v-for="(lang, key) in availableLocales"
-          :key="key"
+          v-for="lang in availableLocales"
+          :key="lang"
           :value="lang"
           :label="languages[lang]"
         />
@@ -66,7 +81,7 @@ onMounted(() => {
 }
 
 .language-select {
-  width: 5.5em;
+  width: 6.5em;
 
   :deep(.el-input__wrapper) {
     background-color: transparent;

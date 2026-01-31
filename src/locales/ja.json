@@ -341,7 +341,9 @@
       "recast": "リキャスト (秒)",
       "job": "対象ジョブ",
       "minLevel": "最小習得LV",
-      "line": "表示行"
+      "line": "表示行",
+      "allJobs": "全ジョブ",
+      "jobsCount": "{count} ジョブ"
     },
     "deleteBtn": "削除",
     "deleteConfirmTitle": "削除しますか？この操作は取り消せません。"

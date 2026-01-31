@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import { localeToCactbotLang, useLang } from '@/composables/useLang'
 import { useKeySkillStore } from '@/store/keySkills'
-import type { Lang } from '@/types/lang'
-import { idToSrc } from '@/utils/dynamicValue'
-import Util from '@/utils/util'
-
-const { locale } = useLang()
+import ActionIcon from './ActionIcon.vue'
+import JobSelector from './JobSelector.vue'
+import { CaretTop, CaretBottom, Delete } from '@element-plus/icons-vue'
 
 const emit = defineEmits<{
   (e: 'delete', key: string): void
@@ -14,228 +11,234 @@ const emit = defineEmits<{
 
 const storeKeySKill = useKeySkillStore()
 const data = computed(() => storeKeySKill.keySkillsData.chinese)
-
-const jobList = Object.freeze(Util.getBattleJobs())
-
-const jobOptions = markRaw(
-  jobList.map((job) => {
-    const label = Util.jobToFullName(job)
-    return {
-      value: Util.jobToJobEnum(job),
-      label: label,
-    }
-  })
-)
-
-// src 防抖
-const debouncedSrcMap = ref(new Map<string, string>())
-const timers: Record<string, number | undefined> = {}
-watch(
-  () => data.value.map((row) => ({ key: row.key, id: row.id })),
-  (newList) => {
-    newList.forEach(({ key, id }) => {
-      // 清除旧定时器
-      if (timers[key]) clearTimeout(timers[key])
-      // 新定时器，延迟1秒更新
-      timers[key] = window.setTimeout(() => {
-        debouncedSrcMap.value.set(key, idToSrc(id))
-        // 触发响应更新 map
-        debouncedSrcMap.value = new Map(debouncedSrcMap.value)
-      }, 1000)
-    })
-  },
-  { immediate: true, deep: true }
-)
-
-function getLabel(option: {
-  value: number
-  label: {
-    en: string
-    ja: string
-    cn: string
-    simple1: string
-    simple2: string
-  }
-}) {
-  return (
-    option.label[
-      localeToCactbotLang(
-        locale.value as Lang
-      ) as keyof typeof Util.jobToFullName
-    ] ?? option.label.en
-  )
-}
 </script>
 
 <template>
-  <el-table
-    :data="data"
-    border
-    size="small"
-    :row-key="(row) => row.key"
-    :height="620"
-  >
-    <el-table-column
-      :label="$t('keySkillTimerSettings.col.action')"
-      width="80"
-      align="center"
+  <div class="settings-table-wrapper">
+    <el-table
+      :data="data"
+      border
+      size="small"
+      :row-key="(row) => row.key"
+      height="100%"
+      class="custom-table"
+      header-row-class-name="table-header"
     >
-      <template #default="{ row, $index }">
-        <div
-          style="display: flex; justify-content: center; gap: 0px"
-          class="actions"
-        >
-          <el-button
-            link
+      <el-table-column
+        :label="$t('keySkillTimerSettings.col.action')"
+        width="90"
+        fixed="left"
+        align="center"
+      >
+        <template #default="{ row, $index }">
+          <div class="action-buttons">
+            <el-button
+              link
+              size="small"
+              :disabled="$index === 0"
+              @click="emit('move', $index, $index - 1)"
+            >
+              <el-icon><CaretTop /></el-icon>
+            </el-button>
+            <el-button
+              link
+              size="small"
+              :disabled="$index === data.length - 1"
+              @click="emit('move', $index, $index + 1)"
+            >
+              <el-icon><CaretBottom /></el-icon>
+            </el-button>
+            <el-popconfirm
+              :title="$t('keySkillTimerSettings.deleteConfirmTitle')"
+              @confirm="emit('delete', row.key)"
+            >
+              <template #reference>
+                <el-button link size="small" type="danger">
+                  <el-icon><Delete /></el-icon>
+                </el-button>
+              </template>
+            </el-popconfirm>
+          </div>
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        :label="$t('keySkillTimerSettings.col.preview')"
+        width="50"
+        align="center"
+      >
+        <template #default="{ row }">
+          <ActionIcon :id="row.id" />
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        :label="$t('keySkillTimerSettings.col.id')"
+        min-width="220"
+      >
+        <template #default="{ row }">
+          <el-input v-model="row.id" size="small" />
+        </template>
+      </el-table-column>
+
+      <el-table-column width="130">
+        <template #header>
+          <div class="tts-header">
+            <span>TTS</span>
+            <el-switch v-model="storeKeySKill.enableTts.chinese" size="small" />
+          </div>
+        </template>
+        <template #default="{ row }">
+          <el-input
+            v-model="row.tts"
             size="small"
-            type="primary"
-            :disabled="$index === 0"
-            class="arrow"
-            @click="emit('move', $index, $index - 1)"
-          >
-            ↑
-          </el-button>
-          <el-button
-            link
-            size="small"
-            type="primary"
-            :disabled="$index === data.length - 1"
-            class="arrow"
-            @click="emit('move', $index, $index + 1)"
-          >
-            ↓
-          </el-button>
-          <el-popconfirm
-            :title="$t('keySkillTimerSettings.deleteConfirmTitle')"
-            placement="top-start"
-            @confirm="emit('delete', row.key)"
-          >
-            <template #reference>
-              <el-button link type="danger" size="small">
-                {{ $t('keySkillTimerSettings.deleteBtn') }}
-              </el-button>
-            </template>
-          </el-popconfirm>
-        </div>
-      </template>
-    </el-table-column>
-
-    <el-table-column
-      :label="$t('keySkillTimerSettings.col.preview')"
-      width="50"
-      align="center"
-    >
-      <template #default="{ row }">
-        <img
-          :src="debouncedSrcMap.get(row.key) ?? idToSrc(row.id)"
-          class="icon"
-        />
-      </template>
-    </el-table-column>
-
-    <el-table-column :label="$t('keySkillTimerSettings.col.id')" width="200">
-      <template #default="{ row }">
-        <el-input v-model="row.id" size="small" />
-      </template>
-    </el-table-column>
-
-    <el-table-column :label="$t('keySkillTimerSettings.col.tts')" width="100">
-      <template #header>
-        <el-form>
-          TTS
-          <el-switch v-model="storeKeySKill.enableTts.chinese" size="small" />
-        </el-form>
-      </template>
-      <template #default="{ row }">
-        <el-input
-          v-model="row.tts"
-          size="small"
-          :disabled="!storeKeySKill.enableTts.chinese"
-        />
-      </template>
-    </el-table-column>
-
-    <el-table-column
-      :label="$t('keySkillTimerSettings.col.duration')"
-      width="180"
-    >
-      <template #default="{ row }">
-        <el-input v-model="row.duration" size="small" />
-      </template>
-    </el-table-column>
-
-    <el-table-column
-      :label="$t('keySkillTimerSettings.col.recast')"
-      width="180"
-    >
-      <template #default="{ row }">
-        <el-input v-model="row.recast1000ms" size="small" />
-      </template>
-    </el-table-column>
-
-    <el-table-column
-      :label="$t('keySkillTimerSettings.col.job')"
-      min-width="100"
-    >
-      <template #default="{ row }">
-        <el-select v-model="row.job" size="small" multiple>
-          <el-option
-            v-for="option in jobOptions"
-            :key="option.value"
-            :label="getLabel(option)"
-            :value="option.value"
+            :disabled="!storeKeySKill.enableTts.chinese"
           />
-        </el-select>
-      </template>
-    </el-table-column>
+        </template>
+      </el-table-column>
 
-    <el-table-column
-      :label="$t('keySkillTimerSettings.col.minLevel')"
-      width="90"
-      align="center"
-    >
-      <template #default="{ row }">
-        <el-input-number
-          v-model="row.minLevel"
-          :min="1"
-          :max="100"
-          size="small"
-          controls-position="right"
-          style="width: 70px"
-        />
-      </template>
-    </el-table-column>
+      <el-table-column
+        :label="$t('keySkillTimerSettings.col.duration')"
+        min-width="180"
+        align="left"
+      >
+        <template #default="{ row }">
+          <el-input v-model="row.duration" size="small" />
+        </template>
+      </el-table-column>
 
-    <el-table-column
-      :label="$t('keySkillTimerSettings.col.line')"
-      width="100"
-      align="center"
-    >
-      <template #default="{ row }">
-        <el-input-number
-          v-model="row.line"
-          :min="1"
-          size="small"
-          controls-position="right"
-          style="width: 60px"
-        />
-      </template>
-    </el-table-column>
-  </el-table>
+      <el-table-column
+        :label="$t('keySkillTimerSettings.col.recast')"
+        min-width="220"
+        align="left"
+      >
+        <template #default="{ row }">
+          <el-input v-model="row.recast1000ms" size="small" />
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        :label="$t('keySkillTimerSettings.col.job')"
+        width="100"
+        align="center"
+      >
+        <template #default="{ row }">
+          <JobSelector v-model="row.job" />
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        :label="$t('keySkillTimerSettings.col.minLevel')"
+        width="110"
+        align="center"
+      >
+        <template #default="{ row }">
+          <el-input-number
+            v-model="row.minLevel"
+            :min="1"
+            :max="100"
+            size="small"
+            :controls="false"
+            class="level-input"
+          />
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        :label="$t('keySkillTimerSettings.col.line')"
+        width="110"
+        align="center"
+      >
+        <template #default="{ row }">
+          <el-input-number
+            v-model="row.line"
+            :min="1"
+            :max="10"
+            size="small"
+            :controls="false"
+            class="line-input"
+          />
+        </template>
+      </el-table-column>
+    </el-table>
+  </div>
 </template>
 
 <style lang="scss" scoped>
-.icon {
-  width: 24px;
-  height: 24px;
-  display: block;
-  margin: 0 auto;
+.settings-table-wrapper {
+  border-radius: 4px;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
 }
-.actions > button {
+
+.custom-table {
+  --el-table-border-color: var(--el-border-color-lighter);
+  --el-table-header-bg-color: var(--el-fill-color-light);
+  background: transparent;
+  width: 100%;
+}
+
+:deep(.table-header) th {
+  background-color: var(--el-fill-color-light) !important;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+  white-space: nowrap !important;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+}
+
+.action-buttons .el-button {
+  padding: 4px;
   margin: 0;
 }
-.actions > button.arrow {
-  font-size: 16px;
-  font-weight: bold;
+
+.tts-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: center;
+}
+
+.job-select {
+  width: 100%;
+}
+
+.level-input, .line-input {
+  width: 70px !important;
+  margin: 0 auto;
+}
+
+:deep(.el-table__body-wrapper) {
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+}
+
+:deep(.el-table__row) {
+  transition: background-color 0.2s;
+}
+
+:deep(.el-input__wrapper), :deep(.el-select__wrapper) {
+  background-color: var(--el-fill-color-blank) !important;
+  box-shadow: 0 0 0 1px var(--el-border-color) inset !important;
+  border: none;
+  transition: all 0.2s;
+  
+  &:hover {
+    box-shadow: 0 0 0 1px var(--el-color-primary) inset !important;
+  }
+}
+
+html.dark {
+  :deep(.el-input__wrapper), :deep(.el-select__wrapper) {
+    background-color: rgba(0, 0, 0, 0.2) !important;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1) inset !important;
+  }
 }
 </style>

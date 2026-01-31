@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
 import * as LZString from 'lz-string'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { actionId2ClassJobLevel } from '@/resources/action2ClassJobLevel'
 import { actionChinese } from '@/resources/actionChinese'
 import { raidbuffs } from '@/resources/raidbuffs'
 import { useKeySkillStore } from '@/store/keySkills'
 import { copyToClipboard } from '@/utils/clipboard'
-import { idToSrc } from '@/utils/dynamicValue'
 import { useLang } from '@/composables/useLang'
-const { t } = useLang()
+import ActionIcon from '@/components/keySkillTimer/ActionIcon.vue'
+import { Plus, Search, Download, Upload, RefreshLeft, Close, CopyDocument } from '@element-plus/icons-vue'
 
+const { t } = useLang()
 const storeKeySkill = useKeySkillStore()
 
 function resetToDefault() {
@@ -107,195 +108,160 @@ function importData(): void {
 const showDialog = ref(false)
 const searchText = ref('')
 const searchResult = ref<Array<{ id: number; name: string }>>([])
+let searchTimeout: number | undefined
+
 watch(searchText, (value) => {
-  if (value) {
-    const result = []
-    for (const [id, name] of Object.entries(actionChinese)) {
-      if (name.includes(value)) {
-        const idNumber = Number(id)
-        const useful = actionId2ClassJobLevel(idNumber)
-        if (useful) {
-          result.push({ id: idNumber, name })
+  if (searchTimeout) clearTimeout(searchTimeout)
+  searchTimeout = window.setTimeout(() => {
+    if (value) {
+      const result = []
+      for (const [id, name] of Object.entries(actionChinese)) {
+        if (name.includes(value)) {
+          const idNumber = Number(id)
+          const useful = actionId2ClassJobLevel(idNumber)
+          if (useful) {
+            result.push({ id: idNumber, name })
+          }
         }
       }
+      searchResult.value = result.slice(0, 50) // Limit results for better performance
+    } else {
+      searchResult.value = []
     }
-    searchResult.value = result
-  }
+  }, 300)
 })
-
-const observedImages = new Map<Element, () => void>()
-
-function lazyLoadImage(el: HTMLImageElement) {
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        const img = entry.target as HTMLImageElement
-        img.src = img.dataset.src!
-        observer.unobserve(img)
-      }
-    })
-  })
-  observer.observe(el)
-  observedImages.set(el, () => observer.unobserve(el))
-}
-
-onBeforeUnmount(() => {
-  observedImages.forEach((unobserve) => unobserve())
-  observedImages.clear()
-})
-
-function onImgRef(el: Element | ComponentPublicInstance | null) {
-  if (el && el instanceof HTMLImageElement) {
-    lazyLoadImage(el)
-  }
-}
 
 const dialogStyle = ref<Record<string, string>>({
   position: 'fixed',
-  top: '50px',
-  left: '50px',
-  width: '400px',
-  height: '400px',
-  zIndex: '1000',
+  top: '100px',
+  left: '100px',
+  width: '450px',
+  zIndex: '2000',
 })
 
+let dragging = false
 let startX = 0
 let startY = 0
 let originX = 0
 let originY = 0
-let dragging = false
-
-let dragTarget: HTMLElement | null = null
-
-function updateDialogPosition(left: number, top: number) {
-  if (dragTarget) {
-    dragTarget.style.left = `${left}px`
-    dragTarget.style.top = `${top}px`
-  }
-  dialogStyle.value.left = `${left}px`
-  dialogStyle.value.top = `${top}px`
-}
 
 function onMouseDown(e: MouseEvent) {
-  e.preventDefault()
   const dialog = document.querySelector('.search-dialog') as HTMLElement
   if (!dialog) return
-
-  dragTarget = dialog
   const rect = dialog.getBoundingClientRect()
   startX = e.clientX
   startY = e.clientY
   originX = rect.left
   originY = rect.top
   dragging = true
-
   window.addEventListener('mousemove', onMouseMove)
   window.addEventListener('mouseup', onMouseUp, { once: true })
 }
 
 function onMouseMove(e: MouseEvent) {
-  if (!dragging || !dragTarget) return
+  if (!dragging) return
   const dx = e.clientX - startX
   const dy = e.clientY - startY
-  const newLeft = Math.max(0, originX + dx)
-  const newTop = Math.max(0, originY + dy)
-  updateDialogPosition(newLeft, newTop)
+  dialogStyle.value.left = `${Math.max(0, originX + dx)}px`
+  dialogStyle.value.top = `${Math.max(0, originY + dy)}px`
 }
 
 function onMouseUp() {
   dragging = false
-  dragTarget = null
   window.removeEventListener('mousemove', onMouseMove)
 }
 </script>
 
 <template>
   <div class="page-container">
-    <el-card
-      v-if="showDialog"
-      class="search-dialog"
-      :style="dialogStyle"
-      body-style="padding: 0.5em 1em"
-    >
-      <div
-        class="search-dialog-header"
-        style="
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        "
+    <transition name="fade">
+      <el-card
+        v-if="showDialog"
+        class="search-dialog"
+        :style="dialogStyle"
+        body-style="padding: 1em"
       >
-        <h4 class="dialog-drag-handle" @mousedown="onMouseDown">
-          {{ $t('keySkillTimerSettings.dragHere') }}
-        </h4>
-        <el-button size="small" @click="showDialog = false">
-          {{ $t('keySkillTimerSettings.close') }}
-        </el-button>
-      </div>
-      <el-form label-width="5em">
-        <el-form-item :label="$t('keySkillTimerSettings.skillName')">
-          <el-input
-            v-model="searchText"
-            clearable
-            placeholder="请输入技能名称"
-          />
-        </el-form-item>
-      </el-form>
-      <div style="height: 300px; overflow-y: auto">
-        <el-table :data="searchResult" style="width: 100%">
-          <el-table-column
-            :label="$t('keySkillTimerSettings.preview')"
-            width="60"
-            align="center"
-          >
-            <template #default="{ row }">
-              <img
-                :ref="onImgRef"
-                :data-src="idToSrc(row.id)"
-                src="data:image/gif;base64,R0lGODlhEAAQAPIAAP///wAAAMLCwgAAACH5BAEAAAIALAAAAAAQABAAAAM6CLrc/jDKSau9OOvNu/9gKI5kaZ5oqub5bSqVefrb7r3rtf1B7n8fqw7GZ0cL+o8P8fAQA7"
-                loading="lazy"
-                style="width: 24px; height: 24px"
-                alt=""
-              />
-            </template>
-          </el-table-column>
-          <el-table-column
-            prop="id"
-            :label="$t('keySkillTimerSettings.skillID')"
-          />
-          <el-table-column
-            prop="name"
-            :label="$t('keySkillTimerSettings.skillName')"
-          />
-        </el-table>
-      </div>
-    </el-card>
-    <el-header class="header">
-      <el-button size="small" type="success" @click="addSkill()">
-        {{ $t('keySkillTimerSettings.addSkill') }}
-      </el-button>
-      <el-button size="small" type="info" @click="showDialog = true">
-        {{ $t('keySkillTimerSettings.searchSkill') }}
-      </el-button>
-      <el-button-group>
-        <el-button size="small" @click="exportData">
-          {{ $t('keySkillTimerSettings.export') }}
-        </el-button>
-        <el-button size="small" @click="importData">
-          {{ $t('keySkillTimerSettings.import') }}
-        </el-button>
-      </el-button-group>
-      <el-button size="small" type="danger" @click="resetToDefault">
-        {{ $t('keySkillTimerSettings.restoreDefault') }}
-      </el-button>
-      <CommonThemeToggle storage-key="key-skill-timer-2" />
-      <CommonLanguageSwitcher />
-    </el-header>
+        <template #header>
+          <div class="search-dialog-header" @mousedown="onMouseDown">
+            <span>{{ $t('keySkillTimerSettings.searchSkill') }}</span>
+            <el-button link @click="showDialog = false">
+              <el-icon><Close /></el-icon>
+            </el-button>
+          </div>
+        </template>
+        <el-input
+          v-model="searchText"
+          clearable
+          :placeholder="$t('keySkillTimerSettings.skillName')"
+          :prefix-icon="Search"
+          class="search-input"
+        />
+        <div class="search-results">
+          <el-table :data="searchResult" style="width: 100%" height="350px">
+            <el-table-column
+              :label="$t('keySkillTimerSettings.preview')"
+              width="70"
+              align="center"
+            >
+              <template #default="{ row }">
+                <ActionIcon :id="row.id" />
+              </template>
+            </el-table-column>
+            <el-table-column
+              prop="id"
+              :label="$t('keySkillTimerSettings.skillID')"
+              width="100"
+            />
+            <el-table-column
+              prop="name"
+              :label="$t('keySkillTimerSettings.skillName')"
+            />
+            <el-table-column width="60" align="center">
+              <template #default="{ row }">
+                <el-button link type="primary" @click="copyToClipboard(String(row.id))">
+                  <el-icon><CopyDocument /></el-icon>
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+      </el-card>
+    </transition>
 
-    <KeySkillTimerSettingsTable
-      @delete="(key) => deleteSkill(key)"
-      @move="(from, to) => moveSkill(from, to)"
-    />
+    <div class="header-toolbar">
+      <div class="left-tools">
+        <el-button type="success" :icon="Plus" @click="addSkill()">
+          {{ $t('keySkillTimerSettings.addSkill') }}
+        </el-button>
+        <el-button type="primary" :icon="Search" @click="showDialog = true">
+          {{ $t('keySkillTimerSettings.searchSkill') }}
+        </el-button>
+      </div>
+      <div class="center-tools">
+        <el-button-group>
+          <el-button :icon="Download" @click="exportData">
+            {{ $t('keySkillTimerSettings.export') }}
+          </el-button>
+          <el-button :icon="Upload" @click="importData">
+            {{ $t('keySkillTimerSettings.import') }}
+          </el-button>
+        </el-button-group>
+        <el-button type="danger" :icon="RefreshLeft" @click="resetToDefault">
+          {{ $t('keySkillTimerSettings.restoreDefault') }}
+        </el-button>
+      </div>
+      <div class="right-tools">
+        <CommonThemeToggle storage-key="key-skill-timer-2" />
+        <CommonLanguageSwitcher :teleported="false" />
+      </div>
+    </div>
+
+    <main class="page-content">
+      <KeySkillTimerSettingsTable
+        @delete="(key) => deleteSkill(key)"
+        @move="(from, to) => moveSkill(from, to)"
+      />
+    </main>
   </div>
 </template>
 
@@ -303,33 +269,76 @@ function onMouseUp() {
 .page-container {
   display: flex;
   flex-direction: column;
-  padding: 0 1em;
+  height: 100vh;
+  width: 100vw;
+  padding: 8px;
+  background: var(--el-bg-color);
+  color: var(--el-text-color-primary);
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
-.header {
+.header-toolbar {
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.5em;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  flex-shrink: 0;
   height: 40px;
-  padding: 0;
+  box-sizing: border-box;
 }
-.dialog-drag-handle {
-  cursor: move;
-  user-select: none;
-  padding: 6px 12px;
+
+.left-tools, .center-tools, .right-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.page-content {
   flex: 1;
-  margin: 0.8em 0.4em;
-  padding: 0.2em 0;
-  text-align: center;
-  cursor: move;
-  user-select: none;
-  font-weight: none;
-  border: 1px solid rgba(0, 0, 0, 0.3);
-  color: gray;
-  font-size: 12px;
+  width: 100%;
+  overflow: hidden;
+  margin-top: 8px;
+  min-height: 0; /* 关键：允许 flex 子项缩小 */
 }
+
 .search-dialog {
-  transition: none;
+  user-select: none;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--el-bg-color-overlay);
+}
+
+.search-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: move;
+  padding: 4px 0;
+  font-weight: bold;
+}
+
+.search-input {
+  margin-bottom: 15px;
+}
+
+.search-results {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s, transform 0.3s;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+:deep(.el-card__header) {
+  padding: 10px 15px;
+  background: rgba(255, 255, 255, 0.02);
 }
 </style>

@@ -341,7 +341,9 @@
       "recast": "Recast (sec)",
       "job": "Applicable Job",
       "minLevel": "Min Level",
-      "line": "Display Line"
+      "line": "Display Line",
+      "allJobs": "All Jobs",
+      "jobsCount": "{count} Jobs"
     },
     "deleteBtn": "Delete",
     "deleteConfirmTitle": "Are you sure you want to delete? This action cannot be undone."

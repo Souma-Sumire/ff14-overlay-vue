@@ -66,7 +66,7 @@ function triggerAll(speed: number) {
 }
 
 function showSettings() {
-  window.open(`${import.meta.env.BASE_URL}#/keySkillTimerSettings`, '_blank')
+  window.open(`${import.meta.env.BASE_URL}#/keySkillTimerSettings`, '_blank', 'width=1550,height=1024')
 }
 </script>
 
@@ -202,11 +202,18 @@ img {
 }
 
 .duration {
-  z-index: 4;
+  z-index: 10;
   position: absolute;
-  font-size: 18px;
-  font-weight: bold;
-  text-shadow: -1px 0 2px #000, 0 1px 2px #000, 1px 0 2px #000, 0 -1px 2px #000;
+  font-size: 20px;
+  font-weight: 800;
+  font-family: 'Arial Black', sans-serif;
+  text-shadow: 
+    -1.5px -1.5px 0 #000,  
+     1.5px -1.5px 0 #000,
+    -1.5px  1.5px 0 #000,
+     1.5px  1.5px 0 #000,
+     0px 2px 4px rgba(0,0,0,0.8);
+  pointer-events: none;
 }
 
 .duration.cooldown {
