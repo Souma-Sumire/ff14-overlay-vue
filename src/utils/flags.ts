@@ -108,6 +108,9 @@ const kHealFlags = ['04']
 const kFlagInstantDeath = '36'
 const kAttackFlags = ['01', '03', '05', '06', kFlagInstantDeath]
 
+// 占星的小宇宙（ID: 0x1647）治疗时，21/22 (ActionEffect) 行的伤害字段通常为 0，且 Flag 为 3D。
+// 真正的治疗数值会记录在紧随其后的 24 (DoTHoT) 行中，对应 StatusID 为 A9E。
+
 function processAbilityLine(splitLine: string[]) {
   const flagIdx = 8
   let offset = 0

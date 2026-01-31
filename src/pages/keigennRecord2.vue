@@ -778,13 +778,17 @@ function handleLine(line: string) {
       }
       break
 
-    case '24': // NetworkDoT
-      if (!userOptions.parseDoT) return
+    case '24': // NetworkDoT / HoT
       {
         const which = splitLine[logDefinitions.NetworkDoT.fields.which]!
+        const effectId = splitLine[logDefinitions.NetworkDoT.fields.effectId]!
+        const effectIdNum = parseInt(effectId, 16)
+        const isMicrocosmos = which === 'HoT' && effectIdNum === 0xA9E
+        if (!isMicrocosmos && !userOptions.parseDoT) return
+
         const targetId = splitLine[logDefinitions.NetworkDoT.fields.id]!
         if (
-          which !== 'DoT' ||
+          (which !== 'DoT' && which !== 'HoT') ||
           targetId.startsWith('4') ||
           !(
             targetId === povId ||
@@ -798,6 +802,11 @@ function handleLine(line: string) {
         const target = splitLine[logDefinitions.NetworkDoT.fields.name]!
         const damage = splitLine[logDefinitions.NetworkDoT.fields.damage]!
         const amount = Number.parseInt(damage, 16)
+
+        let actionDisplay = which
+        if (isMicrocosmos) {
+          actionDisplay = userOptions.actionCN ? '小宇宙' : 'Microcosmos'
+        }
         const timestamp = new Date(
           splitLine[logDefinitions.Ability.fields.timestamp] ?? '???',
         ).getTime()
@@ -813,15 +822,15 @@ function handleLine(line: string) {
         const { jobEnum, job, jobIcon, hasDuplicate } =
           getCachedJobInfo(targetId)
 
-        // dot/hot日志的source不准确 故无法计算目标减
+        // HoT/DoT日志的source不准确 故无法计算目标减伤
         addRow(
           prepareRowVO({
             key: (rowCounter++).toString(),
             time: formattedTime,
             timestamp,
             id: '',
-            action: which,
-            actionCN: which,
+            action: actionDisplay,
+            actionCN: actionDisplay,
             source: '',
             target,
             targetId,
@@ -833,8 +842,8 @@ function handleLine(line: string) {
             keigenns: [],
             currentHp,
             maxHp,
-            effect: 'damage done',
-            type: 'dot',
+            effect: isMicrocosmos ? 'heal' : 'damage done',
+            type: isMicrocosmos ? 'heal' : 'dot',
             shield: shieldData[targetId] ?? '0',
             povId: povId,
             reduction: 0,
