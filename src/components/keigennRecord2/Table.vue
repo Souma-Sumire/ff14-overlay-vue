@@ -696,7 +696,7 @@ defineExpose({
                         <div class="skill-icon-container" :title="`${skill.ownerName} (${skill.ownerJobName})`">
                           <img :src="skill.icon" class="skill-icon" />
                           <div class="skill-overlay" />
-                          <span class="skill-text">{{ skill.recastLeft }}</span>
+                          <span v-if="skill.recastLeft > 0" class="skill-text">{{ skill.recastLeft }}</span>
                           <span v-if="skill.maxCharges && skill.maxCharges > 1" class="skill-charges">{{ skill.chargesReady }}</span>
                           <span v-if="skill.jobResource !== undefined" class="skill-resource" :style="{ fontSize: skill.jobResource.toString().length > 2 ? '9px' : '11px' }">{{ skill.jobResource }}</span>
                           <span v-if="isDuplicateSkill(hoveredRow.preCalculated.coolingDownSkills, skill.id)" class="skill-job-name">{{ getSimpleJobName(skill.ownerJob) }}</span>
