@@ -38,17 +38,24 @@ await Promise.all([
   }),
   readCsv(`${csvPaths.ja}Action.csv`, (row) => {
     const level = Number(row[13])
-    if (level > 0 && row[3] !== '405') {
-      id2ClassJobLevel[row[0]!] = row[13]!
-      id2Icon[row[0]!] = row[3]!
+    const id = row[0]!
+    const icon = row[3]!
+    if (level > 0 && (icon !== '405' || id === '120')) {
+      id2ClassJobLevel[id] = row[13]!
+      id2Icon[id] = icon
     }
   }),
 ])
-const chineseToIcon = Object.fromEntries(
-  Object.entries(id2Name)
-    .filter(([id]) => id2ClassJobLevel[id])
-    .map(([id, name]) => [name, id2Icon[id]]),
-)
+
+const chineseToIcon: Record<string, string> = {}
+for (const [id, name] of Object.entries(id2Name)) {
+  if (id2ClassJobLevel[id]) {
+    const icon = id2Icon[id]!
+    if (!chineseToIcon[name] || (chineseToIcon[name] === '405' && icon !== '405')) {
+      chineseToIcon[name] = icon
+    }
+  }
+}
 
 fs.outputJsonSync('src/resources/chinese2Icon.json', chineseToIcon, {
   spaces: 2,
