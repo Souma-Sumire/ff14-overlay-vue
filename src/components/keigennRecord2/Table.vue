@@ -9,7 +9,6 @@ import { copyToClipboard } from '@/utils/clipboard'
 import Util from '@/utils/util'
 import { handleImgError } from '@/utils/xivapi'
 import { useLang } from '@/composables/useLang'
-import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 const { t } = useLang()
 
 const props = defineProps<{
@@ -611,14 +610,7 @@ const getSimpleJobName = (jobEnum: number) => {
 }
 
 const getAllSkills = (row: RowVO) => {
-  const all = [...row.preCalculated.coolingDownSkills, ...row.preCalculated.readySkills]
-  return all.sort((a, b) => {
-    if (a.scope !== b.scope) return a.scope === 'party' ? -1 : 1
-    if (a.ownerJob !== b.ownerJob) {
-      return DEFAULT_JOB_SORT_ORDER.indexOf(a.ownerJob) - DEFAULT_JOB_SORT_ORDER.indexOf(b.ownerJob)
-    }
-    return a.id - b.id
-  })
+  return row.preCalculated.sortedSkills || []
 }
 
 defineExpose({

@@ -22,6 +22,7 @@ import { getImgSrc } from '@/utils/xivapi'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 import { processAbilityLine, processFlags } from '@/utils/flags'
 import { keigennSkills } from '@/resources/keigennSkills'
+import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 
 import {
@@ -297,6 +298,19 @@ function prepareRowVO(row: Omit<RowVO, 'preCalculated'>): RowVO {
     (amount && Math.round((amount + shieldValue) / (1 - reduction))) || 0
   const originalDamageDisplay = originalDamage.toLocaleString()
 
+  const commonSkillSort = (a: KeySkillSnapshot, b: KeySkillSnapshot) => {
+    const scopeOrder = { party: 0, other: 1, self: 2 } as const
+    if (a.scope !== b.scope) return scopeOrder[a.scope] - scopeOrder[b.scope]
+    if (a.ownerJob !== b.ownerJob) {
+      return (
+        DEFAULT_JOB_SORT_ORDER.indexOf(a.ownerJob) -
+        DEFAULT_JOB_SORT_ORDER.indexOf(b.ownerJob)
+      )
+    }
+    if (a.recast1000ms !== b.recast1000ms) return b.recast1000ms - a.recast1000ms
+    return a.id - b.id
+  }
+
   return {
     ...row,
     preCalculated: {
@@ -314,22 +328,7 @@ function prepareRowVO(row: Omit<RowVO, 'preCalculated'>): RowVO {
       })),
       originalDamageDisplay,
       hpPercent,
-      coolingDownSkills:
-        row.keySkills
-          ?.filter((v) => !v.ready)
-          .sort((a, b) => {
-            if (a.scope !== b.scope) return a.scope === 'party' ? -1 : 1
-            if (a.id !== b.id) return a.id - b.id
-            return a.recastLeft - b.recastLeft
-          }) ?? [],
-      readySkills:
-        row.keySkills
-          ?.filter((v) => v.ready)
-          .sort((a, b) => {
-            if (a.scope !== b.scope) return a.scope === 'party' ? -1 : 1
-            if (a.id !== b.id) return a.id - b.id
-            return Util.enumSortMethod(a.ownerJob, b.ownerJob)
-          }) ?? [],
+      sortedSkills: (row.keySkills ?? []).sort(commonSkillSort),
     },
   }
 }

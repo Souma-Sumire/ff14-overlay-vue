@@ -57,8 +57,7 @@ export interface RowVO {
     }[]
     originalDamageDisplay: string
     hpPercent: number
-    coolingDownSkills: KeySkillSnapshot[]
-    readySkills: KeySkillSnapshot[]
+    sortedSkills: KeySkillSnapshot[]
   }
 }
 
