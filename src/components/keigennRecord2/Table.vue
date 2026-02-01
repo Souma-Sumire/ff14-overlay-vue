@@ -691,8 +691,7 @@ defineExpose({
                 <template v-if="hoveredRow.preCalculated.coolingDownSkills.length > 0">
                   <div class="subtitle">{{ t('keigennRecord.coolingDown') }}</div>
                   <div class="skill-grid">
-                    <template v-for="(skill, index) in hoveredRow.preCalculated.coolingDownSkills" :key="`${skill.id}-${skill.ownerId}`">
-                      <div v-if="index > 0 && skill.scope === 'solo' && hoveredRow.preCalculated.coolingDownSkills[index - 1]!.scope === 'party'" class="skill-divider" />
+                    <template v-for="skill in hoveredRow.preCalculated.coolingDownSkills" :key="`${skill.id}-${skill.ownerId}`">
                       <div class="skill-wrapper">
                         <div class="skill-icon-container" :title="`${skill.ownerName} (${skill.ownerJobName})`">
                           <img :src="skill.icon" class="skill-icon" />
@@ -711,8 +710,7 @@ defineExpose({
                   <el-divider v-if="hoveredRow.preCalculated.coolingDownSkills.length > 0" />
                   <div class="subtitle">{{ t('keigennRecord.ready') || '可用' }}</div>
                   <div class="skill-grid">
-                    <template v-for="(skill, index) in hoveredRow.preCalculated.readySkills" :key="`${skill.id}-${skill.ownerId}`">
-                      <div v-if="index > 0 && skill.scope === 'solo' && hoveredRow.preCalculated.readySkills[index - 1]!.scope === 'party'" class="skill-divider" />
+                    <template v-for="skill in hoveredRow.preCalculated.readySkills" :key="`${skill.id}-${skill.ownerId}`">
                       <div class="skill-wrapper">
                         <div class="skill-icon-container" :title="`${skill.ownerName} (${skill.ownerJobName})`">
                           <img :src="skill.icon" class="skill-icon" />
