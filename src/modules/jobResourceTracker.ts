@@ -1,6 +1,7 @@
 import type { ResourceTracker } from '@/types/JobResource'
 import { ScholarTracker } from './jobs/scholar'
 import { PaladinTracker } from './jobs/paladin'
+import { SageTracker } from './jobs/sage'
 
 export class JobResourceManager {
   private trackers: Map<number, ResourceTracker> = new Map()
@@ -10,6 +11,8 @@ export class JobResourceManager {
      this.trackers.set(28, new ScholarTracker())
      // 注册 PLD (19) 的 Tracker
      this.trackers.set(19, new PaladinTracker())
+     // 注册 SGE (40) 的 Tracker
+     this.trackers.set(40, new SageTracker())
   }
 
   public reset() {

@@ -216,6 +216,46 @@ const keigennSkills: KeigennSkill[] = [
     showResource: true,
     resourceCost: 1,
   },
+  {
+    // 坚角清汁
+    id: 24298,
+    recast1000ms: 30,
+    job: [40],
+    minLevel: 50,
+    scope: PARTY,
+    showResource: true,
+    resourceCost: 1,
+  },
+  {
+    // 寄生清汁
+    id: 24299,
+    recast1000ms: 30,
+    job: [40],
+    minLevel: 52,
+    scope: PARTY,
+    showResource: true,
+    resourceCost: 1,
+  },
+  {
+    // 灵橡清汁
+    id: 24296,
+    recast1000ms: 1,
+    job: [40],
+    minLevel: 45,
+    scope: PARTY,
+    showResource: true,
+    resourceCost: 1,
+  },
+  {
+    // 白牛清汁
+    id: 24303,
+    recast1000ms: 45,
+    job: [40],
+    minLevel: 62,
+    scope: PARTY,
+    showResource: true,
+    resourceCost: 1,
+  },
 ] as const
 
 export { keigennSkills }
