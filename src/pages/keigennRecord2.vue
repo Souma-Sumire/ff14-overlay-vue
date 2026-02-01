@@ -223,7 +223,8 @@ function beforeHandle() {
   invalidateJobCache()
   skillMapCache.clear()
   rsvData = {}
-  resourceManager.reset()
+  resourceManager.clear()
+  invalidateJobCache()
 }
 
 async function afterHandle() {
@@ -905,6 +906,22 @@ let skillSnapshotSkeletonCache: Omit<KeySkillSnapshot, 'ready' | 'recastLeft'>[]
 function invalidateJobCache() {
   jobInfoCache.clear()
   skillSnapshotSkeletonCache = null
+  updateResourceManagerJobs()
+}
+
+function updateResourceManagerJobs() {
+  const jobs = new Set<number>()
+  partyEventParty.forEach((p) => jobs.add(p.job))
+  if (povId) {
+    const pov = partyEventParty.find((p) => p.id === povId) || entitiesMap[povId]
+    if (pov) jobs.add(pov.job)
+  }
+  // 如果当前正在处理 LogLine 的列表，也可以加入进来
+  partyLogList.forEach(id => {
+    const info = entitiesMap[id]
+    if (info) jobs.add(info.job)
+  })
+  resourceManager.updateParty(jobs)
 }
 
 function getJobById(targetId: string) {
@@ -987,8 +1004,8 @@ function stopCombat(timeStamp: number) {
   statusData.friendly = {}
   statusData.enemy = {}
   cooldownTracker = {}
+  resourceManager.clear()
   invalidateJobCache()
-  resourceManager.reset()
   saveStorage()
 }
 

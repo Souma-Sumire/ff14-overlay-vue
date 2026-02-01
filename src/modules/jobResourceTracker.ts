@@ -4,31 +4,45 @@ import { PaladinTracker } from './jobs/paladin'
 import { SageTracker } from './jobs/sage'
 
 export class JobResourceManager {
-  private trackers: Map<number, ResourceTracker> = new Map()
+  private allTrackers: Map<number, new () => ResourceTracker> = new Map()
+  private activeTrackers: Map<number, ResourceTracker> = new Map()
   
   constructor() {
-     // 注册 SCH (28) 的 Tracker
-     this.trackers.set(28, new ScholarTracker())
-     // 注册 PLD (19) 的 Tracker
-     this.trackers.set(19, new PaladinTracker())
-     // 注册 SGE (40) 的 Tracker
-     this.trackers.set(40, new SageTracker())
+     this.allTrackers.set(28, ScholarTracker)
+     this.allTrackers.set(19, PaladinTracker)
+     this.allTrackers.set(40, SageTracker)
+  }
+
+  public updateParty(jobEnums: Iterable<number>) {
+    const jobSet = new Set(jobEnums)
+    
+    // 仅添加新出现的职业 Tracker，不移除已存在的（防止战斗中因小队变动导致数据丢失）
+    for (const job of jobSet) {
+      const TrackerClass = this.allTrackers.get(job)
+      if (TrackerClass && !this.activeTrackers.has(job)) {
+        this.activeTrackers.set(job, new TrackerClass())
+      }
+    }
+  }
+
+  public clear() {
+    this.activeTrackers.clear()
   }
 
   public reset() {
-    for (const tracker of this.trackers.values()) {
+    for (const tracker of this.activeTrackers.values()) {
       tracker.reset()
     }
   }
 
   public processLine(type: string, splitLine: string[]) {
-    for (const tracker of this.trackers.values()) {
+    for (const tracker of this.activeTrackers.values()) {
       tracker.processLine(type, splitLine)
     }
   }
 
   public getResource(jobEnum: number, characterId: string): number | undefined {
-    const tracker = this.trackers.get(jobEnum)
+    const tracker = this.activeTrackers.get(jobEnum)
     if (tracker) {
       return tracker.getResource(characterId)
     }
