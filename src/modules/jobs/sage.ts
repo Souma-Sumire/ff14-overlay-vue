@@ -21,7 +21,7 @@ export class SageTracker implements ResourceTracker {
   }
 
   public getResource(characterId: string): number | undefined {
-    return this.stacks[characterId] ?? 0
+    return this.stacks[characterId] ?? 3
   }
 
   public processLine(type: string, splitLine: string[]) {
@@ -73,7 +73,9 @@ export class SageTracker implements ResourceTracker {
   private updateStacks(characterId: string, now: number) {
     if (!this.lastGenTime[characterId]) {
       this.lastGenTime[characterId] = now
-      this.stacks[characterId] = 0
+      if (this.stacks[characterId] === undefined) {
+        this.stacks[characterId] = 3
+      }
       return
     }
 
