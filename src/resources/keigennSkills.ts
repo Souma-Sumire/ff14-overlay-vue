@@ -26,10 +26,10 @@ const keigennSkills: KeigennSkill[] = [
     scope: SELF,
   },
   {
-    // 即刻咏唱（只关心治疗职业）
+    // 即刻咏唱（只关心治疗职业/召唤师）
     id: 7561,
     recast1000ms: `(lv) => lv>=94 ? 40 : 60`,
-    job: [6, 24, 28, 33, 40],
+    job: [6, 24, 27, 28, 33, 40],
     minLevel: 18,
     scope: PARTY,
   },
@@ -274,6 +274,14 @@ const keigennSkills: KeigennSkill[] = [
     scope: PARTY,
   },
   {
+    // 展开战术
+    id: 3585,
+    recast1000ms: 90,
+    job: [28],
+    minLevel: 56,
+    scope: PARTY,
+  },
+  {
     // 异想的幻光
     id: 16538,
     recast1000ms: 120,
@@ -311,6 +319,97 @@ const keigennSkills: KeigennSkill[] = [
     showResource: true,
     resourceCost: 1,
   },
+  {
+    // 炽天召唤
+    id: 16545,
+    recast1000ms: 120,
+    job: [28],
+    minLevel: 80,
+    scope: PARTY,
+  },
+  {
+    // 生命回生法
+    id: 25867,
+    recast1000ms: 60,
+    job: [28],
+    minLevel: 86,
+    scope: PARTY,
+  },
+  {
+    // 炽天附体
+    id: 37014,
+    recast1000ms: 180,
+    job: [28],
+    minLevel: 100,
+    scope: PARTY,
+  },
+  // 占星
+  {
+    // 先天禀赋
+    id: 3614,
+    recast1000ms: 40,
+    job: [33],
+    minLevel: 15,
+    scope: PARTY,
+    maxCharges: `(lv) => lv>=78 ? (lv>=98 ? 3 : 2) : 1`,
+  },
+  {
+    // 命运之轮
+    id: 3613,
+    recast1000ms: 60,
+    job: [33],
+    minLevel: 58,
+    scope: PARTY,
+  },
+  {
+    // 天星冲日
+    id: 16553,
+    recast1000ms: 60,
+    job: [33],
+    minLevel: 60,
+    scope: PARTY,
+  },
+  {
+    // 地星
+    id: 7439,
+    recast1000ms: 60,
+    job: [33],
+    minLevel: 62,
+    scope: PARTY,
+  },
+  {
+    // 天星交错
+    id: 16556,
+    recast1000ms: 30,
+    job: [33],
+    minLevel: 74,
+    scope: PARTY,
+    maxCharges: `(lv) => lv>=88 ? 2 : 1`,
+  },
+  {
+    // 天宫图
+    id: 16557,
+    recast1000ms: 60,
+    job: [33],
+    minLevel: 76,
+    scope: PARTY,
+  },
+  {
+    // 中间学派
+    id: 16559,
+    recast1000ms: 120,
+    job: [33],
+    minLevel: 80,
+    scope: PARTY,
+  },
+  {
+    // 擢升
+    id: 25873,
+    recast1000ms: 60,
+    job: [33],
+    minLevel: 86,
+    scope: PARTY,
+  },
   // 贤者
   {
     // 坚角清汁
@@ -332,16 +431,16 @@ const keigennSkills: KeigennSkill[] = [
     showResource: true,
     resourceCost: 1,
   },
-  {
-    // 灵橡清汁
-    id: 24296,
-    recast1000ms: 1,
-    job: [40],
-    minLevel: 45,
-    scope: PARTY,
-    showResource: true,
-    resourceCost: 1,
-  },
+  // {
+  //   // 灵橡清汁
+  //   id: 24296,
+  //   recast1000ms: 1,
+  //   job: [40],
+  //   minLevel: 45,
+  //   scope: PARTY,
+  //   showResource: true,
+  //   resourceCost: 1,
+  // },
   {
     // 白牛清汁
     id: 24303,
@@ -352,7 +451,54 @@ const keigennSkills: KeigennSkill[] = [
     showResource: true,
     resourceCost: 1,
   },
-
+  {
+    // 输血
+    id: 24305,
+    recast1000ms: 120,
+    job: [40],
+    minLevel: 70,
+    scope: PARTY,
+  },
+  {
+    // 泛输血
+    id: 24311,
+    recast1000ms: 120,
+    job: [40],
+    minLevel: 80,
+    scope: PARTY,
+  },
+  {
+    // 整体论
+    id: 24310,
+    recast1000ms: 120,
+    job: [40],
+    minLevel: 76,
+    scope: PARTY,
+  },
+  {
+    // 活化
+    id: 24300,
+    recast1000ms: `(lv) => lv>=88 ? 90 : 120`,
+    job: [40],
+    minLevel: 56,
+    scope: PARTY,
+  },
+  {
+    // 魂灵风息
+    id: 24318,
+    recast1000ms: 120,
+    job: [40],
+    minLevel: 90,
+    scope: PARTY,
+  },
+  {
+    // 智慧之爱
+    id: 37035,
+    recast1000ms: 180,
+    job: [40],
+    minLevel: 100,
+    scope: PARTY,
+  },
   // 武僧
   {
     // 金刚极意
@@ -370,6 +516,14 @@ const keigennSkills: KeigennSkill[] = [
     job: [20],
     minLevel: 64,
     scope: OTHER,
+  },
+  {
+    // 真言
+    id: 65,
+    recast1000ms: 90,
+    job: [2, 20],
+    minLevel: 42,
+    scope: PARTY,
   },
   // 龙骑士
   // 忍者
@@ -401,6 +555,14 @@ const keigennSkills: KeigennSkill[] = [
   },
   // 蝰蛇剑士
   // 吟游诗人
+  {
+    // 大地神的抒情恋歌
+    id: 7408,
+    recast1000ms: 120,
+    job: [23],
+    minLevel: 66,
+    scope: PARTY,
+  },
   // 机工士
   // 舞者
   {
@@ -428,6 +590,14 @@ const keigennSkills: KeigennSkill[] = [
     minLevel: 40,
     scope: SELF,
   },
+  {
+    // 以太步
+    id: 155,
+    recast1000ms: 10,
+    job: [25],
+    minLevel: 50,
+    scope: SELF,
+  },
   // 召唤师
   {
     // 守护之光
@@ -438,12 +608,23 @@ const keigennSkills: KeigennSkill[] = [
     scope: SELF,
     maxCharges: `(lv) => lv>=88 ? 2 : 1`,
   },
+  // {
+  //   // 不死鸟召唤（苏生之炎）需要模拟一整套召唤互锁机制，还要考虑低等级情况，太麻烦了先不管了。日光普照同理。
+  //   id: 25831,
+  //   overrideIconId: 25830,
+  //   recast1000ms: 120,
+  //   job: [27],
+  //   minLevel: 80,
+  //   scope: PARTY,
+  // },
+  // 赤魔法师
+  // 绘灵法师
   {
-    // 苏生之炎
-    id: 25830,
+    // 坦培拉涂层（按120秒算）
+    id: 34685,
     recast1000ms: 120,
-    job: [27],
-    minLevel: 80,
+    job: [42],
+    minLevel: 10,
     scope: PARTY,
   },
 ] as const
