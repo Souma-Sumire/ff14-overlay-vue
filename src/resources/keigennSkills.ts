@@ -113,6 +113,14 @@ const keigennSkills: KeigennSkill[] = [
     scope: SELF,
   },
   {
+    // 原初的勇猛
+    id: 16464,
+    recast1000ms: 25,
+    job: [21],
+    minLevel: 76,
+    scope: OTHER,
+  },
+  {
     // 刚玉之心
     id: `(lv) => lv>=92 ? 25758 : 16161`,
     recast1000ms: 25,
