@@ -1063,7 +1063,7 @@ body .el-popover.keigenn-global-popover {
       display: flex;
       flex-wrap: wrap;
       gap: 4px;
-      max-width: 178px;
+      max-width: 192px;
 
       .skill-divider {
         width: 1px;
@@ -1077,12 +1077,12 @@ body .el-popover.keigenn-global-popover {
         display: flex;
         flex-direction: column;
         align-items: center;
-        width: 22px;
+        width: 24px;
 
         .skill-icon-container {
           position: relative;
-          width: 22px;
-          height: 22px;
+          width: 24px;
+          height: 24px;
           border-radius: 3px;
           overflow: hidden;
           background: #222;
