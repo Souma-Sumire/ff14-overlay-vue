@@ -20,10 +20,13 @@ export class ScholarTracker implements ResourceTracker {
   private stacks: Record<string, number> = {}
   // characterId -> has recitation buff
   private recitation: Record<string, boolean> = {}
+  // characterId -> last usage of Recitation
+  private lastRecitationUsed: Record<string, number> = {}
 
   public reset() {
     this.stacks = {}
     this.recitation = {}
+    this.lastRecitationUsed = {}
   }
 
   public getResource(characterId: string): number | undefined {
@@ -38,12 +41,11 @@ export class ScholarTracker implements ResourceTracker {
     return (this.stacks[characterId] ?? 0) >= cost
   }
 
-  public getExtraText(_characterId: string, skillId: number, timestamp: number, allCooldowns: Record<number, number[]>): string {
+  public getExtraText(characterId: string, skillId: number, timestamp: number, _allCooldowns: Record<number, number[]>): string {
     // 仅针对不屈(3583)和深谋(7434)显示秘策(16542)的冷却
     if (skillId === SCH_ACTION_IDS.INDOMITABILITY || skillId === SCH_ACTION_IDS.EXCOGITATION) {
-      const recHistory = allCooldowns[SCH_ACTION_IDS.RECITATION] ?? []
-      if (recHistory.length > 0) {
-        const lastUsed = recHistory[recHistory.length - 1]!
+      const lastUsed = this.lastRecitationUsed[characterId] ?? 0
+      if (lastUsed > 0) {
         const recRecastMs = 90000
         const recFreeAt = lastUsed + recRecastMs
         if (timestamp < recFreeAt) {
@@ -61,6 +63,11 @@ export class ScholarTracker implements ResourceTracker {
         {
           const sourceId = splitLine[logDefinitions.Ability.fields.sourceId]!
           const id = parseInt(splitLine[logDefinitions.Ability.fields.id]!, 16)
+          const timestamp = new Date(splitLine[logDefinitions.Ability.fields.timestamp]!).getTime()
+
+          if (id === SCH_ACTION_IDS.RECITATION) {
+            this.lastRecitationUsed[sourceId] = timestamp
+          }
 
           // 获得以太超流: 以太超流(166) 或 转化(3587)
           if (id === SCH_ACTION_IDS.AETHERFLOW || id === SCH_ACTION_IDS.DISSIPATION) {
