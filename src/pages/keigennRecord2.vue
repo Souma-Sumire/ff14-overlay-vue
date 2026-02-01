@@ -35,6 +35,7 @@ import NetRegexes from '../../cactbot/resources/netregexes'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import { ZoneInfo } from '@/resources/zoneInfo'
 import { getCactbotLocaleMessage } from '@/composables/useLang'
+import { JobResourceManager } from '@/modules/jobResourceTracker'
 
 const dev = useDev()
 
@@ -171,6 +172,8 @@ let skillMapCache = new Map<number, Map<number, (typeof trackedSkills)[0]>>()
 
 const trackedSkills = keigennSkills
 
+const resourceManager = new JobResourceManager()
+
 const db = useIndexedDB<Encounter>(STORAGE_KEY)
 
 function getSkillMapForLevel(level: number) {
@@ -215,6 +218,7 @@ function beforeHandle() {
   invalidateJobCache()
   skillMapCache.clear()
   rsvData = {}
+  resourceManager.reset()
 }
 
 async function afterHandle() {
@@ -328,6 +332,8 @@ function handleLine(line: string) {
   const type = line.substring(0, line.indexOf('|'))
   if (!type) return
   const splitLine = line.split('|')
+
+  resourceManager.processLine(type, splitLine)
 
   switch (type) {
     case '26': // GainsEffect
@@ -976,6 +982,7 @@ function stopCombat(timeStamp: number) {
   statusData.enemy = {}
   cooldownTracker = {}
   invalidateJobCache()
+  resourceManager.reset()
   saveStorage()
 }
 
@@ -1026,6 +1033,8 @@ function getKeySkillSnapshot(
             ownerJobName: Util.jobToFullName(Util.jobEnumToJob(player.job))
               .simple2!,
             maxCharges: parseDynamicValue(skill.maxCharges || 1, level),
+            jobResource: skill.showResource ? resourceManager.getResource(player.job, player.id) : undefined,
+            resourceCost: skill.resourceCost,
             scope: skill.scope,
           }
         })
@@ -1064,7 +1073,7 @@ function getKeySkillSnapshot(
       }
     }
 
-    const ready = chargesReady > 0
+    const ready = chargesReady > 0 && (item.jobResource === undefined || item.jobResource >= (item.resourceCost ?? 1))
 
     return {
       ...item,

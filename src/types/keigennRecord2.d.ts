@@ -13,6 +13,8 @@ export interface KeigennSkill {
   minLevel: number
   maxCharges?: DynamicValue
   scope: Scope
+  showResource?: boolean
+  resourceCost?: number
 }
 
 export interface RowVO {
@@ -73,6 +75,8 @@ export interface KeySkillSnapshot {
   chargesReady?: number
   maxCharges?: number
   scope: Scope
+  jobResource?: number
+  resourceCost?: number
 }
 
 export interface Status {

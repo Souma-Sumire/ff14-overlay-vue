@@ -174,6 +174,16 @@ const keigennSkills: KeigennSkill[] = [
     minLevel: 18,
     scope: PARTY,
   },
+  {
+    // 野战治疗阵
+    id: 188,
+    recast1000ms: 30,
+    job: [28],
+    minLevel: 50,
+    scope: PARTY,
+    showResource: true,
+    resourceCost: 1,
+  },
 ] as const
 
 export { keigennSkills }
