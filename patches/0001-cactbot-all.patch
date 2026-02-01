@@ -1,0 +1,173 @@
+diff --git a/cactbot/resources/overlay_plugin_api.ts b/cactbot/resources/overlay_plugin_api.ts
+index b08e4d0b7..b99e74301 100644
+--- a/cactbot/resources/overlay_plugin_api.ts
++++ b/cactbot/resources/overlay_plugin_api.ts
+@@ -76,15 +76,28 @@ const sendMessage = (
+   cb?: (value: string | null) => unknown,
+ ): void => {
+   if (ws) {
+-    if (queue)
++    if (queue || ws.readyState !== 1) {
++      if (!queue)
++        queue = [];
+       queue.push(msg);
+-    else
+-      ws.send(JSON.stringify(msg));
++    } else {
++      try {
++        ws.send(JSON.stringify(msg));
++      } catch (e) {
++        console.error(e);
++        if (!queue)
++          queue = [];
++        queue.push(msg);
++      }
++    }
+   } else {
+-    if (queue)
++    if (queue || !window.OverlayPluginApi?.ready) {
++      if (!queue)
++        queue = [];
+       queue.push([msg, cb]);
+-    else
++    } else {
+       window.OverlayPluginApi.callHandler(JSON.stringify(msg), cb);
++    }
+   }
+ };
+ 
+@@ -209,11 +222,10 @@ export const init = (): void => {
+     return;
+ 
+   if (typeof window !== 'undefined') {
+-    wsUrl = new URLSearchParams(window.location.search).get('OVERLAY_WS');
++    wsUrl = new URLSearchParams(window.location.href.split('?')[1]).get('OVERLAY_WS');
+     if (wsUrl !== null) {
+       const connectWs = function(wsUrl: string) {
+         ws = new WebSocket(wsUrl);
+-
+         ws.addEventListener('error', (e) => {
+           console.error(e);
+         });
+@@ -260,12 +272,12 @@ export const init = (): void => {
+         });
+ 
+         ws.addEventListener('close', () => {
+-          queue = null;
++          queue = [];
+ 
+           console.log('Trying to reconnect...');
+           // Don't spam the server with retries.
+           window.setTimeout(() => {
+-            connectWs(wsUrl);
++            connectWs(wsUrl!);
+           }, 300);
+         });
+       };
+diff --git a/cactbot/types/event.d.ts b/cactbot/types/event.d.ts
+index d99c42d18..88af2a448 100644
+--- a/cactbot/types/event.d.ts
++++ b/cactbot/types/event.d.ts
+@@ -7,12 +7,29 @@ declare global {
+     'onOverlayStateUpdate': CustomEvent<{ isLocked: boolean }>;
+   }
+ }
++export enum PartyType {
++  Solo,
++  Party,
++  AllianceA,
++  AllianceB,
++  AllianceC,
++  AllianceD,
++  AllianceE,
++  AllianceF,
++}
++
+ export interface Party {
+   id: string;
+   name: string;
+   worldId: number;
+   job: number;
+   inParty: boolean;
++  contentId: number;
++  flags: number;
++  level: number;
++  objectId: number;
++  partyType: PartyType;
++  territoryType: number;
+ }
+ 
+ export type BardSongType = 'Ballad' | 'Paeon' | 'Minuet' | 'None';
+@@ -213,6 +230,32 @@ export type EnmityTargetCombatant = {
+     ActorID: number;
+     isOwner: boolean;
+   }[];
++
++  BNpcID: number;
++  CurrentMP: number;
++  IsCasting1: number;
++  BNpcNameID: number;
++  TransformationId: number;
++  WeaponId: number;
++  Heading: number;
++  MaxMP: number;
++  Level: number;
++  WorldID: number;
++  CurrentWorldID: number;
++  NPCTargetID: number;
++  CurrentGP: number;
++  MaxGP: number;
++  CurrentCP: number;
++  MaxCP: number;
++  PCTargetID: number;
++  IsCasting2: number;
++  CastBuffID: number;
++  CastTargetID: number;
++  CastGroundTargetX: number;
++  CastGroundTargetY: number;
++  CastGroundTargetZ: number;
++  CastDurationCurrent: number;
++  CastDurationMax: number;
+ };
+ 
+ export interface EventMap {
+@@ -524,6 +567,30 @@ type CactbotChooseDirectoryHandler = (msg: {
+   call: 'cactbotChooseDirectory';
+ }) => { data: string } | undefined;
+ 
++export type PostNamazuCall =
++  | 'DoTextCommand'
++  | 'command'
++  | 'DoWaymarks'
++  | 'place'
++  | 'mark'
++  | 'DoInsertPreset'
++  | 'preset'
++  | 'DoQueueActions';
++
++type PostNamazuHandler = (msg: {
++  call: 'PostNamazu';
++  c: PostNamazuCall;
++  p: string;
++  d?: number;
++}) => Promise<void>;
++
++type GetLanguageHandler = (msg: { call: 'getLanguage' }) => {
++  language: string;
++  languageId: string;
++  region: string;
++  regionId: string;
++};
++
+ export type OverlayHandlerAll = {
+   'broadcast': BroadcastHandler;
+   'subscribe': SubscribeHandler;
+@@ -537,6 +604,8 @@ export type OverlayHandlerAll = {
+   'cactbotSaveData': CactbotSaveDataHandler;
+   'cactbotLoadData': CactbotLoadDataHandler;
+   'cactbotChooseDirectory': CactbotChooseDirectoryHandler;
++  'postNamazu': PostNamazuHandler;
++  'getLanguage': GetLanguageHandler;
+ };
+ 
+ export type OverlayHandlerTypes = keyof OverlayHandlerAll;

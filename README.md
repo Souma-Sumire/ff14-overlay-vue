@@ -1,4 +1,4 @@
-# ff14-overlay-vue  
+# ff14-overlay-vue
 
 [English](README.en.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
@@ -29,10 +29,10 @@
 pnpm install
 git submodule update --init --recursive
 git submodule update --remote --recursive
-git apply patches/0001-postNamazu.patch patches/0002-hash-mode.patch patches/0003-event-type.patch patches/0004-party-type.patch
+git apply patches/0001-cactbot-all.patch
 pnpm dev
 pnpm vite build
 ```
 
-大部分页面，可以通过 dev 参数来进入测试模式。例如：  
+大部分页面，可以通过 dev 参数来进入测试模式。例如：
 `http://localhost:3000/ff14-overlay-vue/#/keySkillTimer?dev=1`
