@@ -36,6 +36,7 @@ import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import { ZoneInfo } from '@/resources/zoneInfo'
 import { getCactbotLocaleMessage } from '@/composables/useLang'
 import { JobResourceManager } from '@/modules/jobResourceTracker'
+import { compareSame } from '@/utils/compareSaveAction'
 
 const dev = useDev()
 
@@ -184,6 +185,10 @@ function getSkillMapForLevel(level: number) {
       if (skill.minLevel > level) continue
       const id = parseDynamicValue(skill.id, level)
       map.set(id, skill)
+      const groupId = compareSame(id)
+      if (groupId !== id) {
+        map.set(groupId, skill)
+      }
    }
     skillMapCache.set(level, map)
   }
@@ -437,16 +442,17 @@ function handleLine(line: string) {
           const level = entitiesMap[sourceId]?.level ?? 999
 
           const skillMap = getSkillMapForLevel(level)
-          const trackedSkill = skillMap.get(abilityIdDecimal)
+          const groupAbilityId = compareSame(abilityIdDecimal)
+          const trackedSkill = skillMap.get(abilityIdDecimal) || skillMap.get(groupAbilityId)
 
           if (trackedSkill) {
             if (!cooldownTracker[sourceId]) {
               cooldownTracker[sourceId] = {}
             }
-            if (!cooldownTracker[sourceId][abilityIdDecimal]) {
-              cooldownTracker[sourceId][abilityIdDecimal] = []
+            if (!cooldownTracker[sourceId][groupAbilityId]) {
+              cooldownTracker[sourceId][groupAbilityId] = []
             }
-            const history = cooldownTracker[sourceId][abilityIdDecimal]!
+            const history = cooldownTracker[sourceId][groupAbilityId]!
             history.push(timestamp)
             const maxCharges = parseDynamicValue(trackedSkill.maxCharges || 1, level)
             if (history.length > maxCharges) {
@@ -1051,7 +1057,7 @@ function getKeySkillSnapshot(
       return false
     })
     .map((item) => {
-    const history = cooldownTracker[item.ownerId]?.[item.id] ?? []
+    const history = cooldownTracker[item.ownerId]?.[compareSame(item.id)] ?? []
     const maxCharges = item.maxCharges || 1
     const recastMs = item.recast1000ms * 1000
 
