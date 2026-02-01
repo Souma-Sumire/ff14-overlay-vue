@@ -3,6 +3,7 @@ import { ScholarTracker } from './jobs/scholar'
 import { PaladinTracker } from './jobs/paladin'
 import { SageTracker } from './jobs/sage'
 import { DarkKnightTracker } from './jobs/darkKnight'
+import { PictomancerTracker } from './jobs/pictomancer'
 
 /**
  * 职业资源管理器
@@ -17,6 +18,7 @@ export class JobResourceManager {
      this.allTrackers.set(19, PaladinTracker)
      this.allTrackers.set(40, SageTracker)
      this.allTrackers.set(32, DarkKnightTracker)
+     this.allTrackers.set(42, PictomancerTracker)
   }
 
   /** 根据当前队伍职业动态开启 Tracker */
@@ -45,9 +47,9 @@ export class JobResourceManager {
   }
 
   /** 将日志行分发给所有活跃的 Tracker */
-  public processLine(type: string, splitLine: string[]) {
+  public processLine(type: string, splitLine: string[], cooldownTracker?: Record<string, Record<number, number[]>>) {
     for (const tracker of this.activeTrackers.values()) {
-      tracker.processLine(type, splitLine)
+      tracker.processLine(type, splitLine, cooldownTracker)
     }
   }
 

@@ -2,7 +2,7 @@ export interface ResourceTracker {
   /** 重置所有角色的数据，通常在团灭或战斗切换时调用 */
   reset(): void
   /** 处理日志行，用于模拟量谱变化 */
-  processLine(type: string, splitLine: string[]): void
+  processLine(type: string, splitLine: string[], cooldownTracker?: Record<string, Record<number, number[]>>): void
   /** 获取指定角色的当前资源量（如层数、忠义值等） */
   getResource(characterId: string): number | undefined
   /** 

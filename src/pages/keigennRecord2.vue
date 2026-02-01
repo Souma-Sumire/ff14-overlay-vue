@@ -338,7 +338,7 @@ function handleLine(line: string) {
   if (!type) return
   const splitLine = line.split('|')
 
-  resourceManager.processLine(type, splitLine)
+  resourceManager.processLine(type, splitLine, cooldownTracker)
 
   switch (type) {
     case '26': // GainsEffect
