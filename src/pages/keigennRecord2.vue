@@ -156,6 +156,7 @@ const regexes = {
   addCombatant: NetRegexes.addedCombatant(),
   removingCombatant: NetRegexes.removingCombatant(),
   networkDoT: NetRegexes.networkDoT(),
+  wipe: NetRegexes.network6d({ command: ['40000010', '4000000F'] }),
 } as const
 
 const STORAGE_KEY = 'keigenn-record-2'
@@ -732,6 +733,8 @@ function handleLine(line: string) {
           if (useLangZoneName && useLangZoneName !== 'Unknown')
             zoneName = useLangZoneName
         }
+        cooldownTracker = {}
+        resourceManager.clear()
         stopCombat(
           new Date(
             splitLine[logDefinitions.ChangeZone.fields.timestamp]!,
@@ -885,6 +888,18 @@ function handleLine(line: string) {
         )
       }
       break
+
+    case '33': // ActorControl (including Wipe)
+      {
+        if (regexes.wipe.exec(line)) {
+          resourceManager.reset()
+          cooldownTracker = {}
+          shieldData = {}
+          statusData.friendly = {}
+          statusData.enemy = {}
+        }
+      }
+      break
   }
 }
 
@@ -1001,8 +1016,7 @@ function stopCombat(timeStamp: number) {
   combatTimeStamp = 0
   statusData.friendly = {}
   statusData.enemy = {}
-  cooldownTracker = {}
-  resourceManager.clear()
+  shieldData = {}
   invalidateJobCache()
   saveStorage()
 }
