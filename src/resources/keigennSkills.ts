@@ -1,7 +1,11 @@
 import type { KeigennSkill, Scope } from '@/types/keigennRecord2'
 import { raidbuffs } from './raidbuffs'
 
-const SOLO: Scope = 'solo'
+// 目标是本人时显示
+const SELF: Scope = 'self'
+// 目标不是本人时显示
+const OTHER: Scope = 'other'
+// 全队显示
 const PARTY: Scope = 'party'
 
 const keigennSkills: KeigennSkill[] = [
@@ -17,7 +21,7 @@ const keigennSkills: KeigennSkill[] = [
     recast1000ms: 90,
     job: [1, 3, 19, 21, 32, 37],
     minLevel: 8,
-    scope: SOLO,
+    scope: SELF,
   },
   {
     // 预警 / 极致防御
@@ -25,7 +29,7 @@ const keigennSkills: KeigennSkill[] = [
     recast1000ms: 120,
     job: [19],
     minLevel: 38,
-    scope: SOLO,
+    scope: SELF,
   },
   {
     // 复仇 / 戮罪
@@ -33,7 +37,7 @@ const keigennSkills: KeigennSkill[] = [
     recast1000ms: 120,
     job: [21],
     minLevel: 38,
-    scope: SOLO,
+    scope: SELF,
   },
   {
     // 暗影墙 / 暗影卫
@@ -41,7 +45,7 @@ const keigennSkills: KeigennSkill[] = [
     recast1000ms: 120,
     job: [32],
     minLevel: 38,
-    scope: SOLO,
+    scope: SELF,
   },
   {
     // 星云 / 大星云
@@ -49,7 +53,7 @@ const keigennSkills: KeigennSkill[] = [
     recast1000ms: 120,
     job: [37],
     minLevel: 38,
-    scope: SOLO,
+    scope: SELF,
   },
   {
     // 壁垒
@@ -57,7 +61,7 @@ const keigennSkills: KeigennSkill[] = [
     recast1000ms: 90,
     job: [19],
     minLevel: 52,
-    scope: SOLO,
+    scope: SELF,
   },
   {
     // 战栗
@@ -65,7 +69,7 @@ const keigennSkills: KeigennSkill[] = [
     recast1000ms: 90,
     job: [21],
     minLevel: 30,
-    scope: SOLO,
+    scope: SELF,
   },
   {
     // 泰然自若
@@ -73,7 +77,7 @@ const keigennSkills: KeigennSkill[] = [
     recast1000ms: 60,
     job: [21],
     minLevel: 58,
-    scope: SOLO,
+    scope: SELF,
   },
   {
     // 弃明投暗
@@ -81,7 +85,7 @@ const keigennSkills: KeigennSkill[] = [
     recast1000ms: 60,
     job: [32],
     minLevel: 45,
-    scope: SOLO,
+    scope: SELF,
   },
   {
     // 献奉
@@ -89,7 +93,7 @@ const keigennSkills: KeigennSkill[] = [
     recast1000ms: 30,
     job: [32],
     minLevel: 82,
-    scope: SOLO,
+    scope: SELF,
     maxCharges: 2,
   },
   {
@@ -98,7 +102,7 @@ const keigennSkills: KeigennSkill[] = [
     recast1000ms: 15,
     job: [32],
     minLevel: 70,
-    scope: SOLO,
+    scope: PARTY,
   },
   {
     // 原初的血气
@@ -106,7 +110,7 @@ const keigennSkills: KeigennSkill[] = [
     recast1000ms: 25,
     job: [21],
     minLevel: 56,
-    scope: SOLO,
+    scope: SELF,
   },
   {
     // 刚玉之心
@@ -114,7 +118,7 @@ const keigennSkills: KeigennSkill[] = [
     recast1000ms: 25,
     job: [37],
     minLevel: 68,
-    scope: SOLO,
+    scope: SELF,
   },
   {
     // 圣盾阵
@@ -122,7 +126,17 @@ const keigennSkills: KeigennSkill[] = [
     recast1000ms: 5,
     job: [19],
     minLevel: 35,
-    scope: SOLO,
+    scope: SELF,
+    showResource: true,
+    resourceCost: 50,
+  },
+  {
+    // 干预
+    id: 7382,
+    recast1000ms: 5,
+    job: [19],
+    minLevel: 62,
+    scope: OTHER,
     showResource: true,
     resourceCost: 50,
   },
@@ -132,7 +146,7 @@ const keigennSkills: KeigennSkill[] = [
     recast1000ms: 120,
     job: [2, 4, 5, 20, 22, 23, 29, 30, 31, 34, 38, 39, 41],
     minLevel: 1,
-    scope: SOLO,
+    scope: SELF,
   },
   {
     // 浴血
@@ -140,7 +154,7 @@ const keigennSkills: KeigennSkill[] = [
     recast1000ms: 90,
     job: [2, 20, 4, 22, 29, 30, 34, 39, 41],
     minLevel: 12,
-    scope: SOLO,
+    scope: SELF,
   },
   // {
   //   // 庇护所

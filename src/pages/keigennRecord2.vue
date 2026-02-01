@@ -1046,7 +1046,7 @@ function getKeySkillSnapshot(
   return skillSnapshotSkeletonCache
     .filter((v) => {
       if (v.scope === 'party') return true
-      if (v.scope === 'solo') return v.ownerId === targetId
+      if (v.scope === 'self') return v.ownerId === targetId
       if (v.scope === 'other') return v.ownerId !== targetId
       return false
     })

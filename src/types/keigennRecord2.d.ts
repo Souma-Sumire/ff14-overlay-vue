@@ -2,7 +2,7 @@ import type { FFIcon } from '@/types/fflogs'
 import type { DamageEffect, DamageType } from '@/utils/flags'
 import type { DynamicValue } from '@/types/keySkill'
 
-export type Scope = 'solo' | 'party' | 'other'
+export type Scope = 'self' | 'party' | 'other'
 
 export { DynamicValue }
 
