@@ -162,6 +162,16 @@ const raidbuffs: KeySkill[] = [
     minLevel: 64,
   },
   {
+    key: 'preset_7433',
+    id: 7433,
+    tts: '全大赦',
+    duration: 10,
+    recast1000ms: 60,
+    job: [24],
+    line: 2,
+    minLevel: 70,
+  },
+  {
     key: 'preset_16536',
     id: 16536,
     tts: '节制',

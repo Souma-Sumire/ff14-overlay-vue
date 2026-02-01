@@ -1056,9 +1056,9 @@ function getKeySkillSnapshot(
             ownerJobName: Util.jobToFullName(Util.jobEnumToJob(player.job))
               .simple2!,
             maxCharges: parseDynamicValue(skill.maxCharges || 1, level),
-            jobResource: skill.showResource ? resourceManager.getResource(player.job, player.id) : undefined,
-            resourceCost: skill.resourceCost,
             scope: skill.scope,
+            showResource: skill.showResource,
+            resourceCost: skill.resourceCost,
           }
         })
     })
@@ -1101,13 +1101,28 @@ function getKeySkillSnapshot(
       }
     }
 
-    const ready = chargesReady > 0 && (item.jobResource === undefined || item.jobResource >= (item.resourceCost ?? 1))
+    const jobResource = item.showResource ? resourceManager.getResource(item.ownerJob, item.ownerId) : undefined
+    const isResourceReady = item.resourceCost === undefined 
+      ? true 
+      : resourceManager.isResourceReady(item.ownerJob, item.ownerId, item.id, item.resourceCost)
+
+    const ready = chargesReady > 0 && isResourceReady
+
+    const extraText = resourceManager.getExtraText(
+      item.ownerJob,
+      item.ownerId,
+      item.id,
+      timestamp,
+      cooldownTracker[item.ownerId] || {},
+    )
 
     return {
       ...item,
+      jobResource,
       recastLeft,
       ready,
       chargesReady,
+      extraText,
     }
   })
 }

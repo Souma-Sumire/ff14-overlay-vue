@@ -706,11 +706,14 @@ defineExpose({
                       <div class="skill-wrapper">
                         <div class="skill-icon-container" :title="`${skill.ownerName} (${skill.ownerJobName})`">
                           <img :src="skill.icon" class="skill-icon" />
-                          <div v-if="skill.recastLeft > 0" class="skill-overlay" />
+                          <div v-if="!skill.ready" class="skill-overlay" />
                           <span v-if="skill.recastLeft > 0" class="skill-text">{{ skill.recastLeft }}</span>
                           <span v-if="skill.maxCharges && skill.maxCharges > 1" class="skill-charges">{{ skill.chargesReady }}</span>
-                          <span v-if="skill.jobResource !== undefined" class="skill-resource" :style="{ fontSize: skill.jobResource.toString().length > 2 ? '9px' : '11px' }">{{ skill.jobResource }}</span>
-                          <span v-if="isDuplicateSkill(getAllSkills(hoveredRow), skill.id)" class="skill-job-name">{{ getSimpleJobName(skill.ownerJob) }}</span>
+                          <span v-if="skill.jobResource !== undefined" class="skill-resource"
+        :style="{ fontSize: skill.jobResource.toString().length > 2 ? '9px' : '11px' }">{{ skill.jobResource }}</span>
+      <span v-if="skill.extraText" class="skill-extra-text">{{ skill.extraText }}</span>
+      <span v-if="isDuplicateSkill(getAllSkills(hoveredRow), skill.id)" class="skill-job-name">{{
+        getSimpleJobName(skill.ownerJob) }}</span>
                         </div>
                       </div>
                     </template>
@@ -1150,6 +1153,19 @@ body .el-popover.keigenn-global-popover {
             transform: scale(0.7);
             transform-origin: right top;
             color: #64b5f6;
+            font-weight: bold;
+            font-size: 11px;
+            z-index: 3;
+            text-shadow: -1px 0 1.5px #000, 0 1px 1.5px #000, 1px 0 1.5px #000, 0 -1px 1.5px #000;
+          }
+
+          .skill-extra-text {
+            position: absolute;
+            top: -1px;
+            left: 0px;
+            transform: scale(0.7);
+            transform-origin: left top;
+            color: #ff9800;
             font-weight: bold;
             font-size: 11px;
             z-index: 3;

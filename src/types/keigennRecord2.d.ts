@@ -78,6 +78,8 @@ export interface KeySkillSnapshot {
   scope: Scope
   jobResource?: number
   resourceCost?: number
+  showResource?: boolean
+  extraText?: string
 }
 
 export interface Status {

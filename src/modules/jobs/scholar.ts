@@ -8,6 +8,7 @@ const SCH_ACTION_IDS = {
   INDOMITABILITY: 3583, // 不屈不挠之策
   SACRED_SOIL: 188, // 野战治疗阵
   EXCOGITATION: 7434, // 深谋远虑之策
+  RECITATION: 16542, // 秘策
 }
 
 const SCH_STATUS_IDS = {
@@ -27,6 +28,30 @@ export class ScholarTracker implements ResourceTracker {
 
   public getResource(characterId: string): number | undefined {
     return this.stacks[characterId] ?? 0
+  }
+
+  public isReady(characterId: string, skillId: number, cost: number): boolean {
+    // 如果有秘策，且技能是不屈(3583)或深谋(7434)，则无视消耗
+    if (this.recitation[characterId] && (skillId === SCH_ACTION_IDS.INDOMITABILITY || skillId === SCH_ACTION_IDS.EXCOGITATION)) {
+      return true
+    }
+    return (this.stacks[characterId] ?? 0) >= cost
+  }
+
+  public getExtraText(_characterId: string, skillId: number, timestamp: number, allCooldowns: Record<number, number[]>): string {
+    // 仅针对不屈(3583)和深谋(7434)显示秘策(16542)的冷却
+    if (skillId === SCH_ACTION_IDS.INDOMITABILITY || skillId === SCH_ACTION_IDS.EXCOGITATION) {
+      const recHistory = allCooldowns[SCH_ACTION_IDS.RECITATION] ?? []
+      if (recHistory.length > 0) {
+        const lastUsed = recHistory[recHistory.length - 1]!
+        const recRecastMs = 90000
+        const recFreeAt = lastUsed + recRecastMs
+        if (timestamp < recFreeAt) {
+          return Math.ceil((recFreeAt - timestamp) / 1000).toString()
+        }
+      }
+    }
+    return ''
   }
 
   public processLine(type: string, splitLine: string[]) {

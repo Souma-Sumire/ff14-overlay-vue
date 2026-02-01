@@ -48,4 +48,21 @@ export class JobResourceManager {
     }
     return undefined
   }
+
+  public isResourceReady(jobEnum: number, characterId: string, skillId: number, cost: number): boolean {
+    const tracker = this.activeTrackers.get(jobEnum)
+    if (tracker && tracker.isReady) {
+      return tracker.isReady(characterId, skillId, cost)
+    }
+    const resource = this.getResource(jobEnum, characterId) ?? 0
+    return resource >= cost
+  }
+
+  public getExtraText(jobEnum: number, characterId: string, skillId: number, timestamp: number, allCooldowns: Record<number, number[]>): string {
+    const tracker = this.activeTrackers.get(jobEnum)
+    if (tracker && tracker.getExtraText) {
+      return tracker.getExtraText(characterId, skillId, timestamp, allCooldowns)
+    }
+    return ''
+  }
 }
