@@ -221,7 +221,6 @@ function beforeHandle() {
   povId = ''
   rowCounter = 0
   colorCache.clear()
-  invalidateJobCache()
   skillMapCache.clear()
   rsvData = {}
   resourceManager.clear()
