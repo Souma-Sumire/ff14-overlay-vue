@@ -1048,7 +1048,7 @@ function getKeySkillSnapshot(
           return {
             id,
             name: getActionChinese(id) || 'Unknown',
-            icon: idToSrc(id),
+            icon: idToSrc(skill.overrideIconId ?? id),
             recast1000ms: recast,
             ownerId: player.id,
             ownerName: player.name,

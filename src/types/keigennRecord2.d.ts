@@ -15,6 +15,7 @@ export interface KeigennSkill {
   scope: Scope
   showResource?: boolean
   resourceCost?: number
+  overrideIconId?: number
 }
 
 export interface RowVO {
