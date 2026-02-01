@@ -132,22 +132,22 @@ const keigennSkills: KeigennSkill[] = [
     minLevel: 12,
     scope: SOLO,
   },
-  {
-    // 庇护所
-    id: 3569,
-    recast1000ms: 90,
-    job: [24],
-    minLevel: 52,
-    scope: PARTY,
-  },
-  {
-    // 法令
-    id: 3571,
-    recast1000ms: 40,
-    job: [24],
-    minLevel: 56,
-    scope: PARTY,
-  },
+  // {
+  //   // 庇护所
+  //   id: 3569,
+  //   recast1000ms: 90,
+  //   job: [24],
+  //   minLevel: 52,
+  //   scope: PARTY,
+  // },
+  // {
+  //   // 法令
+  //   id: 3571,
+  //   recast1000ms: 40,
+  //   job: [24],
+  //   minLevel: 56,
+  //   scope: PARTY,
+  // },
   {
     // 神名
     id: 3570,
