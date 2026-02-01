@@ -191,6 +191,8 @@ const keigennSkills: KeigennSkill[] = [
     job: [32],
     minLevel: 70,
     scope: PARTY,
+    showResource: true,
+    resourceCost: 3000,
   },
   {
     // 献奉

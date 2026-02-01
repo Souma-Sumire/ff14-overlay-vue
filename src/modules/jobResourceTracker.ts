@@ -2,6 +2,7 @@ import type { ResourceTracker } from '@/types/JobResource'
 import { ScholarTracker } from './jobs/scholar'
 import { PaladinTracker } from './jobs/paladin'
 import { SageTracker } from './jobs/sage'
+import { DarkKnightTracker } from './jobs/darkKnight'
 
 /**
  * 职业资源管理器
@@ -15,6 +16,7 @@ export class JobResourceManager {
      this.allTrackers.set(28, ScholarTracker)
      this.allTrackers.set(19, PaladinTracker)
      this.allTrackers.set(40, SageTracker)
+     this.allTrackers.set(32, DarkKnightTracker)
   }
 
   /** 根据当前队伍职业动态开启 Tracker */
