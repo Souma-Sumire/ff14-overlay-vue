@@ -117,6 +117,16 @@ const keigennSkills: KeigennSkill[] = [
     scope: SOLO,
   },
   {
+    // 圣盾阵
+    id: `(lv) => lv>=82 ? 25746 : 3542`,
+    recast1000ms: 5,
+    job: [19],
+    minLevel: 35,
+    scope: SOLO,
+    showResource: true,
+    resourceCost: 50,
+  },
+  {
     // 内丹
     id: 7541,
     recast1000ms: 120,
