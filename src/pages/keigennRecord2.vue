@@ -1044,7 +1044,12 @@ function getKeySkillSnapshot(
   if (!skillSnapshotSkeletonCache) return []
 
   return skillSnapshotSkeletonCache
-    .filter((v) => (v.scope === 'party' ? true : v.ownerId === targetId))
+    .filter((v) => {
+      if (v.scope === 'party') return true
+      if (v.scope === 'solo') return v.ownerId === targetId
+      if (v.scope === 'other') return v.ownerId !== targetId
+      return false
+    })
     .map((item) => {
     const history = cooldownTracker[item.ownerId]?.[item.id] ?? []
     const maxCharges = item.maxCharges || 1
