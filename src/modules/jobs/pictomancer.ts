@@ -1,5 +1,5 @@
-import type { ResourceTracker } from '@/types/JobResource'
 import logDefinitions from '../../../cactbot/resources/netlog_defs'
+import { BaseTracker } from './baseTracker'
 
 const PCT_ACTION_IDS = {
   TEMPERA_COAT: 34685, // 坦培拉涂层
@@ -20,12 +20,26 @@ interface ActiveShield {
  * 绘灵法师资源追踪器
  * 主要逻辑：监控坦培拉涂层护盾是否因吸收伤害而提前破碎，并缩短其复唱时间。
  */
-export class PictomancerTracker implements ResourceTracker {
+export class PictomancerTracker extends BaseTracker {
   // characterId -> 活跃护盾信息
   private activeShields: Record<string, ActiveShield> = {}
   // 记录刚刚消失的涂层，用于判定是破碎还是转化为油性。
   // characterId -> 消失时的日志时间戳
   private pendingTransitions: Record<string, number> = {}
+
+  protected cleanupRedundantPlayers() {
+    // 清理不再追踪的 ID
+    for (const id in this.activeShields) {
+      if (!this.playerIds.has(id)) {
+        delete this.activeShields[id]
+      }
+    }
+    for (const id in this.pendingTransitions) {
+      if (!this.playerIds.has(id)) {
+        delete this.pendingTransitions[id]
+      }
+    }
+  }
 
   public reset() {
     this.activeShields = {}
@@ -60,6 +74,8 @@ export class PictomancerTracker implements ResourceTracker {
       case '26': // GainsEffect (获得状态)
         {
           const targetId = splitLine[logDefinitions.GainsEffect.fields.targetId]!
+          if (!this.playerIds.has(targetId))
+            return
           const effectId = Number.parseInt(splitLine[logDefinitions.GainsEffect.fields.effectId]!, 16)
           const durationStr = splitLine[logDefinitions.GainsEffect.fields.duration]
           const duration = durationStr ? Number.parseFloat(durationStr) : 0
@@ -80,6 +96,8 @@ export class PictomancerTracker implements ResourceTracker {
       case '30': // LosesEffect (状态消失)
         {
           const targetId = splitLine[logDefinitions.LosesEffect.fields.targetId]!
+          if (!this.playerIds.has(targetId))
+            return
           const effectId = Number.parseInt(splitLine[logDefinitions.LosesEffect.fields.effectId]!, 16)
 
           if (effectId === PCT_STATUS_IDS.TEMPERA_COAT) {

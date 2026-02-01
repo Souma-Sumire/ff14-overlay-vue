@@ -1,5 +1,5 @@
-import type { ResourceTracker } from '@/types/JobResource'
 import logDefinitions from '../../../cactbot/resources/netlog_defs'
+import { BaseTracker } from './baseTracker'
 
 const SGE_ACTION_IDS = {
   DRUOCHOLE: 24296, // 灵橡清汁
@@ -9,11 +9,20 @@ const SGE_ACTION_IDS = {
   RHIZOMATA: 24309, // 根素
 }
 
-export class SageTracker implements ResourceTracker {
+export class SageTracker extends BaseTracker {
   // characterId -> current stacks (0-3)
   private stacks: Record<string, number> = {}
   // characterId -> last generation timestamp
   private lastGenTime: Record<string, number> = {}
+
+  protected cleanupRedundantPlayers() {
+    for (const id in this.stacks) {
+      if (!this.playerIds.has(id)) {
+        delete this.stacks[id]
+        delete this.lastGenTime[id]
+      }
+    }
+  }
 
   public reset() {
     this.stacks = {}
@@ -40,8 +49,8 @@ export class SageTracker implements ResourceTracker {
       case '22':
         {
           const sourceId = splitLine[logDefinitions.Ability.fields.sourceId]!
-          if (!sourceId.startsWith('1'))
-            return // 只跟踪玩家
+          if (!this.playerIds.has(sourceId))
+            return // 只跟踪对应的贤者玩家
 
           this.updateStacks(sourceId, timestamp)
 
@@ -66,8 +75,10 @@ export class SageTracker implements ResourceTracker {
       case '25': // Death
         {
           const targetId = splitLine[logDefinitions.WasDefeated.fields.targetId]!
-          this.stacks[targetId] = 0
-          delete this.lastGenTime[targetId]
+          if (this.playerIds.has(targetId)) {
+            this.stacks[targetId] = 0
+            delete this.lastGenTime[targetId]
+          }
         }
         break
     }

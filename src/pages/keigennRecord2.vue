@@ -942,20 +942,27 @@ function invalidateJobCache() {
 }
 
 function updateResourceManagerJobs() {
-  const jobs = new Set<number>()
-  partyEventParty.forEach(p => jobs.add(p.job))
+  const partyInfo = new Map<number, string[]>()
+  const add = (job: number, id: string) => {
+    if (!job || !id)
+      return
+    if (!partyInfo.has(job))
+      partyInfo.set(job, [])
+    partyInfo.get(job)!.push(id)
+  }
+
+  partyEventParty.forEach(p => add(p.job, p.id))
   if (povId) {
     const pov = partyEventParty.find(p => p.id === povId) || entitiesMap[povId]
     if (pov)
-      jobs.add(pov.job)
+      add(pov.job, povId)
   }
-  // 如果当前正在处理 LogLine 的列表，也可以加入进来
   partyLogList.forEach((id) => {
     const info = entitiesMap[id]
     if (info)
-      jobs.add(info.job)
+      add(info.job, id)
   })
-  resourceManager.updateParty(jobs)
+  resourceManager.updateParty(partyInfo)
 }
 
 function getJobById(targetId: string) {

@@ -1,9 +1,17 @@
-import type { ResourceTracker } from '@/types/JobResource'
 import logDefinitions from '../../../cactbot/resources/netlog_defs'
+import { BaseTracker } from './baseTracker'
 
-export class DarkKnightTracker implements ResourceTracker {
+export class DarkKnightTracker extends BaseTracker {
   // characterId -> current mp
   private mp: Record<string, number> = {}
+
+  protected cleanupRedundantPlayers() {
+    for (const id in this.mp) {
+      if (!this.playerIds.has(id)) {
+        delete this.mp[id]
+      }
+    }
+  }
 
   public reset() {
     this.mp = {}
@@ -19,7 +27,7 @@ export class DarkKnightTracker implements ResourceTracker {
       case '22':
         {
           const sourceId = splitLine[logDefinitions.Ability.fields.sourceId]!
-          if (!sourceId.startsWith('1'))
+          if (!this.playerIds.has(sourceId))
             return
 
           const currentMp = Number.parseInt(splitLine[logDefinitions.Ability.fields.currentMp]!)
@@ -32,7 +40,7 @@ export class DarkKnightTracker implements ResourceTracker {
       case '24': // DoT
         {
           const sourceId = splitLine[logDefinitions.NetworkDoT.fields.sourceId]!
-          if (sourceId.startsWith('1')) {
+          if (this.playerIds.has(sourceId)) {
             const sourceMp = Number.parseInt(splitLine[logDefinitions.NetworkDoT.fields.sourceCurrentMp]!)
             if (!Number.isNaN(sourceMp)) {
               this.mp[sourceId] = sourceMp
@@ -40,7 +48,7 @@ export class DarkKnightTracker implements ResourceTracker {
           }
 
           const targetId = splitLine[logDefinitions.NetworkDoT.fields.id]!
-          if (targetId.startsWith('1')) {
+          if (this.playerIds.has(targetId)) {
             const targetMp = Number.parseInt(splitLine[logDefinitions.NetworkDoT.fields.currentMp]!)
             if (!Number.isNaN(targetMp)) {
               this.mp[targetId] = targetMp

@@ -1,5 +1,5 @@
-import type { ResourceTracker } from '@/types/JobResource'
 import logDefinitions from '../../../cactbot/resources/netlog_defs'
+import { BaseTracker } from './baseTracker'
 
 const SCH_ACTION_IDS = {
   AETHERFLOW: 166, // 以太超流
@@ -15,13 +15,23 @@ const SCH_STATUS_IDS = {
   RECITATION: 1896, // 秘策
 }
 
-export class ScholarTracker implements ResourceTracker {
+export class ScholarTracker extends BaseTracker {
   // characterId -> current stacks (0-3)
   private stacks: Record<string, number> = {}
   // characterId -> has recitation buff
   private recitation: Record<string, boolean> = {}
   // characterId -> last usage of Recitation
   private lastRecitationUsed: Record<string, number> = {}
+
+  protected cleanupRedundantPlayers() {
+    for (const id in this.stacks) {
+      if (!this.playerIds.has(id)) {
+        delete this.stacks[id]
+        delete this.recitation[id]
+        delete this.lastRecitationUsed[id]
+      }
+    }
+  }
 
   public reset() {
     this.stacks = {}
@@ -62,6 +72,9 @@ export class ScholarTracker implements ResourceTracker {
       case '22':
         {
           const sourceId = splitLine[logDefinitions.Ability.fields.sourceId]!
+          if (!this.playerIds.has(sourceId))
+            return
+
           const id = Number.parseInt(splitLine[logDefinitions.Ability.fields.id]!, 16)
           const timestamp = new Date(splitLine[logDefinitions.Ability.fields.timestamp]!).getTime()
 
@@ -91,9 +104,11 @@ export class ScholarTracker implements ResourceTracker {
 
       case '26': // GainsEffect
         {
+          const targetId = splitLine[logDefinitions.GainsEffect.fields.targetId]!
+          if (!this.playerIds.has(targetId))
+            return
           const effectId = Number.parseInt(splitLine[logDefinitions.GainsEffect.fields.effectId]!, 16)
           if (effectId === SCH_STATUS_IDS.RECITATION) {
-            const targetId = splitLine[logDefinitions.GainsEffect.fields.targetId]!
             this.recitation[targetId] = true
           }
         }
@@ -101,9 +116,11 @@ export class ScholarTracker implements ResourceTracker {
 
       case '30': // LosesEffect
         {
+          const targetId = splitLine[logDefinitions.LosesEffect.fields.targetId]!
+          if (!this.playerIds.has(targetId))
+            return
           const effectId = Number.parseInt(splitLine[logDefinitions.LosesEffect.fields.effectId]!, 16)
           if (effectId === SCH_STATUS_IDS.RECITATION) {
-            const targetId = splitLine[logDefinitions.LosesEffect.fields.targetId]!
             delete this.recitation[targetId]
           }
         }
@@ -112,7 +129,9 @@ export class ScholarTracker implements ResourceTracker {
       case '25': // Death
         {
           const targetId = splitLine[logDefinitions.WasDefeated.fields.targetId]!
-          this.stacks[targetId] = 0
+          if (this.playerIds.has(targetId)) {
+            this.stacks[targetId] = 0
+          }
         }
         break
     }

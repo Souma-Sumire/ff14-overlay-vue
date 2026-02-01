@@ -22,14 +22,16 @@ export class JobResourceManager {
   }
 
   /** 根据当前队伍职业动态开启 Tracker */
-  public updateParty(jobEnums: Iterable<number>) {
-    const jobSet = new Set(jobEnums)
-
+  public updateParty(partyInfo: Map<number, string[]>) {
     // 仅添加新出现的职业 Tracker，不移除已存在的（防止战斗中因小队变动导致数据丢失）
-    for (const job of jobSet) {
+    for (const [job, ids] of partyInfo.entries()) {
       const TrackerClass = this.allTrackers.get(job)
-      if (TrackerClass && !this.activeTrackers.has(job)) {
-        this.activeTrackers.set(job, new TrackerClass())
+      if (TrackerClass) {
+        if (!this.activeTrackers.has(job)) {
+          this.activeTrackers.set(job, new TrackerClass())
+        }
+        const tracker = this.activeTrackers.get(job)!
+        tracker.updateTrackedPlayers(ids)
       }
     }
   }

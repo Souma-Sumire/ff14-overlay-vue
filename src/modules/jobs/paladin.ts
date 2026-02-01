@@ -1,5 +1,5 @@
-import type { ResourceTracker } from '@/types/JobResource'
 import logDefinitions from '../../../cactbot/resources/netlog_defs'
+import { BaseTracker } from './baseTracker'
 
 const PLD_ACTION_IDS = {
   ATTACK: 7, // 攻击
@@ -9,9 +9,17 @@ const PLD_ACTION_IDS = {
   COVER: 27, // 保护
 }
 
-export class PaladinTracker implements ResourceTracker {
+export class PaladinTracker extends BaseTracker {
   // characterId -> current oath (0-100)
   private gauge: Record<string, number> = {}
+
+  protected cleanupRedundantPlayers() {
+    for (const id in this.gauge) {
+      if (!this.playerIds.has(id)) {
+        delete this.gauge[id]
+      }
+    }
+  }
 
   public reset() {
     this.gauge = {}
@@ -27,6 +35,8 @@ export class PaladinTracker implements ResourceTracker {
       case '22':
         {
           const sourceId = splitLine[logDefinitions.Ability.fields.sourceId]!
+          if (!this.playerIds.has(sourceId))
+            return
           const id = Number.parseInt(splitLine[logDefinitions.Ability.fields.id]!, 16)
 
           if (id === PLD_ACTION_IDS.ATTACK) {
@@ -46,7 +56,9 @@ export class PaladinTracker implements ResourceTracker {
       case '25': // Death
         {
           const targetId = splitLine[logDefinitions.WasDefeated.fields.targetId]!
-          this.gauge[targetId] = 0
+          if (this.playerIds.has(targetId)) {
+            this.gauge[targetId] = 0
+          }
         }
         break
     }
