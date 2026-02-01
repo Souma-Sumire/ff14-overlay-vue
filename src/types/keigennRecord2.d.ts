@@ -11,7 +11,7 @@ export interface KeigennSkill {
   recast1000ms: DynamicValue
   job: number[]
   minLevel: number
-  maxCharges?: number
+  maxCharges?: DynamicValue
   scope: Scope
 }
 
