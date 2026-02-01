@@ -9,6 +9,7 @@ import { copyToClipboard } from '@/utils/clipboard'
 import Util from '@/utils/util'
 import { handleImgError } from '@/utils/xivapi'
 import { useLang } from '@/composables/useLang'
+import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 const { t } = useLang()
 
 const props = defineProps<{
@@ -609,6 +610,17 @@ const getSimpleJobName = (jobEnum: number) => {
   return Util.jobToFullName(Util.jobEnumToJob(jobEnum))?.simple1 ?? ''
 }
 
+const getAllSkills = (row: RowVO) => {
+  const all = [...row.preCalculated.coolingDownSkills, ...row.preCalculated.readySkills]
+  return all.sort((a, b) => {
+    if (a.scope !== b.scope) return a.scope === 'party' ? -1 : 1
+    if (a.ownerJob !== b.ownerJob) {
+      return DEFAULT_JOB_SORT_ORDER.indexOf(a.ownerJob) - DEFAULT_JOB_SORT_ORDER.indexOf(b.ownerJob)
+    }
+    return a.id - b.id
+  })
+}
+
 defineExpose({
   scrollToBottom,
 })
@@ -688,42 +700,24 @@ defineExpose({
 
             <template v-else-if="hoveredRow && tooltipMode === 'skills'">
               <div class="skill-popover-content">
-                <template v-if="hoveredRow.preCalculated.coolingDownSkills.length > 0">
-                  <div class="subtitle">{{ t('keigennRecord.coolingDown') }}</div>
+                <template v-if="getAllSkills(hoveredRow).length > 0">
                   <div class="skill-grid">
-                    <template v-for="skill in hoveredRow.preCalculated.coolingDownSkills" :key="`${skill.id}-${skill.ownerId}`">
+                    <template v-for="skill in getAllSkills(hoveredRow)" :key="`${skill.id}-${skill.ownerId}`">
                       <div class="skill-wrapper">
                         <div class="skill-icon-container" :title="`${skill.ownerName} (${skill.ownerJobName})`">
                           <img :src="skill.icon" class="skill-icon" />
-                          <div class="skill-overlay" />
+                          <div v-if="skill.recastLeft > 0" class="skill-overlay" />
                           <span v-if="skill.recastLeft > 0" class="skill-text">{{ skill.recastLeft }}</span>
                           <span v-if="skill.maxCharges && skill.maxCharges > 1" class="skill-charges">{{ skill.chargesReady }}</span>
                           <span v-if="skill.jobResource !== undefined" class="skill-resource" :style="{ fontSize: skill.jobResource.toString().length > 2 ? '9px' : '11px' }">{{ skill.jobResource }}</span>
-                          <span v-if="isDuplicateSkill(hoveredRow.preCalculated.coolingDownSkills, skill.id)" class="skill-job-name">{{ getSimpleJobName(skill.ownerJob) }}</span>
+                          <span v-if="isDuplicateSkill(getAllSkills(hoveredRow), skill.id)" class="skill-job-name">{{ getSimpleJobName(skill.ownerJob) }}</span>
                         </div>
                       </div>
                     </template>
                   </div>
                 </template>
 
-                <template v-if="hoveredRow.preCalculated.readySkills.length > 0">
-                  <el-divider v-if="hoveredRow.preCalculated.coolingDownSkills.length > 0" />
-                  <div class="subtitle">{{ t('keigennRecord.ready') || '可用' }}</div>
-                  <div class="skill-grid">
-                    <template v-for="skill in hoveredRow.preCalculated.readySkills" :key="`${skill.id}-${skill.ownerId}`">
-                      <div class="skill-wrapper">
-                        <div class="skill-icon-container" :title="`${skill.ownerName} (${skill.ownerJobName})`">
-                          <img :src="skill.icon" class="skill-icon" />
-                          <span v-if="skill.maxCharges && skill.maxCharges > 1" class="skill-charges">{{ skill.chargesReady }}</span>
-                          <span v-if="skill.jobResource !== undefined" class="skill-resource" :style="{ fontSize: skill.jobResource.toString().length > 2 ? '9px' : '11px' }">{{ skill.jobResource }}</span>
-                          <span v-if="isDuplicateSkill(hoveredRow.preCalculated.readySkills, skill.id)" class="skill-job-name">{{ getSimpleJobName(skill.ownerJob) }}</span>
-                        </div>
-                      </div>
-                    </template>
-                  </div>
-                </template>
-
-                <div v-if="hoveredRow.preCalculated.coolingDownSkills.length === 0 && hoveredRow.preCalculated.readySkills.length === 0" class="no-data">
+                <div v-if="getAllSkills(hoveredRow).length === 0" class="no-data">
                   {{ t('keigennRecord.noData') }}
                 </div>
               </div>
@@ -1106,7 +1100,7 @@ body .el-popover.keigenn-global-popover {
           .skill-overlay {
             position: absolute;
             inset: 0;
-            background-color: rgba(0, 0, 0, 0.35);
+            background-color: rgba(0, 0, 0, 0.5);
             z-index: 1;
           }
 

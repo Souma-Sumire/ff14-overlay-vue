@@ -1,11 +1,9 @@
 import { defineStore } from 'pinia'
+import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 
 const usePartySortStore = defineStore('partySort', {
   state: () => ({
-    arr: useStorage('cactbotRuntime-sortArr', [
-      21, 19, 32, 37, 24, 33, 40, 28, 34, 30, 39, 22, 20, 41, 23, 31, 38, 25,
-      27, 35, 42, 36,
-    ] as number[]),
+    arr: useStorage('cactbotRuntime-sortArr', [...DEFAULT_JOB_SORT_ORDER]),
   }),
 })
 
