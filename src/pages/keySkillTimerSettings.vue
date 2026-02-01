@@ -1,14 +1,14 @@
 <script setup lang="ts">
+import { Download, Plus, RefreshLeft, Search, Upload } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import * as LZString from 'lz-string'
-import { ref, watch, shallowRef, onMounted } from 'vue'
-import { getActionChinese, searchActions, initActionChinese } from '@/resources/actionChinese'
+import { onMounted, ref, shallowRef, watch } from 'vue'
+import ActionIcon from '@/components/keySkillTimer/ActionIcon.vue'
+import { useLang } from '@/composables/useLang'
+import { getActionChinese, initActionChinese, searchActions } from '@/resources/actionChinese'
 import { raidbuffs } from '@/resources/raidbuffs'
 import { useKeySkillStore } from '@/store/keySkills'
 import { copyToClipboard } from '@/utils/clipboard'
-import { useLang } from '@/composables/useLang'
-import ActionIcon from '@/components/keySkillTimer/ActionIcon.vue'
-import { Plus, Search, Download, Upload, RefreshLeft } from '@element-plus/icons-vue'
 
 const { t } = useLang()
 const storeKeySkill = useKeySkillStore()
@@ -17,9 +17,11 @@ const isResourcesLoaded = ref(false)
 onMounted(async () => {
   try {
     await initActionChinese()
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Failed to load resources', e)
-  } finally {
+  }
+  finally {
     isResourcesLoaded.value = true
   }
 })
@@ -32,7 +34,7 @@ function resetToDefault() {
       confirmButtonText: t('keySkillTimerSettings.confirmBtn'),
       cancelButtonText: t('keySkillTimerSettings.cancelBtn'),
       type: 'warning',
-    }
+    },
   )
     .then(() => {
       storeKeySkill.keySkillsData.chinese = [...raidbuffs]
@@ -44,7 +46,7 @@ function resetToDefault() {
 function addSkillById(id: number, name: string | undefined) {
   storeKeySkill.keySkillsData.chinese.unshift({
     key: crypto.randomUUID(),
-    id: id,
+    id,
     tts: name || '',
     duration: 0,
     recast1000ms: 0,
@@ -57,15 +59,18 @@ function addSkillById(id: number, name: string | undefined) {
 
 function deleteSkill(key: string) {
   const skills = storeKeySkill.keySkillsData.chinese
-  const index = skills.findIndex((skill) => skill.key === key)
-  if (index !== -1) skills.splice(index, 1)
+  const index = skills.findIndex(skill => skill.key === key)
+  if (index !== -1)
+    skills.splice(index, 1)
 }
 
 function moveSkill(from: number, to: number) {
   const skills = storeKeySkill.keySkillsData.chinese
-  if (to < 0 || to >= skills.length || from === to) return
+  if (to < 0 || to >= skills.length || from === to)
+    return
   const item = skills[from]
-  if (!item) return
+  if (!item)
+    return
   skills.splice(from, 1)
   skills.splice(to, 0, item)
 }
@@ -94,12 +99,13 @@ function importData(): void {
             return true
           }
           return t('keySkillTimerSettings.dataFormatError')
-        } catch (e) {
+        }
+        catch (e) {
           const message = e instanceof Error ? e.message : String(e)
           return `${t('keySkillTimerSettings.dataFormatError')}: ${message}`
         }
       },
-    }
+    },
   )
     .then(({ value }) => {
       if (value) {
@@ -108,7 +114,8 @@ function importData(): void {
         if (typeof data === 'object' && data !== null) {
           storeKeySkill.keySkillsData.chinese = data.chinese
           ElMessage.success(t('keySkillTimerSettings.importSuccess'))
-        } else {
+        }
+        else {
           ElMessage.error(t('keySkillTimerSettings.importFormatError'))
         }
       }
@@ -117,11 +124,12 @@ function importData(): void {
 }
 
 const searchText = ref('')
-const searchResult = shallowRef<Array<{ id: number; name: string }>>([])
+const searchResult = shallowRef<Array<{ id: number, name: string }>>([])
 let searchTimeout: number | undefined
 
 watch(searchText, (value) => {
-  if (searchTimeout) clearTimeout(searchTimeout)
+  if (searchTimeout)
+    clearTimeout(searchTimeout)
   searchTimeout = window.setTimeout(() => {
     searchResult.value = searchActions(value)
   }, 300)
@@ -277,7 +285,7 @@ watch(searchText, (value) => {
   padding: 12px 14px;
   border-bottom: 1px solid var(--el-border-color-extra-light);
   transition: all 0.2s;
-  
+
   &:last-child {
     border-bottom: none;
   }
@@ -291,7 +299,7 @@ watch(searchText, (value) => {
     display: flex;
     align-items: center;
     gap: 12px;
-    
+
     .name {
       font-size: 14px;
       font-weight: 500;
@@ -328,7 +336,7 @@ watch(searchText, (value) => {
     font-size: 14px;
     padding: 0 20px !important;
     border-right: 1px solid var(--el-border-color-lighter) !important;
-    
+
     &:first-child {
       border-top-left-radius: 4px;
     }

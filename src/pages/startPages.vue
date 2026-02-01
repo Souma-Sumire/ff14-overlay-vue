@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { type ComponentPublicInstance } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
+import type { Menu } from '@/resources/menuData'
 import { useLang } from '@/composables/useLang'
-import { getRawMenuData, MENU_ORDER, type Menu } from '@/resources/menuData'
+import { getRawMenuData, MENU_ORDER } from '@/resources/menuData'
 
 const { t, locale } = useLang()
 
@@ -40,7 +41,8 @@ const observer = new ResizeObserver(() => {
 
 onMounted(() => {
   const container = document.querySelector('.masonry')
-  if (container) observer.observe(container)
+  if (container)
+    observer.observe(container)
 })
 
 onUnmounted(() => {
@@ -82,7 +84,9 @@ watch(
       <el-header class="sticky-header">
         <div class="header-content">
           <div class="brand">
-            <h1 class="main-title">{{ t('startPages.header.title') }}</h1>
+            <h1 class="main-title">
+              {{ t('startPages.header.title') }}
+            </h1>
             <span class="version-tag">Project Souma</span>
           </div>
           <div class="header-actions">
@@ -95,7 +99,9 @@ watch(
       <el-main class="main-container">
         <el-card class="contact-card" shadow="hover">
           <template #header>
-            <div class="card-header">{{ t('startPages.contact.header') }}</div>
+            <div class="card-header">
+              {{ t('startPages.contact.header') }}
+            </div>
           </template>
           <div class="contact-info">
             <el-link
@@ -119,7 +125,7 @@ watch(
                   src="//pub.idqqimg.com/wpa/images/group.png"
                   :alt="t('startPages.contact.qq_group_alt')"
                   :title="t('startPages.contact.qq_group_alt')"
-                />
+                >
               </a>
             </span>
             <el-link
@@ -147,24 +153,19 @@ watch(
             }"
           >
             <el-card
+              :ref="(el) => setCardRef(el, item)"
               shadow="hover"
               class="menu-card"
               :body-style="{ padding: '10px' }"
-              :ref="(el) => setCardRef(el, item)"
             >
               <div class="card-header-row">
                 <div class="badge-group">
-                  <span v-if="item.isNew" class="subtle-badge floating new"
-                    >✨ {{ t('startPages.badge.new') }}</span
-                  >
-                  <span v-if="item.isHot" class="subtle-badge floating hot"
-                    >🔥 {{ t('startPages.badge.hot') }}</span
-                  >
+                  <span v-if="item.isNew" class="subtle-badge floating new">✨ {{ t('startPages.badge.new') }}</span>
+                  <span v-if="item.isHot" class="subtle-badge floating hot">🔥 {{ t('startPages.badge.hot') }}</span>
                   <span
                     v-if="item.isRecommended"
                     class="subtle-badge floating recommended"
-                    >⭐ {{ t('startPages.badge.recommended') }}</span
-                  >
+                  >⭐ {{ t('startPages.badge.recommended') }}</span>
                 </div>
                 <router-link
                   v-if="!item.path.startsWith('http')"
@@ -193,7 +194,6 @@ watch(
                 <div
                   v-if="item.comment"
                   class="card-comment"
-                  v-html="item.commentArgs ? t(item.comment, item.commentArgs) : t(item.comment)"
                   :style="{
                     marginLeft:
                       item.direction === 'row-reverse' ? '0.5em' : '0px',
@@ -203,6 +203,7 @@ watch(
                         ? '0.5em'
                         : '0',
                   }"
+                  v-html="item.commentArgs ? t(item.comment, item.commentArgs) : t(item.comment)"
                 />
                 <el-image
                   v-if="item.src"
@@ -210,7 +211,6 @@ watch(
                   fit="contain"
                   lazy
                   class="card-image"
-                  @load="updateSpans"
                   :preview-src-list="[item.src]"
                   preview-teleported
                   hide-on-click-modal
@@ -218,6 +218,7 @@ watch(
                     height: item.imageHeight ? `${item.imageHeight}px` : 'auto',
                     width: item.imageWidth ? `${item.imageWidth}px` : 'auto',
                   }"
+                  @load="updateSpans"
                 />
               </div>
             </el-card>

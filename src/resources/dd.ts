@@ -4,7 +4,7 @@ type MapKey = 'PT' | 'EO' | 'HoH' | 'PotD'
 
 type langString = Partial<Record<Lang, string>>
 
-type EnemyData = {
+interface EnemyData {
   // 难度： 简单       小心       危险
   grade?: 'easy' | 'caution' | 'danger'
   // 感知：  视觉       听觉        范围       BOSS
@@ -40,7 +40,7 @@ type EnemyData = {
 type EnemiesData = Record<number, EnemyData>
 type FloorTips = Record<number, string | langString>
 
-type DDInfo = { enemiesData: EnemiesData; floorTips: FloorTips }
+interface DDInfo { enemiesData: EnemiesData, floorTips: FloorTips }
 
 type Data = { zoneIDs: number[] } & DDInfo
 
@@ -706,10 +706,10 @@ const PT: Data = {
 const data: Data[] = [PT, EO, HoH, PotD]
 
 function getMaps(zoneID: number): DDInfo | undefined {
-  const mapData = data.find((map) => map.zoneIDs.includes(zoneID))
+  const mapData = data.find(map => map.zoneIDs.includes(zoneID))
   if (mapData) {
     return { enemiesData: mapData.enemiesData, floorTips: mapData.floorTips[mapData.zoneIDs.indexOf(zoneID) ?? 0] ?? '' }
   }
 }
 
-export { type EnemyData, type MapKey, getMaps, type DDInfo, type langString }
+export { type DDInfo, type EnemyData, getMaps, type langString, type MapKey }

@@ -1,27 +1,31 @@
-import { actionId2ClassJobLevel, initAction2ClassJobLevel } from './action2ClassJobLevel'
 import { shallowRef } from 'vue'
+import { actionId2ClassJobLevel, initAction2ClassJobLevel } from './action2ClassJobLevel'
 
 let rawActionChinese: Record<string, string> | null = null
 export const actionResourcesLoaded = shallowRef(false)
-let cachedActionList: Array<{ id: number; name: string }> | null = null
+let cachedActionList: Array<{ id: number, name: string }> | null = null
 let loadingPromise: Promise<void> | null = null
 
 async function initActionChinese() {
-  if (rawActionChinese) return
-  if (loadingPromise) return loadingPromise
+  if (rawActionChinese)
+    return
+  if (loadingPromise)
+    return loadingPromise
 
   loadingPromise = (async () => {
     try {
       const [module] = await Promise.all([
         import('./actionChinese.json'),
-        initAction2ClassJobLevel()
+        initAction2ClassJobLevel(),
       ])
       rawActionChinese = module.default
       actionResourcesLoaded.value = true
-    } catch (e) {
+    }
+    catch (e) {
       console.error('Failed to init action chinese:', e)
       throw e
-    } finally {
+    }
+    finally {
       loadingPromise = null
     }
   })()
@@ -39,31 +43,33 @@ function getCachedActionList() {
         }
         return null
       })
-      .filter((item): item is { id: number; name: string } => item !== null)
+      .filter((item): item is { id: number, name: string } => item !== null)
   }
   return cachedActionList || []
 }
 
 function getActionChinese(id: number): string | undefined {
-  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+  // eslint-disable-next-line ts/no-unused-expressions
   actionResourcesLoaded.value
   return rawActionChinese?.[id]
 }
 
-function searchActions(query: string, limit: number = 100): Array<{ id: number; name: string }> {
-  if (!query || !rawActionChinese) return []
-  
+function searchActions(query: string, limit: number = 100): Array<{ id: number, name: string }> {
+  if (!query || !rawActionChinese)
+    return []
+
   const list = getCachedActionList()
-  const result: Array<{ id: number; name: string }> = []
+  const result: Array<{ id: number, name: string }> = []
   const q = query.toLowerCase()
-  
+
   for (const item of list) {
     if (item.name.toLowerCase().includes(q) || item.id.toString().includes(q)) {
       result.push(item)
-      if (result.length >= limit) break
+      if (result.length >= limit)
+        break
     }
   }
   return result
 }
 
-export { getActionChinese, searchActions, initActionChinese }
+export { getActionChinese, initActionChinese, searchActions }

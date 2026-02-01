@@ -10,7 +10,7 @@ const displayAA = Number(
 </script>
 
 <template>
-  <div w-100vw flex="~ nowrap" class="main" m-t-1>
+  <div flex="~ nowrap" class="main" m-t-1 w-100vw>
     <div
       v-for="(item) in castingMonitorStore.castData.filter(v => v.key)" :key="item.key"
       :data-casterId="item.casterId"

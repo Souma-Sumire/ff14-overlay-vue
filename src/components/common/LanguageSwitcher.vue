@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { watch, onMounted } from 'vue'
-import { useStorage } from '@vueuse/core'
-import { useLang } from '@/composables/useLang'
 import type { Lang } from '@/types/lang'
+import { useStorage } from '@vueuse/core'
+import { onMounted, watch } from 'vue'
+import { useLang } from '@/composables/useLang'
 
 const props = defineProps({
   teleported: {

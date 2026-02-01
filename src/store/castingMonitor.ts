@@ -14,8 +14,26 @@ const THNSort = ['tank', 'healer', 'dps', 'crafter', 'gatherer', 'none']
 // ];
 
 const testActions = [
-  34563, 34564, 34565, 34566, 34567, 34568, 34569, 34570, 34571, 34572, 34573,
-  34574, 34575, 34576, 34577, 34578, 34579, 34580, 34581, 34582,
+  34563,
+  34564,
+  34565,
+  34566,
+  34567,
+  34568,
+  34569,
+  34570,
+  34571,
+  34572,
+  34573,
+  34574,
+  34575,
+  34576,
+  34577,
+  34578,
+  34579,
+  34580,
+  34581,
+  34582,
 ]
 export const useCastingMonitorStore = defineStore('castingMonitor', {
   state: () => {
@@ -48,25 +66,25 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
     partyDataFormatted(state) {
       return state.partyData.sort((a, b) => {
         return (
-          THNSort.indexOf(Util.jobToRole(Util.jobEnumToJob(a.job))) -
-          THNSort.indexOf(Util.jobToRole(Util.jobEnumToJob(b.job)))
+          THNSort.indexOf(Util.jobToRole(Util.jobEnumToJob(a.job)))
+          - THNSort.indexOf(Util.jobToRole(Util.jobEnumToJob(b.job)))
         )
       })
     },
     focusTargetCastArr(state) {
-      return state.castData.filter((v) => v.casterId === state.focusTargetId)
+      return state.castData.filter(v => v.casterId === state.focusTargetId)
     },
   },
   actions: {
     testAction(): void {
-      const actionId =
-        testActions[Math.floor(Math.random() * testActions.length)]!
+      const actionId
+        = testActions[Math.floor(Math.random() * testActions.length)]!
       void this.pushAction(
         Date.now(),
         15,
         '青魔技能随机',
         this.focusTargetId,
-        actionId
+        actionId,
       )
       // this.pushAction(
       //   Date.now(),
@@ -222,11 +240,11 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
       abilityName: string,
       casterId: string,
       abilityId: number,
-      cast1000Ms?: number
+      cast1000Ms?: number,
     ): Promise<void> {
       if (
-        (this.partyData.length === 0 && casterId === this.playerId) ||
-        (this.partyData.length > 0 && casterId === this.focusTargetId)
+        (this.partyData.length === 0 && casterId === this.playerId)
+        || (this.partyData.length > 0 && casterId === this.focusTargetId)
       ) {
         let abiId = abilityId
         let queryType: string = 'action'
@@ -262,20 +280,21 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
         this.castData.push(cast)
         if (logLine === 14 && cast1000Ms) {
           setTimeout(() => {
-            this.castData = this.castData.filter((v) => v?.key !== key)
+            this.castData = this.castData.filter(v => v?.key !== key)
           }, cast1000Ms * 1000 - 500)
         }
         if (abilityName.startsWith('unknown_')) {
           cast.src = `${site.first}/i/000000/000405.png`
           cast.class = 'action action-category-0'
-        } else if (abiId < 100000) {
-          const action =
-            cache ||
-            (await parseAction(queryType, abiId, [
-              'ID',
-              'Icon',
-              'ActionCategoryTargetID',
-            ]))
+        }
+        else if (abiId < 100000) {
+          const action
+            = cache
+              || (await parseAction(queryType, abiId, [
+                'ID',
+                'Icon',
+                'ActionCategoryTargetID',
+              ]))
           if (action.ID === 3) {
             // 疾跑(冲刺)
             action.Icon = '/i/000000/000104.png'
@@ -284,7 +303,8 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
             cast.src = await getFullImgSrc(action?.Icon ?? '', itemIsHQ)
           if (queryType === 'action')
             cast.class = `action action-category-${action?.ActionCategoryTargetID}`
-          else if (queryType === 'mount') cast.class = 'mount'
+          else if (queryType === 'mount')
+            cast.class = 'mount'
         }
       }
     },
@@ -302,29 +322,30 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
           e.line[5]!,
           e.line[2]!,
           Number.parseInt(e.line[4]!, 16),
-          Number(e.line[8])
+          Number(e.line[8]),
         )
-      } else if (
-        e.line[0] === '21' ||
-        (e.line[0] === '22' && e.line[45] === '0')
+      }
+      else if (
+        e.line[0] === '21'
+        || (e.line[0] === '22' && e.line[45] === '0')
       ) {
         void this.pushAction(
           Date.now(),
           15,
           e.line[5]!,
           e.line[2]!,
-          Number.parseInt(e.line[4]!, 16)
+          Number.parseInt(e.line[4]!, 16),
         )
       }
     },
     handlePartyChanged(e: { party: Party[] }): void {
       if (e.party.length > 0) {
         this.partyData = e.party
-          .filter((v) => v.inParty)
-          .map((v) => ({ ...v, src: '' }))
+          .filter(v => v.inParty)
+          .map(v => ({ ...v, src: '' }))
         for (const key in this.castData) {
           if (Object.prototype.hasOwnProperty.call(this.castData, key)) {
-            if (!this.partyData.find((v) => v.id === key))
+            if (!this.partyData.find(v => v.id === key))
               Reflect.deleteProperty(this.castData, key)
           }
         }
@@ -332,7 +353,8 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
           // 没有之前监控的目标，重置为玩家本人。
           this.focusTargetId = this.playerId
         }
-      } else {
+      }
+      else {
         // 没有队伍，重置为玩家本人。
         this.focusTargetId = this.playerId
         // 清空队伍数据
@@ -343,12 +365,13 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
       if (targetId === this.focusTargetId) {
         // 重复点击，重置为玩家本人。
         this.focusTargetId = this.playerId
-      } else {
+      }
+      else {
         this.focusTargetId = targetId
       }
       if (
         /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(
-          params.get('syncFocusWS') || ''
+          params.get('syncFocusWS') || '',
         )
       ) {
         void callOverlayHandler({
@@ -361,7 +384,7 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
       }
     },
     cleanUpExpired(): void {
-      this.castData = this.castData.filter((v) => v.expirationTime > Date.now())
+      this.castData = this.castData.filter(v => v.expirationTime > Date.now())
     },
   },
 })

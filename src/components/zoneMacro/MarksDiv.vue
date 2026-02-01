@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { MacroInfoPlace } from '@/types/macro'
-import { useMacroStore } from '@/store/macro'
-import MapCanvas from '@/components/MapCanvas.vue'
 import type { CanvasMarker } from '@/components/MapCanvas.vue'
+import type { MacroInfoPlace } from '@/types/macro'
+import { computed } from 'vue'
+import MapCanvas from '@/components/MapCanvas.vue'
+import { useMacroStore } from '@/store/macro'
 
 const props = defineProps({
   macro: { type: Object as () => MacroInfoPlace, required: true },
@@ -14,7 +14,8 @@ const macroStore = useMacroStore()
 const markMap = ['A', 'B', 'C', 'D', '1', '2', '3', '4']
 
 const markers = computed<CanvasMarker[]>(() => {
-  if (!props.macro?.Place) return []
+  if (!props.macro?.Place)
+    return []
   const places = props.macro.Place
   const keys = Object.keys(places) as Array<keyof typeof places>
   return keys.map((key, idx) => {

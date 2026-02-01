@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { WayMark } from '@/types/uisave'
-import MapCanvas from '@/components/MapCanvas.vue'
 import type { CanvasMarker } from '@/components/MapCanvas.vue'
+import type { WayMark } from '@/types/uisave'
+import { computed } from 'vue'
+import MapCanvas from '@/components/MapCanvas.vue'
 
 const props = defineProps<{
   waymark: WayMark
@@ -31,7 +31,7 @@ const markers = computed<CanvasMarker[]>(() => {
   ]
 
   return keys.map((key, idx) => {
-    const point = props.waymark[key] as { x: number; y: number; z: number }
+    const point = props.waymark[key] as { x: number, y: number, z: number }
     return {
       key,
       label: markMap[idx] ?? '',

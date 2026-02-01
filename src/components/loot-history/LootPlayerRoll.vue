@@ -1,3 +1,40 @@
+<script setup lang="ts">
+import type { RollInfo } from '@/utils/lootParser'
+import { computed } from 'vue'
+import {
+  getRollTypeIcon,
+
+} from '@/utils/lootParser'
+import PlayerDisplay from './PlayerDisplay.vue'
+
+const props = defineProps<{
+  roll: RollInfo
+  isWinner?: boolean
+  showOnlyRole?: boolean
+  getPlayerRole: (p: string) => string | undefined
+}>()
+
+const role = computed(() => props.getPlayerRole(props.roll.player))
+
+const rollTypeClass = computed(() => {
+  return `type-${props.roll.type}`
+})
+
+const rollTypeIcon = computed(() => getRollTypeIcon(props.roll.type))
+
+const hasValue = computed(() => {
+  return props.roll.type !== 'assign' && props.roll.type !== 'direct'
+})
+
+const isSpecialType = computed(() => {
+  return (
+    props.roll.type === 'assign'
+    || props.roll.type === 'direct'
+    || props.roll.type === 'replace'
+  )
+})
+</script>
+
 <template>
   <div
     class="mini-roll"
@@ -27,42 +64,6 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { computed } from 'vue'
-import PlayerDisplay from './PlayerDisplay.vue'
-import {
-  type RollInfo,
-  getRollTypeIcon,
-} from '@/utils/lootParser'
-
-const props = defineProps<{
-  roll: RollInfo
-  isWinner?: boolean
-  showOnlyRole?: boolean
-  getPlayerRole: (p: string) => string | undefined
-}>()
-
-const role = computed(() => props.getPlayerRole(props.roll.player))
-
-const rollTypeClass = computed(() => {
-  return `type-${props.roll.type}`
-})
-
-const rollTypeIcon = computed(() => getRollTypeIcon(props.roll.type))
-
-const hasValue = computed(() => {
-  return props.roll.type !== 'assign' && props.roll.type !== 'direct'
-})
-
-const isSpecialType = computed(() => {
-  return (
-    props.roll.type === 'assign' ||
-    props.roll.type === 'direct' ||
-    props.roll.type === 'replace'
-  )
-})
-</script>
-
 <style lang="scss" scoped>
 .mini-roll {
   display: inline-flex;
@@ -90,7 +91,7 @@ const isSpecialType = computed(() => {
     font-weight: 700;
     font-size: 12px;
     color: #1e293b;
-    background: rgba(59, 130, 246, 0.06); 
+    background: rgba(59, 130, 246, 0.06);
     box-shadow: 0 1px 2px rgba(59, 130, 246, 0.05);
 
     html.dark & {
@@ -124,7 +125,7 @@ const isSpecialType = computed(() => {
   white-space: nowrap;
 
   html.dark & {
-    color: rgba(255, 255, 255, 0.4); 
+    color: rgba(255, 255, 255, 0.4);
   }
 }
 
@@ -171,7 +172,7 @@ const isSpecialType = computed(() => {
   font-variant-numeric: tabular-nums;
 
   html.dark & {
-    color: rgba(255, 255, 255, 0.9); 
+    color: rgba(255, 255, 255, 0.9);
   }
 }
 </style>

@@ -22,12 +22,12 @@ class Timeline implements ITimeline {
     name: string,
     condition: ITimelineCondition,
     timeline: string,
-    codeFight: string
+    codeFight: string,
   ) {
     if (Util.iconToJobEnum(condition.jobs[0] as FFIcon)) {
       // 突然有一天数据格式不一致了 可能是fflogs改返回值了?
       condition.jobs[0] = Util.jobEnumToJob(
-        Util.iconToJobEnum(condition.jobs[0] as FFIcon)
+        Util.iconToJobEnum(condition.jobs[0] as FFIcon),
       )
     }
     this.name = name
@@ -102,14 +102,14 @@ export const useTimelineStore = defineStore('timeline', {
         Reflect.deleteProperty(timeline.condition, 'job')
       }
       timeline.condition.jobs.sort(
-        (a, b) => this.jobList.indexOf(a) - this.jobList.indexOf(b)
+        (a, b) => this.jobList.indexOf(a) - this.jobList.indexOf(b),
       )
       if (
-        timeline.condition.jobs[0] &&
-        Util.iconToJobEnum(timeline.condition.jobs[0] as FFIcon)
+        timeline.condition.jobs[0]
+        && Util.iconToJobEnum(timeline.condition.jobs[0] as FFIcon)
       ) {
         timeline.condition.jobs[0] = Util.jobEnumToJob(
-          Util.iconToJobEnum(timeline.condition.jobs[0] as FFIcon)
+          Util.iconToJobEnum(timeline.condition.jobs[0] as FFIcon),
         )
       }
     },
@@ -118,30 +118,30 @@ export const useTimelineStore = defineStore('timeline', {
       title = 'Demo',
       condition: ITimelineCondition = { zoneId: '0', jobs: ['NONE'] },
       rawTimeline = '',
-      codeFight = '用户创建'
+      codeFight = '用户创建',
     ): number {
       this.allTimelines.push(
-        new Timeline(title, condition, rawTimeline, codeFight)
+        new Timeline(title, condition, rawTimeline, codeFight),
       )
       this.sortTimelines()
       ElMessage.success('新建时间轴成功')
       // 如果严谨点应该还要比较create 但重复的demo选错又能怎么样呢
       const result = this.allTimelines.findIndex(
-        (t) =>
-          t.timeline === rawTimeline &&
-          t.name === title &&
-          JSON.stringify(t.condition) === JSON.stringify(condition) &&
-          t.codeFight === codeFight
+        t =>
+          t.timeline === rawTimeline
+          && t.name === title
+          && JSON.stringify(t.condition) === JSON.stringify(condition)
+          && t.codeFight === codeFight,
       )
       return result
     },
     getTimeline(playerState: ITimelineCondition): ITimeline[] {
       return this.allTimelines.filter((t) => {
         return (
-          (t.condition.zoneId === '0' ||
-            t.condition.zoneId === playerState.zoneId) &&
-          (t.condition.jobs.includes('NONE') ||
-            t.condition.jobs.includes(playerState.jobs[0]!))
+          (t.condition.zoneId === '0'
+            || t.condition.zoneId === playerState.zoneId)
+          && (t.condition.jobs.includes('NONE')
+            || t.condition.jobs.includes(playerState.jobs[0]!))
         )
       })
     },
@@ -155,9 +155,10 @@ export const useTimelineStore = defineStore('timeline', {
             settings: this.settings,
             showStyle: this.showStyle,
             filters: this.filters,
-          })
+          }),
         )
-      } catch (e) {
+      }
+      catch (e) {
         console.error('Failed to save timeline settings:', e)
         ElMessage.error('保存时间轴设置失败')
       }
@@ -180,7 +181,8 @@ export const useTimelineStore = defineStore('timeline', {
           })
           this.sortTimelines()
         }
-      } catch (e) {
+      }
+      catch (e) {
         console.error('Failed to load timeline settings:', e)
         ElMessage.error('加载时间轴设置失败')
       }
@@ -198,9 +200,9 @@ export const useTimelineStore = defineStore('timeline', {
         if (nameDiff !== 0) {
           return nameDiff
         }
-        const jobDiff =
-          Util.jobToJobEnum(a.condition.jobs[0]!) -
-          Util.jobToJobEnum(b.condition.jobs[0]!)
+        const jobDiff
+          = Util.jobToJobEnum(a.condition.jobs[0]!)
+            - Util.jobToJobEnum(b.condition.jobs[0]!)
         if (jobDiff !== 0) {
           return jobDiff
         }
@@ -215,7 +217,7 @@ export const useTimelineStore = defineStore('timeline', {
 
 function parseTime(time: string): number {
   const timeFormatType = time.match(
-    /^(?<negative>-)?(?<mm>\d+):(?<ss>\d+(?:\.\d*)?)$/
+    /^(?<negative>-)?(?<mm>\d+):(?<ss>\d+(?:\.\d*)?)$/,
   )
   if (timeFormatType) {
     const minutes = Number(timeFormatType.groups?.mm || '0')
@@ -232,8 +234,8 @@ export function parseAction(text: string) {
 
 const syncRegex = new RegExp(
   `(?:[^#]*?\\s)?(?<netRegexType>${Object.keys(logDefinitions).join(
-    '|'
-  )})\\s*(?<netRegex>\\{.*\\})(?<args>\\s.*)?$`
+    '|',
+  )})\\s*(?<netRegex>\\{.*\\})(?<args>\\s.*)?$`,
 )
 
 const regexStr = {
@@ -244,12 +246,12 @@ const regexStr = {
 }
 
 export async function parseTimeline(
-  rawTimeline: string
+  rawTimeline: string,
 ): Promise<ITimelineLine[]> {
   const total: ITimelineLine[] = []
   const matches = [
     ...rawTimeline.matchAll(
-      /^\s*(?<time>[-:：\d.]+)\s+(?<action>["'“”][^"'“”]*["'“”]).*$/gm
+      /^\s*(?<time>[-:：\d.]+)\s+(?<action>["'“”][^"'“”]*["'“”]).*$/gm,
     ),
   ]
   for (let i = 0; i < matches.length; i++) {
@@ -261,13 +263,12 @@ export async function parseTimeline(
     const normalOnce = /sync\.once/.test(match[0])
     const windowBefore = match[0].match(/(?<=window ?)[-:：\d.]+/)?.[0]
     const windowAfter = match[0].match(
-      /(?<=window ?[-:：\d.]+,)[-:：\d.]+/
+      /(?<=window ?[-:：\d.]+,)[-:：\d.]+/,
     )?.[0]
-    const tts = match[0].match(/ tts ?["'“”](?<tts>[^"'“”]+)["'“”]/)?.groups
-      ?.tts
+    const tts = match[0].match(/ tts ?["'“”](?<tts>[^"'“”]+)["'“”]/)?.groups?.tts
     const ttsSim = / tts(?: |$)/.test(match[0])
       ? Array.from(parseAction(match.groups?.action ?? ''))
-          .map((item) => item?.groups?.name)
+          .map(item => item?.groups?.name)
           .filter(Boolean)
           .join(', ')
       : undefined
@@ -276,7 +277,8 @@ export async function parseTimeline(
     let params = {} as any
     try {
       params = JSON5.parse(cactbotSync?.netRegex ?? '{}')
-    } catch (e) {
+    }
+    catch (e) {
       ElMessage.error({
         type: 'error',
         message: `“${match[0] ?? ''}”解析失败：${e}`,
@@ -286,19 +288,21 @@ export async function parseTimeline(
     Reflect.deleteProperty(params, 'source')
     if (cactbotRegexType) {
       try {
-        const key =
-          regexStr[cactbotRegexType as keyof typeof regexStr] ??
-          (cactbotRegexType.toLowerCase() as keyof typeof Regexes)
+        const key
+          = regexStr[cactbotRegexType as keyof typeof regexStr]
+            ?? (cactbotRegexType.toLowerCase() as keyof typeof Regexes)
         onceSync = / once/.test(match[0]) || params.once
         Reflect.deleteProperty(params, 'once')
         const regex = Regexes[key as keyof typeof Regexes] as (
-          params: unknown
+          params: unknown,
         ) => RegExp
         sync = regex({ ...params, capture: false })
-      } catch (e) {
+      }
+      catch (e) {
         console.error(`Failed to parse ${cactbotRegexType} regex:`, e)
       }
-    } else {
+    }
+    else {
       sync = normalSync ? new RegExp(normalSync) : undefined
       onceSync = normalOnce
     }

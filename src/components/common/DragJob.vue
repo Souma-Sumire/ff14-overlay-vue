@@ -12,7 +12,7 @@ const freeMode = ref(false)
 
 const storePartySort = usePartySortStore()
 
-const ROLES: { role: Role; color: string }[] = [
+const ROLES: { role: Role, color: string }[] = [
   { role: 'tank', color: 'blue' },
   { role: 'healer', color: 'green' },
   { role: 'dps', color: 'red' },
@@ -22,7 +22,7 @@ const ROLES: { role: Role; color: string }[] = [
 ]
 
 function isJobInParty(job: number) {
-  return props.party.find((v) => v.job === job)
+  return props.party.find(v => v.job === job)
 }
 
 function buildJobsList(): Record<Role, number[]> {
@@ -43,7 +43,7 @@ function buildJobsList(): Record<Role, number[]> {
             .filter(roleToFilterFn[role])
             .map(Util.jobToJobEnum)
             .sort(Util.enumSortMethod),
-    ])
+    ]),
   ) as Record<Role, number[]>
 }
 
@@ -68,24 +68,24 @@ const sortableJobList: RemovableRef<
   >
 > = ref(
   (() => {
-    const res = {} as Record<Role, { name: string; job: number }[]>
-    for (const role of ROLES.map((v) => v.role)) {
+    const res = {} as Record<Role, { name: string, job: number }[]>
+    for (const role of ROLES.map(v => v.role)) {
       res[role] = allJobsWithName
-        .filter((v) => jobsList[role].includes(v.job))
+        .filter(v => jobsList[role].includes(v.job))
         .sort(
           (a, b) =>
-            storePartySort.arr.indexOf(a.job) -
-            storePartySort.arr.indexOf(b.job)
+            storePartySort.arr.indexOf(a.job)
+            - storePartySort.arr.indexOf(b.job),
         )
     }
     return res
-  })()
+  })(),
 )
 
 function handleJobListUpdate() {
   storePartySort.arr = Object.values(sortableJobList.value)
     .flat()
-    .map((v) => v.job)
+    .map(v => v.job)
   emit('update')
 }
 </script>

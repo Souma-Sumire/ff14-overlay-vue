@@ -27,7 +27,7 @@ async function getDB(storeName: string) {
     dbPromises.set(dbName, promise)
 
     // 处理版本变更导致的关闭
-    promise.then(db => {
+    promise.then((db) => {
       db.onversionchange = () => {
         db.close()
         dbPromises.delete(dbName)
@@ -44,7 +44,8 @@ export function useIndexedDB<T extends { key: string }>(storeName: string) {
     let db = await getDB(storeName)
     try {
       return await fn(db)
-    } catch (e: any) {
+    }
+    catch (e: any) {
       // 如果错误是连接关闭，清除缓存并重试一次
       if (e.name === 'InvalidStateError' || e.message?.includes('closing') || e.message?.includes('closed')) {
         console.warn('检测到 IndexedDB 连接已关闭，正在尝试重连...')
@@ -57,9 +58,9 @@ export function useIndexedDB<T extends { key: string }>(storeName: string) {
   }
 
   return {
-    getAll: () => withDB((db) => db.getAll(storeName)),
-    get: (key: string) => withDB((db) => db.get(storeName, key)),
-    set: (item: T) => withDB((db) => db.put(storeName, item)),
+    getAll: () => withDB(db => db.getAll(storeName)),
+    get: (key: string) => withDB(db => db.get(storeName, key)),
+    set: (item: T) => withDB(db => db.put(storeName, item)),
     bulkSet: (items: T[]) =>
       withDB(async (db) => {
         const tx = db.transaction(storeName, 'readwrite')
@@ -73,7 +74,7 @@ export function useIndexedDB<T extends { key: string }>(storeName: string) {
         for (const item of items) tx.store.put(item)
         await tx.done
       }),
-    remove: (key: string) => withDB((db) => db.delete(storeName, key)),
-    clear: () => withDB((db) => db.clear(storeName)),
+    remove: (key: string) => withDB(db => db.delete(storeName, key)),
+    clear: () => withDB(db => db.clear(storeName)),
   }
 }

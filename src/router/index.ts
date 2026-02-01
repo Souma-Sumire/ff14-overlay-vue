@@ -41,7 +41,7 @@ const routeTitles = new Map(
     timelineSettings: '自定义时间轴编辑',
     uisaveEditor: '场景标点编辑器',
     zoneMacro: '副本宏',
-  })
+  }),
 )
 for (const route of router.getRoutes()) {
   route.meta.title = routeTitles.get(route.name?.toString() ?? '') ?? route.name

@@ -3,6 +3,7 @@ import type { EventMap } from 'cactbot/types/event'
 import type { Food, Players } from '@/types/food'
 import { useDemo } from '@/composables/useDemo'
 import { useDev } from '@/composables/useDev'
+import { useLang } from '@/composables/useLang'
 import { useZone } from '@/composables/useZone'
 import { demoFoodData } from '@/mock/demoFoodData'
 import Util from '@/utils/util'
@@ -12,11 +13,10 @@ import {
   removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
 import meals from '../resources/meals.json'
-import { useLang } from '@/composables/useLang'
 
 const { t } = useLang()
 const { zoneType } = useZone()
-const party: Ref<{ id: string; name: string; jobName: string }[]> = ref([])
+const party: Ref<{ id: string, name: string, jobName: string }[]> = ref([])
 const effectData = new Map<string, Food>()
 const uiData: Ref<Players[]> = useStorage('souma-food-ui-data', [])
 const demo = useDemo()
@@ -24,14 +24,14 @@ const dev = useDev()
 const orderedUiData = computed(() =>
   demo.value || dev.value
     ? demoFoodData
-    : uiData.value.slice().sort((a, b) => getOrder(a) - getOrder(b))
+    : uiData.value.slice().sort((a, b) => getOrder(a) - getOrder(b)),
 )
 const display = computed(
   () =>
-    (zoneType.value !== 'Pvp' &&
-      party.value.length >= 6 &&
-      uiData.value.filter((v) => v.food).length >= uiData.value.length * 0.5) ||
-    demo.value
+    (zoneType.value !== 'Pvp'
+      && party.value.length >= 6
+      && uiData.value.filter(v => v.food).length >= uiData.value.length * 0.5)
+    || demo.value,
 )
 
 watch(demo, () => {
@@ -44,7 +44,7 @@ const netRegexs = {
 }
 
 function fullUpdateFriendlyCombatants() {
-  uiData.value = party.value.map((v) => ({ ...v, food: effectData.get(v.id) }))
+  uiData.value = party.value.map(v => ({ ...v, food: effectData.get(v.id) }))
 }
 
 function tickUpdateDuration() {
@@ -57,7 +57,8 @@ function tickUpdateDuration() {
       // 食物过期了，但由于某种情况没有收到losesEffect，手动删除
       effectData.delete(key)
       needUpdate = true
-    } else if (food.durationSeconds !== remaining) {
+    }
+    else if (food.durationSeconds !== remaining) {
       food.durationSeconds = remaining
       needUpdate = true
     }
@@ -88,7 +89,8 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
 
       fullUpdateFriendlyCombatants()
     }
-  } else if (e.line[0] === '30') {
+  }
+  else if (e.line[0] === '30') {
     const matches = netRegexs.losesEffect.exec(e.rawLine)
     if (matches && matches.groups) {
       effectData.delete(matches.groups.targetId)
@@ -99,7 +101,7 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
 
 const handlePartyChanged: EventMap['PartyChanged'] = (e) => {
   party.value = e.party
-    .filter((v) => v.inParty)
+    .filter(v => v.inParty)
     .map((v) => {
       return {
         id: v.id,
@@ -112,26 +114,28 @@ const handlePartyChanged: EventMap['PartyChanged'] = (e) => {
 
 function getFoodParams(params: Food['params'], hq: boolean): string {
   const p = params
-    .filter((v) => v.Params !== 'Vitality' && v.Params)
+    .filter(v => v.Params !== 'Vitality' && v.Params)
     .sort((a, b) => {
       const aV = hq ? a['Max{HQ}'] : a.Max
       const bV = hq ? b['Max{HQ}'] : b.Max
       return Number.parseInt(aV, 10) - Number.parseInt(bV, 10)
     })
-    .map((v) => t(`food.${v.Params}`))
+    .map(v => t(`food.${v.Params}`))
     .join('>')
 
   return p
 }
 
 function getText(seconds: number): string {
-  if (seconds < 60) return t('food.seconds', [seconds])
+  if (seconds < 60)
+    return t('food.seconds', [seconds])
   const m = Math.floor(seconds / 60)
   return m >= 60 ? t('food.>1hour') : t('food.minutes', [m])
 }
 
 function getOrder(item: Players) {
-  if (!item.food) return -9999
+  if (!item.food)
+    return -9999
   return item.food.durationSeconds
 }
 
@@ -142,7 +146,8 @@ onMounted(() => {
   fullUpdateFriendlyCombatants()
 
   setInterval(() => {
-    if (!demo.value) tickUpdateDuration()
+    if (!demo.value)
+      tickUpdateDuration()
   }, 1_000)
 })
 
@@ -175,7 +180,7 @@ onUnmounted(() => {
                 <span class="food-params">{{
                   `(${item.food.level})${getFoodParams(
                     item.food.params,
-                    item.food.hq
+                    item.food.hq,
                   )}`
                 }}</span>
                 <span class="food-name">{{ item.food.name }}</span>
@@ -187,8 +192,8 @@ onUnmounted(() => {
                   item.food.durationSeconds <= 60
                     ? 'danger'
                     : item.food.durationSeconds <= 600
-                    ? 'warning'
-                    : 'normal',
+                      ? 'warning'
+                      : 'normal',
                 ]"
               >
                 {{ getText(item.food.durationSeconds) }}

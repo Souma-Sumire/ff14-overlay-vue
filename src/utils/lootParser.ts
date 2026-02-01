@@ -18,8 +18,9 @@ export interface LootRecord {
 
 const itemNameCache = new Map<string, string>()
 export function sanitizeItemName(name: string): string {
-  if (itemNameCache.has(name)) return itemNameCache.get(name)!
-  let clean = name.replace(/[\ue000-\uf8ff]/g, '')
+  if (itemNameCache.has(name))
+    return itemNameCache.get(name)!
+  let clean = name.replace(/[\uE000-\uF8FF]/g, '')
   clean = clean.replace(/^["「『]|["」』]$/g, '').trim()
   const res = clean.trim()
   itemNameCache.set(name, res)
@@ -28,8 +29,9 @@ export function sanitizeItemName(name: string): string {
 
 const playerNameCache = new Map<string, string>()
 export function sanitizePlayerName(name: string): string {
-  if (playerNameCache.has(name)) return playerNameCache.get(name)!
-  let clean = name.replace(/[\ue000-\uf8ff]/g, '')
+  if (playerNameCache.has(name))
+    return playerNameCache.get(name)!
+  let clean = name.replace(/[\uE000-\uF8FF]/g, '')
   for (const s of worldNames) {
     if (clean.length > s.length && clean.endsWith(s)) {
       clean = clean.slice(0, -s.length)
@@ -53,27 +55,39 @@ export const ROLE_DEFINITIONS = [
 ] as const
 
 export function getRoleType(role: string | null | undefined) {
-  if (!role) return ''
+  if (!role)
+    return ''
   const r = role.toUpperCase()
-  if (r.startsWith('LEFT:')) return 'role-left'
-  if (r.startsWith('SUB:')) return 'role-sub'
-  if (r.startsWith('MT') || r.startsWith('ST')) return 'role-tank'
-  if (r.startsWith('H1') || r.startsWith('H2')) return 'role-healer'
+  if (r.startsWith('LEFT:'))
+    return 'role-left'
+  if (r.startsWith('SUB:'))
+    return 'role-sub'
+  if (r.startsWith('MT') || r.startsWith('ST'))
+    return 'role-tank'
+  if (r.startsWith('H1') || r.startsWith('H2'))
+    return 'role-healer'
   return 'role-dps'
 }
 
 export function getRoleColor(role: string | null | undefined) {
-  if (!role) return '#6366f1' // Default Indigo
-  if (role.startsWith('LEFT:')) return '#64748b' // Gray
-  if (role.startsWith('SUB:')) return '#f59e0b' // Orange
-  if (['MT', 'ST'].includes(role)) return '#3b82f6' // Blue
-  if (['H1', 'H2'].includes(role)) return '#10b981' // Green
+  if (!role)
+    return '#6366f1' // Default Indigo
+  if (role.startsWith('LEFT:'))
+    return '#64748b' // Gray
+  if (role.startsWith('SUB:'))
+    return '#f59e0b' // Orange
+  if (['MT', 'ST'].includes(role))
+    return '#3b82f6' // Blue
+  if (['H1', 'H2'].includes(role))
+    return '#10b981' // Green
   return '#ef4444' // Red
 }
 
 export function getRoleDisplayName(role: string) {
-  if (role.startsWith('LEFT:')) return '离队'
-  if (role.startsWith('SUB:')) return '替补'
+  if (role.startsWith('LEFT:'))
+    return '离队'
+  if (role.startsWith('SUB:'))
+    return '替补'
   return role
 }
 

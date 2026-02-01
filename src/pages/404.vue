@@ -4,7 +4,9 @@ import { RouterLink } from 'vue-router'
 
 <template>
   <div class="not-found">
-    <div class="cat-container">🐱</div>
+    <div class="cat-container">
+      🐱
+    </div>
     <h1>{{ $t('404.title') }}</h1>
     <p>{{ $t('404.message') }}</p>
     <RouterLink to="/startPages" class="go-home">

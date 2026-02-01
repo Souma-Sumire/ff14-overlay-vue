@@ -1,9 +1,9 @@
-import fs from 'fs-extra'
 import csv from 'csv-parser'
+import fs from 'fs-extra'
 import iconv from 'iconv-lite'
 import { csvPaths } from './paths'
 
-type IdToNameMap = {
+interface IdToNameMap {
   [key: string]: string
 }
 
@@ -16,8 +16,8 @@ await new Promise<void>((resolve, reject) => {
     .pipe(csv({ headers: false }))
     .on('data', (row: string[]) => {
       if (
-        ['key', '#', 'offset', 'int32', '0'].includes(row[0]!.toLocaleLowerCase()) ||
-        row[1] === ''
+        ['key', '#', 'offset', 'int32', '0'].includes(row[0]!.toLocaleLowerCase())
+        || row[1] === ''
       ) {
         return
       }

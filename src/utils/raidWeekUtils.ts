@@ -4,11 +4,14 @@ export function getRaidWeekStart(date: Date) {
   const hour = d.getHours()
   let daysToSubtract = 0
   if (day === 2) {
-    if (hour < 16) daysToSubtract = 7
+    if (hour < 16)
+      daysToSubtract = 7
     else daysToSubtract = 0
-  } else if (day > 2) {
+  }
+  else if (day > 2) {
     daysToSubtract = day - 2
-  } else {
+  }
+  else {
     daysToSubtract = day + 5
   }
   const start = new Date(d)
@@ -22,7 +25,7 @@ export function getRaidWeekLabel(
   dateInput: Date | string,
   offset: number = 0,
   zeroWeekDate?: Date | string | number,
-): { label: string; start: Date; end: Date } {
+): { label: string, start: Date, end: Date } {
   const date = new Date(dateInput)
   if (offset !== 0) {
     date.setDate(date.getDate() + offset * 7)
@@ -57,8 +60,9 @@ export function getWeekIndexFromStart(current: Date, start: Date): number {
 }
 
 export function getCurrentWeekNumber(timestamps: (number | string | Date)[]): number {
-  if (!timestamps || timestamps.length === 0) return 1
-  const times = timestamps.map((t) => new Date(t).getTime())
+  if (!timestamps || timestamps.length === 0)
+    return 1
+  const times = timestamps.map(t => new Date(t).getTime())
   const firstTime = Math.min(...times)
 
   const zeroWeekStart = getRaidWeekStart(new Date(firstTime))
@@ -70,18 +74,20 @@ export function getCurrentWeekNumber(timestamps: (number | string | Date)[]): nu
 export function getFormattedWeekLabel(
   weekRangeLabel: string,
   zeroWeekStart: Date | null,
-): { label: string; index: number } {
-  if (!zeroWeekStart) return { label: weekRangeLabel, index: 0 }
+): { label: string, index: number } {
+  if (!zeroWeekStart)
+    return { label: weekRangeLabel, index: 0 }
 
   // 兼容 "第 1 周 (2026/01/06 - 2026/01/13)"、"W1 (2026/01/06 - 2026/01/13)" 和 "2026/01/06 - 2026/01/13"
   const dateMatch = weekRangeLabel.match(/(\d{4}\/\d{2}\/\d{2})/)
-  if (!dateMatch) return { label: weekRangeLabel, index: 0 }
+  if (!dateMatch)
+    return { label: weekRangeLabel, index: 0 }
 
   const startStr = dateMatch[1]
-  const currentStart = new Date(startStr + ' 16:00:00')
+  const currentStart = new Date(`${startStr} 16:00:00`)
 
   const weekIndex = getWeekIndexFromStart(currentStart, zeroWeekStart)
-  
+
   // 如果原始标签已经包含周号（第...周 或 W...），直接返回
   if ((weekRangeLabel.includes('周') || weekRangeLabel.includes('W')) && weekRangeLabel.includes('(')) {
     return {

@@ -1,5 +1,5 @@
-import fs from 'fs-extra'
 import csv from 'csv-parser'
+import fs from 'fs-extra'
 import iconv from 'iconv-lite'
 import { csvPaths } from './paths'
 
@@ -44,7 +44,7 @@ const fileNames = ['MapMarker.csv', 'Aetheryte.csv']
 const fileValues: FileValues = {}
 
 const allFiles = [
-  ...fileNames.map((fileName) => ({
+  ...fileNames.map(fileName => ({
     name: fileName,
     path: `${csvPaths.ja}${fileName}`,
   })),
@@ -54,27 +54,28 @@ const allFiles = [
 ]
 
 await Promise.all(
-  allFiles.map((file) => readFile(file.name, file.path, fileValues)),
+  allFiles.map(file => readFile(file.name, file.path, fileValues)),
 )
 
 const DATA_TYPE = '3'
 
 const aetherytes: AetheryteData[] = fileValues['MapMarker.csv']!.filter(
-  (row) => row[8] === DATA_TYPE && row[4] !== '0',
+  row => row[8] === DATA_TYPE && row[4] !== '0',
 )
   .map((row) => {
     const dataKey = row[9]
     const aetheryteRow = fileValues['Aetheryte.csv']?.find(
-      (aetheryte) => aetheryte[0] === dataKey,
+      aetheryte => aetheryte[0] === dataKey,
     )
-    if (!aetheryteRow) return null
+    if (!aetheryteRow)
+      return null
 
     const territory = aetheryteRow[11]
     const placeNameId = row[4]
 
     const findPlaceName = (file: string) => {
       const placeRow = fileValues[file]?.find(
-        (place) => place[0] === placeNameId,
+        place => place[0] === placeNameId,
       )
       return placeRow ? placeRow[1] : undefined
     }

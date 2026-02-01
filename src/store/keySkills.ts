@@ -6,11 +6,11 @@ import { computed, reactive, ref } from 'vue'
 import { useDemo } from '@/composables/useDemo'
 import { useDev } from '@/composables/useDev'
 import { RandomPartyGenerator } from '@/mock/demoParty'
+import { actionResourcesLoaded } from '@/resources/actionChinese'
 import { raidbuffs } from '@/resources/raidbuffs'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 import { tts } from '@/utils/tts'
 import Util from '@/utils/util'
-import { actionResourcesLoaded } from '@/resources/actionChinese'
 
 interface SkillState {
   startTime: number | null
@@ -40,7 +40,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
   // 自动合并逻辑：
   // 1. 迁移与去重：保留用户的第一份数据（可能是魔改过的），将其 Key 更新为静态 Key，并移除后续重复项
   const defaultSkillMap = new Map<number | string, string>(
-    raidbuffs.map((s) => [s.id, s.key])
+    raidbuffs.map(s => [s.id, s.key]),
   )
   const seenDefaultIds = new Set<number | string>()
 
@@ -69,14 +69,14 @@ const useKeySkillStore = defineStore('keySkill', () => {
       acc.push(skill)
       return acc
     },
-    [] as typeof keySkillsData.value.chinese
+    [] as typeof keySkillsData.value.chinese,
   )
 
   // 2. 补全缺失的默认技能（针对新版本新增的默认技能）
   const userCurrentKeys = new Set(
-    keySkillsData.value.chinese.map((s) => s.key)
+    keySkillsData.value.chinese.map(s => s.key),
   )
-  const newDefaultSkills = raidbuffs.filter((s) => !userCurrentKeys.has(s.key))
+  const newDefaultSkills = raidbuffs.filter(s => !userCurrentKeys.has(s.key))
 
   if (newDefaultSkills.length > 0) {
     keySkillsData.value.chinese = [
@@ -92,32 +92,32 @@ const useKeySkillStore = defineStore('keySkill', () => {
 
   const usedSkills = computed(() => {
     // 确保 actionResourcesLoaded 变化时重新计算
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    // eslint-disable-next-line ts/no-unused-expressions
     actionResourcesLoaded.value
 
     const result: KeySkillEntity[] = []
     const currentParty = computed(() =>
-      dev.value || demo.value ? generator.party.value : party.value
+      dev.value || demo.value ? generator.party.value : party.value,
     )
 
     for (const player of currentParty.value) {
       for (const skill of keySkillsData.value.chinese) {
         if (
-          skill.job.includes(player.job) &&
-          (player.level === undefined || skill.minLevel <= player.level)
+          skill.job.includes(player.job)
+          && (player.level === undefined || skill.minLevel <= player.level)
         ) {
           const duration = parseDynamicValue(
             skill.duration,
-            player.level || 999
+            player.level || 999,
           )
           const id = parseDynamicValue(skill.id, player.level || 999)
           const recast1000ms = parseDynamicValue(
             skill.recast1000ms,
-            player.level || 999
+            player.level || 999,
           )
           const minLevel = parseDynamicValue(
             skill.minLevel,
-            player.level || 999
+            player.level || 999,
           )
           const owner: KeySkillEntity['owner'] = {
             id: player.id,
@@ -155,20 +155,20 @@ const useKeySkillStore = defineStore('keySkill', () => {
     for (const res of result) {
       res.owner.hasDuplicate = {
         skill: result.some(
-          (v) => v.id === res.id && v.owner.id !== res.owner.id
+          v => v.id === res.id && v.owner.id !== res.owner.id,
         ),
         job: result.some(
-          (v) => v.owner.job === res.owner.job && v.owner.id !== res.owner.id
+          v => v.owner.job === res.owner.job && v.owner.id !== res.owner.id,
         ),
       }
     }
 
     result.sort((a, b) => {
       const aIndex = keySkillsData.value.chinese.findIndex(
-        (v) => v.key === a.skillKey
+        v => v.key === a.skillKey,
       )
       const bIndex = keySkillsData.value.chinese.findIndex(
-        (v) => v.key === b.skillKey
+        v => v.key === b.skillKey,
       )
       if (aIndex === bIndex) {
         return Util.enumSortMethod(a.owner.job, b.owner.job)
@@ -180,15 +180,17 @@ const useKeySkillStore = defineStore('keySkill', () => {
 
   function triggerSkill(skillIds: number[], ownerID: string, speak: boolean) {
     const skill = usedSkills.value.find(
-      (v) => skillIds.includes(v.id) && v.owner.id === ownerID
+      v => skillIds.includes(v.id) && v.owner.id === ownerID,
     )
-    if (!skill) return
+    if (!skill)
+      return
 
     const key = skill.instanceKey
     const { duration, recast1000ms: recast } = skill
 
     // 取消之前动画
-    if (skillStates[key]?.rafId) cancelAnimationFrame(skillStates[key].rafId)
+    if (skillStates[key]?.rafId)
+      cancelAnimationFrame(skillStates[key].rafId)
 
     const state = reactive<SkillState>({
       startTime: performance.now(),
@@ -217,13 +219,15 @@ const useKeySkillStore = defineStore('keySkill', () => {
           state.durationLeft = Math.ceil(remain / 1000)
           state.text = state.durationLeft.toString()
           state.clipPercent = (remain / durationMs) * 100
-        } else {
+        }
+        else {
           // 进入冷却阶段
           state.isRecast = true
           state.startTime = now
           state.clipPercent = 0
         }
-      } else {
+      }
+      else {
         // 冷却阶段
         const recastElapsed = elapsed - durationMs
         if (recastElapsed < recastMs) {
@@ -231,13 +235,15 @@ const useKeySkillStore = defineStore('keySkill', () => {
           state.recastLeft = Math.ceil(remain / 1000)
           state.text = state.recastLeft.toString()
           state.clipPercent = (recastElapsed / recastMs) * 100
-        } else {
+        }
+        else {
           // 动画结束
           state.text = ''
           state.active = false
           state.isRecast = false
           state.clipPercent = 0
-          if (state.rafId) cancelAnimationFrame(state.rafId)
+          if (state.rafId)
+            cancelAnimationFrame(state.rafId)
           state.rafId = undefined
           Reflect.deleteProperty(skillStates, key)
           return
@@ -256,8 +262,10 @@ const useKeySkillStore = defineStore('keySkill', () => {
   function wipe() {
     for (const key in skillStates) {
       const state = skillStates[key]
-      if (!state) continue
-      if (state.rafId) cancelAnimationFrame(state.rafId)
+      if (!state)
+        continue
+      if (state.rafId)
+        cancelAnimationFrame(state.rafId)
       state.text = ''
       state.active = false
     }

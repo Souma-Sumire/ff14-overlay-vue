@@ -1,5 +1,5 @@
-import fs from 'fs-extra'
 import csv from 'csv-parser'
+import fs from 'fs-extra'
 import iconv from 'iconv-lite'
 import { csvPaths } from './paths'
 
@@ -12,8 +12,8 @@ interface AetherCurrentResult {
   y: string
   z: string
   territory: string
-  name: { ja?: string; cn?: string; en?: string }
-  game: { x: number; y: number }
+  name: { ja?: string, cn?: string, en?: string }
+  game: { x: number, y: number }
   id: string
   exVersion: string
   data: number
@@ -33,7 +33,8 @@ class Vector2 {
   }
 
   divide(scalar: number): Vector2 {
-    if (scalar === 0) throw new Error('Cannot divide by zero')
+    if (scalar === 0)
+      throw new Error('Cannot divide by zero')
     return new Vector2(this.x / scalar, this.y / scalar)
   }
 
@@ -86,7 +87,7 @@ const fileNames = [
 const fileValues: FileValues = {}
 
 const allFiles = [
-  ...fileNames.map((fileName) => ({
+  ...fileNames.map(fileName => ({
     name: fileName,
     path: csvPaths.ja + fileName,
   })),
@@ -95,33 +96,34 @@ const allFiles = [
 ]
 
 await Promise.all(
-  allFiles.map((file) => readFile(file.name, file.path, fileValues)),
+  allFiles.map(file => readFile(file.name, file.path, fileValues)),
 )
 
 const aethercurrentNames = ['风脉泉', 'aether current', '風脈の泉']
-const ids: string[] = fileValues['EObjName.csv']!.filter((row) =>
+const ids: string[] = fileValues['EObjName.csv']!.filter(row =>
   aethercurrentNames.includes(row[1]!),
-).map((row) => row[0]!)
+).map(row => row[0]!)
 
 const idsData: Record<string, string> = Object.fromEntries(
-  fileValues['EObj.csv']!.filter((row) => ids.includes(row[0]!)).map((row) => [
+  fileValues['EObj.csv']!.filter(row => ids.includes(row[0]!)).map(row => [
     row[0],
     row[10],
   ]),
 )
 
-const result = fileValues['Level.csv']!.filter((row) => ids.includes(row[7]!))
+const result = fileValues['Level.csv']!.filter(row => ids.includes(row[7]!))
   .map((row) => {
     const territory = row[10]
     const territoryType = fileValues['TerritoryType.csv']!.find(
-      (t) => t[0] === territory,
+      t => t[0] === territory,
     )
-    if (!territoryType) return null
+    if (!territoryType)
+      return null
 
     const placeNameId = territoryType[6]
 
     const findPlaceName = (file: string) => {
-      const placeNameRow = fileValues[file]?.find((p) => p[0] === placeNameId)
+      const placeNameRow = fileValues[file]?.find(p => p[0] === placeNameId)
       return placeNameRow?.[1]
     }
 
@@ -129,8 +131,9 @@ const result = fileValues['Level.csv']!.filter((row) => ids.includes(row[7]!))
     const cn = findPlaceName('PlaceName_CN.csv')
     const en = findPlaceName('PlaceName_EN.csv')
 
-    const map = fileValues['Map.csv']!.find((m) => m[12] === placeNameId)
-    if (!map) return null
+    const map = fileValues['Map.csv']!.find(m => m[12] === placeNameId)
+    if (!map)
+      return null
 
     const mapSizeFactor = Number(map[8])
     const mapOffsetX = Number(map[9])

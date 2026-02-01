@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import type { EventMap, Party } from 'cactbot/types/event'
+import type { ContentUsedType } from '@/composables/useZone'
+import { useZone } from '@/composables/useZone'
 import Util from '@/utils/util'
 import NetRegexes from '../../cactbot/resources/netregexes'
 import {
   addOverlayListener,
   removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
-import { useZone, type ContentUsedType } from '@/composables/useZone'
 
 const { zoneType } = useZone()
 
@@ -55,20 +56,20 @@ const noEnmity = computed(() => {
   if (!EffectiveZoneTypes.includes(zoneType.value)) {
     return false
   }
-  const tanks = state.party.filter((p) =>
-    Util.isTankJob(Util.jobEnumToJob(p.job))
+  const tanks = state.party.filter(p =>
+    Util.isTankJob(Util.jobEnumToJob(p.job)),
   )
-  const playerIsTank = tanks.some((p) => p.id === state.povCharID)
+  const playerIsTank = tanks.some(p => p.id === state.povCharID)
   if (tanks.length === 0 || state.party.length === 1 || !playerIsTank) {
     return false
   }
-  return !tanks.some((t) => state.status.has(t.id))
+  return !tanks.some(t => state.status.has(t.id))
 })
 
 const handlePartyChanged: EventMap['PartyChanged'] = (e) => {
   state.party = e.party.slice()
   state.status.forEach((id) => {
-    if (!state.party.some((p) => p.id === id)) {
+    if (!state.party.some(p => p.id === id)) {
       state.status.delete(id)
     }
   })
@@ -93,7 +94,6 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
     if (id) {
       state.status.delete(id)
     }
-    return
   }
 }
 

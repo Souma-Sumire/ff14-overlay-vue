@@ -192,8 +192,8 @@ const chineseAbbreviationMap = new Map([
 function chineseToIcon(chinese: string): number | undefined {
   chinese = chineseAbbreviationMap.get(chinese.toUpperCase()) ?? chinese
 
-  const iconStr =
-    userActionMap.get(chinese)?.toString() ?? chineseToIconMap[chinese]
+  const iconStr
+    = userActionMap.get(chinese)?.toString() ?? chineseToIconMap[chinese]
   const iconNum = Number(iconStr)
 
   if (!iconStr || Number.isNaN(iconNum) || iconNum === 0) {

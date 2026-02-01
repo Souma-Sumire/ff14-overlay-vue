@@ -1,50 +1,47 @@
-<template>
-    <div class="user-card" :class="{ 'not-responded': user.isQueried && !user.hasResponded, 'pre-query': !user.isQueried, 'blur-mode': blurMode }">
-        <div class="user-header">
-            <div class="user-info">
-                <div class="user-name">
-                    <span :class="{ 'blurred-text': blurMode }">{{ user.name }}</span>
-                    <span v-if="!user.isQueried" class="status-badge pre" title="尚未查询">尚未查询</span>
-                    <template v-else>
-                        <span v-if="user.hasResponded" class="status-badge" title="正在使用 BBY">BBY</span>
-                        <span v-else class="status-badge unused" title="未使用 BBY">未使用</span>
-                    </template>
-                </div>
-                <div class="user-meta">
-                    <span class="user-job" v-if="user.job">{{ user.job }}</span>
-                    <span class="user-world" v-if="user.world">{{ user.world }}</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</template>
-
 <script setup lang="ts">
-
 interface UserInfo {
-    id: string;
-    name: string;
-    job: string;
-    flags: number;
-    waymarkIndex: number;
-    isAnonymous: boolean;
-    isIdHidden: boolean;
-    isWaymarkEnabled: boolean;
-    isInitiator: boolean;
-    world?: string;
-    hasResponded?: boolean;
-    isQueried?: boolean;
+  id: string
+  name: string
+  job: string
+  flags: number
+  waymarkIndex: number
+  isAnonymous: boolean
+  isIdHidden: boolean
+  isWaymarkEnabled: boolean
+  isInitiator: boolean
+  world?: string
+  hasResponded?: boolean
+  isQueried?: boolean
 }
 
 interface Props {
-    user: UserInfo;
-    blurMode?: boolean;
+  user: UserInfo
+  blurMode?: boolean
 }
 
-const _props = defineProps<Props>();
-
-
+const _props = defineProps<Props>()
 </script>
+
+<template>
+  <div class="user-card" :class="{ 'not-responded': user.isQueried && !user.hasResponded, 'pre-query': !user.isQueried, 'blur-mode': blurMode }">
+    <div class="user-header">
+      <div class="user-info">
+        <div class="user-name">
+          <span :class="{ 'blurred-text': blurMode }">{{ user.name }}</span>
+          <span v-if="!user.isQueried" class="status-badge pre" title="尚未查询">尚未查询</span>
+          <template v-else>
+            <span v-if="user.hasResponded" class="status-badge" title="正在使用 BBY">BBY</span>
+            <span v-else class="status-badge unused" title="未使用 BBY">未使用</span>
+          </template>
+        </div>
+        <div class="user-meta">
+          <span v-if="user.job" class="user-job">{{ user.job }}</span>
+          <span v-if="user.world" class="user-world">{{ user.world }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
 
 <style scoped lang="scss">
 // 设计系统变量
@@ -95,7 +92,7 @@ $transition-base: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         opacity: 0.9;
         transition: all $transition-base;
     }
-    
+
     // 悬停光晕效果
     &::after {
         content: '';
@@ -112,7 +109,7 @@ $transition-base: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
     &.pre-query {
         border-color: rgba(71, 85, 105, 0.3);
-        
+
         &::before {
             background: $color-neutral;
             opacity: 0.5;
@@ -200,19 +197,19 @@ $transition-base: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     flex-shrink: 0;
     transition: all $transition-base;
     position: relative;
-    
+
     &.pre {
         background: linear-gradient(135deg, $color-neutral 0%, #64748b 100%);
         box-shadow: 0 2px 4px rgba(71, 85, 105, 0.3);
         opacity: 0.85;
     }
-    
+
     // BBY 使用中徽章
     &:not(.pre):not(.unused) {
         background: linear-gradient(135deg, $color-danger 0%, #dc2626 100%);
         box-shadow: 0 0 12px rgba(239, 68, 68, 0.6), 0 2px 4px rgba(0, 0, 0, 0.2);
         animation: danger-glow 2s ease-in-out infinite;
-        
+
         &::before {
             content: '●';
             margin-right: 2px;
@@ -269,7 +266,7 @@ $transition-base: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     align-items: center;
     gap: 4px;
     font-weight: 500;
-    
+
     &::before {
         content: '@';
         opacity: 0.5;
@@ -286,7 +283,7 @@ $transition-base: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
 .user-card.blur-mode {
     cursor: context-menu;
-    
+
     &:hover .blurred-text {
         filter: blur(3px);
     }

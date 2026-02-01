@@ -49,7 +49,7 @@ function updateSearchTargets() {
     return
   }
   const matched = combatants.value.filter(
-    (c) => c.Name && c.Name.includes(searchTargetName.value)
+    c => c.Name && c.Name.includes(searchTargetName.value),
   )
   // const matched = combatants.value.filter(c => c.Name)
   searchTargets.value = matched
@@ -62,12 +62,13 @@ function drawRadar() {
     throw new Error('canvas context is null')
   }
   const search = searchTargets.value[currentTargetIndex.value]
-  const primary = combatants.value.find((c) => c.Name === primaryPlayer.value)
+  const primary = combatants.value.find(c => c.Name === primaryPlayer.value)
   if (!search) {
     ctx.clearRect(0, 0, size.value, size.value)
     return
   }
-  if (!primary) return
+  if (!primary)
+    return
 
   ctx.clearRect(0, 0, size.value, size.value)
 
@@ -141,11 +142,11 @@ function drawRadar() {
   ctx.moveTo(px, py)
   ctx.lineTo(
     px - sizes.directionIndicator * Math.cos(angle - Math.PI / 6),
-    py - sizes.directionIndicator * Math.sin(angle - Math.PI / 6)
+    py - sizes.directionIndicator * Math.sin(angle - Math.PI / 6),
   )
   ctx.lineTo(
     px - sizes.directionIndicator * Math.cos(angle + Math.PI / 6),
-    py - sizes.directionIndicator * Math.sin(angle + Math.PI / 6)
+    py - sizes.directionIndicator * Math.sin(angle + Math.PI / 6),
   )
   ctx.closePath()
   ctx.fill()
@@ -165,8 +166,8 @@ function calculatePosition(
     PosX: number
     PosY: number
   },
-  distanceScale: number
-): { px: number; py: number } {
+  distanceScale: number,
+): { px: number, py: number } {
   const dx = c.PosX - primary.PosX
   const dy = c.PosY - primary.PosY
   let px = centerX.value + dx / distanceScale
@@ -185,14 +186,16 @@ function calculatePosition(
 function drawAll() {
   searchType.value = 'all'
   const distanceScale = 1
-  if (!ctx) throw new Error('canvas context is null')
+  if (!ctx)
+    throw new Error('canvas context is null')
 
-  const primary = combatants.value.find((c) => c.Name === primaryPlayer.value)
+  const primary = combatants.value.find(c => c.Name === primaryPlayer.value)
   const searchs = combatants.value.filter(
-    (c) => c.Name !== primaryPlayer.value && c.ID
+    c => c.Name !== primaryPlayer.value && c.ID,
   )
 
-  if (!primary) return
+  if (!primary)
+    return
 
   ctx.clearRect(0, 0, size.value, size.value)
 
@@ -213,18 +216,19 @@ function drawAll() {
   ctx.stroke()
 
   // 先缓存所有目标的位置
-  const positions = new Map<string, { px: number; py: number }>()
+  const positions = new Map<string, { px: number, py: number }>()
   for (const c of searchs) {
     positions.set(
       c.ID!.toString(),
-      calculatePosition(c, primary, distanceScale)
+      calculatePosition(c, primary, distanceScale),
     )
   }
 
   // 画连线
   for (const c of searchs) {
     const pos = positions.get(c.ID!.toString())
-    if (!pos) continue
+    if (!pos)
+      continue
     ctx.strokeStyle = colors.directionLine
     ctx.lineWidth = sizes.directionLineWidth
     ctx.beginPath()
@@ -236,7 +240,8 @@ function drawAll() {
   // 画红点
   for (const c of searchs) {
     const pos = positions.get(c.ID!.toString())
-    if (!pos) continue
+    if (!pos)
+      continue
     ctx.fillStyle = colors.target
     ctx.beginPath()
     ctx.arc(pos.px, pos.py, sizes.targetMarker, 0, 2 * Math.PI)
@@ -246,7 +251,8 @@ function drawAll() {
   // 画名字
   for (const c of searchs) {
     const pos = positions.get(c.ID!.toString())
-    if (!pos) continue
+    if (!pos)
+      continue
     const name = c.Name ?? ''
     const textWidth = ctx.measureText(name).width
 
@@ -293,16 +299,17 @@ async function update() {
   await getCombatants()
   updateSearchTargets()
   if (
-    zoneType.value === 'Pvp' ||
-    !searchTargetName.value ||
-    !primaryPlayer.value
+    zoneType.value === 'Pvp'
+    || !searchTargetName.value
+    || !primaryPlayer.value
   ) {
     searchTargetName.value = ''
     return
   }
   if (searchTargetName.value === '*') {
     drawAll()
-  } else {
+  }
+  else {
     drawRadar()
   }
   setTimeout(update, 100)
@@ -336,7 +343,8 @@ function handleResize() {
 
 onMounted(() => {
   ctx = canvas.value?.getContext('2d') ?? null
-  if (ctx) ctx.scale(devicePixelRatio.value, devicePixelRatio.value)
+  if (ctx)
+    ctx.scale(devicePixelRatio.value, devicePixelRatio.value)
   addOverlayListener('LogLine', handleLogLine)
   addOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
   window.addEventListener('resize', handleResize)
@@ -369,9 +377,9 @@ onUnmounted(() => {
             :disabled="searchTargets.length <= 1"
             :aria-label="$t('radar.prevTarget')"
             @click="
-              currentTargetIndex =
-                (currentTargetIndex - 1 + searchTargets.length) %
-                searchTargets.length
+              currentTargetIndex
+                = (currentTargetIndex - 1 + searchTargets.length)
+                  % searchTargets.length
             "
           >
             ←
@@ -384,8 +392,8 @@ onUnmounted(() => {
             :disabled="searchTargets.length <= 1"
             :aria-label="$t('radar.nextTarget')"
             @click="
-              currentTargetIndex =
-                (currentTargetIndex + 1) % searchTargets.length
+              currentTargetIndex
+                = (currentTargetIndex + 1) % searchTargets.length
             "
           >
             →
@@ -394,8 +402,8 @@ onUnmounted(() => {
 
         <div class="target-header">
           <span v-if="searchType === 'single'" class="target-name">{{
-            searchTargets[currentTargetIndex]?.Name ??
-            $t('radar.targetNotFound', { targetName: searchTargetName })
+            searchTargets[currentTargetIndex]?.Name
+              ?? $t('radar.targetNotFound', { targetName: searchTargetName })
           }}</span>
           <button
             class="cancel-btn"

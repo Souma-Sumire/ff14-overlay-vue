@@ -24,7 +24,8 @@ export class CacheManager {
     try {
       const raw = localStorage.getItem(this.storageKey)
       return raw ? JSON.parse(raw) : {}
-    } catch {
+    }
+    catch {
       return {}
     }
   }
@@ -32,11 +33,13 @@ export class CacheManager {
   private saveAll(data: Record<string, CacheEntry<any>>): void {
     try {
       localStorage.setItem(this.storageKey, JSON.stringify(data))
-    } catch {
+    }
+    catch {
       this.cleanupOldEntries(data)
       try {
         localStorage.setItem(this.storageKey, JSON.stringify(data))
-      } catch (e) {
+      }
+      catch (e) {
         console.warn('[CacheManager] Failed to save after cleanup', e)
       }
     }
@@ -77,7 +80,8 @@ export class CacheManager {
   public get<T>(key: string): T | null {
     const all = this.loadAll()
     const entry = all[key]
-    if (!entry) return null
+    if (!entry)
+      return null
 
     if (entry.expire < Date.now()) {
       delete all[key]

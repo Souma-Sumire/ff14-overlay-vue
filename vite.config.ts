@@ -26,7 +26,7 @@ function injectBuildTime() {
       })
       return html.replace(
         '</head>',
-        `  <meta name="build-time" content="${buildTime}" />\n  </head>`
+        `  <meta name="build-time" content="${buildTime}" />\n  </head>`,
       )
     },
   }
@@ -59,9 +59,9 @@ export default defineConfig({
               return 'vendor-echarts'
             }
             if (
-              id.includes('vue') ||
-              id.includes('pinia') ||
-              id.includes('vue-router')
+              id.includes('vue')
+              || id.includes('pinia')
+              || id.includes('vue-router')
             ) {
               return 'vendor-vue'
             }
@@ -73,9 +73,9 @@ export default defineConfig({
           }
 
           if (
-            id.includes('/src/utils/') ||
-            id.includes('/src/store/') ||
-            id.includes('/src/composables/')
+            id.includes('/src/utils/')
+            || id.includes('/src/store/')
+            || id.includes('/src/composables/')
           ) {
             return 'shared-core'
           }
@@ -87,8 +87,8 @@ export default defineConfig({
       },
       onwarn(warning, warn) {
         if (
-          warning.code === 'EVAL' &&
-          warning.id?.includes('cactbot/resources/user_config.ts')
+          warning.code === 'EVAL'
+          && warning.id?.includes('cactbot/resources/user_config.ts')
         ) {
           return
         }

@@ -1,3 +1,20 @@
+<script setup lang="ts">
+import type { LootRecord } from '@/utils/lootParser'
+import ChartPlayerDistribution from './ChartPlayerDistribution.vue'
+import ChartRollLuck from './ChartRollLuck.vue'
+import ChartWeeklyTrend from './ChartWeeklyTrend.vue'
+
+defineProps<{
+  records: LootRecord[]
+  players: string[]
+  getActualPlayer?: (name: string) => string
+  getPlayerRole?: (name: string) => string | undefined
+  recordWeekCorrections?: Record<string, number>
+  syncStartDate?: string | Date
+  playerVisibility?: 'all' | 'role' | 'job' | 'initial'
+}>()
+</script>
+
 <template>
   <div class="stats-panel">
     <div class="charts-grid">
@@ -28,23 +45,6 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import ChartPlayerDistribution from './ChartPlayerDistribution.vue'
-import ChartRollLuck from './ChartRollLuck.vue'
-import ChartWeeklyTrend from './ChartWeeklyTrend.vue'
-import type { LootRecord } from '@/utils/lootParser'
-
-defineProps<{
-  records: LootRecord[]
-  players: string[]
-  getActualPlayer?: (name: string) => string
-  getPlayerRole?: (name: string) => string | undefined
-  recordWeekCorrections?: Record<string, number>
-  syncStartDate?: string | Date
-  playerVisibility?: 'all' | 'role' | 'job' | 'initial'
-}>()
-</script>
-
 <style lang="scss" scoped>
 .stats-panel {
   padding: 16px;
@@ -60,9 +60,8 @@ defineProps<{
 }
 
 .charts-grid > * {
-  min-width: 0; 
+  min-width: 0;
 }
-
 
 @media (max-width: 1000px) {
   .charts-grid {

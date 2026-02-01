@@ -70,17 +70,17 @@ function sortParty() {
     .slice()
     .sort(
       (a, b) =>
-        storePartySort.arr.indexOf(Util.baseJobEnumConverted(a.job)) -
-        storePartySort.arr.indexOf(Util.baseJobEnumConverted(b.job))
+        storePartySort.arr.indexOf(Util.baseJobEnumConverted(a.job))
+        - storePartySort.arr.indexOf(Util.baseJobEnumConverted(b.job)),
     )
-  state.partySorted.tank = res.filter((v) =>
-    Util.isTankJob(Util.jobEnumToJob(v.job))
+  state.partySorted.tank = res.filter(v =>
+    Util.isTankJob(Util.jobEnumToJob(v.job)),
   )
-  state.partySorted.healer = res.filter((v) =>
-    Util.isHealerJob(Util.jobEnumToJob(v.job))
+  state.partySorted.healer = res.filter(v =>
+    Util.isHealerJob(Util.jobEnumToJob(v.job)),
   )
-  state.partySorted.dps = res.filter((v) =>
-    Util.isDpsJob(Util.jobEnumToJob(v.job))
+  state.partySorted.dps = res.filter(v =>
+    Util.isDpsJob(Util.jobEnumToJob(v.job)),
   )
   broadcast()
 }
@@ -107,8 +107,9 @@ const eventHandlers: {
     mouseEnter.value = false
   },
   partyChanged: (e) => {
-    if (dev.value && e.party.length === 0) return
-    state.party = e.party.filter((v) => v.inParty)
+    if (dev.value && e.party.length === 0)
+      return
+    state.party = e.party.filter(v => v.inParty)
     sortParty()
   },
   changePrimaryPlayer: (e) => {
@@ -119,10 +120,10 @@ const eventHandlers: {
   },
   broadcastMessage: (e) => {
     if (
-      e.source === 'soumaUserJS' &&
-      typeof e.msg === 'object' &&
-      e.msg !== null &&
-      Reflect.get(e.msg, 'text') === 'requestData'
+      e.source === 'soumaUserJS'
+      && typeof e.msg === 'object'
+      && e.msg !== null
+      && Reflect.get(e.msg, 'text') === 'requestData'
     ) {
       broadcast()
     }
@@ -143,14 +144,14 @@ onUnmounted(() => {
   removeOverlayListener('PartyChanged', eventHandlers.partyChanged)
   removeOverlayListener(
     'ChangePrimaryPlayer',
-    eventHandlers.changePrimaryPlayer
+    eventHandlers.changePrimaryPlayer,
   )
   removeOverlayListener('BroadcastMessage', eventHandlers.broadcastMessage)
 })
 
 function testSolo() {
   playerName.value = generator.party.value[0]!.name
-  state.party = generator.party.value.filter((v) => v.name === playerName.value)
+  state.party = generator.party.value.filter(v => v.name === playerName.value)
   sortParty()
 }
 
@@ -208,9 +209,9 @@ function testShuffleParty() {
               </div>
               <el-divider
                 v-if="
-                  state.partySorted[role].length > 0 &&
-                  roleIndex < 2 &&
-                  mouseEnter
+                  state.partySorted[role].length > 0
+                    && roleIndex < 2
+                    && mouseEnter
                 "
               />
             </div>

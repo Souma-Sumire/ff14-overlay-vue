@@ -1,5 +1,5 @@
-import logDefinitions from '../../../cactbot/resources/netlog_defs'
 import type { ResourceTracker } from '@/types/JobResource'
+import logDefinitions from '../../../cactbot/resources/netlog_defs'
 
 const SGE_ACTION_IDS = {
   DRUOCHOLE: 24296, // 灵橡清汁
@@ -27,10 +27,12 @@ export class SageTracker implements ResourceTracker {
   public processLine(type: string, splitLine: string[]) {
     // 并不是每一行都有时间戳或者我们关注的来源
     // 我们主要在 Ability 的时候更新，因为资源读取通常也在 Ability 发生时
-    if (type !== '21' && type !== '22' && type !== '25') return
+    if (type !== '21' && type !== '22' && type !== '25')
+      return
 
     const timestampStr = splitLine[1]
-    if (!timestampStr) return
+    if (!timestampStr)
+      return
     const timestamp = new Date(timestampStr).getTime()
 
     switch (type) {
@@ -38,18 +40,19 @@ export class SageTracker implements ResourceTracker {
       case '22':
         {
           const sourceId = splitLine[logDefinitions.Ability.fields.sourceId]!
-          if (!sourceId.startsWith('1')) return // 只跟踪玩家
+          if (!sourceId.startsWith('1'))
+            return // 只跟踪玩家
 
           this.updateStacks(sourceId, timestamp)
 
-          const id = parseInt(splitLine[logDefinitions.Ability.fields.id]!, 16)
+          const id = Number.parseInt(splitLine[logDefinitions.Ability.fields.id]!, 16)
 
           // 消耗蛇胆
           if (
-            id === SGE_ACTION_IDS.DRUOCHOLE ||
-            id === SGE_ACTION_IDS.KERACHOLE ||
-            id === SGE_ACTION_IDS.IXOCHOLE ||
-            id === SGE_ACTION_IDS.TAUROCHOLE
+            id === SGE_ACTION_IDS.DRUOCHOLE
+            || id === SGE_ACTION_IDS.KERACHOLE
+            || id === SGE_ACTION_IDS.IXOCHOLE
+            || id === SGE_ACTION_IDS.TAUROCHOLE
           ) {
             this.consumeStack(sourceId)
           }

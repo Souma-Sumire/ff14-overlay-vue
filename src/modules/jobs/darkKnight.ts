@@ -1,5 +1,5 @@
-import logDefinitions from '../../../cactbot/resources/netlog_defs'
 import type { ResourceTracker } from '@/types/JobResource'
+import logDefinitions from '../../../cactbot/resources/netlog_defs'
 
 export class DarkKnightTracker implements ResourceTracker {
   // characterId -> current mp
@@ -19,10 +19,11 @@ export class DarkKnightTracker implements ResourceTracker {
       case '22':
         {
           const sourceId = splitLine[logDefinitions.Ability.fields.sourceId]!
-          if (!sourceId.startsWith('1')) return
+          if (!sourceId.startsWith('1'))
+            return
 
-          const currentMp = parseInt(splitLine[logDefinitions.Ability.fields.currentMp]!)
-          if (!isNaN(currentMp)) {
+          const currentMp = Number.parseInt(splitLine[logDefinitions.Ability.fields.currentMp]!)
+          if (!Number.isNaN(currentMp)) {
             this.mp[sourceId] = currentMp
           }
         }

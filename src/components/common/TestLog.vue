@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { useLang } from '@/composables/useLang'
 import { ElLoading } from 'element-plus'
-
-const { t } = useLang()
+import { useLang } from '@/composables/useLang'
 
 const emits = defineEmits<{
   (e: 'handleLine', line: string): unknown
@@ -10,13 +8,16 @@ const emits = defineEmits<{
   (e: 'afterHandle'): void
 }>()
 
+const { t } = useLang()
+
 const input = ref<HTMLInputElement | null>(null)
 const select = ref<HTMLInputElement | null>(null)
 
 async function onChange(e: Event) {
   select.value?.classList.remove('drag')
   const files = (e.target as HTMLInputElement).files
-  if (!files || files.length === 0) return
+  if (!files || files.length === 0)
+    return
 
   emits('beforeHandle')
 
@@ -67,7 +68,7 @@ onUnmounted(() => {
         <span>+</span>
         <p>{{ $t('testLog.upload') }}</p>
       </div>
-      <input ref="input" type="file" />
+      <input ref="input" type="file">
     </div>
   </div>
 </template>

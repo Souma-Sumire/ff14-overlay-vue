@@ -1,7 +1,8 @@
 let action2ClassJobLevelMap: Map<string, any> | null = null
 
 async function initAction2ClassJobLevel() {
-  if (action2ClassJobLevelMap) return
+  if (action2ClassJobLevelMap)
+    return
   const module = await import('./action2ClassJobLevel.json')
   action2ClassJobLevelMap = new Map(Object.entries(module.default))
 }

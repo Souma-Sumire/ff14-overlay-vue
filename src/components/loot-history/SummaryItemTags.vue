@@ -1,22 +1,3 @@
-<template>
-  <div class="summary-item-right">
-    <span v-if="item.isRandomWeapon" class="random-weapon-tag">随武</span>
-    <template v-else>
-      <span v-if="item.isBis" class="bis-tag">毕业</span>
-      <span v-else-if="item.isBis === false" class="non-bis-tag">副职</span>
-    </template>
-    <span v-if="item.layerName" class="layer-tag">{{ item.layerName }}</span>
-    <span
-      :class="[
-        'count-badge',
-        item.count > 1 ? 'count-many' : item.count === 0 ? 'count-none' : 'count-single'
-      ]"
-    >
-      x{{ item.count }}
-    </span>
-  </div>
-</template>
-
 <script setup lang="ts">
 interface SummaryItem {
   count: number
@@ -30,6 +11,24 @@ defineProps<{
   item: SummaryItem
 }>()
 </script>
+
+<template>
+  <div class="summary-item-right">
+    <span v-if="item.isRandomWeapon" class="random-weapon-tag">随武</span>
+    <template v-else>
+      <span v-if="item.isBis" class="bis-tag">毕业</span>
+      <span v-else-if="item.isBis === false" class="non-bis-tag">副职</span>
+    </template>
+    <span v-if="item.layerName" class="layer-tag">{{ item.layerName }}</span>
+    <span
+      class="count-badge" :class="[
+        item.count > 1 ? 'count-many' : item.count === 0 ? 'count-none' : 'count-single',
+      ]"
+    >
+      x{{ item.count }}
+    </span>
+  </div>
+</template>
 
 <style lang="scss" scoped>
 .summary-item-right {

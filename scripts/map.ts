@@ -1,9 +1,9 @@
-import fs from 'fs-extra'
 import csv from 'csv-parser'
+import fs from 'fs-extra'
 import iconv from 'iconv-lite'
 import { csvPaths } from './paths.js'
 
-type FileValues = {
+interface FileValues {
   [fileName: string]: string[][]
 }
 
@@ -24,7 +24,7 @@ interface MapResult {
 function readFile(
   fileName: string,
   filePath: string,
-  fileValues: FileValues
+  fileValues: FileValues,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     fs.createReadStream(filePath)
@@ -47,7 +47,7 @@ const fileValues: FileValues = {}
 const fileNames = ['TerritoryType.csv', 'Map.csv']
 
 const allFiles = [
-  ...fileNames.map((fileName) => ({
+  ...fileNames.map(fileName => ({
     name: fileName,
     path: `${csvPaths.ja}${fileName}`,
   })),
@@ -57,7 +57,7 @@ const allFiles = [
 ]
 
 await Promise.all(
-  allFiles.map((file) => readFile(file.name, file.path, fileValues))
+  allFiles.map(file => readFile(file.name, file.path, fileValues)),
 )
 
 const res: MapResult = {}
@@ -70,7 +70,7 @@ territoryTypes.forEach((row) => {
   }
 
   const mapId = row[7]
-  const mapData = maps.find((v) => v[0] === mapId)!
+  const mapData = maps.find(v => v[0] === mapId)!
   const id = mapData?.[7]
 
   if (!id) {
@@ -81,7 +81,7 @@ territoryTypes.forEach((row) => {
 
   const getPlaceName = (fileName: string) => {
     const file = fileValues[fileName]
-    const placeNameRow = file?.find((v) => v[0] === placeNameId)
+    const placeNameRow = file?.find(v => v[0] === placeNameId)
     return placeNameRow?.[1]
   }
 

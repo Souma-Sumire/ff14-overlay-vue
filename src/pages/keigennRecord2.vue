@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// TODO: 死亡回放：治疗栏目的状态追踪治疗有关的buff
-import { triggerRef, shallowReactive, markRaw, nextTick, shallowRef, ref, onBeforeUnmount } from 'vue'
+// 职业信息缓存
+import type { FFIcon } from '@/types/fflogs'
 import type {
   CombatDataEvent,
   Encounter,
@@ -13,31 +13,30 @@ import type {
 import type { Player } from '@/types/partyPlayer'
 import { ZoomIn, ZoomOut } from '@element-plus/icons-vue'
 import { useDark } from '@vueuse/core'
+// TODO: 死亡回放：治疗栏目的状态追踪治疗有关的buff
+import { markRaw, nextTick, onBeforeUnmount, ref, shallowReactive, shallowRef, triggerRef } from 'vue'
 import { useDev } from '@/composables/useDev'
 import { useIndexedDB } from '@/composables/useIndexedDB'
-import { getActionChinese, initActionChinese } from '@/resources/actionChinese'
-import { completeIcon, stackUrl } from '@/resources/status'
-import { multiplierEffect } from '@/utils/keigenn'
-import { getImgSrc } from '@/utils/xivapi'
-import { useKeigennRecord2Store } from '@/store/keigennRecord2'
-import { processAbilityLine, processFlags } from '@/utils/flags'
-import { keigennSkills } from '@/resources/keigennSkills'
-import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
-import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
-
-import {
-  getKeigenn,
-  universalVulnerableEnemy,
-  universalVulnerableFriendly,
-} from '@/utils/keigenn'
-import Util from '@/utils/util'
-import logDefinitions from '../../cactbot/resources/netlog_defs'
-import NetRegexes from '../../cactbot/resources/netregexes'
-import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
-import { ZoneInfo } from '@/resources/zoneInfo'
 import { getCactbotLocaleMessage } from '@/composables/useLang'
 import { JobResourceManager } from '@/modules/jobResourceTracker'
+import { getActionChinese, initActionChinese } from '@/resources/actionChinese'
+import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
+import { keigennSkills } from '@/resources/keigennSkills'
+import { completeIcon, stackUrl } from '@/resources/status'
+import { ZoneInfo } from '@/resources/zoneInfo'
+import { useKeigennRecord2Store } from '@/store/keigennRecord2'
+
 import { compareSame } from '@/utils/compareSaveAction'
+import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
+import { processAbilityLine, processFlags } from '@/utils/flags'
+import { getKeigenn, multiplierEffect, universalVulnerableEnemy, universalVulnerableFriendly } from '@/utils/keigenn'
+
+import Util from '@/utils/util'
+import { getImgSrc } from '@/utils/xivapi'
+import logDefinitions from '../../cactbot/resources/netlog_defs'
+import NetRegexes from '../../cactbot/resources/netregexes'
+
+import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
 const dev = useDev()
 
@@ -71,37 +70,59 @@ const STORAGE_KEYS = {
 const DATA_VERSION = 'v20260131'
 let isNewVersion = false
 
+// 这些数据不需要响应式，但需要持久化（通过手动保存/加载）
+const tableRef = ref<any>(null)
+let povId = ''
+let partyLogList: string[] = []
+let entitiesMap: Record<string, { job: number, timestamp: number, name: string, level: number }> = {}
+let partyEventParty: PlayerSP[] = []
+let rsvData: Record<number, string> = {}
+let combatTimeStamp = 0
+let zoneName = ''
+let rowCounter = 0
+let pendingRows: RowVO[] = []
+let batchTimer: number | null = null
+const colorCache = new Map<number, string>()
+
 // 从 localStorage 加载持久化数据
 function loadPersistentData() {
   try {
     const savedVersion = localStorage.getItem(STORAGE_KEYS.VERSION)
     if (savedVersion !== DATA_VERSION) {
       Object.values(STORAGE_KEYS).forEach((key) => {
-         if (key !== STORAGE_KEYS.VERSION) localStorage.removeItem(key)
+        if (key !== STORAGE_KEYS.VERSION)
+          localStorage.removeItem(key)
       })
       localStorage.setItem(STORAGE_KEYS.VERSION, DATA_VERSION)
       isNewVersion = true
-      return 
+      return
     }
 
     const savedPovId = localStorage.getItem(STORAGE_KEYS.POV_ID)
-    if (savedPovId) povId = savedPovId
+    if (savedPovId)
+      povId = savedPovId
 
     const savedPartyList = localStorage.getItem(STORAGE_KEYS.PARTY_LIST)
-    if (savedPartyList) partyLogList = JSON.parse(savedPartyList)
+    if (savedPartyList)
+      partyLogList = JSON.parse(savedPartyList)
 
     const savedEntitiesMap = localStorage.getItem(STORAGE_KEYS.ENTITIES_MAP)
-    if (savedEntitiesMap) entitiesMap = JSON.parse(savedEntitiesMap)
+    if (savedEntitiesMap)
+      entitiesMap = JSON.parse(savedEntitiesMap)
 
     const savedPartyEvent = localStorage.getItem(STORAGE_KEYS.PARTY_EVENT)
-    if (savedPartyEvent) partyEventParty = JSON.parse(savedPartyEvent)
+    if (savedPartyEvent)
+      partyEventParty = JSON.parse(savedPartyEvent)
 
     const savedRsvData = localStorage.getItem(STORAGE_KEYS.RSV_DATA)
-    if (savedRsvData) rsvData = JSON.parse(savedRsvData)
+    if (savedRsvData)
+      rsvData = JSON.parse(savedRsvData)
 
     const savedZoneName = localStorage.getItem(STORAGE_KEYS.ZONE_NAME)
-    if (savedZoneName) zoneName = savedZoneName
-  } catch (e) {
+    if (savedZoneName)
+      zoneName = savedZoneName
+  }
+  catch (e) {
     console.error('Failed to load persistent data:', e)
   }
 }
@@ -115,21 +136,12 @@ function savePersistentData() {
     localStorage.setItem(STORAGE_KEYS.PARTY_EVENT, JSON.stringify(partyEventParty))
     localStorage.setItem(STORAGE_KEYS.RSV_DATA, JSON.stringify(rsvData))
     localStorage.setItem(STORAGE_KEYS.ZONE_NAME, zoneName)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Failed to save persistent data:', e)
   }
 }
 
-// 这些数据不需要响应式，但需要持久化（通过手动保存/加载）
-let povId = ''
-let partyLogList: string[] = []
-let entitiesMap: Record<string, { job: number; timestamp: number; name: string; level: number }> = {}
-let partyEventParty: PlayerSP[] = []
-let rsvData: Record<number, string> = {}
-let combatTimeStamp = 0
-let zoneName = ''
-
-let rowCounter = 0
 const select = ref(0)
 const data = shallowRef<Encounter[]>([
   {
@@ -171,7 +183,7 @@ let statusData: {
   enemy: {},
 }
 let cooldownTracker: Record<string, Record<number, number[]>> = {}
-let skillMapCache = new Map<number, Map<number, (typeof trackedSkills)[0]>>()
+const skillMapCache = new Map<number, Map<number, (typeof trackedSkills)[0]>>()
 
 const trackedSkills = keigennSkills
 
@@ -184,14 +196,15 @@ function getSkillMapForLevel(level: number) {
   if (!map) {
     map = new Map()
     for (const skill of trackedSkills) {
-      if (skill.minLevel > level) continue
+      if (skill.minLevel > level)
+        continue
       const id = parseDynamicValue(skill.id, level)
       map.set(id, skill)
       const groupId = compareSame(id)
       if (groupId !== id) {
         map.set(groupId, skill)
       }
-   }
+    }
     skillMapCache.set(level, map)
   }
   return map
@@ -239,7 +252,8 @@ async function afterHandle() {
       if (isPush) {
         data.value[0]!.table.push(...pendingRows)
         nextTick(() => tableRef.value?.scrollToBottom())
-      } else {
+      }
+      else {
         data.value[0]!.table.unshift(...pendingRows.reverse())
       }
       pendingRows = []
@@ -250,10 +264,10 @@ async function afterHandle() {
   triggerRef(data)
 }
 
-const colorCache = new Map<number, string>()
 function getReductionColor(reduction: number) {
   const roundedReduction = Math.round(reduction * 100) / 100
-  if (colorCache.has(roundedReduction)) return colorCache.get(roundedReduction)!
+  if (colorCache.has(roundedReduction))
+    return colorCache.get(roundedReduction)!
 
   const CURVE_CAP_PERCENTAGE = 0.5 // 封顶百分比 （也就是减伤达到50%时，颜色变为最亮）
   const CURVE_POWER = 0.8 // 曲率，值越小，颜色变化越大
@@ -263,20 +277,20 @@ function getReductionColor(reduction: number) {
   const cappedReduction = Math.min(1, roundedReduction / CURVE_CAP_PERCENTAGE)
   const colorIndex = Math.min(9, Math.floor(cappedReduction * 10))
   const linearProgress = colorIndex / 9
-  const curvedProgress = Math.pow(linearProgress, CURVE_POWER)
-  const r =
-    START_COLOR[0]! + (TARGET_COLOR[0]! - START_COLOR[0]!) * curvedProgress
-  const g =
-    START_COLOR[1]! + (TARGET_COLOR[1]! - START_COLOR[1]!) * curvedProgress
-  const b =
-    START_COLOR[2]! + (TARGET_COLOR[2]! - START_COLOR[2]!) * curvedProgress
+  const curvedProgress = linearProgress ** CURVE_POWER
+  const r
+    = START_COLOR[0]! + (TARGET_COLOR[0]! - START_COLOR[0]!) * curvedProgress
+  const g
+    = START_COLOR[1]! + (TARGET_COLOR[1]! - START_COLOR[1]!) * curvedProgress
+  const b
+    = START_COLOR[2]! + (TARGET_COLOR[2]! - START_COLOR[2]!) * curvedProgress
 
   const color = `rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}, 1)`
   colorCache.set(roundedReduction, color)
   return color
 }
 
-const getJobIconUrl = (jobIcon: string, type: number) => {
+function getJobIconUrl(jobIcon: string, type: number) {
   const jobName = jobIcon.replaceAll(/([A-Z])/g, ' $1').trim()
   return `https://souma.diemoe.net/resources/img/cj${type}/${jobName}.png`
 }
@@ -285,8 +299,8 @@ const icon4k = store.icon4k
 
 function prepareRowVO(row: Omit<RowVO, 'preCalculated'>): RowVO {
   const reductionColor = getReductionColor(row.reduction)
-  const amountDisplay =
-    row.amount > 999_999
+  const amountDisplay
+    = row.amount > 999_999
       ? `${(row.amount / 10_000).toFixed(0)}万`
       : row.amount.toLocaleString()
   const jobIconSrc = getJobIconUrl(row.jobIcon, userOptions.iconType)
@@ -294,20 +308,22 @@ function prepareRowVO(row: Omit<RowVO, 'preCalculated'>): RowVO {
   const { amount, maxHp, currentHp, shield, type, reduction } = row
   const shieldValue = Math.round((maxHp * +shield) / 100)
   const hpPercent = Math.round((currentHp / maxHp) * 100)
-  const originalDamage =
-    (amount && Math.round((amount + shieldValue) / (1 - reduction))) || 0
+  const originalDamage
+    = (amount && Math.round((amount + shieldValue) / (1 - reduction))) || 0
   const originalDamageDisplay = originalDamage.toLocaleString()
 
   const commonSkillSort = (a: KeySkillSnapshot, b: KeySkillSnapshot) => {
     const scopeOrder = { party: 0, other: 1, self: 2 } as const
-    if (a.scope !== b.scope) return scopeOrder[a.scope] - scopeOrder[b.scope]
+    if (a.scope !== b.scope)
+      return scopeOrder[a.scope] - scopeOrder[b.scope]
     if (a.ownerJob !== b.ownerJob) {
       return (
-        DEFAULT_JOB_SORT_ORDER.indexOf(a.ownerJob) -
-        DEFAULT_JOB_SORT_ORDER.indexOf(b.ownerJob)
+        DEFAULT_JOB_SORT_ORDER.indexOf(a.ownerJob)
+        - DEFAULT_JOB_SORT_ORDER.indexOf(b.ownerJob)
       )
     }
-    if (a.recast1000ms !== b.recast1000ms) return b.recast1000ms - a.recast1000ms
+    if (a.recast1000ms !== b.recast1000ms)
+      return b.recast1000ms - a.recast1000ms
     return a.id - b.id
   }
 
@@ -318,7 +334,7 @@ function prepareRowVO(row: Omit<RowVO, 'preCalculated'>): RowVO {
       amountDisplay,
       damageTypeClass: (row.effect === 'heal') ? 'is-heal' : type,
       jobIconSrc,
-      keigenns: row.keigenns.map((v) => ({
+      keigenns: row.keigenns.map(v => ({
         src: getImgSrc(`/i/${v.fullIcon}${icon4k}.png`),
         usefulClass: multiplierEffect(v, type as any),
         title: `${userOptions.statusCN ? v.name : v.effect}(${v.source})`,
@@ -335,7 +351,8 @@ function prepareRowVO(row: Omit<RowVO, 'preCalculated'>): RowVO {
 
 function handleLine(line: string) {
   const type = line.substring(0, line.indexOf('|'))
-  if (!type) return
+  if (!type)
+    return
   const splitLine = line.split('|')
 
   resourceManager.processLine(type, splitLine, cooldownTracker)
@@ -344,7 +361,8 @@ function handleLine(line: string) {
     case '26': // GainsEffect
       {
         const match = regexes.gainsEffect.exec(line)
-        if (!match) return
+        if (!match)
+          return
         const effectId = splitLine[logDefinitions.GainsEffect.fields.effectId]!
         const effect = splitLine[logDefinitions.GainsEffect.fields.effect]!
         const target = splitLine[logDefinitions.GainsEffect.fields.target]!
@@ -355,16 +373,17 @@ function handleLine(line: string) {
         )
         let keigenn: Keigenn | undefined = getKeigenn(effectId)
         if (!keigenn) {
-          const vulnerable =
-            (targetId.startsWith('1') &&
-              universalVulnerableFriendly.get(
-                Number.parseInt(effectId, 16).toString(),
-              )) ||
-            (targetId.startsWith('4') &&
-              universalVulnerableEnemy.get(
+          const vulnerable
+            = (targetId.startsWith('1')
+              && universalVulnerableFriendly.get(
                 Number.parseInt(effectId, 16).toString(),
               ))
-          if (!vulnerable) return
+              || (targetId.startsWith('4')
+                && universalVulnerableEnemy.get(
+                  Number.parseInt(effectId, 16).toString(),
+                ))
+          if (!vulnerable)
+            return
           const fullIcon = completeIcon(vulnerable.icon)
           const realIcon = count > 1 ? stackUrl(fullIcon, count) : fullIcon
           keigenn = {
@@ -382,8 +401,8 @@ function handleLine(line: string) {
         const timestamp = new Date(
           splitLine[logDefinitions.GainsEffect.fields.timestamp]!,
         ).getTime()
-        const expirationTimestamp =
-          timestamp + Number.parseFloat(duration) * 1000
+        const expirationTimestamp
+          = timestamp + Number.parseFloat(duration) * 1000
         const status: Status = {
           name: keigenn.name,
           type: keigenn.type,
@@ -403,7 +422,8 @@ function handleLine(line: string) {
           if (statusData.friendly[targetId] === undefined)
             statusData.friendly[targetId] = {}
           statusData.friendly[targetId][effectId] = status
-        } else if (targetId.startsWith('4') && !keigenn.isFriendly) {
+        }
+        else if (targetId.startsWith('4') && !keigenn.isFriendly) {
           if (statusData.enemy[target] === undefined)
             statusData.enemy[target] = {}
           statusData.enemy[target][effectId] = status
@@ -419,7 +439,8 @@ function handleLine(line: string) {
         if (targetId.startsWith('1')) {
           if (statusData.friendly[targetId])
             Reflect.deleteProperty(statusData.friendly[targetId], effectId)
-        } else {
+        }
+        else {
           if (statusData.enemy[target])
             Reflect.deleteProperty(statusData.enemy[target], effectId)
         }
@@ -429,9 +450,10 @@ function handleLine(line: string) {
     case '21':
     case '22': // Ability
       {
-        if (combatTimeStamp === 0) return
-        const sourceId =
-          splitLine[logDefinitions.Ability.fields.sourceId] ?? '???'
+        if (combatTimeStamp === 0)
+          return
+        const sourceId
+          = splitLine[logDefinitions.Ability.fields.sourceId] ?? '???'
         const id = splitLine[logDefinitions.Ability.fields.id] ?? '???'
         const timestamp = new Date(
           splitLine[logDefinitions.Ability.fields.timestamp] ?? '???',
@@ -462,41 +484,41 @@ function handleLine(line: string) {
         }
 
         const ability = processAbilityLine(splitLine)
-        const targetId =
-          splitLine[logDefinitions.Ability.fields.targetId] ?? '???'
-        const isHeal =
-          ability.isHeal && ability.amount > 0 && targetId.startsWith('1')
-        const isDamage =
-          ability.isAttack &&
-          ability.amount >= 0 &&
-          sourceId.startsWith('4') &&
-          targetId.startsWith('1')
+        const targetId
+          = splitLine[logDefinitions.Ability.fields.targetId] ?? '???'
+        const isHeal
+          = ability.isHeal && ability.amount > 0 && targetId.startsWith('1')
+        const isDamage
+          = ability.isAttack
+            && ability.amount >= 0
+            && sourceId.startsWith('4')
+            && targetId.startsWith('1')
 
         if (isHeal || isDamage) {
-
           if (
             !(
-              targetId === povId ||
-              partyLogList.includes(targetId) ||
-              partyEventParty.find((v) => v.id === targetId)
+              targetId === povId
+              || partyLogList.includes(targetId)
+              || partyEventParty.find(v => v.id === targetId)
             )
           ) {
             return
           }
 
-          const rawAblityName =
-            splitLine[logDefinitions.Ability.fields.ability]!
+          const rawAblityName
+            = splitLine[logDefinitions.Ability.fields.ability]!
           const rsvMatch = rawAblityName.match(/^_rsv_(?<id>\d+)_/)
           let action = rawAblityName
           if (rsvMatch) {
             const id: number = Number(rsvMatch.groups?.id)
-            action = (rsvData[id] ??
-              rawAblityName.match(/^_(?<id>rsv_\d+)_/)?.groups?.id)!
-          } else {
+            action = (rsvData[id]
+              ?? rawAblityName.match(/^_(?<id>rsv_\d+)_/)?.groups?.id)!
+          }
+          else {
             action = action.replace(/unknown_.*/, '攻击')
             if (
-              userOptions.parseAA === false &&
-              /^攻击|攻撃|[Aa]ttack$/.test(action)
+              userOptions.parseAA === false
+              && /^攻击|攻撃|[Aa]ttack$/.test(action)
             ) {
               return
             }
@@ -509,18 +531,18 @@ function handleLine(line: string) {
           const maxHp = Number(
             splitLine[logDefinitions.Ability.fields.targetMaxHp],
           )
-          const source =
-            splitLine[logDefinitions.Ability.fields.source] ?? '???'
-          const target =
-            splitLine[logDefinitions.Ability.fields.target] ?? '???'
+          const source
+            = splitLine[logDefinitions.Ability.fields.source] ?? '???'
+          const target
+            = splitLine[logDefinitions.Ability.fields.target] ?? '???'
           const { effect, type } = processFlags(ability.flags)
-          const time =
-            combatTimeStamp === 0 ? 0 : timestamp - combatTimeStamp
+          const time
+            = combatTimeStamp === 0 ? 0 : timestamp - combatTimeStamp
           const formattedTime = formatTime(time)
 
           // 使用缓存的职业信息
-          const { jobEnum, job, jobIcon, hasDuplicate } =
-            getCachedJobInfo(targetId)
+          const { jobEnum, job, jobIcon, hasDuplicate }
+            = getCachedJobInfo(targetId)
 
           // 浅拷贝快照
           const keigenns = Object.values(statusData.friendly[targetId] ?? [])
@@ -539,7 +561,7 @@ function handleLine(line: string) {
                     : remain.toFixed(remain > 0.05 && remain < 0.95 ? 1 : 0),
               }
             })
-            .filter((v) => Number(v.remainingDuration) > -3)
+            .filter(v => Number(v.remainingDuration) > -3)
 
           const shield = shieldData[targetId] ?? '0'
           const amount = ability.amount
@@ -548,15 +570,17 @@ function handleLine(line: string) {
           if (!isHeal && effect !== 'instant death' && effect !== 'dodge') {
             let flagMultiplier = 1
             // 格挡20%
-            if (effect === 'blocked damage') flagMultiplier = 0.8
+            if (effect === 'blocked damage')
+              flagMultiplier = 0.8
             // 招架15%
-            else if (effect === 'parried damage') flagMultiplier = 0.85
+            else if (effect === 'parried damage')
+              flagMultiplier = 0.85
 
             let reductionMultiplier = 1
             for (const k of keigenns) {
               if (k.type !== 'absorbed') {
-                reductionMultiplier *=
-                  k.performance[type as keyof PerformanceType] ?? 1
+                reductionMultiplier
+                  *= k.performance[type as keyof PerformanceType] ?? 1
               }
             }
             reduction = 1 - reductionMultiplier * flagMultiplier
@@ -584,7 +608,7 @@ function handleLine(line: string) {
               effect,
               type,
               shield,
-              povId: povId,
+              povId,
               reduction,
               keySkills: getKeySkillSnapshot(timestamp, targetId),
             }),
@@ -601,20 +625,22 @@ function handleLine(line: string) {
     case '25': // Death
       {
         const match = regexes.death.exec(line)
-        if (!match || !match.groups) return
+        if (!match || !match.groups)
+          return
         const targetId = match.groups.targetId!
         const target = match.groups.target!
         const sourceId = match.groups.sourceId!
         const source = sourceId === 'E0000000' ? '地形杀' : match.groups.source!
         const rawTimestamp = match.groups.timestamp!
 
-        if (combatTimeStamp === 0) return
+        if (combatTimeStamp === 0)
+          return
 
         if (
           !(
-            targetId === povId ||
-            partyLogList.includes(targetId!) ||
-            partyEventParty.find((v) => v.id === targetId)
+            targetId === povId
+            || partyLogList.includes(targetId!)
+            || partyEventParty.find(v => v.id === targetId)
           )
         ) {
           return
@@ -636,8 +662,8 @@ function handleLine(line: string) {
             id: '',
             action: 'Death',
             actionCN: sourceId === 'E0000000' ? '地形杀' : '死亡',
-            source: source,
-            target: target,
+            source,
+            target,
             targetId: targetId!,
             job,
             jobIcon,
@@ -650,7 +676,7 @@ function handleLine(line: string) {
             effect: 'death',
             type: 'death',
             shield: '0',
-            povId: povId,
+            povId,
             reduction: 0,
             keySkills: getKeySkillSnapshot(timestamp, targetId!),
           }),
@@ -669,10 +695,10 @@ function handleLine(line: string) {
 
     case '260': // InCombat
       {
-        const inACTCombat =
-          splitLine[logDefinitions.InCombat.fields.inACTCombat] === '1'
-        const inGameCombat =
-          splitLine[logDefinitions.InCombat.fields.inGameCombat] === '1'
+        const inACTCombat
+          = splitLine[logDefinitions.InCombat.fields.inACTCombat] === '1'
+        const inGameCombat
+          = splitLine[logDefinitions.InCombat.fields.inGameCombat] === '1'
         const timeStamp = new Date(
           splitLine[logDefinitions.InCombat.fields.timestamp]!,
         ).getTime()
@@ -690,7 +716,8 @@ function handleLine(line: string) {
             if (pendingRows.length > 0) {
               if (isPush) {
                 data.value[0]!.table.push(...pendingRows)
-              } else {
+              }
+              else {
                 data.value[0]!.table.unshift(...pendingRows.reverse())
               }
               pendingRows = []
@@ -699,7 +726,7 @@ function handleLine(line: string) {
               zoneName: '',
               duration: '00:00',
               table: shallowReactive([]),
-              key: key,
+              key,
               timestamp: timeStamp,
             })
             triggerRef(data)
@@ -714,14 +741,13 @@ function handleLine(line: string) {
         if (!inACTCombat && !inGameCombat) {
           // stop combat
           stopCombat(timeStamp)
-          return
         }
       }
       break
 
     case '01': // ChangeZone
       {
-        const zoneId = parseInt(
+        const zoneId = Number.parseInt(
           splitLine[logDefinitions.ChangeZone.fields.id]!,
           16,
         )
@@ -756,34 +782,30 @@ function handleLine(line: string) {
       break
 
     case '02': // PrimaryPlayer
-      {
-        povId = splitLine[logDefinitions.ChangedPlayer.fields.id]!
-       invalidateJobCache()
-      }
+      povId = splitLine[logDefinitions.ChangedPlayer.fields.id]!
+      invalidateJobCache()
       break
 
     case '03': // AddCombatant
-      {
-        if (splitLine[logDefinitions.AddedCombatant.fields.job] !== '00') {
-          const job = splitLine[logDefinitions.AddedCombatant.fields.job]!
-          const name = splitLine[logDefinitions.AddedCombatant.fields.name]!
-          const timestamp = new Date(
-            splitLine[logDefinitions.AddedCombatant.fields.timestamp]!,
-          ).getTime()
-          const level = parseInt(
-            splitLine[logDefinitions.AddedCombatant.fields.level]!,
-            16,
-          )
-          entitiesMap[
-            splitLine[logDefinitions.AddedCombatant.fields.id]!
-          ] = {
-            job: Number.parseInt(job, 16),
-            timestamp,
-            name,
-            level,
-          }
-          invalidateJobCache()
+      if (splitLine[logDefinitions.AddedCombatant.fields.job] !== '00') {
+        const job = splitLine[logDefinitions.AddedCombatant.fields.job]!
+        const name = splitLine[logDefinitions.AddedCombatant.fields.name]!
+        const timestamp = new Date(
+          splitLine[logDefinitions.AddedCombatant.fields.timestamp]!,
+        ).getTime()
+        const level = Number.parseInt(
+          splitLine[logDefinitions.AddedCombatant.fields.level]!,
+          16,
+        )
+        entitiesMap[
+          splitLine[logDefinitions.AddedCombatant.fields.id]!
+        ] = {
+          job: Number.parseInt(job, 16),
+          timestamp,
+          name,
+          level,
         }
+        invalidateJobCache()
       }
       break
 
@@ -809,7 +831,8 @@ function handleLine(line: string) {
         if (match) {
           const id = Number(match.groups?.id as string)
           const real = splitLine[logDefinitions.RSVData.fields.value]
-          if (id && real) rsvData[Number(id)] = real
+          if (id && real)
+            rsvData[Number(id)] = real
         }
       }
       break
@@ -818,18 +841,19 @@ function handleLine(line: string) {
       {
         const which = splitLine[logDefinitions.NetworkDoT.fields.which]!
         const effectId = splitLine[logDefinitions.NetworkDoT.fields.effectId]!
-        const effectIdNum = parseInt(effectId, 16)
+        const effectIdNum = Number.parseInt(effectId, 16)
         const isMicrocosmos = which === 'HoT' && effectIdNum === 0xA9E
-        if (!isMicrocosmos && !userOptions.parseDoT) return
+        if (!isMicrocosmos && !userOptions.parseDoT)
+          return
 
         const targetId = splitLine[logDefinitions.NetworkDoT.fields.id]!
         if (
-          (which !== 'DoT' && which !== 'HoT') ||
-          targetId.startsWith('4') ||
-          !(
-            targetId === povId ||
-            partyLogList.includes(targetId) ||
-            partyEventParty.find((v) => v.id === targetId)
+          (which !== 'DoT' && which !== 'HoT')
+          || targetId.startsWith('4')
+          || !(
+            targetId === povId
+            || partyLogList.includes(targetId)
+            || partyEventParty.find(v => v.id === targetId)
           )
         ) {
           return
@@ -850,13 +874,13 @@ function handleLine(line: string) {
           splitLine[logDefinitions.NetworkDoT.fields.currentHp],
         )
         const maxHp = Number(splitLine[logDefinitions.NetworkDoT.fields.maxHp])
-        const time =
-          combatTimeStamp === 0 ? 0 : timestamp - combatTimeStamp
+        const time
+          = combatTimeStamp === 0 ? 0 : timestamp - combatTimeStamp
         const formattedTime = formatTime(time)
 
         // 使用缓存的职业信息
-        const { jobEnum, job, jobIcon, hasDuplicate } =
-          getCachedJobInfo(targetId)
+        const { jobEnum, job, jobIcon, hasDuplicate }
+          = getCachedJobInfo(targetId)
 
         // HoT/DoT日志的source不准确 故无法计算目标减伤
         addRow(
@@ -881,7 +905,7 @@ function handleLine(line: string) {
             effect: isMicrocosmos ? 'heal' : 'damage done',
             type: isMicrocosmos ? 'heal' : 'dot',
             shield: shieldData[targetId] ?? '0',
-            povId: povId,
+            povId,
             reduction: 0,
             keySkills: [],
           }),
@@ -890,21 +914,16 @@ function handleLine(line: string) {
       break
 
     case '33': // ActorControl (including Wipe)
-      {
-        if (regexes.wipe.exec(line)) {
-          resourceManager.reset()
-          cooldownTracker = {}
-          shieldData = {}
-          statusData.friendly = {}
-          statusData.enemy = {}
-        }
+      if (regexes.wipe.exec(line)) {
+        resourceManager.reset()
+        cooldownTracker = {}
+        shieldData = {}
+        statusData.friendly = {}
+        statusData.enemy = {}
       }
       break
   }
 }
-
-// 职业信息缓存
-import type { FFIcon } from '@/types/fflogs'
 
 interface JobInfo {
   jobEnum: number
@@ -924,15 +943,17 @@ function invalidateJobCache() {
 
 function updateResourceManagerJobs() {
   const jobs = new Set<number>()
-  partyEventParty.forEach((p) => jobs.add(p.job))
+  partyEventParty.forEach(p => jobs.add(p.job))
   if (povId) {
-    const pov = partyEventParty.find((p) => p.id === povId) || entitiesMap[povId]
-    if (pov) jobs.add(pov.job)
+    const pov = partyEventParty.find(p => p.id === povId) || entitiesMap[povId]
+    if (pov)
+      jobs.add(pov.job)
   }
   // 如果当前正在处理 LogLine 的列表，也可以加入进来
-  partyLogList.forEach(id => {
+  partyLogList.forEach((id) => {
     const info = entitiesMap[id]
-    if (info) jobs.add(info.job)
+    if (info)
+      jobs.add(info.job)
   })
   resourceManager.updateParty(jobs)
 }
@@ -940,24 +961,24 @@ function updateResourceManagerJobs() {
 function getJobById(targetId: string) {
   const fromJobMap = entitiesMap[targetId]
   const fromPartyEvent = partyEventParty.find(
-    (v) => v.id === targetId,
+    v => v.id === targetId,
   ) ?? { job: 0, timestamp: 0 }
-  const need =
-    (fromJobMap?.timestamp ?? 0) > fromPartyEvent.timestamp
+  const need
+    = (fromJobMap?.timestamp ?? 0) > fromPartyEvent.timestamp
       ? fromJobMap
       : fromPartyEvent
 
-  const hasDuplicate =
-    need === fromJobMap
+  const hasDuplicate
+    = need === fromJobMap
       ? Object.entries(entitiesMap).some(
-        ([id, job]) =>
-          id !== targetId &&
-          job.job === need?.job &&
-          partyLogList.includes(id),
-      )
+          ([id, job]) =>
+            id !== targetId
+            && job.job === need?.job
+            && partyLogList.includes(id),
+        )
       : partyEventParty.some(
-        (v) => v.id !== targetId && v.job === need?.job,
-      )
+          v => v.id !== targetId && v.job === need?.job,
+        )
   return { job: need?.job ?? 0, hasDuplicate }
 }
 
@@ -987,10 +1008,6 @@ function getCachedJobInfo(targetId: string): JobInfo {
   return jobInfo
 }
 
-let pendingRows: RowVO[] = []
-let batchTimer: number | null = null
-
-const tableRef = ref<any>(null)
 function addRow(row: RowVO) {
   pendingRows.push(markRaw(row))
   if (batchTimer === null) {
@@ -1000,7 +1017,8 @@ function addRow(row: RowVO) {
         if (!loading.value) {
           nextTick(() => tableRef.value?.scrollToBottom())
         }
-      } else {
+      }
+      else {
         data.value[0]!.table.unshift(...pendingRows.reverse())
       }
       pendingRows = []
@@ -1010,7 +1028,8 @@ function addRow(row: RowVO) {
 }
 
 function stopCombat(timeStamp: number) {
-  if (combatTimeStamp === 0) return
+  if (combatTimeStamp === 0)
+    return
   data.value[0]!.duration = formatTime(timeStamp - combatTimeStamp)
   data.value[0] = markRaw(data.value[0]!)
   combatTimeStamp = 0
@@ -1027,32 +1046,34 @@ function getKeySkillSnapshot(
 ): KeySkillSnapshot[] {
   if (!skillSnapshotSkeletonCache) {
     const candidateIds = new Set<string>()
-    partyEventParty.forEach((p) => candidateIds.add(p.id))
-    partyLogList.forEach((id) => candidateIds.add(id))
-    if (povId) candidateIds.add(povId)
+    partyEventParty.forEach(p => candidateIds.add(p.id))
+    partyLogList.forEach(id => candidateIds.add(id))
+    if (povId)
+      candidateIds.add(povId)
 
-    const players: { id: string; job: number; name: string; level: number }[] = []
+    const players: { id: string, job: number, name: string, level: number }[] = []
     for (const id of candidateIds) {
-      const p = partyEventParty.find((v) => v.id === id)
+      const p = partyEventParty.find(v => v.id === id)
       if (p) {
         players.push({ id: p.id, job: p.job, name: p.name, level: p.level })
         continue
       }
       const info = entitiesMap[id]
-      if (info)
+      if (info) {
         players.push({
           id,
           job: info.job,
           name: info.name ?? 'Unknown',
           level: info.level,
         })
+      }
     }
 
     skillSnapshotSkeletonCache = players.flatMap((player) => {
       const level = player.level || 999
       return trackedSkills
         .filter(
-          (skill) => skill.job.includes(player.job) && skill.minLevel <= level,
+          skill => skill.job.includes(player.job) && skill.minLevel <= level,
         )
         .map((skill) => {
           const id = parseDynamicValue(skill.id, level)
@@ -1076,67 +1097,72 @@ function getKeySkillSnapshot(
     })
   }
 
-  if (!skillSnapshotSkeletonCache) return []
+  if (!skillSnapshotSkeletonCache)
+    return []
 
   return skillSnapshotSkeletonCache
     .filter((v) => {
-      if (v.scope === 'party') return true
-      if (v.scope === 'self') return v.ownerId === targetId
-      if (v.scope === 'other') return v.ownerId !== targetId
+      if (v.scope === 'party')
+        return true
+      if (v.scope === 'self')
+        return v.ownerId === targetId
+      if (v.scope === 'other')
+        return v.ownerId !== targetId
       return false
     })
     .map((item) => {
-    const history = cooldownTracker[item.ownerId]?.[compareSame(item.id)] ?? []
-    const maxCharges = item.maxCharges || 1
-    const recastMs = item.recast1000ms * 1000
+      const history = cooldownTracker[item.ownerId]?.[compareSame(item.id)] ?? []
+      const maxCharges = item.maxCharges || 1
+      const recastMs = item.recast1000ms * 1000
 
-    // 计算每个槽位的冷却结束时间
-    const freeAt = new Array(maxCharges).fill(0)
-    for (let i = 0; i < history.length; i++) {
+      // 计算每个槽位的冷却结束时间
+      const freeAt = Array.from({ length: maxCharges }, () => 0)
+      for (let i = 0; i < history.length; i++) {
       // 第 i 次使用技能消耗一个充能，该充能将在上次冷却结束（或本次使用时间）后 recastMs 恢复
-      const usedAt = history[i]!
-      const prevFreeAt = i > 0 ? freeAt[i - 1]! : 0
-      freeAt[i] = Math.max(usedAt, prevFreeAt) + recastMs
-    }
-
-    let chargesReady = maxCharges - history.length
-    let recastLeft = 0
-
-    // 检查历史记录中哪些充能已经恢复
-    for (let i = 0; i < history.length; i++) {
-      if (timestamp >= freeAt[i]!) {
-        chargesReady++
-      } else {
-        // 第一个还没恢复的充能即为当前的 CD 状态
-        recastLeft = Math.ceil((freeAt[i]! - timestamp) / 1000)
-        break
+        const usedAt = history[i]!
+        const prevFreeAt = i > 0 ? freeAt[i - 1]! : 0
+        freeAt[i] = Math.max(usedAt, prevFreeAt) + recastMs
       }
-    }
 
-    const jobResource = item.showResource ? resourceManager.getResource(item.ownerJob, item.ownerId) : undefined
-    const isResourceReady = item.resourceCost === undefined 
-      ? true 
-      : resourceManager.isResourceReady(item.ownerJob, item.ownerId, item.id, item.resourceCost)
+      let chargesReady = maxCharges - history.length
+      let recastLeft = 0
 
-    const ready = chargesReady > 0 && isResourceReady
+      // 检查历史记录中哪些充能已经恢复
+      for (let i = 0; i < history.length; i++) {
+        if (timestamp >= freeAt[i]!) {
+          chargesReady++
+        }
+        else {
+        // 第一个还没恢复的充能即为当前的 CD 状态
+          recastLeft = Math.ceil((freeAt[i]! - timestamp) / 1000)
+          break
+        }
+      }
 
-    const extraText = resourceManager.getExtraText(
-      item.ownerJob,
-      item.ownerId,
-      item.id,
-      timestamp,
-      cooldownTracker[item.ownerId] || {},
-    )
+      const jobResource = item.showResource ? resourceManager.getResource(item.ownerJob, item.ownerId) : undefined
+      const isResourceReady = item.resourceCost === undefined
+        ? true
+        : resourceManager.isResourceReady(item.ownerJob, item.ownerId, item.id, item.resourceCost)
 
-    return {
-      ...item,
-      jobResource,
-      recastLeft,
-      ready,
-      chargesReady,
-      extraText,
-    }
-  })
+      const ready = chargesReady > 0 && isResourceReady
+
+      const extraText = resourceManager.getExtraText(
+        item.ownerJob,
+        item.ownerId,
+        item.id,
+        timestamp,
+        cooldownTracker[item.ownerId] || {},
+      )
+
+      return {
+        ...item,
+        jobResource,
+        recastLeft,
+        ready,
+        chargesReady,
+        extraText,
+      }
+    })
 }
 
 async function saveStorage() {
@@ -1144,7 +1170,7 @@ async function saveStorage() {
     return
   }
   const validData = data.value
-    .filter((v) => v.key !== 'init' && v.timestamp > 0 && v.table.length > 0)
+    .filter(v => v.key !== 'init' && v.timestamp > 0 && v.table.length > 0)
     .map((v) => {
       const rawTable = Array.isArray(v.table) ? toRaw(v.table) : []
       return {
@@ -1161,15 +1187,16 @@ async function loadStorage() {
     if (isNewVersion) {
       await db.replaceAll([])
       data.value.length = 0
-    } else {
+    }
+    else {
       const loadData = await db.getAll()
       if (loadData.length) {
         data.value.length = 0
         let result = loadData
           .filter(
-            (v) =>
-              store.isBrowser ||
-              v.timestamp > Date.now() - 1000 * 60 * 60 * 24 * 3,
+            v =>
+              store.isBrowser
+              || v.timestamp > Date.now() - 1000 * 60 * 60 * 24 * 3,
           )
           .sort((a, b) => a.timestamp - b.timestamp)
 
@@ -1177,7 +1204,7 @@ async function loadStorage() {
           result = result.reverse()
         }
 
-        const mappedResult = result.map((v) => ({
+        const mappedResult = result.map(v => ({
           ...v,
           table: shallowReactive(Array.isArray(v.table) ? v.table.map((row: RowVO) => markRaw(row)) : []),
         }))
@@ -1187,17 +1214,17 @@ async function loadStorage() {
     }
 
     if (data.value.length === 0) {
-        data.value.push({
-          zoneName: '',
-          duration: '00:00',
-          table: shallowReactive([]),
-          key: 'init',
-          timestamp: -1,
-        })
-      }
-      triggerRef(data)
-
-  } catch (e) {
+      data.value.push({
+        zoneName: '',
+        duration: '00:00',
+        table: shallowReactive([]),
+        key: 'init',
+        timestamp: -1,
+      })
+    }
+    triggerRef(data)
+  }
+  catch (e) {
     console.error(e)
     data.value.length = 0
     throw e
@@ -1214,7 +1241,7 @@ onMounted(() => {
   initActionChinese()
   // 加载持久化数据
   loadPersistentData()
-  
+
   const isDark = useDark({ storageKey: 'keigenn-record-2-theme' })
   const toggleDark = useToggle(isDark)
   if (isDark.value === false) {
@@ -1232,7 +1259,7 @@ onMounted(() => {
     handleLine(e.rawLine)
   })
   addOverlayListener('PartyChanged', (e) => {
-    partyEventParty = e.party.map((v) => ({
+    partyEventParty = e.party.map(v => ({
       ...v,
       timestamp: Date.now(),
     }))
@@ -1243,7 +1270,8 @@ onMounted(() => {
     invalidateJobCache()
   })
   addOverlayListener('CombatData', ((e: CombatDataEvent) => {
-    if (combatTimeStamp > 0) return
+    if (combatTimeStamp > 0)
+      return
     if (e.isActive === 'true') {
       if (e.Encounter?.CurrentZoneName) {
         zoneName = e.Encounter.CurrentZoneName
@@ -1254,7 +1282,8 @@ onMounted(() => {
       let durationMs = 0
       if (parts.length === 3) {
         durationMs = (parts[0]! * 3600 + parts[1]! * 60 + parts[2]!) * 1000
-      } else if (parts.length === 2) {
+      }
+      else if (parts.length === 2) {
         durationMs = (parts[0]! * 60 + parts[1]!) * 1000
       }
 
@@ -1348,23 +1377,31 @@ function formatTimestamp(ms: number): string {
   <div class="wrapper" :style="{ '--scale': userOptions.scale, '--opacity': userOptions.opacity }" @contextmenu.prevent>
     <header>
       <div class="header-select">
-        <el-select v-show="!minimize" v-model="select" size="small" class="combat-select"
+        <el-select
+          v-show="!minimize" v-model="select" size="small" class="combat-select"
           :class="store.isBrowser ? 'browser' : 'act'" popper-class="combat-select-popup" :offset="0"
-          :show-arrow="false">
-          <el-option v-for="i in data.length" :key="`${data[i - 1]!.key}-${data[i - 1]!.duration}-${data[i - 1]!.zoneName
+          :show-arrow="false"
+        >
+          <el-option
+            v-for="i in data.length" :key="`${data[i - 1]!.key}-${data[i - 1]!.duration}-${data[i - 1]!.zoneName
             }`" :value="i - 1"
-            :label="`${data[i - 1]!.zoneName}${data[i - 1]!.zoneName === '' ? '' : ` - [${data[i - 1]!.duration}] ${formatTimestamp(data[i - 1]!.timestamp)}`}`" />
+            :label="`${data[i - 1]!.zoneName}${data[i - 1]!.zoneName === '' ? '' : ` - [${data[i - 1]!.duration}] ${formatTimestamp(data[i - 1]!.timestamp)}`}`"
+          />
         </el-select>
       </div>
-      <el-button v-if="!store.isBrowser" class="minimize" :class="minimize ? 'in-minimize' : 'not-minimize'"
-        :icon="minimize ? ZoomIn : ZoomOut" circle :style="{ opacity: minimize ? 0.5 : 1 }" @click="clickMinimize" />
+      <el-button
+        v-if="!store.isBrowser" class="minimize" :class="minimize ? 'in-minimize' : 'not-minimize'"
+        :icon="minimize ? ZoomIn : ZoomOut" circle :style="{ opacity: minimize ? 0.5 : 1 }" @click="clickMinimize"
+      />
     </header>
     <main v-show="!minimize" style="height: 100%">
       <KeigennRecord2Table ref="tableRef" :rows="data[select]!.table" :action-key="actionKey" />
     </main>
   </div>
   <div v-if="store.isBrowser || dev" class="testLog">
-    <el-button v-if="dev" @click="test"> 测试 </el-button>
+    <el-button v-if="dev" @click="test">
+      测试
+    </el-button>
     <CommonTestLog m-1 @before-handle="beforeHandle" @after-handle="afterHandle" @handle-line="handleLine" />
   </div>
 </template>

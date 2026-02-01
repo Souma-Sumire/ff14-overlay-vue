@@ -2,10 +2,11 @@ const blockedHosts = ['shimo.im', 'vfiles.gtimg.cn', 'pan.baidu.com']
 
 export function checkReferrer() {
   const ref = document.referrer
-  if (!ref) return
+  if (!ref)
+    return
 
   const url = new URL(ref)
-  const hit = blockedHosts.some((host) => url.hostname.includes(host))
+  const hit = blockedHosts.some(host => url.hostname.includes(host))
   if (hit) {
     document.body.innerHTML = ''
     document.body.style.height = '100vh'

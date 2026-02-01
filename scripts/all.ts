@@ -1,5 +1,6 @@
 import { execSync } from 'node:child_process'
 import path from 'node:path'
+import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -25,7 +26,8 @@ for (const script of scripts) {
 
   try {
     execSync(`npx tsx ${scriptPath}`, { stdio: 'inherit' })
-  } catch (error) {
+  }
+  catch (error) {
     console.error(`❌ Error running ${script}:`, error)
     process.exit(1)
   }

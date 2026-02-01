@@ -172,7 +172,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     348: [
       {
-        Name: "<a href='https://www.bilibili.com/video/BV1xF411G7rd/'target='_blank'>奶油咖啡</a>",
+        Name: '<a href=\'https://www.bilibili.com/video/BV1xF411G7rd/\'target=\'_blank\'>奶油咖啡</a>',
         Text: '/p 究极神兵击退撞球\n/p 当前MT：向北击退（不撞球）\n/p 当前ST：向东击退/防击退（全减撞东）\n/p 人群：向南击退（南→西）\n/p 第三次（四组球）MT击退时开LB\n/p MT优先减伤覆盖平A和小死刑\n/p ST减伤不够时跟人群一起撞',
       },
     ],
@@ -2291,7 +2291,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Text: '/p 【莫古力龙诗减伤宏P1~P7】只安排目标减伤，场地减伤请队内自行沟通\n/p P1至圣：MT雪仇、D1牵制                     ｜P2古代爆震：MT雪仇、D1牵制、D4昏乱\n/p P1锁链点名：ST雪仇、D2牵制、D4昏乱｜P2碎屏斩：ST雪仇、D2牵制、D4昏乱\n/p ————————————————\n/p P3第一次连旋：MT雪仇、D1牵制               ｜P4陨石流：给不给都可以\n/p P3第二次连旋：ST雪仇、D2牵制、D4昏乱 ｜P4.5纯洁心灵：ST雪仇、D2牵制、D4昏乱\n/p ————————————————\n/p P5第一次古代爆震：MT雪仇、D1牵制              ｜P6两次血量检测：MT雪仇\n/p P5第二次古代爆震：ST雪仇、D2牵制、D4昏乱｜P6死亡轮回：ST雪仇、D1牵制、D4昏乱\n/p ————————————————\n/p 转场，超大AOE注意减伤嗷！别好不容易要进P7了结果噶了嗷！MTST给D34减伤，H12D12开特色减伤，龙骑找奶妈要\n/p ————————————————\n/p P7第一次死亡轮回：MT雪仇、D1牵制、D4昏乱  ｜P7第一次陨石：ST雪仇、D2牵制\n/p P7第二次死亡轮回：MT雪仇                 ｜P7第二次陨石：ST雪仇  、D1牵制、D4昏乱\n/p P7第三次死亡轮回：别看了！有什么给什么！留着过年吗？\n（如果觉得第二次死亡轮回的压力过大，可以考虑2死亡轮回D2牵制）',
       },
       {
-        Name: "陨石逃课宏 需要连打+锁60帧  <a href='https://docs.qq.com/doc/DSkpLTVNTT2doT2Rz' target='_blank'>来源</a>",
+        Name: '陨石逃课宏 需要连打+锁60帧  <a href=\'https://docs.qq.com/doc/DSkpLTVNTT2doT2Rz\' target=\'_blank\'>来源</a>',
         Text: '/mlock\n/merror off\n/automove on <wait.1>\n/automove off\n/echo\n/echo\n/echo\n/echo\n/echo\n/echo\n/echo\n/echo\n/echo\n/echo\n/echo',
       },
       {
@@ -2328,7 +2328,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         },
       },
       {
-        Name: "P2 @竹取辉夜姬  <a href='https://nga.178.com/read.php?tid=31807681' target='_blank'>来源</a>",
+        Name: 'P2 @竹取辉夜姬  <a href=\'https://nga.178.com/read.php?tid=31807681\' target=\'_blank\'>来源</a>',
         Place: {
           A: { X: 100, Y: 0, Z: 86.8, Active: true },
           B: { X: 113.2, Y: 0, Z: 100, Active: true },
@@ -2425,11 +2425,11 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     998: [
       {
-        Name: "子言评论区 @辅助不萌 <a href='https://www.bilibili.com/video/BV1PU4y1e72C/?vd_source=583984e97858d637c7db9eb92b042c91' target='_blank'>来源</a>",
+        Name: '子言评论区 @辅助不萌 <a href=\'https://www.bilibili.com/video/BV1PU4y1e72C/?vd_source=583984e97858d637c7db9eb92b042c91\' target=\'_blank\'>来源</a>',
         Text: '/p 分摊站位\n/p MT H1 D1 D2左上\n/p ST  H2 D3 D4 右下\n/p 踩塔站位\n/p  MT   D1\n/p  ST    D2\n/p  H1   D3\n/p  H2   D4\n/p 三连点名基础分散站位\n/p D1 MT D2\n/p H1  ○  ST\n/p D3  H2 D4\n/p 三连点名最终站位\n/p          核爆t\n/p 大圈    ○   核爆d\n/p          核爆n',
       },
       {
-        Name: "斜点角尖击退点 @竹取辉夜姬 <a href='https://nga.178.com/read.php?tid=33015568' target='_blank'>来源</a>",
+        Name: '斜点角尖击退点 @竹取辉夜姬 <a href=\'https://nga.178.com/read.php?tid=33015568\' target=\'_blank\'>来源</a>',
         Place: {
           A: { X: 100, Y: 0, Z: 83, Active: true },
           B: { X: 117, Y: 0, Z: 100, Active: true },
@@ -2772,7 +2772,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     1072: [
       {
-        Name: "宏 <a href='https://nga.178.com/read.php?tid=34756217' target='_blank'>来源</a>",
+        Name: '宏 <a href=\'https://nga.178.com/read.php?tid=34756217\' target=\'_blank\'>来源</a>',
         Text: '/p 【散开基准】咒发突袭：BOSS面向基准　其它：北（A）基准\n/p 【基本散开】 【十字分摊】\n/p D3 MT D4　　　MTD3\n/p H1　　H2　 H1D1　 H2D4\n/p D1 ST D2　 　　 STD2\n/p 【咒法突袭（分摊/分散）】\n/p D3H1D1MT←▲→STD2H2D4　※分散：T原地不动,D1D2在扇形结束后往内侧走\n/p 【距离衰减+分摊】【PS连线：TH固定法】\n/p 　　MT　　ST　　　　　　   MT(A)\n/p 　　　　◎ 　 　 　　　H1(D)  DPS  H2(B)\n/p 　　　分摊　　　　　　　　　ST(C)  ※T分摊死刑点名T无敌单吃\n/p 【咒发拘束1】①③标记处分摊\n/p 【咒发拘束2/PS连线】DPS：顺时针（左）　TH：逆时针（右）\n/p 【4连黄圈】C点集合，顺时针放圈\n/p 【PS连线2分摊】对组分摊：全员靠近后和邻组分摊  邻组分摊：无点名找点名分摊',
       },
       {
@@ -2911,7 +2911,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     1084: [
       {
-        Name: "P6S 千星流月夜（推荐） <a href='https://www.bilibili.com/video/BV1RG4y1u78L' target='_blank'>来源</a>",
+        Name: 'P6S 千星流月夜（推荐） <a href=\'https://www.bilibili.com/video/BV1RG4y1u78L\' target=\'_blank\'>来源</a>',
         Text: '/p ※MT组：MTH1D1D3　ST组：STH2D2D4\n/p 　【基本散开】　　【恶病质】\n/p MT/D3　ST/D4　　　　20　20\n/p 　　　★　　　　　　8　★　8\n/p H1/D1　H2/D2　　　12　　　12\n/p 　　　　　　　　　　16　　16\n/p 【分摊分组】　　　　｜【苦痛爆发+寄生之舞】\n/p 西：MT组 东：ST組　｜DPS分摊：场地4点 TN分摊：场地3点\n/p ※顺时针移动处理分摊｜DPS大圈：D1→B D2→4 D3→右下 D4→D\n/p 【致病胞流】　　　　｜TN 大圈：MT→3 ST→D H1→左上 H2→B\n/p 奇数：场地1点　　　 ｜【苦痛爆发+界外劈砍】\n/p 偶数：场地2点　　 　｜DPS分摊：场地4点 TN分摊：场地3点\n/p 　　　　　　　　　　｜DPS大圈：B /TN大圈：D\n/p 【恶病质+多元以太】\n/p 安全格中上半两格→AoE　下半两格→分摊',
       },
       {
@@ -3163,7 +3163,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     1122: [
       {
-        Name: "绝欧米茄八方标准点4A1 <a href='https://nga.178.com/read.php?tid=35178002' target='_blank'>来源</a>",
+        Name: '绝欧米茄八方标准点4A1 <a href=\'https://nga.178.com/read.php?tid=35178002\' target=\'_blank\'>来源</a>',
         Place: {
           A: { X: 100, Y: 0, Z: 86.99, Active: true },
           B: { X: 113.01, Y: 0, Z: 100, Active: true },
@@ -3195,7 +3195,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Text: '/p ■散開(北基準)--■44頭割り-------ハムカツ式改---\n/p D3 MT D4　　| 西/外:MTH1D1D3\n/p H1 ★ H2　　| 東/内:STH2D2D4\n/p D1 ST D2　　 | 縦安置 北:MT組 南:ST組\n/p ■ディレイスパーク--------------------------------------\n/p ディレイアースを避けた位置で捨てる\n/p ■ダブルメテオ-------------------------------------------\n/p DPS:3人塔　フレア北\n/p TH:2人塔　フレア南　ノックバック中央\n/p ■ヴォイド･コメットレイン-----------------------------\n/p 北1:H1D3　北2:MTD1　南1:H2D4　南2:STD2\n/p ■ウィンドスフィア2,3回目----------------------------\n/p 北/西 H1D3,MTD1,STD2,H2D4 南/東\n/p ■三連黒竜閃---------------------------------------------\n/p T:北 東西:H 南:DPS',
       },
       {
-        Name: "<a href='https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86'target='_blank'>极高贝扎安全角树歌</a>",
+        Name: '<a href=\'https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86\'target=\'_blank\'>极高贝扎安全角树歌</a>',
         Place: {
           A: { X: 100, Y: 0.03, Z: 86, ID: 0, Active: true },
           B: { X: 114, Y: 0.03, Z: 100, ID: 1, Active: true },
@@ -3293,7 +3293,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         },
       },
       {
-        Name: "<a href='https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86'target='_blank'>P10S Game8国服适配</a>",
+        Name: '<a href=\'https://bbs.tggfl.com/topic/223/ff14%E5%8D%AB%E6%9C%88-waymark-present-%E6%A0%87%E7%82%B9%E5%90%88%E9%9B%86\'target=\'_blank\'>P10S Game8国服适配</a>',
         Place: {
           A: { X: 100, Y: 0, Z: 98.2, ID: 0, Active: true },
           B: { X: 92.009, Y: 0, Z: 111.204, ID: 6, Active: true },
@@ -3419,7 +3419,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     1155: [
       {
-        Name: "<a href='https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs'target='_blank'>树嘎 Enrance Mob</a>",
+        Name: '<a href=\'https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs\'target=\'_blank\'>树嘎 Enrance Mob</a>',
         Place: {
           A: { X: -11.747, Y: 0, Z: -9.764, ID: 0, Active: true },
           B: { X: -16.405, Y: 0, Z: 8.963, ID: 1, Active: true },
@@ -3432,7 +3432,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         },
       },
       {
-        Name: "<a href='https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs'target='_blank'>树嘎 Boss 1</a>",
+        Name: '<a href=\'https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs\'target=\'_blank\'>树嘎 Boss 1</a>',
         Place: {
           A: { X: 0, Y: 0, Z: -117, ID: 0, Active: true },
           B: { X: 17, Y: 0, Z: -100, ID: 1, Active: true },
@@ -3445,7 +3445,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         },
       },
       {
-        Name: "<a href='https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs'target='_blank'>树嘎 Middle Mob</a>",
+        Name: '<a href=\'https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs\'target=\'_blank\'>树嘎 Middle Mob</a>',
         Place: {
           A: { X: 0, Y: 0, Z: 0, ID: 0, Active: false },
           B: { X: 0, Y: 0, Z: 0, ID: 1, Active: false },
@@ -3458,7 +3458,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         },
       },
       {
-        Name: "<a href='https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs'target='_blank'>树嘎 Boss 2</a>",
+        Name: '<a href=\'https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs\'target=\'_blank\'>树嘎 Boss 2</a>',
         Place: {
           A: { X: 300, Y: 7, Z: -139.5, ID: 0, Active: true },
           B: { X: 318.5, Y: 7, Z: -120, ID: 1, Active: true },
@@ -3471,7 +3471,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         },
       },
       {
-        Name: "<a href='https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs'target='_blank'>树嘎 Boss 3</a>",
+        Name: '<a href=\'https://docs.qq.com/doc/DUG5OR2x5T0d5TWVs\'target=\'_blank\'>树嘎 Boss 3</a>',
         Place: {
           A: { X: -200, Y: -195, Z: -13.199, ID: 0, Active: true },
           B: { X: -186.199, Y: -195, Z: 0, ID: 1, Active: true },
@@ -3484,7 +3484,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         },
       },
       {
-        Name: "<a href='https://www.bilibili.com/read/cv28235466/'target='_blank'>MMW BOSS1</a>",
+        Name: '<a href=\'https://www.bilibili.com/read/cv28235466/\'target=\'_blank\'>MMW BOSS1</a>',
         Place: {
           A: { X: -0.282, Y: 0, Z: -113.311, ID: 0, Active: true },
           B: { X: 15.779, Y: 0, Z: -99.813, ID: 1, Active: true },
@@ -3497,7 +3497,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         },
       },
       {
-        Name: "<a href='https://www.bilibili.com/read/cv28235466/'target='_blank'>MMW BOSS2（spell式麻将）</a>",
+        Name: '<a href=\'https://www.bilibili.com/read/cv28235466/\'target=\'_blank\'>MMW BOSS2（spell式麻将）</a>',
         Place: {
           A: { X: 300.033, Y: 7, Z: -132.846, ID: 0, Active: true },
           B: { X: 312.372, Y: 7, Z: -120.148, ID: 1, Active: true },
@@ -3510,7 +3510,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         },
       },
       {
-        Name: "<a href='https://www.bilibili.com/read/cv28235466/'target='_blank'>MMW BOSS3</a>",
+        Name: '<a href=\'https://www.bilibili.com/read/cv28235466/\'target=\'_blank\'>MMW BOSS3</a>',
         Place: {
           A: { X: -199.954, Y: -195, Z: -11.785, ID: 0, Active: true },
           B: { X: -187.473, Y: -195, Z: -0.102, ID: 1, Active: true },
@@ -3529,7 +3529,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Text: '/p 【飛翔：散開方向】\n/p 　　　 　 (A)\n/p 　 　　 MT+ST\n/p 　　D3　　 　 D4\n/p (D)　　　 　 　 　 (B)\n/p 　　D1　　 　 D2\n/p 　 　 　H1+H2\n/p 　　　 　 (C)\n/p 【デモンクロー】ST先頭で頭割り\n/p 【雑魚タゲ取り】\n/p 2回目：MT⇒北西ウィル　ST⇒南西ウィル\n/p 3回目：MT⇒南ウィル　　ST⇒東セウ\n/p 【サザンクロス】 　 ｜【波動砲】\n/p 背面から時計回り　｜9時で捨てる\n/p MTのみ反時計回り ｜MTは東寄りにタゲサ内へ入る',
       },
       {
-        Name: "<a href='https://discord.com/channels/277897135515762698/448209053743579186/1109777325140217896'target='_blank'>Markers from Discord @Maya#1998</a>",
+        Name: '<a href=\'https://discord.com/channels/277897135515762698/448209053743579186/1109777325140217896\'target=\'_blank\'>Markers from Discord @Maya#1998</a>',
         Place: {
           A: { X: 4.916, Y: 0, Z: -18.292, ID: 0, Active: true },
           B: { X: 16.196, Y: 0, Z: -9.309, ID: 1, Active: true },
@@ -3598,7 +3598,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Text: '/p 分散站位\n/p    T\n/p D2    H\n/p    D1\n/p ■飞镖盘1优先级\n/p 蓝T 红DPS 黄H ※飞镖点两个D，D2补颜色\n/p ■飞镖盘2\n/p 以外周轮盘安全两色+AoE覆盖方向为北\n/p TH左/D右\n/p 飞镖同时点TH或2D，北边两人换位',
       },
       {
-        Name: "<a href='https://docs.qq.com/sheet/DTlFYZlVkeGlSenFI?tab=BB08J2'target='_blank'>异闻阿罗一</a>",
+        Name: '<a href=\'https://docs.qq.com/sheet/DTlFYZlVkeGlSenFI?tab=BB08J2\'target=\'_blank\'>异闻阿罗一</a>',
         Place: {
           A: { X: 0, Y: 0, Z: -10, ID: 0, Active: true },
           B: { X: 10, Y: 0, Z: 0, ID: 1, Active: true },
@@ -3611,7 +3611,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         },
       },
       {
-        Name: "<a href='https://docs.qq.com/sheet/DTlFYZlVkeGlSenFI?tab=BB08J2'target='_blank'>异闻阿罗二</a>",
+        Name: '<a href=\'https://docs.qq.com/sheet/DTlFYZlVkeGlSenFI?tab=BB08J2\'target=\'_blank\'>异闻阿罗二</a>',
         Place: {
           A: { X: 200, Y: -300, Z: -8, ID: 0, Active: true },
           B: { X: 208, Y: -300, Z: 0, ID: 1, Active: true },
@@ -3624,7 +3624,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         },
       },
       {
-        Name: "<a href='https://docs.qq.com/sheet/DTlFYZlVkeGlSenFI?tab=BB08J2'target='_blank'>异闻阿罗三</a>",
+        Name: '<a href=\'https://docs.qq.com/sheet/DTlFYZlVkeGlSenFI?tab=BB08J2\'target=\'_blank\'>异闻阿罗三</a>',
         Place: {
           A: { X: -200, Y: -200, Z: -18.55, ID: 0, Active: true },
           B: { X: -181.45, Y: -200, Z: 0, ID: 1, Active: true },
@@ -3639,11 +3639,11 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     1196: [
       {
-        Name: "<a href='https://www.bilibili.com/video/BV1CApeeEEGd/'target='_blank'>莫古力</a>",
+        Name: '<a href=\'https://www.bilibili.com/video/BV1CApeeEEGd/\'target=\'_blank\'>莫古力</a>',
         Text: '/p ■游龙绕场旋转(月环)         | ■嘴部发光(扇形)\n/p ＆火阶段雷分散&冰上雷下 |    MT/D1 ／＼ST/D2\n/p  MT/D1　ST/D2            　| H1/D3／　  　＼H2/D4\n/p  H1/D3　H2/D4\n/p  ■举起双爪(钢铁)\n/p  H1/D3　MT/D1　ST/D2　H2/D4\n/p  ■山火坦克踩塔 奇数:MT　偶数:ST\n/p  ■小怪阶段直线分摊&火雷阶段分摊\n/p  西：MTH1D1D3　东：STH2D2D4\n/p  ■冰阶段开场\n/p 大圈：西北 MT        东北 ST\n/p 分摊:西H1D1D3　东H2D2D4',
       },
       {
-        Name: "<a href='https://www.bilibili.com/video/BV1G7pEe9E5Z'target='_blank'>MMW</a>",
+        Name: '<a href=\'https://www.bilibili.com/video/BV1G7pEe9E5Z\'target=\'_blank\'>MMW</a>',
         Text: '/p ■环分摊/冰雷分散 |■扇形分摊\n/p MT/D1　ST/D2 　|　MT/D1／＼ST/D2\n/p H1/D3　H2/D4　 |H1/D3／　　＼H2/D4\n/p ■远离分摊\n/p H1/D3　MT/D1　ST/D2　H2/D4\n/p ■死刑塔 奇数:MT　偶数:ST\n/p ■火雷灾祸分组分摊 + 小怪分组\n/p 左 MTH1D1D3　右 STH2D2D4\n/p ■冰灾祸死刑+分摊\n/p 左上 MT　右上 ST\n/p 分摊 左 H1D1D3　右 H2D2D4',
       },
       {
@@ -3666,11 +3666,11 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     1201: [
       {
-        Name: "<a href='https://www.bilibili.com/video/BV1aBsaeeE8W'target='_blank'>莫古力</a>",
+        Name: '<a href=\'https://www.bilibili.com/video/BV1aBsaeeE8W\'target=\'_blank\'>莫古力</a>',
         Text: '/p ～莫古力系列～首饰神专用宏\n/p ～佐拉加歼殛战～\n/p ◆情感投射・爆发(分摊线)\n/p H1→H2→D4→D3→D2→D1→ST→MT\n/p ◆无双之击(二人蓝圈分摊)\n/p  ————场外新平台————\n/p H1/D3 MT/D1 ST/D2 H2/D4\n/p ◆小世界②黄标 ｜\n/p ————BOSS ————\n/p ｜MT/D1｜ST/D2 ｜\n/p ｜-——-— ｜-—-——｜\n/p ｜H1/D3｜H2/D4｜',
       },
       {
-        Name: "<a href='https://www.bilibili.com/video/BV1sztheREVR'target='_blank'>MMW</a>",
+        Name: '<a href=\'https://www.bilibili.com/video/BV1sztheREVR\'target=\'_blank\'>MMW</a>',
         Text: '/p 【分摊线】（日服）\n/p H1→H2→D4→D3→D2→D1→ST→MT\n/p 【分摊线】（美服）\n/p MT→ST→D1→D2→H1→H2→D3→D4\n/p 【22分摊】\n/p 　　　　 BOSS\n/p H1/D3 MT/D1 ST/D2 H2/D4\n/p 风火剑分散\n/p ===风火行===\n/p D1 MT ST D2\n/p D3 H1 H2 D4\n/p 双半场分散（以Boss面向为基准）\n/p MT/D1 ST/D2\n/p H1/D3 H2/D4',
       },
       {
@@ -3706,7 +3706,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     1226: [
       {
-        Name: "<a href='https://www.bilibili.com/video/BV1dhyHYME2Z'target='_blank'>苏帕酱噗</a>",
+        Name: '<a href=\'https://www.bilibili.com/video/BV1dhyHYME2Z\'target=\'_blank\'>苏帕酱噗</a>',
         Text: '/p 【基本散开】 ｜【扇形引导】\n/p D3 MT D4     ｜             MTD3\n/p H1  ☆  H2     ｜　H1D1 ☆ H2D4\n/p D1 ST   D2     ｜              STD2\n/p 【交叉尖甲】（十字引导）\n/p 先TH　后DPS　※22分摊从扇形诱导位置逆时针移动\n/p 【冲击波（击退）】\n/p 北MTH1D1D3　南STH2D2D4\n/p 【分裂指甲斩（职能分散）】\n/p BOSS\n/p T D H\n/p 【猫猫雨（接线+远近分摊）】（DTTT）\n/p 第1轮 D1左 D2右\n/p 第2~4轮 MT中心偏左上 ST中心偏右上 2裸吃34无敌\n/p MTST诱导近分摊，其他人在C诱导远分摊',
       },
       {
@@ -3729,7 +3729,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     1228: [
       {
-        Name: "<a href='https://www.bilibili.com/video/BV1bwy9Y7ELV'target='_blank'>苏帕酱噗</a>",
+        Name: '<a href=\'https://www.bilibili.com/video/BV1bwy9Y7ELV\'target=\'_blank\'>苏帕酱噗</a>',
         Text: '/p ■基本散开\n/p D3 MT D4   D3 D4   MT/D3 ST/D4\n/p H1  ☆  H2   MT ST    H1/D1 D2/H2\n/p D1 ST  D2   D1 D2\n/p                        H1 H2\n/p ■1运\n/p 近战：♡2 正面（北）起点顺时针分摊　远程：♡3\n/p ■2运\n/p ♡0：正面（北）起点顺时针分摊\n/p ♡1：场中待机→分散:TH西 DPS东；塔:TH 北/西 DPS南/东\n/p ■毒圈　TH上半场 DPS下半场\n/p ■3运\n/p 大圈：X字；踩塔：X字\n/p ■软狂暴\n/p 初始标准8方 毒7s时去场中',
       },
       {
@@ -3778,7 +3778,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     1230: [
       {
-        Name: "<a href='https://www.bilibili.com/video/BV1hZSJYzEEa'target='_blank'>苏帕酱噗</a>",
+        Name: '<a href=\'https://www.bilibili.com/video/BV1hZSJYzEEa\'target=\'_blank\'>苏帕酱噗</a>',
         Text: '/p ■八重分散ーーー■四重二二ーーーーーー\n/p D3 MT D4            MT/D3  H2/D4\n/p H1  ★  H2                         ★\n/p D1 ST  D2             H1/D1  ST/D2\n/p ■强袭俯冲·分散ーーーーーー■强袭俯冲·分摊ーーーーーー\n/p   MT   ★    ST                                         ★\n/p       D1   D2                               MT/D1 D2/ST\n/p D3  H1  H2  D4                      D3/H1 H2/D4\n/p ■野蛮爆炸（击退塔）\n/p 1塔　近战组西/北 远程组东/南\n/p 2塔　面朝场中 MTD1H1D3往左 STD2H2D4往右\n/p ■零式引线爆弹（Hector解法）\n/p MTD1：A/D；ST/D2：B/C\n/p H1D3：西北角/东北角；H2D4：西南角/东南角\n/p ■导火线区域\n/p 找线：A顺时针 MT→ST→H1→H2　D1→D2→D3→D4\n/p 踩线：短→长　MT→ST→H1→H2　D1→D2→D3→D4\n/p ■超华丽野蛮旋火·分散站位（近战字母点，远程四角）\n/p D3     MT     D4\n/p D1     ★      D2\n/p H1     ST     H2',
       },
       {
@@ -3801,11 +3801,11 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     1232: [
       {
-        Name: "<a href='https://www.bilibili.com/video/BV1JtDQYVEKp'target='_blank'>苏帕酱噗</a>",
+        Name: '<a href=\'https://www.bilibili.com/video/BV1JtDQYVEKp\'target=\'_blank\'>苏帕酱噗</a>',
         Text: '/p ■闪电猎巫ーーーー■圆轮・轮圆式猎巫ーーーーーー\n/p D3 D4                       D3 MT D4\n/p MT ST                        D1 ☆ D2\n/p D1 D2                       H1 ST H2\n/p H1 H2\n/p ■第1次雷转质展开ーーーーーーーーーーーーー\n/p MT D2 D4 | ☆　ST/D2 H2/D4\n/p D1 ST  H2  | MT/D1\n/p D3 H1 角    | H1/D3          角\n/p ■第2次雷转质展开（长1长2当作长2长3）\n/p 基本散开     |3次 ■■■ 3次  西：TH 东：DPS\n/p D3 MT D4 |    ■   ■   ■      22秒：3次 or 2次\n/p H1 ☆ H2   |    2次 ■ 2次     42秒：2次 or 1次\n/p D1 ST D2  |  ■ ■ 他 ■ ■/p ・分摊（长1长2当作长2长3）・分散(北基准)\n/p TH3次：B,D DPS3次：中央 | D3\n/p TH2次：A     DPS2次：C      | MT  H1\n/p                                                     | D1☆　ST\n/p                                                     | D2  H2\n/p                                                     | D4\n/p ■3连炮ーーーーーーーー雷转质移植※以C为12点\n/p   紫                            ｜\n/p 箭头                            | D3/MT   ST/D4\n/p 蓝 蓝 ※TH靠场外    |              ☆\n/p 蓝 蓝 ※DPS靠场内 | H1/D1   D2/H2\n/p 箭头                           |\n/p   紫                             |',
       },
       {
-        Name: "<a href='https://www.bilibili.com/video/BV1BiDyY9Ei3'target='_blank'>MMW</a>",
+        Name: '<a href=\'https://www.bilibili.com/video/BV1BiDyY9Ei3\'target=\'_blank\'>MMW</a>',
         Text: '/p ■开场分散ーーーー■狩猎站位（DN式）ーーーーーー\n/p D3 D4 　 　 　 　D3 MT D4\n/p MT ST 　 　 　 　D1 ☆ D2\n/p D1 D2 　 　 　 　H1 ST H2\n/p H1 H2\n/p ■雷转质1 分散 / 分摊（面向BOSS）ーーーーーーーー\n/p MT D2 D4 　 　| ☆　ST/D2 H2/D4\n/p D1 ST H2 　 　| MT/D1\n/p D3 H1 雷 　 | H1/D3\n/p ■雷转质2 基本分散 / 点名安置 以T型AOE为12点\n/p 　 | 多 ■■■ 多 　 安全区6点\n/p D3 MT D4 | ■ ■ ■ 　 左半场TH 右半场DPS\n/p H1 ☆ H2 | 少 　 ■ 　 少 第一轮22s：3层多2层少\n/p D1 ST D2 | ■ ■ ○ ■ ■ 第二轮42s：2层多1层少\n/p 以A点为基准 根据半场刀换位（多D和D1站位与BOSS重合）\n/p ■ーーーー分摊雷站位 / 分散雷站位ーーーーーーーーーー\n/p ｜ D3 D3\n/p 　 少TN ｜ H1　 MT 　H1\n/p 多TN　多D 多TN ｜　 ST D1　ST\n/p 　 　 少D　 　 ｜ H2 　 D2　 　H2\n/p 　 　 　 　 　 　 ｜ D4 　 D4\n/p ■分组炮站位ーーーーーー■转场分散分组（BOSS面向基准）\n/p 　 蓄雷 　 圆环点名 　 ｜\n/p 　 远近 　 面向BOSS 　 ｜ 　D3/MT　 ST/D4\n/p 圆环 圆环 TH左 　 　 ｜ 　 　 　 　☆\n/p 圆环 　 圆环 DPS右　 　｜ 　 H1/D1 　D2/H2\n/p 　 远近 　 　 　 　 　 　 ｜※顺时针→逆时针往返躲避地火\n/p 蓄雷 ｜',
       },
       {
@@ -3813,7 +3813,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
         Text: '/p ■縦散開ーーーー■円輪・輪円（DN式）ーーーーーー\n/p   D3 D4                   D3  MT  D4\n/p   MT ST                   D1   ☆   D2\n/p   D1 D2                   H1  ST   H2\n/p   H1 H2\n/p ■エレクトロープ1回目ーーーーーーーーーーーーー\n/p   MT  D2  D4         |      ☆   ST/D2   H2/D4\n/p   D1  ST  H2        |  MT/D1\n/p   D3  H1  角          |  H1/D3\n/p ■エレクトロープ2回目\n/p   基本散開              |多  ■■■  多      西：TH  東：DpS\n/p   D3 MT D4          |■ 　 ■ 　 ■      22秒：3回 or 2回\n/p   H1  ☆  H2          |少 　 ■ 　 少      42秒：2回 or 1回\n/p   D1  ST D2          |■ ■ 他 ■ ■\n/p ・ペア散開　 　　  　 　　　  ・散開(北基準)\n/p  TH多：B,D　DPS多：中央  |　　      D3\n/p  TH少：A   　DPS少：C       |     MT  　　H1\n/p  　　　　　 　　　　　　  　| ☆D1   ST\n/p  　　　 　　　　　　  　　　|     D2　      H2\n/p  　　　 　　　　　　 　 　　| 　    　D4\n/p ■ストリームーーーーーーエレクトロープ移植※ボス基準\n/p  　   紫　                      ｜\n/p 　  誘電　                      |    D3/MT　ST/D4\n/p  青         青 ※TH外側    |                 ☆\n/p  青         青 ※DPS内側  |    H1/D1    D2/H2\n/p  　 誘電                         |   ※自分のペアの基本散開位置と往復\n/p        紫',
       },
       {
-        Name: "<a href='https://www.bilibili.com/video/BV1JtDQYVEKp'target='_blank'>通用</a>",
+        Name: '<a href=\'https://www.bilibili.com/video/BV1JtDQYVEKp\'target=\'_blank\'>通用</a>',
         Place: {
           A: { X: 100, Y: 0, Z: 90, ID: 0, Active: true },
           B: { X: 110, Y: 0, Z: 100, ID: 1, Active: true },
@@ -3856,7 +3856,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
     ],
     1243: [
       {
-        Name: "<a href='https://www.bilibili.com/video/BV1fsqWYeEDT/'target='_blank'>子言</a>",
+        Name: '<a href=\'https://www.bilibili.com/video/BV1fsqWYeEDT/\'target=\'_blank\'>子言</a>',
         Text: '/p 【风阶段】\n/p 分摊MT组 　 　锁D\n/p 　锁TH 　 　分摊ST组\n/p 【土阶段】\n/p D1/MT 　ST/D2 　■塔2优先级：上:近战>坦克>远程>治疗:下\n/p D3/H1 　H2/D4 　■陨石：前：近战　后：坦克\n/p 【陨石挡球】→左上开始走コ字路线\n/p 【绝对君权】\n/p D1/MT 　 　 　 D2/ST\n/p D3/H1 　分摊 　 D4/H2\n/p 【冰阶段】\n/p 　南冰：外侧→上桥 　内侧→下桥\n/p 东西冰：上侧→下桥 　下侧→上桥\n/p ■截线：①D1D2→②MTST→③④MTST无敌',
       },
       {
@@ -4127,7 +4127,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
       {
         Name: getSource(
           '纸Sama P4雷分散标点',
-          'https://www.bilibili.com/video/BV1PdKszCEUJ/'
+          'https://www.bilibili.com/video/BV1PdKszCEUJ/',
         ),
         Place: {
           A: { X: 100, Z: 87, Y: 0, Active: true },
@@ -4229,7 +4229,7 @@ const defaultMacro: { zoneId: ZoneIdInfo } = {
       {
         Name: getSource(
           'XivStrat改本体C',
-          'https://nga.178.com/read.php?tid=44529364'
+          'https://nga.178.com/read.php?tid=44529364',
         ),
         Place: {
           A: { X: 100.0, Y: 0.0, Z: 91.5, ID: 0, Active: true },
@@ -4362,7 +4362,7 @@ fastPP(`{"Name":"Four Seasons","MapID":1062,"A":{"X":83.25,"Y":0.0,"Z":92.0,"ID"
 `)
 // 诗想
 fastPP(
-  `{"Name":"自用","MapID":1063,"A":{"X":-618,"Z":-314,"Y":0,"Active":true},"B":{"X":-610,"Z":-302,"Y":0,"Active":true},"C":{"X":-590,"Z":-293,"Y":0,"Active":true},"D":{"X":-581,"Z":-286,"Y":0,"Active":true},"One":{"X":-606,"Z":-314,"Y":0,"Active":true},"Two":{"X":-594,"Z":-314,"Y":0,"Active":true},"Three":{"X":-594,"Z":-286,"Y":0,"Active":true},"Four":{"X":-606,"Z":-286,"Y":0,"Active":true}}`
+  `{"Name":"自用","MapID":1063,"A":{"X":-618,"Z":-314,"Y":0,"Active":true},"B":{"X":-610,"Z":-302,"Y":0,"Active":true},"C":{"X":-590,"Z":-293,"Y":0,"Active":true},"D":{"X":-581,"Z":-286,"Y":0,"Active":true},"One":{"X":-606,"Z":-314,"Y":0,"Active":true},"Two":{"X":-594,"Z":-314,"Y":0,"Active":true},"Three":{"X":-594,"Z":-286,"Y":0,"Active":true},"Four":{"X":-606,"Z":-286,"Y":0,"Active":true}}`,
 )
 // M9S
 fastPP(`{"Name":"M9S","MapID":1069,"A":{"X":100,"Z":90,"Y":0,"Active":true},"B":{"X":110,"Z":100,"Y":0,"Active":true},"C":{"X":100,"Z":110,"Y":0,"Active":true},"D":{"X":90,"Z":100,"Y":0,"Active":true},"One":{"X":90,"Z":90,"Y":0,"Active":true},"Two":{"X":110,"Z":90,"Y":0,"Active":true},"Three":{"X":110,"Z":110,"Y":0,"Active":true},"Four":{"X":90,"Z":110,"Y":0,"Active":true}}`)
@@ -4377,14 +4377,14 @@ fastPP(`{"Name":"CAD-L改${getSource('@御琪幽然', 'https://www.bilibili.com/
 fastPP(`{"Name":"门神一字长蛇","MapID":1075,"A":{"X":107.485,"Y":0.0,"Z":93.071,"ID":0,"Active":true},"B":{"X":111.367,"Y":0.0,"Z":99.774,"ID":1,"Active":true},"C":{"X":115.169,"Y":0.0,"Z":106.315,"ID":2,"Active":true},"D":{"X":119.314,"Y":0.0,"Z":112.643,"ID":3,"Active":true},"One":{"X":92.114,"Y":0.0,"Z":93.394,"ID":4,"Active":true},"Two":{"X":88.576,"Y":0.0,"Z":100.088,"ID":5,"Active":true},"Three":{"X":85.1,"Y":0.0,"Z":106.139,"ID":6,"Active":true},"Four":{"X":81.158,"Y":0.0,"Z":112.629,"ID":7,"Active":true}}`)
 fastPP(`{"Name":"本体4A1","MapID":1075,"A":{"X":100.081,"Y":0.0,"Z":89.082,"ID":0,"Active":true},"B":{"X":110.969,"Y":0.0,"Z":100.16,"ID":1,"Active":true},"C":{"X":100.054,"Y":0.0,"Z":111.093,"ID":2,"Active":true},"D":{"X":89.13,"Y":0.0,"Z":100.063,"ID":3,"Active":true},"One":{"X":108.214,"Y":0.0,"Z":91.863,"ID":4,"Active":true},"Two":{"X":108.158,"Y":0.0,"Z":108.268,"ID":5,"Active":true},"Three":{"X":92.061,"Y":0.0,"Z":108.121,"ID":6,"Active":true},"Four":{"X":91.964,"Y":0.0,"Z":91.948,"ID":7,"Active":true}}`)
 
-
 function getSource(title: string, href: string): string {
   return `<a href='${href}'target='_blank'>${title}</a>`
 }
 
 function fastPP(jsonstr: string): void {
   const d = JSON.parse(jsonstr) as Partial<PPJSON>
-  if (!d.MapID) throw new Error('PPJSON 不存在 MapID')
+  if (!d.MapID)
+    throw new Error('PPJSON 不存在 MapID')
   const nullMark = { X: 0, Y: 0, Z: 0, Active: false }
   const zoneId = getTerritoryTypeByMapID(d.MapID)
   if (zoneId === 0) {
@@ -4416,14 +4416,14 @@ const syncMap: Record<string, string> = {
 
 Object.entries(syncMap).forEach(([savage, normal]) => {
   defaultMacro.zoneId[savage] = [
-    ...(defaultMacro.zoneId[savage] ?? []).filter((v) => 'Text' in v),
+    ...(defaultMacro.zoneId[savage] ?? []).filter(v => 'Text' in v),
     ...(defaultMacro.zoneId[normal] ?? [])
-      .filter((v) => 'Text' in v)
-      .map((v) => ({ ...v, Name: v.Name.replace('异闻', '零式') })),
-    ...(defaultMacro.zoneId[savage] ?? []).filter((v) => 'Place' in v),
+      .filter(v => 'Text' in v)
+      .map(v => ({ ...v, Name: v.Name.replace('异闻', '零式') })),
+    ...(defaultMacro.zoneId[savage] ?? []).filter(v => 'Place' in v),
     ...(defaultMacro.zoneId[normal] ?? [])
-      .filter((v) => 'Place' in v)
-      .map((v) => ({ ...v, Name: v.Name.replace('异闻', '零式') })),
+      .filter(v => 'Place' in v)
+      .map(v => ({ ...v, Name: v.Name.replace('异闻', '零式') })),
   ]
 })
 

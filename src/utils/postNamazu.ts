@@ -15,7 +15,8 @@ export async function doTextCommand(text: string) {
       ),
     ])
     return res
-  } catch (e) {
+  }
+  catch (e) {
     console.error('PostNamazu DoTextCommand failed:', e)
     throw e
   }
@@ -36,7 +37,8 @@ export async function doWayMarks(
       ),
     ])
     return res
-  } catch (e) {
+  }
+  catch (e) {
     console.error('PostNamazu DoWaymarks failed:', e)
     throw e
   }
@@ -64,7 +66,8 @@ export async function doInsertPreset(
       ),
     ])
     return res
-  } catch (e) {
+  }
+  catch (e) {
     console.error('PostNamazu DoInsertPreset failed:', e)
     throw e
   }
@@ -83,7 +86,8 @@ export async function doQueueActions(queue: QueueArr) {
       ),
     ])
     return res
-  } catch (e) {
+  }
+  catch (e) {
     console.error('PostNamazu DoQueueActions failed:', e)
     throw e
   }

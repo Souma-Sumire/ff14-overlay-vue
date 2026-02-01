@@ -1,16 +1,17 @@
 <script setup lang="ts">
+import type { CSSProperties, PropType } from 'vue'
 import {
   computed,
-  ref,
+
   onMounted,
+
+  ref,
   watch,
-  type CSSProperties,
-  type PropType,
 } from 'vue'
+import { getTerritoryTypeByMapID } from '@/resources/contentFinderCondition'
 import Map from '@/resources/map.json'
 import { ZoneInfo } from '@/resources/zoneInfo'
 import { getPixelCoordinates, Vector2 } from '@/utils/mapCoordinates'
-import { getTerritoryTypeByMapID } from '@/resources/contentFinderCondition'
 
 export interface CanvasMarker {
   key: string
@@ -29,19 +30,21 @@ const props = defineProps({
 })
 
 const mapSrc = computed(() => {
-  if (props.mapId === 0 && !props.forceTerritoryType) return undefined
+  if (props.mapId === 0 && !props.forceTerritoryType)
+    return undefined
 
-  const territoryType =
-    props.forceTerritoryType ?? getTerritoryTypeByMapID(props.mapId)
+  const territoryType
+    = props.forceTerritoryType ?? getTerritoryTypeByMapID(props.mapId)
   const mapData = Map[territoryType.toString() as keyof typeof Map]
 
-  if (!mapData) return undefined
+  if (!mapData)
+    return undefined
   return `https://v2.xivapi.com/api/asset/map/${mapData.id}`
 })
 
-function getPix(point: { x: number; z: number }) {
-  const territoryType =
-    props.forceTerritoryType ?? getTerritoryTypeByMapID(props.mapId)
+function getPix(point: { x: number, z: number }) {
+  const territoryType
+    = props.forceTerritoryType ?? getTerritoryTypeByMapID(props.mapId)
   const zone = ZoneInfo[territoryType] ?? {
     sizeFactor: 100,
     offsetX: 0,
@@ -74,7 +77,8 @@ function onMouseDown(e: MouseEvent) {
 
 function onMouseMove(e: MouseEvent) {
   e.preventDefault()
-  if (!isDragging.value) return
+  if (!isDragging.value)
+    return
   offsetX.value = e.clientX - dragStartX
   offsetY.value = e.clientY - dragStartY
 }
@@ -100,7 +104,7 @@ function onWheel(e: WheelEvent) {
   scale.value = newScale
 }
 
-function getOffset(point: { x: number; z: number }) {
+function getOffset(point: { x: number, z: number }) {
   const pixelCoordinates = getPix(point)
   const size = Math.max((1 / scale.value) * fontSize.value, fontSize.value)
   return {
@@ -142,13 +146,14 @@ onMounted(() => {
     },
     { rootMargin: '200px' },
   )
-  if (containerRef.value) observer.observe(containerRef.value)
+  if (containerRef.value)
+    observer.observe(containerRef.value)
 })
 
 watch(
   () => props.markers,
   () => {
-    const activePoints = props.markers.filter((p) => p.active)
+    const activePoints = props.markers.filter(p => p.active)
     if (activePoints.length === 0) {
       scale.value = 0.5
       offsetX.value = props.size / 2 - 1024 * scale.value
@@ -168,10 +173,10 @@ watch(
     ave.x /= activePoints.length
     ave.y /= activePoints.length
 
-    let minX = Infinity,
-      maxX = -Infinity,
-      minY = Infinity,
-      maxY = -Infinity
+    let minX = Infinity
+    let maxX = -Infinity
+    let minY = Infinity
+    let maxY = -Infinity
     for (const p of activePoints) {
       const pix = getPix(p)
       minX = Math.min(minX, pix.x)
@@ -207,7 +212,7 @@ watch(
     @wheel="onWheel"
   >
     <div v-if="isVisible" class="crop-1024" :style="transformStyle">
-      <img v-if="mapSrc" :src="mapSrc" alt="" />
+      <img v-if="mapSrc" :src="mapSrc" alt="">
       <span
         v-for="p in markers"
         :key="p.key"

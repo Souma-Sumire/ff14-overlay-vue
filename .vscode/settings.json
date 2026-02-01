@@ -1,11 +1,20 @@
 {
   // Enable the ESlint flat config support
   // (remove this if your ESLint extension above v3.0.5)
-  "eslint.experimental.useFlatConfig": true,
+  "eslint.useFlatConfig": true,
+  "eslint.format.enable": true,
 
   // Disable the default formatter, use eslint instead
-  "prettier.enable": true,
+  "prettier.enable": false,
   "editor.formatOnSave": false,
+
+  // Set default formatter to ESLint (though we rely on codeActionsOnSave)
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
 
   // Auto fix
   "editor.codeActionsOnSave": {
@@ -49,5 +58,8 @@
     "src/locales"
   ],
   "i18n-ally.keystyle": "nested",
-  "typescript.tsdk": "node_modules\\typescript\\lib"
+  "typescript.tsdk": "node_modules\\typescript\\lib",
+  "[typescript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  }
 }

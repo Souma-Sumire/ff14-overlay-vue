@@ -12,8 +12,8 @@ function useDemo() {
   onMounted(() => {
     listeners++
     if (!initialized) {
-      demo.value =
-        document.getElementById('unlocked')?.style?.display === 'flex'
+      demo.value
+        = document.getElementById('unlocked')?.style?.display === 'flex'
       document.addEventListener(
         'onOverlayStateUpdate',
         handleOverlayStateUpdate,

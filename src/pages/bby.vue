@@ -1,559 +1,575 @@
 <script setup lang="ts">
-import { ElNotification } from 'element-plus';
-import UserCard from '@/components/UserCard.vue';
-import { useIndexedDB } from '@/composables/useIndexedDB';
-import { useWebSocket } from '@/composables/useWebSocket';
-import type { WayMarkObj } from '@/types/PostNamazu';
-import Util from '@/utils/util';
-import type { EventMap } from 'cactbot/types/event';
-import { computed, onMounted, onUnmounted, ref, toRaw } from 'vue';
-import { addOverlayListener, callOverlayHandler, removeOverlayListener } from '../../cactbot/resources/overlay_plugin_api';
-import { useDev } from '@/composables/useDev';
-import { worlds as world } from '@/resources/worlds';
+import type { EventMap } from 'cactbot/types/event'
+import type { WayMarkObj } from '@/types/PostNamazu'
+import { ElNotification } from 'element-plus'
+import { computed, onMounted, onUnmounted, ref, toRaw } from 'vue'
+import UserCard from '@/components/UserCard.vue'
+import { useDev } from '@/composables/useDev'
+import { useIndexedDB } from '@/composables/useIndexedDB'
+import { useWebSocket } from '@/composables/useWebSocket'
+import { worlds as world } from '@/resources/worlds'
+import Util from '@/utils/util'
+import { addOverlayListener, callOverlayHandler, removeOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
-const dev = useDev();
+const dev = useDev()
 
-useWebSocket({ addWsParam: true, allowClose: false });
+useWebSocket({ addWsParam: true, allowClose: false })
 
 enum StatusFlags {
-    None = 0,
-    IsAnonymous = 1,      // 是否匿名
-    IsIdHidden = 2,       // 是否隐藏ID
-    IsWaymarkEnabled = 4, // 标点功能是否启用（？没开怎么发信号？）
-    IsInitiator = 8,      // 是否是发起者
+  None = 0,
+  IsAnonymous = 1, // 是否匿名
+  IsIdHidden = 2, // 是否隐藏ID
+  IsWaymarkEnabled = 4, // 标点功能是否启用（？没开怎么发信号？）
+  IsInitiator = 8, // 是否是发起者
 }
 
 interface UserInfo {
-    id: string;
-    name: string;
-    job: string;
-    flags: StatusFlags;
-    waymarkIndex: number;
-    isAnonymous: boolean;
-    isIdHidden: boolean;
-    isWaymarkEnabled: boolean;
-    isInitiator: boolean;
-    world?: string;
+  id: string
+  name: string
+  job: string
+  flags: StatusFlags
+  waymarkIndex: number
+  isAnonymous: boolean
+  isIdHidden: boolean
+  isWaymarkEnabled: boolean
+  isInitiator: boolean
+  world?: string
 }
 
 interface BBYHistoryItem {
-    key: string;
-    timestamp: string;
-    queryTime?: string | null;
-    members: UserInfo[];
+  key: string
+  timestamp: string
+  queryTime?: string | null
+  members: UserInfo[]
 }
-
 
 interface PartyMember {
-    id: string;
-    hexId: number;
-    name: string;
-    job: number;
-    level: number;
-    world: string;
+  id: string
+  hexId: number
+  name: string
+  job: number
+  level: number
+  world: string
 }
 
-const waymarkNames = ['A', 'B', 'C', 'D', 'One', 'Two', 'Three', 'Four'];
+const waymarkNames = ['A', 'B', 'C', 'D', 'One', 'Two', 'Three', 'Four']
 
 const regexs = {
-    floorMarker: /^(?<timestamp>^.{14}) WaymarkMarker (?<type>1C):(?<operation>[^:]*):(?<waymark>[^:]*):(?<id>[^:]*):(?<name>[^:]*):(?<x>[^:]*):(?<y>[^:]*):(?<z>[^:]*)(?:$|:)/
-};
+  floorMarker: /^(?<timestamp>.{14}) WaymarkMarker (?<type>1C):(?<operation>[^:]*):(?<waymark>[^:]*):(?<id>[^:]*):(?<name>[^:]*):(?<x>[^:]*):(?<y>[^:]*):(?<z>[^:]*)(?:$|:)/,
+}
 
-const users = ref<UserInfo[]>([]);
-const myId = ref('');
-const debugMode = ref(false);
-const debugInfo = ref<any>({});
-const waymarks = ref<Record<number, { x: number, y: number, z: number, active: boolean }>>({});
-const lastQueryTime = ref<string | null>(null);
-const partyMembersLength = computed(() => partyMembers.value.filter(v => v).length);
-const blurMode = ref(false);
+const users = ref<UserInfo[]>([])
+const partyMembers = ref<(PartyMember | null)[]>([])
+const myId = ref('')
+const debugMode = ref(false)
+const debugInfo = ref<any>({})
+const waymarks = ref<Record<number, { x: number, y: number, z: number, active: boolean }>>({})
+const lastQueryTime = ref<string | null>(null)
+const partyMembersLength = computed(() => partyMembers.value.filter(v => v).length)
+const blurMode = ref(false)
 
-const toggleBlurMode = () => {
-    blurMode.value = !blurMode.value;
-};
+function toggleBlurMode() {
+  blurMode.value = !blurMode.value
+}
 const STORAGE_KEY = 'bby'
 const db = useIndexedDB<BBYHistoryItem>(STORAGE_KEY)
-const history = ref<BBYHistoryItem[]>([]);
+const history = ref<BBYHistoryItem[]>([])
 
 async function saveHistory() {
-    const data = history.value.map(v => toRaw(v));
-    await db.replaceAll(data);
+  const data = history.value.map(v => toRaw(v))
+  await db.replaceAll(data)
 }
 
 async function loadHistory() {
-    try {
-        const data = await db.getAll();
-        if (data && data.length > 0) {
-            history.value = data.sort((a, b) => b.key.localeCompare(a.key));
-        }
-    } catch (e) {
-        console.error('Failed to load BBY history:', e);
+  try {
+    const data = await db.getAll()
+    if (data && data.length > 0) {
+      history.value = data.sort((a, b) => b.key.localeCompare(a.key))
     }
+  }
+  catch (e) {
+    console.error('Failed to load BBY history:', e)
+  }
 }
 
 async function clearHistory() {
-    history.value = [];
-    await db.clear();
+  history.value = []
+  await db.clear()
 }
 
-const partyMembers = ref<(PartyMember | null)[]>([]);
-const queryTimer = ref<ReturnType<typeof setTimeout> | null>(null);
+const queryTimer = ref<ReturnType<typeof setTimeout> | null>(null)
 
 const respondents = computed(() => {
-    return partyMembers.value.map(pm => {
-        if (!pm) return null;
-        const responded = users.value.find(u => u.id === pm.id);
-        const jobName = Util.jobToFullName(Util.jobEnumToJob(pm.job)).cn || '';
-        const isQueried = !!lastQueryTime.value;
-        if (responded) {
-            return {
-                ...responded,
-                hasResponded: true,
-                isQueried
-            };
-        }
-        return {
-            id: pm.id,
-            name: pm.name,
-            job: jobName,
-            world: pm.world,
-            flags: StatusFlags.None,
-            waymarkIndex: -1,
-            isAnonymous: false,
-            isIdHidden: false,
-            isWaymarkEnabled: false,
-            isInitiator: false,
-            hasResponded: false,
-            isQueried
-        } as UserInfo & { hasResponded: boolean; isQueried: boolean };
-    }).filter(m => m !== null) as (UserInfo & { hasResponded: boolean; isQueried: boolean })[];
-});
+  return partyMembers.value.map((pm) => {
+    if (!pm)
+      return null
+    const responded = users.value.find(u => u.id === pm.id)
+    const jobName = Util.jobToFullName(Util.jobEnumToJob(pm.job)).cn || ''
+    const isQueried = !!lastQueryTime.value
+    if (responded) {
+      return {
+        ...responded,
+        hasResponded: true,
+        isQueried,
+      }
+    }
+    return {
+      id: pm.id,
+      name: pm.name,
+      job: jobName,
+      world: pm.world,
+      flags: StatusFlags.None,
+      waymarkIndex: -1,
+      isAnonymous: false,
+      isIdHidden: false,
+      isWaymarkEnabled: false,
+      isInitiator: false,
+      hasResponded: false,
+      isQueried,
+    } as UserInfo & { hasResponded: boolean, isQueried: boolean }
+  }).filter(m => m !== null) as (UserInfo & { hasResponded: boolean, isQueried: boolean })[]
+})
 
 function zToFlags(z: number): StatusFlags {
-    const decimal = z - Math.floor(z);
-    return Math.round((decimal - 0.01) * 100) as StatusFlags;
+  const decimal = z - Math.floor(z)
+  return Math.round((decimal - 0.01) * 100) as StatusFlags
 }
 
 const logger = {
-    debug: (...args: any[]) => debugMode.value && console.debug(...args),
-    log: (...args: any[]) => debugMode.value && console.log(...args),
-    warn: (...args: any[]) => debugMode.value && console.warn(...args),
-    error: (...args: any[]) => debugMode.value && console.error(...args),
-};
-
-function isPartyModeCoord(coordStr: string): boolean {
-    return coordStr.endsWith('1');
+  debug: (...args: any[]) => debugMode.value && console.debug(...args),
+  log: (...args: any[]) => debugMode.value && console.log(...args),
+  warn: (...args: any[]) => debugMode.value && console.warn(...args),
+  error: (...args: any[]) => debugMode.value && console.error(...args),
 }
 
-
+function isPartyModeCoord(coordStr: string): boolean {
+  return coordStr.endsWith('1')
+}
 
 const handleLogEvent: EventMap['onLogEvent'] = (e) => {
-    for (const log of e.detail.logs) {
-        const match = regexs.floorMarker.exec(log);
-        if (match?.groups) {
-            const { operation, waymark, id, x, y, z } = match.groups;
-            const waymarkIdx = parseInt(waymark || '0');
-            logger.log(`[LogEvent] 捕获标点变更: ${operation} waymarkIdx:${waymarkIdx} waymarkName:${waymarkNames[waymarkIdx]} (x:${x}, y:${y}, z:${z})`);
+  for (const log of e.detail.logs) {
+    const match = regexs.floorMarker.exec(log)
+    if (match?.groups) {
+      const { operation, waymark, id, x, y, z } = match.groups
+      const waymarkIdx = Number.parseInt(waymark || '0')
+      logger.log(`[LogEvent] 捕获标点变更: ${operation} waymarkIdx:${waymarkIdx} waymarkName:${waymarkNames[waymarkIdx]} (x:${x}, y:${y}, z:${z})`)
 
-            if (!isNaN(waymarkIdx) && waymarkIdx >= 0 && waymarkIdx <= 7) {
-                if (operation === 'Add' || operation === 'Change') {
-                    waymarks.value[waymarkIdx] = {
-                        x: parseFloat(x || '0'),
-                        y: parseFloat(y || '0'),
-                        z: parseFloat(z || '0'),
-                        active: true
-                    };
-                } else if (operation === 'Delete') {
-                    if (waymarks.value[waymarkIdx]) {
-                        waymarks.value[waymarkIdx].active = false;
-                    }
-                }
-            }
-
-            if (!operation || (operation !== 'Add' && operation !== 'Change')) {
-                continue;
-            }
-            if (!waymark || !id || !x || !y || !z) {
-                logger.warn(`[LogEvent] 标点数据缺失:`, { operation, waymark, id, x, y, z });
-                continue;
-            }
-
-            const xCoord = parseFloat(x || '0');
-            const yCoord = parseFloat(y || '0');
-            const zCoord = parseFloat(z || '0');
-
-
-            if (isNaN(waymarkIdx) || waymarkIdx < 0 || waymarkIdx > 7) {
-                continue;
-            }
-
-            if (Math.abs(xCoord) > 10000 || Math.abs(yCoord) > 10000) {
-                continue;
-            }
-
-            const flags = zToFlags(zCoord);
-
-            const xValid = isPartyModeCoord(x);
-            const yValid = isPartyModeCoord(y);
-
-            if (xValid && yValid) {
-                logger.log(`[LogEvent] 检测到特征信号 (WaymarkIdx: ${waymarkIdx}, Flags: 0x${flags.toString(16)})`);
-
-                const isInitiator = !!(flags & StatusFlags.IsInitiator);
-
-                // 收到了 A 点的发起信号，跳过
-                if (isInitiator && waymarkIdx === 0) {
-                    logger.log(`[LogEvent] 忽略匿名查询广播`);
-                    continue;
-                }
-
-                const member = partyMembers.value[waymarkIdx];
-
-                if (!member) {
-                    logger.warn(`[LogEvent] 索引 ${waymarkIdx} 对应的是空槽位`);
-                    continue;
-                }
-
-                const jobName = Util.jobToFullName(Util.jobEnumToJob(member.job)).cn || '';
-                logger.log(`[LogEvent] 解析成员: ${member.name} (${jobName})`);
-
-                const user = {
-                    id: member.id,
-                    name: member.name || '未知',
-                    job: jobName,
-                    flags: flags,
-                    waymarkIndex: waymarkIdx,
-                    isAnonymous: !!(flags & StatusFlags.IsAnonymous),
-                    isIdHidden: !!(flags & StatusFlags.IsIdHidden),
-                    isWaymarkEnabled: !!(flags & StatusFlags.IsWaymarkEnabled),
-                    isInitiator: !!(flags & StatusFlags.IsInitiator),
-                    world: member.world,
-                };
-                addOrUpdateUser(user);
-            } else {
-                logger.debug(`[LogEvent] 坐标特征不符 (X:${x}, Y:${y})`);
-            }
+      if (!Number.isNaN(waymarkIdx) && waymarkIdx >= 0 && waymarkIdx <= 7) {
+        if (operation === 'Add' || operation === 'Change') {
+          waymarks.value[waymarkIdx] = {
+            x: Number.parseFloat(x || '0'),
+            y: Number.parseFloat(y || '0'),
+            z: Number.parseFloat(z || '0'),
+            active: true,
+          }
         }
+        else if (operation === 'Delete') {
+          if (waymarks.value[waymarkIdx]) {
+            waymarks.value[waymarkIdx].active = false
+          }
+        }
+      }
+
+      if (!operation || (operation !== 'Add' && operation !== 'Change')) {
+        continue
+      }
+      if (!waymark || !id || !x || !y || !z) {
+        logger.warn(`[LogEvent] 标点数据缺失:`, { operation, waymark, id, x, y, z })
+        continue
+      }
+
+      const xCoord = Number.parseFloat(x || '0')
+      const yCoord = Number.parseFloat(y || '0')
+      const zCoord = Number.parseFloat(z || '0')
+
+      if (Number.isNaN(waymarkIdx) || waymarkIdx < 0 || waymarkIdx > 7) {
+        continue
+      }
+
+      if (Math.abs(xCoord) > 10000 || Math.abs(yCoord) > 10000) {
+        continue
+      }
+
+      const flags = zToFlags(zCoord)
+
+      const xValid = isPartyModeCoord(x)
+      const yValid = isPartyModeCoord(y)
+
+      if (xValid && yValid) {
+        logger.log(`[LogEvent] 检测到特征信号 (WaymarkIdx: ${waymarkIdx}, Flags: 0x${flags.toString(16)})`)
+
+        const isInitiator = !!(flags & StatusFlags.IsInitiator)
+
+        // 收到了 A 点的发起信号，跳过
+        if (isInitiator && waymarkIdx === 0) {
+          logger.log(`[LogEvent] 忽略匿名查询广播`)
+          continue
+        }
+
+        const member = partyMembers.value[waymarkIdx]
+
+        if (!member) {
+          logger.warn(`[LogEvent] 索引 ${waymarkIdx} 对应的是空槽位`)
+          continue
+        }
+
+        const jobName = Util.jobToFullName(Util.jobEnumToJob(member.job)).cn || ''
+        logger.log(`[LogEvent] 解析成员: ${member.name} (${jobName})`)
+
+        const user = {
+          id: member.id,
+          name: member.name || '未知',
+          job: jobName,
+          flags,
+          waymarkIndex: waymarkIdx,
+          isAnonymous: !!(flags & StatusFlags.IsAnonymous),
+          isIdHidden: !!(flags & StatusFlags.IsIdHidden),
+          isWaymarkEnabled: !!(flags & StatusFlags.IsWaymarkEnabled),
+          isInitiator: !!(flags & StatusFlags.IsInitiator),
+          world: member.world,
+        }
+        addOrUpdateUser(user)
+      }
+      else {
+        logger.debug(`[LogEvent] 坐标特征不符 (X:${x}, Y:${y})`)
+      }
     }
-};
+  }
+}
 
 // 添加或更新用户
 function addOrUpdateUser(user: UserInfo) {
-    if (user.id === myId.value && user.isInitiator) return;
+  if (user.id === myId.value && user.isInitiator)
+    return
 
-    const existingIndex = users.value.findIndex(u => u.id === user.id);
+  const existingIndex = users.value.findIndex(u => u.id === user.id)
 
-    if (existingIndex >= 0) {
-        logger.log(`[User] 更新用户信息: ${user.name}`);
-        users.value[existingIndex] = user;
-    } else {
-        // 收到的是别人的发起请求信号
-        if (user.isInitiator && user.id !== myId.value) {
-            logger.log(`[User] 检测到来自 ${user.name} 的被动查询，清空当前列表`);
-            if (users.value.length > 0) {
-                logger.log(`[User] 存档当前列表到历史记录`);
-                history.value.unshift({
-                    key: Date.now().toString(),
-                    timestamp: new Date().toLocaleTimeString(),
-                    queryTime: lastQueryTime.value,
-                    members: [...users.value]
-                });
-                saveHistory();
-            }
-            lastQueryTime.value = new Date().toLocaleTimeString();
-            users.value = [user];
-        } else {
-            logger.log(`[User] 新增响应者: ${user.name}`);
-            users.value.push(user);
-        }
+  if (existingIndex >= 0) {
+    logger.log(`[User] 更新用户信息: ${user.name}`)
+    users.value[existingIndex] = user
+  }
+  else {
+    // 收到的是别人的发起请求信号
+    if (user.isInitiator && user.id !== myId.value) {
+      logger.log(`[User] 检测到来自 ${user.name} 的被动查询，清空当前列表`)
+      if (users.value.length > 0) {
+        logger.log(`[User] 存档当前列表到历史记录`)
+        history.value.unshift({
+          key: Date.now().toString(),
+          timestamp: new Date().toLocaleTimeString(),
+          queryTime: lastQueryTime.value,
+          members: [...users.value],
+        })
+        saveHistory()
+      }
+      lastQueryTime.value = new Date().toLocaleTimeString()
+      users.value = [user]
     }
+    else {
+      logger.log(`[User] 新增响应者: ${user.name}`)
+      users.value.push(user)
+    }
+  }
 
-    logger.log(`当前响应者列表:`, users.value);
+  logger.log(`当前响应者列表:`, users.value)
 }
 
 const handlePartyChanged: EventMap['PartyChanged'] = (e) => {
-    const rawMembers: PartyMember[] = [];
-    if (e.party && Array.isArray(e.party)) {
-        for (const member of e.party) {
-            if (member.id && member.inParty) {
-                rawMembers.push({
-                    id: member.id.toUpperCase(),
-                    hexId: parseInt(member.id, 16),
-                    name: member.name || '',
-                    job: member.job || 0,
-                    level: member.level || 0,
-                    world: world[member.worldId as keyof typeof world] || ''
-                });
-            }
-        }
+  const rawMembers: PartyMember[] = []
+  if (e.party && Array.isArray(e.party)) {
+    for (const member of e.party) {
+      if (member.id && member.inParty) {
+        rawMembers.push({
+          id: member.id.toUpperCase(),
+          hexId: Number.parseInt(member.id, 16),
+          name: member.name || '',
+          job: member.job || 0,
+          level: member.level || 0,
+          world: world[member.worldId as keyof typeof world] || '',
+        })
+      }
     }
+  }
 
+  const sortedRaw = [...rawMembers].sort((a, b) => a.hexId - b.hexId)
 
-    const sortedRaw = [...rawMembers].sort((a, b) => a.hexId - b.hexId);
+  const offset = 3
+  const shifted = Array.from({ length: 8 }).fill(null) as (PartyMember | null)[]
 
-    const offset = 3;
-    const shifted = new Array<PartyMember | null>(8).fill(null);
-
-    for (let i = 0; i < 8; i++) {
-        const idx = (i + offset) % 8;
-        if (idx < sortedRaw.length) {
-            shifted[i] = sortedRaw[idx] || null;
-        }
+  for (let i = 0; i < 8; i++) {
+    const idx = (i + offset) % 8
+    if (idx < sortedRaw.length) {
+      shifted[i] = sortedRaw[idx] || null
     }
+  }
 
-    partyMembers.value = shifted;
-    logger.log(shifted);
-};
-
-
-const doWayMarks = (json: WayMarkObj) => {
-    logger.log(`调用鲶鱼精邮差:`, JSON.stringify(json));
-    void callOverlayHandler({
-        call: 'PostNamazu',
-        c: 'DoWaymarks',
-        p: JSON.stringify({ ...json, LocalOnly: false }),
-    })
+  partyMembers.value = shifted
+  logger.log(shifted)
 }
 
-const clearWayMarks = () => {
-    logger.log(`清理所有标点`);
-    void callOverlayHandler({
-        call: 'PostNamazu',
-        c: 'DoWaymarks',
-        p: JSON.stringify({ LocalOnly: false, A: {}, B: {}, C: {}, D: {}, One: {}, Two: {}, Three: {}, Four: {} }),
-    })
+function doWayMarks(json: WayMarkObj) {
+  logger.log(`调用鲶鱼精邮差:`, JSON.stringify(json))
+  void callOverlayHandler({
+    call: 'PostNamazu',
+    c: 'DoWaymarks',
+    p: JSON.stringify({ ...json, LocalOnly: false }),
+  })
 }
 
-const ask = () => {
-    let flags = StatusFlags.IsAnonymous | StatusFlags.IsIdHidden | StatusFlags.IsInitiator | StatusFlags.IsWaymarkEnabled;
+function clearWayMarks() {
+  logger.log(`清理所有标点`)
+  void callOverlayHandler({
+    call: 'PostNamazu',
+    c: 'DoWaymarks',
+    p: JSON.stringify({ LocalOnly: false, A: {}, B: {}, C: {}, D: {}, One: {}, Two: {}, Three: {}, Four: {} }),
+  })
+}
 
-    const targetIdx = 0;
-    const targetWaymarkName = 'A';
+function ask() {
+  const flags = StatusFlags.IsAnonymous | StatusFlags.IsIdHidden | StatusFlags.IsInitiator | StatusFlags.IsWaymarkEnabled
 
-    // 获取该标点当前位置
-    const current = waymarks.value[targetIdx] || { x: 0, y: 0, z: 0 };
-    const threeZero = current.x === 0 && current.y === 0 && current.z === 0;
+  const targetIdx = 0
+  const targetWaymarkName = 'A'
 
-    let x = Math.round(current.x * 10) / 10;
-    x += (x >= 0 ? 0.01 : -0.01);
+  // 获取该标点当前位置
+  const current = waymarks.value[targetIdx] || { x: 0, y: 0, z: 0 }
+  const threeZero = current.x === 0 && current.y === 0 && current.z === 0
 
-    let y = Math.round(current.y * 10) / 10;
-    y += (y >= 0 ? 0.01 : -0.01);
+  let x = Math.round(current.x * 10) / 10
+  x += (x >= 0 ? 0.01 : -0.01)
 
-    let z = Math.floor(current.z + 0.01);
-    z += 0.01 + (flags / 100);
+  let y = Math.round(current.y * 10) / 10
+  y += (y >= 0 ? 0.01 : -0.01)
 
-    const json: any = {
-        "Local": false,
-        [targetWaymarkName]: {
-            X: x,
-            Y: z,
-            Z: y,
-            Active: true
-        }
-    };
+  let z = Math.floor(current.z + 0.01)
+  z += 0.01 + (flags / 100)
 
-    logger.log(`[Ask] 计算坐标(索引 ${targetIdx}): X=${x}, Y=${z}, Z=${y}`);
-    doWayMarks(json);
+  const json: any = {
+    Local: false,
+    [targetWaymarkName]: {
+      X: x,
+      Y: z,
+      Z: y,
+      Active: true,
+    },
+  }
 
-    // 存档与清理
+  logger.log(`[Ask] 计算坐标(索引 ${targetIdx}): X=${x}, Y=${z}, Z=${y}`)
+  doWayMarks(json)
+
+  // 存档与清理
+  if (users.value.length > 0) {
+    history.value.unshift({
+      key: Date.now().toString(),
+      timestamp: new Date().toLocaleTimeString(),
+      queryTime: lastQueryTime.value,
+      members: [...users.value],
+    })
+    saveHistory()
+  }
+  lastQueryTime.value = new Date().toLocaleTimeString()
+  users.value = []
+
+  ElNotification.closeAll()
+  ElNotification.info({
+    message: '正在获取信号...',
+    position: 'top-left',
+    customClass: 'bby-mini-notify',
+    showClose: false,
+  })
+
+  if (queryTimer.value)
+    clearTimeout(queryTimer.value)
+  queryTimer.value = setTimeout(() => {
+    if (threeZero)
+      clearWayMarks()
+    queryTimer.value = null
+    ElNotification.closeAll()
     if (users.value.length > 0) {
-        history.value.unshift({
-            key: Date.now().toString(),
-            timestamp: new Date().toLocaleTimeString(),
-            queryTime: lastQueryTime.value,
-            members: [...users.value]
-        });
-        saveHistory();
-    }
-    lastQueryTime.value = new Date().toLocaleTimeString();
-    users.value = [];
-
-    ElNotification.closeAll();
-    ElNotification.info({
-        message: '正在获取信号...',
+      ElNotification.success({
+        message: `发现 ${users.value.length} 名 BBY 成员`,
         position: 'top-left',
         customClass: 'bby-mini-notify',
-        showClose: false
-    });
-
-    if (queryTimer.value) clearTimeout(queryTimer.value);
-    queryTimer.value = setTimeout(() => {
-        if (threeZero) clearWayMarks();
-        queryTimer.value = null;
-        ElNotification.closeAll();
-        if (users.value.length > 0) {
-            ElNotification.success({
-                message: `发现 ${users.value.length} 名 BBY 成员`,
-                position: 'top-left',
-                customClass: 'bby-mini-notify',
-                showClose: false
-            });
-        } else {
-            ElNotification.warning({
-                message: '未发现 BBY 成员',
-                position: 'top-left',
-                customClass: 'bby-mini-notify',
-                showClose: false
-            });
-        }
-    }, 1000);
+        showClose: false,
+      })
+    }
+    else {
+      ElNotification.warning({
+        message: '未发现 BBY 成员',
+        position: 'top-left',
+        customClass: 'bby-mini-notify',
+        showClose: false,
+      })
+    }
+  }, 1000)
 }
 
 const handleChangePrimaryPlayer: EventMap['ChangePrimaryPlayer'] = (e) => {
-    const id = e.charID.toString(16).toUpperCase()
-    if (myId.value !== id) {
-        myId.value = id
-        logger.log(`我的 ID 已更新: ${id}`);
-    }
+  const id = e.charID.toString(16).toUpperCase()
+  if (myId.value !== id) {
+    myId.value = id
+    logger.log(`我的 ID 已更新: ${id}`)
+  }
 }
 
-const addFakeData = () => {
-    const worlds = ['地平关', '迷雾湿地', '拉诺西亚', '紫水栈桥', '幻影群岛'];
-    const names = ['鸣神小吉', '猫三水', '苏摩', '艾露恩', '莉莉丝', '阿尔法', '欧米茄', '泰坦', '利维亚桑', '希瓦'];
+function addFakeData() {
+  const worlds = ['地平关', '迷雾湿地', '拉诺西亚', '紫水栈桥', '幻影群岛']
+  const names = ['鸣神小吉', '猫三水', '苏摩', '艾露恩', '莉莉丝', '阿尔法', '欧米茄', '泰坦', '利维亚桑', '希瓦']
 
-    const fakeMembers: PartyMember[] = [];
-    for (let i = 0; i < 8; i++) {
-        fakeMembers.push({
-            id: (1000 + i).toString(16).toUpperCase(),
-            hexId: 1000 + i,
-            name: names[i % names.length]!,
-            job: 1 + (i % 38), // 随便来点职业ID
-            level: 100,
-            world: worlds[i % worlds.length]!
-        });
+  const fakeMembers: PartyMember[] = []
+  for (let i = 0; i < 8; i++) {
+    fakeMembers.push({
+      id: (1000 + i).toString(16).toUpperCase(),
+      hexId: 1000 + i,
+      name: names[i % names.length]!,
+      job: 1 + (i % 38), // 随便来点职业ID
+      level: 100,
+      world: worlds[i % worlds.length]!,
+    })
+  }
+  partyMembers.value = fakeMembers
+
+  const responders: UserInfo[] = []
+  fakeMembers.forEach((m, idx) => {
+    if (Math.random() > 0.4) {
+      responders.push({
+        id: m.id,
+        name: m.name,
+        job: Util.jobToFullName(Util.jobEnumToJob(m.job)).cn || '冒险者',
+        flags: StatusFlags.None,
+        waymarkIndex: idx,
+        isAnonymous: false,
+        isIdHidden: false,
+        isWaymarkEnabled: true,
+        isInitiator: false,
+        world: m.world,
+      })
     }
-    partyMembers.value = fakeMembers;
+  })
 
-    const responders: UserInfo[] = [];
-    fakeMembers.forEach((m, idx) => {
-        if (Math.random() > 0.4) {
-            responders.push({
-                id: m.id,
-                name: m.name,
-                job: Util.jobToFullName(Util.jobEnumToJob(m.job)).cn || '冒险者',
-                flags: StatusFlags.None,
-                waymarkIndex: idx,
-                isAnonymous: false,
-                isIdHidden: false,
-                isWaymarkEnabled: true,
-                isInitiator: false,
-                world: m.world
-            });
-        }
-    });
-
-    lastQueryTime.value = new Date().toLocaleTimeString();
-    users.value = responders;
+  lastQueryTime.value = new Date().toLocaleTimeString()
+  users.value = responders
 }
 
 onMounted(() => {
-    loadHistory();
-    addOverlayListener('onLogEvent', handleLogEvent);
-    addOverlayListener('PartyChanged', handlePartyChanged);
-    addOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
-    const isDark = useDark({ storageKey: 'bby-theme' })
-    const toggleDark = useToggle(isDark)
-    if (isDark.value === false) {
-        // 固定使用深色主题
-        toggleDark()
-    }
-});
+  loadHistory()
+  addOverlayListener('onLogEvent', handleLogEvent)
+  addOverlayListener('PartyChanged', handlePartyChanged)
+  addOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
+  const isDark = useDark({ storageKey: 'bby-theme' })
+  const toggleDark = useToggle(isDark)
+  if (isDark.value === false) {
+    // 固定使用深色主题
+    toggleDark()
+  }
+})
 
 onUnmounted(() => {
-    removeOverlayListener('onLogEvent', handleLogEvent);
-    removeOverlayListener('PartyChanged', handlePartyChanged);
-    removeOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
-});
+  removeOverlayListener('onLogEvent', handleLogEvent)
+  removeOverlayListener('PartyChanged', handlePartyChanged)
+  removeOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
+})
 </script>
+
 <template>
-    <CommonActWrapper>
-        <div class="advwm-container">
-            <div class="header">
-                <h2>小队里谁在使用BBY</h2>
-                <div class="query-methods">
-                    <div class="query-item">
-                        <button class="ask-btn" :class="{ 'searching': !!queryTimer }" @click="ask"
-                            :disabled="!!queryTimer">
-                            {{ queryTimer ? '正在查询...' : '主动查询' }}
-                        </button>
-                        <button v-if="dev" class="ask-btn fake-test-btn" @click="addFakeData">
-                            生成测试数据
-                        </button>
-                        <span class="item-desc">
-                            通过场地标点通信，需要使用鲶鱼精邮差（你和对方都要）并处于可以标点的同一地图中<br>
-                            <!-- 他代码没写好，目前匿名查询对方不会收到提醒 -->
-                            <!-- <span class="warn-text">注意：他们会知道有人进行了匿名查询！</span> -->
-                        </span>
-                    </div>
-                    <div class="query-item passive">
-                        <span class="passive-title">被动接收</span>
-                        <span class="item-desc">当队伍内其他玩家发起查询时，此处也会同步显示结果。</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="users-section">
-                <div class="users-header-row">
-                    <h3>当前小队 ({{ respondents.length }})</h3>
-                    <span v-if="!lastQueryTime" class="status-hint">尚未进行查询</span>
-                    <template v-else>
-                        <span class="using-count">发现使用中: {{ users.length }}</span>
-                        <span class="last-query-time">最后查询: {{ lastQueryTime }}</span>
-                    </template>
-                </div>
-                <div class="users-list">
-                    <UserCard v-for="user in respondents" :key="user.id" :user="user" :blur-mode="blurMode"
-                        @contextmenu.prevent="toggleBlurMode" />
-                </div>
-            </div>
-
-            <div v-if="respondents.length === 0" class="empty-state">
-                <p>等待小队数据...</p>
-            </div>
-
-            <div class="debug-section" v-if="debugMode">
-                <h3>调试信息</h3>
-                <div style="margin-bottom: 16px;">
-                    <strong>用户总数:</strong> {{ users.length }}<br>
-                    <strong>应答者数:</strong> {{ respondents.length }}<br>
-                    <strong>小队成员数:</strong> {{ partyMembersLength }}
-                </div>
-                <details>
-                    <summary>用户列表详情</summary>
-                    <pre>{{ users }}</pre>
-                </details>
-                <details>
-                    <summary>标点解析详情</summary>
-                    <pre>{{ debugInfo }}</pre>
-                </details>
-            </div>
-
-            <div v-if="history.length > 0" class="history-section">
-                <div class="history-header">
-                    <h3>历史记录 ({{ history.length }})</h3>
-                    <button class="clear-history-btn" @click="clearHistory">清空历史</button>
-                </div>
-                <div class="history-list">
-                    <div v-for="(snapshot, index) in history" :key="index" class="history-item">
-                        <div class="snapshot-header">
-                            <div class="snapshot-time">存档时间: {{ snapshot.timestamp }}</div>
-                            <div class="snapshot-query-time" v-if="snapshot.queryTime">查询时间: {{ snapshot.queryTime
-                                }}</div>
-                        </div>
-                        <div class="snapshot-members">
-                            <div v-for="u in snapshot.members" :key="u.id" class="history-member-tag">
-                                <span class="member-name">{{ u.name }}</span>
-                                <span class="member-world" v-if="u.world">{{ u.world }}</span>
-                                <span class="member-job">{{ u.job }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  <CommonActWrapper>
+    <div class="advwm-container">
+      <div class="header">
+        <h2>小队里谁在使用BBY</h2>
+        <div class="query-methods">
+          <div class="query-item">
+            <button
+              class="ask-btn" :class="{ searching: !!queryTimer }" :disabled="!!queryTimer"
+              @click="ask"
+            >
+              {{ queryTimer ? '正在查询...' : '主动查询' }}
+            </button>
+            <button v-if="dev" class="ask-btn fake-test-btn" @click="addFakeData">
+              生成测试数据
+            </button>
+            <span class="item-desc">
+              通过场地标点通信，需要使用鲶鱼精邮差（你和对方都要）并处于可以标点的同一地图中<br>
+              <!-- 他代码没写好，目前匿名查询对方不会收到提醒 -->
+              <!-- <span class="warn-text">注意：他们会知道有人进行了匿名查询！</span> -->
+            </span>
+          </div>
+          <div class="query-item passive">
+            <span class="passive-title">被动接收</span>
+            <span class="item-desc">当队伍内其他玩家发起查询时，此处也会同步显示结果。</span>
+          </div>
         </div>
-    </CommonActWrapper>
+      </div>
+
+      <div class="users-section">
+        <div class="users-header-row">
+          <h3>当前小队 ({{ respondents.length }})</h3>
+          <span v-if="!lastQueryTime" class="status-hint">尚未进行查询</span>
+          <template v-else>
+            <span class="using-count">发现使用中: {{ users.length }}</span>
+            <span class="last-query-time">最后查询: {{ lastQueryTime }}</span>
+          </template>
+        </div>
+        <div class="users-list">
+          <UserCard
+            v-for="user in respondents" :key="user.id" :user="user" :blur-mode="blurMode"
+            @contextmenu.prevent="toggleBlurMode"
+          />
+        </div>
+      </div>
+
+      <div v-if="respondents.length === 0" class="empty-state">
+        <p>等待小队数据...</p>
+      </div>
+
+      <div v-if="debugMode" class="debug-section">
+        <h3>调试信息</h3>
+        <div style="margin-bottom: 16px;">
+          <strong>用户总数:</strong> {{ users.length }}<br>
+          <strong>应答者数:</strong> {{ respondents.length }}<br>
+          <strong>小队成员数:</strong> {{ partyMembersLength }}
+        </div>
+        <details>
+          <summary>用户列表详情</summary>
+          <pre>{{ users }}</pre>
+        </details>
+        <details>
+          <summary>标点解析详情</summary>
+          <pre>{{ debugInfo }}</pre>
+        </details>
+      </div>
+
+      <div v-if="history.length > 0" class="history-section">
+        <div class="history-header">
+          <h3>历史记录 ({{ history.length }})</h3>
+          <button class="clear-history-btn" @click="clearHistory">
+            清空历史
+          </button>
+        </div>
+        <div class="history-list">
+          <div v-for="(snapshot, index) in history" :key="index" class="history-item">
+            <div class="snapshot-header">
+              <div class="snapshot-time">
+                存档时间: {{ snapshot.timestamp }}
+              </div>
+              <div v-if="snapshot.queryTime" class="snapshot-query-time">
+                查询时间: {{ snapshot.queryTime
+                }}
+              </div>
+            </div>
+            <div class="snapshot-members">
+              <div v-for="u in snapshot.members" :key="u.id" class="history-member-tag">
+                <span class="member-name">{{ u.name }}</span>
+                <span v-if="u.world" class="member-world">{{ u.world }}</span>
+                <span class="member-job">{{ u.job }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </CommonActWrapper>
 </template>
+
 <style scoped lang='scss'>
 // 设计系统变量
 $color-primary: #3b82f6;
@@ -845,8 +861,6 @@ $transition-slow: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 }
 
-
-
 .item-desc {
     font-size: 11px;
     color: $color-text-muted;
@@ -867,8 +881,6 @@ $transition-slow: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     white-space: nowrap;
     letter-spacing: 0.2px;
 }
-
-
 
 .users-section {
     margin-bottom: 16px;

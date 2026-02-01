@@ -1,34 +1,45 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import tseslint from 'typescript-eslint'
-import pluginVue from 'eslint-plugin-vue'
-import { defineConfig } from 'eslint/config'
-
-import fs from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import antfu from '@antfu/eslint-config'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const autoImportConfigPath = path.resolve(
-  __dirname,
-  '.eslintrc-auto-import.json'
-)
-const autoImportGlobals: Record<string, boolean | 'readonly'> = JSON.parse(
-  fs.readFileSync(autoImportConfigPath, 'utf-8')
-).globals
+const autoImportConfigPath = path.resolve(__dirname, '.eslintrc-auto-import.json')
+const autoImportGlobals = fs.existsSync(autoImportConfigPath)
+  ? JSON.parse(fs.readFileSync(autoImportConfigPath, 'utf-8')).globals
+  : {}
 
-export default defineConfig([
+export default antfu(
   {
     ignores: ['dist/', 'node_modules/', 'cactbot/'],
+    vue: true,
+    typescript: true,
+    unocss: true,
+    stylistic: {
+      indent: 2,
+      quotes: 'single',
+      semi: false,
+    },
   },
   {
-    files: ['**/*.{js,mjs,cjs,ts,mts,cts,vue}'],
-    plugins: { js },
-    extends: ['js/recommended'],
-    languageOptions: { globals: { ...globals.browser, ...autoImportGlobals } },
+    languageOptions: {
+      globals: {
+        ...autoImportGlobals,
+      },
+    },
+  },
+  {
+    files: ['**/*.vue'],
     rules: {
+      'vue/multi-word-component-names': 'off',
+    },
+  },
+  {
+    rules: {
+      'no-console': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -43,19 +54,4 @@ export default defineConfig([
       ],
     },
   },
-  tseslint.configs.recommended,
-  pluginVue.configs['flat/essential'],
-  {
-    files: ['**/*.vue'],
-    languageOptions: { parserOptions: { parser: tseslint.parser } },
-    rules: {
-      'vue/multi-word-component-names': 'off',
-    },
-  },
-  {
-    files: ['**/*.{ts,vue}'],
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-    },
-  },
-])
+)

@@ -1,5 +1,5 @@
-import logDefinitions from '../../../cactbot/resources/netlog_defs'
 import type { ResourceTracker } from '@/types/JobResource'
+import logDefinitions from '../../../cactbot/resources/netlog_defs'
 
 const PCT_ACTION_IDS = {
   TEMPERA_COAT: 34685, // 坦培拉涂层
@@ -50,7 +50,8 @@ export class PictomancerTracker implements ResourceTracker {
   public processLine(type: string, splitLine: string[], cooldownTracker: Record<string, Record<number, number[]>> = {}) {
     const timestampStr = splitLine[logDefinitions.GainsEffect?.fields?.timestamp ?? 1]
     const timestamp = timestampStr ? new Date(timestampStr).getTime() : 0
-    if (timestamp <= 0) return
+    if (timestamp <= 0)
+      return
 
     // 检查一遍观察期
     this.checkPending(timestamp, cooldownTracker)
@@ -59,14 +60,15 @@ export class PictomancerTracker implements ResourceTracker {
       case '26': // GainsEffect (获得状态)
         {
           const targetId = splitLine[logDefinitions.GainsEffect.fields.targetId]!
-          const effectId = parseInt(splitLine[logDefinitions.GainsEffect.fields.effectId]!, 16)
+          const effectId = Number.parseInt(splitLine[logDefinitions.GainsEffect.fields.effectId]!, 16)
           const durationStr = splitLine[logDefinitions.GainsEffect.fields.duration]
-          const duration = durationStr ? parseFloat(durationStr) : 0
+          const duration = durationStr ? Number.parseFloat(durationStr) : 0
 
           if (effectId === PCT_STATUS_IDS.TEMPERA_COAT) {
             // 获得普通涂层
             this.activeShields[targetId] = { type: 'coat', expiresAt: timestamp + duration * 1000 }
-          } else if (effectId === PCT_STATUS_IDS.TEMPERA_GRASSA) {
+          }
+          else if (effectId === PCT_STATUS_IDS.TEMPERA_GRASSA) {
             // 获得油性涂层 (由普通涂层转化而来)
             this.activeShields[targetId] = { type: 'grassa', expiresAt: timestamp + duration * 1000 }
             // 成功转化为油性，清空待定标记，防止触发普通破碎
@@ -78,7 +80,7 @@ export class PictomancerTracker implements ResourceTracker {
       case '30': // LosesEffect (状态消失)
         {
           const targetId = splitLine[logDefinitions.LosesEffect.fields.targetId]!
-          const effectId = parseInt(splitLine[logDefinitions.LosesEffect.fields.effectId]!, 16)
+          const effectId = Number.parseInt(splitLine[logDefinitions.LosesEffect.fields.effectId]!, 16)
 
           if (effectId === PCT_STATUS_IDS.TEMPERA_COAT) {
             const shield = this.activeShields[targetId]
@@ -90,7 +92,8 @@ export class PictomancerTracker implements ResourceTracker {
               }
               delete this.activeShields[targetId]
             }
-          } else if (effectId === PCT_STATUS_IDS.TEMPERA_GRASSA) {
+          }
+          else if (effectId === PCT_STATUS_IDS.TEMPERA_GRASSA) {
             const shield = this.activeShields[targetId]
             if (shield?.type === 'grassa') {
               // 油性涂层无法转化，提前消失直接判定为破碎。减 30s。
@@ -107,7 +110,9 @@ export class PictomancerTracker implements ResourceTracker {
 
   /**
    * 缩短指定角色的坦培拉涂层技能 CD
+   * @param characterId
    * @param amountMs 缩减的毫秒数 (普通涂层为 60000, 油性为 30000)
+   * @param cooldownTracker
    */
   private reduceCooldown(characterId: string, amountMs: number, cooldownTracker: Record<string, Record<number, number[]>>) {
     const jobCooldowns = cooldownTracker[characterId]

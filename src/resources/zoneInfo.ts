@@ -1,7 +1,7 @@
 import type { LocaleText } from '../../cactbot/types/trigger'
 import data from '../../cactbot/resources/zone_info'
 
-type ZoneInfoType = {
+interface ZoneInfoType {
   [zoneId: number]: {
     readonly exVersion: number
     readonly contentType?: number

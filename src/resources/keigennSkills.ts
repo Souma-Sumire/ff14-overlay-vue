@@ -10,7 +10,7 @@ const PARTY: Scope = 'party'
 
 const keigennSkills: KeigennSkill[] = [
   ...raidbuffs
-    .filter((v) => v.line === 1 || v.line === 2)
+    .filter(v => v.line === 1 || v.line === 2)
     .map(({ tts, duration, key, line, ...rest }) => ({
       ...rest,
       scope: PARTY,
@@ -56,7 +56,25 @@ const keigennSkills: KeigennSkill[] = [
     id: 7548,
     recast1000ms: 120,
     job: [
-      1, 2, 3, 4, 5, 19, 20, 21, 22, 23, 29, 30, 31, 32, 34, 37, 38, 39, 41,
+      1,
+      2,
+      3,
+      4,
+      5,
+      19,
+      20,
+      21,
+      22,
+      23,
+      29,
+      30,
+      31,
+      32,
+      34,
+      37,
+      38,
+      39,
+      41,
     ],
     // minLevel: 32,
     minLevel: 1,

@@ -1,5 +1,5 @@
-import fs from 'fs-extra'
 import csv from 'csv-parser'
+import fs from 'fs-extra'
 import iconv from 'iconv-lite'
 import { csvPaths } from './paths'
 
@@ -52,7 +52,7 @@ jaData.forEach((row) => {
     return
   }
 
-  const cnRow = cnData!.find((r) => r[0] === row[0])!
+  const cnRow = cnData!.find(r => r[0] === row[0])!
   const cn = cnRow?.[2]
   const ja = row[2]
 

@@ -1,5 +1,5 @@
-import fs from 'fs-extra'
 import csv from 'csv-parser'
+import fs from 'fs-extra'
 import iconv from 'iconv-lite'
 import { csvPaths } from './paths'
 
@@ -22,7 +22,7 @@ function readCsv(
         }
       })
       .on('end', () => resolve())
-      .on('error', (error) => reject(error))
+      .on('error', error => reject(error))
   })
 }
 

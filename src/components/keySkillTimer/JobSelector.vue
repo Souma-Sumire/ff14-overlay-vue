@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useLang, localeToCactbotLang } from '@/composables/useLang'
 import type { Lang } from '@/types/lang'
-import Util from '@/utils/util'
 import { Filter } from '@element-plus/icons-vue'
+import { computed } from 'vue'
+import { localeToCactbotLang, useLang } from '@/composables/useLang'
+import Util from '@/utils/util'
 
 const props = defineProps<{
   modelValue: number[]
@@ -27,12 +27,14 @@ const localizedJobOptions = computed(() => {
 })
 
 const selectedJobsText = computed(() => {
-  if (!props.modelValue || props.modelValue.length === 0) return t('keySkillTimerSettings.col.allJobs')
-  if (props.modelValue.length === jobList.length) return t('keySkillTimerSettings.col.allJobs')
+  if (!props.modelValue || props.modelValue.length === 0)
+    return t('keySkillTimerSettings.col.allJobs')
+  if (props.modelValue.length === jobList.length)
+    return t('keySkillTimerSettings.col.allJobs')
   return t('keySkillTimerSettings.col.jobsCount', { count: props.modelValue.length })
 })
 
-const handleUpdate = (val: number[]) => {
+function handleUpdate(val: number[]) {
   emit('update:modelValue', val)
 }
 </script>
@@ -45,11 +47,10 @@ const handleUpdate = (val: number[]) => {
         <span class="btn-text">{{ selectedJobsText }}</span>
       </el-button>
     </template>
-    
+
     <div class="job-selector-content">
       <el-select
         :model-value="modelValue"
-        @update:model-value="handleUpdate"
         multiple
         filterable
         placeholder="Select Jobs"
@@ -57,6 +58,7 @@ const handleUpdate = (val: number[]) => {
         class="full-width"
         collapse-tags
         collapse-tags-tooltip
+        @update:model-value="handleUpdate"
       >
         <el-option
           v-for="option in localizedJobOptions"
@@ -77,7 +79,7 @@ const handleUpdate = (val: number[]) => {
   overflow: hidden;
   border: 1px solid var(--el-border-color);
   background-color: var(--el-fill-color-blank);
-  
+
   .btn-text {
     margin-left: 6px;
     overflow: hidden;

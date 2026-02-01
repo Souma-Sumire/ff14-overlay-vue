@@ -349,23 +349,24 @@ export function getPresetsForRole(role: string | null | undefined): {
   recommended: BisPreset[]
   others: BisPreset[]
 } {
-  if (!role) return { recommended: [], others: [] }
+  if (!role)
+    return { recommended: [], others: [] }
 
   const roleType = getRoleType(role).replace('role-', '') as
     | 'tank'
     | 'healer'
     | 'dps'
 
-  const allForRoleType = BIS_PRESETS.filter((p) => p.roleType === roleType)
+  const allForRoleType = BIS_PRESETS.filter(p => p.roleType === roleType)
 
   // 推荐：匹配特定位置的
   const recommended = allForRoleType.filter(
-    (p) => p.specificRoles && p.specificRoles.includes(role),
+    p => p.specificRoles && p.specificRoles.includes(role),
   )
 
   // 其他：职能匹配但位置不匹配（或未指定位置）的
   const others = allForRoleType.filter(
-    (p) => !p.specificRoles || !p.specificRoles.includes(role),
+    p => !p.specificRoles || !p.specificRoles.includes(role),
   )
 
   return { recommended, others }
@@ -387,7 +388,8 @@ function checkDuplicatePresets() {
       console.warn(
         `[BisPreset] 检测到重复预设内容: "${p.name}" 与 "${seen.get(key)}" 的配置完全一致。`,
       )
-    } else {
+    }
+    else {
       seen.set(key, p.name)
     }
   })

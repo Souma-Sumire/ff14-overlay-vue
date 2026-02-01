@@ -1,5 +1,5 @@
-import fs from 'fs-extra'
 import csv from 'csv-parser'
+import fs from 'fs-extra'
 import iconv from 'iconv-lite'
 import { csvPaths } from './paths'
 
@@ -41,7 +41,7 @@ soumaData.forEach((row) => {
     return
   }
 
-  const jaRow = jaData.find((r) => r[0] === row[0])
+  const jaRow = jaData.find(r => r[0] === row[0])
   if (jaRow && row[1]) {
     result[row[0]!] = [row[1]!, jaRow[3]!, jaRow[6]!]
   }

@@ -1,9 +1,9 @@
 import type { ResourceTracker } from '@/types/JobResource'
-import { ScholarTracker } from './jobs/scholar'
-import { PaladinTracker } from './jobs/paladin'
-import { SageTracker } from './jobs/sage'
 import { DarkKnightTracker } from './jobs/darkKnight'
+import { PaladinTracker } from './jobs/paladin'
 import { PictomancerTracker } from './jobs/pictomancer'
+import { SageTracker } from './jobs/sage'
+import { ScholarTracker } from './jobs/scholar'
 
 /**
  * 职业资源管理器
@@ -12,19 +12,19 @@ import { PictomancerTracker } from './jobs/pictomancer'
 export class JobResourceManager {
   private allTrackers: Map<number, new () => ResourceTracker> = new Map()
   private activeTrackers: Map<number, ResourceTracker> = new Map()
-  
+
   constructor() {
-     this.allTrackers.set(28, ScholarTracker)
-     this.allTrackers.set(19, PaladinTracker)
-     this.allTrackers.set(40, SageTracker)
-     this.allTrackers.set(32, DarkKnightTracker)
-     this.allTrackers.set(42, PictomancerTracker)
+    this.allTrackers.set(28, ScholarTracker)
+    this.allTrackers.set(19, PaladinTracker)
+    this.allTrackers.set(40, SageTracker)
+    this.allTrackers.set(32, DarkKnightTracker)
+    this.allTrackers.set(42, PictomancerTracker)
   }
 
   /** 根据当前队伍职业动态开启 Tracker */
   public updateParty(jobEnums: Iterable<number>) {
     const jobSet = new Set(jobEnums)
-    
+
     // 仅添加新出现的职业 Tracker，不移除已存在的（防止战斗中因小队变动导致数据丢失）
     for (const job of jobSet) {
       const TrackerClass = this.allTrackers.get(job)
@@ -62,7 +62,7 @@ export class JobResourceManager {
     return undefined
   }
 
-  /** 
+  /**
    * 判定资源是否满足技能要求
    * 优先使用 Tracker 的自定义逻辑，否则回退到通用的消耗判定
    */

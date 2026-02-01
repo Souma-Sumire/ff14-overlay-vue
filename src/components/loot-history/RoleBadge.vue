@@ -1,3 +1,16 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { getRoleColor, getRoleDisplayName } from '@/utils/lootParser'
+
+const props = defineProps<{
+  role: string | null | undefined
+  large?: boolean
+}>()
+
+const bgColor = computed(() => getRoleColor(props.role))
+const roleDisplayName = computed(() => props.role ? getRoleDisplayName(props.role) : '')
+</script>
+
 <template>
   <span
     v-if="role"
@@ -8,19 +21,6 @@
     {{ roleDisplayName }}
   </span>
 </template>
-
-<script setup lang="ts">
-import { computed } from 'vue'
-import { getRoleDisplayName, getRoleColor } from '@/utils/lootParser'
-
-const props = defineProps<{
-  role: string | null | undefined
-  large?: boolean
-}>()
-
-const bgColor = computed(() => getRoleColor(props.role))
-const roleDisplayName = computed(() => props.role ? getRoleDisplayName(props.role) : '')
-</script>
 
 <style scoped>
 .role-badge {
@@ -37,7 +37,7 @@ const roleDisplayName = computed(() => props.role ? getRoleDisplayName(props.rol
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   font-family: inherit;
   font-weight: 800;
-  min-width: 2.5em; 
+  min-width: 2.5em;
   text-align: center;
 }
 .role-badge.badge-large {

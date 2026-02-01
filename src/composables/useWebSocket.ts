@@ -1,8 +1,8 @@
 import { ElMessageBox } from 'element-plus'
 import { onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import actWS from '@/assets/actWS.webp'
 import { callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
-import { useI18n } from 'vue-i18n'
 
 function isIE() {
   const userAgent = window.navigator.userAgent
@@ -40,7 +40,7 @@ export function useWebSocket(
   config: {
     allowClose: boolean
     addWsParam: boolean
-  } = { allowClose: false, addWsParam: true }
+  } = { allowClose: false, addWsParam: true },
 ) {
   const { t } = useI18n()
   const wsConnected = ref(undefined as boolean | undefined)
@@ -82,7 +82,7 @@ export function useWebSocket(
     if (!userIgnoredWarning.value) {
       ElMessageBox.close()
 
-      const message = t('websocket.disconnectMsg', { actWS: actWS })
+      const message = t('websocket.disconnectMsg', { actWS })
       const title = config.allowClose
         ? t('websocket.disconnectTitleCloseable')
         : t('websocket.disconnectTitleRequired')
@@ -99,7 +99,8 @@ export function useWebSocket(
         buttonSize: 'small',
       }).catch(() => {
         userIgnoredWarning.value = true
-        if (timer) clearInterval(timer)
+        if (timer)
+          clearInterval(timer)
       })
     }
   }
@@ -113,14 +114,15 @@ export function useWebSocket(
           type: 'error',
           showConfirmButton: false,
           showClose: false,
-        }
+        },
       )
       return
     }
     watch(wsConnected, (value) => {
       if (value) {
         ElMessageBox.close()
-      } else {
+      }
+      else {
         handleDisconnection()
       }
     })

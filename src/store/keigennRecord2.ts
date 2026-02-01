@@ -33,9 +33,10 @@ export const useKeigennRecord2Store = defineStore('keigennRecord2', {
   },
   actions: {
     checkIsBrowser() {
-      this.isBrowser =
-        !window.OverlayPluginApi && !params.OVERLAY_WS && !params.HOST_PORT
-      if (this.isBrowser) setTimeout(() => this.checkIsBrowser(), 1000)
+      this.isBrowser
+        = !window.OverlayPluginApi && !params.OVERLAY_WS && !params.HOST_PORT
+      if (this.isBrowser)
+        setTimeout(() => this.checkIsBrowser(), 1000)
     },
     formatterName(v: string) {
       const global = /^([A-Z])\S+ ([A-Z])\S+/
@@ -49,11 +50,14 @@ export const useKeigennRecord2Store = defineStore('keigennRecord2', {
 
 function parseParams<T>(v: string, def: T): T {
   if (typeof def === 'boolean') {
-    if (v === '0' || v?.toLocaleLowerCase() === 'false') return false as T
-    if (v === '1' || v?.toLocaleLowerCase() === 'true') return true as T
+    if (v === '0' || v?.toLocaleLowerCase() === 'false')
+      return false as T
+    if (v === '1' || v?.toLocaleLowerCase() === 'true')
+      return true as T
     return def
   }
-  if (typeof def === 'number') return Number.isNaN(+v) ? def : (+v as T)
+  if (typeof def === 'number')
+    return Number.isNaN(+v) ? def : (+v as T)
 
   if (typeof def === 'string') {
     return v as T

@@ -17,7 +17,7 @@ watchEffect(() => {
     item.src = getClassjobIconSrc(item.job)
 })
 const showHeader = /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(
-  params.get('showHeader') || 'true'
+  params.get('showHeader') || 'true',
 )
 
 function getJobStr(job: number): string {
@@ -49,7 +49,7 @@ function getJobStr(job: number): string {
           style="height: 1.25em"
           loading="lazy"
           :onerror="handleImgError"
-        />
+        >
         {{ getJobStr(item.job) }}
       </div>
     </button>

@@ -13,7 +13,7 @@ function useLang() {
     (locale) => {
       localeRef.value = locale as Lang
     },
-    { immediate: true }
+    { immediate: true },
   )
   function setLang(lang: Lang) {
     i18n.locale.value = lang
@@ -42,18 +42,19 @@ function getLocaleMessage(text: Record<Lang, string>): string {
   return text[l as keyof typeof text] ?? text.zhCn
 }
 function getCactbotLocaleMessage(text: Partial<Record<CLang, string>>): string {
-  if (!text) return 'Unknown'
+  if (!text)
+    return 'Unknown'
   const lang = localeToCactbotLang(localeRef.value)
   return (
-    text[lang] ??
-    text.cn ??
-    `${text.en} / ${text.ja}`
+    text[lang]
+    ?? text.cn
+    ?? `${text.en} / ${text.ja}`
   )
 }
 
 export {
-  useLang,
-  localeToCactbotLang,
-  getLocaleMessage,
   getCactbotLocaleMessage,
+  getLocaleMessage,
+  localeToCactbotLang,
+  useLang,
 }

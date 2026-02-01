@@ -1,37 +1,28 @@
-<template>
-  <div class="chart-container">
-    <div class="chart-header">
-      <div class="chart-title">Roll 点运气统计</div>
-    </div>
-    <div class="chart-body">
-      <v-chart 
-        class="echarts-instance" 
-        :option="option" 
-        :update-options="{ notMerge: true }" 
-        :theme="isDark ? 'dark' : ''"
-        autoresize 
-      />
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { computed } from 'vue'
-import VChart from 'vue-echarts'
-import { use } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
+import type { LootRecord } from '@/utils/lootParser'
+import { useDark } from '@vueuse/core'
 import { BarChart, BoxplotChart } from 'echarts/charts'
 import {
   GridComponent,
-  TooltipComponent,
   LegendComponent,
-  TitleComponent,
   MarkLineComponent,
+  TitleComponent,
+  TooltipComponent,
 } from 'echarts/components'
-import { useDark } from '@vueuse/core'
-import type { LootRecord } from '@/utils/lootParser'
+import { use } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { computed } from 'vue'
+import VChart from 'vue-echarts'
+import { formatChartPlayerLabel, getChartLabelRich } from '@/utils/chartUtils'
 import { getRoleColor, getRoleDisplayName } from '@/utils/lootParser'
-import { getChartLabelRich, formatChartPlayerLabel } from '@/utils/chartUtils'
+
+const props = defineProps<{
+  records: LootRecord[]
+  players: string[]
+  getActualPlayer?: (name: string) => string
+  getPlayerRole?: (name: string) => string | undefined
+  playerVisibility?: 'all' | 'role' | 'job' | 'initial'
+}>()
 
 const isDark = useDark({
   storageKey: 'loot-history-theme',
@@ -48,19 +39,11 @@ use([
   MarkLineComponent,
 ])
 
-const props = defineProps<{
-  records: LootRecord[]
-  players: string[]
-  getActualPlayer?: (name: string) => string
-  getPlayerRole?: (name: string) => string | undefined
-  playerVisibility?: 'all' | 'role' | 'job' | 'initial'
-}>()
-
 const option = computed(() => {
   const visibility = props.playerVisibility
   // 1. 收集每位玩家的 Roll 点历史
   const playerRolls = new Map<string, number[]>()
-  props.players.forEach((p) => playerRolls.set(p, []))
+  props.players.forEach(p => playerRolls.set(p, []))
 
   props.records.forEach((r) => {
     // 遍历该条记录的所有 roll 信息
@@ -85,7 +68,7 @@ const option = computed(() => {
     const max = count > 0 ? Math.max(...rolls) : 0
     const min = count > 0 ? Math.min(...rolls) : 0
     const role = props.getPlayerRole ? props.getPlayerRole(p) : undefined
-    
+
     return {
       name: p,
       value: avg, // 主图显示平均值
@@ -98,12 +81,12 @@ const option = computed(() => {
   })
 
   // 3. 准备图表数据
-  const xData = dataList.map((d) => d.name)
-  const seriesData = dataList.map((d) => d.value)
-  
+  const xData = dataList.map(d => d.name)
+  const seriesData = dataList.map(d => d.value)
+
   const nameToRoleMap = new Map<string, string>()
   const nameToDataMap = new Map<string, typeof dataList[0]>()
-  
+
   dataList.forEach((d) => {
     nameToRoleMap.set(d.name, d.formattedRole)
     nameToDataMap.set(d.name, d)
@@ -122,14 +105,16 @@ const option = computed(() => {
         const item = params[0]
         const name = item.name
         const data = nameToDataMap.get(name)
-        if (!data) return ''
+        if (!data)
+          return ''
 
         const roleStr = data.formattedRole ? `[${data.formattedRole}] ` : ''
-        
+
         let html = `${roleStr}<b>${name}</b><br/>`
         if (data.count === 0) {
           html += `<span style="color:#999">无数据</span>`
-        } else {
+        }
+        else {
           html += `平均点数: <b>${data.value.toFixed(1)}</b><br/>`
           html += `最高点数: ${data.max}<br/>`
           html += `最低点数: ${data.min}<br/>`
@@ -163,8 +148,8 @@ const option = computed(() => {
       axisLine: {
         lineStyle: {
           color: isDark.value ? 'rgba(255,255,255,0.1)' : '#e2e8f0',
-        }
-      }
+        },
+      },
     },
     yAxis: {
       type: 'value',
@@ -174,11 +159,11 @@ const option = computed(() => {
       splitLine: {
         lineStyle: {
           color: isDark.value ? 'rgba(255,255,255,0.06)' : '#f1f5f9',
-        }
+        },
       },
       axisLabel: {
         color: isDark.value ? '#94a3b8' : '#64748b',
-      }
+      },
     },
     series: [
       {
@@ -199,25 +184,44 @@ const option = computed(() => {
           formatter: (p: any) => p.value > 0 ? p.value.toFixed(1) : '',
           color: isDark.value ? '#f1f5f9' : '#1e293b',
         },
-          markLine: {
-            data: [{ type: 'average', name: '平均' }],
-            symbol: 'none',
-            lineStyle: {
-              color: isDark.value ? 'rgba(255,255,255,0.4)' : '#999',
-              type: 'dashed'
-            },
-            label: {
-              position: 'start',
-              formatter: '{b}',
-              color: isDark.value ? '#94a3b8' : '#64748b',
-              padding: [0, 8, 0, 0]
-            }
-          }
+        markLine: {
+          data: [{ type: 'average', name: '平均' }],
+          symbol: 'none',
+          lineStyle: {
+            color: isDark.value ? 'rgba(255,255,255,0.4)' : '#999',
+            type: 'dashed',
+          },
+          label: {
+            position: 'start',
+            formatter: '{b}',
+            color: isDark.value ? '#94a3b8' : '#64748b',
+            padding: [0, 8, 0, 0],
+          },
+        },
       },
     ],
   }
 })
 </script>
+
+<template>
+  <div class="chart-container">
+    <div class="chart-header">
+      <div class="chart-title">
+        Roll 点运气统计
+      </div>
+    </div>
+    <div class="chart-body">
+      <VChart
+        class="echarts-instance"
+        :option="option"
+        :update-options="{ notMerge: true }"
+        :theme="isDark ? 'dark' : ''"
+        autoresize
+      />
+    </div>
+  </div>
+</template>
 
 <style lang="scss" scoped>
 .chart-container {

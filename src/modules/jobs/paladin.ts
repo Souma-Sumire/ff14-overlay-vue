@@ -1,5 +1,5 @@
-import logDefinitions from '../../../cactbot/resources/netlog_defs'
 import type { ResourceTracker } from '@/types/JobResource'
+import logDefinitions from '../../../cactbot/resources/netlog_defs'
 
 const PLD_ACTION_IDS = {
   ATTACK: 7, // 攻击
@@ -27,15 +27,16 @@ export class PaladinTracker implements ResourceTracker {
       case '22':
         {
           const sourceId = splitLine[logDefinitions.Ability.fields.sourceId]!
-          const id = parseInt(splitLine[logDefinitions.Ability.fields.id]!, 16)
+          const id = Number.parseInt(splitLine[logDefinitions.Ability.fields.id]!, 16)
 
           if (id === PLD_ACTION_IDS.ATTACK) {
             this.addGauge(sourceId, 5)
-          } else if (
-            id === PLD_ACTION_IDS.SHELLTRON ||
-            id === PLD_ACTION_IDS.HOLY_SHELLTRON ||
-            id === PLD_ACTION_IDS.INTERVENTION ||
-            id === PLD_ACTION_IDS.COVER
+          }
+          else if (
+            id === PLD_ACTION_IDS.SHELLTRON
+            || id === PLD_ACTION_IDS.HOLY_SHELLTRON
+            || id === PLD_ACTION_IDS.INTERVENTION
+            || id === PLD_ACTION_IDS.COVER
           ) {
             this.consumeGauge(sourceId, 50)
           }

@@ -1,3 +1,19 @@
+<script setup lang="ts">
+export type DisplayFilterMode = 'obtained' | 'needed' | 'all'
+
+defineProps<{
+  modelValue: DisplayFilterMode
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: DisplayFilterMode): void
+}>()
+
+function updateValue(val: DisplayFilterMode) {
+  emit('update:modelValue', val)
+}
+</script>
+
 <template>
   <div class="filter-segmented">
     <div
@@ -23,22 +39,6 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-export type DisplayFilterMode = 'obtained' | 'needed' | 'all'
-
-defineProps<{
-  modelValue: DisplayFilterMode
-}>()
-
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: DisplayFilterMode): void
-}>()
-
-function updateValue(val: DisplayFilterMode) {
-  emit('update:modelValue', val)
-}
-</script>
 
 <style lang="scss" scoped>
 .filter-segmented {

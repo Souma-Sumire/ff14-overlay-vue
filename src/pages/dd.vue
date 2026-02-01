@@ -1,23 +1,24 @@
 <script setup lang="ts">
+import type { MessageHandler } from 'element-plus'
+import type { EnmityTargetCombatant, EventMap } from '../../cactbot/types/event'
+import type { DDInfo, EnemyData, langString } from '@/resources/dd'
+import type { Lang } from '@/types/lang'
+import { ElMessage } from 'element-plus'
+import { useDemo } from '@/composables/useDemo'
+import { useLang } from '@/composables/useLang'
 import {
+
   getMaps,
-  type EnemyData,
-  type DDInfo,
-  type langString,
+
 } from '@/resources/dd'
+import Util from '@/utils/util'
+import NetRegexes from '../../cactbot/resources/netregexes'
 import {
   addOverlayListener,
   removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
-import type { EnmityTargetCombatant, EventMap } from '../../cactbot/types/event'
-import NetRegexes from '../../cactbot/resources/netregexes'
-import Util from '@/utils/util'
-import { useDemo } from '@/composables/useDemo'
-import { useLang } from '@/composables/useLang'
-import type { Lang } from '@/types/lang'
-import { ElMessage, type MessageHandler } from 'element-plus'
 
-type Abilities = {
+interface Abilities {
   stun: boolean
   slow: boolean
   sleep: boolean
@@ -47,7 +48,7 @@ const state = useStorage(
       bind: true,
     } as Abilities,
   },
-  sessionStorage
+  sessionStorage,
 )
 
 const netRegexs = {
@@ -69,24 +70,25 @@ const netRegexs = {
 }
 
 let lastTime = 0
-let elMsg: MessageHandler | undefined = undefined
+let elMsg: MessageHandler | undefined
 const closeCount = useStorage('DDCloseCount', 0, localStorage)
 
 const handleEnmityTargetData: EventMap['EnmityTargetData'] = (e) => {
   const delay = Date.now() - lastTime
   if (lastTime && delay > 20 && delay < 150 && elMsg) {
     elMsg.close()
-  } else if (
-    lastTime &&
-    delay < 2000 &&
-    delay > 500 &&
-    !elMsg &&
-    closeCount.value === 0
+  }
+  else if (
+    lastTime
+    && delay < 2000
+    && delay > 500
+    && !elMsg
+    && closeCount.value === 0
   ) {
     elMsg = ElMessage({
       showClose: true,
-      message: `${t('dd.highAgroDelayMessage', { delay: delay })}<p>${t(
-        'dd.setAgroDelayTip'
+      message: `${t('dd.highAgroDelayMessage', { delay })}<p>${t(
+        'dd.setAgroDelayTip',
       )}</p> <em>${t('dd.disableAgroDelayHint')}</em>`,
       dangerouslyUseHTMLString: true,
       type: 'warning',
@@ -104,7 +106,8 @@ const handleEnmityTargetData: EventMap['EnmityTargetData'] = (e) => {
   if (e.Target) {
     state.value.tarIns = e.Target
     state.value.tarData = state.value.data?.enemiesData[e.Target.BNpcNameID]
-  } else {
+  }
+  else {
     state.value.tarIns = null
     state.value.tarData = undefined
   }
@@ -123,16 +126,19 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
     if (logMessage.groups?.id === '1C50') {
       // 成功进行了传送！
       state.value.traps = undefined
-    } else if (logMessage.groups?.id === '1C57') {
+    }
+    else if (logMessage.groups?.id === '1C57') {
       // 这一层的陷阱全部被清除了！
       state.value.traps = 'disappeared'
-    } else if (logMessage.groups?.id === '1C58') {
+    }
+    else if (logMessage.groups?.id === '1C58') {
       // 这一层的地图全部被点亮了！
       state.value.traps = 'revealed'
-    } else if (
-      logMessage.groups?.id === '2BF3' &&
-      logMessage.groups?.param0 === '02' &&
-      logMessage.groups?.param2 === '04'
+    }
+    else if (
+      logMessage.groups?.id === '2BF3'
+      && logMessage.groups?.param0 === '02'
+      && logMessage.groups?.param2 === '04'
     ) {
       // ChatLog 00:0839::点燃杜松香·安宁召唤了妖灵王的分身！
       // SystemLogMessage 29:8003EA8E:2BF3:02:XXXXXXXX:05
@@ -156,15 +162,15 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
     const command = network6d.groups!.command!
     const data0 = network6d.groups!.data0!
     if (['10000008', '10000009'].includes(command)) {
-      const key =
-        network6d.groups!.command! === '10000008' ? 'return' : 'passage'
-      state.value.pylons[key] = (parseInt(data0, 16) * 100) / 0x0b
-    } else if (['10000001'].includes(command)) {
+      const key
+        = network6d.groups!.command! === '10000008' ? 'return' : 'passage'
+      state.value.pylons[key] = (Number.parseInt(data0, 16) * 100) / 0x0B
+    }
+    else if (['10000001'].includes(command)) {
       // 新的一层
       state.value.pylons.return = 0
       state.value.pylons.passage = 0
     }
-    return
   }
 }
 
@@ -191,11 +197,11 @@ const handlePartyChanged: EventMap['PartyChanged'] = (e) => {
 watchEffect(() => {
   ;(state.value.data ? addOverlayListener : removeOverlayListener)(
     'EnmityTargetData',
-    handleEnmityTargetData
+    handleEnmityTargetData,
   )
   ;(state.value.data ? addOverlayListener : removeOverlayListener)(
     'LogLine',
-    handleLogLine
+    handleLogLine,
   )
 })
 
@@ -212,7 +218,7 @@ onUnmounted(() => {
   removeOverlayListener('LogLine', handleLogLine)
 })
 
-const getEmoji = (str: string = 'unknown') => {
+function getEmoji(str: string = 'unknown') {
   const s = str ?? ''
   return {
     visual: '👁️',
@@ -247,7 +253,7 @@ function getLangString(v: langString | string | undefined) {
         {{ $t('dd.demo-text') }}
       </span>
     </template>
-    <div class="container" v-if="demo || state.data">
+    <div v-if="demo || state.data" class="container">
       <header v-if="demo || state.tarData?.detect !== 'boss'">
         <pre v-if="demo || state.data?.floorTips">{{
           demo ? $t('dd.test.floor_tips') : getLangString(state.data?.floorTips)
@@ -257,12 +263,12 @@ function getLangString(v: langString | string | undefined) {
           {{ $t('dd.pylon_passage') }}: {{ Math.round(state.pylons.passage) }}%
           <span v-if="demo || state.traps">
             {{
-              ' / ' +
-              (demo
-                ? $t('dd.test.trap_status')
-                : state.traps === 'disappeared'
-                ? $t('dd.trap_cleared')
-                : $t('dd.map_illuminated'))
+              ` / ${
+                demo
+                  ? $t('dd.test.trap_status')
+                  : state.traps === 'disappeared'
+                    ? $t('dd.trap_cleared')
+                    : $t('dd.map_illuminated')}`
             }}
           </span>
         </div>
@@ -286,16 +292,16 @@ function getLangString(v: langString | string | undefined) {
               }}
             </span>
             <div
-              class="vulnerabilities"
               v-if="
-                state.tarData?.vulnerabilities &&
-                (demo || state.tarData?.detect !== 'boss')
+                state.tarData?.vulnerabilities
+                  && (demo || state.tarData?.detect !== 'boss')
               "
+              class="vulnerabilities"
             >
               <div
                 v-for="k in ['stun', 'heavy', 'slow', 'sleep', 'bind']"
+                v-show="demo || (state.tarData?.vulnerabilities?.[k as keyof Abilities] !== undefined && state.partyAbilities[k as keyof Abilities])"
                 :key="k"
-                v-show="demo || (state.tarData?.vulnerabilities?.[k as keyof Abilities] !==undefined && state.partyAbilities[k as keyof Abilities])"
                 :class="`icon ${k} ${state.tarData?.vulnerabilities![k as keyof Abilities] === true ? 'valid' : 'invalid'}`"
               >
                 <div class="icon-text">

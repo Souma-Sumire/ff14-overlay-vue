@@ -1,3 +1,17 @@
+<script setup lang="ts">
+defineProps<{
+  modelValue: 'part' | 'drop'
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: 'part' | 'drop'): void
+}>()
+
+function updateValue(val: 'part' | 'drop') {
+  emit('update:modelValue', val)
+}
+</script>
+
 <template>
   <div class="sort-segmented">
     <div
@@ -16,20 +30,6 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-defineProps<{
-  modelValue: 'part' | 'drop'
-}>()
-
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: 'part' | 'drop'): void
-}>()
-
-function updateValue(val: 'part' | 'drop') {
-  emit('update:modelValue', val)
-}
-</script>
 
 <style lang="scss" scoped>
 .sort-segmented {

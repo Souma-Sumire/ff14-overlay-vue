@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import { idToSrc } from '@/utils/dynamicValue'
 import { ref, watch } from 'vue'
+import { actionResourcesLoaded } from '@/resources/actionChinese'
+import { idToSrc } from '@/utils/dynamicValue'
 
 const props = defineProps<{
   id: number | string
 }>()
 
 const src = ref('')
-import { actionResourcesLoaded } from '@/resources/actionChinese'
 
 watch(
   [() => props.id, actionResourcesLoaded],
   ([newId]) => {
     src.value = idToSrc(newId)
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 
 <template>
   <div class="action-icon-wrapper">
-    <img v-if="src" :src="src" class="action-icon" alt="" />
+    <img v-if="src" :src="src" class="action-icon" alt="">
     <div v-else class="action-icon-placeholder" />
   </div>
 </template>

@@ -1,8 +1,8 @@
-import type { Role } from '../../cactbot/types/job'
 import type { Ref } from 'vue'
+import type { Party } from '../../cactbot/types/event'
+import type { Role } from '../../cactbot/types/job'
 import { ref } from 'vue'
 import Util from '@/utils/util'
-import type { Party } from '../../cactbot/types/event'
 
 const fullParty: Party[] = [
   {
@@ -593,7 +593,7 @@ class RandomPartyGenerator {
    */
   shuffle(
     roleCount: Partial<Record<Role, number>> = defaultRoleCount,
-    options: { includeBaseJob?: boolean } = { includeBaseJob: false }
+    options: { includeBaseJob?: boolean } = { includeBaseJob: false },
   ) {
     const count = { ...defaultRoleCount, ...roleCount }
     const result: Party[] = []
@@ -611,7 +611,8 @@ class RandomPartyGenerator {
         return Util.jobToRole(job) === role
       })
 
-      if (candidates.length === 0) continue
+      if (candidates.length === 0)
+        continue
 
       for (let i = 0; i < total; i++) {
         const random = pickRandom(candidates)
@@ -623,7 +624,7 @@ class RandomPartyGenerator {
       const randomNum = crypto.getRandomValues(new Uint32Array(1))[0]!
       const randomId = randomNum.toString(16).toUpperCase()
       const randomName = `${member.name}#${Number(
-        randomNum.toString().slice(0 - Math.floor(Math.random() * 4))
+        randomNum.toString().slice(0 - Math.floor(Math.random() * 4)),
       )}`
       return { ...member, id: randomId, name: randomName }
     })

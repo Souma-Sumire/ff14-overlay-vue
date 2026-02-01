@@ -1,5 +1,5 @@
-import fs from 'fs-extra'
 import csv from 'csv-parser'
+import fs from 'fs-extra'
 import iconv from 'iconv-lite'
 import { csvPaths } from './paths'
 
@@ -14,10 +14,10 @@ type Item = DataMap<{
 type ItemFood = CsvRow
 type BaseParam = DataMap<string>
 type ItemAction = DataMap<string>
-type ParamValue = {
-  Params: string
-  Value: string
-  Max: string
+interface ParamValue {
+  'Params': string
+  'Value': string
+  'Max': string
   'Value{HQ}': string
   'Max{HQ}': string
 }
@@ -81,10 +81,10 @@ const medicine: Medicine = {}
 
 for (const itemValue of Object.values(item)) {
   if (
-    !itemValue.Name ||
-    !itemValue.ItemAction ||
-    !itemValue.Level ||
-    !itemValue.ItemUICategory
+    !itemValue.Name
+    || !itemValue.ItemAction
+    || !itemValue.Level
+    || !itemValue.ItemUICategory
   ) {
     continue
   }
@@ -102,9 +102,9 @@ for (const itemValue of Object.values(item)) {
         return null
       }
       return {
-        Params: params,
-        Value: food[4 + offset],
-        Max: food[5 + offset],
+        'Params': params,
+        'Value': food[4 + offset],
+        'Max': food[5 + offset],
         'Value{HQ}': food[6 + offset],
         'Max{HQ}': food[7 + offset],
       }

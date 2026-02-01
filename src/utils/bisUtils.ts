@@ -18,7 +18,6 @@ export interface LegacyBisConfig {
   playerBis: Record<string, string[]>
 }
 
-// prettier-ignore
 export const DEFAULT_ROWS: BisRow[] = [
   { id: 'earring', name: '耳部', keywords: PartOrder.EarringBox, type: 'toggle' },
   { id: 'necklace', name: '颈部', keywords: PartOrder.NecklaceBox, type: 'toggle' },
@@ -43,9 +42,9 @@ export const LAYER_CONFIG = [
   { name: '4层', items: ['weapon'] },
 ]
 
-
 export function isPlayerComplete(config: BisConfig, playerOrRole: string) {
-  if (!config?.playerBis?.[playerOrRole]) return false
+  if (!config?.playerBis?.[playerOrRole])
+    return false
   for (const row of DEFAULT_ROWS) {
     if (row.type === 'toggle' && !config.playerBis[playerOrRole]?.[row.id]) {
       return false
@@ -58,7 +57,8 @@ export function isBisItem(
   row: BisRow,
   playerBis: Record<string, BisValue>,
 ): boolean {
-  if (!playerBis) return false
+  if (!playerBis)
+    return false
   return row.type === 'toggle'
     ? playerBis[row.id] === 'raid'
     : typeof playerBis[row.id] === 'number' && (playerBis[row.id] as number) > 0

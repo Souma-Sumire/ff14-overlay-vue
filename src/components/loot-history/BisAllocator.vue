@@ -1,3 +1,761 @@
+<script setup lang="ts">
+import type { BisPreset } from '@/utils/bisPresets'
+import type { BisConfig, BisRow, BisValue, LegacyBisConfig } from '@/utils/bisUtils'
+import type { LootRecord } from '@/utils/lootParser'
+import {
+  ArrowDown,
+  Delete,
+  InfoFilled,
+  List,
+  MagicStick,
+  Plus,
+  QuestionFilled,
+  Right,
+  Setting,
+  User,
+  Warning,
+} from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { computed, ref, watch } from 'vue'
+import { getPresetsForRole } from '@/utils/bisPresets'
+import {
+
+  isPlayerComplete as checkPlayerComplete,
+  DEFAULT_ROWS,
+  LAYER_CONFIG,
+
+} from '@/utils/bisUtils'
+
+import { getRoleType, PART_ORDER, ROLE_DEFINITIONS } from '@/utils/lootParser'
+
+import { getCurrentWeekNumber } from '@/utils/raidWeekUtils'
+import PlayerDisplay from './PlayerDisplay.vue'
+
+const props = defineProps<{
+  players: string[]
+  records: LootRecord[]
+  modelValue: BisConfig | LegacyBisConfig | undefined
+  getPlayerRole?: (name: string) => string | null | undefined
+  getActualPlayer?: (p: string) => string
+  showOnlyRole?: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', val: BisConfig): void
+}>()
+
+const tooltipsOpen = ref<Record<string, boolean>>({})
+
+const showConfigDialog = ref(false)
+const excludedPlayers = ref<Set<string>>(new Set())
+const customAllocations = ref<Record<string, string>>({})
+
+const config = ref<BisConfig>({
+  playerBis: {},
+  plannedWeeks: 8,
+})
+
+const showImportConfirmDialog = ref(false)
+const showPresetConfirmDialog = ref(false)
+const importDiffs = ref<PlayerDiff[]>([])
+const pendingPresetData = ref<{
+  player: string
+  preset: BisPreset
+  diff: PlayerDiff | null
+} | null>(null)
+
+const importWeeks = ref<number | undefined>(undefined)
+
+const STATUS_MAP = {
+  pass: { text: '放弃', class: 'status-pass' },
+  need: { text: '需求', class: 'status-need' },
+  greed: { text: '贪婪', class: 'status-greed-tome' },
+  assigned: { text: '分配', class: 'status-assigned' },
+} as const
+
+const layeredViewRows = computed(() => {
+  return LAYER_CONFIG.map((layer) => {
+    const rows = layer.items
+      .map(id => DEFAULT_ROWS.find(r => r.id === id))
+      .filter((r): r is BisRow => !!r)
+    return {
+      name: layer.name,
+      rows,
+    }
+  })
+})
+
+const configRows = computed(() => {
+  const order = PART_ORDER as string[]
+  return [...DEFAULT_ROWS].sort((a, b) => {
+    const ia = order.indexOf(a.keywords)
+    const ib = order.indexOf(b.keywords)
+    if (ia === -1 && ib === -1)
+      return 0
+    if (ia === -1)
+      return 1
+    if (ib === -1)
+      return -1
+    return ia - ib
+  })
+})
+
+const eligiblePlayers = computed(() => {
+  return props.players.filter(isEligible)
+})
+
+const expandedPlayerPresets = ref<Set<string>>(new Set())
+
+const isConfigComplete = computed(() => {
+  for (const role of ROLE_DEFINITIONS) {
+    if (!checkPlayerComplete(config.value, role))
+      return false
+  }
+  return true
+})
+
+const incompletePlayerCount = computed(() => {
+  return ROLE_DEFINITIONS.filter(
+    role => !checkPlayerComplete(config.value, role),
+  ).length
+})
+
+const validationAlerts = computed(() => {
+  const alerts: { id: string, type: 'info' | 'warning', message: string }[] = []
+  const weeks = config.value.plannedWeeks || 8
+
+  const itemsToValidate = [
+    { id: 'coating', name: '硬化药' },
+    { id: 'twine', name: '强化纤维' },
+    { id: 'tome', name: '神典石' },
+    { id: 'solvent', name: '强化药' },
+  ]
+
+  itemsToValidate.forEach((item) => {
+    let total = 0
+    eligiblePlayers.value.forEach((p) => {
+      total += getNeededCount(p, item.id)
+    })
+
+    if (total > weeks) {
+      alerts.push({
+        id: item.id,
+        type: 'warning',
+        message: `${item.name}: 总需求(${total}) 大于 计划周数(${weeks})，这是不可能的分配。`,
+      })
+    }
+  })
+
+  return alerts
+})
+
+function generateEquipLines(rows: BisRow[]): string[] {
+  const lines: string[] = []
+  rows.forEach((row) => {
+    const needs: string[] = []
+    const greeds: string[] = []
+
+    // 队长分配具有最高优先级
+    if (customAllocations.value[row.id]) {
+      const p = customAllocations.value[row.id]!
+      let displayName = props.getPlayerRole?.(p) || p
+      displayName = displayName.replace(/^LEFT:/, '').trim()
+      lines.push(`/p ${row.name}：${displayName} (队长分配)`)
+      return
+    }
+
+    eligiblePlayers.value.forEach((p) => {
+      if (excludedPlayers.value.has(p))
+        return
+
+      let displayName = props.getPlayerRole?.(p) || p
+      displayName = displayName.replace(/^LEFT:/, '').trim()
+
+      const status = getLogicStatus(p, row)
+      if (status === 'need') {
+        needs.push(displayName)
+      }
+      else if (status === 'greed') {
+        greeds.push(displayName)
+      }
+    })
+
+    let content = ''
+    if (needs.length > 0) {
+      content = needs.join('、')
+    }
+    else if (greeds.length > 0) {
+      content = greeds.join('、')
+    }
+    else {
+      content = '随便ROLL'
+    }
+
+    lines.push(`/p ${row.name}：${content}`)
+  })
+  return lines
+}
+
+function getFF14WeekNumber(): number {
+  if (!props.records || props.records.length === 0)
+    return 1
+  return getCurrentWeekNumber(props.records.map(r => r.timestamp))
+}
+
+function handleCopyMacro(command: { name: string, rows: BisRow[] } | 'all') {
+  const now = new Date()
+  const weekNum = getFF14WeekNumber()
+  const dateStr = `${now.getMonth() + 1}月${now.getDate()}日`
+  let text = ''
+  let message = ''
+
+  if (command === 'all') {
+    const lines = [`/p <第${weekNum}周分配优先级> ${dateStr}`]
+
+    layeredViewRows.value.forEach((layer) => {
+      lines.push(...generateEquipLines(layer.rows))
+    })
+
+    text = lines.join('\n')
+    message = `已复制全层宏 (共${lines.length}行)`
+  }
+  else {
+    const lines = [`/p <第${weekNum}周${command.name}分配优先级> ${dateStr}`]
+    lines.push(...generateEquipLines(command.rows))
+    text = lines.join('\n')
+    message = `已复制 ${command.name} 分配宏`
+  }
+
+  if (!text)
+    return
+
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      ElMessage.success(message)
+    })
+    .catch(() => {
+      ElMessage.error('复制失败')
+    })
+}
+
+function isPlayerAssigned(player: string): boolean {
+  return Object.values(customAllocations.value).includes(player)
+}
+
+function togglePlayerExclusion(player: string) {
+  if (excludedPlayers.value.has(player)) {
+    excludedPlayers.value.delete(player)
+  }
+  else {
+    excludedPlayers.value.add(player)
+  }
+}
+
+function getStorageKey(player: string): string {
+  if (!props.getPlayerRole)
+    return player
+  const role = props.getPlayerRole(player)
+  if (role && !role.startsWith('LEFT:') && !role.startsWith('SUB:')) {
+    return role
+  }
+  return player
+}
+
+function exportBisData() {
+  const parts = ROLE_DEFINITIONS.filter(
+    role => !!config.value.playerBis[role],
+  ).map((role) => {
+    const dataBinary = DEFAULT_ROWS.map((row) => {
+      const val = config.value.playerBis[role]?.[row.id]
+      if (row.type === 'toggle') {
+        return val === 'raid' ? '1' : '0'
+      }
+      else {
+        return typeof val === 'number' && val > 0 ? '1' : '0'
+      }
+    }).join('')
+    const data = Number.parseInt(dataBinary, 2).toString(36)
+    return `${role}:${data}`
+  })
+  const str = parts.join(';')
+  navigator.clipboard.writeText(str).then(() => {
+    ElMessage.success('BIS 设置已复制到剪贴板')
+  })
+}
+
+function importBisData() {
+  ElMessageBox.prompt('请粘贴 BIS 设置字符串', '导入 BIS 设置', {
+    confirmButtonText: '下一步',
+    cancelButtonText: '取消',
+    inputType: 'textarea',
+    inputPlaceholder: '在此粘贴...',
+    customClass: 'bis-import-message-box',
+    inputValidator: (value) => {
+      if (!value)
+        return '内容不能为空'
+      const parts = value
+        .trim()
+        .split(';')
+        .filter(p => p.trim())
+      if (parts.length === 0)
+        return '格式错误：无法识别有效的分隔符'
+
+      let validCount = 0
+
+      for (const part of parts) {
+        if (part.startsWith('weeks:'))
+          continue
+        const segs = part.split(':')
+
+        if (segs.length !== 2) {
+          return `数据格式错误："${part.slice(0, 10)}..."`
+        }
+
+        const [role, data] = segs
+
+        if (!data || !/^[0-9a-z]+$/i.test(data)) {
+          return `数据校验失败：职位 "${role || '未知'}" 的设置已损坏`
+        }
+
+        if (ROLE_DEFINITIONS.includes(role as any)) {
+          validCount++
+        }
+      }
+
+      if (validCount === 0)
+        return '未找到匹配当前团队的有效设置数据'
+      return true
+    },
+  })
+    .then(({ value }) => {
+      if (!value)
+        return
+      parseAndPreviewBisData(value)
+    })
+    .catch(() => {
+      // 用户取消
+    })
+}
+
+interface BisChange {
+  label: string
+  oldVal: string
+  newVal: string
+}
+
+interface PlayerDiff {
+  name: string
+  role: string
+  isNew: boolean
+  changes: BisChange[]
+  newConfig: Record<string, BisValue>
+}
+
+function getValDisplay(row: BisRow, val: BisValue | undefined): string {
+  if (row.type === 'toggle') {
+    if (val === 'raid')
+      return '零式'
+    if (val === 'tome')
+      return '点数'
+    return '未设置'
+  }
+  return (val || 1).toString()
+}
+
+function getValClass(val: string) {
+  if (val === '零式')
+    return 'is-raid'
+  if (val === '点数')
+    return 'is-tome'
+  return ''
+}
+
+function parseAndPreviewBisData(rawInput: string) {
+  try {
+    const trimmedVal = rawInput.trim()
+    if (!trimmedVal)
+      throw new Error('输入内容为空')
+
+    const parts = trimmedVal.split(';').filter(p => p.trim())
+    if (parts.length === 0)
+      throw new Error('无效的格式')
+
+    const diffs: PlayerDiff[] = []
+
+    importWeeks.value = undefined
+    parts.forEach((part) => {
+      if (part.startsWith('weeks:')) {
+        const weeks = Number.parseInt(part.split(':')[1] || '0')
+        if (!Number.isNaN(weeks)) {
+          importWeeks.value = weeks
+        }
+        return
+      }
+      const segs = part.split(':')
+      if (segs.length !== 2)
+        return
+      const role = segs[0]
+      const data = segs[1]
+
+      if (!role || !data || !ROLE_DEFINITIONS.includes(role as any))
+        return
+
+      // 找到本地对应职位的玩家名（用于预览显示）
+      const localPlayers = eligiblePlayers.value.filter(
+        p => props.getPlayerRole?.(p) === role,
+      )
+      const pName = localPlayers[0] || role
+
+      const dataBinary = Number.parseInt(data, 36)
+        .toString(2)
+        .padStart(DEFAULT_ROWS.length, '0')
+
+      const newConfig: Record<string, BisValue> = {}
+      DEFAULT_ROWS.forEach((row, idx) => {
+        const char = dataBinary[idx]
+        if (row.type === 'toggle') {
+          newConfig[row.id] = char === '1' ? 'raid' : 'tome'
+        }
+        else {
+          newConfig[row.id] = char === '1' ? 1 : 0
+        }
+      })
+
+      const currentConfig = config.value.playerBis[role] || {}
+      const changes: BisChange[] = []
+      let hasChanges = false
+
+      DEFAULT_ROWS.forEach((row) => {
+        const oldV = currentConfig[row.id]
+        const newV = newConfig[row.id]
+        const sOld = getValDisplay(row, oldV)
+        const sNew = getValDisplay(row, newV)
+        if (sOld !== sNew) {
+          hasChanges = true
+          changes.push({ label: row.name, oldVal: sOld, newVal: sNew })
+        }
+      })
+
+      if (hasChanges) {
+        diffs.push({
+          name: pName,
+          role,
+          isNew: Object.keys(currentConfig).length === 0,
+          changes,
+          newConfig,
+        })
+      }
+    })
+
+    if (diffs.length === 0) {
+      ElMessage.info('未检测到有效的设置变更。')
+      return
+    }
+
+    importDiffs.value = diffs
+    showImportConfirmDialog.value = true
+  }
+  catch (e: any) {
+    console.error(e)
+    ElMessage.error(e.message || '解析失败')
+  }
+}
+
+function confirmImportBis() {
+  confirmImportAction()
+}
+
+// 稍微重构一下以支持周数导入
+
+function confirmImportAction() {
+  const newPlayerBis = { ...config.value.playerBis }
+  importDiffs.value.forEach((diff) => {
+    newPlayerBis[diff.role] = {
+      ...newPlayerBis[diff.role],
+      ...diff.newConfig,
+    }
+  })
+  config.value.playerBis = newPlayerBis
+  if (importWeeks.value !== undefined) {
+    config.value.plannedWeeks = importWeeks.value
+  }
+  showImportConfirmDialog.value = false
+  ElMessage.success(`成功更新 ${importDiffs.value.length} 个职位的配置`)
+}
+
+function setBis(player: string, rowId: string, type: BisValue) {
+  const storageKey = getStorageKey(player)
+  if (!config.value.playerBis[storageKey])
+    config.value.playerBis[storageKey] = {}
+  const current = config.value.playerBis[storageKey]![rowId]
+  if (current === type) {
+    delete config.value.playerBis[storageKey]![rowId]
+  }
+  else {
+    config.value.playerBis[storageKey]![rowId] = type
+  }
+}
+
+function setNeededCount(player: string, rowId: string, count: number) {
+  const storageKey = getStorageKey(player)
+  if (!config.value.playerBis[storageKey])
+    config.value.playerBis[storageKey] = {}
+  config.value.playerBis[storageKey]![rowId] = count
+}
+
+function applyPreset(player: string, preset: BisPreset) {
+  const storageKey = getStorageKey(player)
+  const currentConfig = config.value.playerBis[storageKey] || {}
+  const newConfig = { ...preset.config }
+
+  const changes: BisChange[] = []
+  DEFAULT_ROWS.forEach((row) => {
+    const oldV = currentConfig[row.id]
+    const newV = newConfig[row.id]
+
+    const sOld = getValDisplay(row, oldV)
+    const sNew = getValDisplay(row, newV)
+
+    if (sOld !== sNew) {
+      changes.push({
+        label: row.name,
+        oldVal: sOld,
+        newVal: sNew,
+      })
+    }
+  })
+
+  if (changes.length === 0) {
+    ElMessage.info('当前设置与预设相同，无需更改')
+    return
+  }
+
+  const diff: PlayerDiff = {
+    name: player,
+    role: props.getPlayerRole?.(player) || 'Unknown',
+    isNew: Object.keys(currentConfig).length === 0,
+    changes,
+    newConfig,
+  }
+
+  pendingPresetData.value = { player, preset, diff }
+  showPresetConfirmDialog.value = true
+}
+
+function confirmApplyPreset() {
+  if (!pendingPresetData.value?.diff)
+    return
+
+  const { player, preset, diff } = pendingPresetData.value
+  const storageKey = getStorageKey(player)
+
+  if (!config.value.playerBis[storageKey]) {
+    config.value.playerBis[storageKey] = {}
+  }
+
+  Object.assign(config.value.playerBis[storageKey], diff.newConfig)
+
+  showPresetConfirmDialog.value = false
+  pendingPresetData.value = null
+  ElMessage.success(`已应用预设: ${preset.name} (${player})`)
+}
+
+function getObtainedCount(player: string, row: BisRow): number {
+  if (!props.records)
+    return 0
+  const keywords = row.keywords
+    .replace(/，/g, ',')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean)
+  if (keywords.length === 0)
+    return 0
+
+  return props.records.filter((r) => {
+    const actual = props.getActualPlayer
+      ? props.getActualPlayer(r.player)
+      : r.player
+    if (actual !== player)
+      return false
+    return keywords.some(k => r.item.includes(k))
+  }).length
+}
+
+function hasObtained(player: string, row: BisRow): boolean {
+  return getObtainedCount(player, row) > 0
+}
+
+function getLogicStatus(
+  player: string,
+  row: BisRow,
+): 'need' | 'greed' | 'pass' | 'assigned' {
+  const customAlloc = customAllocations.value[row.id]
+
+  // 队长分配具有最高优先级
+  if (customAlloc) {
+    if (customAlloc === player)
+      return 'assigned'
+    return 'pass' // 有分配时，其余所有人显示为放弃
+  }
+
+  if (row.type === 'count') {
+    const needed = getNeededCount(player, row.id)
+    if (needed === 0)
+      return 'greed'
+    return getObtainedCount(player, row) >= needed ? 'pass' : 'need'
+  }
+  if (hasObtained(player, row))
+    return 'pass'
+  return getBisValue(player, row.id) === 'raid' ? 'need' : 'greed'
+}
+
+function getOriginalStatus(
+  player: string,
+  row: BisRow,
+): 'need' | 'greed' | 'pass' {
+  if (row.type === 'count') {
+    const needed = getNeededCount(player, row.id)
+    if (needed === 0)
+      return 'greed'
+    return getObtainedCount(player, row) >= needed ? 'pass' : 'need'
+  }
+  if (hasObtained(player, row))
+    return 'pass'
+  return getBisValue(player, row.id) === 'raid' ? 'need' : 'greed'
+}
+
+function getStatusBaseText(player: string, row: BisRow): string {
+  const status = getLogicStatus(player, row)
+  return STATUS_MAP[status]?.text || ''
+}
+
+function isLegacyConfig(val: any): val is LegacyBisConfig {
+  if (!val || typeof val !== 'object' || !val.playerBis)
+    return false
+  const firstKey = Object.keys(val.playerBis)[0]
+  if (!firstKey)
+    return false
+  return Array.isArray(val.playerBis[firstKey])
+}
+
+function isEligible(player: string) {
+  if (!props.getPlayerRole)
+    return false
+  const role = props.getPlayerRole(player)
+  if (!role)
+    return false
+  return !role.startsWith('LEFT:') && !role.startsWith('SUB:')
+}
+
+function getCurrentMatchedPresetName(player: string) {
+  const role = props.getPlayerRole?.(player)
+  if (!role)
+    return null
+
+  const storageKey = getStorageKey(player)
+  const currentConfig = config.value.playerBis[storageKey]
+  if (!currentConfig || Object.keys(currentConfig).length === 0)
+    return null
+
+  const { recommended, others } = getPresetsForRole(role)
+  const allPresets = [...recommended, ...others]
+
+  for (const preset of allPresets) {
+    let isMatch = true
+    for (const key of Object.keys(preset.config)) {
+      if (currentConfig[key] !== preset.config[key]) {
+        isMatch = false
+        break
+      }
+    }
+    if (isMatch)
+      return preset.name
+  }
+  return null
+}
+
+function hasAnyPresets(player: string) {
+  const role = props.getPlayerRole?.(player)
+  const presets = getPresetsForRole(role)
+  return presets.recommended.length > 0 || presets.others.length > 0
+}
+
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    if (!newVal) {
+      return
+    }
+
+    if (isLegacyConfig(newVal)) {
+      const migrated: BisConfig = { playerBis: {} }
+      const raw = JSON.parse(JSON.stringify(newVal))
+      Object.keys(raw.playerBis).forEach((player) => {
+        migrated.playerBis[player] = {}
+        const list = raw.playerBis[player]
+        if (list) {
+          list.forEach((id: string) => {
+            if (migrated.playerBis[player]) {
+              migrated.playerBis[player]![id] = 'raid'
+            }
+          })
+        }
+      })
+      config.value = migrated
+    }
+    else {
+      const standard = newVal as BisConfig
+      if (JSON.stringify(standard) !== JSON.stringify(config.value)) {
+        config.value = {
+          ...standard,
+          plannedWeeks: standard.plannedWeeks ?? 8,
+        }
+      }
+    }
+  },
+  { immediate: true, deep: true },
+)
+
+watch(
+  config,
+  (newVal) => {
+    if (JSON.stringify(newVal) !== JSON.stringify(props.modelValue)) {
+      emit('update:modelValue', newVal)
+    }
+  },
+  { deep: true },
+)
+
+function getBisValue(player: string, rowId: string): BisValue | undefined {
+  return config.value.playerBis[getStorageKey(player)]?.[rowId]
+}
+
+function isRaidBis(player: string, rowId: string) {
+  return getBisValue(player, rowId) === 'raid'
+}
+
+function isTomeBis(player: string, rowId: string) {
+  return getBisValue(player, rowId) === 'tome'
+}
+
+function getNeededCount(player: string, rowId: string): number {
+  const val = getBisValue(player, rowId)
+  if (typeof val === 'number')
+    return val
+  // 神典石和强化药默认限制为 0，纤维和硬化药默认为 1
+  return ['tome', 'solvent'].includes(rowId) ? 0 : 1
+}
+
+function getCellClass(player: string, row: BisRow): string {
+  const status = getLogicStatus(player, row)
+  const base = STATUS_MAP[status]?.class || ''
+  return excludedPlayers.value.has(player) ? `${base} is-excluded` : base
+}
+
+const getRoleGroupClass = getRoleType
+</script>
+
 <template>
   <div class="bis-allocator">
     <div class="bis-toolbar">
@@ -5,12 +763,14 @@
         size="small"
         type="primary"
         plain
-        @click="showConfigDialog = true"
         class="setup-trigger-btn"
+        @click="showConfigDialog = true"
       >
-        <el-icon style="margin-right: 4px"><Setting /></el-icon>
+        <el-icon style="margin-right: 4px">
+          <Setting />
+        </el-icon>
         <span>设置 BIS</span>
-        <span v-if="!isConfigComplete" class="dot-warn"></span>
+        <span v-if="!isConfigComplete" class="dot-warn" />
       </el-button>
 
       <el-dropdown
@@ -19,11 +779,15 @@
         @command="handleCopyMacro"
       >
         <el-button size="small">
-          复制分配宏<el-icon class="el-icon--right"><arrow-down /></el-icon>
+          复制分配宏<el-icon class="el-icon--right">
+            <ArrowDown />
+          </el-icon>
         </el-button>
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item command="all"> 全层 </el-dropdown-item>
+            <el-dropdown-item command="all">
+              全层
+            </el-dropdown-item>
             <el-dropdown-item
               v-for="layer in layeredViewRows"
               :key="layer.name"
@@ -44,10 +808,14 @@
         trigger="hover"
       >
         <template #reference>
-          <el-icon class="macro-help-icon"><QuestionFilled /></el-icon>
+          <el-icon class="macro-help-icon">
+            <QuestionFilled />
+          </el-icon>
         </template>
         <div class="macro-help-content">
-          <div class="intro">生成可以直接在游戏内发送的分配宏（/p）。</div>
+          <div class="intro">
+            生成可以直接在游戏内发送的分配宏（/p）。
+          </div>
           <div class="rule-item">
             <strong>1. 优先需求</strong>
             <span>仅显示BIS设为“零式”且尚未获得的玩家。</span>
@@ -69,7 +837,7 @@
         <table class="bis-table">
           <thead>
             <tr>
-              <th class="sticky-col col-layer" style="z-index: 30"></th>
+              <th class="sticky-col col-layer" style="z-index: 30" />
               <th class="sticky-col col-item" style="z-index: 30">
                 装备 \ 玩家
               </th>
@@ -98,7 +866,9 @@
                       <span>已请假</span>
                     </template>
                     <template v-else>
-                      <el-icon style="margin-right: 2px"><User /></el-icon>
+                      <el-icon style="margin-right: 2px">
+                        <User />
+                      </el-icon>
                       <span>请假</span>
                     </template>
                   </div>
@@ -146,8 +916,8 @@
                               'is-active': customAllocations[row.id] === p,
                             }"
                             @click="
-                              !excludedPlayers.has(p) &&
-                              (customAllocations[row.id] = p)
+                              !excludedPlayers.has(p)
+                                && (customAllocations[row.id] = p)
                             "
                           >
                             <div class="player-option-item">
@@ -157,8 +927,7 @@
                                 :show-only-role="showOnlyRole"
                               />
                               <span
-                                :class="[
-                                  'mini-status-tag',
+                                class="mini-status-tag" :class="[
                                   getOriginalStatus(p, row),
                                 ]"
                               >
@@ -169,7 +938,7 @@
                           <div
                             v-if="customAllocations[row.id]"
                             class="tooltip-divider"
-                          ></div>
+                          />
                           <div
                             v-if="customAllocations[row.id]"
                             class="tooltip-player-item clear-btn"
@@ -198,7 +967,9 @@
                           <span class="p-status">已分配</span>
                         </template>
                         <template v-else>
-                          <el-icon style="margin-right: 2px"><Plus /></el-icon>
+                          <el-icon style="margin-right: 2px">
+                            <Plus />
+                          </el-icon>
                           <span>分配</span>
                         </template>
                       </div>
@@ -276,7 +1047,7 @@
           <div
             v-for="alert in validationAlerts"
             :key="alert.id"
-            :class="['validation-alert', alert.type]"
+            class="validation-alert" :class="[alert.type]"
           >
             <el-icon class="alert-icon">
               <InfoFilled v-if="alert.type === 'info'" />
@@ -289,7 +1060,9 @@
           <table class="bis-table config-table">
             <thead>
               <tr>
-                <th class="sticky-col">装备 \ 玩家</th>
+                <th class="sticky-col">
+                  装备 \ 玩家
+                </th>
                 <th
                   v-for="p in eligiblePlayers"
                   :key="p"
@@ -314,18 +1087,17 @@
                       <span
                         v-if="!checkPlayerComplete(config, getStorageKey(p))"
                         class="incomplete-label"
-                        >未填写</span
-                      >
+                      >未填写</span>
                       <div class="preset-apply-zone">
                         <el-dropdown
                           v-if="hasAnyPresets(p)"
                           trigger="click"
+                          popper-class="bis-preset-popper"
                           @command="(cmd: any) => applyPreset(p, cmd)"
                           @visible-change="
                             (v: boolean) =>
                               !v && expandedPlayerPresets.delete(p)
                           "
-                          popper-class="bis-preset-popper"
                         >
                           <el-button
                             size="small"
@@ -337,14 +1109,14 @@
                             <el-icon
                               v-if="!getCurrentMatchedPresetName(p)"
                               class="magic-icon"
-                              ><MagicStick
-                            /></el-icon>
+                            >
+                              <MagicStick />
+                            </el-icon>
                             <span
                               v-if="getCurrentMatchedPresetName(p)"
                               class="matched-name-inline"
                               :title="getCurrentMatchedPresetName(p) ?? ''"
-                              >{{ getCurrentMatchedPresetName(p) }}</span
-                            >
+                            >{{ getCurrentMatchedPresetName(p) }}</span>
                             <span v-else>一键预设</span>
                           </el-button>
                           <template #dropdown>
@@ -395,12 +1167,12 @@
                                   class="preset-expand-divider"
                                   @click.stop="expandedPlayerPresets.add(p)"
                                 >
-                                  <div class="divider-line"></div>
+                                  <div class="divider-line" />
                                   <div class="expand-action">
                                     <span>更多同职能预设</span>
                                     <el-icon><ArrowDown /></el-icon>
                                   </div>
-                                  <div class="divider-line"></div>
+                                  <div class="divider-line" />
                                 </div>
                                 <template v-else>
                                   <el-dropdown-item
@@ -429,7 +1201,9 @@
             </thead>
             <tbody>
               <tr v-for="row in configRows" :key="row.id">
-                <td class="sticky-col row-header">{{ row.name }}</td>
+                <td class="sticky-col row-header">
+                  {{ row.name }}
+                </td>
                 <td
                   v-for="p in eligiblePlayers"
                   :key="p"
@@ -460,10 +1234,10 @@
                         :max="8"
                         size="small"
                         controls-position="right"
+                        class="mini-stepper"
                         @update:model-value="
                           (v) => setNeededCount(p, row.id, v || 0)
                         "
-                        class="mini-stepper"
                       />
                     </div>
                   </div>
@@ -477,12 +1251,12 @@
         <div class="dialog-footer">
           <div class="footer-left">
             <el-button-group>
-              <el-button size="small" @click="exportBisData"
-                >导出 BIS 设置</el-button
-              >
-              <el-button size="small" @click="importBisData"
-                >导入 BIS 设置</el-button
-              >
+              <el-button size="small" @click="exportBisData">
+                导出 BIS 设置
+              </el-button>
+              <el-button size="small" @click="importBisData">
+                导入 BIS 设置
+              </el-button>
             </el-button-group>
           </div>
           <div class="footer-right">
@@ -525,8 +1299,8 @@
               :role="diff.role"
               :show-only-role="showOnlyRole"
             />
-            <span class="diff-tag" v-if="diff.isNew">新设置</span>
-            <span class="diff-tag update" v-else>更新</span>
+            <span v-if="diff.isNew" class="diff-tag">新设置</span>
+            <span v-else class="diff-tag update">更新</span>
           </div>
           <div class="diff-items">
             <div
@@ -550,11 +1324,13 @@
       </div>
       <template #footer>
         <div class="dialog-footer" style="justify-content: flex-end; gap: 12px">
-          <el-button @click="showImportConfirmDialog = false">取消</el-button>
+          <el-button @click="showImportConfirmDialog = false">
+            取消
+          </el-button>
           <el-button
             type="primary"
-            @click="confirmImportBis"
             :disabled="importDiffs.length === 0"
+            @click="confirmImportBis"
           >
             确认应用
           </el-button>
@@ -581,10 +1357,8 @@
               :role="pendingPresetData.diff.role"
               :show-only-role="showOnlyRole"
             />
-            <span class="diff-tag" v-if="pendingPresetData.diff.isNew"
-              >新设置</span
-            >
-            <span class="diff-tag update" v-else>更新</span>
+            <span v-if="pendingPresetData.diff.isNew" class="diff-tag">新设置</span>
+            <span v-else class="diff-tag update">更新</span>
           </div>
           <div class="diff-items">
             <div
@@ -608,7 +1382,9 @@
       </div>
       <template #footer>
         <div class="dialog-footer" style="justify-content: flex-end; gap: 12px">
-          <el-button @click="showPresetConfirmDialog = false">取消</el-button>
+          <el-button @click="showPresetConfirmDialog = false">
+            取消
+          </el-button>
           <el-button type="primary" @click="confirmApplyPreset">
             确认应用
           </el-button>
@@ -617,716 +1393,6 @@
     </el-dialog>
   </div>
 </template>
-
-<script setup lang="ts">
-import {
-  DEFAULT_ROWS,
-  LAYER_CONFIG,
-  type BisConfig,
-  type BisRow,
-  type BisValue,
-  type LegacyBisConfig,
-  isPlayerComplete as checkPlayerComplete,
-} from '@/utils/bisUtils'
-import type { LootRecord } from '@/utils/lootParser'
-import { getRoleType, ROLE_DEFINITIONS } from '@/utils/lootParser'
-import {
-  ArrowDown,
-  List,
-  QuestionFilled,
-  Right,
-  Setting,
-  InfoFilled,
-  Warning,
-  MagicStick,
-  Delete,
-  Plus,
-  User,
-} from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { computed, ref, watch } from 'vue'
-
-import { PART_ORDER } from '@/utils/lootParser'
-import { getCurrentWeekNumber } from '@/utils/raidWeekUtils'
-
-import PlayerDisplay from './PlayerDisplay.vue'
-import { getPresetsForRole, type BisPreset } from '@/utils/bisPresets'
-
-const tooltipsOpen = ref<Record<string, boolean>>({})
-
-function generateEquipLines(rows: BisRow[]): string[] {
-  const lines: string[] = []
-  rows.forEach((row) => {
-    const needs: string[] = []
-    const greeds: string[] = []
-
-    // 队长分配具有最高优先级
-    if (customAllocations.value[row.id]) {
-      const p = customAllocations.value[row.id]!
-      let displayName = props.getPlayerRole?.(p) || p
-      displayName = displayName.replace(/^LEFT:/, '').trim()
-      lines.push(`/p ${row.name}：${displayName} (队长分配)`)
-      return
-    }
-
-    eligiblePlayers.value.forEach((p) => {
-      if (excludedPlayers.value.has(p)) return
-
-      let displayName = props.getPlayerRole?.(p) || p
-      displayName = displayName.replace(/^LEFT:/, '').trim()
-
-      const status = getLogicStatus(p, row)
-      if (status === 'need') {
-        needs.push(displayName)
-      } else if (status === 'greed') {
-        greeds.push(displayName)
-      }
-    })
-
-    let content = ''
-    if (needs.length > 0) {
-      content = needs.join('、')
-    } else if (greeds.length > 0) {
-      content = greeds.join('、')
-    } else {
-      content = '随便ROLL'
-    }
-
-    lines.push(`/p ${row.name}：${content}`)
-  })
-  return lines
-}
-
-function getFF14WeekNumber(): number {
-  if (!props.records || props.records.length === 0) return 1
-  return getCurrentWeekNumber(props.records.map((r) => r.timestamp))
-}
-
-function handleCopyMacro(command: { name: string; rows: BisRow[] } | 'all') {
-  const now = new Date()
-  const weekNum = getFF14WeekNumber()
-  const dateStr = `${now.getMonth() + 1}月${now.getDate()}日`
-  let text = ''
-  let message = ''
-
-  if (command === 'all') {
-    const lines = [`/p <第${weekNum}周分配优先级> ${dateStr}`]
-
-    layeredViewRows.value.forEach((layer) => {
-      lines.push(...generateEquipLines(layer.rows))
-    })
-
-    text = lines.join('\n')
-    message = '已复制全层宏 (共' + lines.length + '行)'
-  } else {
-    const lines = [`/p <第${weekNum}周${command.name}分配优先级> ${dateStr}`]
-    lines.push(...generateEquipLines(command.rows))
-    text = lines.join('\n')
-    message = `已复制 ${command.name} 分配宏`
-  }
-
-  if (!text) return
-
-  navigator.clipboard
-    .writeText(text)
-    .then(() => {
-      ElMessage.success(message)
-    })
-    .catch(() => {
-      ElMessage.error('复制失败')
-    })
-}
-
-const props = defineProps<{
-  players: string[]
-  records: LootRecord[]
-  modelValue: BisConfig | LegacyBisConfig | undefined
-  getPlayerRole?: (name: string) => string | null | undefined
-  getActualPlayer?: (p: string) => string
-  showOnlyRole?: boolean
-}>()
-
-const emit = defineEmits<{
-  (e: 'update:modelValue', val: BisConfig): void
-}>()
-
-const showConfigDialog = ref(false)
-const excludedPlayers = ref<Set<string>>(new Set())
-const customAllocations = ref<Record<string, string>>({})
-
-function isPlayerAssigned(player: string): boolean {
-  return Object.values(customAllocations.value).includes(player)
-}
-
-const config = ref<BisConfig>({
-  playerBis: {},
-  plannedWeeks: 8,
-})
-
-function togglePlayerExclusion(player: string) {
-  if (excludedPlayers.value.has(player)) {
-    excludedPlayers.value.delete(player)
-  } else {
-    excludedPlayers.value.add(player)
-  }
-}
-
-function getStorageKey(player: string): string {
-  if (!props.getPlayerRole) return player
-  const role = props.getPlayerRole(player)
-  if (role && !role.startsWith('LEFT:') && !role.startsWith('SUB:')) {
-    return role
-  }
-  return player
-}
-
-function exportBisData() {
-  const parts = ROLE_DEFINITIONS.filter(
-    (role) => !!config.value.playerBis[role],
-  ).map((role) => {
-    const dataBinary = DEFAULT_ROWS.map((row) => {
-      const val = config.value.playerBis[role]?.[row.id]
-      if (row.type === 'toggle') {
-        return val === 'raid' ? '1' : '0'
-      } else {
-        return typeof val === 'number' && val > 0 ? '1' : '0'
-      }
-    }).join('')
-    const data = parseInt(dataBinary, 2).toString(36)
-    return `${role}:${data}`
-  })
-  let str = parts.join(';')
-  navigator.clipboard.writeText(str).then(() => {
-    ElMessage.success('BIS 设置已复制到剪贴板')
-  })
-}
-
-function importBisData() {
-  ElMessageBox.prompt('请粘贴 BIS 设置字符串', '导入 BIS 设置', {
-    confirmButtonText: '下一步',
-    cancelButtonText: '取消',
-    inputType: 'textarea',
-    inputPlaceholder: '在此粘贴...',
-    customClass: 'bis-import-message-box',
-    inputValidator: (value) => {
-      if (!value) return '内容不能为空'
-      const parts = value
-        .trim()
-        .split(';')
-        .filter((p) => p.trim())
-      if (parts.length === 0) return '格式错误：无法识别有效的分隔符'
-
-      let validCount = 0
-
-      for (const part of parts) {
-        if (part.startsWith('weeks:')) continue
-        const segs = part.split(':')
-
-        if (segs.length !== 2) {
-          return `数据格式错误："${part.slice(0, 10)}..."`
-        }
-
-        const [role, data] = segs
-
-        if (!data || !/^[0-9a-z]+$/i.test(data)) {
-          return `数据校验失败：职位 "${role || '未知'}" 的设置已损坏`
-        }
-
-        if (ROLE_DEFINITIONS.includes(role as any)) {
-          validCount++
-        }
-      }
-
-      if (validCount === 0) return '未找到匹配当前团队的有效设置数据'
-      return true
-    },
-  })
-    .then(({ value }) => {
-      if (!value) return
-      parseAndPreviewBisData(value)
-    })
-    .catch(() => {
-      // 用户取消
-    })
-}
-
-interface BisChange {
-  label: string
-  oldVal: string
-  newVal: string
-}
-
-interface PlayerDiff {
-  name: string
-  role: string
-  isNew: boolean
-  changes: BisChange[]
-  newConfig: Record<string, BisValue>
-}
-
-const showImportConfirmDialog = ref(false)
-const showPresetConfirmDialog = ref(false)
-const importDiffs = ref<PlayerDiff[]>([])
-const pendingPresetData = ref<{
-  player: string
-  preset: BisPreset
-  diff: PlayerDiff | null
-} | null>(null)
-
-function getValDisplay(row: BisRow, val: BisValue | undefined): string {
-  if (row.type === 'toggle') {
-    if (val === 'raid') return '零式'
-    if (val === 'tome') return '点数'
-    return '未设置'
-  }
-  return (val || 1).toString()
-}
-
-function getValClass(val: string) {
-  if (val === '零式') return 'is-raid'
-  if (val === '点数') return 'is-tome'
-  return ''
-}
-
-function parseAndPreviewBisData(rawInput: string) {
-  try {
-    const trimmedVal = rawInput.trim()
-    if (!trimmedVal) throw new Error('输入内容为空')
-
-    const parts = trimmedVal.split(';').filter((p) => p.trim())
-    if (parts.length === 0) throw new Error('无效的格式')
-
-    const diffs: PlayerDiff[] = []
-
-    importWeeks.value = undefined
-    parts.forEach((part) => {
-      if (part.startsWith('weeks:')) {
-        const weeks = parseInt(part.split(':')[1] || '0')
-        if (!isNaN(weeks)) {
-          importWeeks.value = weeks
-        }
-        return
-      }
-      const segs = part.split(':')
-      if (segs.length !== 2) return
-      const role = segs[0]
-      const data = segs[1]
-
-      if (!role || !data || !ROLE_DEFINITIONS.includes(role as any)) return
-
-      // 找到本地对应职位的玩家名（用于预览显示）
-      const localPlayers = eligiblePlayers.value.filter(
-        (p) => props.getPlayerRole?.(p) === role,
-      )
-      const pName = localPlayers[0] || role
-
-      const dataBinary = parseInt(data, 36)
-        .toString(2)
-        .padStart(DEFAULT_ROWS.length, '0')
-
-      const newConfig: Record<string, BisValue> = {}
-      DEFAULT_ROWS.forEach((row, idx) => {
-        const char = dataBinary[idx]
-        if (row.type === 'toggle') {
-          newConfig[row.id] = char === '1' ? 'raid' : 'tome'
-        } else {
-          newConfig[row.id] = char === '1' ? 1 : 0
-        }
-      })
-
-      const currentConfig = config.value.playerBis[role] || {}
-      const changes: BisChange[] = []
-      let hasChanges = false
-
-      DEFAULT_ROWS.forEach((row) => {
-        const oldV = currentConfig[row.id]
-        const newV = newConfig[row.id]
-        const sOld = getValDisplay(row, oldV)
-        const sNew = getValDisplay(row, newV)
-        if (sOld !== sNew) {
-          hasChanges = true
-          changes.push({ label: row.name, oldVal: sOld, newVal: sNew })
-        }
-      })
-
-      if (hasChanges) {
-        diffs.push({
-          name: pName,
-          role: role,
-          isNew: Object.keys(currentConfig).length === 0,
-          changes,
-          newConfig,
-        })
-      }
-    })
-
-    if (diffs.length === 0) {
-      ElMessage.info('未检测到有效的设置变更。')
-      return
-    }
-
-    importDiffs.value = diffs
-    showImportConfirmDialog.value = true
-  } catch (e: any) {
-    console.error(e)
-    ElMessage.error(e.message || '解析失败')
-  }
-}
-
-function confirmImportBis() {
-  confirmImportAction()
-}
-
-// 稍微重构一下以支持周数导入
-const importWeeks = ref<number | undefined>(undefined)
-
-function confirmImportAction() {
-  const newPlayerBis = { ...config.value.playerBis }
-  importDiffs.value.forEach((diff) => {
-    newPlayerBis[diff.role] = {
-      ...newPlayerBis[diff.role],
-      ...diff.newConfig,
-    }
-  })
-  config.value.playerBis = newPlayerBis
-  if (importWeeks.value !== undefined) {
-    config.value.plannedWeeks = importWeeks.value
-  }
-  showImportConfirmDialog.value = false
-  ElMessage.success(`成功更新 ${importDiffs.value.length} 个职位的配置`)
-}
-
-function setBis(player: string, rowId: string, type: BisValue) {
-  const storageKey = getStorageKey(player)
-  if (!config.value.playerBis[storageKey])
-    config.value.playerBis[storageKey] = {}
-  const current = config.value.playerBis[storageKey]![rowId]
-  if (current === type) {
-    delete config.value.playerBis[storageKey]![rowId]
-  } else {
-    config.value.playerBis[storageKey]![rowId] = type
-  }
-}
-
-function setNeededCount(player: string, rowId: string, count: number) {
-  const storageKey = getStorageKey(player)
-  if (!config.value.playerBis[storageKey])
-    config.value.playerBis[storageKey] = {}
-  config.value.playerBis[storageKey]![rowId] = count
-}
-
-function applyPreset(player: string, preset: BisPreset) {
-  const storageKey = getStorageKey(player)
-  const currentConfig = config.value.playerBis[storageKey] || {}
-  const newConfig = { ...preset.config }
-
-  const changes: BisChange[] = []
-  DEFAULT_ROWS.forEach((row) => {
-    const oldV = currentConfig[row.id]
-    const newV = newConfig[row.id]
-
-    const sOld = getValDisplay(row, oldV)
-    const sNew = getValDisplay(row, newV)
-
-    if (sOld !== sNew) {
-      changes.push({
-        label: row.name,
-        oldVal: sOld,
-        newVal: sNew,
-      })
-    }
-  })
-
-  if (changes.length === 0) {
-    ElMessage.info('当前设置与预设相同，无需更改')
-    return
-  }
-
-  const diff: PlayerDiff = {
-    name: player,
-    role: props.getPlayerRole?.(player) || 'Unknown',
-    isNew: Object.keys(currentConfig).length === 0,
-    changes,
-    newConfig,
-  }
-
-  pendingPresetData.value = { player, preset, diff }
-  showPresetConfirmDialog.value = true
-}
-
-function confirmApplyPreset() {
-  if (!pendingPresetData.value?.diff) return
-
-  const { player, preset, diff } = pendingPresetData.value
-  const storageKey = getStorageKey(player)
-
-  if (!config.value.playerBis[storageKey]) {
-    config.value.playerBis[storageKey] = {}
-  }
-
-  Object.assign(config.value.playerBis[storageKey], diff.newConfig)
-
-  showPresetConfirmDialog.value = false
-  pendingPresetData.value = null
-  ElMessage.success(`已应用预设: ${preset.name} (${player})`)
-}
-
-function getObtainedCount(player: string, row: BisRow): number {
-  if (!props.records) return 0
-  const keywords = row.keywords
-    .replace(/，/g, ',')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean)
-  if (keywords.length === 0) return 0
-
-  return props.records.filter((r) => {
-    const actual = props.getActualPlayer
-      ? props.getActualPlayer(r.player)
-      : r.player
-    if (actual !== player) return false
-    return keywords.some((k) => r.item.includes(k))
-  }).length
-}
-
-function hasObtained(player: string, row: BisRow): boolean {
-  return getObtainedCount(player, row) > 0
-}
-
-function getLogicStatus(
-  player: string,
-  row: BisRow,
-): 'need' | 'greed' | 'pass' | 'assigned' {
-  const customAlloc = customAllocations.value[row.id]
-
-  // 队长分配具有最高优先级
-  if (customAlloc) {
-    if (customAlloc === player) return 'assigned'
-    return 'pass' // 有分配时，其余所有人显示为放弃
-  }
-
-  if (row.type === 'count') {
-    const needed = getNeededCount(player, row.id)
-    if (needed === 0) return 'greed'
-    return getObtainedCount(player, row) >= needed ? 'pass' : 'need'
-  }
-  if (hasObtained(player, row)) return 'pass'
-  return getBisValue(player, row.id) === 'raid' ? 'need' : 'greed'
-}
-
-function getOriginalStatus(
-  player: string,
-  row: BisRow,
-): 'need' | 'greed' | 'pass' {
-  if (row.type === 'count') {
-    const needed = getNeededCount(player, row.id)
-    if (needed === 0) return 'greed'
-    return getObtainedCount(player, row) >= needed ? 'pass' : 'need'
-  }
-  if (hasObtained(player, row)) return 'pass'
-  return getBisValue(player, row.id) === 'raid' ? 'need' : 'greed'
-}
-
-function getStatusBaseText(player: string, row: BisRow): string {
-  const status = getLogicStatus(player, row)
-  return STATUS_MAP[status]?.text || ''
-}
-
-const layeredViewRows = computed(() => {
-  return LAYER_CONFIG.map((layer) => {
-    const rows = layer.items
-      .map((id) => DEFAULT_ROWS.find((r) => r.id === id))
-      .filter((r): r is BisRow => !!r)
-    return {
-      name: layer.name,
-      rows,
-    }
-  })
-})
-
-const configRows = computed(() => {
-  const order = PART_ORDER as string[]
-  return [...DEFAULT_ROWS].sort((a, b) => {
-    const ia = order.indexOf(a.keywords)
-    const ib = order.indexOf(b.keywords)
-    if (ia === -1 && ib === -1) return 0
-    if (ia === -1) return 1
-    if (ib === -1) return -1
-    return ia - ib
-  })
-})
-
-function isLegacyConfig(val: any): val is LegacyBisConfig {
-  if (!val || typeof val !== 'object' || !val.playerBis) return false
-  const firstKey = Object.keys(val.playerBis)[0]
-  if (!firstKey) return false
-  return Array.isArray(val.playerBis[firstKey])
-}
-
-function isEligible(player: string) {
-  if (!props.getPlayerRole) return false
-  const role = props.getPlayerRole(player)
-  if (!role) return false
-  return !role.startsWith('LEFT:') && !role.startsWith('SUB:')
-}
-
-const eligiblePlayers = computed(() => {
-  return props.players.filter(isEligible)
-})
-
-const expandedPlayerPresets = ref<Set<string>>(new Set())
-
-function getCurrentMatchedPresetName(player: string) {
-  const role = props.getPlayerRole?.(player)
-  if (!role) return null
-
-  const storageKey = getStorageKey(player)
-  const currentConfig = config.value.playerBis[storageKey]
-  if (!currentConfig || Object.keys(currentConfig).length === 0) return null
-
-  const { recommended, others } = getPresetsForRole(role)
-  const allPresets = [...recommended, ...others]
-
-  for (const preset of allPresets) {
-    let isMatch = true
-    for (const key of Object.keys(preset.config)) {
-      if (currentConfig[key] !== preset.config[key]) {
-        isMatch = false
-        break
-      }
-    }
-    if (isMatch) return preset.name
-  }
-  return null
-}
-
-function hasAnyPresets(player: string) {
-  const role = props.getPlayerRole?.(player)
-  const presets = getPresetsForRole(role)
-  return presets.recommended.length > 0 || presets.others.length > 0
-}
-
-const isConfigComplete = computed(() => {
-  for (const role of ROLE_DEFINITIONS) {
-    if (!checkPlayerComplete(config.value, role)) return false
-  }
-  return true
-})
-
-watch(
-  () => props.modelValue,
-  (newVal) => {
-    if (!newVal) {
-      return
-    }
-
-    if (isLegacyConfig(newVal)) {
-      const migrated: BisConfig = { playerBis: {} }
-      const raw = JSON.parse(JSON.stringify(newVal))
-      Object.keys(raw.playerBis).forEach((player) => {
-        migrated.playerBis[player] = {}
-        const list = raw.playerBis[player]
-        if (list) {
-          list.forEach((id: string) => {
-            if (migrated.playerBis[player]) {
-              migrated.playerBis[player]![id] = 'raid'
-            }
-          })
-        }
-      })
-      config.value = migrated
-    } else {
-      const standard = newVal as BisConfig
-      if (JSON.stringify(standard) !== JSON.stringify(config.value)) {
-        config.value = {
-          ...standard,
-          plannedWeeks: standard.plannedWeeks ?? 8,
-        }
-      }
-    }
-  },
-  { immediate: true, deep: true },
-)
-
-const incompletePlayerCount = computed(() => {
-  return ROLE_DEFINITIONS.filter(
-    (role) => !checkPlayerComplete(config.value, role),
-  ).length
-})
-
-watch(
-  config,
-  (newVal) => {
-    if (JSON.stringify(newVal) !== JSON.stringify(props.modelValue)) {
-      emit('update:modelValue', newVal)
-    }
-  },
-  { deep: true },
-)
-
-const STATUS_MAP = {
-  pass: { text: '放弃', class: 'status-pass' },
-  need: { text: '需求', class: 'status-need' },
-  greed: { text: '贪婪', class: 'status-greed-tome' },
-  assigned: { text: '分配', class: 'status-assigned' },
-} as const
-
-function getBisValue(player: string, rowId: string): BisValue | undefined {
-  return config.value.playerBis[getStorageKey(player)]?.[rowId]
-}
-
-function isRaidBis(player: string, rowId: string) {
-  return getBisValue(player, rowId) === 'raid'
-}
-
-function isTomeBis(player: string, rowId: string) {
-  return getBisValue(player, rowId) === 'tome'
-}
-
-function getNeededCount(player: string, rowId: string): number {
-  const val = getBisValue(player, rowId)
-  if (typeof val === 'number') return val
-  // 神典石和强化药默认限制为 0，纤维和硬化药默认为 1
-  return ['tome', 'solvent'].includes(rowId) ? 0 : 1
-}
-
-function getCellClass(player: string, row: BisRow): string {
-  const status = getLogicStatus(player, row)
-  const base = STATUS_MAP[status]?.class || ''
-  return excludedPlayers.value.has(player) ? `${base} is-excluded` : base
-}
-
-const getRoleGroupClass = getRoleType
-
-const validationAlerts = computed(() => {
-  const alerts: { id: string; type: 'info' | 'warning'; message: string }[] = []
-  const weeks = config.value.plannedWeeks || 8
-
-  const itemsToValidate = [
-    { id: 'coating', name: '硬化药' },
-    { id: 'twine', name: '强化纤维' },
-    { id: 'tome', name: '神典石' },
-    { id: 'solvent', name: '强化药' },
-  ]
-
-  itemsToValidate.forEach((item) => {
-    let total = 0
-    eligiblePlayers.value.forEach((p) => {
-      total += getNeededCount(p, item.id)
-    })
-
-    if (total > weeks) {
-      alerts.push({
-        id: item.id,
-        type: 'warning',
-        message: `${item.name}: 总需求(${total}) 大于 计划周数(${weeks})，这是不可能的分配。`,
-      })
-    }
-  })
-
-  return alerts
-})
-</script>
 
 <style lang="scss" scoped>
 .bis-allocator {

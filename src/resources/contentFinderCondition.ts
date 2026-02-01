@@ -2,9 +2,10 @@
 import contentFinderCondition from './contentFinderCondition.json'
 
 const map: Record<string, number> = {}
-for (const key in contentFinderCondition)
-  map[contentFinderCondition[key as keyof typeof contentFinderCondition]] =
-    Number(key)
+for (const key in contentFinderCondition) {
+  map[contentFinderCondition[key as keyof typeof contentFinderCondition]]
+    = Number(key)
+}
 
 export function getMapIDByTerritoryType(territoryType: number): number {
   return map[territoryType.toString()] ?? territoryType

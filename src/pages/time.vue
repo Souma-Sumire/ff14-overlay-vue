@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { EventMap } from '../../cactbot/types/event'
 import moment from 'moment'
-import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import { useWebSocket } from '@/composables/useWebSocket'
+import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
 useWebSocket({ allowClose: true, addWsParam: true })
 

@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import type { UISaveData, WayMark } from '@/types/uisave'
 import {
-  Upload,
   Download,
   MapLocation,
   Share,
+  Upload,
 } from '@element-plus/icons-vue'
-import WaymarkDisplay from '@/components/uisaveEditor/WaymarkDisplay.vue'
-import type { WayMark, UISaveData } from '@/types/uisave'
-import { ZoneInfo } from '@/resources/zoneInfo'
-import {
-  getTerritoryTypeByMapID,
-  getMapIDByTerritoryType,
-} from '@/resources/contentFinderCondition'
-import ZoneSelecter from '@/components/zoneSelecter.vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import LanguageSwitcher from '@/components/common/LanguageSwitcher.vue'
-import { parseUISave, MARKER_MAP, xorCrypt } from '@/utils/uisaveParser'
+import WaymarkDisplay from '@/components/uisaveEditor/WaymarkDisplay.vue'
+import ZoneSelecter from '@/components/zoneSelecter.vue'
+import {
+  getMapIDByTerritoryType,
+  getTerritoryTypeByMapID,
+} from '@/resources/contentFinderCondition'
+import { ZoneInfo } from '@/resources/zoneInfo'
+import { MARKER_MAP, parseUISave, xorCrypt } from '@/utils/uisaveParser'
 
 const { t } = useI18n()
 
@@ -58,17 +58,17 @@ let dragCounter = 0
 
 const toFloat = (v: number) => v / 1000
 const toInt = (v: number) => Math.round(v * 1000)
-const markAsModified = () => {
+function markAsModified() {
   hasUnsavedChanges.value = true
 }
 const isMarkerEnabled = (m: WayMark, bit: number) => (m.enableFlag & bit) !== 0
-const toggleMarker = (m: WayMark, bit: number) => {
+function toggleMarker(m: WayMark, bit: number) {
   const isEnabling = (m.enableFlag & bit) === 0
   m.enableFlag ^= bit
   markAsModified()
 
   if (isEnabling) {
-    const def = MARKER_MAP.find((d) => d.bit === bit)
+    const def = MARKER_MAP.find(d => d.bit === bit)
     if (def) {
       const p = m[def.key]
       if (p.x === 0 && p.y === 0 && p.z === 0) {
@@ -79,12 +79,7 @@ const toggleMarker = (m: WayMark, bit: number) => {
   }
 }
 
-const updateCoordinate = (
-  m: WayMark,
-  mKey: WayMarkKey,
-  coordKey: 'x' | 'y' | 'z',
-  val: number | undefined,
-) => {
+function updateCoordinate(m: WayMark, mKey: WayMarkKey, coordKey: 'x' | 'y' | 'z', val: number | undefined) {
   if (val !== undefined) {
     m[mKey][coordKey] = toInt(val)
     markAsModified()
@@ -102,16 +97,16 @@ async function handleFile(file: File) {
 
   try {
     // 使用 setTimeout 确保 Loading UI 有机会渲染
-    await new Promise((resolve) => setTimeout(resolve, 50))
-    
+    await new Promise(resolve => setTimeout(resolve, 50))
+
     parsedData.value = await parseUISave(await file.arrayBuffer())
 
     // 性能优化：分步加载剩余卡片
     displayLimit.value = 12
     const expandDisplay = () => {
       if (
-        parsedData.value &&
-        displayLimit.value < parsedData.value.wayMarks.length
+        parsedData.value
+        && displayLimit.value < parsedData.value.wayMarks.length
       ) {
         displayLimit.value += 12
         requestAnimationFrame(expandDisplay)
@@ -123,16 +118,19 @@ async function handleFile(file: File) {
 
     ElMessage.success(t('uisaveEditor.importSuccess'))
     hasUnsavedChanges.value = false
-  } catch (e: unknown) {
+  }
+  catch (e: unknown) {
     ElMessage.error(`解析失败: ${e instanceof Error ? e.message : String(e)}`)
-  } finally {
+  }
+  finally {
     isParsing.value = false
     loading.close()
   }
 }
 
 function exportFile() {
-  if (!parsedData.value) return
+  if (!parsedData.value)
+    return
   const {
     wayMarks,
     markerHeader,
@@ -231,7 +229,8 @@ function exportFile() {
 
 async function copyMark(index: number) {
   const wm = parsedData.value?.wayMarks[index]
-  if (!wm) return
+  if (!wm)
+    return
   const zone = ZoneInfo[getTerritoryTypeByMapID(wm.regionID)]
   const ppJson: PPJson = {
     Name: zone?.name.cn || zone?.name.en || `Zone_${wm.regionID}`,
@@ -314,16 +313,19 @@ const VALID_ROOT_KEYS = new Set([
 ])
 
 function validatePPJson(json: unknown): string | true {
-  if (typeof json !== 'object' || json === null) return '输入必须是 JSON 对象'
+  if (typeof json !== 'object' || json === null)
+    return '输入必须是 JSON 对象'
 
   // 1. 检查根节点是否有非法字段
   for (const key of Object.keys(json)) {
-    if (!VALID_ROOT_KEYS.has(key)) return `根节点包含非法字段: ${key}`
+    if (!VALID_ROOT_KEYS.has(key))
+      return `根节点包含非法字段: ${key}`
   }
 
   // 2. 检查必要字段类型
   const j = json as Partial<PPJson>
-  if (typeof j.MapID !== 'number') return '缺少 MapID 或类型错误 (应为数字)'
+  if (typeof j.MapID !== 'number')
+    return '缺少 MapID 或类型错误 (应为数字)'
   if ('Name' in j && typeof j.Name !== 'string')
     return 'Name 字段类型错误 (应为字符串)'
 
@@ -342,9 +344,12 @@ function validatePPJson(json: unknown): string | true {
       }
 
       // 检查标点属性类型
-      if (typeof m.X !== 'number') return `标点 ${key}.X 类型错误 (应为数字)`
-      if (typeof m.Y !== 'number') return `标点 ${key}.Y 类型错误 (应为数字)`
-      if (typeof m.Z !== 'number') return `标点 ${key}.Z 类型错误 (应为数字)`
+      if (typeof m.X !== 'number')
+        return `标点 ${key}.X 类型错误 (应为数字)`
+      if (typeof m.Y !== 'number')
+        return `标点 ${key}.Y 类型错误 (应为数字)`
+      if (typeof m.Z !== 'number')
+        return `标点 ${key}.Z 类型错误 (应为数字)`
       if ('ID' in m && typeof m.ID !== 'number')
         return `标点 ${key}.ID 类型错误 (应为数字)`
       if ('Active' in m && typeof m.Active !== 'boolean')
@@ -365,12 +370,13 @@ async function pasteMark(index: number) {
         cancelButtonText: t('uisaveEditor.cancel'),
         inputType: 'textarea',
         inputPlaceholder: '{"Name":...,"MapID":...,"A":{...}...}',
-        inputPattern: /^{.*}$/,
+        inputPattern: /^\{.*\}$/,
         inputErrorMessage: t('uisaveEditor.jsonError'),
         closeOnClickModal: false,
         customClass: 'ppjson-import-dialog',
         inputValidator: (val) => {
-          if (!val) return t('uisaveEditor.inputEmpty')
+          if (!val)
+            return t('uisaveEditor.inputEmpty')
           try {
             const json = JSON.parse(val)
             const res = validatePPJson(json)
@@ -378,19 +384,22 @@ async function pasteMark(index: number) {
               return `${t('uisaveEditor.invalidPPJson')}: ${res}`
             }
             return true
-          } catch {
+          }
+          catch {
             return t('uisaveEditor.jsonError')
           }
         },
       },
     )
 
-    if (!text) return
+    if (!text)
+      return
     const validJson = JSON.parse(text) as PPJson
     // MapID 校验已在 validatePPJson 中完成
 
     const wm = parsedData.value?.wayMarks[index]
-    if (!wm) return
+    if (!wm)
+      return
 
     wm.regionID = validJson.MapID
 
@@ -428,7 +437,7 @@ async function pasteMark(index: number) {
       updateCoordinate(wm, wmKey, 'z', targetP.Z)
 
       // Update active state
-      const markerDef = MARKER_MAP.find((m) => m.key === wmKey)
+      const markerDef = MARKER_MAP.find(m => m.key === wmKey)
       if (markerDef) {
         setEnabled(markerDef.bit, targetP.Active)
       }
@@ -437,31 +446,36 @@ async function pasteMark(index: number) {
     markAsModified()
     markAsModified()
     ElMessage.success(t('uisaveEditor.importSuccess'))
-  } catch (e) {
-    if (e === 'cancel') return
+  }
+  catch (e) {
+    if (e === 'cancel')
+      return
     console.error(e)
     ElMessage.error(t('uisaveEditor.importFail'))
   }
 }
 
 // --- 事件处理 ---
-const onFileChange = (e: Event) => {
+function onFileChange(e: Event) {
   const f = (e.target as HTMLInputElement).files?.[0]
-  if (f) handleFile(f)
+  if (f)
+    handleFile(f)
 }
-const onDrop = (e: DragEvent) => {
+function onDrop(e: DragEvent) {
   isDragging.value = false
   dragCounter = 0
   const f = e.dataTransfer?.files[0]
-  if (f?.name.toLowerCase().endsWith('.dat')) handleFile(f)
+  if (f?.name.toLowerCase().endsWith('.dat'))
+    handleFile(f)
 }
-const onDragEnter = () => {
+function onDragEnter() {
   dragCounter++
   isDragging.value = true
 }
-const onDragLeave = () => {
+function onDragLeave() {
   dragCounter--
-  if (dragCounter === 0) isDragging.value = false
+  if (dragCounter === 0)
+    isDragging.value = false
 }
 </script>
 
@@ -475,7 +489,9 @@ const onDragLeave = () => {
   >
     <div v-if="isDragging" class="drag-full-overlay">
       <div class="overlay-content">
-        <el-icon :size="80" color="var(--el-color-primary)"><Upload /></el-icon>
+        <el-icon :size="80" color="var(--el-color-primary)">
+          <Upload />
+        </el-icon>
         <p>{{ t('uisaveEditor.dropToLoad') }}</p>
         <span class="sub-text">{{ t('uisaveEditor.description') }}</span>
       </div>
@@ -485,7 +501,7 @@ const onDragLeave = () => {
       <div class="header-left">
         <div class="title-group">
           <h1>{{ t('uisaveEditor.title') }}</h1>
-          <div class="status-badges" v-if="parsedData">
+          <div v-if="parsedData" class="status-badges">
             <el-tag
               v-if="hasUnsavedChanges"
               type="danger"
@@ -507,7 +523,7 @@ const onDragLeave = () => {
           accept=".DAT,.dat"
           style="display: none"
           @change="onFileChange"
-        />
+        >
 
         <div class="action-buttons">
           <el-button
@@ -516,7 +532,9 @@ const onDragLeave = () => {
             round
             @click="fileInput?.click()"
           >
-            <el-icon class="el-icon--left"><Upload /></el-icon>
+            <el-icon class="el-icon--left">
+              <Upload />
+            </el-icon>
             {{ t('uisaveEditor.parseDat') }}
           </el-button>
 
@@ -528,13 +546,14 @@ const onDragLeave = () => {
             :disabled="!parsedData"
             @click="exportFile"
           >
-            <el-icon class="el-icon--left"><Download /></el-icon>
+            <el-icon class="el-icon--left">
+              <Download />
+            </el-icon>
             {{ t('uisaveEditor.download') }}
           </el-button>
-          
         </div>
 
-        <div class="divider"></div>
+        <div class="divider" />
 
         <LanguageSwitcher />
 
@@ -561,35 +580,35 @@ const onDragLeave = () => {
                   getTerritoryTypeByMapID(waymark.regionID).toString()
                 "
                 :placeholder="t('uisaveEditor.zoneSelectPlaceholder')"
+                width="100%"
+                :show-all-levels="false"
+                :border="false"
+                class="header-zone-select"
                 @update:select-zone="
                   (v: string) => {
                     waymark.regionID = getMapIDByTerritoryType(Number(v))
                     markAsModified()
                   }
                 "
-                width="100%"
-                :show-all-levels="false"
-                :border="false"
-                class="header-zone-select"
               />
               <div style="display: flex; gap: 0">
                 <el-button
                   size="small"
                   :icon="Upload"
-                  @click="pasteMark(index)"
                   :title="`${t('uisaveEditor.import')} PP JSON`"
                   text
                   style="margin: 0"
+                  @click="pasteMark(index)"
                 >
                   {{ t('uisaveEditor.import') }}
                 </el-button>
                 <el-button
                   size="small"
                   :icon="Share"
-                  @click="copyMark(index)"
                   :title="`${t('uisaveEditor.copy')} PP JSON`"
                   text
                   style="margin: 0"
+                  @click="copyMark(index)"
                 >
                   {{ t('uisaveEditor.copy') }}
                 </el-button>
@@ -608,46 +627,47 @@ const onDragLeave = () => {
               <div v-for="m in MARKER_MAP" :key="m.key" class="control-row">
                 <el-checkbox
                   :model-value="isMarkerEnabled(waymark, m.bit)"
-                  @change="toggleMarker(waymark, m.bit)"
                   class="marker-checkbox"
                   :disabled="waymark.regionID === 0"
-                  >{{ m.label }}</el-checkbox
+                  @change="toggleMarker(waymark, m.bit)"
                 >
+                  {{ m.label }}
+                </el-checkbox>
                 <el-input-number
                   :model-value="toFloat(waymark[m.key].x)"
+                  :step="0.01"
+                  :precision="3"
+                  :controls="false"
+                  size="small"
+                  class="coord-input"
+                  :disabled="waymark.regionID === 0"
                   @update:model-value="
                     (v) => updateCoordinate(waymark, m.key, 'x', v)
                   "
-                  :step="0.01"
-                  :precision="3"
-                  :controls="false"
-                  size="small"
-                  class="coord-input"
-                  :disabled="waymark.regionID === 0"
                 />
                 <el-input-number
                   :model-value="toFloat(waymark[m.key].y)"
+                  :step="0.01"
+                  :precision="3"
+                  :controls="false"
+                  size="small"
+                  class="coord-input"
+                  :disabled="waymark.regionID === 0"
                   @update:model-value="
                     (v) => updateCoordinate(waymark, m.key, 'y', v)
                   "
-                  :step="0.01"
-                  :precision="3"
-                  :controls="false"
-                  size="small"
-                  class="coord-input"
-                  :disabled="waymark.regionID === 0"
                 />
                 <el-input-number
                   :model-value="toFloat(waymark[m.key].z)"
-                  @update:model-value="
-                    (v) => updateCoordinate(waymark, m.key, 'z', v)
-                  "
                   :step="0.01"
                   :precision="3"
                   :controls="false"
                   size="small"
                   class="coord-input"
                   :disabled="waymark.regionID === 0"
+                  @update:model-value="
+                    (v) => updateCoordinate(waymark, m.key, 'z', v)
+                  "
                 />
               </div>
             </div>
@@ -658,9 +678,9 @@ const onDragLeave = () => {
                 :size="250"
               />
               <div v-else class="empty-map-placeholder">
-                <el-icon :size="24" color="var(--el-text-color-placeholder)"
-                  ><MapLocation
-                /></el-icon>
+                <el-icon :size="24" color="var(--el-text-color-placeholder)">
+                  <MapLocation />
+                </el-icon>
               </div>
             </div>
           </div>
@@ -670,10 +690,14 @@ const onDragLeave = () => {
 
     <div v-else class="empty-state" @click="fileInput?.click()">
       <div class="empty-icon-wrapper">
-        <el-icon :size="64"><Upload /></el-icon>
+        <el-icon :size="64">
+          <Upload />
+        </el-icon>
       </div>
       <h2>{{ t('uisaveEditor.startUsage') }}</h2>
-      <p class="upload-text">{{ t('uisaveEditor.description') }}</p>
+      <p class="upload-text">
+        {{ t('uisaveEditor.description') }}
+      </p>
     </div>
   </div>
 </template>

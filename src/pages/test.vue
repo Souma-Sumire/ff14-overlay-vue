@@ -1,6 +1,7 @@
 <!-- eslint-disable no-console -->
 <script setup lang="ts">
 import type { EventMap } from '../../cactbot/types/event'
+import { useLang } from '@/composables/useLang'
 import { useWebSocket } from '@/composables/useWebSocket'
 import NetRegexes from '../../cactbot/resources/netregexes'
 import {
@@ -8,7 +9,6 @@ import {
   callOverlayHandler,
 } from '../../cactbot/resources/overlay_plugin_api'
 import UserConfig from '../../cactbot/resources/user_config'
-import { useLang } from '@/composables/useLang'
 
 const { t } = useLang()
 
@@ -38,7 +38,7 @@ interface SystemInfo {
 
 const options = UserConfig.getDefaultBaseOptions()
 const userConfig = ref<
-  Options & { CactbotUserDirectory: string; DefaultAlertOutput: string }
+  Options & { CactbotUserDirectory: string, DefaultAlertOutput: string }
 >({
   ParserLanguage: '',
   ShortLocale: '',
@@ -279,13 +279,13 @@ const onLogLine: EventMap['LogLine'] = (ev) => {
     }
   }
   for (const key in overlayPluginLogRegexes.value) {
-    const regex =
-      overlayPluginLogRegexes.value[
+    const regex
+      = overlayPluginLogRegexes.value[
         key as keyof typeof overlayPluginLogRegexes.value
       ].regex
     if (regex.test(ev.rawLine)) {
-      eventEventRes.value[key as keyof typeof overlayPluginLogRegexes.value] =
-        true
+      eventEventRes.value[key as keyof typeof overlayPluginLogRegexes.value]
+        = true
     }
   }
 }
@@ -323,7 +323,7 @@ addOverlayListener('LogLine', onLogLine)
               tts(
                 t('actSelfTest.ttsText', {
                   time: new Date().getTime().toString().slice(-4),
-                })
+                }),
               )
             "
           >

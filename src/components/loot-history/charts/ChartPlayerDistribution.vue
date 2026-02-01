@@ -1,36 +1,27 @@
-<template>
-  <div class="chart-container">
-    <div class="chart-header">
-      <div class="chart-title">获取数量统计</div>
-    </div>
-    <div class="chart-body">
-      <v-chart 
-        class="echarts-instance" 
-        :option="option" 
-        :update-options="{ notMerge: true }" 
-        :theme="isDark ? 'dark' : ''"
-        autoresize 
-      />
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { computed } from 'vue'
-import VChart from 'vue-echarts'
-import { use } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
+import type { LootRecord } from '@/utils/lootParser'
+import { useDark } from '@vueuse/core'
 import { BarChart } from 'echarts/charts'
 import {
   GridComponent,
-  TooltipComponent,
   LegendComponent,
   TitleComponent,
+  TooltipComponent,
 } from 'echarts/components'
-import { useDark } from '@vueuse/core'
-import type { LootRecord } from '@/utils/lootParser'
+import { use } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { computed } from 'vue'
+import VChart from 'vue-echarts'
+import { formatChartPlayerLabel, getChartLabelRich } from '@/utils/chartUtils'
 import { getRoleColor, getRoleDisplayName } from '@/utils/lootParser'
-import { getChartLabelRich, formatChartPlayerLabel } from '@/utils/chartUtils'
+
+const props = defineProps<{
+  records: LootRecord[]
+  players: string[]
+  getActualPlayer?: (name: string) => string
+  getPlayerRole?: (name: string) => string | undefined
+  playerVisibility?: 'all' | 'role' | 'job' | 'initial'
+}>()
 
 const isDark = useDark({
   storageKey: 'loot-history-theme',
@@ -45,18 +36,10 @@ use([
   TitleComponent,
 ])
 
-const props = defineProps<{
-  records: LootRecord[]
-  players: string[]
-  getActualPlayer?: (name: string) => string
-  getPlayerRole?: (name: string) => string | undefined
-  playerVisibility?: 'all' | 'role' | 'job' | 'initial'
-}>()
-
 const option = computed(() => {
   const visibility = props.playerVisibility
   const counts = new Map<string, number>()
-  props.players.forEach((p) => counts.set(p, 0))
+  props.players.forEach(p => counts.set(p, 0))
 
   props.records.forEach((r) => {
     const p = props.getActualPlayer ? props.getActualPlayer(r.player) : r.player
@@ -76,13 +59,14 @@ const option = computed(() => {
     }
   })
 
-  const xData = dataList.map((d) => d.name)
-  const seriesData = dataList.map((d) => d.value)
-  
+  const xData = dataList.map(d => d.name)
+  const seriesData = dataList.map(d => d.value)
+
   const nameToRoleMap = new Map<string, string>()
   props.players.forEach((p) => {
     const role = props.getPlayerRole ? props.getPlayerRole(p) : undefined
-    if (role) nameToRoleMap.set(p, role)
+    if (role)
+      nameToRoleMap.set(p, role)
   })
 
   return {
@@ -127,8 +111,8 @@ const option = computed(() => {
       axisLine: {
         lineStyle: {
           color: isDark.value ? 'rgba(255,255,255,0.1)' : '#e2e8f0',
-        }
-      }
+        },
+      },
     },
     yAxis: {
       type: 'value',
@@ -136,11 +120,11 @@ const option = computed(() => {
       splitLine: {
         lineStyle: {
           color: isDark.value ? 'rgba(255,255,255,0.06)' : '#f1f5f9',
-        }
+        },
       },
       axisLabel: {
         color: isDark.value ? '#94a3b8' : '#64748b',
-      }
+      },
     },
     series: [
       {
@@ -167,6 +151,25 @@ const option = computed(() => {
   }
 })
 </script>
+
+<template>
+  <div class="chart-container">
+    <div class="chart-header">
+      <div class="chart-title">
+        获取数量统计
+      </div>
+    </div>
+    <div class="chart-body">
+      <VChart
+        class="echarts-instance"
+        :option="option"
+        :update-options="{ notMerge: true }"
+        :theme="isDark ? 'dark' : ''"
+        autoresize
+      />
+    </div>
+  </div>
+</template>
 
 <style lang="scss" scoped>
 .chart-container {

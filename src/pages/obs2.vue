@@ -3,8 +3,10 @@ import type { EventMap } from 'cactbot/types/event'
 import type { RequestBatchRequest } from 'obs-websocket-js'
 import type { Reactive } from 'vue'
 import type { ContentUsedType } from '@/composables/useZone'
+import { ElMessage } from 'element-plus'
 import OBSWebSocket from 'obs-websocket-js'
 import { useDev } from '@/composables/useDev'
+import { useLang } from '@/composables/useLang'
 import { CONTENT_TYPES, useZone } from '@/composables/useZone'
 import logDefinitions from '../../cactbot/resources/netlog_defs'
 import NetRegexes, { commonNetRegex } from '../../cactbot/resources/netregexes'
@@ -12,8 +14,6 @@ import {
   addOverlayListener,
   removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
-import { ElMessage } from 'element-plus'
-import { useLang } from '@/composables/useLang'
 
 const { t } = useLang()
 
@@ -28,13 +28,13 @@ interface Settings {
   partyLength: number
   customPath: string
 }
-type ConditionType =
-  | 'enter'
-  | 'combatStart'
-  | 'combatEnd'
-  | 'countdown'
-  | 'countdownCancel'
-  | 'wipe'
+type ConditionType
+  = | 'enter'
+    | 'combatStart'
+    | 'combatEnd'
+    | 'countdown'
+    | 'countdownCancel'
+    | 'wipe'
 
 const { zoneType } = useZone()
 const zoneName = useStorage('obs-zone-name', '')
@@ -49,11 +49,11 @@ const userConfig = useStorage(
     appendContentName: true,
   },
   localStorage,
-  { mergeDefaults: true }
+  { mergeDefaults: true },
 )
 const userContentSetting = useStorage(
   'obs-user-content-setting',
-  [] as Settings[]
+  [] as Settings[],
 )
 const dev = useDev()
 const partyLength = ref(1)
@@ -101,27 +101,28 @@ function initializeContentSettings() {
   ]
   if (userContentSetting.value.length === 0) {
     userContentSetting.value = [
-      ...defaultEnabled.map((type) => ({ type, ...DEFAULT_ENABLE_SETTINGS })),
-      ...CONTENT_TYPES.filter((type) => !defaultEnabled.includes(type)).map(
-        (type) => ({ type, ...DEFAULT_DISABLE_SETTINGS })
+      ...defaultEnabled.map(type => ({ type, ...DEFAULT_ENABLE_SETTINGS })),
+      ...CONTENT_TYPES.filter(type => !defaultEnabled.includes(type)).map(
+        type => ({ type, ...DEFAULT_DISABLE_SETTINGS }),
       ),
     ]
     const occ = userContentSetting.value.find(
-      (v) => v.type === 'OccultCrescent'
+      v => v.type === 'OccultCrescent',
     )
     if (occ) {
       occ.partyLength = 40
     }
-  } else {
+  }
+  else {
     // 清理不存在的类型
-    userContentSetting.value = userContentSetting.value.filter((item) =>
-      CONTENT_TYPES.includes(item.type)
+    userContentSetting.value = userContentSetting.value.filter(item =>
+      CONTENT_TYPES.includes(item.type),
     )
     // 加入缺少的类型
     const missingTypes = CONTENT_TYPES.filter(
-      (type) =>
-        !userContentSetting.value.some((item) => item.type === type) &&
-        type !== 'Default'
+      type =>
+        !userContentSetting.value.some(item => item.type === type)
+        && type !== 'Default',
     ).map((v) => {
       return defaultEnabled.includes(v)
         ? { type: v, ...DEFAULT_ENABLE_SETTINGS }
@@ -130,10 +131,10 @@ function initializeContentSettings() {
     userContentSetting.value.push(...missingTypes)
   }
   userContentSetting.value.sort(
-    (a, b) => CONTENT_TYPES.indexOf(a.type) - CONTENT_TYPES.indexOf(b.type)
+    (a, b) => CONTENT_TYPES.indexOf(a.type) - CONTENT_TYPES.indexOf(b.type),
   )
   // 补全可能因新增而缺失的设置项
-  userContentSetting.value = userContentSetting.value.map((item) => ({
+  userContentSetting.value = userContentSetting.value.map(item => ({
     ...(defaultEnabled.includes(item.type)
       ? DEFAULT_ENABLE_SETTINGS
       : DEFAULT_DISABLE_SETTINGS),
@@ -158,6 +159,7 @@ class Obs {
     outputActive: boolean
     outputPath: string
   }>
+
   connectingPromise: Promise<void> | null = null
 
   handleConnectionError = () => {
@@ -204,8 +206,10 @@ class Obs {
   }
 
   async connect(): Promise<void> {
-    if (this.status.connected) return Promise.resolve()
-    if (this.connectingPromise) return this.connectingPromise
+    if (this.status.connected)
+      return Promise.resolve()
+    if (this.connectingPromise)
+      return this.connectingPromise
 
     this.connectingPromise = (async () => {
       Log('Connecting to OBS')
@@ -222,7 +226,7 @@ class Obs {
       try {
         await this.ws.connect(
           `ws://127.0.0.1:${userConfig.value.host}`,
-          userConfig.value.password
+          userConfig.value.password,
         )
         Log('Connected to OBS')
         const recordStatus = await this.ws.call('GetRecordStatus')
@@ -245,14 +249,16 @@ class Obs {
           userConfig.value.fileName = '%CCYY-%MM-%DD %hh-%mm-%ss'
         }
         hasUsedBefore.value = true
-      } catch (e) {
+      }
+      catch (e) {
         Log('OBS connection failed', e)
         ElMessage({
           type: 'error',
           message: t('obs2.connection failed'),
           duration: 1000,
         })
-      } finally {
+      }
+      finally {
         this.status.connecting = false
         this.connectingPromise = null
       }
@@ -288,16 +294,16 @@ class Obs {
   }
 
   async setProfileParameter(cause: 'start' | 'stop' | 'split') {
-    const filePath =
-      cause === 'stop'
+    const filePath
+      = cause === 'stop'
         ? userConfig.value.path
-        : userContentSetting.value.find((item) => item.type === zoneType.value)
-            ?.customPath || userConfig.value.path
-    const fileName =
-      cause === 'stop'
+        : userContentSetting.value.find(item => item.type === zoneType.value)
+          ?.customPath || userConfig.value.path
+    const fileName
+      = cause === 'stop'
         ? userConfig.value.fileName
-        : userConfig.value.fileName +
-          (userConfig.value.appendContentName ? ` - ${zoneName.value}` : '')
+        : userConfig.value.fileName
+          + (userConfig.value.appendContentName ? ` - ${zoneName.value}` : '')
 
     const requests: RequestBatchRequest[] = [
       {
@@ -338,10 +344,10 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
       const splitLine = line.split('|')
       switch (regexName) {
         case 'inCombat': {
-          const inACTCombat =
-            splitLine[logDefinitions.InCombat.fields.inACTCombat] === '1'
-          const inGameCombat =
-            splitLine[logDefinitions.InCombat.fields.inGameCombat] === '1'
+          const inACTCombat
+            = splitLine[logDefinitions.InCombat.fields.inACTCombat] === '1'
+          const inGameCombat
+            = splitLine[logDefinitions.InCombat.fields.inGameCombat] === '1'
           if (inACTCombat && inGameCombat) {
             checkCondition('combatStart')
             return
@@ -381,11 +387,11 @@ function checkCondition(condition: ConditionType) {
   Log('checkCondition', condition)
 
   const rule = userContentSetting.value.find(
-    (item) => item.type === zoneType.value
+    item => item.type === zoneType.value,
   )
 
   if (!rule) {
-    throw new Error('Rule not found for zone type:' + zoneType.value)
+    throw new Error(`Rule not found for zone type:${zoneType.value}`)
   }
 
   if (rule.enter === false && condition === 'enter' && obs.status.recording) {
@@ -429,7 +435,6 @@ function checkCondition(condition: ConditionType) {
       // 但排除combatStart，因为如果战斗开始时已经在录制了，表明目前处于由倒计时发起的录制动作中，我们不希望倒计时过程会单独被分割出来。
       if (obs.status.recording === true && condition !== 'combatStart') {
         obs.splitRecord()
-        return
       }
       break
     case 'countdownCancel':
@@ -463,11 +468,11 @@ onUnmounted(() => {
 
 // 获取当前区域类型对应的规则
 const currentRule = computed(() => {
-  return userContentSetting.value.find((item) => item.type === zoneType.value)
+  return userContentSetting.value.find(item => item.type === zoneType.value)
 })
 
 // 表格行类名方法 - 高亮当前类型
-const tableRowClassName = ({ row }: { row: Settings }) => {
+function tableRowClassName({ row }: { row: Settings }) {
   return row.type === zoneType.value ? 'current-zone-row' : ''
 }
 </script>
@@ -481,12 +486,14 @@ const tableRowClassName = ({ row }: { row: Settings }) => {
         <div
           class="recording-dot"
           :class="{ 'is-recording': obs.status.recording }"
-        ></div>
+        />
 
         <!-- 区域名称 -->
         <div class="zone-info">
           <div class="zone-name-wrapper">
-            <div class="zone-name">{{ zoneName || t('obs2.Unknown') }}</div>
+            <div class="zone-name">
+              {{ zoneName || t('obs2.Unknown') }}
+            </div>
           </div>
         </div>
 
@@ -534,7 +541,7 @@ const tableRowClassName = ({ row }: { row: Settings }) => {
       </div>
 
       <!-- 设置按钮 -->
-      <button class="settings-btn" @click="isMiniMode = false" title="展开详情">
+      <button class="settings-btn" title="展开详情" @click="isMiniMode = false">
         ⚙
       </button>
     </div>
@@ -545,10 +552,16 @@ const tableRowClassName = ({ row }: { row: Settings }) => {
         <!-- 占位符：镜像迷你模式的内容以实现按钮对齐 -->
         <div class="mini-mode-placeholder" style="visibility: hidden; pointer-events: none;">
           <template v-if="obs.status.connected">
-            <div class="recording-dot"></div>
+            <div class="recording-dot" />
             <div class="zone-info">
-              <div class="zone-name-wrapper"><div class="zone-name">{{ zoneName || t('obs2.Unknown') }}</div></div>
-              <div class="zone-type">{{ zoneType ? `（${t(`obs2.${zoneType}`)}）` : '' }}</div>
+              <div class="zone-name-wrapper">
+                <div class="zone-name">
+                  {{ zoneName || t('obs2.Unknown') }}
+                </div>
+              </div>
+              <div class="zone-type">
+                {{ zoneType ? `（${t(`obs2.${zoneType}`)}）` : '' }}
+              </div>
             </div>
             <div class="rules-status">
               <span class="rule-item">{{ t('obs2.EnterShort') }}</span>
@@ -563,7 +576,7 @@ const tableRowClassName = ({ row }: { row: Settings }) => {
           </div>
         </div>
 
-        <el-button size="small" @click="isMiniMode = true" class="mini-toggle-btn">
+        <el-button size="small" class="mini-toggle-btn" @click="isMiniMode = true">
           {{ t('obs2.Mini Mode') }}
         </el-button>
       </div>
@@ -778,10 +791,9 @@ const tableRowClassName = ({ row }: { row: Settings }) => {
                 >
                   <template #default="scope">
                     <span
-                      class="current-type"
                       v-if="zoneType === scope.row.type"
-                      >{{ t('obs2.Current') }}<br
-                    /></span>
+                      class="current-type"
+                    >{{ t('obs2.Current') }}<br></span>
 
                     <span>{{
                       scope.row.type ? t(`obs2.${scope.row.type}`) : ''
@@ -1088,7 +1100,7 @@ const tableRowClassName = ({ row }: { row: Settings }) => {
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  
+
   // 添加阴影
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);

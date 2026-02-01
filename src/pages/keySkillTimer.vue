@@ -4,13 +4,13 @@ import type { KeySkillEntity } from '@/types/keySkill'
 import { useDemo } from '@/composables/useDemo'
 import { useDev } from '@/composables/useDev'
 import { useZone } from '@/composables/useZone'
+import { initActionChinese } from '@/resources/actionChinese'
 import { useKeySkillStore } from '@/store/keySkills'
 import { compareSame } from '@/utils/compareSaveAction'
 import {
   addOverlayListener,
   removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
-import { initActionChinese } from '@/resources/actionChinese'
 
 const storeKeySkill = useKeySkillStore()
 const { zoneType } = useZone()
@@ -19,7 +19,7 @@ const dev = useDev()
 const demo = useDemo()
 
 const handlePartyChanged: EventMap['PartyChanged'] = (e) => {
-  storeKeySkill.party = e.party.filter((v) => v.inParty)
+  storeKeySkill.party = e.party.filter(v => v.inParty)
 }
 
 const handleLogLine: EventMap['LogLine'] = (e) => {
@@ -32,9 +32,10 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
     const skillIdCompare = compareSame(skillId)
     const casterIdHex = e.line[2]!
     storeKeySkill.triggerSkill([skillId, skillIdCompare], casterIdHex, true)
-  } else if (
-    e.line[0] === '33' &&
-    ['40000010', '4000000F'].includes(e.line[3]!)
+  }
+  else if (
+    e.line[0] === '33'
+    && ['40000010', '4000000F'].includes(e.line[3]!)
   ) {
     storeKeySkill.wipe()
   }
@@ -56,7 +57,8 @@ onUnmounted(() => {
   removeOverlayListener('PartyChanged', handlePartyChanged)
   removeOverlayListener('LogLine', handleLogLine)
   Object.values(storeKeySkill.skillStates).forEach((s) => {
-    if (s.rafId) cancelAnimationFrame(s.rafId)
+    if (s.rafId)
+      cancelAnimationFrame(s.rafId)
   })
 })
 
@@ -76,7 +78,7 @@ function showSettings() {
   <CommonActWrapper>
     <template #readme>
       <span class="demo-text">
-        {{ $t('keySkillTimer.demo-text1') }}<br />
+        {{ $t('keySkillTimer.demo-text1') }}<br>
         {{ $t('keySkillTimer.demo-text2') }}
       </span>
     </template>
@@ -103,7 +105,7 @@ function showSettings() {
             >
               {{ storeKeySkill.skillStates[skill.instanceKey]?.text || '' }}
             </span>
-            <img :src="skill.src" />
+            <img :src="skill.src">
             <div
               v-if="storeKeySkill.skillStates[skill.instanceKey]?.active"
               :key="
@@ -209,8 +211,8 @@ img {
   font-size: 20px;
   font-weight: 800;
   font-family: 'Arial Black', sans-serif;
-  text-shadow: 
-    -1.5px -1.5px 0 #000,  
+  text-shadow:
+    -1.5px -1.5px 0 #000,
      1.5px -1.5px 0 #000,
     -1.5px  1.5px 0 #000,
      1.5px  1.5px 0 #000,

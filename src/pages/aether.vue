@@ -1,24 +1,26 @@
 <script setup lang="ts">
+import type { Lang } from '@/types/lang'
 import { localeToCactbotLang, useLang } from '@/composables/useLang'
 import aethercurrent from '@/resources/aethercurrent.json'
-import type { Lang } from '@/types/lang'
+
 const { locale } = useLang()
 
 const exVersions = Array.from(
   new Set(
     aethercurrent
-      .map((v) => v.exVersion)
+      .map(v => v.exVersion)
       .sort()
-      .reverse()
-  )
+      .reverse(),
+  ),
 )
 
 const groupById = aethercurrent.reduce(
   (total, item) => {
-    const group = total.find((v) => v.id === item.id)
+    const group = total.find(v => v.id === item.id)
     if (group) {
       group.items.push(item)
-    } else {
+    }
+    else {
       total.push({
         id: item.id,
         name: item.name,
@@ -30,7 +32,7 @@ const groupById = aethercurrent.reduce(
   },
   [] as {
     id: string
-    name: { ja: string; cn?: string }
+    name: { ja: string, cn?: string }
     exVersion: string
     items: {
       x: string
@@ -44,14 +46,14 @@ const groupById = aethercurrent.reduce(
       id: string
       data: number
     }[]
-  }[]
+  }[],
 )
 const IMG_RAW_SIZE = 2048
 const IMG_SHOW_SIZE = 512
 const IMG_SCALE = IMG_SHOW_SIZE / IMG_RAW_SIZE
 const selectExVersion = ref(exVersions[0])
 
-function getName(name: { ja: string; cn?: string; en?: string }) {
+function getName(name: { ja: string, cn?: string, en?: string }) {
   return name[localeToCactbotLang(locale.value as Lang) as keyof typeof name] ?? name.en
 }
 </script>
@@ -84,7 +86,9 @@ function getName(name: { ja: string; cn?: string; en?: string }) {
         :key="map.id"
         class="map-card"
       >
-        <h2 class="map-title">{{ getName(map.name) }}</h2>
+        <h2 class="map-title">
+          {{ getName(map.name) }}
+        </h2>
         <div class="map-image-wrapper">
           <img
             :style="{
@@ -94,7 +98,7 @@ function getName(name: { ja: string; cn?: string; en?: string }) {
             :src="`https://v2.xivapi.com/api/asset/map/${map.id}`"
             :alt="getName(map.name)"
             class="map-image"
-          />
+          >
           <article class="points-overlay">
             <div
               v-for="(item, index) in map.items.sort((a, b) => b.data - a.data)"

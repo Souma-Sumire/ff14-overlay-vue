@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { getActionChinese, initActionChinese } from '@/resources/actionChinese'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
-import { onMounted } from 'vue'
 
 onMounted(() => {
   initActionChinese()
@@ -12,7 +12,8 @@ function getName(line: string[]): string {
   const sourceId = line[2]!
   const rawText = line[5]!
   const name = getActionChinese(id)
-  if (name) return name
+  if (name)
+    return name
   if (sourceId.startsWith('4') && !rawText.includes('unknown'))
     console.error(`未找到动作 ${id} ${rawText}`)
   return rawText
@@ -72,26 +73,26 @@ const windowWidth = computed(() => `${settings.value.width}px`)
 const opacityCountdown = computed(() => (settings.value.showCountdown ? 1 : 0))
 const opacityProgress = computed(() => (settings.value.showProgress ? 1 : 0))
 const opacityActionChinese = computed(() =>
-  settings.value.showActionChinese ? 1 : 0
+  settings.value.showActionChinese ? 1 : 0,
 )
 const opacityActionID = computed(() => (settings.value.showActionID ? 1 : 0))
 const offsetCountdownX = computed(() => `${settings.value.offsetCountdownX}px`)
 const offsetCountdownY = computed(
-  () => `${settings.value.offsetCountdownY * -1}px`
+  () => `${settings.value.offsetCountdownY * -1}px`,
 )
 const offsetActionChineseX = computed(
-  () => `${settings.value.offsetActionChineseX}px`
+  () => `${settings.value.offsetActionChineseX}px`,
 )
 const offsetActionChineseY = computed(
-  () => `${settings.value.offsetActionChineseY * -1}px`
+  () => `${settings.value.offsetActionChineseY * -1}px`,
 )
 const offsetActionIDX = computed(() => `${settings.value.offsetActionIDX}px`)
 const offsetActionIDY = computed(
-  () => `${settings.value.offsetActionIDY * -1}px`
+  () => `${settings.value.offsetActionIDY * -1}px`,
 )
 const offsetProgressX = computed(() => `${settings.value.offsetProgressX}px`)
 const offsetProgressY = computed(
-  () => `${settings.value.offsetProgressY * -1}px`
+  () => `${settings.value.offsetProgressY * -1}px`,
 )
 const casting = new Map()
 const now = ref(0)
@@ -99,15 +100,16 @@ const ping = settings.value.ping
 
 addOverlayListener(
   'EnmityTargetData',
-  (e: { Target: { ID: number } | null; Focus: { ID: number } | null }) => {
+  (e: { Target: { ID: number } | null, Focus: { ID: number } | null }) => {
     data.targetCast = casting.get(e[settings.value.targetKey]?.ID)
-  }
+  },
 )
 
 addOverlayListener('LogLine', (e: { line: string[] }) => {
   if (e.line[0] === '20')
     casting.set(Number.parseInt(e.line[2]!, 16), new Cast(e.line))
-  else if (e.line[0] === '23') casting.delete(Number.parseInt(e.line[2]!, 16))
+  else if (e.line[0] === '23')
+    casting.delete(Number.parseInt(e.line[2]!, 16))
 })
 
 addOverlayListener('ChangeZone', () => casting.clear())
@@ -301,8 +303,8 @@ function resetSettings() {
     <div class="container">
       <el-main
         v-show="
-          data.targetCast &&
-          now - data.targetCast.overTime + ping < settings.keep
+          data.targetCast
+            && now - data.targetCast.overTime + ping < settings.keep
         "
         :style="{ fontFamily: settings.fontFamily }"
       >
@@ -313,17 +315,17 @@ function resetSettings() {
           {{
             Math.max(
               ((data.targetCast?.overTime ?? 1) - now - ping) / 1000,
-              0
+              0,
             ).toFixed(2)
           }}
         </div>
         <el-progress
           :percentage="
             Math.min(
-              ((now - (data.targetCast?.startTime ?? 1) + ping) /
-                (data.targetCast?.castTime ?? 1)) *
-                100,
-              100
+              ((now - (data.targetCast?.startTime ?? 1) + ping)
+                / (data.targetCast?.castTime ?? 1))
+                * 100,
+              100,
             )
           "
           :stroke-width="8"

@@ -1,3 +1,14 @@
+<script setup lang="ts">
+import RoleBadge from './RoleBadge.vue'
+
+defineProps<{
+  name: string
+  role: string | null | undefined
+  showOnlyRole: boolean
+  nameClass?: string
+}>()
+</script>
+
 <template>
   <div class="player-display" :class="{ 'is-large': showOnlyRole }">
     <RoleBadge :role="role" :large="showOnlyRole" class="role-icon" />
@@ -10,17 +21,6 @@
     </span>
   </div>
 </template>
-
-<script setup lang="ts">
-import RoleBadge from './RoleBadge.vue'
-
-defineProps<{
-  name: string
-  role: string | null | undefined
-  showOnlyRole: boolean
-  nameClass?: string
-}>()
-</script>
 
 <style lang="scss" scoped>
 .player-display {

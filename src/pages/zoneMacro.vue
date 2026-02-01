@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { UISaveData, WayMark } from '@/types/uisave'
 import {
   ChatDotSquare,
   ChatSquare,
@@ -7,38 +8,40 @@ import {
   Delete,
   Edit,
   Position,
+  View,
 } from '@element-plus/icons-vue'
-import { useDev } from '@/composables/useDev'
-import { useWebSocket } from '@/composables/useWebSocket'
-import { defaultMacro } from '@/resources/macro'
-import { useMacroStore } from '@/store/macro'
-import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
-import 'github-markdown-css/github-markdown-light.css'
+
+import { ElMessage } from 'element-plus'
+import { useI18n } from 'vue-i18n'
+import WaymarkDisplay from '@/components/uisaveEditor/WaymarkDisplay.vue'
 import ZoneSelecter from '@/components/zoneSelecter.vue'
+import { useDev } from '@/composables/useDev'
 import {
-  getLocaleMessage,
   getCactbotLocaleMessage,
+  getLocaleMessage,
 } from '@/composables/useLang'
-import type { WayMark, UISaveData } from '@/types/uisave'
-import { parseUISave, MARKER_MAP } from '@/utils/uisaveParser'
+import { useWebSocket } from '@/composables/useWebSocket'
 import {
   getMapIDByTerritoryType,
   getTerritoryTypeByMapID,
 } from '@/resources/contentFinderCondition'
+import { defaultMacro } from '@/resources/macro'
 import { ZoneInfo } from '@/resources/zoneInfo'
-import WaymarkDisplay from '@/components/uisaveEditor/WaymarkDisplay.vue'
-import { View } from '@element-plus/icons-vue'
-import { useI18n } from 'vue-i18n'
-import { ElMessage } from 'element-plus'
+import { useMacroStore } from '@/store/macro'
+import { MARKER_MAP, parseUISave } from '@/utils/uisaveParser'
+import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
+import 'github-markdown-css/github-markdown-light.css'
 
 const { t } = useI18n()
 
 const dev = useDev()
 const macroStore = useMacroStore()
 const hideOnStartup = useStorage('zoneMacroHideOnStartup', ref(false))
-if (hideOnStartup.value) macroStore.show = false
+if (hideOnStartup.value)
+  macroStore.show = false
 
-if (!dev.value) useWebSocket({ allowClose: true, addWsParam: true })
+if (!dev.value)
+  useWebSocket({ allowClose: true, addWsParam: true })
 
 const fastEntrance = computed(() => {
   return macroStore.fastEntrance.map((v) => {
@@ -54,20 +57,21 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const uisaveData = ref<UISaveData | null>(null)
 const importDialogVisible = ref(false)
 const onlyCurrentZone = ref(true)
-const selectedWaymarks = ref<{ mark: WayMark; index: number }[]>([])
+const selectedWaymarks = ref<{ mark: WayMark, index: number }[]>([])
 
 const currentMapID = computed(() => {
   return getMapIDByTerritoryType(Number(macroStore.selectZone))
 })
 
 const displayedWaymarks = computed(() => {
-  if (!uisaveData.value) return []
+  if (!uisaveData.value)
+    return []
   let marks = uisaveData.value.wayMarks
     .map((mark, index) => ({ mark, index }))
-    .filter((m) => m.mark.regionID !== 0)
+    .filter(m => m.mark.regionID !== 0)
 
   if (onlyCurrentZone.value) {
-    marks = marks.filter((m) => m.mark.regionID === currentMapID.value)
+    marks = marks.filter(m => m.mark.regionID === currentMapID.value)
   }
   return marks
 })
@@ -75,19 +79,22 @@ const displayedWaymarks = computed(() => {
 async function onFileChange(e: Event) {
   const input = e.target as HTMLInputElement
   const file = input.files?.[0]
-  if (!file) return
+  if (!file)
+    return
   try {
     uisaveData.value = await parseUISave(await file.arrayBuffer())
     importDialogVisible.value = true
     onlyCurrentZone.value = false
-  } catch (err) {
-    ElMessage.error('Parse failed: ' + err)
-  } finally {
+  }
+  catch (err) {
+    ElMessage.error(`Parse failed: ${err}`)
+  }
+  finally {
     input.value = ''
   }
 }
 
-function handleSelectionChange(val: { mark: WayMark; index: number }[]) {
+function handleSelectionChange(val: { mark: WayMark, index: number }[]) {
   selectedWaymarks.value = val
 }
 
@@ -122,9 +129,11 @@ function doImportUISAVE() {
 
 function getZoneName(mapID: number) {
   const territoryType = getTerritoryTypeByMapID(mapID)
-  if (!territoryType) return 'Unknown'
+  if (!territoryType)
+    return 'Unknown'
   const info = ZoneInfo[territoryType]
-  if (!info) return 'Unknown'
+  if (!info)
+    return 'Unknown'
   return getCactbotLocaleMessage(info.name)
 }
 
@@ -139,15 +148,15 @@ onMounted(() => {
   watch(
     toRef(macroStore, 'selectZone'),
     () => {
-      const data =
-        macroStore.data.zoneId[macroStore.selectZone]?.map((v) => {
+      const data
+        = macroStore.data.zoneId[macroStore.selectZone]?.map((v) => {
           const { Editable, ...r } = v
           return r
-        }) ||
-        defaultMacro.zoneId[macroStore.selectZone] ||
-        []
+        })
+        || defaultMacro.zoneId[macroStore.selectZone]
+        || []
 
-      const userData = data.filter((v) => v.Deletability)
+      const userData = data.filter(v => v.Deletability)
       const nativeData = defaultMacro.zoneId[macroStore.selectZone] ?? []
       macroStore.data.zoneId[macroStore.selectZone] = [
         ...nativeData,
@@ -172,7 +181,7 @@ onMounted(() => {
             @click="macroStore.positioning()"
           />
         </el-tooltip>
-        <ZoneSelecter v-model:selectZone="macroStore.selectZone" />
+        <ZoneSelecter v-model:select-zone="macroStore.selectZone" />
 
         <div class="fast-entrance-group">
           <el-button
@@ -231,19 +240,19 @@ onMounted(() => {
     <el-main class="main-content">
       <el-space wrap alignment="flex-start" class="macro-grid">
         <el-empty
+          v-if="
+            macroStore.data.zoneId[macroStore.selectZone] === undefined
+              || macroStore.data.zoneId[macroStore.selectZone]!.length === 0
+          "
           w-100
           :image-size="150"
           :description="$t('zoneMacro.noDataTip')"
-          v-if="
-            macroStore.data.zoneId[macroStore.selectZone] === undefined ||
-            macroStore.data.zoneId[macroStore.selectZone]!.length === 0
-          "
         />
         <el-card
-          v-else
           v-for="(macro, index) in macroStore.data.zoneId[
             macroStore.selectZone
           ]"
+          v-else
           :key="index"
           shadow="hover"
           class="main-box-card"
@@ -516,7 +525,7 @@ onMounted(() => {
       accept=".DAT,.dat"
       style="display: none"
       @change="onFileChange"
-    />
+    >
 
     <el-dialog
       v-model="importDialogVisible"
@@ -524,12 +533,14 @@ onMounted(() => {
       width="800px"
     >
       <div style="margin-bottom: 10px">
-        <el-checkbox v-model="onlyCurrentZone">{{
-          $t('zoneMacro.onlyCurrentZone', [
-            currentMapID,
-            getZoneName(currentMapID),
-          ])
-        }}</el-checkbox>
+        <el-checkbox v-model="onlyCurrentZone">
+          {{
+            $t('zoneMacro.onlyCurrentZone', [
+              currentMapID,
+              getZoneName(currentMapID),
+            ])
+          }}
+        </el-checkbox>
       </div>
 
       <el-table
@@ -599,13 +610,15 @@ onMounted(() => {
 
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="importDialogVisible = false">{{
-            $t('zoneMacro.cancel')
-          }}</el-button>
+          <el-button @click="importDialogVisible = false">
+            {{
+              $t('zoneMacro.cancel')
+            }}
+          </el-button>
           <el-button
             type="primary"
-            @click="doImportUISAVE"
             :disabled="selectedWaymarks.length === 0"
+            @click="doImportUISAVE"
           >
             {{ $t('zoneMacro.importSelected', [selectedWaymarks.length]) }}
           </el-button>
@@ -693,7 +706,7 @@ $main-font: 'FFXIV', 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans 
     display: flex;
     gap: 0;
     flex-wrap: wrap;
-    
+
     :deep(.el-button) {
       margin-left: 0 !important;
       border-radius: 0;

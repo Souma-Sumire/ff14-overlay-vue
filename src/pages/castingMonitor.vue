@@ -9,7 +9,7 @@ const dev = useDev()
 onMounted(() => {
   addOverlayListener(
     'ChangePrimaryPlayer',
-    castingMonitorStore.handleChangePrimaryPlayer
+    castingMonitorStore.handleChangePrimaryPlayer,
   )
   addOverlayListener('LogLine', castingMonitorStore.handleLogLine)
   addOverlayListener('PartyChanged', castingMonitorStore.handlePartyChanged)

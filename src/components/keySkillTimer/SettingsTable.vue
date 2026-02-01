@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import { CaretBottom, CaretTop, Delete } from '@element-plus/icons-vue'
+import { computed } from 'vue'
+import { searchActions } from '@/resources/actionChinese'
 import { useKeySkillStore } from '@/store/keySkills'
 import ActionIcon from './ActionIcon.vue'
 import JobSelector from './JobSelector.vue'
-import { CaretTop, CaretBottom, Delete } from '@element-plus/icons-vue'
-import { searchActions } from '@/resources/actionChinese'
-import { computed } from 'vue'
 
 const emit = defineEmits<{
   (e: 'delete', key: string): void
@@ -14,15 +14,16 @@ const emit = defineEmits<{
 const storeKeySKill = useKeySkillStore()
 const data = computed(() => storeKeySKill.keySkillsData.chinese)
 
-const querySearch = (queryString: string, cb: (results: any[]) => void) => {
+function querySearch(queryString: string, cb: (results: any[]) => void) {
   if (queryString) {
-    const results = searchActions(queryString, 50).map((item) => ({
+    const results = searchActions(queryString, 50).map(item => ({
       value: item.id.toString(),
       label: item.name,
       id: item.id,
     }))
     cb(results)
-  } else {
+  }
+  else {
     cb([])
   }
 }
@@ -103,12 +104,11 @@ const querySearch = (queryString: string, cb: (results: any[]) => void) => {
           >
             <template #default="{ item }">
               <div style="display: flex; align-items: center; gap: 8px">
-                <ActionIcon :id="item.id" :size="20" :key="item.id" />
+                <ActionIcon :id="item.id" :key="item.id" :size="20" />
                 <span>{{ item.label }}</span>
                 <span
                   style="color: var(--el-text-color-secondary); font-size: 12px"
-                  >({{ item.value }})</span
-                >
+                >({{ item.value }})</span>
               </div>
             </template>
           </el-autocomplete>
@@ -263,7 +263,7 @@ const querySearch = (queryString: string, cb: (results: any[]) => void) => {
   box-shadow: 0 0 0 1px var(--el-border-color) inset !important;
   border: none;
   transition: all 0.2s;
-  
+
   &:hover {
     box-shadow: 0 0 0 1px var(--el-color-primary) inset !important;
   }

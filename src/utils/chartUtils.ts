@@ -9,16 +9,16 @@ export function getChartLabelRich(_playerVisibility?: string) {
         fontWeight: 'bold',
         color: getRoleColor(r),
         align: 'center',
-        padding: [0, 0, 2, 0]
-      }])
+        padding: [0, 0, 2, 0],
+      }]),
     ),
     ...Object.fromEntries(
-      ROLE_DEFINITIONS.map(r => [r + 'Big', {
+      ROLE_DEFINITIONS.map(r => [`${r}Big`, {
         fontSize: 12,
         fontWeight: 'bold',
         color: getRoleColor(r),
-        align: 'center'
-      }])
+        align: 'center',
+      }]),
     ),
     role: { fontSize: 10, fontWeight: 'bold', color: '#64748b', align: 'center', padding: [0, 0, 2, 0] },
     roleBig: { fontSize: 12, fontWeight: 'bold', color: '#1e293b', align: 'center' },
@@ -47,13 +47,15 @@ export function getChartLabelRich(_playerVisibility?: string) {
 
 export function formatChartPlayerLabel(value: string, rawRole: string | undefined, playerVisibility?: string) {
   const roleDisplay = rawRole ? getRoleDisplayName(rawRole) : ''
-  
+
   let styleKey = rawRole || 'role'
-  if (rawRole?.startsWith('LEFT:')) styleKey = 'left'
-  if (rawRole?.startsWith('SUB:')) styleKey = 'sub'
+  if (rawRole?.startsWith('LEFT:'))
+    styleKey = 'left'
+  if (rawRole?.startsWith('SUB:'))
+    styleKey = 'sub'
 
   if (playerVisibility === 'role') {
-    const bigKey = (styleKey === 'left' || styleKey === 'sub') ? styleKey + 'Big' : (rawRole || 'roleBig')
+    const bigKey = (styleKey === 'left' || styleKey === 'sub') ? `${styleKey}Big` : (rawRole || 'roleBig')
     return roleDisplay ? `{${bigKey}|${roleDisplay}}` : value
   }
 

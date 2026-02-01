@@ -1,6 +1,6 @@
-import type { WayMark, UISaveData } from '@/types/uisave'
+import type { UISaveData, WayMark } from '@/types/uisave'
 
-export const xorCrypt = (data: Uint8Array, key = 0x31) => data.map((v) => v ^ key)
+export const xorCrypt = (data: Uint8Array, key = 0x31) => data.map(v => v ^ key)
 
 // Mapping for markers
 export const MARKER_MAP = [
@@ -13,7 +13,6 @@ export const MARKER_MAP = [
   { key: 'Three', label: '3', bit: 0x40, id: 6 },
   { key: 'Four', label: '4', bit: 0x80, id: 7 },
 ] as const
-
 
 function parseWaymarkEntry(view: DataView, offset: number, buffer: Uint8Array): WayMark {
   const wm: any = {
@@ -56,7 +55,8 @@ export async function parseUISave(buffer: ArrayBuffer): Promise<UISaveData> {
   }
 
   // Basic validation (length check?)
-  if (data.length < 16) throw new Error('File too small')
+  if (data.length < 16)
+    throw new Error('File too small')
 
   const encryptLength = view.getInt32(8, true)
   const decrypted = xorCrypt(data.slice(16, 16 + encryptLength))
@@ -81,7 +81,8 @@ export async function parseUISave(buffer: ArrayBuffer): Promise<UISaveData> {
         wayMarks.push(parseWaymarkEntry(sView, i, sectionData))
       }
       markerTail = sectionData.slice(wayMarks.length * 104 + 16)
-    } else {
+    }
+    else {
       otherSectionsParts.push(sectionFull)
     }
     decOffset += 16 + length + 4

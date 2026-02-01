@@ -52,10 +52,12 @@ function getZoneType(zoneInfo: (typeof ZoneInfo)[number]): ContentUsedType {
     case ContentType.VCDungeonFinder:
       return 'VCDungeonFinder'
     case ContentType.Trials:
-      if (zoneNameFr?.includes('(extrême)')) return 'Extreme'
+      if (zoneNameFr?.includes('(extrême)'))
+        return 'Extreme'
       return 'Trials'
     case ContentType.Raids:
-      if (zoneNameEn?.includes('(Savage)')) return 'Savage'
+      if (zoneNameEn?.includes('(Savage)'))
+        return 'Savage'
       return 'Raids'
     case ContentType.DisciplesOfTheLand:
       return 'DisciplesOfTheLand'

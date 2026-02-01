@@ -1,3 +1,4 @@
+import type { Lang } from '@/types/lang'
 import type { MacroInfoMacro, MacroInfoPlace } from '@/types/macro'
 import type { QueueArr, Slot, WayMarkObj } from '@/types/PostNamazu'
 import { ElInputNumber, ElMessage, ElMessageBox } from 'element-plus'
@@ -16,7 +17,6 @@ import {
   doWayMarks,
 } from '../utils/postNamazu'
 import { defaultMacro } from './../resources/macro'
-import type { Lang } from '@/types/lang'
 
 let partyLen = 0
 const slotIndex = useStorage('macro-slot-index', 5)
@@ -31,13 +31,15 @@ function safeParseJson(input: string) {
   try {
     // 尝试直接解析
     return JSON.parse(input)
-  } catch (e) {
+  }
+  catch (e) {
     // 解析失败，再尝试移除尾逗号后重新解析
     try {
       void e
       const cleaned = input.replace(/,(\s*[}\]])/g, '$1')
       return JSON.parse(cleaned)
-    } catch (e) {
+    }
+    catch (e) {
       void e
       // 两次都失败就说明真的是非法 JSON
       throw new Error(`无法解析 JSON 数据`)
@@ -82,8 +84,9 @@ async function macroCommand(text: string, channel: 'e' | 'p') {
   try {
     await doQueueActions(queue)
     ElMessage.success('已发送')
-  } catch (e) {
-    ElMessage.error('发送失败: ' + (e as Error).message || '未知错误')
+  }
+  catch (e) {
+    ElMessage.error(`发送失败: ${(e as Error).message}` || '未知错误')
   }
 }
 
@@ -166,11 +169,11 @@ const useMacroStore = defineStore('macro', {
         })
       }
     },
-    newPlace(place?: WayMarkObj & { Name?: string; MapID?: number; Editable?: boolean }) {
+    newPlace(place?: WayMarkObj & { Name?: string, MapID?: number, Editable?: boolean }) {
       let selectZoneId = Number(this.selectZone)
       if (place?.MapID) {
         const tType = getTerritoryTypeByMapID(place.MapID)
-        if (tType && !isNaN(tType)) {
+        if (tType && !Number.isNaN(tType)) {
           selectZoneId = tType
         }
       }
@@ -198,25 +201,27 @@ const useMacroStore = defineStore('macro', {
           this.newPlace(json)
           ElMessage.success('导入成功')
         },
-        () => {}
+        () => {},
       )
     },
     deleteMacro(macro: MacroInfoMacro | MacroInfoPlace): void {
       if (
-        ('Text' in macro && (macro?.Text ?? '').length <= 5) ||
-        ('Place' in macro &&
-          macro.Place.A.Active === false &&
-          macro.Place.B.Active === false &&
-          macro.Place.C.Active === false &&
-          macro.Place.D.Active === false &&
-          macro.Place.One.Active === false &&
-          macro.Place.Two.Active === false &&
-          macro.Place.Three.Active === false &&
-          macro.Place.Four.Active === false)
+        ('Text' in macro && (macro?.Text ?? '').length <= 5)
+        || ('Place' in macro
+          && macro.Place.A.Active === false
+          && macro.Place.B.Active === false
+          && macro.Place.C.Active === false
+          && macro.Place.D.Active === false
+          && macro.Place.One.Active === false
+          && macro.Place.Two.Active === false
+          && macro.Place.Three.Active === false
+          && macro.Place.Four.Active === false)
       ) {
         const index = this.data.zoneId[this.selectZone]!.indexOf(macro)
-        if (index > -1) this.data.zoneId[this.selectZone]!.splice(index, 1)
-      } else {
+        if (index > -1)
+          this.data.zoneId[this.selectZone]!.splice(index, 1)
+      }
+      else {
         ElMessageBox.confirm('确定要删除吗?', '警告', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
@@ -224,7 +229,8 @@ const useMacroStore = defineStore('macro', {
         })
           .then(() => {
             const index = this.data.zoneId[this.selectZone]!.indexOf(macro)
-            if (index > -1) this.data.zoneId[this.selectZone]!.splice(index, 1)
+            if (index > -1)
+              this.data.zoneId[this.selectZone]!.splice(index, 1)
           })
           .catch(() => {})
       }
@@ -245,7 +251,7 @@ const useMacroStore = defineStore('macro', {
           Two: json.Two,
           Three: json.Three,
           Four: json.Four,
-        })
+        }),
       )
       ElMessage.success('已复制到剪贴板')
     },
@@ -267,16 +273,18 @@ const useMacroStore = defineStore('macro', {
       try {
         await doWayMarks(place, true)
         ElMessage.success('已尝试本地标点')
-      } catch (e) {
-        ElMessage.error('本地标点失败: ' + (e as Error).message || '未知错误')
+      }
+      catch (e) {
+        ElMessage.error(`本地标点失败: ${(e as Error).message}` || '未知错误')
       }
     },
     async doPartyWayMark(place: WayMarkObj): Promise<void> {
       try {
         await doWayMarks(place, false)
         ElMessage.success('已尝试公开标点')
-      } catch (e) {
-        ElMessage.error('公开标点失败: ' + (e as Error).message || '未知错误')
+      }
+      catch (e) {
+        ElMessage.error(`公开标点失败: ${(e as Error).message}` || '未知错误')
       }
     },
     doSlotWayMark(place: WayMarkObj): void {
@@ -284,10 +292,10 @@ const useMacroStore = defineStore('macro', {
         title: '选择插槽',
         message: () =>
           h(ElInputNumber, {
-            modelValue: slotIndex.value,
-            min: 1,
-            max: 30,
-            size: 'large',
+            'modelValue': slotIndex.value,
+            'min': 1,
+            'max': 30,
+            'size': 'large',
             'onUpdate:modelValue': (val) => {
               slotIndex.value = val
             },
@@ -304,9 +312,10 @@ const useMacroStore = defineStore('macro', {
               slotIndex.value as Slot,
             )
             ElMessage.success(`已尝试写入至插槽${slotIndex.value}`)
-          } catch (e) {
+          }
+          catch (e) {
             ElMessage.error(
-              `写入插槽失败: ` + (e as Error).message || '未知错误',
+              `写入插槽失败: ${(e as Error).message}` || '未知错误',
             )
           }
         })
@@ -334,7 +343,7 @@ const useMacroStore = defineStore('macro', {
         .then(() => {
           this.data.zoneId[this.selectZone]!.length = 0
           this.data.zoneId[this.selectZone]!.push(
-            ...JSON.parse(JSON.stringify(defaultMacro.zoneId[this.selectZone]))
+            ...JSON.parse(JSON.stringify(defaultMacro.zoneId[this.selectZone])),
           )
           ElMessage.success('重置成功')
         })
