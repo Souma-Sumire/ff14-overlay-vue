@@ -7,7 +7,10 @@ const PARTY: Scope = 'party'
 const keigennSkills: KeigennSkill[] = [
   ...raidbuffs
     .filter((v) => v.line === 1 || v.line === 2)
-    .map(({ tts, duration, key, line, ...rest }) => ({ ...rest, scope: PARTY })),
+    .map(({ tts, duration, key, line, ...rest }) => ({
+      ...rest,
+      scope: PARTY,
+    })),
   {
     // 铁壁
     id: 7531,
@@ -98,6 +101,22 @@ const keigennSkills: KeigennSkill[] = [
     scope: SOLO,
   },
   {
+    // 原初的血气
+    id: `(lv) => lv>=82 ? 25751 : 3551`,
+    recast1000ms: 25,
+    job: [21],
+    minLevel: 56,
+    scope: SOLO,
+  },
+  {
+    // 刚玉之心
+    id: `(lv) => lv>=92 ? 25758 : 16161`,
+    recast1000ms: 25,
+    job: [37],
+    minLevel: 68,
+    scope: SOLO,
+  },
+  {
     // 内丹
     id: 7541,
     recast1000ms: 120,
@@ -114,13 +133,46 @@ const keigennSkills: KeigennSkill[] = [
     scope: SOLO,
   },
   {
-    // 前冲步
-    id: 16010,
+    // 庇护所
+    id: 3569,
+    recast1000ms: 90,
+    job: [24],
+    minLevel: 52,
+    scope: PARTY,
+  },
+  {
+    // 法令
+    id: 3571,
+    recast1000ms: 40,
+    job: [24],
+    minLevel: 56,
+    scope: PARTY,
+  },
+  {
+    // 神名
+    id: 3570,
+    recast1000ms: 60,
+    job: [24],
+    minLevel: 60,
+    scope: PARTY,
+    maxCharges: `(lv) => lv>=98 ? 2 : 1`,
+  },
+  {
+    // 神祝祷
+    id: 7432,
     recast1000ms: 30,
-    job: [38],
-    minLevel: 10,
-    scope: SOLO,
-    maxCharges: 3,
+    job: [24],
+    minLevel: 66,
+    scope: PARTY,
+    maxCharges: `(lv) => lv>=98 ? 2 : 1`,
+  },
+  {
+    // 即刻咏唱（只关心治疗职业）
+    id: 7561,
+    recast1000ms: `(lv) => lv>=94 ? 40 : 60`,
+    job: [6, 24, 28, 33, 40],
+    minLevel: 18,
+    scope: PARTY,
   },
 ] as const
 

@@ -594,6 +594,21 @@ function scrollToBottom() {
   }
 }
 
+const isDuplicateSkill = (skills: { id: number }[], currentId: number) => {
+  let count = 0
+  for (const s of skills) {
+    if (s.id === currentId) {
+      count++
+      if (count > 1) return true
+    }
+  }
+  return false
+}
+
+const getSimpleJobName = (jobEnum: number) => {
+  return Util.jobToFullName(Util.jobEnumToJob(jobEnum))?.simple1 ?? ''
+}
+
 defineExpose({
   scrollToBottom,
 })
@@ -684,6 +699,7 @@ defineExpose({
                           <div class="skill-overlay" />
                           <span class="skill-text">{{ skill.recastLeft }}</span>
                           <span v-if="skill.maxCharges && skill.maxCharges > 1" class="skill-charges">{{ skill.chargesReady }}</span>
+                          <span v-if="isDuplicateSkill(hoveredRow.preCalculated.coolingDownSkills, skill.id)" class="skill-job-name">{{ getSimpleJobName(skill.ownerJob) }}</span>
                         </div>
                       </div>
                     </template>
@@ -700,6 +716,7 @@ defineExpose({
                         <div class="skill-icon-container" :title="`${skill.ownerName} (${skill.ownerJobName})`">
                           <img :src="skill.icon" class="skill-icon" />
                           <span v-if="skill.maxCharges && skill.maxCharges > 1" class="skill-charges">{{ skill.chargesReady }}</span>
+                          <span v-if="isDuplicateSkill(hoveredRow.preCalculated.readySkills, skill.id)" class="skill-job-name">{{ getSimpleJobName(skill.ownerJob) }}</span>
                         </div>
                       </div>
                     </template>
@@ -1111,6 +1128,19 @@ body .el-popover.keigenn-global-popover {
             right: 0px;
             transform: scale(0.7);
             transform-origin: right bottom;
+            color: #fff;
+            font-weight: bold;
+            font-size: 11px;
+            z-index: 3;
+            text-shadow: -1px 0 1.5px #000, 0 1px 1.5px #000, 1px 0 1.5px #000, 0 -1px 1.5px #000;
+          }
+
+          .skill-job-name {
+            position: absolute;
+            bottom: -1px;
+            left: 0px;
+            transform: scale(0.7);
+            transform-origin: left bottom;
             color: #fff;
             font-weight: bold;
             font-size: 11px;
