@@ -13,7 +13,7 @@ export class DarkKnightTracker implements ResourceTracker {
     return this.mp[characterId] ?? 10000
   }
 
-  public processLine(type: string, splitLine: string[]) {
+  public processLine(type: string, splitLine: string[], _cooldownTracker: Record<string, Record<number, number[]>> = {}) {
     switch (type) {
       case '21': // Ability
       case '22':
@@ -25,6 +25,26 @@ export class DarkKnightTracker implements ResourceTracker {
           const currentMp = Number.parseInt(splitLine[logDefinitions.Ability.fields.currentMp]!)
           if (!Number.isNaN(currentMp)) {
             this.mp[sourceId] = currentMp
+          }
+        }
+        break
+
+      case '24': // DoT
+        {
+          const sourceId = splitLine[logDefinitions.NetworkDoT.fields.sourceId]!
+          if (sourceId.startsWith('1')) {
+            const sourceMp = Number.parseInt(splitLine[logDefinitions.NetworkDoT.fields.sourceCurrentMp]!)
+            if (!Number.isNaN(sourceMp)) {
+              this.mp[sourceId] = sourceMp
+            }
+          }
+
+          const targetId = splitLine[logDefinitions.NetworkDoT.fields.id]!
+          if (targetId.startsWith('1')) {
+            const targetMp = Number.parseInt(splitLine[logDefinitions.NetworkDoT.fields.currentMp]!)
+            if (!Number.isNaN(targetMp)) {
+              this.mp[targetId] = targetMp
+            }
           }
         }
         break
