@@ -479,8 +479,8 @@ function tableRowClassName({ row }: { row: Settings }) {
 
 <template>
   <CommonActWrapper>
-    <!-- 迷你模式 -->
-    <div v-if="isMiniMode" class="mini-mode">
+    <!-- 顶部状态条 -->
+    <div class="mini-mode">
       <template v-if="obs.status.connected">
         <!-- 录像状态红点 -->
         <div
@@ -541,46 +541,16 @@ function tableRowClassName({ row }: { row: Settings }) {
       </div>
 
       <!-- 设置按钮 -->
-      <button class="settings-btn" title="展开详情" @click="isMiniMode = false">
-        ⚙
+      <button
+        class="settings-btn"
+        @click="isMiniMode = !isMiniMode"
+      >
+        {{ isMiniMode ? '⚙' : '－' }}
       </button>
     </div>
 
-    <!-- 详情模式 -->
-    <template v-else>
-      <div class="mode-switch-container">
-        <!-- 占位符：镜像迷你模式的内容以实现按钮对齐 -->
-        <div class="mini-mode-placeholder" style="visibility: hidden; pointer-events: none;">
-          <template v-if="obs.status.connected">
-            <div class="recording-dot" />
-            <div class="zone-info">
-              <div class="zone-name-wrapper">
-                <div class="zone-name">
-                  {{ zoneName || t('obs2.Unknown') }}
-                </div>
-              </div>
-              <div class="zone-type">
-                {{ zoneType ? `（${t(`obs2.${zoneType}`)}）` : '' }}
-              </div>
-            </div>
-            <div class="rules-status">
-              <span class="rule-item">{{ t('obs2.EnterShort') }}</span>
-              <span class="rule-item">{{ t('obs2.CountdownShort') }}</span>
-              <span class="rule-item">{{ t('obs2.CombatStartShort') }}</span>
-              <span class="rule-item">{{ t('obs2.CombatEndShort') }}</span>
-              <span class="rule-item">{{ t('obs2.WipeShort') }}</span>
-            </div>
-          </template>
-          <div v-else class="obs-status-text">
-            {{ t('obs2.OBS Not Connected') }}
-          </div>
-        </div>
-
-        <el-button size="small" class="mini-toggle-btn" @click="isMiniMode = true">
-          {{ t('obs2.Mini Mode') }}
-        </el-button>
-      </div>
-
+    <!-- 详情内容 -->
+    <template v-if="!isMiniMode">
       <el-alert
         :title="t('obs2.size warning')"
         type="warning"
@@ -657,7 +627,7 @@ function tableRowClassName({ row }: { row: Settings }) {
           </el-card>
 
           <!-- 已连接状态 -->
-          <div v-else>
+          <div v-else class="connected-layout">
             <el-card v-if="dev" class="status-card">
               <template #header>
                 <div class="card-header">
@@ -723,7 +693,7 @@ function tableRowClassName({ row }: { row: Settings }) {
                 </div>
               </template>
               <div class="profile-info">
-                <el-form label-position="top" class="content-form">
+                <el-form label-position="top" class="content-form profile-form-grid">
                   <el-form-item :label="t('obs2.Record Default Path')">
                     <el-input
                       v-model="userConfig.path"
@@ -737,7 +707,7 @@ function tableRowClassName({ row }: { row: Settings }) {
                     />
                   </el-form-item>
 
-                  <el-form-item :label="t('obs2.Record File Name')">
+                  <el-form-item :label="t('obs2.Record File Name')" class="filename-item">
                     <el-input
                       v-model="userConfig.fileName"
                       :placeholder="t('obs2.recordFileNamePlaceholder')"
@@ -750,7 +720,7 @@ function tableRowClassName({ row }: { row: Settings }) {
                     />
                   </el-form-item>
 
-                  <el-form-item>
+                  <el-form-item class="append-item">
                     <div class="append-content-toggle">
                       <span>{{ t('obs2.Append Content Name') }}</span>
                       <el-switch v-model="userConfig.appendContentName" />
@@ -770,10 +740,6 @@ function tableRowClassName({ row }: { row: Settings }) {
               <template #header>
                 <div class="card-header">
                   <span>{{ t('obs2.User Content Settings') }}</span>
-                  <div class="header-actions">
-                    <CommonThemeToggle storage-key="obs-2-theme" />
-                    <CommonLanguageSwitcher />
-                  </div>
                 </div>
               </template>
               <el-table
@@ -903,8 +869,7 @@ function tableRowClassName({ row }: { row: Settings }) {
 
 <style scoped lang="scss">
 // 迷你模式
-.mini-mode,
-.mini-mode-placeholder {
+.mini-mode {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -917,18 +882,10 @@ function tableRowClassName({ row }: { row: Settings }) {
   overflow: visible;
   color: #fff;
   text-shadow: -1px 0 2px #000, 0 1px 2px #000, 1px 0 2px #000;
-
-  // 横向居中
   width: fit-content;
-}
-
-.mini-mode {
-  margin: 0 auto;
-}
-
-.mini-mode-placeholder {
-  // 占位符不需要 margin auto，它靠 container 居中
-  padding-right: 0; // 移除右侧 padding 以抵消设置按钮的紧凑感
+  left: 50%;
+  transform: translateX(-50%);
+  position: fixed;
 }
 
 // 录像状态红点
@@ -968,13 +925,8 @@ function tableRowClassName({ row }: { row: Settings }) {
   overflow: hidden;
   text-overflow: ellipsis;
   display: block;
-}
-
-// 区域类型
-.zone-type {
-  white-space: nowrap;
-  flex-shrink: 0;
-  font-weight: bold;
+  padding: 2px;
+  line-height: 1.2;
 }
 
 // 规则状态容器
@@ -996,8 +948,8 @@ function tableRowClassName({ row }: { row: Settings }) {
   cursor: default;
 
   // 未开启
-  color: rgba(255, 255, 255, 0.35);
-  text-shadow: 0 0 2px rgba(0, 0, 0, 0.9), 1px 1px 1px rgba(0, 0, 0, 0.7);
+  color: rgba(255, 255, 255, 0.5);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 
   // 激活状态
   &.active {
@@ -1016,6 +968,7 @@ function tableRowClassName({ row }: { row: Settings }) {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 120px;
+  padding: 0 2px;
 }
 
 // 设置按钮
@@ -1035,6 +988,7 @@ function tableRowClassName({ row }: { row: Settings }) {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  color: #fff;
   transition: background 0.15s ease;
 
   &:hover {
@@ -1045,15 +999,6 @@ function tableRowClassName({ row }: { row: Settings }) {
   &:active {
     transform: scale(0.95);
   }
-}
-
-// 详情模式控制条
-.mode-switch-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
 }
 
 :deep(.el-main) {
@@ -1069,37 +1014,6 @@ function tableRowClassName({ row }: { row: Settings }) {
   margin: 0 !important;
 }
 
-.mini-toggle-btn {
-  padding: 0 12px;
-  height: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  background: rgba(80, 80, 80, 0.7);
-  backdrop-filter: blur(4px);
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 13px;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-
-  // 添加阴影
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-
-  &:hover {
-    background: rgba(100, 100, 100, 0.8);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
-  }
-
-  &:active {
-    transform: scale(0.95);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  }
-}
-
-.act-not-ready-card,
 .connection-card,
 .status-card,
 .table-card,
@@ -1159,16 +1073,6 @@ function tableRowClassName({ row }: { row: Settings }) {
 .button-container .el-button {
   flex: 1;
   width: 120px;
-}
-
-.file-path-explanation,
-.file-name-explanation {
-  font-size: 12px;
-}
-
-.act-not-ready-card,
-.connection-card {
-  max-width: 100%;
 }
 
 :deep(.el-table__body .el-input__inner) {
@@ -1366,5 +1270,66 @@ function tableRowClassName({ row }: { row: Settings }) {
 
 :deep(.el-table--striped .el-table__body tr.el-table__row--striped td) {
   background-color: rgba(0, 0, 0, 0.02);
+}
+
+.connected-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profile-form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  :deep(.el-form-item) {
+    margin-bottom: 4px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+:deep(.el-card__body) {
+  padding: 6px 8px;
+}
+
+.append-content-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+</style>
+
+<style lang="scss">
+html,
+body {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(100, 100, 100, 0.6);
+    border-radius: 4px;
+
+    &:hover {
+      background: rgba(120, 120, 120, 0.8);
+    }
+
+    &:active {
+      background: rgba(140, 140, 140, 0.9);
+    }
+  }
+
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 100, 100, 0.6) rgba(0, 0, 0, 0.1);
 }
 </style>
