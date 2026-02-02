@@ -68,8 +68,8 @@ function generateActionUrls(
   return [urlTemplate, urlTemplate.replace(site.first, site.second)]
 }
 
-export async function getFullImgSrc(icon: string, itemIsHQ = false) {
-  const url = `${site.first}${icon}`
+export async function getFullImgSrc(icon: string, itemIsHQ = false, host?: string) {
+  const url = `${host ? `https://${host}` : site.first}${icon}`
   return url.replace(
     ICON_REGEX,
     (_match, p1, p2) => `${p1}/${itemIsHQ ? 'hq/' : ''}${p2}.png`,
@@ -79,7 +79,7 @@ export async function getFullImgSrc(icon: string, itemIsHQ = false) {
 export async function getImgSrcByActionId(id: number): Promise<string> {
   const res = await parseAction('action', id, ['Icon'])
 
-  return getFullImgSrc(res.Icon)
+  return getFullImgSrc(res.Icon, false, res.Host)
 }
 
 async function timeoutPromise<T>(
@@ -102,12 +102,27 @@ async function requestPromise(
   options?: RequestInit,
 ): Promise<any> {
   const _options = Object.assign({ cache: 'force-cache' }, options)
-  for (const url of urls) {
-    const response = await timeoutPromise(fetch(url, _options), 3000)
-    if (response.ok) {
-      const json = await response.json()
-      const host = new URL(url).host
-      return { ...json, Host: host }
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i]!
+    try {
+      const response = await timeoutPromise(fetch(url, _options), 3000)
+      if (response.ok) {
+        if (i > 0 && urls[0] && url.includes(site.second) && urls[0].includes(site.first)) {
+          console.warn(`Primary site ${site.first} failed, switching to ${site.second}`)
+          const temp = site.first
+          site.first = site.second
+          site.second = temp
+        }
+        const json = await response.json()
+        const host = new URL(url).host
+        return { ...json, Host: host }
+      }
+      else {
+        console.warn(`Fetch failed for ${url}: status ${response.status}`)
+      }
+    }
+    catch (e) {
+      console.warn(`Fetch failed for ${url}: ${e}`)
     }
   }
   throw new Error('All fetch attempts failed.')

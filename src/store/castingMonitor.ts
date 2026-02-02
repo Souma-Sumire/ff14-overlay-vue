@@ -300,7 +300,7 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
             action.Icon = '/i/000000/000104.png'
           }
           if (!cache)
-            cast.src = await getFullImgSrc(action?.Icon ?? '', itemIsHQ)
+            cast.src = await getFullImgSrc(action?.Icon ?? '', itemIsHQ, action?.Host)
           if (queryType === 'action')
             cast.class = `action action-category-${action?.ActionCategoryTargetID}`
           else if (queryType === 'mount')
