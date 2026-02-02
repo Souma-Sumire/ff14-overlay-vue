@@ -129,7 +129,7 @@ watch(
               </a>
             </span>
             <el-link
-              href="https://discord.gg/VGM6764h"
+              href="https://discord.gg/C5DdSRfXZr"
               target="_blank"
               class="discord-link"
               type="primary"
