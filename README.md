@@ -25,11 +25,15 @@
 ### 二、启动项目
 
 ```bash
+# 安装依赖
 bun install
+# 初始化子模块
 git submodule update --init --recursive
-git submodule update --remote --recursive
-git apply patches/0001-cactbot-all.patch
+# 拉取最新 cactbot 代码并应用补丁
+bash scripts/update-cactbot.sh
+# 开发模式
 bun dev
+# 构建
 bun run build
 ```
 

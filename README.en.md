@@ -4,34 +4,38 @@
 
 ## Deployment
 
-- Global: [GitHub Pages](https://souma-sumire.github.io/ff14-overlay-vue/#/)
-- China Mainland: [Daimoe Server](https://souma.diemoe.net/#/)
+- International: [Github Pages](https://souma-sumire.github.io/ff14-overlay-vue/#/)
+- China / Backup: [Diemoe Server](https://souma.diemoe.net/#/)
 
 ### Add to ACT Overlay
 
-1. Open **ACT > OverlayPlugin**
-2. Click **"New"**
-3. Configure as follows:
-   - **Name:** Any name you like
-   - **Preset:** Choose “Custom Overlay”
-   - **Type:** Select “Data Statistics”
+1. Open ACT > OverlayPlugin
+2. Click "New"
+3. Settings:
+   - Name: Any name
+   - Preset: Select "Custom Web Overlay"
+   - Type: Select "Mini Parse"
 
 ## Development Guide
 
-### 1. Environment Setup
+### 1. Prerequisites
 
 1. [Bun](https://bun.sh/)
 
-### 2. Start the Project
+### 2. Start Project
 
 ```bash
+# Install dependencies
 bun install
+# Initialize submodules
 git submodule update --init --recursive
-git submodule update --remote --recursive
-git apply patches/0001-cactbot-all.patch
+# Pull latest cactbot code and apply patches
+bash scripts/update-cactbot.sh
+# Development mode
 bun dev
+# Build
 bun run build
 ```
 
-Most pages can be opened in test mode using the `dev` parameter, for example:
+Most pages can be tested by adding `dev` parameter. Example:
 `http://localhost:3000/ff14-overlay-vue/#/keySkillTimer?dev=1`
