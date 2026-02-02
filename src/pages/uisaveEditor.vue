@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { MessageBoxInputData } from 'element-plus'
 import type { UISaveData, WayMark } from '@/types/uisave'
 import {
   Download,
@@ -362,7 +363,7 @@ function validatePPJson(json: unknown): string | true {
 
 async function pasteMark(index: number) {
   try {
-    const { value: text } = await ElMessageBox.prompt(
+    const res = await ElMessageBox.prompt(
       t('uisaveEditor.pastePrompt'),
       t('uisaveEditor.importTitle'),
       {
@@ -391,6 +392,8 @@ async function pasteMark(index: number) {
         },
       },
     )
+    const { value } = res as MessageBoxInputData
+    const text = value
 
     if (!text)
       return
