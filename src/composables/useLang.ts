@@ -3,21 +3,33 @@ import { useI18n } from 'vue-i18n'
 
 const params = useUrlSearchParams('hash')
 const urlLang = params.lang?.toString() as Lang
-const localeRef = ref(urlLang || 'en')
+
+// 创建一个全局的 locale ref 用于跟踪当前语言
+const globalLocale = ref<Lang>(urlLang || 'zhCn')
 
 function useLang() {
   const i18n = useI18n()
-  i18n.locale.value = urlLang || i18n.locale.value || 'en'
+
+  // 如果有 URL 参数,使用 URL 参数
+  if (urlLang) {
+    i18n.locale.value = urlLang
+    globalLocale.value = urlLang
+  } else {
+    // 否则使用 i18n 的当前值
+    globalLocale.value = i18n.locale.value as Lang
+  }
+
+  // 监听 i18n locale 变化,同步到 globalLocale
   watch(
-    i18n.locale,
-    (locale) => {
-      localeRef.value = locale as Lang
+    () => i18n.locale.value,
+    (newLocale) => {
+      globalLocale.value = newLocale as Lang
     },
-    { immediate: true },
   )
+
   function setLang(lang: Lang) {
     i18n.locale.value = lang
-    localeRef.value = lang
+    globalLocale.value = lang
   }
 
   return {
@@ -38,13 +50,14 @@ function localeToCactbotLang(locale: Lang): CLang {
 }
 
 function getLocaleMessage(text: Record<Lang, string>): string {
-  const l = localeToCactbotLang(localeRef.value)
-  return text[l as keyof typeof text] ?? text.zhCn
+  const cLang = localeToCactbotLang(globalLocale.value)
+  return text[cLang as keyof typeof text] ?? text.zhCn
 }
+
 function getCactbotLocaleMessage(text: Partial<Record<CLang, string>>): string {
   if (!text)
     return 'Unknown'
-  const lang = localeToCactbotLang(localeRef.value)
+  const lang = localeToCactbotLang(globalLocale.value)
   return (
     text[lang]
     ?? text.cn

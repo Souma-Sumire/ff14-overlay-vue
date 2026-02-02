@@ -142,7 +142,7 @@ function getGroupedZoneOptions(t: (key: string) => string, locale: string) {
   return cachedOptions
 }
 
-const { t, locale, setLang } = useLang()
+const { t, locale } = useLang()
 const groupedZoneOptions = computed(() => getGroupedZoneOptions(t, locale.value))
 
 const localSelectZone = ref(props.selectZone)
@@ -153,9 +153,8 @@ watch(
   val => (localSelectZone.value = val),
 )
 
-onMounted(() => {
-  setLang('zhCn')
-  // 强制清除缓存以确保副本名显示中文
+watch(locale, () => {
+  // 语言切换时清除缓存,强制重新生成选项
   cachedOptions = null
   cachedLang = null
 })
