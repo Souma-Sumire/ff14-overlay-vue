@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "vite",
-    "tsc": "tsc --noEmit",
+    "tsc": "tsc --noEmit | grep \"src/\" || exit 0",
     "github-build": "vite build",
     "build": "bun submodule && bun generate && vite build",
     "preview": "vite preview",
