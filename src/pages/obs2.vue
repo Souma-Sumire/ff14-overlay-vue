@@ -960,31 +960,14 @@ function tableRowClassName({ row }: { row: Settings }) {
 // 区域名称包装器
 .zone-name-wrapper {
   max-width: 140px;
-  overflow: visible;
-  position: relative;
-
-  &:hover .zone-name {
-    animation-play-state: running;
-  }
+  overflow: hidden;
 }
 
 .zone-name {
   white-space: nowrap;
-  display: inline-block;
-
-  animation: scroll-text 8s linear infinite;
-  animation-play-state: paused;
-
-  @keyframes scroll-text {
-    0%,
-    20% {
-      transform: translateX(0);
-    }
-    80%,
-    100% {
-      transform: translateX(calc(-100% + 140px));
-    }
-  }
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
 }
 
 // 区域类型
