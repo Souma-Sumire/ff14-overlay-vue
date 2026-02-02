@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { EventMap } from 'cactbot/types/event'
 import type { Job } from 'cactbot/types/job'
-import type { NotificationHandle } from 'element-plus'
+import type { MessageBoxInputData, NotificationHandle } from 'element-plus'
 import type { ITimeline, ITimelineLine } from '@/types/timeline'
 import {
   ElLoading,
@@ -318,7 +318,8 @@ function importTimelineData(): void {
     },
     inputErrorMessage: '无效的输入',
   })
-    .then(({ value }) => {
+    .then((res) => {
+      const { value } = res as MessageBoxInputData
       const lines = value.split('\n').filter(line => line.trim() !== '')
       let allParsedData: ITimeline[] = []
 
@@ -361,7 +362,8 @@ function importTimelineData(): void {
                 type: 'warning',
               },
             )
-              .then(({ value }) => {
+              .then((res) => {
+                const { value } = res as MessageBoxInputData
                 if (value === '我确认') {
                   // 用户确认覆盖
                   saveImportedTimelines(allParsedData, true)

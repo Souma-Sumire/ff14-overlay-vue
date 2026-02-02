@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { MessageBoxInputData } from 'element-plus'
 import type { BisPreset } from '@/utils/bisPresets'
 import type { BisConfig, BisRow, BisValue, LegacyBisConfig } from '@/utils/bisUtils'
 import type { LootRecord } from '@/utils/lootParser'
@@ -328,7 +329,8 @@ function importBisData() {
       return true
     },
   })
-    .then(({ value }) => {
+    .then((res) => {
+      const { value } = res as MessageBoxInputData
       if (!value)
         return
       parseAndPreviewBisData(value)

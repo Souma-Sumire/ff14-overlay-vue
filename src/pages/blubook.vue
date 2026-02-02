@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { MessageBoxInputData } from 'element-plus'
 import type { Ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { completeIcon } from '@/resources/status'
@@ -2171,7 +2172,8 @@ function handleBatchLearning(): void {
     inputPattern: batchReg,
     inputErrorMessage: '格式错误',
   })
-    .then(({ value }) => {
+    .then((res) => {
+      const { value } = res as MessageBoxInputData
       for (const n of value.split(',')) {
         if (/^\d+[-~]\d+$/.test(n)) {
           const [min, max] = n.split(/[-~]/).map(Number)

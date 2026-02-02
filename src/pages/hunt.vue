@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { EventMap } from 'cactbot/types/event'
+import type { MessageBoxInputData } from 'element-plus'
 import type { HuntEntry } from '../../cactbot/resources/hunt'
 import type { WayMarkObj } from '@/types/PostNamazu'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
@@ -773,7 +774,8 @@ function importStr() {
         return '数据格式错误'
       }
     },
-  }).then(({ value }) => {
+  }).then((res) => {
+    const { value } = res as MessageBoxInputData
     Promise.race([
       ElMessageBox.confirm(
         '要舍弃当前的数据，并全部替换为导入的数据吗？',
@@ -835,7 +837,8 @@ function importOneZoneStr() {
         return '数据格式错误'
       }
     },
-  }).then(({ value }) => {
+  }).then((res) => {
+    const { value } = res as MessageBoxInputData
     const decompressedText = LZString.decompressFromEncodedURIComponent(value)
     const data = JSON.parse(decompressedText) as DiscoveredMonsters
     const mapName = Map[data[0]!.zoneId as unknown as keyof typeof Map].name.cn
@@ -900,7 +903,8 @@ function importOneInstanceStr() {
         return '数据格式错误'
       }
     },
-  }).then(({ value }) => {
+  }).then((res) => {
+    const { value } = res as MessageBoxInputData
     const decompressedText = LZString.decompressFromEncodedURIComponent(value)
     const data = JSON.parse(decompressedText) as DiscoveredMonsters
     const mapName = Map[data[0]!.zoneId as unknown as keyof typeof Map]!.name.cn
@@ -1101,7 +1105,8 @@ onMounted(async () => {
         ? savedInstance.value
         : 1
       ).toString(),
-    }).then(({ value }) => {
+    }).then((res) => {
+      const { value } = res as MessageBoxInputData
       playerInstance.value = Number(value)
       savedInstance.value = playerInstance.value
     })

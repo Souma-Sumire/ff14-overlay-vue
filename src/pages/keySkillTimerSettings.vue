@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { MessageBoxInputData } from 'element-plus'
 import { Download, Plus, RefreshLeft, Search, Upload } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import * as LZString from 'lz-string'
@@ -107,7 +108,8 @@ function importData(): void {
       },
     },
   )
-    .then(({ value }) => {
+    .then((res) => {
+      const { value } = res as MessageBoxInputData
       if (value) {
         const text = LZString.decompressFromBase64(value)
         const data = JSON.parse(text)
