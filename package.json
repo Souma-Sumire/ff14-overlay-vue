@@ -39,6 +39,7 @@
     "@johnsoncodehk/html2pug": "^1.0.0",
     "@jridgewell/sourcemap-codec": "^1.5.5",
     "@types/fs-extra": "^11.0.4",
+    "@unocss/eslint-plugin": "^66.6.0",
     "@vitejs/plugin-vue": "^6.0.3",
     "@volar/pug-language-service": "^1.0.24",
     "@volar/typescript-language-service": "^1.0.1",

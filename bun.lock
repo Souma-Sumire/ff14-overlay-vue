@@ -30,6 +30,7 @@
         "@johnsoncodehk/html2pug": "^1.0.0",
         "@jridgewell/sourcemap-codec": "^1.5.5",
         "@types/fs-extra": "^11.0.4",
+        "@unocss/eslint-plugin": "^66.6.0",
         "@vitejs/plugin-vue": "^6.0.3",
         "@volar/pug-language-service": "^1.0.24",
         "@volar/typescript-language-service": "^1.0.1",
@@ -414,6 +415,8 @@
     "@unocss/config": ["@unocss/config@66.6.0", "https://registry.npmmirror.com/@unocss/config/-/config-66.6.0.tgz", { "dependencies": { "@unocss/core": "66.6.0", "unconfig": "^7.4.2" } }, "sha512-YvNk/b9jGmT1TQGDbHR+0VALnTsPLzSTzw90t09ggny9YxeF0XnsP06M5+H0EJPwpmdigBC++KEIMaK8SYDsaQ=="],
 
     "@unocss/core": ["@unocss/core@66.6.0", "https://registry.npmmirror.com/@unocss/core/-/core-66.6.0.tgz", {}, "sha512-Sxm7HmhsPIIzxbPnWembPyobuCeA5j9KxL+jIOW2c+kZiTFjHeju7vuVWX9jmAMMC+UyDuuCQ4yE+kBo3Y7SWQ=="],
+
+    "@unocss/eslint-plugin": ["@unocss/eslint-plugin@66.6.0", "https://registry.npmmirror.com/@unocss/eslint-plugin/-/eslint-plugin-66.6.0.tgz", { "dependencies": { "@typescript-eslint/utils": "^8.53.0", "@unocss/config": "66.6.0", "@unocss/core": "66.6.0", "@unocss/rule-utils": "66.6.0", "magic-string": "^0.30.21", "synckit": "^0.11.12" } }, "sha512-6i+kNVVGb5I+XOCUgLDHol6sxb28ahbJrmLL/eiAWflT850MUqtAlFeyHDYHzScnOFcPy1AcmeY0yM77GgERmg=="],
 
     "@unocss/extractor-arbitrary-variants": ["@unocss/extractor-arbitrary-variants@66.6.0", "https://registry.npmmirror.com/@unocss/extractor-arbitrary-variants/-/extractor-arbitrary-variants-66.6.0.tgz", { "dependencies": { "@unocss/core": "66.6.0" } }, "sha512-AsCmpbre4hQb+cKOf3gHUeYlF7guR/aCKZvw53VBk12qY5wNF7LdfIx4zWc5LFVCoRxIZlU2C7L4/Tt7AkiFMA=="],
 
