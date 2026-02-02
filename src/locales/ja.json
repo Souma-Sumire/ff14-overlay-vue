@@ -127,7 +127,7 @@
     "Set Recording Name": "パスを設定",
     "Default": "未分類",
     "Chaotic": "滅",
-    "firewallTutorial": "パスワードが正しいのに接続できない場合は、Windows Defender ファイアウォールを確認してください。",
+    "firewallTutorial": "パスワードが正しいのに接続できない場合は、Windows Defender ファイアウォールを確認するか、「認証を有効にする」のチェックを外してください。",
     "SocietyQuests": "友好部族クエスト",
     "OccultCrescent": "蜃気楼の島",
     "When Party": "人数≥",

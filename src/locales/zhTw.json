@@ -128,7 +128,7 @@
     "Set Recording Name": "設定路徑",
     "Default": "未歸類",
     "Chaotic": "誅滅戰",
-    "firewallTutorial": "若確定密碼正確，卻始終連線失敗，請檢查 Windows Defender 防火牆。",
+    "firewallTutorial": "若確定密碼正確，卻始終連線失敗，請檢查 Windows Defender 防火牆，或者取消勾選「開啟身份認證」。",
     "SocietyQuests": "友好部族任務",
     "OccultCrescent": "蜃景幻界",
     "When Party": "人數≥",

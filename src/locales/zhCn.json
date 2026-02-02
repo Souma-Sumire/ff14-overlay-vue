@@ -128,7 +128,7 @@
     "Set Recording Name": "设置路径",
     "Default": "未归类",
     "Chaotic": "诛灭战",
-    "firewallTutorial": "若确定密码正确，却始终连接失败，请检查 Windows Defender 防火墙。",
+    "firewallTutorial": "若确定密码正确，却始终连接失败，请检查 Windows Defender 防火墙，或者取消勾选\"开启身份认证\"。",
     "SocietyQuests": "友好部族任务",
     "OccultCrescent": "蜃景幻界",
     "When Party": "人数≥",

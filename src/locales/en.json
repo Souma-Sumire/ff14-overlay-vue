@@ -127,7 +127,7 @@
     "Set Recording Name": "Set Path",
     "Default": "Uncategorized",
     "Chaotic": "Chaotic",
-    "firewallTutorial": "If the password is correct but the connection fails, please check Windows Defender Firewall.",
+    "firewallTutorial": "If the password is correct but the connection fails, please check Windows Defender Firewall, or uncheck \"Enable Authentication\".",
     "SocietyQuests": "Tribal Quests",
     "OccultCrescent": "The Occult Crescent",
     "When Party": "Party≥",
