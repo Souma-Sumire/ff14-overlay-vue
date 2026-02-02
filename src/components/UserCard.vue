@@ -19,7 +19,7 @@ interface Props {
   blurMode?: boolean
 }
 
-const _props = defineProps<Props>()
+defineProps<Props>()
 </script>
 
 <template>

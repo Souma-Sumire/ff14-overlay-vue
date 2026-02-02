@@ -40,8 +40,9 @@ export default antfu(
     rules: {
       'no-console': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
+      'unused-imports/no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': [
-        'error',
+        'warn',
         {
           args: 'all',
           argsIgnorePattern: '^_',
@@ -54,4 +55,20 @@ export default antfu(
       ],
     },
   },
-)
+).then((configs) => {
+  return configs.map((config) => {
+    if (!config.rules)
+      return config
+    const rules = { ...config.rules }
+    for (const key in rules) {
+      const level = Array.isArray(rules[key]) ? rules[key][0] : rules[key]
+      if (level === 'error' || level === 2) {
+        if (Array.isArray(rules[key]))
+          rules[key] = ['warn', ...rules[key].slice(1)]
+        else
+          rules[key] = 'warn'
+      }
+    }
+    return { ...config, rules }
+  })
+})

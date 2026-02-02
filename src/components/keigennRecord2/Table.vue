@@ -307,7 +307,6 @@ function filterByTarget() {
 const renderHeader = (title: string, customClass = '') => h('div', { class: ['header-static', customClass] }, title)
 const renderEmpty = () => h('div')
 
-
 function rowClass({ rowData }: { rowData: RowVO }) {
   return rowData.type === 'death' ? 'row-death' : ''
 }

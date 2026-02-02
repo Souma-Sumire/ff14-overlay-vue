@@ -193,4 +193,3 @@ async function requestWithFallback(urls: string[], options: RequestInit = {}): P
   }
   throw new Error('All fetch attempts failed.')
 }
-

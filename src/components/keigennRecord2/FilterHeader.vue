@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ElOption, ElSelect } from 'element-plus'
 
-const props = defineProps<{
+defineProps<{
   modelValue: string
   options: { label: string, value: string, fullLabel?: string }[]
   placeholder: string

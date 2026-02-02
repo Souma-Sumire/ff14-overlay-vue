@@ -14,7 +14,8 @@ function useLang() {
   if (urlLang) {
     i18n.locale.value = urlLang
     globalLocale.value = urlLang
-  } else {
+  }
+  else {
     // 否则使用 i18n 的当前值
     globalLocale.value = i18n.locale.value as Lang
   }
