@@ -583,8 +583,13 @@ class RandomPartyGenerator {
     this.shuffle() // 初始化一次
   }
 
-  fullParty() {
-    this.party.value = fullParty.slice()
+  fullParty(options: { includeBaseJob?: boolean } = { includeBaseJob: false }) {
+    this.party.value = fullParty.filter((member) => {
+      if (options.includeBaseJob)
+        return true
+      const job = Util.jobEnumToJob(member.job)
+      return Util.isBaseJob(job) === false
+    })
   }
 
   /**
