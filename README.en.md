@@ -20,18 +20,17 @@
 
 ### 1. Environment Setup
 
-1. [Node.js (LTS version)](https://nodejs.org/en/download)
-2. [pnpm package manager](https://pnpm.io/installation)
+1. [Bun](https://bun.sh/)
 
 ### 2. Start the Project
 
 ```bash
-pnpm install
+bun install
 git submodule update --init --recursive
 git submodule update --remote --recursive
 git apply patches/0001-cactbot-all.patch
-pnpm dev
-pnpm vite build
+bun dev
+bun run build
 ```
 
 Most pages can be opened in test mode using the `dev` parameter, for example:

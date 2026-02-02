@@ -20,18 +20,17 @@
 
 ### 1. 環境の準備
 
-1. [Node.js（LTS バージョン）](https://nodejs.org/en/download)
-2. [pnpm パッケージマネージャー](https://pnpm.io/installation)
+1. [Bun](https://bun.sh/)
 
 ### 2. プロジェクトの起動
 
 ```bash
-pnpm install
+bun install
 git submodule update --init --recursive
 git submodule update --remote --recursive
 git apply patches/0001-cactbot-all.patch
-pnpm dev
-pnpm vite build
+bun dev
+bun run build
 ```
 
 ほとんどのページは、`dev` パラメータを使うことでテストモードで開けます。

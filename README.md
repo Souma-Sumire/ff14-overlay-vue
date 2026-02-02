@@ -20,18 +20,17 @@
 
 ### 一、环境准备
 
-1. [Node.js（LTS 版本）](https://nodejs.org/en/download)
-2. [pnpm 包管理器](https://pnpm.io/installation)
+1. [Bun](https://bun.sh/)
 
 ### 二、启动项目
 
 ```bash
-pnpm install
+bun install
 git submodule update --init --recursive
 git submodule update --remote --recursive
 git apply patches/0001-cactbot-all.patch
-pnpm dev
-pnpm vite build
+bun dev
+bun run build
 ```
 
 大部分页面，可以通过 dev 参数来进入测试模式。例如：
