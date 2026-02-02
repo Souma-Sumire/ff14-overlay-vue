@@ -1,3 +1,4 @@
+import type { MessageBoxInputData } from 'element-plus'
 import type { Lang } from '@/types/lang'
 import type { MacroInfoMacro, MacroInfoPlace } from '@/types/macro'
 import type { QueueArr, Slot, WayMarkObj } from '@/types/PostNamazu'
@@ -189,20 +190,18 @@ const useMacroStore = defineStore('macro', {
         })
       }
     },
-    async importPPJSON(): Promise<void> {
+    importPPJSON(): void {
       ElMessageBox.prompt('输入PPJSON', 'Import PPJSON', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         inputPattern: /^(\{.*\})$/,
         inputErrorMessage: '无效的格式',
-      }).then(
-        async ({ value }) => {
-          const json = Object.assign(this.blankWaymark, safeParseJson(value))
-          this.newPlace(json)
-          ElMessage.success('导入成功')
-        },
-        () => {},
-      )
+      }).then((res) => {
+        const { value } = res as MessageBoxInputData
+        const json = Object.assign(this.blankWaymark, safeParseJson(value))
+        this.newPlace(json)
+        ElMessage.success('导入成功')
+      }).catch(() => {})
     },
     deleteMacro(macro: MacroInfoMacro | MacroInfoPlace): void {
       if (
