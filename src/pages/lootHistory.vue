@@ -729,10 +729,7 @@ onMounted(async () => {
         syncStartDate.value = c.value
       if (c.key === 'syncEndDate')
         syncEndDate.value = c.value || null
-      if (
-        c.key === 'viewMode'
-        && ['list', 'summary', 'slot', 'week', 'chart', 'bis'].includes(c.value)
-      ) {
+      if (c.key === 'viewMode') {
         viewMode.value = c.value
       }
       if (c.key === 'hideUnselectedItems')
@@ -3834,34 +3831,40 @@ async function applyPendingWinnerChange() {
                     >
                       <ElCheckbox
                         v-model="systemFilterSettings.cards"
-                        label="九宫幻卡"
                         size="small"
-                      />
+                      >
+                        九宫幻卡
+                      </ElCheckbox>
                       <ElCheckbox
                         v-model="systemFilterSettings.materia"
-                        label="魔晶石"
                         size="small"
-                      />
+                      >
+                        魔晶石
+                      </ElCheckbox>
                       <ElCheckbox
                         v-model="systemFilterSettings.music"
-                        label="乐谱"
                         size="small"
-                      />
+                      >
+                        乐谱
+                      </ElCheckbox>
                       <ElCheckbox
                         v-model="systemFilterSettings.book"
-                        label="零式断章"
                         size="small"
-                      />
+                      >
+                        零式断章
+                      </ElCheckbox>
                       <ElCheckbox
                         v-model="systemFilterSettings.totem"
-                        label="极神图腾"
                         size="small"
-                      />
+                      >
+                        极神图腾
+                      </ElCheckbox>
                       <ElCheckbox
                         v-model="systemFilterSettings.other"
-                        label="经验值/金币"
                         size="small"
-                      />
+                      >
+                        经验值/金币
+                      </ElCheckbox>
 
                       <template v-if="availableSeries.length > 0">
                         <div
@@ -3881,7 +3884,7 @@ async function applyPendingWinnerChange() {
                           <ElCheckbox
                             v-for="s in availableSeries"
                             :key="s"
-                            :label="s"
+                            :value="s"
                             size="small"
                           >
                             {{ s }}系列
@@ -3968,19 +3971,17 @@ async function applyPendingWinnerChange() {
                             )
                           }}
                           <el-tooltip
+                            v-if="
+                              rawSuspiciousKeys.has(scope.row.key)
+                                && !recordWeekCorrections[scope.row.key]
+                            "
                             placement="top"
                             :enterable="false"
                           >
                             <template #content>
                               可能归属周错误（通常发生在周二压线进本）。<br>点击可选择将其归入上一周。
                             </template>
-                            <el-icon
-                              v-if="
-                                rawSuspiciousKeys.has(scope.row.key)
-                                  && !recordWeekCorrections[scope.row.key]
-                              "
-                              class="week-warning-icon"
-                            >
+                            <el-icon class="week-warning-icon">
                               <Warning />
                             </el-icon>
                           </el-tooltip>
@@ -4103,7 +4104,7 @@ async function applyPendingWinnerChange() {
                     :page-size="50"
                     layout="total, prev, pager, next"
                     :total="filteredRecords.length"
-                    small
+                    size="small"
                   />
                 </div>
               </div>

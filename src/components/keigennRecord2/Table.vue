@@ -2,13 +2,14 @@
 import type { Column, MessageHandler, RowEventHandlers, TableV2Instance } from 'element-plus'
 import type { RowVO } from '@/types/keigennRecord2'
 import { onClickOutside } from '@vueuse/core'
-import { ElMessage, ElOption, ElSelect } from 'element-plus'
-import { computed } from 'vue'
+import { ElMessage } from 'element-plus'
+import { computed, h } from 'vue'
 import { useLang } from '@/composables/useLang'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 import { copyToClipboard } from '@/utils/clipboard'
 import Util from '@/utils/util'
 import { handleImgError } from '@/utils/xivapi'
+import FilterHeader from './FilterHeader.vue'
 
 const props = defineProps<{
   rows: RowVO[]
@@ -306,40 +307,12 @@ function filterByTarget() {
 const renderHeader = (title: string, customClass = '') => h('div', { class: ['header-static', customClass] }, title)
 const renderEmpty = () => h('div')
 
-function FilterHeader(props: {
-  modelValue: string
-  options: { label: string, value: string, fullLabel?: string }[]
-  placeholder: string
-  width: string
-  onUpdate: (v: string) => void
-}) {
-  return h(
-    'div',
-    { class: 'header-filter' },
-    [
-      h(
-        ElSelect,
-        {
-          size: 'small',
-          modelValue: props.modelValue,
-          placeholder: props.placeholder,
-          clearable: false,
-          style: `width:${props.width}`,
-          teleported: true,
-          popperClass: 'keigenn-header-select-popper',
-          onChange: props.onUpdate,
-        },
-        () => props.options.map(a => h(ElOption, { key: a.value, label: a.label, value: a.value }, { default: () => a.fullLabel || a.label })),
-      ),
-    ],
-  )
-}
 
 function rowClass({ rowData }: { rowData: RowVO }) {
   return rowData.type === 'death' ? 'row-death' : ''
 }
 
-const columns: Column[] = [
+const columns = computed<Column[]>(() => [
   {
     key: 'time',
     title: t('keigennRecord.time'),
@@ -549,7 +522,7 @@ const columns: Column[] = [
             ),
       ),
   },
-]
+])
 
 let msgHdl: MessageHandler | null = null
 
@@ -731,7 +704,7 @@ defineExpose({
                     <template v-for="skill in getAllSkills(hoveredRow)" :key="`${skill.id}-${skill.ownerId}`">
                       <div class="skill-wrapper">
                         <div class="skill-icon-container" :title="`${skill.ownerName} (${skill.ownerJobName})`">
-                          <img :src="skill.icon" class="skill-icon">
+                          <img :src="skill.icon" class="skill-icon" @error="handleImgError">
                           <div v-if="!skill.ready" class="skill-overlay" />
                           <span v-if="skill.recastLeft > 0" class="skill-text">{{ skill.recastLeft }}</span>
                           <span v-if="skill.maxCharges && skill.maxCharges > 1" class="skill-charges">{{ skill.chargesReady }}</span>
@@ -775,7 +748,7 @@ defineExpose({
                   <!-- Ability -->
                   <div class="ability-cell">
                     <div class="ability-content">
-                      <img v-if="row.iconSrc" :src="row.iconSrc" class="ability-icon">
+                      <img v-if="row.iconSrc" :src="row.iconSrc" class="ability-icon" @error="handleImgError">
                       <span class="ability-name" :title="row.actionCN">{{ row.actionCN }}</span>
                     </div>
                   </div>
@@ -785,7 +758,7 @@ defineExpose({
                     <div class="status-content">
                       <div v-for="(k, idx) in row.keigenns" :key="idx" class="status-wrapper">
                         <div class="status" :title="k.title" :data-duration="k.duration" :class="{ 'is-pov': k.isPov }">
-                          <img :src="k.src" class="status-icon" :class="k.usefulClass">
+                          <img :src="k.src" class="status-icon" :class="k.usefulClass" @error="handleImgError">
                         </div>
                       </div>
                     </div>
