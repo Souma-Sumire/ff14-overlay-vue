@@ -1,3 +1,4 @@
 [submodule "cactbot"]
 	path = cactbot
 	url = https://github.com/OverlayPlugin/cactbot.git
+	branch = main
