@@ -60,15 +60,14 @@ function getSkillImage(name: string): string {
     // 仅请求一次，无论成功失败都不会再调用
     imageMap[name] = PLACEHOLDER
     if (icon) {
-      getFullImgSrc(icon).then((url) => {
-        preloadImage(url)
-          .then(() => {
-            imageMap[name] = url
-          })
-          .catch(() => {
-            imageMap[name] = PLACEHOLDER
-          })
-      })
+      const url = getFullImgSrc(icon)
+      preloadImage(url)
+        .then(() => {
+          imageMap[name] = url
+        })
+        .catch(() => {
+          imageMap[name] = PLACEHOLDER
+        })
     }
   }
 
