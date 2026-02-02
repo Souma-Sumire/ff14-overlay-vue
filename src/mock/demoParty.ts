@@ -583,7 +583,7 @@ class RandomPartyGenerator {
     this.shuffle() // 初始化一次
   }
 
-  fullPary() {
+  fullParty() {
     this.party.value = fullParty.slice()
   }
 

@@ -276,7 +276,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
   }
 
   function demoFullParty() {
-    generator.fullPary()
+    generator.fullParty()
   }
 
   return {
