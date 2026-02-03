@@ -1260,7 +1260,7 @@ const displaySlots = computed(() => {
 
         const count = countObtainedItems(row, summary)
         const targetReq = calculateTargetRequirement(row, pName)
-        return count < targetReq
+        return count < targetReq || count === 0
       })
     }
     return false
@@ -2006,7 +2006,7 @@ function getSortedPlayersInSlot(
         result.push(p)
     }
     else if (filterMode === 'needed') {
-      if (!isLeftOrSub && count < targetReq)
+      if (!isLeftOrSub && (count < targetReq || count === 0))
         result.push(p)
     }
   })
@@ -2099,7 +2099,7 @@ function getFilteredItemsInPlayerSummary(player: string) {
       shouldShow = true
     }
     else if (playerSummaryFilterMode.value === 'needed') {
-      if (cVal < targetReq)
+      if (cVal < targetReq || cVal === 0)
         shouldShow = true
     }
 
