@@ -6718,8 +6718,7 @@ html.dark {
   border-bottom: none;
 }
 .summary-item.is-not-obtained {
-  opacity: 0.5;
-  filter: grayscale(0.8);
+  opacity: 0.6;
 }
 .summary-item.is-not-obtained .s-name {
   color: #94a3b8;

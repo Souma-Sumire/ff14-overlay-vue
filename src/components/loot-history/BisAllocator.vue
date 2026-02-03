@@ -1000,7 +1000,10 @@ const getRoleGroupClass = getRoleType
               <tr
                 v-for="(row, rIdx) in layer.rows"
                 :key="row.id"
-                :class="{ 'is-layer-end': rIdx === layer.rows.length - 1 }"
+                :class="{
+                  'is-layer-end': rIdx === layer.rows.length - 1,
+                  'is-group-end': row.id === 'weapon' || row.id === 'feet' || row.id === 'ring',
+                }"
               >
                 <td
                   v-if="rIdx === 0"
@@ -1607,13 +1610,13 @@ const getRoleGroupClass = getRoleType
             </thead>
             <tbody>
               <tr v-for="row in configRows" :key="row.id">
-                <td class="sticky-col row-header">
+                <td class="sticky-col row-header" :class="[{ 'is-group-end': row.id === 'weapon' || row.id === 'feet' || row.id === 'ring' }]">
                   {{ row.name }}
                 </td>
                 <td
                   v-for="p in eligiblePlayers"
                   :key="p"
-                  class="count-cell"
+                  class="count-cell" :class="[{ 'is-group-end': row.id === 'weapon' || row.id === 'feet' || row.id === 'ring' }]"
                 >
                   <div class="correction-input-wrapper">
                     <el-input
@@ -2194,6 +2197,11 @@ const getRoleGroupClass = getRoleType
     }
   }
 
+  tr.is-group-end td,
+  tr.is-group-end th {
+    border-bottom: 2px solid #475569 !important;
+  }
+
   tr:last-child td {
     border-bottom: 1px solid #475569;
   }
@@ -2277,6 +2285,10 @@ const getRoleGroupClass = getRoleType
       border-right: 1px solid #cbd5e1;
       border-bottom: 1px solid #cbd5e1;
       overflow: hidden;
+
+      &.is-group-end {
+        border-bottom: 1px solid #475569 !important;
+      }
     }
 
     th {
