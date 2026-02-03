@@ -366,7 +366,9 @@ function getValDisplay(row: BisRow, val: BisValue | undefined): string {
       return '点数'
     return '未设置'
   }
-  return (val || 1).toString()
+  if (typeof val !== 'number')
+    throw new Error(`[BisAllocator] 数据异常: ${row.name} 应为数字，实际为 ${val}`)
+  return val.toString()
 }
 
 function getValClass(val: string) {
@@ -794,8 +796,10 @@ watch(
       return
     }
 
+    let nextConfig: BisConfig
+
     if (isLegacyConfig(newVal)) {
-      const migrated: BisConfig = { playerBis: {} }
+      const migrated: BisConfig = { playerBis: {}, plannedWeeks: 8, manualObtained: {} }
       const raw = JSON.parse(JSON.stringify(newVal))
       Object.keys(raw.playerBis).forEach((player) => {
         migrated.playerBis[player] = {}
@@ -808,20 +812,57 @@ watch(
           })
         }
       })
-      config.value = migrated
+      nextConfig = migrated
     }
     else {
       const standard = newVal as BisConfig
-      if (JSON.stringify(standard) !== JSON.stringify(config.value)) {
-        config.value = {
-          ...standard,
-          plannedWeeks: standard.plannedWeeks ?? 8,
-          manualObtained: standard.manualObtained ?? {},
-        }
+      nextConfig = {
+        ...standard,
+        plannedWeeks: standard.plannedWeeks ?? 8,
+        manualObtained: standard.manualObtained ?? {},
+        playerBis: JSON.parse(JSON.stringify(standard.playerBis || {})),
       }
+    }
+
+    // 确保所有有效玩家的计数型物品都有默认值 1
+    eligiblePlayers.value.forEach((p) => {
+      const key = getStorageKey(p)
+      if (!nextConfig.playerBis[key])
+        nextConfig.playerBis[key] = {}
+
+      const pConfig = nextConfig.playerBis[key]!
+      DEFAULT_ROWS.filter(r => r.type === 'count').forEach((r) => {
+        if (typeof pConfig[r.id] !== 'number') {
+          pConfig[r.id] = 1
+        }
+      })
+    })
+
+    if (JSON.stringify(nextConfig) !== JSON.stringify(config.value)) {
+      config.value = nextConfig
     }
   },
   { immediate: true, deep: true },
+)
+
+watch(
+  eligiblePlayers,
+  (players) => {
+    players.forEach((p) => {
+      const key = getStorageKey(p)
+      if (!config.value.playerBis[key]) {
+        config.value.playerBis[key] = {}
+      }
+
+      const pConfig = config.value.playerBis[key]!
+      DEFAULT_ROWS.filter(r => r.type === 'count').forEach((r) => {
+        if (typeof pConfig[r.id] !== 'number') {
+          pConfig[r.id] = 1
+        }
+      })
+    })
+  },
+  { deep: true, immediate: true },
 )
 
 watch(
@@ -848,9 +889,9 @@ function isTomeBis(player: string, rowId: string) {
 
 function getNeededCount(player: string, rowId: string): number {
   const val = getBisValue(player, rowId)
-  if (typeof val === 'number')
-    return val
-  return 1
+  if (typeof val !== 'number')
+    throw new Error(`[BisAllocator] 数据异常: ${player} 在 ${rowId} 的值应为数字，实际为 ${val}`)
+  return val
 }
 
 function getCellClass(player: string, row: BisRow): string {
