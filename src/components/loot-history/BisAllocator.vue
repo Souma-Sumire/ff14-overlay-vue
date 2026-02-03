@@ -588,43 +588,125 @@ function hasObtained(player: string, row: BisRow): boolean {
   return getObtainedCount(player, row) > 0
 }
 
+function getLogicReason(player: string, row: BisRow): string {
+  return getLogicDetails(player, row).reason
+}
+
 function getLogicStatus(
   player: string,
   row: BisRow,
 ): 'need' | 'greed' | 'pass' | 'assigned' {
+  return getLogicDetails(player, row).status
+}
+
+function getLogicDetails(
+  player: string,
+  row: BisRow,
+): {
+  status: 'need' | 'greed' | 'pass' | 'assigned'
+  reason: string
+} {
   const customAlloc = customAllocations.value[row.id]
 
-  // 队长分配具有最高优先级
+  // 1. 队长分配逻辑
   if (customAlloc) {
     if (customAlloc === player)
-      return 'assigned'
-    return 'pass' // 有分配时，其余所有人显示为放弃
+      return { status: 'assigned', reason: '队长指定分配 (最高优先级)' }
+    return { status: 'pass', reason: '队长已指定给他人' }
   }
+
+  // 2. 已被排除/请假
+  if (excludedPlayers.value.has(player)) {
+    return { status: 'pass', reason: '玩家已请假/被排除' }
+  }
+
+  // 3. 特殊物品兜底逻辑 (神典石/药/纤维 - ID在 SPECIAL_ITEMS 中且是 count 类型)
+  const SPECIAL_ITEMS = ['coating', 'twine', 'tome', 'solvent']
+  if (SPECIAL_ITEMS.includes(row.id) && row.type === 'count') {
+    // 计算每个人基于“需求量”的基础状态
+    const playerStatuses = eligiblePlayers.value.map((p) => {
+      // 排除的人视为 Pass 且 infinite obtained (不参与 min 比较)
+      if (excludedPlayers.value.has(p))
+        return { p, status: 'pass' as const, obtained: Infinity }
+
+      const pNeeded = getNeededCount(p, row.id)
+      const pObtained = getObtainedCount(p, row)
+      // 基础规则: 拿够了就 Pass, 没拿够 Need
+      const s = pObtained >= pNeeded ? 'pass' : 'need'
+
+      return { p, status: s, obtained: pObtained }
+    })
+
+    // 检查“有效玩家”是否全员 Pass
+    const activeStatuses = playerStatuses.filter(x => !excludedPlayers.value.has(x.p))
+
+    // 如果没有有效玩家，回归基础逻辑
+    if (activeStatuses.length === 0) {
+      return getBaseLogicDetails(player, row)
+    }
+
+    const allPass = activeStatuses.every(x => x.status === 'pass')
+
+    if (allPass) {
+      // 触发兜底贪婪
+      const minObtained = Math.min(...activeStatuses.map(x => x.obtained))
+      const myInfo = activeStatuses.find(x => x.p === player)
+
+      if (!myInfo)
+        return { status: 'pass', reason: '未知错误/无效玩家' }
+
+      if (myInfo.obtained === minObtained) {
+        return { status: 'greed', reason: `全员需求满足，作为获得最少者 (${myInfo.obtained}个) 兜底贪婪` }
+      }
+      return { status: 'pass', reason: `全员需求满足，但不是获得最少者 (${myInfo.obtained} > ${minObtained})` }
+    }
+
+    // 如果并非全员 Pass，则按基础逻辑返回
+    return getBaseLogicDetails(player, row)
+  }
+
+  // 4. 其他常规物品
+  return getBaseLogicDetails(player, row)
+}
+
+function getBaseLogicDetails(
+  player: string,
+  row: BisRow,
+): { status: 'need' | 'greed' | 'pass', reason: string } {
+  const obtained = getObtainedCount(player, row)
 
   if (row.type === 'count') {
     const needed = getNeededCount(player, row.id)
-    if (needed === 0)
-      return 'greed'
-    return getObtainedCount(player, row) >= needed ? 'pass' : 'need'
+    if (obtained >= needed) {
+      return { status: 'pass', reason: `已获得 ${obtained} 个 (需求 ${needed} 个)` }
+    }
+    return { status: 'need', reason: `需求 ${needed} 个，当前 ${obtained} 个` }
   }
-  if (hasObtained(player, row))
-    return 'pass'
-  return getBisValue(player, row.id) === 'raid' ? 'need' : 'greed'
+
+  // Toggle 类型
+  if (hasObtained(player, row)) {
+    return { status: 'pass', reason: '已获得该装备' }
+  }
+
+  const val = getBisValue(player, row.id)
+  if (val === 'raid') {
+    return { status: 'need', reason: 'BIS 设为“零式” (需求，未获得)' }
+  }
+  return { status: 'greed', reason: 'BIS 设为“点数” (贪婪，未获得)' }
+}
+
+function calculateBaseStatus(
+  player: string,
+  row: BisRow,
+): 'need' | 'greed' | 'pass' {
+  return getBaseLogicDetails(player, row).status
 }
 
 function getOriginalStatus(
   player: string,
   row: BisRow,
 ): 'need' | 'greed' | 'pass' {
-  if (row.type === 'count') {
-    const needed = getNeededCount(player, row.id)
-    if (needed === 0)
-      return 'greed'
-    return getObtainedCount(player, row) >= needed ? 'pass' : 'need'
-  }
-  if (hasObtained(player, row))
-    return 'pass'
-  return getBisValue(player, row.id) === 'raid' ? 'need' : 'greed'
+  return calculateBaseStatus(player, row)
 }
 
 function getStatusBaseText(player: string, row: BisRow): string {
@@ -984,25 +1066,83 @@ const getRoleGroupClass = getRoleType
                   :class="getCellClass(p, row)"
                 >
                   <div class="cell-status-container">
-                    <span class="status-main">{{
-                      getStatusBaseText(p, row)
-                    }}</span>
-                    <span
-                      v-if="
-                        row.type === 'count' && getNeededCount(p, row.id) > 1
-                      "
-                      class="status-meta"
+                    <el-tooltip
+                      :content="getLogicReason(p, row)"
+                      placement="auto"
+                      :hide-after="0"
                     >
-                      ({{ getObtainedCount(p, row) }}/{{
-                        getNeededCount(p, row.id)
-                      }})
-                    </span>
+                      <div class="status-text-wrapper">
+                        <span class="status-main">{{
+                          getStatusBaseText(p, row)
+                        }}</span>
+                        <span
+                          v-if="
+                            row.type === 'count' && getNeededCount(p, row.id) > 1
+                          "
+                          class="status-meta"
+                        >
+                          ({{ getObtainedCount(p, row) }}/{{
+                            getNeededCount(p, row.id)
+                          }})
+                        </span>
+                      </div>
+                    </el-tooltip>
                   </div>
                 </td>
               </tr>
             </template>
           </tbody>
         </table>
+      </div>
+
+      <div class="logic-summary-section">
+        <div class="summary-title">
+          分配逻辑说明
+        </div>
+        <table class="logic-summary-table">
+          <thead>
+            <tr>
+              <th>物品名称</th>
+              <th>默认分配规则</th>
+              <th>获得后行为</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>常规装备<br><span style="font-size: 10px; opacity: 0.8">(防具/首饰/武器)</span></td>
+              <td>
+                <div>BIS设为“零式”：<span class="mini-status-tag need">需求 (Need)</span></div>
+                <div style="margin-top: 2px">
+                  BIS设为“点数”：<span class="mini-status-tag greed">贪婪 (Greed)</span>
+                </div>
+              </td>
+              <td><span class="mini-status-tag pass">放弃 (Pass)</span></td>
+            </tr>
+            <tr>
+              <td>神典石</td>
+              <td><span class="mini-status-tag greed">贪婪 (Greed)*</span></td>
+              <td><span class="mini-status-tag pass">放弃 (Pass)</span></td>
+            </tr>
+            <tr>
+              <td>强化药</td>
+              <td><span class="mini-status-tag greed">贪婪 (Greed)*</span></td>
+              <td><span class="mini-status-tag pass">放弃 (Pass)</span></td>
+            </tr>
+            <tr>
+              <td>硬化药</td>
+              <td><span class="mini-status-tag need">需求 (Need)</span></td>
+              <td><span class="mini-status-tag pass">放弃 (Pass)</span></td>
+            </tr>
+            <tr>
+              <td>强化纤维</td>
+              <td><span class="mini-status-tag need">需求 (Need)</span></td>
+              <td><span class="mini-status-tag pass">放弃 (Pass)</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="logic-note">
+          * 注：当某物品所有有效玩家都判定为放弃时，系统会自动找出“已获得数量最少”的玩家（可能有多人），将其状态改为贪婪 (Greed)。
+        </div>
       </div>
     </div>
 
@@ -2029,14 +2169,6 @@ const getRoleGroupClass = getRoleType
       padding: 8px 0 !important;
     }
   }
-
-  tbody tr,
-  tbody tr:hover,
-  tbody tr:hover > td,
-  tbody tr:hover > th {
-    background-color: transparent !important;
-    background: none !important;
-  }
 }
 
 .premium-header-player {
@@ -2263,6 +2395,12 @@ const getRoleGroupClass = getRoleType
   font-weight: 500;
   opacity: 0.8;
   margin-top: 2px;
+}
+
+.status-text-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .vert-header {
@@ -2796,6 +2934,63 @@ html.dark {
     background-color: rgba(255, 255, 255, 0.05) !important;
   }
 }
+
+.logic-summary-section {
+  max-width: 1400px;
+  margin: 24px auto 0;
+  padding-top: 24px;
+  border-top: 1px dashed #cbd5e1;
+
+  html.dark & {
+    border-top-color: #334155;
+  }
+}
+
+.summary-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 12px;
+
+  html.dark & {
+    color: #94a3b8;
+  }
+}
+
+.logic-summary-table {
+  width: 100%;
+  max-width: 600px;
+  border-collapse: collapse;
+  font-size: 12px;
+
+  th, td {
+    border: 1px solid #e2e8f0;
+    padding: 6px 12px;
+    text-align: center;
+    color: #475569;
+
+    html.dark & {
+      border-color: #334155;
+      color: #94a3b8;
+    }
+  }
+
+  th {
+    background: #f8fafc;
+    font-weight: 600;
+
+    html.dark & {
+      background: #1e293b;
+    }
+  }
+}
+
+.logic-note {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #64748b;
+  font-style: italic;
+}
 </style>
 
 <style lang="scss">
@@ -2842,9 +3037,6 @@ html.dark {
       color: #d1d5db;
     }
 
-    tr:hover td {
-      background-color: rgba(255, 255, 255, 0.02);
-    }
   }
 
   .header-incomplete {
