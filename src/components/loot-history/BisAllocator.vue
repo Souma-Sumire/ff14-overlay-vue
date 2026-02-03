@@ -6,6 +6,7 @@ import type { LootRecord } from '@/utils/lootParser'
 import {
   ArrowDown,
   Delete,
+  Edit,
   InfoFilled,
   List,
   MagicStick,
@@ -54,7 +55,10 @@ const customAllocations = ref<Record<string, string>>({})
 const config = ref<BisConfig>({
   playerBis: {},
   plannedWeeks: 8,
+  manualObtained: {},
 })
+
+const showCorrectionDialog = ref(false)
 
 const showImportConfirmDialog = ref(false)
 const showPresetConfirmDialog = ref(false)
@@ -574,7 +578,7 @@ function getObtainedCount(player: string, row: BisRow): number {
   if (keywords.length === 0)
     return 0
 
-  return props.records.filter((r) => {
+  const logCount = props.records.filter((r) => {
     const actual = props.getActualPlayer
       ? props.getActualPlayer(r.player)
       : r.player
@@ -582,6 +586,24 @@ function getObtainedCount(player: string, row: BisRow): number {
       return false
     return keywords.some(k => r.item.includes(k))
   }).length
+
+  const storageKey = getStorageKey(player)
+  const manual = config.value.manualObtained?.[storageKey]?.[row.id] || 0
+  return Math.max(0, logCount + manual)
+}
+
+function getManualObtained(player: string, rowId: string): number {
+  const key = getStorageKey(player)
+  return config.value.manualObtained?.[key]?.[rowId] || 0
+}
+
+function setManualObtained(player: string, rowId: string, val: number) {
+  const key = getStorageKey(player)
+  if (!config.value.manualObtained)
+    config.value.manualObtained = {}
+  if (!config.value.manualObtained[key])
+    config.value.manualObtained[key] = {}
+  config.value.manualObtained[key]![rowId] = val
 }
 
 function hasObtained(player: string, row: BisRow): boolean {
@@ -794,6 +816,7 @@ watch(
         config.value = {
           ...standard,
           plannedWeeks: standard.plannedWeeks ?? 8,
+          manualObtained: standard.manualObtained ?? {},
         }
       }
     }
@@ -855,6 +878,18 @@ const getRoleGroupClass = getRoleType
         </el-icon>
         <span>设置 BIS</span>
         <span v-if="!isConfigComplete" class="dot-warn" />
+      </el-button>
+
+      <el-button
+        size="small"
+        plain
+        class="setup-trigger-btn"
+        @click="showCorrectionDialog = true"
+      >
+        <el-icon style="margin-right: 4px">
+          <Edit />
+        </el-icon>
+        <span>野队获取修正</span>
       </el-button>
 
       <el-dropdown
@@ -1533,6 +1568,76 @@ const getRoleGroupClass = getRoleType
         </div>
       </template>
     </el-dialog>
+
+    <el-dialog
+      v-model="showCorrectionDialog"
+      title="野队已获得数修正"
+      width="auto"
+      append-to-body
+      destroy-on-close
+      align-center
+    >
+      <div class="bis-config-panel-container">
+        <div class="bis-storage-info">
+          <el-icon><InfoFilled /></el-icon>
+          <span>此处记录玩家在固定队记录之外（如野队）获得的装备。最终统计 = 掉落记录数 + 野队修正数。</span>
+        </div>
+        <div class="table-scroll-wrapper">
+          <table class="bis-table config-table">
+            <thead>
+              <tr>
+                <th class="sticky-col">
+                  装备 \ 玩家
+                </th>
+                <th
+                  v-for="p in eligiblePlayers"
+                  :key="p"
+                  :class="[
+                    { 'is-header-away': excludedPlayers.has(p) },
+                    getRoleGroupClass(getPlayerRole?.(p)),
+                  ]"
+                >
+                  <PlayerDisplay
+                    :name="p"
+                    :role="getPlayerRole?.(p)"
+                    :show-only-role="showOnlyRole"
+                  />
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in configRows" :key="row.id">
+                <td class="sticky-col row-header">
+                  {{ row.name }}
+                </td>
+                <td
+                  v-for="p in eligiblePlayers"
+                  :key="p"
+                  class="count-cell"
+                >
+                  <div class="correction-input-wrapper">
+                    <el-input
+                      :model-value="getManualObtained(p, row.id) || 0"
+                      size="small"
+                      class="mini-input correction-input"
+                      :class="{ 'is-nonzero': getManualObtained(p, row.id) !== 0 }"
+                      @input="v => setManualObtained(p, row.id, parseInt(v) || 0)"
+                    />
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <template #footer>
+        <div class="dialog-footer" style="justify-content: flex-end">
+          <el-button type="primary" size="small" @click="showCorrectionDialog = false">
+            完成
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -1550,7 +1655,14 @@ const getRoleGroupClass = getRoleType
   display: flex;
   align-items: center;
   min-height: 32px;
-  gap: 12px;
+
+  // Element Plus 按钮自带左边距，我们不需要 gap
+  :deep(.el-button + .el-button),
+  :deep(.el-button + .el-dropdown),
+  :deep(.el-dropdown + .el-button),
+  :deep(.el-dropdown + .el-dropdown) {
+    margin-left: 12px;
+  }
 }
 
 .setup-trigger-btn {
@@ -2143,7 +2255,7 @@ const getRoleGroupClass = getRoleType
     }
 
     .sticky-col {
-      width: 85px;
+      width: 72px;
       border-left: none !important;
       border-right: 1px solid #475569;
     }
@@ -2159,14 +2271,36 @@ const getRoleGroupClass = getRoleType
 
     th,
     td {
-      width: 140px;
+      width: 100px;
+      min-width: 100px;
+      max-width: 100px;
       border-right: 1px solid #cbd5e1;
       border-bottom: 1px solid #cbd5e1;
+      overflow: hidden;
     }
 
     th {
       height: auto !important;
-      padding: 8px 0 !important;
+      padding: 4px 0 !important;
+
+      :deep(.player-display) {
+        flex-direction: column;
+        gap: 0;
+        width: 100%;
+
+        .p-name {
+          font-size: 10px;
+          max-width: 90px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .role-tag {
+          transform: scale(0.8);
+          margin-bottom: -2px;
+        }
+      }
     }
   }
 }
@@ -2651,7 +2785,7 @@ const getRoleGroupClass = getRoleType
 
   .matched-name-inline {
     display: inline-block;
-    max-width: 105px;
+    max-width: 85px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2933,6 +3067,64 @@ html.dark {
   html.dark & {
     background-color: rgba(255, 255, 255, 0.05) !important;
   }
+}
+
+.correction-input-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+
+  .correction-input {
+    width: 32px !important;
+    height: 20px;
+
+    :deep(.el-input__wrapper) {
+      padding: 0;
+      text-align: center;
+      background: transparent;
+      box-shadow: none;
+      border-bottom: 1px solid transparent;
+      border-radius: 0;
+      height: 20px;
+
+      &:hover, &.is-focus {
+        border-bottom-color: #3b82f6;
+      }
+    }
+
+    :deep(.el-input__inner) {
+      height: 20px;
+      line-height: 20px;
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    &.is-nonzero {
+      :deep(.el-input__inner) {
+        color: #3b82f6;
+      }
+      :deep(.el-input__wrapper) {
+        border-bottom-color: #3b82f6;
+      }
+    }
+
+    html.dark & {
+      :deep(.el-input__wrapper) {
+        border-bottom-color: #334155;
+      }
+      &.is-nonzero :deep(.el-input__inner) {
+        color: #60a5fa;
+      }
+    }
+  }
+}
+
+.is-header-away {
+  opacity: 0.6;
 }
 
 .logic-summary-section {

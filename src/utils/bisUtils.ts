@@ -12,6 +12,7 @@ export type BisValue = 'raid' | 'tome' | number
 export interface BisConfig {
   playerBis: Record<string, Record<string, BisValue>>
   plannedWeeks?: number
+  manualObtained?: Record<string, Record<string, number>>
 }
 
 export interface LegacyBisConfig {
