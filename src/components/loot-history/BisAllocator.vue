@@ -1002,7 +1002,6 @@ const getRoleGroupClass = getRoleType
                 :key="row.id"
                 :class="{
                   'is-layer-end': rIdx === layer.rows.length - 1,
-                  'is-group-end': row.id === 'weapon' || row.id === 'feet' || row.id === 'ring',
                 }"
               >
                 <td
@@ -1381,13 +1380,14 @@ const getRoleGroupClass = getRoleType
             </thead>
             <tbody>
               <tr v-for="row in configRows" :key="row.id">
-                <td class="sticky-col row-header">
+                <td class="sticky-col row-header" :class="[{ 'is-group-end': row.id === 'weapon' || row.id === 'feet' || row.id === 'ring' }]">
                   {{ row.name }}
                 </td>
                 <td
                   v-for="p in eligiblePlayers"
                   :key="p"
                   class="split-cell-container"
+                  :class="[{ 'is-group-end': row.id === 'weapon' || row.id === 'feet' || row.id === 'ring' }]"
                 >
                   <div v-if="row.type === 'toggle'" class="split-cell">
                     <div
