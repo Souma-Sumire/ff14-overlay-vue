@@ -850,8 +850,7 @@ function getNeededCount(player: string, rowId: string): number {
   const val = getBisValue(player, rowId)
   if (typeof val === 'number')
     return val
-  // 神典石和强化药默认限制为 0，纤维和硬化药默认为 1
-  return ['tome', 'solvent'].includes(rowId) ? 0 : 1
+  return 1
 }
 
 function getCellClass(player: string, row: BisRow): string {
@@ -1132,54 +1131,8 @@ const getRoleGroupClass = getRoleType
         </table>
       </div>
 
-      <div class="logic-summary-section">
-        <div class="summary-title">
-          分配逻辑说明
-        </div>
-        <table class="logic-summary-table">
-          <thead>
-            <tr>
-              <th>物品名称</th>
-              <th>默认分配规则</th>
-              <th>获得后行为</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>常规装备<br><span style="font-size: 10px; opacity: 0.8">(防具/首饰/武器)</span></td>
-              <td>
-                <div>BIS设为“零式”：<span class="mini-status-tag need">需求 (Need)</span></div>
-                <div style="margin-top: 2px">
-                  BIS设为“点数”：<span class="mini-status-tag greed">贪婪 (Greed)</span>
-                </div>
-              </td>
-              <td><span class="mini-status-tag pass">放弃 (Pass)</span></td>
-            </tr>
-            <tr>
-              <td>神典石</td>
-              <td><span class="mini-status-tag greed">贪婪 (Greed)*</span></td>
-              <td><span class="mini-status-tag pass">放弃 (Pass)</span></td>
-            </tr>
-            <tr>
-              <td>强化药</td>
-              <td><span class="mini-status-tag greed">贪婪 (Greed)*</span></td>
-              <td><span class="mini-status-tag pass">放弃 (Pass)</span></td>
-            </tr>
-            <tr>
-              <td>硬化药</td>
-              <td><span class="mini-status-tag need">需求 (Need)</span></td>
-              <td><span class="mini-status-tag pass">放弃 (Pass)</span></td>
-            </tr>
-            <tr>
-              <td>强化纤维</td>
-              <td><span class="mini-status-tag need">需求 (Need)</span></td>
-              <td><span class="mini-status-tag pass">放弃 (Pass)</span></td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="logic-note">
-          * 注：当某物品所有有效玩家都判定为放弃时，系统会自动找出“已获得数量最少”的玩家（可能有多人），将其状态改为贪婪 (Greed)。
-        </div>
+      <div class="logic-note">
+        * 注：当某物品所有有效玩家都判定为放弃时，系统会自动找出“已获得数量最少”的玩家（可能有多人），将其状态改为贪婪 (Greed)。
       </div>
     </div>
 
@@ -3139,58 +3092,8 @@ html.dark {
   opacity: 0.6;
 }
 
-.logic-summary-section {
-  max-width: 1400px;
-  margin: 24px auto 0;
-  padding-top: 24px;
-  border-top: 1px dashed #cbd5e1;
-
-  html.dark & {
-    border-top-color: #334155;
-  }
-}
-
-.summary-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: #475569;
-  margin-bottom: 12px;
-
-  html.dark & {
-    color: #94a3b8;
-  }
-}
-
-.logic-summary-table {
-  width: 100%;
-  max-width: 600px;
-  border-collapse: collapse;
-  font-size: 12px;
-
-  th, td {
-    border: 1px solid #e2e8f0;
-    padding: 6px 12px;
-    text-align: center;
-    color: #475569;
-
-    html.dark & {
-      border-color: #334155;
-      color: #94a3b8;
-    }
-  }
-
-  th {
-    background: #f8fafc;
-    font-weight: 600;
-
-    html.dark & {
-      background: #1e293b;
-    }
-  }
-}
-
 .logic-note {
-  margin-top: 8px;
+  margin-top: 4px;
   font-size: 12px;
   color: #64748b;
   font-style: italic;
