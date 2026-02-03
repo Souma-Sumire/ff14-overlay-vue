@@ -1106,6 +1106,7 @@ const getRoleGroupClass = getRoleType
                       :content="getLogicReason(p, row)"
                       placement="auto"
                       :hide-after="0"
+                      popper-class="bis-logic-tooltip"
                     >
                       <div class="status-text-wrapper">
                         <span class="status-main">{{
@@ -2181,8 +2182,7 @@ const getRoleGroupClass = getRoleType
   }
 
   .col-item {
-    width: 60px;
-    left: 32px;
+    width: 40px;
     font-weight: 700;
     color: #334155;
     border-right: 1px solid #475569;
@@ -2274,8 +2274,13 @@ const getRoleGroupClass = getRoleType
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 6px 0;
+  gap: 2px;
+  padding: 4px 0;
+
+  :deep(.player-display) {
+    flex-direction: column;
+    gap: 0;
+  }
 
   .leave-tag-trigger {
     display: flex;
@@ -2290,8 +2295,8 @@ const getRoleGroupClass = getRoleType
     font-size: 10px;
     cursor: pointer;
     user-select: none;
-    font-weight: 500;
-    opacity: 0.45;
+    font-weight: 800;
+    opacity: 0.6;
     transition: opacity 0.2s ease;
     border: 1px solid transparent;
 
@@ -2350,16 +2355,16 @@ const getRoleGroupClass = getRoleType
     }
   }
 
-  // 移除容器悬停触发 opacity 的逻辑，因为现在默认就有 0.45 透明度
 }
 
 .equip-cell-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 6px;
-  gap: 4px;
+  padding: 0 2px 0 4px;
+  gap: 0;
   height: 100%;
+  overflow: hidden;
 
   span {
     font-size: 11px;
@@ -2369,25 +2374,47 @@ const getRoleGroupClass = getRoleType
     html.dark & {
       color: #94a3b8;
     }
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
   }
 
   .assign-tag-trigger {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 18px;
-    min-width: 48px;
-    padding: 0 4px;
-    border-radius: 4px;
+    height: 16px;
+    width: 14px;
+    padding: 0;
+    flex-shrink: 0;
+    border-radius: 2px;
     background: transparent;
-    color: #94a3b8;
-    font-size: 10px;
+    color: #64748b;
+    font-size: 9px;
     cursor: pointer;
     user-select: none;
     font-weight: 500;
     opacity: 0.45;
-    transition: opacity 0.2s ease;
+    transition: all 0.2s ease;
     border: 1px solid transparent;
+    overflow: hidden;
+    white-space: nowrap;
+
+    span {
+      display: none;
+    }
+
+    &:hover, &.is-active, &.is-open {
+      width: auto;
+      min-width: 32px;
+      padding: 0 3px;
+      opacity: 1;
+
+      span {
+        display: inline;
+      }
+    }
 
     span {
       color: inherit;
@@ -2414,30 +2441,27 @@ const getRoleGroupClass = getRoleType
     }
 
     &.is-active {
-      opacity: 1 !important; // 已分配状态常驻
-      background: #10b981 !important;
-      color: #ffffff !important;
-      font-weight: bold;
-      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
-      border: none;
+      display: inline-flex;
+      width: auto;
+      height: 14px;
+      opacity: 1 !important;
+      background: transparent !important; /* 彻底移除绿色底 */
+      border: none !important;
+      box-shadow: none;
+      padding: 0;
+      margin-left: -2px;
 
-      span {
-        color: #ffffff !important;
+      :deep(.player-display) {
+        transform: scale(0.8);
+        .p-name { display: none !important; }
+      }
+
+      .p-status {
+        display: none !important;
       }
 
       &:hover {
-        background: #059669 !important;
-      }
-
-      .p-role {
-        background: rgba(255, 255, 255, 0.2);
-        padding: 0 3px;
-        border-radius: 2px;
-        margin-right: 3px;
-        font-size: 9px;
-      }
-      .p-status {
-        font-size: 9px;
+        opacity: 0.8 !important;
       }
     }
 
@@ -2612,12 +2636,10 @@ const getRoleGroupClass = getRoleType
   color: #94a3b8 !important;
 }
 .status-assigned {
-  background-color: #059669 !important;
-  color: #ffffff !important;
+  background-color: #f0fdf4 !important;
+  color: #16a34a !important;
   font-weight: 800;
-  border: 1px solid #10b981;
-  box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.2);
-  transform: scale(1.02);
+  border: 1px solid #bbf7d0 !important;
   z-index: 1;
 }
 
@@ -3337,6 +3359,23 @@ html.dark {
       border-top: none !important;
       border-right: none !important;
     }
+  }
+}
+
+.el-popper.bis-logic-tooltip {
+  padding: 4px 8px !important;
+  font-size: 11px !important;
+  line-height: 1.4 !important;
+  min-width: auto !important;
+  border-radius: 4px !important;
+  background: #1e293b !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+
+  .el-popper__arrow::before {
+    background: #1e293b !important;
+    border: none !important;
   }
 }
 </style>
