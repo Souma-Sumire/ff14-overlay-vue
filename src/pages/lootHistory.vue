@@ -6718,7 +6718,8 @@ html.dark {
   border-bottom: none;
 }
 .summary-item.is-not-obtained {
-  opacity: 0.6;
+  filter:grayscale(0.2);
+  opacity: 0.8;
 }
 .summary-item.is-not-obtained .s-name {
   color: #94a3b8;
@@ -6726,8 +6727,12 @@ html.dark {
 }
 .summary-item.is-not-obtained .count-badge {
   background: transparent;
-  color: #cbd5e1;
-  border-color: #e2e8f0;
+  color: #94a3b8;
+  border-color: #cbd5e1;
+}
+html.dark .summary-item.is-not-obtained .count-badge {
+  color: #64748b;
+  border-color: #475569;
 }
 
 .pagination-el-container {

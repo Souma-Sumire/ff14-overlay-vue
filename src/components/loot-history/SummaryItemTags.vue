@@ -52,7 +52,7 @@ defineProps<{
   background: rgba(148, 163, 184, 0.08);
   color: #64748b;
   border: 1px solid rgba(148, 163, 184, 0.15);
-  :global(html.dark) & {
+  html.dark & {
     background: rgba(148, 163, 184, 0.12);
     color: #94a3b8;
     border-color: rgba(148, 163, 184, 0.15);
@@ -63,7 +63,7 @@ defineProps<{
   background: rgba(219, 39, 119, 0.08);
   color: #db2777;
   border: 1px solid rgba(219, 39, 119, 0.15);
-  :global(html.dark) & {
+  html.dark & {
     background: rgba(219, 39, 119, 0.15);
     color: #f472b6;
     border-color: rgba(219, 39, 119, 0.25);
@@ -74,7 +74,7 @@ defineProps<{
   background: rgba(100, 116, 139, 0.08);
   color: #64748b;
   border: 1px solid rgba(100, 116, 139, 0.15);
-  :global(html.dark) & {
+  html.dark & {
     background: rgba(148, 163, 184, 0.12);
     color: #94a3b8;
     border-color: rgba(148, 163, 184, 0.15);
@@ -85,7 +85,7 @@ defineProps<{
   background: rgba(245, 158, 11, 0.08);
   color: #d97706;
   border: 1px solid rgba(245, 158, 11, 0.15);
-  :global(html.dark) & {
+  html.dark & {
     background: rgba(245, 158, 11, 0.15);
     color: #fbbf24;
     border-color: rgba(245, 158, 11, 0.2);
@@ -104,7 +104,7 @@ defineProps<{
   background: rgba(59, 130, 246, 0.1);
   color: #3b82f6;
   border: 1px solid rgba(59, 130, 246, 0.2);
-  :global(html.dark) & {
+  html.dark & {
     background: rgba(59, 130, 246, 0.15);
     color: #60a5fa;
     border-color: rgba(59, 130, 246, 0.25);
@@ -113,12 +113,13 @@ defineProps<{
 
 .count-none {
   background: #f8fafc;
-  color: #cbd5e1;
-  border: 1px solid #f1f5f9;
-  :global(html.dark) & {
-    background: rgba(255, 255, 255, 0.02);
-    color: #475569;
-    border-color: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+  border: 1px solid #e2e8f0;
+
+  html.dark & {
+    background: rgba(255, 255, 255, 0.05);
+    color: #64748b;
+    border-color: rgba(255, 255, 255, 0.1);
   }
 }
 
@@ -126,7 +127,7 @@ defineProps<{
   background: #fef2f2;
   color: #ef4444;
   border: 1px solid #fee2e2;
-  :global(html.dark) & {
+  html.dark & {
     background: rgba(239, 68, 68, 0.1);
     color: #f87171;
     border-color: rgba(239, 68, 68, 0.2);
