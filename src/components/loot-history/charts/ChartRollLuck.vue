@@ -124,10 +124,10 @@ const option = computed(() => {
       },
     },
     grid: {
-      left: '2%',
+      left: '5%',
       right: '2%',
       bottom: '10%',
-      top: '15%',
+      top: '10%',
     },
     xAxis: {
       type: 'category',
@@ -185,6 +185,7 @@ const option = computed(() => {
           color: isDark.value ? '#f1f5f9' : '#1e293b',
         },
         markLine: {
+          silent: true,
           data: [{ type: 'average', name: '平均' }],
           symbol: 'none',
           lineStyle: {
@@ -195,7 +196,8 @@ const option = computed(() => {
             position: 'start',
             formatter: '{b}',
             color: isDark.value ? '#94a3b8' : '#64748b',
-            padding: [0, 8, 0, 0],
+            padding: [0, 4, 0, 4],
+            backgroundColor: 'transparent',
           },
         },
       },
