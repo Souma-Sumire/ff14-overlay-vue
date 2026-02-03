@@ -498,6 +498,23 @@ const allPlayers = computed(() => {
   )
 })
 
+watch(isOnlyRaidMembersActive, (val) => {
+  if (val) {
+    const newVis = { ...playerVisibility.value }
+
+    // 强制选中所有固定队成员，反选非固定队成员
+    allPlayers.value.forEach((p) => {
+      if (getPlayerRole(p)) {
+        newVis[p] = true
+      }
+      else {
+        newVis[p] = false
+      }
+    })
+    playerVisibility.value = newVis
+  }
+})
+
 const filteredRecords = computed(() => {
   if (isInitializing.value)
     return []
@@ -1855,9 +1872,6 @@ function isItemChecked(item: string) {
 }
 
 function isPlayerChecked(p: string) {
-  if (isOnlyRaidMembersActive.value) {
-    return !!getPlayerRole(p)
-  }
   return playerVisibility.value[p] !== false
 }
 
