@@ -31,6 +31,7 @@ import {
   View,
   Warning,
 } from '@element-plus/icons-vue'
+import { useUrlSearchParams } from '@vueuse/core'
 import {
   ElAutocomplete,
   ElCheckbox,
@@ -370,7 +371,8 @@ const playerRoles = ref<Record<string, string>>({})
 let sessionPermissionGranted = false
 
 // 演示模式
-const isDemoMode = ref(false)
+const urlParams = useUrlSearchParams('hash')
+const isDemoMode = urlParams.demo === '1'
 const anonymousMapping = ref<Record<string, string>>({})
 const usedAnonymousNames = new Set<string>()
 
@@ -431,7 +433,7 @@ const ANONYMOUS_POOL = [
 function getDisplayName(playerName: string | undefined | null): string {
   if (!playerName)
     return ''
-  if (!isDemoMode.value)
+  if (!isDemoMode)
     return playerName
 
   if (anonymousMapping.value[playerName]) {
