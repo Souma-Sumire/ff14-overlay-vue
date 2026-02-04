@@ -4565,6 +4565,7 @@ async function applyPendingWinnerChange() {
                   :get-player-role="getPlayerRole"
                   :get-actual-player="getActualPlayer"
                   :show-only-role="showOnlyRole"
+                  :get-item-slot="getItemSlot"
                 />
 
                 <transition name="fade">

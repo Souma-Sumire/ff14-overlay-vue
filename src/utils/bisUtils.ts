@@ -30,6 +30,7 @@ export const DEFAULT_ROWS: BisRow[] = [
   { id: 'body', name: '身体', keywords: PartOrder.BodyBox, type: 'toggle' },
   { id: 'legs', name: '腿部', keywords: PartOrder.LegsBox, type: 'toggle' },
   { id: 'weapon', name: '武器箱', keywords: PartOrder.WeaponBox, type: 'toggle' },
+  { id: 'random_weapon', name: '随武', keywords: '随武', type: 'count' },
   { id: 'twine', name: '强化纤维', keywords: PartOrder.Coating, type: 'count' },
   { id: 'coating', name: '硬化药', keywords: PartOrder.Twine, type: 'count' },
   { id: 'tome', name: '神典石', keywords: PartOrder.Tome, type: 'count' },
@@ -40,7 +41,7 @@ export const LAYER_CONFIG = [
   { name: '1层', items: ['earring', 'necklace', 'bracelet', 'ring'] },
   { name: '2层', items: ['head', 'hands', 'feet', 'tome', 'coating'] },
   { name: '3层', items: ['body', 'legs', 'solvent', 'twine'] },
-  { name: '4层', items: ['weapon'] },
+  { name: '4层', items: ['weapon', 'random_weapon'] },
 ]
 
 export function isPlayerComplete(config: BisConfig, playerOrRole: string) {

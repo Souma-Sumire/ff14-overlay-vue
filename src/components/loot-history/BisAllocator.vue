@@ -41,6 +41,7 @@ const props = defineProps<{
   getPlayerRole?: (name: string) => string | null | undefined
   getActualPlayer?: (p: string) => string
   showOnlyRole?: boolean
+  getItemSlot?: (name: string) => string
 }>()
 
 const emit = defineEmits<{
@@ -93,17 +94,19 @@ const layeredViewRows = computed(() => {
 
 const configRows = computed(() => {
   const order = PART_ORDER as string[]
-  return [...DEFAULT_ROWS].sort((a, b) => {
-    const ia = order.indexOf(a.keywords)
-    const ib = order.indexOf(b.keywords)
-    if (ia === -1 && ib === -1)
-      return 0
-    if (ia === -1)
-      return 1
-    if (ib === -1)
-      return -1
-    return ia - ib
-  })
+  return [...DEFAULT_ROWS]
+    .filter(r => r.id !== 'random_weapon')
+    .sort((a, b) => {
+      const ia = order.indexOf(a.keywords)
+      const ib = order.indexOf(b.keywords)
+      if (ia === -1 && ib === -1)
+        return 0
+      if (ia === -1)
+        return 1
+      if (ib === -1)
+        return -1
+      return ia - ib
+    })
 })
 
 const eligiblePlayers = computed(() => {
@@ -188,6 +191,10 @@ function handleCopyAllMacro() {
 function generateEquipLines(rows: BisRow[]): string[] {
   const lines: string[] = []
   rows.forEach((row) => {
+    // 随武不进入分配宏
+    if (row.id === 'random_weapon')
+      return
+
     const needs: string[] = []
     const greeds: string[] = []
 
@@ -629,12 +636,52 @@ function getObtainedCount(player: string, row: BisRow): number {
       : r.player
     if (actual !== player)
       return false
+
+    // 特殊逻辑：随武统计，复用父组件的 getItemSlot 逻辑
+    if (row.id === 'random_weapon' && props.getItemSlot) {
+      return props.getItemSlot(r.item) === '随武'
+    }
+
     return keywords.some(k => r.item.includes(k))
   }).length
 
   const storageKey = getStorageKey(player)
   const manual = config.value.manualObtained?.[storageKey]?.[row.id] || 0
   return Math.max(0, logCount + manual)
+}
+
+function getObtainedItemsDetail(player: string, row: BisRow) {
+  if (!props.records)
+    return []
+
+  const detailsMap: Record<string, number> = {}
+
+  // 随武逻辑
+  if (row.id === 'random_weapon' && props.getItemSlot) {
+    props.records.forEach((r) => {
+      const actual = props.getActualPlayer ? props.getActualPlayer(r.player) : r.player
+      if (actual === player && props.getItemSlot!(r.item) === '随武') {
+        detailsMap[r.item] = (detailsMap[r.item] || 0) + 1
+      }
+    })
+  }
+  else {
+    // 常规项逻辑
+    const keywords = row.keywords
+      .replace(/，/g, ',')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+
+    props.records.forEach((r) => {
+      const actual = props.getActualPlayer ? props.getActualPlayer(r.player) : r.player
+      if (actual === player && keywords.some(k => r.item.includes(k))) {
+        detailsMap[r.item] = (detailsMap[r.item] || 0) + 1
+      }
+    })
+  }
+
+  return Object.entries(detailsMap).map(([name, count]) => ({ name, count }))
 }
 
 function getManualObtained(player: string, rowId: string): number {
@@ -656,6 +703,10 @@ function hasObtained(player: string, row: BisRow): boolean {
 }
 
 function getLogicReason(player: string, row: BisRow): string {
+  if (row.id === 'random_weapon') {
+    const count = getObtainedCount(player, row)
+    return `累计获得 ${count} 个随武`
+  }
   return getLogicDetails(player, row).reason
 }
 
@@ -931,6 +982,8 @@ function isTomeBis(player: string, rowId: string) {
 }
 
 function getNeededCount(player: string, rowId: string): number {
+  if (rowId === 'random_weapon')
+    return 0
   const val = getBisValue(player, rowId)
   if (typeof val !== 'number')
     throw new Error(`[BisAllocator] 数据异常: ${player} 在 ${rowId} 的值应为数字，实际为 ${val}`)
@@ -938,6 +991,12 @@ function getNeededCount(player: string, rowId: string): number {
 }
 
 function getCellClass(player: string, row: BisRow): string {
+  if (row.id === 'random_weapon') {
+    const count = getObtainedCount(player, row)
+    // 0个用需求底色(绿)，1个及以上用获得底色(灰)
+    const base = count === 0 ? 'status-need' : 'status-rw-obtained'
+    return excludedPlayers.value.has(player) ? `${base} is-excluded` : base
+  }
   const status = getLogicStatus(player, row)
   const base = STATUS_MAP[status]?.class || ''
   return excludedPlayers.value.has(player) ? `${base} is-excluded` : base
@@ -1080,7 +1139,7 @@ const getRoleGroupClass = getRoleType
             </tr>
           </thead>
           <tbody>
-            <template v-for="layer in layeredViewRows" :key="layer.name">
+            <template v-for="(layer, lIdx) in layeredViewRows" :key="layer.name">
               <tr
                 v-for="(row, rIdx) in layer.rows"
                 :key="row.id"
@@ -1092,6 +1151,7 @@ const getRoleGroupClass = getRoleType
                   v-if="rIdx === 0"
                   :rowspan="layer.rows.length"
                   class="sticky-col col-layer layer-cell"
+                  :class="{ 'is-last-layer-cell': lIdx === layeredViewRows.length - 1 }"
                 >
                   {{ layer.name }}
                 </td>
@@ -1187,34 +1247,64 @@ const getRoleGroupClass = getRoleType
                   :class="getCellClass(p, row)"
                 >
                   <div class="cell-status-container">
-                    <el-tooltip
-                      :content="getLogicReason(p, row)"
+                    <el-popover
                       placement="auto"
+                      trigger="hover"
+                      popper-class="bis-common-popover"
+                      width="auto"
+                      :show-after="0"
                       :hide-after="0"
-                      popper-class="bis-logic-tooltip"
+                      transition="none"
                     >
-                      <div class="status-text-wrapper">
-                        <span class="status-main">{{
-                          getStatusBaseText(p, row)
-                        }}</span>
-                        <span
-                          v-if="
-                            row.type === 'count' && getNeededCount(p, row.id) > 1
-                          "
-                          class="status-meta"
-                        >
-                          ({{ getObtainedCount(p, row) }}/{{
-                            getNeededCount(p, row.id)
-                          }})
-                        </span>
+                      <template #reference>
+                        <div class="status-text-wrapper">
+                          <template v-if="row.id === 'random_weapon'">
+                            <span
+                              :class="[
+                                getObtainedCount(p, row) > 0 ? 'rw-simple-count-active' : 'rw-simple-count-none',
+                                { 'is-many': getObtainedCount(p, row) >= 2 },
+                              ]"
+                            >
+                              {{ getObtainedCount(p, row) }}
+                            </span>
+                          </template>
+                          <template v-else>
+                            <span class="status-main">{{ getStatusBaseText(p, row) }}</span>
+                            <span
+                              v-if="row.type === 'count' && getNeededCount(p, row.id) > 1"
+                              class="status-meta"
+                            >
+                              ({{ getObtainedCount(p, row) }}/{{ getNeededCount(p, row.id) }})
+                            </span>
+                          </template>
+                        </div>
+                      </template>
+
+                      <div class="popover-content">
+                        <div class="reason-section">
+                          {{ getLogicReason(p, row) }}
+                        </div>
+                        <template v-if="getObtainedItemsDetail(p, row).length > 0">
+                          <div class="popover-divider" />
+                          <div class="obtained-list">
+                            <div v-for="(d, i) in getObtainedItemsDetail(p, row)" :key="i" class="obtained-row">
+                              <span class="item-name">{{ d.name }}</span>
+                              <span class="item-count">x{{ d.count }}</span>
+                            </div>
+                          </div>
+                        </template>
+                        <div v-else-if="row.id === 'random_weapon'" class="obtained-empty">
+                          未获得过
+                        </div>
                       </div>
-                    </el-tooltip>
+                    </el-popover>
                   </div>
                 </td>
                 <td
                   v-if="rIdx === 0"
                   :rowspan="layer.rows.length"
                   class="col-macro macro-cell"
+                  :class="{ 'is-last-layer-cell': lIdx === layeredViewRows.length - 1 }"
                 >
                   <div class="macro-preview-box">
                     <div class="macro-preview-content">
@@ -2305,18 +2395,30 @@ const getRoleGroupClass = getRoleType
     border-right: none;
   }
 
-  tr.is-layer-end td,
-  tr.is-layer-end th,
-  .macro-cell {
+  tr.is-layer-end:not(:last-child) td,
+  tr.is-layer-end:not(:last-child) th {
     border-bottom: 1px solid black !important;
     html.dark & {
       border-bottom-color: #334155 !important;
     }
   }
 
+  .layer-cell,
+  .macro-cell {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1) !important;
+
+    :deep(tr.is-layer-end:not(:last-child)) & {
+       border-bottom: 1px solid black !important;
+    }
+  }
+
+  // 针对 rowspan 跨到最后一行的特殊清理，防止与外部容器边框重叠
+  .is-last-layer-cell {
+    border-bottom: none !important;
+  }
+
   tr:last-child td,
-  tr:last-child th,
-  tr:last-child .macro-cell {
+  tr:last-child th {
     border-bottom: none !important;
   }
 
@@ -2351,7 +2453,7 @@ const getRoleGroupClass = getRoleType
   .col-layer {
     left: 0;
     background: #f8fafc;
-    border-right: 1px solid #cbd5e1 !important;
+    border-right: 1px solid black !important;
 
     html.dark & {
       background: #0f172a;
@@ -3272,6 +3374,26 @@ html.dark {
         border: 1px solid rgba(16, 185, 129, 0.5) !important;
         box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
       }
+
+      .status-rw-need {
+        background-color: rgba(180, 83, 9, 0.2) !important;
+        color: #fbbf24 !important;
+        .rw-simple-count-active {
+           color: #fbbf24 !important;
+        }
+      }
+      .status-rw-obtained {
+        background-color: transparent !important;
+        .rw-simple-count-active {
+          color: #94a3b8 !important;
+          &.is-many {
+            color: #f59e0b !important;
+          }
+        }
+        .rw-simple-count-none {
+          color: #475569 !important;
+        }
+      }
     }
 
     .row-header {
@@ -3733,20 +3855,67 @@ html.dark {
   }
 }
 
-.el-popper.bis-logic-tooltip {
-  padding: 4px 8px !important;
-  font-size: 11px !important;
-  line-height: 1.4 !important;
-  min-width: auto !important;
-  border-radius: 4px !important;
-  background: #1e293b !important;
-  color: #ffffff !important;
-  border: none !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+.el-popper.bis-common-popover {
+  background: #1f2937 !important;
+  border: 1px solid #374151 !important;
+  padding: 8px 12px !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4) !important;
+  border-radius: 8px !important;
+  color: #f3f4f6 !important;
+  min-width: unset !important;
 
   .el-popper__arrow::before {
-    background: #1e293b !important;
-    border: none !important;
+    background: #1f2937 !important;
+    border: 1px solid #374151 !important;
+  }
+
+  .popover-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 11.5px;
+    white-space: nowrap;
+  }
+
+  .reason-section {
+    color: #e5e7eb;
+    line-height: 1.4;
+    font-weight: 500;
+  }
+
+  .popover-divider {
+    height: 1px;
+    background: rgba(75, 85, 99, 0.4);
+    margin: 2px 0;
+  }
+
+  .obtained-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .obtained-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .item-name {
+    color: #d1d5db;
+  }
+
+  .item-count {
+    color: #fbbf24;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+  }
+
+  .obtained-empty {
+    color: #6b7280;
+    text-align: center;
+    font-style: italic;
   }
 }
 
