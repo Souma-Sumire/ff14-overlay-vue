@@ -8,12 +8,14 @@ import {
   Calendar,
   Check,
   CircleCheckFilled,
+  CircleCloseFilled,
   Delete,
   Download,
   Edit,
   EditPen,
   FolderOpened,
   InfoFilled,
+  Lock,
   Monitor,
   Mouse,
   Plus,
@@ -1296,7 +1298,6 @@ function getItemSortPriority(
 }
 
 const visibleItemCount = computed(() => visibleUniqueItems.value.length)
-
 const visiblePlayerCount = computed(() => visibleAllPlayers.value.length)
 
 const allConditionRecords = computed(() => {
@@ -4517,21 +4518,55 @@ async function applyPendingWinnerChange() {
 
                 <transition name="fade">
                   <div
-                    v-if="!isOnlyRaidMembersActive"
+                    v-show="!isOnlyRaidMembersActive || !isRaidFilterActive"
                     class="bis-lock-mask"
                   >
                     <div class="lock-card">
-                      <el-icon class="lock-icon">
-                        <Warning />
-                      </el-icon>
-                      <h3>BIS 分配需要启用“只看固定队”</h3>
-                      <p>为确保数据准确，分配逻辑必须在固定队环境下进行分析。</p>
-                      <el-button
-                        type="primary"
-                        @click="isOnlyRaidMembersActive = true"
-                      >
-                        立即开启“只看固定队”
-                      </el-button>
+                      <div class="lock-header">
+                        <div class="lock-icon-wrapper">
+                          <el-icon><Lock /></el-icon>
+                        </div>
+                        <h3>BIS 分配功能已锁定</h3>
+                        <p>为确保数据分析的准确性，需激活以下过滤模式：</p>
+                      </div>
+
+                      <div class="status-list">
+                        <div
+                          class="status-item"
+                          :class="{ 'is-ready': isOnlyRaidMembersActive }"
+                        >
+                          <div class="item-icon">
+                            <el-icon v-if="isOnlyRaidMembersActive">
+                              <CircleCheckFilled />
+                            </el-icon>
+                            <el-icon v-else>
+                              <CircleCloseFilled />
+                            </el-icon>
+                          </div>
+                          <div class="item-label">
+                            只看固定队
+                          </div>
+                          <ElSwitch v-model="isOnlyRaidMembersActive" />
+                        </div>
+
+                        <div
+                          class="status-item"
+                          :class="{ 'is-ready': isRaidFilterActive }"
+                        >
+                          <div class="item-icon">
+                            <el-icon v-if="isRaidFilterActive">
+                              <CircleCheckFilled />
+                            </el-icon>
+                            <el-icon v-else>
+                              <CircleCloseFilled />
+                            </el-icon>
+                          </div>
+                          <div class="item-label">
+                            只看零式掉落
+                          </div>
+                          <ElSwitch v-model="isRaidFilterActive" />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </transition>
@@ -9126,15 +9161,23 @@ html.dark {
 
 .bis-lock-mask {
   position: absolute;
-  inset: -10px;
+  inset: -15px;
   z-index: 2000;
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(8px);
-  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(12px) saturate(180%);
+  background: rgba(255, 255, 255, 0.3);
   border-radius: 12px;
   overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, transparent 0%, rgba(255, 255, 255, 0.4) 100%);
+    pointer-events: none;
+  }
 
   &::after {
     content: '';
@@ -9142,68 +9185,176 @@ html.dark {
     inset: 0;
     z-index: -1;
     background-image: var(--ffxiv-diagonal-texture);
-    opacity: 0.6;
+    opacity: 0.4;
     pointer-events: none;
   }
 }
 
 html.dark .bis-lock-mask {
-  background: rgba(22, 24, 35, 0.65);
+  background: rgba(15, 23, 42, 0.65);
+  &::before {
+    background: radial-gradient(
+      circle at center,
+      transparent 0%,
+      rgba(15, 23, 42, 0.4) 100%
+    );
+  }
 }
 
 .lock-card {
   background: #fff;
   padding: 40px;
-  border-radius: 16px;
+  border-radius: 24px;
   box-shadow:
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    0 25px 50px -12px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
   text-align: center;
-  max-width: 420px;
-  border: 1px solid #e2e8f0;
-  z-index: 10;
-  animation: slide-up 0.4s ease-out;
+  width: 440px;
+  max-width: calc(100% - 40px);
+  position: relative;
+  overflow: hidden;
+  animation: lock-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 html.dark .lock-card {
   background: #1e293b;
-  border-color: #334155;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
   color: #f1f5f9;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
-.lock-icon {
-  font-size: 56px;
+.lock-header {
+  margin-bottom: 32px;
+}
+
+.lock-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  background: #fff7ed;
   color: #f59e0b;
-  margin-bottom: 20px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin: 0 auto 20px;
+  box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.1);
+
+  html.dark & {
+    background: rgba(245, 158, 11, 0.1);
+  }
 }
 
 .lock-card h3 {
-  margin-top: 0;
-  margin-bottom: 12px;
-  font-size: 1.25rem;
-  font-weight: 700;
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
 }
 
 .lock-card p {
   color: #64748b;
-  margin-bottom: 32px;
+  margin: 0;
   font-size: 0.95rem;
-  line-height: 1.6;
 }
 
 html.dark .lock-card p {
   color: #94a3b8;
 }
 
-@keyframes slide-up {
+.status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+
+  .item-icon {
+    font-size: 20px;
+    margin-right: 12px;
+    color: #94a3b8;
+    display: flex;
+  }
+
+  .item-label {
+    flex: 1;
+    text-align: left;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  .item-status {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #94a3b8;
+  }
+
+  &.is-ready {
+    background: #f0fdf4;
+    border-color: #dcfce7;
+
+    .item-icon {
+      color: #22c55e;
+    }
+    .item-label {
+      color: #166534;
+    }
+    .item-status {
+      color: #16a34a;
+    }
+  }
+
+  html.dark & {
+    background: rgba(30, 41, 59, 0.5);
+    border-color: rgba(51, 65, 85, 0.5);
+
+    .item-label {
+      color: #cbd5e1;
+    }
+
+    &.is-ready {
+      background: rgba(22, 163, 74, 0.1);
+      border-color: rgba(22, 163, 74, 0.2);
+      .item-label {
+        color: #4ade80;
+      }
+    }
+  }
+}
+
+.unlock-action-btn {
+  width: 100%;
+  height: 48px;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+  transition: all 0.3s ease !important;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 20px -3px rgba(59, 130, 246, 0.4);
+  }
+}
+
+@keyframes lock-pop {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: scale(0.9) translateY(20px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1) translateY(0);
   }
 }
 </style>
