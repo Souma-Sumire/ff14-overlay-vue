@@ -4738,6 +4738,14 @@ async function applyPendingWinnerChange() {
                 >
                   调整时间范围
                 </el-button>
+                <el-button
+                  v-if="!isSyncing"
+                  plain
+                  size="large"
+                  @click="setLogPath"
+                >
+                  修改日志目录
+                </el-button>
               </div>
             </div>
           </template>
