@@ -5398,6 +5398,10 @@ async function applyPendingWinnerChange() {
       style="display: none"
       @change="handleImportFile"
     >
+    <div class="early-access-disclaimer">
+      <el-icon><Warning /></el-icon>
+      <span>项目处于早期开发阶段，功能可能存在BUG。</span>
+    </div>
   </div>
 </template>
 
@@ -6011,6 +6015,31 @@ html.dark .loading-sub-txt {
     opacity: 1;
   }
 }
+.early-access-disclaimer {
+  position: fixed;
+  bottom: 8px;
+  right: 12px;
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 4px 8px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+  user-select: none;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+html.dark .early-access-disclaimer {
+  background: rgba(0, 0, 0, 0.3);
+  color: #64748b;
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
 .mini-tag-el {
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
