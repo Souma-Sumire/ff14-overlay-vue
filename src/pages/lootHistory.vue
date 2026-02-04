@@ -1299,8 +1299,8 @@ const visibleItemCount = computed(() => visibleUniqueItems.value.length)
 
 const visiblePlayerCount = computed(() => visibleAllPlayers.value.length)
 
-const normalizedRecords = computed(() => {
-  return filteredRecords.value.map(r => ({
+const allConditionRecords = computed(() => {
+  return baseFilteredRecords.value.map(r => ({
     ...r,
     player: getRecordPlayer(r),
   }))
@@ -4477,7 +4477,7 @@ async function applyPendingWinnerChange() {
                 </el-tooltip>
               </template>
               <LootStatisticsPanel
-                :records="normalizedRecords"
+                :records="allConditionRecords"
                 :players="visibleAllPlayers.filter(isPlayerChecked)"
                 :get-actual-player="getActualPlayer"
                 :get-player-role="getPlayerRole"
@@ -4504,15 +4504,38 @@ async function applyPendingWinnerChange() {
                   </div>
                 </el-tooltip>
               </template>
-              <BisAllocator
-                v-model="bisConfig"
-                v-model:sort-mode="bisSortMode"
-                :players="visibleAllPlayers"
-                :records="normalizedRecords"
-                :get-player-role="getPlayerRole"
-                :get-actual-player="getActualPlayer"
-                :show-only-role="showOnlyRole"
-              />
+              <div class="bis-allocator-wrapper">
+                <BisAllocator
+                  v-model="bisConfig"
+                  v-model:sort-mode="bisSortMode"
+                  :players="visibleAllPlayers"
+                  :records="allConditionRecords"
+                  :get-player-role="getPlayerRole"
+                  :get-actual-player="getActualPlayer"
+                  :show-only-role="showOnlyRole"
+                />
+
+                <transition name="fade">
+                  <div
+                    v-if="!isOnlyRaidMembersActive"
+                    class="bis-lock-mask"
+                  >
+                    <div class="lock-card">
+                      <el-icon class="lock-icon">
+                        <Warning />
+                      </el-icon>
+                      <h3>BIS 分配需要启用“只看固定队”</h3>
+                      <p>为确保数据准确，分配逻辑必须在固定队环境下进行分析。</p>
+                      <el-button
+                        type="primary"
+                        @click="isOnlyRaidMembersActive = true"
+                      >
+                        立即开启“只看固定队”
+                      </el-button>
+                    </div>
+                  </div>
+                </transition>
+              </div>
             </el-tab-pane>
           </el-tabs>
 
@@ -5415,6 +5438,94 @@ html.dark .section-mask {
 .guide-popover-popper,
 .role-settings-popper {
   padding: 0 !important;
+}
+
+.bis-allocator-wrapper {
+  position: relative;
+  min-height: 400px;
+}
+
+.bis-lock-mask {
+  position: absolute;
+  inset: -10px;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 12px;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: var(--ffxiv-diagonal-texture);
+    opacity: 0.6;
+    pointer-events: none;
+  }
+}
+
+html.dark .bis-lock-mask {
+  background: rgba(22, 24, 35, 0.65);
+}
+
+.lock-card {
+  background: #fff;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  text-align: center;
+  max-width: 420px;
+  border: 1px solid #e2e8f0;
+  z-index: 10;
+  animation: slide-up 0.4s ease-out;
+}
+
+html.dark .lock-card {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f1f5f9;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.lock-icon {
+  font-size: 56px;
+  color: #f59e0b;
+  margin-bottom: 20px;
+}
+
+.lock-card h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.lock-card p {
+  color: #64748b;
+  margin-bottom: 32px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+html.dark .lock-card p {
+  color: #94a3b8;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>
 
@@ -9006,5 +9117,93 @@ html.dark {
   margin-left: 1px;
   vertical-align: -2px;
   animation: suspicious-pulse 2s infinite;
+}
+
+.bis-allocator-wrapper {
+  position: relative;
+  min-height: 400px;
+}
+
+.bis-lock-mask {
+  position: absolute;
+  inset: -10px;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 12px;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: var(--ffxiv-diagonal-texture);
+    opacity: 0.6;
+    pointer-events: none;
+  }
+}
+
+html.dark .bis-lock-mask {
+  background: rgba(22, 24, 35, 0.65);
+}
+
+.lock-card {
+  background: #fff;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  text-align: center;
+  max-width: 420px;
+  border: 1px solid #e2e8f0;
+  z-index: 10;
+  animation: slide-up 0.4s ease-out;
+}
+
+html.dark .lock-card {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f1f5f9;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.lock-icon {
+  font-size: 56px;
+  color: #f59e0b;
+  margin-bottom: 20px;
+}
+
+.lock-card h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.lock-card p {
+  color: #64748b;
+  margin-bottom: 32px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+html.dark .lock-card p {
+  color: #94a3b8;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>
