@@ -1409,7 +1409,7 @@ function formatTimestamp(ms: number): string {
     <el-button v-if="dev" @click="test">
       测试
     </el-button>
-    <CommonTestLog m-1 @before-handle="beforeHandle" @after-handle="afterHandle" @handle-line="handleLine" />
+    <CommonTestLog @before-handle="beforeHandle" @after-handle="afterHandle" @handle-line="handleLine" />
   </div>
 </template>
 
@@ -1568,11 +1568,16 @@ main {
 
 .testLog {
   position: fixed;
-  opacity: 0.8;
-  right: 0;
-  bottom: 0;
-  z-index: 10;
-  transition: all 0.2s ease-in-out;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0.5;
+  z-index: 100;
+  transition: all 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 
   &:hover {
     opacity: 1;
