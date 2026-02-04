@@ -225,14 +225,19 @@ const filteredPlayerCorrections = computed(() => {
   )
 })
 
+const lootRecordsMap = computed(() => {
+  const map = new Map<string, LootRecord>()
+  lootRecords.value.forEach(r => map.set(r.key, r))
+  return map
+})
+
 const filteredWeekCorrections = computed(() => {
   if (!showCustomCorrectionDialog.value)
     return []
   const list: any[] = []
-  const recordMap = new Map(lootRecords.value.map(r => [r.key, r]))
 
   Object.entries(recordWeekCorrections.value).forEach(([key, newVal]) => {
-    const record = recordMap.get(key)
+    const record = lootRecordsMap.value.get(key)
     if (!record)
       return
     const oldIdx = getRaidWeekIndex(record.timestamp, GAME_VERSION_CONFIG.RAID_START_TIME)
@@ -558,32 +563,39 @@ watch([syncStartDate, syncEndDate], () => {
 
 const isMenuVisible = ref(false)
 
-const playerTotalItemsMap = computed(() => {
-  const counts: Record<string, number> = {}
-  lootRecords.value.forEach((r) => {
-    const p = getActualPlayer(getRecordPlayer(r))
-    counts[p] = (counts[p] || 0) + 1
-  })
-  return counts
-})
+const detailedPlayerStats = computed(() => {
+  if (isInitializing.value) {
+    return {
+      counts: {} as Record<string, number>,
+      sortedPlayers: [] as string[],
+    }
+  }
 
-const allPlayers = computed(() => {
-  if (isInitializing.value)
-    return []
-  const players = new Set<string>()
+  const counts: Record<string, number> = {}
+  const playersSet = new Set<string>()
+
   lootRecords.value.forEach((record) => {
-    players.add(getActualPlayer(getRecordPlayer(record)))
-    record.rolls.forEach(roll => players.add(getActualPlayer(roll.player)))
+    const p = getActualPlayer(getRecordPlayer(record))
+    counts[p] = (counts[p] || 0) + 1
+    playersSet.add(p)
+    record.rolls.forEach(roll => playersSet.add(getActualPlayer(roll.player)))
   })
+
   // 即使没有掉落记录，也将已设置职位的玩家加入列表
   Object.values(playerRoles.value).forEach((p) => {
     if (p)
-      players.add(getActualPlayer(p))
+      playersSet.add(getActualPlayer(p))
   })
-  return Array.from(players).sort((a, b) =>
-    comparePlayersByRole(a, b, playerTotalItemsMap.value),
+
+  const sortedPlayers = Array.from(playersSet).sort((a, b) =>
+    comparePlayersByRole(a, b, counts),
   )
+
+  return { counts, sortedPlayers }
 })
+
+const playerTotalItemsMap = computed(() => detailedPlayerStats.value.counts)
+const allPlayers = computed(() => detailedPlayerStats.value.sortedPlayers)
 
 watch(isOnlyRaidMembersActive, (val) => {
   if (val) {
@@ -602,24 +614,17 @@ watch(isOnlyRaidMembersActive, (val) => {
   }
 })
 
-const filteredRecords = computed(() => {
+const baseFilteredRecords = computed(() => {
   if (isInitializing.value)
     return []
+
   const startTs = new Date(syncStartDate.value).getTime()
   const endTs = syncEndDate.value ? new Date(syncEndDate.value).getTime() : Infinity
-
-  // 预先缓存过滤条件以减少闭包内的重复计算
   const itemVis = itemVisibility.value
-  const playerVis = playerVisibility.value
 
-  const result = lootRecords.value.filter((record) => {
+  return lootRecords.value.filter((record) => {
     if (isSystemFiltered(record.item))
       return false
-
-    const player = getActualPlayer(getRecordPlayer(record))
-    if (playerVis[player] === false)
-      return false
-
     if (itemVis[record.item] === false)
       return false
 
@@ -628,6 +633,18 @@ const filteredRecords = computed(() => {
       return false
 
     return true
+  })
+})
+
+const filteredRecords = computed(() => {
+  const playerVis = playerVisibility.value
+  const isListMode = viewMode.value === 'list'
+
+  const result = baseFilteredRecords.value.filter((record) => {
+    const player = getActualPlayer(getRecordPlayer(record))
+    return isListMode
+      ? playerVis[player] !== false
+      : !!getPlayerRole(player)
   })
   return result.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
 })
@@ -734,22 +751,7 @@ const isRaidRolesComplete = computed(() => {
 
 const playersWithRecordsMatchingItemFilters = computed(() => {
   const set = new Set<string>()
-  const startTs = new Date(syncStartDate.value).getTime()
-  const endTs = syncEndDate.value
-    ? new Date(syncEndDate.value).getTime()
-    : Infinity
-
-  lootRecords.value.forEach((r) => {
-    // 1. 系统过滤（如屏蔽屏蔽乐谱等）
-    if (isSystemFiltered(r.item))
-      return
-    // 2. 物品筛选（用户在界面上选中的物品）
-    if (itemVisibility.value[r.item] === false)
-      return
-    // 3. 时间范围
-    const ts = r.timestamp.getTime()
-    if (ts < startTs || ts > endTs)
-      return
+  baseFilteredRecords.value.forEach((r) => {
     set.add(getActualPlayer(getRecordPlayer(r)))
   })
   return set
@@ -758,8 +760,8 @@ const playersWithRecordsMatchingItemFilters = computed(() => {
 const visibleAllPlayers = computed(() => {
   let players = allPlayers.value
 
-  if (isOnlyRaidMembersActive.value) {
-    // 如果开启了“只看固定队”，则强制过滤非固定队成员，且不受 hideUnselectedPlayers 影响
+  if (isOnlyRaidMembersActive.value || viewMode.value !== 'list') {
+    // 强制过滤非固定队成员，不受 hideUnselectedPlayers 影响
     players = players.filter(p => !!getPlayerRole(p))
   }
   else {
@@ -5767,6 +5769,12 @@ html.dark .loading-sub-txt {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
 }
+.el-check-tag {
+  border: 1px solid transparent;
+  &.is-checked {
+    font-weight: 600;
+  }
+}
 .el-check-tag.player-tag {
   height: 24px;
   line-height: 22px;
@@ -8130,13 +8138,11 @@ html.dark {
   .el-check-tag {
     background-color: rgba(255, 255, 255, 0.04);
     color: rgba(255, 255, 255, 0.5);
-    border: 1px solid transparent; /* Prevent size jump when adding border to checked state */
 
     &.is-checked {
       background-color: rgba(59, 130, 246, 0.2);
       border-color: rgba(59, 130, 246, 0.4);
       color: #60a5fa;
-      font-weight: 600;
     }
 
     &:not(.is-checked):hover {

@@ -979,10 +979,19 @@ const getRoleGroupClass = getRoleType
     <div v-if="isConfigComplete" class="bis-view-panel">
       <div class="table-container">
         <table class="bis-table">
+          <colgroup>
+            <col style="width: 32px !important; min-width: 32px !important">
+            <col style="width: 110px !important; min-width: 110px !important">
+            <col v-for="p in eligiblePlayers" :key="p">
+            <col style="width: 250px !important; min-width: 250px !important">
+          </colgroup>
           <thead>
             <tr>
-              <th class="sticky-col col-layer" style="z-index: 30" />
-              <th class="sticky-col col-item" style="z-index: 30">
+              <th
+                class="sticky-col col-combined-header"
+                style="z-index: 30"
+                colspan="2"
+              >
                 装备 \ 玩家
               </th>
               <th
@@ -2267,7 +2276,8 @@ const getRoleGroupClass = getRoleType
 .bis-table {
   width: 100%;
   min-width: max-content;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 13px;
   table-layout: fixed;
   border: none;
@@ -2325,73 +2335,64 @@ const getRoleGroupClass = getRoleType
 
   thead {
     position: relative;
-    &::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0px;
-      height: 1px;
-      background-color: black;
-      z-index: 100;
-      pointer-events: none;
-
-      html.dark & {
-        background-color: #334155;
-      }
-    }
   }
 
   thead th {
-    background: #f1f5f9 !important;
+    background: linear-gradient(to bottom, #f1f5f9 calc(100% - 1px), black calc(100% - 1px)) !important;
     border-bottom: none !important;
     box-shadow: none !important;
 
     html.dark & {
-      background: #111827 !important;
+      background: linear-gradient(to bottom, #111827 calc(100% - 1px), #334155 calc(100% - 1px)) !important;
+      border-bottom: none !important;
     }
   }
 
   .col-layer {
-    width: 32px;
-    min-width: 32px;
-    max-width: 32px;
     left: 0;
     background: #f8fafc;
     border-right: 1px solid #cbd5e1 !important;
 
     html.dark & {
       background: #0f172a;
-      border-right-color: rgba(148, 163, 184, 0.2) !important;
+      border-right-color: #334155 !important;
     }
   }
 
   .col-item {
-    width: 110px;
-    min-width: 110px;
-    max-width: 110px;
     font-weight: 700;
     color: #334155;
     background: #f8fafc;
-    border-right: 1px solid #cbd5e1 !important;
+    border-right: 1px solid black !important;
 
     html.dark & {
       background: #0f172a;
       color: #e2e8f0;
-      border-right-color: rgba(148, 163, 184, 0.2) !important;
+      border-right-color: #334155 !important;
+    }
+  }
+
+  .col-combined-header {
+    left: 0;
+    font-weight: 700;
+    color: #334155;
+    background: #f8fafc;
+    border-right: 1px solid black !important;
+
+    html.dark & {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-right-color: #334155 !important;
     }
   }
 
   .col-macro {
     position: relative;
-    width: 250px;
-    min-width: 250px;
-    max-width: 250px;
     text-align: left;
-    border-left: 1px solid #cbd5e1 !important;
+    border-left: 1px solid black !important;
 
     html.dark & {
-      border-left-color: rgba(148, 163, 184, 0.2) !important;
+      border-left-color: #334155 !important;
     }
 
     .macro-header-content {
@@ -2440,21 +2441,6 @@ const getRoleGroupClass = getRoleType
     }
   }
 
-  th.col-macro::before {
-    content: '';
-    position: absolute;
-    left: -1px;
-    top: 0;
-    bottom: 0;
-    width: 1px;
-    background-color: #cbd5e1;
-    z-index: 5;
-
-    html.dark & {
-      background-color: rgba(148, 163, 184, 0.2);
-    }
-  }
-
   .layer-cell {
     background: #f8fafc;
     color: #1e293b;
@@ -2477,21 +2463,6 @@ const getRoleGroupClass = getRoleType
     height: 1px;
     overflow: visible;
     position: relative;
-
-    &::before {
-      content: '';
-      position: absolute;
-      left: -1px;
-      top: 0;
-      width: 1px;
-      height: calc(100% + 1px);
-      background-color: #cbd5e1;
-      z-index: 5;
-
-      html.dark & {
-        background-color: rgba(148, 163, 184, 0.2);
-      }
-    }
 
     html.dark & {
       background: #1e1f29;
@@ -2569,12 +2540,10 @@ const getRoleGroupClass = getRoleType
     transform: scale(0.9) translateZ(0);
     backface-visibility: hidden;
     will-change: transform, opacity;
-    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-                background 0.2s ease,
-                color 0.2s ease,
+    transition: color 0.2s ease,
                 border-color 0.2s ease;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
 
     &:hover {
       background: #eff6ff;
@@ -3300,7 +3269,8 @@ html.dark {
         background-color: rgba(16, 185, 129, 0.2) !important;
         color: #34d399 !important;
         font-weight: 800;
-        box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.5), 0 0 15px rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.5) !important;
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
       }
     }
 
@@ -3546,26 +3516,18 @@ html.dark {
   .table-scroll-wrapper {
     background: #1a1b26;
     border-color: #2d2e3d;
-    &::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    &::-webkit-scrollbar-thumb {
-      background: #2d2e3d;
-      border-radius: 4px;
-    }
+    border-color: #2d2e3d;
+
   }
 
   .bis-table {
     background-color: #1a1b26;
-    border-top: 1px solid #2d2e3d;
 
     th {
       background-color: #1a1b26 !important;
       color: #9ca3af;
       border-right-color: #2d2e3d;
-      border-bottom: 2px solid #232433;
-      font-weight: 600;
+      border-bottom-color: #232433;
     }
 
     td {
@@ -3614,13 +3576,14 @@ html.dark {
   .mini-stepper {
     .el-input__wrapper {
       background-color: #1a1b26 !important;
-      border: 1px solid #2d2e3d !important;
-      box-shadow: none !important;
+      box-shadow: 0 0 0 1px #2d2e3d inset !important;
+      border: none !important;
     }
     .el-input-number__increase,
     .el-input-number__decrease {
       background: #11121d !important;
-      border-color: #2d2e3d !important;
+      border: none !important;
+      border-left: 1px solid #2d2e3d !important;
       color: #6b7280 !important;
       &:hover {
         background: #1a1b26 !important;
