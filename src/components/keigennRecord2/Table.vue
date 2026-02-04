@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { Column, MessageHandler, RowEventHandlers, TableV2Instance } from 'element-plus'
+import type { Column, MessageHandler, Placement, RowEventHandlers, TableV2Instance } from 'element-plus'
 import type { RowVO } from '@/types/keigennRecord2'
+import { Clock } from '@element-plus/icons-vue'
 import { onClickOutside } from '@vueuse/core'
-import { ElMessage } from 'element-plus'
+import { ElIcon, ElMessage } from 'element-plus'
 import { computed, h } from 'vue'
 import { useLang } from '@/composables/useLang'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
@@ -48,7 +49,7 @@ const virtualRef = ref<HTMLElement | { getBoundingClientRect: () => DOMRect }>({
 })
 const tooltipMode = ref<'amount' | 'skills' | 'death-recap' | null>(null)
 const popoverVisible = ref(false)
-const popoverPlacement = ref('top')
+const popoverPlacement = ref('top' as Placement)
 
 interface RecapRow {
   key: string
@@ -488,7 +489,7 @@ const columns = computed<Column[]>(() => [
     key: 'skills',
     title: '',
     dataKey: 'skills',
-    width: 0,
+    width: 24,
     align: 'center' as const,
     class: 'col-skills',
     cellRenderer: ({ rowData }: { rowData: RowVO }) =>
@@ -516,7 +517,7 @@ const columns = computed<Column[]>(() => [
                 'onMouseenter': (e: MouseEvent) => handleHover(rowData, 'skills', e),
               },
               [
-                h('div', { class: 'dots' }, [h('i'), h('i'), h('i')]),
+                h(ElIcon, { size: 12, color: 'inherit', style: { opacity: 0.5 } }, { default: () => h(Clock) }),
               ],
             ),
       ),
@@ -617,7 +618,7 @@ defineExpose({
           <el-table-v2
             ref="tableV2Ref" header-class="keigenn-table-header" class="keigenn-table performance-table"
             :columns="columns" :data="tableData" :width="width" :height="height" :row-height="28" :header-height="24"
-            row-key="key" scrollbar-always-on :row-event-handlers="rowEventHandlers" :row-class="rowClass"
+            row-key="key" :row-event-handlers="rowEventHandlers" :row-class="rowClass"
             :overscan-row-count="2"
           >
             <template #empty>
@@ -667,10 +668,11 @@ defineExpose({
           <el-popover
             v-model:visible="popoverVisible" :virtual-ref="virtualRef" virtual-triggering
             popper-class="keigenn-global-popover" transition="none"
-            :show-after="0" :hide-after="0" :offset="6" :enterable="true" :teleported="true"
-            placement="top"
+            :show-after="0" :hide-after="0" :offset="2" :enterable="true" :teleported="true"
+            :placement="popoverPlacement"
+
             width="auto"
-            :fallback-placements="['top-end', 'top-start', 'bottom', 'bottom-end', 'bottom-start']"
+            :fallback-placements="['top-end', 'top-start', 'bottom', 'bottom-end', 'bottom-start', 'left']"
           >
             <template v-if="hoveredRow && tooltipMode === 'amount'">
               <div class="row-info">
@@ -773,6 +775,10 @@ defineExpose({
 </template>
 
 <style scoped lang="scss">
+:deep(.el-virtual-scrollbar) {
+  width: 4px !important;
+  pointer-events: none !important;
+}
 .table-container {
   height: 100%;
   width: 100%;
@@ -788,6 +794,14 @@ defineExpose({
 
 .keigenn-table {
   font-size: 12px;
+
+  :deep(.el-table-v2__row) {
+    width: 100% !important;
+  }
+
+  :deep(.el-table-v2__header-row) {
+    width: 100% !important;
+  }
 }
 
 .recap-banner {
@@ -1002,7 +1016,7 @@ defineExpose({
 
 <style lang="scss">
 body .el-popover.keigenn-global-popover {
-  padding: 8px 10px;
+  padding: 4px 6px;
   background: rgb(29, 30, 31);
   border: 1px solid #444;
   color: rgb(207, 211, 220);
@@ -1010,20 +1024,6 @@ body .el-popover.keigenn-global-popover {
   font-size: 12px;
   line-height: 1.2;
   pointer-events: none;
-
-  &::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: #555;
-    border-radius: 2px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
 
   .row-info {
     padding: 0;
@@ -1061,10 +1061,10 @@ body .el-popover.keigenn-global-popover {
     }
 
     .skill-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      max-width: 192px;
+      display: grid;
+      grid-template-columns: repeat(7, 24px);
+      gap: 2px;
+      width: fit-content;
 
       .skill-divider {
         width: 1px;
@@ -1198,25 +1198,6 @@ body .el-popover.keigenn-global-popover {
   background: transparent;
   cursor: pointer;
 
-  .dots {
-    display: flex;
-    gap: 2px;
-
-    i {
-      width: 2.5px;
-      height: 2.5px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.8);
-      display: inline-block;
-      transition: background 0.2s;
-    }
-  }
-
-  &:hover {
-    .dots i {
-      background: var(--el-color-primary);
-    }
-  }
 }
 </style>
 

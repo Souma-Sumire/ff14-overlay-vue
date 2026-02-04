@@ -1578,6 +1578,11 @@ main {
     opacity: 1;
   }
 }
+
+:deep(.el-select--small .el-select__wrapper){
+  padding:0 8px;
+  min-height:22px;
+}
 </style>
 
 <style lang="scss">
