@@ -2211,6 +2211,8 @@ const getRoleGroupClass = getRoleType
   max-height: 75vh;
   background: #fff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
 
   -webkit-mask-image: -webkit-radial-gradient(white, black);
   mask-image: radial-gradient(white, black);
@@ -2275,7 +2277,7 @@ const getRoleGroupClass = getRoleType
     text-align: center;
     min-width: 65px;
     padding: 0 4px !important;
-    height: 38px;
+    height: 32px;
     border-right: 1px solid rgba(148, 163, 184, 0.1);
     border-bottom: 1px solid rgba(148, 163, 184, 0.1);
     vertical-align: middle;
@@ -2540,7 +2542,7 @@ const getRoleGroupClass = getRoleType
   }
 
   .macro-preview-line {
-    height: 38px;
+    height: 32px;
     display: flex;
     align-items: center;
     white-space: nowrap;
@@ -2633,6 +2635,7 @@ const getRoleGroupClass = getRoleType
       width: 100px;
       min-width: 100px;
       max-width: 100px;
+      height: 32px;
       border-right: 1px solid #cbd5e1;
       border-bottom: 1px solid #cbd5e1;
       overflow: hidden;
