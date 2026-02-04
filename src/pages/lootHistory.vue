@@ -8126,23 +8126,25 @@ html.dark {
   }
 
   .el-check-tag {
-    background-color: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.6);
+    background-color: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.5);
+    border: 1px solid transparent; /* Prevent size jump when adding border to checked state */
 
     &.is-checked {
-      background-color: rgba(255, 255, 255, 0.15);
+      background-color: rgba(59, 130, 246, 0.2);
+      border-color: rgba(59, 130, 246, 0.4);
       color: #60a5fa;
       font-weight: 600;
     }
 
     &:not(.is-checked):hover {
-      background-color: rgba(255, 255, 255, 0.12);
-      color: rgba(255, 255, 255, 0.9);
+      background-color: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.8);
     }
 
     &:not(.is-checked) {
-      --el-tag-bg-color: rgba(255, 255, 255, 0.08);
-      --el-tag-text-color: rgba(255, 255, 255, 0.6);
+      --el-tag-bg-color: rgba(255, 255, 255, 0.04);
+      --el-tag-text-color: rgba(255, 255, 255, 0.5);
       --el-tag-border-color: transparent;
     }
   }
