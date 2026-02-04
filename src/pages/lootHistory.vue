@@ -116,6 +116,16 @@ const dbHandle = useIndexedDB<{
 
 const isInitializing = ref(true)
 const isMergePanelActive = ref(false)
+const isRoleSettingsVisible = ref(false)
+const isConfirmingPlayer = ref(false)
+
+watch(isRoleSettingsVisible, (val) => {
+  // 如果正在弹出新玩家确认对话框，强制禁止气泡框关闭
+  if (!val && isConfirmingPlayer.value) {
+    isRoleSettingsVisible.value = true
+  }
+})
+
 const isLoading = ref(false)
 const loadingProgress = ref(0)
 
@@ -1307,6 +1317,60 @@ const allConditionRecords = computed(() => {
   }))
 })
 
+async function confirmAndPerformPlayerAction(name: string, context: string, action: () => void) {
+  if (!name)
+    return
+
+  if (playersForSelection.value.includes(name)) {
+    action()
+    return
+  }
+
+  isConfirmingPlayer.value = true
+  try {
+    await ElMessageBox.confirm(
+      `玩家「${name}」在当前掉落记录中从未出现过。是否将其添加为${context}？`,
+      '添加新玩家确认',
+      {
+        confirmButtonText: '确定添加',
+        cancelButtonText: '取消',
+        type: 'warning',
+        autofocus: false,
+        lockScroll: false,
+      },
+    )
+    action()
+  }
+  catch {
+    // 用户取消了
+  }
+  finally {
+    // 延迟释放锁定，确保弹窗点击事件处理完后再允许气泡框失焦
+    setTimeout(() => {
+      isConfirmingPlayer.value = false
+    }, 200)
+  }
+}
+
+async function handleRolePlayerChange(name: string, role: string) {
+  if (!name) {
+    playerRoles.value[role] = ''
+    return
+  }
+
+  confirmAndPerformPlayerAction(name, '固定队成员', () => {
+    playerRoles.value[role] = name
+  })
+}
+
+async function addSpecialRole(name: string, type: 'SUB' | 'LEFT') {
+  const context = type === 'SUB' ? '替补成员' : '离队成员'
+  confirmAndPerformPlayerAction(name, context, () => {
+    const roleKey = `${type}:${Date.now()}`
+    playerRoles.value[roleKey] = name
+  })
+}
+
 function getItemSlot(itemName: string): string {
   const def = SLOT_DEFINITIONS.find(d => itemName.includes(d))
   if (def)
@@ -2041,24 +2105,6 @@ function calculateTargetRequirement(row: any, player: string) {
   }
 
   return 0
-}
-
-function addSpecialRole(p: string, type: 'SUB' | 'LEFT') {
-  if (!p)
-    return
-  const exists = Object.entries(playerRoles.value).some(
-    ([role, name]) => role.startsWith(`${type}:`) && name === p,
-  )
-  if (exists)
-    return
-
-  let index = 1
-  let roleKey = `${type}:${index}`
-  while (playerRoles.value[roleKey]) {
-    index++
-    roleKey = `${type}:${index}`
-  }
-  playerRoles.value[roleKey] = p
 }
 
 function comparePlayersByRole(
@@ -3540,6 +3586,7 @@ async function applyPendingWinnerChange() {
                 <span class="title-main">👥 玩家 ({{ visiblePlayerCount }})</span>
                 <div class="header-sep" />
                 <el-popover
+                  v-model:visible="isRoleSettingsVisible"
                   placement="bottom"
                   :width="360"
                   trigger="click"
@@ -3564,7 +3611,7 @@ async function applyPendingWinnerChange() {
                           <RoleBadge :role="role" />
                         </div>
                         <ElSelect
-                          v-model="playerRoles[role]"
+                          :model-value="playerRoles[role]"
                           placeholder="选择/输入玩家"
                           filterable
                           allow-create
@@ -3573,6 +3620,7 @@ async function applyPendingWinnerChange() {
                           size="small"
                           style="flex: 1"
                           :teleported="false"
+                          @change="handleRolePlayerChange($event, role)"
                         >
                           <template #label="{ label, value }">
                             {{ getDisplayName(value || label) }}
