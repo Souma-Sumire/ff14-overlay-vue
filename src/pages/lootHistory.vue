@@ -3299,7 +3299,7 @@ async function applyPendingWinnerChange() {
     class="app-container"
     :class="{
       'is-onboarding':
-        !currentHandle || showTimeSetup || lootRecords.length === 0,
+        lootRecords.length === 0 && (!currentHandle || showTimeSetup),
     }"
   >
     <transition name="fade">
