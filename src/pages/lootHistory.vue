@@ -2797,18 +2797,6 @@ async function processImportJSON(json: any) {
       = !!json.c?.playerCorrections
         && Object.keys(json.c.playerCorrections).length > 0
     const hasSettings = json.c?.filter || json.c?.raidActive !== undefined
-
-    const isLocalBisEmpty
-      = !bisConfig.value
-        || !bisConfig.value.playerBis
-        || Object.keys(bisConfig.value.playerBis).length === 0
-    const isLocalRolesEmpty = Object.keys(playerRoles.value).length === 0
-    const isLocalMappingEmpty = Object.keys(playerMapping.value).length === 0
-    const isLocalWeekCorrectionEmpty
-      = Object.keys(recordWeekCorrections.value).length === 0
-    const isLocalPlayerCorrectionEmpty
-      = Object.keys(recordPlayerCorrections.value).length === 0
-
     // 计算掉落记录差异
     let newLootCount = 0
     if (hasLoot) {
@@ -2886,16 +2874,14 @@ async function processImportJSON(json: any) {
 
     importForm.value = {
       loot: importDiffs.value.loot, // 只有发现新记录才默认勾选
-      bis: hasBis && isLocalBisEmpty && importDiffs.value.bis,
-      roles: hasRoles && isLocalRolesEmpty && importDiffs.value.roles,
-      mapping: hasMapping && isLocalMappingEmpty && importDiffs.value.mapping,
+      bis: hasBis && importDiffs.value.bis,
+      roles: hasRoles && importDiffs.value.roles,
+      mapping: hasMapping && importDiffs.value.mapping,
       weekCorrection:
         hasCorrectionWeek
-        && isLocalWeekCorrectionEmpty
         && importDiffs.value.weekCorrection,
       playerCorrection:
         hasCorrectionPlayer
-        && isLocalPlayerCorrectionEmpty
         && importDiffs.value.playerCorrection,
       settings: hasSettings && importDiffs.value.settings,
     }

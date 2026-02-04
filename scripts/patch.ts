@@ -22,10 +22,12 @@ function applyPatch() {
       console.log('Applying patch...')
       execSync('git apply patches/0001-cactbot-all.patch', { cwd: rootDir, stdio: 'inherit' })
       console.log('✅ Patch applied successfully!')
-    } catch (e) {
+    }
+    catch (e) {
       console.log('ℹ️ Patch already applied or cannot be applied cleanly.')
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('❌ Error applying patch:', error)
   }
 }
