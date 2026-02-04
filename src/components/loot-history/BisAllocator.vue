@@ -42,11 +42,11 @@ const props = defineProps<{
   showOnlyRole?: boolean
 }>()
 
-const getDisplayName = inject('getDisplayName', (n: string) => n)
-
 const emit = defineEmits<{
   (e: 'update:modelValue', val: BisConfig): void
 }>()
+
+const getDisplayName = inject('getDisplayName', (n: string) => n)
 
 const tooltipsOpen = ref<Record<string, boolean>>({})
 
@@ -2225,7 +2225,7 @@ const getRoleGroupClass = getRoleType
   }
 
   .col-item {
-    width: 40px;
+    width: 6em;
     font-weight: 700;
     color: #334155;
     border-right: 1px solid #475569;
