@@ -637,14 +637,16 @@ const baseFilteredRecords = computed(() => {
 })
 
 const filteredRecords = computed(() => {
-  const playerVis = playerVisibility.value
   const isListMode = viewMode.value === 'list'
 
   const result = baseFilteredRecords.value.filter((record) => {
     const player = getActualPlayer(getRecordPlayer(record))
-    return isListMode
-      ? playerVis[player] !== false
-      : !!getPlayerRole(player)
+    // 列表模式下显示所有角色记录，非列表模式（分部位/分玩家/周统计）仅显示固定队成员
+    if (!isListMode && !getPlayerRole(player))
+      return false
+
+    // 始终应用玩家勾选过滤，确保上方玩家标签的开关能影响所有视图
+    return isPlayerChecked(player)
   })
   return result.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
 })
@@ -1219,7 +1221,7 @@ const selectablePlayersForMerge = computed(() => {
 })
 
 const sortedSummaryPlayers = computed(() => {
-  let players = visibleAllPlayers.value
+  let players = visibleAllPlayers.value.filter(isPlayerChecked)
   const filterMode = playerSummaryFilterMode.value
 
   if (filterMode === 'needed') {
@@ -2118,6 +2120,8 @@ function getSortedPlayersInSlot(
   const result: string[] = []
 
   allPlayersInSlot.forEach((p) => {
+    if (!isPlayerChecked(p))
+      return
     const role = getPlayerRole(p)
     const isLeftOrSub = role?.startsWith('LEFT:') || role?.startsWith('SUB:')
     if (filterMode === 'needed' && isLeftOrSub)
@@ -4474,7 +4478,7 @@ async function applyPendingWinnerChange() {
               </template>
               <LootStatisticsPanel
                 :records="normalizedRecords"
-                :players="visibleAllPlayers"
+                :players="visibleAllPlayers.filter(isPlayerChecked)"
                 :get-actual-player="getActualPlayer"
                 :get-player-role="getPlayerRole"
                 :record-week-corrections="recordWeekCorrections"
