@@ -2206,12 +2206,13 @@ const getRoleGroupClass = getRoleType
 .table-container {
   max-width: 100%;
   overflow-x: auto;
-  border: 1px solid #cbd5e1;
+  border: 1px solid black;
   border-radius: 8px;
   position: relative;
+  overflow: hidden;
 
   &::-webkit-scrollbar {
-    height: 6px; /* 变细 */
+    height: 6px;
   }
 
   &::-webkit-scrollbar-track {
@@ -2228,7 +2229,7 @@ const getRoleGroupClass = getRoleType
   }
 
   html.dark & {
-    border-color: #475569;
+    border-color: #334155;
 
     &::-webkit-scrollbar-track {
       background: rgba(255, 255, 255, 0.05);
@@ -2255,26 +2256,38 @@ const getRoleGroupClass = getRoleType
   td {
     box-sizing: border-box;
     text-align: center;
-    min-width: 65px; /* 允许压缩到65px */
+    min-width: 65px;
     padding: 0 4px !important;
     height: 38px;
-    border-right: 1px solid #cbd5e1;
-    border-bottom: 1px solid #cbd5e1;
+    border-right: 1px solid rgba(148, 163, 184, 0.1);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
     vertical-align: middle;
     position: relative;
 
-    &:last-child {
-      border-right: 1px solid #475569;
+    html.dark & {
+      color: #94a3b8;
+      border-color: rgba(148, 163, 184, 0.1);
     }
   }
 
-  tr.is-group-end td,
-  tr.is-group-end th {
-    border-bottom: 2px solid #475569 !important;
+  tr td:last-child,
+  tr th:last-child {
+    border-right: none;
   }
 
-  tr:last-child td {
-    border-bottom: 1px solid #475569;
+  tr.is-layer-end td,
+  tr.is-layer-end th,
+  .macro-cell {
+    border-bottom: 1px solid black !important;
+    html.dark & {
+      border-bottom-color: #334155 !important;
+    }
+  }
+
+  tr:last-child td,
+  tr:last-child th,
+  tr:last-child .macro-cell {
+    border-bottom: none !important;
   }
 
   th {
@@ -2283,12 +2296,40 @@ const getRoleGroupClass = getRoleType
     font-weight: 700;
     white-space: nowrap;
     color: #475569;
-    border-top: 1px solid #475569;
-    border-bottom: 1px solid #94a3b8;
+
+    html.dark & {
+      background: #111827;
+      color: #94a3b8;
+    }
   }
 
-  tr.is-layer-end td {
-    border-bottom: 1px solid #475569;
+  thead {
+    position: relative;
+    &::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0px;
+      height: 1px;
+      background-color: black;
+      z-index: 100;
+      pointer-events: none;
+
+      html.dark & {
+        background-color: #334155;
+      }
+    }
+  }
+
+  thead th {
+    background: #f1f5f9 !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+
+    html.dark & {
+      background: #111827 !important;
+    }
   }
 
   .col-layer {
@@ -2296,8 +2337,13 @@ const getRoleGroupClass = getRoleType
     min-width: 32px;
     max-width: 32px;
     left: 0;
-    border-left: 1px solid #475569;
-    border-right: 1px solid #475569;
+    background: #f8fafc;
+    border-right: 1px solid #cbd5e1 !important;
+
+    html.dark & {
+      background: #0f172a;
+      border-right-color: rgba(148, 163, 184, 0.2) !important;
+    }
   }
 
   .col-item {
@@ -2306,14 +2352,27 @@ const getRoleGroupClass = getRoleType
     max-width: 110px;
     font-weight: 700;
     color: #334155;
-    border-right: 1px solid #475569;
+    background: #f8fafc;
+    border-right: 1px solid #cbd5e1 !important;
+
+    html.dark & {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-right-color: rgba(148, 163, 184, 0.2) !important;
+    }
   }
 
   .col-macro {
+    position: relative;
     width: 250px;
     min-width: 250px;
     max-width: 250px;
     text-align: left;
+    border-left: 1px solid #cbd5e1 !important;
+
+    html.dark & {
+      border-left-color: rgba(148, 163, 184, 0.2) !important;
+    }
 
     .macro-header-content {
       display: flex;
@@ -2361,6 +2420,21 @@ const getRoleGroupClass = getRoleType
     }
   }
 
+  th.col-macro::before {
+    content: '';
+    position: absolute;
+    left: -1px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: #cbd5e1;
+    z-index: 5;
+
+    html.dark & {
+      background-color: rgba(148, 163, 184, 0.2);
+    }
+  }
+
   .layer-cell {
     background: #f8fafc;
     color: #1e293b;
@@ -2381,7 +2455,23 @@ const getRoleGroupClass = getRoleType
     padding: 0 !important;
     vertical-align: middle;
     height: 1px;
-    overflow: hidden;
+    overflow: visible;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: -1px;
+      top: 0;
+      width: 1px;
+      height: calc(100% + 1px);
+      background-color: #cbd5e1;
+      z-index: 5;
+
+      html.dark & {
+        background-color: rgba(148, 163, 184, 0.2);
+      }
+    }
 
     html.dark & {
       background: #1e1f29;
@@ -2390,7 +2480,7 @@ const getRoleGroupClass = getRoleType
 
   .macro-preview-box {
     position: relative;
-    padding: 0 8px; /* 移除上下padding，确保首行对齐 */
+    padding: 0 8px;
     height: 100%;
     min-height: 100%;
     cursor: default;
@@ -2433,7 +2523,7 @@ const getRoleGroupClass = getRoleType
   }
 
   .macro-preview-line {
-    height: 38px; /* 精确匹配表格行高 */
+    height: 38px;
     display: flex;
     align-items: center;
     white-space: nowrap;
@@ -2456,7 +2546,7 @@ const getRoleGroupClass = getRoleType
     border-radius: 4px;
     color: #3b82f6;
     opacity: 0;
-    transform: scale(0.9) translateZ(0); /* 开启硬件加速 */
+    transform: scale(0.9) translateZ(0);
     backface-visibility: hidden;
     will-change: transform, opacity;
     transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
