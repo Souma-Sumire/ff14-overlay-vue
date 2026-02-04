@@ -232,6 +232,24 @@ function generateEquipLines(rows: BisRow[]): string[] {
   return lines
 }
 
+function formatMacroLine(line: string): string {
+  // 简单的高亮逻辑:
+  // 1. /p 变暗
+  // 2. 物品名 (冒号前) 变亮
+  // 3. 常见职能名变色 (MT/ST/H1/H2/D1-D4)
+
+  let html = line
+    .replace(/^(\/p)\s+/, '<span class="macro-cmd">$1</span> ')
+    .replace(/^(.+?)：/, '<span class="macro-item">$1</span>：')
+
+  // 高亮职能组
+  html = html.replace(/\b(MT|ST)\b/g, '<span class="role-tank">$1</span>')
+  html = html.replace(/\b(H1|H2)\b/g, '<span class="role-healer">$1</span>')
+  html = html.replace(/\b(D[1-4])\b/g, '<span class="role-dps">$1</span>')
+
+  return html
+}
+
 function getLayerMacroLines(layer: { name: string, rows: BisRow[] }) {
   const { weekNum, dateStr } = getMacroInfo()
   const header = `/p <${dateStr} 第${weekNum}周 ${layer.name}分配>`
@@ -1195,9 +1213,8 @@ const getRoleGroupClass = getRoleType
                         v-for="(line, idx) in getLayerMacroLines(layer).slice(1)"
                         :key="idx"
                         class="macro-preview-line"
-                      >
-                        {{ line }}
-                      </div>
+                        v-html="formatMacroLine(line)"
+                      />
                     </div>
                     <div class="macro-copy-action" @click.stop="handleCopyMacro(layer)">
                       <el-icon><CopyDocument /></el-icon>
@@ -3255,24 +3272,31 @@ html.dark {
       }
 
       .status-need {
-        background-color: #064e3b !important;
+        background-color: rgba(6, 78, 59, 0.5) !important;
         color: #6ee7b7 !important;
+        box-shadow: none;
+        backdrop-filter: brightness(1.2);
       }
       .status-greed-tome {
-        background-color: #0c4a6e !important;
+        background-color: rgba(12, 74, 110, 0.5) !important;
         color: #7dd3fc !important;
+        box-shadow: none;
+        backdrop-filter: brightness(1.2);
       }
       .status-pass {
-        background-color: #1e293b !important;
-        color: #64748b !important;
+        background-color: transparent !important;
+        color: #475569 !important;
+
+        &:hover {
+           background-color: rgba(255, 255, 255, 0.02) !important;
+           color: #64748b !important;
+        }
       }
       .status-assigned {
-        background-color: #10b981 !important;
-        color: #064e3b !important;
+        background-color: rgba(16, 185, 129, 0.2) !important;
+        color: #34d399 !important;
         font-weight: 800;
-        border-color: #34d399;
-        box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
-        transform: scale(1.02);
+        box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.5), 0 0 15px rgba(16, 185, 129, 0.1);
       }
     }
 
@@ -3756,6 +3780,46 @@ html.dark {
   .el-popper__arrow::before {
     background: #1e293b !important;
     border: none !important;
+  }
+}
+
+/* Macro Syntax Highlighting */
+.macro-cmd {
+  color: #94a3b8;
+  font-weight: normal;
+}
+.macro-item {
+  color: #334155;
+  font-weight: 700;
+}
+.role-tank {
+  color: #2563eb;
+  font-weight: 600;
+}
+.role-healer {
+  color: #16a34a;
+  font-weight: 600;
+}
+.role-dps {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+html.dark {
+  .macro-cmd {
+    color: #64748b;
+  }
+  .macro-item {
+    color: #e2e8f0;
+  }
+  .role-tank {
+    color: #60a5fa;
+  }
+  .role-healer {
+    color: #4ade80;
+  }
+  .role-dps {
+    color: #f87171;
   }
 }
 </style>
