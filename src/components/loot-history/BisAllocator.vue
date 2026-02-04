@@ -2213,6 +2213,7 @@ const getRoleGroupClass = getRoleType
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   border-radius: 8px;
   overflow: hidden;
+  border: 1px solid black;
 
   -webkit-mask-image: -webkit-radial-gradient(white, black);
   mask-image: radial-gradient(white, black);
