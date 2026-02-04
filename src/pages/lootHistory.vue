@@ -9156,7 +9156,7 @@ html.dark {
 
 .bis-allocator-wrapper {
   position: relative;
-  min-height: 400px;
+  min-height: 600px;
 }
 
 .bis-lock-mask {
@@ -9203,14 +9203,14 @@ html.dark .bis-lock-mask {
 
 .lock-card {
   background: #fff;
-  padding: 40px;
-  border-radius: 24px;
+  padding: 24px 32px;
+  border-radius: 20px;
   box-shadow:
     0 25px 50px -12px rgba(0, 0, 0, 0.15),
     0 0 0 1px rgba(0, 0, 0, 0.05);
   text-align: center;
-  width: 440px;
-  max-width: calc(100% - 40px);
+  width: 400px;
+  max-width: calc(100% - 32px);
   position: relative;
   overflow: hidden;
   animation: lock-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -9225,20 +9225,20 @@ html.dark .lock-card {
 }
 
 .lock-header {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .lock-icon-wrapper {
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
   background: #fff7ed;
   color: #f59e0b;
-  border-radius: 16px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
-  margin: 0 auto 20px;
+  font-size: 24px;
+  margin: 0 auto 16px;
   box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.1);
 
   html.dark & {
@@ -9247,8 +9247,8 @@ html.dark .lock-card {
 }
 
 .lock-card h3 {
-  margin: 0 0 8px;
-  font-size: 1.5rem;
+  margin: 0 0 4px;
+  font-size: 1.25rem;
   font-weight: 800;
   letter-spacing: -0.025em;
 }
@@ -9256,7 +9256,7 @@ html.dark .lock-card {
 .lock-card p {
   color: #64748b;
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
 }
 
 html.dark .lock-card p {
@@ -9266,22 +9266,22 @@ html.dark .lock-card p {
 .status-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 32px;
+  gap: 10px;
+  margin-bottom: 8px;
 }
 
 .status-item {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
+  padding: 10px 14px;
   background: #f8fafc;
   border: 1px solid #f1f5f9;
-  border-radius: 12px;
+  border-radius: 10px;
   transition: all 0.3s ease;
 
   .item-icon {
-    font-size: 20px;
-    margin-right: 12px;
+    font-size: 18px;
+    margin-right: 10px;
     color: #94a3b8;
     display: flex;
   }
@@ -9290,6 +9290,7 @@ html.dark .lock-card p {
     flex: 1;
     text-align: left;
     font-weight: 600;
+    font-size: 0.9rem;
     color: #475569;
   }
 
