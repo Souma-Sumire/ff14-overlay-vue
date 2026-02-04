@@ -1306,7 +1306,13 @@ const normalizedRecords = computed(() => {
 
 function getItemSlot(itemName: string): string {
   const def = SLOT_DEFINITIONS.find(d => itemName.includes(d))
-  return def || '其他'
+  if (def)
+    return def
+
+  if (itemName.includes(GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD))
+    return '随武'
+
+  return '其他'
 }
 
 const slotSummary = computed(() => {
@@ -1335,6 +1341,26 @@ const slotSummary = computed(() => {
     currentSlot[p]++
   })
   return summary
+})
+
+const randomWeaponDetails = computed(() => {
+  const map: Record<string, Record<string, number>> = {}
+  filteredRecords.value.forEach((r) => {
+    if (getItemSlot(r.item) === '随武') {
+      const p = getActualPlayer(getRecordPlayer(r))
+      if (!map[p])
+        map[p] = {}
+      map[p][r.item] = (map[p][r.item] || 0) + 1
+    }
+  })
+  const result: Record<string, { name: string, count: number }[]> = {}
+  for (const p in map) {
+    result[p] = Object.entries(map[p]!).map(([name, count]) => ({
+      name,
+      count,
+    }))
+  }
+  return result
 })
 
 const displaySlots = computed(() => {
@@ -2123,13 +2149,15 @@ function getSlotItemTagInfo(player: string, slotName: string, count: number) {
   )
   if (!row) {
     const isRandomWeapon
-      = slotName.startsWith(GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD)
-        && RAID_REGEX.test(slotName)
+      = slotName === '随武'
+        || (slotName.startsWith(GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD)
+          && RAID_REGEX.test(slotName))
 
     return {
       count,
       isRandomWeapon,
       layerName: isRandomWeapon ? '4层' : undefined,
+      details: isRandomWeapon ? randomWeaponDetails.value[player] : undefined,
     }
   }
 
@@ -2182,6 +2210,7 @@ function getFilteredItemsInPlayerSummary(player: string) {
     id?: string
     isRandomWeapon?: boolean
     layerName?: string
+    details?: { name: string, count: number }[]
   }[] = []
 
   const roleKey = getPlayerRole(player)
@@ -2221,27 +2250,41 @@ function getFilteredItemsInPlayerSummary(player: string) {
     }
   })
 
-  const isComplete = isPlayerComplete(
-    bisConfig.value,
-    getPlayerRole(player) || player,
-  )
-
   // 3. 处理杂项（识别随武）
+  // 聚合所有随武
+  const randomWeaponItems: { name: string, count: number }[] = []
   Object.entries(obtainedItemsMap).forEach(([itemName, count]) => {
     if (!consumedItemNames.has(itemName)) {
-      const isRandomWeapon
-        = itemName.startsWith(GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD)
-          && RAID_REGEX.test(itemName)
+      if (
+        itemName.startsWith(GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD)
+        && RAID_REGEX.test(itemName)
+      ) {
+        randomWeaponItems.push({ name: itemName, count: count as number })
+        consumedItemNames.add(itemName)
+      }
+    }
+  })
+
+  // 如果有随武，添加聚合项
+  if (randomWeaponItems.length > 0) {
+    const totalCount = randomWeaponItems.reduce((sum, i) => sum + i.count, 0)
+    results.push({
+      name: '随武',
+      count: totalCount,
+      isRandomWeapon: true,
+      layerName: '4层',
+      details: randomWeaponItems,
+    })
+  }
+
+  // 处理剩余杂项
+  Object.entries(obtainedItemsMap).forEach(([itemName, count]) => {
+    if (!consumedItemNames.has(itemName)) {
       results.push({
         name: itemName,
-        count,
-        isRandomWeapon,
-        isBis: isRandomWeapon
-          ? undefined
-          : hasRole && isComplete
-            ? false
-            : undefined,
-        layerName: isRandomWeapon ? '4层' : undefined,
+        count: count as number,
+        isBis: undefined,
+        layerName: undefined,
       })
     }
   })

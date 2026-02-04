@@ -4,6 +4,7 @@ interface SummaryItem {
   isBis?: boolean
   isRandomWeapon?: boolean
   layerName?: string
+  details?: { name: string, count: number }[]
   [key: string]: any
 }
 
@@ -14,7 +15,25 @@ defineProps<{
 
 <template>
   <div class="summary-item-right">
-    <span v-if="item.isRandomWeapon" class="random-weapon-tag">随武</span>
+    <el-tooltip
+      v-if="item.isRandomWeapon && item.details && item.details.length"
+      effect="dark"
+      placement="top"
+      :show-after="200"
+      popper-class="rw-tooltip-popper"
+    >
+      <template #content>
+        <div class="rw-tooltip-list">
+          <div v-for="(d, i) in item.details" :key="i" class="rw-tip-row">
+            <span class="rw-tip-name">{{ d.name }}</span>
+            <span class="rw-tip-count">x{{ d.count }}</span>
+          </div>
+        </div>
+      </template>
+      <span class="random-weapon-tag cursor-pointer">随武</span>
+    </el-tooltip>
+    <span v-else-if="item.isRandomWeapon" class="random-weapon-tag">随武</span>
+
     <template v-else>
       <span v-if="item.isBis" class="bis-tag">毕业</span>
       <span v-else-if="item.isBis === false" class="non-bis-tag">副职</span>
@@ -46,6 +65,11 @@ defineProps<{
   border-radius: 99px;
   font-weight: 800;
   white-space: nowrap;
+}
+
+.random-weapon-tag.cursor-pointer {
+  cursor: help;
+  border-bottom: 1px dashed rgba(217, 119, 6, 0.5);
 }
 
 .layer-tag {
@@ -132,5 +156,43 @@ defineProps<{
     color: #f87171;
     border-color: rgba(239, 68, 68, 0.2);
   }
+}
+</style>
+
+<style>
+.rw-tooltip-popper {
+  background: #1f2937 !important;
+  border: 1px solid #374151 !important;
+  padding: 6px 10px !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4) !important;
+}
+/* 强制小箭头背景颜色一致 */
+.rw-tooltip-popper .el-popper__arrow::before {
+  background: #1f2937 !important;
+  border: 1px solid #374151 !important;
+}
+
+.rw-tooltip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 120px;
+}
+.rw-tip-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11.5px;
+  line-height: 1.3;
+}
+.rw-tip-name {
+  color: #f3f4f6 !important;
+  font-weight: 500;
+}
+.rw-tip-count {
+  color: #fbbf24 !important;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
 }
 </style>
