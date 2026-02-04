@@ -3574,6 +3574,9 @@ async function applyPendingWinnerChange() {
                           style="flex: 1"
                           :teleported="false"
                         >
+                          <template #label="{ label, value }">
+                            {{ getDisplayName(value || label) }}
+                          </template>
                           <ElOption
                             v-for="p in playersForSelection.filter(
                               (p) =>
@@ -3581,7 +3584,7 @@ async function applyPendingWinnerChange() {
                                 || !assignedPlayers.has(p),
                             )"
                             :key="p"
-                            :label="p"
+                            :label="getDisplayName(p)"
                             :value="p"
                           />
                         </ElSelect>
