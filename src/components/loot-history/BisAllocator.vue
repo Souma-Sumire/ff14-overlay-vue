@@ -2997,6 +2997,13 @@ const getRoleGroupClass = getRoleType
   display: flex;
   flex-direction: column;
   align-items: center;
+  cursor: help;
+}
+
+.rw-simple-count-active,
+.rw-simple-count-none {
+  text-decoration: underline dashed currentColor 1px;
+  text-underline-offset: 3px;
 }
 
 .vert-header {

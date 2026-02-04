@@ -2083,6 +2083,9 @@ function calculateTargetRequirement(row: any, player: string) {
     return 0
   const bis = (bisConfig.value.playerBis || {})[roleKey] || {}
 
+  if (row.id === 'random_weapon')
+    return 0
+
   if (row.type === 'count' && bis[row.id] === 0) {
     return 0
   }
@@ -2196,8 +2199,17 @@ function getSortedPlayersInSlot(
 
 function getSlotItemTagInfo(player: string, slotName: string, count: number) {
   const row = DEFAULT_ROWS.find(
-    r => r.name === slotName || r.keywords === slotName,
+    r => r.name === slotName || r.keywords === slotName || r.id === slotName,
   )
+
+  if (row?.id === 'random_weapon' || slotName === '随武') {
+    return {
+      count,
+      isRandomWeapon: true,
+      layerName: '4层',
+      details: randomWeaponDetails.value[player],
+    }
+  }
   if (!row) {
     const isRandomWeapon
       = slotName === '随武'
@@ -2292,9 +2304,13 @@ function getFilteredItemsInPlayerSummary(player: string) {
         name: row.keywords || row.name,
         count: cVal,
         isBis:
-          hasRole && playerBis[row.id] !== undefined
-            ? targetReq > 0
-            : undefined,
+          row.id === 'random_weapon'
+            ? undefined
+            : hasRole && playerBis[row.id] !== undefined
+              ? targetReq > 0
+              : undefined,
+        isRandomWeapon: row.id === 'random_weapon',
+        details: row.id === 'random_weapon' ? randomWeaponDetails.value[player] : undefined,
         id: row.id,
         layerName: layer ? layer.name : undefined,
       })

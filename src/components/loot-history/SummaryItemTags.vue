@@ -15,6 +15,14 @@ defineProps<{
 
 <template>
   <div class="summary-item-right">
+    <span v-if="item.isRandomWeapon" class="random-weapon-tag">随武</span>
+
+    <template v-else>
+      <span v-if="item.isBis" class="bis-tag">毕业</span>
+      <span v-else-if="item.isBis === false" class="non-bis-tag">副职</span>
+    </template>
+    <span v-if="item.layerName" class="layer-tag">{{ item.layerName }}</span>
+
     <el-tooltip
       v-if="item.isRandomWeapon && item.details && item.details.length"
       effect="dark"
@@ -30,16 +38,16 @@ defineProps<{
           </div>
         </div>
       </template>
-      <span class="random-weapon-tag cursor-pointer">随武</span>
+      <span
+        class="count-badge cursor-help" :class="[
+          item.count > 1 ? 'count-many' : item.count === 0 ? 'count-none' : 'count-single',
+        ]"
+      >
+        x{{ item.count }}
+      </span>
     </el-tooltip>
-    <span v-else-if="item.isRandomWeapon" class="random-weapon-tag">随武</span>
-
-    <template v-else>
-      <span v-if="item.isBis" class="bis-tag">毕业</span>
-      <span v-else-if="item.isBis === false" class="non-bis-tag">副职</span>
-    </template>
-    <span v-if="item.layerName" class="layer-tag">{{ item.layerName }}</span>
     <span
+      v-else
       class="count-badge" :class="[
         item.count > 1 ? 'count-many' : item.count === 0 ? 'count-none' : 'count-single',
       ]"
@@ -56,6 +64,12 @@ defineProps<{
   gap: 4px;
 }
 
+.cursor-help {
+  cursor: help;
+  text-decoration: underline dashed currentColor 1px;
+  text-underline-offset: 3px;
+}
+
 .bis-tag,
 .non-bis-tag,
 .random-weapon-tag,
@@ -65,11 +79,6 @@ defineProps<{
   border-radius: 99px;
   font-weight: 800;
   white-space: nowrap;
-}
-
-.random-weapon-tag.cursor-pointer {
-  cursor: help;
-  border-bottom: 1px dashed rgba(217, 119, 6, 0.5);
 }
 
 .layer-tag {
