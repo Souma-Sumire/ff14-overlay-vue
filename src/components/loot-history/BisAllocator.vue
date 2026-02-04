@@ -5,6 +5,7 @@ import type { BisConfig, BisRow, BisValue, LegacyBisConfig } from '@/utils/bisUt
 import type { LootRecord } from '@/utils/lootParser'
 import {
   ArrowDown,
+  CopyDocument,
   Delete,
   Edit,
   InfoFilled,
@@ -18,7 +19,7 @@ import {
   Warning,
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { computed, inject, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { getPresetsForRole } from '@/utils/bisPresets'
 import {
 
@@ -45,8 +46,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:modelValue', val: BisConfig): void
 }>()
-
-const getDisplayName = inject('getDisplayName', (n: string) => n)
 
 const tooltipsOpen = ref<Record<string, boolean>>({})
 
@@ -156,6 +155,36 @@ const validationAlerts = computed(() => {
   return alerts
 })
 
+function getMacroInfo() {
+  const now = new Date()
+  return {
+    weekNum: getFF14WeekNumber(),
+    dateStr: `${now.getMonth() + 1}月${now.getDate()}日`,
+  }
+}
+
+function handleCopyAllMacro() {
+  const { weekNum, dateStr } = getMacroInfo()
+  const lines = [`/p <${dateStr} 第${weekNum}周分配优先级>`]
+
+  layeredViewRows.value.forEach((layer) => {
+    lines.push(...generateEquipLines(layer.rows))
+  })
+
+  const text = lines.join('\n')
+  if (!text)
+    return
+
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      ElMessage.success(`已复制全层宏 (共${lines.length}行)`)
+    })
+    .catch(() => {
+      ElMessage.error('复制失败')
+    })
+}
+
 function generateEquipLines(rows: BisRow[]): string[] {
   const lines: string[] = []
   rows.forEach((row) => {
@@ -165,7 +194,7 @@ function generateEquipLines(rows: BisRow[]): string[] {
     // 队长分配具有最高优先级
     if (customAllocations.value[row.id]) {
       const p = customAllocations.value[row.id]!
-      let displayName = getDisplayName(props.getPlayerRole?.(p) || p)
+      let displayName = props.getPlayerRole?.(p) || p
       displayName = displayName.replace(/^LEFT:/, '').trim()
       lines.push(`/p ${row.name}：${displayName} (队长分配)`)
       return
@@ -175,7 +204,7 @@ function generateEquipLines(rows: BisRow[]): string[] {
       if (excludedPlayers.value.has(p))
         return
 
-      let displayName = getDisplayName(props.getPlayerRole?.(p) || p)
+      let displayName = props.getPlayerRole?.(p) || p
       displayName = displayName.replace(/^LEFT:/, '').trim()
 
       const status = getLogicStatus(p, row)
@@ -203,6 +232,12 @@ function generateEquipLines(rows: BisRow[]): string[] {
   return lines
 }
 
+function getLayerMacroLines(layer: { name: string, rows: BisRow[] }) {
+  const { weekNum, dateStr } = getMacroInfo()
+  const header = `/p <${dateStr} 第${weekNum}周 ${layer.name}分配>`
+  return [header, ...generateEquipLines(layer.rows)]
+}
+
 function getFF14WeekNumber(): number {
   if (!props.records || props.records.length === 0)
     return 1
@@ -210,28 +245,16 @@ function getFF14WeekNumber(): number {
 }
 
 function handleCopyMacro(command: { name: string, rows: BisRow[] } | 'all') {
-  const now = new Date()
-  const weekNum = getFF14WeekNumber()
-  const dateStr = `${now.getMonth() + 1}月${now.getDate()}日`
-  let text = ''
-  let message = ''
-
   if (command === 'all') {
-    const lines = [`/p <第${weekNum}周分配优先级> ${dateStr}`]
-
-    layeredViewRows.value.forEach((layer) => {
-      lines.push(...generateEquipLines(layer.rows))
-    })
-
-    text = lines.join('\n')
-    message = `已复制全层宏 (共${lines.length}行)`
+    handleCopyAllMacro()
+    return
   }
-  else {
-    const lines = [`/p <第${weekNum}周${command.name}分配优先级> ${dateStr}`]
-    lines.push(...generateEquipLines(command.rows))
-    text = lines.join('\n')
-    message = `已复制 ${command.name} 分配宏`
-  }
+
+  const { weekNum, dateStr } = getMacroInfo()
+  const lines = [`/p <${dateStr} 第${weekNum}周 ${command.name}分配优先级>`]
+  lines.push(...generateEquipLines(command.rows))
+  const text = lines.join('\n')
+  const message = `已复制 ${command.name} 分配宏`
 
   if (!text)
     return
@@ -933,64 +956,6 @@ const getRoleGroupClass = getRoleType
         </el-icon>
         <span>野队获取修正</span>
       </el-button>
-
-      <el-dropdown
-        v-if="isConfigComplete"
-        trigger="click"
-        @command="handleCopyMacro"
-      >
-        <el-button size="small">
-          复制分配宏<el-icon class="el-icon--right">
-            <ArrowDown />
-          </el-icon>
-        </el-button>
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item command="all">
-              全层
-            </el-dropdown-item>
-            <el-dropdown-item
-              v-for="layer in layeredViewRows"
-              :key="layer.name"
-              :command="layer"
-              divided
-            >
-              {{ layer.name }}
-            </el-dropdown-item>
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
-
-      <el-popover
-        v-if="isConfigComplete"
-        placement="top"
-        title="分配宏生成规则"
-        :width="320"
-        trigger="hover"
-      >
-        <template #reference>
-          <el-icon class="macro-help-icon">
-            <QuestionFilled />
-          </el-icon>
-        </template>
-        <div class="macro-help-content">
-          <div class="intro">
-            生成可以直接在游戏内发送的分配宏（/p）。
-          </div>
-          <div class="rule-item">
-            <strong>1. 优先需求</strong>
-            <span>仅显示BIS设为“零式”且尚未获得的玩家。</span>
-          </div>
-          <div class="rule-item">
-            <strong>2. 次选贪婪</strong>
-            <span>若无需求者，显示其余尚未获得的玩家。</span>
-          </div>
-          <div class="rule-item">
-            <strong>3. 兜底机制</strong>
-            <span>若全员不需要，显示“随便ROLL”。</span>
-          </div>
-        </div>
-      </el-popover>
     </div>
 
     <div v-if="isConfigComplete" class="bis-view-panel">
@@ -1033,6 +998,56 @@ const getRoleGroupClass = getRoleType
                       <span>请假</span>
                     </template>
                   </div>
+                </div>
+              </th>
+              <th class="col-macro">
+                <div class="macro-header-content">
+                  <div class="header-left">
+                    <div class="title-with-icon">
+                      <span>分配宏</span>
+                    </div>
+                    <el-popover
+                      placement="top"
+                      title="分配宏生成规则"
+                      :width="320"
+                      trigger="hover"
+                    >
+                      <template #reference>
+                        <el-icon class="macro-help-icon" style="margin: 0">
+                          <QuestionFilled />
+                        </el-icon>
+                      </template>
+                      <div class="macro-help-content">
+                        <div class="intro">
+                          生成可以直接在游戏内发送的分配宏（/p）。
+                        </div>
+                        <div class="rule-item">
+                          <strong>1. 优先需求</strong>
+                          <span>仅显示BIS设为“零式”且尚未获得的玩家。</span>
+                        </div>
+                        <div class="rule-item">
+                          <strong>2. 次选贪婪</strong>
+                          <span>若无需求者，显示其余尚未获得的玩家。</span>
+                        </div>
+                        <div class="rule-item">
+                          <strong>3. 兜底机制</strong>
+                          <span>若全员不需要，显示“随便ROLL”。</span>
+                        </div>
+                      </div>
+                    </el-popover>
+                  </div>
+                  <el-button
+                    link
+                    type="primary"
+                    size="small"
+                    class="copy-full-text-btn"
+                    @click="handleCopyAllMacro"
+                  >
+                    <el-icon>
+                      <CopyDocument />
+                    </el-icon>
+                    <span>复制全部</span>
+                  </el-button>
                 </div>
               </th>
             </tr>
@@ -1167,6 +1182,26 @@ const getRoleGroupClass = getRoleType
                         </span>
                       </div>
                     </el-tooltip>
+                  </div>
+                </td>
+                <td
+                  v-if="rIdx === 0"
+                  :rowspan="layer.rows.length"
+                  class="col-macro macro-cell"
+                >
+                  <div class="macro-preview-box">
+                    <div class="macro-preview-content">
+                      <div
+                        v-for="(line, idx) in getLayerMacroLines(layer).slice(1)"
+                        :key="idx"
+                        class="macro-preview-line"
+                      >
+                        {{ line }}
+                      </div>
+                    </div>
+                    <div class="macro-copy-action" @click.stop="handleCopyMacro(layer)">
+                      <el-icon><CopyDocument /></el-icon>
+                    </div>
                   </div>
                 </td>
               </tr>
@@ -2156,11 +2191,8 @@ const getRoleGroupClass = getRoleType
   margin: 0 auto;
   width: fit-content;
   max-width: 100%;
-  border: 1px solid #475569;
-  border-radius: 8px;
-  overflow: auto;
-  background: #fff;
   max-height: 75vh;
+  background: #fff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 
   -webkit-mask-image: -webkit-radial-gradient(white, black);
@@ -2171,8 +2203,49 @@ const getRoleGroupClass = getRoleType
   }
 }
 
+.table-container {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  position: relative;
+
+  &::-webkit-scrollbar {
+    height: 6px; /* 变细 */
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    &:hover {
+      background: rgba(0, 0, 0, 0.25);
+    }
+  }
+
+  html.dark & {
+    border-color: #475569;
+
+    &::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      &:hover {
+        background: rgba(255, 255, 255, 0.25);
+      }
+    }
+  }
+}
+
 .bis-table {
-  width: max-content;
+  width: 100%;
+  min-width: max-content;
   border-collapse: collapse;
   font-size: 13px;
   table-layout: fixed;
@@ -2182,14 +2255,13 @@ const getRoleGroupClass = getRoleType
   td {
     box-sizing: border-box;
     text-align: center;
-    width: 90px;
-    min-width: 90px;
-    max-width: 90px;
-    padding: 0 !important;
-    height: 32px;
+    min-width: 65px; /* 允许压缩到65px */
+    padding: 0 4px !important;
+    height: 38px;
     border-right: 1px solid #cbd5e1;
     border-bottom: 1px solid #cbd5e1;
     vertical-align: middle;
+    position: relative;
 
     &:last-child {
       border-right: 1px solid #475569;
@@ -2229,12 +2301,64 @@ const getRoleGroupClass = getRoleType
   }
 
   .col-item {
-    width: 85px;
-    min-width: 85px;
-    max-width: 85px;
+    width: 110px;
+    min-width: 110px;
+    max-width: 110px;
     font-weight: 700;
     color: #334155;
     border-right: 1px solid #475569;
+  }
+
+  .col-macro {
+    width: 250px;
+    min-width: 250px;
+    max-width: 250px;
+    text-align: left;
+
+    .macro-header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 8px;
+      gap: 4px;
+      white-space: nowrap;
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+      }
+
+      .title-with-icon {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .copy-full-text-btn {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 0;
+        height: auto;
+        color: #3b82f6;
+
+        &:hover {
+          color: #2563eb;
+          text-decoration: underline;
+        }
+      }
+
+      .copy-all-icon {
+        cursor: pointer;
+        font-size: 13px;
+        color: #3b82f6;
+        transition: transform 0.2s;
+
+        &:hover {
+          transform: scale(1.2);
+        }
+      }
+    }
   }
 
   .layer-cell {
@@ -2249,6 +2373,124 @@ const getRoleGroupClass = getRoleType
     line-height: 1.1;
     text-shadow: none;
     border-bottom-color: #475569;
+  }
+
+  .macro-cell {
+    background: #f8fafc;
+    border-bottom-color: #475569;
+    padding: 0 !important;
+    vertical-align: middle;
+    height: 1px;
+    overflow: hidden;
+
+    html.dark & {
+      background: #1e1f29;
+    }
+  }
+
+  .macro-preview-box {
+    position: relative;
+    padding: 0 8px; /* 移除上下padding，确保首行对齐 */
+    height: 100%;
+    min-height: 100%;
+    cursor: default;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    background: transparent;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: rgba(59, 130, 246, 0.04);
+    }
+
+    &:hover .macro-copy-action {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    html.dark & {
+      &:hover {
+        background: rgba(59, 130, 246, 0.08);
+      }
+    }
+  }
+
+  .macro-preview-content {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 11px;
+    line-height: 1.25;
+    color: #475569;
+    text-align: left;
+    width: 100%;
+    overflow: hidden;
+
+    html.dark & {
+      color: #cbd5e1;
+    }
+  }
+
+  .macro-preview-line {
+    height: 38px; /* 精确匹配表格行高 */
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 24px;
+  }
+
+  .macro-copy-action {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    color: #3b82f6;
+    opacity: 0;
+    transform: scale(0.9) translateZ(0); /* 开启硬件加速 */
+    backface-visibility: hidden;
+    will-change: transform, opacity;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                background 0.2s ease,
+                color 0.2s ease,
+                border-color 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+    &:hover {
+      background: #eff6ff;
+      color: #2563eb;
+      border-color: #3b82f6;
+    }
+
+    html.dark & {
+      background: #1e293b;
+      border-color: #334155;
+      color: #60a5fa;
+
+      &:hover {
+        background: #334155;
+        color: #93c5fd;
+      }
+    }
+
+    .el-icon {
+      font-size: 14px;
+    }
+  }
+
+  .macro-btn {
+    font-weight: 700;
+    font-size: 11px;
   }
 
   td.col-item {
@@ -2494,7 +2736,7 @@ const getRoleGroupClass = getRoleType
       width: auto;
       height: 14px;
       opacity: 1 !important;
-      background: transparent !important; /* 彻底移除绿色底 */
+      background: transparent !important;
       border: none !important;
       box-shadow: none;
       padding: 0;
@@ -2805,7 +3047,7 @@ const getRoleGroupClass = getRoleType
   .magic-icon {
     margin-right: 2px;
     font-size: 10px;
-    color: #f59e0b; /* Amber icon for 'Magic' feel without clashing bg */
+    color: #f59e0b;
     flex-shrink: 0;
   }
 
@@ -3304,7 +3546,6 @@ html.dark {
 </style>
 
 <style lang="scss">
-// 队长分配专用下拉框全局样式 (处理 Teleport)
 .el-popper.captain-player-popper,
 .el-popper.captain-player-tooltip-new {
   background: #ffffff !important;
@@ -3385,8 +3626,8 @@ html.dark {
     &::before {
       background: #ffffff !important;
       border: 1px solid #e4e7ed !important;
-      border-top: none !important; // 移除旋转后的“右侧”边框
-      border-right: none !important; // 移除旋转后的“右侧”边框
+      border-top: none !important;
+      border-right: none !important;
     }
   }
 
