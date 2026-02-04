@@ -804,25 +804,6 @@ defineExpose({
   }
 }
 
-.recap-banner {
-  flex: none;
-  width: 100%;
-  height: 32px;
-  background-color: rgba(168, 26, 26, 0.9);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-}
-
-.exit-btn {
-  margin-left: 15px;
-  cursor: pointer;
-  text-decoration: underline;
-  color: #ffd700;
-}
-
 .context-menu {
   position: fixed;
   background-color: rgba(20, 20, 20, 1);
