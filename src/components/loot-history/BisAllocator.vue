@@ -18,7 +18,7 @@ import {
   Warning,
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { computed, ref, watch } from 'vue'
+import { computed, inject, ref, watch } from 'vue'
 import { getPresetsForRole } from '@/utils/bisPresets'
 import {
 
@@ -41,6 +41,8 @@ const props = defineProps<{
   getActualPlayer?: (p: string) => string
   showOnlyRole?: boolean
 }>()
+
+const getDisplayName = inject('getDisplayName', (n: string) => n)
 
 const emit = defineEmits<{
   (e: 'update:modelValue', val: BisConfig): void
@@ -163,7 +165,7 @@ function generateEquipLines(rows: BisRow[]): string[] {
     // 队长分配具有最高优先级
     if (customAllocations.value[row.id]) {
       const p = customAllocations.value[row.id]!
-      let displayName = props.getPlayerRole?.(p) || p
+      let displayName = getDisplayName(props.getPlayerRole?.(p) || p)
       displayName = displayName.replace(/^LEFT:/, '').trim()
       lines.push(`/p ${row.name}：${displayName} (队长分配)`)
       return
@@ -173,7 +175,7 @@ function generateEquipLines(rows: BisRow[]): string[] {
       if (excludedPlayers.value.has(p))
         return
 
-      let displayName = props.getPlayerRole?.(p) || p
+      let displayName = getDisplayName(props.getPlayerRole?.(p) || p)
       displayName = displayName.replace(/^LEFT:/, '').trim()
 
       const status = getLogicStatus(p, row)

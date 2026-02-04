@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { inject } from 'vue'
 import RoleBadge from './RoleBadge.vue'
 
 defineProps<{
@@ -7,6 +8,8 @@ defineProps<{
   showOnlyRole: boolean
   nameClass?: string
 }>()
+
+const getDisplayName = inject('getDisplayName', (name: string) => name)
 </script>
 
 <template>
@@ -17,7 +20,7 @@ defineProps<{
       class="player-name-text"
       :class="nameClass"
     >
-      {{ name }}
+      {{ getDisplayName(name) }}
     </span>
   </div>
 </template>

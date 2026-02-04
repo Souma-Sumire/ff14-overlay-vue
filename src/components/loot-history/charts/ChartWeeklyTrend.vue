@@ -10,7 +10,7 @@ import {
 } from 'echarts/components'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { computed, ref, watchEffect } from 'vue'
+import { computed, inject, ref, watchEffect } from 'vue'
 import VChart from 'vue-echarts'
 import { formatChartPlayerLabel, getChartLabelRich } from '@/utils/chartUtils'
 import { getRoleDisplayName } from '@/utils/lootParser'
@@ -30,6 +30,8 @@ const props = defineProps<{
 const isDark = useDark({
   storageKey: 'loot-history-theme',
 })
+
+const getDisplayName = inject('getDisplayName', (n: string) => n)
 
 use([
   CanvasRenderer,
@@ -93,11 +95,12 @@ const processedData = computed(() => {
     .sort((a, b) => a[1] - b[1])
     .map(entry => entry[0])
 
-  const xData = [...props.players]
+  const xData = props.players.map(p => getDisplayName(p))
   const seriesData: any[] = []
 
   sortedWeeks.forEach((week, yIndex) => {
-    xData.forEach((player, xIndex) => {
+    xData.forEach((_, xIndex) => {
+      const player = props.players[xIndex]!
       const entry = dataMap.get(week)?.get(player)
       const count = entry ? entry.count : 0
       seriesData.push({

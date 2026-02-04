@@ -10,7 +10,7 @@ import {
 } from 'echarts/components'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import VChart from 'vue-echarts'
 import { formatChartPlayerLabel, getChartLabelRich } from '@/utils/chartUtils'
 import { getRoleColor, getRoleDisplayName } from '@/utils/lootParser'
@@ -26,6 +26,8 @@ const props = defineProps<{
 const isDark = useDark({
   storageKey: 'loot-history-theme',
 })
+
+const getDisplayName = inject('getDisplayName', (n: string) => n)
 
 use([
   CanvasRenderer,
@@ -53,7 +55,7 @@ const option = computed(() => {
     const role = props.getPlayerRole ? props.getPlayerRole(p) : undefined
     const count = counts.get(p) || 0
     return {
-      name: p,
+      name: getDisplayName(p),
       value: count,
       role: role ? getRoleDisplayName(role) : '',
     }
@@ -102,7 +104,8 @@ const option = computed(() => {
         interval: 0,
         rotate: 0,
         formatter: (value: string) => {
-          const rawRole = nameToRoleMap.get(value)
+          const p = props.players.find(name => getDisplayName(name) === value)
+          const rawRole = p ? nameToRoleMap.get(p) : undefined
           return formatChartPlayerLabel(value, rawRole, props.playerVisibility)
         },
         rich: getChartLabelRich(props.playerVisibility),

@@ -44,7 +44,7 @@ import {
   ElSwitch,
   ElTag,
 } from 'element-plus'
-import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, provide, ref, shallowRef, watch } from 'vue'
 import BisAllocator from '@/components/loot-history/BisAllocator.vue'
 import LootStatisticsPanel from '@/components/loot-history/charts/LootStatisticsPanel.vue'
 import LootDisplayFilterSegmented from '@/components/loot-history/LootDisplayFilterSegmented.vue'
@@ -368,6 +368,91 @@ const playerRoles = ref<Record<string, string>>({})
 
 // 会话内权限缓存，减少 queryPermission 带来的 1s+ 延迟
 let sessionPermissionGranted = false
+
+// 演示模式
+const isDemoMode = ref(false)
+const anonymousMapping = ref<Record<string, string>>({})
+const usedAnonymousNames = new Set<string>()
+
+const ANONYMOUS_POOL = [
+  '阿尔菲诺',
+  '阿莉塞',
+  '桑克瑞德',
+  '雅修特拉',
+  '于里昂热',
+  '埃斯蒂尼安',
+  '琳',
+  '盖亚',
+  '芝诺斯',
+  '奥尔什方',
+  '艾默里克',
+  '塔塔露',
+  '可露儿',
+  '维涅斯',
+  '爱梅特赛尔克',
+  '希斯拉德',
+  '赫尔墨斯',
+  '法丹尼尔',
+  '嘉恩·艾',
+  '梅尔维布',
+  '劳班',
+  '比格斯',
+  '威奇',
+  '娜娜莫',
+  '莉瑟',
+  '飞燕',
+  '夕雾',
+  '豪雪',
+  '玛托雅',
+  '零',
+  '阿伦瓦尔德',
+  '露西亚',
+  '希尔达',
+  '克劳德',
+  '蒂法',
+  '爱丽丝',
+  '扎克斯',
+  '萨富罗斯',
+  '斯考尔',
+  '莉诺雅',
+  '吉坦',
+  '嘉妮特',
+  '提达',
+  '尤娜',
+  '梵',
+  '巴尔弗雷',
+  '芙兰',
+  '诺克提斯',
+  '露娜弗蕾亚',
+  '克莱夫',
+  '吉尔',
+]
+
+function getDisplayName(playerName: string | undefined | null): string {
+  if (!playerName)
+    return ''
+  if (!isDemoMode.value)
+    return playerName
+
+  if (anonymousMapping.value[playerName]) {
+    return anonymousMapping.value[playerName]
+  }
+
+  // 随机分配一个
+  const available = ANONYMOUS_POOL.filter(name => !usedAnonymousNames.has(name))
+  let assigned: string
+  if (available.length > 0) {
+    assigned = available[Math.floor(Math.random() * available.length)]!
+  }
+  else {
+    assigned = `匿名玩家 ${Object.keys(anonymousMapping.value).length + 1}`
+  }
+
+  anonymousMapping.value[playerName] = assigned
+  usedAnonymousNames.add(assigned)
+  return assigned
+}
+provide('getDisplayName', getDisplayName)
 
 const saveConfigDebounced = (() => {
   let timer: any = null
@@ -3473,7 +3558,7 @@ async function applyPendingWinnerChange() {
                                 closable
                                 @close="delete playerRoles[role]"
                               >
-                                {{ p }}
+                                {{ getDisplayName(p) }}
                               </ElTag>
                             </div>
                           </template>
@@ -3493,7 +3578,7 @@ async function applyPendingWinnerChange() {
                                 (p) => !assignedPlayers.has(p),
                               )"
                               :key="p"
-                              :label="p"
+                              :label="getDisplayName(p)"
                               :value="p"
                             />
                           </ElSelect>
@@ -3517,7 +3602,7 @@ async function applyPendingWinnerChange() {
                                 closable
                                 @close="delete playerRoles[role]"
                               >
-                                {{ p }}
+                                {{ getDisplayName(p) }}
                               </ElTag>
                             </div>
                           </template>
@@ -3537,7 +3622,7 @@ async function applyPendingWinnerChange() {
                                 (p) => !assignedPlayers.has(p),
                               )"
                               :key="p"
-                              :label="p"
+                              :label="getDisplayName(p)"
                               :value="p"
                             />
                           </ElSelect>
@@ -4440,7 +4525,7 @@ async function applyPendingWinnerChange() {
                 <ElOption
                   v-for="p in visibleAllPlayers"
                   :key="p"
-                  :label="(showOnlyRole && getPlayerRole(p)) || p"
+                  :label="(showOnlyRole && getPlayerRole(p)) || getDisplayName(p)"
                   :value="p"
                 >
                   <div class="select-player-row">

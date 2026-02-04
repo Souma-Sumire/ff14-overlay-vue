@@ -11,7 +11,7 @@ import {
 } from 'echarts/components'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import VChart from 'vue-echarts'
 import { formatChartPlayerLabel, getChartLabelRich } from '@/utils/chartUtils'
 import { getRoleColor, getRoleDisplayName } from '@/utils/lootParser'
@@ -27,6 +27,8 @@ const props = defineProps<{
 const isDark = useDark({
   storageKey: 'loot-history-theme',
 })
+
+const getDisplayName = inject('getDisplayName', (n: string) => n)
 
 use([
   CanvasRenderer,
@@ -70,7 +72,7 @@ const option = computed(() => {
     const role = props.getPlayerRole ? props.getPlayerRole(p) : undefined
 
     return {
-      name: p,
+      name: getDisplayName(p),
       value: avg, // 主图显示平均值
       min,
       max,
@@ -139,7 +141,8 @@ const option = computed(() => {
         interval: 0,
         rotate: 0,
         formatter: (value: string) => {
-          const rawRole = nameToDataMap.get(value)?.role
+          const p = props.players.find(name => getDisplayName(name) === value)
+          const rawRole = p ? nameToDataMap.get(getDisplayName(p))?.role : undefined
           return formatChartPlayerLabel(value, rawRole, props.playerVisibility)
         },
         rich: getChartLabelRich(props.playerVisibility),
