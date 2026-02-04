@@ -2172,7 +2172,7 @@ const getRoleGroupClass = getRoleType
 }
 
 .bis-table {
-  width: 100%;
+  width: max-content;
   border-collapse: collapse;
   font-size: 13px;
   table-layout: fixed;
@@ -2182,7 +2182,9 @@ const getRoleGroupClass = getRoleType
   td {
     box-sizing: border-box;
     text-align: center;
-    width: 72px;
+    width: 90px;
+    min-width: 90px;
+    max-width: 90px;
     padding: 0 !important;
     height: 32px;
     border-right: 1px solid #cbd5e1;
@@ -2219,13 +2221,17 @@ const getRoleGroupClass = getRoleType
 
   .col-layer {
     width: 32px;
+    min-width: 32px;
+    max-width: 32px;
     left: 0;
     border-left: 1px solid #475569;
     border-right: 1px solid #475569;
   }
 
   .col-item {
-    width: 6em;
+    width: 85px;
+    min-width: 85px;
+    max-width: 85px;
     font-weight: 700;
     color: #334155;
     border-right: 1px solid #475569;
@@ -2428,24 +2434,24 @@ const getRoleGroupClass = getRoleType
     align-items: center;
     justify-content: center;
     height: 16px;
-    width: 14px;
-    padding: 0;
+    width: auto;
+    min-width: 32px;
+    padding: 0 3px;
     flex-shrink: 0;
     border-radius: 2px;
-    background: transparent;
     color: #64748b;
     font-size: 9px;
     cursor: pointer;
     user-select: none;
     font-weight: 500;
-    opacity: 0.45;
+    opacity: 0.8;
     transition: all 0.2s ease;
     border: 1px solid transparent;
     overflow: hidden;
     white-space: nowrap;
 
     span {
-      display: none;
+      display: inline;
     }
 
     &:hover, &.is-active, &.is-open {
@@ -2495,8 +2501,8 @@ const getRoleGroupClass = getRoleType
       margin-left: -2px;
 
       :deep(.player-display) {
-        transform: scale(0.8);
-        .p-name { display: none !important; }
+        transform: scale(0.9);
+        .player-name-text { display: none !important; }
       }
 
       .p-status {
@@ -2530,13 +2536,13 @@ const getRoleGroupClass = getRoleType
       }
 
       &.is-active {
-        background: #10b981 !important;
-        color: #ffffff !important;
-        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        background: transparent !important;
+        color: #10b981 !important;
+        box-shadow: none;
         border: none;
 
         span {
-          color: #ffffff !important;
+          color: #10b981 !important;
         }
       }
     }
