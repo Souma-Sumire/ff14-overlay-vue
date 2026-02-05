@@ -54,29 +54,9 @@ import PlayerDisplay from '@/components/loot-history/PlayerDisplay.vue'
 import RoleBadge from '@/components/loot-history/RoleBadge.vue'
 import SummaryItemTags from '@/components/loot-history/SummaryItemTags.vue'
 import { useIndexedDB } from '@/composables/useIndexedDB'
-import {
-
-  countObtainedItems,
-  DEFAULT_ROWS,
-  isBisItem,
-  isPlayerComplete,
-  LAYER_CONFIG,
-} from '@/utils/bisUtils'
-import {
-  DROP_ORDER,
-
-  PART_ORDER,
-  ROLE_DEFINITIONS,
-
-  sanitizeItemName,
-  sanitizePlayerName,
-} from '@/utils/lootParser'
-import {
-  getFormattedWeekLabel,
-  getRaidWeekIndex,
-  getRaidWeekLabel,
-  getRaidWeekStart,
-} from '@/utils/raidWeekUtils'
+import { countObtainedItems, DEFAULT_ROWS, isBisItem, isPlayerComplete, LAYER_CONFIG } from '@/utils/bisUtils'
+import { DROP_ORDER, PART_ORDER, ROLE_DEFINITIONS, sanitizeItemName, sanitizePlayerName } from '@/utils/lootParser'
+import { getFormattedWeekLabel, getRaidWeekIndex, getRaidWeekLabel, getRaidWeekStart } from '@/utils/raidWeekUtils'
 import LogParserWorker from '@/workers/logParser.ts?worker'
 
 const GAME_VERSION_CONFIG = {
@@ -88,7 +68,7 @@ const GAME_VERSION_CONFIG = {
 
 const LABELS = {
   LOOT: '装备掉落/拿装备记录',
-  ROLES: '固定队成员',
+  ROLES: '固定队职位设置',
   BIS: '毕业装备需求 (BIS)',
   MAPPING: '角色合并映射',
   WEEK_CORRECTION: '手动修改过的CD周数',
@@ -96,8 +76,7 @@ const LABELS = {
   SETTINGS: '过滤和排序偏好',
 }
 
-const ROLE_SETTING_HINT
-  = '需在左上方“固定队 - 职位设置”中完成所有职位后方可开启'
+const ROLE_SETTING_HINT = '需在左上方“固定队 - 职位设置”中完成所有职位后方可开启'
 
 interface DBConfig {
   key: string
@@ -182,7 +161,6 @@ const clearForm = ref({
   mapping: false,
   weekCorrection: false,
   playerCorrection: false,
-  settings: false,
 })
 
 const showTimeSetup = ref(false)
@@ -347,9 +325,9 @@ const isSyncing = ref(false)
 const processedFiles = ref<Record<string, { size: number, mtime: number }>>({})
 const syncStartDate = ref(GAME_VERSION_CONFIG.RAID_START_TIME)
 const syncEndDate = ref<string | null>(null)
-const isRaidFilterActive = ref(false)
+const isRaidFilterActive = ref(true)
 const isSyncNeeded = ref(false)
-const isOnlyRaidMembersActive = ref(false)
+const isOnlyRaidMembersActive = ref(true)
 const EQUIP_ROLES = [
   '御敌',
   '制敌',
@@ -368,8 +346,6 @@ const RAID_REGEX = new RegExp(
 const EQUIP_SERIES_REGEX = new RegExp(`(?<series>.+)(${EQUIP_ROLES_STR}).+`)
 const showOnlyRole = ref(false)
 const hideUnselectedItems = ref(false)
-const hideUnselectedPlayers = ref(false)
-const hideEmptyPlayers = ref(true)
 const systemFilterSettings = ref({
   cards: true,
   materia: true,
@@ -498,7 +474,6 @@ watch(
     playerRoles,
     showOnlyRole,
     hideUnselectedItems,
-    hideUnselectedPlayers,
     systemFilterSettings,
     isOnlyRaidMembersActive,
     recordWeekCorrections,
@@ -508,7 +483,6 @@ watch(
     weekSortMode,
     bisSortMode,
     blacklistedKeys,
-    hideEmptyPlayers,
     playerSummaryFilterMode,
     slotSummaryFilterMode,
   ],
@@ -526,7 +500,6 @@ watch(
       { key: 'isRaidFilterActive', value: isRaidFilterActive.value },
       { key: 'bisConfig', value: bisConfig.value },
       { key: 'hideUnselectedItems', value: hideUnselectedItems.value },
-      { key: 'hideUnselectedPlayers', value: hideUnselectedPlayers.value },
       { key: 'playerMapping', value: playerMapping.value },
       { key: 'playerRoles', value: playerRoles.value },
       { key: 'showOnlyRole', value: showOnlyRole.value },
@@ -538,7 +511,6 @@ watch(
       { key: 'bisSortMode', value: bisSortMode.value },
       { key: 'playerSummaryFilterMode', value: playerSummaryFilterMode.value },
       { key: 'slotSummaryFilterMode', value: slotSummaryFilterMode.value },
-      { key: 'hideEmptyPlayers', value: hideEmptyPlayers.value },
       { key: 'blacklistedKeys', value: Array.from(blacklistedKeys.value) },
     ]
 
@@ -760,34 +732,8 @@ const isRaidRolesComplete = computed(() => {
   return ROLE_DEFINITIONS.every(role => !!playerRoles.value[role])
 })
 
-const playersWithRecordsMatchingItemFilters = computed(() => {
-  const set = new Set<string>()
-  baseFilteredRecords.value.forEach((r) => {
-    set.add(getActualPlayer(getRecordPlayer(r)))
-  })
-  return set
-})
-
 const visibleAllPlayers = computed(() => {
-  let players = allPlayers.value
-
-  if (isOnlyRaidMembersActive.value || viewMode.value !== 'list') {
-    // 强制过滤非固定队成员，不受 hideUnselectedPlayers 影响
-    players = players.filter(p => !!getPlayerRole(p))
-  }
-  else {
-    if (hideUnselectedPlayers.value) {
-      players = players.filter(p => isPlayerChecked(p))
-    }
-  }
-
-  if (hideEmptyPlayers.value && !isOnlyRaidMembersActive.value) {
-    players = players.filter((p) => {
-      // 检查该玩家在当前物品/时间/系统过滤条件下是否有记录
-      return playersWithRecordsMatchingItemFilters.value.has(p)
-    })
-  }
-  return players
+  return isOnlyRaidMembersActive.value ? allPlayers.value.filter(p => !!getPlayerRole(p)) : allPlayers.value
 })
 
 onMounted(async () => {
@@ -851,8 +797,6 @@ onMounted(async () => {
       }
       if (c.key === 'hideUnselectedItems')
         hideUnselectedItems.value = !!c.value
-      if (c.key === 'hideUnselectedPlayers')
-        hideUnselectedPlayers.value = !!c.value
       if (c.key === 'playerMapping')
         playerMapping.value = c.value || {}
       if (c.key === 'playerRoles')
@@ -935,6 +879,28 @@ onMounted(async () => {
     console.error('Initialize error:', err)
     isInitializing.value = false
   }
+  watch(
+    [isRaidFilterActive, uniqueItems],
+    ([active]) => {
+      if (active) {
+        selectRaidLoot()
+        hideUnselectedItems.value = true
+      }
+      else {
+        hideUnselectedItems.value = false
+      }
+    },
+    { immediate: true },
+  )
+
+  watch(isRaidRolesComplete, (newVal) => {
+    if (!newVal && isOnlyRaidMembersActive.value) {
+      isOnlyRaidMembersActive.value = false
+    }
+    if (!newVal) {
+      viewMode.value = 'list'
+    }
+  })
 })
 
 function handleVisibilityChange() {
@@ -1250,41 +1216,10 @@ const sortedSummaryPlayers = computed(() => {
   return [...players].sort((a, b) => comparePlayersByRole(a, b, counts))
 })
 
-const playersForSelection = computed(() => {
-  return hideEmptyPlayers.value
-    ? allPlayers.value.filter(p =>
-        playersWithRecordsMatchingItemFilters.value.has(p),
-      )
-    : allPlayers.value
-})
-
 const visibleUniqueItems = computed(() => {
   if (!hideUnselectedItems.value)
     return uniqueItems.value
   return uniqueItems.value.filter(isItemChecked)
-})
-
-watch(
-  [isRaidFilterActive, uniqueItems],
-  ([active]) => {
-    if (active) {
-      selectRaidLoot()
-      hideUnselectedItems.value = true
-    }
-    else {
-      hideUnselectedItems.value = false
-    }
-  },
-  { immediate: true },
-)
-
-watch(isRaidRolesComplete, (newVal) => {
-  if (!newVal && isOnlyRaidMembersActive.value) {
-    isOnlyRaidMembersActive.value = false
-  }
-  if (!newVal) {
-    viewMode.value = 'list'
-  }
 })
 
 const SLOT_DEFINITIONS = PART_ORDER
@@ -1318,7 +1253,7 @@ async function confirmAndPerformPlayerAction(name: string, context: string, acti
   if (!name)
     return
 
-  if (playersForSelection.value.includes(name)) {
+  if (allPlayers.value.includes(name)) {
     action()
     return
   }
@@ -2605,7 +2540,6 @@ function handleDataCommand(command: string) {
       mapping: false,
       weekCorrection: false,
       playerCorrection: false,
-      settings: false,
     }
     showClearDialog.value = true
   }
@@ -3217,21 +3151,6 @@ async function confirmClear() {
     tasks.push(dbConfig.remove('playerCorrections'))
   }
 
-  if (clearForm.value.settings) {
-    systemFilterSettings.value = {
-      cards: true,
-      materia: true,
-      music: true,
-      book: true,
-      totem: true,
-      other: true,
-      maskedSeries: [],
-    }
-    isOnlyRaidMembersActive.value = false
-    tasks.push(dbConfig.remove('systemFilterSettings'))
-    tasks.push(dbConfig.remove('isOnlyRaidMembersActive'))
-  }
-
   if (clearForm.value.bis) {
     bisConfig.value = { playerBis: {} }
     tasks.push(dbConfig.remove('bisConfig'))
@@ -3620,7 +3539,7 @@ async function applyPendingWinnerChange() {
                             {{ getDisplayName(value || label) }}
                           </template>
                           <ElOption
-                            v-for="p in playersForSelection.filter(
+                            v-for="p in allPlayers.filter(
                               (p) =>
                                 p === playerRoles[role]
                                 || !assignedPlayers.has(p),
@@ -3671,7 +3590,7 @@ async function applyPendingWinnerChange() {
                             @change="addSpecialRole($event, 'SUB')"
                           >
                             <ElOption
-                              v-for="p in playersForSelection.filter(
+                              v-for="p in allPlayers.filter(
                                 (p) => !assignedPlayers.has(p),
                               )"
                               :key="p"
@@ -3715,7 +3634,7 @@ async function applyPendingWinnerChange() {
                             @change="addSpecialRole($event, 'LEFT')"
                           >
                             <ElOption
-                              v-for="p in playersForSelection.filter(
+                              v-for="p in allPlayers.filter(
                                 (p) => !assignedPlayers.has(p),
                               )"
                               :key="p"
@@ -3778,14 +3697,6 @@ async function applyPendingWinnerChange() {
                   </div>
                 </el-tooltip>
                 <div v-if="!isOnlyRaidMembersActive" class="header-sep" />
-                <label v-if="!isOnlyRaidMembersActive" class="switch-box">
-                  <ElSwitch
-                    v-model="hideEmptyPlayers"
-                    size="small"
-                    style="--el-switch-on-color: #3b82f6"
-                  />
-                  <span class="switch-label">隐藏无记录玩家</span>
-                </label>
               </div>
               <div class="acts">
                 <el-popover
@@ -5139,7 +5050,6 @@ async function applyPendingWinnerChange() {
                     mapping: true,
                     weekCorrection: true,
                     playerCorrection: true,
-                    settings: true,
                   }
                 "
               >
@@ -5156,7 +5066,6 @@ async function applyPendingWinnerChange() {
                     mapping: !clearForm.mapping,
                     weekCorrection: !clearForm.weekCorrection,
                     playerCorrection: !clearForm.playerCorrection,
-                    settings: !clearForm.settings,
                   }
                 "
               >
@@ -5189,9 +5098,6 @@ async function applyPendingWinnerChange() {
             {{
               LABELS.PLAYER_CORRECTION
             }}
-          </ElCheckbox>
-          <ElCheckbox v-model="clearForm.settings">
-            {{ LABELS.SETTINGS }} (重置)
           </ElCheckbox>
         </div>
         <div class="clear-danger-hint">
