@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { DisplayFilterMode } from '@/components/loot-history/LootDisplayFilterSegmented.vue'
-import type { BisConfig, BisValue } from '@/utils/bisUtils'
+import type { BisConfig } from '@/utils/bisUtils'
 import type { LootRecord, RollInfo } from '@/utils/lootParser'
 import {
   ArrowDown,
@@ -120,27 +120,15 @@ const viewMode = ref<'list' | 'summary' | 'slot' | 'week' | 'chart' | 'bis'>(
 const currentHandle = ref<FileSystemDirectoryHandle | null>(null)
 
 const showManualAddDialog = ref(false)
-const showExportDialog = ref(false)
 const showImportConfirmDialog = ref(false)
 // 简化分类：loot / meta / corrections / view
-const exportForm = ref({
-  loot: true,
-  meta: true,
-  corrections: true,
-  view: true,
-})
 const importForm = ref({
   loot: true,
   meta: true,
   corrections: true,
   view: true,
 })
-const importDiffs = ref({
-  loot: true,
-  meta: true,
-  corrections: true,
-  view: true,
-})
+
 const importDataPending = ref<any>(null)
 const manualForm = ref({
   timestamp: '',
@@ -1139,10 +1127,6 @@ function handleGlobalKeydown(e: KeyboardEvent) {
     }
     if (showManualAddDialog.value) {
       showManualAddDialog.value = false
-      return
-    }
-    if (showExportDialog.value) {
-      showExportDialog.value = false
       return
     }
     if (showImportConfirmDialog.value) {
@@ -2577,17 +2561,10 @@ function handleDataCommand(command: string) {
 }
 
 function exportData() {
-  // 导出时默认全选
-  exportForm.value = {
-    loot: true,
-    meta: true,
-    corrections: true,
-    view: true,
-  }
-  showExportDialog.value = true
+  doExport()
 }
 
-async function confirmExport() {
+async function doExport() {
   try {
     const uniqueItems = new Set<string>()
     const uniquePlayers = new Set<string>()
@@ -2620,83 +2597,58 @@ async function confirmExport() {
         i: itemDict,
         p: playerDict,
       },
-      r: exportForm.value.loot
-        ? lootRecords.value.map((rec) => {
-            const t
-              = rec.timestamp instanceof Date
-                ? rec.timestamp.getTime()
-                : rec.timestamp
+      r: lootRecords.value.map((rec) => {
+        const t
+          = rec.timestamp instanceof Date
+            ? rec.timestamp.getTime()
+            : rec.timestamp
 
-            const row: any[] = [
-              t - minTs,
-              itemMap.get(rec.item),
-              playerMap.get(rec.player),
-              rec.key,
-            ]
+        const row: any[] = [
+          t - minTs,
+          itemMap.get(rec.item),
+          playerMap.get(rec.player),
+          rec.key,
+        ]
 
-            if (rec.rolls && rec.rolls.length > 0) {
-              row.push(rec.rolls.length)
-              rec.rolls.forEach((r) => {
-                row.push(playerMap.get(r.player))
-                row.push(r.value)
-                row.push(rollTypeMap.get(r.type) ?? 0)
-              })
-            }
-            else {
-              row.push(0)
-            }
-            return row
+        if (rec.rolls && rec.rolls.length > 0) {
+          row.push(rec.rolls.length)
+          rec.rolls.forEach((r) => {
+            row.push(playerMap.get(r.player))
+            row.push(r.value)
+            row.push(rollTypeMap.get(r.type) ?? 0)
           })
-        : [],
+        }
+        else {
+          row.push(0)
+        }
+        return row
+      }),
     }
 
-    const config: any = {}
-    // 保持向后兼容的旧字段
-    if (exportForm.value.meta) {
-      config.map = playerMapping.value
-      config.roles = playerRoles.value
-      const filteredBis: BisConfig = { playerBis: {} }
-      ROLE_DEFINITIONS.forEach((role) => {
-        const data = bisConfig.value.playerBis?.[role]
-        if (data)
-          filteredBis.playerBis[role] = data
-      })
-      config.bisConfig = filteredBis
-    }
-
-    if (exportForm.value.corrections) {
-      config.weekCorrections = recordWeekCorrections.value
-      config.playerCorrections = recordPlayerCorrections.value
-    }
-
-    if (exportForm.value.view) {
-      config.filter = systemFilterSettings.value
-      config.raidActive = isOnlyRaidMembersActive.value
-      config.itemVisibility = itemVisibility.value
-      config.playerVisibility = playerVisibility.value
-      config.processedFiles = processedFiles.value
-      config.logPath = logPath.value
-      config.viewMode = viewMode.value
-      config.hideUnselectedItems = hideUnselectedItems.value
-      config.showOnlyRole = showOnlyRole.value
-      config.isOnlyRaidMembersActive = isOnlyRaidMembersActive.value
-      config.systemFilterSettings = systemFilterSettings.value
-      config.summarySortMode = summarySortMode.value
-      config.slotSortMode = slotSortMode.value
-      config.weekSortMode = weekSortMode.value
-      config.bisSortMode = bisSortMode.value
-      config.playerSummaryFilterMode = playerSummaryFilterMode.value
-      config.slotSummaryFilterMode = slotSummaryFilterMode.value
-      config.blacklistedKeys = Array.from(blacklistedKeys.value)
-      config.syncStartDate = syncStartDate.value
-      config.syncEndDate = syncEndDate.value
-    }
-
-    // 同时保留旧的独立字段以兼容旧版导入
-    if (exportForm.value.meta) {
-      config.map = config.map || playerMapping.value
-      config.roles = config.roles || playerRoles.value
-      config.bisConfig = config.bisConfig || bisConfig.value
+    const config: any = {
+      map: playerMapping.value,
+      roles: playerRoles.value,
+      bisConfig: bisConfig.value,
+      weekCorrections: recordWeekCorrections.value,
+      playerCorrections: recordPlayerCorrections.value,
+      itemVisibility: itemVisibility.value,
+      playerVisibility: playerVisibility.value,
+      processedFiles: processedFiles.value,
+      systemFilterSettings: systemFilterSettings.value,
+      logPath: logPath.value,
+      viewMode: viewMode.value,
+      hideUnselectedItems: hideUnselectedItems.value,
+      showOnlyRole: showOnlyRole.value,
+      isOnlyRaidMembersActive: isOnlyRaidMembersActive.value,
+      summarySortMode: summarySortMode.value,
+      slotSortMode: slotSortMode.value,
+      weekSortMode: weekSortMode.value,
+      bisSortMode: bisSortMode.value,
+      playerSummaryFilterMode: playerSummaryFilterMode.value,
+      slotSummaryFilterMode: slotSummaryFilterMode.value,
+      blacklistedKeys: Array.from(blacklistedKeys.value),
+      syncStartDate: syncStartDate.value,
+      syncEndDate: syncEndDate.value,
     }
 
     data.c = config
@@ -2710,7 +2662,6 @@ async function confirmExport() {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-    showExportDialog.value = false
     ElMessage.success({ message: '数据已导出', showClose: true })
   }
   catch (e) {
@@ -2719,163 +2670,11 @@ async function confirmExport() {
   }
 }
 
-function isDeepEqual(obj1: any, obj2: any): boolean {
-  if (obj1 === obj2)
-    return true
-  if (
-    typeof obj1 !== 'object'
-    || obj1 === null
-    || typeof obj2 !== 'object'
-    || obj2 === null
-  ) {
-    return false
-  }
-
-  if (Array.isArray(obj1) !== Array.isArray(obj2))
-    return false
-  if (Array.isArray(obj1)) {
-    if (obj1.length !== obj2.length)
-      return false
-    for (let i = 0; i < obj1.length; i++) {
-      if (!isDeepEqual(obj1[i], obj2[i]))
-        return false
-    }
-    return true
-  }
-
-  const keys1 = Object.keys(obj1).sort()
-  const keys2 = Object.keys(obj2).sort()
-
-  if (keys1.length !== keys2.length)
-    return false
-
-  for (let i = 0; i < keys1.length; i++) {
-    const key = keys1[i]
-    if (key === undefined)
-      return false
-    if (key !== keys2[i])
-      return false
-    if (!isDeepEqual(obj1[key], obj2[key]))
-      return false
-  }
-
-  return true
-}
-
 async function processImportJSON(json: any) {
   try {
     if (!json.r || !Array.isArray(json.r)) {
       ElMessage.error({ message: '无效的备份文件格式', showClose: true })
       return
-    }
-
-    // 初始化导入勾选逻辑：备份中有数据，且本地尚无配置时，默认勾选
-    const hasLoot = !!json.r?.length
-    const hasBis = !!(json.c?.bisConfig || json.bisConfig || json.c?.bis)
-    const hasRoles = !!json.c?.roles && Object.keys(json.c.roles).length > 0
-    const hasMapping = !!json.c?.map && Object.keys(json.c.map).length > 0
-    const hasCorrectionWeek
-      = !!json.c?.weekCorrections
-        && Object.keys(json.c.weekCorrections).length > 0
-    const hasCorrectionPlayer
-      = !!json.c?.playerCorrections
-        && Object.keys(json.c.playerCorrections).length > 0
-
-    const hasView = !!(
-      json.c?.itemVisibility
-      || json.c?.playerVisibility
-      || json.c?.processedFiles
-      || json.c?.viewMode
-      || json.c?.blacklistedKeys
-    )
-    const hasMeta = hasBis || hasRoles || hasMapping
-    // 计算掉落记录差异
-    let newLootCount = 0
-    if (hasLoot) {
-      const existingSigs = new Set(
-        lootRecords.value.map(
-          r => `${new Date(r.timestamp).getTime()}|${r.item}|${r.player}`,
-        ),
-      )
-      const currentKeys = new Set(lootRecords.value.map(r => r.key))
-      const baseTs = json.base || 0
-      const itemDict = json.dicts?.i || []
-      const playerDict = json.dicts?.p || []
-
-      for (const rec of json.r) {
-        const ts = baseTs + rec[0]
-        const item = itemDict[rec[1]]
-        const player = playerDict[rec[2]]
-        const key = rec[3]
-        if (!item || !player)
-          continue
-
-        const recordKey
-          = key && typeof key === 'string' ? key : `${ts}_${item}_${player}`
-        if (currentKeys.has(recordKey) || blacklistedKeys.value.has(recordKey))
-          continue
-
-        const sig = `${ts}|${item}|${player}`
-        if (!existingSigs.has(sig)) {
-          newLootCount++
-        }
-      }
-    }
-
-    // 计算差异
-    importDiffs.value = {
-      loot: hasLoot && newLootCount > 0,
-      meta: (() => {
-        if (!hasMeta)
-          return false
-        // 比较 mapping / roles / bis
-        if (!isDeepEqual(playerMapping.value, json.c.map || {}))
-          return true
-        if (!isDeepEqual(playerRoles.value, json.c.roles || {}))
-          return true
-        const incomingBis = json.c?.bisConfig || json.bisConfig || json.c?.bis
-        const localFiltered: Record<string, Record<string, BisValue>> = {}
-        const incomingFiltered: Record<string, Record<string, BisValue>> = {}
-        ROLE_DEFINITIONS.forEach((role) => {
-          const localMap = bisConfig.value.playerBis
-          if (localMap && localMap[role]) {
-            localFiltered[role] = localMap[role]
-          }
-          const incomingMap = incomingBis?.playerBis
-          if (incomingMap && incomingMap[role]) {
-            incomingFiltered[role] = incomingMap[role]
-          }
-        })
-        if (!isDeepEqual(localFiltered, incomingFiltered))
-          return true
-        return false
-      })(),
-      corrections: (() => {
-        const weekDiff = hasCorrectionWeek
-          && !isDeepEqual(recordWeekCorrections.value, json.c.weekCorrections || {})
-        const playerDiff = hasCorrectionPlayer
-          && !isDeepEqual(recordPlayerCorrections.value, json.c.playerCorrections || {})
-        return weekDiff || playerDiff
-      })(),
-      view: (() => {
-        if (!hasView)
-          return false
-        // 比较常见视图/过滤配置
-        if (!isDeepEqual(itemVisibility.value, json.c.itemVisibility || {}))
-          return true
-        if (!isDeepEqual(playerVisibility.value, json.c.playerVisibility || {}))
-          return true
-        if (!isDeepEqual(processedFiles.value, json.c.processedFiles || {}))
-          return true
-        if (!isDeepEqual(systemFilterSettings.value, json.c.systemFilterSettings || json.c.filter || {}))
-          return true
-        if (!isDeepEqual(Array.from(blacklistedKeys.value), json.c.blacklistedKeys || json.c.blacklisted || []))
-          return true
-        // 其它标量对比
-        if ((viewMode.value || '') !== (json.c.viewMode || viewMode.value || ''))
-          return true
-        return false
-      })(),
     }
 
     // 导入时默认全选（不可用的会被 UI 禁用）
@@ -2917,29 +2716,18 @@ async function confirmImport() {
         if (json.c.roles)
           playerRoles.value = { ...playerRoles.value, ...json.c.roles }
         const incomingBis = json.c.bisConfig || json.bisConfig || json.c.bis
-        if (incomingBis) {
-          const filtered: BisConfig = { playerBis: {} }
-          ROLE_DEFINITIONS.forEach((role) => {
-            const data = incomingBis.playerBis?.[role]
-            if (data)
-              filtered.playerBis[role] = data
-          })
-          bisConfig.value = filtered
-        }
+        if (incomingBis)
+          bisConfig.value = incomingBis
       }
 
       // view: filters / visibility / sort / misc
       if (importForm.value.view) {
-        if (json.c.filter) {
+        // 兼容旧版本的 filter 字段名
+        const filterSettings = json.c.systemFilterSettings || json.c.filter || {}
+        if (Object.keys(filterSettings).length > 0) {
           systemFilterSettings.value = {
             ...systemFilterSettings.value,
-            ...json.c.filter,
-          }
-        }
-        if (json.c.systemFilterSettings) {
-          systemFilterSettings.value = {
-            ...systemFilterSettings.value,
-            ...json.c.systemFilterSettings,
+            ...filterSettings,
           }
         }
         if (json.c.itemVisibility)
@@ -4968,35 +4756,6 @@ async function applyPendingWinnerChange() {
       </div>
 
       <ElDialog
-        v-model="showExportDialog"
-        title="选择导出内容"
-        width="360px"
-        append-to-body
-        destroy-on-close
-      >
-        <div v-if="showExportDialog" class="export-selection-list">
-          <ElCheckbox v-model="exportForm.loot">
-            {{ LABELS.LOOT }} ({{ lootRecords.length }})
-          </ElCheckbox>
-          <ElCheckbox v-model="exportForm.meta">
-            {{ LABELS.META }}
-          </ElCheckbox>
-          <ElCheckbox v-model="exportForm.corrections">
-            {{ LABELS.CORRECTIONS }}
-          </ElCheckbox>
-          <ElCheckbox v-model="exportForm.view">
-            {{ LABELS.VIEW }}
-          </ElCheckbox>
-        </div>
-        <template v-if="showExportDialog" #footer>
-          <span class="dialog-footer">
-            <el-button @click="showExportDialog = false">取消</el-button>
-            <el-button type="primary" @click="confirmExport">立即导出</el-button>
-          </span>
-        </template>
-      </ElDialog>
-
-      <ElDialog
         v-model="showImportConfirmDialog"
         title="选择导入内容"
         width="400px"
@@ -5017,7 +4776,6 @@ async function applyPendingWinnerChange() {
                 v-if="!importDataPending.r?.length"
                 class="import-not-found-hint"
               >- 备份文件中未发现记录</span>
-              <span v-else-if="!importDiffs.loot" class="import-identical-hint">(与现有记录一致)</span>
             </ElCheckbox>
             <ElCheckbox
               v-model="importForm.meta"
@@ -5028,7 +4786,6 @@ async function applyPendingWinnerChange() {
                 v-if="!(importDataPending.c?.map || importDataPending.c?.roles || importDataPending.c?.bisConfig || importDataPending.bisConfig)"
                 class="import-not-found-hint"
               >- 备份文件中未发现元数据</span>
-              <span v-else-if="!importDiffs.meta" class="import-identical-hint">(与现有配置一致)</span>
             </ElCheckbox>
             <ElCheckbox
               v-model="importForm.corrections"
@@ -5039,7 +4796,6 @@ async function applyPendingWinnerChange() {
                 v-if="!(importDataPending.c?.weekCorrections || importDataPending.c?.playerCorrections)"
                 class="import-not-found-hint"
               >- 备份文件中未发现修正项</span>
-              <span v-else-if="!importDiffs.corrections" class="import-identical-hint">(与现有配置一致)</span>
             </ElCheckbox>
             <ElCheckbox
               v-model="importForm.view"
@@ -5050,31 +4806,7 @@ async function applyPendingWinnerChange() {
                 v-if="!(importDataPending.c?.filter || importDataPending.c?.itemVisibility || importDataPending.c?.playerVisibility || importDataPending.c?.processedFiles)"
                 class="import-not-found-hint"
               >- 备份文件中未发现视图/过滤配置</span>
-              <span v-else-if="!importDiffs.view" class="import-identical-hint">(与现有配置一致)</span>
             </ElCheckbox>
-          </div>
-          <div
-            v-if="
-              (importForm.meta && importDiffs.meta)
-                || (importForm.corrections && importDiffs.corrections)
-                || (importForm.view && importDiffs.view)
-            "
-            class="import-warning-info"
-          >
-            <el-icon><Warning /></el-icon>
-            <span>所选配置项导入后将覆盖当前设置</span>
-          </div>
-          <div
-            v-else-if="
-              (importForm.meta || importForm.corrections || importForm.view)
-                && !importDiffs.meta
-                && !importDiffs.corrections
-                && !importDiffs.view
-            "
-            class="import-success-info"
-          >
-            <el-icon><CircleCheckFilled /></el-icon>
-            <span>所选配置项已与本地同步，无需重复导入</span>
           </div>
         </div>
         <template #footer>
