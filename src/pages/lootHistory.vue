@@ -2577,6 +2577,13 @@ function handleDataCommand(command: string) {
 }
 
 function exportData() {
+  // 导出时默认全选
+  exportForm.value = {
+    loot: true,
+    meta: true,
+    corrections: true,
+    view: true,
+  }
   showExportDialog.value = true
 }
 
@@ -2871,11 +2878,12 @@ async function processImportJSON(json: any) {
       })(),
     }
 
+    // 导入时默认全选（不可用的会被 UI 禁用）
     importForm.value = {
-      loot: importDiffs.value.loot, // 只有发现新记录才默认勾选
-      meta: hasMeta && importDiffs.value.meta,
-      corrections: (hasCorrectionWeek || hasCorrectionPlayer) && importDiffs.value.corrections,
-      view: hasView && importDiffs.value.view,
+      loot: true,
+      meta: true,
+      corrections: true,
+      view: true,
     }
 
     importDataPending.value = json
