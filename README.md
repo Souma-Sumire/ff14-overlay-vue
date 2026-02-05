@@ -2,6 +2,8 @@
 
 [English](README.en.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
+> 由于不确定是否有非简中用户，i18n 暂未进行针对性优化。如果您使用其他语言，请告诉我们，这将帮助我们改进多语言支持。
+
 ## 部署地址
 
 - 国内：[呆萌服务器](https://souma.diemoe.net/#/)

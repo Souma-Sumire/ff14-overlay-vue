@@ -190,7 +190,8 @@
       "mogstation_patch": "[Tampermonkey] モグステーション中国語化",
       "stone_sky_logs": "[Tampermonkey] 石の家-スキルログ照会",
       "kook_purify": "[Tampermonkey] KOOK浄化",
-      "uisave_editor": "[ウェブ] UISAVE.DAT（フィールドマーカー）エディタ"
+      "uisave_editor": "[ウェブ] UISAVE.DAT（フィールドマーカー）エディタ",
+      "loot_history": "[ウェブ] 固定PT装備分配＆BIS管理ツール"
     },
     "comment": {
       "github_patch": "詳細はリポジトリのREADME参照",
@@ -219,7 +220,8 @@
       "stone_sky_logs": "データは72時間キャッシュ。水晶アイコンクリックでFFLOGSページへ遷移。",
       "kook_purify": "KOOKウェブ版の煩わしい広告を非表示。個別入場SEをブロック。",
       "uisave_editor": "UISAVE.DAT（フィールドマーカー）ファイルの解析および編集を行うためのツールです。コードは {0} を参考にしています。",
-      "uisave_editor_credits": "ff14_config_editor"
+      "uisave_editor_credits": "ff14_config_editor",
+      "loot_history": "零式のドロップ品とロット記録を自動保存。統計やBIS分配提案など、多彩な機能をサポート。"
     }
   },
   "dd": {
@@ -241,6 +243,7 @@
     "caution": "注意",
     "danger": "危険",
     "unknown": "不明",
+    "boss": "ボス",
     "test": {
       "name": "敵名称",
       "note": "モンスター攻略ノート",

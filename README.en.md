@@ -2,6 +2,8 @@
 
 [简体中文](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
+> As the user base outside of Simplified Chinese is unclear, internationalization (i18n) has not been fully optimized. If you are using other languages, please let us know so we can improve support.
+
 ## Deployment
 
 - International: [Github Pages](https://souma-sumire.github.io/ff14-overlay-vue/#/)

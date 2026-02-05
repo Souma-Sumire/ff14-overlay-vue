@@ -2,6 +2,8 @@
 
 [English](README.en.md) | [简体中文](README.md) | [繁體中文](README.zh-TW.md)
 
+> 簡体字中国語以外のユーザー状況が不明なため、i18n（多言語対応）は十分に最適化されていません。もしご利用の方がいらっしゃいましたら、ぜひお知らせください。今後の改善の参考にさせていただきます。
+
 ## デプロイ先
 
 - 海外：[GitHub Pages](https://souma-sumire.github.io/ff14-overlay-vue/#/)

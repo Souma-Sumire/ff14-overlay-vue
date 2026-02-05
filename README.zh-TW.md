@@ -2,6 +2,8 @@
 
 [English](README.en.md) | [简体中文](README.md) | [日本語](README.ja.md)
 
+> 由於不確定是否有非簡中用戶，i18n 暫未進行針對性優化。如果您使用其他語言，請告訴我們，這將幫助我們改進多語言支援。
+
 ## 部署地址
 
 - 海外：[GitHub Pages](https://souma-sumire.github.io/ff14-overlay-vue/#/)

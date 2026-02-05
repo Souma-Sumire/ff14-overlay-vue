@@ -190,7 +190,8 @@
       "mogstation_patch": "[Tampermonkey] MogStation Chinese Translation",
       "stone_sky_logs": "[Tampermonkey] Stone-Sky Logs Query",
       "kook_purify": "[Tampermonkey] KOOK Purification",
-      "uisave_editor": "[Web] UISAVE.DAT (Waymark) Editor"
+      "uisave_editor": "[Web] UISAVE.DAT (Waymark) Editor",
+      "loot_history": "[Web/Tool] Static Gear Loot & BIS Manager"
     },
     "comment": {
       "github_patch": "See README in the repository for details.",
@@ -219,7 +220,8 @@
       "stone_sky_logs": "Data is cached for 72 hours. Clicking the Crystal icon jumps to the FFLogs page.",
       "kook_purify": "Hides various annoying ads on the KOOK web version. Blocks personalized entry sound effects.",
       "uisave_editor": "A tool for parsing and editing UISAVE.DAT (Waymark) files. Code referenced from {0}.",
-      "uisave_editor_credits": "ff14_config_editor"
+      "uisave_editor_credits": "ff14_config_editor",
+      "loot_history": "Automatically records Savage loot drops and Roll results. Supports various statistics, BIS allocation suggestions, and more."
     }
   },
   "dd": {
@@ -241,6 +243,7 @@
     "caution": "Caution",
     "danger": "Danger",
     "unknown": "Unknown",
+    "boss": "Boss",
     "test": {
       "name": "Enemy Name",
       "note": "Monster Strategy Notes",

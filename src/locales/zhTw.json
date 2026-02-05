@@ -190,7 +190,8 @@
       "mogstation_patch": "[油猴腳本] MogStation莫古站漢化",
       "stone_sky_logs": "[油猴腳本] 石之家-修為查詢",
       "kook_purify": "[油猴腳本] KOOK淨化",
-      "uisave_editor": "[網頁] UISAVE.DAT（場地標點）編輯器"
+      "uisave_editor": "[網頁] UISAVE.DAT（場地標點）編輯器",
+      "loot_history": "[網頁/工具] 固定隊裝備分配與 BIS 管理工具"
     },
     "comment": {
       "github_patch": "詳見倉庫 README",
@@ -219,7 +220,8 @@
       "stone_sky_logs": "資料存在72小時快取。點擊水晶圖標則跳轉FFLOGS頁面。",
       "kook_purify": "隱藏 KOOK 網頁版各種煩人的廣告。屏蔽個性化入場音效。",
       "uisave_editor": "對UISAVE.DAT（場地標點）文件進行解析和編輯的工具。代碼參考自 {0} 。",
-      "uisave_editor_credits": "ff14_config_editor"
+      "uisave_editor_credits": "ff14_config_editor",
+      "loot_history": "自動記錄零式戰利品掉落與 Roll 點記錄。支援多種統計、BIS 分配建議等功能。"
     }
   },
   "dd": {
@@ -241,6 +243,7 @@
     "caution": "小心",
     "danger": "危險",
     "unknown": "未知",
+    "boss": "BOSS",
     "test": {
       "name": "敵人名稱",
       "note": "怪物攻略筆記",
