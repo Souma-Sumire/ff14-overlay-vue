@@ -823,6 +823,18 @@ onMounted(async () => {
         slotSummaryFilterMode.value = c.value || 'obtained'
     })
 
+    // 如果上次同步中断（存在 syncInProgress 标志），为了避免遗漏记录，重置 processedFiles
+    const hadInterruptedSync = configs.some(c => c.key === 'syncInProgress')
+    if (hadInterruptedSync) {
+      processedFiles.value = {}
+      try {
+        await dbConfig.remove('syncInProgress')
+      }
+      catch {
+        // ignore
+      }
+    }
+
     // 4. 处理 Handle 和 权限，记录权限缓存
     if (handleEntry && handleEntry.handle) {
       currentHandle.value = handleEntry.handle
@@ -1710,6 +1722,14 @@ async function syncLogFiles(userInitiated = false) {
   loadingProgress.value = 0
 
   try {
+    // 标记同步正在进行，若页面意外关闭可在下次启动时检测到中断
+    try {
+      await dbConfig.bulkSet([{ key: 'syncInProgress', value: true }])
+    }
+    catch (e) {
+      // ignore persistence errors
+      console.warn('Failed to set syncInProgress flag', e)
+    }
     const syncStartTs = new Date(syncStartDate.value).getTime()
     const syncEndTs = syncEndDate.value
       ? new Date(syncEndDate.value).getTime()
@@ -1916,6 +1936,13 @@ async function syncLogFiles(userInitiated = false) {
     console.error('Sync error:', err.message)
   }
   finally {
+    // 清理同步标志（尝试移除持久化标记）
+    try {
+      await dbConfig.remove('syncInProgress')
+    }
+    catch {
+      // ignore
+    }
     isSyncing.value = false
     isLoading.value = false
     loadingProgress.value = 0
