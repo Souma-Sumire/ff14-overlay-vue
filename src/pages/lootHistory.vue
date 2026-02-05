@@ -3136,9 +3136,44 @@ async function confirmClear() {
   if (clearForm.value.loot) {
     tasks.push(dbRecords.clear())
     lootRecords.value = []
-    existingKeys.value.clear()
+    existingKeys.value = new Set()
+    // 清空与记录相关的缓存和 UI 配置
     processedFiles.value = {}
+    itemVisibility.value = {}
+    playerVisibility.value = {}
+    anonymousMapping.value = {}
+    // usedAnonymousNames 是 Set，重置为新 Set 以触发响应
+    usedAnonymousNames.clear()
+    parsedLogFiles.value = []
+    pendingLogFiles.value = []
+    currentHandle.value = null
+    fullLogPath.value = ''
+    lastSyncTime.value = ''
+
+    // 删除持久化配置
     tasks.push(dbConfig.remove('processedFiles'))
+    tasks.push(dbConfig.remove('itemVisibility'))
+    tasks.push(dbConfig.remove('playerVisibility'))
+    tasks.push(dbConfig.remove('logPath'))
+    tasks.push(dbConfig.remove('viewMode'))
+    tasks.push(dbConfig.remove('hideUnselectedItems'))
+    tasks.push(dbConfig.remove('showOnlyRole'))
+    tasks.push(dbConfig.remove('isOnlyRaidMembersActive'))
+    tasks.push(dbConfig.remove('systemFilterSettings'))
+    tasks.push(dbConfig.remove('summarySortMode'))
+    tasks.push(dbConfig.remove('slotSortMode'))
+    tasks.push(dbConfig.remove('weekSortMode'))
+    tasks.push(dbConfig.remove('bisSortMode'))
+    tasks.push(dbConfig.remove('playerSummaryFilterMode'))
+    tasks.push(dbConfig.remove('slotSummaryFilterMode'))
+    tasks.push(dbConfig.remove('blacklistedKeys'))
+    // 如果文件句柄也保存在 dbHandle 中，删除之
+    try {
+      tasks.push(dbHandle.remove('current-log-dir'))
+    }
+    catch {
+      // ignore if not supported
+    }
   }
 
   if (clearForm.value.weekCorrection) {
