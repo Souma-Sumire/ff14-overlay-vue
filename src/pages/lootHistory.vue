@@ -12,12 +12,9 @@ import {
   Delete,
   Download,
   Edit,
-  EditPen,
   FolderOpened,
   InfoFilled,
   Lock,
-  Monitor,
-  Mouse,
   Plus,
   QuestionFilled,
   RefreshLeft,
@@ -3323,10 +3320,6 @@ async function applyPendingWinnerChange() {
       </div>
     </transition>
 
-    <div class="theme-toggle-fixed">
-      <CommonThemeToggle storage-key="loot-history-theme" />
-    </div>
-
     <template v-if="!isInitializing">
       <transition name="fade">
         <div v-if="isLoading" class="loading-overlay">
@@ -3413,24 +3406,26 @@ async function applyPendingWinnerChange() {
           </div>
 
           <div class="path-toolbar">
-            <el-button
-              :type="isSyncNeeded ? 'warning' : 'primary'"
-              size="small"
-              :loading="isSyncing"
-              class="sync-btn-fixed"
-              @click="syncLogFiles(true)"
-            >
-              {{
-                isSyncing ? '同步中' : isSyncNeeded ? '需要同步' : '立即同步'
-              }}
-              <span v-if="isSyncNeeded" class="dot-warn" />
-            </el-button>
-            <div class="sync-status-container">
-              <div v-show="!syncSuccessVisible && lastSyncTime" class="sync-hint-text time-hint">
-                上次同步: {{ lastSyncTime }}
-              </div>
-              <div v-show="syncSuccessVisible" class="sync-hint-text is-success success-hint">
-                同步成功
+            <div class="sync-btn-group">
+              <el-button
+                :type="isSyncNeeded ? 'warning' : 'primary'"
+                size="small"
+                :loading="isSyncing"
+                class="sync-btn-fixed"
+                @click="syncLogFiles(true)"
+              >
+                {{
+                  isSyncing ? '同步中' : isSyncNeeded ? '需要同步' : '立即同步'
+                }}
+                <span v-if="isSyncNeeded" class="dot-warn" />
+              </el-button>
+              <div class="sync-status-container">
+                <div v-show="!syncSuccessVisible && lastSyncTime" class="sync-hint-text time-hint">
+                  上次同步: {{ lastSyncTime }}
+                </div>
+                <div v-show="syncSuccessVisible" class="sync-hint-text is-success success-hint">
+                  同步成功
+                </div>
               </div>
             </div>
 
@@ -3449,7 +3444,7 @@ async function applyPendingWinnerChange() {
               v-model="syncEndDate"
               type="datetime"
               size="small"
-              placeholder="截止时间(可选)"
+              placeholder="截止 (可选)"
               format="YYYY/MM/DD HH:mm"
               value-format="YYYY-MM-DDTHH:mm"
               clearable
@@ -3502,81 +3497,78 @@ async function applyPendingWinnerChange() {
 
             <div class="v-divider" />
 
-            <el-popover
-              placement="bottom-end"
-              :width="480"
-              trigger="click"
-              popper-class="guide-popover-popper"
-            >
-              <template #reference>
-                <el-button plain class="tool-btn">
-                  <el-icon><QuestionFilled /></el-icon>
-                  <span>使用指南</span>
-                </el-button>
-              </template>
+            <div class="header-right">
+              <CommonThemeToggle storage-key="loot-history-theme" />
+              <el-popover
+                placement="bottom-end"
+                :width="480"
+                trigger="click"
+                popper-class="guide-popover-popper"
+              >
+                <template #reference>
+                  <el-button plain class="tool-btn">
+                    <el-icon><QuestionFilled /></el-icon>
+                    <span>使用指南</span>
+                  </el-button>
+                </template>
 
-              <div class="guide-content-popover">
-                <section class="guide-section">
-                  <h4>
-                    <el-icon><InfoFilled /></el-icon> 这是什么？
-                  </h4>
-                  <p>
-                    这是一个专门为 FFXIV
-                    固定队设计的<strong>掉落历史统计</strong>与
-                    <strong>BIS 分配管理</strong>工具。它能自动从你的 ACT
-                    日志中记录战利品信息，并以此为基础提供自动化的分配建议与数据分析。
-                  </p>
-                </section>
+                <div class="guide-content-popover">
+                  <section class="guide-section">
+                    <h4>
+                      <el-icon><InfoFilled /></el-icon> 这是什么？
+                    </h4>
+                    <p>
+                      这是一个专门为 FFXIV 固定队设计的<strong>掉落历史统计</strong>与 <strong>BIS 分配管理</strong>工具。它能自动从你的 ACT 日志中记录战利品信息，并以此为基础提供自动化的分配建议与数据分析。
+                    </p>
+                  </section>
+                  <section class="guide-section">
+                    <h4>
+                      <el-icon><InfoFilled /></el-icon> 注意事项
+                    </h4>
+                    <div class="warning-box">
+                      <ul>
+                        <li>
+                          <strong>保持 ACT 运行：</strong>且未勾选“隐藏聊天日志(隐私保护)”。
+                        </li>
+                        <li>
+                          <strong>请勿提前退本：</strong>
+                          一定要等装备分完了再退本！以保证日志完整。
+                        </li>
+                      </ul>
+                    </div>
+                  </section>
 
-                <section class="guide-section">
-                  <h4>
-                    <el-icon><Monitor /></el-icon> 注意事项
-                  </h4>
-                  <div class="warning-box">
-                    <ul>
+                  <section class="guide-section">
+                    <h4>
+                      <el-icon><InfoFilled /></el-icon> 快速上手
+                    </h4>
+                    <ol>
                       <li>
-                        <strong>保持 ACT 运行：</strong>且未勾选“隐藏聊天日志(隐私保护)”。
+                        <strong>配置人员：</strong>
+                        在左上方“固定队 - 职位设置”中绑定队员 ID。
                       </li>
                       <li>
-                        <strong>请勿提前退本：</strong>
-                        一定要等装备分完了再退本！以保证日志完整。
+                        <strong>BIS 规划：</strong>
+                        切换至“BIS分配”页签，录入全队成员的毕业装备需求。
                       </li>
-                    </ul>
-                  </div>
-                </section>
+                      <li>
+                        <strong>一键分配：</strong>
+                        副本结束后，可参考“BIS分配”页签的建议进行分配。
+                      </li>
+                    </ol>
+                  </section>
 
-                <section class="guide-section">
-                  <h4>
-                    <el-icon><Mouse /></el-icon> 快速上手
-                  </h4>
-                  <ol>
-                    <li>
-                      <strong>配置人员：</strong>
-                      在左上方“固定队 - 职位设置”中绑定队员 ID。
-                    </li>
-                    <li>
-                      <strong>BIS 规划：</strong>
-                      切换至“BIS分配”页签，录入全队成员的毕业装备需求。
-                    </li>
-                    <li>
-                      <strong>一键分配：</strong>
-                      副本结束后，可参考“BIS分配”页签的建议进行分配。
-                    </li>
-                  </ol>
-                </section>
-
-                <section class="guide-section">
-                  <h4>
-                    <el-icon><EditPen /></el-icon> 漏了记录怎么办？
-                  </h4>
-                  <p>
-                    如果因意外（如掉线、忘开 ACT
-                    等）漏掉记录，请点击主界面右上角的“<strong>手动添加</strong>”补全。手动添加的记录也会参与
-                    BIS 统计与分配计算。
-                  </p>
-                </section>
-              </div>
-            </el-popover>
+                  <section class="guide-section">
+                    <h4>
+                      <el-icon><InfoFilled /></el-icon> 漏了记录怎么办？
+                    </h4>
+                    <p>
+                      如果因意外（如掉线、忘开 ACT 等）漏掉记录，请点击主界面右上角的“<strong>手动添加</strong>”补全。手动添加的记录也会参与 BIS 统计与分配计算。
+                    </p>
+                  </section>
+                </div>
+              </el-popover>
+            </div>
           </div>
         </div>
 
@@ -5514,20 +5506,6 @@ html.dark .section-mask {
   );
 }
 
-.path-toolbar {
-  .date-picker-el,
-  .range-sep {
-    transform: translateY(-1.5px) !important;
-  }
-}
-
-.theme-toggle-fixed {
-  position: fixed;
-  top: 10px;
-  right: 12px;
-  z-index: 10000;
-}
-
 .guide-popover-popper,
 .role-settings-popper {
   padding: 0 !important;
@@ -5688,38 +5666,69 @@ html.dark .lock-card p {
   font-weight: 800;
   border: 1px solid #dbeafe;
 }
+.sync-btn-group {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
 
 .path-toolbar {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 12px;
   border-radius: 6px;
   flex-shrink: 0;
   height: 32px;
   box-sizing: border-box;
-}
-.tool-btn {
-  height: 28px !important;
-  padding: 0 8px !important;
-  border: none !important;
-  background: transparent !important;
-  font-size: 13px;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-.tool-btn :deep(i) {
-  font-size: 14px;
-}
-.tool-btn:hover {
-  color: #3b82f6;
-  background: rgba(59, 130, 246, 0.08) !important;
-}
-.tool-btn.el-button--danger:hover {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.05) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  gap: 12px; // 保持稳定的间距
+
+  & :deep(.date-picker-el) {
+    width: 145px !important;
+    min-width: 140px !important;
+    transform: translateY(-1.5px) !important;
+    transition: all 0.3s ease;
+
+    .el-input,
+    .el-input__wrapper,
+    .el-input__inner {
+      width: 100% !important;
+    }
+  }
+
+  .range-sep {
+    margin: 0 -2px;
+    transform: translateY(-1.5px) !important;
+  }
+
+  .tool-btn {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 4px !important;
+    height: 28px !important;
+    padding: 0 8px !important;
+    border: none !important;
+    background: transparent !important;
+    font-size: 12px;
+    color: #64748b;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+
+    &:hover {
+      color: #3b82f6;
+      background: rgba(59, 130, 246, 0.08) !important;
+    }
+
+    &.el-button--danger:hover {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.05) !important;
+    }
+
+    :deep(i), .el-icon {
+      font-size: 14px;
+    }
+  }
 }
 .v-divider {
   width: 1px;
@@ -5736,18 +5745,21 @@ html.dark .lock-card p {
 .path-toolbar :deep(.el-button) {
   height: 28px !important;
   margin: 0 !important;
-  padding: 0 10px !important;
+  padding: 0 6px !important;
   font-weight: 600;
+  font-size: 12px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   line-height: 0 !important;
+  letter-spacing: -0.01em;
 }
 .path-toolbar :deep(.el-input__wrapper) {
   height: 28px !important;
+  width: 100% !important;
   background: #f8fafc;
   box-shadow: 0 0 0 1px #e2e8f0 inset !important;
-  padding: 0 8px !important;
+  padding: 0 4px !important;
   box-sizing: border-box !important;
   display: flex;
   align-items: center;
@@ -5763,15 +5775,34 @@ html.dark .lock-card p {
   background: white;
 }
 .path-toolbar :deep(.el-input__inner) {
-  font-size: 12px;
+  font-size: 10.2px;
   color: #1e293b;
   font-weight: 600;
   font-family: 'JetBrains Mono', monospace;
-  padding: 0 !important;
-  padding-left: 24px !important;
-  height: 28px !important;
-  line-height: 28px !important;
+  letter-spacing: -0.03em;
+  padding: 0 10px 0 20px !important;
+  height: 100% !important;
   border: none !important;
+  background: transparent !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+.path-toolbar :deep(.el-input__suffix) {
+  position: absolute !important;
+  right: 4px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 1;
+}
+.path-toolbar :deep(.el-input__prefix) {
+  position: absolute !important;
+  left: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .header-right {
@@ -9181,20 +9212,24 @@ html.dark {
 }
 
 .sync-status-container {
-  display: inline-flex;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  display: flex;
   align-items: center;
-  margin: 0 6px;
-  position: relative;
-  width: 70px;
-  height: 24px;
+  justify-content: center;
+  margin: 0;
+  height: auto;
+  padding-top: 1px;
 }
 .sync-hint-text {
-  font-size: 10px;
+  font-size: 9px;
   color: #94a3b8;
   white-space: nowrap;
   font-weight: 500;
-  width: 100%;
-  text-align: center;
+  transform: scale(0.9);
+  line-height: 1;
 }
 .sync-hint-text.is-success {
   color: #10b981;
