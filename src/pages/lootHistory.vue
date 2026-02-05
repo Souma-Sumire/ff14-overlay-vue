@@ -3419,7 +3419,7 @@ async function applyPendingWinnerChange() {
                       <el-icon><InfoFilled /></el-icon> 漏了记录怎么办？
                     </h4>
                     <p>
-                      如果因意外（如掉线、忘开 ACT 等）漏掉记录，请点击主界面右上角的“<strong>手动添加</strong>”补全。手动添加的记录也会参与 BIS 统计与分配计算。
+                      如果因意外（如掉线、忘开 ACT 等）漏掉记录，请点击顶部栏中间的“<strong>手动添加</strong>”补全。
                     </p>
                   </section>
                 </div>
