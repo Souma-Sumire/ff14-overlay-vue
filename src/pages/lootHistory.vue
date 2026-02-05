@@ -74,6 +74,9 @@ const LABELS = {
   WEEK_CORRECTION: '手动修改过的CD周数',
   PLAYER_CORRECTION: '手动修改过的装备获得者',
   SETTINGS: '过滤和排序偏好',
+  META: '元数据（BIS/职位/合并映射）',
+  CORRECTIONS: '修正项（周/获得者）',
+  VIEW: '视图与过滤设置',
 }
 
 const ROLE_SETTING_HINT = '需在左上方“固定队 - 职位设置”中完成所有职位后方可开启'
@@ -119,32 +122,24 @@ const currentHandle = ref<FileSystemDirectoryHandle | null>(null)
 const showManualAddDialog = ref(false)
 const showExportDialog = ref(false)
 const showImportConfirmDialog = ref(false)
+// 简化分类：loot / meta / corrections / view
 const exportForm = ref({
   loot: true,
-  bis: true,
-  roles: true,
-  mapping: true,
-  weekCorrection: true,
-  playerCorrection: true,
-  settings: true,
+  meta: true,
+  corrections: true,
+  view: true,
 })
 const importForm = ref({
   loot: true,
-  bis: true,
-  roles: true,
-  mapping: true,
-  weekCorrection: true,
-  playerCorrection: true,
-  settings: true,
+  meta: true,
+  corrections: true,
+  view: true,
 })
 const importDiffs = ref({
   loot: true,
-  bis: true,
-  roles: true,
-  mapping: true,
-  weekCorrection: true,
-  playerCorrection: true,
-  settings: true,
+  meta: true,
+  corrections: true,
+  view: true,
 })
 const importDataPending = ref<any>(null)
 const manualForm = ref({
@@ -2622,11 +2617,10 @@ async function confirmExport() {
     }
 
     const config: any = {}
-    if (exportForm.value.mapping)
+    // 保持向后兼容的旧字段
+    if (exportForm.value.meta) {
       config.map = playerMapping.value
-    if (exportForm.value.roles)
       config.roles = playerRoles.value
-    if (exportForm.value.bis) {
       const filteredBis: BisConfig = { playerBis: {} }
       ROLE_DEFINITIONS.forEach((role) => {
         const data = bisConfig.value.playerBis?.[role]
@@ -2635,15 +2629,40 @@ async function confirmExport() {
       })
       config.bisConfig = filteredBis
     }
-    if (exportForm.value.settings) {
+
+    if (exportForm.value.corrections) {
+      config.weekCorrections = recordWeekCorrections.value
+      config.playerCorrections = recordPlayerCorrections.value
+    }
+
+    if (exportForm.value.view) {
       config.filter = systemFilterSettings.value
       config.raidActive = isOnlyRaidMembersActive.value
+      config.itemVisibility = itemVisibility.value
+      config.playerVisibility = playerVisibility.value
+      config.processedFiles = processedFiles.value
+      config.logPath = logPath.value
+      config.viewMode = viewMode.value
+      config.hideUnselectedItems = hideUnselectedItems.value
+      config.showOnlyRole = showOnlyRole.value
+      config.isOnlyRaidMembersActive = isOnlyRaidMembersActive.value
+      config.systemFilterSettings = systemFilterSettings.value
+      config.summarySortMode = summarySortMode.value
+      config.slotSortMode = slotSortMode.value
+      config.weekSortMode = weekSortMode.value
+      config.bisSortMode = bisSortMode.value
+      config.playerSummaryFilterMode = playerSummaryFilterMode.value
+      config.slotSummaryFilterMode = slotSummaryFilterMode.value
+      config.blacklistedKeys = Array.from(blacklistedKeys.value)
+      config.syncStartDate = syncStartDate.value
+      config.syncEndDate = syncEndDate.value
     }
-    if (exportForm.value.weekCorrection) {
-      config.weekCorrections = recordWeekCorrections.value
-    }
-    if (exportForm.value.playerCorrection) {
-      config.playerCorrections = recordPlayerCorrections.value
+
+    // 同时保留旧的独立字段以兼容旧版导入
+    if (exportForm.value.meta) {
+      config.map = config.map || playerMapping.value
+      config.roles = config.roles || playerRoles.value
+      config.bisConfig = config.bisConfig || bisConfig.value
     }
 
     data.c = config
@@ -2727,7 +2746,15 @@ async function processImportJSON(json: any) {
     const hasCorrectionPlayer
       = !!json.c?.playerCorrections
         && Object.keys(json.c.playerCorrections).length > 0
-    const hasSettings = json.c?.filter || json.c?.raidActive !== undefined
+
+    const hasView = !!(
+      json.c?.itemVisibility
+      || json.c?.playerVisibility
+      || json.c?.processedFiles
+      || json.c?.viewMode
+      || json.c?.blacklistedKeys
+    )
+    const hasMeta = hasBis || hasRoles || hasMapping
     // 计算掉落记录差异
     let newLootCount = 0
     if (hasLoot) {
@@ -2762,12 +2789,17 @@ async function processImportJSON(json: any) {
     }
 
     // 计算差异
-    const incomingBis = json.c?.bisConfig || json.bisConfig || json.c?.bis
     importDiffs.value = {
       loot: hasLoot && newLootCount > 0,
-      bis: (() => {
-        if (!hasBis)
+      meta: (() => {
+        if (!hasMeta)
           return false
+        // 比较 mapping / roles / bis
+        if (!isDeepEqual(playerMapping.value, json.c.map || {}))
+          return true
+        if (!isDeepEqual(playerRoles.value, json.c.roles || {}))
+          return true
+        const incomingBis = json.c?.bisConfig || json.bisConfig || json.c?.bis
         const localFiltered: Record<string, Record<string, BisValue>> = {}
         const incomingFiltered: Record<string, Record<string, BisValue>> = {}
         ROLE_DEFINITIONS.forEach((role) => {
@@ -2780,41 +2812,43 @@ async function processImportJSON(json: any) {
             incomingFiltered[role] = incomingMap[role]
           }
         })
-        return !isDeepEqual(localFiltered, incomingFiltered)
+        if (!isDeepEqual(localFiltered, incomingFiltered))
+          return true
+        return false
       })(),
-      roles: hasRoles && !isDeepEqual(playerRoles.value, json.c.roles),
-      mapping: hasMapping && !isDeepEqual(playerMapping.value, json.c.map),
-      weekCorrection:
-        hasCorrectionWeek
-        && !isDeepEqual(recordWeekCorrections.value, json.c.weekCorrections || {}),
-      playerCorrection:
-        hasCorrectionPlayer
-        && !isDeepEqual(
-          recordPlayerCorrections.value,
-          json.c.playerCorrections || {},
-        ),
-      settings:
-        hasSettings
-        && (!isDeepEqual(
-          systemFilterSettings.value,
-          json.c.filter || systemFilterSettings.value,
-        )
-        || isOnlyRaidMembersActive.value
-        !== (json.c.raidActive ?? isOnlyRaidMembersActive.value)),
+      corrections: (() => {
+        const weekDiff = hasCorrectionWeek
+          && !isDeepEqual(recordWeekCorrections.value, json.c.weekCorrections || {})
+        const playerDiff = hasCorrectionPlayer
+          && !isDeepEqual(recordPlayerCorrections.value, json.c.playerCorrections || {})
+        return weekDiff || playerDiff
+      })(),
+      view: (() => {
+        if (!hasView)
+          return false
+        // 比较常见视图/过滤配置
+        if (!isDeepEqual(itemVisibility.value, json.c.itemVisibility || {}))
+          return true
+        if (!isDeepEqual(playerVisibility.value, json.c.playerVisibility || {}))
+          return true
+        if (!isDeepEqual(processedFiles.value, json.c.processedFiles || {}))
+          return true
+        if (!isDeepEqual(systemFilterSettings.value, json.c.systemFilterSettings || json.c.filter || {}))
+          return true
+        if (!isDeepEqual(Array.from(blacklistedKeys.value), json.c.blacklistedKeys || json.c.blacklisted || []))
+          return true
+        // 其它标量对比
+        if ((viewMode.value || '') !== (json.c.viewMode || viewMode.value || ''))
+          return true
+        return false
+      })(),
     }
 
     importForm.value = {
       loot: importDiffs.value.loot, // 只有发现新记录才默认勾选
-      bis: hasBis && importDiffs.value.bis,
-      roles: hasRoles && importDiffs.value.roles,
-      mapping: hasMapping && importDiffs.value.mapping,
-      weekCorrection:
-        hasCorrectionWeek
-        && importDiffs.value.weekCorrection,
-      playerCorrection:
-        hasCorrectionPlayer
-        && importDiffs.value.playerCorrection,
-      settings: hasSettings && importDiffs.value.settings,
+      meta: hasMeta && importDiffs.value.meta,
+      corrections: (hasCorrectionWeek || hasCorrectionPlayer) && importDiffs.value.corrections,
+      view: hasView && importDiffs.value.view,
     }
 
     importDataPending.value = json
@@ -2841,11 +2875,12 @@ async function confirmImport() {
     })
 
     if (json.c) {
-      if (importForm.value.mapping && json.c.map)
-        playerMapping.value = { ...playerMapping.value, ...json.c.map }
-      if (importForm.value.roles && json.c.roles)
-        playerRoles.value = { ...playerRoles.value, ...json.c.roles }
-      if (importForm.value.bis) {
+      // meta: mapping / roles / bis
+      if (importForm.value.meta) {
+        if (json.c.map)
+          playerMapping.value = { ...playerMapping.value, ...json.c.map }
+        if (json.c.roles)
+          playerRoles.value = { ...playerRoles.value, ...json.c.roles }
         const incomingBis = json.c.bisConfig || json.bisConfig || json.c.bis
         if (incomingBis) {
           const filtered: BisConfig = { playerBis: {} }
@@ -2858,25 +2893,64 @@ async function confirmImport() {
         }
       }
 
-      if (importForm.value.settings) {
+      // view: filters / visibility / sort / misc
+      if (importForm.value.view) {
         if (json.c.filter) {
           systemFilterSettings.value = {
             ...systemFilterSettings.value,
             ...json.c.filter,
           }
         }
-        if (json.c.raidActive !== undefined)
-          isOnlyRaidMembersActive.value = json.c.raidActive
+        if (json.c.systemFilterSettings) {
+          systemFilterSettings.value = {
+            ...systemFilterSettings.value,
+            ...json.c.systemFilterSettings,
+          }
+        }
+        if (json.c.itemVisibility)
+          itemVisibility.value = { ...itemVisibility.value, ...json.c.itemVisibility }
+        if (json.c.playerVisibility)
+          playerVisibility.value = { ...playerVisibility.value, ...json.c.playerVisibility }
+        if (json.c.processedFiles)
+          processedFiles.value = { ...processedFiles.value, ...json.c.processedFiles }
+        if (json.c.logPath)
+          logPath.value = json.c.logPath
+        if (json.c.viewMode)
+          viewMode.value = json.c.viewMode
+        if (json.c.hideUnselectedItems !== undefined)
+          hideUnselectedItems.value = json.c.hideUnselectedItems
+        if (json.c.showOnlyRole !== undefined)
+          showOnlyRole.value = json.c.showOnlyRole
+        if (json.c.isOnlyRaidMembersActive !== undefined)
+          isOnlyRaidMembersActive.value = json.c.isOnlyRaidMembersActive
+        if (json.c.summarySortMode)
+          summarySortMode.value = json.c.summarySortMode
+        if (json.c.slotSortMode)
+          slotSortMode.value = json.c.slotSortMode
+        if (json.c.weekSortMode)
+          weekSortMode.value = json.c.weekSortMode
+        if (json.c.bisSortMode)
+          bisSortMode.value = json.c.bisSortMode
+        if (json.c.playerSummaryFilterMode)
+          playerSummaryFilterMode.value = json.c.playerSummaryFilterMode
+        if (json.c.slotSummaryFilterMode)
+          slotSummaryFilterMode.value = json.c.slotSummaryFilterMode
+        if (json.c.blacklistedKeys)
+          blacklistedKeys.value = new Set(json.c.blacklistedKeys)
+        if (json.c.syncStartDate)
+          syncStartDate.value = json.c.syncStartDate
+        if (json.c.syncEndDate)
+          syncEndDate.value = json.c.syncEndDate
       }
-      if (importForm.value.weekCorrection) {
+
+      // corrections: week / player
+      if (importForm.value.corrections) {
         if (json.c.weekCorrections) {
           recordWeekCorrections.value = {
             ...recordWeekCorrections.value,
             ...json.c.weekCorrections,
           }
         }
-      }
-      if (importForm.value.playerCorrection) {
         if (json.c.playerCorrections) {
           recordPlayerCorrections.value = {
             ...recordPlayerCorrections.value,
@@ -3149,6 +3223,9 @@ async function confirmClear() {
     currentHandle.value = null
     fullLogPath.value = ''
     lastSyncTime.value = ''
+    // 重置同步时间范围
+    syncStartDate.value = GAME_VERSION_CONFIG.RAID_START_TIME
+    syncEndDate.value = null
 
     // 删除持久化配置
     tasks.push(dbConfig.remove('processedFiles'))
@@ -3167,6 +3244,8 @@ async function confirmClear() {
     tasks.push(dbConfig.remove('playerSummaryFilterMode'))
     tasks.push(dbConfig.remove('slotSummaryFilterMode'))
     tasks.push(dbConfig.remove('blacklistedKeys'))
+    tasks.push(dbConfig.remove('syncStartDate'))
+    tasks.push(dbConfig.remove('syncEndDate'))
     // 如果文件句柄也保存在 dbHandle 中，删除之
     try {
       tasks.push(dbHandle.remove('current-log-dir'))
@@ -4864,33 +4943,14 @@ async function applyPendingWinnerChange() {
           <ElCheckbox v-model="exportForm.loot">
             {{ LABELS.LOOT }} ({{ lootRecords.length }})
           </ElCheckbox>
-          <ElCheckbox v-model="exportForm.roles">
-            {{
-              LABELS.ROLES
-            }}
+          <ElCheckbox v-model="exportForm.meta">
+            {{ LABELS.META }}
           </ElCheckbox>
-          <ElCheckbox v-model="exportForm.bis">
-            {{ LABELS.BIS }}
+          <ElCheckbox v-model="exportForm.corrections">
+            {{ LABELS.CORRECTIONS }}
           </ElCheckbox>
-          <ElCheckbox v-model="exportForm.mapping">
-            {{
-              LABELS.MAPPING
-            }}
-          </ElCheckbox>
-          <ElCheckbox v-model="exportForm.weekCorrection">
-            {{
-              LABELS.WEEK_CORRECTION
-            }}
-          </ElCheckbox>
-          <ElCheckbox v-model="exportForm.playerCorrection">
-            {{
-              LABELS.PLAYER_CORRECTION
-            }}
-          </ElCheckbox>
-          <ElCheckbox v-model="exportForm.settings">
-            {{
-              LABELS.SETTINGS
-            }}
+          <ElCheckbox v-model="exportForm.view">
+            {{ LABELS.VIEW }}
           </ElCheckbox>
         </div>
         <template v-if="showExportDialog" #footer>
@@ -4925,106 +4985,44 @@ async function applyPendingWinnerChange() {
               <span v-else-if="!importDiffs.loot" class="import-identical-hint">(与现有记录一致)</span>
             </ElCheckbox>
             <ElCheckbox
-              v-model="importForm.bis"
-              :disabled="
-                !importDataPending.bisConfig
-                  && !importDataPending.c?.bisConfig
-                  && !importDataPending.c?.bis
-              "
+              v-model="importForm.meta"
+              :disabled="!(importDataPending.c?.map || importDataPending.c?.roles || importDataPending.c?.bisConfig || importDataPending.bisConfig)"
             >
-              {{ LABELS.BIS }}
+              {{ LABELS.META }}
               <span
-                v-if="
-                  !importDataPending.bisConfig
-                    && !importDataPending.c?.bisConfig
-                    && !importDataPending.c?.bis
-                "
+                v-if="!(importDataPending.c?.map || importDataPending.c?.roles || importDataPending.c?.bisConfig || importDataPending.bisConfig)"
                 class="import-not-found-hint"
-              >- 备份文件中未发现数据</span>
-              <span v-else-if="!importDiffs.bis" class="import-identical-hint">(与现有配置一致)</span>
+              >- 备份文件中未发现元数据</span>
+              <span v-else-if="!importDiffs.meta" class="import-identical-hint">(与现有配置一致)</span>
             </ElCheckbox>
             <ElCheckbox
-              v-model="importForm.roles"
-              :disabled="!importDataPending.c?.roles"
+              v-model="importForm.corrections"
+              :disabled="!(importDataPending.c?.weekCorrections || importDataPending.c?.playerCorrections)"
             >
-              {{ LABELS.ROLES }}
+              {{ LABELS.CORRECTIONS }}
               <span
-                v-if="!importDataPending.c?.roles"
+                v-if="!(importDataPending.c?.weekCorrections || importDataPending.c?.playerCorrections)"
                 class="import-not-found-hint"
-              >- 备份文件中未发现数据</span>
-              <span v-else-if="!importDiffs.roles" class="import-identical-hint">(与现有设置一致)</span>
+              >- 备份文件中未发现修正项</span>
+              <span v-else-if="!importDiffs.corrections" class="import-identical-hint">(与现有配置一致)</span>
             </ElCheckbox>
             <ElCheckbox
-              v-model="importForm.mapping"
-              :disabled="!importDataPending.c?.map"
+              v-model="importForm.view"
+              :disabled="!(importDataPending.c?.filter || importDataPending.c?.itemVisibility || importDataPending.c?.playerVisibility || importDataPending.c?.processedFiles)"
             >
-              {{ LABELS.MAPPING }}
+              {{ LABELS.VIEW }}
               <span
-                v-if="!importDataPending.c?.map"
+                v-if="!(importDataPending.c?.filter || importDataPending.c?.itemVisibility || importDataPending.c?.playerVisibility || importDataPending.c?.processedFiles)"
                 class="import-not-found-hint"
-              >- 备份文件中未发现数据</span>
-              <span
-                v-else-if="!importDiffs.mapping"
-                class="import-identical-hint"
-              >(与现有设置一致)</span>
-            </ElCheckbox>
-            <ElCheckbox
-              v-model="importForm.weekCorrection"
-              :disabled="!importDataPending.c?.weekCorrections"
-            >
-              {{ LABELS.WEEK_CORRECTION }}
-              <span
-                v-if="!importDataPending.c?.weekCorrections"
-                class="import-not-found-hint"
-              >- 未发现数据</span>
-              <span
-                v-else-if="!importDiffs.weekCorrection"
-                class="import-identical-hint"
-              >(与现有设置一致)</span>
-            </ElCheckbox>
-            <ElCheckbox
-              v-model="importForm.playerCorrection"
-              :disabled="!importDataPending.c?.playerCorrections"
-            >
-              {{ LABELS.PLAYER_CORRECTION }}
-              <span
-                v-if="!importDataPending.c?.playerCorrections"
-                class="import-not-found-hint"
-              >- 未发现数据</span>
-              <span
-                v-else-if="!importDiffs.playerCorrection"
-                class="import-identical-hint"
-              >(与现有设置一致)</span>
-            </ElCheckbox>
-            <ElCheckbox
-              v-model="importForm.settings"
-              :disabled="
-                !importDataPending.c?.filter
-                  && importDataPending.c?.raidActive === undefined
-              "
-            >
-              {{ LABELS.SETTINGS }}
-              <span
-                v-if="
-                  !importDataPending.c?.filter
-                    && importDataPending.c?.raidActive === undefined
-                "
-                class="import-not-found-hint"
-              >- 未发现数据</span>
-              <span
-                v-else-if="!importDiffs.settings"
-                class="import-identical-hint"
-              >(与现有设置一致)</span>
+              >- 备份文件中未发现视图/过滤配置</span>
+              <span v-else-if="!importDiffs.view" class="import-identical-hint">(与现有配置一致)</span>
             </ElCheckbox>
           </div>
           <div
             v-if="
-              (importForm.bis && importDiffs.bis)
-                || (importForm.roles && importDiffs.roles)
-                || (importForm.mapping && importDiffs.mapping)
-                || (importForm.weekCorrection && importDiffs.weekCorrection)
-                || (importForm.playerCorrection && importDiffs.playerCorrection)
-                || (importForm.settings && importDiffs.settings)
+              (importForm.meta && importDiffs.meta)
+                || (importForm.corrections && importDiffs.corrections)
+                || (importForm.view && importDiffs.view)
             "
             class="import-warning-info"
           >
@@ -5033,18 +5031,10 @@ async function applyPendingWinnerChange() {
           </div>
           <div
             v-else-if="
-              (importForm.bis
-                || importForm.roles
-                || importForm.mapping
-                || importForm.weekCorrection
-                || importForm.playerCorrection
-                || importForm.settings)
-                && !importDiffs.bis
-                && !importDiffs.roles
-                && !importDiffs.mapping
-                && !importDiffs.weekCorrection
-                && !importDiffs.playerCorrection
-                && !importDiffs.settings
+              (importForm.meta || importForm.corrections || importForm.view)
+                && !importDiffs.meta
+                && !importDiffs.corrections
+                && !importDiffs.view
             "
             class="import-success-info"
           >
