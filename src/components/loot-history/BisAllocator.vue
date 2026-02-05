@@ -569,6 +569,8 @@ function applyPreset(player: string, preset: BisPreset) {
 
   const changes: BisChange[] = []
   DEFAULT_ROWS.forEach((row) => {
+    if (row.id === 'random_weapon')
+      return
     const oldV = currentConfig[row.id]
     const newV = newConfig[row.id]
 
