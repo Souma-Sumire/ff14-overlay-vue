@@ -151,11 +151,11 @@ const manualForm = ref({
 const showClearDialog = ref(false)
 const clearForm = ref({
   loot: true,
-  bis: false,
-  roles: false,
-  mapping: false,
-  weekCorrection: false,
-  playerCorrection: false,
+  bis: true,
+  roles: true,
+  mapping: true,
+  weekCorrection: true,
+  playerCorrection: true,
 })
 
 const showTimeSetup = ref(false)
@@ -2557,11 +2557,11 @@ function handleDataCommand(command: string) {
   if (command === 'clear') {
     clearForm.value = {
       loot: true,
-      bis: false,
-      roles: false,
-      mapping: false,
-      weekCorrection: false,
-      playerCorrection: false,
+      bis: true,
+      roles: true,
+      mapping: true,
+      weekCorrection: true,
+      playerCorrection: true,
     }
     showClearDialog.value = true
   }
