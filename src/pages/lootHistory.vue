@@ -310,7 +310,7 @@ const syncStartDate = ref(GAME_VERSION_CONFIG.RAID_START_TIME)
 const syncEndDate = ref<string | null>(null)
 const isRaidFilterActive = ref(true)
 const isSyncNeeded = ref(false)
-const isOnlyRaidMembersActive = ref(true)
+const isOnlyRaidMembersActive = ref(false)
 const EQUIP_ROLES = [
   '御敌',
   '制敌',
