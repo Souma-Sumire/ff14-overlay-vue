@@ -35,6 +35,22 @@ const demoFoodData: Players[] = [
       ],
       hq: !true,
     },
+    medicine: [
+      {
+        name: '8级意力之幻药',
+        hq: true,
+        grade: '8',
+        shortName: '意',
+        type: '意',
+      },
+      {
+        name: '5级意力之幻药',
+        hq: true,
+        grade: '5',
+        shortName: '意',
+        type: '意',
+      },
+    ],
   },
   {
     id: '2',
@@ -70,6 +86,22 @@ const demoFoodData: Players[] = [
         },
       ],
     },
+    medicine: [
+      {
+        name: '7级刚力之幻药',
+        hq: false,
+        grade: '7',
+        shortName: '刚',
+        type: '刚',
+      },
+      {
+        name: '8级刚力之幻药',
+        hq: true,
+        grade: '8',
+        shortName: '刚',
+        type: '刚',
+      },
+    ],
   },
   {
     id: '3',
@@ -105,6 +137,15 @@ const demoFoodData: Players[] = [
         },
       ],
     },
+    medicine: [
+      {
+        name: '8级智力之幻药',
+        hq: true,
+        grade: '8',
+        shortName: '智',
+        type: '智',
+      },
+    ],
   },
   {
     id: '4',
@@ -140,6 +181,15 @@ const demoFoodData: Players[] = [
         },
       ],
     },
+    medicine: [
+      {
+        name: '8级巧力之幻药',
+        hq: true,
+        grade: '8',
+        shortName: '巧',
+        type: '巧',
+      },
+    ],
   },
   {
     id: '5',
@@ -175,12 +225,30 @@ const demoFoodData: Players[] = [
         },
       ],
     },
+    medicine: [
+      {
+        name: '8级巧力之幻药',
+        hq: false,
+        grade: '8',
+        shortName: '巧',
+        type: '巧',
+      },
+    ],
   },
   {
     id: '6',
     name: '1',
     jobName: '召唤',
     food: undefined,
+    medicine: [
+      {
+        name: '8级智力之幻药',
+        hq: true,
+        grade: '8',
+        shortName: '智',
+        type: '智',
+      },
+    ],
   },
   {
     id: '7',
@@ -209,11 +277,20 @@ const demoFoodData: Players[] = [
       ],
       hq: true,
     },
+    medicine: [
+      {
+        name: '7级巧力之幻药',
+        hq: true,
+        grade: '7',
+        shortName: '巧',
+        type: '巧',
+      },
+    ],
   },
   {
     id: '8',
     name: '1',
-    jobName: '时魔',
+    jobName: '黑骑',
     food: {
       durationSeconds: 6594,
       expiredMillisecond: 1753140603605,
@@ -237,6 +314,15 @@ const demoFoodData: Players[] = [
       ],
       hq: true,
     },
+    medicine: [
+      {
+        name: '8级耐力之幻药',
+        hq: true,
+        grade: '8',
+        shortName: '耐',
+        type: '耐',
+      },
+    ],
   },
 ].sort(
   (a, b) => (a.food?.durationSeconds ?? 0) - (b.food?.durationSeconds ?? 0),
