@@ -1288,6 +1288,15 @@ async function handleRolePlayerChange(name: string, role: string) {
 
 async function addSpecialRole(name: string, type: 'SUB' | 'LEFT') {
   const context = type === 'SUB' ? '替补成员' : '离队成员'
+  // 检查同分类中是否已存在该玩家，避免重复添加
+  const isDuplicate = Object.entries(playerRoles.value).some(
+    ([role, pName]) => role.startsWith(`${type}:`) && pName === name,
+  )
+  if (isDuplicate) {
+    ElMessage.warning(`玩家「${name}」已经在${context}列表中了`)
+    return
+  }
+
   confirmAndPerformPlayerAction(name, context, () => {
     const roleKey = `${type}:${Date.now()}`
     playerRoles.value[roleKey] = name
@@ -2713,8 +2722,27 @@ async function confirmImport() {
       if (importForm.value.meta) {
         if (json.c.map)
           playerMapping.value = { ...playerMapping.value, ...json.c.map }
-        if (json.c.roles)
-          playerRoles.value = { ...playerRoles.value, ...json.c.roles }
+        if (json.c.roles) {
+          const mergedRoles = { ...playerRoles.value }
+          for (const [newRole, newName] of Object.entries(json.c.roles)) {
+            const typedName = newName as string
+            // 对于替补(SUB:)和离队(LEFT:)，基于玩家名称进行去重
+            if (newRole.startsWith('SUB:') || newRole.startsWith('LEFT:')) {
+              const type = newRole.split(':')[0]
+              const alreadyExists = Object.entries(mergedRoles).some(
+                ([r, n]) => r.startsWith(`${type}:`) && n === typedName,
+              )
+              if (!alreadyExists) {
+                mergedRoles[newRole] = typedName
+              }
+            }
+            else {
+              // 普通职位直接覆盖
+              mergedRoles[newRole] = typedName
+            }
+          }
+          playerRoles.value = mergedRoles
+        }
         const incomingBis = json.c.bisConfig || json.bisConfig || json.c.bis
         if (incomingBis)
           bisConfig.value = incomingBis
