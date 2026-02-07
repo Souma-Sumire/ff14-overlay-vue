@@ -4,13 +4,16 @@ export interface ITimeline {
   name: string
   condition: ITimelineCondition
   timeline: string
-  codeFight: string
-  create: string
+  source: string
+  createdAt: string
 }
 
+export type BossPhase = 'door' | 'final' | undefined
+
 export interface ITimelineCondition {
-  zoneId: string // 0=true
+  zoneID: string // 0=true
   jobs: Job[] // JobEnum.NONE=true
+  phase: BossPhase
 }
 
 export interface ITimelineLine {

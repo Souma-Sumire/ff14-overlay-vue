@@ -46,15 +46,16 @@ function getGroupedZoneOptions(t: (key: string) => string, locale: string) {
     return cachedOptions
 
   cachedLang = locale
-  const contentTypeLabel: { type: number, label: string }[] = [
+  const contentTypeLabel: { type: number | string, label: string }[] = [
+    { type: 'SavageRaids', label: t('zoneSelect.raidSavage') },
     { type: ContentType.Dungeons, label: t('zoneSelect.dungeons') },
     { type: ContentType.Trials, label: t('zoneSelect.trials') },
-    { type: ContentType.Raids, label: t('zoneSelect.raids') },
     { type: ContentType.ChaoticAllianceRaid, label: t('zoneSelect.chaoticAllianceRaid') },
     { type: ContentType.UltimateRaids, label: t('zoneSelect.ultimateRaids') },
     { type: ContentType.VCDungeonFinder, label: t('zoneSelect.vcDungeonFinder') },
     { type: ContentType.DeepDungeonExtras, label: t('zoneSelect.deepDungeonExtras') },
     { type: ContentType.DeepDungeons, label: t('zoneSelect.deepDungeons') },
+    { type: ContentType.Raids, label: t('zoneSelect.raids') },
     { type: ContentType.DisciplesOfTheLand, label: t('zoneSelect.disciplesOfTheLand') },
     { type: ContentType.Eureka, label: t('zoneSelect.eureka') },
     { type: ContentType.SaveTheQueen, label: t('zoneSelect.saveTheQueen') },
@@ -73,16 +74,6 @@ function getGroupedZoneOptions(t: (key: string) => string, locale: string) {
         ],
       })
     }
-    else if (ct.type === ContentType.Raids) {
-      options.push({
-        label: ct.label,
-        value: ContentType.Raids,
-        children: [
-          { label: t('zoneSelect.raidSavage'), value: '零式', children: [] },
-          { label: t('zoneSelect.raidNormal'), value: '普通', children: [] },
-        ],
-      })
-    }
     else {
       options.push({ label: ct.label, value: ct.type, children: [] })
     }
@@ -98,7 +89,7 @@ function getGroupedZoneOptions(t: (key: string) => string, locale: string) {
       }
       return Number(a.id) - Number(b.id)
     })
-    .filter(v => !v.name.en.startsWith('(') && v.contentType && contentTypeLabel.some(ct => ct.type === v.contentType))
+    .filter(v => !v.name.en.startsWith('(') && v.contentType && (contentTypeLabel.some(ct => ct.type === v.contentType) || v.contentType === ContentType.Raids))
     .forEach((v) => {
       const value = v.id
       const label = `[${+v.exVersion + 2}.0] ${getCactbotLocaleMessage(v.name)}`
@@ -118,13 +109,11 @@ function getGroupedZoneOptions(t: (key: string) => string, locale: string) {
           categoryNode.children!.push({ value, label })
       }
       else if (v.contentType === ContentType.Raids) {
-        const raidsOptions = options.find(ct => ct.value === ContentType.Raids)
-        if (!raidsOptions)
-          return
-        const targetCategoryValue = v.name.en.includes('(Savage)') ? '零式' : '普通'
-        const categoryNode = raidsOptions.children!.find(ct => ct.value === targetCategoryValue)
-        if (categoryNode)
-          categoryNode.children!.push({ value, label })
+        const isSavage = v.name.en.includes('(Savage)')
+        const targetType = isSavage ? 'SavageRaids' : ContentType.Raids
+        const contentNode = options.find(ct => ct.value === targetType)
+        if (contentNode)
+          contentNode.children!.push({ value, label })
       }
       else {
         const contentNode = options.find(ct => ct.value === v.contentType)
@@ -135,8 +124,8 @@ function getGroupedZoneOptions(t: (key: string) => string, locale: string) {
 
   options.push({ label: t('zoneSelect.uncategorized'), value: '0' })
   cachedOptions = options.sort((a, b) => {
-    const aIndex = contentTypeLabel.findIndex(ct => ct.label === a.label)
-    const bIndex = contentTypeLabel.findIndex(ct => ct.label === b.label)
+    const aIndex = contentTypeLabel.findIndex(ct => ct.type === a.value || ct.label === a.label)
+    const bIndex = contentTypeLabel.findIndex(ct => ct.type === b.value || ct.label === b.label)
     return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex)
   })
   return cachedOptions

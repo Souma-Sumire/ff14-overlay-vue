@@ -8,11 +8,13 @@ import type {
 import { Check } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useDev } from '@/composables/useDev'
+import { bossPhase } from '@/resources/bossPhase'
 import { parseTimeline, useTimelineStore } from '@/store/timeline'
 import { tts } from '@/utils/tts'
 import {
   addOverlayListener,
   callOverlayHandler,
+  removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
 
 const timelineStore = useTimelineStore()
@@ -28,8 +30,9 @@ let doTTS = false // 防止tts重复
 
 // 每次get时间轴时被传入的条件对象
 const playerState = useStorage('timeline-condition-2', {
-  zoneId: '0',
+  zoneID: '0',
   jobs: ['NONE'],
+  phase: undefined,
 } as ITimelineCondition)
 const dev = useDev()
 
@@ -129,6 +132,27 @@ function play() {
   }
   requestAnimationFrame(play)
 }
+let lastCheckTime = 0
+const handleEnmityTargetData: EventMap['EnmityTargetData'] = (e) => {
+  const now = Date.now()
+  if (now - lastCheckTime < 1000)
+    return
+  lastCheckTime = now
+  if (!e.Target)
+    return
+
+  const boss = e.Target.BNpcID
+  const finalIds = bossPhase[Number(playerState.value.zoneID)]
+  if (!finalIds)
+    return
+  if (finalIds.includes(boss)) {
+    // 选到本体了，以后不会再变回门神了
+    removeOverlayListener('EnmityTargetData', handleEnmityTargetData)
+    playerState.value.phase = 'final'
+    getTimeline()
+  }
+}
+
 // 日志
 function handleLogEvent(e: { detail: { logs: string[] } }) {
   for (const log of e.detail.logs) {
@@ -192,7 +216,17 @@ const handlePlayerChangedEvent: EventMap['onPlayerChangedEvent'] = (e) => {
 
 // 切换场景
 const handleChangeZone: EventMap['ChangeZone'] = (e) => {
-  playerState.value.zoneId = String(e.zoneID)
+  playerState.value.phase = undefined
+  // 防止重复订阅
+  removeOverlayListener('EnmityTargetData', handleEnmityTargetData)
+  // 副本有门神本体之分
+  if (bossPhase[e.zoneID]) {
+    // 直接设定为门神
+    playerState.value.phase = 'door'
+    // 订阅目标事件
+    addOverlayListener('EnmityTargetData', handleEnmityTargetData)
+  }
+  playerState.value.zoneID = e.zoneID.toString()
   getTimeline()
 }
 
@@ -284,8 +318,16 @@ function init() {
     duration: 1000,
     showClose: false,
   })
-  getTimeline()
 }
+
+onUnmounted(() => {
+  removeOverlayListener('onLogEvent', handleLogEvent)
+  removeOverlayListener('onPlayerChangedEvent', handlePlayerChangedEvent)
+  removeOverlayListener('ChangeZone', handleChangeZone)
+  removeOverlayListener('BroadcastMessage', handleBroadcastMessage)
+  removeOverlayListener('onInCombatChangedEvent', handleInCombatChanged)
+  removeOverlayListener('EnmityTargetData', handleEnmityTargetData)
+})
 </script>
 
 <template>

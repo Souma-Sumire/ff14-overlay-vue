@@ -12,6 +12,7 @@ import type {
 import { ElMessage } from 'element-plus'
 import JSON5 from 'json5'
 import { defineStore } from 'pinia'
+import { bossPhase } from '@/resources/bossPhase'
 import { TimelineConfigEnum } from '@/types/timeline'
 import logDefinitions from '../../cactbot/resources/netlog_defs'
 import Regexes from '../../cactbot/resources/regexes'
@@ -22,10 +23,9 @@ class Timeline implements ITimeline {
     name: string,
     condition: ITimelineCondition,
     timeline: string,
-    codeFight: string,
+    source: string,
   ) {
     if (Util.iconToJobEnum(condition.jobs[0] as FFIcon)) {
-      // 突然有一天数据格式不一致了 可能是fflogs改返回值了?
       condition.jobs[0] = Util.jobEnumToJob(
         Util.iconToJobEnum(condition.jobs[0] as FFIcon),
       )
@@ -33,15 +33,15 @@ class Timeline implements ITimeline {
     this.name = name
     this.condition = condition
     this.timeline = timeline
-    this.codeFight = codeFight
-    this.create = new Date().toLocaleString()
+    this.source = source
+    this.createdAt = new Date().toLocaleString()
   }
 
   name: string
   condition: ITimelineCondition
   timeline: string
-  codeFight: string
-  create: string
+  source: string
+  createdAt: string
 }
 
 const configTranslate: TimelineConfigTranslate = {
@@ -96,52 +96,67 @@ export const useTimelineStore = defineStore('timeline', {
   getters: {},
   actions: {
     // 兼容以前的job字段，10年后删除
-    normalizeJobConditions(timeline: ITimeline) {
-      if (!timeline.condition.jobs) {
-        timeline.condition.jobs = [(timeline.condition as any)?.job ?? 'NONE']
+    normalizeTimeline(timeline: any) {
+      if (timeline.condition.job && !timeline.condition.jobs) {
+        timeline.condition.jobs = [timeline.condition.job]
         Reflect.deleteProperty(timeline.condition, 'job')
       }
-      timeline.condition.jobs.sort(
-        (a, b) => this.jobList.indexOf(a) - this.jobList.indexOf(b),
-      )
+      if (timeline.condition.zoneId && !timeline.condition.zoneID) {
+        timeline.condition.zoneID = timeline.condition.zoneId
+        Reflect.deleteProperty(timeline.condition, 'zoneId')
+      }
+      if (timeline.codeFight && !timeline.source) {
+        timeline.source = timeline.codeFight
+        Reflect.deleteProperty(timeline, 'codeFight')
+      }
+      if (timeline.create && !timeline.createdAt) {
+        timeline.createdAt = timeline.create
+        Reflect.deleteProperty(timeline, 'create')
+      }
       if (
-        timeline.condition.jobs[0]
+        timeline.condition.jobs?.[0]
         && Util.iconToJobEnum(timeline.condition.jobs[0] as FFIcon)
       ) {
         timeline.condition.jobs[0] = Util.jobEnumToJob(
           Util.iconToJobEnum(timeline.condition.jobs[0] as FFIcon),
         )
       }
+      if (timeline.condition.jobs) {
+        timeline.condition.jobs.sort(
+          (a: Job, b: Job) => this.jobList.indexOf(a) - this.jobList.indexOf(b),
+        )
+      }
     },
 
     newTimeline(
       title = 'Demo',
-      condition: ITimelineCondition = { zoneId: '0', jobs: ['NONE'] },
+      condition: ITimelineCondition = { zoneID: '0', jobs: ['NONE'], phase: undefined },
       rawTimeline = '',
-      codeFight = '用户创建',
+      source = '用户创建',
     ): number {
       this.allTimelines.push(
-        new Timeline(title, condition, rawTimeline, codeFight),
+        new Timeline(title, condition, rawTimeline, source),
       )
       this.sortTimelines()
       ElMessage.success('新建时间轴成功')
-      // 如果严谨点应该还要比较create 但重复的demo选错又能怎么样呢
       const result = this.allTimelines.findIndex(
         t =>
           t.timeline === rawTimeline
           && t.name === title
           && JSON.stringify(t.condition) === JSON.stringify(condition)
-          && t.codeFight === codeFight,
+          && t.source === source,
       )
       return result
     },
     getTimeline(playerState: ITimelineCondition): ITimeline[] {
       return this.allTimelines.filter((t) => {
         return (
-          (t.condition.zoneId === '0'
-            || t.condition.zoneId === playerState.zoneId)
+          (Number(t.condition.zoneID) === 0
+            || Number(t.condition.zoneID) === Number(playerState.zoneID))
           && (t.condition.jobs.includes('NONE')
             || t.condition.jobs.includes(playerState.jobs[0]!))
+          && (t.condition.phase === undefined
+            || (t.condition.phase === playerState.phase && bossPhase[playerState.zoneID]))
         )
       })
     },
@@ -168,7 +183,7 @@ export const useTimelineStore = defineStore('timeline', {
       if (ls) {
         Object.assign(this, JSON.parse(ls))
         this.allTimelines.forEach((timeline) => {
-          this.normalizeJobConditions(timeline)
+          this.normalizeTimeline(timeline)
         })
         this.sortTimelines()
       }
@@ -177,7 +192,7 @@ export const useTimelineStore = defineStore('timeline', {
         if (ls) {
           Object.assign(this, JSON.parse(ls))
           this.allTimelines.forEach((timeline) => {
-            this.normalizeJobConditions(timeline)
+            this.normalizeTimeline(timeline)
           })
           this.sortTimelines()
         }
@@ -188,25 +203,31 @@ export const useTimelineStore = defineStore('timeline', {
       }
     },
     sortTimelines() {
-      this.allTimelines.forEach((timeline) => {
-        this.normalizeJobConditions(timeline)
-      })
+      for (const timeline of this.allTimelines) {
+        this.normalizeTimeline(timeline)
+      }
       this.allTimelines.sort((a, b) => {
-        const mapDiff = Number(a.condition.zoneId) - Number(b.condition.zoneId)
-        if (mapDiff !== 0) {
+        // 1. 地图ID
+        const mapDiff = Number(a.condition.zoneID) - Number(b.condition.zoneID)
+        if (mapDiff !== 0)
           return mapDiff
-        }
-        const nameDiff = a.name.localeCompare(b.name)
-        if (nameDiff !== 0) {
-          return nameDiff
-        }
+
+        // 2. 阶段 (无 < 门神 < 本体)
+        const phaseWeight = { undefined: 0, door: 1, final: 2 }
+        const aPhase = phaseWeight[a.condition.phase as keyof typeof phaseWeight] ?? 0
+        const bPhase = phaseWeight[b.condition.phase as keyof typeof phaseWeight] ?? 0
+        if (aPhase !== bPhase)
+          return aPhase - bPhase
+
+        // 3. 职业
         const jobDiff
           = Util.jobToJobEnum(a.condition.jobs[0]!)
             - Util.jobToJobEnum(b.condition.jobs[0]!)
-        if (jobDiff !== 0) {
+        if (jobDiff !== 0)
           return jobDiff
-        }
-        return a.create.localeCompare(b.create)
+
+        // 4. 名称
+        return a.name.localeCompare(b.name)
       })
     },
     updateFilters(target: string, value: number[]) {

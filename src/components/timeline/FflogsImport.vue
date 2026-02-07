@@ -432,8 +432,9 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
   const index = timelineStore.newTimeline(
     `导入${fflogsQueryConfig.player?.name}`,
     {
-      zoneId: fflogsQueryConfig.zoneID.toString(),
+      zoneID: fflogsQueryConfig.zoneID.toString(),
       jobs: [(fflogsQueryConfig.player?.icon as Job) ?? 'NONE'],
+      phase: undefined,
     },
     fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline,
     `${fflogsQueryConfig.code}#fight=${fflogsQueryConfig.fightIndex + 1}`,
@@ -595,7 +596,7 @@ function handeleFFlogsQueryResultEnemiesListFilter() {
       .join('\n')
   const index = timelineStore.newTimeline(
     `BOSS时间轴（使用前请删除非必要的正则）`,
-    { zoneId: fflogsQueryConfig.zoneID.toString(), jobs: [] },
+    { zoneID: fflogsQueryConfig.zoneID.toString(), jobs: [], phase: undefined },
     fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline,
     `${fflogsQueryConfig.code}#fight=${fflogsQueryConfig.fightIndex + 1}`,
   )
