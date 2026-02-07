@@ -264,8 +264,11 @@ async function updateManualRecordTime(record: LootRecord, newTime: Date) {
   if (!newTime || Number.isNaN(newTime.getTime()))
     return
 
+  const targetTime = new Date(newTime)
+  targetTime.setHours(18, 0, 0, 0)
+
   try {
-    const updatedRecord = { ...record, timestamp: newTime }
+    const updatedRecord = { ...record, timestamp: targetTime }
     // IndexedDB 中的 key 未变，所以直接 put 即可覆盖
     await dbRecords.set(JSON.parse(JSON.stringify(updatedRecord)))
 
@@ -273,7 +276,7 @@ async function updateManualRecordTime(record: LootRecord, newTime: Date) {
     const index = lootRecords.value.findIndex(r => r.key === record.key)
     if (index !== -1) {
       const newList = [...lootRecords.value]
-      newList[index] = { ...updatedRecord, timestamp: new Date(newTime) }
+      newList[index] = { ...updatedRecord, timestamp: new Date(targetTime) }
       lootRecords.value = newList
     }
     ElMessage.success('已更新记录时间')
@@ -2488,8 +2491,10 @@ function selectRaidLoot() {
 }
 
 function openManualAddDialog() {
+  const defaultDate = new Date()
+  defaultDate.setHours(18, 0, 0, 0)
   manualForm.value = {
-    timestamp: new Date().toISOString(),
+    timestamp: defaultDate.toISOString(),
     item: '',
     player: '',
   }
@@ -2553,6 +2558,7 @@ async function submitManualRecord() {
   }
 
   const ts = new Date(manualForm.value.timestamp)
+  ts.setHours(18, 0, 0, 0)
   const key = `manual-${ts.getTime()}-${Math.random().toString(36).slice(2)}`
 
   const record: LootRecord = {
@@ -4102,7 +4108,10 @@ async function applyPendingWinnerChange() {
                   <el-table-column label="时间" width="140">
                     <template #default="scope">
                       <div class="col-time">
-                        <span class="time-date">{{
+                        <ElTag v-if="scope.row.isManual" size="small" type="info" effect="plain" class="manual-tag">
+                          手动添加
+                        </ElTag>
+                        <span v-else class="time-date">{{
                           formatTime(scope.row.timestamp)
                         }}</span>
                       </div>
@@ -4977,11 +4986,11 @@ async function applyPendingWinnerChange() {
         destroy-on-close
       >
         <ElForm v-if="showManualAddDialog" label-width="80px">
-          <ElFormItem label="时间">
+          <ElFormItem label="日期">
             <ElDatePicker
               v-model="manualForm.timestamp"
-              type="datetime"
-              placeholder="选择获得时间"
+              type="date"
+              placeholder="选择获得日期"
               style="width: 100%"
             />
           </ElFormItem>
@@ -5167,11 +5176,11 @@ async function applyPendingWinnerChange() {
                       <div class="item-time">
                         <ElDatePicker
                           :model-value="record.timestamp"
-                          type="datetime"
+                          type="date"
                           size="small"
-                          placeholder="选择时间"
+                          placeholder="选择日期"
                           :clearable="false"
-                          style="width: 160px"
+                          style="width: 140px"
                           @update:model-value="(val: Date) => updateManualRecordTime(record, val)"
                         />
                       </div>
