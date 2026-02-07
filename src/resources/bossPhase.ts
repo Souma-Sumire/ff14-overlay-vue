@@ -19,7 +19,7 @@ const bossPhase: Record<string, number[]> = {
   // M8S 剑嚎
   // [ZoneId.AacCruiserweightM4Savage]: [?],
   // M12S 林德布鲁姆
-  [ZoneId.AacHeavyweightM4Savage]: [19195],
+  [ZoneId.AacHeavyweightM4Savage]: [19202],
 }
 
 export { bossPhase }
