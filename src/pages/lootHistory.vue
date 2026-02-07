@@ -34,6 +34,7 @@ import { useUrlSearchParams } from '@vueuse/core'
 import {
   ElAutocomplete,
   ElCheckbox,
+  ElDatePicker,
   ElDialog,
   ElForm,
   ElFormItem,
@@ -161,7 +162,6 @@ const pendingWinnerChange = ref<{
 const lastSyncTime = ref('')
 const syncSuccessVisible = ref(false)
 const showCustomCorrectionDialog = ref(false)
-const correctionSearch = ref('')
 const activeCorrectionTab = ref('player')
 const bisConfig = ref<BisConfig>({ playerBis: {} })
 
@@ -185,14 +185,7 @@ const filteredPlayerCorrections = computed(() => {
     })
   })
 
-  if (!correctionSearch.value)
-    return list
-  const s = correctionSearch.value.toLowerCase()
-  return list.filter(item =>
-    item.itemName.toLowerCase().includes(s)
-    || item.oldVal.toString().toLowerCase().includes(s)
-    || item.newVal.toString().toLowerCase().includes(s),
-  )
+  return list
 })
 
 const lootRecordsMap = computed(() => {
@@ -222,14 +215,13 @@ const filteredWeekCorrections = computed(() => {
     })
   })
 
-  if (!correctionSearch.value)
-    return list
-  const s = correctionSearch.value.toLowerCase()
-  return list.filter(item =>
-    item.itemName.toLowerCase().includes(s)
-    || item.oldVal.toString().toLowerCase().includes(s)
-    || item.newVal.toString().toLowerCase().includes(s),
-  )
+  return list
+})
+
+const filteredManualRecords = computed(() => {
+  if (!showCustomCorrectionDialog.value)
+    return []
+  return lootRecords.value.filter(r => r.isManual)
 })
 
 function restoreCorrection(item: any) {
@@ -244,6 +236,52 @@ function restoreCorrection(item: any) {
     recordWeekCorrections.value = newMap
   }
   ElMessage.success('已还原该条修正项')
+}
+
+async function removeManualRecord(record: LootRecord) {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除这条手动添加的记录吗？<br/><br/><b>${record.item}</b> - <b>${record.player}</b>`,
+      '确认删除',
+      {
+        confirmButtonText: '确定删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+        dangerouslyUseHTMLString: true,
+      },
+    )
+
+    await dbRecords.remove(record.key)
+    lootRecords.value = lootRecords.value.filter(r => r.key !== record.key)
+    ElMessage.success('已删除手动记录')
+  }
+  catch {
+    // cancel
+  }
+}
+
+async function updateManualRecordTime(record: LootRecord, newTime: Date) {
+  if (!newTime || Number.isNaN(newTime.getTime()))
+    return
+
+  try {
+    const updatedRecord = { ...record, timestamp: newTime }
+    // IndexedDB 中的 key 未变，所以直接 put 即可覆盖
+    await dbRecords.set(JSON.parse(JSON.stringify(updatedRecord)))
+
+    // 更新本地内存中的数据（注意 timestamp 在内存中是 Date 全局对象）
+    const index = lootRecords.value.findIndex(r => r.key === record.key)
+    if (index !== -1) {
+      const newList = [...lootRecords.value]
+      newList[index] = { ...updatedRecord, timestamp: new Date(newTime) }
+      lootRecords.value = newList
+    }
+    ElMessage.success('已更新记录时间')
+  }
+  catch (err) {
+    console.error('Update time error:', err)
+    ElMessage.error('更新时间失败')
+  }
 }
 
 // 排序模式：'part' (部位排序) | 'drop' (掉落排序)
@@ -3313,7 +3351,7 @@ async function applyPendingWinnerChange() {
               </div>
             </div>
 
-            <el-date-picker
+            <ElDatePicker
               v-model="syncStartDate"
               type="datetime"
               size="small"
@@ -3324,7 +3362,7 @@ async function applyPendingWinnerChange() {
               class="date-picker-el"
             />
             <span class="range-sep">-</span>
-            <el-date-picker
+            <ElDatePicker
               v-model="syncEndDate"
               type="datetime"
               size="small"
@@ -4677,7 +4715,7 @@ async function applyPendingWinnerChange() {
             <div class="setup-form">
               <div class="setup-row">
                 <span class="setup-label">起始时间:</span>
-                <el-date-picker
+                <ElDatePicker
                   v-model="syncStartDate"
                   type="datetime"
                   placeholder="起始时间"
@@ -4688,7 +4726,7 @@ async function applyPendingWinnerChange() {
               </div>
               <div class="setup-row">
                 <span class="setup-label">截止时间:</span>
-                <el-date-picker
+                <ElDatePicker
                   v-model="syncEndDate"
                   type="datetime"
                   placeholder="现在 (可选)"
@@ -4940,7 +4978,7 @@ async function applyPendingWinnerChange() {
       >
         <ElForm v-if="showManualAddDialog" label-width="80px">
           <ElFormItem label="时间">
-            <el-date-picker
+            <ElDatePicker
               v-model="manualForm.timestamp"
               type="datetime"
               placeholder="选择获得时间"
@@ -5016,86 +5054,160 @@ async function applyPendingWinnerChange() {
                 </div>
               </div>
             </div>
-
-            <div class="sidebar-footer">
-              <el-input
-                v-model="correctionSearch"
-                placeholder="搜索内容..."
-                prefix-icon="Search"
-                size="small"
-                clearable
-              />
+            <div
+              class="nav-item"
+              :class="{ active: activeCorrectionTab === 'manual' }"
+              @click="activeCorrectionTab = 'manual'"
+            >
+              <div class="nav-icon">
+                <el-icon><Plus /></el-icon>
+              </div>
+              <div class="nav-content">
+                <div class="nav-title">
+                  手动添加记录
+                </div>
+                <div class="nav-status">
+                  {{ filteredManualRecords.length }} 个条目
+                </div>
+              </div>
             </div>
           </div>
 
           <div class="correction-main">
             <div class="main-header">
               <h3>
-                {{ activeCorrectionTab === 'player' ? '获得者修正管理' : 'CD周数修正管理' }}
+                {{
+                  activeCorrectionTab === 'player'
+                    ? '获得者修正管理'
+                    : activeCorrectionTab === 'week'
+                      ? 'CD周数修正管理'
+                      : '手动添加记录管理'
+                }}
               </h3>
-              <p>可以撤销手动进行的改动，恢复最原始的系统记录。</p>
+              <p>
+                {{
+                  activeCorrectionTab === 'manual'
+                    ? '管理手动添加的装备掉落记录，删除后将永久移除。'
+                    : '可以撤销手动进行的改动，恢复最原始的系统记录。'
+                }}
+              </p>
             </div>
 
             <div class="correction-grid-wrapper scroll-thin">
-              <div
-                v-for="item in (activeCorrectionTab === 'player' ? filteredPlayerCorrections : filteredWeekCorrections)"
-                :key="item.key"
-                class="correction-card-compact"
-              >
-                <div class="card-main-row">
-                  <div class="item-primary-info">
-                    <div class="item-name" :title="item.itemName">
-                      {{ item.itemName }}
-                    </div>
-                    <div class="item-time">
-                      {{ formatTime(item.record.timestamp) }}
-                    </div>
-                  </div>
-
-                  <div class="card-comparison-inline">
-                    <div class="comp-box old">
-                      <div class="value">
-                        <template v-if="activeCorrectionTab === 'player'">
-                          <PlayerDisplay :name="item.oldVal" :role="getPlayerRole(item.oldVal)" :show-only-role="false" />
-                        </template>
-                        <template v-else>
-                          <span class="week-text">{{ item.oldVal }}</span>
-                        </template>
+              <template v-if="activeCorrectionTab === 'player' || activeCorrectionTab === 'week'">
+                <div
+                  v-for="item in (activeCorrectionTab === 'player' ? filteredPlayerCorrections : filteredWeekCorrections)"
+                  :key="item.key"
+                  class="correction-card-compact"
+                >
+                  <div class="card-main-row">
+                    <div class="item-primary-info">
+                      <div class="item-name" :title="item.itemName">
+                        {{ item.itemName }}
+                      </div>
+                      <div class="item-time">
+                        {{ formatTime(item.record.timestamp) }}
                       </div>
                     </div>
 
-                    <div class="comp-arrow">
-                      <el-icon><Right /></el-icon>
-                    </div>
+                    <div class="card-comparison-inline">
+                      <div class="comp-box old">
+                        <div class="value">
+                          <template v-if="activeCorrectionTab === 'player'">
+                            <PlayerDisplay :name="item.oldVal" :role="getPlayerRole(item.oldVal)" :show-only-role="false" />
+                          </template>
+                          <template v-else>
+                            <span class="week-text">{{ item.oldVal }}</span>
+                          </template>
+                        </div>
+                      </div>
 
-                    <div class="comp-box new">
-                      <div class="value">
-                        <template v-if="activeCorrectionTab === 'player'">
-                          <PlayerDisplay :name="item.newVal" :role="getPlayerRole(item.newVal)" :show-only-role="false" />
-                        </template>
-                        <template v-else>
-                          <span class="week-text">{{ item.newVal }}</span>
-                        </template>
+                      <div class="comp-arrow">
+                        <el-icon><Right /></el-icon>
+                      </div>
+
+                      <div class="comp-box new">
+                        <div class="value">
+                          <template v-if="activeCorrectionTab === 'player'">
+                            <PlayerDisplay :name="item.newVal" :role="getPlayerRole(item.newVal)" :show-only-role="false" />
+                          </template>
+                          <template v-else>
+                            <span class="week-text">{{ item.newVal }}</span>
+                          </template>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div class="card-actions">
-                    <el-button
-                      type="primary"
-                      link
-                      size="small"
-                      @click="restoreCorrection(item)"
-                    >
-                      <el-icon><RefreshLeft /></el-icon>
-                      还原
-                    </el-button>
+                    <div class="card-actions">
+                      <el-button
+                        type="primary"
+                        link
+                        size="small"
+                        @click="restoreCorrection(item)"
+                      >
+                        <el-icon><RefreshLeft /></el-icon>
+                        还原
+                      </el-button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </template>
+
+              <template v-else-if="activeCorrectionTab === 'manual'">
+                <div
+                  v-for="record in filteredManualRecords"
+                  :key="record.key"
+                  class="correction-card-compact"
+                >
+                  <div class="card-main-row">
+                    <div class="item-primary-info">
+                      <div class="item-name" :title="record.item">
+                        {{ record.item }}
+                      </div>
+                      <div class="item-time">
+                        <ElDatePicker
+                          :model-value="record.timestamp"
+                          type="datetime"
+                          size="small"
+                          placeholder="选择时间"
+                          :clearable="false"
+                          style="width: 160px"
+                          @update:model-value="(val: Date) => updateManualRecordTime(record, val)"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="card-comparison-inline">
+                      <div class="comp-box new">
+                        <div class="value">
+                          <PlayerDisplay :name="record.player" :role="getPlayerRole(record.player)" :show-only-role="false" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="card-actions">
+                      <el-button
+                        type="danger"
+                        link
+                        size="small"
+                        @click="removeManualRecord(record)"
+                      >
+                        <el-icon><Delete /></el-icon>
+                        删除
+                      </el-button>
+                    </div>
+                  </div>
+                </div>
+              </template>
 
               <div
-                v-if="(activeCorrectionTab === 'player' ? filteredPlayerCorrections : filteredWeekCorrections).length === 0"
+                v-if="(
+                  activeCorrectionTab === 'player'
+                    ? filteredPlayerCorrections
+                    : activeCorrectionTab === 'week'
+                      ? filteredWeekCorrections
+                      : filteredManualRecords
+                ).length === 0"
                 class="premium-empty"
               >
                 <el-icon class="empty-icon">
