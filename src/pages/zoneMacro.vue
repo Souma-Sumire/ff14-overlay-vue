@@ -66,6 +66,7 @@ const dutyLoading = ref(false)
 const dutyContent = ref('')
 const dutyStatus = ref<'idle' | 'loading' | 'success' | 'empty' | 'error'>('idle')
 const dutyErrorCode = ref<string | number>('')
+const dutyBestProxyIndex = useStorage('duty-best-proxy-index', 0)
 const dutyUrl = computed(() => {
   if (currentMapID.value > 0 && currentMapID.value !== Number(macroStore.selectZone)) {
     return `https://ff14.org/duty/${currentMapID.value}.htm`
@@ -79,6 +80,37 @@ interface DutyCache {
   expiry: number
 }
 const db = useIndexedDB<DutyCache>('duty-cache')
+
+function cleanDutyHtml(rawHtml: string): string {
+  if (!rawHtml)
+    return ''
+
+  const isFullPage = rawHtml.includes('<!DOCTYPE') || rawHtml.includes('<html')
+  const parser = new DOMParser()
+  let doc: Document | Element
+
+  if (isFullPage) {
+    const fullDoc = parser.parseFromString(rawHtml, 'text/html')
+    const article = fullDoc.querySelector('#root > div.main-container > div > div > main > div.content-container > article')
+    if (!article)
+      return ''
+    doc = article
+  }
+  else {
+    const tempDiv = document.createElement('div')
+    tempDiv.innerHTML = rawHtml
+    doc = tempDiv
+  }
+
+  const html = (doc as HTMLElement).innerHTML || ''
+
+  // 3. 基础正则清理：移除图片 + 修剪标签边缘的空格
+  return html
+    .replace(/<img[^>]*>/gi, '')
+    .replace(/>\s+/g, '>')
+    .replace(/\s+</g, '<')
+    .trim()
+}
 
 async function loadDuty(skipCache = false) {
   if (!dutyUrl.value)
@@ -104,37 +136,58 @@ async function loadDuty(skipCache = false) {
       }
     }
 
-    // 2. 网络请求
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(dutyUrl.value)}`
-    const resp = await fetch(proxyUrl, { cache: 'no-cache' })
-    if (resp.ok) {
-      const data = await resp.json()
-      const html = data.contents
+    // 2. 尝试通过代理请求数据
+    const targetUrl = dutyUrl.value
+    let html = ''
+    let success = false
 
-      if (!html || html.includes('404 噗') || html.includes('Page Not Found')) {
-        await db.set({ key: cacheKey, content: '', expiry: now + 3 * 24 * 60 * 60 * 1000 })
-        dutyStatus.value = 'empty'
-      }
-      else {
-        const parser = new DOMParser()
-        const doc = parser.parseFromString(html, 'text/html')
-        const article = doc.querySelector('#root > div.main-container > div > div > main > div.content-container > article')
+    const allProxies = [
+      (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+      (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+      (url: string) => `https://cors.lol/?url=${encodeURIComponent(url)}`,
+      (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+    ]
 
-        if (article) {
-          article.querySelectorAll('img').forEach(img => img.remove())
-          const content = article.innerHTML
-          await db.set({ key: cacheKey, content, expiry: now + 30 * 24 * 60 * 60 * 1000 })
-          dutyContent.value = content
-          dutyStatus.value = 'success'
+    // 重新排序代理：将上次成功的排在最前面
+    const bestIndex = dutyBestProxyIndex.value
+    const proxyOrder = Array.from({ length: allProxies.length }, (_, i) => i)
+    if (bestIndex > 0 && bestIndex < allProxies.length) {
+      proxyOrder.splice(bestIndex, 1)
+      proxyOrder.unshift(bestIndex)
+    }
+
+    for (const pIdx of proxyOrder) {
+      const getProxyUrl = allProxies[pIdx]!
+      const proxyUrl = getProxyUrl(targetUrl)
+      try {
+        console.log(`[Duty] Attempting proxy [${pIdx}]: ${proxyUrl}`)
+        const resp = await fetch(proxyUrl, {
+          cache: 'no-cache',
+          referrerPolicy: 'no-referrer',
+        })
+        if (resp.ok) {
+          html = await resp.text()
+          if (html) {
+            success = true
+            dutyBestProxyIndex.value = pIdx // 记住成功的索引
+            break
+          }
         }
         else {
-          dutyStatus.value = 'empty'
+          dutyErrorCode.value = `Proxy[${pIdx}] Error ${resp.status}`
         }
       }
+      catch (e: any) {
+        dutyErrorCode.value = `Proxy[${pIdx}] ${e.message || 'Failure'}`
+        console.warn(`[Duty] Proxy failed: ${proxyUrl}`, e)
+      }
     }
-    else {
+
+    if (success && html) {
+      dutyContent.value = html
+    }
+    else if (!success) {
       dutyStatus.value = 'error'
-      dutyErrorCode.value = resp.status
     }
   }
   catch (e: any) {
@@ -147,18 +200,48 @@ async function loadDuty(skipCache = false) {
   }
 }
 
-watch(dutyUrl, async () => {
+watch(dutyUrl, async (newUrl) => {
   dutyContent.value = ''
   dutyStatus.value = 'idle'
-  dutyLoading.value = false
-  if (dutyUrl.value) {
-    const cached = await db.get(dutyUrl.value)
-    if (cached && cached.expiry > Date.now()) {
-      dutyContent.value = cached.content
-      dutyStatus.value = cached.content ? 'success' : 'empty'
-    }
+  dutyErrorCode.value = ''
+  if (!newUrl)
+    return
+
+  const cached = await db.get(newUrl)
+  if (cached && cached.expiry > Date.now()) {
+    dutyContent.value = cached.content
+    dutyStatus.value = cached.content ? 'success' : 'empty'
   }
 }, { immediate: true })
+
+// 归一化处理：统一管理内容获取后的清理、缓存与展示
+watch(dutyContent, async (newVal) => {
+  // 如果当前已经解析成功或者是正在加载中途被逻辑反复触发，则跳过
+  if (!newVal || dutyStatus.value === 'success' || dutyStatus.value === 'empty')
+    return
+
+  if (newVal.includes('404 噗') || newVal.includes('Page Not Found')) {
+    dutyStatus.value = 'empty'
+    return
+  }
+
+  const cleaned = cleanDutyHtml(newVal)
+  if (cleaned) {
+    // 先改状态再改值，防止 watch 递归
+    dutyStatus.value = 'success'
+    dutyContent.value = cleaned
+
+    // 缓存回写：如果是新内容，则存入数据库
+    const cacheKey = dutyUrl.value
+    const cached = await db.get(cacheKey)
+    if (!cached || cached.expiry <= Date.now() || cached.content !== cleaned) {
+      await db.set({ key: cacheKey, content: cleaned, expiry: Date.now() + 30 * 24 * 60 * 60 * 1000 })
+    }
+  }
+  else {
+    dutyStatus.value = 'empty'
+  }
+})
 
 const displayedWaymarks = computed(() => {
   if (!uisaveData.value)
@@ -910,14 +993,28 @@ $main-font: 'FFXIV', 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans 
 }
 
 .duty-card {
-  width: 400px;
+  width: fit-content;
+  max-width: min(42em, calc(100vw - 2rem));
+  min-width: 280px;
   height: auto;
-  min-height: 150px;
+  min-height: auto;
   border-radius: 12px !important;
   margin-bottom: 20px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: var(--el-bg-color-overlay);
+  border: 1px solid var(--el-border-color-light);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  animation: fadeIn 0.35s ease-out both;
+  animation-delay: 0.1s;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    border-color: var(--el-color-primary-light-5);
+  }
 
   :deep(.el-card__body) {
     padding: 0;
@@ -928,7 +1025,8 @@ $main-font: 'FFXIV', 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans 
 }
 
 .duty-placeholder {
-  padding: 24px 0;
+  padding: 24px 16px;
+  min-height: 180px;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -939,20 +1037,39 @@ $main-font: 'FFXIV', 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans 
 }
 
 .duty-html-content {
-  padding: 12px;
+  padding: 12px 16px;
   overflow-y: auto;
-  max-height: 600px;
+  // max-height: 550px;
   flex: 1;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.6;
   color: var(--el-text-color-regular);
-  background: var(--el-bg-color);
+  background: var(--el-bg-color-overlay);
 
   :deep(h1), :deep(h2), :deep(h3) {
     color: var(--el-color-primary);
-    font-size: 1.3em;
-    margin: 0;
+    font-size: 1.2em;
+    margin: 12px 0 4px 0;
     padding: 0;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  :deep(ul), :deep(ol) {
+    margin: 4px 0;
+    padding-left: 20px;
+  }
+
+  :deep(li) {
+    margin: 2px 0;
+  }
+
+  :deep(mark) {
+    background-color: #ffeb3b;
+    color: #333;
+    border-radius: 4px;
   }
 }
 

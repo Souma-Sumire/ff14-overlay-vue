@@ -491,7 +491,7 @@
     "timestamp": "时间: {0}",
     "resetZone": "恢复本图",
     "resetAll": "恢复全部",
-    "noDataTip": "此区域没有数据",
+    "noDataTip": "此区域没有用户数据",
     "badgeUser": "用户",
     "badgeNative": "内置",
     "placeholderMacroTitle": "宏标题",
