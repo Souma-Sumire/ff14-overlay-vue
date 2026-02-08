@@ -16,6 +16,7 @@ import { useI18n } from 'vue-i18n'
 import WaymarkDisplay from '@/components/uisaveEditor/WaymarkDisplay.vue'
 import ZoneSelecter from '@/components/zoneSelecter.vue'
 import { useDev } from '@/composables/useDev'
+import { useIndexedDB } from '@/composables/useIndexedDB'
 import {
   getCactbotLocaleMessage,
   getLocaleMessage,
@@ -51,8 +52,6 @@ const fastEntrance = computed(() => {
     }
   })
 })
-
-// UISAVE Import Logic
 const fileInput = ref<HTMLInputElement | null>(null)
 const uisaveData = ref<UISaveData | null>(null)
 const importDialogVisible = ref(false)
@@ -62,6 +61,104 @@ const selectedWaymarks = ref<{ mark: WayMark, index: number }[]>([])
 const currentMapID = computed(() => {
   return getMapIDByTerritoryType(Number(macroStore.selectZone))
 })
+
+const dutyLoading = ref(false)
+const dutyContent = ref('')
+const dutyStatus = ref<'idle' | 'loading' | 'success' | 'empty' | 'error'>('idle')
+const dutyErrorCode = ref<string | number>('')
+const dutyUrl = computed(() => {
+  if (currentMapID.value > 0 && currentMapID.value !== Number(macroStore.selectZone)) {
+    return `https://ff14.org/duty/${currentMapID.value}.htm`
+  }
+  return ''
+})
+
+interface DutyCache {
+  key: string
+  content: string
+  expiry: number
+}
+const db = useIndexedDB<DutyCache>('duty-cache')
+
+async function loadDuty(skipCache = false) {
+  if (!dutyUrl.value)
+    return
+
+  dutyLoading.value = true
+  dutyStatus.value = 'loading'
+  dutyContent.value = ''
+  dutyErrorCode.value = ''
+
+  const cacheKey = dutyUrl.value
+  const now = Date.now()
+
+  try {
+    // 1. 检查缓存 (如果不是强制刷新)
+    if (!skipCache) {
+      const cached = await db.get(cacheKey)
+      if (cached && cached.expiry > now) {
+        dutyContent.value = cached.content
+        dutyStatus.value = cached.content ? 'success' : 'empty'
+        dutyLoading.value = false
+        return
+      }
+    }
+
+    // 2. 网络请求
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(dutyUrl.value)}`
+    const resp = await fetch(proxyUrl, { cache: 'no-cache' })
+    if (resp.ok) {
+      const data = await resp.json()
+      const html = data.contents
+
+      if (!html || html.includes('404 噗') || html.includes('Page Not Found')) {
+        await db.set({ key: cacheKey, content: '', expiry: now + 3 * 24 * 60 * 60 * 1000 })
+        dutyStatus.value = 'empty'
+      }
+      else {
+        const parser = new DOMParser()
+        const doc = parser.parseFromString(html, 'text/html')
+        const article = doc.querySelector('#root > div.main-container > div > div > main > div.content-container > article')
+
+        if (article) {
+          article.querySelectorAll('img').forEach(img => img.remove())
+          const content = article.innerHTML
+          await db.set({ key: cacheKey, content, expiry: now + 30 * 24 * 60 * 60 * 1000 })
+          dutyContent.value = content
+          dutyStatus.value = 'success'
+        }
+        else {
+          dutyStatus.value = 'empty'
+        }
+      }
+    }
+    else {
+      dutyStatus.value = 'error'
+      dutyErrorCode.value = resp.status
+    }
+  }
+  catch (e: any) {
+    console.error('Load duty failed:', e)
+    dutyStatus.value = 'error'
+    dutyErrorCode.value = e.message || 'Unknown'
+  }
+  finally {
+    dutyLoading.value = false
+  }
+}
+
+watch(dutyUrl, async () => {
+  dutyContent.value = ''
+  dutyStatus.value = 'idle'
+  dutyLoading.value = false
+  if (dutyUrl.value) {
+    const cached = await db.get(dutyUrl.value)
+    if (cached && cached.expiry > Date.now()) {
+      dutyContent.value = cached.content
+      dutyStatus.value = cached.content ? 'success' : 'empty'
+    }
+  }
+}, { immediate: true })
 
 const displayedWaymarks = computed(() => {
   if (!uisaveData.value)
@@ -516,6 +613,36 @@ onMounted(() => {
             </el-row>
           </div>
         </el-card>
+        <el-card
+          v-if="dutyUrl"
+          v-loading="dutyLoading"
+          element-loading-text="正在加载..."
+          shadow="hover"
+          class="duty-card"
+        >
+          <div v-if="dutyStatus === 'idle'" class="duty-placeholder">
+            <el-button type="primary" plain @click="() => loadDuty(false)">
+              加载攻略
+            </el-button>
+          </div>
+          <div v-else-if="dutyStatus === 'loading'" class="duty-placeholder" />
+          <div v-else-if="dutyStatus === 'empty'" class="duty-placeholder">
+            <p>暂无攻略内容</p>
+          </div>
+          <div v-else-if="dutyStatus === 'error'" class="duty-placeholder">
+            <p>加载失败 ({{ dutyErrorCode }})</p>
+            <el-button size="small" type="primary" @click="() => loadDuty(true)">
+              重试
+            </el-button>
+          </div>
+          <div v-else class="duty-html-content" v-html="dutyContent" />
+
+          <div class="duty-card-footer">
+            <el-link :href="dutyUrl" target="_blank" type="primary" size="small">
+              在 新大陆见闻录 查看完整攻略
+            </el-link>
+          </div>
+        </el-card>
       </el-space>
     </el-main>
 
@@ -780,6 +907,60 @@ $main-font: 'FFXIV', 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans 
   &:hover {
     transform: translateY(-1px);
   }
+}
+
+.duty-card {
+  width: 400px;
+  height: auto;
+  min-height: 150px;
+  border-radius: 12px !important;
+  margin-bottom: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  :deep(.el-card__body) {
+    padding: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.duty-placeholder {
+  padding: 24px 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.duty-html-content {
+  padding: 12px;
+  overflow-y: auto;
+  max-height: 600px;
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--el-text-color-regular);
+  background: var(--el-bg-color);
+
+  :deep(h1), :deep(h2), :deep(h3) {
+    color: var(--el-color-primary);
+    font-size: 1.3em;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.duty-card-footer {
+  padding: 8px 16px;
+  background: var(--el-bg-color-overlay);
+  border-top: 1px solid var(--el-border-color-light);
+  text-align: right;
 }
 
 .main-box-card {
