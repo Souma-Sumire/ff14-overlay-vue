@@ -552,7 +552,7 @@ const rowEventHandlers: RowEventHandlers = {
       : keigenns
         .map(k => (userOptions.statusCN ? k.name : k.effect))
         .join(',') + sp
-    } ${t('keigennRecord.hp')}}:${currentHp}(${Math.round(
+    } ${t('keigennRecord.hp')}:${currentHp}(${Math.round(
       (currentHp / maxHp) * 100,
     )}%)+${t('keigennRecord.shield')}:${Math.round(
       (maxHp * +shield) / 100,
