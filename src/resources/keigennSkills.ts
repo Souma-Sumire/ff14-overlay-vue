@@ -13,6 +13,7 @@ const keigennSkills: KeigennSkill[] = [
     .filter(v => v.line === 1 || v.line === 2)
     .map(({ tts, duration, key, line, ...rest }) => ({
       ...rest,
+      duration,
       scope: PARTY,
     })),
   // 职能技能
@@ -24,6 +25,7 @@ const keigennSkills: KeigennSkill[] = [
     // minLevel: 8,
     minLevel: 1,
     scope: SELF,
+    duration: 20,
   },
   {
     // 即刻咏唱（只关心治疗职业/召唤师）
@@ -41,6 +43,7 @@ const keigennSkills: KeigennSkill[] = [
     // minLevel: 12,
     minLevel: 1,
     scope: SELF,
+    duration: 20,
   },
   {
     // 内丹
@@ -79,6 +82,7 @@ const keigennSkills: KeigennSkill[] = [
     // minLevel: 32,
     minLevel: 1,
     scope: SELF,
+    duration: 6,
   },
   {
     // 沉稳咏唱
@@ -88,6 +92,7 @@ const keigennSkills: KeigennSkill[] = [
     // minLevel: 44,
     minLevel: 1,
     scope: SELF,
+    duration: 6,
   },
 
   // 职业技能
@@ -99,6 +104,7 @@ const keigennSkills: KeigennSkill[] = [
     job: [1],
     minLevel: 38,
     scope: SELF,
+    duration: 15,
   },
   {
     // 预警 / 极致防御
@@ -107,6 +113,7 @@ const keigennSkills: KeigennSkill[] = [
     job: [19],
     minLevel: 38,
     scope: SELF,
+    duration: 15,
   },
   {
     // 壁垒
@@ -115,6 +122,7 @@ const keigennSkills: KeigennSkill[] = [
     job: [19],
     minLevel: 52,
     scope: SELF,
+    duration: 10,
   },
   {
     // 圣盾阵
@@ -125,6 +133,7 @@ const keigennSkills: KeigennSkill[] = [
     scope: SELF,
     showResource: true,
     resourceCost: 50,
+    duration: 8,
   },
   {
     // 干预
@@ -135,6 +144,7 @@ const keigennSkills: KeigennSkill[] = [
     scope: OTHER,
     showResource: true,
     resourceCost: 50,
+    duration: 8,
   },
   // 战士
   {
@@ -144,6 +154,7 @@ const keigennSkills: KeigennSkill[] = [
     job: [3],
     minLevel: 38,
     scope: SELF,
+    duration: 15,
   },
   {
     // 复仇 / 戮罪
@@ -152,6 +163,7 @@ const keigennSkills: KeigennSkill[] = [
     job: [21],
     minLevel: 38,
     scope: SELF,
+    duration: 15,
   },
   {
     // 战栗
@@ -160,6 +172,7 @@ const keigennSkills: KeigennSkill[] = [
     job: [3, 21],
     minLevel: 30,
     scope: SELF,
+    duration: 10,
   },
   {
     // 泰然自若
@@ -176,6 +189,7 @@ const keigennSkills: KeigennSkill[] = [
     job: [21],
     minLevel: 56,
     scope: SELF,
+    duration: 8,
   },
   {
     // 原初的勇猛
@@ -184,6 +198,7 @@ const keigennSkills: KeigennSkill[] = [
     job: [21],
     minLevel: 76,
     scope: OTHER,
+    duration: 8,
   },
   // 暗黑骑士
   {
@@ -193,6 +208,7 @@ const keigennSkills: KeigennSkill[] = [
     job: [32],
     minLevel: 38,
     scope: SELF,
+    duration: 15,
   },
   {
     // 弃明投暗
@@ -201,6 +217,7 @@ const keigennSkills: KeigennSkill[] = [
     job: [32],
     minLevel: 45,
     scope: SELF,
+    duration: 10,
   },
   {
     // 至黑之夜
@@ -211,6 +228,7 @@ const keigennSkills: KeigennSkill[] = [
     scope: PARTY,
     showResource: true,
     resourceCost: 3000,
+    duration: 7,
   },
   {
     // 献奉
@@ -220,6 +238,7 @@ const keigennSkills: KeigennSkill[] = [
     minLevel: 82,
     scope: PARTY,
     maxCharges: 2,
+    duration: 7,
   },
   // 绝枪战士
   {
@@ -229,6 +248,7 @@ const keigennSkills: KeigennSkill[] = [
     job: [37],
     minLevel: 38,
     scope: SELF,
+    duration: 15,
   },
   {
     // 伪装
@@ -237,6 +257,7 @@ const keigennSkills: KeigennSkill[] = [
     job: [37],
     minLevel: 6,
     scope: SELF,
+    duration: 10,
   },
   {
     // 石之心 / 刚玉之心
@@ -245,6 +266,7 @@ const keigennSkills: KeigennSkill[] = [
     job: [37],
     minLevel: 68,
     scope: PARTY,
+    duration: 8,
   },
   {
     // 极光

@@ -27,6 +27,7 @@ import { ZoneInfo } from '@/resources/zoneInfo'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 
 import { compareSame } from '@/utils/compareSaveAction'
+import { calculateCharges } from '@/utils/cooldown'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 import { processAbilityLine, processFlags } from '@/utils/flags'
 import { getKeigenn, multiplierEffect, universalVulnerableEnemy, universalVulnerableFriendly } from '@/utils/keigenn'
@@ -1119,32 +1120,13 @@ function getKeySkillSnapshot(
     })
     .map((item) => {
       const history = cooldownTracker[item.ownerId]?.[compareSame(item.id)] ?? []
-      const maxCharges = item.maxCharges || 1
-      const recastMs = item.recast1000ms * 1000
-
-      // 计算每个槽位的冷却结束时间
-      const freeAt = Array.from({ length: maxCharges }, () => 0)
-      for (let i = 0; i < history.length; i++) {
-      // 第 i 次使用技能消耗一个充能，该充能将在上次冷却结束（或本次使用时间）后 recastMs 恢复
-        const usedAt = history[i]!
-        const prevFreeAt = i > 0 ? freeAt[i - 1]! : 0
-        freeAt[i] = Math.max(usedAt, prevFreeAt) + recastMs
-      }
-
-      let chargesReady = maxCharges - history.length
-      let recastLeft = 0
-
-      // 检查历史记录中哪些充能已经恢复
-      for (let i = 0; i < history.length; i++) {
-        if (timestamp >= freeAt[i]!) {
-          chargesReady++
-        }
-        else {
-        // 第一个还没恢复的充能即为当前的 CD 状态
-          recastLeft = Math.ceil((freeAt[i]! - timestamp) / 1000)
-          break
-        }
-      }
+      const { charges: chargesReady, recastLeft: recastLeftMs } = calculateCharges(
+        history,
+        timestamp,
+        item.maxCharges || 1,
+        item.recast1000ms * 1000,
+      )
+      const recastLeft = Math.ceil(recastLeftMs / 1000)
 
       const jobResource = item.showResource ? resourceManager.getResource(item.ownerJob, item.ownerId) : undefined
       const isResourceReady = item.resourceCost === undefined

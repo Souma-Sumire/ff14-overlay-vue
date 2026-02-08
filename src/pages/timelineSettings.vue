@@ -405,9 +405,7 @@ function saveImportedTimelines(parsedData: ITimeline[]): void {
   timelineStore.sortTimelines()
 
   for (const timeline of timelineStore.allTimelines) {
-    if (timeline.condition.jobs === undefined) {
-      timeline.condition.jobs = [(timeline.condition as any)?.job ?? 'NONE']
-    }
+    timelineStore.normalizeTimeline(timeline)
   }
 
   // 追加操作
@@ -478,7 +476,8 @@ function requestACTTimelineData() {
 const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
   if (e.source !== 'soumaTimeline')
     return
-  if ((e.msg as any).type === 'post') {
+  const msg = e.msg as { type: string, data?: any }
+  if (msg.type === 'post') {
     // 得到 timeline 中储存的数据（仅在网页无数据时才会触发）
     keepRetrying = false
     loading.close()
@@ -500,13 +499,13 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
       duration: 3000,
     })
   }
-  else if ((e.msg as any).type === 'success') {
+  else if (msg.type === 'success') {
     // timeline 回报 数据同步成功
     hasUnsyncedChanges.value = false
     syncStatus.value = 'idle'
     lastSyncTime.value = new Date().toLocaleTimeString()
   }
-  else if ((e.msg as any).type === 'hello') {
+  else if (msg.type === 'hello') {
     // timeline 主动告知 上线
     syncData()
   }
@@ -625,7 +624,15 @@ onMounted(() => {
     syncData()
   }, 500)
 
-  watch(() => timelineStore.$state, syncDataDebounced, { deep: true })
+  watch(
+    [
+      () => timelineStore.allTimelines,
+      () => timelineStore.configValues,
+      () => timelineStore.showStyle,
+    ],
+    syncDataDebounced,
+    { deep: true },
+  )
 })
 
 function init(): void {

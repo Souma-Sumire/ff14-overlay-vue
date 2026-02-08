@@ -265,14 +265,11 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
   if (e.source !== 'soumaTimelineSettings') {
     return
   }
-  if ((e.msg as any).type === 'post') {
-    const data = (e.msg as { data: typeof timelineStore.$state }).data
+  const msg = e.msg as { type: string, data?: any }
+  if (msg.type === 'post') {
+    const data = (msg as { data: typeof timelineStore.$state }).data
     for (const v of data.allTimelines) {
-      if (v.condition.jobs === undefined) {
-        v.condition.jobs = [(v.condition as any).job]
-      }
-      v.condition.jobs.sort((a, b) => timelineStore.jobList.indexOf(a) - timelineStore.jobList.indexOf(b))
-      Reflect.deleteProperty(v.condition, 'job')
+      timelineStore.normalizeTimeline(v)
     }
     timelineStore.allTimelines = data.allTimelines
     timelineStore.configValues = data.configValues
@@ -288,7 +285,7 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
     getTimeline() // 获取新数据之后查询一次
     sendBroadcastData('success')
   }
-  if ((e.msg as any).type === 'get') {
+  if (msg.type === 'get') {
     sendBroadcastData('post', timelineStore.$state) // 发送数据
   }
 }

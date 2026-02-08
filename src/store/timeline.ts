@@ -307,7 +307,7 @@ export async function parseTimeline(
       : undefined
     const cactbotSync = syncRegex.exec(match[0])?.groups
     const cactbotRegexType = cactbotSync?.netRegexType
-    let params = {} as any
+    let params: Record<string, any> = {}
     try {
       params = JSON5.parse(cactbotSync?.netRegex ?? '{}')
     }

@@ -19,6 +19,7 @@ type DamageType
     | 'darkness' // 暗黑;
     | 'dot'
     | 'heal'
+    | 'unknown'
 
 function processFlags(flag: string) {
   const effect = processEffect(flag)
@@ -50,7 +51,7 @@ function processEffect(flag: string): DamageEffect {
     case flag.endsWith('6'):
       return 'parried damage'
     default:
-      throw new Error(`Unknown effect flag ${flag}`)
+      return 'damage done'
   }
 }
 
@@ -89,8 +90,7 @@ function processType(flag: string): DamageType {
     case /6\w{4}$/.test(flag):
       return 'darkness'
     default:
-      console.warn(`Unknown type flag "${flag}", defaulting to 'physics'`)
-      return 'physics'
+      return 'unknown'
   }
 }
 // 0x10000 = 真无敌

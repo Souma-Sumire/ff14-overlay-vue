@@ -16,6 +16,7 @@ export interface KeigennSkill {
   showResource?: boolean
   resourceCost?: number
   overrideIconId?: number
+  duration?: DynamicValue
 }
 
 export interface RowVO {
