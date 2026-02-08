@@ -1,73 +1,165 @@
 <!DOCTYPE html>
 <html lang="zh">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" href="/ff14-overlay-vue/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title></title>
-      <script>
-        var _hmt = _hmt || [];
-        (function () {
-          if (location.hostname === "localhost") return;
-          var hm = document.createElement("script");
-          hm.src = "https://hm.baidu.com/hm.js?a1732a75e4e7101fb39e0e7ca0e546a4";
-          var s = document.getElementsByTagName("script")[0];
-          s.parentNode.insertBefore(hm, s);
-        })();
-      </script>
-    <script type="module" crossorigin src="/ff14-overlay-vue/assets/index-BMYkThjD.js"></script>
-    <link rel="modulepreload" crossorigin href="/ff14-overlay-vue/assets/vendor-vue-iK2zA9mI.js">
-    <link rel="modulepreload" crossorigin href="/ff14-overlay-vue/assets/vendor-element-plus-Crd81rYT.js">
-    <link rel="modulepreload" crossorigin href="/ff14-overlay-vue/assets/cactbot-Bq2Gp82n.js">
-    <link rel="modulepreload" crossorigin href="/ff14-overlay-vue/assets/shared-core-DqyA8e41.js">
-    <link rel="stylesheet" crossorigin href="/ff14-overlay-vue/assets/vendor-vue-DWnTz46N.css">
-    <link rel="stylesheet" crossorigin href="/ff14-overlay-vue/assets/vendor-element-plus-DIgZjo4S.css">
-    <link rel="stylesheet" crossorigin href="/ff14-overlay-vue/assets/index-7jUIND-H.css">
-    <meta name="build-time" content="2026/02/08 18:55:54" />
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="/ff14-overlay-vue/favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title></title>
+  <script>
+    var _hmt = _hmt || [];
+    (function () {
+      if (location.hostname === "localhost") return;
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?a1732a75e4e7101fb39e0e7ca0e546a4";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+  <script type="module" crossorigin src="/ff14-overlay-vue/assets/index-BMYkThjD.js"></script>
+  <link rel="modulepreload" crossorigin href="/ff14-overlay-vue/assets/vendor-vue-iK2zA9mI.js">
+  <link rel="modulepreload" crossorigin href="/ff14-overlay-vue/assets/vendor-element-plus-Crd81rYT.js">
+  <link rel="modulepreload" crossorigin href="/ff14-overlay-vue/assets/cactbot-Bq2Gp82n.js">
+  <link rel="modulepreload" crossorigin href="/ff14-overlay-vue/assets/shared-core-DqyA8e41.js">
+  <link rel="stylesheet" crossorigin href="/ff14-overlay-vue/assets/vendor-vue-DWnTz46N.css">
+  <link rel="stylesheet" crossorigin href="/ff14-overlay-vue/assets/vendor-element-plus-DIgZjo4S.css">
+  <link rel="stylesheet" crossorigin href="/ff14-overlay-vue/assets/index-7jUIND-H.css">
+  <meta name="build-time" content="2026/02/08 22:28:23" />
   </head>
-  <body>
-    <div id="app"></div>
-    <link rel="stylesheet" href="//overlay.diemoe.net/font/Smartisan%20Compact%20CNS%20Light/?replaceName=SmartisanHei" />
-    <style>
-      [v-cloak] {
-        display: none;
+
+<body>
+  <div id="app"></div>
+  <link rel="stylesheet" href="//overlay.diemoe.net/font/Smartisan%20Compact%20CNS%20Light/?replaceName=SmartisanHei" />
+  <style>
+    [v-cloak] {
+      display: none;
+    }
+  </style>
+  <div id="unlocked" class="unlocked" v-cloak>
+    <div id="position-info" class="position-info">
+      左上角
+      <div id="position-screen-x"></div>
+      <div id="position-screen-y"></div>
+      中心点
+      <div id="position-center-x"></div>
+      <div id="position-center-y"></div>
+    </div>
+    <h2 id="unlocked-text">🔓 请调整至合适大小，随后在ACT勾选"锁定悬浮窗"以开始使用。</h2>
+  </div>
+  <script>
+    (function () {
+      let isUnlocked = false;
+      let hasScreenInfoApi = false;
+      let updateTimer = null;
+
+      function checkApi() {
+        hasScreenInfoApi = !!(window.OverlayPluginApi && typeof window.OverlayPluginApi.getScreenInfo === 'function');
+        const posInfo = document.getElementById("position-info");
+        if (posInfo) {
+          posInfo.style.display = hasScreenInfoApi ? "block" : "none";
+          document.getElementById("unlocked-text").style.marginLeft = hasScreenInfoApi ? "60px" : "0px";
+        }
+        return hasScreenInfoApi;
       }
-    </style>
-    <div id="unlocked" class="unlocked" v-cloak><h2>🔓 请调整至合适大小，随后在ACT勾选"锁定悬浮窗"以开始使用。</h2></div>
-    <script>
+
+      async function updatePositionInfo() {
+        const posInfo = document.getElementById("position-info");
+        const positionScreenX = document.getElementById("position-screen-x");
+        const positionScreenY = document.getElementById("position-screen-y");
+        const positionCenterX = document.getElementById("position-center-x");
+        const positionCenterY = document.getElementById("position-center-y");
+        if (!posInfo || !isUnlocked || !hasScreenInfoApi) return;
+
+        try {
+          const info = await window.OverlayPluginApi.getScreenInfo();
+          const overlay = info.overlay;
+          const primaryScreen = info.screens.find(s => s.primary) || info.screens[0];
+
+          if (!primaryScreen) return;
+
+          const screenW = primaryScreen.width;
+          const screenH = primaryScreen.height;
+          const overlayCenterX = overlay.x + overlay.width / 2;
+          const overlayCenterY = overlay.y + overlay.height / 2;
+          // 左上角相对于屏幕的百分比
+          const screenX = ((overlay.x - primaryScreen.x) / screenW * 100).toFixed(1);
+          const screenY = ((overlay.y - primaryScreen.y) / screenH * 100).toFixed(1);
+          // 中心点相对于屏幕的百分比
+          const centerX = ((overlayCenterX - primaryScreen.x) / screenW * 100).toFixed(1);
+          const centerY = ((overlayCenterY - primaryScreen.y) / screenH * 100).toFixed(1);
+
+          positionScreenX.textContent = `X: ${screenX}%`;
+          positionScreenY.textContent = `Y: ${screenY}%`;
+          positionCenterX.textContent = `X: ${centerX}%`;
+          positionCenterY.textContent = `Y: ${centerY}%`;
+        } catch (e) {
+          console.error("Failed to get screen info:", e);
+        }
+      }
+
       document.addEventListener("onOverlayStateUpdate", (e) => {
         const unlocked = document.getElementById("unlocked");
-        if (e.detail.isLocked) unlocked.style.display = "none";
-        else unlocked.style.display = "flex";
+        if (e.detail.isLocked) {
+          unlocked.style.display = "none";
+          isUnlocked = false;
+          if (updateTimer) {
+            clearInterval(updateTimer);
+            updateTimer = null;
+          }
+        } else {
+          unlocked.style.display = "flex";
+          isUnlocked = true;
+          if (checkApi()) {
+            updatePositionInfo();
+            updateTimer = setInterval(updatePositionInfo, 100);
+          }
+        }
       });
-    </script>
-    <style>
-      body{
-        padding: 0;
-        margin: 0;
-      }
-      .unlocked {
-        overflow: hidden;
-        height: 100vh;
-        width: 100vw;
-        position: fixed;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background-color: rgba(0, 0, 150, 0.2);
-        display: none;
-        flex-direction: row;
-        flex-wrap: nowrap;
-        align-content: center;
-        justify-content: center;
-        align-items: flex-end;
-        z-index: 20;
-        color: white;
-        text-shadow: 1px 1px 2px black;
-        font-size: 11px;
-        font-weight: bold;
-      }
-    </style>
-  </body>
+    })();
+  </script>
+  <style>
+    body {
+      padding: 0;
+      margin: 0;
+    }
+
+    .unlocked {
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: rgba(0, 0, 150, 0.2);
+      display: none;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-content: center;
+      justify-content: center;
+      align-items: flex-end;
+      z-index: 20;
+      color: white;
+      text-shadow: 1px 1px 2px black;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .position-info {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      font-size: 10px;
+      pointer-events: none;
+      min-width: 50px;
+      width:50px;
+      padding: 4px;
+      font-weight: normal;
+      font-family: monospace;
+      background-color: rgba(0, 0, 0, 0.6);
+    }
+  </style>
+</body>
+
 </html>
