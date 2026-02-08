@@ -95,7 +95,7 @@ export const useTimelineStore = defineStore('timeline', {
   },
   getters: {},
   actions: {
-    // 兼容以前的job字段，10年后删除
+    // 各种兼容逻辑
     normalizeTimeline(timeline: any) {
       if (timeline.condition.job && !timeline.condition.jobs) {
         timeline.condition.jobs = [timeline.condition.job]
@@ -104,6 +104,18 @@ export const useTimelineStore = defineStore('timeline', {
       if (timeline.condition.zoneId && !timeline.condition.zoneID) {
         timeline.condition.zoneID = timeline.condition.zoneId
         Reflect.deleteProperty(timeline.condition, 'zoneId')
+      }
+      if (timeline.condition.phase === undefined) {
+        const bNpcId = timeline.condition.bNpcId
+        const finalIds = bossPhase[timeline.condition.zoneID]
+        if (bNpcId !== undefined && finalIds !== undefined) {
+          if (finalIds.includes(Number(bNpcId))) {
+            timeline.condition.phase = 'final'
+          }
+          else {
+            timeline.condition.phase = 'door'
+          }
+        }
       }
       if (timeline.codeFight && !timeline.source) {
         timeline.source = timeline.codeFight
