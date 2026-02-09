@@ -33,11 +33,19 @@ const useKeySkillStore = defineStore('keySkill', () => {
   const party = ref<Party[]>([])
 
   // 版本管理：用于自动合并开发者新增的默认技能
-  const keySkillsData = useStorage('keySkills-fix', { chinese: [...raidbuffs] })
+  const keySkillsData = useStorage('keySkills-fix', {
+    chinese: [...raidbuffs],
+    mergedKeys: raidbuffs.map(s => s.key),
+  })
+
+  // 兼容老用户：如果没有 mergedKeys，说明是之前版本的存储，
+  // 我们将当前所有 raidbuffs 标记为已合并，防止用户已删除的技能被意外补回。
+  if (!keySkillsData.value.mergedKeys) {
+    keySkillsData.value.mergedKeys = raidbuffs.map(s => s.key)
+  }
 
   // 自动合并逻辑：每当开发者在 raidbuffs.ts 中新增了默认技能，
   // 用户的本地存储会自动检测到这些通过 key 标识的新技能并将其追加。
-  // 自动合并逻辑：
   // 1. 迁移与去重：保留用户的第一份数据（可能是魔改过的），将其 Key 更新为静态 Key，并移除后续重复项
   const defaultSkillMap = new Map<number | string, string>(
     raidbuffs.map(s => [s.id, s.key]),
@@ -72,16 +80,19 @@ const useKeySkillStore = defineStore('keySkill', () => {
     [] as typeof keySkillsData.value.chinese,
   )
 
-  // 2. 补全缺失的默认技能（针对新版本新增的默认技能）
-  const userCurrentKeys = new Set(
-    keySkillsData.value.chinese.map(s => s.key),
-  )
-  const newDefaultSkills = raidbuffs.filter(s => !userCurrentKeys.has(s.key))
+  // 2. 补全真正的缺失默认技能（针对开发者在代码中新增的技能）
+  const mergedKeysSet = new Set(keySkillsData.value.mergedKeys)
+  const newDefaultSkills = raidbuffs.filter(s => !mergedKeysSet.has(s.key))
 
   if (newDefaultSkills.length > 0) {
     keySkillsData.value.chinese = [
       ...keySkillsData.value.chinese,
       ...newDefaultSkills,
+    ]
+    // 更新已合并列表，确保下次不再补充
+    keySkillsData.value.mergedKeys = [
+      ...keySkillsData.value.mergedKeys,
+      ...newDefaultSkills.map(s => s.key),
     ]
   }
 
