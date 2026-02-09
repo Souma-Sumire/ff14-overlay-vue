@@ -11,6 +11,7 @@ import type { ITimeline } from '@/types/timeline'
 import { Loading } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 import { getActionChinese, initActionChinese } from '@/resources/actionChinese'
+import { bossPhase } from '@/resources/bossPhase'
 import { factory } from '@/services/timelineSpecialRules'
 import { useTimelineStore } from '@/store/timeline'
 import { CacheManager } from '@/utils/cacheManager'
@@ -149,6 +150,10 @@ async function queryFFlogsReportFights(url: string) {
         ? res.fights.length
         : Number.parseInt(reg?.groups?.fight ?? '0')) - 1
     const fight = res.fights[fflogsQueryConfig.fightIndex]
+    fflogsQueryConfig.phase = undefined
+    if (fight.difficulty === 101 && bossPhase[fight.zoneID] && bossPhase[fight.zoneID]?.fflogsBoss) {
+      fflogsQueryConfig.phase = bossPhase[fight.zoneID]!.fflogsBoss! === fight.boss ? 'final' : 'door'
+    }
     fflogsQueryConfig.zoneID = fight.zoneID
     fflogsQueryConfig.start = fight.start_time
     fflogsQueryConfig.end = fight.end_time
@@ -434,7 +439,7 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
     {
       zoneID: fflogsQueryConfig.zoneID.toString(),
       jobs: [(fflogsQueryConfig.player?.icon as Job) ?? 'NONE'],
-      phase: undefined,
+      phase: fflogsQueryConfig.phase,
     },
     fflogsQueryConfig.abilityFilterEventsAfterFilterRawTimeline,
     `${fflogsQueryConfig.code}#fight=${fflogsQueryConfig.fightIndex + 1}`,

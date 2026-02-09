@@ -1,3 +1,5 @@
+import type { BossPhase } from './timeline'
+
 export type FFIcon
   = | 'NONE'
     | 'Gladiator'
@@ -103,6 +105,7 @@ export interface FFlogsQuery {
     icon: string
   }[]
   battleSyncedIDs: number[]
+  phase?: BossPhase
 }
 
 export interface FFlogsApiV1ReportEvents {

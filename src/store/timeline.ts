@@ -109,7 +109,7 @@ export const useTimelineStore = defineStore('timeline', {
         const bNpcId = timeline.condition.bNpcId
         const finalIds = bossPhase[timeline.condition.zoneID]
         if (bNpcId !== undefined && finalIds !== undefined) {
-          if (finalIds.includes(Number(bNpcId))) {
+          if (finalIds.bNpcId.includes(Number(bNpcId))) {
             timeline.condition.phase = 'final'
           }
           else {

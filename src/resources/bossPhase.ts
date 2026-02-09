@@ -1,9 +1,14 @@
 import ZoneId from '../../cactbot/resources/zone_id'
 
-// 只需要写本体的BNpcID
-const bossPhase: Record<string, number[]> = {
+// 只需要写本体的
+const bossPhase: Record<string, {
+  // 实际进游戏时的boss bNpcID
+  bNpcId: number[]
+  // 用于从fflogs自动导入日志时自动选择阶段
+  fflogsBoss?: number
+}> = {
   // O4S 新生艾克斯迪司
-  [ZoneId.DeltascapeV40Savage]: [7459],
+  [ZoneId.DeltascapeV40Savage]: { bNpcId: [7459] },
   // O8S 凯夫卡 未知
   // [ZoneId.SigmascapeV40Savage]: [?],
   // O12S 欧米茄
@@ -19,7 +24,7 @@ const bossPhase: Record<string, number[]> = {
   // M8S 剑嚎
   // [ZoneId.AacCruiserweightM4Savage]: [?],
   // M12S 林德布鲁姆
-  [ZoneId.AacHeavyweightM4Savage]: [19202],
+  [ZoneId.AacHeavyweightM4Savage]: { bNpcId: [19202], fflogsBoss: 105 },
 }
 
 export { bossPhase }

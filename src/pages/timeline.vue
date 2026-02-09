@@ -145,7 +145,7 @@ const handleEnmityTargetData: EventMap['EnmityTargetData'] = (e) => {
   const finalIds = bossPhase[Number(playerState.value.zoneID)]
   if (!finalIds)
     return
-  if (finalIds.includes(boss)) {
+  if (finalIds.bNpcId.includes(boss)) {
     // 选到本体了，以后不会再变回门神了
     removeOverlayListener('EnmityTargetData', handleEnmityTargetData)
     playerState.value.phase = 'final'
