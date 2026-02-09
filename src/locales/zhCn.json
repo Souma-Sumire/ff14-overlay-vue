@@ -311,7 +311,8 @@
     "test-trigger-1x": "测试触发(1X)",
     "test-trigger-5x": "测试触发(5X)",
     "test-wipe": "模拟团灭",
-    "settings": "设置"
+    "settings": "设置",
+    "no-job": "未配置职业"
   },
   "keySkillTimerSettings": {
     "dragHere": "拖动这里可以移动",
@@ -352,6 +353,7 @@
       "line": "显示到第n行",
       "allJobs": "全职业",
       "jobsCount": "{count} 个职业",
+      "noJobSelected": "未选择",
       "shortId": "ID"
     },
     "unknownSkill": "未知技能",

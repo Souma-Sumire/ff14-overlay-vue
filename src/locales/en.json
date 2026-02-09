@@ -308,7 +308,8 @@
     "test-trigger-1x": "Test Trigger (1X)",
     "test-trigger-5x": "Test Trigger (5X)",
     "test-wipe": "Simulate Wipe",
-    "settings": "Settings"
+    "settings": "Settings",
+    "no-job": "No Job Configured"
   },
   "keySkillTimerSettings": {
     "dragHere": "Drag here to move",
@@ -349,6 +350,7 @@
       "line": "Display Line",
       "allJobs": "All Jobs",
       "jobsCount": "{count} Jobs",
+      "noJobSelected": "None Selected",
       "shortId": "ID"
     },
     "unknownSkill": "Unknown Skill",

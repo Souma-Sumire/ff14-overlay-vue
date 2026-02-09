@@ -308,7 +308,8 @@
     "test-trigger-1x": "トリガーテスト(1倍)",
     "test-trigger-5x": "トリガーテスト(5倍)",
     "test-wipe": "ワイプをシミュレート",
-    "settings": "設定"
+    "settings": "設定",
+    "no-job": "ジョブ未設定"
   },
   "keySkillTimerSettings": {
     "dragHere": "ここをドラッグして移動",
@@ -349,6 +350,7 @@
       "line": "表示行",
       "allJobs": "全ジョブ",
       "jobsCount": "{count} ジョブ",
+      "noJobSelected": "未選択",
       "shortId": "ID"
     },
     "unknownSkill": "不明なアクション",

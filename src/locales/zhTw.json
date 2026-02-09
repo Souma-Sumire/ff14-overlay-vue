@@ -308,7 +308,8 @@
     "test-trigger-1x": "測試觸發(1X)",
     "test-trigger-5x": "測試觸發(5X)",
     "test-wipe": "模擬隊伍毀滅",
-    "settings": "設定"
+    "settings": "設定",
+    "no-job": "未配置職業"
   },
   "keySkillTimerSettings": {
     "dragHere": "拖曳此處移動",
@@ -349,6 +350,7 @@
       "line": "顯示到第n行",
       "allJobs": "全職業",
       "jobsCount": "{count} 個職業",
+      "noJobSelected": "未選擇",
       "shortId": "ID"
     },
     "unknownSkill": "未知技能",

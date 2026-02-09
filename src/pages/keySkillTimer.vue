@@ -135,6 +135,12 @@ function showSettings() {
                 : skill.owner.jobName
             }}
           </span>
+          <span
+            v-else-if="skill.job.length === 0"
+            class="job no-job error"
+          >
+            {{ $t('keySkillTimer.no-job') }}
+          </span>
         </div>
       </div>
     </div>
@@ -256,6 +262,12 @@ img {
   bottom: -8px;
   z-index: 3;
   font-size: 12.5px;
+}
+
+.job.error {
+  color: #ff4d4f;
+  text-shadow: 0 0 2px black, 0 0 2px black;
+  font-weight: bold;
 }
 
 .duplicate-show-name {

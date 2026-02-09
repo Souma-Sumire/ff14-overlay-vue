@@ -28,7 +28,7 @@ const localizedJobOptions = computed(() => {
 
 const selectedJobsText = computed(() => {
   if (!props.modelValue || props.modelValue.length === 0)
-    return t('keySkillTimerSettings.col.allJobs')
+    return t('keySkillTimerSettings.col.noJobSelected')
   if (props.modelValue.length === jobList.length)
     return t('keySkillTimerSettings.col.allJobs')
   return t('keySkillTimerSettings.col.jobsCount', { count: props.modelValue.length })
@@ -87,6 +87,19 @@ function handleUpdate(val: number[]) {
     white-space: nowrap;
     font-size: 12px;
   }
+}
+
+.has-duplicate {
+  position: absolute;
+  bottom: -8px;
+  z-index: 3;
+  font-size: 12.5px;
+}
+
+.job.error {
+  color: #ff4d4f;
+  text-shadow: 0 0 2px black;
+  font-weight: bold;
 }
 
 .job-selector-content {
