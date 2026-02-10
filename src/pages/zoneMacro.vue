@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import type { ContentUsedType } from '@/composables/useZone'
 import type { UISaveData, WayMark } from '@/types/uisave'
+
 import {
   ChatDotSquare,
   ChatSquare,
@@ -10,7 +12,6 @@ import {
   Position,
   View,
 } from '@element-plus/icons-vue'
-
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import WaymarkDisplay from '@/components/uisaveEditor/WaymarkDisplay.vue'
@@ -22,6 +23,7 @@ import {
   getLocaleMessage,
 } from '@/composables/useLang'
 import { useWebSocket } from '@/composables/useWebSocket'
+import { getZoneType } from '@/composables/useZone'
 import {
   getMapIDByTerritoryType,
   getTerritoryTypeByMapID,
@@ -37,6 +39,17 @@ const { t } = useI18n()
 
 const dev = useDev()
 const macroStore = useMacroStore()
+const showHorizon = computed(() => {
+  const zone = ZoneInfo[Number(macroStore.selectZone)]
+  if (!zone)
+    return false
+  const type = getZoneType(zone)
+  return ([
+    'Dungeons', // 四人迷宫
+    'Trials', // 讨伐歼灭战
+    'Raids', // 大型任务
+  ] as ContentUsedType[]).includes(type)
+})
 const hideOnStartup = useStorage('zoneMacroHideOnStartup', ref(false))
 if (hideOnStartup.value)
   macroStore.show = false
@@ -697,7 +710,7 @@ onMounted(() => {
           </div>
         </el-card>
         <el-card
-          v-if="dutyUrl"
+          v-if="dutyUrl && showHorizon"
           v-loading="dutyLoading"
           element-loading-text="正在加载..."
           shadow="hover"

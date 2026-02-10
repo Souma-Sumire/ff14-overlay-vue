@@ -110,4 +110,4 @@ function useZone() {
   }
 }
 
-export { CONTENT_TYPES, type ContentUsedType, useZone }
+export { CONTENT_TYPES, type ContentUsedType, getZoneType, useZone }
