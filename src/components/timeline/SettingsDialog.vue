@@ -38,12 +38,13 @@ const defaultValues: {
     [TimelineConfigEnum.TTS提前量]: 1,
   },
   style: {
+    [ShowStyleConfigEnum.总缩放]: 1,
     [ShowStyleConfigEnum.总宽度]: 200,
     [ShowStyleConfigEnum.字体尺寸]: 16,
     [ShowStyleConfigEnum.未到来不透明度]: 0.5,
     [ShowStyleConfigEnum.未到来缩放]: 0.66,
     [ShowStyleConfigEnum.即将到来缩放]: 1,
-    [ShowStyleConfigEnum.变色动画时间]: 1,
+    [ShowStyleConfigEnum.动画时间]: 1,
   },
 }
 
@@ -54,12 +55,13 @@ const sliderConfigs: Partial<Record<TimelineConfigEnum | ShowStyleConfigEnum, { 
   [TimelineConfigEnum.零后持续]: { min: 0, max: 5, step: 0.1 },
   [TimelineConfigEnum.战前准备]: { min: 0, max: 40, step: 1 },
   [TimelineConfigEnum.TTS提前量]: { min: 0, max: 5, step: 0.5 },
-  [ShowStyleConfigEnum.总宽度]: { min: 120, max: 300, step: 5 },
-  [ShowStyleConfigEnum.字体尺寸]: { min: 8, max: 48, step: 1 },
+  [ShowStyleConfigEnum.总缩放]: { min: 0.1, max: 4, step: 0.01 },
+  [ShowStyleConfigEnum.总宽度]: { min: 100, max: 1200, step: 5 },
+  [ShowStyleConfigEnum.字体尺寸]: { min: 8, max: 96, step: 1 },
   [ShowStyleConfigEnum.未到来不透明度]: { min: 0, max: 1, step: 0.05 },
   [ShowStyleConfigEnum.未到来缩放]: { min: 0.1, max: 2, step: 0.01 },
   [ShowStyleConfigEnum.即将到来缩放]: { min: 0.1, max: 2, step: 0.01 },
-  [ShowStyleConfigEnum.变色动画时间]: { min: 0, max: 3, step: 0.1 },
+  [ShowStyleConfigEnum.动画时间]: { min: 0, max: 3, step: 0.1 },
 }
 
 function resetConfigField(key: TimelineConfigEnum) {
@@ -197,7 +199,7 @@ const testTimeline = ref<ITimelineLine[]>([
       </div>
 
       <!-- Right Side: Live Preview -->
-      <div class="preview-side" :style="{ width: `${timelineStore.showStyle['--timeline-width'] + 50}px` }">
+      <div class="preview-side">
         <h3 class="section-header">
           效果预览
         </h3>
@@ -268,8 +270,10 @@ const testTimeline = ref<ITimelineLine[]>([
 
 .layout-container {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   align-items: stretch;
+  max-width: 95vw;
+  max-height: 85vh;
 }
 
 .section-container {
@@ -338,21 +342,22 @@ const testTimeline = ref<ITimelineLine[]>([
 .preview-side {
   display: flex;
   flex-direction: column;
-  position: relative; // 关键：建立相对定位参考，子元素绝对定位后不占用空间高度
-  flex-shrink: 0; // 防止宽度被压缩
+  width: fit-content;
+  min-width: 300px;
+  max-width: 75vw;
+  overflow: hidden;
 
   .preview-content {
-    position: absolute; // 关键：绝对定位使其脱离高度计算
-    top: 36px; // 避开 section-header 的高度
-    bottom: 0;
-    left: 0;
-    right: 0;
+    flex: 1;
     display: flex;
     flex-direction: column;
     background-color: var(--el-fill-color-blank);
     border: 1px solid var(--el-border-color-lighter);
     border-radius: 6px;
     padding: 10px;
+    box-sizing: border-box;
+    width: fit-content;
+    min-width: 100%;
   }
 
   .preview-box {
@@ -363,11 +368,13 @@ const testTimeline = ref<ITimelineLine[]>([
     margin-top: 8px;
     border: 1px solid var(--el-border-color-darker);
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: flex-start;
-    overflow: hidden;
+    overflow: auto;
     .inner-preview {
       width: fit-content;
+      height: fit-content;
+      padding: 10px;
     }
   }
 

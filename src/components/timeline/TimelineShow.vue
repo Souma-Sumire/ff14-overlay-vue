@@ -136,6 +136,7 @@ $trasDuration: 1;
   text-align: right;
 }
 .loadedTimelines {
+  zoom: var(--timeline-zoom, 1);
   width: calc(1px * var(--timeline-width, $timelineWitdh));
   list-style-type: none;
   color: white;

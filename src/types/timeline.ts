@@ -45,10 +45,11 @@ export type TimelineConfigValues = Record<TimelineConfigEnum, number>
 export type ShowStyleTranslate = Record<ShowStyleConfigEnum, string>
 export type ShowStyle = Record<ShowStyleConfigEnum, number>
 export enum ShowStyleConfigEnum {
+  总缩放 = '--timeline-zoom',
   总宽度 = '--timeline-width',
   未到来缩放 = '--normal-scale',
   即将到来缩放 = '--up-coming-scale',
   字体尺寸 = '--font-size',
-  变色动画时间 = '--tras-duration',
+  动画时间 = '--tras-duration',
   未到来不透明度 = '--opacity',
 }

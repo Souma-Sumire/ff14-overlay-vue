@@ -356,6 +356,9 @@ onUnmounted(() => {
         :runtime="runtimeTimeSeconds"
         :show-style="timelineStore.showStyle"
       />
+      <button v-if="dev" @click="getTimeline()">
+        获取时间轴
+      </button>
       <button v-if="dev" @click="startTimeline(30)">
         开始从-30
       </button>

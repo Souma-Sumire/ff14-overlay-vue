@@ -13,7 +13,7 @@ import { ElMessage } from 'element-plus'
 import JSON5 from 'json5'
 import { defineStore } from 'pinia'
 import { bossPhase } from '@/resources/bossPhase'
-import { TimelineConfigEnum } from '@/types/timeline'
+import { ShowStyleConfigEnum, TimelineConfigEnum } from '@/types/timeline'
 import logDefinitions from '../../cactbot/resources/netlog_defs'
 import Regexes from '../../cactbot/resources/regexes'
 import Util from '../utils/util'
@@ -50,7 +50,6 @@ const configTranslate: TimelineConfigTranslate = {
   [TimelineConfigEnum.零后持续]: '后续保持（秒）',
   [TimelineConfigEnum.战前准备]: '倒计时量（秒）',
   [TimelineConfigEnum.TTS提前量]: 'TTS预备（秒）',
-  // [TimelineConfigEnum.刷新频率]: "刷新率（毫秒）",
 }
 
 const configValues: TimelineConfigValues = {
@@ -59,25 +58,26 @@ const configValues: TimelineConfigValues = {
   [TimelineConfigEnum.零后持续]: 0.5,
   [TimelineConfigEnum.战前准备]: 30,
   [TimelineConfigEnum.TTS提前量]: 1,
-  // [TimelineConfigEnum.刷新频率]: 100,
 }
 
 const showStyleTranslate: ShowStyleTranslate = {
-  '--timeline-width': '时间轴宽度',
-  '--font-size': '字体大小',
-  '--normal-scale': '等待缩放',
-  '--up-coming-scale': '来临缩放',
-  '--opacity': '等待不透明度',
-  '--tras-duration': '动画时间',
+  [ShowStyleConfigEnum.总缩放]: '总缩放',
+  [ShowStyleConfigEnum.总宽度]: '时间轴宽度',
+  [ShowStyleConfigEnum.字体尺寸]: '字体大小',
+  [ShowStyleConfigEnum.未到来缩放]: '等待缩放',
+  [ShowStyleConfigEnum.即将到来缩放]: '来临缩放',
+  [ShowStyleConfigEnum.未到来不透明度]: '等待不透明度',
+  [ShowStyleConfigEnum.动画时间]: '动画时间',
 }
 
 const showStyle: ShowStyle = {
-  '--timeline-width': 200,
-  '--font-size': 16,
-  '--opacity': 0.5,
-  '--normal-scale': 0.66,
-  '--up-coming-scale': 1,
-  '--tras-duration': 1,
+  [ShowStyleConfigEnum.总缩放]: 1,
+  [ShowStyleConfigEnum.总宽度]: 200,
+  [ShowStyleConfigEnum.字体尺寸]: 16,
+  [ShowStyleConfigEnum.未到来不透明度]: 0.5,
+  [ShowStyleConfigEnum.未到来缩放]: 0.66,
+  [ShowStyleConfigEnum.即将到来缩放]: 1,
+  [ShowStyleConfigEnum.动画时间]: 1,
 }
 
 export const useTimelineStore = defineStore('timeline', {
@@ -193,7 +193,12 @@ export const useTimelineStore = defineStore('timeline', {
     loadTimelineSettings() {
       const ls = localStorage.getItem('timelines')
       if (ls) {
-        Object.assign(this, JSON.parse(ls))
+        const data = JSON.parse(ls)
+        this.allTimelines = data.allTimelines ?? []
+        this.configValues = { ...configValues, ...data.configValues }
+        this.showStyle = { ...showStyle, ...data.showStyle }
+        this.settings = { ...this.settings, ...data.settings }
+        this.filters = data.filters ?? {}
         this.allTimelines.forEach((timeline) => {
           this.normalizeTimeline(timeline)
         })
