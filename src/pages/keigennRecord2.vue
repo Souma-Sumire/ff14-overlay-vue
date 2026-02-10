@@ -26,11 +26,13 @@ import { completeIcon, stackUrl } from '@/resources/status'
 import { ZoneInfo } from '@/resources/zoneInfo'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 
+import { initChineseToIcon } from '@/utils/chineseToIcon'
 import { compareSame } from '@/utils/compareSaveAction'
 import { calculateCharges } from '@/utils/cooldown'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 import { processAbilityLine, processFlags } from '@/utils/flags'
 import { getKeigenn, multiplierEffect, universalVulnerableEnemy, universalVulnerableFriendly } from '@/utils/keigenn'
+import { formatTimeMs as formatTime } from '@/utils/time'
 
 import Util from '@/utils/util'
 import { getImgSrc } from '@/utils/xivapi'
@@ -1220,14 +1222,11 @@ async function loadStorage() {
   }
 }
 
-function formatTime(time: number) {
-  const minute = Math.max(Math.floor(time / 60000), 0)
-  const second = Math.max(Math.floor((time - minute * 60000) / 1000), 0)
-  return `${minute < 10 ? '0' : ''}${minute}:${second < 10 ? '0' : ''}${second}`
-}
-
-onMounted(() => {
-  initActionChinese()
+onMounted(async () => {
+  await Promise.all([
+    initActionChinese(),
+    initChineseToIcon(),
+  ])
   // 加载持久化数据
   loadPersistentData()
 

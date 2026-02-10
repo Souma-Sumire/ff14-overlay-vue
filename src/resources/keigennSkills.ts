@@ -127,7 +127,7 @@ const keigennSkills: KeigennSkill[] = [
   {
     // 圣盾阵
     id: `(lv) => lv>=82 ? 25746 : 3542`,
-    recast1000ms: 5,
+    recast1000ms: 0,
     job: [19],
     minLevel: 35,
     scope: SELF,
@@ -138,7 +138,7 @@ const keigennSkills: KeigennSkill[] = [
   {
     // 干预
     id: 7382,
-    recast1000ms: 10,
+    recast1000ms: 0,
     job: [19],
     minLevel: 62,
     scope: OTHER,
@@ -397,6 +397,7 @@ const keigennSkills: KeigennSkill[] = [
     // 命运之轮
     id: 3613,
     recast1000ms: 60,
+    duration: 10,
     job: [33],
     minLevel: 58,
     scope: PARTY,
@@ -405,6 +406,7 @@ const keigennSkills: KeigennSkill[] = [
     // 天星冲日
     id: 16553,
     recast1000ms: 60,
+    duration: 15,
     job: [33],
     minLevel: 60,
     scope: PARTY,
@@ -413,6 +415,7 @@ const keigennSkills: KeigennSkill[] = [
     // 地星
     id: 7439,
     recast1000ms: 60,
+    duration: 10,
     job: [33],
     minLevel: 62,
     scope: PARTY,

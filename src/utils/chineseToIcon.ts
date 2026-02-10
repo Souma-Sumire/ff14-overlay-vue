@@ -1,6 +1,8 @@
-import chinese2IconRaw from '@/resources/chinese2Icon.json'
+import { shallowRef } from 'vue'
 
-const chineseToIconMap: Record<string, string> = chinese2IconRaw
+let chineseToIconMap: Record<string, string> | null = null
+export const iconResourcesLoaded = shallowRef(false)
+let loadingPromise: Promise<void> | null = null
 
 const userActionMap = new Map([
   ['任务指令', 123],
@@ -189,11 +191,36 @@ const chineseAbbreviationMap = new Map([
   ['黑豆', '彗星之黑'],
 ])
 
+async function initChineseToIcon() {
+  if (chineseToIconMap)
+    return
+  if (loadingPromise)
+    return loadingPromise
+
+  loadingPromise = (async () => {
+    try {
+      const module = await import('@/resources/chinese2Icon.json')
+      chineseToIconMap = module.default
+      iconResourcesLoaded.value = true
+    }
+    catch (e) {
+      console.error('Failed to init chineseToIcon:', e)
+      throw e
+    }
+    finally {
+      loadingPromise = null
+    }
+  })()
+  return loadingPromise
+}
+
 function chineseToIcon(chinese: string): number | undefined {
+  // eslint-disable-next-line ts/no-unused-expressions
+  iconResourcesLoaded.value
   chinese = chineseAbbreviationMap.get(chinese.toUpperCase()) ?? chinese
 
   const iconStr
-    = userActionMap.get(chinese)?.toString() ?? chineseToIconMap[chinese]
+    = userActionMap.get(chinese)?.toString() ?? chineseToIconMap?.[chinese]
   const iconNum = Number(iconStr)
 
   if (!iconStr || Number.isNaN(iconNum) || iconNum === 0) {
@@ -202,4 +229,4 @@ function chineseToIcon(chinese: string): number | undefined {
   return iconNum
 }
 
-export { chineseToIcon, chineseToIconMap }
+export { chineseToIcon, initChineseToIcon }

@@ -7,6 +7,7 @@ import { onMounted, ref, shallowRef, watch } from 'vue'
 import ActionIcon from '@/components/keySkillTimer/ActionIcon.vue'
 import { useLang } from '@/composables/useLang'
 import { getActionChinese, initActionChinese, searchActions } from '@/resources/actionChinese'
+import { initChineseToIcon } from '@/utils/chineseToIcon'
 import { raidbuffs } from '@/resources/raidbuffs'
 import { useKeySkillStore } from '@/store/keySkills'
 import { copyToClipboard } from '@/utils/clipboard'
@@ -17,7 +18,10 @@ const isResourcesLoaded = ref(false)
 
 onMounted(async () => {
   try {
-    await initActionChinese()
+    await Promise.all([
+      initActionChinese(),
+      initChineseToIcon(),
+    ])
   }
   catch (e) {
     console.error('Failed to load resources', e)

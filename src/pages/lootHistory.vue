@@ -58,6 +58,7 @@ import { useIndexedDB } from '@/composables/useIndexedDB'
 import { countObtainedItems, DEFAULT_ROWS, isBisItem, isPlayerComplete, LAYER_CONFIG } from '@/utils/bisUtils'
 import { DROP_ORDER, PART_ORDER, ROLE_DEFINITIONS, sanitizeItemName, sanitizePlayerName } from '@/utils/lootParser'
 import { getFormattedWeekLabel, getRaidWeekIndex, getRaidWeekLabel, getRaidWeekStart } from '@/utils/raidWeekUtils'
+import { formatDateTime as formatTime } from '@/utils/time'
 import LogParserWorker from '@/workers/logParser.ts?worker'
 
 const GAME_VERSION_CONFIG = {
@@ -751,6 +752,12 @@ const rawSuspiciousKeys = computed(() => {
   }
   return keys
 })
+
+function canCorrectWeek(record: LootRecord | null): boolean {
+  if (!record)
+    return false
+  return rawSuspiciousKeys.value.has(record.key) || !!recordWeekCorrections.value[record.key]
+}
 
 const isRaidRolesComplete = computed(() => {
   return ROLE_DEFINITIONS.every(role => !!playerRoles.value[role])
@@ -1602,6 +1609,8 @@ const contextMenuRef = {
 }
 
 function handleRecordTrigger(e: MouseEvent, record: LootRecord) {
+  if (!canCorrectWeek(record))
+    return
   e.preventDefault()
   e.stopPropagation()
   contextMenuRecord.value = record
@@ -3014,14 +3023,6 @@ function toggleSoloMode(type: 'item' | 'player', key: string) {
   })
 }
 
-function formatTime(date: Date) {
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  const hh = String(date.getHours()).padStart(2, '0')
-  const mm = String(date.getMinutes()).padStart(2, '0')
-  return `${date.getFullYear()}/${m}/${d} ${hh}:${mm}`
-}
-
 function formatFileSize(bytes: number) {
   if (bytes === 0)
     return '0 MB'
@@ -4052,6 +4053,7 @@ async function applyPendingWinnerChange() {
                     <template #default="scope">
                       <div
                         class="col-week-interactive"
+                        :class="{ 'is-actionable': canCorrectWeek(scope.row) }"
                         @click.stop="handleRecordTrigger($event, scope.row)"
                         @contextmenu.prevent="handleRecordTrigger($event, scope.row)"
                       >
@@ -4377,6 +4379,7 @@ async function applyPendingWinnerChange() {
                               'is-suspicious':
                                 rawSuspiciousKeys.has(rec.key)
                                 && !recordWeekCorrections[rec.key],
+                              'is-actionable': canCorrectWeek(rec),
                             }"
                             @contextmenu.prevent="
                               handleRecordTrigger($event, rec)
@@ -4629,12 +4632,7 @@ async function applyPendingWinnerChange() {
             :show-arrow="false"
             placement="bottom-start"
           >
-            <div v-if="contextMenuRecord" class="custom-context-menu">
-              <div class="menu-info-header">
-                <el-icon><Calendar /></el-icon>
-                <span>{{ formatTime(contextMenuRecord.timestamp!) }}</span>
-              </div>
-              <div class="menu-divider" />
+            <div v-if="contextMenuRecord && canCorrectWeek(contextMenuRecord)" class="custom-context-menu">
               <div class="menu-action-item" @click="handleCorrectionClick">
                 <el-icon class="action-arrow">
                   <component
@@ -6568,6 +6566,9 @@ html.dark {
 }
 :deep(.el-table__row) {
   transition: background-color 0.2s;
+  &:hover > td {
+    background-color: transparent !important;
+  }
 }
 
 .col-time {
@@ -6648,19 +6649,21 @@ html.dark {
   margin: 0 !important;
   padding: 6px 12px !important;
   border-bottom: 1px solid #f1f5f9;
-  cursor: pointer;
   transition: all 0.2s ease;
   display: flex !important;
   align-items: center;
   justify-content: space-between;
+
+  &.is-actionable {
+    cursor: pointer;
+    &:hover {
+      background-color: #f8fafc;
+    }
+  }
 }
 
 .week-record-row:last-child {
   border-bottom: none;
-}
-
-.week-record-row:hover {
-  background-color: #f8fafc;
 }
 
 .week-row-main {
@@ -6704,7 +6707,7 @@ html.dark {
 .week-record-row.is-suspicious {
   background-color: #fff7ed;
 }
-.week-record-row.is-suspicious:hover {
+.week-record-row.is-suspicious.is-actionable:hover {
   background-color: #ffedd5;
 }
 .week-record-row.is-suspicious .week-item-name {
@@ -6715,7 +6718,7 @@ html.dark {
 .week-record-row.is-corrected {
   background-color: #eff6ff;
 }
-.week-record-row.is-corrected:hover {
+.week-record-row.is-corrected.is-actionable:hover {
   background-color: #dbeafe;
 }
 .week-record-row.is-corrected .week-item-name {
@@ -8208,10 +8211,10 @@ html.dark {
   }
 
   .el-table__row:hover > td {
-    background-color: rgba(255, 255, 255, 0.04) !important;
+    background-color: transparent !important;
   }
 
-  .week-record-row:hover {
+  .week-record-row.is-actionable:hover {
     background-color: rgba(255, 255, 255, 0.06) !important;
   }
   .menu-action-item:hover,
@@ -8227,7 +8230,7 @@ html.dark {
       color: #ffabadd9 !important;
     }
   }
-  .week-record-row.is-suspicious:hover {
+  .week-record-row.is-suspicious.is-actionable:hover {
     background-color: rgba(255, 77, 79, 0.2) !important;
   }
 
@@ -9083,11 +9086,16 @@ html.dark {
   font-weight: 700;
 }
 .col-week-interactive {
-  cursor: pointer;
   padding: 4px 0;
-  &:hover {
-    background-color: rgba(0,0,0,0.02);
-    border-radius: 4px;
+  &.is-actionable {
+    cursor: pointer;
+    &:hover {
+      background-color: rgba(0,0,0,0.02);
+      border-radius: 4px;
+      html.dark & {
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+    }
   }
 }
 .week-correction-display {

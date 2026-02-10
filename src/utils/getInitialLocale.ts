@@ -1,18 +1,7 @@
 import type { Lang } from '@/types/lang'
 import { useUrlSearchParams } from '@vueuse/core'
-import en from '../locales/en.json'
-import ja from '../locales/ja.json'
-import zhCn from '../locales/zhCn.json'
-import zhTw from '../locales/zhTw.json'
 
 const SUPPORTED_LOCALES = ['zhCn', 'en', 'ja', 'zhTw'] as Lang[]
-
-const messages = {
-  en,
-  ja,
-  zhCn,
-  zhTw,
-}
 
 function getBrowserLocale(): Lang {
   const browserLangs = navigator.languages || [navigator.language]
@@ -55,7 +44,21 @@ function getInitialLocale(): Lang {
     return urlLang as Lang
   }
 
-  return getBrowserLocale() ?? 'en' as Lang
+  return getBrowserLocale() ?? 'zhCn' as Lang
 }
 
-export { getInitialLocale, messages }
+async function loadLocaleMessages(lang: Lang) {
+  switch (lang) {
+    case 'en':
+      return (await import('../locales/en.json')).default
+    case 'ja':
+      return (await import('../locales/ja.json')).default
+    case 'zhTw':
+      return (await import('../locales/zhTw.json')).default
+    case 'zhCn':
+    default:
+      return (await import('../locales/zhCn.json')).default
+  }
+}
+
+export { getInitialLocale, loadLocaleMessages, SUPPORTED_LOCALES }
