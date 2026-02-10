@@ -511,10 +511,6 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
   }
 }
 
-function loadTimelineSettings() {
-  timelineStore.loadTimelineSettings()
-}
-
 function openDocs() {
   const href = 'https://docs.qq.com/sheet/DTWxKT3lFbmpDV3Fm?tab=5ovrc8'
   window.open(href, '_blank')
@@ -636,7 +632,7 @@ onMounted(() => {
 })
 
 function init(): void {
-  loadTimelineSettings()
+  timelineStore.loadTimelineSettings()
   timelineStore.sortTimelines()
 }
 

@@ -197,21 +197,6 @@ export const useTimelineStore = defineStore('timeline', {
         this.allTimelines.forEach((timeline) => {
           this.normalizeTimeline(timeline)
         })
-        this.sortTimelines()
-      }
-      try {
-        const ls = localStorage.getItem('timelines')
-        if (ls) {
-          Object.assign(this, JSON.parse(ls))
-          this.allTimelines.forEach((timeline) => {
-            this.normalizeTimeline(timeline)
-          })
-          this.sortTimelines()
-        }
-      }
-      catch (e) {
-        console.error('Failed to load timeline settings:', e)
-        ElMessage.error('加载时间轴设置失败')
       }
     },
     sortTimelines() {
