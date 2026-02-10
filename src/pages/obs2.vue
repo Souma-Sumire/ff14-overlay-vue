@@ -332,7 +332,14 @@ const obs = new Obs()
 const handleChangeZone: EventMap['ChangeZone'] = (e) => {
   Log('ChangeZone:', e)
   zoneName.value = e.zoneName
-  checkCondition('enter')
+  if (obs.status.connected) {
+    checkCondition('enter')
+  }
+  else {
+    obs.connect()?.then(() => {
+      checkCondition('enter')
+    })
+  }
 }
 
 const handleLogLine: EventMap['LogLine'] = (e) => {
@@ -348,7 +355,7 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
             = splitLine[logDefinitions.InCombat.fields.inACTCombat] === '1'
           const inGameCombat
             = splitLine[logDefinitions.InCombat.fields.inGameCombat] === '1'
-          if (inACTCombat && inGameCombat) {
+          if (inACTCombat || inGameCombat) {
             checkCondition('combatStart')
             return
           }
@@ -453,7 +460,6 @@ const handlePartyChanged: EventMap['PartyChanged'] = (ev) => {
 }
 
 onMounted(() => {
-  obs.connect()
   addOverlayListener('ChangeZone', handleChangeZone)
   addOverlayListener('LogLine', handleLogLine)
   addOverlayListener('PartyChanged', handlePartyChanged)
@@ -464,6 +470,7 @@ onUnmounted(() => {
   obs.disconnect()
   removeOverlayListener('ChangeZone', handleChangeZone)
   removeOverlayListener('LogLine', handleLogLine)
+  removeOverlayListener('PartyChanged', handlePartyChanged)
 })
 
 // 获取当前区域类型对应的规则
