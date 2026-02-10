@@ -10,7 +10,7 @@ import type {
 import type { ITimeline } from '@/types/timeline'
 import { Loading } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
-import { getActionChinese, initActionChinese } from '@/resources/actionChinese'
+import { getActionChinese } from '@/resources/actionChinese'
 import { bossPhase } from '@/resources/bossPhase'
 import { factory } from '@/services/timelineSpecialRules'
 import { useTimelineStore } from '@/store/timeline'
@@ -61,7 +61,6 @@ function isCacheValid(cache: { data: any, expire: number }) {
 
 onMounted(() => {
   fflogsCache.clearExpired()
-  initActionChinese()
 })
 enum QueryTextEnum {
   query = '查询',

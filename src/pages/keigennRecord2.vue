@@ -14,19 +14,18 @@ import type { Player } from '@/types/partyPlayer'
 import { ZoomIn, ZoomOut } from '@element-plus/icons-vue'
 import { useDark } from '@vueuse/core'
 // TODO: 死亡回放：治疗栏目的状态追踪治疗有关的buff
-import { markRaw, nextTick, onBeforeUnmount, ref, shallowReactive, shallowRef, triggerRef } from 'vue'
+import { markRaw, nextTick, ref, shallowReactive, shallowRef, triggerRef } from 'vue'
 import { useDev } from '@/composables/useDev'
 import { useIndexedDB } from '@/composables/useIndexedDB'
 import { getCactbotLocaleMessage } from '@/composables/useLang'
 import { JobResourceManager } from '@/modules/jobResourceTracker'
-import { getActionChinese, initActionChinese } from '@/resources/actionChinese'
+import { getActionChinese } from '@/resources/actionChinese'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { keigennSkills } from '@/resources/keigennSkills'
 import { completeIcon, stackUrl } from '@/resources/status'
 import { ZoneInfo } from '@/resources/zoneInfo'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 
-import { initChineseToIcon } from '@/utils/chineseToIcon'
 import { compareSame } from '@/utils/compareSaveAction'
 import { calculateCharges } from '@/utils/cooldown'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
@@ -132,6 +131,8 @@ function loadPersistentData() {
 
 // 保存持久化数据到 localStorage
 function savePersistentData() {
+  if (loading.value)
+    return
   try {
     localStorage.setItem(STORAGE_KEYS.POV_ID, povId)
     localStorage.setItem(STORAGE_KEYS.PARTY_LIST, JSON.stringify(partyLogList))
@@ -264,6 +265,7 @@ async function afterHandle() {
   }
 
   await saveStorage()
+  savePersistentData()
   triggerRef(data)
 }
 
@@ -1047,6 +1049,7 @@ function stopCombat(timeStamp: number) {
   statusData.enemy = {}
   shieldData = {}
   invalidateJobCache()
+  savePersistentData()
   saveStorage()
 }
 
@@ -1223,10 +1226,6 @@ async function loadStorage() {
 }
 
 onMounted(async () => {
-  await Promise.all([
-    initActionChinese(),
-    initChineseToIcon(),
-  ])
   // 加载持久化数据
   loadPersistentData()
 
@@ -1296,13 +1295,6 @@ onMounted(async () => {
       select.value = 0
     }
   }) as any)
-})
-
-onBeforeUnmount(() => {
-  // 保存持久化数据
-  savePersistentData()
-  // 尝试保存 IndexedDB 数据
-  saveStorage()
 })
 
 function clickMinimize() {

@@ -4,9 +4,7 @@ import type { KeySkillEntity } from '@/types/keySkill'
 import { useDemo } from '@/composables/useDemo'
 import { useDev } from '@/composables/useDev'
 import { useZone } from '@/composables/useZone'
-import { initActionChinese } from '@/resources/actionChinese'
 import { useKeySkillStore } from '@/store/keySkills'
-import { initChineseToIcon } from '@/utils/chineseToIcon'
 import { compareSame } from '@/utils/compareSaveAction'
 import {
   addOverlayListener,
@@ -49,8 +47,6 @@ function testTrigger(skill: KeySkillEntity, tts: boolean) {
 }
 
 onMounted(() => {
-  initActionChinese()
-  initChineseToIcon()
   addOverlayListener('PartyChanged', handlePartyChanged)
   addOverlayListener('LogLine', handleLogLine)
 })

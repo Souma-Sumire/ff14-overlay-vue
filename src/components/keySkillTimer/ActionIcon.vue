@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { actionResourcesLoaded } from '@/resources/actionChinese'
-import { iconResourcesLoaded } from '@/utils/chineseToIcon'
 import { idToSrc } from '@/utils/dynamicValue'
 
 const props = defineProps<{
@@ -11,7 +9,7 @@ const props = defineProps<{
 const src = ref('')
 
 watch(
-  [() => props.id, actionResourcesLoaded, iconResourcesLoaded],
+  [() => props.id],
   ([newId]) => {
     src.value = idToSrc(newId)
   },

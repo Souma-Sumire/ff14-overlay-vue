@@ -1,36 +1,8 @@
-import { shallowRef } from 'vue'
-import { actionId2ClassJobLevel, initAction2ClassJobLevel } from './action2ClassJobLevel'
+import { actionId2ClassJobLevel } from './action2ClassJobLevel'
+import actionChineseRaw from './actionChinese.json'
 
-let rawActionChinese: Record<string, string> | null = null
-export const actionResourcesLoaded = shallowRef(false)
+const rawActionChinese: Record<string, string> = actionChineseRaw
 let cachedActionList: Array<{ id: number, name: string }> | null = null
-let loadingPromise: Promise<void> | null = null
-
-async function initActionChinese() {
-  if (rawActionChinese)
-    return
-  if (loadingPromise)
-    return loadingPromise
-
-  loadingPromise = (async () => {
-    try {
-      const [module] = await Promise.all([
-        import('./actionChinese.json'),
-        initAction2ClassJobLevel(),
-      ])
-      rawActionChinese = module.default
-      actionResourcesLoaded.value = true
-    }
-    catch (e) {
-      console.error('Failed to init action chinese:', e)
-      throw e
-    }
-    finally {
-      loadingPromise = null
-    }
-  })()
-  return loadingPromise
-}
 
 function getCachedActionList() {
   if (!cachedActionList && rawActionChinese) {
@@ -49,9 +21,7 @@ function getCachedActionList() {
 }
 
 function getActionChinese(id: number): string | undefined {
-  // eslint-disable-next-line ts/no-unused-expressions
-  actionResourcesLoaded.value
-  return rawActionChinese?.[id]
+  return rawActionChinese[id]
 }
 
 function searchActions(query: string, limit: number = 100): Array<{ id: number, name: string }> {
@@ -72,4 +42,4 @@ function searchActions(query: string, limit: number = 100): Array<{ id: number, 
   return result
 }
 
-export { getActionChinese, initActionChinese, searchActions }
+export { getActionChinese, searchActions }

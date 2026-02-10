@@ -1,8 +1,6 @@
-import { shallowRef } from 'vue'
+import chineseToIconMapRaw from '@/resources/chinese2Icon.json'
 
-let chineseToIconMap: Record<string, string> | null = null
-export const iconResourcesLoaded = shallowRef(false)
-let loadingPromise: Promise<void> | null = null
+const chineseToIconMap: Record<string, string> = chineseToIconMapRaw
 
 const userActionMap = new Map([
   ['任务指令', 123],
@@ -191,32 +189,7 @@ const chineseAbbreviationMap = new Map([
   ['黑豆', '彗星之黑'],
 ])
 
-async function initChineseToIcon() {
-  if (chineseToIconMap)
-    return
-  if (loadingPromise)
-    return loadingPromise
-
-  loadingPromise = (async () => {
-    try {
-      const module = await import('@/resources/chinese2Icon.json')
-      chineseToIconMap = module.default
-      iconResourcesLoaded.value = true
-    }
-    catch (e) {
-      console.error('Failed to init chineseToIcon:', e)
-      throw e
-    }
-    finally {
-      loadingPromise = null
-    }
-  })()
-  return loadingPromise
-}
-
 function chineseToIcon(chinese: string): number | undefined {
-  // eslint-disable-next-line ts/no-unused-expressions
-  iconResourcesLoaded.value
   chinese = chineseAbbreviationMap.get(chinese.toUpperCase()) ?? chinese
 
   const iconStr
@@ -229,4 +202,4 @@ function chineseToIcon(chinese: string): number | undefined {
   return iconNum
 }
 
-export { chineseToIcon, initChineseToIcon }
+export { chineseToIcon }

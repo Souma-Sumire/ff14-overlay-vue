@@ -3,33 +3,16 @@ import type { MessageBoxInputData } from 'element-plus'
 import { Download, Plus, RefreshLeft, Search, Upload } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import * as LZString from 'lz-string'
-import { onMounted, ref, shallowRef, watch } from 'vue'
+import { ref, shallowRef, watch } from 'vue'
 import ActionIcon from '@/components/keySkillTimer/ActionIcon.vue'
 import { useLang } from '@/composables/useLang'
-import { getActionChinese, initActionChinese, searchActions } from '@/resources/actionChinese'
-import { initChineseToIcon } from '@/utils/chineseToIcon'
+import { getActionChinese, searchActions } from '@/resources/actionChinese'
 import { raidbuffs } from '@/resources/raidbuffs'
 import { useKeySkillStore } from '@/store/keySkills'
 import { copyToClipboard } from '@/utils/clipboard'
 
 const { t } = useLang()
 const storeKeySkill = useKeySkillStore()
-const isResourcesLoaded = ref(false)
-
-onMounted(async () => {
-  try {
-    await Promise.all([
-      initActionChinese(),
-      initChineseToIcon(),
-    ])
-  }
-  catch (e) {
-    console.error('Failed to load resources', e)
-  }
-  finally {
-    isResourcesLoaded.value = true
-  }
-})
 
 function resetToDefault() {
   ElMessageBox.confirm(
@@ -143,7 +126,7 @@ watch(searchText, (value) => {
 </script>
 
 <template>
-  <div v-loading.fullscreen.lock="!isResourcesLoaded" class="page-container">
+  <div class="page-container">
     <div class="header-toolbar">
       <div class="left-tools">
         <el-popover
@@ -153,7 +136,7 @@ watch(searchText, (value) => {
           popper-class="skill-library-popover"
         >
           <template #reference>
-            <el-button type="primary" :icon="Search" :loading="!isResourcesLoaded">
+            <el-button type="primary" :icon="Search">
               {{ $t('keySkillTimerSettings.searchSkill') }}
             </el-button>
           </template>

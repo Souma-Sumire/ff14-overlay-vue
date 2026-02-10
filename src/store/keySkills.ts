@@ -6,7 +6,6 @@ import { computed, reactive, ref } from 'vue'
 import { useDemo } from '@/composables/useDemo'
 import { useDev } from '@/composables/useDev'
 import { RandomPartyGenerator } from '@/mock/demoParty'
-import { actionResourcesLoaded } from '@/resources/actionChinese'
 import { raidbuffs } from '@/resources/raidbuffs'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 import { tts } from '@/utils/tts'
@@ -102,10 +101,6 @@ const useKeySkillStore = defineStore('keySkill', () => {
   const speed = ref(1)
 
   const usedSkills = computed(() => {
-    // 确保 actionResourcesLoaded 变化时重新计算
-    // eslint-disable-next-line ts/no-unused-expressions
-    actionResourcesLoaded.value
-
     const result: KeySkillEntity[] = []
     const currentParty = computed(() =>
       dev.value || demo.value ? generator.party.value : party.value,
