@@ -155,6 +155,10 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
       fullUpdateFriendlyCombatants()
     }
   }
+  else if (e.line[0] === '01') {
+    // 换线清空爆发药记录
+    medicineData.clear()
+  }
 }
 
 const handlePartyChanged: EventMap['PartyChanged'] = (e) => {
