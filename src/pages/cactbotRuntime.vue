@@ -223,6 +223,8 @@ function testShuffleParty() {
               v-model="state.partySorted[role]"
               :animation="200"
               ghost-class="ghost"
+              drag-class="drag"
+              fallback-class="fallback"
               :force-fallback="true"
               filter=".no-draggable"
               @update="onTempRuleUpdate"
@@ -330,7 +332,11 @@ function testShuffleParty() {
 }
 
 .ghost {
-  opacity: 0;
+  opacity: 0 !important;
+}
+
+.drag, .fallback {
+  opacity: 1 !important;
 }
 
 .el-divider {

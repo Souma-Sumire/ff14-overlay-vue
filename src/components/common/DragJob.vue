@@ -117,6 +117,8 @@ function handleJobListUpdate() {
       v-model="sortableJobList[role.role]"
       :animation="150"
       ghost-class="ghost"
+      drag-class="drag"
+      fallback-class="fallback"
       class="m-b-0.25 m-t-0.25 flex flex-row gap-0.25 rounded p-0"
       filter=".no-draggable"
       :force-fallback="true"
@@ -146,8 +148,11 @@ function handleJobListUpdate() {
 }
 
 .ghost {
-  opacity: 0.5;
-  background: #c8ebfb;
+  opacity: 0 !important;
+}
+
+.drag, .fallback {
+  opacity: 1 !important;
 }
 
 .bg-blue {
