@@ -42,6 +42,8 @@ import {
   ElMessageBox,
   ElOption,
   ElSelect,
+  ElStep,
+  ElSteps,
   ElSwitch,
   ElTag,
 } from 'element-plus'
@@ -52,7 +54,7 @@ import LootDisplayFilterSegmented from '@/components/loot-history/LootDisplayFil
 import LootPlayerRoll from '@/components/loot-history/LootPlayerRoll.vue'
 import LootSortSegmented from '@/components/loot-history/LootSortSegmented.vue'
 import PlayerDisplay from '@/components/loot-history/PlayerDisplay.vue'
-import RoleBadge from '@/components/loot-history/RoleBadge.vue'
+import RoleSetupItem from '@/components/loot-history/RoleSetupItem.vue'
 import SummaryItemTags from '@/components/loot-history/SummaryItemTags.vue'
 import { useIndexedDB } from '@/composables/useIndexedDB'
 import { countObtainedItems, DEFAULT_ROWS, isBisItem, isPlayerComplete, LAYER_CONFIG } from '@/utils/bisUtils'
@@ -119,6 +121,8 @@ const itemVisibility = ref<Record<string, boolean>>({})
 const viewMode = ref<'list' | 'summary' | 'slot' | 'week' | 'chart' | 'bis'>(
   'summary',
 )
+const itemSearchKeyword = ref('')
+const winnerSearchPlayer = ref('')
 const currentHandle = ref<FileSystemDirectoryHandle | null>(null)
 
 const showManualAddDialog = ref(false)
@@ -148,7 +152,7 @@ const clearForm = ref({
   playerCorrection: true,
 })
 
-const showTimeSetup = ref(false)
+const showInitialRoleSetup = ref(false)
 
 const playerVisibility = ref<Record<string, boolean>>({})
 const recordWeekCorrections = ref<Record<string, number>>({})
@@ -352,7 +356,7 @@ const syncStartDate = ref(GAME_VERSION_CONFIG.RAID_START_TIME)
 const syncEndDate = ref<string | null>(null)
 const isRaidFilterActive = ref(true)
 const isSyncNeeded = ref(false)
-const isOnlyRaidMembersActive = ref(false)
+const isOnlyRaidMembersActive = ref(true)
 const EQUIP_ROLES = [
   '御敌',
   '制敌',
@@ -510,6 +514,9 @@ watch(
     blacklistedKeys,
     playerSummaryFilterMode,
     slotSummaryFilterMode,
+    itemSearchKeyword,
+    winnerSearchPlayer,
+    showInitialRoleSetup,
   ],
   () => {
     const rawConfigs = [
@@ -536,7 +543,11 @@ watch(
       { key: 'bisSortMode', value: bisSortMode.value },
       { key: 'playerSummaryFilterMode', value: playerSummaryFilterMode.value },
       { key: 'slotSummaryFilterMode', value: slotSummaryFilterMode.value },
+      { key: 'itemSearchKeyword', value: itemSearchKeyword.value },
+      { key: 'winnerSearchPlayer', value: winnerSearchPlayer.value },
+      { key: 'showInitialRoleSetup', value: showInitialRoleSetup.value },
       { key: 'blacklistedKeys', value: Array.from(blacklistedKeys.value) },
+      { key: 'showInitialRoleSetup', value: showInitialRoleSetup.value },
     ]
 
     const pendingUpdates: { key: string, value: any }[] = []
@@ -577,30 +588,37 @@ const detailedPlayerStats = computed(() => {
     }
   }
 
-  const counts: Record<string, number> = {}
+  const itemCounts: Record<string, number> = {}
+  const rollCounts: Record<string, number> = {}
   const playersSet = new Set<string>()
 
   lootRecords.value.forEach((record) => {
-    const p = getActualPlayer(getRecordPlayer(record))
-    counts[p] = (counts[p] || 0) + 1
-    playersSet.add(p)
-    record.rolls.forEach(roll => playersSet.add(getActualPlayer(roll.player)))
+    const winner = getActualPlayer(getRecordPlayer(record))
+    itemCounts[winner] = (itemCounts[winner] || 0) + 1
+    playersSet.add(winner)
+
+    record.rolls.forEach((roll) => {
+      const p = getActualPlayer(roll.player)
+      playersSet.add(p)
+      rollCounts[p] = (rollCounts[p] || 0) + 1
+    })
   })
 
-  // 即使没有掉落记录，也将已设置职位的玩家加入列表
+  // 即使没有数据，也将已设置职位的玩家加入列表
   Object.values(playerRoles.value).forEach((p) => {
     if (p)
       playersSet.add(getActualPlayer(p))
   })
 
   const sortedPlayers = Array.from(playersSet).sort((a, b) =>
-    comparePlayersByRole(a, b, counts),
+    comparePlayersByRole(a, b, rollCounts),
   )
 
-  return { counts, sortedPlayers }
+  return { counts: itemCounts, rollCounts, sortedPlayers }
 })
 
 const playerTotalItemsMap = computed(() => detailedPlayerStats.value.counts)
+const playerRollCountsMap = computed(() => detailedPlayerStats.value.rollCounts)
 const allPlayers = computed(() => detailedPlayerStats.value.sortedPlayers)
 
 watch(isOnlyRaidMembersActive, (val) => {
@@ -637,6 +655,15 @@ const baseFilteredRecords = computed(() => {
     const ts = record.timestamp.getTime()
     if (ts < startTs || ts > endTs)
       return false
+
+    if (itemSearchKeyword.value && !record.item.toLowerCase().includes(itemSearchKeyword.value.toLowerCase()))
+      return false
+
+    if (winnerSearchPlayer.value) {
+      const actualWinner = getActualPlayer(getRecordPlayer(record))
+      if (actualWinner !== winnerSearchPlayer.value)
+        return false
+    }
 
     return true
   })
@@ -857,6 +884,12 @@ onMounted(async () => {
         playerSummaryFilterMode.value = c.value || 'obtained'
       if (c.key === 'slotSummaryFilterMode')
         slotSummaryFilterMode.value = c.value || 'obtained'
+      if (c.key === 'itemSearchKeyword')
+        itemSearchKeyword.value = c.value || ''
+      if (c.key === 'winnerSearchPlayer')
+        winnerSearchPlayer.value = c.value || ''
+      if (c.key === 'showInitialRoleSetup')
+        showInitialRoleSetup.value = !!c.value
     })
 
     // 如果上次同步中断（存在 syncInProgress 标志），为了避免遗漏记录，重置 processedFiles
@@ -888,7 +921,6 @@ onMounted(async () => {
       }
     }
 
-    // 5. 最后一次性赋值数据，触发单一重绘流程
     lootRecords.value = cleanRecords
     existingKeys.value = new Set(cleanRecords.map(r => r.key))
 
@@ -1017,13 +1049,6 @@ function handleGlobalDrop(e: DragEvent) {
   if (dragLeaveTimer) {
     clearTimeout(dragLeaveTimer)
     dragLeaveTimer = null
-  }
-
-  if (e.dataTransfer && e.dataTransfer.files.length > 0) {
-    const file = e.dataTransfer.files[0]
-    if (file && file.name.endsWith('.json')) {
-      processImportFile(file)
-    }
   }
 }
 
@@ -1185,10 +1210,6 @@ function handleGlobalKeydown(e: KeyboardEvent) {
       showClearDialog.value = false
       return
     }
-    if (showTimeSetup.value) {
-      showTimeSetup.value = false
-      return
-    }
   }
 
   if (!isInput && !e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey) {
@@ -1212,26 +1233,25 @@ function handleGlobalKeydown(e: KeyboardEvent) {
 
 const selectablePlayersForMerge = computed(() => {
   const players = new Set<string>()
-  lootRecords.value.forEach((record) => {
-    players.add(getActualPlayer(record.player))
+
+  lootRecords.value.forEach((r) => {
+    players.add(r.player)
+    const corrected = recordPlayerCorrections.value[r.key]
+    if (corrected)
+      players.add(corrected)
+    r.rolls.forEach(roll => players.add(roll.player))
   })
 
-  const originalPlayers = new Set<string>()
-  lootRecords.value.forEach((r) => {
-    originalPlayers.add(r.player)
-    r.rolls.forEach(roll => originalPlayers.add(roll.player))
+  Object.values(playerRoles.value).forEach((p) => {
+    if (p)
+      players.add(p)
   })
 
   const mappedAliases = new Set(Object.keys(playerMapping.value))
 
-  return Array.from(originalPlayers)
-    .filter((p) => {
-      if (mappedAliases.has(p))
-        return false
-      const actual = getActualPlayer(p)
-      return isPlayerChecked(actual)
-    })
-    .sort((a, b) => comparePlayersByRole(a, b, playerTotalItemsMap.value))
+  return Array.from(players)
+    .filter(p => !mappedAliases.has(p))
+    .sort((a, b) => comparePlayersByRole(a, b, playerRollCountsMap.value))
 })
 
 const sortedSummaryPlayers = computed(() => {
@@ -1241,7 +1261,7 @@ const sortedSummaryPlayers = computed(() => {
   if (filterMode === 'needed') {
     players = players.filter((p) => {
       const role = getPlayerRole(p)
-      return role && !role.startsWith('LEFT:') && !role.startsWith('SUB:')
+      return role && !role.startsWith('LEFT:')
     })
   }
   const summary = playerSummary.value
@@ -1334,19 +1354,17 @@ async function handleRolePlayerChange(name: string, role: string) {
   })
 }
 
-async function addSpecialRole(name: string, type: 'SUB' | 'LEFT') {
-  const context = type === 'SUB' ? '替补成员' : '离队成员'
-  // 检查同分类中是否已存在该玩家，避免重复添加
+async function addSpecialRole(name: string) {
   const isDuplicate = Object.entries(playerRoles.value).some(
-    ([role, pName]) => role.startsWith(`${type}:`) && pName === name,
+    ([role, pName]) => role.startsWith('LEFT:') && pName === name,
   )
   if (isDuplicate) {
-    ElMessage.warning(`玩家「${name}」已经在${context}列表中了`)
+    ElMessage.warning(`玩家「${name}」已经在离队成员列表中了`)
     return
   }
 
-  confirmAndPerformPlayerAction(name, context, () => {
-    const roleKey = `${type}:${Date.now()}`
+  confirmAndPerformPlayerAction(name, '离队成员', () => {
+    const roleKey = `LEFT:${Date.now()}`
     playerRoles.value[roleKey] = name
   })
 }
@@ -1428,9 +1446,7 @@ const displaySlots = computed(() => {
       if (!row)
         return false
 
-      const coreRoles = Object.keys(playerRoles.value).filter(
-        r => !r.startsWith('LEFT:') && !r.startsWith('SUB:'),
-      )
+      const coreRoles = Object.keys(playerRoles.value).filter(r => !r.startsWith('LEFT:'))
       return coreRoles.some((role) => {
         const pName = playerRoles.value[role]
         if (!pName)
@@ -1641,6 +1657,10 @@ watch(() => popoverTargetRecord.value, (newVal) => {
   }
 })
 
+watch(itemSearchKeyword, () => {
+  currentPage.value = 1
+})
+
 const paginatedRecords = computed(() => {
   const start = (currentPage.value - 1) * pageSize
   return filteredRecords.value.slice(start, start + pageSize)
@@ -1650,6 +1670,8 @@ function resetFilters() {
   itemVisibility.value = {}
   playerVisibility.value = {}
   isRaidFilterActive.value = false
+  itemSearchKeyword.value = ''
+  winnerSearchPlayer.value = ''
   syncStartDate.value = GAME_VERSION_CONFIG.RAID_START_TIME
   syncEndDate.value = null
 }
@@ -1683,7 +1705,6 @@ async function setLogPath() {
       currentHandle.value = handle
       logPath.value = handle.name
       fullLogPath.value = handle.name
-      showTimeSetup.value = true
     }
   }
   catch (e: any) {
@@ -1720,7 +1741,6 @@ async function deleteRecord(record: LootRecord, silent = false) {
 }
 
 async function startInitialSync() {
-  showTimeSetup.value = false
   await syncLogFiles(true)
 }
 
@@ -1946,6 +1966,9 @@ async function syncLogFiles(userInitiated = false) {
       }
 
       if (isFirstSync) {
+        if (!isRaidRolesComplete.value)
+          showInitialRoleSetup.value = true
+
         const uniqueSavageDrops = new Set(
           lootRecords.value
             .filter(r => RAID_REGEX.test(r.item))
@@ -1953,15 +1976,6 @@ async function syncLogFiles(userInitiated = false) {
         )
         if (uniqueSavageDrops.size >= 12) {
           isRaidFilterActive.value = true
-        }
-
-        if (!isRaidRolesComplete.value) {
-          ElMessage.warning({
-            message:
-              '解析成功，请先在「固定队 - 职位设置」中完成所有职位的设置，以开启更多功能。',
-            duration: 10000,
-            showClose: true,
-          })
         }
       }
     }
@@ -2120,8 +2134,6 @@ function comparePlayersByRole(
       return 999
     if (ROLE_DEFINITIONS.includes(r as any))
       return ROLE_DEFINITIONS.indexOf(r as any)
-    if (r.startsWith('SUB:'))
-      return 100
     if (r.startsWith('LEFT:'))
       return 200
     return 500
@@ -2170,7 +2182,7 @@ function getSortedPlayersInSlot(
     if (!isPlayerChecked(p))
       return
     const role = getPlayerRole(p)
-    const isLeftOrSub = role?.startsWith('LEFT:') || role?.startsWith('SUB:')
+    const isLeftOrSub = role?.startsWith('LEFT:')
     if (filterMode === 'needed' && isLeftOrSub)
       return
 
@@ -2779,8 +2791,8 @@ async function confirmImport() {
           const mergedRoles = { ...playerRoles.value }
           for (const [newRole, newName] of Object.entries(json.c.roles)) {
             const typedName = newName as string
-            // 对于替补(SUB:)和离队(LEFT:)，基于玩家名称进行去重
-            if (newRole.startsWith('SUB:') || newRole.startsWith('LEFT:')) {
+            // 对于离队(LEFT:)，基于玩家名称进行去重
+            if (newRole.startsWith('LEFT:')) {
               const type = newRole.split(':')[0]
               const alreadyExists = Object.entries(mergedRoles).some(
                 ([r, n]) => r.startsWith(`${type}:`) && n === typedName,
@@ -3023,12 +3035,6 @@ function toggleSoloMode(type: 'item' | 'player', key: string) {
   })
 }
 
-function formatFileSize(bytes: number) {
-  if (bytes === 0)
-    return '0 MB'
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
-}
-
 function getOriginalRollInfo(record: LootRecord): RollInfo | null {
   const roll = record.rolls.find(r => r.player === record.player)
   if (roll)
@@ -3218,15 +3224,21 @@ async function applyPendingWinnerChange() {
   // 清空待处理状态
   pendingWinnerChange.value = null
 }
+
+const activeStep = computed(() => {
+  if (showInitialRoleSetup.value)
+    return 2
+  if (lootRecords.value.length > 0)
+    return 3 // Main App
+  if (currentHandle.value)
+    return 1
+  return 0
+})
 </script>
 
 <template>
   <div
     class="app-container"
-    :class="{
-      'is-onboarding':
-        lootRecords.length === 0 && (!currentHandle || showTimeSetup),
-    }"
   >
     <transition name="fade">
       <div v-if="isInitializing" class="initial-loading">
@@ -3250,71 +3262,264 @@ async function applyPendingWinnerChange() {
     </transition>
 
     <template v-if="!isInitializing">
-      <transition name="fade">
-        <div v-if="isLoading" class="loading-overlay">
-          <div class="loading-card-wide">
-            <div class="loading-header">
-              <div class="spinner-small" />
-              <span class="loading-title">解析中... {{ loadingProgress }}%</span>
+      <!-- 统一引导流程 Wizard -->
+      <div v-if="activeStep < 3" class="onboarding-wizard">
+        <div class="wizard-card">
+          <div class="wizard-header">
+            <ElSteps :active="activeStep" align-center finish-status="success">
+              <ElStep title="选择目录" />
+              <ElStep title="同步数据" />
+              <ElStep title="职位分配" />
+            </ElSteps>
+          </div>
+
+          <div class="wizard-content">
+            <div
+              v-if="isDragOverWindow"
+              class="drag-guide-zone"
+              :class="{ 'is-active': isDragOverZone }"
+              @drop.stop.prevent="handleZoneDrop"
+              @dragover.prevent
+              @dragenter="isDragOverZone = true"
+              @dragleave="isDragOverZone = false"
+            >
+              <el-icon class="guide-icon">
+                <UploadFilled />
+              </el-icon>
+              <span>释放文件以导入备份</span>
             </div>
-            <div class="parsing-lists">
-              <div class="list-col">
-                <div class="list-head">
-                  已完成 ({{ parsedLogFiles.length }})
-                </div>
-                <div class="list-body">
-                  <transition-group name="list">
+            <!-- 步骤 0: 欢迎 & 选择目录 -->
+            <transition name="fade" mode="out-in">
+              <div v-if="activeStep === 0" class="step-pane step-welcome">
+                <div class="welcome-left">
+                  <div class="welcome-hero">
+                    <h2>欢迎使用 Loot History</h2>
+                    <p>专为 FFXIV 固定队设计的掉落统计与 BIS 分配工具</p>
+                  </div>
+
+                  <div class="action-area">
                     <div
-                      v-for="file in parsedLogFiles"
-                      :key="file.name"
-                      class="file-item done"
+                      class="drop-zone"
+                      @click="setLogPath"
                     >
-                      <div class="file-info-left">
-                        <el-icon><Check /></el-icon>
-                        <span class="file-name" :title="file.name">{{
-                          file.name
-                        }}</span>
+                      <el-icon class="zone-icon">
+                        <FolderOpened />
+                      </el-icon>
+                      <h3>选择日志目录</h3>
+                      <p>点击选择 ACT 日志所在的文件夹</p>
+                    </div>
+
+                    <div class="secondary-actions">
+                      <el-button plain @click="importInputRef?.click()">
+                        <el-icon><Upload /></el-icon> 从备份文件导入
+                      </el-button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="welcome-right">
+                  <div class="guide-preview">
+                    <img src="@/assets/screenshots/lootHistoryGuide.jpg" alt="Guide" class="guide-img">
+                  </div>
+                </div>
+              </div>
+
+              <!-- 步骤 1: 时间设置 & 解析进度 -->
+              <div v-else-if="activeStep === 1" class="step-pane step-sync">
+                <div v-if="!isSyncing" class="sync-setup">
+                  <div class="step-title">
+                    <h3>确认同步范围</h3>
+                    <p>
+                      已选中目录: <ElTag size="small">
+                        {{ currentHandle?.name }}
+                      </ElTag>
+                    </p>
+                  </div>
+
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label>起始时间</label>
+                      <ElDatePicker
+                        v-model="syncStartDate"
+                        type="datetime"
+                        placeholder="起始时间"
+                        format="YYYY/MM/DD HH:mm"
+                        value-format="YYYY-MM-DDTHH:mm"
+                        :clearable="false"
+                        style="width: 100%"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="step-footer">
+                    <el-button @click="currentHandle = null">
+                      上一步
+                    </el-button>
+                    <el-button type="primary" size="large" @click="startInitialSync">
+                      开始解析
+                      <el-icon class="el-icon--right">
+                        <Right />
+                      </el-icon>
+                    </el-button>
+                  </div>
+                </div>
+
+                <div v-else class="sync-progress">
+                  <div class="progress-circle">
+                    <el-progress type="circle" :percentage="loadingProgress" />
+                  </div>
+                  <h3>正在解析日志文件...</h3>
+                  <p>已处理 {{ parsedLogFiles.length }} / {{ parsedLogFiles.length + pendingLogFiles.length }} 个文件</p>
+
+                  <div class="file-list-preview">
+                    <div v-for="file in parsedLogFiles.slice(-3)" :key="file.name" class="file-item done">
+                      <el-icon><Check /></el-icon> {{ file.name }}
+                    </div>
+                    <div v-if="pendingLogFiles.length > 0" class="file-item pending">
+                      <el-icon class="is-loading">
+                        <Timer />
+                      </el-icon> {{ pendingLogFiles[0]?.name }}...
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 步骤 2: 职位分配 -->
+              <div v-else-if="activeStep === 2" class="step-pane step-roles">
+                <div class="step-title">
+                  <h3>固定队职位设置</h3>
+                </div>
+
+                <div class="role-grid-container">
+                  <div class="role-groups-compact">
+                    <!-- Left Column: Supports (TN) -->
+                    <div class="role-col">
+                      <div class="compact-group-header support">
+                        <span class="dot" /> 坦克/治疗 (TANK / HEALER)
                       </div>
-                      <span class="file-size">{{
-                        formatFileSize(file.size)
-                      }}</span>
+                      <div class="compact-grid">
+                        <RoleSetupItem
+                          v-for="role in ['MT', 'ST']"
+                          :key="role"
+                          v-model="playerRoles[role]"
+                          :role="role"
+                          variant="card"
+                          :all-players="allPlayers"
+                          :get-display-name="getDisplayName"
+                          :get-player-role="getPlayerRole"
+                          :assigned-players="assignedPlayers"
+                          @change="(val: string) => handleRolePlayerChange(val, role)"
+                        />
+                        <div class="grid-spacer" />
+                        <div class="grid-spacer" />
+                        <RoleSetupItem
+                          v-for="role in ['H1', 'H2']"
+                          :key="role"
+                          v-model="playerRoles[role]"
+                          :role="role"
+                          variant="card"
+                          :all-players="allPlayers"
+                          :get-display-name="getDisplayName"
+                          :get-player-role="getPlayerRole"
+                          :assigned-players="assignedPlayers"
+                          @change="(val: string) => handleRolePlayerChange(val, role)"
+                        />
+                      </div>
                     </div>
-                  </transition-group>
+                    <div class="role-col">
+                      <div class="compact-group-header dps">
+                        <span class="dot" /> 进攻 (DPS)
+                      </div>
+                      <div class="compact-grid">
+                        <RoleSetupItem
+                          v-for="role in ['D1', 'D2', 'D3', 'D4']"
+                          :key="role"
+                          v-model="playerRoles[role]"
+                          :role="role"
+                          variant="card"
+                          :all-players="allPlayers"
+                          :get-display-name="getDisplayName"
+                          :get-player-role="getPlayerRole"
+                          :assigned-players="assignedPlayers"
+                          @change="(val: string) => handleRolePlayerChange(val, role)"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="special-roles-compact">
+                    <div class="compact-label">
+                      离队成员
+                    </div>
+                    <div class="compact-content">
+                      <template v-for="(p, roleKey) in playerRoles" :key="roleKey">
+                        <div v-if="roleKey.startsWith('LEFT:')" class="special-item-tag">
+                          <PlayerDisplay
+                            :name="p"
+                            :role="getPlayerRole(p)"
+                            :show-only-role="false"
+                            size="small"
+                          />
+                          <el-icon class="delete-btn" @click="delete playerRoles[roleKey]">
+                            <CircleCloseFilled />
+                          </el-icon>
+                        </div>
+                      </template>
+                      <ElSelect
+                        placeholder="添加离队..."
+                        filterable
+                        allow-create
+                        default-first-option
+                        size="small"
+                        value=""
+                        class="special-add-select-compact"
+                        @change="addSpecialRole($event)"
+                      >
+                        <ElOption
+                          v-for="p in allPlayers.filter(p => !assignedPlayers.has(p))"
+                          :key="p"
+                          :label="getDisplayName(p)"
+                          :value="p"
+                        >
+                          <div class="select-player-row">
+                            <PlayerDisplay
+                              :name="p"
+                              :role="getPlayerRole(p)"
+                              :show-only-role="false"
+                            />
+                          </div>
+                        </ElOption>
+                      </ElSelect>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div class="list-divider" />
-              <div class="list-col">
-                <div class="list-head">
-                  待处理 ({{ pendingLogFiles.length }})
-                </div>
-                <div class="list-body">
-                  <div
-                    v-for="file in pendingLogFiles.slice(0, 50)"
-                    :key="file.name"
-                    class="file-item pending"
+
+                <div class="step-footer">
+                  <el-alert :title="isRaidRolesComplete ? '设置已完成' : '请完成所有 8 个职位的分配'" :type="isRaidRolesComplete ? 'success' : 'warning'" show-icon :closable="false" />
+                  <el-button
+                    type="primary"
+                    size="large"
+                    :disabled="!isRaidRolesComplete"
+                    @click="showInitialRoleSetup = false"
                   >
-                    <div class="file-info-left">
-                      <el-icon><Timer /></el-icon>
-                      <span class="file-name" :title="file.name">{{
-                        file.name
-                      }}</span>
-                    </div>
-                    <span class="file-size">{{
-                      formatFileSize(file.size)
-                    }}</span>
-                  </div>
-                  <div v-if="pendingLogFiles.length > 50" class="more-hint">
-                    ...还有 {{ pendingLogFiles.length - 50 }} 个文件
-                  </div>
+                    进入面板
+                    <el-icon class="el-icon--right">
+                      <Check />
+                    </el-icon>
+                  </el-button>
+                </div>
+
+                <div class="bg-watermark">
+                  <el-icon><User /></el-icon>
                 </div>
               </div>
-            </div>
+            </transition>
           </div>
         </div>
-      </transition>
+      </div>
 
       <main
-        v-if="lootRecords.length > 0"
+        v-else-if="lootRecords.length > 0"
         class="app-main"
         style="padding-top: 10px"
       >
@@ -3525,96 +3730,28 @@ async function applyPendingWinnerChange() {
 
                   <div class="role-settings-content-popover">
                     <div class="role-grid">
-                      <div
+                      <RoleSetupItem
                         v-for="role in ROLE_DEFINITIONS"
                         :key="role"
-                        class="role-setup-item"
-                      >
-                        <div class="role-setup-label">
-                          <RoleBadge :role="role" />
-                        </div>
-                        <ElSelect
-                          :model-value="playerRoles[role]"
-                          placeholder="选择/输入玩家"
-                          filterable
-                          allow-create
-                          default-first-option
-                          clearable
-                          size="small"
-                          style="flex: 1"
-                          :teleported="false"
-                          @change="handleRolePlayerChange($event, role)"
-                        >
-                          <template #label="{ label, value }">
-                            {{ getDisplayName(value || label) }}
-                          </template>
-                          <ElOption
-                            v-for="p in allPlayers.filter(
-                              (p) =>
-                                p === playerRoles[role]
-                                || !assignedPlayers.has(p),
-                            )"
-                            :key="p"
-                            :label="getDisplayName(p)"
-                            :value="p"
-                          />
-                        </ElSelect>
-                      </div>
+                        v-model="playerRoles[role]"
+                        :role="role"
+                        variant="row"
+                        :all-players="allPlayers"
+                        :assigned-players="assignedPlayers"
+                        :get-display-name="getDisplayName"
+                        :get-player-role="getPlayerRole"
+                        allow-create
+                        :teleported="false"
+                        @change="handleRolePlayerChange($event, role)"
+                      />
                     </div>
 
                     <div class="role-divider">
-                      特殊分组
+                      已离队
                     </div>
 
                     <div class="special-role-section">
                       <div class="special-role-group">
-                        <div class="group-title">
-                          临时替补
-                        </div>
-                        <div class="special-list">
-                          <template
-                            v-for="(p, role) in playerRoles"
-                            :key="role"
-                          >
-                            <div
-                              v-if="role.startsWith('SUB:')"
-                              class="special-item"
-                            >
-                              <ElTag
-                                closable
-                                @close="delete playerRoles[role]"
-                              >
-                                {{ getDisplayName(p) }}
-                              </ElTag>
-                            </div>
-                          </template>
-                          <ElSelect
-                            placeholder="添加/输入替补"
-                            filterable
-                            allow-create
-                            default-first-option
-                            size="small"
-                            value=""
-                            style="width: 120px"
-                            :teleported="false"
-                            @change="addSpecialRole($event, 'SUB')"
-                          >
-                            <ElOption
-                              v-for="p in allPlayers.filter(
-                                (p) => !assignedPlayers.has(p),
-                              )"
-                              :key="p"
-                              :label="getDisplayName(p)"
-                              :value="p"
-                            />
-                          </ElSelect>
-                        </div>
-                      </div>
-
-                      <div class="special-role-group">
-                        <div class="group-title">
-                          已离队
-                        </div>
                         <div class="special-list">
                           <template
                             v-for="(p, role) in playerRoles"
@@ -3641,7 +3778,7 @@ async function applyPendingWinnerChange() {
                             value=""
                             style="width: 120px"
                             :teleported="false"
-                            @change="addSpecialRole($event, 'LEFT')"
+                            @change="addSpecialRole($event)"
                           >
                             <ElOption
                               v-for="p in allPlayers.filter(
@@ -3650,7 +3787,15 @@ async function applyPendingWinnerChange() {
                               :key="p"
                               :label="getDisplayName(p)"
                               :value="p"
-                            />
+                            >
+                              <div class="select-player-row">
+                                <PlayerDisplay
+                                  :name="p"
+                                  :role="getPlayerRole(p)"
+                                  :show-only-role="false"
+                                />
+                              </div>
+                            </ElOption>
                           </ElSelect>
                         </div>
                       </div>
@@ -4119,14 +4264,62 @@ async function applyPendingWinnerChange() {
                       </div>
                     </template>
                   </el-table-column>
-                  <el-table-column label="物品" width="220">
+                  <el-table-column width="240">
+                    <template #header>
+                      <div class="col-header-search" style="display: flex !important; align-items: center !important; gap: 8px !important; white-space: nowrap !important;">
+                        <span class="header-label">物品</span>
+                        <ElSelect
+                          v-model="itemSearchKeyword"
+                          size="small"
+                          placeholder="全部"
+                          clearable
+                          filterable
+                          class="header-search-input"
+                        >
+                          <ElOption
+                            v-for="item in visibleUniqueItems"
+                            :key="item"
+                            :label="item"
+                            :value="item"
+                          />
+                        </ElSelect>
+                      </div>
+                    </template>
                     <template #default="scope">
                       <div class="col-item">
                         <span class="item-text">{{ scope.row.item }}</span>
                       </div>
                     </template>
                   </el-table-column>
-                  <el-table-column label="获得者" width="260">
+                  <el-table-column width="260">
+                    <template #header>
+                      <div class="col-header-search" style="display: flex !important; align-items: center !important; gap: 8px !important; white-space: nowrap !important;">
+                        <span class="header-label">获得者</span>
+                        <ElSelect
+                          v-model="winnerSearchPlayer"
+                          size="small"
+                          placeholder="全部"
+                          clearable
+                          filterable
+                          class="header-search-input"
+                        >
+                          <ElOption
+                            v-for="p in allPlayers"
+                            :key="p"
+                            :label="getDisplayName(p)"
+                            :value="p"
+                          >
+                            <div class="option-player-display">
+                              <PlayerDisplay
+                                :name="p"
+                                :role="getPlayerRole(p)"
+                                :show-only-role="showOnlyRole"
+                              />
+                            </div>
+                          </ElOption>
+                        </ElSelect>
+                      </div>
+                    </template>
                     <template #default="scope">
                       <div
                         class="winner-selector-trigger"
@@ -4655,577 +4848,6 @@ async function applyPendingWinnerChange() {
           </el-popover>
         </div>
       </main>
-
-      <!-- 数据库完全为空时的引导 -->
-      <div v-else class="empty-container">
-        <!-- 核心引导流程：步进式 -->
-        <div class="empty-placeholder compact-guide">
-          <!-- 状态 1: 未设置目录 -->
-          <template v-if="!currentHandle">
-            <div class="empty-guide-main" style="position: relative">
-              <div
-                v-if="isDragOverWindow"
-                class="setup-drag-zone"
-                :class="{ 'is-active': isDragOverZone }"
-                @drop.stop.prevent="handleZoneDrop"
-                @dragover.prevent
-                @dragenter="isDragOverZone = true"
-                @dragleave="isDragOverZone = false"
-              >
-                <el-icon class="guide-icon">
-                  <UploadFilled />
-                </el-icon>
-                <span>释放文件以导入备份</span>
-              </div>
-              <div class="empty-info-side">
-                <div class="empty-title">
-                  欢迎使用 Loot History
-                </div>
-                <p class="empty-desc">
-                  选择你的<span class="empty-highlight">FFXIV 日志文件夹</span>，开始记录掉落。
-                </p>
-                <div class="empty-hint">
-                  <el-button type="primary" size="large" @click="setLogPath">
-                    选择日志目录
-                  </el-button>
-                  <el-button
-                    type="info"
-                    plain
-                    size="large"
-                    @click="importInputRef?.click()"
-                  >
-                    导入备份数据
-                  </el-button>
-                </div>
-              </div>
-              <div class="guide-img-box">
-                <img
-                  src="@/assets/screenshots/lootHistoryGuide.jpg"
-                  alt="Guide"
-                  class="guide-img"
-                >
-              </div>
-            </div>
-          </template>
-
-          <!-- 状态 2: 已设置目录，配置时间范围 -->
-          <template v-else-if="showTimeSetup">
-            <div class="empty-title">
-              设置同步范围
-            </div>
-            <p class="empty-desc">
-              已关联目录：<span class="empty-highlight">{{
-                currentHandle.name
-              }}</span><br>
-              请指定你想要同步的历史记录起始时间。
-            </p>
-            <div class="setup-form">
-              <div class="setup-row">
-                <span class="setup-label">起始时间:</span>
-                <ElDatePicker
-                  v-model="syncStartDate"
-                  type="datetime"
-                  placeholder="起始时间"
-                  format="YYYY/MM/DD HH:mm"
-                  value-format="YYYY-MM-DDTHH:mm"
-                  :clearable="false"
-                />
-              </div>
-              <div class="setup-row">
-                <span class="setup-label">截止时间:</span>
-                <ElDatePicker
-                  v-model="syncEndDate"
-                  type="datetime"
-                  placeholder="现在 (可选)"
-                  format="YYYY/MM/DD HH:mm"
-                  value-format="YYYY-MM-DDTHH:mm"
-                />
-              </div>
-            </div>
-            <div class="empty-hint" style="margin-top: 24px">
-              <el-button plain size="large" @click="currentHandle = null">
-                返回重选
-              </el-button>
-              <el-button type="primary" size="large" @click="startInitialSync">
-                开始解析并导入
-              </el-button>
-            </div>
-          </template>
-
-          <!-- 状态 3: 已设置目录，但数据库依然为空 (可能正在同步或同步结果为空) -->
-          <template v-else>
-            <div
-              class="ready-state-container"
-              style="
-                position: relative;
-                width: 100%;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-              "
-            >
-              <div
-                v-if="isDragOverWindow"
-                class="setup-drag-zone"
-                :class="{ 'is-active': isDragOverZone }"
-                @drop.stop.prevent="handleZoneDrop"
-                @dragover.prevent
-                @dragenter="isDragOverZone = true"
-                @dragleave="isDragOverZone = false"
-              >
-                <el-icon class="guide-icon">
-                  <UploadFilled />
-                </el-icon>
-                <span>释放文件以导入备份</span>
-              </div>
-
-              <div class="empty-title">
-                {{ isSyncing ? '正在同步数据' : '准备就绪' }}
-              </div>
-              <p class="empty-desc">
-                {{
-                  isSyncing
-                    ? '正在处理日志文件，请稍候。'
-                    : '数据库当前为空。你可以开始解析数据，或从备份文件恢复。'
-                }}
-              </p>
-              <div class="empty-hint">
-                <el-button
-                  v-if="!isSyncing"
-                  type="primary"
-                  size="large"
-                  @click="syncLogFiles(true)"
-                >
-                  开始解析数据
-                </el-button>
-                <el-button
-                  v-if="!isSyncing"
-                  plain
-                  size="large"
-                  @click="importInputRef?.click()"
-                >
-                  导入备份数据
-                </el-button>
-                <el-button
-                  v-if="!isSyncing"
-                  plain
-                  size="large"
-                  @click="showTimeSetup = true"
-                >
-                  调整时间范围
-                </el-button>
-                <el-button
-                  v-if="!isSyncing"
-                  plain
-                  size="large"
-                  @click="setLogPath"
-                >
-                  修改日志目录
-                </el-button>
-              </div>
-            </div>
-          </template>
-        </div>
-      </div>
-
-      <ElDialog
-        v-model="showImportConfirmDialog"
-        title="选择导入内容"
-        width="400px"
-        append-to-body
-        destroy-on-close
-      >
-        <div v-if="showImportConfirmDialog && importDataPending" class="import-preview-box">
-          <p class="import-hint-text">
-            发现备份文件，请选择要导入的部分：
-          </p>
-          <div class="import-selection-list">
-            <ElCheckbox
-              v-model="importForm.loot"
-              :disabled="!importDataPending.r?.length"
-            >
-              {{ LABELS.LOOT }} ({{ importDataPending.r?.length || 0 }} 条)
-              <span
-                v-if="!importDataPending.r?.length"
-                class="import-not-found-hint"
-              >- 备份文件中未发现记录</span>
-            </ElCheckbox>
-            <ElCheckbox
-              v-model="importForm.meta"
-              :disabled="!(importDataPending.c?.map || importDataPending.c?.roles || importDataPending.c?.bisConfig || importDataPending.bisConfig)"
-            >
-              {{ LABELS.META }}
-              <span
-                v-if="!(importDataPending.c?.map || importDataPending.c?.roles || importDataPending.c?.bisConfig || importDataPending.bisConfig)"
-                class="import-not-found-hint"
-              >- 备份文件中未发现元数据</span>
-            </ElCheckbox>
-            <ElCheckbox
-              v-model="importForm.corrections"
-              :disabled="!(importDataPending.c?.weekCorrections || importDataPending.c?.playerCorrections)"
-            >
-              {{ LABELS.CORRECTIONS }}
-              <span
-                v-if="!(importDataPending.c?.weekCorrections || importDataPending.c?.playerCorrections)"
-                class="import-not-found-hint"
-              >- 备份文件中未发现修正项</span>
-            </ElCheckbox>
-            <ElCheckbox
-              v-model="importForm.view"
-              :disabled="!(importDataPending.c?.filter || importDataPending.c?.itemVisibility || importDataPending.c?.playerVisibility || importDataPending.c?.processedFiles)"
-            >
-              {{ LABELS.VIEW }}
-              <span
-                v-if="!(importDataPending.c?.filter || importDataPending.c?.itemVisibility || importDataPending.c?.playerVisibility || importDataPending.c?.processedFiles)"
-                class="import-not-found-hint"
-              >- 备份文件中未发现视图/过滤配置</span>
-            </ElCheckbox>
-          </div>
-        </div>
-        <template #footer>
-          <span class="dialog-footer">
-            <el-button @click="showImportConfirmDialog = false">取消</el-button>
-            <el-button type="primary" @click="confirmImport">确认导入</el-button>
-          </span>
-        </template>
-      </ElDialog>
-
-      <ElDialog
-        v-model="showClearDialog"
-        title="清空数据选项"
-        width="400px"
-        append-to-body
-        destroy-on-close
-      >
-        <div v-if="showClearDialog" class="clear-selection-list">
-          <div class="clear-selection-header">
-            <p class="clear-warning-text">
-              请选择要彻底删除的数据项：
-            </p>
-            <div class="clear-quick-actions">
-              <el-button
-                link
-                type="primary"
-                size="small"
-                @click="
-                  clearForm = {
-                    loot: true,
-                    bis: true,
-                    roles: true,
-                    mapping: true,
-                    weekCorrection: true,
-                    playerCorrection: true,
-                  }
-                "
-              >
-                全选
-              </el-button>
-              <el-button
-                link
-                size="small"
-                @click="
-                  clearForm = {
-                    loot: !clearForm.loot,
-                    bis: !clearForm.bis,
-                    roles: !clearForm.roles,
-                    mapping: !clearForm.mapping,
-                    weekCorrection: !clearForm.weekCorrection,
-                    playerCorrection: !clearForm.playerCorrection,
-                  }
-                "
-              >
-                反选
-              </el-button>
-            </div>
-          </div>
-          <ElCheckbox v-model="clearForm.loot">
-            {{ LABELS.LOOT }} ({{ lootRecords.length }})
-          </ElCheckbox>
-          <ElCheckbox v-model="clearForm.roles">
-            {{
-              LABELS.ROLES
-            }}
-          </ElCheckbox>
-          <ElCheckbox v-model="clearForm.bis">
-            {{ LABELS.BIS }}
-          </ElCheckbox>
-          <ElCheckbox v-model="clearForm.mapping">
-            {{
-              LABELS.MAPPING
-            }}
-          </ElCheckbox>
-          <ElCheckbox v-model="clearForm.weekCorrection">
-            {{
-              LABELS.WEEK_CORRECTION
-            }}
-          </ElCheckbox>
-          <ElCheckbox v-model="clearForm.playerCorrection">
-            {{
-              LABELS.PLAYER_CORRECTION
-            }}
-          </ElCheckbox>
-        </div>
-        <div class="clear-danger-hint">
-          <el-icon><Warning /></el-icon>
-          <span>选中的数据将被永久删除，无法撤销。</span>
-        </div>
-        <template #footer>
-          <span class="dialog-footer">
-            <el-button @click="showClearDialog = false">取消</el-button>
-            <el-button type="danger" @click="confirmClear">确定清空</el-button>
-          </span>
-        </template>
-      </ElDialog>
-      <ElDialog
-        v-model="showManualAddDialog"
-        title="手动添加记录"
-        width="400px"
-        append-to-body
-        destroy-on-close
-      >
-        <ElForm v-if="showManualAddDialog" label-width="80px">
-          <ElFormItem label="日期">
-            <ElDatePicker
-              v-model="manualForm.timestamp"
-              type="date"
-              placeholder="选择获得日期"
-              style="width: 100%"
-            />
-          </ElFormItem>
-          <ElFormItem label="物品">
-            <ElAutocomplete
-              v-model="manualForm.item"
-              :fetch-suggestions="querySearchItems"
-              placeholder="请输入物品名称"
-              style="width: 100%"
-            />
-          </ElFormItem>
-          <ElFormItem label="获得者">
-            <ElAutocomplete
-              v-model="manualForm.player"
-              :fetch-suggestions="querySearchPlayers"
-              placeholder="请输入玩家名称"
-              style="width: 100%"
-            />
-          </ElFormItem>
-        </ElForm>
-        <template #footer>
-          <span class="dialog-footer">
-            <el-button @click="showManualAddDialog = false">取消</el-button>
-            <el-button type="primary" @click="submitManualRecord">确定添加</el-button>
-          </span>
-        </template>
-      </ElDialog>
-
-      <ElDialog
-        v-model="showCustomCorrectionDialog"
-        title="自定义修正管理"
-        width="850px"
-        append-to-body
-        destroy-on-close
-        class="premium-correction-dialog"
-      >
-        <div v-if="showCustomCorrectionDialog" class="premium-correction-layout">
-          <div class="correction-sidebar">
-            <div
-              class="nav-item"
-              :class="{ active: activeCorrectionTab === 'player' }"
-              @click="activeCorrectionTab = 'player'"
-            >
-              <div class="nav-icon">
-                <el-icon><User /></el-icon>
-              </div>
-              <div class="nav-content">
-                <div class="nav-title">
-                  获得者修正
-                </div>
-                <div class="nav-status">
-                  {{ filteredPlayerCorrections.length }} 个条目
-                </div>
-              </div>
-            </div>
-            <div
-              class="nav-item"
-              :class="{ active: activeCorrectionTab === 'week' }"
-              @click="activeCorrectionTab = 'week'"
-            >
-              <div class="nav-icon">
-                <el-icon><Calendar /></el-icon>
-              </div>
-              <div class="nav-content">
-                <div class="nav-title">
-                  CD周数修正
-                </div>
-                <div class="nav-status">
-                  {{ filteredWeekCorrections.length }} 个条目
-                </div>
-              </div>
-            </div>
-            <div
-              class="nav-item"
-              :class="{ active: activeCorrectionTab === 'manual' }"
-              @click="activeCorrectionTab = 'manual'"
-            >
-              <div class="nav-icon">
-                <el-icon><Plus /></el-icon>
-              </div>
-              <div class="nav-content">
-                <div class="nav-title">
-                  手动添加记录
-                </div>
-                <div class="nav-status">
-                  {{ filteredManualRecords.length }} 个条目
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="correction-main">
-            <div class="main-header">
-              <h3>
-                {{
-                  activeCorrectionTab === 'player'
-                    ? '获得者修正管理'
-                    : activeCorrectionTab === 'week'
-                      ? 'CD周数修正管理'
-                      : '手动添加记录管理'
-                }}
-              </h3>
-              <p>
-                {{
-                  activeCorrectionTab === 'manual'
-                    ? '管理手动添加的装备掉落记录，删除后将永久移除。'
-                    : '可以撤销手动进行的改动，恢复最原始的系统记录。'
-                }}
-              </p>
-            </div>
-
-            <div class="correction-grid-wrapper scroll-thin">
-              <template v-if="activeCorrectionTab === 'player' || activeCorrectionTab === 'week'">
-                <div
-                  v-for="item in (activeCorrectionTab === 'player' ? filteredPlayerCorrections : filteredWeekCorrections)"
-                  :key="item.key"
-                  class="correction-card-compact"
-                >
-                  <div class="card-main-row">
-                    <div class="item-primary-info">
-                      <div class="item-name" :title="item.itemName">
-                        {{ item.itemName }}
-                      </div>
-                      <div class="item-time">
-                        {{ formatTime(item.record.timestamp) }}
-                      </div>
-                    </div>
-
-                    <div class="card-comparison-inline">
-                      <div class="comp-box old">
-                        <div class="value">
-                          <template v-if="activeCorrectionTab === 'player'">
-                            <PlayerDisplay :name="item.oldVal" :role="getPlayerRole(item.oldVal)" :show-only-role="false" />
-                          </template>
-                          <template v-else>
-                            <span class="week-text">{{ item.oldVal }}</span>
-                          </template>
-                        </div>
-                      </div>
-
-                      <div class="comp-arrow">
-                        <el-icon><Right /></el-icon>
-                      </div>
-
-                      <div class="comp-box new">
-                        <div class="value">
-                          <template v-if="activeCorrectionTab === 'player'">
-                            <PlayerDisplay :name="item.newVal" :role="getPlayerRole(item.newVal)" :show-only-role="false" />
-                          </template>
-                          <template v-else>
-                            <span class="week-text">{{ item.newVal }}</span>
-                          </template>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="card-actions">
-                      <el-button
-                        type="primary"
-                        link
-                        size="small"
-                        @click="restoreCorrection(item)"
-                      >
-                        <el-icon><RefreshLeft /></el-icon>
-                        还原
-                      </el-button>
-                    </div>
-                  </div>
-                </div>
-              </template>
-
-              <template v-else-if="activeCorrectionTab === 'manual'">
-                <div
-                  v-for="record in filteredManualRecords"
-                  :key="record.key"
-                  class="correction-card-compact"
-                >
-                  <div class="card-main-row">
-                    <div class="item-primary-info">
-                      <div class="item-name" :title="record.item">
-                        {{ record.item }}
-                      </div>
-                      <div class="item-time">
-                        <ElDatePicker
-                          :model-value="record.timestamp"
-                          type="date"
-                          size="small"
-                          placeholder="选择日期"
-                          :clearable="false"
-                          style="width: 140px"
-                          @update:model-value="(val: Date) => updateManualRecordTime(record, val)"
-                        />
-                      </div>
-                    </div>
-
-                    <div class="card-comparison-inline">
-                      <div class="comp-box new">
-                        <div class="value">
-                          <PlayerDisplay :name="record.player" :role="getPlayerRole(record.player)" :show-only-role="false" />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="card-actions">
-                      <el-button
-                        type="danger"
-                        link
-                        size="small"
-                        @click="removeManualRecord(record)"
-                      >
-                        <el-icon><Delete /></el-icon>
-                        删除
-                      </el-button>
-                    </div>
-                  </div>
-                </div>
-              </template>
-
-              <div
-                v-if="(
-                  activeCorrectionTab === 'player'
-                    ? filteredPlayerCorrections
-                    : activeCorrectionTab === 'week'
-                      ? filteredWeekCorrections
-                      : filteredManualRecords
-                ).length === 0"
-                class="premium-empty"
-              >
-                <el-icon class="empty-icon">
-                  <CircleCheckFilled />
-                </el-icon>
-                <p>暂无符合条件的修正项</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </ElDialog>
     </template>
 
     <input
@@ -5235,10 +4857,417 @@ async function applyPendingWinnerChange() {
       style="display: none"
       @change="handleImportFile"
     >
-    <div class="early-access-disclaimer">
-      <el-icon><Warning /></el-icon>
-      <span>项目处于早期开发阶段，功能可能存在BUG。</span>
+  </div>
+
+  <ElDialog
+    v-model="showImportConfirmDialog"
+    title="选择导入内容"
+    width="400px"
+    append-to-body
+    destroy-on-close
+  >
+    <div v-if="showImportConfirmDialog && importDataPending" class="import-preview-box">
+      <p class="import-hint-text">
+        发现备份文件，请选择要导入的部分：
+      </p>
+      <div class="import-selection-list">
+        <ElCheckbox
+          v-model="importForm.loot"
+          :disabled="!importDataPending.r?.length"
+        >
+          {{ LABELS.LOOT }} ({{ importDataPending.r?.length || 0 }} 条)
+          <span
+            v-if="!importDataPending.r?.length"
+            class="import-not-found-hint"
+          >- 备份文件中未发现记录</span>
+        </ElCheckbox>
+        <ElCheckbox
+          v-model="importForm.meta"
+          :disabled="!(importDataPending.c?.map || importDataPending.c?.roles || importDataPending.c?.bisConfig || importDataPending.bisConfig)"
+        >
+          {{ LABELS.META }}
+          <span
+            v-if="!(importDataPending.c?.map || importDataPending.c?.roles || importDataPending.c?.bisConfig || importDataPending.bisConfig)"
+            class="import-not-found-hint"
+          >- 备份文件中未发现元数据</span>
+        </ElCheckbox>
+        <ElCheckbox
+          v-model="importForm.corrections"
+          :disabled="!(importDataPending.c?.weekCorrections || importDataPending.c?.playerCorrections)"
+        >
+          {{ LABELS.CORRECTIONS }}
+          <span
+            v-if="!(importDataPending.c?.weekCorrections || importDataPending.c?.playerCorrections)"
+            class="import-not-found-hint"
+          >- 备份文件中未发现修正项</span>
+        </ElCheckbox>
+        <ElCheckbox
+          v-model="importForm.view"
+          :disabled="!(importDataPending.c?.filter || importDataPending.c?.itemVisibility || importDataPending.c?.playerVisibility || importDataPending.c?.processedFiles)"
+        >
+          {{ LABELS.VIEW }}
+          <span
+            v-if="!(importDataPending.c?.filter || importDataPending.c?.itemVisibility || importDataPending.c?.playerVisibility || importDataPending.c?.processedFiles)"
+            class="import-not-found-hint"
+          >- 备份文件中未发现视图/过滤配置</span>
+        </ElCheckbox>
+      </div>
     </div>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="showImportConfirmDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmImport">确认导入</el-button>
+      </span>
+    </template>
+  </ElDialog>
+
+  <ElDialog
+    v-model="showClearDialog"
+    title="清空数据选项"
+    width="400px"
+    append-to-body
+    destroy-on-close
+  >
+    <div v-if="showClearDialog" class="clear-selection-list">
+      <div class="clear-selection-header">
+        <p class="clear-warning-text">
+          请选择要彻底删除的数据项：
+        </p>
+        <div class="clear-quick-actions">
+          <el-button
+            link
+            type="primary"
+            size="small"
+            @click="
+              clearForm = {
+                loot: true,
+                bis: true,
+                roles: true,
+                mapping: true,
+                weekCorrection: true,
+                playerCorrection: true,
+              }
+            "
+          >
+            全选
+          </el-button>
+          <el-button
+            link
+            size="small"
+            @click="
+              clearForm = {
+                loot: !clearForm.loot,
+                bis: !clearForm.bis,
+                roles: !clearForm.roles,
+                mapping: !clearForm.mapping,
+                weekCorrection: !clearForm.weekCorrection,
+                playerCorrection: !clearForm.playerCorrection,
+              }
+            "
+          >
+            反选
+          </el-button>
+        </div>
+      </div>
+      <ElCheckbox v-model="clearForm.loot">
+        {{ LABELS.LOOT }} ({{ lootRecords.length }})
+      </ElCheckbox>
+      <ElCheckbox v-model="clearForm.roles">
+        {{
+          LABELS.ROLES
+        }}
+      </ElCheckbox>
+      <ElCheckbox v-model="clearForm.bis">
+        {{ LABELS.BIS }}
+      </ElCheckbox>
+      <ElCheckbox v-model="clearForm.mapping">
+        {{
+          LABELS.MAPPING
+        }}
+      </ElCheckbox>
+      <ElCheckbox v-model="clearForm.weekCorrection">
+        {{
+          LABELS.WEEK_CORRECTION
+        }}
+      </ElCheckbox>
+      <ElCheckbox v-model="clearForm.playerCorrection">
+        {{
+          LABELS.PLAYER_CORRECTION
+        }}
+      </ElCheckbox>
+    </div>
+    <div class="clear-danger-hint">
+      <el-icon><Warning /></el-icon>
+      <span>选中的数据将被永久删除，无法撤销。</span>
+    </div>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="showClearDialog = false">取消</el-button>
+        <el-button type="danger" @click="confirmClear">确定清空</el-button>
+      </span>
+    </template>
+  </ElDialog>
+  <ElDialog
+    v-model="showManualAddDialog"
+    title="手动添加记录"
+    width="400px"
+    append-to-body
+    destroy-on-close
+  >
+    <ElForm v-if="showManualAddDialog" label-width="80px">
+      <ElFormItem label="日期">
+        <ElDatePicker
+          v-model="manualForm.timestamp"
+          type="date"
+          placeholder="选择获得日期"
+          style="width: 100%"
+        />
+      </ElFormItem>
+      <ElFormItem label="物品">
+        <ElAutocomplete
+          v-model="manualForm.item"
+          :fetch-suggestions="querySearchItems"
+          placeholder="请输入物品名称"
+          style="width: 100%"
+        />
+      </ElFormItem>
+      <ElFormItem label="获得者">
+        <ElAutocomplete
+          v-model="manualForm.player"
+          :fetch-suggestions="querySearchPlayers"
+          placeholder="请输入玩家名称"
+          style="width: 100%"
+        />
+      </ElFormItem>
+    </ElForm>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="showManualAddDialog = false">取消</el-button>
+        <el-button type="primary" @click="submitManualRecord">确定添加</el-button>
+      </span>
+    </template>
+  </ElDialog>
+
+  <ElDialog
+    v-model="showCustomCorrectionDialog"
+    title="自定义修正管理"
+    width="850px"
+    append-to-body
+    destroy-on-close
+    class="premium-correction-dialog"
+  >
+    <div v-if="showCustomCorrectionDialog" class="premium-correction-layout">
+      <div class="correction-sidebar">
+        <div
+          class="nav-item"
+          :class="{ active: activeCorrectionTab === 'player' }"
+          @click="activeCorrectionTab = 'player'"
+        >
+          <div class="nav-icon">
+            <el-icon><User /></el-icon>
+          </div>
+          <div class="nav-content">
+            <div class="nav-title">
+              获得者修正
+            </div>
+            <div class="nav-status">
+              {{ filteredPlayerCorrections.length }} 个条目
+            </div>
+          </div>
+        </div>
+        <div
+          class="nav-item"
+          :class="{ active: activeCorrectionTab === 'week' }"
+          @click="activeCorrectionTab = 'week'"
+        >
+          <div class="nav-icon">
+            <el-icon><Calendar /></el-icon>
+          </div>
+          <div class="nav-content">
+            <div class="nav-title">
+              CD周数修正
+            </div>
+            <div class="nav-status">
+              {{ filteredWeekCorrections.length }} 个条目
+            </div>
+          </div>
+        </div>
+        <div
+          class="nav-item"
+          :class="{ active: activeCorrectionTab === 'manual' }"
+          @click="activeCorrectionTab = 'manual'"
+        >
+          <div class="nav-icon">
+            <el-icon><Plus /></el-icon>
+          </div>
+          <div class="nav-content">
+            <div class="nav-title">
+              手动添加记录
+            </div>
+            <div class="nav-status">
+              {{ filteredManualRecords.length }} 个条目
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="correction-main">
+        <div class="main-header">
+          <h3>
+            {{
+              activeCorrectionTab === 'player'
+                ? '获得者修正管理'
+                : activeCorrectionTab === 'week'
+                  ? 'CD周数修正管理'
+                  : '手动添加记录管理'
+            }}
+          </h3>
+          <p>
+            {{
+              activeCorrectionTab === 'manual'
+                ? '管理手动添加的装备掉落记录，删除后将永久移除。'
+                : '可以撤销手动进行的改动，恢复最原始的系统记录。'
+            }}
+          </p>
+        </div>
+
+        <div class="correction-grid-wrapper">
+          <template v-if="activeCorrectionTab === 'player' || activeCorrectionTab === 'week'">
+            <div
+              v-for="item in (activeCorrectionTab === 'player' ? filteredPlayerCorrections : filteredWeekCorrections)"
+              :key="item.key"
+              class="correction-card-compact"
+            >
+              <div class="card-main-row">
+                <div class="item-primary-info">
+                  <div class="item-name" :title="item.itemName">
+                    {{ item.itemName }}
+                  </div>
+                  <div class="item-time">
+                    {{ formatTime(item.record.timestamp) }}
+                  </div>
+                </div>
+
+                <div class="card-comparison-inline">
+                  <div class="comp-box old">
+                    <div class="value">
+                      <template v-if="activeCorrectionTab === 'player'">
+                        <PlayerDisplay :name="item.oldVal" :role="getPlayerRole(item.oldVal)" :show-only-role="false" />
+                      </template>
+                      <template v-else>
+                        <span class="week-text">{{ item.oldVal }}</span>
+                      </template>
+                    </div>
+                  </div>
+
+                  <div class="comp-arrow">
+                    <el-icon><Right /></el-icon>
+                  </div>
+
+                  <div class="comp-box new">
+                    <div class="value">
+                      <template v-if="activeCorrectionTab === 'player'">
+                        <PlayerDisplay :name="item.newVal" :role="getPlayerRole(item.newVal)" :show-only-role="false" />
+                      </template>
+                      <template v-else>
+                        <span class="week-text">{{ item.newVal }}</span>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card-actions">
+                  <el-button
+                    type="primary"
+                    link
+                    size="small"
+                    @click="restoreCorrection(item)"
+                  >
+                    <el-icon><RefreshLeft /></el-icon>
+                    还原
+                  </el-button>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <template v-else-if="activeCorrectionTab === 'manual'">
+            <div
+              v-for="record in filteredManualRecords"
+              :key="record.key"
+              class="correction-card-compact"
+            >
+              <div class="card-main-row">
+                <div class="item-primary-info">
+                  <div class="item-name" :title="record.item">
+                    {{ record.item }}
+                  </div>
+                  <div class="item-time">
+                    <ElDatePicker
+                      :model-value="record.timestamp"
+                      type="date"
+                      size="small"
+                      placeholder="选择日期"
+                      :clearable="false"
+                      style="width: 140px"
+                      @update:model-value="(val: Date) => updateManualRecordTime(record, val)"
+                    />
+                  </div>
+                </div>
+
+                <div class="card-comparison-inline">
+                  <div class="comp-box new">
+                    <div class="value">
+                      <PlayerDisplay :name="record.player" :role="getPlayerRole(record.player)" :show-only-role="false" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card-actions">
+                  <el-button
+                    type="danger"
+                    link
+                    size="small"
+                    @click="removeManualRecord(record)"
+                  >
+                    <el-icon><Delete /></el-icon>
+                    删除
+                  </el-button>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <div
+            v-if="(
+              activeCorrectionTab === 'player'
+                ? filteredPlayerCorrections
+                : activeCorrectionTab === 'week'
+                  ? filteredWeekCorrections
+                  : filteredManualRecords
+            ).length === 0"
+            class="premium-empty"
+          >
+            <el-icon class="empty-icon">
+              <CircleCheckFilled />
+            </el-icon>
+            <p>暂无符合条件的修正项</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ElDialog>
+  <input
+    ref="importInputRef"
+    type="file"
+    accept=".json"
+    style="display: none"
+    @change="handleImportFile"
+  >
+
+  <div class="early-access-disclaimer">
+    <el-icon><Warning /></el-icon>
+    <span>项目处于早期开发阶段，功能可能存在BUG。</span>
   </div>
 </template>
 
@@ -5443,6 +5472,1482 @@ html.dark .lock-card p {
     transform: translateY(0);
   }
 }
+
+.onboarding-role-setup {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+  z-index: 50;
+
+  .setup-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    width: 100%;
+    max-width: 800px;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    animation: slide-up 0.5s ease-out;
+  }
+
+  .setup-header {
+    text-align: center;
+
+    h2 {
+      font-size: 24px;
+      font-weight: 700;
+      margin: 0 0 12px 0;
+      color: #1e293b;
+    }
+
+    p {
+      color: #64748b;
+      margin: 0;
+    }
+  }
+
+  .role-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+
+  .role-cell {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: all 0.2s ease;
+
+    &:hover, &.is-filled {
+      background: #fff;
+      border-color: #cbd5e1;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    &.is-filled {
+      border-color: #3b82f6;
+      background: #eff6ff;
+    }
+
+    .role-label {
+      font-weight: 700;
+      color: #475569;
+      font-size: 16px;
+      text-align: center;
+    }
+  }
+
+  .setup-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+
+    .status-hint {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #64748b;
+      font-size: 14px;
+
+      &.is-ok {
+        color: #10b981;
+      }
+    }
+  }
+}
+
+html.dark .onboarding-role-setup {
+  background-color: #0f172a;
+
+  .setup-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+
+    .setup-header h2 {
+      color: #f1f5f9;
+    }
+    .setup-header p {
+      color: #94a3b8;
+    }
+  }
+
+  .role-cell {
+    background: #0f172a;
+    border-color: #334155;
+
+    &:hover, &.is-filled {
+      background: #1e293b;
+      border-color: #475569;
+    }
+
+    &.is-filled {
+      background: rgba(59, 130, 246, 0.1);
+      border-color: #3b82f6;
+    }
+
+    .role-label {
+      color: #cbd5e1;
+    }
+  }
+
+  .setup-footer {
+    border-color: #334155;
+  }
+}
+
+.control-bar {
+  margin: 0 auto 12px;
+  width: calc(100% - 48px);
+  max-width: 1400px;
+  padding: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .sync-btn-fixed {
+    width: 92px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    white-space: nowrap;
+    transition: none !important;
+    padding: 0;
+    :deep(span) {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  .dot-warn {
+    width: 6px;
+    height: 6px;
+    background-color: #f59e0b;
+    border-radius: 50%;
+    margin-left: 4px;
+    flex-shrink: 0;
+  }
+}
+
+.control-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+html.dark {
+  .app-container {
+    background-color: #161823;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .app-header {
+    background: rgba(22, 24, 35, 0.85);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .filter-section,
+  .summary-card,
+  .list-container-el,
+  .initial-loading,
+  .summary-grid,
+  .suggestion-box,
+  .context-menu,
+  .selector-tags {
+    background-color: #252632;
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .sec-header,
+  .summary-header,
+  .role-config-header,
+  .menu-info-header,
+  .context-menu-header {
+    background: #252632;
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .sec-body,
+  .mapping-tag,
+  .initial-loading {
+    background-color: #161823;
+  }
+
+  .empty-title {
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  .empty-desc {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .mode-tabs-el .el-tab-pane {
+    background-color: #252632;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  .mode-tabs-el .el-tabs__header .el-tabs__item {
+    background-color: #161823 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .mode-tabs-el .el-tabs__header .el-tabs__item.is-active {
+    background-color: #252632 !important;
+    color: #60a5fa !important;
+    border-bottom-color: #252632 !important;
+  }
+  .status-pass {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+    color: #475569 !important;
+  }
+
+  .summary-item,
+  .week-record-row,
+  .menu-divider,
+  .role-divider,
+  .divider,
+  .mapping-list  {
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+    border-top-color: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .week-record-row:last-child,
+  .summary-item:last-child {
+    border-bottom: none;
+  }
+
+  .s-name,
+  .item-text,
+  .title-main,
+  .week-item-name,
+  .week-player-name,
+  .menu-action-item,
+  .context-menu-item,
+  .selector-title,
+  .switch-label {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  .hint-small,
+  .no-rolls-hint,
+  .no-winner,
+  .time-date,
+  .col-week,
+  .menu-info-header {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .soft-action-btn,
+  .hint-action {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border-color: transparent !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.15) !important;
+      color: #ffffff !important;
+    }
+  }
+
+  .path-toolbar .el-input__wrapper {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: none !important;
+  }
+  .path-toolbar .el-input__inner {
+    color: rgba(255, 255, 255, 0.9) !important;
+    background-color: transparent !important;
+  }
+  .path-toolbar .el-input__wrapper:hover,
+  .path-toolbar .el-input__wrapper.is-focus {
+    background-color: rgba(255, 255, 255, 0.12) !important;
+  }
+
+  .el-table {
+    --el-table-bg-color: #252632;
+    --el-table-tr-bg-color: #252632;
+    --el-table-header-bg-color: #252632;
+    --el-table-border-color: rgba(255, 255, 255, 0.06);
+    background-color: #252632;
+  }
+
+  .loot-record-table th.el-table__cell {
+    background-color: #252632 !important;
+    color: rgba(255, 255, 255, 0.7);
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .col-header-search {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: 100%;
+
+    .header-label {
+      flex-shrink: 0;
+      white-space: nowrap;
+      margin-right: 4px;
+    }
+
+    .header-search-input {
+      flex: 1;
+      min-width: 80px;
+      max-width: 150px;
+
+      :deep(.el-input__wrapper) {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        box-shadow: none !important;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 0 6px;
+        height: 22px;
+
+        &:hover,
+        &.is-focus {
+          background-color: rgba(255, 255, 255, 0.08) !important;
+          border-color: rgba(255, 255, 255, 0.2);
+        }
+      }
+
+      :deep(.el-input__inner) {
+        color: rgba(255, 255, 255, 0.8) !important;
+        font-size: 11px;
+        height: 22px;
+      }
+
+      :deep(.el-input__prefix) {
+        margin-right: 4px;
+      }
+    }
+  }
+
+  .el-table__row:hover > td {
+    background-color: transparent !important;
+  }
+
+  .week-record-row.is-actionable:hover {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+  }
+  .menu-action-item:hover,
+  .summary-card:hover,
+  .context-menu-item:hover {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .week-record-row.is-suspicious {
+    background-color: rgba(255, 77, 79, 0.15) !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 77, 79, 0.2);
+    .week-item-name {
+      color: #ffabadd9 !important;
+    }
+  }
+  .week-record-row.is-suspicious.is-actionable:hover {
+    background-color: rgba(255, 77, 79, 0.2) !important;
+  }
+
+  .week-record-row.is-corrected {
+    background-color: rgba(94, 129, 244, 0.15) !important;
+    box-shadow: inset 0 0 0 1px rgba(94, 129, 244, 0.2);
+    .week-item-name {
+      color: #8baaffd1 !important;
+    }
+  }
+
+  .context-menu-popper {
+    background: #252632 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .v-divider,
+  .act-divider {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .el-dialog {
+    background-color: #252632;
+    border-color: rgba(255, 255, 255, 0.1);
+    .el-dialog__title {
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
+
+  .el-button:not(.el-button--primary):not(.el-button--danger):not(
+      .el-button--info
+    ) {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1) !important;
+      border-color: #60a5fa !important;
+      color: #60a5fa !important;
+    }
+  }
+
+  .initial-loading{
+    background-color: #161823 !important;
+  }
+
+  .el-pagination {
+    --el-pagination-bg-color: transparent;
+    --el-pagination-button-bg-color: rgba(255, 255, 255, 0.08);
+    --el-pagination-button-color: rgba(255, 255, 255, 0.5);
+    --el-pagination-button-disabled-bg-color: transparent;
+    --el-pagination-hover-color: #60a5fa;
+  }
+
+  .el-check-tag {
+    background-color: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.5);
+
+    &.is-checked {
+      background-color: rgba(59, 130, 246, 0.2);
+      border-color: rgba(59, 130, 246, 0.4);
+      color: #60a5fa;
+    }
+
+    &:not(.is-checked):hover {
+      background-color: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    &:not(.is-checked) {
+      --el-tag-bg-color: rgba(255, 255, 255, 0.04);
+      --el-tag-text-color: rgba(255, 255, 255, 0.5);
+      --el-tag-border-color: transparent;
+    }
+  }
+
+  .el-checkbox__label {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .loading-txt {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .stats-panel {
+    background-color: #161823 !important;
+  }
+
+  .chart-container {
+    background-color: #252632 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .summary-header {
+    background-color: #1e1f29 !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .summary-card {
+    background-color: #252632 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .summary-card:hover {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    background-color: #2a2b36 !important;
+  }
+
+  .count-single {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+  }
+
+  .week-list-divider {
+    border-top-color: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .chart-title {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  .chart-subtitle {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  .bis-view-panel,
+  .bis-config-panel {
+    background-color: #252632 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .bis-table th,
+  .sticky-col {
+    background-color: #252632 !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .bis-table td {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  .status-need {
+    background-color: rgba(16, 185, 129, 0.2) !important;
+    color: #34d399 !important;
+  }
+
+  .status-greed {
+    background-color: rgba(245, 158, 11, 0.15) !important;
+    color: #fbbf24 !important;
+  }
+
+  .status-greed-tome {
+    background-color: rgba(56, 189, 248, 0.15) !important;
+    color: #38bdf8 !important;
+  }
+
+  .status-pass {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+    color: rgba(255, 255, 255, 0.3) !important;
+  }
+
+  .config-table .check-cell:hover {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+  }
+
+  .guide-popover-popper {
+    background-color: #252632 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+
+    .el-popper__arrow::before {
+      background-color: #252632 !important;
+      border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .guide-content-popover {
+      .guide-section {
+        margin-bottom: 20px;
+
+        h4 {
+          color: rgba(255, 255, 255, 0.95);
+        }
+
+        p,
+        li {
+          color: rgba(255, 255, 255, 0.75);
+          &::marker {
+            color: rgba(255, 255, 255, 0.35);
+          }
+        }
+
+        strong {
+          color: #60a5fa;
+        }
+      }
+
+      .warning-box {
+        background-color: rgba(234, 179, 8, 0.08);
+        border-color: rgba(234, 179, 8, 0.25);
+        border-radius: 6px;
+
+        p,
+        li {
+          color: rgba(255, 255, 255, 0.85);
+        }
+
+        strong {
+          color: #facc15;
+        }
+      }
+
+      code {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #60a5fa;
+      }
+    }
+  }
+
+  .loading-card-wide {
+    background: #252632;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 24px;
+    width: 800px;
+    max-width: 95vw;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+
+    .loading-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .spinner-small {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .loading-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .parsing-lists {
+      display: flex;
+      height: 500px;
+      gap: 16px;
+    }
+
+    .list-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .list-divider {
+      width: 1px;
+      background: rgba(255, 255, 255, 0.1);
+      margin: 0 4px;
+    }
+
+    .list-head {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 8px;
+    }
+
+    .list-body {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 4px;
+      font-family: 'JetBrains Mono', 'Consolas', monospace;
+      font-size: 12px;
+
+      &::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+      }
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-bottom: 2px;
+      overflow: hidden;
+
+      .file-info-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        flex: 1;
+
+        .el-icon {
+          font-size: 14px;
+          flex-shrink: 0;
+        }
+
+        .file-name {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+
+      .file-size {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        opacity: 0.5;
+        flex-shrink: 0;
+        min-width: 70px;
+        text-align: right;
+      }
+
+      &.done {
+        color: #34d399;
+        background: rgba(16, 185, 129, 0.1);
+      }
+
+      &.pending {
+        color: rgba(255, 255, 255, 0.4);
+      }
+    }
+
+    .more-hint {
+      padding: 8px;
+      color: rgba(255, 255, 255, 0.3);
+      text-align: center;
+      font-style: italic;
+    }
+  }
+}
+
+.v-divider-mini {
+  width: 1px;
+  height: 14px;
+  background: #e2e8f0;
+  margin: 0 4px;
+  html.dark & {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.export-selection-list,
+.import-selection-list,
+.clear-selection-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.clear-selection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.clear-warning-text {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+.clear-quick-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.clear-danger-hint {
+  margin-top: 20px;
+  padding: 12px;
+  background: #fff1f2;
+  border-radius: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #e11d48;
+  font-size: 12px;
+  line-height: 1.6;
+  border: 1px solid #ffe4e6;
+
+  .el-icon {
+    font-size: 16px;
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+
+  html.dark & {
+    background: rgba(239, 68, 68, 0.05);
+    border-color: rgba(239, 68, 68, 0.1);
+    color: #fb7185;
+  }
+}
+
+.import-preview-box {
+  .import-hint-text {
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: #64748b;
+  }
+}
+
+.import-warning-info {
+  margin-top: 20px;
+  padding: 10px 12px;
+  background-color: #fff7ed;
+  border: 1px solid #ffedd5;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #c2410c;
+  font-size: 12px;
+
+  .el-icon {
+    font-size: 16px;
+  }
+}
+
+.import-success-info {
+  margin-top: 20px;
+  padding: 10px 12px;
+  background-color: #f0fdf4;
+  border: 1px solid #dcfce7;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #16a34a;
+  font-size: 12px;
+
+  .el-icon {
+    font-size: 16px;
+  }
+}
+
+.import-identical-hint {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-left: 8px;
+  font-weight: normal;
+}
+
+html.dark {
+  .import-warning-info {
+    background-color: rgba(194, 65, 12, 0.1);
+    border-color: rgba(194, 65, 12, 0.2);
+    color: #fb923c;
+  }
+  .import-success-info {
+    background-color: rgba(22, 163, 74, 0.1);
+    border-color: rgba(22, 163, 74, 0.2);
+    color: #4ade80;
+  }
+}
+
+.winner-selector-trigger {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 2px 4px 2px 0;
+  border-radius: 4px;
+  transition: all 0.2s;
+  position: relative;
+  min-width: 120px;
+
+  &:hover {
+    background: #f1f5f9;
+    .winner-edit-icon {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+  }
+
+  html.dark &:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .winner-edit-icon {
+    opacity: 0.3;
+    transition: all 0.2s;
+    font-size: 14px;
+    color: #3b82f6;
+    margin-left: auto;
+  }
+
+  .correction-winner-display {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    line-height: 1.1;
+
+    .original-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #7f8ea3;
+      margin-left: 2px;
+      margin-bottom: 2px;
+
+      .correction-label {
+        font-weight: 800;
+        font-size: 10px;
+        opacity: 0.7;
+        white-space: nowrap;
+      }
+
+      .original-display {
+        opacity: 0.6;
+        transform: scale(0.92);
+        transform-origin: left center;
+      }
+    }
+
+    .corrected-row {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      margin-left: 10px;
+
+      .correction-arrow {
+        color: #94a3b8;
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+    }
+  }
+}
+
+.winner-change-popper.el-popper {
+  transition:
+    opacity 0.08s linear,
+    transform 0.08s ease-out !important;
+}
+
+.winner-change-popover {
+  padding: 4px;
+  .popover-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+
+    .popover-title {
+      font-weight: bold;
+      font-size: 14px;
+      color: #1e293b;
+      margin-bottom: 0;
+
+      html.dark & {
+        color: #f1f5f9;
+      }
+    }
+
+    .restore-btn {
+      padding: 0;
+      font-size: 12px;
+      height: auto;
+    }
+  }
+
+  .popover-desc {
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 12px;
+    opacity: 0.8;
+  }
+}
+
+.winner-select-bar {
+  width: 100%;
+}
+
+.select-player-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.premium-correction-dialog {
+  .el-dialog__header {
+    margin-right: 0 !important;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f1f5f9;
+    html.dark & { border-color: rgba(255, 255, 255, 0.05); }
+  }
+  .el-dialog__body {
+    padding: 0 !important;
+    overflow: hidden;
+  }
+}
+
+.premium-correction-layout {
+  display: flex;
+  height: 550px;
+  background: #ffffff;
+
+  html.dark & {
+    background: #1a1b26;
+  }
+
+  .correction-sidebar {
+    width: 200px;
+    background: #f8fafc;
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 0;
+
+    html.dark & {
+      background: rgba(255, 255, 255, 0.02);
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-item {
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      border-left: 3px solid transparent;
+      margin-bottom: 4px;
+
+      &:hover {
+        background: rgba(59, 130, 246, 0.05);
+      }
+
+      &.active {
+        background: #fff;
+        border-left-color: #3b82f6;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+
+        html.dark & { background: rgba(59, 130, 246, 0.1); }
+
+        .nav-title { color: #1e293b; font-weight: 700; html.dark & { color: #f1f5f9; } }
+      }
+
+      .nav-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        color: #64748b;
+        font-size: 18px;
+
+        html.dark & { background: #2d2e3d; color: #94a3b8; }
+
+        .el-icon { font-size: 18px; }
+      }
+
+      &.active .nav-icon {
+        background: #3b82f6;
+        color: #fff;
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+      }
+
+      .nav-content {
+        .nav-title { font-size: 14px; color: #64748b; margin-bottom: 2px; }
+        .nav-status { font-size: 12px; color: #94a3b8; }
+      }
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 0 20px;
+    }
+  }
+
+  .correction-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 20px 24px;
+
+    .main-header {
+      margin-bottom: 16px;
+      h3 { font-size: 16px; font-weight: 800; color: #1e293b; margin: 0 0 4px 0; html.dark & { color: #f1f5f9; } }
+      p { color: #64748b; margin: 0; font-size: 12px; }
+    }
+
+    .correction-grid-wrapper {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 8px;
+      padding-top: 4px;
+
+      &::-webkit-scrollbar { width: 5px; }
+      &::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+    }
+
+    .correction-card-compact {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+      &:hover {
+        transform: translateX(4px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        border-color: #3b82f6;
+      }
+
+      html.dark & {
+        background: #252632;
+        border-color: rgba(255, 255, 255, 0.05);
+        &:hover { border-color: #3b82f6; background: #2d2e3d; }
+      }
+
+      .card-main-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .item-primary-info {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        .item-name {
+          font-weight: 700;
+          color: #1e293b;
+          font-size: 13px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          line-height: 1.2;
+          html.dark & { color: #f1f5f9; }
+        }
+        .item-time { font-size: 10px; color: #94a3b8; font-family: 'JetBrains Mono', monospace; opacity: 0.6; line-height: 1.2; margin-top: 1px; }
+      }
+
+      .card-comparison-inline {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #f8fafc;
+        border-radius: 6px;
+        padding: 4px 10px;
+        min-width: 280px;
+
+        html.dark & { background: rgba(0, 0, 0, 0.2); }
+
+        .comp-box {
+          flex: 1;
+          display: flex;
+          justify-content: center;
+          .value {
+            font-size: 12px;
+            .week-text { font-weight: 700; color: #64748b; html.dark & { color: #94a3b8; } }
+          }
+        }
+
+        .comp-arrow {
+          color: #94a3b8;
+          font-size: 12px;
+          opacity: 0.4;
+        }
+
+        .new .value .week-text { color: #10b981; }
+      }
+
+      .card-actions {
+        margin-left: 4px;
+        .el-button { font-weight: 600; font-size: 11px; padding: 4px 0; }
+      }
+    }
+  }
+}
+
+.premium-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #94a3b8;
+  opacity: 0.6;
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  p { font-size: 13px; margin: 0; }
+}
+
+.sync-status-container {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  height: auto;
+  padding-top: 1px;
+}
+.sync-hint-text {
+  font-size: 9px;
+  color: #94a3b8;
+  white-space: nowrap;
+  font-weight: 500;
+  transform: scale(0.9);
+  line-height: 1;
+}
+.sync-hint-text.is-success {
+  color: #10b981;
+  font-weight: 700;
+}
+.col-week-interactive {
+  padding: 4px 0;
+  &.is-actionable {
+    cursor: pointer;
+    &:hover {
+      background-color: rgba(0,0,0,0.02);
+      border-radius: 4px;
+      html.dark & {
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+    }
+  }
+}
+.week-correction-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+.original-week {
+  text-decoration: line-through;
+  opacity: 0.5;
+  font-size: 10px;
+}
+.corrected-week {
+  color: #3b82f6;
+  font-weight: 800;
+  font-size: 12px;
+}
+.week-arrow {
+  font-size: 10px;
+  color: #94a3b8;
+  margin: -1px 0;
+}
+.week-warning-icon {
+  color: #f97316;
+  font-size: 12px;
+  margin-left: 1px;
+  vertical-align: -2px;
+  animation: suspicious-pulse 2s infinite;
+}
+
+.bis-allocator-wrapper {
+  position: relative;
+  min-height: 600px;
+}
+
+.bis-lock-mask {
+  position: absolute;
+  inset: -15px;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(12px) saturate(180%);
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, transparent 0%, rgba(255, 255, 255, 0.4) 100%);
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: var(--ffxiv-diagonal-texture);
+    opacity: 0.4;
+    pointer-events: none;
+  }
+}
+
+html.dark .bis-lock-mask {
+  background: rgba(15, 23, 42, 0.65);
+  &::before {
+    background: radial-gradient(
+      circle at center,
+      transparent 0%,
+      rgba(15, 23, 42, 0.4) 100%
+    );
+  }
+}
+
+.lock-card {
+  background: #fff;
+  padding: 24px 32px;
+  border-radius: 20px;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  width: 400px;
+  max-width: calc(100% - 32px);
+  position: relative;
+  overflow: hidden;
+  animation: lock-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+html.dark .lock-card {
+  background: #1e293b;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  color: #f1f5f9;
+}
+
+.lock-header {
+  margin-bottom: 24px;
+}
+
+.lock-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  background: #fff7ed;
+  color: #f59e0b;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin: 0 auto 16px;
+  box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.1);
+
+  html.dark & {
+    background: rgba(245, 158, 11, 0.1);
+  }
+}
+
+.lock-card h3 {
+  margin: 0 0 4px;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.lock-card p {
+  color: #64748b;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+html.dark .lock-card p {
+  color: #94a3b8;
+}
+
+.status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+
+  .item-icon {
+    font-size: 18px;
+    margin-right: 10px;
+    color: #94a3b8;
+    display: flex;
+  }
+
+  .item-label {
+    flex: 1;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #475569;
+  }
+
+  .item-status {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #94a3b8;
+  }
+
+  &.is-ready {
+    background: #f0fdf4;
+    border-color: #dcfce7;
+
+    .item-icon {
+      color: #22c55e;
+    }
+    .item-label {
+      color: #166534;
+    }
+    .item-status {
+      color: #16a34a;
+    }
+  }
+
+  html.dark & {
+    background: rgba(30, 41, 59, 0.5);
+    border-color: rgba(51, 65, 85, 0.5);
+
+    .item-label {
+      color: #cbd5e1;
+    }
+
+    &.is-ready {
+      background: rgba(22, 163, 74, 0.1);
+      border-color: rgba(22, 163, 74, 0.2);
+      .item-label {
+        color: #4ade80;
+      }
+    }
+  }
+}
+
+.unlock-action-btn {
+  width: 100%;
+  height: 48px;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+  transition: all 0.3s ease !important;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 20px -3px rgba(59, 130, 246, 0.4);
+  }
+}
+
+@keyframes lock-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
 </style>
 
 <style lang="scss" scoped>
@@ -5458,11 +6963,6 @@ html.dark .lock-card p {
   color: #1e293b;
   display: flex;
   flex-direction: column;
-}
-
-.is-onboarding {
-  max-height: 100vh;
-  overflow: hidden;
 }
 
 .app-header {
@@ -6152,7 +7652,7 @@ html.dark .early-access-disclaimer {
 
     span {
       display: none;
-    } /* 这么窄的地方就不写字了 */
+    }
 
     &.hide {
       background: #ef4444;
@@ -7144,194 +8644,10 @@ html.dark {
   }
 }
 
-.loading-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.7);
-  z-index: 999;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  backdrop-filter: blur(4px);
-}
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 4px solid #e2e8f0;
-  border-top-color: #3b82f6;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin-bottom: 12px;
-}
-.loading-txt {
-  font-weight: 700;
-  color: #1e293b;
-}
-
-.loading-card-wide {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  width: 800px;
-  max-width: 95vw;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
-  text-align: left;
-
-  .loading-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #f1f5f9;
-  }
-
-  .spinner-small {
-    width: 20px;
-    height: 20px;
-    border: 2px solid #e2e8f0;
-    border-top-color: #3b82f6;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-
-  .loading-title {
-    font-size: 15px;
-    font-weight: 700;
-    color: #1e293b;
-  }
-
-  .parsing-lists {
-    display: flex;
-    height: 500px;
-    gap: 16px;
-  }
-
-  .list-col {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    min-width: 0;
-  }
-
-  .list-divider {
-    width: 1px;
-    background: #f1f5f9;
-    margin: 0 4px;
-  }
-
-  .list-head {
-    font-size: 12px;
-    font-weight: 700;
-    color: #64748b;
-    margin-bottom: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .list-body {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding-right: 4px;
-    font-family: 'JetBrains Mono', 'Consolas', monospace;
-    font-size: 12px;
-
-    &::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    &::-webkit-scrollbar-thumb {
-      background: #e2e8f0;
-      border-radius: 3px;
-    }
-  }
-
-  .file-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 6px 10px;
-    border-radius: 6px;
-    margin-bottom: 2px;
-    transition: all 0.2s;
-    overflow: hidden;
-
-    .file-info-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-width: 0;
-      flex: 1;
-
-      .el-icon {
-        font-size: 14px;
-        flex-shrink: 0;
-      }
-
-      .file-name {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-    }
-
-    .file-size {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      opacity: 0.7;
-      flex-shrink: 0;
-      min-width: 70px;
-      text-align: right;
-    }
-
-    &.done {
-      color: #059669;
-      background: #ecfdf5;
-
-      .el-icon {
-        color: #10b981;
-      }
-    }
-
-    &.pending {
-      color: #94a3b8;
-
-      .el-icon {
-        opacity: 0.6;
-      }
-    }
-  }
-
-  .more-hint {
-    padding: 8px;
-    color: #cbd5e1;
-    text-align: center;
-    font-style: italic;
-    font-size: 12px;
-  }
-}
-
-.empty-state {
-  text-align: center;
-  padding: 80px 0;
-  color: #94a3b8;
-}
 .empty-icon {
   font-size: 64px;
   margin-bottom: 24px;
   opacity: 0.2;
-}
-.hint-txt {
-  font-size: 13px;
-  color: #94a3b8;
-  margin: 6px 0;
 }
 
 .fade-enter-active,
@@ -7340,32 +8656,6 @@ html.dark {
 }
 .fade-leave-to {
   opacity: 0;
-}
-
-.filter-popover {
-  padding: 4px;
-}
-.pop-title {
-  font-size: 12px;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: #334155;
-  border-bottom: 1px solid #f1f5f9;
-  padding-bottom: 4px;
-}
-.filter-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-.filter-list .el-checkbox {
-  height: 24px;
-}
-
-.main-viewport {
-  width: calc(100% - 48px);
-  max-width: 1400px;
-  margin: 0 auto 32px;
 }
 
 .mode-tabs-el {
@@ -7469,81 +8759,6 @@ html.dark {
   width: 100%;
 }
 
-@media (max-height: 750px) {
-  .empty-placeholder {
-    padding: 20px;
-  }
-  .empty-title {
-    font-size: 26px;
-    margin-bottom: 4px;
-  }
-  .empty-desc {
-    font-size: 15px;
-    margin-bottom: 12px;
-  }
-}
-
-@media (max-height: 580px) {
-  .empty-container {
-    padding-bottom: 0;
-    padding-top: 0;
-    align-items: center;
-  }
-  .empty-placeholder {
-    padding: 16px 24px 12px;
-  }
-
-  .empty-guide-main {
-    flex-direction: row;
-    text-align: left;
-    align-items: center;
-    justify-content: center;
-    gap: 40px;
-  }
-
-  .empty-info-side {
-    flex: 0 1 auto;
-    max-width: 400px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .empty-icon {
-    display: block !important;
-    max-height: 48px;
-    opacity: 0.8;
-    margin-bottom: 8px;
-    overflow: visible;
-    pointer-events: auto;
-    line-height: 1;
-  }
-
-  .guide-img-box {
-    margin-left: 0;
-    margin-bottom: 0;
-  }
-
-  .empty-title {
-    font-size: 18px;
-  }
-  .empty-desc {
-    font-size: 13px;
-  }
-
-  .setup-form {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    max-width: 500px;
-    padding: 8px;
-    gap: 12px;
-  }
-}
-
-.compact-guide {
-  margin-top: 0 !important;
-}
-
 .empty-placeholder:hover {
   border-color: #3b82f6;
   background: #fbfcfe;
@@ -7552,17 +8767,6 @@ html.dark {
 html.dark .empty-placeholder:hover {
   background: transparent;
   border-color: #60a5fa;
-}
-
-.empty-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  flex: 1;
-  box-sizing: border-box;
-  background-color: #f8fafc;
 }
 
 .empty-title {
@@ -7620,238 +8824,11 @@ html.dark .drop-hint {
   border-radius: 10px;
 }
 
-.setup-form {
-  background: #f8fafc;
-  padding: 20px;
-  border-radius: 12px;
-  width: 100%;
-  max-width: 400px;
-  margin: 16px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.setup-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.setup-label {
-  font-weight: 700;
-  color: #475569;
-  font-size: 14px;
-  white-space: nowrap;
-}
-
-.setup-row :deep(.el-date-editor) {
-  flex: 1;
-}
-
-.guide-img-box {
-  border-radius: 9.5px;
-  overflow: hidden;
-  max-width: 500px;
-  width: auto;
-  flex-shrink: 1;
-  background: transparent;
-}
-
-.guide-img {
-  display: block;
-  width: auto;
-  max-width: 100%;
-  max-height: 58vh;
-  height: auto;
-  object-fit: contain;
-  opacity: 1;
-}
-
-@media (max-height: 750px) {
-  .guide-img {
-    max-height: 48vh;
-  }
-}
-
-@media (max-height: 580px) {
-  .guide-img {
-    max-height: 50vh;
-    max-width: 320px;
-  }
-}
-
-.guide-img:hover {
-  opacity: 1;
-  transition: opacity 0.2s ease;
-}
-
-.hint-txt {
-  margin-top: 8px;
-  color: #94a3b8;
-  font-size: 11px;
-  width: 100%;
-  border-top: 1px solid #f1f5f9;
-  padding-top: 8px;
-}
-
-.drag-guide-zone {
-  position: absolute;
-  top: -8px;
-  left: -8px;
-  right: -8px;
-  height: 80px;
-  z-index: 9999;
-  background-color: rgba(236, 245, 255, 0.95);
-  border: 2px dashed #409eff;
-  border-radius: 8px;
-
-  html.dark & {
-    background-color: rgba(37, 38, 50, 0.95);
-    border-color: #3b82f6;
-  }
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  color: #409eff;
-  font-weight: bold;
-  font-size: 16px;
-  gap: 4px;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  animation: fadeIn 0.2s ease-out;
-  transition: all 0.2s ease;
-}
-
-.drag-guide-zone.is-active {
-  background-color: rgba(217, 236, 255, 0.98);
-  border-color: #337ecc;
-  transform: scale(1.01);
-  box-shadow: 0 12px 32px rgba(64, 158, 255, 0.3);
-}
-
-.drag-guide-zone > * {
-  pointer-events: none;
-}
-
-.setup-drag-zone {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 10;
-  background-color: rgba(255, 255, 255, 0.95);
-  border: 2px dashed #409eff;
-  border-radius: 12px;
-
-  html.dark & {
-    background-color: rgba(37, 38, 50, 0.95);
-    border-color: #3b82f6;
-  }
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  color: #409eff;
-  font-weight: bold;
-  font-size: 16px;
-  gap: 8px;
-  backdrop-filter: blur(4px);
-  animation: fadeIn 0.2s ease-out;
-  transition: all 0.2s ease;
-}
-
-.setup-drag-zone.is-active {
-  background-color: rgba(236, 245, 255, 0.98);
-  border-color: #337ecc;
-  transform: scale(1.02);
-  box-shadow: 0 12px 32px rgba(64, 158, 255, 0.2);
-}
-
-.setup-drag-zone > * {
-  pointer-events: none;
-}
-
-.guide-icon {
-  font-size: 32px;
-  margin-bottom: 4px;
-}
-.role-settings-content-popover {
-  padding: 12px 14px;
-}
-
 .role-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 4px 8px;
   padding: 0;
-}
-
-.role-setup-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.role-setup-label {
-  flex-shrink: 0;
-  width: 24px;
-  display: flex;
-  justify-content: center;
-  transform: scale(0.85);
-}
-
-.role-divider {
-  margin: 10px 0 6px;
-  padding-bottom: 2px;
-  border-bottom: 1px dashed #e2e8f0;
-  font-size: 12px;
-  font-weight: 700;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-}
-
-.role-divider::before {
-  content: '';
-  width: 2px;
-  height: 10px;
-  background: #3b82f6;
-  margin-right: 4px;
-  border-radius: 2px;
-}
-
-.special-role-section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.special-role-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.group-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: #94a3b8;
-  text-transform: uppercase;
-}
-
-.special-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-
-.special-item {
-  display: inline-flex;
 }
 
 .loot-record-table :deep(th.el-table__cell) {
@@ -7992,1343 +8969,925 @@ html.dark .drop-hint {
     }
   }
 }
-</style>
 
-<style lang="scss">
-.control-bar {
-  margin: 0 auto 12px;
-  width: calc(100% - 48px);
-  max-width: 1400px;
-  padding: 0;
+.wizard-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  height: fit-content;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  overflow: hidden;
 
-  .sync-btn-fixed {
-    width: 92px;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    white-space: nowrap;
-    transition: none !important;
-    padding: 0; /* 使用固定宽度时，减小 padding 扰动 */
+  .wizard-header {
+    padding: 32px 40px;
+    border-bottom: 1px solid #f1f5f9;
+    background: #fff;
+  }
+  .step-pane {
+    margin: 20px 0;
+    display: flex;
+    flex-direction: column;
+    animation: fade-in 0.3s ease;
 
-    :deep(span) {
-      display: inline-flex;
+    &.step-welcome {
+      align-items: center;
+      justify-content: center;
+      margin: 32px 40px;
+    }
+
+    &.step-sync {
+      height: max-content;
       align-items: center;
       justify-content: center;
     }
   }
+}
 
-  .dot-warn {
-    width: 6px;
-    height: 6px;
-    background-color: #f59e0b;
-    border-radius: 50%;
-    margin-left: 4px;
-    flex-shrink: 0;
+.welcome-hero {
+  text-align: center;
+
+  .hero-icon {
+    margin-bottom: 20px;
+  }
+
+  h2 {
+    font-size: 28px;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0 0 8px 0;
+  }
+
+  p {
+    color: #64748b;
+    font-size: 16px;
+    margin: 0;
   }
 }
 
-.control-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-html.dark {
-  .app-container {
-    background-color: #161823;
-    color: rgba(255, 255, 255, 0.9);
-  }
-
-  .app-header {
-    background: rgba(22, 24, 35, 0.85);
-    border-bottom-color: rgba(255, 255, 255, 0.08);
-  }
-
-  .filter-section,
-  .summary-card,
-  .list-container-el,
-  .initial-loading,
-  .summary-grid,
-  .setup-form,
-  .role-setup-item,
-  .suggestion-box,
-  .context-menu,
-  .selector-tags {
-    background-color: #252632;
-    border-color: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  }
-
-  .sec-header,
-  .summary-header,
-  .role-config-header,
-  .menu-info-header,
-  .context-menu-header {
-    background: #252632;
-    border-bottom-color: rgba(255, 255, 255, 0.06);
-    color: rgba(255, 255, 255, 0.9);
-  }
-
-  .sec-body,
-  .mapping-tag,
-  .empty-container,
-  .initial-loading {
-    background-color: #161823;
-  }
-
-  .loading-card,
-  .setup-form,
-  .loading-overlay {
-    background-color: #252632;
-    border-color: rgba(255, 255, 255, 0.08);
-  }
-
-  .loading-overlay {
-    background-color: rgba(22, 24, 35, 0.85);
-  }
-
-  .empty-title,
-  .loading-title {
-    color: rgba(255, 255, 255, 0.95);
-  }
-
-  .empty-desc,
-  .loading-subtitle {
-    color: rgba(255, 255, 255, 0.5);
-  }
-
-  .setup-label {
-    color: rgba(255, 255, 255, 0.7);
-  }
-
-  .spinner-large,
-  .spinner {
-    border-color: rgba(255, 255, 255, 0.1);
-    border-top-color: #3b82f6;
-  }
-
-  .mode-tabs-el .el-tab-pane {
-    background-color: #252632;
-    border-color: rgba(255, 255, 255, 0.08);
-  }
-  .mode-tabs-el .el-tabs__header .el-tabs__item {
-    background-color: #161823 !important;
-    border-color: rgba(255, 255, 255, 0.08) !important;
-    color: rgba(255, 255, 255, 0.5);
-  }
-  .mode-tabs-el .el-tabs__header .el-tabs__item.is-active {
-    background-color: #252632 !important;
-    color: #60a5fa !important;
-    border-bottom-color: #252632 !important;
-  }
-  .status-pass {
-    background-color: rgba(255, 255, 255, 0.02) !important;
-    color: #475569 !important;
-  }
-
-  .summary-item,
-  .week-record-row,
-  .menu-divider,
-  .role-divider,
-  .divider,
-  .mapping-list {
-    border-bottom-color: rgba(255, 255, 255, 0.06);
-    border-top-color: rgba(255, 255, 255, 0.06);
-    color: rgba(255, 255, 255, 0.5);
-  }
-
-  .week-record-row:last-child,
-  .summary-item:last-child {
-    border-bottom: none;
-  }
-
-  .s-name,
-  .item-text,
-  .title-main,
-  .week-item-name,
-  .week-player-name,
-  .setup-label,
-  .menu-action-item,
-  .context-menu-item,
-  .selector-title,
-  .switch-label {
-    color: rgba(255, 255, 255, 0.9) !important;
-  }
-
-  .hint-small,
-  .hint-txt,
-  .no-rolls-hint,
-  .no-winner,
-  .time-date,
-  .col-week,
-  .menu-info-header {
-    color: rgba(255, 255, 255, 0.5);
-  }
-
-  .hint-txt {
-    border-top-color: rgba(255, 255, 255, 0.06) !important;
-  }
-
-  .soft-action-btn,
-  .hint-action {
-    background-color: rgba(255, 255, 255, 0.08) !important;
-    border-color: transparent !important;
-    color: rgba(255, 255, 255, 0.8) !important;
-    &:hover {
-      background-color: rgba(255, 255, 255, 0.15) !important;
-      color: #ffffff !important;
-    }
-  }
-
-  .path-toolbar .el-input__wrapper {
-    background-color: rgba(255, 255, 255, 0.08) !important;
-    box-shadow: none !important;
-  }
-  .path-toolbar .el-input__inner {
-    color: rgba(255, 255, 255, 0.9) !important;
-    background-color: transparent !important;
-  }
-  .path-toolbar .el-input__wrapper:hover,
-  .path-toolbar .el-input__wrapper.is-focus {
-    background-color: rgba(255, 255, 255, 0.12) !important;
-  }
-
-  .el-table {
-    --el-table-bg-color: #252632;
-    --el-table-tr-bg-color: #252632;
-    --el-table-header-bg-color: #252632;
-    --el-table-border-color: rgba(255, 255, 255, 0.06);
-    background-color: #252632;
-  }
-
-  .loot-record-table th.el-table__cell {
-    background-color: #252632 !important;
-    color: rgba(255, 255, 255, 0.7);
-    border-bottom-color: rgba(255, 255, 255, 0.06);
-  }
-
-  .el-table__row:hover > td {
-    background-color: transparent !important;
-  }
-
-  .week-record-row.is-actionable:hover {
-    background-color: rgba(255, 255, 255, 0.06) !important;
-  }
-  .menu-action-item:hover,
-  .summary-card:hover,
-  .context-menu-item:hover {
-    background-color: rgba(255, 255, 255, 0.06) !important;
-  }
-
-  .week-record-row.is-suspicious {
-    background-color: rgba(255, 77, 79, 0.15) !important;
-    box-shadow: inset 0 0 0 1px rgba(255, 77, 79, 0.2);
-    .week-item-name {
-      color: #ffabadd9 !important;
-    }
-  }
-  .week-record-row.is-suspicious.is-actionable:hover {
-    background-color: rgba(255, 77, 79, 0.2) !important;
-  }
-
-  .week-record-row.is-corrected {
-    background-color: rgba(94, 129, 244, 0.15) !important;
-    box-shadow: inset 0 0 0 1px rgba(94, 129, 244, 0.2);
-    .week-item-name {
-      color: #8baaffd1 !important;
-    }
-  }
-
-  .context-menu-popper {
-    background: #252632 !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5) !important;
-  }
-  .pop-title {
-    color: rgba(255, 255, 255, 0.9);
-    border-bottom-color: rgba(255, 255, 255, 0.08);
-  }
-
-  .v-divider,
-  .act-divider {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .el-dialog {
-    background-color: #252632;
-    border-color: rgba(255, 255, 255, 0.1);
-    .el-dialog__title {
-      color: rgba(255, 255, 255, 0.9);
-    }
-  }
-
-  .el-button:not(.el-button--primary):not(.el-button--danger):not(
-      .el-button--info
-    ) {
-    background-color: rgba(255, 255, 255, 0.05) !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
-    color: rgba(255, 255, 255, 0.9) !important;
-
-    &:hover {
-      background-color: rgba(255, 255, 255, 0.1) !important;
-      border-color: #60a5fa !important;
-      color: #60a5fa !important;
-    }
-  }
-
-  .initial-loading,
-  .empty-container {
-    background-color: #161823 !important;
-  }
-
-  .el-pagination {
-    --el-pagination-bg-color: transparent;
-    --el-pagination-button-bg-color: rgba(255, 255, 255, 0.08);
-    --el-pagination-button-color: rgba(255, 255, 255, 0.5);
-    --el-pagination-button-disabled-bg-color: transparent;
-    --el-pagination-hover-color: #60a5fa;
-  }
-
-  .el-check-tag {
-    background-color: rgba(255, 255, 255, 0.04);
-    color: rgba(255, 255, 255, 0.5);
-
-    &.is-checked {
-      background-color: rgba(59, 130, 246, 0.2);
-      border-color: rgba(59, 130, 246, 0.4);
-      color: #60a5fa;
-    }
-
-    &:not(.is-checked):hover {
-      background-color: rgba(255, 255, 255, 0.08);
-      color: rgba(255, 255, 255, 0.8);
-    }
-
-    &:not(.is-checked) {
-      --el-tag-bg-color: rgba(255, 255, 255, 0.04);
-      --el-tag-text-color: rgba(255, 255, 255, 0.5);
-      --el-tag-border-color: transparent;
-    }
-  }
-
-  .el-checkbox__label {
-    color: rgba(255, 255, 255, 0.9);
-  }
-
-  .loading-txt {
-    color: rgba(255, 255, 255, 0.7);
-  }
-
-  .stats-panel {
-    background-color: #161823 !important;
-  }
-
-  .chart-container {
-    background-color: #252632 !important;
-    border-color: rgba(255, 255, 255, 0.08) !important;
-  }
-
-  .summary-header {
-    background-color: #1e1f29 !important;
-    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
-    color: rgba(255, 255, 255, 0.7);
-  }
-
-  .summary-card {
-    background-color: #252632 !important;
-    border-color: rgba(255, 255, 255, 0.08) !important;
-  }
-
-  .summary-card:hover {
-    border-color: rgba(255, 255, 255, 0.2) !important;
-    background-color: #2a2b36 !important;
-  }
-
-  .count-single {
-    background-color: rgba(255, 255, 255, 0.05) !important;
-    border-color: rgba(255, 255, 255, 0.08) !important;
-    color: rgba(255, 255, 255, 0.4) !important;
-  }
-
-  .week-list-divider {
-    border-top-color: rgba(255, 255, 255, 0.06) !important;
-  }
-
-  .chart-title {
-    color: rgba(255, 255, 255, 0.9) !important;
-  }
-
-  .chart-subtitle {
-    color: rgba(255, 255, 255, 0.5) !important;
-  }
-
-  .bis-view-panel,
-  .bis-config-panel {
-    background-color: #252632 !important;
-    border-color: rgba(255, 255, 255, 0.08) !important;
-  }
-
-  .bis-table th,
-  .sticky-col {
-    background-color: #252632 !important;
-    color: rgba(255, 255, 255, 0.9) !important;
-    border-color: rgba(255, 255, 255, 0.08) !important;
-  }
-
-  .bis-table td {
-    border-color: rgba(255, 255, 255, 0.08) !important;
-    color: rgba(255, 255, 255, 0.9) !important;
-  }
-
-  .status-need {
-    background-color: rgba(16, 185, 129, 0.2) !important;
-    color: #34d399 !important;
-  }
-
-  .status-greed {
-    background-color: rgba(245, 158, 11, 0.15) !important;
-    color: #fbbf24 !important;
-  }
-
-  .status-greed-tome {
-    background-color: rgba(56, 189, 248, 0.15) !important;
-    color: #38bdf8 !important;
-  }
-
-  .status-pass {
-    background-color: rgba(255, 255, 255, 0.02) !important;
-    color: rgba(255, 255, 255, 0.3) !important;
-  }
-
-  .config-table .check-cell:hover {
-    background-color: rgba(255, 255, 255, 0.05) !important;
-  }
-
-  .guide-popover-popper {
-    background-color: #252632 !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
-
-    .el-popper__arrow::before {
-      background-color: #252632 !important;
-      border-color: rgba(255, 255, 255, 0.1) !important;
-    }
-
-    .guide-content-popover {
-      .guide-section {
-        margin-bottom: 20px;
-
-        h4 {
-          color: rgba(255, 255, 255, 0.95);
-        }
-
-        p,
-        li {
-          color: rgba(255, 255, 255, 0.75);
-          &::marker {
-            color: rgba(255, 255, 255, 0.35);
-          }
-        }
-
-        strong {
-          color: #60a5fa;
-        }
-      }
-
-      .warning-box {
-        background-color: rgba(234, 179, 8, 0.08);
-        border-color: rgba(234, 179, 8, 0.25);
-        border-radius: 6px;
-
-        p,
-        li {
-          color: rgba(255, 255, 255, 0.85);
-        }
-
-        strong {
-          color: #facc15;
-        }
-      }
-
-      code {
-        background-color: rgba(255, 255, 255, 0.1);
-        color: #60a5fa;
-      }
-    }
-  }
-
-  .loading-card-wide {
-    background: #252632;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    padding: 24px;
-    width: 800px;
-    max-width: 95vw;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
-
-    .loading-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .spinner-small {
-      width: 20px;
-      height: 20px;
-      border: 2px solid rgba(255, 255, 255, 0.1);
-      border-top-color: #3b82f6;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    .loading-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: rgba(255, 255, 255, 0.9);
-    }
-
-    .parsing-lists {
-      display: flex;
-      height: 500px;
-      gap: 16px;
-    }
-
-    .list-col {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      min-width: 0;
-    }
-
-    .list-divider {
-      width: 1px;
-      background: rgba(255, 255, 255, 0.1);
-      margin: 0 4px;
-    }
-
-    .list-head {
-      font-size: 13px;
-      font-weight: 600;
-      color: rgba(255, 255, 255, 0.5);
-      margin-bottom: 8px;
-    }
-
-    .list-body {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding-right: 4px;
-      font-family: 'JetBrains Mono', 'Consolas', monospace;
-      font-size: 12px;
-
-      &::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-      }
-      &::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 3px;
-      }
-    }
-
-    .file-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 4px 8px;
-      border-radius: 4px;
-      margin-bottom: 2px;
-      overflow: hidden;
-
-      .file-info-left {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        min-width: 0;
-        flex: 1;
-
-        .el-icon {
-          font-size: 14px;
-          flex-shrink: 0;
-        }
-
-        .file-name {
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-      }
-
-      .file-size {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 11px;
-        opacity: 0.5;
-        flex-shrink: 0;
-        min-width: 70px;
-        text-align: right;
-      }
-
-      &.done {
-        color: #34d399;
-        background: rgba(16, 185, 129, 0.1);
-      }
-
-      &.pending {
-        color: rgba(255, 255, 255, 0.4);
-      }
-    }
-
-    .more-hint {
-      padding: 8px;
-      color: rgba(255, 255, 255, 0.3);
-      text-align: center;
-      font-style: italic;
-    }
-  }
-}
-
-.v-divider-mini {
-  width: 1px;
-  height: 14px;
-  background: #e2e8f0;
-  margin: 0 4px;
-  html.dark & {
-    background: rgba(255, 255, 255, 0.1);
-  }
-}
-
-.export-selection-list,
-.import-selection-list,
-.clear-selection-list {
+.action-area {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 8px 0;
-}
-
-.clear-selection-header {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 4px;
+  gap: 20px;
+  width: 100%;
+  max-width: 400px;
 }
 
-.clear-warning-text {
-  font-size: 13px;
-  color: #64748b;
-  margin: 0;
-}
-
-.clear-quick-actions {
+.drop-zone {
+  width: 100%;
+  height: 180px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
   display: flex;
-  gap: 4px;
-}
-
-.clear-danger-hint {
-  margin-top: 20px;
-  padding: 12px;
-  background: #fff1f2;
-  border-radius: 10px;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  color: #e11d48;
-  font-size: 12px;
-  line-height: 1.6;
-  border: 1px solid #ffe4e6;
-
-  .el-icon {
-    font-size: 16px;
-    margin-top: 1px;
-    flex-shrink: 0;
-  }
-
-  html.dark & {
-    background: rgba(239, 68, 68, 0.05);
-    border-color: rgba(239, 68, 68, 0.1);
-    color: #fb7185;
-  }
-}
-
-.import-preview-box {
-  .import-hint-text {
-    margin-bottom: 16px;
-    font-size: 14px;
-    color: #64748b;
-  }
-}
-
-.import-warning-info {
-  margin-top: 20px;
-  padding: 10px 12px;
-  background-color: #fff7ed;
-  border: 1px solid #ffedd5;
-  border-radius: 8px;
-  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  color: #c2410c;
-  font-size: 12px;
-
-  .el-icon {
-    font-size: 16px;
-  }
-}
-
-.import-success-info {
-  margin-top: 20px;
-  padding: 10px 12px;
-  background-color: #f0fdf4;
-  border: 1px solid #dcfce7;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #16a34a;
-  font-size: 12px;
-
-  .el-icon {
-    font-size: 16px;
-  }
-}
-
-.import-identical-hint {
-  font-size: 12px;
-  color: #94a3b8;
-  margin-left: 8px;
-  font-weight: normal;
-}
-
-html.dark {
-  .import-warning-info {
-    background-color: rgba(194, 65, 12, 0.1);
-    border-color: rgba(194, 65, 12, 0.2);
-    color: #fb923c;
-  }
-  .import-success-info {
-    background-color: rgba(22, 163, 74, 0.1);
-    border-color: rgba(22, 163, 74, 0.2);
-    color: #4ade80;
-  }
-}
-
-.winner-selector-trigger {
-  display: flex;
-  width: fit-content;
-  align-items: center;
-  gap: 8px;
+  justify-content: center;
   cursor: pointer;
-  padding: 2px 4px 2px 0;
-  border-radius: 4px;
-  transition: all 0.2s;
-  position: relative;
-  min-width: 120px;
+  transition: all 0.2s ease;
+  background: #f8fafc;
 
   &:hover {
-    background: #f1f5f9;
-    .winner-edit-icon {
-      opacity: 1;
+    border-color: #3b82f6;
+    background: #eff6ff;
+
+    .zone-icon {
+      color: #3b82f6;
       transform: scale(1.1);
     }
   }
 
-  html.dark &:hover {
-    background: rgba(255, 255, 255, 0.05);
+  &.is-active {
+    border-color: #3b82f6;
+    background: #eff6ff;
+    transform: scale(1.02);
   }
 
-  .winner-edit-icon {
-    opacity: 0.3;
-    transition: all 0.2s;
-    font-size: 14px;
-    color: #3b82f6;
-    margin-left: auto;
+  .zone-icon {
+    font-size: 48px;
+    color: #94a3b8;
+    margin-bottom: 16px;
+    transition: all 0.2s ease;
   }
 
-  .correction-winner-display {
+  h3 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    color: #334155;
+  }
+
+  p {
+    margin: 0;
+    font-size: 13px;
+    color: #94a3b8;
+  }
+}
+
+.secondary-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.guide-preview {
+  margin-top: 20px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  opacity: 0.8;
+  transition: opacity 0.2s;
+  max-width: 600px;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+}
+
+.sync-setup {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+
+  .step-title {
+    text-align: center;
+    h3 { margin: 0 0 8px 0; font-size: 20px; }
+    p { margin: 0; color: #64748b; }
+  }
+}
+
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .field-hint {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+  }
+}
+
+.step-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 24px;
+  gap: 16px;
+
+  .el-alert {
+    flex: 1;
+    margin: 0;
+    border-radius: 8px;
+  }
+
+}
+
+.sync-progress {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 500px;
+
+  .progress-circle {
+    margin-bottom: 24px;
+    transform: scale(1.2);
+  }
+
+  h3 { margin: 0 0 8px 0; font-size: 20px; color: #334155; }
+  p { margin: 0 0 24px 0; color: #64748b; }
+
+  .file-list-preview {
+    width: 100%;
+    max-height: 200px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    padding: 12px;
+    text-align: left;
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      font-size: 13px;
+      color: #64748b;
+
+      &.done { color: #10b981; }
+      &.pending { color: #3b82f6; }
+    }
+  }
+}
+
+html.dark {
+  .onboarding-wizard {
+    background-color: #0f172a;
+  }
+
+  .wizard-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+
+    .wizard-header {
+      background: #1e293b;
+      border-bottom-color: #334155;
+    }
+
+    .step-footer.is-sticky {
+      background: #1e293b;
+    }
+  }
+
+  .welcome-hero h2, .sync-setup .step-title h3, .sync-progress h3 {
+    color: #f1f5f9;
+  }
+
+  .drop-zone {
+    background: #1e293b;
+    border-color: #475569;
+
+    &:hover, &.is-active {
+      background: rgba(59, 130, 246, 0.1);
+      border-color: #3b82f6;
+    }
+
+    h3 { color: #e2e8f0; }
+  }
+
+  .sync-progress .file-list-preview {
+    background: #0f172a;
+    border-color: #334155;
+  }
+
+  .form-group label {
+    color: #cbd5e1;
+  }
+
+  .step-footer {
+    border-top-color: #334155;
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.onboarding-wizard {
+  height:100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+  z-index: 50;
+  padding: 24px;
+}
+
+.wizard-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .wizard-header {
+    padding: 16px 32px;
+    border-bottom: 1px solid #f1f5f9;
+    background: #fff;
+    flex-shrink: 0;
+  }
+
+  .step-pane {
+
+    &.step-welcome {
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+    }
+
+    &.step-sync {
+      align-items: center;
+      justify-content: center;
+    }
+  }
+}
+
+.welcome-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  max-width: 450px;
+  gap: 24px;
+}
+
+.welcome-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 500px;
+}
+
+.welcome-hero {
+  text-align: left;
+  width: 100%;
+
+  .hero-icon {
+    margin-bottom: 16px;
+  }
+
+  h2 {
+    font-size: 24px;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0 0 8px 0;
+  }
+
+  p {
+    color: #64748b;
+    font-size: 15px;
+    margin: 0;
+  }
+}
+
+.action-area {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  width: 100%;
+}
+
+.drop-zone {
+  width: 100%;
+  height: 180px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #f8fafc;
+
+  &:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+
+    .zone-icon {
+      color: #3b82f6;
+      transform: scale(1.1);
+    }
+  }
+
+  &.is-active {
+    border-color: #3b82f6;
+    background: #eff6ff;
+    transform: scale(1.02);
+  }
+
+  .zone-icon {
+    font-size: 48px;
+    color: #94a3b8;
+    margin-bottom: 16px;
+    transition: all 0.2s ease;
+  }
+
+  h3 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    color: #334155;
+  }
+
+  p {
+    margin: 0;
+    font-size: 13px;
+    color: #94a3b8;
+  }
+}
+
+.secondary-actions {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  gap: 12px;
+}
+
+.guide-preview {
+  margin-top: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
+  opacity: 0.9;
+  transition: all 0.3s;
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid #e2e8f0;
+
+  &:hover {
+    opacity: 1;
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+}
+
+.sync-setup {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  .step-title {
+    text-align: center;
+    h3 { margin: 0 0 8px 0; font-size: 20px; }
+    p { margin: 0; color: #64748b; }
+  }
+}
+
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .field-hint {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+  }
+}
+
+.step-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 20px;
+  gap: 16px;
+
+  .el-alert {
+    flex: 1;
+    margin: 0;
+    border-radius: 8px;
+    border: 1px solid transparent;
+  }
+}
+
+.sync-progress {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 500px;
+
+  .progress-circle {
+    margin-bottom: 24px;
+    transform: scale(1.2);
+  }
+
+  h3 { margin: 0 0 8px 0; font-size: 20px; color: #334155; }
+  p { margin: 0 0 24px 0; color: #64748b; }
+
+  .file-list-preview {
+    width: 100%;
+    max-height: 200px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    padding: 12px;
+    text-align: left;
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      font-size: 13px;
+      color: #64748b;
+
+      &.done { color: #10b981; }
+      &.pending { color: #3b82f6; }
+    }
+  }
+}
+
+.step-roles {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  flex: 1;
+  align-items: center;
+  width: 100%;
+
+  .bg-watermark {
+    position: absolute;
+    bottom: -60px;
+    right: -40px;
+    font-size: 320px;
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 0;
+    color: #334155;
+    transform: rotate(-10deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    html.dark & {
+      opacity: 0.04;
+      color: #94a3b8;
+    }
+  }
+
+  .step-title {
+    text-align: center;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 800px;
+    h3 { margin: 0 0 6px 0; font-size: 24px; color: #1e293b; font-weight: 800; letter-spacing: -0.5px; }
+    p { margin: 0; color: #64748b; font-size: 14px; opacity: 0.8; }
+  }
+
+  .role-grid-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .role-groups-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    margin-bottom: 32px;
+    align-items: center;
+  }
+
+  .role-col {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 500px;
+    gap: 20px;
+
+    .compact-group-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding-left: 2px;
+
+      .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+      }
+
+      &.support {
+        color: #64748b;
+        .dot { background-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+      }
+      &.dps {
+        color: #64748b;
+        .dot { background-color: #ef4444; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2); }
+      }
+    }
+
+    .compact-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .grid-spacer {
+      height: 0;
+      display: none;
+    }
+  }
+
+  .special-roles-compact {
+    border-top: 1px dashed #e2e8f0;
+    padding: 24px 0;
+    margin-top: 0;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0;
-    line-height: 1.1;
+    gap: 12px;
+    width: 100%;
+    max-width: 500px;
+    margin-bottom: 20px;
 
-    .original-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    .compact-label {
       font-size: 11px;
-      color: #7f8ea3;
-      margin-left: 2px;
-      margin-bottom: 2px;
-
-      .correction-label {
-        font-weight: 800;
-        font-size: 10px;
-        opacity: 0.7;
-        white-space: nowrap;
-      }
-
-      .original-display {
-        opacity: 0.6;
-        transform: scale(0.92);
-        transform-origin: left center;
-      }
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding-left: 2px;
     }
 
-    .corrected-row {
+    .compact-content {
+      flex: 1;
       display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
       align-items: center;
-      gap: 2px;
-      margin-left: 10px;
 
-      .correction-arrow {
-        color: #94a3b8;
-        font-size: 14px;
-        flex-shrink: 0;
+      .special-item-tag {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        padding: 2px 8px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        height: 28px;
+
+        &:hover {
+          border-color: #cbd5e1;
+          .delete-btn { color: #526379; }
+        }
+
+        .delete-btn {
+          font-size: 12px;
+          color: #cbd5e1;
+          cursor: pointer;
+          transition: all 0.2s;
+          &:hover { color: #ef4444; }
+        }
+      }
+
+      .special-add-select-compact {
+        width: 140px;
+
+        :deep(.el-input__wrapper) {
+          background-color: transparent !important;
+          box-shadow: none !important;
+          border: 1px dashed #cbd5e1;
+          padding: 0 8px;
+          height: 28px;
+          font-size: 12px !important;
+
+          &:hover { border-color: #94a3b8; }
+          &.is-focus { border-color: #3b82f6; border-style: solid; }
+        }
       }
     }
   }
 }
 
-.winner-change-popper.el-popper {
-  transition:
-    opacity 0.08s linear,
-    transform 0.08s ease-out !important;
-}
+html.dark {
+  .onboarding-wizard {
+    background-color: #0f172a;
+  }
 
-.winner-change-popover {
-  padding: 4px;
-  .popover-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 4px;
+  .wizard-card {
+    background: #1e293b;
+    border: 1px solid #334155;
 
-    .popover-title {
-      font-weight: bold;
-      font-size: 14px;
-      color: #1e293b;
-      margin-bottom: 0;
-
-      html.dark & {
-        color: #f1f5f9;
-      }
-    }
-
-    .restore-btn {
-      padding: 0;
-      font-size: 12px;
-      height: auto;
+    .wizard-header {
+      background: #1e293b;
+      border-bottom-color: #334155;
     }
   }
 
-  .popover-desc {
-    font-size: 11px;
-    color: #64748b;
-    margin-bottom: 12px;
-    opacity: 0.8;
+  .welcome-hero h2, .sync-setup .step-title h3, .sync-progress h3, .step-roles .step-title h3 {
+    color: #f1f5f9;
+  }
+
+  .drop-zone {
+    background: #1e293b;
+    border-color: #475569;
+
+    &:hover, &.is-active {
+      background: rgba(59, 130, 246, 0.1);
+      border-color: #3b82f6;
+    }
+
+    h3 { color: #e2e8f0; }
+  }
+
+  .sync-progress .file-list-preview {
+    background: #0f172a;
+    border-color: #334155;
+  }
+
+  .form-group label {
+    color: #cbd5e1;
   }
 }
 
-.winner-select-bar {
-  width: 100%;
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.select-player-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
+@keyframes pulse-border {
+  0% { border-color: #409eff; box-shadow: 0 0 0 0 rgba(64, 158, 255, 0.4); }
+  70% { border-color: #337ecc; box-shadow: 0 0 0 6px rgba(64, 158, 255, 0); }
+  100% { border-color: #409eff; box-shadow: 0 0 0 0 rgba(64, 158, 255, 0); }
 }
 
-.premium-correction-dialog {
-  .el-dialog__header {
-    margin-right: 0 !important;
-    padding: 20px 24px;
-    border-bottom: 1px solid #f1f5f9;
-    html.dark & { border-color: rgba(255, 255, 255, 0.05); }
-  }
-  .el-dialog__body {
-    padding: 0 !important;
-    overflow: hidden;
-  }
+@keyframes bounce-icon {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
 
-.premium-correction-layout {
-  display: flex;
-  height: 550px;
-  background: #ffffff;
+.drag-guide-zone {
+  position: absolute;
+  inset: 12px;
+  z-index: 9999;
+  background-color: rgba(236, 245, 255, 0.9);
+  border: 2px dashed #409eff;
+  border-radius: 12px;
 
   html.dark & {
-    background: #1a1b26;
+    background-color: rgba(30, 41, 59, 0.92);
+    border-color: #3b82f6;
   }
-
-  .correction-sidebar {
-    width: 200px;
-    background: #f8fafc;
-    border-right: 1px solid #e2e8f0;
-    display: flex;
-    flex-direction: column;
-    padding: 16px 0;
-
-    html.dark & {
-      background: rgba(255, 255, 255, 0.02);
-      border-color: rgba(255, 255, 255, 0.05);
-    }
-
-    .nav-item {
-      padding: 12px 20px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      border-left: 3px solid transparent;
-      margin-bottom: 4px;
-
-      &:hover {
-        background: rgba(59, 130, 246, 0.05);
-      }
-
-      &.active {
-        background: #fff;
-        border-left-color: #3b82f6;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-
-        html.dark & { background: rgba(59, 130, 246, 0.1); }
-
-        .nav-title { color: #1e293b; font-weight: 700; html.dark & { color: #f1f5f9; } }
-      }
-
-      .nav-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #fff;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-        color: #64748b;
-        font-size: 18px;
-
-        html.dark & { background: #2d2e3d; color: #94a3b8; }
-
-        .el-icon { font-size: 18px; }
-      }
-
-      &.active .nav-icon {
-        background: #3b82f6;
-        color: #fff;
-        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
-      }
-
-      .nav-content {
-        .nav-title { font-size: 14px; color: #64748b; margin-bottom: 2px; }
-        .nav-status { font-size: 12px; color: #94a3b8; }
-      }
-    }
-
-    .sidebar-footer {
-      margin-top: auto;
-      padding: 0 20px;
-    }
-  }
-
-  .correction-main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    padding: 20px 24px;
-
-    .main-header {
-      margin-bottom: 16px;
-      h3 { font-size: 16px; font-weight: 800; color: #1e293b; margin: 0 0 4px 0; html.dark & { color: #f1f5f9; } }
-      p { color: #64748b; margin: 0; font-size: 12px; }
-    }
-
-    .correction-grid-wrapper {
-      flex: 1;
-      overflow-y: auto;
-      padding-right: 8px;
-      padding-top: 4px; /* 为 hover 上浮效果留出空间 */
-
-      &::-webkit-scrollbar { width: 5px; }
-      &::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
-    }
-
-    .correction-card-compact {
-      background: #fff;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 10px 14px;
-      margin-bottom: 8px;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-
-      &:hover {
-        transform: translateX(4px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        border-color: #3b82f6;
-      }
-
-      html.dark & {
-        background: #252632;
-        border-color: rgba(255, 255, 255, 0.05);
-        &:hover { border-color: #3b82f6; background: #2d2e3d; }
-      }
-
-      .card-main-row {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-
-      .item-primary-info {
-        flex: 1;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        .item-name {
-          font-weight: 700;
-          color: #1e293b;
-          font-size: 13px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          line-height: 1.2;
-          html.dark & { color: #f1f5f9; }
-        }
-        .item-time { font-size: 10px; color: #94a3b8; font-family: 'JetBrains Mono', monospace; opacity: 0.6; line-height: 1.2; margin-top: 1px; }
-      }
-
-      .card-comparison-inline {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        background: #f8fafc;
-        border-radius: 6px;
-        padding: 4px 10px;
-        min-width: 280px;
-
-        html.dark & { background: rgba(0, 0, 0, 0.2); }
-
-        .comp-box {
-          flex: 1;
-          display: flex;
-          justify-content: center;
-          .value {
-            font-size: 12px;
-            .week-text { font-weight: 700; color: #64748b; html.dark & { color: #94a3b8; } }
-          }
-        }
-
-        .comp-arrow {
-          color: #94a3b8;
-          font-size: 12px;
-          opacity: 0.4;
-        }
-
-        .new .value .week-text { color: #10b981; }
-      }
-
-      .card-actions {
-        margin-left: 4px;
-        .el-button { font-weight: 600; font-size: 11px; padding: 4px 0; }
-      }
-    }
-  }
-}
-
-.premium-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 200px;
-  color: #94a3b8;
-  opacity: 0.6;
-  .empty-icon { font-size: 40px; margin-bottom: 12px; }
-  p { font-size: 13px; margin: 0; }
-}
-
-.sync-status-container {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0;
-  height: auto;
-  padding-top: 1px;
-}
-.sync-hint-text {
-  font-size: 9px;
-  color: #94a3b8;
-  white-space: nowrap;
-  font-weight: 500;
-  transform: scale(0.9);
-  line-height: 1;
-}
-.sync-hint-text.is-success {
-  color: #10b981;
-  font-weight: 700;
-}
-.col-week-interactive {
-  padding: 4px 0;
-  &.is-actionable {
-    cursor: pointer;
-    &:hover {
-      background-color: rgba(0,0,0,0.02);
-      border-radius: 4px;
-      html.dark & {
-        background-color: rgba(255, 255, 255, 0.05);
-      }
-    }
-  }
-}
-.week-correction-display {
-  display: flex;
   flex-direction: column;
-  align-items: center;
-  line-height: 1.1;
-}
-.original-week {
-  text-decoration: line-through;
-  opacity: 0.5;
-  font-size: 10px;
-}
-.corrected-week {
   color: #3b82f6;
   font-weight: 800;
-  font-size: 12px;
-}
-.week-arrow {
-  font-size: 10px;
-  color: #94a3b8;
-  margin: -1px 0;
-}
-.week-warning-icon {
-  color: #f97316;
-  font-size: 12px;
-  margin-left: 1px;
-  vertical-align: -2px;
-  animation: suspicious-pulse 2s infinite;
-}
-
-.bis-allocator-wrapper {
-  position: relative;
-  min-height: 600px;
-}
-
-.bis-lock-mask {
-  position: absolute;
-  inset: -15px;
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 18px;
+  gap: 12px;
   backdrop-filter: blur(12px) saturate(180%);
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
-  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  animation: fade-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at center, transparent 0%, rgba(255, 255, 255, 0.4) 100%);
-    pointer-events: none;
+  .guide-icon {
+    font-size: 42px;
+    animation: bounce-icon 2s infinite ease-in-out;
   }
 
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background-image: var(--ffxiv-diagonal-texture);
-    opacity: 0.4;
-    pointer-events: none;
+  span {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    letter-spacing: 1px;
   }
 }
 
-html.dark .bis-lock-mask {
-  background: rgba(15, 23, 42, 0.65);
-  &::before {
-    background: radial-gradient(
-      circle at center,
-      transparent 0%,
-      rgba(15, 23, 42, 0.4) 100%
-    );
-  }
-}
-
-.lock-card {
-  background: #fff;
-  padding: 24px 32px;
-  border-radius: 20px;
-  box-shadow:
-    0 25px 50px -12px rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(0, 0, 0, 0.05);
-  text-align: center;
-  width: 400px;
-  max-width: calc(100% - 32px);
-  position: relative;
-  overflow: hidden;
-  animation: lock-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-html.dark .lock-card {
-  background: #1e293b;
-  box-shadow:
-    0 25px 50px -12px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
-  color: #f1f5f9;
-}
-
-.lock-header {
-  margin-bottom: 24px;
-}
-
-.lock-icon-wrapper {
-  width: 48px;
-  height: 48px;
-  background: #fff7ed;
-  color: #f59e0b;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  margin: 0 auto 16px;
-  box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.1);
+.drag-guide-zone.is-active {
+  background-color: rgba(217, 236, 255, 0.95);
+  border-color: #337ecc;
+  box-shadow: 0 20px 50px rgba(64, 158, 255, 0.4);
+  animation: pulse-border 2s infinite;
 
   html.dark & {
-    background: rgba(245, 158, 11, 0.1);
+    background-color: rgba(15, 23, 42, 0.95);
+    border-color: #60a5fa;
+  }
+
+  .guide-icon {
+    color: #2563eb;
   }
 }
 
-.lock-card h3 {
-  margin: 0 0 4px;
-  font-size: 1.25rem;
-  font-weight: 800;
-  letter-spacing: -0.025em;
+.drag-guide-zone > * {
+  pointer-events: none;
 }
 
-.lock-card p {
+.role-settings-content-popover {
+  padding: 12px 14px;
+}
+
+.role-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px 8px;
+  padding: 0;
+}
+
+.role-setup-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.role-setup-label {
+  flex-shrink: 0;
+  width: 24px;
+  display: flex;
+  justify-content: center;
+  transform: scale(0.85);
+}
+
+.role-divider {
+  margin: 10px 0 6px;
+  padding-bottom: 2px;
+  border-bottom: 1px dashed #e2e8f0;
+  font-size: 12px;
+  font-weight: 700;
   color: #64748b;
-  margin: 0;
-  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+
+  html.dark & {
+    border-bottom-color: #334155;
+    color: #94a3b8;
+  }
 }
 
-html.dark .lock-card p {
-  color: #94a3b8;
+.role-divider::before {
+  content: '';
+  width: 2px;
+  height: 10px;
+  background: #3b82f6;
+  margin-right: 4px;
+  border-radius: 2px;
 }
 
-.status-list {
+.special-role-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 8px;
+  gap: 8px;
 }
 
-.status-item {
+.special-role-group {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.group-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.special-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   align-items: center;
-  padding: 10px 14px;
-  background: #f8fafc;
-  border: 1px solid #f1f5f9;
-  border-radius: 10px;
-  transition: all 0.3s ease;
-
-  .item-icon {
-    font-size: 18px;
-    margin-right: 10px;
-    color: #94a3b8;
-    display: flex;
-  }
-
-  .item-label {
-    flex: 1;
-    text-align: left;
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: #475569;
-  }
-
-  .item-status {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #94a3b8;
-  }
-
-  &.is-ready {
-    background: #f0fdf4;
-    border-color: #dcfce7;
-
-    .item-icon {
-      color: #22c55e;
-    }
-    .item-label {
-      color: #166534;
-    }
-    .item-status {
-      color: #16a34a;
-    }
-  }
-
-  html.dark & {
-    background: rgba(30, 41, 59, 0.5);
-    border-color: rgba(51, 65, 85, 0.5);
-
-    .item-label {
-      color: #cbd5e1;
-    }
-
-    &.is-ready {
-      background: rgba(22, 163, 74, 0.1);
-      border-color: rgba(22, 163, 74, 0.2);
-      .item-label {
-        color: #4ade80;
-      }
-    }
-  }
 }
 
-.unlock-action-btn {
-  width: 100%;
-  height: 48px;
-  font-size: 1rem !important;
-  font-weight: 700 !important;
-  border-radius: 12px !important;
-  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
-  transition: all 0.3s ease !important;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 20px -3px rgba(59, 130, 246, 0.4);
-  }
+.special-item {
+  display: inline-flex;
 }
 
-@keyframes lock-pop {
-  from {
-    opacity: 0;
-    transform: scale(0.9) translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+.main-viewport {
+  width: calc(100% - 48px);
+  max-width: 1400px;
+  margin: 0 auto 32px;
+}
+
+.wizard-content{
+  height:100%;
 }
 </style>

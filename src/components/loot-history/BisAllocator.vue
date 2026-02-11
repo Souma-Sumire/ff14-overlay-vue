@@ -311,7 +311,7 @@ function getStorageKey(player: string): string {
   if (!props.getPlayerRole)
     return player
   const role = props.getPlayerRole(player)
-  if (role && !role.startsWith('LEFT:') && !role.startsWith('SUB:')) {
+  if (role && !role.startsWith('LEFT:')) {
     return role
   }
   return player
@@ -849,7 +849,7 @@ function isEligible(player: string) {
   const role = props.getPlayerRole(player)
   if (!role)
     return false
-  return !role.startsWith('LEFT:') && !role.startsWith('SUB:')
+  return !role.startsWith('LEFT:')
 }
 
 function getCurrentMatchedPresetName(player: string) {
@@ -1733,7 +1733,7 @@ const getRoleGroupClass = getRoleType
       <div class="bis-config-panel-container">
         <div class="bis-storage-info">
           <el-icon><InfoFilled /></el-icon>
-          <span>此处记录玩家在固定队记录之外（如野队）获得的装备。最终统计 = 掉落记录数 + 野队修正数。</span>
+          <span>此处记录玩家在固定队记录之外（如野队）获得的装备。用于降低这些部位的获取优先级。</span>
         </div>
         <div class="table-scroll-wrapper">
           <table class="bis-table config-table">

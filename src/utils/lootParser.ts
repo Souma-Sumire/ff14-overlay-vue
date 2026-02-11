@@ -60,8 +60,6 @@ export function getRoleType(role: string | null | undefined) {
   const r = role.toUpperCase()
   if (r.startsWith('LEFT:'))
     return 'role-left'
-  if (r.startsWith('SUB:'))
-    return 'role-sub'
   if (r.startsWith('MT') || r.startsWith('ST'))
     return 'role-tank'
   if (r.startsWith('H1') || r.startsWith('H2'))
@@ -74,8 +72,6 @@ export function getRoleColor(role: string | null | undefined) {
     return '#6366f1' // Default Indigo
   if (role.startsWith('LEFT:'))
     return '#64748b' // Gray
-  if (role.startsWith('SUB:'))
-    return '#f59e0b' // Orange
   if (['MT', 'ST'].includes(role))
     return '#3b82f6' // Blue
   if (['H1', 'H2'].includes(role))
@@ -86,8 +82,6 @@ export function getRoleColor(role: string | null | undefined) {
 export function getRoleDisplayName(role: string) {
   if (role.startsWith('LEFT:'))
     return '离队'
-  if (role.startsWith('SUB:'))
-    return '替补'
   return role
 }
 
