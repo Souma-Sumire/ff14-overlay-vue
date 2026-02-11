@@ -965,9 +965,18 @@ defineExpose({
       content: attr(data-duration);
       z-index: 1;
       position: absolute;
-      bottom: -8px;
+      bottom: -4px;
       font-family: emoji;
+      width: 100%;
+      text-align: center;
       transform: scale(0.6);
+      transform-origin: center bottom;
+      white-space: nowrap;
+      text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000;
     }
 
     &[data-sourcePov='true']::before {
