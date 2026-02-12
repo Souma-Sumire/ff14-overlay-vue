@@ -29,6 +29,26 @@ const playerOptions = computed(() => {
     p => p === props.modelValue || !props.assignedPlayers?.has(p),
   )
 })
+const displayNameByPlayer = computed(() => {
+  const map: Record<string, string> = {}
+  props.allPlayers.forEach((p) => {
+    map[p] = props.getDisplayName(p)
+  })
+  return map
+})
+const playerOptionItems = computed(() => {
+  return playerOptions.value.map((p) => {
+    return {
+      value: p,
+      label: displayNameByPlayer.value[p] || props.getDisplayName(p),
+      role: props.getPlayerRole(p),
+    }
+  })
+})
+
+function resolveDisplayName(name: string) {
+  return displayNameByPlayer.value[name] || props.getDisplayName(name)
+}
 
 function handleChange(val: string) {
   emit('update:modelValue', val)
@@ -59,18 +79,18 @@ function handleChange(val: string) {
         @change="handleChange"
       >
         <template v-if="variant === 'row'" #label="{ label, value }">
-          {{ getDisplayName(value || label) }}
+          {{ resolveDisplayName(value || label) }}
         </template>
         <ElOption
-          v-for="p in playerOptions"
-          :key="p"
-          :label="getDisplayName(p)"
-          :value="p"
+          v-for="item in playerOptionItems"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value"
         >
           <div class="select-player-row">
             <PlayerDisplay
-              :name="p"
-              :role="getPlayerRole(p)"
+              :name="item.value"
+              :role="item.role"
               :show-only-role="false"
             />
           </div>

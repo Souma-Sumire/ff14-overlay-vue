@@ -70,13 +70,14 @@ const chartHeight = ref(400)
 const processedData = computed(() => {
   const weekInfoMap = new Map<string, number>() // WeekLabel -> WeekIndex
   const dataMap = new Map<string, Map<string, { count: number, items: string[] }>>()
+  const playerSet = new Set(props.players)
 
   props.records.forEach((r) => {
     const { label, sortKey } = getWeekInfo(r)
     weekInfoMap.set(label, sortKey)
 
     const p = props.getActualPlayer ? props.getActualPlayer(r.player) : r.player
-    if (!props.players.includes(p))
+    if (!playerSet.has(p))
       return
 
     if (!dataMap.has(label))
@@ -152,10 +153,12 @@ const option = computed(() => {
         // Remove the early return for count === 0 to allow tooltip
 
         // x is player, y is week
-        const player = xData[item.value[0]]
+        const xIndex = item.value[0]
+        const rawPlayer = props.players[xIndex]
+        const player = xData[xIndex]
         const week = sortedWeeks[item.value[1]]
 
-        const role = player ? nameToRoleMap.get(player) : undefined
+        const role = rawPlayer ? nameToRoleMap.get(rawPlayer) : undefined
 
         // If items is empty or undefined
         const itemsStr = (item.items && item.items.length > 0)
@@ -185,8 +188,9 @@ const option = computed(() => {
       axisLabel: {
         interval: 0,
         rotate: 0,
-        formatter: (value: string) => {
-          const rawRole = props.getPlayerRole ? props.getPlayerRole(value) : undefined
+        formatter: (value: string, index: number) => {
+          const rawPlayer = props.players[index]
+          const rawRole = rawPlayer && props.getPlayerRole ? props.getPlayerRole(rawPlayer) : undefined
           return formatChartPlayerLabel(value, rawRole, props.playerVisibility)
         },
         rich: getChartLabelRich(props.playerVisibility),

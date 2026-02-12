@@ -19,7 +19,8 @@ import {
   Warning,
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, shallowRef, watch } from 'vue'
+import { ensureBisCountDefaults, normalizeBisConfigFromModel } from '@/composables/useBisConfigSync'
 import { getPresetsForRole } from '@/utils/bisPresets'
 import {
 
@@ -59,6 +60,10 @@ const config = ref<BisConfig>({
   plannedWeeks: 8,
   manualObtained: {},
 })
+const recordsForCompute = shallowRef<LootRecord[]>([])
+const obtainedDetailsCache = shallowRef<Map<string, { name: string, count: number }[]>>(new Map())
+let recordsSyncTimer: ReturnType<typeof setTimeout> | null = null
+let modelEmitTimer: ReturnType<typeof setTimeout> | null = null
 
 const showCorrectionDialog = ref(false)
 
@@ -79,11 +84,52 @@ const STATUS_MAP = {
   greed: { text: '贪婪', class: 'status-greed-tome' },
   assigned: { text: '分配', class: 'status-assigned' },
 } as const
+const SPECIAL_ITEM_IDS = new Set(['coating', 'twine', 'tome', 'solvent'])
+const DEFAULT_ROW_BY_ID = new Map(DEFAULT_ROWS.map(row => [row.id, row] as const))
+const COUNT_ROWS = DEFAULT_ROWS.filter(r => r.type === 'count')
+const PART_ORDER_INDEX = new Map((PART_ORDER as string[]).map((v, i) => [v, i] as const))
+const ROW_KEYWORDS_BY_ID = new Map(
+  DEFAULT_ROWS.map((row) => {
+    const keywords = row.keywords
+      .replace(/，/g, ',')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+    return [row.id, keywords] as const
+  }),
+)
+
+type LogicStatus = 'need' | 'greed' | 'pass' | 'assigned'
+interface LogicDetail {
+  status: LogicStatus
+  reason: string
+}
+interface ObtainedSummary {
+  counts: Record<string, Record<string, number>>
+}
+interface CellViewModel {
+  obtained: number
+  needed: number
+  statusText: string
+  reason: string
+  cellClass: string
+}
+const warnedMissingCellKeys = new Set<string>()
+
+function warnMissingCache(kind: 'logic' | 'cell', rowId: string, player: string) {
+  if (!import.meta.env.DEV)
+    return
+  const key = `${kind}:${rowId}:${player}`
+  if (warnedMissingCellKeys.has(key))
+    return
+  warnedMissingCellKeys.add(key)
+  console.warn(`[BisAllocator] Missing ${kind} cache for row="${rowId}", player="${player}"`)
+}
 
 const layeredViewRows = computed(() => {
   return LAYER_CONFIG.map((layer) => {
     const rows = layer.items
-      .map(id => DEFAULT_ROWS.find(r => r.id === id))
+      .map(id => DEFAULT_ROW_BY_ID.get(id))
       .filter((r): r is BisRow => !!r)
     return {
       name: layer.name,
@@ -93,12 +139,11 @@ const layeredViewRows = computed(() => {
 })
 
 const configRows = computed(() => {
-  const order = PART_ORDER as string[]
   return [...DEFAULT_ROWS]
     .filter(r => r.id !== 'random_weapon')
     .sort((a, b) => {
-      const ia = order.indexOf(a.keywords)
-      const ib = order.indexOf(b.keywords)
+      const ia = PART_ORDER_INDEX.get(a.keywords) ?? -1
+      const ib = PART_ORDER_INDEX.get(b.keywords) ?? -1
       if (ia === -1 && ib === -1)
         return 0
       if (ia === -1)
@@ -111,6 +156,72 @@ const configRows = computed(() => {
 
 const eligiblePlayers = computed(() => {
   return props.players.filter(isEligible)
+})
+const assignedPlayerSet = computed(() => {
+  return new Set(Object.values(customAllocations.value).filter(Boolean))
+})
+const storageKeyByPlayer = computed(() => {
+  const map: Record<string, string> = {}
+  for (const player of eligiblePlayers.value) {
+    map[player] = getStorageKey(player)
+  }
+  return map
+})
+const presetsByPlayer = computed(() => {
+  const map: Record<string, ReturnType<typeof getPresetsForRole>> = {}
+  for (const player of eligiblePlayers.value) {
+    map[player] = getPresetsForRole(props.getPlayerRole?.(player))
+  }
+  return map
+})
+const firstEligiblePlayerByRole = computed(() => {
+  const map: Record<string, string> = {}
+  for (const player of eligiblePlayers.value) {
+    const role = props.getPlayerRole?.(player)
+    if (role && !map[role])
+      map[role] = player
+  }
+  return map
+})
+
+const obtainedSummary = computed<ObtainedSummary>(() => {
+  const counts: Record<string, Record<string, number>> = {}
+
+  const ensurePlayer = (player: string) => {
+    if (!counts[player])
+      counts[player] = {}
+  }
+  const ensureRow = (player: string, rowId: string) => {
+    if (counts[player]![rowId] == null)
+      counts[player]![rowId] = 0
+  }
+
+  for (const rec of recordsForCompute.value || []) {
+    const player = props.getActualPlayer ? props.getActualPlayer(rec.player) : rec.player
+    ensurePlayer(player)
+    for (const row of DEFAULT_ROWS) {
+      const keywords = ROW_KEYWORDS_BY_ID.get(row.id) || []
+      const matched = row.id === 'random_weapon'
+        ? !!props.getItemSlot && props.getItemSlot(rec.item) === '随武'
+        : keywords.some(k => rec.item.includes(k))
+      if (!matched)
+        continue
+      ensureRow(player, row.id)
+      counts[player]![row.id] = (counts[player]![row.id] || 0) + 1
+    }
+  }
+
+  for (const player of eligiblePlayers.value) {
+    ensurePlayer(player)
+    const storageKey = storageKeyByPlayer.value[player] || player
+    const manual = config.value.manualObtained?.[storageKey] || {}
+    for (const row of DEFAULT_ROWS) {
+      ensureRow(player, row.id)
+      counts[player]![row.id] = Math.max(0, (counts[player]![row.id] || 0) + (manual[row.id] || 0))
+    }
+  }
+
+  return { counts }
 })
 
 const expandedPlayerPresets = ref<Set<string>>(new Set())
@@ -262,6 +373,13 @@ function getLayerMacroLines(layer: { name: string, rows: BisRow[] }) {
   const header = `/p <${dateStr} 第${weekNum}周 ${layer.name}分配>`
   return [header, ...generateEquipLines(layer.rows)]
 }
+const layerMacroLinesMap = computed(() => {
+  const map: Record<string, string[]> = {}
+  for (const layer of layeredViewRows.value) {
+    map[layer.name] = getLayerMacroLines(layer)
+  }
+  return map
+})
 
 function getFF14WeekNumber(): number {
   if (!props.records || props.records.length === 0)
@@ -295,7 +413,7 @@ function handleCopyMacro(command: { name: string, rows: BisRow[] } | 'all') {
 }
 
 function isPlayerAssigned(player: string): boolean {
-  return Object.values(customAllocations.value).includes(player)
+  return assignedPlayerSet.value.has(player)
 }
 
 function togglePlayerExclusion(player: string) {
@@ -460,10 +578,7 @@ function parseAndPreviewBisData(rawInput: string) {
         return
 
       // 找到本地对应职位的玩家名（用于预览显示）
-      const localPlayers = eligiblePlayers.value.filter(
-        p => props.getPlayerRole?.(p) === role,
-      )
-      const pName = localPlayers[0] || role
+      const pName = firstEligiblePlayerByRole.value[role] || role
 
       const dataBinary = Number.parseInt(data, 36)
         .toString(2)
@@ -622,68 +737,33 @@ function confirmApplyPreset() {
 }
 
 function getObtainedCount(player: string, row: BisRow): number {
-  if (!props.records)
-    return 0
-  const keywords = row.keywords
-    .replace(/，/g, ',')
-    .split(',')
-    .map(s => s.trim())
-    .filter(Boolean)
-  if (keywords.length === 0)
-    return 0
-
-  const logCount = props.records.filter((r) => {
-    const actual = props.getActualPlayer
-      ? props.getActualPlayer(r.player)
-      : r.player
-    if (actual !== player)
-      return false
-
-    // 特殊逻辑：随武统计，复用父组件的 getItemSlot 逻辑
-    if (row.id === 'random_weapon' && props.getItemSlot) {
-      return props.getItemSlot(r.item) === '随武'
-    }
-
-    return keywords.some(k => r.item.includes(k))
-  }).length
-
-  const storageKey = getStorageKey(player)
-  const manual = config.value.manualObtained?.[storageKey]?.[row.id] || 0
-  return Math.max(0, logCount + manual)
+  return obtainedSummary.value.counts[player]?.[row.id] || 0
 }
 
 function getObtainedItemsDetail(player: string, row: BisRow) {
-  if (!props.records)
-    return []
+  const cacheKey = `${player}|${row.id}`
+  const cached = obtainedDetailsCache.value.get(cacheKey)
+  if (cached)
+    return cached
 
   const detailsMap: Record<string, number> = {}
+  for (const rec of recordsForCompute.value || []) {
+    const actual = props.getActualPlayer ? props.getActualPlayer(rec.player) : rec.player
+    if (actual !== player)
+      continue
 
-  // 随武逻辑
-  if (row.id === 'random_weapon' && props.getItemSlot) {
-    props.records.forEach((r) => {
-      const actual = props.getActualPlayer ? props.getActualPlayer(r.player) : r.player
-      if (actual === player && props.getItemSlot!(r.item) === '随武') {
-        detailsMap[r.item] = (detailsMap[r.item] || 0) + 1
-      }
-    })
-  }
-  else {
-    // 常规项逻辑
-    const keywords = row.keywords
-      .replace(/，/g, ',')
-      .split(',')
-      .map(s => s.trim())
-      .filter(Boolean)
+    const matched = row.id === 'random_weapon'
+      ? !!props.getItemSlot && props.getItemSlot(rec.item) === '随武'
+      : (ROW_KEYWORDS_BY_ID.get(row.id) || []).some(k => rec.item.includes(k))
+    if (!matched)
+      continue
 
-    props.records.forEach((r) => {
-      const actual = props.getActualPlayer ? props.getActualPlayer(r.player) : r.player
-      if (actual === player && keywords.some(k => r.item.includes(k))) {
-        detailsMap[r.item] = (detailsMap[r.item] || 0) + 1
-      }
-    })
+    detailsMap[rec.item] = (detailsMap[rec.item] || 0) + 1
   }
 
-  return Object.entries(detailsMap).map(([name, count]) => ({ name, count }))
+  const result = Object.entries(detailsMap).map(([name, count]) => ({ name, count }))
+  obtainedDetailsCache.value.set(cacheKey, result)
+  return result
 }
 
 function getManualObtained(player: string, rowId: string): number {
@@ -700,16 +780,124 @@ function setManualObtained(player: string, rowId: string, val: number) {
   config.value.manualObtained[key]![rowId] = val
 }
 
-function hasObtained(player: string, row: BisRow): boolean {
-  return getObtainedCount(player, row) > 0
+function getBaseLogicDetailsFor(
+  player: string,
+  row: BisRow,
+  obtainedCount: number,
+): { status: 'need' | 'greed' | 'pass', reason: string } {
+  if (row.type === 'count') {
+    const needed = getNeededCount(player, row.id)
+    if (obtainedCount >= needed) {
+      return { status: 'pass', reason: `已获得 ${obtainedCount} 个 (需求 ${needed} 个)` }
+    }
+    return { status: 'need', reason: `需求 ${needed} 个，当前 ${obtainedCount} 个` }
+  }
+
+  if (obtainedCount > 0) {
+    return { status: 'pass', reason: '已获得该装备' }
+  }
+
+  const val = getBisValue(player, row.id)
+  if (val === 'raid') {
+    return { status: 'need', reason: 'BIS 设为“零式” (需求，未获得)' }
+  }
+  return { status: 'greed', reason: 'BIS 设为“点数” (贪婪，未获得)' }
 }
 
-function getLogicReason(player: string, row: BisRow): string {
-  if (row.id === 'random_weapon') {
-    const count = getObtainedCount(player, row)
-    return `累计获得 ${count} 个随武`
+const logicDetailsByCell = computed(() => {
+  const result: Record<string, Record<string, LogicDetail>> = {}
+
+  for (const row of DEFAULT_ROWS) {
+    result[row.id] = {}
+    const customAlloc = customAllocations.value[row.id]
+
+    let minObtained = Infinity
+    let allActivePass = false
+
+    if (SPECIAL_ITEM_IDS.has(row.id) && row.type === 'count') {
+      const activeStatuses = eligiblePlayers.value
+        .filter(p => !excludedPlayers.value.has(p))
+        .map((p) => {
+          const obtained = obtainedSummary.value.counts[p]?.[row.id] || 0
+          const needed = getNeededCount(p, row.id)
+          return { p, obtained, status: obtained >= needed ? 'pass' : 'need' as const }
+        })
+
+      if (activeStatuses.length > 0) {
+        allActivePass = activeStatuses.every(x => x.status === 'pass')
+        if (allActivePass) {
+          minObtained = Math.min(...activeStatuses.map(x => x.obtained))
+        }
+      }
+    }
+
+    for (const player of eligiblePlayers.value) {
+      if (customAlloc) {
+        result[row.id]![player] = customAlloc === player
+          ? { status: 'assigned', reason: '队长指定分配 (最高优先级)' }
+          : { status: 'pass', reason: '队长已指定给他人' }
+        continue
+      }
+
+      if (excludedPlayers.value.has(player)) {
+        result[row.id]![player] = { status: 'pass', reason: '玩家已请假/被排除' }
+        continue
+      }
+
+      const obtained = obtainedSummary.value.counts[player]?.[row.id] || 0
+      if (SPECIAL_ITEM_IDS.has(row.id) && row.type === 'count' && allActivePass) {
+        result[row.id]![player] = obtained === minObtained
+          ? { status: 'greed', reason: `全员需求满足，作为获得最少者 (${obtained}个) 兜底贪婪` }
+          : { status: 'pass', reason: `全员需求满足，但不是获得最少者 (${obtained} > ${minObtained})` }
+        continue
+      }
+
+      result[row.id]![player] = getBaseLogicDetailsFor(player, row, obtained)
+    }
   }
-  return getLogicDetails(player, row).reason
+
+  return result
+})
+const cellViewByRowId = computed(() => {
+  const map: Record<string, Record<string, CellViewModel>> = {}
+  for (const row of DEFAULT_ROWS) {
+    map[row.id] = {}
+    for (const player of eligiblePlayers.value) {
+      const obtained = obtainedSummary.value.counts[player]?.[row.id] || 0
+      const needed = row.type === 'count' ? getNeededCount(player, row.id) : 0
+      const logicDetail = logicDetailsByCell.value[row.id]?.[player]
+      const status = logicDetail?.status || 'pass'
+      const baseClass = row.id === 'random_weapon'
+        ? (obtained === 0 ? 'status-need' : 'status-rw-obtained')
+        : (STATUS_MAP[status]?.class || '')
+      const cellClass = excludedPlayers.value.has(player) ? `${baseClass} is-excluded` : baseClass
+      const reason = row.id === 'random_weapon'
+        ? `累计获得 ${obtained} 个随武`
+        : (logicDetail?.reason || '未命中判定缓存')
+      map[row.id]![player] = {
+        obtained,
+        needed,
+        statusText: STATUS_MAP[status]?.text || '',
+        reason,
+        cellClass,
+      }
+    }
+  }
+  return map
+})
+
+function getCellView(player: string, row: BisRow): CellViewModel {
+  const cached = cellViewByRowId.value[row.id]?.[player]
+  if (cached)
+    return cached
+  warnMissingCache('cell', row.id, player)
+  return {
+    obtained: 0,
+    needed: 0,
+    statusText: '',
+    reason: '',
+    cellClass: '',
+  }
 }
 
 function getLogicStatus(
@@ -723,96 +911,21 @@ function getLogicDetails(
   player: string,
   row: BisRow,
 ): {
-  status: 'need' | 'greed' | 'pass' | 'assigned'
+  status: LogicStatus
   reason: string
 } {
-  const customAlloc = customAllocations.value[row.id]
-
-  // 1. 队长分配逻辑
-  if (customAlloc) {
-    if (customAlloc === player)
-      return { status: 'assigned', reason: '队长指定分配 (最高优先级)' }
-    return { status: 'pass', reason: '队长已指定给他人' }
-  }
-
-  // 2. 已被排除/请假
-  if (excludedPlayers.value.has(player)) {
-    return { status: 'pass', reason: '玩家已请假/被排除' }
-  }
-
-  // 3. 特殊物品兜底逻辑 (神典石/药/纤维 - ID在 SPECIAL_ITEMS 中且是 count 类型)
-  const SPECIAL_ITEMS = ['coating', 'twine', 'tome', 'solvent']
-  if (SPECIAL_ITEMS.includes(row.id) && row.type === 'count') {
-    // 计算每个人基于“需求量”的基础状态
-    const playerStatuses = eligiblePlayers.value.map((p) => {
-      // 排除的人视为 Pass 且 infinite obtained (不参与 min 比较)
-      if (excludedPlayers.value.has(p))
-        return { p, status: 'pass' as const, obtained: Infinity }
-
-      const pNeeded = getNeededCount(p, row.id)
-      const pObtained = getObtainedCount(p, row)
-      // 基础规则: 拿够了就 Pass, 没拿够 Need
-      const s = pObtained >= pNeeded ? 'pass' : 'need'
-
-      return { p, status: s, obtained: pObtained }
-    })
-
-    // 检查“有效玩家”是否全员 Pass
-    const activeStatuses = playerStatuses.filter(x => !excludedPlayers.value.has(x.p))
-
-    // 如果没有有效玩家，回归基础逻辑
-    if (activeStatuses.length === 0) {
-      return getBaseLogicDetails(player, row)
-    }
-
-    const allPass = activeStatuses.every(x => x.status === 'pass')
-
-    if (allPass) {
-      // 触发兜底贪婪
-      const minObtained = Math.min(...activeStatuses.map(x => x.obtained))
-      const myInfo = activeStatuses.find(x => x.p === player)
-
-      if (!myInfo)
-        return { status: 'pass', reason: '未知错误/无效玩家' }
-
-      if (myInfo.obtained === minObtained) {
-        return { status: 'greed', reason: `全员需求满足，作为获得最少者 (${myInfo.obtained}个) 兜底贪婪` }
-      }
-      return { status: 'pass', reason: `全员需求满足，但不是获得最少者 (${myInfo.obtained} > ${minObtained})` }
-    }
-
-    // 如果并非全员 Pass，则按基础逻辑返回
-    return getBaseLogicDetails(player, row)
-  }
-
-  // 4. 其他常规物品
-  return getBaseLogicDetails(player, row)
+  const cached = logicDetailsByCell.value[row.id]?.[player]
+  if (cached)
+    return cached
+  warnMissingCache('logic', row.id, player)
+  return { status: 'pass', reason: '' }
 }
 
 function getBaseLogicDetails(
   player: string,
   row: BisRow,
 ): { status: 'need' | 'greed' | 'pass', reason: string } {
-  const obtained = getObtainedCount(player, row)
-
-  if (row.type === 'count') {
-    const needed = getNeededCount(player, row.id)
-    if (obtained >= needed) {
-      return { status: 'pass', reason: `已获得 ${obtained} 个 (需求 ${needed} 个)` }
-    }
-    return { status: 'need', reason: `需求 ${needed} 个，当前 ${obtained} 个` }
-  }
-
-  // Toggle 类型
-  if (hasObtained(player, row)) {
-    return { status: 'pass', reason: '已获得该装备' }
-  }
-
-  const val = getBisValue(player, row.id)
-  if (val === 'raid') {
-    return { status: 'need', reason: 'BIS 设为“零式” (需求，未获得)' }
-  }
-  return { status: 'greed', reason: 'BIS 设为“点数” (贪婪，未获得)' }
+  return getBaseLogicDetailsFor(player, row, getObtainedCount(player, row))
 }
 
 function calculateBaseStatus(
@@ -829,20 +942,6 @@ function getOriginalStatus(
   return calculateBaseStatus(player, row)
 }
 
-function getStatusBaseText(player: string, row: BisRow): string {
-  const status = getLogicStatus(player, row)
-  return STATUS_MAP[status]?.text || ''
-}
-
-function isLegacyConfig(val: any): val is LegacyBisConfig {
-  if (!val || typeof val !== 'object' || !val.playerBis)
-    return false
-  const firstKey = Object.keys(val.playerBis)[0]
-  if (!firstKey)
-    return false
-  return Array.isArray(val.playerBis[firstKey])
-}
-
 function isEligible(player: string) {
   if (!props.getPlayerRole)
     return false
@@ -857,12 +956,12 @@ function getCurrentMatchedPresetName(player: string) {
   if (!role)
     return null
 
-  const storageKey = getStorageKey(player)
+  const storageKey = storageKeyByPlayer.value[player] || getStorageKey(player)
   const currentConfig = config.value.playerBis[storageKey]
   if (!currentConfig || Object.keys(currentConfig).length === 0)
     return null
 
-  const { recommended, others } = getPresetsForRole(role)
+  const { recommended, others } = presetsByPlayer.value[player] || getPresetsForRole(role)
   const allPresets = [...recommended, ...others]
 
   for (const preset of allPresets) {
@@ -878,10 +977,37 @@ function getCurrentMatchedPresetName(player: string) {
   }
   return null
 }
+const matchedPresetNameByPlayer = computed(() => {
+  const map: Record<string, string | null> = {}
+  for (const player of eligiblePlayers.value)
+    map[player] = getCurrentMatchedPresetName(player)
+  return map
+})
+
+const isSyncingFromProps = ref(false)
+
+watch(
+  () => props.records,
+  (records) => {
+    if (recordsSyncTimer)
+      clearTimeout(recordsSyncTimer)
+    recordsSyncTimer = setTimeout(() => {
+      recordsForCompute.value = records || []
+      obtainedDetailsCache.value.clear()
+      recordsSyncTimer = null
+    }, 120)
+  },
+  { immediate: true },
+)
+watch(
+  [() => props.getActualPlayer, () => props.getItemSlot],
+  () => {
+    obtainedDetailsCache.value.clear()
+  },
+)
 
 function hasAnyPresets(player: string) {
-  const role = props.getPlayerRole?.(player)
-  const presets = getPresetsForRole(role)
+  const presets = presetsByPlayer.value[player] || getPresetsForRole(props.getPlayerRole?.(player))
   return presets.recommended.length > 0 || presets.others.length > 0
 }
 
@@ -891,85 +1017,52 @@ watch(
     if (!newVal) {
       return
     }
+    const nextConfig = normalizeBisConfigFromModel(
+      newVal,
+      eligiblePlayers.value,
+      COUNT_ROWS,
+      getStorageKey,
+    )
 
-    let nextConfig: BisConfig
-
-    if (isLegacyConfig(newVal)) {
-      const migrated: BisConfig = { playerBis: {}, plannedWeeks: 8, manualObtained: {} }
-      const raw = JSON.parse(JSON.stringify(newVal))
-      Object.keys(raw.playerBis).forEach((player) => {
-        migrated.playerBis[player] = {}
-        const list = raw.playerBis[player]
-        if (list) {
-          list.forEach((id: string) => {
-            if (migrated.playerBis[player]) {
-              migrated.playerBis[player]![id] = 'raid'
-            }
-          })
-        }
-      })
-      nextConfig = migrated
-    }
-    else {
-      const standard = newVal as BisConfig
-      nextConfig = {
-        ...standard,
-        plannedWeeks: standard.plannedWeeks ?? 8,
-        manualObtained: standard.manualObtained ?? {},
-        playerBis: JSON.parse(JSON.stringify(standard.playerBis || {})),
-      }
-    }
-
-    // 确保所有有效玩家的计数型物品都有默认值 1
-    eligiblePlayers.value.forEach((p) => {
-      const key = getStorageKey(p)
-      if (!nextConfig.playerBis[key])
-        nextConfig.playerBis[key] = {}
-
-      const pConfig = nextConfig.playerBis[key]!
-      DEFAULT_ROWS.filter(r => r.type === 'count').forEach((r) => {
-        if (typeof pConfig[r.id] !== 'number') {
-          pConfig[r.id] = 1
-        }
-      })
+    isSyncingFromProps.value = true
+    config.value = nextConfig
+    nextTick(() => {
+      isSyncingFromProps.value = false
     })
-
-    if (JSON.stringify(nextConfig) !== JSON.stringify(config.value)) {
-      config.value = nextConfig
-    }
   },
-  { immediate: true, deep: true },
+  { immediate: true },
 )
 
 watch(
   eligiblePlayers,
   (players) => {
-    players.forEach((p) => {
-      const key = getStorageKey(p)
-      if (!config.value.playerBis[key]) {
-        config.value.playerBis[key] = {}
-      }
-
-      const pConfig = config.value.playerBis[key]!
-      DEFAULT_ROWS.filter(r => r.type === 'count').forEach((r) => {
-        if (typeof pConfig[r.id] !== 'number') {
-          pConfig[r.id] = 1
-        }
-      })
-    })
+    ensureBisCountDefaults(config.value, players, COUNT_ROWS, getStorageKey)
   },
-  { deep: true, immediate: true },
+  { immediate: true },
 )
 
 watch(
   config,
   (newVal) => {
-    if (JSON.stringify(newVal) !== JSON.stringify(props.modelValue)) {
+    if (isSyncingFromProps.value)
+      return
+    if (modelEmitTimer)
+      clearTimeout(modelEmitTimer)
+    modelEmitTimer = setTimeout(() => {
       emit('update:modelValue', newVal)
-    }
+      modelEmitTimer = null
+    }, 80)
   },
   { deep: true },
 )
+
+onUnmounted(() => {
+  if (recordsSyncTimer)
+    clearTimeout(recordsSyncTimer)
+  if (modelEmitTimer)
+    clearTimeout(modelEmitTimer)
+  obtainedDetailsCache.value.clear()
+})
 
 function getBisValue(player: string, rowId: string): BisValue | undefined {
   return config.value.playerBis[getStorageKey(player)]?.[rowId]
@@ -993,15 +1086,7 @@ function getNeededCount(player: string, rowId: string): number {
 }
 
 function getCellClass(player: string, row: BisRow): string {
-  if (row.id === 'random_weapon') {
-    const count = getObtainedCount(player, row)
-    // 0个用需求底色(绿)，1个及以上用获得底色(灰)
-    const base = count === 0 ? 'status-need' : 'status-rw-obtained'
-    return excludedPlayers.value.has(player) ? `${base} is-excluded` : base
-  }
-  const status = getLogicStatus(player, row)
-  const base = STATUS_MAP[status]?.class || ''
-  return excludedPlayers.value.has(player) ? `${base} is-excluded` : base
+  return getCellView(player, row).cellClass
 }
 
 const getRoleGroupClass = getRoleType
@@ -1263,20 +1348,20 @@ const getRoleGroupClass = getRoleType
                           <template v-if="row.id === 'random_weapon'">
                             <span
                               :class="[
-                                getObtainedCount(p, row) > 0 ? 'rw-simple-count-active' : 'rw-simple-count-none',
-                                { 'is-many': getObtainedCount(p, row) >= 2 },
+                                getCellView(p, row).obtained > 0 ? 'rw-simple-count-active' : 'rw-simple-count-none',
+                                { 'is-many': getCellView(p, row).obtained >= 2 },
                               ]"
                             >
-                              {{ getObtainedCount(p, row) }}
+                              {{ getCellView(p, row).obtained }}
                             </span>
                           </template>
                           <template v-else>
-                            <span class="status-main">{{ getStatusBaseText(p, row) }}</span>
+                            <span class="status-main">{{ getCellView(p, row).statusText }}</span>
                             <span
-                              v-if="row.type === 'count' && getNeededCount(p, row.id) > 1"
+                              v-if="row.type === 'count' && getCellView(p, row).needed > 1"
                               class="status-meta"
                             >
-                              ({{ getObtainedCount(p, row) }}/{{ getNeededCount(p, row.id) }})
+                              ({{ getCellView(p, row).obtained }}/{{ getCellView(p, row).needed }})
                             </span>
                           </template>
                         </div>
@@ -1284,7 +1369,7 @@ const getRoleGroupClass = getRoleType
 
                       <div class="popover-content">
                         <div class="reason-section">
-                          {{ getLogicReason(p, row) }}
+                          {{ getCellView(p, row).reason }}
                         </div>
                         <template v-if="getObtainedItemsDetail(p, row).length > 0">
                           <div class="popover-divider" />
@@ -1311,7 +1396,7 @@ const getRoleGroupClass = getRoleType
                   <div class="macro-preview-box">
                     <div class="macro-preview-content">
                       <div
-                        v-for="(line, idx) in getLayerMacroLines(layer).slice(1)"
+                        v-for="(line, idx) in (layerMacroLinesMap[layer.name] || []).slice(1)"
                         :key="idx"
                         class="macro-preview-line"
                         v-html="formatMacroLine(line)"
@@ -1356,10 +1441,6 @@ const getRoleGroupClass = getRoleType
     >
       <div class="bis-config-panel-container">
         <div class="bis-config-header-row">
-          <div class="bis-storage-info">
-            <el-icon><InfoFilled /></el-icon>
-            <span>提示：此 BIS 设置跟随职位（MT/ST等），不跟随具体玩家。</span>
-          </div>
           <div class="planned-weeks-config">
             <span class="label">你们计划清几周CD：</span>
             <el-input-number
@@ -1370,6 +1451,10 @@ const getRoleGroupClass = getRoleType
               controls-position="right"
               class="weeks-stepper"
             />
+          </div>
+          <div class="bis-storage-info">
+            <el-icon><InfoFilled /></el-icon>
+            <span>提示：此 BIS 设置跟随职位（MT/ST等），不跟随具体玩家。</span>
           </div>
         </div>
         <div v-if="validationAlerts.length > 0" class="validation-alerts">
@@ -1432,29 +1517,27 @@ const getRoleGroupClass = getRoleType
                             size="small"
                             class="preset-btn"
                             :class="{
-                              'is-matched': getCurrentMatchedPresetName(p),
+                              'is-matched': matchedPresetNameByPlayer[p],
                             }"
                           >
                             <el-icon
-                              v-if="!getCurrentMatchedPresetName(p)"
+                              v-if="!matchedPresetNameByPlayer[p]"
                               class="magic-icon"
                             >
                               <MagicStick />
                             </el-icon>
                             <span
-                              v-if="getCurrentMatchedPresetName(p)"
+                              v-if="matchedPresetNameByPlayer[p]"
                               class="matched-name-inline"
-                              :title="getCurrentMatchedPresetName(p) ?? ''"
-                            >{{ getCurrentMatchedPresetName(p) }}</span>
+                              :title="matchedPresetNameByPlayer[p] ?? ''"
+                            >{{ matchedPresetNameByPlayer[p] }}</span>
                             <span v-else>一键预设</span>
                           </el-button>
                           <template #dropdown>
                             <el-dropdown-menu class="bis-preset-dropdown">
                               <!-- 推荐预设 -->
                               <el-dropdown-item
-                                v-for="preset in getPresetsForRole(
-                                  getPlayerRole?.(p),
-                                ).recommended"
+                                v-for="preset in (presetsByPlayer[p]?.recommended || [])"
                                 :key="preset.name"
                                 :command="preset"
                               >
@@ -1467,14 +1550,11 @@ const getRoleGroupClass = getRoleType
                               <!-- 逻辑：如果没有推荐项，直接显示全部；如果有且未展开，显示展开按钮 -->
                               <template
                                 v-if="
-                                  getPresetsForRole(getPlayerRole?.(p))
-                                    .recommended.length === 0
+                                  (presetsByPlayer[p]?.recommended.length || 0) === 0
                                 "
                               >
                                 <el-dropdown-item
-                                  v-for="preset in getPresetsForRole(
-                                    getPlayerRole?.(p),
-                                  ).others"
+                                  v-for="preset in (presetsByPlayer[p]?.others || [])"
                                   :key="preset.name"
                                   :command="preset"
                                 >
@@ -1487,8 +1567,7 @@ const getRoleGroupClass = getRoleType
 
                               <template
                                 v-else-if="
-                                  getPresetsForRole(getPlayerRole?.(p)).others
-                                    .length > 0
+                                  (presetsByPlayer[p]?.others.length || 0) > 0
                                 "
                               >
                                 <div
@@ -1505,9 +1584,7 @@ const getRoleGroupClass = getRoleType
                                 </div>
                                 <template v-else>
                                   <el-dropdown-item
-                                    v-for="(preset, idx) in getPresetsForRole(
-                                      getPlayerRole?.(p),
-                                    ).others"
+                                    v-for="(preset, idx) in (presetsByPlayer[p]?.others || [])"
                                     :key="preset.name"
                                     :command="preset"
                                     :divided="idx === 0"

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DisplayFilterMode } from '@/components/loot-history/LootDisplayFilterSegmented.vue'
+import type { LootParserLocale } from '@/constants/lootParserLocale'
 import type { BisConfig } from '@/utils/bisUtils'
 import type { LootRecord, RollInfo } from '@/utils/lootParser'
 import {
@@ -20,7 +21,6 @@ import {
   RefreshLeft,
   RefreshRight,
   Right,
-  Search,
   Setting,
   Star,
   Timer,
@@ -57,6 +57,8 @@ import PlayerDisplay from '@/components/loot-history/PlayerDisplay.vue'
 import RoleSetupItem from '@/components/loot-history/RoleSetupItem.vue'
 import SummaryItemTags from '@/components/loot-history/SummaryItemTags.vue'
 import { useIndexedDB } from '@/composables/useIndexedDB'
+import { useLang } from '@/composables/useLang'
+import { resolveLootParserLocale } from '@/constants/lootParserLocale'
 import { countObtainedItems, DEFAULT_ROWS, isBisItem, isPlayerComplete, LAYER_CONFIG } from '@/utils/bisUtils'
 import { DROP_ORDER, PART_ORDER, ROLE_DEFINITIONS, sanitizeItemName, sanitizePlayerName } from '@/utils/lootParser'
 import { getFormattedWeekLabel, getRaidWeekIndex, getRaidWeekLabel, getRaidWeekStart } from '@/utils/raidWeekUtils'
@@ -84,6 +86,32 @@ const LABELS = {
 }
 
 const ROLE_SETTING_HINT = '需在左上方“固定队 - 职位设置”中完成所有职位后方可开启'
+type BisRow = (typeof DEFAULT_ROWS)[number]
+const defaultRowBySlotName = new Map<string, BisRow>()
+const defaultRowById = new Map<string, BisRow>()
+for (const row of DEFAULT_ROWS) {
+  defaultRowBySlotName.set(row.name, row)
+  defaultRowBySlotName.set(row.keywords, row)
+  defaultRowBySlotName.set(row.id, row)
+  defaultRowById.set(row.id, row)
+}
+const layerNameByRowId = new Map<string, string>()
+for (const layer of LAYER_CONFIG) {
+  for (const rowId of layer.items)
+    layerNameByRowId.set(rowId, layer.name)
+}
+const itemSortPriorityCache: Record<'part' | 'drop', Map<string, number>> = {
+  part: new Map(),
+  drop: new Map(),
+}
+const rollTypePriority = { need: 0, greed: 1 } as const
+
+function findDefaultRowBySlot(slotName: string) {
+  return defaultRowBySlotName.get(slotName)
+}
+
+const { locale } = useLang()
+const lootParserLocale = computed(() => resolveLootParserLocale(locale.value))
 
 interface DBConfig {
   key: string
@@ -170,14 +198,19 @@ const showCustomCorrectionDialog = ref(false)
 const activeCorrectionTab = ref('player')
 const bisConfig = ref<BisConfig>({ playerBis: {} })
 
+const lootRecordsMap = computed(() => {
+  const map = new Map<string, LootRecord>()
+  lootRecords.value.forEach(r => map.set(r.key, r))
+  return map
+})
+
 const filteredPlayerCorrections = computed(() => {
   if (!showCustomCorrectionDialog.value)
     return []
   const list: any[] = []
-  const recordMap = new Map(lootRecords.value.map(r => [r.key, r]))
 
   Object.entries(recordPlayerCorrections.value).forEach(([key, newVal]) => {
-    const record = recordMap.get(key)
+    const record = lootRecordsMap.value.get(key)
     if (!record)
       return
     list.push({
@@ -191,12 +224,6 @@ const filteredPlayerCorrections = computed(() => {
   })
 
   return list
-})
-
-const lootRecordsMap = computed(() => {
-  const map = new Map<string, LootRecord>()
-  lootRecords.value.forEach(r => map.set(r.key, r))
-  return map
 })
 
 const filteredWeekCorrections = computed(() => {
@@ -297,12 +324,11 @@ const summarySortMode = ref<'part' | 'drop'>('part')
 const slotSortMode = ref<'part' | 'drop'>('part')
 const weekSortMode = ref<'part' | 'drop'>('drop')
 const bisSortMode = ref<'part' | 'drop'>('part')
+const SLOT_DEFINITIONS = PART_ORDER
 
 const playerMapping = ref<Record<string, string>>({})
 
 function getActualPlayer(name: string): string {
-  if (!playerMapping.value)
-    return name
   return playerMapping.value[name] || name
 }
 
@@ -349,7 +375,6 @@ const currentPage = ref(1)
 const pageSize = 50
 
 const logPath = ref('')
-const fullLogPath = ref('')
 const isSyncing = ref(false)
 const processedFiles = ref<Record<string, { size: number, mtime: number }>>({})
 const syncStartDate = ref(GAME_VERSION_CONFIG.RAID_START_TIME)
@@ -476,7 +501,7 @@ function getDisplayName(playerName: string | undefined | null): string {
 provide('getDisplayName', getDisplayName)
 
 const saveConfigDebounced = (() => {
-  let timer: any = null
+  let timer: ReturnType<typeof setTimeout> | null = null
   return (configs: { key: string, value: any }[]) => {
     if (timer)
       clearTimeout(timer)
@@ -547,7 +572,6 @@ watch(
       { key: 'winnerSearchPlayer', value: winnerSearchPlayer.value },
       { key: 'showInitialRoleSetup', value: showInitialRoleSetup.value },
       { key: 'blacklistedKeys', value: Array.from(blacklistedKeys.value) },
-      { key: 'showInitialRoleSetup', value: showInitialRoleSetup.value },
     ]
 
     const pendingUpdates: { key: string, value: any }[] = []
@@ -584,6 +608,7 @@ const detailedPlayerStats = computed(() => {
   if (isInitializing.value) {
     return {
       counts: {} as Record<string, number>,
+      rollCounts: {} as Record<string, number>,
       sortedPlayers: [] as string[],
     }
   }
@@ -645,6 +670,8 @@ const baseFilteredRecords = computed(() => {
   const startTs = new Date(syncStartDate.value).getTime()
   const endTs = syncEndDate.value ? new Date(syncEndDate.value).getTime() : Infinity
   const itemVis = itemVisibility.value
+  const keywordLower = String(itemSearchKeyword.value || '').trim().toLowerCase()
+  const winnerFilter = String(winnerSearchPlayer.value || '')
 
   return lootRecords.value.filter((record) => {
     if (isSystemFiltered(record.item))
@@ -656,12 +683,12 @@ const baseFilteredRecords = computed(() => {
     if (ts < startTs || ts > endTs)
       return false
 
-    if (itemSearchKeyword.value && !record.item.toLowerCase().includes(itemSearchKeyword.value.toLowerCase()))
+    if (keywordLower && !record.item.toLowerCase().includes(keywordLower))
       return false
 
-    if (winnerSearchPlayer.value) {
+    if (winnerFilter) {
       const actualWinner = getActualPlayer(getRecordPlayer(record))
-      if (actualWinner !== winnerSearchPlayer.value)
+      if (actualWinner !== winnerFilter)
         return false
     }
 
@@ -684,21 +711,67 @@ const filteredRecords = computed(() => {
   return result.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
 })
 
-const playerSummary = computed(() => {
-  if (isInitializing.value)
-    return {}
-  const summary: Record<string, Record<string, number>> = {}
-  filteredRecords.value.forEach((record) => {
-    const p = getActualPlayer(getRecordPlayer(record))
-    const i = record.item
-    if (!summary[p])
-      summary[p] = {}
-    if (!summary[p][i])
-      summary[p][i] = 0
-    summary[p][i]++
+const filteredRecordStats = computed(() => {
+  const nextPlayerSummary: Record<string, Record<string, number>> = {}
+  const nextSlotSummary: Record<string, Record<string, number>> = {}
+  const nextWeekSummary: Record<string, Record<string, LootRecord[]>> = {}
+  const randomWeaponMap: Record<string, Record<string, number>> = {}
+
+  SLOT_DEFINITIONS.forEach((s) => {
+    nextSlotSummary[s] = {}
   })
-  return summary
+
+  filteredRecords.value.forEach((record) => {
+    const player = getActualPlayer(getRecordPlayer(record))
+    const itemName = record.item
+
+    if (!nextPlayerSummary[player])
+      nextPlayerSummary[player] = {}
+    nextPlayerSummary[player]![itemName] = (nextPlayerSummary[player]![itemName] || 0) + 1
+
+    const rawSlot = getItemSlot(itemName)
+    const slot = rawSlot === '其他' ? itemName : rawSlot
+    if (!nextSlotSummary[slot])
+      nextSlotSummary[slot] = {}
+    nextSlotSummary[slot]![player] = (nextSlotSummary[slot]![player] || 0) + 1
+
+    if (rawSlot === '随武') {
+      if (!randomWeaponMap[player])
+        randomWeaponMap[player] = {}
+      randomWeaponMap[player]![itemName] = (randomWeaponMap[player]![itemName] || 0) + 1
+    }
+
+    const week = getRecordRaidWeekLabel(record)
+    if (!nextWeekSummary[week])
+      nextWeekSummary[week] = {}
+    if (!nextWeekSummary[week]![player])
+      nextWeekSummary[week]![player] = []
+    nextWeekSummary[week]![player]!.push(record)
+  })
+
+  Object.values(nextWeekSummary).forEach((weekPlayers) => {
+    Object.values(weekPlayers).forEach((records) => {
+      records.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+    })
+  })
+
+  const nextRandomWeaponDetails: Record<string, { name: string, count: number }[]> = {}
+  Object.entries(randomWeaponMap).forEach(([player, itemMap]) => {
+    nextRandomWeaponDetails[player] = Object.entries(itemMap).map(([name, count]) => ({
+      name,
+      count,
+    }))
+  })
+
+  return {
+    playerSummary: nextPlayerSummary,
+    slotSummary: nextSlotSummary,
+    weekSummary: nextWeekSummary,
+    randomWeaponDetails: nextRandomWeaponDetails,
+  }
 })
+
+const playerSummary = computed(() => filteredRecordStats.value.playerSummary)
 
 const uniqueItems = computed(() => {
   if (isInitializing.value)
@@ -755,6 +828,9 @@ const rawSuspiciousKeys = computed(() => {
         }
       }
     }
+
+    if (anchorTimestamps.length === 0)
+      continue
 
     allRecords.forEach((r) => {
       // 限定条件1: 道具名称符合 RAID_REGEX
@@ -907,7 +983,6 @@ onMounted(async () => {
     // 4. 处理 Handle 和 权限，记录权限缓存
     if (handleEntry && handleEntry.handle) {
       currentHandle.value = handleEntry.handle
-      fullLogPath.value = handleEntry.handle.name
       const status = await (
         handleEntry.handle as unknown as {
           queryPermission: (o: { mode: string }) => Promise<string>
@@ -986,7 +1061,7 @@ function handleVisibilityChange() {
 
 const isDragOverWindow = ref(false)
 const isDragOverZone = ref(false)
-let dragLeaveTimer: any = null
+let dragLeaveTimer: ReturnType<typeof setTimeout> | null = null
 
 const isSharedTooltipVisible = ref(false)
 const sharedTooltipRef = ref()
@@ -1041,9 +1116,7 @@ function handleGlobalDragLeave(e: DragEvent) {
   }, 100)
 }
 
-function handleGlobalDrop(e: DragEvent) {
-  e.preventDefault()
-  e.stopPropagation()
+function resetDragGuideState() {
   isDragOverWindow.value = false
   isDragOverZone.value = false
   if (dragLeaveTimer) {
@@ -1052,15 +1125,16 @@ function handleGlobalDrop(e: DragEvent) {
   }
 }
 
+function handleGlobalDrop(e: DragEvent) {
+  e.preventDefault()
+  e.stopPropagation()
+  resetDragGuideState()
+}
+
 function handleZoneDrop(e: DragEvent) {
   e.preventDefault()
   e.stopPropagation()
-  isDragOverWindow.value = false
-  isDragOverZone.value = false
-  if (dragLeaveTimer) {
-    clearTimeout(dragLeaveTimer)
-    dragLeaveTimer = null
-  }
+  resetDragGuideState()
 
   if (e.dataTransfer && e.dataTransfer.files.length > 0) {
     const file = e.dataTransfer.files[0]
@@ -1173,6 +1247,23 @@ const availableSeries = computed(() => {
 const assignedPlayers = computed(() => {
   return new Set(Object.values(playerRoles.value))
 })
+const unassignedPlayers = computed(() => {
+  return allPlayers.value.filter(p => !assignedPlayers.value.has(p))
+})
+const roleByPlayer = computed(() => {
+  const map = new Map<string, string>()
+  for (const [role, name] of Object.entries(playerRoles.value)) {
+    if (name && !map.has(name))
+      map.set(name, role)
+  }
+  return map
+})
+const activeMemberNames = computed(() => {
+  return Object.entries(playerRoles.value)
+    .filter(([role, name]) => name && !role.startsWith('LEFT:'))
+    .map(([_, name]) => name as string)
+})
+const activeMemberNameSet = computed(() => new Set(activeMemberNames.value))
 
 const isBisConfigComplete = computed(() => {
   if (!isRaidRolesComplete.value)
@@ -1190,6 +1281,11 @@ function handleGlobalKeydown(e: KeyboardEvent) {
     = ['INPUT', 'TEXTAREA'].includes(target.tagName) || target.isContentEditable
 
   if (e.key === 'Escape') {
+    if (isDragOverWindow.value || isDragOverZone.value) {
+      e.preventDefault()
+      resetDragGuideState()
+      return
+    }
     if (popoverTargetRecord.value) {
       popoverTargetRecord.value = null
       return
@@ -1253,9 +1349,12 @@ const selectablePlayersForMerge = computed(() => {
     .filter(p => !mappedAliases.has(p))
     .sort((a, b) => comparePlayersByRole(a, b, playerRollCountsMap.value))
 })
+const checkedVisiblePlayers = computed(() => {
+  return visibleAllPlayers.value.filter(isPlayerChecked)
+})
 
 const sortedSummaryPlayers = computed(() => {
-  let players = visibleAllPlayers.value.filter(isPlayerChecked)
+  let players = checkedVisiblePlayers.value
   const filterMode = playerSummaryFilterMode.value
 
   if (filterMode === 'needed') {
@@ -1281,21 +1380,21 @@ const visibleUniqueItems = computed(() => {
   return uniqueItems.value.filter(isItemChecked)
 })
 
-const SLOT_DEFINITIONS = PART_ORDER
-
 function getItemSortPriority(
   item: string,
   mode: 'part' | 'drop' = 'part',
 ): number {
+  const cached = itemSortPriorityCache[mode].get(item)
+  if (cached !== undefined)
+    return cached
+
   const order = mode === 'part' ? PART_ORDER : DROP_ORDER
   const index = order.findIndex(
     def => item.includes(def) || def.includes(item),
   )
-  if (index !== -1)
-    return index
-  if (RAID_REGEX.test(item))
-    return 50
-  return 100
+  const priority = index !== -1 ? index : RAID_REGEX.test(item) ? 50 : 100
+  itemSortPriorityCache[mode].set(item, priority)
+  return priority
 }
 
 const visibleItemCount = computed(() => visibleUniqueItems.value.length)
@@ -1380,53 +1479,8 @@ function getItemSlot(itemName: string): string {
   return '其他'
 }
 
-const slotSummary = computed(() => {
-  if (isInitializing.value)
-    return {}
-  const summary: Record<string, Record<string, number>> = {}
-  SLOT_DEFINITIONS.forEach((s) => {
-    summary[s] = {}
-  })
-
-  filteredRecords.value.forEach((record) => {
-    let slot = getItemSlot(record.item)
-
-    if (slot === '其他') {
-      slot = record.item
-    }
-
-    if (!summary[slot])
-      summary[slot] = {}
-    const currentSlot = summary[slot]!
-
-    const p = getActualPlayer(getRecordPlayer(record))
-
-    if (!currentSlot[p])
-      currentSlot[p] = 0
-    currentSlot[p]++
-  })
-  return summary
-})
-
-const randomWeaponDetails = computed(() => {
-  const map: Record<string, Record<string, number>> = {}
-  filteredRecords.value.forEach((r) => {
-    if (getItemSlot(r.item) === '随武') {
-      const p = getActualPlayer(getRecordPlayer(r))
-      if (!map[p])
-        map[p] = {}
-      map[p][r.item] = (map[p][r.item] || 0) + 1
-    }
-  })
-  const result: Record<string, { name: string, count: number }[]> = {}
-  for (const p in map) {
-    result[p] = Object.entries(map[p]!).map(([name, count]) => ({
-      name,
-      count,
-    }))
-  }
-  return result
-})
+const slotSummary = computed(() => filteredRecordStats.value.slotSummary)
+const randomWeaponDetails = computed(() => filteredRecordStats.value.randomWeaponDetails)
 
 const displaySlots = computed(() => {
   const filterMode = slotSummaryFilterMode.value
@@ -1442,7 +1496,7 @@ const displaySlots = computed(() => {
       return true
 
     if (filterMode === 'needed') {
-      const row = DEFAULT_ROWS.find(r => r.name === s || r.keywords === s)
+      const row = findDefaultRowBySlot(s)
       if (!row)
         return false
 
@@ -1467,19 +1521,22 @@ const displaySlots = computed(() => {
       && !(DROP_ORDER as unknown as string[]).includes(k),
   )
 
+  const dynamicSlotCounts: Record<string, number> = {}
+  dynamicItems.forEach((key) => {
+    dynamicSlotCounts[key] = Object.values(slotSummary.value[key] || {}).reduce(
+      (sum, c) => sum + c,
+      0,
+    )
+  })
+
   const dynamic = dynamicItems
     .filter((k) => {
       const hasObtained = Object.keys(slotSummary.value[k] || {}).length > 0
       return hasObtained
     })
     .sort((a, b) => {
-      const getCount = (key: string) =>
-        Object.values(slotSummary.value[key] || {}).reduce(
-          (sum, c) => sum + c,
-          0,
-        )
-      const ca = getCount(a)
-      const cb = getCount(b)
+      const ca = dynamicSlotCounts[a] || 0
+      const cb = dynamicSlotCounts[b] || 0
       if (ca !== cb)
         return cb - ca
       return a.localeCompare(b)
@@ -1519,34 +1576,13 @@ function toggleWeekCorrection(record: LootRecord) {
   recordWeekCorrections.value = newMap
 }
 
-const weekSummary = computed(() => {
-  const summary: Record<string, Record<string, LootRecord[]>> = {}
-  filteredRecords.value.forEach((r) => {
-    const week = getRecordRaidWeekLabel(r)
-    if (!summary[week])
-      summary[week] = {}
-    const p = getActualPlayer(getRecordPlayer(r))
-    if (!summary[week][p])
-      summary[week][p] = []
-    summary[week][p].push(r)
-  })
-
-  for (const week in summary) {
-    for (const player in summary[week]) {
-      const records = summary[week][player]
-      if (records) {
-        records.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-      }
-    }
-  }
-  return summary
-})
+const weekSummary = computed(() => filteredRecordStats.value.weekSummary)
 
 const sortedWeeks = computed(() => {
   return Object.keys(weekSummary.value).sort().reverse()
 })
 
-function getSortedRecordsInWeek(weekName: string): LootRecord[] {
+function buildSortedRecordsInWeek(weekName: string): LootRecord[] {
   const playersMap = weekSummary.value[weekName]
   if (!playersMap)
     return []
@@ -1570,6 +1606,31 @@ function getSortedRecordsInWeek(weekName: string): LootRecord[] {
     // 3. 职能相同时，按照时间顺序
     return a.timestamp.getTime() - b.timestamp.getTime()
   })
+}
+const sortedRecordsByWeekMap = computed(() => {
+  const map: Record<string, LootRecord[]> = {}
+  for (const week of sortedWeeks.value)
+    map[week] = buildSortedRecordsInWeek(week)
+  return map
+})
+const weekDividerByWeekMap = computed(() => {
+  const map: Record<string, boolean[]> = {}
+  for (const week of sortedWeeks.value) {
+    const records = sortedRecordsByWeekMap.value[week] || []
+    const dividers = records.map((record, index) => {
+      if (index >= records.length - 1)
+        return false
+      const next = records[index + 1]
+      if (!next)
+        return false
+      return getItemGroupId(record.item) !== getItemGroupId(next.item)
+    })
+    map[week] = dividers
+  }
+  return map
+})
+function getSortedRecordsInWeek(weekName: string): LootRecord[] {
+  return sortedRecordsByWeekMap.value[weekName] || []
 }
 
 function getItemGroupId(itemName: string): number {
@@ -1595,17 +1656,8 @@ function getItemGroupId(itemName: string): number {
   }
 }
 
-function shouldShowWeekDivider(records: LootRecord[], index: number): boolean {
-  if (index >= records.length - 1)
-    return false
-  const current = records[index]
-  const next = records[index + 1]
-  if (!current || !next)
-    return false
-
-  const currentGroup = getItemGroupId(current.item)
-  const nextGroup = getItemGroupId(next.item)
-  return currentGroup !== nextGroup
+function shouldShowWeekDivider(weekName: string, index: number): boolean {
+  return weekDividerByWeekMap.value[weekName]?.[index] || false
 }
 
 const contextMenuRecord = ref<LootRecord | null>(null)
@@ -1651,7 +1703,7 @@ function openWinnerPopover(e: MouseEvent, record: LootRecord) {
   popoverOpenedWithCorrection.value[record.key] = !!recordPlayerCorrections.value[record.key]
 }
 
-watch(() => popoverTargetRecord.value, (newVal) => {
+watch(popoverTargetRecord, (newVal) => {
   if (!newVal) {
     popoverTriggerRef.value = null
   }
@@ -1665,16 +1717,21 @@ const paginatedRecords = computed(() => {
   const start = (currentPage.value - 1) * pageSize
   return filteredRecords.value.slice(start, start + pageSize)
 })
-
-function resetFilters() {
-  itemVisibility.value = {}
-  playerVisibility.value = {}
-  isRaidFilterActive.value = false
-  itemSearchKeyword.value = ''
-  winnerSearchPlayer.value = ''
-  syncStartDate.value = GAME_VERSION_CONFIG.RAID_START_TIME
-  syncEndDate.value = null
-}
+const otherRollsByRecordKey = computed(() => {
+  const map: Record<string, RollInfo[]> = {}
+  for (const record of paginatedRecords.value) {
+    map[record.key] = record.rolls
+      .filter(r => r.player !== record.player)
+      .sort((a, b) => {
+        const typeA = rollTypePriority[a.type as keyof typeof rollTypePriority] ?? 3
+        const typeB = rollTypePriority[b.type as keyof typeof rollTypePriority] ?? 3
+        if (typeA !== typeB)
+          return typeA - typeB
+        return (b.value || 0) - (a.value || 0)
+      })
+  }
+  return map
+})
 
 async function setLogPath() {
   try {
@@ -1704,7 +1761,6 @@ async function setLogPath() {
       await dbHandle.set({ key: 'current-log-dir', handle })
       currentHandle.value = handle
       logPath.value = handle.name
-      fullLogPath.value = handle.name
     }
   }
   catch (e: any) {
@@ -1891,7 +1947,7 @@ async function syncLogFiles(userInitiated = false) {
           records,
           players: filePlayers,
           items: fileItems,
-        } = await parseLogWithWorker(text)
+        } = await parseLogWithWorker(text, lootParserLocale.value)
 
         for (const r of records) {
           if (!localKeys.has(r.key) && !blacklistedKeys.value.has(r.key)) {
@@ -2006,7 +2062,7 @@ async function syncLogFiles(userInitiated = false) {
   }
 }
 
-function parseLogWithWorker(text: string): Promise<{
+function parseLogWithWorker(text: string, locale: LootParserLocale): Promise<{
   records: LootRecord[]
   players: string[]
   items: string[]
@@ -2024,7 +2080,7 @@ function parseLogWithWorker(text: string): Promise<{
       worker.terminate()
     }
 
-    worker.postMessage(text)
+    worker.postMessage({ text, locale })
   })
 }
 
@@ -2155,26 +2211,20 @@ function comparePlayersByRole(
   return a.localeCompare(b)
 }
 
-function getSortedPlayersInSlot(
+function buildSortedPlayersInSlot(
   summary: Record<string, number>,
   slotName: string,
 ) {
   const filterMode = slotSummaryFilterMode.value
-  const row = DEFAULT_ROWS.find(
-    r => r.name === slotName || r.keywords === slotName,
-  )
+  const row = findDefaultRowBySlot(slotName)
   if (!row) {
     return Object.keys(summary || {}).sort((a, b) =>
       comparePlayersByRole(a, b, summary || {}),
     )
   }
 
-  const activeMembersNames = Object.entries(playerRoles.value)
-    .filter(([role, name]) => name && !role.startsWith('LEFT:'))
-    .map(([_, name]) => name)
-
   const allPlayersInSlot = Array.from(
-    new Set([...Object.keys(summary || {}), ...activeMembersNames]),
+    new Set([...Object.keys(summary || {}), ...activeMemberNames.value]),
   )
   const result: string[] = []
 
@@ -2190,7 +2240,7 @@ function getSortedPlayersInSlot(
     const targetReq = calculateTargetRequirement(row, p)
 
     if (filterMode === 'all') {
-      if (count > 0 || activeMembersNames.includes(p))
+      if (count > 0 || activeMemberNameSet.value.has(p))
         result.push(p)
     }
     else if (filterMode === 'obtained') {
@@ -2205,11 +2255,19 @@ function getSortedPlayersInSlot(
 
   return result.sort((a, b) => comparePlayersByRole(a, b, summary || {}))
 }
+const sortedPlayersBySlotMap = computed(() => {
+  const map: Record<string, string[]> = {}
+  for (const slot of displaySlots.value) {
+    map[slot] = buildSortedPlayersInSlot(slotSummary.value[slot] || {}, slot)
+  }
+  return map
+})
+function getSortedPlayersInSlot(slotName: string) {
+  return sortedPlayersBySlotMap.value[slotName] || []
+}
 
-function getSlotItemTagInfo(player: string, slotName: string, count: number) {
-  const row = DEFAULT_ROWS.find(
-    r => r.name === slotName || r.keywords === slotName || r.id === slotName,
-  )
+function buildSlotItemTagInfo(player: string, slotName: string, count: number) {
+  const row = findDefaultRowBySlot(slotName)
 
   if (row?.id === 'random_weapon' || slotName === '随武') {
     return {
@@ -2238,7 +2296,7 @@ function getSlotItemTagInfo(player: string, slotName: string, count: number) {
   if (!isRegularRole) {
     return {
       count,
-      layerName: LAYER_CONFIG.find(l => l.items.includes(row.id))?.name,
+      layerName: layerNameByRowId.get(row.id),
     }
   }
 
@@ -2248,17 +2306,32 @@ function getSlotItemTagInfo(player: string, slotName: string, count: number) {
 
   const isBisValue = isBisItem(row, bis)
 
-  const layer = LAYER_CONFIG.find(l => l.items.includes(row.id))
-
   return {
     count,
     isBis: hasConfig ? isBisValue : undefined,
     isBisFalse: !isBisValue && targetReq > 0,
-    layerName: layer?.name,
+    layerName: layerNameByRowId.get(row.id),
   }
 }
+const slotItemTagInfoBySlotMap = computed(() => {
+  const map: Record<string, Record<string, ReturnType<typeof buildSlotItemTagInfo>>> = {}
+  for (const slot of displaySlots.value) {
+    const slotPlayers = sortedPlayersBySlotMap.value[slot] || []
+    const slotCounts = slotSummary.value[slot] || {}
+    const playerTagMap: Record<string, ReturnType<typeof buildSlotItemTagInfo>> = {}
+    for (const player of slotPlayers) {
+      playerTagMap[player] = buildSlotItemTagInfo(player, slot, slotCounts[player] || 0)
+    }
+    map[slot] = playerTagMap
+  }
+  return map
+})
+function getSlotItemTagInfo(player: string, slotName: string) {
+  return slotItemTagInfoBySlotMap.value[slotName]?.[player]
+    || buildSlotItemTagInfo(player, slotName, slotSummary.value[slotName]?.[player] || 0)
+}
 
-function getFilteredItemsInPlayerSummary(player: string) {
+function buildFilteredItemsInPlayerSummary(player: string) {
   const obtainedItemsMap = playerSummary.value[player] || {}
   const categoryCounts: Record<string, number> = {}
   const consumedItemNames = new Set<string>()
@@ -2308,7 +2381,6 @@ function getFilteredItemsInPlayerSummary(player: string) {
     }
 
     if (shouldShow) {
-      const layer = LAYER_CONFIG.find(l => l.items.includes(row.id))
       results.push({
         name: row.keywords || row.name,
         count: cVal,
@@ -2321,7 +2393,7 @@ function getFilteredItemsInPlayerSummary(player: string) {
         isRandomWeapon: row.id === 'random_weapon',
         details: row.id === 'random_weapon' ? randomWeaponDetails.value[player] : undefined,
         id: row.id,
-        layerName: layer ? layer.name : undefined,
+        layerName: layerNameByRowId.get(row.id),
       })
     }
   })
@@ -2369,13 +2441,13 @@ function getFilteredItemsInPlayerSummary(player: string) {
   results.sort((a, b) => {
     const ia = getItemSortPriority(
       a.id
-        ? DEFAULT_ROWS.find(r => r.id === a.id)?.keywords || a.name
+        ? defaultRowById.get(a.id)?.keywords || a.name
         : a.name,
       mode,
     )
     const ib = getItemSortPriority(
       b.id
-        ? DEFAULT_ROWS.find(r => r.id === b.id)?.keywords || b.name
+        ? defaultRowById.get(b.id)?.keywords || b.name
         : b.name,
       mode,
     )
@@ -2392,13 +2464,18 @@ function getFilteredItemsInPlayerSummary(player: string) {
   }
   return results
 }
+const filteredItemsByPlayerSummaryMap = computed(() => {
+  const map: Record<string, ReturnType<typeof buildFilteredItemsInPlayerSummary>> = {}
+  for (const player of sortedSummaryPlayers.value)
+    map[player] = buildFilteredItemsInPlayerSummary(player)
+  return map
+})
+function getFilteredItemsInPlayerSummary(player: string) {
+  return filteredItemsByPlayerSummaryMap.value[player] || []
+}
 
 function getPlayerRole(player: string) {
-  for (const [role, pName] of Object.entries(playerRoles.value)) {
-    if (pName === player)
-      return role
-  }
-  return undefined
+  return roleByPlayer.value.get(player)
 }
 
 function handlePlayerClick(e: MouseEvent, p: string) {
@@ -2538,8 +2615,8 @@ function querySearchPlayers(qs: string, cb: any) {
 }
 
 async function submitManualRecord() {
-  const item = manualForm.value.item.trim()
-  const player = manualForm.value.player.trim()
+  const item = String(manualForm.value.item || '').trim()
+  const player = String(manualForm.value.player || '').trim()
 
   if (!manualForm.value.timestamp || !item || !player) {
     ElMessage.error('请填写完整信息')
@@ -3087,16 +3164,7 @@ function getWinnerRollInfo(record: LootRecord): RollInfo | null {
   return null
 }
 function getOtherRolls(record: LootRecord): RollInfo[] {
-  return record.rolls
-    .filter(r => r.player !== record.player)
-    .sort((a, b) => {
-      const typePriority = { need: 0, greed: 1 } as const
-      const typeA = typePriority[a.type as keyof typeof typePriority] ?? 3
-      const typeB = typePriority[b.type as keyof typeof typePriority] ?? 3
-      if (typeA !== typeB)
-        return typeA - typeB
-      return (b.value || 0) - (a.value || 0)
-    })
+  return otherRollsByRecordKey.value[record.key] || []
 }
 
 async function confirmClear() {
@@ -3123,7 +3191,6 @@ async function confirmClear() {
     parsedLogFiles.value = []
     pendingLogFiles.value = []
     currentHandle.value = null
-    fullLogPath.value = ''
     lastSyncTime.value = ''
     // 重置同步时间范围
     syncStartDate.value = GAME_VERSION_CONFIG.RAID_START_TIME
@@ -3275,9 +3342,8 @@ const activeStep = computed(() => {
 
           <div class="wizard-content">
             <div
-              v-if="isDragOverWindow"
               class="drag-guide-zone"
-              :class="{ 'is-active': isDragOverZone }"
+              :class="{ 'is-visible': isDragOverWindow, 'is-active': isDragOverWindow && isDragOverZone }"
               @drop.stop.prevent="handleZoneDrop"
               @dragover.prevent
               @dragenter="isDragOverZone = true"
@@ -3476,7 +3542,7 @@ const activeStep = computed(() => {
                         @change="addSpecialRole($event)"
                       >
                         <ElOption
-                          v-for="p in allPlayers.filter(p => !assignedPlayers.has(p))"
+                          v-for="p in unassignedPlayers"
                           :key="p"
                           :label="getDisplayName(p)"
                           :value="p"
@@ -3525,9 +3591,8 @@ const activeStep = computed(() => {
       >
         <div class="control-bar" style="position: relative">
           <div
-            v-if="isDragOverWindow"
             class="drag-guide-zone"
-            :class="{ 'is-active': isDragOverZone }"
+            :class="{ 'is-visible': isDragOverWindow, 'is-active': isDragOverWindow && isDragOverZone }"
             @drop.stop.prevent="handleZoneDrop"
             @dragover.prevent
             @dragenter="isDragOverZone = true"
@@ -3781,9 +3846,7 @@ const activeStep = computed(() => {
                             @change="addSpecialRole($event)"
                           >
                             <ElOption
-                              v-for="p in allPlayers.filter(
-                                (p) => !assignedPlayers.has(p),
-                              )"
+                              v-for="p in unassignedPlayers"
                               :key="p"
                               :label="getDisplayName(p)"
                               :value="p"
@@ -3851,7 +3914,6 @@ const activeStep = computed(() => {
                     </span>
                   </div>
                 </el-tooltip>
-                <div v-if="!isOnlyRaidMembersActive" class="header-sep" />
               </div>
               <div class="acts">
                 <el-popover
@@ -4181,7 +4243,6 @@ const activeStep = computed(() => {
 
         <div class="main-viewport" style="position: relative">
           <el-tabs
-            v-if="filteredRecords.length > 0"
             v-model="viewMode"
             class="mode-tabs-el"
             type="card"
@@ -4304,7 +4365,7 @@ const activeStep = computed(() => {
                           class="header-search-input"
                         >
                           <ElOption
-                            v-for="p in allPlayers"
+                            v-for="p in checkedVisiblePlayers"
                             :key="p"
                             :label="getDisplayName(p)"
                             :value="p"
@@ -4495,10 +4556,7 @@ const activeStep = computed(() => {
                   </div>
                   <div>
                     <div
-                      v-for="player in getSortedPlayersInSlot(
-                        slotSummary[slot] || {},
-                        slot,
-                      )"
+                      v-for="player in getSortedPlayersInSlot(slot)"
                       :key="player"
                       class="summary-item"
                       :class="{
@@ -4515,11 +4573,7 @@ const activeStep = computed(() => {
                       <div class="s-right-group">
                         <SummaryItemTags
                           :item="
-                            getSlotItemTagInfo(
-                              player,
-                              slot,
-                              slotSummary[slot]?.[player] || 0,
-                            )
+                            getSlotItemTagInfo(player, slot)
                           "
                         />
                       </div>
@@ -4557,65 +4611,60 @@ const activeStep = computed(() => {
                       {{ getRecordFormattedWeekLabel(week) }}
                     </div>
                     <div class="week-list-body">
-                      <div
-                        v-for="recordsGroup in [getSortedRecordsInWeek(week)]"
-                        :key="recordsGroup.length + week"
+                      <template
+                        v-for="(rec, idx) in getSortedRecordsInWeek(week)"
+                        :key="rec.key"
                       >
-                        <template
-                          v-for="(rec, idx) in recordsGroup"
-                          :key="rec.key"
+                        <div
+                          class="summary-item week-record-row"
+                          :class="{
+                            'is-corrected': recordWeekCorrections[rec.key],
+                            'is-suspicious':
+                              rawSuspiciousKeys.has(rec.key)
+                              && !recordWeekCorrections[rec.key],
+                            'is-actionable': canCorrectWeek(rec),
+                          }"
+                          @contextmenu.prevent="
+                            handleRecordTrigger($event, rec)
+                          "
+                          @click.stop="handleRecordTrigger($event, rec)"
+                          @mouseenter="handleWeekItemEnter($event, rec)"
+                          @mouseleave="handleWeekItemLeave"
                         >
-                          <div
-                            class="summary-item week-record-row"
-                            :class="{
-                              'is-corrected': recordWeekCorrections[rec.key],
-                              'is-suspicious':
-                                rawSuspiciousKeys.has(rec.key)
-                                && !recordWeekCorrections[rec.key],
-                              'is-actionable': canCorrectWeek(rec),
-                            }"
-                            @contextmenu.prevent="
-                              handleRecordTrigger($event, rec)
-                            "
-                            @click.stop="handleRecordTrigger($event, rec)"
-                            @mouseenter="handleWeekItemEnter($event, rec)"
-                            @mouseleave="handleWeekItemLeave"
-                          >
-                            <div class="week-row-aside">
-                              <PlayerDisplay
-                                :name="rec.player"
-                                :role="getPlayerRole(rec.player)"
-                                :show-only-role="showOnlyRole"
-                                name-class="week-player-name"
-                              />
-                            </div>
-                            <div class="week-row-main">
-                              <span class="week-item-name">{{
-                                rec.item
-                              }}</span>
-                              <el-icon
-                                v-if="
-                                  rawSuspiciousKeys.has(rec.key)
-                                    && !recordWeekCorrections[rec.key]
-                                "
-                                class="row-status-icon is-warning"
-                              >
-                                <Warning />
-                              </el-icon>
-                              <el-icon
-                                v-if="recordWeekCorrections[rec.key]"
-                                class="row-status-icon is-info"
-                              >
-                                <Timer />
-                              </el-icon>
-                            </div>
+                          <div class="week-row-aside">
+                            <PlayerDisplay
+                              :name="rec.player"
+                              :role="getPlayerRole(rec.player)"
+                              :show-only-role="showOnlyRole"
+                              name-class="week-player-name"
+                            />
                           </div>
-                          <div
-                            v-if="shouldShowWeekDivider(recordsGroup, idx)"
-                            class="week-list-divider"
-                          />
-                        </template>
-                      </div>
+                          <div class="week-row-main">
+                            <span class="week-item-name">{{
+                              rec.item
+                            }}</span>
+                            <el-icon
+                              v-if="
+                                rawSuspiciousKeys.has(rec.key)
+                                  && !recordWeekCorrections[rec.key]
+                              "
+                              class="row-status-icon is-warning"
+                            >
+                              <Warning />
+                            </el-icon>
+                            <el-icon
+                              v-if="recordWeekCorrections[rec.key]"
+                              class="row-status-icon is-info"
+                            >
+                              <Timer />
+                            </el-icon>
+                          </div>
+                        </div>
+                        <div
+                          v-if="shouldShowWeekDivider(week, idx)"
+                          class="week-list-divider"
+                        />
+                      </template>
                     </div>
                   </div>
                 </div>
@@ -4643,7 +4692,7 @@ const activeStep = computed(() => {
               </template>
               <LootStatisticsPanel
                 :records="allConditionRecords"
-                :players="visibleAllPlayers.filter(isPlayerChecked)"
+                :players="checkedVisiblePlayers"
                 :get-actual-player="getActualPlayer"
                 :get-player-role="getPlayerRole"
                 :record-week-corrections="recordWeekCorrections"
@@ -4738,25 +4787,6 @@ const activeStep = computed(() => {
               </div>
             </el-tab-pane>
           </el-tabs>
-
-          <!-- 筛选结果为空时的引导 -->
-          <div v-else class="empty-placeholder">
-            <div class="empty-icon">
-              <el-icon><Search /></el-icon>
-            </div>
-            <div class="empty-title">
-              未发现匹配记录
-            </div>
-            <p class="empty-desc">
-              当前筛选条件过于严格，数据库中有数据但未能匹配。<br>
-              请尝试<span class="empty-highlight">清除筛选条件</span>或调整时间范围。
-            </p>
-            <div class="empty-hint">
-              <el-button type="info" plain @click="resetFilters">
-                显示所有掉落
-              </el-button>
-            </div>
-          </div>
 
           <!-- 共享的获得者变更 Popover -->
           <el-popover
@@ -6951,6 +6981,7 @@ html.dark .lock-card p {
 </style>
 
 <style lang="scss" scoped>
+/* Layout & Header */
 .app-container {
   height: 100%;
   overflow-y: auto;
@@ -7027,7 +7058,6 @@ html.dark .lock-card p {
   height: 32px;
   box-sizing: border-box;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  gap: 12px; // 保持稳定的间距
 
   & :deep(.date-picker-el) {
     width: 145px !important;
@@ -8255,7 +8285,6 @@ html.dark {
 .mode-tabs-el :deep(.el-tab-pane) {
   background: white;
   border: 1px solid #e2e8f0;
-  border-top: none;
   border-radius: 0 0 12px 12px;
   box-sizing: border-box;
 }
@@ -8824,20 +8853,6 @@ html.dark .drop-hint {
   border-radius: 10px;
 }
 
-.role-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 4px 8px;
-  padding: 0;
-}
-
-.loot-record-table :deep(th.el-table__cell) {
-  background-color: #f8fafc;
-  color: #64748b;
-  font-weight: 800;
-  font-size: 12px;
-}
-
 .loot-record-table :deep(.el-table__row) {
   content-visibility: auto;
   contain-intrinsic-size: 1px 48px;
@@ -9254,7 +9269,7 @@ html.dark {
   to { opacity: 1; transform: translateY(0); }
 }
 .onboarding-wizard {
-  height:100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9746,9 +9761,13 @@ html.dark {
 }
 
 .drag-guide-zone {
-  position: absolute;
+  position: fixed;
   inset: 12px;
   z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(6px) scale(0.995);
   background-color: rgba(236, 245, 255, 0.9);
   border: 2px dashed #409eff;
   border-radius: 12px;
@@ -9767,8 +9786,13 @@ html.dark {
   gap: 12px;
   backdrop-filter: blur(12px) saturate(180%);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-  animation: fade-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    visibility 0s linear 0.18s;
 
   .guide-icon {
     font-size: 42px;
@@ -9779,6 +9803,20 @@ html.dark {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     letter-spacing: 1px;
   }
+}
+
+.drag-guide-zone.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    visibility 0s linear 0s;
 }
 
 .drag-guide-zone.is-active {
@@ -9887,7 +9925,7 @@ html.dark {
   margin: 0 auto 32px;
 }
 
-.wizard-content{
-  height:100%;
+.wizard-content {
+  height: 100%;
 }
 </style>

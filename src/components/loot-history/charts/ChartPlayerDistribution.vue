@@ -52,24 +52,20 @@ const option = computed(() => {
 
   // 直接使用 props.players 的顺序，因为外部已经按 Role 排序好了
   const dataList = props.players.map((p) => {
-    const role = props.getPlayerRole ? props.getPlayerRole(p) : undefined
+    const roleRaw = props.getPlayerRole ? props.getPlayerRole(p) : undefined
     const count = counts.get(p) || 0
+    const displayName = getDisplayName(p)
     return {
-      name: getDisplayName(p),
+      rawName: p,
+      name: displayName,
       value: count,
-      role: role ? getRoleDisplayName(role) : '',
+      roleRaw: roleRaw || '',
+      role: roleRaw ? getRoleDisplayName(roleRaw) : '',
     }
   })
 
   const xData = dataList.map(d => d.name)
   const seriesData = dataList.map(d => d.value)
-
-  const nameToRoleMap = new Map<string, string>()
-  props.players.forEach((p) => {
-    const role = props.getPlayerRole ? props.getPlayerRole(p) : undefined
-    if (role)
-      nameToRoleMap.set(p, role)
-  })
 
   return {
     backgroundColor: 'transparent',
@@ -82,9 +78,9 @@ const option = computed(() => {
       },
       formatter: (params: any) => {
         const item = params[0]
-        const name = item.name
-        const role = nameToRoleMap.get(name)
-        const roleStr = role ? `[${role}] ` : ''
+        const data = dataList[item.dataIndex]
+        const roleStr = data?.role ? `[${data.role}] ` : ''
+        const name = data?.name || item.name
         return `${roleStr}${name}<br/>获取数量: <b>${item.value}</b>`
       },
     },
@@ -103,9 +99,8 @@ const option = computed(() => {
       axisLabel: {
         interval: 0,
         rotate: 0,
-        formatter: (value: string) => {
-          const p = props.players.find(name => getDisplayName(name) === value)
-          const rawRole = p ? nameToRoleMap.get(p) : undefined
+        formatter: (value: string, index: number) => {
+          const rawRole = dataList[index]?.roleRaw
           return formatChartPlayerLabel(value, rawRole, props.playerVisibility)
         },
         rich: getChartLabelRich(props.playerVisibility),
@@ -137,8 +132,7 @@ const option = computed(() => {
         data: seriesData,
         itemStyle: {
           color: (params: any) => {
-            const name = params.name
-            const role = nameToRoleMap.get(name)
+            const role = dataList[params.dataIndex]?.roleRaw
             return getRoleColor(role)
           },
           borderRadius: [4, 4, 0, 0],

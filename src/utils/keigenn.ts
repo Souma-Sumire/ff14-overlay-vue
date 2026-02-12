@@ -30,6 +30,10 @@ export function multiplierEffect(
     // DOT、真实伤害永远无效
     return 'unuseful'
   }
+  if (damageType === 'unknown') {
+    // 我不道啊
+    return 'useful'
+  }
   else if (
     // 真无敌
     (status.performance.darkness === 0

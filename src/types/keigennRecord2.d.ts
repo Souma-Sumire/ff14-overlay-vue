@@ -113,6 +113,7 @@ export interface PerformanceType {
   physics: number
   magic: number
   darkness: number
+  unknown?: number
 }
 
 export interface Keigenn {

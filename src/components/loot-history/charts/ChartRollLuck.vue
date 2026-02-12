@@ -69,30 +69,24 @@ const option = computed(() => {
     const avg = count > 0 ? sum / count : 0
     const max = count > 0 ? Math.max(...rolls) : 0
     const min = count > 0 ? Math.min(...rolls) : 0
-    const role = props.getPlayerRole ? props.getPlayerRole(p) : undefined
+    const roleRaw = props.getPlayerRole ? props.getPlayerRole(p) : undefined
+    const displayName = getDisplayName(p)
 
     return {
-      name: getDisplayName(p),
+      rawName: p,
+      name: displayName,
       value: avg, // 主图显示平均值
       min,
       max,
       count,
-      role: role || '',
-      formattedRole: role ? getRoleDisplayName(role) : '',
+      roleRaw: roleRaw || '',
+      formattedRole: roleRaw ? getRoleDisplayName(roleRaw) : '',
     }
   })
 
   // 3. 准备图表数据
   const xData = dataList.map(d => d.name)
   const seriesData = dataList.map(d => d.value)
-
-  const nameToRoleMap = new Map<string, string>()
-  const nameToDataMap = new Map<string, typeof dataList[0]>()
-
-  dataList.forEach((d) => {
-    nameToRoleMap.set(d.name, d.formattedRole)
-    nameToDataMap.set(d.name, d)
-  })
 
   return {
     backgroundColor: 'transparent',
@@ -105,13 +99,13 @@ const option = computed(() => {
       },
       formatter: (params: any) => {
         const item = params[0]
-        const name = item.name
-        const data = nameToDataMap.get(name)
+        const data = dataList[item.dataIndex]
         if (!data)
           return ''
 
         const roleStr = data.formattedRole ? `[${data.formattedRole}] ` : ''
 
+        const name = data.name
         let html = `${roleStr}<b>${name}</b><br/>`
         if (data.count === 0) {
           html += `<span style="color:#999">无数据</span>`
@@ -140,9 +134,8 @@ const option = computed(() => {
       axisLabel: {
         interval: 0,
         rotate: 0,
-        formatter: (value: string) => {
-          const p = props.players.find(name => getDisplayName(name) === value)
-          const rawRole = p ? nameToDataMap.get(getDisplayName(p))?.role : undefined
+        formatter: (value: string, index: number) => {
+          const rawRole = dataList[index]?.roleRaw
           return formatChartPlayerLabel(value, rawRole, props.playerVisibility)
         },
         rich: getChartLabelRich(props.playerVisibility),
@@ -176,8 +169,8 @@ const option = computed(() => {
         data: seriesData,
         itemStyle: {
           color: (params: any) => {
-            const data = nameToDataMap.get(params.name)
-            return getRoleColor(data?.role)
+            const data = dataList[params.dataIndex]
+            return getRoleColor(data?.roleRaw)
           },
           borderRadius: [4, 4, 0, 0],
         },
