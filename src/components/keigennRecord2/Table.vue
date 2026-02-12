@@ -362,6 +362,9 @@ const columns = computed<Column[]>(() => [
               'onMouseenter': (e: MouseEvent) => {
                 handleHover(rowData, 'death-recap', e)
               },
+              'onClick': (e: MouseEvent) => {
+                copyLastRowBeforeDeath(rowData, e)
+              },
             },
             ' [死亡回放]',
           ),
@@ -526,46 +529,83 @@ const columns = computed<Column[]>(() => [
 
 let msgHdl: MessageHandler | null = null
 
+function buildRowCopyText(rowData: RowVO) {
+  const {
+    action,
+    actionCN,
+    amount,
+    keigenns,
+    time,
+    type,
+    effect,
+    currentHp,
+    maxHp,
+    shield,
+    reduction,
+    jobEnum,
+  } = rowData
+  const sp
+    = effect === 'damage done' ? '' : `,${t(`keigennRecord.${effect}`)}`
+  const jobName = Util.jobEnumToJob(jobEnum)
+  return `${time} ${t(`keigennRecord.job.${jobName}`)} ${props.actionKey === 'action' ? action : actionCN} ${amount.toLocaleString()}(${t(`keigennRecord.${type}`)}) ${t(
+    'keigennRecord.reduction',
+  )}(${(reduction * 100).toFixed(0)}%):${keigenns.length === 0 && sp === ''
+    ? t('keigennRecord.none')
+    : keigenns
+      .map(k => (userOptions.statusCN ? k.name : k.effect))
+      .join(',') + sp
+  } ${t('keigennRecord.hp')}:${currentHp}(${Math.round(
+    (currentHp / maxHp) * 100,
+  )}%)+${t('keigennRecord.shield')}:${Math.round(
+    (maxHp * +shield) / 100,
+  )}(${shield}%)`
+}
+
+function copyRowText(rowData: RowVO) {
+  const result = buildRowCopyText(rowData)
+  copyToClipboard(result)
+    .then(() => {
+      msgHdl?.close()
+      msgHdl = ElMessage.success({
+        message: t('keigennRecord.copySuccess'),
+        duration: 800,
+      })
+    })
+    .catch(() => ElMessage.error(t('keigennRecord.copyFailed')))
+}
+
+function findLastRowBeforeDeath(deathRow: RowVO) {
+  let latestRow: RowVO | null = null
+  for (const row of props.rows) {
+    if (row.type === 'death')
+      continue
+    if (row.targetId !== deathRow.targetId)
+      continue
+    if (row.timestamp >= deathRow.timestamp)
+      continue
+    if (!latestRow || row.timestamp > latestRow.timestamp)
+      latestRow = row
+  }
+  return latestRow
+}
+
+function copyLastRowBeforeDeath(deathRow: RowVO, e?: MouseEvent) {
+  e?.stopPropagation()
+  const lastRow = findLastRowBeforeDeath(deathRow)
+  if (!lastRow) {
+    ElMessage.warning(t('keigennRecord.noData'))
+    return
+  }
+  copyRowText(lastRow)
+}
+
 const rowEventHandlers: RowEventHandlers = {
   onClick: ({ rowData }: { rowData: RowVO }) => {
-    if (rowData.type === 'death')
+    if (rowData.type === 'death') {
+      copyLastRowBeforeDeath(rowData)
       return
-    const {
-      actionCN,
-      amount,
-      job,
-      keigenns,
-      time,
-      type,
-      effect,
-      currentHp,
-      maxHp,
-      shield,
-      reduction,
-    } = rowData
-    const sp
-      = effect === 'damage done' ? '' : `,${t(`keigennRecord.${effect}`)}`
-    const result = `${time} ${job} ${actionCN} ${amount.toLocaleString()}(${t(`keigennRecord.${type}`)}) ${t(
-      'keigennRecord.reduction',
-    )}(${(reduction * 100).toFixed(0)}%):${keigenns.length === 0 && sp === ''
-      ? t('keigennRecord.none')
-      : keigenns
-        .map(k => (userOptions.statusCN ? k.name : k.effect))
-        .join(',') + sp
-    } ${t('keigennRecord.hp')}:${currentHp}(${Math.round(
-      (currentHp / maxHp) * 100,
-    )}%)+${t('keigennRecord.shield')}:${Math.round(
-      (maxHp * +shield) / 100,
-    )}(${shield}%)`
-    copyToClipboard(result)
-      .then(() => {
-        msgHdl?.close()
-        msgHdl = ElMessage.success({
-          message: t('keigennRecord.copySuccess'),
-          duration: 800,
-        })
-      })
-      .catch(() => ElMessage.error(t('keigennRecord.copyFailed')))
+    }
+    copyRowText(rowData)
   },
   onContextmenu: ({ rowData, event }: { rowData: RowVO, event: Event }) => {
     if (rowData.type === 'death')
@@ -859,7 +899,7 @@ defineExpose({
 
 :deep(.row-death) {
   background-color: rgba(60, 0, 0, 0.4) !important;
-  cursor: default;
+  cursor: pointer;
 
   .el-table-v2__row-cell {
     background-color: transparent !important;
