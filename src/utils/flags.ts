@@ -19,7 +19,6 @@ type DamageType
     | 'darkness' // 暗黑;
     | 'dot'
     | 'heal'
-    | 'unknown'
 
 function processFlags(flag: string) {
   const effect = processEffect(flag)
@@ -90,7 +89,7 @@ function processType(flag: string): DamageType {
     case /6\w{4}$/.test(flag):
       return 'darkness'
     default:
-      return 'unknown'
+      return 'physics'
   }
 }
 // 0x10000 = 真无敌

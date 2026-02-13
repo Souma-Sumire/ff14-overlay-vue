@@ -521,6 +521,11 @@ function openMarkdown() {
   window.open(href, '_blank')
 }
 
+function openMitigationGenerator() {
+  const href = router.resolve({ path: '/mitigationGenerator' }).href
+  window.open(href, '_blank')
+}
+
 function fflogsImportClick() {
   showFFlogsDialog.value = true
 }
@@ -721,6 +726,9 @@ init()
               导出全部
             </el-button>
           </el-button-group>
+          <el-button size="small" @click="openMitigationGenerator">
+            打开减伤规划器（测试中）
+          </el-button>
         </el-space>
 
         <el-space>

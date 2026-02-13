@@ -21,6 +21,7 @@ export const MENU_ORDER: string[] = [
   'startPages.menu.dd_atlas',
   'startPages.menu.keigenn_record2',
   'startPages.menu.healing_timeline',
+  'startPages.menu.mitigation_generator',
   'startPages.menu.key_skill_timer',
   'startPages.menu.zone_macro',
   'startPages.menu.obs_auto_record2',
@@ -89,7 +90,6 @@ export function getRawMenuData(locale: string, t: (key: string, args?: (string |
       path: `keySkillTimer?scale=1&opacity=1&lang=${locale}`,
       comment: 'startPages.comment.key_skill_timer_params',
       src: 'keySkillTimer.webp',
-      isHot: true,
     },
     {
       title: 'startPages.menu.dd_atlas',
@@ -101,7 +101,6 @@ export function getRawMenuData(locale: string, t: (key: string, args?: (string |
         '<a href="https://github.com/Souma-Sumire/ff14-overlay-vue" target="_blank">PR</a>',
       ],
       imageWidth: 350,
-      isHot: true,
     },
     {
       title: 'startPages.menu.zone_macro',
@@ -139,6 +138,15 @@ export function getRawMenuData(locale: string, t: (key: string, args?: (string |
       ],
       imageHeight: 154,
       isHot: true,
+    },
+    {
+      title: 'startPages.menu.mitigation_generator',
+      type: '网页/工具',
+      path: 'mitigationGenerator',
+      isNew: true,
+      src: 'mitigationGenerator.webp',
+      comment: 'startPages.comment.mitigation_generator',
+      imageWidth: 350,
     },
     {
       title: 'startPages.menu.casting_monitor',

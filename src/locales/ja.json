@@ -191,7 +191,8 @@
       "stone_sky_logs": "[Tampermonkey] 石の家-スキルログ照会",
       "kook_purify": "[Tampermonkey] KOOK浄化",
       "uisave_editor": "[ウェブ] UISAVE.DAT（フィールドマーカー）エディタ",
-      "loot_history": "[ウェブ] 固定PT装備分配＆BIS管理ツール"
+      "loot_history": "[ウェブ] 固定PT装備分配＆BIS管理ツール",
+      "mitigation_generator": "[ウェブ] 軽減プランナー"
     },
     "comment": {
       "github_patch": "詳細はリポジトリのREADME参照",
@@ -221,7 +222,8 @@
       "kook_purify": "KOOKウェブ版の煩わしい広告を非表示。個別入場SEをブロック。",
       "uisave_editor": "UISAVE.DAT（フィールドマーカー）ファイルの解析および編集を行うためのツールです。コードは {0} を参考にしています。",
       "uisave_editor_credits": "ff14_config_editor",
-      "loot_history": "零式のドロップ品とロット記録を自動保存。統計やBIS分配提案など、多彩な機能をサポート。"
+      "loot_history": "零式のドロップ品とロット記録を自動保存。統計やBIS分配提案など、多彩な機能をサポート。",
+      "mitigation_generator": "軽減計画表。唯一の利点は「ヒール/軽減タイムライン」のテキストを直接エクスポートできること。欠点：機能がかなり不足しています。"
     }
   },
   "dd": {
