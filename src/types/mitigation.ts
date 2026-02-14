@@ -52,6 +52,7 @@ export interface RowSimState {
   cells: Record<string, CellSimState>
   activeMitigations: number[]
   damageTypeClass: string
+  shieldAbsorbed: number
 }
 
 export interface MitigationRow {
@@ -67,11 +68,11 @@ export interface MitigationRow {
   isAOE: boolean
   isTB: boolean
   isShare?: boolean
-  shieldValue?: number
   castTime?: string
   castStartTime?: number
 
   targets: string[]
+  targetIds?: string[]
   rawLines: string[]
   flags: string[]
   damageDetails: Array<{
@@ -102,6 +103,7 @@ export interface MitigationSkill {
   icon: string
   mitigationScope?: MitigationScope
   damageTakenMultiplier?: PerformanceType
+  shieldAmount?: number
   recast: number
   duration?: number
   maxCharges?: number

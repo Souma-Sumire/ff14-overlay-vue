@@ -20,7 +20,7 @@ import { handleImgError } from '@/utils/xivapi'
 type AutoArrangeStrategy = 'max-total' | 'tb-priority' | 'peak-smoothing'
 type AutoArrangeCoverageScope = 'self' | 'party'
 type AutoArrangeExclusiveScope = 'single' | 'group'
-type ContextOverlayId = 'mechanic-ctx' | 'mechanic-edit-ctx' | 'column-ctx' | 'skill-ctx'
+type ContextOverlayId = 'mechanic-ctx' | 'mechanic-edit-ctx' | 'mechanic-target-ctx' | 'column-ctx' | 'skill-ctx'
 type DamageNumberDisplayUnit = 'k' | 'w'
 
 const props = defineProps<{
@@ -30,7 +30,6 @@ const props = defineProps<{
   partyCompositionJobOptions?: Array<{ value: number, label: string }>
   mechanicOptions?: Array<{ actionId: string, action: string }>
   filterMechanics?: string[]
-  isDebug?: boolean
   playerActions: PlayerActionRecord[]
   mechanicColors: Record<string, string>
   autoArrangeToleranceSeconds?: number
@@ -48,6 +47,8 @@ const emit = defineEmits<{
   (e: 'partyColumnChangeJob', payload: { colKey: string, jobEnum: number }): void
   (e: 'partyColumnReorder', orderedKeys: string[]): void
 }>()
+
+const TARGET_ALL_VALUE = '__all__'
 
 const EXCLUSIVE_GROUP_BY_SKILL_ID = new Map<number, string>([
   [7549, 'exclusive-feint'], // 牵制
@@ -157,10 +158,6 @@ function toBooleanCheckboxValue(value: CheckboxValueType) {
   return typeof value === 'boolean' ? value : Boolean(value)
 }
 
-function toStringFilterValues(values: CheckboxValueType[]) {
-  return values.map(value => String(value))
-}
-
 function handleAOEMechanicsChange(value: CheckboxValueType) {
   toggleAOEMechanics(toBooleanCheckboxValue(value))
 }
@@ -177,8 +174,17 @@ function handleNormalMechanicsChange(value: CheckboxValueType) {
   toggleNormalMechanics(toBooleanCheckboxValue(value))
 }
 
-function handleFilterMechanicsChange(values: CheckboxValueType[]) {
-  emit('update:filterMechanics', toStringFilterValues(values))
+function isMechanicChecked(actionId: string) {
+  return currentFilterSet.value.has(String(actionId))
+}
+
+function handleMechanicToggle(actionId: string, value: CheckboxValueType) {
+  const id = String(actionId)
+  const checked = toBooleanCheckboxValue(value)
+  const next = currentFilters.value.filter(item => item !== id)
+  if (checked)
+    next.push(id)
+  emit('update:filterMechanics', next)
 }
 
 const cellPopover = reactive<{
@@ -195,16 +201,6 @@ const cellPopover = reactive<{
   skill: null,
 })
 
-const damagePopover = reactive<{
-  visible: boolean
-  target: HTMLElement | undefined
-  row: MitigationRow | null
-}>({
-  visible: false,
-  target: undefined,
-  row: null,
-})
-
 const mechanicContextMenu = ref<{ top: number, left: number, anchorTop: number, anchorLeft: number, row: MitigationRow | null }>({
   top: 0,
   left: 0,
@@ -213,6 +209,13 @@ const mechanicContextMenu = ref<{ top: number, left: number, anchorTop: number, 
   row: null,
 })
 const mechanicEditContextMenu = ref<{ top: number, left: number, anchorTop: number, anchorLeft: number, row: MitigationRow | null }>({
+  top: 0,
+  left: 0,
+  anchorTop: 0,
+  anchorLeft: 0,
+  row: null,
+})
+const mechanicTargetContextMenu = ref<{ top: number, left: number, anchorTop: number, anchorLeft: number, row: MitigationRow | null }>({
   top: 0,
   left: 0,
   anchorTop: 0,
@@ -236,6 +239,7 @@ const skillContextMenu = ref<{ top: number, left: number, anchorTop: number, anc
 })
 const mechanicContextMenuRef = ref<HTMLElement | null>(null)
 const mechanicEditContextMenuRef = ref<HTMLElement | null>(null)
+const mechanicTargetContextMenuRef = ref<HTMLElement | null>(null)
 const columnContextMenuRef = ref<HTMLElement | null>(null)
 const skillContextMenuRef = ref<HTMLElement | null>(null)
 const CONTEXT_MENU_VIEWPORT_PADDING = 8
@@ -243,15 +247,20 @@ const CONTEXT_MENU_VIEWPORT_PADDING = 8
 function isContextOverlay(id: string | null): id is ContextOverlayId {
   return id === 'mechanic-ctx'
     || id === 'mechanic-edit-ctx'
+    || id === 'mechanic-target-ctx'
     || id === 'column-ctx'
     || id === 'skill-ctx'
 }
 
 function getContextOverlayEstimatedSize(id: ContextOverlayId) {
+  if (id === 'mechanic-ctx')
+    return { width: 300, height: 280 }
   if (id === 'mechanic-edit-ctx')
     return { width: 320, height: 220 }
+  if (id === 'mechanic-target-ctx')
+    return { width: 320, height: 180 }
   if (id === 'column-ctx')
-    return { width: 180, height: 220 }
+    return { width: 180, height: 248 }
   if (id === 'skill-ctx')
     return { width: 240, height: 260 }
   return { width: 180, height: 140 }
@@ -289,6 +298,11 @@ function updateContextMenuStatePosition(overlayId: ContextOverlayId, left: numbe
     mechanicEditContextMenu.value.top = top
     return
   }
+  if (overlayId === 'mechanic-target-ctx') {
+    mechanicTargetContextMenu.value.left = left
+    mechanicTargetContextMenu.value.top = top
+    return
+  }
   if (overlayId === 'column-ctx') {
     columnContextMenu.value.left = left
     columnContextMenu.value.top = top
@@ -303,6 +317,8 @@ function getContextMenuElement(overlayId: ContextOverlayId) {
     return mechanicContextMenuRef.value
   if (overlayId === 'mechanic-edit-ctx')
     return mechanicEditContextMenuRef.value
+  if (overlayId === 'mechanic-target-ctx')
+    return mechanicTargetContextMenuRef.value
   if (overlayId === 'column-ctx')
     return columnContextMenuRef.value
   return skillContextMenuRef.value
@@ -322,6 +338,10 @@ function adjustContextMenuPositionWithinViewport(overlayId: ContextOverlayId) {
   else if (overlayId === 'mechanic-edit-ctx') {
     anchorLeft = mechanicEditContextMenu.value.anchorLeft
     anchorTop = mechanicEditContextMenu.value.anchorTop
+  }
+  else if (overlayId === 'mechanic-target-ctx') {
+    anchorLeft = mechanicTargetContextMenu.value.anchorLeft
+    anchorTop = mechanicTargetContextMenu.value.anchorTop
   }
   else if (overlayId === 'column-ctx') {
     anchorLeft = columnContextMenu.value.anchorLeft
@@ -359,10 +379,14 @@ const mechanicEditor = reactive<{
   row: MitigationRow | null
   type: 'aoe' | 'share' | 'tb' | 'normal'
   damage: number
+  targetColumnKeys: string[]
+  targetAll: boolean
 }>({
   row: null,
   type: 'normal',
   damage: 0,
+  targetColumnKeys: [],
+  targetAll: false,
 })
 
 // Global overlay state for mutual exclusivity
@@ -435,11 +459,11 @@ function handleWindowKeydown(event: KeyboardEvent) {
     clearOverlays()
     return
   }
-  if (activeOverlay.value !== 'mechanic-edit-ctx')
+  if (event.key !== 'Enter')
     return
-  if (event.key === 'Enter') {
+  if (activeOverlay.value === 'mechanic-target-ctx') {
     event.preventDefault()
-    applyMechanicEditor({ scope: 'single' })
+    applyMechanicTargetsToCurrent()
   }
 }
 
@@ -462,13 +486,13 @@ watch(activeOverlay, (val) => {
     hideSkillDetail()
   if (val) {
     cellPopover.visible = false
-    damagePopover.visible = false
     if (isContextOverlay(val))
       void ensureContextMenuPositionInViewport(val)
   }
   else {
     mechanicContextMenu.value.row = null
     mechanicEditContextMenu.value.row = null
+    mechanicTargetContextMenu.value.row = null
     columnContextMenu.value.col = null
     skillContextMenu.value.col = null
     skillContextMenu.value.skill = null
@@ -916,6 +940,94 @@ function getColDisplayName(col: ColumnDef) {
   return trimmed || key
 }
 
+const mechanicTargetColumnOptions = computed(() => {
+  const nameCount = new Map<string, number>()
+  props.columns.forEach((col) => {
+    const name = getColDisplayName(col)
+    nameCount.set(name, (nameCount.get(name) || 0) + 1)
+  })
+  const nameIndex = new Map<string, number>()
+  return props.columns.map((col) => {
+    const baseName = getColDisplayName(col)
+    const duplicated = (nameCount.get(baseName) || 0) > 1
+    const index = (nameIndex.get(baseName) || 0) + 1
+    nameIndex.set(baseName, index)
+    return {
+      value: col.key,
+      label: duplicated ? `${baseName}${index}` : baseName,
+      roleClass: getRoleClassByJobEnum(col.jobEnum),
+    }
+  })
+})
+
+function getRoleClassByJobEnum(jobEnum: number) {
+  const job = Util.jobEnumToJob(jobEnum)
+  if (Util.isTankJob(job))
+    return 'role-tank'
+  if (Util.isHealerJob(job))
+    return 'role-healer'
+  if (Util.isDpsJob(job))
+    return 'role-dps'
+  return ''
+}
+
+const targetRoleClassByName = computed(() => {
+  const map = new Map<string, string>()
+  props.columns.forEach((col) => {
+    const displayName = getColDisplayName(col)
+    if (!displayName || map.has(displayName))
+      return
+    const roleClass = getRoleClassByJobEnum(col.jobEnum)
+    if (roleClass)
+      map.set(displayName, roleClass)
+  })
+  return map
+})
+
+function getTargetRoleClass(name: string) {
+  return targetRoleClassByName.value.get(String(name || '').trim()) || ''
+}
+
+function getTargetDisplayNames(row: MitigationRow) {
+  return (row.targets || []).filter(Boolean).map(name => String(name))
+}
+
+function getTargetLeadingNames(row: MitigationRow) {
+  return getTargetDisplayNames(row)
+}
+
+function getTargetOverflowSuffix(row: MitigationRow) {
+  const targets = getTargetDisplayNames(row)
+  if (targets.length === 0)
+    return '-'
+  return ''
+}
+
+function resolveMechanicTargetColumnKeys(row: MitigationRow) {
+  const rowTargetIds = new Set((row.targetIds || []).map(item => String(item || '').trim()).filter(Boolean))
+  const rowTargets = new Set((row.targets || []).map(item => String(item || '').trim()).filter(Boolean))
+  const keys: string[] = []
+  for (const col of props.columns) {
+    const colTargetId = String(col.targetId || '').trim()
+    if (colTargetId && rowTargetIds.has(colTargetId)) {
+      keys.push(col.key)
+      continue
+    }
+    if (rowTargetIds.has(col.key)) {
+      keys.push(col.key)
+      continue
+    }
+    const nameCandidates = getColumnTargetNameCandidates(col)
+    if (nameCandidates.size > 0 && Array.from(nameCandidates).some(name => rowTargets.has(name))) {
+      keys.push(col.key)
+      continue
+    }
+    if (rowTargets.has(getColDisplayName(col)))
+      keys.push(col.key)
+  }
+  return keys
+}
+
 function formatSkillSeconds(value: number | undefined) {
   const seconds = Number(value || 0)
   if (!Number.isFinite(seconds) || seconds <= 0)
@@ -950,6 +1062,8 @@ function getSkillMitigationSummary(skill: MitigationSkill) {
 
 function handleRightClickMechanic(row: MitigationRow, event: MouseEvent) {
   clearOverlays()
+  mechanicEditor.row = row
+  mechanicEditor.type = row.isShare ? 'share' : (row.isAOE ? 'aoe' : (row.isTB ? 'tb' : 'normal'))
   const pos = getContextMenuPositionFromEvent(event, 'mechanic-ctx')
   mechanicContextMenu.value = {
     top: pos.top,
@@ -975,6 +1089,22 @@ function handleRightClickMechanicDamage(row: MitigationRow, event: MouseEvent) {
     row,
   }
   activeOverlay.value = 'mechanic-edit-ctx'
+}
+
+function handleRightClickMechanicTarget(row: MitigationRow, event: MouseEvent) {
+  clearOverlays()
+  mechanicEditor.row = row
+  mechanicEditor.targetAll = (row.targets || []).some(target => String(target || '').trim() === '全部')
+  mechanicEditor.targetColumnKeys = resolveMechanicTargetColumnKeys(row)
+  const pos = getContextMenuPositionFromEvent(event, 'mechanic-target-ctx')
+  mechanicTargetContextMenu.value = {
+    top: pos.top,
+    left: pos.left,
+    anchorTop: event.clientY,
+    anchorLeft: event.clientX,
+    row,
+  }
+  activeOverlay.value = 'mechanic-target-ctx'
 }
 
 function handleRightClickColumn(col: ColumnDef, event: MouseEvent) {
@@ -1134,7 +1264,6 @@ function showCellPopover(event: MouseEvent, row: MitigationRow, col: ColumnDef, 
   const info = getCellSim(row, col, skill.id)
   if (!info)
     return
-  damagePopover.visible = false
   cellPopover.row = row
   cellPopover.col = col
   cellPopover.skill = skill
@@ -1160,30 +1289,11 @@ const cellPopoverInfo = computed(() => {
   }
 })
 
-const isDamagePopoverVisible = computed(() => !activeOverlay.value && damagePopover.visible)
-
-function showDamagePopover(event: MouseEvent, row: MitigationRow) {
-  if (activeOverlay.value || editingCell.value || !!activeSkillDetailKey.value)
-    return
-  hideSkillDetail()
-  if (!row.damageDetails || row.damageDetails.length <= 1)
-    return
-  cellPopover.visible = false
-  damagePopover.row = row
-  damagePopover.target = event.currentTarget as HTMLElement
-  damagePopover.visible = true
-}
-
 function clearOverlays() {
   activeOverlay.value = null
   editingCell.value = null
   cellPopover.visible = false
-  damagePopover.visible = false
   hideSkillDetail()
-}
-
-function hideDamagePopover() {
-  damagePopover.visible = false
 }
 
 const skillById = computed(() => {
@@ -1257,6 +1367,9 @@ function getColumnTargetNameCandidates(col: ColumnDef) {
   const match = key.match(/\(([^()]+)\)\s*$/)
   if (match?.[1])
     names.add(match[1].trim())
+  const displayName = getColDisplayName(col)
+  if (displayName)
+    names.add(displayName.trim())
   return names
 }
 
@@ -1270,33 +1383,85 @@ function getDetailBaseDamage(detail: NonNullable<MitigationRow['damageDetails']>
   return 0
 }
 
+function normalizeTargetId(value: unknown) {
+  return String(value || '').trim().toLowerCase()
+}
+
+function isRowTargetingAllPartyStrictForDamage(row: MitigationRow) {
+  const partyColumns = props.columns
+  if (!partyColumns.length)
+    return false
+
+  const rowTargetIds = new Set((row.targetIds || []).map(item => normalizeTargetId(item)).filter(Boolean))
+  const detailTargetIds = new Set((row.damageDetails || []).map(detail => normalizeTargetId(detail.targetId)).filter(Boolean))
+  const allTargetIds = new Set<string>([...rowTargetIds, ...detailTargetIds])
+  const rowTargets = new Set((row.targets || []).map(item => String(item || '').trim()).filter(Boolean))
+  if (rowTargets.has('全部'))
+    return true
+
+  let matched = 0
+  for (const col of partyColumns) {
+    const colTargetId = normalizeTargetId(col.targetId)
+    if ((colTargetId && allTargetIds.has(colTargetId)) || allTargetIds.has(normalizeTargetId(col.key))) {
+      matched += 1
+      continue
+    }
+    const nameCandidates = getColumnTargetNameCandidates(col)
+    if (nameCandidates.size > 0 && Array.from(nameCandidates).some(name => rowTargets.has(name))) {
+      matched += 1
+      continue
+    }
+  }
+  if (matched >= partyColumns.length)
+    return true
+
+  return Math.max(0, Number(row.targetCount || 0)) >= partyColumns.length
+}
+
 function getPersonalDamageForColumn(row: MitigationRow, col: ColumnDef) {
   const fallback = Math.max(0, Number(row.rawDamage || 0))
   const details = row.damageDetails
-  if (!details || details.length === 0)
+  const targetId = normalizeTargetId(col.targetId)
+  const rowTargetIdSet = new Set((row.targetIds || []).map(item => normalizeTargetId(item)).filter(Boolean))
+  const targetNames = (row.targets || []).map(target => String(target || '').trim()).filter(Boolean)
+  const targetsAll = targetNames.includes('全部')
+  const rowHitsAllParty = isRowTargetingAllPartyStrictForDamage(row)
+  if (details && details.length > 0) {
+    let matchedDamage = 0
+    if (targetId) {
+      const byId = details
+        .filter(detail => normalizeTargetId(detail.targetId) === targetId)
+        .reduce((sum, detail) => sum + getDetailBaseDamage(detail), 0)
+      if (byId > 0)
+        matchedDamage = Math.max(matchedDamage, byId)
+    }
+
+    const nameCandidates = getColumnTargetNameCandidates(col)
+    if (nameCandidates.size > 0) {
+      const byName = details
+        .filter(detail => nameCandidates.has(detail.target))
+        .reduce((sum, detail) => sum + getDetailBaseDamage(detail), 0)
+      if (byName > 0)
+        matchedDamage = Math.max(matchedDamage, byName)
+    }
+    if (targetsAll || rowHitsAllParty)
+      return Math.max(matchedDamage, fallback)
+    if (matchedDamage > 0)
+      return matchedDamage
+    return 0
+  }
+
+  // row.rawDamage is already per-target baseline damage when details are absent.
+  if ((targetId && rowTargetIdSet.has(targetId)) || rowTargetIdSet.has(normalizeTargetId(col.key)))
     return fallback
 
-  const targetId = col.targetId
-  if (targetId) {
-    const byId = details.find(detail => detail.targetId === targetId)
-    if (byId) {
-      const value = getDetailBaseDamage(byId)
-      if (value > 0)
-        return value
-    }
-  }
-
   const nameCandidates = getColumnTargetNameCandidates(col)
-  if (nameCandidates.size > 0) {
-    const byName = details.find(detail => nameCandidates.has(detail.target))
-    if (byName) {
-      const value = getDetailBaseDamage(byName)
-      if (value > 0)
-        return value
-    }
-  }
+  if (targetsAll || (nameCandidates.size > 0 && targetNames.some(target => nameCandidates.has(target))))
+    return fallback
+  if (rowHitsAllParty)
+    return fallback
 
-  return fallback
+  return 0
 }
 
 function buildPersonalDamageCacheForColumn(rows: MitigationRow[], col: ColumnDef) {
@@ -1327,7 +1492,7 @@ function formatReduction(rate: number) {
 }
 
 function getRowShieldValue(row: MitigationRow) {
-  return typeof row.shieldValue === 'number' ? row.shieldValue : 0
+  return Math.max(0, Number(row._sim?.shieldAbsorbed || 0))
 }
 
 function getSimulatedDamage(row: MitigationRow) {
@@ -1504,12 +1669,21 @@ function findFirstRowAtOrAfter(rows: MitigationRow[], timestamp: number) {
 }
 
 function resolveActionRowIndex(rows: MitigationRow[], rowIndexByKey: Map<string, number>, action: PlayerActionRecord) {
-  if (action.rowKey) {
-    const byKey = rowIndexByKey.get(action.rowKey)
-    if (byKey !== undefined)
-      return byKey
-  }
-  return findFirstRowAtOrAfter(rows, action.timestamp)
+  const byTimestamp = findFirstRowAtOrAfter(rows, action.timestamp)
+  if (!action.rowKey)
+    return byTimestamp
+
+  const byKey = rowIndexByKey.get(action.rowKey)
+  if (byKey === undefined)
+    return byTimestamp
+  if (byTimestamp === -1)
+    return byKey
+
+  const keyRow = rows[byKey]
+  const tsRow = rows[byTimestamp]
+  const keyTimeMatches = !!keyRow && Math.abs(keyRow.timestamp - action.timestamp) <= AUTO_PLAN_EPSILON
+  const tsTimeMatches = !!tsRow && Math.abs(tsRow.timestamp - action.timestamp) <= AUTO_PLAN_EPSILON
+  return keyTimeMatches && tsTimeMatches ? byKey : byTimestamp
 }
 
 function buildSkillLookupByPlayer() {
@@ -1569,12 +1743,19 @@ function isScheduledActionActiveAtRow(action: AutoScheduledAction, rowIndex: num
 }
 
 function computeBaselineMultipliers(rows: MitigationRow[], scheduledActions: AutoScheduledAction[]) {
+  const columnByKey = new Map(props.columns.map(col => [col.key, col] as const))
   return rows.map((row, rowIndex) => {
     let multiplier = 1
     const exclusiveGroupBest = new Map<string, number>()
     scheduledActions.forEach((action) => {
       if (!isScheduledActionActiveAtRow(action, rowIndex, row.timestamp))
         return
+      const coverage = getAutoArrangeCoverageScope(action.skillId)
+      if (coverage === 'self') {
+        const ownerCol = columnByKey.get(action.columnKey)
+        if (!ownerCol || getPersonalDamageForColumn(row, ownerCol) <= AUTO_PLAN_EPSILON)
+          return
+      }
       const actionMultiplier = getSkillMultiplier(action.skillId, row.damageType)
       if (actionMultiplier >= 1)
         return
@@ -1682,8 +1863,13 @@ function computeAutoUseWeightForFill(
     const isExtremeFailure = cache?.extremeFailureMask?.[rowIndex] ?? isExtremeFailureDamageRow(row)
     if (isExtremeFailure)
       return
+    const personalDamage = coverage === 'self'
+      ? (cache?.personalDamageByRow?.[rowIndex] ?? 0)
+      : 0
 
     if (!hasDamageTakenMultiplier) {
+      if (coverage === 'self' && personalDamage <= AUTO_PLAN_EPSILON)
+        return
       const gain = 1
       totalGain += gain
       let score = gain
@@ -1697,7 +1883,9 @@ function computeAutoUseWeightForFill(
     if (skillMultiplier >= 1)
       return
 
-    const baseDamage = Math.max(0, Number(row.rawDamage || 0))
+    const baseDamage = coverage === 'self'
+      ? Math.max(0, personalDamage)
+      : Math.max(0, Number(row.rawDamage || 0))
     const targetCount = coverage === 'party' ? 8 : 1
     if (!Number.isFinite(baseDamage) || baseDamage <= 0)
       return
@@ -2495,14 +2683,74 @@ function updateRows(updater: (row: MitigationRow) => MitigationRow) {
   emit('update:rows', sourceRows.value.map(updater))
 }
 
-function updateShieldValue(row: MitigationRow, value: string) {
-  const next = Number.parseInt(value, 10)
-  const shieldValue = Number.isFinite(next) ? Math.max(0, next) : 0
-  updateRows(r => (r.key === row.key ? { ...r, shieldValue } : r))
-}
-
 function isMechanicEditorType(value: unknown): value is 'aoe' | 'share' | 'tb' | 'normal' {
   return value === 'aoe' || value === 'share' || value === 'tb' || value === 'normal'
+}
+
+function isSameTargetList(a: string[], b: string[]) {
+  if (a.length !== b.length)
+    return false
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i])
+      return false
+  }
+  return true
+}
+
+function applyMechanicTargetsToCurrent() {
+  const editingRow = mechanicEditor.row
+  if (!editingRow)
+    return
+  const row = sourceRows.value.find(item => item.key === editingRow.key) || editingRow
+  const selectedKeys = Array.from(new Set((mechanicEditor.targetColumnKeys || []).map(key => String(key || '').trim()).filter(Boolean)))
+  const selectedColumns = props.columns.filter(col => selectedKeys.includes(col.key))
+  const nextTargets = mechanicEditor.targetAll
+    ? ['全部']
+    : selectedColumns.map(col => getColDisplayName(col))
+  const nextTargetCount = mechanicEditor.targetAll
+    ? Math.max(props.columns.length, 1)
+    : Math.max(selectedColumns.length, 1)
+  const currentTargets = (row.targets || []).map(target => String(target || '').trim()).filter(Boolean)
+  if (isSameTargetList(currentTargets, nextTargets) && Number(row.targetCount || 0) === nextTargetCount && (row.targetIds?.length || 0) === 0)
+    return
+
+  updateRows((r) => {
+    if (r.key !== row.key)
+      return r
+    return {
+      ...r,
+      targets: nextTargets,
+      targetCount: nextTargetCount,
+      // Target stores profession labels only; clear target IDs and parsed per-target payload.
+      targetIds: [],
+      damageDetails: [],
+    }
+  })
+  mechanicEditor.row = sourceRows.value.find(item => item.key === row.key) || row
+  mechanicEditor.targetColumnKeys = selectedColumns.map(col => col.key)
+}
+
+function toggleMechanicTargetColumn(columnKey: string) {
+  const normalized = String(columnKey || '').trim()
+  if (!normalized || normalized === TARGET_ALL_VALUE)
+    return
+  mechanicEditor.targetAll = false
+  const selected = new Set(mechanicEditor.targetColumnKeys.map(key => String(key || '').trim()).filter(Boolean))
+  if (selected.has(normalized))
+    selected.delete(normalized)
+  else
+    selected.add(normalized)
+  mechanicEditor.targetColumnKeys = props.columns
+    .map(col => col.key)
+    .filter(key => selected.has(key))
+  applyMechanicTargetsToCurrent()
+}
+
+function toggleMechanicTargetAll() {
+  mechanicEditor.targetAll = !mechanicEditor.targetAll
+  if (mechanicEditor.targetAll)
+    mechanicEditor.targetColumnKeys = []
+  applyMechanicTargetsToCurrent()
 }
 
 function handleMechanicTypeChange(value: unknown) {
@@ -2524,7 +2772,7 @@ function handleMechanicTypeChange(value: unknown) {
   })
 }
 
-function applyMechanicEditor(options?: { closeMenu?: boolean, showMessage?: boolean, scope?: 'single' | 'all' }) {
+function applyMechanicEditor(options?: { closeMenu?: boolean, showMessage?: boolean }) {
   const row = mechanicEditor.row
   if (!row)
     return
@@ -2535,11 +2783,13 @@ function applyMechanicEditor(options?: { closeMenu?: boolean, showMessage?: bool
   const damage = Number.isFinite(mechanicEditor.damage)
     ? Math.max(0, Math.round(mechanicEditor.damage))
     : 0
-  const isSingleDamage = (options?.scope ?? 'single') === 'single'
+
+  const hasChange = sourceRows.value.some(r => r.actionId === row.actionId && Number(r.rawDamage || 0) !== damage)
+  if (!hasChange)
+    return
 
   updateRows((r) => {
-    const damageMatched = isSingleDamage ? r.key === row.key : r.actionId === row.actionId
-    if (!damageMatched)
+    if (r.actionId !== row.actionId)
       return r
     return {
       ...r,
@@ -2555,8 +2805,8 @@ function applyMechanicEditor(options?: { closeMenu?: boolean, showMessage?: bool
     ElMessage.success('机制数值修改成功')
 }
 
-function applyMechanicDamageToScope(scope: 'single' | 'all') {
-  applyMechanicEditor({ scope })
+function syncMechanicDamageToAll() {
+  applyMechanicEditor({ closeMenu: false, showMessage: false })
 }
 
 function preventNumberInputWheel(event: WheelEvent) {
@@ -2669,16 +2919,6 @@ async function deleteMechanicRowsByActionId() {
   ElMessage.success(`已删除技能ID ${actionId} 的 ${targetRows.length} 行`)
 }
 
-function getMechanicTypeLabel(row: MitigationRow) {
-  if (row.isShare)
-    return '分摊'
-  if (row.isAOE)
-    return 'AOE'
-  if (row.isTB)
-    return '死刑'
-  return '-'
-}
-
 function getCastStartDisplay(row: MitigationRow) {
   if (row.castTime !== undefined && row.castTime !== null && row.castTime !== '') {
     const castSeconds = Number.parseFloat(String(row.castTime))
@@ -2690,12 +2930,8 @@ function getCastStartDisplay(row: MitigationRow) {
   return '-'
 }
 
-function getTargetDisplay(row: MitigationRow) {
-  if (!row.targets || row.targets.length === 0)
-    return 'Unknown'
-  if (row.targets.length > 1)
-    return isAoeLike(row) ? 'Multiple' : (row.targets[0] || 'Unknown')
-  return row.targets[0] || 'Unknown'
+function isRowTargetingAllParty(row: MitigationRow) {
+  return (row.targets || []).some(target => String(target || '').trim() === '全部')
 }
 
 function getDamageNumberUnitScale() {
@@ -2791,11 +3027,7 @@ const gridStyleVars = computed(() => ({
   '--mg-fixed-w-cast-start': `${MITIGATION_GRID_WIDTH.castStart}px`,
   '--mg-fixed-w-time': `${MITIGATION_GRID_WIDTH.time}px`,
   '--mg-fixed-w-name': `${MITIGATION_GRID_WIDTH.nameMin}px`,
-  '--mg-fixed-w-cast': `${MITIGATION_GRID_WIDTH.cast}px`,
-  '--mg-debug-w': `${MITIGATION_GRID_WIDTH.debug}px`,
-  '--mg-debug-w-xl': `${MITIGATION_GRID_WIDTH.debugXL}px`,
-  '--mg-debug-w-sm': `${MITIGATION_GRID_WIDTH.debugSM}px`,
-  '--mg-debug-w-lg': `${MITIGATION_GRID_WIDTH.debugLG}px`,
+  '--mg-fixed-w-target': `${MITIGATION_GRID_WIDTH.target}px`,
   '--mg-fixed-w-dmg': `${MITIGATION_GRID_WIDTH.damage}px`,
   '--mg-fixed-w-shield': `${MITIGATION_GRID_WIDTH.shield}px`,
   '--mg-fixed-w-reduction': `${MITIGATION_GRID_WIDTH.reduction}px`,
@@ -2896,6 +3128,23 @@ function removeCurrentColumn() {
   removePartyColumn(col)
 }
 
+function clearColumnActions() {
+  const col = columnContextMenu.value.col
+  activeOverlay.value = null
+  if (!col)
+    return
+
+  const nextActions = props.playerActions.filter(action => action.columnKey !== col.key)
+  const removedCount = props.playerActions.length - nextActions.length
+  if (removedCount <= 0) {
+    ElMessage.warning(`${getColDisplayName(col)} 当前没有释放记录`)
+    return
+  }
+
+  emit('update:playerActions', nextActions)
+  ElMessage.success(`已清除 ${getColDisplayName(col)} 的 ${removedCount} 条释放`)
+}
+
 function handlePartyColumnJobChange(col: ColumnDef, value: unknown) {
   const jobEnum = Number(value)
   if (Number.isNaN(jobEnum) || col.jobEnum === jobEnum)
@@ -2969,13 +3218,16 @@ function handleColumnNameClick(col: ColumnDef) {
                       AOE
                     </el-checkbox>
                   </div>
-                  <el-checkbox-group
-                    :model-value="filterMechanics"
-                    class="section-list"
-                    @change="handleFilterMechanicsChange"
-                  >
-                    <el-checkbox v-for="opt in aoeMechanics" :key="opt.actionId" :value="opt.actionId" :label="opt.actionId ? (opt.action ? `${opt.action} (${opt.actionId})` : opt.actionId) : opt.action" size="small" />
-                  </el-checkbox-group>
+                  <div class="section-list">
+                    <el-checkbox
+                      v-for="opt in aoeMechanics"
+                      :key="opt.actionId"
+                      :model-value="isMechanicChecked(opt.actionId)"
+                      :label="opt.actionId ? (opt.action ? `${opt.action} (${opt.actionId})` : opt.actionId) : opt.action"
+                      size="small"
+                      @change="(value) => handleMechanicToggle(opt.actionId, value)"
+                    />
+                  </div>
                 </div>
 
                 <div class="filter-section">
@@ -2988,13 +3240,16 @@ function handleColumnNameClick(col: ColumnDef) {
                       分摊
                     </el-checkbox>
                   </div>
-                  <el-checkbox-group
-                    :model-value="filterMechanics"
-                    class="section-list"
-                    @change="handleFilterMechanicsChange"
-                  >
-                    <el-checkbox v-for="opt in shareMechanics" :key="opt.actionId" :value="opt.actionId" :label="opt.actionId ? (opt.action ? `${opt.action} (${opt.actionId})` : opt.actionId) : opt.action" size="small" />
-                  </el-checkbox-group>
+                  <div class="section-list">
+                    <el-checkbox
+                      v-for="opt in shareMechanics"
+                      :key="opt.actionId"
+                      :model-value="isMechanicChecked(opt.actionId)"
+                      :label="opt.actionId ? (opt.action ? `${opt.action} (${opt.actionId})` : opt.actionId) : opt.action"
+                      size="small"
+                      @change="(value) => handleMechanicToggle(opt.actionId, value)"
+                    />
+                  </div>
                 </div>
 
                 <div class="filter-section">
@@ -3007,13 +3262,16 @@ function handleColumnNameClick(col: ColumnDef) {
                       死刑
                     </el-checkbox>
                   </div>
-                  <el-checkbox-group
-                    :model-value="filterMechanics"
-                    class="section-list"
-                    @change="handleFilterMechanicsChange"
-                  >
-                    <el-checkbox v-for="opt in tbMechanics" :key="opt.actionId" :value="opt.actionId" :label="opt.actionId ? (opt.action ? `${opt.action} (${opt.actionId})` : opt.actionId) : opt.action" size="small" />
-                  </el-checkbox-group>
+                  <div class="section-list">
+                    <el-checkbox
+                      v-for="opt in tbMechanics"
+                      :key="opt.actionId"
+                      :model-value="isMechanicChecked(opt.actionId)"
+                      :label="opt.actionId ? (opt.action ? `${opt.action} (${opt.actionId})` : opt.actionId) : opt.action"
+                      size="small"
+                      @change="(value) => handleMechanicToggle(opt.actionId, value)"
+                    />
+                  </div>
                 </div>
 
                 <div class="filter-section">
@@ -3026,46 +3284,24 @@ function handleColumnNameClick(col: ColumnDef) {
                       其他
                     </el-checkbox>
                   </div>
-                  <el-checkbox-group
-                    :model-value="filterMechanics"
-                    class="section-list"
-                    @change="handleFilterMechanicsChange"
-                  >
-                    <el-checkbox v-for="opt in normalMechanics" :key="opt.actionId" :value="opt.actionId" :label="opt.actionId ? (opt.action ? `${opt.action} (${opt.actionId})` : opt.actionId) : opt.action" size="small" />
-                  </el-checkbox-group>
+                  <div class="section-list">
+                    <el-checkbox
+                      v-for="opt in normalMechanics"
+                      :key="opt.actionId"
+                      :model-value="isMechanicChecked(opt.actionId)"
+                      :label="opt.actionId ? (opt.action ? `${opt.action} (${opt.actionId})` : opt.actionId) : opt.action"
+                      size="small"
+                      @change="(value) => handleMechanicToggle(opt.actionId, value)"
+                    />
+                  </div>
                 </div>
               </div>
             </el-popover>
           </div>
         </div>
-        <div v-if="isDebug" class="cell fixed-w-cast">
-          <span class="header-label">咏唱</span>
+        <div class="cell fixed-w-target">
+          <span class="header-label">目标</span>
         </div>
-
-        <!-- Debug Columns Header -->
-        <template v-if="isDebug">
-          <div class="cell debug-w-lg">
-            <span class="header-label">Source</span>
-          </div>
-          <div class="cell debug-w-lg">
-            <span class="header-label">Target</span>
-          </div>
-          <div class="cell debug-w">
-            <span class="header-label">ID</span>
-          </div>
-          <div class="cell debug-w-xl">
-            <span class="header-label">Flag</span>
-          </div>
-          <div class="cell debug-w-lg">
-            <span class="header-label">属性</span>
-          </div>
-          <div class="cell debug-w-sm">
-            <span class="header-label">类型</span>
-          </div>
-          <div class="cell debug-w-sm">
-            <span class="header-label">数量</span>
-          </div>
-        </template>
 
         <div class="cell fixed-w-dmg">
           <span class="header-label">原伤</span>
@@ -3238,8 +3474,8 @@ function handleColumnNameClick(col: ColumnDef) {
       <!-- Rows -->
       <div
         v-for="(row, rowIndex) in rows"
-        :key="row.key"
-        v-memo="[row._v, row.shieldValue, isDebug, columns.length, columnHiddenHash, columnOrderHash, damageNumberDisplayUnit]"
+        :key="`${row.key}_${rowIndex}`"
+        v-memo="[row._v, row._sim?.shieldAbsorbed, columns.length, columnHiddenHash, columnOrderHash, damageNumberDisplayUnit]"
         class="row content-row"
       >
         <div class="cell fixed-w-cast-start">
@@ -3256,96 +3492,28 @@ function handleColumnNameClick(col: ColumnDef) {
         >
           {{ row.action }}
         </div>
-        <div v-if="isDebug" class="cell fixed-w-cast">
-          {{ row.castTime ?? '-' }}
-        </div>
-        <!-- Debug Columns Content -->
-        <template v-if="isDebug">
-          <div class="cell debug-w-lg debug-text">
-            {{ row.source }}
-          </div>
-
-          <div class="cell debug-w-lg debug-text">
-            <el-popover v-if="row.damageDetails && row.damageDetails.length > 1" trigger="hover" placement="top" :width="220">
-              <template #reference>
-                <span class="multiple-label">{{ getTargetDisplay(row) }} ({{ row.targets?.length || 0 }})</span>
-              </template>
-              <div class="popover-list">
-                <div class="popover-item detail-header">
-                  <span class="detail-target">目标</span>
-                  <span class="detail-raw">原伤</span>
-                  <span class="detail-flag">Flag</span>
-                </div>
-                <div v-for="(detail, i) in row.damageDetails" :key="i" class="popover-item detail-item">
-                  <span class="detail-target">{{ detail.target }}</span>
-                  <span class="detail-raw font-mono">{{ formatDamageNumber(detail.estimatedRaw) }}</span>
-                  <span class="detail-flag font-mono">{{ detail.flag }}</span>
-                </div>
-              </div>
-            </el-popover>
-            <span v-else>{{ getTargetDisplay(row) }}</span>
-          </div>
-
-          <div class="cell debug-w debug-text">
-            {{ row.actionId }}
-          </div>
-
-          <div class="cell debug-w-xl debug-text">
-            <template v-if="row.flags && row.flags.length > 0">
-              <el-popover v-if="new Set(row.flags).size > 1" trigger="hover" placement="top" :width="140">
-                <template #reference>
-                  <span class="multiple-label">Flag ({{ row.flags.length }})</span>
-                </template>
-                <div class="popover-list">
-                  <div class="popover-item detail-header">
-                    <span class="detail-target">Flag 记录</span>
-                  </div>
-                  <div v-for="(f, i) in row.flags" :key="i" class="popover-item font-mono">
-                    {{ f }}
-                  </div>
-                </div>
-              </el-popover>
-              <span v-else>{{ row.flags[0] }} ({{ row.flags.length }})</span>
+        <div class="cell fixed-w-target clickable text-ellipsis" @contextmenu.prevent="handleRightClickMechanicTarget(row, $event)">
+          <template v-if="isRowTargetingAllParty(row)">
+            <span class="target-all">全部</span>
+          </template>
+          <template v-else>
+            <template v-for="(targetName, index) in getTargetLeadingNames(row)" :key="`${row.key}_${targetName}_${index}`">
+              <span :class="getTargetRoleClass(targetName)">{{ targetName }}</span>
+              <span v-if="index < getTargetLeadingNames(row).length - 1"> / </span>
             </template>
-          </div>
-
-          <div class="cell debug-w-lg debug-text">
-            <span>{{ row.damageType }}</span>
-          </div>
-          <div class="cell debug-w-sm debug-text">
-            {{ getMechanicTypeLabel(row) }}
-          </div>
-          <div class="cell debug-w-sm debug-text">
-            {{ row.flags?.length || 0 }}
-          </div>
-        </template>
+            <span>{{ getTargetOverflowSuffix(row) }}</span>
+          </template>
+        </div>
 
         <div
           class="cell fixed-w-dmg font-mono"
           :class="row._sim?.damageTypeClass"
           @contextmenu.prevent="handleRightClickMechanicDamage(row, $event)"
         >
-          <span
-            v-if="row.damageDetails && row.damageDetails.length > 1"
-            class="multiple-label"
-            @mouseenter="showDamagePopover($event, row)"
-            @mouseleave="hideDamagePopover"
-          >
-            {{ formatDamageNumber(row.rawDamage) }}
-          </span>
-          <span v-else>{{ formatDamageNumber(row.rawDamage) }}</span>
+          <span>{{ formatDamageNumber(row.rawDamage) }}</span>
         </div>
         <div class="cell fixed-w-shield">
-          <input
-            :id="`shield-${row.key}`"
-            class="shield-input font-mono"
-            type="number"
-            min="0"
-            :name="`shield-${row.key}`"
-            autocomplete="off"
-            :value="row.shieldValue ?? ''"
-            @input="updateShieldValue(row, ($event.target as HTMLInputElement).value)"
-          >
+          <span class="font-mono">{{ formatDamageNumber(getRowShieldValue(row)) }}</span>
         </div>
         <div class="cell fixed-w-reduction font-mono">
           {{ formatReduction(getRowReductionRate(row)) }}
@@ -3435,6 +3603,31 @@ function handleColumnNameClick(col: ColumnDef) {
           {{ getMechanicMenuTitle(mechanicContextMenu.row) }}
         </div>
         <div class="menu-divider" />
+        <div v-if="mechanicContextMenu.row" class="mechanic-inline-editor mechanic-inline-editor-compact">
+          <div class="mechanic-inline-row">
+            <span class="inline-label">类型</span>
+            <el-radio-group
+              v-model="mechanicEditor.type"
+              size="small"
+              class="inline-radio-group inline-radio-group-compact"
+              @change="handleMechanicTypeChange"
+            >
+              <el-radio-button value="aoe">
+                AOE
+              </el-radio-button>
+              <el-radio-button value="share">
+                分摊
+              </el-radio-button>
+              <el-radio-button value="tb">
+                死刑
+              </el-radio-button>
+              <el-radio-button value="normal">
+                普通
+              </el-radio-button>
+            </el-radio-group>
+          </div>
+        </div>
+        <div class="menu-divider" />
         <div class="menu-item" @click="triggerRename">
           <el-icon><Edit /></el-icon>
           <span>重命名机制</span>
@@ -3468,29 +3661,6 @@ function handleColumnNameClick(col: ColumnDef) {
         <div class="menu-divider" />
         <div v-if="mechanicEditContextMenu.row" class="mechanic-inline-editor">
           <div class="mechanic-inline-row">
-            <span class="inline-label">类型</span>
-            <el-radio-group
-              v-model="mechanicEditor.type"
-              size="small"
-              class="inline-radio-group"
-              @change="handleMechanicTypeChange"
-            >
-              <el-radio-button value="aoe">
-                AOE
-              </el-radio-button>
-              <el-radio-button value="share">
-                分摊
-              </el-radio-button>
-              <el-radio-button value="tb">
-                死刑
-              </el-radio-button>
-              <el-radio-button value="normal">
-                普通
-              </el-radio-button>
-            </el-radio-group>
-          </div>
-          <div class="menu-divider inline-divider" />
-          <div class="mechanic-inline-row">
             <span class="inline-label">数值</span>
             <el-input-number
               v-model="mechanicEditor.damage"
@@ -3502,15 +3672,46 @@ function handleColumnNameClick(col: ColumnDef) {
               :formatter="formatDamageInputDisplay"
               :parser="parseDamageInputValue"
               @wheel.prevent="preventNumberInputWheel"
+              @update:model-value="syncMechanicDamageToAll"
             />
           </div>
-          <div class="inline-apply-actions">
-            <el-button size="small" class="inline-apply-btn" @click="applyMechanicDamageToScope('single')">
-              应用于当前
-            </el-button>
-            <el-button size="small" type="primary" class="inline-apply-btn" @click="applyMechanicDamageToScope('all')">
-              应用于全部
-            </el-button>
+        </div>
+      </div>
+    </transition>
+
+    <transition name="menu-fade">
+      <div
+        v-if="activeOverlay === 'mechanic-target-ctx'"
+        ref="mechanicTargetContextMenuRef"
+        class="custom-context-menu"
+        :style="{ top: `${mechanicTargetContextMenu.top}px`, left: `${mechanicTargetContextMenu.left}px` }"
+        @click.stop
+        @contextmenu.prevent
+      >
+        <div class="menu-header">
+          {{ getMechanicMenuTitle(mechanicTargetContextMenu.row) }}
+        </div>
+        <div class="menu-divider" />
+        <div v-if="mechanicTargetContextMenu.row" class="mechanic-inline-editor">
+          <div class="target-column-list">
+            <button
+              type="button"
+              class="target-column-chip target-column-chip-all"
+              :class="{ 'is-active': mechanicEditor.targetAll }"
+              @click="toggleMechanicTargetAll"
+            >
+              全部
+            </button>
+            <button
+              v-for="option in mechanicTargetColumnOptions"
+              :key="option.value"
+              type="button"
+              class="target-column-chip"
+              :class="[option.roleClass, { 'is-active': mechanicEditor.targetColumnKeys.includes(option.value) }]"
+              @click="toggleMechanicTargetColumn(option.value)"
+            >
+              {{ option.label }}
+            </button>
           </div>
         </div>
       </div>
@@ -3539,6 +3740,9 @@ function handleColumnNameClick(col: ColumnDef) {
         <div class="menu-divider" />
         <div class="menu-item" @click="copyTimelineText('column')">
           <span>复制为时间轴文本</span>
+        </div>
+        <div class="menu-item danger" @click="clearColumnActions">
+          <span>清除所有技能释放</span>
         </div>
         <div class="menu-divider" />
         <div class="menu-item danger" :class="{ disabled: columns.length <= 1 }" @click="removeCurrentColumn">
@@ -3617,30 +3821,6 @@ function handleColumnNameClick(col: ColumnDef) {
         </div>
       </div>
     </el-popover>
-
-    <!-- Shared Damage Popover -->
-    <el-popover
-      :visible="isDamagePopoverVisible"
-      :virtual-ref="damagePopover.target"
-      virtual-triggering
-      placement="top"
-      :width="180"
-      popper-style="padding: 6px"
-    >
-      <div v-if="damagePopover.row" class="popover-list">
-        <div class="popover-item detail-header">
-          <span class="detail-target">目标</span>
-          <span class="detail-raw">原伤记录</span>
-        </div>
-        <div v-for="(detail, i) in damagePopover.row.damageDetails" :key="i" class="popover-item detail-item">
-          <span class="detail-target">{{ detail.target }}</span>
-          <span class="detail-raw font-mono">{{ formatDamageNumber(detail.estimatedRaw) }}</span>
-        </div>
-        <div class="popover-footer">
-          {{ isAoeLike(damagePopover.row) ? '基准原伤' : '原伤合计' }}: {{ formatDamageNumber(damagePopover.row.rawDamage) }}
-        </div>
-      </div>
-    </el-popover>
   </div>
 </template>
 
@@ -3705,33 +3885,15 @@ function handleColumnNameClick(col: ColumnDef) {
 .fixed-w-time { width: var(--mg-fixed-w-time); justify-content: center; color: #888; user-select: text; }
 .fixed-w-cast-start { width: var(--mg-fixed-w-cast-start); justify-content: center; color: #888; user-select: text; }
 .fixed-w-name { min-width: var(--mg-fixed-w-name); width: fit-content; flex: 0 1 auto; padding-left: 4px; user-select: text; }
-.fixed-w-cast { width: var(--mg-fixed-w-cast); justify-content: center; color: #666; font-size: 11px; }
-
-.debug-w { width: var(--mg-debug-w); justify-content: center; background: #f9f9f9; font-size: 10px; color: #666; }
-.debug-w-xl { width: var(--mg-debug-w-xl); justify-content: center; background: #f9f9f9; font-size: 10px; color: #666; }
-.debug-w-sm { width: var(--mg-debug-w-sm); justify-content: center; background: #f9f9f9; font-size: 10px; color: #666; }
-.debug-w-lg { width: var(--mg-debug-w-lg); justify-content: flex-start; background: #f9f9f9; font-size: 10px; color: #666; padding-left: 4px; }
-.debug-text { font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fixed-w-target { width: var(--mg-fixed-w-target); justify-content: flex-start; padding-left: 4px; user-select: text; }
+.target-all { font-weight: 600; }
+.role-tank { color: #2563eb; }
+.role-healer { color: #16a34a; }
+.role-dps { color: #dc2626; }
 
 .fixed-w-dmg { width: var(--mg-fixed-w-dmg); justify-content: flex-end; font-size: 11px; padding-right: 4px; }
 .fixed-w-shield { width: var(--mg-fixed-w-shield); justify-content: center; }
 .fixed-w-reduction { width: var(--mg-fixed-w-reduction); justify-content: center; }
-
-.shield-input {
-  width: 100%;
-  height: 20px;
-  padding: 0 4px;
-  border: 1px solid #ddd;
-  border-radius: 2px;
-  font-size: 11px;
-  text-align: right;
-  background: #fff;
-  box-sizing: border-box;
-}
-.shield-input:focus {
-  outline: none;
-  border-color: #7c3aed;
-}
 
 .header-inner {
   display: flex;
@@ -4218,6 +4380,12 @@ function handleColumnNameClick(col: ColumnDef) {
     padding: 6px;
   }
 
+  .mechanic-inline-editor-compact {
+    gap: 4px;
+    min-width: 0;
+    // padding: 6px 6px 2px;
+  }
+
   .mechanic-inline-row {
     display: flex;
     align-items: center;
@@ -4248,23 +4416,65 @@ function handleColumnNameClick(col: ColumnDef) {
     }
   }
 
+  .inline-radio-group-compact {
+    :deep(.el-radio-button__inner) {
+      padding: 2px 7px;
+      font-size: 11px;
+    }
+  }
+
   .inline-damage-input {
     flex: 1;
     min-width: 0;
   }
 
-  .inline-divider {
-    margin: 0;
-  }
-
-  .inline-apply-actions {
+  .target-column-list {
     display: flex;
-    gap: 8px;
-    margin-top: 4px;
+    flex-wrap: wrap;
+    gap: 4px;
   }
 
-  .inline-apply-btn {
-    flex: 1;
+  .target-column-chip {
+    appearance: none;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    color: #6b7280;
+    border-radius: 4px;
+    font-size: 10.5px;
+    line-height: 1;
+    padding: 3px 7px;
+    min-height: 22px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .target-column-chip.is-active {
+    border-color: #4f46e5;
+    background: rgba(79, 70, 229, 0.1);
+    font-weight: 600;
+  }
+
+  .target-column-chip-all {
+    color: #374151;
+  }
+
+  .target-column-chip.role-tank,
+  .target-column-chip.is-active.role-tank {
+    color: #2563eb;
+  }
+
+  .target-column-chip.role-healer,
+  .target-column-chip.is-active.role-healer {
+    color: #16a34a;
+  }
+
+  .target-column-chip.role-dps,
+  .target-column-chip.is-active.role-dps {
+    color: #dc2626;
+  }
+
+  .target-column-chip:hover {
+    border-color: #818cf8;
   }
 }
 
@@ -4279,7 +4489,6 @@ function handleColumnNameClick(col: ColumnDef) {
   transform: translateY(-4px) scale(0.98);
 }
 
-.multiple-label { color: inherit; text-decoration: none; cursor: help; border-bottom: 1px dashed #ccc; }
 .popover-list { max-height: 300px; overflow-y: auto; font-size: 11px; padding: 0 4px; }
 .popover-item { padding: 4px 0; border-bottom: 1px solid #f0f0f0; }
 .cell-popover .popover-item { padding: 3px 0; }
@@ -4296,9 +4505,6 @@ function handleColumnNameClick(col: ColumnDef) {
 
 .detail-target { width: 6em; min-width: 6em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .detail-raw { width: 55px; text-align: right; color: #444; }
-.detail-flag { width: 50px; text-align: right; color: #666; font-size: 10px; }
-
-.popover-footer { padding: 4px 0; border-top: 1px solid #ccc; font-weight: bold; margin-top: 4px; text-align: right; }
 
 .font-mono { font-family: monospace; }
 
@@ -4352,34 +4558,6 @@ function handleColumnNameClick(col: ColumnDef) {
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.col-source {
-  width: 85px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  span {
-    padding: 2px 10px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 500;
-    line-height: 1.4;
-    min-width: 44px;
-    text-align: center;
-
-    &.log {
-      background-color: #f0f9eb;
-      color: #67c23a;
-      border: 1px solid #e1f3d8;
-    }
-    &.manual {
-      background-color: #fdf6ec;
-      color: #e6a23c;
-      border: 1px solid #faecd8;
-    }
-  }
 }
 
 .col-action {

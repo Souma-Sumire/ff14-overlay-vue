@@ -52,13 +52,14 @@ keigennSkills.forEach((skill) => {
 
 function parseAddedCombatant(split: string[]): Combatant {
   const id = split[logDefinitions.AddedCombatant.fields.id] || ''
-  const name = split[logDefinitions.AddedCombatant.fields.name] || 'Unknown'
   const rawJob = Number.parseInt(split[logDefinitions.AddedCombatant.fields.job] || '0', 16)
+  const normalizedJob = Util.baseJobEnumConverted(rawJob)
+  const jobName = Util.jobToFullName(Util.jobEnumToJob(normalizedJob)).simple1 || 'Unknown'
   const level = Number.parseInt(split[logDefinitions.AddedCombatant.fields.level] || '0', 16) || 0
   return {
     id,
-    name,
-    job: Util.baseJobEnumConverted(rawJob),
+    name: jobName,
+    job: normalizedJob,
     level,
   }
 }
@@ -146,6 +147,7 @@ function addPrepullRows(rows: MitigationRow[], importKeySeed: string) {
       isTB: false,
       isShare: false,
       targets: [],
+      targetIds: [],
       rawLines: [],
       flags: [],
       damageDetails: [],
@@ -317,6 +319,17 @@ export function useLogParser() {
     encounter.party.forEach((member, index) => {
       columnKeyByPartyId.set(member.id, buildPartyColumnKey(index, member.id))
     })
+    const getSanitizedNameById = (id: string, fallback: string) => {
+      const member = partyMembersMap.get(id)
+      if (member) {
+        const name = Util.jobToFullName(Util.jobEnumToJob(member.job)).simple1
+        if (name)
+          return name
+      }
+      if (String(id || '').startsWith('1'))
+        return '玩家'
+      return fallback || 'Unknown'
+    }
 
     for (const line of encounter.lines) {
       const split = line.split('|')
@@ -416,9 +429,9 @@ export function useLogParser() {
         amount: ability.amount,
         type: damageType,
         sourceId,
-        sourceName: split[logDefinitions.Ability.fields.source] || 'Unknown',
+        sourceName: getSanitizedNameById(sourceId, split[logDefinitions.Ability.fields.source] || 'Unknown'),
         targetId,
-        targetName: split[logDefinitions.Ability.fields.target] || 'Unknown',
+        targetName: getSanitizedNameById(targetId, split[logDefinitions.Ability.fields.target] || 'Unknown'),
         flags,
         line,
         reduction,
@@ -438,7 +451,9 @@ export function useLogParser() {
     const groupedByStableKey = new Map<string, GroupedRawEvents[]>()
     const sortedRawEvents = [...rawEvents].sort((a, b) => a.timestamp - b.timestamp)
     for (const event of sortedRawEvents) {
-      const stableKey = `${event.id}_${event.sourceId}`
+      // Group by ability id (instead of source) so simultaneous same-mechanic hits
+      // from multiple casters are merged into one mechanic row with multi-targets.
+      const stableKey = `${event.id}`
       const groupList = groupedByStableKey.get(stableKey) || []
       const previousGroup = groupList[groupList.length - 1]
       if (previousGroup && event.timestamp - previousGroup.firstTimestamp <= EVENT_GROUP_WINDOW_MS) {
@@ -457,18 +472,26 @@ export function useLogParser() {
       grouped.push(nextGroup)
     }
 
-    const groupsByActionId = new Map<string, Array<{ ts: number, targets: string[] }>>()
-    grouped.forEach((group) => {
-      const history = groupsByActionId.get(group.id) || []
-      history.push({ ts: group.firstTimestamp, targets: group.events.map(event => event.targetName) })
-      groupsByActionId.set(group.id, history)
-    })
-
     const rowDrafts: Array<Omit<MitigationRow, 'isAOE' | 'isTB'> & { localIsAOE: boolean, localIsTB: boolean }> = []
     const sortedGroups = [...grouped].sort((a, b) => a.firstTimestamp - b.firstTimestamp)
 
-    for (const group of sortedGroups) {
-      const targetsSet = new Set(group.events.map(event => event.targetName))
+    for (let groupIndex = 0; groupIndex < sortedGroups.length; groupIndex += 1) {
+      const group = sortedGroups[groupIndex]!
+      const targetsSet = new Set(group.events.map(event => event.targetId))
+      const uniqueTargetsById = new Map<string, string>()
+      group.events.forEach((event) => {
+        if (!uniqueTargetsById.has(event.targetId))
+          uniqueTargetsById.set(event.targetId, event.targetName)
+      })
+      const targetsByTimestamp = new Map<number, Set<string>>()
+      group.events.forEach((event) => {
+        const bucket = targetsByTimestamp.get(event.timestamp)
+        if (bucket) {
+          bucket.add(event.targetId)
+          return
+        }
+        targetsByTimestamp.set(event.timestamp, new Set([event.targetId]))
+      })
       const flags = group.events.map(event => event.flags)
 
       const estimatedRawDamages = group.events.map((event) => {
@@ -484,21 +507,12 @@ export function useLogParser() {
         return raw
       })
 
-      const hitCount = targetsSet.size
-      const nearbyTargets = new Set<string>()
-      const nearbyGroups = groupsByActionId.get(group.id) || []
-      for (const nearby of nearbyGroups) {
-        if (Math.abs(nearby.ts - group.firstTimestamp) <= EVENT_GROUP_WINDOW_MS) {
-          for (const target of nearby.targets)
-            nearbyTargets.add(target)
-        }
-      }
-
-      const windowTargetCount = nearbyTargets.size
-      const avgNormalizedDamage = normalizedDamages.length > 0
-        ? normalizedDamages.reduce((sum, value) => sum + value, 0) / normalizedDamages.length
-        : 0
-      const isAOE = (hitCount >= 4 || windowTargetCount >= 4) && avgNormalizedDamage > 60000
+      const simultaneousHitCount = Math.max(
+        0,
+        ...Array.from(targetsByTimestamp.values()).map(bucket => bucket.size),
+      )
+      const hitCount = simultaneousHitCount
+      const isAOE = hitCount >= 4
 
       const damagesForBaseline = isAOE ? normalizedDamages : estimatedRawDamages
       const nonSpecialDamages = damagesForBaseline.filter(damage => Number.isFinite(damage) && damage > 0 && damage <= EXTREME_DAMAGE_THRESHOLD)
@@ -552,38 +566,40 @@ export function useLogParser() {
       }))
 
       rowDrafts.push({
-        key: `${importKeySeed}_${group.id}_${group.firstTimestamp}`,
+        key: `${importKeySeed}_${group.id}_${group.firstTimestamp}_${group.events[0]?.sourceId || 'src'}_${groupIndex}`,
         timestamp: normalizedTime,
         action: group.name,
         actionId: group.id,
         source: group.events[0]?.sourceName || 'Unknown',
         damageType: group.events[0]?.type || 'physics',
         rawDamage: baselineRawDamage,
-        targetCount: Math.max(1, damageDetails.length),
-        rawLines: group.events.map(event => event.line),
+        targetCount: Math.max(1, targetsSet.size),
         flags,
         damageDetails,
-        targets: damageDetails.map(detail => detail.target),
+        targets: Array.from(uniqueTargetsById.values()),
+        targetIds: Array.from(uniqueTargetsById.keys()),
         castTime: castDuration,
         castStartTime: Number.isFinite(castSeconds) ? normalizedTime - castSeconds : undefined,
+        // Avoid retaining potentially sensitive raw log lines in parsed mechanic rows.
+        rawLines: [],
         localIsAOE: isAOE,
         localIsTB: isTB,
       })
     }
 
-    const actionTypeStateByName = new Map<string, { isAOE: boolean, isTB: boolean }>()
+    const actionTypeStateById = new Map<string, { isAOE: boolean, isTB: boolean }>()
     rowDrafts.forEach((draft) => {
-      const state = actionTypeStateByName.get(draft.action) || { isAOE: false, isTB: false }
+      const state = actionTypeStateById.get(draft.actionId) || { isAOE: false, isTB: false }
       if (draft.localIsAOE)
         state.isAOE = true
       if (draft.localIsTB)
         state.isTB = true
-      actionTypeStateByName.set(draft.action, state)
+      actionTypeStateById.set(draft.actionId, state)
     })
 
     const rows: MitigationRow[] = rowDrafts.map((draft) => {
       const { localIsAOE, localIsTB, ...row } = draft
-      const state = actionTypeStateByName.get(draft.action) || { isAOE: localIsAOE, isTB: localIsTB }
+      const state = actionTypeStateById.get(draft.actionId) || { isAOE: localIsAOE, isTB: localIsTB }
       return {
         ...row,
         isAOE: state.isAOE,

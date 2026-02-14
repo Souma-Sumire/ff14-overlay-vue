@@ -24,6 +24,7 @@ interface MitigationKeigennSkillBase {
   minLevel: number
   maxCharges?: DynamicValue
   duration?: DynamicValue
+  shieldAmount?: DynamicValue
 }
 
 type MitigationKeigennSkill = MitigationKeigennSkillBase & MitigationSkillMeta
@@ -127,6 +128,7 @@ const mitigationKeigennSkills: MitigationKeigennSkill[] = [
     job: [19],
     minLevel: 56,
     mitigationScope: 'party',
+    shieldAmount: 30000,
   },
   {
     // 武装戍卫

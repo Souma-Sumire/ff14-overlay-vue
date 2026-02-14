@@ -15,8 +15,9 @@ export interface MechanicsImportRowPayload {
   tc?: number
   ty: number
   f: number
-  sv?: number
   ct?: number
+  tg?: string[]
+  ti?: string[]
 }
 
 export interface MitigationMechanicsImportData {
@@ -72,9 +73,11 @@ function isMechanicsImportRowPayload(value: unknown): value is MechanicsImportRo
     return false
   if (value.tc !== undefined && typeof value.tc !== 'number')
     return false
-  if (value.sv !== undefined && typeof value.sv !== 'number')
-    return false
   if (value.ct !== undefined && typeof value.ct !== 'number')
+    return false
+  if (value.tg !== undefined && !isStringArray(value.tg))
+    return false
+  if (value.ti !== undefined && !isStringArray(value.ti))
     return false
   return true
 }

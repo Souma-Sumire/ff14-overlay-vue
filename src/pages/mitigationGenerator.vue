@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CheckboxValueType, MessageBoxInputData } from 'element-plus'
+import type { MessageBoxInputData } from 'element-plus'
 import type {
   ImportedColumnPayload,
   MitigationMechanicsImportData,
@@ -161,7 +161,6 @@ const isActiveSheetBlank = computed(() => {
     && playerActions.value.length === 0
 })
 
-const isDebugMode = useStorage('mitigation-debug-mode', false)
 const DEFAULT_JOB_SKILL_FILTERS: Record<number, number[]> = {
   19: [7382, 7548],
   20: [7549, 7541, 7394],
@@ -200,19 +199,8 @@ const skeletonFixedCellWidths = computed(() => {
     MITIGATION_GRID_WIDTH.castStart,
     MITIGATION_GRID_WIDTH.time,
     MITIGATION_GRID_WIDTH.nameMin,
+    MITIGATION_GRID_WIDTH.target,
   ]
-  if (isDebugMode.value) {
-    widths.push(
-      MITIGATION_GRID_WIDTH.cast,
-      MITIGATION_GRID_WIDTH.debugLG,
-      MITIGATION_GRID_WIDTH.debugLG,
-      MITIGATION_GRID_WIDTH.debug,
-      MITIGATION_GRID_WIDTH.debugXL,
-      MITIGATION_GRID_WIDTH.debugLG,
-      MITIGATION_GRID_WIDTH.debugSM,
-      MITIGATION_GRID_WIDTH.debugSM,
-    )
-  }
   widths.push(
     MITIGATION_GRID_WIDTH.damage,
     MITIGATION_GRID_WIDTH.shield,
@@ -262,6 +250,105 @@ function getJobOrder(jobEnum: number) {
   return jobOrder.get(normalized) ?? Number.MAX_SAFE_INTEGER
 }
 
+const mechanicTargetJobNameSet = new Set(
+  Util.getBattleJobs3()
+    .map(job => Util.jobToFullName(job).simple1)
+    .filter((name): name is string => !!name),
+)
+
+function normalizeRowDamageType(value: unknown): MitigationRow['damageType'] {
+  const type = String(value || 'physics')
+  if (type === 'magic' || type === 'darkness' || type === 'physics')
+    return type
+  return 'physics'
+}
+
+function normalizeMechanicTargets(
+  targets: unknown[],
+  targetCount: number,
+  partySize: number,
+) {
+  const normalizedPartySize = Number.isFinite(partySize) && partySize > 0
+    ? Math.max(1, Math.round(partySize))
+    : 8
+
+  const next: string[] = []
+  const pushUnique = (name: string) => {
+    if (!next.includes(name))
+      next.push(name)
+  }
+
+  targets.forEach((target) => {
+    const name = String(target || '').trim()
+    if (!name)
+      return
+    if (name === '全部') {
+      pushUnique('全部')
+      return
+    }
+    if (mechanicTargetJobNameSet.has(name))
+      pushUnique(name)
+  })
+
+  if (next.includes('全部'))
+    return ['全部']
+
+  const safeTargetCount = Number.isFinite(targetCount) ? Math.max(0, Math.round(targetCount)) : 0
+  if (safeTargetCount >= normalizedPartySize)
+    return ['全部']
+
+  return next
+}
+
+function normalizeMechanicRows(rows: MitigationRow[], options: { partySize?: number } = {}) {
+  const normalizedPartySize = Number.isFinite(options.partySize) && Number(options.partySize) > 0
+    ? Math.max(1, Math.round(Number(options.partySize)))
+    : 8
+
+  return rows.map((row, index) => {
+    const { shieldValue: _legacyShieldValue, ...restRow } = row as MitigationRow & { shieldValue?: unknown }
+    const timestampRaw = Number(row.timestamp)
+    const timestamp = Number.isFinite(timestampRaw) ? timestampRaw : 0
+    const rawDamageRaw = Number(row.rawDamage)
+    const rawDamage = Number.isFinite(rawDamageRaw) ? Math.max(0, Math.round(rawDamageRaw)) : 0
+
+    const castRaw = Number.parseFloat(String(row.castTime ?? ''))
+    const castTime = Number.isFinite(castRaw) && castRaw > 0
+      ? Number(castRaw.toFixed(2))
+      : undefined
+
+    const sourceTargets = Array.isArray(row.targets) ? row.targets : []
+    const parsedTargetCount = Number.isFinite(Number(row.targetCount))
+      ? Math.max(0, Math.round(Number(row.targetCount)))
+      : 0
+    const targets = normalizeMechanicTargets(sourceTargets, parsedTargetCount, normalizedPartySize)
+    const targetCount = targets.includes('全部')
+      ? Math.max(normalizedPartySize, parsedTargetCount, 1)
+      : Math.max(parsedTargetCount, targets.length, 1)
+
+    return {
+      ...restRow,
+      key: String(row.key || '').trim() || `row_${index}`,
+      timestamp: Number(timestamp.toFixed(2)),
+      actionId: String(row.actionId || '').trim(),
+      action: String(row.action || '').trim() || String(row.actionId || '').trim() || 'Unknown',
+      source: '',
+      damageType: normalizeRowDamageType(row.damageType),
+      rawDamage,
+      targetCount,
+      targets,
+      targetIds: [],
+      damageDetails: [],
+      rawLines: [],
+      flags: [],
+      castTime: castTime !== undefined ? String(castTime) : undefined,
+      castStartTime: castTime !== undefined ? Number((timestamp - castTime).toFixed(2)) : undefined,
+      _sim: undefined,
+      _sim_str: undefined,
+    } satisfies MitigationRow
+  })
+}
+
 function getAliasedName(actionId: string, originalName: string) {
   const aliases = mechanicAliases.value
   return aliases[actionId] || aliases[originalName] || originalName
@@ -301,6 +388,34 @@ function applyAliasesToRows(rows: MitigationRow[]) {
   return changed ? next : rows
 }
 
+function ensureUniqueRowKeys(rows: MitigationRow[]) {
+  const keyCounter = new Map<string, number>()
+  let changed = false
+  const next = rows.map((row, index) => {
+    const baseKey = String(row.key || '').trim() || `row_${index}`
+    const currentCount = keyCounter.get(baseKey) || 0
+    keyCounter.set(baseKey, currentCount + 1)
+    const uniqueKey = currentCount === 0 ? baseKey : `${baseKey}_${currentCount + 1}`
+    if (uniqueKey === row.key && currentCount === 0)
+      return row
+    changed = true
+    return { ...row, key: uniqueKey, _v: (row._v || 0) + 1 }
+  })
+  return changed ? next : rows
+}
+
+function sanitizeFiltersByRows(filters: string[], rows: MitigationRow[]) {
+  const validIds = new Set(rows.map(row => String(row.actionId ?? '').trim()))
+  if (validIds.size === 0)
+    return [] as string[]
+  if (filters.length === 0)
+    return []
+  const next = filters
+    .map(id => String(id || '').trim())
+    .filter((id, index, arr) => validIds.has(id) && arr.indexOf(id) === index)
+  return next
+}
+
 function renameRowsByActionId(rows: MitigationRow[], actionId: string, nextName: string) {
   return rows.map(row => row.actionId === actionId ? { ...row, action: nextName, _v: (row._v || 0) + 1 } : row)
 }
@@ -315,13 +430,18 @@ function resolveRowKeyByTimestamp(rows: MitigationRow[], ts: number) {
 }
 
 function ensurePlayerActionsRowKey(actions: PlayerActionRecord[], rows: MitigationRow[]) {
-  const rowKeySet = new Set(rows.map(row => row.key))
+  const rowByKey = new Map(rows.map(row => [row.key, row] as const))
+  const rowKeySet = new Set(rowByKey.keys())
   return actions.map((action) => {
     const normalizedId = action.id || createActionId()
     if (action.rowKey && rowKeySet.has(action.rowKey)) {
-      return normalizedId === action.id
-        ? action
-        : { ...action, id: normalizedId }
+      const anchoredRow = rowByKey.get(action.rowKey)
+      const keyTimestampMatches = !!anchoredRow && Math.abs(anchoredRow.timestamp - action.timestamp) <= 0.001
+      if (keyTimestampMatches) {
+        return normalizedId === action.id
+          ? action
+          : { ...action, id: normalizedId }
+      }
     }
     const resolvedRowKey = resolveRowKeyByTimestamp(rows, action.timestamp)
     if (!resolvedRowKey) {
@@ -359,12 +479,12 @@ const mechanicOptions = computed(() => {
 const filteredRows = computed(() => {
   const filters = filterMechanics.value
   if (!filters || filters.length === 0)
-    return rawRows.value
+    return []
   return rawRows.value.filter((row: MitigationRow) => filters.includes(row.actionId))
 })
 
 // Simulator
-const { runSimulation } = useMitigationSimulator(filteredRows, columns, playerActions)
+const { runSimulation } = useMitigationSimulator(rawRows, columns, playerActions)
 
 let isSimulatingInternal = false
 // 当核心输入变化时运行模拟
@@ -631,15 +751,20 @@ function applySheetToWorkspace(id: string | null) {
   isRestoringSheet.value = true
 
   if (sheet) {
-    const normalizedRows = applyAliasesToRows(sheet.mechanics.rows || [])
+    const normalizedRows = ensureUniqueRowKeys(
+      applyAliasesToRows(
+        normalizeMechanicRows(sheet.mechanics.rows || [], { partySize: sheet.planner.columns?.length || 8 }),
+      ),
+    )
     rawRows.value = normalizedRows
     playerActions.value = ensurePlayerActionsRowKey(sheet.planner.playerActions || [], normalizedRows)
     playerLevel.value = sheet.planner.playerLevel || 100
     columns.value = normalizeColumnsWithJobFilters(sheet.planner.columns || [], { forceGlobal: true }).columns
     const fallbackFilters = buildDefaultFilters(rawRows.value)
-    filterMechanics.value = Array.isArray(sheet.mechanics.filterMechanics)
+    const incomingFilters = Array.isArray(sheet.mechanics.filterMechanics)
       ? sheet.mechanics.filterMechanics
       : fallbackFilters
+    filterMechanics.value = sanitizeFiltersByRows(incomingFilters, normalizedRows)
   }
   else {
     rawRows.value = []
@@ -718,7 +843,6 @@ function getCommandLabel(label?: string) {
     'duplicate-sheet': '复制 Sheet 副本',
     'rename-sheet': '重命名 Sheet',
     'switch-sheet': '切换 Sheet',
-    'debug-mode': '切换 Debug',
     'player-level': '修改等级',
     'color-aoe': '修改 AOE 颜色',
     'color-tb': '修改死刑颜色',
@@ -904,8 +1028,11 @@ function createNewSheet(encounter: EncounterCandidate, mode: Extract<LogImportMo
     includeMechanics: true,
     includePlayerActions: mode === 'mechanics-auto',
   })
-  result.rows.forEach(r => (r._v = 0))
-  const normalizedActions = ensurePlayerActionsRowKey(result.playerActions, result.rows)
+  const normalizedRows = normalizeMechanicRows(
+    result.rows.map(row => ({ ...row, _v: 0 })),
+    { partySize: encounter.party.length || 8 },
+  )
+  const normalizedActions = ensurePlayerActionsRowKey(result.playerActions, normalizedRows)
 
   const newSheet: SheetState = {
     id: createActionId(),
@@ -915,7 +1042,7 @@ function createNewSheet(encounter: EncounterCandidate, mode: Extract<LogImportMo
       zoneName: encounter.zoneName,
     },
     mechanics: {
-      rows: result.rows,
+      rows: normalizedRows,
       filterMechanics: [],
     },
     planner: {
@@ -926,7 +1053,7 @@ function createNewSheet(encounter: EncounterCandidate, mode: Extract<LogImportMo
   }
 
   // Pre-filter
-  newSheet.mechanics.filterMechanics = buildDefaultFilters(result.rows)
+  newSheet.mechanics.filterMechanics = buildDefaultFilters(normalizedRows)
 
   const prevSheets = deepClone(sheets.value)
   const prevActiveSheetId = activeSheetId.value
@@ -1083,6 +1210,8 @@ function cancelImportMode() {
 }
 
 function onSheetsReordered(list: SheetState[]) {
+  if (editingSheetId.value)
+    return
   applyWithCommand(sheets.value, list, value => (sheets.value = value), { label: 'reorder-sheets' })
 }
 
@@ -1220,15 +1349,6 @@ function handleGlobalPointerDown(event: PointerEvent) {
   closeSheetContextMenu()
 }
 
-function handleDebugModeUpdate(value: CheckboxValueType) {
-  const normalized = typeof value === 'boolean'
-    ? value
-    : typeof value === 'number'
-      ? value !== 0
-      : value === 'true' || value === '1'
-  applyWithCommand(!!isDebugMode.value, normalized, next => (isDebugMode.value = next), { label: 'debug-mode', coalesceKey: 'debug-mode' })
-}
-
 function handlePlayerLevelUpdate(value: number | undefined) {
   const normalized = typeof value === 'number' && Number.isFinite(value)
     ? Math.max(1, Math.min(100, Math.round(value)))
@@ -1327,12 +1447,66 @@ function buildColumnByJob(jobEnum: number, base?: Partial<Pick<ColumnDef, 'key' 
   } satisfies ColumnDef
 }
 
+function getColumnTargetJobName(col: Pick<ColumnDef, 'jobEnum' | 'key'>) {
+  const job = Util.jobEnumToJob(col.jobEnum)
+  const jobName = Util.jobToFullName(job)?.simple1
+  if (jobName)
+    return jobName.trim()
+  const key = String(col.key || '').trim()
+  const trimmed = key.split('(')[0]?.split('（')[0]?.trim()
+  return trimmed || key
+}
+
+function replaceRowTargetsByJobName(rows: MitigationRow[], fromName: string, toName: string) {
+  const normalizedFrom = String(fromName || '').trim()
+  const normalizedTo = String(toName || '').trim()
+  if (!normalizedFrom || !normalizedTo || normalizedFrom === normalizedTo)
+    return rows
+
+  let changed = false
+  const nextRows = rows.map((row) => {
+    const currentTargets = (row.targets || []).map(item => String(item || '').trim()).filter(Boolean)
+    if (currentTargets.length === 0 || currentTargets.includes('全部'))
+      return row
+
+    let rowChanged = false
+    const dedupedTargets: string[] = []
+    const seen = new Set<string>()
+    currentTargets.forEach((target) => {
+      const nextTarget = target === normalizedFrom ? normalizedTo : target
+      if (nextTarget !== target)
+        rowChanged = true
+      if (!seen.has(nextTarget)) {
+        seen.add(nextTarget)
+        dedupedTargets.push(nextTarget)
+      }
+      else {
+        rowChanged = true
+      }
+    })
+
+    if (!rowChanged)
+      return row
+
+    changed = true
+    return {
+      ...row,
+      targets: dedupedTargets,
+      _v: (row._v || 0) + 1,
+    }
+  })
+
+  return changed ? nextRows : rows
+}
+
 function getSkillsForJob(jobEnum: number, level = 100): MitigationSkill[] {
   const skills = mitigationKeigennSkills
     .filter(s => s.job.includes(jobEnum) && s.minLevel <= level)
     .map((s) => {
       const id = parseDynamicValue(s.id, level)
       const damageTakenMultiplier = s.damageTakenMultiplier ? parseDynamicPerformance(s.damageTakenMultiplier, level) : undefined
+      const shieldAmountRaw = parseDynamicValue(s.shieldAmount ?? 0, level)
+      const shieldAmount = Number.isFinite(shieldAmountRaw) && shieldAmountRaw > 0 ? shieldAmountRaw : undefined
       const name = getActionChinese(id) || `Skill_${id}`
       const iconId = chineseToIcon(name)
       const iconUrl = iconId && iconId !== 405 ? getImgSrc(`/i/${completeIcon(iconId)}.png`) : ''
@@ -1342,6 +1516,7 @@ function getSkillsForJob(jobEnum: number, level = 100): MitigationSkill[] {
         icon: iconUrl,
         mitigationScope: s.mitigationScope,
         damageTakenMultiplier,
+        shieldAmount,
         recast: parseDynamicValue(s.recast1000ms, level),
         duration: parseDynamicValue(s.duration ?? 0, level),
         maxCharges: parseDynamicValue(s.maxCharges ?? 1, level),
@@ -1471,20 +1646,25 @@ function prunePlayerActionsByColumns(actions: PlayerActionRecord[], targetColumn
     .map(action => ({ ...action, id: action.id || createActionId() }))
 }
 
-function applyPartyCompositionUpdate(list: ColumnDef[]) {
+function applyPartyCompositionUpdate(list: ColumnDef[], options: { nextRows?: MitigationRow[] } = {}) {
   const normalizedInput = ensureColumnIdentity(deepClone(list))
   const prevColumns = deepClone(columns.value)
   const prevOrders = deepClone(jobSkillOrders.value)
   const prevFilters = deepClone(jobSkillFilters.value)
   const prevActions = deepClone(playerActions.value)
+  const prevRows = deepClone(rawRows.value)
 
   const { nextColumns, nextFilters, nextOrders } = buildColumnsUpdatePayload(normalizedInput)
   const nextActions = prunePlayerActionsByColumns(playerActions.value, nextColumns)
+  const nextRows = options.nextRows
+    ? deepClone(options.nextRows)
+    : deepClone(prevRows)
 
   const changed = !isSameState(prevColumns, nextColumns)
     || !isSameState(prevOrders, nextOrders)
     || !isSameState(prevFilters, nextFilters)
     || !isSameState(prevActions, nextActions)
+    || !isSameState(prevRows, nextRows)
   if (!changed)
     return
 
@@ -1495,12 +1675,14 @@ function applyPartyCompositionUpdate(list: ColumnDef[]) {
       jobSkillFilters.value = deepClone(nextFilters)
       columns.value = deepClone(nextColumns)
       playerActions.value = deepClone(nextActions)
+      rawRows.value = deepClone(nextRows)
     },
     undo: () => {
       jobSkillOrders.value = deepClone(prevOrders)
       jobSkillFilters.value = deepClone(prevFilters)
       columns.value = deepClone(prevColumns)
       playerActions.value = deepClone(prevActions)
+      rawRows.value = deepClone(prevRows)
     },
   })
 }
@@ -1553,12 +1735,15 @@ function handlePartyColumnChangeJob(payload: { colKey: string, jobEnum: number }
   const current = next[index]
   if (!current || current.jobEnum === jobEnum)
     return
+  const previousTargetName = getColumnTargetJobName(current)
 
   next[index] = buildColumnByJob(jobEnum, {
     key: current.key,
     targetId: current.targetId,
   })
-  applyPartyCompositionUpdate(next)
+  const currentTargetName = getColumnTargetJobName(next[index]!)
+  const nextRows = replaceRowTargetsByJobName(rawRows.value, previousTargetName, currentTargetName)
+  applyPartyCompositionUpdate(next, { nextRows })
 }
 
 function handlePartyColumnReorder(orderedKeys: string[]) {
@@ -1593,14 +1778,16 @@ function handlePlayerActionsUpdate(list: PlayerActionRecord[]) {
 }
 
 function handleFilterUpdate(list: string[]) {
-  applyWithCommand(filterMechanics.value, list, value => (filterMechanics.value = value), {
+  const normalized = sanitizeFiltersByRows(list, rawRows.value)
+  applyWithCommand(filterMechanics.value, normalized, value => (filterMechanics.value = value), {
     label: 'update-filter',
     equals: isSameStringArray,
   })
 }
 
 function handleRowsUpdate(list: MitigationRow[]) {
-  applyWithCommand(rawRows.value, list, value => (rawRows.value = value), { label: 'update-rows' })
+  const normalized = normalizeMechanicRows(list, { partySize: columns.value.length || 8 })
+  applyWithCommand(rawRows.value, normalized, value => (rawRows.value = value), { label: 'update-rows' })
 }
 
 function addCustomRow() {
@@ -1637,6 +1824,7 @@ function addCustomRow() {
       isShare: false,
       damageDetails: [],
       targets: [],
+      targetIds: [],
       rawLines: [],
       flags: [],
       _v: 0,
@@ -1664,7 +1852,7 @@ function addCustomRow() {
 }
 function copyToClipboard(data: unknown, options: { compressed?: boolean } = {}) {
   const compressed = options.compressed ?? true
-  const jsonStr = JSON.stringify(data, null, 0)
+  const jsonStr = JSON.stringify(data, null, 2)
   const text = compressed ? LZString.compressToBase64(jsonStr) : jsonStr
   navigator.clipboard.writeText(text).then(() => {
     ElMessage.success(compressed ? '已复制到剪贴板' : '已复制原始 JSON 到剪贴板')
@@ -1673,9 +1861,17 @@ function copyToClipboard(data: unknown, options: { compressed?: boolean } = {}) 
   })
 }
 
-function exportMechanics(options: { compressed?: boolean } = {}) {
+function copyPlainTextToClipboard(text: string, successMessage: string) {
+  navigator.clipboard.writeText(text).then(() => {
+    ElMessage.success(successMessage)
+  }).catch(() => {
+    ElMessage.error('复制失败')
+  })
+}
+
+function buildMechanicsExportData() {
   if (!rawRows.value.length)
-    return
+    return null
 
   // Dictionary Compression for Action Names
   const actionNames = new Set<string>()
@@ -1683,7 +1879,7 @@ function exportMechanics(options: { compressed?: boolean } = {}) {
   const actionList = Array.from(actionNames)
   const actionMap = new Map(actionList.map((n, i) => [n, i]))
 
-  // V3 Minified: t:ts, i:id, n:nameIdx, v:dmg, ty:type, f:flags, sv:shield
+  // V3 Minified: t:ts, i:id, n:nameIdx, v:dmg, ty:type, f:flags, ct:castTime, tg:targets
   const rows = rawRows.value.map((r) => {
     let ty = 3
     if (r.damageType === 'physics')
@@ -1711,27 +1907,35 @@ function exportMechanics(options: { compressed?: boolean } = {}) {
     }
     if ((r.targetCount || 0) > 1)
       item.tc = Math.round(r.targetCount || 0)
-    if (r.shieldValue)
-      item.sv = r.shieldValue
     if (r.castTime !== undefined) {
       const castTime = Number.parseFloat(String(r.castTime))
       if (Number.isFinite(castTime) && castTime > 0)
         item.ct = Number(castTime.toFixed(2))
     }
+    const targets = Array.from(new Set((r.targets || []).filter(Boolean)))
+    if (targets.length > 0)
+      item.tg = targets
     return item
   })
 
-  copyToClipboard({
+  return {
     type: 'mitigation-mechanics',
     actions: actionList,
     rows,
     aliases: toRaw(mechanicAliases.value),
-  }, options)
+  } satisfies MitigationMechanicsImportData
 }
 
-function exportPlayerActions(options: { compressed?: boolean } = {}) {
-  if (!playerActions.value.length && !columns.value.length)
+function exportMechanics(options: { compressed?: boolean } = {}) {
+  const payload = buildMechanicsExportData()
+  if (!payload)
     return
+  copyToClipboard(payload, options)
+}
+
+function buildPlayerActionsExportData() {
+  if (!playerActions.value.length && !columns.value.length)
+    return null
 
   // Optimize sources & Anonymize
   const sourceToAnonMap = new Map<string, string>() // ColumnKey -> AnonID (e.g. 10(1))
@@ -1776,20 +1980,67 @@ function exportPlayerActions(options: { compressed?: boolean } = {}) {
     h: c.hiddenSkillIds,
   }))
 
-  copyToClipboard({
+  return {
     type: 'mitigation-player-actions',
     src: anonSourcesList,
     data: dataMap,
     cols,
-  }, options)
+  } satisfies MitigationPlayerActionsImportData
 }
 
-function exportMechanicsRaw() {
-  exportMechanics({ compressed: false })
+function exportPlayerActions(options: { compressed?: boolean } = {}) {
+  const payload = buildPlayerActionsExportData()
+  if (!payload)
+    return
+  copyToClipboard(payload, options)
 }
 
-function exportPlayerActionsRaw() {
-  exportPlayerActions({ compressed: false })
+function toTemplateIdBase(name: string) {
+  const base = String(name || '')
+    .trim()
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9]+/g, '-')
+    .replaceAll(/^-+|-+$/g, '')
+  return base || 'template'
+}
+
+function escapeSingleQuote(text: string) {
+  return String(text || '').replaceAll('\\', '\\\\').replaceAll('\'', '\\\'')
+}
+
+function generateTemplateSnippet() {
+  const mechanics = buildMechanicsExportData()
+  const playerActions = buildPlayerActionsExportData()
+  if (!mechanics && !playerActions) {
+    ElMessage.warning('没有可生成的模板数据')
+    return
+  }
+
+  const sheetName = activeSheet.value?.name || '新模板'
+  const idBase = toTemplateIdBase(sheetName)
+  const nameEscaped = escapeSingleQuote(sheetName)
+  const descriptionEscaped = escapeSingleQuote(`由 ${sheetName} 生成`)
+
+  const lines: string[] = [
+    '{',
+    `  id: '${idBase}',`,
+    `  name: '${nameEscaped}',`,
+    `  description: '${descriptionEscaped}',`,
+  ]
+
+  if (mechanics) {
+    lines.push(
+      `  mechanics: ${JSON.stringify(mechanics, null, 2).replaceAll('\n', '\n  ')},`,
+    )
+  }
+  if (playerActions) {
+    lines.push(
+      `  playerActions: ${JSON.stringify(playerActions, null, 2).replaceAll('\n', '\n  ')},`,
+    )
+  }
+  lines.push('},')
+
+  copyPlainTextToClipboard(lines.join('\n'), '模板片段已复制到剪贴板')
 }
 
 function decodeDamageType(typeCode: number) {
@@ -1810,7 +2061,7 @@ function buildImportedColumn(c: ImportedColumnPayload) {
 
 function importMechanicData(data: MitigationMechanicsImportData) {
   const actions = data.actions || []
-  const rows: MitigationRow[] = data.rows.map((r) => {
+  const importedRows: MitigationRow[] = data.rows.map((r) => {
     const isShare = !!(r.f & 4)
     const isTB = !isShare && !!(r.f & 2)
     const isAOE = !isShare && !isTB && !!(r.f & 1)
@@ -1825,7 +2076,6 @@ function importMechanicData(data: MitigationMechanicsImportData) {
       isAOE,
       isTB,
       isShare,
-      shieldValue: r.sv,
       castTime: typeof r.ct === 'number' && Number.isFinite(r.ct) && r.ct > 0
         ? String(r.ct)
         : undefined,
@@ -1833,13 +2083,15 @@ function importMechanicData(data: MitigationMechanicsImportData) {
         ? r.t - r.ct
         : undefined,
       source: 'Import',
-      targets: [],
+      targets: Array.isArray(r.tg) ? r.tg.filter((item): item is string => typeof item === 'string') : [],
+      targetIds: [],
       rawLines: [],
       flags: [],
       damageDetails: [],
       _v: 0,
     }
   })
+  const rows = normalizeMechanicRows(importedRows, { partySize: columns.value.length || 8 })
 
   const aliases = data.aliases || data.mechanicAliases
   const nextAliases = aliases
@@ -1943,6 +2195,19 @@ function importPlayerActionsData(data: MitigationPlayerActionsImportData) {
   ElMessage.success('导入玩家减伤成功')
 }
 
+function doImportByData(data: unknown) {
+  if (isMitigationMechanicsImportData(data)) {
+    importMechanicData(data)
+    return true
+  }
+  if (isMitigationPlayerActionsImportData(data)) {
+    importPlayerActionsData(data)
+    return true
+  }
+  ElMessage.error('导入数据类型不受支持')
+  return false
+}
+
 function doImportByText(rawText: string) {
   const value = rawText.trim()
   if (!value) {
@@ -1953,15 +2218,7 @@ function doImportByText(rawText: string) {
   loading.value = true
   try {
     const data = parseMitigationImportText(value)
-    if (isMitigationMechanicsImportData(data)) {
-      importMechanicData(data)
-    }
-    else if (isMitigationPlayerActionsImportData(data)) {
-      importPlayerActionsData(data)
-    }
-    else {
-      ElMessage.error('导入字符串类型不受支持')
-    }
+    doImportByData(data)
   }
   catch (err) {
     console.error(err)
@@ -2000,9 +2257,8 @@ function handleEmptyImportByText() {
 }
 
 async function createSheetFromTemplate(template: MitigationSheetTemplate) {
-  const payloads = [template.mechanicsText, template.playerActionsText]
-    .map(text => text?.trim())
-    .filter((text): text is string => !!text)
+  const payloads = [template.mechanics, template.playerActions]
+    .filter((item): item is NonNullable<typeof item> => !!item)
 
   if (payloads.length === 0) {
     ElMessage.warning('该模板未配置可导入内容')
@@ -2010,7 +2266,7 @@ async function createSheetFromTemplate(template: MitigationSheetTemplate) {
   }
 
   await ensureActiveSheetReady(template.name)
-  payloads.forEach(payload => doImportByText(payload))
+  payloads.forEach(payload => doImportByData(payload))
 }
 </script>
 
@@ -2061,11 +2317,8 @@ async function createSheetFromTemplate(template: MitigationSheetTemplate) {
                   <el-dropdown-item @click="exportPlayerActions">
                     仅导出玩家减伤
                   </el-dropdown-item>
-                  <el-dropdown-item v-if="isDebugMode" divided @click="exportMechanicsRaw">
-                    仅导出机制信息（原始 JSON）
-                  </el-dropdown-item>
-                  <el-dropdown-item v-if="isDebugMode" @click="exportPlayerActionsRaw">
-                    仅导出玩家减伤（原始 JSON）
+                  <el-dropdown-item @click="generateTemplateSnippet">
+                    生成模板片段
                   </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
@@ -2087,11 +2340,6 @@ async function createSheetFromTemplate(template: MitigationSheetTemplate) {
       </div>
       <div v-if="activeSheet || isHydrating" class="tool-right">
         <template v-if="activeSheet">
-          <div class="debug-toggle">
-            <el-checkbox :model-value="isDebugMode" size="small" @update:model-value="handleDebugModeUpdate">
-              Debug
-            </el-checkbox>
-          </div>
           <div class="lv-box">
             <span>队伍等级</span>
             <el-input-number :model-value="playerLevel" size="small" :min="1" :max="100" @update:model-value="handlePlayerLevelUpdate" />
@@ -2171,10 +2419,10 @@ async function createSheetFromTemplate(template: MitigationSheetTemplate) {
     <main class="content">
       <MitigationGrid
         v-if="activeSheet && !isActiveSheetBlank"
+        :key="activeSheetId || 'active-sheet'"
         :rows="filteredRows"
         :all-rows="rawRows"
         :columns="columns"
-        :is-debug="isDebugMode"
         :player-actions="playerActions"
         :party-composition-job-options="partyCompositionJobOptions"
         :mechanic-options="mechanicOptions"
@@ -2295,6 +2543,7 @@ async function createSheetFromTemplate(template: MitigationSheetTemplate) {
         <VueDraggable
           :model-value="sheets"
           class="sheet-tabs"
+          :disabled="!!editingSheetId"
           :animation="160"
           ghost-class="sheet-ghost"
           drag-class="sheet-drag"
