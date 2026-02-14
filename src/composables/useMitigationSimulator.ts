@@ -62,9 +62,14 @@ export function useMitigationSimulator(
       if (!playerSkills || !skill)
         return
 
-      const rowIndex = action.rowKey
-        ? (rowIndexByKey.get(action.rowKey) ?? -1)
-        : findFirstRowAtOrAfter(rawRows, action.timestamp - 0.5)
+      let rowIndex = -1
+      if (action.rowKey) {
+        const matchedIndex = rowIndexByKey.get(action.rowKey)
+        if (matchedIndex !== undefined)
+          rowIndex = matchedIndex
+      }
+      if (rowIndex === -1)
+        rowIndex = findFirstRowAtOrAfter(rawRows, action.timestamp)
 
       if (rowIndex === -1)
         return
@@ -100,6 +105,8 @@ export function useMitigationSimulator(
           let status: CellSimState['status'] = ''
           let currentMatchingUse: typeof schedule[0] | undefined
           let nextUse: typeof schedule[0] | undefined
+          let showDot = false
+          let showDotMuted = false
 
           let startUse: typeof schedule[0] | undefined
           for (const item of schedule) {
@@ -110,10 +117,27 @@ export function useMitigationSimulator(
           }
 
           if (startUse) {
-            status = 'active-start'
+            const elapsed = row.timestamp - startUse.timestamp
+            const activeDuration = Math.max(0, startUse.duration)
+            const inActiveWindow = elapsed >= -EPSILON && elapsed < activeDuration - EPSILON
+            showDot = true
+            showDotMuted = !inActiveWindow
             currentMatchingUse = startUse
+            if (Math.abs(elapsed) <= EPSILON) {
+              status = 'active-start'
+            }
+            else if (elapsed > EPSILON && elapsed < activeDuration - EPSILON) {
+              status = 'active'
+            }
+            else if (
+              elapsed >= activeDuration - EPSILON
+              && elapsed < startUse.recast - EPSILON
+            ) {
+              status = 'cooldown'
+            }
           }
-          else {
+
+          if (!status) {
             let prevUse: typeof schedule[0] | undefined
             for (let i = schedule.length - 1; i >= 0; i--) {
               const candidate = schedule[i]
@@ -134,18 +158,18 @@ export function useMitigationSimulator(
                 currentMatchingUse = prevUse
               }
             }
+          }
 
-            if (!status) {
-              for (let i = 0; i < schedule.length; i++) {
-                const candidate = schedule[i]
-                if (candidate && candidate.timestamp > row.timestamp) {
-                  nextUse = candidate
-                  const timeToNext = nextUse.timestamp - row.timestamp
-                  const requiredSpacing = nextUse.recast
-                  if (timeToNext > 0 && timeToNext < requiredSpacing)
-                    status = 'conflict'
-                  break
-                }
+          if (!status) {
+            for (let i = 0; i < schedule.length; i++) {
+              const candidate = schedule[i]
+              if (candidate && candidate.timestamp > row.timestamp) {
+                nextUse = candidate
+                const timeToNext = nextUse.timestamp - row.timestamp
+                const requiredSpacing = nextUse.recast
+                if (timeToNext > 0 && timeToNext < requiredSpacing)
+                  status = 'conflict'
+                break
               }
             }
           }
@@ -216,7 +240,8 @@ export function useMitigationSimulator(
           cellSims[key] = {
             status,
             classes,
-            showDot: status === 'active-start',
+            showDot,
+            showDotMuted,
             offset,
             useTimestamp: currentMatchingUse?.timestamp,
             actionId: currentMatchingUse?.id,

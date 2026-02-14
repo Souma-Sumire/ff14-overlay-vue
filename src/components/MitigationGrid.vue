@@ -367,6 +367,47 @@ const mechanicEditor = reactive<{
 
 // Global overlay state for mutual exclusivity
 const activeOverlay = ref<string | null>(null)
+const activeSkillDetailKey = ref<string | null>(null)
+let skillDetailHideTimer: ReturnType<typeof setTimeout> | null = null
+
+function cancelSkillDetailHide() {
+  if (skillDetailHideTimer !== null) {
+    clearTimeout(skillDetailHideTimer)
+    skillDetailHideTimer = null
+  }
+}
+
+function scheduleHideSkillDetail() {
+  cancelSkillDetailHide()
+  skillDetailHideTimer = setTimeout(() => {
+    activeSkillDetailKey.value = null
+    skillDetailHideTimer = null
+  }, 120)
+}
+
+function getSkillDetailKey(columnKey: string, skillId: number) {
+  return `${columnKey}_${skillId}`
+}
+
+function isSkillDetailVisible(columnKey: string, skillId: number) {
+  return activeSkillDetailKey.value === getSkillDetailKey(columnKey, skillId)
+}
+
+function updateSkillDetailVisible(columnKey: string, skillId: number, visible: boolean) {
+  const key = getSkillDetailKey(columnKey, skillId)
+  if (visible) {
+    cancelSkillDetailHide()
+    activeSkillDetailKey.value = key
+    return
+  }
+  if (activeSkillDetailKey.value === key)
+    activeSkillDetailKey.value = null
+}
+
+function hideSkillDetail() {
+  cancelSkillDetailHide()
+  activeSkillDetailKey.value = null
+}
 
 function toggleOverlay(id: string) {
   if (activeOverlay.value === id) {
@@ -379,7 +420,7 @@ function toggleOverlay(id: string) {
 }
 
 function handleWindowClick() {
-  activeOverlay.value = null
+  clearOverlays()
 }
 
 function handleWindowResize() {
@@ -412,10 +453,13 @@ onBeforeUnmount(() => {
   window.removeEventListener('click', handleWindowClick)
   window.removeEventListener('keydown', handleWindowKeydown)
   window.removeEventListener('resize', handleWindowResize)
+  cancelSkillDetailHide()
 })
 
 // Watch activeOverlay to close hover popovers
 watch(activeOverlay, (val) => {
+  if (val)
+    hideSkillDetail()
   if (val) {
     cellPopover.visible = false
     damagePopover.visible = false
@@ -498,7 +542,7 @@ function resolveRowKeyByTimestamp(ts: number) {
   const rows = sourceRows.value
   if (rows.length === 0)
     return undefined
-  const idx = rows.findIndex(r => r.timestamp >= ts - 0.5)
+  const idx = rows.findIndex(r => r.timestamp >= ts)
   if (idx === -1)
     return rows[rows.length - 1]?.key
   return rows[idx]?.key
@@ -517,6 +561,7 @@ function validateActionPlacement(
   skillId: number,
   newTimestamp: number,
   ignoreAction?: PlayerActionRecord,
+  showConflictMessage = true,
 ) {
   const columnKey = col.key
 
@@ -534,7 +579,8 @@ function validateActionPlacement(
       const otherStart = action.timestamp
       const otherWindow = action.recastOverride ?? recast
       if (newTimestamp < otherStart + otherWindow && otherStart < newTimestamp + recastWindow) {
-        ElMessage.error('与已有的技能释放冲突')
+        if (showConflictMessage)
+          ElMessage.error('与已有的技能释放冲突')
         return false
       }
     }
@@ -558,62 +604,17 @@ function validateActionPlacement(
   return true
 }
 
-function findValidTimestampInOffsetRange(row: MitigationRow, col: ColumnDef, skillId: number) {
-  const columnKey = col.key
-  const { duration, recast } = getSkillMeta(col, skillId)
-  if (duration <= 0)
-    return null
-
-  const baseStart = row.timestamp - duration
-  const baseEnd = row.timestamp + duration
-  if (recast <= 0)
-    return row.timestamp
-
-  let intervals: Array<[number, number]> = [[baseStart, baseEnd]]
-  for (const action of props.playerActions) {
-    if (action.columnKey !== columnKey || action.skillId !== skillId)
-      continue
-    const otherStart = action.timestamp
-    const otherEnd = otherStart + (action.recastOverride ?? recast)
-    if (otherEnd <= otherStart)
-      continue
-    const next: Array<[number, number]> = []
-    for (const [start, end] of intervals) {
-      if (otherEnd <= start || otherStart >= end) {
-        next.push([start, end])
-        continue
-      }
-      if (otherStart > start)
-        next.push([start, Math.min(otherStart, end)])
-      if (otherEnd < end)
-        next.push([Math.max(otherEnd, start), end])
-    }
-    intervals = next
-    if (intervals.length === 0)
-      return null
-  }
-
-  let best: number | null = null
-  let bestDist = Number.POSITIVE_INFINITY
-  for (const [start, end] of intervals) {
-    const t = Math.min(Math.max(row.timestamp, start), end)
-    const dist = Math.abs(t - row.timestamp)
-    if (dist < bestDist) {
-      best = t
-      bestDist = dist
-    }
-  }
-  return best
-}
-
 function toggleCell(row: MitigationRow, col: ColumnDef, skillId: number) {
   const columnKey = col.key
+  const isNormalMechanicCell = !row.isAOE && !row.isTB && !row.isShare
+  const defaultManualOffsetSeconds = isNormalMechanicCell ? 0 : -2
 
   const info = getCellSim(row, col, skillId)
   const isChecked = props.playerActions.some(a => a.rowKey === row.key && a.columnKey === columnKey && a.skillId === skillId)
 
   const isExactUseCell = !!info?.useTimestamp && Math.abs(info.useTimestamp - row.timestamp) <= 0.5
   const canClick = isChecked
+    || !!info?.showDot
     || info?.status === 'active-start'
     || (info?.status === 'active' && isExactUseCell)
     || isExactUseCell
@@ -628,8 +629,8 @@ function toggleCell(row: MitigationRow, col: ColumnDef, skillId: number) {
     if (index !== -1)
       newActions.splice(index, 1)
   }
-  else if (info?.status === 'active-start' || info?.status === 'active' || isExactUseCell) {
-    // Allow cancelling an active use even if the original action is not row-bound
+  else if (info?.showDot || info?.status === 'active-start' || info?.status === 'active' || isExactUseCell) {
+    // Allow cancelling the rendered use marker even if the original action is not row-bound.
     if (info?.actionId) {
       const index = newActions.findIndex(a => a.id === info.actionId)
       if (index !== -1) {
@@ -651,12 +652,10 @@ function toggleCell(row: MitigationRow, col: ColumnDef, skillId: number) {
     }
   }
   else {
-    let newTimestamp = row.timestamp
-    if (info?.status === 'conflict') {
-      const suggested = findValidTimestampInOffsetRange(row, col, skillId)
-      if (suggested === null)
-        return
-      newTimestamp = suggested
+    let newTimestamp = row.timestamp + defaultManualOffsetSeconds
+    if (!validateActionPlacement(col, skillId, newTimestamp, undefined, false)) {
+      const fallbackOffset = Math.max(defaultManualOffsetSeconds, 0)
+      newTimestamp = row.timestamp + fallbackOffset
     }
     if (!validateActionPlacement(col, skillId, newTimestamp))
       return
@@ -665,7 +664,7 @@ function toggleCell(row: MitigationRow, col: ColumnDef, skillId: number) {
       timestamp: newTimestamp,
       columnKey,
       skillId,
-      rowKey: row.key,
+      rowKey: resolveRowKeyByTimestamp(newTimestamp) || row.key,
     }
     newActions.push(record)
   }
@@ -674,6 +673,96 @@ function toggleCell(row: MitigationRow, col: ColumnDef, skillId: number) {
 
 const editingCell = ref<{ rowKey: string, colKey: string, skillId: number, target: HTMLElement, title: string, baseTime: number } | null>(null)
 const editForm = reactive({ offset: 0 })
+const EDIT_OFFSET_BOUNDARY_SCAN_LIMIT = 7200
+
+function getEditingActionContext() {
+  if (!editingCell.value)
+    return null
+  const { rowKey, colKey, skillId, baseTime } = editingCell.value
+  const col = props.columns.find(c => c.key === colKey)
+  if (!col)
+    return null
+  const columnKey = col.key
+  const originalAction = props.playerActions.find(a => a.rowKey === rowKey && a.columnKey === columnKey && a.skillId === skillId)
+  if (!originalAction)
+    return null
+  return { col, skillId, baseTime, originalAction }
+}
+
+function canUpdateEditOffsetWithContext(
+  ctx: { col: ColumnDef, skillId: number, baseTime: number, originalAction: PlayerActionRecord },
+  nextOffset: number,
+) {
+  const newTimestamp = ctx.baseTime + nextOffset
+  return validateActionPlacement(ctx.col, ctx.skillId, newTimestamp, ctx.originalAction, false)
+}
+
+function canUpdateEditOffset(nextOffset: number) {
+  const ctx = getEditingActionContext()
+  if (!ctx)
+    return false
+  return canUpdateEditOffsetWithContext(ctx, nextOffset)
+}
+
+function findEditOffsetBoundary(
+  ctx: { col: ColumnDef, skillId: number, baseTime: number, originalAction: PlayerActionRecord },
+  direction: 1 | -1,
+  startOffset: number,
+) {
+  let current = startOffset
+  for (let i = 0; i < EDIT_OFFSET_BOUNDARY_SCAN_LIMIT; i++) {
+    const next = current + direction
+    if (!canUpdateEditOffsetWithContext(ctx, next))
+      return current
+    current = next
+  }
+  return direction > 0 ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY
+}
+
+function formatOffsetBoundary(value: number) {
+  if (!Number.isFinite(value))
+    return value > 0 ? '+∞' : '-∞'
+  const rounded = Math.round(value * 10) / 10
+  const normalized = Object.is(rounded, -0) ? 0 : rounded
+  const text = Number.isInteger(normalized)
+    ? String(normalized)
+    : normalized.toFixed(1).replace(/\.0$/, '')
+  return normalized > 0 ? `+${text}` : text
+}
+
+const canIncreaseEditOffset = computed(() => canUpdateEditOffset(editForm.offset + 1))
+const canDecreaseEditOffset = computed(() => canUpdateEditOffset(editForm.offset - 1))
+const editOffsetBounds = computed(() => {
+  const ctx = getEditingActionContext()
+  if (!ctx)
+    return null
+  return {
+    lower: findEditOffsetBoundary(ctx, -1, editForm.offset),
+    upper: findEditOffsetBoundary(ctx, 1, editForm.offset),
+  }
+})
+const editOffsetLowerLabel = computed(() => {
+  if (!editOffsetBounds.value)
+    return '--'
+  return formatOffsetBoundary(editOffsetBounds.value.lower)
+})
+const editOffsetUpperLabel = computed(() => {
+  if (!editOffsetBounds.value)
+    return '--'
+  return formatOffsetBoundary(editOffsetBounds.value.upper)
+})
+
+const editOffsetModel = computed<number>({
+  get: () => editForm.offset,
+  set: (value) => {
+    const nextOffset = Number(value)
+    if (!Number.isFinite(nextOffset))
+      return
+    if (!canUpdateEditOffset(nextOffset))
+      return
+    editForm.offset = nextOffset
+  },
+})
 
 const editDisplayTime = computed(() => {
   if (!editingCell.value)
@@ -796,11 +885,23 @@ function getStatusLabel(status: string | undefined) {
   return '准备就绪'
 }
 
-function getStatusLabelForCell(status: string | undefined, useTimestamp: number | undefined, rowTimestamp: number) {
+function getStatusLabelForCell(
+  status: string | undefined,
+  useTimestamp: number | undefined,
+  rowTimestamp: number,
+  duration?: number,
+) {
   if (status === 'active-start') {
     if (useTimestamp !== undefined && Math.abs(useTimestamp - rowTimestamp) < 0.001)
       return '释放瞬间'
-    return '生效中'
+    if (useTimestamp !== undefined) {
+      const elapsed = rowTimestamp - useTimestamp
+      const activeDuration = Math.max(0, Number(duration || 0))
+      if (elapsed >= 0 && elapsed < activeDuration - 0.001)
+        return '生效中'
+      return '冷却中'
+    }
+    return '释放瞬间'
   }
   return getStatusLabel(status)
 }
@@ -813,6 +914,38 @@ function getColDisplayName(col: ColumnDef) {
   const key = col.key || ''
   const trimmed = key.split('(')[0]?.split('（')[0]?.trim()
   return trimmed || key
+}
+
+function formatSkillSeconds(value: number | undefined) {
+  const seconds = Number(value || 0)
+  if (!Number.isFinite(seconds) || seconds <= 0)
+    return '0s'
+  if (Number.isInteger(seconds))
+    return `${seconds}s`
+  return `${seconds.toFixed(1)}s`
+}
+
+function getSkillScopeLabel(scope: MitigationSkill['mitigationScope']) {
+  if (scope === 'party')
+    return '团队'
+  if (scope === 'self')
+    return '自身'
+  return '未定义'
+}
+
+function formatMitigationPercentFromMultiplier(multiplier: number) {
+  const value = Number(multiplier)
+  if (!Number.isFinite(value))
+    return '--'
+  const rate = Math.max(0, Math.min(1, 1 - value))
+  return `${Math.round(rate * 100)}%`
+}
+
+function getSkillMitigationSummary(skill: MitigationSkill) {
+  const multiplier = skill.damageTakenMultiplier
+  if (!multiplier)
+    return '无'
+  return `物${formatMitigationPercentFromMultiplier(multiplier.physics)} / 魔${formatMitigationPercentFromMultiplier(multiplier.magic)} / 暗${formatMitigationPercentFromMultiplier(multiplier.darkness)}`
 }
 
 function handleRightClickMechanic(row: MitigationRow, event: MouseEvent) {
@@ -995,8 +1128,9 @@ function pasteColumnData() {
 const isCellPopoverVisible = computed(() => !activeOverlay.value && cellPopover.visible)
 
 function showCellPopover(event: MouseEvent, row: MitigationRow, col: ColumnDef, skill: MitigationSkill) {
-  if (activeOverlay.value || editingCell.value)
+  if (activeOverlay.value || editingCell.value || !!activeSkillDetailKey.value)
     return
+  hideSkillDetail()
   const info = getCellSim(row, col, skill.id)
   if (!info)
     return
@@ -1029,8 +1163,9 @@ const cellPopoverInfo = computed(() => {
 const isDamagePopoverVisible = computed(() => !activeOverlay.value && damagePopover.visible)
 
 function showDamagePopover(event: MouseEvent, row: MitigationRow) {
-  if (activeOverlay.value || editingCell.value)
+  if (activeOverlay.value || editingCell.value || !!activeSkillDetailKey.value)
     return
+  hideSkillDetail()
   if (!row.damageDetails || row.damageDetails.length <= 1)
     return
   cellPopover.visible = false
@@ -1044,6 +1179,7 @@ function clearOverlays() {
   editingCell.value = null
   cellPopover.visible = false
   damagePopover.visible = false
+  hideSkillDetail()
 }
 
 function hideDamagePopover() {
@@ -1203,7 +1339,6 @@ function getSimulatedDamage(row: MitigationRow) {
 }
 
 const AUTO_PLAN_EPSILON = 0.001
-const AUTO_PLAN_WEIGHT_SCALE = 1000
 
 function getAutoArrangeStrategyLabel(strategy: AutoArrangeStrategy) {
   if (strategy === 'tb-priority')
@@ -1293,6 +1428,10 @@ function getAutoArrangeToleranceSeconds() {
   return Math.max(0, raw)
 }
 
+function getAutoArrangeReleaseTimestamp(triggerTimestamp: number) {
+  return triggerTimestamp - getAutoArrangeToleranceSeconds()
+}
+
 function getRowPriorityWeight(row: MitigationRow, strategy: AutoArrangeStrategy) {
   if (strategy !== 'tb-priority')
     return 1
@@ -1323,15 +1462,6 @@ interface AutoScheduledAction {
   exclusiveGroup: string | null
 }
 
-interface AutoIntervalCandidate {
-  rowIndex: number
-  timestamp: number
-  endTimestamp: number
-  gain: number
-  score: number
-  scoreScaled: number
-}
-
 interface AutoArrangeRowComputationCache {
   extremeFailureMask?: boolean[]
   personalDamageByRow?: number[]
@@ -1344,13 +1474,6 @@ interface ExclusiveGroupAutoArrangeUnit {
   skill: MitigationSkill
   columnKey: string
   skillId: number
-}
-
-interface MinCostFlowEdge {
-  to: number
-  rev: number
-  cap: number
-  cost: number
 }
 
 interface AutoArrangeBuildContext {
@@ -1381,9 +1504,12 @@ function findFirstRowAtOrAfter(rows: MitigationRow[], timestamp: number) {
 }
 
 function resolveActionRowIndex(rows: MitigationRow[], rowIndexByKey: Map<string, number>, action: PlayerActionRecord) {
-  if (action.rowKey)
-    return rowIndexByKey.get(action.rowKey) ?? -1
-  return findFirstRowAtOrAfter(rows, action.timestamp - 0.5)
+  if (action.rowKey) {
+    const byKey = rowIndexByKey.get(action.rowKey)
+    if (byKey !== undefined)
+      return byKey
+  }
+  return findFirstRowAtOrAfter(rows, action.timestamp)
 }
 
 function buildSkillLookupByPlayer() {
@@ -1471,81 +1597,6 @@ function computeBaselineMultipliers(rows: MitigationRow[], scheduledActions: Aut
   })
 }
 
-function computeAutoUseWeight(
-  rows: MitigationRow[],
-  startRowIndex: number,
-  col: ColumnDef,
-  skillId: number,
-  duration: number,
-  baselineMultipliers: number[],
-  strategy: AutoArrangeStrategy,
-  cache?: AutoArrangeRowComputationCache,
-) {
-  const startRow = rows[startRowIndex]
-  if (!startRow)
-    return { gain: 0, score: 0 }
-  const coverage = getAutoArrangeCoverageScope(skillId)
-  if (!coverage)
-    return { gain: 0, score: 0 }
-  const startTimestamp = startRow.timestamp
-  const endTimestamp = startTimestamp + duration
-  const hasDamageTakenMultiplier = hasSkillDamageTakenMultiplier(skillId)
-  let totalGain = 0
-  let totalScore = 0
-
-  rows.forEach((row, rowIndex) => {
-    const isStartRow = rowIndex === startRowIndex
-    const isWithinDuration = duration > AUTO_PLAN_EPSILON
-      && row.timestamp >= startTimestamp
-      && row.timestamp < endTimestamp
-    if (!isStartRow && !isWithinDuration)
-      return
-
-    const isExtremeFailure = cache?.extremeFailureMask?.[rowIndex] ?? isExtremeFailureDamageRow(row)
-    if (isExtremeFailure)
-      return
-
-    if (!hasDamageTakenMultiplier) {
-      const gain = 1
-      totalGain += gain
-      let score = gain
-      if (strategy === 'tb-priority')
-        score *= getRowPriorityWeight(row, strategy)
-      totalScore += score
-      return
-    }
-
-    const skillMultiplier = cache?.skillMultiplierByRow?.[rowIndex] ?? getSkillMultiplier(skillId, row.damageType)
-    if (skillMultiplier >= 1)
-      return
-
-    const baseDamage = coverage === 'party'
-      ? Math.max(0, Number(row.rawDamage || 0))
-      : (cache?.personalDamageByRow?.[rowIndex] ?? getPersonalDamageForColumn(row, col))
-    const targetCount = coverage === 'party' ? 8 : 1
-    if (!Number.isFinite(baseDamage) || baseDamage <= 0)
-      return
-    const baselineMultiplier = baselineMultipliers[rowIndex] ?? 1
-    const baselineDamage = baseDamage * targetCount * baselineMultiplier
-    const gain = baselineDamage * (1 - skillMultiplier)
-    if (gain <= 0)
-      return
-    totalGain += gain
-
-    let score = gain
-    if (strategy === 'tb-priority') {
-      score *= getRowPriorityWeight(row, strategy)
-    }
-    else if (strategy === 'peak-smoothing') {
-      // Maximize squared-damage drop to prioritize high peak rows.
-      score = baselineDamage * baselineDamage * (1 - skillMultiplier * skillMultiplier)
-    }
-    totalScore += score
-  })
-
-  return { gain: totalGain, score: totalScore }
-}
-
 function isSkillAlreadyActiveAtRow(
   scheduledSkillActions: AutoScheduledAction[],
   rowIndex: number,
@@ -1599,7 +1650,6 @@ function hasExclusiveGroupOverlap(
 function computeAutoUseWeightForFill(
   rows: MitigationRow[],
   startRowIndex: number,
-  col: ColumnDef,
   skillId: number,
   duration: number,
   baselineMultipliers: number[],
@@ -1647,9 +1697,7 @@ function computeAutoUseWeightForFill(
     if (skillMultiplier >= 1)
       return
 
-    const baseDamage = coverage === 'party'
-      ? Math.max(0, Number(row.rawDamage || 0))
-      : (cache?.personalDamageByRow?.[rowIndex] ?? getPersonalDamageForColumn(row, col))
+    const baseDamage = Math.max(0, Number(row.rawDamage || 0))
     const targetCount = coverage === 'party' ? 8 : 1
     if (!Number.isFinite(baseDamage) || baseDamage <= 0)
       return
@@ -1889,6 +1937,7 @@ function runAutoArrangeForExclusiveGroup(params: {
       unit: ExclusiveGroupAutoArrangeUnit
       row: MitigationRow
       rowIndex: number
+      timestamp: number
       score: number
       gain: number
       rhythmPenalty: number
@@ -1909,15 +1958,15 @@ function runAutoArrangeForExclusiveGroup(params: {
 
       for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
         const row = rows[rowIndex]!
+        const releaseTimestamp = getAutoArrangeReleaseTimestamp(row.timestamp)
         if (isSkillAlreadyActiveAtRow(scheduledSkillActions, rowIndex, row.timestamp))
           continue
-        if (!validateActionPlacementAgainstActions(currentActions, unit.col, unit.skillId, row.timestamp, scheduledActions, scheduledExclusiveGroupActions))
+        if (!validateActionPlacementAgainstActions(currentActions, unit.col, unit.skillId, releaseTimestamp, scheduledActions, scheduledExclusiveGroupActions))
           continue
 
         const result = computeAutoUseWeightForFill(
           rows,
           rowIndex,
-          unit.col,
           unit.skillId,
           effectiveDuration,
           baselineMultipliers,
@@ -1931,12 +1980,12 @@ function runAutoArrangeForExclusiveGroup(params: {
         const latestUsage = latestUsageByUnit.get(unit.key)
         const rhythmPenalty = latestUsage === undefined
           ? 0
-          : Math.abs(row.timestamp - (latestUsage + recastWindow))
+          : Math.abs(releaseTimestamp - (latestUsage + recastWindow))
 
         const current = {
           score: result.score,
           rhythmPenalty,
-          timestamp: row.timestamp,
+          timestamp: releaseTimestamp,
           unitKey: unit.key,
           gain: result.gain,
           unitPriority,
@@ -1945,7 +1994,7 @@ function runAutoArrangeForExclusiveGroup(params: {
           ? {
               score: bestCandidate.score,
               rhythmPenalty: bestCandidate.rhythmPenalty,
-              timestamp: bestCandidate.row.timestamp,
+              timestamp: bestCandidate.timestamp,
               unitKey: bestCandidate.unit.key,
               gain: bestCandidate.gain,
               unitPriority: bestCandidate.unitPriority,
@@ -1959,6 +2008,7 @@ function runAutoArrangeForExclusiveGroup(params: {
           unit,
           row,
           rowIndex,
+          timestamp: releaseTimestamp,
           score: result.score,
           gain: result.gain,
           rhythmPenalty,
@@ -1999,12 +2049,12 @@ function runAutoArrangeForExclusiveGroup(params: {
 
     currentActions.push({
       id: createActionId(),
-      timestamp: bestCandidate.row.timestamp,
+      timestamp: bestCandidate.timestamp,
       columnKey: bestCandidate.unit.columnKey,
       skillId: bestCandidate.unit.skillId,
-      rowKey: bestCandidate.row.key,
+      rowKey: resolveRowKeyByTimestamp(bestCandidate.timestamp) || bestCandidate.row.key,
     })
-    latestUsageByUnit.set(bestCandidate.unit.key, bestCandidate.row.timestamp)
+    latestUsageByUnit.set(bestCandidate.unit.key, bestCandidate.timestamp)
     addedCount += 1
     totalGain += bestCandidate.gain
   }
@@ -2014,139 +2064,6 @@ function runAutoArrangeForExclusiveGroup(params: {
     addedCount,
     totalGain,
   }
-}
-
-function addFlowEdge(
-  graph: MinCostFlowEdge[][],
-  from: number,
-  to: number,
-  cap: number,
-  cost: number,
-) {
-  const forward: MinCostFlowEdge = { to, rev: graph[to]!.length, cap, cost }
-  const reverse: MinCostFlowEdge = { to: from, rev: graph[from]!.length, cap: 0, cost: -cost }
-  graph[from]!.push(forward)
-  graph[to]!.push(reverse)
-}
-
-function pickOptimalAutoIntervals(candidates: AutoIntervalCandidate[], capacity: number) {
-  if (capacity <= 0 || candidates.length === 0)
-    return [] as AutoIntervalCandidate[]
-
-  const points = Array.from(new Set(candidates.flatMap(c => [c.timestamp, c.endTimestamp]))).sort((a, b) => a - b)
-  if (points.length < 2)
-    return [] as AutoIntervalCandidate[]
-
-  const pointIndex = new Map<number, number>()
-  points.forEach((point, index) => pointIndex.set(point, index))
-
-  const graph: MinCostFlowEdge[][] = Array.from({ length: points.length }, () => [])
-  for (let i = 0; i < points.length - 1; i++)
-    addFlowEdge(graph, i, i + 1, capacity, 0)
-
-  const intervalRefs: Array<{ from: number, edgeIndex: number, candidateIndex: number }> = []
-  candidates.forEach((candidate, candidateIndex) => {
-    const from = pointIndex.get(candidate.timestamp)
-    const to = pointIndex.get(candidate.endTimestamp)
-    if (from === undefined || to === undefined || to <= from)
-      return
-    addFlowEdge(graph, from, to, 1, -candidate.scoreScaled)
-    intervalRefs.push({
-      from,
-      edgeIndex: graph[from]!.length - 1,
-      candidateIndex,
-    })
-  })
-
-  const source = 0
-  const sink = points.length - 1
-  let sent = 0
-  while (sent < capacity) {
-    const dist = Array.from({ length: points.length }, () => Number.POSITIVE_INFINITY)
-    const inQueue = Array.from({ length: points.length }, () => false)
-    const prevNode = Array.from({ length: points.length }, () => -1)
-    const prevEdge = Array.from({ length: points.length }, () => -1)
-    dist[source] = 0
-    const queue: number[] = [source]
-    inQueue[source] = true
-
-    while (queue.length > 0) {
-      const current = queue.shift()
-      if (current === undefined)
-        break
-      inQueue[current] = false
-      graph[current]!.forEach((edge, edgeIndex) => {
-        if (edge.cap <= 0)
-          return
-        const nextDistance = dist[current]! + edge.cost
-        if (nextDistance >= dist[edge.to]!)
-          return
-        dist[edge.to] = nextDistance
-        prevNode[edge.to] = current
-        prevEdge[edge.to] = edgeIndex
-        if (!inQueue[edge.to]) {
-          queue.push(edge.to)
-          inQueue[edge.to] = true
-        }
-      })
-    }
-
-    if (!Number.isFinite(dist[sink]))
-      break
-
-    let add = capacity - sent
-    let traceNode = sink
-    while (traceNode !== source) {
-      const from = prevNode[traceNode]
-      const edgeIndex = prevEdge[traceNode]
-      if (from === undefined || edgeIndex === undefined || from < 0 || edgeIndex < 0) {
-        add = 0
-        break
-      }
-      const edge = graph[from]?.[edgeIndex]
-      if (!edge) {
-        add = 0
-        break
-      }
-      add = Math.min(add, edge.cap)
-      traceNode = from
-    }
-    if (add <= 0)
-      break
-
-    traceNode = sink
-    while (traceNode !== source) {
-      const from = prevNode[traceNode]
-      const edgeIndex = prevEdge[traceNode]
-      if (from === undefined || edgeIndex === undefined || from < 0 || edgeIndex < 0) {
-        add = 0
-        break
-      }
-      const edge = graph[from]?.[edgeIndex]
-      if (!edge) {
-        add = 0
-        break
-      }
-      edge.cap -= add
-      graph[traceNode]![edge.rev]!.cap += add
-      traceNode = from
-    }
-    if (add <= 0)
-      break
-    sent += add
-  }
-
-  const selected: AutoIntervalCandidate[] = []
-  intervalRefs.forEach((ref) => {
-    const edge = graph[ref.from]![ref.edgeIndex]
-    if (!edge || edge.cap !== 0)
-      return
-    const candidate = candidates[ref.candidateIndex]
-    if (candidate)
-      selected.push(candidate)
-  })
-  selected.sort((a, b) => (a.timestamp - b.timestamp) || (a.rowIndex - b.rowIndex))
-  return selected
 }
 
 async function runAutoArrangeForSkill() {
@@ -2210,58 +2127,218 @@ async function runAutoArrangeForSkill() {
 
   const duration = Math.max(0, Number(skill.duration || 0))
   const effectiveDuration = getAutoArrangeEffectiveDuration(duration)
-  const spacing = Math.max(AUTO_PLAN_EPSILON, getAutoArrangeRecastWindow(Number(skill.recast || 0)))
-  const candidates: AutoIntervalCandidate[] = []
+  const recastWindow = Math.max(0, getAutoArrangeRecastWindow(Number(skill.recast || 0)))
+  const capacity = Math.max(1, Number(skill.maxCharges || 1))
+  const isChargeBased = capacity > 1
+  const chargeRecast = Math.max(AUTO_PLAN_EPSILON, Number(skill.recast || 0))
+  const activeSpacing = Math.max(AUTO_PLAN_EPSILON, effectiveDuration)
+  const exclusiveSpacing = exclusiveGroup ? Math.max(AUTO_PLAN_EPSILON, duration) : 0
+  const recastSpacing = recastWindow > AUTO_PLAN_EPSILON ? recastWindow : AUTO_PLAN_EPSILON
 
+  interface AutoArrangeCandidate {
+    rowIndex: number
+    timestamp: number
+    score: number
+    gain: number
+    rowKey: string
+  }
+
+  const candidates: AutoArrangeCandidate[] = []
   rows.forEach((row, rowIndex) => {
-    if (hasExclusiveGroupOverlap(baseExclusiveGroupActions, row.timestamp, duration))
+    const releaseTimestamp = getAutoArrangeReleaseTimestamp(row.timestamp)
+    if (hasExclusiveGroupOverlap(baseExclusiveGroupActions, releaseTimestamp, duration))
       return
-    const result = computeAutoUseWeight(rows, rowIndex, col, skillId, effectiveDuration, baselineMultipliers, selectedStrategy, rowCache)
-    if (!Number.isFinite(result.score) || result.score <= 0)
+    const result = computeAutoUseWeightForFill(
+      rows,
+      rowIndex,
+      skillId,
+      effectiveDuration,
+      baselineMultipliers,
+      EMPTY_SCHEDULED_ACTIONS,
+      selectedStrategy,
+      rowCache,
+    )
+    if (!Number.isFinite(result.score) || result.score <= AUTO_PLAN_EPSILON)
       return
     candidates.push({
       rowIndex,
-      timestamp: row.timestamp,
-      endTimestamp: row.timestamp + spacing,
-      gain: result.gain,
+      timestamp: releaseTimestamp,
       score: result.score,
-      scoreScaled: Math.max(1, Math.round(result.score * AUTO_PLAN_WEIGHT_SCALE)),
+      gain: result.gain,
+      rowKey: row.key,
     })
   })
 
   if (candidates.length === 0) {
     activeOverlay.value = null
-    ElMessage.warning(`自动排轴未找到 ${skill.name} 的有效收益点`)
-    return
-  }
-
-  const capacity = Math.max(1, Number(skill.maxCharges || 1))
-  const selected = pickOptimalAutoIntervals(candidates, capacity)
-  if (selected.length === 0) {
-    activeOverlay.value = null
     ElMessage.warning(`自动排轴未找到 ${skill.name} 的可用释放方案`)
     return
   }
 
-  const nextActions: PlayerActionRecord[] = [
-    ...baseActions,
-    ...selected.map((candidate) => {
-      const row = rows[candidate.rowIndex]!
-      return {
-        id: createActionId(),
-        timestamp: candidate.timestamp,
-        columnKey,
-        skillId,
-        rowKey: row.key,
+  candidates.sort((a, b) => (a.timestamp - b.timestamp) || (a.rowIndex - b.rowIndex))
+
+  interface DpPlanResult {
+    score: number
+    gain: number
+    picks: number[]
+  }
+
+  function formatPlanTimeKey(value: number) {
+    return Number.isFinite(value) ? value.toFixed(3) : 'inf'
+  }
+
+  function normalizeRechargeAts(rechargeAts: number[], currentTime: number) {
+    return [...rechargeAts]
+      .map(rt => (rt <= currentTime + AUTO_PLAN_EPSILON ? Number.NEGATIVE_INFINITY : rt))
+      .sort((a, b) => a - b)
+  }
+
+  function isPlanBetter(current: DpPlanResult, best: DpPlanResult) {
+    if (current.score > best.score + AUTO_PLAN_EPSILON)
+      return true
+    if (Math.abs(current.score - best.score) <= AUTO_PLAN_EPSILON) {
+      if (current.gain > best.gain + AUTO_PLAN_EPSILON)
+        return true
+      if (Math.abs(current.gain - best.gain) <= AUTO_PLAN_EPSILON) {
+        const maxLength = Math.max(current.picks.length, best.picks.length)
+        for (let i = 0; i < maxLength; i++) {
+          const currentIndex = current.picks[i]
+          const bestIndex = best.picks[i]
+          if (currentIndex === undefined)
+            return false
+          if (bestIndex === undefined)
+            return true
+          const currentTs = candidates[currentIndex]?.timestamp ?? Number.POSITIVE_INFINITY
+          const bestTs = candidates[bestIndex]?.timestamp ?? Number.POSITIVE_INFINITY
+          if (currentTs < bestTs - AUTO_PLAN_EPSILON)
+            return true
+          if (currentTs > bestTs + AUTO_PLAN_EPSILON)
+            return false
+        }
       }
-    }),
-  ]
+    }
+    return false
+  }
+
+  const dpMemo = new Map<string, DpPlanResult>()
+
+  function solveAutoArrangeDP(
+    index: number,
+    nextActiveAt: number,
+    nextRecastAt: number,
+    nextExclusiveAt: number,
+    rechargeAts: number[],
+  ): DpPlanResult {
+    if (index >= candidates.length)
+      return { score: 0, gain: 0, picks: [] }
+
+    const candidate = candidates[index]
+    if (!candidate)
+      return { score: 0, gain: 0, picks: [] }
+
+    const normalizedRechargeAts = isChargeBased
+      ? normalizeRechargeAts(rechargeAts, candidate.timestamp)
+      : rechargeAts
+    const rechargeKey = isChargeBased
+      ? normalizedRechargeAts.map(formatPlanTimeKey).join(',')
+      : ''
+
+    const memoKey = [
+      index,
+      formatPlanTimeKey(nextActiveAt),
+      formatPlanTimeKey(nextRecastAt),
+      formatPlanTimeKey(nextExclusiveAt),
+      rechargeKey,
+    ].join('|')
+    const memoized = dpMemo.get(memoKey)
+    if (memoized)
+      return memoized
+
+    let bestPlan = solveAutoArrangeDP(
+      index + 1,
+      nextActiveAt,
+      nextRecastAt,
+      nextExclusiveAt,
+      normalizedRechargeAts,
+    )
+
+    const canPassActive = candidate.timestamp + AUTO_PLAN_EPSILON >= nextActiveAt
+    const canPassRecast = candidate.timestamp + AUTO_PLAN_EPSILON >= nextRecastAt
+    const canPassExclusive = candidate.timestamp + AUTO_PLAN_EPSILON >= nextExclusiveAt
+
+    let canTake = canPassActive && canPassRecast && canPassExclusive
+    let nextRechargeState = normalizedRechargeAts
+
+    if (canTake && isChargeBased) {
+      const availableIndex = normalizedRechargeAts.findIndex(rt => !Number.isFinite(rt) || rt <= candidate.timestamp + AUTO_PLAN_EPSILON)
+      if (availableIndex === -1) {
+        canTake = false
+      }
+      else {
+        nextRechargeState = [...normalizedRechargeAts]
+        nextRechargeState[availableIndex] = candidate.timestamp + chargeRecast
+        nextRechargeState.sort((a, b) => a - b)
+      }
+    }
+
+    if (canTake) {
+      const nextPlan = solveAutoArrangeDP(
+        index + 1,
+        candidate.timestamp + activeSpacing,
+        isChargeBased ? nextRecastAt : (candidate.timestamp + recastSpacing),
+        exclusiveSpacing > 0 ? (candidate.timestamp + exclusiveSpacing) : nextExclusiveAt,
+        nextRechargeState,
+      )
+      const currentPlan: DpPlanResult = {
+        score: candidate.score + nextPlan.score,
+        gain: candidate.gain + nextPlan.gain,
+        picks: [index, ...nextPlan.picks],
+      }
+      if (isPlanBetter(currentPlan, bestPlan))
+        bestPlan = currentPlan
+    }
+
+    dpMemo.set(memoKey, bestPlan)
+    return bestPlan
+  }
+
+  const initialRechargeAts = isChargeBased
+    ? Array.from({ length: capacity }, () => Number.NEGATIVE_INFINITY)
+    : []
+  const dpResult = solveAutoArrangeDP(
+    0,
+    Number.NEGATIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+    initialRechargeAts,
+  )
+
+  const nextActions: PlayerActionRecord[] = [...baseActions]
+  let appliedCount = 0
+  dpResult.picks.forEach((candidateIndex) => {
+    const candidate = candidates[candidateIndex]
+    if (!candidate)
+      return
+    nextActions.push({
+      id: createActionId(),
+      timestamp: candidate.timestamp,
+      columnKey,
+      skillId,
+      rowKey: resolveRowKeyByTimestamp(candidate.timestamp) || candidate.rowKey,
+    })
+    appliedCount += 1
+  })
+
+  activeOverlay.value = null
+  if (appliedCount === 0) {
+    ElMessage.warning(`自动排轴未找到 ${skill.name} 的可用释放方案`)
+    return
+  }
 
   emit('update:playerActions', nextActions)
-  activeOverlay.value = null
-  const totalGain = Math.round(selected.reduce((sum, item) => sum + item.gain, 0))
+  const totalGain = Math.round(dpResult.gain)
   const strategyLabel = getAutoArrangeStrategyLabel(selectedStrategy)
-  ElMessage.success(`已自动排轴 ${skill.name}（${selected.length} 次，预计减伤 ${totalGain}，策略：${strategyLabel}）`)
+  ElMessage.success(`已自动排轴 ${skill.name}（${appliedCount} 次，预计减伤 ${totalGain}，策略：${strategyLabel}）`)
 }
 
 async function runAutoArrangeForSkillFillGaps() {
@@ -2332,14 +2409,14 @@ async function runAutoArrangeForSkillFillGaps() {
     let bestGain = 0
     let bestScore = 0
     rows.forEach((row, rowIndex) => {
+      const releaseTimestamp = getAutoArrangeReleaseTimestamp(row.timestamp)
       if (isSkillAlreadyActiveAtRow(scheduledSkillActions, rowIndex, row.timestamp))
         return
-      if (!validateActionPlacementAgainstActions(currentActions, col, skillId, row.timestamp, scheduledActions, scheduledExclusiveGroupActions))
+      if (!validateActionPlacementAgainstActions(currentActions, col, skillId, releaseTimestamp, scheduledActions, scheduledExclusiveGroupActions))
         return
       const result = computeAutoUseWeightForFill(
         rows,
         rowIndex,
-        col,
         skillId,
         effectiveDuration,
         baselineMultipliers,
@@ -2363,10 +2440,10 @@ async function runAutoArrangeForSkillFillGaps() {
       break
     currentActions.push({
       id: createActionId(),
-      timestamp: row.timestamp,
+      timestamp: getAutoArrangeReleaseTimestamp(row.timestamp),
       columnKey,
       skillId,
-      rowKey: row.key,
+      rowKey: resolveRowKeyByTimestamp(getAutoArrangeReleaseTimestamp(row.timestamp)) || row.key,
     })
     addedCount += 1
     totalGain += bestGain
@@ -3099,15 +3176,54 @@ function handleColumnNameClick(col: ColumnDef) {
                 :key="skill.id"
                 class="skill-icon-wrap clickable"
                 @contextmenu.prevent="handleRightClickSkill($event, col, skill)"
+                @mouseenter="cancelSkillDetailHide"
+                @mouseleave="scheduleHideSkillDetail"
               >
-                <img
-                  v-if="skill.icon"
-                  :src="skill.icon"
-                  :alt="skill.name"
-                  class="skill-icon"
-                  @error="handleImgError"
+                <el-tooltip
+                  trigger="click"
+                  placement="top"
+                  :offset="5"
+                  effect="light"
+                  popper-class="skill-header-tooltip"
+                  :visible="isSkillDetailVisible(col.key, skill.id)"
+                  @update:visible="(visible) => updateSkillDetailVisible(col.key, skill.id, visible)"
                 >
-                <span v-else class="skill-letter">{{ skill.name[0] }}</span>
+                  <template #content>
+                    <div class="skill-header-tooltip-content" @mouseenter="cancelSkillDetailHide" @mouseleave="scheduleHideSkillDetail">
+                      <div class="skill-header-tooltip-title">
+                        {{ skill.name }}
+                      </div>
+                      <div class="skill-header-tooltip-row">
+                        ID: <span class="font-mono">{{ skill.id }}</span>
+                      </div>
+                      <div class="skill-header-tooltip-row">
+                        冷却: <span class="font-mono">{{ formatSkillSeconds(skill.recast) }}</span>
+                      </div>
+                      <div class="skill-header-tooltip-row">
+                        持续: <span class="font-mono">{{ formatSkillSeconds(skill.duration) }}</span>
+                      </div>
+                      <div class="skill-header-tooltip-row">
+                        充能: <span class="font-mono">{{ skill.maxCharges || 1 }}</span>
+                      </div>
+                      <div class="skill-header-tooltip-row">
+                        作用域: {{ getSkillScopeLabel(skill.mitigationScope) }}
+                      </div>
+                      <div class="skill-header-tooltip-row">
+                        减伤: {{ getSkillMitigationSummary(skill) }}
+                      </div>
+                    </div>
+                  </template>
+                  <div class="skill-icon-reference" @click.stop @mouseenter="cancelSkillDetailHide" @mouseleave="scheduleHideSkillDetail">
+                    <img
+                      v-if="skill.icon"
+                      :src="skill.icon"
+                      :alt="skill.name"
+                      class="skill-icon"
+                      @error="handleImgError"
+                    >
+                    <span v-else class="skill-letter">{{ skill.name[0] }}</span>
+                  </div>
+                </el-tooltip>
               </div>
             </div>
           </div>
@@ -3254,6 +3370,7 @@ function handleColumnNameClick(col: ColumnDef) {
             <div
               v-if="getCellSim(row, col, skill.id)?.showDot"
               class="check-dot"
+              :class="{ 'is-muted': getCellSim(row, col, skill.id)?.showDotMuted }"
             >
               <img
                 v-if="skill.icon"
@@ -3276,20 +3393,26 @@ function handleColumnNameClick(col: ColumnDef) {
 
     <!-- Edit Popover -->
     <el-popover :visible="!!editingCell" :virtual-ref="editingCell?.target" virtual-triggering width="240" popper-style="padding: 8px">
-      <div class="edit-popover">
+      <div class="edit-popover" @click.stop>
         <div class="edit-field">
-          <span>Time:</span>
+          <span>时间：</span>
           <span class="time-display font-mono">{{ editDisplayTime }}</span>
         </div>
         <div class="edit-field">
-          <span>Offset:</span>
+          <span>偏移：</span>
           <el-input-number
-            v-model="editForm.offset"
+            v-model="editOffsetModel"
             :step="1"
             size="small"
             controls-position="right"
-            class="offset-input"
+            class="offset-input" :class="[
+              { 'offset-input-inc-disabled': !canIncreaseEditOffset, 'offset-input-dec-disabled': !canDecreaseEditOffset },
+            ]"
           />
+        </div>
+        <div class="edit-field">
+          <span>范围：</span>
+          <span class="offset-boundary-display font-mono">{{ editOffsetLowerLabel }} / {{ editOffsetUpperLabel }}</span>
         </div>
         <el-button type="primary" size="small" style="width: 100%; margin-top: 8px" @click="saveEdit">
           Apply
@@ -3478,7 +3601,7 @@ function handleColumnNameClick(col: ColumnDef) {
           {{ cellPopoverInfo.skill.name }}
         </div>
         <div class="popover-item">
-          状态 {{ getStatusLabelForCell(cellPopoverInfo.sim.status, cellPopoverInfo.sim.useTimestamp, cellPopoverInfo.row.timestamp) }}
+          状态 {{ getStatusLabelForCell(cellPopoverInfo.sim.status, cellPopoverInfo.sim.useTimestamp, cellPopoverInfo.row.timestamp, cellPopoverInfo.skill.duration) }}
         </div>
         <div v-if="cellPopoverInfo.sim.useTimestamp !== undefined" class="popover-item">
           释放时间: {{ formatTime(cellPopoverInfo.sim.useTimestamp) }}
@@ -3811,6 +3934,13 @@ function handleColumnNameClick(col: ColumnDef) {
   }
 }
 .skill-icon { width: 100%; height: 100%; }
+.skill-icon-reference {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .skill-letter { font-size: 9px; color: #999; }
 
 .col-content { gap: 2px; justify-content: center; align-items: center; padding: 0 4px; overflow: visible; }
@@ -3837,6 +3967,11 @@ function handleColumnNameClick(col: ColumnDef) {
     align-items: center;
     justify-content: center;
     pointer-events: none;
+
+    &.is-muted {
+      filter: grayscale(1);
+      opacity: 0.75;
+    }
   }
 
   .check-icon {
@@ -3945,8 +4080,54 @@ function handleColumnNameClick(col: ColumnDef) {
   color: #333;
 }
 
+.offset-boundary-display {
+  flex: 1;
+  color: #333;
+}
+
 .offset-input {
   width: 120px;
+
+  :deep(.el-input-number__increase),
+  :deep(.el-input-number__decrease) {
+    right: 1px;
+    left: auto;
+  }
+
+  :deep(.el-input-number__increase) {
+    top: auto;
+    bottom: 1px;
+    border-top: 1px solid var(--el-border-color);
+    border-bottom: none;
+  }
+
+  :deep(.el-input-number__decrease) {
+    top: 1px;
+    bottom: auto;
+    border-top: none;
+    border-bottom: 1px solid var(--el-border-color);
+  }
+
+  :deep(.el-input-number__increase .el-icon),
+  :deep(.el-input-number__decrease .el-icon) {
+    transform: rotate(180deg);
+  }
+}
+
+.offset-input-inc-disabled {
+  :deep(.el-input-number__increase) {
+    pointer-events: none;
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+}
+
+.offset-input-dec-disabled {
+  :deep(.el-input-number__decrease) {
+    pointer-events: none;
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
 }
 
 .text-ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -4243,6 +4424,26 @@ function handleColumnNameClick(col: ColumnDef) {
 .skill-icon-wrap.clickable {
   cursor: pointer;
   &:hover { opacity: 0.8; }
+}
+
+:deep(.skill-header-tooltip) {
+  padding: 8px 10px;
+}
+
+.skill-header-tooltip-content {
+  font-size: 12px;
+  line-height: 1.35;
+  color: #374151;
+}
+
+.skill-header-tooltip-title {
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.skill-header-tooltip-row {
+  white-space: nowrap;
 }
 
 .filter-popover {

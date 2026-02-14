@@ -156,7 +156,7 @@ const mitigationKeigennSkills: MitigationKeigennSkill[] = [
     minLevel: 52,
     mitigationScope: 'self',
     // 格挡算20%
-    damageTakenMultiplier: { physics: 0.8, magic: 1, darkness: 1 },
+    damageTakenMultiplier: { physics: 0.8, magic: 0.8, darkness: 1 },
     duration: 10,
   },
   {

@@ -308,7 +308,7 @@ function renameRowsByActionId(rows: MitigationRow[], actionId: string, nextName:
 function resolveRowKeyByTimestamp(rows: MitigationRow[], ts: number) {
   if (rows.length === 0)
     return undefined
-  const idx = rows.findIndex(r => r.timestamp >= ts - 0.5)
+  const idx = rows.findIndex(r => r.timestamp >= ts)
   if (idx === -1)
     return rows[rows.length - 1]?.key
   return rows[idx]?.key
@@ -634,8 +634,8 @@ function applySheetToWorkspace(id: string | null) {
     const normalizedRows = applyAliasesToRows(sheet.mechanics.rows || [])
     rawRows.value = normalizedRows
     playerActions.value = ensurePlayerActionsRowKey(sheet.planner.playerActions || [], normalizedRows)
-    columns.value = normalizeColumnsWithJobFilters(sheet.planner.columns || [], { forceGlobal: true }).columns
     playerLevel.value = sheet.planner.playerLevel || 100
+    columns.value = normalizeColumnsWithJobFilters(sheet.planner.columns || [], { forceGlobal: true }).columns
     const fallbackFilters = buildDefaultFilters(rawRows.value)
     filterMechanics.value = Array.isArray(sheet.mechanics.filterMechanics)
       ? sheet.mechanics.filterMechanics
@@ -1381,7 +1381,10 @@ function normalizeColumnsWithJobFilters(
   const orderMap = options.jobOrderMap || jobSkillOrders.value
   const normalized = list.map((col) => {
     const hidden = nextMap[col.jobEnum] || col.hiddenSkillIds || []
-    const sortedSkills = applySavedSkillOrder(col.skills, orderMap[col.jobEnum])
+    // Rebuild from latest catalog so resource updates apply to existing sheet columns.
+    const latestSkills = getSkillsForJob(col.jobEnum, playerLevel.value)
+    const fallbackOrder = col.skills?.map(skill => skill.id) || []
+    const sortedSkills = applySavedSkillOrder(latestSkills, orderMap[col.jobEnum] || fallbackOrder)
     return { ...col, skills: sortedSkills, hiddenSkillIds: Array.from(new Set(hidden)) }
   })
   return {
@@ -2967,11 +2970,5 @@ async function createSheetFromTemplate(template: MitigationSheetTemplate) {
 
 .sheet-fallback {
   opacity: 1 !important;
-}
-
-:global(body.mitigation-generator-message-scope .el-message) {
-  left: auto !important;
-  right: 20px !important;
-  transform: none !important;
 }
 </style>

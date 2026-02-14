@@ -36,6 +36,7 @@ export interface CellSimState {
   status: 'active-start' | 'active' | 'ready' | 'cooldown' | 'conflict' | ''
   classes: string | string[] | Record<string, boolean>
   showDot: boolean
+  showDotMuted: boolean
   offset: number
   useTimestamp?: number
   actionId?: string
