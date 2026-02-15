@@ -48,6 +48,13 @@ const exportOptions = reactive({
 const syncStatus = ref<'idle' | 'syncing'>('idle')
 const lastSyncTime = ref<string>('')
 const hasUnsyncedChanges = ref(false)
+const hasSyncTimedOut = ref(false)
+const SYNC_ACK_TIMEOUT_MS = 3000
+let syncAckTimeoutTimer: number | null = null
+
+const showSyncWarning = computed(() =>
+  hasUnsyncedChanges.value && hasSyncTimedOut.value,
+)
 
 const fflogsSourceRe = /^(?:a:)?\w{16,}(?:[#?]fight=(?:\d+|last))?$/
 
@@ -78,6 +85,23 @@ const selectedJob = ref('')
 const selectedPhase = ref('')
 
 let wsWarningNotification: NotificationHandle | undefined
+
+function clearSyncAckTimeout() {
+  if (syncAckTimeoutTimer !== null) {
+    clearTimeout(syncAckTimeoutTimer)
+    syncAckTimeoutTimer = null
+  }
+}
+
+function armSyncAckTimeout() {
+  clearSyncAckTimeout()
+  syncAckTimeoutTimer = window.setTimeout(() => {
+    if (!hasUnsyncedChanges.value)
+      return
+    hasSyncTimedOut.value = true
+    syncStatus.value = 'idle'
+  }, SYNC_ACK_TIMEOUT_MS)
+}
 
 const filteredTimelines = computed(() => {
   return allTimelinesRef.value.filter((timeline) => {
@@ -512,7 +536,9 @@ const handleBroadcastMessage: EventMap['BroadcastMessage'] = (e) => {
   }
   else if (msg.type === 'success') {
     // timeline 回报 数据同步成功
+    clearSyncAckTimeout()
     hasUnsyncedChanges.value = false
+    hasSyncTimedOut.value = false
     syncStatus.value = 'idle'
     lastSyncTime.value = new Date().toLocaleTimeString()
   }
@@ -588,7 +614,9 @@ function showTimelineTableDialog() {
 
 function syncData() {
   hasUnsyncedChanges.value = true
+  hasSyncTimedOut.value = false
   syncStatus.value = 'syncing'
+  armSyncAckTimeout()
   sendBroadcastData('post', timelineStore.$state)
 }
 
@@ -645,6 +673,10 @@ onMounted(() => {
     syncDataDebounced,
     { deep: true },
   )
+})
+
+onUnmounted(() => {
+  clearSyncAckTimeout()
 })
 
 function init(): void {
@@ -748,27 +780,27 @@ init()
             title="同步未生效"
             :width="280"
             trigger="hover"
-            :disabled="wsConnected || !hasUnsyncedChanges"
+            :disabled="!showSyncWarning"
           >
             <template #reference>
-              <div class="connection-status" :class="{ connected: wsConnected, warning: !wsConnected && hasUnsyncedChanges }">
+              <div class="connection-status" :class="{ connected: wsConnected, warning: showSyncWarning }">
                 <span class="dot" />
                 <span class="status-text">
-                  <template v-if="!wsConnected && hasUnsyncedChanges">
-                    改动暂未同步 (连接断开)
+                  <template v-if="showSyncWarning">
+                    改动暂未同步 (未收到确认)
                   </template>
                   <template v-else>
-                    {{ wsConnected ? '悬浮窗已连接' : '悬浮窗未连接' }}
+                    {{ wsConnected ? 'WS已连接' : 'WS未连接' }}
                   </template>
                 </span>
-                <span v-if="lastSyncTime && (!hasUnsyncedChanges || wsConnected)" class="sync-time">（同步于 {{ lastSyncTime }}）</span>
+                <span v-if="lastSyncTime && !showSyncWarning" class="sync-time">（同步于 {{ lastSyncTime }}）</span>
                 <el-icon v-if="syncStatus === 'syncing'" class="is-loading" style="margin-left: 5px">
                   <Refresh />
                 </el-icon>
               </div>
             </template>
             <div style="font-size: 13px; line-height: 1.6; color: var(--el-text-color-regular)">
-              检测到你有未同步的改动。请确保你在ACT中启用了
+              同步请求已超时（{{ SYNC_ACK_TIMEOUT_MS / 1000 }} 秒未收到时间轴确认）。请确保你在ACT中启用了
               <el-link
                 type="danger"
                 :href="fullPath"
