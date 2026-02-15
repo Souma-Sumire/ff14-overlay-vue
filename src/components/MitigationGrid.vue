@@ -640,6 +640,12 @@ function validateActionPlacement(
   const skill = col.skills.find(s => s.id === skillId)
   const isChargeBased = (skill?.maxCharges ?? 1) > 1
 
+  if (skill?.isTargetMitigation && newTimestamp < 0) {
+    if (showConflictMessage)
+      ElMessage.error('目标减技能不允许在 0 秒之前释放')
+    return false
+  }
+
   const recastWindow = recast
   if (recastWindow > 0 && !isChargeBased) {
     for (const action of props.playerActions) {
@@ -1510,13 +1516,39 @@ function buildSkillMultiplierCache(rows: MitigationRow[], skillId: number) {
 }
 
 function getRowReductionRate(row: MitigationRow) {
-  const active = row._sim?.activeMitigations
-  if (!active || active.length === 0)
+  const cells = row._sim?.cells
+  if (!cells)
     return 0
   let multiplier = 1
-  for (const skillId of active) {
-    multiplier *= getSkillMultiplier(skillId, row.damageType)
+  const exclusiveGroupLatest = new Map<string, { timestamp: number, multiplier: number }>()
+  for (const [cellKey, cell] of Object.entries(cells)) {
+    if (cell.status !== 'active' && cell.status !== 'active-start')
+      continue
+    const skillIdMatch = cellKey.match(/_(\d+)$/)
+    if (!skillIdMatch)
+      continue
+    const skillId = Number(skillIdMatch[1])
+    if (!Number.isFinite(skillId))
+      continue
+    const skillMultiplier = getSkillMultiplier(skillId, row.damageType)
+    const exclusiveGroup = getExclusiveGroupBySkillId(skillId)
+    if (!exclusiveGroup) {
+      multiplier *= skillMultiplier
+      continue
+    }
+    const useTimestamp = Number(cell.useTimestamp)
+    const normalizedTimestamp = Number.isFinite(useTimestamp) ? useTimestamp : Number.NEGATIVE_INFINITY
+    const previous = exclusiveGroupLatest.get(exclusiveGroup)
+    if (!previous || normalizedTimestamp > previous.timestamp + AUTO_PLAN_EPSILON) {
+      exclusiveGroupLatest.set(exclusiveGroup, {
+        timestamp: normalizedTimestamp,
+        multiplier: skillMultiplier,
+      })
+    }
   }
+  exclusiveGroupLatest.forEach(({ multiplier: latestMultiplier }) => {
+    multiplier *= latestMultiplier
+  })
   if (multiplier < 0)
     multiplier = 0
   if (multiplier > 1)
@@ -1634,6 +1666,139 @@ function getAutoArrangeReleaseTimestamp(triggerTimestamp: number) {
   return triggerTimestamp - getAutoArrangeToleranceSeconds()
 }
 
+function findEarliestValidAutoArrangeReleaseTimestamp(params: {
+  triggerTimestamp: number
+  duration: number
+  isValid: (timestamp: number) => boolean
+  minTimestamp?: number
+}) {
+  const { triggerTimestamp, duration, isValid, minTimestamp } = params
+  const latest = getAutoArrangeReleaseTimestamp(triggerTimestamp)
+  let earliest = triggerTimestamp - getAutoArrangeMaxAdvanceSeconds(duration)
+  if (minTimestamp !== undefined)
+    earliest = Math.max(earliest, minTimestamp)
+  if (earliest > latest + AUTO_PLAN_EPSILON)
+    return null
+  const step = 0.5
+  const span = Math.max(0, latest - earliest)
+  const steps = Math.ceil(span / step)
+  for (let i = 0; i <= steps; i++) {
+    const candidate = i === steps ? latest : (earliest + i * step)
+    if (isValid(candidate))
+      return candidate
+  }
+  return null
+}
+
+function optimizeAutoArrangedActionOffsets(params: {
+  rows: MitigationRow[]
+  actions: PlayerActionRecord[]
+  buildContext: AutoArrangeBuildContext
+  targetActionIds: Set<string>
+  anchorRowKeyByActionId?: Map<string, string>
+  resolveStrategy: (col: ColumnDef, skillId: number) => AutoArrangeStrategy
+}) {
+  const { rows, actions, buildContext, targetActionIds, anchorRowKeyByActionId, resolveStrategy } = params
+  if (targetActionIds.size === 0 || rows.length === 0 || actions.length === 0)
+    return actions
+
+  const nextActions = [...actions]
+  const orderedIds = nextActions
+    .filter(action => action.id && targetActionIds.has(action.id))
+    .sort((a, b) => a.timestamp - b.timestamp)
+    .map(action => action.id)
+    .filter((id): id is string => !!id)
+
+  orderedIds.forEach((actionId) => {
+    const index = nextActions.findIndex(item => item.id === actionId)
+    if (index < 0)
+      return
+    const action = nextActions[index]
+    if (!action)
+      return
+    const col = props.columns.find(item => item.key === action.columnKey)
+    if (!col)
+      return
+    const skill = col.skills.find(item => item.id === action.skillId)
+    if (!skill)
+      return
+
+    const anchorRowKey = anchorRowKeyByActionId?.get(actionId) || action.rowKey
+    const anchorRowIndex = anchorRowKey ? buildContext.rowIndexByKey.get(anchorRowKey) : undefined
+    const resolvedRowIndex = anchorRowIndex ?? resolveActionRowIndex(rows, buildContext.rowIndexByKey, action)
+    const anchorRow = rows[resolvedRowIndex]
+    if (!anchorRow)
+      return
+
+    const duration = Math.max(0, Number(skill.duration || 0))
+    const effectiveDuration = getAutoArrangeEffectiveDuration(duration)
+    const latestTimestamp = action.timestamp
+    const withoutCurrent = nextActions.filter((_, actionIndex) => actionIndex !== index)
+    const scheduledWithoutCurrent = buildScheduledActions(rows, withoutCurrent, buildContext)
+    const scheduledExclusiveGroupActions = getExclusiveGroupActions(
+      scheduledWithoutCurrent,
+      getExclusiveGroupBySkillId(action.skillId),
+    )
+    const strategy = resolveStrategy(col, action.skillId)
+    const coverage = getAutoArrangeCoverageScope(action.skillId)
+    const rowCache: AutoArrangeRowComputationCache = {
+      extremeFailureMask: buildExtremeFailureMask(rows),
+      personalDamageByRow: coverage === 'self' ? buildPersonalDamageCacheForColumn(rows, col) : undefined,
+      skillMultiplierByRow: buildSkillMultiplierCache(rows, action.skillId),
+    }
+    const baselineMultipliers = computeBaselineMultipliers(rows, scheduledWithoutCurrent)
+    const baselineWeight = computeAutoUseWeightForReleaseTimestamp(
+      rows,
+      latestTimestamp,
+      action.skillId,
+      effectiveDuration,
+      baselineMultipliers,
+      strategy,
+      rowCache,
+    )
+
+    const optimizedTimestamp = findEarliestValidAutoArrangeReleaseTimestamp({
+      triggerTimestamp: anchorRow.timestamp,
+      duration,
+      isValid: (candidateTimestamp) => {
+        if (candidateTimestamp > latestTimestamp + AUTO_PLAN_EPSILON)
+          return false
+        if (!validateActionPlacementAgainstActions(
+          withoutCurrent,
+          col,
+          action.skillId,
+          candidateTimestamp,
+          scheduledWithoutCurrent,
+          scheduledExclusiveGroupActions,
+        ))
+          return false
+        const candidateWeight = computeAutoUseWeightForReleaseTimestamp(
+          rows,
+          candidateTimestamp,
+          action.skillId,
+          effectiveDuration,
+          baselineMultipliers,
+          strategy,
+          rowCache,
+        )
+        return candidateWeight.score + AUTO_PLAN_EPSILON >= baselineWeight.score
+          && candidateWeight.gain + AUTO_PLAN_EPSILON >= baselineWeight.gain
+      },
+    })
+
+    if (optimizedTimestamp === null || optimizedTimestamp >= latestTimestamp - AUTO_PLAN_EPSILON)
+      return
+
+    nextActions[index] = {
+      ...action,
+      timestamp: optimizedTimestamp,
+      rowKey: resolveRowKeyByTimestamp(optimizedTimestamp) || anchorRow.key,
+    }
+  })
+
+  return nextActions
+}
+
 function getRowPriorityWeight(row: MitigationRow, strategy: AutoArrangeStrategy) {
   if (strategy !== 'tb-priority')
     return 1
@@ -1646,6 +1811,11 @@ function getRowPriorityWeight(row: MitigationRow, strategy: AutoArrangeStrategy)
 
 function getAutoArrangeEffectiveDuration(duration: number) {
   return Math.max(0, duration - getAutoArrangeToleranceSeconds())
+}
+
+function getAutoArrangeMaxAdvanceSeconds(duration: number) {
+  const normalized = Math.max(0, Number(duration || 0))
+  return Math.max(normalized * 0.8, normalized - 3)
 }
 
 function getAutoArrangeRecastWindow(recast: number) {
@@ -1783,7 +1953,7 @@ function computeBaselineMultipliers(rows: MitigationRow[], scheduledActions: Aut
   const columnByKey = new Map(props.columns.map(col => [col.key, col] as const))
   return rows.map((row, rowIndex) => {
     let multiplier = 1
-    const exclusiveGroupBest = new Map<string, number>()
+    const exclusiveGroupLatest = new Map<string, { timestamp: number, multiplier: number }>()
     scheduledActions.forEach((action) => {
       if (!isScheduledActionActiveAtRow(action, rowIndex, row.timestamp))
         return
@@ -1800,12 +1970,16 @@ function computeBaselineMultipliers(rows: MitigationRow[], scheduledActions: Aut
         multiplier *= actionMultiplier
         return
       }
-      const previous = exclusiveGroupBest.get(action.exclusiveGroup)
-      if (previous === undefined || actionMultiplier < previous)
-        exclusiveGroupBest.set(action.exclusiveGroup, actionMultiplier)
+      const previous = exclusiveGroupLatest.get(action.exclusiveGroup)
+      if (!previous || action.timestamp > previous.timestamp + AUTO_PLAN_EPSILON) {
+        exclusiveGroupLatest.set(action.exclusiveGroup, {
+          timestamp: action.timestamp,
+          multiplier: actionMultiplier,
+        })
+      }
     })
-    exclusiveGroupBest.forEach((value) => {
-      multiplier *= value
+    exclusiveGroupLatest.forEach(({ multiplier: latestMultiplier }) => {
+      multiplier *= latestMultiplier
     })
     if (multiplier < 0)
       multiplier = 0
@@ -1947,6 +2121,80 @@ function computeAutoUseWeightForFill(
   return { gain: totalGain, score: totalScore }
 }
 
+function computeAutoUseWeightForReleaseTimestamp(
+  rows: MitigationRow[],
+  releaseTimestamp: number,
+  skillId: number,
+  duration: number,
+  baselineMultipliers: number[],
+  strategy: AutoArrangeStrategy,
+  cache?: AutoArrangeRowComputationCache,
+) {
+  const coverage = getAutoArrangeCoverageScope(skillId)
+  if (!coverage)
+    return { gain: 0, score: 0 }
+  const startTimestamp = releaseTimestamp
+  const endTimestamp = startTimestamp + duration
+  const hasDamageTakenMultiplier = hasSkillDamageTakenMultiplier(skillId)
+  let totalGain = 0
+  let totalScore = 0
+
+  rows.forEach((row, rowIndex) => {
+    const isWithinDuration = duration > AUTO_PLAN_EPSILON
+      && row.timestamp >= startTimestamp
+      && row.timestamp < endTimestamp
+    if (!isWithinDuration)
+      return
+
+    const isExtremeFailure = cache?.extremeFailureMask?.[rowIndex] ?? isExtremeFailureDamageRow(row)
+    if (isExtremeFailure)
+      return
+    const personalDamage = coverage === 'self'
+      ? (cache?.personalDamageByRow?.[rowIndex] ?? 0)
+      : 0
+
+    if (!hasDamageTakenMultiplier) {
+      if (coverage === 'self' && personalDamage <= AUTO_PLAN_EPSILON)
+        return
+      const gain = 1
+      totalGain += gain
+      let score = gain
+      if (strategy === 'tb-priority')
+        score *= getRowPriorityWeight(row, strategy)
+      totalScore += score
+      return
+    }
+
+    const skillMultiplier = cache?.skillMultiplierByRow?.[rowIndex] ?? getSkillMultiplier(skillId, row.damageType)
+    if (skillMultiplier >= 1)
+      return
+
+    const baseDamage = coverage === 'self'
+      ? Math.max(0, personalDamage)
+      : Math.max(0, Number(row.rawDamage || 0))
+    const targetCount = coverage === 'party' ? 8 : 1
+    if (!Number.isFinite(baseDamage) || baseDamage <= 0)
+      return
+    const baselineMultiplier = baselineMultipliers[rowIndex] ?? 1
+    const baselineDamage = baseDamage * targetCount * baselineMultiplier
+    const gain = baselineDamage * (1 - skillMultiplier)
+    if (gain <= 0)
+      return
+    totalGain += gain
+
+    let score = gain
+    if (strategy === 'tb-priority') {
+      score *= getRowPriorityWeight(row, strategy)
+    }
+    else if (strategy === 'peak-smoothing') {
+      score = baselineDamage * baselineDamage * (1 - skillMultiplier * skillMultiplier)
+    }
+    totalScore += score
+  })
+
+  return { gain: totalGain, score: totalScore }
+}
+
 function validateActionPlacementAgainstActions(
   actions: PlayerActionRecord[],
   col: ColumnDef,
@@ -1964,6 +2212,9 @@ function validateActionPlacementAgainstActions(
   const exclusiveGroup = getExclusiveGroupBySkillId(skillId)
   const duration = Math.max(0, Number(skill?.duration || 0))
   const groupActions = exclusiveGroupActions || getExclusiveGroupActions(scheduledActions, exclusiveGroup)
+
+  if (skill?.isTargetMitigation && newTimestamp < 0)
+    return false
 
   if (hasExclusiveGroupOverlap(groupActions, newTimestamp, duration))
     return false
@@ -2147,6 +2398,9 @@ function runAutoArrangeForExclusiveGroup(params: {
 
   const currentActions = [...baseActions]
   const latestUsageByUnit = getLatestUsageByUnit(currentActions, units)
+  const optimizedActionIds = new Set<string>()
+  const anchorRowKeyByActionId = new Map<string, string>()
+  let firstPreferredTimestamp: number | null = null
   let addedCount = 0
   let totalGain = 0
   const maxIterations = Math.max(1, rows.length * Math.max(1, units.length) * 2)
@@ -2157,6 +2411,7 @@ function runAutoArrangeForExclusiveGroup(params: {
     scheduledActions: AutoScheduledAction[],
     scheduledExclusiveGroupActions: AutoScheduledAction[],
     baselineMultipliers: number[],
+    options: { preferEarliestTimestamp?: boolean, minTimestamp?: number } = {},
   ) => {
     let bestCandidate: null | {
       unit: ExclusiveGroupAutoArrangeUnit
@@ -2184,18 +2439,22 @@ function runAutoArrangeForExclusiveGroup(params: {
       for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
         const row = rows[rowIndex]!
         const releaseTimestamp = getAutoArrangeReleaseTimestamp(row.timestamp)
+        if (
+          options.minTimestamp !== undefined
+          && releaseTimestamp < options.minTimestamp - AUTO_PLAN_EPSILON
+        )
+          continue
         if (isSkillAlreadyActiveAtRow(scheduledSkillActions, rowIndex, row.timestamp))
           continue
         if (!validateActionPlacementAgainstActions(currentActions, unit.col, unit.skillId, releaseTimestamp, scheduledActions, scheduledExclusiveGroupActions))
           continue
 
-        const result = computeAutoUseWeightForFill(
+        const result = computeAutoUseWeightForReleaseTimestamp(
           rows,
-          rowIndex,
+          releaseTimestamp,
           unit.skillId,
           effectiveDuration,
           baselineMultipliers,
-          scheduledSkillActions,
           strategy,
           rowCache,
         )
@@ -2226,7 +2485,17 @@ function runAutoArrangeForExclusiveGroup(params: {
             }
           : null
 
-        if (!compareExclusiveGroupCandidate(current, best))
+        const shouldReplace = options.preferEarliestTimestamp
+          ? (
+              !bestCandidate
+              || current.timestamp < bestCandidate.timestamp - AUTO_PLAN_EPSILON
+              || (
+                Math.abs(current.timestamp - bestCandidate.timestamp) <= AUTO_PLAN_EPSILON
+                && compareExclusiveGroupCandidate(current, best)
+              )
+            )
+          : compareExclusiveGroupCandidate(current, best)
+        if (!shouldReplace)
           continue
 
         bestCandidate = {
@@ -2252,12 +2521,17 @@ function runAutoArrangeForExclusiveGroup(params: {
     const baselineMultipliers = computeBaselineMultipliers(rows, scheduledActions)
 
     const firstRoundPreferredOnly = mode === 'overwrite' && addedCount === 0 && preferredFirstUnit
+    const minTimestamp = firstRoundPreferredOnly ? undefined : (firstPreferredTimestamp ?? undefined)
     let bestCandidate = selectBestCandidate(
       firstRoundPreferredOnly ? [preferredFirstUnit] : units,
       scheduledByUnitKey,
       scheduledActions,
       scheduledExclusiveGroupActions,
       baselineMultipliers,
+      {
+        preferEarliestTimestamp: !!firstRoundPreferredOnly,
+        minTimestamp,
+      },
     )
     if (!bestCandidate && firstRoundPreferredOnly) {
       bestCandidate = selectBestCandidate(
@@ -2266,26 +2540,46 @@ function runAutoArrangeForExclusiveGroup(params: {
         scheduledActions,
         scheduledExclusiveGroupActions,
         baselineMultipliers,
+        { minTimestamp },
       )
     }
 
     if (!bestCandidate)
       break
 
+    const actionId = createActionId()
     currentActions.push({
-      id: createActionId(),
+      id: actionId,
       timestamp: bestCandidate.timestamp,
       columnKey: bestCandidate.unit.columnKey,
       skillId: bestCandidate.unit.skillId,
       rowKey: resolveRowKeyByTimestamp(bestCandidate.timestamp) || bestCandidate.row.key,
     })
+    optimizedActionIds.add(actionId)
+    anchorRowKeyByActionId.set(actionId, bestCandidate.row.key)
+    if (firstRoundPreferredOnly && firstPreferredTimestamp === null)
+      firstPreferredTimestamp = bestCandidate.timestamp
     latestUsageByUnit.set(bestCandidate.unit.key, bestCandidate.timestamp)
     addedCount += 1
     totalGain += bestCandidate.gain
   }
 
-  return {
+  const optimizedActions = optimizeAutoArrangedActionOffsets({
+    rows,
     actions: currentActions,
+    buildContext,
+    targetActionIds: optimizedActionIds,
+    anchorRowKeyByActionId,
+    resolveStrategy: (col, skillId) => {
+      const coverage = getAutoArrangeCoverageScope(skillId)
+      if (coverage === 'party')
+        return partyStrategy
+      return getDefaultAutoArrangeStrategy(col, skillId)
+    },
+  })
+
+  return {
+    actions: optimizedActions,
     addedCount,
     totalGain,
   }
@@ -2371,15 +2665,16 @@ async function runAutoArrangeForSkill() {
   const candidates: AutoArrangeCandidate[] = []
   rows.forEach((row, rowIndex) => {
     const releaseTimestamp = getAutoArrangeReleaseTimestamp(row.timestamp)
-    if (hasExclusiveGroupOverlap(baseExclusiveGroupActions, releaseTimestamp, duration))
+    if (skill.isTargetMitigation && releaseTimestamp < 0)
       return
-    const result = computeAutoUseWeightForFill(
+    if (!validateActionPlacementAgainstActions(baseActions, col, skillId, releaseTimestamp, baseScheduledActions, baseExclusiveGroupActions))
+      return
+    const result = computeAutoUseWeightForReleaseTimestamp(
       rows,
-      rowIndex,
+      releaseTimestamp,
       skillId,
       effectiveDuration,
       baselineMultipliers,
-      EMPTY_SCHEDULED_ACTIONS,
       selectedStrategy,
       rowCache,
     )
@@ -2539,18 +2834,23 @@ async function runAutoArrangeForSkill() {
   )
 
   const nextActions: PlayerActionRecord[] = [...baseActions]
+  const optimizedActionIds = new Set<string>()
+  const anchorRowKeyByActionId = new Map<string, string>()
   let appliedCount = 0
   dpResult.picks.forEach((candidateIndex) => {
     const candidate = candidates[candidateIndex]
     if (!candidate)
       return
+    const actionId = createActionId()
     nextActions.push({
-      id: createActionId(),
+      id: actionId,
       timestamp: candidate.timestamp,
       columnKey,
       skillId,
       rowKey: resolveRowKeyByTimestamp(candidate.timestamp) || candidate.rowKey,
     })
+    optimizedActionIds.add(actionId)
+    anchorRowKeyByActionId.set(actionId, candidate.rowKey)
     appliedCount += 1
   })
 
@@ -2560,7 +2860,15 @@ async function runAutoArrangeForSkill() {
     return
   }
 
-  emit('update:playerActions', nextActions)
+  const optimizedActions = optimizeAutoArrangedActionOffsets({
+    rows,
+    actions: nextActions,
+    buildContext,
+    targetActionIds: optimizedActionIds,
+    anchorRowKeyByActionId,
+    resolveStrategy: () => selectedStrategy,
+  })
+  emit('update:playerActions', optimizedActions)
   const totalGain = Math.round(dpResult.gain)
   const strategyLabel = getAutoArrangeStrategyLabel(selectedStrategy)
   ElMessage.success(`已自动排轴 ${skill.name}（${appliedCount} 次，预计减伤 ${totalGain}，策略：${strategyLabel}）`)
@@ -2623,6 +2931,8 @@ async function runAutoArrangeForSkillFillGaps() {
   }
   let addedCount = 0
   let totalGain = 0
+  const optimizedActionIds = new Set<string>()
+  const anchorRowKeyByActionId = new Map<string, string>()
 
   while (true) {
     const scheduledActions = buildScheduledActions(rows, currentActions, buildContext)
@@ -2639,13 +2949,12 @@ async function runAutoArrangeForSkillFillGaps() {
         return
       if (!validateActionPlacementAgainstActions(currentActions, col, skillId, releaseTimestamp, scheduledActions, scheduledExclusiveGroupActions))
         return
-      const result = computeAutoUseWeightForFill(
+      const result = computeAutoUseWeightForReleaseTimestamp(
         rows,
-        rowIndex,
+        releaseTimestamp,
         skillId,
         effectiveDuration,
         baselineMultipliers,
-        scheduledSkillActions,
         selectedStrategy,
         rowCache,
       )
@@ -2663,13 +2972,17 @@ async function runAutoArrangeForSkillFillGaps() {
     const row = rows[bestRowIndex]
     if (!row)
       break
+    const actionId = createActionId()
+    const releaseTimestamp = getAutoArrangeReleaseTimestamp(row.timestamp)
     currentActions.push({
-      id: createActionId(),
-      timestamp: getAutoArrangeReleaseTimestamp(row.timestamp),
+      id: actionId,
+      timestamp: releaseTimestamp,
       columnKey,
       skillId,
-      rowKey: resolveRowKeyByTimestamp(getAutoArrangeReleaseTimestamp(row.timestamp)) || row.key,
+      rowKey: resolveRowKeyByTimestamp(releaseTimestamp) || row.key,
     })
+    optimizedActionIds.add(actionId)
+    anchorRowKeyByActionId.set(actionId, row.key)
     addedCount += 1
     totalGain += bestGain
     if (addedCount > rows.length)
@@ -2681,7 +2994,15 @@ async function runAutoArrangeForSkillFillGaps() {
     ElMessage.warning(`自动补轴未找到 ${skill.name} 的可补全空位`)
     return
   }
-  emit('update:playerActions', currentActions)
+  const optimizedActions = optimizeAutoArrangedActionOffsets({
+    rows,
+    actions: currentActions,
+    buildContext,
+    targetActionIds: optimizedActionIds,
+    anchorRowKeyByActionId,
+    resolveStrategy: () => selectedStrategy,
+  })
+  emit('update:playerActions', optimizedActions)
   const strategyLabel = getAutoArrangeStrategyLabel(selectedStrategy)
   ElMessage.success(`已补全 ${skill.name} ${addedCount} 次（预计减伤 ${Math.round(totalGain)}，策略：${strategyLabel}）`)
 }

@@ -104,6 +104,7 @@ export interface MitigationSkill {
   mitigationScope?: MitigationScope
   damageTakenMultiplier?: PerformanceType
   shieldAmount?: number
+  isTargetMitigation?: boolean
   recast: number
   duration?: number
   maxCharges?: number

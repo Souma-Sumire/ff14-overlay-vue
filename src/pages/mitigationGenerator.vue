@@ -1553,6 +1553,7 @@ function getSkillsForJob(jobEnum: number, level = 100): MitigationSkill[] {
         mitigationScope: s.mitigationScope,
         damageTakenMultiplier,
         shieldAmount,
+        isTargetMitigation: s.isEnemyTargetMitigation,
         recast: parseDynamicValue(s.recast1000ms, level),
         duration: parseDynamicValue(s.duration ?? 0, level),
         maxCharges: parseDynamicValue(s.maxCharges ?? 1, level),

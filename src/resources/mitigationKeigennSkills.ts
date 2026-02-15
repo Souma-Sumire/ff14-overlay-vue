@@ -25,6 +25,7 @@ interface MitigationKeigennSkillBase {
   maxCharges?: DynamicValue
   duration?: DynamicValue
   shieldAmount?: DynamicValue
+  isEnemyTargetMitigation?: boolean
 }
 
 type MitigationKeigennSkill = MitigationKeigennSkillBase & MitigationSkillMeta
@@ -40,6 +41,7 @@ const mitigationKeigennSkills: MitigationKeigennSkill[] = [
     minLevel: 1,
     mitigationScope: 'party',
     damageTakenMultiplier: { physics: 0.9, magic: 0.95, darkness: 1 },
+    isEnemyTargetMitigation: true,
   },
   {
     // 昏乱
@@ -51,6 +53,7 @@ const mitigationKeigennSkills: MitigationKeigennSkill[] = [
     minLevel: 1,
     mitigationScope: 'party',
     damageTakenMultiplier: { physics: 0.95, magic: 0.9, darkness: 1 },
+    isEnemyTargetMitigation: true,
   },
   {
     // 雪仇
@@ -62,6 +65,7 @@ const mitigationKeigennSkills: MitigationKeigennSkill[] = [
     minLevel: 1,
     mitigationScope: 'party',
     damageTakenMultiplier: { physics: 0.9, magic: 0.9, darkness: 1 },
+    isEnemyTargetMitigation: true,
   },
   {
     // 铁壁
@@ -496,6 +500,7 @@ const mitigationKeigennSkills: MitigationKeigennSkill[] = [
     recast1000ms: 45,
     job: [28],
     minLevel: 62,
+    isEnemyTargetMitigation: true,
   },
   {
     // 疾风怒涛之计
@@ -749,6 +754,7 @@ const mitigationKeigennSkills: MitigationKeigennSkill[] = [
     minLevel: 62,
     mitigationScope: 'party',
     damageTakenMultiplier: { physics: 0.9, magic: 0.9, darkness: 1 },
+    isEnemyTargetMitigation: true,
   },
   {
     // 策动
