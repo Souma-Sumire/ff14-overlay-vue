@@ -37,6 +37,8 @@ interface GroupedRawEvents {
 }
 
 const EVENT_GROUP_WINDOW_MS = 1000
+const CAST_MATCH_LOOKBACK_MS = 30000
+const CAST_CACHE_TTL_MS = 120000
 
 const validSkillIds = new Set<number>()
 keigennSkills.forEach((skill) => {
@@ -83,6 +85,36 @@ function resolveRsvAbilityName(name: string, rsvData: Map<number, string>) {
   const id = Number(rsvMatch[1])
   const fallback = name.match(/^_(rsv_\d+)_/i)?.[1]
   return rsvData.get(id) || fallback || name
+}
+
+function normalizeAbilityName(rawName: string) {
+  const normalized = rawName.trim().toLowerCase()
+  return normalized || ''
+}
+
+function normalizeAbilityId(rawId: string) {
+  if (!rawId)
+    return ''
+  const parsed = Number.parseInt(rawId, 16)
+  if (!Number.isFinite(parsed) || parsed <= 0)
+    return ''
+  return parsed.toString(16).toUpperCase()
+}
+
+function buildCastIdMatchKeys(rawIds: string[]) {
+  const keys = rawIds
+    .map(id => normalizeAbilityId(id))
+    .filter(Boolean)
+    .map(id => `id:${id}`)
+  return Array.from(new Set(keys))
+}
+
+function buildCastNameMatchKeys(rawAbilityNames: string[]) {
+  const keys = rawAbilityNames
+    .map(name => normalizeAbilityName(name))
+    .filter(Boolean)
+    .map(name => `name:${name}`)
+  return Array.from(new Set(keys))
 }
 
 function calculateReductionMultiplier(
@@ -192,7 +224,6 @@ export function useLogParser() {
 
   async function parseFile(file: File): Promise<EncounterCandidate[]> {
     loadRsvData()
-
     const text = await file.text()
     const lines = text.split(/\r?\n/)
     const parsedEncounters: EncounterCandidate[] = []
@@ -309,8 +340,29 @@ export function useLogParser() {
 
     const statusData: Record<string, Record<string, any>> = {}
     const shieldData: Record<string, number> = {}
-    const activeCasts = new Map<string, { actionId: string, totalTime: string }>()
+    const activeCasts = new Map<string, { totalTime: string, startedAt: number }>()
     const playerActionKeys = new Set<string>()
+
+    const pruneActiveCasts = (now: number) => {
+      for (const [castKey, castData] of activeCasts.entries()) {
+        if (now - castData.startedAt > CAST_CACHE_TTL_MS)
+          activeCasts.delete(castKey)
+      }
+    }
+    const resolveCastTime = (castKeys: string[], now: number) => {
+      let bestMatch: { totalTime: string, age: number } | null = null
+      for (const castKey of castKeys) {
+        const castData = activeCasts.get(castKey)
+        if (!castData)
+          continue
+        const age = now - castData.startedAt
+        if (age < 0 || age > CAST_MATCH_LOOKBACK_MS)
+          continue
+        if (!bestMatch || age < bestMatch.age)
+          bestMatch = { totalTime: castData.totalTime, age }
+      }
+      return bestMatch?.totalTime
+    }
 
     const partyMembersMap = new Map<string, PartyMember>()
     encounter.party.forEach(member => partyMembersMap.set(member.id, member))
@@ -338,10 +390,21 @@ export function useLogParser() {
       const timestamp = new Date(timestampText).getTime()
 
       if (type === logDefinitions.StartsUsing.type) {
-        const sourceId = split[logDefinitions.StartsUsing.fields.sourceId] || ''
-        const actionId = split[logDefinitions.StartsUsing.fields.id] || ''
+        const abilityNameRaw = split[logDefinitions.StartsUsing.fields.ability] || ''
+        const abilityIdRaw = split[logDefinitions.StartsUsing.fields.id] || ''
         const castTime = split[logDefinitions.StartsUsing.fields.castTime] || ''
-        activeCasts.set(`${sourceId}_${actionId}`, { actionId, totalTime: castTime })
+        const castSeconds = Number.parseFloat(castTime)
+        if (!Number.isFinite(castSeconds) || castSeconds < 1)
+          continue
+        const abilityName = resolveRsvAbilityName(abilityNameRaw, rsvDataGlobal)
+        pruneActiveCasts(timestamp)
+        const castKeys = [
+          ...buildCastIdMatchKeys([abilityIdRaw]),
+          ...buildCastNameMatchKeys([abilityName]),
+        ]
+        castKeys.forEach((castKey) => {
+          activeCasts.set(castKey, { totalTime: castTime, startedAt: timestamp })
+        })
         continue
       }
 
@@ -379,9 +442,15 @@ export function useLogParser() {
       const sourceId = split[logDefinitions.Ability.fields.sourceId] || '0'
       const targetId = split[logDefinitions.Ability.fields.targetId] || '0'
       const abilityIdHex = split[logDefinitions.Ability.fields.id] || '0'
+      const actionIdHex = split[logDefinitions.Ability.fields.actionId] || '0'
       const abilityIdDec = Number.parseInt(abilityIdHex, 16)
-
       const abilityOwnerId = split[logDefinitions.Ability.fields.ownerId] || '0'
+      const abilityNameRaw = split[logDefinitions.Ability.fields.ability] || 'Unknown'
+      const abilityName = resolveRsvAbilityName(abilityNameRaw, rsvDataGlobal)
+      pruneActiveCasts(timestamp)
+      const castTime
+        = resolveCastTime(buildCastIdMatchKeys([abilityIdHex, actionIdHex]), timestamp)
+          ?? resolveCastTime(buildCastNameMatchKeys([abilityName]), timestamp)
       const isOwnerPlayer = !/^0+$/.test(abilityOwnerId) && abilityOwnerId.startsWith('1')
       let realPlayerId = sourceId.startsWith('1') ? sourceId : (isOwnerPlayer ? abilityOwnerId : null)
 
@@ -425,7 +494,7 @@ export function useLogParser() {
       rawEvents.push({
         timestamp,
         id: abilityIdHex,
-        name: resolveRsvAbilityName(split[logDefinitions.Ability.fields.ability] || 'Unknown', rsvDataGlobal),
+        name: abilityName,
         amount: ability.amount,
         type: damageType,
         sourceId,
@@ -436,7 +505,7 @@ export function useLogParser() {
         line,
         reduction,
         shield: shieldData[targetId] || 0,
-        castTime: activeCasts.get(`${sourceId}_${abilityIdHex}`)?.totalTime,
+        castTime,
       })
     }
 
