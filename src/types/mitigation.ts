@@ -114,7 +114,6 @@ export interface SheetState {
   name: string
   meta?: {
     zoneId: number | null
-    zoneName?: string
   }
   mechanics: SheetMechanicState
   planner: SheetPlannerState

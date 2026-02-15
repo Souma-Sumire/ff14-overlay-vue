@@ -43,7 +43,6 @@ export function normalizeLegacySheet(sheet: SheetState): SheetState {
     name: sheet.name,
     meta: {
       zoneId: sheet.meta?.zoneId ?? null,
-      zoneName: sheet.meta?.zoneName,
     },
     mechanics: {
       rows: sheet.mechanics.rows || [],

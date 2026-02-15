@@ -31,6 +31,10 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  teleported: {
+    type: Boolean,
+    default: true,
+  },
   border: {
     type: Boolean,
     default: true,
@@ -160,6 +164,7 @@ watch(locale, () => {
     :size="props.size"
     filterable
     :clearable="props.clearable"
+    :teleported="props.teleported"
     :class="{ 'no-border': !props.border }"
   />
 </template>

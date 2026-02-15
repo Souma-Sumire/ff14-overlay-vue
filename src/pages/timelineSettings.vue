@@ -401,6 +401,14 @@ function importTimelineData(): void {
 }
 
 function saveImportedTimelines(parsedData: ITimeline[]): void {
+  const buildTimelineIdentity = (timeline: ITimeline) => JSON.stringify({
+    name: timeline.name,
+    condition: timeline.condition,
+    timeline: timeline.timeline,
+    source: timeline.source,
+    createdAt: timeline.createdAt,
+  })
+
   timelineStore.allTimelines.push(...parsedData)
   timelineStore.sortTimelines()
 
@@ -414,13 +422,7 @@ function saveImportedTimelines(parsedData: ITimeline[]): void {
   const seen = new Set()
 
   for (const timeline of timelineStore.allTimelines) {
-    const timelineString = JSON.stringify({
-      name: timeline.name,
-      condition: timeline.condition,
-      timeline: timeline.timeline,
-      source: timeline.source,
-      createdAt: timeline.createdAt,
-    })
+    const timelineString = buildTimelineIdentity(timeline)
 
     if (!seen.has(timelineString)) {
       seen.add(timelineString)
@@ -439,6 +441,15 @@ function saveImportedTimelines(parsedData: ITimeline[]): void {
     type: 'success',
     duration: 3000,
   })
+
+  if (parsedData.length === 1) {
+    const importedIdentity = buildTimelineIdentity(parsedData[0]!)
+    const importedTimeline = timelineStore.allTimelines.find(
+      timeline => buildTimelineIdentity(timeline) === importedIdentity,
+    )
+    if (importedTimeline)
+      editTimeline(importedTimeline)
+  }
 }
 
 function sendBroadcastData(type: 'get' | 'post', data: any = {}) {

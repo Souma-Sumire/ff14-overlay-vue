@@ -20,12 +20,17 @@ export interface MechanicsImportRowPayload {
   ti?: string[]
 }
 
+export interface MitigationImportMapMeta {
+  zoneId?: number | string
+}
+
 export interface MitigationMechanicsImportData {
   type: 'mitigation-mechanics'
   rows: MechanicsImportRowPayload[]
   actions?: string[]
   aliases?: Record<string, string>
   mechanicAliases?: Record<string, string>
+  map?: MitigationImportMapMeta
 }
 
 export interface MitigationPlayerActionsV4Data {
@@ -33,6 +38,7 @@ export interface MitigationPlayerActionsV4Data {
   src: string[]
   data: Record<string, Record<string, number[]>>
   cols?: ImportedColumnPayload[]
+  map?: MitigationImportMapMeta
 }
 
 export type MitigationPlayerActionsImportData
@@ -86,6 +92,16 @@ function isStringMap(value: unknown): value is Record<string, string> {
   return isObject(value) && Object.values(value).every(item => typeof item === 'string')
 }
 
+function isMitigationImportMapMeta(value: unknown): value is MitigationImportMapMeta {
+  if (!isObject(value))
+    return false
+  if (value.zoneId !== undefined
+    && !((typeof value.zoneId === 'number' && Number.isFinite(value.zoneId)) || typeof value.zoneId === 'string')) {
+    return false
+  }
+  return true
+}
+
 function isPlayerActionsDataMap(value: unknown): value is Record<string, Record<string, number[]>> {
   if (!isObject(value))
     return false
@@ -122,6 +138,8 @@ export function isMitigationMechanicsImportData(data: unknown): data is Mitigati
     return false
   if (data.mechanicAliases !== undefined && !isStringMap(data.mechanicAliases))
     return false
+  if (data.map !== undefined && !isMitigationImportMapMeta(data.map))
+    return false
   return true
 }
 
@@ -135,6 +153,8 @@ export function isMitigationPlayerActionsImportData(data: unknown): data is Miti
   if (!isPlayerActionsDataMap(data.data))
     return false
   if (data.cols !== undefined && !(Array.isArray(data.cols) && data.cols.every(col => isImportedColumnPayload(col))))
+    return false
+  if (data.map !== undefined && !isMitigationImportMapMeta(data.map))
     return false
   return true
 }

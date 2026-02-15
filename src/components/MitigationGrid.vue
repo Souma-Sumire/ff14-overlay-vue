@@ -11,6 +11,7 @@ import { isMitigationPlayerActionsImportData, parseMitigationImportText } from '
 import { createActionId } from '@/utils/actionId'
 import { copyToClipboard } from '@/utils/clipboard'
 import { getFirstChargeDeficitTime } from '@/utils/mitigationCharges'
+import { getMitigationColumnDisplayName } from '@/utils/mitigationColumn'
 import { EXTREME_DAMAGE_THRESHOLD } from '@/utils/mitigationConstants'
 import { getMitigationGridColumnWidth, MITIGATION_GRID_WIDTH } from '@/utils/mitigationGridLayout'
 import { formatTime } from '@/utils/time'
@@ -27,6 +28,8 @@ const props = defineProps<{
   rows: MitigationRow[]
   allRows?: MitigationRow[]
   columns: ColumnDef[]
+  timelineZoneId?: number | string | null
+  timelineExportSource?: string
   partyCompositionJobOptions?: Array<{ value: number, label: string }>
   mechanicOptions?: Array<{ actionId: string, action: string }>
   filterMechanics?: string[]
@@ -260,7 +263,7 @@ function getContextOverlayEstimatedSize(id: ContextOverlayId) {
   if (id === 'mechanic-target-ctx')
     return { width: 320, height: 180 }
   if (id === 'column-ctx')
-    return { width: 180, height: 248 }
+    return { width: 220, height: 278 }
   if (id === 'skill-ctx')
     return { width: 240, height: 260 }
   return { width: 180, height: 140 }
@@ -515,10 +518,10 @@ function handleRightClickSkill(event: MouseEvent, col: ColumnDef, skill: Mitigat
   activeOverlay.value = 'skill-ctx'
 }
 
-function copyTimelineText(type: 'skill' | 'column') {
+function buildTimelineText(type: 'skill' | 'column') {
   const col = type === 'skill' ? skillContextMenu.value.col : columnContextMenu.value.col
   if (!col)
-    return
+    return null
 
   let targetSkillId: number | null = null
   let targetSkillName = ''
@@ -546,14 +549,58 @@ function copyTimelineText(type: 'skill' | 'column') {
     })
     .join('\n')
 
-  if (!text) {
+  if (!text)
+    return null
+
+  return { col, text }
+}
+
+function copyTimelineText(type: 'skill' | 'column') {
+  const payload = buildTimelineText(type)
+  if (!payload) {
     ElMessage.warning('没有可导出的释放记录')
     return
   }
 
-  copyToClipboard(text).then(() => {
+  copyToClipboard(payload.text).then(() => {
     ElMessage.success('已复制时间轴文本')
     activeOverlay.value = null
+  })
+}
+
+function exportColumnTimelineSettingsString() {
+  const payload = buildTimelineText('column')
+  if (!payload) {
+    ElMessage.warning('没有可导出的释放记录')
+    return
+  }
+
+  const zoneIdRaw = Number(props.timelineZoneId)
+  const zoneID = Number.isFinite(zoneIdRaw) ? String(Math.max(0, Math.round(zoneIdRaw))) : '0'
+  const job = Util.jobEnumToJob(payload.col.jobEnum) as string
+  const timelineJob = job || 'NONE'
+  const exportedAt = new Date().toLocaleString('zh-CN', { hour12: false })
+  const name = String(props.timelineExportSource || '').trim() || '未命名 Sheet'
+  const source = '减伤规划器'
+
+  const exportData = {
+    name,
+    condition: {
+      zoneID,
+      jobs: [timelineJob],
+      phase: undefined,
+    },
+    timeline: payload.text,
+    source,
+    createdAt: exportedAt,
+  }
+  const compressed = LZString.compressToBase64(JSON.stringify(exportData))
+
+  copyToClipboard(compressed).then(() => {
+    ElMessage.success('已复制压缩的 timelineSettings 导入字符串')
+    activeOverlay.value = null
+  }).catch(() => {
+    ElMessage.error('复制失败')
   })
 }
 
@@ -930,25 +977,15 @@ function getStatusLabelForCell(
   return getStatusLabel(status)
 }
 
-function getColDisplayName(col: ColumnDef) {
-  const job = Util.jobEnumToJob(col.jobEnum)
-  const jobName = Util.jobToFullName(job)?.simple1
-  if (jobName)
-    return jobName
-  const key = col.key || ''
-  const trimmed = key.split('(')[0]?.split('（')[0]?.trim()
-  return trimmed || key
-}
-
 const mechanicTargetColumnOptions = computed(() => {
   const nameCount = new Map<string, number>()
   props.columns.forEach((col) => {
-    const name = getColDisplayName(col)
+    const name = getMitigationColumnDisplayName(col)
     nameCount.set(name, (nameCount.get(name) || 0) + 1)
   })
   const nameIndex = new Map<string, number>()
   return props.columns.map((col) => {
-    const baseName = getColDisplayName(col)
+    const baseName = getMitigationColumnDisplayName(col)
     const duplicated = (nameCount.get(baseName) || 0) > 1
     const index = (nameIndex.get(baseName) || 0) + 1
     nameIndex.set(baseName, index)
@@ -974,7 +1011,7 @@ function getRoleClassByJobEnum(jobEnum: number) {
 const targetRoleClassByName = computed(() => {
   const map = new Map<string, string>()
   props.columns.forEach((col) => {
-    const displayName = getColDisplayName(col)
+    const displayName = getMitigationColumnDisplayName(col)
     if (!displayName || map.has(displayName))
       return
     const roleClass = getRoleClassByJobEnum(col.jobEnum)
@@ -1022,7 +1059,7 @@ function resolveMechanicTargetColumnKeys(row: MitigationRow) {
       keys.push(col.key)
       continue
     }
-    if (rowTargets.has(getColDisplayName(col)))
+    if (rowTargets.has(getMitigationColumnDisplayName(col)))
       keys.push(col.key)
   }
   return keys
@@ -1155,7 +1192,7 @@ function copyColumnData() {
   const compressed = LZString.compressToBase64(jsonStr)
 
   copyToClipboard(compressed).then(() => {
-    ElMessage.success(`已复制 ${getColDisplayName(col)} 的配置`)
+    ElMessage.success(`已复制 ${getMitigationColumnDisplayName(col)} 的配置`)
   }).catch(() => {
     ElMessage.error('复制失败')
   })
@@ -1195,7 +1232,7 @@ function pasteColumnData() {
       // Verify job match
       if (importedCol.j !== targetCol.jobEnum) {
         const importedJob = Util.jobToFullName(Util.jobEnumToJob(importedCol.j || 0)).cn || '未知职业'
-        const targetJob = getColDisplayName(targetCol)
+        const targetJob = getMitigationColumnDisplayName(targetCol)
         ElMessageBox.confirm(
           `导入的数据属于 ${importedJob}，而当前列是 ${targetJob}。确定要覆盖导入吗？`,
           '职业不匹配',
@@ -1244,7 +1281,7 @@ function pasteColumnData() {
         })
 
         emit('update:playerActions', [...otherActions, ...newActions])
-        ElMessage.success(`已覆盖导入 ${getColDisplayName(targetCol)} 的配置`)
+        ElMessage.success(`已覆盖导入 ${getMitigationColumnDisplayName(targetCol)} 的配置`)
       }
     }
     catch (_e) {
@@ -1367,7 +1404,7 @@ function getColumnTargetNameCandidates(col: ColumnDef) {
   const match = key.match(/\(([^()]+)\)\s*$/)
   if (match?.[1])
     names.add(match[1].trim())
-  const displayName = getColDisplayName(col)
+  const displayName = getMitigationColumnDisplayName(col)
   if (displayName)
     names.add(displayName.trim())
   return names
@@ -2706,7 +2743,7 @@ function applyMechanicTargetsToCurrent() {
   const selectedColumns = props.columns.filter(col => selectedKeys.includes(col.key))
   const nextTargets = mechanicEditor.targetAll
     ? ['全部']
-    : selectedColumns.map(col => getColDisplayName(col))
+    : selectedColumns.map(col => getMitigationColumnDisplayName(col))
   const nextTargetCount = mechanicEditor.targetAll
     ? Math.max(props.columns.length, 1)
     : Math.max(selectedColumns.length, 1)
@@ -3137,12 +3174,12 @@ function clearColumnActions() {
   const nextActions = props.playerActions.filter(action => action.columnKey !== col.key)
   const removedCount = props.playerActions.length - nextActions.length
   if (removedCount <= 0) {
-    ElMessage.warning(`${getColDisplayName(col)} 当前没有释放记录`)
+    ElMessage.warning(`${getMitigationColumnDisplayName(col)} 当前没有释放记录`)
     return
   }
 
   emit('update:playerActions', nextActions)
-  ElMessage.success(`已清除 ${getColDisplayName(col)} 的 ${removedCount} 条释放`)
+  ElMessage.success(`已清除 ${getMitigationColumnDisplayName(col)} 的 ${removedCount} 条释放`)
 }
 
 function handlePartyColumnJobChange(col: ColumnDef, value: unknown) {
@@ -3352,7 +3389,7 @@ function handleColumnNameClick(col: ColumnDef) {
                     @click.stop="handleColumnNameClick(col)"
                     @contextmenu.prevent="handleRightClickColumn(col, $event)"
                   >
-                    <span class="col-name-main">{{ getColDisplayName(col) }}</span>
+                    <span class="col-name-main">{{ getMitigationColumnDisplayName(col) }}</span>
                   </div>
                 </template>
                 <div class="skill-filter-list" @click.stop>
@@ -3475,7 +3512,7 @@ function handleColumnNameClick(col: ColumnDef) {
       <div
         v-for="(row, rowIndex) in rows"
         :key="`${row.key}_${rowIndex}`"
-        v-memo="[row._v, row._sim?.shieldAbsorbed, columns.length, columnHiddenHash, columnOrderHash, damageNumberDisplayUnit]"
+        v-memo="[row._v, row._sim?.shieldAbsorbed, columns.length, columnHiddenHash, columnOrderHash, damageNumberDisplayUnit, mechanicColors.aoe, mechanicColors.share, mechanicColors.tb, mechanicColors.normal]"
         class="row content-row"
       >
         <div class="cell fixed-w-cast-start">
@@ -3728,7 +3765,7 @@ function handleColumnNameClick(col: ColumnDef) {
         @contextmenu.prevent
       >
         <div class="menu-header">
-          {{ columnContextMenu.col ? getColDisplayName(columnContextMenu.col) : 'Column' }}
+          {{ columnContextMenu.col ? getMitigationColumnDisplayName(columnContextMenu.col) : 'Column' }}
         </div>
         <div class="menu-divider" />
         <div class="menu-item" @click="copyColumnData">
@@ -3739,7 +3776,10 @@ function handleColumnNameClick(col: ColumnDef) {
         </div>
         <div class="menu-divider" />
         <div class="menu-item" @click="copyTimelineText('column')">
-          <span>复制为时间轴文本</span>
+          <span>复制时间轴文本</span>
+        </div>
+        <div class="menu-item" @click="exportColumnTimelineSettingsString">
+          <span>复制完整的时间轴字符串</span>
         </div>
         <div class="menu-item danger" @click="clearColumnActions">
           <span>清除所有技能释放</span>

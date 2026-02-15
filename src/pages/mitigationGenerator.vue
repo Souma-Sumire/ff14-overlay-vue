@@ -2,6 +2,7 @@
 import type { MessageBoxInputData } from 'element-plus'
 import type {
   ImportedColumnPayload,
+  MitigationImportMapMeta,
   MitigationMechanicsImportData,
   MitigationPlayerActionsImportData,
 } from '@/composables/mitigation/useMitigationImportCodec'
@@ -23,6 +24,7 @@ import * as LZString from 'lz-string'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, toRaw, triggerRef, watch } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import MitigationGrid from '@/components/MitigationGrid.vue'
+import ZoneSelecter from '@/components/zoneSelecter.vue'
 import {
   isMitigationMechanicsImportData,
   isMitigationPlayerActionsImportData,
@@ -47,6 +49,7 @@ import { completeIcon } from '@/resources/status'
 import { createActionId } from '@/utils/actionId'
 import { chineseToIcon } from '@/utils/chineseToIcon'
 import { parseDynamicPerformance, parseDynamicValue } from '@/utils/dynamicValue'
+import { getMitigationColumnDisplayName } from '@/utils/mitigationColumn'
 import { buildPartyColumnKey } from '@/utils/mitigationConstants'
 import { getMitigationGridColumnWidth, MITIGATION_GRID_WIDTH } from '@/utils/mitigationGridLayout'
 import Util from '@/utils/util'
@@ -842,6 +845,7 @@ function getCommandLabel(label?: string) {
     'delete-sheet': '删除 Sheet',
     'duplicate-sheet': '复制 Sheet 副本',
     'rename-sheet': '重命名 Sheet',
+    'set-sheet-zone': '设置 Sheet 地图',
     'switch-sheet': '切换 Sheet',
     'player-level': '修改等级',
     'color-aoe': '修改 AOE 颜色',
@@ -1039,7 +1043,6 @@ function createNewSheet(encounter: EncounterCandidate, mode: Extract<LogImportMo
     name: `${encounter.zoneName} (${encounter.durationStr})`,
     meta: {
       zoneId: encounter.zoneId,
-      zoneName: encounter.zoneName,
     },
     mechanics: {
       rows: normalizedRows,
@@ -1309,9 +1312,52 @@ function closeSheetContextMenu() {
   sheetContextMenu.value.sheetId = ''
 }
 
+function getSheetContextZoneValue() {
+  const sheet = sheets.value.find(item => item.id === sheetContextMenu.value.sheetId)
+  const zoneId = sheet?.meta?.zoneId
+  if (typeof zoneId !== 'number' || !Number.isFinite(zoneId) || zoneId <= 0)
+    return ''
+  return String(zoneId)
+}
+
+function updateSheetZoneFromContextMenu(value: string | number) {
+  const targetSheetId = sheetContextMenu.value.sheetId
+  if (!targetSheetId)
+    return
+
+  const parsed = Number(String(value || '').trim())
+  const zoneId = Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed) : null
+  const targetSheet = sheets.value.find(sheet => sheet.id === targetSheetId)
+  if (!targetSheet)
+    return
+
+  const nextMeta = {
+    zoneId,
+  }
+  const currentMeta = {
+    zoneId: targetSheet.meta?.zoneId ?? null,
+  }
+  if (isSameState(currentMeta, nextMeta))
+    return
+
+  const nextSheets = sheets.value.map((sheet) => {
+    if (sheet.id !== targetSheetId)
+      return sheet
+    return {
+      ...sheet,
+      meta: nextMeta,
+    }
+  })
+
+  applyWithCommand(sheets.value, nextSheets, value => (sheets.value = value), {
+    label: 'set-sheet-zone',
+    coalesceKey: `set-sheet-zone-${targetSheetId}`,
+  })
+}
+
 function openSheetContextMenu(sheet: SheetState, event: MouseEvent) {
-  const menuWidth = 148
-  const menuHeight = 104
+  const menuWidth = 280
+  const menuHeight = 226
   const viewportPadding = 8
   const left = Math.min(event.clientX, window.innerWidth - menuWidth - viewportPadding)
   const top = Math.min(event.clientY, window.innerHeight - menuHeight - viewportPadding)
@@ -1445,16 +1491,6 @@ function buildColumnByJob(jobEnum: number, base?: Partial<Pick<ColumnDef, 'key' 
     skills: getSkillsForJob(jobEnum, playerLevel.value),
     hiddenSkillIds,
   } satisfies ColumnDef
-}
-
-function getColumnTargetJobName(col: Pick<ColumnDef, 'jobEnum' | 'key'>) {
-  const job = Util.jobEnumToJob(col.jobEnum)
-  const jobName = Util.jobToFullName(job)?.simple1
-  if (jobName)
-    return jobName.trim()
-  const key = String(col.key || '').trim()
-  const trimmed = key.split('(')[0]?.split('（')[0]?.trim()
-  return trimmed || key
 }
 
 function replaceRowTargetsByJobName(rows: MitigationRow[], fromName: string, toName: string) {
@@ -1735,13 +1771,13 @@ function handlePartyColumnChangeJob(payload: { colKey: string, jobEnum: number }
   const current = next[index]
   if (!current || current.jobEnum === jobEnum)
     return
-  const previousTargetName = getColumnTargetJobName(current)
+  const previousTargetName = getMitigationColumnDisplayName(current)
 
   next[index] = buildColumnByJob(jobEnum, {
     key: current.key,
     targetId: current.targetId,
   })
-  const currentTargetName = getColumnTargetJobName(next[index]!)
+  const currentTargetName = getMitigationColumnDisplayName(next[index]!)
   const nextRows = replaceRowTargetsByJobName(rawRows.value, previousTargetName, currentTargetName)
   applyPartyCompositionUpdate(next, { nextRows })
 }
@@ -1869,6 +1905,91 @@ function copyPlainTextToClipboard(text: string, successMessage: string) {
   })
 }
 
+function buildImportMapMetaFromActiveSheet() {
+  const zoneIdRaw = activeSheet.value?.meta?.zoneId
+  const zoneId = typeof zoneIdRaw === 'number' && Number.isFinite(zoneIdRaw)
+    ? Math.max(0, Math.round(zoneIdRaw))
+    : undefined
+  if (zoneId === undefined)
+    return undefined
+  return {
+    zoneId,
+  } satisfies MitigationImportMapMeta
+}
+
+function parseImportedZoneId(value: unknown) {
+  if (typeof value === 'number' && Number.isFinite(value))
+    return Math.max(0, Math.round(value))
+  if (typeof value === 'string') {
+    const normalized = value.trim()
+    if (!normalized)
+      return null
+    const parsed = Number(normalized)
+    if (Number.isFinite(parsed))
+      return Math.max(0, Math.round(parsed))
+  }
+  return null
+}
+
+function resolveImportedMapMeta(data: unknown) {
+  const root = (typeof data === 'object' && data !== null)
+    ? data as Record<string, unknown>
+    : null
+  if (!root)
+    return null
+
+  const mapObj = (typeof root.map === 'object' && root.map !== null)
+    ? root.map as Record<string, unknown>
+    : null
+  const conditionObj = (typeof root.condition === 'object' && root.condition !== null)
+    ? root.condition as Record<string, unknown>
+    : null
+
+  const zoneIdRaw = mapObj?.zoneId ?? mapObj?.zoneID ?? root.zoneId ?? root.zoneID ?? conditionObj?.zoneID
+  const zoneId = parseImportedZoneId(zoneIdRaw)
+
+  if (zoneId === null)
+    return null
+
+  const meta: MitigationImportMapMeta = {}
+  if (zoneId !== null)
+    meta.zoneId = zoneId
+  return meta
+}
+
+function buildSheetsWithImportedMapMeta(mapMeta: MitigationImportMapMeta | null) {
+  if (!mapMeta || !activeSheetId.value)
+    return { changed: false, nextSheets: deepClone(sheets.value) }
+
+  const targetIndex = sheets.value.findIndex(sheet => sheet.id === activeSheetId.value)
+  if (targetIndex < 0)
+    return { changed: false, nextSheets: deepClone(sheets.value) }
+
+  const targetSheet = sheets.value[targetIndex]
+  if (!targetSheet)
+    return { changed: false, nextSheets: deepClone(sheets.value) }
+
+  const currentMeta = targetSheet.meta || { zoneId: null as number | null }
+  const resolvedZoneId = parseImportedZoneId(mapMeta.zoneId)
+  const nextMeta = {
+    ...currentMeta,
+    zoneId: resolvedZoneId !== null ? resolvedZoneId : currentMeta.zoneId,
+  }
+
+  if (isSameState(currentMeta, nextMeta))
+    return { changed: false, nextSheets: deepClone(sheets.value) }
+
+  const nextSheets = deepClone(sheets.value)
+  const nextTarget = nextSheets[targetIndex]
+  if (!nextTarget)
+    return { changed: false, nextSheets: deepClone(sheets.value) }
+  nextSheets[targetIndex] = {
+    ...nextTarget,
+    meta: nextMeta,
+  }
+  return { changed: true, nextSheets }
+}
+
 function buildMechanicsExportData() {
   if (!rawRows.value.length)
     return null
@@ -1918,11 +2039,13 @@ function buildMechanicsExportData() {
     return item
   })
 
+  const mapMeta = buildImportMapMetaFromActiveSheet()
   return {
     type: 'mitigation-mechanics',
     actions: actionList,
     rows,
     aliases: toRaw(mechanicAliases.value),
+    ...(mapMeta ? { map: mapMeta } : {}),
   } satisfies MitigationMechanicsImportData
 }
 
@@ -1980,11 +2103,13 @@ function buildPlayerActionsExportData() {
     h: c.hiddenSkillIds,
   }))
 
+  const mapMeta = buildImportMapMetaFromActiveSheet()
   return {
     type: 'mitigation-player-actions',
     src: anonSourcesList,
     data: dataMap,
     cols,
+    ...(mapMeta ? { map: mapMeta } : {}),
   } satisfies MitigationPlayerActionsImportData
 }
 
@@ -2060,6 +2185,8 @@ function buildImportedColumn(c: ImportedColumnPayload) {
 }
 
 function importMechanicData(data: MitigationMechanicsImportData) {
+  const importedMapMeta = resolveImportedMapMeta(data)
+  const importedMapSheetUpdate = buildSheetsWithImportedMapMeta(importedMapMeta)
   const actions = data.actions || []
   const importedRows: MitigationRow[] = data.rows.map((r) => {
     const isShare = !!(r.f & 4)
@@ -2102,11 +2229,13 @@ function importMechanicData(data: MitigationMechanicsImportData) {
   const prevRows = deepClone(rawRows.value)
   const prevFilters = deepClone(filterMechanics.value)
   const prevActions = deepClone(playerActions.value)
+  const prevSheets = deepClone(sheets.value)
   const nextActions = ensurePlayerActionsRowKey(playerActions.value, rows)
   const changed = !isSameState(prevAliases, nextAliases)
     || !isSameState(prevRows, rows)
     || !isSameState(prevFilters, nextFilters)
     || !isSameState(prevActions, nextActions)
+    || importedMapSheetUpdate.changed
   if (!changed)
     return
 
@@ -2117,12 +2246,14 @@ function importMechanicData(data: MitigationMechanicsImportData) {
       rawRows.value = deepClone(rows)
       filterMechanics.value = deepClone(nextFilters)
       playerActions.value = deepClone(nextActions)
+      sheets.value = deepClone(importedMapSheetUpdate.nextSheets)
     },
     undo: () => {
       mechanicAliases.value = deepClone(prevAliases)
       rawRows.value = deepClone(prevRows)
       filterMechanics.value = deepClone(prevFilters)
       playerActions.value = deepClone(prevActions)
+      sheets.value = deepClone(prevSheets)
     },
   })
 
@@ -2130,6 +2261,8 @@ function importMechanicData(data: MitigationMechanicsImportData) {
 }
 
 function importPlayerActionsData(data: MitigationPlayerActionsImportData) {
+  const importedMapMeta = resolveImportedMapMeta(data)
+  const importedMapSheetUpdate = buildSheetsWithImportedMapMeta(importedMapMeta)
   const newActions: PlayerActionRecord[] = []
   let importedColumns: ColumnDef[] | null = null
 
@@ -2164,6 +2297,7 @@ function importPlayerActionsData(data: MitigationPlayerActionsImportData) {
   const prevColumns = deepClone(columns.value)
   const prevOrders = deepClone(jobSkillOrders.value)
   const prevFilters = deepClone(jobSkillFilters.value)
+  const prevSheets = deepClone(sheets.value)
   const nextActions = deepClone(ensurePlayerActionsRowKey(newActions, rawRows.value))
   const importedColumnsPayload = importedColumns ? buildColumnsUpdatePayload(importedColumns) : null
   const nextColumns = importedColumnsPayload ? importedColumnsPayload.nextColumns : deepClone(columns.value)
@@ -2173,6 +2307,7 @@ function importPlayerActionsData(data: MitigationPlayerActionsImportData) {
     || !isSameState(prevColumns, nextColumns)
     || !isSameState(prevOrders, nextOrders)
     || !isSameState(prevFilters, nextFilters)
+    || importedMapSheetUpdate.changed
   if (!changed)
     return
 
@@ -2183,12 +2318,14 @@ function importPlayerActionsData(data: MitigationPlayerActionsImportData) {
       jobSkillFilters.value = deepClone(nextFilters)
       columns.value = deepClone(nextColumns)
       playerActions.value = deepClone(nextActions)
+      sheets.value = deepClone(importedMapSheetUpdate.nextSheets)
     },
     undo: () => {
       jobSkillOrders.value = deepClone(prevOrders)
       jobSkillFilters.value = deepClone(prevFilters)
       columns.value = deepClone(prevColumns)
       playerActions.value = deepClone(prevActions)
+      sheets.value = deepClone(prevSheets)
     },
   })
 
@@ -2388,19 +2525,19 @@ async function createSheetFromTemplate(template: MitigationSheetTemplate) {
                 <div class="color-config">
                   <div class="config-item">
                     <span class="label">AOE 颜色</span>
-                    <el-color-picker :model-value="mechanicColors.aoe" size="small" @update:model-value="(v) => handleMechanicColorUpdate('aoe', v)" />
+                    <el-color-picker :model-value="mechanicColors.aoe" :teleported="false" size="small" @update:model-value="(v) => handleMechanicColorUpdate('aoe', v)" />
                   </div>
                   <div class="config-item">
                     <span class="label">分摊 颜色</span>
-                    <el-color-picker :model-value="mechanicColors.share || '#f59e0b'" size="small" @update:model-value="(v) => handleMechanicColorUpdate('share', v)" />
+                    <el-color-picker :model-value="mechanicColors.share || '#f59e0b'" :teleported="false" size="small" @update:model-value="(v) => handleMechanicColorUpdate('share', v)" />
                   </div>
                   <div class="config-item">
                     <span class="label">死刑 颜色</span>
-                    <el-color-picker :model-value="mechanicColors.tb" size="small" @update:model-value="(v) => handleMechanicColorUpdate('tb', v)" />
+                    <el-color-picker :model-value="mechanicColors.tb" :teleported="false" size="small" @update:model-value="(v) => handleMechanicColorUpdate('tb', v)" />
                   </div>
                   <div class="config-item">
                     <span class="label">普通 颜色</span>
-                    <el-color-picker :model-value="mechanicColors.normal" size="small" @update:model-value="(v) => handleMechanicColorUpdate('normal', v)" />
+                    <el-color-picker :model-value="mechanicColors.normal" :teleported="false" size="small" @update:model-value="(v) => handleMechanicColorUpdate('normal', v)" />
                   </div>
                 </div>
               </div>
@@ -2428,6 +2565,8 @@ async function createSheetFromTemplate(template: MitigationSheetTemplate) {
         :mechanic-options="mechanicOptions"
         :filter-mechanics="filterMechanics"
         :mechanic-colors="mechanicColors"
+        :timeline-zone-id="activeSheet?.meta?.zoneId ?? 0"
+        :timeline-export-source="activeSheet?.name || 'MitigationPlanner'"
         :auto-arrange-tolerance-seconds="autoArrangeToleranceSeconds"
         :damage-number-display-unit="damageNumberDisplayUnit"
         @update:columns="handleColumnsUpdate"
@@ -2599,6 +2738,21 @@ async function createSheetFromTemplate(template: MitigationSheetTemplate) {
         <button class="sheet-context-item" type="button" @click="handleSheetContextAction('duplicate')">
           复制副本
         </button>
+        <div class="sheet-context-divider" />
+        <div class="sheet-context-zone">
+          <span class="sheet-context-zone-label">地图ID</span>
+          <ZoneSelecter
+            :select-zone="getSheetContextZoneValue()"
+            width="252px"
+            size="small"
+            :clearable="true"
+            :show-all-levels="false"
+            :teleported="false"
+            placeholder="设置地图ID"
+            @update:select-zone="updateSheetZoneFromContextMenu"
+          />
+        </div>
+        <div class="sheet-context-divider" />
         <button class="sheet-context-item danger" type="button" @click="handleSheetContextAction('delete')">
           删除
         </button>
@@ -2980,7 +3134,7 @@ async function createSheetFromTemplate(template: MitigationSheetTemplate) {
 .sheet-context-menu {
   position: fixed;
   z-index: 1001;
-  min-width: 148px;
+  min-width: 272px;
   padding: 6px;
   border: 1px solid #d9d9d9;
   border-radius: 8px;
@@ -2989,6 +3143,25 @@ async function createSheetFromTemplate(template: MitigationSheetTemplate) {
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.sheet-context-divider {
+  height: 1px;
+  margin: 4px 2px;
+  background: #f3f4f6;
+}
+
+.sheet-context-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 2px 4px;
+}
+
+.sheet-context-zone-label {
+  color: #6b7280;
+  font-size: 11px;
+  line-height: 1;
 }
 
 .sheet-context-item {
