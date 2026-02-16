@@ -35,6 +35,10 @@ const testActions = [
   34581,
   34582,
 ]
+
+function getRandomTestActionId(): number {
+  return testActions[Math.floor(Math.random() * testActions.length)]!
+}
 export const useCastingMonitorStore = defineStore('castingMonitor', {
   state: () => {
     return {
@@ -60,31 +64,49 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
         duration: Number(params.get('duration') || 15),
       },
       // lastPush: Date.now(),
+      type: params.get('type') === 'party' ? 'party' : 'focus',
     }
   },
   getters: {
     partyDataFormatted(state) {
-      return state.partyData.sort((a, b) => {
+      return [...state.partyData].sort((a, b) => {
         return (
           THNSort.indexOf(Util.jobToRole(Util.jobEnumToJob(a.job)))
           - THNSort.indexOf(Util.jobToRole(Util.jobEnumToJob(b.job)))
         )
       })
     },
-    focusTargetCastArr(state) {
-      return state.castData.filter(v => v.casterId === state.focusTargetId)
-    },
   },
   actions: {
     testAction(): void {
-      const actionId
-        = testActions[Math.floor(Math.random() * testActions.length)]!
+      if (this.type === 'party') {
+        const casters = this.partyDataFormatted.length > 0
+          ? this.partyDataFormatted
+          : [{ id: this.playerId }]
+        const partyCasters = [...casters]
+        for (let i = partyCasters.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1))
+          ;[partyCasters[i], partyCasters[j]] = [partyCasters[j]!, partyCasters[i]!]
+        }
+        const count = Math.min(4, partyCasters.length)
+        for (let i = 0; i < count; i++) {
+          const caster = partyCasters[i]!
+          void this.pushAction(
+            Date.now() + i,
+            15,
+            '青魔技能随机',
+            caster.id,
+            getRandomTestActionId(),
+          )
+        }
+        return
+      }
       void this.pushAction(
         Date.now(),
         15,
         '青魔技能随机',
-        this.focusTargetId,
-        actionId,
+        this.focusTargetId || this.playerId,
+        getRandomTestActionId(),
       )
       // this.pushAction(
       //   Date.now(),
@@ -234,6 +256,17 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
           : [],
       })
     },
+    testPartyMode(): void {
+      this.type = 'party'
+      this.castData = []
+      this.testParty(true)
+    },
+    testFocusMode(): void {
+      this.type = 'focus'
+      this.castData = []
+      this.testParty(false)
+      this.focusTargetId = this.playerId
+    },
     async pushAction(
       time: number,
       logLine: number,
@@ -242,9 +275,17 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
       abilityId: number,
       cast1000Ms?: number,
     ): Promise<void> {
+      const shouldDisplay = this.type === 'party'
+        ? (
+            (this.partyData.length === 0 && casterId === this.playerId)
+            || this.partyData.some(v => v.id === casterId)
+          )
+        : (
+            (this.partyData.length === 0 && casterId === this.playerId)
+            || (this.partyData.length > 0 && casterId === this.focusTargetId)
+          )
       if (
-        (this.partyData.length === 0 && casterId === this.playerId)
-        || (this.partyData.length > 0 && casterId === this.focusTargetId)
+        shouldDisplay
       ) {
         let abiId = abilityId
         let queryType: string = 'action'
@@ -270,7 +311,7 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
           expirationTime: Date.now() + this.config.duration * 1000,
           logLine,
           src: '',
-          class: '',
+          class: 'action action-category-0',
           key,
         }
         const cache = hostCache.get(abiId)
@@ -362,6 +403,8 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
       }
     },
     handleClickChangeTarget(targetId: string): void {
+      if (this.type === 'party')
+        return
       if (targetId === this.focusTargetId) {
         // 重复点击，重置为玩家本人。
         this.focusTargetId = this.playerId

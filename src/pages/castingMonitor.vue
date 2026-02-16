@@ -39,10 +39,10 @@ setInterval(() => {
         </el-main>
       </el-container>
       <footer v-if="dev">
-        <el-button @click="castingMonitorStore.testParty(true)">
+        <el-button @click="castingMonitorStore.testPartyMode()">
           {{ $t('castingMonitor.testParty') }}
         </el-button>
-        <el-button @click="castingMonitorStore.testParty(false)">
+        <el-button @click="castingMonitorStore.testFocusMode()">
           {{ $t('castingMonitor.testSolo') }}
         </el-button>
         <el-button @click="castingMonitorStore.testAction()">

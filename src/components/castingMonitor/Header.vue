@@ -27,7 +27,7 @@ function getJobStr(job: number): string {
 
 <template>
   <div
-    v-if="showHeader && castingMonitorStore.partyData.length > 1"
+    v-if="showHeader && castingMonitorStore.type === 'focus' && castingMonitorStore.partyData.length > 1"
     z-100
     flex="~ gap0 wrap"
     class="header-layout"

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useCastingMonitorStore } from '@/store/castingMonitor'
 import { handleImgError } from '@/utils/xivapi'
 
@@ -7,15 +8,40 @@ const castingMonitorStore = useCastingMonitorStore()
 const displayAA = Number(
   /^(?:1|true|yes|on|open|enabled)$/i.test(params.get('displayAA') ?? ''),
 )
+const isPartyMode = computed(() => castingMonitorStore.type === 'party')
+const visibleCastData = computed(() =>
+  castingMonitorStore.castData.filter(v => v.key),
+)
+const partyCasterRows = computed(() => {
+  const rows = new Map<string, number>()
+  for (const [index, member] of castingMonitorStore.partyDataFormatted.entries())
+    rows.set(member.id, index)
+  if (rows.size === 0 && castingMonitorStore.playerId)
+    rows.set(castingMonitorStore.playerId, 0)
+  return rows
+})
+const rowCount = computed(() => Math.max(partyCasterRows.value.size, 1))
+
+function getCasterRowIndex(casterId: string): number {
+  return partyCasterRows.value.get(casterId) ?? 0
+}
 </script>
 
 <template>
-  <div flex="~ nowrap" class="main" m-t-1 w-100vw>
+  <div
+    flex="~ nowrap"
+    class="main"
+    :class="{ 'party-mode': isPartyMode }"
+    :style="`--rowCount: ${rowCount};`"
+    m-t-1
+    w-100vw
+  >
     <div
-      v-for="(item) in castingMonitorStore.castData.filter(v => v.key)" :key="item.key"
+      v-for="(item) in visibleCastData"
+      :key="item.key"
       :data-casterId="item.casterId"
       :class="`images ${item.class} logLine${item.logLine} displayAA${displayAA}`"
-      :style="`--animeDuration: ${castingMonitorStore.config.duration}s;`"
+      :style="`--animeDuration: ${castingMonitorStore.config.duration}s; --rowIndex: ${isPartyMode ? getCasterRowIndex(item.casterId) : 0};`"
     >
       <img :src="item.src" class="action-icon" height="40" loading="lazy" @error="handleImgError">
       <img class="frame" loading="lazy">
@@ -41,6 +67,14 @@ const displayAA = Number(
   top: -4px;
   min-height: 60px;
   height: calc(100vh);
+  &.party-mode {
+    min-height: calc(var(--rowCount) * 52px);
+    height: calc(var(--rowCount) * 52px);
+  }
+  &.party-mode .images {
+    top: calc(var(--rowIndex) * 52px);
+    bottom: auto;
+  }
 
   .images {
     position: absolute;
