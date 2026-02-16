@@ -89,10 +89,5 @@ setInterval(() => {
 footer {
   position: fixed;
   bottom: 0%;
-  filter: opacity(0);
-  transition: filter 0.5s;
-  &:hover {
-    filter: none;
-  }
 }
 </style>
