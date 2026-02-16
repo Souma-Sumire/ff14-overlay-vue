@@ -63,6 +63,8 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
       config: {
         duration: Number(params.get('duration') || 15),
       },
+      simulateSlowImageLoad: false,
+      simulateSlowImageLoadDelayMs: 3000,
       // lastPush: Date.now(),
       type: params.get('type') === 'party' ? 'party' : 'focus',
     }
@@ -267,6 +269,9 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
       this.testParty(false)
       this.focusTargetId = this.playerId
     },
+    toggleSimulateSlowImageLoad(): void {
+      this.simulateSlowImageLoad = !this.simulateSlowImageLoad
+    },
     async pushAction(
       time: number,
       logLine: number,
@@ -314,18 +319,30 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
           class: 'action action-category-0',
           key,
         }
+        this.castData.push(cast)
+        const setCastSrc = (src: string) => {
+          const assignSrc = () => {
+            const target = this.castData.find(v => v.key === key)
+            if (target)
+              target.src = src
+          }
+          if (this.simulateSlowImageLoad) {
+            setTimeout(assignSrc, this.simulateSlowImageLoadDelayMs)
+            return
+          }
+          assignSrc()
+        }
         const cache = hostCache.get(abiId)
         if (cache) {
-          cast.src = `//${cache.Host}${cache.Icon}`
+          setCastSrc(`//${cache.Host}${cache.Icon}`)
         }
-        this.castData.push(cast)
         if (logLine === 14 && cast1000Ms) {
           setTimeout(() => {
             this.castData = this.castData.filter(v => v?.key !== key)
           }, cast1000Ms * 1000 - 500)
         }
         if (abilityName.startsWith('unknown_')) {
-          cast.src = `${site.first}/i/000000/000405.png`
+          setCastSrc(`${site.first}/i/000000/000405.png`)
           cast.class = 'action action-category-0'
         }
         else if (abiId < 100000) {
@@ -341,7 +358,7 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
             action.Icon = '/i/000000/000104.png'
           }
           if (!cache)
-            cast.src = getFullImgSrc(action?.Icon ?? '', itemIsHQ, action?.Host)
+            setCastSrc(getFullImgSrc(action?.Icon ?? '', itemIsHQ, action?.Host))
           if (queryType === 'action')
             cast.class = `action action-category-${action?.ActionCategoryTargetID}`
           else if (queryType === 'mount')

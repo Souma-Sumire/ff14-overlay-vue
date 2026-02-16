@@ -22,7 +22,8 @@
   "castingMonitor": {
     "testSolo": "Test Solo",
     "testParty": "Test Party",
-    "testAction": "Test Action"
+    "testAction": "Test Action",
+    "slowNetwork3s": "Simulate Slow Network (3s Icon Delay)"
   },
   "dragJob": {
     "freeMode": "Unlock Position"

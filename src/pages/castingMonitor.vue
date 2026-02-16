@@ -48,6 +48,12 @@ setInterval(() => {
         <el-button @click="castingMonitorStore.testAction()">
           {{ $t('castingMonitor.testAction') }}
         </el-button>
+        <el-button
+          :type="castingMonitorStore.simulateSlowImageLoad ? 'warning' : 'info'"
+          @click="castingMonitorStore.toggleSimulateSlowImageLoad()"
+        >
+          {{ castingMonitorStore.simulateSlowImageLoad ? '[ON] ' : '[OFF] ' }}{{ $t('castingMonitor.slowNetwork3s') }}
+        </el-button>
         <!-- <el-button @click="castingMonitorStore.testItem()">
         Item
       </el-button>

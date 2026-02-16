@@ -22,7 +22,8 @@
   "castingMonitor": {
     "testSolo": "测试单人",
     "testParty": "测试组队",
-    "testAction": "测试技能"
+    "testAction": "测试技能",
+    "slowNetwork3s": "慢网模拟(3秒后加载图标)"
   },
   "dragJob": {
     "freeMode": "解除限制"

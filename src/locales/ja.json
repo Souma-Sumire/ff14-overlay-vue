@@ -22,7 +22,8 @@
   "castingMonitor": {
     "testSolo": "ソロでテスト",
     "testParty": "パーティでテスト",
-    "testAction": "アクションをテスト"
+    "testAction": "アクションをテスト",
+    "slowNetwork3s": "低速回線を再現(3秒後にアイコン表示)"
   },
   "dragJob": {
     "freeMode": "配置ロック解除"
