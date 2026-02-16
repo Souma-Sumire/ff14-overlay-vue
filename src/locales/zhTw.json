@@ -207,7 +207,7 @@
       "food_police": "檢查食物剩餘時間。\n平時會簡易顯示，當滑鼠移入後顯示食物加成屬性。再次移入後顯示食物名稱。（僅在小隊人數>=6，且至少有50%人吃食物時才顯示）\nURL地址欄參數說明：\nscale: 縮放倍率，預設1\nlang: 語言，預設zhCn，可選en、ja、ko、zhTw、zhCn",
       "healing_timeline": "自訂的時間軸提醒，支援FFLogs一鍵複製時間軸。\n{0}（曾經的小齒輪）",
       "healing_timeline_link": "編輯時間軸請在瀏覽器中開啟這裡",
-      "casting_monitor_params": "URL地址欄參數說明：\nduration: 圖片從右劃到左的動畫持續時間（越短速度越快），預設15\ndisplayAA: 是否顯示自動攻擊，預設false\napi: 技能圖標圖床來源，國內建議cafemaker，外網則選擇xivapi，預設cafemaker\nshowHeader: 是否顯示懸浮窗頭部的隊員選擇器（用於切換監控目標），預設true\nsyncFocusWS: 是否同步監控目標至透過 WebSocket 連接的其他頁面（例如OBS），預設false\n\n建議在懸浮窗的[進階]設定，增加[最大影格速率（FPS）]，避免卡頓感。\n",
+      "casting_monitor_params": "URL地址欄參數說明：\nduration: 圖片從右劃到左的動畫持續時間（越短速度越快），預設15\ndisplayAA: 是否顯示自動攻擊，預設false\ntype: 監控模式，focus=僅顯示當前監控目標，party=顯示全隊成員（每人獨占一行），預設focus\napi: 技能圖標圖床來源，國內建議cafemaker，外網則選擇xivapi，預設cafemaker\nshowHeader: 是否顯示懸浮窗頭部的隊員選擇器（用於切換監控目標），預設true\nsyncFocusWS: 是否同步監控目標至透過 WebSocket 連接的其他頁面（例如OBS），預設false\n\n建議在懸浮窗的[進階]設定，增加[最大影格速率（FPS）]，避免卡頓感。\n",
       "instanced_area_info": "顯示你當前在幾線 / 新月島顯示唯一編號",
       "radar": "找人用。地圖為指北。\nPVP區域自動禁用。",
       "obs_auto_record2": "滿足某些條件時自動控制 OBS 錄屏，提供多種條件控制。",

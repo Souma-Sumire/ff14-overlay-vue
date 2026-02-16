@@ -207,7 +207,7 @@
       "food_police": "食事残り時間チェック。\n通常は簡易表示、マウスオーバーでバフ属性、再度マウスオーバーで食事名を表示。（PT人数6人以上、50%以上食事時に表示）\nURLパラメータ説明：\nscale: 拡大倍率、デフォルト1\nlang: 言語、デフォルトzhCn、en/ja/ko/zhTw/zhCn",
       "healing_timeline": "カスタムタイムライン通知、FFLogsのワンクリック軸コピペ対応。\n{0}（以前の歯車）",
       "healing_timeline_link": "タイムライン編集はこちらをブラウザで開いてください",
-      "casting_monitor_params": "URLパラメータ説明：\nduration: 右から左へのアニメーション時間（短いほど高速）、デフォルト15\ndisplayAA: AA表示の有無、デフォルトfalse\napi: スキルアイコン提供元、国内はcafemaker、海外はxivapi推奨、デフォルトcafemaker\nshowHeader: ヘッダーのメンバー選択（監視対象切替用）表示の有無、デフォルトtrue\nsyncFocusWS: WebSocket接続経由でOBS等に監視対象を同期するか、デフォルトfalse\n\nオーバーレイの[詳細]設定で[最大フレームレート（FPS）]を上げ、カクつきを抑えることを推奨します。\n",
+      "casting_monitor_params": "URLパラメータ説明：\nduration: 右から左へのアニメーション時間（短いほど高速）、デフォルト15\ndisplayAA: AA表示の有無、デフォルトfalse\ntype: 監視モード、focus=現在の監視対象のみ表示、party=パーティ全員を表示（1人1行）、デフォルトfocus\napi: スキルアイコン提供元、国内はcafemaker、海外はxivapi推奨、デフォルトcafemaker\nshowHeader: ヘッダーのメンバー選択（監視対象切替用）表示の有無、デフォルトtrue\nsyncFocusWS: WebSocket接続経由でOBS等に監視対象を同期するか、デフォルトfalse\n\nオーバーレイの[詳細]設定で[最大フレームレート（FPS）]を上げ、カクつきを抑えることを推奨します。\n",
       "instanced_area_info": "現在いるライン数/新月島は固有IDを表示",
       "radar": "プレイヤー探索用。マップは北向き。\nPVPエリアでは自動的に無効化。",
       "obs_auto_record2": "特定条件でOBS録画を自動制御、多様な制御オプションを提供。",

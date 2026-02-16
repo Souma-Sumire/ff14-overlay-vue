@@ -151,7 +151,7 @@ export function getRawMenuData(locale: string, t: (key: string, args?: (string |
     {
       title: 'startPages.menu.casting_monitor',
       type: '悬浮窗',
-      path: `castingMonitor?duration=15&displayAA=false&api=cafemaker&showHeader=true&syncFocusWS=false&lang=${locale}`,
+      path: `castingMonitor?duration=15&displayAA=false&type=focus&api=cafemaker&showHeader=true&syncFocusWS=false&lang=${locale}`,
       src: 'castingMonitor.webp',
       comment: 'startPages.comment.casting_monitor_params',
     },
