@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useCastingMonitorStore } from '@/store/castingMonitor'
+import Util from '@/utils/util'
 import { handleImgError } from '@/utils/xivapi'
 
 const params = new URLSearchParams(window.location.href.split('?')[1])
@@ -25,6 +26,12 @@ const rowCount = computed(() => Math.max(partyCasterRows.value.size, 1))
 function getCasterRowIndex(casterId: string): number {
   return partyCasterRows.value.get(casterId) ?? 0
 }
+
+function getClassjobIconSrc(jobEnum: number): string {
+  const job = Util.jobEnumToJob(jobEnum)
+  const fullName = Util.jobToFullName(job)
+  return `https://souma.diemoe.net/resources/img/cj2/${fullName.en}.png`
+}
 </script>
 
 <template>
@@ -36,6 +43,21 @@ function getCasterRowIndex(casterId: string): number {
     m-t-1
     w-100vw
   >
+    <div v-if="isPartyMode" class="party-row-icons">
+      <div
+        v-for="(member, index) in castingMonitorStore.partyDataFormatted"
+        :key="member.id"
+        class="party-row-icon"
+        :style="`--rowIndex: ${index};`"
+      >
+        <img
+          :src="getClassjobIconSrc(member.job)"
+          class="party-job-icon"
+          loading="lazy"
+          @error="handleImgError"
+        >
+      </div>
+    </div>
     <div
       v-for="(item) in visibleCastData"
       :key="item.key"
@@ -68,12 +90,40 @@ function getCasterRowIndex(casterId: string): number {
   min-height: 60px;
   height: calc(100vh);
   &.party-mode {
-    min-height: calc(var(--rowCount) * 52px);
-    height: calc(var(--rowCount) * 52px);
+    top: 0;
+    margin-top: 16px;
+    min-height: calc(var(--rowCount) * 60px);
+    height: calc(var(--rowCount) * 60px);
   }
   &.party-mode .images {
-    top: calc(var(--rowIndex) * 52px);
+    top: calc(var(--rowIndex) * 60px);
     bottom: auto;
+  }
+
+  .party-row-icons {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 48px;
+    pointer-events: none;
+    z-index: 6;
+  }
+
+  .party-row-icon {
+    position: absolute;
+    top: calc(var(--rowIndex) * 60px);
+    left: 0;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .party-job-icon {
+      width: 38px;
+      height: 38px;
+      filter: drop-shadow(0 0 1px rgb(0 0 0 / 55%));
+    }
   }
 
   .images {
