@@ -53,6 +53,8 @@ const emit = defineEmits<{
 
 const TARGET_ALL_VALUE = '__all__'
 
+const AUTO_PLAN_EPSILON = 0.001
+
 const EXCLUSIVE_GROUP_BY_SKILL_ID = new Map<number, string>([
   [7549, 'exclusive-feint'], // 牵制
   [7560, 'exclusive-addle'], // 昏乱
@@ -1572,8 +1574,6 @@ function getSimulatedDamage(row: MitigationRow) {
   return Math.max(0, simulated)
 }
 
-const AUTO_PLAN_EPSILON = 0.001
-
 function getAutoArrangeStrategyLabel(strategy: AutoArrangeStrategy) {
   if (strategy === 'tb-priority')
     return '死刑优先'
@@ -1770,8 +1770,9 @@ function optimizeAutoArrangedActionOffsets(params: {
           candidateTimestamp,
           scheduledWithoutCurrent,
           scheduledExclusiveGroupActions,
-        ))
+        )) {
           return false
+        }
         const candidateWeight = computeAutoUseWeightForReleaseTimestamp(
           rows,
           candidateTimestamp,
@@ -2037,88 +2038,6 @@ function hasExclusiveGroupOverlap(
     return action.timestamp < endTimestamp - AUTO_PLAN_EPSILON
       && startTimestamp < actionEnd - AUTO_PLAN_EPSILON
   })
-}
-
-function computeAutoUseWeightForFill(
-  rows: MitigationRow[],
-  startRowIndex: number,
-  skillId: number,
-  duration: number,
-  baselineMultipliers: number[],
-  scheduledSkillActions: AutoScheduledAction[],
-  strategy: AutoArrangeStrategy,
-  cache?: AutoArrangeRowComputationCache,
-) {
-  const startRow = rows[startRowIndex]
-  if (!startRow)
-    return { gain: 0, score: 0 }
-  const coverage = getAutoArrangeCoverageScope(skillId)
-  if (!coverage)
-    return { gain: 0, score: 0 }
-  const startTimestamp = startRow.timestamp
-  const endTimestamp = startTimestamp + duration
-  const hasDamageTakenMultiplier = hasSkillDamageTakenMultiplier(skillId)
-  let totalGain = 0
-  let totalScore = 0
-
-  rows.forEach((row, rowIndex) => {
-    const isStartRow = rowIndex === startRowIndex
-    const isWithinDuration = duration > AUTO_PLAN_EPSILON
-      && row.timestamp >= startTimestamp
-      && row.timestamp < endTimestamp
-    if (!isStartRow && !isWithinDuration)
-      return
-    if (isSkillAlreadyActiveAtRow(scheduledSkillActions, rowIndex, row.timestamp))
-      return
-
-    const isExtremeFailure = cache?.extremeFailureMask?.[rowIndex] ?? isExtremeFailureDamageRow(row)
-    if (isExtremeFailure)
-      return
-    const personalDamage = coverage === 'self'
-      ? (cache?.personalDamageByRow?.[rowIndex] ?? 0)
-      : 0
-
-    if (!hasDamageTakenMultiplier) {
-      if (coverage === 'self' && personalDamage <= AUTO_PLAN_EPSILON)
-        return
-      const gain = 1
-      totalGain += gain
-      let score = gain
-      if (strategy === 'tb-priority')
-        score *= getRowPriorityWeight(row, strategy)
-      totalScore += score
-      return
-    }
-
-    const skillMultiplier = cache?.skillMultiplierByRow?.[rowIndex] ?? getSkillMultiplier(skillId, row.damageType)
-    if (skillMultiplier >= 1)
-      return
-
-    const baseDamage = coverage === 'self'
-      ? Math.max(0, personalDamage)
-      : Math.max(0, Number(row.rawDamage || 0))
-    const targetCount = coverage === 'party' ? 8 : 1
-    if (!Number.isFinite(baseDamage) || baseDamage <= 0)
-      return
-    const baselineMultiplier = baselineMultipliers[rowIndex] ?? 1
-    const baselineDamage = baseDamage * targetCount * baselineMultiplier
-    const gain = baselineDamage * (1 - skillMultiplier)
-    if (gain <= 0)
-      return
-    totalGain += gain
-
-    let score = gain
-    if (strategy === 'tb-priority') {
-      score *= getRowPriorityWeight(row, strategy)
-    }
-    else if (strategy === 'peak-smoothing') {
-      // Maximize squared-damage drop to prioritize high peak rows.
-      score = baselineDamage * baselineDamage * (1 - skillMultiplier * skillMultiplier)
-    }
-    totalScore += score
-  })
-
-  return { gain: totalGain, score: totalScore }
 }
 
 function computeAutoUseWeightForReleaseTimestamp(
@@ -2442,8 +2361,9 @@ function runAutoArrangeForExclusiveGroup(params: {
         if (
           options.minTimestamp !== undefined
           && releaseTimestamp < options.minTimestamp - AUTO_PLAN_EPSILON
-        )
+        ) {
           continue
+        }
         if (isSkillAlreadyActiveAtRow(scheduledSkillActions, rowIndex, row.timestamp))
           continue
         if (!validateActionPlacementAgainstActions(currentActions, unit.col, unit.skillId, releaseTimestamp, scheduledActions, scheduledExclusiveGroupActions))

@@ -341,8 +341,9 @@ export function useMitigationSimulator(
             const elapsed = row.timestamp - startUse.timestamp
             const activeDuration = Math.max(0, startUse.effectiveDuration)
             const inActiveWindow = elapsed >= -EPSILON && elapsed < activeDuration
+            const hasDuration = Number(startUse.duration || 0) > 0
             showDot = true
-            showDotMuted = !inActiveWindow
+            showDotMuted = hasDuration ? !inActiveWindow : false
             currentMatchingUse = startUse
             if (Math.abs(elapsed) <= EPSILON) {
               status = 'active-start'
