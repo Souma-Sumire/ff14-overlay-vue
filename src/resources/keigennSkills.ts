@@ -1,5 +1,4 @@
 import type { KeigennSkill, Scope } from '@/types/keigennRecord2'
-import { getJobResourceActionCost } from './jobResourceActionCost'
 import { raidbuffs } from './raidbuffs'
 
 // 目标是本人时显示
@@ -9,9 +8,7 @@ const OTHER: Scope = 'other'
 // 全队显示
 const PARTY: Scope = 'party'
 
-type KeigennSkillInput = Omit<KeigennSkill, 'showResource' | 'resourceCost'>
-
-const rawKeigennSkills: KeigennSkillInput[] = [
+const keigennSkills: KeigennSkill[] = [
   ...raidbuffs
     .filter(v => v.line === 1 || v.line === 2)
     .map(({ tts, duration, key, line, ...rest }) => ({
@@ -659,46 +656,5 @@ const rawKeigennSkills: KeigennSkillInput[] = [
     scope: PARTY,
   },
 ] as const
-
-function extractActionIdsFromDynamicId(idExpr: string): number[] {
-  const ids = Array.from(idExpr.matchAll(/[?:]\s*(\d+)/g))
-    .map((match) => {
-      const value = Number(match[1])
-      return Number.isFinite(value) && value > 0 ? value : 0
-    })
-    .filter(v => v > 0)
-
-  if (ids.length > 0)
-    return ids
-
-  const direct = Number(idExpr.trim())
-  if (Number.isFinite(direct) && direct > 0)
-    return [direct]
-
-  return []
-}
-
-function resolveSkillResourceCostById(id: KeigennSkillInput['id']) {
-  const ids = typeof id === 'number' ? [id] : extractActionIdsFromDynamicId(id)
-
-  for (const id of ids) {
-    const cost = getJobResourceActionCost(id)
-    if (cost !== undefined)
-      return cost
-  }
-
-  return undefined
-}
-
-const keigennSkills: KeigennSkill[] = rawKeigennSkills.map((skill) => {
-  const cost = resolveSkillResourceCostById(skill.id)
-  if (cost === undefined)
-    return skill
-  return {
-    ...skill,
-    showResource: true,
-    resourceCost: cost,
-  }
-})
 
 export { keigennSkills }

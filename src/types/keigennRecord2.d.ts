@@ -11,8 +11,6 @@ export interface KeigennSkill {
   minLevel: number
   maxCharges?: DynamicValue
   scope: Scope
-  showResource?: boolean
-  resourceCost?: number
   overrideIconId?: number
   duration?: DynamicValue
 }
@@ -76,7 +74,6 @@ export interface KeySkillSnapshot {
   scope: Scope
   jobResource?: number
   resourceCost?: number
-  showResource?: boolean
   extraText?: string
 }
 

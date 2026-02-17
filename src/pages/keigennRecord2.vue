@@ -20,6 +20,7 @@ import { useIndexedDB } from '@/composables/useIndexedDB'
 import { getCactbotLocaleMessage } from '@/composables/useLang'
 import { JobResourceManager } from '@/modules/jobResourceTracker'
 import { getActionChinese } from '@/resources/actionChinese'
+import { getJobResourceActionCost } from '@/resources/jobResourceActionCost'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { keigennSkills } from '@/resources/keigennSkills'
 import { completeIcon, stackUrl } from '@/resources/status'
@@ -1103,8 +1104,7 @@ function getKeySkillSnapshot(
               .simple2!,
             maxCharges: parseDynamicValue(skill.maxCharges || 1, level),
             scope: skill.scope,
-            showResource: skill.showResource,
-            resourceCost: skill.resourceCost,
+            resourceCost: getJobResourceActionCost(id),
           }
         })
     })
@@ -1133,7 +1133,9 @@ function getKeySkillSnapshot(
       )
       const recastLeft = Math.ceil(recastLeftMs / 1000)
 
-      const jobResource = item.showResource ? resourceManager.getResource(item.ownerJob, item.ownerId) : undefined
+      const jobResource = item.resourceCost === undefined
+        ? undefined
+        : resourceManager.getResource(item.ownerJob, item.ownerId)
       const isResourceReady = item.resourceCost === undefined
         ? true
         : resourceManager.isResourceReady(item.ownerJob, item.ownerId, item.id, item.resourceCost)
