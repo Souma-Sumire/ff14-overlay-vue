@@ -9,38 +9,23 @@ import { WhiteMageTracker } from './jobs/whiteMage'
 interface JobResourceTrackerDefinition {
   job: number
   tracker: new () => ResourceTracker
-  resourceCostName?: string
 }
 
 const JOB_RESOURCE_TRACKER_DEFINITIONS: JobResourceTrackerDefinition[] = [
-  { job: 28, tracker: ScholarTracker, resourceCostName: '以太超流' }, // SCH
-  { job: 19, tracker: PaladinTracker, resourceCostName: '忠义量谱' }, // PLD
-  { job: 40, tracker: SageTracker, resourceCostName: '蛇胆' }, // SGE
-  { job: 32, tracker: DarkKnightTracker, resourceCostName: '魔力(MP)' }, // DRK
+  { job: 28, tracker: ScholarTracker }, // SCH
+  { job: 19, tracker: PaladinTracker }, // PLD
+  { job: 40, tracker: SageTracker }, // SGE
+  { job: 32, tracker: DarkKnightTracker }, // DRK
   { job: 42, tracker: PictomancerTracker }, // PCT
-  { job: 24, tracker: WhiteMageTracker, resourceCostName: '治疗百合' }, // WHM
+  { job: 24, tracker: WhiteMageTracker }, // WHM
 ]
 
 export const JOB_RESOURCE_TRACKER_SUPPORTED_JOBS = new Set<number>(
   JOB_RESOURCE_TRACKER_DEFINITIONS.map(item => item.job),
 )
 
-export const JOB_RESOURCE_COST_NAME_BY_JOB: Record<number, string> = Object.fromEntries(
-  JOB_RESOURCE_TRACKER_DEFINITIONS
-    .filter((item): item is JobResourceTrackerDefinition & { resourceCostName: string } => !!item.resourceCostName)
-    .map(item => [item.job, item.resourceCostName]),
-) as Record<number, string>
-
 export function hasJobResourceTracker(job: number) {
   return JOB_RESOURCE_TRACKER_SUPPORTED_JOBS.has(job)
-}
-
-export function hasJobResourceCostTracker(job: number) {
-  return job in JOB_RESOURCE_COST_NAME_BY_JOB
-}
-
-export function getJobResourceCostName(job: number) {
-  return JOB_RESOURCE_COST_NAME_BY_JOB[job] ?? ''
 }
 
 /**
@@ -81,6 +66,13 @@ export class JobResourceManager {
   public reset() {
     for (const tracker of this.activeTrackers.values()) {
       tracker.reset()
+    }
+  }
+
+  /** 将所有活跃 Tracker 的资源填满（用于 debug） */
+  public fill() {
+    for (const tracker of this.activeTrackers.values()) {
+      tracker.fill?.()
     }
   }
 
