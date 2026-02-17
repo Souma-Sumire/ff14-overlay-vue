@@ -4,6 +4,7 @@ import { PaladinTracker } from './jobs/paladin'
 import { PictomancerTracker } from './jobs/pictomancer'
 import { SageTracker } from './jobs/sage'
 import { ScholarTracker } from './jobs/scholar'
+import { WhiteMageTracker } from './jobs/whiteMage'
 
 interface JobResourceTrackerDefinition {
   job: number
@@ -17,6 +18,7 @@ const JOB_RESOURCE_TRACKER_DEFINITIONS: JobResourceTrackerDefinition[] = [
   { job: 40, tracker: SageTracker, resourceCostName: '蛇胆' }, // SGE
   { job: 32, tracker: DarkKnightTracker, resourceCostName: '魔力(MP)' }, // DRK
   { job: 42, tracker: PictomancerTracker }, // PCT
+  { job: 24, tracker: WhiteMageTracker, resourceCostName: '治疗百合' }, // WHM
 ]
 
 export const JOB_RESOURCE_TRACKER_SUPPORTED_JOBS = new Set<number>(
