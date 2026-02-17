@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Search } from '@element-plus/icons-vue'
+import { ArrowLeft, Search } from '@element-plus/icons-vue'
 
 export interface ActionPickerGridItem {
   id: number
@@ -28,6 +28,9 @@ const props = withDefaults(defineProps<{
   searchPlaceholder?: string
   searchDisabled?: boolean
   targetLabel?: string
+  showBack?: boolean
+  backDisabled?: boolean
+  backText?: string
 }>(), {
   title: '选择技能',
   width: '860px',
@@ -42,10 +45,14 @@ const props = withDefaults(defineProps<{
   searchPlaceholder: '输入技能名或ID',
   searchDisabled: false,
   targetLabel: '',
+  showBack: true,
+  backDisabled: false,
+  backText: '返回',
 })
 
 const emit = defineEmits<{
   pick: [item: ActionPickerGridItem]
+  back: []
 }>()
 
 const visible = defineModel<boolean>('visible', { default: false })
@@ -68,6 +75,15 @@ function isCurrent(item: ActionPickerGridItem) {
   return props.currentActionId !== null && props.currentActionId === item.id
 }
 
+function getStatusText(item: ActionPickerGridItem) {
+  const parts: string[] = []
+  if (isCurrent(item))
+    parts.push('当前')
+  if (item.disabledReason)
+    parts.push(item.disabledReason)
+  return parts.join(' / ')
+}
+
 function resolveItemAttrs(item: ActionPickerGridItem) {
   if (!item.attrs)
     return undefined
@@ -75,18 +91,40 @@ function resolveItemAttrs(item: ActionPickerGridItem) {
     Object.entries(item.attrs).map(([key, value]) => [key, String(value)]),
   )
 }
+
+function handleBack() {
+  if (props.backDisabled)
+    return
+  visible.value = false
+  emit('back')
+}
 </script>
 
 <template>
   <el-dialog
     v-model="visible"
-    :title="props.title"
     :width="props.width"
     class="action-picker-dialog"
     :teleported="props.teleported"
     :destroy-on-close="props.destroyOnClose"
     :lock-scroll="props.lockScroll"
+    :show-close="false"
   >
+    <template #header>
+      <div class="picker-dialog-header">
+        <el-button
+          v-if="props.showBack"
+          class="picker-dialog-back"
+          :icon="ArrowLeft"
+          :disabled="props.backDisabled"
+          text
+          @click="handleBack"
+        >
+          {{ props.backText }}
+        </el-button>
+      </div>
+    </template>
+
     <div v-if="props.targetLabel" class="action-picker-target">
       {{ props.targetLabel }}
     </div>
@@ -122,7 +160,10 @@ function resolveItemAttrs(item: ActionPickerGridItem) {
             @click="emit('pick', item)"
           >
             <div class="picker-cell-name">
-              {{ item.name }} #{{ item.id }}
+              {{ item.name }}
+            </div>
+            <div class="picker-cell-id">
+              #{{ item.id }}
             </div>
             <img
               v-if="item.iconSrc"
@@ -136,11 +177,8 @@ function resolveItemAttrs(item: ActionPickerGridItem) {
             <div class="picker-cell-meta">
               {{ formatRecast1000ms(item.recast1000ms) }}
             </div>
-            <div v-if="item.disabledReason" class="picker-cell-flag">
-              {{ item.disabledReason }}
-            </div>
-            <div v-if="isCurrent(item)" class="picker-cell-current" :class="{ 'has-flag': !!item.disabledReason }">
-              当前
+            <div v-if="getStatusText(item)" class="picker-cell-hover-tip">
+              {{ getStatusText(item) }}
             </div>
           </button>
         </div>
@@ -162,7 +200,10 @@ function resolveItemAttrs(item: ActionPickerGridItem) {
             @click="emit('pick', item)"
           >
             <div class="picker-cell-name">
-              {{ item.name }} #{{ item.id }}
+              {{ item.name }}
+            </div>
+            <div class="picker-cell-id">
+              #{{ item.id }}
             </div>
             <img
               v-if="item.iconSrc"
@@ -176,11 +217,8 @@ function resolveItemAttrs(item: ActionPickerGridItem) {
             <div class="picker-cell-meta">
               {{ formatRecast1000ms(item.recast1000ms) }}
             </div>
-            <div v-if="item.disabledReason" class="picker-cell-flag">
-              {{ item.disabledReason }}
-            </div>
-            <div v-if="isCurrent(item)" class="picker-cell-current" :class="{ 'has-flag': !!item.disabledReason }">
-              当前
+            <div v-if="getStatusText(item)" class="picker-cell-hover-tip">
+              {{ getStatusText(item) }}
             </div>
           </button>
         </div>
@@ -194,6 +232,23 @@ function resolveItemAttrs(item: ActionPickerGridItem) {
 </template>
 
 <style scoped lang="scss">
+.action-picker-dialog :deep(.el-dialog__header) {
+  padding: 8px 10px 0;
+}
+
+.picker-dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.picker-dialog-back {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 6px;
+}
+
 .action-picker-target {
   margin-bottom: 8px;
   padding: 4px 6px;
@@ -201,7 +256,7 @@ function resolveItemAttrs(item: ActionPickerGridItem) {
   border: 1px solid var(--el-border-color);
   background: var(--el-fill-color-light);
   color: var(--el-text-color-secondary);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .action-picker-dialog :deep(.el-dialog__body) {
@@ -243,7 +298,7 @@ function resolveItemAttrs(item: ActionPickerGridItem) {
 }
 
 .picker-group-title {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--el-text-color-secondary);
   line-height: 1.2;
@@ -263,7 +318,7 @@ function resolveItemAttrs(item: ActionPickerGridItem) {
 
 .picker-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   gap: 4px;
 }
 
@@ -273,13 +328,13 @@ function resolveItemAttrs(item: ActionPickerGridItem) {
   border-radius: 2px;
   background: var(--el-fill-color-light);
   color: var(--el-text-color-primary);
-  min-height: 68px;
-  padding: 2px 2px 1px;
+  min-height: 56px;
+  padding: 2px 2px 2px;
   display: grid;
-  grid-template-rows: auto auto auto;
+  grid-template-rows: auto auto auto auto;
   justify-items: center;
   align-content: center;
-  row-gap: 1px;
+  row-gap: 0;
   cursor: pointer;
 }
 
@@ -297,6 +352,7 @@ function resolveItemAttrs(item: ActionPickerGridItem) {
 }
 
 .picker-cell.disabled .picker-cell-name,
+.picker-cell.disabled .picker-cell-id,
 .picker-cell.disabled .picker-cell-meta,
 .picker-cell.disabled .picker-icon,
 .picker-cell.disabled .picker-icon-empty {
@@ -310,64 +366,76 @@ function resolveItemAttrs(item: ActionPickerGridItem) {
 
 .picker-cell-name {
   width: 100%;
-  font-size: 9px;
-  line-height: 1.2;
-  min-height: 12px;
+  font-size: 10px;
+  line-height: 1.15;
+  min-height: 13px;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--el-text-color-secondary);
+}
+
+.picker-cell-id {
+  width: 100%;
+  min-height: 12px;
+  font-size: 10px;
+  line-height: 1.1;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--el-text-color-secondary);
 }
 
 .picker-icon {
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
   border-radius: 3px;
 }
 
 .picker-icon-empty {
   border: 1px dashed var(--el-border-color);
   color: var(--el-text-color-secondary);
-  font-size: 9px;
+  font-size: 12px;
   display: grid;
   place-items: center;
 }
 
 .picker-cell-meta {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--el-text-color-secondary);
   white-space: nowrap;
   line-height: 1.1;
   padding: 0;
-  margin: 4px 0 0;
+  margin: 1px 0 0;
 }
 
-.picker-cell-flag {
+.picker-cell-hover-tip {
   position: absolute;
-  left: 2px;
-  top: 2px;
-  padding: 0 2px;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
   border-radius: 2px;
-  font-size: 8px;
-  line-height: 1.3;
-  color: var(--el-color-danger);
-  background: var(--el-color-danger-light-9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4px;
+  font-size: 12px;
+  line-height: 1.2;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.62);
+  text-align: center;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  pointer-events: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
-.picker-cell-current {
-  position: absolute;
-  left: 2px;
-  top: 2px;
-  padding: 0 2px;
-  border-radius: 2px;
-  font-size: 8px;
-  line-height: 1.3;
-  color: var(--el-color-primary);
-  background: var(--el-color-primary-light-9);
-}
-
-.picker-cell-current.has-flag {
-  top: 14px;
+.picker-cell:hover .picker-cell-hover-tip,
+.picker-cell:focus-visible .picker-cell-hover-tip {
+  opacity: 1;
 }
 
 .picker-empty {
@@ -375,6 +443,6 @@ function resolveItemAttrs(item: ActionPickerGridItem) {
   display: grid;
   place-items: center;
   color: var(--el-text-color-secondary);
-  font-size: 10px;
+  font-size: 12px;
 }
 </style>
