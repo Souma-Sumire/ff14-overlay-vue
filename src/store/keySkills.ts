@@ -38,7 +38,7 @@ interface KeySkillEntry {
   job?: number[]
   recast1000ms?: DynamicValue
   duration?: DynamicValue
-  minLevel?: DynamicValue
+  minLevel?: number
 }
 
 interface KeySkillStorageData {
@@ -140,6 +140,13 @@ function normalizeEntryDynamicValue(value: unknown): DynamicValue | undefined {
   return undefined
 }
 
+function normalizeEntryMinLevel(value: unknown): number | undefined {
+  const numeric = Number(value)
+  if (!Number.isFinite(numeric))
+    return undefined
+  return normalizeInt(numeric, 1, 1)
+}
+
 function normalizeEntryJobs(value: unknown): number[] | undefined {
   if (!Array.isArray(value))
     return undefined
@@ -170,7 +177,7 @@ function normalizeStorageSkills(raw: unknown): KeySkillEntry[] {
       job: normalizeEntryJobs(row.job),
       recast1000ms: normalizeEntryDynamicValue(row.recast1000ms),
       duration: normalizeEntryDynamicValue(row.duration),
-      minLevel: normalizeEntryDynamicValue(row.minLevel),
+      minLevel: normalizeEntryMinLevel(row.minLevel),
     })
   })
   return normalized
@@ -428,7 +435,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
           0,
         )
         const resolvedMinLevel = normalizeInt(
-          resolveTeamWatchDynamicValue(skill.minLevel ?? meta.minLevel, level, meta.minLevel),
+          Number(skill.minLevel ?? meta.minLevel),
           meta.minLevel,
           1,
         )
