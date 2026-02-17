@@ -308,88 +308,88 @@ const useKeySkillStore = defineStore('keySkill', () => {
     const nextTask = (async () => {
       pendingAutoMeta.add(id)
       try {
-      const response = await parseAction('action', id, [
-        'ID',
-        'Name',
-        'Icon',
-        'Recast100ms',
-        'ClassJobLevel',
-        'ClassJobTargetID',
-        'ActionCategoryTargetID',
-        'IsRoleAction',
-      ])
-      const recast100ms = Number(response.Recast100ms ?? 0)
-      const apiRecast1000ms = Number.isFinite(recast100ms) && recast100ms > 0 ? recast100ms / 10 : 0
-      const classJobLevel = normalizeInt(Number(response.ClassJobLevel ?? 1), 1, 1)
-      const classJobTargetId = normalizeInt(Number(response.ClassJobTargetID ?? 0), 0, 0)
-      const actionCategoryTargetId = normalizeInt(Number(response.ActionCategoryTargetID ?? 0), 0, 0)
-      const isRoleAction = Number(response.IsRoleAction ?? 0) > 0
-      const jobs = (globalMeta?.job?.length ?? 0) > 0
-        ? uniqueInts(globalMeta!.job)
-        : resolveJobsFromApi(classJobTargetId, actionCategoryTargetId, isRoleAction)
-      const resolvedId = normalizeInt(
-        resolveTeamWatchDynamicValue(globalMeta?.id ?? id, 100, id),
-        id,
-        1,
-      )
-      const resolvedRecast1000ms = normalizeInt(
-        resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? apiRecast1000ms, 100, apiRecast1000ms),
-        apiRecast1000ms,
-        0,
-      )
-      const resolvedDuration = normalizeInt(
-        resolveTeamWatchDynamicValue(globalMeta?.duration ?? 0, 100, 0),
-        0,
-        0,
-      )
-      const resolvedMinLevel = normalizeInt(Number(globalMeta?.minLevel ?? (isRoleAction ? 1 : classJobLevel)), 1, 1)
-      const iconSrcById = idToSrc(id)
-      const iconSrc = iconSrcById
-        || (typeof response.Icon === 'string' && response.Icon
-          ? getIconSrcByPath(response.Icon)
-          : '')
+        const response = await parseAction('action', id, [
+          'ID',
+          'Name',
+          'Icon',
+          'Recast100ms',
+          'ClassJobLevel',
+          'ClassJobTargetID',
+          'ActionCategoryTargetID',
+          'IsRoleAction',
+        ])
+        const recast100ms = Number(response.Recast100ms ?? 0)
+        const apiRecast1000ms = Number.isFinite(recast100ms) && recast100ms > 0 ? recast100ms / 10 : 0
+        const classJobLevel = normalizeInt(Number(response.ClassJobLevel ?? 1), 1, 1)
+        const classJobTargetId = normalizeInt(Number(response.ClassJobTargetID ?? 0), 0, 0)
+        const actionCategoryTargetId = normalizeInt(Number(response.ActionCategoryTargetID ?? 0), 0, 0)
+        const isRoleAction = Number(response.IsRoleAction ?? 0) > 0
+        const jobs = (globalMeta?.job?.length ?? 0) > 0
+          ? uniqueInts(globalMeta!.job)
+          : resolveJobsFromApi(classJobTargetId, actionCategoryTargetId, isRoleAction)
+        const resolvedId = normalizeInt(
+          resolveTeamWatchDynamicValue(globalMeta?.id ?? id, 100, id),
+          id,
+          1,
+        )
+        const resolvedRecast1000ms = normalizeInt(
+          resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? apiRecast1000ms, 100, apiRecast1000ms),
+          apiRecast1000ms,
+          0,
+        )
+        const resolvedDuration = normalizeInt(
+          resolveTeamWatchDynamicValue(globalMeta?.duration ?? 0, 100, 0),
+          0,
+          0,
+        )
+        const resolvedMinLevel = normalizeInt(Number(globalMeta?.minLevel ?? (isRoleAction ? 1 : classJobLevel)), 1, 1)
+        const iconSrcById = idToSrc(id)
+        const iconSrc = iconSrcById
+          || (typeof response.Icon === 'string' && response.Icon
+            ? getIconSrcByPath(response.Icon)
+            : '')
 
-      saveAutoMetaToCache(id, {
-        id: resolvedId,
-        name: getActionChinese(resolvedId) || getActionChinese(id) || response.Name || `#${resolvedId}`,
-        src: iconSrc,
-        duration: resolvedDuration,
-        recast1000ms: resolvedRecast1000ms,
-        minLevel: resolvedMinLevel,
-        jobs,
-      })
-    }
-    catch (error) {
-      console.warn('[keySkill] ensureActionAutoMeta failed:', id, error)
-      const resolvedId = normalizeInt(
-        resolveTeamWatchDynamicValue(globalMeta?.id ?? id, 100, id),
-        id,
-        1,
-      )
-      const resolvedRecast1000ms = normalizeInt(
-        resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? 0, 100, 0),
-        0,
-        0,
-      )
-      const resolvedDuration = normalizeInt(
-        resolveTeamWatchDynamicValue(globalMeta?.duration ?? 0, 100, 0),
-        0,
-        0,
-      )
-      saveAutoMetaToCache(id, {
-        id: resolvedId,
-        name: getActionChinese(resolvedId) || `#${resolvedId}`,
-        src: idToSrc(resolvedId),
-        duration: resolvedDuration,
-        recast1000ms: resolvedRecast1000ms,
-        minLevel: normalizeInt(Number(globalMeta?.minLevel ?? 1), 1, 1),
-        jobs: uniqueInts(globalMeta?.job ?? []),
-      })
-    }
-    finally {
-      pendingAutoMeta.delete(id)
-      pendingAutoMetaTasks.delete(id)
-    }
+        saveAutoMetaToCache(id, {
+          id: resolvedId,
+          name: getActionChinese(resolvedId) || getActionChinese(id) || response.Name || `#${resolvedId}`,
+          src: iconSrc,
+          duration: resolvedDuration,
+          recast1000ms: resolvedRecast1000ms,
+          minLevel: resolvedMinLevel,
+          jobs,
+        })
+      }
+      catch (error) {
+        console.warn('[keySkill] ensureActionAutoMeta failed:', id, error)
+        const resolvedId = normalizeInt(
+          resolveTeamWatchDynamicValue(globalMeta?.id ?? id, 100, id),
+          id,
+          1,
+        )
+        const resolvedRecast1000ms = normalizeInt(
+          resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? 0, 100, 0),
+          0,
+          0,
+        )
+        const resolvedDuration = normalizeInt(
+          resolveTeamWatchDynamicValue(globalMeta?.duration ?? 0, 100, 0),
+          0,
+          0,
+        )
+        saveAutoMetaToCache(id, {
+          id: resolvedId,
+          name: getActionChinese(resolvedId) || `#${resolvedId}`,
+          src: idToSrc(resolvedId),
+          duration: resolvedDuration,
+          recast1000ms: resolvedRecast1000ms,
+          minLevel: normalizeInt(Number(globalMeta?.minLevel ?? 1), 1, 1),
+          jobs: uniqueInts(globalMeta?.job ?? []),
+        })
+      }
+      finally {
+        pendingAutoMeta.delete(id)
+        pendingAutoMetaTasks.delete(id)
+      }
     })()
 
     pendingAutoMetaTasks.set(id, nextTask)
