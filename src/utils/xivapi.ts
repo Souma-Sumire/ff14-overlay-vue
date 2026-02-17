@@ -1,3 +1,4 @@
+import { useStorage } from '@vueuse/core'
 import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/roleActionCategoryByJob'
 import { completeIcon } from '@/resources/status'
 
@@ -10,7 +11,31 @@ const SITE_HOST = {
 } as const
 type SiteName = keyof typeof SITE_HOST
 
-let primarySite: SiteName = apiParam === 'xivapi' ? 'xivapi' : 'cafe'
+const PRIMARY_SITE_STORAGE_KEY = 'xivapi-primary-site'
+const primarySiteStorage = useStorage<string>(PRIMARY_SITE_STORAGE_KEY, 'cafe')
+
+function isSiteName(value: unknown): value is SiteName {
+  return typeof value === 'string' && value in SITE_HOST
+}
+
+function readPrimarySiteFromStorage(): SiteName {
+  if (isSiteName(primarySiteStorage.value))
+    return primarySiteStorage.value
+  primarySiteStorage.value = 'cafe'
+  return 'cafe'
+}
+
+function persistPrimarySite(site: SiteName): void {
+  primarySiteStorage.value = site
+}
+
+function resolveInitialPrimarySite(): SiteName {
+  if (isSiteName(apiParam))
+    return apiParam
+  return readPrimarySiteFromStorage()
+}
+
+let primarySite: SiteName = resolveInitialPrimarySite()
 
 const ICON_REGEX = /(\d{6})\/(\d{6})\.png$/
 const DEFAULT_ICON = '/i/000000/000405.png'
@@ -42,6 +67,7 @@ function buildUrl(host: string): string {
 function switchPrimarySite(): void {
   const oldHost = getPrimaryHost()
   primarySite = primarySite === 'cafe' ? 'xivapi' : 'cafe'
+  persistPrimarySite(primarySite)
   console.warn(`Primary site ${oldHost} failed, switching to ${getPrimaryHost()}`)
 }
 
@@ -336,6 +362,8 @@ async function requestWithFallback(urls: string[], options: RequestInit = {}): P
       }
       if (isSecondaryUrl(url))
         switchPrimarySite()
+      else
+        persistPrimarySite(primarySite)
       const json = await response.json()
       return { ...json, Host: new URL(url).host }
     }
