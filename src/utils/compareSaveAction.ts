@@ -20,6 +20,7 @@ const compareSameGroup = {
   23273: 23275, // 玄结界→斗灵弹
   11426: 11427, // 飞翎雨→地火喷发
   11428: 11429, // 山崩→轰雷
+  34686: 34685, // 油性坦培拉涂层→坦培拉涂层
 } as const
 
 const compareSameMap = new Map<number, number>(Object.entries(compareSameGroup).map(([k, v]) => [Number(k), v]))

@@ -483,6 +483,17 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
         return
       }
 
+      // Keep non-charge cooldown in sync with tracker-adjusted cast history (e.g. PCT tempera break reduction).
+      const history = cooldownTracker[runtime.ownerId]?.[runtime.trackedActionId]
+      if (history && history.length > 0 && runtime.recast1000ms > 0) {
+        const lastCastAt = history[history.length - 1] ?? 0
+        if (Number.isFinite(lastCastAt) && lastCastAt > 0) {
+          const syncedEndAt = lastCastAt + runtime.recast1000ms * 1000
+          if (runtime.recastEndAt === null || syncedEndAt < runtime.recastEndAt)
+            runtime.recastEndAt = syncedEndAt
+        }
+      }
+
       if (runtime.recastEndAt && runtime.recastEndAt <= now)
         runtime.recastEndAt = null
     })
