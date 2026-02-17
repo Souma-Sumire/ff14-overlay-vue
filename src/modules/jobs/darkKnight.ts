@@ -21,6 +21,12 @@ export class DarkKnightTracker extends BaseTracker {
     return this.mp[characterId] ?? 10000
   }
 
+  public fill() {
+    for (const id of this.playerIds) {
+      this.mp[id] = 10000
+    }
+  }
+
   public processLine(type: string, splitLine: string[], _cooldownTracker: Record<string, Record<number, number[]>> = {}) {
     switch (type) {
       case '21': // Ability

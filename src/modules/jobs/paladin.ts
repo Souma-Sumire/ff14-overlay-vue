@@ -29,6 +29,12 @@ export class PaladinTracker extends BaseTracker {
     return this.gauge[characterId] ?? 100
   }
 
+  public fill() {
+    for (const id of this.playerIds) {
+      this.gauge[id] = 100
+    }
+  }
+
   public processLine(type: string, splitLine: string[]) {
     switch (type) {
       case '21': // Ability

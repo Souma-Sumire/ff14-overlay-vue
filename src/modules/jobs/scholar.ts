@@ -43,6 +43,12 @@ export class ScholarTracker extends BaseTracker {
     return this.stacks[characterId] ?? 0
   }
 
+  public fill() {
+    for (const id of this.playerIds) {
+      this.stacks[id] = 3
+    }
+  }
+
   public isReady(characterId: string, skillId: number, cost: number): boolean {
     // 如果有秘策，且技能是不屈(3583)或深谋(7434)，则无视消耗
     if (this.recitation[characterId] && (skillId === SCH_ACTION_IDS.INDOMITABILITY || skillId === SCH_ACTION_IDS.EXCOGITATION)) {

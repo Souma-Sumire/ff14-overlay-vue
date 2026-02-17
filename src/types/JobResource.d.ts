@@ -7,6 +7,8 @@ export interface ResourceTracker {
   updateTrackedPlayers: (playerIds: string[]) => void
   /** 获取指定角色的当前资源量（如层数、忠义值等） */
   getResource: (characterId: string) => number | undefined
+  /** [可选] 将当前追踪角色的资源直接填满（用于 debug） */
+  fill?: () => void
   /**
    * [可选] 判定特定技能是否可用。
    * 默认逻辑为 (resource >= cost)，如果有特殊 Buff（如秘策）免消耗逻辑，需在此实现。

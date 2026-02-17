@@ -33,6 +33,14 @@ export class SageTracker extends BaseTracker {
     return this.stacks[characterId] ?? 3
   }
 
+  public fill() {
+    const now = Date.now()
+    for (const id of this.playerIds) {
+      this.stacks[id] = 3
+      this.lastGenTime[id] = now
+    }
+  }
+
   public processLine(type: string, splitLine: string[]) {
     // 并不是每一行都有时间戳或者我们关注的来源
     // 我们主要在 Ability 的时候更新，因为资源读取通常也在 Ability 发生时

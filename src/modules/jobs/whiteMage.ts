@@ -48,6 +48,12 @@ export class WhiteMageTracker extends BaseTracker {
     return this.lilies[characterId] ?? 3
   }
 
+  public fill() {
+    for (const id of this.playerIds) {
+      this.lilies[id] = 3
+    }
+  }
+
   public processLine(type: string, splitLine: string[]) {
     const timestamp = this.parseTimestamp(splitLine)
     if (timestamp !== null)
