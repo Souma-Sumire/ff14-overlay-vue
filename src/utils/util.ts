@@ -1,6 +1,5 @@
 import type { Job, Role } from '../../cactbot/types/job'
 import type { FFIcon as Icon } from '../types/fflogs'
-import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 
 const iconToJobEnum: Record<Icon, number> = {
   NONE: 0,
