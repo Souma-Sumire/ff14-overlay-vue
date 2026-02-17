@@ -37,6 +37,8 @@ const routeTitles = new Map(
     startPages: '主页导航',
     test: '自助测试',
     time: '显示时间',
+    teamWatch: '技能监控 5',
+    teamWatchSettings: '技能监控 5 设置',
     timeline: '自定义时间轴',
     timelineHelp: '自定义时间轴帮助',
     timelineSettings: '自定义时间轴编辑',
