@@ -32,7 +32,7 @@ const props = withDefaults(defineProps<{
   deleteAction?: FooterActionConfig
   resetAction?: FooterActionConfig
 }>(), {
-  width: '460px',
+  width: '520px',
   teleported: false,
   destroyOnClose: true,
   lockScroll: true,
