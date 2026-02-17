@@ -14,6 +14,12 @@ interface FooterActionConfig {
   cancelButtonText?: string
 }
 
+interface CloseActionConfig {
+  show?: boolean
+  disabled?: boolean
+  text?: string
+}
+
 const props = withDefaults(defineProps<{
   modelValue: boolean
   title: string
@@ -31,6 +37,7 @@ const props = withDefaults(defineProps<{
   primaryAction?: PrimaryActionConfig
   deleteAction?: FooterActionConfig
   resetAction?: FooterActionConfig
+  closeAction?: CloseActionConfig
 }>(), {
   width: '520px',
   teleported: false,
@@ -46,6 +53,7 @@ const props = withDefaults(defineProps<{
   primaryAction: () => ({}),
   deleteAction: () => ({}),
   resetAction: () => ({}),
+  closeAction: () => ({}),
 })
 
 const emit = defineEmits<{
@@ -53,6 +61,7 @@ const emit = defineEmits<{
   (e: 'primaryAction'): void
   (e: 'deleteAction'): void
   (e: 'resetAction'): void
+  (e: 'closeAction'): void
   (e: 'iconError', event: Event): void
 }>()
 
@@ -91,6 +100,14 @@ const resetActionState = computed(() => {
   }
 })
 
+const closeActionState = computed(() => {
+  return {
+    show: props.closeAction?.show ?? true,
+    disabled: props.closeAction?.disabled ?? false,
+    text: props.closeAction?.text?.trim() || '确认',
+  }
+})
+
 function triggerPrimaryAction() {
   emit('primaryAction')
 }
@@ -101,6 +118,11 @@ function triggerDeleteAction() {
 
 function triggerResetAction() {
   emit('resetAction')
+}
+
+function triggerCloseAction() {
+  emit('closeAction')
+  visible.value = false
 }
 
 function handleIconError(event: Event) {
@@ -199,10 +221,6 @@ function handleIconError(event: Event) {
             >
               {{ deleteActionState.text }}
             </el-button>
-          </slot>
-        </div>
-        <div class="editor-footer-right">
-          <slot name="footer-right">
             <el-popconfirm
               v-if="resetActionState.show && resetActionState.confirmTitle"
               :title="resetActionState.confirmTitle"
@@ -223,6 +241,17 @@ function handleIconError(event: Event) {
               @click="triggerResetAction"
             >
               {{ resetActionState.text }}
+            </el-button>
+          </slot>
+        </div>
+        <div class="editor-footer-right">
+          <slot name="footer-right">
+            <el-button
+              v-if="closeActionState.show"
+              :disabled="closeActionState.disabled"
+              @click="triggerCloseAction"
+            >
+              {{ closeActionState.text }}
             </el-button>
           </slot>
         </div>
@@ -355,6 +384,7 @@ function handleIconError(event: Event) {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
 }
 
 .editor-footer-left,
@@ -362,6 +392,14 @@ function handleIconError(event: Event) {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.editor-footer-left {
+  justify-content: flex-start;
+}
+
+.editor-footer-right {
+  justify-content: flex-end;
 }
 
 .skill-editor-dialog :deep(.editor-action-btn),
@@ -375,15 +413,15 @@ function handleIconError(event: Event) {
 }
 
 .editor-reset-btn {
-  background: #fff;
-  color: #303133;
-  border-color: #dcdfe6;
+  background: var(--el-color-warning-light-9);
+  color: var(--el-color-warning-dark-2);
+  border-color: var(--el-color-warning-light-5);
 }
 
 .editor-reset-btn:hover {
-  background: #f5f7fa;
-  color: #303133;
-  border-color: #c0c4cc;
+  background: var(--el-color-warning-light-8);
+  color: var(--el-color-warning-dark-2);
+  border-color: var(--el-color-warning-light-3);
 }
 
 @media (max-width: 680px) {

@@ -104,6 +104,7 @@ const metaForm = reactive<MetaFormModel>({
 const filterText = ref('')
 const showBaseJobs = ref(false)
 const isHydrating = ref(false)
+const isCtrlPressed = ref(false)
 
 const rowsByJob = computed(() => {
   const map = new Map<number, JobRow>()
@@ -714,6 +715,7 @@ async function openMetaEditor(context: MetaEditorContext) {
   }
   finally {
     metaEditorLoading.value = false
+    applyMetaFormRealtime()
   }
 }
 
@@ -880,11 +882,31 @@ function removeActionSlot(job: number, index: number) {
   if (!row || index < 0 || index >= row.actions.length)
     return
 
+  const removedActionId = row.actions[index] ?? 0
   row.actions.splice(index, 1)
   if (row.actions.length === 0)
     row.actions.push(0)
 
-  ElMessage.success('已删除空白槽位')
+  ElMessage.success(removedActionId > 0 ? '已删除技能槽位' : '已删除空白槽位')
+}
+
+function canShowSlotRemoveAnchor(actionId: number, slotCount: number) {
+  if (slotCount <= 1)
+    return false
+  return actionId <= 0 || isCtrlPressed.value
+}
+
+function handleGlobalKeyState(event: KeyboardEvent) {
+  isCtrlPressed.value = event.ctrlKey
+}
+
+function resetGlobalKeyState() {
+  isCtrlPressed.value = false
+}
+
+function handleVisibilityChange() {
+  if (document.hidden)
+    resetGlobalKeyState()
 }
 
 async function exportSettings() {
@@ -931,11 +953,22 @@ async function resetSettings() {
 
 onMounted(() => {
   reloadFromStore()
+  window.addEventListener('keydown', handleGlobalKeyState)
+  window.addEventListener('keyup', handleGlobalKeyState)
+  window.addEventListener('blur', resetGlobalKeyState)
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleGlobalKeyState)
+  window.removeEventListener('keyup', handleGlobalKeyState)
+  window.removeEventListener('blur', resetGlobalKeyState)
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 </script>
 
 <template>
-  <div class="settings-page">
+  <div class="settings-page" :class="{ 'ctrl-delete-mode': isCtrlPressed }">
     <header class="toolbar">
       <div class="toolbar-left">
         <el-input
@@ -1053,7 +1086,7 @@ onMounted(() => {
                             {{ actionId > 0 ? getActionMeta(actionId).name : '未设置' }}
                           </div>
                         </button>
-                        <div v-if="actionId <= 0 && row.actions.length > 1" class="slot-remove-anchor" @click.stop>
+                        <div v-if="canShowSlotRemoveAnchor(actionId, row.actions.length)" class="slot-remove-anchor" @click.stop>
                           <el-button
                             class="slot-remove-btn"
                             circle
@@ -1113,7 +1146,7 @@ onMounted(() => {
                             {{ actionId > 0 ? getActionMeta(actionId).name : '未设置' }}
                           </div>
                         </button>
-                        <div v-if="actionId <= 0 && (rowsByJob.get(baseJobsByAdvanced[row.job] ?? -1)?.actions.length ?? 0) > 1" class="slot-remove-anchor" @click.stop>
+                        <div v-if="canShowSlotRemoveAnchor(actionId, rowsByJob.get(baseJobsByAdvanced[row.job] ?? -1)?.actions.length ?? 0)" class="slot-remove-anchor" @click.stop>
                           <el-button
                             class="slot-remove-btn"
                             circle
@@ -1729,6 +1762,12 @@ onMounted(() => {
 
 .slot-cell:hover .slot-remove-anchor,
 .slot-cell:focus-within .slot-remove-anchor {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.settings-page.ctrl-delete-mode .slot-remove-anchor {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
