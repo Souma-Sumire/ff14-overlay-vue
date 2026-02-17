@@ -244,6 +244,10 @@ function handleIconError(event: Event) {
   width: 100%;
 }
 
+.editor-grid :deep(.number-input-full .el-input__inner) {
+  text-align: left;
+}
+
 .editor-footer {
   width: 100%;
   display: flex;
