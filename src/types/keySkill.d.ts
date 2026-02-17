@@ -1,5 +1,5 @@
-import type { FFIcon } from '@/types/fflogs'
 import type { DynamicValue } from '@/types/dynamicValue'
+import type { FFIcon } from '@/types/fflogs'
 
 interface KeySkill {
   // 此key是对于技能来说的，而不是技能的具体实例
