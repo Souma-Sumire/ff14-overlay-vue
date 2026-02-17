@@ -125,6 +125,7 @@ export interface GlobalSkillMeta {
   id: DynamicValue
   recast1000ms: DynamicValue
   duration: DynamicValue
+  minLevel: number
   job: number[]
 }
 
@@ -164,6 +165,7 @@ const globalSkillMetaMap = (() => {
           id: definition.id,
           recast1000ms: definition.recast1000ms,
           duration: definition.duration ?? 0,
+          minLevel: definition.minLevel,
           job: uniqueJobs(definition.job),
         })
         continue
@@ -173,6 +175,7 @@ const globalSkillMetaMap = (() => {
         id: previous.id,
         recast1000ms: previous.recast1000ms,
         duration: previous.duration,
+        minLevel: Math.min(previous.minLevel, definition.minLevel),
         job: uniqueJobs([...previous.job, ...definition.job]),
       })
     }
