@@ -1,6 +1,5 @@
 import type { FFIcon } from '@/types/fflogs'
-
-type DynamicValue = number | string
+import type { DynamicValue } from '@/types/dynamicValue'
 
 interface KeySkill {
   // 此key是对于技能来说的，而不是技能的具体实例
@@ -40,4 +39,4 @@ interface KeySkillEntity {
   }
 }
 
-export { DynamicValue, KeySkill, KeySkillEntity }
+export { KeySkill, KeySkillEntity }

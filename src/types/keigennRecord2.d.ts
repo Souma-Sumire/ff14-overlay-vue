@@ -1,10 +1,8 @@
 import type { FFIcon } from '@/types/fflogs'
-import type { DynamicValue } from '@/types/keySkill'
+import type { DynamicValue } from '@/types/dynamicValue'
 import type { DamageEffect, DamageType } from '@/utils/flags'
 
 export type Scope = 'self' | 'party' | 'other'
-
-export { DynamicValue }
 
 export interface KeigennSkill {
   id: DynamicValue

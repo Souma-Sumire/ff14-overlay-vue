@@ -1,5 +1,5 @@
 import type { PerformanceType } from '@/types/keigennRecord2'
-import type { DynamicValue } from '@/types/keySkill'
+import type { DynamicValue } from '@/types/dynamicValue'
 
 type MitigationScope = 'self' | 'party'
 type DynamicDamageTakenMultiplier = PerformanceType | string
@@ -843,3 +843,4 @@ const mitigationKeigennSkills: MitigationKeigennSkill[] = [
   },
 ]
 export { type MitigationKeigennSkill, mitigationKeigennSkills }
+
