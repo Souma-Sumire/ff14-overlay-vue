@@ -1,7 +1,7 @@
 import type { PerformanceType } from '@/types/keigennRecord2'
 import type { EncounterCandidate, MitigationRow, PartyMember, PlayerActionRecord } from '@/types/mitigation'
 import type { DamageType } from '@/utils/flags'
-import { keigennSkills } from '@/resources/keigennSkills'
+import { keigennSkills } from '@/resources/keigennSkillResource'
 import { createActionId } from '@/utils/actionId'
 import { processAbilityLine, processFlags } from '@/utils/flags'
 import { getKeigenn } from '@/utils/keigenn'

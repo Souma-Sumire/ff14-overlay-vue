@@ -2,15 +2,20 @@ import type { Party } from 'cactbot/types/event'
 import type { KeySkillEntity } from '@/types/keySkill'
 import { useStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useDemo } from '@/composables/useDemo'
 import { useDev } from '@/composables/useDev'
 import { RandomPartyGenerator } from '@/mock/demoParty'
+import { getActionChinese } from '@/resources/actionChinese'
+import { getGlobalSkillMetaByActionId } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
-import { raidbuffs } from '@/resources/raidbuffs'
-import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
+import { raidbuffs } from '@/resources/keySkillResource'
+import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/roleActionCategoryByJob'
+import { resolveTeamWatchDynamicValue } from '@/resources/teamWatchResource'
+import { idToSrc } from '@/utils/dynamicValue'
 import { tts } from '@/utils/tts'
 import Util from '@/utils/util'
+import { getIconSrcByPath, parseAction } from '@/utils/xivapi'
 
 interface SkillState {
   startTime: number | null
@@ -24,82 +29,265 @@ interface SkillState {
   rafId?: number
 }
 
+interface KeySkillEntry {
+  key: string
+  id: number
+  tts: string
+  line: number
+}
+
+interface KeySkillStorageData {
+  chinese: KeySkillEntry[]
+  mergedIds: number[]
+}
+
+interface KeySkillAutoMeta {
+  id: number
+  name: string
+  src: string
+  duration: number
+  recast1000ms: number
+  minLevel: number
+  jobs: number[]
+}
+
+interface DefaultKeySkillEntry {
+  id: number
+  tts: string
+  line: number
+}
+
 const generator = new RandomPartyGenerator()
+
+function normalizeInt(value: number, fallback: number, min = 0) {
+  if (!Number.isFinite(value))
+    return fallback
+  return Math.max(min, Math.trunc(value))
+}
+
+function uniqueInts(input: number[]) {
+  return [...new Set(input.filter(v => Number.isFinite(v) && v > 0).map(v => Math.trunc(v)))]
+}
+
+function buildDefaultSkillEntries() {
+  const map = new Map<number, DefaultKeySkillEntry>()
+  raidbuffs.forEach((skill) => {
+    const resolvedId = normalizeInt(resolveTeamWatchDynamicValue(skill.id, 100, 0), 0, 0)
+    if (resolvedId <= 0 || map.has(resolvedId))
+      return
+
+    map.set(resolvedId, {
+      id: resolvedId,
+      tts: typeof skill.tts === 'string' ? skill.tts : '',
+      line: normalizeInt(Number(skill.line ?? 1), 1, 1),
+    })
+  })
+  return [...map.values()]
+}
+
+function createSkillEntry(id: number, tts = '', line = 1): KeySkillEntry {
+  return {
+    key: crypto.randomUUID(),
+    id,
+    tts,
+    line: normalizeInt(Number(line), 1, 1),
+  }
+}
+
+function normalizeStorageSkills(raw: unknown): KeySkillEntry[] {
+  if (!Array.isArray(raw))
+    return []
+
+  const normalized: KeySkillEntry[] = []
+  raw.forEach((item) => {
+    if (!item || typeof item !== 'object')
+      return
+    const row = item as Record<string, unknown>
+    const resolvedId = normalizeInt(resolveTeamWatchDynamicValue(row.id as number | string, 100, 0), 0, 0)
+    if (resolvedId <= 0)
+      return
+    const key = typeof row.key === 'string' && row.key.trim() ? row.key : crypto.randomUUID()
+    const line = normalizeInt(Number(row.line ?? 1), 1, 1)
+    const ttsText = typeof row.tts === 'string' ? row.tts : ''
+    normalized.push({
+      key,
+      id: resolvedId,
+      line,
+      tts: ttsText,
+    })
+  })
+  return normalized
+}
+
+function resolveJobsFromApi(classJobTargetId: number, actionCategoryTargetId: number, isRoleAction: boolean) {
+  const battleJobEnums = Util.getBattleJobs()
+    .filter(job => job !== 'NONE')
+    .filter(job => Util.isCombatJob(job))
+    .map(job => Util.jobToJobEnum(job))
+
+  if (isRoleAction && actionCategoryTargetId > 0) {
+    return uniqueInts(
+      battleJobEnums.filter((jobEnum) => {
+        const categories = ROLE_ACTION_CATEGORY_BY_JOB[jobEnum] ?? []
+        return categories.includes(actionCategoryTargetId)
+      }),
+    )
+  }
+
+  if (classJobTargetId <= 0)
+    return []
+
+  return uniqueInts(
+    battleJobEnums.filter((jobEnum) => {
+      return jobEnum === classJobTargetId
+        || Util.baseJobEnumConverted(jobEnum) === classJobTargetId
+        || Util.baseJobEnumConverted(classJobTargetId) === jobEnum
+    }),
+  )
+}
 
 const useKeySkillStore = defineStore('keySkill', () => {
   const dev = useDev()
   const demo = useDemo()
-
   const party = ref<Party[]>([])
+  const defaultSkillEntries = buildDefaultSkillEntries()
+  const defaultSkillIds = defaultSkillEntries.map(v => v.id)
 
-  // 版本管理：用于自动合并开发者新增的默认技能
-  const keySkillsData = useStorage('keySkills-fix', {
-    chinese: [...raidbuffs],
-    mergedKeys: raidbuffs.map(s => s.key),
+  const keySkillsData = useStorage<KeySkillStorageData>('keySkills-fix', {
+    chinese: defaultSkillEntries.map(skill => createSkillEntry(skill.id, skill.tts, skill.line)),
+    mergedIds: [...defaultSkillIds],
   })
 
-  // 兼容老用户：如果没有 mergedKeys，说明是之前版本的存储，
-  // 我们将当前所有 raidbuffs 标记为已合并，防止用户已删除的技能被意外补回。
-  if (!keySkillsData.value.mergedKeys) {
-    keySkillsData.value.mergedKeys = raidbuffs.map(s => s.key)
+  const normalizedStored = normalizeStorageSkills(keySkillsData.value.chinese)
+  keySkillsData.value.chinese = normalizedStored
+
+  if (!Array.isArray(keySkillsData.value.mergedIds)) {
+    keySkillsData.value.mergedIds = [...defaultSkillIds]
+  }
+  else {
+    keySkillsData.value.mergedIds = uniqueInts(keySkillsData.value.mergedIds)
   }
 
-  // 自动合并逻辑：每当开发者在 raidbuffs.ts 中新增了默认技能，
-  // 用户的本地存储会自动检测到这些通过 key 标识的新技能并将其追加。
-  // 1. 迁移与去重：保留用户的第一份数据（可能是魔改过的），将其 Key 更新为静态 Key，并移除后续重复项
-  const defaultSkillMap = new Map<number | string, string>(
-    raidbuffs.map(s => [s.id, s.key]),
-  )
-  const seenDefaultIds = new Set<number | string>()
-
-  keySkillsData.value.chinese = keySkillsData.value.chinese.reduce(
-    (acc, skill) => {
-      // 检查是否为默认提供的技能 ID
-      if (defaultSkillMap.has(skill.id)) {
-        if (seenDefaultIds.has(skill.id)) {
-          // 如果该 ID 已经添加过一次，说明后续的都是 Bug 产生的重复项，直接丢弃
-          return acc
-        }
-        // 第一次遇到该默认技能（保留这份数据，因为它是最早的，可能包含用户修改）
-        seenDefaultIds.add(skill.id)
-
-        // 【关键】执行迁移：如果 Key 还是旧的 UUID，强制更新为新的静态 Key
-        // 这样既保留了用户的配置（TTS/时间等），又修复了 Key 不一致的问题
-        const staticKey = defaultSkillMap.get(skill.id)!
-        if (skill.key !== staticKey) {
-          skill.key = staticKey
-        }
-        acc.push(skill)
-        return acc
-      }
-
-      // 用户自定义的技能（ID 不在默认列表中），直接保留
-      acc.push(skill)
-      return acc
-    },
-    [] as typeof keySkillsData.value.chinese,
-  )
-
-  // 2. 补全真正的缺失默认技能（针对开发者在代码中新增的技能）
-  const mergedKeysSet = new Set(keySkillsData.value.mergedKeys)
-  const newDefaultSkills = raidbuffs.filter(s => !mergedKeysSet.has(s.key))
-
-  if (newDefaultSkills.length > 0) {
-    keySkillsData.value.chinese = [
-      ...keySkillsData.value.chinese,
-      ...newDefaultSkills,
-    ]
-    // 更新已合并列表，确保下次不再补充
-    keySkillsData.value.mergedKeys = [
-      ...keySkillsData.value.mergedKeys,
-      ...newDefaultSkills.map(s => s.key),
-    ]
+  const mergedSet = new Set(keySkillsData.value.mergedIds)
+  const missingDefaults = defaultSkillEntries.filter(skill => !mergedSet.has(skill.id))
+  if (missingDefaults.length > 0) {
+    keySkillsData.value.chinese.push(
+      ...missingDefaults.map(skill => createSkillEntry(skill.id, skill.tts, skill.line)),
+    )
+    keySkillsData.value.mergedIds.push(...missingDefaults.map(skill => skill.id))
   }
 
   const enableTts = useStorage('keySkills-enable-tts', { chinese: true })
   const skillStates = reactive<Record<string, SkillState>>({})
-
   const speed = ref(1)
+
+  const autoMetaById = reactive<Record<number, KeySkillAutoMeta>>({})
+  const pendingAutoMeta = new Set<number>()
+
+  function resolveMeta(actionId: number): KeySkillAutoMeta {
+    const cached = autoMetaById[actionId]
+    if (cached)
+      return cached
+
+    return {
+      id: actionId,
+      name: getActionChinese(actionId) || `#${actionId}`,
+      src: idToSrc(actionId),
+      duration: 0,
+      recast1000ms: 0,
+      minLevel: 1,
+      jobs: [],
+    }
+  }
+
+  async function ensureActionAutoMeta(actionId: number) {
+    if (!Number.isFinite(actionId) || actionId <= 0)
+      return
+    const id = Math.trunc(actionId)
+    if (autoMetaById[id] || pendingAutoMeta.has(id))
+      return
+
+    const globalMeta = getGlobalSkillMetaByActionId(id)
+
+    pendingAutoMeta.add(id)
+    try {
+      const response = await parseAction('action', id, [
+        'ID',
+        'Name',
+        'Icon',
+        'Recast100ms',
+        'ClassJobLevel',
+        'ClassJobTargetID',
+        'ActionCategoryTargetID',
+        'IsRoleAction',
+      ])
+      const recast100ms = Number(response.Recast100ms ?? 0)
+      const apiRecast1000ms = Number.isFinite(recast100ms) && recast100ms > 0 ? recast100ms / 10 : 0
+      const classJobLevel = normalizeInt(Number(response.ClassJobLevel ?? 1), 1, 1)
+      const classJobTargetId = normalizeInt(Number(response.ClassJobTargetID ?? 0), 0, 0)
+      const actionCategoryTargetId = normalizeInt(Number(response.ActionCategoryTargetID ?? 0), 0, 0)
+      const isRoleAction = Number(response.IsRoleAction ?? 0) > 0
+      const jobs = (globalMeta?.job?.length ?? 0) > 0
+        ? uniqueInts(globalMeta!.job)
+        : resolveJobsFromApi(classJobTargetId, actionCategoryTargetId, isRoleAction)
+      const resolvedId = normalizeInt(
+        resolveTeamWatchDynamicValue(globalMeta?.id ?? id, 100, id),
+        id,
+        1,
+      )
+      const resolvedRecast1000ms = normalizeInt(
+        resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? apiRecast1000ms, 100, apiRecast1000ms),
+        apiRecast1000ms,
+        0,
+      )
+      const resolvedDuration = normalizeInt(
+        resolveTeamWatchDynamicValue(globalMeta?.duration ?? 0, 100, 0),
+        0,
+        0,
+      )
+      const resolvedMinLevel = isRoleAction ? 1 : classJobLevel
+      const iconSrcById = idToSrc(id)
+      const iconSrc = iconSrcById
+        || (typeof response.Icon === 'string' && response.Icon
+          ? getIconSrcByPath(response.Icon)
+          : '')
+
+      autoMetaById[id] = {
+        id: resolvedId,
+        name: response.Name ?? getActionChinese(resolvedId) ?? `#${resolvedId}`,
+        src: iconSrc,
+        duration: resolvedDuration,
+        recast1000ms: resolvedRecast1000ms,
+        minLevel: resolvedMinLevel,
+        jobs,
+      }
+    }
+    catch (error) {
+      console.warn('[keySkill] ensureActionAutoMeta failed:', id, error)
+      autoMetaById[id] = {
+        id,
+        name: getActionChinese(id) || `#${id}`,
+        src: idToSrc(id),
+        duration: 0,
+        recast1000ms: 0,
+        minLevel: 1,
+        jobs: [],
+      }
+    }
+    finally {
+      pendingAutoMeta.delete(id)
+    }
+  }
+
+  watch(
+    () => keySkillsData.value.chinese.map(item => item.id),
+    (ids) => {
+      ids.forEach((id) => {
+        void ensureActionAutoMeta(id)
+      })
+    },
+    { immediate: true, deep: true },
+  )
 
   const usedSkills = computed(() => {
     const result: KeySkillEntity[] = []
@@ -109,74 +297,50 @@ const useKeySkillStore = defineStore('keySkill', () => {
 
     for (const player of currentParty.value) {
       for (const skill of keySkillsData.value.chinese) {
-        if (
-          skill.job.includes(player.job)
-          && (player.level === undefined || skill.minLevel <= player.level)
-        ) {
-          const duration = parseDynamicValue(
-            skill.duration,
-            player.level || 999,
-          )
-          const id = parseDynamicValue(skill.id, player.level || 999)
-          const recast1000ms = parseDynamicValue(
-            skill.recast1000ms,
-            player.level || 999,
-          )
-          const minLevel = parseDynamicValue(
-            skill.minLevel,
-            player.level || 999,
-          )
-          const owner: KeySkillEntity['owner'] = {
-            id: player.id,
-            name: player.name,
-            job: player.job,
-            jobIcon: Util.jobEnumToIcon(player.job),
-            jobName: Util.jobToFullName(Util.jobEnumToJob(player.job)).simple1,
-            hasDuplicate: {
-              skill: false,
-              job: false,
-            },
-          }
-          const skillKey = skill.key
-          const instanceKey = `${player.id}-${id}`
-          const src = idToSrc(id)
-          const tts = skill.tts
-          const line = skill.line
-          const job = skill.job
-          result.push({
-            duration,
-            id,
-            owner,
-            skillKey,
-            minLevel,
-            recast1000ms,
-            src,
-            tts,
-            line,
-            job,
-            instanceKey,
-          })
+        const meta = resolveMeta(skill.id)
+        if (!meta.jobs.includes(player.job))
+          continue
+        if (player.level !== undefined && meta.minLevel > player.level)
+          continue
+
+        const owner: KeySkillEntity['owner'] = {
+          id: player.id,
+          name: player.name,
+          job: player.job,
+          jobIcon: Util.jobEnumToIcon(player.job),
+          jobName: Util.jobToFullName(Util.jobEnumToJob(player.job)).simple1,
+          hasDuplicate: {
+            skill: false,
+            job: false,
+          },
         }
+        const instanceKey = `${player.id}-${meta.id}`
+        result.push({
+          duration: meta.duration,
+          id: meta.id,
+          owner,
+          skillKey: skill.key,
+          minLevel: meta.minLevel,
+          recast1000ms: meta.recast1000ms,
+          src: meta.src,
+          tts: skill.tts || meta.name,
+          line: skill.line,
+          job: meta.jobs,
+          instanceKey,
+        })
       }
     }
+
     for (const res of result) {
       res.owner.hasDuplicate = {
-        skill: result.some(
-          v => v.id === res.id && v.owner.id !== res.owner.id,
-        ),
-        job: result.some(
-          v => v.owner.job === res.owner.job && v.owner.id !== res.owner.id,
-        ),
+        skill: result.some(v => v.id === res.id && v.owner.id !== res.owner.id),
+        job: result.some(v => v.owner.job === res.owner.job && v.owner.id !== res.owner.id),
       }
     }
 
     result.sort((a, b) => {
-      const aIndex = keySkillsData.value.chinese.findIndex(
-        v => v.key === a.skillKey,
-      )
-      const bIndex = keySkillsData.value.chinese.findIndex(
-        v => v.key === b.skillKey,
-      )
+      const aIndex = keySkillsData.value.chinese.findIndex(v => v.key === a.skillKey)
+      const bIndex = keySkillsData.value.chinese.findIndex(v => v.key === b.skillKey)
       if (aIndex === bIndex) {
         return DEFAULT_JOB_SORT_ORDER.indexOf(a.owner.job) - DEFAULT_JOB_SORT_ORDER.indexOf(b.owner.job)
       }
@@ -186,16 +350,13 @@ const useKeySkillStore = defineStore('keySkill', () => {
   })
 
   function triggerSkill(skillIds: number[], ownerID: string, speak: boolean) {
-    const skill = usedSkills.value.find(
-      v => skillIds.includes(v.id) && v.owner.id === ownerID,
-    )
+    const skill = usedSkills.value.find(v => skillIds.includes(v.id) && v.owner.id === ownerID)
     if (!skill)
       return
 
     const key = skill.instanceKey
     const { duration, recast1000ms: recast } = skill
 
-    // 取消之前动画
     if (skillStates[key]?.rafId)
       cancelAnimationFrame(skillStates[key].rafId)
 
@@ -220,7 +381,6 @@ const useKeySkillStore = defineStore('keySkill', () => {
       const now = performance.now()
       const elapsed = (now - start) * speedValue
       if (!state.isRecast) {
-        // 持续时间阶段
         if (elapsed < durationMs) {
           const remain = durationMs - elapsed
           state.durationLeft = Math.ceil(remain / 1000)
@@ -228,14 +388,12 @@ const useKeySkillStore = defineStore('keySkill', () => {
           state.clipPercent = (remain / durationMs) * 100
         }
         else {
-          // 进入冷却阶段
           state.isRecast = true
           state.startTime = now
           state.clipPercent = 0
         }
       }
       else {
-        // 冷却阶段
         const recastElapsed = elapsed - durationMs
         if (recastElapsed < recastMs) {
           const remain = recastMs - recastElapsed
@@ -244,7 +402,6 @@ const useKeySkillStore = defineStore('keySkill', () => {
           state.clipPercent = (recastElapsed / recastMs) * 100
         }
         else {
-          // 动画结束
           state.text = ''
           state.active = false
           state.isRecast = false
@@ -261,9 +418,8 @@ const useKeySkillStore = defineStore('keySkill', () => {
 
     state.rafId = requestAnimationFrame(update)
     skillStates[key] = state
-    if (speak && enableTts.value.chinese) {
+    if (speak && enableTts.value.chinese)
       tts(skill.tts)
-    }
   }
 
   function wipe() {
@@ -286,6 +442,18 @@ const useKeySkillStore = defineStore('keySkill', () => {
     generator.fullParty()
   }
 
+  function setSkills(entries: unknown[]) {
+    keySkillsData.value.chinese = normalizeStorageSkills(entries)
+    keySkillsData.value.chinese.forEach((entry) => {
+      void ensureActionAutoMeta(entry.id)
+    })
+  }
+
+  function resetSkillsToDefault() {
+    keySkillsData.value.chinese = defaultSkillEntries.map(skill => createSkillEntry(skill.id, skill.tts, skill.line))
+    keySkillsData.value.mergedIds = [...defaultSkillIds]
+  }
+
   return {
     party,
     skillStates,
@@ -299,7 +467,11 @@ const useKeySkillStore = defineStore('keySkill', () => {
     demoFullParty,
     keySkillsData,
     enableTts,
+    autoMetaById,
+    ensureActionAutoMeta,
+    setSkills,
+    resetSkillsToDefault,
   }
 })
 
-export { type SkillState, useKeySkillStore }
+export { type KeySkillAutoMeta, type SkillState, useKeySkillStore }
