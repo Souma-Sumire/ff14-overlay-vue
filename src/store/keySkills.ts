@@ -1,4 +1,5 @@
 import type { Party } from 'cactbot/types/event'
+import type { DynamicValue } from '@/types/dynamicValue'
 import type { KeySkillEntity } from '@/types/keySkill'
 import { useStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
@@ -34,6 +35,10 @@ interface KeySkillEntry {
   id: number
   tts: string
   line: number
+  job?: number[]
+  recast1000ms?: DynamicValue
+  duration?: DynamicValue
+  minLevel?: DynamicValue
 }
 
 interface KeySkillStorageData {
@@ -55,6 +60,36 @@ interface DefaultKeySkillEntry {
   id: number
   tts: string
   line: number
+}
+
+function normalizeAutoMetaEntry(rawId: number, value: unknown): KeySkillAutoMeta | undefined {
+  if (!value || typeof value !== 'object')
+    return undefined
+  const row = value as Record<string, unknown>
+  const id = normalizeInt(Number(row.id ?? rawId), rawId, 1)
+  const name = typeof row.name === 'string' && row.name.trim() ? row.name : (getActionChinese(id) || `#${id}`)
+  const src = typeof row.src === 'string' ? row.src : idToSrc(id)
+  const duration = normalizeInt(Number(row.duration ?? 0), 0, 0)
+  const recast1000ms = normalizeInt(Number(row.recast1000ms ?? 0), 0, 0)
+  const minLevel = normalizeInt(Number(row.minLevel ?? 1), 1, 1)
+  const jobs = uniqueInts(Array.isArray(row.jobs) ? row.jobs.map(v => Number(v)) : [])
+  return { id, name, src, duration, recast1000ms, minLevel, jobs }
+}
+
+function normalizeAutoMetaCache(raw: unknown): Record<number, KeySkillAutoMeta> {
+  if (!raw || typeof raw !== 'object')
+    return {}
+  const output: Record<number, KeySkillAutoMeta> = {}
+  Object.entries(raw as Record<string, unknown>).forEach(([key, value]) => {
+    const id = normalizeInt(Number(key), 0, 1)
+    if (id <= 0)
+      return
+    const normalized = normalizeAutoMetaEntry(id, value)
+    if (!normalized)
+      return
+    output[id] = normalized
+  })
+  return output
 }
 
 const generator = new RandomPartyGenerator()
@@ -94,6 +129,24 @@ function createSkillEntry(id: number, tts = '', line = 1): KeySkillEntry {
   }
 }
 
+function normalizeEntryDynamicValue(value: unknown): DynamicValue | undefined {
+  if (typeof value === 'number' && Number.isFinite(value))
+    return value
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (trimmed)
+      return trimmed
+  }
+  return undefined
+}
+
+function normalizeEntryJobs(value: unknown): number[] | undefined {
+  if (!Array.isArray(value))
+    return undefined
+  const jobs = uniqueInts(value.map(v => Number(v)))
+  return jobs
+}
+
 function normalizeStorageSkills(raw: unknown): KeySkillEntry[] {
   if (!Array.isArray(raw))
     return []
@@ -114,6 +167,10 @@ function normalizeStorageSkills(raw: unknown): KeySkillEntry[] {
       id: resolvedId,
       line,
       tts: ttsText,
+      job: normalizeEntryJobs(row.job),
+      recast1000ms: normalizeEntryDynamicValue(row.recast1000ms),
+      duration: normalizeEntryDynamicValue(row.duration),
+      minLevel: normalizeEntryDynamicValue(row.minLevel),
     })
   })
   return normalized
@@ -180,23 +237,57 @@ const useKeySkillStore = defineStore('keySkill', () => {
   const enableTts = useStorage('keySkills-enable-tts', { chinese: true })
   const skillStates = reactive<Record<string, SkillState>>({})
   const speed = ref(1)
+  const autoMetaCache = useStorage<Record<string, KeySkillAutoMeta>>('keySkills-auto-meta-cache', {})
 
   const autoMetaById = reactive<Record<number, KeySkillAutoMeta>>({})
+  const normalizedAutoMetaCache = normalizeAutoMetaCache(autoMetaCache.value)
+  autoMetaCache.value = Object.fromEntries(
+    Object.entries(normalizedAutoMetaCache).map(([id, meta]) => [String(id), meta]),
+  )
+  Object.entries(normalizedAutoMetaCache).forEach(([id, meta]) => {
+    autoMetaById[Number(id)] = meta
+  })
   const pendingAutoMeta = new Set<number>()
+  const pendingAutoMetaTasks = new Map<number, Promise<void>>()
+  const isAutoMetaLoading = computed(() => pendingAutoMeta.size > 0)
+
+  function saveAutoMetaToCache(id: number, meta: KeySkillAutoMeta) {
+    autoMetaById[id] = meta
+    autoMetaCache.value = {
+      ...autoMetaCache.value,
+      [String(id)]: meta,
+    }
+  }
 
   function resolveMeta(actionId: number): KeySkillAutoMeta {
     const cached = autoMetaById[actionId]
     if (cached)
       return cached
+    const globalMeta = getGlobalSkillMetaByActionId(actionId)
+    const resolvedId = normalizeInt(
+      resolveTeamWatchDynamicValue(globalMeta?.id ?? actionId, 100, actionId),
+      actionId,
+      1,
+    )
+    const resolvedRecast1000ms = normalizeInt(
+      resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? 0, 100, 0),
+      0,
+      0,
+    )
+    const resolvedDuration = normalizeInt(
+      resolveTeamWatchDynamicValue(globalMeta?.duration ?? 0, 100, 0),
+      0,
+      0,
+    )
 
     return {
-      id: actionId,
-      name: getActionChinese(actionId) || `#${actionId}`,
-      src: idToSrc(actionId),
-      duration: 0,
-      recast1000ms: 0,
-      minLevel: 1,
-      jobs: [],
+      id: resolvedId,
+      name: getActionChinese(resolvedId) || `#${resolvedId}`,
+      src: idToSrc(resolvedId),
+      duration: resolvedDuration,
+      recast1000ms: resolvedRecast1000ms,
+      minLevel: normalizeInt(Number(globalMeta?.minLevel ?? 1), 1, 1),
+      jobs: uniqueInts(globalMeta?.job ?? []),
     }
   }
 
@@ -204,13 +295,19 @@ const useKeySkillStore = defineStore('keySkill', () => {
     if (!Number.isFinite(actionId) || actionId <= 0)
       return
     const id = Math.trunc(actionId)
-    if (autoMetaById[id] || pendingAutoMeta.has(id))
+    if (autoMetaById[id])
       return
+    const task = pendingAutoMetaTasks.get(id)
+    if (task) {
+      await task
+      return
+    }
 
     const globalMeta = getGlobalSkillMetaByActionId(id)
 
-    pendingAutoMeta.add(id)
-    try {
+    const nextTask = (async () => {
+      pendingAutoMeta.add(id)
+      try {
       const response = await parseAction('action', id, [
         'ID',
         'Name',
@@ -245,38 +342,58 @@ const useKeySkillStore = defineStore('keySkill', () => {
         0,
         0,
       )
-      const resolvedMinLevel = isRoleAction ? 1 : classJobLevel
+      const resolvedMinLevel = normalizeInt(Number(globalMeta?.minLevel ?? (isRoleAction ? 1 : classJobLevel)), 1, 1)
       const iconSrcById = idToSrc(id)
       const iconSrc = iconSrcById
         || (typeof response.Icon === 'string' && response.Icon
           ? getIconSrcByPath(response.Icon)
           : '')
 
-      autoMetaById[id] = {
+      saveAutoMetaToCache(id, {
         id: resolvedId,
-        name: response.Name ?? getActionChinese(resolvedId) ?? `#${resolvedId}`,
+        name: getActionChinese(resolvedId) || getActionChinese(id) || response.Name || `#${resolvedId}`,
         src: iconSrc,
         duration: resolvedDuration,
         recast1000ms: resolvedRecast1000ms,
         minLevel: resolvedMinLevel,
         jobs,
-      }
+      })
     }
     catch (error) {
       console.warn('[keySkill] ensureActionAutoMeta failed:', id, error)
-      autoMetaById[id] = {
+      const resolvedId = normalizeInt(
+        resolveTeamWatchDynamicValue(globalMeta?.id ?? id, 100, id),
         id,
-        name: getActionChinese(id) || `#${id}`,
-        src: idToSrc(id),
-        duration: 0,
-        recast1000ms: 0,
-        minLevel: 1,
-        jobs: [],
-      }
+        1,
+      )
+      const resolvedRecast1000ms = normalizeInt(
+        resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? 0, 100, 0),
+        0,
+        0,
+      )
+      const resolvedDuration = normalizeInt(
+        resolveTeamWatchDynamicValue(globalMeta?.duration ?? 0, 100, 0),
+        0,
+        0,
+      )
+      saveAutoMetaToCache(id, {
+        id: resolvedId,
+        name: getActionChinese(resolvedId) || `#${resolvedId}`,
+        src: idToSrc(resolvedId),
+        duration: resolvedDuration,
+        recast1000ms: resolvedRecast1000ms,
+        minLevel: normalizeInt(Number(globalMeta?.minLevel ?? 1), 1, 1),
+        jobs: uniqueInts(globalMeta?.job ?? []),
+      })
     }
     finally {
       pendingAutoMeta.delete(id)
+      pendingAutoMetaTasks.delete(id)
     }
+    })()
+
+    pendingAutoMetaTasks.set(id, nextTask)
+    await nextTask
   }
 
   watch(
@@ -298,9 +415,27 @@ const useKeySkillStore = defineStore('keySkill', () => {
     for (const player of currentParty.value) {
       for (const skill of keySkillsData.value.chinese) {
         const meta = resolveMeta(skill.id)
-        if (!meta.jobs.includes(player.job))
+        const level = player.level || 100
+        const resolvedJobs = skill.job && skill.job.length > 0 ? uniqueInts(skill.job) : meta.jobs
+        const resolvedRecast1000ms = normalizeInt(
+          resolveTeamWatchDynamicValue(skill.recast1000ms ?? meta.recast1000ms, level, meta.recast1000ms),
+          meta.recast1000ms,
+          0,
+        )
+        const resolvedDuration = normalizeInt(
+          resolveTeamWatchDynamicValue(skill.duration ?? meta.duration, level, meta.duration),
+          meta.duration,
+          0,
+        )
+        const resolvedMinLevel = normalizeInt(
+          resolveTeamWatchDynamicValue(skill.minLevel ?? meta.minLevel, level, meta.minLevel),
+          meta.minLevel,
+          1,
+        )
+
+        if (!resolvedJobs.includes(player.job))
           continue
-        if (player.level !== undefined && meta.minLevel > player.level)
+        if (player.level !== undefined && resolvedMinLevel > player.level)
           continue
 
         const owner: KeySkillEntity['owner'] = {
@@ -316,16 +451,16 @@ const useKeySkillStore = defineStore('keySkill', () => {
         }
         const instanceKey = `${player.id}-${meta.id}`
         result.push({
-          duration: meta.duration,
+          duration: resolvedDuration,
           id: meta.id,
           owner,
           skillKey: skill.key,
-          minLevel: meta.minLevel,
-          recast1000ms: meta.recast1000ms,
+          minLevel: resolvedMinLevel,
+          recast1000ms: resolvedRecast1000ms,
           src: meta.src,
-          tts: skill.tts || meta.name,
+          tts: skill.tts,
           line: skill.line,
-          job: meta.jobs,
+          job: resolvedJobs,
           instanceKey,
         })
       }
@@ -450,8 +585,24 @@ const useKeySkillStore = defineStore('keySkill', () => {
   }
 
   function resetSkillsToDefault() {
-    keySkillsData.value.chinese = defaultSkillEntries.map(skill => createSkillEntry(skill.id, skill.tts, skill.line))
-    keySkillsData.value.mergedIds = [...defaultSkillIds]
+    keySkillsData.value = {
+      chinese: defaultSkillEntries.map(skill => createSkillEntry(skill.id, skill.tts, skill.line)),
+      mergedIds: [...defaultSkillIds],
+    }
+    wipe()
+    pendingAutoMeta.clear()
+    pendingAutoMetaTasks.clear()
+    Object.keys(autoMetaById).forEach((key) => {
+      Reflect.deleteProperty(autoMetaById, Number(key))
+    })
+    keySkillsData.value.chinese.forEach((entry) => {
+      const cached = normalizeAutoMetaEntry(entry.id, autoMetaCache.value[String(entry.id)])
+      if (cached) {
+        autoMetaById[entry.id] = cached
+        return
+      }
+      void ensureActionAutoMeta(entry.id)
+    })
   }
 
   return {
@@ -468,6 +619,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
     keySkillsData,
     enableTts,
     autoMetaById,
+    isAutoMetaLoading,
     ensureActionAutoMeta,
     setSkills,
     resetSkillsToDefault,
