@@ -26,9 +26,14 @@ const compareSameGroup = {
 const compareSameMap = new Map<number, number>(
   Object.entries(compareSameGroup).map(([k, v]) => [Number(k), v]),
 )
+const compareSameSourceIdSet = new Set<number>(compareSameMap.keys())
 
 function compareSame(id: number) {
   return compareSameMap.get(id) || id
 }
 
-export { compareSame }
+function isCompareSameSourceId(id: number) {
+  return compareSameSourceIdSet.has(id)
+}
+
+export { compareSame, isCompareSameSourceId }
