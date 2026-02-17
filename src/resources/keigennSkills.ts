@@ -127,7 +127,7 @@ const keigennSkills: KeigennSkill[] = [
   {
     // 圣盾阵
     id: `(lv) => lv>=82 ? 25746 : 3542`,
-    recast1000ms: 0,
+    recast1000ms: 5,
     job: [19],
     minLevel: 35,
     scope: SELF,
@@ -138,7 +138,7 @@ const keigennSkills: KeigennSkill[] = [
   {
     // 干预
     id: 7382,
-    recast1000ms: 0,
+    recast1000ms: 10,
     job: [19],
     minLevel: 62,
     scope: OTHER,

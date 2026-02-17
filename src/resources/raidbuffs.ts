@@ -89,7 +89,8 @@ const raidbuffs: KeySkill[] = [
     recast1000ms: 90,
     job: [2, 4, 20, 22, 29, 30, 34, 39, 41],
     line: 2,
-    minLevel: 22,
+    // minLevel: 22,
+    minLevel: 1,
   },
   {
     key: 'preset_7560',
@@ -99,7 +100,8 @@ const raidbuffs: KeySkill[] = [
     recast1000ms: 90,
     job: [7, 25, 26, 27, 35, 36, 42],
     line: 2,
-    minLevel: 8,
+    // minLevel: 8,
+    minLevel: 1,
   },
   {
     key: 'preset_7535',
@@ -109,7 +111,8 @@ const raidbuffs: KeySkill[] = [
     recast1000ms: 60,
     job: [1, 3, 19, 21, 32, 37],
     line: 2,
-    minLevel: 22,
+    // minLevel: 22,
+    minLevel: 1,
   },
   {
     key: 'preset_3540',
