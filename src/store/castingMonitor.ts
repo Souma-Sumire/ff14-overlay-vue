@@ -1,12 +1,13 @@
 import type { Party } from '../../cactbot/types/event'
 import { defineStore } from 'pinia'
-import Util from '@/utils/util'
+import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { getFullImgSrc, hostCache, parseAction, site } from '@/utils/xivapi'
 import { callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 
 const params = new URLSearchParams(window.location.href.split('?')[1])
-
-const THNSort = ['tank', 'healer', 'dps', 'crafter', 'gatherer', 'none']
+const DEFAULT_JOB_SORT_INDEX = new Map(
+  DEFAULT_JOB_SORT_ORDER.map((job, index) => [job, index]),
+)
 // const testActions = [
 //   24283, 24284, 24285, 24286, 24287, 24288, 24289, 24290, 24294, 24295, 24296,
 //   24297, 24298, 24299, 24300, 24301, 24302, 24303, 24304, 24305, 24306, 24307,
@@ -39,6 +40,114 @@ const testActions = [
 function getRandomTestActionId(): number {
   return testActions[Math.floor(Math.random() * testActions.length)]!
 }
+
+const testPartyMembers: Party[] = [
+  {
+    id: '10000001',
+    name: '测试张三',
+    job: 24,
+    inParty: true,
+    worldId: 0,
+    level: 100,
+    contentId: 0,
+    flags: 0,
+    objectId: 0,
+    partyType: 1,
+    territoryType: 0,
+  },
+  {
+    id: '10000002',
+    name: '测试李四',
+    job: 25,
+    inParty: true,
+    worldId: 0,
+    level: 100,
+    contentId: 0,
+    flags: 0,
+    objectId: 0,
+    partyType: 1,
+    territoryType: 0,
+  },
+  {
+    id: '10000004',
+    name: '测试王五',
+    job: 19,
+    inParty: true,
+    worldId: 0,
+    level: 100,
+    contentId: 0,
+    flags: 0,
+    objectId: 0,
+    partyType: 1,
+    territoryType: 0,
+  },
+  {
+    id: '10000005',
+    name: '测试赵六',
+    job: 23,
+    inParty: true,
+    worldId: 0,
+    level: 100,
+    contentId: 0,
+    flags: 0,
+    objectId: 0,
+    partyType: 1,
+    territoryType: 0,
+  },
+  {
+    id: '10000006',
+    name: '测试孙七',
+    job: 39,
+    inParty: true,
+    worldId: 0,
+    level: 100,
+    contentId: 0,
+    flags: 0,
+    objectId: 0,
+    partyType: 1,
+    territoryType: 0,
+  },
+  {
+    id: '10000007',
+    name: '测试周八',
+    job: 40,
+    inParty: true,
+    worldId: 0,
+    level: 100,
+    contentId: 0,
+    flags: 0,
+    objectId: 0,
+    partyType: 1,
+    territoryType: 0,
+  },
+  {
+    id: '10000008',
+    name: '测试吴九',
+    job: 37,
+    inParty: true,
+    worldId: 0,
+    level: 100,
+    contentId: 0,
+    flags: 0,
+    objectId: 0,
+    partyType: 1,
+    territoryType: 0,
+  },
+  {
+    id: '10000009',
+    name: '测试郑十',
+    job: 38,
+    inParty: true,
+    worldId: 0,
+    level: 100,
+    contentId: 0,
+    flags: 0,
+    objectId: 0,
+    partyType: 1,
+    territoryType: 0,
+  },
+]
+
 export const useCastingMonitorStore = defineStore('castingMonitor', {
   state: () => {
     return {
@@ -65,6 +174,7 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
       },
       simulateSlowImageLoad: false,
       simulateSlowImageLoadDelayMs: 3000,
+      testPartySize: 8,
       // lastPush: Date.now(),
       type: params.get('type') === 'party' ? 'party' : 'focus',
     }
@@ -72,10 +182,9 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
   getters: {
     partyDataFormatted(state) {
       return [...state.partyData].sort((a, b) => {
-        return (
-          THNSort.indexOf(Util.jobToRole(Util.jobEnumToJob(a.job)))
-          - THNSort.indexOf(Util.jobToRole(Util.jobEnumToJob(b.job)))
-        )
+        const aSort = DEFAULT_JOB_SORT_INDEX.get(a.job) ?? Number.POSITIVE_INFINITY
+        const bSort = DEFAULT_JOB_SORT_INDEX.get(b.job) ?? Number.POSITIVE_INFINITY
+        return aSort - bSort
       })
     },
   },
@@ -149,114 +258,15 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
     testParty(fakeParty: boolean): void {
       this.handlePartyChanged({
         party: fakeParty
-          ? [
-              {
-                id: '10000001',
-                name: '测试张三',
-                job: 24,
-                inParty: true,
-                worldId: 0,
-                level: 100,
-                contentId: 0,
-                flags: 0,
-                objectId: 0,
-                partyType: 1,
-                territoryType: 0,
-              },
-              {
-                id: '10000002',
-                name: '测试李四',
-                job: 25,
-                inParty: true,
-                worldId: 0,
-                level: 100,
-                contentId: 0,
-                flags: 0,
-                objectId: 0,
-                partyType: 1,
-                territoryType: 0,
-              },
-              {
-                id: '10000004',
-                name: '测试王五',
-                job: 19,
-                inParty: true,
-                worldId: 0,
-                level: 100,
-                contentId: 0,
-                flags: 0,
-                objectId: 0,
-                partyType: 1,
-                territoryType: 0,
-              },
-              {
-                id: '10000005',
-                name: '测试赵六',
-                job: 23,
-                inParty: true,
-                worldId: 0,
-                level: 100,
-                contentId: 0,
-                flags: 0,
-                objectId: 0,
-                partyType: 1,
-                territoryType: 0,
-              },
-              {
-                id: '10000006',
-                name: '测试孙七',
-                job: 39,
-                inParty: true,
-                worldId: 0,
-                level: 100,
-                contentId: 0,
-                flags: 0,
-                objectId: 0,
-                partyType: 1,
-                territoryType: 0,
-              },
-              {
-                id: '10000007',
-                name: '测试周八',
-                job: 40,
-                inParty: true,
-                worldId: 0,
-                level: 100,
-                contentId: 0,
-                flags: 0,
-                objectId: 0,
-                partyType: 1,
-                territoryType: 0,
-              },
-              {
-                id: '10000008',
-                name: '测试吴九',
-                job: 37,
-                inParty: true,
-                worldId: 0,
-                level: 100,
-                contentId: 0,
-                flags: 0,
-                objectId: 0,
-                partyType: 1,
-                territoryType: 0,
-              },
-              {
-                id: '10000009',
-                name: '测试郑十',
-                job: 38,
-                inParty: true,
-                worldId: 0,
-                level: 100,
-                contentId: 0,
-                flags: 0,
-                objectId: 0,
-                partyType: 1,
-                territoryType: 0,
-              },
-            ]
+          ? testPartyMembers.slice(0, this.testPartySize)
           : [],
       })
+    },
+    setTestPartySize(size: number): void {
+      const normalized = Math.min(8, Math.max(1, Math.round(size)))
+      this.testPartySize = normalized
+      if (this.type === 'party')
+        this.testParty(true)
     },
     testPartyMode(): void {
       this.type = 'party'

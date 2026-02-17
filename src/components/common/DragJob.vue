@@ -3,6 +3,7 @@ import type { RemovableRef } from '@vueuse/core'
 import type { Role } from '../../../cactbot/types/job'
 import type { Player } from '@/types/partyPlayer'
 import { VueDraggable } from 'vue-draggable-plus'
+import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { usePartySortStore } from '@/store/partySort'
 import Util from '@/utils/util'
 
@@ -42,7 +43,9 @@ function buildJobsList(): Record<Role, number[]> {
         : Util.getBattleJobs3()
             .filter(roleToFilterFn[role])
             .map(Util.jobToJobEnum)
-            .sort(Util.enumSortMethod),
+            .sort((a, b) =>
+              DEFAULT_JOB_SORT_ORDER.indexOf(a) - DEFAULT_JOB_SORT_ORDER.indexOf(b),
+            ),
     ]),
   ) as Record<Role, number[]>
 }

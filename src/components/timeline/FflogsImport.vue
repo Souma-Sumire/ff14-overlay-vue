@@ -12,6 +12,7 @@ import { Loading } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 import { getActionChinese } from '@/resources/actionChinese'
 import { bossPhase } from '@/resources/bossPhase'
+import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { factory } from '@/services/timelineSpecialRules'
 import { useTimelineStore } from '@/store/timeline'
 import { CacheManager } from '@/utils/cacheManager'
@@ -164,7 +165,7 @@ async function queryFFlogsReportFights(url: string) {
     fflogsQueryConfig.friendlies.sort((a, b) => {
       const aEnum = Util.iconToJobEnum(a.icon as FFIcon)
       const bEnum = Util.iconToJobEnum(b.icon as FFIcon)
-      return Util.enumSortMethod(aEnum, bEnum)
+      return DEFAULT_JOB_SORT_ORDER.indexOf(aEnum) - DEFAULT_JOB_SORT_ORDER.indexOf(bEnum)
     })
     queryText.value = QueryTextEnum.query
     fflogsQueryConfig.abilityFilterEvents.length = 0

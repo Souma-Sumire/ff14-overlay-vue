@@ -6,6 +6,7 @@ import { onClickOutside } from '@vueuse/core'
 import { ElIcon, ElMessage } from 'element-plus'
 import { computed, h } from 'vue'
 import { useLang } from '@/composables/useLang'
+import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 import { copyToClipboard } from '@/utils/clipboard'
 import Util from '@/utils/util'
@@ -275,7 +276,7 @@ const targetOptions = computed(() => {
       job: row.jobEnum,
     })),
   ].sort((a, b) => {
-    return Util.enumSortMethod(a.job, b.job)
+    return DEFAULT_JOB_SORT_ORDER.indexOf(a.job) - DEFAULT_JOB_SORT_ORDER.indexOf(b.job)
   })
 })
 

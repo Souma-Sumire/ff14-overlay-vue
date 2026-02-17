@@ -6,6 +6,7 @@ import { computed, reactive, ref } from 'vue'
 import { useDemo } from '@/composables/useDemo'
 import { useDev } from '@/composables/useDev'
 import { RandomPartyGenerator } from '@/mock/demoParty'
+import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { raidbuffs } from '@/resources/raidbuffs'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 import { tts } from '@/utils/tts'
@@ -177,7 +178,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
         v => v.key === b.skillKey,
       )
       if (aIndex === bIndex) {
-        return Util.enumSortMethod(a.owner.job, b.owner.job)
+        return DEFAULT_JOB_SORT_ORDER.indexOf(a.owner.job) - DEFAULT_JOB_SORT_ORDER.indexOf(b.owner.job)
       }
       return aIndex - bIndex
     })
