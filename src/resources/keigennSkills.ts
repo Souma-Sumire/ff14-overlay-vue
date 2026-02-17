@@ -568,6 +568,7 @@ const keigennSkills: KeigennSkill[] = [
     // 心眼 / 天眼通
     id: `(lv) => lv>=82 ? 36962 : 7498`,
     recast1000ms: 15,
+    duration: 4,
     job: [34],
     minLevel: 6,
     scope: SELF,
