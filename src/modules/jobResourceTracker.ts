@@ -5,6 +5,42 @@ import { PictomancerTracker } from './jobs/pictomancer'
 import { SageTracker } from './jobs/sage'
 import { ScholarTracker } from './jobs/scholar'
 
+interface JobResourceTrackerDefinition {
+  job: number
+  tracker: new () => ResourceTracker
+  resourceCostName?: string
+}
+
+const JOB_RESOURCE_TRACKER_DEFINITIONS: JobResourceTrackerDefinition[] = [
+  { job: 28, tracker: ScholarTracker, resourceCostName: '以太超流' }, // SCH
+  { job: 19, tracker: PaladinTracker, resourceCostName: '忠义量谱' }, // PLD
+  { job: 40, tracker: SageTracker, resourceCostName: '蛇胆' }, // SGE
+  { job: 32, tracker: DarkKnightTracker, resourceCostName: '魔力(MP)' }, // DRK
+  { job: 42, tracker: PictomancerTracker }, // PCT
+]
+
+export const JOB_RESOURCE_TRACKER_SUPPORTED_JOBS = new Set<number>(
+  JOB_RESOURCE_TRACKER_DEFINITIONS.map(item => item.job),
+)
+
+export const JOB_RESOURCE_COST_NAME_BY_JOB: Record<number, string> = Object.fromEntries(
+  JOB_RESOURCE_TRACKER_DEFINITIONS
+    .filter((item): item is JobResourceTrackerDefinition & { resourceCostName: string } => !!item.resourceCostName)
+    .map(item => [item.job, item.resourceCostName]),
+) as Record<number, string>
+
+export function hasJobResourceTracker(job: number) {
+  return JOB_RESOURCE_TRACKER_SUPPORTED_JOBS.has(job)
+}
+
+export function hasJobResourceCostTracker(job: number) {
+  return job in JOB_RESOURCE_COST_NAME_BY_JOB
+}
+
+export function getJobResourceCostName(job: number) {
+  return JOB_RESOURCE_COST_NAME_BY_JOB[job] ?? ''
+}
+
 /**
  * 职业资源管理器
  * 负责统一管理不同职业的量谱模拟器 (Tracker)，并提供统一的资源查询 API
@@ -14,11 +50,9 @@ export class JobResourceManager {
   private activeTrackers: Map<number, ResourceTracker> = new Map()
 
   constructor() {
-    this.allTrackers.set(28, ScholarTracker)
-    this.allTrackers.set(19, PaladinTracker)
-    this.allTrackers.set(40, SageTracker)
-    this.allTrackers.set(32, DarkKnightTracker)
-    this.allTrackers.set(42, PictomancerTracker)
+    JOB_RESOURCE_TRACKER_DEFINITIONS.forEach(({ job, tracker }) => {
+      this.allTrackers.set(job, tracker)
+    })
   }
 
   /** 根据当前队伍职业动态开启 Tracker */
