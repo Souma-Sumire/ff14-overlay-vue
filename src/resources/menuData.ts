@@ -216,7 +216,7 @@ export function getRawMenuData(locale: string, t: (key: string, args?: (string |
     {
       title: 'startPages.menu.team_watch_legacy',
       type: '悬浮窗',
-      path: 'https://souma.diemoe.net/dist/teamWatch.html',
+      path: `teamWatch?scale=1&opacity=1&postNamazu=false&lang=${locale}`,
       comment: 'startPages.comment.team_watch_legacy',
       src: 'teamWatch.webp',
       direction: 'row-reverse',
