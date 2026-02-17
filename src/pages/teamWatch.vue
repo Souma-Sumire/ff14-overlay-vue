@@ -1,0 +1,332 @@
+<script setup lang="ts">
+import type { EventMap } from '../../cactbot/types/event'
+import type { TeamWatchMemberView, TeamWatchSkillView } from '@/types/teamWatchTypes'
+import { useUrlSearchParams } from '@vueuse/core'
+import { ElMessage } from 'element-plus'
+import { useDemo } from '@/composables/useDemo'
+import { useDev } from '@/composables/useDev'
+import { useTeamWatchStore } from '@/store/teamWatchStore'
+import { copyToClipboard } from '@/utils/clipboard'
+import { doTextCommand } from '@/utils/postNamazu'
+import { handleImgError } from '@/utils/xivapi'
+import { addOverlayListener, removeOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
+
+const params = useUrlSearchParams('hash')
+const store = useTeamWatchStore()
+const demo = useDemo()
+const dev = useDev()
+
+const postNamazu = computed(() => params.postNamazu === 'true')
+const showMenu = computed(() => demo.value || dev.value || window.location.hostname === 'localhost')
+
+const handleChangePrimaryPlayer: EventMap['ChangePrimaryPlayer'] = (e) => {
+  store.handleChangePrimaryPlayer(e)
+}
+const handlePartyChanged: EventMap['PartyChanged'] = (e) => {
+  store.handlePartyChanged(e)
+}
+const handleChangeZone: EventMap['ChangeZone'] = () => {
+  store.handleZoneChanged()
+}
+const handleLogLine: EventMap['LogLine'] = (e) => {
+  store.handleLogLine(e)
+}
+
+let runtimeRaf: number | undefined
+const runtimeTickMode: 'full' | '30fps' = '30fps'
+const runtimeThrottleMs = 33
+
+function skillState(skill: TeamWatchSkillView) {
+  return store.getSkillState(skill)
+}
+
+async function handleSkillClick(member: TeamWatchMemberView, skill: TeamWatchSkillView) {
+  if (skill.rawActionId <= 0)
+    return
+
+  const text = store.buildSkillStatusText(member, skill)
+  try {
+    await copyToClipboard(text)
+  }
+  catch (error) {
+    console.warn('[teamWatch] copy failed:', error)
+    ElMessage.warning('复制失败')
+  }
+
+  if (postNamazu.value) {
+    try {
+      await doTextCommand(`/p ${text}`)
+    }
+    catch (error) {
+      console.warn('[teamWatch] postNamazu failed:', error)
+    }
+  }
+}
+
+function openSettings() {
+  window.open(`${import.meta.env.BASE_URL}#/teamWatchSettings`, 'teamWatchSettings', 'width=1280,height=900')
+}
+
+onMounted(() => {
+  addOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
+  addOverlayListener('PartyChanged', handlePartyChanged)
+  addOverlayListener('ChangeZone', handleChangeZone)
+  addOverlayListener('LogLine', handleLogLine)
+
+  let lastRuntimeUpdateAt = Number.NEGATIVE_INFINITY
+  const tick = (timestamp: number) => {
+    if (runtimeTickMode === '30fps') {
+      if (timestamp - lastRuntimeUpdateAt >= runtimeThrottleMs) {
+        store.updateRuntime()
+        lastRuntimeUpdateAt = timestamp
+      }
+    }
+    else {
+      store.updateRuntime()
+    }
+    runtimeRaf = window.requestAnimationFrame(tick)
+  }
+  runtimeRaf = window.requestAnimationFrame(tick)
+
+  if (window.location.href.includes('localhost') || dev.value)
+    store.initForDev()
+})
+
+onUnmounted(() => {
+  removeOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
+  removeOverlayListener('PartyChanged', handlePartyChanged)
+  removeOverlayListener('ChangeZone', handleChangeZone)
+  removeOverlayListener('LogLine', handleLogLine)
+  if (runtimeRaf)
+    cancelAnimationFrame(runtimeRaf)
+})
+</script>
+
+<template>
+  <CommonActWrapper>
+    <div class="team-watch-root">
+      <div v-if="showMenu" class="menu-tools">
+        <el-button size="small" @click="openSettings">
+          设置
+        </el-button>
+        <el-button size="small" @click="store.setFakeMode(true)">
+          假队
+        </el-button>
+        <el-button size="small" @click="store.setFakeMode(false)">
+          实队
+        </el-button>
+        <el-button size="small" @click="store.triggerAllVisibleSkills()">
+          测触
+        </el-button>
+        <el-button size="small" @click="store.fillResourceStates()">
+          填满量谱
+        </el-button>
+      </div>
+
+      <main class="member-list">
+        <article
+          v-for="member in store.members"
+          :key="member.id"
+          class="member-row"
+        >
+          <button
+            v-for="(skill, index) in member.skills"
+            :key="`${member.id}-${index}-${skill.rawActionId}`"
+            class="skill-btn"
+            :class="[
+              {
+                'is-hidden': skill.rawActionId <= 0 || member.level < skill.meta.classJobLevel,
+                'is-cooling': skillState(skill).isCooling,
+                'is-resource-empty': !skillState(skill).resourceReady,
+                'flash-used': skillState(skill).isRecentlyUsed,
+              },
+            ]"
+            :title="store.buildSkillStatusText(member, skill)"
+            @click="handleSkillClick(member, skill)"
+          >
+            <img :src="skill.meta.iconSrc" :alt="skill.meta.name" @error="handleImgError">
+            <span
+              v-if="skillState(skill).overlayPercent > 0"
+              class="cooldown-mask"
+              :style="{ height: `${skillState(skill).overlayPercent}%` }"
+            />
+            <span
+              v-if="!skillState(skill).isCharge"
+              class="recast-text"
+            >
+              {{ skillState(skill).text }}
+            </span>
+            <span
+              v-if="skillState(skill).isCharge"
+              class="charges-text"
+              :class="{ empty: skillState(skill).charges <= 0 }"
+            >
+              {{ skillState(skill).charges }}
+            </span>
+            <span
+              v-if="skillState(skill).extraText"
+              class="resource-text"
+            >
+              {{ skillState(skill).extraText }}
+            </span>
+            <span
+              v-else-if="skillState(skill).hasResourceCost && skillState(skill).resourceValue !== undefined"
+              class="resource-text"
+              :class="{ warn: !skillState(skill).resourceReady }"
+            >
+              {{ skillState(skill).resourceValue ?? 0 }}
+            </span>
+          </button>
+        </article>
+      </main>
+    </div>
+  </CommonActWrapper>
+</template>
+
+<style scoped lang="scss">
+.team-watch-root {
+  width: fit-content;
+  user-select: none;
+}
+
+.member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  gap: 2px;
+}
+
+.skill-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(20, 20, 20, 0.65);
+  cursor: pointer;
+  transition: transform 0.08s ease, filter 0.08s ease;
+
+  img {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.08);
+  }
+}
+
+.skill-btn.is-resource-empty {
+  box-shadow: inset 0 0 0 1px rgba(255, 69, 69, 0.85);
+  filter: saturate(0.65);
+}
+
+.skill-btn.is-hidden {
+  opacity: 0;
+  border-color: transparent;
+  background: transparent;
+  pointer-events: none;
+}
+
+.cooldown-mask {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
+.recast-text {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 2;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  text-shadow:
+    -1px 0 2px #000,
+    0 1px 2px #000,
+    1px 0 2px #000,
+    0 -1px 2px #000;
+}
+
+.charges-text {
+  position: absolute;
+  right: 2px;
+  bottom: 0;
+  z-index: 2;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  text-shadow:
+    -1px 0 2px #000,
+    0 1px 2px #000,
+    1px 0 2px #000,
+    0 -1px 2px #000;
+}
+
+.charges-text.empty {
+  color: #ff6a00;
+}
+
+.resource-text {
+  position: absolute;
+  left: 2px;
+  bottom: 2px;
+  z-index: 2;
+  color: #f5f5f5;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  transform: scale(0.84);
+  transform-origin: left bottom;
+  text-shadow:
+    -1px 0 2px #000,
+    0 1px 2px #000,
+    1px 0 2px #000,
+    0 -1px 2px #000;
+}
+
+.resource-text.warn {
+  color: #ff4d4f;
+}
+
+.menu-tools {
+  position: fixed;
+  right: 0;
+  bottom: 36px;
+  z-index: 200;
+  display: flex;
+  gap: 0px;
+}
+
+.flash-used {
+  animation: used-flash 0.22s ease-out 1;
+}
+
+@keyframes used-flash {
+  from {
+    transform: scale(1);
+    filter: brightness(1.35);
+  }
+  to {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+</style>
