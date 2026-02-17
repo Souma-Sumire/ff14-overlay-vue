@@ -17,7 +17,7 @@ import { factory } from '@/services/timelineSpecialRules'
 import { useTimelineStore } from '@/store/timeline'
 import { CacheManager } from '@/utils/cacheManager'
 import Util from '@/utils/util'
-import { getImgSrc, handleImgError } from '@/utils/xivapi'
+import { getIconSrcByPath, handleImgError } from '@/utils/xivapi'
 
 const props = defineProps<{
   filters: Record<string, number[]>
@@ -767,7 +767,7 @@ function getJobStr(icon: FFIcon) {
               class="ability-filter-option"
             >
               <img
-                :src="getImgSrc(`/i/${rule.url}.png`)"
+                :src="getIconSrcByPath(`/i/${rule.url}.png`)"
                 class="ability-filter-icon"
                 :alt="rule.actionName"
                 :onerror="handleImgError"

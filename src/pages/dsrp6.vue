@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { getImgSrcByActionId } from '@/utils/xivapi'
+import { getActionIconSrc } from '@/utils/xivapi'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
 addOverlayListener('LogLine', handleLogLine)
@@ -49,7 +49,7 @@ async function handleLogLine(e: { line: string[] }): Promise<void> {
         shengHP: HP.sheng.toFixed(1),
       }
     }
-    const img = await getImgSrcByActionId(Number.parseInt(e.line[4]!, 16))
+    const img = await getActionIconSrc(Number.parseInt(e.line[4]!, 16))
     if (targetName.xie.includes(e.line[7]!)) {
       HP.xie = (Number(e.line[24]) / Number(e.line[25])) * 100
       actionTimeline.data[timeIndex].xie.push(img)

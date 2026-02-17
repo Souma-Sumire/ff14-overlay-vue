@@ -1,7 +1,7 @@
 import type { Party } from '../../cactbot/types/event'
 import { defineStore } from 'pinia'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
-import { getFullImgSrc, hostCache, parseAction, site } from '@/utils/xivapi'
+import { getIconSrcByFullIcon, getIconSrcByPath, parseAction } from '@/utils/xivapi'
 import { callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 
 const params = new URLSearchParams(window.location.href.split('?')[1])
@@ -342,33 +342,26 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
           }
           assignSrc()
         }
-        const cache = hostCache.get(abiId)
-        if (cache) {
-          setCastSrc(`//${cache.Host}${cache.Icon}`)
-        }
         if (logLine === 14 && cast1000Ms) {
           setTimeout(() => {
             this.castData = this.castData.filter(v => v?.key !== key)
           }, cast1000Ms * 1000 - 500)
         }
         if (abilityName.startsWith('unknown_')) {
-          setCastSrc(`${site.first}/i/000000/000405.png`)
+          setCastSrc(getIconSrcByFullIcon('000000/000405'))
           cast.class = 'action action-category-0'
         }
         else if (abiId < 100000) {
-          const action
-            = cache
-              || (await parseAction(queryType, abiId, [
-                'ID',
-                'Icon',
-                'ActionCategoryTargetID',
-              ]))
+          const action = await parseAction(queryType, abiId, [
+            'ID',
+            'Icon',
+            'ActionCategoryTargetID',
+          ])
           if (action.ID === 3) {
             // 疾跑(冲刺)
             action.Icon = '/i/000000/000104.png'
           }
-          if (!cache)
-            setCastSrc(getFullImgSrc(action?.Icon ?? '', itemIsHQ, action?.Host))
+          setCastSrc(getIconSrcByPath(action?.Icon ?? '', itemIsHQ))
           if (queryType === 'action')
             cast.class = `action action-category-${action?.ActionCategoryTargetID}`
           else if (queryType === 'mount')

@@ -1,8 +1,8 @@
 import type { PerformanceType } from '@/types/keigennRecord2'
 import { getActionChinese } from '@/resources/actionChinese'
+import { getIconSrcById } from '@/utils/xivapi'
 import { chineseToIcon } from './chineseToIcon'
 import { compareSame } from './compareSaveAction'
-import { iconToSrc } from './iconToSrc'
 
 const DYNAMIC_EXPRESSION_PATTERN = /^[\s\w=>()*+\-/.,:;<?@[\]^{}!]+$/
 
@@ -86,6 +86,6 @@ function idToSrc(id: number | string) {
     // console.warn(`找不到动作图标: ${chinese}, icon: ${icon}`)
     return ''
   }
-  return iconToSrc(icon)
+  return getIconSrcById(icon, true)
 }
 export { idToSrc, parseDynamicPerformance, parseDynamicValue }

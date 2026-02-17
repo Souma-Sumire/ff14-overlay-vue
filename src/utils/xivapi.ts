@@ -1,69 +1,114 @@
 import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/roleActionCategoryByJob'
+import { completeIcon } from '@/resources/status'
 
 const params = new URLSearchParams(window.location.search)
 const apiParam = params.get('api')?.toLowerCase()
 
-const SITE_LIST = {
+const SITE_HOST = {
   cafe: 'cafemaker.wakingsands.com',
   xivapi: 'xivapi.com',
 } as const
+type SiteName = keyof typeof SITE_HOST
 
-class SiteManager {
-  private hosts: string[]
-  private currentIndex: number = 0
-
-  constructor(primary: 'xivapi' | 'cafe') {
-    if (primary === 'xivapi') {
-      this.hosts = [SITE_LIST.xivapi, SITE_LIST.cafe]
-    }
-    else {
-      this.hosts = [SITE_LIST.cafe, SITE_LIST.xivapi]
-    }
-  }
-
-  get primaryHost() {
-    return this.hosts[this.currentIndex]!
-  }
-
-  get secondaryHost() {
-    return this.hosts[1 - this.currentIndex]!
-  }
-
-  get primaryUrl() {
-    return `https://${this.primaryHost}`
-  }
-
-  get secondaryUrl() {
-    return `https://${this.secondaryHost}`
-  }
-
-  switch() {
-    console.warn(`Primary site ${this.primaryHost} failed, switching to ${this.secondaryHost}`)
-    this.currentIndex = 1 - this.currentIndex
-  }
-
-  isSecondary(url: string) {
-    return url.includes(this.secondaryHost)
-  }
-}
-
-export const siteManager = new SiteManager(apiParam === 'xivapi' ? 'xivapi' : 'cafe')
-
-// 兼容旧代码的导出
-export const site = {
-  get first() { return siteManager.primaryUrl },
-  set first(_v) { /* ignore */ },
-  get second() { return siteManager.secondaryUrl },
-  set second(_v) { /* ignore */ },
-}
-
-export const hostCache = new Map<number, any>()
-const imgCache = new Map<string, string>()
-const actionSearchByJobCache = new Map<string, XivApiActionSearchItem[]>()
-const ACTION_SEARCH_CACHE_VERSION = 'action_search_by_jobs_v2'
+let primarySite: SiteName = apiParam === 'xivapi' ? 'xivapi' : 'cafe'
 
 const ICON_REGEX = /(\d{6})\/(\d{6})\.png$/
 const DEFAULT_ICON = '/i/000000/000405.png'
+const ACTION_SEARCH_CACHE_VERSION = 'action_search_by_jobs_v2'
+
+const actionCache = new Map<string, Record<string, any>>()
+const actionSearchByJobCache = new Map<string, XivApiActionSearchItem[]>()
+
+function getPrimaryHost(): string {
+  return SITE_HOST[primarySite]
+}
+
+function getSecondaryHost(): string {
+  return SITE_HOST[primarySite === 'cafe' ? 'xivapi' : 'cafe']
+}
+
+function getPrimaryUrl(): string {
+  return `https://${getPrimaryHost()}`
+}
+
+function getSecondaryUrl(): string {
+  return `https://${getSecondaryHost()}`
+}
+
+function buildUrl(host: string): string {
+  return `https://${host}`
+}
+
+function switchPrimarySite(): void {
+  const oldHost = getPrimaryHost()
+  primarySite = primarySite === 'cafe' ? 'xivapi' : 'cafe'
+  console.warn(`Primary site ${oldHost} failed, switching to ${getPrimaryHost()}`)
+}
+
+function isSecondaryUrl(url: string): boolean {
+  return url.includes(getSecondaryHost())
+}
+
+function getIconHost(highRes: boolean): string {
+  if (highRes && getPrimaryHost() !== SITE_HOST.cafe)
+    return SITE_HOST.cafe
+  return getPrimaryHost()
+}
+
+function getIconBaseUrl(highRes = false): string {
+  return buildUrl(getIconHost(highRes))
+}
+
+function buildFallbackUrls(path: string): string[] {
+  return [`${getPrimaryUrl()}${path}`, `${getSecondaryUrl()}${path}`]
+}
+
+/**
+ * 你手里是图标数字 ID（如 12345）时用这个。
+ * 会自动补全为标准图标路径，并按全局站点策略生成 URL。
+ */
+export function getIconSrcById(iconId: number, highRes = false): string {
+  if (!Number.isFinite(iconId) || iconId <= 0)
+    return ''
+  return getIconSrcByFullIcon(completeIcon(Math.trunc(iconId)), highRes)
+}
+
+/**
+ * 你手里是完整图标段（如 "000000/000405"）时用这个。
+ * 常用于状态图标或已知图标分组路径。
+ */
+export function getIconSrcByFullIcon(fullIcon: string, highRes = false): string {
+  const normalized = fullIcon.trim()
+  if (!normalized)
+    return ''
+  const resolvedHost = getIconHost(highRes)
+  const suffix = highRes && resolvedHost === SITE_HOST.cafe ? '_hr1' : ''
+  return `${buildUrl(resolvedHost)}/i/${normalized}${suffix}.png`
+}
+
+/**
+ * 你手里是 API 返回的图标路径（如 "/i/000000/000405.png"）时用这个。
+ * 常用于 parseAction / search 返回的 Icon 字段。
+ */
+export function getIconSrcByPath(iconPath: string, itemIsHQ = false): string {
+  if (!iconPath)
+    return ''
+  if (/^https?:\/\//.test(iconPath))
+    return iconPath
+  const baseUrl = getIconBaseUrl()
+  return `${baseUrl}${iconPath}`.replace(
+    ICON_REGEX,
+    (_match, p1, p2) => `${p1}/${itemIsHQ ? 'hq/' : ''}${p2}.png`,
+  )
+}
+
+/**
+ * 你只有技能 Action ID，想直接拿图标 URL 时用这个。
+ */
+export async function getActionIconSrc(id: number): Promise<string> {
+  const res = await parseAction('action', id, ['Icon'])
+  return getIconSrcByPath(res.Icon)
+}
 
 export interface XivApiActionSearchItem {
   ID: number
@@ -79,7 +124,7 @@ export interface XivApiActionSearchItem {
   Host?: string
 }
 
-function getRoleActionCategories(jobIds: number[]) {
+function getRoleActionCategories(jobIds: number[]): number[] {
   const set = new Set<number>()
   jobIds.forEach((jobId) => {
     const categories = ROLE_ACTION_CATEGORY_BY_JOB[jobId]
@@ -90,58 +135,102 @@ function getRoleActionCategories(jobIds: number[]) {
   return [...set].sort((a, b) => a - b)
 }
 
+function getActionCacheKey(type: string, actionId: number): string {
+  return `${type}:${Math.trunc(actionId)}`
+}
+
+function hasAllColumns(record: Record<string, any>, columns: string[]): boolean {
+  return columns.every(col => col === 'ID' || Object.prototype.hasOwnProperty.call(record, col))
+}
+
 /**
- * 解析技能/物品等数据
+ * 需要查询单个技能/道具/坐骑等基础数据时用这个。
+ * 会自动缓存并在主备站之间回退。
  */
 export async function parseAction(
   type: string,
   actionId: number,
   columns: (keyof XivApiJson)[] = ['ID', 'Icon', 'ActionCategoryTargetID'],
 ): Promise<any> {
-  if (hostCache.has(actionId)) {
-    return hostCache.get(actionId)
-  }
+  const id = Math.trunc(Number(actionId))
+  const key = getActionCacheKey(type, id)
+  const requestedColumns = columns.map(col => String(col))
+  const cached = actionCache.get(key)
+  if (cached && hasAllColumns(cached, requestedColumns))
+    return cached
 
-  const columnStr = columns.join(',')
-  const urls = [
-    `${siteManager.primaryUrl}/${type}/${actionId}?columns=${columnStr}`,
-    `${siteManager.secondaryUrl}/${type}/${actionId}?columns=${columnStr}`,
-  ]
-
+  const path = `/${type}/${id}?columns=${requestedColumns.join(',')}`
   try {
-    const result = await requestWithFallback(urls)
-    hostCache.set(actionId, result)
-    return result
+    const result = await requestWithFallback(buildFallbackUrls(path))
+    const merged = { ...(cached ?? {}), ...result }
+    actionCache.set(key, merged)
+    return merged
   }
   catch (error) {
-    console.error(`Failed to parse action ${actionId}:`, error)
-    return {
+    console.error(`Failed to parse action ${id}:`, error)
+    const fallback = {
       ActionCategoryTargetID: 0,
-      ID: actionId,
+      ID: id,
       Icon: DEFAULT_ICON,
     }
+    const merged = { ...(cached ?? {}), ...fallback }
+    actionCache.set(key, merged)
+    return merged
+  }
+}
+
+function toActionSearchItem(row: XivApiActionSearchItem): XivApiActionSearchItem | undefined {
+  if (!row || !Number.isFinite(Number(row.ID)))
+    return
+  const isPvP = Number(row.IsPvP ?? 0)
+  if (isPvP > 0)
+    return
+  const recast100ms = Number(row.Recast100ms ?? 0)
+  if (!Number.isFinite(recast100ms) || recast100ms <= 0)
+    return
+  const actionId = Math.trunc(Number(row.ID))
+  if (actionId <= 0)
+    return
+  return {
+    ID: actionId,
+    Name: row.Name ?? `#${actionId}`,
+    Icon: row.Icon ?? DEFAULT_ICON,
+    ClassJobLevel: Number(row.ClassJobLevel ?? 1),
+    ClassJobTargetID: Number(row.ClassJobTargetID ?? 0),
+    ActionCategoryTargetID: Number(row.ActionCategoryTargetID ?? 0),
+    IsRoleAction: Number(row.IsRoleAction ?? 0),
+    IsPvP: isPvP,
+    Recast100ms: recast100ms,
+    Recast1000ms: recast100ms / 10,
+    Host: row.Host,
+  }
+}
+
+async function fetchActionSearchPages(baseQuery: URLSearchParams, merged: Map<number, XivApiActionSearchItem>, limit: number): Promise<void> {
+  const pageLimit = Number(baseQuery.get('limit') ?? 100)
+  let page = 1
+
+  while (merged.size < limit) {
+    const query = new URLSearchParams(baseQuery)
+    query.set('page', String(page))
+    const result = await requestWithFallback(buildFallbackUrls(`/search?${query.toString()}`))
+    const rows = Array.isArray(result?.Results) ? result.Results as XivApiActionSearchItem[] : []
+    rows.forEach((row) => {
+      const parsed = toActionSearchItem(row)
+      if (parsed)
+        merged.set(parsed.ID, parsed)
+    })
+    const pageTotal = Number(result?.Pagination?.PageTotal ?? page)
+    if (page >= pageTotal || rows.length < pageLimit)
+      break
+    page += 1
   }
 }
 
 /**
- * 获取完整的图片链接
+ * 需要按职业批量拉取技能列表（职业技能 + 职能技能）时用这个。
+ * 常用于设置页“选择技能”弹窗。
  */
-export function getFullImgSrc(icon: string, itemIsHQ = false, host?: string) {
-  const baseUrl = host ? `https://${host}` : siteManager.primaryUrl
-  return `${baseUrl}${icon}`.replace(
-    ICON_REGEX,
-    (_match, p1, p2) => `${p1}/${itemIsHQ ? 'hq/' : ''}${p2}.png`,
-  )
-}
-
-/**
- * 根据 Action ID 直接获取图片链接
- */
-export async function getImgSrcByActionId(id: number): Promise<string> {
-  const res = await parseAction('action', id, ['Icon'])
-  return getFullImgSrc(res.Icon, false, res.Host)
-}
-
 export async function searchActionsByClassJobs(jobIds: number[], limit = 500): Promise<XivApiActionSearchItem[]> {
   const normalized = Array.from(
     new Set(
@@ -160,151 +249,47 @@ export async function searchActionsByClassJobs(jobIds: number[], limit = 500): P
     return [...actionSearchByJobCache.get(cacheKey)!]
 
   const merged = new Map<number, XivApiActionSearchItem>()
-  const pageLimit = 100
 
   for (const jobId of normalized) {
-    let page = 1
-    while (merged.size < limit) {
-      const query = new URLSearchParams({
-        indexes: 'Action',
-        columns: 'ID,Name,Icon,ClassJobLevel,ClassJobTargetID,ActionCategoryTargetID,IsRoleAction,IsPvP,Recast100ms',
-        filters: `ClassJobTargetID=${jobId},IsPvP=0`,
-        sort_field: 'ClassJobLevel',
-        sort_order: 'asc',
-        limit: String(pageLimit),
-        page: String(page),
-      })
-
-      const urls = [
-        `${siteManager.primaryUrl}/search?${query.toString()}`,
-        `${siteManager.secondaryUrl}/search?${query.toString()}`,
-      ]
-
-      const result = await requestWithFallback(urls)
-      const rows = Array.isArray(result?.Results) ? result.Results as XivApiActionSearchItem[] : []
-      rows.forEach((row) => {
-        if (!row || !Number.isFinite(Number(row.ID)))
-          return
-        const isPvP = Number(row.IsPvP ?? 0)
-        if (isPvP > 0)
-          return
-        const actionCategoryTargetId = Number(row.ActionCategoryTargetID ?? 0)
-        const recast100ms = Number(row.Recast100ms ?? 0)
-        if (!Number.isFinite(recast100ms) || recast100ms <= 0)
-          return
-        const recast1000ms = recast100ms / 10
-
-        const actionId = Math.trunc(Number(row.ID))
-        if (actionId <= 0)
-          return
-        merged.set(actionId, {
-          ID: actionId,
-          Name: row.Name ?? `#${actionId}`,
-          Icon: row.Icon ?? DEFAULT_ICON,
-          ClassJobLevel: Number(row.ClassJobLevel ?? 1),
-          ClassJobTargetID: Number(row.ClassJobTargetID ?? 0),
-          ActionCategoryTargetID: actionCategoryTargetId,
-          IsRoleAction: Number(row.IsRoleAction ?? 0),
-          IsPvP: isPvP,
-          Recast100ms: recast100ms,
-          Recast1000ms: recast1000ms,
-          Host: row.Host,
-        })
-      })
-
-      const pageTotal = Number(result?.Pagination?.PageTotal ?? page)
-      if (page >= pageTotal)
-        break
-      page += 1
-    }
+    const query = new URLSearchParams({
+      indexes: 'Action',
+      columns: 'ID,Name,Icon,ClassJobLevel,ClassJobTargetID,ActionCategoryTargetID,IsRoleAction,IsPvP,Recast100ms',
+      filters: `ClassJobTargetID=${jobId},IsPvP=0`,
+      sort_field: 'ClassJobLevel',
+      sort_order: 'asc',
+      limit: '100',
+    })
+    await fetchActionSearchPages(query, merged, limit)
   }
 
-  // Merge role actions for the queried jobs.
   const roleCategories = getRoleActionCategories(normalized)
   for (const categoryId of roleCategories) {
-    let page = 1
-    while (merged.size < limit) {
-      const query = new URLSearchParams({
-        indexes: 'Action',
-        columns: 'ID,Name,Icon,ClassJobLevel,ClassJobTargetID,ClassJobCategoryTargetID,ActionCategoryTargetID,IsPvP,IsRoleAction,Recast100ms',
-        filters: `IsRoleAction=1,IsPvP=0,ClassJobCategoryTargetID=${categoryId}`,
-        sort_field: 'ClassJobLevel',
-        sort_order: 'asc',
-        limit: String(pageLimit),
-        page: String(page),
-      })
-
-      const urls = [
-        `${siteManager.primaryUrl}/search?${query.toString()}`,
-        `${siteManager.secondaryUrl}/search?${query.toString()}`,
-      ]
-
-      const result = await requestWithFallback(urls)
-      const rows = Array.isArray(result?.Results) ? result.Results as XivApiActionSearchItem[] : []
-      rows.forEach((row) => {
-        if (!row || !Number.isFinite(Number(row.ID)))
-          return
-        const isPvP = Number(row.IsPvP ?? 0)
-        if (isPvP > 0)
-          return
-        const recast100ms = Number(row.Recast100ms ?? 0)
-        if (!Number.isFinite(recast100ms) || recast100ms <= 0)
-          return
-        const recast1000ms = recast100ms / 10
-
-        const actionId = Math.trunc(Number(row.ID))
-        if (actionId <= 0)
-          return
-        merged.set(actionId, {
-          ID: actionId,
-          Name: row.Name ?? `#${actionId}`,
-          Icon: row.Icon ?? DEFAULT_ICON,
-          ClassJobLevel: Number(row.ClassJobLevel ?? 1),
-          ClassJobTargetID: Number(row.ClassJobTargetID ?? 0),
-          ActionCategoryTargetID: Number(row.ActionCategoryTargetID ?? 0),
-          IsRoleAction: Number(row.IsRoleAction ?? 0),
-          IsPvP: isPvP,
-          Recast100ms: recast100ms,
-          Recast1000ms: recast1000ms,
-          Host: row.Host,
-        })
-      })
-
-      const pageTotal = Number(result?.Pagination?.PageTotal ?? page)
-      if (page >= pageTotal)
-        break
-      page += 1
-    }
+    const query = new URLSearchParams({
+      indexes: 'Action',
+      columns: 'ID,Name,Icon,ClassJobLevel,ClassJobTargetID,ClassJobCategoryTargetID,ActionCategoryTargetID,IsPvP,IsRoleAction,Recast100ms',
+      filters: `IsRoleAction=1,IsPvP=0,ClassJobCategoryTargetID=${categoryId}`,
+      sort_field: 'ClassJobLevel',
+      sort_order: 'asc',
+      limit: '100',
+    })
+    await fetchActionSearchPages(query, merged, limit)
   }
 
-  const sorted = [...merged.values()].sort((a, b) => {
-    if (a.ClassJobLevel === b.ClassJobLevel)
-      return a.ID - b.ID
-    return a.ClassJobLevel - b.ClassJobLevel
-  })
-
-  const list = sorted.slice(0, limit)
+  const list = [...merged.values()]
+    .sort((a, b) => a.ClassJobLevel === b.ClassJobLevel ? a.ID - b.ID : a.ClassJobLevel - b.ClassJobLevel)
+    .slice(0, limit)
 
   actionSearchByJobCache.set(cacheKey, list)
   return [...list]
 }
 
 /**
- * 获取普通图片链接（带缓存）
+ * 用在 `<img @error>` 上的统一兜底处理函数。
+ * 首次加载失败会自动尝试镜像站，仍失败则清空图片。
  */
-export function getImgSrc(src: string): string {
-  if (imgCache.has(src)) {
-    return imgCache.get(src)!
-  }
-  return `${siteManager.primaryUrl}${src}`
-}
-
-/**
- * 处理图片加载错误，尝试切换镜像站
- */
-export function handleImgError(event: Event) {
+export function handleImgError(event: Event): void {
   const target = event.target as HTMLImageElement
-  if (!target.src)
+  if (!target?.src)
     return
 
   const url = new URL(target.src)
@@ -316,34 +301,25 @@ export function handleImgError(event: Event) {
   else if (target.src.includes('viper.png')) {
     target.src = '//souma.diemoe.net/resources/img/viper.png'
   }
-  else if (url.host === siteManager.primaryHost) {
-    target.src = `${siteManager.secondaryUrl}${path}`
+  else if (url.host === getPrimaryHost()) {
+    target.src = `${getSecondaryUrl()}${path}`
   }
   else {
     target.src = ''
   }
-
-  imgCache.set(path, target.src)
 }
 
-/**
- * 带超时的 fetch
- */
 async function fetchWithTimeout(url: string, options: RequestInit, timeout = 3000): Promise<Response> {
   const controller = new AbortController()
   const id = setTimeout(() => controller.abort(), timeout)
   try {
-    const response = await fetch(url, { ...options, signal: controller.signal })
-    return response
+    return await fetch(url, { ...options, signal: controller.signal })
   }
   finally {
     clearTimeout(id)
   }
 }
 
-/**
- * 带有站点回退机制的请求
- */
 async function requestWithFallback(urls: string[], options: RequestInit = {}): Promise<any> {
   const mergedOptions: RequestInit = {
     cache: 'force-cache',
@@ -354,18 +330,19 @@ async function requestWithFallback(urls: string[], options: RequestInit = {}): P
   for (const url of urls) {
     try {
       const response = await fetchWithTimeout(url, mergedOptions)
-      if (response.ok) {
-        if (siteManager.isSecondary(url)) {
-          siteManager.switch()
-        }
-        const json = await response.json()
-        return { ...json, Host: new URL(url).host }
+      if (!response.ok) {
+        console.warn(`Fetch failed for ${url}: status ${response.status}`)
+        continue
       }
-      console.warn(`Fetch failed for ${url}: status ${response.status}`)
+      if (isSecondaryUrl(url))
+        switchPrimarySite()
+      const json = await response.json()
+      return { ...json, Host: new URL(url).host }
     }
-    catch (e) {
-      console.warn(`Fetch failed for ${url}:`, e)
+    catch (error) {
+      console.warn(`Fetch failed for ${url}:`, error)
     }
   }
+
   throw new Error('All fetch attempts failed.')
 }

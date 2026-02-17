@@ -35,7 +35,7 @@ import { getKeigenn, multiplierEffect, universalVulnerableEnemy, universalVulner
 import { formatTimeMs as formatTime } from '@/utils/time'
 
 import Util from '@/utils/util'
-import { getImgSrc } from '@/utils/xivapi'
+import { getIconSrcByFullIcon } from '@/utils/xivapi'
 import logDefinitions from '../../cactbot/resources/netlog_defs'
 import NetRegexes from '../../cactbot/resources/netregexes'
 
@@ -341,7 +341,7 @@ function prepareRowVO(row: Omit<RowVO, 'preCalculated'>): RowVO {
       damageTypeClass: (row.effect === 'heal') ? 'is-heal' : type,
       jobIconSrc,
       keigenns: row.keigenns.map(v => ({
-        src: getImgSrc(`/i/${v.fullIcon}${icon4k}.png`),
+        src: getIconSrcByFullIcon(v.fullIcon, icon4k === '_hr1'),
         usefulClass: multiplierEffect(v, type as any),
         title: `${userOptions.statusCN ? v.name : v.effect}(${v.source})`,
         duration: v.remainingDuration ?? '',

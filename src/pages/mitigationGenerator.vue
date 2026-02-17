@@ -53,7 +53,7 @@ import { getMitigationColumnDisplayName } from '@/utils/mitigationColumn'
 import { buildPartyColumnKey } from '@/utils/mitigationConstants'
 import { getMitigationGridColumnWidth, MITIGATION_GRID_WIDTH } from '@/utils/mitigationGridLayout'
 import Util from '@/utils/util'
-import { getImgSrc } from '@/utils/xivapi'
+import { getIconSrcByPath } from '@/utils/xivapi'
 
 const { parseFile, extractMechanics } = useLogParser()
 
@@ -1545,7 +1545,7 @@ function getSkillsForJob(jobEnum: number, level = 100): MitigationSkill[] {
       const shieldAmount = Number.isFinite(shieldAmountRaw) && shieldAmountRaw > 0 ? shieldAmountRaw : undefined
       const name = getActionChinese(id) || `Skill_${id}`
       const iconId = chineseToIcon(name)
-      const iconUrl = iconId && iconId !== 405 ? getImgSrc(`/i/${completeIcon(iconId)}.png`) : ''
+      const iconUrl = iconId && iconId !== 405 ? getIconSrcByPath(`/i/${completeIcon(iconId)}.png`) : ''
       return {
         id,
         name,

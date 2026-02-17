@@ -7,7 +7,7 @@ import type {
 import { completeIcon } from '@/resources/status'
 import { parseAction } from '@/store/timeline'
 import { chineseToIcon } from '@/utils/chineseToIcon'
-import { getFullImgSrc } from '@/utils/xivapi'
+import { getIconSrcByPath } from '@/utils/xivapi'
 
 const props = defineProps<{
   config: TimelineConfigValues
@@ -60,7 +60,7 @@ function getSkillImage(name: string): string {
     // 仅请求一次，无论成功失败都不会再调用
     imageMap[name] = PLACEHOLDER
     if (icon) {
-      const url = getFullImgSrc(icon)
+      const url = getIconSrcByPath(icon)
       preloadImage(url)
         .then(() => {
           imageMap[name] = url
