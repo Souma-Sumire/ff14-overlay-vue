@@ -10,6 +10,7 @@ const scripts: string[] = [
   'aethercurrent.ts',
   'aetheryte.ts',
   'action.ts',
+  'roleActionCategoryByJob.ts',
   'chinese2Icon.ts',
   'map.ts',
   'status.ts',
