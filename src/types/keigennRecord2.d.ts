@@ -1,5 +1,5 @@
-import type { FFIcon } from '@/types/fflogs'
 import type { DynamicValue } from '@/types/dynamicValue'
+import type { FFIcon } from '@/types/fflogs'
 import type { DamageEffect, DamageType } from '@/utils/flags'
 
 export type Scope = 'self' | 'party' | 'other'
