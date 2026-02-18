@@ -1,5 +1,6 @@
 import { useStorage } from '@vueuse/core'
 import { markRoleActionId, resolveActionMinLevel } from '@/resources/actionMinLevel'
+import { ACTION_SEARCH_CACHE_VERSION, XIVAPI_CACHE_VERSION } from '@/resources/cacheVersion'
 import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/roleActionCategoryByJob'
 import { completeIcon } from '@/resources/status'
 
@@ -12,7 +13,6 @@ const SITE_HOST = {
 } as const
 type SiteName = keyof typeof SITE_HOST
 
-export const XIVAPI_CACHE_VERSION = '20260218-v6'
 const CACHE_VERSION_STORAGE_KEY = 'xivapi-cache-version'
 const PRIMARY_SITE_STORAGE_KEY = 'xivapi-primary-site'
 const cacheVersionStorage = useStorage<string>(CACHE_VERSION_STORAGE_KEY, '')
@@ -51,13 +51,14 @@ let primarySite: SiteName = resolveInitialPrimarySite()
 
 const ICON_REGEX = /(\d{6})\/(\d{6})\.png$/
 const DEFAULT_ICON = '/i/000000/000405.png'
-const ACTION_SEARCH_CACHE_VERSION = 'action_search_by_jobs_v2'
 const XIVAPI_MAX_CONCURRENT_REQUESTS = 10
 
 const actionCache = new Map<string, Record<string, any>>()
 const actionSearchByJobCache = new Map<string, XivApiActionSearchItem[]>()
 const pendingRequestResolvers: Array<() => void> = []
 let activeRequestCount = 0
+
+export { XIVAPI_CACHE_VERSION }
 
 async function acquireRequestSlot(): Promise<void> {
   if (activeRequestCount < XIVAPI_MAX_CONCURRENT_REQUESTS) {
