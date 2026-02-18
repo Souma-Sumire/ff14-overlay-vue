@@ -771,11 +771,20 @@ function validateMetaForm() {
     return null
 
   const name = metaForm.name.trim() || getActionChinese(metaForm.actionId) || `技能 #${metaForm.actionId}`
+  const currentActionCategory = Number(
+    actionMetaUser.value[metaForm.actionId]?.actionCategory
+      ?? store.getActionMetaRaw(metaForm.actionId, false).actionCategory
+      ?? 0,
+  )
+  const normalizedActionCategory = Number.isFinite(currentActionCategory) && currentActionCategory > 0
+    ? Math.trunc(currentActionCategory)
+    : 0
 
   return normalizeTeamWatchActionMetaRaw(metaForm.actionId, {
     id: resolvedSkillId,
     name,
     iconSrc: metaForm.iconSrc.trim(),
+    actionCategory: normalizedActionCategory,
     recast1000ms: recastCheck.parsed!,
     duration: durationCheck.parsed!,
     maxCharges: maxChargesCheck.parsed!,

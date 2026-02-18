@@ -21,6 +21,7 @@ const TEAM_WATCH_ACTION_COLUMNS = [
   'ID',
   'Name',
   'Icon',
+  'ActionCategoryTargetID',
   'Recast100ms',
   'MaxCharges',
   'ClassJobLevel',
@@ -28,8 +29,8 @@ const TEAM_WATCH_ACTION_COLUMNS = [
 ] as (keyof XivApiJson)[]
 
 const teamWatchFakeParty: Party[] = [
-  { id: '10000001', name: 'Faker1', worldId: 0, job: 24, inParty: true, contentId: 0, flags: 0, level: 100, objectId: 0, partyType: 1, territoryType: 0 },
-  { id: '10000002', name: 'Faker2', worldId: 0, job: 25, inParty: true, contentId: 0, flags: 0, level: 100, objectId: 0, partyType: 1, territoryType: 0 },
+  { id: '10000001', name: 'Faker1', worldId: 0, job: 19, inParty: true, contentId: 0, flags: 0, level: 100, objectId: 0, partyType: 1, territoryType: 0 },
+  { id: '10000002', name: 'Faker2', worldId: 0, job: 32, inParty: true, contentId: 0, flags: 0, level: 100, objectId: 0, partyType: 1, territoryType: 0 },
   { id: '10000003', name: 'Faker3', worldId: 0, job: 35, inParty: true, contentId: 0, flags: 0, level: 100, objectId: 0, partyType: 1, territoryType: 0 },
   { id: '10000004', name: 'Faker4', worldId: 0, job: 34, inParty: true, contentId: 0, flags: 0, level: 100, objectId: 0, partyType: 1, territoryType: 0 },
   { id: '10000005', name: 'Faker5', worldId: 0, job: 42, inParty: true, contentId: 0, flags: 0, level: 100, objectId: 0, partyType: 1, territoryType: 0 },
@@ -82,7 +83,8 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
   function triggerAutoFetchActionMeta(actionId: number) {
     if (actionId <= 0)
       return
-    if (actionMetaUser.value[actionId])
+    const existing = actionMetaUser.value[actionId]
+    if (existing && Number(existing.actionCategory ?? 0) > 0)
       return
     if (autoFetchMetaRequested.has(actionId))
       return
@@ -111,6 +113,7 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
       id: resolvedActionId,
       name,
       iconSrc,
+      actionCategory: normalizeInt(Number(raw.actionCategory), 0, 0),
       recast1000ms: normalizeInt(resolveTeamWatchDynamicValue(raw.recast1000ms, level, 0), 0, 0),
       duration: normalizeInt(resolveTeamWatchDynamicValue(raw.duration, level, 0), 0, 0),
       maxCharges: normalizeInt(resolveTeamWatchDynamicValue(raw.maxCharges, level, 0), 0, 0),
@@ -144,6 +147,7 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
           id: actionId,
           name: response.Name ?? base.name,
           iconSrc,
+          actionCategory: Number(response.ActionCategoryTargetID ?? 0),
           recast1000ms: Number(response.Recast100ms ?? 0) / 10,
           duration: base.duration,
           maxCharges: Number(response.MaxCharges ?? 0),
@@ -156,8 +160,11 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
 
         const merged = normalizeTeamWatchActionMetaRaw(actionId, apiMeta)
         // Cache API result to local state + localStorage, but never overwrite manual config.
-        if (!actionMetaUser.value[actionId])
+        const existing = actionMetaUser.value[actionId]
+        if (!existing)
           saveActionMetaRaw(actionId, merged)
+        else if (Number(existing.actionCategory ?? 0) <= 0 && Number(merged.actionCategory ?? 0) > 0)
+          saveActionMetaRaw(actionId, { ...existing, actionCategory: merged.actionCategory })
         return merged
       }
       catch (error) {

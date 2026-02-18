@@ -111,6 +111,14 @@ function normalizeActionId(value: unknown, fallback: number): number {
   return fallbackId
 }
 
+function normalizeActionCategory(value: unknown, fallback: number): number {
+  const fallbackCategory = Number.isFinite(fallback) ? Math.max(0, Math.trunc(fallback)) : 0
+  const numeric = Number(value)
+  if (Number.isFinite(numeric))
+    return Math.max(0, Math.trunc(numeric))
+  return fallbackCategory
+}
+
 // 规范化学习等级，始终返回 >= 1 的整数。
 function normalizeClassJobLevel(value: unknown, fallback: number): number {
   const fallbackLevel = Number.isFinite(fallback) ? Math.max(1, Math.trunc(fallback)) : 1
@@ -161,6 +169,7 @@ export function buildTeamWatchFallbackMeta(actionId: number): TeamWatchActionMet
     id: actionId,
     name: getActionChinese(actionId) || `#${actionId}`,
     iconSrc: idToSrc(actionId),
+    actionCategory: 0,
     recast1000ms: 0,
     duration: 0,
     maxCharges: 0,
@@ -179,6 +188,7 @@ export function normalizeTeamWatchActionMetaRaw(actionId: number, value: unknown
     id: normalizeActionId(raw.id, fallback.id),
     name: (typeof raw.name === 'string' && raw.name.trim()) ? raw.name.trim() : fallback.name,
     iconSrc: (typeof raw.iconSrc === 'string' && raw.iconSrc.trim()) ? raw.iconSrc.trim() : fallback.iconSrc,
+    actionCategory: normalizeActionCategory(raw.actionCategory, fallback.actionCategory),
     recast1000ms: normalizeDynamicValue(raw.recast1000ms, fallback.recast1000ms),
     duration: normalizeDynamicValue(raw.duration, fallback.duration),
     maxCharges: normalizeDynamicValue(raw.maxCharges, fallback.maxCharges),

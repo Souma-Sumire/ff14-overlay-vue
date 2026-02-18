@@ -4,6 +4,7 @@ interface TeamWatchActionMetaBase<TValue> {
   id: number
   name: string
   iconSrc: string
+  actionCategory: number
   recast1000ms: TValue
   duration: TValue
   maxCharges: TValue
