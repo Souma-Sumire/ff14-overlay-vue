@@ -4,6 +4,7 @@ import type { TeamWatchMemberView, TeamWatchSkillView } from '@/types/teamWatchT
 import { useUrlSearchParams } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
 import { useDemo } from '@/composables/useDemo'
+import { useDev } from '@/composables/useDev'
 import { useTeamWatchStore } from '@/store/teamWatchStore'
 import { copyToClipboard } from '@/utils/clipboard'
 import { doTextCommand } from '@/utils/postNamazu'
@@ -13,6 +14,7 @@ import { addOverlayListener, removeOverlayListener } from '../../cactbot/resourc
 const params = useUrlSearchParams('hash')
 const store = useTeamWatchStore()
 const demo = useDemo()
+const dev = useDev()
 
 const postNamazu = computed(() => params.postNamazu === 'true')
 
@@ -110,25 +112,23 @@ onUnmounted(() => {
 
 <template>
   <CommonActWrapper>
-    <template #readme>
-      <div class="menu-tools">
-        <el-button size="small" @click="openSettings">
-          设置
-        </el-button>
-        <el-button size="small" @click="store.setFakeMode(false)">
-          实际队伍
-        </el-button>
-        <el-button size="small" @click="store.setFakeMode(true)">
-          测试：模拟小队
-        </el-button>
-        <el-button size="small" @click="store.triggerAllVisibleSkills()">
-          测试：全部触发
-        </el-button>
-        <el-button size="small" @click="store.fillResourceStates()">
-          测试：填满量谱
-        </el-button>
-      </div>
-    </template>
+    <div v-if="dev || demo" class="menu-tools">
+      <el-button size="small" @click="openSettings">
+        设置
+      </el-button>
+      <el-button size="small" @click="store.setFakeMode(false)">
+        实际队伍
+      </el-button>
+      <el-button size="small" @click="store.setFakeMode(true)">
+        测试：模拟小队
+      </el-button>
+      <el-button size="small" @click="store.triggerAllVisibleSkills()">
+        测试：全部触发
+      </el-button>
+      <el-button size="small" @click="store.fillResourceStates()">
+        测试：填满量谱
+      </el-button>
+    </div>
     <div class="team-watch-root">
       <main class="member-list">
         <article
@@ -236,7 +236,7 @@ onUnmounted(() => {
     width: 48px;
     height: 48px;
     position: absolute;
-    top: calc(50% + 0px);
+    top: calc(50% + 1px);
     left: 50%;
     transform: translate(-50%, -50%) scale(0.8);
     transform-origin: center;
@@ -272,8 +272,9 @@ onUnmounted(() => {
   place-items: center;
   z-index: 2;
   color: #fff;
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1;
   text-shadow:
     -1px 0 2px #000,
     0 1px 2px #000,
@@ -283,12 +284,13 @@ onUnmounted(() => {
 
 .charges-text {
   position: absolute;
-  right: 2px;
-  bottom: 0;
+  right: 1px;
+  bottom: 1px;
   z-index: 2;
   color: #fff;
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1;
   text-shadow:
     -1px 0 2px #000,
     0 1px 2px #000,
@@ -302,16 +304,14 @@ onUnmounted(() => {
 
 .resource-text {
   position: absolute;
-  left: 2px;
-  bottom: 2px;
+  left: 1px;
+  bottom: 1px;
   z-index: 2;
   color: #f5f5f5;
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 10px;
+  font-weight: 400;
   line-height: 1;
   white-space: nowrap;
-  transform: scale(0.84);
-  transform-origin: left bottom;
   text-shadow:
     -1px 0 2px #000,
     0 1px 2px #000,
