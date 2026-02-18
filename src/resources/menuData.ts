@@ -17,19 +17,20 @@ export interface Menu {
 
 export const MENU_ORDER: string[] = [
   'startPages.menu.loot_history',
-  'startPages.menu.uisave_editor',
-  'startPages.menu.dd_atlas',
+  'startPages.menu.team_watch',
   'startPages.menu.keigenn_record2',
   'startPages.menu.healing_timeline',
   'startPages.menu.mitigation_generator',
   'startPages.menu.key_skill_timer',
   'startPages.menu.zone_macro',
+  'startPages.menu.dd_atlas',
   'startPages.menu.obs_auto_record2',
   'startPages.menu.cactbot_raidboss',
   'startPages.menu.casting_monitor',
   'startPages.menu.food_police',
   'startPages.menu.instanced_area_info',
   'startPages.menu.casting_to_chinese',
+  'startPages.menu.uisave_editor',
   'startPages.menu.aether_map',
   'startPages.menu.combat_time_obs',
   'startPages.menu.radar',
@@ -38,7 +39,6 @@ export const MENU_ORDER: string[] = [
   'startPages.menu.show_barrier',
   'startPages.menu.github_patch',
   'startPages.menu.fflogs_uploader_download',
-  'startPages.menu.team_watch_legacy',
   'startPages.menu.act_self_test',
   'startPages.menu.hunt_map',
   'startPages.menu.mogstation_patch',
@@ -68,7 +68,6 @@ export function getRawMenuData(locale: string, t: (key: string, args?: (string |
       commentArgs: [
         `<a href="https://github.com/MisakaCirno/ff14_config_editor/" target="_blank">${t('startPages.comment.uisave_editor_credits')}</a>`,
       ],
-      isNew: true,
     },
     {
       title: 'startPages.menu.fflogs_uploader_download',
@@ -82,7 +81,7 @@ export function getRawMenuData(locale: string, t: (key: string, args?: (string |
       comment: 'startPages.comment.keigenn_record2_params',
       direction: 'row-reverse',
       src: 'keigennRecord2.webp',
-      isRecommended: true,
+      isHot: true,
     },
     {
       title: 'startPages.menu.key_skill_timer',
@@ -146,7 +145,7 @@ export function getRawMenuData(locale: string, t: (key: string, args?: (string |
       isNew: true,
       src: 'mitigationGenerator.webp',
       comment: 'startPages.comment.mitigation_generator',
-      imageWidth: 350,
+      imageWidth: 300,
     },
     {
       title: 'startPages.menu.casting_monitor',
@@ -214,11 +213,12 @@ export function getRawMenuData(locale: string, t: (key: string, args?: (string |
       comment: 'startPages.comment.show_barrier_params',
     },
     {
-      title: 'startPages.menu.team_watch_legacy',
+      title: 'startPages.menu.team_watch',
       type: '悬浮窗',
       path: `teamWatch?scale=1&opacity=1&postNamazu=false&lang=${locale}`,
-      comment: 'startPages.comment.team_watch_legacy',
+      comment: 'startPages.comment.team_watch',
       src: 'teamWatch.webp',
+      isNew: true,
       direction: 'row-reverse',
     },
     {
