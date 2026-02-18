@@ -207,13 +207,13 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   min-height: 38px;
-  gap: 0px;
+  gap: 3px;
 }
 
 .skill-btn {
   position: relative;
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border: 0px solid transparent;
   box-sizing: border-box;
@@ -227,7 +227,6 @@ onUnmounted(() => {
   }
 
   &:hover {
-    transform: translateY(-1px);
     filter: brightness(1.08);
   }
 
@@ -237,7 +236,7 @@ onUnmounted(() => {
     width: 48px;
     height: 48px;
     position: absolute;
-    top: 50%;
+    top: calc(50% + 0px);
     left: 50%;
     transform: translate(-50%, -50%) scale(0.8);
     transform-origin: center;
