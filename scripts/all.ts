@@ -12,6 +12,7 @@ const scripts: string[] = [
   'action.ts',
   'roleActionCategoryByJob.ts',
   'chinese2Icon.ts',
+  'actionMinLevelBake.ts',
   'map.ts',
   'status.ts',
   'contentFinderCondition.ts',
@@ -26,7 +27,7 @@ for (const script of scripts) {
   console.log(`Running ${script}...`)
 
   try {
-    execSync(`npx tsx ${scriptPath}`, { stdio: 'inherit' })
+    execSync(`bun ${scriptPath}`, { stdio: 'inherit' })
   }
   catch (error) {
     console.error(`❌ Error running ${script}:`, error)

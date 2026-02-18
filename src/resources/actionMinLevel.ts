@@ -1,6 +1,8 @@
 import { useStorage } from '@vueuse/core'
 import action2ClassJobLevelMapRaw from '@/resources/action2ClassJobLevel.json'
-import { ACTION_UPGRADE_LEVEL_OVERRIDES, ACTION_UPGRADE_STEPS } from '@/utils/compareSaveAction'
+import { BAKED_ROLE_ACTION_IDS } from '@/resources/bakedRoleActionIds'
+import { BAKED_UPGRADE_CHAIN_MIN_LEVEL_BY_ACTION_ID } from '@/resources/bakedUpgradeChainMinLevel'
+import { ACTION_UPGRADE_LEVEL_OVERRIDES } from '@/utils/compareSaveAction'
 
 const ROLE_ACTION_MIN_LEVEL = 1
 const ROLE_ACTION_CACHE_VERSION = '20260218-v1'
@@ -15,32 +17,17 @@ if (roleActionCacheVersion.value !== ROLE_ACTION_CACHE_VERSION) {
   roleActionCacheVersion.value = ROLE_ACTION_CACHE_VERSION
 }
 
-const knownRoleActionIds = new Set<number>(
-  Object.keys(roleActionIdStorage.value)
+const knownRoleActionIds = new Set<number>([
+  ...BAKED_ROLE_ACTION_IDS,
+  ...Object.keys(roleActionIdStorage.value)
     .map(v => Number(v))
     .filter(v => Number.isFinite(v) && v > 0)
     .map(v => Math.trunc(v)),
-)
+])
 
 const action2ClassJobLevelMap = new Map<string, string>(
   Object.entries(action2ClassJobLevelMapRaw as Record<string, string>),
 )
-
-const upgradeLowerByUpper = (() => {
-  const map = new Map<number, number[]>()
-  Object.entries(ACTION_UPGRADE_STEPS).forEach(([rawLower, rawUpper]) => {
-    const lower = Number(rawLower)
-    const upper = Number(rawUpper)
-    if (!Number.isFinite(lower) || lower <= 0 || !Number.isFinite(upper) || upper <= 0)
-      return
-    if (!map.has(upper))
-      map.set(upper, [])
-    map.get(upper)!.push(lower)
-  })
-  return map
-})()
-
-const upgradeFamilyByActionCache = new Map<number, number[]>()
 
 function persistKnownRoleActionIds() {
   roleActionIdStorage.value = Object.fromEntries(
@@ -75,36 +62,6 @@ function resolveKnownMinLevelByActionId(actionId: number) {
     return normalizeMinLevelValue(fromMap, 1)
 
   return undefined
-}
-
-function getUpgradeFamilyActionIds(actionId: number) {
-  const id = Math.trunc(actionId)
-  const cached = upgradeFamilyByActionCache.get(id)
-  if (cached)
-    return cached
-
-  const visited = new Set<number>()
-  const stack: number[] = [id]
-  while (stack.length > 0) {
-    const current = stack.pop()!
-    if (visited.has(current))
-      continue
-    visited.add(current)
-
-    const upper = ACTION_UPGRADE_STEPS[current]
-    if (typeof upper === 'number' && Number.isFinite(upper) && upper > 0)
-      stack.push(Math.trunc(upper))
-
-    const lowers = upgradeLowerByUpper.get(current) ?? []
-    lowers.forEach((lower) => {
-      if (!visited.has(lower))
-        stack.push(lower)
-    })
-  }
-
-  const family = [...visited]
-  family.forEach(memberId => upgradeFamilyByActionCache.set(memberId, family))
-  return family
 }
 
 export function markRoleActionId(actionId: number, isRoleAction: unknown) {
@@ -150,12 +107,12 @@ export function resolveActionMinLevel(
   if (normalizedActionId <= 0)
     return baseLevel
 
-  const family = getUpgradeFamilyActionIds(normalizedActionId)
-  let minLevel = baseLevel
-  family.forEach((memberId) => {
-    const knownLevel = resolveKnownMinLevelByActionId(memberId)
-    if (knownLevel !== undefined)
-      minLevel = Math.min(minLevel, knownLevel)
-  })
-  return minLevel
+  const bakedFamilyMinLevel = Number(BAKED_UPGRADE_CHAIN_MIN_LEVEL_BY_ACTION_ID[normalizedActionId])
+  if (Number.isFinite(bakedFamilyMinLevel) && bakedFamilyMinLevel > 0)
+    return Math.min(baseLevel, normalizeMinLevelValue(bakedFamilyMinLevel, baseLevel))
+
+  const knownLevel = resolveKnownMinLevelByActionId(normalizedActionId)
+  if (knownLevel !== undefined)
+    return Math.min(baseLevel, knownLevel)
+  return baseLevel
 }

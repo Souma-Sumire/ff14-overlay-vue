@@ -9,6 +9,7 @@
     "build": "bun submodule && bun generate && vite build",
     "preview": "vite preview",
     "generate:role-action-categories": "bun scripts/roleActionCategoryByJob.ts",
+    "generate:action-min-level": "bun scripts/actionMinLevelBake.ts",
     "submodule": "git submodule update --remote && bun scripts/patch.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

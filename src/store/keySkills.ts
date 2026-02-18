@@ -77,10 +77,14 @@ function normalizeAutoMetaEntry(rawId: number, value: unknown): KeySkillAutoMeta
   const src = typeof row.src === 'string' ? row.src : idToSrc(id)
   const duration = normalizeInt(Number(row.duration ?? 0), 0, 0)
   const recast1000ms = normalizeInt(Number(row.recast1000ms ?? 0), 0, 0)
-  const minLevel = normalizeInt(Number(row.minLevel ?? 1), 1, 1)
+  const isRoleAction = Number(row.isRoleAction ?? 0) > 0
+  const minLevel = resolveActionMinLevel(row.minLevel ?? 1, {
+    actionId: id,
+    isRoleAction,
+    fallback: 1,
+  })
   const jobs = uniqueInts(Array.isArray(row.jobs) ? row.jobs.map(v => Number(v)) : [])
   const classJobTargetId = normalizeInt(Number(row.classJobTargetId ?? 0), 0, 0)
-  const isRoleAction = Number(row.isRoleAction ?? 0) > 0
   return { id, name, src, duration, recast1000ms, minLevel, jobs, classJobTargetId, isRoleAction }
 }
 
@@ -522,13 +526,14 @@ const useKeySkillStore = defineStore('keySkill', () => {
           meta.duration,
           0,
         )
-        const resolvedMinLevel = meta.isRoleAction
-          ? 1
-          : normalizeInt(
-              Number(skill.minLevel ?? meta.minLevel),
-              meta.minLevel,
-              1,
-            )
+        const resolvedMinLevel = resolveActionMinLevel(
+          skill.minLevel ?? meta.minLevel,
+          {
+            actionId: meta.id,
+            isRoleAction: meta.isRoleAction,
+            fallback: meta.minLevel,
+          },
+        )
 
         if (!resolvedJobs.includes(player.job))
           continue
