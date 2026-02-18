@@ -7,7 +7,7 @@ import type {
   TeamWatchStorageData,
 } from '@/types/teamWatchTypes'
 import { defineStore } from 'pinia'
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { JobResourceManager } from '@/modules/jobResourceTracker'
 import { resolveJobResourceActionCost } from '@/resources/jobResourceActionCost'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
@@ -134,6 +134,7 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
   const party = ref<Party[]>([])
   const fakeMode = ref(false)
   const nowTs = ref(Date.now())
+  const partyCount = computed(() => party.value.length)
 
   const sortRuleUser = ref<number[]>([...storage.sortRuleUser])
   const watchJobsActionsIDUser = ref<Record<number, number[]>>(
@@ -586,6 +587,8 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
   }
 
   function setFakeMode(value: boolean) {
+    if (fakeMode.value === value)
+      return
     fakeMode.value = value
     rebuildMembers()
   }
@@ -867,31 +870,17 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
     )
   }
 
-  function initForDev() {
-    if (!party.value.length) {
-      fakeMode.value = true
-      rebuildMembers()
-    }
-  }
-
   return {
-    playerId,
-    party,
-    fakeMode,
-    sortRuleUser,
-    watchJobsActionsIDUser,
-    actionMetaUser,
     members,
+    partyCount,
     getActionMetaRaw,
     resolveActionMeta,
-    saveActionMetaRaw,
     fetchActionMetaDraft,
     getSkillState,
     buildSkillStatusText,
     updateRuntime,
     triggerAllVisibleSkills,
     setFakeMode,
-    clearCooldownStates,
     fillResourceStates,
     handleChangePrimaryPlayer,
     handlePartyChanged,
@@ -903,7 +892,6 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
     resetSettings,
     exportSettings,
     importSettings,
-    initForDev,
   }
 })
 

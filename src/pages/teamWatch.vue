@@ -4,7 +4,6 @@ import type { TeamWatchMemberView, TeamWatchSkillView } from '@/types/teamWatchT
 import { useUrlSearchParams } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
 import { useDemo } from '@/composables/useDemo'
-import { useDev } from '@/composables/useDev'
 import { useTeamWatchStore } from '@/store/teamWatchStore'
 import { copyToClipboard } from '@/utils/clipboard'
 import { doTextCommand } from '@/utils/postNamazu'
@@ -14,10 +13,8 @@ import { addOverlayListener, removeOverlayListener } from '../../cactbot/resourc
 const params = useUrlSearchParams('hash')
 const store = useTeamWatchStore()
 const demo = useDemo()
-const dev = useDev()
 
 const postNamazu = computed(() => params.postNamazu === 'true')
-const showMenu = computed(() => demo.value || dev.value || window.location.hostname === 'localhost')
 
 const handleChangePrimaryPlayer: EventMap['ChangePrimaryPlayer'] = (e) => {
   store.handleChangePrimaryPlayer(e)
@@ -87,10 +84,15 @@ onMounted(() => {
     runtimeRaf = window.requestAnimationFrame(tick)
   }
   runtimeRaf = window.requestAnimationFrame(tick)
-
-  if (window.location.href.includes('localhost') || dev.value)
-    store.initForDev()
 })
+
+watch(
+  () => [demo.value, store.partyCount] as const,
+  ([isDemo, partyCount]) => {
+    store.setFakeMode(isDemo && partyCount <= 1)
+  },
+  { immediate: true },
+)
 
 onUnmounted(() => {
   removeOverlayListener('ChangePrimaryPlayer', handleChangePrimaryPlayer)
@@ -104,25 +106,26 @@ onUnmounted(() => {
 
 <template>
   <CommonActWrapper>
-    <div class="team-watch-root">
-      <div v-if="showMenu" class="menu-tools">
+    <template #readme>
+      <div class="menu-tools">
         <el-button size="small" @click="openSettings">
           设置
         </el-button>
-        <el-button size="small" @click="store.setFakeMode(true)">
-          假队
-        </el-button>
         <el-button size="small" @click="store.setFakeMode(false)">
-          实队
+          实际队伍
+        </el-button>
+        <el-button size="small" @click="store.setFakeMode(true)">
+          测试：模拟小队
         </el-button>
         <el-button size="small" @click="store.triggerAllVisibleSkills()">
-          测触
+          测试：全部触发
         </el-button>
         <el-button size="small" @click="store.fillResourceStates()">
-          填满量谱
+          测试：填满量谱
         </el-button>
       </div>
-
+    </template>
+    <div class="team-watch-root">
       <main class="member-list">
         <article
           v-for="member in store.members"
@@ -208,7 +211,7 @@ onUnmounted(() => {
   width: 40px;
   height: 40px;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
   overflow: hidden;
   background: rgba(20, 20, 20, 0.65);
@@ -309,10 +312,24 @@ onUnmounted(() => {
 .menu-tools {
   position: fixed;
   right: 0;
-  bottom: 36px;
+  top: 0;
   z-index: 200;
   display: flex;
-  gap: 0px;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+  padding: 4px;
+}
+
+.menu-tools :deep(.el-button) {
+  width: 72px;
+  margin-left: 0;
+  justify-content: center;
+  padding-inline: 8px;
+}
+
+.menu-tools :deep(.el-button + .el-button) {
+  margin-left: 0;
 }
 
 .flash-used {
@@ -328,5 +345,28 @@ onUnmounted(() => {
     transform: scale(1);
     filter: brightness(1);
   }
+}
+.menu-tools {
+  user-select: none;
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min-content;
+  white-space: nowrap;
+  padding: 10px;
+  color: white;
+  font-size: 12px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+}
+.menu-tools :deep(.el-button) {
+  width: 88px;
+  margin-left: 0;
+  justify-content: center;
+  padding-inline: 8px;
+}
+.menu-tools :deep(.el-button + .el-button) {
+  margin-left: 0;
 }
 </style>
