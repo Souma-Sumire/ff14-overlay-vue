@@ -7,9 +7,9 @@ import { VueDraggable } from 'vue-draggable-plus'
 import ActionPickerDialog from '@/components/common/ActionPickerDialog.vue'
 import SkillEditorDialog from '@/components/common/SkillEditorDialog.vue'
 import { getActionChinese, searchActions } from '@/resources/actionChinese'
+import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import {
-  buildTeamWatchFallbackMeta,
   cloneTeamWatchActionMetaMap,
   isTeamWatchLowerTierActionId,
   normalizeTeamWatchActionMetaRaw,
@@ -196,15 +196,11 @@ const pickerDisabledActionSet = computed(() => {
   const currentRow = rowsByJob.value.get(target.job)
   const currentActionId = currentRow?.actions[target.index] ?? 0
   const disabled = new Set<number>()
-
-  getRelatedJobIds(target.job).forEach((jobId) => {
-    const row = rowsByJob.value.get(jobId)
-    if (!row)
-      return
-    row.actions.forEach((actionId) => {
-      if (actionId > 0 && actionId !== currentActionId)
-        disabled.add(actionId)
-    })
+  if (!currentRow)
+    return disabled
+  currentRow.actions.forEach((actionId) => {
+    if (actionId > 0 && actionId !== currentActionId)
+      disabled.add(actionId)
   })
 
   return disabled
@@ -394,7 +390,7 @@ const metaEditorSubtitle = computed(() => {
   return slotLabel ? `${idLabel} · ${slotLabel}` : idLabel
 })
 
-const dynamicValueTipText = '支持输入数字或动态表达式，例如 `(lv) => lv>=94 ? 40 : 60`。'
+const dynamicValueTipText = 'DynamicValue支持输入数字或动态表达式，例如 `(lv) => lv>=94 ? 40 : 60`。'
 
 const skillEditorPrimaryAction = computed(() => ({
   show: metaEditorCanReplaceSkill.value,
@@ -443,8 +439,6 @@ function isLowerTierAction(actionId: number) {
 function getPickerDisableReason(actionId: number) {
   if (isCompareSameSourceId(actionId))
     return '共享CD'
-  if (isLowerTierAction(actionId))
-    return '下位技能'
   if (pickerDisabledActionSet.value.has(actionId))
     return '已存在'
   return ''
@@ -540,7 +534,7 @@ function getActionMeta(actionId: number) {
     actionId,
     actionMetaUser.value[actionId] ?? store.getActionMetaRaw(actionId),
   )
-  return store.resolveActionMeta(actionId, 100, raw)
+  return store.resolveActionMeta(actionId, GLOBAL_SKILL_MAX_LEVEL, raw)
 }
 
 function reloadFromStore() {
@@ -737,14 +731,18 @@ function validateMetaForm() {
   const errors: string[] = []
   const idCheck = validateRequiredDynamicInput(metaForm.id, '技能 ID')
   metaFieldErrors.id = idCheck.message
+  let resolvedSkillId = 0
   if (idCheck.message) {
     errors.push(idCheck.message)
   }
   else if (idCheck.parsed !== null) {
-    const resolved = resolveTeamWatchDynamicValue(idCheck.parsed, 100, 0)
+    const resolved = resolveTeamWatchDynamicValue(idCheck.parsed, GLOBAL_SKILL_MAX_LEVEL, 0)
     if (!Number.isFinite(resolved) || resolved <= 0) {
-      metaFieldErrors.id = '技能 ID 在 100 级解析后必须大于 0'
+      metaFieldErrors.id = `技能 ID 在 ${GLOBAL_SKILL_MAX_LEVEL} 级解析后必须大于 0`
       errors.push(metaFieldErrors.id)
+    }
+    else {
+      resolvedSkillId = Math.trunc(resolved)
     }
   }
 
@@ -775,7 +773,7 @@ function validateMetaForm() {
   const name = metaForm.name.trim() || getActionChinese(metaForm.actionId) || `技能 #${metaForm.actionId}`
 
   return normalizeTeamWatchActionMetaRaw(metaForm.actionId, {
-    id: idCheck.parsed!,
+    id: resolvedSkillId,
     name,
     iconSrc: metaForm.iconSrc.trim(),
     recast1000ms: recastCheck.parsed!,
@@ -864,17 +862,20 @@ function clearCurrentSlotSkill() {
   ElMessage.success('已清空当前技能槽位')
 }
 
-function resetMetaFormToInitial() {
+async function resetMetaFormToInitial() {
   const actionId = metaForm.actionId
   if (actionId <= 0)
     return
-  const initial = normalizeTeamWatchActionMetaRaw(
-    actionId,
-    buildTeamWatchFallbackMeta(actionId),
-  )
-  fillMetaForm(actionId, initial)
-  applyMetaFormRealtime()
-  ElMessage.success('已恢复默认参数')
+  metaEditorLoading.value = true
+  try {
+    const initial = await store.fetchActionMetaDraft(actionId, true)
+    fillMetaForm(actionId, normalizeTeamWatchActionMetaRaw(actionId, initial))
+    applyMetaFormRealtime()
+    ElMessage.success('已恢复默认参数')
+  }
+  finally {
+    metaEditorLoading.value = false
+  }
 }
 
 function removeActionSlot(job: number, index: number) {

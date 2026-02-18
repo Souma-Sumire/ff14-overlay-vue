@@ -11,8 +11,9 @@ import ActionPickerDialog from '@/components/common/ActionPickerDialog.vue'
 import SkillEditorDialog from '@/components/common/SkillEditorDialog.vue'
 import { useLang } from '@/composables/useLang'
 import { getActionChinese, searchActions } from '@/resources/actionChinese'
-import { getGlobalSkillMetaByActionId } from '@/resources/globalSkills'
+import { getGlobalSkillMetaByActionId, GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
+import { keySkillDefinitions } from '@/resources/keySkillResource'
 import { isTeamWatchLowerTierActionId, resolveTeamWatchDynamicValue } from '@/resources/teamWatchResource'
 import { useKeySkillStore } from '@/store/keySkills'
 import { copyToClipboard } from '@/utils/clipboard'
@@ -92,7 +93,7 @@ const currentEditorMeta = computed(() => {
     return null
   return resolveSkillMeta(currentEditorSkill.value.id)
 })
-const dynamicValueTipText = '支持输入数字或动态表达式，例如 `(lv) => lv>=94 ? 40 : 60`。'
+const dynamicValueTipText = 'DynamicValue支持输入数字或动态表达式，例如 `(lv) => lv>=94 ? 40 : 60`。'
 
 const pickerDialogWidth = computed(() => {
   const available = Math.trunc(viewportWidth.value) - 20
@@ -234,6 +235,19 @@ const pickerRoleResult = computed(() => pickerOrderedResult.value.filter(item =>
 const pickerJobResult = computed(() => pickerOrderedResult.value.filter(item => !item.isRoleAction))
 const interactionLocked = computed(() => editorOpening.value || storeKeySkill.isAutoMetaLoading)
 const pickerInteractionLocked = computed(() => pickerLoading.value || interactionLocked.value)
+const defaultTtsByActionId = (() => {
+  const map = new Map<number, string>()
+  keySkillDefinitions.forEach((definition) => {
+    const resolvedId = resolveTeamWatchDynamicValue(definition.id, GLOBAL_SKILL_MAX_LEVEL, 0)
+    if (!Number.isFinite(resolvedId) || resolvedId <= 0)
+      return
+    const actionId = Math.trunc(resolvedId)
+    if (!map.has(actionId))
+      map.set(actionId, definition.tts ?? '')
+  })
+  return map
+})()
+
 const pickerCurrentActionId = computed(() => {
   const replaceKey = pickerReplaceSkillKey.value
   if (!replaceKey)
@@ -243,13 +257,43 @@ const pickerCurrentActionId = computed(() => {
     return null
   return row.id
 })
+
+function normalizeJobEnums(jobs: number[] | undefined): number[] {
+  if (!Array.isArray(jobs))
+    return []
+  return [...new Set(
+    jobs
+      .map(v => Number(v))
+      .filter(v => Number.isFinite(v) && v > 0)
+      .map(v => Math.trunc(v)),
+  )]
+}
+
+function resolveRowJobsForPicker(row: KeySkillRow): number[] {
+  const cached = storeKeySkill.autoMetaById[row.id]
+  if (cached?.classJobTargetId && cached.classJobTargetId > 0)
+    return [Math.trunc(cached.classJobTargetId)]
+  const customJobs = normalizeJobEnums(row.job)
+  if (customJobs.length > 0)
+    return customJobs
+  if (cached)
+    return normalizeJobEnums(cached.jobs)
+  return normalizeJobEnums(resolveSkillMeta(row.id).jobs)
+}
+
 const pickerDisabledActionSet = computed(() => {
   const currentActionId = pickerCurrentActionId.value ?? 0
+  const selectedJob = Number.isFinite(pickerSelectedJob.value) ? Math.trunc(Number(pickerSelectedJob.value)) : 0
   const disabled = new Set<number>()
   rows.value.forEach((row) => {
     const actionId = Number(row.id)
     if (!Number.isFinite(actionId) || actionId <= 0)
       return
+    if (selectedJob > 0) {
+      const rowJobs = resolveRowJobsForPicker(row)
+      if (!rowJobs.includes(selectedJob))
+        return
+    }
     const normalized = Math.trunc(actionId)
     if (normalized !== currentActionId)
       disabled.add(normalized)
@@ -260,8 +304,6 @@ const pickerDisabledActionSet = computed(() => {
 function getPickerDisableReason(actionId: number) {
   if (isCompareSameSourceId(actionId))
     return '共享CD'
-  if (isTeamWatchLowerTierActionId(actionId))
-    return '下位技能'
   if (pickerDisabledActionSet.value.has(actionId))
     return '已存在'
   return ''
@@ -300,9 +342,9 @@ function resolveSkillMeta(actionId: number) {
     return cached
 
   const globalMeta = getGlobalSkillMetaByActionId(actionId)
-  const resolvedIdRaw = resolveTeamWatchDynamicValue(globalMeta?.id ?? actionId, 100, actionId)
-  const resolvedDurationRaw = resolveTeamWatchDynamicValue(globalMeta?.duration ?? 0, 100, 0)
-  const resolvedRecastRaw = resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? 0, 100, 0)
+  const resolvedIdRaw = resolveTeamWatchDynamicValue(globalMeta?.id ?? actionId, GLOBAL_SKILL_MAX_LEVEL, actionId)
+  const resolvedDurationRaw = resolveTeamWatchDynamicValue(globalMeta?.duration ?? 0, GLOBAL_SKILL_MAX_LEVEL, 0)
+  const resolvedRecastRaw = resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? 0, GLOBAL_SKILL_MAX_LEVEL, 0)
   const resolvedId = Number.isFinite(resolvedIdRaw) ? Math.trunc(resolvedIdRaw) : actionId
   const resolvedDuration = Number.isFinite(resolvedDurationRaw) ? Math.max(0, Math.trunc(resolvedDurationRaw)) : 0
   const resolvedRecast1000ms = Number.isFinite(resolvedRecastRaw) ? Math.max(0, Math.trunc(resolvedRecastRaw)) : 0
@@ -508,7 +550,7 @@ async function loadPickerPool(jobEnum: number) {
       })(),
       duration: (() => {
         const meta = getGlobalSkillMetaByActionId(row.ID)
-        return resolveTeamWatchDynamicValue(meta?.duration ?? 0, 100, 0)
+        return resolveTeamWatchDynamicValue(meta?.duration ?? 0, GLOBAL_SKILL_MAX_LEVEL, 0)
       })(),
       minLevel: Number(row.IsRoleAction ?? 0) > 0 ? 1 : (Number(row.ClassJobLevel ?? 1) || 1),
       isRoleAction: Number(row.IsRoleAction ?? 0) > 0,
@@ -673,7 +715,7 @@ async function openEditor(skillKey: string) {
     editorTts.value = row.tts
     editorJobs.value = Array.isArray(row.job)
       ? [...row.job]
-      : [...(shared?.job?.length ? shared.job : fallback.jobs)]
+      : [...(fallback.jobs.length ? fallback.jobs : (shared?.job ?? []))]
     editorRecast1000ms.value = formatDynamicEditorValue(row.recast1000ms ?? shared?.recast1000ms ?? fallback.recast1000ms)
     editorDuration.value = formatDynamicEditorValue(row.duration ?? shared?.duration ?? fallback.duration)
     editorMinLevel.value = normalizeMinLevelValue(row.minLevel ?? shared?.minLevel ?? fallback.minLevel) ?? 1
@@ -693,7 +735,7 @@ function applyEditorDraftToRow() {
     return
   const fallback = resolveSkillMeta(row.id)
   const shared = getGlobalSkillMetaByActionId(row.id)
-  const baselineJobs = shared?.job?.length ? shared.job : fallback.jobs
+  const baselineJobs = fallback.jobs.length ? fallback.jobs : (shared?.job ?? [])
   const baselineRecast1000ms = shared?.recast1000ms ?? fallback.recast1000ms
   const baselineDuration = shared?.duration ?? fallback.duration
   const baselineMinLevel = normalizeMinLevelValue(shared?.minLevel ?? fallback.minLevel) ?? 1
@@ -755,12 +797,12 @@ function resetCurrentSkillToDefaults() {
     return
   const fallback = resolveSkillMeta(row.id)
   const shared = getGlobalSkillMetaByActionId(row.id)
-  const baselineJobs = shared?.job?.length ? shared.job : fallback.jobs
+  const baselineJobs = fallback.jobs.length ? fallback.jobs : (shared?.job ?? [])
   const baselineRecast1000ms = shared?.recast1000ms ?? fallback.recast1000ms
   const baselineDuration = shared?.duration ?? fallback.duration
   const baselineMinLevel = normalizeMinLevelValue(shared?.minLevel ?? fallback.minLevel) ?? 1
 
-  editorTts.value = ''
+  editorTts.value = getDefaultTtsByActionId(row.id)
   editorJobs.value = [...baselineJobs]
   editorRecast1000ms.value = formatDynamicEditorValue(baselineRecast1000ms)
   editorDuration.value = formatDynamicEditorValue(baselineDuration)
@@ -836,6 +878,13 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
     return row.job.length === 0
   const loaded = Boolean(storeKeySkill.autoMetaById[actionId])
   return loaded && resolveSkillMeta(actionId).jobs.length === 0
+}
+
+function getDefaultTtsByActionId(actionId: number) {
+  const normalized = Number.isFinite(actionId) ? Math.trunc(actionId) : 0
+  if (normalized <= 0)
+    return ''
+  return defaultTtsByActionId.get(normalized) ?? ''
 }
 </script>
 

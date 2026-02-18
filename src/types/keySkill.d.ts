@@ -4,7 +4,7 @@ import type { FFIcon } from '@/types/fflogs'
 interface KeySkill {
   // 此key是对于技能来说的，而不是技能的具体实例
   key: string
-  id: DynamicValue
+  id: number
   tts: string
   duration: DynamicValue
   recast1000ms: DynamicValue

@@ -5,7 +5,7 @@ import type { DamageEffect, DamageType } from '@/utils/flags'
 export type Scope = 'self' | 'party' | 'other'
 
 export interface KeigennSkill {
-  id: DynamicValue
+  id: number
   recast1000ms: DynamicValue
   job: number[]
   minLevel: number

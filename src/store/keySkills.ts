@@ -8,7 +8,7 @@ import { useDemo } from '@/composables/useDemo'
 import { useDev } from '@/composables/useDev'
 import { RandomPartyGenerator } from '@/mock/demoParty'
 import { getActionChinese } from '@/resources/actionChinese'
-import { getGlobalSkillMetaByActionId } from '@/resources/globalSkills'
+import { getGlobalSkillMetaByActionId, GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { raidbuffs } from '@/resources/keySkillResource'
 import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/roleActionCategoryByJob'
@@ -16,7 +16,7 @@ import { resolveTeamWatchDynamicValue } from '@/resources/teamWatchResource'
 import { idToSrc } from '@/utils/dynamicValue'
 import { tts } from '@/utils/tts'
 import Util from '@/utils/util'
-import { getIconSrcByPath, parseAction } from '@/utils/xivapi'
+import { getIconSrcByPath, parseAction, XIVAPI_CACHE_VERSION } from '@/utils/xivapi'
 
 interface SkillState {
   startTime: number | null
@@ -54,6 +54,7 @@ interface KeySkillAutoMeta {
   recast1000ms: number
   minLevel: number
   jobs: number[]
+  classJobTargetId?: number
 }
 
 interface DefaultKeySkillEntry {
@@ -61,6 +62,8 @@ interface DefaultKeySkillEntry {
   tts: string
   line: number
 }
+
+const KEY_SKILLS_AUTO_META_CACHE_VERSION_STORAGE_KEY = 'keySkills-auto-meta-cache-version'
 
 function normalizeAutoMetaEntry(rawId: number, value: unknown): KeySkillAutoMeta | undefined {
   if (!value || typeof value !== 'object')
@@ -73,7 +76,8 @@ function normalizeAutoMetaEntry(rawId: number, value: unknown): KeySkillAutoMeta
   const recast1000ms = normalizeInt(Number(row.recast1000ms ?? 0), 0, 0)
   const minLevel = normalizeInt(Number(row.minLevel ?? 1), 1, 1)
   const jobs = uniqueInts(Array.isArray(row.jobs) ? row.jobs.map(v => Number(v)) : [])
-  return { id, name, src, duration, recast1000ms, minLevel, jobs }
+  const classJobTargetId = normalizeInt(Number(row.classJobTargetId ?? 0), 0, 0)
+  return { id, name, src, duration, recast1000ms, minLevel, jobs, classJobTargetId }
 }
 
 function normalizeAutoMetaCache(raw: unknown): Record<number, KeySkillAutoMeta> {
@@ -107,7 +111,7 @@ function uniqueInts(input: number[]) {
 function buildDefaultSkillEntries() {
   const map = new Map<number, DefaultKeySkillEntry>()
   raidbuffs.forEach((skill) => {
-    const resolvedId = normalizeInt(resolveTeamWatchDynamicValue(skill.id, 100, 0), 0, 0)
+    const resolvedId = normalizeInt(resolveTeamWatchDynamicValue(skill.id, GLOBAL_SKILL_MAX_LEVEL, 0), 0, 0)
     if (resolvedId <= 0 || map.has(resolvedId))
       return
 
@@ -163,7 +167,12 @@ function normalizeStorageSkills(raw: unknown): KeySkillEntry[] {
     if (!item || typeof item !== 'object')
       return
     const row = item as Record<string, unknown>
-    const resolvedId = normalizeInt(resolveTeamWatchDynamicValue(row.id as number | string, 100, 0), 0, 0)
+    const rawId = row.id as number | string | undefined
+    const resolvedId = normalizeInt(
+      resolveTeamWatchDynamicValue(rawId ?? 0, GLOBAL_SKILL_MAX_LEVEL, 0),
+      0,
+      0,
+    )
     if (resolvedId <= 0)
       return
     const key = typeof row.key === 'string' && row.key.trim() ? row.key : crypto.randomUUID()
@@ -233,18 +242,24 @@ const useKeySkillStore = defineStore('keySkill', () => {
   }
 
   const mergedSet = new Set(keySkillsData.value.mergedIds)
-  const missingDefaults = defaultSkillEntries.filter(skill => !mergedSet.has(skill.id))
-  if (missingDefaults.length > 0) {
+  const missingDefaultEntries = defaultSkillEntries.filter(skill => !mergedSet.has(skill.id))
+  if (missingDefaultEntries.length > 0) {
     keySkillsData.value.chinese.push(
-      ...missingDefaults.map(skill => createSkillEntry(skill.id, skill.tts, skill.line)),
+      ...missingDefaultEntries.map(skill => createSkillEntry(skill.id, skill.tts, skill.line)),
     )
-    keySkillsData.value.mergedIds.push(...missingDefaults.map(skill => skill.id))
+    keySkillsData.value.mergedIds.push(...missingDefaultEntries.map(skill => skill.id))
   }
 
   const enableTts = useStorage('keySkills-enable-tts', { chinese: true })
   const skillStates = reactive<Record<string, SkillState>>({})
   const speed = ref(1)
   const autoMetaCache = useStorage<Record<string, KeySkillAutoMeta>>('keySkills-auto-meta-cache', {})
+  const autoMetaCacheVersion = useStorage<string>(KEY_SKILLS_AUTO_META_CACHE_VERSION_STORAGE_KEY, '')
+
+  if (autoMetaCacheVersion.value !== XIVAPI_CACHE_VERSION) {
+    autoMetaCache.value = {}
+    autoMetaCacheVersion.value = XIVAPI_CACHE_VERSION
+  }
 
   const autoMetaById = reactive<Record<number, KeySkillAutoMeta>>({})
   const normalizedAutoMetaCache = normalizeAutoMetaCache(autoMetaCache.value)
@@ -254,7 +269,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
   Object.entries(normalizedAutoMetaCache).forEach(([id, meta]) => {
     autoMetaById[Number(id)] = meta
   })
-  const pendingAutoMeta = new Set<number>()
+  const pendingAutoMeta = reactive(new Set<number>())
   const pendingAutoMetaTasks = new Map<number, Promise<void>>()
   const isAutoMetaLoading = computed(() => pendingAutoMeta.size > 0)
 
@@ -272,17 +287,17 @@ const useKeySkillStore = defineStore('keySkill', () => {
       return cached
     const globalMeta = getGlobalSkillMetaByActionId(actionId)
     const resolvedId = normalizeInt(
-      resolveTeamWatchDynamicValue(globalMeta?.id ?? actionId, 100, actionId),
+      resolveTeamWatchDynamicValue(globalMeta?.id ?? actionId, GLOBAL_SKILL_MAX_LEVEL, actionId),
       actionId,
       1,
     )
     const resolvedRecast1000ms = normalizeInt(
-      resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? 0, 100, 0),
+      resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? 0, GLOBAL_SKILL_MAX_LEVEL, 0),
       0,
       0,
     )
     const resolvedDuration = normalizeInt(
-      resolveTeamWatchDynamicValue(globalMeta?.duration ?? 0, 100, 0),
+      resolveTeamWatchDynamicValue(globalMeta?.duration ?? 0, GLOBAL_SKILL_MAX_LEVEL, 0),
       0,
       0,
     )
@@ -295,6 +310,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
       recast1000ms: resolvedRecast1000ms,
       minLevel: normalizeInt(Number(globalMeta?.minLevel ?? 1), 1, 1),
       jobs: uniqueInts(globalMeta?.job ?? []),
+      classJobTargetId: 0,
     }
   }
 
@@ -335,17 +351,17 @@ const useKeySkillStore = defineStore('keySkill', () => {
           ? uniqueInts(globalMeta!.job)
           : resolveJobsFromApi(classJobTargetId, actionCategoryTargetId, isRoleAction)
         const resolvedId = normalizeInt(
-          resolveTeamWatchDynamicValue(globalMeta?.id ?? id, 100, id),
+          resolveTeamWatchDynamicValue(globalMeta?.id ?? id, GLOBAL_SKILL_MAX_LEVEL, id),
           id,
           1,
         )
         const resolvedRecast1000ms = normalizeInt(
-          resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? apiRecast1000ms, 100, apiRecast1000ms),
+          resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? apiRecast1000ms, GLOBAL_SKILL_MAX_LEVEL, apiRecast1000ms),
           apiRecast1000ms,
           0,
         )
         const resolvedDuration = normalizeInt(
-          resolveTeamWatchDynamicValue(globalMeta?.duration ?? 0, 100, 0),
+          resolveTeamWatchDynamicValue(globalMeta?.duration ?? 0, GLOBAL_SKILL_MAX_LEVEL, 0),
           0,
           0,
         )
@@ -364,22 +380,23 @@ const useKeySkillStore = defineStore('keySkill', () => {
           recast1000ms: resolvedRecast1000ms,
           minLevel: resolvedMinLevel,
           jobs,
+          classJobTargetId: classJobTargetId > 0 ? classJobTargetId : 0,
         })
       }
       catch (error) {
         console.warn('[keySkill] ensureActionAutoMeta failed:', id, error)
         const resolvedId = normalizeInt(
-          resolveTeamWatchDynamicValue(globalMeta?.id ?? id, 100, id),
+          resolveTeamWatchDynamicValue(globalMeta?.id ?? id, GLOBAL_SKILL_MAX_LEVEL, id),
           id,
           1,
         )
         const resolvedRecast1000ms = normalizeInt(
-          resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? 0, 100, 0),
+          resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? 0, GLOBAL_SKILL_MAX_LEVEL, 0),
           0,
           0,
         )
         const resolvedDuration = normalizeInt(
-          resolveTeamWatchDynamicValue(globalMeta?.duration ?? 0, 100, 0),
+          resolveTeamWatchDynamicValue(globalMeta?.duration ?? 0, GLOBAL_SKILL_MAX_LEVEL, 0),
           0,
           0,
         )
@@ -391,6 +408,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
           recast1000ms: resolvedRecast1000ms,
           minLevel: normalizeInt(Number(globalMeta?.minLevel ?? 1), 1, 1),
           jobs: uniqueInts(globalMeta?.job ?? []),
+          classJobTargetId: 0,
         })
       }
       finally {
@@ -421,8 +439,8 @@ const useKeySkillStore = defineStore('keySkill', () => {
 
     for (const player of currentParty.value) {
       for (const skill of keySkillsData.value.chinese) {
+        const level = player.level || GLOBAL_SKILL_MAX_LEVEL
         const meta = resolveMeta(skill.id)
-        const level = player.level || 100
         const resolvedJobs = skill.job && skill.job.length > 0 ? uniqueInts(skill.job) : meta.jobs
         const resolvedRecast1000ms = normalizeInt(
           resolveTeamWatchDynamicValue(skill.recast1000ms ?? meta.recast1000ms, level, meta.recast1000ms),
@@ -492,76 +510,78 @@ const useKeySkillStore = defineStore('keySkill', () => {
   })
 
   function triggerSkill(skillIds: number[], ownerID: string, speak: boolean) {
-    const skill = usedSkills.value.find(v => skillIds.includes(v.id) && v.owner.id === ownerID)
-    if (!skill)
+    const matchedSkills = usedSkills.value.filter(v => skillIds.includes(v.id) && v.owner.id === ownerID)
+    if (matchedSkills.length === 0)
       return
 
-    const key = skill.instanceKey
-    const { duration, recast1000ms: recast } = skill
+    matchedSkills.forEach((skill) => {
+      const key = skill.instanceKey
+      const { duration, recast1000ms: recast } = skill
 
-    if (skillStates[key]?.rafId)
-      cancelAnimationFrame(skillStates[key].rafId)
+      if (skillStates[key]?.rafId)
+        cancelAnimationFrame(skillStates[key].rafId)
 
-    const state = reactive<SkillState>({
-      startTime: performance.now(),
-      isRecast: duration === 0,
-      durationLeft: duration,
-      recastLeft: recast - duration,
-      text: (duration || recast).toString(),
-      active: true,
-      animationKey: Date.now(),
-      clipPercent: 0,
-      rafId: undefined,
-    })
+      const state = reactive<SkillState>({
+        startTime: performance.now(),
+        isRecast: duration === 0,
+        durationLeft: duration,
+        recastLeft: recast - duration,
+        text: (duration || recast).toString(),
+        active: true,
+        animationKey: Date.now(),
+        clipPercent: 0,
+        rafId: undefined,
+      })
 
-    const speedValue = speed.value
-    const start = performance.now()
-    const durationMs = duration * 1000
-    const recastMs = (recast - duration) * 1000
+      const speedValue = speed.value
+      const start = performance.now()
+      const durationMs = duration * 1000
+      const recastMs = (recast - duration) * 1000
 
-    function update() {
-      const now = performance.now()
-      const elapsed = (now - start) * speedValue
-      if (!state.isRecast) {
-        if (elapsed < durationMs) {
-          const remain = durationMs - elapsed
-          state.durationLeft = Math.ceil(remain / 1000)
-          state.text = state.durationLeft.toString()
-          state.clipPercent = (remain / durationMs) * 100
+      function update() {
+        const now = performance.now()
+        const elapsed = (now - start) * speedValue
+        if (!state.isRecast) {
+          if (elapsed < durationMs) {
+            const remain = durationMs - elapsed
+            state.durationLeft = Math.ceil(remain / 1000)
+            state.text = state.durationLeft.toString()
+            state.clipPercent = (remain / durationMs) * 100
+          }
+          else {
+            state.isRecast = true
+            state.startTime = now
+            state.clipPercent = 0
+          }
         }
         else {
-          state.isRecast = true
-          state.startTime = now
-          state.clipPercent = 0
+          const recastElapsed = elapsed - durationMs
+          if (recastElapsed < recastMs) {
+            const remain = recastMs - recastElapsed
+            state.recastLeft = Math.ceil(remain / 1000)
+            state.text = state.recastLeft.toString()
+            state.clipPercent = (recastElapsed / recastMs) * 100
+          }
+          else {
+            state.text = ''
+            state.active = false
+            state.isRecast = false
+            state.clipPercent = 0
+            if (state.rafId)
+              cancelAnimationFrame(state.rafId)
+            state.rafId = undefined
+            Reflect.deleteProperty(skillStates, key)
+            return
+          }
         }
+        state.rafId = requestAnimationFrame(update)
       }
-      else {
-        const recastElapsed = elapsed - durationMs
-        if (recastElapsed < recastMs) {
-          const remain = recastMs - recastElapsed
-          state.recastLeft = Math.ceil(remain / 1000)
-          state.text = state.recastLeft.toString()
-          state.clipPercent = (recastElapsed / recastMs) * 100
-        }
-        else {
-          state.text = ''
-          state.active = false
-          state.isRecast = false
-          state.clipPercent = 0
-          if (state.rafId)
-            cancelAnimationFrame(state.rafId)
-          state.rafId = undefined
-          Reflect.deleteProperty(skillStates, key)
-          return
-        }
-      }
+
       state.rafId = requestAnimationFrame(update)
-    }
-
-    state.rafId = requestAnimationFrame(update)
-    skillStates[key] = state
-    if (speak && enableTts.value.chinese)
-      tts(skill.tts)
+      skillStates[key] = state
+      if (speak && enableTts.value.chinese)
+        tts(skill.tts)
+    })
   }
 
   function wipe() {

@@ -1,7 +1,7 @@
 import type { DynamicValue } from '@/types/dynamicValue'
 
 interface TeamWatchActionMetaBase<TValue> {
-  id: TValue
+  id: number
   name: string
   iconSrc: string
   recast1000ms: TValue

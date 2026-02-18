@@ -1,3 +1,4 @@
+import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import type { ColumnDef, MitigationRow, PlayerActionRecord, SheetState } from '@/types/mitigation'
 
 export interface SheetStorageShards {
@@ -51,7 +52,7 @@ export function normalizeLegacySheet(sheet: SheetState): SheetState {
     planner: {
       playerActions: normalizedActions,
       columns: normalizedColumns,
-      playerLevel: sheet.planner.playerLevel || 100,
+      playerLevel: sheet.planner.playerLevel || GLOBAL_SKILL_MAX_LEVEL,
     },
   }
 }

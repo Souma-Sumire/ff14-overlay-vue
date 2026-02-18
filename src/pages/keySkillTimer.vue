@@ -5,7 +5,7 @@ import { useDemo } from '@/composables/useDemo'
 import { useDev } from '@/composables/useDev'
 import { useZone } from '@/composables/useZone'
 import { useKeySkillStore } from '@/store/keySkills'
-import { compareSame } from '@/utils/compareSaveAction'
+import { compareSame, getUpgradeActionChain } from '@/utils/compareSaveAction'
 import {
   addOverlayListener,
   removeOverlayListener,
@@ -28,9 +28,12 @@ const handleLogLine: EventMap['LogLine'] = (e) => {
   if (e.line[0] === '21' || (e.line[0] === '22' && e.line[45] === '0')) {
     // 15/16行
     const skillId = Number.parseInt(e.line[4]!, 16)
-    const skillIdCompare = compareSame(skillId)
+    const skillIdChain = getUpgradeActionChain(skillId)
+    const triggerIds = Array.from(new Set(
+      skillIdChain.flatMap(id => [id, compareSame(id)]),
+    ))
     const casterIdHex = e.line[2]!
-    storeKeySkill.triggerSkill([skillId, skillIdCompare], casterIdHex, true)
+    storeKeySkill.triggerSkill(triggerIds, casterIdHex, true)
   }
   else if (
     e.line[0] === '33'

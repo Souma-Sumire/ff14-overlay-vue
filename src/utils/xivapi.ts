@@ -11,7 +11,7 @@ const SITE_HOST = {
 } as const
 type SiteName = keyof typeof SITE_HOST
 
-const XIVAPI_CACHE_VERSION = '7.4'
+export const XIVAPI_CACHE_VERSION = '20260218-v3'
 const CACHE_VERSION_STORAGE_KEY = 'xivapi-cache-version'
 const PRIMARY_SITE_STORAGE_KEY = 'xivapi-primary-site'
 const cacheVersionStorage = useStorage<string>(CACHE_VERSION_STORAGE_KEY, '')
@@ -51,9 +51,42 @@ let primarySite: SiteName = resolveInitialPrimarySite()
 const ICON_REGEX = /(\d{6})\/(\d{6})\.png$/
 const DEFAULT_ICON = '/i/000000/000405.png'
 const ACTION_SEARCH_CACHE_VERSION = 'action_search_by_jobs_v2'
+const XIVAPI_MAX_CONCURRENT_REQUESTS = 10
 
 const actionCache = new Map<string, Record<string, any>>()
 const actionSearchByJobCache = new Map<string, XivApiActionSearchItem[]>()
+const pendingRequestResolvers: Array<() => void> = []
+let activeRequestCount = 0
+
+async function acquireRequestSlot(): Promise<void> {
+  if (activeRequestCount < XIVAPI_MAX_CONCURRENT_REQUESTS) {
+    activeRequestCount += 1
+    return
+  }
+  await new Promise<void>((resolve) => {
+    pendingRequestResolvers.push(() => {
+      activeRequestCount += 1
+      resolve()
+    })
+  })
+}
+
+function releaseRequestSlot(): void {
+  activeRequestCount = Math.max(0, activeRequestCount - 1)
+  const next = pendingRequestResolvers.shift()
+  if (next)
+    next()
+}
+
+async function withRequestPool<T>(task: () => Promise<T>): Promise<T> {
+  await acquireRequestSlot()
+  try {
+    return await task()
+  }
+  finally {
+    releaseRequestSlot()
+  }
+}
 
 function getPrimaryHost(): string {
   return SITE_HOST[primarySite]
@@ -92,10 +125,6 @@ function getIconHost(highRes: boolean): string {
   return getPrimaryHost()
 }
 
-function getIconBaseUrl(highRes = false): string {
-  return buildUrl(getIconHost(highRes))
-}
-
 function buildFallbackUrls(path: string): string[] {
   return [`${getPrimaryUrl()}${path}`, `${getSecondaryUrl()}${path}`]
 }
@@ -127,15 +156,17 @@ export function getIconSrcByFullIcon(fullIcon: string, highRes = false): string 
  * 你手里是 API 返回的图标路径（如 "/i/000000/000405.png"）时用这个。
  * 常用于 parseAction / search 返回的 Icon 字段。
  */
-export function getIconSrcByPath(iconPath: string, itemIsHQ = false): string {
+export function getIconSrcByPath(iconPath: string, itemIsHQ = false, highRes = false): string {
   if (!iconPath)
     return ''
   if (/^https?:\/\//.test(iconPath))
     return iconPath
-  const baseUrl = getIconBaseUrl()
+  const resolvedHost = getIconHost(highRes)
+  const suffix = highRes && resolvedHost === SITE_HOST.cafe ? '_hr1' : ''
+  const baseUrl = buildUrl(resolvedHost)
   return `${baseUrl}${iconPath}`.replace(
     ICON_REGEX,
-    (_match, p1, p2) => `${p1}/${itemIsHQ ? 'hq/' : ''}${p2}.png`,
+    (_match, p1, p2) => `${p1}/${itemIsHQ ? 'hq/' : ''}${p2}${suffix}.png`,
   )
 }
 
@@ -358,30 +389,32 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeout = 300
 }
 
 async function requestWithFallback(urls: string[], options: RequestInit = {}): Promise<any> {
-  const mergedOptions: RequestInit = {
-    cache: 'force-cache',
-    mode: 'cors',
-    ...options,
-  }
+  return withRequestPool(async () => {
+    const mergedOptions: RequestInit = {
+      cache: 'force-cache',
+      mode: 'cors',
+      ...options,
+    }
 
-  for (const url of urls) {
-    try {
-      const response = await fetchWithTimeout(url, mergedOptions)
-      if (!response.ok) {
-        console.warn(`Fetch failed for ${url}: status ${response.status}`)
-        continue
+    for (const url of urls) {
+      try {
+        const response = await fetchWithTimeout(url, mergedOptions)
+        if (!response.ok) {
+          console.warn(`Fetch failed for ${url}: status ${response.status}`)
+          continue
+        }
+        if (isSecondaryUrl(url))
+          switchPrimarySite()
+        else
+          persistPrimarySite(primarySite)
+        const json = await response.json()
+        return { ...json, Host: new URL(url).host }
       }
-      if (isSecondaryUrl(url))
-        switchPrimarySite()
-      else
-        persistPrimarySite(primarySite)
-      const json = await response.json()
-      return { ...json, Host: new URL(url).host }
+      catch (error) {
+        console.warn(`Fetch failed for ${url}:`, error)
+      }
     }
-    catch (error) {
-      console.warn(`Fetch failed for ${url}:`, error)
-    }
-  }
 
-  throw new Error('All fetch attempts failed.')
+    throw new Error('All fetch attempts failed.')
+  })
 }

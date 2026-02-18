@@ -42,6 +42,7 @@ import { useIndexedDB } from '@/composables/useIndexedDB'
 import { useLogParser } from '@/composables/useLogParser'
 import { useMitigationSimulator } from '@/composables/useMitigationSimulator'
 import { getActionChinese } from '@/resources/actionChinese'
+import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { mitigationKeigennSkills } from '@/resources/mitigationKeigennSkills'
 import { mitigationSheetTemplates } from '@/resources/mitigationSheetTemplates'
@@ -723,7 +724,7 @@ watch([rawRows, playerActions, columns, playerLevel, filterMechanics], () => {
       sheet.planner.playerActions,
       sheet.planner.columns,
       sheet.mechanics.filterMechanics || [],
-      sheet.planner.playerLevel || 100,
+      sheet.planner.playerLevel || GLOBAL_SKILL_MAX_LEVEL,
     )
     if (nextComparableState === currentComparableState)
       return
@@ -761,7 +762,7 @@ function applySheetToWorkspace(id: string | null) {
     )
     rawRows.value = normalizedRows
     playerActions.value = ensurePlayerActionsRowKey(sheet.planner.playerActions || [], normalizedRows)
-    playerLevel.value = sheet.planner.playerLevel || 100
+    playerLevel.value = sheet.planner.playerLevel || GLOBAL_SKILL_MAX_LEVEL
     columns.value = normalizeColumnsWithJobFilters(sheet.planner.columns || [], { forceGlobal: true }).columns
     const fallbackFilters = buildDefaultFilters(rawRows.value)
     const incomingFilters = Array.isArray(sheet.mechanics.filterMechanics)

@@ -1,5 +1,7 @@
 import type { DynamicValue } from '@/types/dynamicValue'
 import type { PerformanceType } from '@/types/keigennRecord2'
+import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
+import { parseDynamicValue } from '@/utils/dynamicValue'
 
 type MitigationScope = 'self' | 'party'
 type DynamicDamageTakenMultiplier = PerformanceType | string
@@ -17,8 +19,21 @@ interface MitigationSkillWithoutDamageTakenMultiplier {
 
 type MitigationSkillMeta = MitigationSkillWithDamageTakenMultiplier | MitigationSkillWithoutDamageTakenMultiplier
 
+interface RawMitigationKeigennSkillBase {
+  id: number | string
+  recast1000ms: DynamicValue
+  job: number[]
+  minLevel: number
+  maxCharges?: DynamicValue
+  duration?: DynamicValue
+  shieldAmount?: DynamicValue
+  isEnemyTargetMitigation?: boolean
+}
+
+type RawMitigationKeigennSkill = RawMitigationKeigennSkillBase & MitigationSkillMeta
+
 interface MitigationKeigennSkillBase {
-  id: DynamicValue
+  id: number
   recast1000ms: DynamicValue
   job: number[]
   minLevel: number
@@ -29,7 +44,25 @@ interface MitigationKeigennSkillBase {
 }
 
 type MitigationKeigennSkill = MitigationKeigennSkillBase & MitigationSkillMeta
-const mitigationKeigennSkills: MitigationKeigennSkill[] = [
+
+function normalizeMitigationSkillIdAtMaxLevel(value: number | string): number {
+  if (typeof value === 'number' && Number.isFinite(value))
+    return Math.max(0, Math.trunc(value))
+  const trimmed = String(value).trim()
+  if (!trimmed)
+    return 0
+  try {
+    const resolved = parseDynamicValue(trimmed, GLOBAL_SKILL_MAX_LEVEL)
+    if (!Number.isFinite(resolved) || resolved <= 0)
+      return 0
+    return Math.trunc(resolved)
+  }
+  catch {
+    return 0
+  }
+}
+
+const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
   // 职业通用技能
   {
     // 牵制
@@ -842,4 +875,16 @@ const mitigationKeigennSkills: MitigationKeigennSkill[] = [
     mitigationScope: 'party',
   },
 ]
+
+const mitigationKeigennSkills: MitigationKeigennSkill[] = mitigationKeigennSkillDefinitions
+  .map((skill) => {
+    const resolvedId = normalizeMitigationSkillIdAtMaxLevel(skill.id)
+    if (resolvedId <= 0)
+      return undefined
+    return {
+      ...skill,
+      id: resolvedId,
+    }
+  })
+  .filter((skill): skill is MitigationKeigennSkill => Boolean(skill))
 export { type MitigationKeigennSkill, mitigationKeigennSkills }
