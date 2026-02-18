@@ -1,7 +1,7 @@
 import type { DynamicValue } from '@/types/dynamicValue'
 import type { TeamWatchActionMetaRaw, TeamWatchStorageData } from '@/types/teamWatchTypes'
-import { resolveActionMinLevel } from '@/resources/actionMinLevel'
 import { getActionChinese } from '@/resources/actionChinese'
+import { resolveActionMinLevel } from '@/resources/actionMinLevel'
 import {
   isLowerTierActionId,
 } from '@/utils/compareSaveAction'
