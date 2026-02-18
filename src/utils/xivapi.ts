@@ -11,8 +11,18 @@ const SITE_HOST = {
 } as const
 type SiteName = keyof typeof SITE_HOST
 
+const XIVAPI_CACHE_VERSION = '7.4'
+const CACHE_VERSION_STORAGE_KEY = 'xivapi-cache-version'
 const PRIMARY_SITE_STORAGE_KEY = 'xivapi-primary-site'
+const cacheVersionStorage = useStorage<string>(CACHE_VERSION_STORAGE_KEY, '')
 const primarySiteStorage = useStorage<string>(PRIMARY_SITE_STORAGE_KEY, 'cafe')
+
+function ensureCacheVersion(): void {
+  if (cacheVersionStorage.value === XIVAPI_CACHE_VERSION)
+    return
+  cacheVersionStorage.value = XIVAPI_CACHE_VERSION
+  primarySiteStorage.value = 'cafe'
+}
 
 function isSiteName(value: unknown): value is SiteName {
   return typeof value === 'string' && value in SITE_HOST
@@ -30,6 +40,7 @@ function persistPrimarySite(site: SiteName): void {
 }
 
 function resolveInitialPrimarySite(): SiteName {
+  ensureCacheVersion()
   if (isSiteName(apiParam))
     return apiParam
   return readPrimarySiteFromStorage()
