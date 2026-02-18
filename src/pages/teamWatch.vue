@@ -44,6 +44,10 @@ async function handleSkillClick(member: TeamWatchMemberView, skill: TeamWatchSki
   const text = store.buildSkillStatusText(member, skill)
   try {
     await copyToClipboard(text)
+    ElMessage.success({
+      message: '已复制技能状态',
+      duration: 1000,
+    })
   }
   catch (error) {
     console.warn('[teamWatch] copy failed:', error)
@@ -202,21 +206,19 @@ onUnmounted(() => {
 .member-row {
   display: flex;
   align-items: center;
-  min-height: 44px;
-  gap: 2px;
+  min-height: 38px;
+  gap: 0px;
 }
 
 .skill-btn {
   position: relative;
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  overflow: hidden;
-  background: rgba(20, 20, 20, 0.65);
+  border: 0px solid transparent;
+  box-sizing: border-box;
+  background: none;
   cursor: pointer;
-  transition: transform 0.08s ease, filter 0.08s ease;
 
   img {
     width: 100%;
@@ -227,6 +229,19 @@ onUnmounted(() => {
   &:hover {
     transform: translateY(-1px);
     filter: brightness(1.08);
+  }
+
+  &::after {
+    content: '';
+    background: url(https://souma.diemoe.net/resources/img/frame.png) no-repeat center / 100% 100%;
+    width: 48px;
+    height: 48px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    transform-origin: center;
+    pointer-events: none;
   }
 }
 
@@ -307,29 +322,6 @@ onUnmounted(() => {
 
 .resource-text.warn {
   color: #ff4d4f;
-}
-
-.menu-tools {
-  position: fixed;
-  right: 0;
-  top: 0;
-  z-index: 200;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: flex-end;
-  padding: 4px;
-}
-
-.menu-tools :deep(.el-button) {
-  width: 72px;
-  margin-left: 0;
-  justify-content: center;
-  padding-inline: 8px;
-}
-
-.menu-tools :deep(.el-button + .el-button) {
-  margin-left: 0;
 }
 
 .flash-used {
