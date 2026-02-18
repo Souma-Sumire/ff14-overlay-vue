@@ -10,6 +10,7 @@ import { VueDraggable } from 'vue-draggable-plus'
 import ActionPickerDialog from '@/components/common/ActionPickerDialog.vue'
 import SkillEditorDialog from '@/components/common/SkillEditorDialog.vue'
 import { useLang } from '@/composables/useLang'
+import { resolveActionMinLevel } from '@/resources/actionMinLevel'
 import { getActionChinese, searchActions } from '@/resources/actionChinese'
 import { getGlobalSkillMetaByActionId, GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
@@ -366,9 +367,14 @@ function resolveSkillMeta(actionId: number) {
 function resolveBaselineMinLevel(actionId: number) {
   const fallback = resolveSkillMeta(actionId)
   const shared = getGlobalSkillMetaByActionId(actionId)
-  if (fallback.isRoleAction)
-    return 1
-  return normalizeMinLevelValue(fallback.minLevel ?? shared?.minLevel) ?? 1
+  return resolveActionMinLevel(
+    fallback.minLevel ?? shared?.minLevel,
+    {
+      actionId,
+      isRoleAction: fallback.isRoleAction,
+      fallback: 1,
+    },
+  )
 }
 
 function syncBucketsFromStore() {
@@ -561,7 +567,11 @@ async function loadPickerPool(jobEnum: number) {
         const meta = getGlobalSkillMetaByActionId(row.ID)
         return resolveTeamWatchDynamicValue(meta?.duration ?? 0, GLOBAL_SKILL_MAX_LEVEL, 0)
       })(),
-      minLevel: Number(row.IsRoleAction ?? 0) > 0 ? 1 : (Number(row.ClassJobLevel ?? 1) || 1),
+      minLevel: resolveActionMinLevel(row.ClassJobLevel, {
+        actionId: row.ID,
+        isRoleAction: row.IsRoleAction,
+        fallback: 1,
+      }),
       isRoleAction: Number(row.IsRoleAction ?? 0) > 0,
     }))
     pickerPoolCache[jobEnum] = mapped
@@ -727,9 +737,7 @@ async function openEditor(skillKey: string) {
       : [...(fallback.jobs.length ? fallback.jobs : (shared?.job ?? []))]
     editorRecast1000ms.value = formatDynamicEditorValue(row.recast1000ms ?? shared?.recast1000ms ?? fallback.recast1000ms)
     editorDuration.value = formatDynamicEditorValue(row.duration ?? shared?.duration ?? fallback.duration)
-    editorMinLevel.value = fallback.isRoleAction
-      ? 1
-      : (normalizeMinLevelValue(row.minLevel ?? resolveBaselineMinLevel(row.id)) ?? 1)
+    editorMinLevel.value = normalizeMinLevelValue(row.minLevel ?? resolveBaselineMinLevel(row.id)) ?? 1
     jobEditorVisible.value = false
     editorVisible.value = true
   }
@@ -754,18 +762,21 @@ function applyEditorDraftToRow() {
   const durationError = validateOptionalDynamicInput(editorDuration.value, '持续时间')
   const parsedRecast1000ms = parseOptionalDynamicInput(editorRecast1000ms.value)
   const parsedDuration = parseOptionalDynamicInput(editorDuration.value)
-  const parsedMinLevel = fallback.isRoleAction
-    ? 1
-    : (normalizeMinLevelValue(editorMinLevel.value) ?? 1)
+  const parsedMinLevel = resolveActionMinLevel(
+    normalizeMinLevelValue(editorMinLevel.value) ?? 1,
+    {
+      actionId: row.id,
+      isRoleAction: fallback.isRoleAction,
+      fallback: 1,
+    },
+  )
   row.tts = editorTts.value
   row.job = isSameJobSet(editorJobs.value, baselineJobs) ? undefined : [...editorJobs.value]
   if (!recastError)
     row.recast1000ms = isSameDynamicValue(parsedRecast1000ms, baselineRecast1000ms) ? undefined : parsedRecast1000ms
   if (!durationError)
     row.duration = isSameDynamicValue(parsedDuration, baselineDuration) ? undefined : parsedDuration
-  row.minLevel = fallback.isRoleAction
-    ? undefined
-    : (parsedMinLevel === baselineMinLevel ? undefined : parsedMinLevel)
+  row.minLevel = parsedMinLevel === baselineMinLevel ? undefined : parsedMinLevel
 }
 
 async function previewEditorTts() {

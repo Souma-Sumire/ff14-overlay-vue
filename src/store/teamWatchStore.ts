@@ -5,6 +5,7 @@ import type { TeamWatchActionMeta, TeamWatchActionMetaRaw, TeamWatchMemberView, 
 import { defineStore } from 'pinia'
 import { computed, reactive, ref } from 'vue'
 import { JobResourceManager } from '@/modules/jobResourceTracker'
+import { resolveActionMinLevel } from '@/resources/actionMinLevel'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { buildTeamWatchFallbackMeta, cloneTeamWatchActionMetaMap, loadTeamWatchStorageData, normalizeTeamWatchActionMetaRaw, resolveTeamWatchDynamicValue, saveTeamWatchStorageData, TEAM_WATCH_EMPTY_ACTIONS, TEAM_WATCH_STORAGE_VERSION, TEAM_WATCH_WATCH_ACTIONS_DEFAULT } from '@/resources/teamWatchResource'
 import { extractTriggeredActionFromLogLine, isTeamWatchResetLogLine, triggerRuntimeByAction } from '@/store/teamWatchLoglineHelpers'
@@ -146,9 +147,11 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
           recast1000ms: Number(response.Recast100ms ?? 0) / 10,
           duration: base.duration,
           maxCharges: Number(response.MaxCharges ?? 0),
-          classJobLevel: Number(response.IsRoleAction ?? 0) > 0
-            ? 1
-            : Number(response.ClassJobLevel ?? 1),
+          classJobLevel: resolveActionMinLevel(response.ClassJobLevel, {
+            actionId,
+            isRoleAction: response.IsRoleAction,
+            fallback: 1,
+          }),
         } satisfies TeamWatchActionMetaRaw)
 
         const merged = normalizeTeamWatchActionMetaRaw(actionId, apiMeta)

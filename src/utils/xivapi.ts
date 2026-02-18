@@ -1,4 +1,5 @@
 import { useStorage } from '@vueuse/core'
+import { markRoleActionId, resolveActionMinLevel } from '@/resources/actionMinLevel'
 import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/roleActionCategoryByJob'
 import { completeIcon } from '@/resources/status'
 
@@ -11,7 +12,7 @@ const SITE_HOST = {
 } as const
 type SiteName = keyof typeof SITE_HOST
 
-export const XIVAPI_CACHE_VERSION = '20260218-v5'
+export const XIVAPI_CACHE_VERSION = '20260218-v6'
 const CACHE_VERSION_STORAGE_KEY = 'xivapi-cache-version'
 const PRIMARY_SITE_STORAGE_KEY = 'xivapi-primary-site'
 const cacheVersionStorage = useStorage<string>(CACHE_VERSION_STORAGE_KEY, '')
@@ -222,7 +223,13 @@ export async function parseAction(
 ): Promise<any> {
   const id = Math.trunc(Number(actionId))
   const key = getActionCacheKey(type, id)
-  const requestedColumns = columns.map(col => String(col))
+  const requestedColumns = [...columns.map(col => String(col))]
+  if (type === 'action') {
+    if (!requestedColumns.includes('IsRoleAction'))
+      requestedColumns.push('IsRoleAction')
+    if (!requestedColumns.includes('ClassJobLevel'))
+      requestedColumns.push('ClassJobLevel')
+  }
   const cached = actionCache.get(key)
   if (cached && hasAllColumns(cached, requestedColumns))
     return cached
@@ -230,6 +237,17 @@ export async function parseAction(
   const path = `/${type}/${id}?columns=${requestedColumns.join(',')}`
   try {
     const result = await requestWithFallback(buildFallbackUrls(path))
+    if (type === 'action') {
+      const resolvedId = Number(result.ID ?? id)
+      const normalizedId = Number.isFinite(resolvedId) && resolvedId > 0 ? Math.trunc(resolvedId) : id
+      const isRoleAction = Number(result.IsRoleAction ?? 0)
+      markRoleActionId(normalizedId, isRoleAction)
+      result.ClassJobLevel = resolveActionMinLevel(result.ClassJobLevel, {
+        actionId: normalizedId,
+        isRoleAction,
+        fallback: 1,
+      })
+    }
     const merged = { ...(cached ?? {}), ...result }
     actionCache.set(key, merged)
     return merged
@@ -260,11 +278,16 @@ function toActionSearchItem(row: XivApiActionSearchItem): XivApiActionSearchItem
   const actionId = Math.trunc(Number(row.ID))
   if (actionId <= 0)
     return
+  markRoleActionId(actionId, isRoleAction)
   return {
     ID: actionId,
     Name: row.Name ?? `#${actionId}`,
     Icon: row.Icon ?? DEFAULT_ICON,
-    ClassJobLevel: isRoleAction > 0 ? 1 : Number(row.ClassJobLevel ?? 1),
+    ClassJobLevel: resolveActionMinLevel(row.ClassJobLevel, {
+      actionId,
+      isRoleAction,
+      fallback: 1,
+    }),
     ClassJobTargetID: Number(row.ClassJobTargetID ?? 0),
     ActionCategoryTargetID: Number(row.ActionCategoryTargetID ?? 0),
     IsRoleAction: isRoleAction,

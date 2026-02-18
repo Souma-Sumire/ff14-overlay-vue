@@ -1,5 +1,6 @@
 import type { DynamicValue } from '@/types/dynamicValue'
 import type { TeamWatchActionMetaRaw, TeamWatchStorageData } from '@/types/teamWatchTypes'
+import { resolveActionMinLevel } from '@/resources/actionMinLevel'
 import { getActionChinese } from '@/resources/actionChinese'
 import {
   isLowerTierActionId,
@@ -181,7 +182,13 @@ export function normalizeTeamWatchActionMetaRaw(actionId: number, value: unknown
     recast1000ms: normalizeDynamicValue(raw.recast1000ms, fallback.recast1000ms),
     duration: normalizeDynamicValue(raw.duration, fallback.duration),
     maxCharges: normalizeDynamicValue(raw.maxCharges, fallback.maxCharges),
-    classJobLevel: normalizeClassJobLevel(raw.classJobLevel, fallback.classJobLevel),
+    classJobLevel: resolveActionMinLevel(
+      normalizeClassJobLevel(raw.classJobLevel, fallback.classJobLevel),
+      {
+        actionId: actionId > 0 ? actionId : fallback.id,
+        fallback: fallback.classJobLevel,
+      },
+    ),
   }
   return normalized
 }

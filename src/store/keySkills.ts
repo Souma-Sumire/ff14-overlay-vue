@@ -7,6 +7,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useDemo } from '@/composables/useDemo'
 import { useDev } from '@/composables/useDev'
 import { RandomPartyGenerator } from '@/mock/demoParty'
+import { resolveActionMinLevel } from '@/resources/actionMinLevel'
 import { getActionChinese } from '@/resources/actionChinese'
 import { getGlobalSkillMetaByActionId, GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
@@ -194,7 +195,15 @@ function normalizeStorageSkills(raw: unknown): KeySkillEntry[] {
       job: normalizeEntryJobs(row.job),
       recast1000ms: normalizeEntryDynamicValue(row.recast1000ms),
       duration: normalizeEntryDynamicValue(row.duration),
-      minLevel: normalizeEntryMinLevel(row.minLevel),
+      minLevel: (() => {
+        const minLevel = normalizeEntryMinLevel(row.minLevel)
+        if (minLevel === undefined)
+          return undefined
+        return resolveActionMinLevel(minLevel, {
+          actionId: resolvedId,
+          fallback: 1,
+        })
+      })(),
     })
   })
   return normalized
@@ -304,6 +313,13 @@ const useKeySkillStore = defineStore('keySkill', () => {
       ...autoMetaCache.value,
       [String(id)]: meta,
     }
+    if (meta.isRoleAction) {
+      keySkillsData.value.chinese.forEach((entry) => {
+        if (entry.id !== id)
+          return
+        entry.minLevel = undefined
+      })
+    }
   }
 
   function resolveMeta(actionId: number): KeySkillAutoMeta {
@@ -376,7 +392,11 @@ const useKeySkillStore = defineStore('keySkill', () => {
         ])
         const recast100ms = Number(response.Recast100ms ?? 0)
         const apiRecast1000ms = Number.isFinite(recast100ms) && recast100ms > 0 ? recast100ms / 10 : 0
-        const classJobLevel = normalizeInt(Number(response.ClassJobLevel ?? 1), 1, 1)
+        const classJobLevel = resolveActionMinLevel(response.ClassJobLevel, {
+          actionId: id,
+          isRoleAction: response.IsRoleAction,
+          fallback: 1,
+        })
         const classJobTargetId = normalizeInt(Number(response.ClassJobTargetID ?? 0), 0, 0)
         const classJobCategoryTargetId = normalizeInt(Number(response.ClassJobCategoryTargetID ?? 0), 0, 0)
         const actionCategoryTargetId = normalizeInt(Number(response.ActionCategoryTargetID ?? 0), 0, 0)
@@ -399,9 +419,14 @@ const useKeySkillStore = defineStore('keySkill', () => {
           0,
           0,
         )
-        const resolvedMinLevel = isRoleAction
-          ? 1
-          : normalizeInt(Number(globalMeta?.minLevel ?? classJobLevel), 1, 1)
+        const resolvedMinLevel = resolveActionMinLevel(
+          globalMeta?.minLevel ?? classJobLevel,
+          {
+            actionId: id,
+            isRoleAction,
+            fallback: classJobLevel,
+          },
+        )
         const iconSrcById = idToSrc(id)
         const iconSrc = iconSrcById
           || (typeof response.Icon === 'string' && response.Icon
