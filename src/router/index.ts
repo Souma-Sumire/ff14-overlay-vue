@@ -44,6 +44,8 @@ const routeTitles = new Map(
     timelineSettings: '自定义时间轴编辑',
     uisaveEditor: '场景标点编辑器',
     zoneMacro: '副本宏',
+    keySkillTimer: '关键技能监控2',
+    keySkillTimerSettings: '关键技能监控2 设置',
   }),
 )
 for (const route of router.getRoutes()) {
