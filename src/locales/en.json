@@ -357,6 +357,7 @@
     "test-trigger-5x": "Test Trigger (5X)",
     "test-wipe": "Simulate Wipe",
     "settings": "Settings",
+    "test-level": "Test Level",
     "no-job": "No Job Configured"
   },
   "keySkillTimerSettings": {

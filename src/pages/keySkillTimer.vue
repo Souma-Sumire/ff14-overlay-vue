@@ -4,6 +4,7 @@ import type { KeySkillEntity } from '@/types/keySkill'
 import { useDemo } from '@/composables/useDemo'
 import { useDev } from '@/composables/useDev'
 import { useZone } from '@/composables/useZone'
+import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { useKeySkillStore } from '@/store/keySkills'
 import { compareSame, getUpgradeActionChain } from '@/utils/compareSaveAction'
 import {
@@ -146,10 +147,23 @@ function showSettings() {
       </div>
     </div>
     <div v-if="dev || demo" class="test">
+      <div v-if="dev" class="level-sync-inline">
+        <span class="level-sync-label">
+          {{ $t('keySkillTimer.test-level') }} {{ storeKeySkill.levelSyncTestLevel }}
+        </span>
+        <el-slider
+          v-model="storeKeySkill.levelSyncTestLevel"
+          class="level-sync-control"
+          :min="1"
+          :max="GLOBAL_SKILL_MAX_LEVEL"
+          :step="1"
+          :show-tooltip="false"
+        />
+      </div>
       <el-button @click="storeKeySkill.demoFullParty">
         {{ $t('keySkillTimer.test-all-jobs') }}
       </el-button>
-      <el-button @click="() => storeKeySkill.shuffle()">
+      <el-button v-if="dev" @click="() => storeKeySkill.shuffle()">
         {{ $t('keySkillTimer.test-8-party') }}
       </el-button>
       <el-button v-if="dev" @click="() => triggerAll(1)">
@@ -303,5 +317,33 @@ img {
 .test {
   position: fixed;
   z-index: 200;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.level-sync-inline {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid var(--el-border-color);
+  background: var(--el-bg-color-overlay);
+}
+
+.level-sync-label {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.level-sync-control {
+  width: 110px;
+}
+
+.level-sync-control :deep(.el-slider__runway) {
+  margin: 0;
 }
 </style>

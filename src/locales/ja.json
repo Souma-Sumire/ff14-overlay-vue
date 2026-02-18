@@ -357,6 +357,7 @@
     "test-trigger-5x": "トリガーテスト(5倍)",
     "test-wipe": "ワイプをシミュレート",
     "settings": "設定",
+    "test-level": "テストレベル",
     "no-job": "ジョブ未設定"
   },
   "keySkillTimerSettings": {

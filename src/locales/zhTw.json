@@ -357,6 +357,7 @@
     "test-trigger-5x": "測試觸發(5X)",
     "test-wipe": "模擬隊伍毀滅",
     "settings": "設定",
+    "test-level": "測試等級",
     "no-job": "未配置職業"
   },
   "keySkillTimerSettings": {

@@ -580,7 +580,7 @@ class RandomPartyGenerator {
 
   constructor() {
     this.party = ref<Party[]>([])
-    this.shuffle() // 初始化一次
+    this.fullParty() // 初始化一次
   }
 
   fullParty(options: { includeBaseJob?: boolean } = { includeBaseJob: false }) {

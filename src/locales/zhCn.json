@@ -360,6 +360,7 @@
     "test-trigger-5x": "测试触发(5X)",
     "test-wipe": "模拟团灭",
     "settings": "设置",
+    "test-level": "测试等级",
     "no-job": "未配置职业"
   },
   "keySkillTimerSettings": {
