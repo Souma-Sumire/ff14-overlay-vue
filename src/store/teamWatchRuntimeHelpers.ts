@@ -1,6 +1,6 @@
 import type { TeamWatchActionMeta } from '@/types/teamWatchTypes'
-import Util from '@/utils/util'
 import { clamp, toHexId } from '@/store/teamWatchStoreHelpers'
+import Util from '@/utils/util'
 
 export interface TeamWatchRuntime {
   key: string

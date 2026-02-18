@@ -1,64 +1,18 @@
 import type { Party } from 'cactbot/types/event'
-import type {
-  TeamWatchActionMeta,
-  TeamWatchActionMetaRaw,
-  TeamWatchMemberView,
-  TeamWatchSkillView,
-  TeamWatchStorageData,
-} from '@/types/teamWatchTypes'
+import type { TeamWatchRuntime } from '@/store/teamWatchRuntimeHelpers'
+import type { TeamWatchSkillStateView } from '@/store/teamWatchSkillStateHelpers'
+import type { TeamWatchActionMeta, TeamWatchActionMetaRaw, TeamWatchMemberView, TeamWatchSkillView, TeamWatchStorageData } from '@/types/teamWatchTypes'
 import { defineStore } from 'pinia'
 import { computed, reactive, ref } from 'vue'
 import { JobResourceManager } from '@/modules/jobResourceTracker'
-import { resolveJobResourceActionCost } from '@/resources/jobResourceActionCost'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
-import {
-  buildTeamWatchFallbackMeta,
-  cloneTeamWatchActionMetaMap,
-  loadTeamWatchStorageData,
-  normalizeTeamWatchActionMetaRaw,
-  resolveTeamWatchDynamicValue,
-  saveTeamWatchStorageData,
-  TEAM_WATCH_EMPTY_ACTIONS,
-  TEAM_WATCH_STORAGE_VERSION,
-  TEAM_WATCH_WATCH_ACTIONS_DEFAULT,
-} from '@/resources/teamWatchResource'
-import {
-  buildDefaultWatchMap,
-  buildKnownJobs,
-  buildSimulatedAbilityLine,
-  clamp,
-  collectWatchActionIds,
-  decodeBase64Payload,
-  deepCloneWatchMap,
-  encodeBase64Payload,
-  normalizeInt,
-  normalizeTrackedActionId,
-  toHexId,
-} from '@/store/teamWatchStoreHelpers'
-import {
-  clearRuntimeCooldownStates,
-  ensureCooldownHistory,
-  ensureRuntime,
-  type TeamWatchRuntime,
-  updateRuntimeCollection,
-  useRuntime,
-} from '@/store/teamWatchRuntimeHelpers'
+import { buildTeamWatchFallbackMeta, cloneTeamWatchActionMetaMap, loadTeamWatchStorageData, normalizeTeamWatchActionMetaRaw, resolveTeamWatchDynamicValue, saveTeamWatchStorageData, TEAM_WATCH_EMPTY_ACTIONS, TEAM_WATCH_STORAGE_VERSION, TEAM_WATCH_WATCH_ACTIONS_DEFAULT } from '@/resources/teamWatchResource'
+import { extractTriggeredActionFromLogLine, isTeamWatchResetLogLine, triggerRuntimeByAction } from '@/store/teamWatchLoglineHelpers'
+import { clearRuntimeCooldownStates, ensureCooldownHistory, ensureRuntime, updateRuntimeCollection } from '@/store/teamWatchRuntimeHelpers'
+import { buildSkillStateCacheKey, buildTeamWatchSkillStatusText, resolveTeamWatchSkillState } from '@/store/teamWatchSkillStateHelpers'
+import { buildDefaultWatchMap, buildKnownJobs, buildSimulatedAbilityLine, collectWatchActionIds, decodeBase64Payload, deepCloneWatchMap, encodeBase64Payload, normalizeInt, normalizeTrackedActionId, toHexId } from '@/store/teamWatchStoreHelpers'
 import Util from '@/utils/util'
 import { getIconSrcByPath, parseAction } from '@/utils/xivapi'
-
-interface TeamWatchSkillStateView {
-  text: string
-  charges: number
-  maxCharges: number
-  isCharge: boolean
-  overlayPercent: number
-  isCooling: boolean
-  isRecentlyUsed: boolean
-  hasResourceCost: boolean
-  resourceReady: boolean
-  resourceValue?: number
-  extraText: string
-}
 
 const TEAM_WATCH_ACTION_COLUMNS = [
   'ID',
@@ -357,15 +311,17 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
   }
 
   function triggerSkillByAction(casterId: string, actionId: number) {
-    const trackedActionId = normalizeTrackedActionId(actionId)
-    if (trackedActionId <= 0)
-      return
-    const runtimeKey = actionLookup[`${toHexId(casterId)}:${trackedActionId}`]
-    if (!runtimeKey)
-      return
     const now = Date.now()
-    if (useRuntime(runtimeByKey, cooldownTracker, runtimeKey, now))
+    if (triggerRuntimeByAction({
+      runtimeByKey,
+      cooldownTracker,
+      actionLookup,
+      casterId,
+      actionId,
+      now,
+    })) {
       nowTs.value = now
+    }
   }
 
   function triggerAllVisibleSkills() {
@@ -426,19 +382,13 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
 
     resourceManager.processLine(type, e.line, cooldownTracker)
 
-    if (type === '21' || (type === '22' && e.line[45] === '0')) {
-      const actionIdHex = e.line[4]
-      const casterId = e.line[2]
-      if (!actionIdHex || !casterId)
-        return
-      const actionId = Number.parseInt(actionIdHex, 16)
-      if (!Number.isFinite(actionId))
-        return
-      triggerSkillByAction(casterId, actionId)
+    const triggeredAction = extractTriggeredActionFromLogLine(e.line)
+    if (triggeredAction) {
+      triggerSkillByAction(triggeredAction.casterId, triggeredAction.actionId)
       return
     }
 
-    if (type === '33' && ['4000000F', '40000010'].includes(e.line[3] ?? '')) {
+    if (isTeamWatchResetLogLine(e.line)) {
       clearCooldownStates()
       scheduleRebuild()
     }
@@ -450,124 +400,25 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
       skillStateCache.clear()
     }
 
-    const cacheKey = `${skill.runtimeKey}:${skill.rawActionId}:${skill.resolvedActionId}:${skill.trackedActionId}:${skill.meta.maxCharges}:${skill.meta.recast1000ms}`
+    const cacheKey = buildSkillStateCacheKey(skill)
     const cached = skillStateCache.get(cacheKey)
     if (cached)
       return cached
 
-    const runtime = runtimeByKey[skill.runtimeKey]
-    const now = nowTs.value
-    const recastTotalMs = Math.max(1, skill.meta.recast1000ms * 1000)
-    const isCharge = skill.meta.maxCharges > 0
-
-    let overlayPercent = 0
-    let text = ''
-    let charges = skill.meta.maxCharges
-    let isCooling = false
-    let hasResourceCost = false
-    let resourceReady = true
-    let resourceValue: number | undefined
-    let extraText = ''
-
-    if (!runtime) {
-      const state = {
-        text,
-        charges,
-        maxCharges: skill.meta.maxCharges,
-        isCharge,
-        overlayPercent,
-        isCooling,
-        isRecentlyUsed: false,
-        hasResourceCost,
-        resourceReady,
-        resourceValue,
-        extraText,
-      }
-      skillStateCache.set(cacheKey, state)
-      return state
-    }
-
-    if (isCharge) {
-      charges = runtime.chargesNow
-      if (runtime.chargeReadyAt.length > 0) {
-        const nextReadyAt = runtime.chargeReadyAt[0]!
-        const remain = clamp(nextReadyAt - now, 0, recastTotalMs)
-        overlayPercent = (remain / recastTotalMs) * 100
-        isCooling = true
-      }
-    }
-    else if (runtime.recastEndAt) {
-      const remain = Math.max(0, runtime.recastEndAt - now)
-      text = remain > 0
-        ? String(Math.max(0, Math.round(remain / 1000)))
-        : ''
-      overlayPercent = (remain / recastTotalMs) * 100
-      isCooling = remain > 0
-    }
-
-    const resourceCost
-      = resolveJobResourceActionCost(
-        skill.rawActionId,
-        skill.resolvedActionId,
-        skill.trackedActionId,
-      )
-
-    if (resourceCost !== undefined) {
-      hasResourceCost = true
-      resourceValue = resourceManager.getResource(runtime.ownerJob, runtime.ownerId)
-      resourceReady = resourceManager.isResourceReady(
-        runtime.ownerJob,
-        runtime.ownerId,
-        skill.resolvedActionId,
-        resourceCost,
-      )
-    }
-    extraText = resourceManager.getExtraText(
-      runtime.ownerJob,
-      runtime.ownerId,
-      skill.resolvedActionId,
-      now,
-      cooldownTracker[runtime.ownerId] ?? {},
-    )
-
-    const state = {
-      text,
-      charges,
-      maxCharges: skill.meta.maxCharges,
-      isCharge,
-      overlayPercent: clamp(overlayPercent, 0, 100),
-      isCooling,
-      isRecentlyUsed: now - runtime.activeAt < 250,
-      hasResourceCost,
-      resourceReady,
-      resourceValue,
-      extraText,
-    }
+    const state = resolveTeamWatchSkillState({
+      skill,
+      runtime: runtimeByKey[skill.runtimeKey],
+      now: nowTs.value,
+      cooldownTracker,
+      resourceManager,
+    })
     skillStateCache.set(cacheKey, state)
     return state
   }
 
   function buildSkillStatusText(member: TeamWatchMemberView, skill: TeamWatchSkillView) {
     const state = getSkillState(skill)
-    const suffixes: string[] = []
-
-    if (state.isCharge) {
-      suffixes.push(
-        state.charges >= state.maxCharges
-          ? `已就绪(${state.charges}层)`
-          : `当前(${state.charges}层)`,
-      )
-    }
-    else {
-      suffixes.push(state.text ? `冷却：${state.text}` : '已就绪')
-    }
-
-    if (!state.resourceReady)
-      suffixes.push(`资源不足(${state.resourceValue ?? 0})`)
-    if (state.extraText)
-      suffixes.push(`附加:${state.extraText}`)
-
-    return `${member.name} ${skill.meta.name} ${suffixes.join(' ')}`
+    return buildTeamWatchSkillStatusText(member.name, skill.meta.name, state)
   }
 
   function getSnapshot() {
