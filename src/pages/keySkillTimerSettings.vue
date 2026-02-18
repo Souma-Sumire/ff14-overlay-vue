@@ -16,7 +16,7 @@ import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { isTeamWatchLowerTierActionId, resolveTeamWatchDynamicValue } from '@/resources/teamWatchResource'
 import { useKeySkillStore } from '@/store/keySkills'
 import { copyToClipboard } from '@/utils/clipboard'
-import { isCompareSameSourceId } from '@/utils/compareSaveAction'
+import { compareSame, isCompareSameSourceId, normalizeUpgradeActionId } from '@/utils/compareSaveAction'
 import { idToSrc } from '@/utils/dynamicValue'
 import { parseOptionalDynamicInput, validateOptionalDynamicInput } from '@/utils/dynamicValueValidation'
 import Util from '@/utils/util'
@@ -153,13 +153,78 @@ const editorJobOptions = computed(() => {
 })
 
 const pickerOrderedResult = computed(() => {
+  interface FamilySortState {
+    state: number
+    recast: number
+    representativeId: number
+  }
+
+  const getFamilyId = (actionId: number) => {
+    const upgraded = normalizeUpgradeActionId(actionId)
+    const same = compareSame(upgraded)
+    return normalizeUpgradeActionId(same)
+  }
+
+  const getMemberState = (actionId: number) => {
+    if (isTeamWatchLowerTierActionId(actionId))
+      return 0
+    if (isCompareSameSourceId(actionId))
+      return 1
+    return 2
+  }
+
+  const familyState = new Map<number, FamilySortState>()
+
+  for (const item of pickerResult.value) {
+    const familyId = getFamilyId(item.id)
+    const state = getMemberState(item.id)
+    const recastRaw = Number(item.recast1000ms ?? 0)
+    const recast = Number.isFinite(recastRaw) ? recastRaw : -1
+    const prev = familyState.get(familyId)
+    if (!prev) {
+      familyState.set(familyId, {
+        state,
+        recast,
+        representativeId: item.id,
+      })
+      continue
+    }
+
+    if (state > prev.state || (state === prev.state && (recast > prev.recast || (recast === prev.recast && item.id < prev.representativeId)))) {
+      familyState.set(familyId, {
+        state,
+        recast,
+        representativeId: item.id,
+      })
+    }
+  }
+
   return [...pickerResult.value].sort((a, b) => {
-    const aRecast = Number(a.recast1000ms ?? 0)
-    const bRecast = Number(b.recast1000ms ?? 0)
-    const aSort = Number.isFinite(aRecast) ? aRecast : -1
-    const bSort = Number.isFinite(bRecast) ? bRecast : -1
-    if (aSort !== bSort)
-      return bSort - aSort
+    const aFamilyId = getFamilyId(a.id)
+    const bFamilyId = getFamilyId(b.id)
+
+    if (aFamilyId !== bFamilyId) {
+      const aFamily = familyState.get(aFamilyId)
+      const bFamily = familyState.get(bFamilyId)
+      const aRecast = aFamily?.recast ?? -1
+      const bRecast = bFamily?.recast ?? -1
+      if (aRecast !== bRecast)
+        return bRecast - aRecast
+      const aRepresentativeId = aFamily?.representativeId ?? aFamilyId
+      const bRepresentativeId = bFamily?.representativeId ?? bFamilyId
+      return aRepresentativeId - bRepresentativeId
+    }
+
+    const aState = getMemberState(a.id)
+    const bState = getMemberState(b.id)
+    if (aState !== bState)
+      return aState - bState
+
+    const aLevel = Number(a.minLevel ?? Number.MAX_SAFE_INTEGER)
+    const bLevel = Number(b.minLevel ?? Number.MAX_SAFE_INTEGER)
+    if (aLevel !== bLevel)
+      return aLevel - bLevel
+
     return a.id - b.id
   })
 })
@@ -427,17 +492,10 @@ async function loadPickerPool(jobEnum: number) {
   try {
     const apiRows = await searchActionsByClassJobs([jobEnum], 500)
     const mapped = apiRows.map(row => ({
-      id: (() => {
-        const meta = getGlobalSkillMetaByActionId(row.ID)
-        const resolved = resolveTeamWatchDynamicValue(meta?.id ?? row.ID, 100, row.ID)
-        return Number.isFinite(resolved) && resolved > 0 ? Math.trunc(resolved) : row.ID
-      })(),
+      id: row.ID,
       name: getActionChinese(row.ID) || row.Name || `#${row.ID}`,
       iconSrc: (() => {
-        const meta = getGlobalSkillMetaByActionId(row.ID)
-        const resolved = resolveTeamWatchDynamicValue(meta?.id ?? row.ID, 100, row.ID)
-        const actionId = Number.isFinite(resolved) && resolved > 0 ? Math.trunc(resolved) : row.ID
-        return idToSrc(actionId) || (row.Icon ? getIconSrcByPath(row.Icon) : undefined)
+        return idToSrc(row.ID) || (row.Icon ? getIconSrcByPath(row.Icon) : undefined)
       })(),
       recast1000ms: (() => {
         const meta = getGlobalSkillMetaByActionId(row.ID)
