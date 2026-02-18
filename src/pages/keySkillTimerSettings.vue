@@ -19,6 +19,7 @@ import { copyToClipboard } from '@/utils/clipboard'
 import { compareSame, isCompareSameSourceId, normalizeUpgradeActionId } from '@/utils/compareSaveAction'
 import { idToSrc } from '@/utils/dynamicValue'
 import { parseOptionalDynamicInput, validateOptionalDynamicInput } from '@/utils/dynamicValueValidation'
+import { tts } from '@/utils/tts'
 import Util from '@/utils/util'
 import { getIconSrcByPath, handleImgError, searchActionsByClassJobs } from '@/utils/xivapi'
 
@@ -710,6 +711,23 @@ function applyEditorDraftToRow() {
   row.minLevel = parsedMinLevel === baselineMinLevel ? undefined : parsedMinLevel
 }
 
+async function previewEditorTts() {
+  if (interactionLocked.value)
+    return
+  const text = editorTts.value.trim()
+  if (!text) {
+    ElMessage.warning('请先输入 TTS 内容')
+    return
+  }
+  try {
+    await tts(text)
+  }
+  catch (error) {
+    console.warn('[keySkillTimerSettings] tts preview failed:', error)
+    ElMessage.error('TTS 试听失败')
+  }
+}
+
 watch(editorTts, applyEditorDraftToRow)
 watch(editorRecast1000ms, applyEditorDraftToRow)
 watch(editorDuration, applyEditorDraftToRow)
@@ -966,7 +984,16 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
       <template v-if="currentEditorSkill">
         <div class="editor-field">
           <label>TTS</label>
-          <el-input v-model="editorTts" :disabled="interactionLocked" placeholder="可留空，留空则不播报" />
+          <el-input v-model="editorTts" :disabled="interactionLocked" placeholder="可留空，留空则不播报">
+            <template #append>
+              <el-button
+                :disabled="interactionLocked || !editorTts.trim()"
+                @click="previewEditorTts"
+              >
+                试听
+              </el-button>
+            </template>
+          </el-input>
         </div>
         <div class="editor-field">
           <label>习得等级</label>
