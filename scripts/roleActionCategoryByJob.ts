@@ -142,7 +142,6 @@ async function main() {
   const output = `${lines.join('\n')}`
   const outPath = 'src/resources/roleActionCategoryByJob.ts'
   fs.outputFileSync(outPath, output, 'utf8')
-  console.log(`[roleActionCategoryByJob] generated ${outPath} with ${sortedJobIds.length} jobs.`)
 }
 
 await main()
