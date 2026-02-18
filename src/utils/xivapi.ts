@@ -11,7 +11,7 @@ const SITE_HOST = {
 } as const
 type SiteName = keyof typeof SITE_HOST
 
-export const XIVAPI_CACHE_VERSION = '20260218-v3'
+export const XIVAPI_CACHE_VERSION = '20260218-v5'
 const CACHE_VERSION_STORAGE_KEY = 'xivapi-cache-version'
 const PRIMARY_SITE_STORAGE_KEY = 'xivapi-primary-site'
 const cacheVersionStorage = useStorage<string>(CACHE_VERSION_STORAGE_KEY, '')
@@ -253,6 +253,7 @@ function toActionSearchItem(row: XivApiActionSearchItem): XivApiActionSearchItem
   const isPvP = Number(row.IsPvP ?? 0)
   if (isPvP > 0)
     return
+  const isRoleAction = Number(row.IsRoleAction ?? 0)
   const recast100ms = Number(row.Recast100ms ?? 0)
   if (!Number.isFinite(recast100ms) || recast100ms <= 0)
     return
@@ -263,10 +264,10 @@ function toActionSearchItem(row: XivApiActionSearchItem): XivApiActionSearchItem
     ID: actionId,
     Name: row.Name ?? `#${actionId}`,
     Icon: row.Icon ?? DEFAULT_ICON,
-    ClassJobLevel: Number(row.ClassJobLevel ?? 1),
+    ClassJobLevel: isRoleAction > 0 ? 1 : Number(row.ClassJobLevel ?? 1),
     ClassJobTargetID: Number(row.ClassJobTargetID ?? 0),
     ActionCategoryTargetID: Number(row.ActionCategoryTargetID ?? 0),
-    IsRoleAction: Number(row.IsRoleAction ?? 0),
+    IsRoleAction: isRoleAction,
     IsPvP: isPvP,
     Recast100ms: recast100ms,
     Recast1000ms: recast100ms / 10,

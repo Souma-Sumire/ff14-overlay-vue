@@ -13,6 +13,7 @@ import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { raidbuffs } from '@/resources/keySkillResource'
 import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/roleActionCategoryByJob'
 import { resolveTeamWatchDynamicValue } from '@/resources/teamWatchResource'
+import { resolveUpgradeActionIdForLevel } from '@/utils/compareSaveAction'
 import { idToSrc } from '@/utils/dynamicValue'
 import { tts } from '@/utils/tts'
 import Util from '@/utils/util'
@@ -55,6 +56,7 @@ interface KeySkillAutoMeta {
   minLevel: number
   jobs: number[]
   classJobTargetId?: number
+  isRoleAction: boolean
 }
 
 interface DefaultKeySkillEntry {
@@ -77,7 +79,8 @@ function normalizeAutoMetaEntry(rawId: number, value: unknown): KeySkillAutoMeta
   const minLevel = normalizeInt(Number(row.minLevel ?? 1), 1, 1)
   const jobs = uniqueInts(Array.isArray(row.jobs) ? row.jobs.map(v => Number(v)) : [])
   const classJobTargetId = normalizeInt(Number(row.classJobTargetId ?? 0), 0, 0)
-  return { id, name, src, duration, recast1000ms, minLevel, jobs, classJobTargetId }
+  const isRoleAction = Number(row.isRoleAction ?? 0) > 0
+  return { id, name, src, duration, recast1000ms, minLevel, jobs, classJobTargetId, isRoleAction }
 }
 
 function normalizeAutoMetaCache(raw: unknown): Record<number, KeySkillAutoMeta> {
@@ -102,6 +105,11 @@ function normalizeInt(value: number, fallback: number, min = 0) {
   if (!Number.isFinite(value))
     return fallback
   return Math.max(min, Math.trunc(value))
+}
+
+function normalizeSkillLevel(value: number, fallback = GLOBAL_SKILL_MAX_LEVEL) {
+  const normalized = normalizeInt(value, fallback, 1)
+  return Math.min(GLOBAL_SKILL_MAX_LEVEL, normalized)
 }
 
 function uniqueInts(input: number[]) {
@@ -192,17 +200,25 @@ function normalizeStorageSkills(raw: unknown): KeySkillEntry[] {
   return normalized
 }
 
-function resolveJobsFromApi(classJobTargetId: number, actionCategoryTargetId: number, isRoleAction: boolean) {
+function resolveJobsFromApi(
+  classJobTargetId: number,
+  classJobCategoryTargetId: number,
+  actionCategoryTargetId: number,
+  isRoleAction: boolean,
+) {
   const battleJobEnums = Util.getBattleJobs()
     .filter(job => job !== 'NONE')
     .filter(job => Util.isCombatJob(job))
     .map(job => Util.jobToJobEnum(job))
 
-  if (isRoleAction && actionCategoryTargetId > 0) {
+  if (isRoleAction) {
+    const roleCategoryTargetIds = uniqueInts([classJobCategoryTargetId, actionCategoryTargetId])
+    if (!roleCategoryTargetIds.length)
+      return []
     return uniqueInts(
       battleJobEnums.filter((jobEnum) => {
         const categories = ROLE_ACTION_CATEGORY_BY_JOB[jobEnum] ?? []
-        return categories.includes(actionCategoryTargetId)
+        return roleCategoryTargetIds.some(categoryId => categories.includes(categoryId))
       }),
     )
   }
@@ -253,8 +269,16 @@ const useKeySkillStore = defineStore('keySkill', () => {
   const enableTts = useStorage('keySkills-enable-tts', { chinese: true })
   const skillStates = reactive<Record<string, SkillState>>({})
   const speed = ref(1)
+  const levelSyncTestLevel = useStorage<number>('keySkills-level-sync-test-level', GLOBAL_SKILL_MAX_LEVEL)
   const autoMetaCache = useStorage<Record<string, KeySkillAutoMeta>>('keySkills-auto-meta-cache', {})
   const autoMetaCacheVersion = useStorage<string>(KEY_SKILLS_AUTO_META_CACHE_VERSION_STORAGE_KEY, '')
+
+  levelSyncTestLevel.value = normalizeSkillLevel(levelSyncTestLevel.value)
+  watch(levelSyncTestLevel, (value) => {
+    const normalized = normalizeSkillLevel(value)
+    if (normalized !== value)
+      levelSyncTestLevel.value = normalized
+  })
 
   if (autoMetaCacheVersion.value !== XIVAPI_CACHE_VERSION) {
     autoMetaCache.value = {}
@@ -271,6 +295,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
   })
   const pendingAutoMeta = reactive(new Set<number>())
   const pendingAutoMetaTasks = new Map<number, Promise<void>>()
+  const refreshedIncompleteAutoMeta = reactive(new Set<number>())
   const isAutoMetaLoading = computed(() => pendingAutoMeta.size > 0)
 
   function saveAutoMetaToCache(id: number, meta: KeySkillAutoMeta) {
@@ -311,6 +336,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
       minLevel: normalizeInt(Number(globalMeta?.minLevel ?? 1), 1, 1),
       jobs: uniqueInts(globalMeta?.job ?? []),
       classJobTargetId: 0,
+      isRoleAction: false,
     }
   }
 
@@ -318,8 +344,14 @@ const useKeySkillStore = defineStore('keySkill', () => {
     if (!Number.isFinite(actionId) || actionId <= 0)
       return
     const id = Math.trunc(actionId)
-    if (autoMetaById[id])
-      return
+    const existing = autoMetaById[id]
+    if (existing) {
+      const hasResolvedJobs = Array.isArray(existing.jobs) && existing.jobs.length > 0
+      if (hasResolvedJobs)
+        return
+      if (refreshedIncompleteAutoMeta.has(id))
+        return
+    }
     const task = pendingAutoMetaTasks.get(id)
     if (task) {
       await task
@@ -338,6 +370,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
           'Recast100ms',
           'ClassJobLevel',
           'ClassJobTargetID',
+          'ClassJobCategoryTargetID',
           'ActionCategoryTargetID',
           'IsRoleAction',
         ])
@@ -345,11 +378,12 @@ const useKeySkillStore = defineStore('keySkill', () => {
         const apiRecast1000ms = Number.isFinite(recast100ms) && recast100ms > 0 ? recast100ms / 10 : 0
         const classJobLevel = normalizeInt(Number(response.ClassJobLevel ?? 1), 1, 1)
         const classJobTargetId = normalizeInt(Number(response.ClassJobTargetID ?? 0), 0, 0)
+        const classJobCategoryTargetId = normalizeInt(Number(response.ClassJobCategoryTargetID ?? 0), 0, 0)
         const actionCategoryTargetId = normalizeInt(Number(response.ActionCategoryTargetID ?? 0), 0, 0)
         const isRoleAction = Number(response.IsRoleAction ?? 0) > 0
         const jobs = (globalMeta?.job?.length ?? 0) > 0
           ? uniqueInts(globalMeta!.job)
-          : resolveJobsFromApi(classJobTargetId, actionCategoryTargetId, isRoleAction)
+          : resolveJobsFromApi(classJobTargetId, classJobCategoryTargetId, actionCategoryTargetId, isRoleAction)
         const resolvedId = normalizeInt(
           resolveTeamWatchDynamicValue(globalMeta?.id ?? id, GLOBAL_SKILL_MAX_LEVEL, id),
           id,
@@ -365,7 +399,9 @@ const useKeySkillStore = defineStore('keySkill', () => {
           0,
           0,
         )
-        const resolvedMinLevel = normalizeInt(Number(globalMeta?.minLevel ?? (isRoleAction ? 1 : classJobLevel)), 1, 1)
+        const resolvedMinLevel = isRoleAction
+          ? 1
+          : normalizeInt(Number(globalMeta?.minLevel ?? classJobLevel), 1, 1)
         const iconSrcById = idToSrc(id)
         const iconSrc = iconSrcById
           || (typeof response.Icon === 'string' && response.Icon
@@ -381,6 +417,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
           minLevel: resolvedMinLevel,
           jobs,
           classJobTargetId: classJobTargetId > 0 ? classJobTargetId : 0,
+          isRoleAction,
         })
       }
       catch (error) {
@@ -409,9 +446,11 @@ const useKeySkillStore = defineStore('keySkill', () => {
           minLevel: normalizeInt(Number(globalMeta?.minLevel ?? 1), 1, 1),
           jobs: uniqueInts(globalMeta?.job ?? []),
           classJobTargetId: 0,
+          isRoleAction: false,
         })
       }
       finally {
+        refreshedIncompleteAutoMeta.add(id)
         pendingAutoMeta.delete(id)
         pendingAutoMetaTasks.delete(id)
       }
@@ -439,8 +478,14 @@ const useKeySkillStore = defineStore('keySkill', () => {
 
     for (const player of currentParty.value) {
       for (const skill of keySkillsData.value.chinese) {
-        const level = player.level || GLOBAL_SKILL_MAX_LEVEL
+        const actualLevel = normalizeSkillLevel(player.level || GLOBAL_SKILL_MAX_LEVEL)
+        const level = dev.value || demo.value ? levelSyncTestLevel.value : actualLevel
         const meta = resolveMeta(skill.id)
+        const displayActionId = normalizeInt(
+          resolveUpgradeActionIdForLevel(meta.id, level),
+          meta.id,
+          1,
+        )
         const resolvedJobs = skill.job && skill.job.length > 0 ? uniqueInts(skill.job) : meta.jobs
         const resolvedRecast1000ms = normalizeInt(
           resolveTeamWatchDynamicValue(skill.recast1000ms ?? meta.recast1000ms, level, meta.recast1000ms),
@@ -452,15 +497,17 @@ const useKeySkillStore = defineStore('keySkill', () => {
           meta.duration,
           0,
         )
-        const resolvedMinLevel = normalizeInt(
-          Number(skill.minLevel ?? meta.minLevel),
-          meta.minLevel,
-          1,
-        )
+        const resolvedMinLevel = meta.isRoleAction
+          ? 1
+          : normalizeInt(
+              Number(skill.minLevel ?? meta.minLevel),
+              meta.minLevel,
+              1,
+            )
 
         if (!resolvedJobs.includes(player.job))
           continue
-        if (player.level !== undefined && resolvedMinLevel > player.level)
+        if (resolvedMinLevel > level)
           continue
 
         const owner: KeySkillEntity['owner'] = {
@@ -482,7 +529,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
           skillKey: skill.key,
           minLevel: resolvedMinLevel,
           recast1000ms: resolvedRecast1000ms,
-          src: meta.src,
+          src: idToSrc(displayActionId) || meta.src,
           tts: skill.tts,
           line: skill.line,
           job: resolvedJobs,
@@ -638,6 +685,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
     dev,
     demo,
     speed,
+    levelSyncTestLevel,
     usedSkills,
     triggerSkill,
     wipe,

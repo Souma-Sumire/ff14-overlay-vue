@@ -358,8 +358,17 @@ function resolveSkillMeta(actionId: number) {
     duration: resolvedDuration,
     recast1000ms: resolvedRecast1000ms,
     minLevel: resolvedMinLevel,
+    isRoleAction: false,
     jobs: Array.isArray(globalMeta?.job) ? [...globalMeta.job] : [],
   }
+}
+
+function resolveBaselineMinLevel(actionId: number) {
+  const fallback = resolveSkillMeta(actionId)
+  const shared = getGlobalSkillMetaByActionId(actionId)
+  if (fallback.isRoleAction)
+    return 1
+  return normalizeMinLevelValue(fallback.minLevel ?? shared?.minLevel) ?? 1
 }
 
 function syncBucketsFromStore() {
@@ -718,7 +727,9 @@ async function openEditor(skillKey: string) {
       : [...(fallback.jobs.length ? fallback.jobs : (shared?.job ?? []))]
     editorRecast1000ms.value = formatDynamicEditorValue(row.recast1000ms ?? shared?.recast1000ms ?? fallback.recast1000ms)
     editorDuration.value = formatDynamicEditorValue(row.duration ?? shared?.duration ?? fallback.duration)
-    editorMinLevel.value = normalizeMinLevelValue(row.minLevel ?? shared?.minLevel ?? fallback.minLevel) ?? 1
+    editorMinLevel.value = fallback.isRoleAction
+      ? 1
+      : (normalizeMinLevelValue(row.minLevel ?? resolveBaselineMinLevel(row.id)) ?? 1)
     jobEditorVisible.value = false
     editorVisible.value = true
   }
@@ -738,19 +749,23 @@ function applyEditorDraftToRow() {
   const baselineJobs = fallback.jobs.length ? fallback.jobs : (shared?.job ?? [])
   const baselineRecast1000ms = shared?.recast1000ms ?? fallback.recast1000ms
   const baselineDuration = shared?.duration ?? fallback.duration
-  const baselineMinLevel = normalizeMinLevelValue(shared?.minLevel ?? fallback.minLevel) ?? 1
+  const baselineMinLevel = resolveBaselineMinLevel(row.id)
   const recastError = validateOptionalDynamicInput(editorRecast1000ms.value, '冷却时间')
   const durationError = validateOptionalDynamicInput(editorDuration.value, '持续时间')
   const parsedRecast1000ms = parseOptionalDynamicInput(editorRecast1000ms.value)
   const parsedDuration = parseOptionalDynamicInput(editorDuration.value)
-  const parsedMinLevel = normalizeMinLevelValue(editorMinLevel.value) ?? 1
+  const parsedMinLevel = fallback.isRoleAction
+    ? 1
+    : (normalizeMinLevelValue(editorMinLevel.value) ?? 1)
   row.tts = editorTts.value
   row.job = isSameJobSet(editorJobs.value, baselineJobs) ? undefined : [...editorJobs.value]
   if (!recastError)
     row.recast1000ms = isSameDynamicValue(parsedRecast1000ms, baselineRecast1000ms) ? undefined : parsedRecast1000ms
   if (!durationError)
     row.duration = isSameDynamicValue(parsedDuration, baselineDuration) ? undefined : parsedDuration
-  row.minLevel = parsedMinLevel === baselineMinLevel ? undefined : parsedMinLevel
+  row.minLevel = fallback.isRoleAction
+    ? undefined
+    : (parsedMinLevel === baselineMinLevel ? undefined : parsedMinLevel)
 }
 
 async function previewEditorTts() {
@@ -800,7 +815,7 @@ function resetCurrentSkillToDefaults() {
   const baselineJobs = fallback.jobs.length ? fallback.jobs : (shared?.job ?? [])
   const baselineRecast1000ms = shared?.recast1000ms ?? fallback.recast1000ms
   const baselineDuration = shared?.duration ?? fallback.duration
-  const baselineMinLevel = normalizeMinLevelValue(shared?.minLevel ?? fallback.minLevel) ?? 1
+  const baselineMinLevel = resolveBaselineMinLevel(row.id)
 
   editorTts.value = getDefaultTtsByActionId(row.id)
   editorJobs.value = [...baselineJobs]
@@ -1048,7 +1063,7 @@ function getDefaultTtsByActionId(actionId: number) {
           <label>习得等级</label>
           <el-input-number
             v-model="editorMinLevel"
-            :disabled="interactionLocked"
+            :disabled="interactionLocked || !!currentEditorMeta?.isRoleAction"
             :min="1"
             :step="1"
             step-strictly

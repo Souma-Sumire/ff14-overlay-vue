@@ -11,6 +11,8 @@ import { extractTriggeredActionFromLogLine, isTeamWatchResetLogLine, triggerRunt
 import { clearRuntimeCooldownStates, ensureCooldownHistory, ensureRuntime, updateRuntimeCollection } from '@/store/teamWatchRuntimeHelpers'
 import { buildSkillStateCacheKey, buildTeamWatchSkillStatusText, resolveTeamWatchSkillState } from '@/store/teamWatchSkillStateHelpers'
 import { buildDefaultWatchMap, buildKnownJobs, buildSimulatedAbilityLine, collectWatchActionIds, decodeBase64Payload, deepCloneWatchMap, encodeBase64Payload, normalizeInt, normalizeTrackedActionId, toHexId } from '@/store/teamWatchStoreHelpers'
+import { resolveUpgradeActionIdForLevel } from '@/utils/compareSaveAction'
+import { idToSrc } from '@/utils/dynamicValue'
 import Util from '@/utils/util'
 import { getIconSrcByPath, parseAction } from '@/utils/xivapi'
 
@@ -21,6 +23,7 @@ const TEAM_WATCH_ACTION_COLUMNS = [
   'Recast100ms',
   'MaxCharges',
   'ClassJobLevel',
+  'IsRoleAction',
 ] as (keyof XivApiJson)[]
 
 const teamWatchFakeParty: Party[] = [
@@ -92,11 +95,16 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
 
   function resolveActionMeta(actionId: number, level: number, rawOverride?: TeamWatchActionMetaRaw) {
     const raw = rawOverride ? normalizeTeamWatchActionMetaRaw(actionId, rawOverride) : getActionMetaRaw(actionId)
-    const resolvedActionId = normalizeInt(Number(raw.id), actionId, 0)
+    const configuredActionId = normalizeInt(Number(raw.id), actionId, 0)
+    const resolvedActionId = normalizeInt(
+      resolveUpgradeActionIdForLevel(configuredActionId, level),
+      configuredActionId,
+      0,
+    )
 
-    const fallback = buildTeamWatchFallbackMeta(actionId)
+    const fallback = buildTeamWatchFallbackMeta(resolvedActionId > 0 ? resolvedActionId : actionId)
     const name = raw.name.trim() || fallback.name
-    const iconSrc = raw.iconSrc.trim() || fallback.iconSrc
+    const iconSrc = idToSrc(resolvedActionId) || raw.iconSrc.trim() || fallback.iconSrc
 
     return {
       id: resolvedActionId,
@@ -138,7 +146,9 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
           recast1000ms: Number(response.Recast100ms ?? 0) / 10,
           duration: base.duration,
           maxCharges: Number(response.MaxCharges ?? 0),
-          classJobLevel: Number(response.ClassJobLevel ?? 1),
+          classJobLevel: Number(response.IsRoleAction ?? 0) > 0
+            ? 1
+            : Number(response.ClassJobLevel ?? 1),
         } satisfies TeamWatchActionMetaRaw)
 
         const merged = normalizeTeamWatchActionMetaRaw(actionId, apiMeta)

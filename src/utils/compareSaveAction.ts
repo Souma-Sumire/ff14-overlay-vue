@@ -1,3 +1,5 @@
+import { actionId2ClassJobLevel } from '@/resources/action2ClassJobLevel'
+
 // 共享CD映射：仅用于把同CD技能归并到同一ID。
 const compareSameGroup = {
   16484: 16486, // 回返彼岸花→回返纷乱雪月花
@@ -157,6 +159,12 @@ export const ACTION_UPGRADE_STEPS: Record<number, number> = {
   7503: 7524, // 摇荡 -> 震荡
 }
 
+// 技能进化链学习等级覆写表（可选）。
+// key: actionId, value: 学习等级
+// 若未配置则回退到 action2ClassJobLevel。
+export const ACTION_UPGRADE_LEVEL_OVERRIDES: Record<number, number> = {
+}
+
 export function getUpgradeActionChain(actionId: number): number[] {
   if (!Number.isFinite(actionId) || actionId <= 0)
     return []
@@ -205,4 +213,151 @@ export function isLowerTierActionId(actionId: number) {
   if (!Number.isFinite(actionId) || actionId <= 0)
     return false
   return normalizeUpgradeActionId(actionId) !== actionId
+}
+
+const upgradeLowerByUpper = (() => {
+  const map = new Map<number, number[]>()
+  Object.entries(ACTION_UPGRADE_STEPS).forEach(([rawLower, rawUpper]) => {
+    const lower = Number(rawLower)
+    const upper = Number(rawUpper)
+    if (!Number.isFinite(lower) || lower <= 0 || !Number.isFinite(upper) || upper <= 0)
+      return
+    if (!map.has(upper))
+      map.set(upper, [])
+    map.get(upper)!.push(lower)
+  })
+  return map
+})()
+
+const actionUpgradeLevelCache = new Map<number, number>()
+const upgradeDepthToTopCache = new Map<number, number>()
+const upgradeFamilyByTopCache = new Map<number, number[]>()
+const levelResolvedUpgradeActionCache = new Map<string, number>()
+
+function normalizeLevel(level: number) {
+  if (!Number.isFinite(level))
+    return 1
+  return Math.max(1, Math.trunc(level))
+}
+
+export function getActionUpgradeMinLevel(actionId: number) {
+  if (!Number.isFinite(actionId) || actionId <= 0)
+    return 1
+  const id = Math.trunc(actionId)
+  const cached = actionUpgradeLevelCache.get(id)
+  if (cached !== undefined)
+    return cached
+
+  const overridden = Number(ACTION_UPGRADE_LEVEL_OVERRIDES[id])
+  if (Number.isFinite(overridden) && overridden > 0) {
+    const resolved = normalizeLevel(overridden)
+    actionUpgradeLevelCache.set(id, resolved)
+    return resolved
+  }
+
+  const fromMap = Number(actionId2ClassJobLevel(id))
+  const resolved = Number.isFinite(fromMap) && fromMap > 0
+    ? normalizeLevel(fromMap)
+    : 1
+  actionUpgradeLevelCache.set(id, resolved)
+  return resolved
+}
+
+function getUpgradeDepthToTop(actionId: number) {
+  if (!Number.isFinite(actionId) || actionId <= 0)
+    return 0
+  const id = Math.trunc(actionId)
+  const cached = upgradeDepthToTopCache.get(id)
+  if (cached !== undefined)
+    return cached
+
+  let depth = 0
+  let current = id
+  const visited = new Set<number>([current])
+  while (true) {
+    const next = ACTION_UPGRADE_STEPS[current]
+    if (typeof next !== 'number' || !Number.isFinite(next) || next <= 0)
+      break
+    const nextId = Math.trunc(next)
+    if (visited.has(nextId))
+      break
+    depth += 1
+    visited.add(nextId)
+    current = nextId
+  }
+  upgradeDepthToTopCache.set(id, depth)
+  return depth
+}
+
+function getUpgradeFamilyByTop(topActionId: number) {
+  const top = Math.trunc(topActionId)
+  const cached = upgradeFamilyByTopCache.get(top)
+  if (cached)
+    return cached
+
+  const visited = new Set<number>()
+  const stack: number[] = [top]
+  while (stack.length > 0) {
+    const current = stack.pop()!
+    if (visited.has(current))
+      continue
+    visited.add(current)
+    const lowers = upgradeLowerByUpper.get(current) ?? []
+    lowers.forEach((lower) => {
+      if (!visited.has(lower))
+        stack.push(lower)
+    })
+  }
+  const family = [...visited]
+  upgradeFamilyByTopCache.set(top, family)
+  return family
+}
+
+export function resolveUpgradeActionIdForLevel(actionId: number, level: number) {
+  if (!Number.isFinite(actionId) || actionId <= 0)
+    return actionId
+
+  const startActionId = Math.trunc(actionId)
+  const normalizedLevel = normalizeLevel(level)
+  const cacheKey = `${startActionId}:${normalizedLevel}`
+  const cached = levelResolvedUpgradeActionCache.get(cacheKey)
+  if (cached !== undefined)
+    return cached
+
+  const topActionId = normalizeUpgradeActionId(startActionId)
+  const family = getUpgradeFamilyByTop(topActionId)
+  let bestActionId = topActionId
+  let bestMinLevel = Number.NEGATIVE_INFINITY
+  let bestDepth = Number.NEGATIVE_INFINITY
+
+  family.forEach((candidateId) => {
+    const minLevel = getActionUpgradeMinLevel(candidateId)
+    if (minLevel > normalizedLevel)
+      return
+    const depth = getUpgradeDepthToTop(candidateId)
+    if (
+      minLevel > bestMinLevel
+      || (minLevel === bestMinLevel && depth > bestDepth)
+      || (minLevel === bestMinLevel && depth === bestDepth && candidateId === startActionId)
+    ) {
+      bestActionId = candidateId
+      bestMinLevel = minLevel
+      bestDepth = depth
+    }
+  })
+
+  if (bestMinLevel === Number.NEGATIVE_INFINITY) {
+    bestActionId = family.reduce((acc, candidateId) => {
+      const candidateLevel = getActionUpgradeMinLevel(candidateId)
+      const accLevel = getActionUpgradeMinLevel(acc)
+      if (candidateLevel < accLevel)
+        return candidateId
+      if (candidateLevel === accLevel && getUpgradeDepthToTop(candidateId) > getUpgradeDepthToTop(acc))
+        return candidateId
+      return acc
+    }, topActionId)
+  }
+
+  levelResolvedUpgradeActionCache.set(cacheKey, bestActionId)
+  return bestActionId
 }
