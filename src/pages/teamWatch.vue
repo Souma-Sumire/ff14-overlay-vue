@@ -261,7 +261,7 @@ onUnmounted(() => {
   left: 0;
   top: 0;
   width: 100%;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.60);
   pointer-events: none;
 }
 
@@ -285,7 +285,7 @@ onUnmounted(() => {
 .charges-text {
   position: absolute;
   right: 1px;
-  bottom: 1px;
+  bottom: 0px;
   z-index: 2;
   color: #fff;
   font-size: 10px;
@@ -305,7 +305,7 @@ onUnmounted(() => {
 .resource-text {
   position: absolute;
   left: 1px;
-  bottom: 1px;
+  bottom: 0px;
   z-index: 2;
   color: #f5f5f5;
   font-size: 10px;
