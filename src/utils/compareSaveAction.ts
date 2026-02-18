@@ -1,4 +1,12 @@
-import { actionId2ClassJobLevel } from '@/resources/action2ClassJobLevel'
+import action2ClassJobLevelMapRaw from '@/resources/action2ClassJobLevel.json'
+
+const action2ClassJobLevelMap = new Map<string, string>(
+  Object.entries(action2ClassJobLevelMapRaw as Record<string, string>),
+)
+
+function actionId2ClassJobLevelRaw(id: number): string | undefined {
+  return action2ClassJobLevelMap.get(String(Math.trunc(id)))
+}
 
 // 共享CD映射：仅用于把同CD技能归并到同一ID。
 const compareSameGroup = {
@@ -255,7 +263,7 @@ export function getActionUpgradeMinLevel(actionId: number) {
     return resolved
   }
 
-  const fromMap = Number(actionId2ClassJobLevel(id))
+  const fromMap = Number(actionId2ClassJobLevelRaw(id))
   const resolved = Number.isFinite(fromMap) && fromMap > 0
     ? normalizeLevel(fromMap)
     : 1
