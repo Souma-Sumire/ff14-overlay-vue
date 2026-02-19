@@ -73,4 +73,3 @@ territoryTypes.forEach((row) => {
 
 const outputPath = 'src/resources/generated/map.json'
 fs.outputJsonSync(outputPath, res, { spaces: 2 })
-

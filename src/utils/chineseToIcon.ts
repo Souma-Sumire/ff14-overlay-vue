@@ -1,6 +1,4 @@
-import chineseToIconMapRaw from '@/resources/generated/chinese2Icon.json'
-
-const chineseToIconMap: Record<string, string> = chineseToIconMapRaw
+import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/generated/bakedActionMetaLite'
 
 const userActionMap = new Map([
   ['任务指令', 123],
@@ -189,17 +187,44 @@ const chineseAbbreviationMap = new Map([
   ['黑豆', '彗星之黑'],
 ])
 
+let bakedChineseToIconMap: Map<string, number> | null = null
+
+function getBakedChineseToIconMap() {
+  if (bakedChineseToIconMap)
+    return bakedChineseToIconMap
+
+  bakedChineseToIconMap = new Map<string, number>()
+  Object.entries(BAKED_ACTION_META_LITE_BY_ID)
+    .map(([rawId, meta]) => ({ id: Number(rawId), meta }))
+    .filter(({ id, meta }) => {
+      if (!Number.isFinite(id) || id <= 0)
+        return false
+      const icon = Number(meta.icon ?? 0)
+      return Number.isFinite(icon) && icon > 0
+    })
+    .sort((a, b) => a.id - b.id)
+    .forEach(({ meta }) => {
+      const name = String(meta.name ?? '').trim()
+      if (!name)
+        return
+      const icon = Math.trunc(Number(meta.icon))
+      const existing = bakedChineseToIconMap!.get(name)
+      if (existing === undefined || (existing === 405 && icon !== 405))
+        bakedChineseToIconMap!.set(name, icon)
+    })
+
+  return bakedChineseToIconMap
+}
+
 function chineseToIcon(chinese: string): number | undefined {
   chinese = chineseAbbreviationMap.get(chinese.toUpperCase()) ?? chinese
 
-  const iconStr
-    = userActionMap.get(chinese)?.toString() ?? chineseToIconMap?.[chinese]
-  const iconNum = Number(iconStr)
+  const iconNum = userActionMap.get(chinese) ?? getBakedChineseToIconMap().get(chinese)
 
-  if (!iconStr || Number.isNaN(iconNum) || iconNum === 0) {
+  if (iconNum === undefined || !Number.isFinite(iconNum) || iconNum === 0) {
     return undefined
   }
-  return iconNum
+  return Math.trunc(iconNum)
 }
 
 export { chineseToIcon }

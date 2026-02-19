@@ -148,4 +148,3 @@ const result = fileValues['Level.csv']!.filter(row => ids.includes(row[7]!))
   .filter((row): row is AetherCurrentResult => row !== null)
 
 fs.outputJsonSync('src/resources/generated/aethercurrent.json', result, { spaces: 2 })
-

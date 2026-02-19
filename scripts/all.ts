@@ -11,14 +11,13 @@ const scripts: string[] = [
   'action.ts',
   'actionUpgradeStepsBake.ts',
   'roleActionCategoryByJob.ts',
-  'chinese2Icon.ts',
   'actionMetaBake.ts',
   'actionMinLevelBake.ts',
   'map.ts',
   'status.ts',
   'contentFinderCondition.ts',
   'meals.ts',
-  // "world.ts",
+  'world.ts',
 ]
 
 console.log('--- Running scripts ---')

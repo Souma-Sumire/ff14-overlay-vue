@@ -1,6 +1,6 @@
 import { useStorage } from '@vueuse/core'
 import action2ClassJobLevelMapRaw from '@/resources/generated/action2ClassJobLevel.json'
-import { BAKED_ROLE_ACTION_IDS } from '@/resources/generated/bakedRoleActionIds'
+import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/generated/bakedActionMetaLite'
 import { BAKED_UPGRADE_CHAIN_MIN_LEVEL_BY_ACTION_ID } from '@/resources/generated/bakedUpgradeChainMinLevel'
 import { ROLE_ACTION_CACHE_VERSION } from '@/resources/cacheVersion'
 
@@ -16,8 +16,19 @@ if (roleActionCacheVersion.value !== ROLE_ACTION_CACHE_VERSION) {
   roleActionCacheVersion.value = ROLE_ACTION_CACHE_VERSION
 }
 
+function collectBakedRoleActionIds() {
+  return Object.entries(BAKED_ACTION_META_LITE_BY_ID)
+    .map(([rawId, meta]) => ({ id: Number(rawId), meta }))
+    .filter(({ id, meta }) => {
+      if (!Number.isFinite(id) || id <= 0)
+        return false
+      return Number(meta.isRoleAction ?? 0) > 0
+    })
+    .map(({ id }) => Math.trunc(id))
+}
+
 const knownRoleActionIds = new Set<number>([
-  ...BAKED_ROLE_ACTION_IDS,
+  ...collectBakedRoleActionIds(),
   ...Object.keys(roleActionIdStorage.value)
     .map(v => Number(v))
     .filter(v => Number.isFinite(v) && v > 0)

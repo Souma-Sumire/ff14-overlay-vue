@@ -19,4 +19,3 @@ rows.forEach((row) => {
 })
 
 fs.outputJsonSync('src/resources/generated/actionChinese.json', id2Name, { spaces: 2 })
-

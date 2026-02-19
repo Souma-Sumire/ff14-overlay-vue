@@ -121,4 +121,3 @@ await fs.outputJson('src/resources/generated/medicine.json', medicine, { spaces:
   获取属性：去ItemFood作为Key找到其三组BaseParam、Value、Max、Value{HQ}、Max{HQ}，其中BaseParam的数值通过查表BaseParam.csv获取中文属性字符串。
   获取名字：用671去ItemAction.csv的Data[1]得到他的key2617，再用key去Item.csv作为ItemAction得到ID44842的酸柠檬腌鱼。
 */
-

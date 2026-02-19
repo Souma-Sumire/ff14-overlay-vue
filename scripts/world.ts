@@ -16,4 +16,3 @@ const worldsString = `export const worlds = ${JSON.stringify(worldsArray, null, 
 const outputPath = 'src/resources/generated/worlds.ts'
 
 fs.outputFileSync(outputPath, worldsString)
-

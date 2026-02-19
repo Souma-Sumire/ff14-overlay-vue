@@ -35,4 +35,3 @@ soumaData.forEach((row) => {
 
 const outputPath = 'src/resources/generated/status.json'
 fs.outputJsonSync(outputPath, result, { spaces: 2 })
-
