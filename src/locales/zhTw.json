@@ -211,7 +211,7 @@
       "instanced_area_info": "顯示你當前在幾線 / 新月島顯示唯一編號",
       "radar": "找人用。地圖為指北。\nPVP區域自動禁用。",
       "obs_auto_record2": "滿足某些條件時自動控制 OBS 錄屏，提供多種條件控制。",
-      "team_watch": "可監控小隊關鍵技能CD與充能。\nURL地址列參數說明：\nscale: 縮放倍率，預設1\nopacity: 不透明度，預設1\npostNamazu: 點擊技能後是否透過鯰魚精發送小隊訊息，預設false\ncooldownStyle: 冷卻樣式，sprite=雪碧圖，mask=黑色遮罩，預設sprite",
+      "team_watch": "可監控小隊關鍵技能CD與充能。\nURL地址列參數說明：\nscale: 縮放倍率，預設1\nopacity: 不透明度，預設1\npostNamazu: 點擊技能後是否透過鯰魚精發送小隊訊息，預設false",
       "enmity_reminder": "タンクジョブのみ有効\nパーティ内にタンクがスタンスを起動していない場合、目立つテキストで「スタンス起動なし」と警告。",
       "combat_time_obs_params": "在OBS中新增「瀏覽器」，以便在錄像中顯示戰鬥時間。\nURL地址欄參數說明：\nmode: 顯示模式，預設combat，值為：combat（戰鬥時間）/logline（日誌時間）/both（同時顯示）",
       "show_barrier_params": "速刷用，顯示小隊成員的現有護盾值。\n\nURL地址欄參數說明：\nlineHeight: 行高，預設1\nfontSize: 字體尺寸，預設26\ntype: 顯示方式 1=僅顯示百分比 2=僅顯示數值 3=同時顯示，預設1\nshowSettings: 顯示排序設定與人名，預設1，即顯示，使用之前需要將其與遊戲內的'小隊列表'-'職能內排序順序'保持一致，設定好了再改為0隱藏\n\n盾值百分比為四捨五入，數值也是根據百分比計算的值，故都存在誤差，無法更精準。",

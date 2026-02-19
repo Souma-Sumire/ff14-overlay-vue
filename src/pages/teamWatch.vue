@@ -17,10 +17,6 @@ const demo = useDemo()
 const dev = useDev()
 
 const postNamazu = computed(() => params.postNamazu === 'true')
-const cooldownStyle = computed<'sprite' | 'mask'>(() => {
-  const raw = String(params.cooldownStyle ?? '').trim().toLowerCase()
-  return raw === 'mask' ? 'mask' : 'sprite'
-})
 
 const handleChangePrimaryPlayer: EventMap['ChangePrimaryPlayer'] = (e) => {
   store.handleChangePrimaryPlayer(e)
@@ -45,7 +41,10 @@ function skillState(skill: TeamWatchSkillView) {
 
 function getCooldownAnimationClass(skill: TeamWatchSkillView) {
   const state = skillState(skill)
-  if (cooldownStyle.value !== 'sprite' || !state.isCooling)
+  const shouldAnimate = state.isCharge
+    ? state.charges < state.maxCharges
+    : state.isCooling
+  if (!shouldAnimate)
     return ''
   if (!state.isCharge)
     return 'normal-action-animation'
@@ -54,7 +53,10 @@ function getCooldownAnimationClass(skill: TeamWatchSkillView) {
 
 function getCooldownAnimationStyle(skill: TeamWatchSkillView) {
   const state = skillState(skill)
-  if (cooldownStyle.value !== 'sprite' || !state.isCooling)
+  const shouldAnimate = state.isCharge
+    ? state.charges < state.maxCharges
+    : state.isCooling
+  if (!shouldAnimate)
     return undefined
   const progress = Math.max(0, Math.min(1, 1 - state.overlayPercent / 100))
   const totalMs = Math.max(1, skill.meta.recast1000ms * 1000)
@@ -178,6 +180,7 @@ onUnmounted(() => {
                 'is-hidden': skill.rawActionId <= 0 || member.level < skill.meta.classJobLevel,
                 'is-cooling': skillState(skill).isCooling,
                 'is-resource-empty': !skillState(skill).resourceReady,
+                'is-charge-empty': skillState(skill).isCharge && skillState(skill).charges <= 0,
                 'flash-used': skillState(skill).isRecentlyUsed,
               },
               getCooldownAnimationClass(skill),
@@ -187,11 +190,6 @@ onUnmounted(() => {
             @click="handleSkillClick(member, skill)"
           >
             <img :src="skill.meta.iconSrc" :alt="skill.meta.name" @error="handleImgError">
-            <span
-              v-if="cooldownStyle === 'mask' && skillState(skill).overlayPercent > 0"
-              class="cooldown-mask"
-              :style="{ height: `${skillState(skill).overlayPercent}%` }"
-            />
             <span
               v-if="!skillState(skill).isCharge"
               class="recast-text"
@@ -230,13 +228,6 @@ onUnmounted(() => {
   width: fit-content;
   user-select: none;
   overflow: visible;
-  /* 雪碧图裁切偏移 */
-  --tw-normal-sprite-offset-x: 0px;
-  --tw-normal-sprite-offset-y: 0px;
-  --tw-gcd-sprite-offset-x: 0px;
-  --tw-gcd-sprite-offset-y: 0px;
-  --tw-ogcd-sprite-offset-x: 0px;
-  --tw-ogcd-sprite-offset-y: 0px;
 }
 
 .member-list {
@@ -268,8 +259,11 @@ onUnmounted(() => {
   cursor: pointer;
 
   img {
+    position: relative;
+    z-index: 0;
     width: 100%;
     height: 100%;
+    border-radius: 4px;
   }
 
   &:hover {
@@ -279,19 +273,23 @@ onUnmounted(() => {
   &::after {
     content: '';
     background: url(https://souma.diemoe.net/resources/img/frame.png) no-repeat center / 100% 100%;
-    width: 46px;
-    height: 46px;
+    width: 48px;
+    height: 48px;
     position: absolute;
-    top: 50%;
+    top: calc(50% + 1px);
     left: 50%;
-    transform: translate(-50%, -50%) scale(0.8);
+    transform: translate(-50%, -50%) scaleX(0.765) scaleY(0.765);
     transform-origin: center;
     pointer-events: none;
+    z-index:2;
   }
 }
 
-.skill-btn.is-resource-empty {
-  filter: saturate(0.65);
+.skill-btn.is-resource-empty,
+.skill-btn.is-charge-empty {
+  img{
+    filter: brightness(0.5);
+  }
 }
 
 .skill-btn.is-hidden {
@@ -306,43 +304,37 @@ onUnmounted(() => {
 .skill-btn.ogcd-action-animation::before {
   content: '';
   position: absolute;
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 48px;
   display: block;
   pointer-events: none;
-  top: calc(50% + 0px);
+  z-index: 1;
+  top: calc(50% + 1px);
   left: calc(50% + 0px);
-  transform: translate(-50%, -50%) scaleX(0.76) scaleY(0.79);
+  transform: translate(-50%, -50%) scaleX(0.765) scaleY(0.765);
   transform-origin: center;
 }
 
 .skill-btn.normal-action-animation::before {
   background-image: url(https://souma.diemoe.net/resources/img/recast.png);
   background-size: 3564px 48px;
-  background-position: calc(var(--tw-normal-sprite-offset-x) + var(--tw-sprite-frame-offset-x, 0px)) var(--tw-normal-sprite-offset-y);
-   clip-path: polygon(4% 0, 100% 0, 100% 100%, 4% 100%);
+  background-position: calc(var(--tw-sprite-frame-offset-x) + 0px) 0px;
+  clip-path: polygon(4% 0, 95% 0, 95% 95%, 4% 100%);
 }
 
 .skill-btn.gcd-action-animation::before {
   background-image: url(https://souma.diemoe.net/resources/img/GCD.png);
   background-size: 3564px 48px;
-  background-position: calc(var(--tw-gcd-sprite-offset-x) + var(--tw-sprite-frame-offset-x, 0px)) var(--tw-gcd-sprite-offset-y);
+  background-position: calc(var(--tw-sprite-frame-offset-x) + 0px) 1px;
+  clip-path: polygon(5% 0, 95% 0, 95% 95%, 5% 100%);
+  transform: translate(-50%, -50%) scaleX(0.8) scaleY(0.8);
 }
 
 .skill-btn.ogcd-action-animation::before {
   background-image: url(https://souma.diemoe.net/resources/img/oGCD.png);
   background-size: 3564px 48px;
-  background-position: calc(var(--tw-ogcd-sprite-offset-x) + var(--tw-sprite-frame-offset-x, 0px)) var(--tw-ogcd-sprite-offset-y);
-  top: calc(50% - 1px);
-}
-
-.cooldown-mask {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  background: rgba(0, 0, 0, 0.60);
-  pointer-events: none;
+  background-position: calc(var(--tw-sprite-frame-offset-x) + 1px) 0px;
+  transform: translate(-50%, -50%) scaleX(0.8) scaleY(0.8);
 }
 
 .recast-text {

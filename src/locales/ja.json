@@ -211,7 +211,7 @@
       "instanced_area_info": "現在いるライン数/新月島は固有IDを表示",
       "radar": "プレイヤー探索用。マップは北向き。\nPVPエリアでは自動的に無効化。",
       "obs_auto_record2": "特定条件でOBS録画を自動制御、多様な制御オプションを提供。",
-      "team_watch": "PTメンバーの主要スキルCDとチャージを監視できます。\nURLパラメータ:\nscale: 拡大率（既定1）\nopacity: 透過度（既定1）\npostNamazu: クリック時にPostNamazuでPTチャット送信（既定false）\ncooldownStyle: クールダウン表示。sprite=スプライト、mask=黒いマスク、既定sprite",
+      "team_watch": "PTメンバーの主要スキルCDとチャージを監視できます。\nURLパラメータ:\nscale: 拡大率（既定1）\nopacity: 透過度（既定1）\npostNamazu: クリック時にPostNamazuでPTチャット送信（既定false）",
       "enmity_reminder": "タンクジョブのみ有効\nパーティ内にタンクがスタンスを起動していない場合、目立つテキストで「スタンス起動なし」と警告。",
       "combat_time_obs_params": "OBSに「ブラウザ」ソースとして追加し、録画中に戦闘時間を表示。\nURLパラメータ説明：\nmode: 表示モード、デフォルトcombat。値：combat（戦闘時間）/logline（ログ時間）/both（両方表示）",
       "show_barrier_params": "スピードラン用、PTメンバーの現シールド値を表示。\n\nURLパラメータ説明：\nlineHeight: 行の高さ、デフォルト1\nfontSize: フォントサイズ、デフォルト26\ntype: 表示方法 1=％のみ 2=数値のみ 3=両方、デフォルト1\nshowSettings: ソート設定と人名の表示、デフォルト1（表示）。使用前にゲーム内『パーティリスト』の『ロール内ソート順』と一致させる必要あり。設定後0にして非表示にしてください。\n\nシールド％は四捨五入され、数値も％基準の計算値のため誤差が生じる可能性あり、高精度化は不可。",
