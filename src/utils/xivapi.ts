@@ -1,7 +1,7 @@
 import { useStorage } from '@vueuse/core'
 import { useIndexedDB } from '@/composables/useIndexedDB'
-import { markRoleActionId, resolveActionMinLevel } from '@/resources/actionMinLevel'
 import { CLASS_JOB_ACTION_CATEGORIES_BY_JOB } from '@/resources/actionClassJobCategoryIndex'
+import { markRoleActionId, resolveActionMinLevel } from '@/resources/actionMinLevel'
 import { ACTION_SEARCH_CACHE_VERSION, XIVAPI_CACHE_VERSION } from '@/resources/cacheVersion'
 import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/roleActionCategoryByJob'
 import { completeIcon } from '@/resources/status'
