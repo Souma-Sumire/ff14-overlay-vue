@@ -1,7 +1,7 @@
-import { getActionChinese } from '@/resources/logic/actionChinese'
 import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/generated/bakedActionMetaLite'
 import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/generated/roleActionCategoryByJob'
 import { getGlobalSkillMetaByActionId } from '@/resources/globalSkills'
+import { getActionChinese } from '@/resources/logic/actionChinese'
 import { ACTION_JOBS_BY_CLASS_JOB_CATEGORY } from '@/resources/logic/actionClassJobCategoryIndex'
 import { resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
