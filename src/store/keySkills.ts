@@ -65,6 +65,7 @@ interface DefaultKeySkillEntry {
 }
 
 const KEY_SKILLS_AUTO_META_CACHE_VERSION_STORAGE_KEY = 'keySkills-auto-meta-cache-version'
+const LEGACY_PRESET_2248_KEY = 'preset_2248'
 
 function normalizeAutoMetaEntry(rawId: number, value: unknown): KeySkillAutoMeta | undefined {
   if (!value || typeof value !== 'object')
@@ -187,6 +188,8 @@ function normalizeStorageSkills(raw: unknown): KeySkillEntry[] {
     if (resolvedId <= 0)
       return
     const key = typeof row.key === 'string' && row.key.trim() ? row.key : crypto.randomUUID()
+    if (key === LEGACY_PRESET_2248_KEY)
+      return
     const line = normalizeInt(Number(row.line ?? 1), 1, 1)
     const ttsText = typeof row.tts === 'string' ? row.tts : ''
     normalized.push({
