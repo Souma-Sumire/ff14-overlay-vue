@@ -9,6 +9,7 @@
     "build": "bun submodule && bun generate && vite build",
     "preview": "vite preview",
     "generate:role-action-categories": "bun scripts/roleActionCategoryByJob.ts",
+    "generate:action-upgrade-steps": "bun scripts/actionUpgradeStepsBake.ts",
     "generate:action-min-level": "bun scripts/actionMinLevelBake.ts",
     "generate:action-meta-lite": "bun scripts/actionMetaBake.ts",
     "submodule": "git submodule update --remote && bun scripts/patch.ts",

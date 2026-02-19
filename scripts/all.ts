@@ -9,6 +9,7 @@ const scripts: string[] = [
   'aethercurrent.ts',
   'aetheryte.ts',
   'action.ts',
+  'actionUpgradeStepsBake.ts',
   'roleActionCategoryByJob.ts',
   'chinese2Icon.ts',
   'actionMetaBake.ts',
