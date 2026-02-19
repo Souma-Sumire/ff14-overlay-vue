@@ -122,14 +122,6 @@ export function getRoleDisplayName(role: string) {
   return role
 }
 
-export function getRollTypeName(type: string) {
-  return ROLL_TYPE_NAME_MAP[type] || type
-}
-
-export function getRollTypeIcon(type: string) {
-  return ROLL_TYPE_ICON_MAP[type] || '?'
-}
-
 const ROLL_TYPE_NAME_MAP: Record<string, string> = {
   need: '需求',
   greed: '贪婪',
@@ -146,6 +138,14 @@ const ROLL_TYPE_ICON_MAP: Record<string, string> = {
   assign: '配',
   direct: '直',
   replace: '换',
+}
+
+export function getRollTypeName(type: string) {
+  return ROLL_TYPE_NAME_MAP[type] || type
+}
+
+export function getRollTypeIcon(type: string) {
+  return ROLL_TYPE_ICON_MAP[type] || '?'
 }
 
 export enum PartOrder {
