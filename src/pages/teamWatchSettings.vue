@@ -1318,18 +1318,11 @@ onBeforeUnmount(() => {
         </div>
       </template>
 
-      <template #fields>
-        <template v-if="metaForm.actionId > 0">
-          <div class="editor-field">
-            <label>技能ID（DynamicValue）</label>
-            <el-input v-model="metaForm.id" placeholder="例如 7382 或 (lv)=>lv>=82?25746:3542" />
-            <div v-if="metaFieldErrors.id" class="input-error-tip">
-              {{ metaFieldErrors.id }}
-            </div>
-          </div>
-          <div class="editor-field">
-            <label>习得等级</label>
-            <el-input-number
+        <template #fields>
+          <template v-if="metaForm.actionId > 0">
+            <div class="editor-field">
+              <label>习得等级</label>
+              <el-input-number
               v-model="metaForm.classJobLevel"
               class="number-input-full"
               :min="1"
@@ -1337,6 +1330,13 @@ onBeforeUnmount(() => {
               step-strictly
               :controls="false"
             />
+          </div>
+          <div class="editor-field">
+            <label>最大层数（DynamicValue）</label>
+            <el-input v-model="metaForm.maxCharges" placeholder="例如 1 或 (lv)=>lv>=84?2:1" />
+            <div v-if="metaFieldErrors.maxCharges" class="input-error-tip">
+              {{ metaFieldErrors.maxCharges }}
+            </div>
           </div>
           <div class="editor-field span-2">
             <label>图标URL</label>
@@ -1354,13 +1354,6 @@ onBeforeUnmount(() => {
             <el-input v-model="metaForm.duration" placeholder="例如 15 或 (lv)=>lv>=88?20:15" />
             <div v-if="metaFieldErrors.duration" class="input-error-tip">
               {{ metaFieldErrors.duration }}
-            </div>
-          </div>
-          <div class="editor-field">
-            <label>最大层数（DynamicValue）</label>
-            <el-input v-model="metaForm.maxCharges" placeholder="例如 1 或 (lv)=>lv>=84?2:1" />
-            <div v-if="metaFieldErrors.maxCharges" class="input-error-tip">
-              {{ metaFieldErrors.maxCharges }}
             </div>
           </div>
         </template>
