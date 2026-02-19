@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import type { TeamWatchActionMetaRaw } from '@/types/teamWatchTypes'
 import { Delete, Download, Plus, Rank, RefreshLeft, Search, Upload } from '@element-plus/icons-vue'
 import { useDebounceFn, useWindowSize } from '@vueuse/core'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { storeToRefs } from 'pinia'
 import { VueDraggable } from 'vue-draggable-plus'
 import ActionPickerDialog from '@/components/common/ActionPickerDialog.vue'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { getActionNameLite, searchActionNamesLite } from '@/resources/logic/actionNameLite'
 import {
   buildInheritedBaseJobActions,
-  cloneTeamWatchActionMetaMap,
   isTeamWatchLowerTierActionId,
   TEAM_WATCH_EMPTY_ACTIONS,
   TEAM_WATCH_WATCH_ACTIONS_DEFAULT,
@@ -42,11 +41,8 @@ interface PickerTarget {
 type SortGroup = 'tank' | 'healer' | 'dps' | 'other'
 
 const store = useTeamWatchStore()
+const { sortRuleUser, watchJobsActionsIDUser } = storeToRefs(store)
 const SEARCH_LIMIT = 200
-
-const sortRule = ref<number[]>([])
-const rows = ref<JobRow[]>([])
-const actionMetaUser = ref<Record<number, TeamWatchActionMetaRaw>>({})
 
 const pickerVisible = ref(false)
 const pickerSearch = ref('')
@@ -58,7 +54,17 @@ const { width: viewportWidth } = useWindowSize()
 
 const filterText = ref('')
 const showBaseJobs = ref(false)
-const isHydrating = ref(false)
+
+const rows = computed(() => {
+  const allJobs = Array.from(new Set([
+    ...DEFAULT_JOB_SORT_ORDER,
+    ...Object.keys(watchJobsActionsIDUser.value).map(Number),
+  ]))
+  return allJobs.map(job => ({
+    job,
+    actions: watchJobsActionsIDUser.value[job] || [0, 0, 0, 0, 0],
+  }))
+})
 
 const rowsByJob = computed(() => {
   const map = new Map<number, JobRow>()
@@ -70,7 +76,7 @@ const rowsByJob = computed(() => {
 
 const sortIndexMap = computed(() => {
   const map = new Map<number, number>()
-  sortRule.value.forEach((job, index) => {
+  sortRuleUser.value.forEach((job, index) => {
     map.set(job, index)
   })
   return map
@@ -128,10 +134,10 @@ const draggableVisibleRows = computed<JobRow[]>({
       return
     const nextSortRule = normalizeSortRuleByGroup(
       Array.from(new Set(nextRows.map(row => Util.baseJobEnumConverted(row.job)))),
-      sortRule.value,
+      sortRuleUser.value,
     )
     if (nextSortRule.length > 0)
-      sortRule.value = nextSortRule
+      sortRuleUser.value = nextSortRule
   },
 })
 
@@ -407,32 +413,9 @@ watch(pickerVisible, (visible) => {
   pickerLoading.value = false
 })
 
-function normalizeActions(actions: unknown): number[] {
-  if (!Array.isArray(actions))
-    return [0]
-
-  const normalized = actions
-    .map(v => Number(v))
-    .filter(v => Number.isFinite(v) && v >= 0)
-    .map(v => Math.trunc(v))
-
-  return normalized.length > 0 ? normalized : [0]
-}
-
 function getJobName(job: number) {
   const full = Util.jobToFullName(Util.jobEnumToJob(job))
   return full.cn || full.en || `Job-${job}`
-}
-
-function getJobIconSrc(job: number) {
-  const full = Util.jobToFullName(Util.jobEnumToJob(job))
-  return `https://souma.diemoe.net/resources/img/cj2/${full.en}.png`
-}
-
-function getActionMeta(actionId: number) {
-  if (actionId <= 0)
-    return store.getActionMetaRaw(0, false)
-  return store.getActionMetaRaw(actionId, false)
 }
 
 function assertKnownStoredJobs(snapshot: ReturnType<typeof store.getSnapshot>) {
@@ -454,40 +437,19 @@ function assertKnownStoredJobs(snapshot: ReturnType<typeof store.getSnapshot>) {
   }
 }
 
-function reloadFromStore() {
-  isHydrating.value = true
-  store.loadFromStorage()
-  const snapshot = store.getSnapshot()
-  assertKnownStoredJobs(snapshot)
-  sortRule.value = [...snapshot.sortRuleUser]
-  const jobs = Array.from(new Set([
-    ...DEFAULT_JOB_SORT_ORDER,
-    ...Object.keys(snapshot.watchJobsActionsIDUser).map(v => Number(v)),
-  ]))
-  rows.value = jobs.map(job => ({
-    job,
-    actions: normalizeActions(snapshot.watchJobsActionsIDUser[job]),
-  }))
-  actionMetaUser.value = cloneTeamWatchActionMetaMap(snapshot.actionMetaUser)
-  isHydrating.value = false
+function getJobIconSrc(job: number) {
+  const full = Util.jobToFullName(Util.jobEnumToJob(job))
+  return `https://souma.diemoe.net/resources/img/cj2/${full.en}.png`
 }
 
-const debouncedPersistSettings = useDebounceFn(() => {
-  if (isHydrating.value)
-    return
-  const nextWatchMap = Object.fromEntries(
-    rows.value.map(row => [row.job, normalizeActions(row.actions)]),
-  ) as Record<number, number[]>
-  store.saveSettings({
-    sortRuleUser: [...sortRule.value],
-    watchJobsActionsIDUser: nextWatchMap,
-    actionMetaUser: cloneTeamWatchActionMetaMap(actionMetaUser.value),
-  })
-}, 250)
+function getActionMeta(actionId: number) {
+  return store.getActionMetaRaw(actionId > 0 ? actionId : 0, false)
+}
 
-watch([sortRule, rows, actionMetaUser], () => {
-  debouncedPersistSettings()
-}, { deep: true })
+function reloadFromStore() {
+  store.loadFromStorage()
+  assertKnownStoredJobs(store.getSnapshot())
+}
 
 const SORT_GROUP_ORDER: SortGroup[] = ['tank', 'healer', 'dps', 'other']
 
@@ -545,8 +507,9 @@ async function appendActionAndOpen(job: number) {
   const row = rowsByJob.value.get(job)
   if (!row)
     return
-  row.actions.push(0)
-  const index = row.actions.length - 1
+  const nextActions = [...row.actions, 0]
+  store.watchJobsActionsIDUser[job] = nextActions
+  const index = nextActions.length - 1
   await openPicker(job, index)
 }
 
@@ -559,19 +522,13 @@ async function onSlotCardClick(job: number, index: number) {
 function resetJobActions(job: number) {
   if (isBaseJob(job))
     return
-  const row = rowsByJob.value.get(job)
-  if (!row)
-    return
-  row.actions = [...(TEAM_WATCH_WATCH_ACTIONS_DEFAULT[job] ?? TEAM_WATCH_EMPTY_ACTIONS)]
+  store.watchJobsActionsIDUser[job] = [...(TEAM_WATCH_WATCH_ACTIONS_DEFAULT[job] ?? TEAM_WATCH_EMPTY_ACTIONS)]
 }
 
 function clearJobActions(job: number) {
   if (isBaseJob(job))
     return
-  const row = rowsByJob.value.get(job)
-  if (!row)
-    return
-  row.actions = [0]
+  store.watchJobsActionsIDUser[job] = [0, 0, 0, 0, 0]
 }
 
 async function openPicker(job: number, index: number) {
@@ -591,21 +548,25 @@ async function pickAction(actionId: number) {
   const row = rowsByJob.value.get(target.job)
   if (!row || target.index < 0 || target.index >= row.actions.length)
     return
-  row.actions[target.index] = Math.trunc(Number(actionId) || 0)
+
+  const nextActions = [...row.actions]
+  nextActions[target.index] = Math.trunc(Number(actionId) || 0)
+  store.watchJobsActionsIDUser[target.job] = nextActions
   pickerVisible.value = false
 }
 
 function removeActionSlot(job: number, index: number) {
-  if (isBaseJob(job))
-    return
   const row = rowsByJob.value.get(job)
   if (!row || index < 0 || index >= row.actions.length)
     return
 
-  const removedActionId = row.actions[index] ?? 0
-  row.actions.splice(index, 1)
-  if (row.actions.length === 0)
-    row.actions.push(0)
+  const nextActions = [...row.actions]
+  const removedActionId = nextActions[index] ?? 0
+  nextActions.splice(index, 1)
+  if (nextActions.length === 0)
+    nextActions.push(0)
+
+  store.watchJobsActionsIDUser[job] = nextActions
   ElMessage.success(removedActionId > 0 ? '已删除技能槽位' : '已删除空白槽位')
 }
 
@@ -744,7 +705,7 @@ onBeforeUnmount(() => {
                 <div class="skills-line">
                   <div class="slot-grid">
                     <VueDraggable
-                      v-model="row.actions"
+                      :model-value="row.actions"
                       class="slot-grid-draggable"
                       :group="getSkillDragGroup(row.job)"
                       :animation="120"
@@ -753,6 +714,7 @@ onBeforeUnmount(() => {
                       ghost-class="job-drag-ghost"
                       drag-class="job-drag-active"
                       fallback-class="job-drag-fallback"
+                      @update:model-value="(val: number[]) => store.watchJobsActionsIDUser[row.job] = val"
                     >
                       <article
                         v-for="(actionId, index) in row.actions"
