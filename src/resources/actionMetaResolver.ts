@@ -1,7 +1,12 @@
 import { resolveActionMinLevel } from '@/resources/actionMinLevel'
 import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/bakedActionMetaLite'
+import { getGlobalSkillMetaByActionId } from '@/resources/globalSkills'
 import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/roleActionCategoryByJob'
+import { getActionChinese } from '@/resources/actionChinese'
+import { idToSrc } from '@/utils/dynamicValue'
+import { parseDynamicValue } from '@/utils/dynamicValue'
 import Util from '@/utils/util'
+import { getIconSrcByPath } from '@/utils/xivapi'
 
 export interface ResolvedBakedActionMeta {
   id: number
@@ -30,6 +35,14 @@ export interface ResolvedApiActionMeta {
   jobs: number[]
 }
 
+export interface ResolvedActionLevelMeta {
+  resolvedId: number
+  recast1000ms: number
+  duration: number
+  minLevel: number
+  jobsFromGlobal: number[]
+}
+
 function normalizeInt(value: unknown, fallback = 0, min = 0) {
   const numeric = Number(value)
   if (!Number.isFinite(numeric))
@@ -39,6 +52,18 @@ function normalizeInt(value: unknown, fallback = 0, min = 0) {
 
 function uniqueInts(input: number[]) {
   return [...new Set(input.filter(v => Number.isFinite(v) && v > 0).map(v => Math.trunc(v)))]
+}
+
+function resolveDynamicNumber(value: unknown, level: number, fallback = 0) {
+  try {
+    const resolved = parseDynamicValue(value as any, level)
+    if (!Number.isFinite(resolved))
+      return fallback
+    return Number(resolved)
+  }
+  catch {
+    return fallback
+  }
 }
 
 export function resolveActionJobsFromTargets(
@@ -129,6 +154,58 @@ export function hasBakedActionMeta(actionId: number, options?: { requireActionCa
   return true
 }
 
+export function resolveActionMetaByLevel(
+  actionId: number,
+  level: number,
+  options?: {
+    baseRecast1000ms?: number
+    baseDuration?: number
+    baseMinLevel?: number
+    isRoleAction?: boolean
+  },
+): ResolvedActionLevelMeta {
+  const id = normalizeInt(actionId, 0, 1)
+  const normalizedLevel = normalizeInt(level, 1, 1)
+  const globalMeta = getGlobalSkillMetaByActionId(id)
+
+  const resolvedId = normalizeInt(
+    resolveDynamicNumber(globalMeta?.id ?? id, normalizedLevel, id),
+    id,
+    1,
+  )
+  const baseRecast1000ms = normalizeInt(options?.baseRecast1000ms, 0, 0)
+  const recast1000ms = normalizeInt(
+    resolveDynamicNumber(globalMeta?.recast1000ms ?? baseRecast1000ms, normalizedLevel, baseRecast1000ms),
+    baseRecast1000ms,
+    0,
+  )
+  const baseDuration = normalizeInt(options?.baseDuration, 0, 0)
+  const duration = normalizeInt(
+    resolveDynamicNumber(globalMeta?.duration ?? baseDuration, normalizedLevel, baseDuration),
+    baseDuration,
+    0,
+  )
+
+  const fallbackMinLevel = normalizeInt(options?.baseMinLevel, 1, 1)
+  const minLevel = resolveActionMinLevel(
+    globalMeta?.minLevel ?? fallbackMinLevel,
+    {
+      actionId: id,
+      isRoleAction: options?.isRoleAction,
+      fallback: fallbackMinLevel,
+    },
+  )
+
+  const jobsFromGlobal = uniqueInts(globalMeta?.job ?? [])
+  return {
+    resolvedId,
+    recast1000ms,
+    duration,
+    minLevel,
+    jobsFromGlobal,
+  }
+}
+
 export function shouldFetchResolvedActionMeta(
   input: {
     actionCategoryTargetId?: number
@@ -192,4 +269,21 @@ export function resolveApiActionMeta(actionId: number, row: Record<string, unkno
     isRoleAction,
     jobs,
   }
+}
+
+export function resolveActionDisplayName(resolvedActionId: number, fallbackActionId: number, apiName?: string) {
+  return getActionChinese(resolvedActionId)
+    || getActionChinese(fallbackActionId)
+    || (typeof apiName === 'string' && apiName.trim() ? apiName : '')
+    || `#${resolvedActionId}`
+}
+
+export function resolveActionIconSrc(actionId: number, options?: { apiIconPath?: string, highRes?: boolean }) {
+  const iconById = idToSrc(actionId)
+  if (iconById)
+    return iconById
+  if (typeof options?.apiIconPath === 'string' && options.apiIconPath.trim()) {
+    return getIconSrcByPath(options.apiIconPath, false, options?.highRes ?? false)
+  }
+  return ''
 }

@@ -6,19 +6,17 @@ import { defineStore } from 'pinia'
 import { computed, reactive, ref, watch } from 'vue'
 import { useDemo } from '@/composables/useDemo'
 import { useDev } from '@/composables/useDev'
-import { resolveActionJobsFromTargets, resolveApiActionMeta, resolveBakedActionMeta, shouldFetchResolvedActionMeta } from '@/resources/actionMetaResolver'
 import { RandomPartyGenerator } from '@/mock/demoParty'
-import { getActionChinese } from '@/resources/actionChinese'
+import { resolveActionDisplayName, resolveActionIconSrc, resolveActionJobsFromTargets, resolveActionMetaByLevel, resolveApiActionMeta, resolveBakedActionMeta, shouldFetchResolvedActionMeta } from '@/resources/actionMetaResolver'
 import { resolveActionMinLevel } from '@/resources/actionMinLevel'
-import { getGlobalSkillMetaByActionId, GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
+import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { raidbuffs } from '@/resources/keySkillResource'
 import { resolveTeamWatchDynamicValue } from '@/resources/teamWatchResource'
 import { resolveUpgradeActionIdForLevel } from '@/utils/compareSaveAction'
-import { idToSrc } from '@/utils/dynamicValue'
 import { tts } from '@/utils/tts'
 import Util from '@/utils/util'
-import { getIconSrcByPath, parseAction, XIVAPI_CACHE_VERSION } from '@/utils/xivapi'
+import { parseAction, XIVAPI_CACHE_VERSION } from '@/utils/xivapi'
 
 interface SkillState {
   startTime: number | null
@@ -73,8 +71,8 @@ function normalizeAutoMetaEntry(rawId: number, value: unknown): KeySkillAutoMeta
     return undefined
   const row = value as Record<string, unknown>
   const id = normalizeInt(Number(row.id ?? rawId), rawId, 1)
-  const name = typeof row.name === 'string' && row.name.trim() ? row.name : (getActionChinese(id) || `#${id}`)
-  const src = typeof row.src === 'string' ? row.src : idToSrc(id)
+  const name = typeof row.name === 'string' && row.name.trim() ? row.name : resolveActionDisplayName(id, id)
+  const src = typeof row.src === 'string' ? row.src : resolveActionIconSrc(id)
   const duration = normalizeInt(Number(row.duration ?? 0), 0, 0)
   const recast1000ms = normalizeInt(Number(row.recast1000ms ?? 0), 0, 0)
   const isRoleAction = Number(row.isRoleAction ?? 0) > 0
@@ -299,46 +297,25 @@ const useKeySkillStore = defineStore('keySkill', () => {
     if (!baked)
       return undefined
 
-    const globalMeta = getGlobalSkillMetaByActionId(id)
-    const jobs = (globalMeta?.job?.length ?? 0) > 0
-      ? uniqueInts(globalMeta!.job)
-      : baked.jobs
     const isRoleAction = baked.isRoleAction
+    const levelMeta = resolveActionMetaByLevel(id, GLOBAL_SKILL_MAX_LEVEL, {
+      baseRecast1000ms: baked.recast1000ms,
+      baseDuration: 0,
+      baseMinLevel: baked.classJobLevel,
+      isRoleAction,
+    })
+    const jobs = levelMeta.jobsFromGlobal.length > 0
+      ? levelMeta.jobsFromGlobal
+      : baked.jobs
     const classJobTargetId = baked.classJobTargetId
 
-    const resolvedId = normalizeInt(
-      resolveTeamWatchDynamicValue(globalMeta?.id ?? id, GLOBAL_SKILL_MAX_LEVEL, id),
-      id,
-      1,
-    )
-    const bakedRecast1000ms = normalizeInt(Number(baked.recast1000ms ?? 0), 0, 0)
-    const resolvedRecast1000ms = normalizeInt(
-      resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? bakedRecast1000ms, GLOBAL_SKILL_MAX_LEVEL, bakedRecast1000ms),
-      bakedRecast1000ms,
-      0,
-    )
-    const resolvedDuration = normalizeInt(
-      resolveTeamWatchDynamicValue(globalMeta?.duration ?? 0, GLOBAL_SKILL_MAX_LEVEL, 0),
-      0,
-      0,
-    )
-    const baseMinLevel = normalizeInt(Number(baked.classJobLevel ?? 1), 1, 1)
-    const resolvedMinLevel = resolveActionMinLevel(
-      globalMeta?.minLevel ?? baseMinLevel,
-      {
-        actionId: id,
-        isRoleAction,
-        fallback: baseMinLevel,
-      },
-    )
-
     return {
-      id: resolvedId,
-      name: getActionChinese(resolvedId) || getActionChinese(id) || baked.name || `#${resolvedId}`,
-      src: idToSrc(resolvedId),
-      duration: resolvedDuration,
-      recast1000ms: resolvedRecast1000ms,
-      minLevel: resolvedMinLevel,
+      id: levelMeta.resolvedId,
+      name: resolveActionDisplayName(levelMeta.resolvedId, id, baked.name),
+      src: resolveActionIconSrc(levelMeta.resolvedId),
+      duration: levelMeta.duration,
+      recast1000ms: levelMeta.recast1000ms,
+      minLevel: levelMeta.minLevel,
       jobs,
       classJobTargetId: classJobTargetId > 0 ? classJobTargetId : 0,
       isRoleAction,
@@ -352,31 +329,21 @@ const useKeySkillStore = defineStore('keySkill', () => {
     const baked = buildAutoMetaFromBaked(actionId)
     if (baked)
       return baked
-    const globalMeta = getGlobalSkillMetaByActionId(actionId)
-    const resolvedId = normalizeInt(
-      resolveTeamWatchDynamicValue(globalMeta?.id ?? actionId, GLOBAL_SKILL_MAX_LEVEL, actionId),
-      actionId,
-      1,
-    )
-    const resolvedRecast1000ms = normalizeInt(
-      resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? 0, GLOBAL_SKILL_MAX_LEVEL, 0),
-      0,
-      0,
-    )
-    const resolvedDuration = normalizeInt(
-      resolveTeamWatchDynamicValue(globalMeta?.duration ?? 0, GLOBAL_SKILL_MAX_LEVEL, 0),
-      0,
-      0,
-    )
+    const levelMeta = resolveActionMetaByLevel(actionId, GLOBAL_SKILL_MAX_LEVEL, {
+      baseRecast1000ms: 0,
+      baseDuration: 0,
+      baseMinLevel: 1,
+      isRoleAction: false,
+    })
 
     return {
-      id: resolvedId,
-      name: getActionChinese(resolvedId) || `#${resolvedId}`,
-      src: idToSrc(resolvedId),
-      duration: resolvedDuration,
-      recast1000ms: resolvedRecast1000ms,
-      minLevel: normalizeInt(Number(globalMeta?.minLevel ?? 1), 1, 1),
-      jobs: uniqueInts(globalMeta?.job ?? []),
+      id: levelMeta.resolvedId,
+      name: resolveActionDisplayName(levelMeta.resolvedId, levelMeta.resolvedId),
+      src: resolveActionIconSrc(levelMeta.resolvedId),
+      duration: levelMeta.duration,
+      recast1000ms: levelMeta.recast1000ms,
+      minLevel: levelMeta.minLevel,
+      jobs: levelMeta.jobsFromGlobal,
       classJobTargetId: 0,
       isRoleAction: false,
     }
@@ -413,8 +380,6 @@ const useKeySkillStore = defineStore('keySkill', () => {
       return
     }
 
-    const globalMeta = getGlobalSkillMetaByActionId(id)
-
     const nextTask = (async () => {
       pendingAutoMeta.add(id)
       try {
@@ -436,45 +401,26 @@ const useKeySkillStore = defineStore('keySkill', () => {
         const classJobCategoryTargetId = apiMeta.classJobCategoryTargetId
         const actionCategoryTargetId = apiMeta.actionCategoryTargetId
         const isRoleAction = apiMeta.isRoleAction
-        const jobs = (globalMeta?.job?.length ?? 0) > 0
-          ? uniqueInts(globalMeta!.job)
+        const levelMeta = resolveActionMetaByLevel(id, GLOBAL_SKILL_MAX_LEVEL, {
+          baseRecast1000ms: apiRecast1000ms,
+          baseDuration: 0,
+          baseMinLevel: classJobLevel,
+          isRoleAction,
+        })
+        const jobs = levelMeta.jobsFromGlobal.length > 0
+          ? levelMeta.jobsFromGlobal
           : resolveActionJobsFromTargets(classJobTargetId, classJobCategoryTargetId, actionCategoryTargetId, isRoleAction)
-        const resolvedId = normalizeInt(
-          resolveTeamWatchDynamicValue(globalMeta?.id ?? id, GLOBAL_SKILL_MAX_LEVEL, id),
-          id,
-          1,
-        )
-        const resolvedRecast1000ms = normalizeInt(
-          resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? apiRecast1000ms, GLOBAL_SKILL_MAX_LEVEL, apiRecast1000ms),
-          apiRecast1000ms,
-          0,
-        )
-        const resolvedDuration = normalizeInt(
-          resolveTeamWatchDynamicValue(globalMeta?.duration ?? 0, GLOBAL_SKILL_MAX_LEVEL, 0),
-          0,
-          0,
-        )
-        const resolvedMinLevel = resolveActionMinLevel(
-          globalMeta?.minLevel ?? classJobLevel,
-          {
-            actionId: id,
-            isRoleAction,
-            fallback: classJobLevel,
-          },
-        )
-        const iconSrcById = idToSrc(id)
-        const iconSrc = iconSrcById
-          || (typeof response.Icon === 'string' && response.Icon
-            ? getIconSrcByPath(response.Icon)
-            : '')
+        const iconSrc = resolveActionIconSrc(id, {
+          apiIconPath: typeof response.Icon === 'string' ? response.Icon : undefined,
+        }) || ''
 
         saveAutoMetaToCache(id, {
-          id: resolvedId,
-          name: getActionChinese(resolvedId) || getActionChinese(id) || apiMeta.name || `#${resolvedId}`,
+          id: levelMeta.resolvedId,
+          name: resolveActionDisplayName(levelMeta.resolvedId, id, apiMeta.name),
           src: iconSrc,
-          duration: resolvedDuration,
-          recast1000ms: resolvedRecast1000ms,
-          minLevel: resolvedMinLevel,
+          duration: levelMeta.duration,
+          recast1000ms: levelMeta.recast1000ms,
+          minLevel: levelMeta.minLevel,
           jobs,
           classJobTargetId: classJobTargetId > 0 ? classJobTargetId : 0,
           isRoleAction,
@@ -482,29 +428,20 @@ const useKeySkillStore = defineStore('keySkill', () => {
       }
       catch (error) {
         console.warn('[keySkill] ensureActionAutoMeta failed:', id, error)
-        const resolvedId = normalizeInt(
-          resolveTeamWatchDynamicValue(globalMeta?.id ?? id, GLOBAL_SKILL_MAX_LEVEL, id),
-          id,
-          1,
-        )
-        const resolvedRecast1000ms = normalizeInt(
-          resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? 0, GLOBAL_SKILL_MAX_LEVEL, 0),
-          0,
-          0,
-        )
-        const resolvedDuration = normalizeInt(
-          resolveTeamWatchDynamicValue(globalMeta?.duration ?? 0, GLOBAL_SKILL_MAX_LEVEL, 0),
-          0,
-          0,
-        )
+        const levelMeta = resolveActionMetaByLevel(id, GLOBAL_SKILL_MAX_LEVEL, {
+          baseRecast1000ms: 0,
+          baseDuration: 0,
+          baseMinLevel: 1,
+          isRoleAction: false,
+        })
         saveAutoMetaToCache(id, {
-          id: resolvedId,
-          name: getActionChinese(resolvedId) || `#${resolvedId}`,
-          src: idToSrc(resolvedId),
-          duration: resolvedDuration,
-          recast1000ms: resolvedRecast1000ms,
-          minLevel: normalizeInt(Number(globalMeta?.minLevel ?? 1), 1, 1),
-          jobs: uniqueInts(globalMeta?.job ?? []),
+          id: levelMeta.resolvedId,
+          name: resolveActionDisplayName(levelMeta.resolvedId, levelMeta.resolvedId),
+          src: resolveActionIconSrc(levelMeta.resolvedId),
+          duration: levelMeta.duration,
+          recast1000ms: levelMeta.recast1000ms,
+          minLevel: levelMeta.minLevel,
+          jobs: levelMeta.jobsFromGlobal,
           classJobTargetId: 0,
           isRoleAction: false,
         })
@@ -590,7 +527,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
           skillKey: skill.key,
           minLevel: resolvedMinLevel,
           recast1000ms: resolvedRecast1000ms,
-          src: idToSrc(displayActionId) || meta.src,
+          src: resolveActionIconSrc(displayActionId) || meta.src,
           tts: skill.tts,
           line: skill.line,
           job: resolvedJobs,

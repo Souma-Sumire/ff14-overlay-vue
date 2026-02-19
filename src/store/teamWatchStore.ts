@@ -5,7 +5,7 @@ import type { TeamWatchActionMeta, TeamWatchActionMetaRaw, TeamWatchMemberView, 
 import { defineStore } from 'pinia'
 import { computed, reactive, ref } from 'vue'
 import { JobResourceManager } from '@/modules/jobResourceTracker'
-import { resolveApiActionMeta, shouldFetchResolvedActionMeta } from '@/resources/actionMetaResolver'
+import { resolveActionDisplayName, resolveActionIconSrc, resolveApiActionMeta, shouldFetchResolvedActionMeta } from '@/resources/actionMetaResolver'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { buildTeamWatchFallbackMeta, cloneTeamWatchActionMetaMap, hasBakedTeamWatchMeta, loadTeamWatchStorageData, normalizeTeamWatchActionMetaRaw, resolveTeamWatchDynamicValue, saveTeamWatchStorageData, TEAM_WATCH_EMPTY_ACTIONS, TEAM_WATCH_STORAGE_VERSION, TEAM_WATCH_WATCH_ACTIONS_DEFAULT } from '@/resources/teamWatchResource'
 import { extractTriggeredActionFromLogLine, isTeamWatchResetLogLine, triggerRuntimeByAction } from '@/store/teamWatchLoglineHelpers'
@@ -13,9 +13,8 @@ import { clearRuntimeCooldownStates, ensureCooldownHistory, ensureRuntime, updat
 import { buildSkillStateCacheKey, buildTeamWatchSkillStatusText, resolveTeamWatchSkillState } from '@/store/teamWatchSkillStateHelpers'
 import { buildDefaultWatchMap, buildKnownJobs, buildSimulatedAbilityLine, collectWatchActionIds, decodeBase64Payload, deepCloneWatchMap, encodeBase64Payload, normalizeInt, normalizeTrackedActionId, toHexId } from '@/store/teamWatchStoreHelpers'
 import { resolveUpgradeActionIdForLevel } from '@/utils/compareSaveAction'
-import { idToSrc } from '@/utils/dynamicValue'
 import Util from '@/utils/util'
-import { getIconSrcByPath, parseAction } from '@/utils/xivapi'
+import { parseAction } from '@/utils/xivapi'
 
 const TEAM_WATCH_ACTION_COLUMNS = [
   'ID',
@@ -114,8 +113,12 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
     )
 
     const fallback = buildTeamWatchFallbackMeta(resolvedActionId > 0 ? resolvedActionId : actionId)
-    const name = raw.name.trim() || fallback.name
-    const iconSrc = idToSrc(resolvedActionId) || raw.iconSrc.trim() || fallback.iconSrc
+    const name = raw.name.trim()
+      || resolveActionDisplayName(resolvedActionId > 0 ? resolvedActionId : actionId, actionId)
+      || fallback.name
+    const iconSrc = resolveActionIconSrc(resolvedActionId > 0 ? resolvedActionId : actionId)
+      || raw.iconSrc.trim()
+      || fallback.iconSrc
 
     return {
       id: resolvedActionId,
@@ -147,14 +150,12 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
       try {
         const response = await parseAction('action', actionId, TEAM_WATCH_ACTION_COLUMNS)
         const resolvedApi = resolveApiActionMeta(actionId, response as Record<string, unknown>)
-        const iconPath = typeof response.Icon === 'string' ? response.Icon : ''
-        const iconSrc = iconPath
-          ? getIconSrcByPath(iconPath, false, true)
-          : base.iconSrc
+        const iconPath = typeof response.Icon === 'string' ? response.Icon : undefined
+        const iconSrc = resolveActionIconSrc(actionId, { apiIconPath: iconPath, highRes: true }) || base.iconSrc
 
         const apiMeta = normalizeTeamWatchActionMetaRaw(actionId, {
           id: actionId,
-          name: resolvedApi.name || base.name,
+          name: resolveActionDisplayName(actionId, actionId, resolvedApi.name) || base.name,
           iconSrc,
           actionCategory: resolvedApi.actionCategoryTargetId,
           recast1000ms: resolvedApi.recast1000ms,
