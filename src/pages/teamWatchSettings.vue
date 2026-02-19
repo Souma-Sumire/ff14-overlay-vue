@@ -8,6 +8,7 @@ import ActionPickerDialog from '@/components/common/ActionPickerDialog.vue'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { getActionNameLite, searchActionNamesLite } from '@/resources/logic/actionNameLite'
 import {
+  buildInheritedBaseJobActions,
   cloneTeamWatchActionMetaMap,
   isTeamWatchLowerTierActionId,
   TEAM_WATCH_EMPTY_ACTIONS,
@@ -326,6 +327,21 @@ function getRelatedJobIds(job: number) {
   return [...related]
 }
 
+function isBaseJob(job: number) {
+  const normalized = Number.isFinite(Number(job)) ? Math.trunc(Number(job)) : 0
+  if (normalized <= 0)
+    return false
+  return Util.baseJobEnumConverted(normalized) !== normalized
+}
+
+function getInheritedBaseActions(advancedJob: number) {
+  const baseJob = baseJobsByAdvanced.value[advancedJob]
+  if (!baseJob)
+    return [0]
+  const source = rowsByJob.value.get(advancedJob)?.actions ?? TEAM_WATCH_EMPTY_ACTIONS
+  return buildInheritedBaseJobActions(baseJob, source)
+}
+
 function isLowerTierAction(actionId: number) {
   return isTeamWatchLowerTierActionId(actionId)
 }
@@ -415,8 +431,8 @@ function getJobIconSrc(job: number) {
 
 function getActionMeta(actionId: number) {
   if (actionId <= 0)
-    return store.resolveActionMeta(0, 100)
-  return store.resolveActionMeta(actionId, 100)
+    return store.getActionMetaRaw(0, false)
+  return store.getActionMetaRaw(actionId, false)
 }
 
 function assertKnownStoredJobs(snapshot: ReturnType<typeof store.getSnapshot>) {
@@ -524,6 +540,8 @@ function getSkillDragGroup(job: number) {
 }
 
 async function appendActionAndOpen(job: number) {
+  if (isBaseJob(job))
+    return
   const row = rowsByJob.value.get(job)
   if (!row)
     return
@@ -533,10 +551,14 @@ async function appendActionAndOpen(job: number) {
 }
 
 async function onSlotCardClick(job: number, index: number) {
+  if (isBaseJob(job))
+    return
   await openPicker(job, index)
 }
 
 function resetJobActions(job: number) {
+  if (isBaseJob(job))
+    return
   const row = rowsByJob.value.get(job)
   if (!row)
     return
@@ -544,6 +566,8 @@ function resetJobActions(job: number) {
 }
 
 function clearJobActions(job: number) {
+  if (isBaseJob(job))
+    return
   const row = rowsByJob.value.get(job)
   if (!row)
     return
@@ -572,6 +596,8 @@ async function pickAction(actionId: number) {
 }
 
 function removeActionSlot(job: number, index: number) {
+  if (isBaseJob(job))
+    return
   const row = rowsByJob.value.get(job)
   if (!row || index < 0 || index >= row.actions.length)
     return
@@ -792,31 +818,21 @@ onBeforeUnmount(() => {
 
                 <div
                   v-if="showBaseJobs && !!rowsByJob.get(baseJobsByAdvanced[row.job] ?? -1)"
-                  class="skills-line merged-base-line"
+                  class="skills-line merged-base-line is-base-readonly"
                 >
-                  <span class="base-floating-label">{{ getJobName(baseJobsByAdvanced[row.job] ?? 0) }}</span>
                   <div class="slot-grid">
-                    <VueDraggable
-                      v-model="rowsByJob.get(baseJobsByAdvanced[row.job] ?? -1)!.actions"
-                      class="slot-grid-draggable"
-                      :group="getSkillDragGroup(baseJobsByAdvanced[row.job] ?? 0)"
-                      :animation="120"
-                      :force-fallback="true"
-                      :fallback-tolerance="16"
-                      ghost-class="job-drag-ghost"
-                      drag-class="job-drag-active"
-                      fallback-class="job-drag-fallback"
-                    >
+                    <div class="slot-grid-draggable">
                       <article
-                        v-for="(actionId, index) in (rowsByJob.get(baseJobsByAdvanced[row.job] ?? -1)?.actions ?? [])"
+                        v-for="(actionId, index) in getInheritedBaseActions(row.job)"
                         :key="`base-${row.job}-${index}`"
                         class="slot-cell is-base-slot"
                       >
                         <button
                           type="button"
-                          class="slot-card"
+                          class="slot-card slot-card-readonly"
                           :class="{ empty: actionId <= 0 }"
-                          @click="onSlotCardClick(baseJobsByAdvanced[row.job] ?? 0, Number(index))"
+                          title="基础职业技能自动继承自进阶职业，当前不可编辑"
+                          disabled
                         >
                           <img
                             v-if="actionId > 0 && getActionMeta(actionId).iconSrc"
@@ -831,40 +847,7 @@ onBeforeUnmount(() => {
                             {{ actionId > 0 ? getActionMeta(actionId).name : '未设置' }}
                           </div>
                         </button>
-                        <div class="slot-remove-anchor" @click.stop>
-                          <el-popconfirm
-                            v-if="actionId > 0"
-                            title="将删除该技能槽位，是否继续？"
-                            confirm-button-text="删除"
-                            cancel-button-text="取消"
-                            @confirm="removeActionSlot(baseJobsByAdvanced[row.job] ?? 0, Number(index))"
-                          >
-                            <template #reference>
-                              <el-button
-                                class="slot-remove-btn"
-                                circle
-                                plain
-                                size="small"
-                                :icon="Delete"
-                                @click.stop
-                              />
-                            </template>
-                          </el-popconfirm>
-                          <el-button
-                            v-else
-                            class="slot-remove-btn"
-                            circle
-                            plain
-                            size="small"
-                            :icon="Delete"
-                            @click.stop="removeActionSlot(baseJobsByAdvanced[row.job] ?? 0, Number(index))"
-                          />
-                        </div>
                       </article>
-                    </VueDraggable>
-
-                    <div class="slot-add-wrap is-base-slot">
-                      <el-button size="small" type="primary" plain :icon="Plus" @click="appendActionAndOpen(baseJobsByAdvanced[row.job] ?? 0)" />
                     </div>
                   </div>
                 </div>
@@ -918,35 +901,9 @@ onBeforeUnmount(() => {
                 </div>
               </div>
 
-              <div v-if="showBaseJobs && !!rowsByJob.get(baseJobsByAdvanced[row.job] ?? -1)" class="job-actions-line">
-                <span class="job-actions-base-label col-1-2">基础</span>
-                <div class="job-action-cell col-3">
-                  <el-popconfirm
-                    title="将基础职业技能槽位恢复为默认，是否继续？"
-                    confirm-button-text="恢复"
-                    cancel-button-text="取消"
-                    @confirm="resetJobActions(baseJobsByAdvanced[row.job] ?? 0)"
-                  >
-                    <template #reference>
-                      <el-button size="small" text class="job-action-text">
-                        默认
-                      </el-button>
-                    </template>
-                  </el-popconfirm>
-                </div>
-                <div class="job-action-cell col-4">
-                  <el-popconfirm
-                    title="将清空基础职业所有技能槽位，是否继续？"
-                    confirm-button-text="清空"
-                    cancel-button-text="取消"
-                    @confirm="clearJobActions(baseJobsByAdvanced[row.job] ?? 0)"
-                  >
-                    <template #reference>
-                      <el-button size="small" text class="job-action-text">
-                        清空
-                      </el-button>
-                    </template>
-                  </el-popconfirm>
+              <div v-if="showBaseJobs && !!rowsByJob.get(baseJobsByAdvanced[row.job] ?? -1)" class="job-actions-line is-base-row">
+                <div class="job-action-cell">
+                  <span class="base-readonly-note">自动继承特职技能</span>
                 </div>
               </div>
             </div>
@@ -1144,7 +1101,7 @@ onBeforeUnmount(() => {
 
 .job-head {
   display: grid;
-  grid-template-columns: 88px minmax(0, 1fr) 152px;
+  grid-template-columns: 88px minmax(0, 1fr) auto;
   align-items: center;
   gap: 2px;
   padding: 2px 3px;
@@ -1179,6 +1136,7 @@ onBeforeUnmount(() => {
   row-gap: 1px;
   align-content: start;
   justify-items: end;
+  min-width: 152px;
 }
 
 .job-actions.has-base-actions {
@@ -1186,13 +1144,12 @@ onBeforeUnmount(() => {
 }
 
 .job-actions-line {
-  display: grid;
-  grid-template-columns: 22px 22px 40px 40px;
+  display: flex;
   align-items: center;
-  align-content: center;
-  justify-content: end;
-  gap: 2px;
+  justify-content: flex-end;
+  gap: 4px;
   height: 46px;
+  padding-right: 4px;
 }
 
 .job-action-cell {
@@ -1207,6 +1164,7 @@ onBeforeUnmount(() => {
 .col-3 { grid-column: 3; }
 .col-4 { grid-column: 4; }
 .col-1-2 { grid-column: 1 / span 2; }
+.col-3-4 { grid-column: 3 / span 2; }
 
 .job-actions :deep(.el-button) {
   flex: 0 0 auto;
@@ -1222,11 +1180,25 @@ onBeforeUnmount(() => {
   display: inline-block;
   text-align: center;
   color: var(--muted);
-  font-size: 12px;
-  line-height: 1;
+  font-size: 10px;
+  line-height: 1.2;
   white-space: nowrap;
-  transform: scale(0.78);
-  transform-origin: center;
+}
+
+.base-readonly-note {
+  display: inline-block;
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.is-base-row {
+  justify-content: flex-end;
+  padding-right: 8px;
+  gap: 8px;
+  width: max-content;
+  white-space: nowrap;
 }
 
 .job-drag-handle {
@@ -1241,7 +1213,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   gap: 2px;
   font-size: 12px;
-  line-height: 1.1;
+  line-height: 1.2;
   white-space: nowrap;
   padding-inline: 6px;
   min-width: 40px;
@@ -1284,20 +1256,6 @@ onBeforeUnmount(() => {
 
 .merged-base-line {
   position: relative;
-}
-
-.base-floating-label {
-  position: absolute;
-  left: 2px;
-  bottom: 2px;
-  z-index: 2;
-  font-size: 12px;
-  line-height: 1;
-  color: var(--muted);
-  opacity: 0.9;
-  pointer-events: none;
-  transform: scale(0.76);
-  transform-origin: left bottom;
 }
 
 .slot-grid {
@@ -1351,10 +1309,35 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
 }
 
+.slot-card.slot-card-readonly,
+.slot-card:disabled {
+  cursor: not-allowed;
+  color: var(--muted);
+  background: var(--panel-soft);
+  opacity: 0.82;
+}
+
+.slot-card.slot-card-readonly:hover,
+.slot-card:disabled:hover {
+  background: var(--panel-soft);
+}
+
+.slot-card.slot-card-readonly .slot-icon,
+.slot-card:disabled .slot-icon {
+  opacity: 0.75;
+  filter: saturate(0.68);
+}
+
 .slot-cell:hover,
 .slot-cell:focus-within {
   border-color: var(--el-color-primary-light-3);
   box-shadow: 0 0 0 1px var(--el-color-primary-light-5);
+}
+
+.merged-base-line .slot-cell.is-base-slot:hover,
+.merged-base-line .slot-cell.is-base-slot:focus-within {
+  border-color: var(--line);
+  box-shadow: none;
 }
 
 .slot-card:hover {
@@ -1400,7 +1383,7 @@ onBeforeUnmount(() => {
 .slot-title {
   width: 100%;
   font-size: 12px;
-  line-height: 1.1;
+  line-height: 1.2;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;

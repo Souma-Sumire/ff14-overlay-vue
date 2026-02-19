@@ -7,7 +7,7 @@ import { computed, reactive, ref } from 'vue'
 import { JobResourceManager } from '@/modules/jobResourceTracker'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { resolveActionDisplayName, resolveActionIconSrc, resolveApiActionMeta, shouldFetchResolvedActionMeta } from '@/resources/logic/actionMetaResolver'
-import { buildTeamWatchFallbackMeta, cloneTeamWatchActionMetaMap, hasBakedTeamWatchMeta, loadTeamWatchStorageData, normalizeTeamWatchActionMetaRaw, resolveTeamWatchDynamicValue, saveTeamWatchStorageData, TEAM_WATCH_EMPTY_ACTIONS, TEAM_WATCH_WATCH_ACTIONS_DEFAULT } from '@/resources/teamWatchResource'
+import { buildInheritedBaseJobActions, buildTeamWatchFallbackMeta, cloneTeamWatchActionMetaMap, hasBakedTeamWatchMeta, loadTeamWatchStorageData, normalizeTeamWatchActionMetaRaw, resolveTeamWatchDynamicValue, saveTeamWatchStorageData, TEAM_WATCH_EMPTY_ACTIONS, TEAM_WATCH_WATCH_ACTIONS_DEFAULT } from '@/resources/teamWatchResource'
 import { extractTriggeredActionFromLogLine, isTeamWatchResetLogLine, triggerRuntimeByAction } from '@/store/teamWatchLoglineHelpers'
 import { clearRuntimeCooldownStates, ensureCooldownHistory, ensureRuntime, updateRuntimeCollection } from '@/store/teamWatchRuntimeHelpers'
 import { buildSkillStateCacheKey, buildTeamWatchSkillStatusText, resolveTeamWatchSkillState } from '@/store/teamWatchSkillStateHelpers'
@@ -236,6 +236,25 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
     }, 0)
   }
 
+  function resolveMemberWatchActionIds(job: number) {
+    const normalizedJob = Number.isFinite(Number(job)) ? Math.trunc(Number(job)) : 0
+    if (normalizedJob <= 0)
+      return [...TEAM_WATCH_EMPTY_ACTIONS]
+
+    const advancedJob = Util.baseJobEnumConverted(normalizedJob)
+    if (advancedJob !== normalizedJob) {
+      const inheritedSource
+        = watchJobsActionsIDUser.value[advancedJob]
+          ?? TEAM_WATCH_EMPTY_ACTIONS
+      return buildInheritedBaseJobActions(normalizedJob, inheritedSource)
+    }
+
+    const configured = watchJobsActionsIDUser.value[normalizedJob]
+    if (Array.isArray(configured) && configured.length > 0)
+      return configured
+    return [...TEAM_WATCH_EMPTY_ACTIONS]
+  }
+
   function rebuildMembers() {
     updateResourceManagerJobs()
 
@@ -247,10 +266,7 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
     const activeActionByOwner = new Map<string, Set<number>>()
 
     for (const member of sorted) {
-      const actionIds
-        = watchJobsActionsIDUser.value[member.job]
-          ?? watchJobsActionsIDUser.value[Util.baseJobEnumConverted(member.job)]
-          ?? [0, 0, 0, 0, 0]
+      const actionIds = resolveMemberWatchActionIds(member.job)
 
       const ownerId = toHexId(member.id)
       const memberLevel = Number.isFinite(member.level) ? member.level : 100

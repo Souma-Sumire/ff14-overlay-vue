@@ -4,9 +4,12 @@ import { hasBakedActionMeta, resolveBakedActionMeta } from '@/resources/logic/ac
 import { resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
 import { getActionNameLite } from '@/resources/logic/actionNameLite'
 import {
+  ACTION_UPGRADE_STEPS,
   isLowerTierActionId,
+  normalizeUpgradeActionId,
 } from '@/utils/compareSaveAction'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
+import Util from '@/utils/util'
 import { DEFAULT_JOB_SORT_ORDER } from './jobSortOrder'
 
 // TeamWatch v5 本地存储键名。
@@ -68,6 +71,23 @@ export const TEAM_WATCH_WATCH_ACTIONS_DEFAULT: Record<number, number[]> = {
 
 // DynamicValue 校验时使用的抽样等级。
 const TEAM_WATCH_DYNAMIC_SAMPLE_LEVELS = [1, 50, 80, 90, 100] as const
+
+const upgradeLowerByUpper = (() => {
+  const map = new Map<number, number[]>()
+  Object.entries(ACTION_UPGRADE_STEPS).forEach(([rawLower, rawUpper]) => {
+    const lower = Number(rawLower)
+    const upper = Number(rawUpper)
+    if (!Number.isFinite(lower) || lower <= 0 || !Number.isFinite(upper) || upper <= 0)
+      return
+    if (!map.has(upper))
+      map.set(upper, [])
+    map.get(upper)!.push(lower)
+  })
+  return map
+})()
+
+const upgradeFamilyByTopCache = new Map<number, number[]>()
+const upgradeDepthToTopCache = new Map<number, number>()
 
 // 将未知输入转换为整数数组，并按最小值过滤（默认 >=0）。
 function toIntArray(value: unknown, min = 0): number[] {
@@ -177,6 +197,131 @@ export function buildTeamWatchFallbackMeta(actionId: number): TeamWatchActionMet
 
 export function hasBakedTeamWatchMeta(actionId: number) {
   return hasBakedActionMeta(actionId, { requireActionCategory: true })
+}
+
+function getUpgradeFamily(actionId: number) {
+  const normalized = Number.isFinite(Number(actionId)) ? Math.trunc(Number(actionId)) : 0
+  if (normalized <= 0)
+    return []
+  const top = normalizeUpgradeActionId(normalized)
+  const cached = upgradeFamilyByTopCache.get(top)
+  if (cached)
+    return cached
+
+  const visited = new Set<number>()
+  const stack = [top]
+  while (stack.length > 0) {
+    const current = stack.pop()!
+    if (visited.has(current))
+      continue
+    visited.add(current)
+    const lowers = upgradeLowerByUpper.get(current) ?? []
+    lowers.forEach((lower) => {
+      if (!visited.has(lower))
+        stack.push(lower)
+    })
+  }
+
+  const family = [...visited]
+  upgradeFamilyByTopCache.set(top, family)
+  return family
+}
+
+function getUpgradeDepthToTop(actionId: number) {
+  const normalized = Number.isFinite(Number(actionId)) ? Math.trunc(Number(actionId)) : 0
+  if (normalized <= 0)
+    return Number.MAX_SAFE_INTEGER
+  const cached = upgradeDepthToTopCache.get(normalized)
+  if (cached !== undefined)
+    return cached
+
+  let depth = 0
+  let current = normalized
+  const visited = new Set<number>([current])
+  while (true) {
+    const nextRaw = ACTION_UPGRADE_STEPS[current]
+    if (typeof nextRaw !== 'number' || !Number.isFinite(nextRaw) || nextRaw <= 0)
+      break
+    const nextId = Math.trunc(nextRaw)
+    if (visited.has(nextId))
+      break
+    depth += 1
+    visited.add(nextId)
+    current = nextId
+  }
+
+  upgradeDepthToTopCache.set(normalized, depth)
+  return depth
+}
+
+function isActionSupportedByBaseJob(actionId: number, baseJob: number) {
+  if (actionId <= 0)
+    return true
+  const baked = resolveBakedActionMeta(actionId)
+  if (!baked)
+    return true
+  if (baked.isRoleAction)
+    return baked.jobs.includes(baseJob)
+  if (baked.classJobTargetId > 0)
+    return baked.classJobTargetId === baseJob
+  // For base-job inheritance, non-role actions with only classJobCategory are ambiguous
+  // (category may include both base+advanced jobs). Treat them as unsupported.
+  return false
+}
+
+function resolveHighestSupportedActionInFamily(actionId: number, baseJob: number) {
+  const family = getUpgradeFamily(actionId)
+  let bestActionId = 0
+  let bestMinLevel = Number.NEGATIVE_INFINITY
+  let bestDepth = Number.MAX_SAFE_INTEGER
+
+  family.forEach((candidateId) => {
+    if (!isActionSupportedByBaseJob(candidateId, baseJob))
+      return
+
+    const baked = resolveBakedActionMeta(candidateId)
+    const minLevel = baked?.classJobLevel ?? 1
+    const depth = getUpgradeDepthToTop(candidateId)
+
+    if (
+      minLevel > bestMinLevel
+      || (minLevel === bestMinLevel && depth < bestDepth)
+      || (minLevel === bestMinLevel && depth === bestDepth && candidateId === actionId)
+    ) {
+      bestActionId = candidateId
+      bestMinLevel = minLevel
+      bestDepth = depth
+    }
+  })
+
+  return bestActionId
+}
+
+// 基础职业继承进阶职业技能时，过滤掉基础职业无法学习的技能。
+export function buildInheritedBaseJobActions(baseJob: number, sourceActions: unknown): number[] {
+  const normalizeSlotActionsKeepShape = (input: unknown) => {
+    if (!Array.isArray(input))
+      return [0]
+    const normalized = input.map((value) => {
+      const numeric = Number(value)
+      if (!Number.isFinite(numeric) || numeric < 0)
+        return 0
+      return Math.trunc(numeric)
+    })
+    return normalized.length > 0 ? normalized : [0]
+  }
+
+  const normalizedBaseJob = Number.isFinite(Number(baseJob)) ? Math.trunc(Number(baseJob)) : 0
+  if (normalizedBaseJob <= 0)
+    return [0]
+  if (Util.baseJobEnumConverted(normalizedBaseJob) === normalizedBaseJob)
+    return normalizeSlotActionsKeepShape(sourceActions)
+
+  return normalizeSlotActionsKeepShape(sourceActions).map((actionId) => {
+    if (actionId <= 0)
+      return 0
+    return resolveHighestSupportedActionInFamily(actionId, normalizedBaseJob) || 0
+  })
 }
 
 // 规范化 TeamWatchActionMetaRaw。
