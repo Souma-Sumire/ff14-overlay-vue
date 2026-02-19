@@ -72,14 +72,6 @@ export default defineConfig({
             return 'shared-common'
           }
 
-          if (
-            id.includes('/src/utils/')
-            || id.includes('/src/store/')
-            || id.includes('/src/composables/')
-          ) {
-            return 'shared-core'
-          }
-
           if (id.includes('cactbot/') && !id.includes('user_config.ts')) {
             return 'cactbot'
           }
