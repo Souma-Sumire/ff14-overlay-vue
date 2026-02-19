@@ -773,8 +773,8 @@ function validateMetaForm() {
   const name = metaForm.name.trim() || getActionChinese(metaForm.actionId) || `技能 #${metaForm.actionId}`
   const currentActionCategory = Number(
     actionMetaUser.value[metaForm.actionId]?.actionCategory
-      ?? store.getActionMetaRaw(metaForm.actionId, false).actionCategory
-      ?? 0,
+    ?? store.getActionMetaRaw(metaForm.actionId, false).actionCategory
+    ?? 0,
   )
   const normalizedActionCategory = Number.isFinite(currentActionCategory) && currentActionCategory > 0
     ? Math.trunc(currentActionCategory)
@@ -1318,11 +1318,11 @@ onBeforeUnmount(() => {
         </div>
       </template>
 
-        <template #fields>
-          <template v-if="metaForm.actionId > 0">
-            <div class="editor-field">
-              <label>习得等级</label>
-              <el-input-number
+      <template #fields>
+        <template v-if="metaForm.actionId > 0">
+          <div class="editor-field">
+            <label>习得等级</label>
+            <el-input-number
               v-model="metaForm.classJobLevel"
               class="number-input-full"
               :min="1"

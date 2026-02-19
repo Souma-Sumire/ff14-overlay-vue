@@ -1,5 +1,5 @@
-import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import type { ColumnDef, MitigationRow, PlayerActionRecord, SheetState } from '@/types/mitigation'
+import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 
 export interface SheetStorageShards {
   sheetOrder: string[]
