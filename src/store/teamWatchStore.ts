@@ -574,6 +574,8 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
     sortRuleUser,
     watchJobsActionsIDUser,
     actionMetaUser,
+    fakeMode,
+    playerId,
     members,
     partyCount,
     getActionMetaRaw,

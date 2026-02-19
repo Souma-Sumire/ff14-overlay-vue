@@ -1,14 +1,15 @@
+/// <reference types="vitest" />
 import path from 'node:path'
 import vue from '@vitejs/plugin-vue'
 import Unocss from 'unocss/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
-import { defineConfig } from 'vite'
 import viteCompression from 'vite-plugin-compression'
 import Markdown from 'vite-plugin-md'
 import Pages from 'vite-plugin-pages'
 import sassDts from 'vite-plugin-sass-dts'
+import { defineConfig } from 'vitest/config'
 
 function injectBuildTime() {
   return {
@@ -150,5 +151,9 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['vue', 'vue-router', 'pinia', 'element-plus', '@vueuse/core'],
+  },
+  test: {
+    environment: 'happy-dom',
+    globals: true,
   },
 })
