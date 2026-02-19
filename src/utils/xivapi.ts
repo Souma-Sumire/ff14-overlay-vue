@@ -1,4 +1,5 @@
 import { useStorage } from '@vueuse/core'
+import { useIndexedDB } from '@/composables/useIndexedDB'
 import { markRoleActionId, resolveActionMinLevel } from '@/resources/actionMinLevel'
 import { ACTION_SEARCH_CACHE_VERSION, XIVAPI_CACHE_VERSION } from '@/resources/cacheVersion'
 import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/roleActionCategoryByJob'
@@ -13,22 +14,37 @@ const SITE_HOST = {
 } as const
 type SiteName = keyof typeof SITE_HOST
 
+interface IndexedDbActionMetaCacheItem {
+  key: string
+  value: Record<string, any>
+}
+
+interface IndexedDbActionSearchCacheItem {
+  key: string
+  value: unknown[]
+}
+
 const CACHE_VERSION_STORAGE_KEY = 'xivapi-cache-version'
 const PRIMARY_SITE_STORAGE_KEY = 'xivapi-primary-site'
-const ACTION_SEARCH_CACHE_STORAGE_KEY = 'xivapi-action-search-cache'
-const ACTION_META_CACHE_STORAGE_KEY = 'xivapi-action-meta-cache'
 const cacheVersionStorage = useStorage<string>(CACHE_VERSION_STORAGE_KEY, '')
 const primarySiteStorage = useStorage<string>(PRIMARY_SITE_STORAGE_KEY, 'cafe')
-const actionSearchCacheStorage = useStorage<Record<string, XivApiActionSearchItem[]>>(ACTION_SEARCH_CACHE_STORAGE_KEY, {})
-const actionMetaCacheStorage = useStorage<Record<string, Record<string, any>>>(ACTION_META_CACHE_STORAGE_KEY, {})
+const actionMetaCacheDb = useIndexedDB<IndexedDbActionMetaCacheItem>('xivapi-action-meta-cache')
+const actionSearchCacheDb = useIndexedDB<IndexedDbActionSearchCacheItem>('xivapi-action-search-cache')
+const pendingPersistentActionMetaLoad = new Map<string, Promise<Record<string, any> | undefined>>()
+const pendingPersistentActionSearchLoad = new Map<string, Promise<unknown[] | null>>()
 
 function ensureCacheVersion(): void {
   if (cacheVersionStorage.value === XIVAPI_CACHE_VERSION)
     return
   cacheVersionStorage.value = XIVAPI_CACHE_VERSION
   primarySiteStorage.value = 'cafe'
-  actionSearchCacheStorage.value = {}
-  actionMetaCacheStorage.value = {}
+  try {
+    localStorage.removeItem('xivapi-action-search-cache')
+    localStorage.removeItem('xivapi-action-meta-cache')
+  }
+  catch {}
+  void actionMetaCacheDb.clear().catch(() => {})
+  void actionSearchCacheDb.clear().catch(() => {})
 }
 
 function isSiteName(value: unknown): value is SiteName {
@@ -63,13 +79,6 @@ const actionCache = new Map<string, Record<string, any>>()
 const actionSearchByJobCache = new Map<string, XivApiActionSearchItem[]>()
 const pendingRequestResolvers: Array<() => void> = []
 let activeRequestCount = 0
-
-if (actionMetaCacheStorage.value && typeof actionMetaCacheStorage.value === 'object') {
-  Object.entries(actionMetaCacheStorage.value).forEach(([key, value]) => {
-    if (value && typeof value === 'object')
-      actionCache.set(key, value)
-  })
-}
 
 export { XIVAPI_CACHE_VERSION }
 
@@ -221,12 +230,50 @@ function getActionCacheKey(type: string, actionId: number): string {
   return `${type}:${Math.trunc(actionId)}`
 }
 
+async function loadActionMetaCacheFromPersistent(key: string): Promise<Record<string, any> | undefined> {
+  const pending = pendingPersistentActionMetaLoad.get(key)
+  if (pending)
+    return pending
+  const task = actionMetaCacheDb.get(key)
+    .then((record) => {
+      if (!record || typeof record.value !== 'object' || !record.value)
+        return undefined
+      return record.value
+    })
+    .catch(() => undefined)
+    .finally(() => {
+      pendingPersistentActionMetaLoad.delete(key)
+    })
+  pendingPersistentActionMetaLoad.set(key, task)
+  return task
+}
+
 function saveActionCache(key: string, value: Record<string, any>) {
   actionCache.set(key, value)
-  actionMetaCacheStorage.value = {
-    ...actionMetaCacheStorage.value,
-    [key]: value,
-  }
+  void actionMetaCacheDb.set({
+    key,
+    value,
+  }).catch((error) => {
+    console.warn('[xivapi] persist action cache failed:', key, error)
+  })
+}
+
+async function loadActionSearchCacheFromPersistent(cacheKey: string): Promise<unknown[] | null> {
+  const pending = pendingPersistentActionSearchLoad.get(cacheKey)
+  if (pending)
+    return pending
+  const task = actionSearchCacheDb.get(cacheKey)
+    .then((record) => {
+      if (!record)
+        return null
+      return Array.isArray(record.value) ? record.value : []
+    })
+    .catch(() => null)
+    .finally(() => {
+      pendingPersistentActionSearchLoad.delete(cacheKey)
+    })
+  pendingPersistentActionSearchLoad.set(cacheKey, task)
+  return task
 }
 
 function normalizeSearchCacheList(raw: unknown): XivApiActionSearchItem[] {
@@ -239,6 +286,20 @@ function normalizeSearchCacheList(raw: unknown): XivApiActionSearchItem[] {
 
 function hasAllColumns(record: Record<string, any>, columns: string[]): boolean {
   return columns.every(col => col === 'ID' || Object.prototype.hasOwnProperty.call(record, col))
+}
+
+function applyActionCacheSideEffects(record: Record<string, any>, fallbackId: number) {
+  const resolvedId = Number(record.ID ?? fallbackId)
+  const normalizedId = Number.isFinite(resolvedId) && resolvedId > 0 ? Math.trunc(resolvedId) : fallbackId
+  const isRoleAction = Number(record.IsRoleAction ?? 0)
+  markRoleActionId(normalizedId, isRoleAction)
+  if (Object.prototype.hasOwnProperty.call(record, 'ClassJobLevel')) {
+    record.ClassJobLevel = resolveActionMinLevel(record.ClassJobLevel, {
+      actionId: normalizedId,
+      isRoleAction,
+      fallback: 1,
+    })
+  }
 }
 
 /**
@@ -259,9 +320,19 @@ export async function parseAction(
     if (!requestedColumns.includes('ClassJobLevel'))
       requestedColumns.push('ClassJobLevel')
   }
-  const cached = actionCache.get(key)
-  if (cached && hasAllColumns(cached, requestedColumns))
+  let cached = actionCache.get(key)
+  if (!cached) {
+    const persistentCached = await loadActionMetaCacheFromPersistent(key)
+    if (persistentCached) {
+      cached = persistentCached
+      actionCache.set(key, persistentCached)
+    }
+  }
+  if (cached && hasAllColumns(cached, requestedColumns)) {
+    if (type === 'action')
+      applyActionCacheSideEffects(cached, id)
     return cached
+  }
 
   const path = `/${type}/${id}?columns=${requestedColumns.join(',')}`
   try {
@@ -368,8 +439,9 @@ export async function searchActionsByClassJobs(jobIds: number[], limit = 500): P
   const cacheKey = `${ACTION_SEARCH_CACHE_VERSION}|${normalized.join(',')}|${limit}`
   if (actionSearchByJobCache.has(cacheKey))
     return [...actionSearchByJobCache.get(cacheKey)!]
-  const persistentCached = normalizeSearchCacheList(actionSearchCacheStorage.value[cacheKey])
-  if (persistentCached.length > 0) {
+  const persistentCachedRaw = await loadActionSearchCacheFromPersistent(cacheKey)
+  if (persistentCachedRaw !== null) {
+    const persistentCached = normalizeSearchCacheList(persistentCachedRaw)
     actionSearchByJobCache.set(cacheKey, persistentCached)
     return [...persistentCached]
   }
@@ -406,10 +478,12 @@ export async function searchActionsByClassJobs(jobIds: number[], limit = 500): P
     .slice(0, limit)
 
   actionSearchByJobCache.set(cacheKey, list)
-  actionSearchCacheStorage.value = {
-    ...actionSearchCacheStorage.value,
-    [cacheKey]: list,
-  }
+  void actionSearchCacheDb.set({
+    key: cacheKey,
+    value: list,
+  }).catch((error) => {
+    console.warn('[xivapi] persist action-search cache failed:', cacheKey, error)
+  })
   return [...list]
 }
 
