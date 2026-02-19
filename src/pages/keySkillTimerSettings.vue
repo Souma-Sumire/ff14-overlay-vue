@@ -63,6 +63,7 @@ const pickerLoading = ref(false)
 const pickerSelectedJob = ref<number | null>(null)
 const pickerTargetLine = ref(1)
 const pickerReplaceSkillKey = ref<string | null>(null)
+const pickerHideShortCD = ref(true)
 
 const editorVisible = ref(false)
 const editorOpening = ref(false)
@@ -232,8 +233,18 @@ const pickerOrderedResult = computed(() => {
   })
 })
 
-const pickerRoleResult = computed(() => pickerOrderedResult.value.filter(item => !!item.isRoleAction))
-const pickerJobResult = computed(() => pickerOrderedResult.value.filter(item => !item.isRoleAction))
+const pickerRoleResult = computed(() => {
+  let list = pickerOrderedResult.value.filter(item => !!item.isRoleAction)
+  if (pickerHideShortCD.value)
+    list = list.filter(item => (item.recast1000ms ?? 0) > 5)
+  return list
+})
+const pickerJobResult = computed(() => {
+  let list = pickerOrderedResult.value.filter(item => !item.isRoleAction)
+  if (pickerHideShortCD.value)
+    list = list.filter(item => (item.recast1000ms ?? 0) > 5)
+  return list
+})
 const interactionLocked = computed(() => editorOpening.value || storeKeySkill.isAutoMetaLoading)
 const pickerInteractionLocked = computed(() => pickerLoading.value || interactionLocked.value)
 const defaultTtsByActionId = (() => {
@@ -657,6 +668,7 @@ watch(pickerVisible, (visible) => {
   pickerLoading.value = false
   pickerSelectedJob.value = null
   pickerReplaceSkillKey.value = null
+  pickerHideShortCD.value = true
 })
 
 async function openSkillPicker(line = 1, replaceSkillKey: string | null = null) {
@@ -1036,10 +1048,12 @@ function getDefaultTtsByActionId(actionId: number) {
       empty-text="当前没有匹配技能"
       :search-disabled="!pickerSelectedJob || pickerInteractionLocked"
       :global-disabled="pickerInteractionLocked"
-      :back-disabled="pickerInteractionLocked"
       @pick="pickAction($event.id, $event.name)"
       @back="handlePickerBack"
     >
+      <template #header-controls>
+        <el-checkbox v-model="pickerHideShortCD" label="隐藏 CD <= 5 秒的技能" size="small" />
+      </template>
       <template #toolbar>
         <div class="picker-job-strip">
           <div class="picker-job-caption">
@@ -1428,5 +1442,15 @@ function getDefaultTtsByActionId(actionId: number) {
 
 .job-edit-select {
   margin-top: 8px;
+}
+
+.picker-toolbar {
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--el-fill-color-light);
+  border-radius: 4px;
+  border: 1px solid var(--el-border-color-lighter);
 }
 </style>

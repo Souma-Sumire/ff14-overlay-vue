@@ -125,19 +125,24 @@ function handleBack() {
       </div>
     </template>
 
-    <div v-if="props.targetLabel" class="action-picker-target">
-      {{ props.targetLabel }}
+    <div class="picker-header-row">
+      <div v-if="props.targetLabel" class="action-picker-target">
+        {{ props.targetLabel }}
+      </div>
+
+      <el-input
+        v-model="search"
+        :prefix-icon="Search"
+        :disabled="props.searchDisabled"
+        :placeholder="props.searchPlaceholder"
+        class="picker-search-input"
+        clearable
+      />
+
+      <div class="picker-header-controls">
+        <slot name="header-controls" />
+      </div>
     </div>
-
-    <slot name="toolbar" />
-
-    <el-input
-      v-model="search"
-      :prefix-icon="Search"
-      :disabled="props.searchDisabled"
-      :placeholder="props.searchPlaceholder"
-      clearable
-    />
 
     <div v-loading="props.loading" class="picker-grid-wrap">
       <div v-if="props.promptVisible && props.promptText" class="picker-empty">
@@ -250,13 +255,70 @@ function handleBack() {
 }
 
 .action-picker-target {
-  margin-bottom: 8px;
-  padding: 4px 6px;
-  border-radius: 4px;
-  border: 1px solid var(--el-border-color);
-  background: var(--el-fill-color-light);
-  color: var(--el-text-color-secondary);
+  flex: 0 0 auto;
+  min-width: 120px;
+  max-width: 200px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 6px;
+  background: var(--el-color-primary-light-9);
+  color: var(--el-color-primary);
+  border: 1px solid var(--el-color-primary-light-8);
   font-size: 12px;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.picker-header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  min-width: 0;
+  padding: 2px 0;
+}
+
+.picker-search-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.picker-search-input :deep(.el-input__wrapper) {
+  height: 32px;
+  box-shadow: 0 0 0 1px var(--el-border-color) inset;
+  background: var(--el-fill-color-blank);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.picker-search-input :deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 1px var(--el-color-primary) inset, 0 0 0 3px var(--el-color-primary-light-8);
+}
+
+.picker-header-controls {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 10px;
+  background: var(--el-fill-color-darker);
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 6px;
+}
+
+.picker-header-controls :deep(.el-checkbox) {
+  height: auto;
+  margin-right: 0;
+}
+
+.picker-header-controls :deep(.el-checkbox__label) {
+  font-size: 11px;
+  color: var(--el-text-color-regular);
 }
 
 .action-picker-dialog :deep(.el-dialog__body) {

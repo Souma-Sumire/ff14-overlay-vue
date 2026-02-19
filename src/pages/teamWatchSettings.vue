@@ -50,6 +50,7 @@ const pickerResult = ref<ActionSearchResult[]>([])
 const pickerPool = ref<ActionSearchResult[]>([])
 const pickerLoading = ref(false)
 const pickerTarget = ref<PickerTarget | null>(null)
+const pickerHideShortCD = ref(true)
 const { width: viewportWidth } = useWindowSize()
 
 const filterText = ref('')
@@ -244,8 +245,18 @@ const pickerOrderedResult = computed(() => {
   })
 })
 
-const pickerRoleResult = computed(() => pickerOrderedResult.value.filter(item => !!item.isRoleAction))
-const pickerJobResult = computed(() => pickerOrderedResult.value.filter(item => !item.isRoleAction))
+const pickerRoleResult = computed(() => {
+  let list = pickerOrderedResult.value.filter(item => !!item.isRoleAction)
+  if (pickerHideShortCD.value)
+    list = list.filter(item => (item.recast1000ms ?? 0) > 5)
+  return list
+})
+const pickerJobResult = computed(() => {
+  let list = pickerOrderedResult.value.filter(item => !item.isRoleAction)
+  if (pickerHideShortCD.value)
+    list = list.filter(item => (item.recast1000ms ?? 0) > 5)
+  return list
+})
 const pickerCurrentActionId = computed(() => {
   const target = pickerTarget.value
   if (!target)
@@ -413,6 +424,7 @@ watch(pickerVisible, (visible) => {
   pickerResult.value = []
   pickerPool.value = []
   pickerLoading.value = false
+  pickerHideShortCD.value = true
 })
 
 function getJobName(job: number) {
@@ -892,7 +904,11 @@ onBeforeUnmount(() => {
       :global-disabled="pickerLoading"
       :back-disabled="pickerLoading"
       @pick="pickAction($event.id)"
-    />
+    >
+      <template #header-controls>
+        <el-checkbox v-model="pickerHideShortCD" label="隐藏 CD <= 5 秒的技能" size="small" />
+      </template>
+    </ActionPickerDialog>
   </div>
 </template>
 
@@ -1395,5 +1411,15 @@ onBeforeUnmount(() => {
 .slot-add-wrap :deep(.el-button) {
   --el-button-size: 18px;
   padding: 0 4px;
+}
+
+.picker-toolbar {
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--panel-soft);
+  border-radius: 4px;
+  border: 1px solid var(--line-soft);
 }
 </style>
