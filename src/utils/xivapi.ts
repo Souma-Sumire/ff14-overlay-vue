@@ -16,9 +16,11 @@ type SiteName = keyof typeof SITE_HOST
 const CACHE_VERSION_STORAGE_KEY = 'xivapi-cache-version'
 const PRIMARY_SITE_STORAGE_KEY = 'xivapi-primary-site'
 const ACTION_SEARCH_CACHE_STORAGE_KEY = 'xivapi-action-search-cache'
+const ACTION_META_CACHE_STORAGE_KEY = 'xivapi-action-meta-cache'
 const cacheVersionStorage = useStorage<string>(CACHE_VERSION_STORAGE_KEY, '')
 const primarySiteStorage = useStorage<string>(PRIMARY_SITE_STORAGE_KEY, 'cafe')
 const actionSearchCacheStorage = useStorage<Record<string, XivApiActionSearchItem[]>>(ACTION_SEARCH_CACHE_STORAGE_KEY, {})
+const actionMetaCacheStorage = useStorage<Record<string, Record<string, any>>>(ACTION_META_CACHE_STORAGE_KEY, {})
 
 function ensureCacheVersion(): void {
   if (cacheVersionStorage.value === XIVAPI_CACHE_VERSION)
@@ -26,6 +28,7 @@ function ensureCacheVersion(): void {
   cacheVersionStorage.value = XIVAPI_CACHE_VERSION
   primarySiteStorage.value = 'cafe'
   actionSearchCacheStorage.value = {}
+  actionMetaCacheStorage.value = {}
 }
 
 function isSiteName(value: unknown): value is SiteName {
@@ -60,6 +63,13 @@ const actionCache = new Map<string, Record<string, any>>()
 const actionSearchByJobCache = new Map<string, XivApiActionSearchItem[]>()
 const pendingRequestResolvers: Array<() => void> = []
 let activeRequestCount = 0
+
+if (actionMetaCacheStorage.value && typeof actionMetaCacheStorage.value === 'object') {
+  Object.entries(actionMetaCacheStorage.value).forEach(([key, value]) => {
+    if (value && typeof value === 'object')
+      actionCache.set(key, value)
+  })
+}
 
 export { XIVAPI_CACHE_VERSION }
 
@@ -211,6 +221,14 @@ function getActionCacheKey(type: string, actionId: number): string {
   return `${type}:${Math.trunc(actionId)}`
 }
 
+function saveActionCache(key: string, value: Record<string, any>) {
+  actionCache.set(key, value)
+  actionMetaCacheStorage.value = {
+    ...actionMetaCacheStorage.value,
+    [key]: value,
+  }
+}
+
 function normalizeSearchCacheList(raw: unknown): XivApiActionSearchItem[] {
   if (!Array.isArray(raw))
     return []
@@ -260,7 +278,7 @@ export async function parseAction(
       })
     }
     const merged = { ...(cached ?? {}), ...result }
-    actionCache.set(key, merged)
+    saveActionCache(key, merged)
     return merged
   }
   catch (error) {
@@ -271,7 +289,7 @@ export async function parseAction(
       Icon: DEFAULT_ICON,
     }
     const merged = { ...(cached ?? {}), ...fallback }
-    actionCache.set(key, merged)
+    saveActionCache(key, merged)
     return merged
   }
 }
