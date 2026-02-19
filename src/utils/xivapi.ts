@@ -1,9 +1,12 @@
 import { useStorage } from '@vueuse/core'
 import { useIndexedDB } from '@/composables/useIndexedDB'
 import { markRoleActionId, resolveActionMinLevel } from '@/resources/actionMinLevel'
+import { CLASS_JOB_ACTION_CATEGORIES_BY_JOB } from '@/resources/actionClassJobCategoryIndex'
+import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/bakedActionMetaLite'
 import { ACTION_SEARCH_CACHE_VERSION, XIVAPI_CACHE_VERSION } from '@/resources/cacheVersion'
 import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/roleActionCategoryByJob'
 import { completeIcon } from '@/resources/status'
+import Util from '@/utils/util'
 
 const params = new URLSearchParams(window.location.search)
 const apiParam = params.get('api')?.toLowerCase()
@@ -207,6 +210,7 @@ export interface XivApiActionSearchItem {
   Icon: string
   ClassJobLevel: number
   ClassJobTargetID: number
+  ClassJobCategoryTargetID?: number
   ActionCategoryTargetID?: number
   IsRoleAction?: number
   IsPvP?: number
@@ -224,6 +228,33 @@ function getRoleActionCategories(jobIds: number[]): number[] {
     categories.forEach(v => set.add(v))
   })
   return [...set].sort((a, b) => a - b)
+}
+
+function getJobActionCategories(jobIds: number[]): number[] {
+  const set = new Set<number>()
+  jobIds.forEach((jobId) => {
+    const categories = CLASS_JOB_ACTION_CATEGORIES_BY_JOB.get(jobId)
+    if (!categories)
+      return
+    categories.forEach(v => set.add(v))
+  })
+  return [...set].sort((a, b) => a - b)
+}
+
+function normalizeCombatJobIds(jobIds: number[]) {
+  const normalizedSet = new Set<number>()
+  jobIds.forEach((rawJobId) => {
+    const numeric = Number(rawJobId)
+    if (!Number.isFinite(numeric) || numeric <= 0)
+      return
+
+    const jobId = Math.trunc(numeric)
+    const job = Util.jobEnumToJob(jobId)
+    if (job === 'NONE' || !Util.isCombatJob(job))
+      return
+    normalizedSet.add(jobId)
+  })
+  return [...normalizedSet].sort((a, b) => a - b)
 }
 
 function getActionCacheKey(type: string, actionId: number): string {
@@ -389,6 +420,7 @@ function toActionSearchItem(row: XivApiActionSearchItem): XivApiActionSearchItem
       fallback: 1,
     }),
     ClassJobTargetID: Number(row.ClassJobTargetID ?? 0),
+    ClassJobCategoryTargetID: Number(row.ClassJobCategoryTargetID ?? 0),
     ActionCategoryTargetID: Number(row.ActionCategoryTargetID ?? 0),
     IsRoleAction: isRoleAction,
     IsPvP: isPvP,
@@ -424,14 +456,7 @@ async function fetchActionSearchPages(baseQuery: URLSearchParams, merged: Map<nu
  * 常用于设置页“选择技能”弹窗。
  */
 export async function searchActionsByClassJobs(jobIds: number[], limit = 500): Promise<XivApiActionSearchItem[]> {
-  const normalized = Array.from(
-    new Set(
-      jobIds
-        .map(v => Number(v))
-        .filter(v => Number.isFinite(v) && v > 0)
-        .map(v => Math.trunc(v)),
-    ),
-  ).sort((a, b) => a - b)
+  const normalized = normalizeCombatJobIds(jobIds)
 
   if (!normalized.length)
     return []
@@ -451,7 +476,7 @@ export async function searchActionsByClassJobs(jobIds: number[], limit = 500): P
   for (const jobId of normalized) {
     const query = new URLSearchParams({
       indexes: 'Action',
-      columns: 'ID,Name,Icon,ClassJobLevel,ClassJobTargetID,ActionCategoryTargetID,IsRoleAction,IsPvP,Recast100ms',
+      columns: 'ID,Name,Icon,ClassJobLevel,ClassJobTargetID,ClassJobCategoryTargetID,ActionCategoryTargetID,IsRoleAction,IsPvP,Recast100ms',
       filters: `ClassJobTargetID=${jobId},IsPvP=0`,
       sort_field: 'ClassJobLevel',
       sort_order: 'asc',
@@ -466,6 +491,20 @@ export async function searchActionsByClassJobs(jobIds: number[], limit = 500): P
       indexes: 'Action',
       columns: 'ID,Name,Icon,ClassJobLevel,ClassJobTargetID,ClassJobCategoryTargetID,ActionCategoryTargetID,IsPvP,IsRoleAction,Recast100ms',
       filters: `IsRoleAction=1,IsPvP=0,ClassJobCategoryTargetID=${categoryId}`,
+      sort_field: 'ClassJobLevel',
+      sort_order: 'asc',
+      limit: '100',
+    })
+    await fetchActionSearchPages(query, merged, limit)
+  }
+
+  // Some job skills have ClassJobTargetID=0/-1, but can still be inferred by ClassJobCategory.
+  const jobActionCategories = getJobActionCategories(normalized)
+  for (const categoryId of jobActionCategories) {
+    const query = new URLSearchParams({
+      indexes: 'Action',
+      columns: 'ID,Name,Icon,ClassJobLevel,ClassJobTargetID,ClassJobCategoryTargetID,ActionCategoryTargetID,IsPvP,IsRoleAction,Recast100ms',
+      filters: `IsRoleAction=0,IsPvP=0,ClassJobCategoryTargetID=${categoryId}`,
       sort_field: 'ClassJobLevel',
       sort_order: 'asc',
       limit: '100',

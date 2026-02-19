@@ -1,4 +1,5 @@
 import { getActionChinese } from '@/resources/actionChinese'
+import { ACTION_JOBS_BY_CLASS_JOB_CATEGORY } from '@/resources/actionClassJobCategoryIndex'
 import { resolveActionMinLevel } from '@/resources/actionMinLevel'
 import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/bakedActionMetaLite'
 import { getGlobalSkillMetaByActionId } from '@/resources/globalSkills'
@@ -80,24 +81,34 @@ export function resolveActionJobsFromTargets(
     const roleCategoryTargetIds = uniqueInts([classJobCategoryTargetId, actionCategoryTargetId])
     if (!roleCategoryTargetIds.length)
       return []
-    return uniqueInts(
+    const resolvedRoleJobs = uniqueInts(
       battleJobEnums.filter((jobEnum) => {
         const categories = ROLE_ACTION_CATEGORY_BY_JOB[jobEnum] ?? []
         return roleCategoryTargetIds.some(categoryId => categories.includes(categoryId))
       }),
     )
+    if (resolvedRoleJobs.length === 0)
+      return []
+    return resolvedRoleJobs
   }
 
-  if (classJobTargetId <= 0)
+  if (classJobTargetId <= 0) {
+    const jobsByCategory = ACTION_JOBS_BY_CLASS_JOB_CATEGORY.get(classJobCategoryTargetId)
+    if (jobsByCategory && jobsByCategory.length > 0)
+      return [...jobsByCategory]
     return []
+  }
 
-  return uniqueInts(
+  const resolvedJobs = uniqueInts(
     battleJobEnums.filter((jobEnum) => {
       return jobEnum === classJobTargetId
         || Util.baseJobEnumConverted(jobEnum) === classJobTargetId
         || Util.baseJobEnumConverted(classJobTargetId) === jobEnum
     }),
   )
+  if (resolvedJobs.length === 0)
+    return []
+  return resolvedJobs
 }
 
 export function resolveBakedActionMeta(actionId: number): ResolvedBakedActionMeta | undefined {
