@@ -27,7 +27,7 @@
 
 ## 匹配语句（用于同步时间，平时看不到）
 
-通常无需手动编写。FFLOGS导入会自动生成，完整规则见 [timelineSpecialRules.ts](https://github.com/Souma-Sumire/ff14-overlay-vue/blob/main/src/services/timelineSpecialRules.ts)。
+通常无需手动编写。FFLOGS导入会自动生成，完整规则见 [timelineSpecialRules.ts](https://github.com/Souma-Sumire/ff14-overlay-vue/blob/main/src/resources/timelineSpecialRules.ts)。
 
 若某些副本未自动适配或未正确同步，则需要用户（你）手动编写。
 
