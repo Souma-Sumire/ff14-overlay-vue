@@ -1,8 +1,7 @@
-import csv from 'csv-parser'
 import fs from 'fs-extra'
-import iconv from 'iconv-lite'
 import action2ClassJobLevelMapRaw from '../src/resources/action2ClassJobLevel.json'
 import { ACTION_UPGRADE_LEVEL_OVERRIDES, ACTION_UPGRADE_STEPS } from '../src/utils/compareSaveAction'
+import { readCsvRowsCached } from './csvCache'
 import { csvPaths } from './paths'
 
 type CsvRow = string[]
@@ -26,21 +25,6 @@ function parseIntSafe(value: string | undefined) {
   return Math.trunc(num)
 }
 
-async function readCsvRows(filePath: string) {
-  const rows: CsvRow[] = []
-  await new Promise<void>((resolve, reject) => {
-    fs.createReadStream(filePath)
-      .pipe(iconv.decodeStream('utf8'))
-      .pipe(csv({ headers: false }))
-      .on('data', (row: Record<string, string>) => {
-        rows.push(Object.values(row))
-      })
-      .on('end', resolve)
-      .on('error', reject)
-  })
-  return rows
-}
-
 function getHeaderRow(rows: CsvRow[]) {
   return rows.find(row => (row[0] ?? '').toLowerCase() === '#') ?? []
 }
@@ -57,7 +41,7 @@ function normalizeLevel(level: unknown, fallback = 1) {
 }
 
 async function collectRoleActionIds() {
-  const actionRows = await readCsvRows(`${csvPaths.cn}Action.csv`)
+  const actionRows = await readCsvRowsCached(`${csvPaths.cn}Action.csv`)
   const header = getHeaderRow(actionRows)
   const isRoleActionIndex = getColumnIndex(header, 'IsRoleAction')
   const isPvPIndex = getColumnIndex(header, 'IsPvP')

@@ -1,6 +1,5 @@
-import csv from 'csv-parser'
 import fs from 'fs-extra'
-import iconv from 'iconv-lite'
+import { readCsvRowsCached } from './csvCache'
 import { csvPaths } from './paths'
 
 interface FileValues {
@@ -13,38 +12,22 @@ interface ContentFinderConditionResult {
 
 const fileValues: FileValues = {}
 
-function readFile(fileName: string, filePath: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    fs.createReadStream(filePath)
-      .pipe(iconv.decodeStream('utf8'))
-      .pipe(csv({ headers: false }))
-      .on('data', (row: string[]) => {
-        fileValues[fileName] = fileValues[fileName] || []
-        fileValues[fileName].push(row)
-      })
-      .on('end', () => {
-        resolve()
-      })
-      .on('error', (error) => {
-        reject(error)
-      })
-  })
-}
-
 await Promise.all([
-  readFile(
-    'contentFinderCondition.csv',
-    `${csvPaths.ja}contentFinderCondition.csv`,
-  ),
-  readFile(
-    'contentFinderCondition_cn.csv',
-    `${csvPaths.cn}contentFinderCondition.csv`,
-  ),
+  (async () => {
+    fileValues.contentFinderCondition = await readCsvRowsCached(
+      `${csvPaths.ja}contentFinderCondition.csv`,
+    )
+  })(),
+  (async () => {
+    fileValues.contentFinderCondition_cn = await readCsvRowsCached(
+      `${csvPaths.cn}contentFinderCondition.csv`,
+    )
+  })(),
 ])
 
 const result: ContentFinderConditionResult = {}
-const jaData = fileValues['contentFinderCondition.csv']!
-const cnData = fileValues['contentFinderCondition_cn.csv']!
+const jaData = fileValues.contentFinderCondition!
+const cnData = fileValues.contentFinderCondition_cn!
 
 jaData.forEach((row) => {
   // 跳过不必要的行

@@ -1,6 +1,5 @@
-import csv from 'csv-parser'
 import fs from 'fs-extra'
-import iconv from 'iconv-lite'
+import { readCsvRowsCached } from './csvCache'
 import { csvPaths } from './paths'
 
 type FileValues = Record<string, string[][]>
@@ -8,28 +7,15 @@ type StatusResult = Record<string, string[]>
 
 const fileValues: FileValues = {}
 
-function readFile(fileName: string, filePath: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    fs.createReadStream(filePath)
-      .pipe(iconv.decodeStream('utf8'))
-      .pipe(csv({ headers: false }))
-      .on('data', (row: string[]) => {
-        if (!fileValues[fileName]) {
-          fileValues[fileName] = []
-        }
-        if (row[0] === '' && row[1] === '0' && row[2] === '0') {
-          return
-        }
-        fileValues[fileName].push(row)
-      })
-      .on('end', resolve)
-      .on('error', reject)
-  })
-}
-
 await Promise.all([
-  readFile('status.csv', `${csvPaths.souma}status.csv`),
-  readFile('status_ja.csv', `${csvPaths.ja}status.csv`),
+  (async () => {
+    const rows = await readCsvRowsCached(`${csvPaths.souma}status.csv`)
+    fileValues['status.csv'] = rows.filter(row => !(row[0] === '' && row[1] === '0' && row[2] === '0'))
+  })(),
+  (async () => {
+    const rows = await readCsvRowsCached(`${csvPaths.ja}status.csv`)
+    fileValues['status_ja.csv'] = rows.filter(row => !(row[0] === '' && row[1] === '0' && row[2] === '0'))
+  })(),
 ])
 
 const result: StatusResult = {}

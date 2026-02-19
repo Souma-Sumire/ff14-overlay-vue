@@ -1,6 +1,5 @@
-import csv from 'csv-parser'
 import fs from 'fs-extra'
-import iconv from 'iconv-lite'
+import { readCsvRowsCached } from './csvCache'
 import { csvPaths } from './paths'
 
 type CsvRow = string[]
@@ -28,44 +27,38 @@ type Meal = DataMap<{
 }>
 type Medicine = Meal
 
-async function readCSV(
-  path: string,
-  onRow: (row: CsvRow) => void,
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    fs.createReadStream(path)
-      .pipe(iconv.decodeStream('utf8'))
-      .pipe(csv({ headers: false }))
-      .on('data', onRow)
-      .on('end', resolve)
-      .on('error', reject)
-  })
-}
-
 const item: Item = {}
 const itemAction: ItemAction = {}
 const itemFood: DataMap<ItemFood> = {}
 const baseParam: BaseParam = {}
 
-await readCSV(`${csvPaths.en}BaseParam.csv`, (row) => {
+const [baseParamRows, itemFoodRows, itemActionRows, itemCnRows, itemJaRows] = await Promise.all([
+  readCsvRowsCached(`${csvPaths.en}BaseParam.csv`),
+  readCsvRowsCached(`${csvPaths.ja}ItemFood.csv`),
+  readCsvRowsCached(`${csvPaths.ja}ItemAction.csv`),
+  readCsvRowsCached(`${csvPaths.cn}Item.csv`),
+  readCsvRowsCached(`${csvPaths.ja}Item.csv`),
+])
+
+baseParamRows.forEach((row) => {
   baseParam[row[0]!] = row[2]!
 })
 
-await readCSV(`${csvPaths.ja}ItemFood.csv`, (row) => {
+itemFoodRows.forEach((row) => {
   itemFood[row[0]!] = row
 })
 
-await readCSV(`${csvPaths.ja}ItemAction.csv`, (row) => {
+itemActionRows.forEach((row) => {
   itemAction[row[0]!] = row[7]!
 })
 
-await readCSV(`${csvPaths.cn}Item.csv`, (row) => {
+itemCnRows.forEach((row) => {
   if (!['key', 'offset', '#', 'int32'].includes(row[0]!.toLocaleLowerCase())) {
     item[row[0]!] = { ...(item[row[0]!] || {}), Name: row[1] }
   }
 })
 
-await readCSV(`${csvPaths.ja}Item.csv`, (row) => {
+itemJaRows.forEach((row) => {
   if (['46', '44'].includes(row[16]!) && itemAction[row[31]!] !== '0') {
     item[row[0]!] = {
       ...(item[row[0]!] || {}),

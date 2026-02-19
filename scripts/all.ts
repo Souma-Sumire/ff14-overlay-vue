@@ -1,7 +1,6 @@
-import { execSync } from 'node:child_process'
 import path from 'node:path'
 import process from 'node:process'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -28,7 +27,7 @@ for (const script of scripts) {
   console.log(`Running ${script}...`)
 
   try {
-    execSync(`bun ${scriptPath}`, { stdio: 'inherit' })
+    await import(pathToFileURL(scriptPath).href)
   }
   catch (error) {
     console.error(`❌ Error running ${script}:`, error)

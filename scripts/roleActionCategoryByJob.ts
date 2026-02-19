@@ -1,6 +1,5 @@
-import csv from 'csv-parser'
 import fs from 'fs-extra'
-import iconv from 'iconv-lite'
+import { readCsvRowsCached } from './csvCache'
 import { csvPaths } from './paths'
 
 type CsvRow = string[]
@@ -23,21 +22,6 @@ function parseIntSafe(value: string | undefined) {
   return Math.trunc(num)
 }
 
-async function readCsvRows(filePath: string) {
-  const rows: CsvRow[] = []
-  await new Promise<void>((resolve, reject) => {
-    fs.createReadStream(filePath)
-      .pipe(iconv.decodeStream('utf8'))
-      .pipe(csv({ headers: false }))
-      .on('data', (row: Record<string, string>) => {
-        rows.push(Object.values(row))
-      })
-      .on('end', resolve)
-      .on('error', reject)
-  })
-  return rows
-}
-
 function getHeaderRow(rows: CsvRow[]) {
   return rows.find(row => (row[0] ?? '').toLowerCase() === '#') ?? []
 }
@@ -47,9 +31,9 @@ function getColumnIndex(header: CsvRow, name: string) {
 }
 
 async function main() {
-  const classJobRows = await readCsvRows(`${csvPaths.cn}ClassJob.csv`)
-  const classJobCategoryRows = await readCsvRows(`${csvPaths.cn}ClassJobCategory.csv`)
-  const actionRows = await readCsvRows(`${csvPaths.cn}Action.csv`)
+  const classJobRows = await readCsvRowsCached(`${csvPaths.cn}ClassJob.csv`)
+  const classJobCategoryRows = await readCsvRowsCached(`${csvPaths.cn}ClassJobCategory.csv`)
+  const actionRows = await readCsvRowsCached(`${csvPaths.cn}Action.csv`)
 
   const classJobHeader = getHeaderRow(classJobRows)
   const classJobCategoryHeader = getHeaderRow(classJobCategoryRows)

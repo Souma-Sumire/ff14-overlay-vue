@@ -1,6 +1,5 @@
-import csv from 'csv-parser'
 import fs from 'fs-extra'
-import iconv from 'iconv-lite'
+import { readCsvRowsCached } from './csvCache.js'
 import { csvPaths } from './paths.js'
 
 interface FileValues {
@@ -21,28 +20,6 @@ interface MapResult {
   [territoryTypeId: string]: MapName
 }
 
-function readFile(
-  fileName: string,
-  filePath: string,
-  fileValues: FileValues,
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    fs.createReadStream(filePath)
-      .pipe(iconv.decodeStream('utf8'))
-      .pipe(csv({ headers: false }))
-      .on('data', (row: string[]) => {
-        fileValues[fileName] = fileValues[fileName] || []
-        fileValues[fileName].push(row)
-      })
-      .on('end', () => {
-        resolve()
-      })
-      .on('error', (error) => {
-        reject(error)
-      })
-  })
-}
-
 const fileValues: FileValues = {}
 const fileNames = ['TerritoryType.csv', 'Map.csv']
 
@@ -57,7 +34,9 @@ const allFiles = [
 ]
 
 await Promise.all(
-  allFiles.map(file => readFile(file.name, file.path, fileValues)),
+  allFiles.map(async (file) => {
+    fileValues[file.name] = await readCsvRowsCached(file.path)
+  }),
 )
 
 const res: MapResult = {}
