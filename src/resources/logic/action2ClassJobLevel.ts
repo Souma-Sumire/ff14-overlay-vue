@@ -1,5 +1,5 @@
-import { BAKED_ACTION_META_LITE_BY_ID } from './generated/bakedActionMetaLite'
-import { resolveActionMinLevel } from './logic/actionMinLevel'
+import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/generated/bakedActionMetaLite'
+import { resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
 
 function actionId2ClassJobLevel(id: number): string | undefined {
   const normalized = Number.isFinite(id) && id > 0 ? Math.trunc(id) : 0

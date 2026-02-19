@@ -10,7 +10,7 @@ import type {
 import type { ITimeline } from '@/types/timeline'
 import { Loading } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
-import { getActionChinese } from '@/resources/actionChinese'
+import { getActionChinese } from '@/resources/logic/actionChinese'
 import { bossPhase } from '@/resources/bossPhase'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { factory } from '@/services/timelineSpecialRules'

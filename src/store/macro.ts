@@ -9,7 +9,7 @@ import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import {
   getMapIDByTerritoryType,
   getTerritoryTypeByMapID,
-} from '../resources/contentFinderCondition'
+} from '../resources/logic/contentFinderCondition'
 import { ZoneInfo } from '../resources/zoneInfo'
 import {
   doInsertPreset,

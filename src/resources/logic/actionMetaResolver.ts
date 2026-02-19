@@ -1,4 +1,4 @@
-import { getActionChinese } from '@/resources/actionChinese'
+import { getActionChinese } from '@/resources/logic/actionChinese'
 import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/generated/bakedActionMetaLite'
 import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/generated/roleActionCategoryByJob'
 import { getGlobalSkillMetaByActionId } from '@/resources/globalSkills'

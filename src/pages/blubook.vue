@@ -2,7 +2,7 @@
 import type { MessageBoxInputData } from 'element-plus'
 import type { Ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { completeIcon } from '@/resources/status'
+import { completeIcon } from '@/resources/logic/status'
 
 interface AozAction {
   ID: number

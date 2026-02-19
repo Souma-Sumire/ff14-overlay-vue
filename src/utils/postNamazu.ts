@@ -1,6 +1,6 @@
 import type { PPJSON, QueueArr, Slot, WayMarkObj } from '@/types/PostNamazu'
 import { callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
-import { getMapIDByTerritoryType } from '../resources/contentFinderCondition'
+import { getMapIDByTerritoryType } from '../resources/logic/contentFinderCondition'
 
 export async function doTextCommand(text: string) {
   try {

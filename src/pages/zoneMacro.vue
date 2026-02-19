@@ -27,7 +27,7 @@ import { getZoneType } from '@/composables/useZone'
 import {
   getMapIDByTerritoryType,
   getTerritoryTypeByMapID,
-} from '@/resources/contentFinderCondition'
+} from '@/resources/logic/contentFinderCondition'
 import { defaultMacro } from '@/resources/macro'
 import { ZoneInfo } from '@/resources/zoneInfo'
 import { useMacroStore } from '@/store/macro'

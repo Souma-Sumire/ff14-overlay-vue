@@ -1,6 +1,6 @@
 import type { DynamicValue } from '@/types/dynamicValue'
 import type { TeamWatchActionMetaRaw, TeamWatchStorageData } from '@/types/teamWatchTypes'
-import { getActionChinese } from '@/resources/actionChinese'
+import { getActionChinese } from '@/resources/logic/actionChinese'
 import { hasBakedActionMeta, resolveBakedActionMeta } from '@/resources/logic/actionMetaResolver'
 import { resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
 import {

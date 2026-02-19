@@ -4,7 +4,7 @@ import type {
   ShowStyle,
   TimelineConfigValues,
 } from '@/types/timeline'
-import { completeIcon } from '@/resources/status'
+import { completeIcon } from '@/resources/logic/status'
 import { parseAction } from '@/store/timeline'
 import { chineseToIcon } from '@/utils/chineseToIcon'
 import { getIconSrcByPath } from '@/utils/xivapi'

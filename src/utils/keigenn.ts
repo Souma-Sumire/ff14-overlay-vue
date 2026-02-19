@@ -1,7 +1,7 @@
 import type { DamageType } from './flags'
 import type { Keigenn, Status } from '@/types/keigennRecord2'
 import { keigenns } from '../resources/keigenn'
-import { completeIcon, statusData } from '../resources/status'
+import { completeIcon, statusData } from '../resources/logic/status'
 
 const keigennMap: Map<string, Keigenn> = new Map()
 

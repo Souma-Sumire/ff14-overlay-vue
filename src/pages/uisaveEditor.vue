@@ -16,7 +16,7 @@ import ZoneSelecter from '@/components/zoneSelecter.vue'
 import {
   getMapIDByTerritoryType,
   getTerritoryTypeByMapID,
-} from '@/resources/contentFinderCondition'
+} from '@/resources/logic/contentFinderCondition'
 import { ZoneInfo } from '@/resources/zoneInfo'
 import { MARKER_MAP, parseUISave, xorCrypt } from '@/utils/uisaveParser'
 

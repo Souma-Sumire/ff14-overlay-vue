@@ -1,4 +1,4 @@
-import STATUS from './generated/status.json'
+import STATUS from '@/resources/generated/status.json'
 
 const _STATUS = STATUS as unknown as Record<string, [string, number, number]>
 

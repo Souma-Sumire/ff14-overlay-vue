@@ -1,5 +1,5 @@
 import type { PerformanceType } from '@/types/keigennRecord2'
-import { getActionChinese } from '@/resources/actionChinese'
+import { getActionChinese } from '@/resources/logic/actionChinese'
 import { getIconSrcById } from '@/utils/xivapi'
 import { chineseToIcon } from './chineseToIcon'
 import { compareSame } from './compareSaveAction'

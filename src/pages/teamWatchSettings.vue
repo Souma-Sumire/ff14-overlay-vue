@@ -6,7 +6,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { VueDraggable } from 'vue-draggable-plus'
 import ActionPickerDialog from '@/components/common/ActionPickerDialog.vue'
 import SkillEditorDialog from '@/components/common/SkillEditorDialog.vue'
-import { getActionChinese, searchActions } from '@/resources/actionChinese'
+import { getActionChinese, searchActions } from '@/resources/logic/actionChinese'
 import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import {

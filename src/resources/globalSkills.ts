@@ -1,5 +1,5 @@
 import type { DynamicValue } from '@/types/dynamicValue'
-import { actionId2ClassJobLevel } from '@/resources/action2ClassJobLevel'
+import { actionId2ClassJobLevel } from '@/resources/logic/action2ClassJobLevel'
 import { parseDynamicValue } from '@/utils/dynamicValue'
 
 export interface GlobalSkillDefinition {
@@ -19,18 +19,6 @@ interface RawGlobalSkillDefinition {
   job?: number[]
   minLevel?: number
   duration?: DynamicValue
-}
-
-function resolveActionId(value: number | string, level: number): number {
-  try {
-    const resolved = parseDynamicValue(value, level)
-    if (!Number.isFinite(resolved) || resolved <= 0)
-      return 0
-    return Math.trunc(resolved)
-  }
-  catch {
-    return 0
-  }
 }
 
 const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
@@ -138,6 +126,18 @@ const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
   { id: 25799, recast1000ms: 60 },
   { id: 34685, recast1000ms: 120 },
 ]
+
+function resolveActionId(value: number | string, level: number): number {
+  try {
+    const resolved = parseDynamicValue(value, level)
+    if (!Number.isFinite(resolved) || resolved <= 0)
+      return 0
+    return Math.trunc(resolved)
+  }
+  catch {
+    return 0
+  }
+}
 
 const globalSkillDefinitions: GlobalSkillDefinition[] = rawGlobalSkillDefinitions.map((definition) => {
   const resolvedId = resolveActionId(definition.id, GLOBAL_SKILL_MAX_LEVEL)

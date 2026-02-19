@@ -1,5 +1,5 @@
+import actionChineseRaw from '@/resources/generated/actionChinese.json'
 import { actionId2ClassJobLevel } from './action2ClassJobLevel'
-import actionChineseRaw from './generated/actionChinese.json'
 
 const rawActionChinese: Record<string, string> = actionChineseRaw
 let cachedActionList: Array<{ id: number, name: string }> | null = null

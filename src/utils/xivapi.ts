@@ -4,7 +4,7 @@ import { ACTION_SEARCH_CACHE_VERSION, XIVAPI_CACHE_VERSION } from '@/resources/c
 import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/generated/roleActionCategoryByJob'
 import { CLASS_JOB_ACTION_CATEGORIES_BY_JOB } from '@/resources/logic/actionClassJobCategoryIndex'
 import { markRoleActionId, resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
-import { completeIcon } from '@/resources/status'
+import { completeIcon } from '@/resources/logic/status'
 import Util from '@/utils/util'
 
 const params = new URLSearchParams(window.location.search)

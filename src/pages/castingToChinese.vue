@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getActionChinese } from '@/resources/actionChinese'
+import { getActionChinese } from '@/resources/logic/actionChinese'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
 function getName(line: string[]): string {

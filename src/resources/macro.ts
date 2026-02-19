@@ -1,7 +1,7 @@
 /* eslint-disable no-irregular-whitespace */
 import type { ZoneIdInfo } from '../types/macro'
 import type { PPJSON } from '@/types/PostNamazu'
-import { getTerritoryTypeByMapID } from './contentFinderCondition'
+import { getTerritoryTypeByMapID } from './logic/contentFinderCondition'
 
 const defaultMacro: { zoneId: ZoneIdInfo } = {
   zoneId: {

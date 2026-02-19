@@ -8,7 +8,7 @@ import {
   ref,
   watch,
 } from 'vue'
-import { getTerritoryTypeByMapID } from '@/resources/contentFinderCondition'
+import { getTerritoryTypeByMapID } from '@/resources/logic/contentFinderCondition'
 import Map from '@/resources/generated/map.json'
 import { ZoneInfo } from '@/resources/zoneInfo'
 import { getPixelCoordinates, Vector2 } from '@/utils/mapCoordinates'
