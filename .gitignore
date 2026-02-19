@@ -47,3 +47,4 @@ yarn-error.log*
 
 .agent
 .agents
+AGENTS.md
