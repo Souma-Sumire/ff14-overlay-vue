@@ -6,7 +6,7 @@ import { defineStore } from 'pinia'
 import { computed, reactive, ref, watch } from 'vue'
 import { useDemo } from '@/composables/useDemo'
 import { useDev } from '@/composables/useDev'
-import { resolveActionJobsFromTargets, resolveBakedActionMeta } from '@/resources/actionMetaResolver'
+import { resolveActionJobsFromTargets, resolveApiActionMeta, resolveBakedActionMeta, shouldFetchResolvedActionMeta } from '@/resources/actionMetaResolver'
 import { RandomPartyGenerator } from '@/mock/demoParty'
 import { getActionChinese } from '@/resources/actionChinese'
 import { resolveActionMinLevel } from '@/resources/actionMinLevel'
@@ -388,9 +388,12 @@ const useKeySkillStore = defineStore('keySkill', () => {
     const id = Math.trunc(actionId)
     const existing = autoMetaById[id]
     if (existing) {
-      const hasResolvedJobs = Array.isArray(existing.jobs) && existing.jobs.length > 0
-      if (hasResolvedJobs)
+      if (!shouldFetchResolvedActionMeta(
+        { jobs: existing.jobs },
+        { requireActionCategory: false, requireJobs: true },
+      )) {
         return
+      }
       if (refreshedIncompleteAutoMeta.has(id))
         return
     }
@@ -401,7 +404,10 @@ const useKeySkillStore = defineStore('keySkill', () => {
     }
 
     const baked = buildAutoMetaFromBaked(id)
-    if (baked && baked.jobs.length > 0) {
+    if (baked && !shouldFetchResolvedActionMeta(
+      { jobs: baked.jobs },
+      { requireActionCategory: false, requireJobs: true },
+    )) {
       saveAutoMetaToCache(id, baked)
       refreshedIncompleteAutoMeta.add(id)
       return
@@ -423,17 +429,13 @@ const useKeySkillStore = defineStore('keySkill', () => {
           'ActionCategoryTargetID',
           'IsRoleAction',
         ])
-        const recast100ms = Number(response.Recast100ms ?? 0)
-        const apiRecast1000ms = Number.isFinite(recast100ms) && recast100ms > 0 ? recast100ms / 10 : 0
-        const classJobLevel = resolveActionMinLevel(response.ClassJobLevel, {
-          actionId: id,
-          isRoleAction: response.IsRoleAction,
-          fallback: 1,
-        })
-        const classJobTargetId = normalizeInt(Number(response.ClassJobTargetID ?? 0), 0, 0)
-        const classJobCategoryTargetId = normalizeInt(Number(response.ClassJobCategoryTargetID ?? 0), 0, 0)
-        const actionCategoryTargetId = normalizeInt(Number(response.ActionCategoryTargetID ?? 0), 0, 0)
-        const isRoleAction = Number(response.IsRoleAction ?? 0) > 0
+        const apiMeta = resolveApiActionMeta(id, response as Record<string, unknown>)
+        const apiRecast1000ms = apiMeta.recast1000ms
+        const classJobLevel = apiMeta.classJobLevel
+        const classJobTargetId = apiMeta.classJobTargetId
+        const classJobCategoryTargetId = apiMeta.classJobCategoryTargetId
+        const actionCategoryTargetId = apiMeta.actionCategoryTargetId
+        const isRoleAction = apiMeta.isRoleAction
         const jobs = (globalMeta?.job?.length ?? 0) > 0
           ? uniqueInts(globalMeta!.job)
           : resolveActionJobsFromTargets(classJobTargetId, classJobCategoryTargetId, actionCategoryTargetId, isRoleAction)
@@ -468,7 +470,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
 
         saveAutoMetaToCache(id, {
           id: resolvedId,
-          name: getActionChinese(resolvedId) || getActionChinese(id) || response.Name || `#${resolvedId}`,
+          name: getActionChinese(resolvedId) || getActionChinese(id) || apiMeta.name || `#${resolvedId}`,
           src: iconSrc,
           duration: resolvedDuration,
           recast1000ms: resolvedRecast1000ms,

@@ -5,7 +5,7 @@ import type { TeamWatchActionMeta, TeamWatchActionMetaRaw, TeamWatchMemberView, 
 import { defineStore } from 'pinia'
 import { computed, reactive, ref } from 'vue'
 import { JobResourceManager } from '@/modules/jobResourceTracker'
-import { resolveActionMinLevel } from '@/resources/actionMinLevel'
+import { resolveApiActionMeta, shouldFetchResolvedActionMeta } from '@/resources/actionMetaResolver'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { buildTeamWatchFallbackMeta, cloneTeamWatchActionMetaMap, hasBakedTeamWatchMeta, loadTeamWatchStorageData, normalizeTeamWatchActionMetaRaw, resolveTeamWatchDynamicValue, saveTeamWatchStorageData, TEAM_WATCH_EMPTY_ACTIONS, TEAM_WATCH_STORAGE_VERSION, TEAM_WATCH_WATCH_ACTIONS_DEFAULT } from '@/resources/teamWatchResource'
 import { extractTriggeredActionFromLogLine, isTeamWatchResetLogLine, triggerRuntimeByAction } from '@/store/teamWatchLoglineHelpers'
@@ -84,9 +84,15 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
     if (actionId <= 0)
       return
     const existing = actionMetaUser.value[actionId]
-    if (existing && Number(existing.actionCategory ?? 0) > 0)
-      return
-    if (!existing && hasBakedTeamWatchMeta(actionId))
+    const shouldFetch = shouldFetchResolvedActionMeta(
+      {
+        actionCategoryTargetId: existing
+          ? Number(existing.actionCategory ?? 0)
+          : (hasBakedTeamWatchMeta(actionId) ? 1 : 0),
+      },
+      { requireActionCategory: true },
+    )
+    if (!shouldFetch)
       return
     if (autoFetchMetaRequested.has(actionId))
       return
@@ -140,6 +146,7 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
         : getActionMetaRaw(actionId, false)
       try {
         const response = await parseAction('action', actionId, TEAM_WATCH_ACTION_COLUMNS)
+        const resolvedApi = resolveApiActionMeta(actionId, response as Record<string, unknown>)
         const iconPath = typeof response.Icon === 'string' ? response.Icon : ''
         const iconSrc = iconPath
           ? getIconSrcByPath(iconPath, false, true)
@@ -147,17 +154,13 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
 
         const apiMeta = normalizeTeamWatchActionMetaRaw(actionId, {
           id: actionId,
-          name: response.Name ?? base.name,
+          name: resolvedApi.name || base.name,
           iconSrc,
-          actionCategory: Number(response.ActionCategoryTargetID ?? 0),
-          recast1000ms: Number(response.Recast100ms ?? 0) / 10,
+          actionCategory: resolvedApi.actionCategoryTargetId,
+          recast1000ms: resolvedApi.recast1000ms,
           duration: base.duration,
-          maxCharges: Number(response.MaxCharges ?? 0),
-          classJobLevel: resolveActionMinLevel(response.ClassJobLevel, {
-            actionId,
-            isRoleAction: response.IsRoleAction,
-            fallback: 1,
-          }),
+          maxCharges: resolvedApi.maxCharges,
+          classJobLevel: resolvedApi.classJobLevel,
         } satisfies TeamWatchActionMetaRaw)
 
         const merged = normalizeTeamWatchActionMetaRaw(actionId, apiMeta)

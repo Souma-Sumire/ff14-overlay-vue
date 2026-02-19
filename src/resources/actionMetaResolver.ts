@@ -17,6 +17,19 @@ export interface ResolvedBakedActionMeta {
   jobs: number[]
 }
 
+export interface ResolvedApiActionMeta {
+  id: number
+  name: string
+  classJobTargetId: number
+  classJobCategoryTargetId: number
+  actionCategoryTargetId: number
+  recast1000ms: number
+  maxCharges: number
+  classJobLevel: number
+  isRoleAction: boolean
+  jobs: number[]
+}
+
 function normalizeInt(value: unknown, fallback = 0, min = 0) {
   const numeric = Number(value)
   if (!Number.isFinite(numeric))
@@ -114,4 +127,69 @@ export function hasBakedActionMeta(actionId: number, options?: { requireActionCa
   if (options?.requireActionCategory)
     return resolved.actionCategoryTargetId > 0
   return true
+}
+
+export function shouldFetchResolvedActionMeta(
+  input: {
+    actionCategoryTargetId?: number
+    jobs?: number[]
+  },
+  options?: {
+    requireActionCategory?: boolean
+    requireJobs?: boolean
+  },
+) {
+  const requireActionCategory = options?.requireActionCategory ?? true
+  const requireJobs = options?.requireJobs ?? false
+
+  if (requireActionCategory) {
+    const actionCategoryTargetId = normalizeInt(input.actionCategoryTargetId, 0, 0)
+    if (actionCategoryTargetId <= 0)
+      return true
+  }
+
+  if (requireJobs) {
+    const jobs = uniqueInts((input.jobs ?? []).map(v => Number(v)))
+    if (!jobs.length)
+      return true
+  }
+
+  return false
+}
+
+export function resolveApiActionMeta(actionId: number, row: Record<string, unknown>): ResolvedApiActionMeta {
+  const id = normalizeInt(Number(row.ID ?? actionId), actionId, 1)
+  const isRoleAction = Number(row.IsRoleAction ?? 0) > 0
+  const classJobTargetId = normalizeInt(row.ClassJobTargetID, 0, 0)
+  const classJobCategoryTargetId = normalizeInt(row.ClassJobCategoryTargetID, 0, 0)
+  const actionCategoryTargetId = normalizeInt(row.ActionCategoryTargetID, 0, 0)
+  const recast1000ms = normalizeInt(Number(row.Recast100ms ?? 0) / 10, 0, 0)
+  const maxCharges = normalizeInt(row.MaxCharges, 0, 0)
+  const classJobLevel = resolveActionMinLevel(
+    normalizeInt(row.ClassJobLevel, 1, 1),
+    {
+      actionId: id,
+      isRoleAction,
+      fallback: 1,
+    },
+  )
+  const jobs = resolveActionJobsFromTargets(
+    classJobTargetId,
+    classJobCategoryTargetId,
+    actionCategoryTargetId,
+    isRoleAction,
+  )
+
+  return {
+    id,
+    name: typeof row.Name === 'string' ? row.Name : '',
+    classJobTargetId,
+    classJobCategoryTargetId,
+    actionCategoryTargetId,
+    recast1000ms,
+    maxCharges,
+    classJobLevel,
+    isRoleAction,
+    jobs,
+  }
 }
