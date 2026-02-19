@@ -42,14 +42,7 @@ const CAST_CACHE_TTL_MS = 120000
 
 const validSkillIds = new Set<number>()
 keigennSkills.forEach((skill) => {
-  if (typeof skill.id === 'number') {
-    validSkillIds.add(skill.id)
-    return
-  }
-
-  const matches = skill.id.match(/\d+/g)
-  if (matches)
-    matches.forEach(m => validSkillIds.add(Number(m)))
+  validSkillIds.add(skill.id)
 })
 
 function parseAddedCombatant(split: string[]): Combatant {
