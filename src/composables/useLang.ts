@@ -8,7 +8,7 @@ const urlLang = params.lang?.toString() as Lang
 const globalLocale = ref<Lang>(urlLang || 'zhCn')
 
 function useLang() {
-  const i18n = useI18n()
+  const i18n = useI18n({ useScope: 'global' })
 
   // 如果有 URL 参数,使用 URL 参数
   if (urlLang) {

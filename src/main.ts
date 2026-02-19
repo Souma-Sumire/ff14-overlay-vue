@@ -8,7 +8,11 @@ import VueLazyload from 'vue-lazyload'
 import App from './App.vue'
 import router from './router'
 import { checkReferrer } from './utils/checkReferrer'
-import { getInitialLocale, loadLocaleMessages } from './utils/getInitialLocale'
+import {
+  getInitialLocale,
+  loadLocaleMessages,
+  SUPPORTED_LOCALES,
+} from './utils/getInitialLocale'
 import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import './styles/common.scss'
@@ -16,7 +20,13 @@ import 'virtual:uno.css'
 
 async function bootstrap() {
   const initialLocale: Lang = getInitialLocale()
-  const messages = await loadLocaleMessages(initialLocale)
+  const localeEntries = await Promise.all(
+    SUPPORTED_LOCALES.map(async (lang) => {
+      const messages = await loadLocaleMessages(lang)
+      return [lang, messages] as const
+    }),
+  )
+  const allMessages = Object.fromEntries(localeEntries)
 
   const app = createApp(App)
   const head = createHead()
@@ -26,9 +36,7 @@ async function bootstrap() {
     legacy: false,
     locale: initialLocale,
     fallbackLocale: 'zhCn',
-    messages: {
-      [initialLocale]: messages,
-    },
+    messages: allMessages,
     warnHtmlMessage: false,
   })
 
