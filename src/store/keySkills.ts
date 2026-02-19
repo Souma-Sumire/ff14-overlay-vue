@@ -7,7 +7,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useDemo } from '@/composables/useDemo'
 import { useDev } from '@/composables/useDev'
 import { RandomPartyGenerator } from '@/mock/demoParty'
-import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
+import { getGlobalSkillMetaByActionId, GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { raidbuffs } from '@/resources/keySkillResource'
 import { resolveActionDisplayName, resolveActionIconSrc, resolveActionJobsFromTargets, resolveActionMetaByLevel, resolveApiActionMeta, resolveBakedActionMeta, shouldFetchResolvedActionMeta } from '@/resources/logic/actionMetaResolver'
@@ -472,6 +472,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
         const actualLevel = normalizeSkillLevel(player.level || GLOBAL_SKILL_MAX_LEVEL)
         const level = dev.value || demo.value ? levelSyncTestLevel.value : actualLevel
         const meta = resolveMeta(skill.id)
+        const globalMeta = getGlobalSkillMetaByActionId(skill.id)
         const displayActionId = normalizeInt(
           resolveUpgradeActionIdForLevel(meta.id, level),
           meta.id,
@@ -479,12 +480,12 @@ const useKeySkillStore = defineStore('keySkill', () => {
         )
         const resolvedJobs = skill.job && skill.job.length > 0 ? uniqueInts(skill.job) : meta.jobs
         const resolvedRecast1000ms = normalizeInt(
-          resolveTeamWatchDynamicValue(skill.recast1000ms ?? meta.recast1000ms, level, meta.recast1000ms),
+          resolveTeamWatchDynamicValue(skill.recast1000ms ?? globalMeta?.recast1000ms ?? meta.recast1000ms, level, meta.recast1000ms),
           meta.recast1000ms,
           0,
         )
         const resolvedDuration = normalizeInt(
-          resolveTeamWatchDynamicValue(skill.duration ?? meta.duration, level, meta.duration),
+          resolveTeamWatchDynamicValue(skill.duration ?? globalMeta?.duration ?? meta.duration, level, meta.duration),
           meta.duration,
           0,
         )
