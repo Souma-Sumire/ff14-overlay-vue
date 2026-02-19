@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ArrowLeft, Search } from '@element-plus/icons-vue'
-import { isTeamWatchLowerTierActionId } from '@/resources/teamWatchResource'
-import { compareSame, isCompareSameSourceId, normalizeUpgradeActionId } from '@/utils/compareSaveAction'
+
+import { compareSame, isCompareSameSourceId, isLowerTierActionId, normalizeUpgradeActionId } from '@/utils/compareSaveAction'
 
 export interface ActionPickerGridItem {
   id: number
@@ -84,7 +84,7 @@ const orderedResult = computed(() => {
   }
 
   const getMemberState = (actionId: number) => {
-    if (isTeamWatchLowerTierActionId(actionId))
+    if (isLowerTierActionId(actionId))
       return 0
     if (isCompareSameSourceId(actionId))
       return 1
@@ -137,7 +137,7 @@ const jobItems = computed(() => filteredResult.value.filter(item => !item.isRole
 const roleItems = computed(() => filteredResult.value.filter(item => item.isRoleAction))
 
 function getInternalDisableReason(item: ActionPickerGridItem) {
-  if (isTeamWatchLowerTierActionId(item.id))
+  if (isLowerTierActionId(item.id))
     return '下位技能'
   if (isCompareSameSourceId(item.id))
     return '共享CD'

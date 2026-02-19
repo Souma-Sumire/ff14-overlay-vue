@@ -1,11 +1,10 @@
 import type { DynamicValue } from '@/types/dynamicValue'
 import type { TeamWatchActionMetaRaw, TeamWatchStorageData } from '@/types/teamWatchTypes'
-import { hasBakedActionMeta, resolveBakedActionMeta } from '@/resources/logic/actionMetaResolver'
+import { resolveBakedActionMeta } from '@/resources/logic/actionMetaResolver'
 import { resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
 import { getActionNameLite } from '@/resources/logic/actionNameLite'
 import {
   ACTION_UPGRADE_STEPS,
-  isLowerTierActionId,
   normalizeUpgradeActionId,
 } from '@/utils/compareSaveAction'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
@@ -75,18 +74,14 @@ function toIntArray(value: unknown, min = 0): number[] {
   if (!Array.isArray(value))
     return []
   return value
-    .map(v => Number(v))
+    .map(Number)
     .filter(v => Number.isFinite(v) && v >= min)
-    .map(v => Math.trunc(v))
+    .map(Math.trunc)
 }
 
 // 深拷贝 actionMetaUser（避免响应式对象被直接复用）。
 export function cloneTeamWatchActionMetaMap(input: Record<number, TeamWatchActionMetaRaw>) {
-  const result: Record<number, TeamWatchActionMetaRaw> = {}
-  Object.entries(input).forEach(([key, value]) => {
-    result[Number(key)] = { ...value }
-  })
-  return result
+  return Object.fromEntries(Object.entries(input).map(([k, v]) => [Number(k), { ...v }]))
 }
 
 // 规范化 DynamicValue（number/string），非法时回退。
@@ -101,29 +96,12 @@ function normalizeDynamicValue(value: unknown, fallback: DynamicValue): DynamicV
   return fallback
 }
 
-function normalizeActionId(value: unknown, fallback: number): number {
-  const fallbackId = Number.isFinite(fallback) ? Math.max(0, Math.trunc(fallback)) : 0
+function normalizeInt(value: unknown, fallback: number, min = 0): number {
+  const fallbackInt = Number.isFinite(fallback) ? Math.max(min, Math.trunc(fallback)) : min
   const numeric = Number(value)
   if (Number.isFinite(numeric))
-    return Math.max(0, Math.trunc(numeric))
-  return fallbackId
-}
-
-function normalizeActionCategory(value: unknown, fallback: number): number {
-  const fallbackCategory = Number.isFinite(fallback) ? Math.max(0, Math.trunc(fallback)) : 0
-  const numeric = Number(value)
-  if (Number.isFinite(numeric))
-    return Math.max(0, Math.trunc(numeric))
-  return fallbackCategory
-}
-
-// 规范化学习等级，始终返回 >= 1 的整数。
-function normalizeClassJobLevel(value: unknown, fallback: number): number {
-  const fallbackLevel = Number.isFinite(fallback) ? Math.max(1, Math.trunc(fallback)) : 1
-  const numeric = Number(value)
-  if (Number.isFinite(numeric))
-    return Math.max(1, Math.trunc(numeric))
-  return fallbackLevel
+    return Math.max(min, Math.trunc(numeric))
+  return fallbackInt
 }
 
 // 解析 DynamicValue 到指定等级下的数值，失败时回退。
@@ -138,7 +116,6 @@ export function resolveTeamWatchDynamicValue(value: DynamicValue, level: number,
     return fallback
   }
 }
-
 // 校验 DynamicValue 在多个等级下是否可稳定解析。
 export function validateTeamWatchDynamicValue(value: DynamicValue, label: string) {
   for (const level of TEAM_WATCH_DYNAMIC_SAMPLE_LEVELS) {
@@ -156,11 +133,6 @@ export function validateTeamWatchDynamicValue(value: DynamicValue, label: string
   return ''
 }
 
-// 判断技能是否为某条进化链中的下位技能。
-export function isTeamWatchLowerTierActionId(actionId: number) {
-  return isLowerTierActionId(actionId)
-}
-
 // 构建技能元数据兜底值（仅基于 actionId 的本地信息）。
 export function buildTeamWatchFallbackMeta(actionId: number): TeamWatchActionMetaRaw {
   const baked = resolveBakedActionMeta(actionId)
@@ -174,10 +146,6 @@ export function buildTeamWatchFallbackMeta(actionId: number): TeamWatchActionMet
     maxCharges: Number(baked?.maxCharges ?? 0),
     classJobLevel: Number(baked?.classJobLevel ?? 1),
   }
-}
-
-export function hasBakedTeamWatchMeta(actionId: number) {
-  return hasBakedActionMeta(actionId, { requireActionCategory: true })
 }
 
 function getUpgradeFamily(actionId: number) {
@@ -313,15 +281,15 @@ export function normalizeTeamWatchActionMetaRaw(actionId: number, value: unknown
 
   const raw = value as Record<string, unknown>
   const normalized: TeamWatchActionMetaRaw = {
-    id: normalizeActionId(raw.id, fallback.id),
+    id: normalizeInt(raw.id, fallback.id, 0),
     name: (typeof raw.name === 'string' && raw.name.trim()) ? raw.name.trim() : fallback.name,
     iconSrc: (typeof raw.iconSrc === 'string' && raw.iconSrc.trim()) ? raw.iconSrc.trim() : fallback.iconSrc,
-    actionCategory: normalizeActionCategory(raw.actionCategory, fallback.actionCategory),
+    actionCategory: normalizeInt(raw.actionCategory, fallback.actionCategory, 0),
     recast1000ms: normalizeDynamicValue(raw.recast1000ms, fallback.recast1000ms),
     duration: normalizeDynamicValue(raw.duration, fallback.duration),
     maxCharges: normalizeDynamicValue(raw.maxCharges, fallback.maxCharges),
     classJobLevel: resolveActionMinLevel(
-      normalizeClassJobLevel(raw.classJobLevel, fallback.classJobLevel),
+      normalizeInt(raw.classJobLevel, fallback.classJobLevel, 1),
       {
         actionId: actionId > 0 ? actionId : fallback.id,
         fallback: fallback.classJobLevel,

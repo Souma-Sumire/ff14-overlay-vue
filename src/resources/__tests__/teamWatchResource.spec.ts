@@ -1,15 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
-  isTeamWatchLowerTierActionId,
   normalizeTeamWatchActionMetaRaw,
   TEAM_WATCH_EMPTY_ACTIONS,
 } from '../teamWatchResource'
 
 describe('teamWatchResource', () => {
-  it('isTeamWatchLowerTierActionId should identify lower tier actions', () => {
-    expect(typeof isTeamWatchLowerTierActionId(44)).toBe('boolean')
-  })
-
   it('normalizeTeamWatchActionMetaRaw should return fallback for invalid input', () => {
     const fallback = normalizeTeamWatchActionMetaRaw(0, null)
     expect(fallback.id).toBe(0)

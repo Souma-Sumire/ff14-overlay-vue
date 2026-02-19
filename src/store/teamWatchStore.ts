@@ -5,8 +5,8 @@ import { defineStore } from 'pinia'
 import { computed, reactive, ref, watch } from 'vue'
 import { JobResourceManager } from '@/modules/jobResourceTracker'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
-import { resolveActionDisplayName, resolveActionIconSrc, resolveApiActionMeta, shouldFetchResolvedActionMeta } from '@/resources/logic/actionMetaResolver'
-import { buildInheritedBaseJobActions, buildTeamWatchFallbackMeta, cloneTeamWatchActionMetaMap, hasBakedTeamWatchMeta, loadTeamWatchStorageData, normalizeTeamWatchActionMetaRaw, resolveTeamWatchDynamicValue, saveTeamWatchStorageData, TEAM_WATCH_EMPTY_ACTIONS, TEAM_WATCH_WATCH_ACTIONS_DEFAULT } from '@/resources/teamWatchResource'
+import { hasBakedActionMeta, resolveActionDisplayName, resolveActionIconSrc, resolveApiActionMeta, shouldFetchResolvedActionMeta } from '@/resources/logic/actionMetaResolver'
+import { buildInheritedBaseJobActions, buildTeamWatchFallbackMeta, cloneTeamWatchActionMetaMap, loadTeamWatchStorageData, normalizeTeamWatchActionMetaRaw, resolveTeamWatchDynamicValue, saveTeamWatchStorageData, TEAM_WATCH_EMPTY_ACTIONS, TEAM_WATCH_WATCH_ACTIONS_DEFAULT } from '@/resources/teamWatchResource'
 import { buildSimulatedAbilityLine, clearRuntimeCooldownStates, decodeBase64Payload, deepCloneWatchMap, encodeBase64Payload, ensureRuntime, normalizeInt, normalizeTrackedActionId, resolveTeamWatchSkillState, toHexId, updateRuntimeCollection, useRuntime } from '@/store/teamWatchHelpers'
 import { resolveUpgradeActionIdForLevel } from '@/utils/compareSaveAction'
 import Util from '@/utils/util'
@@ -101,7 +101,7 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
       {
         actionCategoryTargetId: existing
           ? Number(existing.actionCategory ?? 0)
-          : (hasBakedTeamWatchMeta(actionId) ? 1 : 0),
+          : (hasBakedActionMeta(actionId, { requireActionCategory: true }) ? 1 : 0),
       },
       { requireActionCategory: true },
     )
