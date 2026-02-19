@@ -1,6 +1,6 @@
 import type { DynamicValue } from '@/types/dynamicValue'
 import type { TeamWatchActionMetaRaw, TeamWatchStorageData } from '@/types/teamWatchTypes'
-import { getActionChinese } from '@/resources/logic/actionChinese'
+import { getActionNameLite } from '@/resources/logic/actionNameLite'
 import { hasBakedActionMeta, resolveBakedActionMeta } from '@/resources/logic/actionMetaResolver'
 import { resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
 import {
@@ -169,7 +169,7 @@ export function buildTeamWatchFallbackMeta(actionId: number): TeamWatchActionMet
   const baked = resolveBakedActionMeta(actionId)
   return {
     id: actionId,
-    name: getActionChinese(actionId) || baked?.name || `#${actionId}`,
+    name: getActionNameLite(actionId) || baked?.name || `#${actionId}`,
     iconSrc: idToSrc(actionId),
     actionCategory: Number(baked?.actionCategoryTargetId ?? 0),
     recast1000ms: Number(baked?.recast1000ms ?? 0),

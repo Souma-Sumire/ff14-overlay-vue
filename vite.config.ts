@@ -119,7 +119,9 @@ export default defineConfig({
       deleteOriginFile: false,
     }),
     Unocss(),
-    Pages(),
+    Pages({
+      importMode: 'async',
+    }),
     sassDts(),
     injectBuildTime(),
   ],

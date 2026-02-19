@@ -8,7 +8,7 @@ import ActionPickerDialog from '@/components/common/ActionPickerDialog.vue'
 import SkillEditorDialog from '@/components/common/SkillEditorDialog.vue'
 import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
-import { getActionChinese, searchActions } from '@/resources/logic/actionChinese'
+import { getActionNameLite, searchActionNamesLite } from '@/resources/logic/actionNameLite'
 import {
   cloneTeamWatchActionMetaMap,
   isTeamWatchLowerTierActionId,
@@ -160,7 +160,7 @@ const visibleRows = computed(() => {
         return true
       if (actionId <= 0)
         return false
-      return (getActionChinese(actionId) ?? '').toLowerCase().includes(keyword)
+      return (getActionNameLite(actionId) ?? '').toLowerCase().includes(keyword)
     })
   })
 })
@@ -379,7 +379,7 @@ const metaEditorTitle = computed(() => {
   const localName = metaForm.name.trim()
   if (localName)
     return localName
-  return getActionChinese(metaForm.actionId) || getActionMeta(metaForm.actionId).name || `#${metaForm.actionId}`
+  return getActionNameLite(metaForm.actionId) || getActionMeta(metaForm.actionId).name || `#${metaForm.actionId}`
 })
 
 const metaEditorSubtitle = computed(() => {
@@ -483,7 +483,7 @@ const debouncedSearch = useDebounceFn(() => {
     return
   }
 
-  pickerResult.value = searchActions(keyword, SEARCH_LIMIT)
+  pickerResult.value = searchActionNamesLite(keyword, SEARCH_LIMIT)
 }, 200)
 
 watch(pickerSearch, () => debouncedSearch())
@@ -790,7 +790,7 @@ function validateMetaForm() {
   if (errors.length > 0)
     return null
 
-  const name = metaForm.name.trim() || getActionChinese(metaForm.actionId) || `技能 #${metaForm.actionId}`
+  const name = metaForm.name.trim() || getActionNameLite(metaForm.actionId) || `技能 #${metaForm.actionId}`
   const currentActionCategory = Number(
     actionMetaUser.value[metaForm.actionId]?.actionCategory
     ?? store.getActionMetaRaw(metaForm.actionId, false).actionCategory

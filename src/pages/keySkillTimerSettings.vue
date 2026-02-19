@@ -13,8 +13,8 @@ import { useLang } from '@/composables/useLang'
 import { getGlobalSkillMetaByActionId, GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { keySkillDefinitions } from '@/resources/keySkillResource'
-import { getActionChinese, searchActions } from '@/resources/logic/actionChinese'
 import { resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
+import { getActionNameLite, searchActionNamesLite } from '@/resources/logic/actionNameLite'
 import { isTeamWatchLowerTierActionId, resolveTeamWatchDynamicValue } from '@/resources/teamWatchResource'
 import { useKeySkillStore } from '@/store/keySkills'
 import { copyToClipboard } from '@/utils/clipboard'
@@ -354,7 +354,7 @@ function resolveSkillMeta(actionId: number) {
 
   return {
     id: resolvedId,
-    name: getActionChinese(resolvedId) || getActionChinese(actionId) || `#${resolvedId}`,
+    name: getActionNameLite(resolvedId) || getActionNameLite(actionId) || `#${resolvedId}`,
     src: idToSrc(resolvedId),
     duration: resolvedDuration,
     recast1000ms: resolvedRecast1000ms,
@@ -578,7 +578,7 @@ async function loadPickerPool(jobEnum: number) {
     const apiRows = await searchActionsByClassJobs([jobEnum], 500)
     const mapped = apiRows.map(row => ({
       id: row.ID,
-      name: getActionChinese(row.ID) || row.Name || `#${row.ID}`,
+      name: getActionNameLite(row.ID) || row.Name || `#${row.ID}`,
       iconSrc: (() => {
         return idToSrc(row.ID) || (row.Icon ? getIconSrcByPath(row.Icon) : undefined)
       })(),
@@ -632,7 +632,7 @@ const debouncedSearch = useDebounceFn(() => {
     pickerResult.value = local
     return
   }
-  pickerResult.value = searchActions(keyword, 200)
+  pickerResult.value = searchActionNamesLite(keyword, 200)
 }, 200)
 
 watch(pickerSearch, () => debouncedSearch())
@@ -726,7 +726,7 @@ async function pickAction(actionId: number, name?: string) {
     }
   }
   else {
-    targetSkillKey = addSkillById(actionId, pickerTargetLine.value, name || getActionChinese(actionId))
+    targetSkillKey = addSkillById(actionId, pickerTargetLine.value, name || getActionNameLite(actionId))
   }
   await storeKeySkill.ensureActionAutoMeta(actionId)
   pickerVisible.value = false

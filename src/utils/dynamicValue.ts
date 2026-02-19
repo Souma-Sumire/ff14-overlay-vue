@@ -1,5 +1,5 @@
 import type { PerformanceType } from '@/types/keigennRecord2'
-import { getActionChinese } from '@/resources/logic/actionChinese'
+import { getActionNameLite } from '@/resources/logic/actionNameLite'
 import { getIconSrcById } from '@/utils/xivapi'
 import { chineseToIcon } from './chineseToIcon'
 import { compareSame } from './compareSaveAction'
@@ -76,7 +76,7 @@ function idToSrc(id: number | string) {
     id = parseDynamicValue(id, 999)
   }
 
-  const chinese = getActionChinese(id) || getActionChinese(compareSame(id))
+  const chinese = getActionNameLite(id) || getActionNameLite(compareSame(id))
   if (!chinese) {
     // console.warn(`找不到动作中文: ${id}`)
     return ''

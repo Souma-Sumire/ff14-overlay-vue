@@ -1,9 +1,9 @@
 import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/generated/bakedActionMetaLite'
 import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/generated/roleActionCategoryByJob'
 import { getGlobalSkillMetaByActionId } from '@/resources/globalSkills'
-import { getActionChinese } from '@/resources/logic/actionChinese'
 import { ACTION_JOBS_BY_CLASS_JOB_CATEGORY } from '@/resources/logic/actionClassJobCategoryIndex'
 import { resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
+import { getActionNameLite } from '@/resources/logic/actionNameLite'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 import Util from '@/utils/util'
 import { getIconSrcById, getIconSrcByPath } from '@/utils/xivapi'
@@ -282,8 +282,8 @@ export function resolveApiActionMeta(actionId: number, row: Record<string, unkno
 }
 
 export function resolveActionDisplayName(resolvedActionId: number, fallbackActionId: number, apiName?: string) {
-  return getActionChinese(resolvedActionId)
-    || getActionChinese(fallbackActionId)
+  return getActionNameLite(resolvedActionId)
+    || getActionNameLite(fallbackActionId)
     || (typeof apiName === 'string' && apiName.trim() ? apiName : '')
     || `#${resolvedActionId}`
 }
