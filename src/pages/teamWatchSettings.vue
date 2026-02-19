@@ -4,7 +4,7 @@ import { Delete, Download, Plus, Rank, RefreshLeft, Search, Upload } from '@elem
 import { useWindowSize } from '@vueuse/core'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import ActionPickerDialog from '@/components/common/ActionPickerDialog.vue'
 import { getGlobalSkillMetaByActionId, GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
@@ -184,6 +184,7 @@ function getInheritedBaseActions(advancedJob: number) {
 }
 
 const pickerPool = ref<ActionPickerGridItem[]>([])
+const pickerPoolCache = reactive<Record<number, ActionPickerGridItem[]>>({})
 const pickerSearch = ref('')
 const pickerVisible = ref(false)
 
@@ -196,10 +197,15 @@ const pickerCurrentActionId = computed(() => {
 })
 
 async function loadPickerPool(job: number) {
+  const hasCached = Object.prototype.hasOwnProperty.call(pickerPoolCache, job)
+  if (hasCached) {
+    pickerPool.value = [...(pickerPoolCache[job] ?? [])]
+    return
+  }
   pickerLoading.value = true
   try {
     const apiRows = await searchActionsByClassJobs(getRelatedJobIds(job), 500)
-    pickerPool.value = apiRows.map(row => ({
+    const mapped = apiRows.map(row => ({
       id: row.ID,
       name: getActionNameLite(row.ID) || row.Name || `#${row.ID}`,
       iconSrc: idToSrc(row.ID) || (row.Icon ? getIconSrcByPath(row.Icon) : undefined),
@@ -214,6 +220,8 @@ async function loadPickerPool(job: number) {
       })(),
       isRoleAction: Number(row.IsRoleAction ?? 0) > 0,
     }))
+    pickerPoolCache[job] = mapped
+    pickerPool.value = [...mapped]
   }
   catch (error) {
     console.warn('[teamWatchSettings] load job action list failed:', job, error)
@@ -229,7 +237,6 @@ watch(pickerVisible, (visible) => {
   if (!visible) {
     pickerTarget.value = null
     pickerSearch.value = ''
-    pickerPool.value = []
     pickerLoading.value = false
   }
 })
