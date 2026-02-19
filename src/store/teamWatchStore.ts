@@ -3,7 +3,7 @@ import type { TeamWatchRuntime } from '@/store/teamWatchRuntimeHelpers'
 import type { TeamWatchSkillStateView } from '@/store/teamWatchSkillStateHelpers'
 import type { TeamWatchActionMeta, TeamWatchActionMetaRaw, TeamWatchMemberView, TeamWatchSkillView, TeamWatchStorageData } from '@/types/teamWatchTypes'
 import { defineStore } from 'pinia'
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { JobResourceManager } from '@/modules/jobResourceTracker'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { resolveActionDisplayName, resolveActionIconSrc, resolveApiActionMeta, shouldFetchResolvedActionMeta } from '@/resources/logic/actionMetaResolver'
@@ -73,6 +73,16 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
   let skillStateCacheTs = 0
   const skillStateCache = new Map<string, TeamWatchSkillStateView>()
 
+  // 1. Reactive Sync & Auto Rebuild
+  watch(
+    [party, fakeMode, playerId, sortRuleUser, watchJobsActionsIDUser, actionMetaUser],
+    () => {
+      saveTeamWatchStorageData(getSnapshot())
+      scheduleRebuild()
+    },
+    { deep: true },
+  )
+
   function getActionMetaRaw(actionId: number, autoFetch = true) {
     if (actionId <= 0)
       return normalizeTeamWatchActionMetaRaw(0, buildTeamWatchFallbackMeta(0))
@@ -126,15 +136,18 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
       || raw.iconSrc.trim()
       || fallback.iconSrc
 
+    const resInt = (val: any, fallback = 0) =>
+      normalizeInt(resolveTeamWatchDynamicValue(val, level, fallback), fallback, fallback)
+
     return {
       id: resolvedActionId,
       name,
       iconSrc,
       actionCategory: normalizeInt(Number(raw.actionCategory), 0, 0),
-      recast1000ms: normalizeInt(resolveTeamWatchDynamicValue(raw.recast1000ms, level, 0), 0, 0),
-      duration: normalizeInt(resolveTeamWatchDynamicValue(raw.duration, level, 0), 0, 0),
-      maxCharges: normalizeInt(resolveTeamWatchDynamicValue(raw.maxCharges, level, 0), 0, 0),
-      classJobLevel: normalizeInt(resolveTeamWatchDynamicValue(raw.classJobLevel, level, 1), 1, 1),
+      recast1000ms: resInt(raw.recast1000ms),
+      duration: resInt(raw.duration),
+      maxCharges: resInt(raw.maxCharges),
+      classJobLevel: resInt(raw.classJobLevel, 1),
     } satisfies TeamWatchActionMeta
   }
 
@@ -237,22 +250,17 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
   }
 
   function resolveMemberWatchActionIds(job: number) {
-    const normalizedJob = Number.isFinite(Number(job)) ? Math.trunc(Number(job)) : 0
-    if (normalizedJob <= 0)
+    const jobId = Math.trunc(Number(job)) || 0
+    if (jobId <= 0)
       return [...TEAM_WATCH_EMPTY_ACTIONS]
 
-    const advancedJob = Util.baseJobEnumConverted(normalizedJob)
-    if (advancedJob !== normalizedJob) {
-      const inheritedSource
-        = watchJobsActionsIDUser.value[advancedJob]
-          ?? TEAM_WATCH_EMPTY_ACTIONS
-      return buildInheritedBaseJobActions(normalizedJob, inheritedSource)
-    }
+    const advancedJob = Util.baseJobEnumConverted(jobId)
+    const isBase = advancedJob !== jobId
 
-    const configured = watchJobsActionsIDUser.value[normalizedJob]
-    if (Array.isArray(configured) && configured.length > 0)
-      return configured
-    return [...TEAM_WATCH_EMPTY_ACTIONS]
+    const source = watchJobsActionsIDUser.value[isBase ? advancedJob : jobId] ?? TEAM_WATCH_EMPTY_ACTIONS
+    const validSource = Array.isArray(source) && source.length > 0 ? source : [...TEAM_WATCH_EMPTY_ACTIONS]
+
+    return isBase ? buildInheritedBaseJobActions(jobId, validSource) : validSource
   }
 
   function rebuildMembers() {
@@ -401,15 +409,11 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
   }
 
   function setFakeMode(value: boolean) {
-    if (fakeMode.value === value)
-      return
     fakeMode.value = value
-    rebuildMembers()
   }
 
   function handleChangePrimaryPlayer(e: { charID: number }) {
     playerId.value = e.charID.toString(16).toUpperCase()
-    rebuildMembers()
   }
 
   function handlePartyChanged(e: { party: Party[] }) {
@@ -419,8 +423,6 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
         ...v,
         id: toHexId(v.id),
       }))
-    if (!fakeMode.value)
-      rebuildMembers()
   }
 
   function handleZoneChanged() {
@@ -487,36 +489,22 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
     sortRuleUser.value = [...next.sortRuleUser]
     watchJobsActionsIDUser.value = deepCloneWatchMap(next.watchJobsActionsIDUser)
     actionMetaUser.value = cloneTeamWatchActionMetaMap(next.actionMetaUser)
-    rebuildMembers()
+    // rebuild will bue triggered by watch
     const actionIds = collectWatchActionIds(watchJobsActionsIDUser.value)
     actionIds.forEach(actionId => triggerAutoFetchActionMeta(actionId))
   }
 
   function saveSettings(next: TeamWatchSaveSettingsInput) {
-    const nextActionMetaUser = next.actionMetaUser ?? actionMetaUser.value
-    saveTeamWatchStorageData({
-      sortRuleUser: [...next.sortRuleUser],
-      watchJobsActionsIDUser: deepCloneWatchMap(next.watchJobsActionsIDUser),
-      actionMetaUser: cloneTeamWatchActionMetaMap(nextActionMetaUser),
-    })
-    loadFromStorage()
+    sortRuleUser.value = [...next.sortRuleUser]
+    watchJobsActionsIDUser.value = deepCloneWatchMap(next.watchJobsActionsIDUser)
+    if (next.actionMetaUser)
+      actionMetaUser.value = cloneTeamWatchActionMetaMap(next.actionMetaUser)
   }
 
   function saveActionMetaRaw(actionId: number, raw: TeamWatchActionMetaRaw) {
     if (actionId <= 0)
       return
-
-    const nextActionMetaUser = cloneTeamWatchActionMetaMap(actionMetaUser.value)
-    nextActionMetaUser[actionId] = normalizeTeamWatchActionMetaRaw(actionId, raw)
-
-    saveTeamWatchStorageData({
-      sortRuleUser: [...sortRuleUser.value],
-      watchJobsActionsIDUser: deepCloneWatchMap(watchJobsActionsIDUser.value),
-      actionMetaUser: nextActionMetaUser,
-    })
-
-    actionMetaUser.value = nextActionMetaUser
-    scheduleRebuild()
+    actionMetaUser.value[actionId] = normalizeTeamWatchActionMetaRaw(actionId, raw)
   }
 
   function resetSettings() {
