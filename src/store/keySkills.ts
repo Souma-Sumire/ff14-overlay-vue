@@ -145,31 +145,6 @@ function createSkillEntry(id: number, tts = '', line = 1): KeySkillEntry {
   }
 }
 
-function normalizeEntryDynamicValue(value: unknown): DynamicValue | undefined {
-  if (typeof value === 'number' && Number.isFinite(value))
-    return value
-  if (typeof value === 'string') {
-    const trimmed = value.trim()
-    if (trimmed)
-      return trimmed
-  }
-  return undefined
-}
-
-function normalizeEntryMinLevel(value: unknown): number | undefined {
-  const numeric = Number(value)
-  if (!Number.isFinite(numeric))
-    return undefined
-  return normalizeInt(numeric, 1, 1)
-}
-
-function normalizeEntryJobs(value: unknown): number[] | undefined {
-  if (!Array.isArray(value))
-    return undefined
-  const jobs = uniqueInts(value.map(v => Number(v)))
-  return jobs
-}
-
 function normalizeStorageSkills(raw: unknown): KeySkillEntry[] {
   if (!Array.isArray(raw))
     return []
@@ -179,36 +154,22 @@ function normalizeStorageSkills(raw: unknown): KeySkillEntry[] {
     if (!item || typeof item !== 'object')
       return
     const row = item as Record<string, unknown>
-    const rawId = row.id as number | string | undefined
-    const resolvedId = normalizeInt(
-      resolveTeamWatchDynamicValue(rawId ?? 0, GLOBAL_SKILL_MAX_LEVEL, 0),
-      0,
-      0,
-    )
+    const rawId = typeof row.id === 'string' || typeof row.id === 'number' ? row.id : 0
+    const resolvedId = normalizeInt(resolveTeamWatchDynamicValue(rawId, GLOBAL_SKILL_MAX_LEVEL, 0), 0, 0)
     if (resolvedId <= 0)
       return
     const key = typeof row.key === 'string' && row.key.trim() ? row.key : crypto.randomUUID()
     if (key === LEGACY_PRESET_2248_KEY)
       return
-    const line = normalizeInt(Number(row.line ?? 1), 1, 1)
-    const ttsText = typeof row.tts === 'string' ? row.tts : ''
     normalized.push({
       key,
       id: resolvedId,
-      line,
-      tts: ttsText,
-      job: normalizeEntryJobs(row.job),
-      recast1000ms: normalizeEntryDynamicValue(row.recast1000ms),
-      duration: normalizeEntryDynamicValue(row.duration),
-      minLevel: (() => {
-        const minLevel = normalizeEntryMinLevel(row.minLevel)
-        if (minLevel === undefined)
-          return undefined
-        return resolveActionMinLevel(minLevel, {
-          actionId: resolvedId,
-          fallback: 1,
-        })
-      })(),
+      line: normalizeInt(Number(row.line ?? 1), 1, 1),
+      tts: typeof row.tts === 'string' ? row.tts : '',
+      job: Array.isArray(row.job) ? uniqueInts(row.job.map(Number)) : undefined,
+      recast1000ms: ((typeof row.recast1000ms === 'number' && Number.isFinite(row.recast1000ms)) ? row.recast1000ms : (typeof row.recast1000ms === 'string' && row.recast1000ms.trim() ? row.recast1000ms.trim() : undefined)) as DynamicValue | undefined,
+      duration: ((typeof row.duration === 'number' && Number.isFinite(row.duration)) ? row.duration : (typeof row.duration === 'string' && row.duration.trim() ? row.duration.trim() : undefined)) as DynamicValue | undefined,
+      minLevel: Number.isFinite(Number(row.minLevel)) ? resolveActionMinLevel(normalizeInt(Number(row.minLevel), 1, 1), { actionId: resolvedId, fallback: 1 }) : undefined,
     })
   })
   return normalized
