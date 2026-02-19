@@ -7,11 +7,11 @@ import { computed, reactive, ref, watch } from 'vue'
 import { JobResourceManager } from '@/modules/jobResourceTracker'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { resolveActionDisplayName, resolveActionIconSrc, resolveApiActionMeta, shouldFetchResolvedActionMeta } from '@/resources/logic/actionMetaResolver'
-import { buildInheritedBaseJobActions, buildTeamWatchFallbackMeta, cloneTeamWatchActionMetaMap, hasBakedTeamWatchMeta, loadTeamWatchStorageData, normalizeTeamWatchActionMetaRaw, resolveTeamWatchDynamicValue, saveTeamWatchStorageData, TEAM_WATCH_EMPTY_ACTIONS, TEAM_WATCH_WATCH_ACTIONS_DEFAULT } from '@/resources/teamWatchResource'
+import { buildInheritedBaseJobActions, buildTeamWatchFallbackMeta, cloneTeamWatchActionMetaMap, hasBakedTeamWatchMeta, loadTeamWatchStorageData, normalizeTeamWatchActionMetaRaw, resolveTeamWatchDynamicValue, saveTeamWatchStorageData, TEAM_WATCH_EMPTY_ACTIONS } from '@/resources/teamWatchResource'
 import { extractTriggeredActionFromLogLine, isTeamWatchResetLogLine, triggerRuntimeByAction } from '@/store/teamWatchLoglineHelpers'
 import { clearRuntimeCooldownStates, ensureCooldownHistory, ensureRuntime, updateRuntimeCollection } from '@/store/teamWatchRuntimeHelpers'
 import { buildSkillStateCacheKey, buildTeamWatchSkillStatusText, resolveTeamWatchSkillState } from '@/store/teamWatchSkillStateHelpers'
-import { buildDefaultWatchMap, buildKnownJobs, buildSimulatedAbilityLine, collectWatchActionIds, decodeBase64Payload, deepCloneWatchMap, encodeBase64Payload, normalizeInt, normalizeTrackedActionId, toHexId } from '@/store/teamWatchStoreHelpers'
+import { buildSimulatedAbilityLine, collectWatchActionIds, decodeBase64Payload, deepCloneWatchMap, encodeBase64Payload, normalizeInt, normalizeTrackedActionId, toHexId } from '@/store/teamWatchStoreHelpers'
 import { resolveUpgradeActionIdForLevel } from '@/utils/compareSaveAction'
 import Util from '@/utils/util'
 import { parseAction } from '@/utils/xivapi'
@@ -497,8 +497,10 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
   function saveSettings(next: TeamWatchSaveSettingsInput) {
     sortRuleUser.value = [...next.sortRuleUser]
     watchJobsActionsIDUser.value = deepCloneWatchMap(next.watchJobsActionsIDUser)
-    if (next.actionMetaUser)
+    if (next.actionMetaUser !== undefined)
       actionMetaUser.value = cloneTeamWatchActionMetaMap(next.actionMetaUser)
+    // Force immediate persistence to avoid race conditions with loadFromStorage
+    saveTeamWatchStorageData(getSnapshot())
   }
 
   function saveActionMetaRaw(actionId: number, raw: TeamWatchActionMetaRaw) {
@@ -508,15 +510,10 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
   }
 
   function resetSettings() {
-    const knownJobs = buildKnownJobs(watchJobsActionsIDUser.value, DEFAULT_JOB_SORT_ORDER)
-    const defaultWatchMap = buildDefaultWatchMap(
-      knownJobs,
-      TEAM_WATCH_WATCH_ACTIONS_DEFAULT,
-      TEAM_WATCH_EMPTY_ACTIONS,
-    )
+    // 强制完全重置到初始状态
     saveSettings({
       sortRuleUser: [...DEFAULT_JOB_SORT_ORDER],
-      watchJobsActionsIDUser: defaultWatchMap,
+      watchJobsActionsIDUser: {},
       actionMetaUser: {},
     })
   }
