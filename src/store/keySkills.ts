@@ -6,14 +6,13 @@ import { defineStore } from 'pinia'
 import { computed, reactive, ref, watch } from 'vue'
 import { useDemo } from '@/composables/useDemo'
 import { useDev } from '@/composables/useDev'
+import { resolveActionJobsFromTargets, resolveBakedActionMeta } from '@/resources/actionMetaResolver'
 import { RandomPartyGenerator } from '@/mock/demoParty'
 import { getActionChinese } from '@/resources/actionChinese'
 import { resolveActionMinLevel } from '@/resources/actionMinLevel'
-import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/bakedActionMetaLite'
 import { getGlobalSkillMetaByActionId, GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { raidbuffs } from '@/resources/keySkillResource'
-import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/roleActionCategoryByJob'
 import { resolveTeamWatchDynamicValue } from '@/resources/teamWatchResource'
 import { resolveUpgradeActionIdForLevel } from '@/utils/compareSaveAction'
 import { idToSrc } from '@/utils/dynamicValue'
@@ -214,41 +213,6 @@ function normalizeStorageSkills(raw: unknown): KeySkillEntry[] {
   return normalized
 }
 
-function resolveJobsFromApi(
-  classJobTargetId: number,
-  classJobCategoryTargetId: number,
-  actionCategoryTargetId: number,
-  isRoleAction: boolean,
-) {
-  const battleJobEnums = Util.getBattleJobs()
-    .filter(job => job !== 'NONE')
-    .filter(job => Util.isCombatJob(job))
-    .map(job => Util.jobToJobEnum(job))
-
-  if (isRoleAction) {
-    const roleCategoryTargetIds = uniqueInts([classJobCategoryTargetId, actionCategoryTargetId])
-    if (!roleCategoryTargetIds.length)
-      return []
-    return uniqueInts(
-      battleJobEnums.filter((jobEnum) => {
-        const categories = ROLE_ACTION_CATEGORY_BY_JOB[jobEnum] ?? []
-        return roleCategoryTargetIds.some(categoryId => categories.includes(categoryId))
-      }),
-    )
-  }
-
-  if (classJobTargetId <= 0)
-    return []
-
-  return uniqueInts(
-    battleJobEnums.filter((jobEnum) => {
-      return jobEnum === classJobTargetId
-        || Util.baseJobEnumConverted(jobEnum) === classJobTargetId
-        || Util.baseJobEnumConverted(classJobTargetId) === jobEnum
-    }),
-  )
-}
-
 const useKeySkillStore = defineStore('keySkill', () => {
   const dev = useDev()
   const demo = useDemo()
@@ -331,25 +295,23 @@ const useKeySkillStore = defineStore('keySkill', () => {
     const id = normalizeInt(actionId, 0, 1)
     if (id <= 0)
       return undefined
-    const baked = BAKED_ACTION_META_LITE_BY_ID[id]
+    const baked = resolveBakedActionMeta(id)
     if (!baked)
       return undefined
 
     const globalMeta = getGlobalSkillMetaByActionId(id)
-    const isRoleAction = Number(baked.isRoleAction ?? 0) > 0
-    const classJobTargetId = normalizeInt(Number(baked.classJob ?? 0), 0, 0)
-    const classJobCategoryTargetId = normalizeInt(Number(baked.classJobCategory ?? 0), 0, 0)
-    const actionCategoryTargetId = normalizeInt(Number(baked.actionCategory ?? 0), 0, 0)
     const jobs = (globalMeta?.job?.length ?? 0) > 0
       ? uniqueInts(globalMeta!.job)
-      : resolveJobsFromApi(classJobTargetId, classJobCategoryTargetId, actionCategoryTargetId, isRoleAction)
+      : baked.jobs
+    const isRoleAction = baked.isRoleAction
+    const classJobTargetId = baked.classJobTargetId
 
     const resolvedId = normalizeInt(
       resolveTeamWatchDynamicValue(globalMeta?.id ?? id, GLOBAL_SKILL_MAX_LEVEL, id),
       id,
       1,
     )
-    const bakedRecast1000ms = normalizeInt(Number(baked.recast100ms ?? 0) / 10, 0, 0)
+    const bakedRecast1000ms = normalizeInt(Number(baked.recast1000ms ?? 0), 0, 0)
     const resolvedRecast1000ms = normalizeInt(
       resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? bakedRecast1000ms, GLOBAL_SKILL_MAX_LEVEL, bakedRecast1000ms),
       bakedRecast1000ms,
@@ -474,7 +436,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
         const isRoleAction = Number(response.IsRoleAction ?? 0) > 0
         const jobs = (globalMeta?.job?.length ?? 0) > 0
           ? uniqueInts(globalMeta!.job)
-          : resolveJobsFromApi(classJobTargetId, classJobCategoryTargetId, actionCategoryTargetId, isRoleAction)
+          : resolveActionJobsFromTargets(classJobTargetId, classJobCategoryTargetId, actionCategoryTargetId, isRoleAction)
         const resolvedId = normalizeInt(
           resolveTeamWatchDynamicValue(globalMeta?.id ?? id, GLOBAL_SKILL_MAX_LEVEL, id),
           id,
