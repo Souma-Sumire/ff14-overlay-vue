@@ -1,12 +1,11 @@
+import { getActionChinese } from '@/resources/actionChinese'
 import { resolveActionMinLevel } from '@/resources/actionMinLevel'
 import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/bakedActionMetaLite'
 import { getGlobalSkillMetaByActionId } from '@/resources/globalSkills'
 import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/roleActionCategoryByJob'
-import { getActionChinese } from '@/resources/actionChinese'
-import { idToSrc } from '@/utils/dynamicValue'
-import { parseDynamicValue } from '@/utils/dynamicValue'
+import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 import Util from '@/utils/util'
-import { getIconSrcByPath } from '@/utils/xivapi'
+import { getIconSrcById, getIconSrcByPath } from '@/utils/xivapi'
 
 export interface ResolvedBakedActionMeta {
   id: number
@@ -279,6 +278,9 @@ export function resolveActionDisplayName(resolvedActionId: number, fallbackActio
 }
 
 export function resolveActionIconSrc(actionId: number, options?: { apiIconPath?: string, highRes?: boolean }) {
+  const baked = resolveBakedActionMeta(actionId)
+  if (baked?.iconId && baked.iconId > 0)
+    return getIconSrcById(baked.iconId, options?.highRes ?? true)
   const iconById = idToSrc(actionId)
   if (iconById)
     return iconById
@@ -286,4 +288,18 @@ export function resolveActionIconSrc(actionId: number, options?: { apiIconPath?:
     return getIconSrcByPath(options.apiIconPath, false, options?.highRes ?? false)
   }
   return ''
+}
+
+export function resolveBakedActionVisualMeta(actionId: number) {
+  const baked = resolveBakedActionMeta(actionId)
+  if (!baked)
+    return undefined
+  const actionCategory = normalizeInt(baked.actionCategoryTargetId, 0, 0)
+  const maxCharges = normalizeInt(baked.maxCharges, 0, 0)
+  return {
+    actionCategory,
+    isGcdLike: actionCategory !== 4,
+    isCharge: maxCharges > 0,
+    maxCharges,
+  }
 }

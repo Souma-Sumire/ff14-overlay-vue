@@ -214,7 +214,8 @@ const topTierUpgradeActionMap = (() => {
 export function normalizeUpgradeActionId(actionId: number) {
   if (!Number.isFinite(actionId) || actionId <= 0)
     return actionId
-  return topTierUpgradeActionMap.get(actionId) ?? actionId
+  const normalized = Math.trunc(actionId)
+  return topTierUpgradeActionMap.get(normalized) ?? normalized
 }
 
 export function isLowerTierActionId(actionId: number) {
