@@ -44,7 +44,15 @@ export function encodeBase64Payload(text: string): string {
 }
 
 export function decodeBase64Payload(base64: string): string {
-  const binary = window.atob(base64.trim())
+  // 容错处理：去掉换行/空白，并支持 URL-safe Base64。
+  const normalized = base64
+    .trim()
+    .replace(/\s+/g, '')
+    .replace(/-/g, '+')
+    .replace(/_/g, '/')
+  const padding = normalized.length % 4
+  const padded = padding > 0 ? normalized.padEnd(normalized.length + (4 - padding), '=') : normalized
+  const binary = window.atob(padded)
   try {
     const bytes = Uint8Array.from(binary, char => char.charCodeAt(0))
     return new TextDecoder().decode(bytes)

@@ -38,6 +38,12 @@ const teamWatchFakeParty: Party[] = [
   { id: '10000008', name: 'Faker8', worldId: 0, job: 33, inParty: true, contentId: 0, flags: 0, level: 100, objectId: 0, partyType: 1, territoryType: 0 },
 ]
 
+interface TeamWatchSaveSettingsInput {
+  sortRuleUser: number[]
+  watchJobsActionsIDUser: Record<number, number[]>
+  actionMetaUser?: Record<number, TeamWatchActionMetaRaw>
+}
+
 const useTeamWatchStore = defineStore('teamWatch', () => {
   const storage = loadTeamWatchStorageData()
 
@@ -470,14 +476,11 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
     actionIds.forEach(actionId => triggerAutoFetchActionMeta(actionId))
   }
 
-  function saveSettings(
-    nextSortRuleUser: number[],
-    nextWatchJobsActionsIDUser: Record<number, number[]>,
-    nextActionMetaUser: Record<number, TeamWatchActionMetaRaw> = actionMetaUser.value,
-  ) {
+  function saveSettings(next: TeamWatchSaveSettingsInput) {
+    const nextActionMetaUser = next.actionMetaUser ?? actionMetaUser.value
     saveTeamWatchStorageData({
-      sortRuleUser: [...nextSortRuleUser],
-      watchJobsActionsIDUser: deepCloneWatchMap(nextWatchJobsActionsIDUser),
+      sortRuleUser: [...next.sortRuleUser],
+      watchJobsActionsIDUser: deepCloneWatchMap(next.watchJobsActionsIDUser),
       actionMetaUser: cloneTeamWatchActionMetaMap(nextActionMetaUser),
     })
     loadFromStorage()
@@ -507,7 +510,11 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
       TEAM_WATCH_WATCH_ACTIONS_DEFAULT,
       TEAM_WATCH_EMPTY_ACTIONS,
     )
-    saveSettings([...DEFAULT_JOB_SORT_ORDER], defaultWatchMap, {})
+    saveSettings({
+      sortRuleUser: [...DEFAULT_JOB_SORT_ORDER],
+      watchJobsActionsIDUser: defaultWatchMap,
+      actionMetaUser: {},
+    })
   }
 
   function exportSettings() {
@@ -521,21 +528,39 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
     if (!parsed || typeof parsed !== 'object')
       throw new Error('invalid teamwatch payload')
 
+    const entries = Object.entries(parsed)
+    const isLegacyV4Payload = entries.length > 0 && entries.every(([key, value]) => {
+      const jobId = Number(key)
+      return Number.isFinite(jobId) && Array.isArray(value)
+    })
+    if (isLegacyV4Payload) {
+      saveSettings({
+        sortRuleUser: sortRuleUser.value,
+        watchJobsActionsIDUser: parsed as unknown as Record<number, number[]>,
+        actionMetaUser: {},
+      })
+      return
+    }
+
     const sortRuleCandidate = parsed.sortRuleUser
     const watchMapCandidate = parsed.watchJobsActionsIDUser
-    if (!Array.isArray(sortRuleCandidate) || !watchMapCandidate || typeof watchMapCandidate !== 'object')
-      throw new Error('invalid teamwatch payload')
-
     const actionMetaCandidate = parsed.actionMetaUser
-    const nextActionMetaUser = actionMetaCandidate && typeof actionMetaCandidate === 'object'
-      ? (actionMetaCandidate as Record<number, TeamWatchActionMetaRaw>)
-      : {}
+    if (
+      Array.isArray(sortRuleCandidate)
+      && !!watchMapCandidate
+      && typeof watchMapCandidate === 'object'
+      && !!actionMetaCandidate
+      && typeof actionMetaCandidate === 'object'
+    ) {
+      saveSettings({
+        sortRuleUser: sortRuleCandidate as number[],
+        watchJobsActionsIDUser: watchMapCandidate as Record<number, number[]>,
+        actionMetaUser: actionMetaCandidate as Record<number, TeamWatchActionMetaRaw>,
+      })
+      return
+    }
 
-    saveSettings(
-      sortRuleCandidate as number[],
-      watchMapCandidate as Record<number, number[]>,
-      nextActionMetaUser,
-    )
+    throw new Error('invalid teamwatch payload')
   }
 
   return {

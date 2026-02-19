@@ -260,57 +260,36 @@ function normalizeActionMetaUser(value: unknown): Record<number, TeamWatchAction
   return next
 }
 
-// 解析并规范化当前版本存档字符串。
-function parseCurrentStorageData(raw: string) {
-  try {
-    const parsed = JSON.parse(raw) as Record<string, unknown>
-    if (!parsed || typeof parsed !== 'object')
-      return null
-
-    if (
-      Object.prototype.hasOwnProperty.call(parsed, 'watchJobsActionsIDUser')
-      || Object.prototype.hasOwnProperty.call(parsed, 'sortRuleUser')
-      || Object.prototype.hasOwnProperty.call(parsed, 'actionMetaUser')
-    ) {
-      const normalized = parsed as Partial<TeamWatchStorageData>
-      return {
-        watchJobsActionsIDUser: normalizeWatchJobsActionsIDUser(normalized.watchJobsActionsIDUser),
-        sortRuleUser: normalizeSortRuleUser(normalized.sortRuleUser),
-        actionMetaUser: normalizeActionMetaUser(normalized.actionMetaUser),
-      }
-    }
-    return null
-  }
-  catch {
-    return null
-  }
-}
-
-function buildEmptyStorageData(): TeamWatchStorageData {
+function buildStorageData(input?: {
+  watchJobsActionsIDUser?: unknown
+  sortRuleUser?: unknown
+  actionMetaUser?: unknown
+}): TeamWatchStorageData {
   return {
-    watchJobsActionsIDUser: normalizeWatchJobsActionsIDUser(undefined),
-    sortRuleUser: normalizeSortRuleUser(undefined),
-    actionMetaUser: normalizeActionMetaUser(undefined),
+    watchJobsActionsIDUser: normalizeWatchJobsActionsIDUser(input?.watchJobsActionsIDUser),
+    sortRuleUser: normalizeSortRuleUser(input?.sortRuleUser),
+    actionMetaUser: normalizeActionMetaUser(input?.actionMetaUser),
   }
 }
 
-function parseLegacyStorageData(raw: string): TeamWatchStorageData | null {
+function parseStorageData(raw: string, requireActionMetaUser: boolean): TeamWatchStorageData | null {
   try {
     const parsed = JSON.parse(raw) as Record<string, unknown>
     if (!parsed || typeof parsed !== 'object')
       return null
 
-    const watchSource = parsed.watchJobsActionsIDUser
-    if (!watchSource || typeof watchSource !== 'object')
+    if (!parsed.watchJobsActionsIDUser || typeof parsed.watchJobsActionsIDUser !== 'object')
       return null
     if (!Array.isArray(parsed.sortRuleUser))
       return null
+    if (requireActionMetaUser && (!parsed.actionMetaUser || typeof parsed.actionMetaUser !== 'object'))
+      return null
 
-    return {
-      watchJobsActionsIDUser: normalizeWatchJobsActionsIDUser(watchSource),
-      sortRuleUser: normalizeSortRuleUser(parsed.sortRuleUser),
-      actionMetaUser: normalizeActionMetaUser(undefined),
-    }
+    return buildStorageData({
+      watchJobsActionsIDUser: parsed.watchJobsActionsIDUser,
+      sortRuleUser: parsed.sortRuleUser,
+      actionMetaUser: requireActionMetaUser ? parsed.actionMetaUser : undefined,
+    })
   }
   catch {
     return null
@@ -325,23 +304,23 @@ export function loadTeamWatchStorageData(): TeamWatchStorageData {
   // 3. 都没有则默认配置
   const legacyRaw = localStorage.getItem(TEAM_WATCH_STORAGE_NAMESPACE_LEGACY)
   if (legacyRaw !== null) {
-    const migrated = parseLegacyStorageData(legacyRaw)
+    const migrated = parseStorageData(legacyRaw, false)
     if (migrated) {
       localStorage.setItem(TEAM_WATCH_STORAGE_NAMESPACE, JSON.stringify(migrated))
       localStorage.removeItem(TEAM_WATCH_STORAGE_NAMESPACE_LEGACY)
       return migrated
     }
-    return buildEmptyStorageData()
+    return buildStorageData()
   }
 
   const currentRaw = localStorage.getItem(TEAM_WATCH_STORAGE_NAMESPACE)
   if (currentRaw) {
-    const parsed = parseCurrentStorageData(currentRaw)
+    const parsed = parseStorageData(currentRaw, true)
     if (parsed)
       return parsed
   }
 
-  return buildEmptyStorageData()
+  return buildStorageData()
 }
 
 // 写入 TeamWatch 存档（仅更新本模块字段并标准化）。

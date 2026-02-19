@@ -580,11 +580,11 @@ const debouncedPersistSettings = useDebounceFn(() => {
   const nextWatchMap = Object.fromEntries(
     rows.value.map(row => [row.job, normalizeActions(row.actions)]),
   ) as Record<number, number[]>
-  store.saveSettings(
-    [...sortRule.value],
-    nextWatchMap,
-    cloneTeamWatchActionMetaMap(actionMetaUser.value),
-  )
+  store.saveSettings({
+    sortRuleUser: [...sortRule.value],
+    watchJobsActionsIDUser: nextWatchMap,
+    actionMetaUser: cloneTeamWatchActionMetaMap(actionMetaUser.value),
+  })
 }, 250)
 
 watch([sortRule, rows, actionMetaUser], () => {
