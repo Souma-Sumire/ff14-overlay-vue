@@ -479,16 +479,15 @@ const useKeySkillStore = defineStore('keySkill', () => {
           1,
         )
         const resolvedJobs = skill.job && skill.job.length > 0 ? uniqueInts(skill.job) : meta.jobs
-        const resolvedRecast1000ms = normalizeInt(
-          resolveTeamWatchDynamicValue(skill.recast1000ms ?? globalMeta?.recast1000ms ?? meta.recast1000ms, level, meta.recast1000ms),
-          meta.recast1000ms,
-          0,
-        )
-        const resolvedDuration = normalizeInt(
-          resolveTeamWatchDynamicValue(skill.duration ?? globalMeta?.duration ?? meta.duration, level, meta.duration),
-          meta.duration,
-          0,
-        )
+        const inputRecast = skill.recast1000ms ?? globalMeta?.recast1000ms
+        const resolvedRecast1000ms = inputRecast !== undefined
+          ? normalizeInt(resolveTeamWatchDynamicValue(inputRecast, level, 0), 0, 0)
+          : meta.recast1000ms
+
+        const inputDuration = skill.duration ?? globalMeta?.duration
+        const resolvedDuration = inputDuration !== undefined
+          ? normalizeInt(resolveTeamWatchDynamicValue(inputDuration, level, 0), 0, 0)
+          : meta.duration
         const resolvedMinLevel = resolveActionMinLevel(
           skill.minLevel ?? meta.minLevel,
           {
