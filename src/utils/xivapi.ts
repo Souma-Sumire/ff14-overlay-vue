@@ -122,8 +122,7 @@ function isSecondaryUrl(url: string): boolean {
 }
 
 function getIconHost(highRes: boolean): string {
-  if (highRes && getPrimaryHost() !== SITE_HOST.cafe)
-    return SITE_HOST.cafe
+  void highRes
   return getPrimaryHost()
 }
 
