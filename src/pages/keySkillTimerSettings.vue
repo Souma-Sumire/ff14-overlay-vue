@@ -77,6 +77,11 @@ const currentEditorMeta = computed(() => {
     return null
   return resolveSkillMeta(currentEditorSkill.value.id)
 })
+const currentEditorGlobalMeta = computed(() => {
+  if (!currentEditorSkill.value)
+    return null
+  return getGlobalSkillMetaByActionId(currentEditorSkill.value.id)
+})
 const dynamicValueTipText = 'DynamicValue支持输入数字或动态表达式，例如 `(lv) => lv>=94 ? 40 : 60`。'
 
 const pickerDialogWidth = computed(() => {
@@ -755,12 +760,12 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
               Lv.{{ currentEditorMeta.minLevel }}
             </el-descriptions-item>
             <el-descriptions-item label="冷却时间">
-              {{ currentEditorMeta.recast1000ms }}（秒）
+              {{ currentEditorGlobalMeta?.recast1000ms ?? currentEditorMeta.recast1000ms }}
             </el-descriptions-item>
             <el-descriptions-item label="持续时间">
-              {{ currentEditorMeta.duration }}（秒）
+              {{ currentEditorGlobalMeta?.duration ?? currentEditorMeta.duration }}
             </el-descriptions-item>
-            <el-descriptions-item label="角色通用">
+            <el-descriptions-item label="职能技能">
               {{ currentEditorMeta.isRoleAction ? '是' : '否' }}
             </el-descriptions-item>
             <el-descriptions-item label="解析职业">
