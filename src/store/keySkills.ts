@@ -457,10 +457,44 @@ const useKeySkillStore = defineStore('keySkill', () => {
     await nextTask
   }
 
+  function shouldScheduleEnsureActionAutoMeta(actionId: number) {
+    if (!Number.isFinite(actionId) || actionId <= 0)
+      return false
+    const id = Math.trunc(actionId)
+
+    if (pendingAutoMetaTasks.has(id) || pendingAutoMeta.has(id))
+      return false
+
+    const existing = autoMetaById[id]
+    if (existing) {
+      if (!shouldFetchResolvedActionMeta(
+        { jobs: existing.jobs },
+        { requireActionCategory: false, requireJobs: true },
+      )) {
+        return false
+      }
+      return !refreshedIncompleteAutoMeta.has(id)
+    }
+
+    const baked = buildAutoMetaFromBaked(id)
+    if (baked && !shouldFetchResolvedActionMeta(
+      { jobs: baked.jobs },
+      { requireActionCategory: false, requireJobs: true },
+    )) {
+      saveAutoMetaToCache(id, baked)
+      refreshedIncompleteAutoMeta.add(id)
+      return false
+    }
+
+    return true
+  }
+
   watch(
     () => keySkillsData.value.chinese.map(item => item.id),
     (ids) => {
-      ids.forEach((id) => {
+      uniqueInts(ids.map(v => Number(v))).forEach((id) => {
+        if (!shouldScheduleEnsureActionAutoMeta(id))
+          return
         void ensureActionAutoMeta(id)
       })
     },

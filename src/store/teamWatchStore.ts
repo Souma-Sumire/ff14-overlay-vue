@@ -104,7 +104,7 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
   }
 
   function resolveActionMeta(actionId: number, level: number, rawOverride?: TeamWatchActionMetaRaw) {
-    const raw = rawOverride ? normalizeTeamWatchActionMetaRaw(actionId, rawOverride) : getActionMetaRaw(actionId)
+    const raw = rawOverride ? normalizeTeamWatchActionMetaRaw(actionId, rawOverride) : getActionMetaRaw(actionId, false)
     const configuredActionId = normalizeInt(Number(raw.id), actionId, 0)
     const resolvedActionId = normalizeInt(
       resolveUpgradeActionIdForLevel(configuredActionId, level),
@@ -235,6 +235,7 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
 
     const sorted = getSortedParty()
     const nextMembers: TeamWatchMemberView[] = []
+    const pendingAutoFetchActionIds = new Set<number>()
     const activeRuntimeKeys = new Set<string>()
     const nextLookup: Record<string, string> = {}
     const activeActionByOwner = new Map<string, Set<number>>()
@@ -249,6 +250,8 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
       const memberLevel = Number.isFinite(member.level) ? member.level : 100
 
       const skills: TeamWatchSkillView[] = actionIds.map((rawActionId) => {
+        if (rawActionId > 0)
+          pendingAutoFetchActionIds.add(rawActionId)
         const meta = resolveActionMeta(rawActionId, memberLevel)
         const resolvedActionId = Math.max(0, meta.id)
         const trackedActionId = normalizeTrackedActionId(resolvedActionId)
@@ -281,6 +284,8 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
         skills,
       })
     }
+
+    pendingAutoFetchActionIds.forEach(actionId => triggerAutoFetchActionMeta(actionId))
 
     for (const key of Object.keys(runtimeByKey)) {
       if (!activeRuntimeKeys.has(key))
