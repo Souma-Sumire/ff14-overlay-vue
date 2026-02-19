@@ -566,5 +566,5 @@ export const worlds = [
   "Cloudtest02",
   "Clcontents01",
   "Clcontents02",
-  "Clcontents03",
-]
+  "Clcontents03"
+];
