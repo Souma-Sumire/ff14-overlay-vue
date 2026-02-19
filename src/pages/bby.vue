@@ -285,7 +285,7 @@ const handlePartyChanged: EventMap['PartyChanged'] = (e) => {
           name: member.name || '',
           job: member.job || 0,
           level: member.level || 0,
-          world: world[member.worldId as keyof typeof world] || '',
+          world: world[member.worldId] || '',
         })
       }
     }
