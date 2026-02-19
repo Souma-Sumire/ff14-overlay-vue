@@ -1133,8 +1133,7 @@ onMounted(() => {
   transition: opacity 120ms ease;
 }
 
-.slot-cell:hover .slot-remove-anchor,
-.slot-cell:focus-within .slot-remove-anchor {
+.slot-cell:hover .slot-remove-anchor{
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
