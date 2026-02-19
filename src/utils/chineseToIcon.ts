@@ -1,4 +1,4 @@
-import chineseToIconMapRaw from '@/resources/chinese2Icon.json'
+import chineseToIconMapRaw from '@/resources/generated/chinese2Icon.json'
 
 const chineseToIconMap: Record<string, string> = chineseToIconMapRaw
 
@@ -203,3 +203,4 @@ function chineseToIcon(chinese: string): number | undefined {
 }
 
 export { chineseToIcon }
+

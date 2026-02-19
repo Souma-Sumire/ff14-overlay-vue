@@ -7,8 +7,8 @@ import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import LZString from 'lz-string'
 import { useDev } from '@/composables/useDev'
 import { useWebSocket } from '@/composables/useWebSocket'
-import Aetherytes from '@/resources/aetherytes.json'
-import Map from '@/resources/map.json'
+import Aetherytes from '@/resources/generated/aetherytes.json'
+import Map from '@/resources/generated/map.json'
 import { ZoneInfo } from '@/resources/zoneInfo'
 import { getPixelCoordinates, Vector2 } from '@/utils/mapCoordinates'
 import HuntData from '../../cactbot/resources/hunt'
@@ -1466,3 +1466,4 @@ onMounted(async () => {
   background-color: var(--ins3-color);
 }
 </style>
+

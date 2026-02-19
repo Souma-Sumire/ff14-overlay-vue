@@ -33,5 +33,6 @@ soumaData.forEach((row) => {
   }
 })
 
-const outputPath = 'src/resources/status.json'
+const outputPath = 'src/resources/generated/status.json'
 fs.outputJsonSync(outputPath, result, { spaces: 2 })
+

@@ -76,4 +76,5 @@ const aetherytes: AetheryteData[] = fileValues['MapMarker.csv']!.filter(
   })
   .filter((row): row is AetheryteData => row !== null)
 
-fs.outputJsonSync('src/resources/aetherytes.json', aetherytes, { spaces: 2 })
+fs.outputJsonSync('src/resources/generated/aetherytes.json', aetherytes, { spaces: 2 })
+

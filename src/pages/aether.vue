@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Lang } from '@/types/lang'
 import { localeToCactbotLang, useLang } from '@/composables/useLang'
-import aethercurrent from '@/resources/aethercurrent.json'
+import aethercurrent from '@/resources/generated/aethercurrent.json'
 
 const { locale } = useLang()
 
@@ -188,3 +188,4 @@ function getName(name: { ja: string, cn?: string, en?: string }) {
   transform: translate(-50%, -50%);
 }
 </style>
+

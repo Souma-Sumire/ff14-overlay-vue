@@ -47,5 +47,6 @@ jaData.forEach((row) => {
   }
 })
 
-const outputPath = 'src/resources/contentFinderCondition.json'
+const outputPath = 'src/resources/generated/contentFinderCondition.json'
 fs.outputJsonSync(outputPath, result, { spaces: 2 })
+

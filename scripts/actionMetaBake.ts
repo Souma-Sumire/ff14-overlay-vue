@@ -1,5 +1,5 @@
 import fs from 'fs-extra'
-import action2ClassJobLevelMapRaw from '../src/resources/action2ClassJobLevel.json'
+import action2ClassJobLevelMapRaw from '../src/resources/generated/action2ClassJobLevel.json'
 import { ACTION_UPGRADE_STEPS } from '../src/utils/compareSaveAction'
 import { readCsvRowsCached } from './csvCache'
 import { csvPaths } from './paths'
@@ -123,7 +123,7 @@ function writeOutput(map: Record<number, BakedActionMetaLite>) {
   lines.push('  }')
   lines.push('})')
   lines.push('')
-  fs.outputFileSync('src/resources/bakedActionMetaLite.ts', lines.join('\n'), 'utf8')
+  fs.outputFileSync('src/resources/generated/bakedActionMetaLite.ts', lines.join('\n'), 'utf8')
 }
 
 async function main() {
@@ -180,3 +180,4 @@ async function main() {
 }
 
 await main()
+

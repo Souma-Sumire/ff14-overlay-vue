@@ -71,5 +71,6 @@ territoryTypes.forEach((row) => {
   res[row[0]!] = { id, name: { cn, en, ja } }
 })
 
-const outputPath = 'src/resources/map.json'
+const outputPath = 'src/resources/generated/map.json'
 fs.outputJsonSync(outputPath, res, { spaces: 2 })
+

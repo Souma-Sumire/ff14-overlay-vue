@@ -124,8 +124,9 @@ async function main() {
   lines.push('')
 
   const output = `${lines.join('\n')}`
-  const outPath = 'src/resources/roleActionCategoryByJob.ts'
+  const outPath = 'src/resources/generated/roleActionCategoryByJob.ts'
   fs.outputFileSync(outPath, output, 'utf8')
 }
 
 await main()
+

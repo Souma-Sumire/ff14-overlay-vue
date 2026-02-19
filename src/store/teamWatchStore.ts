@@ -5,7 +5,7 @@ import type { TeamWatchActionMeta, TeamWatchActionMetaRaw, TeamWatchMemberView, 
 import { defineStore } from 'pinia'
 import { computed, reactive, ref } from 'vue'
 import { JobResourceManager } from '@/modules/jobResourceTracker'
-import { resolveActionDisplayName, resolveActionIconSrc, resolveApiActionMeta, shouldFetchResolvedActionMeta } from '@/resources/actionMetaResolver'
+import { resolveActionDisplayName, resolveActionIconSrc, resolveApiActionMeta, shouldFetchResolvedActionMeta } from '@/resources/logic/actionMetaResolver'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { buildTeamWatchFallbackMeta, cloneTeamWatchActionMetaMap, hasBakedTeamWatchMeta, loadTeamWatchStorageData, normalizeTeamWatchActionMetaRaw, resolveTeamWatchDynamicValue, saveTeamWatchStorageData, TEAM_WATCH_EMPTY_ACTIONS, TEAM_WATCH_STORAGE_VERSION, TEAM_WATCH_WATCH_ACTIONS_DEFAULT } from '@/resources/teamWatchResource'
 import { extractTriggeredActionFromLogLine, isTeamWatchResetLogLine, triggerRuntimeByAction } from '@/store/teamWatchLoglineHelpers'
@@ -574,3 +574,4 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
 })
 
 export { useTeamWatchStore }
+

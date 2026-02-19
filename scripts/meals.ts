@@ -112,8 +112,8 @@ for (const itemValue of Object.values(item)) {
   }
 }
 
-await fs.outputJson('src/resources/meals.json', meals, { spaces: 2 })
-await fs.outputJson('src/resources/medicine.json', medicine, { spaces: 2 })
+await fs.outputJson('src/resources/generated/meals.json', meals, { spaces: 2 })
+await fs.outputJson('src/resources/generated/medicine.json', medicine, { spaces: 2 })
 
 /*
   在1A(NetworkBuff) 拿到count 转十进制  其中0x10000是HQ位
@@ -121,3 +121,4 @@ await fs.outputJson('src/resources/medicine.json', medicine, { spaces: 2 })
   获取属性：去ItemFood作为Key找到其三组BaseParam、Value、Max、Value{HQ}、Max{HQ}，其中BaseParam的数值通过查表BaseParam.csv获取中文属性字符串。
   获取名字：用671去ItemAction.csv的Data[1]得到他的key2617，再用key去Item.csv作为ItemAction得到ID44842的酸柠檬腌鱼。
 */
+

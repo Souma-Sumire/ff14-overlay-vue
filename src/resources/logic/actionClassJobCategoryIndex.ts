@@ -1,4 +1,4 @@
-import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/bakedActionMetaLite'
+import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/generated/bakedActionMetaLite'
 import Util from '@/utils/util'
 
 function normalizeInt(value: unknown) {
@@ -64,3 +64,4 @@ const maps = (() => {
 
 export const ACTION_JOBS_BY_CLASS_JOB_CATEGORY = maps.jobsByCategory
 export const CLASS_JOB_ACTION_CATEGORIES_BY_JOB = maps.categoriesByJob
+

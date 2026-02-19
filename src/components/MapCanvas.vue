@@ -9,7 +9,7 @@ import {
   watch,
 } from 'vue'
 import { getTerritoryTypeByMapID } from '@/resources/contentFinderCondition'
-import Map from '@/resources/map.json'
+import Map from '@/resources/generated/map.json'
 import { ZoneInfo } from '@/resources/zoneInfo'
 import { getPixelCoordinates, Vector2 } from '@/utils/mapCoordinates'
 
@@ -291,3 +291,4 @@ $color4: rgba(128, 0, 128, 1);
     0 0 0.4em $color4;
 }
 </style>
+

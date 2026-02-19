@@ -1,5 +1,5 @@
-import action2ClassJobLevelMapRaw from '@/resources/action2ClassJobLevel.json'
-import { BAKED_ACTION_UPGRADE_STEPS } from '@/resources/bakedActionUpgradeSteps'
+import action2ClassJobLevelMapRaw from '@/resources/generated/action2ClassJobLevel.json'
+import { BAKED_ACTION_UPGRADE_STEPS } from '@/resources/generated/bakedActionUpgradeSteps'
 
 const action2ClassJobLevelMap = new Map<string, string>(
   Object.entries(action2ClassJobLevelMapRaw as Record<string, string>),
@@ -238,3 +238,4 @@ export function resolveUpgradeActionIdForLevel(actionId: number, level: number) 
   levelResolvedUpgradeActionCache.set(cacheKey, bestActionId)
   return bestActionId
 }
+

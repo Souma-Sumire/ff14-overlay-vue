@@ -1,5 +1,5 @@
 // contentFinderCondition.csv A5: =B5&":"&D5&","
-import contentFinderCondition from './contentFinderCondition.json'
+import contentFinderCondition from './generated/contentFinderCondition.json'
 
 const map: Record<string, number> = {}
 for (const key in contentFinderCondition) {
@@ -17,3 +17,4 @@ export function getTerritoryTypeByMapID(mapID: number): number {
     ],
   )
 }
+

@@ -1,8 +1,8 @@
 import type { DynamicValue } from '@/types/dynamicValue'
 import type { TeamWatchActionMetaRaw, TeamWatchStorageData } from '@/types/teamWatchTypes'
 import { getActionChinese } from '@/resources/actionChinese'
-import { hasBakedActionMeta, resolveBakedActionMeta } from '@/resources/actionMetaResolver'
-import { resolveActionMinLevel } from '@/resources/actionMinLevel'
+import { hasBakedActionMeta, resolveBakedActionMeta } from '@/resources/logic/actionMetaResolver'
+import { resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
 import {
   isLowerTierActionId,
 } from '@/utils/compareSaveAction'
@@ -334,3 +334,4 @@ export function saveTeamWatchStorageData(data: TeamWatchStorageData) {
   current.storageVersion = TEAM_WATCH_STORAGE_VERSION
   localStorage.setItem(TEAM_WATCH_STORAGE_NAMESPACE, JSON.stringify(current))
 }
+

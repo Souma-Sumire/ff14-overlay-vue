@@ -7,7 +7,7 @@ import UserCard from '@/components/UserCard.vue'
 import { useDev } from '@/composables/useDev'
 import { useIndexedDB } from '@/composables/useIndexedDB'
 import { useWebSocket } from '@/composables/useWebSocket'
-import { worlds as world } from '@/resources/worlds'
+import { worlds as world } from '@/resources/generated/worlds'
 import Util from '@/utils/util'
 import { addOverlayListener, callOverlayHandler, removeOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
@@ -1117,3 +1117,4 @@ $transition-slow: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 }
 </style>
+

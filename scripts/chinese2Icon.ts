@@ -45,9 +45,10 @@ for (const [id, name] of Object.entries(id2Name)) {
   }
 }
 
-fs.outputJsonSync('src/resources/chinese2Icon.json', chineseToIcon, {
+fs.outputJsonSync('src/resources/generated/chinese2Icon.json', chineseToIcon, {
   spaces: 2,
 })
-fs.outputJsonSync('src/resources/action2ClassJobLevel.json', id2ClassJobLevel, {
+fs.outputJsonSync('src/resources/generated/action2ClassJobLevel.json', id2ClassJobLevel, {
   spaces: 2,
 })
+

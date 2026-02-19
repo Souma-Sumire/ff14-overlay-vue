@@ -12,8 +12,8 @@ import {
   addOverlayListener,
   removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
-import meals from '../resources/meals.json'
-import medicines from '../resources/medicine.json'
+import meals from '@/resources/generated/meals.json'
+import medicines from '@/resources/generated/medicine.json'
 
 const { t } = useLang()
 const { zoneType } = useZone()

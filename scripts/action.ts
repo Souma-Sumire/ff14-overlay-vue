@@ -18,4 +18,5 @@ rows.forEach((row) => {
   id2Name[row[0]!] = row[1]!
 })
 
-fs.outputJsonSync('src/resources/actionChinese.json', id2Name, { spaces: 2 })
+fs.outputJsonSync('src/resources/generated/actionChinese.json', id2Name, { spaces: 2 })
+

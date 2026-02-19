@@ -1,4 +1,4 @@
-import { worldNames } from '@/resources/worlds'
+import { worldNames } from '@/resources/generated/worlds'
 
 export interface RollInfo {
   player: string
@@ -185,3 +185,4 @@ export enum DropOrder {
 }
 
 export const DROP_ORDER = Object.values(DropOrder)
+

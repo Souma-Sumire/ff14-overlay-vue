@@ -1,7 +1,7 @@
 import { useStorage } from '@vueuse/core'
-import action2ClassJobLevelMapRaw from '@/resources/action2ClassJobLevel.json'
-import { BAKED_ROLE_ACTION_IDS } from '@/resources/bakedRoleActionIds'
-import { BAKED_UPGRADE_CHAIN_MIN_LEVEL_BY_ACTION_ID } from '@/resources/bakedUpgradeChainMinLevel'
+import action2ClassJobLevelMapRaw from '@/resources/generated/action2ClassJobLevel.json'
+import { BAKED_ROLE_ACTION_IDS } from '@/resources/generated/bakedRoleActionIds'
+import { BAKED_UPGRADE_CHAIN_MIN_LEVEL_BY_ACTION_ID } from '@/resources/generated/bakedUpgradeChainMinLevel'
 import { ROLE_ACTION_CACHE_VERSION } from '@/resources/cacheVersion'
 
 const ROLE_ACTION_MIN_LEVEL = 1
@@ -111,3 +111,4 @@ export function resolveActionMinLevel(
     return Math.min(baseLevel, knownLevel)
   return baseLevel
 }
+

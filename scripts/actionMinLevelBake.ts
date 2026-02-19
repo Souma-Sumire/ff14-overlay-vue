@@ -1,5 +1,5 @@
 import fs from 'fs-extra'
-import action2ClassJobLevelMapRaw from '../src/resources/action2ClassJobLevel.json'
+import action2ClassJobLevelMapRaw from '../src/resources/generated/action2ClassJobLevel.json'
 import { ACTION_UPGRADE_STEPS } from '../src/utils/compareSaveAction'
 import { readCsvRowsCached } from './csvCache'
 import { csvPaths } from './paths'
@@ -131,7 +131,7 @@ function writeRoleActionIds(roleActionIds: number[]) {
   lines.push('// Source: chs/Action.csv')
   lines.push(`export const BAKED_ROLE_ACTION_IDS: number[] = [${roleActionIds.join(', ')}]`)
   lines.push('')
-  fs.outputFileSync('src/resources/bakedRoleActionIds.ts', lines.join('\n'), 'utf8')
+  fs.outputFileSync('src/resources/generated/bakedRoleActionIds.ts', lines.join('\n'), 'utf8')
 }
 
 function writeUpgradeChainMinLevelMap(map: Record<number, number>) {
@@ -145,7 +145,7 @@ function writeUpgradeChainMinLevelMap(map: Record<number, number>) {
   })
   lines.push('}')
   lines.push('')
-  fs.outputFileSync('src/resources/bakedUpgradeChainMinLevel.ts', lines.join('\n'), 'utf8')
+  fs.outputFileSync('src/resources/generated/bakedUpgradeChainMinLevel.ts', lines.join('\n'), 'utf8')
 }
 
 async function main() {
@@ -156,3 +156,4 @@ async function main() {
 }
 
 await main()
+

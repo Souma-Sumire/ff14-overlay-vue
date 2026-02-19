@@ -11,7 +11,7 @@ import ActionPickerDialog from '@/components/common/ActionPickerDialog.vue'
 import SkillEditorDialog from '@/components/common/SkillEditorDialog.vue'
 import { useLang } from '@/composables/useLang'
 import { getActionChinese, searchActions } from '@/resources/actionChinese'
-import { resolveActionMinLevel } from '@/resources/actionMinLevel'
+import { resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
 import { getGlobalSkillMetaByActionId, GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { keySkillDefinitions } from '@/resources/keySkillResource'
@@ -1428,3 +1428,4 @@ function getDefaultTtsByActionId(actionId: number) {
   margin-top: 8px;
 }
 </style>
+

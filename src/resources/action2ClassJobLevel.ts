@@ -1,5 +1,5 @@
-import action2ClassJobLevelMapRaw from './action2ClassJobLevel.json'
-import { resolveActionMinLevel } from './actionMinLevel'
+import action2ClassJobLevelMapRaw from './generated/action2ClassJobLevel.json'
+import { resolveActionMinLevel } from './logic/actionMinLevel'
 
 const action2ClassJobLevelMap: Map<string, any> = new Map(Object.entries(action2ClassJobLevelMapRaw))
 
@@ -11,3 +11,4 @@ function actionId2ClassJobLevel(id: number): string | undefined {
 }
 
 export { actionId2ClassJobLevel }
+

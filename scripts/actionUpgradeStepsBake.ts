@@ -140,7 +140,7 @@ function writeOutput(steps: Record<number, number>, actionMetaMap: Map<number, A
   lines.push('}')
   lines.push('')
 
-  fs.outputFileSync('src/resources/bakedActionUpgradeSteps.ts', lines.join('\n'), 'utf8')
+  fs.outputFileSync('src/resources/generated/bakedActionUpgradeSteps.ts', lines.join('\n'), 'utf8')
 }
 
 async function main() {
@@ -153,3 +153,4 @@ async function main() {
 }
 
 await main()
+

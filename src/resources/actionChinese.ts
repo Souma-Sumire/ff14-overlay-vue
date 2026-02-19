@@ -1,5 +1,5 @@
 import { actionId2ClassJobLevel } from './action2ClassJobLevel'
-import actionChineseRaw from './actionChinese.json'
+import actionChineseRaw from './generated/actionChinese.json'
 
 const rawActionChinese: Record<string, string> = actionChineseRaw
 let cachedActionList: Array<{ id: number, name: string }> | null = null
@@ -43,3 +43,4 @@ function searchActions(query: string, limit: number = 100): Array<{ id: number, 
 }
 
 export { getActionChinese, searchActions }
+
