@@ -169,10 +169,8 @@ function getRelatedJobIds(job: number) {
 }
 
 function isBaseJob(job: number) {
-  const normalized = Number.isFinite(Number(job)) ? Math.trunc(Number(job)) : 0
-  if (normalized <= 0)
-    return false
-  return Util.baseJobEnumConverted(normalized) !== normalized
+  const n = Math.trunc(Number(job))
+  return n > 0 && Util.baseJobEnumConverted(n) !== n
 }
 
 function getInheritedBaseActions(advancedJob: number) {
@@ -252,12 +250,9 @@ function assertKnownStoredJobs(snapshot: ReturnType<typeof store.getSnapshot>) {
     ...Object.keys(snapshot.watchJobsActionsIDUser).map(v => Number(v)),
   ])
 
-  const invalid = [...allJobs]
-    .filter(jobId => Number.isFinite(jobId) && jobId > 0)
-    .filter((jobId) => {
-      const job = Util.jobEnumToJob(Math.trunc(jobId))
-      return job === 'NONE'
-    })
+  const invalid = [...allJobs].filter((jobId) => {
+    return Number.isFinite(jobId) && jobId > 0 && Util.jobEnumToJob(Math.trunc(jobId)) === 'NONE'
+  })
 
   if (invalid.length > 0) {
     const ids = invalid.sort((a, b) => a - b).join(', ')

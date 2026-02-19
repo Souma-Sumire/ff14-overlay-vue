@@ -62,7 +62,7 @@ describe('teamWatchStore', () => {
 
     // Sort rule should be back to default
     expect(store.sortRuleUser).not.toContain(customJob)
-    // Job is still in watch map (due to buildKnownJobs) but actions are reset to empty/default
+    // Job is still in watch map (due to knownJobs initialization logic) but actions are reset to empty/default
     expect(store.watchJobsActionsIDUser[customJob]).toEqual([0, 0, 0, 0, 0])
   })
 
