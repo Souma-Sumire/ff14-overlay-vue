@@ -1,35 +1,30 @@
 <script setup lang="ts">
+import type { ActionPickerGridItem } from '@/components/common/ActionPickerDialog.vue'
 import { Delete, Download, Plus, Rank, RefreshLeft, Search, Upload } from '@element-plus/icons-vue'
 import { useWindowSize } from '@vueuse/core'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { storeToRefs } from 'pinia'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import ActionPickerDialog from '@/components/common/ActionPickerDialog.vue'
+import { getGlobalSkillMetaByActionId, GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { getActionNameLite } from '@/resources/logic/actionNameLite'
 import {
   buildInheritedBaseJobActions,
+  resolveTeamWatchDynamicValue,
   TEAM_WATCH_EMPTY_ACTIONS,
   TEAM_WATCH_WATCH_ACTIONS_DEFAULT,
 } from '@/resources/teamWatchResource'
 import { useTeamWatchStore } from '@/store/teamWatchStore'
 import { copyToClipboard } from '@/utils/clipboard'
+import { idToSrc } from '@/utils/dynamicValue'
 import Util from '@/utils/util'
 import { getIconSrcByPath, handleImgError, searchActionsByClassJobs } from '@/utils/xivapi'
 
 interface JobRow {
   job: number
   actions: number[]
-}
-
-interface ActionSearchResult {
-  id: number
-  name: string
-  iconSrc?: string
-  classJobLevel?: number
-  recast1000ms?: number
-  isRoleAction?: boolean
 }
 
 interface PickerTarget {
@@ -188,7 +183,7 @@ function getInheritedBaseActions(advancedJob: number) {
   return buildInheritedBaseJobActions(baseJob, source)
 }
 
-const pickerPool = ref<ActionSearchResult[]>([])
+const pickerPool = ref<ActionPickerGridItem[]>([])
 const pickerSearch = ref('')
 const pickerVisible = ref(false)
 
@@ -206,10 +201,17 @@ async function loadPickerPool(job: number) {
     const apiRows = await searchActionsByClassJobs(getRelatedJobIds(job), 500)
     pickerPool.value = apiRows.map(row => ({
       id: row.ID,
-      name: row.Name,
-      iconSrc: row.Icon ? getIconSrcByPath(row.Icon) : undefined,
+      name: getActionNameLite(row.ID) || row.Name || `#${row.ID}`,
+      iconSrc: idToSrc(row.ID) || (row.Icon ? getIconSrcByPath(row.Icon) : undefined),
       classJobLevel: row.ClassJobLevel,
-      recast1000ms: row.Recast1000ms,
+      recast1000ms: (() => {
+        const meta = getGlobalSkillMetaByActionId(row.ID)
+        return resolveTeamWatchDynamicValue(
+          meta?.recast1000ms ?? Number(row.Recast1000ms ?? 0),
+          GLOBAL_SKILL_MAX_LEVEL,
+          Number(row.Recast1000ms ?? 0),
+        )
+      })(),
       isRoleAction: Number(row.IsRoleAction ?? 0) > 0,
     }))
   }
@@ -431,9 +433,6 @@ async function resetSettings() {
 
 onMounted(() => {
   reloadFromStore()
-})
-
-onBeforeUnmount(() => {
 })
 </script>
 

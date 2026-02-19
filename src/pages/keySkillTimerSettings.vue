@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { MessageBoxInputData } from 'element-plus'
+import type { ActionPickerGridItem } from '@/components/common/ActionPickerDialog.vue'
 import type { DynamicValue } from '@/types/dynamicValue'
 import { Download, Plus, RefreshLeft, Upload } from '@element-plus/icons-vue'
 import { useWindowSize } from '@vueuse/core'
@@ -24,16 +25,6 @@ import { tts } from '@/utils/tts'
 import Util from '@/utils/util'
 import { getIconSrcByPath, handleImgError, searchActionsByClassJobs } from '@/utils/xivapi'
 
-interface ActionSearchResult {
-  id: number
-  name: string
-  iconSrc?: string
-  recast1000ms?: number
-  duration?: number
-  minLevel?: number
-  isRoleAction?: boolean
-}
-
 interface KeySkillRow {
   key: string
   id: number
@@ -55,8 +46,8 @@ let syncLocked = false
 
 const pickerVisible = ref(false)
 const pickerSearch = ref('')
-const pickerPool = ref<ActionSearchResult[]>([])
-const pickerPoolCache = reactive<Record<number, ActionSearchResult[]>>({})
+const pickerPool = ref<ActionPickerGridItem[]>([])
+const pickerPoolCache = reactive<Record<number, ActionPickerGridItem[]>>({})
 const pickerLoading = ref(false)
 const pickerSelectedJob = ref<number | null>(null)
 const pickerTargetLine = ref(1)
