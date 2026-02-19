@@ -9,6 +9,7 @@ import { useDev } from '@/composables/useDev'
 import { RandomPartyGenerator } from '@/mock/demoParty'
 import { getActionChinese } from '@/resources/actionChinese'
 import { resolveActionMinLevel } from '@/resources/actionMinLevel'
+import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/bakedActionMetaLite'
 import { getGlobalSkillMetaByActionId, GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { raidbuffs } from '@/resources/keySkillResource'
@@ -326,10 +327,69 @@ const useKeySkillStore = defineStore('keySkill', () => {
     }
   }
 
+  function buildAutoMetaFromBaked(actionId: number): KeySkillAutoMeta | undefined {
+    const id = normalizeInt(actionId, 0, 1)
+    if (id <= 0)
+      return undefined
+    const baked = BAKED_ACTION_META_LITE_BY_ID[id]
+    if (!baked)
+      return undefined
+
+    const globalMeta = getGlobalSkillMetaByActionId(id)
+    const isRoleAction = Number(baked.isRoleAction ?? 0) > 0
+    const classJobTargetId = normalizeInt(Number(baked.classJob ?? 0), 0, 0)
+    const classJobCategoryTargetId = normalizeInt(Number(baked.classJobCategory ?? 0), 0, 0)
+    const actionCategoryTargetId = normalizeInt(Number(baked.actionCategory ?? 0), 0, 0)
+    const jobs = (globalMeta?.job?.length ?? 0) > 0
+      ? uniqueInts(globalMeta!.job)
+      : resolveJobsFromApi(classJobTargetId, classJobCategoryTargetId, actionCategoryTargetId, isRoleAction)
+
+    const resolvedId = normalizeInt(
+      resolveTeamWatchDynamicValue(globalMeta?.id ?? id, GLOBAL_SKILL_MAX_LEVEL, id),
+      id,
+      1,
+    )
+    const bakedRecast1000ms = normalizeInt(Number(baked.recast100ms ?? 0) / 10, 0, 0)
+    const resolvedRecast1000ms = normalizeInt(
+      resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? bakedRecast1000ms, GLOBAL_SKILL_MAX_LEVEL, bakedRecast1000ms),
+      bakedRecast1000ms,
+      0,
+    )
+    const resolvedDuration = normalizeInt(
+      resolveTeamWatchDynamicValue(globalMeta?.duration ?? 0, GLOBAL_SKILL_MAX_LEVEL, 0),
+      0,
+      0,
+    )
+    const baseMinLevel = normalizeInt(Number(baked.classJobLevel ?? 1), 1, 1)
+    const resolvedMinLevel = resolveActionMinLevel(
+      globalMeta?.minLevel ?? baseMinLevel,
+      {
+        actionId: id,
+        isRoleAction,
+        fallback: baseMinLevel,
+      },
+    )
+
+    return {
+      id: resolvedId,
+      name: getActionChinese(resolvedId) || getActionChinese(id) || baked.name || `#${resolvedId}`,
+      src: idToSrc(resolvedId),
+      duration: resolvedDuration,
+      recast1000ms: resolvedRecast1000ms,
+      minLevel: resolvedMinLevel,
+      jobs,
+      classJobTargetId: classJobTargetId > 0 ? classJobTargetId : 0,
+      isRoleAction,
+    }
+  }
+
   function resolveMeta(actionId: number): KeySkillAutoMeta {
     const cached = autoMetaById[actionId]
     if (cached)
       return cached
+    const baked = buildAutoMetaFromBaked(actionId)
+    if (baked)
+      return baked
     const globalMeta = getGlobalSkillMetaByActionId(actionId)
     const resolvedId = normalizeInt(
       resolveTeamWatchDynamicValue(globalMeta?.id ?? actionId, GLOBAL_SKILL_MAX_LEVEL, actionId),
@@ -375,6 +435,13 @@ const useKeySkillStore = defineStore('keySkill', () => {
     const task = pendingAutoMetaTasks.get(id)
     if (task) {
       await task
+      return
+    }
+
+    const baked = buildAutoMetaFromBaked(id)
+    if (baked && baked.jobs.length > 0) {
+      saveAutoMetaToCache(id, baked)
+      refreshedIncompleteAutoMeta.add(id)
       return
     }
 

@@ -12,6 +12,7 @@ const scripts: string[] = [
   'action.ts',
   'roleActionCategoryByJob.ts',
   'chinese2Icon.ts',
+  'actionMetaBake.ts',
   'actionMinLevelBake.ts',
   'map.ts',
   'status.ts',

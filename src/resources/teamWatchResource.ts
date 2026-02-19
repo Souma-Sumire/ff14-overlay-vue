@@ -2,6 +2,7 @@ import type { DynamicValue } from '@/types/dynamicValue'
 import type { TeamWatchActionMetaRaw, TeamWatchStorageData } from '@/types/teamWatchTypes'
 import { getActionChinese } from '@/resources/actionChinese'
 import { resolveActionMinLevel } from '@/resources/actionMinLevel'
+import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/bakedActionMetaLite'
 import {
   isLowerTierActionId,
 } from '@/utils/compareSaveAction'
@@ -165,16 +166,31 @@ export function isTeamWatchLowerTierActionId(actionId: number) {
 
 // 构建技能元数据兜底值（仅基于 actionId 的本地信息）。
 export function buildTeamWatchFallbackMeta(actionId: number): TeamWatchActionMetaRaw {
+  const baked = BAKED_ACTION_META_LITE_BY_ID[actionId]
   return {
     id: actionId,
-    name: getActionChinese(actionId) || `#${actionId}`,
+    name: getActionChinese(actionId) || baked?.name || `#${actionId}`,
     iconSrc: idToSrc(actionId),
-    actionCategory: 0,
-    recast1000ms: 0,
+    actionCategory: Number(baked?.actionCategory ?? 0),
+    recast1000ms: Number(baked?.recast100ms ?? 0) / 10,
     duration: 0,
-    maxCharges: 0,
-    classJobLevel: 1,
+    maxCharges: Number(baked?.maxCharges ?? 0),
+    classJobLevel: resolveActionMinLevel(
+      Number(baked?.classJobLevel ?? 1),
+      {
+        actionId,
+        isRoleAction: baked?.isRoleAction,
+        fallback: 1,
+      },
+    ),
   }
+}
+
+export function hasBakedTeamWatchMeta(actionId: number) {
+  const baked = BAKED_ACTION_META_LITE_BY_ID[actionId]
+  if (!baked)
+    return false
+  return Number.isFinite(baked.actionCategory) && baked.actionCategory > 0
 }
 
 // 规范化 TeamWatchActionMetaRaw。
