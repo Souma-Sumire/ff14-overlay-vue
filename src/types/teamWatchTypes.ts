@@ -14,7 +14,6 @@ interface TeamWatchActionMetaBase<TValue> {
 export type TeamWatchActionMetaRaw = TeamWatchActionMetaBase<DynamicValue>
 
 export interface TeamWatchStorageData {
-  storageVersion?: number
   watchJobsActionsIDUser: Record<number, number[]>
   sortRuleUser: number[]
   actionMetaUser: Record<number, TeamWatchActionMetaRaw>

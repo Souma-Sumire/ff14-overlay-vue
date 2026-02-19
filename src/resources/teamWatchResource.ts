@@ -1,22 +1,18 @@
 import type { DynamicValue } from '@/types/dynamicValue'
 import type { TeamWatchActionMetaRaw, TeamWatchStorageData } from '@/types/teamWatchTypes'
-import { getActionNameLite } from '@/resources/logic/actionNameLite'
 import { hasBakedActionMeta, resolveBakedActionMeta } from '@/resources/logic/actionMetaResolver'
 import { resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
+import { getActionNameLite } from '@/resources/logic/actionNameLite'
 import {
   isLowerTierActionId,
 } from '@/utils/compareSaveAction'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 import { DEFAULT_JOB_SORT_ORDER } from './jobSortOrder'
-import {
-  loadTeamWatchStorageDataWithCompat,
-  parseTeamWatchLegacyStorageData,
-} from './teamWatchStorageCompat'
 
-// TeamWatch 存档版本号（用于本地数据迁移判断）。
-export const TEAM_WATCH_STORAGE_VERSION = 5
 // TeamWatch v5 本地存储键名。
 export const TEAM_WATCH_STORAGE_NAMESPACE = 'TeamWatch5'
+// TeamWatch v4 本地存储键名（仅用于迁移）。
+const TEAM_WATCH_STORAGE_NAMESPACE_LEGACY = 'TeamWatch4'
 
 // 每个职业默认技能槽数量。
 export const TEAM_WATCH_SLOT_COUNT = 5
@@ -278,7 +274,6 @@ function parseCurrentStorageData(raw: string) {
     ) {
       const normalized = parsed as Partial<TeamWatchStorageData>
       return {
-        storageVersion: TEAM_WATCH_STORAGE_VERSION,
         watchJobsActionsIDUser: normalizeWatchJobsActionsIDUser(normalized.watchJobsActionsIDUser),
         sortRuleUser: normalizeSortRuleUser(normalized.sortRuleUser),
         actionMetaUser: normalizeActionMetaUser(normalized.actionMetaUser),
@@ -293,26 +288,60 @@ function parseCurrentStorageData(raw: string) {
 
 function buildEmptyStorageData(): TeamWatchStorageData {
   return {
-    storageVersion: TEAM_WATCH_STORAGE_VERSION,
     watchJobsActionsIDUser: normalizeWatchJobsActionsIDUser(undefined),
     sortRuleUser: normalizeSortRuleUser(undefined),
     actionMetaUser: normalizeActionMetaUser(undefined),
   }
 }
 
+function parseLegacyStorageData(raw: string): TeamWatchStorageData | null {
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>
+    if (!parsed || typeof parsed !== 'object')
+      return null
+
+    const watchSource = parsed.watchJobsActionsIDUser
+    if (!watchSource || typeof watchSource !== 'object')
+      return null
+    if (!Array.isArray(parsed.sortRuleUser))
+      return null
+
+    return {
+      watchJobsActionsIDUser: normalizeWatchJobsActionsIDUser(watchSource),
+      sortRuleUser: normalizeSortRuleUser(parsed.sortRuleUser),
+      actionMetaUser: normalizeActionMetaUser(undefined),
+    }
+  }
+  catch {
+    return null
+  }
+}
+
 // 读取 TeamWatch 存档（含 TeamWatch4 -> TeamWatch5 自动迁移）。
 export function loadTeamWatchStorageData(): TeamWatchStorageData {
-  return loadTeamWatchStorageDataWithCompat({
-    namespace: TEAM_WATCH_STORAGE_NAMESPACE,
-    parseCurrent: raw => parseCurrentStorageData(raw),
-    parseLegacy: raw => parseTeamWatchLegacyStorageData(raw, {
-      storageVersion: TEAM_WATCH_STORAGE_VERSION,
-      normalizeWatchJobsActionsIDUser,
-      normalizeSortRuleUser,
-      normalizeActionMetaUser,
-    }),
-    buildEmpty: buildEmptyStorageData,
-  })
+  // 读取顺序：
+  // 1. 有 TeamWatch4 则迁移到 TeamWatch5，并删除 TeamWatch4
+  // 2. 没有 TeamWatch4 读 TeamWatch5
+  // 3. 都没有则默认配置
+  const legacyRaw = localStorage.getItem(TEAM_WATCH_STORAGE_NAMESPACE_LEGACY)
+  if (legacyRaw !== null) {
+    const migrated = parseLegacyStorageData(legacyRaw)
+    if (migrated) {
+      localStorage.setItem(TEAM_WATCH_STORAGE_NAMESPACE, JSON.stringify(migrated))
+      localStorage.removeItem(TEAM_WATCH_STORAGE_NAMESPACE_LEGACY)
+      return migrated
+    }
+    return buildEmptyStorageData()
+  }
+
+  const currentRaw = localStorage.getItem(TEAM_WATCH_STORAGE_NAMESPACE)
+  if (currentRaw) {
+    const parsed = parseCurrentStorageData(currentRaw)
+    if (parsed)
+      return parsed
+  }
+
+  return buildEmptyStorageData()
 }
 
 // 写入 TeamWatch 存档（仅更新本模块字段并标准化）。
@@ -331,6 +360,5 @@ export function saveTeamWatchStorageData(data: TeamWatchStorageData) {
   current.watchJobsActionsIDUser = normalizeWatchJobsActionsIDUser(data.watchJobsActionsIDUser)
   current.sortRuleUser = normalizeSortRuleUser(data.sortRuleUser)
   current.actionMetaUser = normalizeActionMetaUser(data.actionMetaUser)
-  current.storageVersion = TEAM_WATCH_STORAGE_VERSION
   localStorage.setItem(TEAM_WATCH_STORAGE_NAMESPACE, JSON.stringify(current))
 }

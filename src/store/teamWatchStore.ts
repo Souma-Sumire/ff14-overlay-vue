@@ -7,7 +7,7 @@ import { computed, reactive, ref } from 'vue'
 import { JobResourceManager } from '@/modules/jobResourceTracker'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { resolveActionDisplayName, resolveActionIconSrc, resolveApiActionMeta, shouldFetchResolvedActionMeta } from '@/resources/logic/actionMetaResolver'
-import { buildTeamWatchFallbackMeta, cloneTeamWatchActionMetaMap, hasBakedTeamWatchMeta, loadTeamWatchStorageData, normalizeTeamWatchActionMetaRaw, resolveTeamWatchDynamicValue, saveTeamWatchStorageData, TEAM_WATCH_EMPTY_ACTIONS, TEAM_WATCH_STORAGE_VERSION, TEAM_WATCH_WATCH_ACTIONS_DEFAULT } from '@/resources/teamWatchResource'
+import { buildTeamWatchFallbackMeta, cloneTeamWatchActionMetaMap, hasBakedTeamWatchMeta, loadTeamWatchStorageData, normalizeTeamWatchActionMetaRaw, resolveTeamWatchDynamicValue, saveTeamWatchStorageData, TEAM_WATCH_EMPTY_ACTIONS, TEAM_WATCH_WATCH_ACTIONS_DEFAULT } from '@/resources/teamWatchResource'
 import { extractTriggeredActionFromLogLine, isTeamWatchResetLogLine, triggerRuntimeByAction } from '@/store/teamWatchLoglineHelpers'
 import { clearRuntimeCooldownStates, ensureCooldownHistory, ensureRuntime, updateRuntimeCollection } from '@/store/teamWatchRuntimeHelpers'
 import { buildSkillStateCacheKey, buildTeamWatchSkillStatusText, resolveTeamWatchSkillState } from '@/store/teamWatchSkillStateHelpers'
@@ -454,7 +454,6 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
 
   function getSnapshot() {
     return {
-      storageVersion: TEAM_WATCH_STORAGE_VERSION,
       sortRuleUser: [...sortRuleUser.value],
       watchJobsActionsIDUser: deepCloneWatchMap(watchJobsActionsIDUser.value),
       actionMetaUser: cloneTeamWatchActionMetaMap(actionMetaUser.value),
@@ -521,30 +520,21 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
     const parsed = JSON.parse(decoded) as Record<string, unknown>
     if (!parsed || typeof parsed !== 'object')
       throw new Error('invalid teamwatch payload')
-    const storageVersion = Number(parsed.storageVersion ?? 0)
-    const isV5Payload = Number.isFinite(storageVersion) && storageVersion >= TEAM_WATCH_STORAGE_VERSION
 
-    const hasNewShape = parsed && typeof parsed === 'object' && (
-      Object.prototype.hasOwnProperty.call(parsed, 'watchJobsActionsIDUser')
-      || Object.prototype.hasOwnProperty.call(parsed, 'sortRuleUser')
-      || Object.prototype.hasOwnProperty.call(parsed, 'actionMetaUser')
-    )
+    const sortRuleCandidate = parsed.sortRuleUser
+    const watchMapCandidate = parsed.watchJobsActionsIDUser
+    if (!Array.isArray(sortRuleCandidate) || !watchMapCandidate || typeof watchMapCandidate !== 'object')
+      throw new Error('invalid teamwatch payload')
 
-    if (hasNewShape) {
-      saveSettings(
-        (parsed.sortRuleUser as number[]) ?? sortRuleUser.value,
-        (parsed.watchJobsActionsIDUser as Record<number, number[]>) ?? watchJobsActionsIDUser.value,
-        isV5Payload
-          ? ((parsed.actionMetaUser as Record<number, TeamWatchActionMetaRaw>) ?? actionMetaUser.value)
-          : {},
-      )
-      return
-    }
+    const actionMetaCandidate = parsed.actionMetaUser
+    const nextActionMetaUser = actionMetaCandidate && typeof actionMetaCandidate === 'object'
+      ? (actionMetaCandidate as Record<number, TeamWatchActionMetaRaw>)
+      : {}
 
     saveSettings(
-      sortRuleUser.value,
-      parsed as unknown as Record<number, number[]>,
-      {},
+      sortRuleCandidate as number[],
+      watchMapCandidate as Record<number, number[]>,
+      nextActionMetaUser,
     )
   }
 
