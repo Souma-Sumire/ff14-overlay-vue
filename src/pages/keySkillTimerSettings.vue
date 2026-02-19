@@ -303,6 +303,8 @@ const pickerDisabledActionSet = computed(() => {
 })
 
 function getPickerDisableReason(actionId: number) {
+  if (isTeamWatchLowerTierActionId(actionId))
+    return '下位技能'
   if (isCompareSameSourceId(actionId))
     return '共享CD'
   if (pickerDisabledActionSet.value.has(actionId))
