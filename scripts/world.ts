@@ -12,7 +12,7 @@ rows.forEach((row, index) => {
 })
 
 const worldsArray = Array.from(worlds)
-const worldsString = `export const worlds = ${JSON.stringify(worldsArray, null, 2)};\n`
+const worldsString = `/* eslint-disable style/quotes */\nexport const worlds = ${JSON.stringify(worldsArray, null, 2)};\n`
 const outputPath = 'src/resources/generated/worlds.ts'
 
 fs.outputFileSync(outputPath, worldsString)

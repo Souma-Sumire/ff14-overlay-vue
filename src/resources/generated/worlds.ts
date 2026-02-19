@@ -1,3 +1,4 @@
+/* eslint-disable style/quotes */
 export const worlds = [
   "Dev",
   "Ravana",
