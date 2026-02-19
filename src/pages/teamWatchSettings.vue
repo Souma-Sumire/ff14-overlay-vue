@@ -659,7 +659,7 @@ onBeforeUnmount(() => {
         </el-popconfirm>
         <CommonThemeToggle storage-key="team-watch-settings" />
         <div class="lang-switch-wrap">
-          <CommonLanguageSwitcher :teleported="false" />
+          <CommonLanguageSwitcher />
         </div>
       </div>
     </header>
@@ -926,7 +926,6 @@ onBeforeUnmount(() => {
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--panel);
-  overflow: hidden;
   min-height: 34px;
 }
 

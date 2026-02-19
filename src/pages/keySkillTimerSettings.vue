@@ -965,7 +965,7 @@ function getDefaultTtsByActionId(actionId: number) {
         </el-button>
         <CommonThemeToggle storage-key="key-skill-timer-2" />
         <div class="lang-switch-wrap">
-          <CommonLanguageSwitcher :teleported="false" />
+          <CommonLanguageSwitcher />
         </div>
       </div>
     </header>
