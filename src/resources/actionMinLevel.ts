@@ -3,7 +3,6 @@ import action2ClassJobLevelMapRaw from '@/resources/action2ClassJobLevel.json'
 import { BAKED_ROLE_ACTION_IDS } from '@/resources/bakedRoleActionIds'
 import { BAKED_UPGRADE_CHAIN_MIN_LEVEL_BY_ACTION_ID } from '@/resources/bakedUpgradeChainMinLevel'
 import { ROLE_ACTION_CACHE_VERSION } from '@/resources/cacheVersion'
-import { ACTION_UPGRADE_LEVEL_OVERRIDES } from '@/utils/compareSaveAction'
 
 const ROLE_ACTION_MIN_LEVEL = 1
 const ROLE_ACTION_CACHE_STORAGE_KEY = 'action-role-action-id-cache'
@@ -49,10 +48,6 @@ function resolveKnownMinLevelByActionId(actionId: number) {
   if (!Number.isFinite(actionId) || actionId <= 0)
     return undefined
   const id = Math.trunc(actionId)
-
-  const overridden = Number(ACTION_UPGRADE_LEVEL_OVERRIDES[id])
-  if (Number.isFinite(overridden) && overridden > 0)
-    return normalizeMinLevelValue(overridden, 1)
 
   if (knownRoleActionIds.has(id))
     return ROLE_ACTION_MIN_LEVEL

@@ -48,12 +48,6 @@ export function isCompareSameSourceId(id: number) {
 // 技能进化映射：由脚本从本地 CSV 自动生成。
 export const ACTION_UPGRADE_STEPS: Record<number, number> = BAKED_ACTION_UPGRADE_STEPS
 
-// 技能进化链学习等级覆写表（可选）。
-// key: actionId, value: 学习等级
-// 若未配置则回退到 action2ClassJobLevel。
-export const ACTION_UPGRADE_LEVEL_OVERRIDES: Record<number, number> = {
-}
-
 export function getUpgradeActionChain(actionId: number): number[] {
   if (!Number.isFinite(actionId) || actionId <= 0)
     return []
@@ -137,13 +131,6 @@ export function getActionUpgradeMinLevel(actionId: number) {
   const cached = actionUpgradeLevelCache.get(id)
   if (cached !== undefined)
     return cached
-
-  const overridden = Number(ACTION_UPGRADE_LEVEL_OVERRIDES[id])
-  if (Number.isFinite(overridden) && overridden > 0) {
-    const resolved = normalizeLevel(overridden)
-    actionUpgradeLevelCache.set(id, resolved)
-    return resolved
-  }
 
   const fromMap = Number(actionId2ClassJobLevelRaw(id))
   const resolved = Number.isFinite(fromMap) && fromMap > 0
