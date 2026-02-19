@@ -172,7 +172,6 @@ async function main() {
   const upgradeChainMinLevelMap = buildUpgradeChainMinLevelMap(roleActionIds)
   writeRoleActionIds(roleActionIds)
   writeUpgradeChainMinLevelMap(upgradeChainMinLevelMap)
-  console.log(`[actionMinLevelBake] roleActionIds=${roleActionIds.length}, upgradeFamilyMembers=${Object.keys(upgradeChainMinLevelMap).length}`)
 }
 
 await main()
