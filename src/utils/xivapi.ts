@@ -15,14 +15,17 @@ type SiteName = keyof typeof SITE_HOST
 
 const CACHE_VERSION_STORAGE_KEY = 'xivapi-cache-version'
 const PRIMARY_SITE_STORAGE_KEY = 'xivapi-primary-site'
+const ACTION_SEARCH_CACHE_STORAGE_KEY = 'xivapi-action-search-cache'
 const cacheVersionStorage = useStorage<string>(CACHE_VERSION_STORAGE_KEY, '')
 const primarySiteStorage = useStorage<string>(PRIMARY_SITE_STORAGE_KEY, 'cafe')
+const actionSearchCacheStorage = useStorage<Record<string, XivApiActionSearchItem[]>>(ACTION_SEARCH_CACHE_STORAGE_KEY, {})
 
 function ensureCacheVersion(): void {
   if (cacheVersionStorage.value === XIVAPI_CACHE_VERSION)
     return
   cacheVersionStorage.value = XIVAPI_CACHE_VERSION
   primarySiteStorage.value = 'cafe'
+  actionSearchCacheStorage.value = {}
 }
 
 function isSiteName(value: unknown): value is SiteName {
@@ -208,6 +211,14 @@ function getActionCacheKey(type: string, actionId: number): string {
   return `${type}:${Math.trunc(actionId)}`
 }
 
+function normalizeSearchCacheList(raw: unknown): XivApiActionSearchItem[] {
+  if (!Array.isArray(raw))
+    return []
+  return raw
+    .map(item => toActionSearchItem((item ?? {}) as XivApiActionSearchItem))
+    .filter((item): item is XivApiActionSearchItem => !!item)
+}
+
 function hasAllColumns(record: Record<string, any>, columns: string[]): boolean {
   return columns.every(col => col === 'ID' || Object.prototype.hasOwnProperty.call(record, col))
 }
@@ -339,6 +350,11 @@ export async function searchActionsByClassJobs(jobIds: number[], limit = 500): P
   const cacheKey = `${ACTION_SEARCH_CACHE_VERSION}|${normalized.join(',')}|${limit}`
   if (actionSearchByJobCache.has(cacheKey))
     return [...actionSearchByJobCache.get(cacheKey)!]
+  const persistentCached = normalizeSearchCacheList(actionSearchCacheStorage.value[cacheKey])
+  if (persistentCached.length > 0) {
+    actionSearchByJobCache.set(cacheKey, persistentCached)
+    return [...persistentCached]
+  }
 
   const merged = new Map<number, XivApiActionSearchItem>()
 
@@ -372,6 +388,10 @@ export async function searchActionsByClassJobs(jobIds: number[], limit = 500): P
     .slice(0, limit)
 
   actionSearchByJobCache.set(cacheKey, list)
+  actionSearchCacheStorage.value = {
+    ...actionSearchCacheStorage.value,
+    [cacheKey]: list,
+  }
   return [...list]
 }
 
