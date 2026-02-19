@@ -537,10 +537,30 @@ function getActionMeta(actionId: number) {
   return store.resolveActionMeta(actionId, GLOBAL_SKILL_MAX_LEVEL, raw)
 }
 
+function assertKnownStoredJobs(snapshot: ReturnType<typeof store.getSnapshot>) {
+  const allJobs = new Set<number>([
+    ...snapshot.sortRuleUser,
+    ...Object.keys(snapshot.watchJobsActionsIDUser).map(v => Number(v)),
+  ])
+
+  const invalid = [...allJobs]
+    .filter(jobId => Number.isFinite(jobId) && jobId > 0)
+    .filter((jobId) => {
+      const job = Util.jobEnumToJob(Math.trunc(jobId))
+      return job === 'NONE'
+    })
+
+  if (invalid.length > 0) {
+    const ids = invalid.sort((a, b) => a - b).join(', ')
+    throw new Error(`[UnknownJob] teamWatchSettings existing data contains unknown jobs: ${ids}`)
+  }
+}
+
 function reloadFromStore() {
   isHydrating.value = true
   store.loadFromStorage()
   const snapshot = store.getSnapshot()
+  assertKnownStoredJobs(snapshot)
   sortRule.value = [...snapshot.sortRuleUser]
   const jobs = Array.from(new Set([
     ...DEFAULT_JOB_SORT_ORDER,

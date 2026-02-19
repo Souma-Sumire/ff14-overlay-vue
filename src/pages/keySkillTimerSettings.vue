@@ -377,6 +377,29 @@ function resolveBaselineMinLevel(actionId: number) {
   )
 }
 
+let hasCheckedExistingRowJobs = false
+function assertKnownExistingRowJobs() {
+  const invalid = new Set<number>()
+  rows.value.forEach((row) => {
+    if (!Array.isArray(row.job))
+      return
+    row.job.forEach((jobId) => {
+      const numeric = Number(jobId)
+      if (!Number.isFinite(numeric) || numeric <= 0)
+        return
+      const normalized = Math.trunc(numeric)
+      const job = Util.jobEnumToJob(normalized)
+      if (job === 'NONE')
+        invalid.add(normalized)
+    })
+  })
+
+  if (invalid.size > 0) {
+    const ids = [...invalid].sort((a, b) => a - b).join(', ')
+    throw new Error(`[UnknownJob] keySkillTimerSettings existing data contains unknown jobs: ${ids}`)
+  }
+}
+
 function syncBucketsFromStore() {
   if (syncLocked)
     return
@@ -428,6 +451,10 @@ function updateLineBucket(line: number, list: unknown[]) {
 }
 
 watch(rows, () => {
+  if (!hasCheckedExistingRowJobs) {
+    assertKnownExistingRowJobs()
+    hasCheckedExistingRowJobs = true
+  }
   syncBucketsFromStore()
   rows.value.forEach((row) => {
     void storeKeySkill.ensureActionAutoMeta(row.id)
