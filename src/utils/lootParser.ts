@@ -1,4 +1,4 @@
-import { worldNames } from '@/resources/generated/worlds'
+import { worlds as worldNames } from '@/resources/generated/worlds'
 
 export interface RollInfo {
   player: string
