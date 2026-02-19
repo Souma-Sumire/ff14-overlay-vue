@@ -5,22 +5,17 @@ import { useDebounceFn, useWindowSize } from '@vueuse/core'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { VueDraggable } from 'vue-draggable-plus'
 import ActionPickerDialog from '@/components/common/ActionPickerDialog.vue'
-import SkillEditorDialog from '@/components/common/SkillEditorDialog.vue'
-import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { getActionNameLite, searchActionNamesLite } from '@/resources/logic/actionNameLite'
 import {
   cloneTeamWatchActionMetaMap,
   isTeamWatchLowerTierActionId,
-  normalizeTeamWatchActionMetaRaw,
-  resolveTeamWatchDynamicValue,
   TEAM_WATCH_EMPTY_ACTIONS,
   TEAM_WATCH_WATCH_ACTIONS_DEFAULT,
 } from '@/resources/teamWatchResource'
 import { useTeamWatchStore } from '@/store/teamWatchStore'
 import { copyToClipboard } from '@/utils/clipboard'
 import { compareSame, isCompareSameSourceId, normalizeUpgradeActionId } from '@/utils/compareSaveAction'
-import { validateRequiredDynamicInput } from '@/utils/dynamicValueValidation'
 import Util from '@/utils/util'
 import { getIconSrcByPath, handleImgError, searchActionsByClassJobs } from '@/utils/xivapi'
 
@@ -43,25 +38,6 @@ interface PickerTarget {
   index: number
 }
 
-interface MetaEditorContext {
-  actionId: number
-  job?: number
-  index?: number
-  assignAfterConfirm: boolean
-  fetchFromApi: boolean
-}
-
-interface MetaFormModel {
-  actionId: number
-  id: string
-  name: string
-  iconSrc: string
-  recast1000ms: string
-  duration: string
-  maxCharges: string
-  classJobLevel: number
-}
-
 type SortGroup = 'tank' | 'healer' | 'dps' | 'other'
 
 const store = useTeamWatchStore()
@@ -77,34 +53,11 @@ const pickerResult = ref<ActionSearchResult[]>([])
 const pickerPool = ref<ActionSearchResult[]>([])
 const pickerLoading = ref(false)
 const pickerTarget = ref<PickerTarget | null>(null)
-const pickerReturnMetaContext = ref<MetaEditorContext | null>(null)
 const { width: viewportWidth } = useWindowSize()
-
-const metaEditorVisible = ref(false)
-const metaEditorLoading = ref(false)
-const metaEditorContext = ref<MetaEditorContext | null>(null)
-const metaEditorErrors = ref<string[]>([])
-const metaFieldErrors = reactive({
-  id: '',
-  recast1000ms: '',
-  duration: '',
-  maxCharges: '',
-})
-const metaForm = reactive<MetaFormModel>({
-  actionId: 0,
-  id: '',
-  name: '',
-  iconSrc: '',
-  recast1000ms: '',
-  duration: '',
-  maxCharges: '',
-  classJobLevel: 1,
-})
 
 const filterText = ref('')
 const showBaseJobs = ref(false)
 const isHydrating = ref(false)
-const isCtrlPressed = ref(false)
 
 const rowsByJob = computed(() => {
   const map = new Map<number, JobRow>()
@@ -346,70 +299,11 @@ const pickerRoleGridItems = computed(() => {
   })
 })
 
-const metaEditorCanReplaceSkill = computed(() => {
-  const context = metaEditorContext.value
-  return !!context && context.job !== undefined && context.index !== undefined
-})
-
-const metaEditorTargetSlotLabel = computed(() => {
-  const context = metaEditorContext.value
-  if (!context || context.job === undefined || context.index === undefined)
-    return ''
-  return `${getJobName(context.job)} · 技能位 ${context.index + 1}`
-})
-
 const pickerDialogWidth = computed(() => {
   const available = Math.trunc(viewportWidth.value) - 20
   const safeWidth = Math.max(320, available)
   return `${Math.min(980, safeWidth)}px`
 })
-
-const metaEditorIconSrc = computed(() => {
-  if (metaForm.actionId <= 0)
-    return ''
-  const local = metaForm.iconSrc.trim()
-  if (local)
-    return local
-  return getActionMeta(metaForm.actionId).iconSrc
-})
-
-const metaEditorTitle = computed(() => {
-  if (metaForm.actionId <= 0)
-    return '未选择技能'
-  const localName = metaForm.name.trim()
-  if (localName)
-    return localName
-  return getActionNameLite(metaForm.actionId) || getActionMeta(metaForm.actionId).name || `#${metaForm.actionId}`
-})
-
-const metaEditorSubtitle = computed(() => {
-  if (metaForm.actionId <= 0)
-    return ''
-  const idLabel = `#${metaForm.actionId}`
-  const slotLabel = metaEditorTargetSlotLabel.value
-  return slotLabel ? `${idLabel} · ${slotLabel}` : idLabel
-})
-
-const dynamicValueTipText = 'DynamicValue支持输入数字或动态表达式，例如 `(lv) => lv>=94 ? 40 : 60`。'
-
-const skillEditorPrimaryAction = computed(() => ({
-  show: metaEditorCanReplaceSkill.value,
-  disabled: metaEditorLoading.value,
-}))
-
-const skillEditorDeleteAction = computed(() => ({
-  show: metaEditorCanReplaceSkill.value,
-  disabled: metaEditorLoading.value,
-  confirmTitle: '将清空当前槽位中的技能，是否继续？',
-  confirmButtonText: '清空',
-}))
-
-const skillEditorResetAction = computed(() => ({
-  show: metaForm.actionId > 0,
-  disabled: metaEditorLoading.value,
-  confirmTitle: '将按当前技能ID恢复默认参数，是否继续？',
-  confirmButtonText: '恢复',
-}))
 
 const baseJobsByAdvanced = computed<Record<number, number>>(() => {
   const map: Record<number, number> = {}
@@ -491,7 +385,6 @@ watch(pickerVisible, (visible) => {
   if (visible)
     return
   pickerTarget.value = null
-  pickerReturnMetaContext.value = null
   pickerSearch.value = ''
   pickerResult.value = []
   pickerPool.value = []
@@ -510,13 +403,6 @@ function normalizeActions(actions: unknown): number[] {
   return normalized.length > 0 ? normalized : [0]
 }
 
-function normalizeLevelNumber(input: unknown): number | null {
-  const numeric = Number(input)
-  if (Number.isFinite(numeric))
-    return Math.max(1, Math.trunc(numeric))
-  return null
-}
-
 function getJobName(job: number) {
   const full = Util.jobToFullName(Util.jobEnumToJob(job))
   return full.cn || full.en || `Job-${job}`
@@ -530,11 +416,7 @@ function getJobIconSrc(job: number) {
 function getActionMeta(actionId: number) {
   if (actionId <= 0)
     return store.resolveActionMeta(0, 100)
-  const raw = normalizeTeamWatchActionMetaRaw(
-    actionId,
-    actionMetaUser.value[actionId] ?? store.getActionMetaRaw(actionId),
-  )
-  return store.resolveActionMeta(actionId, GLOBAL_SKILL_MAX_LEVEL, raw)
+  return store.resolveActionMeta(actionId, 100)
 }
 
 function assertKnownStoredJobs(snapshot: ReturnType<typeof store.getSnapshot>) {
@@ -650,17 +532,7 @@ async function appendActionAndOpen(job: number) {
   await openPicker(job, index)
 }
 
-async function onSlotCardClick(job: number, index: number, actionId: number) {
-  if (actionId > 0) {
-    await openMetaEditor({
-      actionId,
-      job,
-      index,
-      assignAfterConfirm: false,
-      fetchFromApi: false,
-    })
-    return
-  }
+async function onSlotCardClick(job: number, index: number) {
   await openPicker(job, index)
 }
 
@@ -678,9 +550,8 @@ function clearJobActions(job: number) {
   row.actions = [0]
 }
 
-async function openPicker(job: number, index: number, returnContext: MetaEditorContext | null = null) {
+async function openPicker(job: number, index: number) {
   pickerTarget.value = { job, index }
-  pickerReturnMetaContext.value = returnContext
   pickerVisible.value = true
   pickerSearch.value = ''
   pickerPool.value = []
@@ -689,222 +560,15 @@ async function openPicker(job: number, index: number, returnContext: MetaEditorC
   pickerResult.value = [...pickerPool.value]
 }
 
-function fillMetaForm(actionId: number, raw: TeamWatchActionMetaRaw) {
-  metaForm.actionId = actionId
-  metaForm.id = String(raw.id)
-  metaForm.name = raw.name
-  metaForm.iconSrc = raw.iconSrc
-  metaForm.recast1000ms = String(raw.recast1000ms)
-  metaForm.duration = String(raw.duration)
-  metaForm.maxCharges = String(raw.maxCharges)
-  metaForm.classJobLevel = normalizeLevelNumber(raw.classJobLevel) ?? 1
-  metaEditorErrors.value = []
-  metaFieldErrors.id = ''
-  metaFieldErrors.recast1000ms = ''
-  metaFieldErrors.duration = ''
-  metaFieldErrors.maxCharges = ''
-}
-
-async function openMetaEditor(context: MetaEditorContext) {
-  if (context.actionId <= 0)
-    return
-
-  metaEditorContext.value = context
-  metaEditorLoading.value = true
-  metaEditorVisible.value = true
-  metaEditorErrors.value = []
-
-  try {
-    let source = normalizeTeamWatchActionMetaRaw(
-      context.actionId,
-      actionMetaUser.value[context.actionId] ?? store.getActionMetaRaw(context.actionId),
-    )
-    if (context.fetchFromApi) {
-      source = await store.fetchActionMetaDraft(context.actionId)
-      if (actionMetaUser.value[context.actionId]) {
-        source = normalizeTeamWatchActionMetaRaw(context.actionId, actionMetaUser.value[context.actionId]!)
-      }
-    }
-    fillMetaForm(context.actionId, source)
-  }
-  finally {
-    metaEditorLoading.value = false
-    applyMetaFormRealtime()
-  }
-}
-
 async function pickAction(actionId: number) {
   const target = pickerTarget.value
   if (!target)
     return
+  const row = rowsByJob.value.get(target.job)
+  if (!row || target.index < 0 || target.index >= row.actions.length)
+    return
+  row.actions[target.index] = Math.trunc(Number(actionId) || 0)
   pickerVisible.value = false
-  await openMetaEditor({
-    actionId,
-    job: target.job,
-    index: target.index,
-    assignAfterConfirm: true,
-    fetchFromApi: true,
-  })
-}
-
-function validateMetaForm() {
-  const errors: string[] = []
-  const idCheck = validateRequiredDynamicInput(metaForm.id, '技能 ID')
-  metaFieldErrors.id = idCheck.message
-  let resolvedSkillId = 0
-  if (idCheck.message) {
-    errors.push(idCheck.message)
-  }
-  else if (idCheck.parsed !== null) {
-    const resolved = resolveTeamWatchDynamicValue(idCheck.parsed, GLOBAL_SKILL_MAX_LEVEL, 0)
-    if (!Number.isFinite(resolved) || resolved <= 0) {
-      metaFieldErrors.id = `技能 ID 在 ${GLOBAL_SKILL_MAX_LEVEL} 级解析后必须大于 0`
-      errors.push(metaFieldErrors.id)
-    }
-    else {
-      resolvedSkillId = Math.trunc(resolved)
-    }
-  }
-
-  const recastCheck = validateRequiredDynamicInput(metaForm.recast1000ms, '冷却时间')
-  metaFieldErrors.recast1000ms = recastCheck.message
-  if (recastCheck.message)
-    errors.push(recastCheck.message)
-
-  const durationCheck = validateRequiredDynamicInput(metaForm.duration, '持续时间')
-  metaFieldErrors.duration = durationCheck.message
-  if (durationCheck.message)
-    errors.push(durationCheck.message)
-
-  const maxChargesCheck = validateRequiredDynamicInput(metaForm.maxCharges, '最大层数')
-  metaFieldErrors.maxCharges = maxChargesCheck.message
-  if (maxChargesCheck.message)
-    errors.push(maxChargesCheck.message)
-
-  const classJobLevel = normalizeLevelNumber(metaForm.classJobLevel)
-  if (classJobLevel === null) {
-    errors.push('等级不能为空')
-  }
-
-  metaEditorErrors.value = errors
-  if (errors.length > 0)
-    return null
-
-  const name = metaForm.name.trim() || getActionNameLite(metaForm.actionId) || `技能 #${metaForm.actionId}`
-  const currentActionCategory = Number(
-    actionMetaUser.value[metaForm.actionId]?.actionCategory
-    ?? store.getActionMetaRaw(metaForm.actionId, false).actionCategory
-    ?? 0,
-  )
-  const normalizedActionCategory = Number.isFinite(currentActionCategory) && currentActionCategory > 0
-    ? Math.trunc(currentActionCategory)
-    : 0
-
-  return normalizeTeamWatchActionMetaRaw(metaForm.actionId, {
-    id: resolvedSkillId,
-    name,
-    iconSrc: metaForm.iconSrc.trim(),
-    actionCategory: normalizedActionCategory,
-    recast1000ms: recastCheck.parsed!,
-    duration: durationCheck.parsed!,
-    maxCharges: maxChargesCheck.parsed!,
-    classJobLevel: classJobLevel!,
-  } satisfies TeamWatchActionMetaRaw)
-}
-
-function applyMetaFormRealtime() {
-  if (!metaEditorVisible.value)
-    return
-  if (metaEditorLoading.value)
-    return
-  const normalized = validateMetaForm()
-  if (!normalized)
-    return
-
-  actionMetaUser.value[metaForm.actionId] = normalized
-
-  const context = metaEditorContext.value
-  if (context?.assignAfterConfirm && context.job !== undefined && context.index !== undefined) {
-    const row = rowsByJob.value.get(context.job)
-    if (row && context.index >= 0 && context.index < row.actions.length)
-      row.actions[context.index] = context.actionId
-  }
-}
-
-watch(
-  () => [
-    metaEditorVisible.value,
-    metaForm.id,
-    metaForm.name,
-    metaForm.iconSrc,
-    metaForm.recast1000ms,
-    metaForm.duration,
-    metaForm.maxCharges,
-    metaForm.classJobLevel,
-  ],
-  () => {
-    applyMetaFormRealtime()
-  },
-)
-
-async function openPickerFromMetaEditor() {
-  const context = metaEditorContext.value
-  if (!context || context.job === undefined || context.index === undefined)
-    return
-  metaEditorVisible.value = false
-  await openPicker(context.job, context.index, {
-    actionId: context.actionId,
-    job: context.job,
-    index: context.index,
-    assignAfterConfirm: false,
-    fetchFromApi: false,
-  })
-}
-
-async function returnToMetaEditorFromPicker() {
-  const context = pickerReturnMetaContext.value
-  if (!context)
-    return
-  await openMetaEditor({
-    actionId: context.actionId,
-    job: context.job,
-    index: context.index,
-    assignAfterConfirm: false,
-    fetchFromApi: false,
-  })
-}
-
-function handlePickerBack() {
-  if (pickerReturnMetaContext.value)
-    void returnToMetaEditorFromPicker()
-}
-
-function clearCurrentSlotSkill() {
-  const context = metaEditorContext.value
-  if (!context || context.job === undefined || context.index === undefined)
-    return
-  const row = rowsByJob.value.get(context.job)
-  if (!row || context.index < 0 || context.index >= row.actions.length)
-    return
-  row.actions[context.index] = 0
-  metaEditorVisible.value = false
-  ElMessage.success('已清空当前技能槽位')
-}
-
-async function resetMetaFormToInitial() {
-  const actionId = metaForm.actionId
-  if (actionId <= 0)
-    return
-  metaEditorLoading.value = true
-  try {
-    const initial = await store.fetchActionMetaDraft(actionId, true)
-    fillMetaForm(actionId, normalizeTeamWatchActionMetaRaw(actionId, initial))
-    applyMetaFormRealtime()
-    ElMessage.success('已恢复默认参数')
-  }
-  finally {
-    metaEditorLoading.value = false
-  }
 }
 
 function removeActionSlot(job: number, index: number) {
@@ -916,27 +580,7 @@ function removeActionSlot(job: number, index: number) {
   row.actions.splice(index, 1)
   if (row.actions.length === 0)
     row.actions.push(0)
-
   ElMessage.success(removedActionId > 0 ? '已删除技能槽位' : '已删除空白槽位')
-}
-
-function canShowSlotRemoveAnchor(actionId: number, slotCount: number) {
-  if (slotCount <= 1)
-    return false
-  return actionId <= 0 || isCtrlPressed.value
-}
-
-function handleGlobalKeyState(event: KeyboardEvent) {
-  isCtrlPressed.value = event.ctrlKey
-}
-
-function resetGlobalKeyState() {
-  isCtrlPressed.value = false
-}
-
-function handleVisibilityChange() {
-  if (document.hidden)
-    resetGlobalKeyState()
 }
 
 async function exportSettings() {
@@ -983,22 +627,14 @@ async function resetSettings() {
 
 onMounted(() => {
   reloadFromStore()
-  window.addEventListener('keydown', handleGlobalKeyState)
-  window.addEventListener('keyup', handleGlobalKeyState)
-  window.addEventListener('blur', resetGlobalKeyState)
-  document.addEventListener('visibilitychange', handleVisibilityChange)
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('keydown', handleGlobalKeyState)
-  window.removeEventListener('keyup', handleGlobalKeyState)
-  window.removeEventListener('blur', resetGlobalKeyState)
-  document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 </script>
 
 <template>
-  <div class="settings-page" :class="{ 'ctrl-delete-mode': isCtrlPressed }">
+  <div class="settings-page">
     <header class="toolbar">
       <div class="toolbar-left">
         <el-input
@@ -1101,7 +737,7 @@ onBeforeUnmount(() => {
                           type="button"
                           class="slot-card"
                           :class="{ empty: actionId <= 0 }"
-                          @click="onSlotCardClick(Number(row.job), Number(index), Number(actionId))"
+                          @click="onSlotCardClick(Number(row.job), Number(index))"
                         >
                           <img
                             v-if="actionId > 0 && getActionMeta(actionId).iconSrc"
@@ -1116,8 +752,27 @@ onBeforeUnmount(() => {
                             {{ actionId > 0 ? getActionMeta(actionId).name : '未设置' }}
                           </div>
                         </button>
-                        <div v-if="canShowSlotRemoveAnchor(actionId, row.actions.length)" class="slot-remove-anchor" @click.stop>
+                        <div class="slot-remove-anchor" @click.stop>
+                          <el-popconfirm
+                            v-if="actionId > 0"
+                            title="将删除该技能槽位，是否继续？"
+                            confirm-button-text="删除"
+                            cancel-button-text="取消"
+                            @confirm="removeActionSlot(Number(row.job), Number(index))"
+                          >
+                            <template #reference>
+                              <el-button
+                                class="slot-remove-btn"
+                                circle
+                                plain
+                                size="small"
+                                :icon="Delete"
+                                @click.stop
+                              />
+                            </template>
+                          </el-popconfirm>
                           <el-button
+                            v-else
                             class="slot-remove-btn"
                             circle
                             plain
@@ -1161,7 +816,7 @@ onBeforeUnmount(() => {
                           type="button"
                           class="slot-card"
                           :class="{ empty: actionId <= 0 }"
-                          @click="onSlotCardClick(baseJobsByAdvanced[row.job] ?? 0, Number(index), Number(actionId))"
+                          @click="onSlotCardClick(baseJobsByAdvanced[row.job] ?? 0, Number(index))"
                         >
                           <img
                             v-if="actionId > 0 && getActionMeta(actionId).iconSrc"
@@ -1176,8 +831,27 @@ onBeforeUnmount(() => {
                             {{ actionId > 0 ? getActionMeta(actionId).name : '未设置' }}
                           </div>
                         </button>
-                        <div v-if="canShowSlotRemoveAnchor(actionId, rowsByJob.get(baseJobsByAdvanced[row.job] ?? -1)?.actions.length ?? 0)" class="slot-remove-anchor" @click.stop>
+                        <div class="slot-remove-anchor" @click.stop>
+                          <el-popconfirm
+                            v-if="actionId > 0"
+                            title="将删除该技能槽位，是否继续？"
+                            confirm-button-text="删除"
+                            cancel-button-text="取消"
+                            @confirm="removeActionSlot(baseJobsByAdvanced[row.job] ?? 0, Number(index))"
+                          >
+                            <template #reference>
+                              <el-button
+                                class="slot-remove-btn"
+                                circle
+                                plain
+                                size="small"
+                                :icon="Delete"
+                                @click.stop
+                              />
+                            </template>
+                          </el-popconfirm>
                           <el-button
+                            v-else
                             class="slot-remove-btn"
                             circle
                             plain
@@ -1297,88 +971,7 @@ onBeforeUnmount(() => {
       :global-disabled="pickerLoading"
       :back-disabled="pickerLoading"
       @pick="pickAction($event.id)"
-      @back="handlePickerBack"
     />
-
-    <SkillEditorDialog
-      v-model="metaEditorVisible"
-      title="技能编辑"
-      :teleported="false"
-      destroy-on-close
-      :lock-scroll="false"
-      :loading="metaEditorLoading"
-      loading-text="正在加载技能属性..."
-      :tip="dynamicValueTipText"
-      :primary-action="skillEditorPrimaryAction"
-      :delete-action="skillEditorDeleteAction"
-      :reset-action="skillEditorResetAction"
-      @primary-action="openPickerFromMetaEditor"
-      @delete-action="clearCurrentSlotSkill"
-      @reset-action="resetMetaFormToInitial"
-      @icon-error="handleImgError"
-    >
-      <template #summary>
-        <img
-          v-if="metaEditorIconSrc"
-          :src="metaEditorIconSrc"
-          :alt="metaEditorTitle"
-          class="editor-icon"
-          @error="handleImgError"
-        >
-        <div v-else class="editor-icon editor-icon-empty">
-          无图标
-        </div>
-        <div class="editor-summary">
-          <div class="editor-name">
-            {{ metaEditorTitle }}
-          </div>
-          <div v-if="metaEditorSubtitle" class="editor-sub">
-            {{ metaEditorSubtitle }}
-          </div>
-        </div>
-      </template>
-
-      <template #fields>
-        <template v-if="metaForm.actionId > 0">
-          <div class="editor-field">
-            <label>习得等级</label>
-            <el-input-number
-              v-model="metaForm.classJobLevel"
-              class="number-input-full"
-              :min="1"
-              :step="1"
-              step-strictly
-              :controls="false"
-            />
-          </div>
-          <div class="editor-field">
-            <label>最大层数（DynamicValue）</label>
-            <el-input v-model="metaForm.maxCharges" placeholder="例如 1 或 (lv)=>lv>=84?2:1" />
-            <div v-if="metaFieldErrors.maxCharges" class="input-error-tip">
-              {{ metaFieldErrors.maxCharges }}
-            </div>
-          </div>
-          <div class="editor-field span-2">
-            <label>图标URL</label>
-            <el-input v-model="metaForm.iconSrc" placeholder="可留空，留空时使用默认图标" />
-          </div>
-          <div class="editor-field">
-            <label>冷却时间（DynamicValue）</label>
-            <el-input v-model="metaForm.recast1000ms" placeholder="例如 90（即 90s）" />
-            <div v-if="metaFieldErrors.recast1000ms" class="input-error-tip">
-              {{ metaFieldErrors.recast1000ms }}
-            </div>
-          </div>
-          <div class="editor-field">
-            <label>持续时间（DynamicValue）</label>
-            <el-input v-model="metaForm.duration" placeholder="例如 15 或 (lv)=>lv>=88?20:15" />
-            <div v-if="metaFieldErrors.duration" class="input-error-tip">
-              {{ metaFieldErrors.duration }}
-            </div>
-          </div>
-        </template>
-      </template>
-    </SkillEditorDialog>
   </div>
 </template>
 
@@ -1785,12 +1378,6 @@ onBeforeUnmount(() => {
 
 .slot-cell:hover .slot-remove-anchor,
 .slot-cell:focus-within .slot-remove-anchor {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-}
-
-.settings-page.ctrl-delete-mode .slot-remove-anchor {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
