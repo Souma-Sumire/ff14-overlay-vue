@@ -2,7 +2,7 @@
 import type { MessageBoxInputData } from 'element-plus'
 import type { ActionPickerGridItem } from '@/components/common/ActionPickerDialog.vue'
 import type { DynamicValue } from '@/types/dynamicValue'
-import { Download, Plus, RefreshLeft, Upload } from '@element-plus/icons-vue'
+import { Download, InfoFilled, Plus, RefreshLeft, Upload } from '@element-plus/icons-vue'
 import { useWindowSize } from '@vueuse/core'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import * as LZString from 'lz-string'
@@ -13,7 +13,6 @@ import SkillEditorDialog from '@/components/common/SkillEditorDialog.vue'
 import { useLang } from '@/composables/useLang'
 import { getGlobalSkillMetaByActionId, GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
-import { keySkillDefinitions } from '@/resources/keySkillResource'
 import { resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
 import { getActionNameLite } from '@/resources/logic/actionNameLite'
 import { resolveTeamWatchDynamicValue } from '@/resources/teamWatchResource'
@@ -106,18 +105,6 @@ const pickerJobOptions = computed(() => {
 
 const interactionLocked = computed(() => editorOpening.value || storeKeySkill.isAutoMetaLoading)
 const pickerInteractionLocked = computed(() => pickerLoading.value || interactionLocked.value)
-const defaultTtsByActionId = (() => {
-  const map = new Map<number, string>()
-  keySkillDefinitions.forEach((definition) => {
-    const resolvedId = resolveTeamWatchDynamicValue(definition.id, GLOBAL_SKILL_MAX_LEVEL, 0)
-    if (!Number.isFinite(resolvedId) || resolvedId <= 0)
-      return
-    const actionId = Math.trunc(resolvedId)
-    if (!map.has(actionId))
-      map.set(actionId, definition.tts ?? '')
-  })
-  return map
-})()
 
 const pickerCurrentActionId = computed(() => {
   const replaceKey = pickerReplaceSkillKey.value
@@ -606,13 +593,15 @@ function replaceCurrentSkill() {
   void openSkillPicker(row?.line ?? 1, editorSkillKey.value)
 }
 
-function resetCurrentSkillToDefaults() {
-  const row = currentEditorSkill.value
-  if (!row)
-    return
-  editorTts.value = getDefaultTtsByActionId(row.id)
-
-  ElMessage.success('已恢复默认参数')
+function formatJobs(jobs: number[]) {
+  if (!jobs.length)
+    return '未知'
+  return jobs
+    .map((job) => {
+      const full = Util.jobToFullName(Util.jobEnumToJob(job))
+      return full.cn || full.en || `#${job}`
+    })
+    .join(' / ')
 }
 
 const skillEditorPrimaryAction = computed(() => ({
@@ -625,25 +614,11 @@ const skillEditorDeleteAction = computed(() => ({
   disabled: interactionLocked.value || !currentEditorSkill.value,
 }))
 
-const skillEditorResetAction = computed(() => ({
-  show: !!currentEditorSkill.value,
-  disabled: interactionLocked.value,
-  confirmTitle: '将按当前技能ID恢复默认参数，是否继续？',
-  confirmButtonText: '恢复',
-}))
-
 function hasJobWarning(actionId: number, row: KeySkillRow) {
   if (Array.isArray(row.job))
     return row.job.length === 0
   const loaded = Boolean(storeKeySkill.autoMetaById[actionId])
   return loaded && resolveSkillMeta(actionId).jobs.length === 0
-}
-
-function getDefaultTtsByActionId(actionId: number) {
-  const normalized = Number.isFinite(actionId) ? Math.trunc(actionId) : 0
-  if (normalized <= 0)
-    return ''
-  return defaultTtsByActionId.get(normalized) ?? ''
 }
 </script>
 
@@ -738,12 +713,10 @@ function getDefaultTtsByActionId(actionId: number) {
       loading-text="正在加载技能数据..."
       :primary-action="skillEditorPrimaryAction"
       :delete-action="skillEditorDeleteAction"
-      :reset-action="skillEditorResetAction"
       :teleported="false"
       destroy-on-close
       @primary-action="replaceCurrentSkill"
       @delete-action="removeCurrentSkill"
-      @reset-action="resetCurrentSkillToDefaults"
       @icon-error="handleImgError"
     >
       <template v-if="currentEditorSkill">
@@ -760,6 +733,41 @@ function getDefaultTtsByActionId(actionId: number) {
             </template>
           </el-input>
         </div>
+      </template>
+      <template #extra-footer-left>
+        <el-popover
+          v-if="currentEditorMeta"
+          placement="top-start"
+          title="底层参数 (供调试)"
+          :width="260"
+          trigger="click"
+        >
+          <template #reference>
+            <el-button :icon="InfoFilled">
+              调试信息
+            </el-button>
+          </template>
+          <el-descriptions :column="1" border size="small" class="debug-desc">
+            <el-descriptions-item label="Action ID">
+              {{ currentEditorMeta.id }}
+            </el-descriptions-item>
+            <el-descriptions-item label="习得等级">
+              Lv.{{ currentEditorMeta.minLevel }}
+            </el-descriptions-item>
+            <el-descriptions-item label="冷却时间">
+              {{ currentEditorMeta.recast1000ms }}（秒）
+            </el-descriptions-item>
+            <el-descriptions-item label="持续时间">
+              {{ currentEditorMeta.duration }}（秒）
+            </el-descriptions-item>
+            <el-descriptions-item label="角色通用">
+              {{ currentEditorMeta.isRoleAction ? '是' : '否' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="解析职业">
+              {{ formatJobs(currentEditorMeta.jobs || []) }}
+            </el-descriptions-item>
+          </el-descriptions>
+        </el-popover>
       </template>
     </SkillEditorDialog>
 
@@ -1085,5 +1093,10 @@ function getDefaultTtsByActionId(actionId: number) {
   background: var(--el-fill-color-light);
   border-radius: 4px;
   border: 1px solid var(--el-border-color-lighter);
+}
+
+.debug-desc :deep(.el-descriptions__label) {
+  width: 70px;
+  white-space: nowrap;
 }
 </style>

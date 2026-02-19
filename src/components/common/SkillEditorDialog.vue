@@ -242,6 +242,7 @@ function handleIconError(event: Event) {
             >
               {{ resetActionState.text }}
             </el-button>
+            <slot name="extra-footer-left" />
           </slot>
         </div>
         <div class="editor-footer-right">
