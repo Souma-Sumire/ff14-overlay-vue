@@ -17,4 +17,3 @@ export function getTerritoryTypeByMapID(mapID: number): number {
     ],
   )
 }
-

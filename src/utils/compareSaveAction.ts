@@ -1,12 +1,14 @@
-import action2ClassJobLevelMapRaw from '@/resources/generated/action2ClassJobLevel.json'
+import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/generated/bakedActionMetaLite'
 import { BAKED_ACTION_UPGRADE_STEPS } from '@/resources/generated/bakedActionUpgradeSteps'
 
-const action2ClassJobLevelMap = new Map<string, string>(
-  Object.entries(action2ClassJobLevelMapRaw as Record<string, string>),
-)
-
 function actionId2ClassJobLevelRaw(id: number): string | undefined {
-  return action2ClassJobLevelMap.get(String(Math.trunc(id)))
+  const normalized = Number.isFinite(id) && id > 0 ? Math.trunc(id) : 0
+  if (normalized <= 0)
+    return undefined
+  const level = Number(BAKED_ACTION_META_LITE_BY_ID[normalized]?.classJobLevel ?? 0)
+  if (!Number.isFinite(level) || level <= 0)
+    return undefined
+  return String(level)
 }
 
 // 共享CD映射：仅用于把同CD技能归并到同一ID。
@@ -238,4 +240,3 @@ export function resolveUpgradeActionIdForLevel(actionId: number, level: number) 
   levelResolvedUpgradeActionCache.set(cacheKey, bestActionId)
   return bestActionId
 }
-

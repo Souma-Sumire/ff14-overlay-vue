@@ -1466,4 +1466,3 @@ onMounted(async () => {
   background-color: var(--ins3-color);
 }
 </style>
-

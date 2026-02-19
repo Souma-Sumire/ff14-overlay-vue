@@ -188,4 +188,3 @@ function getName(name: { ja: string, cn?: string, en?: string }) {
   transform: translate(-50%, -50%);
 }
 </style>
-

@@ -64,4 +64,3 @@ const maps = (() => {
 
 export const ACTION_JOBS_BY_CLASS_JOB_CATEGORY = maps.jobsByCategory
 export const CLASS_JOB_ACTION_CATEGORIES_BY_JOB = maps.categoriesByJob
-

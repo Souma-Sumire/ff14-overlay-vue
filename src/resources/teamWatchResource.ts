@@ -334,4 +334,3 @@ export function saveTeamWatchStorageData(data: TeamWatchStorageData) {
   current.storageVersion = TEAM_WATCH_STORAGE_VERSION
   localStorage.setItem(TEAM_WATCH_STORAGE_NAMESPACE, JSON.stringify(current))
 }
-

@@ -6,14 +6,14 @@ import { useDev } from '@/composables/useDev'
 import { useLang } from '@/composables/useLang'
 import { useZone } from '@/composables/useZone'
 import { demoFoodData } from '@/mock/demoFoodData'
+import meals from '@/resources/generated/meals.json'
+import medicines from '@/resources/generated/medicine.json'
 import Util from '@/utils/util'
 import NetRegexes from '../../cactbot/resources/netregexes'
 import {
   addOverlayListener,
   removeOverlayListener,
 } from '../../cactbot/resources/overlay_plugin_api'
-import meals from '@/resources/generated/meals.json'
-import medicines from '@/resources/generated/medicine.json'
 
 const { t } = useLang()
 const { zoneType } = useZone()

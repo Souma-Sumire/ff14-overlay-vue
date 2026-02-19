@@ -34,4 +34,3 @@ export function stackUrl(url: string, stack: number) {
 }
 // A: =B5&": ["""&C5&""", "&E5&"],"
 export const statusData: Record<number, [string, number, number]> = _STATUS
-

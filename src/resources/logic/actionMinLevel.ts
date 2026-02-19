@@ -1,8 +1,7 @@
 import { useStorage } from '@vueuse/core'
-import action2ClassJobLevelMapRaw from '@/resources/generated/action2ClassJobLevel.json'
+import { ROLE_ACTION_CACHE_VERSION } from '@/resources/cacheVersion'
 import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/generated/bakedActionMetaLite'
 import { BAKED_UPGRADE_CHAIN_MIN_LEVEL_BY_ACTION_ID } from '@/resources/generated/bakedUpgradeChainMinLevel'
-import { ROLE_ACTION_CACHE_VERSION } from '@/resources/cacheVersion'
 
 const ROLE_ACTION_MIN_LEVEL = 1
 const ROLE_ACTION_CACHE_STORAGE_KEY = 'action-role-action-id-cache'
@@ -35,10 +34,6 @@ const knownRoleActionIds = new Set<number>([
     .map(v => Math.trunc(v)),
 ])
 
-const action2ClassJobLevelMap = new Map<string, string>(
-  Object.entries(action2ClassJobLevelMapRaw as Record<string, string>),
-)
-
 function persistKnownRoleActionIds() {
   roleActionIdStorage.value = Object.fromEntries(
     [...knownRoleActionIds]
@@ -63,7 +58,7 @@ function resolveKnownMinLevelByActionId(actionId: number) {
   if (knownRoleActionIds.has(id))
     return ROLE_ACTION_MIN_LEVEL
 
-  const fromMap = Number(action2ClassJobLevelMap.get(String(id)))
+  const fromMap = Number(BAKED_ACTION_META_LITE_BY_ID[id]?.classJobLevel ?? 0)
   if (Number.isFinite(fromMap) && fromMap > 0)
     return normalizeMinLevelValue(fromMap, 1)
 
@@ -122,4 +117,3 @@ export function resolveActionMinLevel(
     return Math.min(baseLevel, knownLevel)
   return baseLevel
 }
-

@@ -43,4 +43,3 @@ function searchActions(query: string, limit: number = 100): Array<{ id: number, 
 }
 
 export { getActionChinese, searchActions }
-

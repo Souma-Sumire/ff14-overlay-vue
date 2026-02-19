@@ -228,4 +228,3 @@ function chineseToIcon(chinese: string): number | undefined {
 }
 
 export { chineseToIcon }
-

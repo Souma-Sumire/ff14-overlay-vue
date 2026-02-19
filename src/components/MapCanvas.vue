@@ -291,4 +291,3 @@ $color4: rgba(128, 0, 128, 1);
     0 0 0.4em $color4;
 }
 </style>
-

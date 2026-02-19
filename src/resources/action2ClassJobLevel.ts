@@ -1,14 +1,14 @@
-import action2ClassJobLevelMapRaw from './generated/action2ClassJobLevel.json'
+import { BAKED_ACTION_META_LITE_BY_ID } from './generated/bakedActionMetaLite'
 import { resolveActionMinLevel } from './logic/actionMinLevel'
 
-const action2ClassJobLevelMap: Map<string, any> = new Map(Object.entries(action2ClassJobLevelMapRaw))
-
 function actionId2ClassJobLevel(id: number): string | undefined {
-  const raw = action2ClassJobLevelMap.get(id.toString())
-  if (raw === undefined)
+  const normalized = Number.isFinite(id) && id > 0 ? Math.trunc(id) : 0
+  if (normalized <= 0)
+    return undefined
+  const raw = Number(BAKED_ACTION_META_LITE_BY_ID[normalized]?.classJobLevel ?? 0)
+  if (!Number.isFinite(raw) || raw <= 0)
     return undefined
   return String(resolveActionMinLevel(raw, { actionId: id, fallback: 1 }))
 }
 
 export { actionId2ClassJobLevel }
-
