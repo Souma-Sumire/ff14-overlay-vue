@@ -2,7 +2,7 @@
 import type { MessageBoxInputData } from 'element-plus'
 import type { DynamicValue } from '@/types/dynamicValue'
 import { Download, Plus, RefreshLeft, Upload } from '@element-plus/icons-vue'
-import { useDebounceFn, useWindowSize } from '@vueuse/core'
+import { useWindowSize } from '@vueuse/core'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import * as LZString from 'lz-string'
 import { computed, reactive, ref, watch } from 'vue'
@@ -14,11 +14,10 @@ import { getGlobalSkillMetaByActionId, GLOBAL_SKILL_MAX_LEVEL } from '@/resource
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { keySkillDefinitions } from '@/resources/keySkillResource'
 import { resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
-import { getActionNameLite, searchActionNamesLite } from '@/resources/logic/actionNameLite'
-import { isTeamWatchLowerTierActionId, resolveTeamWatchDynamicValue } from '@/resources/teamWatchResource'
+import { getActionNameLite } from '@/resources/logic/actionNameLite'
+import { resolveTeamWatchDynamicValue } from '@/resources/teamWatchResource'
 import { useKeySkillStore } from '@/store/keySkills'
 import { copyToClipboard } from '@/utils/clipboard'
-import { compareSame, isCompareSameSourceId, normalizeUpgradeActionId } from '@/utils/compareSaveAction'
 import { idToSrc } from '@/utils/dynamicValue'
 import { parseOptionalDynamicInput, validateOptionalDynamicInput } from '@/utils/dynamicValueValidation'
 import { tts } from '@/utils/tts'
@@ -56,14 +55,12 @@ let syncLocked = false
 
 const pickerVisible = ref(false)
 const pickerSearch = ref('')
-const pickerResult = ref<ActionSearchResult[]>([])
 const pickerPool = ref<ActionSearchResult[]>([])
 const pickerPoolCache = reactive<Record<number, ActionSearchResult[]>>({})
 const pickerLoading = ref(false)
 const pickerSelectedJob = ref<number | null>(null)
 const pickerTargetLine = ref(1)
 const pickerReplaceSkillKey = ref<string | null>(null)
-const pickerHideShortCD = ref(true)
 
 const editorVisible = ref(false)
 const editorOpening = ref(false)
@@ -156,95 +153,6 @@ const editorJobOptions = computed(() => {
     })
 })
 
-const pickerOrderedResult = computed(() => {
-  interface FamilySortState {
-    state: number
-    recast: number
-    representativeId: number
-  }
-
-  const getFamilyId = (actionId: number) => {
-    const upgraded = normalizeUpgradeActionId(actionId)
-    const same = compareSame(upgraded)
-    return normalizeUpgradeActionId(same)
-  }
-
-  const getMemberState = (actionId: number) => {
-    if (isTeamWatchLowerTierActionId(actionId))
-      return 0
-    if (isCompareSameSourceId(actionId))
-      return 1
-    return 2
-  }
-
-  const familyState = new Map<number, FamilySortState>()
-
-  for (const item of pickerResult.value) {
-    const familyId = getFamilyId(item.id)
-    const state = getMemberState(item.id)
-    const recastRaw = Number(item.recast1000ms ?? 0)
-    const recast = Number.isFinite(recastRaw) ? recastRaw : -1
-    const prev = familyState.get(familyId)
-    if (!prev) {
-      familyState.set(familyId, {
-        state,
-        recast,
-        representativeId: item.id,
-      })
-      continue
-    }
-
-    if (state > prev.state || (state === prev.state && (recast > prev.recast || (recast === prev.recast && item.id < prev.representativeId)))) {
-      familyState.set(familyId, {
-        state,
-        recast,
-        representativeId: item.id,
-      })
-    }
-  }
-
-  return [...pickerResult.value].sort((a, b) => {
-    const aFamilyId = getFamilyId(a.id)
-    const bFamilyId = getFamilyId(b.id)
-
-    if (aFamilyId !== bFamilyId) {
-      const aFamily = familyState.get(aFamilyId)
-      const bFamily = familyState.get(bFamilyId)
-      const aRecast = aFamily?.recast ?? -1
-      const bRecast = bFamily?.recast ?? -1
-      if (aRecast !== bRecast)
-        return bRecast - aRecast
-      const aRepresentativeId = aFamily?.representativeId ?? aFamilyId
-      const bRepresentativeId = bFamily?.representativeId ?? bFamilyId
-      return aRepresentativeId - bRepresentativeId
-    }
-
-    const aState = getMemberState(a.id)
-    const bState = getMemberState(b.id)
-    if (aState !== bState)
-      return aState - bState
-
-    const aLevel = Number(a.minLevel ?? Number.MAX_SAFE_INTEGER)
-    const bLevel = Number(b.minLevel ?? Number.MAX_SAFE_INTEGER)
-    if (aLevel !== bLevel)
-      return aLevel - bLevel
-
-    return a.id - b.id
-  })
-})
-
-const pickerRoleResult = computed(() => {
-  let list = pickerOrderedResult.value.filter(item => !!item.isRoleAction)
-  if (pickerHideShortCD.value)
-    list = list.filter(item => (item.recast1000ms ?? 0) > 5)
-  return list
-})
-const pickerJobResult = computed(() => {
-  let list = pickerOrderedResult.value.filter(item => !item.isRoleAction)
-  if (pickerHideShortCD.value)
-    list = list.filter(item => (item.recast1000ms ?? 0) > 5)
-  return list
-})
 const interactionLocked = computed(() => editorOpening.value || storeKeySkill.isAutoMetaLoading)
 const pickerInteractionLocked = computed(() => pickerLoading.value || interactionLocked.value)
 const defaultTtsByActionId = (() => {
@@ -313,41 +221,16 @@ const pickerDisabledActionSet = computed(() => {
   return disabled
 })
 
-function getPickerDisableReason(actionId: number) {
-  if (isTeamWatchLowerTierActionId(actionId))
-    return '下位技能'
-  if (isCompareSameSourceId(actionId))
-    return '共享CD'
-  if (pickerDisabledActionSet.value.has(actionId))
-    return '已存在'
-  return ''
-}
+const pickerDisabledIds = computed(() => pickerDisabledActionSet.value)
 
-const pickerJobGridItems = computed(() => {
-  return pickerJobResult.value.map((item) => {
-    const disableReason = getPickerDisableReason(item.id)
-    return {
-      id: item.id,
-      name: item.name,
-      iconSrc: item.iconSrc || resolveSkillMeta(item.id).src,
-      recast1000ms: item.recast1000ms,
-      disabled: disableReason !== '',
-      disabledReason: disableReason || undefined,
-    }
-  })
-})
-const pickerRoleGridItems = computed(() => {
-  return pickerRoleResult.value.map((item) => {
-    const disableReason = getPickerDisableReason(item.id)
-    return {
-      id: item.id,
-      name: item.name,
-      iconSrc: item.iconSrc || resolveSkillMeta(item.id).src,
-      recast1000ms: item.recast1000ms,
-      disabled: disableReason !== '',
-      disabledReason: disableReason || undefined,
-    }
-  })
+const pickerTargetLabel = computed(() => {
+  const replaceKey = pickerReplaceSkillKey.value
+  if (replaceKey) {
+    const row = rows.value.find(v => v.key === replaceKey)
+    if (row)
+      return `正在替换：${resolveSkillMeta(row.id).name}`
+  }
+  return `正在编辑：第 ${pickerTargetLine.value} 行`
 })
 
 function resolveSkillMeta(actionId: number) {
@@ -627,48 +510,20 @@ async function loadPickerPool(jobEnum: number) {
   }
 }
 
-const debouncedSearch = useDebounceFn(() => {
-  if (!pickerSelectedJob.value) {
-    pickerResult.value = []
-    return
-  }
-  const keyword = pickerSearch.value.trim().toLowerCase()
-  if (!keyword) {
-    pickerResult.value = [...pickerPool.value]
-    return
-  }
-
-  const local = pickerPool.value.filter((item) => {
-    return item.name.toLowerCase().includes(keyword) || String(item.id).includes(keyword)
-  })
-  if (pickerPool.value.length > 0) {
-    pickerResult.value = local
-    return
-  }
-  pickerResult.value = searchActionNamesLite(keyword, 200)
-}, 200)
-
-watch(pickerSearch, () => debouncedSearch())
-
 watch(pickerSelectedJob, async (jobEnum) => {
   pickerSearch.value = ''
-  pickerResult.value = []
   if (!pickerVisible.value || !jobEnum)
     return
   await loadPickerPool(jobEnum)
-  pickerResult.value = [...pickerPool.value]
 })
 
 watch(pickerVisible, (visible) => {
-  if (visible)
-    return
-  pickerSearch.value = ''
-  pickerPool.value = []
-  pickerResult.value = []
-  pickerLoading.value = false
-  pickerSelectedJob.value = null
-  pickerReplaceSkillKey.value = null
-  pickerHideShortCD.value = true
+  if (!visible) {
+    pickerSearch.value = ''
+    pickerLoading.value = false
+    pickerSelectedJob.value = null
+    pickerReplaceSkillKey.value = null
+  }
 })
 
 async function openSkillPicker(line = 1, replaceSkillKey: string | null = null) {
@@ -1034,51 +889,6 @@ function getDefaultTtsByActionId(actionId: number) {
       </div>
     </main>
 
-    <ActionPickerDialog
-      v-model:visible="pickerVisible"
-      v-model:search="pickerSearch"
-      title="选择技能"
-      :width="pickerDialogWidth"
-      :loading="pickerLoading"
-      :job-items="pickerJobGridItems"
-      :role-items="pickerRoleGridItems"
-      :current-action-id="pickerCurrentActionId"
-      :prompt-visible="!pickerSelectedJob"
-      prompt-text="请先选择职业"
-      empty-text="当前没有匹配技能"
-      :search-disabled="!pickerSelectedJob || pickerInteractionLocked"
-      :global-disabled="pickerInteractionLocked"
-      @pick="pickAction($event.id, $event.name)"
-      @back="handlePickerBack"
-    >
-      <template #header-controls>
-        <el-checkbox v-model="pickerHideShortCD" label="隐藏 CD <= 5 秒的技能" size="small" />
-      </template>
-      <template #toolbar>
-        <div class="picker-job-strip">
-          <div class="picker-job-caption">
-            选择职业
-          </div>
-          <div class="picker-job-space">
-            <button
-              v-for="option in pickerJobOptions"
-              :key="option.jobEnum"
-              type="button"
-              class="picker-job-btn"
-              :class="{ 'is-active': pickerSelectedJob === option.jobEnum }"
-              :disabled="pickerInteractionLocked"
-              @click="pickJob(option.jobEnum)"
-            >
-              <span class="picker-job-icon-wrap">
-                <img :src="option.iconSrc" :alt="option.label" class="picker-job-icon" @error="handleImgError">
-              </span>
-              <span class="picker-job-text">{{ option.label }}</span>
-            </button>
-          </div>
-        </div>
-      </template>
-    </ActionPickerDialog>
-
     <SkillEditorDialog
       v-model="editorVisible"
       title="技能编辑"
@@ -1169,6 +979,46 @@ function getDefaultTtsByActionId(actionId: number) {
         </div>
       </template>
     </SkillEditorDialog>
+
+    <ActionPickerDialog
+      v-model:visible="pickerVisible"
+      v-model:search="pickerSearch"
+      title="选择技能"
+      :width="pickerDialogWidth"
+      :loading="pickerLoading"
+      :pool="pickerPool"
+      :disabled-ids="pickerDisabledIds"
+      :current-action-id="pickerCurrentActionId"
+      :target-label="pickerTargetLabel"
+      :prompt-visible="!pickerSelectedJob"
+      prompt-text="请先选择职业"
+      @pick="pickAction($event.id, $event.name)"
+      @back="handlePickerBack"
+    >
+      <template #top>
+        <div class="picker-job-strip">
+          <div class="picker-job-caption">
+            筛选职业技能
+          </div>
+          <div class="picker-job-space">
+            <button
+              v-for="option in pickerJobOptions"
+              :key="option.jobEnum"
+              class="picker-job-btn"
+              :class="{ 'is-active': pickerSelectedJob === option.jobEnum }"
+              :disabled="pickerInteractionLocked"
+              type="button"
+              @click="pickJob(option.jobEnum)"
+            >
+              <div class="picker-job-icon-wrap">
+                <img :src="option.iconSrc" class="picker-job-icon" @error="handleImgError">
+              </div>
+              <span class="picker-job-text">{{ option.label }}</span>
+            </button>
+          </div>
+        </div>
+      </template>
+    </ActionPickerDialog>
   </div>
 </template>
 

@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { ArrowLeft, Search } from '@element-plus/icons-vue'
+import { isTeamWatchLowerTierActionId } from '@/resources/teamWatchResource'
+import { compareSame, isCompareSameSourceId, normalizeUpgradeActionId } from '@/utils/compareSaveAction'
 
 export interface ActionPickerGridItem {
   id: number
   name: string
   iconSrc?: string
   recast1000ms?: number
+  classJobLevel?: number
+  isRoleAction?: boolean
   disabled?: boolean
   disabledReason?: string
   attrs?: Record<string, string | number>
@@ -18,8 +22,8 @@ const props = withDefaults(defineProps<{
   destroyOnClose?: boolean
   lockScroll?: boolean
   loading: boolean
-  jobItems: ActionPickerGridItem[]
-  roleItems: ActionPickerGridItem[]
+  pool: ActionPickerGridItem[]
+  disabledIds?: Set<number>
   currentActionId?: number | null
   emptyText?: string
   promptText?: string
@@ -57,6 +61,95 @@ const emit = defineEmits<{
 
 const visible = defineModel<boolean>('visible', { default: false })
 const search = defineModel<string>('search', { default: '' })
+const hideShortCD = ref(true)
+
+const internalResult = computed(() => {
+  const keyword = search.value.trim().toLowerCase()
+  if (!keyword)
+    return props.pool
+  return props.pool.filter(item => item.name.toLowerCase().includes(keyword) || String(item.id).includes(keyword))
+})
+
+const orderedResult = computed(() => {
+  interface FamilySortState {
+    state: number
+    recast: number
+    representativeId: number
+  }
+
+  const getFamilyId = (actionId: number) => {
+    const upgraded = normalizeUpgradeActionId(actionId)
+    const same = compareSame(upgraded)
+    return normalizeUpgradeActionId(same)
+  }
+
+  const getMemberState = (actionId: number) => {
+    if (isTeamWatchLowerTierActionId(actionId))
+      return 0
+    if (isCompareSameSourceId(actionId))
+      return 1
+    return 2
+  }
+
+  const familyState = new Map<number, FamilySortState>()
+  for (const item of internalResult.value) {
+    const familyId = getFamilyId(item.id)
+    const state = getMemberState(item.id)
+    const recastRaw = Number(item.recast1000ms ?? 0)
+    const recast = Number.isFinite(recastRaw) ? recastRaw : -1
+    const prev = familyState.get(familyId)
+    if (!prev || state > prev.state || (state === prev.state && (recast > prev.recast || (recast === prev.recast && item.id < prev.representativeId)))) {
+      familyState.set(familyId, { state, recast, representativeId: item.id })
+    }
+  }
+
+  return [...internalResult.value].sort((a, b) => {
+    const aFamilyId = getFamilyId(a.id)
+    const bFamilyId = getFamilyId(b.id)
+    if (aFamilyId !== bFamilyId) {
+      const aFamily = familyState.get(aFamilyId)
+      const bFamily = familyState.get(bFamilyId)
+      const aRecast = aFamily?.recast ?? -1
+      const bRecast = bFamily?.recast ?? -1
+      if (aRecast !== bRecast)
+        return bRecast - aRecast
+      return (aFamily?.representativeId ?? aFamilyId) - (bFamily?.representativeId ?? bFamilyId)
+    }
+    const aState = getMemberState(a.id)
+    const bState = getMemberState(b.id)
+    if (aState !== bState)
+      return aState - bState
+    const aLevel = Number(a.classJobLevel ?? Number.MAX_SAFE_INTEGER)
+    const bLevel = Number(b.classJobLevel ?? Number.MAX_SAFE_INTEGER)
+    if (aLevel !== bLevel)
+      return aLevel - bLevel
+    return a.id - b.id
+  })
+})
+
+const filteredResult = computed(() => {
+  if (!hideShortCD.value)
+    return orderedResult.value
+  return orderedResult.value.filter(item => (item.recast1000ms ?? 0) > 5)
+})
+
+const jobItems = computed(() => filteredResult.value.filter(item => !item.isRoleAction))
+const roleItems = computed(() => filteredResult.value.filter(item => item.isRoleAction))
+
+function getInternalDisableReason(item: ActionPickerGridItem) {
+  if (isTeamWatchLowerTierActionId(item.id))
+    return '下位技能'
+  if (isCompareSameSourceId(item.id))
+    return '共享CD'
+  if (props.disabledIds?.has(item.id) || item.disabled)
+    return item.disabledReason || '已存在'
+  return ''
+}
+
+watch(visible, (val) => {
+  if (!val)
+    hideShortCD.value = true
+})
 
 function formatRecast1000ms(recastValue: number | undefined) {
   const recast1000ms = Number(recastValue ?? 0)
@@ -68,7 +161,7 @@ function formatRecast1000ms(recastValue: number | undefined) {
 }
 
 function isDisabled(item: ActionPickerGridItem) {
-  return !!item.disabled || !!props.globalDisabled
+  return !!getInternalDisableReason(item) || !!props.globalDisabled
 }
 
 function isCurrent(item: ActionPickerGridItem) {
@@ -79,8 +172,9 @@ function getStatusText(item: ActionPickerGridItem) {
   const parts: string[] = []
   if (isCurrent(item))
     parts.push('当前')
-  if (item.disabledReason)
-    parts.push(item.disabledReason)
+  const internalReason = getInternalDisableReason(item)
+  if (internalReason)
+    parts.push(internalReason)
   return parts.join(' / ')
 }
 
@@ -140,22 +234,25 @@ function handleBack() {
       />
 
       <div class="picker-header-controls">
+        <el-checkbox v-model="hideShortCD" label="隐藏 CD <= 5 秒" size="small" />
         <slot name="header-controls" />
       </div>
     </div>
+
+    <slot name="top" />
 
     <div v-loading="props.loading" class="picker-grid-wrap">
       <div v-if="props.promptVisible && props.promptText" class="picker-empty">
         {{ props.promptText }}
       </div>
 
-      <section v-if="props.jobItems.length" class="picker-group">
+      <section v-if="jobItems.length" class="picker-group">
         <div class="picker-group-title">
           职业技能
         </div>
         <div class="picker-grid">
           <button
-            v-for="item in props.jobItems"
+            v-for="item in jobItems"
             :key="`job-${item.id}`"
             type="button"
             class="picker-cell"
@@ -189,13 +286,13 @@ function handleBack() {
         </div>
       </section>
 
-      <section v-if="props.roleItems.length" class="picker-group">
+      <section v-if="roleItems.length" class="picker-group">
         <div class="picker-group-title">
           职能技能
         </div>
         <div class="picker-grid">
           <button
-            v-for="item in props.roleItems"
+            v-for="item in roleItems"
             :key="`role-${item.id}`"
             type="button"
             class="picker-cell"
@@ -229,7 +326,7 @@ function handleBack() {
         </div>
       </section>
 
-      <div v-if="!props.loading && props.jobItems.length === 0 && props.roleItems.length === 0" class="picker-empty">
+      <div v-if="!props.loading && jobItems.length === 0 && roleItems.length === 0" class="picker-empty">
         {{ props.emptyText }}
       </div>
     </div>
