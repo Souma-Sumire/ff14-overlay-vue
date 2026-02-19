@@ -28,11 +28,7 @@ export function normalizeTrackedActionId(actionId: number): number {
 }
 
 export function deepCloneWatchMap(input: Record<number, number[]>): Record<number, number[]> {
-  const result: Record<number, number[]> = {}
-  Object.entries(input).forEach(([key, value]) => {
-    result[Number(key)] = [...value]
-  })
-  return result
+  return Object.fromEntries(Object.entries(input).map(([k, v]) => [Number(k), [...v]]))
 }
 
 export function encodeBase64Payload(text: string): string {
@@ -91,40 +87,6 @@ export function buildSimulatedAbilityLine(
   return line
 }
 
-export function collectWatchActionIds(watchMap: Record<number, number[]>): Set<number> {
-  const actionIds = new Set<number>()
-  Object.values(watchMap).forEach((actions) => {
-    actions.forEach((actionId) => {
-      const normalizedId = Number(actionId)
-      if (Number.isFinite(normalizedId) && normalizedId > 0)
-        actionIds.add(normalizedId)
-    })
-  })
-  return actionIds
-}
-
-export function buildKnownJobs(
-  watchMap: Record<number, number[]>,
-  defaultJobSort: number[],
-): number[] {
-  return Array.from(new Set([
-    ...defaultJobSort,
-    ...Object.keys(watchMap).map(v => Number(v)),
-  ]))
-}
-
-export function buildDefaultWatchMap(
-  knownJobs: number[],
-  defaults: Record<number, number[]>,
-  emptyActions: readonly number[],
-): Record<number, number[]> {
-  const result: Record<number, number[]> = {}
-  knownJobs.forEach((job) => {
-    result[job] = [...(defaults[job] ?? emptyActions)]
-  })
-  return result
-}
-
 // --- runtime helpers ---
 
 export interface TeamWatchRuntime {
@@ -138,19 +100,6 @@ export interface TeamWatchRuntime {
   recastEndAt: number | null
   chargeReadyAt: number[]
   activeAt: number
-}
-
-export function ensureCooldownHistory(
-  cooldownTracker: Record<string, Record<number, number[]>>,
-  ownerId: string,
-  trackedActionId: number,
-): number[] {
-  const normalizedOwnerId = toHexId(ownerId)
-  if (!cooldownTracker[normalizedOwnerId])
-    cooldownTracker[normalizedOwnerId] = {}
-  if (!cooldownTracker[normalizedOwnerId]![trackedActionId])
-    cooldownTracker[normalizedOwnerId]![trackedActionId] = []
-  return cooldownTracker[normalizedOwnerId]![trackedActionId]!
 }
 
 export function ensureRuntime(
@@ -202,7 +151,9 @@ export function appendSkillHistory(
 ): void {
   if (runtime.trackedActionId <= 0)
     return
-  const history = ensureCooldownHistory(cooldownTracker, runtime.ownerId, runtime.trackedActionId)
+  cooldownTracker[runtime.ownerId] ??= {}
+  cooldownTracker[runtime.ownerId]![runtime.trackedActionId] ??= []
+  const history = cooldownTracker[runtime.ownerId]![runtime.trackedActionId]!
   history.push(timestamp)
   const cap = Math.max(1, runtime.maxCharges || 1)
   if (history.length > cap)
@@ -247,16 +198,14 @@ export function clearRuntimeCooldownStates(
     runtime.activeAt = 0
   })
 
-  for (const ownerId of Object.keys(cooldownTracker)) {
-    const ownerMap = cooldownTracker[ownerId]
+  Object.values(cooldownTracker).forEach((ownerMap) => {
     if (!ownerMap)
-      continue
-    for (const actionId of Object.keys(ownerMap)) {
-      const history = ownerMap[Number(actionId)]
+      return
+    Object.values(ownerMap).forEach((history) => {
       if (history)
         history.length = 0
-    }
-  }
+    })
+  })
 }
 
 export function updateRuntimeCollection(
@@ -292,65 +241,6 @@ export function updateRuntimeCollection(
   })
 }
 
-// --- logline helpers ---
-
-const TEAM_WATCH_RESET_EFFECT_IDS = new Set(['4000000F', '40000010'])
-
-export interface TeamWatchActionTrigger {
-  casterId: string
-  actionId: number
-}
-
-export interface TriggerRuntimeByActionOptions {
-  runtimeByKey: Record<string, TeamWatchRuntime>
-  cooldownTracker: Record<string, Record<number, number[]>>
-  actionLookup: Record<string, string>
-  casterId: string
-  actionId: number
-  now: number
-}
-
-export function extractTriggeredActionFromLogLine(line: string[]): TeamWatchActionTrigger | null {
-  const type = line[0] ?? ''
-  if (type !== '21' && !(type === '22' && line[45] === '0'))
-    return null
-
-  const actionIdHex = line[4]
-  const casterId = line[2]
-  if (!actionIdHex || !casterId)
-    return null
-
-  const actionId = Number.parseInt(actionIdHex, 16)
-  if (!Number.isFinite(actionId))
-    return null
-
-  return {
-    casterId,
-    actionId,
-  }
-}
-
-export function isTeamWatchResetLogLine(line: string[]): boolean {
-  return (line[0] ?? '') === '33' && TEAM_WATCH_RESET_EFFECT_IDS.has(line[3] ?? '')
-}
-
-export function triggerRuntimeByAction(options: TriggerRuntimeByActionOptions): boolean {
-  const trackedActionId = normalizeTrackedActionId(options.actionId)
-  if (trackedActionId <= 0)
-    return false
-
-  const runtimeKey = options.actionLookup[`${toHexId(options.casterId)}:${trackedActionId}`]
-  if (!runtimeKey)
-    return false
-
-  return useRuntime(
-    options.runtimeByKey,
-    options.cooldownTracker,
-    runtimeKey,
-    options.now,
-  )
-}
-
 // --- skill state helpers ---
 
 export interface TeamWatchSkillStateView {
@@ -373,10 +263,6 @@ export interface TeamWatchSkillStateContext {
   now: number
   cooldownTracker: Record<string, Record<number, number[]>>
   resourceManager: JobResourceManager
-}
-
-export function buildSkillStateCacheKey(skill: TeamWatchSkillView): string {
-  return `${skill.runtimeKey}:${skill.rawActionId}:${skill.resolvedActionId}:${skill.trackedActionId}:${skill.meta.maxCharges}:${skill.meta.recast1000ms}`
 }
 
 export function resolveTeamWatchSkillState(context: TeamWatchSkillStateContext): TeamWatchSkillStateView {
@@ -464,30 +350,4 @@ export function resolveTeamWatchSkillState(context: TeamWatchSkillStateContext):
     resourceValue,
     extraText,
   }
-}
-
-export function buildTeamWatchSkillStatusText(
-  memberName: string,
-  skillName: string,
-  state: TeamWatchSkillStateView,
-): string {
-  const suffixes: string[] = []
-
-  if (state.isCharge) {
-    suffixes.push(
-      state.charges >= state.maxCharges
-        ? `已就绪(${state.charges}层)`
-        : `当前(${state.charges}层)`,
-    )
-  }
-  else {
-    suffixes.push(state.text ? `冷却：${state.text}` : '已就绪')
-  }
-
-  if (!state.resourceReady)
-    suffixes.push(`资源不足(${state.resourceValue ?? 0})`)
-  if (state.extraText)
-    suffixes.push(`附加:${state.extraText}`)
-
-  return `${memberName} ${skillName} ${suffixes.join(' ')}`
 }

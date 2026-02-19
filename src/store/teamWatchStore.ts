@@ -7,7 +7,7 @@ import { JobResourceManager } from '@/modules/jobResourceTracker'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { resolveActionDisplayName, resolveActionIconSrc, resolveApiActionMeta, shouldFetchResolvedActionMeta } from '@/resources/logic/actionMetaResolver'
 import { buildInheritedBaseJobActions, buildTeamWatchFallbackMeta, cloneTeamWatchActionMetaMap, hasBakedTeamWatchMeta, loadTeamWatchStorageData, normalizeTeamWatchActionMetaRaw, resolveTeamWatchDynamicValue, saveTeamWatchStorageData, TEAM_WATCH_EMPTY_ACTIONS, TEAM_WATCH_WATCH_ACTIONS_DEFAULT } from '@/resources/teamWatchResource'
-import { buildDefaultWatchMap, buildKnownJobs, buildSimulatedAbilityLine, buildSkillStateCacheKey, buildTeamWatchSkillStatusText, clearRuntimeCooldownStates, collectWatchActionIds, decodeBase64Payload, deepCloneWatchMap, encodeBase64Payload, ensureCooldownHistory, ensureRuntime, extractTriggeredActionFromLogLine, isTeamWatchResetLogLine, normalizeInt, normalizeTrackedActionId, resolveTeamWatchSkillState, toHexId, triggerRuntimeByAction, updateRuntimeCollection } from '@/store/teamWatchHelpers'
+import { buildSimulatedAbilityLine, clearRuntimeCooldownStates, decodeBase64Payload, deepCloneWatchMap, encodeBase64Payload, ensureRuntime, normalizeInt, normalizeTrackedActionId, resolveTeamWatchSkillState, toHexId, updateRuntimeCollection, useRuntime } from '@/store/teamWatchHelpers'
 import { resolveUpgradeActionIdForLevel } from '@/utils/compareSaveAction'
 import Util from '@/utils/util'
 import { parseAction } from '@/utils/xivapi'
@@ -22,6 +22,8 @@ const TEAM_WATCH_ACTION_COLUMNS = [
   'ClassJobLevel',
   'IsRoleAction',
 ] as (keyof XivApiJson)[]
+
+const TEAM_WATCH_RESET_EFFECT_IDS = new Set(['4000000F', '40000010'])
 
 const teamWatchFakeParty: Party[] = [
   { id: '10000001', name: 'Faker1', worldId: 0, job: 19, inParty: true, contentId: 0, flags: 0, level: 100, objectId: 0, partyType: 1, territoryType: 0 },
@@ -287,7 +289,8 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
 
         if (trackedActionId > 0) {
           nextLookup[`${ownerId}:${trackedActionId}`] = runtimeKey
-          ensureCooldownHistory(cooldownTracker, ownerId, trackedActionId)
+          cooldownTracker[ownerId] ??= {}
+          cooldownTracker[ownerId]![trackedActionId] ??= []
           if (!activeActionByOwner.has(ownerId))
             activeActionByOwner.set(ownerId, new Set<number>())
           activeActionByOwner.get(ownerId)!.add(trackedActionId)
@@ -369,14 +372,13 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
 
   function triggerSkillByAction(casterId: string, actionId: number) {
     const now = Date.now()
-    if (triggerRuntimeByAction({
-      runtimeByKey,
-      cooldownTracker,
-      actionLookup,
-      casterId,
-      actionId,
-      now,
-    })) {
+    const trackedActionId = normalizeTrackedActionId(actionId)
+    if (trackedActionId <= 0)
+      return
+    const runtimeKey = actionLookup[`${toHexId(casterId)}:${trackedActionId}`]
+    if (!runtimeKey)
+      return
+    if (useRuntime(runtimeByKey, cooldownTracker, runtimeKey, now)) {
       nowTs.value = now
     }
   }
@@ -433,13 +435,16 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
 
     resourceManager.processLine(type, e.line, cooldownTracker)
 
-    const triggeredAction = extractTriggeredActionFromLogLine(e.line)
-    if (triggeredAction) {
-      triggerSkillByAction(triggeredAction.casterId, triggeredAction.actionId)
-      return
+    if (type === '21' || (type === '22' && e.line[45] === '0')) {
+      const actionId = Number.parseInt(e.line[4] ?? '', 16)
+      const casterId = e.line[2]
+      if (casterId && Number.isFinite(actionId)) {
+        triggerSkillByAction(casterId, actionId)
+        return
+      }
     }
 
-    if (isTeamWatchResetLogLine(e.line)) {
+    if (type === '33' && TEAM_WATCH_RESET_EFFECT_IDS.has(e.line[3] ?? '')) {
       clearCooldownStates()
       scheduleRebuild()
     }
@@ -451,7 +456,7 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
       skillStateCache.clear()
     }
 
-    const cacheKey = buildSkillStateCacheKey(skill)
+    const cacheKey = `${skill.runtimeKey}:${skill.rawActionId}:${skill.resolvedActionId}:${skill.trackedActionId}:${skill.meta.maxCharges}:${skill.meta.recast1000ms}`
     const cached = skillStateCache.get(cacheKey)
     if (cached)
       return cached
@@ -469,7 +474,25 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
 
   function buildSkillStatusText(member: TeamWatchMemberView, skill: TeamWatchSkillView) {
     const state = getSkillState(skill)
-    return buildTeamWatchSkillStatusText(member.name, skill.meta.name, state)
+    const suffixes: string[] = []
+
+    if (state.isCharge) {
+      suffixes.push(
+        state.charges >= state.maxCharges
+          ? `已就绪(${state.charges}层)`
+          : `当前(${state.charges}层)`,
+      )
+    }
+    else {
+      suffixes.push(state.text ? `冷却：${state.text}` : '已就绪')
+    }
+
+    if (!state.resourceReady)
+      suffixes.push(`资源不足(${state.resourceValue ?? 0})`)
+    if (state.extraText)
+      suffixes.push(`附加:${state.extraText}`)
+
+    return `${member.name} ${skill.meta.name} ${suffixes.join(' ')}`
   }
 
   function getSnapshot() {
@@ -486,7 +509,12 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
     watchJobsActionsIDUser.value = deepCloneWatchMap(next.watchJobsActionsIDUser)
     actionMetaUser.value = cloneTeamWatchActionMetaMap(next.actionMetaUser)
     // rebuild will bue triggered by watch
-    const actionIds = collectWatchActionIds(watchJobsActionsIDUser.value)
+    const actionIds = new Set(
+      Object.values(watchJobsActionsIDUser.value)
+        .flat()
+        .map(Number)
+        .filter(id => Number.isFinite(id) && id > 0),
+    )
     actionIds.forEach(actionId => triggerAutoFetchActionMeta(actionId))
   }
 
@@ -507,12 +535,14 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
 
   function resetSettings() {
     // 重置到初始状态
-    const knownJobs = buildKnownJobs(watchJobsActionsIDUser.value, DEFAULT_JOB_SORT_ORDER)
-    const defaultWatchMap = buildDefaultWatchMap(
-      knownJobs,
-      TEAM_WATCH_WATCH_ACTIONS_DEFAULT,
-      TEAM_WATCH_EMPTY_ACTIONS,
-    )
+    const knownJobs = Array.from(new Set([
+      ...DEFAULT_JOB_SORT_ORDER,
+      ...Object.keys(watchJobsActionsIDUser.value).map(Number),
+    ]))
+    const defaultWatchMap: Record<number, number[]> = {}
+    knownJobs.forEach((job) => {
+      defaultWatchMap[job] = [...(TEAM_WATCH_WATCH_ACTIONS_DEFAULT[job] ?? TEAM_WATCH_EMPTY_ACTIONS)]
+    })
     saveSettings({
       sortRuleUser: [...DEFAULT_JOB_SORT_ORDER],
       watchJobsActionsIDUser: defaultWatchMap,
