@@ -20,7 +20,6 @@ import { resolveTeamWatchDynamicValue } from '@/resources/teamWatchResource'
 import { useKeySkillStore } from '@/store/keySkills'
 import { copyToClipboard } from '@/utils/clipboard'
 import { idToSrc } from '@/utils/dynamicValue'
-import { parseOptionalDynamicInput, validateOptionalDynamicInput } from '@/utils/dynamicValueValidation'
 import { tts } from '@/utils/tts'
 import Util from '@/utils/util'
 import { getIconSrcByPath, handleImgError, searchActionsByClassJobs } from '@/utils/xivapi'
@@ -58,10 +57,6 @@ const editorOpening = ref(false)
 const editorSkillKey = ref<string | null>(null)
 const jobEditorVisible = ref(false)
 const editorTts = ref('')
-const editorJobs = ref<number[]>([])
-const editorRecast1000ms = ref('')
-const editorDuration = ref('')
-const editorMinLevel = ref(1)
 
 const lineOrder = computed(() => {
   const lines = Object.keys(lineBuckets)
@@ -105,41 +100,6 @@ const pickerJobOptions = computed(() => {
       const bIndex = sortMap.get(b.jobEnum) ?? Number.MAX_SAFE_INTEGER
       if (aIndex !== bIndex)
         return aIndex - bIndex
-      return a.jobEnum - b.jobEnum
-    })
-})
-
-const editorJobOptions = computed(() => {
-  const sortMap = new Map(DEFAULT_JOB_SORT_ORDER.map((jobEnum, index) => [jobEnum, index]))
-  const jobSet = new Set<number>()
-
-  Util.getBattleJobs().forEach((job) => {
-    const jobEnum = Util.jobToJobEnum(job)
-    if (Number.isFinite(jobEnum) && jobEnum > 0)
-      jobSet.add(jobEnum)
-  })
-
-  editorJobs.value.forEach((jobEnum) => {
-    const normalized = Number(jobEnum)
-    if (Number.isFinite(normalized) && normalized > 0)
-      jobSet.add(Math.trunc(normalized))
-  })
-
-  return [...jobSet]
-    .map((jobEnum) => {
-      const advancedJob = Util.baseJobEnumConverted(jobEnum)
-      return {
-        jobEnum,
-        label: getJobLabelByEnum(jobEnum),
-        sortIndex: sortMap.get(advancedJob) ?? Number.MAX_SAFE_INTEGER,
-        isBase: advancedJob !== jobEnum,
-      }
-    })
-    .sort((a, b) => {
-      if (a.sortIndex !== b.sortIndex)
-        return a.sortIndex - b.sortIndex
-      if (a.isBase !== b.isBase)
-        return a.isBase ? 1 : -1
       return a.jobEnum - b.jobEnum
     })
 })
@@ -249,19 +209,6 @@ function resolveSkillMeta(actionId: number) {
     isRoleAction: false,
     jobs: Array.isArray(globalMeta?.job) ? [...globalMeta.job] : [],
   }
-}
-
-function resolveBaselineMinLevel(actionId: number) {
-  const fallback = resolveSkillMeta(actionId)
-  const shared = getGlobalSkillMetaByActionId(actionId)
-  return resolveActionMinLevel(
-    fallback.minLevel ?? shared?.minLevel,
-    {
-      actionId,
-      isRoleAction: fallback.isRoleAction,
-      fallback: 1,
-    },
-  )
 }
 
 let hasCheckedExistingRowJobs = false
@@ -531,15 +478,6 @@ function getJobIconSrcByEnum(jobEnum: number) {
   return `https://souma.diemoe.net/resources/img/cj2/${full.en}.png`
 }
 
-function getJobLabelByEnum(jobEnum: number) {
-  const normalized = Number.isFinite(jobEnum) ? Math.trunc(jobEnum) : 0
-  const job = Util.jobEnumToJob(normalized)
-  if (job === 'NONE' && normalized !== 0)
-    return `#${normalized}`
-  const full = Util.jobToFullName(job)
-  return full.cn || full.en || `#${normalized}`
-}
-
 function resolvePickerInitialJob(replaceSkillKey: string | null) {
   if (!replaceSkillKey)
     return null
@@ -615,16 +553,8 @@ async function openEditor(skillKey: string) {
   editorOpening.value = true
   try {
     await storeKeySkill.ensureActionAutoMeta(row.id)
-    const fallback = resolveSkillMeta(row.id)
-    const shared = getGlobalSkillMetaByActionId(row.id)
     editorSkillKey.value = skillKey
     editorTts.value = row.tts
-    editorJobs.value = Array.isArray(row.job)
-      ? [...row.job]
-      : [...(fallback.jobs.length ? fallback.jobs : (shared?.job ?? []))]
-    editorRecast1000ms.value = formatDynamicEditorValue(row.recast1000ms ?? shared?.recast1000ms ?? fallback.recast1000ms)
-    editorDuration.value = formatDynamicEditorValue(row.duration ?? shared?.duration ?? fallback.duration)
-    editorMinLevel.value = normalizeMinLevelValue(row.minLevel ?? resolveBaselineMinLevel(row.id)) ?? 1
     jobEditorVisible.value = false
     editorVisible.value = true
   }
@@ -639,31 +569,7 @@ function applyEditorDraftToRow() {
     return
   if (editorOpening.value)
     return
-  const fallback = resolveSkillMeta(row.id)
-  const shared = getGlobalSkillMetaByActionId(row.id)
-  const baselineJobs = fallback.jobs.length ? fallback.jobs : (shared?.job ?? [])
-  const baselineRecast1000ms = shared?.recast1000ms ?? fallback.recast1000ms
-  const baselineDuration = shared?.duration ?? fallback.duration
-  const baselineMinLevel = resolveBaselineMinLevel(row.id)
-  const recastError = validateOptionalDynamicInput(editorRecast1000ms.value, '冷却时间')
-  const durationError = validateOptionalDynamicInput(editorDuration.value, '持续时间')
-  const parsedRecast1000ms = parseOptionalDynamicInput(editorRecast1000ms.value)
-  const parsedDuration = parseOptionalDynamicInput(editorDuration.value)
-  const parsedMinLevel = resolveActionMinLevel(
-    normalizeMinLevelValue(editorMinLevel.value) ?? 1,
-    {
-      actionId: row.id,
-      isRoleAction: fallback.isRoleAction,
-      fallback: 1,
-    },
-  )
   row.tts = editorTts.value
-  row.job = isSameJobSet(editorJobs.value, baselineJobs) ? undefined : [...editorJobs.value]
-  if (!recastError)
-    row.recast1000ms = isSameDynamicValue(parsedRecast1000ms, baselineRecast1000ms) ? undefined : parsedRecast1000ms
-  if (!durationError)
-    row.duration = isSameDynamicValue(parsedDuration, baselineDuration) ? undefined : parsedDuration
-  row.minLevel = parsedMinLevel === baselineMinLevel ? undefined : parsedMinLevel
 }
 
 async function previewEditorTts() {
@@ -684,10 +590,6 @@ async function previewEditorTts() {
 }
 
 watch(editorTts, applyEditorDraftToRow)
-watch(editorRecast1000ms, applyEditorDraftToRow)
-watch(editorDuration, applyEditorDraftToRow)
-watch(editorMinLevel, applyEditorDraftToRow)
-watch(editorJobs, () => applyEditorDraftToRow(), { deep: true })
 
 function removeCurrentSkill() {
   if (!editorSkillKey.value)
@@ -708,43 +610,10 @@ function resetCurrentSkillToDefaults() {
   const row = currentEditorSkill.value
   if (!row)
     return
-  const fallback = resolveSkillMeta(row.id)
-  const shared = getGlobalSkillMetaByActionId(row.id)
-  const baselineJobs = fallback.jobs.length ? fallback.jobs : (shared?.job ?? [])
-  const baselineRecast1000ms = shared?.recast1000ms ?? fallback.recast1000ms
-  const baselineDuration = shared?.duration ?? fallback.duration
-  const baselineMinLevel = resolveBaselineMinLevel(row.id)
-
   editorTts.value = getDefaultTtsByActionId(row.id)
-  editorJobs.value = [...baselineJobs]
-  editorRecast1000ms.value = formatDynamicEditorValue(baselineRecast1000ms)
-  editorDuration.value = formatDynamicEditorValue(baselineDuration)
-  editorMinLevel.value = baselineMinLevel
 
   ElMessage.success('已恢复默认参数')
 }
-
-function formatJobs(jobs: number[]) {
-  if (!jobs.length)
-    return '未知'
-  return jobs
-    .map((job) => {
-      const full = Util.jobToFullName(Util.jobEnumToJob(job))
-      return full.cn || full.en || `#${job}`
-    })
-    .join(' / ')
-}
-
-function formatDynamicEditorValue(value: DynamicValue | undefined) {
-  if (value === undefined || value === null)
-    return ''
-  return String(value)
-}
-
-const editorFieldErrors = computed(() => ({
-  recast1000ms: validateOptionalDynamicInput(editorRecast1000ms.value, '冷却时间'),
-  duration: validateOptionalDynamicInput(editorDuration.value, '持续时间'),
-}))
 
 const skillEditorPrimaryAction = computed(() => ({
   show: !!currentEditorSkill.value,
@@ -762,29 +631,6 @@ const skillEditorResetAction = computed(() => ({
   confirmTitle: '将按当前技能ID恢复默认参数，是否继续？',
   confirmButtonText: '恢复',
 }))
-
-function normalizeMinLevelValue(value: unknown) {
-  const numeric = Number(value)
-  if (!Number.isFinite(numeric))
-    return undefined
-  return Math.max(1, Math.trunc(numeric))
-}
-
-function isSameDynamicValue(left: DynamicValue | undefined, right: DynamicValue | undefined) {
-  if (left === undefined || left === null)
-    return right === undefined || right === null
-  if (right === undefined || right === null)
-    return false
-  return String(left).trim() === String(right).trim()
-}
-
-function isSameJobSet(left: number[] | undefined, right: number[] | undefined) {
-  const leftSorted = (left ?? []).map(v => Number(v)).filter(v => Number.isFinite(v)).sort((a, b) => a - b)
-  const rightSorted = (right ?? []).map(v => Number(v)).filter(v => Number.isFinite(v)).sort((a, b) => a - b)
-  if (leftSorted.length !== rightSorted.length)
-    return false
-  return leftSorted.every((v, i) => v === rightSorted[i])
-}
 
 function hasJobWarning(actionId: number, row: KeySkillRow) {
   if (Array.isArray(row.job))
@@ -913,60 +759,6 @@ function getDefaultTtsByActionId(actionId: number) {
               </el-button>
             </template>
           </el-input>
-        </div>
-        <div class="editor-field">
-          <label>习得等级</label>
-          <el-input-number
-            v-model="editorMinLevel"
-            :disabled="interactionLocked || !!currentEditorMeta?.isRoleAction"
-            :min="1"
-            :step="1"
-            step-strictly
-            :controls="false"
-            class="number-input-full"
-          />
-        </div>
-        <div class="editor-field">
-          <label>冷却时间（DynamicValue）</label>
-          <el-input v-model="editorRecast1000ms" :disabled="interactionLocked" placeholder="留空使用默认值" />
-          <div v-if="editorFieldErrors.recast1000ms" class="input-error-tip">
-            {{ editorFieldErrors.recast1000ms }}
-          </div>
-        </div>
-        <div class="editor-field">
-          <label>持续时间（DynamicValue）</label>
-          <el-input v-model="editorDuration" :disabled="interactionLocked" placeholder="留空使用默认值" />
-          <div v-if="editorFieldErrors.duration" class="input-error-tip">
-            {{ editorFieldErrors.duration }}
-          </div>
-        </div>
-        <div class="editor-field span-2">
-          <label>习得职业</label>
-          <div class="readonly-text-row">
-            <div class="readonly-text">
-              {{ formatJobs(editorJobs.length > 0 ? editorJobs : (currentEditorMeta?.jobs ?? [])) }}
-            </div>
-            <el-button class="job-edit-btn" plain :disabled="interactionLocked" @click="jobEditorVisible = !jobEditorVisible">
-              {{ jobEditorVisible ? '收起编辑' : '编辑职业' }}
-            </el-button>
-          </div>
-          <el-select
-            v-if="jobEditorVisible"
-            v-model="editorJobs"
-            class="job-edit-select"
-            multiple
-            clearable
-            filterable
-            :disabled="interactionLocked"
-            placeholder="留空使用默认职业"
-          >
-            <el-option
-              v-for="option in editorJobOptions"
-              :key="option.jobEnum"
-              :label="option.label"
-              :value="option.jobEnum"
-            />
-          </el-select>
         </div>
       </template>
     </SkillEditorDialog>

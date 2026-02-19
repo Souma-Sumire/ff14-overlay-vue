@@ -166,10 +166,6 @@ function normalizeStorageSkills(raw: unknown): KeySkillEntry[] {
       id: resolvedId,
       line: normalizeInt(Number(row.line ?? 1), 1, 1),
       tts: typeof row.tts === 'string' ? row.tts : '',
-      job: Array.isArray(row.job) ? uniqueInts(row.job.map(Number)) : undefined,
-      recast1000ms: ((typeof row.recast1000ms === 'number' && Number.isFinite(row.recast1000ms)) ? row.recast1000ms : (typeof row.recast1000ms === 'string' && row.recast1000ms.trim() ? row.recast1000ms.trim() : undefined)) as DynamicValue | undefined,
-      duration: ((typeof row.duration === 'number' && Number.isFinite(row.duration)) ? row.duration : (typeof row.duration === 'string' && row.duration.trim() ? row.duration.trim() : undefined)) as DynamicValue | undefined,
-      minLevel: Number.isFinite(Number(row.minLevel)) ? resolveActionMinLevel(normalizeInt(Number(row.minLevel), 1, 1), { actionId: resolvedId, fallback: 1 }) : undefined,
     })
   })
   return normalized
