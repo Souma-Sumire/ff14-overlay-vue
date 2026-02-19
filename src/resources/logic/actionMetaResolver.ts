@@ -51,15 +51,13 @@ function normalizeInt(value: unknown, fallback = 0, min = 0) {
 }
 
 function uniqueInts(input: number[]) {
-  return [...new Set(input.filter(v => Number.isFinite(v) && v > 0).map(v => Math.trunc(v)))]
+  return [...new Set(input.map(Number).filter(v => Number.isFinite(v) && v > 0).map(Math.trunc))]
 }
 
 function resolveDynamicNumber(value: unknown, level: number, fallback = 0) {
   try {
-    const resolved = parseDynamicValue(value as any, level)
-    if (!Number.isFinite(resolved))
-      return fallback
-    return Number(resolved)
+    const resolved = Number(parseDynamicValue(value as any, level))
+    return Number.isFinite(resolved) ? resolved : fallback
   }
   catch {
     return fallback

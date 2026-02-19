@@ -28,10 +28,7 @@ function collectBakedRoleActionIds() {
 
 const knownRoleActionIds = new Set<number>([
   ...collectBakedRoleActionIds(),
-  ...Object.keys(roleActionIdStorage.value)
-    .map(v => Number(v))
-    .filter(v => Number.isFinite(v) && v > 0)
-    .map(v => Math.trunc(v)),
+  ...Object.keys(roleActionIdStorage.value).map(Number).filter(v => Number.isFinite(v) && v > 0).map(Math.trunc),
 ])
 
 function persistKnownRoleActionIds() {
@@ -43,11 +40,9 @@ function persistKnownRoleActionIds() {
 }
 
 function normalizeMinLevelValue(value: unknown, fallback = 1) {
-  const fallbackLevel = Number.isFinite(Number(fallback)) ? Math.max(1, Math.trunc(Number(fallback))) : 1
+  const fallbackLevel = Math.max(1, Math.trunc(Number(fallback)) || 1)
   const numeric = Number(value)
-  if (!Number.isFinite(numeric))
-    return fallbackLevel
-  return Math.max(1, Math.trunc(numeric))
+  return Number.isFinite(numeric) ? Math.max(1, Math.trunc(numeric)) : fallbackLevel
 }
 
 function resolveKnownMinLevelByActionId(actionId: number) {

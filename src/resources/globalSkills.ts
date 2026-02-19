@@ -129,10 +129,8 @@ const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
 
 function resolveActionId(value: number | string, level: number): number {
   try {
-    const resolved = parseDynamicValue(value, level)
-    if (!Number.isFinite(resolved) || resolved <= 0)
-      return 0
-    return Math.trunc(resolved)
+    const resolved = Number(parseDynamicValue(value, level))
+    return Number.isFinite(resolved) && resolved > 0 ? Math.trunc(resolved) : 0
   }
   catch {
     return 0
@@ -172,10 +170,7 @@ export interface GlobalSkillMeta {
 function uniqueJobs(jobs: number[] | undefined): number[] {
   if (!Array.isArray(jobs))
     return []
-  return [...new Set(jobs
-    .map(v => Number(v))
-    .filter(v => Number.isFinite(v) && v > 0)
-    .map(v => Math.trunc(v)))]
+  return [...new Set(jobs.map(Number).filter(v => Number.isFinite(v) && v > 0).map(Math.trunc))]
 }
 
 function resolveMinLevelForActionId(actionId: number, fallback?: number): number {
