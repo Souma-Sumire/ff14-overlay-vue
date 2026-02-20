@@ -10,10 +10,10 @@ import { RandomPartyGenerator } from '@/mock/demoParty'
 import { getGlobalSkillMetaByActionId, GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { raidbuffs } from '@/resources/keySkillResource'
-import { resolveActionDisplayName, resolveActionIconSrc, resolveActionJobsFromTargets, resolveActionMetaByLevel, resolveApiActionMeta, resolveBakedActionMeta, shouldFetchResolvedActionMeta } from '@/resources/logic/actionMetaResolver'
+import { resolveActionDisplayName, resolveActionIconSrc, resolveActionJobsFromTargets, resolveActionMetaByLevel, resolveApiActionMeta, resolveBakedActionMeta, uniqueInts } from '@/resources/logic/actionMetaResolver'
 import { resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
-import { resolveTeamWatchDynamicValue } from '@/resources/teamWatchResource'
 import { resolveUpgradeActionIdForLevel } from '@/utils/compareSaveAction'
+import { parseDynamicValue } from '@/utils/dynamicValue'
 import { tts } from '@/utils/tts'
 import Util from '@/utils/util'
 import { parseAction, XIVAPI_CACHE_VERSION } from '@/utils/xivapi'
@@ -72,19 +72,19 @@ function normalizeAutoMetaEntry(rawId: number, value: unknown): KeySkillAutoMeta
   if (!value || typeof value !== 'object')
     return undefined
   const row = value as Record<string, unknown>
-  const id = normalizeInt(Number(row.id ?? rawId), rawId, 1)
-  const name = typeof row.name === 'string' && row.name.trim() ? row.name : resolveActionDisplayName(id, id)
+  const id = Math.trunc(Number(row.id)) || rawId
+  const name = (typeof row.name === 'string' && row.name.trim()) ? row.name.trim() : resolveActionDisplayName(id, id)
   const src = typeof row.src === 'string' ? row.src : resolveActionIconSrc(id)
-  const duration = normalizeInt(Number(row.duration ?? 0), 0, 0)
-  const recast1000ms = normalizeInt(Number(row.recast1000ms ?? 0), 0, 0)
-  const isRoleAction = Number(row.isRoleAction ?? 0) > 0
+  const duration = Math.trunc(Number(row.duration)) || 0
+  const recast1000ms = Math.trunc(Number(row.recast1000ms)) || 0
+  const isRoleAction = !!row.isRoleAction
   const minLevel = resolveActionMinLevel(row.minLevel ?? 1, {
     actionId: id,
     isRoleAction,
     fallback: 1,
   })
-  const jobs = uniqueInts(Array.isArray(row.jobs) ? row.jobs.map(v => Number(v)) : [])
-  const classJobTargetId = normalizeInt(Number(row.classJobTargetId ?? 0), 0, 0)
+  const jobs = uniqueInts(Array.isArray(row.jobs) ? row.jobs : [])
+  const classJobTargetId = Number(row.classJobTargetId) || 0
   return { id, name, src, duration, recast1000ms, minLevel, jobs, classJobTargetId, isRoleAction }
 }
 
@@ -93,45 +93,29 @@ function normalizeAutoMetaCache(raw: unknown): Record<number, KeySkillAutoMeta> 
     return {}
   const output: Record<number, KeySkillAutoMeta> = {}
   Object.entries(raw as Record<string, unknown>).forEach(([key, value]) => {
-    const id = normalizeInt(Number(key), 0, 1)
+    const id = Math.trunc(Number(key)) || 0
     if (id <= 0)
       return
     const normalized = normalizeAutoMetaEntry(id, value)
-    if (!normalized)
-      return
-    output[id] = normalized
+    if (normalized)
+      output[id] = normalized
   })
   return output
 }
 
 const generator = new RandomPartyGenerator()
 
-function normalizeInt(value: number, fallback: number, min = 0) {
-  if (!Number.isFinite(value))
-    return fallback
-  return Math.max(min, Math.trunc(value))
-}
-
-function normalizeSkillLevel(value: number, fallback = GLOBAL_SKILL_MAX_LEVEL) {
-  const normalized = normalizeInt(value, fallback, 1)
-  return Math.min(GLOBAL_SKILL_MAX_LEVEL, normalized)
-}
-
-function uniqueInts(input: number[]) {
-  return [...new Set(input.filter(v => Number.isFinite(v) && v > 0).map(v => Math.trunc(v)))]
-}
-
 function buildDefaultSkillEntries() {
   const map = new Map<number, DefaultKeySkillEntry>()
   raidbuffs.forEach((skill) => {
-    const resolvedId = normalizeInt(resolveTeamWatchDynamicValue(skill.id, GLOBAL_SKILL_MAX_LEVEL, 0), 0, 0)
+    const resolvedId = Math.trunc(Number(parseDynamicValue(skill.id, GLOBAL_SKILL_MAX_LEVEL))) || 0
     if (resolvedId <= 0 || map.has(resolvedId))
       return
 
     map.set(resolvedId, {
       id: resolvedId,
       tts: typeof skill.tts === 'string' ? skill.tts : '',
-      line: normalizeInt(Number(skill.line ?? 1), 1, 1),
+      line: Math.max(1, Math.trunc(Number(skill.line)) || 1),
     })
   })
   return [...map.values()]
@@ -142,7 +126,7 @@ function createSkillEntry(id: number, tts = '', line = 1): KeySkillEntry {
     key: crypto.randomUUID(),
     id,
     tts,
-    line: normalizeInt(Number(line), 1, 1),
+    line: Math.max(1, Math.trunc(Number(line)) || 1),
   }
 }
 
@@ -155,17 +139,16 @@ function normalizeStorageSkills(raw: unknown): KeySkillEntry[] {
     if (!item || typeof item !== 'object')
       return
     const row = item as Record<string, unknown>
-    const rawId = typeof row.id === 'string' || typeof row.id === 'number' ? row.id : 0
-    const resolvedId = normalizeInt(resolveTeamWatchDynamicValue(rawId, GLOBAL_SKILL_MAX_LEVEL, 0), 0, 0)
+    const resolvedId = Math.trunc(Number(parseDynamicValue(row.id as any, GLOBAL_SKILL_MAX_LEVEL))) || 0
     if (resolvedId <= 0)
       return
-    const key = typeof row.key === 'string' && row.key.trim() ? row.key : crypto.randomUUID()
+    const key = (typeof row.key === 'string' && row.key.trim()) ? row.key : crypto.randomUUID()
     if (key === LEGACY_PRESET_2248_KEY)
       return
     normalized.push({
       key,
       id: resolvedId,
-      line: normalizeInt(Number(row.line ?? 1), 1, 1),
+      line: Math.max(1, Math.trunc(row.line as any) || 1),
       tts: typeof row.tts === 'string' ? row.tts : '',
     })
   })
@@ -210,9 +193,9 @@ const useKeySkillStore = defineStore('keySkill', () => {
   const autoMetaCache = useStorage<Record<string, KeySkillAutoMeta>>('keySkills-auto-meta-cache', {})
   const autoMetaCacheVersion = useStorage<string>(KEY_SKILLS_AUTO_META_CACHE_VERSION_STORAGE_KEY, '')
 
-  levelSyncTestLevel.value = normalizeSkillLevel(levelSyncTestLevel.value)
+  levelSyncTestLevel.value = Math.min(GLOBAL_SKILL_MAX_LEVEL, Math.max(1, Math.trunc(levelSyncTestLevel.value) || GLOBAL_SKILL_MAX_LEVEL))
   watch(levelSyncTestLevel, (value) => {
-    const normalized = normalizeSkillLevel(value)
+    const normalized = Math.min(GLOBAL_SKILL_MAX_LEVEL, Math.max(1, Math.trunc(value) || GLOBAL_SKILL_MAX_LEVEL))
     if (normalized !== value)
       levelSyncTestLevel.value = normalized
   })
@@ -251,7 +234,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
   }
 
   function buildAutoMetaFromBaked(actionId: number): KeySkillAutoMeta | undefined {
-    const id = normalizeInt(actionId, 0, 1)
+    const id = Math.trunc(actionId) || 0
     if (id <= 0)
       return undefined
     const baked = resolveBakedActionMeta(id)
@@ -316,10 +299,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
     const id = Math.trunc(actionId)
     const existing = autoMetaById[id]
     if (existing) {
-      if (!shouldFetchResolvedActionMeta(
-        { jobs: existing.jobs },
-        { requireActionCategory: false, requireJobs: true },
-      )) {
+      if (existing.jobs?.length) {
         return
       }
       if (refreshedIncompleteAutoMeta.has(id))
@@ -332,10 +312,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
     }
 
     const baked = buildAutoMetaFromBaked(id)
-    if (baked && !shouldFetchResolvedActionMeta(
-      { jobs: baked.jobs },
-      { requireActionCategory: false, requireJobs: true },
-    )) {
+    if (baked && baked.jobs?.length) {
       saveAutoMetaToCache(id, baked)
       refreshedIncompleteAutoMeta.add(id)
       return
@@ -428,20 +405,14 @@ const useKeySkillStore = defineStore('keySkill', () => {
 
     const existing = autoMetaById[id]
     if (existing) {
-      if (!shouldFetchResolvedActionMeta(
-        { jobs: existing.jobs },
-        { requireActionCategory: false, requireJobs: true },
-      )) {
+      if (existing.jobs?.length) {
         return false
       }
       return !refreshedIncompleteAutoMeta.has(id)
     }
 
     const baked = buildAutoMetaFromBaked(id)
-    if (baked && !shouldFetchResolvedActionMeta(
-      { jobs: baked.jobs },
-      { requireActionCategory: false, requireJobs: true },
-    )) {
+    if (baked && baked.jobs?.length) {
       saveAutoMetaToCache(id, baked)
       refreshedIncompleteAutoMeta.add(id)
       return false
@@ -463,77 +434,51 @@ const useKeySkillStore = defineStore('keySkill', () => {
   )
 
   const usedSkills = computed(() => {
+    const currentParty = dev.value || demo.value ? generator.party.value : party.value
     const result: KeySkillEntity[] = []
-    const currentParty = computed(() =>
-      dev.value || demo.value ? generator.party.value : party.value,
-    )
 
-    for (const player of currentParty.value) {
+    for (const player of currentParty) {
+      const level = dev.value || demo.value ? levelSyncTestLevel.value : Math.min(GLOBAL_SKILL_MAX_LEVEL, Math.max(1, Math.trunc(player.level) || GLOBAL_SKILL_MAX_LEVEL))
       for (const skill of keySkillsData.value.chinese) {
-        const actualLevel = normalizeSkillLevel(player.level || GLOBAL_SKILL_MAX_LEVEL)
-        const level = dev.value || demo.value ? levelSyncTestLevel.value : actualLevel
         const meta = resolveMeta(skill.id)
         const globalMeta = getGlobalSkillMetaByActionId(skill.id)
-        const displayActionId = normalizeInt(
-          resolveUpgradeActionIdForLevel(meta.id, level),
-          meta.id,
-          1,
-        )
-        const resolvedJobs = skill.job && skill.job.length > 0 ? uniqueInts(skill.job) : meta.jobs
-        const inputRecast = skill.recast1000ms ?? globalMeta?.recast1000ms
-        const resolvedRecast1000ms = inputRecast !== undefined
-          ? normalizeInt(resolveTeamWatchDynamicValue(inputRecast, level, 0), 0, 0)
-          : meta.recast1000ms
+        const displayId = resolveUpgradeActionIdForLevel(meta.id, level) || meta.id
 
-        const inputDuration = skill.duration ?? globalMeta?.duration
-        const resolvedDuration = inputDuration !== undefined
-          ? normalizeInt(resolveTeamWatchDynamicValue(inputDuration, level, 0), 0, 0)
-          : meta.duration
-
-        const inputMaxCharges = skill.maxCharges ?? globalMeta?.maxCharges
-        const resolvedMaxCharges = inputMaxCharges !== undefined
-          ? normalizeInt(resolveTeamWatchDynamicValue(inputMaxCharges, level, 0), 0, 0)
-          : 0
-
-        const resolvedMinLevel = resolveActionMinLevel(
-          skill.minLevel ?? meta.minLevel,
-          {
-            actionId: meta.id,
-            isRoleAction: meta.isRoleAction,
-            fallback: meta.minLevel,
-          },
-        )
-
+        const resolvedJobs = skill.job?.length ? uniqueInts(skill.job) : meta.jobs
         if (!resolvedJobs.includes(player.job))
           continue
+
+        const recastInput = skill.recast1000ms ?? globalMeta?.recast1000ms
+        const resolvedRecast = (recastInput !== undefined ? parseDynamicValue(recastInput, level) : 0) || meta.recast1000ms
+        const durInput = skill.duration ?? globalMeta?.duration
+        const resolvedDuration = (durInput !== undefined ? parseDynamicValue(durInput, level) : 0) || meta.duration
+        const chargesInput = skill.maxCharges ?? globalMeta?.maxCharges
+        const resolvedMaxCharges = (chargesInput !== undefined ? parseDynamicValue(chargesInput, level) : 0) || 0
+
+        const resolvedMinLevel = resolveActionMinLevel(skill.minLevel ?? meta.minLevel, { actionId: meta.id, isRoleAction: meta.isRoleAction, fallback: meta.minLevel })
         if (resolvedMinLevel > level)
           continue
 
-        const owner: KeySkillEntity['owner'] = {
-          id: player.id,
-          name: player.name,
-          job: player.job,
-          jobIcon: Util.jobEnumToIcon(player.job),
-          jobName: Util.jobToFullName(Util.jobEnumToJob(player.job)).simple1,
-          hasDuplicate: {
-            skill: false,
-            job: false,
-          },
-        }
-        const instanceKey = `${player.id}-${meta.id}`
         result.push({
           duration: resolvedDuration,
           id: meta.id,
-          owner,
+          owner: {
+            id: player.id,
+            name: player.name,
+            job: player.job,
+            jobIcon: Util.jobEnumToIcon(player.job),
+            jobName: Util.jobToFullName(Util.jobEnumToJob(player.job)).simple1,
+            hasDuplicate: { skill: false, job: false },
+          },
           skillKey: skill.key,
           minLevel: resolvedMinLevel,
-          recast1000ms: resolvedRecast1000ms,
-          src: resolveActionIconSrc(displayActionId) || meta.src,
+          recast1000ms: resolvedRecast,
+          src: resolveActionIconSrc(displayId) || meta.src,
           tts: skill.tts,
           line: skill.line,
           job: resolvedJobs,
           maxCharges: resolvedMaxCharges,
-          instanceKey,
+          instanceKey: `${player.id}-${meta.id}`,
         })
       }
     }

@@ -56,8 +56,7 @@ function isSiteName(value: unknown): value is SiteName {
 function readPrimarySiteFromStorage(): SiteName {
   if (isSiteName(primarySiteStorage.value))
     return primarySiteStorage.value
-  primarySiteStorage.value = 'cafe'
-  return 'cafe'
+  return (primarySiteStorage.value = 'cafe')
 }
 
 function persistPrimarySite(site: SiteName): void {
@@ -319,13 +318,12 @@ function hasAllColumns(record: Record<string, any>, columns: string[]): boolean 
 }
 
 function applyActionCacheSideEffects(record: Record<string, any>, fallbackId: number) {
-  const resolvedId = Number(record.ID ?? fallbackId)
-  const normalizedId = Number.isFinite(resolvedId) && resolvedId > 0 ? Math.trunc(resolvedId) : fallbackId
-  const isRoleAction = Number(record.IsRoleAction ?? 0)
-  markRoleActionId(normalizedId, isRoleAction)
-  if (Object.prototype.hasOwnProperty.call(record, 'ClassJobLevel')) {
+  const id = Math.trunc(Number(record.ID)) || fallbackId
+  const isRoleAction = !!record.IsRoleAction
+  markRoleActionId(id, isRoleAction)
+  if (record.ClassJobLevel !== undefined) {
     record.ClassJobLevel = resolveActionMinLevel(record.ClassJobLevel, {
-      actionId: normalizedId,
+      actionId: id,
       isRoleAction,
       fallback: 1,
     })
@@ -368,9 +366,8 @@ export async function parseAction(
   try {
     const result = await requestWithFallback(buildFallbackUrls(path))
     if (type === 'action') {
-      const resolvedId = Number(result.ID ?? id)
-      const normalizedId = Number.isFinite(resolvedId) && resolvedId > 0 ? Math.trunc(resolvedId) : id
-      const isRoleAction = Number(result.IsRoleAction ?? 0)
+      const normalizedId = Math.trunc(Number(result.ID)) || id
+      const isRoleAction = !!result.IsRoleAction
       markRoleActionId(normalizedId, isRoleAction)
       result.ClassJobLevel = resolveActionMinLevel(result.ClassJobLevel, {
         actionId: normalizedId,
@@ -396,19 +393,15 @@ export async function parseAction(
 }
 
 function toActionSearchItem(row: XivApiActionSearchItem): XivApiActionSearchItem | undefined {
-  if (!row || !Number.isFinite(Number(row.ID)))
+  if (!row)
     return
-  const isPvP = Number(row.IsPvP ?? 0)
-  if (isPvP > 0)
+  const actionId = Math.trunc(Number(row.ID)) || 0
+  if (actionId <= 0 || (Number(row.IsPvP) || 0) > 0 || (Number(row.Recast100ms) || 0) <= 0)
     return
-  const isRoleAction = Number(row.IsRoleAction ?? 0)
-  const recast100ms = Number(row.Recast100ms ?? 0)
-  if (!Number.isFinite(recast100ms) || recast100ms <= 0)
-    return
-  const actionId = Math.trunc(Number(row.ID))
-  if (actionId <= 0)
-    return
+
+  const isRoleAction = !!row.IsRoleAction
   markRoleActionId(actionId, isRoleAction)
+  const recast100ms = Number(row.Recast100ms) || 0
   return {
     ID: actionId,
     Name: row.Name ?? `#${actionId}`,
@@ -418,11 +411,11 @@ function toActionSearchItem(row: XivApiActionSearchItem): XivApiActionSearchItem
       isRoleAction,
       fallback: 1,
     }),
-    ClassJobTargetID: Number(row.ClassJobTargetID ?? 0),
-    ClassJobCategoryTargetID: Number(row.ClassJobCategoryTargetID ?? 0),
-    ActionCategoryTargetID: Number(row.ActionCategoryTargetID ?? 0),
-    IsRoleAction: isRoleAction,
-    IsPvP: isPvP,
+    ClassJobTargetID: Number(row.ClassJobTargetID) || 0,
+    ClassJobCategoryTargetID: Number(row.ClassJobCategoryTargetID) || 0,
+    ActionCategoryTargetID: Number(row.ActionCategoryTargetID) || 0,
+    IsRoleAction: Number(isRoleAction),
+    IsPvP: 0,
     Recast100ms: recast100ms,
     Recast1000ms: recast100ms / 10,
     Host: row.Host,

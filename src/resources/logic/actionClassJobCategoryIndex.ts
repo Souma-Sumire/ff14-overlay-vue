@@ -1,13 +1,6 @@
 import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/generated/bakedActionMetaLite'
 import Util from '@/utils/util'
 
-function normalizeInt(value: unknown) {
-  const numeric = Number(value)
-  if (!Number.isFinite(numeric))
-    return 0
-  return Math.trunc(numeric)
-}
-
 function resolveBattleJobEnums() {
   return Util.getBattleJobs()
     .filter(job => job !== 'NONE')
@@ -29,9 +22,9 @@ const maps = (() => {
   const categoriesByJob = new Map<number, Set<number>>()
 
   Object.values(BAKED_ACTION_META_LITE_BY_ID).forEach((meta) => {
-    const classJobTargetId = normalizeInt(meta.classJob)
-    const classJobCategoryTargetId = normalizeInt(meta.classJobCategory)
-    const isRoleAction = Number(meta.isRoleAction ?? 0) > 0
+    const classJobTargetId = Math.trunc(Number(meta.classJob)) || 0
+    const classJobCategoryTargetId = Math.trunc(Number(meta.classJobCategory)) || 0
+    const isRoleAction = !!meta.isRoleAction
     if (isRoleAction || classJobTargetId <= 0 || classJobCategoryTargetId <= 0)
       return
 

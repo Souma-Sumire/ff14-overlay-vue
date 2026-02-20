@@ -1,6 +1,6 @@
 import type { DynamicValue } from '@/types/dynamicValue'
 import { actionId2ClassJobLevel } from '@/resources/logic/action2ClassJobLevel'
-import { resolveBakedActionMeta } from '@/resources/logic/actionMetaResolver'
+import { resolveBakedActionMeta, uniqueInts } from '@/resources/logic/actionMetaResolver'
 import { parseDynamicValue } from '@/utils/dynamicValue'
 
 export interface GlobalSkillDefinition {
@@ -122,44 +122,22 @@ const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
   { id: 34685, recast1000ms: 120 },
 ]
 
-function resolveActionId(value: number | string, level: number): number {
-  try {
-    const resolved = Number(parseDynamicValue(value, level))
-    return Number.isFinite(resolved) && resolved > 0 ? Math.trunc(resolved) : 0
-  }
-  catch {
-    return 0
-  }
-}
-
 const globalSkillDefinitions: GlobalSkillDefinition[] = rawGlobalSkillDefinitions.map((definition) => {
-  const resolvedId = resolveActionId(definition.id, GLOBAL_SKILL_MAX_LEVEL)
-  const normalizedId = resolvedId > 0 ? resolvedId : 0
-  const resolvedMinLevel = resolveMinLevelForActionId(normalizedId, definition.minLevel)
+  const normalizedId = parseDynamicValue(definition.id, GLOBAL_SKILL_MAX_LEVEL) || 0
 
-  let jobs = uniqueJobs(definition.job)
-  let recast = definition.recast1000ms
-  let maxCharges = definition.maxCharges
+  const fromMap = Number(actionId2ClassJobLevel(normalizedId))
+  const resolvedMinLevel = fromMap || Number(definition.minLevel) || 1
 
-  if (normalizedId > 0 && (jobs.length === 0 || recast === undefined || maxCharges === undefined)) {
-    const baked = resolveBakedActionMeta(normalizedId)
-    if (baked) {
-      if (jobs.length === 0)
-        jobs = baked.jobs
-      if (recast === undefined)
-        recast = baked.recast1000ms
-      if (maxCharges === undefined && baked.maxCharges > 0)
-        maxCharges = baked.maxCharges
-    }
-  }
+  const jobs = uniqueInts(definition.job ?? [])
+  const baked = normalizedId > 0 ? resolveBakedActionMeta(normalizedId) : undefined
 
   return {
     id: normalizedId,
-    recast1000ms: recast ?? 0,
+    recast1000ms: definition.recast1000ms ?? baked?.recast1000ms ?? 0,
     duration: definition.duration ?? 0,
     minLevel: resolvedMinLevel,
-    job: jobs,
-    maxCharges: maxCharges ?? 0,
+    job: jobs.length ? jobs : (baked?.jobs ?? []),
+    maxCharges: definition.maxCharges ?? baked?.maxCharges ?? 0,
   }
 })
 
@@ -181,51 +159,34 @@ export interface GlobalSkillMeta {
   maxCharges?: DynamicValue
 }
 
-function uniqueJobs(jobs: number[] | undefined): number[] {
-  if (!Array.isArray(jobs))
-    return []
-  return [...new Set(jobs.map(Number).filter(v => Number.isFinite(v) && v > 0).map(Math.trunc))]
-}
-
-function resolveMinLevelForActionId(actionId: number, fallback?: number): number {
-  const fromMap = Number(actionId2ClassJobLevel(actionId))
-  if (Number.isFinite(fromMap) && fromMap > 0)
-    return Math.trunc(fromMap)
-  if (Number.isFinite(fallback) && Number(fallback) > 0)
-    return Math.trunc(Number(fallback))
-  return 1
-}
-
-function mergeMinLevel(previous: number, current: number): number {
-  return Math.max(1, Math.min(previous, current))
-}
-
 const globalSkillMetaMap = (() => {
   const map = new Map<number, GlobalSkillMeta>()
   const normalizedJobsBySkillId = new Map<number, number[]>()
 
   rawGlobalSkillDefinitions.forEach((definition) => {
-    const normalizedId = resolveActionId(definition.id, GLOBAL_SKILL_MAX_LEVEL)
+    const normalizedId = Number(parseDynamicValue(definition.id, GLOBAL_SKILL_MAX_LEVEL)) || 0
     if (normalizedId <= 0)
       return
-    const normalizedJobs = uniqueJobs(definition.job)
+    const normalizedJobs = uniqueInts(definition.job ?? [])
     if (normalizedJobs.length > 0) {
       const previous = normalizedJobsBySkillId.get(normalizedId) ?? []
-      normalizedJobsBySkillId.set(normalizedId, uniqueJobs([...previous, ...normalizedJobs]))
+      normalizedJobsBySkillId.set(normalizedId, uniqueInts([...previous, ...normalizedJobs]))
     }
   })
 
   rawGlobalSkillDefinitions.forEach((definition) => {
-    const normalizedId = resolveActionId(definition.id, GLOBAL_SKILL_MAX_LEVEL)
+    const normalizedId = Number(parseDynamicValue(definition.id, GLOBAL_SKILL_MAX_LEVEL)) || 0
     if (normalizedId <= 0)
       return
     const inheritedJobs = normalizedJobsBySkillId.get(normalizedId) ?? []
 
     for (let level = 1; level <= GLOBAL_SKILL_MAX_LEVEL; level += 1) {
-      const actionId = resolveActionId(definition.id, level)
+      const actionId = Number(parseDynamicValue(definition.id, level)) || 0
       if (actionId <= 0)
         continue
-      const resolvedMinLevel = resolveMinLevelForActionId(actionId, definition.minLevel)
+
+      const fromMap = Number(actionId2ClassJobLevel(actionId))
+      const resolvedMinLevel = fromMap || Number(definition.minLevel) || 1
 
       const previous = map.get(actionId)
       if (!previous) {
@@ -244,8 +205,8 @@ const globalSkillMetaMap = (() => {
         id: normalizedId,
         recast1000ms: previous.recast1000ms ?? definition.recast1000ms ?? 0,
         duration: previous.duration ?? 0,
-        minLevel: mergeMinLevel(previous.minLevel, resolvedMinLevel),
-        job: uniqueJobs([...previous.job, ...inheritedJobs]),
+        minLevel: Math.max(1, Math.min(previous.minLevel, resolvedMinLevel)),
+        job: uniqueInts([...previous.job, ...inheritedJobs]),
         maxCharges: previous.maxCharges ?? definition.maxCharges,
       })
     }
@@ -255,18 +216,12 @@ const globalSkillMetaMap = (() => {
 })()
 
 export function getGlobalSkillDefinitionById(id: number): GlobalSkillDefinition | undefined {
-  if (!Number.isFinite(id) || id <= 0)
-    return undefined
-  const normalized = Math.trunc(id)
-  const found = globalSkillDefinitionMap.get(normalized)
+  const found = globalSkillDefinitionMap.get(id)
   return found ? { ...found, job: [...found.job] } : undefined
 }
 
 export function getGlobalSkillMetaByActionId(actionId: number): GlobalSkillMeta | undefined {
-  if (!Number.isFinite(actionId) || actionId <= 0)
-    return undefined
-  const normalized = Math.trunc(actionId)
-  const found = globalSkillMetaMap.get(normalized)
+  const found = globalSkillMetaMap.get(actionId)
   return found ? { ...found, job: [...found.job] } : undefined
 }
 

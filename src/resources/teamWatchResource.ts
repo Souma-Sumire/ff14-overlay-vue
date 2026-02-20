@@ -1,12 +1,8 @@
 import type { DynamicValue } from '@/types/dynamicValue'
 import type { TeamWatchActionMetaRaw, TeamWatchStorageData } from '@/types/teamWatchTypes'
-import { resolveBakedActionMeta } from '@/resources/logic/actionMetaResolver'
+import { resolveActionDisplayName, resolveBakedActionMeta, uniqueInts } from '@/resources/logic/actionMetaResolver'
 import { resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
-import { getActionNameLite } from '@/resources/logic/actionNameLite'
-import {
-  ACTION_UPGRADE_STEPS,
-  normalizeUpgradeActionId,
-} from '@/utils/compareSaveAction'
+import { ACTION_UPGRADE_STEPS, normalizeUpgradeActionId } from '@/utils/compareSaveAction'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 import Util from '@/utils/util'
 import { DEFAULT_JOB_SORT_ORDER } from './jobSortOrder'
@@ -69,53 +65,11 @@ const upgradeLowerByUpper = (() => {
 const upgradeFamilyByTopCache = new Map<number, number[]>()
 const upgradeDepthToTopCache = new Map<number, number>()
 
-// 将未知输入转换为整数数组，并按最小值过滤（默认 >=0）。
-function toIntArray(value: unknown, min = 0): number[] {
-  if (!Array.isArray(value))
-    return []
-  return value
-    .map(Number)
-    .filter(v => Number.isFinite(v) && v >= min)
-    .map(Math.trunc)
-}
-
 // 深拷贝 actionMetaUser（避免响应式对象被直接复用）。
 export function cloneTeamWatchActionMetaMap(input: Record<number, TeamWatchActionMetaRaw>) {
-  return Object.fromEntries(Object.entries(input).map(([k, v]) => [Number(k), { ...v }]))
+  return Object.fromEntries(Object.entries(input).map(([k, v]) => [Math.trunc(Number(k)) || 0, { ...v }]))
 }
 
-// 规范化 DynamicValue（number/string），非法时回退。
-function normalizeDynamicValue(value: unknown, fallback: DynamicValue): DynamicValue {
-  if (typeof value === 'number' && Number.isFinite(value))
-    return value
-  if (typeof value === 'string') {
-    const trimmed = value.trim()
-    if (trimmed)
-      return trimmed
-  }
-  return fallback
-}
-
-function normalizeInt(value: unknown, fallback: number, min = 0): number {
-  const fallbackInt = Number.isFinite(fallback) ? Math.max(min, Math.trunc(fallback)) : min
-  const numeric = Number(value)
-  if (Number.isFinite(numeric))
-    return Math.max(min, Math.trunc(numeric))
-  return fallbackInt
-}
-
-// 解析 DynamicValue 到指定等级下的数值，失败时回退。
-export function resolveTeamWatchDynamicValue(value: DynamicValue, level: number, fallback: number) {
-  try {
-    const parsed = parseDynamicValue(value, level)
-    if (!Number.isFinite(parsed))
-      return fallback
-    return parsed
-  }
-  catch {
-    return fallback
-  }
-}
 // 校验 DynamicValue 在多个等级下是否可稳定解析。
 export function validateTeamWatchDynamicValue(value: DynamicValue, label: string) {
   for (const level of TEAM_WATCH_DYNAMIC_SAMPLE_LEVELS) {
@@ -131,21 +85,6 @@ export function validateTeamWatchDynamicValue(value: DynamicValue, label: string
     }
   }
   return ''
-}
-
-// 构建技能元数据兜底值（仅基于 actionId 的本地信息）。
-export function buildTeamWatchFallbackMeta(actionId: number): TeamWatchActionMetaRaw {
-  const baked = resolveBakedActionMeta(actionId)
-  return {
-    id: actionId,
-    name: getActionNameLite(actionId) || baked?.name || `#${actionId}`,
-    iconSrc: idToSrc(actionId),
-    actionCategory: Number(baked?.actionCategoryTargetId ?? 0),
-    recast1000ms: Number(baked?.recast1000ms ?? 0),
-    duration: 0,
-    maxCharges: Number(baked?.maxCharges ?? 0),
-    classJobLevel: Number(baked?.classJobLevel ?? 1),
-  }
 }
 
 function getUpgradeFamily(actionId: number) {
@@ -275,39 +214,29 @@ export function buildInheritedBaseJobActions(baseJob: number, sourceActions: unk
 
 // 规范化 TeamWatchActionMetaRaw。
 export function normalizeTeamWatchActionMetaRaw(actionId: number, value: unknown): TeamWatchActionMetaRaw {
-  const fallback = buildTeamWatchFallbackMeta(actionId)
-  if (!value || typeof value !== 'object')
-    return fallback
+  const raw = value && typeof value === 'object' ? value as Record<string, unknown> : {}
+  const id = Number(raw.id) || actionId || 0
+  const name = (typeof raw.name === 'string' && raw.name.trim()) ? raw.name.trim() : resolveActionDisplayName(id, id)
+  const iconSrc = (typeof raw.iconSrc === 'string' && raw.iconSrc.trim()) ? raw.iconSrc.trim() : idToSrc(id)
 
-  const raw = value as Record<string, unknown>
-  const normalized: TeamWatchActionMetaRaw = {
-    id: normalizeInt(raw.id, fallback.id, 0),
-    name: (typeof raw.name === 'string' && raw.name.trim()) ? raw.name.trim() : fallback.name,
-    iconSrc: (typeof raw.iconSrc === 'string' && raw.iconSrc.trim()) ? raw.iconSrc.trim() : fallback.iconSrc,
-    actionCategory: normalizeInt(raw.actionCategory, fallback.actionCategory, 0),
-    recast1000ms: normalizeDynamicValue(raw.recast1000ms, fallback.recast1000ms),
-    duration: normalizeDynamicValue(raw.duration, fallback.duration),
-    maxCharges: normalizeDynamicValue(raw.maxCharges, fallback.maxCharges),
-    classJobLevel: resolveActionMinLevel(
-      normalizeInt(raw.classJobLevel, fallback.classJobLevel, 1),
-      {
-        actionId: actionId > 0 ? actionId : fallback.id,
-        fallback: fallback.classJobLevel,
-      },
-    ),
+  return {
+    id,
+    name,
+    iconSrc,
+    actionCategory: Number(raw.actionCategory) || 0,
+    recast1000ms: (typeof raw.recast1000ms === 'string' && raw.recast1000ms.trim()) ? raw.recast1000ms.trim() : (Number.isFinite(raw.recast1000ms) ? raw.recast1000ms as any : 0),
+    duration: (typeof raw.duration === 'string' && raw.duration.trim()) ? raw.duration.trim() : (Number.isFinite(raw.duration) ? raw.duration as any : 0),
+    maxCharges: (typeof raw.maxCharges === 'string' && raw.maxCharges.trim()) ? raw.maxCharges.trim() : (Number.isFinite(raw.maxCharges) ? raw.maxCharges as any : 0),
+    classJobLevel: resolveActionMinLevel(raw.classJobLevel ?? 1, {
+      actionId: id,
+      fallback: 1,
+    }),
   }
-  return normalized
 }
 
-// 规范化职业 -> 槽位技能 ID 映射，并补齐默认职业与默认槽位。
 function normalizeWatchJobsActionsIDUser(value: unknown): Record<number, number[]> {
-  const extraJobs = value && typeof value === 'object'
-    ? Object.keys(value as Record<string, unknown>).map(v => Number(v))
-    : []
-  const jobs = Array.from(new Set([
-    ...DEFAULT_JOB_SORT_ORDER,
-    ...toIntArray(extraJobs, 1),
-  ]))
+  const extraJobs = value && typeof value === 'object' ? Object.keys(value as Record<string, unknown>).map(v => Math.trunc(Number(v)) || 0) : []
+  const jobs = uniqueInts([...DEFAULT_JOB_SORT_ORDER, ...extraJobs])
   const base: Record<number, number[]> = {}
   jobs.forEach((job) => {
     base[job] = [...(TEAM_WATCH_WATCH_ACTIONS_DEFAULT[job] ?? TEAM_WATCH_EMPTY_ACTIONS)]
@@ -317,24 +246,17 @@ function normalizeWatchJobsActionsIDUser(value: unknown): Record<number, number[
     return base
 
   for (const [rawJob, rawActions] of Object.entries(value as Record<string, unknown>)) {
-    const job = Number(rawJob)
-    if (!Number.isFinite(job))
-      continue
-    base[job] = toIntArray(rawActions)
+    const job = Math.trunc(Number(rawJob)) || 0
+    if (job > 0)
+      base[job] = uniqueInts(Array.isArray(rawActions) ? rawActions : [])
   }
-
   return base
 }
 
-// 规范化职业排序：保留输入顺序，同时补齐缺失职业。
 function normalizeSortRuleUser(value: unknown): number[] {
-  const hasInput = Array.isArray(value)
-  const normalized = hasInput ? toIntArray(value) : [...DEFAULT_JOB_SORT_ORDER]
-  const jobs = Array.from(new Set([
-    ...DEFAULT_JOB_SORT_ORDER,
-    ...normalized.filter(v => v > 0),
-  ]))
-  const unique = Array.from(new Set(normalized))
+  const normalized = uniqueInts(Array.isArray(value) ? value : [...DEFAULT_JOB_SORT_ORDER])
+  const jobs = uniqueInts([...DEFAULT_JOB_SORT_ORDER, ...normalized])
+  const unique = [...new Set(normalized)]
   const missing = jobs.filter(job => !unique.includes(job))
   return [...unique, ...missing]
 }

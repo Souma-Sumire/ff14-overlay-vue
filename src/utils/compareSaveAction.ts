@@ -120,32 +120,24 @@ const upgradeDepthToTopCache = new Map<number, number>()
 const upgradeFamilyByTopCache = new Map<number, number[]>()
 const levelResolvedUpgradeActionCache = new Map<string, number>()
 
-function normalizeLevel(level: number) {
-  if (!Number.isFinite(level))
-    return 1
-  return Math.max(1, Math.trunc(level))
-}
-
 export function getActionUpgradeMinLevel(actionId: number) {
-  if (!Number.isFinite(actionId) || actionId <= 0)
+  if (actionId <= 0)
     return 1
-  const id = Math.trunc(actionId)
+  const id = actionId
   const cached = actionUpgradeLevelCache.get(id)
   if (cached !== undefined)
     return cached
 
   const fromMap = Number(actionId2ClassJobLevelRaw(id))
-  const resolved = Number.isFinite(fromMap) && fromMap > 0
-    ? normalizeLevel(fromMap)
-    : 1
+  const resolved = fromMap || 1
   actionUpgradeLevelCache.set(id, resolved)
   return resolved
 }
 
 function getUpgradeDepthToTop(actionId: number) {
-  if (!Number.isFinite(actionId) || actionId <= 0)
+  if (actionId <= 0)
     return 0
-  const id = Math.trunc(actionId)
+  const id = actionId
   const cached = upgradeDepthToTopCache.get(id)
   if (cached !== undefined)
     return cached
@@ -196,8 +188,8 @@ export function resolveUpgradeActionIdForLevel(actionId: number, level: number) 
   if (!Number.isFinite(actionId) || actionId <= 0)
     return actionId
 
-  const startActionId = Math.trunc(actionId)
-  const normalizedLevel = normalizeLevel(level)
+  const startActionId = actionId
+  const normalizedLevel = level || 1
   const cacheKey = `${startActionId}:${normalizedLevel}`
   const cached = levelResolvedUpgradeActionCache.get(cacheKey)
   if (cached !== undefined)

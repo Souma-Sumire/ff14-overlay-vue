@@ -2,7 +2,7 @@ import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/generated/bakedActionM
 import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/generated/roleActionCategoryByJob'
 import { getGlobalSkillMetaByActionId } from '@/resources/globalSkills'
 import { ACTION_JOBS_BY_CLASS_JOB_CATEGORY } from '@/resources/logic/actionClassJobCategoryIndex'
-import { resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
+import { markRoleActionId, resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
 import { getActionNameLite } from '@/resources/logic/actionNameLite'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 import Util from '@/utils/util'
@@ -43,25 +43,8 @@ export interface ResolvedActionLevelMeta {
   jobsFromGlobal: number[]
 }
 
-function normalizeInt(value: unknown, fallback = 0, min = 0) {
-  const numeric = Number(value)
-  if (!Number.isFinite(numeric))
-    return Math.max(min, Math.trunc(fallback))
-  return Math.max(min, Math.trunc(numeric))
-}
-
-function uniqueInts(input: number[]) {
-  return [...new Set(input.map(Number).filter(v => Number.isFinite(v) && v > 0).map(Math.trunc))]
-}
-
-function resolveDynamicNumber(value: unknown, level: number, fallback = 0) {
-  try {
-    const resolved = Number(parseDynamicValue(value as any, level))
-    return Number.isFinite(resolved) ? resolved : fallback
-  }
-  catch {
-    return fallback
-  }
+export function uniqueInts(input: (number | string | undefined | null)[]) {
+  return [...new Set(input.map(Number))].filter(v => Number.isFinite(v) && v > 0)
 }
 
 export function resolveActionJobsFromTargets(
@@ -110,27 +93,24 @@ export function resolveActionJobsFromTargets(
 }
 
 export function resolveBakedActionMeta(actionId: number): ResolvedBakedActionMeta | undefined {
-  const id = normalizeInt(actionId, 0, 1)
+  const id = Math.trunc(actionId) || 0
   if (id <= 0)
     return undefined
   const baked = BAKED_ACTION_META_LITE_BY_ID[id]
   if (!baked)
     return undefined
 
-  const isRoleAction = Number(baked.isRoleAction ?? 0) > 0
-  const classJobTargetId = normalizeInt(baked.classJob, 0, 0)
-  const classJobCategoryTargetId = normalizeInt(baked.classJobCategory, 0, 0)
-  const actionCategoryTargetId = normalizeInt(baked.actionCategory, 0, 0)
-  const recast1000ms = normalizeInt(Number(baked.recast100ms ?? 0) / 10, 0, 0)
-  const maxCharges = normalizeInt(baked.maxCharges, 0, 0)
-  const classJobLevel = resolveActionMinLevel(
-    normalizeInt(baked.classJobLevel, 1, 1),
-    {
-      actionId: id,
-      isRoleAction,
-      fallback: 1,
-    },
-  )
+  const isRoleAction = !!baked.isRoleAction
+  const classJobTargetId = Number(baked.classJob) || 0
+  const classJobCategoryTargetId = Number(baked.classJobCategory) || 0
+  const actionCategoryTargetId = Number(baked.actionCategory) || 0
+  const recast1000ms = (Number(baked.recast100ms) || 0) / 10
+  const maxCharges = Number(baked.maxCharges) || 0
+  const classJobLevel = resolveActionMinLevel(baked.classJobLevel || 1, {
+    actionId: id,
+    isRoleAction,
+    fallback: 1,
+  })
   const jobs = resolveActionJobsFromTargets(
     classJobTargetId,
     classJobCategoryTargetId,
@@ -141,7 +121,7 @@ export function resolveBakedActionMeta(actionId: number): ResolvedBakedActionMet
   return {
     id,
     name: String(baked.name ?? '').trim(),
-    iconId: normalizeInt(baked.icon, 0, 0),
+    iconId: Number(baked.icon) || 0,
     classJobTargetId,
     classJobCategoryTargetId,
     actionCategoryTargetId,
@@ -151,15 +131,6 @@ export function resolveBakedActionMeta(actionId: number): ResolvedBakedActionMet
     isRoleAction,
     jobs,
   }
-}
-
-export function hasBakedActionMeta(actionId: number, options?: { requireActionCategory?: boolean }) {
-  const resolved = resolveBakedActionMeta(actionId)
-  if (!resolved)
-    return false
-  if (options?.requireActionCategory)
-    return resolved.actionCategoryTargetId > 0
-  return true
 }
 
 export function resolveActionMetaByLevel(
@@ -172,37 +143,23 @@ export function resolveActionMetaByLevel(
     isRoleAction?: boolean
   },
 ): ResolvedActionLevelMeta {
-  const id = normalizeInt(actionId, 0, 1)
-  const normalizedLevel = normalizeInt(level, 1, 1)
+  const id = Math.trunc(actionId) || 0
+  const normalizedLevel = Math.max(1, Math.trunc(level))
   const globalMeta = getGlobalSkillMetaByActionId(id)
 
-  const resolvedId = normalizeInt(
-    resolveDynamicNumber(globalMeta?.id ?? id, normalizedLevel, id),
-    id,
-    1,
-  )
-  const baseRecast1000ms = normalizeInt(options?.baseRecast1000ms, 0, 0)
-  const recast1000ms = normalizeInt(
-    resolveDynamicNumber(globalMeta?.recast1000ms ?? baseRecast1000ms, normalizedLevel, baseRecast1000ms),
-    baseRecast1000ms,
-    0,
-  )
-  const baseDuration = normalizeInt(options?.baseDuration, 0, 0)
-  const duration = normalizeInt(
-    resolveDynamicNumber(globalMeta?.duration ?? baseDuration, normalizedLevel, baseDuration),
-    baseDuration,
-    0,
-  )
+  const baseRecast1000ms = options?.baseRecast1000ms || 0
+  const baseDuration = options?.baseDuration || 0
+  const fallbackMinLevel = options?.baseMinLevel || 1
 
-  const fallbackMinLevel = normalizeInt(options?.baseMinLevel, 1, 1)
-  const minLevel = resolveActionMinLevel(
-    globalMeta?.minLevel ?? fallbackMinLevel,
-    {
-      actionId: id,
-      isRoleAction: options?.isRoleAction,
-      fallback: fallbackMinLevel,
-    },
-  )
+  const resolvedId = Number(parseDynamicValue(globalMeta?.id ?? id, normalizedLevel)) || id
+  const recast1000ms = Number(parseDynamicValue(globalMeta?.recast1000ms ?? baseRecast1000ms, normalizedLevel)) || baseRecast1000ms
+  const duration = Number(parseDynamicValue(globalMeta?.duration ?? baseDuration, normalizedLevel)) || baseDuration
+
+  const minLevel = resolveActionMinLevel(globalMeta?.minLevel ?? fallbackMinLevel, {
+    actionId: id,
+    isRoleAction: options?.isRoleAction,
+    fallback: fallbackMinLevel,
+  })
 
   const jobsFromGlobal = uniqueInts(globalMeta?.job ?? [])
   return {
@@ -214,50 +171,20 @@ export function resolveActionMetaByLevel(
   }
 }
 
-export function shouldFetchResolvedActionMeta(
-  input: {
-    actionCategoryTargetId?: number
-    jobs?: number[]
-  },
-  options?: {
-    requireActionCategory?: boolean
-    requireJobs?: boolean
-  },
-) {
-  const requireActionCategory = options?.requireActionCategory ?? true
-  const requireJobs = options?.requireJobs ?? false
-
-  if (requireActionCategory) {
-    const actionCategoryTargetId = normalizeInt(input.actionCategoryTargetId, 0, 0)
-    if (actionCategoryTargetId <= 0)
-      return true
-  }
-
-  if (requireJobs) {
-    const jobs = uniqueInts((input.jobs ?? []).map(v => Number(v)))
-    if (!jobs.length)
-      return true
-  }
-
-  return false
-}
-
 export function resolveApiActionMeta(actionId: number, row: Record<string, unknown>): ResolvedApiActionMeta {
-  const id = normalizeInt(Number(row.ID ?? actionId), actionId, 1)
-  const isRoleAction = Number(row.IsRoleAction ?? 0) > 0
-  const classJobTargetId = normalizeInt(row.ClassJobTargetID, 0, 0)
-  const classJobCategoryTargetId = normalizeInt(row.ClassJobCategoryTargetID, 0, 0)
-  const actionCategoryTargetId = normalizeInt(row.ActionCategoryTargetID, 0, 0)
-  const recast1000ms = normalizeInt(Number(row.Recast100ms ?? 0) / 10, 0, 0)
-  const maxCharges = normalizeInt(row.MaxCharges, 0, 0)
-  const classJobLevel = resolveActionMinLevel(
-    normalizeInt(row.ClassJobLevel, 1, 1),
-    {
-      actionId: id,
-      isRoleAction,
-      fallback: 1,
-    },
-  )
+  const id = Number(row.ID) || actionId || 0
+  const isRoleAction = !!row.IsRoleAction
+  markRoleActionId(id, isRoleAction)
+  const classJobTargetId = Number(row.ClassJobTargetID) || 0
+  const classJobCategoryTargetId = Number(row.ClassJobCategoryTargetID) || 0
+  const actionCategoryTargetId = Number(row.ActionCategoryTargetID) || 0
+  const recast1000ms = (Number(row.Recast100ms) || 0) / 10
+  const maxCharges = Number(row.MaxCharges) || 0
+  const classJobLevel = resolveActionMinLevel(row.ClassJobLevel || 1, {
+    actionId: id,
+    isRoleAction,
+    fallback: 1,
+  })
   const jobs = resolveActionJobsFromTargets(
     classJobTargetId,
     classJobCategoryTargetId,
@@ -280,6 +207,11 @@ export function resolveApiActionMeta(actionId: number, row: Record<string, unkno
 }
 
 export function resolveActionDisplayName(resolvedActionId: number, fallbackActionId: number, apiName?: string) {
+  if (resolvedActionId === fallbackActionId) {
+    return getActionNameLite(resolvedActionId)
+      || (typeof apiName === 'string' && apiName.trim() ? apiName : '')
+      || `#${resolvedActionId}`
+  }
   return getActionNameLite(resolvedActionId)
     || getActionNameLite(fallbackActionId)
     || (typeof apiName === 'string' && apiName.trim() ? apiName : '')
@@ -297,18 +229,4 @@ export function resolveActionIconSrc(actionId: number, options?: { apiIconPath?:
     return getIconSrcByPath(options.apiIconPath, false, options?.highRes ?? false)
   }
   return ''
-}
-
-export function resolveBakedActionVisualMeta(actionId: number) {
-  const baked = resolveBakedActionMeta(actionId)
-  if (!baked)
-    return undefined
-  const actionCategory = normalizeInt(baked.actionCategoryTargetId, 0, 0)
-  const maxCharges = normalizeInt(baked.maxCharges, 0, 0)
-  return {
-    actionCategory,
-    isGcdLike: actionCategory !== 4,
-    isCharge: maxCharges > 0,
-    maxCharges,
-  }
 }

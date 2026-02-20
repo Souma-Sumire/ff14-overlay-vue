@@ -46,16 +46,9 @@ interface MitigationKeigennSkillBase {
 type MitigationKeigennSkill = MitigationKeigennSkillBase & MitigationSkillMeta
 
 function normalizeMitigationSkillIdAtMaxLevel(value: number | string): number {
-  if (typeof value === 'number' && Number.isFinite(value))
-    return Math.max(0, Math.trunc(value))
-  const trimmed = String(value).trim()
-  if (!trimmed)
-    return 0
   try {
-    const resolved = parseDynamicValue(trimmed, GLOBAL_SKILL_MAX_LEVEL)
-    if (!Number.isFinite(resolved) || resolved <= 0)
-      return 0
-    return Math.trunc(resolved)
+    const raw = parseDynamicValue(value, GLOBAL_SKILL_MAX_LEVEL)
+    return raw || 0
   }
   catch {
     return 0

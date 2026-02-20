@@ -12,13 +12,12 @@ import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { getActionNameLite } from '@/resources/logic/actionNameLite'
 import {
   buildInheritedBaseJobActions,
-  resolveTeamWatchDynamicValue,
   TEAM_WATCH_EMPTY_ACTIONS,
   TEAM_WATCH_WATCH_ACTIONS_DEFAULT,
 } from '@/resources/teamWatchResource'
 import { useTeamWatchStore } from '@/store/teamWatchStore'
 import { copyToClipboard } from '@/utils/clipboard'
-import { idToSrc } from '@/utils/dynamicValue'
+import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 import Util from '@/utils/util'
 import { getIconSrcByPath, handleImgError, searchActionsByClassJobs } from '@/utils/xivapi'
 
@@ -210,11 +209,10 @@ async function loadPickerPool(job: number) {
       classJobLevel: row.ClassJobLevel,
       recast1000ms: (() => {
         const meta = getGlobalSkillMetaByActionId(row.ID)
-        return resolveTeamWatchDynamicValue(
+        return parseDynamicValue(
           meta?.recast1000ms ?? Number(row.Recast1000ms ?? 0),
           GLOBAL_SKILL_MAX_LEVEL,
-          Number(row.Recast1000ms ?? 0),
-        )
+        ) ?? Number(row.Recast1000ms ?? 0)
       })(),
       isRoleAction: Number(row.IsRoleAction ?? 0) > 0,
     }))

@@ -17,13 +17,9 @@ if (roleActionCacheVersion.value !== ROLE_ACTION_CACHE_VERSION) {
 
 function collectBakedRoleActionIds() {
   return Object.entries(BAKED_ACTION_META_LITE_BY_ID)
-    .map(([rawId, meta]) => ({ id: Number(rawId), meta }))
-    .filter(({ id, meta }) => {
-      if (!Number.isFinite(id) || id <= 0)
-        return false
-      return Number(meta.isRoleAction ?? 0) > 0
-    })
-    .map(({ id }) => Math.trunc(id))
+    .filter(([_, meta]) => (Number(meta.isRoleAction) || 0) > 0)
+    .map(([rawId]) => Math.trunc(Number(rawId)) || 0)
+    .filter(id => id > 0)
 }
 
 const knownRoleActionIds = new Set<number>([
@@ -39,45 +35,36 @@ function persistKnownRoleActionIds() {
   )
 }
 
-function normalizeMinLevelValue(value: unknown, fallback = 1) {
-  const fallbackLevel = Math.max(1, Math.trunc(Number(fallback)) || 1)
-  const numeric = Number(value)
-  return Number.isFinite(numeric) ? Math.max(1, Math.trunc(numeric)) : fallbackLevel
-}
-
 function resolveKnownMinLevelByActionId(actionId: number) {
   if (!Number.isFinite(actionId) || actionId <= 0)
     return undefined
-  const id = Math.trunc(actionId)
+  const id = actionId
 
   if (knownRoleActionIds.has(id))
     return ROLE_ACTION_MIN_LEVEL
 
   const fromMap = Number(BAKED_ACTION_META_LITE_BY_ID[id]?.classJobLevel ?? 0)
   if (Number.isFinite(fromMap) && fromMap > 0)
-    return normalizeMinLevelValue(fromMap, 1)
+    return fromMap
 
   return undefined
 }
 
 export function markRoleActionId(actionId: number, isRoleAction: unknown) {
-  const id = Number(actionId)
-  if (!Number.isFinite(id) || id <= 0)
+  const id = Number(actionId) || 0
+  if (id <= 0 || (Number(isRoleAction) || 0) <= 0)
     return
-  if (!(Number(isRoleAction) > 0))
-    return
-  const normalized = Math.trunc(id)
-  if (knownRoleActionIds.has(normalized))
-    return
-  knownRoleActionIds.add(normalized)
-  persistKnownRoleActionIds()
+  if (!knownRoleActionIds.has(id)) {
+    knownRoleActionIds.add(id)
+    persistKnownRoleActionIds()
+  }
 }
 
 export function isRoleActionId(actionId: number) {
   const id = Number(actionId)
   if (!Number.isFinite(id) || id <= 0)
     return false
-  return knownRoleActionIds.has(Math.trunc(id))
+  return knownRoleActionIds.has(id)
 }
 
 export function resolveActionMinLevel(
@@ -88,26 +75,25 @@ export function resolveActionMinLevel(
     fallback?: number
   },
 ) {
-  const fallback = normalizeMinLevelValue(options?.fallback ?? 1, 1)
-  const actionId = Number(options?.actionId ?? 0)
-  const normalizedActionId = Number.isFinite(actionId) && actionId > 0 ? Math.trunc(actionId) : 0
+  const fallbackValue = Number(options?.fallback) || 1
+  const actionId = Number(options?.actionId) || 0
 
-  if (Number(options?.isRoleAction ?? 0) > 0) {
-    markRoleActionId(normalizedActionId, 1)
+  if ((Number(options?.isRoleAction) || 0) > 0) {
+    markRoleActionId(actionId, 1)
     return ROLE_ACTION_MIN_LEVEL
   }
-  if (isRoleActionId(normalizedActionId))
+  if (isRoleActionId(actionId))
     return ROLE_ACTION_MIN_LEVEL
 
-  const baseLevel = normalizeMinLevelValue(classJobLevel, fallback)
-  if (normalizedActionId <= 0)
+  const baseLevel = Number(classJobLevel) || fallbackValue
+  if (actionId <= 0)
     return baseLevel
 
-  const bakedFamilyMinLevel = Number(BAKED_UPGRADE_CHAIN_MIN_LEVEL_BY_ACTION_ID[normalizedActionId])
+  const bakedFamilyMinLevel = Number(BAKED_UPGRADE_CHAIN_MIN_LEVEL_BY_ACTION_ID[actionId])
   if (Number.isFinite(bakedFamilyMinLevel) && bakedFamilyMinLevel > 0)
-    return Math.min(baseLevel, normalizeMinLevelValue(bakedFamilyMinLevel, baseLevel))
+    return Math.min(baseLevel, Math.max(1, Math.trunc(bakedFamilyMinLevel)))
 
-  const knownLevel = resolveKnownMinLevelByActionId(normalizedActionId)
+  const knownLevel = resolveKnownMinLevelByActionId(actionId)
   if (knownLevel !== undefined)
     return Math.min(baseLevel, knownLevel)
   return baseLevel

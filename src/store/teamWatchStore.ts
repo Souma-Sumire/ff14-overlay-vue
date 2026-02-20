@@ -5,10 +5,11 @@ import { defineStore } from 'pinia'
 import { computed, reactive, ref, watch } from 'vue'
 import { JobResourceManager } from '@/modules/jobResourceTracker'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
-import { hasBakedActionMeta, resolveActionDisplayName, resolveActionIconSrc, resolveApiActionMeta, shouldFetchResolvedActionMeta } from '@/resources/logic/actionMetaResolver'
-import { buildInheritedBaseJobActions, buildTeamWatchFallbackMeta, cloneTeamWatchActionMetaMap, loadTeamWatchStorageData, normalizeTeamWatchActionMetaRaw, resolveTeamWatchDynamicValue, saveTeamWatchStorageData, TEAM_WATCH_EMPTY_ACTIONS, TEAM_WATCH_WATCH_ACTIONS_DEFAULT } from '@/resources/teamWatchResource'
-import { buildSimulatedAbilityLine, clearRuntimeCooldownStates, decodeBase64Payload, deepCloneWatchMap, encodeBase64Payload, ensureRuntime, normalizeInt, normalizeTrackedActionId, resolveTeamWatchSkillState, toHexId, updateRuntimeCollection, useRuntime } from '@/store/teamWatchHelpers'
+import { resolveActionDisplayName, resolveActionIconSrc, resolveApiActionMeta } from '@/resources/logic/actionMetaResolver'
+import { buildInheritedBaseJobActions, cloneTeamWatchActionMetaMap, loadTeamWatchStorageData, normalizeTeamWatchActionMetaRaw, saveTeamWatchStorageData, TEAM_WATCH_EMPTY_ACTIONS, TEAM_WATCH_WATCH_ACTIONS_DEFAULT } from '@/resources/teamWatchResource'
+import { buildSimulatedAbilityLine, clearRuntimeCooldownStates, decodeBase64Payload, encodeBase64Payload, ensureRuntime, resolveTeamWatchSkillState, resolveTrackedActionId, updateRuntimeCollection, useRuntime } from '@/store/teamWatchHelpers'
 import { resolveUpgradeActionIdForLevel } from '@/utils/compareSaveAction'
+import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 import Util from '@/utils/util'
 import { parseAction } from '@/utils/xivapi'
 
@@ -53,7 +54,7 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
 
   const sortRuleUser = ref<number[]>([...storage.sortRuleUser])
   const watchJobsActionsIDUser = ref<Record<number, number[]>>(
-    deepCloneWatchMap(storage.watchJobsActionsIDUser),
+    Object.fromEntries(Object.entries(storage.watchJobsActionsIDUser).map(([k, v]) => [Number(k), [...v]])),
   )
   const actionMetaUser = ref<Record<number, TeamWatchActionMetaRaw>>(
     cloneTeamWatchActionMetaMap(storage.actionMetaUser),
@@ -82,13 +83,8 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
   )
 
   function getActionMetaRaw(actionId: number, autoFetch = true) {
-    if (actionId <= 0)
-      return normalizeTeamWatchActionMetaRaw(0, buildTeamWatchFallbackMeta(0))
-    const raw = normalizeTeamWatchActionMetaRaw(
-      actionId,
-      actionMetaUser.value[actionId] ?? buildTeamWatchFallbackMeta(actionId),
-    )
-    if (autoFetch)
+    const raw = normalizeTeamWatchActionMetaRaw(actionId, actionMetaUser.value[actionId])
+    if (autoFetch && actionId > 0)
       triggerAutoFetchActionMeta(actionId)
     return raw
   }
@@ -97,15 +93,7 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
     if (actionId <= 0)
       return
     const existing = actionMetaUser.value[actionId]
-    const shouldFetch = shouldFetchResolvedActionMeta(
-      {
-        actionCategoryTargetId: existing
-          ? Number(existing.actionCategory ?? 0)
-          : (hasBakedActionMeta(actionId, { requireActionCategory: true }) ? 1 : 0),
-      },
-      { requireActionCategory: true },
-    )
-    if (!shouldFetch)
+    if ((existing?.actionCategory ?? 0) > 0)
       return
     if (autoFetchMetaRequested.has(actionId))
       return
@@ -119,39 +107,24 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
 
   function resolveActionMeta(actionId: number, level: number, rawOverride?: TeamWatchActionMetaRaw) {
     const raw = rawOverride ? normalizeTeamWatchActionMetaRaw(actionId, rawOverride) : getActionMetaRaw(actionId, false)
-    const configuredActionId = normalizeInt(Number(raw.id), actionId, 0)
-    const resolvedActionId = normalizeInt(
-      resolveUpgradeActionIdForLevel(configuredActionId, level),
-      configuredActionId,
-      0,
-    )
-
-    const fallback = buildTeamWatchFallbackMeta(resolvedActionId > 0 ? resolvedActionId : actionId)
-    const name = raw.name.trim()
-      || resolveActionDisplayName(resolvedActionId > 0 ? resolvedActionId : actionId, actionId)
-      || fallback.name
-    const iconSrc = resolveActionIconSrc(resolvedActionId > 0 ? resolvedActionId : actionId)
-      || raw.iconSrc.trim()
-      || fallback.iconSrc
-
-    const resInt = (val: any, fallback = 0) =>
-      normalizeInt(resolveTeamWatchDynamicValue(val, level, fallback), fallback, fallback)
+    const configuredActionId = Math.trunc(Number(raw.id)) || actionId
+    const resolvedActionId = resolveUpgradeActionIdForLevel(configuredActionId, level) || configuredActionId
 
     return {
       id: resolvedActionId,
-      name,
-      iconSrc,
-      actionCategory: normalizeInt(Number(raw.actionCategory), 0, 0),
-      recast1000ms: resInt(raw.recast1000ms),
-      duration: resInt(raw.duration),
-      maxCharges: resInt(raw.maxCharges),
-      classJobLevel: resInt(raw.classJobLevel, 1),
+      name: resolveActionDisplayName(resolvedActionId, configuredActionId, raw.name),
+      iconSrc: resolveActionIconSrc(resolvedActionId > 0 ? resolvedActionId : configuredActionId) || raw.iconSrc || idToSrc(configuredActionId),
+      actionCategory: Number(raw.actionCategory),
+      recast1000ms: parseDynamicValue(raw.recast1000ms, level),
+      duration: parseDynamicValue(raw.duration, level),
+      maxCharges: parseDynamicValue(raw.maxCharges, level),
+      classJobLevel: parseDynamicValue(raw.classJobLevel, level),
     } satisfies TeamWatchActionMeta
   }
 
   async function fetchActionMetaDraft(actionId: number, force = false): Promise<TeamWatchActionMetaRaw> {
     if (actionId <= 0)
-      return normalizeTeamWatchActionMetaRaw(0, buildTeamWatchFallbackMeta(0))
+      return normalizeTeamWatchActionMetaRaw(0, {})
 
     if (!force && actionMetaUser.value[actionId])
       return getActionMetaRaw(actionId)
@@ -161,19 +134,16 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
       return pending
 
     const task = (async () => {
-      const base = force
-        ? normalizeTeamWatchActionMetaRaw(actionId, buildTeamWatchFallbackMeta(actionId))
-        : getActionMetaRaw(actionId, false)
+      const base = getActionMetaRaw(actionId, false)
       try {
         const response = await parseAction('action', actionId, TEAM_WATCH_ACTION_COLUMNS)
         const resolvedApi = resolveApiActionMeta(actionId, response as Record<string, unknown>)
         const iconPath = typeof response.Icon === 'string' ? response.Icon : undefined
-        const iconSrc = resolveActionIconSrc(actionId, { apiIconPath: iconPath, highRes: true }) || base.iconSrc
 
         const apiMeta = normalizeTeamWatchActionMetaRaw(actionId, {
           id: actionId,
-          name: resolveActionDisplayName(actionId, actionId, resolvedApi.name) || base.name,
-          iconSrc,
+          name: resolveActionDisplayName(actionId, actionId, resolvedApi.name),
+          iconSrc: resolveActionIconSrc(actionId, { apiIconPath: iconPath, highRes: true }),
           actionCategory: resolvedApi.actionCategoryTargetId,
           recast1000ms: resolvedApi.recast1000ms,
           duration: base.duration,
@@ -228,7 +198,7 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
     const partySource = fakeMode.value ? teamWatchFakeParty : party.value
     partySource.forEach((member) => {
       const normalizedJob = Util.baseJobEnumConverted(member.job)
-      const normalizedId = toHexId(member.id)
+      const normalizedId = String(member.id).toUpperCase()
       if (!partyInfo.has(normalizedJob))
         partyInfo.set(normalizedJob, [])
       const ids = partyInfo.get(normalizedJob)!
@@ -274,7 +244,7 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
     for (const member of sorted) {
       const actionIds = resolveMemberWatchActionIds(member.job)
 
-      const ownerId = toHexId(member.id)
+      const ownerId = String(member.id).toUpperCase()
       const memberLevel = Number.isFinite(member.level) ? member.level : 100
 
       const skills: TeamWatchSkillView[] = actionIds.map((rawActionId) => {
@@ -282,7 +252,7 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
           pendingAutoFetchActionIds.add(rawActionId)
         const meta = resolveActionMeta(rawActionId, memberLevel)
         const resolvedActionId = Math.max(0, meta.id)
-        const trackedActionId = normalizeTrackedActionId(resolvedActionId)
+        const trackedActionId = resolveTrackedActionId(resolvedActionId)
         const runtimeKey = `${ownerId}:${trackedActionId}`
         ensureRuntime(runtimeByKey, runtimeKey, ownerId, member.job, trackedActionId, meta)
         activeRuntimeKeys.add(runtimeKey)
@@ -372,10 +342,10 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
 
   function triggerSkillByAction(casterId: string, actionId: number) {
     const now = Date.now()
-    const trackedActionId = normalizeTrackedActionId(actionId)
+    const trackedActionId = resolveTrackedActionId(actionId)
     if (trackedActionId <= 0)
       return
-    const runtimeKey = actionLookup[`${toHexId(casterId)}:${trackedActionId}`]
+    const runtimeKey = actionLookup[`${String(casterId).toUpperCase()}:${trackedActionId}`]
     if (!runtimeKey)
       return
     if (useRuntime(runtimeByKey, cooldownTracker, runtimeKey, now)) {
@@ -419,7 +389,7 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
       .filter(v => v.inParty)
       .map(v => ({
         ...v,
-        id: toHexId(v.id),
+        id: String(v.id).toUpperCase(),
       }))
   }
 
@@ -498,7 +468,7 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
   function getSnapshot() {
     return {
       sortRuleUser: [...sortRuleUser.value],
-      watchJobsActionsIDUser: deepCloneWatchMap(watchJobsActionsIDUser.value),
+      watchJobsActionsIDUser: Object.fromEntries(Object.entries(watchJobsActionsIDUser.value).map(([k, v]) => [Number(k), [...v]])),
       actionMetaUser: cloneTeamWatchActionMetaMap(actionMetaUser.value),
     } satisfies TeamWatchStorageData
   }
@@ -506,7 +476,7 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
   function loadFromStorage() {
     const next = loadTeamWatchStorageData()
     sortRuleUser.value = [...next.sortRuleUser]
-    watchJobsActionsIDUser.value = deepCloneWatchMap(next.watchJobsActionsIDUser)
+    watchJobsActionsIDUser.value = Object.fromEntries(Object.entries(next.watchJobsActionsIDUser).map(([k, v]) => [Number(k), [...v]]))
     actionMetaUser.value = cloneTeamWatchActionMetaMap(next.actionMetaUser)
     // rebuild will bue triggered by watch
     const actionIds = new Set(
@@ -520,7 +490,7 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
 
   function saveSettings(next: TeamWatchSaveSettingsInput) {
     sortRuleUser.value = [...next.sortRuleUser]
-    watchJobsActionsIDUser.value = deepCloneWatchMap(next.watchJobsActionsIDUser)
+    watchJobsActionsIDUser.value = Object.fromEntries(Object.entries(next.watchJobsActionsIDUser).map(([k, v]) => [Number(k), [...v]]))
     if (next.actionMetaUser !== undefined)
       actionMetaUser.value = cloneTeamWatchActionMetaMap(next.actionMetaUser)
     // Force immediate persistence to avoid race conditions with loadFromStorage

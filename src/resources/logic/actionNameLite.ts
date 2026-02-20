@@ -4,10 +4,9 @@ import { actionId2ClassJobLevel } from './action2ClassJobLevel'
 let cachedActionList: Array<{ id: number, name: string }> | null = null
 
 function getActionNameLite(id: number): string | undefined {
-  const normalized = Number.isFinite(id) && id > 0 ? Math.trunc(id) : 0
-  if (normalized <= 0)
+  if (id <= 0)
     return undefined
-  return BAKED_ACTION_META_LITE_BY_ID[normalized]?.name
+  return BAKED_ACTION_META_LITE_BY_ID[id]?.name
 }
 
 function getCachedActionList() {

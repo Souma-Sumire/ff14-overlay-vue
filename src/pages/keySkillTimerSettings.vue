@@ -14,15 +14,13 @@ import { useLang } from '@/composables/useLang'
 import { useWebSocket } from '@/composables/useWebSocket'
 import { getGlobalSkillMetaByActionId, GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
-import { resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
-import { getActionNameLite } from '@/resources/logic/actionNameLite'
-import { resolveTeamWatchDynamicValue } from '@/resources/teamWatchResource'
+import { resolveActionDisplayName, resolveActionIconSrc, uniqueInts } from '@/resources/logic/actionMetaResolver'
 import { useKeySkillStore } from '@/store/keySkills'
 import { copyToClipboard } from '@/utils/clipboard'
-import { idToSrc } from '@/utils/dynamicValue'
+import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 import { tts } from '@/utils/tts'
 import Util from '@/utils/util'
-import { getIconSrcByPath, handleImgError, searchActionsByClassJobs } from '@/utils/xivapi'
+import { handleImgError, searchActionsByClassJobs } from '@/utils/xivapi'
 
 interface KeySkillRow {
   key: string
@@ -123,27 +121,16 @@ const pickerCurrentActionId = computed(() => {
   return row.id
 })
 
-function normalizeJobEnums(jobs: number[] | undefined): number[] {
-  if (!Array.isArray(jobs))
-    return []
-  return [...new Set(
-    jobs
-      .map(v => Number(v))
-      .filter(v => Number.isFinite(v) && v > 0)
-      .map(v => Math.trunc(v)),
-  )]
-}
-
 function resolveRowJobsForPicker(row: KeySkillRow): number[] {
   const cached = storeKeySkill.autoMetaById[row.id]
   if (cached?.classJobTargetId && cached.classJobTargetId > 0)
-    return [Math.trunc(cached.classJobTargetId)]
-  const customJobs = normalizeJobEnums(row.job)
+    return [cached.classJobTargetId]
+  const customJobs = row.job ? uniqueInts(row.job) : []
   if (customJobs.length > 0)
     return customJobs
   if (cached)
-    return normalizeJobEnums(cached.jobs)
-  return normalizeJobEnums(resolveSkillMeta(row.id).jobs)
+    return cached.jobs
+  return resolveSkillMeta(row.id).jobs
 }
 
 const pickerDisabledActionSet = computed(() => {
@@ -184,24 +171,20 @@ function resolveSkillMeta(actionId: number) {
     return cached
 
   const globalMeta = getGlobalSkillMetaByActionId(actionId)
-  const resolvedIdRaw = resolveTeamWatchDynamicValue(globalMeta?.id ?? actionId, GLOBAL_SKILL_MAX_LEVEL, actionId)
-  const resolvedDurationRaw = resolveTeamWatchDynamicValue(globalMeta?.duration ?? 0, GLOBAL_SKILL_MAX_LEVEL, 0)
-  const resolvedRecastRaw = resolveTeamWatchDynamicValue(globalMeta?.recast1000ms ?? 0, GLOBAL_SKILL_MAX_LEVEL, 0)
-  const resolvedId = Number.isFinite(resolvedIdRaw) ? Math.trunc(resolvedIdRaw) : actionId
-  const resolvedDuration = Number.isFinite(resolvedDurationRaw) ? Math.max(0, Math.trunc(resolvedDurationRaw)) : 0
-  const resolvedRecast1000ms = Number.isFinite(resolvedRecastRaw) ? Math.max(0, Math.trunc(resolvedRecastRaw)) : 0
-  const minLevel = Number(globalMeta?.minLevel ?? 1)
-  const resolvedMinLevel = Number.isFinite(minLevel) ? Math.max(1, Math.trunc(minLevel)) : 1
+  const resolvedId = parseDynamicValue(globalMeta?.id ?? actionId, GLOBAL_SKILL_MAX_LEVEL)
+  const resolvedDuration = Math.max(0, parseDynamicValue(globalMeta?.duration ?? 0, GLOBAL_SKILL_MAX_LEVEL))
+  const resolvedRecast1000ms = Math.max(0, parseDynamicValue(globalMeta?.recast1000ms ?? 0, GLOBAL_SKILL_MAX_LEVEL))
+  const resolvedMinLevel = Math.max(1, Number(globalMeta?.minLevel ?? 1))
 
   return {
     id: resolvedId,
-    name: getActionNameLite(resolvedId) || getActionNameLite(actionId) || `#${resolvedId}`,
+    name: resolveActionDisplayName(resolvedId, actionId),
     src: idToSrc(resolvedId),
     duration: resolvedDuration,
     recast1000ms: resolvedRecast1000ms,
     minLevel: resolvedMinLevel,
     isRoleAction: false,
-    jobs: Array.isArray(globalMeta?.job) ? [...globalMeta.job] : [],
+    jobs: globalMeta?.job ? [...globalMeta.job] : [],
   }
 }
 
@@ -404,31 +387,19 @@ async function loadPickerPool(jobEnum: number) {
   pickerLoading.value = true
   try {
     const apiRows = await searchActionsByClassJobs([jobEnum], 500)
-    const mapped = apiRows.map(row => ({
-      id: row.ID,
-      name: getActionNameLite(row.ID) || row.Name || `#${row.ID}`,
-      iconSrc: (() => {
-        return idToSrc(row.ID) || (row.Icon ? getIconSrcByPath(row.Icon) : undefined)
-      })(),
-      recast1000ms: (() => {
-        const meta = getGlobalSkillMetaByActionId(row.ID)
-        return resolveTeamWatchDynamicValue(
-          meta?.recast1000ms ?? Number(row.Recast1000ms ?? 0),
-          100,
-          Number(row.Recast1000ms ?? 0),
-        )
-      })(),
-      duration: (() => {
-        const meta = getGlobalSkillMetaByActionId(row.ID)
-        return resolveTeamWatchDynamicValue(meta?.duration ?? 0, GLOBAL_SKILL_MAX_LEVEL, 0)
-      })(),
-      minLevel: resolveActionMinLevel(row.ClassJobLevel, {
-        actionId: row.ID,
-        isRoleAction: row.IsRoleAction,
-        fallback: 1,
-      }),
-      isRoleAction: Number(row.IsRoleAction ?? 0) > 0,
-    }))
+    const mapped = apiRows.map((row) => {
+      const globalMeta = getGlobalSkillMetaByActionId(row.ID)
+      const actionId = row.ID
+      return {
+        id: actionId,
+        name: resolveActionDisplayName(actionId, actionId, row.Name),
+        iconSrc: resolveActionIconSrc(actionId, { apiIconPath: row.Icon }),
+        recast1000ms: Math.max(0, parseDynamicValue(globalMeta?.recast1000ms ?? (row.Recast100ms ?? 0) / 10, 100)),
+        duration: Math.max(0, parseDynamicValue(globalMeta?.duration ?? 0, GLOBAL_SKILL_MAX_LEVEL)),
+        minLevel: row.ClassJobLevel,
+        isRoleAction: Number(row.IsRoleAction ?? 0) > 0,
+      }
+    })
     pickerPoolCache[jobEnum] = mapped
     pickerPool.value = [...mapped]
   }
@@ -482,21 +453,15 @@ function resolvePickerInitialJob(replaceSkillKey: string | null) {
     return null
 
   const jobSet = new Set(pickerJobOptions.value.map(v => v.jobEnum))
-  const globalJobs = getGlobalSkillMetaByActionId(row.id)?.job ?? []
-  const fallbackJobs = resolveSkillMeta(row.id).jobs
-  const mergedJobs = [
-    ...(Array.isArray(row.job) ? row.job : []),
-    ...globalJobs,
-    ...fallbackJobs,
-  ]
+  const mergedJobs = uniqueInts([
+    ...(row.job ?? []),
+    ...(getGlobalSkillMetaByActionId(row.id)?.job ?? []),
+    ...resolveSkillMeta(row.id).jobs,
+  ])
 
-  for (const candidate of mergedJobs) {
-    const jobEnum = Number(candidate)
-    if (!Number.isFinite(jobEnum))
-      continue
-    const normalized = Math.trunc(jobEnum)
-    if (normalized > 0 && jobSet.has(normalized))
-      return normalized
+  for (const jobEnum of mergedJobs) {
+    if (jobSet.has(jobEnum))
+      return jobEnum
   }
   return null
 }
@@ -520,7 +485,7 @@ async function pickAction(actionId: number, name?: string) {
     }
   }
   else {
-    targetSkillKey = addSkillById(actionId, pickerTargetLine.value, name || getActionNameLite(actionId))
+    targetSkillKey = addSkillById(actionId, pickerTargetLine.value, name || resolveActionDisplayName(actionId, actionId))
   }
   await storeKeySkill.ensureActionAutoMeta(actionId)
   pickerVisible.value = false

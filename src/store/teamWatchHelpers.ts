@@ -6,29 +6,11 @@ import Util from '@/utils/util'
 
 // --- store & utils helpers ---
 
-export function toHexId(id: string | number): string {
-  return String(id).toUpperCase()
-}
-
-export function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value))
-}
-
-export function normalizeInt(value: number, fallback: number, min = 0): number {
-  if (!Number.isFinite(value))
-    return fallback
-  return Math.max(min, Math.trunc(value))
-}
-
-export function normalizeTrackedActionId(actionId: number): number {
-  if (!Number.isFinite(actionId) || actionId <= 0)
+export function resolveTrackedActionId(actionId: number): number {
+  if (actionId <= 0)
     return 0
-  const upgradedActionId = normalizeUpgradeActionId(Math.trunc(actionId))
+  const upgradedActionId = normalizeUpgradeActionId(actionId)
   return compareSame(upgradedActionId)
-}
-
-export function deepCloneWatchMap(input: Record<number, number[]>): Record<number, number[]> {
-  return Object.fromEntries(Object.entries(input).map(([k, v]) => [Number(k), [...v]]))
 }
 
 export function encodeBase64Payload(text: string): string {
@@ -78,11 +60,11 @@ export function buildSimulatedAbilityLine(
   const line: string[] = []
   line[0] = '21'
   line[1] = new Date(timestampMs).toISOString()
-  line[2] = toHexId(sourceId)
+  line[2] = String(sourceId).toUpperCase()
   line[3] = sourceName
   line[4] = actionId.toString(16).toUpperCase()
   line[5] = actionName
-  line[6] = toHexId(sourceId)
+  line[6] = String(sourceId).toUpperCase()
   line[7] = sourceName
   return line
 }
@@ -114,7 +96,7 @@ export function ensureRuntime(
   if (!existing) {
     runtimeByKey[runtimeKey] = {
       key: runtimeKey,
-      ownerId: toHexId(ownerId),
+      ownerId: String(ownerId).toUpperCase(),
       ownerJob: Util.baseJobEnumConverted(ownerJob),
       trackedActionId,
       maxCharges: Math.max(0, meta.maxCharges),
@@ -135,10 +117,9 @@ export function ensureRuntime(
     existing.chargesNow = 0
   }
   else {
-    existing.chargesNow = clamp(
-      existing.maxCharges - existing.chargeReadyAt.length,
-      0,
+    existing.chargesNow = Math.min(
       existing.maxCharges,
+      Math.max(0, existing.maxCharges - existing.chargeReadyAt.length),
     )
   }
   return existing
@@ -217,10 +198,9 @@ export function updateRuntimeCollection(
     if (runtime.maxCharges > 0) {
       if (runtime.chargeReadyAt.length > 0) {
         runtime.chargeReadyAt = runtime.chargeReadyAt.filter(readyAt => readyAt > now)
-        runtime.chargesNow = clamp(
-          runtime.maxCharges - runtime.chargeReadyAt.length,
-          0,
+        runtime.chargesNow = Math.min(
           runtime.maxCharges,
+          Math.max(0, runtime.maxCharges - runtime.chargeReadyAt.length),
         )
       }
       return
@@ -299,7 +279,7 @@ export function resolveTeamWatchSkillState(context: TeamWatchSkillStateContext):
     charges = runtime.chargesNow
     if (runtime.chargeReadyAt.length > 0) {
       const nextReadyAt = runtime.chargeReadyAt[0]!
-      const remain = clamp(nextReadyAt - now, 0, recastTotalMs)
+      const remain = Math.min(recastTotalMs, Math.max(0, nextReadyAt - now))
       overlayPercent = (remain / recastTotalMs) * 100
       isCooling = true
     }
@@ -342,7 +322,7 @@ export function resolveTeamWatchSkillState(context: TeamWatchSkillStateContext):
     charges,
     maxCharges: skill.meta.maxCharges,
     isCharge,
-    overlayPercent: clamp(overlayPercent, 0, 100),
+    overlayPercent: Math.min(100, Math.max(0, overlayPercent)),
     isCooling,
     isRecentlyUsed: now - runtime.activeAt < 250,
     hasResourceCost,
