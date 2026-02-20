@@ -14,7 +14,7 @@ export const GLOBAL_SKILL_MAX_LEVEL = 100
 
 type RawGlobalSkillDefinition = Partial<GlobalSkillDefinition> & { id: number }
 
-export const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
+const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
   { id: 30, recast1000ms: 420, duration: 10 },
   { id: 43, recast1000ms: 240, duration: 10 },
   { id: 3638, recast1000ms: 300, duration: 10 },
