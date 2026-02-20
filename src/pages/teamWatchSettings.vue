@@ -7,9 +7,9 @@ import { storeToRefs } from 'pinia'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import ActionPickerDialog from '@/components/common/ActionPickerDialog.vue'
-import { getGlobalSkillMetaByActionId, GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
+import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
-import { getActionNameLite } from '@/resources/logic/actionNameLite'
+import { getActionNameLite, getGlobalSkillDefinitionById } from '@/resources/logic/actionMetaResolver'
 import {
   buildInheritedBaseJobActions,
   TEAM_WATCH_EMPTY_ACTIONS,
@@ -190,7 +190,7 @@ const pickerCurrentActionId = computed(() => {
   if (!target)
     return null
   const current = rowsByJob.value.get(target.job)?.actions[target.index] ?? 0
-  return current > 0 ? Math.trunc(current) : null
+  return current > 0 ? Number(current) : null
 })
 
 async function loadPickerPool(job: number) {
@@ -208,7 +208,7 @@ async function loadPickerPool(job: number) {
       iconSrc: idToSrc(row.ID) || (row.Icon ? getIconSrcByPath(row.Icon) : undefined),
       classJobLevel: row.ClassJobLevel,
       recast1000ms: (() => {
-        const meta = getGlobalSkillMetaByActionId(row.ID)
+        const meta = getGlobalSkillDefinitionById(row.ID)
         return parseDynamicValue(
           meta?.recast1000ms ?? Number(row.Recast1000ms ?? 0),
           GLOBAL_SKILL_MAX_LEVEL,
@@ -369,7 +369,7 @@ async function pickAction(actionId: number) {
     return
 
   const nextActions = [...row.actions]
-  nextActions[target.index] = Math.trunc(Number(actionId) || 0)
+  nextActions[target.index] = Number(actionId) || 0
   store.watchJobsActionsIDUser[target.job] = nextActions
   pickerVisible.value = false
 }

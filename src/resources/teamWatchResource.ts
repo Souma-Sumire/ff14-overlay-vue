@@ -1,7 +1,6 @@
 import type { DynamicValue } from '@/types/dynamicValue'
 import type { TeamWatchActionMetaRaw, TeamWatchStorageData } from '@/types/teamWatchTypes'
-import { resolveActionDisplayName, resolveBakedActionMeta, uniqueInts } from '@/resources/logic/actionMetaResolver'
-import { resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
+import { resolveActionDisplayName, resolveActionMinLevel, resolveBakedActionMeta, uniqueInts } from '@/resources/logic/actionMetaResolver'
 import { ACTION_UPGRADE_STEPS, normalizeUpgradeActionId } from '@/utils/compareSaveAction'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 import Util from '@/utils/util'
@@ -192,14 +191,12 @@ export function buildInheritedBaseJobActions(baseJob: number, sourceActions: unk
       return [0]
     const normalized = input.map((value) => {
       const numeric = Number(value)
-      if (!Number.isFinite(numeric) || numeric < 0)
-        return 0
-      return Math.trunc(numeric)
+      return (Number.isFinite(numeric) && numeric >= 0) ? numeric : 0
     })
     return normalized.length > 0 ? normalized : [0]
   }
 
-  const normalizedBaseJob = Number.isFinite(Number(baseJob)) ? Math.trunc(Number(baseJob)) : 0
+  const normalizedBaseJob = Number(baseJob) || 0
   if (normalizedBaseJob <= 0)
     return [0]
   if (Util.baseJobEnumConverted(normalizedBaseJob) === normalizedBaseJob)
@@ -235,7 +232,7 @@ export function normalizeTeamWatchActionMetaRaw(actionId: number, value: unknown
 }
 
 function normalizeWatchJobsActionsIDUser(value: unknown): Record<number, number[]> {
-  const extraJobs = value && typeof value === 'object' ? Object.keys(value as Record<string, unknown>).map(v => Math.trunc(Number(v)) || 0) : []
+  const extraJobs = value && typeof value === 'object' ? Object.keys(value as Record<string, unknown>).map(v => Number(v) || 0) : []
   const jobs = uniqueInts([...DEFAULT_JOB_SORT_ORDER, ...extraJobs])
   const base: Record<number, number[]> = {}
   jobs.forEach((job) => {
@@ -245,10 +242,16 @@ function normalizeWatchJobsActionsIDUser(value: unknown): Record<number, number[
   if (!value || typeof value !== 'object')
     return base
 
+  const normalizeActions = (input: any) => {
+    if (!Array.isArray(input))
+      return []
+    return input.map(v => Number(v) || 0).filter(v => Number.isFinite(v) && v >= 0)
+  }
+
   for (const [rawJob, rawActions] of Object.entries(value as Record<string, unknown>)) {
-    const job = Math.trunc(Number(rawJob)) || 0
+    const job = Number(rawJob) || 0
     if (job > 0)
-      base[job] = uniqueInts(Array.isArray(rawActions) ? rawActions : [])
+      base[job] = normalizeActions(rawActions)
   }
   return base
 }

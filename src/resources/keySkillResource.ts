@@ -1,6 +1,5 @@
 import type { KeySkill } from '@/types/keySkill'
-import { getGlobalSkillDefinitionById } from '@/resources/globalSkills'
-import { resolveBakedActionMeta } from '@/resources/logic/actionMetaResolver'
+import { getGlobalSkillDefinitionById, resolveBakedActionMeta } from '@/resources/logic/actionMetaResolver'
 
 interface KeySkillDefinition {
   id: number

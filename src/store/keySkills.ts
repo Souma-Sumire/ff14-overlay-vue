@@ -7,11 +7,10 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useDemo } from '@/composables/useDemo'
 import { useDev } from '@/composables/useDev'
 import { RandomPartyGenerator } from '@/mock/demoParty'
-import { getGlobalSkillMetaByActionId, GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
+import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { raidbuffs } from '@/resources/keySkillResource'
-import { resolveActionDisplayName, resolveActionIconSrc, resolveActionJobsFromTargets, resolveActionMetaByLevel, resolveApiActionMeta, resolveBakedActionMeta, uniqueInts } from '@/resources/logic/actionMetaResolver'
-import { resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
+import { getGlobalSkillDefinitionById, resolveActionDisplayName, resolveActionIconSrc, resolveActionJobsFromTargets, resolveActionMetaByLevel, resolveActionMinLevel, resolveApiActionMeta, resolveBakedActionMeta, uniqueInts } from '@/resources/logic/actionMetaResolver'
 import { resolveUpgradeActionIdForLevel } from '@/utils/compareSaveAction'
 import { parseDynamicValue } from '@/utils/dynamicValue'
 import { tts } from '@/utils/tts'
@@ -441,7 +440,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
       const level = dev.value || demo.value ? levelSyncTestLevel.value : Math.min(GLOBAL_SKILL_MAX_LEVEL, Math.max(1, Math.trunc(player.level) || GLOBAL_SKILL_MAX_LEVEL))
       for (const skill of keySkillsData.value.chinese) {
         const meta = resolveMeta(skill.id)
-        const globalMeta = getGlobalSkillMetaByActionId(skill.id)
+        const globalMeta = getGlobalSkillDefinitionById(skill.id)
         const displayId = resolveUpgradeActionIdForLevel(meta.id, level) || meta.id
 
         const resolvedJobs = skill.job?.length ? uniqueInts(skill.job) : meta.jobs

@@ -1,6 +1,5 @@
 import type { KeigennSkill, Scope } from '@/types/keigennRecord2'
-import { getGlobalSkillDefinitionById } from '@/resources/globalSkills'
-import { resolveBakedActionMeta } from '@/resources/logic/actionMetaResolver'
+import { getGlobalSkillDefinitionById, resolveBakedActionMeta } from '@/resources/logic/actionMetaResolver'
 
 const keigennSkillDefinitions: { id: number, scope: Scope }[] = [
   { id: 30, scope: 'party' },

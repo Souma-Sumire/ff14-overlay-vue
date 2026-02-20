@@ -12,9 +12,9 @@ import ActionPickerDialog from '@/components/common/ActionPickerDialog.vue'
 import SkillEditorDialog from '@/components/common/SkillEditorDialog.vue'
 import { useLang } from '@/composables/useLang'
 import { useWebSocket } from '@/composables/useWebSocket'
-import { getGlobalSkillMetaByActionId, GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
+import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
-import { resolveActionDisplayName, resolveActionIconSrc, uniqueInts } from '@/resources/logic/actionMetaResolver'
+import { getGlobalSkillDefinitionById, resolveActionDisplayName, resolveActionIconSrc, uniqueInts } from '@/resources/logic/actionMetaResolver'
 import { useKeySkillStore } from '@/store/keySkills'
 import { copyToClipboard } from '@/utils/clipboard'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
@@ -54,8 +54,9 @@ const pickerReplaceSkillKey = ref<string | null>(null)
 const editorVisible = ref(false)
 const editorOpening = ref(false)
 const editorSkillKey = ref<string | null>(null)
-const jobEditorVisible = ref(false)
 const editorTts = ref('')
+const editorRecast = ref<DynamicValue>('')
+const editorDuration = ref<DynamicValue>('')
 
 const lineOrder = computed(() => {
   const lines = Object.keys(lineBuckets)
@@ -80,7 +81,23 @@ const currentEditorMeta = computed(() => {
 const currentEditorGlobalMeta = computed(() => {
   if (!currentEditorSkill.value)
     return null
-  return getGlobalSkillMetaByActionId(currentEditorSkill.value.id)
+  return getGlobalSkillDefinitionById(currentEditorSkill.value.id)
+})
+
+const effectiveRecast = computed({
+  get: () => editorRecast.value || String(currentEditorMeta.value?.recast1000ms ?? ''),
+  set: (val: string) => {
+    const base = String(currentEditorMeta.value?.recast1000ms ?? '')
+    editorRecast.value = (val === base || !val) ? '' : val
+  },
+})
+
+const effectiveDuration = computed({
+  get: () => editorDuration.value || String(currentEditorMeta.value?.duration ?? ''),
+  set: (val: string) => {
+    const base = String(currentEditorMeta.value?.duration ?? '')
+    editorDuration.value = (val === base || !val) ? '' : val
+  },
 })
 const dynamicValueTipText = 'DynamicValue支持输入数字或动态表达式，例如 `(lv) => lv>=94 ? 40 : 60`。'
 
@@ -170,7 +187,7 @@ function resolveSkillMeta(actionId: number) {
   if (cached)
     return cached
 
-  const globalMeta = getGlobalSkillMetaByActionId(actionId)
+  const globalMeta = getGlobalSkillDefinitionById(actionId)
   const resolvedId = parseDynamicValue(globalMeta?.id ?? actionId, GLOBAL_SKILL_MAX_LEVEL)
   const resolvedDuration = Math.max(0, parseDynamicValue(globalMeta?.duration ?? 0, GLOBAL_SKILL_MAX_LEVEL))
   const resolvedRecast1000ms = Math.max(0, parseDynamicValue(globalMeta?.recast1000ms ?? 0, GLOBAL_SKILL_MAX_LEVEL))
@@ -388,7 +405,7 @@ async function loadPickerPool(jobEnum: number) {
   try {
     const apiRows = await searchActionsByClassJobs([jobEnum], 500)
     const mapped = apiRows.map((row) => {
-      const globalMeta = getGlobalSkillMetaByActionId(row.ID)
+      const globalMeta = getGlobalSkillDefinitionById(row.ID)
       const actionId = row.ID
       return {
         id: actionId,
@@ -455,7 +472,7 @@ function resolvePickerInitialJob(replaceSkillKey: string | null) {
   const jobSet = new Set(pickerJobOptions.value.map(v => v.jobEnum))
   const mergedJobs = uniqueInts([
     ...(row.job ?? []),
-    ...(getGlobalSkillMetaByActionId(row.id)?.job ?? []),
+    ...(getGlobalSkillDefinitionById(row.id)?.job ?? []),
     ...resolveSkillMeta(row.id).jobs,
   ])
 
@@ -516,7 +533,8 @@ async function openEditor(skillKey: string) {
     await storeKeySkill.ensureActionAutoMeta(row.id)
     editorSkillKey.value = skillKey
     editorTts.value = row.tts
-    jobEditorVisible.value = false
+    editorRecast.value = row.recast1000ms ?? ''
+    editorDuration.value = row.duration ?? ''
     editorVisible.value = true
   }
   finally {
@@ -526,11 +544,11 @@ async function openEditor(skillKey: string) {
 
 function applyEditorDraftToRow() {
   const row = currentEditorSkill.value
-  if (!row)
-    return
-  if (editorOpening.value)
+  if (!row || editorOpening.value)
     return
   row.tts = editorTts.value
+  row.recast1000ms = editorRecast.value || undefined
+  row.duration = editorDuration.value || undefined
 }
 
 async function previewEditorTts() {
@@ -550,7 +568,7 @@ async function previewEditorTts() {
   }
 }
 
-watch(editorTts, applyEditorDraftToRow)
+watch([editorTts, editorRecast, editorDuration], applyEditorDraftToRow)
 
 function removeCurrentSkill() {
   if (!editorSkillKey.value)
@@ -694,7 +712,7 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
       @icon-error="handleImgError"
     >
       <template v-if="currentEditorSkill">
-        <div class="editor-field">
+        <div class="editor-field span-2">
           <label>TTS</label>
           <el-input v-model="editorTts" :disabled="interactionLocked" placeholder="可留空，留空则不播报">
             <template v-if="wsConnected" #append>
@@ -706,6 +724,14 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
               </el-button>
             </template>
           </el-input>
+        </div>
+        <div class="editor-field">
+          <label>冷却时间 (秒)</label>
+          <el-input v-model="effectiveRecast" :disabled="interactionLocked" placeholder="继承底层属性" />
+        </div>
+        <div class="editor-field">
+          <label>持续时间 (秒)</label>
+          <el-input v-model="effectiveDuration" :disabled="interactionLocked" placeholder="继承底层属性" />
         </div>
       </template>
       <template #extra-footer-left>

@@ -1,5 +1,5 @@
 import type { PerformanceType } from '@/types/keigennRecord2'
-import { getActionNameLite } from '@/resources/logic/actionNameLite'
+import { getActionNameLite } from '@/resources/logic/actionMetaResolver'
 import { getIconSrcById } from '@/utils/xivapi'
 import { chineseToIcon } from './chineseToIcon'
 import { compareSame } from './compareSaveAction'

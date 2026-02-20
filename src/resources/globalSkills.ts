@@ -1,7 +1,5 @@
 import type { DynamicValue } from '@/types/dynamicValue'
-import { actionId2ClassJobLevel } from '@/resources/logic/action2ClassJobLevel'
-import { resolveBakedActionMeta, uniqueInts } from '@/resources/logic/actionMetaResolver'
-import { parseDynamicValue } from '@/utils/dynamicValue'
+import { initGlobalSkills } from '@/resources/logic/actionMetaResolver'
 
 export interface GlobalSkillDefinition {
   id: number
@@ -16,7 +14,7 @@ export const GLOBAL_SKILL_MAX_LEVEL = 100
 
 type RawGlobalSkillDefinition = Partial<GlobalSkillDefinition> & { id: number }
 
-const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
+export const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
   { id: 30, recast1000ms: 420, duration: 10 },
   { id: 43, recast1000ms: 240, duration: 10 },
   { id: 3638, recast1000ms: 300, duration: 10 },
@@ -122,107 +120,4 @@ const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
   { id: 34685, recast1000ms: 120 },
 ]
 
-const globalSkillDefinitions: GlobalSkillDefinition[] = rawGlobalSkillDefinitions.map((definition) => {
-  const normalizedId = parseDynamicValue(definition.id, GLOBAL_SKILL_MAX_LEVEL) || 0
-
-  const fromMap = Number(actionId2ClassJobLevel(normalizedId))
-  const resolvedMinLevel = fromMap || Number(definition.minLevel) || 1
-
-  const jobs = uniqueInts(definition.job ?? [])
-  const baked = normalizedId > 0 ? resolveBakedActionMeta(normalizedId) : undefined
-
-  return {
-    id: normalizedId,
-    recast1000ms: definition.recast1000ms ?? baked?.recast1000ms ?? 0,
-    duration: definition.duration ?? 0,
-    minLevel: resolvedMinLevel,
-    job: jobs.length ? jobs : (baked?.jobs ?? []),
-    maxCharges: definition.maxCharges ?? baked?.maxCharges ?? 0,
-  }
-})
-
-const globalSkillDefinitionMap = (() => {
-  const map = new Map<number, GlobalSkillDefinition>()
-  globalSkillDefinitions.forEach((definition) => {
-    if (!map.has(definition.id))
-      map.set(definition.id, definition)
-  })
-  return map
-})()
-
-export interface GlobalSkillMeta {
-  id: number
-  recast1000ms: DynamicValue
-  duration: DynamicValue
-  minLevel: number
-  job: number[]
-  maxCharges?: DynamicValue
-}
-
-const globalSkillMetaMap = (() => {
-  const map = new Map<number, GlobalSkillMeta>()
-  const normalizedJobsBySkillId = new Map<number, number[]>()
-
-  rawGlobalSkillDefinitions.forEach((definition) => {
-    const normalizedId = Number(parseDynamicValue(definition.id, GLOBAL_SKILL_MAX_LEVEL)) || 0
-    if (normalizedId <= 0)
-      return
-    const normalizedJobs = uniqueInts(definition.job ?? [])
-    if (normalizedJobs.length > 0) {
-      const previous = normalizedJobsBySkillId.get(normalizedId) ?? []
-      normalizedJobsBySkillId.set(normalizedId, uniqueInts([...previous, ...normalizedJobs]))
-    }
-  })
-
-  rawGlobalSkillDefinitions.forEach((definition) => {
-    const normalizedId = Number(parseDynamicValue(definition.id, GLOBAL_SKILL_MAX_LEVEL)) || 0
-    if (normalizedId <= 0)
-      return
-    const inheritedJobs = normalizedJobsBySkillId.get(normalizedId) ?? []
-
-    for (let level = 1; level <= GLOBAL_SKILL_MAX_LEVEL; level += 1) {
-      const actionId = Number(parseDynamicValue(definition.id, level)) || 0
-      if (actionId <= 0)
-        continue
-
-      const fromMap = Number(actionId2ClassJobLevel(actionId))
-      const resolvedMinLevel = fromMap || Number(definition.minLevel) || 1
-
-      const previous = map.get(actionId)
-      if (!previous) {
-        map.set(actionId, {
-          id: normalizedId,
-          recast1000ms: definition.recast1000ms ?? 0,
-          duration: definition.duration ?? 0,
-          minLevel: resolvedMinLevel,
-          job: inheritedJobs,
-          maxCharges: definition.maxCharges,
-        })
-        continue
-      }
-
-      map.set(actionId, {
-        id: normalizedId,
-        recast1000ms: previous.recast1000ms ?? definition.recast1000ms ?? 0,
-        duration: previous.duration ?? 0,
-        minLevel: Math.max(1, Math.min(previous.minLevel, resolvedMinLevel)),
-        job: uniqueInts([...previous.job, ...inheritedJobs]),
-        maxCharges: previous.maxCharges ?? definition.maxCharges,
-      })
-    }
-  })
-
-  return map
-})()
-
-export function getGlobalSkillDefinitionById(id: number): GlobalSkillDefinition | undefined {
-  const found = globalSkillDefinitionMap.get(id)
-  return found ? { ...found, job: [...found.job] } : undefined
-}
-
-export function getGlobalSkillMetaByActionId(actionId: number): GlobalSkillMeta | undefined {
-  const found = globalSkillMetaMap.get(actionId)
-  return found ? { ...found, job: [...found.job] } : undefined
-}
-
-export { globalSkillDefinitions }
+initGlobalSkills(rawGlobalSkillDefinitions)
