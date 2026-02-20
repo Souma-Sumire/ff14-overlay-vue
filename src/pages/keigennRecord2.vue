@@ -483,7 +483,7 @@ function handleLine(line: string) {
             }
             const history = cooldownTracker[sourceId][groupAbilityId]!
             history.push(timestamp)
-            const maxCharges = parseDynamicValue(trackedSkill.maxCharges || 1, level)
+            const maxCharges = parseDynamicValue(trackedSkill.maxCharges || 1, level) || 1
             if (history.length > maxCharges) {
               history.shift()
             }
@@ -1103,7 +1103,7 @@ function getKeySkillSnapshot(
             ownerJob: player.job,
             ownerJobName: Util.jobToFullName(Util.jobEnumToJob(player.job))
               .simple2!,
-            maxCharges: parseDynamicValue(skill.maxCharges || 1, level),
+            maxCharges: parseDynamicValue(skill.maxCharges || 1, level) || 1,
             scope: skill.scope,
             resourceCost: getJobResourceActionCost(id),
           }

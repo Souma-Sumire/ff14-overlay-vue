@@ -95,7 +95,7 @@ const currentEditorResolvedDebug = computed(() => {
   const globalMeta = currentEditorGlobalMeta.value
   const recastInput = skill.recast1000ms ?? globalMeta?.recast1000ms ?? meta.recast1000ms
   const durationInput = skill.duration ?? globalMeta?.duration ?? meta.duration
-  const chargesInput = skill.maxCharges ?? globalMeta?.maxCharges ?? 0
+  const chargesInput = skill.maxCharges ?? globalMeta?.maxCharges ?? 1
   const minLevelInput = skill.minLevel ?? meta.minLevel
   const resolvedJobs = skill.job?.length ? uniqueInts(skill.job) : meta.jobs
 
@@ -233,7 +233,7 @@ function resolveSkillMeta(actionId: number) {
   const resolvedId = parseDynamicValue(globalMeta?.id ?? actionId, GLOBAL_SKILL_MAX_LEVEL)
   const resolvedDuration = Math.max(0, parseDynamicValue(globalMeta?.duration ?? 0, GLOBAL_SKILL_MAX_LEVEL))
   const resolvedRecast1000ms = Math.max(0, parseDynamicValue(globalMeta?.recast1000ms ?? 0, GLOBAL_SKILL_MAX_LEVEL))
-  const resolvedMaxCharges = Math.max(0, Number(parseDynamicValue(globalMeta?.maxCharges ?? 0, GLOBAL_SKILL_MAX_LEVEL)) || 0)
+  const resolvedMaxCharges = Math.max(1, Number(parseDynamicValue(globalMeta?.maxCharges ?? 1, GLOBAL_SKILL_MAX_LEVEL)) || 1)
   const resolvedMinLevel = Math.max(1, Number(globalMeta?.minLevel ?? 1))
 
   return {

@@ -407,10 +407,11 @@ export function useMitigationSimulator(
           let charges = 1
           let conflictTimeInfo: number | undefined
           let nextRechargeAtForCharges: number | undefined
-          const isChargeBased = (skill.maxCharges ?? 1) > 1
+          const maxChargesCapacity = skill.maxCharges || 1
+          const isChargeBased = maxChargesCapacity > 1
 
           if (isChargeBased) {
-            const maxCharges = skill.maxCharges || 1
+            const maxCharges = maxChargesCapacity
             const recast = skill.recast || 1
             const chargeState = simulateChargeStateAtTime(scheduleTimestamps, row.timestamp, maxCharges, recast)
             charges = chargeState.charges
@@ -460,7 +461,7 @@ export function useMitigationSimulator(
           else if (currentMatchingUse) {
             recastLeft = Math.round(Math.max(0, currentMatchingUse.recast - (row.timestamp - currentMatchingUse.timestamp)))
           }
-          else if (isChargeBased && nextRechargeAtForCharges !== undefined && charges < (skill.maxCharges || 1)) {
+          else if (isChargeBased && nextRechargeAtForCharges !== undefined && charges < maxChargesCapacity) {
             recastLeft = Math.max(0, Math.round(nextRechargeAtForCharges - row.timestamp))
           }
 
@@ -475,7 +476,7 @@ export function useMitigationSimulator(
             tooltip: `<strong>${skill.name}</strong><br/>${status === 'active-start' || status === 'active' ? '生效中' : (status === 'cooldown' ? (isChargeBased ? '无充能' : '冷却中') : (status === 'conflict' ? '冲突' : '就绪'))}`,
             ready: status === '' || status === 'active' || status === 'active-start',
             charges,
-            maxCharges: skill.maxCharges || 1,
+            maxCharges: maxChargesCapacity,
             recastLeft,
             conflictTime: conflictTimeInfo,
           }

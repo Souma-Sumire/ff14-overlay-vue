@@ -1557,7 +1557,7 @@ function getSkillsForJob(jobEnum: number, level = 100): MitigationSkill[] {
         isTargetMitigation: s.isEnemyTargetMitigation,
         recast: parseDynamicValue(s.recast1000ms, level),
         duration: parseDynamicValue(s.duration ?? 0, level),
-        maxCharges: parseDynamicValue(s.maxCharges ?? 1, level),
+        maxCharges: parseDynamicValue(s.maxCharges ?? 1, level) || 1,
       }
     })
     .sort((a, b) => a.recast - b.recast)

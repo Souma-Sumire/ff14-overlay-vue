@@ -109,7 +109,7 @@ const keigennSkills: KeigennSkill[] = keigennSkillDefinitions
       minLevel: shared?.minLevel ?? api?.classJobLevel ?? 1,
       scope: definition.scope,
       duration: shared?.duration ?? 0,
-      maxCharges: shared?.maxCharges ?? api?.maxCharges ?? 0,
+      maxCharges: shared?.maxCharges ?? api?.maxCharges ?? 1,
     }
 
     return skill

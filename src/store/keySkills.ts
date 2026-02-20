@@ -87,7 +87,7 @@ function normalizeAutoMetaCache(raw: Record<string, KeySkillAutoMeta>): Record<n
       minLevel: resolveActionMinLevel(value.minLevel ?? 1, { actionId: id, isRoleAction, fallback: 1 }),
       jobs,
       classJobTargetId: Number(value.classJobTargetId) || 0,
-      maxCharges: Number(value.maxCharges) || 0,
+      maxCharges: Number(value.maxCharges) || 1,
     }
   })
   return output
@@ -262,7 +262,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
       minLevel: levelMeta.minLevel,
       jobs: levelMeta.jobsFromGlobal,
       classJobTargetId: 0,
-      maxCharges: 0,
+      maxCharges: 1,
       isRoleAction: false,
     }
   }
@@ -391,7 +391,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
         const durInput = skill.duration ?? globalMeta?.duration
         const resolvedDuration = (durInput !== undefined ? parseDynamicValue(durInput, level) : 0) || meta.duration
         const chargesInput = skill.maxCharges ?? globalMeta?.maxCharges
-        const resolvedMaxCharges = (chargesInput !== undefined ? parseDynamicValue(chargesInput, level) : 0) || 0
+        const resolvedMaxCharges = (chargesInput !== undefined ? parseDynamicValue(chargesInput, level) : 1) || 1
 
         const resolvedMinLevel = resolveActionMinLevel(skill.minLevel ?? meta.minLevel, { actionId: meta.id, isRoleAction: meta.isRoleAction, fallback: meta.minLevel })
         if (resolvedMinLevel > level)

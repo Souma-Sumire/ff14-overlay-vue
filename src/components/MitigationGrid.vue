@@ -640,7 +640,8 @@ function validateActionPlacement(
 
   const { recast } = getSkillMeta(col, skillId)
   const skill = col.skills.find(s => s.id === skillId)
-  const isChargeBased = (skill?.maxCharges ?? 1) > 1
+  const maxCharges = skill?.maxCharges || 1
+  const isChargeBased = maxCharges > 1
 
   if (skill?.isTargetMitigation && newTimestamp < 0) {
     if (showConflictMessage)
@@ -2127,7 +2128,8 @@ function validateActionPlacementAgainstActions(
   const { recast } = getSkillMeta(col, skillId)
   const recastWindow = getAutoArrangeRecastWindow(Number(recast || 0))
   const skill = col.skills.find(s => s.id === skillId)
-  const isChargeBased = (skill?.maxCharges ?? 1) > 1
+  const maxCharges = skill?.maxCharges || 1
+  const isChargeBased = maxCharges > 1
   const exclusiveGroup = getExclusiveGroupBySkillId(skillId)
   const duration = Math.max(0, Number(skill?.duration || 0))
   const groupActions = exclusiveGroupActions || getExclusiveGroupActions(scheduledActions, exclusiveGroup)
@@ -2567,7 +2569,7 @@ async function runAutoArrangeForSkill() {
   const duration = Math.max(0, Number(skill.duration || 0))
   const effectiveDuration = getAutoArrangeEffectiveDuration(duration)
   const recastWindow = Math.max(0, getAutoArrangeRecastWindow(Number(skill.recast || 0)))
-  const capacity = Math.max(1, Number(skill.maxCharges || 1))
+  const capacity = skill.maxCharges || 1
   const isChargeBased = capacity > 1
   const chargeRecast = Math.max(AUTO_PLAN_EPSILON, Number(skill.recast || 0))
   const activeSpacing = Math.max(AUTO_PLAN_EPSILON, effectiveDuration)
@@ -4097,7 +4099,7 @@ function handleColumnNameClick(col: ColumnDef) {
         <div v-if="cellPopoverInfo.sim.status === 'conflict' && cellPopoverInfo.sim.conflictTime" class="popover-item text-danger">
           警告: 会导致 {{ formatTime(cellPopoverInfo.sim.conflictTime) }} 处充能不足
         </div>
-        <div v-if="cellPopoverInfo.skill.maxCharges && cellPopoverInfo.skill.maxCharges > 1" class="popover-item">
+        <div v-if="cellPopoverInfo.skill.maxCharges > 1" class="popover-item">
           充能层数: {{ cellPopoverInfo.sim.charges }} / {{ cellPopoverInfo.skill.maxCharges }}
         </div>
       </div>

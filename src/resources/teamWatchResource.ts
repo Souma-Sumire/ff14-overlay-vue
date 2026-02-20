@@ -60,7 +60,7 @@ export function normalizeTeamWatchActionMetaRaw(aid: number, value: any): TeamWa
     actionCategory: Number(raw.actionCategory) || 0,
     recast1000ms: raw.recast1000ms ?? 0,
     duration: raw.duration ?? 0,
-    maxCharges: raw.maxCharges ?? 0,
+    maxCharges: raw.maxCharges ?? 1,
     classJobLevel: resolveActionMinLevel(raw.classJobLevel ?? 1, { actionId: id, fallback: 1 }),
   }
 }

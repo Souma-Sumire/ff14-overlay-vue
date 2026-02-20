@@ -99,8 +99,8 @@ export function ensureRuntime(
       ownerId: String(ownerId).toUpperCase(),
       ownerJob: Util.baseJobEnumConverted(ownerJob),
       trackedActionId,
-      maxCharges: Math.max(0, meta.maxCharges),
-      chargesNow: Math.max(0, meta.maxCharges),
+      maxCharges: Math.max(1, meta.maxCharges || 1),
+      chargesNow: Math.max(0, meta.maxCharges || 1),
       recast1000ms: Math.max(0, meta.recast1000ms),
       recastEndAt: null,
       chargeReadyAt: [],
@@ -110,9 +110,9 @@ export function ensureRuntime(
   }
 
   existing.ownerJob = Util.baseJobEnumConverted(ownerJob)
-  existing.maxCharges = Math.max(0, meta.maxCharges)
+  existing.maxCharges = Math.max(1, meta.maxCharges || 1)
   existing.recast1000ms = Math.max(0, meta.recast1000ms)
-  if (existing.maxCharges <= 0) {
+  if (existing.maxCharges <= 1) {
     existing.chargeReadyAt = []
     existing.chargesNow = 0
   }
@@ -153,7 +153,7 @@ export function useRuntime(
 
   runtime.activeAt = now
 
-  if (runtime.maxCharges > 0) {
+  if (runtime.maxCharges > 1) {
     if (runtime.chargesNow <= 0)
       return false
     runtime.chargesNow -= 1
@@ -175,7 +175,7 @@ export function clearRuntimeCooldownStates(
   Object.values(runtimeByKey).forEach((runtime) => {
     runtime.recastEndAt = null
     runtime.chargeReadyAt = []
-    runtime.chargesNow = runtime.maxCharges > 0 ? runtime.maxCharges : 0
+    runtime.chargesNow = runtime.maxCharges > 1 ? runtime.maxCharges : 0
     runtime.activeAt = 0
   })
 
@@ -195,7 +195,7 @@ export function updateRuntimeCollection(
   now: number,
 ): void {
   Object.values(runtimeByKey).forEach((runtime) => {
-    if (runtime.maxCharges > 0) {
+    if (runtime.maxCharges > 1) {
       if (runtime.chargeReadyAt.length > 0) {
         runtime.chargeReadyAt = runtime.chargeReadyAt.filter(readyAt => readyAt > now)
         runtime.chargesNow = Math.min(
@@ -248,7 +248,7 @@ export interface TeamWatchSkillStateContext {
 export function resolveTeamWatchSkillState(context: TeamWatchSkillStateContext): TeamWatchSkillStateView {
   const { skill, runtime, now, cooldownTracker, resourceManager } = context
   const recastTotalMs = Math.max(1, skill.meta.recast1000ms * 1000)
-  const isCharge = skill.meta.maxCharges > 0
+  const isCharge = skill.meta.maxCharges > 1
 
   let overlayPercent = 0
   let text = ''
