@@ -19,26 +19,27 @@ import { useDev } from '@/composables/useDev'
 import { useIndexedDB } from '@/composables/useIndexedDB'
 import { getCactbotLocaleMessage } from '@/composables/useLang'
 import { JobResourceManager } from '@/modules/jobResourceTracker'
+import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { getJobResourceActionCost } from '@/resources/jobResourceActionCost'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { keigennSkills } from '@/resources/keigennSkillResource'
 import { getActionChinese } from '@/resources/logic/actionChinese'
 import { completeIcon, stackUrl } from '@/resources/logic/status'
 import { ZoneInfo } from '@/resources/zoneInfo'
-import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 
+import { useKeigennRecord2Store } from '@/store/keigennRecord2'
 import { compareSame } from '@/utils/compareSaveAction'
 import { calculateCharges } from '@/utils/cooldown'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 import { processAbilityLine, processFlags } from '@/utils/flags'
 import { getKeigenn, multiplierEffect, universalVulnerableEnemy, universalVulnerableFriendly } from '@/utils/keigenn'
-import { formatTimeMs as formatTime } from '@/utils/time'
 
+import { formatTimeMs as formatTime } from '@/utils/time'
 import Util from '@/utils/util'
 import { getIconSrcByFullIcon } from '@/utils/xivapi'
 import logDefinitions from '../../cactbot/resources/netlog_defs'
-import NetRegexes from '../../cactbot/resources/netregexes'
 
+import NetRegexes from '../../cactbot/resources/netregexes'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
 const dev = useDev()
@@ -1084,7 +1085,7 @@ function getKeySkillSnapshot(
     }
 
     skillSnapshotSkeletonCache = players.flatMap((player) => {
-      const level = player.level || 999
+      const level = player.level || GLOBAL_SKILL_MAX_LEVEL
       return trackedSkills
         .filter(
           skill => skill.job.includes(player.job) && skill.minLevel <= level,
