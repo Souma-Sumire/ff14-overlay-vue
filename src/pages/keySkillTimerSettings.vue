@@ -369,7 +369,10 @@ function importData(): void {
       inputType: 'textarea',
       inputValidator: (value: string) => {
         try {
-          const data = LZString.decompressFromBase64(value)
+          const trimmed = value.trim()
+          const data = LZString.decompressFromBase64(trimmed)
+          if (!data)
+            return t('keySkillTimerSettings.dataFormatError')
           const json = JSON.parse(data)
           if (typeof json === 'object' && json !== null)
             return true
@@ -386,7 +389,9 @@ function importData(): void {
       const { value } = res as MessageBoxInputData
       if (!value)
         return
-      const text = LZString.decompressFromBase64(value)
+      const text = LZString.decompressFromBase64(value.trim())
+      if (!text)
+        return
       const data = JSON.parse(text)
       if (typeof data !== 'object' || data === null) {
         ElMessage.error(t('keySkillTimerSettings.importFormatError'))
