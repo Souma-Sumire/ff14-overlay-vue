@@ -87,17 +87,31 @@ const currentEditorGlobalMeta = computed(() => {
 })
 
 const effectiveRecast = computed({
-  get: () => editorRecast.value !== '' ? String(editorRecast.value) : String(currentEditorGlobalMeta.value?.recast1000ms ?? ''),
+  get: () => {
+    if (editorRecast.value !== '')
+      return String(editorRecast.value)
+    const globalVal = currentEditorGlobalMeta.value?.recast1000ms
+    if (globalVal !== undefined && globalVal !== null)
+      return String(globalVal)
+    return String(currentEditorMeta.value?.recast1000ms ?? '')
+  },
   set: (val: string) => {
-    const base = String(currentEditorGlobalMeta.value?.recast1000ms ?? '')
+    const base = String(currentEditorGlobalMeta.value?.recast1000ms ?? currentEditorMeta.value?.recast1000ms ?? '')
     editorRecast.value = (val === base || !val) ? '' : val
   },
 })
 
 const effectiveDuration = computed({
-  get: () => editorDuration.value !== '' ? String(editorDuration.value) : String(currentEditorGlobalMeta.value?.duration ?? ''),
+  get: () => {
+    if (editorDuration.value !== '')
+      return String(editorDuration.value)
+    const globalVal = currentEditorGlobalMeta.value?.duration
+    if (globalVal !== undefined && globalVal !== null)
+      return String(globalVal)
+    return String(currentEditorMeta.value?.duration ?? '')
+  },
   set: (val: string) => {
-    const base = String(currentEditorGlobalMeta.value?.duration ?? '')
+    const base = String(currentEditorGlobalMeta.value?.duration ?? currentEditorMeta.value?.duration ?? '')
     editorDuration.value = (val === base || !val) ? '' : val
   },
 })
