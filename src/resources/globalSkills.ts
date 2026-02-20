@@ -10,7 +10,6 @@ export interface GlobalSkillDefinition {
   minLevel: number
   duration: DynamicValue
   maxCharges: DynamicValue
-  overrideIconId?: number
 }
 
 export const GLOBAL_SKILL_MAX_LEVEL = 100
@@ -109,7 +108,7 @@ const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
   { id: 24318, recast1000ms: 120 },
   { id: 37035, recast1000ms: 180 },
   { id: 7394, recast1000ms: 120 },
-  { id: 7394, recast1000ms: 120, overrideIconId: 36944 },
+  { id: 7394, recast1000ms: 120 },
   { id: 65, recast1000ms: 90 },
   { id: 2241, recast1000ms: 120 },
   { id: 36962, recast1000ms: 15, duration: 4 },
@@ -161,7 +160,6 @@ const globalSkillDefinitions: GlobalSkillDefinition[] = rawGlobalSkillDefinition
     minLevel: resolvedMinLevel,
     job: jobs,
     maxCharges: maxCharges ?? 0,
-    overrideIconId: definition.overrideIconId,
   }
 })
 

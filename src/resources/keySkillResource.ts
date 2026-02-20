@@ -12,7 +12,6 @@ interface KeySkillDefinition {
   minLevel?: number
   duration?: DynamicValue
   maxCharges?: DynamicValue
-  overrideIconId?: number
 }
 
 const keySkillDefinitions: KeySkillDefinition[] = [
@@ -82,10 +81,6 @@ const raidbuffs: KeySkill[] = keySkillDefinitions
     if (maxCharges === undefined && api && api.maxCharges > 0)
       maxCharges = api.maxCharges
 
-    let overrideIconId = definition.overrideIconId ?? shared?.overrideIconId
-    if (overrideIconId === undefined && api && api.iconId > 0)
-      overrideIconId = api.iconId
-
     const skill: KeySkill = {
       key: `skill_${definition.id}`,
       id: definition.id,
@@ -97,10 +92,6 @@ const raidbuffs: KeySkill[] = keySkillDefinitions
       duration: duration ?? 0,
       maxCharges: maxCharges ?? 0,
     }
-
-    if (overrideIconId !== undefined)
-      skill.overrideIconId = overrideIconId
-
     return skill
   })
   .filter((skill): skill is KeySkill => Boolean(skill))

@@ -11,7 +11,6 @@ interface KeigennSkillDefinition {
   duration?: DynamicValue
   scope: Scope
   maxCharges?: DynamicValue
-  overrideIconId?: number
 }
 
 const keigennSkillDefinitions: KeigennSkillDefinition[] = [
@@ -146,13 +145,6 @@ const keigennSkills: KeigennSkill[] = keigennSkillDefinitions
       skill.maxCharges = api.maxCharges
     else if (shared?.maxCharges !== undefined)
       skill.maxCharges = shared.maxCharges
-
-    if (definition.overrideIconId !== undefined)
-      skill.overrideIconId = definition.overrideIconId
-    else if (shared?.overrideIconId !== undefined)
-      skill.overrideIconId = shared.overrideIconId
-    else if (api && api.iconId > 0)
-      skill.overrideIconId = api.iconId
 
     return skill
   })

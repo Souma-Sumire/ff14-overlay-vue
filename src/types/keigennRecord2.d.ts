@@ -11,7 +11,6 @@ export interface KeigennSkill {
   minLevel: number
   maxCharges?: DynamicValue
   scope: Scope
-  overrideIconId?: number
   duration?: DynamicValue
 }
 

@@ -12,7 +12,6 @@ interface KeySkill {
   line: number
   minLevel: number
   maxCharges: DynamicValue
-  overrideIconId?: number
 }
 
 interface KeySkillEntity {
@@ -28,7 +27,6 @@ interface KeySkillEntity {
   line: number
   minLevel: number
   maxCharges: number
-  overrideIconId?: number
   src: string
   owner: {
     id: string
