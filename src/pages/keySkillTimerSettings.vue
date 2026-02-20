@@ -85,17 +85,17 @@ const currentEditorGlobalMeta = computed(() => {
 })
 
 const effectiveRecast = computed({
-  get: () => editorRecast.value || String(currentEditorMeta.value?.recast1000ms ?? ''),
+  get: () => editorRecast.value !== '' ? String(editorRecast.value) : String(currentEditorGlobalMeta.value?.recast1000ms ?? ''),
   set: (val: string) => {
-    const base = String(currentEditorMeta.value?.recast1000ms ?? '')
+    const base = String(currentEditorGlobalMeta.value?.recast1000ms ?? '')
     editorRecast.value = (val === base || !val) ? '' : val
   },
 })
 
 const effectiveDuration = computed({
-  get: () => editorDuration.value || String(currentEditorMeta.value?.duration ?? ''),
+  get: () => editorDuration.value !== '' ? String(editorDuration.value) : String(currentEditorGlobalMeta.value?.duration ?? ''),
   set: (val: string) => {
-    const base = String(currentEditorMeta.value?.duration ?? '')
+    const base = String(currentEditorGlobalMeta.value?.duration ?? '')
     editorDuration.value = (val === base || !val) ? '' : val
   },
 })
