@@ -11,6 +11,7 @@ import { VueDraggable } from 'vue-draggable-plus'
 import ActionPickerDialog from '@/components/common/ActionPickerDialog.vue'
 import SkillEditorDialog from '@/components/common/SkillEditorDialog.vue'
 import { useLang } from '@/composables/useLang'
+import { useWebSocket } from '@/composables/useWebSocket'
 import { getGlobalSkillMetaByActionId, GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { resolveActionMinLevel } from '@/resources/logic/actionMinLevel'
@@ -37,6 +38,7 @@ interface KeySkillRow {
 const { t } = useLang()
 const storeKeySkill = useKeySkillStore()
 const { width: viewportWidth } = useWindowSize()
+const { wsConnected } = useWebSocket({ allowWarning: false })
 
 const rows = computed<KeySkillRow[]>(() => storeKeySkill.keySkillsData.chinese as unknown as KeySkillRow[])
 const lineBuckets = reactive<Record<number, KeySkillRow[]>>({})
@@ -728,7 +730,7 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
         <div class="editor-field">
           <label>TTS</label>
           <el-input v-model="editorTts" :disabled="interactionLocked" placeholder="可留空，留空则不播报">
-            <template #append>
+            <template v-if="wsConnected" #append>
               <el-button
                 :disabled="interactionLocked || !editorTts.trim()"
                 @click="previewEditorTts"

@@ -38,9 +38,10 @@ function addOverlayWsParam() {
 
 export function useWebSocket(
   config: {
-    allowClose: boolean
-    addWsParam: boolean
-  } = { allowClose: false, addWsParam: true },
+    allowClose?: boolean
+    addWsParam?: boolean
+    allowWarning?: boolean
+  } = { allowClose: false, addWsParam: true, allowWarning: true },
 ) {
   const { t } = useI18n()
   const wsConnected = ref(undefined as boolean | undefined)
@@ -79,7 +80,7 @@ export function useWebSocket(
   }
 
   function handleDisconnection() {
-    if (!userIgnoredWarning.value) {
+    if (!userIgnoredWarning.value && config.allowWarning) {
       ElMessageBox.close()
 
       const message = t('websocket.disconnectMsg', { actWS })

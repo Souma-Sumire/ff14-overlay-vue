@@ -72,7 +72,7 @@ function triggerAll(speed: number) {
 }
 
 function showSettings() {
-  window.open(`${import.meta.env.BASE_URL}#/keySkillTimerSettings`, 'keySkillTimerSettings', 'width=1280,height=768')
+  window.open(`${import.meta.env.BASE_URL}#/keySkillTimerSettings?OVERLAY_WS=ws://127.0.0.1:10501/ws`, '_blank', 'width=1280,height=768')
 }
 </script>
 
