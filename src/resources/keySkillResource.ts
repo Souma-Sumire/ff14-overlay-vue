@@ -1,15 +1,18 @@
 import type { DynamicValue } from '@/types/dynamicValue'
 import type { KeySkill } from '@/types/keySkill'
 import { getGlobalSkillDefinitionById } from '@/resources/globalSkills'
+import { resolveBakedActionMeta } from '@/resources/logic/actionMetaResolver'
 
 interface KeySkillDefinition {
   id: number
+  tts: string
+  line: number
   recast1000ms?: DynamicValue
   job?: number[]
   minLevel?: number
   duration?: DynamicValue
-  tts: string
-  line: number
+  maxCharges?: DynamicValue
+  overrideIconId?: number
 }
 
 const keySkillDefinitions: KeySkillDefinition[] = [
@@ -54,19 +57,51 @@ const keySkillDefinitions: KeySkillDefinition[] = [
 const raidbuffs: KeySkill[] = keySkillDefinitions
   .map((definition) => {
     const shared = getGlobalSkillDefinitionById(definition.id)
-    if (!shared)
+    const api = resolveBakedActionMeta(definition.id)
+
+    if (!shared && !api)
       return undefined
 
-    return {
+    let recast = definition.recast1000ms ?? shared?.recast1000ms
+    if (recast === undefined && api)
+      recast = Math.round(api.recast1000ms)
+
+    let jobs = definition.job ?? shared?.job
+    if ((!jobs || jobs.length === 0) && api)
+      jobs = api.jobs
+
+    let minLevel = definition.minLevel ?? shared?.minLevel
+    if (minLevel === undefined && api)
+      minLevel = api.classJobLevel
+
+    let duration = definition.duration ?? shared?.duration
+    if (duration === undefined && api)
+      duration = 0 // not provided by api
+
+    let maxCharges = definition.maxCharges ?? shared?.maxCharges
+    if (maxCharges === undefined && api && api.maxCharges > 0)
+      maxCharges = api.maxCharges
+
+    let overrideIconId = definition.overrideIconId ?? shared?.overrideIconId
+    if (overrideIconId === undefined && api && api.iconId > 0)
+      overrideIconId = api.iconId
+
+    const skill: KeySkill = {
       key: `skill_${definition.id}`,
       id: definition.id,
       tts: definition.tts,
-      duration: definition.duration ?? shared.duration ?? 0,
-      recast1000ms: definition.recast1000ms ?? shared.recast1000ms,
-      job: [...(definition.job ?? shared.job)],
       line: definition.line,
-      minLevel: definition.minLevel ?? shared.minLevel,
+      recast1000ms: recast ?? 0,
+      job: [...(jobs ?? [])],
+      minLevel: minLevel ?? 1,
+      duration: duration ?? 0,
+      maxCharges: maxCharges ?? 0,
     }
+
+    if (overrideIconId !== undefined)
+      skill.overrideIconId = overrideIconId
+
+    return skill
   })
   .filter((skill): skill is KeySkill => Boolean(skill))
 

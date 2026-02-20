@@ -39,6 +39,7 @@ interface KeySkillEntry {
   recast1000ms?: DynamicValue
   duration?: DynamicValue
   minLevel?: number
+  maxCharges?: DynamicValue
 }
 
 interface KeySkillStorageData {
@@ -488,6 +489,12 @@ const useKeySkillStore = defineStore('keySkill', () => {
         const resolvedDuration = inputDuration !== undefined
           ? normalizeInt(resolveTeamWatchDynamicValue(inputDuration, level, 0), 0, 0)
           : meta.duration
+
+        const inputMaxCharges = skill.maxCharges ?? globalMeta?.maxCharges
+        const resolvedMaxCharges = inputMaxCharges !== undefined
+          ? normalizeInt(resolveTeamWatchDynamicValue(inputMaxCharges, level, 0), 0, 0)
+          : 0
+
         const resolvedMinLevel = resolveActionMinLevel(
           skill.minLevel ?? meta.minLevel,
           {
@@ -525,6 +532,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
           tts: skill.tts,
           line: skill.line,
           job: resolvedJobs,
+          maxCharges: resolvedMaxCharges,
           instanceKey,
         })
       }

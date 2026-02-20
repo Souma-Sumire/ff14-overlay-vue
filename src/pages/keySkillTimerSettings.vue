@@ -444,8 +444,10 @@ async function loadPickerPool(jobEnum: number) {
 
 watch(pickerSelectedJob, async (jobEnum) => {
   pickerSearch.value = ''
-  if (!pickerVisible.value || !jobEnum)
+  if (!pickerVisible.value || !jobEnum) {
+    pickerPool.value = []
     return
+  }
   await loadPickerPool(jobEnum)
 })
 

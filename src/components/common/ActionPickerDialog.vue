@@ -326,7 +326,7 @@ function handleBack() {
         </div>
       </section>
 
-      <div v-if="!props.loading && jobItems.length === 0 && roleItems.length === 0" class="picker-empty">
+      <div v-if="!props.promptVisible && !props.loading && jobItems.length === 0 && roleItems.length === 0" class="picker-empty">
         {{ props.emptyText }}
       </div>
     </div>
@@ -598,10 +598,13 @@ function handleBack() {
 }
 
 .picker-empty {
-  min-height: 70px;
-  display: grid;
-  place-items: center;
+  flex: 1;
+  min-height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   color: var(--el-text-color-secondary);
-  font-size: 12px;
+  font-size: 13px;
+  letter-spacing: 0.5px;
 }
 </style>

@@ -11,6 +11,8 @@ interface KeySkill {
   job: number[]
   line: number
   minLevel: number
+  maxCharges: DynamicValue
+  overrideIconId?: number
 }
 
 interface KeySkillEntity {
@@ -25,6 +27,8 @@ interface KeySkillEntity {
   job: number[]
   line: number
   minLevel: number
+  maxCharges: number
+  overrideIconId?: number
   src: string
   owner: {
     id: string

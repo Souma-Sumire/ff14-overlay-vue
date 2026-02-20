@@ -1,5 +1,6 @@
 import type { DynamicValue } from '@/types/dynamicValue'
 import { actionId2ClassJobLevel } from '@/resources/logic/action2ClassJobLevel'
+import { resolveBakedActionMeta } from '@/resources/logic/actionMetaResolver'
 import { parseDynamicValue } from '@/utils/dynamicValue'
 
 export interface GlobalSkillDefinition {
@@ -7,19 +8,14 @@ export interface GlobalSkillDefinition {
   recast1000ms: DynamicValue
   job: number[]
   minLevel: number
-  duration?: DynamicValue
+  duration: DynamicValue
+  maxCharges: DynamicValue
+  overrideIconId?: number
 }
 
 export const GLOBAL_SKILL_MAX_LEVEL = 100
 
-interface RawGlobalSkillDefinition {
-  id: number
-  recast1000ms: DynamicValue
-  // legacy compatible: job/minLevel can be omitted and auto resolved.
-  job?: number[]
-  minLevel?: number
-  duration?: DynamicValue
-}
+type RawGlobalSkillDefinition = Partial<GlobalSkillDefinition> & { id: number }
 
 const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
   { id: 30, recast1000ms: 420, duration: 10 },
@@ -78,13 +74,13 @@ const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
   { id: 36927, recast1000ms: 120, duration: 15 },
   { id: 3634, recast1000ms: 60, duration: 10 },
   { id: 7393, recast1000ms: 15, duration: 7 },
-  { id: 25754, recast1000ms: 60, duration: 7 },
+  { id: 25754, recast1000ms: 60, duration: 7, maxCharges: 2 },
   { id: 36935, recast1000ms: 120, duration: 15 },
   { id: 16140, recast1000ms: 90, duration: 10 },
   { id: 25758, recast1000ms: 25, duration: 8 },
-  { id: 16151, recast1000ms: 60 },
-  { id: 3570, recast1000ms: 60 },
-  { id: 7432, recast1000ms: 30 },
+  { id: 16151, recast1000ms: 60, maxCharges: '(lv) => lv>=84 ? 2 : 1' },
+  { id: 3570, recast1000ms: 60, maxCharges: '(lv) => lv>=98 ? 2 : 1' },
+  { id: 7432, recast1000ms: 30, maxCharges: '(lv) => lv>=98 ? 2 : 1' },
   { id: 25861, recast1000ms: 60, duration: 8 },
   { id: 16542, recast1000ms: 90 },
   { id: 3585, recast1000ms: 90 },
@@ -95,11 +91,11 @@ const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
   { id: 16545, recast1000ms: 120 },
   { id: 25867, recast1000ms: 60 },
   { id: 37014, recast1000ms: 180 },
-  { id: 3614, recast1000ms: 40 },
+  { id: 3614, recast1000ms: 40, maxCharges: '(lv) => lv>=78 ? (lv>=98 ? 3 : 2) : 1' },
   { id: 3613, recast1000ms: 60, duration: 10 },
   { id: 16553, recast1000ms: 60, duration: 15 },
   { id: 7439, recast1000ms: 60, duration: 10 },
-  { id: 16556, recast1000ms: 30 },
+  { id: 16556, recast1000ms: 30, maxCharges: '(lv) => lv>=88 ? 2 : 1' },
   { id: 16557, recast1000ms: 60 },
   { id: 16559, recast1000ms: 120 },
   { id: 25873, recast1000ms: 60 },
@@ -113,7 +109,7 @@ const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
   { id: 24318, recast1000ms: 120 },
   { id: 37035, recast1000ms: 180 },
   { id: 7394, recast1000ms: 120 },
-  { id: 7394, recast1000ms: 120 },
+  { id: 7394, recast1000ms: 120, overrideIconId: 36944 },
   { id: 65, recast1000ms: 90 },
   { id: 2241, recast1000ms: 120 },
   { id: 36962, recast1000ms: 15, duration: 4 },
@@ -123,7 +119,7 @@ const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
   { id: 16014, recast1000ms: 120 },
   { id: 157, recast1000ms: 120 },
   { id: 155, recast1000ms: 10 },
-  { id: 25799, recast1000ms: 60 },
+  { id: 25799, recast1000ms: 60, maxCharges: '(lv) => lv>=88 ? 2 : 1' },
   { id: 34685, recast1000ms: 120 },
 ]
 
@@ -141,12 +137,31 @@ const globalSkillDefinitions: GlobalSkillDefinition[] = rawGlobalSkillDefinition
   const resolvedId = resolveActionId(definition.id, GLOBAL_SKILL_MAX_LEVEL)
   const normalizedId = resolvedId > 0 ? resolvedId : 0
   const resolvedMinLevel = resolveMinLevelForActionId(normalizedId, definition.minLevel)
+
+  let jobs = uniqueJobs(definition.job)
+  let recast = definition.recast1000ms
+  let maxCharges = definition.maxCharges
+
+  if (normalizedId > 0 && (jobs.length === 0 || recast === undefined || maxCharges === undefined)) {
+    const baked = resolveBakedActionMeta(normalizedId)
+    if (baked) {
+      if (jobs.length === 0)
+        jobs = baked.jobs
+      if (recast === undefined)
+        recast = baked.recast1000ms
+      if (maxCharges === undefined && baked.maxCharges > 0)
+        maxCharges = baked.maxCharges
+    }
+  }
+
   return {
     id: normalizedId,
-    recast1000ms: definition.recast1000ms,
-    duration: definition.duration,
+    recast1000ms: recast ?? 0,
+    duration: definition.duration ?? 0,
     minLevel: resolvedMinLevel,
-    job: uniqueJobs(definition.job),
+    job: jobs,
+    maxCharges: maxCharges ?? 0,
+    overrideIconId: definition.overrideIconId,
   }
 })
 
@@ -165,6 +180,7 @@ export interface GlobalSkillMeta {
   duration: DynamicValue
   minLevel: number
   job: number[]
+  maxCharges?: DynamicValue
 }
 
 function uniqueJobs(jobs: number[] | undefined): number[] {
@@ -217,20 +233,22 @@ const globalSkillMetaMap = (() => {
       if (!previous) {
         map.set(actionId, {
           id: normalizedId,
-          recast1000ms: definition.recast1000ms,
+          recast1000ms: definition.recast1000ms ?? 0,
           duration: definition.duration ?? 0,
           minLevel: resolvedMinLevel,
           job: inheritedJobs,
+          maxCharges: definition.maxCharges,
         })
         continue
       }
 
       map.set(actionId, {
         id: normalizedId,
-        recast1000ms: previous.recast1000ms,
-        duration: previous.duration,
+        recast1000ms: previous.recast1000ms ?? definition.recast1000ms ?? 0,
+        duration: previous.duration ?? 0,
         minLevel: mergeMinLevel(previous.minLevel, resolvedMinLevel),
         job: uniqueJobs([...previous.job, ...inheritedJobs]),
+        maxCharges: previous.maxCharges ?? definition.maxCharges,
       })
     }
   })
