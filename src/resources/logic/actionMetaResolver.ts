@@ -3,6 +3,7 @@ import { ROLE_ACTION_CACHE_VERSION } from '@/resources/cacheVersion'
 import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/generated/bakedActionMetaLite'
 import { BAKED_UPGRADE_CHAIN_MIN_LEVEL_BY_ACTION_ID } from '@/resources/generated/bakedUpgradeChainMinLevel'
 import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/generated/roleActionCategoryByJob'
+import { ACTION_UPGRADE_STEPS, normalizeUpgradeActionId } from '@/utils/compareSaveAction'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 import Util from '@/utils/util'
 import { getIconSrcById, getIconSrcByPath } from '@/utils/xivapi'
@@ -190,11 +191,11 @@ export function initGlobalSkills(definitions: any[]) {
       const prev = globalSkillMetaMap.get(aid)
       globalSkillMetaMap.set(aid, {
         id,
-        recast1000ms: prev?.recast1000ms ?? d.recast1000ms ?? 0,
-        duration: prev?.duration ?? 0,
+        recast1000ms: d.recast1000ms ?? prev?.recast1000ms ?? 0,
+        duration: d.duration ?? prev?.duration ?? 0,
         minLevel: prev ? Math.min(prev.minLevel, minL) : minL,
         job: uniqueInts([...(prev?.job ?? []), ...inheritedJobs]),
-        maxCharges: prev?.maxCharges ?? d.maxCharges,
+        maxCharges: d.maxCharges ?? prev?.maxCharges,
       })
     }
   })
@@ -316,4 +317,82 @@ export function resolveActionIconSrc(aid: number, options?: { apiIconPath?: stri
   if (src)
     return src
   return options?.apiIconPath?.trim() ? getIconSrcByPath(options.apiIconPath, false, options?.highRes ?? false) : ''
+}
+
+// --- Upgrade Family Logic ---
+const upgradeLowerByUpper = (() => {
+  const map = new Map<number, number[]>()
+  Object.entries(ACTION_UPGRADE_STEPS).forEach(([rawLower, rawUpper]) => {
+    const lower = Number(rawLower)
+    const upper = Number(rawUpper)
+    if (lower > 0 && upper > 0) {
+      if (!map.has(upper))
+        map.set(upper, [])
+      map.get(upper)!.push(lower)
+    }
+  })
+  return map
+})()
+
+const upgradeFamilyCache = new Map<number, number[]>()
+const upgradeDepthCache = new Map<number, number>()
+
+function getUpgradeFamily(actionId: number) {
+  const top = normalizeUpgradeActionId(actionId)
+  if (top <= 0)
+    return []
+  if (upgradeFamilyCache.has(top))
+    return upgradeFamilyCache.get(top)!
+  const visited = new Set<number>()
+  const stack = [top]
+  while (stack.length) {
+    const curr = stack.pop()!
+    if (visited.has(curr))
+      continue
+    visited.add(curr)
+    stack.push(...(upgradeLowerByUpper.get(curr) ?? []))
+  }
+  const res = [...visited]
+  upgradeFamilyCache.set(top, res)
+  return res
+}
+
+function getUpgradeDepth(actionId: number) {
+  if (actionId <= 0)
+    return 999
+  if (upgradeDepthCache.has(actionId))
+    return upgradeDepthCache.get(actionId)!
+  let depth = 0
+  let curr = actionId
+  const visited = new Set([curr])
+  while (true) {
+    const next = Number(ACTION_UPGRADE_STEPS[curr]) || 0
+    if (next <= 0 || visited.has(next))
+      break
+    depth++
+    visited.add(next)
+    curr = next
+  }
+  upgradeDepthCache.set(actionId, depth)
+  return depth
+}
+
+export function resolveHighestSupportedActionInFamily(actionId: number, baseJob: number) {
+  const family = getUpgradeFamily(actionId)
+  let bestId = 0
+  let bestLv = -1
+  let bestDepth = 999
+  for (const cid of family) {
+    const baked = resolveBakedActionMeta(cid)
+    if (!baked || (baked.isRoleAction ? !baked.jobs.includes(baseJob) : (baked.classJobTargetId > 0 && baked.classJobTargetId !== baseJob)))
+      continue
+    const lv = baked.classJobLevel
+    const depth = getUpgradeDepth(cid)
+    if (lv > bestLv || (lv === bestLv && depth < bestDepth) || (lv === bestLv && depth === bestDepth && cid === actionId)) {
+      bestId = cid
+      bestLv = lv
+      bestDepth = depth
+    }
+  }
+  return bestId || 0
 }
