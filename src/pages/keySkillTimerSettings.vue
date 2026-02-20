@@ -86,6 +86,28 @@ const currentEditorGlobalMeta = computed(() => {
     return null
   return getGlobalSkillDefinitionById(currentEditorSkill.value.id)
 })
+const currentEditorResolvedDebug = computed(() => {
+  const skill = currentEditorSkill.value
+  const meta = currentEditorMeta.value
+  if (!skill || !meta)
+    return null
+
+  const globalMeta = currentEditorGlobalMeta.value
+  const recastInput = skill.recast1000ms ?? globalMeta?.recast1000ms ?? meta.recast1000ms
+  const durationInput = skill.duration ?? globalMeta?.duration ?? meta.duration
+  const chargesInput = skill.maxCharges ?? globalMeta?.maxCharges ?? 0
+  const minLevelInput = skill.minLevel ?? meta.minLevel
+  const resolvedJobs = skill.job?.length ? uniqueInts(skill.job) : meta.jobs
+
+  return {
+    id: skill.id,
+    minLevel: minLevelInput,
+    recast1000ms: recastInput,
+    duration: durationInput,
+    maxCharges: chargesInput,
+    jobs: resolvedJobs,
+  }
+})
 
 const effectiveRecast = computed({
   get: () => {
@@ -612,9 +634,9 @@ function replaceCurrentSkill() {
   void openSkillPicker(row?.line ?? 1, editorSkillKey.value)
 }
 
-function formatJobs(jobs: number[]) {
-  if (!jobs.length)
-    return '未知'
+function formatJobs(jobs?: number[]) {
+  if (!Array.isArray(jobs) || jobs.length === 0)
+    return ''
   return jobs
     .map((job) => {
       const full = Util.jobToFullName(Util.jobEnumToJob(job))
@@ -765,7 +787,7 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
       </template>
       <template #extra-footer-left>
         <el-popover
-          v-if="currentEditorSkill"
+          v-if="currentEditorResolvedDebug"
           placement="top-start"
           title="底层参数 (供调试)"
           :width="260"
@@ -778,25 +800,22 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
           </template>
           <el-descriptions :column="1" border size="small" class="debug-desc">
             <el-descriptions-item label="Action ID">
-              {{ currentEditorSkill.id }}
+              {{ currentEditorResolvedDebug.id }}
             </el-descriptions-item>
             <el-descriptions-item label="习得等级">
-              {{ currentEditorSkill.minLevel }}
+              Lv.{{ currentEditorResolvedDebug.minLevel }}
             </el-descriptions-item>
             <el-descriptions-item label="冷却时间">
-              {{ currentEditorSkill.recast1000ms }}
+              {{ currentEditorResolvedDebug.recast1000ms }}
             </el-descriptions-item>
             <el-descriptions-item label="持续时间">
-              {{ currentEditorSkill.duration }}
+              {{ currentEditorResolvedDebug.duration }}
             </el-descriptions-item>
             <el-descriptions-item label="最大充能">
-              {{ currentEditorSkill.maxCharges }}
-            </el-descriptions-item>
-            <el-descriptions-item label="职能技能">
-              {{ currentEditorMeta.isRoleAction ? '是' : '否' }}
+              {{ currentEditorResolvedDebug.maxCharges }}
             </el-descriptions-item>
             <el-descriptions-item label="解析职业">
-              {{ formatJobs(currentEditorSkill.job!) }}
+              {{ formatJobs(currentEditorResolvedDebug.jobs) }}
             </el-descriptions-item>
           </el-descriptions>
         </el-popover>
