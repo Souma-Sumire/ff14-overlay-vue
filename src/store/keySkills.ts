@@ -55,6 +55,7 @@ interface KeySkillAutoMeta {
   minLevel: number
   jobs: number[]
   classJobTargetId?: number
+  maxCharges: number
   isRoleAction: boolean
 }
 
@@ -69,17 +70,24 @@ function normalizeAutoMetaCache(raw: Record<string, KeySkillAutoMeta>): Record<n
     const id = Number(key) || 0
     if (id <= 0)
       return
+    const name = typeof value.name === 'string' ? value.name.trim() : ''
+    const src = typeof value.src === 'string' ? value.src.trim() : ''
+    const jobs = uniqueInts(Array.isArray(value.jobs) ? value.jobs : [])
+    // 字段缺失则淘汰
+    if (!name || !src || !jobs.length)
+      return
     const isRoleAction = !!value.isRoleAction
     output[id] = {
       id: Number(value.id) || id,
-      name: (typeof value.name === 'string' && value.name.trim()) ? value.name.trim() : resolveActionDisplayName(id, id),
-      src: typeof value.src === 'string' ? value.src : resolveActionIconSrc(id),
+      name,
+      src,
       duration: Number(value.duration) || 0,
       recast1000ms: Number(value.recast1000ms) || 0,
       isRoleAction,
       minLevel: resolveActionMinLevel(value.minLevel ?? 1, { actionId: id, isRoleAction, fallback: 1 }),
-      jobs: uniqueInts(Array.isArray(value.jobs) ? value.jobs : []),
+      jobs,
       classJobTargetId: Number(value.classJobTargetId) || 0,
+      maxCharges: Number(value.maxCharges) || 0,
     }
   })
   return output
@@ -172,10 +180,15 @@ const useKeySkillStore = defineStore('keySkill', () => {
   Object.entries(normalizedAutoMetaCache).forEach(([id, meta]) => {
     autoMetaById[Number(id)] = meta
   })
+
   const pendingAutoMeta = reactive(new Set<number>())
   const pendingAutoMetaTasks = new Map<number, Promise<void>>()
   const refreshedIncompleteAutoMeta = reactive(new Set<number>())
   const isAutoMetaLoading = computed(() => pendingAutoMeta.size > 0)
+
+  function isApiCached(id: number): boolean {
+    return !!autoMetaCache.value[String(id)]
+  }
 
   function saveAutoMetaToCache(id: number, meta: KeySkillAutoMeta) {
     autoMetaById[id] = meta
@@ -221,6 +234,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
       minLevel: levelMeta.minLevel,
       jobs,
       classJobTargetId: classJobTargetId > 0 ? classJobTargetId : 0,
+      maxCharges: baked.maxCharges,
       isRoleAction,
     }
   }
@@ -248,6 +262,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
       minLevel: levelMeta.minLevel,
       jobs: levelMeta.jobsFromGlobal,
       classJobTargetId: 0,
+      maxCharges: 0,
       isRoleAction: false,
     }
   }
@@ -256,26 +271,19 @@ const useKeySkillStore = defineStore('keySkill', () => {
     if (!Number.isFinite(actionId) || actionId <= 0)
       return
     const id = Math.trunc(actionId)
-    const existing = autoMetaById[id]
-    if (existing) {
-      if (existing.jobs?.length) {
-        return
-      }
-      if (refreshedIncompleteAutoMeta.has(id))
-        return
-    }
+    if (isApiCached(id))
+      return
+    if (refreshedIncompleteAutoMeta.has(id))
+      return
     const task = pendingAutoMetaTasks.get(id)
     if (task) {
       await task
       return
     }
-
+    // baked 仅作内存展示占位，不写 localStorage
     const baked = buildAutoMetaFromBaked(id)
-    if (baked && baked.jobs?.length) {
-      saveAutoMetaToCache(id, baked)
-      refreshedIncompleteAutoMeta.add(id)
-      return
-    }
+    if (baked)
+      autoMetaById[id] = baked
 
     const nextTask = (async () => {
       pendingAutoMeta.add(id)
@@ -289,6 +297,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
           'ClassJobTargetID',
           'ClassJobCategoryTargetID',
           'ActionCategoryTargetID',
+          'MaxCharges',
           'IsRoleAction',
         ])
         const apiMeta = resolveApiActionMeta(id, response as Record<string, unknown>)
@@ -320,28 +329,16 @@ const useKeySkillStore = defineStore('keySkill', () => {
           minLevel: levelMeta.minLevel,
           jobs,
           classJobTargetId: classJobTargetId > 0 ? classJobTargetId : 0,
+          maxCharges: apiMeta.maxCharges,
           isRoleAction,
         })
       }
       catch (error) {
         console.warn('[keySkill] ensureActionAutoMeta failed:', id, error)
-        const levelMeta = resolveActionMetaByLevel(id, GLOBAL_SKILL_MAX_LEVEL, {
-          baseRecast1000ms: 0,
-          baseDuration: 0,
-          baseMinLevel: 1,
-          isRoleAction: false,
-        })
-        saveAutoMetaToCache(id, {
-          id: levelMeta.resolvedId,
-          name: resolveActionDisplayName(levelMeta.resolvedId, levelMeta.resolvedId),
-          src: resolveActionIconSrc(levelMeta.resolvedId),
-          duration: levelMeta.duration,
-          recast1000ms: levelMeta.recast1000ms,
-          minLevel: levelMeta.minLevel,
-          jobs: levelMeta.jobsFromGlobal,
-          classJobTargetId: 0,
-          isRoleAction: false,
-        })
+        // 失败时仅更新内存展示，不写 localStorage（避免缓存錺误数据）
+        const baked = buildAutoMetaFromBaked(id)
+        if (baked)
+          autoMetaById[id] = baked
       }
       finally {
         refreshedIncompleteAutoMeta.add(id)
@@ -360,19 +357,14 @@ const useKeySkillStore = defineStore('keySkill', () => {
       uniqueInts(ids.map(Number)).forEach((id) => {
         if (pendingAutoMetaTasks.has(id) || pendingAutoMeta.has(id))
           return
-        const existing = autoMetaById[id]
-        if (existing) {
-          if (existing.jobs?.length)
-            return
-          if (refreshedIncompleteAutoMeta.has(id))
-            return
-        }
-        const baked = buildAutoMetaFromBaked(id)
-        if (baked && baked.jobs?.length) {
-          saveAutoMetaToCache(id, baked)
-          refreshedIncompleteAutoMeta.add(id)
+        if (isApiCached(id))
           return
-        }
+        if (refreshedIncompleteAutoMeta.has(id))
+          return
+        // baked 仅作内存展示占位，不写 localStorage
+        const baked = buildAutoMetaFromBaked(id)
+        if (baked)
+          autoMetaById[id] = baked
         void ensureActionAutoMeta(id)
       })
     },

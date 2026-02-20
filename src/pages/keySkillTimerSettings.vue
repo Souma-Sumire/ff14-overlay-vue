@@ -786,6 +786,9 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
             <el-descriptions-item label="持续时间">
               {{ currentEditorGlobalMeta?.duration ?? currentEditorMeta.duration }}
             </el-descriptions-item>
+            <el-descriptions-item label="最大充能">
+              {{ currentEditorGlobalMeta?.maxCharges }}
+            </el-descriptions-item>
             <el-descriptions-item label="职能技能">
               {{ currentEditorMeta.isRoleAction ? '是' : '否' }}
             </el-descriptions-item>
