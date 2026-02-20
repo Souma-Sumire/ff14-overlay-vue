@@ -13,7 +13,7 @@ import { useRouter } from 'vue-router'
 import { useWebSocket } from '@/composables/useWebSocket'
 import { bossPhase } from '@/resources/bossPhase'
 // import recommendedTimeline from '../resources/recommendedTimeline.json'
-import { ZoneInfo } from '@/resources/zoneInfo'
+import { MapAlias, ZoneInfo } from '@/resources/zoneInfo'
 import { parseTimeline, useTimelineStore } from '@/store/timeline'
 import { copyToClipboard } from '@/utils/clipboard'
 import Util from '@/utils/util'
@@ -625,7 +625,8 @@ function getMapName(zoneId: number) {
   if (!names) {
     return '未知地图'
   }
-  return names.cn || `${names.ja} / ${names.en}`
+  const alias = MapAlias[zoneId as keyof typeof MapAlias]
+  return (alias ? `[${alias}] ` : '') + (names.cn || `${names.ja} / ${names.en}`)
 }
 
 function getLabel(job: Job) {
@@ -951,12 +952,12 @@ init()
             sortable
             :show-overflow-tooltip="true"
           />
-          <el-table-column label="地图" sortable prop="condition">
+          <el-table-column label="地图" sortable prop="condition" width="310">
             <template #default="scope">
               {{ getMapName(scope.row.condition.zoneID) }}
             </template>
           </el-table-column>
-          <el-table-column prop="condition" label="阶段" width="80">
+          <el-table-column prop="condition" label="阶段" width="60">
             <template #default="scope">
               {{
                 scope.row.condition.phase === 'door'
