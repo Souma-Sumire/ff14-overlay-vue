@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { MessageBoxInputData } from 'element-plus'
 import type { ActionPickerGridItem } from '@/components/common/ActionPickerDialog.vue'
+import type { KeySkillEntry } from '@/store/keySkills'
 import type { DynamicValue } from '@/types/dynamicValue'
 import { Download, InfoFilled, Plus, RefreshLeft, Upload } from '@element-plus/icons-vue'
 import { useWindowSize } from '@vueuse/core'
@@ -391,7 +392,7 @@ function importData(): void {
         ElMessage.error(t('keySkillTimerSettings.importFormatError'))
         return
       }
-      const payload = data as { chinese?: unknown[] }
+      const payload = data as { chinese?: KeySkillEntry[] }
       storeKeySkill.setSkills(payload.chinese ?? [])
       ElMessage.success(t('keySkillTimerSettings.importSuccess'))
     })
