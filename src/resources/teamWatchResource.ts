@@ -1,7 +1,6 @@
-import type { DynamicValue } from '@/types/dynamicValue'
 import type { TeamWatchActionMetaRaw, TeamWatchStorageData } from '@/types/teamWatchTypes'
 import { resolveActionDisplayName, resolveActionMinLevel, resolveHighestSupportedActionInFamily, uniqueInts } from '@/resources/logic/actionMetaResolver'
-import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
+import { idToSrc } from '@/utils/dynamicValue'
 import Util from '@/utils/util'
 import { DEFAULT_JOB_SORT_ORDER } from './jobSortOrder'
 
@@ -37,25 +36,10 @@ export const TEAM_WATCH_WATCH_ACTIONS_DEFAULT: Record<number, number[]> = {
   42: [7560, 34685, 0, 0, 0],
 }
 
-const SAMPLE_LEVELS = [1, 50, 80, 90, 100] as const
-
 export function cloneTeamWatchActionMetaMap(input: Record<number, TeamWatchActionMetaRaw>) {
   return Object.fromEntries(
     Object.entries(input).map(([k, v]) => [Number(k) || 0, { ...v }]),
   )
-}
-
-export function validateTeamWatchDynamicValue(value: DynamicValue, label: string) {
-  for (const lv of SAMPLE_LEVELS) {
-    try {
-      if (!Number.isFinite(parseDynamicValue(value, lv)))
-        return `${label} 在 ${lv} 级返回了无效数值`
-    }
-    catch (e: any) {
-      return `${label} 在 ${lv} 级校验失败: ${e.message || String(e)}`
-    }
-  }
-  return ''
 }
 
 export function buildInheritedBaseJobActions(baseJob: number, sourceActions: unknown): number[] {
@@ -146,7 +130,9 @@ export function loadTeamWatchStorageData(): TeamWatchStorageData {
 
 export function saveTeamWatchStorageData(data: TeamWatchStorageData) {
   let current: any = {}
-  try { current = JSON.parse(localStorage.getItem(TEAM_WATCH_STORAGE_NAMESPACE) || '{}') }
+  try {
+    current = JSON.parse(localStorage.getItem(TEAM_WATCH_STORAGE_NAMESPACE) || '{}')
+  }
   catch { /* ignore */ }
   localStorage.setItem(TEAM_WATCH_STORAGE_NAMESPACE, JSON.stringify({
     ...current,

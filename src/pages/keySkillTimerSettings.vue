@@ -18,6 +18,7 @@ import { getGlobalSkillDefinitionById, resolveActionDisplayName, resolveActionIc
 import { useKeySkillStore } from '@/store/keySkills'
 import { copyToClipboard } from '@/utils/clipboard'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
+import { validateDynamicValue } from '@/utils/dynamicValueValidation'
 import { tts } from '@/utils/tts'
 import Util from '@/utils/util'
 import { handleImgError, searchActionsByClassJobs } from '@/utils/xivapi'
@@ -100,6 +101,9 @@ const effectiveDuration = computed({
   },
 })
 const dynamicValueTipText = 'DynamicValue支持输入数字或动态表达式，例如 `(lv) => lv>=94 ? 40 : 60`。'
+
+const recastError = computed(() => validateDynamicValue(effectiveRecast.value))
+const durationError = computed(() => validateDynamicValue(effectiveDuration.value))
 
 const pickerDialogWidth = computed(() => {
   const available = Math.trunc(viewportWidth.value) - 20
@@ -727,11 +731,13 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
         </div>
         <div class="editor-field">
           <label>冷却时间 (秒)</label>
-          <el-input v-model="effectiveRecast" :disabled="interactionLocked" placeholder="继承底层属性" />
+          <el-input v-model="effectiveRecast" :disabled="interactionLocked" placeholder="继承底层属性" :class="{ 'is-error': recastError }" />
+          <span v-if="recastError" class="dynamic-value-error">{{ recastError }}</span>
         </div>
         <div class="editor-field">
           <label>持续时间 (秒)</label>
-          <el-input v-model="effectiveDuration" :disabled="interactionLocked" placeholder="继承底层属性" />
+          <el-input v-model="effectiveDuration" :disabled="interactionLocked" placeholder="继承底层属性" :class="{ 'is-error': durationError }" />
+          <span v-if="durationError" class="dynamic-value-error">{{ durationError }}</span>
         </div>
       </template>
       <template #extra-footer-left>
@@ -1098,5 +1104,17 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
 .debug-desc :deep(.el-descriptions__label) {
   width: 70px;
   white-space: nowrap;
+}
+
+.dynamic-value-error {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--el-color-danger);
+  line-height: 1.4;
+}
+
+:deep(.is-error .el-input__wrapper) {
+  box-shadow: 0 0 0 1px var(--el-color-danger) inset;
 }
 </style>

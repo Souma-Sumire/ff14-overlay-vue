@@ -129,29 +129,17 @@ function createSkillEntry(id: number, tts = '', line = 1): KeySkillEntry {
   }
 }
 
-function normalizeStorageSkills(raw: unknown): KeySkillEntry[] {
-  if (!Array.isArray(raw))
-    return []
-
-  const normalized: KeySkillEntry[] = []
-  raw.forEach((item) => {
+function normalizeStorageSkills(raw: any[]): KeySkillEntry[] {
+  return raw.flatMap((item) => {
     if (!item || typeof item !== 'object')
-      return
-    const row = item as Record<string, unknown>
-    const resolvedId = Math.trunc(Number(parseDynamicValue(row.id as any, GLOBAL_SKILL_MAX_LEVEL))) || 0
-    if (resolvedId <= 0)
-      return
+      return []
+    const row = item as Record<string, any>
+    const id = Number(parseDynamicValue(row.id as DynamicValue, GLOBAL_SKILL_MAX_LEVEL)) || 0
     const key = (typeof row.key === 'string' && row.key.trim()) ? row.key : crypto.randomUUID()
-    if (key === LEGACY_PRESET_2248_KEY)
-      return
-    normalized.push({
-      key,
-      id: resolvedId,
-      line: Math.max(1, Math.trunc(row.line as any) || 1),
-      tts: typeof row.tts === 'string' ? row.tts : '',
-    })
+    if (id <= 0 || key === LEGACY_PRESET_2248_KEY)
+      return []
+    return [{ ...row, key, id, line: Number(row.line) || 1, tts: typeof row.tts === 'string' ? row.tts : '' } as KeySkillEntry]
   })
-  return normalized
 }
 
 const useKeySkillStore = defineStore('keySkill', () => {
@@ -595,7 +583,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
     generator.fullParty()
   }
 
-  function setSkills(entries: unknown[]) {
+  function setSkills(entries: any[]) {
     keySkillsData.value.chinese = normalizeStorageSkills(entries)
     keySkillsData.value.chinese.forEach((entry) => {
       void ensureActionAutoMeta(entry.id)
