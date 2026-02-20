@@ -1,19 +1,8 @@
-import type { DynamicValue } from '@/types/dynamicValue'
 import type { KeigennSkill, Scope } from '@/types/keigennRecord2'
 import { getGlobalSkillDefinitionById } from '@/resources/globalSkills'
 import { resolveBakedActionMeta } from '@/resources/logic/actionMetaResolver'
 
-interface KeigennSkillDefinition {
-  id: number
-  recast1000ms?: DynamicValue
-  job?: number[]
-  minLevel?: number
-  duration?: DynamicValue
-  scope: Scope
-  maxCharges?: DynamicValue
-}
-
-const keigennSkillDefinitions: KeigennSkillDefinition[] = [
+const keigennSkillDefinitions: { id: number, scope: Scope }[] = [
   { id: 30, scope: 'party' },
   { id: 43, scope: 'party' },
   { id: 3638, scope: 'party' },
@@ -114,40 +103,18 @@ const keigennSkills: KeigennSkill[] = keigennSkillDefinitions
     if (!shared && !api)
       return undefined
 
-    let recast = definition.recast1000ms ?? shared?.recast1000ms
-    if (recast === undefined && api)
-      recast = Math.round(api.recast1000ms)
-
-    let jobs = definition.job ?? shared?.job
-    if ((!jobs || jobs.length === 0) && api)
-      jobs = api.jobs
-
-    let minLevel = definition.minLevel ?? shared?.minLevel
-    if (minLevel === undefined && api)
-      minLevel = api.classJobLevel
-
     const skill: KeigennSkill = {
       id: definition.id,
-      recast1000ms: recast ?? 0,
-      job: [...(jobs ?? [])],
-      minLevel: minLevel ?? 1,
+      recast1000ms: shared?.recast1000ms ?? (api ? Math.round(api.recast1000ms) : 0),
+      job: [...(shared?.job?.length ? shared.job : (api?.jobs ?? []))],
+      minLevel: shared?.minLevel ?? api?.classJobLevel ?? 1,
       scope: definition.scope,
+      duration: shared?.duration ?? 0,
+      maxCharges: shared?.maxCharges ?? api?.maxCharges ?? 0,
     }
-
-    if (definition.duration !== undefined)
-      skill.duration = definition.duration
-    else if (shared?.duration !== undefined)
-      skill.duration = shared.duration
-
-    if (definition.maxCharges !== undefined)
-      skill.maxCharges = definition.maxCharges
-    else if (api && api.maxCharges > 0)
-      skill.maxCharges = api.maxCharges
-    else if (shared?.maxCharges !== undefined)
-      skill.maxCharges = shared.maxCharges
 
     return skill
   })
   .filter((skill): skill is KeigennSkill => Boolean(skill))
 
-export { keigennSkillDefinitions, keigennSkills }
+export { keigennSkills }

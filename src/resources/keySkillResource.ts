@@ -1,4 +1,3 @@
-import type { DynamicValue } from '@/types/dynamicValue'
 import type { KeySkill } from '@/types/keySkill'
 import { getGlobalSkillDefinitionById } from '@/resources/globalSkills'
 import { resolveBakedActionMeta } from '@/resources/logic/actionMetaResolver'
@@ -7,11 +6,6 @@ interface KeySkillDefinition {
   id: number
   tts: string
   line: number
-  recast1000ms?: DynamicValue
-  job?: number[]
-  minLevel?: number
-  duration?: DynamicValue
-  maxCharges?: DynamicValue
 }
 
 const keySkillDefinitions: KeySkillDefinition[] = [
@@ -61,38 +55,16 @@ const raidbuffs: KeySkill[] = keySkillDefinitions
     if (!shared && !api)
       return undefined
 
-    let recast = definition.recast1000ms ?? shared?.recast1000ms
-    if (recast === undefined && api)
-      recast = Math.round(api.recast1000ms)
-
-    let jobs = definition.job ?? shared?.job
-    if ((!jobs || jobs.length === 0) && api)
-      jobs = api.jobs
-
-    let minLevel = definition.minLevel ?? shared?.minLevel
-    if (minLevel === undefined && api)
-      minLevel = api.classJobLevel
-
-    let duration = definition.duration ?? shared?.duration
-    if (duration === undefined && api)
-      duration = 0 // not provided by api
-
-    let maxCharges = definition.maxCharges ?? shared?.maxCharges
-    if (maxCharges === undefined && api && api.maxCharges > 0)
-      maxCharges = api.maxCharges
-
-    const skill: KeySkill = {
+    return {
       key: `skill_${definition.id}`,
       id: definition.id,
       tts: definition.tts,
       line: definition.line,
-      recast1000ms: recast ?? 0,
-      job: [...(jobs ?? [])],
-      minLevel: minLevel ?? 1,
-      duration: duration ?? 0,
-      maxCharges: maxCharges ?? 0,
+      recast1000ms: shared?.recast1000ms ?? (api ? Math.round(api.recast1000ms) : 0),
+      job: [...(shared?.job?.length ? shared.job : (api?.jobs ?? []))],
+      minLevel: shared?.minLevel ?? api?.classJobLevel ?? 1,
+      duration: shared?.duration ?? 0,
     }
-    return skill
   })
   .filter((skill): skill is KeySkill => Boolean(skill))
 
