@@ -73,11 +73,18 @@ let primarySite: SiteName = resolveInitialPrimarySite()
 
 const ICON_REGEX = /(\d{6})\/(\d{6})\.png$/
 const DEFAULT_ICON = '/i/000000/000405.png'
-const XIVAPI_MAX_CONCURRENT_REQUESTS = 10
+// Browsers usually limit concurrent connections per host to around 6.
+// Keeping this close avoids requests waiting in the browser queue and timing out early.
+const XIVAPI_MAX_CONCURRENT_REQUESTS = 6
+const XIVAPI_REQUEST_TIMEOUT_MS = 4000
+const XIVAPI_RETRY_TIMEOUT_MS = 8000
+const XIVAPI_MAX_RETRIES_PER_HOST = 1
+const XIVAPI_RETRYABLE_STATUS = new Set([408, 425, 429, 500, 502, 503, 504])
 
 const actionCache = new Map<string, Record<string, any>>()
 const actionSearchByJobCache = new Map<string, XivApiActionSearchItem[]>()
 const pendingRequestResolvers: Array<() => void> = []
+const pendingNetworkRequests = new Map<string, Promise<any>>()
 let activeRequestCount = 0
 
 export { XIVAPI_CACHE_VERSION }
@@ -531,9 +538,11 @@ export function handleImgError(event: Event): void {
 
   if (target.src.includes('pictomancer.png')) {
     target.src = '//souma.diemoe.net/resources/img/pictomancer.png'
+    console.log('Pictomancer icon load failed, switched to mirror')
   }
   else if (target.src.includes('viper.png')) {
     target.src = '//souma.diemoe.net/resources/img/viper.png'
+    console.log('Viper icon load failed, switched to mirror')
   }
   else if (url.host === getPrimaryHost()) {
     target.src = `${getSecondaryUrl()}${path}`
@@ -554,8 +563,31 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeout = 300
   }
 }
 
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'AbortError'
+}
+
+function buildRequestDedupKey(urls: string[], options: RequestInit): string | null {
+  const method = String(options.method ?? 'GET').toUpperCase()
+  if (method !== 'GET')
+    return null
+  return urls.join('|')
+}
+
 async function requestWithFallback(urls: string[], options: RequestInit = {}): Promise<any> {
-  return withRequestPool(async () => {
+  const mergedOptions: RequestInit = {
+    cache: 'force-cache',
+    mode: 'cors',
+    ...options,
+  }
+  const dedupKey = buildRequestDedupKey(urls, mergedOptions)
+  if (dedupKey) {
+    const pending = pendingNetworkRequests.get(dedupKey)
+    if (pending)
+      return pending
+  }
+
+  const task = withRequestPool(async () => {
     const mergedOptions: RequestInit = {
       cache: 'force-cache',
       mode: 'cors',
@@ -563,24 +595,39 @@ async function requestWithFallback(urls: string[], options: RequestInit = {}): P
     }
 
     for (const url of urls) {
-      try {
-        const response = await fetchWithTimeout(url, mergedOptions)
-        if (!response.ok) {
-          console.warn(`Fetch failed for ${url}: status ${response.status}`)
-          continue
+      for (let attempt = 0; attempt <= XIVAPI_MAX_RETRIES_PER_HOST; attempt++) {
+        const timeout = attempt === 0 ? XIVAPI_REQUEST_TIMEOUT_MS : XIVAPI_RETRY_TIMEOUT_MS
+        try {
+          const response = await fetchWithTimeout(url, mergedOptions, timeout)
+          if (!response.ok) {
+            console.warn(`Fetch failed for ${url}: status ${response.status}`)
+            if (attempt < XIVAPI_MAX_RETRIES_PER_HOST && XIVAPI_RETRYABLE_STATUS.has(response.status))
+              continue
+            break
+          }
+          if (isSecondaryUrl(url))
+            switchPrimarySite()
+          else
+            persistPrimarySite(primarySite)
+          const json = await response.json()
+          return { ...json, Host: new URL(url).host }
         }
-        if (isSecondaryUrl(url))
-          switchPrimarySite()
-        else
-          persistPrimarySite(primarySite)
-        const json = await response.json()
-        return { ...json, Host: new URL(url).host }
-      }
-      catch (error) {
-        console.warn(`Fetch failed for ${url}:`, error)
+        catch (error) {
+          console.warn(`Fetch failed for ${url}:`, error)
+          if (attempt < XIVAPI_MAX_RETRIES_PER_HOST && isAbortError(error))
+            continue
+        }
       }
     }
 
     throw new Error('All fetch attempts failed.')
+  })
+
+  if (!dedupKey)
+    return task
+
+  pendingNetworkRequests.set(dedupKey, task)
+  return task.finally(() => {
+    pendingNetworkRequests.delete(dedupKey)
   })
 }
