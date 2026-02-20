@@ -33,6 +33,7 @@ interface KeySkillRow {
   recast1000ms?: DynamicValue
   duration?: DynamicValue
   minLevel?: number
+  maxCharges?: DynamicValue
 }
 
 const { t } = useLang()
@@ -210,6 +211,7 @@ function resolveSkillMeta(actionId: number) {
   const resolvedId = parseDynamicValue(globalMeta?.id ?? actionId, GLOBAL_SKILL_MAX_LEVEL)
   const resolvedDuration = Math.max(0, parseDynamicValue(globalMeta?.duration ?? 0, GLOBAL_SKILL_MAX_LEVEL))
   const resolvedRecast1000ms = Math.max(0, parseDynamicValue(globalMeta?.recast1000ms ?? 0, GLOBAL_SKILL_MAX_LEVEL))
+  const resolvedMaxCharges = Math.max(0, Number(parseDynamicValue(globalMeta?.maxCharges ?? 0, GLOBAL_SKILL_MAX_LEVEL)) || 0)
   const resolvedMinLevel = Math.max(1, Number(globalMeta?.minLevel ?? 1))
 
   return {
@@ -218,6 +220,7 @@ function resolveSkillMeta(actionId: number) {
     src: idToSrc(resolvedId),
     duration: resolvedDuration,
     recast1000ms: resolvedRecast1000ms,
+    maxCharges: resolvedMaxCharges,
     minLevel: resolvedMinLevel,
     isRoleAction: false,
     jobs: globalMeta?.job ? [...globalMeta.job] : [],
@@ -762,7 +765,7 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
       </template>
       <template #extra-footer-left>
         <el-popover
-          v-if="currentEditorMeta"
+          v-if="currentEditorSkill"
           placement="top-start"
           title="底层参数 (供调试)"
           :width="260"
@@ -775,25 +778,25 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
           </template>
           <el-descriptions :column="1" border size="small" class="debug-desc">
             <el-descriptions-item label="Action ID">
-              {{ currentEditorMeta.id }}
+              {{ currentEditorSkill.id }}
             </el-descriptions-item>
             <el-descriptions-item label="习得等级">
-              Lv.{{ currentEditorMeta.minLevel }}
+              {{ currentEditorSkill.minLevel }}
             </el-descriptions-item>
             <el-descriptions-item label="冷却时间">
-              {{ currentEditorGlobalMeta?.recast1000ms ?? currentEditorMeta.recast1000ms }}
+              {{ currentEditorSkill.recast1000ms }}
             </el-descriptions-item>
             <el-descriptions-item label="持续时间">
-              {{ currentEditorGlobalMeta?.duration ?? currentEditorMeta.duration }}
+              {{ currentEditorSkill.duration }}
             </el-descriptions-item>
             <el-descriptions-item label="最大充能">
-              {{ currentEditorGlobalMeta?.maxCharges }}
+              {{ currentEditorSkill.maxCharges }}
             </el-descriptions-item>
             <el-descriptions-item label="职能技能">
               {{ currentEditorMeta.isRoleAction ? '是' : '否' }}
             </el-descriptions-item>
             <el-descriptions-item label="解析职业">
-              {{ formatJobs(currentEditorMeta.jobs || []) }}
+              {{ formatJobs(currentEditorSkill.job!) }}
             </el-descriptions-item>
           </el-descriptions>
         </el-popover>
