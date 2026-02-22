@@ -7,6 +7,7 @@ import { useZone } from '@/composables/useZone'
 import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { useKeySkillStore } from '@/store/keySkills'
 import { compareSame, getUpgradeActionChain } from '@/utils/compareSaveAction'
+import { handleImgError } from '@/utils/xivapi'
 import {
   addOverlayListener,
   removeOverlayListener,
@@ -107,7 +108,7 @@ function showSettings() {
             >
               {{ storeKeySkill.skillStates[skill.instanceKey]?.text || '' }}
             </span>
-            <img :src="skill.src">
+            <img :src="skill.src" @error="handleImgError">
             <div
               v-if="storeKeySkill.skillStates[skill.instanceKey]?.active"
               :key="
