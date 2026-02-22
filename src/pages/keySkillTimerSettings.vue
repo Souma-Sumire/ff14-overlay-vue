@@ -758,7 +758,6 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
       destroy-on-close
       @primary-action="replaceCurrentSkill"
       @delete-action="removeCurrentSkill"
-      @icon-error="handleImgError"
     >
       <template v-if="currentEditorSkill">
         <div class="editor-field span-2">

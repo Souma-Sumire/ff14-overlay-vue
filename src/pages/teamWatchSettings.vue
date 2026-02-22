@@ -548,6 +548,7 @@ onMounted(() => {
                             :src="getActionMeta(actionId).iconSrc"
                             :alt="getActionMeta(actionId).name"
                             class="slot-icon"
+                            @error="handleImgError"
                           >
                           <div v-else class="slot-placeholder">
                             无

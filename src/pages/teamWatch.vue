@@ -8,6 +8,7 @@ import { useDev } from '@/composables/useDev'
 import { useTeamWatchStore } from '@/store/teamWatchStore'
 import { copyToClipboard } from '@/utils/clipboard'
 import { doTextCommand } from '@/utils/postNamazu'
+import { handleImgError } from '@/utils/xivapi'
 import { addOverlayListener, removeOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 
 const params = useUrlSearchParams('hash')
@@ -188,7 +189,7 @@ onUnmounted(() => {
             :title="store.buildSkillStatusText(member, skill)"
             @click="handleSkillClick(member, skill)"
           >
-            <img :src="skill.meta.iconSrc" :alt="skill.meta.name">
+            <img :src="skill.meta.iconSrc" :alt="skill.meta.name" @error="handleImgError">
             <span
               v-if="!skillState(skill).isCharge"
               class="recast-text"
