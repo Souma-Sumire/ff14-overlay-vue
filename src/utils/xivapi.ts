@@ -75,7 +75,7 @@ const ICON_REGEX = /(\d{6})\/(\d{6})\.png$/
 const DEFAULT_ICON = '/i/000000/000405.png'
 // Browsers usually limit concurrent connections per host to around 6.
 // Keeping this close avoids requests waiting in the browser queue and timing out early.
-const XIVAPI_MAX_CONCURRENT_REQUESTS = 12
+const XIVAPI_MAX_CONCURRENT_REQUESTS = 18
 const XIVAPI_REQUEST_TIMEOUT_MS = 3000
 const XIVAPI_RETRY_TIMEOUT_MS = 6000
 const XIVAPI_MAX_RETRIES_PER_HOST = 1
