@@ -1745,28 +1745,21 @@ async function setLogPath() {
         confirmButtonText: '确定',
         type: 'error',
       })
-      return
+      return false
     }
     const handle = await showPicker()
     if (handle) {
-      await dbRecords.clear()
-      await dbConfig.set({ key: 'processedFiles', value: {} })
-      processedFiles.value = {}
-      recordWeekCorrections.value = {}
-      lootRecords.value = []
-      existingKeys.value.clear()
-      itemVisibility.value = {}
-      playerVisibility.value = {}
-
       await dbHandle.set({ key: 'current-log-dir', handle })
       currentHandle.value = handle
       logPath.value = handle.name
+      return true
     }
   }
   catch (e: any) {
     if (e.name !== 'AbortError')
       console.error('Directory picker error:', e)
   }
+  return false
 }
 
 async function deleteRecord(record: LootRecord, silent = false) {
@@ -1801,8 +1794,19 @@ async function startInitialSync() {
 }
 
 async function syncLogFiles(userInitiated = false) {
-  if (isSyncing.value || !currentHandle.value)
+  if (isSyncing.value)
     return
+
+  if (!currentHandle.value) {
+    if (userInitiated) {
+      const success = await setLogPath()
+      if (!success || !currentHandle.value)
+        return
+    }
+    else {
+      return
+    }
+  }
   isSyncNeeded.value = false
 
   interface FileSystemDirectoryHandleExtended {
