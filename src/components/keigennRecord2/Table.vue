@@ -749,7 +749,7 @@ defineExpose({
                           <img :src="skill.icon" class="skill-icon" @error="handleImgError">
                           <div v-if="!skill.ready" class="skill-overlay" />
                           <span v-if="skill.recastLeft > 0" class="skill-text">{{ skill.recastLeft }}</span>
-                          <span v-if="skill.maxCharges > 1" class="skill-charges">{{ skill.chargesReady }}</span>
+                          <span v-if="(skill.maxCharges ?? 0) > 1" class="skill-charges">{{ skill.chargesReady }}</span>
                           <span
                             v-if="skill.jobResource !== undefined" class="skill-resource"
                             :style="{ fontSize: skill.jobResource.toString().length > 2 ? '9px' : '11px' }"

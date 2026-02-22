@@ -4099,7 +4099,7 @@ function handleColumnNameClick(col: ColumnDef) {
         <div v-if="cellPopoverInfo.sim.status === 'conflict' && cellPopoverInfo.sim.conflictTime" class="popover-item text-danger">
           警告: 会导致 {{ formatTime(cellPopoverInfo.sim.conflictTime) }} 处充能不足
         </div>
-        <div v-if="cellPopoverInfo.skill.maxCharges > 1" class="popover-item">
+        <div v-if="(cellPopoverInfo.skill.maxCharges ?? 0) > 1" class="popover-item">
           充能层数: {{ cellPopoverInfo.sim.charges }} / {{ cellPopoverInfo.skill.maxCharges }}
         </div>
       </div>
