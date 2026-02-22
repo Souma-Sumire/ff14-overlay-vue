@@ -530,8 +530,10 @@ export async function searchActionsByClassJobs(jobIds: number[], limit = 500): P
  */
 export function handleImgError(event: Event): void {
   const target = event.target as HTMLImageElement
-  if (!target?.src)
+  if (!target?.src || target.dataset.triedFallback) {
+    target.src = ''
     return
+  }
 
   const url = new URL(target.src)
   const path = url.pathname
@@ -544,11 +546,22 @@ export function handleImgError(event: Event): void {
     target.src = '//souma.diemoe.net/resources/img/viper.png'
     console.log('Viper icon load failed, switched to mirror')
   }
-  else if (url.host === getPrimaryHost()) {
-    target.src = `${getSecondaryUrl()}${path}`
-  }
   else {
-    target.src = ''
+    const primaryHost = getPrimaryHost()
+    const secondaryHost = getSecondaryHost()
+
+    if (url.host === primaryHost) {
+      target.dataset.triedFallback = 'true'
+      target.src = `${getSecondaryUrl()}${path}`
+      switchPrimarySite()
+    }
+    else if (url.host === secondaryHost) {
+      target.dataset.triedFallback = 'true'
+      target.src = `${getPrimaryUrl()}${path}`
+    }
+    else {
+      target.src = ''
+    }
   }
 }
 
