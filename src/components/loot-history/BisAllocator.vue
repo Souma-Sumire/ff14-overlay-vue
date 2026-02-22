@@ -706,6 +706,19 @@ function applyPreset(player: string, preset: BisPreset) {
     return
   }
 
+  // 如果没有任何装备部位(toggle类型)被选择过，则视为全新配置，直接应用
+  const hasPreviousSelection = DEFAULT_ROWS.some(
+    row => row.type === 'toggle' && (currentConfig[row.id] === 'raid' || currentConfig[row.id] === 'tome'),
+  )
+
+  if (!hasPreviousSelection) {
+    if (!config.value.playerBis[storageKey])
+      config.value.playerBis[storageKey] = {}
+    Object.assign(config.value.playerBis[storageKey], newConfig)
+    ElMessage.success(`已应用预设: ${preset.name} (${player})`)
+    return
+  }
+
   const diff: PlayerDiff = {
     name: player,
     role: props.getPlayerRole?.(player) || 'Unknown',
