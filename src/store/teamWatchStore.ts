@@ -6,7 +6,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { JobResourceManager } from '@/modules/jobResourceTracker'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { getActionIconId, resolveActionDisplayName, resolveActionIconSrc, resolveApiActionMeta } from '@/resources/logic/actionMetaResolver'
-import { buildInheritedBaseJobActions, cloneTeamWatchActionMetaMap, loadTeamWatchStorageData, normalizeTeamWatchActionMetaRaw, saveTeamWatchStorageData, TEAM_WATCH_EMPTY_ACTIONS, TEAM_WATCH_WATCH_ACTIONS_DEFAULT } from '@/resources/teamWatchResource'
+import { buildInheritedBaseJobActions, cloneTeamWatchActionMetaMap, loadTeamWatchStorageData, normalizeTeamWatchActionMetaRaw, saveTeamWatchStorageData, TEAM_WATCH_EMPTY_ACTIONS, TEAM_WATCH_STORAGE_NAMESPACE, TEAM_WATCH_WATCH_ACTIONS_DEFAULT } from '@/resources/teamWatchResource'
 import { buildSimulatedAbilityLine, clearRuntimeCooldownStates, decodeBase64Payload, encodeBase64Payload, ensureRuntime, resolveTeamWatchSkillState, resolveTrackedActionId, updateRuntimeCollection, useRuntime } from '@/store/teamWatchHelpers'
 import { resolveUpgradeActionIdForLevel } from '@/utils/compareSaveAction'
 import { parseDynamicValue } from '@/utils/dynamicValue'
@@ -487,6 +487,15 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
         .filter(id => Number.isFinite(id) && id > 0),
     )
     actionIds.forEach(actionId => triggerAutoFetchActionMeta(actionId))
+  }
+
+  // Window Sync: Listen for storage changes from other windows (e.g., settings window)
+  if (typeof window !== 'undefined') {
+    window.addEventListener('storage', (e) => {
+      if (e.key === TEAM_WATCH_STORAGE_NAMESPACE) {
+        loadFromStorage()
+      }
+    })
   }
 
   function saveSettings(next: TeamWatchSaveSettingsInput) {
