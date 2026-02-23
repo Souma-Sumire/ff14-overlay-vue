@@ -1,6 +1,7 @@
 import { useIndexedDB } from '@/composables/useIndexedDB'
 import { XIVAPI_CACHE_VERSION } from '@/resources/cacheVersion'
-import { markRoleActionId, resolveActionMinLevel } from '@/resources/logic/actionMetaResolver'
+import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/generated/roleActionCategoryByJob'
+import { markRoleActionId, resolveActionMinLevel, resolveBakedActionMeta } from '@/resources/logic/actionMetaResolver'
 import { completeIcon } from '@/resources/logic/status'
 import Util from '@/utils/util'
 
@@ -288,18 +289,36 @@ export async function searchActionsByClassJobs(jobIds: number[], limit = 500): P
     return cached.value
 
   const merged = new Map<number, any>()
-  const cols = 'ID,Name,Icon,ClassJobLevel,ClassJobTargetID,ClassJobCategoryTargetID,ActionCategoryTargetID,IsRoleAction,Recast100ms'
 
-  const fetchPage = async (q: string) => {
-    const res = await requestWithFallback(`/search?${q}&limit=100&columns=${cols}`)
+  const fetchPage = async (id: number) => {
+    // V2 搜索逻辑增强：同时匹配 (职业专属技能) OR (职能技能)
+    const jobCats = ROLE_ACTION_CATEGORY_BY_JOB[id] || []
+    const catQuery = jobCats.length > 0
+      ? ` +(${jobCats.map(cat => `ClassJobCategory=${cat}`).join(' ')})`
+      : ''
+    const q = `query=+IsPvP=false +(ClassJob=${id} (+IsRoleAction=true${catQuery}))`
+
+    // V2 Search 限制：fields 只能返回数值和字符串，请求对象(Icon)或布尔(IsRoleAction)会 400。
+    // 我们在此只取基础字段，后续通过 resolveBakedActionMeta 补全。
+    const v2Cols = 'row_id,Name,ClassJobLevel,Recast100ms'
+    const res = await requestWithFallback(`/search?sheets=Action&${q}&limit=100&fields=${v2Cols}`)
     const rows = res.Results || []
     rows.forEach((r: any) => {
-      if (r.ID > 0 && !merged.has(r.ID))
-        merged.set(r.ID, { ...r, ClassJobLevel: resolveActionMinLevel(r.ClassJobLevel, { actionId: r.ID, isRoleAction: !!r.IsRoleAction }) })
+      if (r.ID > 0 && !merged.has(r.ID)) {
+        // 补全由于 V2 搜索限制而缺失的字段（利用本地 Baked 数据）
+        const baked = resolveBakedActionMeta(r.ID)
+        const row = {
+          ...r,
+          Icon: baked?.iconId ? `/i/${Math.floor(baked.iconId / 1000).toString().padStart(3, '0')}000/${baked.iconId.toString().padStart(6, '0')}.tex` : undefined,
+          IsRoleAction: baked?.isRoleAction ? 1 : 0,
+          ClassJobLevel: resolveActionMinLevel(r.ClassJobLevel, { actionId: r.ID, isRoleAction: baked?.isRoleAction }),
+        }
+        merged.set(r.ID, row)
+      }
     })
   }
 
-  const tasks = normalized.map(id => fetchPage(`indexes=Action&filters=ClassJobTargetID=${id},IsPvP=0`))
+  const tasks = normalized.map(id => fetchPage(id))
   await Promise.all(tasks)
 
   const list = Array.from(merged.values()).sort((a, b) => a.ClassJobLevel - b.ClassJobLevel || a.ID - b.ID).slice(0, limit)
