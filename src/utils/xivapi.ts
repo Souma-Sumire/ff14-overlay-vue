@@ -252,7 +252,9 @@ async function requestWithFallback(path: string): Promise<any> {
             for (const key in res) {
               const val = res[key]
               if (val && typeof val === 'object' && !Array.isArray(val)) {
-                if (val.row_id !== undefined)
+                if (val.path !== undefined)
+                  res[key] = `/${val.path.replace(/^ui\/icon\//, 'i/').replace(/\.tex$/, '.png')}`
+                else if (val.row_id !== undefined)
                   res[key] = val.row_id
                 else if (val.value !== undefined)
                   res[key] = val.value
@@ -363,7 +365,16 @@ export async function searchActionsByClassJobs(jobIds: number[], limit = 500): P
 
 export function handleImgError(event: Event): void {
   const target = event.target as HTMLImageElement
-  if (!target.src || target.dataset.tried || target.src === window.location.href || target.src.startsWith('data:')) {
+  let isLocalFallback = false
+  try {
+    const errorUrl = new URL(target.src, window.location.href)
+    isLocalFallback = errorUrl.origin === window.location.origin
+  }
+  catch (_e) {
+    //
+  }
+
+  if (!target.src || target.dataset.tried || isLocalFallback || target.src.startsWith('data:')) {
     target.src = EMPTY_IMAGE
     return
   }

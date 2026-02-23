@@ -1,7 +1,8 @@
 import type { Party } from '../../cactbot/types/event'
 import { defineStore } from 'pinia'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
-import { getIconSrcByFullIcon, getIconSrcByPath, parseAction } from '@/utils/xivapi'
+import { resolveBakedActionMeta } from '@/resources/logic/actionMetaResolver'
+import { EMPTY_IMAGE, getIconSrcByFullIcon, getIconSrcById, getIconSrcByPath, parseAction } from '@/utils/xivapi'
 import { callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
 
 const params = new URLSearchParams(window.location.href.split('?')[1])
@@ -325,7 +326,7 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
           time,
           expirationTime: Date.now() + this.config.duration * 1000,
           logLine,
-          src: '',
+          src: EMPTY_IMAGE,
           class: 'action action-category-0',
           key,
         }
@@ -352,20 +353,32 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
           cast.class = 'action action-category-0'
         }
         else if (abiId < 100000) {
-          const action = await parseAction(queryType, abiId, [
-            'ID',
-            'Icon',
-            'ActionCategoryTargetID',
-          ])
-          if (action.ID === 3) {
-            // 疾跑(冲刺)
-            action.Icon = '/i/000000/000104.png'
+          let resolvedFromBaked = false
+          if (queryType === 'action') {
+            const baked = resolveBakedActionMeta(abiId)
+            if (baked && baked.iconId > 0) {
+              setCastSrc(getIconSrcById(baked.iconId, false))
+              cast.class = `action action-category-${baked.actionCategoryTargetId}`
+              resolvedFromBaked = true
+            }
           }
-          setCastSrc(getIconSrcByPath(action?.Icon ?? '', itemIsHQ))
-          if (queryType === 'action')
-            cast.class = `action action-category-${action?.ActionCategoryTargetID}`
-          else if (queryType === 'mount')
-            cast.class = 'mount'
+
+          if (!resolvedFromBaked) {
+            const action = await parseAction(queryType, abiId, [
+              'ID',
+              'Icon',
+              'ActionCategoryTargetID',
+            ])
+            if (action.ID === 3) {
+              // 疾跑(冲刺)
+              action.Icon = '/i/000000/000104.png'
+            }
+            setCastSrc(getIconSrcByPath(action?.Icon ?? '', itemIsHQ))
+            if (queryType === 'action')
+              cast.class = `action action-category-${action?.ActionCategoryTargetID}`
+            else if (queryType === 'mount')
+              cast.class = 'mount'
+          }
         }
       }
     },
