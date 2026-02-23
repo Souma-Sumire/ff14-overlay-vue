@@ -9,7 +9,11 @@ import { VueDraggable } from 'vue-draggable-plus'
 import ActionPickerDialog from '@/components/common/ActionPickerDialog.vue'
 import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
-import { getActionNameLite, getGlobalSkillDefinitionById } from '@/resources/logic/actionMetaResolver'
+import {
+  getActionNameLite,
+  getGlobalSkillDefinitionById,
+  resolveActionIconSrc,
+} from '@/resources/logic/actionMetaResolver'
 import {
   buildInheritedBaseJobActions,
   TEAM_WATCH_EMPTY_ACTIONS,
@@ -261,6 +265,10 @@ function assertKnownStoredJobs(snapshot: ReturnType<typeof store.getSnapshot>) {
 function getJobIconSrc(job: number) {
   const full = Util.jobToFullName(Util.jobEnumToJob(job))
   return `https://souma.diemoe.net/resources/img/cj2/${full.en}.png`
+}
+
+function getActionIconSrc(actionId: number) {
+  return resolveActionIconSrc(actionId)
 }
 
 function getActionMeta(actionId: number) {
@@ -544,8 +552,8 @@ onMounted(() => {
                           @click="onSlotCardClick(Number(row.job), Number(index))"
                         >
                           <img
-                            v-if="actionId > 0 && getActionMeta(actionId).iconSrc"
-                            :src="getActionMeta(actionId).iconSrc"
+                            v-if="actionId > 0 && getActionIconSrc(actionId)"
+                            :src="getActionIconSrc(actionId)"
                             :alt="getActionMeta(actionId).name"
                             class="slot-icon"
                             @error="handleImgError"
@@ -614,8 +622,8 @@ onMounted(() => {
                           disabled
                         >
                           <img
-                            v-if="actionId > 0 && getActionMeta(actionId).iconSrc"
-                            :src="getActionMeta(actionId).iconSrc"
+                            v-if="actionId > 0 && getActionIconSrc(actionId)"
+                            :src="getActionIconSrc(actionId)"
                             :alt="getActionMeta(actionId).name"
                             class="slot-icon"
                           >

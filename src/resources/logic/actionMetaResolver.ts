@@ -303,6 +303,12 @@ export function getActionNameLite(id: number): string | undefined {
   return BAKED_ACTION_META_LITE_BY_ID[id]?.name
 }
 
+export function getActionIconId(id: number): number {
+  if (id <= 0)
+    return 0
+  return Number(BAKED_ACTION_META_LITE_BY_ID[id]?.icon) || 0
+}
+
 // --- Display Helpers ---
 export function resolveActionDisplayName(aid: number, fallback: number, apiName?: string) {
   const getName = (id: number) => BAKED_ACTION_META_LITE_BY_ID[id]?.name

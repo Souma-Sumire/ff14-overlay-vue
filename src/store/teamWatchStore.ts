@@ -5,11 +5,11 @@ import { defineStore } from 'pinia'
 import { computed, reactive, ref, watch } from 'vue'
 import { JobResourceManager } from '@/modules/jobResourceTracker'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
-import { resolveActionDisplayName, resolveActionIconSrc, resolveApiActionMeta } from '@/resources/logic/actionMetaResolver'
+import { getActionIconId, resolveActionDisplayName, resolveActionIconSrc, resolveApiActionMeta } from '@/resources/logic/actionMetaResolver'
 import { buildInheritedBaseJobActions, cloneTeamWatchActionMetaMap, loadTeamWatchStorageData, normalizeTeamWatchActionMetaRaw, saveTeamWatchStorageData, TEAM_WATCH_EMPTY_ACTIONS, TEAM_WATCH_WATCH_ACTIONS_DEFAULT } from '@/resources/teamWatchResource'
 import { buildSimulatedAbilityLine, clearRuntimeCooldownStates, decodeBase64Payload, encodeBase64Payload, ensureRuntime, resolveTeamWatchSkillState, resolveTrackedActionId, updateRuntimeCollection, useRuntime } from '@/store/teamWatchHelpers'
 import { resolveUpgradeActionIdForLevel } from '@/utils/compareSaveAction'
-import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
+import { parseDynamicValue } from '@/utils/dynamicValue'
 import Util from '@/utils/util'
 import { parseAction } from '@/utils/xivapi'
 
@@ -109,11 +109,13 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
     const raw = rawOverride ? normalizeTeamWatchActionMetaRaw(actionId, rawOverride) : getActionMetaRaw(actionId, false)
     const configuredActionId = Math.trunc(Number(raw.id)) || actionId
     const resolvedActionId = resolveUpgradeActionIdForLevel(configuredActionId, level) || configuredActionId
+    const iconId = raw.iconId || getActionIconId(configuredActionId)
 
     return {
       id: resolvedActionId,
       name: resolveActionDisplayName(resolvedActionId, configuredActionId, raw.name),
-      iconSrc: resolveActionIconSrc(resolvedActionId > 0 ? resolvedActionId : configuredActionId) || raw.iconSrc || idToSrc(configuredActionId),
+      iconId,
+      iconSrc: resolveActionIconSrc(resolvedActionId > 0 ? resolvedActionId : configuredActionId),
       actionCategory: Number(raw.actionCategory),
       recast1000ms: parseDynamicValue(raw.recast1000ms, level),
       duration: parseDynamicValue(raw.duration, level),
@@ -138,20 +140,19 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
       try {
         const response = await parseAction('action', actionId, TEAM_WATCH_ACTION_COLUMNS)
         const resolvedApi = resolveApiActionMeta(actionId, response as Record<string, unknown>)
-        const iconPath = typeof response.Icon === 'string' ? response.Icon : undefined
 
         const apiMeta = normalizeTeamWatchActionMetaRaw(actionId, {
           id: actionId,
           name: resolveActionDisplayName(actionId, actionId, resolvedApi.name),
-          iconSrc: resolveActionIconSrc(actionId, { apiIconPath: iconPath, highRes: true }),
+          iconId: getActionIconId(actionId),
           actionCategory: resolvedApi.actionCategoryTargetId,
           recast1000ms: resolvedApi.recast1000ms,
           duration: base.duration,
           maxCharges: resolvedApi.maxCharges,
           classJobLevel: resolvedApi.classJobLevel,
-        } satisfies TeamWatchActionMetaRaw)
+        })
 
-        const merged = normalizeTeamWatchActionMetaRaw(actionId, apiMeta)
+        const merged = apiMeta
         // Cache API result to local state + localStorage, but never overwrite manual config.
         const existing = actionMetaUser.value[actionId]
         if (!existing)

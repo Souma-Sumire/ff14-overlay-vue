@@ -1,7 +1,7 @@
 import type { TeamWatchActionMetaRaw, TeamWatchStorageData } from '@/types/teamWatchTypes'
-import { resolveActionDisplayName, resolveActionMinLevel, resolveHighestSupportedActionInFamily, uniqueInts } from '@/resources/logic/actionMetaResolver'
-import { idToSrc } from '@/utils/dynamicValue'
+import { getActionIconId, resolveActionDisplayName, resolveActionMinLevel, resolveHighestSupportedActionInFamily, uniqueInts } from '@/resources/logic/actionMetaResolver'
 import Util from '@/utils/util'
+
 import { DEFAULT_JOB_SORT_ORDER } from './jobSortOrder'
 
 export const TEAM_WATCH_STORAGE_NAMESPACE = 'TeamWatch5'
@@ -52,11 +52,27 @@ export function buildInheritedBaseJobActions(baseJob: number, sourceActions: unk
 
 export function normalizeTeamWatchActionMetaRaw(aid: number, value: any): TeamWatchActionMetaRaw {
   const raw = value || {}
-  const id = Number(raw.id) || aid || 0
+  const id = Number(raw.id || aid) || 0
+
+  // 1. 尝试从存储获取 iconId
+  let iconId = Number(raw.iconId) || 0
+
+  // 2. 迁移逻辑：如果存储没有 ID 但有旧 URL，从 URL 提取
+  if (iconId <= 0 && raw.iconSrc && typeof raw.iconSrc === 'string') {
+    const match = raw.iconSrc.match(/\/(\d+)(?:_hr\d+)?\.png$/)
+    if (match)
+      iconId = Number(match[1])
+  }
+
+  // 3. 最终兜底：从本地静态 Baked 数据获取
+  if (iconId <= 0 && id > 0) {
+    iconId = getActionIconId(id)
+  }
+
   return {
     id,
     name: String(raw.name || resolveActionDisplayName(id, id)).trim(),
-    iconSrc: String(raw.iconSrc || idToSrc(id)).trim(),
+    iconId: iconId || 0,
     actionCategory: Number(raw.actionCategory) || 0,
     recast1000ms: raw.recast1000ms ?? 0,
     duration: raw.duration ?? 0,

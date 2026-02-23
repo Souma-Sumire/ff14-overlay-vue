@@ -3,7 +3,7 @@ import type { DynamicValue } from '@/types/dynamicValue'
 interface TeamWatchActionMetaBase<TValue> {
   id: number
   name: string
-  iconSrc: string
+  iconId: number
   actionCategory: number
   recast1000ms: TValue
   duration: TValue
@@ -13,13 +13,15 @@ interface TeamWatchActionMetaBase<TValue> {
 
 export type TeamWatchActionMetaRaw = TeamWatchActionMetaBase<DynamicValue>
 
+export type TeamWatchActionMeta = TeamWatchActionMetaBase<number> & {
+  iconSrc: string
+}
+
 export interface TeamWatchStorageData {
   watchJobsActionsIDUser: Record<number, number[]>
   sortRuleUser: number[]
   actionMetaUser: Record<number, TeamWatchActionMetaRaw>
 }
-
-export type TeamWatchActionMeta = TeamWatchActionMetaBase<number>
 
 export interface TeamWatchSkillView {
   rawActionId: number

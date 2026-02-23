@@ -1,8 +1,6 @@
-import { useStorage } from '@vueuse/core'
 import { useIndexedDB } from '@/composables/useIndexedDB'
-import { ACTION_SEARCH_CACHE_VERSION, XIVAPI_CACHE_VERSION } from '@/resources/cacheVersion'
-import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/generated/roleActionCategoryByJob'
-import { CLASS_JOB_ACTION_CATEGORIES_BY_JOB, markRoleActionId, resolveActionMinLevel } from '@/resources/logic/actionMetaResolver'
+import { XIVAPI_CACHE_VERSION } from '@/resources/cacheVersion'
+import { markRoleActionId, resolveActionMinLevel } from '@/resources/logic/actionMetaResolver'
 import { completeIcon } from '@/resources/logic/status'
 import Util from '@/utils/util'
 
@@ -10,199 +8,120 @@ const params = new URLSearchParams(window.location.search)
 const apiParam = params.get('api')?.toLowerCase()
 
 const SITE_HOST = {
-  cafe: 'cafemaker.wakingsands.com',
-  xivapi: 'xivapi.com',
+  cafe: { host: 'cafemaker.wakingsands.com', imgHost: 'cafemaker.wakingsands.com', version: 1 },
+  xivapi: { host: 'v2.xivapi.com', imgHost: 'xivapi.com', version: 2 },
 } as const
+
 type SiteName = keyof typeof SITE_HOST
 
-interface IndexedDbActionMetaCacheItem {
+interface IndexedDbCacheItem {
   key: string
-  value: Record<string, any>
-}
-
-interface IndexedDbActionSearchCacheItem {
-  key: string
-  value: unknown[]
+  value: any
 }
 
 const CACHE_VERSION_STORAGE_KEY = 'xivapi-cache-version'
 const PRIMARY_SITE_STORAGE_KEY = 'xivapi-primary-site'
-const cacheVersionStorage = useStorage<string>(CACHE_VERSION_STORAGE_KEY, '')
-const primarySiteStorage = useStorage<string>(PRIMARY_SITE_STORAGE_KEY, 'cafe')
-const actionMetaCacheDb = useIndexedDB<IndexedDbActionMetaCacheItem>('xivapi-action-meta-cache')
-const actionSearchCacheDb = useIndexedDB<IndexedDbActionSearchCacheItem>('xivapi-action-search-cache')
-const pendingPersistentActionMetaLoad = new Map<string, Promise<Record<string, any> | undefined>>()
-const pendingPersistentActionSearchLoad = new Map<string, Promise<unknown[] | null>>()
+let primarySite: SiteName = 'cafe'
 
-function ensureCacheVersion(): void {
-  if (cacheVersionStorage.value === XIVAPI_CACHE_VERSION)
-    return
-  cacheVersionStorage.value = XIVAPI_CACHE_VERSION
-  primarySiteStorage.value = 'cafe'
-  try {
-    localStorage.removeItem('xivapi-action-search-cache')
-    localStorage.removeItem('xivapi-action-meta-cache')
-  }
-  catch {}
-  void actionMetaCacheDb.clear().catch(() => {})
-  void actionSearchCacheDb.clear().catch(() => {})
-}
+const actionMetaCacheDb = useIndexedDB<IndexedDbCacheItem>('xivapi-action-meta-cache')
+const actionSearchCacheDb = useIndexedDB<IndexedDbCacheItem>('xivapi-action-search-cache')
+const pendingNetworkRequests = new Map<string, Promise<any>>()
 
 function isSiteName(value: unknown): value is SiteName {
   return typeof value === 'string' && value in SITE_HOST
 }
 
-function readPrimarySiteFromStorage(): SiteName {
-  if (isSiteName(primarySiteStorage.value))
-    return primarySiteStorage.value
-  return (primarySiteStorage.value = 'cafe')
+function ensureCacheVersion(): void {
+  const storedVersion = localStorage.getItem(CACHE_VERSION_STORAGE_KEY)?.trim().replace(/^"(.*)"$/, '$1')
+  if (storedVersion === XIVAPI_CACHE_VERSION)
+    return
+  localStorage.setItem(CACHE_VERSION_STORAGE_KEY, XIVAPI_CACHE_VERSION)
+  persistPrimarySite('cafe')
+  void actionMetaCacheDb.clear()
+  void actionSearchCacheDb.clear()
 }
 
 function persistPrimarySite(site: SiteName): void {
-  primarySiteStorage.value = site
+  primarySite = site
+  localStorage.setItem(PRIMARY_SITE_STORAGE_KEY, site)
 }
 
 function resolveInitialPrimarySite(): SiteName {
   ensureCacheVersion()
   if (isSiteName(apiParam))
     return apiParam
-  return readPrimarySiteFromStorage()
+  const stored = localStorage.getItem(PRIMARY_SITE_STORAGE_KEY)?.trim().replace(/^"(.*)"$/, '$1')
+  return isSiteName(stored) ? stored : 'cafe'
 }
 
-let primarySite: SiteName = resolveInitialPrimarySite()
-
-const ICON_REGEX = /(\d{6})\/(\d{6})\.png$/
-const DEFAULT_ICON = '/i/000000/000405.png'
-// Browsers usually limit concurrent connections per host to around 6.
-// Keeping this close avoids requests waiting in the browser queue and timing out early.
-const XIVAPI_MAX_CONCURRENT_REQUESTS = 18
-const XIVAPI_REQUEST_TIMEOUT_MS = 3000
-const XIVAPI_RETRY_TIMEOUT_MS = 6000
-const XIVAPI_MAX_RETRIES_PER_HOST = 1
-const XIVAPI_RETRYABLE_STATUS = new Set([408, 425, 429, 500, 502, 503, 504])
-
-const actionCache = new Map<string, Record<string, any>>()
-const actionSearchByJobCache = new Map<string, XivApiActionSearchItem[]>()
-const pendingRequestResolvers: Array<() => void> = []
-const pendingNetworkRequests = new Map<string, Promise<any>>()
-let activeRequestCount = 0
+primarySite = resolveInitialPrimarySite()
 
 export { XIVAPI_CACHE_VERSION }
 
-async function acquireRequestSlot(): Promise<void> {
-  if (activeRequestCount < XIVAPI_MAX_CONCURRENT_REQUESTS) {
-    activeRequestCount += 1
-    return
-  }
-  await new Promise<void>((resolve) => {
-    pendingRequestResolvers.push(() => {
-      activeRequestCount += 1
-      resolve()
-    })
-  })
+function buildUrl(siteName: SiteName, api = true) {
+  const { host, version } = SITE_HOST[siteName]
+  return `https://${host}${api && version === 2 ? '/api' : ''}`
 }
 
-function releaseRequestSlot(): void {
-  activeRequestCount = Math.max(0, activeRequestCount - 1)
-  const next = pendingRequestResolvers.shift()
-  if (next)
-    next()
-}
-
-async function withRequestPool<T>(task: () => Promise<T>): Promise<T> {
-  await acquireRequestSlot()
-  try {
-    return await task()
-  }
-  finally {
-    releaseRequestSlot()
-  }
-}
-
-function getPrimaryHost(): string {
-  return SITE_HOST[primarySite]
-}
-
-function getSecondaryHost(): string {
-  return SITE_HOST[primarySite === 'cafe' ? 'xivapi' : 'cafe']
-}
-
-function getPrimaryUrl(): string {
-  return `https://${getPrimaryHost()}`
-}
-
-function getSecondaryUrl(): string {
-  return `https://${getSecondaryHost()}`
-}
-
-function buildUrl(host: string): string {
-  return `https://${host}`
-}
-
-function switchPrimarySite(): void {
-  const oldHost = getPrimaryHost()
-  primarySite = primarySite === 'cafe' ? 'xivapi' : 'cafe'
-  persistPrimarySite(primarySite)
-  console.warn(`Primary site ${oldHost} failed, switching to ${getPrimaryHost()}`)
-}
-
-function isSecondaryUrl(url: string): boolean {
-  return url.includes(getSecondaryHost())
-}
-
-function getIconHost(highRes: boolean): string {
-  void highRes
-  return getPrimaryHost()
-}
-
-function buildFallbackUrls(path: string): string[] {
-  return [`${getPrimaryUrl()}${path}`, `${getSecondaryUrl()}${path}`]
+function buildImgUrl(siteName: SiteName) {
+  return `https://${SITE_HOST[siteName].imgHost}`
 }
 
 /**
- * 你手里是图标数字 ID（如 12345）时用这个。
- * 会自动补全为标准图标路径，并按全局站点策略生成 URL。
+ * 切换全局主站，并强制救援当前页面所有 pending 状态的图片。
  */
+let lastSwitchTime = 0
+function switchPrimarySite(failedHost?: string): void {
+  const currentConfig = SITE_HOST[primarySite]
+  if (failedHost && failedHost !== currentConfig.host && failedHost !== currentConfig.imgHost)
+    return
+
+  const now = Date.now()
+  if (now - lastSwitchTime < 2000)
+    return
+  lastSwitchTime = now
+
+  const oldApiHost = currentConfig.host
+  const oldImgHost = currentConfig.imgHost
+  primarySite = primarySite === 'cafe' ? 'xivapi' : 'cafe'
+  const newSite = primarySite
+  const newBase = buildImgUrl(newSite)
+
+  persistPrimarySite(newSite)
+  console.warn(`[xivapi] Site ${oldApiHost} seems down. Switching to ${newSite} and rescuing pending images...`)
+
+  if (typeof document !== 'undefined') {
+    const imgs = document.querySelectorAll('img')
+    imgs.forEach((img) => {
+      const isOldHost = img.src && (img.src.includes(oldImgHost) || img.src.includes(oldApiHost))
+      if (isOldHost && !img.dataset.tried) {
+        const url = new URL(img.src)
+        const path = url.pathname
+        img.dataset.tried = '1'
+        img.src = `${newBase}${path}`
+      }
+    })
+  }
+}
+
 export function getIconSrcById(iconId: number, highRes = false): string {
   if (!Number.isFinite(iconId) || iconId <= 0)
     return ''
-  return getIconSrcByFullIcon(completeIcon(Math.trunc(iconId)), highRes)
+  const full = completeIcon(Math.trunc(iconId))
+  const suffix = highRes ? '_hr1' : ''
+  return `${buildImgUrl(primarySite)}/i/${full}${suffix}.png`
 }
 
-/**
- * 你手里是完整图标段（如 "000000/000405"）时用这个。
- * 常用于状态图标或已知图标分组路径。
- */
-export function getIconSrcByFullIcon(fullIcon: string, highRes = false): string {
-  const normalized = fullIcon.trim()
-  if (!normalized)
-    return ''
-  const resolvedHost = getIconHost(highRes)
-  const suffix = highRes && resolvedHost === SITE_HOST.cafe ? '_hr1' : ''
-  return `${buildUrl(resolvedHost)}/i/${normalized}${suffix}.png`
-}
-
-/**
- * 你手里是 API 返回的图标路径（如 "/i/000000/000405.png"）时用这个。
- * 常用于 parseAction / search 返回的 Icon 字段。
- */
 export function getIconSrcByPath(iconPath: string, itemIsHQ = false, highRes = false): string {
   if (!iconPath)
     return ''
   if (/^https?:\/\//.test(iconPath))
     return iconPath
-  const resolvedHost = getIconHost(highRes)
-  const suffix = highRes && resolvedHost === SITE_HOST.cafe ? '_hr1' : ''
-  const baseUrl = buildUrl(resolvedHost)
-  return `${baseUrl}${iconPath}`.replace(
-    ICON_REGEX,
-    (_match, p1, p2) => `${p1}/${itemIsHQ ? 'hq/' : ''}${p2}${suffix}.png`,
-  )
+  const suffix = highRes ? '_hr1' : ''
+  const baseUrl = buildImgUrl(primarySite)
+  return `${baseUrl}${iconPath}`.replace(/(\d{6})\.png$/, (_m, p1) => `${itemIsHQ ? 'hq/' : ''}${p1}${suffix}.png`)
 }
 
-/**
- * 你只有技能 Action ID，想直接拿图标 URL 时用这个。
- */
 export async function getActionIconSrc(id: number): Promise<string> {
   const res = await parseAction('action', id, ['Icon'])
   return getIconSrcByPath(res.Icon)
@@ -220,427 +139,196 @@ export interface XivApiActionSearchItem {
   IsPvP?: number
   Recast100ms?: number
   Recast1000ms?: number
-  Host?: string
 }
 
-function getRoleActionCategories(jobIds: number[]): number[] {
-  const set = new Set<number>()
-  jobIds.forEach((jobId) => {
-    const categories = ROLE_ACTION_CATEGORY_BY_JOB[jobId]
-    if (!categories)
-      return
-    categories.forEach(v => set.add(v))
-  })
-  return [...set].sort((a, b) => a - b)
+async function requestWithFallback(path: string): Promise<any> {
+  const dedupKey = `req:${path}`
+  if (pendingNetworkRequests.has(dedupKey))
+    return pendingNetworkRequests.get(dedupKey)
+
+  const task = (async () => {
+    const sites: SiteName[] = primarySite === 'cafe' ? ['cafe', 'xivapi'] : ['xivapi', 'cafe']
+    for (const siteName of sites) {
+      const isV2 = SITE_HOST[siteName].version === 2
+      // 这里的 path 可能带 query，用 URL 对象解析更稳妥
+      const urlObj = new URL(`${buildUrl(siteName, true)}${path}`)
+
+      if (isV2) {
+        // V2 路径修正：将 V1 的 /{Sheet}/{ID} 映射到 V2 的 /api/sheet/{Sheet}/{ID}
+        // 匹配首字母大写的 Sheet 资源路径（V2 专有格式）
+        if (/^\/api\/[A-Z][a-zA-Z0-9]+\/\d+/.test(urlObj.pathname)) {
+          urlObj.pathname = urlObj.pathname.replace('/api/', '/api/sheet/')
+        }
+
+        // V2 参数名与语法翻译
+        const urlParams = urlObj.searchParams
+
+        // 核心翻译：显式只映射目前涉及到的几个分类字段
+        if (urlParams.has('filters')) {
+          const rawFilters = urlParams.get('filters') || ''
+          const translated = rawFilters.split(',').filter(Boolean).map((f) => {
+            const parts = f.split('=')
+            if (parts.length < 2)
+              return ''
+            const k = parts[0] as string
+            const v = parts[1] as string
+            // 显式映射：防止误伤其他字段
+            let newKey = k
+            if (k === 'ClassJobTargetID')
+              newKey = 'ClassJob'
+            else if (k === 'ClassJobCategoryTargetID')
+              newKey = 'ClassJobCategory'
+            else if (k === 'ActionCategoryTargetID')
+              newKey = 'ActionCategory'
+
+            // 值翻译: V2 对布尔字段要求 false/true 文本，语法要求 +Key=Value
+            let newVal = v
+            if (v === '0')
+              newVal = 'false'
+            else if (v === '1')
+              newVal = 'true'
+
+            return `+${newKey}=${newVal}`
+          }).filter(Boolean).join(' ')
+          urlParams.set('query', translated)
+          urlParams.delete('filters')
+        }
+
+        if (urlParams.has('columns')) {
+          // 显式替换：只对已知字段进行映射转换，且 ID -> row_id
+          let fields = urlParams.get('columns')!
+          fields = fields.replace(/\bID\b/g, 'row_id')
+            .replace(/ClassJobTargetID/g, 'ClassJob')
+            .replace(/ClassJobCategoryTargetID/g, 'ClassJobCategory')
+            .replace(/ActionCategoryTargetID/g, 'ActionCategory')
+          urlParams.set('fields', fields)
+          urlParams.delete('columns')
+        }
+        if (urlParams.has('indexes')) {
+          urlParams.set('sheets', urlParams.get('indexes')!)
+          urlParams.delete('indexes')
+        }
+      }
+
+      try {
+        const controller = new AbortController()
+        const timer = setTimeout(() => controller.abort(), 6000)
+        const resp = await fetch(urlObj.toString(), { signal: controller.signal, cache: 'force-cache' })
+        clearTimeout(timer)
+        if (!resp.ok)
+          continue
+
+        if (siteName !== primarySite)
+          switchPrimarySite()
+        let json = await resp.json()
+
+        if (isV2) {
+          const norm = (i: any) => {
+            if (!i)
+              return i
+            const f = i.fields || {}
+            return {
+              ...f,
+              ID: i.row_id,
+              // 字段映射回 V1 风格
+              ClassJobTargetID: f.ClassJob,
+              ClassJobCategoryTargetID: f.ClassJobCategory,
+              ActionCategoryTargetID: f.ActionCategory,
+              IsPvP: f.IsPvP ? 1 : 0,
+              IsRoleAction: f.IsRoleAction ? 1 : 0,
+            }
+          }
+          if (json.results) {
+            json = {
+              Pagination: { PageTotal: json.total_pages },
+              Results: json.results.map(norm),
+            }
+          }
+          else if (json.row_id !== undefined) {
+            json = norm(json)
+          }
+        }
+        return json
+      }
+      catch (e) {
+        console.warn(`Fetch ${siteName} failed:`, e)
+      }
+    }
+    throw new Error(`All sites failed: ${path}`)
+  })()
+
+  pendingNetworkRequests.set(dedupKey, task)
+  return task.finally(() => pendingNetworkRequests.delete(dedupKey))
 }
 
-function getJobActionCategories(jobIds: number[]): number[] {
-  const set = new Set<number>()
-  jobIds.forEach((jobId) => {
-    const categories = CLASS_JOB_ACTION_CATEGORIES_BY_JOB.get(jobId)
-    if (!categories)
-      return
-    categories.forEach(v => set.add(v))
-  })
-  return [...set].sort((a, b) => a - b)
-}
+export async function parseAction(type: string, id: number, columns: string[] = ['ID', 'Icon']): Promise<any> {
+  const key = `${type}:${id}`
+  const reqCols = Array.from(new Set([...columns, 'ID', 'Icon', 'ClassJobLevel', 'IsRoleAction']))
 
-function normalizeCombatJobIds(jobIds: number[]) {
-  const normalizedSet = new Set<number>()
-  jobIds.forEach((rawJobId) => {
-    const numeric = Number(rawJobId)
-    if (!Number.isFinite(numeric) || numeric <= 0)
-      return
-
-    const jobId = Math.trunc(numeric)
-    const job = Util.jobEnumToJob(jobId)
-    if (job === 'NONE' || !Util.isCombatJob(job))
-      return
-    normalizedSet.add(jobId)
-  })
-  return [...normalizedSet].sort((a, b) => a - b)
-}
-
-function getActionCacheKey(type: string, actionId: number): string {
-  return `${type}:${Math.trunc(actionId)}`
-}
-
-async function loadActionMetaCacheFromPersistent(key: string): Promise<Record<string, any> | undefined> {
-  const pending = pendingPersistentActionMetaLoad.get(key)
-  if (pending)
-    return pending
-  const task = actionMetaCacheDb.get(key)
-    .then((record) => {
-      if (!record || typeof record.value !== 'object' || !record.value)
-        return undefined
-      return record.value
-    })
-    .catch(() => undefined)
-    .finally(() => {
-      pendingPersistentActionMetaLoad.delete(key)
-    })
-  pendingPersistentActionMetaLoad.set(key, task)
-  return task
-}
-
-function saveActionCache(key: string, value: Record<string, any>) {
-  actionCache.set(key, value)
-  void actionMetaCacheDb.set({
-    key,
-    value,
-  }).catch((error) => {
-    console.warn('[xivapi] persist action cache failed:', key, error)
-  })
-}
-
-async function loadActionSearchCacheFromPersistent(cacheKey: string): Promise<unknown[] | null> {
-  const pending = pendingPersistentActionSearchLoad.get(cacheKey)
-  if (pending)
-    return pending
-  const task = actionSearchCacheDb.get(cacheKey)
-    .then((record) => {
-      if (!record)
-        return null
-      return Array.isArray(record.value) ? record.value : []
-    })
-    .catch(() => null)
-    .finally(() => {
-      pendingPersistentActionSearchLoad.delete(cacheKey)
-    })
-  pendingPersistentActionSearchLoad.set(cacheKey, task)
-  return task
-}
-
-function normalizeSearchCacheList(raw: unknown): XivApiActionSearchItem[] {
-  if (!Array.isArray(raw))
-    return []
-  return raw
-    .map(item => toActionSearchItem((item ?? {}) as XivApiActionSearchItem))
-    .filter((item): item is XivApiActionSearchItem => !!item)
-}
-
-function hasAllColumns(record: Record<string, any>, columns: string[]): boolean {
-  return columns.every(col => col === 'ID' || Object.prototype.hasOwnProperty.call(record, col))
-}
-
-function applyActionCacheSideEffects(record: Record<string, any>, fallbackId: number) {
-  const id = Math.trunc(Number(record.ID)) || fallbackId
-  const isRoleAction = !!record.IsRoleAction
-  markRoleActionId(id, isRoleAction)
-  if (record.ClassJobLevel !== undefined) {
-    record.ClassJobLevel = resolveActionMinLevel(record.ClassJobLevel, {
-      actionId: id,
-      isRoleAction,
-      fallback: 1,
-    })
+  const cache = await actionMetaCacheDb.get(key)
+  if (cache?.value && reqCols.every(c => Object.prototype.hasOwnProperty.call(cache.value, c))) {
+    return cache.value
   }
-}
 
-/**
- * 需要查询单个技能/道具/坐骑等基础数据时用这个。
- * 会自动缓存并在主备站之间回退。
- */
-export async function parseAction(
-  type: string,
-  actionId: number,
-  columns: (keyof XivApiJson)[] = ['ID', 'Icon', 'ActionCategoryTargetID'],
-): Promise<any> {
-  const id = Math.trunc(Number(actionId))
-  const key = getActionCacheKey(type, id)
-  const requestedColumns = [...columns.map(col => String(col))]
+  const res = await requestWithFallback(`/${type}/${id}?columns=${reqCols.join(',')}`)
+  const final = { id, ...res }
   if (type === 'action') {
-    if (!requestedColumns.includes('IsRoleAction'))
-      requestedColumns.push('IsRoleAction')
-    if (!requestedColumns.includes('ClassJobLevel'))
-      requestedColumns.push('ClassJobLevel')
+    markRoleActionId(id, !!final.IsRoleAction)
+    final.ClassJobLevel = resolveActionMinLevel(final.ClassJobLevel, { actionId: id, isRoleAction: !!final.IsRoleAction })
   }
-  let cached = actionCache.get(key)
-  if (!cached) {
-    const persistentCached = await loadActionMetaCacheFromPersistent(key)
-    if (persistentCached) {
-      cached = persistentCached
-      actionCache.set(key, persistentCached)
-    }
-  }
-  if (cached && hasAllColumns(cached, requestedColumns)) {
-    if (type === 'action')
-      applyActionCacheSideEffects(cached, id)
-    return cached
-  }
-
-  const path = `/${type}/${id}?columns=${requestedColumns.join(',')}`
-  try {
-    const result = await requestWithFallback(buildFallbackUrls(path))
-    if (type === 'action') {
-      const normalizedId = Math.trunc(Number(result.ID)) || id
-      const isRoleAction = !!result.IsRoleAction
-      markRoleActionId(normalizedId, isRoleAction)
-      result.ClassJobLevel = resolveActionMinLevel(result.ClassJobLevel, {
-        actionId: normalizedId,
-        isRoleAction,
-        fallback: 1,
-      })
-    }
-    const merged = { ...(cached ?? {}), ...result }
-    saveActionCache(key, merged)
-    return merged
-  }
-  catch (error) {
-    console.error(`Failed to parse action ${id}:`, error)
-    const fallback = {
-      ActionCategoryTargetID: 0,
-      ID: id,
-      Icon: DEFAULT_ICON,
-    }
-    const merged = { ...(cached ?? {}), ...fallback }
-    saveActionCache(key, merged)
-    return merged
-  }
+  void actionMetaCacheDb.set({ key, value: final })
+  return final
 }
 
-function toActionSearchItem(row: XivApiActionSearchItem): XivApiActionSearchItem | undefined {
-  if (!row)
-    return
-  const actionId = Math.trunc(Number(row.ID)) || 0
-  if (actionId <= 0 || (Number(row.IsPvP) || 0) > 0 || (Number(row.Recast100ms) || 0) <= 0)
-    return
-
-  const isRoleAction = !!row.IsRoleAction
-  markRoleActionId(actionId, isRoleAction)
-  const recast100ms = Number(row.Recast100ms) || 0
-  return {
-    ID: actionId,
-    Name: row.Name ?? `#${actionId}`,
-    Icon: row.Icon ?? DEFAULT_ICON,
-    ClassJobLevel: resolveActionMinLevel(row.ClassJobLevel, {
-      actionId,
-      isRoleAction,
-      fallback: 1,
-    }),
-    ClassJobTargetID: Number(row.ClassJobTargetID) || 0,
-    ClassJobCategoryTargetID: Number(row.ClassJobCategoryTargetID) || 0,
-    ActionCategoryTargetID: Number(row.ActionCategoryTargetID) || 0,
-    IsRoleAction: Number(isRoleAction),
-    IsPvP: 0,
-    Recast100ms: recast100ms,
-    Recast1000ms: recast100ms / 10,
-    Host: row.Host,
-  }
-}
-
-async function fetchActionSearchPages(baseQuery: URLSearchParams, merged: Map<number, XivApiActionSearchItem>, limit: number): Promise<void> {
-  const pageLimit = Number(baseQuery.get('limit') ?? 100)
-  let page = 1
-
-  while (merged.size < limit) {
-    const query = new URLSearchParams(baseQuery)
-    query.set('page', String(page))
-    const result = await requestWithFallback(buildFallbackUrls(`/search?${query.toString()}`))
-    const rows = Array.isArray(result?.Results) ? result.Results as XivApiActionSearchItem[] : []
-    rows.forEach((row) => {
-      const parsed = toActionSearchItem(row)
-      if (parsed)
-        merged.set(parsed.ID, parsed)
-    })
-    const pageTotal = Number(result?.Pagination?.PageTotal ?? page)
-    if (page >= pageTotal || rows.length < pageLimit)
-      break
-    page += 1
-  }
-}
-
-/**
- * 需要按职业批量拉取技能列表（职业技能 + 职能技能）时用这个。
- * 常用于设置页“选择技能”弹窗。
- */
 export async function searchActionsByClassJobs(jobIds: number[], limit = 500): Promise<XivApiActionSearchItem[]> {
-  const normalized = normalizeCombatJobIds(jobIds)
+  const normalized = jobIds.map(Number).filter(id => id > 0 && Util.isCombatJob(Util.jobEnumToJob(id)))
+  const cacheKey = `search:${normalized.join(',')}:${limit}`
+  const cached = await actionSearchCacheDb.get(cacheKey)
+  if (cached?.value)
+    return cached.value
 
-  if (!normalized.length)
-    return []
+  const merged = new Map<number, any>()
+  const cols = 'ID,Name,Icon,ClassJobLevel,ClassJobTargetID,ClassJobCategoryTargetID,ActionCategoryTargetID,IsRoleAction,Recast100ms'
 
-  const cacheKey = `${ACTION_SEARCH_CACHE_VERSION}|${normalized.join(',')}|${limit}`
-  if (actionSearchByJobCache.has(cacheKey))
-    return [...actionSearchByJobCache.get(cacheKey)!]
-  const persistentCachedRaw = await loadActionSearchCacheFromPersistent(cacheKey)
-  if (persistentCachedRaw !== null) {
-    const persistentCached = normalizeSearchCacheList(persistentCachedRaw)
-    actionSearchByJobCache.set(cacheKey, persistentCached)
-    return [...persistentCached]
-  }
-
-  const merged = new Map<number, XivApiActionSearchItem>()
-
-  for (const jobId of normalized) {
-    const query = new URLSearchParams({
-      indexes: 'Action',
-      columns: 'ID,Name,Icon,ClassJobLevel,ClassJobTargetID,ClassJobCategoryTargetID,ActionCategoryTargetID,IsRoleAction,IsPvP,Recast100ms',
-      filters: `ClassJobTargetID=${jobId},IsPvP=0`,
-      sort_field: 'ClassJobLevel',
-      sort_order: 'asc',
-      limit: '100',
+  const fetchPage = async (q: string) => {
+    const res = await requestWithFallback(`/search?${q}&limit=100&columns=${cols}`)
+    const rows = res.Results || []
+    rows.forEach((r: any) => {
+      if (r.ID > 0 && !merged.has(r.ID))
+        merged.set(r.ID, { ...r, ClassJobLevel: resolveActionMinLevel(r.ClassJobLevel, { actionId: r.ID, isRoleAction: !!r.IsRoleAction }) })
     })
-    await fetchActionSearchPages(query, merged, limit)
   }
 
-  const roleCategories = getRoleActionCategories(normalized)
-  for (const categoryId of roleCategories) {
-    const query = new URLSearchParams({
-      indexes: 'Action',
-      columns: 'ID,Name,Icon,ClassJobLevel,ClassJobTargetID,ClassJobCategoryTargetID,ActionCategoryTargetID,IsPvP,IsRoleAction,Recast100ms',
-      filters: `IsRoleAction=1,IsPvP=0,ClassJobCategoryTargetID=${categoryId}`,
-      sort_field: 'ClassJobLevel',
-      sort_order: 'asc',
-      limit: '100',
-    })
-    await fetchActionSearchPages(query, merged, limit)
-  }
+  const tasks = normalized.map(id => fetchPage(`indexes=Action&filters=ClassJobTargetID=${id},IsPvP=0`))
+  await Promise.all(tasks)
 
-  // Some job skills have ClassJobTargetID=0/-1, but can still be inferred by ClassJobCategory.
-  const jobActionCategories = getJobActionCategories(normalized)
-  for (const categoryId of jobActionCategories) {
-    const query = new URLSearchParams({
-      indexes: 'Action',
-      columns: 'ID,Name,Icon,ClassJobLevel,ClassJobTargetID,ClassJobCategoryTargetID,ActionCategoryTargetID,IsPvP,IsRoleAction,Recast100ms',
-      filters: `IsRoleAction=0,IsPvP=0,ClassJobCategoryTargetID=${categoryId}`,
-      sort_field: 'ClassJobLevel',
-      sort_order: 'asc',
-      limit: '100',
-    })
-    await fetchActionSearchPages(query, merged, limit)
-  }
-
-  const list = [...merged.values()]
-    .sort((a, b) => a.ClassJobLevel === b.ClassJobLevel ? a.ID - b.ID : a.ClassJobLevel - b.ClassJobLevel)
-    .slice(0, limit)
-
-  actionSearchByJobCache.set(cacheKey, list)
-  void actionSearchCacheDb.set({
-    key: cacheKey,
-    value: list,
-  }).catch((error) => {
-    console.warn('[xivapi] persist action-search cache failed:', cacheKey, error)
-  })
-  return [...list]
+  const list = Array.from(merged.values()).sort((a, b) => a.ClassJobLevel - b.ClassJobLevel || a.ID - b.ID).slice(0, limit)
+  void actionSearchCacheDb.set({ key: cacheKey, value: list })
+  return list
 }
 
-/**
- * 用在 `<img @error>` 上的统一兜底处理函数。
- * 首次加载失败会自动尝试镜像站，仍失败则清空图片。
- */
 export function handleImgError(event: Event): void {
   const target = event.target as HTMLImageElement
-  if (!target?.src || target.dataset.triedFallback) {
+  if (!target.src || target.dataset.tried) {
     target.src = ''
     return
   }
 
-  const url = new URL(target.src)
-  const path = url.pathname
-
   if (target.src.includes('pictomancer.png')) {
     target.src = '//souma.diemoe.net/resources/img/pictomancer.png'
-    console.log('Pictomancer icon load failed, switched to mirror')
+    return
   }
-  else if (target.src.includes('viper.png')) {
+  if (target.src.includes('viper.png')) {
     target.src = '//souma.diemoe.net/resources/img/viper.png'
-    console.log('Viper icon load failed, switched to mirror')
-  }
-  else {
-    const primaryHost = getPrimaryHost()
-    const secondaryHost = getSecondaryHost()
-
-    if (url.host === primaryHost) {
-      target.dataset.triedFallback = 'true'
-      target.src = `${getSecondaryUrl()}${path}`
-      switchPrimarySite()
-    }
-    else if (url.host === secondaryHost) {
-      target.dataset.triedFallback = 'true'
-      target.src = `${getPrimaryUrl()}${path}`
-    }
-    else {
-      target.src = ''
-    }
-  }
-}
-
-async function fetchWithTimeout(url: string, options: RequestInit, timeout = 3000): Promise<Response> {
-  const controller = new AbortController()
-  const id = setTimeout(() => controller.abort(), timeout)
-  try {
-    return await fetch(url, { ...options, signal: controller.signal })
-  }
-  finally {
-    clearTimeout(id)
-  }
-}
-
-function isAbortError(error: unknown): boolean {
-  return error instanceof DOMException && error.name === 'AbortError'
-}
-
-function buildRequestDedupKey(urls: string[], options: RequestInit): string | null {
-  const method = String(options.method ?? 'GET').toUpperCase()
-  if (method !== 'GET')
-    return null
-  return urls.join('|')
-}
-
-async function requestWithFallback(urls: string[], options: RequestInit = {}): Promise<any> {
-  const mergedOptions: RequestInit = {
-    cache: 'force-cache',
-    mode: 'cors',
-    ...options,
-  }
-  const dedupKey = buildRequestDedupKey(urls, mergedOptions)
-  if (dedupKey) {
-    const pending = pendingNetworkRequests.get(dedupKey)
-    if (pending)
-      return pending
+    return
   }
 
-  const task = withRequestPool(async () => {
-    const mergedOptions: RequestInit = {
-      cache: 'force-cache',
-      mode: 'cors',
-      ...options,
-    }
+  const url = new URL(target.src)
+  const failedHost = url.host
+  switchPrimarySite(failedHost)
 
-    for (const url of urls) {
-      for (let attempt = 0; attempt <= XIVAPI_MAX_RETRIES_PER_HOST; attempt++) {
-        const timeout = attempt === 0 ? XIVAPI_REQUEST_TIMEOUT_MS : XIVAPI_RETRY_TIMEOUT_MS
-        try {
-          const response = await fetchWithTimeout(url, mergedOptions, timeout)
-          if (!response.ok) {
-            console.warn(`Fetch failed for ${url}: status ${response.status}`)
-            if (attempt < XIVAPI_MAX_RETRIES_PER_HOST && XIVAPI_RETRYABLE_STATUS.has(response.status))
-              continue
-            break
-          }
-          if (isSecondaryUrl(url))
-            switchPrimarySite()
-          else
-            persistPrimarySite(primarySite)
-          const json = await response.json()
-          return { ...json, Host: new URL(url).host }
-        }
-        catch (error) {
-          console.warn(`Fetch failed for ${url}:`, error)
-          if (attempt < XIVAPI_MAX_RETRIES_PER_HOST && isAbortError(error))
-            continue
-        }
-      }
-    }
-
-    throw new Error('All fetch attempts failed.')
-  })
-
-  if (!dedupKey)
-    return task
-
-  pendingNetworkRequests.set(dedupKey, task)
-  return task.finally(() => {
-    pendingNetworkRequests.delete(dedupKey)
-  })
+  target.dataset.tried = '1'
+  const nextSite = primarySite
+  const path = url.pathname
+  target.src = `${buildImgUrl(nextSite)}${path}`
 }
