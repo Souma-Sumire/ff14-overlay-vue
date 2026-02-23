@@ -156,9 +156,12 @@ async function requestWithFallback(path: string): Promise<any> {
 
       if (isV2) {
         // V2 路径修正：将 V1 的 /{Sheet}/{ID} 映射到 V2 的 /api/sheet/{Sheet}/{ID}
-        // 匹配首字母大写的 Sheet 资源路径（V2 专有格式）
-        if (/^\/api\/[A-Z][a-zA-Z0-9]+\/\d+/.test(urlObj.pathname)) {
-          urlObj.pathname = urlObj.pathname.replace('/api/', '/api/sheet/')
+        // 处理小写开头的情况并强制首字母大写
+        const sheetMatch = urlObj.pathname.match(/^\/api\/([a-zA-Z0-9]+)\/(\d+)/)
+        if (sheetMatch && sheetMatch[1] && sheetMatch[2]) {
+          const sheetName = sheetMatch[1]
+          const capitalized = sheetName.charAt(0).toUpperCase() + sheetName.slice(1)
+          urlObj.pathname = `/api/sheet/${capitalized}/${sheetMatch[2]}`
         }
 
         // V2 参数名与语法翻译
