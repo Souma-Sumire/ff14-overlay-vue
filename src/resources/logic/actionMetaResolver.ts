@@ -235,6 +235,23 @@ export function resolveApiActionMeta(actionId: number, row: any) {
   const cj = Number(row.ClassJobTargetID) || 0
   const cjc = Number(row.ClassJobCategoryTargetID) || 0
   const ac = Number(row.ActionCategoryTargetID) || 0
+
+  let jobs: number[] = []
+  if (Array.isArray(row._ClassJobCategoryJobs) && row._ClassJobCategoryJobs.length > 0) {
+    if (isRole) {
+      jobs = battleJobEnums.filter(j => row._ClassJobCategoryJobs.includes(j))
+    }
+    else {
+      if (cj > 0)
+        jobs = battleJobEnums.filter(j => j === cj || Util.baseJobEnumConverted(j) === cj || Util.baseJobEnumConverted(cj) === j)
+      else
+        jobs = battleJobEnums.filter(j => row._ClassJobCategoryJobs.includes(j))
+    }
+  }
+  else {
+    jobs = resolveActionJobsFromTargets(cj, cjc, ac, isRole)
+  }
+
   return {
     id,
     name: String(row.Name || ''),
@@ -245,7 +262,7 @@ export function resolveApiActionMeta(actionId: number, row: any) {
     maxCharges: Number(row.MaxCharges) || 1,
     classJobLevel: resolveActionMinLevel(row.ClassJobLevel || 1, { actionId: id, isRoleAction: isRole }),
     isRoleAction: isRole,
-    jobs: resolveActionJobsFromTargets(cj, cjc, ac, isRole),
+    jobs,
   }
 }
 

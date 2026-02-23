@@ -252,6 +252,13 @@ async function requestWithFallback(path: string): Promise<any> {
             for (const key in res) {
               const val = res[key]
               if (val && typeof val === 'object' && !Array.isArray(val)) {
+                if (key === 'ClassJobCategory' && val.fields) {
+                  res._ClassJobCategoryJobs = Object.entries(val.fields)
+                    .filter(([_, value]) => value === true)
+                    .map(([k]) => Util.jobToJobEnum(k as any))
+                    .filter(v => typeof v === 'number' && v > 0)
+                }
+
                 if (val.path !== undefined)
                   res[key] = `/${val.path.replace(/^ui\/icon\//, 'i/').replace(/\.tex$/, '.png')}`
                 else if (val.row_id !== undefined)
@@ -270,6 +277,7 @@ async function requestWithFallback(path: string): Promise<any> {
               IsRoleAction: res.IsRoleAction ? 1 : 0,
               Recast100ms: Number(res.Recast100ms) || 0,
               ClassJobLevel: Number(res.ClassJobLevel) || 0,
+              _ClassJobCategoryJobs: res._ClassJobCategoryJobs,
             }
           }
           if (json.results) {
