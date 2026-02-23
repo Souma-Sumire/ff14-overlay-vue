@@ -320,6 +320,7 @@ function getLineBucket(line: number) {
 
 function updateLineBucket(line: number, list: unknown[]) {
   lineBuckets[line] = Array.isArray(list) ? (list as KeySkillRow[]) : []
+  syncStoreFromBuckets()
 }
 
 watch(rows, () => {
@@ -711,7 +712,6 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
             :fallback-tolerance="16"
             :disabled="interactionLocked"
             @update:model-value="updateLineBucket(line, $event)"
-            @change="syncStoreFromBuckets"
           >
             <button
               v-for="row in getLineBucket(line)"
