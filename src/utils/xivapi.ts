@@ -230,16 +230,28 @@ async function requestWithFallback(path: string): Promise<any> {
           const norm = (i: any) => {
             if (!i)
               return i
-            const f = i.fields || {}
+            const f = i.fields || i || {}
+            const res: any = { ...f, ID: i.row_id || i.ID }
+            // 递归拆包 V2 的对象结构 (Boilmaster 专有)
+            for (const key in res) {
+              const val = res[key]
+              if (val && typeof val === 'object' && !Array.isArray(val)) {
+                if (val.row_id !== undefined)
+                  res[key] = val.row_id
+                else if (val.value !== undefined)
+                  res[key] = val.value
+              }
+            }
+            // 字段映射并转换回 V1 风格以兼容现有逻辑
             return {
-              ...f,
-              ID: i.row_id,
-              // 字段映射回 V1 风格
-              ClassJobTargetID: f.ClassJob,
-              ClassJobCategoryTargetID: f.ClassJobCategory,
-              ActionCategoryTargetID: f.ActionCategory,
-              IsPvP: f.IsPvP ? 1 : 0,
-              IsRoleAction: f.IsRoleAction ? 1 : 0,
+              ...res,
+              ClassJobTargetID: res.ClassJob,
+              ClassJobCategoryTargetID: res.ClassJobCategory,
+              ActionCategoryTargetID: res.ActionCategory,
+              IsPvP: res.IsPvP ? 1 : 0,
+              IsRoleAction: res.IsRoleAction ? 1 : 0,
+              Recast100ms: Number(res.Recast100ms) || 0,
+              ClassJobLevel: Number(res.ClassJobLevel) || 0,
             }
           }
           if (json.results) {
@@ -248,7 +260,7 @@ async function requestWithFallback(path: string): Promise<any> {
               Results: json.results.map(norm),
             }
           }
-          else if (json.row_id !== undefined) {
+          else if (json.row_id !== undefined || json.ID !== undefined) {
             json = norm(json)
           }
         }
