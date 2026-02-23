@@ -67,20 +67,38 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
   const resourceManager = new JobResourceManager()
 
   const pendingMetaRequest = new Map<number, Promise<TeamWatchActionMetaRaw>>()
-  const autoFetchMetaRequested = new Set<number>()
+  const autoFetchMetaRequested = reactive(new Set<number>())
+  const isFetchingMeta = computed(() => autoFetchMetaRequested.size > 0)
+  const metaFetchQueueSize = computed(() => autoFetchMetaRequested.size)
+
   let rebuildTimer: number | undefined
   let skillStateCacheTs = 0
   const skillStateCache = new Map<string, TeamWatchSkillStateView>()
+
+  let isInternalSyncing = false
 
   // 1. Reactive Sync & Auto Rebuild
   watch(
     [party, fakeMode, playerId, sortRuleUser, watchJobsActionsIDUser, actionMetaUser],
     () => {
-      saveTeamWatchStorageData(getSnapshot())
+      if (isInternalSyncing)
+        return
+      persistenceSync()
       scheduleRebuild()
     },
     { deep: true },
   )
+
+  let persistenceTimer: number | undefined
+
+  function persistenceSync() {
+    if (persistenceTimer)
+      clearTimeout(persistenceTimer)
+    persistenceTimer = window.setTimeout(() => {
+      persistenceTimer = undefined
+      saveTeamWatchStorageData(getSnapshot())
+    }, 100)
+  }
 
   function getActionMetaRaw(actionId: number, autoFetch = true) {
     const raw = normalizeTeamWatchActionMetaRaw(actionId, actionMetaUser.value[actionId])
@@ -90,10 +108,7 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
   }
 
   function triggerAutoFetchActionMeta(actionId: number) {
-    if (actionId <= 0)
-      return
-    const existing = actionMetaUser.value[actionId]
-    if ((existing?.actionCategory ?? 0) > 0)
+    if (actionId <= 0 || (actionMetaUser.value[actionId]?.actionCategory ?? 0) > 0)
       return
     if (autoFetchMetaRequested.has(actionId))
       return
@@ -153,7 +168,6 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
         })
 
         const merged = apiMeta
-        // Cache API result to local state + localStorage, but never overwrite manual config.
         const existing = actionMetaUser.value[actionId]
         if (!existing)
           saveActionMetaRaw(actionId, merged)
@@ -212,10 +226,10 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
   function scheduleRebuild() {
     if (rebuildTimer)
       return
-    rebuildTimer = window.setTimeout(() => {
+    rebuildTimer = window.requestAnimationFrame(() => {
       rebuildTimer = undefined
       rebuildMembers()
-    }, 0)
+    })
   }
 
   function resolveMemberWatchActionIds(job: number) {
@@ -475,21 +489,26 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
   }
 
   function loadFromStorage() {
-    const next = loadTeamWatchStorageData()
-    sortRuleUser.value = [...next.sortRuleUser]
-    watchJobsActionsIDUser.value = Object.fromEntries(Object.entries(next.watchJobsActionsIDUser).map(([k, v]) => [Number(k), [...v]]))
-    actionMetaUser.value = cloneTeamWatchActionMetaMap(next.actionMetaUser)
-    // rebuild will bue triggered by watch
-    const actionIds = new Set(
-      Object.values(watchJobsActionsIDUser.value)
-        .flat()
-        .map(Number)
-        .filter(id => Number.isFinite(id) && id > 0),
-    )
-    actionIds.forEach(actionId => triggerAutoFetchActionMeta(actionId))
+    isInternalSyncing = true
+    try {
+      const next = loadTeamWatchStorageData()
+      sortRuleUser.value = [...next.sortRuleUser]
+      watchJobsActionsIDUser.value = Object.fromEntries(Object.entries(next.watchJobsActionsIDUser).map(([k, v]) => [Number(k), [...v]]))
+      actionMetaUser.value = cloneTeamWatchActionMetaMap(next.actionMetaUser)
+
+      const actionIds = new Set(
+        Object.values(watchJobsActionsIDUser.value)
+          .flat()
+          .map(Number)
+          .filter(id => Number.isFinite(id) && id > 0),
+      )
+      actionIds.forEach(actionId => triggerAutoFetchActionMeta(actionId))
+    }
+    finally {
+      isInternalSyncing = false
+    }
   }
 
-  // Window Sync: Listen for storage changes from other windows (e.g., settings window)
   if (typeof window !== 'undefined') {
     window.addEventListener('storage', (e) => {
       if (e.key === TEAM_WATCH_STORAGE_NAMESPACE) {
@@ -499,12 +518,18 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
   }
 
   function saveSettings(next: TeamWatchSaveSettingsInput) {
-    sortRuleUser.value = [...next.sortRuleUser]
-    watchJobsActionsIDUser.value = Object.fromEntries(Object.entries(next.watchJobsActionsIDUser).map(([k, v]) => [Number(k), [...v]]))
-    if (next.actionMetaUser !== undefined)
-      actionMetaUser.value = cloneTeamWatchActionMetaMap(next.actionMetaUser)
-    // Force immediate persistence to avoid race conditions with loadFromStorage
-    saveTeamWatchStorageData(getSnapshot())
+    isInternalSyncing = true
+    try {
+      sortRuleUser.value = [...next.sortRuleUser]
+      watchJobsActionsIDUser.value = Object.fromEntries(Object.entries(next.watchJobsActionsIDUser).map(([k, v]) => [Number(k), [...v]]))
+      if (next.actionMetaUser !== undefined)
+        actionMetaUser.value = cloneTeamWatchActionMetaMap(next.actionMetaUser)
+      persistenceSync()
+      scheduleRebuild()
+    }
+    finally {
+      isInternalSyncing = false
+    }
   }
 
   function saveActionMetaRaw(actionId: number, raw: TeamWatchActionMetaRaw) {
@@ -514,7 +539,6 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
   }
 
   function resetSettings() {
-    // 重置到初始状态
     const knownJobs = Array.from(new Set([
       ...DEFAULT_JOB_SORT_ORDER,
       ...Object.keys(watchJobsActionsIDUser.value).map(Number),
@@ -603,6 +627,8 @@ const useTeamWatchStore = defineStore('teamWatch', () => {
     resetSettings,
     exportSettings,
     importSettings,
+    isFetchingMeta,
+    metaFetchQueueSize,
   }
 })
 

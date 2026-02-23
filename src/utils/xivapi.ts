@@ -105,17 +105,26 @@ function switchPrimarySite(failedHost?: string): void {
   }
 }
 
+export const EMPTY_IMAGE = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
+
 export function getIconSrcById(iconId: number, highRes = false): string {
   if (!Number.isFinite(iconId) || iconId <= 0)
-    return ''
+    return EMPTY_IMAGE
   const full = completeIcon(Math.trunc(iconId))
   const suffix = highRes ? '_hr1' : ''
   return `${buildImgUrl(primarySite)}/i/${full}${suffix}.png`
 }
 
+export function getIconSrcByFullIcon(fullIcon: string, highRes = false): string {
+  if (!fullIcon)
+    return EMPTY_IMAGE
+  const suffix = highRes ? '_hr1' : ''
+  return `${buildImgUrl(primarySite)}/i/${fullIcon}${suffix}.png`
+}
+
 export function getIconSrcByPath(iconPath: string, itemIsHQ = false, highRes = false): string {
   if (!iconPath)
-    return ''
+    return EMPTY_IMAGE
   if (/^https?:\/\//.test(iconPath))
     return iconPath
   const suffix = highRes ? '_hr1' : ''
@@ -151,20 +160,24 @@ async function requestWithFallback(path: string): Promise<any> {
     const sites: SiteName[] = primarySite === 'cafe' ? ['cafe', 'xivapi'] : ['xivapi', 'cafe']
     for (const siteName of sites) {
       const isV2 = SITE_HOST[siteName].version === 2
-      // 这里的 path 可能带 query，用 URL 对象解析更稳妥
-      const urlObj = new URL(`${buildUrl(siteName, true)}${path}`)
+      let buildedPath = path
+      if (isV2) {
+        // V2 路径转换逻辑：/Action/ID -> /sheet/Action/ID
+        // 支持匹配 /action/123 或 /api/action/123 (以防万一)
+        const v2PathMatch = buildedPath.match(/^\/?(api\/)?([a-zA-Z0-9]+)\/(\d+)/)
+        if (v2PathMatch && v2PathMatch[2] && v2PathMatch[3] && !buildedPath.includes('/search')) {
+          const sheetName = v2PathMatch[2]
+          const capitalized = sheetName.charAt(0).toUpperCase() + sheetName.slice(1)
+          buildedPath = `/sheet/${capitalized}/${v2PathMatch[3]}${buildedPath.includes('?') ? `?${buildedPath.split('?')[1]}` : ''}`
+        }
+      }
+
+      // 构建完整 URL
+      const baseUrl = buildUrl(siteName, true)
+      const urlObj = new URL(`${baseUrl}${buildedPath.startsWith('/') ? '' : '/'}${buildedPath}`)
 
       if (isV2) {
-        // V2 路径修正：将 V1 的 /{Sheet}/{ID} 映射到 V2 的 /api/sheet/{Sheet}/{ID}
-        // 处理小写开头的情况并强制首字母大写
-        const sheetMatch = urlObj.pathname.match(/^\/api\/([a-zA-Z0-9]+)\/(\d+)/)
-        if (sheetMatch && sheetMatch[1] && sheetMatch[2]) {
-          const sheetName = sheetMatch[1]
-          const capitalized = sheetName.charAt(0).toUpperCase() + sheetName.slice(1)
-          urlObj.pathname = `/api/sheet/${capitalized}/${sheetMatch[2]}`
-        }
-
-        // V2 参数名与语法翻译
+        // V2 参数翻译
         const urlParams = urlObj.searchParams
 
         // 核心翻译：显式只映射目前涉及到的几个分类字段
@@ -217,10 +230,13 @@ async function requestWithFallback(path: string): Promise<any> {
       try {
         const controller = new AbortController()
         const timer = setTimeout(() => controller.abort(), 6000)
-        const resp = await fetch(urlObj.toString(), { signal: controller.signal, cache: 'force-cache' })
+        const fetchUrl = urlObj.toString()
+        const resp = await fetch(fetchUrl, { signal: controller.signal, cache: 'force-cache' })
         clearTimeout(timer)
-        if (!resp.ok)
+        if (!resp.ok) {
+          console.error(`[xivapi] Request failed: ${fetchUrl} (${resp.status} ${resp.statusText})`)
           continue
+        }
 
         if (siteName !== primarySite)
           switchPrimarySite()
@@ -347,8 +363,8 @@ export async function searchActionsByClassJobs(jobIds: number[], limit = 500): P
 
 export function handleImgError(event: Event): void {
   const target = event.target as HTMLImageElement
-  if (!target.src || target.dataset.tried) {
-    target.src = ''
+  if (!target.src || target.dataset.tried || target.src === window.location.href || target.src.startsWith('data:')) {
+    target.src = EMPTY_IMAGE
     return
   }
 

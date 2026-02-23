@@ -38,7 +38,7 @@ interface PickerTarget {
 type SortGroup = 'tank' | 'healer' | 'dps' | 'other'
 
 const store = useTeamWatchStore()
-const { sortRuleUser, watchJobsActionsIDUser } = storeToRefs(store)
+const { sortRuleUser, watchJobsActionsIDUser, isFetchingMeta, metaFetchQueueSize } = storeToRefs(store)
 
 const pickerLoading = ref(false)
 const pickerTarget = ref<PickerTarget | null>(null)
@@ -435,7 +435,6 @@ async function importSettings() {
 
 async function resetSettings() {
   store.resetSettings()
-  reloadFromStore()
   ElMessage.success('已恢复默认设置')
 }
 
@@ -445,7 +444,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="settings-page">
+  <div
+    v-loading.fullscreen.lock="isFetchingMeta"
+    class="settings-page"
+    :element-loading-text="`正在全力抓取技能元数据... 剩余 ${metaFetchQueueSize} 项`"
+    element-loading-background="rgba(0, 0, 0, 0.7)"
+  >
     <header class="toolbar">
       <div class="toolbar-left">
         <el-input

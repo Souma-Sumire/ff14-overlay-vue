@@ -6,7 +6,7 @@ import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/generated/roleActionCat
 import { ACTION_UPGRADE_STEPS, normalizeUpgradeActionId } from '@/utils/compareSaveAction'
 import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
 import Util from '@/utils/util'
-import { getIconSrcById, getIconSrcByPath } from '@/utils/xivapi'
+import { EMPTY_IMAGE, getIconSrcById, getIconSrcByPath } from '@/utils/xivapi'
 
 // --- Types ---
 export interface ResolvedBakedActionMeta {
@@ -322,7 +322,7 @@ export function resolveActionIconSrc(aid: number, options?: { apiIconPath?: stri
   const src = idToSrc(aid)
   if (src)
     return src
-  return options?.apiIconPath?.trim() ? getIconSrcByPath(options.apiIconPath, false, options?.highRes ?? false) : ''
+  return options?.apiIconPath?.trim() ? getIconSrcByPath(options.apiIconPath, false, options?.highRes ?? false) : EMPTY_IMAGE
 }
 
 // --- Upgrade Family Logic ---

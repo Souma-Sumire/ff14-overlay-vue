@@ -330,7 +330,7 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
           key,
         }
         this.castData.push(cast)
-        const setCastSrc = (src: string) => {
+        const setCastSrc = (src: string): void => {
           const assignSrc = () => {
             const target = this.castData.find(v => v.key === key)
             if (target)
