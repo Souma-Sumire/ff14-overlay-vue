@@ -222,7 +222,7 @@ async function loadPickerPool(job: number) {
   catch (error) {
     console.warn('[teamWatchSettings] load job action list failed:', job, error)
     pickerPool.value = []
-    ElMessage.warning('职业技能列表加载失败，可手动搜索')
+    ElMessage.warning('职业技能列表加载失败')
   }
   finally {
     pickerLoading.value = false
