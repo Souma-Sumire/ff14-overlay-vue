@@ -271,8 +271,21 @@ const useKeySkillStore = defineStore('keySkill', () => {
     if (!Number.isFinite(actionId) || actionId <= 0)
       return
     const id = Math.trunc(actionId)
-    if (isApiCached(id))
+
+    const baked = buildAutoMetaFromBaked(id)
+    if (baked) {
+      autoMetaById[id] = baked
       return
+    }
+
+    if (isApiCached(id)) {
+      if (!autoMetaById[id]) {
+        const cached = autoMetaCache.value[String(id)]
+        if (cached)
+          autoMetaById[id] = cached
+      }
+      return
+    }
     if (refreshedIncompleteAutoMeta.has(id))
       return
     const task = pendingAutoMetaTasks.get(id)
@@ -280,10 +293,6 @@ const useKeySkillStore = defineStore('keySkill', () => {
       await task
       return
     }
-    // baked 仅作内存展示占位，不写 localStorage
-    const baked = buildAutoMetaFromBaked(id)
-    if (baked)
-      autoMetaById[id] = baked
 
     const nextTask = (async () => {
       pendingAutoMeta.add(id)
