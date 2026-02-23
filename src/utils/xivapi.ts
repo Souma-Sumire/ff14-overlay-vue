@@ -1,7 +1,7 @@
 import { useIndexedDB } from '@/composables/useIndexedDB'
 import { XIVAPI_CACHE_VERSION } from '@/resources/cacheVersion'
 import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/generated/roleActionCategoryByJob'
-import { markRoleActionId, resolveActionMinLevel, resolveBakedActionMeta } from '@/resources/logic/actionMetaResolver'
+import { markRoleActionId, resolveActionMinLevel } from '@/resources/logic/actionMetaResolver'
 import { completeIcon } from '@/resources/logic/status'
 import Util from '@/utils/util'
 
@@ -296,24 +296,28 @@ export async function searchActionsByClassJobs(jobIds: number[], limit = 500): P
     const catQuery = jobCats.length > 0
       ? ` +(${jobCats.map(cat => `ClassJobCategory=${cat}`).join(' ')})`
       : ''
-    const q = `query=+IsPvP=false +(ClassJob=${id} (+IsRoleAction=true${catQuery}))`
+    // 逻辑：IsPvP=false AND (ClassJob=id OR (IsRoleAction=true AND catQuery))
+    // 注意：V2 (Boilmaster) 对 URL 编码极其敏感，必须将 '+' 编码为 '%2B'，否则会被解析为空格导致 400。
+    const qRaw = `+IsPvP=false +(ClassJob=${id} (+IsRoleAction=true${catQuery}))`
+    const q = `query=${qRaw.replace(/\+/g, '%2B').replace(/ /g, '%20')}`
 
-    // V2 Search 限制：fields 只能返回数值和字符串，请求对象(Icon)或布尔(IsRoleAction)会 400。
-    // 我们在此只取基础字段，后续通过 resolveBakedActionMeta 补全。
-    const v2Cols = 'row_id,Name,ClassJobLevel,Recast100ms'
+    // V2 实测：可以直接获取点路径对象 Icon.path 和布尔值 IsRoleAction
+    const v2Cols = 'row_id,Name,Icon.path,ClassJobLevel,Recast100ms,IsRoleAction'
     const res = await requestWithFallback(`/search?sheets=Action&${q}&limit=100&fields=${v2Cols}`)
     const rows = res.Results || []
     rows.forEach((r: any) => {
-      if (r.ID > 0 && !merged.has(r.ID)) {
-        // 补全由于 V2 搜索限制而缺失的字段（利用本地 Baked 数据）
-        const baked = resolveBakedActionMeta(r.ID)
+      const rid = Number(r.row_id || r.ID) || 0
+      if (rid > 0 && !merged.has(rid)) {
+        // 全 API 数据解析：V2 返回的 Icon 是一个嵌套对象 { path: "..." }
+        const iconPath = typeof r.Icon === 'object' ? r.Icon?.path : r.Icon
         const row = {
           ...r,
-          Icon: baked?.iconId ? `/i/${Math.floor(baked.iconId / 1000).toString().padStart(3, '0')}000/${baked.iconId.toString().padStart(6, '0')}.tex` : undefined,
-          IsRoleAction: baked?.isRoleAction ? 1 : 0,
-          ClassJobLevel: resolveActionMinLevel(r.ClassJobLevel, { actionId: r.ID, isRoleAction: baked?.isRoleAction }),
+          ID: rid,
+          Icon: iconPath,
+          IsRoleAction: r.IsRoleAction ? 1 : 0,
+          ClassJobLevel: resolveActionMinLevel(r.ClassJobLevel, { actionId: rid, isRoleAction: !!r.IsRoleAction }),
         }
-        merged.set(r.ID, row)
+        merged.set(rid, row)
       }
     })
   }
