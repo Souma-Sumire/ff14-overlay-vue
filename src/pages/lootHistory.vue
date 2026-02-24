@@ -2867,27 +2867,9 @@ async function confirmImport() {
       // meta: mapping / roles / bis
       if (importForm.value.meta) {
         if (json.c.map)
-          playerMapping.value = { ...playerMapping.value, ...json.c.map }
+          playerMapping.value = json.c.map
         if (json.c.roles) {
-          const mergedRoles = { ...playerRoles.value }
-          for (const [newRole, newName] of Object.entries(json.c.roles)) {
-            const typedName = newName as string
-            // 对于离队(LEFT:)，基于玩家名称进行去重
-            if (newRole.startsWith('LEFT:')) {
-              const type = newRole.split(':')[0]
-              const alreadyExists = Object.entries(mergedRoles).some(
-                ([r, n]) => r.startsWith(`${type}:`) && n === typedName,
-              )
-              if (!alreadyExists) {
-                mergedRoles[newRole] = typedName
-              }
-            }
-            else {
-              // 普通职位直接覆盖
-              mergedRoles[newRole] = typedName
-            }
-          }
-          playerRoles.value = mergedRoles
+          playerRoles.value = json.c.roles
         }
         const incomingBis = json.c.bisConfig || json.bisConfig || json.c.bis
         if (incomingBis)
@@ -2899,17 +2881,11 @@ async function confirmImport() {
         // 兼容旧版本的 filter 字段名
         const filterSettings = json.c.systemFilterSettings || json.c.filter || {}
         if (Object.keys(filterSettings).length > 0) {
-          systemFilterSettings.value = {
-            ...systemFilterSettings.value,
-            ...filterSettings,
-          }
+          systemFilterSettings.value = filterSettings
         }
-        if (json.c.itemVisibility)
-          itemVisibility.value = { ...itemVisibility.value, ...json.c.itemVisibility }
-        if (json.c.playerVisibility)
-          playerVisibility.value = { ...playerVisibility.value, ...json.c.playerVisibility }
-        if (json.c.processedFiles)
-          processedFiles.value = { ...processedFiles.value, ...json.c.processedFiles }
+        itemVisibility.value = json.c.itemVisibility || {}
+        playerVisibility.value = json.c.playerVisibility || {}
+        processedFiles.value = json.c.processedFiles || {}
         if (json.c.logPath)
           logPath.value = json.c.logPath
         if (json.c.viewMode)
@@ -2942,28 +2918,14 @@ async function confirmImport() {
 
       // corrections: week / player
       if (importForm.value.corrections) {
-        if (json.c.weekCorrections) {
-          recordWeekCorrections.value = {
-            ...recordWeekCorrections.value,
-            ...json.c.weekCorrections,
-          }
-        }
-        if (json.c.playerCorrections) {
-          recordPlayerCorrections.value = {
-            ...recordPlayerCorrections.value,
-            ...json.c.playerCorrections,
-          }
-        }
+        recordWeekCorrections.value = json.c.weekCorrections || {}
+        recordPlayerCorrections.value = json.c.playerCorrections || {}
       }
     }
 
-    if (importForm.value.loot && json.r && json.r.length > 0) {
-      const existingSigs = new Set(
-        lootRecords.value.map(
-          r => `${new Date(r.timestamp).getTime()}|${r.item}|${r.player}`,
-        ),
-      )
-      const currentKeys = new Set(lootRecords.value.map(r => r.key))
+    if (importForm.value.loot) {
+      const existingSigs = new Set<string>()
+      const currentKeys = new Set<string>()
 
       const newRecords: LootRecord[] = []
       const baseTs = json.base || 0
@@ -2971,65 +2933,70 @@ async function confirmImport() {
       const playerDict = json.dicts?.p || []
       const ROLL_TYPES = ['need', 'greed', 'assign', 'direct', 'manual']
 
-      for (const rec of json.r) {
-        const ts = baseTs + rec[0]
-        const item = itemDict[rec[1]]
-        const player = playerDict[rec[2]]
-        const key = rec[3]
-        const rCount = rec[4]
+      if (json.r && Array.isArray(json.r)) {
+        for (const rec of json.r) {
+          const ts = baseTs + rec[0]
+          const item = itemDict[rec[1]]
+          const player = playerDict[rec[2]]
+          const key = rec[3]
+          const rCount = rec[4]
 
-        const rolls = [] as any[]
-        if (rCount > 0) {
-          let cursor = 5
-          for (let i = 0; i < rCount; i++) {
-            if (cursor + 2 >= rec.length)
-              break
-            rolls.push({
-              player: playerDict[rec[cursor]],
-              value: rec[cursor + 1],
-              type: ROLL_TYPES[rec[cursor + 2]] || 'need',
-            })
-            cursor += 3
+          const rolls = [] as any[]
+          if (rCount > 0) {
+            let cursor = 5
+            for (let i = 0; i < rCount; i++) {
+              if (cursor + 2 >= rec.length)
+                break
+              rolls.push({
+                player: playerDict[rec[cursor]],
+                value: rec[cursor + 1],
+                type: ROLL_TYPES[rec[cursor + 2]] || 'need',
+              })
+              cursor += 3
+            }
           }
-        }
 
-        if (!item || !player)
-          continue
+          if (!item || !player)
+            continue
 
-        const recordKey
-          = key && typeof key === 'string'
-            ? key
-            : `${ts}_${item}_${player}_${Math.random().toString(36).slice(2)}`
+          const recordKey
+            = key && typeof key === 'string'
+              ? key
+              : `${ts}_${item}_${player}_${Math.random().toString(36).slice(2)}`
 
-        if (currentKeys.has(recordKey) || blacklistedKeys.value.has(recordKey))
-          continue
+          if (currentKeys.has(recordKey))
+            continue
 
-        const sig = `${ts}|${item}|${player}`
-        if (!existingSigs.has(sig)) {
-          newRecords.push({
-            key: recordKey,
-            timestamp: new Date(ts),
-            item,
-            player,
-            rolls,
-            source: 'import',
-            id: '',
-          } as LootRecord)
-          existingSigs.add(sig)
-          currentKeys.add(recordKey)
+          const sig = `${ts}|${item}|${player}`
+          if (!existingSigs.has(sig)) {
+            newRecords.push({
+              key: recordKey,
+              timestamp: new Date(ts),
+              item,
+              player,
+              rolls,
+              source: 'import',
+              id: '',
+            } as LootRecord)
+            existingSigs.add(sig)
+            currentKeys.add(recordKey)
+          }
         }
       }
 
+      await dbRecords.clear()
       if (newRecords.length > 0) {
         await dbRecords.bulkSet(JSON.parse(JSON.stringify(newRecords)))
-        lootRecords.value = [...lootRecords.value, ...newRecords].sort(
+        lootRecords.value = newRecords.sort(
           (a, b) =>
             new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
         )
-        existingKeys.value = new Set(lootRecords.value.map(r => r.key))
-
-        handlePotentialDuplicates(newRecords, 'import')
       }
+      else {
+        lootRecords.value = []
+      }
+      existingKeys.value = new Set(lootRecords.value.map(r => r.key))
+      handlePotentialDuplicates(newRecords, 'import')
     }
 
     ElMessage.success({
