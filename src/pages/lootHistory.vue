@@ -651,21 +651,50 @@ const playerRollCountsMap = computed(() => detailedPlayerStats.value.rollCounts)
 const allPlayers = computed(() => detailedPlayerStats.value.sortedPlayers)
 
 watch(isOnlyRaidMembersActive, (val) => {
-  if (val) {
-    const newVis = { ...playerVisibility.value }
-
-    // 强制选中所有固定队成员，反选非固定队成员
-    allPlayers.value.forEach((p) => {
-      if (getPlayerRole(p)) {
-        newVis[p] = true
-      }
-      else {
-        newVis[p] = false
-      }
-    })
-    playerVisibility.value = newVis
-  }
+  if (val)
+    applyRaidMembersVisibility()
 })
+
+function applyRaidMembersVisibility() {
+  const newVis = { ...playerVisibility.value }
+  // 强制选中所有固定队成员，反选非固定队成员
+  allPlayers.value.forEach((p) => {
+    if (getPlayerRole(p))
+      newVis[p] = true
+    else
+      newVis[p] = false
+  })
+  playerVisibility.value = newVis
+}
+
+function refreshReactiveStateAfterImport() {
+  // 清理排序缓存，确保导入后按当前数据重新计算优先级
+  itemSortPriorityCache.part.clear()
+  itemSortPriorityCache.drop.clear()
+
+  // 通过替换引用强制触发依赖刷新
+  lootRecords.value = [...lootRecords.value]
+  existingKeys.value = new Set(existingKeys.value)
+  blacklistedKeys.value = new Set(blacklistedKeys.value)
+  itemVisibility.value = { ...itemVisibility.value }
+  playerVisibility.value = { ...playerVisibility.value }
+  processedFiles.value = { ...processedFiles.value }
+  playerMapping.value = { ...playerMapping.value }
+  playerRoles.value = { ...playerRoles.value }
+  recordWeekCorrections.value = { ...recordWeekCorrections.value }
+  recordPlayerCorrections.value = { ...recordPlayerCorrections.value }
+  systemFilterSettings.value = {
+    ...systemFilterSettings.value,
+    maskedSeries: [...(systemFilterSettings.value.maskedSeries || [])],
+  }
+
+  if (isRaidFilterActive.value) {
+    selectRaidLoot()
+    hideUnselectedItems.value = true
+  }
+  if (isOnlyRaidMembersActive.value)
+    applyRaidMembersVisibility()
+}
 
 const baseFilteredRecords = computed(() => {
   if (isInitializing.value)
@@ -2880,6 +2909,14 @@ async function confirmImport() {
       existingKeys.value = new Set(lootRecords.value.map(r => r.key))
       handlePotentialDuplicates(newRecords, 'import')
     }
+
+    // 导入后强制开启两个核心过滤开关
+    isOnlyRaidMembersActive.value = true
+    isRaidFilterActive.value = true
+
+    await nextTick()
+    refreshReactiveStateAfterImport()
+    await nextTick()
 
     ElMessage.success({
       message: '数据导入已完成',
