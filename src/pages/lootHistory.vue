@@ -59,7 +59,7 @@ import SummaryItemTags from '@/components/loot-history/SummaryItemTags.vue'
 import { useIndexedDB } from '@/composables/useIndexedDB'
 import { useLang } from '@/composables/useLang'
 import { resolveLootParserLocale } from '@/constants/lootParserLocale'
-import { countObtainedItems, DEFAULT_ROWS, isBisItem, isPlayerComplete, LAYER_CONFIG } from '@/utils/bisUtils'
+import { DEFAULT_ROWS, isBisItem, isPlayerComplete, LAYER_CONFIG } from '@/utils/bisUtils'
 import { DROP_ORDER, PART_ORDER, ROLE_DEFINITIONS, sanitizeItemName, sanitizePlayerName } from '@/utils/lootParser'
 import { getFormattedWeekLabel, getRaidWeekIndex, getRaidWeekLabel, getRaidWeekStart } from '@/utils/raidWeekUtils'
 import { formatDateTime as formatTime } from '@/utils/time'
@@ -90,12 +90,10 @@ const LABELS = {
 const ROLE_SETTING_HINT = '需在左上方“固定队 - 职位设置”中完成所有职位后方可开启'
 type BisRow = (typeof DEFAULT_ROWS)[number]
 const defaultRowBySlotName = new Map<string, BisRow>()
-const defaultRowById = new Map<string, BisRow>()
 for (const row of DEFAULT_ROWS) {
   defaultRowBySlotName.set(row.name, row)
   defaultRowBySlotName.set(row.keywords, row)
   defaultRowBySlotName.set(row.id, row)
-  defaultRowById.set(row.id, row)
 }
 const layerNameByRowId = new Map<string, string>()
 for (const layer of LAYER_CONFIG) {
@@ -699,15 +697,8 @@ const baseFilteredRecords = computed(() => {
 })
 
 const filteredRecords = computed(() => {
-  const isListMode = viewMode.value === 'list'
-
   const result = baseFilteredRecords.value.filter((record) => {
     const player = getActualPlayer(getRecordPlayer(record))
-    // 列表模式下显示所有角色记录，非列表模式（分部位/分玩家/周统计）仅显示固定队成员
-    if (!isListMode && !getPlayerRole(player))
-      return false
-
-    // 始终应用玩家勾选过滤，确保上方玩家标签的开关能影响所有视图
     return isPlayerChecked(player)
   })
   return result.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
@@ -1260,13 +1251,6 @@ const roleByPlayer = computed(() => {
   }
   return map
 })
-const activeMemberNames = computed(() => {
-  return Object.entries(playerRoles.value)
-    .filter(([role, name]) => name && !role.startsWith('LEFT:'))
-    .map(([_, name]) => name as string)
-})
-const activeMemberNameSet = computed(() => new Set(activeMemberNames.value))
-
 const isBisConfigComplete = computed(() => {
   if (!isRaidRolesComplete.value)
     return false
@@ -1356,15 +1340,7 @@ const checkedVisiblePlayers = computed(() => {
 })
 
 const sortedSummaryPlayers = computed(() => {
-  let players = checkedVisiblePlayers.value
-  const filterMode = playerSummaryFilterMode.value
-
-  if (filterMode === 'needed') {
-    players = players.filter((p) => {
-      const role = getPlayerRole(p)
-      return role && !role.startsWith('LEFT:')
-    })
-  }
+  const players = checkedVisiblePlayers.value
   const summary = playerSummary.value
   const counts: Record<string, number> = {}
   players.forEach((p) => {
@@ -1407,10 +1383,18 @@ const visibleItemCount = computed(() => visibleUniqueItems.value.length)
 const visiblePlayerCount = computed(() => visibleAllPlayers.value.length)
 
 const allConditionRecords = computed(() => {
-  return baseFilteredRecords.value.map(r => ({
+  return filteredRecords.value.map(r => ({
     ...r,
     player: getRecordPlayer(r),
   }))
+})
+
+const isDualFilterLockActive = computed(() => {
+  return !isOnlyRaidMembersActive.value || !isRaidFilterActive.value
+})
+
+const shouldShowAnalysisLock = computed(() => {
+  return viewMode.value !== 'list' && isDualFilterLockActive.value
 })
 
 async function confirmAndPerformPlayerAction(name: string, context: string, action: () => void) {
@@ -1492,59 +1476,46 @@ const displaySlots = computed(() => {
   const filterMode = slotSummaryFilterMode.value
   const predefinedList = slotSortMode.value === 'part' ? PART_ORDER : DROP_ORDER
 
-  const predefined = predefinedList.filter((s) => {
+  const selectedPlayers = checkedVisiblePlayers.value
+  const selectedSlots = Array.from(
+    new Set(
+      selectedUniqueItems.value.map((item) => {
+        const rawSlot = getItemSlot(item)
+        return rawSlot === '其他' ? item : rawSlot
+      }),
+    ),
+  )
+  const selectedSlotSet = new Set(selectedSlots)
+
+  const shouldShowByMode = (slotName: string) => {
+    const slotCounts = slotSummary.value[slotName] || {}
     if (filterMode === 'all')
       return true
-
-    const hasObtained
-      = slotSummary.value[s] && Object.keys(slotSummary.value[s]).length > 0
-    if (hasObtained)
-      return true
-
-    if (filterMode === 'needed') {
-      const row = findDefaultRowBySlot(s)
-      if (!row)
-        return false
-
-      const coreRoles = Object.keys(playerRoles.value).filter(r => !r.startsWith('LEFT:'))
-      return coreRoles.some((role) => {
-        const pName = playerRoles.value[role]
-        if (!pName)
-          return false
-        const summary = playerSummary.value[pName] || {}
-
-        const count = countObtainedItems(row, summary)
-        const targetReq = calculateTargetRequirement(row, pName)
-        return count < targetReq || count === 0
-      })
+    if (filterMode === 'obtained') {
+      return selectedPlayers.some(p => (slotCounts[p] || 0) > 0)
     }
-    return false
-  })
+    return selectedPlayers.some(p => (slotCounts[p] || 0) === 0)
+  }
 
-  const dynamicItems = Object.keys(slotSummary.value).filter(
-    k =>
-      !(PART_ORDER as unknown as string[]).includes(k)
-      && !(DROP_ORDER as unknown as string[]).includes(k),
+  const filteredSlots = selectedSlots.filter(shouldShowByMode)
+  const filteredSlotSet = new Set(filteredSlots)
+
+  const predefined = predefinedList.filter(
+    slot => selectedSlotSet.has(slot) && filteredSlotSet.has(slot),
   )
-
-  const dynamicSlotCounts: Record<string, number> = {}
-  dynamicItems.forEach((key) => {
-    dynamicSlotCounts[key] = Object.values(slotSummary.value[key] || {}).reduce(
-      (sum, c) => sum + c,
-      0,
-    )
-  })
-
-  const dynamic = dynamicItems
-    .filter((k) => {
-      const hasObtained = Object.keys(slotSummary.value[k] || {}).length > 0
-      return hasObtained
-    })
+  const dynamic = filteredSlots
+    .filter(slot => !(predefinedList as readonly string[]).includes(slot))
     .sort((a, b) => {
-      const ca = dynamicSlotCounts[a] || 0
-      const cb = dynamicSlotCounts[b] || 0
-      if (ca !== cb)
-        return cb - ca
+      const totalA = selectedPlayers.reduce(
+        (sum, p) => sum + (slotSummary.value[a]?.[p] || 0),
+        0,
+      )
+      const totalB = selectedPlayers.reduce(
+        (sum, p) => sum + (slotSummary.value[b]?.[p] || 0),
+        0,
+      )
+      if (totalA !== totalB)
+        return totalB - totalA
       return a.localeCompare(b)
     })
 
@@ -2226,46 +2197,16 @@ function comparePlayersByRole(
   return a.localeCompare(b)
 }
 
-function buildSortedPlayersInSlot(
-  summary: Record<string, number>,
-  slotName: string,
-) {
+function buildSortedPlayersInSlot(summary: Record<string, number>) {
   const filterMode = slotSummaryFilterMode.value
-  const row = findDefaultRowBySlot(slotName)
-  if (!row) {
-    return Object.keys(summary || {}).sort((a, b) =>
-      comparePlayersByRole(a, b, summary || {}),
-    )
-  }
-
-  const allPlayersInSlot = Array.from(
-    new Set([...Object.keys(summary || {}), ...activeMemberNames.value]),
-  )
-  const result: string[] = []
-
-  allPlayersInSlot.forEach((p) => {
-    if (!isPlayerChecked(p))
-      return
-    const role = getPlayerRole(p)
-    const isLeftOrSub = role?.startsWith('LEFT:')
-    if (filterMode === 'needed' && isLeftOrSub)
-      return
-
+  const selectedPlayers = checkedVisiblePlayers.value
+  const result = selectedPlayers.filter((p) => {
     const count = summary?.[p] || 0
-    const targetReq = calculateTargetRequirement(row, p)
-
-    if (filterMode === 'all') {
-      if (count > 0 || activeMemberNameSet.value.has(p))
-        result.push(p)
-    }
-    else if (filterMode === 'obtained') {
-      if (count > 0)
-        result.push(p)
-    }
-    else if (filterMode === 'needed') {
-      if (!isLeftOrSub && (count < targetReq || count === 0))
-        result.push(p)
-    }
+    if (filterMode === 'all')
+      return true
+    if (filterMode === 'obtained')
+      return count > 0
+    return count === 0
   })
 
   return result.sort((a, b) => comparePlayersByRole(a, b, summary || {}))
@@ -2273,7 +2214,7 @@ function buildSortedPlayersInSlot(
 const sortedPlayersBySlotMap = computed(() => {
   const map: Record<string, string[]> = {}
   for (const slot of displaySlots.value) {
-    map[slot] = buildSortedPlayersInSlot(slotSummary.value[slot] || {}, slot)
+    map[slot] = buildSortedPlayersInSlot(slotSummary.value[slot] || {})
   }
   return map
 })
@@ -2348,122 +2289,35 @@ function getSlotItemTagInfo(player: string, slotName: string) {
 
 function buildFilteredItemsInPlayerSummary(player: string) {
   const obtainedItemsMap = playerSummary.value[player] || {}
-  const categoryCounts: Record<string, number> = {}
-  const consumedItemNames = new Set<string>()
-
-  // 1. 归类已获得物品
-  DEFAULT_ROWS.forEach((row) => {
-    categoryCounts[row.id] = 0
-    Object.entries(obtainedItemsMap).forEach(([itemName, count]) => {
-      const c = (count as number) || 0
-      if (itemName.includes(row.keywords)) {
-        categoryCounts[row.id] = (categoryCounts[row.id] || 0) + c
-        consumedItemNames.add(itemName)
-      }
-    })
-  })
-
   const results: {
     name: string
     count: number
-    isBis?: boolean
-    id?: string
     isRandomWeapon?: boolean
     layerName?: string
-    details?: { name: string, count: number }[]
   }[] = []
 
-  const roleKey = getPlayerRole(player)
-  const hasRole = !!(roleKey && ROLE_DEFINITIONS.includes(roleKey as any))
-  const playerBis = (bisConfig.value?.playerBis || {})[roleKey || ''] || {}
+  selectedUniqueItems.value.forEach((itemName) => {
+    const count = obtainedItemsMap[itemName] || 0
+    const slotName = getItemSlot(itemName)
+    const row = findDefaultRowBySlot(slotName)
+    const isRandomWeapon = slotName === '随武'
 
-  DEFAULT_ROWS.forEach((row) => {
-    const count = categoryCounts[row.id]
-    const targetReq = calculateTargetRequirement(row, player)
-
-    let shouldShow = false
-    const cVal = count || 0
-
-    if (playerSummaryFilterMode.value === 'all') {
-      shouldShow = true
-    }
-    else if (cVal > 0) {
-      shouldShow = true
-    }
-    else if (playerSummaryFilterMode.value === 'needed') {
-      if (cVal < targetReq || cVal === 0)
-        shouldShow = true
-    }
-
-    if (shouldShow) {
-      results.push({
-        name: row.keywords || row.name,
-        count: cVal,
-        isBis:
-          row.id === 'random_weapon'
-            ? undefined
-            : hasRole && playerBis[row.id] !== undefined
-              ? targetReq > 0
-              : undefined,
-        isRandomWeapon: row.id === 'random_weapon',
-        details: row.id === 'random_weapon' ? randomWeaponDetails.value[player] : undefined,
-        id: row.id,
-        layerName: layerNameByRowId.get(row.id),
-      })
-    }
-  })
-
-  // 3. 处理杂项（识别随武）
-  // 聚合所有随武
-  const randomWeaponItems: { name: string, count: number }[] = []
-  Object.entries(obtainedItemsMap).forEach(([itemName, count]) => {
-    if (!consumedItemNames.has(itemName)) {
-      if (
-        itemName.startsWith(GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD)
-        && RAID_REGEX.test(itemName)
-      ) {
-        randomWeaponItems.push({ name: itemName, count: count as number })
-        consumedItemNames.add(itemName)
-      }
-    }
-  })
-
-  // 如果有随武，添加聚合项
-  if (randomWeaponItems.length > 0) {
-    const totalCount = randomWeaponItems.reduce((sum, i) => sum + i.count, 0)
     results.push({
-      name: '随武',
-      count: totalCount,
-      isRandomWeapon: true,
-      layerName: '4层',
-      details: randomWeaponItems,
+      name: itemName,
+      count,
+      isRandomWeapon,
+      layerName: row ? layerNameByRowId.get(row.id) : isRandomWeapon ? '4层' : undefined,
     })
-  }
-
-  // 处理剩余杂项
-  Object.entries(obtainedItemsMap).forEach(([itemName, count]) => {
-    if (!consumedItemNames.has(itemName)) {
-      results.push({
-        name: itemName,
-        count: count as number,
-        isBis: undefined,
-        layerName: undefined,
-      })
-    }
   })
 
   const mode = summarySortMode.value
   results.sort((a, b) => {
     const ia = getItemSortPriority(
-      a.id
-        ? defaultRowById.get(a.id)?.keywords || a.name
-        : a.name,
+      a.name,
       mode,
     )
     const ib = getItemSortPriority(
-      b.id
-        ? defaultRowById.get(b.id)?.keywords || b.name
-        : b.name,
+      b.name,
       mode,
     )
     if (ia !== ib)
@@ -4704,71 +4558,71 @@ const activeStep = computed(() => {
                 <BisAllocator
                   v-model="bisConfig"
                   v-model:sort-mode="bisSortMode"
-                  :players="visibleAllPlayers"
+                  :players="checkedVisiblePlayers"
                   :records="allConditionRecords"
                   :get-player-role="getPlayerRole"
                   :get-actual-player="getActualPlayer"
                   :show-only-role="showOnlyRole"
                   :get-item-slot="getItemSlot"
                 />
-
-                <transition name="fade">
-                  <div
-                    v-show="!isOnlyRaidMembersActive || !isRaidFilterActive"
-                    class="bis-lock-mask"
-                  >
-                    <div class="lock-card">
-                      <div class="lock-header">
-                        <div class="lock-icon-wrapper">
-                          <el-icon><Lock /></el-icon>
-                        </div>
-                        <h3>BIS 分配功能已锁定</h3>
-                        <p>为确保数据分析的准确性，需激活以下过滤模式：</p>
-                      </div>
-
-                      <div class="status-list">
-                        <div
-                          class="status-item"
-                          :class="{ 'is-ready': isOnlyRaidMembersActive }"
-                        >
-                          <div class="item-icon">
-                            <el-icon v-if="isOnlyRaidMembersActive">
-                              <CircleCheckFilled />
-                            </el-icon>
-                            <el-icon v-else>
-                              <CircleCloseFilled />
-                            </el-icon>
-                          </div>
-                          <div class="item-label">
-                            只看固定队
-                          </div>
-                          <ElSwitch v-model="isOnlyRaidMembersActive" />
-                        </div>
-
-                        <div
-                          class="status-item"
-                          :class="{ 'is-ready': isRaidFilterActive }"
-                        >
-                          <div class="item-icon">
-                            <el-icon v-if="isRaidFilterActive">
-                              <CircleCheckFilled />
-                            </el-icon>
-                            <el-icon v-else>
-                              <CircleCloseFilled />
-                            </el-icon>
-                          </div>
-                          <div class="item-label">
-                            只看零式掉落
-                          </div>
-                          <ElSwitch v-model="isRaidFilterActive" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </transition>
               </div>
             </el-tab-pane>
           </el-tabs>
+
+          <transition name="fade">
+            <div
+              v-show="shouldShowAnalysisLock"
+              class="bis-lock-mask tab-lock-mask"
+            >
+              <div class="lock-card">
+                <div class="lock-header">
+                  <div class="lock-icon-wrapper">
+                    <el-icon><Lock /></el-icon>
+                  </div>
+                  <h3>分析功能已锁定</h3>
+                  <p>为确保数据分析的准确性，需激活以下过滤模式：</p>
+                </div>
+
+                <div class="status-list">
+                  <div
+                    class="status-item"
+                    :class="{ 'is-ready': isOnlyRaidMembersActive }"
+                  >
+                    <div class="item-icon">
+                      <el-icon v-if="isOnlyRaidMembersActive">
+                        <CircleCheckFilled />
+                      </el-icon>
+                      <el-icon v-else>
+                        <CircleCloseFilled />
+                      </el-icon>
+                    </div>
+                    <div class="item-label">
+                      只看固定队
+                    </div>
+                    <ElSwitch v-model="isOnlyRaidMembersActive" />
+                  </div>
+
+                  <div
+                    class="status-item"
+                    :class="{ 'is-ready': isRaidFilterActive }"
+                  >
+                    <div class="item-icon">
+                      <el-icon v-if="isRaidFilterActive">
+                        <CircleCheckFilled />
+                      </el-icon>
+                      <el-icon v-else>
+                        <CircleCloseFilled />
+                      </el-icon>
+                    </div>
+                    <div class="item-label">
+                      只看零式掉落
+                    </div>
+                    <ElSwitch v-model="isRaidFilterActive" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </transition>
 
           <!-- 共享的获得者变更 Popover -->
           <el-popover
@@ -6801,6 +6655,47 @@ html.dark .bis-lock-mask {
       rgba(15, 23, 42, 0.4) 100%
     );
   }
+}
+
+.tab-lock-mask {
+  inset: 48px 0 0 0;
+  border-radius: 0 0 12px 12px;
+  align-items: center;
+  overflow: hidden;
+  padding: 0;
+}
+
+.tab-lock-mask .lock-card {
+  width: min(360px, calc(100% - 20px));
+  padding: 16px 18px;
+}
+
+.tab-lock-mask .lock-header {
+  margin-bottom: 12px;
+}
+
+.tab-lock-mask .lock-icon-wrapper {
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.tab-lock-mask .lock-card h3 {
+  font-size: 1.05rem;
+  margin-bottom: 2px;
+}
+
+.tab-lock-mask .lock-card p {
+  font-size: 0.78rem;
+}
+
+.tab-lock-mask .status-list {
+  gap: 8px;
+}
+
+.tab-lock-mask .status-item {
+  padding: 8px 10px;
 }
 
 .lock-card {
@@ -9904,6 +9799,7 @@ html.dark {
 .main-viewport {
   width: calc(100% - 48px);
   max-width: 1400px;
+  min-height: 400px;
   margin: 0 auto 32px;
 }
 
