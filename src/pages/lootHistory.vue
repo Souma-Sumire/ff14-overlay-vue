@@ -1397,8 +1397,9 @@ function getItemSortPriority(
     return cached
 
   const order = mode === 'part' ? PART_ORDER : DROP_ORDER
+  const normalizedItem = mode === 'drop' ? toSlotDisplayName(item) : item
   const index = order.findIndex(
-    def => item.includes(def) || def.includes(item),
+    def => normalizedItem.includes(def) || def.includes(normalizedItem),
   )
   const priority = index !== -1 ? index : RAID_REGEX.test(item) ? 50 : 100
   itemSortPriorityCache[mode].set(item, priority)
@@ -1614,8 +1615,7 @@ function buildSortedRecordsInWeek(weekName: string): LootRecord[] {
     if (roleCompare !== 0)
       return roleCompare
 
-    // 3. 职能相同时，按照时间顺序
-    return a.timestamp.getTime() - b.timestamp.getTime()
+    return 0
   })
 }
 const sortedRecordsByWeekMap = computed(() => {
@@ -1657,11 +1657,11 @@ function getItemGroupId(itemName: string): number {
   }
   else {
     // 部位排序下的分组逻辑 (可选，或者在部位排序下不显示分割线)
-    if (p === 0)
-      return 1 // 武器
-    if (p <= 5)
+    if (p <= 1)
+      return 1 // 武器与随武
+    if (p <= 6)
       return 2 // 左侧防具
-    if (p <= 9)
+    if (p <= 10)
       return 3 // 首饰
     return 4 // 材料
   }

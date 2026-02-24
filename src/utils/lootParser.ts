@@ -150,6 +150,7 @@ export function getRollTypeIcon(type: string) {
 
 export enum PartOrder {
   WeaponBox = '武器箱',
+  RandomWeapon = '随武',
   HeadBox = '头部装备箱',
   BodyBox = '身体装备箱',
   HandsBox = '手臂装备箱',
@@ -182,6 +183,7 @@ export enum DropOrder {
   Solvent = '强化药',
   Coating = '强化纤维',
   WeaponBox = '武器箱',
+  RandomWeapon = '随武',
 }
 
 export const DROP_ORDER = Object.values(DropOrder)
