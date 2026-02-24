@@ -1380,6 +1380,10 @@ const visibleUniqueItems = computed(() => {
   return uniqueItems.value.filter(isItemChecked)
 })
 
+const selectedUniqueItems = computed(() => {
+  return uniqueItems.value.filter(isItemChecked)
+})
+
 function getItemSortPriority(
   item: string,
   mode: 'part' | 'drop' = 'part',
@@ -4309,7 +4313,7 @@ const activeStep = computed(() => {
                           class="header-search-input"
                         >
                           <ElOption
-                            v-for="item in visibleUniqueItems"
+                            v-for="item in selectedUniqueItems"
                             :key="item"
                             :label="item"
                             :value="item"
