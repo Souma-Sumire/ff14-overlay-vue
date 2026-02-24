@@ -1745,10 +1745,15 @@ async function setLogPath() {
       }
     ).showDirectoryPicker
     if (!showPicker) {
-      ElMessageBox.alert('你的浏览器不支持此功能', '错误', {
-        confirmButtonText: '确定',
-        type: 'error',
-      })
+      ElMessageBox.alert(
+        '你的浏览器不支持此功能，详情请参阅:<br /> <a href="https://caniuse.com/?search=showDirectoryPicker" target="_blank" style="color: #409eff">Can I use showDirectoryPicker ? </a>',
+        '错误',
+        {
+          confirmButtonText: '确定',
+          type: 'error',
+          dangerouslyUseHTMLString: true,
+        },
+      )
       return false
     }
     const handle = await showPicker()
