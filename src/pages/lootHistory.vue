@@ -70,6 +70,8 @@ const GAME_VERSION_CONFIG = {
   RAID_START_TIME: '2026-01-06T16:00',
   // 零式装备/道具系列的关键词
   RAID_SERIES_KEYWORD: '总冠军',
+  // 管弦乐琴乐谱
+  RAID_ORCHESTRION: '天上的阿卡狄亚',
 }
 
 const LABELS = {
@@ -395,7 +397,7 @@ const EQUIP_ROLES = [
 const EQUIP_ROLES_STR = EQUIP_ROLES.join('|')
 
 const RAID_REGEX = new RegExp(
-  `${GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD}武器箱|${GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD}(?!${EQUIP_ROLES_STR})|规格神典石|强化药|硬化药|强化纤维|神典石`,
+  `${GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD}武器箱|${GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD}(?!${EQUIP_ROLES_STR})|管弦乐琴乐谱：${GAME_VERSION_CONFIG.RAID_ORCHESTRION}|规格神典石|强化药|硬化药|强化纤维|神典石`,
 )
 const EQUIP_SERIES_REGEX = new RegExp(`(?<series>.+)(${EQUIP_ROLES_STR}).+`)
 const showOnlyRole = ref(false)
