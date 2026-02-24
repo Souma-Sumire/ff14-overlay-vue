@@ -86,6 +86,6 @@ function idToSrc(id: number | string) {
     // console.warn(`找不到动作图标: ${chinese}, icon: ${icon}`)
     return ''
   }
-  return getIconSrcById(icon, true)
+  return getIconSrcById(icon)
 }
 export { idToSrc, parseDynamicPerformance, parseDynamicValue }

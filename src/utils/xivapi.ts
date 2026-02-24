@@ -9,8 +9,8 @@ const params = new URLSearchParams(window.location.search)
 const apiParam = params.get('api')?.toLowerCase()
 
 const SITE_HOST = {
-  cafe: { host: 'cafemaker.wakingsands.com', imgHost: 'cafemaker.wakingsands.com', version: 1 },
-  xivapi: { host: 'v2.xivapi.com', imgHost: 'xivapi.com', version: 2 },
+  cafe: { host: 'xivapi-v2.xivcdn.com', imgHost: 'cafemaker.wakingsands.com' },
+  xivapi: { host: 'v2.xivapi.com', imgHost: 'xivapi.com' },
 } as const
 
 type SiteName = keyof typeof SITE_HOST
@@ -59,15 +59,6 @@ primarySite = resolveInitialPrimarySite()
 
 export { XIVAPI_CACHE_VERSION }
 
-function buildUrl(siteName: SiteName, api = true) {
-  const { host, version } = SITE_HOST[siteName]
-  return `https://${host}${api && version === 2 ? '/api' : ''}`
-}
-
-function buildImgUrl(siteName: SiteName) {
-  return `https://${SITE_HOST[siteName].imgHost}`
-}
-
 /**
  * 切换全局主站，并强制救援当前页面所有 pending 状态的图片。
  */
@@ -86,7 +77,7 @@ function switchPrimarySite(failedHost?: string): void {
   const oldImgHost = currentConfig.imgHost
   primarySite = primarySite === 'cafe' ? 'xivapi' : 'cafe'
   const newSite = primarySite
-  const newBase = buildImgUrl(newSite)
+  const newBase = `https://${SITE_HOST[newSite].imgHost}`
 
   persistPrimarySite(newSite)
   console.warn(`[xivapi] Site ${oldApiHost} seems down. Switching to ${newSite} and rescuing pending images...`)
@@ -107,29 +98,29 @@ function switchPrimarySite(failedHost?: string): void {
 
 export const EMPTY_IMAGE = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
 
-export function getIconSrcById(iconId: number, highRes = false): string {
+export function getIconSrcById(iconId: number): string {
   if (!Number.isFinite(iconId) || iconId <= 0)
     return EMPTY_IMAGE
   const full = completeIcon(Math.trunc(iconId))
-  const suffix = highRes ? '_hr1' : ''
-  return `${buildImgUrl(primarySite)}/i/${full}${suffix}.png`
+  // const suffix = highRes ? '_hr1' : ''
+  return `https://${SITE_HOST[primarySite].imgHost}/i/${full}.png`
 }
 
-export function getIconSrcByFullIcon(fullIcon: string, highRes = false): string {
+export function getIconSrcByFullIcon(fullIcon: string): string {
   if (!fullIcon)
     return EMPTY_IMAGE
-  const suffix = highRes ? '_hr1' : ''
-  return `${buildImgUrl(primarySite)}/i/${fullIcon}${suffix}.png`
+  // const suffix = highRes ? '_hr1' : ''
+  return `https://${SITE_HOST[primarySite].imgHost}/i/${fullIcon}.png`
 }
 
-export function getIconSrcByPath(iconPath: string, itemIsHQ = false, highRes = false): string {
+export function getIconSrcByPath(iconPath: string, itemIsHQ = false): string {
   if (!iconPath)
     return EMPTY_IMAGE
   if (/^https?:\/\//.test(iconPath))
     return iconPath
-  const suffix = highRes ? '_hr1' : ''
-  const baseUrl = buildImgUrl(primarySite)
-  return `${baseUrl}${iconPath}`.replace(/(\d{6})\.png$/, (_m, p1) => `${itemIsHQ ? 'hq/' : ''}${p1}${suffix}.png`)
+  // const suffix = highRes ? '_hr1' : ''
+  const baseUrl = `https://${SITE_HOST[primarySite].imgHost}`
+  return `${baseUrl}${iconPath}`.replace(/(\d{6})\.png$/, (_m, p1) => `${itemIsHQ ? 'hq/' : ''}${p1}.png`)
 }
 
 export async function getActionIconSrc(id: number): Promise<string> {
@@ -142,9 +133,6 @@ export interface XivApiActionSearchItem {
   Name: string
   Icon: string
   ClassJobLevel: number
-  ClassJobTargetID: number
-  ClassJobCategoryTargetID?: number
-  ActionCategoryTargetID?: number
   IsRoleAction?: number
   IsPvP?: number
   Recast100ms?: number
@@ -159,72 +147,19 @@ async function requestWithFallback(path: string): Promise<any> {
   const task = (async () => {
     const sites: SiteName[] = primarySite === 'cafe' ? ['cafe', 'xivapi'] : ['xivapi', 'cafe']
     for (const siteName of sites) {
-      const isV2 = SITE_HOST[siteName].version === 2
-      let buildedPath = path
-      if (isV2) {
-        // V2 路径转换逻辑：/Action/ID -> /sheet/Action/ID
-        // 支持匹配 /action/123 或 /api/action/123 (以防万一)
-        const v2PathMatch = buildedPath.match(/^\/?(api\/)?([a-zA-Z0-9]+)\/(\d+)/)
-        if (v2PathMatch && v2PathMatch[2] && v2PathMatch[3] && !buildedPath.includes('/search')) {
-          const sheetName = v2PathMatch[2]
-          const capitalized = sheetName.charAt(0).toUpperCase() + sheetName.slice(1)
-          buildedPath = `/sheet/${capitalized}/${v2PathMatch[3]}${buildedPath.includes('?') ? `?${buildedPath.split('?')[1]}` : ''}`
-        }
-      }
-
       // 构建完整 URL
-      const baseUrl = buildUrl(siteName, true)
-      const urlObj = new URL(`${baseUrl}${buildedPath.startsWith('/') ? '' : '/'}${buildedPath}`)
+      const baseUrl = `https://${SITE_HOST[siteName].host}/api`
+      const urlObj = new URL(`${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`)
 
-      if (isV2) {
-        // V2 参数翻译
-        const urlParams = urlObj.searchParams
+      // V2 参数翻译
+      const urlParams = urlObj.searchParams
 
-        // 核心翻译：显式只映射目前涉及到的几个分类字段
-        if (urlParams.has('filters')) {
-          const rawFilters = urlParams.get('filters') || ''
-          const translated = rawFilters.split(',').filter(Boolean).map((f) => {
-            const parts = f.split('=')
-            if (parts.length < 2)
-              return ''
-            const k = parts[0] as string
-            const v = parts[1] as string
-            // 显式映射：防止误伤其他字段
-            let newKey = k
-            if (k === 'ClassJobTargetID')
-              newKey = 'ClassJob'
-            else if (k === 'ClassJobCategoryTargetID')
-              newKey = 'ClassJobCategory'
-            else if (k === 'ActionCategoryTargetID')
-              newKey = 'ActionCategory'
-
-            // 值翻译: V2 对布尔字段要求 false/true 文本，语法要求 +Key=Value
-            let newVal = v
-            if (v === '0')
-              newVal = 'false'
-            else if (v === '1')
-              newVal = 'true'
-
-            return `+${newKey}=${newVal}`
-          }).filter(Boolean).join(' ')
-          urlParams.set('query', translated)
-          urlParams.delete('filters')
-        }
-
-        if (urlParams.has('columns')) {
-          // 显式替换：只对已知字段进行映射转换，且 ID -> row_id
-          let fields = urlParams.get('columns')!
-          fields = fields.replace(/\bID\b/g, 'row_id')
-            .replace(/ClassJobTargetID/g, 'ClassJob')
-            .replace(/ClassJobCategoryTargetID/g, 'ClassJobCategory')
-            .replace(/ActionCategoryTargetID/g, 'ActionCategory')
-          urlParams.set('fields', fields)
-          urlParams.delete('columns')
-        }
-        if (urlParams.has('indexes')) {
-          urlParams.set('sheets', urlParams.get('indexes')!)
-          urlParams.delete('indexes')
-        }
+      if (urlParams.has('columns')) {
+        // 仅保留 ID -> row_id 映射
+        let fields = urlParams.get('columns')!
+        fields = fields.replace(/\bID\b/g, 'row_id')
+        urlParams.set('fields', fields)
+        urlParams.delete('columns')
       }
 
       try {
@@ -242,53 +177,48 @@ async function requestWithFallback(path: string): Promise<any> {
           switchPrimarySite()
         let json = await resp.json()
 
-        if (isV2) {
-          const norm = (i: any) => {
-            if (!i)
-              return i
-            const f = i.fields || i || {}
-            const res: any = { ...f, ID: i.row_id || i.ID }
-            // 递归拆包 V2 的对象结构 (Boilmaster 专有)
-            for (const key in res) {
-              const val = res[key]
-              if (val && typeof val === 'object' && !Array.isArray(val)) {
-                if (key === 'ClassJobCategory' && val.fields) {
-                  res._ClassJobCategoryJobs = Object.entries(val.fields)
-                    .filter(([_, value]) => value === true)
-                    .map(([k]) => Util.jobToJobEnum(k as any))
-                    .filter(v => typeof v === 'number' && v > 0)
-                }
-
-                if (val.path !== undefined)
-                  res[key] = `/${val.path.replace(/^ui\/icon\//, 'i/').replace(/\.tex$/, '.png')}`
-                else if (val.row_id !== undefined)
-                  res[key] = val.row_id
-                else if (val.value !== undefined)
-                  res[key] = val.value
+        const norm = (i: any) => {
+          if (!i)
+            return i
+          const f = i.fields || i || {}
+          const res: any = { ...f, ID: i.row_id || i.ID }
+          // 递归拆包 V2 的对象结构 (Boilmaster 专有)
+          for (const key in res) {
+            const val = res[key]
+            if (val && typeof val === 'object' && !Array.isArray(val)) {
+              if (key === 'ClassJobCategory' && val.fields) {
+                res._ClassJobCategoryJobs = Object.entries(val.fields)
+                  .filter(([_, value]) => value === true)
+                  .map(([k]) => Util.jobToJobEnum(k as any))
+                  .filter(v => typeof v === 'number' && v > 0)
               }
-            }
-            // 字段映射并转换回 V1 风格以兼容现有逻辑
-            return {
-              ...res,
-              ClassJobTargetID: res.ClassJob,
-              ClassJobCategoryTargetID: res.ClassJobCategory,
-              ActionCategoryTargetID: res.ActionCategory,
-              IsPvP: res.IsPvP ? 1 : 0,
-              IsRoleAction: res.IsRoleAction ? 1 : 0,
-              Recast100ms: Number(res.Recast100ms) || 0,
-              ClassJobLevel: Number(res.ClassJobLevel) || 0,
-              _ClassJobCategoryJobs: res._ClassJobCategoryJobs,
+
+              if (val.path !== undefined)
+                res[key] = `/${val.path.replace(/^ui\/icon\//, 'i/').replace(/\.tex$/, '.png')}`
+              else if (val.row_id !== undefined)
+                res[key] = val.row_id
+              else if (val.value !== undefined)
+                res[key] = val.value
             }
           }
-          if (json.results) {
-            json = {
-              Pagination: { PageTotal: json.total_pages },
-              Results: json.results.map(norm),
-            }
+          // 保持调用方需要的字段稳定
+          return {
+            ...res,
+            IsPvP: res.IsPvP ? 1 : 0,
+            IsRoleAction: res.IsRoleAction ? 1 : 0,
+            Recast100ms: Number(res.Recast100ms) || 0,
+            ClassJobLevel: Number(res.ClassJobLevel) || 0,
+            _ClassJobCategoryJobs: res._ClassJobCategoryJobs,
           }
-          else if (json.row_id !== undefined || json.ID !== undefined) {
-            json = norm(json)
+        }
+        if (json.results) {
+          json = {
+            Pagination: { PageTotal: json.total_pages },
+            Results: json.results.map(norm),
           }
+        }
+        else if (json.row_id !== undefined || json.ID !== undefined) {
+          json = norm(json)
         }
         return json
       }
@@ -306,13 +236,14 @@ async function requestWithFallback(path: string): Promise<any> {
 export async function parseAction(type: string, id: number, columns: string[] = ['ID', 'Icon']): Promise<any> {
   const key = `${type}:${id}`
   const reqCols = Array.from(new Set([...columns, 'ID', 'Icon', 'ClassJobLevel', 'IsRoleAction']))
+  const sheetName = type.charAt(0).toUpperCase() + type.slice(1)
 
   const cache = await actionMetaCacheDb.get(key)
   if (cache?.value && reqCols.every(c => Object.prototype.hasOwnProperty.call(cache.value, c))) {
     return cache.value
   }
 
-  const res = await requestWithFallback(`/${type}/${id}?columns=${reqCols.join(',')}`)
+  const res = await requestWithFallback(`/sheet/${sheetName}/${id}?columns=${reqCols.join(',')}`)
   const final = { id, ...res }
   if (type === 'action') {
     markRoleActionId(id, !!final.IsRoleAction)
@@ -347,14 +278,11 @@ export async function searchActionsByClassJobs(jobIds: number[], limit = 500): P
     const res = await requestWithFallback(`/search?sheets=Action&${q}&limit=100&fields=${v2Cols}`)
     const rows = res.Results || []
     rows.forEach((r: any) => {
-      const rid = Number(r.row_id || r.ID) || 0
+      const rid = Number(r.ID) || 0
       if (rid > 0 && !merged.has(rid)) {
-        // 全 API 数据解析：V2 返回的 Icon 是一个嵌套对象 { path: "..." }
-        const iconPath = typeof r.Icon === 'object' ? r.Icon?.path : r.Icon
         const row = {
           ...r,
           ID: rid,
-          Icon: iconPath,
           IsRoleAction: r.IsRoleAction ? 1 : 0,
           ClassJobLevel: resolveActionMinLevel(r.ClassJobLevel, { actionId: rid, isRoleAction: !!r.IsRoleAction }),
         }
@@ -403,5 +331,5 @@ export function handleImgError(event: Event): void {
   target.dataset.tried = '1'
   const nextSite = primarySite
   const path = url.pathname
-  target.src = `${buildImgUrl(nextSite)}${path}`
+  target.src = `https://${SITE_HOST[nextSite].imgHost}${path}`
 }

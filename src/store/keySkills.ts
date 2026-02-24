@@ -303,9 +303,9 @@ const useKeySkillStore = defineStore('keySkill', () => {
           'Icon',
           'Recast100ms',
           'ClassJobLevel',
-          'ClassJobTargetID',
-          'ClassJobCategoryTargetID',
-          'ActionCategoryTargetID',
+          'ClassJob',
+          'ClassJobCategory',
+          'ActionCategory',
           'MaxCharges',
           'IsRoleAction',
         ])

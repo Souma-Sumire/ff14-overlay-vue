@@ -357,7 +357,7 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
           if (queryType === 'action') {
             const baked = resolveBakedActionMeta(abiId)
             if (baked && baked.iconId > 0) {
-              setCastSrc(getIconSrcById(baked.iconId, false))
+              setCastSrc(getIconSrcById(baked.iconId))
               cast.class = `action action-category-${baked.actionCategoryTargetId}`
               resolvedFromBaked = true
             }
@@ -367,7 +367,7 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
             const action = await parseAction(queryType, abiId, [
               'ID',
               'Icon',
-              'ActionCategoryTargetID',
+              'ActionCategory',
             ])
             if (action.ID === 3) {
               // 疾跑(冲刺)
@@ -375,7 +375,7 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
             }
             setCastSrc(getIconSrcByPath(action?.Icon ?? '', itemIsHQ))
             if (queryType === 'action')
-              cast.class = `action action-category-${action?.ActionCategoryTargetID}`
+              cast.class = `action action-category-${action?.ActionCategory}`
             else if (queryType === 'mount')
               cast.class = 'mount'
           }

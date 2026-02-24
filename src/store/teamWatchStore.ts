@@ -17,7 +17,7 @@ const TEAM_WATCH_ACTION_COLUMNS = [
   'ID',
   'Name',
   'Icon',
-  'ActionCategoryTargetID',
+  'ActionCategory',
   'Recast100ms',
   'MaxCharges',
   'ClassJobLevel',

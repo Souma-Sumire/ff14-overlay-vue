@@ -302,8 +302,6 @@ function getJobIconUrl(jobIcon: string, type: number) {
   return `https://souma.diemoe.net/resources/img/cj${type}/${jobName}.png`
 }
 
-const icon4k = store.icon4k
-
 function prepareRowVO(row: Omit<RowVO, 'preCalculated'>): RowVO {
   const reductionColor = getReductionColor(row.reduction)
   const amountDisplay
@@ -342,7 +340,7 @@ function prepareRowVO(row: Omit<RowVO, 'preCalculated'>): RowVO {
       damageTypeClass: (row.effect === 'heal') ? 'is-heal' : type,
       jobIconSrc,
       keigenns: row.keigenns.map(v => ({
-        src: getIconSrcByFullIcon(v.fullIcon, icon4k === '_hr1'),
+        src: getIconSrcByFullIcon(v.fullIcon),
         usefulClass: multiplierEffect(v, type as any),
         title: `${userOptions.statusCN ? v.name : v.effect}(${v.source})`,
         duration: v.remainingDuration ?? '',

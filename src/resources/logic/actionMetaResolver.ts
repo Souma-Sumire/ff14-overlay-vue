@@ -232,9 +232,9 @@ export function resolveApiActionMeta(actionId: number, row: any) {
   const isRole = !!row.IsRoleAction
   if (isRole)
     markRoleActionId(id, 1)
-  const cj = Number(row.ClassJobTargetID) || 0
-  const cjc = Number(row.ClassJobCategoryTargetID) || 0
-  const ac = Number(row.ActionCategoryTargetID) || 0
+  const cj = Number(row.ClassJob) || 0
+  const cjc = Number(row.ClassJobCategory) || 0
+  const ac = Number(row.ActionCategory) || 0
 
   let jobs: number[] = []
   if (Array.isArray(row._ClassJobCategoryJobs) && row._ClassJobCategoryJobs.length > 0) {
@@ -332,14 +332,14 @@ export function resolveActionDisplayName(aid: number, fallback: number, apiName?
   return getName(aid) || getName(fallback) || (apiName?.trim() || '') || `#${aid}`
 }
 
-export function resolveActionIconSrc(aid: number, options?: { apiIconPath?: string, highRes?: boolean }) {
+export function resolveActionIconSrc(aid: number, options?: { apiIconPath?: string }) {
   const iconId = Number(BAKED_ACTION_META_LITE_BY_ID[aid]?.icon) || 0
   if (iconId > 0)
-    return getIconSrcById(iconId, options?.highRes ?? true)
+    return getIconSrcById(iconId)
   const src = idToSrc(aid)
   if (src)
     return src
-  return options?.apiIconPath?.trim() ? getIconSrcByPath(options.apiIconPath, false, options?.highRes ?? false) : EMPTY_IMAGE
+  return options?.apiIconPath?.trim() ? getIconSrcByPath(options.apiIconPath, false) : EMPTY_IMAGE
 }
 
 // --- Upgrade Family Logic ---

@@ -25,11 +25,6 @@ export const useKeigennRecord2Store = defineStore('keigennRecord2', {
     }
   },
   getters: {
-    icon4k(state) {
-      return state.userOptions.scale >= 2 || window.devicePixelRatio >= 2
-        ? '_hr1'
-        : ''
-    },
   },
   actions: {
     checkIsBrowser() {
