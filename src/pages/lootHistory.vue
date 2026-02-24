@@ -774,13 +774,7 @@ const uniqueItems = computed(() => {
       .filter(r => !isSystemFiltered(r.item))
       .map(r => r.item),
   )
-  return Array.from(items).sort((a, b) => {
-    const pa = getItemSortPriority(a)
-    const pb = getItemSortPriority(b)
-    if (pa !== pb)
-      return pa - pb
-    return a.localeCompare(b)
-  })
+  return Array.from(items).sort((a, b) => compareItemsForDisplay(a, b))
 })
 
 const rawSuspiciousKeys = computed(() => {
@@ -1362,6 +1356,38 @@ const selectedUniqueItems = computed(() => {
   return uniqueItems.value.filter(isItemChecked)
 })
 
+const analysisLockOptions = computed(() => [
+  {
+    key: 'member-only',
+    label: '只看固定队',
+    enabled: isOnlyRaidMembersActive.value,
+    onChange: (val: string | number | boolean) => {
+      isOnlyRaidMembersActive.value = val === true
+    },
+  },
+  {
+    key: 'raid-only',
+    label: '只看零式掉落',
+    enabled: isRaidFilterActive.value,
+    onChange: (val: string | number | boolean) => {
+      isRaidFilterActive.value = val === true
+    },
+  },
+])
+
+function isCountMatchedByFilterMode(count: number, mode: DisplayFilterMode) {
+  if (mode === 'all')
+    return true
+  if (mode === 'obtained')
+    return count > 0
+  return count === 0
+}
+
+function toSlotDisplayName(itemName: string) {
+  const rawSlot = getItemSlot(itemName)
+  return rawSlot === '其他' ? itemName : rawSlot
+}
+
 function getItemSortPriority(
   item: string,
   mode: 'part' | 'drop' = 'part',
@@ -1377,6 +1403,23 @@ function getItemSortPriority(
   const priority = index !== -1 ? index : RAID_REGEX.test(item) ? 50 : 100
   itemSortPriorityCache[mode].set(item, priority)
   return priority
+}
+
+function compareItemsForDisplay(
+  a: string,
+  b: string,
+  mode: 'part' | 'drop' = 'part',
+) {
+  const isRaidA = RAID_REGEX.test(a)
+  const isRaidB = RAID_REGEX.test(b)
+  if (isRaidA !== isRaidB)
+    return isRaidA ? -1 : 1
+
+  const priorityA = getItemSortPriority(a, mode)
+  const priorityB = getItemSortPriority(b, mode)
+  if (priorityA !== priorityB)
+    return priorityA - priorityB
+  return a.localeCompare(b)
 }
 
 const visibleItemCount = computed(() => visibleUniqueItems.value.length)
@@ -1477,24 +1520,21 @@ const displaySlots = computed(() => {
   const predefinedList = slotSortMode.value === 'part' ? PART_ORDER : DROP_ORDER
 
   const selectedPlayers = checkedVisiblePlayers.value
-  const selectedSlots = Array.from(
-    new Set(
-      selectedUniqueItems.value.map((item) => {
-        const rawSlot = getItemSlot(item)
-        return rawSlot === '其他' ? item : rawSlot
-      }),
-    ),
-  )
+  const selectedSlots = Array.from(new Set(selectedUniqueItems.value.map(toSlotDisplayName)))
   const selectedSlotSet = new Set(selectedSlots)
 
   const shouldShowByMode = (slotName: string) => {
-    const slotCounts = slotSummary.value[slotName] || {}
+    const countsByPlayer = slotSummary.value[slotName] || {}
     if (filterMode === 'all')
       return true
-    if (filterMode === 'obtained') {
-      return selectedPlayers.some(p => (slotCounts[p] || 0) > 0)
-    }
-    return selectedPlayers.some(p => (slotCounts[p] || 0) === 0)
+    return selectedPlayers.some(p =>
+      isCountMatchedByFilterMode(countsByPlayer[p] || 0, filterMode),
+    )
+  }
+
+  const getSelectedPlayerTotal = (slotName: string) => {
+    const countsByPlayer = slotSummary.value[slotName] || {}
+    return selectedPlayers.reduce((sum, p) => sum + (countsByPlayer[p] || 0), 0)
   }
 
   const filteredSlots = selectedSlots.filter(shouldShowByMode)
@@ -1506,14 +1546,8 @@ const displaySlots = computed(() => {
   const dynamic = filteredSlots
     .filter(slot => !(predefinedList as readonly string[]).includes(slot))
     .sort((a, b) => {
-      const totalA = selectedPlayers.reduce(
-        (sum, p) => sum + (slotSummary.value[a]?.[p] || 0),
-        0,
-      )
-      const totalB = selectedPlayers.reduce(
-        (sum, p) => sum + (slotSummary.value[b]?.[p] || 0),
-        0,
-      )
+      const totalA = getSelectedPlayerTotal(a)
+      const totalB = getSelectedPlayerTotal(b)
       if (totalA !== totalB)
         return totalB - totalA
       return a.localeCompare(b)
@@ -2199,15 +2233,9 @@ function comparePlayersByRole(
 
 function buildSortedPlayersInSlot(summary: Record<string, number>) {
   const filterMode = slotSummaryFilterMode.value
-  const selectedPlayers = checkedVisiblePlayers.value
-  const result = selectedPlayers.filter((p) => {
-    const count = summary?.[p] || 0
-    if (filterMode === 'all')
-      return true
-    if (filterMode === 'obtained')
-      return count > 0
-    return count === 0
-  })
+  const result = checkedVisiblePlayers.value.filter(p =>
+    isCountMatchedByFilterMode(summary[p] || 0, filterMode),
+  )
 
   return result.sort((a, b) => comparePlayersByRole(a, b, summary || {}))
 }
@@ -2298,7 +2326,7 @@ function buildFilteredItemsInPlayerSummary(player: string) {
 
   selectedUniqueItems.value.forEach((itemName) => {
     const count = obtainedItemsMap[itemName] || 0
-    const slotName = getItemSlot(itemName)
+    const slotName = toSlotDisplayName(itemName)
     const row = findDefaultRowBySlot(slotName)
     const isRandomWeapon = slotName === '随武'
 
@@ -2311,27 +2339,12 @@ function buildFilteredItemsInPlayerSummary(player: string) {
   })
 
   const mode = summarySortMode.value
-  results.sort((a, b) => {
-    const ia = getItemSortPriority(
-      a.name,
-      mode,
-    )
-    const ib = getItemSortPriority(
-      b.name,
-      mode,
-    )
-    if (ia !== ib)
-      return ia - ib
-    return a.name.localeCompare(b.name)
-  })
+  results.sort((a, b) => compareItemsForDisplay(a.name, b.name, mode))
 
-  if (playerSummaryFilterMode.value === 'obtained') {
-    return results.filter(i => i.count > 0)
-  }
-  else if (playerSummaryFilterMode.value === 'needed') {
-    return results.filter(i => i.count === 0)
-  }
-  return results
+  const filterMode = playerSummaryFilterMode.value
+  if (filterMode === 'all')
+    return results
+  return results.filter(i => isCountMatchedByFilterMode(i.count, filterMode))
 }
 const filteredItemsByPlayerSummaryMap = computed(() => {
   const map: Record<string, ReturnType<typeof buildFilteredItemsInPlayerSummary>> = {}
@@ -4585,11 +4598,13 @@ const activeStep = computed(() => {
 
                 <div class="status-list">
                   <div
+                    v-for="option in analysisLockOptions"
+                    :key="option.key"
                     class="status-item"
-                    :class="{ 'is-ready': isOnlyRaidMembersActive }"
+                    :class="{ 'is-ready': option.enabled }"
                   >
                     <div class="item-icon">
-                      <el-icon v-if="isOnlyRaidMembersActive">
+                      <el-icon v-if="option.enabled">
                         <CircleCheckFilled />
                       </el-icon>
                       <el-icon v-else>
@@ -4597,27 +4612,12 @@ const activeStep = computed(() => {
                       </el-icon>
                     </div>
                     <div class="item-label">
-                      只看固定队
+                      {{ option.label }}
                     </div>
-                    <ElSwitch v-model="isOnlyRaidMembersActive" />
-                  </div>
-
-                  <div
-                    class="status-item"
-                    :class="{ 'is-ready': isRaidFilterActive }"
-                  >
-                    <div class="item-icon">
-                      <el-icon v-if="isRaidFilterActive">
-                        <CircleCheckFilled />
-                      </el-icon>
-                      <el-icon v-else>
-                        <CircleCloseFilled />
-                      </el-icon>
-                    </div>
-                    <div class="item-label">
-                      只看零式掉落
-                    </div>
-                    <ElSwitch v-model="isRaidFilterActive" />
+                    <ElSwitch
+                      :model-value="option.enabled"
+                      @update:model-value="option.onChange"
+                    />
                   </div>
                 </div>
               </div>
@@ -5249,83 +5249,6 @@ html.dark .section-mask {
 .guide-popover-popper,
 .role-settings-popper {
   padding: 0 !important;
-}
-
-.bis-allocator-wrapper {
-  position: relative;
-  min-height: 400px;
-}
-
-.bis-lock-mask {
-  position: absolute;
-  inset: -10px;
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(8px);
-  background: rgba(255, 255, 255, 0.4);
-  border-radius: 12px;
-  overflow: hidden;
-
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background-image: var(--ffxiv-diagonal-texture);
-    opacity: 0.6;
-    pointer-events: none;
-  }
-}
-
-html.dark .bis-lock-mask {
-  background: rgba(22, 24, 35, 0.65);
-}
-
-.lock-card {
-  background: #fff;
-  padding: 40px;
-  border-radius: 16px;
-  box-shadow:
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  text-align: center;
-  max-width: 420px;
-  border: 1px solid #e2e8f0;
-  z-index: 10;
-  animation: slide-up 0.4s ease-out;
-}
-
-html.dark .lock-card {
-  background: #1e293b;
-  border-color: #334155;
-  color: #f1f5f9;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-}
-
-.lock-icon {
-  font-size: 56px;
-  color: #f59e0b;
-  margin-bottom: 20px;
-}
-
-.lock-card h3 {
-  margin-top: 0;
-  margin-bottom: 12px;
-  font-size: 1.25rem;
-  font-weight: 700;
-}
-
-.lock-card p {
-  color: #64748b;
-  margin-bottom: 32px;
-  font-size: 0.95rem;
-  line-height: 1.6;
-}
-
-html.dark .lock-card p {
-  color: #94a3b8;
 }
 
 @keyframes slide-up {
