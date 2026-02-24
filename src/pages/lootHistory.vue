@@ -72,6 +72,10 @@ const GAME_VERSION_CONFIG = {
   RAID_SERIES_KEYWORD: '总冠军',
   // 管弦乐琴乐谱
   RAID_ORCHESTRION: '天上的阿卡狄亚',
+  // 零式坐骑
+  RAID_MOUNT: '跳跳车T1启动钥匙',
+  // 零式宠物
+  RAID_MINION: '摇摆绿光',
 }
 
 const LABELS = {
@@ -395,7 +399,7 @@ const EQUIP_ROLES = [
 const EQUIP_ROLES_STR = EQUIP_ROLES.join('|')
 
 const RAID_REGEX = new RegExp(
-  `${GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD}武器箱|${GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD}(?!${EQUIP_ROLES_STR})|管弦乐琴乐谱：${GAME_VERSION_CONFIG.RAID_ORCHESTRION}|规格神典石|强化药|硬化药|强化纤维|神典石`,
+  `${GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD}武器箱|${GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD}(?!${EQUIP_ROLES_STR})|管弦乐琴乐谱：${GAME_VERSION_CONFIG.RAID_ORCHESTRION}|规格神典石|强化药|硬化药|强化纤维|神典石|${GAME_VERSION_CONFIG.RAID_MOUNT}|${GAME_VERSION_CONFIG.RAID_MINION}`,
 )
 const EQUIP_SERIES_REGEX = new RegExp(`(?<series>.+)(${EQUIP_ROLES_STR}).+`)
 const showOnlyRole = ref(false)

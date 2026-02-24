@@ -164,6 +164,8 @@ export enum PartOrder {
   Coating = '强化纤维',
   Tome = '神典石',
   Solvent = '强化药',
+  Mount = '跳跳车T1启动钥匙',
+  Minion = '摇摆绿光',
 }
 
 export const PART_ORDER = Object.values(PartOrder)
@@ -184,6 +186,8 @@ export enum DropOrder {
   Coating = '强化纤维',
   WeaponBox = '武器箱',
   RandomWeapon = '随武',
+  Mount = '跳跳车T1启动钥匙',
+  Minion = '摇摆绿光',
 }
 
 export const DROP_ORDER = Object.values(DropOrder)
