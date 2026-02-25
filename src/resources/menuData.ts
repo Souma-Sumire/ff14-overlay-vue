@@ -17,12 +17,11 @@ export interface Menu {
 
 export const MENU_ORDER: string[] = [
   'startPages.menu.loot_history',
-  'startPages.menu.team_watch',
   'startPages.menu.keigenn_record2',
   'startPages.menu.healing_timeline',
-  'startPages.menu.mitigation_generator',
   'startPages.menu.key_skill_timer',
   'startPages.menu.zone_macro',
+  'startPages.menu.team_watch',
   'startPages.menu.dd_atlas',
   'startPages.menu.obs_auto_record2',
   'startPages.menu.cactbot_raidboss',
@@ -31,6 +30,7 @@ export const MENU_ORDER: string[] = [
   'startPages.menu.instanced_area_info',
   'startPages.menu.casting_to_chinese',
   'startPages.menu.uisave_editor',
+  'startPages.menu.mitigation_generator',
   'startPages.menu.aether_map',
   'startPages.menu.combat_time_obs',
   'startPages.menu.radar',
@@ -218,7 +218,6 @@ export function getRawMenuData(locale: string, t: (key: string, args?: (string |
       path: `teamWatch?scale=1&opacity=1&postNamazu=false&lang=${locale}`,
       comment: 'startPages.comment.team_watch',
       src: 'teamWatch.webp',
-      isNew: true,
       direction: 'row-reverse',
     },
     {
