@@ -516,6 +516,78 @@ const saveConfigDebounced = (() => {
 })()
 
 const lastSavedState = new Map<string, string>()
+type ConfigEntry = { key: string, value: any }
+
+function buildCurrentConfigEntries(): ConfigEntry[] {
+  return [
+    { key: 'itemVisibility', value: itemVisibility.value },
+    { key: 'playerVisibility', value: playerVisibility.value },
+    { key: 'weekCorrections', value: recordWeekCorrections.value },
+    { key: 'playerCorrections', value: recordPlayerCorrections.value },
+    { key: 'logPath', value: logPath.value },
+    { key: 'processedFiles', value: processedFiles.value },
+    { key: 'syncStartDate', value: syncStartDate.value },
+    { key: 'syncEndDate', value: syncEndDate.value },
+    { key: 'viewMode', value: viewMode.value },
+    { key: 'isRaidFilterActive', value: isRaidFilterActive.value },
+    { key: 'bisConfig', value: bisConfig.value },
+    { key: 'hideUnselectedItems', value: hideUnselectedItems.value },
+    { key: 'playerMapping', value: playerMapping.value },
+    { key: 'playerRoles', value: playerRoles.value },
+    { key: 'showOnlyRole', value: showOnlyRole.value },
+    { key: 'isOnlyRaidMembersActive', value: isOnlyRaidMembersActive.value },
+    { key: 'systemFilterSettings', value: systemFilterSettings.value },
+    { key: 'summarySortMode', value: summarySortMode.value },
+    { key: 'slotSortMode', value: slotSortMode.value },
+    { key: 'weekSortMode', value: weekSortMode.value },
+    { key: 'bisSortMode', value: bisSortMode.value },
+    { key: 'playerSummaryFilterMode', value: playerSummaryFilterMode.value },
+    { key: 'slotSummaryFilterMode', value: slotSummaryFilterMode.value },
+    { key: 'itemSearchKeyword', value: itemSearchKeyword.value },
+    { key: 'winnerSearchPlayer', value: winnerSearchPlayer.value },
+    { key: 'showInitialRoleSetup', value: showInitialRoleSetup.value },
+    { key: 'blacklistedKeys', value: Array.from(blacklistedKeys.value) },
+  ]
+}
+
+function normalizeConfigValue(value: any) {
+  const serialized
+    = value !== null && typeof value === 'object'
+      ? JSON.stringify(value)
+      : String(value)
+  const normalizedValue
+    = value !== null && typeof value === 'object'
+      ? JSON.parse(serialized)
+      : value
+  return { serialized, normalizedValue }
+}
+
+function collectPendingConfigUpdates(configs: ConfigEntry[]) {
+  const pendingUpdates: ConfigEntry[] = []
+
+  for (const { key, value } of configs) {
+    const { serialized, normalizedValue } = normalizeConfigValue(value)
+    if (lastSavedState.get(key) !== serialized) {
+      pendingUpdates.push({
+        key,
+        value: normalizedValue,
+      })
+      lastSavedState.set(key, serialized)
+    }
+  }
+
+  return pendingUpdates
+}
+
+async function saveConfigImmediately() {
+  const configs = buildCurrentConfigEntries().map(({ key, value }) => {
+    const { serialized, normalizedValue } = normalizeConfigValue(value)
+    lastSavedState.set(key, serialized)
+    return { key, value: normalizedValue }
+  })
+
+  await dbConfig.bulkSet(configs)
+}
 
 watch(
   [
@@ -548,50 +620,7 @@ watch(
     showInitialRoleSetup,
   ],
   () => {
-    const rawConfigs = [
-      { key: 'itemVisibility', value: itemVisibility.value },
-      { key: 'playerVisibility', value: playerVisibility.value },
-      { key: 'weekCorrections', value: recordWeekCorrections.value },
-      { key: 'playerCorrections', value: recordPlayerCorrections.value },
-      { key: 'logPath', value: logPath.value },
-      { key: 'processedFiles', value: processedFiles.value },
-      { key: 'syncStartDate', value: syncStartDate.value },
-      { key: 'syncEndDate', value: syncEndDate.value },
-      { key: 'viewMode', value: viewMode.value },
-      { key: 'isRaidFilterActive', value: isRaidFilterActive.value },
-      { key: 'bisConfig', value: bisConfig.value },
-      { key: 'hideUnselectedItems', value: hideUnselectedItems.value },
-      { key: 'playerMapping', value: playerMapping.value },
-      { key: 'playerRoles', value: playerRoles.value },
-      { key: 'showOnlyRole', value: showOnlyRole.value },
-      { key: 'isOnlyRaidMembersActive', value: isOnlyRaidMembersActive.value },
-      { key: 'systemFilterSettings', value: systemFilterSettings.value },
-      { key: 'summarySortMode', value: summarySortMode.value },
-      { key: 'slotSortMode', value: slotSortMode.value },
-      { key: 'weekSortMode', value: weekSortMode.value },
-      { key: 'bisSortMode', value: bisSortMode.value },
-      { key: 'playerSummaryFilterMode', value: playerSummaryFilterMode.value },
-      { key: 'slotSummaryFilterMode', value: slotSummaryFilterMode.value },
-      { key: 'itemSearchKeyword', value: itemSearchKeyword.value },
-      { key: 'winnerSearchPlayer', value: winnerSearchPlayer.value },
-      { key: 'showInitialRoleSetup', value: showInitialRoleSetup.value },
-      { key: 'blacklistedKeys', value: Array.from(blacklistedKeys.value) },
-    ]
-
-    const pendingUpdates: { key: string, value: any }[] = []
-
-    for (const { key, value } of rawConfigs) {
-      const serialized
-        = typeof value === 'object' ? JSON.stringify(value) : String(value)
-      if (lastSavedState.get(key) !== serialized) {
-        pendingUpdates.push({
-          key,
-          value: typeof value === 'object' ? JSON.parse(serialized) : value,
-        })
-        lastSavedState.set(key, serialized)
-      }
-    }
-
+    const pendingUpdates = collectPendingConfigUpdates(buildCurrentConfigEntries())
     if (pendingUpdates.length > 0) {
       saveConfigDebounced(pendingUpdates)
     }
@@ -1367,7 +1396,10 @@ const checkedVisiblePlayers = computed(() => {
 })
 
 const sortedSummaryPlayers = computed(() => {
-  const players = checkedVisiblePlayers.value
+  const players = getPlayersForDisplayFilterMode(
+    checkedVisiblePlayers.value,
+    playerSummaryFilterMode.value,
+  )
   const summary = playerSummary.value
   const counts: Record<string, number> = {}
   players.forEach((p) => {
@@ -1414,6 +1446,15 @@ function isCountMatchedByFilterMode(count: number, mode: DisplayFilterMode) {
   if (mode === 'obtained')
     return count > 0
   return count === 0
+}
+
+function getPlayersForDisplayFilterMode(
+  players: string[],
+  mode: DisplayFilterMode,
+) {
+  if (mode !== 'needed')
+    return players
+  return players.filter(p => !getPlayerRole(p)?.startsWith('LEFT:'))
 }
 
 function toSlotDisplayName(itemName: string) {
@@ -1553,7 +1594,10 @@ const displaySlots = computed(() => {
   const filterMode = slotSummaryFilterMode.value
   const predefinedList = slotSortMode.value === 'part' ? PART_ORDER : DROP_ORDER
 
-  const selectedPlayers = checkedVisiblePlayers.value
+  const selectedPlayers = getPlayersForDisplayFilterMode(
+    checkedVisiblePlayers.value,
+    filterMode,
+  )
   const selectedSlots = Array.from(new Set(selectedUniqueItems.value.map(toSlotDisplayName)))
   const selectedSlotSet = new Set(selectedSlots)
 
@@ -2266,7 +2310,11 @@ function comparePlayersByRole(
 
 function buildSortedPlayersInSlot(summary: Record<string, number>) {
   const filterMode = slotSummaryFilterMode.value
-  const result = checkedVisiblePlayers.value.filter(p =>
+  const selectedPlayers = getPlayersForDisplayFilterMode(
+    checkedVisiblePlayers.value,
+    filterMode,
+  )
+  const result = selectedPlayers.filter(p =>
     isCountMatchedByFilterMode(summary[p] || 0, filterMode),
   )
 
@@ -2377,7 +2425,11 @@ function buildFilteredItemsInPlayerSummary(player: string) {
   const filterMode = playerSummaryFilterMode.value
   if (filterMode === 'all')
     return results
-  return results.filter(i => isCountMatchedByFilterMode(i.count, filterMode))
+  return results.filter((i) => {
+    if (filterMode === 'needed' && i.isRandomWeapon)
+      return false
+    return isCountMatchedByFilterMode(i.count, filterMode)
+  })
 }
 const filteredItemsByPlayerSummaryMap = computed(() => {
   const map: Record<string, ReturnType<typeof buildFilteredItemsInPlayerSummary>> = {}
@@ -2917,6 +2969,13 @@ async function confirmImport() {
     await nextTick()
     refreshReactiveStateAfterImport()
     await nextTick()
+    try {
+      await saveConfigImmediately()
+    }
+    catch (saveErr) {
+      console.error('Failed to persist imported config immediately:', saveErr)
+      ElMessage.warning({ message: '导入完成，但立即保存配置失败，请手动检查', showClose: true })
+    }
 
     ElMessage.success({
       message: '数据导入已完成',

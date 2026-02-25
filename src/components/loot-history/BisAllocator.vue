@@ -308,6 +308,7 @@ function generateEquipLines(rows: BisRow[]): string[] {
 
     const needs: string[] = []
     const greeds: string[] = []
+    const activePlayers = eligiblePlayers.value.filter(p => !excludedPlayers.value.has(p))
 
     // 队长分配具有最高优先级
     if (customAllocations.value[row.id]) {
@@ -318,10 +319,7 @@ function generateEquipLines(rows: BisRow[]): string[] {
       return
     }
 
-    eligiblePlayers.value.forEach((p) => {
-      if (excludedPlayers.value.has(p))
-        return
-
+    activePlayers.forEach((p) => {
       let displayName = props.getPlayerRole?.(p) || p
       displayName = displayName.replace(/^LEFT:/, '').trim()
 
@@ -339,7 +337,9 @@ function generateEquipLines(rows: BisRow[]): string[] {
       content = needs.join('、')
     }
     else if (greeds.length > 0) {
-      content = greeds.join('、')
+      content = greeds.length === activePlayers.length
+        ? '随便ROLL'
+        : greeds.join('、')
     }
     else {
       content = '随便ROLL'
@@ -1217,7 +1217,7 @@ const getRoleGroupClass = getRoleType
                         </div>
                         <div class="rule-item">
                           <strong>3. 兜底机制</strong>
-                          <span>若全员不需要，显示“随便ROLL”。</span>
+                          <span>若全员不需要，或全员均为贪婪，显示“随便ROLL”。</span>
                         </div>
                       </div>
                     </el-popover>
