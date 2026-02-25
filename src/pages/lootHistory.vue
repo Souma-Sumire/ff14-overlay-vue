@@ -6624,9 +6624,9 @@ html.dark .bis-lock-mask {
 .tab-lock-mask {
   inset: 48px 0 0 0;
   border-radius: 0 0 12px 12px;
-  align-items: center;
+  align-items: flex-start;
   overflow: hidden;
-  padding: 0;
+  padding: clamp(20px, 6vh, 56px) 0 0;
 }
 
 .tab-lock-mask .lock-card {
