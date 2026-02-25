@@ -9,6 +9,9 @@ export interface MitigationSheetTemplate {
   description?: string
   mechanics?: MitigationMechanicsImportData
   playerActions?: MitigationPlayerActionsImportData
+  map: {
+    zoneId: number
+  }
 }
 
 export const mitigationSheetTemplates: MitigationSheetTemplate[] = [
@@ -1579,6 +1582,9 @@ export const mitigationSheetTemplates: MitigationSheetTemplate[] = [
           ],
         },
       ],
+    },
+    map: {
+      zoneId: 1321,
     },
   },
 ]

@@ -52,6 +52,7 @@ const emit = defineEmits<{
 }>()
 
 const TARGET_ALL_VALUE = '__all__'
+const TARGET_ALL_LABEL = '全部'
 
 const AUTO_PLAN_EPSILON = 0.001
 
@@ -248,6 +249,46 @@ const mechanicTargetContextMenuRef = ref<HTMLElement | null>(null)
 const columnContextMenuRef = ref<HTMLElement | null>(null)
 const skillContextMenuRef = ref<HTMLElement | null>(null)
 const CONTEXT_MENU_VIEWPORT_PADDING = 8
+const gridContainerRef = ref<HTMLElement | null>(null)
+const firstVisibleContentRowIndex = ref(0)
+let firstVisibleRowSyncRaf: number | null = null
+
+function updateFirstVisibleContentRowIndex() {
+  const container = gridContainerRef.value
+  if (!container) {
+    firstVisibleContentRowIndex.value = 0
+    return
+  }
+  const contentRows = Array.from(container.querySelectorAll<HTMLElement>('.row.content-row'))
+  if (contentRows.length === 0) {
+    firstVisibleContentRowIndex.value = 0
+    return
+  }
+  const containerRect = container.getBoundingClientRect()
+  const headerRow = container.querySelector<HTMLElement>('.row.header')
+  const visibleTop = headerRow?.getBoundingClientRect().bottom ?? containerRect.top
+  let nextIndex = 0
+  for (let i = 0; i < contentRows.length; i++) {
+    const rect = contentRows[i]?.getBoundingClientRect()
+    if (!rect)
+      continue
+    if (rect.bottom > visibleTop + 0.5) {
+      nextIndex = i
+      break
+    }
+    nextIndex = i
+  }
+  firstVisibleContentRowIndex.value = Math.max(0, Math.min(nextIndex, contentRows.length - 1))
+}
+
+function scheduleFirstVisibleContentRowSync() {
+  if (firstVisibleRowSyncRaf !== null)
+    return
+  firstVisibleRowSyncRaf = window.requestAnimationFrame(() => {
+    firstVisibleRowSyncRaf = null
+    updateFirstVisibleContentRowIndex()
+  })
+}
 
 function isContextOverlay(id: string | null): id is ContextOverlayId {
   return id === 'mechanic-ctx'
@@ -453,9 +494,14 @@ function handleWindowClick() {
 }
 
 function handleWindowResize() {
+  scheduleFirstVisibleContentRowSync()
   if (!isContextOverlay(activeOverlay.value))
     return
   void ensureContextMenuPositionInViewport(activeOverlay.value)
+}
+
+function handleGridScroll() {
+  scheduleFirstVisibleContentRowSync()
 }
 
 function handleWindowKeydown(event: KeyboardEvent) {
@@ -476,14 +522,29 @@ onMounted(() => {
   window.addEventListener('click', handleWindowClick)
   window.addEventListener('keydown', handleWindowKeydown)
   window.addEventListener('resize', handleWindowResize)
+  nextTick(() => {
+    scheduleFirstVisibleContentRowSync()
+  })
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('click', handleWindowClick)
   window.removeEventListener('keydown', handleWindowKeydown)
   window.removeEventListener('resize', handleWindowResize)
+  if (firstVisibleRowSyncRaf !== null)
+    window.cancelAnimationFrame(firstVisibleRowSyncRaf)
   cancelSkillDetailHide()
 })
+
+watch(
+  () => props.rows,
+  () => {
+    nextTick(() => {
+      scheduleFirstVisibleContentRowSync()
+    })
+  },
+  { deep: false },
+)
 
 // Watch activeOverlay to close hover popovers
 watch(activeOverlay, (val) => {
@@ -611,6 +672,83 @@ function getCellSim(row: MitigationRow, col: ColumnDef, skillId: number) {
   return row._sim?.cells[key]
 }
 
+const TIMESTAMP_EPSILON = 0.001
+const EXACT_USE_TOLERANCE_SECONDS = 0.5
+
+interface EditingCellState {
+  actionId: string
+  rowKey: string
+  colKey: string
+  skillId: number
+  target: HTMLElement
+  title: string
+  baseTime: number
+}
+
+function isTimestampClose(left: number | undefined, right: number | undefined, tolerance = TIMESTAMP_EPSILON) {
+  if (!Number.isFinite(left) || !Number.isFinite(right))
+    return false
+  return Math.abs((left || 0) - (right || 0)) <= tolerance
+}
+
+function matchesCellAction(action: PlayerActionRecord, rowKey: string, columnKey: string, skillId: number) {
+  return action.rowKey === rowKey && action.columnKey === columnKey && action.skillId === skillId
+}
+
+function findActionById(actions: PlayerActionRecord[], actionId: string | undefined) {
+  if (!actionId)
+    return undefined
+  return actions.find(a => a.id === actionId)
+}
+
+function findActionIndexById(actions: PlayerActionRecord[], actionId: string | undefined) {
+  if (!actionId)
+    return -1
+  return actions.findIndex(a => a.id === actionId)
+}
+
+function findActionByCell(actions: PlayerActionRecord[], rowKey: string, columnKey: string, skillId: number) {
+  return actions.find(a => matchesCellAction(a, rowKey, columnKey, skillId))
+}
+
+function findActionIndexByCell(actions: PlayerActionRecord[], rowKey: string, columnKey: string, skillId: number) {
+  return actions.findIndex(a => matchesCellAction(a, rowKey, columnKey, skillId))
+}
+
+function findActionByUseTimestamp(
+  actions: PlayerActionRecord[],
+  columnKey: string,
+  skillId: number,
+  useTimestamp: number | undefined,
+) {
+  if (!Number.isFinite(useTimestamp))
+    return undefined
+  return actions.find((a) => {
+    return a.columnKey === columnKey
+      && a.skillId === skillId
+      && isTimestampClose(a.timestamp, useTimestamp)
+  })
+}
+
+function emitPlayerActions(actions: PlayerActionRecord[]) {
+  emit('update:playerActions', actions)
+}
+
+function findLatestCoveringActionIndex(
+  actions: PlayerActionRecord[],
+  columnKey: string,
+  skillId: number,
+  rowTimestamp: number,
+  duration: number,
+) {
+  return actions
+    .map((a, index) => ({ a, index }))
+    .filter(({ a }) => a.columnKey === columnKey && a.skillId === skillId)
+    .filter(({ a }) => rowTimestamp >= a.timestamp && (duration <= 0 || rowTimestamp < a.timestamp + duration))
+    .sort((x, y) => y.a.timestamp - x.a.timestamp)[0]
+    ?.index ?? -1
+}
+
 function resolveRowKeyByTimestamp(ts: number) {
   const rows = sourceRows.value
   if (rows.length === 0)
@@ -684,20 +822,70 @@ function validateActionPlacement(
   return true
 }
 
-function toggleCell(row: MitigationRow, col: ColumnDef, skillId: number) {
+function isSameUseTimestamp(left: number | undefined, right: number | undefined) {
+  return isTimestampClose(left, right)
+}
+
+function isFirstVisibleUseCell(
+  rowIndex: number,
+  col: ColumnDef,
+  skillId: number,
+  info: ReturnType<typeof getCellSim> | undefined,
+) {
+  if (!info || !Number.isFinite(info.useTimestamp))
+    return false
+  if (info.status !== 'active' && info.status !== 'active-start' && info.status !== 'cooldown')
+    return false
+  const visibleStartIndex = Math.max(0, firstVisibleContentRowIndex.value)
+  if (rowIndex < visibleStartIndex)
+    return false
+  if (rowIndex <= visibleStartIndex)
+    return true
+  const prevRowIndex = rowIndex - 1
+  if (prevRowIndex < visibleStartIndex)
+    return true
+  const prevRow = props.rows[prevRowIndex]
+  if (!prevRow)
+    return true
+  const prevUseTimestamp = getCellSim(prevRow, col, skillId)?.useTimestamp
+  return !isSameUseTimestamp(info.useTimestamp, prevUseTimestamp)
+}
+
+function shouldShowCellUseIcon(row: MitigationRow, rowIndex: number, col: ColumnDef, skillId: number) {
+  const info = getCellSim(row, col, skillId)
+  if (!info)
+    return false
+  return !!info.showDot || info.status === 'active' || isFirstVisibleUseCell(rowIndex, col, skillId, info)
+}
+
+function shouldMuteCellUseIcon(row: MitigationRow, col: ColumnDef, skillId: number) {
+  const info = getCellSim(row, col, skillId)
+  if (!info)
+    return false
+  if (info.showDot)
+    return !!info.showDotMuted
+  return false
+}
+
+function toggleCell(row: MitigationRow, rowIndex: number, col: ColumnDef, skillId: number) {
   const columnKey = col.key
   const isNormalMechanicCell = !row.isAOE && !row.isTB && !row.isShare
   const defaultManualOffsetSeconds = isNormalMechanicCell ? 0 : -2
 
   const info = getCellSim(row, col, skillId)
-  const isChecked = props.playerActions.some(a => a.rowKey === row.key && a.columnKey === columnKey && a.skillId === skillId)
+  const isChecked = findActionIndexByCell(props.playerActions, row.key, columnKey, skillId) !== -1
+  const firstVisibleUseCell = isFirstVisibleUseCell(rowIndex, col, skillId, info)
 
-  const isExactUseCell = !!info?.useTimestamp && Math.abs(info.useTimestamp - row.timestamp) <= 0.5
-  const canClick = isChecked
-    || !!info?.showDot
-    || info?.status === 'active-start'
-    || (info?.status === 'active' && isExactUseCell)
+  const isExactUseCell = isTimestampClose(info?.useTimestamp, row.timestamp, EXACT_USE_TOLERANCE_SECONDS)
+  const canCancelRenderedUse = !!info && (
+    !!info.showDot
+    || firstVisibleUseCell
+    || info.status === 'active-start'
+    || info.status === 'active'
     || isExactUseCell
+  )
+  const canClick = isChecked
+    || canCancelRenderedUse
     || (info?.status === '' && info?.ready)
 
   if (!canClick)
@@ -705,29 +893,23 @@ function toggleCell(row: MitigationRow, col: ColumnDef, skillId: number) {
 
   const newActions = [...props.playerActions]
   if (isChecked) {
-    const index = newActions.findIndex(a => a.rowKey === row.key && a.columnKey === columnKey && a.skillId === skillId)
+    const index = findActionIndexByCell(newActions, row.key, columnKey, skillId)
     if (index !== -1)
       newActions.splice(index, 1)
   }
-  else if (info?.showDot || info?.status === 'active-start' || info?.status === 'active' || isExactUseCell) {
+  else if (canCancelRenderedUse) {
     // Allow cancelling the rendered use marker even if the original action is not row-bound.
-    if (info?.actionId) {
-      const index = newActions.findIndex(a => a.id === info.actionId)
-      if (index !== -1) {
-        newActions.splice(index, 1)
-        emit('update:playerActions', newActions)
-        return
-      }
+    const actionByIdIndex = findActionIndexById(newActions, info?.actionId)
+    if (actionByIdIndex !== -1) {
+      newActions.splice(actionByIdIndex, 1)
+      emitPlayerActions(newActions)
+      return
     }
     const { duration } = getSkillMeta(col, skillId)
-    const candidates = newActions
-      .map((a, index) => ({ a, index }))
-      .filter(({ a }) => a.columnKey === columnKey && a.skillId === skillId)
-      .filter(({ a }) => row.timestamp >= a.timestamp && (duration <= 0 || row.timestamp < a.timestamp + duration))
-      .sort((x, y) => y.a.timestamp - x.a.timestamp)
-    if (candidates.length > 0) {
-      newActions.splice(candidates[0]!.index, 1)
-      emit('update:playerActions', newActions)
+    const fallbackIndex = findLatestCoveringActionIndex(newActions, columnKey, skillId, row.timestamp, duration)
+    if (fallbackIndex !== -1) {
+      newActions.splice(fallbackIndex, 1)
+      emitPlayerActions(newActions)
       return
     }
   }
@@ -748,22 +930,36 @@ function toggleCell(row: MitigationRow, col: ColumnDef, skillId: number) {
     }
     newActions.push(record)
   }
-  emit('update:playerActions', newActions)
+  emitPlayerActions(newActions)
 }
 
-const editingCell = ref<{ rowKey: string, colKey: string, skillId: number, target: HTMLElement, title: string, baseTime: number } | null>(null)
+const editingCell = ref<EditingCellState | null>(null)
 const editForm = reactive({ offset: 0 })
 const EDIT_OFFSET_BOUNDARY_SCAN_LIMIT = 7200
+
+function findCellAction(row: MitigationRow, col: ColumnDef, skillId: number) {
+  const info = getCellSim(row, col, skillId)
+  const actionById = findActionById(props.playerActions, info?.actionId)
+  if (actionById)
+    return actionById
+
+  const actionByRowKey = findActionByCell(props.playerActions, row.key, col.key, skillId)
+  if (actionByRowKey)
+    return actionByRowKey
+
+  return findActionByUseTimestamp(props.playerActions, col.key, skillId, info?.useTimestamp)
+}
 
 function getEditingActionContext() {
   if (!editingCell.value)
     return null
-  const { rowKey, colKey, skillId, baseTime } = editingCell.value
+  const { actionId, rowKey, colKey, skillId, baseTime } = editingCell.value
   const col = props.columns.find(c => c.key === colKey)
   if (!col)
     return null
   const columnKey = col.key
-  const originalAction = props.playerActions.find(a => a.rowKey === rowKey && a.columnKey === columnKey && a.skillId === skillId)
+  const originalAction = findActionById(props.playerActions, actionId)
+    || findActionByCell(props.playerActions, rowKey, columnKey, skillId)
   if (!originalAction)
     return null
   return { col, skillId, baseTime, originalAction }
@@ -855,13 +1051,12 @@ function handleRightClickCell(event: MouseEvent, row: MitigationRow, col: Column
   if (activeOverlay.value || editingCell.value) {
     clearOverlays()
   }
-  const columnKey = col.key
-
-  const action = props.playerActions.find(a => a.rowKey === row.key && a.columnKey === columnKey && a.skillId === skill.id)
+  const action = findCellAction(row, col, skill.id)
   if (!action)
     return
 
   editingCell.value = {
+    actionId: action.id,
     rowKey: row.key,
     colKey: col.key,
     skillId: skill.id,
@@ -875,21 +1070,21 @@ function handleRightClickCell(event: MouseEvent, row: MitigationRow, col: Column
 function saveEdit() {
   if (!editingCell.value)
     return
-  const { rowKey, colKey, skillId, baseTime } = editingCell.value
+  const { actionId, rowKey, colKey, skillId, baseTime } = editingCell.value
   const col = props.columns.find(c => c.key === colKey)
   if (!col)
     return
   const columnKey = col.key
 
-  const index = props.playerActions.findIndex(a => a.rowKey === rowKey && a.columnKey === columnKey && a.skillId === skillId)
+  let index = findActionIndexById(props.playerActions, actionId)
+  if (index === -1)
+    index = findActionIndexByCell(props.playerActions, rowKey, columnKey, skillId)
 
   if (index !== -1) {
     const originalAction = props.playerActions[index]!
     const newTimestamp = baseTime + editForm.offset
-    if (col) {
-      if (!validateActionPlacement(col, skillId, newTimestamp, originalAction))
-        return
-    }
+    if (!validateActionPlacement(col, skillId, newTimestamp, originalAction))
+      return
     const newActions = [...props.playerActions]
     newActions[index] = {
       ...originalAction,
@@ -897,7 +1092,7 @@ function saveEdit() {
       timestamp: newTimestamp,
       rowKey: resolveRowKeyByTimestamp(newTimestamp),
     }
-    emit('update:playerActions', newActions)
+    emitPlayerActions(newActions)
   }
   editingCell.value = null
 }
@@ -1106,51 +1301,53 @@ function getSkillMitigationSummary(skill: MitigationSkill) {
   return `物${formatMitigationPercentFromMultiplier(multiplier.physics)} / 魔${formatMitigationPercentFromMultiplier(multiplier.magic)} / 暗${formatMitigationPercentFromMultiplier(multiplier.darkness)}`
 }
 
-function handleRightClickMechanic(row: MitigationRow, event: MouseEvent) {
-  clearOverlays()
-  mechanicEditor.row = row
-  mechanicEditor.type = row.isShare ? 'share' : (row.isAOE ? 'aoe' : (row.isTB ? 'tb' : 'normal'))
-  const pos = getContextMenuPositionFromEvent(event, 'mechanic-ctx')
-  mechanicContextMenu.value = {
+function getMechanicEditorTypeByRow(row: MitigationRow): 'aoe' | 'share' | 'tb' | 'normal' {
+  return row.isShare ? 'share' : (row.isAOE ? 'aoe' : (row.isTB ? 'tb' : 'normal'))
+}
+
+function openMechanicContextMenu(
+  row: MitigationRow,
+  event: MouseEvent,
+  overlayId: 'mechanic-ctx' | 'mechanic-edit-ctx' | 'mechanic-target-ctx',
+) {
+  const pos = getContextMenuPositionFromEvent(event, overlayId)
+  const nextState = {
     top: pos.top,
     left: pos.left,
     anchorTop: event.clientY,
     anchorLeft: event.clientX,
     row,
   }
-  activeOverlay.value = 'mechanic-ctx'
+  if (overlayId === 'mechanic-ctx')
+    mechanicContextMenu.value = nextState
+  else if (overlayId === 'mechanic-edit-ctx')
+    mechanicEditContextMenu.value = nextState
+  else
+    mechanicTargetContextMenu.value = nextState
+  activeOverlay.value = overlayId
+}
+
+function handleRightClickMechanic(row: MitigationRow, event: MouseEvent) {
+  clearOverlays()
+  mechanicEditor.row = row
+  mechanicEditor.type = getMechanicEditorTypeByRow(row)
+  openMechanicContextMenu(row, event, 'mechanic-ctx')
 }
 
 function handleRightClickMechanicDamage(row: MitigationRow, event: MouseEvent) {
   clearOverlays()
   mechanicEditor.row = row
-  mechanicEditor.type = row.isShare ? 'share' : (row.isAOE ? 'aoe' : (row.isTB ? 'tb' : 'normal'))
+  mechanicEditor.type = getMechanicEditorTypeByRow(row)
   mechanicEditor.damage = Number(row.rawDamage || 0)
-  const pos = getContextMenuPositionFromEvent(event, 'mechanic-edit-ctx')
-  mechanicEditContextMenu.value = {
-    top: pos.top,
-    left: pos.left,
-    anchorTop: event.clientY,
-    anchorLeft: event.clientX,
-    row,
-  }
-  activeOverlay.value = 'mechanic-edit-ctx'
+  openMechanicContextMenu(row, event, 'mechanic-edit-ctx')
 }
 
 function handleRightClickMechanicTarget(row: MitigationRow, event: MouseEvent) {
   clearOverlays()
   mechanicEditor.row = row
-  mechanicEditor.targetAll = (row.targets || []).some(target => String(target || '').trim() === '全部')
+  mechanicEditor.targetAll = isRowTargetingAllParty(row)
   mechanicEditor.targetColumnKeys = resolveMechanicTargetColumnKeys(row)
-  const pos = getContextMenuPositionFromEvent(event, 'mechanic-target-ctx')
-  mechanicTargetContextMenu.value = {
-    top: pos.top,
-    left: pos.left,
-    anchorTop: event.clientY,
-    anchorLeft: event.clientX,
-    row,
-  }
-  activeOverlay.value = 'mechanic-target-ctx'
+  openMechanicContextMenu(row, event, 'mechanic-target-ctx')
 }
 
 function handleRightClickColumn(col: ColumnDef, event: MouseEvent) {
@@ -1442,7 +1639,7 @@ function isRowTargetingAllPartyStrictForDamage(row: MitigationRow) {
   const detailTargetIds = new Set((row.damageDetails || []).map(detail => normalizeTargetId(detail.targetId)).filter(Boolean))
   const allTargetIds = new Set<string>([...rowTargetIds, ...detailTargetIds])
   const rowTargets = new Set((row.targets || []).map(item => String(item || '').trim()).filter(Boolean))
-  if (rowTargets.has('全部'))
+  if (rowTargets.has(TARGET_ALL_LABEL))
     return true
 
   let matched = 0
@@ -1470,7 +1667,7 @@ function getPersonalDamageForColumn(row: MitigationRow, col: ColumnDef) {
   const targetId = normalizeTargetId(col.targetId)
   const rowTargetIdSet = new Set((row.targetIds || []).map(item => normalizeTargetId(item)).filter(Boolean))
   const targetNames = (row.targets || []).map(target => String(target || '').trim()).filter(Boolean)
-  const targetsAll = targetNames.includes('全部')
+  const targetsAll = targetNames.includes(TARGET_ALL_LABEL)
   const rowHitsAllParty = isRowTargetingAllPartyStrictForDamage(row)
   if (details && details.length > 0) {
     let matchedDamage = 0
@@ -2985,7 +3182,7 @@ function applyMechanicTargetsToCurrent() {
   const selectedKeys = Array.from(new Set((mechanicEditor.targetColumnKeys || []).map(key => String(key || '').trim()).filter(Boolean)))
   const selectedColumns = props.columns.filter(col => selectedKeys.includes(col.key))
   const nextTargets = mechanicEditor.targetAll
-    ? ['全部']
+    ? [TARGET_ALL_LABEL]
     : selectedColumns.map(col => getMitigationColumnDisplayName(col))
   const nextTargetCount = mechanicEditor.targetAll
     ? Math.max(props.columns.length, 1)
@@ -3211,7 +3408,7 @@ function getCastStartDisplay(row: MitigationRow) {
 }
 
 function isRowTargetingAllParty(row: MitigationRow) {
-  return (row.targets || []).some(target => String(target || '').trim() === '全部')
+  return (row.targets || []).some(target => String(target || '').trim() === TARGET_ALL_LABEL)
 }
 
 function getDamageNumberUnitScale() {
@@ -3458,7 +3655,7 @@ function handleColumnNameClick(col: ColumnDef) {
 </script>
 
 <template>
-  <div class="grid-container" @contextmenu.prevent>
+  <div ref="gridContainerRef" class="grid-container" @contextmenu.prevent @scroll.passive="handleGridScroll">
     <div class="grid-table" :style="gridStyleVars">
       <!-- Header -->
       <div class="row header">
@@ -3812,13 +4009,13 @@ function handleColumnNameClick(col: ColumnDef) {
             v-for="skill in getVisibleSkills(col)"
             :key="skill.id"
             :class="getCellClasses(row, rowIndex, col, skill.id)"
-            @click.left="toggleCell(row, col, skill.id)"
+            @click.left="toggleCell(row, rowIndex, col, skill.id)"
             @contextmenu.prevent="handleRightClickCell($event, row, col, skill)"
           >
             <div
-              v-if="getCellSim(row, col, skill.id)?.showDot"
+              v-if="shouldShowCellUseIcon(row, rowIndex, col, skill.id)"
               class="check-dot"
-              :class="{ 'is-muted': getCellSim(row, col, skill.id)?.showDotMuted }"
+              :class="{ 'is-muted': shouldMuteCellUseIcon(row, col, skill.id) }"
             >
               <img
                 v-if="skill.icon"

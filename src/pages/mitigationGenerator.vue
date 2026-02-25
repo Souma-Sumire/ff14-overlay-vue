@@ -847,6 +847,7 @@ function getCommandLabel(label?: string) {
     'duplicate-sheet': '复制 Sheet 副本',
     'rename-sheet': '重命名 Sheet',
     'set-sheet-zone': '设置 Sheet 地图',
+    'apply-template-sheet-meta': '应用模板 Sheet 信息',
     'switch-sheet': '切换 Sheet',
     'player-level': '修改等级',
     'color-aoe': '修改 AOE 颜色',
@@ -2395,6 +2396,35 @@ function handleEmptyImportByText() {
   void promptImportDataWithOptions({ ensureSheetName: '导入字符串' })
 }
 
+function syncActiveSheetMetaFromTemplate(template: MitigationSheetTemplate) {
+  const targetId = activeSheetId.value
+  const nextName = template.name.trim()
+  const parsedZoneId = Number(template.map?.zoneId)
+  const nextZoneId = Number.isFinite(parsedZoneId) && parsedZoneId > 0 ? Math.round(parsedZoneId) : null
+  if (!targetId || !nextName)
+    return
+
+  const current = sheets.value.find(sheet => sheet.id === targetId)
+  if (!current)
+    return
+  const currentZoneId = current.meta?.zoneId ?? null
+  if (current.name === nextName && currentZoneId === nextZoneId)
+    return
+
+  const nextSheets = sheets.value.map((sheet) => {
+    if (sheet.id !== targetId)
+      return sheet
+    return {
+      ...sheet,
+      name: nextName,
+      meta: {
+        zoneId: nextZoneId,
+      },
+    }
+  })
+  applyWithCommand(sheets.value, nextSheets, value => (sheets.value = value), { label: 'apply-template-sheet-meta' })
+}
+
 async function createSheetFromTemplate(template: MitigationSheetTemplate) {
   const payloads = [template.mechanics, template.playerActions]
     .filter((item): item is NonNullable<typeof item> => !!item)
@@ -2405,6 +2435,7 @@ async function createSheetFromTemplate(template: MitigationSheetTemplate) {
   }
 
   await ensureActiveSheetReady(template.name)
+  syncActiveSheetMetaFromTemplate(template)
   payloads.forEach(payload => doImportByData(payload))
 }
 </script>
