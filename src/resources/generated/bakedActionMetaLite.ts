@@ -1309,8 +1309,6 @@ const RAW_BAKED_ACTION_META_LITE_BY_ID: Record<number, BakedActionMetaLiteTuple>
 
 export const BAKED_ACTION_META_LITE_BY_ID: Record<number, BakedActionMetaLite> = {}
 Object.entries(RAW_BAKED_ACTION_META_LITE_BY_ID).forEach(([rawId, row]) => {
-  // // INFO: 屏蔽 baked 数据写入进行纯 API 测试
-  // return
   const id = Number(rawId)
   if (!Number.isFinite(id) || id <= 0)
     return
