@@ -384,6 +384,7 @@ onUnmounted(() => {
   font-weight: 400;
   line-height: 1;
   white-space: nowrap;
+  font-family: monospace;
   text-shadow:
     -1px 0 2px #000,
     0 1px 2px #000,
