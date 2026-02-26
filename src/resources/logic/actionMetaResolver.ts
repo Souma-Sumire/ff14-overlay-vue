@@ -1,5 +1,5 @@
 import { useStorage } from '@vueuse/core'
-import { ROLE_ACTION_CACHE_VERSION } from '@/resources/cacheVersion'
+import { API_CACHE_VERSION } from '@/resources/cacheVersion'
 import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/generated/bakedActionMetaLite'
 import { BAKED_UPGRADE_CHAIN_MIN_LEVEL_BY_ACTION_ID } from '@/resources/generated/bakedUpgradeChainMinLevel'
 import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/generated/roleActionCategoryByJob'
@@ -40,9 +40,9 @@ const ROLE_ACTION_CACHE_VERSION_STORAGE_KEY = 'action-role-action-id-cache-versi
 const roleActionCacheVersion = useStorage<string>(ROLE_ACTION_CACHE_VERSION_STORAGE_KEY, '')
 const roleActionIdStorage = useStorage<Record<string, 1>>(ROLE_ACTION_CACHE_STORAGE_KEY, {})
 
-if (roleActionCacheVersion.value !== ROLE_ACTION_CACHE_VERSION) {
+if (roleActionCacheVersion.value !== API_CACHE_VERSION) {
   roleActionIdStorage.value = {}
-  roleActionCacheVersion.value = ROLE_ACTION_CACHE_VERSION
+  roleActionCacheVersion.value = API_CACHE_VERSION
 }
 
 const knownRoleActionIds = new Set<number>([

@@ -7,4 +7,4 @@ src/resources/keigennSkillResource.ts keigennSkillDefinitions 减伤监控追踪
 src/resources/keigenn.ts keigenns 减伤状态表（有减伤技改更新时）
 src/resources/globalSkills.ts rawGlobalSkillDefinitions（技改时）、GLOBAL_SKILL_MAX_LEVEL 等级上限（大版本更新时）
 src/resources/jobSortOrder.ts DEFAULT_JOB_SORT_ORDER 职业排序（大版本更新时）
-src/resources/cacheVersion.ts CACHE_EPOCH 控制全局API缓存（大版本更新时）；XIVAPI_CACHE_VERSION、ACTION_SEARCH_CACHE_VERSION、ROLE_ACTION_CACHE_VERSION（按需改后缀）
+src/resources/cacheVersion.ts API_CACHE_VERSION（涉及 API 请求缓存结构/策略变化时，或需要全量失效 API 缓存时）

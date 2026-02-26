@@ -1,7 +1,2 @@
-// 统一缓存纪元：日常只需维护这个值即可全量失效缓存。
-export const CACHE_EPOCH = '20260225'
-
-// 各模块独立版本后缀：仅当单模块缓存结构变更时再调整后缀。
-export const XIVAPI_CACHE_VERSION = `${CACHE_EPOCH}:xivapi:2`
-export const ACTION_SEARCH_CACHE_VERSION = `${CACHE_EPOCH}:action-search:2`
-export const ROLE_ACTION_CACHE_VERSION = `${CACHE_EPOCH}:role-action:1`
+// 牵涉 API 请求结果的缓存统一使用该版本号做失效控制。
+export const API_CACHE_VERSION = '20260225:api-cache:1'

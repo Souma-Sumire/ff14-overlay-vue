@@ -1,12 +1,9 @@
 import { useIndexedDB } from '@/composables/useIndexedDB'
-import { XIVAPI_CACHE_VERSION } from '@/resources/cacheVersion'
+import { API_CACHE_VERSION } from '@/resources/cacheVersion'
 import { ROLE_ACTION_CATEGORY_BY_JOB } from '@/resources/generated/roleActionCategoryByJob'
 import { markRoleActionId, resolveActionMinLevel } from '@/resources/logic/actionMetaResolver'
 import { completeIcon } from '@/resources/logic/status'
 import Util from '@/utils/util'
-
-const params = new URLSearchParams(window.location.search)
-const apiParam = params.get('api')?.toLowerCase()
 
 const SITE_HOST = {
   cafe: { host: 'xivapi-v2.xivcdn.com', imgHost: 'cafemaker.wakingsands.com' },
@@ -22,21 +19,37 @@ interface IndexedDbCacheItem {
 
 const CACHE_VERSION_STORAGE_KEY = 'xivapi-cache-version'
 const PRIMARY_SITE_STORAGE_KEY = 'xivapi-primary-site'
+const ACTION_META_CACHE_STORE = 'xivapi-action-meta-cache'
+const ACTION_SEARCH_CACHE_STORE = 'xivapi-action-search-cache'
+
 let primarySite: SiteName = 'cafe'
 
-const actionMetaCacheDb = useIndexedDB<IndexedDbCacheItem>('xivapi-action-meta-cache')
-const actionSearchCacheDb = useIndexedDB<IndexedDbCacheItem>('xivapi-action-search-cache')
+const actionMetaCacheDb = useIndexedDB<IndexedDbCacheItem>(ACTION_META_CACHE_STORE)
+const actionSearchCacheDb = useIndexedDB<IndexedDbCacheItem>(ACTION_SEARCH_CACHE_STORE)
 const pendingNetworkRequests = new Map<string, Promise<any>>()
 
 function isSiteName(value: unknown): value is SiteName {
   return typeof value === 'string' && value in SITE_HOST
 }
 
+function getOtherSite(site: SiteName): SiteName {
+  return site === 'cafe' ? 'xivapi' : 'cafe'
+}
+
+function resolveSiteByHost(host: string): SiteName | null {
+  const normalized = host.toLowerCase()
+  for (const [siteName, cfg] of Object.entries(SITE_HOST) as [SiteName, (typeof SITE_HOST)[SiteName]][]) {
+    if (cfg.host === normalized || cfg.imgHost === normalized)
+      return siteName
+  }
+  return null
+}
+
 function ensureCacheVersion(): void {
   const storedVersion = localStorage.getItem(CACHE_VERSION_STORAGE_KEY)?.trim().replace(/^"(.*)"$/, '$1')
-  if (storedVersion === XIVAPI_CACHE_VERSION)
+  if (storedVersion === API_CACHE_VERSION)
     return
-  localStorage.setItem(CACHE_VERSION_STORAGE_KEY, XIVAPI_CACHE_VERSION)
+  localStorage.setItem(CACHE_VERSION_STORAGE_KEY, API_CACHE_VERSION)
   persistPrimarySite('cafe')
   void actionMetaCacheDb.clear()
   void actionSearchCacheDb.clear()
@@ -49,68 +62,39 @@ function persistPrimarySite(site: SiteName): void {
 
 function resolveInitialPrimarySite(): SiteName {
   ensureCacheVersion()
-  if (isSiteName(apiParam))
-    return apiParam
   const stored = localStorage.getItem(PRIMARY_SITE_STORAGE_KEY)?.trim().replace(/^"(.*)"$/, '$1')
   return isSiteName(stored) ? stored : 'cafe'
 }
 
 primarySite = resolveInitialPrimarySite()
 
-export { XIVAPI_CACHE_VERSION }
-
-/**
- * 切换全局主站，并强制救援当前页面所有 pending 状态的图片。
- */
-let lastSwitchTime = 0
-function switchPrimarySite(failedHost?: string): void {
-  const currentConfig = SITE_HOST[primarySite]
-  if (failedHost && failedHost !== currentConfig.host && failedHost !== currentConfig.imgHost)
-    return
-
-  const now = Date.now()
-  if (now - lastSwitchTime < 2000)
-    return
-  lastSwitchTime = now
-
-  const oldApiHost = currentConfig.host
-  const oldImgHost = currentConfig.imgHost
-  primarySite = primarySite === 'cafe' ? 'xivapi' : 'cafe'
-  const newSite = primarySite
-  const newBase = `https://${SITE_HOST[newSite].imgHost}`
-
-  persistPrimarySite(newSite)
-  console.warn(`[xivapi] Site ${oldApiHost} seems down. Switching to ${newSite} and rescuing pending images...`)
-
-  if (typeof document !== 'undefined') {
-    const imgs = document.querySelectorAll('img')
-    imgs.forEach((img) => {
-      const isOldHost = img.src && (img.src.includes(oldImgHost) || img.src.includes(oldApiHost))
-      if (isOldHost && !img.dataset.tried) {
-        const url = new URL(img.src)
-        const path = url.pathname
-        img.dataset.tried = '1'
-        img.src = `${newBase}${path}`
-      }
-    })
-  }
-}
-
 export const EMPTY_IMAGE = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
+
+function rerouteFailedImage(img: HTMLImageElement, failedUrl: URL): void {
+  const failedSite = resolveSiteByHost(failedUrl.hostname)
+  if (!failedSite) {
+    img.src = EMPTY_IMAGE
+    return
+  }
+
+  const nextSite = getOtherSite(failedSite)
+  img.dataset.tried = '1'
+  img.src = `//${SITE_HOST[nextSite].imgHost}${failedUrl.pathname}`
+}
 
 export function getIconSrcById(iconId: number): string {
   if (!Number.isFinite(iconId) || iconId <= 0)
     return EMPTY_IMAGE
   const full = completeIcon(Math.trunc(iconId))
   // const suffix = highRes ? '_hr1' : ''
-  return `https://${SITE_HOST[primarySite].imgHost}/i/${full}.png`
+  return `//${SITE_HOST[primarySite].imgHost}/i/${full}.png`
 }
 
 export function getIconSrcByFullIcon(fullIcon: string): string {
   if (!fullIcon)
     return EMPTY_IMAGE
   // const suffix = highRes ? '_hr1' : ''
-  return `https://${SITE_HOST[primarySite].imgHost}/i/${fullIcon}.png`
+  return `//${SITE_HOST[primarySite].imgHost}/i/${fullIcon}.png`
 }
 
 export function getIconSrcByPath(iconPath: string, itemIsHQ = false): string {
@@ -119,7 +103,7 @@ export function getIconSrcByPath(iconPath: string, itemIsHQ = false): string {
   if (/^https?:\/\//.test(iconPath))
     return iconPath
   // const suffix = highRes ? '_hr1' : ''
-  const baseUrl = `https://${SITE_HOST[primarySite].imgHost}`
+  const baseUrl = `//${SITE_HOST[primarySite].imgHost}`
   return `${baseUrl}${iconPath}`.replace(/(\d{6})\.png$/, (_m, p1) => `${itemIsHQ ? 'hq/' : ''}${p1}.png`)
 }
 
@@ -148,8 +132,8 @@ async function requestWithFallback(path: string): Promise<any> {
     const sites: SiteName[] = primarySite === 'cafe' ? ['cafe', 'xivapi'] : ['xivapi', 'cafe']
     for (const siteName of sites) {
       // 构建完整 URL
-      const baseUrl = `https://${SITE_HOST[siteName].host}/api`
-      const urlObj = new URL(`${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`)
+      const baseUrl = `//${SITE_HOST[siteName].host}/api`
+      const urlObj = new URL(`${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`, window.location.href)
 
       // V2 参数翻译
       const urlParams = urlObj.searchParams
@@ -173,8 +157,6 @@ async function requestWithFallback(path: string): Promise<any> {
           continue
         }
 
-        if (siteName !== primarySite)
-          switchPrimarySite()
         let json = await resp.json()
 
         const norm = (i: any) => {
@@ -220,6 +202,8 @@ async function requestWithFallback(path: string): Promise<any> {
         else if (json.row_id !== undefined || json.ID !== undefined) {
           json = norm(json)
         }
+        if (primarySite !== siteName)
+          persistPrimarySite(siteName)
         return json
       }
       catch (e) {
@@ -324,12 +308,6 @@ export function handleImgError(event: Event): void {
     return
   }
 
-  const url = new URL(target.src)
-  const failedHost = url.host
-  switchPrimarySite(failedHost)
-
-  target.dataset.tried = '1'
-  const nextSite = primarySite
-  const path = url.pathname
-  target.src = `https://${SITE_HOST[nextSite].imgHost}${path}`
+  const url = new URL(target.src, window.location.href)
+  rerouteFailedImage(target, url)
 }

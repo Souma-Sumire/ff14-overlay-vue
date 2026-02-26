@@ -7,6 +7,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useDemo } from '@/composables/useDemo'
 import { useDev } from '@/composables/useDev'
 import { RandomPartyGenerator } from '@/mock/demoParty'
+import { API_CACHE_VERSION } from '@/resources/cacheVersion'
 import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
 import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
 import { raidbuffs } from '@/resources/keySkillResource'
@@ -15,7 +16,7 @@ import { resolveUpgradeActionIdForLevel } from '@/utils/compareSaveAction'
 import { parseDynamicValue } from '@/utils/dynamicValue'
 import { tts } from '@/utils/tts'
 import Util from '@/utils/util'
-import { parseAction, XIVAPI_CACHE_VERSION } from '@/utils/xivapi'
+import { parseAction } from '@/utils/xivapi'
 
 interface SkillState {
   startTime: number | null
@@ -59,8 +60,9 @@ interface KeySkillAutoMeta {
   isRoleAction: boolean
 }
 
-const KEY_SKILLS_AUTO_META_CACHE_VERSION_STORAGE_KEY = 'keySkills-auto-meta-cache-version'
 const LEGACY_PRESET_2248_KEY = 'preset_2248'
+const KEY_SKILLS_AUTO_META_CACHE_STORAGE_KEY = 'keySkills-auto-meta-cache'
+const KEY_SKILLS_AUTO_META_CACHE_VERSION_STORAGE_KEY = 'keySkills-auto-meta-cache-version'
 
 function normalizeAutoMetaCache(raw: Record<string, KeySkillAutoMeta>): Record<number, KeySkillAutoMeta> {
   const output: Record<number, KeySkillAutoMeta> = {}
@@ -157,7 +159,7 @@ const useKeySkillStore = defineStore('keySkill', () => {
   const skillStates = reactive<Record<string, SkillState>>({})
   const speed = ref(1)
   const levelSyncTestLevel = useStorage<number>('keySkills-level-sync-test-level', GLOBAL_SKILL_MAX_LEVEL)
-  const autoMetaCache = useStorage<Record<string, KeySkillAutoMeta>>('keySkills-auto-meta-cache', {})
+  const autoMetaCache = useStorage<Record<string, KeySkillAutoMeta>>(KEY_SKILLS_AUTO_META_CACHE_STORAGE_KEY, {})
   const autoMetaCacheVersion = useStorage<string>(KEY_SKILLS_AUTO_META_CACHE_VERSION_STORAGE_KEY, '')
 
   levelSyncTestLevel.value = Math.min(GLOBAL_SKILL_MAX_LEVEL, Math.max(1, Math.trunc(levelSyncTestLevel.value) || GLOBAL_SKILL_MAX_LEVEL))
@@ -167,9 +169,9 @@ const useKeySkillStore = defineStore('keySkill', () => {
       levelSyncTestLevel.value = normalized
   })
 
-  if (autoMetaCacheVersion.value !== XIVAPI_CACHE_VERSION) {
+  if (autoMetaCacheVersion.value !== API_CACHE_VERSION) {
     autoMetaCache.value = {}
-    autoMetaCacheVersion.value = XIVAPI_CACHE_VERSION
+    autoMetaCacheVersion.value = API_CACHE_VERSION
   }
 
   const autoMetaById = reactive<Record<number, KeySkillAutoMeta>>({})
