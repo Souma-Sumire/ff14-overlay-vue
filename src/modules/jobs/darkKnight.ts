@@ -43,21 +43,13 @@ export class DarkKnightTracker extends BaseTracker {
         }
         break
 
-      case '24': // DoT
+      case '39': // NetworkUpdateHP
         {
-          const sourceId = splitLine[logDefinitions.NetworkDoT.fields.sourceId]!
+          const sourceId = splitLine[logDefinitions.NetworkUpdateHP.fields.id]!
           if (this.playerIds.has(sourceId)) {
-            const sourceMp = Number.parseInt(splitLine[logDefinitions.NetworkDoT.fields.sourceCurrentMp]!)
+            const sourceMp = Number.parseInt(splitLine[logDefinitions.NetworkUpdateHP.fields.currentMp]!)
             if (!Number.isNaN(sourceMp)) {
               this.mp[sourceId] = sourceMp
-            }
-          }
-
-          const targetId = splitLine[logDefinitions.NetworkDoT.fields.id]!
-          if (this.playerIds.has(targetId)) {
-            const targetMp = Number.parseInt(splitLine[logDefinitions.NetworkDoT.fields.currentMp]!)
-            if (!Number.isNaN(targetMp)) {
-              this.mp[targetId] = targetMp
             }
           }
         }
