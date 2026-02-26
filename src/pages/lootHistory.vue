@@ -516,7 +516,7 @@ const saveConfigDebounced = (() => {
 })()
 
 const lastSavedState = new Map<string, string>()
-type ConfigEntry = { key: string, value: any }
+interface ConfigEntry { key: string, value: any }
 
 function buildCurrentConfigEntries(): ConfigEntry[] {
   return [
