@@ -1703,7 +1703,6 @@ const getRoleGroupClass = getRoleType
         </div>
       </template>
     </el-dialog>
-
   </div>
 </template>
 
