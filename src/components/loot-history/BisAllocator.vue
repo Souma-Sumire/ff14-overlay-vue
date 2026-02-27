@@ -76,6 +76,7 @@ const STATUS_MAP = {
   greed: { text: '贪婪', class: 'status-greed-tome' },
   assigned: { text: '分配', class: 'status-assigned' },
 } as const
+const GROUP_END_ROW_IDS = new Set(['weapon', 'feet', 'ring'])
 const SPECIAL_ITEM_IDS = new Set(['coating', 'twine', 'tome', 'solvent'])
 const DEFAULT_ROW_BY_ID = new Map(DEFAULT_ROWS.map(row => [row.id, row] as const))
 const COUNT_ROWS = DEFAULT_ROWS.filter(r => r.type === 'count')
@@ -130,21 +131,19 @@ const layeredViewRows = computed(() => {
   })
 })
 
-const configRows = computed(() => {
-  return [...DEFAULT_ROWS]
-    .filter(r => r.id !== 'random_weapon')
-    .sort((a, b) => {
-      const ia = PART_ORDER_INDEX.get(a.keywords) ?? -1
-      const ib = PART_ORDER_INDEX.get(b.keywords) ?? -1
-      if (ia === -1 && ib === -1)
-        return 0
-      if (ia === -1)
-        return 1
-      if (ib === -1)
-        return -1
-      return ia - ib
-    })
-})
+const configRows = [...DEFAULT_ROWS]
+  .filter(r => r.id !== 'random_weapon')
+  .sort((a, b) => {
+    const ia = PART_ORDER_INDEX.get(a.keywords) ?? -1
+    const ib = PART_ORDER_INDEX.get(b.keywords) ?? -1
+    if (ia === -1 && ib === -1)
+      return 0
+    if (ia === -1)
+      return 1
+    if (ib === -1)
+      return -1
+    return ia - ib
+  })
 
 const eligiblePlayers = computed(() => {
   return props.players.filter(isEligible)
@@ -426,36 +425,8 @@ function importBisData() {
     inputValidator: (value) => {
       if (!value)
         return '内容不能为空'
-      const parts = value
-        .trim()
-        .split(';')
-        .filter(p => p.trim())
-      if (parts.length === 0)
-        return '格式错误：无法识别有效的分隔符'
-
-      let validCount = 0
-
-      for (const part of parts) {
-        const segs = part.split(':')
-
-        if (segs.length !== 2) {
-          return `数据格式错误："${part.slice(0, 10)}..."`
-        }
-
-        const [role, data] = segs
-
-        if (!data || !/^[0-9a-z]+$/i.test(data)) {
-          return `数据校验失败：职位 "${role || '未知'}" 的设置已损坏`
-        }
-
-        if (ROLE_DEFINITIONS.includes(role as any)) {
-          validCount++
-        }
-      }
-
-      if (validCount === 0)
-        return '未找到匹配当前团队的有效设置数据'
-      return true
+      const { error } = parseBisImportEntries(value)
+      return error || true
     },
   })
     .then((res) => {
@@ -483,6 +454,50 @@ interface PlayerDiff {
   newConfig: Record<string, BisValue>
 }
 
+interface ParsedBisImportEntry {
+  role: string
+  data: string
+}
+
+function parseBisImportEntries(rawInput: string): {
+  entries: ParsedBisImportEntry[]
+  error?: string
+} {
+  const parts = rawInput
+    .trim()
+    .split(';')
+    .map(p => p.trim())
+    .filter(Boolean)
+
+  if (parts.length === 0) {
+    return { entries: [], error: '格式错误：无法识别有效的分隔符' }
+  }
+
+  const entries: ParsedBisImportEntry[] = []
+  for (const part of parts) {
+    const segs = part.split(':')
+    if (segs.length !== 2) {
+      return { entries: [], error: `数据格式错误："${part.slice(0, 10)}..."` }
+    }
+
+    const role = segs[0] ?? ''
+    const data = segs[1] ?? ''
+    if (!data || !/^[0-9a-z]+$/i.test(data)) {
+      return { entries: [], error: `数据校验失败：职位 "${role || '未知'}" 的设置已损坏` }
+    }
+
+    if (ROLE_DEFINITIONS.includes(role as any)) {
+      entries.push({ role, data })
+    }
+  }
+
+  if (entries.length === 0) {
+    return { entries, error: '未找到匹配当前团队的有效设置数据' }
+  }
+
+  return { entries }
+}
+
 function getValDisplay(row: BisRow, val: BisValue | undefined): string {
   if (row.type === 'toggle') {
     if (val === 'raid')
@@ -506,26 +521,13 @@ function getValClass(val: string) {
 
 function parseAndPreviewBisData(rawInput: string) {
   try {
-    const trimmedVal = rawInput.trim()
-    if (!trimmedVal)
-      throw new Error('输入内容为空')
-
-    const parts = trimmedVal.split(';').filter(p => p.trim())
-    if (parts.length === 0)
-      throw new Error('无效的格式')
+    const { entries, error } = parseBisImportEntries(rawInput)
+    if (error)
+      throw new Error(error)
 
     const diffs: PlayerDiff[] = []
 
-    parts.forEach((part) => {
-      const segs = part.split(':')
-      if (segs.length !== 2)
-        return
-      const role = segs[0]
-      const data = segs[1]
-
-      if (!role || !data || !ROLE_DEFINITIONS.includes(role as any))
-        return
-
+    entries.forEach(({ role, data }) => {
       // 找到本地对应职位的玩家名（用于预览显示）
       const pName = firstEligiblePlayerByRole.value[role] || role
 
@@ -691,10 +693,6 @@ function confirmApplyPreset() {
   showPresetConfirmDialog.value = false
   pendingPresetData.value = null
   ElMessage.success(`已应用预设: ${preset.name} (${player})`)
-}
-
-function getObtainedCount(player: string, row: BisRow): number {
-  return obtainedSummary.value.counts[player]?.[row.id] || 0
 }
 
 function getObtainedItemsDetail(player: string, row: BisRow) {
@@ -864,25 +862,16 @@ function getLogicDetails(
   return { status: 'pass', reason: '' }
 }
 
-function getBaseLogicDetails(
-  player: string,
-  row: BisRow,
-): { status: 'need' | 'greed' | 'pass', reason: string } {
-  return getBaseLogicDetailsFor(player, row, getObtainedCount(player, row))
-}
-
-function calculateBaseStatus(
-  player: string,
-  row: BisRow,
-): 'need' | 'greed' | 'pass' {
-  return getBaseLogicDetails(player, row).status
-}
-
 function getOriginalStatus(
   player: string,
   row: BisRow,
 ): 'need' | 'greed' | 'pass' {
-  return calculateBaseStatus(player, row)
+  const obtainedCount = obtainedSummary.value.counts[player]?.[row.id] || 0
+  return getBaseLogicDetailsFor(player, row, obtainedCount).status
+}
+
+function isGroupEndRow(rowId: string): boolean {
+  return GROUP_END_ROW_IDS.has(rowId)
 }
 
 function isEligible(player: string) {
@@ -1512,14 +1501,14 @@ const getRoleGroupClass = getRoleType
             </thead>
             <tbody>
               <tr v-for="row in configRows" :key="row.id">
-                <td class="sticky-col row-header" :class="[{ 'is-group-end': row.id === 'weapon' || row.id === 'feet' || row.id === 'ring' }]">
+                <td class="sticky-col row-header" :class="[{ 'is-group-end': isGroupEndRow(row.id) }]">
                   {{ row.name }}
                 </td>
                 <td
                   v-for="p in eligiblePlayers"
                   :key="p"
                   class="split-cell-container"
-                  :class="[{ 'is-group-end': row.id === 'weapon' || row.id === 'feet' || row.id === 'ring' }]"
+                  :class="[{ 'is-group-end': isGroupEndRow(row.id) }]"
                 >
                   <div v-if="row.type === 'toggle'" class="split-cell">
                     <div
@@ -3171,13 +3160,6 @@ html.dark {
       border-color: #475569 !important;
     }
   }
-}
-
-.dialog-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
 }
 
 .footer-right {
