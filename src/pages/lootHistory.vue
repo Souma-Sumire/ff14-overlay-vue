@@ -65,6 +65,11 @@ import { getFormattedWeekLabel, getRaidWeekIndex, getRaidWeekLabel, getRaidWeekS
 import { formatDateTime as formatTime } from '@/utils/time'
 import LogParserWorker from '@/workers/logParser.ts?worker'
 
+useDark({
+  storageKey: 'loot-history-theme',
+  initialValue: 'light',
+})
+
 const GAME_VERSION_CONFIG = {
   // 零式首周开始时间
   RAID_START_TIME: '2026-01-06T16:00',
