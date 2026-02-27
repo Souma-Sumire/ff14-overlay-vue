@@ -47,7 +47,7 @@ import {
   ElSwitch,
   ElTag,
 } from 'element-plus'
-import { computed, nextTick, onMounted, onUnmounted, provide, ref, shallowRef, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, provide, ref, shallowRef, triggerRef, watch } from 'vue'
 import BisAllocator from '@/components/loot-history/BisAllocator.vue'
 import LootStatisticsPanel from '@/components/loot-history/charts/LootStatisticsPanel.vue'
 import LootDisplayFilterSegmented from '@/components/loot-history/LootDisplayFilterSegmented.vue'
@@ -90,6 +90,8 @@ const LABELS = {
 }
 
 const ROLE_SETTING_HINT = '需在左上方“固定队 - 职位设置”中完成所有职位后方可开启'
+const LOG_PARSER_WORKER_POOL_SIZE = 1
+const SYNC_RECORD_PERSIST_BATCH_SIZE = 1000
 type BisRow = (typeof DEFAULT_ROWS)[number]
 const defaultRowBySlotName = new Map<string, BisRow>()
 for (const row of DEFAULT_ROWS) {
@@ -1091,9 +1093,6 @@ onMounted(async () => {
   )
 
   watch(isRaidRolesComplete, (newVal) => {
-    if (!newVal && isOnlyRaidMembersActive.value) {
-      isOnlyRaidMembersActive.value = false
-    }
     if (!newVal) {
       viewMode.value = 'list'
     }
@@ -1859,6 +1858,7 @@ async function deleteRecord(record: LootRecord, silent = false) {
     const index = lootRecords.value.findIndex(r => r.key === record.key)
     if (index !== -1) {
       lootRecords.value.splice(index, 1)
+      triggerRef(lootRecords)
     }
 
     // 2. 从数据库中删除
@@ -1929,6 +1929,7 @@ async function syncLogFiles(userInitiated = false) {
   }
 
   isSyncing.value = true
+  let parserWorkerPool: ReturnType<typeof createLogParserWorkerPool> | null = null
   const isFirstSync = existingKeys.value.size === 0
   if (isFirstSync) {
     isLoading.value = true
@@ -1956,9 +1957,38 @@ async function syncLogFiles(userInitiated = false) {
     }[] = []
 
     const localKeys = new Set(existingKeys.value)
-    const allNewRecords: LootRecord[] = []
+    const pendingPersistRecords: LootRecord[] = []
+    const incomingMap = new Map<string, Set<string>>()
+    let newRecordCount = 0
     const batchSeenPlayers = new Set<string>()
     const batchSeenItems = new Set<string>()
+    let persistQueue: Promise<void> = Promise.resolve()
+
+    const enqueuePersistRecords = (records: LootRecord[]) => {
+      if (records.length === 0)
+        return Promise.resolve()
+      persistQueue = persistQueue.then(async () => {
+        await dbRecords.bulkSet(JSON.parse(JSON.stringify(records)))
+        lootRecords.value.push(...records)
+        triggerRef(lootRecords)
+      })
+      return persistQueue
+    }
+
+    const flushPendingPersistRecords = async (force = false) => {
+      while (pendingPersistRecords.length > 0) {
+        if (!force && pendingPersistRecords.length < SYNC_RECORD_PERSIST_BATCH_SIZE)
+          break
+        const batchSize = Math.min(
+          SYNC_RECORD_PERSIST_BATCH_SIZE,
+          pendingPersistRecords.length,
+        )
+        const recordsToPersist = pendingPersistRecords.splice(0, batchSize)
+        if (recordsToPersist.length === 0)
+          break
+        await enqueuePersistRecords(recordsToPersist)
+      }
+    }
 
     for await (const entry of handle.values()) {
       if (entry.kind === 'file' && entry.name.toLowerCase().endsWith('.log')) {
@@ -2023,69 +2053,87 @@ async function syncLogFiles(userInitiated = false) {
 
     filesToRead.sort((a, b) => a.name.localeCompare(b.name))
 
-    const CHUNK_SIZE = 10
     parsedLogFiles.value = []
     pendingLogFiles.value = filesToRead.map(f => ({
       name: f.name,
       size: f.size - f.startByte,
     }))
 
+    parserWorkerPool = createLogParserWorkerPool(LOG_PARSER_WORKER_POOL_SIZE)
+    const activeWorkerPool = parserWorkerPool
     let completedCount = 0
 
-    for (let i = 0; i < filesToRead.length; i += CHUNK_SIZE) {
-      const chunk = filesToRead.slice(i, i + CHUNK_SIZE)
-      const chunkPromises = chunk.map(async (target) => {
-        const file = await target.handle.getFile()
-        const text = await file.slice(target.startByte).text()
+    let nextFileIndex = 0
+    const runners = Array.from(
+      { length: LOG_PARSER_WORKER_POOL_SIZE },
+      async () => {
+        while (nextFileIndex < filesToRead.length) {
+          const currentIndex = nextFileIndex
+          nextFileIndex++
+          const target = filesToRead[currentIndex]
+          if (!target)
+            continue
 
-        const {
-          records,
-          players: filePlayers,
-          items: fileItems,
-        } = await parseLogWithWorker(text, lootParserLocale.value)
+          const file = await target.handle.getFile()
+          const buffer = await file.slice(target.startByte).arrayBuffer()
 
-        for (const r of records) {
-          if (!localKeys.has(r.key) && !blacklistedKeys.value.has(r.key)) {
-            localKeys.add(r.key)
-            allNewRecords.push(r)
+          const {
+            records,
+            players: filePlayers,
+            items: fileItems,
+          } = await activeWorkerPool.run({
+            buffer,
+            locale: lootParserLocale.value,
+          })
+
+          for (const r of records) {
+            if (!localKeys.has(r.key) && !blacklistedKeys.value.has(r.key)) {
+              localKeys.add(r.key)
+              pendingPersistRecords.push(r)
+              newRecordCount++
+              const date = new Date(r.timestamp).toLocaleDateString()
+              const dateItemKey = `${date}|${r.item}`
+              if (!incomingMap.has(dateItemKey))
+                incomingMap.set(dateItemKey, new Set())
+              incomingMap.get(dateItemKey)!.add(getActualPlayer(r.player))
+            }
           }
+          await flushPendingPersistRecords()
+
+          filePlayers.forEach(p => batchSeenPlayers.add(p))
+          fileItems.forEach(i => batchSeenItems.add(i))
+
+          processedFiles.value[target.name] = {
+            size: file.size,
+            mtime: file.lastModified,
+          }
+
+          completedCount++
+          loadingProgress.value = Math.round(
+            (completedCount / filesToRead.length) * 100,
+          )
+
+          parsedLogFiles.value.push({
+            name: target.name,
+            size: target.size,
+          })
+          parsedLogFiles.value.sort((a, b) => a.name.localeCompare(b.name))
+
+          pendingLogFiles.value = pendingLogFiles.value.filter(
+            n => n.name !== target.name,
+          )
         }
+      },
+    )
 
-        filePlayers.forEach(p => batchSeenPlayers.add(p))
-        fileItems.forEach(i => batchSeenItems.add(i))
+    await Promise.all(runners)
+    await flushPendingPersistRecords(true)
+    await persistQueue
 
-        processedFiles.value[target.name] = {
-          size: file.size,
-          mtime: file.lastModified,
-        }
-
-        completedCount++
-        loadingProgress.value = Math.round(
-          (completedCount / filesToRead.length) * 100,
-        )
-
-        parsedLogFiles.value.push({
-          name: target.name,
-          size: target.size,
-        })
-        parsedLogFiles.value.sort((a, b) => a.name.localeCompare(b.name))
-
-        pendingLogFiles.value = pendingLogFiles.value.filter(
-          n => n.name !== target.name,
-        )
-      })
-
-      await Promise.all(chunkPromises)
-      await new Promise(r => setTimeout(r, 0))
-    }
-
-    if (allNewRecords.length > 0) {
-      await dbRecords.bulkSet(JSON.parse(JSON.stringify(allNewRecords)))
-
-      lootRecords.value = [...lootRecords.value, ...allNewRecords]
+    if (newRecordCount > 0) {
       existingKeys.value = localKeys
 
-      handlePotentialDuplicates(allNewRecords, 'sync')
+      handlePotentialDuplicatesWithIncomingMap(incomingMap, 'sync')
 
       let visUpdated = false
       const newIV = { ...itemVisibility.value }
@@ -2111,7 +2159,7 @@ async function syncLogFiles(userInitiated = false) {
 
       if (!isFirstSync) {
         ElMessage.success({
-          message: `同步完成，新增 ${allNewRecords.length} 条记录`,
+          message: `同步完成，新增 ${newRecordCount} 条记录`,
           showClose: true,
         })
       }
@@ -2144,6 +2192,7 @@ async function syncLogFiles(userInitiated = false) {
     console.error('Sync error:', err.message)
   }
   finally {
+    parserWorkerPool?.dispose()
     // 清理同步标志（尝试移除持久化标记）
     try {
       await dbConfig.remove('syncInProgress')
@@ -2157,26 +2206,96 @@ async function syncLogFiles(userInitiated = false) {
   }
 }
 
-function parseLogWithWorker(text: string, locale: LootParserLocale): Promise<{
+interface ParseWorkerResult {
   records: LootRecord[]
   players: string[]
   items: string[]
-}> {
-  return new Promise((resolve, reject) => {
-    const worker = new LogParserWorker()
+}
 
-    worker.onmessage = (e) => {
-      resolve(e.data)
-      worker.terminate()
-    }
+interface ParseWorkerTask {
+  buffer: ArrayBuffer
+  locale: LootParserLocale
+}
 
-    worker.onerror = (e) => {
-      reject(e)
-      worker.terminate()
-    }
+function createLogParserWorkerPool(size: number) {
+  const normalizedSize = Math.max(1, Math.floor(size))
+  const workerSlots: { worker: Worker, chain: Promise<void> }[] = Array.from({ length: normalizedSize }, () => ({
+    worker: new LogParserWorker(),
+    chain: Promise.resolve(),
+  }))
+  let roundRobinIndex = 0
+  let disposed = false
 
-    worker.postMessage({ text, locale })
-  })
+  function getSlot(index: number) {
+    const slot = workerSlots[index]
+    if (!slot)
+      throw new Error(`Invalid worker slot index: ${index}`)
+    return slot
+  }
+
+  function resetWorker(index: number) {
+    const slot = getSlot(index)
+    slot.worker.terminate()
+    slot.worker = new LogParserWorker()
+  }
+
+  function executeTask(index: number, task: ParseWorkerTask): Promise<ParseWorkerResult> {
+    return new Promise((resolve, reject) => {
+      const slot = getSlot(index)
+      const worker = slot.worker
+      const cleanup = () => {
+        worker.onmessage = null
+        worker.onerror = null
+      }
+
+      worker.onmessage = (e: MessageEvent<ParseWorkerResult>) => {
+        cleanup()
+        resolve(e.data)
+      }
+
+      worker.onerror = (e) => {
+        cleanup()
+        resetWorker(index)
+        reject(e)
+      }
+
+      try {
+        worker.postMessage(task, [task.buffer])
+      }
+      catch (e) {
+        cleanup()
+        resetWorker(index)
+        reject(e)
+      }
+    })
+  }
+
+  return {
+    run(task: ParseWorkerTask): Promise<ParseWorkerResult> {
+      if (disposed)
+        return Promise.reject(new Error('Log parser worker pool is disposed'))
+
+      const index = roundRobinIndex % normalizedSize
+      roundRobinIndex++
+      const slot = getSlot(index)
+
+      const taskPromise = slot.chain.then(() => executeTask(index, task))
+      slot.chain = taskPromise.then(
+        () => undefined,
+        () => undefined,
+      )
+
+      return taskPromise
+    },
+    dispose() {
+      if (disposed)
+        return
+      disposed = true
+      workerSlots.forEach((slot) => {
+        slot.worker.terminate()
+      })
+    },
+  }
 }
 
 function isSystemFiltered(item: string) {
@@ -2492,14 +2611,31 @@ function findManualDuplicates(incomingRecords: LootRecord[]): LootRecord[] {
   return toDelete
 }
 
-async function handlePotentialDuplicates(
-  incomingRecords: LootRecord[],
+function findManualDuplicatesByIncomingMap(incomingMap: Map<string, Set<string>>): LootRecord[] {
+  if (incomingMap.size === 0)
+    return []
+  const manualRecords = lootRecords.value.filter(r => r.isManual)
+  if (manualRecords.length === 0)
+    return []
+
+  const toDelete: LootRecord[] = []
+  manualRecords.forEach((manual) => {
+    const date = new Date(manual.timestamp).toLocaleDateString()
+    const key = `${date}|${manual.item}`
+    const players = incomingMap.get(key)
+    if (players && players.has(getActualPlayer(manual.player))) {
+      toDelete.push(manual)
+    }
+  })
+  return toDelete
+}
+
+async function confirmAndDeleteManualDuplicates(
+  overlaps: LootRecord[],
   context: 'sync' | 'import',
 ) {
-  const overlaps = findManualDuplicates(incomingRecords)
   if (overlaps.length === 0)
     return
-
   const sourceName = context === 'sync' ? '同步的日志' : '导入的数据'
   try {
     await ElMessageBox.confirm(
@@ -2520,6 +2656,22 @@ async function handlePotentialDuplicates(
   catch {
     // 用户取消删除
   }
+}
+
+async function handlePotentialDuplicates(
+  incomingRecords: LootRecord[],
+  context: 'sync' | 'import',
+) {
+  const overlaps = findManualDuplicates(incomingRecords)
+  await confirmAndDeleteManualDuplicates(overlaps, context)
+}
+
+async function handlePotentialDuplicatesWithIncomingMap(
+  incomingMap: Map<string, Set<string>>,
+  context: 'sync' | 'import',
+) {
+  const overlaps = findManualDuplicatesByIncomingMap(incomingMap)
+  await confirmAndDeleteManualDuplicates(overlaps, context)
 }
 
 async function copyToClipboard(text: string) {

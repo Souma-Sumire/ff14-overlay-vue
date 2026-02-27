@@ -153,13 +153,19 @@ function parseLineAndAppend(
 }
 
 interface WorkerInput {
-  text: string
+  text?: string
+  buffer?: ArrayBuffer
   locale?: LootParserLocale
 }
 
+const utf8Decoder = new TextDecoder('utf-8')
+
 globalThis.onmessage = (e: MessageEvent<string | WorkerInput>) => {
   const payload = e.data
-  const text = typeof payload === 'string' ? payload : payload.text
+  const text
+    = typeof payload === 'string'
+      ? payload
+      : (payload.text ?? (payload.buffer ? utf8Decoder.decode(payload.buffer) : ''))
   const locale = typeof payload === 'string' ? DEFAULT_LOOT_PARSER_LOCALE : payload.locale || DEFAULT_LOOT_PARSER_LOCALE
   const localeConfig = PARSER_LOCALE_CONFIGS[locale]
 
