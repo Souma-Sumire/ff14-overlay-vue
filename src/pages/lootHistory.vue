@@ -65,6 +65,17 @@ import { getFormattedWeekLabel, getRaidWeekIndex, getRaidWeekLabel, getRaidWeekS
 import { formatDateTime as formatTime } from '@/utils/time'
 import LogParserWorker from '@/workers/logParser.ts?worker'
 
+if (typeof window !== 'undefined') {
+  const savedTheme = window.localStorage
+    .getItem('loot-history-theme')
+    ?.trim()
+    .replace(/^"(.*)"$/, '$1')
+
+  // 兼容历史值（如 auto），统一回落到浅色，避免引导流程中途切到暗色
+  if (savedTheme !== 'light' && savedTheme !== 'dark')
+    window.localStorage.setItem('loot-history-theme', 'light')
+}
+
 useDark({
   storageKey: 'loot-history-theme',
   initialValue: 'light',
