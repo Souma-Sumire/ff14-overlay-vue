@@ -1562,14 +1562,14 @@ const getRoleGroupClass = getRoleType
       <template #footer>
         <div class="dialog-footer">
           <div class="footer-left">
-            <el-button-group>
+            <div class="io-action-list">
               <el-button size="small" @click="exportBisData">
                 导出 BIS 设置
               </el-button>
               <el-button size="small" @click="importBisData">
                 导入 BIS 设置
               </el-button>
-            </el-button-group>
+            </div>
           </div>
           <div class="footer-right">
             <div class="config-status-msg">
@@ -1856,6 +1856,18 @@ const getRoleGroupClass = getRoleType
   align-items: center;
   justify-content: space-between;
   width: 100%;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+}
+
+.io-action-list {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .config-status-msg {
