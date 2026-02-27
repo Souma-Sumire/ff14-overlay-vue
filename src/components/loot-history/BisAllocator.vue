@@ -15,7 +15,6 @@ import {
   Right,
   Setting,
   User,
-  Warning,
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { computed, nextTick, onUnmounted, ref, shallowRef, watch } from 'vue'
@@ -56,7 +55,6 @@ const customAllocations = ref<Record<string, string>>({})
 
 const config = ref<BisConfig>({
   playerBis: {},
-  plannedWeeks: 8,
 })
 const recordsForCompute = shallowRef<LootRecord[]>([])
 const obtainedDetailsCache = shallowRef<Map<string, { name: string, count: number }[]>>(new Map())
@@ -71,8 +69,6 @@ const pendingPresetData = ref<{
   preset: BisPreset
   diff: PlayerDiff | null
 } | null>(null)
-
-const importWeeks = ref<number | undefined>(undefined)
 
 const STATUS_MAP = {
   pass: { text: '放弃', class: 'status-pass' },
@@ -230,35 +226,6 @@ const incompletePlayerCount = computed(() => {
   return ROLE_DEFINITIONS.filter(
     role => !checkPlayerComplete(config.value, role),
   ).length
-})
-
-const validationAlerts = computed(() => {
-  const alerts: { id: string, type: 'info' | 'warning', message: string }[] = []
-  const weeks = config.value.plannedWeeks || 8
-
-  const itemsToValidate = [
-    { id: 'coating', name: '硬化药' },
-    { id: 'twine', name: '强化纤维' },
-    { id: 'tome', name: '神典石' },
-    { id: 'solvent', name: '强化药' },
-  ]
-
-  itemsToValidate.forEach((item) => {
-    let total = 0
-    eligiblePlayers.value.forEach((p) => {
-      total += getNeededCount(p, item.id)
-    })
-
-    if (total > weeks) {
-      alerts.push({
-        id: item.id,
-        type: 'warning',
-        message: `${item.name}: 总需求(${total}) 大于 计划周数(${weeks})，这是不可能的分配。`,
-      })
-    }
-  })
-
-  return alerts
 })
 
 function getMacroInfo() {
@@ -469,8 +436,6 @@ function importBisData() {
       let validCount = 0
 
       for (const part of parts) {
-        if (part.startsWith('weeks:'))
-          continue
         const segs = part.split(':')
 
         if (segs.length !== 2) {
@@ -551,15 +516,7 @@ function parseAndPreviewBisData(rawInput: string) {
 
     const diffs: PlayerDiff[] = []
 
-    importWeeks.value = undefined
     parts.forEach((part) => {
-      if (part.startsWith('weeks:')) {
-        const weeks = Number.parseInt(part.split(':')[1] || '0')
-        if (!Number.isNaN(weeks)) {
-          importWeeks.value = weeks
-        }
-        return
-      }
       const segs = part.split(':')
       if (segs.length !== 2)
         return
@@ -631,8 +588,6 @@ function confirmImportBis() {
   confirmImportAction()
 }
 
-// 稍微重构一下以支持周数导入
-
 function confirmImportAction() {
   const newPlayerBis = { ...config.value.playerBis }
   importDiffs.value.forEach((diff) => {
@@ -642,9 +597,6 @@ function confirmImportAction() {
     }
   })
   config.value.playerBis = newPlayerBis
-  if (importWeeks.value !== undefined) {
-    config.value.plannedWeeks = importWeeks.value
-  }
   showImportConfirmDialog.value = false
   ElMessage.success(`成功更新 ${importDiffs.value.length} 个职位的配置`)
 }
@@ -1419,35 +1371,9 @@ const getRoleGroupClass = getRoleType
       align-center
     >
       <div class="bis-config-panel-container">
-        <div class="bis-config-header-row">
-          <div class="planned-weeks-config">
-            <span class="label">你们计划清几周CD：</span>
-            <el-input-number
-              v-model="config.plannedWeeks"
-              :min="1"
-              :max="16"
-              size="small"
-              controls-position="right"
-              class="weeks-stepper"
-            />
-          </div>
-          <div class="bis-storage-info">
-            <el-icon><InfoFilled /></el-icon>
-            <span>提示：此 BIS 设置跟随职位（MT/ST等），不跟随具体玩家。</span>
-          </div>
-        </div>
-        <div v-if="validationAlerts.length > 0" class="validation-alerts">
-          <div
-            v-for="alert in validationAlerts"
-            :key="alert.id"
-            class="validation-alert" :class="[alert.type]"
-          >
-            <el-icon class="alert-icon">
-              <InfoFilled v-if="alert.type === 'info'" />
-              <Warning v-else />
-            </el-icon>
-            <span class="alert-msg">{{ alert.message }}</span>
-          </div>
+        <div class="bis-storage-info">
+          <el-icon><InfoFilled /></el-icon>
+          <span>提示：此 BIS 设置跟随职位（MT/ST等），不跟随具体玩家。</span>
         </div>
         <div class="table-scroll-wrapper">
           <table class="bis-table config-table">
@@ -1967,47 +1893,6 @@ const getRoleGroupClass = getRoleType
   html.dark & {
     background: rgba(255, 255, 255, 0.05);
     color: #94a3b8;
-  }
-}
-
-.bis-config-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 8px;
-
-  .bis-storage-info {
-    margin-bottom: 0;
-    flex: 1;
-  }
-}
-
-.planned-weeks-config {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #f1f5f9;
-  padding: 4px 12px;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-
-  html.dark & {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #475569;
-    html.dark & {
-      color: #94a3b8;
-    }
-  }
-
-  .weeks-stepper {
-    width: 80px !important;
   }
 }
 
