@@ -7,7 +7,6 @@ import {
   ArrowDown,
   CopyDocument,
   Delete,
-  Edit,
   InfoFilled,
   List,
   MagicStick,
@@ -58,14 +57,11 @@ const customAllocations = ref<Record<string, string>>({})
 const config = ref<BisConfig>({
   playerBis: {},
   plannedWeeks: 8,
-  manualObtained: {},
 })
 const recordsForCompute = shallowRef<LootRecord[]>([])
 const obtainedDetailsCache = shallowRef<Map<string, { name: string, count: number }[]>>(new Map())
 let recordsSyncTimer: ReturnType<typeof setTimeout> | null = null
 let modelEmitTimer: ReturnType<typeof setTimeout> | null = null
-
-const showCorrectionDialog = ref(false)
 
 const showImportConfirmDialog = ref(false)
 const showPresetConfirmDialog = ref(false)
@@ -213,12 +209,8 @@ const obtainedSummary = computed<ObtainedSummary>(() => {
 
   for (const player of eligiblePlayers.value) {
     ensurePlayer(player)
-    const storageKey = storageKeyByPlayer.value[player] || player
-    const manual = config.value.manualObtained?.[storageKey] || {}
-    for (const row of DEFAULT_ROWS) {
+    for (const row of DEFAULT_ROWS)
       ensureRow(player, row.id)
-      counts[player]![row.id] = Math.max(0, (counts[player]![row.id] || 0) + (manual[row.id] || 0))
-    }
   }
 
   return { counts }
@@ -779,20 +771,6 @@ function getObtainedItemsDetail(player: string, row: BisRow) {
   return result
 }
 
-function getManualObtained(player: string, rowId: string): number {
-  const key = getStorageKey(player)
-  return config.value.manualObtained?.[key]?.[rowId] || 0
-}
-
-function setManualObtained(player: string, rowId: string, val: number) {
-  const key = getStorageKey(player)
-  if (!config.value.manualObtained)
-    config.value.manualObtained = {}
-  if (!config.value.manualObtained[key])
-    config.value.manualObtained[key] = {}
-  config.value.manualObtained[key]![rowId] = val
-}
-
 function getBaseLogicDetailsFor(
   player: string,
   row: BisRow,
@@ -1120,18 +1098,6 @@ const getRoleGroupClass = getRoleType
         </el-icon>
         <span>设置 BIS</span>
         <span v-if="!isConfigComplete" class="dot-warn" />
-      </el-button>
-
-      <el-button
-        size="small"
-        plain
-        class="setup-trigger-btn"
-        @click="showCorrectionDialog = true"
-      >
-        <el-icon style="margin-right: 4px">
-          <Edit />
-        </el-icon>
-        <span>野队获取修正</span>
       </el-button>
     </div>
 
@@ -1812,75 +1778,6 @@ const getRoleGroupClass = getRoleType
       </template>
     </el-dialog>
 
-    <el-dialog
-      v-model="showCorrectionDialog"
-      title="野队已获得数修正"
-      width="auto"
-      append-to-body
-      destroy-on-close
-      align-center
-    >
-      <div class="bis-config-panel-container">
-        <div class="bis-storage-info">
-          <el-icon><InfoFilled /></el-icon>
-          <span>此处记录玩家在固定队记录之外（如野队）获得的装备。用于降低这些部位的获取优先级。</span>
-        </div>
-        <div class="table-scroll-wrapper">
-          <table class="bis-table config-table">
-            <thead>
-              <tr>
-                <th class="sticky-col">
-                  装备 \ 玩家
-                </th>
-                <th
-                  v-for="p in eligiblePlayers"
-                  :key="p"
-                  :class="[
-                    { 'is-header-away': excludedPlayers.has(p) },
-                    getRoleGroupClass(getPlayerRole?.(p)),
-                  ]"
-                >
-                  <PlayerDisplay
-                    :name="p"
-                    :role="getPlayerRole?.(p)"
-                    :show-only-role="showOnlyRole"
-                  />
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="row in configRows" :key="row.id">
-                <td class="sticky-col row-header" :class="[{ 'is-group-end': row.id === 'weapon' || row.id === 'feet' || row.id === 'ring' }]">
-                  {{ row.name }}
-                </td>
-                <td
-                  v-for="p in eligiblePlayers"
-                  :key="p"
-                  class="count-cell" :class="[{ 'is-group-end': row.id === 'weapon' || row.id === 'feet' || row.id === 'ring' }]"
-                >
-                  <div class="correction-input-wrapper">
-                    <el-input
-                      :model-value="getManualObtained(p, row.id) || 0"
-                      size="small"
-                      class="mini-input correction-input"
-                      :class="{ 'is-nonzero': getManualObtained(p, row.id) !== 0 }"
-                      @input="v => setManualObtained(p, row.id, parseInt(v) || 0)"
-                    />
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <template #footer>
-        <div class="dialog-footer" style="justify-content: flex-end">
-          <el-button type="primary" size="small" @click="showCorrectionDialog = false">
-            完成
-          </el-button>
-        </div>
-      </template>
-    </el-dialog>
   </div>
 </template>
 

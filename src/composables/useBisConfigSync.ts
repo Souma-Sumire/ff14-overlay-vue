@@ -41,7 +41,7 @@ export function normalizeBisConfigFromModel(
   let nextConfig: BisConfig
 
   if (isLegacyBisConfig(rawModelValue)) {
-    const migrated: BisConfig = { playerBis: {}, plannedWeeks: 8, manualObtained: {} }
+    const migrated: BisConfig = { playerBis: {}, plannedWeeks: 8 }
     Object.keys(rawModelValue.playerBis).forEach((player) => {
       migrated.playerBis[player] = {}
       const list = rawModelValue.playerBis[player]
@@ -56,10 +56,8 @@ export function normalizeBisConfigFromModel(
   }
   else {
     nextConfig = {
-      ...rawModelValue,
-      plannedWeeks: rawModelValue.plannedWeeks ?? 8,
-      manualObtained: rawModelValue.manualObtained ?? {},
       playerBis: clonePlayerBis(rawModelValue.playerBis),
+      plannedWeeks: rawModelValue.plannedWeeks ?? 8,
     }
   }
 
