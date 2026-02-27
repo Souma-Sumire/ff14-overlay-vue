@@ -748,8 +748,6 @@ const baseFilteredRecords = computed(() => {
   const startTs = new Date(syncStartDate.value).getTime()
   const endTs = syncEndDate.value ? new Date(syncEndDate.value).getTime() : Infinity
   const itemVis = itemVisibility.value
-  const keywordLower = String(itemSearchKeyword.value || '').trim().toLowerCase()
-  const winnerFilter = String(winnerSearchPlayer.value || '')
 
   return lootRecords.value.filter((record) => {
     if (isSystemFiltered(record.item))
@@ -761,6 +759,15 @@ const baseFilteredRecords = computed(() => {
     if (ts < startTs || ts > endTs)
       return false
 
+    return true
+  })
+})
+
+const listFilteredRecords = computed(() => {
+  const keywordLower = String(itemSearchKeyword.value || '').trim().toLowerCase()
+  const winnerFilter = String(winnerSearchPlayer.value || '')
+
+  return baseFilteredRecords.value.filter((record) => {
     if (keywordLower && !record.item.toLowerCase().includes(keywordLower))
       return false
 
@@ -775,6 +782,14 @@ const baseFilteredRecords = computed(() => {
 })
 
 const filteredRecords = computed(() => {
+  const result = listFilteredRecords.value.filter((record) => {
+    const player = getActualPlayer(getRecordPlayer(record))
+    return isPlayerChecked(player)
+  })
+  return result.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+})
+
+const analysisFilteredRecords = computed(() => {
   const result = baseFilteredRecords.value.filter((record) => {
     const player = getActualPlayer(getRecordPlayer(record))
     return isPlayerChecked(player)
@@ -792,7 +807,7 @@ const filteredRecordStats = computed(() => {
     nextSlotSummary[s] = {}
   })
 
-  filteredRecords.value.forEach((record) => {
+  analysisFilteredRecords.value.forEach((record) => {
     const player = getActualPlayer(getRecordPlayer(record))
     const itemName = record.item
 
@@ -1514,7 +1529,7 @@ const visibleItemCount = computed(() => visibleUniqueItems.value.length)
 const visiblePlayerCount = computed(() => visibleAllPlayers.value.length)
 
 const allConditionRecords = computed(() => {
-  return filteredRecords.value.map(r => ({
+  return analysisFilteredRecords.value.map(r => ({
     ...r,
     player: getRecordPlayer(r),
   }))
