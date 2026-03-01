@@ -37,11 +37,15 @@ function addOverlayWsParam() {
 }
 
 export function useWebSocket(
-  config: {
+  {
+    allowClose = false,
+    addWsParam = true,
+    allowWarning = true,
+  }: {
     allowClose?: boolean
     addWsParam?: boolean
     allowWarning?: boolean
-  } = { allowClose: false, addWsParam: true, allowWarning: true },
+  } = {},
 ) {
   const { t } = useI18n()
   const wsConnected = ref(undefined as boolean | undefined)
@@ -80,11 +84,11 @@ export function useWebSocket(
   }
 
   function handleDisconnection() {
-    if (!userIgnoredWarning.value && config.allowWarning) {
+    if (!userIgnoredWarning.value && allowWarning) {
       ElMessageBox.close()
 
       const message = t('websocket.disconnectMsg', { actWS })
-      const title = config.allowClose
+      const title = allowClose
         ? t('websocket.disconnectTitleCloseable')
         : t('websocket.disconnectTitleRequired')
 
@@ -94,7 +98,7 @@ export function useWebSocket(
         showClose: false,
         closeOnPressEscape: false,
         closeOnHashChange: false,
-        showCancelButton: config.allowClose,
+        showCancelButton: allowClose,
         showConfirmButton: false,
         cancelButtonText: t('websocket.ignoreWarningBtn'),
         buttonSize: 'small',
@@ -127,7 +131,7 @@ export function useWebSocket(
         handleDisconnection()
       }
     })
-    if (!window.location.href.includes('OVERLAY_WS') && config.addWsParam) {
+    if (!window.location.href.includes('OVERLAY_WS') && addWsParam) {
       addOverlayWsParam()
     }
     check()
