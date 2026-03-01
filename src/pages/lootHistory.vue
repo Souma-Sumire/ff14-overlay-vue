@@ -108,6 +108,7 @@ const LABELS = {
 const ROLE_SETTING_HINT = '需在左上方“固定队 - 职位设置”中完成所有职位后方可开启'
 const LOG_PARSER_WORKER_POOL_SIZE = 1
 const SYNC_RECORD_PERSIST_BATCH_SIZE = 1000
+const LOG_PARSER_CHUNK_SIZE = 4 * 1024 * 1024
 type BisRow = (typeof DEFAULT_ROWS)[number]
 const defaultRowBySlotName = new Map<string, BisRow>()
 for (const row of DEFAULT_ROWS) {
@@ -128,6 +129,22 @@ const rollTypePriority = { need: 0, greed: 1 } as const
 
 function findDefaultRowBySlot(slotName: string) {
   return defaultRowBySlotName.get(slotName)
+}
+
+function formatByteSize(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes <= 0)
+    return '0 B'
+
+  const units = ['B', 'KB', 'MB', 'GB']
+  let value = bytes
+  let unitIndex = 0
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024
+    unitIndex++
+  }
+
+  const digits = unitIndex === 0 ? 0 : value >= 100 ? 0 : value >= 10 ? 1 : 2
+  return `${value.toFixed(digits)} ${units[unitIndex]}`
 }
 
 const { locale } = useLang()
@@ -159,6 +176,8 @@ watch(isRoleSettingsVisible, (val) => {
 
 const isLoading = ref(false)
 const loadingProgress = ref(0)
+const loadingProcessedBytes = ref(0)
+const loadingTotalBytes = ref(0)
 
 const parsedLogFiles = ref<{ name: string, size: number }[]>([])
 const pendingLogFiles = ref<{ name: string, size: number }[]>([])
@@ -1966,6 +1985,8 @@ async function syncLogFiles(userInitiated = false) {
     isLoading.value = true
   }
   loadingProgress.value = 0
+  loadingProcessedBytes.value = 0
+  loadingTotalBytes.value = 0
 
   try {
     // 标记同步正在进行，若页面意外关闭可在下次启动时检测到中断
@@ -2072,6 +2093,8 @@ async function syncLogFiles(userInitiated = false) {
     if (filesToRead.length === 0) {
       isSyncing.value = false
       isLoading.value = false
+      loadingProcessedBytes.value = 0
+      loadingTotalBytes.value = 0
       lastSyncTime.value = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       if (userInitiated) {
         syncSuccessVisible.value = true
@@ -2090,9 +2113,17 @@ async function syncLogFiles(userInitiated = false) {
       size: f.size - f.startByte,
     }))
 
+    const totalBytesToParse = filesToRead.reduce(
+      (sum, file) => sum + Math.max(0, file.size - file.startByte),
+      0,
+    )
+    let parsedBytes = 0
+    loadingTotalBytes.value = totalBytesToParse
+    loadingProcessedBytes.value = 0
+    loadingProgress.value = totalBytesToParse > 0 ? 0 : 100
+
     parserWorkerPool = createLogParserWorkerPool(LOG_PARSER_WORKER_POOL_SIZE)
     const activeWorkerPool = parserWorkerPool
-    let completedCount = 0
 
     let nextFileIndex = 0
     const runners = Array.from(
@@ -2106,16 +2137,38 @@ async function syncLogFiles(userInitiated = false) {
             continue
 
           const file = await target.handle.getFile()
-          const buffer = await file.slice(target.startByte).arrayBuffer()
-
+          const fileBytesToParse = Math.max(0, file.size - target.startByte)
+          let fileParsedBytes = 0
           const {
             records,
             players: filePlayers,
             items: fileItems,
-          } = await activeWorkerPool.run({
-            buffer,
+          } = await activeWorkerPool.runFile({
+            file,
+            startByte: target.startByte,
             locale: lootParserLocale.value,
+            onProgress(processedBytes) {
+              if (processedBytes <= fileParsedBytes)
+                return
+              const delta = processedBytes - fileParsedBytes
+              fileParsedBytes = processedBytes
+              parsedBytes += delta
+              const displayedParsedBytes = Math.min(parsedBytes, totalBytesToParse)
+              loadingProcessedBytes.value = displayedParsedBytes
+              loadingProgress.value = totalBytesToParse > 0
+                ? Math.min(100, Math.round((displayedParsedBytes / totalBytesToParse) * 100))
+                : 100
+            },
           })
+          if (fileParsedBytes < fileBytesToParse) {
+            const delta = fileBytesToParse - fileParsedBytes
+            parsedBytes += delta
+            const displayedParsedBytes = Math.min(parsedBytes, totalBytesToParse)
+            loadingProcessedBytes.value = displayedParsedBytes
+            loadingProgress.value = totalBytesToParse > 0
+              ? Math.min(100, Math.round((displayedParsedBytes / totalBytesToParse) * 100))
+              : 100
+          }
 
           for (const r of records) {
             if (!localKeys.has(r.key) && !blacklistedKeys.value.has(r.key)) {
@@ -2138,11 +2191,6 @@ async function syncLogFiles(userInitiated = false) {
             size: file.size,
             mtime: file.lastModified,
           }
-
-          completedCount++
-          loadingProgress.value = Math.round(
-            (completedCount / filesToRead.length) * 100,
-          )
 
           parsedLogFiles.value.push({
             name: target.name,
@@ -2234,6 +2282,8 @@ async function syncLogFiles(userInitiated = false) {
     isSyncing.value = false
     isLoading.value = false
     loadingProgress.value = 0
+    loadingProcessedBytes.value = 0
+    loadingTotalBytes.value = 0
   }
 }
 
@@ -2246,6 +2296,34 @@ interface ParseWorkerResult {
 interface ParseWorkerTask {
   buffer: ArrayBuffer
   locale: LootParserLocale
+}
+
+interface ParseWorkerFileTask {
+  file: File
+  startByte: number
+  locale: LootParserLocale
+  onProgress?: (processedBytes: number, totalBytes: number) => void
+}
+
+interface ParseWorkerStreamStartMessage {
+  type: 'stream-start'
+  sessionId: string
+  locale: LootParserLocale
+}
+
+interface ParseWorkerStreamChunkMessage {
+  type: 'stream-chunk'
+  sessionId: string
+  buffer: ArrayBuffer
+}
+
+interface ParseWorkerStreamEndMessage {
+  type: 'stream-end'
+  sessionId: string
+}
+
+interface ParseWorkerAck {
+  ok: boolean
 }
 
 function createLogParserWorkerPool(size: number) {
@@ -2270,34 +2348,73 @@ function createLogParserWorkerPool(size: number) {
     slot.worker = new LogParserWorker()
   }
 
-  function executeTask(index: number, task: ParseWorkerTask): Promise<ParseWorkerResult> {
+  function requestWorkerMessage<T>(
+    worker: Worker,
+    message: ParseWorkerTask | ParseWorkerStreamStartMessage | ParseWorkerStreamChunkMessage | ParseWorkerStreamEndMessage,
+    transferables: Transferable[] = [],
+  ): Promise<T> {
     return new Promise((resolve, reject) => {
-      const slot = getSlot(index)
-      const worker = slot.worker
       const cleanup = () => {
         worker.onmessage = null
         worker.onerror = null
       }
 
-      worker.onmessage = (e: MessageEvent<ParseWorkerResult>) => {
+      worker.onmessage = (e: MessageEvent<T>) => {
         cleanup()
         resolve(e.data)
       }
 
       worker.onerror = (e) => {
         cleanup()
-        resetWorker(index)
         reject(e)
       }
 
       try {
-        worker.postMessage(task, [task.buffer])
+        worker.postMessage(message, transferables)
       }
       catch (e) {
         cleanup()
-        resetWorker(index)
         reject(e)
       }
+    })
+  }
+
+  async function executeTask(index: number, task: ParseWorkerTask): Promise<ParseWorkerResult> {
+    const slot = getSlot(index)
+    return requestWorkerMessage<ParseWorkerResult>(slot.worker, task, [task.buffer])
+  }
+
+  async function executeFileTask(index: number, task: ParseWorkerFileTask): Promise<ParseWorkerResult> {
+    const slot = getSlot(index)
+    const worker = slot.worker
+    const sessionId = `${Date.now()}-${Math.random().toString(36).slice(2)}`
+    const totalBytes = Math.max(0, task.file.size - task.startByte)
+    let processedBytes = 0
+
+    await requestWorkerMessage<ParseWorkerAck>(worker, {
+      type: 'stream-start',
+      sessionId,
+      locale: task.locale,
+    })
+
+    for (let offset = task.startByte; offset < task.file.size; offset += LOG_PARSER_CHUNK_SIZE) {
+      const end = Math.min(offset + LOG_PARSER_CHUNK_SIZE, task.file.size)
+      const buffer = await task.file.slice(offset, end).arrayBuffer()
+      await requestWorkerMessage<ParseWorkerAck>(worker, {
+        type: 'stream-chunk',
+        sessionId,
+        buffer,
+      }, [buffer])
+      processedBytes += end - offset
+      task.onProgress?.(processedBytes, totalBytes)
+    }
+
+    if (processedBytes < totalBytes)
+      task.onProgress?.(totalBytes, totalBytes)
+
+    return requestWorkerMessage<ParseWorkerResult>(worker, {
+      type: 'stream-end',
+      sessionId,
     })
   }
 
@@ -2310,7 +2427,39 @@ function createLogParserWorkerPool(size: number) {
       roundRobinIndex++
       const slot = getSlot(index)
 
-      const taskPromise = slot.chain.then(() => executeTask(index, task))
+      const taskPromise = slot.chain.then(async () => {
+        try {
+          return await executeTask(index, task)
+        }
+        catch (e) {
+          resetWorker(index)
+          throw e
+        }
+      })
+      slot.chain = taskPromise.then(
+        () => undefined,
+        () => undefined,
+      )
+
+      return taskPromise
+    },
+    runFile(task: ParseWorkerFileTask): Promise<ParseWorkerResult> {
+      if (disposed)
+        return Promise.reject(new Error('Log parser worker pool is disposed'))
+
+      const index = roundRobinIndex % normalizedSize
+      roundRobinIndex++
+      const slot = getSlot(index)
+
+      const taskPromise = slot.chain.then(async () => {
+        try {
+          return await executeFileTask(index, task)
+        }
+        catch (e) {
+          resetWorker(index)
+          throw e
+        }
+      })
       slot.chain = taskPromise.then(
         () => undefined,
         () => undefined,
@@ -3566,6 +3715,7 @@ const activeStep = computed(() => {
                   </div>
                   <h3>正在解析日志文件...</h3>
                   <p>已处理 {{ parsedLogFiles.length }} / {{ parsedLogFiles.length + pendingLogFiles.length }} 个文件</p>
+                  <p>已解析 {{ formatByteSize(loadingProcessedBytes) }} / {{ formatByteSize(loadingTotalBytes) }}</p>
 
                   <div class="file-list-preview">
                     <div v-for="file in parsedLogFiles.slice(-3)" :key="file.name" class="file-item done">

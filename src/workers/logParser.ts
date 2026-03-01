@@ -158,22 +158,59 @@ interface WorkerInput {
   locale?: LootParserLocale
 }
 
+interface StreamStartInput {
+  type: 'stream-start'
+  sessionId: string
+  locale?: LootParserLocale
+}
+
+interface StreamChunkInput {
+  type: 'stream-chunk'
+  sessionId: string
+  buffer: ArrayBuffer
+}
+
+interface StreamEndInput {
+  type: 'stream-end'
+  sessionId: string
+}
+
+interface ParseAccumulator {
+  tempRolls: Map<string, RollInfo[]>
+  newRecords: LootRecord[]
+  players: Set<string>
+  items: Set<string>
+  pendingBytes: Uint8Array
+  localeConfig: ParserLocaleConfig
+}
+
 const utf8Decoder = new TextDecoder('utf-8')
+const EMPTY_BYTES = new Uint8Array(0)
+const streamSessions = new Map<string, ParseAccumulator>()
 
-globalThis.onmessage = (e: MessageEvent<string | WorkerInput>) => {
-  const payload = e.data
-  const text
-    = typeof payload === 'string'
-      ? payload
-      : (payload.text ?? (payload.buffer ? utf8Decoder.decode(payload.buffer) : ''))
-  const locale = typeof payload === 'string' ? DEFAULT_LOOT_PARSER_LOCALE : payload.locale || DEFAULT_LOOT_PARSER_LOCALE
-  const localeConfig = PARSER_LOCALE_CONFIGS[locale]
+function createAccumulator(locale: LootParserLocale): ParseAccumulator {
+  return {
+    tempRolls: new Map<string, RollInfo[]>(),
+    newRecords: [],
+    players: new Set<string>(),
+    items: new Set<string>(),
+    pendingBytes: EMPTY_BYTES,
+    localeConfig: PARSER_LOCALE_CONFIGS[locale],
+  }
+}
 
-  const tempRolls = new Map<string, RollInfo[]>()
-  const newRecords: LootRecord[] = []
-  const players = new Set<string>()
-  const items = new Set<string>()
+function buildResult(accumulator: ParseAccumulator) {
+  return {
+    records: accumulator.newRecords,
+    players: Array.from(accumulator.players),
+    items: Array.from(accumulator.items),
+  }
+}
 
+function parseTextAndAppend(
+  text: string,
+  accumulator: ParseAccumulator,
+) {
   // Scan line by line without building a large temporary lines array.
   for (let start = 0; start < text.length;) {
     let end = text.indexOf('\n', start)
@@ -188,12 +225,121 @@ globalThis.onmessage = (e: MessageEvent<string | WorkerInput>) => {
     if (!line)
       continue
 
-    parseLineAndAppend(line, tempRolls, items, players, newRecords, localeConfig)
+    parseLineAndAppend(
+      line,
+      accumulator.tempRolls,
+      accumulator.items,
+      accumulator.players,
+      accumulator.newRecords,
+      accumulator.localeConfig,
+    )
+  }
+}
+
+function parseChunkBytesAndAppend(
+  bytes: Uint8Array,
+  accumulator: ParseAccumulator,
+  flushTail: boolean,
+) {
+  let merged = bytes
+  if (accumulator.pendingBytes.length > 0) {
+    merged = new Uint8Array(accumulator.pendingBytes.length + bytes.length)
+    merged.set(accumulator.pendingBytes, 0)
+    merged.set(bytes, accumulator.pendingBytes.length)
+    accumulator.pendingBytes = EMPTY_BYTES
   }
 
-  globalThis.postMessage({
-    records: newRecords,
-    players: Array.from(players),
-    items: Array.from(items),
-  })
+  let lineStart = 0
+
+  for (let i = 0; i < merged.length; i++) {
+    if (merged[i] !== 0x0A)
+      continue
+
+    let lineEnd = i
+    if (lineEnd > lineStart && merged[lineEnd - 1] === 0x0D)
+      lineEnd--
+
+    if (lineEnd > lineStart) {
+      const line = utf8Decoder.decode(merged.subarray(lineStart, lineEnd))
+      if (line) {
+        parseLineAndAppend(
+          line,
+          accumulator.tempRolls,
+          accumulator.items,
+          accumulator.players,
+          accumulator.newRecords,
+          accumulator.localeConfig,
+        )
+      }
+    }
+
+    lineStart = i + 1
+  }
+
+  if (lineStart >= merged.length)
+    return
+
+  if (flushTail) {
+    let tailEnd = merged.length
+    if (tailEnd > lineStart && merged[tailEnd - 1] === 0x0D)
+      tailEnd--
+    if (tailEnd > lineStart) {
+      const line = utf8Decoder.decode(merged.subarray(lineStart, tailEnd))
+      if (line) {
+        parseLineAndAppend(
+          line,
+          accumulator.tempRolls,
+          accumulator.items,
+          accumulator.players,
+          accumulator.newRecords,
+          accumulator.localeConfig,
+        )
+      }
+    }
+    accumulator.pendingBytes = EMPTY_BYTES
+    return
+  }
+
+  accumulator.pendingBytes = merged.slice(lineStart)
+}
+
+globalThis.onmessage = (e: MessageEvent<string | WorkerInput | StreamStartInput | StreamChunkInput | StreamEndInput>) => {
+  const payload = e.data
+  if (typeof payload === 'object' && payload && 'type' in payload) {
+    if (payload.type === 'stream-start') {
+      const locale = payload.locale || DEFAULT_LOOT_PARSER_LOCALE
+      streamSessions.set(payload.sessionId, createAccumulator(locale))
+      globalThis.postMessage({ ok: true })
+      return
+    }
+
+    if (payload.type === 'stream-chunk') {
+      const session = streamSessions.get(payload.sessionId)
+      if (!session)
+        throw new Error(`Unknown parser stream session: ${payload.sessionId}`)
+      parseChunkBytesAndAppend(new Uint8Array(payload.buffer), session, false)
+      globalThis.postMessage({ ok: true })
+      return
+    }
+
+    if (payload.type === 'stream-end') {
+      const session = streamSessions.get(payload.sessionId)
+      if (!session)
+        throw new Error(`Unknown parser stream session: ${payload.sessionId}`)
+      parseChunkBytesAndAppend(EMPTY_BYTES, session, true)
+      streamSessions.delete(payload.sessionId)
+      globalThis.postMessage(buildResult(session))
+      return
+    }
+  }
+
+  const locale = typeof payload === 'string' ? DEFAULT_LOOT_PARSER_LOCALE : payload.locale || DEFAULT_LOOT_PARSER_LOCALE
+  const accumulator = createAccumulator(locale)
+
+  if (typeof payload === 'string' || payload.text)
+    parseTextAndAppend(typeof payload === 'string' ? payload : payload.text!, accumulator)
+  else if (payload.buffer)
+    parseChunkBytesAndAppend(new Uint8Array(payload.buffer), accumulator, true)
+
+  globalThis.postMessage(buildResult(accumulator))
 }
