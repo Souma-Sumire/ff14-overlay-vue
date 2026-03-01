@@ -40,6 +40,87 @@ function isRollCode(code: string): boolean {
     || code === '0044'
 }
 
+function normalizeActorId(id: string): string {
+  return id.trim().toUpperCase()
+}
+
+function extractFieldByIndex(line: string, fieldIndex: number): string {
+  // Field index is 0-based (e.g. "03|ts|id|name|..." -> id is 2, name is 3).
+  if (fieldIndex < 0)
+    return ''
+
+  let cursor = -1
+  for (let i = 0; i < fieldIndex; i++) {
+    cursor = line.indexOf('|', cursor + 1)
+    if (cursor === -1)
+      return ''
+  }
+
+  const start = cursor + 1
+  const end = line.indexOf('|', start)
+  if (end === -1)
+    return line.slice(start)
+  return line.slice(start, end)
+}
+
+function parsePartyListLineAndAppend(
+  line: string,
+  partyIds: Set<string>,
+  combatantNameById: Map<string, string>,
+  seenPlayers: Set<string>,
+) {
+  // 11|timestamp|partyCount|id0|id1|...|hash
+  const parts = line.split('|')
+  if (parts.length < 4 || parts[0] !== '11')
+    return
+
+  const partyCount = Number.parseInt(parts[2] || '', 10)
+  if (!Number.isFinite(partyCount) || partyCount <= 0)
+    return
+
+  const idCount = Math.min(24, partyCount)
+  for (let i = 0; i < idCount; i++) {
+    const rawId = parts[3 + i]
+    if (!rawId)
+      continue
+
+    const id = normalizeActorId(rawId)
+    if (!id)
+      continue
+
+    partyIds.add(id)
+    const knownName = combatantNameById.get(id)
+    if (knownName)
+      seenPlayers.add(knownName)
+  }
+}
+
+function parseAddCombatantLineAndAppend(
+  line: string,
+  partyIds: Set<string>,
+  combatantNameById: Map<string, string>,
+  seenPlayers: Set<string>,
+) {
+  // 03|timestamp|id|name|...
+  const rawId = extractFieldByIndex(line, 2)
+  const rawName = extractFieldByIndex(line, 3)
+  if (!rawId || !rawName)
+    return
+
+  const id = normalizeActorId(rawId)
+  const name = sanitizePlayerName(rawName)
+  if (!id || !name)
+    return
+
+  // Character actors are usually 10xxxxxx; cache them so PartyList can resolve names
+  // regardless of whether 03 appears before or after 11.
+  if (id.startsWith('10'))
+    combatantNameById.set(id, name)
+
+  if (partyIds.has(id))
+    seenPlayers.add(name)
+}
+
 function extractCoreFields(line: string): { timestampStr: string, code: string, message: string } | null {
   // 00|timestamp|code|actor|message|hash
   const delimiters: [number, number, number, number] = [-1, -1, -1, -1]
@@ -68,9 +149,29 @@ function parseLineAndAppend(
   tempRolls: Map<string, RollInfo[]>,
   seenItems: Set<string>,
   seenPlayers: Set<string>,
+  partyIds: Set<string>,
+  combatantNameById: Map<string, string>,
   outRecords: LootRecord[],
   localeConfig: ParserLocaleConfig,
 ): void {
+  const firstDelimiter = line.indexOf('|')
+  if (firstDelimiter === -1)
+    return
+  const lineType = line.slice(0, firstDelimiter)
+
+  if (lineType === '11') {
+    parsePartyListLineAndAppend(line, partyIds, combatantNameById, seenPlayers)
+    return
+  }
+
+  if (lineType === '03') {
+    parseAddCombatantLineAndAppend(line, partyIds, combatantNameById, seenPlayers)
+    return
+  }
+
+  if (lineType !== '00')
+    return
+
   const fields = extractCoreFields(line)
   if (!fields)
     return
@@ -180,6 +281,8 @@ interface ParseAccumulator {
   newRecords: LootRecord[]
   players: Set<string>
   items: Set<string>
+  partyIds: Set<string>
+  combatantNameById: Map<string, string>
   pendingBytes: Uint8Array
   localeConfig: ParserLocaleConfig
 }
@@ -194,6 +297,8 @@ function createAccumulator(locale: LootParserLocale): ParseAccumulator {
     newRecords: [],
     players: new Set<string>(),
     items: new Set<string>(),
+    partyIds: new Set<string>(),
+    combatantNameById: new Map<string, string>(),
     pendingBytes: EMPTY_BYTES,
     localeConfig: PARSER_LOCALE_CONFIGS[locale],
   }
@@ -230,6 +335,8 @@ function parseTextAndAppend(
       accumulator.tempRolls,
       accumulator.items,
       accumulator.players,
+      accumulator.partyIds,
+      accumulator.combatantNameById,
       accumulator.newRecords,
       accumulator.localeConfig,
     )
@@ -267,6 +374,8 @@ function parseChunkBytesAndAppend(
           accumulator.tempRolls,
           accumulator.items,
           accumulator.players,
+          accumulator.partyIds,
+          accumulator.combatantNameById,
           accumulator.newRecords,
           accumulator.localeConfig,
         )
@@ -291,6 +400,8 @@ function parseChunkBytesAndAppend(
           accumulator.tempRolls,
           accumulator.items,
           accumulator.players,
+          accumulator.partyIds,
+          accumulator.combatantNameById,
           accumulator.newRecords,
           accumulator.localeConfig,
         )

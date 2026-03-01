@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import PlayerDisplay from './PlayerDisplay.vue'
 import RoleBadge from './RoleBadge.vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   role: string
   modelValue: string | undefined
   allPlayers: string[]
@@ -15,7 +15,9 @@ const props = defineProps<{
   allowCreate?: boolean
   size?: 'default' | 'small' | 'large'
   teleported?: boolean
-}>()
+}>(), {
+  teleported: true,
+})
 
 const emit = defineEmits<{
   (e: 'update:modelValue', val: string): void
@@ -75,6 +77,9 @@ function handleChange(val: string) {
         :default-first-option="allowCreate"
         :size="size || (variant === 'card' ? 'default' : 'small')"
         :teleported="teleported"
+        placement="bottom-start"
+        :fallback-placements="variant === 'card' ? ['bottom-start'] : ['bottom-start', 'top-start']"
+        popper-class="role-setup-select-popper"
         class="role-select"
         @change="handleChange"
       >
@@ -100,6 +105,12 @@ function handleChange(val: string) {
   </div>
 </template>
 
-<style lang="scss" scoped>
+<style lang="scss">
+.role-setup-select-popper {
+  max-width: calc(100vw - 24px);
+}
 
+.role-setup-select-popper .el-select-dropdown__wrap {
+  max-height: 240px;
+}
 </style>

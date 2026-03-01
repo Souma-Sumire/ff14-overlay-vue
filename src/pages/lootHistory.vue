@@ -703,6 +703,12 @@ const detailedPlayerStats = computed(() => {
       playersSet.add(getActualPlayer(p))
   })
 
+  // 将解析到的历史玩家（包含 PartyList 补充的队友）也加入候选列表
+  Object.keys(playerVisibility.value).forEach((p) => {
+    if (p)
+      playersSet.add(getActualPlayer(p))
+  })
+
   const sortedPlayers = Array.from(playersSet).sort((a, b) =>
     comparePlayersByRole(a, b, rollCounts),
   )
@@ -1889,6 +1895,8 @@ async function setLogPath() {
     }
     const handle = await showPicker()
     if (handle) {
+      // 若是通过“上一步”强制回到第一步，选完目录后恢复自动步进
+      wizardStepOverride.value = null
       await dbHandle.set({ key: 'current-log-dir', handle })
       currentHandle.value = handle
       logPath.value = handle.name
@@ -2209,32 +2217,32 @@ async function syncLogFiles(userInitiated = false) {
     await flushPendingPersistRecords(true)
     await persistQueue
 
+    let visUpdated = false
+    const newIV = { ...itemVisibility.value }
+    const newPV = { ...playerVisibility.value }
+
+    batchSeenItems.forEach((i) => {
+      if (newIV[i] === undefined) {
+        newIV[i] = true
+        visUpdated = true
+      }
+    })
+    batchSeenPlayers.forEach((p) => {
+      if (newPV[p] === undefined) {
+        newPV[p] = true
+        visUpdated = true
+      }
+    })
+
+    if (visUpdated) {
+      itemVisibility.value = newIV
+      playerVisibility.value = newPV
+    }
+
     if (newRecordCount > 0) {
       existingKeys.value = localKeys
 
       handlePotentialDuplicatesWithIncomingMap(incomingMap, 'sync')
-
-      let visUpdated = false
-      const newIV = { ...itemVisibility.value }
-      const newPV = { ...playerVisibility.value }
-
-      batchSeenItems.forEach((i) => {
-        if (newIV[i] === undefined) {
-          newIV[i] = true
-          visUpdated = true
-        }
-      })
-      batchSeenPlayers.forEach((p) => {
-        if (newPV[p] === undefined) {
-          newPV[p] = true
-          visUpdated = true
-        }
-      })
-
-      if (visUpdated) {
-        itemVisibility.value = newIV
-        playerVisibility.value = newPV
-      }
 
       if (!isFirstSync) {
         ElMessage.success({
@@ -3571,7 +3579,63 @@ async function applyPendingWinnerChange() {
   pendingWinnerChange.value = null
 }
 
+const wizardStepOverride = ref<0 | 1 | 2 | null>(null)
+
+function goBackFromSyncStep() {
+  // 强制停留在第一步，避免因残留数据自动跳回主面板
+  wizardStepOverride.value = 0
+  currentHandle.value = null
+}
+
+function startSyncFromWizard() {
+  showInitialRoleSetup.value = false
+  wizardStepOverride.value = null
+  startInitialSync()
+}
+
+async function goBackToStepTwo() {
+  try {
+    await dbRecords.clear()
+    lootRecords.value = []
+    existingKeys.value = new Set()
+    blacklistedKeys.value = new Set()
+    processedFiles.value = {}
+    parsedLogFiles.value = []
+    pendingLogFiles.value = []
+    itemVisibility.value = {}
+    playerVisibility.value = {}
+    recordWeekCorrections.value = {}
+    recordPlayerCorrections.value = {}
+    anonymousMapping.value = {}
+    usedAnonymousNames.clear()
+
+    await Promise.all([
+      dbConfig.remove('processedFiles'),
+      dbConfig.remove('itemVisibility'),
+      dbConfig.remove('playerVisibility'),
+      dbConfig.remove('blacklistedKeys'),
+      dbConfig.remove('weekCorrections'),
+      dbConfig.remove('playerCorrections'),
+    ])
+
+    showInitialRoleSetup.value = false
+    wizardStepOverride.value = 1
+    ElMessage.success('已清空解析数据，请重新开始解析日志')
+  }
+  catch (err) {
+    console.error('Failed to reset data for reparse:', err)
+    ElMessage.error('清空数据库失败，请重试')
+  }
+}
+
+function enterMainPanelFromWizard() {
+  wizardStepOverride.value = null
+  showInitialRoleSetup.value = false
+}
+
 const activeStep = computed(() => {
+  if (wizardStepOverride.value !== null)
+    return wizardStepOverride.value
   if (showInitialRoleSetup.value)
     return 2
   if (lootRecords.value.length > 0)
@@ -3655,7 +3719,7 @@ const activeStep = computed(() => {
                     </div>
 
                     <div class="secondary-actions">
-                      <el-button plain @click="importInputRef?.click()">
+                      <el-button plain class="wizard-btn" @click="importInputRef?.click()">
                         <el-icon><Upload /></el-icon> 从备份文件导入
                       </el-button>
                     </div>
@@ -3697,10 +3761,10 @@ const activeStep = computed(() => {
                   </div>
 
                   <div class="step-footer">
-                    <el-button @click="currentHandle = null">
+                    <el-button class="wizard-btn" @click="goBackFromSyncStep">
                       上一步
                     </el-button>
-                    <el-button type="primary" size="large" @click="startInitialSync">
+                    <el-button type="primary" class="wizard-btn" @click="startSyncFromWizard">
                       开始解析
                       <el-icon class="el-icon--right">
                         <Right />
@@ -3748,6 +3812,7 @@ const activeStep = computed(() => {
                           v-for="role in ['MT', 'ST']"
                           :key="role"
                           v-model="playerRoles[role]"
+                          allow-create
                           :role="role"
                           variant="card"
                           :all-players="allPlayers"
@@ -3762,6 +3827,7 @@ const activeStep = computed(() => {
                           v-for="role in ['H1', 'H2']"
                           :key="role"
                           v-model="playerRoles[role]"
+                          allow-create
                           :role="role"
                           variant="card"
                           :all-players="allPlayers"
@@ -3781,6 +3847,7 @@ const activeStep = computed(() => {
                           v-for="role in ['D1', 'D2', 'D3', 'D4']"
                           :key="role"
                           v-model="playerRoles[role]"
+                          allow-create
                           :role="role"
                           variant="card"
                           :all-players="allPlayers"
@@ -3841,12 +3908,15 @@ const activeStep = computed(() => {
                 </div>
 
                 <div class="step-footer">
+                  <el-button class="wizard-btn" @click="goBackToStepTwo">
+                    上一步
+                  </el-button>
                   <el-alert :title="isRaidRolesComplete ? '设置已完成' : '请完成所有 8 个职位的分配'" :type="isRaidRolesComplete ? 'success' : 'warning'" show-icon :closable="false" />
                   <el-button
                     type="primary"
-                    size="large"
+                    class="wizard-btn"
                     :disabled="!isRaidRolesComplete"
-                    @click="showInitialRoleSetup = false"
+                    @click="enterMainPanelFromWizard"
                   >
                     进入面板
                     <el-icon class="el-icon--right">
@@ -9644,6 +9714,15 @@ html.dark {
   width: 100%;
   justify-content: center;
   gap: 12px;
+}
+
+.wizard-btn {
+  height: 40px;
+  min-width: 120px;
+  padding: 0 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .guide-preview {
