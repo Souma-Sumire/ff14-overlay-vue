@@ -220,6 +220,7 @@ const clearForm = ref({
 })
 
 const showInitialRoleSetup = ref(false)
+const wizardStepOverride = ref<0 | 1 | 2 | null>(null)
 
 const playerVisibility = ref<Record<string, boolean>>({})
 const recordWeekCorrections = ref<Record<string, number>>({})
@@ -3578,8 +3579,6 @@ async function applyPendingWinnerChange() {
   // 清空待处理状态
   pendingWinnerChange.value = null
 }
-
-const wizardStepOverride = ref<0 | 1 | 2 | null>(null)
 
 function goBackFromSyncStep() {
   // 强制停留在第一步，避免因残留数据自动跳回主面板
