@@ -9,6 +9,7 @@ import viteCompression from 'vite-plugin-compression'
 import Markdown from 'vite-plugin-md'
 import Pages from 'vite-plugin-pages'
 import sassDts from 'vite-plugin-sass-dts'
+import VueDevTools from 'vite-plugin-vue-devtools'
 import { defineConfig } from 'vitest/config'
 
 function injectBuildTime() {
@@ -93,6 +94,7 @@ export default defineConfig({
     sourcemap: false,
   },
   plugins: [
+    VueDevTools(),
     vue({
       include: [/\.vue$/, /\.md$/],
     }),

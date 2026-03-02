@@ -1,39 +1,34 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
-
-    "baseUrl": "./",
+    "baseUrl": ".",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "paths": {
-      "@": ["src"],
       "@/*": ["src/*"]
     },
     "resolveJsonModule": true,
     "types": ["vite/client", "element-plus/global"],
-
-    "allowJs": true,
     "strict": true,
-    "strictFunctionTypes": true,
-    "strictNullChecks": true,
-    "strictPropertyInitialization": true,
-    "alwaysStrict": true,
-
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
     "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "outDir": "./dist",
-    "sourceMap": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "verbatimModuleSyntax": false,
+    "isolatedModules": true,
     "skipLibCheck": true
   },
-  "include": ["src", "scripts", "./*.config.ts"],
-  "exclude": ["node_modules", "dist", "cactbot"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.vue",
+    "src/**/*.d.ts",
+    "scripts/**/*.ts",
+    "./*.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "cactbot"
+  ]
 }
