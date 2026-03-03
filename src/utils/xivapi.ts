@@ -22,12 +22,6 @@ const PRIMARY_SITE_STORAGE_KEY = 'xivapi-primary-site'
 const ACTION_META_CACHE_STORE = 'xivapi-action-meta-cache'
 const ACTION_SEARCH_CACHE_STORE = 'xivapi-action-search-cache'
 
-let primarySite: SiteName = 'cafe'
-
-const actionMetaCacheDb = useIndexedDB<IndexedDbCacheItem>(ACTION_META_CACHE_STORE)
-const actionSearchCacheDb = useIndexedDB<IndexedDbCacheItem>(ACTION_SEARCH_CACHE_STORE)
-const pendingNetworkRequests = new Map<string, Promise<any>>()
-
 function isSiteName(value: unknown): value is SiteName {
   return typeof value === 'string' && value in SITE_HOST
 }
@@ -45,28 +39,34 @@ function resolveSiteByHost(host: string): SiteName | null {
   return null
 }
 
-function ensureCacheVersion(): void {
-  const storedVersion = localStorage.getItem(CACHE_VERSION_STORAGE_KEY)?.trim().replace(/^"(.*)"$/, '$1')
-  if (storedVersion === API_CACHE_VERSION)
-    return
-  localStorage.setItem(CACHE_VERSION_STORAGE_KEY, API_CACHE_VERSION)
-  persistPrimarySite('cafe')
-  void actionMetaCacheDb.clear()
-  void actionSearchCacheDb.clear()
+function readStoredSite(): SiteName {
+  const raw = localStorage.getItem(PRIMARY_SITE_STORAGE_KEY)?.trim().replace(/^"(.*)"$/, '$1')
+  return isSiteName(raw) ? raw : 'cafe'
 }
 
-function persistPrimarySite(site: SiteName): void {
+let primarySite: SiteName = readStoredSite()
+
+function setPrimarySite(site: SiteName): void {
+  if (primarySite === site)
+    return
   primarySite = site
   localStorage.setItem(PRIMARY_SITE_STORAGE_KEY, site)
 }
 
-function resolveInitialPrimarySite(): SiteName {
-  ensureCacheVersion()
-  const stored = localStorage.getItem(PRIMARY_SITE_STORAGE_KEY)?.trim().replace(/^"(.*)"$/, '$1')
-  return isSiteName(stored) ? stored : 'cafe'
-}
+const actionMetaCacheDb = useIndexedDB<IndexedDbCacheItem>(ACTION_META_CACHE_STORE)
+const actionSearchCacheDb = useIndexedDB<IndexedDbCacheItem>(ACTION_SEARCH_CACHE_STORE)
+const pendingNetworkRequests = new Map<string, Promise<any>>()
 
-primarySite = resolveInitialPrimarySite()
+;(function ensureCacheVersion() {
+  const stored = localStorage.getItem(CACHE_VERSION_STORAGE_KEY)?.trim().replace(/^"(.*)"$/, '$1')
+  if (stored === API_CACHE_VERSION)
+    return
+  localStorage.setItem(CACHE_VERSION_STORAGE_KEY, API_CACHE_VERSION)
+  primarySite = 'cafe'
+  localStorage.setItem(PRIMARY_SITE_STORAGE_KEY, 'cafe')
+  void actionMetaCacheDb.clear()
+  void actionSearchCacheDb.clear()
+})()
 
 export const EMPTY_IMAGE = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
 
@@ -80,6 +80,7 @@ function rerouteFailedImage(img: HTMLImageElement, failedUrl: URL): void {
   const nextSite = getOtherSite(failedSite)
   img.dataset.tried = '1'
   img.src = `//${SITE_HOST[nextSite].imgHost}${failedUrl.pathname}`
+  img.addEventListener('load', () => setPrimarySite(nextSite), { once: true })
 }
 
 export function getIconSrcById(iconId: number): string {
@@ -107,6 +108,19 @@ export function getIconSrcByPath(iconPath: string, itemIsHQ = false): string {
   return `${baseUrl}${iconPath}`.replace(/(\d{6})\.png$/, (_m, p1) => `${itemIsHQ ? 'hq/' : ''}${p1}.png`)
 }
 
+export function rerouteImgSrc(src: string): string {
+  if (!src || src === EMPTY_IMAGE)
+    return src
+  try {
+    const url = new URL(src, window.location.href)
+    const site = resolveSiteByHost(url.hostname)
+    if (site && site !== primarySite)
+      return `//${SITE_HOST[primarySite].imgHost}${url.pathname}`
+  }
+  catch {}
+  return src
+}
+
 export async function getActionIconSrc(id: number): Promise<string> {
   const res = await parseAction('action', id, ['Icon'])
   return getIconSrcByPath(res.Icon)
@@ -129,7 +143,7 @@ async function requestWithFallback(path: string): Promise<any> {
     return pendingNetworkRequests.get(dedupKey)
 
   const task = (async () => {
-    const sites: SiteName[] = primarySite === 'cafe' ? ['cafe', 'xivapi'] : ['xivapi', 'cafe']
+    const sites: SiteName[] = [primarySite, getOtherSite(primarySite)]
     for (const siteName of sites) {
       // 构建完整 URL
       const baseUrl = `//${SITE_HOST[siteName].host}/api`
@@ -202,12 +216,12 @@ async function requestWithFallback(path: string): Promise<any> {
         else if (json.row_id !== undefined || json.ID !== undefined) {
           json = norm(json)
         }
-        if (primarySite !== siteName)
-          persistPrimarySite(siteName)
+        // 备用站点请求成功 → 切换默认站点
+        setPrimarySite(siteName)
         return json
       }
       catch (e) {
-        console.warn(`Fetch ${siteName} failed:`, e)
+        console.warn(`[xivapi] ${siteName} failed:`, e)
       }
     }
     throw new Error(`All sites failed: ${path}`)

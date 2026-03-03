@@ -36,7 +36,7 @@ import { getKeigenn, multiplierEffect, universalVulnerableEnemy, universalVulner
 
 import { formatTimeMs as formatTime } from '@/utils/time'
 import Util from '@/utils/util'
-import { getIconSrcByFullIcon } from '@/utils/xivapi'
+import { getIconSrcByFullIcon, rerouteImgSrc } from '@/utils/xivapi'
 import logDefinitions from '../../cactbot/resources/netlog_defs'
 
 import NetRegexes from '../../cactbot/resources/netregexes'
@@ -1201,7 +1201,20 @@ async function loadStorage() {
 
         const mappedResult = result.map(v => ({
           ...v,
-          table: shallowReactive(Array.isArray(v.table) ? v.table.map((row: RowVO) => markRaw(row)) : []),
+          table: shallowReactive(
+            Array.isArray(v.table)
+              ? v.table.map((row: RowVO) => {
+                  // 将 IndexedDB 中固化的旧站点图片 URL 重新路由到当前首选站点
+                  if (row.preCalculated) {
+                    for (const k of row.preCalculated.keigenns)
+                      k.src = rerouteImgSrc(k.src)
+                    for (const s of row.preCalculated.sortedSkills ?? [])
+                      s.icon = rerouteImgSrc(s.icon)
+                  }
+                  return markRaw(row)
+                })
+              : [],
+          ),
         }))
 
         data.value.push(...mappedResult)
