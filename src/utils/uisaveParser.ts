@@ -1,6 +1,20 @@
 import type { UISaveData, WayMark } from '@/types/uisave'
 
 export const xorCrypt = (data: Uint8Array, key = 0x31) => data.map(v => v ^ key)
+const FMARKER_INDEX = 17
+const SECTION_HEADER_SIZE = 16
+const SECTION_END_SIZE = 4
+
+function concatUint8Arrays(parts: Uint8Array[]): Uint8Array {
+  const total = parts.reduce((sum, part) => sum + part.length, 0)
+  const merged = new Uint8Array(total)
+  let offset = 0
+  for (const part of parts) {
+    merged.set(part, offset)
+    offset += part.length
+  }
+  return merged
+}
 
 // Mapping for markers
 export const MARKER_MAP = [
@@ -33,7 +47,7 @@ function parseWaymarkEntry(view: DataView, offset: number, buffer: Uint8Array): 
 
 export async function parseUISave(buffer: ArrayBuffer): Promise<UISaveData> {
   const data = new Uint8Array(buffer)
-  const view = new DataView(data.buffer)
+  const view = new DataView(data.buffer, data.byteOffset, data.byteLength)
 
   // Detection for raw WAYMARK.DAT (30 slots * 104 bytes = 3120 bytes)
   if (data.length === 3120) {
@@ -49,7 +63,12 @@ export async function parseUISave(buffer: ArrayBuffer): Promise<UISaveData> {
       wayMarks,
       markerHeader: new Uint8Array(16),
       markerTail: new Uint8Array(0),
+      markerSectionPrefix: new Uint8Array(16),
+      markerSectionEndFlag: new Uint8Array(4),
       otherSections: new Uint8Array(0),
+      otherSectionsBeforeMarker: new Uint8Array(0),
+      otherSectionsAfterMarker: new Uint8Array(0),
+      payloadTail: new Uint8Array(0),
       belongsToWaymarkDat: true,
     }
   }
@@ -59,47 +78,85 @@ export async function parseUISave(buffer: ArrayBuffer): Promise<UISaveData> {
     throw new Error('File too small')
 
   const encryptLength = view.getInt32(8, true)
+  if (encryptLength <= 0 || 16 + encryptLength > data.length) {
+    throw new Error('Invalid encrypted payload length')
+  }
+
   const decrypted = xorCrypt(data.slice(16, 16 + encryptLength))
-  const dView = new DataView(decrypted.buffer)
+  const dView = new DataView(
+    decrypted.buffer,
+    decrypted.byteOffset,
+    decrypted.byteLength,
+  )
 
   let decOffset = 16 // Skip payloadUnknown(8) and userID(8)
   const wayMarks: WayMark[] = []
-  let markerHeader = new Uint8Array(0)
+  let markerHeader = new Uint8Array(16)
   let markerTail = new Uint8Array(0)
-  const otherSectionsParts: Uint8Array[] = []
+  let markerSectionPrefix = new Uint8Array(16)
+  let markerSectionEndFlag = new Uint8Array(4)
+  const markerPrefixView = new DataView(markerSectionPrefix.buffer)
+  markerPrefixView.setInt16(0, FMARKER_INDEX, true)
+  const sectionsBeforeMarker: Uint8Array[] = []
+  const sectionsAfterMarker: Uint8Array[] = []
+  let hasMarkerSection = false
 
-  while (decOffset < decrypted.length - 2) {
+  while (decOffset + SECTION_HEADER_SIZE + SECTION_END_SIZE <= decrypted.length) {
     const index = dView.getInt16(decOffset, true)
     const length = dView.getInt32(decOffset + 8, true)
-    const sectionData = decrypted.slice(decOffset + 16, decOffset + 16 + length)
-    const sectionFull = decrypted.slice(decOffset, decOffset + 16 + length + 4)
+    if (length < 0)
+      break
 
-    if (index === 17) {
+    const sectionTotalLength = SECTION_HEADER_SIZE + length + SECTION_END_SIZE
+    if (decOffset + sectionTotalLength > decrypted.length)
+      break
+
+    const sectionHeader = decrypted.slice(decOffset, decOffset + SECTION_HEADER_SIZE)
+    const sectionData = decrypted.slice(
+      decOffset + SECTION_HEADER_SIZE,
+      decOffset + SECTION_HEADER_SIZE + length,
+    )
+    const sectionEndFlag = decrypted.slice(
+      decOffset + SECTION_HEADER_SIZE + length,
+      decOffset + sectionTotalLength,
+    )
+    const sectionFull = decrypted.slice(decOffset, decOffset + sectionTotalLength)
+
+    if (index === FMARKER_INDEX && !hasMarkerSection) {
+      hasMarkerSection = true
+      markerSectionPrefix = sectionHeader
+      markerSectionEndFlag = sectionEndFlag
       markerHeader = sectionData.slice(0, 16)
       const sView = new DataView(sectionData.buffer, sectionData.byteOffset)
+      let markerCount = 0
       for (let i = 16; i + 104 <= sectionData.length; i += 104) {
         wayMarks.push(parseWaymarkEntry(sView, i, sectionData))
+        markerCount++
       }
-      markerTail = sectionData.slice(wayMarks.length * 104 + 16)
+      markerTail = sectionData.slice(markerCount * 104 + 16)
     }
     else {
-      otherSectionsParts.push(sectionFull)
+      if (hasMarkerSection)
+        sectionsAfterMarker.push(sectionFull)
+      else
+        sectionsBeforeMarker.push(sectionFull)
     }
-    decOffset += 16 + length + 4
+    decOffset += sectionTotalLength
   }
 
-  if (wayMarks.length === 0) {
+  if (!hasMarkerSection || wayMarks.length === 0) {
     throw new Error('No waymark data found in UISAVE.DAT')
   }
 
-  const otherSections = new Uint8Array(
-    otherSectionsParts.reduce((a, b) => a + b.length, 0),
-  )
-  let offset = 0
-  otherSectionsParts.forEach((p) => {
-    otherSections.set(p, offset)
-    offset += p.length
-  })
+  const otherSectionsBeforeMarker = concatUint8Arrays(sectionsBeforeMarker)
+  const otherSectionsAfterMarker = concatUint8Arrays(sectionsAfterMarker)
+  const otherSections = concatUint8Arrays([
+    otherSectionsBeforeMarker,
+    otherSectionsAfterMarker,
+  ])
+  const payloadTail = decOffset < decrypted.length
+    ? decrypted.slice(decOffset)
+    : new Uint8Array(0)
 
   return {
     fileFormatVersion: data.slice(0, 8),
@@ -109,6 +166,11 @@ export async function parseUISave(buffer: ArrayBuffer): Promise<UISaveData> {
     wayMarks,
     markerHeader,
     markerTail,
+    markerSectionPrefix,
+    markerSectionEndFlag,
     otherSections,
+    otherSectionsBeforeMarker,
+    otherSectionsAfterMarker,
+    payloadTail,
   }
 }

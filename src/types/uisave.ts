@@ -29,6 +29,11 @@ export interface UISaveData {
   wayMarks: WayMark[]
   markerHeader: Uint8Array
   markerTail: Uint8Array
-  otherSections: Uint8Array // 其他section的原始数据
+  markerSectionPrefix: Uint8Array // FMARKER section前16字节(含unknown字段)
+  markerSectionEndFlag: Uint8Array // FMARKER section末尾4字节
+  otherSections: Uint8Array // 兼容旧逻辑: before + after
+  otherSectionsBeforeMarker: Uint8Array
+  otherSectionsAfterMarker: Uint8Array
+  payloadTail: Uint8Array // 解密payload尾部填充
   belongsToWaymarkDat?: boolean // 是否属于 WAYMARK.DAT 格式
 }

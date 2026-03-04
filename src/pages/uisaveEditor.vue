@@ -136,9 +136,13 @@ function exportFile() {
     wayMarks,
     markerHeader,
     markerTail,
-    otherSections,
+    markerSectionPrefix,
+    markerSectionEndFlag,
+    otherSectionsBeforeMarker,
+    otherSectionsAfterMarker,
     userID,
     payloadUnknown,
+    payloadTail,
     fileFormatVersion,
     fileUnknown,
     belongsToWaymarkDat,
@@ -196,17 +200,36 @@ function exportFile() {
   })
   markerData.set(markerTail, 16 + wayMarks.length * 104)
 
-  const fmarker = new Uint8Array(16 + markerData.length + 4)
+  const fmarkerEndFlag = markerSectionEndFlag.length === 4
+    ? markerSectionEndFlag
+    : new Uint8Array(4)
+  const fmarkerPrefix = markerSectionPrefix.length === 16
+    ? markerSectionPrefix
+    : new Uint8Array(16)
+  const fmarker = new Uint8Array(16 + markerData.length + fmarkerEndFlag.length)
   const fView = new DataView(fmarker.buffer)
+  fmarker.set(fmarkerPrefix, 0)
   fView.setInt16(0, 17, true)
   fView.setInt32(8, markerData.length, true)
   fmarker.set(markerData, 16)
+  fmarker.set(fmarkerEndFlag, 16 + markerData.length)
 
-  const decrypted = new Uint8Array(16 + otherSections.length + fmarker.length)
+  const sectionsBefore = otherSectionsBeforeMarker
+  const sectionsAfter = otherSectionsAfterMarker
+  const decrypted = new Uint8Array(
+    16 + sectionsBefore.length + fmarker.length + sectionsAfter.length + payloadTail.length,
+  )
   decrypted.set(payloadUnknown, 0)
-  new DataView(decrypted.buffer).setBigInt64(8, userID, true)
-  decrypted.set(otherSections, 16)
-  decrypted.set(fmarker, 16 + otherSections.length)
+  const dView = new DataView(decrypted.buffer)
+  dView.setBigInt64(8, userID, true)
+  let decOffset = 16
+  decrypted.set(sectionsBefore, decOffset)
+  decOffset += sectionsBefore.length
+  decrypted.set(fmarker, decOffset)
+  decOffset += fmarker.length
+  decrypted.set(sectionsAfter, decOffset)
+  decOffset += sectionsAfter.length
+  decrypted.set(payloadTail, decOffset)
 
   const encrypted = xorCrypt(decrypted)
   const final = new Uint8Array(16 + encrypted.length)
