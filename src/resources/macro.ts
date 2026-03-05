@@ -2893,6 +2893,10 @@ fastPP(`{"Name":"CAD-L改${getSource('@御琪幽然', 'https://www.bilibili.com/
 fastPP(`{"Name":"门神一字长蛇","MapID":1075,"A":{"X":107.485,"Y":0.0,"Z":93.071,"ID":0,"Active":true},"B":{"X":111.367,"Y":0.0,"Z":99.774,"ID":1,"Active":true},"C":{"X":115.169,"Y":0.0,"Z":106.315,"ID":2,"Active":true},"D":{"X":119.314,"Y":0.0,"Z":112.643,"ID":3,"Active":true},"One":{"X":92.114,"Y":0.0,"Z":93.394,"ID":4,"Active":true},"Two":{"X":88.576,"Y":0.0,"Z":100.088,"ID":5,"Active":true},"Three":{"X":85.1,"Y":0.0,"Z":106.139,"ID":6,"Active":true},"Four":{"X":81.158,"Y":0.0,"Z":112.629,"ID":7,"Active":true}}`)
 fastPP(`{"Name":"本体4A1","MapID":1075,"A":{"X":100.081,"Y":0.0,"Z":89.082,"ID":0,"Active":true},"B":{"X":110.969,"Y":0.0,"Z":100.16,"ID":1,"Active":true},"C":{"X":100.054,"Y":0.0,"Z":111.093,"ID":2,"Active":true},"D":{"X":89.13,"Y":0.0,"Z":100.063,"ID":3,"Active":true},"One":{"X":108.214,"Y":0.0,"Z":91.863,"ID":4,"Active":true},"Two":{"X":108.158,"Y":0.0,"Z":108.268,"ID":5,"Active":true},"Three":{"X":92.061,"Y":0.0,"Z":108.121,"ID":6,"Active":true},"Four":{"X":91.964,"Y":0.0,"Z":91.948,"ID":7,"Active":true}}`)
 
+// 异闻商客奇谭
+fastPP(`{"Name":"人鱼达莉娅","MapID":1079,"A":{"X":375,"Y":-29.5,"Z":514,"Active":true},"B":{"X":391,"Y":-29.5,"Z":530,"Active":true},"C":{"X":375,"Y":-29.5,"Z":546,"Active":true},"D":{"X":359,"Y":-29.5,"Z":530,"Active":true},"One":{"X":383,"Y":-29.5,"Z":522,"Active":true},"Two":{"X":383,"Y":-29.5,"Z":538,"Active":true},"Three":{"X":367,"Y":-29.5,"Z":538,"Active":true},"Four":{"X":367,"Y":-29.5,"Z":522,"Active":true}}`)
+fastPP(`{"Name":"剑术大师","MapID":1079,"A":{"X":170,"Y":-16,"Z":-815,"Active":true},"B":{"X":0,"Y":0,"Z":0,"Active":false},"C":{"X":0,"Y":0,"Z":0,"Active":false},"D":{"X":0,"Y":0,"Z":0,"Active":false},"One":{"X":0,"Y":0,"Z":0,"Active":false},"Two":{"X":0,"Y":0,"Z":0,"Active":false},"Three":{"X":0,"Y":0,"Z":0,"Active":false},"Four":{"X":0,"Y":0,"Z":0,"Active":false}}`)
+fastPP(`{"Name":"火仙女佩莉","MapID":1079,"A":{"X":-760,"Z":-815,"Y":-54,"Active":true},"B":{"X":-750,"Z":-805,"Y":-54,"Active":true},"C":{"X":-760,"Z":-795,"Y":-54,"Active":true},"D":{"X":-770,"Z":-805,"Y":-54,"Active":true},"One":{"X":-770,"Z":-815,"Y":-54,"Active":true},"Two":{"X":-750,"Z":-815,"Y":-54,"Active":true},"Three":{"X":-750,"Z":-795,"Y":-54,"Active":true},"Four":{"X":-770,"Z":-795,"Y":-54,"Active":true}}`)
 function getSource(title: string, href: string): string {
   return `<a href='${href}'target='_blank'>${title}</a>`
 }
@@ -2928,6 +2932,7 @@ const syncMap: Record<string, string> = {
   1076: '1075', // 希拉狄哈水道
   1156: '1155', // 六根山
   1180: '1179', // 阿罗阿罗岛
+  1317: '1316', // 商客奇谈
 }
 
 Object.entries(syncMap).forEach(([savage, normal]) => {

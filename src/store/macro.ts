@@ -99,19 +99,11 @@ const useMacroStore = defineStore('macro', {
       zoneNow: useStorage('my-zone-now', '1226'),
       zoneNowName: useStorage('my-zone-now-name', ''),
       fastEntrance: [
-        {
-          text: { zhCn: '极护龙', en: 'TWW', ja: '極護竜' },
-          value: '1306',
-        },
-        {
-          text: { zhCn: '诗想', en: 'TFV', ja: '詩想討滅' },
-          value: '1311',
-        },
+        { text: { zhCn: '异闻商客' }, value: '1317' },
         { text: { zhCn: 'M9S' }, value: '1321' },
         { text: { zhCn: 'M10S' }, value: '1323' },
         { text: { zhCn: 'M11S' }, value: '1325' },
         { text: { zhCn: 'M12S' }, value: '1327' },
-        { text: { zhCn: '绝伊甸', en: 'FRU', ja: '絶エデン' }, value: '1238' },
       ] as {
         text: Record<Lang, string>
         value: string
