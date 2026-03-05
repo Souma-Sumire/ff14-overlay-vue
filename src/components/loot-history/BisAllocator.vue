@@ -18,7 +18,7 @@ import {
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { computed, nextTick, onUnmounted, ref, shallowRef, watch } from 'vue'
-import { ensureBisCountDefaults, normalizeBisConfigFromModel } from '@/composables/useBisConfigSync'
+import { ensureBisCountDefaults, ensureBisOffsetDefaults, normalizeBisConfigFromModel } from '@/composables/useBisConfigSync'
 import { getPresetsForRole } from '@/utils/bisPresets'
 import {
 
@@ -50,11 +50,13 @@ const emit = defineEmits<{
 const tooltipsOpen = ref<Record<string, boolean>>({})
 
 const showConfigDialog = ref(false)
+const showOffsetConfigDialog = ref(false)
 const excludedPlayers = ref<Set<string>>(new Set())
 const customAllocations = ref<Record<string, string>>({})
 
 const config = ref<BisConfig>({
   playerBis: {},
+  needCountOffsets: {},
 })
 const recordsForCompute = shallowRef<LootRecord[]>([])
 const obtainedDetailsCache = shallowRef<Map<string, { name: string, count: number }[]>>(new Map())
@@ -80,6 +82,7 @@ const GROUP_END_ROW_IDS = new Set(['weapon', 'feet', 'ring'])
 const SPECIAL_ITEM_IDS = new Set(['coating', 'twine', 'tome', 'solvent'])
 const DEFAULT_ROW_BY_ID = new Map(DEFAULT_ROWS.map(row => [row.id, row] as const))
 const COUNT_ROWS = DEFAULT_ROWS.filter(r => r.type === 'count')
+const NEED_OFFSET_ROWS = DEFAULT_ROWS.filter(row => row.id !== 'random_weapon')
 const PART_ORDER_INDEX = new Map((PART_ORDER as string[]).map((v, i) => [v, i] as const))
 const ROW_KEYWORDS_BY_ID = new Map(
   DEFAULT_ROWS.map((row) => {
@@ -144,6 +147,17 @@ const configRows = [...DEFAULT_ROWS]
       return -1
     return ia - ib
   })
+const offsetLayeredRows = computed(() => {
+  return LAYER_CONFIG.map((layer) => {
+    const rows = layer.items
+      .map(id => DEFAULT_ROW_BY_ID.get(id))
+      .filter((r): r is BisRow => !!r && r.id !== 'random_weapon')
+    return {
+      name: layer.name,
+      rows,
+    }
+  }).filter(layer => layer.rows.length > 0)
+})
 
 const eligiblePlayers = computed(() => {
   return props.players.filter(isEligible)
@@ -623,6 +637,42 @@ function setNeededCount(player: string, rowId: string, count: number) {
   config.value.playerBis[storageKey]![rowId] = count
 }
 
+function normalizeOffsetValue(value: number | null | undefined): number {
+  if (value == null || Number.isNaN(value))
+    return 0
+  return Math.trunc(value)
+}
+
+function getNeedCountOffset(player: string, rowId: string): number {
+  if (rowId === 'random_weapon')
+    return 0
+  return config.value.needCountOffsets[getStorageKey(player)]?.[rowId] || 0
+}
+
+function setNeedCountOffset(player: string, rowId: string, value: number | null | undefined) {
+  if (rowId === 'random_weapon')
+    return
+
+  const storageKey = getStorageKey(player)
+  if (!config.value.needCountOffsets[storageKey])
+    config.value.needCountOffsets[storageKey] = {}
+  config.value.needCountOffsets[storageKey]![rowId] = normalizeOffsetValue(value)
+}
+
+function getBaseNeedCount(player: string, row: BisRow): number {
+  if (row.id === 'random_weapon')
+    return 0
+  if (row.type === 'count')
+    return getNeededCount(player, row.id)
+  return getBisValue(player, row.id) === 'raid' ? 1 : 0
+}
+
+function getAdjustedNeedCount(player: string, row: BisRow): number {
+  if (row.id === 'random_weapon')
+    return 0
+  return Math.max(0, getBaseNeedCount(player, row) + getNeedCountOffset(player, row.id))
+}
+
 function applyPreset(player: string, preset: BisPreset) {
   const storageKey = getStorageKey(player)
   const currentConfig = config.value.playerBis[storageKey] || {}
@@ -721,28 +771,43 @@ function getObtainedItemsDetail(player: string, row: BisRow) {
   return result
 }
 
+function formatOffset(offset: number): string {
+  return offset > 0 ? `+${offset}` : `${offset}`
+}
+
 function getBaseLogicDetailsFor(
   player: string,
   row: BisRow,
-  obtainedCount: number,
+  rawObtainedCount: number,
 ): { status: 'need' | 'greed' | 'pass', reason: string } {
+  const offset = getNeedCountOffset(player, row.id)
+  const neededCount = getAdjustedNeedCount(player, row)
+  const offsetDesc = offset === 0 ? '' : `（基础需求偏移 ${formatOffset(offset)}）`
+
   if (row.type === 'count') {
-    const needed = getNeededCount(player, row.id)
-    if (obtainedCount >= needed) {
-      return { status: 'pass', reason: `已获得 ${obtainedCount} 个 (需求 ${needed} 个)` }
+    if (rawObtainedCount >= neededCount) {
+      return { status: 'pass', reason: `按 ${rawObtainedCount}/${neededCount} 判定为满足${offsetDesc}` }
     }
-    return { status: 'need', reason: `需求 ${needed} 个，当前 ${obtainedCount} 个` }
+    return { status: 'need', reason: `按 ${rawObtainedCount}/${neededCount} 判定为需求${offsetDesc}` }
   }
 
-  if (obtainedCount > 0) {
-    return { status: 'pass', reason: '已获得该装备' }
+  if (rawObtainedCount < neededCount) {
+    return { status: 'need', reason: `按 ${rawObtainedCount}/${neededCount} 判定为需求${offsetDesc}` }
   }
 
   const val = getBisValue(player, row.id)
-  if (val === 'raid') {
-    return { status: 'need', reason: 'BIS 设为“零式” (需求，未获得)' }
+  if (val === 'raid')
+    return { status: 'pass', reason: offsetDesc ? `已满足零式需求${offsetDesc}` : '已满足零式需求' }
+
+  // tome: 默认贪婪；若配置了正偏移导致需求 > 0，在上方会走 need
+  if (neededCount === 0 && rawObtainedCount === 0) {
+    return {
+      status: 'greed',
+      reason: offsetDesc ? `BIS 设为“点数”，且偏移后需求为 0${offsetDesc}` : 'BIS 设为“点数” (贪婪，未获得)',
+    }
   }
-  return { status: 'greed', reason: 'BIS 设为“点数” (贪婪，未获得)' }
+
+  return { status: 'pass', reason: offsetDesc ? `偏移后视为需求已满足${offsetDesc}` : '偏移后视为需求已满足' }
 }
 
 const logicDetailsByCell = computed(() => {
@@ -759,15 +824,19 @@ const logicDetailsByCell = computed(() => {
       const activeStatuses = eligiblePlayers.value
         .filter(p => !excludedPlayers.value.has(p))
         .map((p) => {
-          const obtained = obtainedSummary.value.counts[p]?.[row.id] || 0
-          const needed = getNeededCount(p, row.id)
-          return { p, obtained, status: obtained >= needed ? 'pass' : 'need' as const }
+          const rawObtained = obtainedSummary.value.counts[p]?.[row.id] || 0
+          const needed = getAdjustedNeedCount(p, row)
+          return {
+            p,
+            rawObtained,
+            status: rawObtained >= needed ? 'pass' : 'need' as const,
+          }
         })
 
       if (activeStatuses.length > 0) {
         allActivePass = activeStatuses.every(x => x.status === 'pass')
         if (allActivePass) {
-          minObtained = Math.min(...activeStatuses.map(x => x.obtained))
+          minObtained = Math.min(...activeStatuses.map(x => x.rawObtained))
         }
       }
     }
@@ -785,15 +854,15 @@ const logicDetailsByCell = computed(() => {
         continue
       }
 
-      const obtained = obtainedSummary.value.counts[player]?.[row.id] || 0
+      const rawObtained = obtainedSummary.value.counts[player]?.[row.id] || 0
       if (SPECIAL_ITEM_IDS.has(row.id) && row.type === 'count' && allActivePass) {
-        result[row.id]![player] = obtained === minObtained
-          ? { status: 'greed', reason: `全员需求满足，作为获得最少者 (${obtained}个) 兜底贪婪` }
-          : { status: 'pass', reason: `全员需求满足，但不是获得最少者 (${obtained} > ${minObtained})` }
+        result[row.id]![player] = rawObtained === minObtained
+          ? { status: 'greed', reason: `全员需求满足，作为获得最少者 (${rawObtained}个) 兜底贪婪` }
+          : { status: 'pass', reason: `全员需求满足，但不是获得最少者 (${rawObtained} > ${minObtained})` }
         continue
       }
 
-      result[row.id]![player] = getBaseLogicDetailsFor(player, row, obtained)
+      result[row.id]![player] = getBaseLogicDetailsFor(player, row, rawObtained)
     }
   }
 
@@ -804,8 +873,9 @@ const cellViewByRowId = computed(() => {
   for (const row of DEFAULT_ROWS) {
     map[row.id] = {}
     for (const player of eligiblePlayers.value) {
-      const obtained = obtainedSummary.value.counts[player]?.[row.id] || 0
-      const needed = row.type === 'count' ? getNeededCount(player, row.id) : 0
+      const rawObtained = obtainedSummary.value.counts[player]?.[row.id] || 0
+      const obtained = rawObtained
+      const needed = row.type === 'count' ? getAdjustedNeedCount(player, row) : 0
       const logicDetail = logicDetailsByCell.value[row.id]?.[player]
       const status = logicDetail?.status || 'pass'
       const baseClass = row.id === 'random_weapon'
@@ -953,6 +1023,7 @@ watch(
       newVal,
       eligiblePlayers.value,
       COUNT_ROWS,
+      NEED_OFFSET_ROWS,
       getStorageKey,
     )
 
@@ -969,6 +1040,7 @@ watch(
   eligiblePlayers,
   (players) => {
     ensureBisCountDefaults(config.value, players, COUNT_ROWS, getStorageKey)
+    ensureBisOffsetDefaults(config.value, players, NEED_OFFSET_ROWS, getStorageKey)
   },
   { immediate: true },
 )
@@ -1017,6 +1089,13 @@ function getNeededCount(player: string, rowId: string): number {
   return val
 }
 
+function resetNeedCountOffsets() {
+  for (const player of eligiblePlayers.value) {
+    for (const row of NEED_OFFSET_ROWS)
+      setNeedCountOffset(player, row.id, 0)
+  }
+}
+
 function getCellClass(player: string, row: BisRow): string {
   return getCellView(player, row).cellClass
 }
@@ -1039,6 +1118,14 @@ const getRoleGroupClass = getRoleType
         </el-icon>
         <span>设置 BIS</span>
         <span v-if="!isConfigComplete" class="dot-warn" />
+      </el-button>
+      <el-button
+        size="small"
+        plain
+        class="offset-trigger-btn"
+        @click="showOffsetConfigDialog = true"
+      >
+        需求装备数量偏移
       </el-button>
     </div>
 
@@ -1640,6 +1727,107 @@ const getRoleGroupClass = getRoleType
     </el-dialog>
 
     <el-dialog
+      v-model="showOffsetConfigDialog"
+      title="需求装备数量偏移"
+      width="auto"
+      append-to-body
+      class="offset-config-dialog"
+      destroy-on-close
+      align-center
+    >
+      <div class="offset-popover-content">
+        <div class="offset-config-inline">
+          <p class="offset-config-hint">
+            例如A想把自己的武器箱让给B，则A设置为-1，B设置为+1
+          </p>
+          <el-button size="small" text @click="resetNeedCountOffsets">
+            清零偏移
+          </el-button>
+        </div>
+        <div class="table-scroll-wrapper offset-scroll-wrapper">
+          <table class="bis-table config-table offset-config-table">
+            <colgroup>
+              <col style="width: 44px !important; min-width: 44px !important">
+              <col style="width: 96px !important; min-width: 96px !important">
+              <col v-for="p in eligiblePlayers" :key="`offset-dialog-col-${p}`">
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="offset-layer-col">
+                  层数
+                </th>
+                <th class="offset-item-col">
+                  装备 \ 玩家
+                </th>
+                <th
+                  v-for="p in eligiblePlayers"
+                  :key="`offset-dialog-${p}`"
+                  :class="[
+                    { 'is-excluded': excludedPlayers.has(p) },
+                    getRoleGroupClass(getPlayerRole?.(p)),
+                  ]"
+                >
+                  <PlayerDisplay
+                    :name="p"
+                    :role="getPlayerRole?.(p)"
+                    :show-only-role="showOnlyRole"
+                  />
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <template v-for="(layer, lIdx) in offsetLayeredRows" :key="`offset-layer-${layer.name}`">
+                <tr
+                  v-for="(row, rIdx) in layer.rows"
+                  :key="`offset-dialog-row-${row.id}`"
+                  :class="{ 'is-layer-end': rIdx === layer.rows.length - 1 }"
+                >
+                  <td
+                    v-if="rIdx === 0"
+                    :rowspan="layer.rows.length"
+                    class="offset-layer-col offset-layer-cell"
+                    :class="{ 'is-last-layer-cell': lIdx === offsetLayeredRows.length - 1 }"
+                  >
+                    {{ layer.name }}
+                  </td>
+                  <td class="offset-item-col row-header">
+                    {{ row.name }}
+                  </td>
+                  <td
+                    v-for="p in eligiblePlayers"
+                    :key="`offset-dialog-cell-${row.id}-${p}`"
+                    class="split-cell-container"
+                  >
+                    <div class="correction-input-wrapper">
+                      <el-input-number
+                        :model-value="getNeedCountOffset(p, row.id)"
+                        :min="-99"
+                        :max="99"
+                        :step="1"
+                        :controls="false"
+                        size="small"
+                        class="correction-input"
+                        :class="{ 'is-nonzero': getNeedCountOffset(p, row.id) !== 0 }"
+                        @update:model-value="(v) => setNeedCountOffset(p, row.id, v)"
+                      />
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <template #footer>
+        <div class="dialog-footer" style="justify-content: flex-end">
+          <el-button type="primary" size="small" @click="showOffsetConfigDialog = false">
+            完成并关闭
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <el-dialog
       v-model="showPresetConfirmDialog"
       title="确认预设变更"
       width="600px"
@@ -1721,6 +1909,10 @@ const getRoleGroupClass = getRoleType
 
 .setup-trigger-btn {
   position: relative;
+  font-weight: 600;
+}
+
+.offset-trigger-btn {
   font-weight: 600;
 }
 
@@ -1836,6 +2028,25 @@ const getRoleGroupClass = getRoleType
   :deep(.el-dialog__body) {
     padding: 20px;
     padding-top: 10px;
+  }
+}
+
+.offset-config-dialog {
+  :deep(.el-dialog) {
+    width: fit-content !important;
+    min-width: 700px;
+    max-width: 95vw !important;
+    max-height: 90vh;
+    margin: 0 auto;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  :deep(.el-dialog__body) {
+    padding: 16px 20px 12px;
+    overflow: auto;
   }
 }
 
@@ -2177,6 +2388,90 @@ const getRoleGroupClass = getRoleType
   margin: 0 auto;
 }
 
+.offset-popover-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 680px;
+}
+
+.offset-config-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.offset-config-hint {
+  margin: 0;
+  flex: 1;
+  font-size: 12px;
+  color: #64748b;
+
+  html.dark & {
+    color: #94a3b8;
+  }
+}
+
+.offset-scroll-wrapper {
+  max-height: min(62vh, calc(100vh - 260px));
+}
+
+.table-scroll-wrapper.offset-scroll-wrapper {
+  overflow: auto !important;
+  max-height: min(62vh, calc(100vh - 260px)) !important;
+}
+
+.offset-config-table {
+  .offset-layer-col {
+    width: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+    border-right: 1px solid black !important;
+  }
+
+  .offset-item-col {
+    width: 96px !important;
+    min-width: 96px !important;
+    max-width: 96px !important;
+    border-right: 1px solid black !important;
+    background: #f8fafc;
+  }
+
+  .offset-layer-cell {
+    background: #f8fafc;
+    color: #1e293b;
+    font-weight: 800;
+    font-size: 11px;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    letter-spacing: 0;
+    line-height: 1.1;
+    padding: 0 !important;
+  }
+
+  .offset-layer-cell:not(.is-last-layer-cell) {
+    border-bottom: 1px solid black !important;
+  }
+
+  html.dark & {
+    .offset-layer-col,
+    .offset-item-col {
+      border-right-color: #334155 !important;
+    }
+
+    .offset-item-col,
+    .offset-layer-cell {
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+
+    .offset-layer-cell:not(.is-last-layer-cell) {
+      border-bottom-color: #334155 !important;
+    }
+  }
+}
+
 .table-scroll-wrapper {
   margin: 0 auto;
   width: fit-content;
@@ -2429,6 +2724,10 @@ const getRoleGroupClass = getRoleType
     line-height: 1.1;
     text-shadow: none;
     border-bottom-color: #475569;
+  }
+
+  .layer-cell:not(.is-last-layer-cell) {
+    border-bottom: 1px solid black !important;
   }
 
   .macro-cell {
@@ -3216,6 +3515,10 @@ html.dark {
         border-bottom-color: #475569;
       }
 
+      .layer-cell:not(.is-last-layer-cell) {
+        border-bottom-color: #334155 !important;
+      }
+
       td.col-item {
         background: #1e1f29;
       }
@@ -3438,7 +3741,7 @@ html.dark {
   gap: 4px;
 
   .correction-input {
-    width: 32px !important;
+    width: 56px !important;
     height: 20px;
 
     :deep(.el-input__wrapper) {
@@ -3500,6 +3803,7 @@ html.dark {
 <style lang="scss">
 html.dark {
   .bis-config-dialog,
+  .offset-config-dialog,
   .bis-import-message-box {
     .el-dialog,
     .el-message-box {

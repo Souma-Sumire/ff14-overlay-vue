@@ -4,6 +4,12 @@ function clonePlayerBis(playerBis: BisConfig['playerBis'] | undefined): BisConfi
   return JSON.parse(JSON.stringify(playerBis || {}))
 }
 
+function cloneNeedCountOffsets(
+  needCountOffsets: BisConfig['needCountOffsets'] | undefined,
+): BisConfig['needCountOffsets'] {
+  return JSON.parse(JSON.stringify(needCountOffsets || {}))
+}
+
 export function isLegacyBisConfig(val: unknown): val is LegacyBisConfig {
   if (!val || typeof val !== 'object' || !(val as LegacyBisConfig).playerBis)
     return false
@@ -32,16 +38,36 @@ export function ensureBisCountDefaults(
   })
 }
 
+export function ensureBisOffsetDefaults(
+  targetConfig: BisConfig,
+  players: string[],
+  offsetRows: BisRow[],
+  getStorageKey: (player: string) => string,
+) {
+  players.forEach((player) => {
+    const key = getStorageKey(player)
+    if (!targetConfig.needCountOffsets[key])
+      targetConfig.needCountOffsets[key] = {}
+
+    const pOffsets = targetConfig.needCountOffsets[key]!
+    offsetRows.forEach((row) => {
+      if (typeof pOffsets[row.id] !== 'number')
+        pOffsets[row.id] = 0
+    })
+  })
+}
+
 export function normalizeBisConfigFromModel(
   rawModelValue: BisConfig | LegacyBisConfig,
   eligiblePlayers: string[],
   countRows: BisRow[],
+  offsetRows: BisRow[],
   getStorageKey: (player: string) => string,
 ): BisConfig {
   let nextConfig: BisConfig
 
   if (isLegacyBisConfig(rawModelValue)) {
-    const migrated: BisConfig = { playerBis: {} }
+    const migrated: BisConfig = { playerBis: {}, needCountOffsets: {} }
     Object.keys(rawModelValue.playerBis).forEach((player) => {
       migrated.playerBis[player] = {}
       const list = rawModelValue.playerBis[player]
@@ -57,9 +83,11 @@ export function normalizeBisConfigFromModel(
   else {
     nextConfig = {
       playerBis: clonePlayerBis(rawModelValue.playerBis),
+      needCountOffsets: cloneNeedCountOffsets(rawModelValue.needCountOffsets),
     }
   }
 
   ensureBisCountDefaults(nextConfig, eligiblePlayers, countRows, getStorageKey)
+  ensureBisOffsetDefaults(nextConfig, eligiblePlayers, offsetRows, getStorageKey)
   return nextConfig
 }

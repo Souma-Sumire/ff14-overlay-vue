@@ -236,7 +236,7 @@ const lastSyncTime = ref('')
 const syncSuccessVisible = ref(false)
 const showCustomCorrectionDialog = ref(false)
 const activeCorrectionTab = ref('player')
-const bisConfig = ref<BisConfig>({ playerBis: {} })
+const bisConfig = ref<BisConfig>({ playerBis: {}, needCountOffsets: {} })
 
 const lootRecordsMap = computed(() => {
   const map = new Map<string, LootRecord>()
@@ -1061,7 +1061,7 @@ onMounted(async () => {
       if (c.key === 'blacklistedKeys')
         blacklistedKeys.value = new Set(c.value || [])
       if (c.key === 'bisConfig')
-        bisConfig.value = c.value || { playerBis: {} }
+        bisConfig.value = c.value || { playerBis: {}, needCountOffsets: {} }
       if (c.key === 'playerSummaryFilterMode')
         playerSummaryFilterMode.value = c.value || 'obtained'
       if (c.key === 'slotSummaryFilterMode')
@@ -3523,7 +3523,7 @@ async function confirmClear() {
   }
 
   if (clearForm.value.bis) {
-    bisConfig.value = { playerBis: {} }
+    bisConfig.value = { playerBis: {}, needCountOffsets: {} }
     tasks.push(dbConfig.remove('bisConfig'))
   }
 
