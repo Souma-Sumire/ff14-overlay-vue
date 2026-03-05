@@ -24,6 +24,7 @@ export async function doTextCommand(text: string) {
 export async function doWayMarks(
   json: WayMarkObj,
   localOnly: boolean = true,
+  silent = false,
 ) {
   try {
     const res = await Promise.race([
@@ -39,7 +40,9 @@ export async function doWayMarks(
     return res
   }
   catch (e) {
-    console.error('PostNamazu DoWaymarks failed:', e)
+    if (!silent) {
+      console.error('PostNamazu DoWaymarks failed:', e)
+    }
     throw e
   }
 }

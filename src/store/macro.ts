@@ -268,13 +268,17 @@ const useMacroStore = defineStore('macro', {
     sendMacroEcho(text: string): void {
       macroCommand(text, 'e')
     },
-    async doLocalWayMark(place: WayMarkObj): Promise<void> {
+    async doLocalWayMark(place: WayMarkObj, silent = false): Promise<void> {
       try {
-        await doWayMarks(place, true)
-        ElMessage.success('已尝试本地标点')
+        await doWayMarks(place, true, silent)
+        if (!silent) {
+          ElMessage.success('已尝试本地标点')
+        }
       }
       catch (e) {
-        ElMessage.error(`本地标点失败: ${(e as Error).message}` || '未知错误')
+        if (!silent) {
+          ElMessage.error(`本地标点失败: ${(e as Error).message}` || '未知错误')
+        }
       }
     },
     async doPartyWayMark(place: WayMarkObj): Promise<void> {

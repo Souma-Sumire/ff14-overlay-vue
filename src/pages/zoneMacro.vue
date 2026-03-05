@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ContentUsedType } from '@/composables/useZone'
+import type { MacroInfoPlace } from '@/types/macro'
 import type { UISaveData, WayMark } from '@/types/uisave'
 
 import {
@@ -31,6 +32,7 @@ import {
 import { defaultMacro } from '@/resources/macro'
 import { ZoneInfo } from '@/resources/zoneInfo'
 import { useMacroStore } from '@/store/macro'
+import { doWayMarks } from '@/utils/postNamazu'
 import { MARKER_MAP, parseUISave } from '@/utils/uisaveParser'
 import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
 import 'github-markdown-css/github-markdown-light.css'
@@ -70,6 +72,16 @@ const uisaveData = ref<UISaveData | null>(null)
 const importDialogVisible = ref(false)
 const onlyCurrentZone = ref(true)
 const selectedWaymarks = ref<{ mark: WayMark, index: number }[]>([])
+const realtimeLocalMode = useStorage('zoneMacroRealtimeLocalMode', ref(false))
+
+const applyRealtimeLocalWaymark = useDebounceFn(async (place: MacroInfoPlace['Place']) => {
+  if (!realtimeLocalMode.value)
+    return
+  try {
+    await doWayMarks(place, true, true)
+  }
+  catch {}
+}, 200)
 
 const currentMapID = computed(() => {
   return getMapIDByTerritoryType(Number(macroStore.selectZone))
@@ -336,6 +348,12 @@ function sortByMapName(a: { mark: WayMark }, b: { mark: WayMark }) {
   )
 }
 
+function handleRealtimeCoordinateChange(macro: MacroInfoPlace) {
+  if (!realtimeLocalMode.value || !macro.Editable)
+    return
+  void applyRealtimeLocalWaymark(macro.Place)
+}
+
 onMounted(() => {
   addOverlayListener('ChangeZone', macroStore.handleChangeZone)
   watch(
@@ -600,6 +618,7 @@ onMounted(() => {
                       controls-position="right"
                       size="small"
                       style="width: 8.5em"
+                      @change="handleRealtimeCoordinateChange(macro)"
                     />
                   </template>
                 </el-table-column>
@@ -619,6 +638,7 @@ onMounted(() => {
                       controls-position="right"
                       size="small"
                       style="width: 8.5em"
+                      @change="handleRealtimeCoordinateChange(macro)"
                     />
                   </template>
                 </el-table-column>
@@ -638,6 +658,7 @@ onMounted(() => {
                       controls-position="right"
                       size="small"
                       style="width: 8.5em"
+                      @change="handleRealtimeCoordinateChange(macro)"
                     />
                   </template>
                 </el-table-column>
@@ -689,6 +710,13 @@ onMounted(() => {
             </el-row>
 
             <el-row v-if="macro.Editable" class="buttonAreaEditing">
+              <el-switch
+                v-model="realtimeLocalMode"
+                size="small"
+                inline-prompt
+                active-text="实时模式"
+                inactive-text="手动模式"
+              />
               <el-button
                 type="success"
                 size="small"
