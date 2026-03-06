@@ -70,6 +70,11 @@ function parsePartyIds(split: string[]) {
   return ids
 }
 
+function parseTimestampMs(rawValue: string | undefined) {
+  const parsed = new Date(rawValue || '').getTime()
+  return Number.isNaN(parsed) ? null : parsed
+}
+
 function resolveRsvAbilityName(name: string, rsvData: Map<number, string>) {
   const rsvMatch = name.match(/^_rsv_(\d+)_/i)
   if (!rsvMatch)
@@ -265,9 +270,9 @@ export function useLogParser() {
         const combatAct = split[logDefinitions.InCombat.fields.inACTCombat] === '1'
         const combatGame = split[logDefinitions.InCombat.fields.inGameCombat] === '1'
         const isCombat = combatAct || combatGame
-        const timestamp = new Date(split[logDefinitions.InCombat.fields.timestamp] || '').getTime()
+        const timestamp = parseTimestampMs(split[logDefinitions.InCombat.fields.timestamp])
 
-        if (isCombat && !inCombat) {
+        if (isCombat && !inCombat && timestamp !== null) {
           inCombat = true
           const party = currentPartyIds
             .map(id => allCombatants.get(id))
@@ -286,8 +291,9 @@ export function useLogParser() {
         }
         else if (!isCombat && inCombat && currentEncounter) {
           inCombat = false
-          currentEncounter.endTime = timestamp
-          currentEncounter.durationStr = formatTime((timestamp - currentEncounter.startTime) / 1000)
+          if (timestamp !== null)
+            currentEncounter.endTime = timestamp
+          currentEncounter.durationStr = formatTime((currentEncounter.endTime - currentEncounter.startTime) / 1000)
           if (currentEncounter.lines.length > 20)
             parsedEncounters.push(currentEncounter)
           currentEncounter = null
@@ -296,6 +302,9 @@ export function useLogParser() {
 
       if (inCombat && currentEncounter) {
         currentEncounter.lines.push(line)
+        const lineTimestamp = parseTimestampMs(split[1])
+        if (lineTimestamp !== null)
+          currentEncounter.endTime = lineTimestamp
 
         if (type === logDefinitions.AddedCombatant.type) {
           const combatant = parseAddedCombatant(split)
@@ -311,7 +320,7 @@ export function useLogParser() {
     }
 
     if (inCombat && currentEncounter) {
-      currentEncounter.endTime = currentEncounter.startTime + 1000 * 60 * 10
+      currentEncounter.durationStr = formatTime((currentEncounter.endTime - currentEncounter.startTime) / 1000)
       parsedEncounters.push(currentEncounter)
     }
 
