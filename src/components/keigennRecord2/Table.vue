@@ -2,7 +2,7 @@
 import type { Column, MessageHandler, Placement, RowEventHandlers, TableV2Instance } from 'element-plus'
 import type { RowVO } from '@/types/keigennRecord2'
 import { Clock } from '@element-plus/icons-vue'
-import { onClickOutside } from '@vueuse/core'
+import { onClickOutside, useWindowSize } from '@vueuse/core'
 import { ElIcon, ElMessage } from 'element-plus'
 import { computed, h } from 'vue'
 import { useLang } from '@/composables/useLang'
@@ -232,6 +232,7 @@ function handleScroll(e: WheelEvent) {
 }
 
 const tableContainer = useTemplateRef<HTMLElement>('tableContainer')
+const { width: tableWidth, height: tableHeight } = useWindowSize()
 
 onMounted(() => {
   tableContainer.value?.addEventListener('wheel', handleScroll, { passive: true })
@@ -241,6 +242,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   tableContainer.value?.removeEventListener('wheel', handleScroll)
   window.removeEventListener('mousemove', handleMouseMove)
+  cancelAnimationFrame(scrollFrame)
 })
 
 onClickOutside(contextMenu, () => {
@@ -654,163 +656,160 @@ defineExpose({
 <template>
   <div ref="tableContainer" class="table-container">
     <div class="table-wrapper">
-      <el-auto-resizer style="height: 100%; width: 100%">
-        <template #default="{ height, width }">
-          <el-table-v2
-            ref="tableV2Ref" header-class="keigenn-table-header" class="keigenn-table performance-table"
-            :columns="columns" :data="tableData" :width="width" :height="height" :row-height="28" :header-height="24"
-            row-key="key" :row-event-handlers="rowEventHandlers" :row-class="rowClass"
-            :overscan-row-count="2"
-          >
-            <template #empty>
-              <el-empty
-                :description="store.isBrowser ? $t('keigennRecord.actTip') : undefined
-                "
-              />
-            </template>
-          </el-table-v2>
-          <div
-            v-if="contextMenuVisible" ref="contextMenu" class="context-menu"
-            :style="{ top: `${contextMenuY}px`, left: `${contextMenuX}px` }"
-          >
-            <ul>
-              <li @click="filterByAction">
-                {{
-                  actionFilter === (contextMenuRow?.[actionKey] ?? '')
-                    ? t('keigennRecord.filter.action_cancel', {
-                      actionName:
-                        contextMenuRow?.[actionKey]
-                        ?? t('keigennRecord.this_skill'),
-                    })
-                    : t('keigennRecord.filter.action_only', {
-                      actionName:
-                        contextMenuRow?.[actionKey]
-                        ?? t('keigennRecord.this_skill'),
-                    })
-                }}
-              </li>
-
-              <li @click="filterByTarget">
-                {{
-                  targetFilter === contextMenuRow?.targetId
-                    ? t('keigennRecord.filter.target_cancel', {
-                      jobName:
-                        contextMenuRow?.job ?? t('keigennRecord.this_job'),
-                    })
-                    : t('keigennRecord.filter.target_only', {
-                      jobName:
-                        contextMenuRow?.job ?? t('keigennRecord.this_job'),
-                    })
-                }}
-              </li>
-            </ul>
-          </div>
-
-          <el-popover
-            v-model:visible="popoverVisible" :virtual-ref="virtualRef" virtual-triggering
-            popper-class="keigenn-global-popover" transition="none"
-            :show-after="0" :hide-after="0" :offset="2" :enterable="true" :teleported="true"
-            :placement="popoverPlacement"
-
-            width="auto"
-            :fallback-placements="['top-end', 'top-start', 'bottom', 'bottom-end', 'bottom-start', 'left']"
-          >
-            <template v-if="hoveredRow && tooltipMode === 'amount'">
-              <div class="row-info">
-                <div class="info-line">
-                  {{ t('keigennRecord.source') }}: {{ hoveredRow.source }}
-                </div>
-                <div class="info-line">
-                  {{ t('keigennRecord.playerShield') }}: {{ hoveredRow.shield }}%
-                </div>
-                <div class="info-line">
-                  {{ t('keigennRecord.playerHp') }}: {{ hoveredRow.currentHp.toLocaleString() }}({{ hoveredRow.preCalculated.hpPercent }}%)
-                </div>
-                <template v-if="hoveredRow.reduction < 1 && hoveredRow.type !== 'dot'">
-                  <div class="info-divider" />
-                  <div class="info-line">
-                    {{ t('keigennRecord.reductionRate') }}: {{ (hoveredRow.reduction * 100).toFixed(2) }}%
-                  </div>
-                  <div class="info-line">
-                    {{ t('keigennRecord.originalDamage') }}:
-                    <span :class="hoveredRow.preCalculated.damageTypeClass">{{ hoveredRow.preCalculated.originalDamageDisplay }}</span>
-                  </div>
-                </template>
-              </div>
-            </template>
-
-            <template v-else-if="hoveredRow && tooltipMode === 'skills'">
-              <div class="skill-popover-content">
-                <template v-if="getAllSkills(hoveredRow).length > 0">
-                  <div class="skill-grid">
-                    <template v-for="skill in getAllSkills(hoveredRow)" :key="`${skill.id}-${skill.ownerId}`">
-                      <div class="skill-wrapper">
-                        <div class="skill-icon-container" :title="`${skill.ownerName} (${skill.ownerJobName})`">
-                          <img :src="skill.icon" class="skill-icon" @error="handleImgError">
-                          <div v-if="!skill.ready" class="skill-overlay" />
-                          <span v-if="skill.recastLeft > 0" class="skill-text">{{ skill.recastLeft }}</span>
-                          <span v-if="(skill.maxCharges ?? 0) > 1" class="skill-charges">{{ skill.chargesReady }}</span>
-                          <span
-                            v-if="skill.jobResource !== undefined" class="skill-resource"
-                            :style="{ fontSize: skill.jobResource.toString().length > 2 ? '9px' : '11px' }"
-                          >{{ skill.jobResource }}</span>
-                          <span v-if="skill.extraText" class="skill-extra-text">{{ skill.extraText }}</span>
-                          <span v-if="isDuplicateSkill(getAllSkills(hoveredRow), skill.id)" class="skill-job-name">{{
-                            getSimpleJobName(skill.ownerJob) }}</span>
-                        </div>
-                      </div>
-                    </template>
-                  </div>
-                </template>
-
-                <div v-if="getAllSkills(hoveredRow).length === 0" class="no-data">
-                  {{ t('keigennRecord.noData') }}
-                </div>
-              </div>
-            </template>
-
-            <template v-else-if="hoveredRow && tooltipMode === 'death-recap'">
-              <div class="death-recap-popover">
-                <div class="recap-header">
-                  <span>{{ t('keigennRecord.time') }}</span>
-                  <span class="align-right">{{ t('keigennRecord.amount') }}</span>
-                  <span>{{ t('keigennRecord.action') }}</span>
-                  <span>{{ t('keigennRecord.keigenns') }}</span>
-                </div>
-                <!-- 列表内容 -->
-                <div v-for="row in recapRows" :key="row.key" class="recap-row" :class="{ 'is-death': row.isDeath }">
-                  <!-- Time -->
-                  <span class="time">{{ row.timeStr }}</span>
-
-                  <!-- Amount -->
-                  <span class="amount-cell align-right" :class="row.amountClass">
-                    {{ row.amountStr }}
-                  </span>
-
-                  <!-- Ability -->
-                  <div class="ability-cell">
-                    <div class="ability-content">
-                      <img v-if="row.iconSrc" :src="row.iconSrc" class="ability-icon" @error="handleImgError">
-                      <span class="ability-name" :title="row.actionCN">{{ row.actionCN }}</span>
-                    </div>
-                  </div>
-
-                  <!-- Status -->
-                  <div class="status-cell">
-                    <div class="status-content">
-                      <div v-for="(k, idx) in row.keigenns" :key="idx" class="status-wrapper">
-                        <div class="status" :title="k.title" :data-duration="k.duration" :class="{ 'is-pov': k.isPov }">
-                          <img :src="k.src" class="status-icon" :class="k.usefulClass" @error="handleImgError">
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </template>
-          </el-popover>
+      <el-table-v2
+        v-if="tableWidth > 0 && tableHeight > 0"
+        ref="tableV2Ref" header-class="keigenn-table-header" class="keigenn-table performance-table"
+        :columns="columns" :data="tableData" :width="tableWidth" :height="tableHeight" :row-height="28" :header-height="24"
+        row-key="key" :row-event-handlers="rowEventHandlers" :row-class="rowClass"
+        :overscan-row-count="2"
+      >
+        <template #empty>
+          <el-empty
+            :description="store.isBrowser ? $t('keigennRecord.actTip') : undefined
+            "
+          />
         </template>
-      </el-auto-resizer>
+      </el-table-v2>
+      <div
+        v-if="contextMenuVisible" ref="contextMenu" class="context-menu"
+        :style="{ top: `${contextMenuY}px`, left: `${contextMenuX}px` }"
+      >
+        <ul>
+          <li @click="filterByAction">
+            {{
+              actionFilter === (contextMenuRow?.[actionKey] ?? '')
+                ? t('keigennRecord.filter.action_cancel', {
+                  actionName:
+                    contextMenuRow?.[actionKey]
+                    ?? t('keigennRecord.this_skill'),
+                })
+                : t('keigennRecord.filter.action_only', {
+                  actionName:
+                    contextMenuRow?.[actionKey]
+                    ?? t('keigennRecord.this_skill'),
+                })
+            }}
+          </li>
+
+          <li @click="filterByTarget">
+            {{
+              targetFilter === contextMenuRow?.targetId
+                ? t('keigennRecord.filter.target_cancel', {
+                  jobName:
+                    contextMenuRow?.job ?? t('keigennRecord.this_job'),
+                })
+                : t('keigennRecord.filter.target_only', {
+                  jobName:
+                    contextMenuRow?.job ?? t('keigennRecord.this_job'),
+                })
+            }}
+          </li>
+        </ul>
+      </div>
+
+      <el-popover
+        v-model:visible="popoverVisible" :virtual-ref="virtualRef" virtual-triggering
+        popper-class="keigenn-global-popover" transition="none"
+        :show-after="0" :hide-after="0" :offset="2" :enterable="true" :teleported="true"
+        :placement="popoverPlacement"
+
+        width="auto"
+        :fallback-placements="['top-end', 'top-start', 'bottom', 'bottom-end', 'bottom-start', 'left']"
+      >
+        <template v-if="hoveredRow && tooltipMode === 'amount'">
+          <div class="row-info">
+            <div class="info-line">
+              {{ t('keigennRecord.source') }}: {{ hoveredRow.source }}
+            </div>
+            <div class="info-line">
+              {{ t('keigennRecord.playerShield') }}: {{ hoveredRow.shield }}%
+            </div>
+            <div class="info-line">
+              {{ t('keigennRecord.playerHp') }}: {{ hoveredRow.currentHp.toLocaleString() }}({{ hoveredRow.preCalculated.hpPercent }}%)
+            </div>
+            <template v-if="hoveredRow.reduction < 1 && hoveredRow.type !== 'dot'">
+              <div class="info-divider" />
+              <div class="info-line">
+                {{ t('keigennRecord.reductionRate') }}: {{ (hoveredRow.reduction * 100).toFixed(2) }}%
+              </div>
+              <div class="info-line">
+                {{ t('keigennRecord.originalDamage') }}:
+                <span :class="hoveredRow.preCalculated.damageTypeClass">{{ hoveredRow.preCalculated.originalDamageDisplay }}</span>
+              </div>
+            </template>
+          </div>
+        </template>
+
+        <template v-else-if="hoveredRow && tooltipMode === 'skills'">
+          <div class="skill-popover-content">
+            <template v-if="getAllSkills(hoveredRow).length > 0">
+              <div class="skill-grid">
+                <template v-for="skill in getAllSkills(hoveredRow)" :key="`${skill.id}-${skill.ownerId}`">
+                  <div class="skill-wrapper">
+                    <div class="skill-icon-container" :title="`${skill.ownerName} (${skill.ownerJobName})`">
+                      <img :src="skill.icon" class="skill-icon" @error="handleImgError">
+                      <div v-if="!skill.ready" class="skill-overlay" />
+                      <span v-if="skill.recastLeft > 0" class="skill-text">{{ skill.recastLeft }}</span>
+                      <span v-if="(skill.maxCharges ?? 0) > 1" class="skill-charges">{{ skill.chargesReady }}</span>
+                      <span
+                        v-if="skill.jobResource !== undefined" class="skill-resource"
+                        :style="{ fontSize: skill.jobResource.toString().length > 2 ? '9px' : '11px' }"
+                      >{{ skill.jobResource }}</span>
+                      <span v-if="skill.extraText" class="skill-extra-text">{{ skill.extraText }}</span>
+                      <span v-if="isDuplicateSkill(getAllSkills(hoveredRow), skill.id)" class="skill-job-name">{{
+                        getSimpleJobName(skill.ownerJob) }}</span>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <div v-if="getAllSkills(hoveredRow).length === 0" class="no-data">
+              {{ t('keigennRecord.noData') }}
+            </div>
+          </div>
+        </template>
+
+        <template v-else-if="hoveredRow && tooltipMode === 'death-recap'">
+          <div class="death-recap-popover">
+            <div class="recap-header">
+              <span>{{ t('keigennRecord.time') }}</span>
+              <span class="align-right">{{ t('keigennRecord.amount') }}</span>
+              <span>{{ t('keigennRecord.action') }}</span>
+              <span>{{ t('keigennRecord.keigenns') }}</span>
+            </div>
+            <!-- 列表内容 -->
+            <div v-for="row in recapRows" :key="row.key" class="recap-row" :class="{ 'is-death': row.isDeath }">
+              <!-- Time -->
+              <span class="time">{{ row.timeStr }}</span>
+
+              <!-- Amount -->
+              <span class="amount-cell align-right" :class="row.amountClass">
+                {{ row.amountStr }}
+              </span>
+
+              <!-- Ability -->
+              <div class="ability-cell">
+                <div class="ability-content">
+                  <img v-if="row.iconSrc" :src="row.iconSrc" class="ability-icon" @error="handleImgError">
+                  <span class="ability-name" :title="row.actionCN">{{ row.actionCN }}</span>
+                </div>
+              </div>
+
+              <!-- Status -->
+              <div class="status-cell">
+                <div class="status-content">
+                  <div v-for="(k, idx) in row.keigenns" :key="idx" class="status-wrapper">
+                    <div class="status" :title="k.title" :data-duration="k.duration" :class="{ 'is-pov': k.isPov }">
+                      <img :src="k.src" class="status-icon" :class="k.usefulClass" @error="handleImgError">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </el-popover>
     </div>
   </div>
 </template>
