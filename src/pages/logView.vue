@@ -200,6 +200,20 @@ watch(
   { deep: true },
 )
 
+watch(selectedEncounterId, (newVal, oldVal) => {
+  if (oldVal !== null && newVal !== null && newVal !== oldVal) {
+    filter.value.searchInputText = ''
+    filter.value.appliedSearchText = ''
+    filter.value.showSearchResultsOnly = false
+    filter.value.timeRangeStartText = ''
+    filter.value.timeRangeEndText = ''
+    filter.value.sourceIdFilterText = ''
+    filter.value.sourceFilterText = ''
+    filter.value.targetIdFilterText = ''
+    filter.value.targetFilterText = ''
+  }
+})
+
 onMounted(async () => {
   try {
     loading.value = true
@@ -275,6 +289,15 @@ async function handleFileImport(file: File, saveDb = true) {
     const text = await file.text()
     if (saveDb) {
       saveLogToDB(file.name, text)
+      filter.value.searchInputText = ''
+      filter.value.appliedSearchText = ''
+      filter.value.showSearchResultsOnly = false
+      filter.value.timeRangeStartText = ''
+      filter.value.timeRangeEndText = ''
+      filter.value.sourceIdFilterText = ''
+      filter.value.sourceFilterText = ''
+      filter.value.targetIdFilterText = ''
+      filter.value.targetFilterText = ''
     }
     const freshFile = new File([text], file.name)
     // Step 1 – split encounters
