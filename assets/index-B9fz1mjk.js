@@ -1,0 +1,1 @@
+import{I as s,p as a,Z as t,dt as e,S as r}from"./vendor-vue-D--bZMdc.js";const n=s({__name:"index",setup(s){const n=e();return a(()=>{n.push("/startPages")}),(s,a)=>(r(),t("div"))}});export{n as default};
