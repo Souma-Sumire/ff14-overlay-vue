@@ -12,6 +12,8 @@
     "generate:action-upgrade-steps": "bun scripts/actionUpgradeStepsBake.ts",
     "generate:action-min-level": "bun scripts/actionMinLevelBake.ts",
     "generate:action-meta-lite": "bun scripts/actionMetaBake.ts",
+    "generate:dd-normalize": "bun scripts/ddNormalize.ts",
+    "generate:dd-vulnerabilities": "bun scripts/ddVulnerabilitiesBake.ts --only-undefined-to-bool",
     "submodule": "git submodule update --remote && bun scripts/patch.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
