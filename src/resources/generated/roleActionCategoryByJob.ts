@@ -35,4 +35,4 @@ export const ROLE_ACTION_CATEGORY_BY_JOB: Record<number, number[]> = {
   40: [117, 120],
   41: [114, 118, 161],
   42: [116, 120],
-}
+};

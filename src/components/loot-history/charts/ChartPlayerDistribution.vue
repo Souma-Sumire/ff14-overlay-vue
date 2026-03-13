@@ -1,97 +1,90 @@
 <script setup lang="ts">
-import type { LootRecord } from '@/utils/lootParser'
-import { useDark } from '@vueuse/core'
-import { BarChart } from 'echarts/charts'
+import type { LootRecord } from "@/utils/lootParser";
+import { useDark } from "@vueuse/core";
+import { BarChart } from "echarts/charts";
 import {
   GridComponent,
   LegendComponent,
   TitleComponent,
   TooltipComponent,
-} from 'echarts/components'
-import { use } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
-import { computed, inject } from 'vue'
-import VChart from 'vue-echarts'
-import { formatChartPlayerLabel, getChartLabelRich } from '@/utils/chartUtils'
-import { getRoleColor, getRoleDisplayName } from '@/utils/lootParser'
+} from "echarts/components";
+import { use } from "echarts/core";
+import { CanvasRenderer } from "echarts/renderers";
+import { computed, inject } from "vue";
+import VChart from "vue-echarts";
+import { formatChartPlayerLabel, getChartLabelRich } from "@/utils/chartUtils";
+import { getRoleColor, getRoleDisplayName } from "@/utils/lootParser";
 
 const props = defineProps<{
-  records: LootRecord[]
-  players: string[]
-  getActualPlayer?: (name: string) => string
-  getPlayerRole?: (name: string) => string | undefined
-  playerVisibility?: 'all' | 'role' | 'job' | 'initial'
-}>()
+  records: LootRecord[];
+  players: string[];
+  getActualPlayer?: (name: string) => string;
+  getPlayerRole?: (name: string) => string | undefined;
+  playerVisibility?: "all" | "role" | "job" | "initial";
+}>();
 
 const isDark = useDark({
-  storageKey: 'loot-history-theme',
-})
+  storageKey: "loot-history-theme",
+});
 
-const getDisplayName = inject('getDisplayName', (n: string) => n)
+const getDisplayName = inject("getDisplayName", (n: string) => n);
 
-use([
-  CanvasRenderer,
-  BarChart,
-  GridComponent,
-  TooltipComponent,
-  LegendComponent,
-  TitleComponent,
-])
+use([CanvasRenderer, BarChart, GridComponent, TooltipComponent, LegendComponent, TitleComponent]);
 
 const option = computed(() => {
-  const visibility = props.playerVisibility
-  const counts = new Map<string, number>()
-  props.players.forEach(p => counts.set(p, 0))
+  const visibility = props.playerVisibility;
+  const counts = new Map<string, number>();
+  props.players.forEach((p) => counts.set(p, 0));
 
   props.records.forEach((r) => {
-    const p = props.getActualPlayer ? props.getActualPlayer(r.player) : r.player
+    const p = props.getActualPlayer ? props.getActualPlayer(r.player) : r.player;
     if (counts.has(p)) {
-      counts.set(p, (counts.get(p) || 0) + 1)
+      counts.set(p, (counts.get(p) || 0) + 1);
     }
-  })
+  });
 
   // 直接使用 props.players 的顺序，因为外部已经按 Role 排序好了
   const dataList = props.players.map((p) => {
-    const roleRaw = props.getPlayerRole ? props.getPlayerRole(p) : undefined
-    const count = counts.get(p) || 0
-    const displayName = getDisplayName(p)
+    const roleRaw = props.getPlayerRole ? props.getPlayerRole(p) : undefined;
+    const count = counts.get(p) || 0;
+    const displayName = getDisplayName(p);
     return {
       rawName: p,
       name: displayName,
       value: count,
-      roleRaw: roleRaw || '',
-      role: roleRaw ? getRoleDisplayName(roleRaw) : '',
-    }
-  })
+      roleRaw: roleRaw || "",
+      role: roleRaw ? getRoleDisplayName(roleRaw) : "",
+    };
+  });
 
-  const xData = dataList.map(d => d.name)
-  const seriesData = dataList.map(d => d.value)
+  const xData = dataList.map((d) => d.name);
+  const seriesData = dataList.map((d) => d.value);
 
   return {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     animation: false,
     title: { show: false, text: visibility },
     tooltip: {
-      trigger: 'axis',
+      trigger: "axis",
       axisPointer: {
-        type: 'shadow',
+        type: "shadow",
       },
       formatter: (params: any) => {
-        const item = params[0]
-        const data = dataList[item.dataIndex]
-        const roleStr = data?.role ? `[${data.role}] ` : ''
-        const name = data?.name || item.name
-        return `${roleStr}${name}<br/>获取数量: <b>${item.value}</b>`
+        const item = params[0];
+        const data = dataList[item.dataIndex];
+        const roleStr = data?.role ? `[${data.role}] ` : "";
+        const name = data?.name || item.name;
+        return `${roleStr}${name}<br/>获取数量: <b>${item.value}</b>`;
       },
     },
     grid: {
-      left: '2%',
-      right: '2%',
-      bottom: '10%',
-      top: '10%',
+      left: "2%",
+      right: "2%",
+      bottom: "10%",
+      top: "10%",
     },
     xAxis: {
-      type: 'category',
+      type: "category",
       data: xData,
       axisTick: {
         alignWithLabel: true,
@@ -100,61 +93,59 @@ const option = computed(() => {
         interval: 0,
         rotate: 0,
         formatter: (value: string, index: number) => {
-          const rawRole = dataList[index]?.roleRaw
-          return formatChartPlayerLabel(value, rawRole, props.playerVisibility)
+          const rawRole = dataList[index]?.roleRaw;
+          return formatChartPlayerLabel(value, rawRole, props.playerVisibility);
         },
         rich: getChartLabelRich(props.playerVisibility),
-        color: isDark.value ? '#e2e8f0' : '#64748b',
+        color: isDark.value ? "#e2e8f0" : "#64748b",
       },
       axisLine: {
         lineStyle: {
-          color: isDark.value ? 'rgba(255,255,255,0.1)' : '#e2e8f0',
+          color: isDark.value ? "rgba(255,255,255,0.1)" : "#e2e8f0",
         },
       },
     },
     yAxis: {
-      type: 'value',
+      type: "value",
       minInterval: 1,
       splitLine: {
         lineStyle: {
-          color: isDark.value ? 'rgba(255,255,255,0.06)' : '#f1f5f9',
+          color: isDark.value ? "rgba(255,255,255,0.06)" : "#f1f5f9",
         },
       },
       axisLabel: {
-        color: isDark.value ? '#94a3b8' : '#64748b',
+        color: isDark.value ? "#94a3b8" : "#64748b",
       },
     },
     series: [
       {
-        name: '获取数量',
-        type: 'bar',
-        barWidth: '50%',
+        name: "获取数量",
+        type: "bar",
+        barWidth: "50%",
         data: seriesData,
         itemStyle: {
           color: (params: any) => {
-            const role = dataList[params.dataIndex]?.roleRaw
-            return getRoleColor(role)
+            const role = dataList[params.dataIndex]?.roleRaw;
+            return getRoleColor(role);
           },
           borderRadius: [4, 4, 0, 0],
         },
 
         label: {
           show: true,
-          position: 'top',
-          color: isDark.value ? '#f1f5f9' : '#1e293b',
+          position: "top",
+          color: isDark.value ? "#f1f5f9" : "#1e293b",
         },
       },
     ],
-  }
-})
+  };
+});
 </script>
 
 <template>
   <div class="chart-container">
     <div class="chart-header">
-      <div class="chart-title">
-        获取数量统计
-      </div>
+      <div class="chart-title">获取数量统计</div>
     </div>
     <div class="chart-body">
       <VChart
@@ -177,7 +168,7 @@ const option = computed(() => {
   display: flex;
   flex-direction: column;
   height: 400px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   transition: all 0.3s ease;
 }
 

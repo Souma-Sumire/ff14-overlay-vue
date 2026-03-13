@@ -1,36 +1,31 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useCastingMonitorStore } from '@/store/castingMonitor'
-import Util from '@/utils/util'
-import { handleImgError } from '@/utils/xivapi'
+import { computed } from "vue";
+import { useCastingMonitorStore } from "@/store/castingMonitor";
+import Util from "@/utils/util";
+import { handleImgError } from "@/utils/xivapi";
 
-const params = new URLSearchParams(window.location.href.split('?')[1])
-const castingMonitorStore = useCastingMonitorStore()
-const displayAA = Number(
-  /^(?:1|true|yes|on|open|enabled)$/i.test(params.get('displayAA') ?? ''),
-)
-const isPartyMode = computed(() => castingMonitorStore.type === 'party')
-const visibleCastData = computed(() =>
-  castingMonitorStore.castData.filter(v => v.key),
-)
+const params = new URLSearchParams(window.location.href.split("?")[1]);
+const castingMonitorStore = useCastingMonitorStore();
+const displayAA = Number(/^(?:1|true|yes|on|open|enabled)$/i.test(params.get("displayAA") ?? ""));
+const isPartyMode = computed(() => castingMonitorStore.type === "party");
+const visibleCastData = computed(() => castingMonitorStore.castData.filter((v) => v.key));
 const partyCasterRows = computed(() => {
-  const rows = new Map<string, number>()
+  const rows = new Map<string, number>();
   for (const [index, member] of castingMonitorStore.partyDataFormatted.entries())
-    rows.set(member.id, index)
-  if (rows.size === 0 && castingMonitorStore.playerId)
-    rows.set(castingMonitorStore.playerId, 0)
-  return rows
-})
-const rowCount = computed(() => Math.max(partyCasterRows.value.size, 1))
+    rows.set(member.id, index);
+  if (rows.size === 0 && castingMonitorStore.playerId) rows.set(castingMonitorStore.playerId, 0);
+  return rows;
+});
+const rowCount = computed(() => Math.max(partyCasterRows.value.size, 1));
 
 function getCasterRowIndex(casterId: string): number {
-  return partyCasterRows.value.get(casterId) ?? 0
+  return partyCasterRows.value.get(casterId) ?? 0;
 }
 
 function getClassjobIconSrc(jobEnum: number): string {
-  const job = Util.jobEnumToJob(jobEnum)
-  const fullName = Util.jobToFullName(job)
-  return `https://souma.diemoe.net/resources/img/cj2/${fullName.en}.png`
+  const job = Util.jobEnumToJob(jobEnum);
+  const fullName = Util.jobToFullName(job);
+  return `https://souma.diemoe.net/resources/img/cj2/${fullName.en}.png`;
 }
 </script>
 
@@ -55,18 +50,18 @@ function getClassjobIconSrc(jobEnum: number): string {
           class="party-job-icon"
           loading="lazy"
           @error="handleImgError"
-        >
+        />
       </div>
     </div>
     <div
-      v-for="(item) in visibleCastData"
+      v-for="item in visibleCastData"
       :key="item.key"
       :data-casterId="item.casterId"
       :class="`images ${item.class} logLine${item.logLine} displayAA${displayAA}`"
       :style="`--animeDuration: ${castingMonitorStore.config.duration}s; --rowIndex: ${isPartyMode ? getCasterRowIndex(item.casterId) : 0};`"
     >
-      <img :src="item.src" class="action-icon" height="40" loading="lazy" @error="handleImgError">
-      <img class="frame" loading="lazy">
+      <img :src="item.src" class="action-icon" height="40" loading="lazy" @error="handleImgError" />
+      <img class="frame" loading="lazy" />
     </div>
   </div>
 </template>

@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import type { LootRecord } from '@/utils/lootParser'
-import ChartPlayerDistribution from './ChartPlayerDistribution.vue'
-import ChartRollLuck from './ChartRollLuck.vue'
-import ChartWeeklyTrend from './ChartWeeklyTrend.vue'
+import type { LootRecord } from "@/utils/lootParser";
+import ChartPlayerDistribution from "./ChartPlayerDistribution.vue";
+import ChartRollLuck from "./ChartRollLuck.vue";
+import ChartWeeklyTrend from "./ChartWeeklyTrend.vue";
 
 defineProps<{
-  records: LootRecord[]
-  players: string[]
-  getActualPlayer?: (name: string) => string
-  getPlayerRole?: (name: string) => string | undefined
-  recordWeekCorrections?: Record<string, number>
-  syncStartDate?: string | Date
-  playerVisibility?: 'all' | 'role' | 'job' | 'initial'
-}>()
+  records: LootRecord[];
+  players: string[];
+  getActualPlayer?: (name: string) => string;
+  getPlayerRole?: (name: string) => string | undefined;
+  recordWeekCorrections?: Record<string, number>;
+  syncStartDate?: string | Date;
+  playerVisibility?: "all" | "role" | "job" | "initial";
+}>();
 </script>
 
 <template>

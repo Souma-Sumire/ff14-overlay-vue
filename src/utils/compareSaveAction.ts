@@ -1,14 +1,12 @@
-import { BAKED_ACTION_META_LITE_BY_ID } from '@/resources/generated/bakedActionMetaLite'
-import { BAKED_ACTION_UPGRADE_STEPS } from '@/resources/generated/bakedActionUpgradeSteps'
+import { BAKED_ACTION_META_LITE_BY_ID } from "@/resources/generated/bakedActionMetaLite";
+import { BAKED_ACTION_UPGRADE_STEPS } from "@/resources/generated/bakedActionUpgradeSteps";
 
 function actionId2ClassJobLevelRaw(id: number): string | undefined {
-  const normalized = Number.isFinite(id) && id > 0 ? Math.trunc(id) : 0
-  if (normalized <= 0)
-    return undefined
-  const level = Number(BAKED_ACTION_META_LITE_BY_ID[normalized]?.classJobLevel ?? 0)
-  if (!Number.isFinite(level) || level <= 0)
-    return undefined
-  return String(level)
+  const normalized = Number.isFinite(id) && id > 0 ? Math.trunc(id) : 0;
+  if (normalized <= 0) return undefined;
+  const level = Number(BAKED_ACTION_META_LITE_BY_ID[normalized]?.classJobLevel ?? 0);
+  if (!Number.isFinite(level) || level <= 0) return undefined;
+  return String(level);
 }
 
 // 共享CD映射：仅用于把同CD技能归并到同一ID。
@@ -34,201 +32,183 @@ const compareSameGroup = {
   11426: 11427, // 飞翎雨→地火喷发
   11428: 11429, // 山崩→轰雷
   34686: 34685, // 油性坦培拉涂层→坦培拉涂层
-} as const
+} as const;
 
-const compareSameMap = new Map<number, number>(Object.entries(compareSameGroup).map(([k, v]) => [Number(k), v]))
-const compareSameSourceIdSet = new Set<number>(compareSameMap.keys())
+const compareSameMap = new Map<number, number>(
+  Object.entries(compareSameGroup).map(([k, v]) => [Number(k), v]),
+);
+const compareSameSourceIdSet = new Set<number>(compareSameMap.keys());
 
 export function compareSame(id: number) {
-  return compareSameMap.get(id) || id
+  return compareSameMap.get(id) || id;
 }
 
 export function isCompareSameSourceId(id: number) {
-  return compareSameSourceIdSet.has(id)
+  return compareSameSourceIdSet.has(id);
 }
 
 // 技能进化映射：由脚本从本地 CSV 自动生成。
-export const ACTION_UPGRADE_STEPS: Record<number, number> = BAKED_ACTION_UPGRADE_STEPS
+export const ACTION_UPGRADE_STEPS: Record<number, number> = BAKED_ACTION_UPGRADE_STEPS;
 
 export function getUpgradeActionChain(actionId: number): number[] {
-  if (!Number.isFinite(actionId) || actionId <= 0)
-    return []
-  const start = Math.trunc(actionId)
-  const chain: number[] = [start]
-  const visited = new Set<number>([start])
-  let current = start
+  if (!Number.isFinite(actionId) || actionId <= 0) return [];
+  const start = Math.trunc(actionId);
+  const chain: number[] = [start];
+  const visited = new Set<number>([start]);
+  let current = start;
   while (true) {
-    const next = ACTION_UPGRADE_STEPS[current]
-    if (next === undefined)
-      break
-    if (!Number.isFinite(next) || next <= 0)
-      break
-    const nextActionId = Math.trunc(next)
-    if (visited.has(nextActionId))
-      break
-    chain.push(nextActionId)
-    visited.add(nextActionId)
-    current = nextActionId
+    const next = ACTION_UPGRADE_STEPS[current];
+    if (next === undefined) break;
+    if (!Number.isFinite(next) || next <= 0) break;
+    const nextActionId = Math.trunc(next);
+    if (visited.has(nextActionId)) break;
+    chain.push(nextActionId);
+    visited.add(nextActionId);
+    current = nextActionId;
   }
-  return chain
+  return chain;
 }
 
 const topTierUpgradeActionMap = (() => {
-  const map = new Map<number, number>()
+  const map = new Map<number, number>();
   Object.keys(ACTION_UPGRADE_STEPS).forEach((rawActionId) => {
-    const lowerTierActionId = Number(rawActionId)
-    if (!Number.isFinite(lowerTierActionId) || lowerTierActionId <= 0)
-      return
-    const chain = getUpgradeActionChain(lowerTierActionId)
-    if (chain.length <= 1)
-      return
-    const topTierActionId = chain[chain.length - 1]!
-    map.set(lowerTierActionId, topTierActionId)
-  })
-  return map
-})()
+    const lowerTierActionId = Number(rawActionId);
+    if (!Number.isFinite(lowerTierActionId) || lowerTierActionId <= 0) return;
+    const chain = getUpgradeActionChain(lowerTierActionId);
+    if (chain.length <= 1) return;
+    const topTierActionId = chain.at(-1)!;
+    map.set(lowerTierActionId, topTierActionId);
+  });
+  return map;
+})();
 
 export function normalizeUpgradeActionId(actionId: number) {
-  if (!Number.isFinite(actionId) || actionId <= 0)
-    return actionId
-  const normalized = Math.trunc(actionId)
-  return topTierUpgradeActionMap.get(normalized) ?? normalized
+  if (!Number.isFinite(actionId) || actionId <= 0) return actionId;
+  const normalized = Math.trunc(actionId);
+  return topTierUpgradeActionMap.get(normalized) ?? normalized;
 }
 
 export function isLowerTierActionId(actionId: number) {
-  if (!Number.isFinite(actionId) || actionId <= 0)
-    return false
-  return normalizeUpgradeActionId(actionId) !== actionId
+  if (!Number.isFinite(actionId) || actionId <= 0) return false;
+  return normalizeUpgradeActionId(actionId) !== actionId;
 }
 
 const upgradeLowerByUpper = (() => {
-  const map = new Map<number, number[]>()
+  const map = new Map<number, number[]>();
   Object.entries(ACTION_UPGRADE_STEPS).forEach(([rawLower, rawUpper]) => {
-    const lower = Number(rawLower)
-    const upper = Number(rawUpper)
-    if (!Number.isFinite(lower) || lower <= 0 || !Number.isFinite(upper) || upper <= 0)
-      return
-    if (!map.has(upper))
-      map.set(upper, [])
-    map.get(upper)!.push(lower)
-  })
-  return map
-})()
+    const lower = Number(rawLower);
+    const upper = Number(rawUpper);
+    if (!Number.isFinite(lower) || lower <= 0 || !Number.isFinite(upper) || upper <= 0) return;
+    if (!map.has(upper)) map.set(upper, []);
+    map.get(upper)!.push(lower);
+  });
+  return map;
+})();
 
-const actionUpgradeLevelCache = new Map<number, number>()
-const upgradeDepthToTopCache = new Map<number, number>()
-const upgradeFamilyByTopCache = new Map<number, number[]>()
-const levelResolvedUpgradeActionCache = new Map<string, number>()
+const actionUpgradeLevelCache = new Map<number, number>();
+const upgradeDepthToTopCache = new Map<number, number>();
+const upgradeFamilyByTopCache = new Map<number, number[]>();
+const levelResolvedUpgradeActionCache = new Map<string, number>();
 
 export function getActionUpgradeMinLevel(actionId: number) {
-  if (actionId <= 0)
-    return 1
-  const id = actionId
-  const cached = actionUpgradeLevelCache.get(id)
-  if (cached !== undefined)
-    return cached
+  if (actionId <= 0) return 1;
+  const id = actionId;
+  const cached = actionUpgradeLevelCache.get(id);
+  if (cached !== undefined) return cached;
 
-  const fromMap = Number(actionId2ClassJobLevelRaw(id))
-  const resolved = fromMap || 1
-  actionUpgradeLevelCache.set(id, resolved)
-  return resolved
+  const fromMap = Number(actionId2ClassJobLevelRaw(id));
+  const resolved = fromMap || 1;
+  actionUpgradeLevelCache.set(id, resolved);
+  return resolved;
 }
 
 function getUpgradeDepthToTop(actionId: number) {
-  if (actionId <= 0)
-    return 0
-  const id = actionId
-  const cached = upgradeDepthToTopCache.get(id)
-  if (cached !== undefined)
-    return cached
+  if (actionId <= 0) return 0;
+  const id = actionId;
+  const cached = upgradeDepthToTopCache.get(id);
+  if (cached !== undefined) return cached;
 
-  let depth = 0
-  let current = id
-  const visited = new Set<number>([current])
+  let depth = 0;
+  let current = id;
+  const visited = new Set<number>([current]);
   while (true) {
-    const next = ACTION_UPGRADE_STEPS[current]
-    if (typeof next !== 'number' || !Number.isFinite(next) || next <= 0)
-      break
-    const nextId = Math.trunc(next)
-    if (visited.has(nextId))
-      break
-    depth += 1
-    visited.add(nextId)
-    current = nextId
+    const next = ACTION_UPGRADE_STEPS[current];
+    if (typeof next !== "number" || !Number.isFinite(next) || next <= 0) break;
+    const nextId = Math.trunc(next);
+    if (visited.has(nextId)) break;
+    depth += 1;
+    visited.add(nextId);
+    current = nextId;
   }
-  upgradeDepthToTopCache.set(id, depth)
-  return depth
+  upgradeDepthToTopCache.set(id, depth);
+  return depth;
 }
 
 function getUpgradeFamilyByTop(topActionId: number) {
-  const top = Math.trunc(topActionId)
-  const cached = upgradeFamilyByTopCache.get(top)
-  if (cached)
-    return cached
+  const top = Math.trunc(topActionId);
+  const cached = upgradeFamilyByTopCache.get(top);
+  if (cached) return cached;
 
-  const visited = new Set<number>()
-  const stack: number[] = [top]
+  const visited = new Set<number>();
+  const stack: number[] = [top];
   while (stack.length > 0) {
-    const current = stack.pop()!
-    if (visited.has(current))
-      continue
-    visited.add(current)
-    const lowers = upgradeLowerByUpper.get(current) ?? []
+    const current = stack.pop()!;
+    if (visited.has(current)) continue;
+    visited.add(current);
+    const lowers = upgradeLowerByUpper.get(current) ?? [];
     lowers.forEach((lower) => {
-      if (!visited.has(lower))
-        stack.push(lower)
-    })
+      if (!visited.has(lower)) stack.push(lower);
+    });
   }
-  const family = [...visited]
-  upgradeFamilyByTopCache.set(top, family)
-  return family
+  const family = [...visited];
+  upgradeFamilyByTopCache.set(top, family);
+  return family;
 }
 
 export function resolveUpgradeActionIdForLevel(actionId: number, level: number) {
-  if (!Number.isFinite(actionId) || actionId <= 0)
-    return actionId
+  if (!Number.isFinite(actionId) || actionId <= 0) return actionId;
 
-  const startActionId = actionId
-  const normalizedLevel = level || 1
-  const cacheKey = `${startActionId}:${normalizedLevel}`
-  const cached = levelResolvedUpgradeActionCache.get(cacheKey)
-  if (cached !== undefined)
-    return cached
+  const startActionId = actionId;
+  const normalizedLevel = level || 1;
+  const cacheKey = `${startActionId}:${normalizedLevel}`;
+  const cached = levelResolvedUpgradeActionCache.get(cacheKey);
+  if (cached !== undefined) return cached;
 
-  const topActionId = normalizeUpgradeActionId(startActionId)
-  const family = getUpgradeFamilyByTop(topActionId)
-  let bestActionId = topActionId
-  let bestMinLevel = Number.NEGATIVE_INFINITY
-  let bestDepth = Number.NEGATIVE_INFINITY
+  const topActionId = normalizeUpgradeActionId(startActionId);
+  const family = getUpgradeFamilyByTop(topActionId);
+  let bestActionId = topActionId;
+  let bestMinLevel = Number.NEGATIVE_INFINITY;
+  let bestDepth = Number.NEGATIVE_INFINITY;
 
   family.forEach((candidateId) => {
-    const minLevel = getActionUpgradeMinLevel(candidateId)
-    if (minLevel > normalizedLevel)
-      return
-    const depth = getUpgradeDepthToTop(candidateId)
+    const minLevel = getActionUpgradeMinLevel(candidateId);
+    if (minLevel > normalizedLevel) return;
+    const depth = getUpgradeDepthToTop(candidateId);
     if (
-      minLevel > bestMinLevel
-      || (minLevel === bestMinLevel && depth > bestDepth)
-      || (minLevel === bestMinLevel && depth === bestDepth && candidateId === startActionId)
+      minLevel > bestMinLevel ||
+      (minLevel === bestMinLevel && depth > bestDepth) ||
+      (minLevel === bestMinLevel && depth === bestDepth && candidateId === startActionId)
     ) {
-      bestActionId = candidateId
-      bestMinLevel = minLevel
-      bestDepth = depth
+      bestActionId = candidateId;
+      bestMinLevel = minLevel;
+      bestDepth = depth;
     }
-  })
+  });
 
   if (bestMinLevel === Number.NEGATIVE_INFINITY) {
     bestActionId = family.reduce((acc, candidateId) => {
-      const candidateLevel = getActionUpgradeMinLevel(candidateId)
-      const accLevel = getActionUpgradeMinLevel(acc)
-      if (candidateLevel < accLevel)
-        return candidateId
-      if (candidateLevel === accLevel && getUpgradeDepthToTop(candidateId) > getUpgradeDepthToTop(acc))
-        return candidateId
-      return acc
-    }, topActionId)
+      const candidateLevel = getActionUpgradeMinLevel(candidateId);
+      const accLevel = getActionUpgradeMinLevel(acc);
+      if (candidateLevel < accLevel) return candidateId;
+      if (
+        candidateLevel === accLevel &&
+        getUpgradeDepthToTop(candidateId) > getUpgradeDepthToTop(acc)
+      )
+        return candidateId;
+      return acc;
+    }, topActionId);
   }
 
-  levelResolvedUpgradeActionCache.set(cacheKey, bestActionId)
-  return bestActionId
+  levelResolvedUpgradeActionCache.set(cacheKey, bestActionId);
+  return bestActionId;
 }

@@ -5,7 +5,7 @@
 - `generated/`
   - Script outputs only (both `.json` and `.ts`)
   - Do not edit by hand
-  - Regenerate via `bun generate` or specific `generate:*` scripts
+  - Regenerate via `vp run generate` or specific `generate:*` scripts
 - `logic/`
   - Resource-related resolver/normalization logic
   - No large static datasets

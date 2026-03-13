@@ -1,16 +1,16 @@
 <script setup lang="ts">
-export type DisplayFilterMode = 'obtained' | 'needed' | 'all'
+export type DisplayFilterMode = "obtained" | "needed" | "all";
 
 defineProps<{
-  modelValue: DisplayFilterMode
-}>()
+  modelValue: DisplayFilterMode;
+}>();
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: DisplayFilterMode): void
-}>()
+  (e: "update:modelValue", value: DisplayFilterMode): void;
+}>();
 
 function updateValue(val: DisplayFilterMode) {
-  emit('update:modelValue', val)
+  emit("update:modelValue", val);
 }
 </script>
 

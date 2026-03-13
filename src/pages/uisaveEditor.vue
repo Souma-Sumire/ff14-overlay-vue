@@ -1,137 +1,131 @@
 <script setup lang="ts">
-import type { MessageBoxInputData } from 'element-plus'
-import type { UISaveData, WayMark } from '@/types/uisave'
-import {
-  Download,
-  MapLocation,
-  Share,
-  Upload,
-} from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { ref } from 'vue'
-import { useI18n } from 'vue-i18n'
-import LanguageSwitcher from '@/components/common/LanguageSwitcher.vue'
-import WaymarkDisplay from '@/components/uisaveEditor/WaymarkDisplay.vue'
-import ZoneSelecter from '@/components/zoneSelecter.vue'
+import type { MessageBoxInputData } from "element-plus";
+import type { UISaveData, WayMark } from "@/types/uisave";
+import { Download, MapLocation, Share, Upload } from "@element-plus/icons-vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+import LanguageSwitcher from "@/components/common/LanguageSwitcher.vue";
+import WaymarkDisplay from "@/components/uisaveEditor/WaymarkDisplay.vue";
+import ZoneSelecter from "@/components/zoneSelecter.vue";
 import {
   getMapIDByTerritoryType,
   getTerritoryTypeByMapID,
-} from '@/resources/logic/contentFinderCondition'
-import { ZoneInfo } from '@/resources/zoneInfo'
-import { MARKER_MAP, parseUISave, xorCrypt } from '@/utils/uisaveParser'
+} from "@/resources/logic/contentFinderCondition";
+import { ZoneInfo } from "@/resources/zoneInfo";
+import { MARKER_MAP, parseUISave, xorCrypt } from "@/utils/uisaveParser";
 
-const { t } = useI18n()
+const { t } = useI18n();
 
 // --- 类型定义 ---
-type WayMarkKey = 'A' | 'B' | 'C' | 'D' | 'One' | 'Two' | 'Three' | 'Four'
+type WayMarkKey = "A" | "B" | "C" | "D" | "One" | "Two" | "Three" | "Four";
 
 interface PPJsonPoint {
-  X: number
-  Y: number
-  Z: number
-  ID: number
-  Active: boolean
+  X: number;
+  Y: number;
+  Z: number;
+  ID: number;
+  Active: boolean;
 }
 
 interface PPJson {
-  Name: string
-  MapID: number
-  A: PPJsonPoint
-  B: PPJsonPoint
-  C: PPJsonPoint
-  D: PPJsonPoint
-  One: PPJsonPoint
-  Two: PPJsonPoint
-  Three: PPJsonPoint
-  Four: PPJsonPoint
+  Name: string;
+  MapID: number;
+  A: PPJsonPoint;
+  B: PPJsonPoint;
+  C: PPJsonPoint;
+  D: PPJsonPoint;
+  One: PPJsonPoint;
+  Two: PPJsonPoint;
+  Three: PPJsonPoint;
+  Four: PPJsonPoint;
 }
 
 // --- 响应式数据 ---
-const fileInput = ref<HTMLInputElement | null>(null)
-const parsedData = ref<UISaveData | null>(null)
-const isDragging = ref(false)
-const isParsing = ref(false)
-const hasUnsavedChanges = ref(false)
-const displayLimit = ref(6)
-let dragCounter = 0
+const fileInput = ref<HTMLInputElement | null>(null);
+const parsedData = ref<UISaveData | null>(null);
+const isDragging = ref(false);
+const isParsing = ref(false);
+const hasUnsavedChanges = ref(false);
+const displayLimit = ref(6);
+let dragCounter = 0;
 
 // --- 工具函数 ---
 
-const toFloat = (v: number) => v / 1000
-const toInt = (v: number) => Math.round(v * 1000)
+const toFloat = (v: number) => v / 1000;
+const toInt = (v: number) => Math.round(v * 1000);
 function markAsModified() {
-  hasUnsavedChanges.value = true
+  hasUnsavedChanges.value = true;
 }
-const isMarkerEnabled = (m: WayMark, bit: number) => (m.enableFlag & bit) !== 0
+const isMarkerEnabled = (m: WayMark, bit: number) => (m.enableFlag & bit) !== 0;
 function toggleMarker(m: WayMark, bit: number) {
-  const isEnabling = (m.enableFlag & bit) === 0
-  m.enableFlag ^= bit
-  markAsModified()
+  const isEnabling = (m.enableFlag & bit) === 0;
+  m.enableFlag ^= bit;
+  markAsModified();
 
   if (isEnabling) {
-    const def = MARKER_MAP.find(d => d.bit === bit)
+    const def = MARKER_MAP.find((d) => d.bit === bit);
     if (def) {
-      const p = m[def.key]
+      const p = m[def.key];
       if (p.x === 0 && p.y === 0 && p.z === 0) {
-        p.x = 100000
-        p.z = 100000
+        p.x = 100000;
+        p.z = 100000;
       }
     }
   }
 }
 
-function updateCoordinate(m: WayMark, mKey: WayMarkKey, coordKey: 'x' | 'y' | 'z', val: number | undefined) {
+function updateCoordinate(
+  m: WayMark,
+  mKey: WayMarkKey,
+  coordKey: "x" | "y" | "z",
+  val: number | undefined,
+) {
   if (val !== undefined) {
-    m[mKey][coordKey] = toInt(val)
-    markAsModified()
+    m[mKey][coordKey] = toInt(val);
+    markAsModified();
   }
 }
 
 // --- 解析 & 序列化 ---
 async function handleFile(file: File) {
-  const loading = (await import('element-plus')).ElLoading.service({
+  const loading = (await import("element-plus")).ElLoading.service({
     lock: true,
-    text: '正在解析 UISAVE.DAT...',
-    background: 'rgba(0, 0, 0, 0.7)',
-  })
-  isParsing.value = true
+    text: "正在解析 UISAVE.DAT...",
+    background: "rgba(0, 0, 0, 0.7)",
+  });
+  isParsing.value = true;
 
   try {
     // 使用 setTimeout 确保 Loading UI 有机会渲染
-    await new Promise(resolve => setTimeout(resolve, 50))
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
-    parsedData.value = await parseUISave(await file.arrayBuffer())
+    parsedData.value = await parseUISave(await file.arrayBuffer());
 
     // 性能优化：分步加载剩余卡片
-    displayLimit.value = 12
+    displayLimit.value = 12;
     const expandDisplay = () => {
-      if (
-        parsedData.value
-        && displayLimit.value < parsedData.value.wayMarks.length
-      ) {
-        displayLimit.value += 12
-        requestAnimationFrame(expandDisplay)
+      if (parsedData.value && displayLimit.value < parsedData.value.wayMarks.length) {
+        displayLimit.value += 12;
+        requestAnimationFrame(expandDisplay);
       }
-    }
-    requestAnimationFrame(expandDisplay)
+    };
+    requestAnimationFrame(expandDisplay);
 
-    requestAnimationFrame(expandDisplay)
+    requestAnimationFrame(expandDisplay);
 
-    ElMessage.success(t('uisaveEditor.importSuccess'))
-    hasUnsavedChanges.value = false
-  }
-  catch (e: unknown) {
-    ElMessage.error(`解析失败: ${e instanceof Error ? e.message : String(e)}`)
-  }
-  finally {
-    isParsing.value = false
-    loading.close()
+    ElMessage.success(t("uisaveEditor.importSuccess"));
+    hasUnsavedChanges.value = false;
+  } catch (e: unknown) {
+    ElMessage.error(`解析失败: ${e instanceof Error ? e.message : String(e)}`);
+  } finally {
+    isParsing.value = false;
+    loading.close();
   }
 }
 
 function exportFile() {
-  if (!parsedData.value)
-    return
+  if (!parsedData.value) return;
   const {
     wayMarks,
     markerHeader,
@@ -146,116 +140,103 @@ function exportFile() {
     fileFormatVersion,
     fileUnknown,
     belongsToWaymarkDat,
-  } = parsedData.value
+  } = parsedData.value;
 
   if (belongsToWaymarkDat) {
-    const final = new Uint8Array(wayMarks.length * 104)
+    const final = new Uint8Array(wayMarks.length * 104);
     wayMarks.forEach((wm, i) => {
-      const offset = i * 104
-      const view = new DataView(final.buffer, final.byteOffset + offset, 104)
+      const offset = i * 104;
+      const view = new DataView(final.buffer, final.byteOffset + offset, 104);
       MARKER_MAP.forEach((m, idx) => {
-        view.setInt32(idx * 12, wm[m.key].x, true)
-        view.setInt32(idx * 12 + 4, wm[m.key].y, true)
-        view.setInt32(idx * 12 + 8, wm[m.key].z, true)
-      })
-      final[offset + 96] = wm.enableFlag
-      final[offset + 97] = wm.unknown
-      view.setUint16(98, wm.regionID, true)
-      view.setInt32(100, wm.timestamp, true)
-    })
+        view.setInt32(idx * 12, wm[m.key].x, true);
+        view.setInt32(idx * 12 + 4, wm[m.key].y, true);
+        view.setInt32(idx * 12 + 8, wm[m.key].z, true);
+      });
+      final[offset + 96] = wm.enableFlag;
+      final[offset + 97] = wm.unknown;
+      view.setUint16(98, wm.regionID, true);
+      view.setInt32(100, wm.timestamp, true);
+    });
 
-    const url = URL.createObjectURL(
-      new Blob([final], { type: 'application/octet-stream' }),
-    )
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'WAYMARK.DAT'
-    a.click()
-    URL.revokeObjectURL(url)
-    hasUnsavedChanges.value = false
-    ElMessage.success(t('uisaveEditor.exportSuccess'))
-    return
+    const url = URL.createObjectURL(new Blob([final], { type: "application/octet-stream" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "WAYMARK.DAT";
+    a.click();
+    URL.revokeObjectURL(url);
+    hasUnsavedChanges.value = false;
+    ElMessage.success(t("uisaveEditor.exportSuccess"));
+    return;
   }
 
-  const markerData = new Uint8Array(
-    16 + wayMarks.length * 104 + markerTail.length,
-  )
-  markerData.set(markerHeader, 0)
+  const markerData = new Uint8Array(16 + wayMarks.length * 104 + markerTail.length);
+  markerData.set(markerHeader, 0);
   wayMarks.forEach((wm, i) => {
-    const offset = 16 + i * 104
-    const view = new DataView(
-      markerData.buffer,
-      markerData.byteOffset + offset,
-      104,
-    )
+    const offset = 16 + i * 104;
+    const view = new DataView(markerData.buffer, markerData.byteOffset + offset, 104);
     MARKER_MAP.forEach((m, idx) => {
-      view.setInt32(idx * 12, wm[m.key].x, true)
-      view.setInt32(idx * 12 + 4, wm[m.key].y, true)
-      view.setInt32(idx * 12 + 8, wm[m.key].z, true)
-    })
-    markerData[offset + 96] = wm.enableFlag
-    markerData[offset + 97] = wm.unknown
-    view.setUint16(98, wm.regionID, true)
-    view.setInt32(100, wm.timestamp, true)
-  })
-  markerData.set(markerTail, 16 + wayMarks.length * 104)
+      view.setInt32(idx * 12, wm[m.key].x, true);
+      view.setInt32(idx * 12 + 4, wm[m.key].y, true);
+      view.setInt32(idx * 12 + 8, wm[m.key].z, true);
+    });
+    markerData[offset + 96] = wm.enableFlag;
+    markerData[offset + 97] = wm.unknown;
+    view.setUint16(98, wm.regionID, true);
+    view.setInt32(100, wm.timestamp, true);
+  });
+  markerData.set(markerTail, 16 + wayMarks.length * 104);
 
-  const fmarkerEndFlag = markerSectionEndFlag.length === 4
-    ? markerSectionEndFlag
-    : new Uint8Array(4)
-  const fmarkerPrefix = markerSectionPrefix.length === 16
-    ? markerSectionPrefix
-    : new Uint8Array(16)
-  const fmarker = new Uint8Array(16 + markerData.length + fmarkerEndFlag.length)
-  const fView = new DataView(fmarker.buffer)
-  fmarker.set(fmarkerPrefix, 0)
-  fView.setInt16(0, 17, true)
-  fView.setInt32(8, markerData.length, true)
-  fmarker.set(markerData, 16)
-  fmarker.set(fmarkerEndFlag, 16 + markerData.length)
+  const fmarkerEndFlag =
+    markerSectionEndFlag.length === 4 ? markerSectionEndFlag : new Uint8Array(4);
+  const fmarkerPrefix =
+    markerSectionPrefix.length === 16 ? markerSectionPrefix : new Uint8Array(16);
+  const fmarker = new Uint8Array(16 + markerData.length + fmarkerEndFlag.length);
+  const fView = new DataView(fmarker.buffer);
+  fmarker.set(fmarkerPrefix, 0);
+  fView.setInt16(0, 17, true);
+  fView.setInt32(8, markerData.length, true);
+  fmarker.set(markerData, 16);
+  fmarker.set(fmarkerEndFlag, 16 + markerData.length);
 
-  const sectionsBefore = otherSectionsBeforeMarker
-  const sectionsAfter = otherSectionsAfterMarker
+  const sectionsBefore = otherSectionsBeforeMarker;
+  const sectionsAfter = otherSectionsAfterMarker;
   const decrypted = new Uint8Array(
     16 + sectionsBefore.length + fmarker.length + sectionsAfter.length + payloadTail.length,
-  )
-  decrypted.set(payloadUnknown, 0)
-  const dView = new DataView(decrypted.buffer)
-  dView.setBigInt64(8, userID, true)
-  let decOffset = 16
-  decrypted.set(sectionsBefore, decOffset)
-  decOffset += sectionsBefore.length
-  decrypted.set(fmarker, decOffset)
-  decOffset += fmarker.length
-  decrypted.set(sectionsAfter, decOffset)
-  decOffset += sectionsAfter.length
-  decrypted.set(payloadTail, decOffset)
+  );
+  decrypted.set(payloadUnknown, 0);
+  const dView = new DataView(decrypted.buffer);
+  dView.setBigInt64(8, userID, true);
+  let decOffset = 16;
+  decrypted.set(sectionsBefore, decOffset);
+  decOffset += sectionsBefore.length;
+  decrypted.set(fmarker, decOffset);
+  decOffset += fmarker.length;
+  decrypted.set(sectionsAfter, decOffset);
+  decOffset += sectionsAfter.length;
+  decrypted.set(payloadTail, decOffset);
 
-  const encrypted = xorCrypt(decrypted)
-  const final = new Uint8Array(16 + encrypted.length)
-  const valView = new DataView(final.buffer)
-  final.set(fileFormatVersion, 0)
-  valView.setInt32(8, encrypted.length, true)
-  final.set(fileUnknown, 12)
-  final.set(encrypted, 16)
+  const encrypted = xorCrypt(decrypted);
+  const final = new Uint8Array(16 + encrypted.length);
+  const valView = new DataView(final.buffer);
+  final.set(fileFormatVersion, 0);
+  valView.setInt32(8, encrypted.length, true);
+  final.set(fileUnknown, 12);
+  final.set(encrypted, 16);
 
-  const url = URL.createObjectURL(
-    new Blob([final], { type: 'application/octet-stream' }),
-  )
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'UISAVE.DAT'
-  a.click()
-  URL.revokeObjectURL(url)
-  hasUnsavedChanges.value = false
-  ElMessage.success(t('uisaveEditor.exportSuccess'))
+  const url = URL.createObjectURL(new Blob([final], { type: "application/octet-stream" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "UISAVE.DAT";
+  a.click();
+  URL.revokeObjectURL(url);
+  hasUnsavedChanges.value = false;
+  ElMessage.success(t("uisaveEditor.exportSuccess"));
 }
 
 async function copyMark(index: number) {
-  const wm = parsedData.value?.wayMarks[index]
-  if (!wm)
-    return
-  const zone = ZoneInfo[getTerritoryTypeByMapID(wm.regionID)]
+  const wm = parsedData.value?.wayMarks[index];
+  if (!wm) return;
+  const zone = ZoneInfo[getTerritoryTypeByMapID(wm.regionID)];
   const ppJson: PPJson = {
     Name: zone?.name.cn || zone?.name.en || `Zone_${wm.regionID}`,
     MapID: wm.regionID,
@@ -315,193 +296,174 @@ async function copyMark(index: number) {
       ID: 7,
       Active: isMarkerEnabled(wm, 0x80),
     },
-  }
-  await navigator.clipboard.writeText(JSON.stringify(ppJson))
-  await navigator.clipboard.writeText(JSON.stringify(ppJson))
-  ElMessage.success(t('uisaveEditor.copySuccess'))
+  };
+  await navigator.clipboard.writeText(JSON.stringify(ppJson));
+  await navigator.clipboard.writeText(JSON.stringify(ppJson));
+  ElMessage.success(t("uisaveEditor.copySuccess"));
 }
 
 // --- 验证器 ---
-const VALID_MARKER_KEYS = new Set(['X', 'Y', 'Z', 'ID', 'Active'])
+const VALID_MARKER_KEYS = new Set(["X", "Y", "Z", "ID", "Active"]);
 const VALID_ROOT_KEYS = new Set([
-  'Name',
-  'MapID',
-  'A',
-  'B',
-  'C',
-  'D',
-  'One',
-  'Two',
-  'Three',
-  'Four',
-])
+  "Name",
+  "MapID",
+  "A",
+  "B",
+  "C",
+  "D",
+  "One",
+  "Two",
+  "Three",
+  "Four",
+]);
 
 function validatePPJson(json: unknown): string | true {
-  if (typeof json !== 'object' || json === null)
-    return '输入必须是 JSON 对象'
+  if (typeof json !== "object" || json === null) return "输入必须是 JSON 对象";
 
   // 1. 检查根节点是否有非法字段
   for (const key of Object.keys(json)) {
-    if (!VALID_ROOT_KEYS.has(key))
-      return `根节点包含非法字段: ${key}`
+    if (!VALID_ROOT_KEYS.has(key)) return `根节点包含非法字段: ${key}`;
   }
 
   // 2. 检查必要字段类型
-  const j = json as Partial<PPJson>
-  if (typeof j.MapID !== 'number')
-    return '缺少 MapID 或类型错误 (应为数字)'
-  if ('Name' in j && typeof j.Name !== 'string')
-    return 'Name 字段类型错误 (应为字符串)'
+  const j = json as Partial<PPJson>;
+  if (typeof j.MapID !== "number") return "缺少 MapID 或类型错误 (应为数字)";
+  if ("Name" in j && typeof j.Name !== "string") return "Name 字段类型错误 (应为字符串)";
 
   // 3. 检查每一个存在的标点
-  const markers = ['A', 'B', 'C', 'D', 'One', 'Two', 'Three', 'Four'] as const
+  const markers = ["A", "B", "C", "D", "One", "Two", "Three", "Four"] as const;
   for (const key of markers) {
     if (key in j) {
-      const m = j[key]
-      if (typeof m !== 'object' || m === null)
-        return `标点 ${key} 格式错误 (应为对象)`
+      const m = j[key];
+      if (typeof m !== "object" || m === null) return `标点 ${key} 格式错误 (应为对象)`;
 
       // 检查标点对象的非法字段
       for (const mKey of Object.keys(m)) {
-        if (!VALID_MARKER_KEYS.has(mKey))
-          return `标点 ${key} 包含非法字段: ${mKey}`
+        if (!VALID_MARKER_KEYS.has(mKey)) return `标点 ${key} 包含非法字段: ${mKey}`;
       }
 
       // 检查标点属性类型
-      if (typeof m.X !== 'number')
-        return `标点 ${key}.X 类型错误 (应为数字)`
-      if (typeof m.Y !== 'number')
-        return `标点 ${key}.Y 类型错误 (应为数字)`
-      if (typeof m.Z !== 'number')
-        return `标点 ${key}.Z 类型错误 (应为数字)`
-      if ('ID' in m && typeof m.ID !== 'number')
-        return `标点 ${key}.ID 类型错误 (应为数字)`
-      if ('Active' in m && typeof m.Active !== 'boolean')
-        return `标点 ${key}.Active 类型错误 (应为布尔值)`
+      if (typeof m.X !== "number") return `标点 ${key}.X 类型错误 (应为数字)`;
+      if (typeof m.Y !== "number") return `标点 ${key}.Y 类型错误 (应为数字)`;
+      if (typeof m.Z !== "number") return `标点 ${key}.Z 类型错误 (应为数字)`;
+      if ("ID" in m && typeof m.ID !== "number") return `标点 ${key}.ID 类型错误 (应为数字)`;
+      if ("Active" in m && typeof m.Active !== "boolean")
+        return `标点 ${key}.Active 类型错误 (应为布尔值)`;
     }
   }
 
-  return true
+  return true;
 }
 
 async function pasteMark(index: number) {
   try {
     const res = await ElMessageBox.prompt(
-      t('uisaveEditor.pastePrompt'),
-      t('uisaveEditor.importTitle'),
+      t("uisaveEditor.pastePrompt"),
+      t("uisaveEditor.importTitle"),
       {
-        confirmButtonText: t('uisaveEditor.import'),
-        cancelButtonText: t('uisaveEditor.cancel'),
-        inputType: 'textarea',
+        confirmButtonText: t("uisaveEditor.import"),
+        cancelButtonText: t("uisaveEditor.cancel"),
+        inputType: "textarea",
         inputPlaceholder: '{"Name":...,"MapID":...,"A":{...}...}',
         inputPattern: /^\{.*\}$/,
-        inputErrorMessage: t('uisaveEditor.jsonError'),
+        inputErrorMessage: t("uisaveEditor.jsonError"),
         closeOnClickModal: false,
-        customClass: 'ppjson-import-dialog',
+        customClass: "ppjson-import-dialog",
         inputValidator: (val) => {
-          if (!val)
-            return t('uisaveEditor.inputEmpty')
+          if (!val) return t("uisaveEditor.inputEmpty");
           try {
-            const json = JSON.parse(val)
-            const res = validatePPJson(json)
+            const json = JSON.parse(val);
+            const res = validatePPJson(json);
             if (res !== true) {
-              return `${t('uisaveEditor.invalidPPJson')}: ${res}`
+              return `${t("uisaveEditor.invalidPPJson")}: ${res}`;
             }
-            return true
-          }
-          catch {
-            return t('uisaveEditor.jsonError')
+            return true;
+          } catch {
+            return t("uisaveEditor.jsonError");
           }
         },
       },
-    )
-    const { value } = res as MessageBoxInputData
-    const text = value
+    );
+    const { value } = res as MessageBoxInputData;
+    const text = value;
 
-    if (!text)
-      return
-    const validJson = JSON.parse(text) as PPJson
+    if (!text) return;
+    const validJson = JSON.parse(text) as PPJson;
     // MapID 校验已在 validatePPJson 中完成
 
-    const wm = parsedData.value?.wayMarks[index]
-    if (!wm)
-      return
+    const wm = parsedData.value?.wayMarks[index];
+    if (!wm) return;
 
-    wm.regionID = validJson.MapID
+    wm.regionID = validJson.MapID;
 
     const map: Record<string, WayMarkKey> = {
-      A: 'A',
-      B: 'B',
-      C: 'C',
-      D: 'D',
-      One: 'One',
-      Two: 'Two',
-      Three: 'Three',
-      Four: 'Four',
-    }
+      A: "A",
+      B: "B",
+      C: "C",
+      D: "D",
+      One: "One",
+      Two: "Two",
+      Three: "Three",
+      Four: "Four",
+    };
 
     // Helper to set enabled state
     const setEnabled = (bit: number, active: boolean) => {
-      const current = (wm.enableFlag & bit) !== 0
+      const current = (wm.enableFlag & bit) !== 0;
       if (current !== active) {
-        wm.enableFlag ^= bit
+        wm.enableFlag ^= bit;
       }
-    }
+    };
 
     for (const [ppKey, wmKey] of Object.entries(map)) {
-      const p = validJson[ppKey as keyof PPJson] as PPJsonPoint | undefined
+      const p = validJson[ppKey as keyof PPJson] as PPJsonPoint | undefined;
 
       // 如果点位缺失，使用默认空值（坐标为0且不激活）覆盖
       // 如果点位存在但 Active 缺失，默认为 true (有坐标即激活)
       const targetP = p
         ? { ...p, Active: p.Active ?? true }
-        : { X: 0, Y: 0, Z: 0, ID: 0, Active: false }
+        : { X: 0, Y: 0, Z: 0, ID: 0, Active: false };
 
       // Update coordinates directly (updateCoordinate helper handles conversion & marking modified)
-      updateCoordinate(wm, wmKey, 'x', targetP.X)
-      updateCoordinate(wm, wmKey, 'y', targetP.Y)
-      updateCoordinate(wm, wmKey, 'z', targetP.Z)
+      updateCoordinate(wm, wmKey, "x", targetP.X);
+      updateCoordinate(wm, wmKey, "y", targetP.Y);
+      updateCoordinate(wm, wmKey, "z", targetP.Z);
 
       // Update active state
-      const markerDef = MARKER_MAP.find(m => m.key === wmKey)
+      const markerDef = MARKER_MAP.find((m) => m.key === wmKey);
       if (markerDef) {
-        setEnabled(markerDef.bit, targetP.Active)
+        setEnabled(markerDef.bit, targetP.Active);
       }
     }
 
-    markAsModified()
-    markAsModified()
-    ElMessage.success(t('uisaveEditor.importSuccess'))
-  }
-  catch (e) {
-    if (e === 'cancel')
-      return
-    console.error(e)
-    ElMessage.error(t('uisaveEditor.importFail'))
+    markAsModified();
+    markAsModified();
+    ElMessage.success(t("uisaveEditor.importSuccess"));
+  } catch (e) {
+    if (e === "cancel") return;
+    console.error(e);
+    ElMessage.error(t("uisaveEditor.importFail"));
   }
 }
 
 // --- 事件处理 ---
 function onFileChange(e: Event) {
-  const f = (e.target as HTMLInputElement).files?.[0]
-  if (f)
-    handleFile(f)
+  const f = (e.target as HTMLInputElement).files?.[0];
+  if (f) handleFile(f);
 }
 function onDrop(e: DragEvent) {
-  isDragging.value = false
-  dragCounter = 0
-  const f = e.dataTransfer?.files[0]
-  if (f?.name.toLowerCase().endsWith('.dat'))
-    handleFile(f)
+  isDragging.value = false;
+  dragCounter = 0;
+  const f = e.dataTransfer?.files[0];
+  if (f?.name.toLowerCase().endsWith(".dat")) handleFile(f);
 }
 function onDragEnter() {
-  dragCounter++
-  isDragging.value = true
+  dragCounter++;
+  isDragging.value = true;
 }
 function onDragLeave() {
-  dragCounter--
-  if (dragCounter === 0)
-    isDragging.value = false
+  dragCounter--;
+  if (dragCounter === 0) isDragging.value = false;
 }
 </script>
 
@@ -518,15 +480,15 @@ function onDragLeave() {
         <el-icon :size="80" color="var(--el-color-primary)">
           <Upload />
         </el-icon>
-        <p>{{ t('uisaveEditor.dropToLoad') }}</p>
-        <span class="sub-text">{{ t('uisaveEditor.description') }}</span>
+        <p>{{ t("uisaveEditor.dropToLoad") }}</p>
+        <span class="sub-text">{{ t("uisaveEditor.description") }}</span>
       </div>
     </div>
 
     <header class="header-container">
       <div class="header-left">
         <div class="title-group">
-          <h1>{{ t('uisaveEditor.title') }}</h1>
+          <h1>{{ t("uisaveEditor.title") }}</h1>
           <div v-if="parsedData" class="status-badges">
             <el-tag
               v-if="hasUnsavedChanges"
@@ -536,7 +498,7 @@ function onDragLeave() {
               size="small"
               class="unsaved-tag"
             >
-              ● {{ t('uisaveEditor.unsaved') }}
+              ● {{ t("uisaveEditor.unsaved") }}
             </el-tag>
           </div>
         </div>
@@ -549,19 +511,14 @@ function onDragLeave() {
           accept=".DAT,.dat"
           style="display: none"
           @change="onFileChange"
-        >
+        />
 
         <div class="action-buttons">
-          <el-button
-            class="action-btn import-btn"
-            size="small"
-            round
-            @click="fileInput?.click()"
-          >
+          <el-button class="action-btn import-btn" size="small" round @click="fileInput?.click()">
             <el-icon class="el-icon--left">
               <Upload />
             </el-icon>
-            {{ t('uisaveEditor.parseDat') }}
+            {{ t("uisaveEditor.parseDat") }}
           </el-button>
 
           <el-button
@@ -575,7 +532,7 @@ function onDragLeave() {
             <el-icon class="el-icon--left">
               <Download />
             </el-icon>
-            {{ t('uisaveEditor.download') }}
+            {{ t("uisaveEditor.download") }}
           </el-button>
         </div>
 
@@ -599,12 +556,10 @@ function onDragLeave() {
             <div class="card-header">
               <div class="card-title">
                 <span class="index-num">#{{ index + 1 }}</span>
-                <span class="map-id-text">{{ t('uisaveEditor.mapId', [waymark.regionID]) }}</span>
+                <span class="map-id-text">{{ t("uisaveEditor.mapId", [waymark.regionID]) }}</span>
               </div>
               <ZoneSelecter
-                :select-zone="
-                  getTerritoryTypeByMapID(waymark.regionID).toString()
-                "
+                :select-zone="getTerritoryTypeByMapID(waymark.regionID).toString()"
                 :placeholder="t('uisaveEditor.zoneSelectPlaceholder')"
                 width="100%"
                 :show-all-levels="false"
@@ -612,8 +567,8 @@ function onDragLeave() {
                 class="header-zone-select"
                 @update:select-zone="
                   (v: string) => {
-                    waymark.regionID = getMapIDByTerritoryType(Number(v))
-                    markAsModified()
+                    waymark.regionID = getMapIDByTerritoryType(Number(v));
+                    markAsModified();
                   }
                 "
               />
@@ -626,7 +581,7 @@ function onDragLeave() {
                   style="margin: 0"
                   @click="pasteMark(index)"
                 >
-                  {{ t('uisaveEditor.import') }}
+                  {{ t("uisaveEditor.import") }}
                 </el-button>
                 <el-button
                   size="small"
@@ -636,7 +591,7 @@ function onDragLeave() {
                   style="margin: 0"
                   @click="copyMark(index)"
                 >
-                  {{ t('uisaveEditor.copy') }}
+                  {{ t("uisaveEditor.copy") }}
                 </el-button>
               </div>
             </div>
@@ -645,7 +600,7 @@ function onDragLeave() {
           <div class="waymark-content">
             <div class="waymark-controls">
               <div class="control-header">
-                <span class="col-mark">{{ t('uisaveEditor.active') }}</span>
+                <span class="col-mark">{{ t("uisaveEditor.active") }}</span>
                 <span class="col-coord">X</span>
                 <span class="col-coord">Y</span>
                 <span class="col-coord">Z</span>
@@ -667,9 +622,7 @@ function onDragLeave() {
                   size="small"
                   class="coord-input"
                   :disabled="waymark.regionID === 0"
-                  @update:model-value="
-                    (v) => updateCoordinate(waymark, m.key, 'x', v)
-                  "
+                  @update:model-value="(v) => updateCoordinate(waymark, m.key, 'x', v)"
                 />
                 <el-input-number
                   :model-value="toFloat(waymark[m.key].y)"
@@ -679,9 +632,7 @@ function onDragLeave() {
                   size="small"
                   class="coord-input"
                   :disabled="waymark.regionID === 0"
-                  @update:model-value="
-                    (v) => updateCoordinate(waymark, m.key, 'y', v)
-                  "
+                  @update:model-value="(v) => updateCoordinate(waymark, m.key, 'y', v)"
                 />
                 <el-input-number
                   :model-value="toFloat(waymark[m.key].z)"
@@ -691,18 +642,12 @@ function onDragLeave() {
                   size="small"
                   class="coord-input"
                   :disabled="waymark.regionID === 0"
-                  @update:model-value="
-                    (v) => updateCoordinate(waymark, m.key, 'z', v)
-                  "
+                  @update:model-value="(v) => updateCoordinate(waymark, m.key, 'z', v)"
                 />
               </div>
             </div>
             <div class="waymark-map-container">
-              <WaymarkDisplay
-                v-if="waymark.regionID !== 0"
-                :waymark="waymark"
-                :size="250"
-              />
+              <WaymarkDisplay v-if="waymark.regionID !== 0" :waymark="waymark" :size="250" />
               <div v-else class="empty-map-placeholder">
                 <el-icon :size="24" color="var(--el-text-color-placeholder)">
                   <MapLocation />
@@ -720,9 +665,9 @@ function onDragLeave() {
           <Upload />
         </el-icon>
       </div>
-      <h2>{{ t('uisaveEditor.startUsage') }}</h2>
+      <h2>{{ t("uisaveEditor.startUsage") }}</h2>
       <p class="upload-text">
-        {{ t('uisaveEditor.description') }}
+        {{ t("uisaveEditor.description") }}
       </p>
     </div>
   </div>
@@ -944,11 +889,11 @@ function onDragLeave() {
       border-color: var(--el-color-primary-light-3);
     }
 
-    :deep(.el-card__header) {
+    ::deep(.el-card__header) {
       padding: 8px 12px;
       border-bottom: 1px solid var(--el-border-color-lighter);
     }
-    :deep(.el-card__body) {
+    ::deep(.el-card__body) {
       padding: 10px;
     }
 
@@ -980,7 +925,7 @@ function onDragLeave() {
       }
       .header-zone-select {
         flex: 1;
-        :deep(.el-input__inner) {
+        ::deep(.el-input__inner) {
           font-size: 13px;
           font-weight: 600;
           border: none;
@@ -1039,14 +984,14 @@ function onDragLeave() {
             width: 32px;
             margin: 0;
             height: 100%;
-            :deep(.el-checkbox__label) {
+            ::deep(.el-checkbox__label) {
               font-size: 12px;
               font-weight: 900;
               padding: 0 0 0 2px;
             }
           }
 
-          :deep(.coord-input) {
+          ::deep(.coord-input) {
             flex: 1;
             min-width: 0;
             .el-input__wrapper {
@@ -1059,7 +1004,7 @@ function onDragLeave() {
               height: 24px;
               line-height: 24px;
               font-size: 11px;
-              font-family: 'JetBrains Mono', monospace;
+              font-family: "JetBrains Mono", monospace;
               text-align: center;
             }
           }
@@ -1089,7 +1034,7 @@ function onDragLeave() {
   width: 600px !important;
   textarea {
     min-height: 240px !important;
-    font-family: 'JetBrains Mono', monospace !important;
+    font-family: "JetBrains Mono", monospace !important;
     font-size: 12px !important;
   }
 }

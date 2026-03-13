@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import zhCn from 'element-plus/es/locale/lang/zh-cn'
+import zhCn from "element-plus/es/locale/lang/zh-cn";
 </script>
 
 <template>
@@ -8,5 +8,4 @@ import zhCn from 'element-plus/es/locale/lang/zh-cn'
   </el-config-provider>
 </template>
 
-<style lang="scss">
-</style>
+<style lang="scss"></style>

@@ -1,59 +1,57 @@
-import type { MessageBoxInputData } from 'element-plus'
-import type { Lang } from '@/types/lang'
-import type { MacroInfoMacro, MacroInfoPlace } from '@/types/macro'
-import type { QueueArr, Slot, WayMarkObj } from '@/types/PostNamazu'
-import { ElInputNumber, ElMessage, ElMessageBox } from 'element-plus'
-import { defineStore } from 'pinia'
-import { copyToClipboard } from '@/utils/clipboard'
-import { addOverlayListener } from '../../cactbot/resources/overlay_plugin_api'
+import type { MessageBoxInputData } from "element-plus";
+import type { Lang } from "@/types/lang";
+import type { MacroInfoMacro, MacroInfoPlace } from "@/types/macro";
+import type { QueueArr, Slot, WayMarkObj } from "@/types/PostNamazu";
+import { ElInputNumber, ElMessage, ElMessageBox } from "element-plus";
+import { defineStore } from "pinia";
+import { copyToClipboard } from "@/utils/clipboard";
+import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
 import {
   getMapIDByTerritoryType,
   getTerritoryTypeByMapID,
-} from '../resources/logic/contentFinderCondition'
-import { ZoneInfo } from '../resources/zoneInfo'
-import {
-  doInsertPreset,
-  doQueueActions,
-  doTextCommand,
-  doWayMarks,
-} from '../utils/postNamazu'
-import { defaultMacro } from './../resources/macro'
+} from "../resources/logic/contentFinderCondition";
+import { ZoneInfo } from "../resources/zoneInfo";
+import { doInsertPreset, doQueueActions, doTextCommand, doWayMarks } from "../utils/postNamazu";
+import { defaultMacro } from "./../resources/macro";
 
-let partyLen = 0
-const slotIndex = useStorage('macro-slot-index', 5)
+let partyLen = 0;
+const slotIndex = useStorage("macro-slot-index", 5);
 
-addOverlayListener('PartyChanged', (e) => {
-  partyLen = e.party.length
-})
+addOverlayListener("PartyChanged", (e) => {
+  partyLen = e.party.length;
+});
 
-const [show, toggleShow] = useToggle(true)
+const [show, toggleShow] = useToggle(true);
 
 function safeParseJson(input: string) {
   try {
     // 尝试直接解析
-    return JSON.parse(input)
-  }
-  catch (e) {
+    return JSON.parse(input);
+  } catch (e) {
     // 解析失败，再尝试移除尾逗号后重新解析
     try {
-      void e
-      const cleaned = input.replace(/,(\s*[}\]])/g, '$1')
-      return JSON.parse(cleaned)
-    }
-    catch (e) {
-      void e
+      void e;
+      const cleaned = input.replace(/,(\s*[}\]])/g, "$1");
+      return JSON.parse(cleaned);
+    } catch (e) {
+      void e;
       // 两次都失败就说明真的是非法 JSON
-      throw new Error(`无法解析 JSON 数据`)
+      throw new Error(`无法解析 JSON 数据`);
     }
   }
 }
 
 function cleanMacro(text: string): string {
-  let res = text
-  res = res.replaceAll(/\n{2,}/g, '\n')
-  res = res.replaceAll(/^\s+/gm, '')
-  res = res.replaceAll(/ /g, '\xA0')
-  return res
+  let res = text;
+  res = res.replaceAll(/\n{2,}/g, "\n");
+  res = res.replaceAll(/^\s+/gm, "");
+  res = res.replaceAll(/ /g, "\xA0");
+  return res;
+}
+
+function formatErrorMessage(prefix: string, error: unknown): string {
+  const message = error instanceof Error ? error.message : "";
+  return message ? `${prefix}: ${message}` : `${prefix}: 未知错误`;
 }
 
 // function getZoneIDByZoneName(ZoneName: string) {
@@ -71,57 +69,55 @@ function cleanMacro(text: string): string {
 //   }
 // }
 
-async function macroCommand(text: string, channel: 'e' | 'p') {
-  if (channel === 'p' && partyLen === 0)
-    doTextCommand('/e 单人时无法发送小队宏<se.3>')
-  const macros = text.replaceAll(/^\s*\/[pe]\s/gm, '').split('\n')
+async function macroCommand(text: string, channel: "e" | "p") {
+  if (channel === "p" && partyLen === 0) void doTextCommand("/e 单人时无法发送小队宏<se.3>");
+  const macros = text.replaceAll(/^\s*\/[pe]\s/gm, "").split("\n");
   const queue: QueueArr = macros.map((m) => {
     return {
-      c: 'DoTextCommand',
+      c: "DoTextCommand",
       p: `/${channel} ${m}`,
       d: 125,
-    }
-  })
+    };
+  });
   try {
-    await doQueueActions(queue)
-    ElMessage.success('已发送')
-  }
-  catch (e) {
-    ElMessage.error(`发送失败: ${(e as Error).message}` || '未知错误')
+    await doQueueActions(queue);
+    ElMessage.success("已发送");
+  } catch (e) {
+    ElMessage.error(formatErrorMessage("发送失败", e));
   }
 }
 
-const useMacroStore = defineStore('macro', {
+const useMacroStore = defineStore("macro", {
   state: () => {
     return {
-      data: useStorage('my-macros', defaultMacro),
-      selectZone: useStorage('my-zone', '1226'),
-      zoneNow: useStorage('my-zone-now', '1226'),
-      zoneNowName: useStorage('my-zone-now-name', ''),
+      data: useStorage("my-macros", defaultMacro),
+      selectZone: useStorage("my-zone", "1226"),
+      zoneNow: useStorage("my-zone-now", "1226"),
+      zoneNowName: useStorage("my-zone-now-name", ""),
       fastEntrance: [
-        { text: { zhCn: '异闻商客' }, value: '1317' },
-        { text: { zhCn: 'M9S' }, value: '1321' },
-        { text: { zhCn: 'M10S' }, value: '1323' },
-        { text: { zhCn: 'M11S' }, value: '1325' },
-        { text: { zhCn: 'M12S' }, value: '1327' },
+        { text: { zhCn: "异闻商客" }, value: "1317" },
+        { text: { zhCn: "M9S" }, value: "1321" },
+        { text: { zhCn: "M10S" }, value: "1323" },
+        { text: { zhCn: "M11S" }, value: "1325" },
+        { text: { zhCn: "M12S" }, value: "1327" },
       ] as {
-        text: Record<Lang, string>
-        value: string
+        text: Record<Lang, string>;
+        value: string;
       }[],
       show,
       toggleShow,
-    }
+    };
   },
   getters: {
     defaultX: (state) => {
-      return ZoneInfo[Number(state.selectZone)]?.offsetX ?? 0
+      return ZoneInfo[Number(state.selectZone)]?.offsetX ?? 0;
     },
     defaultY: (state) => {
-      return ZoneInfo[Number(state.selectZone)]?.offsetY ?? 0
+      return ZoneInfo[Number(state.selectZone)]?.offsetY ?? 0;
     },
     blankWaymark: (state) => {
-      const defaultX = ZoneInfo[Number(state.selectZone)]?.offsetX ?? 0
-      const defaultY = ZoneInfo[Number(state.selectZone)]?.offsetY ?? 0
+      const defaultX = ZoneInfo[Number(state.selectZone)]?.offsetX ?? 0;
+      const defaultY = ZoneInfo[Number(state.selectZone)]?.offsetY ?? 0;
       return {
         A: { X: -defaultX, Y: 0, Z: -defaultY, Active: false },
         B: { X: -defaultX, Y: 0, Z: -defaultY, Active: false },
@@ -131,106 +127,103 @@ const useMacroStore = defineStore('macro', {
         Two: { X: -defaultX, Y: 0, Z: -defaultY, Active: false },
         Three: { X: -defaultX, Y: 0, Z: -defaultY, Active: false },
         Four: { X: -defaultX, Y: 0, Z: -defaultY, Active: false },
-      }
+      };
     },
   },
   actions: {
     editMacroMacro(macro: MacroInfoMacro): void {
-      macro.Editable = true
-      macro.Text = cleanMacro(macro.Text)
+      macro.Editable = true;
+      macro.Text = cleanMacro(macro.Text);
     },
     submitMacroMacro(macro: MacroInfoMacro): void {
-      Reflect.deleteProperty(macro, 'Editable')
-      macro.Text = cleanMacro(macro.Text)
+      Reflect.deleteProperty(macro, "Editable");
+      macro.Text = cleanMacro(macro.Text);
     },
     editMacroPlace(macro: MacroInfoPlace): void {
-      macro.Editable = true
+      macro.Editable = true;
     },
     submitMacroPlace(macro: MacroInfoPlace): void {
-      Reflect.deleteProperty(macro, 'Editable')
+      Reflect.deleteProperty(macro, "Editable");
     },
     newMacro(text?: string) {
-      const selectZoneId = Number(this.selectZone)
-      if (this.data.zoneId[selectZoneId] === undefined)
-        this.data.zoneId[selectZoneId] = []
+      const selectZoneId = Number(this.selectZone);
+      if (this.data.zoneId[selectZoneId] === undefined) this.data.zoneId[selectZoneId] = [];
       if (this.data.zoneId[selectZoneId]) {
         this.data.zoneId[selectZoneId].push({
-          Name: 'New Macro',
-          Text: text ?? '',
+          Name: "New Macro",
+          Text: text ?? "",
           Editable: true,
           Deletability: true,
-        })
+        });
       }
     },
-    newPlace(place?: WayMarkObj & { Name?: string, MapID?: number, Editable?: boolean }) {
-      let selectZoneId = Number(this.selectZone)
+    newPlace(place?: WayMarkObj & { Name?: string; MapID?: number; Editable?: boolean }) {
+      let selectZoneId = Number(this.selectZone);
       if (place?.MapID) {
-        const tType = getTerritoryTypeByMapID(place.MapID)
+        const tType = getTerritoryTypeByMapID(place.MapID);
         if (tType && !Number.isNaN(tType)) {
-          selectZoneId = tType
+          selectZoneId = tType;
         }
       }
 
-      if (this.data.zoneId[selectZoneId] === undefined)
-        this.data.zoneId[selectZoneId] = []
+      if (this.data.zoneId[selectZoneId] === undefined) this.data.zoneId[selectZoneId] = [];
       if (this.data.zoneId[selectZoneId]) {
         this.data.zoneId[selectZoneId]!.push({
-          Name: place?.Name ?? 'New WayMark',
+          Name: place?.Name ?? "New WayMark",
           Editable: place?.Editable ?? true,
           Deletability: true,
           Place: structuredClone(Object.assign(this.blankWaymark, place)),
-        })
+        });
       }
     },
     importPPJSON(): void {
-      ElMessageBox.prompt('输入PPJSON', 'Import PPJSON', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+      ElMessageBox.prompt("输入PPJSON", "Import PPJSON", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
         inputPattern: /^(\{.*\})$/,
-        inputErrorMessage: '无效的格式',
-      }).then((res) => {
-        const { value } = res as MessageBoxInputData
-        const json = Object.assign(this.blankWaymark, safeParseJson(value))
-        this.newPlace(json)
-        ElMessage.success('导入成功')
-      }).catch(() => {})
+        inputErrorMessage: "无效的格式",
+      })
+        .then((res) => {
+          const { value } = res as MessageBoxInputData;
+          const json = Object.assign(this.blankWaymark, safeParseJson(value));
+          this.newPlace(json);
+          ElMessage.success("导入成功");
+        })
+        .catch(() => {});
     },
     deleteMacro(macro: MacroInfoMacro | MacroInfoPlace): void {
       if (
-        ('Text' in macro && (macro?.Text ?? '').length <= 5)
-        || ('Place' in macro
-          && macro.Place.A.Active === false
-          && macro.Place.B.Active === false
-          && macro.Place.C.Active === false
-          && macro.Place.D.Active === false
-          && macro.Place.One.Active === false
-          && macro.Place.Two.Active === false
-          && macro.Place.Three.Active === false
-          && macro.Place.Four.Active === false)
+        ("Text" in macro && (macro?.Text ?? "").length <= 5) ||
+        ("Place" in macro &&
+          macro.Place.A.Active === false &&
+          macro.Place.B.Active === false &&
+          macro.Place.C.Active === false &&
+          macro.Place.D.Active === false &&
+          macro.Place.One.Active === false &&
+          macro.Place.Two.Active === false &&
+          macro.Place.Three.Active === false &&
+          macro.Place.Four.Active === false)
       ) {
-        const index = this.data.zoneId[this.selectZone]!.indexOf(macro)
-        if (index > -1)
-          this.data.zoneId[this.selectZone]!.splice(index, 1)
-      }
-      else {
-        ElMessageBox.confirm('确定要删除吗?', '警告', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning',
+        const index = this.data.zoneId[this.selectZone]!.indexOf(macro);
+        if (index > -1) this.data.zoneId[this.selectZone]!.splice(index, 1);
+      } else {
+        ElMessageBox.confirm("确定要删除吗?", "警告", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
         })
           .then(() => {
-            const index = this.data.zoneId[this.selectZone]!.indexOf(macro)
-            if (index > -1)
-              this.data.zoneId[this.selectZone]!.splice(index, 1)
+            const index = this.data.zoneId[this.selectZone]!.indexOf(macro);
+            if (index > -1) this.data.zoneId[this.selectZone]!.splice(index, 1);
           })
-          .catch(() => {})
+          .catch(() => {});
       }
     },
     exportWaymarksJson(macro: MacroInfoPlace): void {
-      const json = JSON.parse(JSON.stringify(macro.Place))
-      json.MapID = getMapIDByTerritoryType(Number(this.selectZone))
-      json.Name = macro.Name
-      copyToClipboard(
+      const json = JSON.parse(JSON.stringify(macro.Place));
+      json.MapID = getMapIDByTerritoryType(Number(this.selectZone));
+      json.Name = macro.Name;
+      void copyToClipboard(
         JSON.stringify({
           Name: json.Name,
           MapID: json.MapID,
@@ -243,127 +236,113 @@ const useMacroStore = defineStore('macro', {
           Three: json.Three,
           Four: json.Four,
         }),
-      )
-      ElMessage.success('已复制到剪贴板')
+      );
+      ElMessage.success("已复制到剪贴板");
     },
     sendMacroParty(text: string): void {
-      ElMessageBox.confirm('确定要发送到队伍频道吗?', '警告', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
+      ElMessageBox.confirm("确定要发送到队伍频道吗?", "警告", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
       })
         .then(() => {
-          macroCommand(text, 'p')
+          void macroCommand(text, "p");
         })
-        .catch(() => {})
+        .catch(() => {});
     },
     sendMacroEcho(text: string): void {
-      macroCommand(text, 'e')
+      void macroCommand(text, "e");
     },
     async doLocalWayMark(place: WayMarkObj, silent = false): Promise<void> {
       try {
-        await doWayMarks(place, true, silent)
+        await doWayMarks(place, true, silent);
         if (!silent) {
-          ElMessage.success('已尝试本地标点')
+          ElMessage.success("已尝试本地标点");
         }
-      }
-      catch (e) {
+      } catch (e) {
         if (!silent) {
-          ElMessage.error(`本地标点失败: ${(e as Error).message}` || '未知错误')
+          ElMessage.error(formatErrorMessage("本地标点失败", e));
         }
       }
     },
     async doPartyWayMark(place: WayMarkObj): Promise<void> {
       try {
-        await doWayMarks(place, false)
-        ElMessage.success('已尝试公开标点')
-      }
-      catch (e) {
-        ElMessage.error(`公开标点失败: ${(e as Error).message}` || '未知错误')
+        await doWayMarks(place, false);
+        ElMessage.success("已尝试公开标点");
+      } catch (e) {
+        ElMessage.error(formatErrorMessage("公开标点失败", e));
       }
     },
     doSlotWayMark(place: WayMarkObj): void {
       ElMessageBox({
-        title: '选择插槽',
+        title: "选择插槽",
         message: () =>
           h(ElInputNumber, {
-            'modelValue': slotIndex.value,
-            'min': 1,
-            'max': 30,
-            'size': 'large',
-            'onUpdate:modelValue': (val) => {
-              slotIndex.value = val
+            modelValue: slotIndex.value,
+            min: 1,
+            max: 30,
+            size: "large",
+            "onUpdate:modelValue": (val) => {
+              slotIndex.value = val;
             },
           }),
         showCancelButton: true,
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
       })
         .then(async () => {
           try {
-            await doInsertPreset(
-              Number(this.selectZone),
-              place,
-              slotIndex.value as Slot,
-            )
-            ElMessage.success(`已尝试写入至插槽${slotIndex.value}`)
-          }
-          catch (e) {
-            ElMessage.error(
-              `写入插槽失败: ${(e as Error).message}` || '未知错误',
-            )
+            await doInsertPreset(Number(this.selectZone), place, slotIndex.value as Slot);
+            ElMessage.success(`已尝试写入至插槽${slotIndex.value}`);
+          } catch (e) {
+            ElMessage.error(formatErrorMessage("写入插槽失败", e));
           }
         })
-        .catch(() => {})
+        .catch(() => {});
     },
     positioning(): void {
-      this.selectZone = this.data.zoneId[Number(this.zoneNow)]
-        ? this.zoneNow
-        : '-1'
+      this.selectZone = this.data.zoneId[Number(this.zoneNow)] ? this.zoneNow : "-1";
     },
-    handleChangeZone(e: {
-      zoneID: { toString: () => string }
-      zoneName: string
-    }): void {
-      this.zoneNow = e.zoneID.toString()
-      this.zoneNowName = e.zoneName
-      this.positioning()
+    handleChangeZone(e: { zoneID: { toString: () => string }; zoneName: string }): void {
+      this.zoneNow = e.zoneID.toString();
+      this.zoneNowName = e.zoneName;
+      this.positioning();
     },
     resetZone(): void {
-      ElMessageBox.confirm('确定要重置当前地图的所有标点吗？', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
+      ElMessageBox.confirm("确定要重置当前地图的所有标点吗？", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
       })
         .then(() => {
-          this.data.zoneId[this.selectZone]!.length = 0
+          this.data.zoneId[this.selectZone]!.length = 0;
           this.data.zoneId[this.selectZone]!.push(
             ...JSON.parse(JSON.stringify(defaultMacro.zoneId[this.selectZone])),
-          )
-          ElMessage.success('重置成功')
+          );
+          ElMessage.success("重置成功");
         })
-        .catch(() => {})
+        .catch(() => {});
     },
     resetAllData(): void {
-      ElMessageBox.confirm('要重置所有数据吗？', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
+      ElMessageBox.confirm("要重置所有数据吗？", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
       })
         .then(() => {
-          ElMessageBox.confirm('你确定吗？', '警告', {
-            confirmButtonText: '确定！',
-            cancelButtonText: '取消',
-            type: 'warning',
+          void ElMessageBox.confirm("你确定吗？", "警告", {
+            confirmButtonText: "确定！",
+            cancelButtonText: "取消",
+            type: "warning",
           }).then(() => {
             // localStorage.removeItem("my-macros");
-            this.data = JSON.parse(JSON.stringify(defaultMacro))
-            ElMessage.success('重置成功')
-          })
+            this.data = JSON.parse(JSON.stringify(defaultMacro));
+            ElMessage.success("重置成功");
+          });
         })
-        .catch(() => {})
+        .catch(() => {});
     },
   },
-})
+});
 
-export { useMacroStore }
+export { useMacroStore };

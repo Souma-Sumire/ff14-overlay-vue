@@ -1,1 +1,1 @@
-export type DynamicValue = number | string
+export type DynamicValue = number | string;

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { MessageBoxInputData } from 'element-plus'
-import type { BisPreset } from '@/utils/bisPresets'
-import type { BisConfig, BisRow, BisValue, LegacyBisConfig } from '@/utils/bisUtils'
-import type { LootRecord } from '@/utils/lootParser'
+import type { MessageBoxInputData } from "element-plus";
+import type { BisPreset } from "@/utils/bisPresets";
+import type { BisConfig, BisRow, BisValue, LegacyBisConfig } from "@/utils/bisUtils";
+import type { LootRecord } from "@/utils/lootParser";
 import {
   ArrowDown,
   CopyDocument,
@@ -15,311 +15,292 @@ import {
   Right,
   Setting,
   User,
-} from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { computed, nextTick, onUnmounted, ref, shallowRef, watch } from 'vue'
-import { ensureBisCountDefaults, ensureBisOffsetDefaults, normalizeBisConfigFromModel } from '@/composables/useBisConfigSync'
-import { getPresetsForRole } from '@/utils/bisPresets'
+} from "@element-plus/icons-vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { computed, nextTick, onUnmounted, ref, shallowRef, watch } from "vue";
 import {
-
+  ensureBisCountDefaults,
+  ensureBisOffsetDefaults,
+  normalizeBisConfigFromModel,
+} from "@/composables/useBisConfigSync";
+import { getPresetsForRole } from "@/utils/bisPresets";
+import {
   isPlayerComplete as checkPlayerComplete,
   DEFAULT_ROWS,
   LAYER_CONFIG,
+} from "@/utils/bisUtils";
 
-} from '@/utils/bisUtils'
+import { getRoleType, PART_ORDER, ROLE_DEFINITIONS } from "@/utils/lootParser";
 
-import { getRoleType, PART_ORDER, ROLE_DEFINITIONS } from '@/utils/lootParser'
-
-import { getCurrentWeekNumber } from '@/utils/raidWeekUtils'
-import PlayerDisplay from './PlayerDisplay.vue'
+import { getCurrentWeekNumber } from "@/utils/raidWeekUtils";
+import PlayerDisplay from "./PlayerDisplay.vue";
 
 const props = defineProps<{
-  players: string[]
-  records: LootRecord[]
-  modelValue: BisConfig | LegacyBisConfig | undefined
-  getPlayerRole?: (name: string) => string | null | undefined
-  getActualPlayer?: (p: string) => string
-  showOnlyRole?: boolean
-  getItemSlot?: (name: string) => string
-}>()
+  players: string[];
+  records: LootRecord[];
+  modelValue: BisConfig | LegacyBisConfig | undefined;
+  getPlayerRole?: (name: string) => string | null | undefined;
+  getActualPlayer?: (p: string) => string;
+  showOnlyRole?: boolean;
+  getItemSlot?: (name: string) => string;
+}>();
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', val: BisConfig): void
-}>()
+  (e: "update:modelValue", val: BisConfig): void;
+}>();
 
-const tooltipsOpen = ref<Record<string, boolean>>({})
+const tooltipsOpen = ref<Record<string, boolean>>({});
 
-const showConfigDialog = ref(false)
-const showOffsetConfigDialog = ref(false)
-const excludedPlayers = ref<Set<string>>(new Set())
-const customAllocations = ref<Record<string, string>>({})
+const showConfigDialog = ref(false);
+const showOffsetConfigDialog = ref(false);
+const excludedPlayers = ref<Set<string>>(new Set());
+const customAllocations = ref<Record<string, string>>({});
 
 const config = ref<BisConfig>({
   playerBis: {},
   needCountOffsets: {},
-})
-const recordsForCompute = shallowRef<LootRecord[]>([])
-const obtainedDetailsCache = shallowRef<Map<string, { name: string, count: number }[]>>(new Map())
-let recordsSyncTimer: ReturnType<typeof setTimeout> | null = null
-let modelEmitTimer: ReturnType<typeof setTimeout> | null = null
+});
+const recordsForCompute = shallowRef<LootRecord[]>([]);
+const obtainedDetailsCache = shallowRef<Map<string, { name: string; count: number }[]>>(new Map());
+let recordsSyncTimer: ReturnType<typeof setTimeout> | null = null;
+let modelEmitTimer: ReturnType<typeof setTimeout> | null = null;
 
-const showImportConfirmDialog = ref(false)
-const showPresetConfirmDialog = ref(false)
-const importDiffs = ref<PlayerDiff[]>([])
+const showImportConfirmDialog = ref(false);
+const showPresetConfirmDialog = ref(false);
+const importDiffs = ref<PlayerDiff[]>([]);
 const pendingPresetData = ref<{
-  player: string
-  preset: BisPreset
-  diff: PlayerDiff | null
-} | null>(null)
+  player: string;
+  preset: BisPreset;
+  diff: PlayerDiff | null;
+} | null>(null);
 
 const STATUS_MAP = {
-  pass: { text: '放弃', class: 'status-pass' },
-  need: { text: '需求', class: 'status-need' },
-  greed: { text: '贪婪', class: 'status-greed-tome' },
-  assigned: { text: '分配', class: 'status-assigned' },
-} as const
-const GROUP_END_ROW_IDS = new Set(['weapon', 'feet', 'ring'])
-const SPECIAL_ITEM_IDS = new Set(['coating', 'twine', 'tome', 'solvent'])
-const DEFAULT_ROW_BY_ID = new Map(DEFAULT_ROWS.map(row => [row.id, row] as const))
-const COUNT_ROWS = DEFAULT_ROWS.filter(r => r.type === 'count')
-const NEED_OFFSET_ROWS = DEFAULT_ROWS.filter(row => row.id !== 'random_weapon')
-const PART_ORDER_INDEX = new Map((PART_ORDER as string[]).map((v, i) => [v, i] as const))
+  pass: { text: "放弃", class: "status-pass" },
+  need: { text: "需求", class: "status-need" },
+  greed: { text: "贪婪", class: "status-greed-tome" },
+  assigned: { text: "分配", class: "status-assigned" },
+} as const;
+const GROUP_END_ROW_IDS = new Set(["weapon", "feet", "ring"]);
+const SPECIAL_ITEM_IDS = new Set(["coating", "twine", "tome", "solvent"]);
+const DEFAULT_ROW_BY_ID = new Map(DEFAULT_ROWS.map((row) => [row.id, row] as const));
+const COUNT_ROWS = DEFAULT_ROWS.filter((r) => r.type === "count");
+const NEED_OFFSET_ROWS = DEFAULT_ROWS.filter((row) => row.id !== "random_weapon");
+const PART_ORDER_INDEX = new Map((PART_ORDER as string[]).map((v, i) => [v, i] as const));
 const ROW_KEYWORDS_BY_ID = new Map(
   DEFAULT_ROWS.map((row) => {
     const keywords = row.keywords
-      .replace(/，/g, ',')
-      .split(',')
-      .map(s => s.trim())
-      .filter(Boolean)
-    return [row.id, keywords] as const
+      .replace(/，/g, ",")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    return [row.id, keywords] as const;
   }),
-)
+);
 
-type LogicStatus = 'need' | 'greed' | 'pass' | 'assigned'
+type LogicStatus = "need" | "greed" | "pass" | "assigned";
 interface LogicDetail {
-  status: LogicStatus
-  reason: string
+  status: LogicStatus;
+  reason: string;
 }
 interface ObtainedSummary {
-  counts: Record<string, Record<string, number>>
+  counts: Record<string, Record<string, number>>;
 }
 interface CellViewModel {
-  obtained: number
-  needed: number
-  statusText: string
-  reason: string
-  cellClass: string
+  obtained: number;
+  needed: number;
+  statusText: string;
+  reason: string;
+  cellClass: string;
 }
-const warnedMissingCellKeys = new Set<string>()
+const warnedMissingCellKeys = new Set<string>();
 
-function warnMissingCache(kind: 'logic' | 'cell', rowId: string, player: string) {
-  if (!import.meta.env.DEV)
-    return
-  const key = `${kind}:${rowId}:${player}`
-  if (warnedMissingCellKeys.has(key))
-    return
-  warnedMissingCellKeys.add(key)
-  console.warn(`[BisAllocator] Missing ${kind} cache for row="${rowId}", player="${player}"`)
+function warnMissingCache(kind: "logic" | "cell", rowId: string, player: string) {
+  if (!import.meta.env.DEV) return;
+  const key = `${kind}:${rowId}:${player}`;
+  if (warnedMissingCellKeys.has(key)) return;
+  warnedMissingCellKeys.add(key);
+  console.warn(`[BisAllocator] Missing ${kind} cache for row="${rowId}", player="${player}"`);
 }
 
 const layeredViewRows = computed(() => {
   return LAYER_CONFIG.map((layer) => {
-    const rows = layer.items
-      .map(id => DEFAULT_ROW_BY_ID.get(id))
-      .filter((r): r is BisRow => !!r)
+    const rows = layer.items.map((id) => DEFAULT_ROW_BY_ID.get(id)).filter((r): r is BisRow => !!r);
     return {
       name: layer.name,
       rows,
-    }
-  })
-})
+    };
+  });
+});
 
 const configRows = [...DEFAULT_ROWS]
-  .filter(r => r.id !== 'random_weapon')
+  .filter((r) => r.id !== "random_weapon")
   .sort((a, b) => {
-    const ia = PART_ORDER_INDEX.get(a.keywords) ?? -1
-    const ib = PART_ORDER_INDEX.get(b.keywords) ?? -1
-    if (ia === -1 && ib === -1)
-      return 0
-    if (ia === -1)
-      return 1
-    if (ib === -1)
-      return -1
-    return ia - ib
-  })
+    const ia = PART_ORDER_INDEX.get(a.keywords) ?? -1;
+    const ib = PART_ORDER_INDEX.get(b.keywords) ?? -1;
+    if (ia === -1 && ib === -1) return 0;
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
 const offsetLayeredRows = computed(() => {
   return LAYER_CONFIG.map((layer) => {
     const rows = layer.items
-      .map(id => DEFAULT_ROW_BY_ID.get(id))
-      .filter((r): r is BisRow => !!r && r.id !== 'random_weapon')
+      .map((id) => DEFAULT_ROW_BY_ID.get(id))
+      .filter((r): r is BisRow => !!r && r.id !== "random_weapon");
     return {
       name: layer.name,
       rows,
-    }
-  }).filter(layer => layer.rows.length > 0)
-})
+    };
+  }).filter((layer) => layer.rows.length > 0);
+});
 
 const eligiblePlayers = computed(() => {
-  return props.players.filter(isEligible)
-})
+  return props.players.filter(isEligible);
+});
 const assignedPlayerSet = computed(() => {
-  return new Set(Object.values(customAllocations.value).filter(Boolean))
-})
+  return new Set(Object.values(customAllocations.value).filter(Boolean));
+});
 const storageKeyByPlayer = computed(() => {
-  const map: Record<string, string> = {}
+  const map: Record<string, string> = {};
   for (const player of eligiblePlayers.value) {
-    map[player] = getStorageKey(player)
+    map[player] = getStorageKey(player);
   }
-  return map
-})
+  return map;
+});
 const presetsByPlayer = computed(() => {
-  const map: Record<string, ReturnType<typeof getPresetsForRole>> = {}
+  const map: Record<string, ReturnType<typeof getPresetsForRole>> = {};
   for (const player of eligiblePlayers.value) {
-    map[player] = getPresetsForRole(props.getPlayerRole?.(player))
+    map[player] = getPresetsForRole(props.getPlayerRole?.(player));
   }
-  return map
-})
+  return map;
+});
 const firstEligiblePlayerByRole = computed(() => {
-  const map: Record<string, string> = {}
+  const map: Record<string, string> = {};
   for (const player of eligiblePlayers.value) {
-    const role = props.getPlayerRole?.(player)
-    if (role && !map[role])
-      map[role] = player
+    const role = props.getPlayerRole?.(player);
+    if (role && !map[role]) map[role] = player;
   }
-  return map
-})
+  return map;
+});
 
 const obtainedSummary = computed<ObtainedSummary>(() => {
-  const counts: Record<string, Record<string, number>> = {}
+  const counts: Record<string, Record<string, number>> = {};
 
   const ensurePlayer = (player: string) => {
-    if (!counts[player])
-      counts[player] = {}
-  }
+    if (!counts[player]) counts[player] = {};
+  };
   const ensureRow = (player: string, rowId: string) => {
-    if (counts[player]![rowId] == null)
-      counts[player]![rowId] = 0
-  }
+    counts[player]![rowId] ??= 0;
+  };
 
   for (const rec of recordsForCompute.value || []) {
-    const player = props.getActualPlayer ? props.getActualPlayer(rec.player) : rec.player
-    ensurePlayer(player)
+    const player = props.getActualPlayer ? props.getActualPlayer(rec.player) : rec.player;
+    ensurePlayer(player);
     for (const row of DEFAULT_ROWS) {
-      const keywords = ROW_KEYWORDS_BY_ID.get(row.id) || []
-      const matched = row.id === 'random_weapon'
-        ? !!props.getItemSlot && props.getItemSlot(rec.item) === '随武'
-        : keywords.some(k => rec.item.includes(k))
-      if (!matched)
-        continue
-      ensureRow(player, row.id)
-      counts[player]![row.id] = (counts[player]![row.id] || 0) + 1
+      const keywords = ROW_KEYWORDS_BY_ID.get(row.id) || [];
+      const matched =
+        row.id === "random_weapon"
+          ? !!props.getItemSlot && props.getItemSlot(rec.item) === "随武"
+          : keywords.some((k) => rec.item.includes(k));
+      if (!matched) continue;
+      ensureRow(player, row.id);
+      counts[player]![row.id] = (counts[player]![row.id] || 0) + 1;
     }
   }
 
   for (const player of eligiblePlayers.value) {
-    ensurePlayer(player)
-    for (const row of DEFAULT_ROWS)
-      ensureRow(player, row.id)
+    ensurePlayer(player);
+    for (const row of DEFAULT_ROWS) ensureRow(player, row.id);
   }
 
-  return { counts }
-})
+  return { counts };
+});
 
-const expandedPlayerPresets = ref<Set<string>>(new Set())
+const expandedPlayerPresets = ref<Set<string>>(new Set());
 
 const isConfigComplete = computed(() => {
   for (const role of ROLE_DEFINITIONS) {
-    if (!checkPlayerComplete(config.value, role))
-      return false
+    if (!checkPlayerComplete(config.value, role)) return false;
   }
-  return true
-})
+  return true;
+});
 
 const incompletePlayerCount = computed(() => {
-  return ROLE_DEFINITIONS.filter(
-    role => !checkPlayerComplete(config.value, role),
-  ).length
-})
+  return ROLE_DEFINITIONS.filter((role) => !checkPlayerComplete(config.value, role)).length;
+});
 
 function getMacroInfo() {
-  const now = new Date()
+  const now = new Date();
   return {
     weekNum: getFF14WeekNumber(),
     dateStr: `${now.getMonth() + 1}月${now.getDate()}日`,
-  }
+  };
 }
 
 function handleCopyAllMacro() {
-  const { weekNum, dateStr } = getMacroInfo()
-  const lines = [`/p <${dateStr} 第${weekNum}周分配优先级>`]
+  const { weekNum, dateStr } = getMacroInfo();
+  const lines = [`/p <${dateStr} 第${weekNum}周分配优先级>`];
 
   layeredViewRows.value.forEach((layer) => {
-    lines.push(...generateEquipLines(layer.rows))
-  })
+    lines.push(...generateEquipLines(layer.rows));
+  });
 
-  const text = lines.join('\n')
-  if (!text)
-    return
+  const text = lines.join("\n");
+  if (!text) return;
 
   navigator.clipboard
     .writeText(text)
     .then(() => {
-      ElMessage.success(`已复制全层宏 (共${lines.length}行)`)
+      ElMessage.success(`已复制全层宏 (共${lines.length}行)`);
     })
     .catch(() => {
-      ElMessage.error('复制失败')
-    })
+      ElMessage.error("复制失败");
+    });
 }
 
 function generateEquipLines(rows: BisRow[]): string[] {
-  const lines: string[] = []
+  const lines: string[] = [];
   rows.forEach((row) => {
     // 随武不进入分配宏
-    if (row.id === 'random_weapon')
-      return
+    if (row.id === "random_weapon") return;
 
-    const needs: string[] = []
-    const greeds: string[] = []
-    const activePlayers = eligiblePlayers.value.filter(p => !excludedPlayers.value.has(p))
+    const needs: string[] = [];
+    const greeds: string[] = [];
+    const activePlayers = eligiblePlayers.value.filter((p) => !excludedPlayers.value.has(p));
 
     // 队长分配具有最高优先级
     if (customAllocations.value[row.id]) {
-      const p = customAllocations.value[row.id]!
-      let displayName = props.getPlayerRole?.(p) || p
-      displayName = displayName.replace(/^LEFT:/, '').trim()
-      lines.push(`/p ${row.name}：${displayName} (队长分配)`)
-      return
+      const p = customAllocations.value[row.id]!;
+      let displayName = props.getPlayerRole?.(p) || p;
+      displayName = displayName.replace(/^LEFT:/, "").trim();
+      lines.push(`/p ${row.name}：${displayName} (队长分配)`);
+      return;
     }
 
     activePlayers.forEach((p) => {
-      let displayName = props.getPlayerRole?.(p) || p
-      displayName = displayName.replace(/^LEFT:/, '').trim()
+      let displayName = props.getPlayerRole?.(p) || p;
+      displayName = displayName.replace(/^LEFT:/, "").trim();
 
-      const status = getLogicStatus(p, row)
-      if (status === 'need') {
-        needs.push(displayName)
+      const status = getLogicStatus(p, row);
+      if (status === "need") {
+        needs.push(displayName);
+      } else if (status === "greed") {
+        greeds.push(displayName);
       }
-      else if (status === 'greed') {
-        greeds.push(displayName)
-      }
-    })
+    });
 
-    let content = ''
+    let content = "";
     if (needs.length > 0) {
-      content = needs.join('、')
-    }
-    else if (greeds.length > 0) {
-      content = greeds.length === activePlayers.length
-        ? '随便ROLL'
-        : greeds.join('、')
-    }
-    else {
-      content = '随便ROLL'
+      content = needs.join("、");
+    } else if (greeds.length > 0) {
+      content = greeds.length === activePlayers.length ? "随便ROLL" : greeds.join("、");
+    } else {
+      content = "随便ROLL";
     }
 
-    lines.push(`/p ${row.name}：${content}`)
-  })
-  return lines
+    lines.push(`/p ${row.name}：${content}`);
+  });
+  return lines;
 }
 
 function formatMacroLine(line: string): string {
@@ -330,250 +311,233 @@ function formatMacroLine(line: string): string {
 
   let html = line
     .replace(/^(\/p)\s+/, '<span class="macro-cmd">$1</span> ')
-    .replace(/^(.+?)：/, '<span class="macro-item">$1</span>：')
+    .replace(/^(.+?)：/, '<span class="macro-item">$1</span>：');
 
   // 高亮职能组
-  html = html.replace(/\b(MT|ST)\b/g, '<span class="role-tank">$1</span>')
-  html = html.replace(/\b(H1|H2)\b/g, '<span class="role-healer">$1</span>')
-  html = html.replace(/\b(D[1-4])\b/g, '<span class="role-dps">$1</span>')
+  html = html.replace(/\b(MT|ST)\b/g, '<span class="role-tank">$1</span>');
+  html = html.replace(/\b(H1|H2)\b/g, '<span class="role-healer">$1</span>');
+  html = html.replace(/\b(D[1-4])\b/g, '<span class="role-dps">$1</span>');
 
-  return html
+  return html;
 }
 
-function getLayerMacroLines(layer: { name: string, rows: BisRow[] }) {
-  const { weekNum, dateStr } = getMacroInfo()
-  const header = `/p <${dateStr} 第${weekNum}周 ${layer.name}分配>`
-  return [header, ...generateEquipLines(layer.rows)]
+function getLayerMacroLines(layer: { name: string; rows: BisRow[] }) {
+  const { weekNum, dateStr } = getMacroInfo();
+  const header = `/p <${dateStr} 第${weekNum}周 ${layer.name}分配>`;
+  return [header, ...generateEquipLines(layer.rows)];
 }
 const layerMacroLinesMap = computed(() => {
-  const map: Record<string, string[]> = {}
+  const map: Record<string, string[]> = {};
   for (const layer of layeredViewRows.value) {
-    map[layer.name] = getLayerMacroLines(layer)
+    map[layer.name] = getLayerMacroLines(layer);
   }
-  return map
-})
+  return map;
+});
 
 function getFF14WeekNumber(): number {
-  if (!props.records || props.records.length === 0)
-    return 1
-  return getCurrentWeekNumber(props.records.map(r => r.timestamp))
+  if (!props.records || props.records.length === 0) return 1;
+  return getCurrentWeekNumber(props.records.map((r) => r.timestamp));
 }
 
-function handleCopyMacro(command: { name: string, rows: BisRow[] } | 'all') {
-  if (command === 'all') {
-    handleCopyAllMacro()
-    return
+function handleCopyMacro(command: { name: string; rows: BisRow[] } | "all") {
+  if (command === "all") {
+    handleCopyAllMacro();
+    return;
   }
 
-  const { weekNum, dateStr } = getMacroInfo()
-  const lines = [`/p <${dateStr} 第${weekNum}周 ${command.name}分配优先级>`]
-  lines.push(...generateEquipLines(command.rows))
-  const text = lines.join('\n')
-  const message = `已复制 ${command.name} 分配宏`
+  const { weekNum, dateStr } = getMacroInfo();
+  const lines = [`/p <${dateStr} 第${weekNum}周 ${command.name}分配优先级>`];
+  lines.push(...generateEquipLines(command.rows));
+  const text = lines.join("\n");
+  const message = `已复制 ${command.name} 分配宏`;
 
-  if (!text)
-    return
+  if (!text) return;
 
   navigator.clipboard
     .writeText(text)
     .then(() => {
-      ElMessage.success(message)
+      ElMessage.success(message);
     })
     .catch(() => {
-      ElMessage.error('复制失败')
-    })
+      ElMessage.error("复制失败");
+    });
 }
 
 function isPlayerAssigned(player: string): boolean {
-  return assignedPlayerSet.value.has(player)
+  return assignedPlayerSet.value.has(player);
 }
 
 function togglePlayerExclusion(player: string) {
   if (excludedPlayers.value.has(player)) {
-    excludedPlayers.value.delete(player)
-  }
-  else {
-    excludedPlayers.value.add(player)
+    excludedPlayers.value.delete(player);
+  } else {
+    excludedPlayers.value.add(player);
   }
 }
 
 function getStorageKey(player: string): string {
-  if (!props.getPlayerRole)
-    return player
-  const role = props.getPlayerRole(player)
-  if (role && !role.startsWith('LEFT:')) {
-    return role
+  if (!props.getPlayerRole) return player;
+  const role = props.getPlayerRole(player);
+  if (role && !role.startsWith("LEFT:")) {
+    return role;
   }
-  return player
+  return player;
 }
 
 function exportBisData() {
-  const parts = ROLE_DEFINITIONS.filter(
-    role => !!config.value.playerBis[role],
-  ).map((role) => {
+  const parts = ROLE_DEFINITIONS.filter((role) => !!config.value.playerBis[role]).map((role) => {
     const dataBinary = DEFAULT_ROWS.map((row) => {
-      const val = config.value.playerBis[role]?.[row.id]
-      if (row.type === 'toggle') {
-        return val === 'raid' ? '1' : '0'
+      const val = config.value.playerBis[role]?.[row.id];
+      if (row.type === "toggle") {
+        return val === "raid" ? "1" : "0";
+      } else {
+        return typeof val === "number" && val > 0 ? "1" : "0";
       }
-      else {
-        return typeof val === 'number' && val > 0 ? '1' : '0'
-      }
-    }).join('')
-    const data = Number.parseInt(dataBinary, 2).toString(36)
-    return `${role}:${data}`
-  })
-  const str = parts.join(';')
+    }).join("");
+    const data = Number.parseInt(dataBinary, 2).toString(36);
+    return `${role}:${data}`;
+  });
+  const str = parts.join(";");
   navigator.clipboard.writeText(str).then(() => {
-    ElMessage.success('BIS 设置已复制到剪贴板')
-  })
+    ElMessage.success("BIS 设置已复制到剪贴板");
+  });
 }
 
 function importBisData() {
-  ElMessageBox.prompt('请粘贴 BIS 设置字符串', '导入 BIS 设置', {
-    confirmButtonText: '下一步',
-    cancelButtonText: '取消',
-    inputType: 'textarea',
-    inputPlaceholder: '在此粘贴...',
-    customClass: 'bis-import-message-box',
+  ElMessageBox.prompt("请粘贴 BIS 设置字符串", "导入 BIS 设置", {
+    confirmButtonText: "下一步",
+    cancelButtonText: "取消",
+    inputType: "textarea",
+    inputPlaceholder: "在此粘贴...",
+    customClass: "bis-import-message-box",
     inputValidator: (value) => {
-      if (!value)
-        return '内容不能为空'
-      const { error } = parseBisImportEntries(value)
-      return error || true
+      if (!value) return "内容不能为空";
+      const { error } = parseBisImportEntries(value);
+      return error || true;
     },
   })
     .then((res) => {
-      const { value } = res as MessageBoxInputData
-      if (!value)
-        return
-      parseAndPreviewBisData(value)
+      const { value } = res as MessageBoxInputData;
+      if (!value) return;
+      parseAndPreviewBisData(value);
     })
     .catch(() => {
       // 用户取消
-    })
+    });
 }
 
 interface BisChange {
-  label: string
-  oldVal: string
-  newVal: string
+  label: string;
+  oldVal: string;
+  newVal: string;
 }
 
 interface PlayerDiff {
-  name: string
-  role: string
-  isNew: boolean
-  changes: BisChange[]
-  newConfig: Record<string, BisValue>
+  name: string;
+  role: string;
+  isNew: boolean;
+  changes: BisChange[];
+  newConfig: Record<string, BisValue>;
 }
 
 interface ParsedBisImportEntry {
-  role: string
-  data: string
+  role: string;
+  data: string;
 }
 
 function parseBisImportEntries(rawInput: string): {
-  entries: ParsedBisImportEntry[]
-  error?: string
+  entries: ParsedBisImportEntry[];
+  error?: string;
 } {
   const parts = rawInput
     .trim()
-    .split(';')
-    .map(p => p.trim())
-    .filter(Boolean)
+    .split(";")
+    .map((p) => p.trim())
+    .filter(Boolean);
 
   if (parts.length === 0) {
-    return { entries: [], error: '格式错误：无法识别有效的分隔符' }
+    return { entries: [], error: "格式错误：无法识别有效的分隔符" };
   }
 
-  const entries: ParsedBisImportEntry[] = []
+  const entries: ParsedBisImportEntry[] = [];
   for (const part of parts) {
-    const segs = part.split(':')
+    const segs = part.split(":");
     if (segs.length !== 2) {
-      return { entries: [], error: `数据格式错误："${part.slice(0, 10)}..."` }
+      return { entries: [], error: `数据格式错误："${part.slice(0, 10)}..."` };
     }
 
-    const role = segs[0] ?? ''
-    const data = segs[1] ?? ''
+    const role = segs[0] ?? "";
+    const data = segs[1] ?? "";
     if (!data || !/^[0-9a-z]+$/i.test(data)) {
-      return { entries: [], error: `数据校验失败：职位 "${role || '未知'}" 的设置已损坏` }
+      return { entries: [], error: `数据校验失败：职位 "${role || "未知"}" 的设置已损坏` };
     }
 
     if (ROLE_DEFINITIONS.includes(role as any)) {
-      entries.push({ role, data })
+      entries.push({ role, data });
     }
   }
 
   if (entries.length === 0) {
-    return { entries, error: '未找到匹配当前团队的有效设置数据' }
+    return { entries, error: "未找到匹配当前团队的有效设置数据" };
   }
 
-  return { entries }
+  return { entries };
 }
 
 function getValDisplay(row: BisRow, val: BisValue | undefined): string {
-  if (row.type === 'toggle') {
-    if (val === 'raid')
-      return '零式'
-    if (val === 'tome')
-      return '点数'
-    return '未设置'
+  if (row.type === "toggle") {
+    if (val === "raid") return "零式";
+    if (val === "tome") return "点数";
+    return "未设置";
   }
-  if (typeof val !== 'number')
-    throw new Error(`[BisAllocator] 数据异常: ${row.name} 应为数字，实际为 ${val}`)
-  return val.toString()
+  if (typeof val !== "number")
+    throw new Error(`[BisAllocator] 数据异常: ${row.name} 应为数字，实际为 ${val}`);
+  return val.toString();
 }
 
 function getValClass(val: string) {
-  if (val === '零式')
-    return 'is-raid'
-  if (val === '点数')
-    return 'is-tome'
-  return ''
+  if (val === "零式") return "is-raid";
+  if (val === "点数") return "is-tome";
+  return "";
 }
 
 function parseAndPreviewBisData(rawInput: string) {
   try {
-    const { entries, error } = parseBisImportEntries(rawInput)
-    if (error)
-      throw new Error(error)
+    const { entries, error } = parseBisImportEntries(rawInput);
+    if (error) throw new Error(error);
 
-    const diffs: PlayerDiff[] = []
+    const diffs: PlayerDiff[] = [];
 
     entries.forEach(({ role, data }) => {
       // 找到本地对应职位的玩家名（用于预览显示）
-      const pName = firstEligiblePlayerByRole.value[role] || role
+      const pName = firstEligiblePlayerByRole.value[role] || role;
 
-      const dataBinary = Number.parseInt(data, 36)
-        .toString(2)
-        .padStart(DEFAULT_ROWS.length, '0')
+      const dataBinary = Number.parseInt(data, 36).toString(2).padStart(DEFAULT_ROWS.length, "0");
 
-      const newConfig: Record<string, BisValue> = {}
+      const newConfig: Record<string, BisValue> = {};
       DEFAULT_ROWS.forEach((row, idx) => {
-        const char = dataBinary[idx]
-        if (row.type === 'toggle') {
-          newConfig[row.id] = char === '1' ? 'raid' : 'tome'
+        const char = dataBinary[idx];
+        if (row.type === "toggle") {
+          newConfig[row.id] = char === "1" ? "raid" : "tome";
+        } else {
+          newConfig[row.id] = char === "1" ? 1 : 0;
         }
-        else {
-          newConfig[row.id] = char === '1' ? 1 : 0
-        }
-      })
+      });
 
-      const currentConfig = config.value.playerBis[role] || {}
-      const changes: BisChange[] = []
-      let hasChanges = false
+      const currentConfig = config.value.playerBis[role] || {};
+      const changes: BisChange[] = [];
+      let hasChanges = false;
 
       DEFAULT_ROWS.forEach((row) => {
-        const oldV = currentConfig[row.id]
-        const newV = newConfig[row.id]
-        const sOld = getValDisplay(row, oldV)
-        const sNew = getValDisplay(row, newV)
+        const oldV = currentConfig[row.id];
+        const newV = newConfig[row.id];
+        const sOld = getValDisplay(row, oldV);
+        const sNew = getValDisplay(row, newV);
         if (sOld !== sNew) {
-          hasChanges = true
-          changes.push({ label: row.name, oldVal: sOld, newVal: sNew })
+          hasChanges = true;
+          changes.push({ label: row.name, oldVal: sOld, newVal: sNew });
         }
-      })
+      });
 
       if (hasChanges) {
         diffs.push({
@@ -582,442 +546,439 @@ function parseAndPreviewBisData(rawInput: string) {
           isNew: Object.keys(currentConfig).length === 0,
           changes,
           newConfig,
-        })
+        });
       }
-    })
+    });
 
     if (diffs.length === 0) {
-      ElMessage.info('未检测到有效的设置变更。')
-      return
+      ElMessage.info("未检测到有效的设置变更。");
+      return;
     }
 
-    importDiffs.value = diffs
-    showImportConfirmDialog.value = true
-  }
-  catch (e: any) {
-    console.error(e)
-    ElMessage.error(e.message || '解析失败')
+    importDiffs.value = diffs;
+    showImportConfirmDialog.value = true;
+  } catch (e: any) {
+    console.error(e);
+    ElMessage.error(e.message || "解析失败");
   }
 }
 
 function confirmImportBis() {
-  confirmImportAction()
+  confirmImportAction();
 }
 
 function confirmImportAction() {
-  const newPlayerBis = { ...config.value.playerBis }
+  const newPlayerBis = { ...config.value.playerBis };
   importDiffs.value.forEach((diff) => {
     newPlayerBis[diff.role] = {
       ...newPlayerBis[diff.role],
       ...diff.newConfig,
-    }
-  })
-  config.value.playerBis = newPlayerBis
-  showImportConfirmDialog.value = false
-  ElMessage.success(`成功更新 ${importDiffs.value.length} 个职位的配置`)
+    };
+  });
+  config.value.playerBis = newPlayerBis;
+  showImportConfirmDialog.value = false;
+  ElMessage.success(`成功更新 ${importDiffs.value.length} 个职位的配置`);
 }
 
 function setBis(player: string, rowId: string, type: BisValue) {
-  const storageKey = getStorageKey(player)
-  if (!config.value.playerBis[storageKey])
-    config.value.playerBis[storageKey] = {}
-  const current = config.value.playerBis[storageKey]![rowId]
+  const storageKey = getStorageKey(player);
+  if (!config.value.playerBis[storageKey]) config.value.playerBis[storageKey] = {};
+  const current = config.value.playerBis[storageKey]![rowId];
   if (current === type) {
-    delete config.value.playerBis[storageKey]![rowId]
-  }
-  else {
-    config.value.playerBis[storageKey]![rowId] = type
+    delete config.value.playerBis[storageKey]![rowId];
+  } else {
+    config.value.playerBis[storageKey]![rowId] = type;
   }
 }
 
 function setNeededCount(player: string, rowId: string, count: number) {
-  const storageKey = getStorageKey(player)
-  if (!config.value.playerBis[storageKey])
-    config.value.playerBis[storageKey] = {}
-  config.value.playerBis[storageKey]![rowId] = count
+  const storageKey = getStorageKey(player);
+  if (!config.value.playerBis[storageKey]) config.value.playerBis[storageKey] = {};
+  config.value.playerBis[storageKey]![rowId] = count;
 }
 
 function normalizeOffsetValue(value: number | null | undefined): number {
-  if (value == null || Number.isNaN(value))
-    return 0
-  return Math.trunc(value)
+  if (value == null || Number.isNaN(value)) return 0;
+  return Math.trunc(value);
 }
 
 function getNeedCountOffset(player: string, rowId: string): number {
-  if (rowId === 'random_weapon')
-    return 0
-  return config.value.needCountOffsets[getStorageKey(player)]?.[rowId] || 0
+  if (rowId === "random_weapon") return 0;
+  return config.value.needCountOffsets[getStorageKey(player)]?.[rowId] || 0;
 }
 
 function setNeedCountOffset(player: string, rowId: string, value: number | null | undefined) {
-  if (rowId === 'random_weapon')
-    return
+  if (rowId === "random_weapon") return;
 
-  const storageKey = getStorageKey(player)
-  if (!config.value.needCountOffsets[storageKey])
-    config.value.needCountOffsets[storageKey] = {}
-  config.value.needCountOffsets[storageKey]![rowId] = normalizeOffsetValue(value)
+  const storageKey = getStorageKey(player);
+  if (!config.value.needCountOffsets[storageKey]) config.value.needCountOffsets[storageKey] = {};
+  config.value.needCountOffsets[storageKey]![rowId] = normalizeOffsetValue(value);
 }
 
 function getBaseNeedCount(player: string, row: BisRow): number {
-  if (row.id === 'random_weapon')
-    return 0
-  if (row.type === 'count')
-    return getNeededCount(player, row.id)
-  return getBisValue(player, row.id) === 'raid' ? 1 : 0
+  if (row.id === "random_weapon") return 0;
+  if (row.type === "count") return getNeededCount(player, row.id);
+  return getBisValue(player, row.id) === "raid" ? 1 : 0;
 }
 
 function getAdjustedNeedCount(player: string, row: BisRow): number {
-  if (row.id === 'random_weapon')
-    return 0
-  return Math.max(0, getBaseNeedCount(player, row) + getNeedCountOffset(player, row.id))
+  if (row.id === "random_weapon") return 0;
+  return Math.max(0, getBaseNeedCount(player, row) + getNeedCountOffset(player, row.id));
 }
 
 function applyPreset(player: string, preset: BisPreset) {
-  const storageKey = getStorageKey(player)
-  const currentConfig = config.value.playerBis[storageKey] || {}
-  const newConfig = { ...preset.config }
+  const storageKey = getStorageKey(player);
+  const currentConfig = config.value.playerBis[storageKey] || {};
+  const newConfig = { ...preset.config };
 
-  const changes: BisChange[] = []
+  const changes: BisChange[] = [];
   DEFAULT_ROWS.forEach((row) => {
-    if (row.id === 'random_weapon')
-      return
-    const oldV = currentConfig[row.id]
-    const newV = newConfig[row.id]
+    if (row.id === "random_weapon") return;
+    const oldV = currentConfig[row.id];
+    const newV = newConfig[row.id];
 
-    const sOld = getValDisplay(row, oldV)
-    const sNew = getValDisplay(row, newV)
+    const sOld = getValDisplay(row, oldV);
+    const sNew = getValDisplay(row, newV);
 
     if (sOld !== sNew) {
       changes.push({
         label: row.name,
         oldVal: sOld,
         newVal: sNew,
-      })
+      });
     }
-  })
+  });
 
   if (changes.length === 0) {
-    ElMessage.info('当前设置与预设相同，无需更改')
-    return
+    ElMessage.info("当前设置与预设相同，无需更改");
+    return;
   }
 
   // 如果没有任何装备部位(toggle类型)被选择过，则视为全新配置，直接应用
   const hasPreviousSelection = DEFAULT_ROWS.some(
-    row => row.type === 'toggle' && (currentConfig[row.id] === 'raid' || currentConfig[row.id] === 'tome'),
-  )
+    (row) =>
+      row.type === "toggle" &&
+      (currentConfig[row.id] === "raid" || currentConfig[row.id] === "tome"),
+  );
 
   if (!hasPreviousSelection) {
-    if (!config.value.playerBis[storageKey])
-      config.value.playerBis[storageKey] = {}
-    Object.assign(config.value.playerBis[storageKey], newConfig)
-    ElMessage.success(`已应用预设: ${preset.name} (${player})`)
-    return
+    if (!config.value.playerBis[storageKey]) config.value.playerBis[storageKey] = {};
+    Object.assign(config.value.playerBis[storageKey], newConfig);
+    ElMessage.success(`已应用预设: ${preset.name} (${player})`);
+    return;
   }
 
   const diff: PlayerDiff = {
     name: player,
-    role: props.getPlayerRole?.(player) || 'Unknown',
+    role: props.getPlayerRole?.(player) || "Unknown",
     isNew: Object.keys(currentConfig).length === 0,
     changes,
     newConfig,
-  }
+  };
 
-  pendingPresetData.value = { player, preset, diff }
-  showPresetConfirmDialog.value = true
+  pendingPresetData.value = { player, preset, diff };
+  showPresetConfirmDialog.value = true;
 }
 
 function confirmApplyPreset() {
-  if (!pendingPresetData.value?.diff)
-    return
+  if (!pendingPresetData.value?.diff) return;
 
-  const { player, preset, diff } = pendingPresetData.value
-  const storageKey = getStorageKey(player)
+  const { player, preset, diff } = pendingPresetData.value;
+  const storageKey = getStorageKey(player);
 
   if (!config.value.playerBis[storageKey]) {
-    config.value.playerBis[storageKey] = {}
+    config.value.playerBis[storageKey] = {};
   }
 
-  Object.assign(config.value.playerBis[storageKey], diff.newConfig)
+  Object.assign(config.value.playerBis[storageKey], diff.newConfig);
 
-  showPresetConfirmDialog.value = false
-  pendingPresetData.value = null
-  ElMessage.success(`已应用预设: ${preset.name} (${player})`)
+  showPresetConfirmDialog.value = false;
+  pendingPresetData.value = null;
+  ElMessage.success(`已应用预设: ${preset.name} (${player})`);
 }
 
 function getObtainedItemsDetail(player: string, row: BisRow) {
-  const cacheKey = `${player}|${row.id}`
-  const cached = obtainedDetailsCache.value.get(cacheKey)
-  if (cached)
-    return cached
+  const cacheKey = `${player}|${row.id}`;
+  const cached = obtainedDetailsCache.value.get(cacheKey);
+  if (cached) return cached;
 
-  const detailsMap: Record<string, number> = {}
+  const detailsMap: Record<string, number> = {};
   for (const rec of recordsForCompute.value || []) {
-    const actual = props.getActualPlayer ? props.getActualPlayer(rec.player) : rec.player
-    if (actual !== player)
-      continue
+    const actual = props.getActualPlayer ? props.getActualPlayer(rec.player) : rec.player;
+    if (actual !== player) continue;
 
-    const matched = row.id === 'random_weapon'
-      ? !!props.getItemSlot && props.getItemSlot(rec.item) === '随武'
-      : (ROW_KEYWORDS_BY_ID.get(row.id) || []).some(k => rec.item.includes(k))
-    if (!matched)
-      continue
+    const matched =
+      row.id === "random_weapon"
+        ? !!props.getItemSlot && props.getItemSlot(rec.item) === "随武"
+        : (ROW_KEYWORDS_BY_ID.get(row.id) || []).some((k) => rec.item.includes(k));
+    if (!matched) continue;
 
-    detailsMap[rec.item] = (detailsMap[rec.item] || 0) + 1
+    detailsMap[rec.item] = (detailsMap[rec.item] || 0) + 1;
   }
 
-  const result = Object.entries(detailsMap).map(([name, count]) => ({ name, count }))
-  obtainedDetailsCache.value.set(cacheKey, result)
-  return result
+  const result = Object.entries(detailsMap).map(([name, count]) => ({ name, count }));
+  obtainedDetailsCache.value.set(cacheKey, result);
+  return result;
 }
 
 function formatOffset(offset: number): string {
-  return offset > 0 ? `+${offset}` : `${offset}`
+  return offset > 0 ? `+${offset}` : `${offset}`;
 }
 
 function getBaseLogicDetailsFor(
   player: string,
   row: BisRow,
   rawObtainedCount: number,
-): { status: 'need' | 'greed' | 'pass', reason: string } {
-  const offset = getNeedCountOffset(player, row.id)
-  const neededCount = getAdjustedNeedCount(player, row)
-  const offsetDesc = offset === 0 ? '' : `（基础需求偏移 ${formatOffset(offset)}）`
+): { status: "need" | "greed" | "pass"; reason: string } {
+  const offset = getNeedCountOffset(player, row.id);
+  const neededCount = getAdjustedNeedCount(player, row);
+  const offsetDesc = offset === 0 ? "" : `（基础需求偏移 ${formatOffset(offset)}）`;
 
-  if (row.type === 'count') {
+  if (row.type === "count") {
     if (rawObtainedCount >= neededCount) {
-      return { status: 'pass', reason: `按 ${rawObtainedCount}/${neededCount} 判定为满足${offsetDesc}` }
+      return {
+        status: "pass",
+        reason: `按 ${rawObtainedCount}/${neededCount} 判定为满足${offsetDesc}`,
+      };
     }
-    return { status: 'need', reason: `按 ${rawObtainedCount}/${neededCount} 判定为需求${offsetDesc}` }
+    return {
+      status: "need",
+      reason: `按 ${rawObtainedCount}/${neededCount} 判定为需求${offsetDesc}`,
+    };
   }
 
   if (rawObtainedCount < neededCount) {
-    return { status: 'need', reason: `按 ${rawObtainedCount}/${neededCount} 判定为需求${offsetDesc}` }
+    return {
+      status: "need",
+      reason: `按 ${rawObtainedCount}/${neededCount} 判定为需求${offsetDesc}`,
+    };
   }
 
-  const val = getBisValue(player, row.id)
-  if (val === 'raid')
-    return { status: 'pass', reason: offsetDesc ? `已满足零式需求${offsetDesc}` : '已满足零式需求' }
+  const val = getBisValue(player, row.id);
+  if (val === "raid")
+    return {
+      status: "pass",
+      reason: offsetDesc ? `已满足零式需求${offsetDesc}` : "已满足零式需求",
+    };
 
   // tome: 默认贪婪；若配置了正偏移导致需求 > 0，在上方会走 need
   if (neededCount === 0 && rawObtainedCount === 0) {
     return {
-      status: 'greed',
-      reason: offsetDesc ? `BIS 设为“点数”，且偏移后需求为 0${offsetDesc}` : 'BIS 设为“点数” (贪婪，未获得)',
-    }
+      status: "greed",
+      reason: offsetDesc
+        ? `BIS 设为“点数”，且偏移后需求为 0${offsetDesc}`
+        : "BIS 设为“点数” (贪婪，未获得)",
+    };
   }
 
-  return { status: 'pass', reason: offsetDesc ? `偏移后视为需求已满足${offsetDesc}` : '偏移后视为需求已满足' }
+  return {
+    status: "pass",
+    reason: offsetDesc ? `偏移后视为需求已满足${offsetDesc}` : "偏移后视为需求已满足",
+  };
 }
 
 const logicDetailsByCell = computed(() => {
-  const result: Record<string, Record<string, LogicDetail>> = {}
+  const result: Record<string, Record<string, LogicDetail>> = {};
 
   for (const row of DEFAULT_ROWS) {
-    result[row.id] = {}
-    const customAlloc = customAllocations.value[row.id]
+    result[row.id] = {};
+    const customAlloc = customAllocations.value[row.id];
 
-    let minObtained = Infinity
-    let allActivePass = false
+    let minObtained = Infinity;
+    let allActivePass = false;
 
-    if (SPECIAL_ITEM_IDS.has(row.id) && row.type === 'count') {
+    if (SPECIAL_ITEM_IDS.has(row.id) && row.type === "count") {
       const activeStatuses = eligiblePlayers.value
-        .filter(p => !excludedPlayers.value.has(p))
+        .filter((p) => !excludedPlayers.value.has(p))
         .map((p) => {
-          const rawObtained = obtainedSummary.value.counts[p]?.[row.id] || 0
-          const needed = getAdjustedNeedCount(p, row)
+          const rawObtained = obtainedSummary.value.counts[p]?.[row.id] || 0;
+          const needed = getAdjustedNeedCount(p, row);
           return {
             p,
             rawObtained,
-            status: rawObtained >= needed ? 'pass' : 'need' as const,
-          }
-        })
+            status: rawObtained >= needed ? "pass" : ("need" as const),
+          };
+        });
 
       if (activeStatuses.length > 0) {
-        allActivePass = activeStatuses.every(x => x.status === 'pass')
+        allActivePass = activeStatuses.every((x) => x.status === "pass");
         if (allActivePass) {
-          minObtained = Math.min(...activeStatuses.map(x => x.rawObtained))
+          minObtained = Math.min(...activeStatuses.map((x) => x.rawObtained));
         }
       }
     }
 
     for (const player of eligiblePlayers.value) {
       if (customAlloc) {
-        result[row.id]![player] = customAlloc === player
-          ? { status: 'assigned', reason: '队长指定分配 (最高优先级)' }
-          : { status: 'pass', reason: '队长已指定给他人' }
-        continue
+        result[row.id]![player] =
+          customAlloc === player
+            ? { status: "assigned", reason: "队长指定分配 (最高优先级)" }
+            : { status: "pass", reason: "队长已指定给他人" };
+        continue;
       }
 
       if (excludedPlayers.value.has(player)) {
-        result[row.id]![player] = { status: 'pass', reason: '玩家已请假/被排除' }
-        continue
+        result[row.id]![player] = { status: "pass", reason: "玩家已请假/被排除" };
+        continue;
       }
 
-      const rawObtained = obtainedSummary.value.counts[player]?.[row.id] || 0
-      if (SPECIAL_ITEM_IDS.has(row.id) && row.type === 'count' && allActivePass) {
-        result[row.id]![player] = rawObtained === minObtained
-          ? { status: 'greed', reason: `全员需求满足，作为获得最少者 (${rawObtained}个) 兜底贪婪` }
-          : { status: 'pass', reason: `全员需求满足，但不是获得最少者 (${rawObtained} > ${minObtained})` }
-        continue
+      const rawObtained = obtainedSummary.value.counts[player]?.[row.id] || 0;
+      if (SPECIAL_ITEM_IDS.has(row.id) && row.type === "count" && allActivePass) {
+        result[row.id]![player] =
+          rawObtained === minObtained
+            ? {
+                status: "greed",
+                reason: `全员需求满足，作为获得最少者 (${rawObtained}个) 兜底贪婪`,
+              }
+            : {
+                status: "pass",
+                reason: `全员需求满足，但不是获得最少者 (${rawObtained} > ${minObtained})`,
+              };
+        continue;
       }
 
-      result[row.id]![player] = getBaseLogicDetailsFor(player, row, rawObtained)
+      result[row.id]![player] = getBaseLogicDetailsFor(player, row, rawObtained);
     }
   }
 
-  return result
-})
+  return result;
+});
 const cellViewByRowId = computed(() => {
-  const map: Record<string, Record<string, CellViewModel>> = {}
+  const map: Record<string, Record<string, CellViewModel>> = {};
   for (const row of DEFAULT_ROWS) {
-    map[row.id] = {}
+    map[row.id] = {};
     for (const player of eligiblePlayers.value) {
-      const rawObtained = obtainedSummary.value.counts[player]?.[row.id] || 0
-      const obtained = rawObtained
-      const needed = row.type === 'count' ? getAdjustedNeedCount(player, row) : 0
-      const logicDetail = logicDetailsByCell.value[row.id]?.[player]
-      const status = logicDetail?.status || 'pass'
-      const baseClass = row.id === 'random_weapon'
-        ? (obtained === 0 ? 'status-need' : 'status-rw-obtained')
-        : (STATUS_MAP[status]?.class || '')
-      const cellClass = excludedPlayers.value.has(player) ? `${baseClass} is-excluded` : baseClass
-      const reason = row.id === 'random_weapon'
-        ? `累计获得 ${obtained} 个随武`
-        : (logicDetail?.reason || '未命中判定缓存')
+      const rawObtained = obtainedSummary.value.counts[player]?.[row.id] || 0;
+      const obtained = rawObtained;
+      const needed = row.type === "count" ? getAdjustedNeedCount(player, row) : 0;
+      const logicDetail = logicDetailsByCell.value[row.id]?.[player];
+      const status = logicDetail?.status || "pass";
+      const baseClass =
+        row.id === "random_weapon"
+          ? obtained === 0
+            ? "status-need"
+            : "status-rw-obtained"
+          : STATUS_MAP[status]?.class || "";
+      const cellClass = excludedPlayers.value.has(player) ? `${baseClass} is-excluded` : baseClass;
+      const reason =
+        row.id === "random_weapon"
+          ? `累计获得 ${obtained} 个随武`
+          : logicDetail?.reason || "未命中判定缓存";
       map[row.id]![player] = {
         obtained,
         needed,
-        statusText: STATUS_MAP[status]?.text || '',
+        statusText: STATUS_MAP[status]?.text || "",
         reason,
         cellClass,
-      }
+      };
     }
   }
-  return map
-})
+  return map;
+});
 
 function getCellView(player: string, row: BisRow): CellViewModel {
-  const cached = cellViewByRowId.value[row.id]?.[player]
-  if (cached)
-    return cached
-  warnMissingCache('cell', row.id, player)
+  const cached = cellViewByRowId.value[row.id]?.[player];
+  if (cached) return cached;
+  warnMissingCache("cell", row.id, player);
   return {
     obtained: 0,
     needed: 0,
-    statusText: '',
-    reason: '',
-    cellClass: '',
-  }
+    statusText: "",
+    reason: "",
+    cellClass: "",
+  };
 }
 
-function getLogicStatus(
-  player: string,
-  row: BisRow,
-): 'need' | 'greed' | 'pass' | 'assigned' {
-  return getLogicDetails(player, row).status
+function getLogicStatus(player: string, row: BisRow): "need" | "greed" | "pass" | "assigned" {
+  return getLogicDetails(player, row).status;
 }
 
 function getLogicDetails(
   player: string,
   row: BisRow,
 ): {
-  status: LogicStatus
-  reason: string
+  status: LogicStatus;
+  reason: string;
 } {
-  const cached = logicDetailsByCell.value[row.id]?.[player]
-  if (cached)
-    return cached
-  warnMissingCache('logic', row.id, player)
-  return { status: 'pass', reason: '' }
+  const cached = logicDetailsByCell.value[row.id]?.[player];
+  if (cached) return cached;
+  warnMissingCache("logic", row.id, player);
+  return { status: "pass", reason: "" };
 }
 
-function getOriginalStatus(
-  player: string,
-  row: BisRow,
-): 'need' | 'greed' | 'pass' {
-  const obtainedCount = obtainedSummary.value.counts[player]?.[row.id] || 0
-  return getBaseLogicDetailsFor(player, row, obtainedCount).status
+function getOriginalStatus(player: string, row: BisRow): "need" | "greed" | "pass" {
+  const obtainedCount = obtainedSummary.value.counts[player]?.[row.id] || 0;
+  return getBaseLogicDetailsFor(player, row, obtainedCount).status;
 }
 
 function isGroupEndRow(rowId: string): boolean {
-  return GROUP_END_ROW_IDS.has(rowId)
+  return GROUP_END_ROW_IDS.has(rowId);
 }
 
 function isEligible(player: string) {
-  if (!props.getPlayerRole)
-    return false
-  const role = props.getPlayerRole(player)
-  if (!role)
-    return false
-  return !role.startsWith('LEFT:')
+  if (!props.getPlayerRole) return false;
+  const role = props.getPlayerRole(player);
+  if (!role) return false;
+  return !role.startsWith("LEFT:");
 }
 
 function getCurrentMatchedPresetName(player: string) {
-  const role = props.getPlayerRole?.(player)
-  if (!role)
-    return null
+  const role = props.getPlayerRole?.(player);
+  if (!role) return null;
 
-  const storageKey = storageKeyByPlayer.value[player] || getStorageKey(player)
-  const currentConfig = config.value.playerBis[storageKey]
-  if (!currentConfig || Object.keys(currentConfig).length === 0)
-    return null
+  const storageKey = storageKeyByPlayer.value[player] || getStorageKey(player);
+  const currentConfig = config.value.playerBis[storageKey];
+  if (!currentConfig || Object.keys(currentConfig).length === 0) return null;
 
-  const { recommended, others } = presetsByPlayer.value[player] || getPresetsForRole(role)
-  const allPresets = [...recommended, ...others]
+  const { recommended, others } = presetsByPlayer.value[player] || getPresetsForRole(role);
+  const allPresets = [...recommended, ...others];
 
   for (const preset of allPresets) {
-    let isMatch = true
+    let isMatch = true;
     for (const key of Object.keys(preset.config)) {
       if (currentConfig[key] !== preset.config[key]) {
-        isMatch = false
-        break
+        isMatch = false;
+        break;
       }
     }
-    if (isMatch)
-      return preset.name
+    if (isMatch) return preset.name;
   }
-  return null
+  return null;
 }
 const matchedPresetNameByPlayer = computed(() => {
-  const map: Record<string, string | null> = {}
-  for (const player of eligiblePlayers.value)
-    map[player] = getCurrentMatchedPresetName(player)
-  return map
-})
+  const map: Record<string, string | null> = {};
+  for (const player of eligiblePlayers.value) map[player] = getCurrentMatchedPresetName(player);
+  return map;
+});
 
-const isSyncingFromProps = ref(false)
+const isSyncingFromProps = ref(false);
 
 watch(
   () => props.records,
   (records) => {
-    if (recordsSyncTimer)
-      clearTimeout(recordsSyncTimer)
+    if (recordsSyncTimer) clearTimeout(recordsSyncTimer);
     recordsSyncTimer = setTimeout(() => {
-      recordsForCompute.value = records || []
-      obtainedDetailsCache.value.clear()
-      recordsSyncTimer = null
-    }, 120)
+      recordsForCompute.value = records || [];
+      obtainedDetailsCache.value.clear();
+      recordsSyncTimer = null;
+    }, 120);
   },
   { immediate: true },
-)
-watch(
-  [() => props.getActualPlayer, () => props.getItemSlot],
-  () => {
-    obtainedDetailsCache.value.clear()
-  },
-)
+);
+watch([() => props.getActualPlayer, () => props.getItemSlot], () => {
+  obtainedDetailsCache.value.clear();
+});
 
 function hasAnyPresets(player: string) {
-  const presets = presetsByPlayer.value[player] || getPresetsForRole(props.getPlayerRole?.(player))
-  return presets.recommended.length > 0 || presets.others.length > 0
+  const presets = presetsByPlayer.value[player] || getPresetsForRole(props.getPlayerRole?.(player));
+  return presets.recommended.length > 0 || presets.others.length > 0;
 }
 
 watch(
   () => props.modelValue,
   (newVal) => {
     if (!newVal) {
-      return
+      return;
     }
     const nextConfig = normalizeBisConfigFromModel(
       newVal,
@@ -1025,82 +986,76 @@ watch(
       COUNT_ROWS,
       NEED_OFFSET_ROWS,
       getStorageKey,
-    )
+    );
 
-    isSyncingFromProps.value = true
-    config.value = nextConfig
+    isSyncingFromProps.value = true;
+    config.value = nextConfig;
     nextTick(() => {
-      isSyncingFromProps.value = false
-    })
+      isSyncingFromProps.value = false;
+    });
   },
   { immediate: true },
-)
+);
 
 watch(
   eligiblePlayers,
   (players) => {
-    ensureBisCountDefaults(config.value, players, COUNT_ROWS, getStorageKey)
-    ensureBisOffsetDefaults(config.value, players, NEED_OFFSET_ROWS, getStorageKey)
+    ensureBisCountDefaults(config.value, players, COUNT_ROWS, getStorageKey);
+    ensureBisOffsetDefaults(config.value, players, NEED_OFFSET_ROWS, getStorageKey);
   },
   { immediate: true },
-)
+);
 
 watch(
   config,
   (newVal) => {
-    if (isSyncingFromProps.value)
-      return
-    if (modelEmitTimer)
-      clearTimeout(modelEmitTimer)
+    if (isSyncingFromProps.value) return;
+    if (modelEmitTimer) clearTimeout(modelEmitTimer);
     modelEmitTimer = setTimeout(() => {
-      emit('update:modelValue', newVal)
-      modelEmitTimer = null
-    }, 80)
+      emit("update:modelValue", newVal);
+      modelEmitTimer = null;
+    }, 80);
   },
   { deep: true },
-)
+);
 
 onUnmounted(() => {
-  if (recordsSyncTimer)
-    clearTimeout(recordsSyncTimer)
-  if (modelEmitTimer)
-    clearTimeout(modelEmitTimer)
-  obtainedDetailsCache.value.clear()
-})
+  if (recordsSyncTimer) clearTimeout(recordsSyncTimer);
+  if (modelEmitTimer) clearTimeout(modelEmitTimer);
+  obtainedDetailsCache.value.clear();
+});
 
 function getBisValue(player: string, rowId: string): BisValue | undefined {
-  return config.value.playerBis[getStorageKey(player)]?.[rowId]
+  return config.value.playerBis[getStorageKey(player)]?.[rowId];
 }
 
 function isRaidBis(player: string, rowId: string) {
-  return getBisValue(player, rowId) === 'raid'
+  return getBisValue(player, rowId) === "raid";
 }
 
 function isTomeBis(player: string, rowId: string) {
-  return getBisValue(player, rowId) === 'tome'
+  return getBisValue(player, rowId) === "tome";
 }
 
 function getNeededCount(player: string, rowId: string): number {
-  if (rowId === 'random_weapon')
-    return 0
-  const val = getBisValue(player, rowId)
-  if (typeof val !== 'number')
-    throw new Error(`[BisAllocator] 数据异常: ${player} 在 ${rowId} 的值应为数字，实际为 ${val}`)
-  return val
+  if (rowId === "random_weapon") return 0;
+  const val = getBisValue(player, rowId);
+  if (typeof val !== "number")
+    throw new Error(`[BisAllocator] 数据异常: ${player} 在 ${rowId} 的值应为数字，实际为 ${val}`);
+  return val;
 }
 
 function resetNeedCountOffsets() {
   for (const player of eligiblePlayers.value) {
-    for (const row of NEED_OFFSET_ROWS)
-      setNeedCountOffset(player, row.id, 0)
+    for (const row of NEED_OFFSET_ROWS) setNeedCountOffset(player, row.id, 0);
   }
 }
 
 function getCellClass(player: string, row: BisRow): string {
-  return getCellView(player, row).cellClass
+  return getCellView(player, row).cellClass;
 }
 
-const getRoleGroupClass = getRoleType
+const getRoleGroupClass = getRoleType;
 </script>
 
 <template>
@@ -1133,18 +1088,14 @@ const getRoleGroupClass = getRoleType
       <div class="table-container">
         <table class="bis-table">
           <colgroup>
-            <col style="width: 32px !important; min-width: 32px !important">
-            <col style="width: 110px !important; min-width: 110px !important">
-            <col v-for="p in eligiblePlayers" :key="p">
-            <col style="width: 250px !important; min-width: 250px !important">
+            <col style="width: 32px !important; min-width: 32px !important" />
+            <col style="width: 110px !important; min-width: 110px !important" />
+            <col v-for="p in eligiblePlayers" :key="p" />
+            <col style="width: 250px !important; min-width: 250px !important" />
           </colgroup>
           <thead>
             <tr>
-              <th
-                class="sticky-col col-combined-header"
-                style="z-index: 30"
-                colspan="2"
-              >
+              <th class="sticky-col col-combined-header" style="z-index: 30" colspan="2">
                 装备 \ 玩家
               </th>
               <th
@@ -1164,9 +1115,7 @@ const getRoleGroupClass = getRoleType
                       'is-away': excludedPlayers.has(p),
                       'is-disabled': isPlayerAssigned(p),
                     }"
-                    @click.stop="
-                      isPlayerAssigned(p) ? null : togglePlayerExclusion(p)
-                    "
+                    @click.stop="isPlayerAssigned(p) ? null : togglePlayerExclusion(p)"
                   >
                     <template v-if="excludedPlayers.has(p)">
                       <span>已请假</span>
@@ -1186,21 +1135,14 @@ const getRoleGroupClass = getRoleType
                     <div class="title-with-icon">
                       <span>分配宏</span>
                     </div>
-                    <el-popover
-                      placement="top"
-                      title="分配宏生成规则"
-                      :width="320"
-                      trigger="hover"
-                    >
+                    <el-popover placement="top" title="分配宏生成规则" :width="320" trigger="hover">
                       <template #reference>
                         <el-icon class="macro-help-icon" style="margin: 0">
                           <QuestionFilled />
                         </el-icon>
                       </template>
                       <div class="macro-help-content">
-                        <div class="intro">
-                          生成可以直接在游戏内发送的分配宏（/p）。
-                        </div>
+                        <div class="intro">生成可以直接在游戏内发送的分配宏（/p）。</div>
                         <div class="rule-item">
                           <strong>1. 优先需求</strong>
                           <span>仅显示BIS设为“零式”且尚未获得的玩家。</span>
@@ -1274,10 +1216,7 @@ const getRoleGroupClass = getRoleType
                               'is-disabled': excludedPlayers.has(p),
                               'is-active': customAllocations[row.id] === p,
                             }"
-                            @click="
-                              !excludedPlayers.has(p)
-                                && (customAllocations[row.id] = p)
-                            "
+                            @click="!excludedPlayers.has(p) && (customAllocations[row.id] = p)"
                           >
                             <div class="player-option-item">
                               <PlayerDisplay
@@ -1285,19 +1224,12 @@ const getRoleGroupClass = getRoleType
                                 :role="getPlayerRole?.(p)"
                                 :show-only-role="showOnlyRole"
                               />
-                              <span
-                                class="mini-status-tag" :class="[
-                                  getOriginalStatus(p, row),
-                                ]"
-                              >
+                              <span class="mini-status-tag" :class="[getOriginalStatus(p, row)]">
                                 {{ STATUS_MAP[getOriginalStatus(p, row)].text }}
                               </span>
                             </div>
                           </div>
-                          <div
-                            v-if="customAllocations[row.id]"
-                            class="tooltip-divider"
-                          />
+                          <div v-if="customAllocations[row.id]" class="tooltip-divider" />
                           <div
                             v-if="customAllocations[row.id]"
                             class="tooltip-player-item clear-btn"
@@ -1318,9 +1250,7 @@ const getRoleGroupClass = getRoleType
                         <template v-if="customAllocations[row.id]">
                           <PlayerDisplay
                             :name="customAllocations[row.id]!"
-                            :role="
-                              props.getPlayerRole?.(customAllocations[row.id]!)
-                            "
+                            :role="props.getPlayerRole?.(customAllocations[row.id]!)"
                             :show-only-role="showOnlyRole"
                           />
                           <span class="p-status">已分配</span>
@@ -1335,11 +1265,7 @@ const getRoleGroupClass = getRoleType
                     </el-tooltip>
                   </div>
                 </td>
-                <td
-                  v-for="p in eligiblePlayers"
-                  :key="p"
-                  :class="getCellClass(p, row)"
-                >
+                <td v-for="p in eligiblePlayers" :key="p" :class="getCellClass(p, row)">
                   <div class="cell-status-container">
                     <el-popover
                       placement="auto"
@@ -1355,7 +1281,9 @@ const getRoleGroupClass = getRoleType
                           <template v-if="row.id === 'random_weapon'">
                             <span
                               :class="[
-                                getCellView(p, row).obtained > 0 ? 'rw-simple-count-active' : 'rw-simple-count-none',
+                                getCellView(p, row).obtained > 0
+                                  ? 'rw-simple-count-active'
+                                  : 'rw-simple-count-none',
                                 { 'is-many': getCellView(p, row).obtained >= 2 },
                               ]"
                             >
@@ -1381,7 +1309,11 @@ const getRoleGroupClass = getRoleType
                         <template v-if="getObtainedItemsDetail(p, row).length > 0">
                           <div class="popover-divider" />
                           <div class="obtained-list">
-                            <div v-for="(d, i) in getObtainedItemsDetail(p, row)" :key="i" class="obtained-row">
+                            <div
+                              v-for="(d, i) in getObtainedItemsDetail(p, row)"
+                              :key="i"
+                              class="obtained-row"
+                            >
                               <span class="item-name">{{ d.name }}</span>
                               <span class="item-count">x{{ d.count }}</span>
                             </div>
@@ -1421,7 +1353,9 @@ const getRoleGroupClass = getRoleType
       </div>
 
       <div class="logic-note">
-        * 注：当某物品所有有效玩家都判定为放弃时，系统会自动找出“已获得数量最少”的玩家（可能有多人），将其状态改为贪婪 (Greed)。
+        *
+        注：当某物品所有有效玩家都判定为放弃时，系统会自动找出“已获得数量最少”的玩家（可能有多人），将其状态改为贪婪
+        (Greed)。
       </div>
     </div>
 
@@ -1455,18 +1389,13 @@ const getRoleGroupClass = getRoleType
           <table class="bis-table config-table">
             <thead>
               <tr>
-                <th class="sticky-col">
-                  装备 \ 玩家
-                </th>
+                <th class="sticky-col">装备 \ 玩家</th>
                 <th
                   v-for="p in eligiblePlayers"
                   :key="p"
                   :class="[
                     {
-                      'header-incomplete': !checkPlayerComplete(
-                        config,
-                        getStorageKey(p),
-                      ),
+                      'header-incomplete': !checkPlayerComplete(config, getStorageKey(p)),
                     },
                     { 'is-excluded': excludedPlayers.has(p) },
                     getRoleGroupClass(getPlayerRole?.(p)),
@@ -1482,17 +1411,15 @@ const getRoleGroupClass = getRoleType
                       <span
                         v-if="!checkPlayerComplete(config, getStorageKey(p))"
                         class="incomplete-label"
-                      >未填写</span>
+                        >未填写</span
+                      >
                       <div class="preset-apply-zone">
                         <el-dropdown
                           v-if="hasAnyPresets(p)"
                           trigger="click"
                           popper-class="bis-preset-popper"
                           @command="(cmd: any) => applyPreset(p, cmd)"
-                          @visible-change="
-                            (v: boolean) =>
-                              !v && expandedPlayerPresets.delete(p)
-                          "
+                          @visible-change="(v: boolean) => !v && expandedPlayerPresets.delete(p)"
                         >
                           <el-button
                             size="small"
@@ -1501,24 +1428,22 @@ const getRoleGroupClass = getRoleType
                               'is-matched': matchedPresetNameByPlayer[p],
                             }"
                           >
-                            <el-icon
-                              v-if="!matchedPresetNameByPlayer[p]"
-                              class="magic-icon"
-                            >
+                            <el-icon v-if="!matchedPresetNameByPlayer[p]" class="magic-icon">
                               <MagicStick />
                             </el-icon>
                             <span
                               v-if="matchedPresetNameByPlayer[p]"
                               class="matched-name-inline"
                               :title="matchedPresetNameByPlayer[p] ?? ''"
-                            >{{ matchedPresetNameByPlayer[p] }}</span>
+                              >{{ matchedPresetNameByPlayer[p] }}</span
+                            >
                             <span v-else>一键预设</span>
                           </el-button>
                           <template #dropdown>
                             <el-dropdown-menu class="bis-preset-dropdown">
                               <!-- 推荐预设 -->
                               <el-dropdown-item
-                                v-for="preset in (presetsByPlayer[p]?.recommended || [])"
+                                v-for="preset in presetsByPlayer[p]?.recommended || []"
                                 :key="preset.name"
                                 :command="preset"
                               >
@@ -1529,13 +1454,9 @@ const getRoleGroupClass = getRoleType
                               </el-dropdown-item>
 
                               <!-- 逻辑：如果没有推荐项，直接显示全部；如果有且未展开，显示展开按钮 -->
-                              <template
-                                v-if="
-                                  (presetsByPlayer[p]?.recommended.length || 0) === 0
-                                "
-                              >
+                              <template v-if="(presetsByPlayer[p]?.recommended.length || 0) === 0">
                                 <el-dropdown-item
-                                  v-for="preset in (presetsByPlayer[p]?.others || [])"
+                                  v-for="preset in presetsByPlayer[p]?.others || []"
                                   :key="preset.name"
                                   :command="preset"
                                 >
@@ -1546,11 +1467,7 @@ const getRoleGroupClass = getRoleType
                                 </el-dropdown-item>
                               </template>
 
-                              <template
-                                v-else-if="
-                                  (presetsByPlayer[p]?.others.length || 0) > 0
-                                "
-                              >
+                              <template v-else-if="(presetsByPlayer[p]?.others.length || 0) > 0">
                                 <div
                                   v-if="!expandedPlayerPresets.has(p)"
                                   class="preset-expand-divider"
@@ -1565,7 +1482,7 @@ const getRoleGroupClass = getRoleType
                                 </div>
                                 <template v-else>
                                   <el-dropdown-item
-                                    v-for="(preset, idx) in (presetsByPlayer[p]?.others || [])"
+                                    v-for="(preset, idx) in presetsByPlayer[p]?.others || []"
                                     :key="preset.name"
                                     :command="preset"
                                     :divided="idx === 0"
@@ -1588,7 +1505,10 @@ const getRoleGroupClass = getRoleType
             </thead>
             <tbody>
               <tr v-for="row in configRows" :key="row.id">
-                <td class="sticky-col row-header" :class="[{ 'is-group-end': isGroupEndRow(row.id) }]">
+                <td
+                  class="sticky-col row-header"
+                  :class="[{ 'is-group-end': isGroupEndRow(row.id) }]"
+                >
                   {{ row.name }}
                 </td>
                 <td
@@ -1623,9 +1543,7 @@ const getRoleGroupClass = getRoleType
                         size="small"
                         controls-position="right"
                         class="mini-stepper"
-                        @update:model-value="
-                          (v) => setNeededCount(p, row.id, v || 0)
-                        "
+                        @update:model-value="(v) => setNeededCount(p, row.id, v || 0)"
                       />
                     </div>
                   </div>
@@ -1639,12 +1557,8 @@ const getRoleGroupClass = getRoleType
         <div class="dialog-footer">
           <div class="footer-left">
             <div class="io-action-list">
-              <el-button size="small" @click="exportBisData">
-                导出 BIS 设置
-              </el-button>
-              <el-button size="small" @click="importBisData">
-                导入 BIS 设置
-              </el-button>
+              <el-button size="small" @click="exportBisData"> 导出 BIS 设置 </el-button>
+              <el-button size="small" @click="importBisData"> 导入 BIS 设置 </el-button>
             </div>
           </div>
           <div class="footer-right">
@@ -1653,11 +1567,7 @@ const getRoleGroupClass = getRoleType
                 还剩 {{ incompletePlayerCount }} 个职位的 BIS 尚未填完
               </span>
             </div>
-            <el-button
-              type="primary"
-              size="small"
-              @click="showConfigDialog = false"
-            >
+            <el-button type="primary" size="small" @click="showConfigDialog = false">
               完成并关闭
             </el-button>
           </div>
@@ -1673,38 +1583,22 @@ const getRoleGroupClass = getRoleType
       destroy-on-close
       align-center
     >
-      <div v-if="importDiffs.length === 0" class="import-empty-msg">
-        没有检测到有效的变更数据。
-      </div>
+      <div v-if="importDiffs.length === 0" class="import-empty-msg">没有检测到有效的变更数据。</div>
       <div v-else class="import-diff-container">
-        <p class="import-summary">
-          检测到 {{ importDiffs.length }} 位玩家的设置变更。
-        </p>
+        <p class="import-summary">检测到 {{ importDiffs.length }} 位玩家的设置变更。</p>
         <div v-for="diff in importDiffs" :key="diff.name" class="diff-card">
           <div class="diff-header">
-            <PlayerDisplay
-              :name="diff.name"
-              :role="diff.role"
-              :show-only-role="showOnlyRole"
-            />
+            <PlayerDisplay :name="diff.name" :role="diff.role" :show-only-role="showOnlyRole" />
             <span v-if="diff.isNew" class="diff-tag">新设置</span>
             <span v-else class="diff-tag update">更新</span>
           </div>
           <div class="diff-items">
-            <div
-              v-for="(change, idx) in diff.changes"
-              :key="idx"
-              class="diff-row"
-            >
+            <div v-for="(change, idx) in diff.changes" :key="idx" class="diff-row">
               <span class="diff-label">{{ change.label }}</span>
               <div class="diff-values">
-                <span class="val old" :class="getValClass(change.oldVal)">{{
-                  change.oldVal
-                }}</span>
+                <span class="val old" :class="getValClass(change.oldVal)">{{ change.oldVal }}</span>
                 <el-icon><Right /></el-icon>
-                <span class="val new" :class="getValClass(change.newVal)">{{
-                  change.newVal
-                }}</span>
+                <span class="val new" :class="getValClass(change.newVal)">{{ change.newVal }}</span>
               </div>
             </div>
           </div>
@@ -1712,14 +1606,8 @@ const getRoleGroupClass = getRoleType
       </div>
       <template #footer>
         <div class="dialog-footer" style="justify-content: flex-end; gap: 12px">
-          <el-button @click="showImportConfirmDialog = false">
-            取消
-          </el-button>
-          <el-button
-            type="primary"
-            :disabled="importDiffs.length === 0"
-            @click="confirmImportBis"
-          >
+          <el-button @click="showImportConfirmDialog = false"> 取消 </el-button>
+          <el-button type="primary" :disabled="importDiffs.length === 0" @click="confirmImportBis">
             确认应用
           </el-button>
         </div>
@@ -1737,28 +1625,20 @@ const getRoleGroupClass = getRoleType
     >
       <div class="offset-popover-content">
         <div class="offset-config-inline">
-          <p class="offset-config-hint">
-            例如A想把自己的武器箱让给B，则A设置为-1，B设置为+1
-          </p>
-          <el-button size="small" text @click="resetNeedCountOffsets">
-            清零偏移
-          </el-button>
+          <p class="offset-config-hint">例如A想把自己的武器箱让给B，则A设置为-1，B设置为+1</p>
+          <el-button size="small" text @click="resetNeedCountOffsets"> 清零偏移 </el-button>
         </div>
         <div class="table-scroll-wrapper offset-scroll-wrapper">
           <table class="bis-table config-table offset-config-table">
             <colgroup>
-              <col style="width: 44px !important; min-width: 44px !important">
-              <col style="width: 96px !important; min-width: 96px !important">
-              <col v-for="p in eligiblePlayers" :key="`offset-dialog-col-${p}`">
+              <col style="width: 44px !important; min-width: 44px !important" />
+              <col style="width: 96px !important; min-width: 96px !important" />
+              <col v-for="p in eligiblePlayers" :key="`offset-dialog-col-${p}`" />
             </colgroup>
             <thead>
               <tr>
-                <th class="offset-layer-col">
-                  层数
-                </th>
-                <th class="offset-item-col">
-                  装备 \ 玩家
-                </th>
+                <th class="offset-layer-col">层数</th>
+                <th class="offset-item-col">装备 \ 玩家</th>
                 <th
                   v-for="p in eligiblePlayers"
                   :key="`offset-dialog-${p}`"
@@ -1776,7 +1656,10 @@ const getRoleGroupClass = getRoleType
               </tr>
             </thead>
             <tbody>
-              <template v-for="(layer, lIdx) in offsetLayeredRows" :key="`offset-layer-${layer.name}`">
+              <template
+                v-for="(layer, lIdx) in offsetLayeredRows"
+                :key="`offset-layer-${layer.name}`"
+              >
                 <tr
                   v-for="(row, rIdx) in layer.rows"
                   :key="`offset-dialog-row-${row.id}`"
@@ -1836,9 +1719,7 @@ const getRoleGroupClass = getRoleType
       align-center
     >
       <div v-if="pendingPresetData?.diff" class="import-diff-container">
-        <p class="import-summary">
-          应用 [{{ pendingPresetData.preset.name }}] 将会产生以下变更：
-        </p>
+        <p class="import-summary">应用 [{{ pendingPresetData.preset.name }}] 将会产生以下变更：</p>
         <div class="diff-card">
           <div class="diff-header">
             <PlayerDisplay
@@ -1857,13 +1738,9 @@ const getRoleGroupClass = getRoleType
             >
               <span class="diff-label">{{ change.label }}</span>
               <div class="diff-values">
-                <span class="val old" :class="getValClass(change.oldVal)">{{
-                  change.oldVal
-                }}</span>
+                <span class="val old" :class="getValClass(change.oldVal)">{{ change.oldVal }}</span>
                 <el-icon><Right /></el-icon>
-                <span class="val new" :class="getValClass(change.newVal)">{{
-                  change.newVal
-                }}</span>
+                <span class="val new" :class="getValClass(change.newVal)">{{ change.newVal }}</span>
               </div>
             </div>
           </div>
@@ -1871,12 +1748,8 @@ const getRoleGroupClass = getRoleType
       </div>
       <template #footer>
         <div class="dialog-footer" style="justify-content: flex-end; gap: 12px">
-          <el-button @click="showPresetConfirmDialog = false">
-            取消
-          </el-button>
-          <el-button type="primary" @click="confirmApplyPreset">
-            确认应用
-          </el-button>
+          <el-button @click="showPresetConfirmDialog = false"> 取消 </el-button>
+          <el-button type="primary" @click="confirmApplyPreset"> 确认应用 </el-button>
         </div>
       </template>
     </el-dialog>
@@ -1899,10 +1772,10 @@ const getRoleGroupClass = getRoleType
   min-height: 32px;
 
   // Element Plus 按钮自带左边距，我们不需要 gap
-  :deep(.el-button + .el-button),
-  :deep(.el-button + .el-dropdown),
-  :deep(.el-dropdown + .el-button),
-  :deep(.el-dropdown + .el-dropdown) {
+  ::deep(.el-button + .el-button),
+  ::deep(.el-button + .el-dropdown),
+  ::deep(.el-dropdown + .el-button),
+  ::deep(.el-dropdown + .el-dropdown) {
     margin-left: 12px;
   }
 }
@@ -2016,7 +1889,7 @@ const getRoleGroupClass = getRoleType
 }
 
 .bis-config-dialog {
-  :deep(.el-dialog) {
+  ::deep(.el-dialog) {
     width: fit-content !important;
     min-width: 600px;
     max-width: 95vw !important;
@@ -2025,14 +1898,14 @@ const getRoleGroupClass = getRoleType
     overflow: hidden;
   }
 
-  :deep(.el-dialog__body) {
+  ::deep(.el-dialog__body) {
     padding: 20px;
     padding-top: 10px;
   }
 }
 
 .offset-config-dialog {
-  :deep(.el-dialog) {
+  ::deep(.el-dialog) {
     width: fit-content !important;
     min-width: 700px;
     max-width: 95vw !important;
@@ -2044,7 +1917,7 @@ const getRoleGroupClass = getRoleType
     overflow: hidden;
   }
 
-  :deep(.el-dialog__body) {
+  ::deep(.el-dialog__body) {
     padding: 16px 20px 12px;
     overflow: auto;
   }
@@ -2289,13 +2162,13 @@ const getRoleGroupClass = getRoleType
 
 // 队长分配专用下拉框样式
 .captain-player-popper {
-  :deep(.el-select-dropdown__wrap) {
+  ::deep(.el-select-dropdown__wrap) {
     max-height: none !important; // 移除滚动条高度限制
   }
-  :deep(.el-select-dropdown__list) {
+  ::deep(.el-select-dropdown__list) {
     padding: 2px 0;
   }
-  :deep(.el-select-dropdown__item) {
+  ::deep(.el-select-dropdown__item) {
     height: 26px !important; // 压缩行高
     line-height: 26px !important;
     padding: 0 12px;
@@ -2576,8 +2449,8 @@ const getRoleGroupClass = getRoleType
   .macro-cell {
     border-bottom: 1px solid rgba(148, 163, 184, 0.1) !important;
 
-    :deep(tr.is-layer-end:not(:last-child)) & {
-       border-bottom: 1px solid black !important;
+    ::deep(tr.is-layer-end:not(:last-child)) & {
+      border-bottom: 1px solid black !important;
     }
   }
 
@@ -2609,12 +2482,20 @@ const getRoleGroupClass = getRoleType
   }
 
   thead th {
-    background: linear-gradient(to bottom, #f1f5f9 calc(100% - 1px), black calc(100% - 1px)) !important;
+    background: linear-gradient(
+      to bottom,
+      #f1f5f9 calc(100% - 1px),
+      black calc(100% - 1px)
+    ) !important;
     border-bottom: none !important;
     box-shadow: none !important;
 
     html.dark & {
-      background: linear-gradient(to bottom, #111827 calc(100% - 1px), #334155 calc(100% - 1px)) !important;
+      background: linear-gradient(
+        to bottom,
+        #111827 calc(100% - 1px),
+        #334155 calc(100% - 1px)
+      ) !important;
       border-bottom: none !important;
     }
   }
@@ -2775,7 +2656,9 @@ const getRoleGroupClass = getRoleType
   }
 
   .macro-preview-content {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-family:
+      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+      monospace;
     font-size: 11px;
     line-height: 1.25;
     color: #475569;
@@ -2815,8 +2698,9 @@ const getRoleGroupClass = getRoleType
     transform: scale(0.9) translateZ(0);
     backface-visibility: hidden;
     will-change: transform, opacity;
-    transition: color 0.2s ease,
-                border-color 0.2s ease;
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     cursor: pointer;
 
@@ -2894,7 +2778,7 @@ const getRoleGroupClass = getRoleType
       height: auto !important;
       padding: 4px 0 !important;
 
-      :deep(.player-display) {
+      ::deep(.player-display) {
         flex-direction: column;
         gap: 0;
         width: 100%;
@@ -2923,7 +2807,7 @@ const getRoleGroupClass = getRoleType
   gap: 2px;
   padding: 4px 0;
 
-  :deep(.player-display) {
+  ::deep(.player-display) {
     flex-direction: column;
     gap: 0;
   }
@@ -3000,7 +2884,6 @@ const getRoleGroupClass = getRoleType
       }
     }
   }
-
 }
 
 .equip-cell-content {
@@ -3051,7 +2934,9 @@ const getRoleGroupClass = getRoleType
       display: inline;
     }
 
-    &:hover, &.is-active, &.is-open {
+    &:hover,
+    &.is-active,
+    &.is-open {
       width: auto;
       min-width: 32px;
       padding: 0 3px;
@@ -3097,9 +2982,11 @@ const getRoleGroupClass = getRoleType
       padding: 0;
       margin-left: -2px;
 
-      :deep(.player-display) {
+      ::deep(.player-display) {
         transform: scale(0.9);
-        .player-name-text { display: none !important; }
+        .player-name-text {
+          display: none !important;
+        }
       }
 
       .p-status {
@@ -3263,7 +3150,7 @@ const getRoleGroupClass = getRoleType
   max-height: 320px;
   overflow-y: auto;
 
-  :deep(.el-dropdown-menu__item) {
+  ::deep(.el-dropdown-menu__item) {
     padding: 0 8px;
     line-height: 20px;
     height: auto;
@@ -3346,7 +3233,7 @@ const getRoleGroupClass = getRoleType
 }
 
 .count-value {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   font-weight: 500;
   color: #64748b;
   font-size: 12px;
@@ -3354,7 +3241,7 @@ const getRoleGroupClass = getRoleType
 
 .mini-stepper {
   width: 76px !important;
-  :deep(.el-input__wrapper) {
+  ::deep(.el-input__wrapper) {
     padding-left: 8px;
     padding-right: 30px;
     box-shadow: 0 0 0 1px #e2e8f0 inset;
@@ -3364,8 +3251,8 @@ const getRoleGroupClass = getRoleType
       box-shadow: 0 0 0 1px #3b82f6 inset;
     }
   }
-  :deep(.el-input-number__increase),
-  :deep(.el-input-number__decrease) {
+  ::deep(.el-input-number__increase),
+  ::deep(.el-input-number__decrease) {
     width: 24px;
     background: #f1f5f9;
     border-left: 1px solid #e2e8f0;
@@ -3540,8 +3427,8 @@ html.dark {
         color: #475569 !important;
 
         &:hover {
-           background-color: rgba(255, 255, 255, 0.02) !important;
-           color: #64748b !important;
+          background-color: rgba(255, 255, 255, 0.02) !important;
+          color: #64748b !important;
         }
       }
       .status-assigned {
@@ -3556,7 +3443,7 @@ html.dark {
         background-color: rgba(180, 83, 9, 0.2) !important;
         color: #fbbf24 !important;
         .rw-simple-count-active {
-           color: #fbbf24 !important;
+          color: #fbbf24 !important;
         }
       }
       .status-rw-obtained {
@@ -3744,7 +3631,7 @@ html.dark {
     width: 56px !important;
     height: 20px;
 
-    :deep(.el-input__wrapper) {
+    ::deep(.el-input__wrapper) {
       padding: 0;
       text-align: center;
       background: transparent;
@@ -3753,35 +3640,36 @@ html.dark {
       border-radius: 0;
       height: 20px;
 
-      &:hover, &.is-focus {
+      &:hover,
+      &.is-focus {
         border-bottom-color: #3b82f6;
       }
     }
 
-    :deep(.el-input__inner) {
+    ::deep(.el-input__inner) {
       height: 20px;
       line-height: 20px;
       text-align: center;
-      font-family: 'JetBrains Mono', monospace;
+      font-family: "JetBrains Mono", monospace;
       font-weight: 600;
       font-size: 11px;
       color: #94a3b8;
     }
 
     &.is-nonzero {
-      :deep(.el-input__inner) {
+      ::deep(.el-input__inner) {
         color: #3b82f6;
       }
-      :deep(.el-input__wrapper) {
+      ::deep(.el-input__wrapper) {
         border-bottom-color: #3b82f6;
       }
     }
 
     html.dark & {
-      :deep(.el-input__wrapper) {
+      ::deep(.el-input__wrapper) {
         border-bottom-color: #334155;
       }
-      &.is-nonzero :deep(.el-input__inner) {
+      &.is-nonzero ::deep(.el-input__inner) {
         color: #60a5fa;
       }
     }
@@ -3817,7 +3705,6 @@ html.dark {
     background: #1a1b26;
     border-color: #2d2e3d;
     border-color: #2d2e3d;
-
   }
 
   .bis-table {
@@ -3836,7 +3723,6 @@ html.dark {
       border-bottom-color: #232433;
       color: #d1d5db;
     }
-
   }
 
   .header-incomplete {
@@ -3920,7 +3806,7 @@ html.dark {
 .bis-import-message-box {
   .el-textarea__inner {
     min-height: 84px !important;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: "JetBrains Mono", monospace;
     font-size: 12px;
   }
 }
@@ -4086,7 +3972,7 @@ html.dark {
 
   .item-count {
     color: #fbbf24;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: "JetBrains Mono", monospace;
     font-weight: 700;
   }
 

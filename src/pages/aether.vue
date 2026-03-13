@@ -1,60 +1,59 @@
 <script setup lang="ts">
-import type { Lang } from '@/types/lang'
-import { localeToCactbotLang, useLang } from '@/composables/useLang'
-import aethercurrent from '@/resources/generated/aethercurrent.json'
+import type { Lang } from "@/types/lang";
+import { localeToCactbotLang, useLang } from "@/composables/useLang";
+import aethercurrent from "@/resources/generated/aethercurrent.json";
 
-const { locale } = useLang()
+const { locale } = useLang();
 
-const exVersions = Array.from(
-  new Set(
+const exVersions = [
+  ...new Set(
     aethercurrent
-      .map(v => v.exVersion)
+      .map((v) => v.exVersion)
       .sort()
       .reverse(),
   ),
-)
+];
 
 const groupById = aethercurrent.reduce(
   (total, item) => {
-    const group = total.find(v => v.id === item.id)
+    const group = total.find((v) => v.id === item.id);
     if (group) {
-      group.items.push(item)
-    }
-    else {
+      group.items.push(item);
+    } else {
       total.push({
         id: item.id,
         name: item.name,
         exVersion: item.exVersion,
         items: [item],
-      })
+      });
     }
-    return total
+    return total;
   },
   [] as {
-    id: string
-    name: { ja: string, cn?: string }
-    exVersion: string
+    id: string;
+    name: { ja: string; cn?: string };
+    exVersion: string;
     items: {
-      x: string
-      y: string
-      z: string
-      territory: string
+      x: string;
+      y: string;
+      z: string;
+      territory: string;
       game: {
-        x: number
-        y: number
-      }
-      id: string
-      data: number
-    }[]
+        x: number;
+        y: number;
+      };
+      id: string;
+      data: number;
+    }[];
   }[],
-)
-const IMG_RAW_SIZE = 2048
-const IMG_SHOW_SIZE = 512
-const IMG_SCALE = IMG_SHOW_SIZE / IMG_RAW_SIZE
-const selectExVersion = ref(exVersions[0])
+);
+const IMG_RAW_SIZE = 2048;
+const IMG_SHOW_SIZE = 512;
+const IMG_SCALE = IMG_SHOW_SIZE / IMG_RAW_SIZE;
+const selectExVersion = ref(exVersions[0]);
 
-function getName(name: { ja: string, cn?: string, en?: string }) {
-  return name[localeToCactbotLang(locale.value as Lang) as keyof typeof name] ?? name.en
+function getName(name: { ja: string; cn?: string; en?: string }) {
+  return name[localeToCactbotLang(locale.value as Lang) as keyof typeof name] ?? name.en;
 }
 </script>
 
@@ -62,7 +61,7 @@ function getName(name: { ja: string, cn?: string, en?: string }) {
   <el-container class="main-container">
     <el-header class="header-container">
       <div class="header-content">
-        <span class="label">{{ $t('aether.exVersion') }}</span>
+        <span class="label">{{ $t("aether.exVersion") }}</span>
         <el-select
           v-model="selectExVersion"
           :placeholder="$t('aether.exVersion')"
@@ -98,7 +97,7 @@ function getName(name: { ja: string, cn?: string, en?: string }) {
             :src="`https://v2.xivapi.com/api/asset/map/${map.id}`"
             :alt="getName(map.name)"
             class="map-image"
-          >
+          />
           <article class="points-overlay">
             <div
               v-for="(item, index) in map.items.sort((a, b) => b.data - a.data)"

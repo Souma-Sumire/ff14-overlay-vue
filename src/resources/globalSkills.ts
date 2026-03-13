@@ -1,18 +1,18 @@
-import type { DynamicValue } from '@/types/dynamicValue'
-import { initGlobalSkills } from '@/resources/logic/actionMetaResolver'
+import type { DynamicValue } from "@/types/dynamicValue";
+import { initGlobalSkills } from "@/resources/logic/actionMetaResolver";
 
 export interface GlobalSkillDefinition {
-  id: number
-  recast1000ms: DynamicValue
-  job: number[]
-  minLevel: number
-  duration: DynamicValue
-  maxCharges: DynamicValue
+  id: number;
+  recast1000ms: DynamicValue;
+  job: number[];
+  minLevel: number;
+  duration: DynamicValue;
+  maxCharges: DynamicValue;
 }
 
-export const GLOBAL_SKILL_MAX_LEVEL = 100
+export const GLOBAL_SKILL_MAX_LEVEL = 100;
 
-type RawGlobalSkillDefinition = Partial<GlobalSkillDefinition> & { id: number }
+type RawGlobalSkillDefinition = Partial<GlobalSkillDefinition> & { id: number };
 
 const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
   { id: 30, recast1000ms: 420, duration: 10 },
@@ -23,9 +23,9 @@ const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
   { id: 25862, recast1000ms: 180, duration: 15 },
   { id: 25868, recast1000ms: 120, duration: 20 },
   { id: 25874, recast1000ms: 180, duration: 15 },
-  { id: 7549, recast1000ms: 90, duration: '(lv) => lv>=98 ? 15 : 10' },
-  { id: 7560, recast1000ms: 90, duration: '(lv) => lv>=98 ? 15 : 10' },
-  { id: 7535, recast1000ms: 60, duration: '(lv) => lv>=98 ? 15 : 10' },
+  { id: 7549, recast1000ms: 90, duration: "(lv) => lv>=98 ? 15 : 10" },
+  { id: 7560, recast1000ms: 90, duration: "(lv) => lv>=98 ? 15 : 10" },
+  { id: 7535, recast1000ms: 60, duration: "(lv) => lv>=98 ? 15 : 10" },
   { id: 3540, recast1000ms: 90, duration: 30 },
   { id: 7385, recast1000ms: 120, duration: 5 },
   { id: 7388, recast1000ms: 90, duration: 15 },
@@ -33,10 +33,10 @@ const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
   { id: 16160, recast1000ms: 90, duration: 15 },
   { id: 7433, recast1000ms: 60, duration: 10 },
   { id: 16536, recast1000ms: 120, duration: 20 },
-  { id: 7405, recast1000ms: '(lv) => lv>=88 ? 90 : 120', duration: 15 },
-  { id: 16889, recast1000ms: '(lv) => lv>=88 ? 90 : 120', duration: 15 },
+  { id: 7405, recast1000ms: "(lv) => lv>=88 ? 90 : 120", duration: 15 },
+  { id: 16889, recast1000ms: "(lv) => lv>=88 ? 90 : 120", duration: 15 },
   { id: 2887, recast1000ms: 120, duration: 10 },
-  { id: 16012, recast1000ms: '(lv) => lv>=88 ? 90 : 120', duration: 15 },
+  { id: 16012, recast1000ms: "(lv) => lv>=88 ? 90 : 120", duration: 15 },
   { id: 25857, recast1000ms: 120, duration: 10 },
   { id: 118, recast1000ms: 120, duration: 20 },
   { id: 25785, recast1000ms: 110, duration: 20 },
@@ -52,11 +52,11 @@ const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
   { id: 16011, recast1000ms: 120, duration: 20 },
   { id: 16552, recast1000ms: 120, duration: 20 },
   { id: 7531, recast1000ms: 90, duration: 20 },
-  { id: 7561, recast1000ms: '(lv) => lv>=94 ? 40 : 60' },
+  { id: 7561, recast1000ms: "(lv) => lv>=94 ? 40 : 60" },
   { id: 7542, recast1000ms: 90, duration: 20 },
   { id: 7541, recast1000ms: 120 },
   { id: 7548, recast1000ms: 120, duration: 6 },
-  { id: 7559, recast1000ms: '120', duration: 6 },
+  { id: 7559, recast1000ms: "120", duration: 6 },
   { id: 17, recast1000ms: 120, duration: 15 },
   { id: 36920, recast1000ms: 120, duration: 15 },
   { id: 22, recast1000ms: 90, duration: 10 },
@@ -75,9 +75,9 @@ const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
   { id: 36935, recast1000ms: 120, duration: 15 },
   { id: 16140, recast1000ms: 90, duration: 10 },
   { id: 25758, recast1000ms: 25, duration: 8 },
-  { id: 16151, recast1000ms: 60, maxCharges: '(lv) => lv>=84 ? 2 : 1' },
-  { id: 3570, recast1000ms: 60, maxCharges: '(lv) => lv>=98 ? 2 : 1' },
-  { id: 7432, recast1000ms: 30, maxCharges: '(lv) => lv>=98 ? 2 : 1' },
+  { id: 16151, recast1000ms: 60, maxCharges: "(lv) => lv>=84 ? 2 : 1" },
+  { id: 3570, recast1000ms: 60, maxCharges: "(lv) => lv>=98 ? 2 : 1" },
+  { id: 7432, recast1000ms: 30, maxCharges: "(lv) => lv>=98 ? 2 : 1" },
   { id: 25861, recast1000ms: 60, duration: 8 },
   { id: 16542, recast1000ms: 90 },
   { id: 3585, recast1000ms: 90 },
@@ -88,11 +88,11 @@ const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
   { id: 16545, recast1000ms: 120 },
   { id: 25867, recast1000ms: 60 },
   { id: 37014, recast1000ms: 180 },
-  { id: 3614, recast1000ms: 40, maxCharges: '(lv) => lv>=78 ? (lv>=98 ? 3 : 2) : 1' },
+  { id: 3614, recast1000ms: 40, maxCharges: "(lv) => lv>=78 ? (lv>=98 ? 3 : 2) : 1" },
   { id: 3613, recast1000ms: 60, duration: 10 },
   { id: 16553, recast1000ms: 60, duration: 15 },
   { id: 7439, recast1000ms: 60, duration: 10 },
-  { id: 16556, recast1000ms: 30, maxCharges: '(lv) => lv>=88 ? 2 : 1' },
+  { id: 16556, recast1000ms: 30, maxCharges: "(lv) => lv>=88 ? 2 : 1" },
   { id: 16557, recast1000ms: 60 },
   { id: 16559, recast1000ms: 120 },
   { id: 25873, recast1000ms: 60 },
@@ -102,7 +102,7 @@ const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
   { id: 24305, recast1000ms: 120 },
   { id: 24311, recast1000ms: 120 },
   { id: 24310, recast1000ms: 120, duration: 20 },
-  { id: 24300, recast1000ms: '(lv) => lv>=88 ? 90 : 120' },
+  { id: 24300, recast1000ms: "(lv) => lv>=88 ? 90 : 120" },
   { id: 24318, recast1000ms: 120 },
   { id: 37035, recast1000ms: 180 },
   { id: 7394, recast1000ms: 120 },
@@ -116,8 +116,8 @@ const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
   { id: 16014, recast1000ms: 120 },
   { id: 157, recast1000ms: 120 },
   { id: 155, recast1000ms: 10 },
-  { id: 25799, recast1000ms: 60, maxCharges: '(lv) => lv>=88 ? 2 : 1' },
+  { id: 25799, recast1000ms: 60, maxCharges: "(lv) => lv>=88 ? 2 : 1" },
   { id: 34685, recast1000ms: 120 },
-]
+];
 
-initGlobalSkills(rawGlobalSkillDefinitions)
+initGlobalSkills(rawGlobalSkillDefinitions);

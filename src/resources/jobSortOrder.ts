@@ -42,4 +42,4 @@ export const DEFAULT_JOB_SORT_ORDER = [
   17, // BTN 园艺工
   18, // FSH 捕鱼人
   0, // NONE 冒险者
-] as number[]
+] as number[];

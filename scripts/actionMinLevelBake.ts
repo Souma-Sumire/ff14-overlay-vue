@@ -1,58 +1,50 @@
-import fs from 'fs-extra'
-import { BAKED_ACTION_UPGRADE_STEPS } from '../src/resources/generated/bakedActionUpgradeSteps'
-import { readCsvRowsCached } from './csvCache'
-import { csvPaths } from './paths'
+import fs from "fs-extra";
+import { BAKED_ACTION_UPGRADE_STEPS } from "../src/resources/generated/bakedActionUpgradeSteps";
+import { readCsvRowsCached } from "./csvCache";
+import { csvPaths } from "./paths";
 
-type CsvRow = string[]
+type CsvRow = string[];
 
 function isMetaRow(row: CsvRow) {
-  const first = (row[0] ?? '').toLowerCase()
-  return ['key', '#', 'offset', 'int32'].includes(first)
+  const first = (row[0] ?? "").toLowerCase();
+  return ["key", "#", "offset", "int32"].includes(first);
 }
 
 function parseBool(value: string | undefined) {
-  if (!value)
-    return false
-  const normalized = value.trim().toLowerCase()
-  return normalized === 'true' || normalized === '1'
+  if (!value) return false;
+  const normalized = value.trim().toLowerCase();
+  return normalized === "true" || normalized === "1";
 }
 
 function parseIntSafe(value: string | undefined) {
-  const num = Number(value)
-  if (!Number.isFinite(num))
-    return 0
-  return Math.trunc(num)
+  const num = Number(value);
+  if (!Number.isFinite(num)) return 0;
+  return Math.trunc(num);
 }
 
 function getHeaderRow(rows: CsvRow[]) {
-  return rows.find(row => (row[0] ?? '').toLowerCase() === '#') ?? []
+  return rows.find((row) => (row[0] ?? "").toLowerCase() === "#") ?? [];
 }
 
 function getColumnIndex(header: CsvRow, name: string) {
-  return header.findIndex(col => (col ?? '').trim() === name)
+  return header.findIndex((col) => (col ?? "").trim() === name);
 }
 
 function normalizeLevel(level: unknown, fallback = 1) {
-  const num = Number(level)
-  if (!Number.isFinite(num))
-    return Math.max(1, Math.trunc(fallback))
-  return Math.max(1, Math.trunc(num))
+  const num = Number(level);
+  if (!Number.isFinite(num)) return Math.max(1, Math.trunc(fallback));
+  return Math.max(1, Math.trunc(num));
 }
-
 function collectRoleActionIds(actionRows: CsvRow[], isRoleActionIndex: number, isPvPIndex: number) {
-  const roleActionIds = new Set<number>()
+  const roleActionIds = new Set<number>();
   actionRows.forEach((row) => {
-    if (isMetaRow(row))
-      return
-    if (!parseBool(row[isRoleActionIndex]))
-      return
-    if (parseBool(row[isPvPIndex]))
-      return
-    const actionId = parseIntSafe(row[0])
-    if (actionId > 0)
-      roleActionIds.add(actionId)
-  })
-  return [...roleActionIds].sort((a, b) => a - b)
+    if (isMetaRow(row)) return;
+    if (!parseBool(row[isRoleActionIndex])) return;
+    if (parseBool(row[isPvPIndex])) return;
+    const actionId = parseIntSafe(row[0]);
+    if (actionId > 0) roleActionIds.add(actionId);
+  });
+  return Array.from(roleActionIds).sort((a: number, b: number) => a - b);
 }
 
 function collectBaseMinLevelByActionId(
@@ -60,108 +52,119 @@ function collectBaseMinLevelByActionId(
   classJobLevelIndex: number,
   iconIndex: number,
 ) {
-  const map = new Map<number, number>()
+  const map = new Map<number, number>();
   actionRows.forEach((row) => {
-    if (isMetaRow(row))
-      return
-    const actionId = parseIntSafe(row[0])
-    if (actionId <= 0)
-      return
-    const classJobLevel = parseIntSafe(row[classJobLevelIndex])
-    const icon = parseIntSafe(row[iconIndex])
+    if (isMetaRow(row)) return;
+    const actionId = parseIntSafe(row[0]);
+    if (actionId <= 0) return;
+    const classJobLevel = parseIntSafe(row[classJobLevelIndex]);
+    const icon = parseIntSafe(row[iconIndex]);
     if (classJobLevel > 0 && (icon !== 405 || actionId === 120))
-      map.set(actionId, normalizeLevel(classJobLevel))
-  })
-  return map
+      map.set(actionId, normalizeLevel(classJobLevel));
+  });
+  return map;
 }
 
-function buildUpgradeChainMinLevelMap(roleActionIds: number[], baseMinLevelByActionId: Map<number, number>) {
-  const roleActionSet = new Set(roleActionIds)
+function buildUpgradeChainMinLevelMap(
+  roleActionIds: number[],
+  baseMinLevelByActionId: Map<number, number>,
+) {
+  const roleActionSet = new Set(roleActionIds);
 
   function getBaseLevel(actionId: number) {
-    if (roleActionSet.has(actionId))
-      return 1
-    const fromMap = Number(baseMinLevelByActionId.get(actionId) ?? 0)
-    if (Number.isFinite(fromMap) && fromMap > 0)
-      return fromMap
-    return 1
+    if (roleActionSet.has(actionId)) return 1;
+    const fromMap = Number(baseMinLevelByActionId.get(actionId) ?? 0);
+    if (Number.isFinite(fromMap) && fromMap > 0) return fromMap;
+    return 1;
   }
 
-  const undirected = new Map<number, Set<number>>()
+  const undirected = new Map<number, Set<number>>();
   Object.entries(BAKED_ACTION_UPGRADE_STEPS).forEach(([rawLower, rawUpper]) => {
-    const lower = Number(rawLower)
-    const upper = Number(rawUpper)
-    if (!Number.isFinite(lower) || lower <= 0 || !Number.isFinite(upper) || upper <= 0)
-      return
-    if (!undirected.has(lower))
-      undirected.set(lower, new Set<number>())
-    if (!undirected.has(upper))
-      undirected.set(upper, new Set<number>())
-    undirected.get(lower)!.add(upper)
-    undirected.get(upper)!.add(lower)
-  })
+    const lower = Number(rawLower);
+    const upper = Number(rawUpper);
+    if (!Number.isFinite(lower) || lower <= 0 || !Number.isFinite(upper) || upper <= 0) return;
+    if (!undirected.has(lower)) undirected.set(lower, new Set<number>());
+    if (!undirected.has(upper)) undirected.set(upper, new Set<number>());
+    undirected.get(lower)!.add(upper);
+    undirected.get(upper)!.add(lower);
+  });
 
-  const visited = new Set<number>()
-  const result: Record<number, number> = {}
+  const visited = new Set<number>();
+  const result: Record<number, number> = {};
 
-  for (const start of undirected.keys()) {
-    if (visited.has(start))
-      continue
-    const stack = [start]
-    const family: number[] = []
+  // Convert undirected.keys() to an array and sort it to ensure consistent processing order
+  const sortedStarts = Array.from(undirected.keys()).sort((a: number, b: number) => a - b);
+
+  for (const start of sortedStarts) {
+    if (visited.has(start)) continue;
+    const stack = [start];
+    const family: number[] = [];
     while (stack.length > 0) {
-      const current = stack.pop()!
-      if (visited.has(current))
-        continue
-      visited.add(current)
-      family.push(current)
-      const next = undirected.get(current)
-      if (!next)
-        continue
+      const current = stack.pop()!;
+      if (visited.has(current)) continue;
+      visited.add(current);
+      family.push(current);
+      const next = undirected.get(current);
+      if (!next) continue;
       next.forEach((id) => {
-        if (!visited.has(id))
-          stack.push(id)
-      })
+        if (!visited.has(id)) stack.push(id);
+      });
     }
 
-    const familyMinLevel = family.reduce((min, id) => Math.min(min, getBaseLevel(id)), Number.POSITIVE_INFINITY)
+    const familyMinLevel = family.reduce(
+      (min, id) => Math.min(min, getBaseLevel(id)),
+      Number.POSITIVE_INFINITY,
+    );
     family.forEach((id) => {
-      result[id] = familyMinLevel
-    })
+      result[id] = familyMinLevel;
+    });
   }
 
-  return result
+  return result;
 }
 
 function writeUpgradeChainMinLevelMap(map: Record<number, number>) {
-  const sortedIds = Object.keys(map).map(v => Number(v)).sort((a, b) => a - b)
-  const lines: string[] = []
-  lines.push('// Generated by scripts/actionMinLevelBake.ts')
-  lines.push('// Source: chs/Action.csv + bakedActionUpgradeSteps.ts')
-  lines.push('export const BAKED_UPGRADE_CHAIN_MIN_LEVEL_BY_ACTION_ID: Record<number, number> = {')
+  const sortedIds = Object.keys(map)
+    .map((v) => Number(v))
+    .sort((a, b) => a - b);
+  const lines: string[] = [];
+  lines.push("// Generated by scripts/actionMinLevelBake.ts");
+  lines.push("// Source: chs/Action.csv + bakedActionUpgradeSteps.ts");
+  lines.push("export const BAKED_UPGRADE_CHAIN_MIN_LEVEL_BY_ACTION_ID: Record<number, number> = {");
   sortedIds.forEach((id) => {
-    lines.push(`  ${id}: ${map[id]},`)
-  })
-  lines.push('}')
-  lines.push('')
-  fs.outputFileSync('src/resources/generated/bakedUpgradeChainMinLevel.ts', lines.join('\n'), 'utf8')
+    lines.push(`  ${id}: ${map[id]},`);
+  });
+  lines.push("}");
+  lines.push("");
+  fs.outputFileSync(
+    "src/resources/generated/bakedUpgradeChainMinLevel.ts",
+    lines.join("\n"),
+    "utf8",
+  );
 }
 
 async function main() {
-  const actionRows = await readCsvRowsCached(`${csvPaths.cn}Action.csv`)
-  const header = getHeaderRow(actionRows)
-  const isRoleActionIndex = getColumnIndex(header, 'IsRoleAction')
-  const isPvPIndex = getColumnIndex(header, 'IsPvP')
-  const classJobLevelIndex = getColumnIndex(header, 'ClassJobLevel')
-  const iconIndex = getColumnIndex(header, 'Icon')
+  const actionRows = await readCsvRowsCached(`${csvPaths.cn}Action.csv`);
+  const header = getHeaderRow(actionRows);
+  const isRoleActionIndex = getColumnIndex(header, "IsRoleAction");
+  const isPvPIndex = getColumnIndex(header, "IsPvP");
+  const classJobLevelIndex = getColumnIndex(header, "ClassJobLevel");
+  const iconIndex = getColumnIndex(header, "Icon");
 
   if (isRoleActionIndex < 0 || isPvPIndex < 0 || classJobLevelIndex < 0 || iconIndex < 0)
-    throw new Error('Action.csv header changed: IsRoleAction/IsPvP/ClassJobLevel/Icon not found.')
+    throw new Error("Action.csv header changed: IsRoleAction/IsPvP/ClassJobLevel/Icon not found.");
 
-  const roleActionIds = collectRoleActionIds(actionRows, isRoleActionIndex, isPvPIndex)
-  const baseMinLevelByActionId = collectBaseMinLevelByActionId(actionRows, classJobLevelIndex, iconIndex)
-  const upgradeChainMinLevelMap = buildUpgradeChainMinLevelMap(roleActionIds, baseMinLevelByActionId)
-  writeUpgradeChainMinLevelMap(upgradeChainMinLevelMap)
+  const roleActionIds = collectRoleActionIds(actionRows, isRoleActionIndex, isPvPIndex);
+  const baseMinLevelByActionId = collectBaseMinLevelByActionId(
+    actionRows,
+    classJobLevelIndex,
+    iconIndex,
+  );
+  const upgradeChainMinLevelMap = buildUpgradeChainMinLevelMap(
+    roleActionIds,
+    baseMinLevelByActionId,
+  );
+  writeUpgradeChainMinLevelMap(upgradeChainMinLevelMap);
 }
 
-await main()
+await main();

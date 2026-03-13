@@ -1,14 +1,14 @@
-import type { WayMarkObj } from './PostNamazu'
+import type { WayMarkObj } from "./PostNamazu";
 
 interface Macro {
-  Name: string
-  Editable?: boolean
-  Deletability?: boolean
+  Name: string;
+  Editable?: boolean;
+  Deletability?: boolean;
 }
 export interface MacroInfoMacro extends Macro {
-  Text: string
+  Text: string;
 }
 export interface MacroInfoPlace extends Macro {
-  Place: WayMarkObj
+  Place: WayMarkObj;
 }
-export type ZoneIdInfo = Record<string, (MacroInfoMacro | MacroInfoPlace)[]>
+export type ZoneIdInfo = Record<string, (MacroInfoMacro | MacroInfoPlace)[]>;

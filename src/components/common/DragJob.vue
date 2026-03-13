@@ -1,29 +1,29 @@
 <script setup lang="ts">
-import type { RemovableRef } from '@vueuse/core'
-import type { Role } from '../../../cactbot/types/job'
-import type { Player } from '@/types/partyPlayer'
-import { VueDraggable } from 'vue-draggable-plus'
-import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
-import { usePartySortStore } from '@/store/partySort'
-import Util from '@/utils/util'
+import type { RemovableRef } from "@vueuse/core";
+import type { Role } from "../../../cactbot/types/job";
+import type { Player } from "@/types/partyPlayer";
+import { VueDraggable } from "vue-draggable-plus";
+import { DEFAULT_JOB_SORT_ORDER } from "@/resources/jobSortOrder";
+import { usePartySortStore } from "@/store/partySort";
+import Util from "@/utils/util";
 
-const props = defineProps<{ party: Player[] }>()
-const emit = defineEmits<(e: 'update') => void>()
-const freeMode = ref(false)
+const props = defineProps<{ party: Player[] }>();
+const emit = defineEmits<(e: "update") => void>();
+const freeMode = ref(false);
 
-const storePartySort = usePartySortStore()
+const storePartySort = usePartySortStore();
 
-const ROLES: { role: Role, color: string }[] = [
-  { role: 'tank', color: 'blue' },
-  { role: 'healer', color: 'green' },
-  { role: 'dps', color: 'red' },
-  { role: 'crafter', color: 'yellow' },
-  { role: 'gatherer', color: 'purple' },
-  { role: 'none', color: 'gray' },
-]
+const ROLES: { role: Role; color: string }[] = [
+  { role: "tank", color: "blue" },
+  { role: "healer", color: "green" },
+  { role: "dps", color: "red" },
+  { role: "crafter", color: "yellow" },
+  { role: "gatherer", color: "purple" },
+  { role: "none", color: "gray" },
+];
 
 function isJobInParty(job: number) {
-  return props.party.find(v => v.job === job)
+  return props.party.find((v) => v.job === job);
 }
 
 function buildJobsList(): Record<Role, number[]> {
@@ -33,24 +33,22 @@ function buildJobsList(): Record<Role, number[]> {
     dps: Util.isDpsJob,
     crafter: Util.isCraftingJob,
     gatherer: Util.isGatheringJob,
-  }
+  };
 
   return Object.fromEntries(
     ROLES.map(({ role }) => [
       role,
-      role === 'none'
+      role === "none"
         ? []
         : Util.getBattleJobs3()
             .filter(roleToFilterFn[role])
             .map(Util.jobToJobEnum)
-            .sort((a, b) =>
-              DEFAULT_JOB_SORT_ORDER.indexOf(a) - DEFAULT_JOB_SORT_ORDER.indexOf(b),
-            ),
+            .sort((a, b) => DEFAULT_JOB_SORT_ORDER.indexOf(a) - DEFAULT_JOB_SORT_ORDER.indexOf(b)),
     ]),
-  ) as Record<Role, number[]>
+  ) as Record<Role, number[]>;
 }
 
-const jobsList = buildJobsList()
+const jobsList = buildJobsList();
 
 const allJobsWithName = Object.values(jobsList)
   .flat()
@@ -58,38 +56,34 @@ const allJobsWithName = Object.values(jobsList)
     return {
       name: Util.jobToFullName(Util.jobEnumToJob(v)).simple1,
       job: v,
-    }
-  })
+    };
+  });
 
 const sortableJobList: RemovableRef<
   Record<
     Role,
     {
-      name: string
-      job: number
+      name: string;
+      job: number;
     }[]
   >
 > = ref(
   (() => {
-    const res = {} as Record<Role, { name: string, job: number }[]>
-    for (const role of ROLES.map(v => v.role)) {
+    const res = {} as Record<Role, { name: string; job: number }[]>;
+    for (const role of ROLES.map((v) => v.role)) {
       res[role] = allJobsWithName
-        .filter(v => jobsList[role].includes(v.job))
-        .sort(
-          (a, b) =>
-            storePartySort.arr.indexOf(a.job)
-            - storePartySort.arr.indexOf(b.job),
-        )
+        .filter((v) => jobsList[role].includes(v.job))
+        .sort((a, b) => storePartySort.arr.indexOf(a.job) - storePartySort.arr.indexOf(b.job));
     }
-    return res
+    return res;
   })(),
-)
+);
 
 function handleJobListUpdate() {
   storePartySort.arr = Object.values(sortableJobList.value)
     .flat()
-    .map(v => v.job)
-  emit('update')
+    .map((v) => v.job);
+  emit("update");
 }
 </script>
 
@@ -112,7 +106,7 @@ function handleJobListUpdate() {
         z-index: 0;
       "
     >
-      {{ $t('dragJob.freeMode') }}
+      {{ $t("dragJob.freeMode") }}
     </el-checkbox>
     <VueDraggable
       v-for="(role, index) in ROLES"
@@ -129,9 +123,7 @@ function handleJobListUpdate() {
     >
       <div
         v-for="item in sortableJobList[role.role]"
-        v-show="
-          !!props.party.find((v) => v.job === 36) ? true : item.job !== 36
-        "
+        v-show="!!props.party.find((v) => v.job === 36) ? true : item.job !== 36"
         :key="item.job"
         :class="`${
           freeMode || isJobInParty(item.job)
@@ -154,7 +146,8 @@ function handleJobListUpdate() {
   opacity: 0 !important;
 }
 
-.drag, .fallback {
+.drag,
+.fallback {
   opacity: 1 !important;
 }
 

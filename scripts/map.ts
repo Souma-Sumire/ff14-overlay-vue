@@ -1,75 +1,75 @@
-import fs from 'fs-extra'
-import { readCsvRowsCached } from './csvCache.js'
-import { csvPaths } from './paths.js'
+import fs from "fs-extra";
+import { readCsvRowsCached } from "./csvCache.js";
+import { csvPaths } from "./paths.js";
 
 interface FileValues {
-  [fileName: string]: string[][]
+  [fileName: string]: string[][];
 }
 
 interface MapName {
-  id?: string
+  id?: string;
   name: {
-    cn?: string
-    en?: string
-    ja?: string
-    souma?: string
-  }
+    cn?: string;
+    en?: string;
+    ja?: string;
+    souma?: string;
+  };
 }
 
 interface MapResult {
-  [territoryTypeId: string]: MapName
+  [territoryTypeId: string]: MapName;
 }
 
-const fileValues: FileValues = {}
-const fileNames = ['TerritoryType.csv', 'Map.csv']
+const fileValues: FileValues = {};
+const fileNames = ["TerritoryType.csv", "Map.csv"];
 
 const allFiles = [
-  ...fileNames.map(fileName => ({
+  ...fileNames.map((fileName) => ({
     name: fileName,
     path: `${csvPaths.ja}${fileName}`,
   })),
-  { name: 'PlaceName.csv', path: `${csvPaths.ja}PlaceName.csv` },
-  { name: 'PlaceName_en.csv', path: `${csvPaths.en}PlaceName.csv` },
-  { name: 'PlaceName_cn.csv', path: `${csvPaths.cn}PlaceName.csv` },
-]
+  { name: "PlaceName.csv", path: `${csvPaths.ja}PlaceName.csv` },
+  { name: "PlaceName_en.csv", path: `${csvPaths.en}PlaceName.csv` },
+  { name: "PlaceName_cn.csv", path: `${csvPaths.cn}PlaceName.csv` },
+];
 
 await Promise.all(
   allFiles.map(async (file) => {
-    fileValues[file.name] = await readCsvRowsCached(file.path)
+    fileValues[file.name] = await readCsvRowsCached(file.path);
   }),
-)
+);
 
-const res: MapResult = {}
-const territoryTypes = fileValues['TerritoryType.csv']!
-const maps = fileValues['Map.csv']!
+const res: MapResult = {};
+const territoryTypes = fileValues["TerritoryType.csv"]!;
+const maps = fileValues["Map.csv"]!;
 
 territoryTypes.forEach((row) => {
-  if (['offset', 'key'].includes(row[0]!)) {
-    return
+  if (["offset", "key"].includes(row[0]!)) {
+    return;
   }
 
-  const mapId = row[7]
-  const mapData = maps.find(v => v[0] === mapId)!
-  const id = mapData?.[7]
+  const mapId = row[7];
+  const mapData = maps.find((v) => v[0] === mapId)!;
+  const id = mapData?.[7];
 
   if (!id) {
-    return
+    return;
   }
 
-  const placeNameId = row[6]
+  const placeNameId = row[6];
 
   const getPlaceName = (fileName: string) => {
-    const file = fileValues[fileName]
-    const placeNameRow = file?.find(v => v[0] === placeNameId)
-    return placeNameRow?.[1]
-  }
+    const file = fileValues[fileName];
+    const placeNameRow = file?.find((v) => v[0] === placeNameId);
+    return placeNameRow?.[1];
+  };
 
-  const ja = getPlaceName('PlaceName.csv')
-  const en = getPlaceName('PlaceName_en.csv')
-  const cn = getPlaceName('PlaceName_cn.csv')
+  const ja = getPlaceName("PlaceName.csv");
+  const en = getPlaceName("PlaceName_en.csv");
+  const cn = getPlaceName("PlaceName_cn.csv");
 
-  res[row[0]!] = { id, name: { cn, en, ja } }
-})
+  res[row[0]!] = { id, name: { cn, en, ja } };
+});
 
-const outputPath = 'src/resources/generated/map.json'
-fs.outputJsonSync(outputPath, res, { spaces: 2 })
+const outputPath = "src/resources/generated/map.json";
+fs.outputJsonSync(outputPath, res, { spaces: 2 });

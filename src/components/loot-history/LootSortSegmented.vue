@@ -1,14 +1,14 @@
 <script setup lang="ts">
 defineProps<{
-  modelValue: 'part' | 'drop'
-}>()
+  modelValue: "part" | "drop";
+}>();
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: 'part' | 'drop'): void
-}>()
+  (e: "update:modelValue", value: "part" | "drop"): void;
+}>();
 
-function updateValue(val: 'part' | 'drop') {
-  emit('update:modelValue', val)
+function updateValue(val: "part" | "drop") {
+  emit("update:modelValue", val);
 }
 </script>
 

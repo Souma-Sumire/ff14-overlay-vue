@@ -1,25 +1,25 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { idToSrc } from '@/utils/dynamicValue'
+import { ref, watch } from "vue";
+import { idToSrc } from "@/utils/dynamicValue";
 
 const props = defineProps<{
-  id: number | string
-}>()
+  id: number | string;
+}>();
 
-const src = ref('')
+const src = ref("");
 
 watch(
   [() => props.id],
   ([newId]) => {
-    src.value = idToSrc(newId)
+    src.value = idToSrc(newId);
   },
   { immediate: true },
-)
+);
 </script>
 
 <template>
   <div class="action-icon-wrapper">
-    <img v-if="src" :src="src" class="action-icon" alt="">
+    <img v-if="src" :src="src" class="action-icon" alt="" />
     <div v-else class="action-icon-placeholder" />
   </div>
 </template>

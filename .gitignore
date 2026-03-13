@@ -1,6 +1,5 @@
 # Dependencies
 node_modules
-
 # Build outputs
 dist
 dist-ssr
@@ -47,4 +46,4 @@ yarn-error.log*
 
 .agent
 .agents
-AGENTS.md
+

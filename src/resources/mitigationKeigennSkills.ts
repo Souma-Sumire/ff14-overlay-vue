@@ -1,57 +1,58 @@
-import type { DynamicValue } from '@/types/dynamicValue'
-import type { PerformanceType } from '@/types/keigennRecord2'
-import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
-import { parseDynamicValue } from '@/utils/dynamicValue'
+import type { DynamicValue } from "@/types/dynamicValue";
+import type { PerformanceType } from "@/types/keigennRecord2";
+import { GLOBAL_SKILL_MAX_LEVEL } from "@/resources/globalSkills";
+import { parseDynamicValue } from "@/utils/dynamicValue";
 
-type MitigationScope = 'self' | 'party'
-type DynamicDamageTakenMultiplier = PerformanceType | string
+type MitigationScope = "self" | "party";
+type DynamicDamageTakenMultiplier = PerformanceType | string;
 
 interface MitigationSkillWithDamageTakenMultiplier {
-  duration: DynamicValue
-  mitigationScope: MitigationScope
-  damageTakenMultiplier: DynamicDamageTakenMultiplier
+  duration: DynamicValue;
+  mitigationScope: MitigationScope;
+  damageTakenMultiplier: DynamicDamageTakenMultiplier;
 }
 
 interface MitigationSkillWithoutDamageTakenMultiplier {
-  mitigationScope?: MitigationScope
-  damageTakenMultiplier?: undefined
+  mitigationScope?: MitigationScope;
+  damageTakenMultiplier?: undefined;
 }
 
-type MitigationSkillMeta = MitigationSkillWithDamageTakenMultiplier | MitigationSkillWithoutDamageTakenMultiplier
+type MitigationSkillMeta =
+  | MitigationSkillWithDamageTakenMultiplier
+  | MitigationSkillWithoutDamageTakenMultiplier;
 
 interface RawMitigationKeigennSkillBase {
-  id: number | string
-  recast1000ms: DynamicValue
-  job: number[]
-  minLevel: number
-  maxCharges?: DynamicValue
-  duration?: DynamicValue
-  shieldAmount?: DynamicValue
-  isEnemyTargetMitigation?: boolean
+  id: number | string;
+  recast1000ms: DynamicValue;
+  job: number[];
+  minLevel: number;
+  maxCharges?: DynamicValue;
+  duration?: DynamicValue;
+  shieldAmount?: DynamicValue;
+  isEnemyTargetMitigation?: boolean;
 }
 
-type RawMitigationKeigennSkill = RawMitigationKeigennSkillBase & MitigationSkillMeta
+type RawMitigationKeigennSkill = RawMitigationKeigennSkillBase & MitigationSkillMeta;
 
 interface MitigationKeigennSkillBase {
-  id: number
-  recast1000ms: DynamicValue
-  job: number[]
-  minLevel: number
-  maxCharges?: DynamicValue
-  duration?: DynamicValue
-  shieldAmount?: DynamicValue
-  isEnemyTargetMitigation?: boolean
+  id: number;
+  recast1000ms: DynamicValue;
+  job: number[];
+  minLevel: number;
+  maxCharges?: DynamicValue;
+  duration?: DynamicValue;
+  shieldAmount?: DynamicValue;
+  isEnemyTargetMitigation?: boolean;
 }
 
-type MitigationKeigennSkill = MitigationKeigennSkillBase & MitigationSkillMeta
+type MitigationKeigennSkill = MitigationKeigennSkillBase & MitigationSkillMeta;
 
 function normalizeMitigationSkillIdAtMaxLevel(value: number | string): number {
   try {
-    const raw = parseDynamicValue(value, GLOBAL_SKILL_MAX_LEVEL)
-    return raw || 0
-  }
-  catch {
-    return 0
+    const raw = parseDynamicValue(value, GLOBAL_SKILL_MAX_LEVEL);
+    return raw || 0;
+  } catch {
+    return 0;
   }
 }
 
@@ -65,7 +66,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     job: [2, 4, 20, 22, 29, 30, 34, 39, 41],
     // minLevel: 22,
     minLevel: 1,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     damageTakenMultiplier: { physics: 0.9, magic: 0.95, darkness: 1 },
     isEnemyTargetMitigation: true,
   },
@@ -77,7 +78,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     job: [7, 25, 26, 27, 35, 36, 42],
     // minLevel: 8,
     minLevel: 1,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     damageTakenMultiplier: { physics: 0.95, magic: 0.9, darkness: 1 },
     isEnemyTargetMitigation: true,
   },
@@ -89,7 +90,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     job: [1, 3, 19, 21, 32, 37],
     // minLevel: 22,
     minLevel: 1,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     damageTakenMultiplier: { physics: 0.9, magic: 0.9, darkness: 1 },
     isEnemyTargetMitigation: true,
   },
@@ -100,7 +101,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     job: [1, 3, 19, 21, 32, 37],
     // minLevel: 8,
     minLevel: 1,
-    mitigationScope: 'self',
+    mitigationScope: "self",
     damageTakenMultiplier: { physics: 0.8, magic: 0.8, darkness: 1 },
     duration: 20,
   },
@@ -136,7 +137,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 120,
     job: [1],
     minLevel: 38,
-    mitigationScope: 'self',
+    mitigationScope: "self",
     damageTakenMultiplier: { physics: 0.7, magic: 0.7, darkness: 1 },
     duration: 15,
   },
@@ -147,7 +148,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 420,
     job: [19],
     minLevel: 50,
-    mitigationScope: 'self',
+    mitigationScope: "self",
     damageTakenMultiplier: { physics: 0, magic: 0, darkness: 0 },
   },
   {
@@ -157,7 +158,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 90,
     job: [19],
     minLevel: 56,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     shieldAmount: 30000,
   },
   {
@@ -167,7 +168,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 120,
     job: [19],
     minLevel: 70,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     damageTakenMultiplier: { physics: 0.85, magic: 0.85, darkness: 1 },
   },
   {
@@ -176,7 +177,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 120,
     job: [19],
     minLevel: 38,
-    mitigationScope: 'self',
+    mitigationScope: "self",
     damageTakenMultiplier: `(lv) => lv>=92 ? { physics: 0.6, magic: 0.6, darkness: 1 } : { physics: 0.7, magic: 0.7, darkness: 1 }`,
     duration: 15,
   },
@@ -186,7 +187,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 90,
     job: [19],
     minLevel: 52,
-    mitigationScope: 'self',
+    mitigationScope: "self",
     // 格挡算20%
     damageTakenMultiplier: { physics: 0.8, magic: 0.8, darkness: 1 },
     duration: 10,
@@ -197,7 +198,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 0,
     job: [19],
     minLevel: 35,
-    mitigationScope: 'self',
+    mitigationScope: "self",
     damageTakenMultiplier: { physics: 0.85, magic: 0.85, darkness: 1 },
     duration: 8,
   },
@@ -217,7 +218,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 90,
     job: [21],
     minLevel: 68,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
   {
     // 死斗
@@ -226,7 +227,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 240,
     job: [3, 21],
     minLevel: 42,
-    mitigationScope: 'self',
+    mitigationScope: "self",
     damageTakenMultiplier: { physics: 0, magic: 0, darkness: 0 },
   },
   {
@@ -235,7 +236,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 120,
     job: [3],
     minLevel: 38,
-    mitigationScope: 'self',
+    mitigationScope: "self",
     damageTakenMultiplier: { physics: 0.7, magic: 0.7, darkness: 1 },
     duration: 15,
   },
@@ -245,7 +246,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 120,
     job: [21],
     minLevel: 38,
-    mitigationScope: 'self',
+    mitigationScope: "self",
     damageTakenMultiplier: `(lv) => lv>=92 ? { physics: 0.6, magic: 0.6, darkness: 1 } : { physics: 0.7, magic: 0.7, darkness: 1 }`,
     duration: 15,
   },
@@ -255,7 +256,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 90,
     job: [3, 21],
     minLevel: 30,
-    mitigationScope: 'self',
+    mitigationScope: "self",
     // 为了自动排轴，按20%算
     damageTakenMultiplier: { physics: 0.8, magic: 0.8, darkness: 0.8 },
     duration: 10,
@@ -266,7 +267,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 60,
     job: [21],
     minLevel: 58,
-    mitigationScope: 'self',
+    mitigationScope: "self",
   },
   {
     // 原初的直觉 / 原初的血气
@@ -274,7 +275,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 25,
     job: [21],
     minLevel: 56,
-    mitigationScope: 'self',
+    mitigationScope: "self",
     damageTakenMultiplier: { physics: 0.9, magic: 0.9, darkness: 1 },
     duration: 8,
   },
@@ -284,7 +285,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 25,
     job: [21],
     minLevel: 76,
-    mitigationScope: 'self',
+    mitigationScope: "self",
     damageTakenMultiplier: { physics: 0.9, magic: 0.9, darkness: 1 },
     duration: 8,
   },
@@ -296,7 +297,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 300,
     job: [32],
     minLevel: 50,
-    mitigationScope: 'self',
+    mitigationScope: "self",
     damageTakenMultiplier: { physics: 0, magic: 0, darkness: 0 },
   },
   {
@@ -306,7 +307,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 90,
     job: [32],
     minLevel: 66,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     damageTakenMultiplier: { physics: 0.95, magic: 0.9, darkness: 1 },
   },
   {
@@ -315,7 +316,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 120,
     job: [32],
     minLevel: 38,
-    mitigationScope: 'self',
+    mitigationScope: "self",
     damageTakenMultiplier: `(lv) => lv>=92 ? { physics: 0.6, magic: 0.6, darkness: 1 } : { physics: 0.7, magic: 0.7, darkness: 1 }`,
     duration: 15,
   },
@@ -325,7 +326,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 60,
     job: [32],
     minLevel: 45,
-    mitigationScope: 'self',
+    mitigationScope: "self",
     damageTakenMultiplier: { physics: 0.9, magic: 0.8, darkness: 1 },
     duration: 10,
   },
@@ -335,7 +336,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 15,
     job: [32],
     minLevel: 70,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     duration: 7,
   },
   {
@@ -344,7 +345,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 60,
     job: [32],
     minLevel: 82,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     damageTakenMultiplier: { physics: 0.9, magic: 0.9, darkness: 1 },
     maxCharges: 2,
     duration: 7,
@@ -358,7 +359,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 360,
     job: [37],
     minLevel: 50,
-    mitigationScope: 'self',
+    mitigationScope: "self",
     damageTakenMultiplier: { physics: 0, magic: 0, darkness: 0 },
   },
   {
@@ -368,7 +369,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 90,
     job: [37],
     minLevel: 64,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     damageTakenMultiplier: { physics: 0.95, magic: 0.85, darkness: 1 },
   },
 
@@ -378,7 +379,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 120,
     job: [37],
     minLevel: 38,
-    mitigationScope: 'self',
+    mitigationScope: "self",
     damageTakenMultiplier: `(lv) => lv>=92 ? { physics: 0.6, magic: 0.6, darkness: 1 } : { physics: 0.7, magic: 0.7, darkness: 1 }`,
     duration: 15,
   },
@@ -388,7 +389,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 90,
     job: [37],
     minLevel: 6,
-    mitigationScope: 'self',
+    mitigationScope: "self",
     damageTakenMultiplier: { physics: 0.9, magic: 0.9, darkness: 1 },
     duration: 10,
   },
@@ -398,7 +399,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 25,
     job: [37],
     minLevel: 68,
-    mitigationScope: 'self',
+    mitigationScope: "self",
     damageTakenMultiplier: { physics: 0.85, magic: 0.85, darkness: 1 },
     duration: 8,
   },
@@ -408,7 +409,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 60,
     job: [37],
     minLevel: 45,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     maxCharges: `(lv) => lv>=84 ? 2 : 1`,
   },
   // 白魔法师
@@ -427,7 +428,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 180,
     job: [24],
     minLevel: 90,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
   {
     // 全大赦
@@ -436,7 +437,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 60,
     job: [24],
     minLevel: 70,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     damageTakenMultiplier: { physics: 0.9, magic: 0.9, darkness: 1 },
   },
   {
@@ -446,7 +447,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 120,
     job: [24],
     minLevel: 80,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     damageTakenMultiplier: { physics: 0.9, magic: 0.9, darkness: 1 },
   },
 
@@ -456,7 +457,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 60,
     job: [24],
     minLevel: 60,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     maxCharges: `(lv) => lv>=98 ? 2 : 1`,
   },
   {
@@ -482,7 +483,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 90,
     job: [28],
     minLevel: 70,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
   {
     // 展开战术
@@ -490,7 +491,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 90,
     job: [28],
     minLevel: 56,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
   {
     // 异想的幻光
@@ -499,7 +500,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     job: [28],
     minLevel: 40,
     duration: 20,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     damageTakenMultiplier: { physics: 1, magic: 0.95, darkness: 1 },
   },
   {
@@ -509,7 +510,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     job: [28],
     minLevel: 50,
     duration: 18,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     damageTakenMultiplier: { physics: 0.9, magic: 0.9, darkness: 1 },
   },
   {
@@ -518,7 +519,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 30,
     job: [28],
     minLevel: 52,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
   {
     // 深谋远虑之策
@@ -535,7 +536,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 120,
     job: [28],
     minLevel: 90,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     damageTakenMultiplier: { physics: 0.9, magic: 0.9, darkness: 1 },
   },
   {
@@ -544,7 +545,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 120,
     job: [28],
     minLevel: 80,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
   {
     // 生命回生法
@@ -559,7 +560,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 180,
     job: [28],
     minLevel: 100,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
   // 占星
   {
@@ -569,7 +570,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 180,
     job: [33],
     minLevel: 90,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
   {
     // 先天禀赋
@@ -586,7 +587,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     duration: 10,
     job: [33],
     minLevel: 58,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     damageTakenMultiplier: { physics: 0.9, magic: 0.9, darkness: 1 },
   },
   {
@@ -596,7 +597,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     duration: 15,
     job: [33],
     minLevel: 60,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
   {
     // 地星
@@ -605,7 +606,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     duration: 10,
     job: [33],
     minLevel: 62,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
   {
     // 天星交错
@@ -613,7 +614,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 30,
     job: [33],
     minLevel: 74,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     maxCharges: `(lv) => lv>=88 ? 2 : 1`,
   },
   {
@@ -622,7 +623,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 60,
     job: [33],
     minLevel: 76,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
   {
     // 中间学派
@@ -630,7 +631,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 120,
     job: [33],
     minLevel: 80,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
   {
     // 擢升
@@ -648,7 +649,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     job: [40],
     minLevel: 50,
     duration: 15,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     damageTakenMultiplier: { physics: 0.9, magic: 0.9, darkness: 1 },
   },
   {
@@ -657,7 +658,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 30,
     job: [40],
     minLevel: 52,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
   {
     // 输血
@@ -672,7 +673,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 120,
     job: [40],
     minLevel: 80,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
   {
     // 整体论
@@ -681,7 +682,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     job: [40],
     duration: 20,
     minLevel: 76,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     damageTakenMultiplier: { physics: 0.9, magic: 0.9, darkness: 1 },
   },
   {
@@ -697,7 +698,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 120,
     job: [40],
     minLevel: 90,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
   {
     // 智慧之爱
@@ -705,7 +706,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 180,
     job: [40],
     minLevel: 100,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
   // 武僧
   {
@@ -714,7 +715,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 120,
     job: [20],
     minLevel: 64,
-    mitigationScope: 'self',
+    mitigationScope: "self",
   },
   {
     // 真言
@@ -722,7 +723,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 90,
     job: [2, 20],
     minLevel: 42,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
   // 龙骑士
   {
@@ -731,7 +732,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 120,
     job: [29, 30],
     minLevel: 2,
-    mitigationScope: 'self',
+    mitigationScope: "self",
   },
   // 武士
   {
@@ -748,7 +749,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 30,
     job: [39],
     minLevel: 40,
-    mitigationScope: 'self',
+    mitigationScope: "self",
   },
   // 蝰蛇剑士
   {
@@ -757,7 +758,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 120,
     job: [23],
     minLevel: 66,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
   // 吟游诗人
   {
@@ -767,7 +768,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: `(lv) => lv>=88 ? 90 : 120`,
     job: [23],
     minLevel: 62,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     damageTakenMultiplier: { physics: 0.85, magic: 0.85, darkness: 1 },
   },
   // 机工士
@@ -778,7 +779,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 120,
     job: [31],
     minLevel: 62,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     damageTakenMultiplier: { physics: 0.9, magic: 0.9, darkness: 1 },
     isEnemyTargetMitigation: true,
   },
@@ -789,7 +790,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: `(lv) => lv>=88 ? 90 : 120`,
     job: [31],
     minLevel: 56,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     damageTakenMultiplier: { physics: 0.85, magic: 0.85, darkness: 1 },
   },
 
@@ -801,7 +802,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: `(lv) => lv>=88 ? 90 : 120`,
     job: [38],
     minLevel: 56,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     damageTakenMultiplier: { physics: 0.85, magic: 0.85, darkness: 1 },
   },
   {
@@ -810,7 +811,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 60,
     job: [38],
     minLevel: 52,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
   {
     // 即兴表演
@@ -818,7 +819,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 120,
     job: [38],
     minLevel: 80,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
   // 黑魔法师
   {
@@ -827,7 +828,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 120,
     job: [7, 25],
     minLevel: 40,
-    mitigationScope: 'self',
+    mitigationScope: "self",
   },
   // 召唤师
   {
@@ -836,7 +837,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 60,
     job: [26, 27],
     minLevel: 2,
-    mitigationScope: 'self',
+    mitigationScope: "self",
     maxCharges: `(lv) => lv>=88 ? 2 : 1`,
   },
   // 赤魔法师
@@ -847,7 +848,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 120,
     job: [35],
     minLevel: 86,
-    mitigationScope: 'party',
+    mitigationScope: "party",
     damageTakenMultiplier: { physics: 1, magic: 0.9, darkness: 1 },
   },
   // 绘灵法师
@@ -857,7 +858,7 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 120,
     job: [42],
     minLevel: 10,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
   {
     // 油性坦培拉涂层
@@ -865,19 +866,18 @@ const mitigationKeigennSkillDefinitions: RawMitigationKeigennSkill[] = [
     recast1000ms: 90,
     job: [42],
     minLevel: 88,
-    mitigationScope: 'party',
+    mitigationScope: "party",
   },
-]
+];
 
 const mitigationKeigennSkills: MitigationKeigennSkill[] = mitigationKeigennSkillDefinitions
   .map((skill) => {
-    const resolvedId = normalizeMitigationSkillIdAtMaxLevel(skill.id)
-    if (resolvedId <= 0)
-      return undefined
+    const resolvedId = normalizeMitigationSkillIdAtMaxLevel(skill.id);
+    if (resolvedId <= 0) return undefined;
     return {
       ...skill,
       id: resolvedId,
-    }
+    };
   })
-  .filter((skill): skill is MitigationKeigennSkill => Boolean(skill))
-export { type MitigationKeigennSkill, mitigationKeigennSkills }
+  .filter((skill): skill is MitigationKeigennSkill => Boolean(skill));
+export { type MitigationKeigennSkill, mitigationKeigennSkills };

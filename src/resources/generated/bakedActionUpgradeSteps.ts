@@ -118,4 +118,4 @@ export const BAKED_ACTION_UPGRADE_STEPS: Record<number, number> = {
   36940: 36942, // 铁山斗气 -> 阴阳斗气
   36941: 36943, // 空鸣斗气 -> 万象斗气
   36974: 16494, // 广域群射 -> 影噬箭
-}
+};

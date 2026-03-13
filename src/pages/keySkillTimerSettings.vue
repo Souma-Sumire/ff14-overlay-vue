@@ -1,103 +1,106 @@
 <script setup lang="ts">
-import type { MessageBoxInputData } from 'element-plus'
-import type { ActionPickerGridItem } from '@/components/common/ActionPickerDialog.vue'
-import type { KeySkillEntry } from '@/store/keySkills'
-import type { DynamicValue } from '@/types/dynamicValue'
-import { Download, InfoFilled, Plus, RefreshLeft, Upload } from '@element-plus/icons-vue'
-import { useWindowSize } from '@vueuse/core'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import * as LZString from 'lz-string'
-import { computed, reactive, ref, watch } from 'vue'
-import { VueDraggable } from 'vue-draggable-plus'
-import ActionPickerDialog from '@/components/common/ActionPickerDialog.vue'
-import SkillEditorDialog from '@/components/common/SkillEditorDialog.vue'
-import { useLang } from '@/composables/useLang'
-import { useWebSocket } from '@/composables/useWebSocket'
-import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
-import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
-import { getGlobalSkillDefinitionById, resolveActionDisplayName, resolveActionIconSrc, uniqueInts } from '@/resources/logic/actionMetaResolver'
-import { useKeySkillStore } from '@/store/keySkills'
-import { copyToClipboard } from '@/utils/clipboard'
-import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
-import { validateDynamicValue } from '@/utils/dynamicValueValidation'
-import { tts } from '@/utils/tts'
-import Util from '@/utils/util'
-import { handleImgError, searchActionsByClassJobs } from '@/utils/xivapi'
+import type { MessageBoxInputData } from "element-plus";
+import type { ActionPickerGridItem } from "@/components/common/ActionPickerDialog.vue";
+import type { KeySkillEntry } from "@/store/keySkills";
+import type { DynamicValue } from "@/types/dynamicValue";
+import { Download, InfoFilled, Plus, RefreshLeft, Upload } from "@element-plus/icons-vue";
+import { useWindowSize } from "@vueuse/core";
+import { ElMessage, ElMessageBox } from "element-plus";
+import * as LZString from "lz-string";
+import { computed, reactive, ref, watch } from "vue";
+import { VueDraggable } from "vue-draggable-plus";
+import ActionPickerDialog from "@/components/common/ActionPickerDialog.vue";
+import SkillEditorDialog from "@/components/common/SkillEditorDialog.vue";
+import { useLang } from "@/composables/useLang";
+import { useWebSocket } from "@/composables/useWebSocket";
+import { GLOBAL_SKILL_MAX_LEVEL } from "@/resources/globalSkills";
+import { DEFAULT_JOB_SORT_ORDER } from "@/resources/jobSortOrder";
+import {
+  getGlobalSkillDefinitionById,
+  resolveActionDisplayName,
+  resolveActionIconSrc,
+  uniqueInts,
+} from "@/resources/logic/actionMetaResolver";
+import { useKeySkillStore } from "@/store/keySkills";
+import { copyToClipboard } from "@/utils/clipboard";
+import { idToSrc, parseDynamicValue } from "@/utils/dynamicValue";
+import { validateDynamicValue } from "@/utils/dynamicValueValidation";
+import { tts } from "@/utils/tts";
+import Util from "@/utils/util";
+import { handleImgError, searchActionsByClassJobs } from "@/utils/xivapi";
 
 interface KeySkillRow {
-  key: string
-  id: number
-  tts: string
-  line: number
-  job?: number[]
-  recast1000ms?: DynamicValue
-  duration?: DynamicValue
-  minLevel?: number
-  maxCharges?: DynamicValue
+  key: string;
+  id: number;
+  tts: string;
+  line: number;
+  job?: number[];
+  recast1000ms?: DynamicValue;
+  duration?: DynamicValue;
+  minLevel?: number;
+  maxCharges?: DynamicValue;
 }
 
-const { t } = useLang()
-const storeKeySkill = useKeySkillStore()
-const { width: viewportWidth } = useWindowSize()
-const { wsConnected } = useWebSocket({ allowWarning: false })
+const { t } = useLang();
+const storeKeySkill = useKeySkillStore();
+const { width: viewportWidth } = useWindowSize();
+const { wsConnected } = useWebSocket({ allowWarning: false });
 
-const rows = computed<KeySkillRow[]>(() => storeKeySkill.keySkillsData.chinese as unknown as KeySkillRow[])
-const lineBuckets = reactive<Record<number, KeySkillRow[]>>({})
-let syncLocked = false
+const rows = computed<KeySkillRow[]>(
+  () => storeKeySkill.keySkillsData.chinese as unknown as KeySkillRow[],
+);
+const lineBuckets = reactive<Record<number, KeySkillRow[]>>({});
+let syncLocked = false;
 
-const pickerVisible = ref(false)
-const pickerSearch = ref('')
-const pickerPool = ref<ActionPickerGridItem[]>([])
-const pickerPoolCache = reactive<Record<number, ActionPickerGridItem[]>>({})
-const pickerLoading = ref(false)
-const pickerSelectedJob = ref<number | null>(null)
-const pickerTargetLine = ref(1)
-const pickerReplaceSkillKey = ref<string | null>(null)
+const pickerVisible = ref(false);
+const pickerSearch = ref("");
+const pickerPool = ref<ActionPickerGridItem[]>([]);
+const pickerPoolCache = reactive<Record<number, ActionPickerGridItem[]>>({});
+const pickerLoading = ref(false);
+const pickerSelectedJob = ref<number | null>(null);
+const pickerTargetLine = ref(1);
+const pickerReplaceSkillKey = ref<string | null>(null);
 
-const editorVisible = ref(false)
-const editorOpening = ref(false)
-const editorSkillKey = ref<string | null>(null)
-const editorTts = ref('')
-const editorRecast = ref<DynamicValue>('')
-const editorDuration = ref<DynamicValue>('')
+const editorVisible = ref(false);
+const editorOpening = ref(false);
+const editorSkillKey = ref<string | null>(null);
+const editorTts = ref("");
+const editorRecast = ref<DynamicValue>("");
+const editorDuration = ref<DynamicValue>("");
 
 const lineOrder = computed(() => {
   const lines = Object.keys(lineBuckets)
-    .map(v => Number(v))
-    .filter(v => Number.isFinite(v) && v > 0)
-    .sort((a, b) => a - b)
-  return lines.length > 0 ? lines : [1]
-})
+    .map((v) => Number(v))
+    .filter((v) => Number.isFinite(v) && v > 0)
+    .sort((a, b) => a - b);
+  return lines.length > 0 ? lines : [1];
+});
 
-const nextLine = computed(() => (lineOrder.value[lineOrder.value.length - 1] ?? 1) + 1)
+const nextLine = computed(() => (lineOrder.value.at(-1) ?? 1) + 1);
 
 const currentEditorSkill = computed(() => {
-  if (!editorSkillKey.value)
-    return null
-  return rows.value.find(v => v.key === editorSkillKey.value) ?? null
-})
+  if (!editorSkillKey.value) return null;
+  return rows.value.find((v) => v.key === editorSkillKey.value) ?? null;
+});
 const currentEditorMeta = computed(() => {
-  if (!currentEditorSkill.value)
-    return null
-  return resolveSkillMeta(currentEditorSkill.value.id)
-})
+  if (!currentEditorSkill.value) return null;
+  return resolveSkillMeta(currentEditorSkill.value.id);
+});
 const currentEditorGlobalMeta = computed(() => {
-  if (!currentEditorSkill.value)
-    return null
-  return getGlobalSkillDefinitionById(currentEditorSkill.value.id)
-})
+  if (!currentEditorSkill.value) return null;
+  return getGlobalSkillDefinitionById(currentEditorSkill.value.id);
+});
 const currentEditorResolvedDebug = computed(() => {
-  const skill = currentEditorSkill.value
-  const meta = currentEditorMeta.value
-  if (!skill || !meta)
-    return null
+  const skill = currentEditorSkill.value;
+  const meta = currentEditorMeta.value;
+  if (!skill || !meta) return null;
 
-  const globalMeta = currentEditorGlobalMeta.value
-  const recastInput = skill.recast1000ms ?? globalMeta?.recast1000ms ?? meta.recast1000ms
-  const durationInput = skill.duration ?? globalMeta?.duration ?? meta.duration
-  const chargesInput = skill.maxCharges ?? globalMeta?.maxCharges ?? 1
-  const minLevelInput = skill.minLevel ?? meta.minLevel
-  const resolvedJobs = skill.job?.length ? uniqueInts(skill.job) : meta.jobs
+  const globalMeta = currentEditorGlobalMeta.value;
+  const recastInput = skill.recast1000ms ?? globalMeta?.recast1000ms ?? meta.recast1000ms;
+  const durationInput = skill.duration ?? globalMeta?.duration ?? meta.duration;
+  const chargesInput = skill.maxCharges ?? globalMeta?.maxCharges ?? 1;
+  const minLevelInput = skill.minLevel ?? meta.minLevel;
+  const resolvedJobs = skill.job?.length ? uniqueInts(skill.job) : meta.jobs;
 
   return {
     id: skill.id,
@@ -106,135 +109,136 @@ const currentEditorResolvedDebug = computed(() => {
     duration: durationInput,
     maxCharges: chargesInput,
     jobs: resolvedJobs,
-  }
-})
+  };
+});
 
 const effectiveRecast = computed({
   get: () => {
-    if (editorRecast.value !== '')
-      return String(editorRecast.value)
-    const globalVal = currentEditorGlobalMeta.value?.recast1000ms
-    if (globalVal !== undefined && globalVal !== null)
-      return String(globalVal)
-    return String(currentEditorMeta.value?.recast1000ms ?? '')
+    if (editorRecast.value !== "") return String(editorRecast.value);
+    const globalVal = currentEditorGlobalMeta.value?.recast1000ms;
+    if (globalVal !== undefined && globalVal !== null) return String(globalVal);
+    return String(currentEditorMeta.value?.recast1000ms ?? "");
   },
   set: (val: string) => {
-    const base = String(currentEditorGlobalMeta.value?.recast1000ms ?? currentEditorMeta.value?.recast1000ms ?? '')
-    editorRecast.value = (val === base || !val) ? '' : val
+    const base = String(
+      currentEditorGlobalMeta.value?.recast1000ms ?? currentEditorMeta.value?.recast1000ms ?? "",
+    );
+    editorRecast.value = val === base || !val ? "" : val;
   },
-})
+});
 
 const effectiveDuration = computed({
   get: () => {
-    if (editorDuration.value !== '')
-      return String(editorDuration.value)
-    const globalVal = currentEditorGlobalMeta.value?.duration
-    if (globalVal !== undefined && globalVal !== null)
-      return String(globalVal)
-    return String(currentEditorMeta.value?.duration ?? '')
+    if (editorDuration.value !== "") return String(editorDuration.value);
+    const globalVal = currentEditorGlobalMeta.value?.duration;
+    if (globalVal !== undefined && globalVal !== null) return String(globalVal);
+    return String(currentEditorMeta.value?.duration ?? "");
   },
   set: (val: string) => {
-    const base = String(currentEditorGlobalMeta.value?.duration ?? currentEditorMeta.value?.duration ?? '')
-    editorDuration.value = (val === base || !val) ? '' : val
+    const base = String(
+      currentEditorGlobalMeta.value?.duration ?? currentEditorMeta.value?.duration ?? "",
+    );
+    editorDuration.value = val === base || !val ? "" : val;
   },
-})
-const dynamicValueTipText = 'DynamicValue支持输入数字或动态表达式，例如 `(lv) => lv>=94 ? 40 : 60`。'
+});
+const dynamicValueTipText =
+  "DynamicValue支持输入数字或动态表达式，例如 `(lv) => lv>=94 ? 40 : 60`。";
 
-const recastError = computed(() => validateDynamicValue(effectiveRecast.value))
-const durationError = computed(() => validateDynamicValue(effectiveDuration.value))
+const recastError = computed(() => validateDynamicValue(effectiveRecast.value));
+const durationError = computed(() => validateDynamicValue(effectiveDuration.value));
 
 const pickerDialogWidth = computed(() => {
-  const available = Math.trunc(viewportWidth.value) - 20
-  const safeWidth = Math.max(320, available)
-  return `${Math.min(980, safeWidth)}px`
-})
+  const available = Math.trunc(viewportWidth.value) - 20;
+  const safeWidth = Math.max(320, available);
+  return `${Math.min(980, safeWidth)}px`;
+});
 
 const pickerJobOptions = computed(() => {
-  const sortMap = new Map(DEFAULT_JOB_SORT_ORDER.map((jobEnum, index) => [jobEnum, index]))
+  const sortMap = new Map(DEFAULT_JOB_SORT_ORDER.map((jobEnum, index) => [jobEnum, index]));
   return Util.getBattleJobs3()
-    .map(job => ({
+    .map((job) => ({
       jobEnum: Util.jobToJobEnum(job),
       label: Util.jobToFullName(job).cn || Util.jobToFullName(job).en || job,
       iconSrc: getJobIconSrcByEnum(Util.jobToJobEnum(job)),
     }))
-    .filter(v => Number.isFinite(v.jobEnum) && v.jobEnum > 0)
+    .filter((v) => Number.isFinite(v.jobEnum) && v.jobEnum > 0)
     .sort((a, b) => {
-      const aIndex = sortMap.get(a.jobEnum) ?? Number.MAX_SAFE_INTEGER
-      const bIndex = sortMap.get(b.jobEnum) ?? Number.MAX_SAFE_INTEGER
-      if (aIndex !== bIndex)
-        return aIndex - bIndex
-      return a.jobEnum - b.jobEnum
-    })
-})
+      const aIndex = sortMap.get(a.jobEnum) ?? Number.MAX_SAFE_INTEGER;
+      const bIndex = sortMap.get(b.jobEnum) ?? Number.MAX_SAFE_INTEGER;
+      if (aIndex !== bIndex) return aIndex - bIndex;
+      return a.jobEnum - b.jobEnum;
+    });
+});
 
-const interactionLocked = computed(() => editorOpening.value || storeKeySkill.isAutoMetaLoading)
-const pickerInteractionLocked = computed(() => pickerLoading.value || interactionLocked.value)
+const interactionLocked = computed(() => editorOpening.value || storeKeySkill.isAutoMetaLoading);
+const pickerInteractionLocked = computed(() => pickerLoading.value || interactionLocked.value);
 
 const pickerCurrentActionId = computed(() => {
-  const replaceKey = pickerReplaceSkillKey.value
-  if (!replaceKey)
-    return null
-  const row = rows.value.find(v => v.key === replaceKey)
-  if (!row || row.id <= 0)
-    return null
-  return row.id
-})
+  const replaceKey = pickerReplaceSkillKey.value;
+  if (!replaceKey) return null;
+  const row = rows.value.find((v) => v.key === replaceKey);
+  if (!row || row.id <= 0) return null;
+  return row.id;
+});
 
 function resolveRowJobsForPicker(row: KeySkillRow): number[] {
-  const cached = storeKeySkill.autoMetaById[row.id]
-  if (cached?.classJobTargetId && cached.classJobTargetId > 0)
-    return [cached.classJobTargetId]
-  const customJobs = row.job ? uniqueInts(row.job) : []
-  if (customJobs.length > 0)
-    return customJobs
-  if (cached)
-    return cached.jobs
-  return resolveSkillMeta(row.id).jobs
+  const cached = storeKeySkill.autoMetaById[row.id];
+  if (cached?.classJobTargetId && cached.classJobTargetId > 0) return [cached.classJobTargetId];
+  const customJobs = row.job ? uniqueInts(row.job) : [];
+  if (customJobs.length > 0) return customJobs;
+  if (cached) return cached.jobs;
+  return resolveSkillMeta(row.id).jobs;
 }
 
 const pickerDisabledActionSet = computed(() => {
-  const currentActionId = pickerCurrentActionId.value ?? 0
-  const selectedJob = Number.isFinite(pickerSelectedJob.value) ? Math.trunc(Number(pickerSelectedJob.value)) : 0
-  const disabled = new Set<number>()
+  const currentActionId = pickerCurrentActionId.value ?? 0;
+  const selectedJob = Number.isFinite(pickerSelectedJob.value)
+    ? Math.trunc(Number(pickerSelectedJob.value))
+    : 0;
+  const disabled = new Set<number>();
   rows.value.forEach((row) => {
-    const actionId = Number(row.id)
-    if (!Number.isFinite(actionId) || actionId <= 0)
-      return
+    const actionId = Number(row.id);
+    if (!Number.isFinite(actionId) || actionId <= 0) return;
     if (selectedJob > 0) {
-      const rowJobs = resolveRowJobsForPicker(row)
-      if (!rowJobs.includes(selectedJob))
-        return
+      const rowJobs = resolveRowJobsForPicker(row);
+      if (!rowJobs.includes(selectedJob)) return;
     }
-    const normalized = Math.trunc(actionId)
-    if (normalized !== currentActionId)
-      disabled.add(normalized)
-  })
-  return disabled
-})
+    const normalized = Math.trunc(actionId);
+    if (normalized !== currentActionId) disabled.add(normalized);
+  });
+  return disabled;
+});
 
-const pickerDisabledIds = computed(() => pickerDisabledActionSet.value)
+const pickerDisabledIds = computed(() => pickerDisabledActionSet.value);
 
 const pickerTargetLabel = computed(() => {
-  const replaceKey = pickerReplaceSkillKey.value
+  const replaceKey = pickerReplaceSkillKey.value;
   if (replaceKey) {
-    const row = rows.value.find(v => v.key === replaceKey)
-    if (row)
-      return `正在替换：${resolveSkillMeta(row.id).name}`
+    const row = rows.value.find((v) => v.key === replaceKey);
+    if (row) return `正在替换：${resolveSkillMeta(row.id).name}`;
   }
-  return `正在编辑：第 ${pickerTargetLine.value} 行`
-})
+  return `正在编辑：第 ${pickerTargetLine.value} 行`;
+});
 
 function resolveSkillMeta(actionId: number) {
-  const cached = storeKeySkill.autoMetaById[actionId]
-  if (cached)
-    return cached
+  const cached = storeKeySkill.autoMetaById[actionId];
+  if (cached) return cached;
 
-  const globalMeta = getGlobalSkillDefinitionById(actionId)
-  const resolvedId = parseDynamicValue(globalMeta?.id ?? actionId, GLOBAL_SKILL_MAX_LEVEL)
-  const resolvedDuration = Math.max(0, parseDynamicValue(globalMeta?.duration ?? 0, GLOBAL_SKILL_MAX_LEVEL))
-  const resolvedRecast1000ms = Math.max(0, parseDynamicValue(globalMeta?.recast1000ms ?? 0, GLOBAL_SKILL_MAX_LEVEL))
-  const resolvedMaxCharges = Math.max(1, Number(parseDynamicValue(globalMeta?.maxCharges ?? 1, GLOBAL_SKILL_MAX_LEVEL)) || 1)
-  const resolvedMinLevel = Math.max(1, Number(globalMeta?.minLevel ?? 1))
+  const globalMeta = getGlobalSkillDefinitionById(actionId);
+  const resolvedId = parseDynamicValue(globalMeta?.id ?? actionId, GLOBAL_SKILL_MAX_LEVEL);
+  const resolvedDuration = Math.max(
+    0,
+    parseDynamicValue(globalMeta?.duration ?? 0, GLOBAL_SKILL_MAX_LEVEL),
+  );
+  const resolvedRecast1000ms = Math.max(
+    0,
+    parseDynamicValue(globalMeta?.recast1000ms ?? 0, GLOBAL_SKILL_MAX_LEVEL),
+  );
+  const resolvedMaxCharges = Math.max(
+    1,
+    Number(parseDynamicValue(globalMeta?.maxCharges ?? 1, GLOBAL_SKILL_MAX_LEVEL)) || 1,
+  );
+  const resolvedMinLevel = Math.max(1, Number(globalMeta?.minLevel ?? 1));
 
   return {
     id: resolvedId,
@@ -246,426 +250,407 @@ function resolveSkillMeta(actionId: number) {
     minLevel: resolvedMinLevel,
     isRoleAction: false,
     jobs: globalMeta?.job ? [...globalMeta.job] : [],
-  }
+  };
 }
 
-let hasCheckedExistingRowJobs = false
+let hasCheckedExistingRowJobs = false;
 function assertKnownExistingRowJobs() {
-  const invalid = new Set<number>()
+  const invalid = new Set<number>();
   rows.value.forEach((row) => {
-    if (!Array.isArray(row.job))
-      return
+    if (!Array.isArray(row.job)) return;
     row.job.forEach((jobId) => {
-      const numeric = Number(jobId)
-      if (!Number.isFinite(numeric) || numeric <= 0)
-        return
-      const normalized = Math.trunc(numeric)
-      const job = Util.jobEnumToJob(normalized)
-      if (job === 'NONE')
-        invalid.add(normalized)
-    })
-  })
+      const numeric = Number(jobId);
+      if (!Number.isFinite(numeric) || numeric <= 0) return;
+      const normalized = Math.trunc(numeric);
+      const job = Util.jobEnumToJob(normalized);
+      if (job === "NONE") invalid.add(normalized);
+    });
+  });
 
   if (invalid.size > 0) {
-    const ids = [...invalid].sort((a, b) => a - b).join(', ')
-    throw new Error(`[UnknownJob] keySkillTimerSettings existing data contains unknown jobs: ${ids}`)
+    const ids = Array.from(invalid)
+      .sort((a: number, b: number) => a - b)
+      .join(", ");
+    throw new Error(
+      `[UnknownJob] keySkillTimerSettings existing data contains unknown jobs: ${ids}`,
+    );
   }
 }
 
 function syncBucketsFromStore() {
-  if (syncLocked)
-    return
-  syncLocked = true
-  const next: Record<number, KeySkillRow[]> = {}
+  if (syncLocked) return;
+  syncLocked = true;
+  const next: Record<number, KeySkillRow[]> = {};
   rows.value.forEach((row) => {
-    const line = Number.isFinite(row.line) && row.line > 0 ? Math.trunc(row.line) : 1
-    if (!next[line])
-      next[line] = []
-    next[line]!.push(row)
-  })
-  if (!next[1])
-    next[1] = []
+    const line = Number.isFinite(row.line) && row.line > 0 ? Math.trunc(row.line) : 1;
+    if (!next[line]) next[line] = [];
+    next[line]!.push(row);
+  });
+  if (!next[1]) next[1] = [];
 
   Object.keys(lineBuckets).forEach((key) => {
-    if (!(Number(key) in next))
-      Reflect.deleteProperty(lineBuckets, Number(key))
-  })
+    if (!(Number(key) in next)) Reflect.deleteProperty(lineBuckets, Number(key));
+  });
   Object.entries(next).forEach(([line, list]) => {
-    lineBuckets[Number(line)] = [...list]
-  })
-  syncLocked = false
+    lineBuckets[Number(line)] = [...list];
+  });
+  syncLocked = false;
 }
 
 function syncStoreFromBuckets() {
-  syncLocked = true
+  syncLocked = true;
   const sortedLines = Object.keys(lineBuckets)
-    .map(v => Number(v))
-    .filter(v => Number.isFinite(v) && v > 0)
-    .sort((a, b) => a - b)
-  const nextRows: KeySkillRow[] = []
+    .map((v) => Number(v))
+    .filter((v) => Number.isFinite(v) && v > 0)
+    .sort((a, b) => a - b);
+  const nextRows: KeySkillRow[] = [];
   sortedLines.forEach((line) => {
-    const list = lineBuckets[line] ?? []
+    const list = lineBuckets[line] ?? [];
     list.forEach((row) => {
-      row.line = line
-      nextRows.push(row)
-    })
-  })
-  storeKeySkill.keySkillsData.chinese = nextRows as any
-  syncLocked = false
+      row.line = line;
+      nextRows.push(row);
+    });
+  });
+  storeKeySkill.keySkillsData.chinese = nextRows as any;
+  syncLocked = false;
 }
 
 function getLineBucket(line: number) {
-  return lineBuckets[line] ?? []
+  return lineBuckets[line] ?? [];
 }
 
 function updateLineBucket(line: number, list: unknown[]) {
-  lineBuckets[line] = Array.isArray(list) ? (list as KeySkillRow[]) : []
-  syncStoreFromBuckets()
+  lineBuckets[line] = Array.isArray(list) ? (list as KeySkillRow[]) : [];
+  syncStoreFromBuckets();
 }
 
-watch(rows, () => {
-  if (!hasCheckedExistingRowJobs) {
-    assertKnownExistingRowJobs()
-    hasCheckedExistingRowJobs = true
-  }
-  syncBucketsFromStore()
-  rows.value.forEach((row) => {
-    void storeKeySkill.ensureActionAutoMeta(row.id)
-  })
-}, { immediate: true, deep: true })
+watch(
+  rows,
+  () => {
+    if (!hasCheckedExistingRowJobs) {
+      assertKnownExistingRowJobs();
+      hasCheckedExistingRowJobs = true;
+    }
+    syncBucketsFromStore();
+    rows.value.forEach((row) => {
+      void storeKeySkill.ensureActionAutoMeta(row.id);
+    });
+  },
+  { immediate: true, deep: true },
+);
 
 function resetToDefault() {
-  if (interactionLocked.value)
-    return
+  if (interactionLocked.value) return;
   ElMessageBox.confirm(
-    t('keySkillTimerSettings.resetConfirmMsg'),
-    t('keySkillTimerSettings.confirmTitle'),
+    t("keySkillTimerSettings.resetConfirmMsg"),
+    t("keySkillTimerSettings.confirmTitle"),
     {
-      confirmButtonText: t('keySkillTimerSettings.confirmBtn'),
-      cancelButtonText: t('keySkillTimerSettings.cancelBtn'),
-      type: 'warning',
+      confirmButtonText: t("keySkillTimerSettings.confirmBtn"),
+      cancelButtonText: t("keySkillTimerSettings.cancelBtn"),
+      type: "warning",
     },
   )
     .then(() => {
-      storeKeySkill.resetSkillsToDefault()
-      editorVisible.value = false
-      pickerVisible.value = false
-      syncBucketsFromStore()
-      ElMessage.success(t('keySkillTimerSettings.resetSuccessMsg'))
+      storeKeySkill.resetSkillsToDefault();
+      editorVisible.value = false;
+      pickerVisible.value = false;
+      syncBucketsFromStore();
+      ElMessage.success(t("keySkillTimerSettings.resetSuccessMsg"));
     })
-    .catch(() => {})
+    .catch(() => {});
 }
 
 function addSkillById(id: number, line: number, name: string | undefined) {
-  if (interactionLocked.value)
-    return null
-  const nextLine = Number.isFinite(line) && line > 0 ? Math.trunc(line) : 1
+  if (interactionLocked.value) return null;
+  const nextLine = Number.isFinite(line) && line > 0 ? Math.trunc(line) : 1;
   const row: KeySkillRow = {
     key: crypto.randomUUID(),
     id,
-    tts: '',
+    tts: "",
     line: nextLine,
-  }
-  storeKeySkill.keySkillsData.chinese.push(row as any)
-  void storeKeySkill.ensureActionAutoMeta(id)
-  ElMessage.success(`${t('keySkillTimerSettings.addSkill')}: ${name || id}`)
-  return row.key
+  };
+  storeKeySkill.keySkillsData.chinese.push(row as any);
+  void storeKeySkill.ensureActionAutoMeta(id);
+  ElMessage.success(`${t("keySkillTimerSettings.addSkill")}: ${name || id}`);
+  return row.key;
 }
 
 function replaceSkillById(row: KeySkillRow, id: number) {
-  row.id = id
+  row.id = id;
   // Keep slot position/key, but reset all skill-specific overrides to match "new add" behavior.
-  row.tts = ''
-  row.job = undefined
-  row.recast1000ms = undefined
-  row.duration = undefined
-  row.minLevel = undefined
+  row.tts = "";
+  row.job = undefined;
+  row.recast1000ms = undefined;
+  row.duration = undefined;
+  row.minLevel = undefined;
 }
 
 function deleteSkill(key: string) {
-  if (interactionLocked.value)
-    return
-  const skills = storeKeySkill.keySkillsData.chinese as unknown as KeySkillRow[]
-  const index = skills.findIndex(skill => skill.key === key)
-  if (index !== -1)
-    skills.splice(index, 1)
+  if (interactionLocked.value) return;
+  const skills = storeKeySkill.keySkillsData.chinese as unknown as KeySkillRow[];
+  const index = skills.findIndex((skill) => skill.key === key);
+  if (index !== -1) skills.splice(index, 1);
 }
 
 function exportData() {
-  const text = JSON.stringify(storeKeySkill.keySkillsData)
-  const zipped = LZString.compressToBase64(text)
+  const text = JSON.stringify(storeKeySkill.keySkillsData);
+  const zipped = LZString.compressToBase64(text);
   copyToClipboard(zipped)
-    .then(() => ElMessage.success(t('keySkillTimerSettings.copySuccess')))
-    .catch(() => ElMessage.error(t('keySkillTimerSettings.copyFailed')))
+    .then(() => ElMessage.success(t("keySkillTimerSettings.copySuccess")))
+    .catch(() => ElMessage.error(t("keySkillTimerSettings.copyFailed")));
 }
 
 function importData(): void {
   ElMessageBox.prompt(
-    t('keySkillTimerSettings.importPromptMsg'),
-    t('keySkillTimerSettings.importTitle'),
+    t("keySkillTimerSettings.importPromptMsg"),
+    t("keySkillTimerSettings.importTitle"),
     {
-      confirmButtonText: t('keySkillTimerSettings.confirmBtn'),
-      cancelButtonText: t('keySkillTimerSettings.cancelBtn'),
-      inputType: 'textarea',
+      confirmButtonText: t("keySkillTimerSettings.confirmBtn"),
+      cancelButtonText: t("keySkillTimerSettings.cancelBtn"),
+      inputType: "textarea",
       inputValidator: (value: string) => {
         try {
-          const trimmed = value.trim()
-          const data = LZString.decompressFromBase64(trimmed)
-          if (!data)
-            return t('keySkillTimerSettings.dataFormatError')
-          const json = JSON.parse(data)
-          if (typeof json === 'object' && json !== null)
-            return true
-          return t('keySkillTimerSettings.dataFormatError')
-        }
-        catch (e) {
-          const message = e instanceof Error ? e.message : String(e)
-          return `${t('keySkillTimerSettings.dataFormatError')}: ${message}`
+          const trimmed = value.trim();
+          const data = LZString.decompressFromBase64(trimmed);
+          if (!data) return t("keySkillTimerSettings.dataFormatError");
+          const json = JSON.parse(data);
+          if (typeof json === "object" && json !== null) return true;
+          return t("keySkillTimerSettings.dataFormatError");
+        } catch (e) {
+          const message = e instanceof Error ? e.message : String(e);
+          return `${t("keySkillTimerSettings.dataFormatError")}: ${message}`;
         }
       },
     },
   )
     .then((res) => {
-      const { value } = res as MessageBoxInputData
-      if (!value)
-        return
-      const text = LZString.decompressFromBase64(value.trim())
-      if (!text)
-        return
-      const data = JSON.parse(text)
-      if (typeof data !== 'object' || data === null) {
-        ElMessage.error(t('keySkillTimerSettings.importFormatError'))
-        return
+      const { value } = res as MessageBoxInputData;
+      if (!value) return;
+      const text = LZString.decompressFromBase64(value.trim());
+      if (!text) return;
+      const data = JSON.parse(text);
+      if (typeof data !== "object" || data === null) {
+        ElMessage.error(t("keySkillTimerSettings.importFormatError"));
+        return;
       }
-      const payload = data as { chinese?: KeySkillEntry[] }
-      storeKeySkill.setSkills(payload.chinese ?? [])
-      ElMessage.success(t('keySkillTimerSettings.importSuccess'))
+      const payload = data as { chinese?: KeySkillEntry[] };
+      storeKeySkill.setSkills(payload.chinese ?? []);
+      ElMessage.success(t("keySkillTimerSettings.importSuccess"));
     })
-    .catch(() => {})
+    .catch(() => {});
 }
 
 async function loadPickerPool(jobEnum: number) {
-  const hasCached = Object.prototype.hasOwnProperty.call(pickerPoolCache, jobEnum)
+  const hasCached = Object.hasOwn(pickerPoolCache, jobEnum);
   if (hasCached) {
-    pickerPool.value = [...(pickerPoolCache[jobEnum] ?? [])]
-    return
+    pickerPool.value = [...(pickerPoolCache[jobEnum] ?? [])];
+    return;
   }
 
-  pickerLoading.value = true
+  pickerLoading.value = true;
   try {
-    const apiRows = await searchActionsByClassJobs([jobEnum], 500)
+    const apiRows = await searchActionsByClassJobs([jobEnum], 500);
     const mapped = apiRows.map((row) => {
-      const globalMeta = getGlobalSkillDefinitionById(row.ID)
-      const actionId = row.ID
+      const globalMeta = getGlobalSkillDefinitionById(row.ID);
+      const actionId = row.ID;
       return {
         id: actionId,
         name: resolveActionDisplayName(actionId, actionId, row.Name),
         iconSrc: resolveActionIconSrc(actionId, { apiIconPath: row.Icon }),
-        recast1000ms: Math.max(0, parseDynamicValue(globalMeta?.recast1000ms ?? (row.Recast100ms ?? 0) / 10, 100)),
+        recast1000ms: Math.max(
+          0,
+          parseDynamicValue(globalMeta?.recast1000ms ?? (row.Recast100ms ?? 0) / 10, 100),
+        ),
         duration: Math.max(0, parseDynamicValue(globalMeta?.duration ?? 0, GLOBAL_SKILL_MAX_LEVEL)),
         minLevel: row.ClassJobLevel,
         isRoleAction: Number(row.IsRoleAction ?? 0) > 0,
-      }
-    })
-    pickerPoolCache[jobEnum] = mapped
-    pickerPool.value = [...mapped]
-  }
-  catch (error) {
-    console.warn('[keySkillTimerSettings] load action list failed:', error)
-    pickerPool.value = []
-    ElMessage.warning('技能列表加载失败，可手动搜索')
-  }
-  finally {
-    pickerLoading.value = false
+      };
+    });
+    pickerPoolCache[jobEnum] = mapped;
+    pickerPool.value = [...mapped];
+  } catch (error) {
+    console.warn("[keySkillTimerSettings] load action list failed:", error);
+    pickerPool.value = [];
+    ElMessage.warning("技能列表加载失败，可手动搜索");
+  } finally {
+    pickerLoading.value = false;
   }
 }
 
 watch(pickerSelectedJob, async (jobEnum) => {
-  pickerSearch.value = ''
+  pickerSearch.value = "";
   if (!pickerVisible.value || !jobEnum) {
-    pickerPool.value = []
-    return
+    pickerPool.value = [];
+    return;
   }
-  await loadPickerPool(jobEnum)
-})
+  await loadPickerPool(jobEnum);
+});
 
 watch(pickerVisible, (visible) => {
   if (!visible) {
-    pickerSearch.value = ''
-    pickerLoading.value = false
-    pickerSelectedJob.value = null
-    pickerReplaceSkillKey.value = null
+    pickerSearch.value = "";
+    pickerLoading.value = false;
+    pickerSelectedJob.value = null;
+    pickerReplaceSkillKey.value = null;
   }
-})
+});
 
 async function openSkillPicker(line = 1, replaceSkillKey: string | null = null) {
-  if (interactionLocked.value)
-    return
-  pickerTargetLine.value = line > 0 ? line : 1
-  pickerReplaceSkillKey.value = replaceSkillKey
-  pickerVisible.value = true
-  pickerSelectedJob.value = resolvePickerInitialJob(replaceSkillKey)
+  if (interactionLocked.value) return;
+  pickerTargetLine.value = line > 0 ? line : 1;
+  pickerReplaceSkillKey.value = replaceSkillKey;
+  pickerVisible.value = true;
+  pickerSelectedJob.value = resolvePickerInitialJob(replaceSkillKey);
 }
 
 function getJobIconSrcByEnum(jobEnum: number) {
-  const full = Util.jobToFullName(Util.jobEnumToJob(jobEnum))
-  return `https://souma.diemoe.net/resources/img/cj2/${full.en}.png`
+  const full = Util.jobToFullName(Util.jobEnumToJob(jobEnum));
+  return `https://souma.diemoe.net/resources/img/cj2/${full.en}.png`;
 }
 
 function resolvePickerInitialJob(replaceSkillKey: string | null) {
-  if (!replaceSkillKey)
-    return null
-  const row = rows.value.find(v => v.key === replaceSkillKey)
-  if (!row)
-    return null
+  if (!replaceSkillKey) return null;
+  const row = rows.value.find((v) => v.key === replaceSkillKey);
+  if (!row) return null;
 
-  const jobSet = new Set(pickerJobOptions.value.map(v => v.jobEnum))
+  const jobSet = new Set(pickerJobOptions.value.map((v) => v.jobEnum));
   const mergedJobs = uniqueInts([
     ...(row.job ?? []),
     ...(getGlobalSkillDefinitionById(row.id)?.job ?? []),
     ...resolveSkillMeta(row.id).jobs,
-  ])
+  ]);
 
   for (const jobEnum of mergedJobs) {
-    if (jobSet.has(jobEnum))
-      return jobEnum
+    if (jobSet.has(jobEnum)) return jobEnum;
   }
-  return null
+  return null;
 }
 
 function pickJob(jobEnum: number) {
-  if (pickerInteractionLocked.value)
-    return
-  pickerSelectedJob.value = pickerSelectedJob.value === jobEnum ? null : jobEnum
+  if (pickerInteractionLocked.value) return;
+  pickerSelectedJob.value = pickerSelectedJob.value === jobEnum ? null : jobEnum;
 }
 
 async function pickAction(actionId: number, name?: string) {
-  if (pickerInteractionLocked.value)
-    return
-  const replaceKey = pickerReplaceSkillKey.value
-  let targetSkillKey: string | null = null
+  if (pickerInteractionLocked.value) return;
+  const replaceKey = pickerReplaceSkillKey.value;
+  let targetSkillKey: string | null = null;
   if (replaceKey) {
-    const row = rows.value.find(v => v.key === replaceKey)
+    const row = rows.value.find((v) => v.key === replaceKey);
     if (row) {
-      replaceSkillById(row, actionId)
-      targetSkillKey = replaceKey
+      replaceSkillById(row, actionId);
+      targetSkillKey = replaceKey;
     }
+  } else {
+    targetSkillKey = addSkillById(
+      actionId,
+      pickerTargetLine.value,
+      name || resolveActionDisplayName(actionId, actionId),
+    );
   }
-  else {
-    targetSkillKey = addSkillById(actionId, pickerTargetLine.value, name || resolveActionDisplayName(actionId, actionId))
-  }
-  await storeKeySkill.ensureActionAutoMeta(actionId)
-  pickerVisible.value = false
-  if (targetSkillKey)
-    await openEditor(targetSkillKey)
+  await storeKeySkill.ensureActionAutoMeta(actionId);
+  pickerVisible.value = false;
+  if (targetSkillKey) await openEditor(targetSkillKey);
 }
 
 async function returnToEditorFromPicker() {
-  const replaceKey = pickerReplaceSkillKey.value
-  if (!replaceKey)
-    return
-  await openEditor(replaceKey)
+  const replaceKey = pickerReplaceSkillKey.value;
+  if (!replaceKey) return;
+  await openEditor(replaceKey);
 }
 
 function handlePickerBack() {
-  if (pickerReplaceSkillKey.value)
-    void returnToEditorFromPicker()
+  if (pickerReplaceSkillKey.value) void returnToEditorFromPicker();
 }
 
 async function openEditor(skillKey: string) {
-  if (interactionLocked.value)
-    return
-  const row = rows.value.find(v => v.key === skillKey)
-  if (!row)
-    return
-  editorOpening.value = true
+  if (interactionLocked.value) return;
+  const row = rows.value.find((v) => v.key === skillKey);
+  if (!row) return;
+  editorOpening.value = true;
   try {
-    await storeKeySkill.ensureActionAutoMeta(row.id)
-    editorSkillKey.value = skillKey
-    editorTts.value = row.tts
-    editorRecast.value = row.recast1000ms ?? ''
-    editorDuration.value = row.duration ?? ''
-    editorVisible.value = true
-  }
-  finally {
-    editorOpening.value = false
+    await storeKeySkill.ensureActionAutoMeta(row.id);
+    editorSkillKey.value = skillKey;
+    editorTts.value = row.tts;
+    editorRecast.value = row.recast1000ms ?? "";
+    editorDuration.value = row.duration ?? "";
+    editorVisible.value = true;
+  } finally {
+    editorOpening.value = false;
   }
 }
 
 function applyEditorDraftToRow() {
-  const row = currentEditorSkill.value
-  if (!row || editorOpening.value)
-    return
-  row.tts = editorTts.value
-  row.recast1000ms = editorRecast.value || undefined
-  row.duration = editorDuration.value || undefined
+  const row = currentEditorSkill.value;
+  if (!row || editorOpening.value) return;
+  row.tts = editorTts.value;
+  row.recast1000ms = editorRecast.value || undefined;
+  row.duration = editorDuration.value || undefined;
 }
 
 async function previewEditorTts() {
-  if (interactionLocked.value)
-    return
-  const text = editorTts.value.trim()
+  if (interactionLocked.value) return;
+  const text = editorTts.value.trim();
   if (!text) {
-    ElMessage.warning('请先输入 TTS 内容')
-    return
+    ElMessage.warning("请先输入 TTS 内容");
+    return;
   }
   try {
-    await tts(text)
-  }
-  catch (error) {
-    console.warn('[keySkillTimerSettings] tts preview failed:', error)
-    ElMessage.error('TTS 试听失败')
+    await tts(text);
+  } catch (error) {
+    console.warn("[keySkillTimerSettings] tts preview failed:", error);
+    ElMessage.error("TTS 试听失败");
   }
 }
 
-watch([editorTts, editorRecast, editorDuration], applyEditorDraftToRow)
+watch([editorTts, editorRecast, editorDuration], applyEditorDraftToRow);
 
 function removeCurrentSkill() {
-  if (!editorSkillKey.value)
-    return
-  deleteSkill(editorSkillKey.value)
-  editorVisible.value = false
+  if (!editorSkillKey.value) return;
+  deleteSkill(editorSkillKey.value);
+  editorVisible.value = false;
 }
 
 function replaceCurrentSkill() {
-  if (!editorSkillKey.value)
-    return
-  const row = rows.value.find(v => v.key === editorSkillKey.value)
-  editorVisible.value = false
-  void openSkillPicker(row?.line ?? 1, editorSkillKey.value)
+  if (!editorSkillKey.value) return;
+  const row = rows.value.find((v) => v.key === editorSkillKey.value);
+  editorVisible.value = false;
+  void openSkillPicker(row?.line ?? 1, editorSkillKey.value);
 }
 
 function formatJobs(jobs?: number[]) {
-  if (!Array.isArray(jobs) || jobs.length === 0)
-    return ''
+  if (!Array.isArray(jobs) || jobs.length === 0) return "";
   return jobs
     .map((job) => {
-      const full = Util.jobToFullName(Util.jobEnumToJob(job))
-      return full.cn || full.en || `#${job}`
+      const full = Util.jobToFullName(Util.jobEnumToJob(job));
+      return full.cn || full.en || `#${job}`;
     })
-    .join(' / ')
+    .join(" / ");
 }
 
 const skillEditorPrimaryAction = computed(() => ({
   show: !!currentEditorSkill.value,
   disabled: interactionLocked.value,
-}))
+}));
 
 const skillEditorDeleteAction = computed(() => ({
   show: !!currentEditorSkill.value,
   disabled: interactionLocked.value || !currentEditorSkill.value,
-}))
+}));
 
 function hasJobWarning(actionId: number, row: KeySkillRow) {
-  if (Array.isArray(row.job))
-    return row.job.length === 0
-  const loaded = Boolean(storeKeySkill.autoMetaById[actionId])
-  return loaded && resolveSkillMeta(actionId).jobs.length === 0
+  if (Array.isArray(row.job)) return row.job.length === 0;
+  const loaded = Boolean(storeKeySkill.autoMetaById[actionId]);
+  return loaded && resolveSkillMeta(actionId).jobs.length === 0;
 }
 </script>
 
 <template>
-  <div v-loading="interactionLocked" class="page-container" element-loading-text="正在等待接口返回...">
+  <div
+    v-loading="interactionLocked"
+    class="page-container"
+    element-loading-text="正在等待接口返回..."
+  >
     <header class="toolbar">
       <div class="toolbar-left">
         <el-switch
@@ -678,13 +663,19 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
       </div>
       <div class="toolbar-right">
         <el-button size="small" :icon="Download" :disabled="interactionLocked" @click="exportData">
-          {{ $t('keySkillTimerSettings.export') }}
+          {{ $t("keySkillTimerSettings.export") }}
         </el-button>
         <el-button size="small" :icon="Upload" :disabled="interactionLocked" @click="importData">
-          {{ $t('keySkillTimerSettings.import') }}
+          {{ $t("keySkillTimerSettings.import") }}
         </el-button>
-        <el-button size="small" type="danger" :icon="RefreshLeft" :disabled="interactionLocked" @click="resetToDefault">
-          {{ $t('keySkillTimerSettings.restoreDefault') }}
+        <el-button
+          size="small"
+          type="danger"
+          :icon="RefreshLeft"
+          :disabled="interactionLocked"
+          @click="resetToDefault"
+        >
+          {{ $t("keySkillTimerSettings.restoreDefault") }}
         </el-button>
         <CommonThemeToggle storage-key="key-skill-timer-2" />
         <div class="lang-switch-wrap">
@@ -695,14 +686,8 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
 
     <main class="page-content">
       <div class="wysiwyg-wrap">
-        <section
-          v-for="line in lineOrder"
-          :key="`line-${line}`"
-          class="line-row"
-        >
-          <div class="line-label">
-            L{{ line }}
-          </div>
+        <section v-for="line in lineOrder" :key="`line-${line}`" class="line-row">
+          <div class="line-label">L{{ line }}</div>
           <VueDraggable
             :model-value="getLineBucket(line)"
             class="line-skill-list"
@@ -723,21 +708,33 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
               @click="openEditor(row.key)"
             >
               <div class="buff-filter">
-                <img :src="resolveSkillMeta(row.id).src" :alt="resolveSkillMeta(row.id).name" @error="handleImgError">
+                <img
+                  :src="resolveSkillMeta(row.id).src"
+                  :alt="resolveSkillMeta(row.id).name"
+                  @error="handleImgError"
+                />
               </div>
             </button>
           </VueDraggable>
-          <el-button class="line-add-btn" :icon="Plus" :disabled="interactionLocked" circle @click="openSkillPicker(line)" />
+          <el-button
+            class="line-add-btn"
+            :icon="Plus"
+            :disabled="interactionLocked"
+            circle
+            @click="openSkillPicker(line)"
+          />
         </section>
 
         <section class="line-row line-row-empty">
-          <div class="line-label">
-            L{{ nextLine }}
-          </div>
-          <div class="line-skill-list empty-placeholder">
-            点击右侧加号为新行添加技能
-          </div>
-          <el-button class="line-add-btn" :icon="Plus" :disabled="interactionLocked" circle @click="openSkillPicker(nextLine)" />
+          <div class="line-label">L{{ nextLine }}</div>
+          <div class="line-skill-list empty-placeholder">点击右侧加号为新行添加技能</div>
+          <el-button
+            class="line-add-btn"
+            :icon="Plus"
+            :disabled="interactionLocked"
+            circle
+            @click="openSkillPicker(nextLine)"
+          />
         </section>
       </div>
     </main>
@@ -762,7 +759,11 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
       <template v-if="currentEditorSkill">
         <div class="editor-field span-2">
           <label>TTS</label>
-          <el-input v-model="editorTts" :disabled="interactionLocked" placeholder="可留空，留空则不播报">
+          <el-input
+            v-model="editorTts"
+            :disabled="interactionLocked"
+            placeholder="可留空，留空则不播报"
+          >
             <template v-if="wsConnected" #append>
               <el-button
                 :disabled="interactionLocked || !editorTts.trim()"
@@ -775,12 +776,22 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
         </div>
         <div class="editor-field">
           <label>冷却时间 (秒)</label>
-          <el-input v-model="effectiveRecast" :disabled="interactionLocked" placeholder="继承底层属性" :class="{ 'is-error': recastError }" />
+          <el-input
+            v-model="effectiveRecast"
+            :disabled="interactionLocked"
+            placeholder="继承底层属性"
+            :class="{ 'is-error': recastError }"
+          />
           <span v-if="recastError" class="dynamic-value-error">{{ recastError }}</span>
         </div>
         <div class="editor-field">
           <label>持续时间 (秒)</label>
-          <el-input v-model="effectiveDuration" :disabled="interactionLocked" placeholder="继承底层属性" :class="{ 'is-error': durationError }" />
+          <el-input
+            v-model="effectiveDuration"
+            :disabled="interactionLocked"
+            placeholder="继承底层属性"
+            :class="{ 'is-error': durationError }"
+          />
           <span v-if="durationError" class="dynamic-value-error">{{ durationError }}</span>
         </div>
       </template>
@@ -793,9 +804,7 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
           trigger="click"
         >
           <template #reference>
-            <el-button :icon="InfoFilled">
-              调试信息
-            </el-button>
+            <el-button :icon="InfoFilled"> 调试信息 </el-button>
           </template>
           <el-descriptions :column="1" border size="small" class="debug-desc">
             <el-descriptions-item label="Action ID">
@@ -838,9 +847,7 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
     >
       <template #top>
         <div class="picker-job-strip">
-          <div class="picker-job-caption">
-            筛选职业技能
-          </div>
+          <div class="picker-job-caption">筛选职业技能</div>
           <div class="picker-job-space">
             <button
               v-for="option in pickerJobOptions"
@@ -852,7 +859,7 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
               @click="pickJob(option.jobEnum)"
             >
               <div class="picker-job-icon-wrap">
-                <img :src="option.iconSrc" class="picker-job-icon" @error="handleImgError">
+                <img :src="option.iconSrc" class="picker-job-icon" @error="handleImgError" />
               </div>
               <span class="picker-job-text">{{ option.label }}</span>
             </button>
@@ -872,7 +879,7 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
   padding: 4px;
   background: var(--el-bg-color);
   color: var(--el-text-color-primary);
-  font-family: 'Bahnschrift', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-family: "Bahnschrift", "PingFang SC", "Microsoft YaHei", sans-serif;
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -909,7 +916,7 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
   white-space: nowrap;
 }
 
-.toolbar-left :deep(.el-switch__label) {
+.toolbar-left ::deep(.el-switch__label) {
   white-space: nowrap;
 }
 
@@ -921,7 +928,7 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
   min-width: 128px;
 }
 
-.lang-switch-wrap :deep(.language-select) {
+.lang-switch-wrap ::deep(.language-select) {
   width: 92px;
 }
 
@@ -987,7 +994,9 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
 }
 
 .buff-container.has-job-warning .buff-filter {
-  box-shadow: 0 0 0 1px var(--el-color-danger) inset, 0 0 1px 1px black;
+  box-shadow:
+    0 0 0 1px var(--el-color-danger) inset,
+    0 0 1px 1px black;
 }
 
 .buff-filter {
@@ -1042,7 +1051,9 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
   border: 1px solid var(--el-border-color);
   background: var(--el-bg-color-overlay);
   color: var(--el-text-color-primary);
-  transition: border-color 120ms ease, background-color 120ms ease;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
   cursor: pointer;
   font: inherit;
 }
@@ -1129,7 +1140,9 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
   min-width: 0;
 }
 
-.job-edit-btn { flex: 0 0 auto; }
+.job-edit-btn {
+  flex: 0 0 auto;
+}
 
 .job-edit-select {
   margin-top: 8px;
@@ -1145,7 +1158,7 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
   border: 1px solid var(--el-border-color-lighter);
 }
 
-.debug-desc :deep(.el-descriptions__label) {
+.debug-desc ::deep(.el-descriptions__label) {
   width: 70px;
   white-space: nowrap;
 }

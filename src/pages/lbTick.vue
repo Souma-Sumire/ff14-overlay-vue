@@ -1,132 +1,115 @@
 <script setup lang="ts">
-import type { EventMap } from 'cactbot/types/event'
-import { useDemo } from '@/composables/useDemo'
-import { useDev } from '@/composables/useDev'
-import { useZone } from '@/composables/useZone'
-import { testLimitBreak } from '@/mock/demoLimitBreak'
+import type { EventMap } from "cactbot/types/event";
+import { useDemo } from "@/composables/useDemo";
+import { useDev } from "@/composables/useDev";
+import { useZone } from "@/composables/useZone";
+import { testLimitBreak } from "@/mock/demoLimitBreak";
 import {
   addOverlayListener,
   removeOverlayListener,
-} from '../../cactbot/resources/overlay_plugin_api'
+} from "../../cactbot/resources/overlay_plugin_api";
 
-const { zoneType } = useZone()
-const dev = useDev()
-const demo = useDemo()
-const display = computed(() => zoneType.value !== 'Pvp')
+const { zoneType } = useZone();
+const dev = useDev();
+const demo = useDemo();
+const display = computed(() => zoneType.value !== "Pvp");
 
-const LB_MAX = 30000
-const LB_INCREMENT = 220
+const LB_MAX = 30000;
+const LB_INCREMENT = 220;
 
-const stopTest = ref<(() => void) | undefined>()
+const stopTest = ref<(() => void) | undefined>();
 
 const state = reactive({
   prev: 0, // 记录上一次LB 进度，用于比较增值
   ratio: 0, // LB 进度
   bonusTotal: 0, // 全局LB 总奖励值
   chain: 0, // 单次LB 连续奖励
-  chainList: [] as { key: string, num: number, timestamp: number }[], // 奖励数值储存
-})
+  chainList: [] as { key: string; num: number; timestamp: number }[], // 奖励数值储存
+});
 
 function handleClear() {
-  state.prev = 0
-  state.ratio = 0
-  state.chain = 0
-  state.chainList = []
-  state.bonusTotal = 0
+  state.prev = 0;
+  state.ratio = 0;
+  state.chain = 0;
+  state.chainList = [];
+  state.bonusTotal = 0;
 }
 
-const handleLogLine: EventMap['LogLine'] = (e) => {
+const handleLogLine: EventMap["LogLine"] = (e) => {
   if (!display.value) {
-    return
+    return;
   }
-  if (e.line[0] === '36') {
-    const now = Number.parseInt(e.line[2]!, 16)
-    const add = now - state.prev
-    state.prev = now
-    state.ratio = now / LB_MAX
+  if (e.line[0] === "36") {
+    const now = Number.parseInt(e.line[2]!, 16);
+    const add = now - state.prev;
+    state.prev = now;
+    state.ratio = now / LB_MAX;
 
     if (now === 0 || add < -0.1) {
       // 重置 / 消耗
-      state.chain = 0
-      state.chainList = []
-    }
-    else if (add > LB_INCREMENT) {
+      state.chain = 0;
+      state.chainList = [];
+    } else if (add > LB_INCREMENT) {
       // 奖池还在累计
-      state.chain += add
-      state.bonusTotal += add
+      state.chain += add;
+      state.bonusTotal += add;
 
-      const last = state.chainList[state.chainList.length - 1]
+      const last = state.chainList.at(-1);
       if (
-        last
-        && last.timestamp + 1000 > new Date(e.line[1]!).getTime()
-        && (last.num === state.chain - LB_MAX / 100
-          || last.num === state.chain - LB_MAX / 500)
+        last &&
+        last.timestamp + 1000 > new Date(e.line[1]!).getTime() &&
+        (last.num === state.chain - LB_MAX / 100 || last.num === state.chain - LB_MAX / 500)
       ) {
-        state.chainList[state.chainList.length - 1]!.num = state.chain
-      }
-      else {
+        state.chainList.at(-1)!.num = state.chain;
+      } else {
         state.chainList.push({
           key: crypto.randomUUID(),
           num: state.chain,
           timestamp: new Date(e.line[1]!).getTime(),
-        })
+        });
       }
-    }
-    else {
+    } else {
       // 随战斗时间自然增加的
-      state.chain = 0
+      state.chain = 0;
     }
+  } else if (e.line[0] === "33" && ["40000010", "4000000F"].includes(e.line[3]!)) {
+    handleClear();
   }
-  else if (
-    e.line[0] === '33'
-    && ['40000010', '4000000F'].includes(e.line[3]!)
-  ) {
-    handleClear()
-  }
-}
+};
 
 function handleTest() {
-  stopTest.value?.()
-  stopTest.value = testLimitBreak(handleLogLine, 1)
+  stopTest.value?.();
+  stopTest.value = testLimitBreak(handleLogLine, 1);
 }
 
 watch(
   () => [demo.value, dev.value],
   () => {
-    stopTest.value?.()
-    handleClear()
+    stopTest.value?.();
+    handleClear();
   },
-)
+);
 
 onMounted(() => {
-  addOverlayListener('ChangeZone', handleClear)
-  addOverlayListener('LogLine', handleLogLine)
-})
+  addOverlayListener("ChangeZone", handleClear);
+  addOverlayListener("LogLine", handleLogLine);
+});
 
 onUnmounted(() => {
-  removeOverlayListener('ChangeZone', handleClear)
-  removeOverlayListener('LogLine', handleLogLine)
-})
+  removeOverlayListener("ChangeZone", handleClear);
+  removeOverlayListener("LogLine", handleLogLine);
+});
 </script>
 
 <template>
   <CommonActWrapper>
-    <el-button
-      v-if="dev || demo"
-      type="primary"
-      class="test-btn"
-      @click="handleTest"
-    >
-      {{ $t('lbTick.test') }}
+    <el-button v-if="dev || demo" type="primary" class="test-btn" @click="handleTest">
+      {{ $t("lbTick.test") }}
     </el-button>
     <div v-show="display" class="lb-container">
-      <p id="percent">
-        {{ $t('lbTick.lb') }}{{ (state.ratio * 100).toFixed(2) }}%
-      </p>
+      <p id="percent">{{ $t("lbTick.lb") }}{{ (state.ratio * 100).toFixed(2) }}%</p>
       <p id="bonusTotal">
-        {{ $t('lbTick.bonus') }}:{{
-          ((state.bonusTotal / LB_MAX) * 100).toFixed(0)
-        }}%
+        {{ $t("lbTick.bonus") }}:{{ ((state.bonusTotal / LB_MAX) * 100).toFixed(0) }}%
       </p>
       <div id="extra">
         <p v-for="item in state.chainList" :key="item.key" class="anime">
@@ -159,13 +142,19 @@ onUnmounted(() => {
 
 #percent {
   font-size: 14px;
-  text-shadow: -1px 0 1.5px rgb(145, 186, 94), 0 1.5px 1.5px rgb(145, 186, 94),
-    1px 0 1.5px rgb(145, 186, 94), 0 -1.5px 1.5px rgb(145, 186, 94);
+  text-shadow:
+    -1px 0 1.5px rgb(145, 186, 94),
+    0 1.5px 1.5px rgb(145, 186, 94),
+    1px 0 1.5px rgb(145, 186, 94),
+    0 -1.5px 1.5px rgb(145, 186, 94);
 }
 
 #extra {
-  text-shadow: -1px 0 2px rgb(169, 26, 22), 0 1.5px 2px rgb(169, 26, 22),
-    1px 0 2px rgb(169, 26, 22), 0 -1.5px 2px rgb(169, 26, 22);
+  text-shadow:
+    -1px 0 2px rgb(169, 26, 22),
+    0 1.5px 2px rgb(169, 26, 22),
+    1px 0 2px rgb(169, 26, 22),
+    0 -1.5px 2px rgb(169, 26, 22);
   font-weight: bold;
 }
 
@@ -174,8 +163,11 @@ onUnmounted(() => {
   top: 21px;
   right: 4px;
   font-size: 14px;
-  text-shadow: -1px 0 2px rgb(169, 26, 22), 0 1.5px 2px rgb(169, 26, 22),
-    1px 0 2px rgb(169, 26, 22), 0 -1.5px 2px rgb(169, 26, 22);
+  text-shadow:
+    -1px 0 2px rgb(169, 26, 22),
+    0 1.5px 2px rgb(169, 26, 22),
+    1px 0 2px rgb(169, 26, 22),
+    0 -1.5px 2px rgb(169, 26, 22);
 }
 
 .anime {

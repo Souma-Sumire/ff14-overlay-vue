@@ -23,19 +23,17 @@ const JOB_RESOURCE_ACTION_COST_MAP: Record<number, number> = {
   // WHM 治疗百合
   16531: 1, // 安慰之心
   16534: 1, // 狂喜之心
-}
+};
 
 export function getJobResourceActionCost(actionId: number): number | undefined {
-  if (!Number.isFinite(actionId) || actionId <= 0)
-    return undefined
-  return JOB_RESOURCE_ACTION_COST_MAP[actionId]
+  if (!Number.isFinite(actionId) || actionId <= 0) return undefined;
+  return JOB_RESOURCE_ACTION_COST_MAP[actionId];
 }
 
 export function resolveJobResourceActionCost(...actionIds: number[]): number | undefined {
   for (const id of actionIds) {
-    const cost = getJobResourceActionCost(id)
-    if (cost !== undefined)
-      return cost
+    const cost = getJobResourceActionCost(id);
+    if (cost !== undefined) return cost;
   }
-  return undefined
+  return undefined;
 }

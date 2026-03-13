@@ -1,34 +1,34 @@
 <script setup lang="ts">
-import type { Lang } from '@/types/lang'
-import { useStorage } from '@vueuse/core'
-import { onMounted, watch } from 'vue'
-import { useLang } from '@/composables/useLang'
+import type { Lang } from "@/types/lang";
+import { useStorage } from "@vueuse/core";
+import { onMounted, watch } from "vue";
+import { useLang } from "@/composables/useLang";
 
 const props = defineProps({
   teleported: {
     type: Boolean,
     default: true,
   },
-})
+});
 
-const { locale, availableLocales } = useLang()
+const { locale, availableLocales } = useLang();
 
 const languages: Record<string, string> = {
-  zhCn: '简体中文',
-  en: 'English',
-  ja: '日本語',
-  zhTw: '繁體中文',
-}
+  zhCn: "简体中文",
+  en: "English",
+  ja: "日本語",
+  zhTw: "繁體中文",
+};
 
-const currentLocale = useStorage('user-locale', locale.value as Lang)
+const currentLocale = useStorage("user-locale", locale.value as Lang);
 
 watch(currentLocale, (newLocale) => {
-  locale.value = newLocale
-})
+  locale.value = newLocale;
+});
 
 onMounted(() => {
-  locale.value = currentLocale.value
-})
+  locale.value = currentLocale.value;
+});
 </script>
 
 <template>
@@ -83,11 +83,11 @@ onMounted(() => {
 .language-select {
   width: 6.5em;
 
-  :deep(.el-input__wrapper) {
+  ::deep(.el-input__wrapper) {
     background-color: transparent;
   }
 
-  :deep(.el-input__inner) {
+  ::deep(.el-input__inner) {
     color: inherit;
   }
 }

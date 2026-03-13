@@ -1,78 +1,67 @@
-import type { PPJSON, QueueArr, Slot, WayMarkObj } from '@/types/PostNamazu'
-import { callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
-import { getMapIDByTerritoryType } from '../resources/logic/contentFinderCondition'
+import type { PPJSON, QueueArr, Slot, WayMarkObj } from "@/types/PostNamazu";
+import { callOverlayHandler } from "../../cactbot/resources/overlay_plugin_api";
+import { getMapIDByTerritoryType } from "../resources/logic/contentFinderCondition";
 
 export async function doTextCommand(text: string) {
   try {
     const res = await Promise.race([
       callOverlayHandler({
-        call: 'PostNamazu',
-        c: 'DoTextCommand',
+        call: "PostNamazu",
+        c: "DoTextCommand",
         p: text,
       }),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('PostNamazu response timeout')), 500),
+        setTimeout(() => reject(new Error("PostNamazu response timeout")), 500),
       ),
-    ])
-    return res
-  }
-  catch (e) {
-    console.error('PostNamazu DoTextCommand failed:', e)
-    throw e
+    ]);
+    return res;
+  } catch (e) {
+    console.error("PostNamazu DoTextCommand failed:", e);
+    throw e;
   }
 }
-export async function doWayMarks(
-  json: WayMarkObj,
-  localOnly: boolean = true,
-  silent = false,
-) {
+export async function doWayMarks(json: WayMarkObj, localOnly: boolean = true, silent = false) {
   try {
     const res = await Promise.race([
       callOverlayHandler({
-        call: 'PostNamazu',
-        c: 'DoWaymarks',
+        call: "PostNamazu",
+        c: "DoWaymarks",
         p: JSON.stringify({ ...json, LocalOnly: localOnly }),
       }),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('PostNamazu response timeout')), 500),
+        setTimeout(() => reject(new Error("PostNamazu response timeout")), 500),
       ),
-    ])
-    return res
-  }
-  catch (e) {
+    ]);
+    return res;
+  } catch (e) {
     if (!silent) {
-      console.error('PostNamazu DoWaymarks failed:', e)
+      console.error("PostNamazu DoWaymarks failed:", e);
     }
-    throw e
+    throw e;
   }
 }
 
-export async function doInsertPreset(
-  mapID: number,
-  json: WayMarkObj,
-  slot: Slot = 1,
-) {
+export async function doInsertPreset(mapID: number, json: WayMarkObj, slot: Slot = 1) {
   const ppJson: PPJSON = {
     ...json,
     MapID: getMapIDByTerritoryType(mapID),
     Name: `Slot${slot}`,
-  }
+  };
   try {
     const res = await Promise.race([
       callOverlayHandler({
-        call: 'PostNamazu',
-        c: 'DoInsertPreset',
+        call: "PostNamazu",
+        c: "DoInsertPreset",
         p: JSON.stringify(ppJson),
       }),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('PostNamazu response timeout')), 500),
+        setTimeout(() => reject(new Error("PostNamazu response timeout")), 500),
       ),
-    ])
-    return res
-  }
-  catch (e) {
-    console.error('PostNamazu DoInsertPreset failed:', e)
-    throw e
+    ]);
+    return res;
+  } catch (e) {
+    console.error("PostNamazu DoInsertPreset failed:", e);
+    throw e;
   }
 }
 
@@ -80,18 +69,17 @@ export async function doQueueActions(queue: QueueArr) {
   try {
     const res = await Promise.race([
       callOverlayHandler({
-        call: 'PostNamazu',
-        c: 'DoQueueActions',
+        call: "PostNamazu",
+        c: "DoQueueActions",
         p: JSON.stringify(queue),
       }),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('PostNamazu response timeout')), 500),
+        setTimeout(() => reject(new Error("PostNamazu response timeout")), 500),
       ),
-    ])
-    return res
-  }
-  catch (e) {
-    console.error('PostNamazu DoQueueActions failed:', e)
-    throw e
+    ]);
+    return res;
+  } catch (e) {
+    console.error("PostNamazu DoQueueActions failed:", e);
+    throw e;
   }
 }

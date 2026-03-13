@@ -1,45 +1,37 @@
 <script setup lang="ts">
-import type { RollInfo } from '@/utils/lootParser'
-import { computed } from 'vue'
-import {
-  getRollTypeIcon,
-
-} from '@/utils/lootParser'
-import PlayerDisplay from './PlayerDisplay.vue'
+import type { RollInfo } from "@/utils/lootParser";
+import { computed } from "vue";
+import { getRollTypeIcon } from "@/utils/lootParser";
+import PlayerDisplay from "./PlayerDisplay.vue";
 
 const props = defineProps<{
-  roll: RollInfo
-  isWinner?: boolean
-  showOnlyRole?: boolean
-  getPlayerRole: (p: string) => string | undefined
-}>()
+  roll: RollInfo;
+  isWinner?: boolean;
+  showOnlyRole?: boolean;
+  getPlayerRole: (p: string) => string | undefined;
+}>();
 
-const role = computed(() => props.getPlayerRole(props.roll.player))
+const role = computed(() => props.getPlayerRole(props.roll.player));
 
 const rollTypeClass = computed(() => {
-  return `type-${props.roll.type}`
-})
+  return `type-${props.roll.type}`;
+});
 
-const rollTypeIcon = computed(() => getRollTypeIcon(props.roll.type))
+const rollTypeIcon = computed(() => getRollTypeIcon(props.roll.type));
 
 const hasValue = computed(() => {
-  return props.roll.type !== 'assign' && props.roll.type !== 'direct'
-})
+  return props.roll.type !== "assign" && props.roll.type !== "direct";
+});
 
 const isSpecialType = computed(() => {
   return (
-    props.roll.type === 'assign'
-    || props.roll.type === 'direct'
-    || props.roll.type === 'replace'
-  )
-})
+    props.roll.type === "assign" || props.roll.type === "direct" || props.roll.type === "replace"
+  );
+});
 </script>
 
 <template>
-  <div
-    class="mini-roll"
-    :class="[rollTypeClass, { 'winner-badge': isWinner }]"
-  >
+  <div class="mini-roll" :class="[rollTypeClass, { 'winner-badge': isWinner }]">
     <PlayerDisplay
       :name="roll.player"
       :role="role"
@@ -49,16 +41,13 @@ const isSpecialType = computed(() => {
 
     <div class="mr-content">
       <!-- Roll Type Icon -->
-      <span
-        class="mr-type"
-        :class="[rollTypeClass, { 'type-full-width': isSpecialType }]"
-      >
+      <span class="mr-type" :class="[rollTypeClass, { 'type-full-width': isSpecialType }]">
         {{ rollTypeIcon }}
       </span>
 
       <!-- Roll Value -->
       <span v-if="hasValue && roll.type !== 'replace'" class="mr-val">
-        {{ roll.value !== null ? roll.value : '-' }}
+        {{ roll.value !== null ? roll.value : "-" }}
       </span>
     </div>
   </div>

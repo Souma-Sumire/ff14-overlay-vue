@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { ElOption, ElSelect } from 'element-plus'
+import { ElOption, ElSelect } from "element-plus";
 
 defineProps<{
-  modelValue: string
-  options: { label: string, value: string, fullLabel?: string }[]
-  placeholder: string
-  width: string
-}>()
+  modelValue: string;
+  options: { label: string; value: string; fullLabel?: string }[];
+  placeholder: string;
+  width: string;
+}>();
 
 const emit = defineEmits<{
-  update: [value: string]
-}>()
+  update: [value: string];
+}>();
 
 function handleChange(value: string) {
-  emit('update', value)
+  emit("update", value);
 }
 </script>
 

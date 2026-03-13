@@ -1,39 +1,38 @@
-import path from 'node:path'
-import process from 'node:process'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import path from "node:path";
+import process from "node:process";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const scripts: string[] = [
-  'aethercurrent.ts',
-  'aetheryte.ts',
-  'action.ts',
-  'actionCategory.ts',
-  'actionUpgradeStepsBake.ts',
-  'roleActionCategoryByJob.ts',
-  'actionMetaBake.ts',
-  'actionMinLevelBake.ts',
-  'map.ts',
-  'status.ts',
-  'contentFinderCondition.ts',
-  'meals.ts',
-  'world.ts',
-]
+  "aethercurrent.ts",
+  "aetheryte.ts",
+  "action.ts",
+  "actionCategory.ts",
+  "actionUpgradeStepsBake.ts",
+  "roleActionCategoryByJob.ts",
+  "actionMetaBake.ts",
+  "actionMinLevelBake.ts",
+  "map.ts",
+  "status.ts",
+  "contentFinderCondition.ts",
+  "meals.ts",
+  "world.ts",
+];
 
-console.log('--- Running scripts ---')
+console.log("--- Running scripts ---");
 
 for (const script of scripts) {
-  const scriptPath = path.join(__dirname, script)
-  console.log(`Running ${script}...`)
+  const scriptPath = path.join(__dirname, script);
+  console.log(`Running ${script}...`);
 
   try {
-    await import(pathToFileURL(scriptPath).href)
-  }
-  catch (error) {
-    console.error(`❌ Error running ${script}:`, error)
-    process.exit(1)
+    await import(pathToFileURL(scriptPath).href);
+  } catch (error) {
+    console.error(`❌ Error running ${script}:`, error);
+    process.exit(1);
   }
 }
 
-console.log('--- All scripts completed! ---')
+console.log("--- All scripts completed! ---");

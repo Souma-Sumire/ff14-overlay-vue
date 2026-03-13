@@ -1,4 +1,4 @@
-export const PREPULL_BASELINE_SECONDS = -30
+export const PREPULL_BASELINE_SECONDS = -30;
 
 export function simulateChargeStateAtTime(
   usageTimes: number[],
@@ -6,35 +6,31 @@ export function simulateChargeStateAtTime(
   maxCharges: number,
   recast: number,
 ) {
-  let charges = maxCharges
-  let nextRechargeAt = PREPULL_BASELINE_SECONDS
+  let charges = maxCharges;
+  let nextRechargeAt = PREPULL_BASELINE_SECONDS;
 
   for (const useTime of usageTimes) {
-    if (useTime >= at)
-      break
+    if (useTime >= at) break;
 
     while (nextRechargeAt <= useTime && charges < maxCharges) {
-      nextRechargeAt += recast
-      charges++
-      if (charges === maxCharges)
-        break
+      nextRechargeAt += recast;
+      charges++;
+      if (charges === maxCharges) break;
     }
 
-    if (charges === maxCharges)
-      nextRechargeAt = useTime + recast
+    if (charges === maxCharges) nextRechargeAt = useTime + recast;
 
-    charges--
+    charges--;
 
-    if (charges === maxCharges - 1 && nextRechargeAt <= useTime)
-      nextRechargeAt = useTime + recast
+    if (charges === maxCharges - 1 && nextRechargeAt <= useTime) nextRechargeAt = useTime + recast;
   }
 
   while (nextRechargeAt <= at && charges < maxCharges) {
-    nextRechargeAt += recast
-    charges++
+    nextRechargeAt += recast;
+    charges++;
   }
 
-  return { charges, nextRechargeAt }
+  return { charges, nextRechargeAt };
 }
 
 export function getFirstChargeDeficitTime(
@@ -42,28 +38,24 @@ export function getFirstChargeDeficitTime(
   maxCharges: number,
   recast: number,
 ) {
-  let charges = maxCharges
-  let nextRechargeAt = PREPULL_BASELINE_SECONDS
+  let charges = maxCharges;
+  let nextRechargeAt = PREPULL_BASELINE_SECONDS;
 
   for (const useTime of usageTimes) {
     while (nextRechargeAt <= useTime && charges < maxCharges) {
-      nextRechargeAt += recast
-      charges++
-      if (charges === maxCharges)
-        break
+      nextRechargeAt += recast;
+      charges++;
+      if (charges === maxCharges) break;
     }
 
-    if (charges === maxCharges)
-      nextRechargeAt = useTime + recast
+    if (charges === maxCharges) nextRechargeAt = useTime + recast;
 
-    if (charges <= 0)
-      return useTime
+    if (charges <= 0) return useTime;
 
-    charges--
+    charges--;
 
-    if (charges === maxCharges - 1 && nextRechargeAt <= useTime)
-      nextRechargeAt = useTime + recast
+    if (charges === maxCharges - 1 && nextRechargeAt <= useTime) nextRechargeAt = useTime + recast;
   }
 
-  return null
+  return null;
 }

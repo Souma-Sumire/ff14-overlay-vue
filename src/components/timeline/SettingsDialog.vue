@@ -1,34 +1,27 @@
 <script lang="ts" setup>
-import type {
-  ITimelineLine,
-  ShowStyle,
-  TimelineConfigValues,
-} from '@/types/timeline'
-import { Refresh, RefreshLeft } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { computed, ref, watchEffect } from 'vue'
-import { useTimelineStore } from '@/store/timeline'
-import {
-  ShowStyleConfigEnum,
-  TimelineConfigEnum,
-} from '@/types/timeline'
+import type { ITimelineLine, ShowStyle, TimelineConfigValues } from "@/types/timeline";
+import { Refresh, RefreshLeft } from "@element-plus/icons-vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { computed, ref, watchEffect } from "vue";
+import { useTimelineStore } from "@/store/timeline";
+import { ShowStyleConfigEnum, TimelineConfigEnum } from "@/types/timeline";
 
 interface Props {
-  modelValue: boolean
+  modelValue: boolean;
 }
 
-const props = defineProps<Props>()
+const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
-}>()
+  (e: "update:modelValue", value: boolean): void;
+}>();
 
-const timelineStore = useTimelineStore()
+const timelineStore = useTimelineStore();
 
 // 默认值定义 (用于重置)
 const defaultValues: {
-  config: TimelineConfigValues
-  style: ShowStyle
+  config: TimelineConfigValues;
+  style: ShowStyle;
 } = {
   config: {
     [TimelineConfigEnum.显示范围]: 120,
@@ -46,10 +39,12 @@ const defaultValues: {
     [ShowStyleConfigEnum.即将到来缩放]: 1,
     [ShowStyleConfigEnum.动画时间]: 1,
   },
-}
+};
 
 // 滑块范围定义
-const sliderConfigs: Partial<Record<TimelineConfigEnum | ShowStyleConfigEnum, { min: number, max: number, step: number }>> = {
+const sliderConfigs: Partial<
+  Record<TimelineConfigEnum | ShowStyleConfigEnum, { min: number; max: number; step: number }>
+> = {
   [TimelineConfigEnum.显示范围]: { min: 10, max: 200, step: 1 },
   [TimelineConfigEnum.变色时间]: { min: 0, max: 5, step: 0.25 },
   [TimelineConfigEnum.零后持续]: { min: 0, max: 5, step: 0.1 },
@@ -62,63 +57,124 @@ const sliderConfigs: Partial<Record<TimelineConfigEnum | ShowStyleConfigEnum, { 
   [ShowStyleConfigEnum.未到来缩放]: { min: 0.1, max: 2, step: 0.01 },
   [ShowStyleConfigEnum.即将到来缩放]: { min: 0.1, max: 2, step: 0.01 },
   [ShowStyleConfigEnum.动画时间]: { min: 0, max: 3, step: 0.1 },
-}
+};
 
 function resetConfigField(key: TimelineConfigEnum) {
-  timelineStore.configValues[key] = defaultValues.config[key]
+  timelineStore.configValues[key] = defaultValues.config[key];
 }
 
 function resetStyleField(key: ShowStyleConfigEnum) {
-  timelineStore.showStyle[key] = defaultValues.style[key]
+  timelineStore.showStyle[key] = defaultValues.style[key];
 }
 
 function resetAll() {
-  ElMessageBox.confirm(
-    '此操作将恢复所有参数至默认值，确定继续吗？',
-    '提示',
-    {
-      confirmButtonText: '确定重置',
-      cancelButtonText: '取消',
-      type: 'warning',
-    },
-  ).then(() => {
-    (Object.keys(defaultValues.config) as TimelineConfigEnum[]).forEach((key) => {
-      timelineStore.configValues[key] = defaultValues.config[key]
-    });
-    (Object.keys(defaultValues.style) as ShowStyleConfigEnum[]).forEach((key) => {
-      timelineStore.showStyle[key] = defaultValues.style[key]
+  ElMessageBox.confirm("此操作将恢复所有参数至默认值，确定继续吗？", "提示", {
+    confirmButtonText: "确定重置",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+    .then(() => {
+      (Object.keys(defaultValues.config) as TimelineConfigEnum[]).forEach((key) => {
+        timelineStore.configValues[key] = defaultValues.config[key];
+      });
+      (Object.keys(defaultValues.style) as ShowStyleConfigEnum[]).forEach((key) => {
+        timelineStore.showStyle[key] = defaultValues.style[key];
+      });
+      ElMessage.success("已恢复默认设置");
     })
-    ElMessage.success('已恢复默认设置')
-  }).catch(() => {})
+    .catch(() => {});
 }
 
 watchEffect(() => {
-  timelineStore.saveTimelineSettings()
-})
+  timelineStore.saveTimelineSettings();
+});
 
 const dialogVisible = computed({
   get: () => props.modelValue,
-  set: value => emit('update:modelValue', value),
-})
+  set: (value) => emit("update:modelValue", value),
+});
 
-const testCombatTime = ref(-2.0)
+const testCombatTime = ref(-2.0);
 const testTimeline = ref<ITimelineLine[]>([
-  { time: -15, action: '<圣光幕帘>~', show: true, windowBefore: 0, windowAfter: 0, alertAlready: false },
-  { time: -2, action: '<圣灵>~', show: true, windowBefore: 0, windowAfter: 0, alertAlready: false },
-  { time: 0, action: '战斗开始！', show: true, windowBefore: 0, windowAfter: 0, alertAlready: false },
-  { time: 3, action: '<挑衅>~', show: true, windowBefore: 0, windowAfter: 0, alertAlready: false },
-  { time: 5, action: '<神圣领域>~', show: true, windowBefore: 0, windowAfter: 0, alertAlready: false },
-  { time: 10, action: '<圣盾阵>~', show: true, windowBefore: 0, windowAfter: 0, alertAlready: false },
-  { time: 20, action: '<圣盾阵>~', show: true, windowBefore: 0, windowAfter: 0, alertAlready: false },
-  { time: 25, action: '<雪仇>~', show: true, windowBefore: 0, windowAfter: 0, alertAlready: false },
-  { time: 30, action: '<铁壁>~', show: true, windowBefore: 0, windowAfter: 0, alertAlready: false },
-  { time: 40, action: '<极限防御>~', show: true, windowBefore: 0, windowAfter: 0, alertAlready: false },
-  { time: 50, action: '<雪仇>~', show: true, windowBefore: 0, windowAfter: 0, alertAlready: false },
-  { time: 60, action: '<圣灵>~', show: true, windowBefore: 0, windowAfter: 0, alertAlready: false },
-  { time: 120, action: '<圣盾阵>~', show: true, windowBefore: 0, windowAfter: 0, alertAlready: false },
-  { time: 180, action: '<圣光幕帘>~', show: true, windowBefore: 0, windowAfter: 0, alertAlready: false },
-  { time: 200, action: '战斗结束！', show: true, windowBefore: 0, windowAfter: 0, alertAlready: false },
-])
+  {
+    time: -15,
+    action: "<圣光幕帘>~",
+    show: true,
+    windowBefore: 0,
+    windowAfter: 0,
+    alertAlready: false,
+  },
+  { time: -2, action: "<圣灵>~", show: true, windowBefore: 0, windowAfter: 0, alertAlready: false },
+  {
+    time: 0,
+    action: "战斗开始！",
+    show: true,
+    windowBefore: 0,
+    windowAfter: 0,
+    alertAlready: false,
+  },
+  { time: 3, action: "<挑衅>~", show: true, windowBefore: 0, windowAfter: 0, alertAlready: false },
+  {
+    time: 5,
+    action: "<神圣领域>~",
+    show: true,
+    windowBefore: 0,
+    windowAfter: 0,
+    alertAlready: false,
+  },
+  {
+    time: 10,
+    action: "<圣盾阵>~",
+    show: true,
+    windowBefore: 0,
+    windowAfter: 0,
+    alertAlready: false,
+  },
+  {
+    time: 20,
+    action: "<圣盾阵>~",
+    show: true,
+    windowBefore: 0,
+    windowAfter: 0,
+    alertAlready: false,
+  },
+  { time: 25, action: "<雪仇>~", show: true, windowBefore: 0, windowAfter: 0, alertAlready: false },
+  { time: 30, action: "<铁壁>~", show: true, windowBefore: 0, windowAfter: 0, alertAlready: false },
+  {
+    time: 40,
+    action: "<极限防御>~",
+    show: true,
+    windowBefore: 0,
+    windowAfter: 0,
+    alertAlready: false,
+  },
+  { time: 50, action: "<雪仇>~", show: true, windowBefore: 0, windowAfter: 0, alertAlready: false },
+  { time: 60, action: "<圣灵>~", show: true, windowBefore: 0, windowAfter: 0, alertAlready: false },
+  {
+    time: 120,
+    action: "<圣盾阵>~",
+    show: true,
+    windowBefore: 0,
+    windowAfter: 0,
+    alertAlready: false,
+  },
+  {
+    time: 180,
+    action: "<圣光幕帘>~",
+    show: true,
+    windowBefore: 0,
+    windowAfter: 0,
+    alertAlready: false,
+  },
+  {
+    time: 200,
+    action: "战斗结束！",
+    show: true,
+    windowBefore: 0,
+    windowAfter: 0,
+    alertAlready: false,
+  },
+]);
 </script>
 
 <template>
@@ -149,9 +205,7 @@ const testTimeline = ref<ITimelineLine[]>([
       <div class="form-side">
         <el-form label-position="top" size="small">
           <div class="section-container">
-            <h3 class="section-header">
-              核心参数
-            </h3>
+            <h3 class="section-header">核心参数</h3>
             <div v-for="(_value, key) in timelineStore.configValues" :key="key" class="slider-item">
               <div class="slider-label">
                 <span>{{ timelineStore.configTranslate[key] }}</span>
@@ -173,9 +227,7 @@ const testTimeline = ref<ITimelineLine[]>([
           </div>
 
           <div class="section-container">
-            <h3 class="section-header">
-              视觉样式
-            </h3>
+            <h3 class="section-header">视觉样式</h3>
             <div v-for="(_value, key) in timelineStore.showStyle" :key="key" class="slider-item">
               <div class="slider-label">
                 <span>{{ timelineStore.showStyleTranslate[key] }}</span>
@@ -200,9 +252,7 @@ const testTimeline = ref<ITimelineLine[]>([
 
       <!-- Right Side: Live Preview -->
       <div class="preview-side">
-        <h3 class="section-header">
-          效果预览
-        </h3>
+        <h3 class="section-header">效果预览</h3>
         <div class="preview-content">
           <div class="slider-container">
             <div class="slider-info">
@@ -227,12 +277,8 @@ const testTimeline = ref<ITimelineLine[]>([
 
     <template #footer>
       <div class="dialog-footer">
-        <el-button size="small" @click="dialogVisible = false">
-          取消
-        </el-button>
-        <el-button size="small" type="primary" @click="dialogVisible = false">
-          保存设置
-        </el-button>
+        <el-button size="small" @click="dialogVisible = false"> 取消 </el-button>
+        <el-button size="small" type="primary" @click="dialogVisible = false"> 保存设置 </el-button>
       </div>
     </template>
   </el-dialog>
@@ -240,17 +286,17 @@ const testTimeline = ref<ITimelineLine[]>([
 
 <style lang="scss" scoped>
 .timeline-settings-dialog {
-  :deep(.el-dialog__header) {
+  ::deep(.el-dialog__header) {
     margin-right: 0;
     padding: 8px 16px;
     border-bottom: 1px solid var(--el-border-color-lighter);
     background-color: var(--el-fill-color-light);
     cursor: move;
   }
-  :deep(.el-dialog__body) {
+  ::deep(.el-dialog__body) {
     padding: 4px 16px;
   }
-  :deep(.el-dialog__footer) {
+  ::deep(.el-dialog__footer) {
     border-top: 1px solid var(--el-border-color-lighter);
     padding: 6px 16px;
   }
@@ -331,10 +377,10 @@ const testTimeline = ref<ITimelineLine[]>([
     }
   }
 
-  :deep(.el-slider__runway) {
+  ::deep(.el-slider__runway) {
     margin-right: 8px;
   } // 留出8px空隙
-  :deep(.el-slider__input) {
+  ::deep(.el-slider__input) {
     width: 60px;
   }
 }

@@ -1,14 +1,18 @@
-import type { Party } from '../../cactbot/types/event'
-import { defineStore } from 'pinia'
-import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
-import { resolveBakedActionMeta } from '@/resources/logic/actionMetaResolver'
-import { EMPTY_IMAGE, getIconSrcByFullIcon, getIconSrcById, getIconSrcByPath, parseAction } from '@/utils/xivapi'
-import { callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
+import type { Party } from "../../cactbot/types/event";
+import { defineStore } from "pinia";
+import { DEFAULT_JOB_SORT_ORDER } from "@/resources/jobSortOrder";
+import { resolveBakedActionMeta } from "@/resources/logic/actionMetaResolver";
+import {
+  EMPTY_IMAGE,
+  getIconSrcByFullIcon,
+  getIconSrcById,
+  getIconSrcByPath,
+  parseAction,
+} from "@/utils/xivapi";
+import { callOverlayHandler } from "../../cactbot/resources/overlay_plugin_api";
 
-const params = new URLSearchParams(window.location.href.split('?')[1])
-const DEFAULT_JOB_SORT_INDEX = new Map(
-  DEFAULT_JOB_SORT_ORDER.map((job, index) => [job, index]),
-)
+const params = new URLSearchParams(window.location.href.split("?")[1]);
+const DEFAULT_JOB_SORT_INDEX = new Map(DEFAULT_JOB_SORT_ORDER.map((job, index) => [job, index]));
 // const testActions = [
 //   24283, 24284, 24285, 24286, 24287, 24288, 24289, 24290, 24294, 24295, 24296,
 //   24297, 24298, 24299, 24300, 24301, 24302, 24303, 24304, 24305, 24306, 24307,
@@ -16,36 +20,18 @@ const DEFAULT_JOB_SORT_INDEX = new Map(
 // ];
 
 const testActions = [
-  34563,
-  34564,
-  34565,
-  34566,
-  34567,
-  34568,
-  34569,
-  34570,
-  34571,
-  34572,
-  34573,
-  34574,
-  34575,
-  34576,
-  34577,
-  34578,
-  34579,
-  34580,
-  34581,
-  34582,
-]
+  34563, 34564, 34565, 34566, 34567, 34568, 34569, 34570, 34571, 34572, 34573, 34574, 34575, 34576,
+  34577, 34578, 34579, 34580, 34581, 34582,
+];
 
 function getRandomTestActionId(): number {
-  return testActions[Math.floor(Math.random() * testActions.length)]!
+  return testActions[Math.floor(Math.random() * testActions.length)]!;
 }
 
 const testPartyMembers: Party[] = [
   {
-    id: '10000001',
-    name: '测试张三',
+    id: "10000001",
+    name: "测试张三",
     job: 24,
     inParty: true,
     worldId: 0,
@@ -57,8 +43,8 @@ const testPartyMembers: Party[] = [
     territoryType: 0,
   },
   {
-    id: '10000002',
-    name: '测试李四',
+    id: "10000002",
+    name: "测试李四",
     job: 25,
     inParty: true,
     worldId: 0,
@@ -70,8 +56,8 @@ const testPartyMembers: Party[] = [
     territoryType: 0,
   },
   {
-    id: '10000004',
-    name: '测试王五',
+    id: "10000004",
+    name: "测试王五",
     job: 19,
     inParty: true,
     worldId: 0,
@@ -83,8 +69,8 @@ const testPartyMembers: Party[] = [
     territoryType: 0,
   },
   {
-    id: '10000005',
-    name: '测试赵六',
+    id: "10000005",
+    name: "测试赵六",
     job: 23,
     inParty: true,
     worldId: 0,
@@ -96,8 +82,8 @@ const testPartyMembers: Party[] = [
     territoryType: 0,
   },
   {
-    id: '10000006',
-    name: '测试孙七',
+    id: "10000006",
+    name: "测试孙七",
     job: 39,
     inParty: true,
     worldId: 0,
@@ -109,8 +95,8 @@ const testPartyMembers: Party[] = [
     territoryType: 0,
   },
   {
-    id: '10000007',
-    name: '测试周八',
+    id: "10000007",
+    name: "测试周八",
     job: 40,
     inParty: true,
     worldId: 0,
@@ -122,8 +108,8 @@ const testPartyMembers: Party[] = [
     territoryType: 0,
   },
   {
-    id: '10000008',
-    name: '测试吴九',
+    id: "10000008",
+    name: "测试吴九",
     job: 37,
     inParty: true,
     worldId: 0,
@@ -135,8 +121,8 @@ const testPartyMembers: Party[] = [
     territoryType: 0,
   },
   {
-    id: '10000009',
-    name: '测试郑十',
+    id: "10000009",
+    name: "测试郑十",
     job: 38,
     inParty: true,
     worldId: 0,
@@ -147,79 +133,78 @@ const testPartyMembers: Party[] = [
     partyType: 1,
     territoryType: 0,
   },
-]
+];
 
-export const useCastingMonitorStore = defineStore('castingMonitor', {
+export const useCastingMonitorStore = defineStore("castingMonitor", {
   state: () => {
     return {
       castData: [] as {
-        casterId: string
-        src: string
-        time: number
-        expirationTime: number
-        class: string
-        key: string
-        logLine: number
+        casterId: string;
+        src: string;
+        time: number;
+        expirationTime: number;
+        class: string;
+        key: string;
+        logLine: number;
       }[],
-      playerId: '',
-      focusTargetId: '',
+      playerId: "",
+      focusTargetId: "",
       partyData: [] as {
-        id: string
-        name: string
-        job: number
-        inParty: boolean
-        src: string
+        id: string;
+        name: string;
+        job: number;
+        inParty: boolean;
+        src: string;
       }[],
       config: {
-        duration: Number(params.get('duration') || 15),
+        duration: Number(params.get("duration") || 15),
       },
       simulateSlowImageLoad: false,
       simulateSlowImageLoadDelayMs: 3000,
       testPartySize: 8,
       // lastPush: Date.now(),
-      type: params.get('type') === 'party' ? 'party' : 'focus',
-    }
+      type: params.get("type") === "party" ? "party" : "focus",
+    };
   },
   getters: {
     partyDataFormatted(state) {
-      return [...state.partyData].sort((a, b) => {
-        const aSort = DEFAULT_JOB_SORT_INDEX.get(a.job) ?? Number.POSITIVE_INFINITY
-        const bSort = DEFAULT_JOB_SORT_INDEX.get(b.job) ?? Number.POSITIVE_INFINITY
-        return aSort - bSort
-      })
+      return state.partyData.toSorted((a, b) => {
+        const aSort = DEFAULT_JOB_SORT_INDEX.get(a.job) ?? Number.POSITIVE_INFINITY;
+        const bSort = DEFAULT_JOB_SORT_INDEX.get(b.job) ?? Number.POSITIVE_INFINITY;
+        return aSort - bSort;
+      });
     },
   },
   actions: {
     testAction(): void {
-      if (this.type === 'party') {
-        const casters = this.partyDataFormatted.length > 0
-          ? this.partyDataFormatted
-          : [{ id: this.playerId }]
-        const partyCasters = [...casters]
+      if (this.type === "party") {
+        const casters =
+          this.partyDataFormatted.length > 0 ? this.partyDataFormatted : [{ id: this.playerId }];
+        const partyCasters = [...casters];
         for (let i = partyCasters.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1))
-          ;[partyCasters[i], partyCasters[j]] = [partyCasters[j]!, partyCasters[i]!]
+          const j = Math.floor(Math.random() * (i + 1));
+          [partyCasters[i], partyCasters[j]] = [partyCasters[j]!, partyCasters[i]!];
         }
-        const count = Math.min(4, partyCasters.length)
+        const count = Math.min(4, partyCasters.length);
         for (let i = 0; i < count; i++) {
-          const caster = partyCasters[i]!
+          const caster = partyCasters[i]!;
           void this.pushAction(
             Date.now() + i,
             15,
-            '青魔技能随机',
+            "青魔技能随机",
             caster.id,
             getRandomTestActionId(),
-          )
+          );
         }
-        return
+        return;
       }
       void this.pushAction(
         Date.now(),
         15,
-        '青魔技能随机',
+        "青魔技能随机",
         this.focusTargetId || this.playerId,
         getRandomTestActionId(),
-      )
+      );
       // this.pushAction(
       //   Date.now(),
       //   14,
@@ -258,30 +243,27 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
     // },
     testParty(fakeParty: boolean): void {
       this.handlePartyChanged({
-        party: fakeParty
-          ? testPartyMembers.slice(0, this.testPartySize)
-          : [],
-      })
+        party: fakeParty ? testPartyMembers.slice(0, this.testPartySize) : [],
+      });
     },
     setTestPartySize(size: number): void {
-      const normalized = Math.min(8, Math.max(1, Math.round(size)))
-      this.testPartySize = normalized
-      if (this.type === 'party')
-        this.testParty(true)
+      const normalized = Math.min(8, Math.max(1, Math.round(size)));
+      this.testPartySize = normalized;
+      if (this.type === "party") this.testParty(true);
     },
     testPartyMode(): void {
-      this.type = 'party'
-      this.castData = []
-      this.testParty(true)
+      this.type = "party";
+      this.castData = [];
+      this.testParty(true);
     },
     testFocusMode(): void {
-      this.type = 'focus'
-      this.castData = []
-      this.testParty(false)
-      this.focusTargetId = this.playerId
+      this.type = "focus";
+      this.castData = [];
+      this.testParty(false);
+      this.focusTargetId = this.playerId;
     },
     toggleSimulateSlowImageLoad(): void {
-      this.simulateSlowImageLoad = !this.simulateSlowImageLoad
+      this.simulateSlowImageLoad = !this.simulateSlowImageLoad;
     },
     async pushAction(
       time: number,
@@ -291,105 +273,94 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
       abilityId: number,
       cast1000Ms?: number,
     ): Promise<void> {
-      const shouldDisplay = this.type === 'party'
-        ? (
-            (this.partyData.length === 0 && casterId === this.playerId)
-            || this.partyData.some(v => v.id === casterId)
-          )
-        : (
-            (this.partyData.length === 0 && casterId === this.playerId)
-            || (this.partyData.length > 0 && casterId === this.focusTargetId)
-          )
-      if (
-        shouldDisplay
-      ) {
-        let abiId = abilityId
-        let queryType: string = 'action'
-        let itemIsHQ = false
+      const shouldDisplay =
+        this.type === "party"
+          ? (this.partyData.length === 0 && casterId === this.playerId) ||
+            this.partyData.some((v) => v.id === casterId)
+          : (this.partyData.length === 0 && casterId === this.playerId) ||
+            (this.partyData.length > 0 && casterId === this.focusTargetId);
+      if (shouldDisplay) {
+        let abiId = abilityId;
+        let queryType: string = "action";
+        let itemIsHQ = false;
         // if (/^(?:item|mount)_/.test(abilityName)) {
-        if (abilityName.startsWith('item_')) {
-          return
+        if (abilityName.startsWith("item_")) {
+          return;
         }
-        if (abilityName.startsWith('mount_')) {
-          abiId = Number.parseInt(abilityName.replace(/^.+_/, ''), 16)
+        if (abilityName.startsWith("mount_")) {
+          abiId = Number.parseInt(abilityName.replace(/^.+_/, ""), 16);
           // HQ道具 item_fXXXX （转十进制则为10XXXXXX）
           if (abiId > 983040) {
-            abiId = Number.parseInt(abiId.toString().slice(-5), 10)
-            itemIsHQ = true
+            abiId = Number.parseInt(abiId.toString().slice(-5), 10);
+            itemIsHQ = true;
           }
           // queryType = abilityName.replace(/_.+$/, '') as 'item' | 'mount'
-          queryType = abilityName.replace(/_.+$/, '') as 'mount'
+          queryType = abilityName.replace(/_.+$/, "") as "mount";
         }
-        const key = `${time}-${logLine}-${casterId}-${abilityId}`
+        const key = `${time}-${logLine}-${casterId}-${abilityId}`;
         const cast = {
           casterId,
           time,
           expirationTime: Date.now() + this.config.duration * 1000,
           logLine,
           src: EMPTY_IMAGE,
-          class: 'action action-category-0',
+          class: "action action-category-0",
           key,
-        }
-        this.castData.push(cast)
+        };
+        this.castData.push(cast);
         const setCastSrc = (src: string): void => {
           const assignSrc = () => {
-            const target = this.castData.find(v => v.key === key)
-            if (target)
-              target.src = src
-          }
+            const target = this.castData.find((v) => v.key === key);
+            if (target) target.src = src;
+          };
           if (this.simulateSlowImageLoad) {
-            setTimeout(assignSrc, this.simulateSlowImageLoadDelayMs)
-            return
+            setTimeout(assignSrc, this.simulateSlowImageLoadDelayMs);
+            return;
           }
-          assignSrc()
-        }
+          assignSrc();
+        };
         if (logLine === 14 && cast1000Ms) {
-          setTimeout(() => {
-            this.castData = this.castData.filter(v => v?.key !== key)
-          }, cast1000Ms * 1000 - 500)
+          setTimeout(
+            () => {
+              this.castData = this.castData.filter((v) => v?.key !== key);
+            },
+            cast1000Ms * 1000 - 500,
+          );
         }
-        if (abilityName.startsWith('unknown_')) {
-          setCastSrc(getIconSrcByFullIcon('000000/000405'))
-          cast.class = 'action action-category-0'
-        }
-        else if (abiId < 100000) {
-          let resolvedFromBaked = false
-          if (queryType === 'action') {
-            const baked = resolveBakedActionMeta(abiId)
+        if (abilityName.startsWith("unknown_")) {
+          setCastSrc(getIconSrcByFullIcon("000000/000405"));
+          cast.class = "action action-category-0";
+        } else if (abiId < 100000) {
+          let resolvedFromBaked = false;
+          if (queryType === "action") {
+            const baked = resolveBakedActionMeta(abiId);
             if (baked && baked.iconId > 0) {
-              setCastSrc(getIconSrcById(baked.iconId))
-              cast.class = `action action-category-${baked.actionCategoryTargetId}`
-              resolvedFromBaked = true
+              setCastSrc(getIconSrcById(baked.iconId));
+              cast.class = `action action-category-${baked.actionCategoryTargetId}`;
+              resolvedFromBaked = true;
             }
           }
 
           if (!resolvedFromBaked) {
-            const action = await parseAction(queryType, abiId, [
-              'ID',
-              'Icon',
-              'ActionCategory',
-            ])
+            const action = await parseAction(queryType, abiId, ["ID", "Icon", "ActionCategory"]);
             if (action.ID === 3) {
               // 疾跑(冲刺)
-              action.Icon = '/i/000000/000104.png'
+              action.Icon = "/i/000000/000104.png";
             }
-            setCastSrc(getIconSrcByPath(action?.Icon ?? '', itemIsHQ))
-            if (queryType === 'action')
-              cast.class = `action action-category-${action?.ActionCategory}`
-            else if (queryType === 'mount')
-              cast.class = 'mount'
+            setCastSrc(getIconSrcByPath(action?.Icon ?? "", itemIsHQ));
+            if (queryType === "action")
+              cast.class = `action action-category-${action?.ActionCategory}`;
+            else if (queryType === "mount") cast.class = "mount";
           }
         }
       }
     },
-    handleChangePrimaryPlayer(e: {
-      charID: { toString: (arg0: number) => string }
-    }): void {
-      this.playerId = e.charID.toString(16).toUpperCase()
-      this.focusTargetId = this.playerId
+    handleChangePrimaryPlayer(e: { charID: { toString: (arg0: number) => string } }): void {
+      this.playerId = e.charID.toString(16).toUpperCase();
+      this.focusTargetId = this.playerId;
     },
     handleLogLine(e: { line: string[] }): void {
-      if (e.line[0] === '20') {
+      if (e.line[0] === "20") {
         void this.pushAction(
           Date.now(),
           14,
@@ -397,70 +368,57 @@ export const useCastingMonitorStore = defineStore('castingMonitor', {
           e.line[2]!,
           Number.parseInt(e.line[4]!, 16),
           Number(e.line[8]),
-        )
-      }
-      else if (
-        e.line[0] === '21'
-        || (e.line[0] === '22' && e.line[45] === '0')
-      ) {
+        );
+      } else if (e.line[0] === "21" || (e.line[0] === "22" && e.line[45] === "0")) {
         void this.pushAction(
           Date.now(),
           15,
           e.line[5]!,
           e.line[2]!,
           Number.parseInt(e.line[4]!, 16),
-        )
+        );
       }
     },
     handlePartyChanged(e: { party: Party[] }): void {
       if (e.party.length > 0) {
-        this.partyData = e.party
-          .filter(v => v.inParty)
-          .map(v => ({ ...v, src: '' }))
-        for (const key in this.castData) {
-          if (Object.prototype.hasOwnProperty.call(this.castData, key)) {
-            if (!this.partyData.find(v => v.id === key))
-              Reflect.deleteProperty(this.castData, key)
+        this.partyData = e.party.filter((v) => v.inParty).map((v) => ({ ...v, src: "" }));
+        for (const key of Object.keys(this.castData)) {
+          if (Object.hasOwn(this.castData, key)) {
+            if (!this.partyData.some((v) => v.id === key))
+              Reflect.deleteProperty(this.castData, key);
           }
         }
         if (!Object.keys(this.partyData).includes(this.focusTargetId)) {
           // 没有之前监控的目标，重置为玩家本人。
-          this.focusTargetId = this.playerId
+          this.focusTargetId = this.playerId;
         }
-      }
-      else {
+      } else {
         // 没有队伍，重置为玩家本人。
-        this.focusTargetId = this.playerId
+        this.focusTargetId = this.playerId;
         // 清空队伍数据
-        this.partyData.length = 0
+        this.partyData.length = 0;
       }
     },
     handleClickChangeTarget(targetId: string): void {
-      if (this.type === 'party')
-        return
+      if (this.type === "party") return;
       if (targetId === this.focusTargetId) {
         // 重复点击，重置为玩家本人。
-        this.focusTargetId = this.playerId
+        this.focusTargetId = this.playerId;
+      } else {
+        this.focusTargetId = targetId;
       }
-      else {
-        this.focusTargetId = targetId
-      }
-      if (
-        /^(?:1|true|yes|on|open|enabled|undefined)$/i.test(
-          params.get('syncFocusWS') || '',
-        )
-      ) {
+      if (/^(?:1|true|yes|on|open|enabled|undefined)$/i.test(params.get("syncFocusWS") || "")) {
         void callOverlayHandler({
-          call: 'broadcast',
-          source: 'castMonitorOverlay',
+          call: "broadcast",
+          source: "castMonitorOverlay",
           msg: {
             targetId: this.focusTargetId,
           },
-        })
+        });
       }
     },
     cleanUpExpired(): void {
-      this.castData = this.castData.filter(v => v.expirationTime > Date.now())
+      this.castData = this.castData.filter((v) => v.expirationTime > Date.now());
     },
   },
-})
+});

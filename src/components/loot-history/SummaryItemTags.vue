@@ -1,16 +1,16 @@
 <script setup lang="ts">
 interface SummaryItem {
-  count: number
-  isBis?: boolean
-  isRandomWeapon?: boolean
-  layerName?: string
-  details?: { name: string, count: number }[]
-  [key: string]: any
+  count: number;
+  isBis?: boolean;
+  isRandomWeapon?: boolean;
+  layerName?: string;
+  details?: { name: string; count: number }[];
+  [key: string]: any;
 }
 
 defineProps<{
-  item: SummaryItem
-}>()
+  item: SummaryItem;
+}>();
 </script>
 
 <template>
@@ -39,18 +39,16 @@ defineProps<{
         </div>
       </template>
       <span
-        class="count-badge cursor-help" :class="[
-          item.count > 1 ? 'count-many' : item.count === 0 ? 'count-none' : 'count-single',
-        ]"
+        class="count-badge cursor-help"
+        :class="[item.count > 1 ? 'count-many' : item.count === 0 ? 'count-none' : 'count-single']"
       >
         x{{ item.count }}
       </span>
     </el-tooltip>
     <span
       v-else
-      class="count-badge" :class="[
-        item.count > 1 ? 'count-many' : item.count === 0 ? 'count-none' : 'count-single',
-      ]"
+      class="count-badge"
+      :class="[item.count > 1 ? 'count-many' : item.count === 0 ? 'count-none' : 'count-single']"
     >
       x{{ item.count }}
     </span>
@@ -128,7 +126,7 @@ defineProps<{
 .count-badge {
   padding: 1px 6px;
   border-radius: 4px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   font-weight: 700;
   font-size: 10px;
 }
@@ -201,7 +199,7 @@ defineProps<{
 }
 .rw-tip-count {
   color: #fbbf24 !important;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   font-weight: 700;
 }
 </style>

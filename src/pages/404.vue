@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
+import { RouterLink } from "vue-router";
 </script>
 
 <template>
   <div class="not-found">
-    <div class="cat-container">
-      🐱
-    </div>
-    <h1>{{ $t('404.title') }}</h1>
-    <p>{{ $t('404.message') }}</p>
+    <div class="cat-container">🐱</div>
+    <h1>{{ $t("404.title") }}</h1>
+    <p>{{ $t("404.message") }}</p>
     <RouterLink to="/startPages" class="go-home">
-      {{ $t('404.back') }}
+      {{ $t("404.back") }}
     </RouterLink>
   </div>
 </template>
@@ -22,7 +20,7 @@ import { RouterLink } from 'vue-router'
   align-items: center;
   justify-content: center;
   height: 100vh;
-  font-family: 'Comic Sans MS', system-ui, sans-serif;
+  font-family: "Comic Sans MS", system-ui, sans-serif;
   text-align: center;
   background: #ffffff;
   color: #333333;

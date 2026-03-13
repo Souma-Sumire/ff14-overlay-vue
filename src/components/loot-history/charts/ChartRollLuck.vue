@@ -1,34 +1,34 @@
 <script setup lang="ts">
-import type { LootRecord } from '@/utils/lootParser'
-import { useDark } from '@vueuse/core'
-import { BarChart, BoxplotChart } from 'echarts/charts'
+import type { LootRecord } from "@/utils/lootParser";
+import { useDark } from "@vueuse/core";
+import { BarChart, BoxplotChart } from "echarts/charts";
 import {
   GridComponent,
   LegendComponent,
   MarkLineComponent,
   TitleComponent,
   TooltipComponent,
-} from 'echarts/components'
-import { use } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
-import { computed, inject } from 'vue'
-import VChart from 'vue-echarts'
-import { formatChartPlayerLabel, getChartLabelRich } from '@/utils/chartUtils'
-import { getRoleColor, getRoleDisplayName } from '@/utils/lootParser'
+} from "echarts/components";
+import { use } from "echarts/core";
+import { CanvasRenderer } from "echarts/renderers";
+import { computed, inject } from "vue";
+import VChart from "vue-echarts";
+import { formatChartPlayerLabel, getChartLabelRich } from "@/utils/chartUtils";
+import { getRoleColor, getRoleDisplayName } from "@/utils/lootParser";
 
 const props = defineProps<{
-  records: LootRecord[]
-  players: string[]
-  getActualPlayer?: (name: string) => string
-  getPlayerRole?: (name: string) => string | undefined
-  playerVisibility?: 'all' | 'role' | 'job' | 'initial'
-}>()
+  records: LootRecord[];
+  players: string[];
+  getActualPlayer?: (name: string) => string;
+  getPlayerRole?: (name: string) => string | undefined;
+  playerVisibility?: "all" | "role" | "job" | "initial";
+}>();
 
 const isDark = useDark({
-  storageKey: 'loot-history-theme',
-})
+  storageKey: "loot-history-theme",
+});
 
-const getDisplayName = inject('getDisplayName', (n: string) => n)
+const getDisplayName = inject("getDisplayName", (n: string) => n);
 
 use([
   CanvasRenderer,
@@ -39,38 +39,38 @@ use([
   LegendComponent,
   TitleComponent,
   MarkLineComponent,
-])
+]);
 
 const option = computed(() => {
-  const visibility = props.playerVisibility
+  const visibility = props.playerVisibility;
   // 1. 收集每位玩家的 Roll 点历史
-  const playerRolls = new Map<string, number[]>()
-  props.players.forEach(p => playerRolls.set(p, []))
+  const playerRolls = new Map<string, number[]>();
+  props.players.forEach((p) => playerRolls.set(p, []));
 
   props.records.forEach((r) => {
     // 遍历该条记录的所有 roll 信息
     r.rolls.forEach((roll) => {
       // 只统计 Need 和 Greed 且有数值的
-      if ((roll.type === 'need' || roll.type === 'greed') && roll.value !== null) {
-        const p = props.getActualPlayer ? props.getActualPlayer(roll.player) : roll.player
+      if ((roll.type === "need" || roll.type === "greed") && roll.value !== null) {
+        const p = props.getActualPlayer ? props.getActualPlayer(roll.player) : roll.player;
         // 只统计在显示列表中的玩家
         if (playerRolls.has(p)) {
-          playerRolls.get(p)!.push(roll.value)
+          playerRolls.get(p)!.push(roll.value);
         }
       }
-    })
-  })
+    });
+  });
 
   // 2. 计算统计指标 (平均值)
   const dataList = props.players.map((p) => {
-    const rolls = playerRolls.get(p) || []
-    const count = rolls.length
-    const sum = rolls.reduce((a, b) => a + b, 0)
-    const avg = count > 0 ? sum / count : 0
-    const max = count > 0 ? Math.max(...rolls) : 0
-    const min = count > 0 ? Math.min(...rolls) : 0
-    const roleRaw = props.getPlayerRole ? props.getPlayerRole(p) : undefined
-    const displayName = getDisplayName(p)
+    const rolls = playerRolls.get(p) || [];
+    const count = rolls.length;
+    const sum = rolls.reduce((a, b) => a + b, 0);
+    const avg = count > 0 ? sum / count : 0;
+    const max = count > 0 ? Math.max(...rolls) : 0;
+    const min = count > 0 ? Math.min(...rolls) : 0;
+    const roleRaw = props.getPlayerRole ? props.getPlayerRole(p) : undefined;
+    const displayName = getDisplayName(p);
 
     return {
       rawName: p,
@@ -79,54 +79,52 @@ const option = computed(() => {
       min,
       max,
       count,
-      roleRaw: roleRaw || '',
-      formattedRole: roleRaw ? getRoleDisplayName(roleRaw) : '',
-    }
-  })
+      roleRaw: roleRaw || "",
+      formattedRole: roleRaw ? getRoleDisplayName(roleRaw) : "",
+    };
+  });
 
   // 3. 准备图表数据
-  const xData = dataList.map(d => d.name)
-  const seriesData = dataList.map(d => d.value)
+  const xData = dataList.map((d) => d.name);
+  const seriesData = dataList.map((d) => d.value);
 
   return {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     animation: false,
     title: { show: false, text: visibility },
     tooltip: {
-      trigger: 'axis',
+      trigger: "axis",
       axisPointer: {
-        type: 'shadow',
+        type: "shadow",
       },
       formatter: (params: any) => {
-        const item = params[0]
-        const data = dataList[item.dataIndex]
-        if (!data)
-          return ''
+        const item = params[0];
+        const data = dataList[item.dataIndex];
+        if (!data) return "";
 
-        const roleStr = data.formattedRole ? `[${data.formattedRole}] ` : ''
+        const roleStr = data.formattedRole ? `[${data.formattedRole}] ` : "";
 
-        const name = data.name
-        let html = `${roleStr}<b>${name}</b><br/>`
+        const name = data.name;
+        let html = `${roleStr}<b>${name}</b><br/>`;
         if (data.count === 0) {
-          html += `<span style="color:#999">无数据</span>`
+          html += `<span style="color:#999">无数据</span>`;
+        } else {
+          html += `平均点数: <b>${data.value.toFixed(1)}</b><br/>`;
+          html += `最高点数: ${data.max}<br/>`;
+          html += `最低点数: ${data.min}<br/>`;
+          html += `Roll点次数: ${data.count}`;
         }
-        else {
-          html += `平均点数: <b>${data.value.toFixed(1)}</b><br/>`
-          html += `最高点数: ${data.max}<br/>`
-          html += `最低点数: ${data.min}<br/>`
-          html += `Roll点次数: ${data.count}`
-        }
-        return html
+        return html;
       },
     },
     grid: {
-      left: '5%',
-      right: '2%',
-      bottom: '10%',
-      top: '10%',
+      left: "5%",
+      right: "2%",
+      bottom: "10%",
+      top: "10%",
     },
     xAxis: {
-      type: 'category',
+      type: "category",
       data: xData,
       axisTick: {
         alignWithLabel: true,
@@ -135,79 +133,77 @@ const option = computed(() => {
         interval: 0,
         rotate: 0,
         formatter: (value: string, index: number) => {
-          const rawRole = dataList[index]?.roleRaw
-          return formatChartPlayerLabel(value, rawRole, props.playerVisibility)
+          const rawRole = dataList[index]?.roleRaw;
+          return formatChartPlayerLabel(value, rawRole, props.playerVisibility);
         },
         rich: getChartLabelRich(props.playerVisibility),
-        color: isDark.value ? '#e2e8f0' : '#64748b',
+        color: isDark.value ? "#e2e8f0" : "#64748b",
       },
       axisLine: {
         lineStyle: {
-          color: isDark.value ? 'rgba(255,255,255,0.1)' : '#e2e8f0',
+          color: isDark.value ? "rgba(255,255,255,0.1)" : "#e2e8f0",
         },
       },
     },
     yAxis: {
-      type: 'value',
+      type: "value",
       min: 0,
       max: 100,
-      name: '平均点数',
+      name: "平均点数",
       splitLine: {
         lineStyle: {
-          color: isDark.value ? 'rgba(255,255,255,0.06)' : '#f1f5f9',
+          color: isDark.value ? "rgba(255,255,255,0.06)" : "#f1f5f9",
         },
       },
       axisLabel: {
-        color: isDark.value ? '#94a3b8' : '#64748b',
+        color: isDark.value ? "#94a3b8" : "#64748b",
       },
     },
     series: [
       {
-        name: '平均Roll点',
-        type: 'bar',
-        barWidth: '50%',
+        name: "平均Roll点",
+        type: "bar",
+        barWidth: "50%",
         data: seriesData,
         itemStyle: {
           color: (params: any) => {
-            const data = dataList[params.dataIndex]
-            return getRoleColor(data?.roleRaw)
+            const data = dataList[params.dataIndex];
+            return getRoleColor(data?.roleRaw);
           },
           borderRadius: [4, 4, 0, 0],
         },
         label: {
           show: true,
-          position: 'top',
-          formatter: (p: any) => p.value > 0 ? p.value.toFixed(1) : '',
-          color: isDark.value ? '#f1f5f9' : '#1e293b',
+          position: "top",
+          formatter: (p: any) => (p.value > 0 ? p.value.toFixed(1) : ""),
+          color: isDark.value ? "#f1f5f9" : "#1e293b",
         },
         markLine: {
           silent: true,
-          data: [{ type: 'average', name: '平均' }],
-          symbol: 'none',
+          data: [{ type: "average", name: "平均" }],
+          symbol: "none",
           lineStyle: {
-            color: isDark.value ? 'rgba(255,255,255,0.4)' : '#999',
-            type: 'dashed',
+            color: isDark.value ? "rgba(255,255,255,0.4)" : "#999",
+            type: "dashed",
           },
           label: {
-            position: 'start',
-            formatter: '{b}',
-            color: isDark.value ? '#94a3b8' : '#64748b',
+            position: "start",
+            formatter: "{b}",
+            color: isDark.value ? "#94a3b8" : "#64748b",
             padding: [0, 4, 0, 4],
-            backgroundColor: 'transparent',
+            backgroundColor: "transparent",
           },
         },
       },
     ],
-  }
-})
+  };
+});
 </script>
 
 <template>
   <div class="chart-container">
     <div class="chart-header">
-      <div class="chart-title">
-        Roll 点运气统计
-      </div>
+      <div class="chart-title">Roll 点运气统计</div>
     </div>
     <div class="chart-body">
       <VChart
@@ -230,7 +226,7 @@ const option = computed(() => {
   display: flex;
   flex-direction: column;
   height: 400px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   transition: all 0.3s ease;
 }
 

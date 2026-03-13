@@ -1,96 +1,94 @@
-import { ElMessageBox } from 'element-plus'
-import { onMounted, ref, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
-import actWS from '@/assets/actWS.webp'
-import { callOverlayHandler } from '../../cactbot/resources/overlay_plugin_api'
+import { ElMessageBox } from "element-plus";
+import { onMounted, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
+import actWS from "@/assets/actWS.webp";
+import { callOverlayHandler } from "../../cactbot/resources/overlay_plugin_api";
 
 function isIE() {
-  const userAgent = window.navigator.userAgent
-  const isMSIE = userAgent.includes('MSIE ') // IE 10 及以下
-  const isTrident = userAgent.includes('Trident/') // IE 11
-  return isMSIE || isTrident
+  const userAgent = window.navigator.userAgent;
+  const isMSIE = userAgent.includes("MSIE "); // IE 10 及以下
+  const isTrident = userAgent.includes("Trident/"); // IE 11
+  return isMSIE || isTrident;
 }
 
 function addOverlayWsParam() {
-  const currentUrl = window.location.href
-  const [basePart, hashPart = ''] = currentUrl.split('#')
-  const [hashPath, hashQuery = ''] = hashPart.split('?')
-  const searchParams = new URLSearchParams(hashQuery)
-  let newHashQuery = ''
+  const currentUrl = window.location.href;
+  const [basePart, hashPart = ""] = currentUrl.split("#");
+  const [hashPath, hashQuery = ""] = hashPart.split("?");
+  const searchParams = new URLSearchParams(hashQuery);
+  let newHashQuery = "";
   searchParams.forEach((value, key) => {
-    if (key !== 'OVERLAY_WS') {
-      newHashQuery += `${key}=${encodeURIComponent(value)}&`
+    if (key !== "OVERLAY_WS") {
+      newHashQuery += `${key}=${encodeURIComponent(value)}&`;
     }
-  })
-  newHashQuery += `OVERLAY_WS=ws://127.0.0.1:10501/ws`
+  });
+  newHashQuery += `OVERLAY_WS=ws://127.0.0.1:10501/ws`;
 
-  let newUrl = basePart!
+  let newUrl = basePart!;
   if (hashPath) {
-    newUrl += `#${hashPath}`
+    newUrl += `#${hashPath}`;
     if (newHashQuery) {
-      newUrl += `?${newHashQuery}`
+      newUrl += `?${newHashQuery}`;
     }
   }
 
-  window.location.href = newUrl
-  location.reload()
+  window.location.href = newUrl;
+  location.reload();
 }
 
-export function useWebSocket(
-  {
-    allowClose = false,
-    addWsParam = true,
-    allowWarning = true,
-  }: {
-    allowClose?: boolean
-    addWsParam?: boolean
-    allowWarning?: boolean
-  } = {},
-) {
-  const { t } = useI18n()
-  const wsConnected = ref(undefined as boolean | undefined)
-  const userIgnoredWarning = ref(false)
-  const useType = ref('overlay' as 'overlay' | 'websocket')
-  let timer: number | null = null
+export function useWebSocket({
+  allowClose = false,
+  addWsParam = true,
+  allowWarning = true,
+}: {
+  allowClose?: boolean;
+  addWsParam?: boolean;
+  allowWarning?: boolean;
+} = {}) {
+  const { t } = useI18n();
+  const wsConnected = ref(undefined as boolean | undefined);
+  const userIgnoredWarning = ref(false);
+  const useType = ref("overlay" as "overlay" | "websocket");
+  let timer: number | null = null;
 
   function check() {
     Promise.race([
-      callOverlayHandler({ call: 'getLanguage' }),
+      callOverlayHandler({ call: "getLanguage" }),
       new Promise((_resolve, reject) => {
         setTimeout(() => {
-          reject(new Error('Timeout'))
-        }, 1000)
+          reject(new Error("Timeout"));
+        }, 1000);
       }),
     ])
       .then(() => {
         if (timer) {
-          clearTimeout(timer)
+          clearTimeout(timer);
         }
-        if (window.location.href.includes('OVERLAY_WS')) {
-          wsConnected.value = true
-          useType.value = 'websocket'
+        if (window.location.href.includes("OVERLAY_WS")) {
+          wsConnected.value = true;
+          useType.value = "websocket";
         }
       })
       .catch(() => {
-        wsConnected.value = false
-        useType.value = 'overlay'
-      })
+        wsConnected.value = false;
+        useType.value = "overlay";
+      });
   }
 
-  if (window.location.href.includes('OVERLAY_WS')) {
+  if (window.location.href.includes("OVERLAY_WS")) {
     timer = window.setInterval(() => {
-      check()
-    }, 3000)
+      check();
+    }, 3000);
   }
 
   function handleDisconnection() {
     if (!userIgnoredWarning.value && allowWarning) {
-      ElMessageBox.close()
+      ElMessageBox.close();
 
-      const message = t('websocket.disconnectMsg', { actWS })
+      const message = t("websocket.disconnectMsg", { actWS });
       const title = allowClose
-        ? t('websocket.disconnectTitleCloseable')
-        : t('websocket.disconnectTitleRequired')
+        ? t("websocket.disconnectTitleCloseable")
+        : t("websocket.disconnectTitleRequired");
 
       ElMessageBox.alert(message, title, {
         dangerouslyUseHTMLString: true,
@@ -100,42 +98,36 @@ export function useWebSocket(
         closeOnHashChange: false,
         showCancelButton: allowClose,
         showConfirmButton: false,
-        cancelButtonText: t('websocket.ignoreWarningBtn'),
-        buttonSize: 'small',
+        cancelButtonText: t("websocket.ignoreWarningBtn"),
+        buttonSize: "small",
       }).catch(() => {
-        userIgnoredWarning.value = true
-        if (timer)
-          clearInterval(timer)
-      })
+        userIgnoredWarning.value = true;
+        if (timer) clearInterval(timer);
+      });
     }
   }
 
   onMounted(() => {
     if (isIE()) {
-      ElMessageBox.alert(
-        t('websocket.ieBrowserWarning'),
-        t('websocket.ieBrowserTitle'),
-        {
-          type: 'error',
-          showConfirmButton: false,
-          showClose: false,
-        },
-      )
-      return
+      void ElMessageBox.alert(t("websocket.ieBrowserWarning"), t("websocket.ieBrowserTitle"), {
+        type: "error",
+        showConfirmButton: false,
+        showClose: false,
+      });
+      return;
     }
     watch(wsConnected, (value) => {
       if (value) {
-        ElMessageBox.close()
+        ElMessageBox.close();
+      } else {
+        handleDisconnection();
       }
-      else {
-        handleDisconnection()
-      }
-    })
-    if (!window.location.href.includes('OVERLAY_WS') && addWsParam) {
-      addOverlayWsParam()
+    });
+    if (!window.location.href.includes("OVERLAY_WS") && addWsParam) {
+      addOverlayWsParam();
     }
-    check()
-  })
+    check();
+  });
 
-  return { wsConnected, useType }
+  return { wsConnected, useType };
 }

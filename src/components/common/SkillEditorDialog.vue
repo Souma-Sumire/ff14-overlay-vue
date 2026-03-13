@@ -1,132 +1,135 @@
 <script setup lang="ts">
 interface PrimaryActionConfig {
-  show?: boolean
-  disabled?: boolean
-  text?: string
+  show?: boolean;
+  disabled?: boolean;
+  text?: string;
 }
 
 interface FooterActionConfig {
-  show?: boolean
-  disabled?: boolean
-  text?: string
-  confirmTitle?: string
-  confirmButtonText?: string
-  cancelButtonText?: string
+  show?: boolean;
+  disabled?: boolean;
+  text?: string;
+  confirmTitle?: string;
+  confirmButtonText?: string;
+  cancelButtonText?: string;
 }
 
 interface CloseActionConfig {
-  show?: boolean
-  disabled?: boolean
-  text?: string
+  show?: boolean;
+  disabled?: boolean;
+  text?: string;
 }
 
-const props = withDefaults(defineProps<{
-  modelValue: boolean
-  title: string
-  width?: string
-  teleported?: boolean
-  destroyOnClose?: boolean
-  lockScroll?: boolean
-  loading?: boolean
-  loadingText?: string
-  tip?: string
-  name?: string
-  subtitle?: string
-  iconSrc?: string
-  iconAlt?: string
-  primaryAction?: PrimaryActionConfig
-  deleteAction?: FooterActionConfig
-  resetAction?: FooterActionConfig
-  closeAction?: CloseActionConfig
-}>(), {
-  width: '520px',
-  teleported: false,
-  destroyOnClose: true,
-  lockScroll: true,
-  loading: false,
-  loadingText: '',
-  tip: '',
-  name: '',
-  subtitle: '',
-  iconSrc: '',
-  iconAlt: '',
-  primaryAction: () => ({}),
-  deleteAction: () => ({}),
-  resetAction: () => ({}),
-  closeAction: () => ({}),
-})
+const props = withDefaults(
+  defineProps<{
+    modelValue: boolean;
+    title: string;
+    width?: string;
+    teleported?: boolean;
+    destroyOnClose?: boolean;
+    lockScroll?: boolean;
+    loading?: boolean;
+    loadingText?: string;
+    tip?: string;
+    name?: string;
+    subtitle?: string;
+    iconSrc?: string;
+    iconAlt?: string;
+    primaryAction?: PrimaryActionConfig;
+    deleteAction?: FooterActionConfig;
+    resetAction?: FooterActionConfig;
+    closeAction?: CloseActionConfig;
+  }>(),
+  {
+    width: "520px",
+    teleported: false,
+    destroyOnClose: true,
+    lockScroll: true,
+    loading: false,
+    loadingText: "",
+    tip: "",
+    name: "",
+    subtitle: "",
+    iconSrc: "",
+    iconAlt: "",
+    primaryAction: () => ({}),
+    deleteAction: () => ({}),
+    resetAction: () => ({}),
+    closeAction: () => ({}),
+  },
+);
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
-  (e: 'primaryAction'): void
-  (e: 'deleteAction'): void
-  (e: 'resetAction'): void
-  (e: 'closeAction'): void
-  (e: 'iconError', event: Event): void
-}>()
+  (e: "update:modelValue", value: boolean): void;
+  (e: "primaryAction"): void;
+  (e: "deleteAction"): void;
+  (e: "resetAction"): void;
+  (e: "closeAction"): void;
+  (e: "iconError", event: Event): void;
+}>();
 
 const visible = computed({
   get: () => props.modelValue,
-  set: value => emit('update:modelValue', value),
-})
+  set: (value) => emit("update:modelValue", value),
+});
 
 const primaryActionState = computed(() => {
   return {
     show: props.primaryAction?.show ?? false,
     disabled: props.primaryAction?.disabled ?? false,
-    text: props.primaryAction?.text?.trim() || '更换技能',
-  }
-})
+    text: props.primaryAction?.text?.trim() || "更换技能",
+  };
+});
 
 const deleteActionState = computed(() => {
   return {
     show: props.deleteAction?.show ?? false,
     disabled: props.deleteAction?.disabled ?? false,
-    text: props.deleteAction?.text?.trim() || '删除技能',
-    confirmTitle: props.deleteAction?.confirmTitle?.trim() || '',
-    confirmButtonText: props.deleteAction?.confirmButtonText?.trim() || '确认',
-    cancelButtonText: props.deleteAction?.cancelButtonText?.trim() || '取消',
-  }
-})
+    text: props.deleteAction?.text?.trim() || "删除技能",
+    confirmTitle: props.deleteAction?.confirmTitle?.trim() || "",
+    confirmButtonText: props.deleteAction?.confirmButtonText?.trim() || "确认",
+    cancelButtonText: props.deleteAction?.cancelButtonText?.trim() || "取消",
+  };
+});
 
 const resetActionState = computed(() => {
   return {
     show: props.resetAction?.show ?? false,
     disabled: props.resetAction?.disabled ?? false,
-    text: props.resetAction?.text?.trim() || '恢复默认',
-    confirmTitle: props.resetAction?.confirmTitle?.trim() || '',
-    confirmButtonText: props.resetAction?.confirmButtonText?.trim() || '确认',
-    cancelButtonText: props.resetAction?.cancelButtonText?.trim() || '取消',
-  }
-})
+    text: props.resetAction?.text?.trim() || "恢复默认",
+    confirmTitle: props.resetAction?.confirmTitle?.trim() || "",
+    confirmButtonText: props.resetAction?.confirmButtonText?.trim() || "确认",
+    cancelButtonText: props.resetAction?.cancelButtonText?.trim() || "取消",
+  };
+});
 
 const closeActionState = computed(() => {
   return {
     show: props.closeAction?.show ?? true,
     disabled: props.closeAction?.disabled ?? false,
-    text: props.closeAction?.text?.trim() || '确认',
-  }
-})
+    text: props.closeAction?.text?.trim() || "确认",
+  };
+});
 
 function triggerPrimaryAction() {
-  emit('primaryAction')
+  emit("primaryAction");
 }
 
 function triggerDeleteAction() {
-  emit('deleteAction')
+  emit("deleteAction");
 }
 
 function triggerResetAction() {
-  emit('resetAction')
+  emit("resetAction");
 }
 
 function triggerCloseAction() {
-  emit('closeAction')
-  visible.value = false
+  emit("closeAction");
+  visible.value = false;
 }
 
 function handleIconError(event: Event) {
-  emit('iconError', event)
+  emit("iconError", event);
 }
 </script>
 
@@ -156,10 +159,8 @@ function handleIconError(event: Event) {
             :alt="iconAlt || name"
             class="editor-icon"
             @error="handleIconError"
-          >
-          <div v-else class="editor-icon editor-icon-empty">
-            无图标
-          </div>
+          />
+          <div v-else class="editor-icon editor-icon-empty">无图标</div>
 
           <div class="editor-summary">
             <div class="editor-name">
@@ -206,7 +207,12 @@ function handleIconError(event: Event) {
               @confirm="triggerDeleteAction"
             >
               <template #reference>
-                <el-button class="editor-delete-btn" type="danger" plain :disabled="deleteActionState.disabled">
+                <el-button
+                  class="editor-delete-btn"
+                  type="danger"
+                  plain
+                  :disabled="deleteActionState.disabled"
+                >
                   {{ deleteActionState.text }}
                 </el-button>
               </template>
@@ -265,7 +271,7 @@ function handleIconError(event: Event) {
 .skill-editor-dialog {
   max-width: min(560px, calc(100vw - 20px));
   margin: 6px auto 0;
-  --editor-font-family: 'Bahnschrift', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --editor-font-family: "Bahnschrift", "PingFang SC", "Microsoft YaHei", sans-serif;
   --el-font-family: var(--editor-font-family);
   --el-font-size-base: 14px;
   font-family: var(--editor-font-family);
@@ -273,16 +279,16 @@ function handleIconError(event: Event) {
 }
 
 .skill-editor-dialog,
-.skill-editor-dialog :deep(*),
-.skill-editor-dialog :deep(.el-dialog__title),
-.skill-editor-dialog :deep(.el-input__inner),
-.skill-editor-dialog :deep(.el-textarea__inner),
-.skill-editor-dialog :deep(.el-select__selected-item),
-.skill-editor-dialog :deep(.el-button) {
+.skill-editor-dialog ::deep(*),
+.skill-editor-dialog ::deep(.el-dialog__title),
+.skill-editor-dialog ::deep(.el-input__inner),
+.skill-editor-dialog ::deep(.el-textarea__inner),
+.skill-editor-dialog ::deep(.el-select__selected-item),
+.skill-editor-dialog ::deep(.el-button) {
   font-family: var(--editor-font-family);
 }
 
-.skill-editor-dialog :deep(.el-dialog__body) {
+.skill-editor-dialog ::deep(.el-dialog__body) {
   padding: 10px;
 }
 
@@ -304,13 +310,13 @@ function handleIconError(event: Event) {
   gap: 10px;
 }
 
-.editor-head :deep(.editor-icon) {
+.editor-head ::deep(.editor-icon) {
   width: 42px;
   height: 42px;
   border-radius: 8px;
 }
 
-.editor-head :deep(.editor-icon-empty) {
+.editor-head ::deep(.editor-icon-empty) {
   display: grid;
   place-items: center;
   font-size: 12px;
@@ -319,12 +325,12 @@ function handleIconError(event: Event) {
   background: var(--el-fill-color-light);
 }
 
-.editor-head :deep(.editor-summary) {
+.editor-head ::deep(.editor-summary) {
   min-width: 0;
   flex: 1;
 }
 
-.editor-head :deep(.editor-name) {
+.editor-head ::deep(.editor-name) {
   font-size: 14px;
   font-weight: 700;
   white-space: nowrap;
@@ -332,7 +338,7 @@ function handleIconError(event: Event) {
   text-overflow: ellipsis;
 }
 
-.editor-head :deep(.editor-sub) {
+.editor-head ::deep(.editor-sub) {
   font-size: 12px;
   color: var(--el-text-color-secondary);
   white-space: nowrap;
@@ -346,35 +352,35 @@ function handleIconError(event: Event) {
   gap: 10px;
 }
 
-.editor-grid :deep(.editor-field) {
+.editor-grid ::deep(.editor-field) {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.editor-grid :deep(.editor-field label) {
+.editor-grid ::deep(.editor-field label) {
   font-size: 12px;
   color: var(--el-text-color-secondary);
 }
 
-.editor-grid :deep(.editor-field.span-2) {
+.editor-grid ::deep(.editor-field.span-2) {
   grid-column: span 2;
 }
 
-.editor-grid :deep(.number-input-full) {
+.editor-grid ::deep(.number-input-full) {
   width: 100%;
 }
 
-.editor-grid :deep(.number-input-full .el-input__wrapper) {
+.editor-grid ::deep(.number-input-full .el-input__wrapper) {
   padding-left: 11px;
   padding-right: 11px;
 }
 
-.editor-grid :deep(.number-input-full .el-input__inner) {
+.editor-grid ::deep(.number-input-full .el-input__inner) {
   text-align: left;
 }
 
-.editor-grid :deep(.input-error-tip) {
+.editor-grid ::deep(.input-error-tip) {
   font-size: 12px;
   line-height: 1.2;
   color: var(--el-color-danger);
@@ -403,10 +409,10 @@ function handleIconError(event: Event) {
   justify-content: flex-end;
 }
 
-.skill-editor-dialog :deep(.editor-action-btn),
-.skill-editor-dialog :deep(.editor-footer .el-button),
-.skill-editor-dialog :deep(.editor-head .el-button),
-.skill-editor-dialog :deep(.editor-body .el-button) {
+.skill-editor-dialog ::deep(.editor-action-btn),
+.skill-editor-dialog ::deep(.editor-footer .el-button),
+.skill-editor-dialog ::deep(.editor-head .el-button),
+.skill-editor-dialog ::deep(.editor-body .el-button) {
   height: 32px;
   padding-left: 12px;
   padding-right: 12px;
@@ -430,7 +436,7 @@ function handleIconError(event: Event) {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .editor-grid :deep(.editor-field.span-2) {
+  .editor-grid ::deep(.editor-field.span-2) {
     grid-column: span 1;
   }
 }

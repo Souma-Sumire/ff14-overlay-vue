@@ -1,454 +1,456 @@
 <script setup lang="ts">
-import type { Column, MessageHandler, Placement, RowEventHandlers, TableV2Instance } from 'element-plus'
-import type { RowVO } from '@/types/keigennRecord2'
-import { Clock } from '@element-plus/icons-vue'
-import { onClickOutside, useWindowSize } from '@vueuse/core'
-import { ElIcon, ElMessage } from 'element-plus'
-import { computed, h } from 'vue'
-import { useLang } from '@/composables/useLang'
-import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
-import { useKeigennRecord2Store } from '@/store/keigennRecord2'
-import { copyToClipboard } from '@/utils/clipboard'
-import Util from '@/utils/util'
-import { handleImgError } from '@/utils/xivapi'
-import FilterHeader from './FilterHeader.vue'
+import type {
+  Column,
+  MessageHandler,
+  Placement,
+  RowEventHandlers,
+  TableV2Instance,
+} from "element-plus";
+import type { RowVO } from "@/types/keigennRecord2";
+import { Clock } from "@element-plus/icons-vue";
+import { onClickOutside, useWindowSize } from "@vueuse/core";
+import { ElIcon, ElMessage } from "element-plus";
+import { computed, h } from "vue";
+import { useLang } from "@/composables/useLang";
+import { DEFAULT_JOB_SORT_ORDER } from "@/resources/jobSortOrder";
+import { useKeigennRecord2Store } from "@/store/keigennRecord2";
+import { copyToClipboard } from "@/utils/clipboard";
+import Util from "@/utils/util";
+import { handleImgError } from "@/utils/xivapi";
+import FilterHeader from "./FilterHeader.vue";
 
 const props = defineProps<{
-  rows: RowVO[]
-  actionKey: keyof RowVO
-}>()
+  rows: RowVO[];
+  actionKey: keyof RowVO;
+}>();
 
-const { t } = useLang()
+const { t } = useLang();
 
-const store = useKeigennRecord2Store()
-const userOptions = store.userOptions
-const contextMenu = useTemplateRef<HTMLElement>('contextMenu')
+const store = useKeigennRecord2Store();
+const userOptions = store.userOptions;
+const contextMenu = useTemplateRef<HTMLElement>("contextMenu");
 
-const actionFilter = ref('') // 技能筛选
-const targetFilter = ref('') // 目标筛选
+const actionFilter = ref(""); // 技能筛选
+const targetFilter = ref(""); // 目标筛选
 
 watch(
   () => props.rows,
   (rows) => {
     if (rows.length === 0) {
-      actionFilter.value = ''
-      targetFilter.value = ''
+      actionFilter.value = "";
+      targetFilter.value = "";
     }
   },
   { immediate: true },
-)
+);
 
-const contextMenuVisible = ref(false)
-const contextMenuX = ref(0)
-const contextMenuY = ref(0)
-const contextMenuRow = ref<RowVO | null>(null)
+const contextMenuVisible = ref(false);
+const contextMenuX = ref(0);
+const contextMenuY = ref(0);
+const contextMenuRow = ref<RowVO | null>(null);
 
 // 全局浮层控制
-const hoveredRow = ref<RowVO | null>(null)
+const hoveredRow = ref<RowVO | null>(null);
 const virtualRef = ref<HTMLElement | { getBoundingClientRect: () => DOMRect }>({
-  getBoundingClientRect: () => ({ top: 0, left: 0, bottom: 0, right: 0, width: 0, height: 0 } as DOMRect),
-})
-const tooltipMode = ref<'amount' | 'skills' | 'death-recap' | null>(null)
-const popoverVisible = ref(false)
-const popoverPlacement = ref('top' as Placement)
+  getBoundingClientRect: () =>
+    ({ top: 0, left: 0, bottom: 0, right: 0, width: 0, height: 0 }) as DOMRect,
+});
+const tooltipMode = ref<"amount" | "skills" | "death-recap" | null>(null);
+const popoverVisible = ref(false);
+const popoverPlacement = ref("top" as Placement);
 
 interface RecapRow {
-  key: string
-  timeStr: string
-  amountStr: string
-  amountClass: string
-  actionCN: string
-  isDeath: boolean
-  iconSrc: string
+  key: string;
+  timeStr: string;
+  amountStr: string;
+  amountClass: string;
+  actionCN: string;
+  isDeath: boolean;
+  iconSrc: string;
   keigenns: {
-    src: string
-    usefulClass: string
-    title: string
-    duration: string
-    isPov: boolean
-    effect: string
-  }[]
+    src: string;
+    usefulClass: string;
+    title: string;
+    duration: string;
+    isPov: boolean;
+    effect: string;
+  }[];
 }
 
-const ALL_STR = t('keigennRecord.cancelFilter')
+const ALL_STR = t("keigennRecord.cancelFilter");
 
 const tableData = computed(() => {
-  const baseRows = props.rows.filter(r => store.debugShowHeals || (r.effect !== 'heal'))
-  const hasFilter
-    = (actionFilter.value && actionFilter.value !== ALL_STR)
-      || (targetFilter.value && targetFilter.value !== ALL_STR)
+  const baseRows = props.rows.filter((r) => store.debugShowHeals || r.effect !== "heal");
+  const hasFilter =
+    (actionFilter.value && actionFilter.value !== ALL_STR) ||
+    (targetFilter.value && targetFilter.value !== ALL_STR);
 
   if (!hasFilter) {
-    return baseRows
+    return baseRows;
   }
 
   return baseRows.filter((row) => {
-    const actionMatch
-      = !actionFilter.value
-        || actionFilter.value === ALL_STR
-        || row[props.actionKey] === actionFilter.value
-    const targetMatch
-      = !targetFilter.value
-        || targetFilter.value === ALL_STR
-        || row.targetId === targetFilter.value
-    return actionMatch && targetMatch
-  })
-})
+    const actionMatch =
+      !actionFilter.value ||
+      actionFilter.value === ALL_STR ||
+      row[props.actionKey] === actionFilter.value;
+    const targetMatch =
+      !targetFilter.value || targetFilter.value === ALL_STR || row.targetId === targetFilter.value;
+    return actionMatch && targetMatch;
+  });
+});
 
-const recapRows = shallowRef<RecapRow[]>([])
+const recapRows = shallowRef<RecapRow[]>([]);
 
 function updateRecapData(deathRow: RowVO) {
-  const targetId = deathRow.targetId
-  const deathTime = deathRow.timestamp
-  const startTime = deathTime - 20000
+  const targetId = deathRow.targetId;
+  const deathTime = deathRow.timestamp;
+  const startTime = deathTime - 20000;
 
   // 遍历寻找 deathTime 前 20秒内的所有记录，不再强依赖数组排序方向
-  const result: RowVO[] = []
-  const deathIndex = props.rows.indexOf(deathRow)
-  if (deathIndex === -1)
-    return
+  const result: RowVO[] = [];
+  const deathIndex = props.rows.indexOf(deathRow);
+  if (deathIndex === -1) return;
 
   // 向前后双向搜索，确保在任何排序模式下都能抓到过去 20s 的记录
   // 1. 向索引小的方向搜
   for (let i = deathIndex; i >= 0; i--) {
-    const r = props.rows[i]
-    if (!r)
-      continue
+    const r = props.rows[i];
+    if (!r) continue;
     // 只记录发生在死亡前（或同时）且在 20s window 内的
     if (r.timestamp <= deathTime && r.timestamp >= startTime) {
-      if (r.targetId === targetId)
-        result.push(r)
-    }
-    else if (r.timestamp < startTime && store.userOptions.order === 'push') {
+      if (r.targetId === targetId) result.push(r);
+    } else if (r.timestamp < startTime && store.userOptions.order === "push") {
       // 在 push 模式下，索引越小时间越早。如果已经比 startTime 还早了，可以直接 break
-      break
+      break;
     }
   }
 
   // 2. 向索引大的方向搜
   for (let i = deathIndex + 1; i < props.rows.length; i++) {
-    const r = props.rows[i]
-    if (!r)
-      continue
+    const r = props.rows[i];
+    if (!r) continue;
     if (r.timestamp <= deathTime && r.timestamp >= startTime) {
-      if (r.targetId === targetId)
-        result.push(r)
-    }
-    else if (r.timestamp < startTime && store.userOptions.order === 'unshift') {
+      if (r.targetId === targetId) result.push(r);
+    } else if (r.timestamp < startTime && store.userOptions.order === "unshift") {
       // 在 unshift 模式下，索引越大时间越早。如果已经比 startTime 还早了，可以直接 break
-      break
+      break;
     }
   }
 
   // 对结果进行去重并按时间从新到旧排序（死亡 0.0s 在最上面）
-  const finalResult = Array.from(new Set(result)).sort((a, b) => b.timestamp - a.timestamp)
+  const finalResult = Array.from(new Set(result)).sort((a, b) => b.timestamp - a.timestamp);
 
   recapRows.value = finalResult.map((r) => {
-    const isHeal = r.effect === 'heal'
-    const isDeath = r.type === 'death'
-    const isDamage = !isHeal && r.amount > 0 && !isDeath
+    const isHeal = r.effect === "heal";
+    const isDeath = r.type === "death";
+    const isDamage = !isHeal && r.amount > 0 && !isDeath;
 
-    let amountPrefix = ''
-    let amountClass = ''
+    let amountPrefix = "";
+    let amountClass = "";
     if (isHeal) {
-      amountPrefix = '+'
-      amountClass = 'is-heal'
+      amountPrefix = "+";
+      amountClass = "is-heal";
+    } else if (isDamage) {
+      amountPrefix = "-";
+      amountClass = "is-damage";
     }
-    else if (isDamage) {
-      amountPrefix = '-'
-      amountClass = 'is-damage'
-    }
-    const amountStr = (r.amount > 0 || isHeal) ? (amountPrefix + r.preCalculated.amountDisplay) : r.preCalculated.amountDisplay
+    const amountStr =
+      r.amount > 0 || isHeal
+        ? amountPrefix + r.preCalculated.amountDisplay
+        : r.preCalculated.amountDisplay;
 
     return {
       key: r.key,
-      timeStr: `${((r.timestamp - deathTime) / 1000).toFixed(1).replace('-0.0', '0.0')}s`,
+      timeStr: `${((r.timestamp - deathTime) / 1000).toFixed(1).replace("-0.0", "0.0")}s`,
       amountStr,
       amountClass,
       actionCN: r.actionCN,
       isDeath,
-      iconSrc: '',
+      iconSrc: "",
       keigenns: r.preCalculated.keigenns,
-    }
-  })
+    };
+  });
 }
 
-function handleHover(row: RowVO, mode: 'amount' | 'skills' | 'death-recap', e: MouseEvent) {
+function handleHover(row: RowVO, mode: "amount" | "skills" | "death-recap", e: MouseEvent) {
   if (popoverVisible.value && hoveredRow.value?.key === row.key && tooltipMode.value === mode)
-    return
+    return;
 
-  tooltipMode.value = mode
-  if (mode === 'skills') {
-    popoverPlacement.value = 'left'
+  tooltipMode.value = mode;
+  if (mode === "skills") {
+    popoverPlacement.value = "left";
+  } else if (mode === "death-recap") {
+    popoverPlacement.value = "auto";
+    updateRecapData(row);
+  } else {
+    popoverPlacement.value = "right";
   }
-  else if (mode === 'death-recap') {
-    popoverPlacement.value = 'auto'
-    updateRecapData(row)
-  }
-  else {
-    popoverPlacement.value = 'right'
-  }
-  hoveredRow.value = row
-  virtualRef.value = e.currentTarget as HTMLElement
-  popoverVisible.value = true
+  hoveredRow.value = row;
+  virtualRef.value = e.currentTarget as HTMLElement;
+  popoverVisible.value = true;
 }
 
-const lastMousePos = { x: 0, y: 0 }
+const lastMousePos = { x: 0, y: 0 };
 function handleMouseMove(e: MouseEvent) {
-  lastMousePos.x = e.clientX
-  lastMousePos.y = e.clientY
+  lastMousePos.x = e.clientX;
+  lastMousePos.y = e.clientY;
 }
 
 function updateHoverState(x: number, y: number) {
-  const el = document.elementFromPoint(x, y)
-  const trigger = el?.closest('[data-row-key][data-hover-mode]') as HTMLElement
+  const el = document.elementFromPoint(x, y);
+  const trigger = el?.closest("[data-row-key][data-hover-mode]") as HTMLElement;
   if (trigger) {
-    const key = trigger.dataset.rowKey
-    const mode = trigger.dataset.hoverMode as any
-    const row = tableData.value.find(r => r.key === key)
+    const key = trigger.dataset.rowKey;
+    const mode = trigger.dataset.hoverMode as any;
+    const row = tableData.value.find((r) => r.key === key);
     if (row) {
-      handleHover(row, mode, { currentTarget: trigger } as any)
-      return
+      handleHover(row, mode, { currentTarget: trigger } as any);
+      return;
     }
   }
-  popoverVisible.value = false
+  popoverVisible.value = false;
 }
 
-let scrollFrame = 0
+let scrollFrame = 0;
 function handleScroll(e: WheelEvent) {
   if (contextMenuVisible.value) {
-    contextMenuVisible.value = false
+    contextMenuVisible.value = false;
   }
 
-  const target = e.target as HTMLElement
-  if (target?.closest('.keigenn-global-popover'))
-    return
+  const target = e.target as HTMLElement;
+  if (target?.closest(".keigenn-global-popover")) return;
 
   // 使用 rAF 延迟探测，确保滚动后的 DOM 已经更新并稳定
-  cancelAnimationFrame(scrollFrame)
+  cancelAnimationFrame(scrollFrame);
   scrollFrame = requestAnimationFrame(() => {
-    updateHoverState(lastMousePos.x, lastMousePos.y)
-  })
+    updateHoverState(lastMousePos.x, lastMousePos.y);
+  });
 }
 
-const tableContainer = useTemplateRef<HTMLElement>('tableContainer')
-const { width: tableWidth, height: tableHeight } = useWindowSize()
+const tableContainer = useTemplateRef<HTMLElement>("tableContainer");
+const { width: tableWidth, height: tableHeight } = useWindowSize();
 
 onMounted(() => {
-  tableContainer.value?.addEventListener('wheel', handleScroll, { passive: true })
-  window.addEventListener('mousemove', handleMouseMove, { passive: true })
-})
+  tableContainer.value?.addEventListener("wheel", handleScroll, { passive: true });
+  window.addEventListener("mousemove", handleMouseMove, { passive: true });
+});
 
 onBeforeUnmount(() => {
-  tableContainer.value?.removeEventListener('wheel', handleScroll)
-  window.removeEventListener('mousemove', handleMouseMove)
-  cancelAnimationFrame(scrollFrame)
-})
+  tableContainer.value?.removeEventListener("wheel", handleScroll);
+  window.removeEventListener("mousemove", handleMouseMove);
+  cancelAnimationFrame(scrollFrame);
+});
 
 onClickOutside(contextMenu, () => {
-  contextMenuVisible.value = false
-})
+  contextMenuVisible.value = false;
+});
 
 const actionOptions = computed(() => {
-  const filteredRows = props.rows.filter(r => store.debugShowHeals || (r.effect !== 'heal'))
-  const actions = Array.from(
-    new Set(filteredRows.map(r => r[props.actionKey] as string)),
-  ).filter(v => v !== undefined && v !== null)
+  const filteredRows = props.rows.filter((r) => store.debugShowHeals || r.effect !== "heal");
+  const actions = [...new Set(filteredRows.map((r) => r[props.actionKey] as string))].filter(
+    (v) => v !== undefined && v !== null,
+  );
   return [
-    { label: ALL_STR, value: '' },
-    ...actions.map(action => ({ label: action, value: action })),
-  ]
-})
+    { label: ALL_STR, value: "" },
+    ...actions.map((action) => ({ label: action, value: action })),
+  ];
+});
 
 const targetOptions = computed(() => {
-  const filteredRows = props.rows.filter(r => store.debugShowHeals || (r.effect !== 'heal'))
-  const players = Array.from(
-    new Map(
-      filteredRows
-        .filter(r => r.targetId)
-        .map(row => [row.targetId, row]),
-    ).values(),
-  )
+  const filteredRows = props.rows.filter((r) => store.debugShowHeals || r.effect !== "heal");
+  const players = [
+    ...new Map(filteredRows.filter((r) => r.targetId).map((row) => [row.targetId, row])).values(),
+  ];
   return [
-    { label: ALL_STR, value: '', job: -1 },
-    ...players.map(row => ({
+    { label: ALL_STR, value: "", job: -1 },
+    ...players.map((row) => ({
       label: row.job,
       fullLabel: `${row.job}(${row.target})`,
       value: row.targetId,
       job: row.jobEnum,
     })),
   ].sort((a, b) => {
-    return DEFAULT_JOB_SORT_ORDER.indexOf(a.job) - DEFAULT_JOB_SORT_ORDER.indexOf(b.job)
-  })
-})
+    return DEFAULT_JOB_SORT_ORDER.indexOf(a.job) - DEFAULT_JOB_SORT_ORDER.indexOf(b.job);
+  });
+});
 
 function filterByAction() {
   if (contextMenuRow.value) {
-    const val = contextMenuRow.value[props.actionKey] as string
+    const val = contextMenuRow.value[props.actionKey] as string;
     if (actionFilter.value === val) {
-      actionFilter.value = '' // 取消筛选
+      actionFilter.value = ""; // 取消筛选
+    } else {
+      actionFilter.value = val; // 设置筛选
     }
-    else {
-      actionFilter.value = val // 设置筛选
-    }
-    contextMenuVisible.value = false
+    contextMenuVisible.value = false;
   }
 }
 
 function filterByTarget() {
   if (contextMenuRow.value) {
-    const val = contextMenuRow.value.targetId
+    const val = contextMenuRow.value.targetId;
     if (targetFilter.value === val) {
-      targetFilter.value = '' // 取消筛选
+      targetFilter.value = ""; // 取消筛选
+    } else {
+      targetFilter.value = val; // 设置筛选
     }
-    else {
-      targetFilter.value = val // 设置筛选
-    }
-    contextMenuVisible.value = false
+    contextMenuVisible.value = false;
   }
 }
 
-const renderHeader = (title: string, customClass = '') => h('div', { class: ['header-static', customClass] }, title)
-const renderEmpty = () => h('div')
+const renderHeader = (title: string, customClass = "") =>
+  h("div", { class: ["header-static", customClass] }, title);
+const renderEmpty = () => h("div");
 
 function rowClass({ rowData }: { rowData: RowVO }) {
-  return rowData.type === 'death' ? 'row-death' : ''
+  return rowData.type === "death" ? "row-death" : "";
 }
 
 const columns = computed<Column[]>(() => [
   {
-    key: 'time',
-    title: t('keigennRecord.time'),
-    dataKey: 'time',
+    key: "time",
+    title: t("keigennRecord.time"),
+    dataKey: "time",
     width: 40,
-    align: 'center' as const,
-    class: 'col-time',
-    headerCellRenderer: () => renderHeader(t('keigennRecord.time'), 'header-time'),
+    align: "center" as const,
+    class: "col-time",
+    headerCellRenderer: () => renderHeader(t("keigennRecord.time"), "header-time"),
   },
   {
-    key: 'action',
-    title: t('keigennRecord.action'),
+    key: "action",
+    title: t("keigennRecord.action"),
     dataKey: props.actionKey as string,
     width: 64,
-    align: 'center' as const,
-    class: 'col-action',
-    headerCellRenderer: () => h(FilterHeader, {
-      modelValue: actionFilter.value,
-      options: actionOptions.value,
-      placeholder: t('keigennRecord.action'),
-      width: '4.5em',
-      onUpdate: (v: string) => (actionFilter.value = v === ALL_STR ? '' : v),
-    }),
+    align: "center" as const,
+    class: "col-action",
+    headerCellRenderer: () =>
+      h(FilterHeader, {
+        modelValue: actionFilter.value,
+        options: actionOptions.value,
+        placeholder: t("keigennRecord.action"),
+        width: "4.5em",
+        onUpdate: (v: string) => (actionFilter.value = v === ALL_STR ? "" : v),
+      }),
     cellRenderer: ({ rowData }) => {
-      if (rowData.type === 'death') {
-        const isTerrain = rowData.source === '地形杀'
-        return h('div', { class: 'death-message-left' }, [
-          h('span', '💀 '),
-          h('span', { class: 'death-target-name' }, rowData.target),
+      if (rowData.type === "death") {
+        const isTerrain = rowData.source === "地形杀";
+        return h("div", { class: "death-message-left" }, [
+          h("span", "💀 "),
+          h("span", { class: "death-target-name" }, rowData.target),
           isTerrain
-            ? h('span', [
-                h('span', ' 因 '),
-                h('span', { class: 'death-terrain' }, '地形杀'),
-                h('span', ' 倒下了！'),
+            ? h("span", [
+                h("span", " 因 "),
+                h("span", { class: "death-terrain" }, "地形杀"),
+                h("span", " 倒下了！"),
               ])
-            : h('span', [
-                h('span', ' 被 '),
-                h('span', { class: 'death-source-name' }, rowData.source),
-                h('span', ' 做掉了！'),
+            : h("span", [
+                h("span", " 被 "),
+                h("span", { class: "death-source-name" }, rowData.source),
+                h("span", " 做掉了！"),
               ]),
           h(
-            'span',
+            "span",
             {
-              'class': 'death-recap-inline',
-              'data-row-key': rowData.key,
-              'data-hover-mode': 'death-recap',
-              'onMouseenter': (e: MouseEvent) => {
-                handleHover(rowData, 'death-recap', e)
+              class: "death-recap-inline",
+              "data-row-key": rowData.key,
+              "data-hover-mode": "death-recap",
+              onMouseenter: (e: MouseEvent) => {
+                handleHover(rowData, "death-recap", e);
               },
-              'onClick': (e: MouseEvent) => {
-                copyLastRowBeforeDeath(rowData, e)
+              onClick: (e: MouseEvent) => {
+                copyLastRowBeforeDeath(rowData, e);
               },
             },
-            ' [死亡回放]',
+            " [死亡回放]",
           ),
-        ])
+        ]);
       }
-      return h('span', rowData[props.actionKey] ?? '')
+      return h("span", rowData[props.actionKey] ?? "");
     },
   },
   {
-    key: 'target',
-    title: t('keigennRecord.target'),
-    dataKey: 'target',
+    key: "target",
+    title: t("keigennRecord.target"),
+    dataKey: "target",
     width: 34,
-    align: 'center' as const,
-    class: 'col-target',
-    headerCellRenderer: () => h(FilterHeader, {
-      modelValue: targetFilter.value,
-      options: targetOptions.value,
-      placeholder: t('keigennRecord.target'),
-      width: '4.7em',
-      onUpdate: (v: string) => (targetFilter.value = v === ALL_STR ? '' : v),
-    }),
+    align: "center" as const,
+    class: "col-target",
+    headerCellRenderer: () =>
+      h(FilterHeader, {
+        modelValue: targetFilter.value,
+        options: targetOptions.value,
+        placeholder: t("keigennRecord.target"),
+        width: "4.7em",
+        onUpdate: (v: string) => (targetFilter.value = v === ALL_STR ? "" : v),
+      }),
     cellRenderer: ({ rowData }: { rowData: RowVO }) => {
-      if (rowData.type === 'death')
-        return renderEmpty()
-      return h('div', { class: 'target' }, [
+      if (rowData.type === "death") return renderEmpty();
+      return h("div", { class: "target" }, [
         rowData.preCalculated.jobIconSrc
-          ? h('img', {
-              class: [store.isBrowser ? 'browser' : 'act', 'jobIcon', `cj${store.userOptions.iconType}`],
+          ? h("img", {
+              class: [
+                store.isBrowser ? "browser" : "act",
+                "jobIcon",
+                `cj${store.userOptions.iconType}`,
+              ],
               src: rowData.preCalculated.jobIconSrc,
               alt: rowData.jobIcon,
               onError: (e: Event) => {
-                const img = e.target as HTMLImageElement
-                img.style.display = 'none'
+                const img = e.target as HTMLImageElement;
+                img.style.display = "none";
               },
             })
-          : h('span', { class: 'alt-text' }, rowData.job),
-        rowData.hasDuplicate ? h('span', { class: 'has-duplicate' }, store.formatterName(rowData.target)) : undefined,
-      ])
+          : h("span", { class: "alt-text" }, rowData.job),
+        rowData.hasDuplicate
+          ? h("span", { class: "has-duplicate" }, store.formatterName(rowData.target))
+          : undefined,
+      ]);
     },
   },
   {
-    key: 'amount',
-    title: t('keigennRecord.amount'),
-    dataKey: 'amount',
+    key: "amount",
+    title: t("keigennRecord.amount"),
+    dataKey: "amount",
     width: 52,
-    align: 'right' as const,
-    class: 'col-amount',
-    headerCellRenderer: () => renderHeader(t('keigennRecord.amount')),
+    align: "right" as const,
+    class: "col-amount",
+    headerCellRenderer: () => renderHeader(t("keigennRecord.amount")),
     cellRenderer: ({ rowData }: { rowData: RowVO }) => {
-      if (rowData.type === 'death')
-        return renderEmpty()
+      if (rowData.type === "death") return renderEmpty();
       return h(
-        'span',
+        "span",
         {
-          'class': 'amount',
-          'data-row-key': rowData.key,
-          'data-hover-mode': 'amount',
-          'onMouseenter': (e: MouseEvent) => handleHover(rowData, 'amount', e),
+          class: "amount",
+          "data-row-key": rowData.key,
+          "data-hover-mode": "amount",
+          onMouseenter: (e: MouseEvent) => handleHover(rowData, "amount", e),
         },
         [
-          h('span', { class: rowData.preCalculated.damageTypeClass }, rowData.preCalculated.amountDisplay),
+          h(
+            "span",
+            { class: rowData.preCalculated.damageTypeClass },
+            rowData.preCalculated.amountDisplay,
+          ),
         ],
-      )
+      );
     },
   },
   {
-    key: 'reduction',
-    title: t('keigennRecord.reduction'),
-    dataKey: 'reduction',
+    key: "reduction",
+    title: t("keigennRecord.reduction"),
+    dataKey: "reduction",
     width: 35,
-    align: 'right' as const,
-    class: 'col-reduction',
-    headerCellRenderer: () => renderHeader(t('keigennRecord.reduction'), 'header-reduction'),
+    align: "right" as const,
+    class: "col-reduction",
+    headerCellRenderer: () => renderHeader(t("keigennRecord.reduction"), "header-reduction"),
     cellRenderer: ({ rowData }: { rowData: RowVO }) =>
-      rowData.type === 'death'
+      rowData.type === "death"
         ? renderEmpty()
         : h(
-            'span',
+            "span",
             {
-              class: 'col-reduction-number',
+              class: "col-reduction-number",
               style: {
                 color: rowData.preCalculated.reductionColor,
               },
@@ -457,80 +459,92 @@ const columns = computed<Column[]>(() => [
           ),
   },
   {
-    key: 'keigenns',
-    title: t('keigennRecord.keigenns'),
-    dataKey: 'keigenns',
+    key: "keigenns",
+    title: t("keigennRecord.keigenns"),
+    dataKey: "keigenns",
     flexGrow: 1,
     width: 100,
-    align: 'left' as const,
-    class: 'col-keigenns',
-    headerCellRenderer: () => renderHeader(t('keigennRecord.keigenns')),
+    align: "left" as const,
+    class: "col-keigenns",
+    headerCellRenderer: () => renderHeader(t("keigennRecord.keigenns")),
     cellRenderer: ({ rowData }: { rowData: RowVO }) => {
-      if (rowData.type === 'death')
-        return renderEmpty()
-      return h('div', { class: 'status-container' }, [
-        ...rowData.preCalculated.keigenns.map(k =>
-          h('span', { class: 'status-wrapper' }, [
-            h('span', {
-              'class': 'status',
-              'title': k.title,
-              'data-duration': k.duration,
-              'data-sourcePov': k.isPov,
-            }, [
-              h('img', {
-                class: ['statusIcon', k.usefulClass],
-                src: k.src,
-                alt: k.effect,
-                onError: handleImgError,
-              }),
-            ]),
+      if (rowData.type === "death") return renderEmpty();
+      return h("div", { class: "status-container" }, [
+        ...rowData.preCalculated.keigenns.map((k) =>
+          h("span", { class: "status-wrapper" }, [
+            h(
+              "span",
+              {
+                class: "status",
+                title: k.title,
+                "data-duration": k.duration,
+                "data-sourcePov": k.isPov,
+              },
+              [
+                h("img", {
+                  class: ["statusIcon", k.usefulClass],
+                  src: k.src,
+                  alt: k.effect,
+                  onError: handleImgError,
+                }),
+              ],
+            ),
           ]),
         ),
-        h('span', { class: 'flags' }, (rowData.effect === 'damage done' || rowData.type === 'heal') ? '' : t(`keigennRecord.${rowData.effect}`),
+        h(
+          "span",
+          { class: "flags" },
+          rowData.effect === "damage done" || rowData.type === "heal"
+            ? ""
+            : t(`keigennRecord.${rowData.effect}`),
         ),
-      ])
+      ]);
     },
   },
   {
-    key: 'skills',
-    title: '',
-    dataKey: 'skills',
+    key: "skills",
+    title: "",
+    dataKey: "skills",
     width: 24,
-    align: 'center' as const,
-    class: 'col-skills',
+    align: "center" as const,
+    class: "col-skills",
     cellRenderer: ({ rowData }: { rowData: RowVO }) =>
       h(
-        'div',
+        "div",
         {
           style: {
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative',
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            position: "relative",
             zIndex: 10,
           },
         },
-        rowData.type === 'death'
+        rowData.type === "death"
           ? undefined
           : h(
-              'div',
+              "div",
               {
-                'class': 'view-icon',
-                'data-row-key': rowData.key,
-                'data-hover-mode': 'skills',
-                'onMouseenter': (e: MouseEvent) => handleHover(rowData, 'skills', e),
+                class: "view-icon",
+                "data-row-key": rowData.key,
+                "data-hover-mode": "skills",
+                onMouseenter: (e: MouseEvent) => handleHover(rowData, "skills", e),
               },
               [
-                h(ElIcon, { size: 12, color: 'inherit', style: { opacity: 0.5 } }, { default: () => h(Clock) }),
+                h(
+                  ElIcon,
+                  { size: 12, color: "inherit", style: { opacity: 0.5 } },
+                  { default: () => h(Clock) },
+                ),
               ],
             ),
       ),
   },
-])
+]);
 
-let msgHdl: MessageHandler | null = null
+let msgHdl: MessageHandler | null = null;
 
 function buildRowCopyText(rowData: RowVO) {
   const {
@@ -546,111 +560,101 @@ function buildRowCopyText(rowData: RowVO) {
     shield,
     reduction,
     jobEnum,
-  } = rowData
-  const sp
-    = effect === 'damage done' ? '' : `,${t(`keigennRecord.${effect}`)}`
-  const jobName = Util.jobEnumToJob(jobEnum)
-  return `${time} ${t(`keigennRecord.job.${jobName}`)} ${props.actionKey === 'action' ? action : actionCN} ${amount.toLocaleString()}(${t(`keigennRecord.${type}`)}) ${t(
-    'keigennRecord.reduction',
-  )}(${(reduction * 100).toFixed(0)}%):${keigenns.length === 0 && sp === ''
-    ? t('keigennRecord.none')
-    : keigenns
-      .map(k => (userOptions.statusCN ? k.name : k.effect))
-      .join(',') + sp
-  } ${t('keigennRecord.hp')}:${currentHp}(${Math.round(
+  } = rowData;
+  const sp = effect === "damage done" ? "" : `,${t(`keigennRecord.${effect}`)}`;
+  const jobName = Util.jobEnumToJob(jobEnum);
+  return `${time} ${t(`keigennRecord.job.${jobName}`)} ${props.actionKey === "action" ? action : actionCN} ${amount.toLocaleString()}(${t(`keigennRecord.${type}`)}) ${t(
+    "keigennRecord.reduction",
+  )}(${(reduction * 100).toFixed(0)}%):${
+    keigenns.length === 0 && sp === ""
+      ? t("keigennRecord.none")
+      : keigenns.map((k) => (userOptions.statusCN ? k.name : k.effect)).join(",") + sp
+  } ${t("keigennRecord.hp")}:${currentHp}(${Math.round(
     (currentHp / maxHp) * 100,
-  )}%)+${t('keigennRecord.shield')}:${Math.round(
-    (maxHp * +shield) / 100,
-  )}(${shield}%)`
+  )}%)+${t("keigennRecord.shield")}:${Math.round((maxHp * +shield) / 100)}(${shield}%)`;
 }
 
 function copyRowText(rowData: RowVO) {
-  const result = buildRowCopyText(rowData)
+  const result = buildRowCopyText(rowData);
   copyToClipboard(result)
     .then(() => {
-      msgHdl?.close()
+      msgHdl?.close();
       msgHdl = ElMessage.success({
-        message: t('keigennRecord.copySuccess'),
+        message: t("keigennRecord.copySuccess"),
         duration: 800,
-      })
+      });
     })
-    .catch(() => ElMessage.error(t('keigennRecord.copyFailed')))
+    .catch(() => ElMessage.error(t("keigennRecord.copyFailed")));
 }
 
 function findLastRowBeforeDeath(deathRow: RowVO) {
-  let latestRow: RowVO | null = null
+  let latestRow: RowVO | null = null;
   for (const row of props.rows) {
-    if (row.type === 'death')
-      continue
-    if (row.targetId !== deathRow.targetId)
-      continue
-    if (row.timestamp >= deathRow.timestamp)
-      continue
-    if (!latestRow || row.timestamp > latestRow.timestamp)
-      latestRow = row
+    if (row.type === "death") continue;
+    if (row.targetId !== deathRow.targetId) continue;
+    if (row.timestamp >= deathRow.timestamp) continue;
+    if (!latestRow || row.timestamp > latestRow.timestamp) latestRow = row;
   }
-  return latestRow
+  return latestRow;
 }
 
 function copyLastRowBeforeDeath(deathRow: RowVO, e?: MouseEvent) {
-  e?.stopPropagation()
-  const lastRow = findLastRowBeforeDeath(deathRow)
+  e?.stopPropagation();
+  const lastRow = findLastRowBeforeDeath(deathRow);
   if (!lastRow) {
-    ElMessage.warning(t('keigennRecord.noData'))
-    return
+    ElMessage.warning(t("keigennRecord.noData"));
+    return;
   }
-  copyRowText(lastRow)
+  copyRowText(lastRow);
 }
 
 const rowEventHandlers: RowEventHandlers = {
   onClick: ({ rowData }: { rowData: RowVO }) => {
-    if (rowData.type === 'death') {
-      copyLastRowBeforeDeath(rowData)
-      return
+    if (rowData.type === "death") {
+      copyLastRowBeforeDeath(rowData);
+      return;
     }
-    copyRowText(rowData)
+    copyRowText(rowData);
   },
-  onContextmenu: ({ rowData, event }: { rowData: RowVO, event: Event }) => {
-    if (rowData.type === 'death')
-      return
-    const mouseEvent = event as MouseEvent
-    contextMenuRow.value = rowData
-    contextMenuX.value = mouseEvent.clientX
-    contextMenuY.value = mouseEvent.clientY
-    contextMenuVisible.value = true
+  onContextmenu: ({ rowData, event }: { rowData: RowVO; event: Event }) => {
+    if (rowData.type === "death") return;
+    const mouseEvent = event as MouseEvent;
+    contextMenuRow.value = rowData;
+    contextMenuX.value = mouseEvent.clientX;
+    contextMenuY.value = mouseEvent.clientY;
+    contextMenuVisible.value = true;
   },
-}
-const tableV2Ref = ref<TableV2Instance | null>(null)
+};
+const tableV2Ref = ref<TableV2Instance | null>(null);
 
 function scrollToBottom() {
   if (tableV2Ref.value) {
-    tableV2Ref.value.scrollToRow(tableData.value.length - 1)
+    tableV2Ref.value.scrollToRow(tableData.value.length - 1);
   }
 }
 
 function isDuplicateSkill(skills: { id: number }[], currentId: number) {
-  let count = 0
+  let count = 0;
   for (const s of skills) {
     if (s.id === currentId) {
-      count++
-      if (count > 1)
-        return true
+      count++;
+      if (count > 1) return true;
     }
   }
-  return false
+  return false;
 }
 
 function getSimpleJobName(jobEnum: number) {
-  return Util.jobToFullName(Util.jobEnumToJob(jobEnum))?.simple1 ?? ''
+  return Util.jobToFullName(Util.jobEnumToJob(jobEnum))?.simple1 ?? "";
 }
 
 function getAllSkills(row: RowVO) {
-  return row.preCalculated.sortedSkills || []
+  return row.preCalculated.sortedSkills || [];
 }
 
 defineExpose({
   scrollToBottom,
-})
+});
 </script>
 
 <template>
@@ -658,83 +662,101 @@ defineExpose({
     <div class="table-wrapper">
       <el-table-v2
         v-if="tableWidth > 0 && tableHeight > 0"
-        ref="tableV2Ref" header-class="keigenn-table-header" class="keigenn-table performance-table"
-        :columns="columns" :data="tableData" :width="tableWidth" :height="tableHeight" :row-height="28" :header-height="24"
-        row-key="key" :row-event-handlers="rowEventHandlers" :row-class="rowClass"
+        ref="tableV2Ref"
+        header-class="keigenn-table-header"
+        class="keigenn-table performance-table"
+        :columns="columns"
+        :data="tableData"
+        :width="tableWidth"
+        :height="tableHeight"
+        :row-height="28"
+        :header-height="24"
+        row-key="key"
+        :row-event-handlers="rowEventHandlers"
+        :row-class="rowClass"
         :overscan-row-count="2"
       >
         <template #empty>
-          <el-empty
-            :description="store.isBrowser ? $t('keigennRecord.actTip') : undefined
-            "
-          />
+          <el-empty :description="store.isBrowser ? $t('keigennRecord.actTip') : undefined" />
         </template>
       </el-table-v2>
       <div
-        v-if="contextMenuVisible" ref="contextMenu" class="context-menu"
+        v-if="contextMenuVisible"
+        ref="contextMenu"
+        class="context-menu"
         :style="{ top: `${contextMenuY}px`, left: `${contextMenuX}px` }"
       >
         <ul>
           <li @click="filterByAction">
             {{
-              actionFilter === (contextMenuRow?.[actionKey] ?? '')
-                ? t('keigennRecord.filter.action_cancel', {
-                  actionName:
-                    contextMenuRow?.[actionKey]
-                    ?? t('keigennRecord.this_skill'),
-                })
-                : t('keigennRecord.filter.action_only', {
-                  actionName:
-                    contextMenuRow?.[actionKey]
-                    ?? t('keigennRecord.this_skill'),
-                })
+              actionFilter === (contextMenuRow?.[actionKey] ?? "")
+                ? t("keigennRecord.filter.action_cancel", {
+                    actionName: contextMenuRow?.[actionKey] ?? t("keigennRecord.this_skill"),
+                  })
+                : t("keigennRecord.filter.action_only", {
+                    actionName: contextMenuRow?.[actionKey] ?? t("keigennRecord.this_skill"),
+                  })
             }}
           </li>
 
           <li @click="filterByTarget">
             {{
               targetFilter === contextMenuRow?.targetId
-                ? t('keigennRecord.filter.target_cancel', {
-                  jobName:
-                    contextMenuRow?.job ?? t('keigennRecord.this_job'),
-                })
-                : t('keigennRecord.filter.target_only', {
-                  jobName:
-                    contextMenuRow?.job ?? t('keigennRecord.this_job'),
-                })
+                ? t("keigennRecord.filter.target_cancel", {
+                    jobName: contextMenuRow?.job ?? t("keigennRecord.this_job"),
+                  })
+                : t("keigennRecord.filter.target_only", {
+                    jobName: contextMenuRow?.job ?? t("keigennRecord.this_job"),
+                  })
             }}
           </li>
         </ul>
       </div>
 
       <el-popover
-        v-model:visible="popoverVisible" :virtual-ref="virtualRef" virtual-triggering
-        popper-class="keigenn-global-popover" transition="none"
-        :show-after="0" :hide-after="0" :offset="2" :enterable="true" :teleported="true"
+        v-model:visible="popoverVisible"
+        :virtual-ref="virtualRef"
+        virtual-triggering
+        popper-class="keigenn-global-popover"
+        transition="none"
+        :show-after="0"
+        :hide-after="0"
+        :offset="2"
+        :enterable="true"
+        :teleported="true"
         :placement="popoverPlacement"
-
         width="auto"
-        :fallback-placements="['top-end', 'top-start', 'bottom', 'bottom-end', 'bottom-start', 'left']"
+        :fallback-placements="[
+          'top-end',
+          'top-start',
+          'bottom',
+          'bottom-end',
+          'bottom-start',
+          'left',
+        ]"
       >
         <template v-if="hoveredRow && tooltipMode === 'amount'">
           <div class="row-info">
+            <div class="info-line">{{ t("keigennRecord.source") }}: {{ hoveredRow.source }}</div>
             <div class="info-line">
-              {{ t('keigennRecord.source') }}: {{ hoveredRow.source }}
+              {{ t("keigennRecord.playerShield") }}: {{ hoveredRow.shield }}%
             </div>
             <div class="info-line">
-              {{ t('keigennRecord.playerShield') }}: {{ hoveredRow.shield }}%
-            </div>
-            <div class="info-line">
-              {{ t('keigennRecord.playerHp') }}: {{ hoveredRow.currentHp.toLocaleString() }}({{ hoveredRow.preCalculated.hpPercent }}%)
+              {{ t("keigennRecord.playerHp") }}: {{ hoveredRow.currentHp.toLocaleString() }}({{
+                hoveredRow.preCalculated.hpPercent
+              }}%)
             </div>
             <template v-if="hoveredRow.reduction < 1 && hoveredRow.type !== 'dot'">
               <div class="info-divider" />
               <div class="info-line">
-                {{ t('keigennRecord.reductionRate') }}: {{ (hoveredRow.reduction * 100).toFixed(2) }}%
+                {{ t("keigennRecord.reductionRate") }}:
+                {{ (hoveredRow.reduction * 100).toFixed(2) }}%
               </div>
               <div class="info-line">
-                {{ t('keigennRecord.originalDamage') }}:
-                <span :class="hoveredRow.preCalculated.damageTypeClass">{{ hoveredRow.preCalculated.originalDamageDisplay }}</span>
+                {{ t("keigennRecord.originalDamage") }}:
+                <span :class="hoveredRow.preCalculated.damageTypeClass">{{
+                  hoveredRow.preCalculated.originalDamageDisplay
+                }}</span>
               </div>
             </template>
           </div>
@@ -744,20 +766,39 @@ defineExpose({
           <div class="skill-popover-content">
             <template v-if="getAllSkills(hoveredRow).length > 0">
               <div class="skill-grid">
-                <template v-for="skill in getAllSkills(hoveredRow)" :key="`${skill.id}-${skill.ownerId}`">
+                <template
+                  v-for="skill in getAllSkills(hoveredRow)"
+                  :key="`${skill.id}-${skill.ownerId}`"
+                >
                   <div class="skill-wrapper">
-                    <div class="skill-icon-container" :title="`${skill.ownerName} (${skill.ownerJobName})`">
-                      <img :src="skill.icon" class="skill-icon" @error="handleImgError">
+                    <div
+                      class="skill-icon-container"
+                      :title="`${skill.ownerName} (${skill.ownerJobName})`"
+                    >
+                      <img :src="skill.icon" class="skill-icon" @error="handleImgError" />
                       <div v-if="!skill.ready" class="skill-overlay" />
-                      <span v-if="skill.recastLeft > 0" class="skill-text">{{ skill.recastLeft }}</span>
-                      <span v-if="(skill.maxCharges ?? 0) > 1" class="skill-charges">{{ skill.chargesReady }}</span>
+                      <span v-if="skill.recastLeft > 0" class="skill-text">{{
+                        skill.recastLeft
+                      }}</span>
+                      <span v-if="(skill.maxCharges ?? 0) > 1" class="skill-charges">{{
+                        skill.chargesReady
+                      }}</span>
                       <span
-                        v-if="skill.jobResource !== undefined" class="skill-resource"
-                        :style="{ fontSize: skill.jobResource.toString().length > 2 ? '9px' : '11px' }"
-                      >{{ skill.jobResource }}</span>
-                      <span v-if="skill.extraText" class="skill-extra-text">{{ skill.extraText }}</span>
-                      <span v-if="isDuplicateSkill(getAllSkills(hoveredRow), skill.id)" class="skill-job-name">{{
-                        getSimpleJobName(skill.ownerJob) }}</span>
+                        v-if="skill.jobResource !== undefined"
+                        class="skill-resource"
+                        :style="{
+                          fontSize: skill.jobResource.toString().length > 2 ? '9px' : '11px',
+                        }"
+                        >{{ skill.jobResource }}</span
+                      >
+                      <span v-if="skill.extraText" class="skill-extra-text">{{
+                        skill.extraText
+                      }}</span>
+                      <span
+                        v-if="isDuplicateSkill(getAllSkills(hoveredRow), skill.id)"
+                        class="skill-job-name"
+                        >{{ getSimpleJobName(skill.ownerJob) }}</span
+                      >
                     </div>
                   </div>
                 </template>
@@ -765,7 +806,7 @@ defineExpose({
             </template>
 
             <div v-if="getAllSkills(hoveredRow).length === 0" class="no-data">
-              {{ t('keigennRecord.noData') }}
+              {{ t("keigennRecord.noData") }}
             </div>
           </div>
         </template>
@@ -773,13 +814,18 @@ defineExpose({
         <template v-else-if="hoveredRow && tooltipMode === 'death-recap'">
           <div class="death-recap-popover">
             <div class="recap-header">
-              <span>{{ t('keigennRecord.time') }}</span>
-              <span class="align-right">{{ t('keigennRecord.amount') }}</span>
-              <span>{{ t('keigennRecord.action') }}</span>
-              <span>{{ t('keigennRecord.keigenns') }}</span>
+              <span>{{ t("keigennRecord.time") }}</span>
+              <span class="align-right">{{ t("keigennRecord.amount") }}</span>
+              <span>{{ t("keigennRecord.action") }}</span>
+              <span>{{ t("keigennRecord.keigenns") }}</span>
             </div>
             <!-- 列表内容 -->
-            <div v-for="row in recapRows" :key="row.key" class="recap-row" :class="{ 'is-death': row.isDeath }">
+            <div
+              v-for="row in recapRows"
+              :key="row.key"
+              class="recap-row"
+              :class="{ 'is-death': row.isDeath }"
+            >
               <!-- Time -->
               <span class="time">{{ row.timeStr }}</span>
 
@@ -791,7 +837,12 @@ defineExpose({
               <!-- Ability -->
               <div class="ability-cell">
                 <div class="ability-content">
-                  <img v-if="row.iconSrc" :src="row.iconSrc" class="ability-icon" @error="handleImgError">
+                  <img
+                    v-if="row.iconSrc"
+                    :src="row.iconSrc"
+                    class="ability-icon"
+                    @error="handleImgError"
+                  />
                   <span class="ability-name" :title="row.actionCN">{{ row.actionCN }}</span>
                 </div>
               </div>
@@ -800,8 +851,18 @@ defineExpose({
               <div class="status-cell">
                 <div class="status-content">
                   <div v-for="(k, idx) in row.keigenns" :key="idx" class="status-wrapper">
-                    <div class="status" :title="k.title" :data-duration="k.duration" :class="{ 'is-pov': k.isPov }">
-                      <img :src="k.src" class="status-icon" :class="k.usefulClass" @error="handleImgError">
+                    <div
+                      class="status"
+                      :title="k.title"
+                      :data-duration="k.duration"
+                      :class="{ 'is-pov': k.isPov }"
+                    >
+                      <img
+                        :src="k.src"
+                        class="status-icon"
+                        :class="k.usefulClass"
+                        @error="handleImgError"
+                      />
                     </div>
                   </div>
                 </div>
@@ -835,11 +896,11 @@ defineExpose({
 .keigenn-table {
   font-size: 12px;
 
-  :deep(.el-table-v2__row) {
+  ::deep(.el-table-v2__row) {
     width: 100% !important;
   }
 
-  :deep(.el-table-v2__header-row) {
+  ::deep(.el-table-v2__header-row) {
     width: 100% !important;
   }
 }
@@ -883,7 +944,7 @@ defineExpose({
 
 :deep(.col-reduction-number) {
   &::after {
-    content: '%';
+    content: "%";
     font-size: 0.66em;
   }
 }
@@ -955,7 +1016,11 @@ defineExpose({
     font-weight: normal;
     right: 5px;
     bottom: 0;
-    text-shadow: -0.8px 0 0 black, 0 0.8px 0 black, 0.8px 0 0 black, 0 -0.8px 0 black;
+    text-shadow:
+      -0.8px 0 0 black,
+      0 0.8px 0 black,
+      0.8px 0 0 black,
+      0 -0.8px 0 black;
     white-space: nowrap;
   }
 
@@ -1019,7 +1084,7 @@ defineExpose({
         1px 1px 0 #000;
     }
 
-    &[data-sourcePov='true']::before {
+    &[data-sourcePov="true"]::before {
       color: aquamarine;
     }
   }
@@ -1028,19 +1093,32 @@ defineExpose({
     width: 18px;
     object-fit: cover;
     vertical-align: middle;
-
   }
 }
 
 :deep() {
   // 核心伤害颜色映射
-  .physics { color: rgb(255, 100, 100); }
-  .magic { color: rgb(100, 200, 255); }
-  .darkness { color: rgb(255, 100, 255); }
-  .is-heal { color: #4caf50; }
-  .unuseful { opacity: 0.3;}
-  .half-useful { opacity: 0.6;}
-  .useful { opacity: 1;}
+  .physics {
+    color: rgb(255, 100, 100);
+  }
+  .magic {
+    color: rgb(100, 200, 255);
+  }
+  .darkness {
+    color: rgb(255, 100, 255);
+  }
+  .is-heal {
+    color: #4caf50;
+  }
+  .unuseful {
+    opacity: 0.3;
+  }
+  .half-useful {
+    opacity: 0.6;
+  }
+  .useful {
+    opacity: 1;
+  }
 }
 </style>
 
@@ -1139,7 +1217,11 @@ body .el-popover.keigenn-global-popover {
             font-weight: bold;
             font-size: 12px;
             z-index: 2;
-            text-shadow: -1px 0 2px #000, 0 1px 2px #000, 1px 0 2px #000, 0 -1px 2px #000;
+            text-shadow:
+              -1px 0 2px #000,
+              0 1px 2px #000,
+              1px 0 2px #000,
+              0 -1px 2px #000;
           }
 
           .skill-charges {
@@ -1152,7 +1234,11 @@ body .el-popover.keigenn-global-popover {
             font-weight: bold;
             font-size: 11px;
             z-index: 3;
-            text-shadow: -1px 0 1.5px #000, 0 1px 1.5px #000, 1px 0 1.5px #000, 0 -1px 1.5px #000;
+            text-shadow:
+              -1px 0 1.5px #000,
+              0 1px 1.5px #000,
+              1px 0 1.5px #000,
+              0 -1px 1.5px #000;
           }
 
           .skill-job-name {
@@ -1166,7 +1252,11 @@ body .el-popover.keigenn-global-popover {
             font-size: 11px;
             z-index: 3;
             z-index: 3;
-            text-shadow: -1px 0 1.5px #000, 0 1px 1.5px #000, 1px 0 1.5px #000, 0 -1px 1.5px #000;
+            text-shadow:
+              -1px 0 1.5px #000,
+              0 1px 1.5px #000,
+              1px 0 1.5px #000,
+              0 -1px 1.5px #000;
           }
 
           .skill-resource {
@@ -1179,7 +1269,11 @@ body .el-popover.keigenn-global-popover {
             font-weight: bold;
             font-size: 11px;
             z-index: 3;
-            text-shadow: -1px 0 1.5px #000, 0 1px 1.5px #000, 1px 0 1.5px #000, 0 -1px 1.5px #000;
+            text-shadow:
+              -1px 0 1.5px #000,
+              0 1px 1.5px #000,
+              1px 0 1.5px #000,
+              0 -1px 1.5px #000;
           }
 
           .skill-extra-text {
@@ -1192,7 +1286,11 @@ body .el-popover.keigenn-global-popover {
             font-weight: bold;
             font-size: 11px;
             z-index: 3;
-            text-shadow: -1px 0 1.5px #000, 0 1px 1.5px #000, 1px 0 1.5px #000, 0 -1px 1.5px #000;
+            text-shadow:
+              -1px 0 1.5px #000,
+              0 1px 1.5px #000,
+              1px 0 1.5px #000,
+              0 -1px 1.5px #000;
           }
         }
       }
@@ -1227,7 +1325,6 @@ body .el-popover.keigenn-global-popover {
   border-radius: 4px;
   background: transparent;
   cursor: pointer;
-
 }
 </style>
 
@@ -1258,11 +1355,17 @@ body .el-popover.keigenn-global-popover {
     border-bottom: 2px solid #333;
     white-space: nowrap;
 
-    &.align-right { text-align: right; }
+    &.align-right {
+      text-align: right;
+    }
 
     /* Target specific headers by order to match content alignment */
-    &:nth-child(1) { text-align: right; } /* Time */
-    &:nth-child(2) { text-align: right; } /* Amount */
+    &:nth-child(1) {
+      text-align: right;
+    } /* Time */
+    &:nth-child(2) {
+      text-align: right;
+    } /* Amount */
   }
 
   .recap-row {
@@ -1287,10 +1390,10 @@ body .el-popover.keigenn-global-popover {
 
     /* Simulate the left border on the first cell */
     &.is-death > *:first-child {
-       position: relative;
+      position: relative;
     }
     &.is-death > *:first-child::before {
-      content: '';
+      content: "";
       position: absolute;
       left: 0;
       top: 0;
@@ -1303,7 +1406,9 @@ body .el-popover.keigenn-global-popover {
       background-color: #222;
     }
 
-    .align-right { text-align: right; }
+    .align-right {
+      text-align: right;
+    }
 
     .time {
       color: #888;
@@ -1320,8 +1425,12 @@ body .el-popover.keigenn-global-popover {
       white-space: nowrap;
       text-align: right;
       padding-right: 4px;
-      &.is-heal { color: #4caf50; }
-      &.is-damage { color: #ff5252; }
+      &.is-heal {
+        color: #4caf50;
+      }
+      &.is-damage {
+        color: #ff5252;
+      }
     }
 
     .ability-cell {
@@ -1362,7 +1471,7 @@ body .el-popover.keigenn-global-popover {
       }
 
       .status {
-        height:18px;
+        height: 18px;
         position: relative;
         display: flex;
         align-items: center;
@@ -1387,9 +1496,9 @@ body .el-popover.keigenn-global-popover {
 
           text-shadow:
             -1px -1px 0 #000,
-             1px -1px 0 #000,
-            -1px  1px 0 #000,
-             1px  1px 0 #000;
+            1px -1px 0 #000,
+            -1px 1px 0 #000,
+            1px 1px 0 #000;
 
           z-index: 10;
           pointer-events: none;
@@ -1408,7 +1517,6 @@ body .el-popover.keigenn-global-popover {
         object-fit: cover;
       }
     }
-
   }
 }
 </style>

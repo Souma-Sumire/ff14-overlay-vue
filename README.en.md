@@ -22,21 +22,21 @@
 
 ### 1. Prerequisites
 
-1. [Bun](https://bun.sh/)
+1. [Vite+](https://viteplus.dev/)
 
 ### 2. Start Project
 
 ```bash
 # Install dependencies
-bun install
+vp install
 # Initialize submodules
 git submodule update --init --recursive
 # Pull latest cactbot code and apply patches
 bash scripts/update-cactbot.sh
 # Development mode
-bun dev
+vp dev
 # Build
-bun run build
+vp run build
 ```
 
 Most pages can be tested by adding `dev` parameter. Example:

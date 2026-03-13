@@ -1,37 +1,37 @@
 <script setup lang="ts">
-import type { LootRecord } from '@/utils/lootParser'
-import { useDark } from '@vueuse/core'
-import { HeatmapChart } from 'echarts/charts'
+import type { LootRecord } from "@/utils/lootParser";
+import { useDark } from "@vueuse/core";
+import { HeatmapChart } from "echarts/charts";
 import {
   GridComponent,
   TitleComponent,
   TooltipComponent,
   VisualMapComponent,
-} from 'echarts/components'
-import { use } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
-import { computed, inject, ref, watchEffect } from 'vue'
-import VChart from 'vue-echarts'
-import { formatChartPlayerLabel, getChartLabelRich } from '@/utils/chartUtils'
-import { getRoleDisplayName } from '@/utils/lootParser'
-import { getFormattedWeekLabel, getRaidWeekLabel, getRaidWeekStart } from '@/utils/raidWeekUtils'
+} from "echarts/components";
+import { use } from "echarts/core";
+import { CanvasRenderer } from "echarts/renderers";
+import { computed, inject, ref, watchEffect } from "vue";
+import VChart from "vue-echarts";
+import { formatChartPlayerLabel, getChartLabelRich } from "@/utils/chartUtils";
+import { getRoleDisplayName } from "@/utils/lootParser";
+import { getFormattedWeekLabel, getRaidWeekLabel, getRaidWeekStart } from "@/utils/raidWeekUtils";
 
 const props = defineProps<{
-  records: LootRecord[]
-  players: string[]
-  getActualPlayer?: (name: string) => string
-  getPlayerRole?: (name: string) => string | undefined
+  records: LootRecord[];
+  players: string[];
+  getActualPlayer?: (name: string) => string;
+  getPlayerRole?: (name: string) => string | undefined;
 
-  recordWeekCorrections?: Record<string, number>
-  syncStartDate?: string | Date
-  playerVisibility?: 'all' | 'role' | 'job' | 'initial'
-}>()
+  recordWeekCorrections?: Record<string, number>;
+  syncStartDate?: string | Date;
+  playerVisibility?: "all" | "role" | "job" | "initial";
+}>();
 
 const isDark = useDark({
-  storageKey: 'loot-history-theme',
-})
+  storageKey: "loot-history-theme",
+});
 
-const getDisplayName = inject('getDisplayName', (n: string) => n)
+const getDisplayName = inject("getDisplayName", (n: string) => n);
 
 use([
   CanvasRenderer,
@@ -40,147 +40,143 @@ use([
   TooltipComponent,
   VisualMapComponent,
   TitleComponent,
-])
+]);
 
 const zeroWeekStart = computed(() => {
-  if (!props.syncStartDate)
-    return null
-  return getRaidWeekStart(new Date(props.syncStartDate))
-})
+  if (!props.syncStartDate) return null;
+  return getRaidWeekStart(new Date(props.syncStartDate));
+});
 
 // 简化 Label 显示逻辑
 function getWeekInfo(record: LootRecord) {
-  const offset = props.recordWeekCorrections?.[record.key] || 0
-  const { label } = getRaidWeekLabel(record.timestamp, offset)
-  const { label: formattedLabel, index } = getFormattedWeekLabel(label, zeroWeekStart.value)
+  const offset = props.recordWeekCorrections?.[record.key] || 0;
+  const { label } = getRaidWeekLabel(record.timestamp, offset);
+  const { label: formattedLabel, index } = getFormattedWeekLabel(label, zeroWeekStart.value);
 
   // 只显示第几周
-  const displayLabel = props.syncStartDate ? `第 ${index} 周` : label
+  const displayLabel = props.syncStartDate ? `第 ${index} 周` : label;
 
   return {
     label: displayLabel,
     fullLabel: formattedLabel,
     sortKey: index,
-  }
+  };
 }
 
-const chartHeight = ref(400)
+const chartHeight = ref(400);
 
 // 将数据处理抽离，为了能同时计算高度
 const processedData = computed(() => {
-  const weekInfoMap = new Map<string, number>() // WeekLabel -> WeekIndex
-  const dataMap = new Map<string, Map<string, { count: number, items: string[] }>>()
-  const playerSet = new Set(props.players)
+  const weekInfoMap = new Map<string, number>(); // WeekLabel -> WeekIndex
+  const dataMap = new Map<string, Map<string, { count: number; items: string[] }>>();
+  const playerSet = new Set(props.players);
 
   props.records.forEach((r) => {
-    const { label, sortKey } = getWeekInfo(r)
-    weekInfoMap.set(label, sortKey)
+    const { label, sortKey } = getWeekInfo(r);
+    weekInfoMap.set(label, sortKey);
 
-    const p = props.getActualPlayer ? props.getActualPlayer(r.player) : r.player
-    if (!playerSet.has(p))
-      return
+    const p = props.getActualPlayer ? props.getActualPlayer(r.player) : r.player;
+    if (!playerSet.has(p)) return;
 
-    if (!dataMap.has(label))
-      dataMap.set(label, new Map())
-    const pMap = dataMap.get(label)!
+    if (!dataMap.has(label)) dataMap.set(label, new Map());
+    const pMap = dataMap.get(label)!;
 
-    if (!pMap.has(p))
-      pMap.set(p, { count: 0, items: [] })
-    const entry = pMap.get(p)!
-    entry.count++
-    entry.items.push(r.item)
-  })
+    if (!pMap.has(p)) pMap.set(p, { count: 0, items: [] });
+    const entry = pMap.get(p)!;
+    entry.count++;
+    entry.items.push(r.item);
+  });
 
   // 排序周次: 根据 weekInfoMap 中的 weekIdx 排序
   const sortedWeeks = Array.from(weekInfoMap.entries())
     .sort((a, b) => a[1] - b[1])
-    .map(entry => entry[0])
+    .map((entry) => entry[0]);
 
-  const xData = props.players.map(p => getDisplayName(p))
-  const seriesData: any[] = []
+  const xData = props.players.map((p) => getDisplayName(p));
+  const seriesData: any[] = [];
 
   sortedWeeks.forEach((week, yIndex) => {
     xData.forEach((_, xIndex) => {
-      const player = props.players[xIndex]!
-      const entry = dataMap.get(week)?.get(player)
-      const count = entry ? entry.count : 0
+      const player = props.players[xIndex]!;
+      const entry = dataMap.get(week)?.get(player);
+      const count = entry ? entry.count : 0;
       seriesData.push({
         value: [xIndex, yIndex, count],
         items: entry ? entry.items : [],
-      })
-    })
-  })
+      });
+    });
+  });
 
   // 计算高度
-  const rowHeight = 40
-  const minHeight = 300
-  const calculatedHeight = sortedWeeks.length * rowHeight + 120
-  const height = Math.max(minHeight, calculatedHeight)
+  const rowHeight = 40;
+  const minHeight = 300;
+  const calculatedHeight = sortedWeeks.length * rowHeight + 120;
+  const height = Math.max(minHeight, calculatedHeight);
 
-  return { xData, sortedWeeks, seriesData, height }
-})
+  return { xData, sortedWeeks, seriesData, height };
+});
 
 // 更新高度副作用
 watchEffect(() => {
-  chartHeight.value = processedData.value.height
-})
+  chartHeight.value = processedData.value.height;
+});
 
 const option = computed(() => {
   // 显式引用
-  const visibility = props.playerVisibility
-  const { xData, sortedWeeks, seriesData } = processedData.value
+  const visibility = props.playerVisibility;
+  const { xData, sortedWeeks, seriesData } = processedData.value;
 
   // Helper
-  const nameToRoleMap = new Map<string, string>()
+  const nameToRoleMap = new Map<string, string>();
   props.players.forEach((p) => {
-    const role = props.getPlayerRole ? props.getPlayerRole(p) : undefined
-    if (role)
-      nameToRoleMap.set(p, getRoleDisplayName(role))
-  })
+    const role = props.getPlayerRole ? props.getPlayerRole(p) : undefined;
+    if (role) nameToRoleMap.set(p, getRoleDisplayName(role));
+  });
 
   return {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     animation: false,
     title: {
       show: false,
       text: visibility, // 增加显式依赖
     },
     tooltip: {
-      position: 'top',
+      position: "top",
       formatter: (params: any) => {
-        const item = params.data
-        const count = item.value[2]
+        const item = params.data;
+        const count = item.value[2];
         // Remove the early return for count === 0 to allow tooltip
 
         // x is player, y is week
-        const xIndex = item.value[0]
-        const rawPlayer = props.players[xIndex]
-        const player = xData[xIndex]
-        const week = sortedWeeks[item.value[1]]
+        const xIndex = item.value[0];
+        const rawPlayer = props.players[xIndex];
+        const player = xData[xIndex];
+        const week = sortedWeeks[item.value[1]];
 
-        const role = rawPlayer ? nameToRoleMap.get(rawPlayer) : undefined
+        const role = rawPlayer ? nameToRoleMap.get(rawPlayer) : undefined;
 
         // If items is empty or undefined
-        const itemsStr = (item.items && item.items.length > 0)
-          ? item.items.map((i: string) => `• ${i}`).join('<br/>')
-          : '<span style="color:#94a3b8;font-style:italic">无掉落</span>'
+        const itemsStr =
+          item.items && item.items.length > 0
+            ? item.items.map((i: string) => `• ${i}`).join("<br/>")
+            : '<span style="color:#94a3b8;font-style:italic">无掉落</span>';
 
         return `<b>${week}</b><br/>
-                <b>${role ? `[${role}]` : ''} ${player}</b><br/>
+                <b>${role ? `[${role}]` : ""} ${player}</b><br/>
                 获取数量: ${count}<br/>
                 <hr style="margin:4px 0;opacity:0.3"/>
-                ${itemsStr}`
+                ${itemsStr}`;
       },
     },
     grid: {
       top: 40,
-      bottom: '2%',
-      left: '2%',
-      right: '2%',
+      bottom: "2%",
+      left: "2%",
+      right: "2%",
     },
     xAxis: {
-      position: 'bottom',
-      type: 'category',
+      position: "bottom",
+      type: "category",
       data: xData,
       splitArea: { show: true },
       axisTick: { show: false },
@@ -189,16 +185,17 @@ const option = computed(() => {
         interval: 0,
         rotate: 0,
         formatter: (value: string, index: number) => {
-          const rawPlayer = props.players[index]
-          const rawRole = rawPlayer && props.getPlayerRole ? props.getPlayerRole(rawPlayer) : undefined
-          return formatChartPlayerLabel(value, rawRole, props.playerVisibility)
+          const rawPlayer = props.players[index];
+          const rawRole =
+            rawPlayer && props.getPlayerRole ? props.getPlayerRole(rawPlayer) : undefined;
+          return formatChartPlayerLabel(value, rawRole, props.playerVisibility);
         },
         rich: getChartLabelRich(props.playerVisibility),
-        color: isDark.value ? '#e2e8f0' : '#64748b',
+        color: isDark.value ? "#e2e8f0" : "#64748b",
       },
     },
     yAxis: {
-      type: 'category',
+      type: "category",
       data: sortedWeeks,
       inverse: false,
       splitArea: { show: true },
@@ -206,67 +203,67 @@ const option = computed(() => {
       axisLine: { show: false },
       axisLabel: {
         fontSize: 12,
-        color: isDark.value ? '#e2e8f0' : '#64748b',
+        color: isDark.value ? "#e2e8f0" : "#64748b",
       },
     },
     visualMap: {
       min: 0,
       max: 8,
       calculable: false,
-      orient: 'horizontal',
+      orient: "horizontal",
       right: 0,
       top: 0,
       itemWidth: 15,
       itemHeight: 15,
-      type: 'piecewise',
+      type: "piecewise",
       pieces: [
-        { value: 0, color: isDark.value ? '#1b1c26' : '#f8fafc', label: '无' },
-        { value: 1, color: isDark.value ? '#450a0a' : '#fff7ed', label: '1' },
-        { value: 2, color: isDark.value ? '#7f1d1d' : '#ffedd5', label: '2' },
-        { value: 3, color: isDark.value ? '#b91c1c' : '#fed7aa', label: '3' },
-        { value: 4, color: isDark.value ? '#c2410c' : '#fdba74', label: '4' },
-        { value: 5, color: isDark.value ? '#ea580c' : '#f97316', label: '5' },
-        { value: 6, color: isDark.value ? '#f97316' : '#ea580c', label: '6' },
-        { value: 7, color: isDark.value ? '#facc15' : '#c2410c', label: '7' },
-        { min: 8, color: isDark.value ? '#fef08a' : '#9a3412', label: '8+' },
+        { value: 0, color: isDark.value ? "#1b1c26" : "#f8fafc", label: "无" },
+        { value: 1, color: isDark.value ? "#450a0a" : "#fff7ed", label: "1" },
+        { value: 2, color: isDark.value ? "#7f1d1d" : "#ffedd5", label: "2" },
+        { value: 3, color: isDark.value ? "#b91c1c" : "#fed7aa", label: "3" },
+        { value: 4, color: isDark.value ? "#c2410c" : "#fdba74", label: "4" },
+        { value: 5, color: isDark.value ? "#ea580c" : "#f97316", label: "5" },
+        { value: 6, color: isDark.value ? "#f97316" : "#ea580c", label: "6" },
+        { value: 7, color: isDark.value ? "#facc15" : "#c2410c", label: "7" },
+        { min: 8, color: isDark.value ? "#fef08a" : "#9a3412", label: "8+" },
       ],
       textStyle: {
-        color: isDark.value ? '#94a3b8' : '#64748b',
+        color: isDark.value ? "#94a3b8" : "#64748b",
       },
     },
-    series: [{
-      name: '每周获取',
-      type: 'heatmap',
-      data: seriesData,
-      label: {
-        show: true,
-        formatter: (p: any) => {
-          return p.value[2] > 0 ? p.value[2] : ''
+    series: [
+      {
+        name: "每周获取",
+        type: "heatmap",
+        data: seriesData,
+        label: {
+          show: true,
+          formatter: (p: any) => {
+            return p.value[2] > 0 ? p.value[2] : "";
+          },
+          color: "inherit",
         },
-        color: 'inherit',
-      },
-      itemStyle: {
-        borderRadius: 4,
-        borderColor: isDark.value ? '#252632' : '#fff',
-        borderWidth: 2,
-      },
-      emphasis: {
         itemStyle: {
-          shadowBlur: 10,
-          shadowColor: 'rgba(0, 0, 0, 0.4)',
+          borderRadius: 4,
+          borderColor: isDark.value ? "#252632" : "#fff",
+          borderWidth: 2,
+        },
+        emphasis: {
+          itemStyle: {
+            shadowBlur: 10,
+            shadowColor: "rgba(0, 0, 0, 0.4)",
+          },
         },
       },
-    }],
-  }
-})
+    ],
+  };
+});
 </script>
 
 <template>
   <div class="chart-container">
     <div class="chart-header">
-      <div class="chart-title">
-        每周获取热力图
-      </div>
+      <div class="chart-title">每周获取热力图</div>
     </div>
     <div class="chart-body" :style="{ height: `${chartHeight}px` }">
       <VChart

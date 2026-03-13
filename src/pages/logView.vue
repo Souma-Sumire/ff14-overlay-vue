@@ -1,185 +1,185 @@
 <script setup lang="ts">
-import type { Column } from 'element-plus'
-import type { EncounterCandidate } from '@/types/mitigation'
-import { useDark } from '@vueuse/core'
-import { ElMessage } from 'element-plus'
-import { computed, h, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useLogParser } from '@/composables/useLogParser'
-import logDefinitions from '../../cactbot/resources/netlog_defs'
+import type { Column } from "element-plus";
+import type { EncounterCandidate } from "@/types/mitigation";
+import { useDark } from "@vueuse/core";
+import { ElMessage } from "element-plus";
+import { computed, h, onMounted, onUnmounted, ref, watch } from "vue";
+import { useLogParser } from "@/composables/useLogParser";
+import logDefinitions from "../../cactbot/resources/netlog_defs";
 
 // ─── Type-code → name mapping ───────────────────────────────────────────────
-const typeCodeNameMap = new Map<string, string>()
-const lineActorFieldIndexMap = new Map<string, {
-  sourceId: number | null
-  source: number | null
-  targetId: number | null
-  target: number | null
-}>()
-const lineFieldNameIndexMap = new Map<string, Map<number, string>>()
-for (const def of Object.values(logDefinitions)) {
-  typeCodeNameMap.set(def.type, def.name)
-  const fields = def.fields as Record<string, number | undefined>
-  const fieldNameMap = new Map<number, string>()
-  for (const [fieldName, fieldIndex] of Object.entries(fields)) {
-    if (typeof fieldIndex === 'number')
-      fieldNameMap.set(fieldIndex, fieldName)
+const typeCodeNameMap = new Map<string, string>();
+const lineActorFieldIndexMap = new Map<
+  string,
+  {
+    sourceId: number | null;
+    source: number | null;
+    targetId: number | null;
+    target: number | null;
   }
-  lineFieldNameIndexMap.set(def.type, fieldNameMap)
+>();
+const lineFieldNameIndexMap = new Map<string, Map<number, string>>();
+for (const def of Object.values(logDefinitions)) {
+  typeCodeNameMap.set(def.type, def.name);
+  const fields = def.fields as Record<string, number | undefined>;
+  const fieldNameMap = new Map<number, string>();
+  for (const [fieldName, fieldIndex] of Object.entries(fields)) {
+    if (typeof fieldIndex === "number") fieldNameMap.set(fieldIndex, fieldName);
+  }
+  lineFieldNameIndexMap.set(def.type, fieldNameMap);
   lineActorFieldIndexMap.set(def.type, {
     sourceId: fields.sourceId ?? null,
     source: fields.source ?? null,
     targetId: fields.targetId ?? null,
     target: fields.target ?? fields.targetName ?? null,
-  })
+  });
 }
 function resolveTypeName(code: string): string {
-  return typeCodeNameMap.get(code) ?? 'Unknown'
+  return typeCodeNameMap.get(code) ?? "Unknown";
 }
 
 // ─── Data Models ────────────────────────────────────────────────────────────
 interface ParsedLineRow {
-  key: string
-  globalIndex: number
-  raw: string
-  parts: string[]
-  typeCode: string
-  typeName: string
-  timestampText: string
-  timestampMs: number | null
-  deltaSec: number | null
-  sourceId: string
-  source: string
-  targetId: string
-  target: string
+  key: string;
+  globalIndex: number;
+  raw: string;
+  parts: string[];
+  typeCode: string;
+  typeName: string;
+  timestampText: string;
+  timestampMs: number | null;
+  deltaSec: number | null;
+  sourceId: string;
+  source: string;
+  targetId: string;
+  target: string;
 }
 
 interface LogFieldDetailRow {
-  index: number
-  fieldName: string
-  value: string
+  index: number;
+  fieldName: string;
+  value: string;
 }
 
 interface LogFilterState {
-  searchInputText: string
-  appliedSearchText: string
-  searchMode: 'text' | 'regex'
-  showSearchResultsOnly: boolean
-  timeRangeStartText: string
-  timeRangeEndText: string
-  sourceIdFilterText: string
-  sourceFilterText: string
-  targetIdFilterText: string
-  targetFilterText: string
-  diffHighlightEnabled: boolean
-  visibleColumns: Record<string, boolean>
+  searchInputText: string;
+  appliedSearchText: string;
+  searchMode: "text" | "regex";
+  showSearchResultsOnly: boolean;
+  timeRangeStartText: string;
+  timeRangeEndText: string;
+  sourceIdFilterText: string;
+  sourceFilterText: string;
+  targetIdFilterText: string;
+  targetFilterText: string;
+  diffHighlightEnabled: boolean;
+  visibleColumns: Record<string, boolean>;
 }
 
 interface PersistedLogSearchState {
-  searchInputText: string
-  appliedSearchText: string
-  searchMode: 'text' | 'regex'
-  showSearchResultsOnly: boolean
-  timeRangeStartText: string
-  timeRangeEndText: string
-  sourceIdFilterText: string
-  sourceFilterText: string
-  targetIdFilterText: string
-  targetFilterText: string
+  searchInputText: string;
+  appliedSearchText: string;
+  searchMode: "text" | "regex";
+  showSearchResultsOnly: boolean;
+  timeRangeStartText: string;
+  timeRangeEndText: string;
+  sourceIdFilterText: string;
+  sourceFilterText: string;
+  targetIdFilterText: string;
+  targetFilterText: string;
 }
 
 // ─── IndexedDB ──────────────────────────────────────────────────────────────
-const DB_NAME = 'FF14LogViewDB'
-const STORE_NAME = 'logs'
+const DB_NAME = "FF14LogViewDB";
+const STORE_NAME = "logs";
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1)
+    const req = indexedDB.open(DB_NAME, 1);
     req.onupgradeneeded = (e: any) => {
-      const db = e.target.result
+      const db = e.target.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME)
+        db.createObjectStore(STORE_NAME);
       }
-    }
-    req.onsuccess = () => resolve(req.result)
-    req.onerror = () => reject(req.error)
-  })
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
 }
 
 async function saveLogToDB(name: string, text: string) {
   try {
-    const db = await openDB()
+    const db = await openDB();
     return new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, 'readwrite')
-      const store = tx.objectStore(STORE_NAME)
-      const req = store.put({ name, text }, 'lastFile')
-      req.onsuccess = () => resolve()
-      req.onerror = () => reject(req.error)
-    })
-  }
-  catch (e) {
-    console.error('Failed to save DB', e)
+      const tx = db.transaction(STORE_NAME, "readwrite");
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.put({ name, text }, "lastFile");
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) {
+    console.error("Failed to save DB", e);
   }
 }
 
-async function loadLogFromDB(): Promise<{ name: string, text: string } | null> {
+async function loadLogFromDB(): Promise<{ name: string; text: string } | null> {
   try {
-    const db = await openDB()
+    const db = await openDB();
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, 'readonly')
-      const store = tx.objectStore(STORE_NAME)
-      const req = store.get('lastFile')
-      req.onsuccess = () => resolve(req.result || null)
-      req.onerror = () => reject(req.error)
-    })
-  }
-  catch (_e) {
-    return null
+      const tx = db.transaction(STORE_NAME, "readonly");
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.get("lastFile");
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (_e) {
+    return null;
   }
 }
 
 // ─── State ──────────────────────────────────────────────────────────────────
-const { parseFile } = useLogParser()
+const { parseFile } = useLogParser();
 const isDark = useDark({
-  storageKey: 'log-view-theme',
-  initialValue: 'dark',
-})
-const persistedSearchState = useStorage<PersistedLogSearchState>('log-view-search-state', {
-  searchInputText: '',
-  appliedSearchText: '',
-  searchMode: 'text',
+  storageKey: "log-view-theme",
+  initialValue: "dark",
+});
+const persistedSearchState = useStorage<PersistedLogSearchState>("log-view-search-state", {
+  searchInputText: "",
+  appliedSearchText: "",
+  searchMode: "text",
   showSearchResultsOnly: false,
-  timeRangeStartText: '',
-  timeRangeEndText: '',
-  sourceIdFilterText: '',
-  sourceFilterText: '',
-  targetIdFilterText: '',
-  targetFilterText: '',
-})
+  timeRangeStartText: "",
+  timeRangeEndText: "",
+  sourceIdFilterText: "",
+  sourceFilterText: "",
+  targetIdFilterText: "",
+  targetFilterText: "",
+});
 
-const fileName = ref('')
-const loading = ref(false)
-const encounters = ref<EncounterCandidate[]>([])
-const selectedEncounterId = ref<string | null>(null)
+const fileName = ref("");
+const loading = ref(false);
+const encounters = ref<EncounterCandidate[]>([]);
+const selectedEncounterId = ref<string | null>(null);
 
 // Only one column visible
 const filter = ref<LogFilterState>({
   ...persistedSearchState.value,
   diffHighlightEnabled: false,
   visibleColumns: { raw: true },
-})
+});
 
-const isDragging = ref(false)
-let dragCounter = 0
-const TYPE_COLUMN_WIDTH = 118
-const enabledTypeCodePrefs = useStorage<Record<string, boolean>>('log-view-enabled-type-codes', {})
-const contextMenuVisible = ref(false)
-const contextMenuPosition = ref({ x: 0, y: 0 })
-const contextMenuTypeCode = ref('')
-const contextMenuTypeName = ref('')
-const contextMenuTimestampMs = ref<number | null>(null)
-const contextMenuRowKey = ref('')
-const detailDialogVisible = ref(false)
-const detailDialogRow = ref<ParsedLineRow | null>(null)
+const isDragging = ref(false);
+let dragCounter = 0;
+const TYPE_COLUMN_WIDTH = 118;
+const enabledTypeCodePrefs = useStorage<Record<string, boolean>>("log-view-enabled-type-codes", {});
+const contextMenuVisible = ref(false);
+const contextMenuPosition = ref({ x: 0, y: 0 });
+const contextMenuTypeCode = ref("");
+const contextMenuTypeName = ref("");
+const contextMenuTimestampMs = ref<number | null>(null);
+const contextMenuRowKey = ref("");
+const detailDialogVisible = ref(false);
+const detailDialogRow = ref<ParsedLineRow | null>(null);
 
 watch(
   () => ({
@@ -195,74 +195,78 @@ watch(
     targetFilterText: filter.value.targetFilterText,
   }),
   (value) => {
-    persistedSearchState.value = value
+    persistedSearchState.value = value;
   },
   { deep: true },
-)
+);
 
 watch(selectedEncounterId, (newVal, oldVal) => {
   if (oldVal !== null && newVal !== null && newVal !== oldVal) {
-    filter.value.searchInputText = ''
-    filter.value.appliedSearchText = ''
-    filter.value.showSearchResultsOnly = false
-    filter.value.timeRangeStartText = ''
-    filter.value.timeRangeEndText = ''
-    filter.value.sourceIdFilterText = ''
-    filter.value.sourceFilterText = ''
-    filter.value.targetIdFilterText = ''
-    filter.value.targetFilterText = ''
+    filter.value.searchInputText = "";
+    filter.value.appliedSearchText = "";
+    filter.value.showSearchResultsOnly = false;
+    filter.value.timeRangeStartText = "";
+    filter.value.timeRangeEndText = "";
+    filter.value.sourceIdFilterText = "";
+    filter.value.sourceFilterText = "";
+    filter.value.targetIdFilterText = "";
+    filter.value.targetFilterText = "";
   }
-})
+});
 
 onMounted(async () => {
   try {
-    loading.value = true
-    const saved = await loadLogFromDB()
+    loading.value = true;
+    const saved = await loadLogFromDB();
     if (saved) {
-      const file = new File([saved.text], saved.name, { type: 'text/plain' })
-      await handleFileImport(file, false)
+      const file = new File([saved.text], saved.name, { type: "text/plain" });
+      await handleFileImport(file, false);
     }
-  }
-  catch (_e) {
+  } catch (_e) {
     // ignore
-  }
-  finally {
-    loading.value = false
+  } finally {
+    loading.value = false;
   }
 
-  window.addEventListener('click', closeContextMenu)
-  window.addEventListener('blur', closeContextMenu)
-})
+  window.addEventListener("click", closeContextMenu);
+  window.addEventListener("blur", closeContextMenu);
+});
 
 onUnmounted(() => {
-  window.removeEventListener('click', closeContextMenu)
-  window.removeEventListener('blur', closeContextMenu)
-})
+  window.removeEventListener("click", closeContextMenu);
+  window.removeEventListener("blur", closeContextMenu);
+});
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
-function parseLineRow(raw: string, globalIndex: number, encounterId: string, combatStartMs: number | null): ParsedLineRow {
-  const parts = raw.split('|')
+function parseLineRow(
+  raw: string,
+  globalIndex: number,
+  encounterId: string,
+  combatStartMs: number | null,
+): ParsedLineRow {
+  const parts = raw.split("|");
 
   // Remove the checksum part (usually the last column) to avoid it
   // causing visual noise or matching in search/filter.
   if (parts.length > 0) {
-    parts.pop()
+    parts.pop();
   }
-  const cleanRaw = `${parts.join('|')}|`
+  const cleanRaw = `${parts.join("|")}|`;
 
-  const typeCode = parts[0] ?? ''
-  const timestampText = parts[1] ?? ''
-  const parsed = Date.parse(timestampText)
-  const timestampMs = Number.isNaN(parsed) ? null : parsed
-  const deltaSec = timestampMs !== null && combatStartMs !== null
-    ? Number(((timestampMs - combatStartMs) / 1000).toFixed(1))
-    : null
+  const typeCode = parts[0] ?? "";
+  const timestampText = parts[1] ?? "";
+  const parsed = Date.parse(timestampText);
+  const timestampMs = Number.isNaN(parsed) ? null : parsed;
+  const deltaSec =
+    timestampMs !== null && combatStartMs !== null
+      ? Number(((timestampMs - combatStartMs) / 1000).toFixed(1))
+      : null;
   const actorFields = lineActorFieldIndexMap.get(typeCode) ?? {
     sourceId: null,
     source: null,
     targetId: null,
     target: null,
-  }
+  };
 
   return {
     key: `${encounterId}_${globalIndex}`,
@@ -278,587 +282,582 @@ function parseLineRow(raw: string, globalIndex: number, encounterId: string, com
     source: readPart(parts, actorFields.source),
     targetId: readPart(parts, actorFields.targetId),
     target: readPart(parts, actorFields.target),
-  }
+  };
 }
 
 // ─── File Import ────────────────────────────────────────────────────────────
 async function handleFileImport(file: File, saveDb = true) {
-  loading.value = true
-  fileName.value = file.name
+  loading.value = true;
+  fileName.value = file.name;
   try {
-    const text = await file.text()
+    const text = await file.text();
     if (saveDb) {
-      saveLogToDB(file.name, text)
-      filter.value.searchInputText = ''
-      filter.value.appliedSearchText = ''
-      filter.value.showSearchResultsOnly = false
-      filter.value.timeRangeStartText = ''
-      filter.value.timeRangeEndText = ''
-      filter.value.sourceIdFilterText = ''
-      filter.value.sourceFilterText = ''
-      filter.value.targetIdFilterText = ''
-      filter.value.targetFilterText = ''
+      saveLogToDB(file.name, text);
+      filter.value.searchInputText = "";
+      filter.value.appliedSearchText = "";
+      filter.value.showSearchResultsOnly = false;
+      filter.value.timeRangeStartText = "";
+      filter.value.timeRangeEndText = "";
+      filter.value.sourceIdFilterText = "";
+      filter.value.sourceFilterText = "";
+      filter.value.targetIdFilterText = "";
+      filter.value.targetFilterText = "";
     }
-    const freshFile = new File([text], file.name)
+    const freshFile = new File([text], file.name);
     // Step 1 – split encounters
-    const parsed = await parseFile(freshFile)
-    encounters.value = parsed
+    const parsed = await parseFile(freshFile);
+    encounters.value = parsed;
 
     if (parsed.length === 0) {
-      ElMessage.warning('未发现战斗记录')
+      ElMessage.warning("未发现战斗记录");
+    } else {
+      selectedEncounterId.value = parsed[0]!.id;
     }
-    else {
-      selectedEncounterId.value = parsed[0]!.id
-    }
-  }
-  catch (e) {
-    console.error('File parse error', e)
-    ElMessage.error('文件解析出错')
-  }
-  finally {
-    loading.value = false
+  } catch (e) {
+    console.error("File parse error", e);
+    ElMessage.error("文件解析出错");
+  } finally {
+    loading.value = false;
   }
 }
 
 function onFileInput(event: Event) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (file)
-    handleFileImport(file)
-  input.value = ''
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (file) handleFileImport(file);
+  input.value = "";
 }
 
 function isSupportedLogFile(file: File) {
-  const lowerName = file.name.toLowerCase()
-  return lowerName.endsWith('.log') || lowerName.endsWith('.txt')
+  const lowerName = file.name.toLowerCase();
+  return lowerName.endsWith(".log") || lowerName.endsWith(".txt");
 }
 
 function onDragEnter(event: DragEvent) {
-  if (!event.dataTransfer?.types.includes('Files'))
-    return
-  dragCounter++
-  isDragging.value = true
+  if (!event.dataTransfer?.types.includes("Files")) return;
+  dragCounter++;
+  isDragging.value = true;
 }
 
 function onDragOver(event: DragEvent) {
-  if (!event.dataTransfer?.types.includes('Files'))
-    return
-  isDragging.value = true
+  if (!event.dataTransfer?.types.includes("Files")) return;
+  isDragging.value = true;
 }
 
 function onDragLeave(event: DragEvent) {
-  if (!event.dataTransfer?.types.includes('Files'))
-    return
-  dragCounter = Math.max(0, dragCounter - 1)
-  if (dragCounter === 0)
-    isDragging.value = false
+  if (!event.dataTransfer?.types.includes("Files")) return;
+  dragCounter = Math.max(0, dragCounter - 1);
+  if (dragCounter === 0) isDragging.value = false;
 }
 
 function onDrop(event: DragEvent) {
-  isDragging.value = false
-  dragCounter = 0
-  const file = event.dataTransfer?.files?.[0]
-  if (!file)
-    return
+  isDragging.value = false;
+  dragCounter = 0;
+  const file = event.dataTransfer?.files?.[0];
+  if (!file) return;
   if (!isSupportedLogFile(file)) {
-    ElMessage.warning('仅支持导入 .log 或 .txt 文件')
-    return
+    ElMessage.warning("仅支持导入 .log 或 .txt 文件");
+    return;
   }
-  handleFileImport(file)
+  handleFileImport(file);
 }
 
 // ─── Selected encounter ─────────────────────────────────────────────────────
 const selectedEncounter = computed(() => {
-  if (!selectedEncounterId.value)
-    return null
-  return encounters.value.find(e => e.id === selectedEncounterId.value) ?? null
-})
+  if (!selectedEncounterId.value) return null;
+  return encounters.value.find((e) => e.id === selectedEncounterId.value) ?? null;
+});
 
 // ─── Base rows (boundary-aware) ─────────────────────────────────────────────
 const baseRows = computed<ParsedLineRow[]>(() => {
-  const enc = selectedEncounter.value
-  if (!enc)
-    return []
+  const enc = selectedEncounter.value;
+  if (!enc) return [];
 
-  return enc.lines.map((line, idx) =>
-    parseLineRow(line, idx, enc.id, enc.startTime),
-  )
-})
+  return enc.lines.map((line, idx) => parseLineRow(line, idx, enc.id, enc.startTime));
+});
 
 // ─── Dynamic type sidebar ───────────────────────────────────────────────────
 function escapeRegExp(text: string) {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function compareTypeCodes(a: string, b: string) {
-  const aNum = Number(a)
-  const bNum = Number(b)
-  const aIsNumeric = !Number.isNaN(aNum)
-  const bIsNumeric = !Number.isNaN(bNum)
-  if (aIsNumeric && bIsNumeric)
-    return aNum - bNum
-  if (aIsNumeric)
-    return -1
-  if (bIsNumeric)
-    return 1
-  return a.localeCompare(b)
+  const aNum = Number(a);
+  const bNum = Number(b);
+  const aIsNumeric = !Number.isNaN(aNum);
+  const bIsNumeric = !Number.isNaN(bNum);
+  if (aIsNumeric && bIsNumeric) return aNum - bNum;
+  if (aIsNumeric) return -1;
+  if (bIsNumeric) return 1;
+  return a.localeCompare(b);
 }
 
 function ensureRegexStartsWithAnchor(text: string) {
-  const trimmed = text.trim()
-  if (!trimmed || trimmed.startsWith('^'))
-    return trimmed
-  return `^${trimmed}`
+  const trimmed = text.trim();
+  if (!trimmed || trimmed.startsWith("^")) return trimmed;
+  return `^${trimmed}`;
 }
 
 function rowMatchesSearch(row: ParsedLineRow, regex: RegExp | null) {
-  return regex ? regex.test(row.raw) : true
+  return regex ? regex.test(row.raw) : true;
 }
 
 function getTimeOfDayMs(timestampMs: number) {
-  const date = new Date(timestampMs)
-  return (((date.getHours() * 60) + date.getMinutes()) * 60 + date.getSeconds()) * 1000 + date.getMilliseconds()
+  const date = new Date(timestampMs);
+  return (
+    ((date.getHours() * 60 + date.getMinutes()) * 60 + date.getSeconds()) * 1000 +
+    date.getMilliseconds()
+  );
 }
 
 function readPart(parts: string[], index: number | null) {
-  if (index === null)
-    return ''
-  return parts[index] ?? ''
+  if (index === null) return "";
+  return parts[index] ?? "";
 }
 
 function parseTimeOfDayInput(text: string) {
-  const trimmed = text.trim()
-  if (!trimmed)
-    return { value: null as number | null, error: '' }
+  const trimmed = text.trim();
+  if (!trimmed) return { value: null as number | null, error: "" };
 
-  const match = trimmed.match(/^(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?$/)
+  const match = trimmed.match(/^(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?$/);
   if (!match) {
-    return { value: null as number | null, error: '时间范围格式应为 hh:mm:ss.xxx' }
+    return { value: null as number | null, error: "时间范围格式应为 hh:mm:ss.xxx" };
   }
 
-  const hours = Number(match[1])
-  const minutes = Number(match[2])
-  const seconds = Number(match[3])
-  const millisText = (match[4] ?? '').padEnd(3, '0')
-  const millis = millisText ? Number(millisText) : 0
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  const seconds = Number(match[3]);
+  const millisText = (match[4] ?? "").padEnd(3, "0");
+  const millis = millisText ? Number(millisText) : 0;
 
   if (hours > 23 || minutes > 59 || seconds > 59 || millis > 999) {
-    return { value: null as number | null, error: '时间范围超出有效时间' }
+    return { value: null as number | null, error: "时间范围超出有效时间" };
   }
 
   return {
-    value: (((hours * 60) + minutes) * 60 + seconds) * 1000 + millis,
-    error: '',
-  }
+    value: ((hours * 60 + minutes) * 60 + seconds) * 1000 + millis,
+    error: "",
+  };
 }
 
 function formatTimeOfDay(timestampMs: number) {
-  const date = new Date(timestampMs)
-  const hours = date.getHours().toString().padStart(2, '0')
-  const minutes = date.getMinutes().toString().padStart(2, '0')
-  const seconds = date.getSeconds().toString().padStart(2, '0')
-  const millis = date.getMilliseconds().toString().padStart(3, '0')
-  return `${hours}:${minutes}:${seconds}.${millis}`
+  const date = new Date(timestampMs);
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  const seconds = date.getSeconds().toString().padStart(2, "0");
+  const millis = date.getMilliseconds().toString().padStart(3, "0");
+  return `${hours}:${minutes}:${seconds}.${millis}`;
 }
 
-const appliedSearchText = computed(() => filter.value.appliedSearchText.trim())
+const appliedSearchText = computed(() => filter.value.appliedSearchText.trim());
 
 // Helper: create a regex computed + error ref from a reactive text source
 function useRegex(textGetter: () => string) {
-  const error = ref('')
+  const error = ref("");
   const regex = computed<RegExp | null>(() => {
-    const text = textGetter().trim()
-    if (!text)
-      return null
+    const text = textGetter().trim();
+    if (!text) return null;
     try {
-      return new RegExp(text, 'i')
+      return new RegExp(text, "i");
+    } catch {
+      return null;
     }
-    catch {
-      return null
-    }
-  })
+  });
   watch(textGetter, (raw) => {
-    const text = raw.trim()
+    const text = raw.trim();
     if (!text) {
-      error.value = ''
-      return
+      error.value = "";
+      return;
     }
     try {
       // eslint-disable-next-line no-new
-      new RegExp(text, 'i')
-      error.value = ''
+      new RegExp(text, "i");
+      error.value = "";
+    } catch (e: any) {
+      error.value = e.message ?? "Invalid regex";
     }
-    catch (e: any) {
-      error.value = e.message ?? 'Invalid regex'
-    }
-  })
-  return { regex, error }
+  });
+  return { regex, error };
 }
 
 const { regex: regexSearchRegex, error: regexSearchError } = useRegex(() =>
-  filter.value.searchMode === 'regex' ? filter.value.appliedSearchText : '',
-)
+  filter.value.searchMode === "regex" ? filter.value.appliedSearchText : "",
+);
 
 const activeSearchRegex = computed<RegExp | null>(() => {
-  if (!appliedSearchText.value)
-    return null
-  if (filter.value.searchMode === 'regex')
-    return regexSearchRegex.value
-  return new RegExp(escapeRegExp(appliedSearchText.value), 'i')
-})
+  if (!appliedSearchText.value) return null;
+  if (filter.value.searchMode === "regex") return regexSearchRegex.value;
+  return new RegExp(escapeRegExp(appliedSearchText.value), "i");
+});
 
-const searchError = computed(() => filter.value.searchMode === 'regex' ? regexSearchError.value : '')
+const searchError = computed(() =>
+  filter.value.searchMode === "regex" ? regexSearchError.value : "",
+);
 
 const searchScopedRows = computed<ParsedLineRow[]>(() => {
-  const regex = activeSearchRegex.value
-  if (!regex)
-    return baseRows.value
-  return baseRows.value.filter(row => rowMatchesSearch(row, regex))
-})
+  const regex = activeSearchRegex.value;
+  if (!regex) return baseRows.value;
+  return baseRows.value.filter((row) => rowMatchesSearch(row, regex));
+});
 
 const parsedTimeRange = computed(() => {
-  const start = parseTimeOfDayInput(filter.value.timeRangeStartText)
-  const end = parseTimeOfDayInput(filter.value.timeRangeEndText)
+  const start = parseTimeOfDayInput(filter.value.timeRangeStartText);
+  const end = parseTimeOfDayInput(filter.value.timeRangeEndText);
   if (start.error)
-    return { start: null as number | null, end: null as number | null, error: start.error }
+    return { start: null as number | null, end: null as number | null, error: start.error };
   if (end.error)
-    return { start: null as number | null, end: null as number | null, error: end.error }
+    return { start: null as number | null, end: null as number | null, error: end.error };
   if (start.value !== null && end.value !== null && start.value > end.value) {
-    return { start: start.value, end: end.value, error: '开始时间不能大于结束时间' }
+    return { start: start.value, end: end.value, error: "开始时间不能大于结束时间" };
   }
-  return { start: start.value, end: end.value, error: '' }
-})
+  return { start: start.value, end: end.value, error: "" };
+});
 
-const timeRangeError = computed(() => parsedTimeRange.value.error)
+const timeRangeError = computed(() => parsedTimeRange.value.error);
 
 function rowMatchesTimeRange(row: ParsedLineRow) {
-  const { start, end, error } = parsedTimeRange.value
-  if (error)
-    return true
-  if (start === null && end === null)
-    return true
-  if (row.timestampMs === null)
-    return false
-  const rowTimeOfDayMs = getTimeOfDayMs(row.timestampMs)
-  if (start !== null && rowTimeOfDayMs < start)
-    return false
-  if (end !== null && rowTimeOfDayMs > end)
-    return false
-  return true
+  const { start, end, error } = parsedTimeRange.value;
+  if (error) return true;
+  if (start === null && end === null) return true;
+  if (row.timestampMs === null) return false;
+  const rowTimeOfDayMs = getTimeOfDayMs(row.timestampMs);
+  if (start !== null && rowTimeOfDayMs < start) return false;
+  if (end !== null && rowTimeOfDayMs > end) return false;
+  return true;
 }
 
-const { regex: sourceIdFilterRegex, error: sourceIdFilterError } = useRegex(() => ensureRegexStartsWithAnchor(filter.value.sourceIdFilterText))
-const { regex: sourceFilterRegex, error: sourceFilterError } = useRegex(() => filter.value.sourceFilterText)
-const { regex: targetIdFilterRegex, error: targetIdFilterError } = useRegex(() => ensureRegexStartsWithAnchor(filter.value.targetIdFilterText))
-const { regex: targetFilterRegex, error: targetFilterError } = useRegex(() => filter.value.targetFilterText)
+const { regex: sourceIdFilterRegex, error: sourceIdFilterError } = useRegex(() =>
+  ensureRegexStartsWithAnchor(filter.value.sourceIdFilterText),
+);
+const { regex: sourceFilterRegex, error: sourceFilterError } = useRegex(
+  () => filter.value.sourceFilterText,
+);
+const { regex: targetIdFilterRegex, error: targetIdFilterError } = useRegex(() =>
+  ensureRegexStartsWithAnchor(filter.value.targetIdFilterText),
+);
+const { regex: targetFilterRegex, error: targetFilterError } = useRegex(
+  () => filter.value.targetFilterText,
+);
 
-const actorFilterError = computed(() =>
-  sourceIdFilterError.value
-  || sourceFilterError.value
-  || targetIdFilterError.value
-  || targetFilterError.value
-  || '',
-)
+const actorFilterError = computed(
+  () =>
+    sourceIdFilterError.value ||
+    sourceFilterError.value ||
+    targetIdFilterError.value ||
+    targetFilterError.value ||
+    "",
+);
 
 function rowMatchesActorFilters(row: ParsedLineRow) {
-  if (sourceIdFilterRegex.value && !sourceIdFilterError.value && !sourceIdFilterRegex.value.test(row.sourceId))
-    return false
+  if (
+    sourceIdFilterRegex.value &&
+    !sourceIdFilterError.value &&
+    !sourceIdFilterRegex.value.test(row.sourceId)
+  )
+    return false;
 
-  if (sourceFilterRegex.value && !sourceFilterError.value && !sourceFilterRegex.value.test(row.source))
-    return false
+  if (
+    sourceFilterRegex.value &&
+    !sourceFilterError.value &&
+    !sourceFilterRegex.value.test(row.source)
+  )
+    return false;
 
-  if (targetIdFilterRegex.value && !targetIdFilterError.value && !targetIdFilterRegex.value.test(row.targetId))
-    return false
+  if (
+    targetIdFilterRegex.value &&
+    !targetIdFilterError.value &&
+    !targetIdFilterRegex.value.test(row.targetId)
+  )
+    return false;
 
-  if (targetFilterRegex.value && !targetFilterError.value && !targetFilterRegex.value.test(row.target))
-    return false
+  if (
+    targetFilterRegex.value &&
+    !targetFilterError.value &&
+    !targetFilterRegex.value.test(row.target)
+  )
+    return false;
 
-  return true
+  return true;
 }
 
-const timeFilteredRows = computed<ParsedLineRow[]>(() => searchScopedRows.value.filter(rowMatchesTimeRange))
+const timeFilteredRows = computed<ParsedLineRow[]>(() =>
+  searchScopedRows.value.filter(rowMatchesTimeRange),
+);
 
-const actorFilteredRows = computed<ParsedLineRow[]>(() => timeFilteredRows.value.filter(rowMatchesActorFilters))
+const actorFilteredRows = computed<ParsedLineRow[]>(() =>
+  timeFilteredRows.value.filter(rowMatchesActorFilters),
+);
 
 const typeFilterSourceRows = computed<ParsedLineRow[]>(() =>
   filter.value.showSearchResultsOnly
     ? actorFilteredRows.value
-    : baseRows.value.filter(row => rowMatchesTimeRange(row) && rowMatchesActorFilters(row)),
-)
+    : baseRows.value.filter((row) => rowMatchesTimeRange(row) && rowMatchesActorFilters(row)),
+);
 
 const availableTypeCodes = computed(() => {
-  const map = new Map<string, { code: string, name: string, count: number }>()
+  const map = new Map<string, { code: string; name: string; count: number }>();
   for (const row of typeFilterSourceRows.value) {
-    const existing = map.get(row.typeCode)
+    const existing = map.get(row.typeCode);
     if (existing) {
-      existing.count++
-    }
-    else {
-      map.set(row.typeCode, { code: row.typeCode, name: row.typeName, count: 1 })
+      existing.count++;
+    } else {
+      map.set(row.typeCode, { code: row.typeCode, name: row.typeName, count: 1 });
     }
   }
-  return Array.from(map.values()).sort((a, b) => compareTypeCodes(a.code, b.code))
-})
+  return Array.from(map.values()).sort((a, b) => compareTypeCodes(a.code, b.code));
+});
 
 function isTypeCodeEnabled(typeCode: string) {
-  return enabledTypeCodePrefs.value[typeCode] ?? true
+  return enabledTypeCodePrefs.value[typeCode] ?? true;
 }
 
 function setTypeCodeEnabled(typeCode: string, enabled: boolean) {
   enabledTypeCodePrefs.value = {
     ...enabledTypeCodePrefs.value,
     [typeCode]: enabled,
-  }
+  };
 }
 
 function onTypeCheckboxChange(event: Event, typeCode: string) {
-  const checked = (event.target as HTMLInputElement).checked
-  setTypeCodeEnabled(typeCode, checked)
+  const checked = (event.target as HTMLInputElement).checked;
+  setTypeCodeEnabled(typeCode, checked);
 }
 
 // ─── Filter chain ───────────────────────────────────────────────────────────
 const filteredRows = computed<ParsedLineRow[]>(() => {
   const sourceRows = filter.value.showSearchResultsOnly
     ? actorFilteredRows.value
-    : baseRows.value.filter(row => rowMatchesTimeRange(row) && rowMatchesActorFilters(row))
+    : baseRows.value.filter((row) => rowMatchesTimeRange(row) && rowMatchesActorFilters(row));
 
-  return sourceRows.filter(r => isTypeCodeEnabled(r.typeCode))
-})
+  return sourceRows.filter((r) => isTypeCodeEnabled(r.typeCode));
+});
 
 // ─── Search Navigation ──────────────────────────────────────────────────────
 const matchIndices = computed(() => {
-  const re = activeSearchRegex.value
-  if (!re)
-    return []
+  const re = activeSearchRegex.value;
+  if (!re) return [];
 
-  const indices: number[] = []
-  const rows = filteredRows.value
+  const indices: number[] = [];
+  const rows = filteredRows.value;
   for (let i = 0; i < rows.length; i++) {
-    const r = rows[i]!
+    const r = rows[i]!;
     if (re.test(r.raw)) {
-      indices.push(i)
+      indices.push(i);
     }
   }
-  return indices
-})
+  return indices;
+});
 
-watch(() => filter.value.searchInputText, (value) => {
-  if (!value.trim() && filter.value.appliedSearchText) {
-    filter.value.appliedSearchText = ''
-    filter.value.showSearchResultsOnly = false
-  }
-})
+watch(
+  () => filter.value.searchInputText,
+  (value) => {
+    if (!value.trim() && filter.value.appliedSearchText) {
+      filter.value.appliedSearchText = "";
+      filter.value.showSearchResultsOnly = false;
+    }
+  },
+);
 
-const tableRef = ref<any>(null)
-const currentMatchIdx = ref(-1)
+const tableRef = ref<any>(null);
+const currentMatchIdx = ref(-1);
 
 watch(matchIndices, (indices) => {
   if (indices.length > 0) {
-    currentMatchIdx.value = 0
-    scrollToIndex(indices[0] as number)
+    currentMatchIdx.value = 0;
+    scrollToIndex(indices[0] as number);
+  } else {
+    currentMatchIdx.value = -1;
   }
-  else {
-    currentMatchIdx.value = -1
-  }
-})
+});
 
 function scrollToIndex(index: number) {
   if (tableRef.value) {
-    tableRef.value.scrollToRow(index, 'center')
+    tableRef.value.scrollToRow(index, "center");
   }
 }
 
 function scrollToNextMatch() {
-  if (matchIndices.value.length === 0)
-    return
-  currentMatchIdx.value = (currentMatchIdx.value + 1) % matchIndices.value.length
-  scrollToIndex(matchIndices.value[currentMatchIdx.value] as number)
+  if (matchIndices.value.length === 0) return;
+  currentMatchIdx.value = (currentMatchIdx.value + 1) % matchIndices.value.length;
+  scrollToIndex(matchIndices.value[currentMatchIdx.value] as number);
 }
 
 function scrollToPrevMatch() {
-  if (matchIndices.value.length === 0)
-    return
-  currentMatchIdx.value = (currentMatchIdx.value - 1 + matchIndices.value.length) % matchIndices.value.length
-  scrollToIndex(matchIndices.value[currentMatchIdx.value] as number)
+  if (matchIndices.value.length === 0) return;
+  currentMatchIdx.value =
+    (currentMatchIdx.value - 1 + matchIndices.value.length) % matchIndices.value.length;
+  scrollToIndex(matchIndices.value[currentMatchIdx.value] as number);
 }
 
-function applySearch(mode: 'text' | 'regex') {
-  filter.value.searchMode = mode
-  filter.value.appliedSearchText = filter.value.searchInputText.trim()
-  filter.value.showSearchResultsOnly = !!filter.value.appliedSearchText
+function applySearch(mode: "text" | "regex") {
+  filter.value.searchMode = mode;
+  filter.value.appliedSearchText = filter.value.searchInputText.trim();
+  filter.value.showSearchResultsOnly = !!filter.value.appliedSearchText;
 }
 
 function runSearch() {
-  applySearch(filter.value.searchMode)
+  applySearch(filter.value.searchMode);
 }
 
 const currentMatchLabel = computed(() => {
-  if (matchIndices.value.length === 0)
-    return '0 / 0'
-  return `${currentMatchIdx.value + 1} / ${matchIndices.value.length}`
-})
+  if (matchIndices.value.length === 0) return "0 / 0";
+  return `${currentMatchIdx.value + 1} / ${matchIndices.value.length}`;
+});
 
 const currentMatchRowKey = computed(() => {
-  if (currentMatchIdx.value < 0)
-    return null
-  const rowIndex = matchIndices.value[currentMatchIdx.value]
-  if (rowIndex === undefined)
-    return null
-  return filteredRows.value[rowIndex]?.key ?? null
-})
+  if (currentMatchIdx.value < 0) return null;
+  const rowIndex = matchIndices.value[currentMatchIdx.value];
+  if (rowIndex === undefined) return null;
+  return filteredRows.value[rowIndex]?.key ?? null;
+});
 
 const detailFieldRows = computed<LogFieldDetailRow[]>(() => {
-  const row = detailDialogRow.value
-  if (!row)
-    return []
-  const fieldNameMap = lineFieldNameIndexMap.get(row.typeCode) ?? new Map<number, string>()
+  const row = detailDialogRow.value;
+  if (!row) return [];
+  const fieldNameMap = lineFieldNameIndexMap.get(row.typeCode) ?? new Map<number, string>();
   return row.parts.map((value, index) => ({
     index,
     fieldName: fieldNameMap.get(index) ?? `field_${index}`,
     value,
-  }))
-})
+  }));
+});
 
 function rowClass({ rowIndex }: { rowIndex: number }) {
   if (matchIndices.value.length > 0) {
     if (rowIndex === matchIndices.value[currentMatchIdx.value]) {
-      return 'active-match-row'
+      return "active-match-row";
     }
   }
-  return ''
+  return "";
 }
 
 // ─── Diff highlight ─────────────────────────────────────────────────────────
 interface DiffInfo {
-  changedFieldCount: number
-  changedIndices: Set<number>
+  changedFieldCount: number;
+  changedIndices: Set<number>;
 }
 
 const diffMap = computed<Map<string, DiffInfo>>(() => {
-  const map = new Map<string, DiffInfo>()
-  if (!filter.value.diffHighlightEnabled)
-    return map
+  const map = new Map<string, DiffInfo>();
+  if (!filter.value.diffHighlightEnabled) return map;
 
-  const rows = filteredRows.value
+  const rows = filteredRows.value;
   // Track last seen row for each typeCode
-  const lastByType = new Map<string, ParsedLineRow>()
+  const lastByType = new Map<string, ParsedLineRow>();
 
   for (const row of rows) {
-    const prev = lastByType.get(row.typeCode)
+    const prev = lastByType.get(row.typeCode);
     if (prev) {
-      const changedIndices = new Set<number>()
-      const maxLen = Math.max(row.parts.length, prev.parts.length)
+      const changedIndices = new Set<number>();
+      const maxLen = Math.max(row.parts.length, prev.parts.length);
       for (let i = 0; i < maxLen; i++) {
-        if (i === 1)
-          continue // skip timestamp field
-        if ((row.parts[i] ?? '') !== (prev.parts[i] ?? ''))
-          changedIndices.add(i)
+        if (i === 1) continue; // skip timestamp field
+        if ((row.parts[i] ?? "") !== (prev.parts[i] ?? "")) changedIndices.add(i);
       }
-      map.set(row.key, { changedFieldCount: changedIndices.size, changedIndices })
+      map.set(row.key, { changedFieldCount: changedIndices.size, changedIndices });
     }
-    lastByType.set(row.typeCode, row)
+    lastByType.set(row.typeCode, row);
   }
-  return map
-})
+  return map;
+});
 
 // ─── Type sidebar actions ───────────────────────────────────────────────────
 function setAllTypes(enabled: boolean) {
-  const next = { ...enabledTypeCodePrefs.value }
-  for (const item of availableTypeCodes.value)
-    next[item.code] = enabled
-  enabledTypeCodePrefs.value = next
+  const next = { ...enabledTypeCodePrefs.value };
+  for (const item of availableTypeCodes.value) next[item.code] = enabled;
+  enabledTypeCodePrefs.value = next;
 }
 
 function hideTypeCode(typeCode: string) {
-  if (!typeCode)
-    return
-  if (!isTypeCodeEnabled(typeCode))
-    return
-  setTypeCodeEnabled(typeCode, false)
-  ElMessage.success(`已隐藏类型 ${typeCode} ${resolveTypeName(typeCode)}`)
+  if (!typeCode) return;
+  if (!isTypeCodeEnabled(typeCode)) return;
+  setTypeCodeEnabled(typeCode, false);
+  ElMessage.success(`已隐藏类型 ${typeCode} ${resolveTypeName(typeCode)}`);
 }
 
 function closeContextMenu() {
-  contextMenuVisible.value = false
-  contextMenuTimestampMs.value = null
-  contextMenuRowKey.value = ''
+  contextMenuVisible.value = false;
+  contextMenuTimestampMs.value = null;
+  contextMenuRowKey.value = "";
 }
 
 function openTypeContextMenu(event: MouseEvent, rowData: ParsedLineRow) {
-  event.preventDefault()
-  contextMenuRowKey.value = rowData.key
-  contextMenuTypeCode.value = rowData.typeCode
-  contextMenuTypeName.value = rowData.typeName
-  contextMenuTimestampMs.value = rowData.timestampMs
+  event.preventDefault();
+  contextMenuRowKey.value = rowData.key;
+  contextMenuTypeCode.value = rowData.typeCode;
+  contextMenuTypeName.value = rowData.typeName;
+  contextMenuTimestampMs.value = rowData.timestampMs;
   contextMenuPosition.value = {
     x: event.clientX,
     y: event.clientY,
-  }
-  contextMenuVisible.value = true
+  };
+  contextMenuVisible.value = true;
 }
 
 function hideCurrentContextMenuType() {
-  hideTypeCode(contextMenuTypeCode.value)
-  closeContextMenu()
+  hideTypeCode(contextMenuTypeCode.value);
+  closeContextMenu();
 }
 
 function openRowDetailDialog() {
-  const row = filteredRows.value.find(item => item.key === contextMenuRowKey.value)
-  if (!row)
-    return
-  detailDialogRow.value = row
-  detailDialogVisible.value = true
-  closeContextMenu()
+  const row = filteredRows.value.find((item) => item.key === contextMenuRowKey.value);
+  if (!row) return;
+  detailDialogRow.value = row;
+  detailDialogVisible.value = true;
+  closeContextMenu();
 }
 
 function focusAroundCurrentContextTime(seconds = 3) {
   if (contextMenuTimestampMs.value === null) {
-    ElMessage.warning('当前日志行没有可用的时间戳')
-    return
+    ElMessage.warning("当前日志行没有可用的时间戳");
+    return;
   }
-  const start = contextMenuTimestampMs.value - seconds * 1000
-  const end = contextMenuTimestampMs.value + seconds * 1000
-  filter.value.timeRangeStartText = formatTimeOfDay(start)
-  filter.value.timeRangeEndText = formatTimeOfDay(end)
-  closeContextMenu()
+  const start = contextMenuTimestampMs.value - seconds * 1000;
+  const end = contextMenuTimestampMs.value + seconds * 1000;
+  filter.value.timeRangeStartText = formatTimeOfDay(start);
+  filter.value.timeRangeEndText = formatTimeOfDay(end);
+  closeContextMenu();
 }
 
 // ─── Horizontal scroll sync ─────────────────────────────────────────────────
-const hScrollRef = ref<HTMLDivElement | null>(null)
-const hScrollLeft = ref(0)
-const contentWidth = ref(0)
+const hScrollRef = ref<HTMLDivElement | null>(null);
+const hScrollLeft = ref(0);
+const contentWidth = ref(0);
 
-let _measureCtx: CanvasRenderingContext2D | null = null
+let _measureCtx: CanvasRenderingContext2D | null = null;
 function measureTextWidth(text: string): number {
   if (!_measureCtx) {
-    const canvas = document.createElement('canvas')
-    _measureCtx = canvas.getContext('2d')
+    const canvas = document.createElement("canvas");
+    _measureCtx = canvas.getContext("2d");
     if (_measureCtx) {
-      _measureCtx.font = '11.5px \'JetBrains Mono\', \'Fira Code\', \'Consolas\', \'Menlo\', monospace'
+      _measureCtx.font = "11.5px 'JetBrains Mono', 'Fira Code', 'Consolas', 'Menlo', monospace";
     }
   }
-  return _measureCtx ? _measureCtx.measureText(text).width : text.length * 7.5
+  return _measureCtx ? _measureCtx.measureText(text).width : text.length * 7.5;
 }
 
-watch(filteredRows, (rows) => {
-  let maxPx = 0
-  for (let i = 0; i < rows.length; i++) {
-    const w = measureTextWidth(rows[i]?.raw || '')
-    if (w > maxPx)
-      maxPx = w
-  }
-  contentWidth.value = Math.ceil(maxPx + 60 + TYPE_COLUMN_WIDTH)
+watch(
+  filteredRows,
+  (rows) => {
+    let maxPx = 0;
+    for (let i = 0; i < rows.length; i++) {
+      const w = measureTextWidth(rows[i]?.raw || "");
+      if (w > maxPx) maxPx = w;
+    }
+    contentWidth.value = Math.ceil(maxPx + 60 + TYPE_COLUMN_WIDTH);
 
-  // Reset horizontal scroll when data changes
-  hScrollLeft.value = 0
-  if (hScrollRef.value) {
-    hScrollRef.value.scrollLeft = 0
-  }
-}, { immediate: true })
+    // Reset horizontal scroll when data changes
+    hScrollLeft.value = 0;
+    if (hScrollRef.value) {
+      hScrollRef.value.scrollLeft = 0;
+    }
+  },
+  { immediate: true },
+);
 
 function onHScroll() {
   if (hScrollRef.value) {
-    hScrollLeft.value = hScrollRef.value.scrollLeft
+    hScrollLeft.value = hScrollRef.value.scrollLeft;
   }
 }
 
@@ -866,92 +865,99 @@ function onHScroll() {
 const tableColumns = computed<Column<any>[]>(() => {
   const allCols: Column<any>[] = [
     {
-      key: 'type',
-      title: 'Type',
-      dataKey: 'typeCode',
+      key: "type",
+      title: "Type",
+      dataKey: "typeCode",
       width: TYPE_COLUMN_WIDTH,
       cellRenderer: ({ rowData }: { rowData: ParsedLineRow }) =>
         h(
-          'div',
+          "div",
           {
-            class: 'cell-type-wrap',
+            class: "cell-type-wrap",
             onContextmenu: (event: MouseEvent) => openTypeContextMenu(event, rowData),
           },
           [
-            h('span', { class: 'cell-type-code' }, rowData.typeCode || '--'),
-            h('span', { class: 'cell-type-name' }, rowData.typeName),
+            h("span", { class: "cell-type-code" }, rowData.typeCode || "--"),
+            h("span", { class: "cell-type-name" }, rowData.typeName),
           ],
         ),
     },
     {
-      key: 'raw',
-      title: 'Raw',
-      dataKey: 'raw',
+      key: "raw",
+      title: "Raw",
+      dataKey: "raw",
       width: 200,
       flexGrow: 1,
       cellRenderer: ({ rowData }: { rowData: ParsedLineRow }) => {
-        const diff = diffMap.value.get(rowData.key)
-        const enableDiff = diff && diff.changedFieldCount > 0 && filter.value.diffHighlightEnabled
-        const sRe = activeSearchRegex.value
-        const isCurrentMatchRow = rowData.key === currentMatchRowKey.value
+        const diff = diffMap.value.get(rowData.key);
+        const enableDiff = diff && diff.changedFieldCount > 0 && filter.value.diffHighlightEnabled;
+        const sRe = activeSearchRegex.value;
+        const isCurrentMatchRow = rowData.key === currentMatchRowKey.value;
 
-        const displayParts = rowData.parts
+        const displayParts = rowData.parts;
 
-        const children = displayParts.map((part, idx) => {
-          const isChanged = enableDiff && diff.changedIndices.has(idx)
+        const children = displayParts
+          .map((part, idx) => {
+            const isChanged = enableDiff && diff.changedIndices.has(idx);
 
-          let content: any = part
-          // Apply search highlight if configured and not empty part
-          if (sRe && !searchError.value && part && sRe.test(part)) {
-            // we split the text and highlight all matches
-            let lastIndex = 0
-            const fragments = []
+            let content: any = part;
+            // Apply search highlight if configured and not empty part
+            if (sRe && !searchError.value && part && sRe.test(part)) {
+              // we split the text and highlight all matches
+              let lastIndex = 0;
+              const fragments = [];
 
-            // Re-instantiate regex with global flag to find *all* matches in this part
-            // (Assumes you don't use g flag in main incRe computed)
-            const globalRegex = new RegExp(sRe.source, sRe.ignoreCase ? 'gi' : 'g')
-            let match
-            while (true) {
-              match = globalRegex.exec(part)
-              if (!match)
-                break
-              if (match.index > lastIndex) {
-                fragments.push(part.substring(lastIndex, match.index))
+              // Re-instantiate regex with global flag to find *all* matches in this part
+              // (Assumes you don't use g flag in main incRe computed)
+              const globalRegex = new RegExp(sRe.source, sRe.ignoreCase ? "gi" : "g");
+              let match;
+              while (true) {
+                match = globalRegex.exec(part);
+                if (!match) break;
+                if (match.index > lastIndex) {
+                  fragments.push(part.substring(lastIndex, match.index));
+                }
+                fragments.push(
+                  h(
+                    "span",
+                    { class: isCurrentMatchRow ? "search-highlight-current" : "search-highlight" },
+                    match[0],
+                  ),
+                );
+                lastIndex = match.index + match[0].length;
               }
-              fragments.push(h('span', { class: isCurrentMatchRow ? 'search-highlight-current' : 'search-highlight' }, match[0]))
-              lastIndex = match.index + match[0].length
+              if (lastIndex < part.length) {
+                fragments.push(part.substring(lastIndex));
+              }
+              content = fragments;
             }
-            if (lastIndex < part.length) {
-              fragments.push(part.substring(lastIndex))
-            }
-            content = fragments
-          }
 
-          return [
-            h('span', { class: isChanged ? 'diff-changed' : 'diff-unchanged' }, content),
-            h('span', { class: 'diff-separator' }, '|'),
-          ]
-        }).flat()
+            return [
+              h("span", { class: isChanged ? "diff-changed" : "diff-unchanged" }, content),
+              h("span", { class: "diff-separator" }, "|"),
+            ];
+          })
+          .flat();
 
         return h(
-          'span',
+          "span",
           {
-            class: 'cell-raw',
+            class: "cell-raw",
             onContextmenu: (event: MouseEvent) => openTypeContextMenu(event, rowData),
           },
           children,
-        )
+        );
       },
     },
-  ]
+  ];
 
-  return allCols
-})
+  return allCols;
+});
 
 // ─── Encounter option label ─────────────────────────────────────────────────
 function encounterLabel(enc: EncounterCandidate) {
-  const start = new Date(enc.startTime).toLocaleTimeString()
-  return `${enc.zoneName} | ${start} | ${enc.durationStr} | ${enc.lines.length} 行`
+  const start = new Date(enc.startTime).toLocaleTimeString();
+  return `${enc.zoneName} | ${start} | ${enc.durationStr} | ${enc.lines.length} 行`;
 }
 </script>
 
@@ -967,12 +973,8 @@ function encounterLabel(enc: EncounterCandidate) {
   >
     <div v-if="isDragging" class="drag-overlay">
       <div class="drag-overlay-card">
-        <div class="drag-overlay-title">
-          释放鼠标以上传日志
-        </div>
-        <div class="drag-overlay-subtitle">
-          支持 .log / .txt
-        </div>
+        <div class="drag-overlay-title">释放鼠标以上传日志</div>
+        <div class="drag-overlay-subtitle">支持 .log / .txt</div>
       </div>
     </div>
 
@@ -986,12 +988,9 @@ function encounterLabel(enc: EncounterCandidate) {
         <!-- 拖放区域 (移入侧边栏上方) -->
         <section class="sidebar-section">
           <div class="sidebar-toolbar">
-            <div
-              class="drop-zone"
-              :class="{ dragging: isDragging }"
-            >
+            <div class="drop-zone" :class="{ dragging: isDragging }">
               <label class="file-label">
-                <input type="file" accept=".log,.txt" hidden @change="onFileInput">
+                <input type="file" accept=".log,.txt" hidden @change="onFileInput" />
                 <span class="file-btn">📂 选择/拖入</span>
               </label>
             </div>
@@ -1033,17 +1032,13 @@ function encounterLabel(enc: EncounterCandidate) {
             </span>
           </h3>
           <div class="type-list">
-            <div
-              v-for="item in availableTypeCodes"
-              :key="item.code"
-              class="type-item"
-            >
+            <div v-for="item in availableTypeCodes" :key="item.code" class="type-item">
               <input
                 type="checkbox"
                 :checked="isTypeCodeEnabled(item.code)"
                 class="type-checkbox"
                 @change="onTypeCheckboxChange($event, item.code)"
-              >
+              />
               <span class="type-code">{{ item.code }}</span>
               <span class="type-name">{{ item.name }}</span>
               <span class="type-count">({{ item.count }})</span>
@@ -1053,9 +1048,7 @@ function encounterLabel(enc: EncounterCandidate) {
 
         <!-- Diff toggle -->
         <section class="sidebar-section diff-section">
-          <el-checkbox v-model="filter.diffHighlightEnabled" size="small">
-            差异高亮
-          </el-checkbox>
+          <el-checkbox v-model="filter.diffHighlightEnabled" size="small"> 差异高亮 </el-checkbox>
         </section>
       </aside>
 
@@ -1073,20 +1066,24 @@ function encounterLabel(enc: EncounterCandidate) {
             />
 
             <div class="search-actions">
-              <button class="nav-btn" @click="applySearch('text')">
-                以文本方式查询
-              </button>
-              <button class="nav-btn" @click="applySearch('regex')">
-                以正则表达式方式查询
-              </button>
+              <button class="nav-btn" @click="applySearch('text')">以文本方式查询</button>
+              <button class="nav-btn" @click="applySearch('regex')">以正则表达式方式查询</button>
               <label class="result-toggle result-toggle-inline">
-                <input v-model="filter.showSearchResultsOnly" type="checkbox">
+                <input v-model="filter.showSearchResultsOnly" type="checkbox" />
                 <span>只显示搜索结果</span>
               </label>
-              <button class="nav-btn" :disabled="matchIndices.length === 0" @click="scrollToPrevMatch">
+              <button
+                class="nav-btn"
+                :disabled="matchIndices.length === 0"
+                @click="scrollToPrevMatch"
+              >
                 上一个
               </button>
-              <button class="nav-btn" :disabled="matchIndices.length === 0" @click="scrollToNextMatch">
+              <button
+                class="nav-btn"
+                :disabled="matchIndices.length === 0"
+                @click="scrollToNextMatch"
+              >
                 下一个
               </button>
             </div>
@@ -1181,12 +1178,13 @@ function encounterLabel(enc: EncounterCandidate) {
                   :row-class-name="rowClass"
                   :expand-column-key="currentMatchIdx.toString()"
                   scrollbar-always-on
-                  :style="{ '--h-scroll-offset': `-${hScrollLeft}px`, '--h-content-width': `${contentWidth}px` }"
+                  :style="{
+                    '--h-scroll-offset': `-${hScrollLeft}px`,
+                    '--h-content-width': `${contentWidth}px`,
+                  }"
                 >
                   <template #empty>
-                    <div class="table-empty">
-                      暂无匹配的日志行
-                    </div>
+                    <div class="table-empty">暂无匹配的日志行</div>
                   </template>
                 </el-table-v2>
                 <div
@@ -1211,12 +1209,8 @@ function encounterLabel(enc: EncounterCandidate) {
       @click.stop
       @contextmenu.prevent
     >
-      <div class="context-menu-header">
-        {{ contextMenuTypeCode }} {{ contextMenuTypeName }}
-      </div>
-      <button class="context-menu-item" @click="openRowDetailDialog">
-        详细信息
-      </button>
+      <div class="context-menu-header">{{ contextMenuTypeCode }} {{ contextMenuTypeName }}</div>
+      <button class="context-menu-item" @click="openRowDetailDialog">详细信息</button>
       <button
         class="context-menu-item"
         :disabled="contextMenuTimestampMs === null"
@@ -1243,15 +1237,15 @@ function encounterLabel(enc: EncounterCandidate) {
           </div>
           <div class="detail-summary-item">
             <span class="detail-summary-label">时间戳</span>
-            <span>{{ detailDialogRow.timestampText || '-' }}</span>
+            <span>{{ detailDialogRow.timestampText || "-" }}</span>
           </div>
           <div class="detail-summary-item">
             <span class="detail-summary-label">Source</span>
-            <span>{{ detailDialogRow.sourceId || '-' }} {{ detailDialogRow.source || '' }}</span>
+            <span>{{ detailDialogRow.sourceId || "-" }} {{ detailDialogRow.source || "" }}</span>
           </div>
           <div class="detail-summary-item">
             <span class="detail-summary-label">Target</span>
-            <span>{{ detailDialogRow.targetId || '-' }} {{ detailDialogRow.target || '' }}</span>
+            <span>{{ detailDialogRow.targetId || "-" }} {{ detailDialogRow.target || "" }}</span>
           </div>
         </div>
 
@@ -1272,7 +1266,7 @@ function encounterLabel(enc: EncounterCandidate) {
               <tr v-for="field in detailFieldRows" :key="`${detailDialogRow.key}_${field.index}`">
                 <td>{{ field.index }}</td>
                 <td>{{ field.fieldName }}</td>
-                <td>{{ field.value || '-' }}</td>
+                <td>{{ field.value || "-" }}</td>
               </tr>
             </tbody>
           </table>
@@ -1291,7 +1285,7 @@ function encounterLabel(enc: EncounterCandidate) {
   flex-direction: column;
   background: var(--lv-bg-page);
   color: var(--lv-text);
-  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Menlo', monospace;
+  font-family: "JetBrains Mono", "Fira Code", "Consolas", "Menlo", monospace;
   overflow: hidden;
 
   --lv-bg-page: #f5f7fb;
@@ -1394,7 +1388,11 @@ function encounterLabel(enc: EncounterCandidate) {
   padding: 24px 32px;
   border: 1px solid color-mix(in srgb, var(--lv-accent) 40%, transparent);
   border-radius: 16px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--lv-bg-elevated) 96%, transparent), color-mix(in srgb, var(--lv-bg-page) 96%, transparent));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--lv-bg-elevated) 96%, transparent),
+    color-mix(in srgb, var(--lv-bg-page) 96%, transparent)
+  );
   box-shadow: 0 20px 60px color-mix(in srgb, var(--lv-shadow) 220%, transparent);
   text-align: center;
 }
@@ -1500,8 +1498,13 @@ function encounterLabel(enc: EncounterCandidate) {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* ── Main Layout ── */
@@ -1559,9 +1562,9 @@ function encounterLabel(enc: EncounterCandidate) {
 .encounter-select {
   width: 100%;
 
-  :deep(.el-input__wrapper) {
-      background-color: var(--lv-bg-page);
-      box-shadow: 0 0 0 1px var(--lv-border-strong) inset;
+  ::deep(.el-input__wrapper) {
+    background-color: var(--lv-bg-page);
+    box-shadow: 0 0 0 1px var(--lv-border-strong) inset;
   }
 }
 
@@ -1618,7 +1621,9 @@ function encounterLabel(enc: EncounterCandidate) {
   border-radius: 5px;
   font-size: 11px;
   line-height: 1.35;
-  transition: background 0.2s, transform 0.1s;
+  transition:
+    background 0.2s,
+    transform 0.1s;
   border: 1px solid transparent;
 
   &:hover {
@@ -1662,7 +1667,7 @@ function encounterLabel(enc: EncounterCandidate) {
 }
 
 /* ── Filter visual states ── */
-.regex-error :deep(.el-input__wrapper) {
+.regex-error ::deep(.el-input__wrapper) {
   box-shadow: 0 0 0 1px var(--lv-danger) inset !important;
   background-color: var(--lv-danger-soft);
 }
@@ -1813,7 +1818,7 @@ function encounterLabel(enc: EncounterCandidate) {
   flex: 1 1 280px;
   max-width: 460px;
 
-  :deep(.el-input__wrapper) {
+  ::deep(.el-input__wrapper) {
     box-shadow: 0 0 0 1px var(--lv-border-strong) inset;
     background: var(--lv-bg-elevated);
     border-radius: 5px;
@@ -1829,7 +1834,7 @@ function encounterLabel(enc: EncounterCandidate) {
 .time-range-input {
   width: 118px;
 
-  :deep(.el-input__wrapper) {
+  ::deep(.el-input__wrapper) {
     background: var(--lv-bg-elevated);
     box-shadow: 0 0 0 1px var(--lv-border-strong) inset;
     min-height: 30px;
@@ -1840,7 +1845,7 @@ function encounterLabel(enc: EncounterCandidate) {
 .actor-filter-input {
   width: 160px;
 
-  :deep(.el-input__wrapper) {
+  ::deep(.el-input__wrapper) {
     background: var(--lv-bg-elevated);
     box-shadow: 0 0 0 1px var(--lv-border-strong) inset;
     min-height: 30px;
@@ -1892,12 +1897,13 @@ function encounterLabel(enc: EncounterCandidate) {
 .encounter-select-sidebar {
   width: 100%;
 
-  :deep(.el-input__wrapper) {
+  ::deep(.el-input__wrapper) {
     background-color: transparent;
     box-shadow: none;
     border: 1px solid var(--lv-border-strong);
 
-    &:hover, &.is-focus {
+    &:hover,
+    &.is-focus {
       border-color: var(--lv-accent);
     }
   }
@@ -1916,15 +1922,15 @@ function encounterLabel(enc: EncounterCandidate) {
   background: var(--lv-bg-page);
   overflow: hidden !important; /* Clip translated content at the outermost boundary */
 
-  :deep(.el-table-v2__root) {
+  ::deep(.el-table-v2__root) {
     background: var(--lv-bg-page);
   }
 
-  :deep(.el-table-v2__emptyblock) {
+  ::deep(.el-table-v2__emptyblock) {
     background: var(--lv-bg-page);
   }
 
-  :deep(.el-table-v2__row) {
+  ::deep(.el-table-v2__row) {
     transition: background-color 0.15s;
     background: var(--lv-bg-page);
 
@@ -1933,7 +1939,7 @@ function encounterLabel(enc: EncounterCandidate) {
     }
   }
 
-  :deep(.el-table-v2__header-row) {
+  ::deep(.el-table-v2__header-row) {
     background: var(--lv-bg-elevated) !important;
     color: var(--lv-text-muted);
     font-weight: 600;
@@ -1943,7 +1949,7 @@ function encounterLabel(enc: EncounterCandidate) {
     font-size: 10px;
   }
 
-  :deep(.el-table-v2__header-cell) {
+  ::deep(.el-table-v2__header-cell) {
     background: transparent !important;
     border-right: 1px solid var(--lv-border);
     &:last-child {
@@ -1951,7 +1957,7 @@ function encounterLabel(enc: EncounterCandidate) {
     }
   }
 
-  :deep(.el-table-v2__row-cell) {
+  ::deep(.el-table-v2__row-cell) {
     background: transparent !important;
     border-bottom: 1px solid var(--lv-border);
     border-right: 1px solid var(--lv-border);
@@ -1961,8 +1967,8 @@ function encounterLabel(enc: EncounterCandidate) {
     }
   }
 
-  :deep(.el-table-v2__header-cell:first-child),
-  :deep(.el-table-v2__row-cell:first-child) {
+  ::deep(.el-table-v2__header-cell:first-child),
+  ::deep(.el-table-v2__row-cell:first-child) {
     padding-left: 6px;
     padding-right: 6px;
   }
@@ -1979,7 +1985,7 @@ function encounterLabel(enc: EncounterCandidate) {
   gap: 8px;
 
   &::before {
-    content: '📭';
+    content: "📭";
     font-size: 24px;
     opacity: 0.5;
   }
@@ -2086,7 +2092,11 @@ function encounterLabel(enc: EncounterCandidate) {
 }
 
 :deep(.search-highlight-current) {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--lv-warning) 82%, white), color-mix(in srgb, var(--lv-warning) 65%, #fb923c));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--lv-warning) 82%, white),
+    color-mix(in srgb, var(--lv-warning) 65%, #fb923c)
+  );
   color: #111;
   border-radius: 2px;
   box-shadow: 0 0 0 1px rgba(255, 214, 102, 0.65);
@@ -2109,7 +2119,11 @@ function encounterLabel(enc: EncounterCandidate) {
 }
 
 :deep(.cell-diff-count) {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--lv-warning) 18%, transparent), color-mix(in srgb, var(--lv-warning) 10%, transparent));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--lv-warning) 18%, transparent),
+    color-mix(in srgb, var(--lv-warning) 10%, transparent)
+  );
   color: var(--lv-warning);
   padding: 2px 8px;
   border-radius: 10px;
@@ -2173,7 +2187,9 @@ function encounterLabel(enc: EncounterCandidate) {
   font-size: 12px;
   text-align: left;
   cursor: pointer;
-  transition: background-color 0.15s, color 0.15s;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
 
   &:hover {
     background: var(--lv-accent-soft);
@@ -2298,7 +2314,7 @@ function encounterLabel(enc: EncounterCandidate) {
   }
 
   td:last-child {
-    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Menlo', monospace;
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", "Menlo", monospace;
     word-break: break-all;
   }
 }

@@ -1,92 +1,92 @@
-/// <reference types="vitest" />
-import path from 'node:path'
-import vue from '@vitejs/plugin-vue'
-import Unocss from 'unocss/vite'
-import AutoImport from 'unplugin-auto-import/vite'
-import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
-import Components from 'unplugin-vue-components/vite'
-import viteCompression from 'vite-plugin-compression'
-import Markdown from 'vite-plugin-md'
-import Pages from 'vite-plugin-pages'
-import sassDts from 'vite-plugin-sass-dts'
-import VueDevTools from 'vite-plugin-vue-devtools'
-import { defineConfig } from 'vitest/config'
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import vue from "@vitejs/plugin-vue";
+import Unocss from "unocss/vite";
+import AutoImport from "unplugin-auto-import/vite";
+import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
+import Components from "unplugin-vue-components/vite";
+import viteCompression from "vite-plugin-compression";
+import Markdown from "vite-plugin-md";
+import Pages from "vite-plugin-pages";
+import sassDts from "vite-plugin-sass-dts";
+import { defineConfig } from "vite-plus";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function injectBuildTime() {
   return {
-    name: 'inject-build-time',
+    name: "inject-build-time",
     transformIndexHtml(html: string) {
-      const buildTime = new Date().toLocaleString('zh-CN', {
-        timeZone: 'Asia/Shanghai',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
+      const buildTime = new Date().toLocaleString("zh-CN", {
+        timeZone: "Asia/Shanghai",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
         hour12: false,
-      })
+      });
       return html.replace(
-        '</head>',
+        "</head>",
         `  <meta name="build-time" content="${buildTime}" />\n  </head>`,
-      )
+      );
     },
-  }
+  };
 }
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/ff14-overlay-vue/',
-  build: {
-    outDir: './dist',
-    // emptyOutDir: true, // 构建时清空outDir目录
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
+  staged: {
+    "*.{js,ts,tsx,vue,svelte}": "vp check --fix",
+  },
+  lint: {
+    ignorePatterns: ["dist/**", "node_modules/**", "cactbot/**"],
+    options: {
+      typeAware: true,
+      typeCheck: true,
     },
+  },
+  fmt: {
+    ignorePatterns: ["dist/**", "node_modules/**", "cactbot/**"],
+  },
+  base: "/ff14-overlay-vue/",
+  build: {
+    outDir: "./dist",
     rollupOptions: {
       output: {
-        chunkFileNames: 'assets/[name]-[hash].js',
-        entryFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]',
+        chunkFileNames: "assets/[name]-[hash].js",
+        entryFileNames: "assets/[name]-[hash].js",
+        assetFileNames: "assets/[name]-[hash].[ext]",
         manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('element-plus')) {
-              return 'vendor-element-plus'
+          if (id.includes("node_modules")) {
+            if (id.includes("element-plus")) {
+              return "vendor-element-plus";
             }
-            if (id.includes('echarts') || id.includes('vue-echarts')) {
-              return 'vendor-echarts'
+            if (id.includes("echarts") || id.includes("vue-echarts")) {
+              return "vendor-echarts";
             }
-            if (
-              id.includes('vue')
-              || id.includes('pinia')
-              || id.includes('vue-router')
-            ) {
-              return 'vendor-vue'
+            if (id.includes("vue") || id.includes("pinia") || id.includes("vue-router")) {
+              return "vendor-vue";
             }
-            return 'vendor-other'
+            return "vendor-other";
           }
 
-          if (id.includes('/src/components/common/')) {
-            return 'shared-common'
+          if (id.includes("/src/components/common/")) {
+            return "shared-common";
           }
 
-          if (id.includes('cactbot/') && !id.includes('user_config.ts')) {
-            return 'cactbot'
+          if (id.includes("cactbot/") && !id.includes("user_config.ts")) {
+            return "cactbot";
           }
         },
       },
       onwarn(warning, warn) {
-        if (
-          warning.code === 'EVAL'
-          && warning.id?.includes('cactbot/resources/user_config.ts')
-        ) {
-          return
+        if (warning.code === "EVAL" && warning.id?.includes("cactbot/resources/user_config.ts")) {
+          return;
         }
-        warn(warning)
+        warn(warning);
       },
     },
     chunkSizeWarningLimit: 2000,
@@ -94,36 +94,30 @@ export default defineConfig({
     sourcemap: false,
   },
   plugins: [
-    VueDevTools(),
     vue({
       include: [/\.vue$/, /\.md$/],
     }),
     Markdown(),
     AutoImport({
-      imports: ['vue', '@vueuse/core'],
-      dts: './src/types/auto-imports.d.ts',
+      imports: ["vue", "@vueuse/core"],
+      dts: "./src/types/auto-imports.d.ts",
       resolvers: [ElementPlusResolver({ importStyle: false })],
-      eslintrc: {
-        enabled: true,
-        filepath: './.eslintrc-auto-import.json',
-        globalsPropValue: true,
-      },
     }),
     Components({
       resolvers: [ElementPlusResolver({ importStyle: false })],
       deep: true,
-      dts: './src/types/components.d.ts',
+      dts: "./src/types/components.d.ts",
       directoryAsNamespace: true,
     }),
     viteCompression({
-      algorithm: 'gzip',
-      ext: '.gz',
+      algorithm: "gzip",
+      ext: ".gz",
       threshold: 1024,
       deleteOriginFile: false,
     }),
     Unocss(),
     Pages({
-      importMode: 'async',
+      importMode: "async",
     }),
     sassDts(),
     injectBuildTime(),
@@ -133,7 +127,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      "@": path.resolve(__dirname, "./src"),
     },
   },
   server: {
@@ -152,10 +146,6 @@ export default defineConfig({
     cors: true,
   },
   optimizeDeps: {
-    include: ['vue', 'vue-router', 'pinia', 'element-plus', '@vueuse/core'],
+    include: ["vue", "vue-router", "pinia", "element-plus", "@vueuse/core"],
   },
-  test: {
-    environment: 'happy-dom',
-    globals: true,
-  },
-})
+});

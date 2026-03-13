@@ -1,446 +1,421 @@
 <script setup lang="ts">
-import type { ActionPickerGridItem } from '@/components/common/ActionPickerDialog.vue'
-import { Delete, Download, Plus, Rank, RefreshLeft, Search, Upload } from '@element-plus/icons-vue'
-import { useWindowSize } from '@vueuse/core'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { storeToRefs } from 'pinia'
-import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { VueDraggable } from 'vue-draggable-plus'
-import ActionPickerDialog from '@/components/common/ActionPickerDialog.vue'
-import { GLOBAL_SKILL_MAX_LEVEL } from '@/resources/globalSkills'
-import { DEFAULT_JOB_SORT_ORDER } from '@/resources/jobSortOrder'
+import type { ActionPickerGridItem } from "@/components/common/ActionPickerDialog.vue";
+import { Delete, Download, Plus, Rank, RefreshLeft, Search, Upload } from "@element-plus/icons-vue";
+import { useWindowSize } from "@vueuse/core";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { storeToRefs } from "pinia";
+import { computed, onMounted, reactive, ref, watch } from "vue";
+import { VueDraggable } from "vue-draggable-plus";
+import ActionPickerDialog from "@/components/common/ActionPickerDialog.vue";
+import { GLOBAL_SKILL_MAX_LEVEL } from "@/resources/globalSkills";
+import { DEFAULT_JOB_SORT_ORDER } from "@/resources/jobSortOrder";
 import {
   getActionNameLite,
   getGlobalSkillDefinitionById,
   resolveActionIconSrc,
-} from '@/resources/logic/actionMetaResolver'
+} from "@/resources/logic/actionMetaResolver";
 import {
   buildInheritedBaseJobActions,
   TEAM_WATCH_EMPTY_ACTIONS,
   TEAM_WATCH_WATCH_ACTIONS_DEFAULT,
-} from '@/resources/teamWatchResource'
-import { useTeamWatchStore } from '@/store/teamWatchStore'
-import { copyToClipboard } from '@/utils/clipboard'
-import { idToSrc, parseDynamicValue } from '@/utils/dynamicValue'
-import Util from '@/utils/util'
-import { getIconSrcByPath, handleImgError, searchActionsByClassJobs } from '@/utils/xivapi'
+} from "@/resources/teamWatchResource";
+import { useTeamWatchStore } from "@/store/teamWatchStore";
+import { copyToClipboard } from "@/utils/clipboard";
+import { idToSrc, parseDynamicValue } from "@/utils/dynamicValue";
+import Util from "@/utils/util";
+import { getIconSrcByPath, handleImgError, searchActionsByClassJobs } from "@/utils/xivapi";
 
 interface JobRow {
-  job: number
-  actions: number[]
+  job: number;
+  actions: number[];
 }
 
 interface PickerTarget {
-  job: number
-  index: number
+  job: number;
+  index: number;
 }
 
-type SortGroup = 'tank' | 'healer' | 'dps' | 'other'
+type SortGroup = "tank" | "healer" | "dps" | "other";
 
-const store = useTeamWatchStore()
-const { sortRuleUser, watchJobsActionsIDUser, isFetchingMeta, metaFetchQueueSize } = storeToRefs(store)
+const store = useTeamWatchStore();
+const { sortRuleUser, watchJobsActionsIDUser, isFetchingMeta, metaFetchQueueSize } =
+  storeToRefs(store);
 
-const pickerLoading = ref(false)
-const pickerTarget = ref<PickerTarget | null>(null)
-const { width: viewportWidth } = useWindowSize()
+const pickerLoading = ref(false);
+const pickerTarget = ref<PickerTarget | null>(null);
+const { width: viewportWidth } = useWindowSize();
 
-const filterText = ref('')
-const showBaseJobs = ref(false)
+const filterText = ref("");
+const showBaseJobs = ref(false);
 
 const rows = computed(() => {
-  const allJobs = Array.from(new Set([
-    ...DEFAULT_JOB_SORT_ORDER,
-    ...Object.keys(watchJobsActionsIDUser.value).map(Number),
-  ]))
-  return allJobs.map(job => ({
+  const allJobs = [
+    ...new Set([
+      ...DEFAULT_JOB_SORT_ORDER,
+      ...Object.keys(watchJobsActionsIDUser.value).map(Number),
+    ]),
+  ];
+  return allJobs.map((job) => ({
     job,
     actions: watchJobsActionsIDUser.value[job] || [0, 0, 0, 0, 0],
-  }))
-})
+  }));
+});
 
 const rowsByJob = computed(() => {
-  const map = new Map<number, JobRow>()
+  const map = new Map<number, JobRow>();
   rows.value.forEach((row) => {
-    map.set(row.job, row)
-  })
-  return map
-})
+    map.set(row.job, row);
+  });
+  return map;
+});
 
 const sortIndexMap = computed(() => {
-  const map = new Map<number, number>()
+  const map = new Map<number, number>();
   sortRuleUser.value.forEach((job, index) => {
-    map.set(job, index)
-  })
-  return map
-})
+    map.set(job, index);
+  });
+  return map;
+});
 
 const sortedRows = computed(() => {
-  const sortMap = sortIndexMap.value
-  return [...rows.value].sort((a, b) => {
-    const aJob = Util.baseJobEnumConverted(a.job)
-    const bJob = Util.baseJobEnumConverted(b.job)
-    const aIndex = sortMap.get(aJob) ?? -1
-    const bIndex = sortMap.get(bJob) ?? -1
-    const aSort = aIndex >= 0 ? aIndex : 999
-    const bSort = bIndex >= 0 ? bIndex : 999
-    if (aSort === bSort)
-      return a.job - b.job
-    return aSort - bSort
-  })
-})
+  const sortMap = sortIndexMap.value;
+  return rows.value.toSorted((a, b) => {
+    const aJob = Util.baseJobEnumConverted(a.job);
+    const bJob = Util.baseJobEnumConverted(b.job);
+    const aIndex = sortMap.get(aJob) ?? -1;
+    const bIndex = sortMap.get(bJob) ?? -1;
+    const aSort = aIndex >= 0 ? aIndex : 999;
+    const bSort = bIndex >= 0 ? bIndex : 999;
+    if (aSort === bSort) return a.job - b.job;
+    return aSort - bSort;
+  });
+});
 
 const visibleRows = computed(() => {
-  const keyword = filterText.value.trim().toLowerCase()
+  const keyword = filterText.value.trim().toLowerCase();
   return sortedRows.value.filter((row) => {
-    const job = Util.jobEnumToJob(row.job)
-    if (!Util.isCombatJob(job) || job === 'NONE')
-      return false
+    const job = Util.jobEnumToJob(row.job);
+    if (!Util.isCombatJob(job) || job === "NONE") return false;
 
     // Base jobs are always merged into advanced jobs in settings view.
-    if (Util.baseJobEnumConverted(row.job) !== row.job)
-      return false
-    if (!keyword)
-      return true
+    if (Util.baseJobEnumConverted(row.job) !== row.job) return false;
+    if (!keyword) return true;
 
-    if (getJobName(row.job).toLowerCase().includes(keyword))
-      return true
-    if (String(row.job).includes(keyword))
-      return true
+    if (getJobName(row.job).toLowerCase().includes(keyword)) return true;
+    if (String(row.job).includes(keyword)) return true;
 
     return row.actions.some((actionId) => {
-      if (String(actionId).includes(keyword))
-        return true
-      if (actionId <= 0)
-        return false
-      return (getActionNameLite(actionId) ?? '').toLowerCase().includes(keyword)
-    })
-  })
-})
+      if (String(actionId).includes(keyword)) return true;
+      if (actionId <= 0) return false;
+      return (getActionNameLite(actionId) ?? "").toLowerCase().includes(keyword);
+    });
+  });
+});
 
-const isDragSortDisabled = computed(() => !!filterText.value.trim())
+const isDragSortDisabled = computed(() => !!filterText.value.trim());
 
 const draggableVisibleRows = computed<JobRow[]>({
   get: () => visibleRows.value,
   set: (nextRows) => {
-    if (!nextRows.length)
-      return
+    if (!nextRows.length) return;
     const nextSortRule = normalizeSortRuleByGroup(
-      Array.from(new Set(nextRows.map(row => Util.baseJobEnumConverted(row.job)))),
+      [...new Set(nextRows.map((row) => Util.baseJobEnumConverted(row.job)))],
       sortRuleUser.value,
-    )
-    if (nextSortRule.length > 0)
-      sortRuleUser.value = nextSortRule
+    );
+    if (nextSortRule.length > 0) sortRuleUser.value = nextSortRule;
   },
-})
+});
 
 const pickerDisabledIds = computed(() => {
-  const target = pickerTarget.value
-  if (!target)
-    return new Set<number>()
-  const currentRow = rowsByJob.value.get(target.job)
-  if (!currentRow)
-    return new Set<number>()
-  const currentActionId = currentRow.actions[target.index] ?? 0
-  return new Set(currentRow.actions.filter(id => id > 0 && id !== currentActionId))
-})
+  const target = pickerTarget.value;
+  if (!target) return new Set<number>();
+  const currentRow = rowsByJob.value.get(target.job);
+  if (!currentRow) return new Set<number>();
+  const currentActionId = currentRow.actions[target.index] ?? 0;
+  return new Set(currentRow.actions.filter((id) => id > 0 && id !== currentActionId));
+});
 
 const pickerDialogWidth = computed(() => {
-  const available = Math.trunc(viewportWidth.value) - 20
-  const safeWidth = Math.max(320, available)
-  return `${Math.min(980, safeWidth)}px`
-})
+  const available = Math.trunc(viewportWidth.value) - 20;
+  const safeWidth = Math.max(320, available);
+  return `${Math.min(980, safeWidth)}px`;
+});
 
 const baseJobsByAdvanced = computed<Record<number, number>>(() => {
-  const map: Record<number, number> = {}
+  const map: Record<number, number> = {};
   DEFAULT_JOB_SORT_ORDER.forEach((job) => {
-    const advanced = Util.baseJobEnumConverted(job)
-    if (advanced !== job)
-      map[advanced] = job
-  })
-  return map
-})
+    const advanced = Util.baseJobEnumConverted(job);
+    if (advanced !== job) map[advanced] = job;
+  });
+  return map;
+});
 
 function getRelatedJobIds(job: number) {
-  const related = new Set<number>([job])
-  const advanced = Util.baseJobEnumConverted(job)
-  if (advanced !== job)
-    related.add(advanced)
-  const base = baseJobsByAdvanced.value[job]
-  if (base)
-    related.add(base)
-  return [...related]
+  const related = new Set<number>([job]);
+  const advanced = Util.baseJobEnumConverted(job);
+  if (advanced !== job) related.add(advanced);
+  const base = baseJobsByAdvanced.value[job];
+  if (base) related.add(base);
+  return [...related];
 }
 
 function isBaseJob(job: number) {
-  const n = Math.trunc(Number(job))
-  return n > 0 && Util.baseJobEnumConverted(n) !== n
+  const n = Math.trunc(Number(job));
+  return n > 0 && Util.baseJobEnumConverted(n) !== n;
 }
 
 function getInheritedBaseActions(advancedJob: number) {
-  const baseJob = baseJobsByAdvanced.value[advancedJob]
-  if (!baseJob)
-    return [0]
-  const source = rowsByJob.value.get(advancedJob)?.actions ?? TEAM_WATCH_EMPTY_ACTIONS
-  return buildInheritedBaseJobActions(baseJob, source)
+  const baseJob = baseJobsByAdvanced.value[advancedJob];
+  if (!baseJob) return [0];
+  const source = rowsByJob.value.get(advancedJob)?.actions ?? TEAM_WATCH_EMPTY_ACTIONS;
+  return buildInheritedBaseJobActions(baseJob, source);
 }
 
-const pickerPool = ref<ActionPickerGridItem[]>([])
-const pickerPoolCache = reactive<Record<number, ActionPickerGridItem[]>>({})
-const pickerSearch = ref('')
-const pickerVisible = ref(false)
+const pickerPool = ref<ActionPickerGridItem[]>([]);
+const pickerPoolCache = reactive<Record<number, ActionPickerGridItem[]>>({});
+const pickerSearch = ref("");
+const pickerVisible = ref(false);
 
 const pickerCurrentActionId = computed(() => {
-  const target = pickerTarget.value
-  if (!target)
-    return null
-  const current = rowsByJob.value.get(target.job)?.actions[target.index] ?? 0
-  return current > 0 ? Number(current) : null
-})
+  const target = pickerTarget.value;
+  if (!target) return null;
+  const current = rowsByJob.value.get(target.job)?.actions[target.index] ?? 0;
+  return current > 0 ? Number(current) : null;
+});
 
 async function loadPickerPool(job: number) {
-  const hasCached = Object.prototype.hasOwnProperty.call(pickerPoolCache, job)
+  const hasCached = Object.hasOwn(pickerPoolCache, job);
   if (hasCached) {
-    pickerPool.value = [...(pickerPoolCache[job] ?? [])]
-    return
+    pickerPool.value = [...(pickerPoolCache[job] ?? [])];
+    return;
   }
-  pickerLoading.value = true
+  pickerLoading.value = true;
   try {
-    const apiRows = await searchActionsByClassJobs(getRelatedJobIds(job), 500)
-    const mapped = apiRows.map(row => ({
+    const apiRows = await searchActionsByClassJobs(getRelatedJobIds(job), 500);
+    const mapped = apiRows.map((row) => ({
       id: row.ID,
       name: getActionNameLite(row.ID) || row.Name || `#${row.ID}`,
       iconSrc: idToSrc(row.ID) || (row.Icon ? getIconSrcByPath(row.Icon) : undefined),
       classJobLevel: row.ClassJobLevel,
       recast1000ms: (() => {
-        const meta = getGlobalSkillDefinitionById(row.ID)
-        return parseDynamicValue(
-          meta?.recast1000ms ?? Number(row.Recast1000ms ?? 0),
-          GLOBAL_SKILL_MAX_LEVEL,
-        ) ?? Number(row.Recast1000ms ?? 0)
+        const meta = getGlobalSkillDefinitionById(row.ID);
+        return (
+          parseDynamicValue(
+            meta?.recast1000ms ?? Number(row.Recast1000ms ?? 0),
+            GLOBAL_SKILL_MAX_LEVEL,
+          ) ?? Number(row.Recast1000ms ?? 0)
+        );
       })(),
       isRoleAction: Number(row.IsRoleAction ?? 0) > 0,
-    }))
-    pickerPoolCache[job] = mapped
-    pickerPool.value = [...mapped]
-  }
-  catch (error) {
-    console.warn('[teamWatchSettings] load job action list failed:', job, error)
-    pickerPool.value = []
-    ElMessage.warning('职业技能列表加载失败')
-  }
-  finally {
-    pickerLoading.value = false
+    }));
+    pickerPoolCache[job] = mapped;
+    pickerPool.value = [...mapped];
+  } catch (error) {
+    console.warn("[teamWatchSettings] load job action list failed:", job, error);
+    pickerPool.value = [];
+    ElMessage.warning("职业技能列表加载失败");
+  } finally {
+    pickerLoading.value = false;
   }
 }
 
 watch(pickerVisible, (visible) => {
   if (!visible) {
-    pickerTarget.value = null
-    pickerSearch.value = ''
-    pickerLoading.value = false
+    pickerTarget.value = null;
+    pickerSearch.value = "";
+    pickerLoading.value = false;
   }
-})
+});
 
 function getJobName(job: number) {
-  const full = Util.jobToFullName(Util.jobEnumToJob(job))
-  return full.cn || full.en || `Job-${job}`
+  const full = Util.jobToFullName(Util.jobEnumToJob(job));
+  return full.cn || full.en || `Job-${job}`;
 }
 
 function assertKnownStoredJobs(snapshot: ReturnType<typeof store.getSnapshot>) {
   const allJobs = new Set<number>([
     ...snapshot.sortRuleUser,
-    ...Object.keys(snapshot.watchJobsActionsIDUser).map(v => Number(v)),
-  ])
+    ...Object.keys(snapshot.watchJobsActionsIDUser).map((v) => Number(v)),
+  ]);
 
   const invalid = [...allJobs].filter((jobId) => {
-    return Number.isFinite(jobId) && jobId > 0 && Util.jobEnumToJob(Math.trunc(jobId)) === 'NONE'
-  })
+    return Number.isFinite(jobId) && jobId > 0 && Util.jobEnumToJob(Math.trunc(jobId)) === "NONE";
+  });
 
   if (invalid.length > 0) {
-    const ids = invalid.sort((a, b) => a - b).join(', ')
-    throw new Error(`[UnknownJob] teamWatchSettings existing data contains unknown jobs: ${ids}`)
+    const ids = invalid.sort((a, b) => a - b).join(", ");
+    throw new Error(`[UnknownJob] teamWatchSettings existing data contains unknown jobs: ${ids}`);
   }
 }
 
 function getJobIconSrc(job: number) {
-  const full = Util.jobToFullName(Util.jobEnumToJob(job))
-  return `https://souma.diemoe.net/resources/img/cj2/${full.en}.png`
+  const full = Util.jobToFullName(Util.jobEnumToJob(job));
+  return `https://souma.diemoe.net/resources/img/cj2/${full.en}.png`;
 }
 
 function getActionIconSrc(actionId: number) {
-  return resolveActionIconSrc(actionId)
+  return resolveActionIconSrc(actionId);
 }
 
 function getActionMeta(actionId: number) {
-  return store.getActionMetaRaw(actionId > 0 ? actionId : 0, false)
+  return store.getActionMetaRaw(actionId > 0 ? actionId : 0, false);
 }
 
 function reloadFromStore() {
-  store.loadFromStorage()
-  assertKnownStoredJobs(store.getSnapshot())
+  store.loadFromStorage();
+  assertKnownStoredJobs(store.getSnapshot());
 }
 
-const SORT_GROUP_ORDER: SortGroup[] = ['tank', 'healer', 'dps', 'other']
+const SORT_GROUP_ORDER: SortGroup[] = ["tank", "healer", "dps", "other"];
 
 function getSortGroup(jobEnum: number): SortGroup {
-  const job = Util.jobEnumToJob(jobEnum)
-  if (Util.isTankJob(job))
-    return 'tank'
-  if (Util.isHealerJob(job))
-    return 'healer'
-  if (Util.isDpsJob(job))
-    return 'dps'
-  return 'other'
+  const job = Util.jobEnumToJob(jobEnum);
+  if (Util.isTankJob(job)) return "tank";
+  if (Util.isHealerJob(job)) return "healer";
+  if (Util.isDpsJob(job)) return "dps";
+  return "other";
 }
 
 function normalizeSortRuleByGroup(nextOrder: number[], previousOrder: number[]) {
-  const nextUnique = Array.from(new Set(nextOrder))
-  const previousUnique = Array.from(new Set(previousOrder))
-  const all = Array.from(new Set([...nextUnique, ...previousUnique]))
+  const nextUnique = [...new Set(nextOrder)];
+  const previousUnique = [...new Set(previousOrder)];
+  const all = [...new Set([...nextUnique, ...previousUnique])];
 
   const grouped: Record<SortGroup, number[]> = {
     tank: [],
     healer: [],
     dps: [],
     other: [],
-  }
+  };
 
   SORT_GROUP_ORDER.forEach((group) => {
-    const nextInGroup = nextUnique.filter(job => getSortGroup(job) === group)
-    const prevInGroup = previousUnique.filter(job => getSortGroup(job) === group && !nextInGroup.includes(job))
-    const unknownInGroup = all.filter(job => getSortGroup(job) === group && !nextInGroup.includes(job) && !prevInGroup.includes(job))
-    grouped[group] = [...nextInGroup, ...prevInGroup, ...unknownInGroup]
-  })
+    const nextInGroup = nextUnique.filter((job) => getSortGroup(job) === group);
+    const prevInGroup = previousUnique.filter(
+      (job) => getSortGroup(job) === group && !nextInGroup.includes(job),
+    );
+    const unknownInGroup = all.filter(
+      (job) =>
+        getSortGroup(job) === group && !nextInGroup.includes(job) && !prevInGroup.includes(job),
+    );
+    grouped[group] = [...nextInGroup, ...prevInGroup, ...unknownInGroup];
+  });
 
-  return SORT_GROUP_ORDER.flatMap(group => grouped[group])
+  return SORT_GROUP_ORDER.flatMap((group) => grouped[group]);
 }
 
-function onSortMove(event: { dragged?: HTMLElement, related?: HTMLElement }) {
-  const draggedGroup = event.dragged?.dataset?.sortGroup
-  const relatedGroup = event.related?.dataset?.sortGroup
+function onSortMove(event: { dragged?: HTMLElement; related?: HTMLElement }) {
+  const draggedGroup = event.dragged?.dataset?.sortGroup;
+  const relatedGroup = event.related?.dataset?.sortGroup;
 
   // Disallow dropping to blank area or any target without a known group.
-  if (!draggedGroup || !relatedGroup)
-    return false
+  if (!draggedGroup || !relatedGroup) return false;
 
-  return draggedGroup === relatedGroup
+  return draggedGroup === relatedGroup;
 }
 
 function getSkillDragGroup(job: number) {
-  return `team-watch-skill-${job}`
+  return `team-watch-skill-${job}`;
 }
 
 async function appendActionAndOpen(job: number) {
-  if (isBaseJob(job))
-    return
-  const row = rowsByJob.value.get(job)
-  if (!row)
-    return
-  const nextActions = [...row.actions, 0]
-  store.watchJobsActionsIDUser[job] = nextActions
-  const index = nextActions.length - 1
-  await openPicker(job, index)
+  if (isBaseJob(job)) return;
+  const row = rowsByJob.value.get(job);
+  if (!row) return;
+  const nextActions = [...row.actions, 0];
+  store.watchJobsActionsIDUser[job] = nextActions;
+  const index = nextActions.length - 1;
+  await openPicker(job, index);
 }
 
 async function onSlotCardClick(job: number, index: number) {
-  if (isBaseJob(job))
-    return
-  await openPicker(job, index)
+  if (isBaseJob(job)) return;
+  await openPicker(job, index);
 }
 
 function resetJobActions(job: number) {
-  if (isBaseJob(job))
-    return
-  store.watchJobsActionsIDUser[job] = [...(TEAM_WATCH_WATCH_ACTIONS_DEFAULT[job] ?? TEAM_WATCH_EMPTY_ACTIONS)]
+  if (isBaseJob(job)) return;
+  store.watchJobsActionsIDUser[job] = [
+    ...(TEAM_WATCH_WATCH_ACTIONS_DEFAULT[job] ?? TEAM_WATCH_EMPTY_ACTIONS),
+  ];
 }
 
 function clearJobActions(job: number) {
-  if (isBaseJob(job))
-    return
-  store.watchJobsActionsIDUser[job] = [0, 0, 0, 0, 0]
+  if (isBaseJob(job)) return;
+  store.watchJobsActionsIDUser[job] = [0, 0, 0, 0, 0];
 }
 
 async function openPicker(job: number, index: number) {
-  pickerTarget.value = { job, index }
-  pickerVisible.value = true
-  pickerSearch.value = ''
-  pickerPool.value = []
-  await loadPickerPool(job)
+  pickerTarget.value = { job, index };
+  pickerVisible.value = true;
+  pickerSearch.value = "";
+  pickerPool.value = [];
+  await loadPickerPool(job);
 }
 
 async function pickAction(actionId: number) {
-  const target = pickerTarget.value
-  if (!target)
-    return
-  const row = rowsByJob.value.get(target.job)
-  if (!row || target.index < 0 || target.index >= row.actions.length)
-    return
+  const target = pickerTarget.value;
+  if (!target) return;
+  const row = rowsByJob.value.get(target.job);
+  if (!row || target.index < 0 || target.index >= row.actions.length) return;
 
-  const nextActions = [...row.actions]
-  nextActions[target.index] = Number(actionId) || 0
-  store.watchJobsActionsIDUser[target.job] = nextActions
-  pickerVisible.value = false
+  const nextActions = [...row.actions];
+  nextActions[target.index] = Number(actionId) || 0;
+  store.watchJobsActionsIDUser[target.job] = nextActions;
+  pickerVisible.value = false;
 }
 
 function removeActionSlot(job: number, index: number) {
-  const row = rowsByJob.value.get(job)
-  if (!row || index < 0 || index >= row.actions.length)
-    return
+  const row = rowsByJob.value.get(job);
+  if (!row || index < 0 || index >= row.actions.length) return;
 
-  const nextActions = [...row.actions]
-  const removedActionId = nextActions[index] ?? 0
-  nextActions.splice(index, 1)
-  if (nextActions.length === 0)
-    nextActions.push(0)
+  const nextActions = [...row.actions];
+  const removedActionId = nextActions[index] ?? 0;
+  nextActions.splice(index, 1);
+  if (nextActions.length === 0) nextActions.push(0);
 
-  store.watchJobsActionsIDUser[job] = nextActions
-  ElMessage.success(removedActionId > 0 ? '已删除技能槽位' : '已删除空白槽位')
+  store.watchJobsActionsIDUser[job] = nextActions;
+  ElMessage.success(removedActionId > 0 ? "已删除技能槽位" : "已删除空白槽位");
 }
 
 async function exportSettings() {
   try {
-    await copyToClipboard(store.exportSettings())
-    ElMessage.success('导出文本已复制')
-  }
-  catch {
-    ElMessage.error('复制失败')
+    await copyToClipboard(store.exportSettings());
+    ElMessage.success("导出文本已复制");
+  } catch {
+    ElMessage.error("复制失败");
   }
 }
 
 async function importSettings() {
   try {
     const promptResult = await ElMessageBox.prompt(
-      '粘贴导入字符串（支持旧版 TeamWatch4 导出格式）',
-      '导入 TeamWatch 设置',
+      "粘贴导入字符串（支持旧版 TeamWatch4 导出格式）",
+      "导入 TeamWatch 设置",
       {
-        inputType: 'textarea',
-        confirmButtonText: '导入',
-        cancelButtonText: '取消',
+        inputType: "textarea",
+        confirmButtonText: "导入",
+        cancelButtonText: "取消",
       },
-    )
-    const value = typeof promptResult === 'string'
-      ? promptResult
-      : (promptResult as { value?: string }).value
-    if (!value)
-      return
-    store.importSettings(value)
-    reloadFromStore()
-    ElMessage.success('导入成功')
-  }
-  catch (error) {
-    if (error !== 'cancel' && error !== 'close')
-      ElMessage.error('导入失败，请检查文本格式')
+    );
+    const value =
+      typeof promptResult === "string" ? promptResult : (promptResult as { value?: string }).value;
+    if (!value) return;
+    store.importSettings(value);
+    reloadFromStore();
+    ElMessage.success("导入成功");
+  } catch (error) {
+    if (error !== "cancel" && error !== "close") ElMessage.error("导入失败，请检查文本格式");
   }
 }
 
 async function resetSettings() {
-  store.resetSettings()
-  ElMessage.success('已恢复默认设置')
+  store.resetSettings();
+  ElMessage.success("已恢复默认设置");
 }
 
 onMounted(() => {
-  reloadFromStore()
-})
+  reloadFromStore();
+});
 </script>
 
 <template>
@@ -467,12 +442,8 @@ onMounted(() => {
         />
       </div>
       <div class="toolbar-right">
-        <el-button size="small" :icon="Download" @click="exportSettings">
-          导出
-        </el-button>
-        <el-button size="small" :icon="Upload" @click="importSettings">
-          导入
-        </el-button>
+        <el-button size="small" :icon="Download" @click="exportSettings"> 导出 </el-button>
+        <el-button size="small" :icon="Upload" @click="importSettings"> 导入 </el-button>
         <el-popconfirm
           title="将清除 TeamWatch 当前自定义配置并恢复默认值，是否继续？"
           confirm-button-text="恢复"
@@ -480,9 +451,7 @@ onMounted(() => {
           @confirm="resetSettings"
         >
           <template #reference>
-            <el-button size="small" type="danger" :icon="RefreshLeft">
-              恢复默认
-            </el-button>
+            <el-button size="small" type="danger" :icon="RefreshLeft"> 恢复默认 </el-button>
           </template>
         </el-popconfirm>
         <CommonThemeToggle storage-key="team-watch-settings" />
@@ -524,7 +493,7 @@ onMounted(() => {
                 :alt="getJobName(row.job)"
                 class="job-title-icon"
                 @error="handleImgError"
-              >
+              />
               <strong>{{ getJobName(row.job) }}</strong>
             </div>
 
@@ -542,7 +511,9 @@ onMounted(() => {
                       ghost-class="job-drag-ghost"
                       drag-class="job-drag-active"
                       fallback-class="job-drag-fallback"
-                      @update:model-value="(val: number[]) => store.watchJobsActionsIDUser[row.job] = val"
+                      @update:model-value="
+                        (val: number[]) => (store.watchJobsActionsIDUser[row.job] = val)
+                      "
                     >
                       <article
                         v-for="(actionId, index) in row.actions"
@@ -561,12 +532,10 @@ onMounted(() => {
                             :alt="getActionMeta(actionId).name"
                             class="slot-icon"
                             @error="handleImgError"
-                          >
-                          <div v-else class="slot-placeholder">
-                            无
-                          </div>
+                          />
+                          <div v-else class="slot-placeholder">无</div>
                           <div class="slot-title">
-                            {{ actionId > 0 ? getActionMeta(actionId).name : '未设置' }}
+                            {{ actionId > 0 ? getActionMeta(actionId).name : "未设置" }}
                           </div>
                         </button>
                         <div class="slot-remove-anchor" @click.stop>
@@ -602,7 +571,13 @@ onMounted(() => {
                     </VueDraggable>
 
                     <div class="slot-add-wrap">
-                      <el-button size="small" type="primary" plain :icon="Plus" @click="appendActionAndOpen(row.job)" />
+                      <el-button
+                        size="small"
+                        type="primary"
+                        plain
+                        :icon="Plus"
+                        @click="appendActionAndOpen(row.job)"
+                      />
                     </div>
                   </div>
                 </div>
@@ -630,12 +605,10 @@ onMounted(() => {
                             :src="getActionIconSrc(actionId)"
                             :alt="getActionMeta(actionId).name"
                             class="slot-icon"
-                          >
-                          <div v-else class="slot-placeholder">
-                            无
-                          </div>
+                          />
+                          <div v-else class="slot-placeholder">无</div>
                           <div class="slot-title">
-                            {{ actionId > 0 ? getActionMeta(actionId).name : '未设置' }}
+                            {{ actionId > 0 ? getActionMeta(actionId).name : "未设置" }}
                           </div>
                         </button>
                       </article>
@@ -647,7 +620,10 @@ onMounted(() => {
 
             <div
               class="job-actions"
-              :class="{ 'has-base-actions': showBaseJobs && !!rowsByJob.get(baseJobsByAdvanced[row.job] ?? -1) }"
+              :class="{
+                'has-base-actions':
+                  showBaseJobs && !!rowsByJob.get(baseJobsByAdvanced[row.job] ?? -1),
+              }"
               @click.stop
             >
               <div class="job-actions-line">
@@ -670,9 +646,7 @@ onMounted(() => {
                     @confirm="resetJobActions(row.job)"
                   >
                     <template #reference>
-                      <el-button size="small" text class="job-action-text">
-                        默认
-                      </el-button>
+                      <el-button size="small" text class="job-action-text"> 默认 </el-button>
                     </template>
                   </el-popconfirm>
                 </div>
@@ -684,15 +658,16 @@ onMounted(() => {
                     @confirm="clearJobActions(row.job)"
                   >
                     <template #reference>
-                      <el-button size="small" text class="job-action-text">
-                        清空
-                      </el-button>
+                      <el-button size="small" text class="job-action-text"> 清空 </el-button>
                     </template>
                   </el-popconfirm>
                 </div>
               </div>
 
-              <div v-if="showBaseJobs && !!rowsByJob.get(baseJobsByAdvanced[row.job] ?? -1)" class="job-actions-line is-base-row">
+              <div
+                v-if="showBaseJobs && !!rowsByJob.get(baseJobsByAdvanced[row.job] ?? -1)"
+                class="job-actions-line is-base-row"
+              >
                 <div class="job-action-cell">
                   <span class="base-readonly-note">自动继承特职技能</span>
                 </div>
@@ -712,7 +687,9 @@ onMounted(() => {
       :pool="pickerPool"
       :disabled-ids="pickerDisabledIds"
       :current-action-id="pickerCurrentActionId"
-      :target-label="pickerTarget ? `${getJobName(pickerTarget.job)} · 技能位 ${pickerTarget.index + 1}` : ''"
+      :target-label="
+        pickerTarget ? `${getJobName(pickerTarget.job)} · 技能位 ${pickerTarget.index + 1}` : ''
+      "
       @pick="pickAction($event.id)"
     />
   </div>
@@ -736,7 +713,7 @@ onMounted(() => {
   box-sizing: border-box;
   color: var(--text);
   background: var(--bg);
-  font-family: 'Bahnschrift', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-family: "Bahnschrift", "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 12px;
   overflow: hidden;
 }
@@ -775,7 +752,7 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.toolbar-left :deep(.el-switch__label) {
+.toolbar-left ::deep(.el-switch__label) {
   white-space: nowrap;
 }
 
@@ -787,7 +764,7 @@ onMounted(() => {
   min-width: 128px;
 }
 
-.lang-switch-wrap :deep(.language-select) {
+.lang-switch-wrap ::deep(.language-select) {
   width: 92px;
 }
 
@@ -944,19 +921,31 @@ onMounted(() => {
   justify-content: center;
 }
 
-.col-1 { grid-column: 1; }
-.col-2 { grid-column: 2; }
-.col-3 { grid-column: 3; }
-.col-4 { grid-column: 4; }
-.col-1-2 { grid-column: 1 / span 2; }
-.col-3-4 { grid-column: 3 / span 2; }
+.col-1 {
+  grid-column: 1;
+}
+.col-2 {
+  grid-column: 2;
+}
+.col-3 {
+  grid-column: 3;
+}
+.col-4 {
+  grid-column: 4;
+}
+.col-1-2 {
+  grid-column: 1 / span 2;
+}
+.col-3-4 {
+  grid-column: 3 / span 2;
+}
 
-.job-actions :deep(.el-button) {
+.job-actions ::deep(.el-button) {
   flex: 0 0 auto;
   --el-button-size: 18px;
 }
 
-.job-actions :deep(.job-action-text) {
+.job-actions ::deep(.job-action-text) {
   width: 100%;
   padding-inline: 0;
 }
@@ -1069,7 +1058,9 @@ onMounted(() => {
   min-height: 44px;
   box-sizing: border-box;
   overflow: hidden;
-  transition: border-color 120ms ease, box-shadow 120ms ease;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
 }
 
 .slot-cell.is-base-slot {
@@ -1144,7 +1135,7 @@ onMounted(() => {
   transition: opacity 120ms ease;
 }
 
-.slot-cell:hover .slot-remove-anchor{
+.slot-cell:hover .slot-remove-anchor {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -1213,7 +1204,7 @@ onMounted(() => {
   border-style: dotted;
 }
 
-.slot-add-wrap :deep(.el-button) {
+.slot-add-wrap ::deep(.el-button) {
   --el-button-size: 18px;
   padding: 0 4px;
 }

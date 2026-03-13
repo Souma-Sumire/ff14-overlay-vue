@@ -1,89 +1,76 @@
-import type { Lang } from './types/lang'
-import { createHead } from '@vueuse/head'
-import { ElMessage } from 'element-plus'
-import { createPinia } from 'pinia'
-import { createApp } from 'vue'
-import { createI18n } from 'vue-i18n'
-import VueLazyload from 'vue-lazyload'
-import App from './App.vue'
-import router from './router'
-import { checkReferrer } from './utils/checkReferrer'
-import {
-  getInitialLocale,
-  loadLocaleMessages,
-  SUPPORTED_LOCALES,
-} from './utils/getInitialLocale'
-import 'element-plus/dist/index.css'
-import 'element-plus/theme-chalk/dark/css-vars.css'
-import './styles/common.scss'
-import 'virtual:uno.css'
+import type { Lang } from "./types/lang";
+import { createHead } from "@vueuse/head";
+import { ElMessage } from "element-plus";
+import { createPinia } from "pinia";
+import { createApp } from "vue";
+import { createI18n } from "vue-i18n";
+import VueLazyload from "vue-lazyload";
+import App from "./App.vue";
+import router from "./router";
+import { checkReferrer } from "./utils/checkReferrer";
+import { getInitialLocale, loadLocaleMessages, SUPPORTED_LOCALES } from "./utils/getInitialLocale";
+import "element-plus/dist/index.css";
+import "element-plus/theme-chalk/dark/css-vars.css";
+import "./styles/common.scss";
+import "virtual:uno.css";
 
 async function bootstrap() {
-  const initialLocale: Lang = getInitialLocale()
+  const initialLocale: Lang = getInitialLocale();
   const localeEntries = await Promise.all(
     SUPPORTED_LOCALES.map(async (lang) => {
-      const messages = await loadLocaleMessages(lang)
-      return [lang, messages] as const
+      const messages = await loadLocaleMessages(lang);
+      return [lang, messages] as const;
     }),
-  )
-  const allMessages = Object.fromEntries(localeEntries)
+  );
+  const allMessages = Object.fromEntries(localeEntries);
 
-  const app = createApp(App)
-  const head = createHead()
-  const pinia = createPinia()
+  const app = createApp(App);
+  const head = createHead();
+  const pinia = createPinia();
 
   const i18n = createI18n({
     legacy: false,
     locale: initialLocale,
-    fallbackLocale: 'zhCn',
+    fallbackLocale: "zhCn",
     messages: allMessages,
     warnHtmlMessage: false,
-  })
+  });
 
   function handleError(error: Error): void {
-    console.error(error)
+    console.error(error);
     ElMessage.error({
       dangerouslyUseHTMLString: true,
-      message: `<pre style="white-space: pre-wrap;">${
-        error.stack || error.message
-      }</pre>`,
+      message: `<pre style="white-space: pre-wrap;">${error.stack || error.message}</pre>`,
       duration: 5000,
       showClose: true,
-    })
+    });
   }
 
   // 全局错误处理
   app.config.errorHandler = (err: unknown) => {
-    handleError(err instanceof Error ? err : new Error(String(err)))
-  }
+    handleError(err instanceof Error ? err : new Error(String(err)));
+  };
 
   // 未捕获的Promise错误处理
-  window.addEventListener(
-    'unhandledrejection',
-    (event: PromiseRejectionEvent) => {
-      handleError(
-        event.reason instanceof Error
-          ? event.reason
-          : new Error(String(event.reason)),
-      )
-    },
-  )
+  window.addEventListener("unhandledrejection", (event: PromiseRejectionEvent) => {
+    handleError(event.reason instanceof Error ? event.reason : new Error(String(event.reason)));
+  });
 
-  app.use(router)
-  app.use(head)
-  app.use(pinia)
-  app.use(VueLazyload)
-  app.use(i18n)
+  app.use(router);
+  app.use(head);
+  app.use(pinia);
+  app.use(VueLazyload);
+  app.use(i18n);
 
-  checkReferrer()
-  app.mount('#app')
+  checkReferrer();
+  app.mount("#app");
 
-  const { protocol, hostname, href } = window.location
-  const isLocal = ['localhost', '127.0.0.1', '::1'].includes(hostname)
+  const { protocol, hostname, href } = window.location;
+  const isLocal = ["localhost", "127.0.0.1", "::1"].includes(hostname);
 
-  if (protocol === 'http:' && !isLocal) {
-    window.location.href = href.replace('http:', 'https:')
+  if (protocol === "http:" && !isLocal) {
+    window.location.href = href.replace("http:", "https:");
   }
 }
 
-bootstrap()
+void bootstrap();

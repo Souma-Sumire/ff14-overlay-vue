@@ -1,36 +1,36 @@
-import fs from 'fs-extra'
-import { readCsvRowsCached } from './csvCache'
-import { csvPaths } from './paths'
+import fs from "fs-extra";
+import { readCsvRowsCached } from "./csvCache";
+import { csvPaths } from "./paths";
 
-type CsvRow = string[]
-type DataMap<T> = Record<string, T>
+type CsvRow = string[];
+type DataMap<T> = Record<string, T>;
 type Item = DataMap<{
-  Name?: string
-  ItemAction?: string
-  Level?: string
-  ItemUICategory?: 'Meal' | 'Medicine'
-}>
-type ItemFood = CsvRow
-type BaseParam = DataMap<string>
-type ItemAction = DataMap<string>
+  Name?: string;
+  ItemAction?: string;
+  Level?: string;
+  ItemUICategory?: "Meal" | "Medicine";
+}>;
+type ItemFood = CsvRow;
+type BaseParam = DataMap<string>;
+type ItemAction = DataMap<string>;
 interface ParamValue {
-  'Params': string
-  'Value': string
-  'Max': string
-  'Value{HQ}': string
-  'Max{HQ}': string
+  Params: string;
+  Value: string;
+  Max: string;
+  "Value{HQ}": string;
+  "Max{HQ}": string;
 }
 type Meal = DataMap<{
-  Name: string
-  ParamsValues: ParamValue[]
-  Level: string
-}>
-type Medicine = Meal
+  Name: string;
+  ParamsValues: ParamValue[];
+  Level: string;
+}>;
+type Medicine = Meal;
 
-const item: Item = {}
-const itemAction: ItemAction = {}
-const itemFood: DataMap<ItemFood> = {}
-const baseParam: BaseParam = {}
+const item: Item = {};
+const itemAction: ItemAction = {};
+const itemFood: DataMap<ItemFood> = {};
+const baseParam: BaseParam = {};
 
 const [baseParamRows, itemFoodRows, itemActionRows, itemCnRows, itemJaRows] = await Promise.all([
   readCsvRowsCached(`${csvPaths.en}BaseParam.csv`),
@@ -38,82 +38,77 @@ const [baseParamRows, itemFoodRows, itemActionRows, itemCnRows, itemJaRows] = aw
   readCsvRowsCached(`${csvPaths.ja}ItemAction.csv`),
   readCsvRowsCached(`${csvPaths.cn}Item.csv`),
   readCsvRowsCached(`${csvPaths.ja}Item.csv`),
-])
+]);
 
 baseParamRows.forEach((row) => {
-  baseParam[row[0]!] = row[2]!
-})
+  baseParam[row[0]!] = row[2]!;
+});
 
 itemFoodRows.forEach((row) => {
-  itemFood[row[0]!] = row
-})
+  itemFood[row[0]!] = row;
+});
 
 itemActionRows.forEach((row) => {
-  itemAction[row[0]!] = row[7]!
-})
+  itemAction[row[0]!] = row[7]!;
+});
 
 itemCnRows.forEach((row) => {
-  if (!['key', 'offset', '#', 'int32'].includes(row[0]!.toLocaleLowerCase())) {
-    item[row[0]!] = { ...(item[row[0]!] || {}), Name: row[1] }
+  if (!["key", "offset", "#", "int32"].includes(row[0]!.toLocaleLowerCase())) {
+    item[row[0]!] = { ...item[row[0]!], Name: row[1] };
   }
-})
+});
 
 itemJaRows.forEach((row) => {
-  if (['46', '44'].includes(row[16]!) && itemAction[row[31]!] !== '0') {
+  if (["46", "44"].includes(row[16]!) && itemAction[row[31]!] !== "0") {
     item[row[0]!] = {
-      ...(item[row[0]!] || {}),
+      ...item[row[0]!],
       ItemAction: itemAction[row[31]!],
       Level: row[12],
-      ItemUICategory: row[16] === '46' ? 'Meal' : 'Medicine',
-    }
+      ItemUICategory: row[16] === "46" ? "Meal" : "Medicine",
+    };
   }
-})
+});
 
-const meals: Meal = {}
-const medicine: Medicine = {}
+const meals: Meal = {};
+const medicine: Medicine = {};
 
 for (const itemValue of Object.values(item)) {
-  if (
-    !itemValue.Name
-    || !itemValue.ItemAction
-    || !itemValue.Level
-    || !itemValue.ItemUICategory
-  ) {
-    continue
+  if (!itemValue.Name || !itemValue.ItemAction || !itemValue.Level || !itemValue.ItemUICategory) {
+    continue;
   }
 
-  const food = itemFood[itemValue.ItemAction]
+  const food = itemFood[itemValue.ItemAction];
   if (!food) {
-    continue
+    continue;
   }
 
   const paramsValues: ParamValue[] = [0, 1, 2]
     .map((i) => {
-      const offset = i * 6
-      const params = baseParam[food[2 + offset]!]
+      const offset = i * 6;
+      const params = baseParam[food[2 + offset]!];
       if (!params) {
-        return null
+        return null;
       }
       return {
-        'Params': params,
-        'Value': food[4 + offset],
-        'Max': food[5 + offset],
-        'Value{HQ}': food[6 + offset],
-        'Max{HQ}': food[7 + offset],
-      }
+        Params: params,
+        Value: food[4 + offset],
+        Max: food[5 + offset],
+        "Value{HQ}": food[6 + offset],
+        "Max{HQ}": food[7 + offset],
+      };
     })
-    .filter((p): p is ParamValue => p !== null)
+    .filter((p): p is ParamValue => p !== null);
 
-  const target = itemValue.ItemUICategory === 'Meal' ? meals : medicine
+  const target = itemValue.ItemUICategory === "Meal" ? meals : medicine;
   target[itemValue.ItemAction] = {
     Name: itemValue.Name,
     ParamsValues: paramsValues,
     Level: itemValue.Level,
-  }
+  };
 }
 
-await fs.outputJson('src/resources/generated/meals.json', meals, { spaces: 2 })
-await fs.outputJson('src/resources/generated/medicine.json', medicine, { spaces: 2 })
+await fs.outputJson("src/resources/generated/meals.json", meals, { spaces: 2 });
+await fs.outputJson("src/resources/generated/medicine.json", medicine, { spaces: 2 });
 
 /*
   在1A(NetworkBuff) 拿到count 转十进制  其中0x10000是HQ位

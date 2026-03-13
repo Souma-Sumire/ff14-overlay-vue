@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { DisplayFilterMode } from '@/components/loot-history/LootDisplayFilterSegmented.vue'
-import type { LootParserLocale } from '@/constants/lootParserLocale'
-import type { BisConfig } from '@/utils/bisUtils'
-import type { LootRecord, RollInfo } from '@/utils/lootParser'
+import type { DisplayFilterMode } from "@/components/loot-history/LootDisplayFilterSegmented.vue";
+import type { LootParserLocale } from "@/constants/lootParserLocale";
+import type { BisConfig } from "@/utils/bisUtils";
+import type { LootRecord, RollInfo } from "@/utils/lootParser";
 import {
   ArrowDown,
   BottomRight,
@@ -29,8 +29,8 @@ import {
   User,
   View,
   Warning,
-} from '@element-plus/icons-vue'
-import { useUrlSearchParams } from '@vueuse/core'
+} from "@element-plus/icons-vue";
+import { useUrlSearchParams } from "@vueuse/core";
 import {
   ElAutocomplete,
   ElCheckbox,
@@ -46,170 +46,187 @@ import {
   ElSteps,
   ElSwitch,
   ElTag,
-} from 'element-plus'
-import { computed, nextTick, onMounted, onUnmounted, provide, ref, shallowRef, triggerRef, watch } from 'vue'
-import BisAllocator from '@/components/loot-history/BisAllocator.vue'
-import LootStatisticsPanel from '@/components/loot-history/charts/LootStatisticsPanel.vue'
-import LootDisplayFilterSegmented from '@/components/loot-history/LootDisplayFilterSegmented.vue'
-import LootPlayerRoll from '@/components/loot-history/LootPlayerRoll.vue'
-import LootSortSegmented from '@/components/loot-history/LootSortSegmented.vue'
-import PlayerDisplay from '@/components/loot-history/PlayerDisplay.vue'
-import RoleSetupItem from '@/components/loot-history/RoleSetupItem.vue'
-import SummaryItemTags from '@/components/loot-history/SummaryItemTags.vue'
-import { useIndexedDB } from '@/composables/useIndexedDB'
-import { useLang } from '@/composables/useLang'
-import { resolveLootParserLocale } from '@/constants/lootParserLocale'
-import { DEFAULT_ROWS, isBisItem, isPlayerComplete, LAYER_CONFIG } from '@/utils/bisUtils'
-import { DROP_ORDER, PART_ORDER, ROLE_DEFINITIONS, sanitizeItemName, sanitizePlayerName } from '@/utils/lootParser'
-import { getFormattedWeekLabel, getRaidWeekIndex, getRaidWeekLabel, getRaidWeekStart } from '@/utils/raidWeekUtils'
-import { formatDateTime as formatTime } from '@/utils/time'
-import LogParserWorker from '@/workers/logParser.ts?worker'
+} from "element-plus";
+import {
+  computed,
+  nextTick,
+  onMounted,
+  onUnmounted,
+  provide,
+  ref,
+  shallowRef,
+  triggerRef,
+  watch,
+} from "vue";
+import BisAllocator from "@/components/loot-history/BisAllocator.vue";
+import LootStatisticsPanel from "@/components/loot-history/charts/LootStatisticsPanel.vue";
+import LootDisplayFilterSegmented from "@/components/loot-history/LootDisplayFilterSegmented.vue";
+import LootPlayerRoll from "@/components/loot-history/LootPlayerRoll.vue";
+import LootSortSegmented from "@/components/loot-history/LootSortSegmented.vue";
+import PlayerDisplay from "@/components/loot-history/PlayerDisplay.vue";
+import RoleSetupItem from "@/components/loot-history/RoleSetupItem.vue";
+import SummaryItemTags from "@/components/loot-history/SummaryItemTags.vue";
+import { useIndexedDB } from "@/composables/useIndexedDB";
+import { useLang } from "@/composables/useLang";
+import { resolveLootParserLocale } from "@/constants/lootParserLocale";
+import { DEFAULT_ROWS, isBisItem, isPlayerComplete, LAYER_CONFIG } from "@/utils/bisUtils";
+import {
+  DROP_ORDER,
+  PART_ORDER,
+  ROLE_DEFINITIONS,
+  sanitizeItemName,
+  sanitizePlayerName,
+} from "@/utils/lootParser";
+import {
+  getFormattedWeekLabel,
+  getRaidWeekIndex,
+  getRaidWeekLabel,
+  getRaidWeekStart,
+} from "@/utils/raidWeekUtils";
+import { formatDateTime as formatTime } from "@/utils/time";
+import LogParserWorker from "@/workers/logParser.ts?worker";
 
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   const savedTheme = window.localStorage
-    .getItem('loot-history-theme')
+    .getItem("loot-history-theme")
     ?.trim()
-    .replace(/^"(.*)"$/, '$1')
+    .replace(/^"(.*)"$/, "$1");
 
   // 兼容历史值（如 auto），统一回落到浅色，避免引导流程中途切到暗色
-  if (savedTheme !== 'light' && savedTheme !== 'dark')
-    window.localStorage.setItem('loot-history-theme', 'light')
+  if (savedTheme !== "light" && savedTheme !== "dark")
+    window.localStorage.setItem("loot-history-theme", "light");
 }
 
 useDark({
-  storageKey: 'loot-history-theme',
-  initialValue: 'light',
-})
+  storageKey: "loot-history-theme",
+  initialValue: "light",
+});
 
 const GAME_VERSION_CONFIG = {
   // 零式首周开始时间
-  RAID_START_TIME: '2026-01-06T16:00',
+  RAID_START_TIME: "2026-01-06T16:00",
   // 零式装备/道具系列的关键词
-  RAID_SERIES_KEYWORD: '总冠军',
+  RAID_SERIES_KEYWORD: "总冠军",
   // 管弦乐琴乐谱
-  RAID_ORCHESTRION: '天上的阿卡狄亚',
+  RAID_ORCHESTRION: "天上的阿卡狄亚",
   // 零式坐骑
-  RAID_MOUNT: '跳跳车T1启动钥匙',
-}
+  RAID_MOUNT: "跳跳车T1启动钥匙",
+};
 
 const LABELS = {
-  LOOT: '装备掉落/拿装备记录',
-  ROLES: '固定队职位设置',
-  BIS: '毕业装备需求 (BIS)',
-  MAPPING: '角色合并映射',
-  WEEK_CORRECTION: '手动修改过的CD周数',
-  PLAYER_CORRECTION: '手动修改过的装备获得者',
-  SETTINGS: '过滤和排序偏好',
-  META: '元数据（BIS/职位/合并映射）',
-  CORRECTIONS: '修正项（周/获得者）',
-  VIEW: '视图与过滤设置',
-}
+  LOOT: "装备掉落/拿装备记录",
+  ROLES: "固定队职位设置",
+  BIS: "毕业装备需求 (BIS)",
+  MAPPING: "角色合并映射",
+  WEEK_CORRECTION: "手动修改过的CD周数",
+  PLAYER_CORRECTION: "手动修改过的装备获得者",
+  SETTINGS: "过滤和排序偏好",
+  META: "元数据（BIS/职位/合并映射）",
+  CORRECTIONS: "修正项（周/获得者）",
+  VIEW: "视图与过滤设置",
+};
 
-const ROLE_SETTING_HINT = '需在左上方“固定队 - 职位设置”中完成所有职位后方可开启'
-const LOG_PARSER_WORKER_POOL_SIZE = 1
-const SYNC_RECORD_PERSIST_BATCH_SIZE = 1000
-const LOG_PARSER_CHUNK_SIZE = 4 * 1024 * 1024
-type BisRow = (typeof DEFAULT_ROWS)[number]
-const defaultRowBySlotName = new Map<string, BisRow>()
+const ROLE_SETTING_HINT = "需在左上方“固定队 - 职位设置”中完成所有职位后方可开启";
+const LOG_PARSER_WORKER_POOL_SIZE = 1;
+const SYNC_RECORD_PERSIST_BATCH_SIZE = 1000;
+const LOG_PARSER_CHUNK_SIZE = 4 * 1024 * 1024;
+type BisRow = (typeof DEFAULT_ROWS)[number];
+const defaultRowBySlotName = new Map<string, BisRow>();
 for (const row of DEFAULT_ROWS) {
-  defaultRowBySlotName.set(row.name, row)
-  defaultRowBySlotName.set(row.keywords, row)
-  defaultRowBySlotName.set(row.id, row)
+  defaultRowBySlotName.set(row.name, row);
+  defaultRowBySlotName.set(row.keywords, row);
+  defaultRowBySlotName.set(row.id, row);
 }
-const layerNameByRowId = new Map<string, string>()
+const layerNameByRowId = new Map<string, string>();
 for (const layer of LAYER_CONFIG) {
-  for (const rowId of layer.items)
-    layerNameByRowId.set(rowId, layer.name)
+  for (const rowId of layer.items) layerNameByRowId.set(rowId, layer.name);
 }
-const itemSortPriorityCache: Record<'part' | 'drop', Map<string, number>> = {
+const itemSortPriorityCache: Record<"part" | "drop", Map<string, number>> = {
   part: new Map(),
   drop: new Map(),
-}
-const rollTypePriority = { need: 0, greed: 1 } as const
+};
+const rollTypePriority = { need: 0, greed: 1 } as const;
 
 function findDefaultRowBySlot(slotName: string) {
-  return defaultRowBySlotName.get(slotName)
+  return defaultRowBySlotName.get(slotName);
 }
 
 function formatByteSize(bytes: number): string {
-  if (!Number.isFinite(bytes) || bytes <= 0)
-    return '0 B'
+  if (!Number.isFinite(bytes) || bytes <= 0) return "0 B";
 
-  const units = ['B', 'KB', 'MB', 'GB']
-  let value = bytes
-  let unitIndex = 0
+  const units = ["B", "KB", "MB", "GB"];
+  let value = bytes;
+  let unitIndex = 0;
   while (value >= 1024 && unitIndex < units.length - 1) {
-    value /= 1024
-    unitIndex++
+    value /= 1024;
+    unitIndex++;
   }
 
-  const digits = unitIndex === 0 ? 0 : value >= 100 ? 0 : value >= 10 ? 1 : 2
-  return `${value.toFixed(digits)} ${units[unitIndex]}`
+  const digits = unitIndex === 0 ? 0 : value >= 100 ? 0 : value >= 10 ? 1 : 2;
+  return `${value.toFixed(digits)} ${units[unitIndex]}`;
 }
 
-const { locale } = useLang()
-const lootParserLocale = computed(() => resolveLootParserLocale(locale.value))
+const { locale } = useLang();
+const lootParserLocale = computed(() => resolveLootParserLocale(locale.value));
 
 interface DBConfig {
-  key: string
-  value: any
+  key: string;
+  value: any;
 }
 
-const dbRecords = useIndexedDB<LootRecord>('loot-history-records')
-const dbConfig = useIndexedDB<DBConfig>('loot-history-config')
+const dbRecords = useIndexedDB<LootRecord>("loot-history-records");
+const dbConfig = useIndexedDB<DBConfig>("loot-history-config");
 const dbHandle = useIndexedDB<{
-  key: string
-  handle: FileSystemDirectoryHandle
-}>('loot-history-handle')
+  key: string;
+  handle: FileSystemDirectoryHandle;
+}>("loot-history-handle");
 
-const isInitializing = ref(true)
-const isMergePanelActive = ref(false)
-const isRoleSettingsVisible = ref(false)
-const isConfirmingPlayer = ref(false)
+const isInitializing = ref(true);
+const isMergePanelActive = ref(false);
+const isRoleSettingsVisible = ref(false);
+const isConfirmingPlayer = ref(false);
 
 watch(isRoleSettingsVisible, (val) => {
   // 如果正在弹出新玩家确认对话框，强制禁止气泡框关闭
   if (!val && isConfirmingPlayer.value) {
-    isRoleSettingsVisible.value = true
+    isRoleSettingsVisible.value = true;
   }
-})
+});
 
-const isLoading = ref(false)
-const loadingProgress = ref(0)
-const loadingProcessedBytes = ref(0)
-const loadingTotalBytes = ref(0)
+const isLoading = ref(false);
+const loadingProgress = ref(0);
+const loadingProcessedBytes = ref(0);
+const loadingTotalBytes = ref(0);
 
-const parsedLogFiles = ref<{ name: string, size: number }[]>([])
-const pendingLogFiles = ref<{ name: string, size: number }[]>([])
-const lootRecords = shallowRef<LootRecord[]>([])
-const existingKeys = ref(new Set<string>())
-const blacklistedKeys = ref(new Set<string>())
-const itemVisibility = ref<Record<string, boolean>>({})
-const viewMode = ref<'list' | 'summary' | 'slot' | 'week' | 'chart' | 'bis'>(
-  'summary',
-)
-const itemSearchKeyword = ref('')
-const winnerSearchPlayer = ref('')
-const currentHandle = ref<FileSystemDirectoryHandle | null>(null)
+const parsedLogFiles = ref<{ name: string; size: number }[]>([]);
+const pendingLogFiles = ref<{ name: string; size: number }[]>([]);
+const lootRecords = shallowRef<LootRecord[]>([]);
+const existingKeys = ref(new Set<string>());
+const blacklistedKeys = ref(new Set<string>());
+const itemVisibility = ref<Record<string, boolean>>({});
+const viewMode = ref<"list" | "summary" | "slot" | "week" | "chart" | "bis">("summary");
+const itemSearchKeyword = ref("");
+const winnerSearchPlayer = ref("");
+const currentHandle = ref<FileSystemDirectoryHandle | null>(null);
 
-const showManualAddDialog = ref(false)
-const showImportConfirmDialog = ref(false)
+const showManualAddDialog = ref(false);
+const showImportConfirmDialog = ref(false);
 // 简化分类：loot / meta / corrections / view
 const importForm = ref({
   loot: true,
   meta: true,
   corrections: true,
   view: true,
-})
+});
 
-const importDataPending = ref<any>(null)
+const importDataPending = ref<any>(null);
 const manualForm = ref({
-  timestamp: '',
-  item: '',
-  player: '',
-})
+  timestamp: "",
+  item: "",
+  player: "",
+});
 
-const showClearDialog = ref(false)
+const showClearDialog = ref(false);
 const clearForm = ref({
   loot: true,
   bis: true,
@@ -217,229 +234,209 @@ const clearForm = ref({
   mapping: true,
   weekCorrection: true,
   playerCorrection: true,
-})
+});
 
-const showInitialRoleSetup = ref(false)
-const wizardStepOverride = ref<0 | 1 | 2 | null>(null)
+const showInitialRoleSetup = ref(false);
+const wizardStepOverride = ref<0 | 1 | 2 | null>(null);
 
-const playerVisibility = ref<Record<string, boolean>>({})
-const recordWeekCorrections = ref<Record<string, number>>({})
-const recordPlayerCorrections = ref<Record<string, string>>({})
-const popoverTargetRecord = ref<LootRecord | null>(null)
-const popoverTriggerRef = ref()
-const popoverOpenedWithCorrection = ref<Record<string, boolean>>({})
+const playerVisibility = ref<Record<string, boolean>>({});
+const recordWeekCorrections = ref<Record<string, number>>({});
+const recordPlayerCorrections = ref<Record<string, string>>({});
+const popoverTargetRecord = ref<LootRecord | null>(null);
+const popoverTriggerRef = ref();
+const popoverOpenedWithCorrection = ref<Record<string, boolean>>({});
 const pendingWinnerChange = ref<{
-  record: LootRecord
-  newPlayer: string
-} | null>(null)
-const lastSyncTime = ref('')
-const syncSuccessVisible = ref(false)
-const showCustomCorrectionDialog = ref(false)
-const activeCorrectionTab = ref('player')
-const bisConfig = ref<BisConfig>({ playerBis: {}, needCountOffsets: {} })
+  record: LootRecord;
+  newPlayer: string;
+} | null>(null);
+const lastSyncTime = ref("");
+const syncSuccessVisible = ref(false);
+const showCustomCorrectionDialog = ref(false);
+const activeCorrectionTab = ref("player");
+const bisConfig = ref<BisConfig>({ playerBis: {}, needCountOffsets: {} });
 
 const lootRecordsMap = computed(() => {
-  const map = new Map<string, LootRecord>()
-  lootRecords.value.forEach(r => map.set(r.key, r))
-  return map
-})
+  const map = new Map<string, LootRecord>();
+  lootRecords.value.forEach((r) => map.set(r.key, r));
+  return map;
+});
 
 const filteredPlayerCorrections = computed(() => {
-  if (!showCustomCorrectionDialog.value)
-    return []
-  const list: any[] = []
+  if (!showCustomCorrectionDialog.value) return [];
+  const list: any[] = [];
 
   Object.entries(recordPlayerCorrections.value).forEach(([key, newVal]) => {
-    const record = lootRecordsMap.value.get(key)
-    if (!record)
-      return
+    const record = lootRecordsMap.value.get(key);
+    if (!record) return;
     list.push({
       key,
-      type: 'player',
+      type: "player",
       itemName: record.item,
       oldVal: record.player,
       newVal,
       record,
-    })
-  })
+    });
+  });
 
-  return list
-})
+  return list;
+});
 
 const filteredWeekCorrections = computed(() => {
-  if (!showCustomCorrectionDialog.value)
-    return []
-  const list: any[] = []
+  if (!showCustomCorrectionDialog.value) return [];
+  const list: any[] = [];
 
   Object.entries(recordWeekCorrections.value).forEach(([key, newVal]) => {
-    const record = lootRecordsMap.value.get(key)
-    if (!record)
-      return
-    const oldIdx = getRaidWeekIndex(record.timestamp, GAME_VERSION_CONFIG.RAID_START_TIME)
-    const targetIdx = oldIdx + (newVal as number)
+    const record = lootRecordsMap.value.get(key);
+    if (!record) return;
+    const oldIdx = getRaidWeekIndex(record.timestamp, GAME_VERSION_CONFIG.RAID_START_TIME);
+    const targetIdx = oldIdx + (newVal as number);
     list.push({
       key,
-      type: 'week',
+      type: "week",
       itemName: record.item,
       oldVal: `第 ${oldIdx} 周`,
       newVal: `第 ${targetIdx} 周`,
       record,
-    })
-  })
+    });
+  });
 
-  return list
-})
+  return list;
+});
 
 const filteredManualRecords = computed(() => {
-  if (!showCustomCorrectionDialog.value)
-    return []
-  return lootRecords.value.filter(r => r.isManual)
-})
+  if (!showCustomCorrectionDialog.value) return [];
+  return lootRecords.value.filter((r) => r.isManual);
+});
 
 function restoreCorrection(item: any) {
-  if (item.type === 'player') {
-    const newMap = { ...recordPlayerCorrections.value }
-    delete newMap[item.key]
-    recordPlayerCorrections.value = newMap
+  if (item.type === "player") {
+    const newMap = { ...recordPlayerCorrections.value };
+    delete newMap[item.key];
+    recordPlayerCorrections.value = newMap;
+  } else {
+    const newMap = { ...recordWeekCorrections.value };
+    delete newMap[item.key];
+    recordWeekCorrections.value = newMap;
   }
-  else {
-    const newMap = { ...recordWeekCorrections.value }
-    delete newMap[item.key]
-    recordWeekCorrections.value = newMap
-  }
-  ElMessage.success('已还原该条修正项')
+  ElMessage.success("已还原该条修正项");
 }
 
 async function removeManualRecord(record: LootRecord) {
   try {
     await ElMessageBox.confirm(
       `确定要删除这条手动添加的记录吗？<br/><br/><b>${record.item}</b> - <b>${record.player}</b>`,
-      '确认删除',
+      "确认删除",
       {
-        confirmButtonText: '确定删除',
-        cancelButtonText: '取消',
-        type: 'warning',
+        confirmButtonText: "确定删除",
+        cancelButtonText: "取消",
+        type: "warning",
         dangerouslyUseHTMLString: true,
       },
-    )
+    );
 
-    await dbRecords.remove(record.key)
-    lootRecords.value = lootRecords.value.filter(r => r.key !== record.key)
-    ElMessage.success('已删除手动记录')
-  }
-  catch {
+    await dbRecords.remove(record.key);
+    lootRecords.value = lootRecords.value.filter((r) => r.key !== record.key);
+    ElMessage.success("已删除手动记录");
+  } catch {
     // cancel
   }
 }
 
 async function updateManualRecordTime(record: LootRecord, newTime: Date) {
-  if (!newTime || Number.isNaN(newTime.getTime()))
-    return
+  if (!newTime || Number.isNaN(newTime.getTime())) return;
 
-  const targetTime = new Date(newTime)
-  targetTime.setHours(18, 0, 0, 0)
+  const targetTime = new Date(newTime);
+  targetTime.setHours(18, 0, 0, 0);
 
   try {
-    const updatedRecord = { ...record, timestamp: targetTime }
+    const updatedRecord = { ...record, timestamp: targetTime };
     // IndexedDB 中的 key 未变，所以直接 put 即可覆盖
-    await dbRecords.set(JSON.parse(JSON.stringify(updatedRecord)))
+    await dbRecords.set(JSON.parse(JSON.stringify(updatedRecord)));
 
     // 更新本地内存中的数据（注意 timestamp 在内存中是 Date 全局对象）
-    const index = lootRecords.value.findIndex(r => r.key === record.key)
+    const index = lootRecords.value.findIndex((r) => r.key === record.key);
     if (index !== -1) {
-      const newList = [...lootRecords.value]
-      newList[index] = { ...updatedRecord, timestamp: new Date(targetTime) }
-      lootRecords.value = newList
+      const newList = [...lootRecords.value];
+      newList[index] = { ...updatedRecord, timestamp: new Date(targetTime) };
+      lootRecords.value = newList;
     }
-    ElMessage.success('已更新记录时间')
-  }
-  catch (err) {
-    console.error('Update time error:', err)
-    ElMessage.error('更新时间失败')
+    ElMessage.success("已更新记录时间");
+  } catch (err) {
+    console.error("Update time error:", err);
+    ElMessage.error("更新时间失败");
   }
 }
 
 // 排序模式：'part' (部位排序) | 'drop' (掉落排序)
-const summarySortMode = ref<'part' | 'drop'>('part')
-const slotSortMode = ref<'part' | 'drop'>('part')
-const weekSortMode = ref<'part' | 'drop'>('drop')
-const bisSortMode = ref<'part' | 'drop'>('part')
-const SLOT_DEFINITIONS = PART_ORDER
+const summarySortMode = ref<"part" | "drop">("part");
+const slotSortMode = ref<"part" | "drop">("part");
+const weekSortMode = ref<"part" | "drop">("drop");
+const bisSortMode = ref<"part" | "drop">("part");
+const SLOT_DEFINITIONS = PART_ORDER;
 
-const playerMapping = ref<Record<string, string>>({})
+const playerMapping = ref<Record<string, string>>({});
 
 function getActualPlayer(name: string): string {
-  return playerMapping.value[name] || name
+  return playerMapping.value[name] || name;
 }
 
 function getRecordPlayer(record: LootRecord): string {
-  const corrected = recordPlayerCorrections.value[record.key]
-  return corrected || record.player
+  const corrected = recordPlayerCorrections.value[record.key];
+  return corrected || record.player;
 }
 
-const selectionForMerge = ref<string[]>([])
+const selectionForMerge = ref<string[]>([]);
 function handlePlayerSelectForMerge(p: string) {
   if (selectionForMerge.value.includes(p)) {
-    selectionForMerge.value = selectionForMerge.value.filter(x => x !== p)
-  }
-  else {
-    if (selectionForMerge.value.length >= 2)
-      selectionForMerge.value.shift()
-    selectionForMerge.value.push(p)
+    selectionForMerge.value = selectionForMerge.value.filter((x) => x !== p);
+  } else {
+    if (selectionForMerge.value.length >= 2) selectionForMerge.value.shift();
+    selectionForMerge.value.push(p);
   }
 }
 
 function confirmMergeSelection() {
   if (selectionForMerge.value.length === 2) {
-    addMapping(selectionForMerge.value[0], selectionForMerge.value[1])
-    selectionForMerge.value = []
+    addMapping(selectionForMerge.value[0], selectionForMerge.value[1]);
+    selectionForMerge.value = [];
   }
 }
 
-const playerSummaryFilterMode = ref<DisplayFilterMode>('obtained')
-const slotSummaryFilterMode = ref<DisplayFilterMode>('obtained')
+const playerSummaryFilterMode = ref<DisplayFilterMode>("obtained");
+const slotSummaryFilterMode = ref<DisplayFilterMode>("obtained");
 
 function addMapping(from?: string, to?: string) {
   if (from && to) {
-    playerMapping.value = { ...playerMapping.value, [from]: to }
+    playerMapping.value = { ...playerMapping.value, [from]: to };
   }
 }
 
 function removeMapping(key: string) {
-  const newMap = { ...playerMapping.value }
-  delete newMap[key]
-  playerMapping.value = newMap
+  const newMap = { ...playerMapping.value };
+  delete newMap[key];
+  playerMapping.value = newMap;
 }
 
-const currentPage = ref(1)
-const pageSize = 50
+const currentPage = ref(1);
+const pageSize = 50;
 
-const logPath = ref('')
-const isSyncing = ref(false)
-const processedFiles = ref<Record<string, { size: number, mtime: number }>>({})
-const syncStartDate = ref(GAME_VERSION_CONFIG.RAID_START_TIME)
-const syncEndDate = ref<string | null>(null)
-const isRaidFilterActive = ref(true)
-const isSyncNeeded = ref(false)
-const isOnlyRaidMembersActive = ref(true)
-const EQUIP_ROLES = [
-  '御敌',
-  '制敌',
-  '精准',
-  '治愈',
-  '强攻',
-  '强袭',
-  '游击',
-  '咏咒',
-]
-const EQUIP_ROLES_STR = EQUIP_ROLES.join('|')
+const logPath = ref("");
+const isSyncing = ref(false);
+const processedFiles = ref<Record<string, { size: number; mtime: number }>>({});
+const syncStartDate = ref(GAME_VERSION_CONFIG.RAID_START_TIME);
+const syncEndDate = ref<string | null>(null);
+const isRaidFilterActive = ref(true);
+const isSyncNeeded = ref(false);
+const isOnlyRaidMembersActive = ref(true);
+const EQUIP_ROLES = ["御敌", "制敌", "精准", "治愈", "强攻", "强袭", "游击", "咏咒"];
+const EQUIP_ROLES_STR = EQUIP_ROLES.join("|");
 
 const RAID_REGEX = new RegExp(
   `${GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD}武器箱|${GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD}(?!${EQUIP_ROLES_STR})|管弦乐琴乐谱：${GAME_VERSION_CONFIG.RAID_ORCHESTRION}|规格神典石|强化药|硬化药|强化纤维|神典石|${GAME_VERSION_CONFIG.RAID_MOUNT}`,
-)
-const EQUIP_SERIES_REGEX = new RegExp(`(?<series>.+)(${EQUIP_ROLES_STR}).+`)
-const showOnlyRole = ref(false)
-const hideUnselectedItems = ref(false)
+);
+const EQUIP_SERIES_REGEX = new RegExp(`(?<series>.+)(${EQUIP_ROLES_STR}).+`);
+const showOnlyRole = ref(false);
+const hideUnselectedItems = ref(false);
 const systemFilterSettings = ref({
   cards: true,
   materia: true,
@@ -448,181 +445,176 @@ const systemFilterSettings = ref({
   totem: true,
   other: true,
   maskedSeries: [] as string[],
-})
-const playerRoles = ref<Record<string, string>>({})
+});
+const playerRoles = ref<Record<string, string>>({});
 
 // 会话内权限缓存，减少 queryPermission 带来的 1s+ 延迟
-let sessionPermissionGranted = false
+let sessionPermissionGranted = false;
 
 // 演示模式
-const urlParams = useUrlSearchParams('hash')
-const isDemoMode = urlParams.demo === '1'
-const anonymousMapping = ref<Record<string, string>>({})
-const usedAnonymousNames = new Set<string>()
+const urlParams = useUrlSearchParams("hash");
+const isDemoMode = urlParams.demo === "1";
+const anonymousMapping = ref<Record<string, string>>({});
+const usedAnonymousNames = new Set<string>();
 
 const ANONYMOUS_POOL = [
-  '阿尔菲诺',
-  '阿莉塞',
-  '桑克瑞德',
-  '雅修特拉',
-  '于里昂热',
-  '埃斯蒂尼安',
-  '琳',
-  '盖亚',
-  '芝诺斯',
-  '奥尔什方',
-  '艾默里克',
-  '塔塔露',
-  '可露儿',
-  '维涅斯',
-  '爱梅特赛尔克',
-  '希斯拉德',
-  '赫尔墨斯',
-  '法丹尼尔',
-  '嘉恩·艾',
-  '梅尔维布',
-  '劳班',
-  '比格斯',
-  '威奇',
-  '娜娜莫',
-  '莉瑟',
-  '飞燕',
-  '夕雾',
-  '豪雪',
-  '玛托雅',
-  '零',
-  '阿伦瓦尔德',
-  '露西亚',
-  '希尔达',
-  '克劳德',
-  '蒂法',
-  '爱丽丝',
-  '扎克斯',
-  '萨富罗斯',
-  '斯考尔',
-  '莉诺雅',
-  '吉坦',
-  '嘉妮特',
-  '提达',
-  '尤娜',
-  '梵',
-  '巴尔弗雷',
-  '芙兰',
-  '诺克提斯',
-  '露娜弗蕾亚',
-  '克莱夫',
-  '吉尔',
-]
+  "阿尔菲诺",
+  "阿莉塞",
+  "桑克瑞德",
+  "雅修特拉",
+  "于里昂热",
+  "埃斯蒂尼安",
+  "琳",
+  "盖亚",
+  "芝诺斯",
+  "奥尔什方",
+  "艾默里克",
+  "塔塔露",
+  "可露儿",
+  "维涅斯",
+  "爱梅特赛尔克",
+  "希斯拉德",
+  "赫尔墨斯",
+  "法丹尼尔",
+  "嘉恩·艾",
+  "梅尔维布",
+  "劳班",
+  "比格斯",
+  "威奇",
+  "娜娜莫",
+  "莉瑟",
+  "飞燕",
+  "夕雾",
+  "豪雪",
+  "玛托雅",
+  "零",
+  "阿伦瓦尔德",
+  "露西亚",
+  "希尔达",
+  "克劳德",
+  "蒂法",
+  "爱丽丝",
+  "扎克斯",
+  "萨富罗斯",
+  "斯考尔",
+  "莉诺雅",
+  "吉坦",
+  "嘉妮特",
+  "提达",
+  "尤娜",
+  "梵",
+  "巴尔弗雷",
+  "芙兰",
+  "诺克提斯",
+  "露娜弗蕾亚",
+  "克莱夫",
+  "吉尔",
+];
 
 function getDisplayName(playerName: string | undefined | null): string {
-  if (!playerName)
-    return ''
-  if (!isDemoMode)
-    return playerName
+  if (!playerName) return "";
+  if (!isDemoMode) return playerName;
 
   if (anonymousMapping.value[playerName]) {
-    return anonymousMapping.value[playerName]
+    return anonymousMapping.value[playerName];
   }
 
   // 随机分配一个
-  const available = ANONYMOUS_POOL.filter(name => !usedAnonymousNames.has(name))
-  let assigned: string
+  const available = ANONYMOUS_POOL.filter((name) => !usedAnonymousNames.has(name));
+  let assigned: string;
   if (available.length > 0) {
-    assigned = available[Math.floor(Math.random() * available.length)]!
-  }
-  else {
-    assigned = `匿名玩家 ${Object.keys(anonymousMapping.value).length + 1}`
+    assigned = available[Math.floor(Math.random() * available.length)]!;
+  } else {
+    assigned = `匿名玩家 ${Object.keys(anonymousMapping.value).length + 1}`;
   }
 
-  anonymousMapping.value[playerName] = assigned
-  usedAnonymousNames.add(assigned)
-  return assigned
+  anonymousMapping.value[playerName] = assigned;
+  usedAnonymousNames.add(assigned);
+  return assigned;
 }
-provide('getDisplayName', getDisplayName)
+provide("getDisplayName", getDisplayName);
 
 const saveConfigDebounced = (() => {
-  let timer: ReturnType<typeof setTimeout> | null = null
-  return (configs: { key: string, value: any }[]) => {
-    if (timer)
-      clearTimeout(timer)
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  return (configs: { key: string; value: any }[]) => {
+    if (timer) clearTimeout(timer);
     timer = setTimeout(() => {
-      dbConfig.bulkSet(configs)
-    }, 500)
-  }
-})()
+      dbConfig.bulkSet(configs);
+    }, 500);
+  };
+})();
 
-const lastSavedState = new Map<string, string>()
-interface ConfigEntry { key: string, value: any }
+const lastSavedState = new Map<string, string>();
+interface ConfigEntry {
+  key: string;
+  value: any;
+}
 
 function buildCurrentConfigEntries(): ConfigEntry[] {
   return [
-    { key: 'itemVisibility', value: itemVisibility.value },
-    { key: 'playerVisibility', value: playerVisibility.value },
-    { key: 'weekCorrections', value: recordWeekCorrections.value },
-    { key: 'playerCorrections', value: recordPlayerCorrections.value },
-    { key: 'logPath', value: logPath.value },
-    { key: 'processedFiles', value: processedFiles.value },
-    { key: 'syncStartDate', value: syncStartDate.value },
-    { key: 'syncEndDate', value: syncEndDate.value },
-    { key: 'viewMode', value: viewMode.value },
-    { key: 'isRaidFilterActive', value: isRaidFilterActive.value },
-    { key: 'bisConfig', value: bisConfig.value },
-    { key: 'hideUnselectedItems', value: hideUnselectedItems.value },
-    { key: 'playerMapping', value: playerMapping.value },
-    { key: 'playerRoles', value: playerRoles.value },
-    { key: 'showOnlyRole', value: showOnlyRole.value },
-    { key: 'isOnlyRaidMembersActive', value: isOnlyRaidMembersActive.value },
-    { key: 'systemFilterSettings', value: systemFilterSettings.value },
-    { key: 'summarySortMode', value: summarySortMode.value },
-    { key: 'slotSortMode', value: slotSortMode.value },
-    { key: 'weekSortMode', value: weekSortMode.value },
-    { key: 'bisSortMode', value: bisSortMode.value },
-    { key: 'playerSummaryFilterMode', value: playerSummaryFilterMode.value },
-    { key: 'slotSummaryFilterMode', value: slotSummaryFilterMode.value },
-    { key: 'itemSearchKeyword', value: itemSearchKeyword.value },
-    { key: 'winnerSearchPlayer', value: winnerSearchPlayer.value },
-    { key: 'showInitialRoleSetup', value: showInitialRoleSetup.value },
-    { key: 'blacklistedKeys', value: Array.from(blacklistedKeys.value) },
-  ]
+    { key: "itemVisibility", value: itemVisibility.value },
+    { key: "playerVisibility", value: playerVisibility.value },
+    { key: "weekCorrections", value: recordWeekCorrections.value },
+    { key: "playerCorrections", value: recordPlayerCorrections.value },
+    { key: "logPath", value: logPath.value },
+    { key: "processedFiles", value: processedFiles.value },
+    { key: "syncStartDate", value: syncStartDate.value },
+    { key: "syncEndDate", value: syncEndDate.value },
+    { key: "viewMode", value: viewMode.value },
+    { key: "isRaidFilterActive", value: isRaidFilterActive.value },
+    { key: "bisConfig", value: bisConfig.value },
+    { key: "hideUnselectedItems", value: hideUnselectedItems.value },
+    { key: "playerMapping", value: playerMapping.value },
+    { key: "playerRoles", value: playerRoles.value },
+    { key: "showOnlyRole", value: showOnlyRole.value },
+    { key: "isOnlyRaidMembersActive", value: isOnlyRaidMembersActive.value },
+    { key: "systemFilterSettings", value: systemFilterSettings.value },
+    { key: "summarySortMode", value: summarySortMode.value },
+    { key: "slotSortMode", value: slotSortMode.value },
+    { key: "weekSortMode", value: weekSortMode.value },
+    { key: "bisSortMode", value: bisSortMode.value },
+    { key: "playerSummaryFilterMode", value: playerSummaryFilterMode.value },
+    { key: "slotSummaryFilterMode", value: slotSummaryFilterMode.value },
+    { key: "itemSearchKeyword", value: itemSearchKeyword.value },
+    { key: "winnerSearchPlayer", value: winnerSearchPlayer.value },
+    { key: "showInitialRoleSetup", value: showInitialRoleSetup.value },
+    { key: "blacklistedKeys", value: [...blacklistedKeys.value] },
+  ];
 }
 
 function normalizeConfigValue(value: any) {
-  const serialized
-    = value !== null && typeof value === 'object'
-      ? JSON.stringify(value)
-      : String(value)
-  const normalizedValue
-    = value !== null && typeof value === 'object'
-      ? JSON.parse(serialized)
-      : value
-  return { serialized, normalizedValue }
+  const serialized =
+    value !== null && typeof value === "object" ? JSON.stringify(value) : String(value);
+  const normalizedValue =
+    value !== null && typeof value === "object" ? JSON.parse(serialized) : value;
+  return { serialized, normalizedValue };
 }
 
 function collectPendingConfigUpdates(configs: ConfigEntry[]) {
-  const pendingUpdates: ConfigEntry[] = []
+  const pendingUpdates: ConfigEntry[] = [];
 
   for (const { key, value } of configs) {
-    const { serialized, normalizedValue } = normalizeConfigValue(value)
+    const { serialized, normalizedValue } = normalizeConfigValue(value);
     if (lastSavedState.get(key) !== serialized) {
       pendingUpdates.push({
         key,
         value: normalizedValue,
-      })
-      lastSavedState.set(key, serialized)
+      });
+      lastSavedState.set(key, serialized);
     }
   }
 
-  return pendingUpdates
+  return pendingUpdates;
 }
 
 async function saveConfigImmediately() {
   const configs = buildCurrentConfigEntries().map(({ key, value }) => {
-    const { serialized, normalizedValue } = normalizeConfigValue(value)
-    lastSavedState.set(key, serialized)
-    return { key, value: normalizedValue }
-  })
+    const { serialized, normalizedValue } = normalizeConfigValue(value);
+    lastSavedState.set(key, serialized);
+    return { key, value: normalizedValue };
+  });
 
-  await dbConfig.bulkSet(configs)
+  await dbConfig.bulkSet(configs);
 }
 
 watch(
@@ -656,22 +648,22 @@ watch(
     showInitialRoleSetup,
   ],
   () => {
-    const pendingUpdates = collectPendingConfigUpdates(buildCurrentConfigEntries())
+    const pendingUpdates = collectPendingConfigUpdates(buildCurrentConfigEntries());
     if (pendingUpdates.length > 0) {
-      saveConfigDebounced(pendingUpdates)
+      saveConfigDebounced(pendingUpdates);
     }
   },
   { deep: true },
-)
+);
 
 watch([syncStartDate, syncEndDate], () => {
   if (!isInitializing.value) {
-    isSyncNeeded.value = true
-    syncLogFiles()
+    isSyncNeeded.value = true;
+    syncLogFiles();
   }
-})
+});
 
-const isMenuVisible = ref(false)
+const isMenuVisible = ref(false);
 
 const detailedPlayerStats = computed(() => {
   if (isInitializing.value) {
@@ -679,1132 +671,1006 @@ const detailedPlayerStats = computed(() => {
       counts: {} as Record<string, number>,
       rollCounts: {} as Record<string, number>,
       sortedPlayers: [] as string[],
-    }
+    };
   }
 
-  const itemCounts: Record<string, number> = {}
-  const rollCounts: Record<string, number> = {}
-  const playersSet = new Set<string>()
+  const itemCounts: Record<string, number> = {};
+  const rollCounts: Record<string, number> = {};
+  const playersSet = new Set<string>();
 
   lootRecords.value.forEach((record) => {
-    const winner = getActualPlayer(getRecordPlayer(record))
-    itemCounts[winner] = (itemCounts[winner] || 0) + 1
-    playersSet.add(winner)
+    const winner = getActualPlayer(getRecordPlayer(record));
+    itemCounts[winner] = (itemCounts[winner] || 0) + 1;
+    playersSet.add(winner);
 
     record.rolls.forEach((roll) => {
-      const p = getActualPlayer(roll.player)
-      playersSet.add(p)
-      rollCounts[p] = (rollCounts[p] || 0) + 1
-    })
-  })
+      const p = getActualPlayer(roll.player);
+      playersSet.add(p);
+      rollCounts[p] = (rollCounts[p] || 0) + 1;
+    });
+  });
 
   // 即使没有数据，也将已设置职位的玩家加入列表
   Object.values(playerRoles.value).forEach((p) => {
-    if (p)
-      playersSet.add(getActualPlayer(p))
-  })
+    if (p) playersSet.add(getActualPlayer(p));
+  });
 
   // 将解析到的历史玩家（包含 PartyList 补充的队友）也加入候选列表
   Object.keys(playerVisibility.value).forEach((p) => {
-    if (p)
-      playersSet.add(getActualPlayer(p))
-  })
+    if (p) playersSet.add(getActualPlayer(p));
+  });
 
-  const sortedPlayers = Array.from(playersSet).sort((a, b) =>
+  const sortedPlayers = Array.from(playersSet).sort((a: string, b: string) =>
     comparePlayersByRole(a, b, rollCounts),
-  )
+  );
 
-  return { counts: itemCounts, rollCounts, sortedPlayers }
-})
+  return { counts: itemCounts, rollCounts, sortedPlayers };
+});
 
-const playerTotalItemsMap = computed(() => detailedPlayerStats.value.counts)
-const playerRollCountsMap = computed(() => detailedPlayerStats.value.rollCounts)
-const allPlayers = computed(() => detailedPlayerStats.value.sortedPlayers)
+const playerTotalItemsMap = computed(() => detailedPlayerStats.value.counts);
+const playerRollCountsMap = computed(() => detailedPlayerStats.value.rollCounts);
+const allPlayers = computed(() => detailedPlayerStats.value.sortedPlayers);
 
 watch(isOnlyRaidMembersActive, (val) => {
-  if (val)
-    applyRaidMembersVisibility()
-})
+  if (val) applyRaidMembersVisibility();
+});
 
 function applyRaidMembersVisibility() {
-  const newVis = { ...playerVisibility.value }
+  const newVis = { ...playerVisibility.value };
   // 强制选中所有固定队成员，反选非固定队成员
-  allPlayers.value.forEach((p) => {
-    if (getPlayerRole(p))
-      newVis[p] = true
-    else
-      newVis[p] = false
-  })
-  playerVisibility.value = newVis
+  allPlayers.value.forEach((p: string) => {
+    if (getPlayerRole(p)) newVis[p] = true;
+    else newVis[p] = false;
+  });
+  playerVisibility.value = newVis;
 }
 
 function refreshReactiveStateAfterImport() {
   // 清理排序缓存，确保导入后按当前数据重新计算优先级
-  itemSortPriorityCache.part.clear()
-  itemSortPriorityCache.drop.clear()
+  itemSortPriorityCache.part.clear();
+  itemSortPriorityCache.drop.clear();
 
   // 通过替换引用强制触发依赖刷新
-  lootRecords.value = [...lootRecords.value]
-  existingKeys.value = new Set(existingKeys.value)
-  blacklistedKeys.value = new Set(blacklistedKeys.value)
-  itemVisibility.value = { ...itemVisibility.value }
-  playerVisibility.value = { ...playerVisibility.value }
-  processedFiles.value = { ...processedFiles.value }
-  playerMapping.value = { ...playerMapping.value }
-  playerRoles.value = { ...playerRoles.value }
-  recordWeekCorrections.value = { ...recordWeekCorrections.value }
-  recordPlayerCorrections.value = { ...recordPlayerCorrections.value }
+  lootRecords.value = [...lootRecords.value];
+  existingKeys.value = new Set(existingKeys.value);
+  blacklistedKeys.value = new Set(blacklistedKeys.value);
+  itemVisibility.value = { ...itemVisibility.value };
+  playerVisibility.value = { ...playerVisibility.value };
+  processedFiles.value = { ...processedFiles.value };
+  playerMapping.value = { ...playerMapping.value };
+  playerRoles.value = { ...playerRoles.value };
+  recordWeekCorrections.value = { ...recordWeekCorrections.value };
+  recordPlayerCorrections.value = { ...recordPlayerCorrections.value };
   systemFilterSettings.value = {
     ...systemFilterSettings.value,
     maskedSeries: [...(systemFilterSettings.value.maskedSeries || [])],
-  }
+  };
 
   if (isRaidFilterActive.value) {
-    selectRaidLoot()
-    hideUnselectedItems.value = true
+    selectRaidLoot();
+    hideUnselectedItems.value = true;
   }
-  if (isOnlyRaidMembersActive.value)
-    applyRaidMembersVisibility()
+  if (isOnlyRaidMembersActive.value) applyRaidMembersVisibility();
 }
 
 const baseFilteredRecords = computed(() => {
-  if (isInitializing.value)
-    return []
+  if (isInitializing.value) return [];
 
-  const startTs = new Date(syncStartDate.value).getTime()
-  const endTs = syncEndDate.value ? new Date(syncEndDate.value).getTime() : Infinity
-  const itemVis = itemVisibility.value
+  const startTs = new Date(syncStartDate.value).getTime();
+  const endTs = syncEndDate.value ? new Date(syncEndDate.value).getTime() : Infinity;
+  const itemVis = itemVisibility.value;
 
   return lootRecords.value.filter((record) => {
-    if (isSystemFiltered(record.item))
-      return false
-    if (itemVis[record.item] === false)
-      return false
+    if (isSystemFiltered(record.item)) return false;
+    if (itemVis[record.item] === false) return false;
 
-    const ts = record.timestamp.getTime()
-    if (ts < startTs || ts > endTs)
-      return false
+    const ts = record.timestamp.getTime();
+    if (ts < startTs || ts > endTs) return false;
 
-    return true
-  })
-})
+    return true;
+  });
+});
 
 const listFilteredRecords = computed(() => {
-  const keywordLower = String(itemSearchKeyword.value || '').trim().toLowerCase()
-  const winnerFilter = String(winnerSearchPlayer.value || '')
+  const keywordLower = String(itemSearchKeyword.value || "")
+    .trim()
+    .toLowerCase();
+  const winnerFilter = String(winnerSearchPlayer.value || "");
 
   return baseFilteredRecords.value.filter((record) => {
-    if (keywordLower && !record.item.toLowerCase().includes(keywordLower))
-      return false
+    if (keywordLower && !record.item.toLowerCase().includes(keywordLower)) return false;
 
     if (winnerFilter) {
-      const actualWinner = getActualPlayer(getRecordPlayer(record))
-      if (actualWinner !== winnerFilter)
-        return false
+      const actualWinner = getActualPlayer(getRecordPlayer(record));
+      if (actualWinner !== winnerFilter) return false;
     }
 
-    return true
-  })
-})
+    return true;
+  });
+});
 
 const filteredRecords = computed(() => {
   const result = listFilteredRecords.value.filter((record) => {
-    const player = getActualPlayer(getRecordPlayer(record))
-    return isPlayerChecked(player)
-  })
-  return result.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-})
+    const player = getActualPlayer(getRecordPlayer(record));
+    return isPlayerChecked(player);
+  });
+  return result.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+});
 
 const analysisFilteredRecords = computed(() => {
   const result = baseFilteredRecords.value.filter((record) => {
-    const player = getActualPlayer(getRecordPlayer(record))
-    return isPlayerChecked(player)
-  })
-  return result.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-})
+    const player = getActualPlayer(getRecordPlayer(record));
+    return isPlayerChecked(player);
+  });
+  return result.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+});
 
 const filteredRecordStats = computed(() => {
-  const nextPlayerSummary: Record<string, Record<string, number>> = {}
-  const nextSlotSummary: Record<string, Record<string, number>> = {}
-  const nextWeekSummary: Record<string, Record<string, LootRecord[]>> = {}
-  const randomWeaponMap: Record<string, Record<string, number>> = {}
+  const nextPlayerSummary: Record<string, Record<string, number>> = {};
+  const nextSlotSummary: Record<string, Record<string, number>> = {};
+  const nextWeekSummary: Record<string, Record<string, LootRecord[]>> = {};
+  const randomWeaponMap: Record<string, Record<string, number>> = {};
 
   SLOT_DEFINITIONS.forEach((s) => {
-    nextSlotSummary[s] = {}
-  })
+    nextSlotSummary[s] = {};
+  });
 
   analysisFilteredRecords.value.forEach((record) => {
-    const player = getActualPlayer(getRecordPlayer(record))
-    const itemName = record.item
+    const player = getActualPlayer(getRecordPlayer(record));
+    const itemName = record.item;
 
-    if (!nextPlayerSummary[player])
-      nextPlayerSummary[player] = {}
-    nextPlayerSummary[player]![itemName] = (nextPlayerSummary[player]![itemName] || 0) + 1
+    if (!nextPlayerSummary[player]) nextPlayerSummary[player] = {};
+    nextPlayerSummary[player]![itemName] = (nextPlayerSummary[player]![itemName] || 0) + 1;
 
-    const rawSlot = getItemSlot(itemName)
-    const slot = rawSlot === '其他' ? itemName : rawSlot
-    if (!nextSlotSummary[slot])
-      nextSlotSummary[slot] = {}
-    nextSlotSummary[slot]![player] = (nextSlotSummary[slot]![player] || 0) + 1
+    const rawSlot = getItemSlot(itemName);
+    const slot = rawSlot === "其他" ? itemName : rawSlot;
+    if (!nextSlotSummary[slot]) nextSlotSummary[slot] = {};
+    nextSlotSummary[slot]![player] = (nextSlotSummary[slot]![player] || 0) + 1;
 
-    if (rawSlot === '随武') {
-      if (!randomWeaponMap[player])
-        randomWeaponMap[player] = {}
-      randomWeaponMap[player]![itemName] = (randomWeaponMap[player]![itemName] || 0) + 1
+    if (rawSlot === "随武") {
+      if (!randomWeaponMap[player]) randomWeaponMap[player] = {};
+      randomWeaponMap[player]![itemName] = (randomWeaponMap[player]![itemName] || 0) + 1;
     }
 
-    const week = getRecordRaidWeekLabel(record)
-    if (!nextWeekSummary[week])
-      nextWeekSummary[week] = {}
-    if (!nextWeekSummary[week]![player])
-      nextWeekSummary[week]![player] = []
-    nextWeekSummary[week]![player]!.push(record)
-  })
+    const week = getRecordRaidWeekLabel(record);
+    if (!nextWeekSummary[week]) nextWeekSummary[week] = {};
+    if (!nextWeekSummary[week]![player]) nextWeekSummary[week]![player] = [];
+    nextWeekSummary[week]![player]!.push(record);
+  });
 
   Object.values(nextWeekSummary).forEach((weekPlayers) => {
     Object.values(weekPlayers).forEach((records) => {
-      records.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-    })
-  })
+      records.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    });
+  });
 
-  const nextRandomWeaponDetails: Record<string, { name: string, count: number }[]> = {}
+  const nextRandomWeaponDetails: Record<string, { name: string; count: number }[]> = {};
   Object.entries(randomWeaponMap).forEach(([player, itemMap]) => {
     nextRandomWeaponDetails[player] = Object.entries(itemMap).map(([name, count]) => ({
       name,
       count,
-    }))
-  })
+    }));
+  });
 
   return {
     playerSummary: nextPlayerSummary,
     slotSummary: nextSlotSummary,
     weekSummary: nextWeekSummary,
     randomWeaponDetails: nextRandomWeaponDetails,
-  }
-})
+  };
+});
 
-const playerSummary = computed(() => filteredRecordStats.value.playerSummary)
+const playerSummary = computed(() => filteredRecordStats.value.playerSummary);
 
 const uniqueItems = computed(() => {
-  if (isInitializing.value)
-    return []
+  if (isInitializing.value) return [];
   const items = new Set(
-    lootRecords.value
-      .filter(r => !isSystemFiltered(r.item))
-      .map(r => r.item),
-  )
-  return Array.from(items).sort((a, b) => compareItemsForDisplay(a, b))
-})
+    lootRecords.value.filter((r) => !isSystemFiltered(r.item)).map((r) => r.item),
+  );
+  return Array.from(items).sort((a: string, b: string) => compareItemsForDisplay(a, b));
+});
 
 const rawSuspiciousKeys = computed(() => {
-  const keys = new Set<string>()
-  const rawSummary: Record<string, LootRecord[]> = {}
+  const keys = new Set<string>();
+  const rawSummary: Record<string, LootRecord[]> = {};
   filteredRecords.value.forEach((r) => {
-    const { label: weekLabel } = getRaidWeekLabel(r.timestamp)
-    if (!rawSummary[weekLabel])
-      rawSummary[weekLabel] = []
-    rawSummary[weekLabel].push(r)
-  })
+    const { label: weekLabel } = getRaidWeekLabel(r.timestamp);
+    if (!rawSummary[weekLabel]) rawSummary[weekLabel] = [];
+    rawSummary[weekLabel].push(r);
+  });
 
   for (const week in rawSummary) {
-    const allRecords = rawSummary[week]!
-    const itemsMap: Record<string, LootRecord[]> = {}
+    const allRecords = rawSummary[week]!;
+    const itemsMap: Record<string, LootRecord[]> = {};
     allRecords.forEach((r) => {
-      if (!itemsMap[r.item])
-        itemsMap[r.item] = []
-      itemsMap[r.item]!.push(r)
-    })
+      if (!itemsMap[r.item]) itemsMap[r.item] = [];
+      itemsMap[r.item]!.push(r);
+    });
 
-    const anchorTimestamps: number[] = []
+    const anchorTimestamps: number[] = [];
     for (const itemName in itemsMap) {
-      const itemRecords = itemsMap[itemName]!
+      const itemRecords = itemsMap[itemName]!;
       if (itemRecords.length > 1) {
-        itemRecords.sort(
-          (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
-        )
+        itemRecords.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
         for (let i = 0; i < itemRecords.length - 1; i++) {
-          const recA = itemRecords[i]!
-          const recB = itemRecords[i + 1]!
-          if (
-            recB.timestamp.getTime() - recA.timestamp.getTime()
-            > 5 * 60 * 1000
-          ) {
-            anchorTimestamps.push(recA.timestamp.getTime())
+          const recA = itemRecords[i]!;
+          const recB = itemRecords[i + 1]!;
+          if (recB.timestamp.getTime() - recA.timestamp.getTime() > 5 * 60 * 1000) {
+            anchorTimestamps.push(recA.timestamp.getTime());
           }
         }
       }
     }
 
-    if (anchorTimestamps.length === 0)
-      continue
+    if (anchorTimestamps.length === 0) continue;
 
     allRecords.forEach((r) => {
       // 限定条件1: 道具名称符合 RAID_REGEX
-      if (!RAID_REGEX.test(r.item))
-        return
+      if (!RAID_REGEX.test(r.item)) return;
 
       // 限定条件2: 获得时间在周二 16:00~19:00 之间
-      const date = r.timestamp
-      const dayOfWeek = date.getDay() // 0=周日, 1=周一, 2=周二...
-      const hour = date.getHours()
+      const date = r.timestamp;
+      const dayOfWeek = date.getDay(); // 0=周日, 1=周一, 2=周二...
+      const hour = date.getHours();
 
-      if (dayOfWeek !== 2)
-        return // 不是周二
-      if (hour < 16 || hour >= 19)
-        return // 不在 16:00~19:00 之间
+      if (dayOfWeek !== 2) return; // 不是周二
+      if (hour < 16 || hour >= 19) return; // 不在 16:00~19:00 之间
 
-      const ts = r.timestamp.getTime()
-      if (anchorTimestamps.some(ats => Math.abs(ts - ats) <= 5 * 60 * 1000)) {
-        keys.add(r.key)
+      const ts = r.timestamp.getTime();
+      if (anchorTimestamps.some((ats) => Math.abs(ts - ats) <= 5 * 60 * 1000)) {
+        keys.add(r.key);
       }
-    })
+    });
   }
-  return keys
-})
+  return keys;
+});
 
 function canCorrectWeek(record: LootRecord | null): boolean {
-  if (!record)
-    return false
-  return rawSuspiciousKeys.value.has(record.key) || !!recordWeekCorrections.value[record.key]
+  if (!record) return false;
+  return rawSuspiciousKeys.value.has(record.key) || !!recordWeekCorrections.value[record.key];
 }
 
 const isRaidRolesComplete = computed(() => {
-  return ROLE_DEFINITIONS.every(role => !!playerRoles.value[role])
-})
+  return ROLE_DEFINITIONS.every((role) => !!playerRoles.value[role]);
+});
 
 const visibleAllPlayers = computed(() => {
-  return isOnlyRaidMembersActive.value ? allPlayers.value.filter(p => !!getPlayerRole(p)) : allPlayers.value
-})
+  return isOnlyRaidMembersActive.value
+    ? allPlayers.value.filter((p: string) => !!getPlayerRole(p))
+    : allPlayers.value;
+});
 
 onMounted(async () => {
-  isInitializing.value = true
+  isInitializing.value = true;
   try {
     // 1. 同时发起多个本地数据库请求，缩短等待时间
     const [records, configs, handleEntry] = await Promise.all([
       dbRecords.getAll(),
       dbConfig.getAll(),
-      dbHandle.get('current-log-dir'),
-    ])
+      dbHandle.get("current-log-dir"),
+    ]);
 
     // 2. 先在非响应式变量里处理数据清理
-    let hasMigration = false
+    let hasMigration = false;
     const cleanRecords = records.map((r) => {
-      const cleanItem = sanitizeItemName(r.item)
-      const cleanPlayer = sanitizePlayerName(r.player)
+      const cleanItem = sanitizeItemName(r.item);
+      const cleanPlayer = sanitizePlayerName(r.player);
       const cleanRolls = r.rolls.map((roll: RollInfo) => ({
         ...roll,
         player: sanitizePlayerName(roll.player),
-      }))
-      const isDirty
-        = cleanItem !== r.item
-          || cleanPlayer !== r.player
-          || JSON.stringify(cleanRolls) !== JSON.stringify(r.rolls)
-      if (isDirty)
-        hasMigration = true
+      }));
+      const isDirty =
+        cleanItem !== r.item ||
+        cleanPlayer !== r.player ||
+        JSON.stringify(cleanRolls) !== JSON.stringify(r.rolls);
+      if (isDirty) hasMigration = true;
       return {
         ...r,
         item: cleanItem,
         player: cleanPlayer,
         rolls: cleanRolls,
         timestamp: new Date(r.timestamp),
-      }
-    })
+      };
+    });
 
     if (hasMigration) {
-      await dbRecords.bulkSet(JSON.parse(JSON.stringify(cleanRecords)))
+      await dbRecords.bulkSet(JSON.parse(JSON.stringify(cleanRecords)));
     }
 
     // 3. 处理配置项到本地变量，暂不更新 ref
     configs.forEach((c) => {
-      if (c.key === 'itemVisibility')
-        itemVisibility.value = c.value
-      if (c.key === 'playerVisibility')
-        playerVisibility.value = c.value
-      if (c.key === 'logPath')
-        logPath.value = c.value
-      if (c.key === 'processedFiles')
-        processedFiles.value = c.value || {}
-      if (c.key === 'weekCorrections')
-        recordWeekCorrections.value = c.value || {}
-      if (c.key === 'playerCorrections')
-        recordPlayerCorrections.value = c.value || {}
-      if (c.key === 'syncStartDate' && c.value)
-        syncStartDate.value = c.value
-      if (c.key === 'syncEndDate')
-        syncEndDate.value = c.value || null
-      if (c.key === 'viewMode') {
-        viewMode.value = c.value
+      if (c.key === "itemVisibility") itemVisibility.value = c.value;
+      if (c.key === "playerVisibility") playerVisibility.value = c.value;
+      if (c.key === "logPath") logPath.value = c.value;
+      if (c.key === "processedFiles") processedFiles.value = c.value || {};
+      if (c.key === "weekCorrections") recordWeekCorrections.value = c.value || {};
+      if (c.key === "playerCorrections") recordPlayerCorrections.value = c.value || {};
+      if (c.key === "syncStartDate" && c.value) syncStartDate.value = c.value;
+      if (c.key === "syncEndDate") syncEndDate.value = c.value || null;
+      if (c.key === "viewMode") {
+        viewMode.value = c.value;
       }
-      if (c.key === 'hideUnselectedItems')
-        hideUnselectedItems.value = !!c.value
-      if (c.key === 'playerMapping')
-        playerMapping.value = c.value || {}
-      if (c.key === 'playerRoles')
-        playerRoles.value = c.value || {}
-      if (c.key === 'showOnlyRole')
-        showOnlyRole.value = !!c.value
-      if (c.key === 'systemFilterSettings' && c.value) {
-        systemFilterSettings.value = { ...systemFilterSettings.value, ...c.value }
+      if (c.key === "hideUnselectedItems") hideUnselectedItems.value = !!c.value;
+      if (c.key === "playerMapping") playerMapping.value = c.value || {};
+      if (c.key === "playerRoles") playerRoles.value = c.value || {};
+      if (c.key === "showOnlyRole") showOnlyRole.value = !!c.value;
+      if (c.key === "systemFilterSettings" && c.value) {
+        systemFilterSettings.value = { ...systemFilterSettings.value, ...c.value };
       }
-      if (c.key === 'isRaidFilterActive')
-        isRaidFilterActive.value = !!c.value
-      if (c.key === 'isOnlyRaidMembersActive')
-        isOnlyRaidMembersActive.value = !!c.value
-      if (c.key === 'summarySortMode')
-        summarySortMode.value = c.value || 'part'
-      if (c.key === 'slotSortMode')
-        slotSortMode.value = c.value || 'part'
-      if (c.key === 'weekSortMode')
-        weekSortMode.value = c.value || 'drop'
-      if (c.key === 'bisSortMode')
-        bisSortMode.value = c.value || 'part'
-      if (c.key === 'blacklistedKeys')
-        blacklistedKeys.value = new Set(c.value || [])
-      if (c.key === 'bisConfig')
-        bisConfig.value = c.value || { playerBis: {}, needCountOffsets: {} }
-      if (c.key === 'playerSummaryFilterMode')
-        playerSummaryFilterMode.value = c.value || 'obtained'
-      if (c.key === 'slotSummaryFilterMode')
-        slotSummaryFilterMode.value = c.value || 'obtained'
-      if (c.key === 'itemSearchKeyword')
-        itemSearchKeyword.value = c.value || ''
-      if (c.key === 'winnerSearchPlayer')
-        winnerSearchPlayer.value = c.value || ''
-      if (c.key === 'showInitialRoleSetup')
-        showInitialRoleSetup.value = !!c.value
-    })
+      if (c.key === "isRaidFilterActive") isRaidFilterActive.value = !!c.value;
+      if (c.key === "isOnlyRaidMembersActive") isOnlyRaidMembersActive.value = !!c.value;
+      if (c.key === "summarySortMode") summarySortMode.value = c.value || "part";
+      if (c.key === "slotSortMode") slotSortMode.value = c.value || "part";
+      if (c.key === "weekSortMode") weekSortMode.value = c.value || "drop";
+      if (c.key === "bisSortMode") bisSortMode.value = c.value || "part";
+      if (c.key === "blacklistedKeys") blacklistedKeys.value = new Set(c.value || []);
+      if (c.key === "bisConfig")
+        bisConfig.value = c.value || { playerBis: {}, needCountOffsets: {} };
+      if (c.key === "playerSummaryFilterMode")
+        playerSummaryFilterMode.value = c.value || "obtained";
+      if (c.key === "slotSummaryFilterMode") slotSummaryFilterMode.value = c.value || "obtained";
+      if (c.key === "itemSearchKeyword") itemSearchKeyword.value = c.value || "";
+      if (c.key === "winnerSearchPlayer") winnerSearchPlayer.value = c.value || "";
+      if (c.key === "showInitialRoleSetup") showInitialRoleSetup.value = !!c.value;
+    });
 
     // 如果上次同步中断（存在 syncInProgress 标志），为了避免遗漏记录，重置 processedFiles
-    const hadInterruptedSync = configs.some(c => c.key === 'syncInProgress')
+    const hadInterruptedSync = configs.some((c) => c.key === "syncInProgress");
     if (hadInterruptedSync) {
-      processedFiles.value = {}
+      processedFiles.value = {};
       try {
-        await dbConfig.remove('syncInProgress')
-      }
-      catch {
+        await dbConfig.remove("syncInProgress");
+      } catch {
         // ignore
       }
     }
 
     // 4. 处理 Handle 和 权限，记录权限缓存
     if (handleEntry && handleEntry.handle) {
-      currentHandle.value = handleEntry.handle
+      currentHandle.value = handleEntry.handle;
       const status = await (
         handleEntry.handle as unknown as {
-          queryPermission: (o: { mode: string }) => Promise<string>
+          queryPermission: (o: { mode: string }) => Promise<string>;
         }
-      ).queryPermission({ mode: 'read' })
-      if (status === 'granted') {
-        sessionPermissionGranted = true
-      }
-      else {
-        logPath.value = '未授权，请点击同步按钮'
+      ).queryPermission({ mode: "read" });
+      if (status === "granted") {
+        sessionPermissionGranted = true;
+      } else {
+        logPath.value = "未授权，请点击同步按钮";
       }
     }
 
-    lootRecords.value = cleanRecords
-    existingKeys.value = new Set(cleanRecords.map(r => r.key))
+    lootRecords.value = cleanRecords;
+    existingKeys.value = new Set(cleanRecords.map((r) => r.key));
 
-    if (!isRaidRolesComplete.value && viewMode.value !== 'list') {
-      viewMode.value = 'list'
+    if (!isRaidRolesComplete.value && viewMode.value !== "list") {
+      viewMode.value = "list";
     }
 
-    window.addEventListener('paste', handleGlobalPaste)
-    document.body.addEventListener('dragover', handleGlobalDragOver)
-    document.body.addEventListener('dragleave', handleGlobalDragLeave)
-    document.body.addEventListener('drop', handleGlobalDrop)
-    window.addEventListener('click', closeContextMenu)
-    window.addEventListener('keydown', handleGlobalKeydown)
-    window.addEventListener('click', handleWindowClick)
+    window.addEventListener("paste", handleGlobalPaste);
+    document.body.addEventListener("dragover", handleGlobalDragOver);
+    document.body.addEventListener("dragleave", handleGlobalDragLeave);
+    document.body.addEventListener("drop", handleGlobalDrop);
+    window.addEventListener("click", closeContextMenu);
+    window.addEventListener("keydown", handleGlobalKeydown);
+    window.addEventListener("click", handleWindowClick);
 
-    window.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener("visibilitychange", handleVisibilityChange);
 
     // 初始加载完成后，如果不是第一次同步，自动进行同步
     if (lootRecords.value.length > 0) {
       setTimeout(() => {
-        syncLogFiles()
-      }, 300)
+        syncLogFiles();
+      }, 300);
     }
     // 7. 完成初始化，稍微延迟以确保数据稳定后再开启渲染
-    await nextTick()
+    await nextTick();
     setTimeout(() => {
-      isInitializing.value = false
-    }, 50)
-  }
-  catch (err) {
-    console.error('Initialize error:', err)
-    isInitializing.value = false
+      isInitializing.value = false;
+    }, 50);
+  } catch (err) {
+    console.error("Initialize error:", err);
+    isInitializing.value = false;
   }
   watch(
     [isRaidFilterActive, uniqueItems],
     ([active]) => {
       if (active) {
-        selectRaidLoot()
-        hideUnselectedItems.value = true
-      }
-      else {
-        hideUnselectedItems.value = false
+        selectRaidLoot();
+        hideUnselectedItems.value = true;
+      } else {
+        hideUnselectedItems.value = false;
       }
     },
     { immediate: true },
-  )
+  );
 
   watch(isRaidRolesComplete, (newVal) => {
     if (!newVal) {
-      viewMode.value = 'list'
+      viewMode.value = "list";
     }
-  })
-})
+  });
+});
 
 function handleVisibilityChange() {
-  if (document.visibilityState === 'visible' && lootRecords.value.length > 0) {
-    syncLogFiles()
+  if (document.visibilityState === "visible" && lootRecords.value.length > 0) {
+    syncLogFiles();
   }
 }
 
-const isDragOverWindow = ref(false)
-const isDragOverZone = ref(false)
-let dragLeaveTimer: ReturnType<typeof setTimeout> | null = null
+const isDragOverWindow = ref(false);
+const isDragOverZone = ref(false);
+let dragLeaveTimer: ReturnType<typeof setTimeout> | null = null;
 
-const isSharedTooltipVisible = ref(false)
-const sharedTooltipRef = ref()
-const weekTooltipContent = ref('')
+const isSharedTooltipVisible = ref(false);
+const sharedTooltipRef = ref();
+const weekTooltipContent = ref("");
 
 function handleWeekItemEnter(e: MouseEvent, rec: LootRecord) {
   if (rawSuspiciousKeys.value.has(rec.key) && recordWeekCorrections.value[rec.key] === undefined) {
-    sharedTooltipRef.value = e.currentTarget
-    weekTooltipContent.value = '可能归属周错误（通常发生在周二压线进本）。点击可选择将其归入上一周。'
-    isSharedTooltipVisible.value = true
+    sharedTooltipRef.value = e.currentTarget;
+    weekTooltipContent.value =
+      "可能归属周错误（通常发生在周二压线进本）。点击可选择将其归入上一周。";
+    isSharedTooltipVisible.value = true;
   }
 }
 
 function handleWeekItemLeave() {
-  isSharedTooltipVisible.value = false
+  isSharedTooltipVisible.value = false;
 }
 
 function handleWindowClick(e: MouseEvent) {
   if (popoverTargetRecord.value) {
-    const popper = document.querySelector('.winner-change-popper')
-    const isInsidePopper = popper?.contains(e.target as Node)
-    const isTrigger = (e.target as HTMLElement).closest('.winner-selector-trigger')
+    const popper = document.querySelector(".winner-change-popper");
+    const isInsidePopper = popper?.contains(e.target as Node);
+    const isTrigger = (e.target as HTMLElement).closest(".winner-selector-trigger");
     if (!isInsidePopper && !isTrigger) {
-      popoverTargetRecord.value = null
+      popoverTargetRecord.value = null;
     }
   }
 }
 
 function handleGlobalDragOver(e: DragEvent) {
-  e.preventDefault()
-  e.stopPropagation()
+  e.preventDefault();
+  e.stopPropagation();
 
   // 仅在拖拽的是文件时触发（避免拖拽文字时触发）
   // 注意：出于安全限制，浏览器在 Drop 之前无法获取具体文件名，因此无法精确判断是否为 .json
-  if (!e.dataTransfer?.types.includes('Files'))
-    return
+  if (!e.dataTransfer?.types.includes("Files")) return;
 
-  isDragOverWindow.value = true
+  isDragOverWindow.value = true;
   if (dragLeaveTimer) {
-    clearTimeout(dragLeaveTimer)
-    dragLeaveTimer = null
+    clearTimeout(dragLeaveTimer);
+    dragLeaveTimer = null;
   }
 }
 
 function handleGlobalDragLeave(e: DragEvent) {
-  e.preventDefault()
-  if (dragLeaveTimer)
-    clearTimeout(dragLeaveTimer)
+  e.preventDefault();
+  if (dragLeaveTimer) clearTimeout(dragLeaveTimer);
   dragLeaveTimer = setTimeout(() => {
-    isDragOverWindow.value = false
-    isDragOverZone.value = false
-  }, 100)
+    isDragOverWindow.value = false;
+    isDragOverZone.value = false;
+  }, 100);
 }
 
 function resetDragGuideState() {
-  isDragOverWindow.value = false
-  isDragOverZone.value = false
+  isDragOverWindow.value = false;
+  isDragOverZone.value = false;
   if (dragLeaveTimer) {
-    clearTimeout(dragLeaveTimer)
-    dragLeaveTimer = null
+    clearTimeout(dragLeaveTimer);
+    dragLeaveTimer = null;
   }
 }
 
 function handleGlobalDrop(e: DragEvent) {
-  e.preventDefault()
-  e.stopPropagation()
-  resetDragGuideState()
+  e.preventDefault();
+  e.stopPropagation();
+  resetDragGuideState();
 }
 
 function handleZoneDrop(e: DragEvent) {
-  e.preventDefault()
-  e.stopPropagation()
-  resetDragGuideState()
+  e.preventDefault();
+  e.stopPropagation();
+  resetDragGuideState();
 
   if (e.dataTransfer && e.dataTransfer.files.length > 0) {
-    const file = e.dataTransfer.files[0]
-    if (file && file.name.endsWith('.json')) {
-      processImportFile(file)
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith(".json")) {
+      processImportFile(file);
     }
   }
 }
 
 async function handleGlobalPaste(e: ClipboardEvent) {
-  const text = e.clipboardData?.getData('text')
-  if (!text)
-    return
+  const text = e.clipboardData?.getData("text");
+  if (!text) return;
 
   try {
-    if (!text.trim().startsWith('{'))
-      return
-    const json = JSON.parse(text)
+    if (!text.trim().startsWith("{")) return;
+    const json = JSON.parse(text);
     if (json.r && Array.isArray(json.r)) {
-      e.preventDefault()
-      await processImportJSON(json)
+      e.preventDefault();
+      await processImportJSON(json);
     }
-  }
-  catch {
+  } catch {
     // ignore
   }
 }
 
 onUnmounted(() => {
-  window.removeEventListener('paste', handleGlobalPaste)
-  document.body.removeEventListener('dragover', handleGlobalDragOver)
-  document.body.removeEventListener('dragleave', handleGlobalDragLeave)
-  document.body.removeEventListener('drop', handleGlobalDrop)
-  window.removeEventListener('click', closeContextMenu)
-  window.removeEventListener('keydown', handleGlobalKeydown)
-  window.removeEventListener('visibilitychange', handleVisibilityChange)
-  window.removeEventListener('click', handleWindowClick)
-})
+  window.removeEventListener("paste", handleGlobalPaste);
+  document.body.removeEventListener("dragover", handleGlobalDragOver);
+  document.body.removeEventListener("dragleave", handleGlobalDragLeave);
+  document.body.removeEventListener("drop", handleGlobalDrop);
+  window.removeEventListener("click", closeContextMenu);
+  window.removeEventListener("keydown", handleGlobalKeydown);
+  window.removeEventListener("visibilitychange", handleVisibilityChange);
+  window.removeEventListener("click", handleWindowClick);
+});
 
 function closeContextMenu() {
-  isMenuVisible.value = false
+  isMenuVisible.value = false;
 }
 
 const playerNetwork = computed(() => {
   if (isInitializing.value || !isMergePanelActive.value || lootRecords.value.length === 0)
-    return new Map<string, Set<string>>()
-  const networks = new Map<string, Set<string>>()
+    return new Map<string, Set<string>>();
+  const networks = new Map<string, Set<string>>();
   lootRecords.value.forEach((record) => {
-    const party = new Set([record.player, ...record.rolls.map(r => r.player)])
+    const party = new Set([record.player, ...record.rolls.map((r) => r.player)]);
     party.forEach((p) => {
-      if (!networks.has(p))
-        networks.set(p, new Set())
-      const myFriends = networks.get(p)!
+      if (!networks.has(p)) networks.set(p, new Set());
+      const myFriends = networks.get(p)!;
       party.forEach((mate) => {
-        if (mate !== p)
-          myFriends.add(mate)
-      })
-    })
-  })
-  return networks
-})
+        if (mate !== p) myFriends.add(mate);
+      });
+    });
+  });
+  return networks;
+});
 
 const mergeSuggestions = computed(() => {
   if (isInitializing.value || !isMergePanelActive.value || playerNetwork.value.size === 0)
-    return []
-  const suggestions: { from: string, to: string, confidence: number }[] = []
-  const ps = Array.from(playerNetwork.value.keys())
+    return [];
+  const suggestions: { from: string; to: string; confidence: number }[] = [];
+  const ps = [...playerNetwork.value.keys()];
 
   for (let i = 0; i < ps.length; i++) {
     for (let j = i + 1; j < ps.length; j++) {
-      const p1 = ps[i] as string
-      const p2 = ps[j] as string
+      const p1 = ps[i] as string;
+      const p2 = ps[j] as string;
 
-      if (getActualPlayer(p1) === getActualPlayer(p2))
-        continue
+      if (getActualPlayer(p1) === getActualPlayer(p2)) continue;
 
-      const net1 = playerNetwork.value.get(p1)!
-      const net2 = playerNetwork.value.get(p2)!
-      if (net1.size < 3 || net2.size < 3)
-        continue
+      const net1 = playerNetwork.value.get(p1)!;
+      const net2 = playerNetwork.value.get(p2)!;
+      if (net1.size < 3 || net2.size < 3) continue;
 
-      const intersection = new Set([...net1].filter(x => net2.has(x)))
-      const union = new Set([...net1, ...net2])
-      const jaccard = intersection.size / union.size
+      const intersection = new Set([...net1].filter((x) => net2.has(x)));
+      const union = new Set([...net1, ...net2]);
+      const jaccard = intersection.size / union.size;
 
       if (jaccard > 0.9) {
         suggestions.push({
           from: p1,
           to: p2,
           confidence: Math.round(jaccard * 100),
-        })
+        });
       }
     }
   }
-  return suggestions.sort((a, b) => b.confidence - a.confidence).slice(0, 5)
-})
+  return suggestions.sort((a, b) => b.confidence - a.confidence).slice(0, 5);
+});
 
 const availableSeries = computed(() => {
-  const seriesSet = new Set<string>()
+  const seriesSet = new Set<string>();
   lootRecords.value.forEach((r) => {
-    if (RAID_REGEX.test(r.item))
-      return
-    const match = r.item.match(EQUIP_SERIES_REGEX)
+    if (RAID_REGEX.test(r.item)) return;
+    const match = r.item.match(EQUIP_SERIES_REGEX);
     if (match?.groups?.series) {
-      seriesSet.add(match.groups.series)
+      seriesSet.add(match.groups.series);
     }
-  })
-  return Array.from(seriesSet).sort()
-})
+  });
+  return Array.from(seriesSet).sort();
+});
 const assignedPlayers = computed(() => {
-  return new Set(Object.values(playerRoles.value))
-})
+  return new Set(Object.values(playerRoles.value));
+});
 const unassignedPlayers = computed(() => {
-  return allPlayers.value.filter(p => !assignedPlayers.value.has(p))
-})
+  return allPlayers.value.filter((p: string) => !assignedPlayers.value.has(p));
+});
 const roleByPlayer = computed(() => {
-  const map = new Map<string, string>()
+  const map = new Map<string, string>();
   for (const [role, name] of Object.entries(playerRoles.value)) {
-    if (name && !map.has(name))
-      map.set(name, role)
+    if (name && !map.has(name)) map.set(name, role);
   }
-  return map
-})
+  return map;
+});
 const isBisConfigComplete = computed(() => {
-  if (!isRaidRolesComplete.value)
-    return false
+  if (!isRaidRolesComplete.value) return false;
   // 仅对正式职位的成员（MT/ST/H1/H2/D1/D2/D3/D4）检查 BIS 完整性
   // 只要有一个职位的 BIS 没填完，就算不完整
-  return ROLE_DEFINITIONS.every(role =>
-    isPlayerComplete(bisConfig.value, role),
-  )
-})
+  return ROLE_DEFINITIONS.every((role) => isPlayerComplete(bisConfig.value, role));
+});
 
 function handleGlobalKeydown(e: KeyboardEvent) {
-  const target = e.target as HTMLElement
-  const isInput
-    = ['INPUT', 'TEXTAREA'].includes(target.tagName) || target.isContentEditable
+  const target = e.target as HTMLElement;
+  const isInput = ["INPUT", "TEXTAREA"].includes(target.tagName) || target.isContentEditable;
 
-  if (e.key === 'Escape') {
+  if (e.key === "Escape") {
     if (isDragOverWindow.value || isDragOverZone.value) {
-      e.preventDefault()
-      resetDragGuideState()
-      return
+      e.preventDefault();
+      resetDragGuideState();
+      return;
     }
     if (popoverTargetRecord.value) {
-      popoverTargetRecord.value = null
-      return
+      popoverTargetRecord.value = null;
+      return;
     }
     if (isMenuVisible.value) {
-      isMenuVisible.value = false
-      return
+      isMenuVisible.value = false;
+      return;
     }
     if (showManualAddDialog.value) {
-      showManualAddDialog.value = false
-      return
+      showManualAddDialog.value = false;
+      return;
     }
     if (showImportConfirmDialog.value) {
-      showImportConfirmDialog.value = false
-      return
+      showImportConfirmDialog.value = false;
+      return;
     }
     if (showClearDialog.value) {
-      showClearDialog.value = false
-      return
+      showClearDialog.value = false;
+      return;
     }
   }
 
   if (!isInput && !e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey) {
-    if (e.key === '1') {
-      viewMode.value = 'list'
-    }
-    else if (isRaidRolesComplete.value) {
-      if (e.key === '2')
-        viewMode.value = 'summary'
-      if (e.key === '3')
-        viewMode.value = 'slot'
-      if (e.key === '4')
-        viewMode.value = 'week'
-      if (e.key === '5')
-        viewMode.value = 'chart'
-      if (e.key === '6')
-        viewMode.value = 'bis'
+    if (e.key === "1") {
+      viewMode.value = "list";
+    } else if (isRaidRolesComplete.value) {
+      if (e.key === "2") viewMode.value = "summary";
+      if (e.key === "3") viewMode.value = "slot";
+      if (e.key === "4") viewMode.value = "week";
+      if (e.key === "5") viewMode.value = "chart";
+      if (e.key === "6") viewMode.value = "bis";
     }
   }
 }
 
 const selectablePlayersForMerge = computed(() => {
-  const players = new Set<string>()
+  const players = new Set<string>();
 
   lootRecords.value.forEach((r) => {
-    players.add(r.player)
-    const corrected = recordPlayerCorrections.value[r.key]
-    if (corrected)
-      players.add(corrected)
-    r.rolls.forEach(roll => players.add(roll.player))
-  })
+    players.add(r.player);
+    const corrected = recordPlayerCorrections.value[r.key];
+    if (corrected) players.add(corrected);
+    r.rolls.forEach((roll) => players.add(roll.player));
+  });
 
   Object.values(playerRoles.value).forEach((p) => {
-    if (p)
-      players.add(p)
-  })
+    if (p) players.add(p);
+  });
 
-  const mappedAliases = new Set(Object.keys(playerMapping.value))
+  const mappedAliases = new Set(Object.keys(playerMapping.value));
 
-  return Array.from(players)
-    .filter(p => !mappedAliases.has(p))
-    .sort((a, b) => comparePlayersByRole(a, b, playerRollCountsMap.value))
-})
+  return [...players]
+    .filter((p) => !mappedAliases.has(p))
+    .sort((a, b) => comparePlayersByRole(a, b, playerRollCountsMap.value));
+});
 const checkedVisiblePlayers = computed(() => {
-  return visibleAllPlayers.value.filter(isPlayerChecked)
-})
+  return visibleAllPlayers.value.filter(isPlayerChecked);
+});
 
 const sortedSummaryPlayers = computed(() => {
   const players = getPlayersForDisplayFilterMode(
     checkedVisiblePlayers.value,
     playerSummaryFilterMode.value,
-  )
-  const summary = playerSummary.value
-  const counts: Record<string, number> = {}
+  );
+  const summary = playerSummary.value;
+  const counts: Record<string, number> = {};
   players.forEach((p) => {
-    counts[p] = Object.values(summary[p] || {}).reduce(
-      (sum, val) => sum + val,
-      0,
-    )
-  })
-  return [...players].sort((a, b) => comparePlayersByRole(a, b, counts))
-})
+    counts[p] = Object.values(summary[p] || {}).reduce((sum, val) => sum + val, 0);
+  });
+  return players.toSorted((a, b) => comparePlayersByRole(a, b, counts));
+});
 
 const visibleUniqueItems = computed(() => {
-  if (!hideUnselectedItems.value)
-    return uniqueItems.value
-  return uniqueItems.value.filter(isItemChecked)
-})
+  if (!hideUnselectedItems.value) return uniqueItems.value;
+  return uniqueItems.value.filter(isItemChecked);
+});
 
 const selectedUniqueItems = computed(() => {
-  return uniqueItems.value.filter(isItemChecked)
-})
+  return uniqueItems.value.filter(isItemChecked);
+});
 
 const analysisLockOptions = computed(() => [
   {
-    key: 'member-only',
-    label: '只看固定队',
+    key: "member-only",
+    label: "只看固定队",
     enabled: isOnlyRaidMembersActive.value,
     onChange: (val: string | number | boolean) => {
-      isOnlyRaidMembersActive.value = val === true
+      isOnlyRaidMembersActive.value = val === true;
     },
   },
   {
-    key: 'raid-only',
-    label: '只看零式掉落',
+    key: "raid-only",
+    label: "只看零式掉落",
     enabled: isRaidFilterActive.value,
     onChange: (val: string | number | boolean) => {
-      isRaidFilterActive.value = val === true
+      isRaidFilterActive.value = val === true;
     },
   },
-])
+]);
 
 function isCountMatchedByFilterMode(count: number, mode: DisplayFilterMode) {
-  if (mode === 'all')
-    return true
-  if (mode === 'obtained')
-    return count > 0
-  return count === 0
+  if (mode === "all") return true;
+  if (mode === "obtained") return count > 0;
+  return count === 0;
 }
 
-function getPlayersForDisplayFilterMode(
-  players: string[],
-  mode: DisplayFilterMode,
-) {
-  if (mode !== 'needed')
-    return players
-  return players.filter(p => !getPlayerRole(p)?.startsWith('LEFT:'))
+function getPlayersForDisplayFilterMode(players: string[], mode: DisplayFilterMode) {
+  if (mode !== "needed") return players;
+  return players.filter((p) => !getPlayerRole(p)?.startsWith("LEFT:"));
 }
 
 function toSlotDisplayName(itemName: string) {
-  const rawSlot = getItemSlot(itemName)
-  return rawSlot === '其他' ? itemName : rawSlot
+  const rawSlot = getItemSlot(itemName);
+  return rawSlot === "其他" ? itemName : rawSlot;
 }
 
-function getItemSortPriority(
-  item: string,
-  mode: 'part' | 'drop' = 'part',
-): number {
-  const cached = itemSortPriorityCache[mode].get(item)
-  if (cached !== undefined)
-    return cached
+function getItemSortPriority(item: string, mode: "part" | "drop" = "part"): number {
+  const cached = itemSortPriorityCache[mode].get(item);
+  if (cached !== undefined) return cached;
 
-  const order = mode === 'part' ? PART_ORDER : DROP_ORDER
-  const normalizedItem = mode === 'drop' ? toSlotDisplayName(item) : item
+  const order = mode === "part" ? PART_ORDER : DROP_ORDER;
+  const normalizedItem = mode === "drop" ? toSlotDisplayName(item) : item;
   const index = order.findIndex(
-    def => normalizedItem.includes(def) || def.includes(normalizedItem),
-  )
-  const priority = index !== -1 ? index : RAID_REGEX.test(item) ? 50 : 100
-  itemSortPriorityCache[mode].set(item, priority)
-  return priority
+    (def) => normalizedItem.includes(def) || def.includes(normalizedItem),
+  );
+  const priority = index !== -1 ? index : RAID_REGEX.test(item) ? 50 : 100;
+  itemSortPriorityCache[mode].set(item, priority);
+  return priority;
 }
 
-function compareItemsForDisplay(
-  a: string,
-  b: string,
-  mode: 'part' | 'drop' = 'part',
-) {
-  const isRaidA = RAID_REGEX.test(a)
-  const isRaidB = RAID_REGEX.test(b)
-  if (isRaidA !== isRaidB)
-    return isRaidA ? -1 : 1
+function compareItemsForDisplay(a: string, b: string, mode: "part" | "drop" = "part") {
+  const isRaidA = RAID_REGEX.test(a);
+  const isRaidB = RAID_REGEX.test(b);
+  if (isRaidA !== isRaidB) return isRaidA ? -1 : 1;
 
-  const priorityA = getItemSortPriority(a, mode)
-  const priorityB = getItemSortPriority(b, mode)
-  if (priorityA !== priorityB)
-    return priorityA - priorityB
-  return a.localeCompare(b)
+  const priorityA = getItemSortPriority(a, mode);
+  const priorityB = getItemSortPriority(b, mode);
+  if (priorityA !== priorityB) return priorityA - priorityB;
+  return a.localeCompare(b);
 }
 
-const visibleItemCount = computed(() => visibleUniqueItems.value.length)
-const visiblePlayerCount = computed(() => visibleAllPlayers.value.length)
+const visibleItemCount = computed(() => visibleUniqueItems.value.length);
+const visiblePlayerCount = computed(() => visibleAllPlayers.value.length);
 
 const allConditionRecords = computed(() => {
-  return analysisFilteredRecords.value.map(r => ({
+  return analysisFilteredRecords.value.map((r) => ({
     ...r,
     player: getRecordPlayer(r),
-  }))
-})
+  }));
+});
 
 const isDualFilterLockActive = computed(() => {
-  return !isOnlyRaidMembersActive.value || !isRaidFilterActive.value
-})
+  return !isOnlyRaidMembersActive.value || !isRaidFilterActive.value;
+});
 
 const shouldShowAnalysisLock = computed(() => {
-  return viewMode.value !== 'list' && isDualFilterLockActive.value
-})
+  return viewMode.value !== "list" && isDualFilterLockActive.value;
+});
 
 async function confirmAndPerformPlayerAction(name: string, context: string, action: () => void) {
-  if (!name)
-    return
+  if (!name) return;
 
   if (allPlayers.value.includes(name)) {
-    action()
-    return
+    action();
+    return;
   }
 
-  isConfirmingPlayer.value = true
+  isConfirmingPlayer.value = true;
   try {
     await ElMessageBox.confirm(
       `玩家「${name}」在当前掉落记录中从未出现过。是否将其添加为${context}？`,
-      '添加新玩家确认',
+      "添加新玩家确认",
       {
-        confirmButtonText: '确定添加',
-        cancelButtonText: '取消',
-        type: 'warning',
+        confirmButtonText: "确定添加",
+        cancelButtonText: "取消",
+        type: "warning",
         autofocus: false,
         lockScroll: false,
       },
-    )
-    action()
-  }
-  catch {
+    );
+    action();
+  } catch {
     // 用户取消了
-  }
-  finally {
+  } finally {
     // 延迟释放锁定，确保弹窗点击事件处理完后再允许气泡框失焦
     setTimeout(() => {
-      isConfirmingPlayer.value = false
-    }, 200)
+      isConfirmingPlayer.value = false;
+    }, 200);
   }
 }
 
 async function handleRolePlayerChange(name: string, role: string) {
   if (!name) {
-    playerRoles.value[role] = ''
-    return
+    playerRoles.value[role] = "";
+    return;
   }
 
-  confirmAndPerformPlayerAction(name, '固定队成员', () => {
-    playerRoles.value[role] = name
-  })
+  confirmAndPerformPlayerAction(name, "固定队成员", () => {
+    playerRoles.value[role] = name;
+  });
 }
 
 async function addSpecialRole(name: string) {
   const isDuplicate = Object.entries(playerRoles.value).some(
-    ([role, pName]) => role.startsWith('LEFT:') && pName === name,
-  )
+    ([role, pName]) => role.startsWith("LEFT:") && pName === name,
+  );
   if (isDuplicate) {
-    ElMessage.warning(`玩家「${name}」已经在离队成员列表中了`)
-    return
+    ElMessage.warning(`玩家「${name}」已经在离队成员列表中了`);
+    return;
   }
 
-  confirmAndPerformPlayerAction(name, '离队成员', () => {
-    const roleKey = `LEFT:${Date.now()}`
-    playerRoles.value[roleKey] = name
-  })
+  confirmAndPerformPlayerAction(name, "离队成员", () => {
+    const roleKey = `LEFT:${Date.now()}`;
+    playerRoles.value[roleKey] = name;
+  });
 }
 
 function getItemSlot(itemName: string): string {
-  const def = SLOT_DEFINITIONS.find(d => itemName.includes(d))
-  if (def)
-    return def
+  const def = SLOT_DEFINITIONS.find((d) => itemName.includes(d));
+  if (def) return def;
 
-  if (itemName.includes(GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD))
-    return '随武'
+  if (itemName.includes(GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD)) return "随武";
 
-  return '其他'
+  return "其他";
 }
 
-const slotSummary = computed(() => filteredRecordStats.value.slotSummary)
-const randomWeaponDetails = computed(() => filteredRecordStats.value.randomWeaponDetails)
+const slotSummary = computed(() => filteredRecordStats.value.slotSummary);
+const randomWeaponDetails = computed(() => filteredRecordStats.value.randomWeaponDetails);
 
 const displaySlots = computed(() => {
-  const filterMode = slotSummaryFilterMode.value
-  const predefinedList = slotSortMode.value === 'part' ? PART_ORDER : DROP_ORDER
+  const filterMode = slotSummaryFilterMode.value;
+  const predefinedList = slotSortMode.value === "part" ? PART_ORDER : DROP_ORDER;
 
-  const selectedPlayers = getPlayersForDisplayFilterMode(
-    checkedVisiblePlayers.value,
-    filterMode,
-  )
-  const selectedSlots = Array.from(new Set(selectedUniqueItems.value.map(toSlotDisplayName)))
-  const selectedSlotSet = new Set(selectedSlots)
+  const selectedPlayers = getPlayersForDisplayFilterMode(checkedVisiblePlayers.value, filterMode);
+  const selectedSlots: string[] = [...new Set(selectedUniqueItems.value.map(toSlotDisplayName))];
+  const selectedSlotSet = new Set<string>(selectedSlots);
 
   const shouldShowByMode = (slotName: string) => {
-    const countsByPlayer = slotSummary.value[slotName] || {}
-    if (filterMode === 'all')
-      return true
-    return selectedPlayers.some(p =>
+    const countsByPlayer = slotSummary.value[slotName] || {};
+    if (filterMode === "all") return true;
+    return selectedPlayers.some((p) =>
       isCountMatchedByFilterMode(countsByPlayer[p] || 0, filterMode),
-    )
-  }
+    );
+  };
 
   const getSelectedPlayerTotal = (slotName: string) => {
-    const countsByPlayer = slotSummary.value[slotName] || {}
-    return selectedPlayers.reduce((sum, p) => sum + (countsByPlayer[p] || 0), 0)
-  }
+    const countsByPlayer = slotSummary.value[slotName] || {};
+    return selectedPlayers.reduce((sum, p) => sum + (countsByPlayer[p] || 0), 0);
+  };
 
-  const filteredSlots = selectedSlots.filter(shouldShowByMode)
-  const filteredSlotSet = new Set(filteredSlots)
+  const filteredSlots = selectedSlots.filter(shouldShowByMode);
+  const filteredSlotSet = new Set(filteredSlots);
 
   const predefined = predefinedList.filter(
-    slot => selectedSlotSet.has(slot) && filteredSlotSet.has(slot),
-  )
+    (slot) => selectedSlotSet.has(slot) && filteredSlotSet.has(slot),
+  );
   const dynamic = filteredSlots
-    .filter(slot => !(predefinedList as readonly string[]).includes(slot))
-    .sort((a, b) => {
-      const totalA = getSelectedPlayerTotal(a)
-      const totalB = getSelectedPlayerTotal(b)
-      if (totalA !== totalB)
-        return totalB - totalA
-      return a.localeCompare(b)
-    })
+    .filter((slot: string) => !(predefinedList as readonly string[]).includes(slot))
+    .sort((a: string, b: string) => {
+      const totalA = getSelectedPlayerTotal(a);
+      const totalB = getSelectedPlayerTotal(b);
+      if (totalA !== totalB) return totalB - totalA;
+      return a.localeCompare(b);
+    });
 
-  return [...predefined, ...dynamic]
-})
+  return [...predefined, ...dynamic];
+});
 
 function getRecordRaidWeekLabel(record: LootRecord) {
-  const offset = recordWeekCorrections.value[record.key] || 0
-  return getRaidWeekLabel(
-    record.timestamp,
-    offset,
-    GAME_VERSION_CONFIG.RAID_START_TIME,
-  ).label
+  const offset = recordWeekCorrections.value[record.key] || 0;
+  return getRaidWeekLabel(record.timestamp, offset, GAME_VERSION_CONFIG.RAID_START_TIME).label;
 }
 
 const zeroWeekStart = computed(() => {
-  return getRaidWeekStart(new Date(GAME_VERSION_CONFIG.RAID_START_TIME))
-})
+  return getRaidWeekStart(new Date(GAME_VERSION_CONFIG.RAID_START_TIME));
+});
 
 function getRecordFormattedWeekLabel(weekRangeLabel: string) {
-  const { label } = getFormattedWeekLabel(weekRangeLabel, zeroWeekStart.value)
-  return label
+  const { label } = getFormattedWeekLabel(weekRangeLabel, zeroWeekStart.value);
+  return label;
 }
 
 function toggleWeekCorrection(record: LootRecord) {
-  const current = recordWeekCorrections.value[record.key] || 0
-  const newMap = { ...recordWeekCorrections.value }
+  const current = recordWeekCorrections.value[record.key] || 0;
+  const newMap = { ...recordWeekCorrections.value };
 
   if (current < 0) {
-    delete newMap[record.key]
+    delete newMap[record.key];
+  } else {
+    newMap[record.key] = -1;
   }
-  else {
-    newMap[record.key] = -1
-  }
-  recordWeekCorrections.value = newMap
+  recordWeekCorrections.value = newMap;
 }
 
-const weekSummary = computed(() => filteredRecordStats.value.weekSummary)
+const weekSummary = computed(() => filteredRecordStats.value.weekSummary);
 
 const sortedWeeks = computed(() => {
-  return Object.keys(weekSummary.value).sort().reverse()
-})
+  return Object.keys(weekSummary.value).sort().reverse();
+});
 
 function buildSortedRecordsInWeek(weekName: string): LootRecord[] {
-  const playersMap = weekSummary.value[weekName]
-  if (!playersMap)
-    return []
-  const all: LootRecord[] = []
+  const playersMap = weekSummary.value[weekName];
+  if (!playersMap) return [];
+  const all: LootRecord[] = [];
   Object.values(playersMap).forEach((recs) => {
-    all.push(...recs)
-  })
+    all.push(...recs);
+  });
 
   return all.sort((a, b) => {
     // 1. 按照部位优先级
-    const pA = getItemSortPriority(a.item, weekSortMode.value)
-    const pB = getItemSortPriority(b.item, weekSortMode.value)
-    if (pA !== pB)
-      return pA - pB
+    const pA = getItemSortPriority(a.item, weekSortMode.value);
+    const pB = getItemSortPriority(b.item, weekSortMode.value);
+    if (pA !== pB) return pA - pB;
 
     // 2. 部位相同时，按照职能顺序 (MT-D4)
-    const roleCompare = comparePlayersByRole(a.player, b.player)
-    if (roleCompare !== 0)
-      return roleCompare
+    const roleCompare = comparePlayersByRole(a.player, b.player);
+    if (roleCompare !== 0) return roleCompare;
 
-    return 0
-  })
+    return 0;
+  });
 }
 const sortedRecordsByWeekMap = computed(() => {
-  const map: Record<string, LootRecord[]> = {}
-  for (const week of sortedWeeks.value)
-    map[week] = buildSortedRecordsInWeek(week)
-  return map
-})
+  const map: Record<string, LootRecord[]> = {};
+  for (const week of sortedWeeks.value) map[week] = buildSortedRecordsInWeek(week);
+  return map;
+});
 const weekDividerByWeekMap = computed(() => {
-  const map: Record<string, boolean[]> = {}
+  const map: Record<string, boolean[]> = {};
   for (const week of sortedWeeks.value) {
-    const records = sortedRecordsByWeekMap.value[week] || []
+    const records = sortedRecordsByWeekMap.value[week] || [];
     const dividers = records.map((record, index) => {
-      if (index >= records.length - 1)
-        return false
-      const next = records[index + 1]
-      if (!next)
-        return false
-      return getItemGroupId(record.item) !== getItemGroupId(next.item)
-    })
-    map[week] = dividers
+      if (index >= records.length - 1) return false;
+      const next = records[index + 1];
+      if (!next) return false;
+      return getItemGroupId(record.item) !== getItemGroupId(next.item);
+    });
+    map[week] = dividers;
   }
-  return map
-})
+  return map;
+});
 function getSortedRecordsInWeek(weekName: string): LootRecord[] {
-  return sortedRecordsByWeekMap.value[weekName] || []
+  return sortedRecordsByWeekMap.value[weekName] || [];
 }
 
 function getItemGroupId(itemName: string): number {
-  const p = getItemSortPriority(itemName, weekSortMode.value)
-  if (weekSortMode.value === 'drop') {
-    if (p <= 3)
-      return 1 // 首饰组 (0-3: 耳, 颈, 腕, 指环)
-    if (p <= 8)
-      return 2 // 小件组 (4-8: 头, 手, 脚, 神典石, 硬化药)
-    if (p <= 12)
-      return 3 // 大件组 (9-12: 身, 腿, 强化药, 强化纤维)
-    return 4 // 武器与其它组 (13+)
-  }
-  else {
+  const p = getItemSortPriority(itemName, weekSortMode.value);
+  if (weekSortMode.value === "drop") {
+    if (p <= 3) return 1; // 首饰组 (0-3: 耳, 颈, 腕, 指环)
+    if (p <= 8) return 2; // 小件组 (4-8: 头, 手, 脚, 神典石, 硬化药)
+    if (p <= 12) return 3; // 大件组 (9-12: 身, 腿, 强化药, 强化纤维)
+    return 4; // 武器与其它组 (13+)
+  } else {
     // 部位排序下的分组逻辑 (可选，或者在部位排序下不显示分割线)
-    if (p <= 1)
-      return 1 // 武器与随武
-    if (p <= 6)
-      return 2 // 左侧防具
-    if (p <= 10)
-      return 3 // 首饰
-    return 4 // 材料
+    if (p <= 1) return 1; // 武器与随武
+    if (p <= 6) return 2; // 左侧防具
+    if (p <= 10) return 3; // 首饰
+    return 4; // 材料
   }
 }
 
 function shouldShowWeekDivider(weekName: string, index: number): boolean {
-  return weekDividerByWeekMap.value[weekName]?.[index] || false
+  return weekDividerByWeekMap.value[weekName]?.[index] || false;
 }
 
-const contextMenuRecord = ref<LootRecord | null>(null)
+const contextMenuRecord = ref<LootRecord | null>(null);
 
-const contextMenuPosition = ref({ x: 0, y: 0 })
+const contextMenuPosition = ref({ x: 0, y: 0 });
 
 const contextMenuRef = {
   getBoundingClientRect: () =>
@@ -1816,277 +1682,249 @@ const contextMenuRef = {
       left: contextMenuPosition.value.x,
       right: contextMenuPosition.value.x,
     }) as DOMRect,
-}
+};
 
 function handleRecordTrigger(e: MouseEvent, record: LootRecord) {
-  if (!canCorrectWeek(record))
-    return
-  e.preventDefault()
-  e.stopPropagation()
-  contextMenuRecord.value = record
-  contextMenuPosition.value = { x: e.clientX, y: e.clientY }
-  isMenuVisible.value = true
+  if (!canCorrectWeek(record)) return;
+  e.preventDefault();
+  e.stopPropagation();
+  contextMenuRecord.value = record;
+  contextMenuPosition.value = { x: e.clientX, y: e.clientY };
+  isMenuVisible.value = true;
 }
 
 function handleCorrectionClick() {
   if (contextMenuRecord.value) {
-    toggleWeekCorrection(contextMenuRecord.value)
+    toggleWeekCorrection(contextMenuRecord.value);
   }
-  isMenuVisible.value = false
+  isMenuVisible.value = false;
 }
 
 function openWinnerPopover(e: MouseEvent, record: LootRecord) {
   if (popoverTargetRecord.value?.key === record.key) {
-    popoverTargetRecord.value = null
-    return
+    popoverTargetRecord.value = null;
+    return;
   }
-  popoverTriggerRef.value = e.currentTarget
-  popoverTargetRecord.value = record
-  popoverOpenedWithCorrection.value[record.key] = !!recordPlayerCorrections.value[record.key]
+  popoverTriggerRef.value = e.currentTarget;
+  popoverTargetRecord.value = record;
+  popoverOpenedWithCorrection.value[record.key] = !!recordPlayerCorrections.value[record.key];
 }
 
 watch(popoverTargetRecord, (newVal) => {
   if (!newVal) {
-    popoverTriggerRef.value = null
+    popoverTriggerRef.value = null;
   }
-})
+});
 
 watch(itemSearchKeyword, () => {
-  currentPage.value = 1
-})
+  currentPage.value = 1;
+});
 
 const paginatedRecords = computed(() => {
-  const start = (currentPage.value - 1) * pageSize
-  return filteredRecords.value.slice(start, start + pageSize)
-})
+  const start = (currentPage.value - 1) * pageSize;
+  return filteredRecords.value.slice(start, start + pageSize);
+});
 const otherRollsByRecordKey = computed(() => {
-  const map: Record<string, RollInfo[]> = {}
+  const map: Record<string, RollInfo[]> = {};
   for (const record of paginatedRecords.value) {
     map[record.key] = record.rolls
-      .filter(r => r.player !== record.player)
+      .filter((r) => r.player !== record.player)
       .sort((a, b) => {
-        const typeA = rollTypePriority[a.type as keyof typeof rollTypePriority] ?? 3
-        const typeB = rollTypePriority[b.type as keyof typeof rollTypePriority] ?? 3
-        if (typeA !== typeB)
-          return typeA - typeB
-        return (b.value || 0) - (a.value || 0)
-      })
+        const typeA = rollTypePriority[a.type as keyof typeof rollTypePriority] ?? 3;
+        const typeB = rollTypePriority[b.type as keyof typeof rollTypePriority] ?? 3;
+        if (typeA !== typeB) return typeA - typeB;
+        return (b.value || 0) - (a.value || 0);
+      });
   }
-  return map
-})
+  return map;
+});
 
 async function setLogPath() {
   try {
     const showPicker = (
       window as unknown as {
-        showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle>
+        showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle>;
       }
-    ).showDirectoryPicker
+    ).showDirectoryPicker;
     if (!showPicker) {
       ElMessageBox.alert(
         '你的浏览器不支持此功能，详情请参阅:<br /> <a href="https://caniuse.com/?search=showDirectoryPicker" target="_blank" style="color: #409eff">Can I use showDirectoryPicker ? </a>',
-        '错误',
+        "错误",
         {
-          confirmButtonText: '确定',
-          type: 'error',
+          confirmButtonText: "确定",
+          type: "error",
           dangerouslyUseHTMLString: true,
         },
-      )
-      return false
+      );
+      return false;
     }
-    const handle = await showPicker()
+    const handle = await showPicker();
     if (handle) {
       // 若是通过“上一步”强制回到第一步，选完目录后恢复自动步进
-      wizardStepOverride.value = null
-      await dbHandle.set({ key: 'current-log-dir', handle })
-      currentHandle.value = handle
-      logPath.value = handle.name
-      return true
+      wizardStepOverride.value = null;
+      await dbHandle.set({ key: "current-log-dir", handle });
+      currentHandle.value = handle;
+      logPath.value = handle.name;
+      return true;
     }
+  } catch (e: any) {
+    if (e.name !== "AbortError") console.error("Directory picker error:", e);
   }
-  catch (e: any) {
-    if (e.name !== 'AbortError')
-      console.error('Directory picker error:', e)
-  }
-  return false
+  return false;
 }
 
 async function deleteRecord(record: LootRecord, silent = false) {
   try {
     // 1. 从内存中删除
-    const index = lootRecords.value.findIndex(r => r.key === record.key)
+    const index = lootRecords.value.findIndex((r) => r.key === record.key);
     if (index !== -1) {
-      lootRecords.value.splice(index, 1)
-      triggerRef(lootRecords)
+      lootRecords.value.splice(index, 1);
+      triggerRef(lootRecords);
     }
 
     // 2. 从数据库中删除
-    await dbRecords.remove(record.key)
+    await dbRecords.remove(record.key);
 
     // 3. 从现有 key 集合中删除
-    existingKeys.value.delete(record.key)
+    existingKeys.value.delete(record.key);
 
     // 4. 加入黑名单（防止以后再解析回来）
-    blacklistedKeys.value.add(record.key)
+    blacklistedKeys.value.add(record.key);
 
-    if (!silent)
-      ElMessage.success('记录已永久删除')
-  }
-  catch (err) {
-    console.error('Delete error:', err)
-    if (!silent)
-      ElMessage.error('删除失败')
+    if (!silent) ElMessage.success("记录已永久删除");
+  } catch (err) {
+    console.error("Delete error:", err);
+    if (!silent) ElMessage.error("删除失败");
   }
 }
 
 async function startInitialSync() {
-  await syncLogFiles(true)
+  await syncLogFiles(true);
 }
 
 async function syncLogFiles(userInitiated = false) {
-  if (isSyncing.value)
-    return
+  if (isSyncing.value) return;
 
   if (!currentHandle.value) {
     if (userInitiated) {
-      const success = await setLogPath()
-      if (!success || !currentHandle.value)
-        return
-    }
-    else {
-      return
+      const success = await setLogPath();
+      if (!success || !currentHandle.value) return;
+    } else {
+      return;
     }
   }
-  isSyncNeeded.value = false
+  isSyncNeeded.value = false;
 
   interface FileSystemDirectoryHandleExtended {
-    queryPermission: (options: {
-      mode: string
-    }) => Promise<'granted' | 'denied' | 'prompt'>
-    requestPermission: (options: {
-      mode: string
-    }) => Promise<'granted' | 'denied' | 'prompt'>
-    values: () => AsyncIterableIterator<FileSystemHandle>
+    queryPermission: (options: { mode: string }) => Promise<"granted" | "denied" | "prompt">;
+    requestPermission: (options: { mode: string }) => Promise<"granted" | "denied" | "prompt">;
+    values: () => AsyncIterableIterator<FileSystemHandle>;
   }
 
-  const handle
-    = currentHandle.value as unknown as FileSystemDirectoryHandleExtended
+  const handle = currentHandle.value as unknown as FileSystemDirectoryHandleExtended;
 
   if (!sessionPermissionGranted) {
-    const status = await handle.queryPermission({ mode: 'read' })
-    if (status !== 'granted') {
+    const status = await handle.queryPermission({ mode: "read" });
+    if (status !== "granted") {
       if (!userInitiated) {
-        isSyncNeeded.value = true
-        return
+        isSyncNeeded.value = true;
+        return;
       }
-      const newStatus = await handle.requestPermission({ mode: 'read' })
-      if (newStatus !== 'granted') {
-        return
+      const newStatus = await handle.requestPermission({ mode: "read" });
+      if (newStatus !== "granted") {
+        return;
       }
     }
-    sessionPermissionGranted = true
+    sessionPermissionGranted = true;
   }
 
-  isSyncing.value = true
-  let parserWorkerPool: ReturnType<typeof createLogParserWorkerPool> | null = null
-  const isFirstSync = existingKeys.value.size === 0
+  isSyncing.value = true;
+  let parserWorkerPool: ReturnType<typeof createLogParserWorkerPool> | null = null;
+  const isFirstSync = existingKeys.value.size === 0;
   if (isFirstSync) {
-    isLoading.value = true
+    isLoading.value = true;
   }
-  loadingProgress.value = 0
-  loadingProcessedBytes.value = 0
-  loadingTotalBytes.value = 0
+  loadingProgress.value = 0;
+  loadingProcessedBytes.value = 0;
+  loadingTotalBytes.value = 0;
 
   try {
     // 标记同步正在进行，若页面意外关闭可在下次启动时检测到中断
     try {
-      await dbConfig.bulkSet([{ key: 'syncInProgress', value: true }])
-    }
-    catch (e) {
+      await dbConfig.bulkSet([{ key: "syncInProgress", value: true }]);
+    } catch (e) {
       // ignore persistence errors
-      console.warn('Failed to set syncInProgress flag', e)
+      console.warn("Failed to set syncInProgress flag", e);
     }
-    const syncStartTs = new Date(syncStartDate.value).getTime()
-    const syncEndTs = syncEndDate.value
-      ? new Date(syncEndDate.value).getTime()
-      : Infinity
+    const syncStartTs = new Date(syncStartDate.value).getTime();
+    const syncEndTs = syncEndDate.value ? new Date(syncEndDate.value).getTime() : Infinity;
     const filesToRead: {
-      handle: FileSystemFileHandle
-      name: string
-      size: number
-      startByte: number
-    }[] = []
+      handle: FileSystemFileHandle;
+      name: string;
+      size: number;
+      startByte: number;
+    }[] = [];
 
-    const localKeys = new Set(existingKeys.value)
-    const pendingPersistRecords: LootRecord[] = []
-    const incomingMap = new Map<string, Set<string>>()
-    let newRecordCount = 0
-    const batchSeenPlayers = new Set<string>()
-    const batchSeenItems = new Set<string>()
-    let persistQueue: Promise<void> = Promise.resolve()
+    const localKeys = new Set(existingKeys.value);
+    const pendingPersistRecords: LootRecord[] = [];
+    const incomingMap = new Map<string, Set<string>>();
+    let newRecordCount = 0;
+    const batchSeenPlayers = new Set<string>();
+    const batchSeenItems = new Set<string>();
+    let persistQueue: Promise<void> = Promise.resolve();
 
     const enqueuePersistRecords = (records: LootRecord[]) => {
-      if (records.length === 0)
-        return Promise.resolve()
+      if (records.length === 0) return Promise.resolve();
       persistQueue = persistQueue.then(async () => {
-        await dbRecords.bulkSet(JSON.parse(JSON.stringify(records)))
-        lootRecords.value.push(...records)
-        triggerRef(lootRecords)
-      })
-      return persistQueue
-    }
+        await dbRecords.bulkSet(JSON.parse(JSON.stringify(records)));
+        lootRecords.value.push(...records);
+        triggerRef(lootRecords);
+      });
+      return persistQueue;
+    };
 
     const flushPendingPersistRecords = async (force = false) => {
       while (pendingPersistRecords.length > 0) {
-        if (!force && pendingPersistRecords.length < SYNC_RECORD_PERSIST_BATCH_SIZE)
-          break
-        const batchSize = Math.min(
-          SYNC_RECORD_PERSIST_BATCH_SIZE,
-          pendingPersistRecords.length,
-        )
-        const recordsToPersist = pendingPersistRecords.splice(0, batchSize)
-        if (recordsToPersist.length === 0)
-          break
-        await enqueuePersistRecords(recordsToPersist)
+        if (!force && pendingPersistRecords.length < SYNC_RECORD_PERSIST_BATCH_SIZE) break;
+        const batchSize = Math.min(SYNC_RECORD_PERSIST_BATCH_SIZE, pendingPersistRecords.length);
+        const recordsToPersist = pendingPersistRecords.splice(0, batchSize);
+        if (recordsToPersist.length === 0) break;
+        await enqueuePersistRecords(recordsToPersist);
       }
-    }
+    };
 
     for await (const entry of handle.values()) {
-      if (entry.kind === 'file' && entry.name.toLowerCase().endsWith('.log')) {
-        const name = entry.name
+      if (entry.kind === "file" && entry.name.toLowerCase().endsWith(".log")) {
+        const name = entry.name;
 
-        const match = name.match(/_(\d{8})(?:\.|_)/)
+        const match = name.match(/_(\d{8})(?:\.|_)/);
         if (match && match[1]) {
-          const fileDateStr = `${match[1].slice(0, 4)}-${match[1].slice(4, 6)}-${match[1].slice(6, 8)} 00:00:00`
-          const fileTs = new Date(fileDateStr).getTime()
+          const fileDateStr = `${match[1].slice(0, 4)}-${match[1].slice(4, 6)}-${match[1].slice(6, 8)} 00:00:00`;
+          const fileTs = new Date(fileDateStr).getTime();
           if (fileTs + 86400000 < syncStartTs || fileTs > syncEndTs) {
-            continue
+            continue;
           }
         }
 
-        const file = await (entry as FileSystemFileHandle).getFile()
-        if (file.size < 10)
-          continue
+        const file = await (entry as FileSystemFileHandle).getFile();
+        if (file.size < 10) continue;
 
         // 如果文件名不含日期，则必须检查文件修改时间是否在范围内
         if (!match) {
-          if (
-            file.lastModified < syncStartTs
-            || file.lastModified > syncEndTs
-          ) {
-            continue
+          if (file.lastModified < syncStartTs || file.lastModified > syncEndTs) {
+            continue;
           }
         }
 
-        const prev = processedFiles.value[name]
-        let startByte = 0
+        const prev = processedFiles.value[name];
+        let startByte = 0;
 
         if (prev) {
           if (file.size === prev.size && file.lastModified <= prev.mtime) {
-            continue
+            continue;
           }
           if (file.size > prev.size) {
-            startByte = prev.size
+            startByte = prev.size;
           }
         }
 
@@ -2095,875 +1933,834 @@ async function syncLogFiles(userInitiated = false) {
           name,
           size: file.size,
           startByte,
-        })
+        });
       }
     }
 
     if (filesToRead.length === 0) {
-      isSyncing.value = false
-      isLoading.value = false
-      loadingProcessedBytes.value = 0
-      loadingTotalBytes.value = 0
-      lastSyncTime.value = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      isSyncing.value = false;
+      isLoading.value = false;
+      loadingProcessedBytes.value = 0;
+      loadingTotalBytes.value = 0;
+      lastSyncTime.value = new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
       if (userInitiated) {
-        syncSuccessVisible.value = true
+        syncSuccessVisible.value = true;
         setTimeout(() => {
-          syncSuccessVisible.value = false
-        }, 800)
+          syncSuccessVisible.value = false;
+        }, 800);
       }
-      return
+      return;
     }
 
-    filesToRead.sort((a, b) => a.name.localeCompare(b.name))
+    filesToRead.sort((a, b) => a.name.localeCompare(b.name));
 
-    parsedLogFiles.value = []
-    pendingLogFiles.value = filesToRead.map(f => ({
+    parsedLogFiles.value = [];
+    pendingLogFiles.value = filesToRead.map((f) => ({
       name: f.name,
       size: f.size - f.startByte,
-    }))
+    }));
 
     const totalBytesToParse = filesToRead.reduce(
       (sum, file) => sum + Math.max(0, file.size - file.startByte),
       0,
-    )
-    let parsedBytes = 0
-    loadingTotalBytes.value = totalBytesToParse
-    loadingProcessedBytes.value = 0
-    loadingProgress.value = totalBytesToParse > 0 ? 0 : 100
+    );
+    let parsedBytes = 0;
+    loadingTotalBytes.value = totalBytesToParse;
+    loadingProcessedBytes.value = 0;
+    loadingProgress.value = totalBytesToParse > 0 ? 0 : 100;
 
-    parserWorkerPool = createLogParserWorkerPool(LOG_PARSER_WORKER_POOL_SIZE)
-    const activeWorkerPool = parserWorkerPool
+    parserWorkerPool = createLogParserWorkerPool(LOG_PARSER_WORKER_POOL_SIZE);
+    const activeWorkerPool = parserWorkerPool;
 
-    let nextFileIndex = 0
-    const runners = Array.from(
-      { length: LOG_PARSER_WORKER_POOL_SIZE },
-      async () => {
-        while (nextFileIndex < filesToRead.length) {
-          const currentIndex = nextFileIndex
-          nextFileIndex++
-          const target = filesToRead[currentIndex]
-          if (!target)
-            continue
+    let nextFileIndex = 0;
+    const runners = Array.from({ length: LOG_PARSER_WORKER_POOL_SIZE }, async () => {
+      while (nextFileIndex < filesToRead.length) {
+        const currentIndex = nextFileIndex;
+        nextFileIndex++;
+        const target = filesToRead[currentIndex];
+        if (!target) continue;
 
-          const file = await target.handle.getFile()
-          const fileBytesToParse = Math.max(0, file.size - target.startByte)
-          let fileParsedBytes = 0
-          const {
-            records,
-            players: filePlayers,
-            items: fileItems,
-          } = await activeWorkerPool.runFile({
-            file,
-            startByte: target.startByte,
-            locale: lootParserLocale.value,
-            onProgress(processedBytes) {
-              if (processedBytes <= fileParsedBytes)
-                return
-              const delta = processedBytes - fileParsedBytes
-              fileParsedBytes = processedBytes
-              parsedBytes += delta
-              const displayedParsedBytes = Math.min(parsedBytes, totalBytesToParse)
-              loadingProcessedBytes.value = displayedParsedBytes
-              loadingProgress.value = totalBytesToParse > 0
+        const file = await target.handle.getFile();
+        const fileBytesToParse = Math.max(0, file.size - target.startByte);
+        let fileParsedBytes = 0;
+        const {
+          records,
+          players: filePlayers,
+          items: fileItems,
+        } = await activeWorkerPool.runFile({
+          file,
+          startByte: target.startByte,
+          locale: lootParserLocale.value,
+          onProgress(processedBytes) {
+            if (processedBytes <= fileParsedBytes) return;
+            const delta = processedBytes - fileParsedBytes;
+            fileParsedBytes = processedBytes;
+            parsedBytes += delta;
+            const displayedParsedBytes = Math.min(parsedBytes, totalBytesToParse);
+            loadingProcessedBytes.value = displayedParsedBytes;
+            loadingProgress.value =
+              totalBytesToParse > 0
                 ? Math.min(100, Math.round((displayedParsedBytes / totalBytesToParse) * 100))
-                : 100
-            },
-          })
-          if (fileParsedBytes < fileBytesToParse) {
-            const delta = fileBytesToParse - fileParsedBytes
-            parsedBytes += delta
-            const displayedParsedBytes = Math.min(parsedBytes, totalBytesToParse)
-            loadingProcessedBytes.value = displayedParsedBytes
-            loadingProgress.value = totalBytesToParse > 0
+                : 100;
+          },
+        });
+        if (fileParsedBytes < fileBytesToParse) {
+          const delta = fileBytesToParse - fileParsedBytes;
+          parsedBytes += delta;
+          const displayedParsedBytes = Math.min(parsedBytes, totalBytesToParse);
+          loadingProcessedBytes.value = displayedParsedBytes;
+          loadingProgress.value =
+            totalBytesToParse > 0
               ? Math.min(100, Math.round((displayedParsedBytes / totalBytesToParse) * 100))
-              : 100
-          }
-
-          for (const r of records) {
-            if (!localKeys.has(r.key) && !blacklistedKeys.value.has(r.key)) {
-              localKeys.add(r.key)
-              pendingPersistRecords.push(r)
-              newRecordCount++
-              const date = new Date(r.timestamp).toLocaleDateString()
-              const dateItemKey = `${date}|${r.item}`
-              if (!incomingMap.has(dateItemKey))
-                incomingMap.set(dateItemKey, new Set())
-              incomingMap.get(dateItemKey)!.add(getActualPlayer(r.player))
-            }
-          }
-          await flushPendingPersistRecords()
-
-          filePlayers.forEach(p => batchSeenPlayers.add(p))
-          fileItems.forEach(i => batchSeenItems.add(i))
-
-          processedFiles.value[target.name] = {
-            size: file.size,
-            mtime: file.lastModified,
-          }
-
-          parsedLogFiles.value.push({
-            name: target.name,
-            size: target.size,
-          })
-          parsedLogFiles.value.sort((a, b) => a.name.localeCompare(b.name))
-
-          pendingLogFiles.value = pendingLogFiles.value.filter(
-            n => n.name !== target.name,
-          )
+              : 100;
         }
-      },
-    )
 
-    await Promise.all(runners)
-    await flushPendingPersistRecords(true)
-    await persistQueue
+        for (const r of records) {
+          if (!localKeys.has(r.key) && !blacklistedKeys.value.has(r.key)) {
+            localKeys.add(r.key);
+            pendingPersistRecords.push(r);
+            newRecordCount++;
+            const date = new Date(r.timestamp).toLocaleDateString();
+            const dateItemKey = `${date}|${r.item}`;
+            if (!incomingMap.has(dateItemKey)) incomingMap.set(dateItemKey, new Set());
+            incomingMap.get(dateItemKey)!.add(getActualPlayer(r.player));
+          }
+        }
+        await flushPendingPersistRecords();
 
-    let visUpdated = false
-    const newIV = { ...itemVisibility.value }
-    const newPV = { ...playerVisibility.value }
+        filePlayers.forEach((p) => batchSeenPlayers.add(p));
+        fileItems.forEach((i) => batchSeenItems.add(i));
+
+        processedFiles.value[target.name] = {
+          size: file.size,
+          mtime: file.lastModified,
+        };
+
+        parsedLogFiles.value.push({
+          name: target.name,
+          size: target.size,
+        });
+        parsedLogFiles.value.sort((a, b) => a.name.localeCompare(b.name));
+
+        pendingLogFiles.value = pendingLogFiles.value.filter((n) => n.name !== target.name);
+      }
+    });
+
+    await Promise.all(runners);
+    await flushPendingPersistRecords(true);
+    await persistQueue;
+
+    let visUpdated = false;
+    const newIV = { ...itemVisibility.value };
+    const newPV = { ...playerVisibility.value };
 
     batchSeenItems.forEach((i) => {
       if (newIV[i] === undefined) {
-        newIV[i] = true
-        visUpdated = true
+        newIV[i] = true;
+        visUpdated = true;
       }
-    })
+    });
     batchSeenPlayers.forEach((p) => {
       if (newPV[p] === undefined) {
-        newPV[p] = true
-        visUpdated = true
+        newPV[p] = true;
+        visUpdated = true;
       }
-    })
+    });
 
     if (visUpdated) {
-      itemVisibility.value = newIV
-      playerVisibility.value = newPV
+      itemVisibility.value = newIV;
+      playerVisibility.value = newPV;
     }
 
     if (newRecordCount > 0) {
-      existingKeys.value = localKeys
+      existingKeys.value = localKeys;
 
-      handlePotentialDuplicatesWithIncomingMap(incomingMap, 'sync')
+      handlePotentialDuplicatesWithIncomingMap(incomingMap, "sync");
 
       if (!isFirstSync) {
         ElMessage.success({
           message: `同步完成，新增 ${newRecordCount} 条记录`,
           showClose: true,
-        })
+        });
       }
 
       if (isFirstSync) {
-        if (!isRaidRolesComplete.value)
-          showInitialRoleSetup.value = true
+        if (!isRaidRolesComplete.value) showInitialRoleSetup.value = true;
 
         const uniqueSavageDrops = new Set(
-          lootRecords.value
-            .filter(r => RAID_REGEX.test(r.item))
-            .map(r => r.item),
-        )
+          lootRecords.value.filter((r) => RAID_REGEX.test(r.item)).map((r) => r.item),
+        );
         if (uniqueSavageDrops.size >= 12) {
-          isRaidFilterActive.value = true
+          isRaidFilterActive.value = true;
         }
       }
     }
-    lastSyncTime.value = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    lastSyncTime.value = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     if (userInitiated) {
-      syncSuccessVisible.value = true
+      syncSuccessVisible.value = true;
       setTimeout(() => {
-        syncSuccessVisible.value = false
-      }, 800)
+        syncSuccessVisible.value = false;
+      }, 800);
     }
 
-    logPath.value = currentHandle.value.name
-  }
-  catch (err: any) {
-    console.error('Sync error:', err.message)
-  }
-  finally {
-    parserWorkerPool?.dispose()
+    logPath.value = currentHandle.value.name;
+  } catch (err: any) {
+    console.error("Sync error:", err.message);
+  } finally {
+    parserWorkerPool?.dispose();
     // 清理同步标志（尝试移除持久化标记）
     try {
-      await dbConfig.remove('syncInProgress')
-    }
-    catch {
+      await dbConfig.remove("syncInProgress");
+    } catch {
       // ignore
     }
-    isSyncing.value = false
-    isLoading.value = false
-    loadingProgress.value = 0
-    loadingProcessedBytes.value = 0
-    loadingTotalBytes.value = 0
+    isSyncing.value = false;
+    isLoading.value = false;
+    loadingProgress.value = 0;
+    loadingProcessedBytes.value = 0;
+    loadingTotalBytes.value = 0;
   }
 }
 
 interface ParseWorkerResult {
-  records: LootRecord[]
-  players: string[]
-  items: string[]
+  records: LootRecord[];
+  players: string[];
+  items: string[];
 }
 
 interface ParseWorkerTask {
-  buffer: ArrayBuffer
-  locale: LootParserLocale
+  buffer: ArrayBuffer;
+  locale: LootParserLocale;
 }
 
 interface ParseWorkerFileTask {
-  file: File
-  startByte: number
-  locale: LootParserLocale
-  onProgress?: (processedBytes: number, totalBytes: number) => void
+  file: File;
+  startByte: number;
+  locale: LootParserLocale;
+  onProgress?: (processedBytes: number, totalBytes: number) => void;
 }
 
 interface ParseWorkerStreamStartMessage {
-  type: 'stream-start'
-  sessionId: string
-  locale: LootParserLocale
+  type: "stream-start";
+  sessionId: string;
+  locale: LootParserLocale;
 }
 
 interface ParseWorkerStreamChunkMessage {
-  type: 'stream-chunk'
-  sessionId: string
-  buffer: ArrayBuffer
+  type: "stream-chunk";
+  sessionId: string;
+  buffer: ArrayBuffer;
 }
 
 interface ParseWorkerStreamEndMessage {
-  type: 'stream-end'
-  sessionId: string
+  type: "stream-end";
+  sessionId: string;
 }
 
 interface ParseWorkerAck {
-  ok: boolean
+  ok: boolean;
 }
 
 function createLogParserWorkerPool(size: number) {
-  const normalizedSize = Math.max(1, Math.floor(size))
-  const workerSlots: { worker: Worker, chain: Promise<void> }[] = Array.from({ length: normalizedSize }, () => ({
-    worker: new LogParserWorker(),
-    chain: Promise.resolve(),
-  }))
-  let roundRobinIndex = 0
-  let disposed = false
+  const normalizedSize = Math.max(1, Math.floor(size));
+  const workerSlots: { worker: Worker; chain: Promise<void> }[] = Array.from(
+    { length: normalizedSize },
+    () => ({
+      worker: new LogParserWorker(),
+      chain: Promise.resolve(),
+    }),
+  );
+  let roundRobinIndex = 0;
+  let disposed = false;
 
   function getSlot(index: number) {
-    const slot = workerSlots[index]
-    if (!slot)
-      throw new Error(`Invalid worker slot index: ${index}`)
-    return slot
+    const slot = workerSlots[index];
+    if (!slot) throw new Error(`Invalid worker slot index: ${index}`);
+    return slot;
   }
 
   function resetWorker(index: number) {
-    const slot = getSlot(index)
-    slot.worker.terminate()
-    slot.worker = new LogParserWorker()
+    const slot = getSlot(index);
+    slot.worker.terminate();
+    slot.worker = new LogParserWorker();
   }
 
   function requestWorkerMessage<T>(
     worker: Worker,
-    message: ParseWorkerTask | ParseWorkerStreamStartMessage | ParseWorkerStreamChunkMessage | ParseWorkerStreamEndMessage,
+    message:
+      | ParseWorkerTask
+      | ParseWorkerStreamStartMessage
+      | ParseWorkerStreamChunkMessage
+      | ParseWorkerStreamEndMessage,
     transferables: Transferable[] = [],
   ): Promise<T> {
     return new Promise((resolve, reject) => {
       const cleanup = () => {
-        worker.onmessage = null
-        worker.onerror = null
-      }
+        worker.onmessage = null;
+        worker.onerror = null;
+      };
 
       worker.onmessage = (e: MessageEvent<T>) => {
-        cleanup()
-        resolve(e.data)
-      }
+        cleanup();
+        resolve(e.data);
+      };
 
       worker.onerror = (e) => {
-        cleanup()
-        reject(e)
-      }
+        cleanup();
+        reject(e);
+      };
 
       try {
-        worker.postMessage(message, transferables)
+        worker.postMessage(message, transferables);
+      } catch (e) {
+        cleanup();
+        reject(e);
       }
-      catch (e) {
-        cleanup()
-        reject(e)
-      }
-    })
+    });
   }
 
   async function executeTask(index: number, task: ParseWorkerTask): Promise<ParseWorkerResult> {
-    const slot = getSlot(index)
-    return requestWorkerMessage<ParseWorkerResult>(slot.worker, task, [task.buffer])
+    const slot = getSlot(index);
+    return requestWorkerMessage<ParseWorkerResult>(slot.worker, task, [task.buffer]);
   }
 
-  async function executeFileTask(index: number, task: ParseWorkerFileTask): Promise<ParseWorkerResult> {
-    const slot = getSlot(index)
-    const worker = slot.worker
-    const sessionId = `${Date.now()}-${Math.random().toString(36).slice(2)}`
-    const totalBytes = Math.max(0, task.file.size - task.startByte)
-    let processedBytes = 0
+  async function executeFileTask(
+    index: number,
+    task: ParseWorkerFileTask,
+  ): Promise<ParseWorkerResult> {
+    const slot = getSlot(index);
+    const worker = slot.worker;
+    const sessionId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const totalBytes = Math.max(0, task.file.size - task.startByte);
+    let processedBytes = 0;
 
     await requestWorkerMessage<ParseWorkerAck>(worker, {
-      type: 'stream-start',
+      type: "stream-start",
       sessionId,
       locale: task.locale,
-    })
+    });
 
     for (let offset = task.startByte; offset < task.file.size; offset += LOG_PARSER_CHUNK_SIZE) {
-      const end = Math.min(offset + LOG_PARSER_CHUNK_SIZE, task.file.size)
-      const buffer = await task.file.slice(offset, end).arrayBuffer()
-      await requestWorkerMessage<ParseWorkerAck>(worker, {
-        type: 'stream-chunk',
-        sessionId,
-        buffer,
-      }, [buffer])
-      processedBytes += end - offset
-      task.onProgress?.(processedBytes, totalBytes)
+      const end = Math.min(offset + LOG_PARSER_CHUNK_SIZE, task.file.size);
+      const buffer = await task.file.slice(offset, end).arrayBuffer();
+      await requestWorkerMessage<ParseWorkerAck>(
+        worker,
+        {
+          type: "stream-chunk",
+          sessionId,
+          buffer,
+        },
+        [buffer],
+      );
+      processedBytes += end - offset;
+      task.onProgress?.(processedBytes, totalBytes);
     }
 
-    if (processedBytes < totalBytes)
-      task.onProgress?.(totalBytes, totalBytes)
+    if (processedBytes < totalBytes) task.onProgress?.(totalBytes, totalBytes);
 
     return requestWorkerMessage<ParseWorkerResult>(worker, {
-      type: 'stream-end',
+      type: "stream-end",
       sessionId,
-    })
+    });
   }
 
   return {
     run(task: ParseWorkerTask): Promise<ParseWorkerResult> {
-      if (disposed)
-        return Promise.reject(new Error('Log parser worker pool is disposed'))
+      if (disposed) return Promise.reject(new Error("Log parser worker pool is disposed"));
 
-      const index = roundRobinIndex % normalizedSize
-      roundRobinIndex++
-      const slot = getSlot(index)
+      const index = roundRobinIndex % normalizedSize;
+      roundRobinIndex++;
+      const slot = getSlot(index);
 
       const taskPromise = slot.chain.then(async () => {
         try {
-          return await executeTask(index, task)
+          return await executeTask(index, task);
+        } catch (e) {
+          resetWorker(index);
+          throw e;
         }
-        catch (e) {
-          resetWorker(index)
-          throw e
-        }
-      })
+      });
       slot.chain = taskPromise.then(
         () => undefined,
         () => undefined,
-      )
+      );
 
-      return taskPromise
+      return taskPromise;
     },
     runFile(task: ParseWorkerFileTask): Promise<ParseWorkerResult> {
-      if (disposed)
-        return Promise.reject(new Error('Log parser worker pool is disposed'))
+      if (disposed) return Promise.reject(new Error("Log parser worker pool is disposed"));
 
-      const index = roundRobinIndex % normalizedSize
-      roundRobinIndex++
-      const slot = getSlot(index)
+      const index = roundRobinIndex % normalizedSize;
+      roundRobinIndex++;
+      const slot = getSlot(index);
 
       const taskPromise = slot.chain.then(async () => {
         try {
-          return await executeFileTask(index, task)
+          return await executeFileTask(index, task);
+        } catch (e) {
+          resetWorker(index);
+          throw e;
         }
-        catch (e) {
-          resetWorker(index)
-          throw e
-        }
-      })
+      });
       slot.chain = taskPromise.then(
         () => undefined,
         () => undefined,
-      )
+      );
 
-      return taskPromise
+      return taskPromise;
     },
     dispose() {
-      if (disposed)
-        return
-      disposed = true
+      if (disposed) return;
+      disposed = true;
       workerSlots.forEach((slot) => {
-        slot.worker.terminate()
-      })
+        slot.worker.terminate();
+      });
     },
-  }
+  };
 }
 
 function isSystemFiltered(item: string) {
-  if (systemFilterSettings.value.cards && item.startsWith('九宫幻卡'))
-    return true
-  if (systemFilterSettings.value.materia && item.includes('魔晶石'))
-    return true
+  if (systemFilterSettings.value.cards && item.startsWith("九宫幻卡")) return true;
+  if (systemFilterSettings.value.materia && item.includes("魔晶石")) return true;
   if (
-    systemFilterSettings.value.music
-    && (item.startsWith('管弦乐琴乐谱') || item.startsWith('陈旧的乐谱'))
+    systemFilterSettings.value.music &&
+    (item.startsWith("管弦乐琴乐谱") || item.startsWith("陈旧的乐谱"))
   ) {
-    return true
+    return true;
   }
-  if (systemFilterSettings.value.book && item.endsWith('断章'))
-    return true
-  if (systemFilterSettings.value.totem && item.endsWith('图腾'))
-    return true
-  if (systemFilterSettings.value.other && item.includes('经验值'))
-    return true
+  if (systemFilterSettings.value.book && item.endsWith("断章")) return true;
+  if (systemFilterSettings.value.totem && item.endsWith("图腾")) return true;
+  if (systemFilterSettings.value.other && item.includes("经验值")) return true;
 
   if (!RAID_REGEX.test(item)) {
-    const match = item.match(EQUIP_SERIES_REGEX)
+    const match = item.match(EQUIP_SERIES_REGEX);
     if (
-      match?.groups?.series
-      && systemFilterSettings.value.maskedSeries?.includes(match.groups.series)
+      match?.groups?.series &&
+      systemFilterSettings.value.maskedSeries?.includes(match.groups.series)
     ) {
-      return true
+      return true;
     }
   }
-  return false
+  return false;
 }
 
 function isItemChecked(item: string) {
-  return isRaidFilterActive.value
-    ? RAID_REGEX.test(item)
-    : itemVisibility.value[item] !== false
+  return isRaidFilterActive.value ? RAID_REGEX.test(item) : itemVisibility.value[item] !== false;
 }
 
 function isPlayerChecked(p: string) {
-  return playerVisibility.value[p] !== false
+  return playerVisibility.value[p] !== false;
 }
 
 function handleItemClick(e: MouseEvent, item: string) {
   if (e.ctrlKey) {
-    copyToClipboard(item)
-    return
+    copyToClipboard(item);
+    return;
   }
   if (e.altKey) {
-    toggleSoloMode('item', item)
-    return
+    toggleSoloMode("item", item);
+    return;
   }
   if (isRaidFilterActive.value) {
-    return
+    return;
   }
-  toggleItemVisibility(item)
+  toggleItemVisibility(item);
 }
 
 function toggleItemVisibility(item: string) {
-  const currentVisible = itemVisibility.value[item] !== false
-  itemVisibility.value[item] = !currentVisible
+  const currentVisible = itemVisibility.value[item] !== false;
+  itemVisibility.value[item] = !currentVisible;
 }
 
 function calculateTargetRequirement(row: any, player: string) {
-  const roleKey = getPlayerRole(player)
-  if (!roleKey)
-    return 0
-  const bis = (bisConfig.value.playerBis || {})[roleKey] || {}
+  const roleKey = getPlayerRole(player);
+  if (!roleKey) return 0;
+  const bis = (bisConfig.value.playerBis || {})[roleKey] || {};
 
-  if (row.id === 'random_weapon')
-    return 0
+  if (row.id === "random_weapon") return 0;
 
-  if (row.type === 'count' && bis[row.id] === 0) {
-    return 0
+  if (row.type === "count" && bis[row.id] === 0) {
+    return 0;
   }
 
-  const isBis = isBisItem(row, bis)
+  const isBis = isBisItem(row, bis);
 
   if (isBis) {
-    return row.type === 'count' ? (bis[row.id] as number) || 0 : 1
+    return row.type === "count" ? (bis[row.id] as number) || 0 : 1;
   }
 
-  const isStandardBox = row.type === 'toggle' && row.id !== 'weapon'
-  const isUpgradeMaterial
-    = row.id === 'twine'
-      || row.id === 'coating'
-      || row.id === 'solvent'
-      || row.id === 'tome'
+  const isStandardBox = row.type === "toggle" && row.id !== "weapon";
+  const isUpgradeMaterial =
+    row.id === "twine" || row.id === "coating" || row.id === "solvent" || row.id === "tome";
 
   if (isStandardBox || isUpgradeMaterial) {
-    return 1
+    return 1;
   }
 
-  return 0
+  return 0;
 }
 
-function comparePlayersByRole(
-  a: string,
-  b: string,
-  customCounts?: Record<string, number>,
-) {
-  const roleA = getPlayerRole(a)
-  const roleB = getPlayerRole(b)
+function comparePlayersByRole(a: string, b: string, customCounts?: Record<string, number>) {
+  const roleA = getPlayerRole(a);
+  const roleB = getPlayerRole(b);
 
   const getRolePriority = (r: string | null | undefined) => {
-    if (!r)
-      return 999
-    if (ROLE_DEFINITIONS.includes(r as any))
-      return ROLE_DEFINITIONS.indexOf(r as any)
-    if (r.startsWith('LEFT:'))
-      return 200
-    return 500
-  }
+    if (!r) return 999;
+    if (ROLE_DEFINITIONS.includes(r as any)) return ROLE_DEFINITIONS.indexOf(r as any);
+    if (r.startsWith("LEFT:")) return 200;
+    return 500;
+  };
 
-  const pA = getRolePriority(roleA)
-  const pB = getRolePriority(roleB)
+  const pA = getRolePriority(roleA);
+  const pB = getRolePriority(roleB);
 
-  if (pA !== pB)
-    return pA - pB
+  if (pA !== pB) return pA - pB;
 
   // 职能相同时，按照获取到的装备数量降序排列
-  const counts = customCounts || playerTotalItemsMap.value
-  const cA = counts[a] || 0
-  const cB = counts[b] || 0
-  if (cA !== cB)
-    return cB - cA
+  const counts = customCounts || playerTotalItemsMap.value;
+  const cA = counts[a] || 0;
+  const cB = counts[b] || 0;
+  if (cA !== cB) return cB - cA;
 
-  return a.localeCompare(b)
+  return a.localeCompare(b);
 }
 
 function buildSortedPlayersInSlot(summary: Record<string, number>) {
-  const filterMode = slotSummaryFilterMode.value
-  const selectedPlayers = getPlayersForDisplayFilterMode(
-    checkedVisiblePlayers.value,
-    filterMode,
-  )
-  const result = selectedPlayers.filter(p =>
+  const filterMode = slotSummaryFilterMode.value;
+  const selectedPlayers = getPlayersForDisplayFilterMode(checkedVisiblePlayers.value, filterMode);
+  const result = selectedPlayers.filter((p) =>
     isCountMatchedByFilterMode(summary[p] || 0, filterMode),
-  )
+  );
 
-  return result.sort((a, b) => comparePlayersByRole(a, b, summary || {}))
+  return result.sort((a, b) => comparePlayersByRole(a, b, summary || {}));
 }
 const sortedPlayersBySlotMap = computed(() => {
-  const map: Record<string, string[]> = {}
+  const map: Record<string, string[]> = {};
   for (const slot of displaySlots.value) {
-    map[slot] = buildSortedPlayersInSlot(slotSummary.value[slot] || {})
+    map[slot] = buildSortedPlayersInSlot(slotSummary.value[slot] || {});
   }
-  return map
-})
+  return map;
+});
 function getSortedPlayersInSlot(slotName: string) {
-  return sortedPlayersBySlotMap.value[slotName] || []
+  return sortedPlayersBySlotMap.value[slotName] || [];
 }
 
 function buildSlotItemTagInfo(player: string, slotName: string, count: number) {
-  const row = findDefaultRowBySlot(slotName)
+  const row = findDefaultRowBySlot(slotName);
 
-  if (row?.id === 'random_weapon' || slotName === '随武') {
+  if (row?.id === "random_weapon" || slotName === "随武") {
     return {
       count,
       isRandomWeapon: true,
-      layerName: '4层',
+      layerName: "4层",
       details: randomWeaponDetails.value[player],
-    }
+    };
   }
   if (!row) {
-    const isRandomWeapon
-      = slotName === '随武'
-        || (slotName.startsWith(GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD)
-          && RAID_REGEX.test(slotName))
+    const isRandomWeapon =
+      slotName === "随武" ||
+      (slotName.startsWith(GAME_VERSION_CONFIG.RAID_SERIES_KEYWORD) && RAID_REGEX.test(slotName));
 
     return {
       count,
       isRandomWeapon,
-      layerName: isRandomWeapon ? '4层' : undefined,
+      layerName: isRandomWeapon ? "4层" : undefined,
       details: isRandomWeapon ? randomWeaponDetails.value[player] : undefined,
-    }
+    };
   }
 
-  const roleKey = getPlayerRole(player)
-  const isRegularRole = roleKey && ROLE_DEFINITIONS.includes(roleKey as any)
+  const roleKey = getPlayerRole(player);
+  const isRegularRole = roleKey && ROLE_DEFINITIONS.includes(roleKey as any);
   if (!isRegularRole) {
     return {
       count,
       layerName: layerNameByRowId.get(row.id),
-    }
+    };
   }
 
-  const bis = (bisConfig.value.playerBis || {})[roleKey] || {}
-  const hasConfig = bis[row.id] !== undefined
-  const targetReq = calculateTargetRequirement(row, player)
+  const bis = (bisConfig.value.playerBis || {})[roleKey] || {};
+  const hasConfig = bis[row.id] !== undefined;
+  const targetReq = calculateTargetRequirement(row, player);
 
-  const isBisValue = isBisItem(row, bis)
+  const isBisValue = isBisItem(row, bis);
 
   return {
     count,
     isBis: hasConfig ? isBisValue : undefined,
     isBisFalse: !isBisValue && targetReq > 0,
     layerName: layerNameByRowId.get(row.id),
-  }
+  };
 }
 const slotItemTagInfoBySlotMap = computed(() => {
-  const map: Record<string, Record<string, ReturnType<typeof buildSlotItemTagInfo>>> = {}
+  const map: Record<string, Record<string, ReturnType<typeof buildSlotItemTagInfo>>> = {};
   for (const slot of displaySlots.value) {
-    const slotPlayers = sortedPlayersBySlotMap.value[slot] || []
-    const slotCounts = slotSummary.value[slot] || {}
-    const playerTagMap: Record<string, ReturnType<typeof buildSlotItemTagInfo>> = {}
+    const slotPlayers = sortedPlayersBySlotMap.value[slot] || [];
+    const slotCounts = slotSummary.value[slot] || {};
+    const playerTagMap: Record<string, ReturnType<typeof buildSlotItemTagInfo>> = {};
     for (const player of slotPlayers) {
-      playerTagMap[player] = buildSlotItemTagInfo(player, slot, slotCounts[player] || 0)
+      playerTagMap[player] = buildSlotItemTagInfo(player, slot, slotCounts[player] || 0);
     }
-    map[slot] = playerTagMap
+    map[slot] = playerTagMap;
   }
-  return map
-})
+  return map;
+});
 function getSlotItemTagInfo(player: string, slotName: string) {
-  return slotItemTagInfoBySlotMap.value[slotName]?.[player]
-    || buildSlotItemTagInfo(player, slotName, slotSummary.value[slotName]?.[player] || 0)
+  return (
+    slotItemTagInfoBySlotMap.value[slotName]?.[player] ||
+    buildSlotItemTagInfo(player, slotName, slotSummary.value[slotName]?.[player] || 0)
+  );
 }
 
 function buildFilteredItemsInPlayerSummary(player: string) {
-  const obtainedItemsMap = playerSummary.value[player] || {}
+  const obtainedItemsMap = playerSummary.value[player] || {};
   const results: {
-    name: string
-    count: number
-    isRandomWeapon?: boolean
-    layerName?: string
-  }[] = []
+    name: string;
+    count: number;
+    isRandomWeapon?: boolean;
+    layerName?: string;
+  }[] = [];
 
-  selectedUniqueItems.value.forEach((itemName) => {
-    const count = obtainedItemsMap[itemName] || 0
-    const slotName = toSlotDisplayName(itemName)
-    const row = findDefaultRowBySlot(slotName)
-    const isRandomWeapon = slotName === '随武'
+  selectedUniqueItems.value.forEach((itemName: string) => {
+    const count = obtainedItemsMap[itemName] || 0;
+    const slotName = toSlotDisplayName(itemName);
+    const row = findDefaultRowBySlot(slotName);
+    const isRandomWeapon = slotName === "随武";
 
     results.push({
       name: itemName,
       count,
       isRandomWeapon,
-      layerName: row ? layerNameByRowId.get(row.id) : isRandomWeapon ? '4层' : undefined,
-    })
-  })
+      layerName: row ? layerNameByRowId.get(row.id) : isRandomWeapon ? "4层" : undefined,
+    });
+  });
 
-  const mode = summarySortMode.value
-  results.sort((a, b) => compareItemsForDisplay(a.name, b.name, mode))
+  const mode = summarySortMode.value;
+  results.sort((a, b) => compareItemsForDisplay(a.name, b.name, mode));
 
-  const filterMode = playerSummaryFilterMode.value
-  if (filterMode === 'all')
-    return results
+  const filterMode = playerSummaryFilterMode.value;
+  if (filterMode === "all") return results;
   return results.filter((i) => {
-    if (filterMode === 'needed' && i.isRandomWeapon)
-      return false
-    return isCountMatchedByFilterMode(i.count, filterMode)
-  })
+    if (filterMode === "needed" && i.isRandomWeapon) return false;
+    return isCountMatchedByFilterMode(i.count, filterMode);
+  });
 }
 const filteredItemsByPlayerSummaryMap = computed(() => {
-  const map: Record<string, ReturnType<typeof buildFilteredItemsInPlayerSummary>> = {}
+  const map: Record<string, ReturnType<typeof buildFilteredItemsInPlayerSummary>> = {};
   for (const player of sortedSummaryPlayers.value)
-    map[player] = buildFilteredItemsInPlayerSummary(player)
-  return map
-})
+    map[player] = buildFilteredItemsInPlayerSummary(player);
+  return map;
+});
 function getFilteredItemsInPlayerSummary(player: string) {
-  return filteredItemsByPlayerSummaryMap.value[player] || []
+  return filteredItemsByPlayerSummaryMap.value[player] || [];
 }
 
 function getPlayerRole(player: string) {
-  return roleByPlayer.value.get(player)
+  return roleByPlayer.value.get(player);
 }
 
 function handlePlayerClick(e: MouseEvent, p: string) {
   if (e.ctrlKey) {
-    copyToClipboard(p)
-    return
+    copyToClipboard(p);
+    return;
   }
   if (e.altKey) {
-    toggleSoloMode('player', p)
-    return
+    toggleSoloMode("player", p);
+    return;
   }
   if (isOnlyRaidMembersActive.value) {
-    return
+    return;
   }
-  togglePlayerVisibility(p)
+  togglePlayerVisibility(p);
 }
 
 function togglePlayerVisibility(player: string) {
-  playerVisibility.value[player] = !(playerVisibility.value[player] !== false)
+  playerVisibility.value[player] = !(playerVisibility.value[player] !== false);
 }
 
 function findManualDuplicates(incomingRecords: LootRecord[]): LootRecord[] {
-  const manualRecords = lootRecords.value.filter(r => r.isManual)
-  if (manualRecords.length === 0)
-    return []
+  const manualRecords = lootRecords.value.filter((r) => r.isManual);
+  if (manualRecords.length === 0) return [];
 
-  const toDelete: LootRecord[] = []
-  const incomingMap = new Map<string, Set<string>>() // date_item -> set of normalized players
+  const toDelete: LootRecord[] = [];
+  const incomingMap = new Map<string, Set<string>>(); // date_item -> set of normalized players
 
   incomingRecords.forEach((real) => {
-    if (real.isManual)
-      return
-    const date = new Date(real.timestamp).toLocaleDateString()
-    const key = `${date}|${real.item}`
-    if (!incomingMap.has(key))
-      incomingMap.set(key, new Set())
-    incomingMap.get(key)!.add(getActualPlayer(real.player))
-  })
+    if (real.isManual) return;
+    const date = new Date(real.timestamp).toLocaleDateString();
+    const key = `${date}|${real.item}`;
+    if (!incomingMap.has(key)) incomingMap.set(key, new Set());
+    incomingMap.get(key)!.add(getActualPlayer(real.player));
+  });
 
   manualRecords.forEach((manual) => {
-    const date = new Date(manual.timestamp).toLocaleDateString()
-    const key = `${date}|${manual.item}`
-    const players = incomingMap.get(key)
+    const date = new Date(manual.timestamp).toLocaleDateString();
+    const key = `${date}|${manual.item}`;
+    const players = incomingMap.get(key);
     if (players && players.has(getActualPlayer(manual.player))) {
-      toDelete.push(manual)
+      toDelete.push(manual);
     }
-  })
+  });
 
-  return toDelete
+  return toDelete;
 }
 
 function findManualDuplicatesByIncomingMap(incomingMap: Map<string, Set<string>>): LootRecord[] {
-  if (incomingMap.size === 0)
-    return []
-  const manualRecords = lootRecords.value.filter(r => r.isManual)
-  if (manualRecords.length === 0)
-    return []
+  if (incomingMap.size === 0) return [];
+  const manualRecords = lootRecords.value.filter((r) => r.isManual);
+  if (manualRecords.length === 0) return [];
 
-  const toDelete: LootRecord[] = []
+  const toDelete: LootRecord[] = [];
   manualRecords.forEach((manual) => {
-    const date = new Date(manual.timestamp).toLocaleDateString()
-    const key = `${date}|${manual.item}`
-    const players = incomingMap.get(key)
+    const date = new Date(manual.timestamp).toLocaleDateString();
+    const key = `${date}|${manual.item}`;
+    const players = incomingMap.get(key);
     if (players && players.has(getActualPlayer(manual.player))) {
-      toDelete.push(manual)
+      toDelete.push(manual);
     }
-  })
-  return toDelete
+  });
+  return toDelete;
 }
 
 async function confirmAndDeleteManualDuplicates(
   overlaps: LootRecord[],
-  context: 'sync' | 'import',
+  context: "sync" | "import",
 ) {
-  if (overlaps.length === 0)
-    return
-  const sourceName = context === 'sync' ? '同步的日志' : '导入的数据'
+  if (overlaps.length === 0) return;
+  const sourceName = context === "sync" ? "同步的日志" : "导入的数据";
   try {
     await ElMessageBox.confirm(
       `在${sourceName}中发现了 ${overlaps.length} 条与现有手动记录重合的数据（同日期、同玩家、同物品）。<br/><br/>是否删除这些手动记录，以真实的解析数据为准？`,
-      '发现重复记录',
+      "发现重复记录",
       {
-        confirmButtonText: '删除手动记录',
-        cancelButtonText: '全部保留',
-        type: 'info',
+        confirmButtonText: "删除手动记录",
+        cancelButtonText: "全部保留",
+        type: "info",
         dangerouslyUseHTMLString: true,
       },
-    )
+    );
     for (const rec of overlaps) {
-      await deleteRecord(rec, true)
+      await deleteRecord(rec, true);
     }
-    ElMessage.success(`已清理 ${overlaps.length} 条手动记录`)
-  }
-  catch {
+    ElMessage.success(`已清理 ${overlaps.length} 条手动记录`);
+  } catch {
     // 用户取消删除
   }
 }
 
 async function handlePotentialDuplicates(
   incomingRecords: LootRecord[],
-  context: 'sync' | 'import',
+  context: "sync" | "import",
 ) {
-  const overlaps = findManualDuplicates(incomingRecords)
-  await confirmAndDeleteManualDuplicates(overlaps, context)
+  const overlaps = findManualDuplicates(incomingRecords);
+  await confirmAndDeleteManualDuplicates(overlaps, context);
 }
 
 async function handlePotentialDuplicatesWithIncomingMap(
   incomingMap: Map<string, Set<string>>,
-  context: 'sync' | 'import',
+  context: "sync" | "import",
 ) {
-  const overlaps = findManualDuplicatesByIncomingMap(incomingMap)
-  await confirmAndDeleteManualDuplicates(overlaps, context)
+  const overlaps = findManualDuplicatesByIncomingMap(incomingMap);
+  await confirmAndDeleteManualDuplicates(overlaps, context);
 }
 
 async function copyToClipboard(text: string) {
   try {
-    await navigator.clipboard.writeText(text)
+    await navigator.clipboard.writeText(text);
     ElMessage.success({
       message: `已复制: ${text}`,
       duration: 1500,
       showClose: true,
-    })
-  }
-  catch (err) {
-    console.error('Copy failed', err)
-    ElMessage.error({ message: '复制失败', showClose: true })
+    });
+  } catch (err) {
+    console.error("Copy failed", err);
+    ElMessage.error({ message: "复制失败", showClose: true });
   }
 }
 
 function toggleAllPlayers(visible: boolean) {
-  allPlayers.value.forEach(p => (playerVisibility.value[p] = visible))
+  allPlayers.value.forEach((p: string) => (playerVisibility.value[p] = visible));
 }
 
 function selectRaidLoot() {
-  const newIV: Record<string, boolean> = {}
-  uniqueItems.value.forEach((item) => {
-    newIV[item] = RAID_REGEX.test(item)
-  })
-  itemVisibility.value = newIV
+  const newIV: Record<string, boolean> = {};
+  uniqueItems.value.forEach((item: string) => {
+    newIV[item] = RAID_REGEX.test(item);
+  });
+  itemVisibility.value = newIV;
 
   if (visiblePlayerCount.value === 0) {
-    toggleAllPlayers(true)
+    toggleAllPlayers(true);
   }
 }
 
 function openManualAddDialog() {
-  const defaultDate = new Date()
-  defaultDate.setHours(18, 0, 0, 0)
+  const defaultDate = new Date();
+  defaultDate.setHours(18, 0, 0, 0);
   manualForm.value = {
     timestamp: defaultDate.toISOString(),
-    item: '',
-    player: '',
-  }
-  showManualAddDialog.value = true
+    item: "",
+    player: "",
+  };
+  showManualAddDialog.value = true;
 }
 
 function querySearchItems(qs: string, cb: any) {
-  const all = Array.from(uniqueItems.value)
-  const candidates = all.filter(i =>
-    i.toLowerCase().includes(qs.toLowerCase()),
-  )
-  cb(candidates.map(v => ({ value: v })))
+  const all = [...uniqueItems.value];
+  const candidates = all.filter((i) => i.toLowerCase().includes(qs.toLowerCase()));
+  cb(candidates.map((v) => ({ value: v })));
 }
 
 function querySearchPlayers(qs: string, cb: any) {
-  const candidates = allPlayers.value.filter(p =>
+  const candidates = allPlayers.value.filter((p: string) =>
     p.toLowerCase().includes(qs.toLowerCase()),
-  )
-  cb(candidates.map(v => ({ value: v })))
+  );
+  cb(candidates.map((v: string) => ({ value: v })));
 }
 
 async function submitManualRecord() {
-  const item = String(manualForm.value.item || '').trim()
-  const player = String(manualForm.value.player || '').trim()
+  const item = String(manualForm.value.item || "").trim();
+  const player = String(manualForm.value.player || "").trim();
 
   if (!manualForm.value.timestamp || !item || !player) {
-    ElMessage.error('请填写完整信息')
-    return
+    ElMessage.error("请填写完整信息");
+    return;
   }
 
-  const isNewItem = !uniqueItems.value.includes(item)
-  const isNewPlayer = !allPlayers.value.includes(player)
+  const isNewItem = !uniqueItems.value.includes(item);
+  const isNewPlayer = !allPlayers.value.includes(player);
 
   if (isNewItem || isNewPlayer) {
-    let warningMsg = ''
+    let warningMsg = "";
     if (isNewItem && isNewPlayer) {
-      warningMsg = `物品 "<b>${item}</b>" 和 玩家 "<b>${player}</b>" 都是第一次出现。`
-    }
-    else if (isNewItem) {
-      warningMsg = `物品 "<b>${item}</b>" 是第一次出现。`
-    }
-    else {
-      warningMsg = `玩家 "<b>${player}</b>" 是第一次出现。`
+      warningMsg = `物品 "<b>${item}</b>" 和 玩家 "<b>${player}</b>" 都是第一次出现。`;
+    } else if (isNewItem) {
+      warningMsg = `物品 "<b>${item}</b>" 是第一次出现。`;
+    } else {
+      warningMsg = `玩家 "<b>${player}</b>" 是第一次出现。`;
     }
 
     try {
       await ElMessageBox.confirm(
         `${warningMsg}<br/><br/>确定要以此名称创建记录吗？请检查是否有错别字。`,
-        '发现新条目',
+        "发现新条目",
         {
-          confirmButtonText: '确定创建',
-          cancelButtonText: '返回修改',
-          type: 'warning',
+          confirmButtonText: "确定创建",
+          cancelButtonText: "返回修改",
+          type: "warning",
           dangerouslyUseHTMLString: true,
         },
-      )
-    }
-    catch {
-      return
+      );
+    } catch {
+      return;
     }
   }
 
-  const ts = new Date(manualForm.value.timestamp)
-  ts.setHours(18, 0, 0, 0)
-  const key = `manual-${ts.getTime()}-${Math.random().toString(36).slice(2)}`
+  const ts = new Date(manualForm.value.timestamp);
+  ts.setHours(18, 0, 0, 0);
+  const key = `manual-${ts.getTime()}-${Math.random().toString(36).slice(2)}`;
 
   const record: LootRecord = {
     key,
@@ -2972,30 +2769,30 @@ async function submitManualRecord() {
     player,
     rolls: [],
     isManual: true,
-  }
+  };
 
-  await dbRecords.set(JSON.parse(JSON.stringify(record)))
+  await dbRecords.set(JSON.parse(JSON.stringify(record)));
 
   if (itemVisibility.value[record.item] === undefined) {
-    itemVisibility.value[record.item] = true
+    itemVisibility.value[record.item] = true;
   }
   if (playerVisibility.value[getActualPlayer(record.player)] === undefined) {
-    playerVisibility.value[getActualPlayer(record.player)] = true
+    playerVisibility.value[getActualPlayer(record.player)] = true;
   }
 
-  lootRecords.value = [...lootRecords.value, record]
+  lootRecords.value = [...lootRecords.value, record];
 
-  showManualAddDialog.value = false
+  showManualAddDialog.value = false;
   ElMessage.success({
     message: `已添加: ${record.item} - ${record.player}`,
     showClose: true,
-  })
+  });
 }
 
-const importInputRef = ref<HTMLInputElement | null>(null)
+const importInputRef = ref<HTMLInputElement | null>(null);
 
 function handleDataCommand(command: string) {
-  if (command === 'clear') {
+  if (command === "clear") {
     clearForm.value = {
       loot: true,
       bis: true,
@@ -3003,49 +2800,44 @@ function handleDataCommand(command: string) {
       mapping: true,
       weekCorrection: true,
       playerCorrection: true,
-    }
-    showClearDialog.value = true
-  }
-  else if (command === 'export') {
-    exportData()
-  }
-  else if (command === 'import') {
-    importInputRef.value?.click()
-  }
-  else if (command === 'manual') {
-    openManualAddDialog()
+    };
+    showClearDialog.value = true;
+  } else if (command === "export") {
+    exportData();
+  } else if (command === "import") {
+    importInputRef.value?.click();
+  } else if (command === "manual") {
+    openManualAddDialog();
   }
 }
 
 function exportData() {
-  doExport()
+  doExport();
 }
 
 async function doExport() {
   try {
-    const uniqueItems = new Set<string>()
-    const uniquePlayers = new Set<string>()
-    let minTs = Date.now()
+    const uniqueItems = new Set<string>();
+    const uniquePlayers = new Set<string>();
+    let minTs = Date.now();
 
     lootRecords.value.forEach((rec) => {
-      uniqueItems.add(rec.item)
-      uniquePlayers.add(rec.player)
-      const t
-        = rec.timestamp instanceof Date ? rec.timestamp.getTime() : rec.timestamp
-      if (t < minTs)
-        minTs = t
+      uniqueItems.add(rec.item);
+      uniquePlayers.add(rec.player);
+      const t = rec.timestamp instanceof Date ? rec.timestamp.getTime() : rec.timestamp;
+      if (t < minTs) minTs = t;
       if (rec.rolls) {
-        rec.rolls.forEach(r => uniquePlayers.add(r.player))
+        rec.rolls.forEach((r) => uniquePlayers.add(r.player));
       }
-    })
+    });
 
-    const itemDict = Array.from(uniqueItems)
-    const playerDict = Array.from(uniquePlayers)
-    const itemMap = new Map(itemDict.map((item, idx) => [item, idx]))
-    const playerMap = new Map(playerDict.map((player, idx) => [player, idx]))
+    const itemDict = [...uniqueItems];
+    const playerDict = [...uniquePlayers];
+    const itemMap = new Map(itemDict.map((item, idx) => [item, idx]));
+    const playerMap = new Map(playerDict.map((player, idx) => [player, idx]));
 
-    const ROLL_TYPES = ['need', 'greed', 'assign', 'direct', 'manual']
-    const rollTypeMap = new Map(ROLL_TYPES.map((t, i) => [t, i]))
+    const ROLL_TYPES = ["need", "greed", "assign", "direct", "manual"];
+    const rollTypeMap = new Map(ROLL_TYPES.map((t, i) => [t, i]));
 
     const data: any = {
       v: 4,
@@ -3055,32 +2847,23 @@ async function doExport() {
         p: playerDict,
       },
       r: lootRecords.value.map((rec) => {
-        const t
-          = rec.timestamp instanceof Date
-            ? rec.timestamp.getTime()
-            : rec.timestamp
+        const t = rec.timestamp instanceof Date ? rec.timestamp.getTime() : rec.timestamp;
 
-        const row: any[] = [
-          t - minTs,
-          itemMap.get(rec.item),
-          playerMap.get(rec.player),
-          rec.key,
-        ]
+        const row: any[] = [t - minTs, itemMap.get(rec.item), playerMap.get(rec.player), rec.key];
 
         if (rec.rolls && rec.rolls.length > 0) {
-          row.push(rec.rolls.length)
+          row.push(rec.rolls.length);
           rec.rolls.forEach((r) => {
-            row.push(playerMap.get(r.player))
-            row.push(r.value)
-            row.push(rollTypeMap.get(r.type) ?? 0)
-          })
+            row.push(playerMap.get(r.player));
+            row.push(r.value);
+            row.push(rollTypeMap.get(r.type) ?? 0);
+          });
+        } else {
+          row.push(0);
         }
-        else {
-          row.push(0)
-        }
-        return row
+        return row;
       }),
-    }
+    };
 
     const config: any = {
       map: playerMapping.value,
@@ -3103,35 +2886,34 @@ async function doExport() {
       bisSortMode: bisSortMode.value,
       playerSummaryFilterMode: playerSummaryFilterMode.value,
       slotSummaryFilterMode: slotSummaryFilterMode.value,
-      blacklistedKeys: Array.from(blacklistedKeys.value),
+      blacklistedKeys: [...blacklistedKeys.value],
       syncStartDate: syncStartDate.value,
       syncEndDate: syncEndDate.value,
-    }
+    };
 
-    data.c = config
+    data.c = config;
 
-    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `ff14_loot_backup_${new Date().toISOString().slice(0, 10)}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-    ElMessage.success({ message: '数据已导出', showClose: true })
-  }
-  catch (e) {
-    console.error(e)
-    ElMessage.error({ message: '导出失败', showClose: true })
+    const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ff14_loot_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    ElMessage.success({ message: "数据已导出", showClose: true });
+  } catch (e) {
+    console.error(e);
+    ElMessage.error({ message: "导出失败", showClose: true });
   }
 }
 
 async function processImportJSON(json: any) {
   try {
     if (!json.r || !Array.isArray(json.r)) {
-      ElMessage.error({ message: '无效的备份文件格式', showClose: true })
-      return
+      ElMessage.error({ message: "无效的备份文件格式", showClose: true });
+      return;
     }
 
     // 导入时默认全选（不可用的会被 UI 禁用）
@@ -3140,136 +2922,119 @@ async function processImportJSON(json: any) {
       meta: true,
       corrections: true,
       view: true,
-    }
+    };
 
-    importDataPending.value = json
-    showImportConfirmDialog.value = true
-  }
-  catch (_err) {
-    console.error(_err)
-    ElMessage.error({ message: '解析出错', showClose: true })
+    importDataPending.value = json;
+    showImportConfirmDialog.value = true;
+  } catch (_err) {
+    console.error(_err);
+    ElMessage.error({ message: "解析出错", showClose: true });
   }
 }
 
 async function confirmImport() {
-  const json = importDataPending.value
-  if (!json)
-    return
+  const json = importDataPending.value;
+  if (!json) return;
 
-  let loading
+  let loading;
   try {
     loading = ElMessage({
-      message: '正在导入数据...',
+      message: "正在导入数据...",
       duration: 0,
-      type: 'info',
+      type: "info",
       showClose: true,
-    })
+    });
 
     if (json.c) {
       // meta: mapping / roles / bis
       if (importForm.value.meta) {
-        if (json.c.map)
-          playerMapping.value = json.c.map
+        if (json.c.map) playerMapping.value = json.c.map;
         if (json.c.roles) {
-          playerRoles.value = json.c.roles
+          playerRoles.value = json.c.roles;
         }
-        const incomingBis = json.c.bisConfig || json.bisConfig || json.c.bis
-        if (incomingBis)
-          bisConfig.value = incomingBis
+        const incomingBis = json.c.bisConfig || json.bisConfig || json.c.bis;
+        if (incomingBis) bisConfig.value = incomingBis;
       }
 
       // view: filters / visibility / sort / misc
       if (importForm.value.view) {
         // 兼容旧版本的 filter 字段名
-        const filterSettings = json.c.systemFilterSettings || json.c.filter || {}
+        const filterSettings = json.c.systemFilterSettings || json.c.filter || {};
         if (Object.keys(filterSettings).length > 0) {
-          systemFilterSettings.value = filterSettings
+          systemFilterSettings.value = filterSettings;
         }
-        itemVisibility.value = json.c.itemVisibility || {}
-        playerVisibility.value = json.c.playerVisibility || {}
-        processedFiles.value = json.c.processedFiles || {}
-        if (json.c.logPath)
-          logPath.value = json.c.logPath
-        if (json.c.viewMode)
-          viewMode.value = json.c.viewMode
+        itemVisibility.value = json.c.itemVisibility || {};
+        playerVisibility.value = json.c.playerVisibility || {};
+        processedFiles.value = json.c.processedFiles || {};
+        if (json.c.logPath) logPath.value = json.c.logPath;
+        if (json.c.viewMode) viewMode.value = json.c.viewMode;
         if (json.c.hideUnselectedItems !== undefined)
-          hideUnselectedItems.value = json.c.hideUnselectedItems
-        if (json.c.showOnlyRole !== undefined)
-          showOnlyRole.value = json.c.showOnlyRole
+          hideUnselectedItems.value = json.c.hideUnselectedItems;
+        if (json.c.showOnlyRole !== undefined) showOnlyRole.value = json.c.showOnlyRole;
         if (json.c.isOnlyRaidMembersActive !== undefined)
-          isOnlyRaidMembersActive.value = json.c.isOnlyRaidMembersActive
-        if (json.c.summarySortMode)
-          summarySortMode.value = json.c.summarySortMode
-        if (json.c.slotSortMode)
-          slotSortMode.value = json.c.slotSortMode
-        if (json.c.weekSortMode)
-          weekSortMode.value = json.c.weekSortMode
-        if (json.c.bisSortMode)
-          bisSortMode.value = json.c.bisSortMode
+          isOnlyRaidMembersActive.value = json.c.isOnlyRaidMembersActive;
+        if (json.c.summarySortMode) summarySortMode.value = json.c.summarySortMode;
+        if (json.c.slotSortMode) slotSortMode.value = json.c.slotSortMode;
+        if (json.c.weekSortMode) weekSortMode.value = json.c.weekSortMode;
+        if (json.c.bisSortMode) bisSortMode.value = json.c.bisSortMode;
         if (json.c.playerSummaryFilterMode)
-          playerSummaryFilterMode.value = json.c.playerSummaryFilterMode
+          playerSummaryFilterMode.value = json.c.playerSummaryFilterMode;
         if (json.c.slotSummaryFilterMode)
-          slotSummaryFilterMode.value = json.c.slotSummaryFilterMode
-        if (json.c.blacklistedKeys)
-          blacklistedKeys.value = new Set(json.c.blacklistedKeys)
-        if (json.c.syncStartDate)
-          syncStartDate.value = json.c.syncStartDate
-        if (json.c.syncEndDate)
-          syncEndDate.value = json.c.syncEndDate
+          slotSummaryFilterMode.value = json.c.slotSummaryFilterMode;
+        if (json.c.blacklistedKeys) blacklistedKeys.value = new Set(json.c.blacklistedKeys);
+        if (json.c.syncStartDate) syncStartDate.value = json.c.syncStartDate;
+        if (json.c.syncEndDate) syncEndDate.value = json.c.syncEndDate;
       }
 
       // corrections: week / player
       if (importForm.value.corrections) {
-        recordWeekCorrections.value = json.c.weekCorrections || {}
-        recordPlayerCorrections.value = json.c.playerCorrections || {}
+        recordWeekCorrections.value = json.c.weekCorrections || {};
+        recordPlayerCorrections.value = json.c.playerCorrections || {};
       }
     }
 
     if (importForm.value.loot) {
-      const existingSigs = new Set<string>()
-      const currentKeys = new Set<string>()
+      const existingSigs = new Set<string>();
+      const currentKeys = new Set<string>();
 
-      const newRecords: LootRecord[] = []
-      const baseTs = json.base || 0
-      const itemDict = json.dicts?.i || []
-      const playerDict = json.dicts?.p || []
-      const ROLL_TYPES = ['need', 'greed', 'assign', 'direct', 'manual']
+      const newRecords: LootRecord[] = [];
+      const baseTs = json.base || 0;
+      const itemDict = json.dicts?.i || [];
+      const playerDict = json.dicts?.p || [];
+      const ROLL_TYPES = ["need", "greed", "assign", "direct", "manual"];
 
       if (json.r && Array.isArray(json.r)) {
         for (const rec of json.r) {
-          const ts = baseTs + rec[0]
-          const item = itemDict[rec[1]]
-          const player = playerDict[rec[2]]
-          const key = rec[3]
-          const rCount = rec[4]
+          const ts = baseTs + rec[0];
+          const item = itemDict[rec[1]];
+          const player = playerDict[rec[2]];
+          const key = rec[3];
+          const rCount = rec[4];
 
-          const rolls = [] as any[]
+          const rolls = [] as any[];
           if (rCount > 0) {
-            let cursor = 5
+            let cursor = 5;
             for (let i = 0; i < rCount; i++) {
-              if (cursor + 2 >= rec.length)
-                break
+              if (cursor + 2 >= rec.length) break;
               rolls.push({
                 player: playerDict[rec[cursor]],
                 value: rec[cursor + 1],
-                type: ROLL_TYPES[rec[cursor + 2]] || 'need',
-              })
-              cursor += 3
+                type: ROLL_TYPES[rec[cursor + 2]] || "need",
+              });
+              cursor += 3;
             }
           }
 
-          if (!item || !player)
-            continue
+          if (!item || !player) continue;
 
-          const recordKey
-            = key && typeof key === 'string'
+          const recordKey =
+            key && typeof key === "string"
               ? key
-              : `${ts}_${item}_${player}_${Math.random().toString(36).slice(2)}`
+              : `${ts}_${item}_${player}_${Math.random().toString(36).slice(2)}`;
 
-          if (currentKeys.has(recordKey))
-            continue
+          if (currentKeys.has(recordKey)) continue;
 
-          const sig = `${ts}|${item}|${player}`
+          const sig = `${ts}|${item}|${player}`;
           if (!existingSigs.has(sig)) {
             newRecords.push({
               key: recordKey,
@@ -3277,378 +3042,355 @@ async function confirmImport() {
               item,
               player,
               rolls,
-              source: 'import',
-              id: '',
-            } as LootRecord)
-            existingSigs.add(sig)
-            currentKeys.add(recordKey)
+              source: "import",
+              id: "",
+            } as LootRecord);
+            existingSigs.add(sig);
+            currentKeys.add(recordKey);
           }
         }
       }
 
-      await dbRecords.clear()
+      await dbRecords.clear();
       if (newRecords.length > 0) {
-        await dbRecords.bulkSet(JSON.parse(JSON.stringify(newRecords)))
+        await dbRecords.bulkSet(JSON.parse(JSON.stringify(newRecords)));
         lootRecords.value = newRecords.sort(
-          (a, b) =>
-            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-        )
+          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+        );
+      } else {
+        lootRecords.value = [];
       }
-      else {
-        lootRecords.value = []
-      }
-      existingKeys.value = new Set(lootRecords.value.map(r => r.key))
-      handlePotentialDuplicates(newRecords, 'import')
+      existingKeys.value = new Set(lootRecords.value.map((r) => r.key));
+      handlePotentialDuplicates(newRecords, "import");
     }
 
     // 导入后强制开启两个核心过滤开关
-    isOnlyRaidMembersActive.value = true
-    isRaidFilterActive.value = true
+    isOnlyRaidMembersActive.value = true;
+    isRaidFilterActive.value = true;
 
-    await nextTick()
-    refreshReactiveStateAfterImport()
-    await nextTick()
+    await nextTick();
+    refreshReactiveStateAfterImport();
+    await nextTick();
     try {
-      await saveConfigImmediately()
-    }
-    catch (saveErr) {
-      console.error('Failed to persist imported config immediately:', saveErr)
-      ElMessage.warning({ message: '导入完成，但立即保存配置失败，请手动检查', showClose: true })
+      await saveConfigImmediately();
+    } catch (saveErr) {
+      console.error("Failed to persist imported config immediately:", saveErr);
+      ElMessage.warning({ message: "导入完成，但立即保存配置失败，请手动检查", showClose: true });
     }
 
     ElMessage.success({
-      message: '数据导入已完成',
+      message: "数据导入已完成",
       showClose: true,
-    })
-    showImportConfirmDialog.value = false
-    importDataPending.value = null
-  }
-  catch (err) {
-    console.error(err)
-    ElMessage.error({ message: '导入失败', showClose: true })
-  }
-  finally {
-    loading?.close()
+    });
+    showImportConfirmDialog.value = false;
+    importDataPending.value = null;
+  } catch (err) {
+    console.error(err);
+    ElMessage.error({ message: "导入失败", showClose: true });
+  } finally {
+    loading?.close();
   }
 }
 
 function processImportFile(file: File) {
-  const reader = new FileReader()
+  const reader = new FileReader();
   reader.onload = async (e) => {
     try {
-      const json = JSON.parse(e.target?.result as string)
-      await processImportJSON(json)
+      const json = JSON.parse(e.target?.result as string);
+      await processImportJSON(json);
+    } catch (e) {
+      console.error(e);
+      ElMessage.error({ message: "文件解析失败", showClose: true });
     }
-    catch (e) {
-      console.error(e)
-      ElMessage.error({ message: '文件解析失败', showClose: true })
-    }
-  }
-  reader.readAsText(file)
+  };
+  reader.readAsText(file);
 }
 
 function handleImportFile(event: Event) {
-  const input = event.target as HTMLInputElement
-  if (!input.files || input.files.length === 0)
-    return
-  processImportFile(input.files[0]!)
-  input.value = ''
+  const input = event.target as HTMLInputElement;
+  if (!input.files || input.files.length === 0) return;
+  processImportFile(input.files[0]!);
+  input.value = "";
 }
 
 const soloState = ref<{
-  type: 'item' | 'player'
-  key: string
-  snapshot: Record<string, boolean>
-} | null>(null)
+  type: "item" | "player";
+  key: string;
+  snapshot: Record<string, boolean>;
+} | null>(null);
 
-function toggleSoloMode(type: 'item' | 'player', key: string) {
-  const isItem = type === 'item'
-  const visibility = isItem ? itemVisibility : playerVisibility
-  const list = isItem ? uniqueItems : allPlayers
+function toggleSoloMode(type: "item" | "player", key: string) {
+  const isItem = type === "item";
+  const visibility = isItem ? itemVisibility : playerVisibility;
+  const list = isItem ? uniqueItems : allPlayers;
 
   if (soloState.value?.type === type && soloState.value.key === key) {
-    visibility.value = { ...soloState.value.snapshot }
-    soloState.value = null
+    visibility.value = { ...soloState.value.snapshot };
+    soloState.value = null;
     ElMessage.info({
-      message: '已恢复到独显前的状态',
+      message: "已恢复到独显前的状态",
       duration: 2000,
       showClose: true,
-    })
-    return
+    });
+    return;
   }
 
-  let baseState = visibility.value
+  let baseState = visibility.value;
   if (soloState.value?.type === type) {
-    baseState = soloState.value.snapshot
+    baseState = soloState.value.snapshot;
   }
 
   soloState.value = {
     type,
     key,
     snapshot: JSON.parse(JSON.stringify(baseState)),
-  }
+  };
 
-  const newVisibility: Record<string, boolean> = {}
-  list.value.forEach((k) => {
-    newVisibility[k] = k === key
-  })
-  visibility.value = newVisibility
+  const newVisibility: Record<string, boolean> = {};
+  list.value.forEach((k: string) => {
+    newVisibility[k] = k === key;
+  });
+  visibility.value = newVisibility;
 
   ElMessage.success({
     message: `仅显示: ${key} (再次 Alt+点击 恢复)`,
     duration: 2000,
-  })
+  });
 }
 
 function getOriginalRollInfo(record: LootRecord): RollInfo | null {
-  const roll = record.rolls.find(r => r.player === record.player)
-  if (roll)
-    return roll
+  const roll = record.rolls.find((r) => r.player === record.player);
+  if (roll) return roll;
 
   if (record.player) {
-    const type: RollInfo['type'] = record.isManual
-      ? 'manual'
+    const type: RollInfo["type"] = record.isManual
+      ? "manual"
       : record.isAssign
-        ? 'assign'
-        : 'direct'
+        ? "assign"
+        : "direct";
     return {
       player: record.player,
       type,
       value: null,
-    }
+    };
   }
-  return null
+  return null;
 }
 
 function getWinnerRollInfo(record: LootRecord): RollInfo | null {
-  const correctedPlayer = getRecordPlayer(record)
-  const isCorrected = !!recordPlayerCorrections.value[record.key]
+  const correctedPlayer = getRecordPlayer(record);
+  const isCorrected = !!recordPlayerCorrections.value[record.key];
 
   if (isCorrected) {
     return {
       player: correctedPlayer,
-      type: 'replace',
+      type: "replace",
       value: null,
-    }
+    };
   }
 
-  const roll = record.rolls.find(r => r.player === correctedPlayer)
-  if (roll)
-    return roll
+  const roll = record.rolls.find((r) => r.player === correctedPlayer);
+  if (roll) return roll;
 
   if (correctedPlayer) {
-    const type: RollInfo['type'] = record.isManual
-      ? 'manual'
+    const type: RollInfo["type"] = record.isManual
+      ? "manual"
       : record.isAssign
-        ? 'assign'
-        : 'direct'
+        ? "assign"
+        : "direct";
 
     return {
       player: correctedPlayer,
       type,
       value: null,
-    }
+    };
   }
-  return null
+  return null;
 }
 function getOtherRolls(record: LootRecord): RollInfo[] {
-  return otherRollsByRecordKey.value[record.key] || []
+  return otherRollsByRecordKey.value[record.key] || [];
 }
 
 async function confirmClear() {
-  const selectedCount = Object.values(clearForm.value).filter(Boolean).length
+  const selectedCount = Object.values(clearForm.value).filter(Boolean).length;
   if (selectedCount === 0) {
-    showClearDialog.value = false
-    return
+    showClearDialog.value = false;
+    return;
   }
 
-  showClearDialog.value = false
-  const tasks: Promise<any>[] = []
+  showClearDialog.value = false;
+  const tasks: Promise<any>[] = [];
 
   if (clearForm.value.loot) {
-    tasks.push(dbRecords.clear())
-    lootRecords.value = []
-    existingKeys.value = new Set()
+    tasks.push(dbRecords.clear());
+    lootRecords.value = [];
+    existingKeys.value = new Set();
     // 清空与记录相关的缓存和 UI 配置
-    processedFiles.value = {}
-    itemVisibility.value = {}
-    playerVisibility.value = {}
-    anonymousMapping.value = {}
+    processedFiles.value = {};
+    itemVisibility.value = {};
+    playerVisibility.value = {};
+    anonymousMapping.value = {};
     // usedAnonymousNames 是 Set，重置为新 Set 以触发响应
-    usedAnonymousNames.clear()
-    parsedLogFiles.value = []
-    pendingLogFiles.value = []
-    currentHandle.value = null
-    lastSyncTime.value = ''
+    usedAnonymousNames.clear();
+    parsedLogFiles.value = [];
+    pendingLogFiles.value = [];
+    currentHandle.value = null;
+    lastSyncTime.value = "";
     // 重置同步时间范围
-    syncStartDate.value = GAME_VERSION_CONFIG.RAID_START_TIME
-    syncEndDate.value = null
+    syncStartDate.value = GAME_VERSION_CONFIG.RAID_START_TIME;
+    syncEndDate.value = null;
 
     // 删除持久化配置
-    tasks.push(dbConfig.remove('processedFiles'))
-    tasks.push(dbConfig.remove('itemVisibility'))
-    tasks.push(dbConfig.remove('playerVisibility'))
-    tasks.push(dbConfig.remove('logPath'))
-    tasks.push(dbConfig.remove('viewMode'))
-    tasks.push(dbConfig.remove('hideUnselectedItems'))
-    tasks.push(dbConfig.remove('showOnlyRole'))
-    tasks.push(dbConfig.remove('isOnlyRaidMembersActive'))
-    tasks.push(dbConfig.remove('systemFilterSettings'))
-    tasks.push(dbConfig.remove('summarySortMode'))
-    tasks.push(dbConfig.remove('slotSortMode'))
-    tasks.push(dbConfig.remove('weekSortMode'))
-    tasks.push(dbConfig.remove('bisSortMode'))
-    tasks.push(dbConfig.remove('playerSummaryFilterMode'))
-    tasks.push(dbConfig.remove('slotSummaryFilterMode'))
-    tasks.push(dbConfig.remove('blacklistedKeys'))
-    tasks.push(dbConfig.remove('syncStartDate'))
-    tasks.push(dbConfig.remove('syncEndDate'))
+    tasks.push(dbConfig.remove("processedFiles"));
+    tasks.push(dbConfig.remove("itemVisibility"));
+    tasks.push(dbConfig.remove("playerVisibility"));
+    tasks.push(dbConfig.remove("logPath"));
+    tasks.push(dbConfig.remove("viewMode"));
+    tasks.push(dbConfig.remove("hideUnselectedItems"));
+    tasks.push(dbConfig.remove("showOnlyRole"));
+    tasks.push(dbConfig.remove("isOnlyRaidMembersActive"));
+    tasks.push(dbConfig.remove("systemFilterSettings"));
+    tasks.push(dbConfig.remove("summarySortMode"));
+    tasks.push(dbConfig.remove("slotSortMode"));
+    tasks.push(dbConfig.remove("weekSortMode"));
+    tasks.push(dbConfig.remove("bisSortMode"));
+    tasks.push(dbConfig.remove("playerSummaryFilterMode"));
+    tasks.push(dbConfig.remove("slotSummaryFilterMode"));
+    tasks.push(dbConfig.remove("blacklistedKeys"));
+    tasks.push(dbConfig.remove("syncStartDate"));
+    tasks.push(dbConfig.remove("syncEndDate"));
     // 如果文件句柄也保存在 dbHandle 中，删除之
     try {
-      tasks.push(dbHandle.remove('current-log-dir'))
-    }
-    catch {
+      tasks.push(dbHandle.remove("current-log-dir"));
+    } catch {
       // ignore if not supported
     }
   }
 
   if (clearForm.value.weekCorrection) {
-    recordWeekCorrections.value = {}
-    tasks.push(dbConfig.remove('weekCorrections'))
+    recordWeekCorrections.value = {};
+    tasks.push(dbConfig.remove("weekCorrections"));
   }
 
   if (clearForm.value.playerCorrection) {
-    recordPlayerCorrections.value = {}
-    tasks.push(dbConfig.remove('playerCorrections'))
+    recordPlayerCorrections.value = {};
+    tasks.push(dbConfig.remove("playerCorrections"));
   }
 
   if (clearForm.value.bis) {
-    bisConfig.value = { playerBis: {}, needCountOffsets: {} }
-    tasks.push(dbConfig.remove('bisConfig'))
+    bisConfig.value = { playerBis: {}, needCountOffsets: {} };
+    tasks.push(dbConfig.remove("bisConfig"));
   }
 
   if (clearForm.value.roles) {
-    playerRoles.value = {}
-    tasks.push(dbConfig.remove('playerRoles'))
+    playerRoles.value = {};
+    tasks.push(dbConfig.remove("playerRoles"));
   }
 
   if (clearForm.value.mapping) {
-    playerMapping.value = {}
-    tasks.push(dbConfig.remove('playerMapping'))
+    playerMapping.value = {};
+    tasks.push(dbConfig.remove("playerMapping"));
   }
 
-  await Promise.all(tasks)
-  ElMessage.success({ message: '所选数据已清空', showClose: true })
+  await Promise.all(tasks);
+  ElMessage.success({ message: "所选数据已清空", showClose: true });
 }
 
 async function handleWinnerChange(record: LootRecord, newPlayer: string) {
-  if (!newPlayer)
-    return
-  pendingWinnerChange.value = { record, newPlayer }
-  popoverTargetRecord.value = null
+  if (!newPlayer) return;
+  pendingWinnerChange.value = { record, newPlayer };
+  popoverTargetRecord.value = null;
 
   setTimeout(() => {
     if (pendingWinnerChange.value) {
-      applyPendingWinnerChange()
+      applyPendingWinnerChange();
     }
-  }, 75)
+  }, 75);
 }
 
 async function applyPendingWinnerChange() {
-  if (!pendingWinnerChange.value)
-    return
-  const { record, newPlayer } = pendingWinnerChange.value
+  if (!pendingWinnerChange.value) return;
+  const { record, newPlayer } = pendingWinnerChange.value;
 
-  const newMap = { ...recordPlayerCorrections.value }
+  const newMap = { ...recordPlayerCorrections.value };
   if (newPlayer === record.player) {
-    delete newMap[record.key]
+    delete newMap[record.key];
+  } else {
+    newMap[record.key] = newPlayer;
   }
-  else {
-    newMap[record.key] = newPlayer
-  }
-  recordPlayerCorrections.value = newMap
+  recordPlayerCorrections.value = newMap;
 
   ElMessage.success({
-    message:
-      newPlayer === record.player
-        ? '已恢复原始获得者'
-        : `已将物品重新分配给 ${newPlayer}`,
+    message: newPlayer === record.player ? "已恢复原始获得者" : `已将物品重新分配给 ${newPlayer}`,
     showClose: true,
-  })
+  });
 
   // 清空待处理状态
-  pendingWinnerChange.value = null
+  pendingWinnerChange.value = null;
 }
 
 function goBackFromSyncStep() {
   // 强制停留在第一步，避免因残留数据自动跳回主面板
-  wizardStepOverride.value = 0
-  currentHandle.value = null
+  wizardStepOverride.value = 0;
+  currentHandle.value = null;
 }
 
 function startSyncFromWizard() {
-  showInitialRoleSetup.value = false
-  wizardStepOverride.value = null
-  startInitialSync()
+  showInitialRoleSetup.value = false;
+  wizardStepOverride.value = null;
+  startInitialSync();
 }
 
 async function goBackToStepTwo() {
   try {
-    await dbRecords.clear()
-    lootRecords.value = []
-    existingKeys.value = new Set()
-    blacklistedKeys.value = new Set()
-    processedFiles.value = {}
-    parsedLogFiles.value = []
-    pendingLogFiles.value = []
-    itemVisibility.value = {}
-    playerVisibility.value = {}
-    recordWeekCorrections.value = {}
-    recordPlayerCorrections.value = {}
-    anonymousMapping.value = {}
-    usedAnonymousNames.clear()
+    await dbRecords.clear();
+    lootRecords.value = [];
+    existingKeys.value = new Set();
+    blacklistedKeys.value = new Set();
+    processedFiles.value = {};
+    parsedLogFiles.value = [];
+    pendingLogFiles.value = [];
+    itemVisibility.value = {};
+    playerVisibility.value = {};
+    recordWeekCorrections.value = {};
+    recordPlayerCorrections.value = {};
+    anonymousMapping.value = {};
+    usedAnonymousNames.clear();
 
     await Promise.all([
-      dbConfig.remove('processedFiles'),
-      dbConfig.remove('itemVisibility'),
-      dbConfig.remove('playerVisibility'),
-      dbConfig.remove('blacklistedKeys'),
-      dbConfig.remove('weekCorrections'),
-      dbConfig.remove('playerCorrections'),
-    ])
+      dbConfig.remove("processedFiles"),
+      dbConfig.remove("itemVisibility"),
+      dbConfig.remove("playerVisibility"),
+      dbConfig.remove("blacklistedKeys"),
+      dbConfig.remove("weekCorrections"),
+      dbConfig.remove("playerCorrections"),
+    ]);
 
-    showInitialRoleSetup.value = false
-    wizardStepOverride.value = 1
-    ElMessage.success('已清空解析数据，请重新开始解析日志')
-  }
-  catch (err) {
-    console.error('Failed to reset data for reparse:', err)
-    ElMessage.error('清空数据库失败，请重试')
+    showInitialRoleSetup.value = false;
+    wizardStepOverride.value = 1;
+    ElMessage.success("已清空解析数据，请重新开始解析日志");
+  } catch (err) {
+    console.error("Failed to reset data for reparse:", err);
+    ElMessage.error("清空数据库失败，请重试");
   }
 }
 
 function enterMainPanelFromWizard() {
-  wizardStepOverride.value = null
-  showInitialRoleSetup.value = false
+  wizardStepOverride.value = null;
+  showInitialRoleSetup.value = false;
 }
 
 const activeStep = computed(() => {
-  if (wizardStepOverride.value !== null)
-    return wizardStepOverride.value
-  if (showInitialRoleSetup.value)
-    return 2
-  if (lootRecords.value.length > 0)
-    return 3 // Main App
-  if (currentHandle.value)
-    return 1
-  return 0
-})
+  if (wizardStepOverride.value !== null) return wizardStepOverride.value;
+  if (showInitialRoleSetup.value) return 2;
+  if (lootRecords.value.length > 0) return 3; // Main App
+  if (currentHandle.value) return 1;
+  return 0;
+});
 </script>
 
 <template>
-  <div
-    class="app-container"
-  >
+  <div class="app-container">
     <transition name="fade">
       <div v-if="isInitializing" class="initial-loading">
         <div class="skeleton-layout">
@@ -3685,7 +3427,10 @@ const activeStep = computed(() => {
           <div class="wizard-content">
             <div
               class="drag-guide-zone"
-              :class="{ 'is-visible': isDragOverWindow, 'is-active': isDragOverWindow && isDragOverZone }"
+              :class="{
+                'is-visible': isDragOverWindow,
+                'is-active': isDragOverWindow && isDragOverZone,
+              }"
               @drop.stop.prevent="handleZoneDrop"
               @dragover.prevent
               @dragenter="isDragOverZone = true"
@@ -3706,10 +3451,7 @@ const activeStep = computed(() => {
                   </div>
 
                   <div class="action-area">
-                    <div
-                      class="drop-zone"
-                      @click="setLogPath"
-                    >
+                    <div class="drop-zone" @click="setLogPath">
                       <el-icon class="zone-icon">
                         <FolderOpened />
                       </el-icon>
@@ -3727,7 +3469,11 @@ const activeStep = computed(() => {
 
                 <div class="welcome-right">
                   <div class="guide-preview">
-                    <img src="@/assets/screenshots/lootHistoryGuide.jpg" alt="Guide" class="guide-img">
+                    <img
+                      src="@/assets/screenshots/lootHistoryGuide.jpg"
+                      alt="Guide"
+                      class="guide-img"
+                    />
                   </div>
                 </div>
               </div>
@@ -3738,7 +3484,8 @@ const activeStep = computed(() => {
                   <div class="step-title">
                     <h3>确认同步范围</h3>
                     <p>
-                      已选中目录: <ElTag size="small">
+                      已选中目录:
+                      <ElTag size="small">
                         {{ currentHandle?.name }}
                       </ElTag>
                     </p>
@@ -3760,9 +3507,7 @@ const activeStep = computed(() => {
                   </div>
 
                   <div class="step-footer">
-                    <el-button class="wizard-btn" @click="goBackFromSyncStep">
-                      上一步
-                    </el-button>
+                    <el-button class="wizard-btn" @click="goBackFromSyncStep"> 上一步 </el-button>
                     <el-button type="primary" class="wizard-btn" @click="startSyncFromWizard">
                       开始解析
                       <el-icon class="el-icon--right">
@@ -3777,17 +3522,28 @@ const activeStep = computed(() => {
                     <el-progress type="circle" :percentage="loadingProgress" />
                   </div>
                   <h3>正在解析日志文件...</h3>
-                  <p>已处理 {{ parsedLogFiles.length }} / {{ parsedLogFiles.length + pendingLogFiles.length }} 个文件</p>
-                  <p>已解析 {{ formatByteSize(loadingProcessedBytes) }} / {{ formatByteSize(loadingTotalBytes) }}</p>
+                  <p>
+                    已处理 {{ parsedLogFiles.length }} /
+                    {{ parsedLogFiles.length + pendingLogFiles.length }} 个文件
+                  </p>
+                  <p>
+                    已解析 {{ formatByteSize(loadingProcessedBytes) }} /
+                    {{ formatByteSize(loadingTotalBytes) }}
+                  </p>
 
                   <div class="file-list-preview">
-                    <div v-for="file in parsedLogFiles.slice(-3)" :key="file.name" class="file-item done">
+                    <div
+                      v-for="file in parsedLogFiles.slice(-3)"
+                      :key="file.name"
+                      class="file-item done"
+                    >
                       <el-icon><Check /></el-icon> {{ file.name }}
                     </div>
                     <div v-if="pendingLogFiles.length > 0" class="file-item pending">
                       <el-icon class="is-loading">
                         <Timer />
-                      </el-icon> {{ pendingLogFiles[0]?.name }}...
+                      </el-icon>
+                      {{ pendingLogFiles[0]?.name }}...
                     </div>
                   </div>
                 </div>
@@ -3838,9 +3594,7 @@ const activeStep = computed(() => {
                       </div>
                     </div>
                     <div class="role-col">
-                      <div class="compact-group-header dps">
-                        <span class="dot" /> 进攻 (DPS)
-                      </div>
+                      <div class="compact-group-header dps"><span class="dot" /> 进攻 (DPS)</div>
                       <div class="compact-grid">
                         <RoleSetupItem
                           v-for="role in ['D1', 'D2', 'D3', 'D4']"
@@ -3860,9 +3614,7 @@ const activeStep = computed(() => {
                   </div>
 
                   <div class="special-roles-compact">
-                    <div class="compact-label">
-                      离队成员
-                    </div>
+                    <div class="compact-label">离队成员</div>
                     <div class="compact-content">
                       <template v-for="(p, roleKey) in playerRoles" :key="roleKey">
                         <div v-if="roleKey.startsWith('LEFT:')" class="special-item-tag">
@@ -3907,10 +3659,13 @@ const activeStep = computed(() => {
                 </div>
 
                 <div class="step-footer">
-                  <el-button class="wizard-btn" @click="goBackToStepTwo">
-                    上一步
-                  </el-button>
-                  <el-alert :title="isRaidRolesComplete ? '设置已完成' : '请完成所有 8 个职位的分配'" :type="isRaidRolesComplete ? 'success' : 'warning'" show-icon :closable="false" />
+                  <el-button class="wizard-btn" @click="goBackToStepTwo"> 上一步 </el-button>
+                  <el-alert
+                    :title="isRaidRolesComplete ? '设置已完成' : '请完成所有 8 个职位的分配'"
+                    :type="isRaidRolesComplete ? 'success' : 'warning'"
+                    show-icon
+                    :closable="false"
+                  />
                   <el-button
                     type="primary"
                     class="wizard-btn"
@@ -3933,15 +3688,14 @@ const activeStep = computed(() => {
         </div>
       </div>
 
-      <main
-        v-else-if="lootRecords.length > 0"
-        class="app-main"
-        style="padding-top: 10px"
-      >
+      <main v-else-if="lootRecords.length > 0" class="app-main" style="padding-top: 10px">
         <div class="control-bar" style="position: relative">
           <div
             class="drag-guide-zone"
-            :class="{ 'is-visible': isDragOverWindow, 'is-active': isDragOverWindow && isDragOverZone }"
+            :class="{
+              'is-visible': isDragOverWindow,
+              'is-active': isDragOverWindow && isDragOverZone,
+            }"
             @drop.stop.prevent="handleZoneDrop"
             @dragover.prevent
             @dragenter="isDragOverZone = true"
@@ -3962,9 +3716,7 @@ const activeStep = computed(() => {
                 class="sync-btn-fixed"
                 @click="syncLogFiles(true)"
               >
-                {{
-                  isSyncing ? '同步中' : isSyncNeeded ? '需要同步' : '立即同步'
-                }}
+                {{ isSyncing ? "同步中" : isSyncNeeded ? "需要同步" : "立即同步" }}
                 <span v-if="isSyncNeeded" class="dot-warn" />
               </el-button>
               <div class="sync-status-container">
@@ -4027,11 +3779,7 @@ const activeStep = computed(() => {
                   <el-dropdown-item command="export">
                     <el-icon><Download /></el-icon>导出备份 (JSON)
                   </el-dropdown-item>
-                  <el-dropdown-item
-                    command="clear"
-                    divided
-                    style="color: #f56c6c"
-                  >
+                  <el-dropdown-item command="clear" divided style="color: #f56c6c">
                     <el-icon><Delete /></el-icon>清空数据库
                   </el-dropdown-item>
                 </el-dropdown-menu>
@@ -4066,7 +3814,9 @@ const activeStep = computed(() => {
                       <el-icon><InfoFilled /></el-icon> 这是什么？
                     </h4>
                     <p>
-                      这是一个专门为 FFXIV 固定队设计的<strong>掉落历史统计</strong>与 <strong>BIS 分配管理</strong>工具。它能自动从你的 ACT 日志中记录战利品信息，并以此为基础提供自动化的分配建议与数据分析。
+                      这是一个专门为 FFXIV 固定队设计的<strong>掉落历史统计</strong>与
+                      <strong>BIS 分配管理</strong>工具。它能自动从你的 ACT
+                      日志中记录战利品信息，并以此为基础提供自动化的分配建议与数据分析。
                     </p>
                   </section>
                   <section class="guide-section">
@@ -4075,9 +3825,7 @@ const activeStep = computed(() => {
                     </h4>
                     <div class="warning-box">
                       <ul>
-                        <li>
-                          <strong>保持 ACT 运行：</strong>且未勾选“隐藏聊天日志(隐私保护)”。
-                        </li>
+                        <li><strong>保持 ACT 运行：</strong>且未勾选“隐藏聊天日志(隐私保护)”。</li>
                         <li>
                           <strong>请勿提前退本：</strong>
                           一定要等装备分完了再退本！以保证日志完整。
@@ -4111,7 +3859,8 @@ const activeStep = computed(() => {
                       <el-icon><InfoFilled /></el-icon> 漏了记录怎么办？
                     </h4>
                     <p>
-                      如果因意外（如掉线、忘开 ACT 等）漏掉记录，请点击顶部栏中间的“<strong>手动添加</strong>”补全。
+                      如果因意外（如掉线、忘开 ACT
+                      等）漏掉记录，请点击顶部栏中间的“<strong>手动添加</strong>”补全。
                     </p>
                   </section>
                 </div>
@@ -4160,25 +3909,14 @@ const activeStep = computed(() => {
                       />
                     </div>
 
-                    <div class="role-divider">
-                      已离队
-                    </div>
+                    <div class="role-divider">已离队</div>
 
                     <div class="special-role-section">
                       <div class="special-role-group">
                         <div class="special-list">
-                          <template
-                            v-for="(p, role) in playerRoles"
-                            :key="role"
-                          >
-                            <div
-                              v-if="role.startsWith('LEFT:')"
-                              class="special-item"
-                            >
-                              <ElTag
-                                closable
-                                @close="delete playerRoles[role]"
-                              >
+                          <template v-for="(p, role) in playerRoles" :key="role">
+                            <div v-if="role.startsWith('LEFT:')" class="special-item">
+                              <ElTag closable @close="delete playerRoles[role]">
                                 {{ getDisplayName(p) }}
                               </ElTag>
                             </div>
@@ -4225,15 +3963,11 @@ const activeStep = computed(() => {
                       v-model="showOnlyRole"
                       :disabled="!isRaidRolesComplete"
                       size="small"
-                      style="
-                        --el-switch-on-color: #3b82f6;
-                        --el-switch-off-color: #cbd5e1;
-                      "
+                      style="--el-switch-on-color: #3b82f6; --el-switch-off-color: #cbd5e1"
                     />
-                    <span
-                      class="switch-label"
-                      :style="{ opacity: isRaidRolesComplete ? 1 : 0.5 }"
-                    >只显示职位</span>
+                    <span class="switch-label" :style="{ opacity: isRaidRolesComplete ? 1 : 0.5 }"
+                      >只显示职位</span
+                    >
                   </label>
                 </el-tooltip>
                 <div class="header-sep" />
@@ -4272,21 +4006,15 @@ const activeStep = computed(() => {
                   trigger="click"
                 >
                   <template #reference>
-                    <el-button size="small" class="soft-action-btn">
-                      合并大小号
-                    </el-button>
+                    <el-button size="small" class="soft-action-btn"> 合并大小号 </el-button>
                   </template>
                   <div class="popover-form">
                     <div class="merge-selector-box">
                       <div class="merge-guide-desc">
                         <el-icon><InfoFilled /></el-icon>
                         <div class="guide-content">
-                          <p>
-                            合并角色将<strong>永久归并</strong>两者的所有历史记录。
-                          </p>
-                          <p>
-                            若仅需修正单次分配错误，请直接在“详情记录”中点击姓名进行修改。
-                          </p>
+                          <p>合并角色将<strong>永久归并</strong>两者的所有历史记录。</p>
+                          <p>若仅需修正单次分配错误，请直接在“详情记录”中点击姓名进行修改。</p>
                         </div>
                       </div>
 
@@ -4332,27 +4060,18 @@ const activeStep = computed(() => {
                             :show-only-role="showOnlyRole"
                             class="tag-label-name"
                           />
-                          <div
-                            v-if="selectionForMerge[0] === p"
-                            class="selection-badge hide"
-                          >
+                          <div v-if="selectionForMerge[0] === p" class="selection-badge hide">
                             <el-icon><View /></el-icon>
                             <span>隐身角色</span>
                           </div>
-                          <div
-                            v-if="selectionForMerge[1] === p"
-                            class="selection-badge show"
-                          >
+                          <div v-if="selectionForMerge[1] === p" class="selection-badge show">
                             <el-icon><Star /></el-icon>
                             <span>主角色</span>
                           </div>
                         </el-check-tag>
                       </div>
 
-                      <div
-                        v-if="selectionForMerge.length === 2"
-                        class="merge-actions"
-                      >
+                      <div v-if="selectionForMerge.length === 2" class="merge-actions">
                         <el-button
                           type="primary"
                           size="default"
@@ -4364,13 +4083,8 @@ const activeStep = computed(() => {
                       </div>
                     </div>
 
-                    <div
-                      v-if="mergeSuggestions.length > 0"
-                      class="suggestion-box"
-                    >
-                      <div class="suggest-title">
-                        💡 发现疑似换号 (>90% 重合)：
-                      </div>
+                    <div v-if="mergeSuggestions.length > 0" class="suggestion-box">
+                      <div class="suggest-title">💡 发现疑似换号 (>90% 重合)：</div>
                       <div class="suggest-items">
                         <el-button
                           v-for="s in mergeSuggestions"
@@ -4398,13 +4112,8 @@ const activeStep = computed(() => {
                       </div>
                     </div>
 
-                    <div
-                      v-if="Object.keys(playerMapping).length > 0"
-                      class="mapping-box"
-                    >
-                      <div class="selector-title">
-                        当前合并映射:
-                      </div>
+                    <div v-if="Object.keys(playerMapping).length > 0" class="mapping-box">
+                      <div class="selector-title">当前合并映射:</div>
                       <div class="mapping-list">
                         <div
                           v-for="(to, from) in playerMapping"
@@ -4457,11 +4166,7 @@ const activeStep = computed(() => {
                 class="mini-tag-el player-tag"
                 @click.stop="handlePlayerClick($event, p)"
               >
-                <PlayerDisplay
-                  :name="p"
-                  :role="getPlayerRole(p)"
-                  :show-only-role="showOnlyRole"
-                />
+                <PlayerDisplay :name="p" :role="getPlayerRole(p)" :show-only-role="showOnlyRole" />
               </el-check-tag>
             </div>
           </div>
@@ -4478,11 +4183,7 @@ const activeStep = computed(() => {
                   <span class="switch-label">只看零式掉落</span>
                 </label>
                 <div class="header-sep" />
-                <el-popover
-                  placement="bottom-start"
-                  :width="220"
-                  trigger="click"
-                >
+                <el-popover placement="bottom-start" :width="220" trigger="click">
                   <template #reference>
                     <el-button size="small" class="soft-action-btn primary">
                       <el-icon style="margin-right: 4px">
@@ -4492,9 +4193,7 @@ const activeStep = computed(() => {
                     </el-button>
                   </template>
                   <div class="filter-popover">
-                    <div class="pop-title">
-                      屏蔽杂物 (非零式模式下生效)
-                    </div>
+                    <div class="pop-title">屏蔽杂物 (非零式模式下生效)</div>
                     <div
                       class="filter-list"
                       :style="{
@@ -4502,64 +4201,34 @@ const activeStep = computed(() => {
                         pointerEvents: isRaidFilterActive ? 'none' : 'auto',
                       }"
                     >
-                      <ElCheckbox
-                        v-model="systemFilterSettings.cards"
-                        size="small"
-                      >
+                      <ElCheckbox v-model="systemFilterSettings.cards" size="small">
                         九宫幻卡
                       </ElCheckbox>
-                      <ElCheckbox
-                        v-model="systemFilterSettings.materia"
-                        size="small"
-                      >
+                      <ElCheckbox v-model="systemFilterSettings.materia" size="small">
                         魔晶石
                       </ElCheckbox>
-                      <ElCheckbox
-                        v-model="systemFilterSettings.music"
-                        size="small"
-                      >
+                      <ElCheckbox v-model="systemFilterSettings.music" size="small">
                         乐谱
                       </ElCheckbox>
-                      <ElCheckbox
-                        v-model="systemFilterSettings.book"
-                        size="small"
-                      >
+                      <ElCheckbox v-model="systemFilterSettings.book" size="small">
                         零式断章
                       </ElCheckbox>
-                      <ElCheckbox
-                        v-model="systemFilterSettings.totem"
-                        size="small"
-                      >
+                      <ElCheckbox v-model="systemFilterSettings.totem" size="small">
                         极神图腾
                       </ElCheckbox>
-                      <ElCheckbox
-                        v-model="systemFilterSettings.other"
-                        size="small"
-                      >
+                      <ElCheckbox v-model="systemFilterSettings.other" size="small">
                         经验值/金币
                       </ElCheckbox>
 
                       <template v-if="availableSeries.length > 0">
-                        <div
-                          class="pop-title"
-                          style="margin: 8px 0 4px; padding-top: 8px"
-                        >
+                        <div class="pop-title" style="margin: 8px 0 4px; padding-top: 8px">
                           屏蔽装备系列
                         </div>
                         <el-checkbox-group
                           v-model="systemFilterSettings.maskedSeries"
-                          style="
-                            display: flex;
-                            flex-direction: column;
-                            gap: 4px;
-                          "
+                          style="display: flex; flex-direction: column; gap: 4px"
                         >
-                          <ElCheckbox
-                            v-for="s in availableSeries"
-                            :key="s"
-                            :value="s"
-                            size="small"
-                          >
+                          <ElCheckbox v-for="s in availableSeries" :key="s" :value="s" size="small">
                             {{ s }}系列
                           </ElCheckbox>
                         </el-checkbox-group>
@@ -4591,11 +4260,7 @@ const activeStep = computed(() => {
         </div>
 
         <div class="main-viewport" style="position: relative">
-          <el-tabs
-            v-model="viewMode"
-            class="mode-tabs-el"
-            type="card"
-          >
+          <el-tabs v-model="viewMode" class="mode-tabs-el" type="card">
             <el-tab-pane label="详细记录" name="list">
               <div class="list-container-el">
                 <el-table
@@ -4645,14 +4310,14 @@ const activeStep = computed(() => {
                           }}
                           <el-tooltip
                             v-if="
-                              rawSuspiciousKeys.has(scope.row.key)
-                                && !recordWeekCorrections[scope.row.key]
+                              rawSuspiciousKeys.has(scope.row.key) &&
+                              !recordWeekCorrections[scope.row.key]
                             "
                             placement="top"
                             :enterable="false"
                           >
                             <template #content>
-                              可能归属周错误（通常发生在周二压线进本）。<br>点击可选择将其归入上一周。
+                              可能归属周错误（通常发生在周二压线进本）。<br />点击可选择将其归入上一周。
                             </template>
                             <el-icon class="week-warning-icon">
                               <Warning />
@@ -4665,18 +4330,30 @@ const activeStep = computed(() => {
                   <el-table-column label="时间" width="140">
                     <template #default="scope">
                       <div class="col-time">
-                        <ElTag v-if="scope.row.isManual" size="small" type="info" effect="plain" class="manual-tag">
+                        <ElTag
+                          v-if="scope.row.isManual"
+                          size="small"
+                          type="info"
+                          effect="plain"
+                          class="manual-tag"
+                        >
                           手动添加
                         </ElTag>
-                        <span v-else class="time-date">{{
-                          formatTime(scope.row.timestamp)
-                        }}</span>
+                        <span v-else class="time-date">{{ formatTime(scope.row.timestamp) }}</span>
                       </div>
                     </template>
                   </el-table-column>
                   <el-table-column width="240">
                     <template #header>
-                      <div class="col-header-search" style="display: flex !important; align-items: center !important; gap: 8px !important; white-space: nowrap !important;">
+                      <div
+                        class="col-header-search"
+                        style="
+                          display: flex !important;
+                          align-items: center !important;
+                          gap: 8px !important;
+                          white-space: nowrap !important;
+                        "
+                      >
                         <span class="header-label">物品</span>
                         <ElSelect
                           v-model="itemSearchKeyword"
@@ -4703,7 +4380,15 @@ const activeStep = computed(() => {
                   </el-table-column>
                   <el-table-column width="260">
                     <template #header>
-                      <div class="col-header-search" style="display: flex !important; align-items: center !important; gap: 8px !important; white-space: nowrap !important;">
+                      <div
+                        class="col-header-search"
+                        style="
+                          display: flex !important;
+                          align-items: center !important;
+                          gap: 8px !important;
+                          white-space: nowrap !important;
+                        "
+                      >
                         <span class="header-label">获得者</span>
                         <ElSelect
                           v-model="winnerSearchPlayer"
@@ -4777,9 +4462,7 @@ const activeStep = computed(() => {
                             :show-only-role="showOnlyRole"
                             :get-player-role="getPlayerRole"
                           />
-                          <div v-else class="no-winner">
-                            未分配
-                          </div>
+                          <div v-else class="no-winner">未分配</div>
                         </template>
                         <el-icon class="winner-edit-icon">
                           <Edit />
@@ -4809,13 +4492,7 @@ const activeStep = computed(() => {
                         @confirm="deleteRecord(scope.row)"
                       >
                         <template #reference>
-                          <el-button
-                            type="danger"
-                            :icon="Delete"
-                            size="small"
-                            circle
-                            plain
-                          />
+                          <el-button type="danger" :icon="Delete" size="small" circle plain />
                         </template>
                       </el-popconfirm>
                     </template>
@@ -4850,11 +4527,7 @@ const activeStep = computed(() => {
                 <LootDisplayFilterSegmented v-model="playerSummaryFilterMode" />
               </div>
               <div class="summary-grid has-sort-control">
-                <div
-                  v-for="player in sortedSummaryPlayers"
-                  :key="player"
-                  class="summary-card"
-                >
+                <div v-for="player in sortedSummaryPlayers" :key="player" class="summary-card">
                   <div class="summary-header">
                     <PlayerDisplay
                       :name="player"
@@ -4869,9 +4542,7 @@ const activeStep = computed(() => {
                       class="summary-item"
                       :class="{ 'is-not-obtained': item.count === 0 }"
                     >
-                      <span class="s-name" :title="item.name">{{
-                        item.name
-                      }}</span>
+                      <span class="s-name" :title="item.name">{{ item.name }}</span>
                       <SummaryItemTags :item="item" />
                     </div>
                   </div>
@@ -4895,11 +4566,7 @@ const activeStep = computed(() => {
                 <LootDisplayFilterSegmented v-model="slotSummaryFilterMode" />
               </div>
               <div class="summary-grid slot-grid has-sort-control">
-                <div
-                  v-for="slot in displaySlots"
-                  :key="slot"
-                  class="summary-card"
-                >
+                <div v-for="slot in displaySlots" :key="slot" class="summary-card">
                   <div class="summary-header">
                     {{ slot }}
                   </div>
@@ -4909,8 +4576,7 @@ const activeStep = computed(() => {
                       :key="player"
                       class="summary-item"
                       :class="{
-                        'is-not-obtained':
-                          (slotSummary[slot]?.[player] || 0) === 0,
+                        'is-not-obtained': (slotSummary[slot]?.[player] || 0) === 0,
                       }"
                     >
                       <PlayerDisplay
@@ -4920,11 +4586,7 @@ const activeStep = computed(() => {
                         :show-only-role="showOnlyRole"
                       />
                       <div class="s-right-group">
-                        <SummaryItemTags
-                          :item="
-                            getSlotItemTagInfo(player, slot)
-                          "
-                        />
+                        <SummaryItemTags :item="getSlotItemTagInfo(player, slot)" />
                       </div>
                     </div>
                   </div>
@@ -4960,22 +4622,16 @@ const activeStep = computed(() => {
                       {{ getRecordFormattedWeekLabel(week) }}
                     </div>
                     <div class="week-list-body">
-                      <template
-                        v-for="(rec, idx) in getSortedRecordsInWeek(week)"
-                        :key="rec.key"
-                      >
+                      <template v-for="(rec, idx) in getSortedRecordsInWeek(week)" :key="rec.key">
                         <div
                           class="summary-item week-record-row"
                           :class="{
                             'is-corrected': recordWeekCorrections[rec.key],
                             'is-suspicious':
-                              rawSuspiciousKeys.has(rec.key)
-                              && !recordWeekCorrections[rec.key],
+                              rawSuspiciousKeys.has(rec.key) && !recordWeekCorrections[rec.key],
                             'is-actionable': canCorrectWeek(rec),
                           }"
-                          @contextmenu.prevent="
-                            handleRecordTrigger($event, rec)
-                          "
+                          @contextmenu.prevent="handleRecordTrigger($event, rec)"
                           @click.stop="handleRecordTrigger($event, rec)"
                           @mouseenter="handleWeekItemEnter($event, rec)"
                           @mouseleave="handleWeekItemLeave"
@@ -4989,13 +4645,10 @@ const activeStep = computed(() => {
                             />
                           </div>
                           <div class="week-row-main">
-                            <span class="week-item-name">{{
-                              rec.item
-                            }}</span>
+                            <span class="week-item-name">{{ rec.item }}</span>
                             <el-icon
                               v-if="
-                                rawSuspiciousKeys.has(rec.key)
-                                  && !recordWeekCorrections[rec.key]
+                                rawSuspiciousKeys.has(rec.key) && !recordWeekCorrections[rec.key]
                               "
                               class="row-status-icon is-warning"
                             >
@@ -5009,10 +4662,7 @@ const activeStep = computed(() => {
                             </el-icon>
                           </div>
                         </div>
-                        <div
-                          v-if="shouldShowWeekDivider(week, idx)"
-                          class="week-list-divider"
-                        />
+                        <div v-if="shouldShowWeekDivider(week, idx)" class="week-list-divider" />
                       </template>
                     </div>
                   </div>
@@ -5083,10 +4733,7 @@ const activeStep = computed(() => {
           </el-tabs>
 
           <transition name="fade">
-            <div
-              v-show="shouldShowAnalysisLock"
-              class="bis-lock-mask tab-lock-mask"
-            >
+            <div v-show="shouldShowAnalysisLock" class="bis-lock-mask tab-lock-mask">
               <div class="lock-card">
                 <div class="lock-header">
                   <div class="lock-icon-wrapper">
@@ -5114,10 +4761,7 @@ const activeStep = computed(() => {
                     <div class="item-label">
                       {{ option.label }}
                     </div>
-                    <ElSwitch
-                      :model-value="option.enabled"
-                      @update:model-value="option.onChange"
-                    />
+                    <ElSwitch :model-value="option.enabled" @update:model-value="option.onChange" />
                   </div>
                 </div>
               </div>
@@ -5137,9 +4781,7 @@ const activeStep = computed(() => {
           >
             <div v-if="popoverTargetRecord" class="winner-change-popover">
               <div class="popover-header">
-                <div class="popover-title">
-                  变更获得者
-                </div>
+                <div class="popover-title">变更获得者</div>
                 <el-button
                   v-if="popoverOpenedWithCorrection[popoverTargetRecord.key]"
                   type="primary"
@@ -5151,9 +4793,7 @@ const activeStep = computed(() => {
                   恢复原始记录
                 </el-button>
               </div>
-              <div class="popover-desc">
-                将掉落记录手动转移至其他玩家名下
-              </div>
+              <div class="popover-desc">将掉落记录手动转移至其他玩家名下</div>
               <ElSelect
                 :model-value="getRecordPlayer(popoverTargetRecord)"
                 placeholder="选择新获得者"
@@ -5191,23 +4831,18 @@ const activeStep = computed(() => {
             :show-arrow="false"
             placement="bottom-start"
           >
-            <div v-if="contextMenuRecord && canCorrectWeek(contextMenuRecord)" class="custom-context-menu">
+            <div
+              v-if="contextMenuRecord && canCorrectWeek(contextMenuRecord)"
+              class="custom-context-menu"
+            >
               <div class="menu-action-item" @click="handleCorrectionClick">
                 <el-icon class="action-arrow">
                   <component
-                    :is="
-                      recordWeekCorrections[contextMenuRecord.key]
-                        ? RefreshLeft
-                        : RefreshRight
-                    "
+                    :is="recordWeekCorrections[contextMenuRecord.key] ? RefreshLeft : RefreshRight"
                   />
                 </el-icon>
                 <span class="action-label">
-                  {{
-                    recordWeekCorrections[contextMenuRecord.key]
-                      ? '归回原始周'
-                      : '归入上一周'
-                  }}
+                  {{ recordWeekCorrections[contextMenuRecord.key] ? "归回原始周" : "归入上一周" }}
                 </span>
               </div>
             </div>
@@ -5222,7 +4857,7 @@ const activeStep = computed(() => {
       accept=".json"
       style="display: none"
       @change="handleImportFile"
-    >
+    />
   </div>
 
   <ElDialog
@@ -5233,49 +4868,76 @@ const activeStep = computed(() => {
     destroy-on-close
   >
     <div v-if="showImportConfirmDialog && importDataPending" class="import-preview-box">
-      <p class="import-hint-text">
-        发现备份文件，请选择要导入的部分：
-      </p>
+      <p class="import-hint-text">发现备份文件，请选择要导入的部分：</p>
       <div class="import-selection-list">
-        <ElCheckbox
-          v-model="importForm.loot"
-          :disabled="!importDataPending.r?.length"
-        >
+        <ElCheckbox v-model="importForm.loot" :disabled="!importDataPending.r?.length">
           {{ LABELS.LOOT }} ({{ importDataPending.r?.length || 0 }} 条)
-          <span
-            v-if="!importDataPending.r?.length"
-            class="import-not-found-hint"
-          >- 备份文件中未发现记录</span>
+          <span v-if="!importDataPending.r?.length" class="import-not-found-hint"
+            >- 备份文件中未发现记录</span
+          >
         </ElCheckbox>
         <ElCheckbox
           v-model="importForm.meta"
-          :disabled="!(importDataPending.c?.map || importDataPending.c?.roles || importDataPending.c?.bisConfig || importDataPending.bisConfig)"
+          :disabled="
+            !(
+              importDataPending.c?.map ||
+              importDataPending.c?.roles ||
+              importDataPending.c?.bisConfig ||
+              importDataPending.bisConfig
+            )
+          "
         >
           {{ LABELS.META }}
           <span
-            v-if="!(importDataPending.c?.map || importDataPending.c?.roles || importDataPending.c?.bisConfig || importDataPending.bisConfig)"
+            v-if="
+              !(
+                importDataPending.c?.map ||
+                importDataPending.c?.roles ||
+                importDataPending.c?.bisConfig ||
+                importDataPending.bisConfig
+              )
+            "
             class="import-not-found-hint"
-          >- 备份文件中未发现元数据</span>
+            >- 备份文件中未发现元数据</span
+          >
         </ElCheckbox>
         <ElCheckbox
           v-model="importForm.corrections"
-          :disabled="!(importDataPending.c?.weekCorrections || importDataPending.c?.playerCorrections)"
+          :disabled="
+            !(importDataPending.c?.weekCorrections || importDataPending.c?.playerCorrections)
+          "
         >
           {{ LABELS.CORRECTIONS }}
           <span
             v-if="!(importDataPending.c?.weekCorrections || importDataPending.c?.playerCorrections)"
             class="import-not-found-hint"
-          >- 备份文件中未发现修正项</span>
+            >- 备份文件中未发现修正项</span
+          >
         </ElCheckbox>
         <ElCheckbox
           v-model="importForm.view"
-          :disabled="!(importDataPending.c?.filter || importDataPending.c?.itemVisibility || importDataPending.c?.playerVisibility || importDataPending.c?.processedFiles)"
+          :disabled="
+            !(
+              importDataPending.c?.filter ||
+              importDataPending.c?.itemVisibility ||
+              importDataPending.c?.playerVisibility ||
+              importDataPending.c?.processedFiles
+            )
+          "
         >
           {{ LABELS.VIEW }}
           <span
-            v-if="!(importDataPending.c?.filter || importDataPending.c?.itemVisibility || importDataPending.c?.playerVisibility || importDataPending.c?.processedFiles)"
+            v-if="
+              !(
+                importDataPending.c?.filter ||
+                importDataPending.c?.itemVisibility ||
+                importDataPending.c?.playerVisibility ||
+                importDataPending.c?.processedFiles
+              )
+            "
             class="import-not-found-hint"
-          >- 备份文件中未发现视图/过滤配置</span>
+            >- 备份文件中未发现视图/过滤配置</span
+          >
         </ElCheckbox>
       </div>
     </div>
@@ -5296,9 +4958,7 @@ const activeStep = computed(() => {
   >
     <div v-if="showClearDialog" class="clear-selection-list">
       <div class="clear-selection-header">
-        <p class="clear-warning-text">
-          请选择要彻底删除的数据项：
-        </p>
+        <p class="clear-warning-text">请选择要彻底删除的数据项：</p>
         <div class="clear-quick-actions">
           <el-button
             link
@@ -5339,27 +4999,19 @@ const activeStep = computed(() => {
         {{ LABELS.LOOT }} ({{ lootRecords.length }})
       </ElCheckbox>
       <ElCheckbox v-model="clearForm.roles">
-        {{
-          LABELS.ROLES
-        }}
+        {{ LABELS.ROLES }}
       </ElCheckbox>
       <ElCheckbox v-model="clearForm.bis">
         {{ LABELS.BIS }}
       </ElCheckbox>
       <ElCheckbox v-model="clearForm.mapping">
-        {{
-          LABELS.MAPPING
-        }}
+        {{ LABELS.MAPPING }}
       </ElCheckbox>
       <ElCheckbox v-model="clearForm.weekCorrection">
-        {{
-          LABELS.WEEK_CORRECTION
-        }}
+        {{ LABELS.WEEK_CORRECTION }}
       </ElCheckbox>
       <ElCheckbox v-model="clearForm.playerCorrection">
-        {{
-          LABELS.PLAYER_CORRECTION
-        }}
+        {{ LABELS.PLAYER_CORRECTION }}
       </ElCheckbox>
     </div>
     <div class="clear-danger-hint">
@@ -5433,12 +5085,8 @@ const activeStep = computed(() => {
             <el-icon><User /></el-icon>
           </div>
           <div class="nav-content">
-            <div class="nav-title">
-              获得者修正
-            </div>
-            <div class="nav-status">
-              {{ filteredPlayerCorrections.length }} 个条目
-            </div>
+            <div class="nav-title">获得者修正</div>
+            <div class="nav-status">{{ filteredPlayerCorrections.length }} 个条目</div>
           </div>
         </div>
         <div
@@ -5450,12 +5098,8 @@ const activeStep = computed(() => {
             <el-icon><Calendar /></el-icon>
           </div>
           <div class="nav-content">
-            <div class="nav-title">
-              CD周数修正
-            </div>
-            <div class="nav-status">
-              {{ filteredWeekCorrections.length }} 个条目
-            </div>
+            <div class="nav-title">CD周数修正</div>
+            <div class="nav-status">{{ filteredWeekCorrections.length }} 个条目</div>
           </div>
         </div>
         <div
@@ -5467,12 +5111,8 @@ const activeStep = computed(() => {
             <el-icon><Plus /></el-icon>
           </div>
           <div class="nav-content">
-            <div class="nav-title">
-              手动添加记录
-            </div>
-            <div class="nav-status">
-              {{ filteredManualRecords.length }} 个条目
-            </div>
+            <div class="nav-title">手动添加记录</div>
+            <div class="nav-status">{{ filteredManualRecords.length }} 个条目</div>
           </div>
         </div>
       </div>
@@ -5481,18 +5121,18 @@ const activeStep = computed(() => {
         <div class="main-header">
           <h3>
             {{
-              activeCorrectionTab === 'player'
-                ? '获得者修正管理'
-                : activeCorrectionTab === 'week'
-                  ? 'CD周数修正管理'
-                  : '手动添加记录管理'
+              activeCorrectionTab === "player"
+                ? "获得者修正管理"
+                : activeCorrectionTab === "week"
+                  ? "CD周数修正管理"
+                  : "手动添加记录管理"
             }}
           </h3>
           <p>
             {{
-              activeCorrectionTab === 'manual'
-                ? '管理手动添加的装备掉落记录，删除后将永久移除。'
-                : '可以撤销手动进行的改动，恢复最原始的系统记录。'
+              activeCorrectionTab === "manual"
+                ? "管理手动添加的装备掉落记录，删除后将永久移除。"
+                : "可以撤销手动进行的改动，恢复最原始的系统记录。"
             }}
           </p>
         </div>
@@ -5500,7 +5140,9 @@ const activeStep = computed(() => {
         <div class="correction-grid-wrapper">
           <template v-if="activeCorrectionTab === 'player' || activeCorrectionTab === 'week'">
             <div
-              v-for="item in (activeCorrectionTab === 'player' ? filteredPlayerCorrections : filteredWeekCorrections)"
+              v-for="item in activeCorrectionTab === 'player'
+                ? filteredPlayerCorrections
+                : filteredWeekCorrections"
               :key="item.key"
               class="correction-card-compact"
             >
@@ -5518,7 +5160,11 @@ const activeStep = computed(() => {
                   <div class="comp-box old">
                     <div class="value">
                       <template v-if="activeCorrectionTab === 'player'">
-                        <PlayerDisplay :name="item.oldVal" :role="getPlayerRole(item.oldVal)" :show-only-role="false" />
+                        <PlayerDisplay
+                          :name="item.oldVal"
+                          :role="getPlayerRole(item.oldVal)"
+                          :show-only-role="false"
+                        />
                       </template>
                       <template v-else>
                         <span class="week-text">{{ item.oldVal }}</span>
@@ -5533,7 +5179,11 @@ const activeStep = computed(() => {
                   <div class="comp-box new">
                     <div class="value">
                       <template v-if="activeCorrectionTab === 'player'">
-                        <PlayerDisplay :name="item.newVal" :role="getPlayerRole(item.newVal)" :show-only-role="false" />
+                        <PlayerDisplay
+                          :name="item.newVal"
+                          :role="getPlayerRole(item.newVal)"
+                          :show-only-role="false"
+                        />
                       </template>
                       <template v-else>
                         <span class="week-text">{{ item.newVal }}</span>
@@ -5543,12 +5193,7 @@ const activeStep = computed(() => {
                 </div>
 
                 <div class="card-actions">
-                  <el-button
-                    type="primary"
-                    link
-                    size="small"
-                    @click="restoreCorrection(item)"
-                  >
+                  <el-button type="primary" link size="small" @click="restoreCorrection(item)">
                     <el-icon><RefreshLeft /></el-icon>
                     还原
                   </el-button>
@@ -5584,18 +5229,17 @@ const activeStep = computed(() => {
                 <div class="card-comparison-inline">
                   <div class="comp-box new">
                     <div class="value">
-                      <PlayerDisplay :name="record.player" :role="getPlayerRole(record.player)" :show-only-role="false" />
+                      <PlayerDisplay
+                        :name="record.player"
+                        :role="getPlayerRole(record.player)"
+                        :show-only-role="false"
+                      />
                     </div>
                   </div>
                 </div>
 
                 <div class="card-actions">
-                  <el-button
-                    type="danger"
-                    link
-                    size="small"
-                    @click="removeManualRecord(record)"
-                  >
+                  <el-button type="danger" link size="small" @click="removeManualRecord(record)">
                     <el-icon><Delete /></el-icon>
                     删除
                   </el-button>
@@ -5605,13 +5249,14 @@ const activeStep = computed(() => {
           </template>
 
           <div
-            v-if="(
-              activeCorrectionTab === 'player'
+            v-if="
+              (activeCorrectionTab === 'player'
                 ? filteredPlayerCorrections
                 : activeCorrectionTab === 'week'
                   ? filteredWeekCorrections
                   : filteredManualRecords
-            ).length === 0"
+              ).length === 0
+            "
             class="premium-empty"
           >
             <el-icon class="empty-icon">
@@ -5629,7 +5274,7 @@ const activeStep = computed(() => {
     accept=".json"
     style="display: none"
     @change="handleImportFile"
-  >
+  />
 
   <div class="early-access-disclaimer">
     <el-icon><Warning /></el-icon>
@@ -5697,7 +5342,7 @@ html.dark ::-webkit-scrollbar-thumb {
   cursor: not-allowed !important;
 
   &::after {
-    content: '' !important;
+    content: "" !important;
     position: absolute !important;
     inset: 0 !important;
     z-index: var(--ffxiv-mask-z, 9999) !important;
@@ -5723,13 +5368,10 @@ html.dark ::-webkit-scrollbar-thumb {
   user-select: none !important;
   -webkit-user-drag: none !important;
   pointer-events: auto !important;
-  --mask-overlay: linear-gradient(
-    rgba(255, 255, 255, 0.2),
-    rgba(255, 255, 255, 0.4)
-  );
+  --mask-overlay: linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.4));
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
     z-index: 10;
@@ -5740,10 +5382,7 @@ html.dark ::-webkit-scrollbar-thumb {
 }
 
 html.dark .section-mask {
-  --mask-overlay: linear-gradient(
-    rgba(22, 24, 35, 0.8),
-    rgba(22, 24, 35, 0.95)
-  );
+  --mask-overlay: linear-gradient(rgba(22, 24, 35, 0.8), rgba(22, 24, 35, 0.95));
 }
 
 .guide-popover-popper,
@@ -5774,7 +5413,9 @@ html.dark .section-mask {
   .setup-card {
     background: #fff;
     border-radius: 16px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    box-shadow:
+      0 20px 25px -5px rgba(0, 0, 0, 0.1),
+      0 10px 10px -5px rgba(0, 0, 0, 0.04);
     width: 100%;
     max-width: 800px;
     padding: 40px;
@@ -5816,7 +5457,8 @@ html.dark .section-mask {
     gap: 12px;
     transition: all 0.2s ease;
 
-    &:hover, &.is-filled {
+    &:hover,
+    &.is-filled {
       background: #fff;
       border-color: #cbd5e1;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
@@ -5875,7 +5517,8 @@ html.dark .onboarding-role-setup {
     background: #0f172a;
     border-color: #334155;
 
-    &:hover, &.is-filled {
+    &:hover,
+    &.is-filled {
       background: #1e293b;
       border-color: #475569;
     }
@@ -5912,7 +5555,7 @@ html.dark .onboarding-role-setup {
     white-space: nowrap;
     transition: none !important;
     padding: 0;
-    :deep(span) {
+    ::deep(span) {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -6007,7 +5650,7 @@ html.dark {
   .menu-divider,
   .role-divider,
   .divider,
-  .mapping-list  {
+  .mapping-list {
     border-bottom-color: rgba(255, 255, 255, 0.06);
     border-top-color: rgba(255, 255, 255, 0.06);
     color: rgba(255, 255, 255, 0.5);
@@ -6095,7 +5738,7 @@ html.dark {
       min-width: 80px;
       max-width: 150px;
 
-      :deep(.el-input__wrapper) {
+      ::deep(.el-input__wrapper) {
         background-color: rgba(255, 255, 255, 0.05) !important;
         box-shadow: none !important;
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -6109,13 +5752,13 @@ html.dark {
         }
       }
 
-      :deep(.el-input__inner) {
+      ::deep(.el-input__inner) {
         color: rgba(255, 255, 255, 0.8) !important;
         font-size: 11px;
         height: 22px;
       }
 
-      :deep(.el-input__prefix) {
+      ::deep(.el-input__prefix) {
         margin-right: 4px;
       }
     }
@@ -6172,9 +5815,7 @@ html.dark {
     }
   }
 
-  .el-button:not(.el-button--primary):not(.el-button--danger):not(
-      .el-button--info
-    ) {
+  .el-button:not(.el-button--primary):not(.el-button--danger):not(.el-button--info) {
     background-color: rgba(255, 255, 255, 0.05) !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
     color: rgba(255, 255, 255, 0.9) !important;
@@ -6186,7 +5827,7 @@ html.dark {
     }
   }
 
-  .initial-loading{
+  .initial-loading {
     background-color: #161823 !important;
   }
 
@@ -6432,7 +6073,7 @@ html.dark {
       overflow-y: auto;
       overflow-x: hidden;
       padding-right: 4px;
-      font-family: 'JetBrains Mono', 'Consolas', monospace;
+      font-family: "JetBrains Mono", "Consolas", monospace;
       font-size: 12px;
 
       &::-webkit-scrollbar {
@@ -6475,7 +6116,7 @@ html.dark {
       }
 
       .file-size {
-        font-family: 'JetBrains Mono', monospace;
+        font-family: "JetBrains Mono", monospace;
         font-size: 11px;
         opacity: 0.5;
         flex-shrink: 0;
@@ -6760,7 +6401,9 @@ html.dark {
     margin-right: 0 !important;
     padding: 20px 24px;
     border-bottom: 1px solid #f1f5f9;
-    html.dark & { border-color: rgba(255, 255, 255, 0.05); }
+    html.dark & {
+      border-color: rgba(255, 255, 255, 0.05);
+    }
   }
   .el-dialog__body {
     padding: 0 !important;
@@ -6809,9 +6452,17 @@ html.dark {
         border-left-color: #3b82f6;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 
-        html.dark & { background: rgba(59, 130, 246, 0.1); }
+        html.dark & {
+          background: rgba(59, 130, 246, 0.1);
+        }
 
-        .nav-title { color: #1e293b; font-weight: 700; html.dark & { color: #f1f5f9; } }
+        .nav-title {
+          color: #1e293b;
+          font-weight: 700;
+          html.dark & {
+            color: #f1f5f9;
+          }
+        }
       }
 
       .nav-icon {
@@ -6826,9 +6477,14 @@ html.dark {
         color: #64748b;
         font-size: 18px;
 
-        html.dark & { background: #2d2e3d; color: #94a3b8; }
+        html.dark & {
+          background: #2d2e3d;
+          color: #94a3b8;
+        }
 
-        .el-icon { font-size: 18px; }
+        .el-icon {
+          font-size: 18px;
+        }
       }
 
       &.active .nav-icon {
@@ -6838,8 +6494,15 @@ html.dark {
       }
 
       .nav-content {
-        .nav-title { font-size: 14px; color: #64748b; margin-bottom: 2px; }
-        .nav-status { font-size: 12px; color: #94a3b8; }
+        .nav-title {
+          font-size: 14px;
+          color: #64748b;
+          margin-bottom: 2px;
+        }
+        .nav-status {
+          font-size: 12px;
+          color: #94a3b8;
+        }
       }
     }
 
@@ -6858,8 +6521,20 @@ html.dark {
 
     .main-header {
       margin-bottom: 16px;
-      h3 { font-size: 16px; font-weight: 800; color: #1e293b; margin: 0 0 4px 0; html.dark & { color: #f1f5f9; } }
-      p { color: #64748b; margin: 0; font-size: 12px; }
+      h3 {
+        font-size: 16px;
+        font-weight: 800;
+        color: #1e293b;
+        margin: 0 0 4px 0;
+        html.dark & {
+          color: #f1f5f9;
+        }
+      }
+      p {
+        color: #64748b;
+        margin: 0;
+        font-size: 12px;
+      }
     }
 
     .correction-grid-wrapper {
@@ -6868,8 +6543,13 @@ html.dark {
       padding-right: 8px;
       padding-top: 4px;
 
-      &::-webkit-scrollbar { width: 5px; }
-      &::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+      &::-webkit-scrollbar {
+        width: 5px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+      }
     }
 
     .correction-card-compact {
@@ -6889,7 +6569,10 @@ html.dark {
       html.dark & {
         background: #252632;
         border-color: rgba(255, 255, 255, 0.05);
-        &:hover { border-color: #3b82f6; background: #2d2e3d; }
+        &:hover {
+          border-color: #3b82f6;
+          background: #2d2e3d;
+        }
       }
 
       .card-main-row {
@@ -6912,9 +6595,18 @@ html.dark {
           overflow: hidden;
           text-overflow: ellipsis;
           line-height: 1.2;
-          html.dark & { color: #f1f5f9; }
+          html.dark & {
+            color: #f1f5f9;
+          }
         }
-        .item-time { font-size: 10px; color: #94a3b8; font-family: 'JetBrains Mono', monospace; opacity: 0.6; line-height: 1.2; margin-top: 1px; }
+        .item-time {
+          font-size: 10px;
+          color: #94a3b8;
+          font-family: "JetBrains Mono", monospace;
+          opacity: 0.6;
+          line-height: 1.2;
+          margin-top: 1px;
+        }
       }
 
       .card-comparison-inline {
@@ -6926,7 +6618,9 @@ html.dark {
         padding: 4px 10px;
         min-width: 280px;
 
-        html.dark & { background: rgba(0, 0, 0, 0.2); }
+        html.dark & {
+          background: rgba(0, 0, 0, 0.2);
+        }
 
         .comp-box {
           flex: 1;
@@ -6934,7 +6628,13 @@ html.dark {
           justify-content: center;
           .value {
             font-size: 12px;
-            .week-text { font-weight: 700; color: #64748b; html.dark & { color: #94a3b8; } }
+            .week-text {
+              font-weight: 700;
+              color: #64748b;
+              html.dark & {
+                color: #94a3b8;
+              }
+            }
           }
         }
 
@@ -6944,12 +6644,18 @@ html.dark {
           opacity: 0.4;
         }
 
-        .new .value .week-text { color: #10b981; }
+        .new .value .week-text {
+          color: #10b981;
+        }
       }
 
       .card-actions {
         margin-left: 4px;
-        .el-button { font-weight: 600; font-size: 11px; padding: 4px 0; }
+        .el-button {
+          font-weight: 600;
+          font-size: 11px;
+          padding: 4px 0;
+        }
       }
     }
   }
@@ -6963,8 +6669,14 @@ html.dark {
   height: 200px;
   color: #94a3b8;
   opacity: 0.6;
-  .empty-icon { font-size: 40px; margin-bottom: 12px; }
-  p { font-size: 13px; margin: 0; }
+  .empty-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+  }
+  p {
+    font-size: 13px;
+    margin: 0;
+  }
 }
 
 .sync-status-container {
@@ -6996,7 +6708,7 @@ html.dark {
   &.is-actionable {
     cursor: pointer;
     &:hover {
-      background-color: rgba(0,0,0,0.02);
+      background-color: rgba(0, 0, 0, 0.02);
       border-radius: 4px;
       html.dark & {
         background-color: rgba(255, 255, 255, 0.05);
@@ -7051,7 +6763,7 @@ html.dark {
   overflow: hidden;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
     background: radial-gradient(circle at center, transparent 0%, rgba(255, 255, 255, 0.4) 100%);
@@ -7059,7 +6771,7 @@ html.dark {
   }
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
     z-index: -1;
@@ -7072,11 +6784,7 @@ html.dark {
 html.dark .bis-lock-mask {
   background: rgba(15, 23, 42, 0.65);
   &::before {
-    background: radial-gradient(
-      circle at center,
-      transparent 0%,
-      rgba(15, 23, 42, 0.4) 100%
-    );
+    background: radial-gradient(circle at center, transparent 0%, rgba(15, 23, 42, 0.4) 100%);
   }
 }
 
@@ -7289,8 +6997,8 @@ html.dark .lock-card p {
   scrollbar-gutter: stable;
   background-color: #f8fafc;
   font-family:
-    'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
-    'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+    "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑",
+    Arial, sans-serif;
   color: #1e293b;
   display: flex;
   flex-direction: column;
@@ -7359,7 +7067,7 @@ html.dark .lock-card p {
   box-sizing: border-box;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-  & :deep(.date-picker-el) {
+  & ::deep(.date-picker-el) {
     width: 145px !important;
     min-width: 140px !important;
     transform: translateY(-1.5px) !important;
@@ -7400,7 +7108,8 @@ html.dark .lock-card p {
       background: rgba(239, 68, 68, 0.05) !important;
     }
 
-    :deep(i), .el-icon {
+    ::deep(i),
+    .el-icon {
       font-size: 14px;
     }
   }
@@ -7417,7 +7126,7 @@ html.dark .lock-card p {
   margin-left: 4px;
   font-weight: normal;
 }
-.path-toolbar :deep(.el-button) {
+.path-toolbar ::deep(.el-button) {
   height: 28px !important;
   margin: 0 !important;
   padding: 0 6px !important;
@@ -7429,7 +7138,7 @@ html.dark .lock-card p {
   line-height: 0 !important;
   letter-spacing: -0.01em;
 }
-.path-toolbar :deep(.el-input__wrapper) {
+.path-toolbar ::deep(.el-input__wrapper) {
   height: 28px !important;
   width: 100% !important;
   background: #f8fafc;
@@ -7439,21 +7148,21 @@ html.dark .lock-card p {
   display: flex;
   align-items: center;
 }
-.path-toolbar :deep(.el-input__wrapper):hover {
+.path-toolbar ::deep(.el-input__wrapper):hover {
   box-shadow: 0 0 0 1px #cbd5e1 inset !important;
   background: #f1f5f9;
 }
-.path-toolbar :deep(.el-input__wrapper).is-focus {
+.path-toolbar ::deep(.el-input__wrapper).is-focus {
   box-shadow:
     0 0 0 1px #3b82f6 inset,
     0 0 0 3px rgba(59, 130, 246, 0.1) !important;
   background: white;
 }
-.path-toolbar :deep(.el-input__inner) {
+.path-toolbar ::deep(.el-input__inner) {
   font-size: 10.2px;
   color: #1e293b;
   font-weight: 600;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   letter-spacing: -0.03em;
   padding: 0 10px 0 20px !important;
   height: 100% !important;
@@ -7464,14 +7173,14 @@ html.dark .lock-card p {
   justify-content: center !important;
   text-align: center !important;
 }
-.path-toolbar :deep(.el-input__suffix) {
+.path-toolbar ::deep(.el-input__suffix) {
   position: absolute !important;
   right: 4px !important;
   top: 50% !important;
   transform: translateY(-50%) !important;
   z-index: 1;
 }
-.path-toolbar :deep(.el-input__prefix) {
+.path-toolbar ::deep(.el-input__prefix) {
   position: absolute !important;
   left: 8px !important;
   top: 50% !important;
@@ -7487,7 +7196,7 @@ html.dark .lock-card p {
   flex-shrink: 0;
   white-space: nowrap;
 }
-.header-right :deep(.el-switch__label) {
+.header-right ::deep(.el-switch__label) {
   white-space: nowrap;
 }
 
@@ -7828,7 +7537,7 @@ html.dark .early-access-disclaimer {
   gap: 6px;
 
   &::before {
-    content: '';
+    content: "";
     width: 3px;
     height: 14px;
     background: #3b82f6;
@@ -8100,7 +7809,7 @@ html.dark .early-access-disclaimer {
   background: #cbd5e1;
   border-radius: 4px;
 }
-.selector-tags :deep(.mini-tag-el) {
+.selector-tags ::deep(.mini-tag-el) {
   margin: 0 !important;
   display: inline-flex !important;
   justify-content: center;
@@ -8114,7 +7823,7 @@ html.dark .early-access-disclaimer {
   text-overflow: ellipsis;
   font-size: 11px;
 }
-.selector-tags :deep(.el-check-tag__content) {
+.selector-tags ::deep(.el-check-tag__content) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -8456,8 +8165,8 @@ html.dark {
   padding: 0 4px;
   border-radius: 4px;
   font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-    'Courier New', monospace;
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
 }
 .no-winner {
   color: #cbd5e1;
@@ -8582,7 +8291,7 @@ html.dark {
   color: #3b82f6;
 }
 
-.mode-tabs-el :deep(.el-tab-pane) {
+.mode-tabs-el ::deep(.el-tab-pane) {
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 0 0 12px 12px;
@@ -8821,7 +8530,7 @@ html.dark {
   border-bottom: none;
 }
 .summary-item.is-not-obtained {
-  filter:grayscale(0.2);
+  filter: grayscale(0.2);
   opacity: 0.8;
 }
 .summary-item.is-not-obtained .s-name {
@@ -8926,7 +8635,7 @@ html.dark .summary-item.is-not-obtained .count-badge {
   overflow: hidden;
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
     transform: translateX(-100%);
@@ -9014,7 +8723,7 @@ html.dark {
   border: none !important;
 }
 
-.mode-tabs-el :deep(.el-tabs__header .el-tabs__item) {
+.mode-tabs-el ::deep(.el-tabs__header .el-tabs__item) {
   border: 1px solid #e2e8f0 !important;
   background: #f8fafc !important;
   margin-right: -1px !important;
@@ -9027,16 +8736,16 @@ html.dark {
   margin-bottom: -1px;
 }
 
-.mode-tabs-el :deep(.el-tabs__header .el-tabs__item:first-child) {
+.mode-tabs-el ::deep(.el-tabs__header .el-tabs__item:first-child) {
   border-top-left-radius: 8px !important;
   margin-left: 0 !important;
 }
 
-.mode-tabs-el :deep(.el-tabs__header .el-tabs__item:last-child) {
+.mode-tabs-el ::deep(.el-tabs__header .el-tabs__item:last-child) {
   border-top-right-radius: 8px !important;
 }
 
-.mode-tabs-el :deep(.el-tabs__header .el-tabs__item.is-active) {
+.mode-tabs-el ::deep(.el-tabs__header .el-tabs__item.is-active) {
   background: white !important;
   color: var(--primary-color) !important;
   font-weight: 800;
@@ -9139,7 +8848,7 @@ html.dark .empty-placeholder:hover {
 }
 
 .drop-hint::before {
-  content: '💡';
+  content: "💡";
   font-size: 14px;
 }
 
@@ -9147,18 +8856,18 @@ html.dark .drop-hint {
   color: rgba(255, 255, 255, 0.4);
 }
 
-.empty-hint :deep(.el-button) {
+.empty-hint ::deep(.el-button) {
   padding: 12px 32px;
   font-weight: 600;
   border-radius: 10px;
 }
 
-.loot-record-table :deep(.el-table__row) {
+.loot-record-table ::deep(.el-table__row) {
   content-visibility: auto;
   contain-intrinsic-size: 1px 48px;
 }
 
-.loot-record-table :deep(th.el-table__cell) {
+.loot-record-table ::deep(th.el-table__cell) {
   background-color: #f8fafc;
   color: #64748b;
   font-weight: 800;
@@ -9234,7 +8943,7 @@ html.dark .drop-hint {
       display: inline-block;
       padding: 1px 5px;
       border-radius: 4px;
-      font-family: 'JetBrains Mono', 'Consolas', monospace;
+      font-family: "JetBrains Mono", "Consolas", monospace;
       font-size: 12px;
       font-weight: 500;
       background-color: #f1f5f9;
@@ -9288,7 +8997,9 @@ html.dark .drop-hint {
 .wizard-card {
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
   width: 100%;
   height: fit-content;
   display: flex;
@@ -9433,8 +9144,14 @@ html.dark .drop-hint {
 
   .step-title {
     text-align: center;
-    h3 { margin: 0 0 8px 0; font-size: 20px; }
-    p { margin: 0; color: #64748b; }
+    h3 {
+      margin: 0 0 8px 0;
+      font-size: 20px;
+    }
+    p {
+      margin: 0;
+      color: #64748b;
+    }
   }
 }
 
@@ -9473,7 +9190,6 @@ html.dark .drop-hint {
     margin: 0;
     border-radius: 8px;
   }
-
 }
 
 .sync-progress {
@@ -9489,8 +9205,15 @@ html.dark .drop-hint {
     transform: scale(1.2);
   }
 
-  h3 { margin: 0 0 8px 0; font-size: 20px; color: #334155; }
-  p { margin: 0 0 24px 0; color: #64748b; }
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    color: #334155;
+  }
+  p {
+    margin: 0 0 24px 0;
+    color: #64748b;
+  }
 
   .file-list-preview {
     width: 100%;
@@ -9509,8 +9232,12 @@ html.dark .drop-hint {
       font-size: 13px;
       color: #64748b;
 
-      &.done { color: #10b981; }
-      &.pending { color: #3b82f6; }
+      &.done {
+        color: #10b981;
+      }
+      &.pending {
+        color: #3b82f6;
+      }
     }
   }
 }
@@ -9534,7 +9261,9 @@ html.dark {
     }
   }
 
-  .welcome-hero h2, .sync-setup .step-title h3, .sync-progress h3 {
+  .welcome-hero h2,
+  .sync-setup .step-title h3,
+  .sync-progress h3 {
     color: #f1f5f9;
   }
 
@@ -9542,12 +9271,15 @@ html.dark {
     background: #1e293b;
     border-color: #475569;
 
-    &:hover, &.is-active {
+    &:hover,
+    &.is-active {
       background: rgba(59, 130, 246, 0.1);
       border-color: #3b82f6;
     }
 
-    h3 { color: #e2e8f0; }
+    h3 {
+      color: #e2e8f0;
+    }
   }
 
   .sync-progress .file-list-preview {
@@ -9565,8 +9297,14 @@ html.dark {
 }
 
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .onboarding-wizard {
   height: 100%;
@@ -9581,7 +9319,9 @@ html.dark {
 .wizard-card {
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
   width: 100%;
   max-width: 1100px;
   display: flex;
@@ -9596,7 +9336,6 @@ html.dark {
   }
 
   .step-pane {
-
     &.step-welcome {
       flex-direction: row;
       align-items: center;
@@ -9758,8 +9497,14 @@ html.dark {
 
   .step-title {
     text-align: center;
-    h3 { margin: 0 0 8px 0; font-size: 20px; }
-    p { margin: 0; color: #64748b; }
+    h3 {
+      margin: 0 0 8px 0;
+      font-size: 20px;
+    }
+    p {
+      margin: 0;
+      color: #64748b;
+    }
   }
 }
 
@@ -9814,8 +9559,15 @@ html.dark {
     transform: scale(1.2);
   }
 
-  h3 { margin: 0 0 8px 0; font-size: 20px; color: #334155; }
-  p { margin: 0 0 24px 0; color: #64748b; }
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    color: #334155;
+  }
+  p {
+    margin: 0 0 24px 0;
+    color: #64748b;
+  }
 
   .file-list-preview {
     width: 100%;
@@ -9834,8 +9586,12 @@ html.dark {
       font-size: 13px;
       color: #64748b;
 
-      &.done { color: #10b981; }
-      &.pending { color: #3b82f6; }
+      &.done {
+        color: #10b981;
+      }
+      &.pending {
+        color: #3b82f6;
+      }
     }
   }
 }
@@ -9874,8 +9630,19 @@ html.dark {
     margin-bottom: 20px;
     width: 100%;
     max-width: 800px;
-    h3 { margin: 0 0 6px 0; font-size: 24px; color: #1e293b; font-weight: 800; letter-spacing: -0.5px; }
-    p { margin: 0; color: #64748b; font-size: 14px; opacity: 0.8; }
+    h3 {
+      margin: 0 0 6px 0;
+      font-size: 24px;
+      color: #1e293b;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    p {
+      margin: 0;
+      color: #64748b;
+      font-size: 14px;
+      opacity: 0.8;
+    }
   }
 
   .role-grid-container {
@@ -9920,11 +9687,17 @@ html.dark {
 
       &.support {
         color: #64748b;
-        .dot { background-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+        .dot {
+          background-color: #3b82f6;
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
       }
       &.dps {
         color: #64748b;
-        .dot { background-color: #ef4444; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2); }
+        .dot {
+          background-color: #ef4444;
+          box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+        }
       }
     }
 
@@ -9981,7 +9754,9 @@ html.dark {
 
         &:hover {
           border-color: #cbd5e1;
-          .delete-btn { color: #526379; }
+          .delete-btn {
+            color: #526379;
+          }
         }
 
         .delete-btn {
@@ -9989,14 +9764,16 @@ html.dark {
           color: #cbd5e1;
           cursor: pointer;
           transition: all 0.2s;
-          &:hover { color: #ef4444; }
+          &:hover {
+            color: #ef4444;
+          }
         }
       }
 
       .special-add-select-compact {
         width: 140px;
 
-        :deep(.el-input__wrapper) {
+        ::deep(.el-input__wrapper) {
           background-color: transparent !important;
           box-shadow: none !important;
           border: 1px dashed #cbd5e1;
@@ -10004,8 +9781,13 @@ html.dark {
           height: 28px;
           font-size: 12px !important;
 
-          &:hover { border-color: #94a3b8; }
-          &.is-focus { border-color: #3b82f6; border-style: solid; }
+          &:hover {
+            border-color: #94a3b8;
+          }
+          &.is-focus {
+            border-color: #3b82f6;
+            border-style: solid;
+          }
         }
       }
     }
@@ -10027,7 +9809,10 @@ html.dark {
     }
   }
 
-  .welcome-hero h2, .sync-setup .step-title h3, .sync-progress h3, .step-roles .step-title h3 {
+  .welcome-hero h2,
+  .sync-setup .step-title h3,
+  .sync-progress h3,
+  .step-roles .step-title h3 {
     color: #f1f5f9;
   }
 
@@ -10035,12 +9820,15 @@ html.dark {
     background: #1e293b;
     border-color: #475569;
 
-    &:hover, &.is-active {
+    &:hover,
+    &.is-active {
       background: rgba(59, 130, 246, 0.1);
       border-color: #3b82f6;
     }
 
-    h3 { color: #e2e8f0; }
+    h3 {
+      color: #e2e8f0;
+    }
   }
 
   .sync-progress .file-list-preview {
@@ -10054,19 +9842,39 @@ html.dark {
 }
 
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes pulse-border {
-  0% { border-color: #409eff; box-shadow: 0 0 0 0 rgba(64, 158, 255, 0.4); }
-  70% { border-color: #337ecc; box-shadow: 0 0 0 6px rgba(64, 158, 255, 0); }
-  100% { border-color: #409eff; box-shadow: 0 0 0 0 rgba(64, 158, 255, 0); }
+  0% {
+    border-color: #409eff;
+    box-shadow: 0 0 0 0 rgba(64, 158, 255, 0.4);
+  }
+  70% {
+    border-color: #337ecc;
+    box-shadow: 0 0 0 6px rgba(64, 158, 255, 0);
+  }
+  100% {
+    border-color: #409eff;
+    box-shadow: 0 0 0 0 rgba(64, 158, 255, 0);
+  }
 }
 
 @keyframes bounce-icon {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .drag-guide-zone {
@@ -10190,7 +9998,7 @@ html.dark {
 }
 
 .role-divider::before {
-  content: '';
+  content: "";
   width: 2px;
   height: 10px;
   background: #3b82f6;

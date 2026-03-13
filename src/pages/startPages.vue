@@ -1,81 +1,80 @@
 <script setup lang="ts">
-import type { ComponentPublicInstance } from 'vue'
-import type { Menu } from '@/resources/menuData'
-import { useLang } from '@/composables/useLang'
-import { getRawMenuData, MENU_ORDER } from '@/resources/menuData'
+import type { ComponentPublicInstance } from "vue";
+import type { Menu } from "@/resources/menuData";
+import { useLang } from "@/composables/useLang";
+import { getRawMenuData, MENU_ORDER } from "@/resources/menuData";
 
-const { t, locale } = useLang()
+const { t, locale } = useLang();
 
 interface ExtendedMenu extends Menu {
-  span?: number
+  span?: number;
 }
 
 function generateUrl(url: string) {
-  return new URL(`../assets/screenshots/${url}`, import.meta.url).href
+  return new URL(`../assets/screenshots/${url}`, import.meta.url).href;
 }
 
-const tableData: Ref<ExtendedMenu[]> = ref([])
-const itemRefs = ref<Record<string, HTMLElement>>({})
+const tableData: Ref<ExtendedMenu[]> = ref([]);
+const itemRefs = ref<Record<string, HTMLElement>>({});
 
 function setCardRef(el: ComponentPublicInstance | Element | null, item: ExtendedMenu) {
   if (el) {
-    itemRefs.value[item.title] = (el instanceof Element ? el : el.$el) as HTMLElement
+    itemRefs.value[item.title] = (el instanceof Element ? el : el.$el) as HTMLElement;
   }
 }
 
 function updateSpans() {
-  const rowHeight = 10
-  const gap = 20
+  const rowHeight = 10;
+  const gap = 20;
   tableData.value.forEach((item) => {
-    const el = itemRefs.value[item.title]
+    const el = itemRefs.value[item.title];
     if (el) {
-      const height = el.getBoundingClientRect().height
-      item.span = Math.ceil((height + gap) / rowHeight)
+      const height = el.getBoundingClientRect().height;
+      item.span = Math.ceil((height + gap) / rowHeight);
     }
-  })
+  });
 }
 
 const observer = new ResizeObserver(() => {
-  updateSpans()
-})
+  updateSpans();
+});
 
 onMounted(() => {
-  const container = document.querySelector('.masonry')
-  if (container)
-    observer.observe(container)
-})
+  const container = document.querySelector(".masonry");
+  if (container) observer.observe(container);
+});
 
 onUnmounted(() => {
-  observer.disconnect()
-})
+  observer.disconnect();
+});
 
 watch(
   locale,
   () => {
-    const rawData: Menu[] = getRawMenuData(locale.value, t)
+    const rawData: Menu[] = getRawMenuData(locale.value, t);
 
     tableData.value = rawData
       .sort((a, b) => {
-        const indexA = MENU_ORDER.indexOf(a.title)
-        const indexB = MENU_ORDER.indexOf(b.title)
-        return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB)
+        const indexA = MENU_ORDER.indexOf(a.title);
+        const indexB = MENU_ORDER.indexOf(b.title);
+        return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
       })
       .map((item) => {
-        const newItem: ExtendedMenu = { ...item }
+        const newItem: ExtendedMenu = { ...item };
         if (newItem.src) {
-          newItem.src = generateUrl(newItem.src)
+          newItem.src = generateUrl(newItem.src);
         }
-        return newItem
-      })
+        return newItem;
+      });
 
     nextTick(() => {
-      updateSpans()
-    })
+      updateSpans();
+    });
   },
   {
     immediate: true,
   },
-)
+);
 </script>
 
 <template>
@@ -85,7 +84,7 @@ watch(
         <div class="header-content">
           <div class="brand">
             <h1 class="main-title">
-              {{ t('startPages.header.title') }}
+              {{ t("startPages.header.title") }}
             </h1>
             <span class="version-tag">Project Souma</span>
           </div>
@@ -100,22 +99,14 @@ watch(
         <el-card class="contact-card" shadow="hover">
           <template #header>
             <div class="card-header">
-              {{ t('startPages.contact.header') }}
+              {{ t("startPages.contact.header") }}
             </div>
           </template>
           <div class="contact-info">
-            <el-link
-              href="https://github.com/Souma-Sumire"
-              target="_blank"
-              type="primary"
-            >
+            <el-link href="https://github.com/Souma-Sumire" target="_blank" type="primary">
               Github
             </el-link>
-            <el-link
-              href="https://space.bilibili.com/1443740"
-              target="_blank"
-              type="primary"
-            >
+            <el-link href="https://space.bilibili.com/1443740" target="_blank" type="primary">
               Bilibili
             </el-link>
             <span class="qq-group">
@@ -125,7 +116,7 @@ watch(
                   src="//pub.idqqimg.com/wpa/images/group.png"
                   :alt="t('startPages.contact.qq_group_alt')"
                   :title="t('startPages.contact.qq_group_alt')"
-                >
+                />
               </a>
             </span>
             <el-link
@@ -136,9 +127,7 @@ watch(
             >
               Discord
             </el-link>
-            <span class="warning-text">{{
-              t('startPages.contact.warning')
-            }}</span>
+            <span class="warning-text">{{ t("startPages.contact.warning") }}</span>
           </div>
         </el-card>
 
@@ -160,12 +149,15 @@ watch(
             >
               <div class="card-header-row">
                 <div class="badge-group">
-                  <span v-if="item.isNew" class="subtle-badge floating new">✨ {{ t('startPages.badge.new') }}</span>
-                  <span v-if="item.isHot" class="subtle-badge floating hot">🔥 {{ t('startPages.badge.hot') }}</span>
-                  <span
-                    v-if="item.isRecommended"
-                    class="subtle-badge floating recommended"
-                  >⭐ {{ t('startPages.badge.recommended') }}</span>
+                  <span v-if="item.isNew" class="subtle-badge floating new"
+                    >✨ {{ t("startPages.badge.new") }}</span
+                  >
+                  <span v-if="item.isHot" class="subtle-badge floating hot"
+                    >🔥 {{ t("startPages.badge.hot") }}</span
+                  >
+                  <span v-if="item.isRecommended" class="subtle-badge floating recommended"
+                    >⭐ {{ t("startPages.badge.recommended") }}</span
+                  >
                 </div>
                 <router-link
                   v-if="!item.path.startsWith('http')"
@@ -174,12 +166,7 @@ watch(
                 >
                   {{ t(item.title) }}
                 </router-link>
-                <a
-                  v-else
-                  :href="item.path"
-                  target="_blank"
-                  class="card-title card-link"
-                >
+                <a v-else :href="item.path" target="_blank" class="card-title card-link">
                   {{ t(item.title) }}
                 </a>
               </div>
@@ -195,13 +182,10 @@ watch(
                   v-if="item.comment"
                   class="card-comment"
                   :style="{
-                    marginLeft:
-                      item.direction === 'row-reverse' ? '0.5em' : '0px',
+                    marginLeft: item.direction === 'row-reverse' ? '0.5em' : '0px',
                     marginRight: item.direction === 'row' ? '0px' : '0.5em',
                     marginTop:
-                      !item.direction || item.direction === 'column-reverse'
-                        ? '0.5em'
-                        : '0',
+                      !item.direction || item.direction === 'column-reverse' ? '0.5em' : '0',
                   }"
                   v-html="item.commentArgs ? t(item.comment, item.commentArgs) : t(item.comment)"
                 />
@@ -234,7 +218,7 @@ watch(
 .common-layout {
   background-color: var(--el-bg-color);
   color: var(--el-text-color-primary);
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .main-container {
@@ -354,7 +338,7 @@ watch(
     color: var(--el-text-color-primary);
 
     &::before {
-      content: '';
+      content: "";
       width: 3px;
       height: 14px;
       background-color: var(--el-color-primary);
@@ -362,7 +346,7 @@ watch(
     }
   }
 
-  :deep(.el-card__header) {
+  ::deep(.el-card__header) {
     padding: 12px 20px;
     border-bottom: 1px dashed var(--el-border-color-lighter);
     background: transparent;

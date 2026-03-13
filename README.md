@@ -22,21 +22,21 @@
 
 ### 一、环境准备
 
-1. [Bun](https://bun.sh/)
+1. [Vite+](https://viteplus.dev/)
 
 ### 二、启动项目
 
 ```bash
 # 安装依赖
-bun install
+vp install
 # 初始化子模块
 git submodule update --init --recursive
 # 拉取最新 cactbot 代码并应用补丁
 bash scripts/update-cactbot.sh
 # 开发模式
-bun dev
+vp dev
 # 构建
-bun run build
+vp run build
 ```
 
 大部分页面，可以通过 dev 参数来进入测试模式。例如：

@@ -1,25 +1,21 @@
 <script setup lang="ts">
-import { inject } from 'vue'
-import RoleBadge from './RoleBadge.vue'
+import { inject } from "vue";
+import RoleBadge from "./RoleBadge.vue";
 
 defineProps<{
-  name: string
-  role: string | null | undefined
-  showOnlyRole: boolean
-  nameClass?: string
-}>()
+  name: string;
+  role: string | null | undefined;
+  showOnlyRole: boolean;
+  nameClass?: string;
+}>();
 
-const getDisplayName = inject('getDisplayName', (name: string) => name)
+const getDisplayName = inject("getDisplayName", (name: string) => name);
 </script>
 
 <template>
   <div class="player-display" :class="{ 'is-large': showOnlyRole }">
     <RoleBadge :role="role" :large="showOnlyRole" class="role-icon" />
-    <span
-      v-if="!showOnlyRole || !role"
-      class="player-name-text"
-      :class="nameClass"
-    >
+    <span v-if="!showOnlyRole || !role" class="player-name-text" :class="nameClass">
       {{ getDisplayName(name) }}
     </span>
   </div>

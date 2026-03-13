@@ -1,15 +1,15 @@
 interface Player {
-  id: string
-  name: string
-  inParty: boolean
-  job: number
-  level: number
+  id: string;
+  name: string;
+  inParty: boolean;
+  job: number;
+  level: number;
 }
 
 interface PlayerRuntime extends Player {
-  rp?: string
+  rp?: string;
 }
 
-type Role = 'tank' | 'healer' | 'dps'
+type Role = "tank" | "healer" | "dps";
 
-export { type Player, type PlayerRuntime, type Role }
+export { type Player, type PlayerRuntime, type Role };

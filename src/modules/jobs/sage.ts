@@ -1,5 +1,5 @@
-import logDefinitions from '../../../cactbot/resources/netlog_defs'
-import { BaseTracker } from './baseTracker'
+import logDefinitions from "../../../cactbot/resources/netlog_defs";
+import { BaseTracker } from "./baseTracker";
 
 const SGE_ACTION_IDS = {
   DRUOCHOLE: 24296, // 灵橡清汁
@@ -7,119 +7,116 @@ const SGE_ACTION_IDS = {
   IXOCHOLE: 24299, // 寄生清汁
   TAUROCHOLE: 24303, // 白牛清汁
   RHIZOMATA: 24309, // 根素
-}
+};
 
 export class SageTracker extends BaseTracker {
   // characterId -> current stacks (0-3)
-  private stacks: Record<string, number> = {}
+  private stacks: Record<string, number> = {};
   // characterId -> last generation timestamp
-  private lastGenTime: Record<string, number> = {}
+  private lastGenTime: Record<string, number> = {};
 
   protected cleanupRedundantPlayers() {
     for (const id in this.stacks) {
       if (!this.playerIds.has(id)) {
-        delete this.stacks[id]
-        delete this.lastGenTime[id]
+        delete this.stacks[id];
+        delete this.lastGenTime[id];
       }
     }
   }
 
   public reset() {
-    this.stacks = {}
-    this.lastGenTime = {}
+    this.stacks = {};
+    this.lastGenTime = {};
   }
 
   public getResource(characterId: string): number | undefined {
-    return this.stacks[characterId] ?? 3
+    return this.stacks[characterId] ?? 3;
   }
 
   public fill() {
-    const now = Date.now()
+    const now = Date.now();
     for (const id of this.playerIds) {
-      this.stacks[id] = 3
-      this.lastGenTime[id] = now
+      this.stacks[id] = 3;
+      this.lastGenTime[id] = now;
     }
   }
 
   public processLine(type: string, splitLine: string[]) {
     // 并不是每一行都有时间戳或者我们关注的来源
     // 我们主要在 Ability 的时候更新，因为资源读取通常也在 Ability 发生时
-    if (type !== '21' && type !== '22' && type !== '25')
-      return
+    if (type !== "21" && type !== "22" && type !== "25") return;
 
-    const timestampStr = splitLine[1]
-    if (!timestampStr)
-      return
-    const timestamp = new Date(timestampStr).getTime()
+    const timestampStr = splitLine[1];
+    if (!timestampStr) return;
+    const timestamp = new Date(timestampStr).getTime();
 
     switch (type) {
-      case '21': // Ability
-      case '22':
+      case "21": // Ability
+      case "22":
         {
-          const sourceId = splitLine[logDefinitions.Ability.fields.sourceId]!
-          if (!this.playerIds.has(sourceId))
-            return // 只跟踪对应的贤者玩家
+          const sourceId = splitLine[logDefinitions.Ability.fields.sourceId]!;
+          if (!this.playerIds.has(sourceId)) return; // 只跟踪对应的贤者玩家
 
-          this.updateStacks(sourceId, timestamp)
+          this.updateStacks(sourceId, timestamp);
 
-          const id = Number.parseInt(splitLine[logDefinitions.Ability.fields.id]!, 16)
+          const id = Number.parseInt(splitLine[logDefinitions.Ability.fields.id]!, 16);
 
           // 消耗蛇胆
           if (
-            id === SGE_ACTION_IDS.DRUOCHOLE
-            || id === SGE_ACTION_IDS.KERACHOLE
-            || id === SGE_ACTION_IDS.IXOCHOLE
-            || id === SGE_ACTION_IDS.TAUROCHOLE
+            id === SGE_ACTION_IDS.DRUOCHOLE ||
+            id === SGE_ACTION_IDS.KERACHOLE ||
+            id === SGE_ACTION_IDS.IXOCHOLE ||
+            id === SGE_ACTION_IDS.TAUROCHOLE
           ) {
-            this.consumeStack(sourceId)
+            this.consumeStack(sourceId);
           }
           // 获得一个蛇胆
           else if (id === SGE_ACTION_IDS.RHIZOMATA) {
-            this.addStack(sourceId)
+            this.addStack(sourceId);
           }
         }
-        break
+        break;
 
-      case '25': // Death
+      case "25": // Death
         {
-          const targetId = splitLine[logDefinitions.WasDefeated.fields.targetId]!
+          const targetId = splitLine[logDefinitions.WasDefeated.fields.targetId]!;
           if (this.playerIds.has(targetId)) {
-            this.stacks[targetId] = 0
-            delete this.lastGenTime[targetId]
+            this.stacks[targetId] = 0;
+            delete this.lastGenTime[targetId];
           }
         }
-        break
+        break;
     }
   }
 
   private updateStacks(characterId: string, now: number) {
     if (!this.lastGenTime[characterId]) {
-      this.lastGenTime[characterId] = now
+      this.lastGenTime[characterId] = now;
       if (this.stacks[characterId] === undefined) {
-        this.stacks[characterId] = 3
+        this.stacks[characterId] = 3;
       }
-      return
+      return;
     }
 
-    const elapsed = now - this.lastGenTime[characterId]
-    const generations = Math.floor(elapsed / 20000)
+    const elapsed = now - this.lastGenTime[characterId];
+    const generations = Math.floor(elapsed / 20000);
 
     if (generations > 0) {
-      const current = this.stacks[characterId] ?? 0
-      this.stacks[characterId] = Math.min(3, current + generations)
-      this.lastGenTime[characterId] += generations * 20000
+      const current = this.stacks[characterId] ?? 0;
+      this.stacks[characterId] = Math.min(3, current + generations);
+      this.lastGenTime[characterId] += generations * 20000;
     }
   }
 
   private consumeStack(characterId: string) {
-    const current = this.stacks[characterId] || 0
+    const current = this.stacks[characterId] || 0;
     if (current > 0) {
-      this.stacks[characterId] = current - 1
+      this.stacks[characterId] = current - 1;
     }
   }
 
   private addStack(characterId: string) {
-    const current = this.stacks[characterId] || 0
-    this.stacks[characterId] = Math.min(3, current + 1)
+    const current = this.stacks[characterId] || 0;
+    this.stacks[characterId] = Math.min(3, current + 1);
   }
 }

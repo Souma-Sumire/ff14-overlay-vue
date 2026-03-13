@@ -22,21 +22,21 @@
 
 ### 1. 環境準備
 
-1. [Bun](https://bun.sh/)
+1. [Vite+](https://viteplus.dev/)
 
 ### 2. プロジェクトの起動
 
 ```bash
 # 依存関係のインストール
-bun install
+vp install
 # サブモジュールの初期化
 git submodule update --init --recursive
 # 最新の cactbot コードを取得してパッチを適用
 bash scripts/update-cactbot.sh
 # 開発モード
-bun dev
+vp dev
 # ビルド
-bun run build
+vp run build
 ```
 
 ほとんどのページは、`dev` パラメータを使用してテストモードに入ることができます。例：

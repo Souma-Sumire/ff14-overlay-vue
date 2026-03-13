@@ -211,4 +211,4 @@ export const BAKED_UPGRADE_CHAIN_MIN_LEVEL_BY_ACTION_ID: Record<number, number> 
   37013: 35,
   37030: 40,
   37034: 30,
-}
+};

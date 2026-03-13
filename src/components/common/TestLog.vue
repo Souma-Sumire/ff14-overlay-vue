@@ -1,69 +1,66 @@
 <script setup lang="ts">
-import { UploadFilled } from '@element-plus/icons-vue'
-import { ElIcon, ElLoading } from 'element-plus'
-import { useLang } from '@/composables/useLang'
+import { UploadFilled } from "@element-plus/icons-vue";
+import { ElIcon, ElLoading } from "element-plus";
+import { useLang } from "@/composables/useLang";
 
 const emits = defineEmits<{
-  (e: 'handleLine', line: string): unknown
-  (e: 'beforeHandle'): void
-  (e: 'afterHandle'): void
-}>()
+  (e: "handleLine", line: string): unknown;
+  (e: "beforeHandle"): void;
+  (e: "afterHandle"): void;
+}>();
 
-const { t } = useLang()
+const { t } = useLang();
 
-const input = ref<HTMLInputElement | null>(null)
-const isDragOver = ref(false)
+const input = ref<HTMLInputElement | null>(null);
+const isDragOver = ref(false);
 
 async function processFiles(files: FileList | null) {
-  if (!files || files.length === 0)
-    return
+  if (!files || files.length === 0) return;
 
-  emits('beforeHandle')
+  emits("beforeHandle");
 
   const instance = ElLoading.service({
     fullscreen: true,
-    text: t('testLog.loading'),
+    text: t("testLog.loading"),
     lock: true,
-    background: 'rgba(0, 0, 0, 0.7)',
-  })
+    background: "rgba(0, 0, 0, 0.7)",
+  });
 
   try {
     for (let i = 0; i < files.length; i++) {
-      const file = files[i]!
-      const text = await file.text()
-      const lines = text.split('\n')
+      const file = files[i]!;
+      const text = await file.text();
+      const lines = text.split("\n");
       for (const line of lines) {
-        emits('handleLine', line)
+        emits("handleLine", line);
       }
     }
-  }
-  finally {
-    instance.close()
-    emits('afterHandle')
-    if (input.value)
-      input.value.value = ''
+  } finally {
+    instance.close();
+    emits("afterHandle");
+    if (input.value) input.value.value = "";
   }
 }
 
 function onChange(e: Event) {
-  isDragOver.value = false
-  const files = (e.target as HTMLInputElement).files
-  processFiles(files)
+  isDragOver.value = false;
+  const files = (e.target as HTMLInputElement).files;
+  processFiles(files);
 }
 
 function onDragOver(e: DragEvent) {
-  e.preventDefault()
-  isDragOver.value = true
+  e.preventDefault();
+  isDragOver.value = true;
 }
 function onDragLeave(e: DragEvent) {
-  e.preventDefault()
-  isDragOver.value = false
+  e.preventDefault();
+  isDragOver.value = false;
 }
 function onDrop(e: DragEvent) {
-  e.preventDefault()
-  isDragOver.value = false
-  const files = e.dataTransfer?.files || null
-  processFiles(files)
+  e.preventDefault();
+  isDragOver.value = false;
+  const files = e.dataTransfer?.files || null;
+  processFiles(files);
 }
 </script>
 
@@ -81,7 +78,7 @@ function onDrop(e: DragEvent) {
       </ElIcon>
       <div class="text-group">
         <p class="title">
-          {{ $t('testLog.upload') }}
+          {{ $t("testLog.upload") }}
         </p>
       </div>
     </div>
@@ -94,7 +91,7 @@ function onDrop(e: DragEvent) {
       accept=".log,.txt"
       class="file-input"
       @change="onChange"
-    >
+    />
   </div>
 </template>
 

@@ -3,15 +3,15 @@
 // Source: chs/Action.csv + bakedActionUpgradeSteps.ts
 
 export interface BakedActionMetaLite {
-  name: string
-  icon: number
-  classJob: number
-  classJobCategory: number
-  actionCategory: number
-  recast100ms: number
-  maxCharges: number
-  classJobLevel: number
-  isRoleAction: boolean
+  name: string;
+  icon: number;
+  classJob: number;
+  classJobCategory: number;
+  actionCategory: number;
+  recast100ms: number;
+  maxCharges: number;
+  classJobLevel: number;
+  isRoleAction: boolean;
 }
 
 type BakedActionMetaLiteTuple = [
@@ -24,7 +24,7 @@ type BakedActionMetaLiteTuple = [
   maxCharges: number,
   classJobLevel: number,
   isRoleAction: 0 | 1,
-]
+];
 
 const RAW_BAKED_ACTION_META_LITE_BY_ID: Record<number, BakedActionMetaLiteTuple> = {
   9: ["先锋剑", 158, 1, 38, 3, 25, 0, 1, 0],
@@ -1305,13 +1305,12 @@ const RAW_BAKED_ACTION_META_LITE_BY_ID: Record<number, BakedActionMetaLiteTuple>
   45960: ["魔回刺", 3225, 0, 112, 3, 15, 0, 1, 0],
   45961: ["魔交击斩", 3226, 0, 112, 3, 15, 0, 35, 0],
   45962: ["魔连攻", 3227, 0, 112, 3, 22, 0, 50, 0],
-}
+};
 
-export const BAKED_ACTION_META_LITE_BY_ID: Record<number, BakedActionMetaLite> = {}
+export const BAKED_ACTION_META_LITE_BY_ID: Record<number, BakedActionMetaLite> = {};
 Object.entries(RAW_BAKED_ACTION_META_LITE_BY_ID).forEach(([rawId, row]) => {
-  const id = Number(rawId)
-  if (!Number.isFinite(id) || id <= 0)
-    return
+  const id = Number(rawId);
+  if (!Number.isFinite(id) || id <= 0) return;
   BAKED_ACTION_META_LITE_BY_ID[id] = {
     name: row[0],
     icon: row[1],
@@ -1322,5 +1321,5 @@ Object.entries(RAW_BAKED_ACTION_META_LITE_BY_ID).forEach(([rawId, row]) => {
     maxCharges: row[6],
     classJobLevel: row[7],
     isRoleAction: row[8] > 0,
-  }
-})
+  };
+});

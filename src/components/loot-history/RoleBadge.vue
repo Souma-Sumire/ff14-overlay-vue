@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { getRoleColor, getRoleDisplayName } from '@/utils/lootParser'
+import { computed } from "vue";
+import { getRoleColor, getRoleDisplayName } from "@/utils/lootParser";
 
 const props = defineProps<{
-  role: string | null | undefined
-  large?: boolean
-}>()
+  role: string | null | undefined;
+  large?: boolean;
+}>();
 
-const bgColor = computed(() => getRoleColor(props.role))
-const roleDisplayName = computed(() => props.role ? getRoleDisplayName(props.role) : '')
+const bgColor = computed(() => getRoleColor(props.role));
+const roleDisplayName = computed(() => (props.role ? getRoleDisplayName(props.role) : ""));
 </script>
 
 <template>

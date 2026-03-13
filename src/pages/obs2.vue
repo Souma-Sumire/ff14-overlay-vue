@@ -1,74 +1,71 @@
 <script setup lang="ts">
-import type { EventMap } from 'cactbot/types/event'
-import type { RequestBatchRequest } from 'obs-websocket-js'
-import type { Reactive } from 'vue'
-import type { ContentUsedType } from '@/composables/useZone'
-import { ElMessage } from 'element-plus'
-import OBSWebSocket from 'obs-websocket-js'
-import { useDev } from '@/composables/useDev'
-import { useLang } from '@/composables/useLang'
-import { CONTENT_TYPES, useZone } from '@/composables/useZone'
-import logDefinitions from '../../cactbot/resources/netlog_defs'
-import NetRegexes, { commonNetRegex } from '../../cactbot/resources/netregexes'
+import type { RequestBatchRequest } from "obs-websocket-js";
+import type { Reactive } from "vue";
+import type { ContentUsedType } from "@/composables/useZone";
+import { ElMessage } from "element-plus";
+import OBSWebSocket from "obs-websocket-js";
+import { useDev } from "@/composables/useDev";
+import { useLang } from "@/composables/useLang";
+import { CONTENT_TYPES, useZone } from "@/composables/useZone";
+import logDefinitions from "../../cactbot/resources/netlog_defs";
+import NetRegexes, { commonNetRegex } from "../../cactbot/resources/netregexes";
 import {
   addOverlayListener,
   removeOverlayListener,
-} from '../../cactbot/resources/overlay_plugin_api'
+} from "../../cactbot/resources/overlay_plugin_api";
+import type { EventMap } from "cactbot/types/event";
 
-const { t } = useLang()
+const { t } = useLang();
 
 interface Settings {
-  type: ContentUsedType
-  enter: boolean
-  countdown: boolean
-  countdownCancel: boolean
-  combatStart: boolean
-  combatEnd: boolean
-  wipe: boolean
-  partyLength: number
-  customPath: string
+  type: ContentUsedType;
+  enter: boolean;
+  countdown: boolean;
+  countdownCancel: boolean;
+  combatStart: boolean;
+  combatEnd: boolean;
+  wipe: boolean;
+  partyLength: number;
+  customPath: string;
 }
-type ConditionType
-  = | 'enter'
-    | 'combatStart'
-    | 'combatEnd'
-    | 'countdown'
-    | 'countdownCancel'
-    | 'wipe'
+type ConditionType =
+  | "enter"
+  | "combatStart"
+  | "combatEnd"
+  | "countdown"
+  | "countdownCancel"
+  | "wipe";
 
-const { zoneType } = useZone()
-const zoneName = useStorage('obs-zone-name', '')
+const { zoneType } = useZone();
+const zoneName = useStorage("obs-zone-name", "");
 
 const userConfig = useStorage(
-  'obs-user-config',
+  "obs-user-config",
   {
     host: 4455,
-    password: '',
-    path: '',
-    fileName: '%CCYY-%MM-%DD %hh-%mm-%ss',
+    password: "",
+    path: "",
+    fileName: "%CCYY-%MM-%DD %hh-%mm-%ss",
     appendContentName: true,
   },
   localStorage,
   { mergeDefaults: true },
-)
-const userContentSetting = useStorage(
-  'obs-user-content-setting',
-  [] as Settings[],
-)
-const dev = useDev()
-const partyLength = ref(1)
+);
+const userContentSetting = useStorage("obs-user-content-setting", [] as Settings[]);
+const dev = useDev();
+const partyLength = ref(1);
 
-const hasUsedBefore = useStorage('obs-has-used-before', false)
-const isMiniMode = ref(hasUsedBefore.value)
+const hasUsedBefore = useStorage("obs-has-used-before", false);
+const isMiniMode = ref(hasUsedBefore.value);
 
 const REGEXES = {
   inCombat: NetRegexes.inCombat(),
   countdown: NetRegexes.countdown(),
   countdownCancel: NetRegexes.countdownCancel(),
   wipe: commonNetRegex.wipe,
-} as const
+} as const;
 
-const DEFAULT_ENABLE_SETTINGS: Omit<Settings, 'type'> = {
+const DEFAULT_ENABLE_SETTINGS: Omit<Settings, "type"> = {
   enter: false,
   countdown: true,
   countdownCancel: true,
@@ -76,9 +73,9 @@ const DEFAULT_ENABLE_SETTINGS: Omit<Settings, 'type'> = {
   combatEnd: true,
   wipe: true,
   partyLength: 1,
-  customPath: '',
-}
-const DEFAULT_DISABLE_SETTINGS: Omit<Settings, 'type'> = {
+  customPath: "",
+};
+const DEFAULT_DISABLE_SETTINGS: Omit<Settings, "type"> = {
   enter: false,
   countdown: false,
   countdownCancel: false,
@@ -86,401 +83,383 @@ const DEFAULT_DISABLE_SETTINGS: Omit<Settings, 'type'> = {
   combatEnd: false,
   wipe: false,
   partyLength: 1,
-  customPath: '',
-}
+  customPath: "",
+};
 
 function initializeContentSettings() {
   const defaultEnabled: ContentUsedType[] = [
-    'Savage',
-    'Extreme',
-    'Ultimate',
-    'Chaotic',
-    'OccultCrescent',
-    'DeepDungeonExtras',
-    'Default',
-  ]
+    "Savage",
+    "Extreme",
+    "Ultimate",
+    "Chaotic",
+    "OccultCrescent",
+    "DeepDungeonExtras",
+    "Default",
+  ];
   if (userContentSetting.value.length === 0) {
     userContentSetting.value = [
-      ...defaultEnabled.map(type => ({ type, ...DEFAULT_ENABLE_SETTINGS })),
-      ...CONTENT_TYPES.filter(type => !defaultEnabled.includes(type)).map(
-        type => ({ type, ...DEFAULT_DISABLE_SETTINGS }),
-      ),
-    ]
-    const occ = userContentSetting.value.find(
-      v => v.type === 'OccultCrescent',
-    )
+      ...defaultEnabled.map((type) => ({ type, ...DEFAULT_ENABLE_SETTINGS })),
+      ...CONTENT_TYPES.filter((type) => !defaultEnabled.includes(type)).map((type) => ({
+        type,
+        ...DEFAULT_DISABLE_SETTINGS,
+      })),
+    ];
+    const occ = userContentSetting.value.find((v) => v.type === "OccultCrescent");
     if (occ) {
-      occ.partyLength = 40
+      occ.partyLength = 40;
     }
-  }
-  else {
+  } else {
     // 清理不存在的类型
-    userContentSetting.value = userContentSetting.value.filter(item =>
+    userContentSetting.value = userContentSetting.value.filter((item) =>
       CONTENT_TYPES.includes(item.type),
-    )
+    );
     // 加入缺少的类型
     const missingTypes = CONTENT_TYPES.filter(
-      type =>
-        !userContentSetting.value.some(item => item.type === type)
-        && type !== 'Default',
+      (type) => !userContentSetting.value.some((item) => item.type === type) && type !== "Default",
     ).map((v) => {
       return defaultEnabled.includes(v)
         ? { type: v, ...DEFAULT_ENABLE_SETTINGS }
-        : { type: v, ...DEFAULT_DISABLE_SETTINGS }
-    })
-    userContentSetting.value.push(...missingTypes)
+        : { type: v, ...DEFAULT_DISABLE_SETTINGS };
+    });
+    userContentSetting.value.push(...missingTypes);
   }
   userContentSetting.value.sort(
     (a, b) => CONTENT_TYPES.indexOf(a.type) - CONTENT_TYPES.indexOf(b.type),
-  )
+  );
   // 补全可能因新增而缺失的设置项
-  userContentSetting.value = userContentSetting.value.map(item => ({
-    ...(defaultEnabled.includes(item.type)
-      ? DEFAULT_ENABLE_SETTINGS
-      : DEFAULT_DISABLE_SETTINGS),
+  userContentSetting.value = userContentSetting.value.map((item) => ({
+    ...(defaultEnabled.includes(item.type) ? DEFAULT_ENABLE_SETTINGS : DEFAULT_DISABLE_SETTINGS),
     ...item,
-  }))
+  }));
   // custom path
   if (userConfig.value.path) {
     userContentSetting.value.forEach((item) => {
-      if (item.customPath === '') {
-        item.customPath = userConfig.value.path
+      if (item.customPath === "") {
+        item.customPath = userConfig.value.path;
       }
-    })
+    });
   }
 }
 
 class Obs {
-  ws: OBSWebSocket
+  ws: OBSWebSocket;
   status: Reactive<{
-    connecting: boolean
-    connected: boolean
-    recording: boolean
-    outputActive: boolean
-    outputPath: string
-  }>
+    connecting: boolean;
+    connected: boolean;
+    recording: boolean;
+    outputActive: boolean;
+    outputPath: string;
+  }>;
 
-  connectingPromise: Promise<void> | null = null
+  connectingPromise: Promise<void> | null = null;
 
   handleConnectionError = () => {
-    Log('OBS connection error')
-    this.status.connecting = false
-    this.status.connected = false
-    this.status.recording = false
-    this.status.outputActive = false
-    this.status.outputPath = ''
-  }
+    Log("OBS connection error");
+    this.status.connecting = false;
+    this.status.connected = false;
+    this.status.recording = false;
+    this.status.outputActive = false;
+    this.status.outputPath = "";
+  };
 
   handleConnectionClosed = () => {
-    Log('OBS connection closed')
-    this.status.connecting = false
-    this.status.connected = false
-    this.status.recording = false
-    this.status.outputActive = false
-    this.status.outputPath = ''
-  }
+    Log("OBS connection closed");
+    this.status.connecting = false;
+    this.status.connected = false;
+    this.status.recording = false;
+    this.status.outputActive = false;
+    this.status.outputPath = "";
+  };
 
   handleRecordStateChanged = (e: {
-    outputActive: boolean
-    outputState: string
-    outputPath: string
+    outputActive: boolean;
+    outputState: string;
+    outputPath: string;
   }) => {
-    this.status.connected = true
-    this.status.recording = e.outputState === 'OBS_WEBSOCKET_OUTPUT_STARTED'
-    this.status.outputActive = e.outputActive
-    this.status.outputPath = e.outputPath || ''
-  }
+    this.status.connected = true;
+    this.status.recording = e.outputState === "OBS_WEBSOCKET_OUTPUT_STARTED";
+    this.status.outputActive = e.outputActive;
+    this.status.outputPath = e.outputPath || "";
+  };
 
   constructor() {
-    this.ws = new OBSWebSocket()
+    this.ws = new OBSWebSocket();
     this.status = reactive({
       connecting: false,
       connected: false,
       recording: false,
       outputActive: false,
-      outputPath: '',
-    })
-    this.ws.on('ConnectionClosed', this.handleConnectionClosed)
-    this.ws.on('ConnectionError', this.handleConnectionError)
-    this.ws.on('RecordStateChanged', this.handleRecordStateChanged)
+      outputPath: "",
+    });
+    this.ws.on("ConnectionClosed", this.handleConnectionClosed);
+    this.ws.on("ConnectionError", this.handleConnectionError);
+    this.ws.on("RecordStateChanged", this.handleRecordStateChanged);
   }
 
   async connect(): Promise<void> {
-    if (this.status.connected)
-      return Promise.resolve()
-    if (this.connectingPromise)
-      return this.connectingPromise
+    if (this.status.connected) return Promise.resolve();
+    if (this.connectingPromise) return this.connectingPromise;
 
     this.connectingPromise = (async () => {
-      Log('Connecting to OBS')
+      Log("Connecting to OBS");
       if (!userConfig.value.host) {
         ElMessage({
-          type: 'error',
-          message: t('obs2.host required'),
+          type: "error",
+          message: t("obs2.host required"),
           duration: 1000,
-        })
-        return
+        });
+        return;
       }
 
-      this.status.connecting = true
+      this.status.connecting = true;
       try {
-        await this.ws.connect(
-          `ws://127.0.0.1:${userConfig.value.host}`,
-          userConfig.value.password,
-        )
-        Log('Connected to OBS')
-        const recordStatus = await this.ws.call('GetRecordStatus')
-        this.status.recording = recordStatus.outputActive
-        this.status.outputActive = recordStatus.outputActive
-        this.status.connected = true
+        await this.ws.connect(`ws://127.0.0.1:${userConfig.value.host}`, userConfig.value.password);
+        Log("Connected to OBS");
+        const recordStatus = await this.ws.call("GetRecordStatus");
+        this.status.recording = recordStatus.outputActive;
+        this.status.outputActive = recordStatus.outputActive;
+        this.status.connected = true;
 
         if (!userConfig.value.path) {
-          const v = await this.ws.call('GetRecordDirectory')
+          const v = await this.ws.call("GetRecordDirectory");
           if (v.recordDirectory) {
-            userConfig.value.path = v.recordDirectory
+            userConfig.value.path = v.recordDirectory;
             userContentSetting.value.forEach((item) => {
-              if (item.customPath === '') {
-                item.customPath = v.recordDirectory
+              if (item.customPath === "") {
+                item.customPath = v.recordDirectory;
               }
-            })
+            });
           }
         }
         if (!userConfig.value.fileName) {
-          userConfig.value.fileName = '%CCYY-%MM-%DD %hh-%mm-%ss'
+          userConfig.value.fileName = "%CCYY-%MM-%DD %hh-%mm-%ss";
         }
-        hasUsedBefore.value = true
-      }
-      catch (e) {
-        Log('OBS connection failed', e)
+        hasUsedBefore.value = true;
+      } catch (e) {
+        Log("OBS connection failed", e);
         ElMessage({
-          type: 'error',
-          message: t('obs2.connection failed'),
+          type: "error",
+          message: t("obs2.connection failed"),
           duration: 1000,
-        })
+        });
+      } finally {
+        this.status.connecting = false;
+        this.connectingPromise = null;
       }
-      finally {
-        this.status.connecting = false
-        this.connectingPromise = null
-      }
-    })()
+    })();
 
-    return this.connectingPromise
+    return this.connectingPromise;
   }
 
   disconnect() {
-    Log('Disconnecting from OBS')
-    this.ws.disconnect()
+    Log("Disconnecting from OBS");
+    this.ws.disconnect();
   }
 
   async startRecord() {
-    Log('Starting recording')
-    await this.setProfileParameter('start')
-    this.ws.call('StartRecord')
+    Log("Starting recording");
+    await this.setProfileParameter("start");
+    this.ws.call("StartRecord");
   }
 
   async stopRecord() {
-    Log('Stopping recording')
-    await this.setProfileParameter('stop')
-    return this.ws.call('StopRecord')
+    Log("Stopping recording");
+    await this.setProfileParameter("stop");
+    return this.ws.call("StopRecord");
   }
 
   async splitRecord() {
-    Log('Splitting recording')
-    await this.setProfileParameter('split')
-    await this.ws.call('StopRecord')
+    Log("Splitting recording");
+    await this.setProfileParameter("split");
+    await this.ws.call("StopRecord");
     setTimeout(() => {
-      this.startRecord()
-    }, 1000)
+      this.startRecord();
+    }, 1000);
   }
 
-  async setProfileParameter(cause: 'start' | 'stop' | 'split') {
-    const filePath
-      = cause === 'stop'
+  async setProfileParameter(cause: "start" | "stop" | "split") {
+    const filePath =
+      cause === "stop"
         ? userConfig.value.path
-        : userContentSetting.value.find(item => item.type === zoneType.value)
-          ?.customPath || userConfig.value.path
-    const fileName
-      = cause === 'stop'
+        : userContentSetting.value.find((item) => item.type === zoneType.value)?.customPath ||
+          userConfig.value.path;
+    const fileName =
+      cause === "stop"
         ? userConfig.value.fileName
-        : userConfig.value.fileName
-          + (userConfig.value.appendContentName ? ` - ${zoneName.value}` : '')
+        : userConfig.value.fileName +
+          (userConfig.value.appendContentName ? ` - ${zoneName.value}` : "");
 
     const requests: RequestBatchRequest[] = [
       {
-        requestType: 'SetProfileParameter',
+        requestType: "SetProfileParameter",
         requestData: {
-          parameterCategory: 'AdvOut',
-          parameterName: 'RecFilePath',
+          parameterCategory: "AdvOut",
+          parameterName: "RecFilePath",
           parameterValue: filePath,
         },
       },
       {
-        requestType: 'SetProfileParameter',
+        requestType: "SetProfileParameter",
         requestData: {
-          parameterCategory: 'Output',
-          parameterName: 'FilenameFormatting',
+          parameterCategory: "Output",
+          parameterName: "FilenameFormatting",
           parameterValue: fileName,
         },
       },
-    ]
-    return this.ws.callBatch(requests)
+    ];
+    return this.ws.callBatch(requests);
   }
 }
 
-const obs = new Obs()
+const obs = new Obs();
 
-const handleChangeZone: EventMap['ChangeZone'] = (e) => {
-  Log('ChangeZone:', e)
-  zoneName.value = e.zoneName
+const handleChangeZone: EventMap["ChangeZone"] = (e) => {
+  Log("ChangeZone:", e);
+  zoneName.value = e.zoneName;
   if (obs.status.connected) {
-    checkCondition('enter')
-  }
-  else {
+    checkCondition("enter");
+  } else {
     obs.connect()?.then(() => {
-      checkCondition('enter')
-    })
+      checkCondition("enter");
+    });
   }
-}
+};
 
-const handleLogLine: EventMap['LogLine'] = (e) => {
-  const line = e.rawLine
+const handleLogLine: EventMap["LogLine"] = (e) => {
+  const line = e.rawLine;
   for (const regexName in REGEXES) {
-    const regex = REGEXES[regexName as keyof typeof REGEXES]
-    const match = regex.exec(line)
+    const regex = REGEXES[regexName as keyof typeof REGEXES];
+    const match = regex.exec(line);
     if (match) {
-      const splitLine = line.split('|')
+      const splitLine = line.split("|");
       switch (regexName) {
-        case 'inCombat': {
-          const inACTCombat
-            = splitLine[logDefinitions.InCombat.fields.inACTCombat] === '1'
-          const inGameCombat
-            = splitLine[logDefinitions.InCombat.fields.inGameCombat] === '1'
+        case "inCombat": {
+          const inACTCombat = splitLine[logDefinitions.InCombat.fields.inACTCombat] === "1";
+          const inGameCombat = splitLine[logDefinitions.InCombat.fields.inGameCombat] === "1";
           if (inACTCombat || inGameCombat) {
-            checkCondition('combatStart')
-            return
+            checkCondition("combatStart");
+            return;
           }
           if (!inACTCombat && !inGameCombat) {
-            checkCondition('combatEnd')
-            return
+            checkCondition("combatEnd");
+            return;
           }
-          break
+          break;
         }
-        case 'countdown': {
-          checkCondition('countdown')
-          break
+        case "countdown": {
+          checkCondition("countdown");
+          break;
         }
-        case 'countdownCancel': {
-          checkCondition('countdownCancel')
-          break
+        case "countdownCancel": {
+          checkCondition("countdownCancel");
+          break;
         }
-        case 'wipe': {
-          checkCondition('wipe')
-          break
+        case "wipe": {
+          checkCondition("wipe");
+          break;
         }
         default:
-          break
+          break;
       }
     }
   }
-}
+};
 
 function Log(...args: unknown[]) {
   if (dev.value) {
-    console.log('[OBS Auto Record]', ...args)
+    console.log("[OBS Auto Record]", ...args);
   }
 }
 
 function checkCondition(condition: ConditionType) {
-  Log('checkCondition', condition)
+  Log("checkCondition", condition);
 
-  const rule = userContentSetting.value.find(
-    item => item.type === zoneType.value,
-  )
+  const rule = userContentSetting.value.find((item) => item.type === zoneType.value);
 
   if (!rule) {
-    throw new Error(`Rule not found for zone type:${zoneType.value}`)
+    throw new Error(`Rule not found for zone type:${zoneType.value}`);
   }
 
-  if (rule.enter === false && condition === 'enter' && obs.status.recording) {
+  if (rule.enter === false && condition === "enter" && obs.status.recording) {
     // 上一次录制战斗通关，则这次切换场地（且不需要切割）时结束录制。
-    obs.stopRecord()
-    return
+    obs.stopRecord();
+    return;
   }
 
   if (!rule[condition]) {
     // 如果当前条件不满足，则不进行录制
-    Log('Condition not met:', condition)
-    return
+    Log("Condition not met:", condition);
+    return;
   }
-  Log('Condition met:', condition, 'for zone type:', zoneType.value)
+  Log("Condition met:", condition, "for zone type:", zoneType.value);
 
   switch (condition) {
-    case 'enter':
-    case 'countdown':
-    case 'combatStart':
+    case "enter":
+    case "countdown":
+    case "combatStart":
       if (partyLength.value < rule.partyLength) {
         // 如果当前玩家人数小于设置的最小人数，则不进行录制。
-        return
+        return;
       }
 
       if (!obs.status.connected) {
         obs.connect()?.then(() => {
           if (obs.status.connected) {
-            obs.startRecord()
+            obs.startRecord();
           }
-        })
-        return
+        });
+        return;
       }
 
       // 未录制，则开始录制
       if (obs.status.recording === false) {
-        obs.startRecord()
-        return
+        obs.startRecord();
+        return;
       }
 
       // 已在录制，则切割录制
       // 但排除combatStart，因为如果战斗开始时已经在录制了，表明目前处于由倒计时发起的录制动作中，我们不希望倒计时过程会单独被分割出来。
-      if (obs.status.recording === true && condition !== 'combatStart') {
-        obs.splitRecord()
+      if (obs.status.recording === true && condition !== "combatStart") {
+        obs.splitRecord();
       }
-      break
-    case 'countdownCancel':
-    case 'combatEnd':
-    case 'wipe':
+      break;
+    case "countdownCancel":
+    case "combatEnd":
+    case "wipe":
       if (obs.status.recording) {
-        obs.stopRecord()
+        obs.stopRecord();
       }
-      break
+      break;
   }
 }
 
-const handlePartyChanged: EventMap['PartyChanged'] = (ev) => {
-  Log('Party changed:', ev)
-  partyLength.value = ev.party.length || 1
-}
+const handlePartyChanged: EventMap["PartyChanged"] = (ev) => {
+  Log("Party changed:", ev);
+  partyLength.value = ev.party.length || 1;
+};
 
 onMounted(() => {
-  addOverlayListener('ChangeZone', handleChangeZone)
-  addOverlayListener('LogLine', handleLogLine)
-  addOverlayListener('PartyChanged', handlePartyChanged)
-  initializeContentSettings()
-})
+  addOverlayListener("ChangeZone", handleChangeZone);
+  addOverlayListener("LogLine", handleLogLine);
+  addOverlayListener("PartyChanged", handlePartyChanged);
+  initializeContentSettings();
+});
 
 onUnmounted(() => {
-  obs.disconnect()
-  removeOverlayListener('ChangeZone', handleChangeZone)
-  removeOverlayListener('LogLine', handleLogLine)
-  removeOverlayListener('PartyChanged', handlePartyChanged)
-})
+  obs.disconnect();
+  removeOverlayListener("ChangeZone", handleChangeZone);
+  removeOverlayListener("LogLine", handleLogLine);
+  removeOverlayListener("PartyChanged", handlePartyChanged);
+});
 
 // 获取当前区域类型对应的规则
 const currentRule = computed(() => {
-  return userContentSetting.value.find(item => item.type === zoneType.value)
-})
+  return userContentSetting.value.find((item) => item.type === zoneType.value);
+});
 
 // 表格行类名方法 - 高亮当前类型
 function tableRowClassName({ row }: { row: Settings }) {
-  return row.type === zoneType.value ? 'current-zone-row' : ''
+  return row.type === zoneType.value ? "current-zone-row" : "";
 }
 </script>
 
@@ -490,16 +469,13 @@ function tableRowClassName({ row }: { row: Settings }) {
     <div class="mini-mode">
       <template v-if="obs.status.connected">
         <!-- 录像状态红点 -->
-        <div
-          class="recording-dot"
-          :class="{ 'is-recording': obs.status.recording }"
-        />
+        <div class="recording-dot" :class="{ 'is-recording': obs.status.recording }" />
 
         <!-- 区域名称 -->
         <div class="zone-info">
           <div class="zone-name-wrapper">
             <div class="zone-name">
-              {{ zoneName || t('obs2.Unknown') }}
+              {{ zoneName || t("obs2.Unknown") }}
             </div>
           </div>
         </div>
@@ -511,48 +487,41 @@ function tableRowClassName({ row }: { row: Settings }) {
             :class="{ active: currentRule?.enter }"
             :title="t('obs2.Enter Zone')"
           >
-            {{ t('obs2.EnterShort') }}
+            {{ t("obs2.EnterShort") }}
           </span>
           <span
             class="rule-item"
             :class="{ active: currentRule?.countdown }"
             :title="t('obs2.CountDown')"
           >
-            {{ t('obs2.CountdownShort') }}
+            {{ t("obs2.CountdownShort") }}
           </span>
           <span
             class="rule-item"
             :class="{ active: currentRule?.combatStart }"
             :title="t('obs2.CombatStart')"
           >
-            {{ t('obs2.CombatStartShort') }}
+            {{ t("obs2.CombatStartShort") }}
           </span>
           <span
             class="rule-item"
             :class="{ active: currentRule?.combatEnd }"
             :title="t('obs2.CombatEnd')"
           >
-            {{ t('obs2.CombatEndShort') }}
+            {{ t("obs2.CombatEndShort") }}
           </span>
-          <span
-            class="rule-item"
-            :class="{ active: currentRule?.wipe }"
-            :title="t('obs2.Wipe')"
-          >
-            {{ t('obs2.WipeShort') }}
+          <span class="rule-item" :class="{ active: currentRule?.wipe }" :title="t('obs2.Wipe')">
+            {{ t("obs2.WipeShort") }}
           </span>
         </div>
       </template>
       <div v-else class="obs-status-text">
-        {{ t('obs2.OBS Not Connected') }}
+        {{ t("obs2.OBS Not Connected") }}
       </div>
 
       <!-- 设置按钮 -->
-      <button
-        class="settings-btn"
-        @click="isMiniMode = !isMiniMode"
-      >
-        {{ isMiniMode ? '⚙' : '－' }}
+      <button class="settings-btn" @click="isMiniMode = !isMiniMode">
+        {{ isMiniMode ? "⚙" : "－" }}
       </button>
     </div>
 
@@ -572,7 +541,7 @@ function tableRowClassName({ row }: { row: Settings }) {
           <el-card v-if="!obs.status.connected" class="connection-card">
             <template #header>
               <div class="card-header">
-                <span>{{ t('obs2.Connect to OBS') }}</span>
+                <span>{{ t("obs2.Connect to OBS") }}</span>
                 <div class="header-actions">
                   <CommonThemeToggle storage-key="obs-2-theme" />
                   <CommonLanguageSwitcher />
@@ -581,10 +550,7 @@ function tableRowClassName({ row }: { row: Settings }) {
             </template>
             <el-form label-position="top" class="connection-form">
               <el-form-item :label="t('obs2.Port')">
-                <el-input
-                  v-model="userConfig.host"
-                  :placeholder="t('obs2.portPlaceholder')"
-                />
+                <el-input v-model="userConfig.host" :placeholder="t('obs2.portPlaceholder')" />
               </el-form-item>
               <el-form-item :label="t('obs2.Password')">
                 <el-input
@@ -601,15 +567,11 @@ function tableRowClassName({ row }: { row: Settings }) {
                   :disabled="obs.status.connecting || !userConfig.host"
                   @click="obs.connect()"
                 >
-                  {{
-                    obs.status.connecting
-                      ? t('obs2.Connecting')
-                      : t('obs2.Connect')
-                  }}
+                  {{ obs.status.connecting ? t("obs2.Connecting") : t("obs2.Connect") }}
                 </el-button>
               </el-form-item>
             </el-form>
-            <el-divider>{{ t('obs2.Instructions') }}</el-divider>
+            <el-divider>{{ t("obs2.Instructions") }}</el-divider>
             <el-alert
               class="instruction-alert"
               type="info"
@@ -638,24 +600,24 @@ function tableRowClassName({ row }: { row: Settings }) {
             <el-card v-if="dev" class="status-card">
               <template #header>
                 <div class="card-header">
-                  <span>{{ t('obs2.Connection Status') }}</span>
+                  <span>{{ t("obs2.Connection Status") }}</span>
                   <el-button
                     type="danger"
                     size="small"
                     class="disconnect-button"
                     @click="obs.disconnect()"
                   >
-                    {{ t('obs2.Disconnect') }}
+                    {{ t("obs2.Disconnect") }}
                   </el-button>
                 </div>
               </template>
               <div class="status-info">
                 <el-descriptions direction="vertical" :column="1" border>
                   <el-descriptions-item :label="t('obs2.Recording')">
-                    {{ obs.status.recording ? t('obs2.Yes') : t('obs2.No') }}
+                    {{ obs.status.recording ? t("obs2.Yes") : t("obs2.No") }}
                   </el-descriptions-item>
                   <el-descriptions-item :label="t('obs2.Output Path')">
-                    {{ obs.status.outputPath || t('obs2.None') }}
+                    {{ obs.status.outputPath || t("obs2.None") }}
                   </el-descriptions-item>
                 </el-descriptions>
               </div>
@@ -665,34 +627,31 @@ function tableRowClassName({ row }: { row: Settings }) {
                   type="primary"
                   @click="obs.startRecord()"
                 >
-                  {{ t('obs2.Start Record') }}
+                  {{ t("obs2.Start Record") }}
                 </el-button>
                 <el-button
                   :disabled="!obs.status.connected || !obs.status.recording"
                   type="danger"
                   @click="obs.stopRecord()"
                 >
-                  {{ t('obs2.Stop Record') }}
+                  {{ t("obs2.Stop Record") }}
                 </el-button>
                 <el-button
                   :disabled="!obs.status.connected || !obs.status.recording"
                   type="warning"
                   @click="obs.splitRecord()"
                 >
-                  {{ t('obs2.Split Record') }}
+                  {{ t("obs2.Split Record") }}
                 </el-button>
-                <el-button
-                  type="primary"
-                  @click="obs.setProfileParameter('stop')"
-                >
-                  {{ t('obs2.Set Recording Name') }}
+                <el-button type="primary" @click="obs.setProfileParameter('stop')">
+                  {{ t("obs2.Set Recording Name") }}
                 </el-button>
               </div>
             </el-card>
             <el-card class="profile-card">
               <template #header>
                 <div class="card-header">
-                  <span>{{ t('obs2.Recording Profile') }}</span>
+                  <span>{{ t("obs2.Recording Profile") }}</span>
                   <div class="header-actions">
                     <CommonThemeToggle storage-key="obs-2-theme" />
                     <CommonLanguageSwitcher />
@@ -729,7 +688,7 @@ function tableRowClassName({ row }: { row: Settings }) {
 
                   <el-form-item class="append-item">
                     <div class="append-content-toggle">
-                      <span>{{ t('obs2.Append Content Name') }}</span>
+                      <span>{{ t("obs2.Append Content Name") }}</span>
                       <el-switch v-model="userConfig.appendContentName" />
                     </div>
                   </el-form-item>
@@ -746,7 +705,7 @@ function tableRowClassName({ row }: { row: Settings }) {
             <el-card class="table-card">
               <template #header>
                 <div class="card-header">
-                  <span>{{ t('obs2.User Content Settings') }}</span>
+                  <span>{{ t("obs2.User Content Settings") }}</span>
                 </div>
               </template>
               <el-table
@@ -763,22 +722,15 @@ function tableRowClassName({ row }: { row: Settings }) {
                   align="center"
                 >
                   <template #default="scope">
-                    <span
-                      v-if="zoneType === scope.row.type"
-                      class="current-type"
-                    >{{ t('obs2.Current') }}<br></span>
+                    <span v-if="zoneType === scope.row.type" class="current-type"
+                      >{{ t("obs2.Current") }}<br
+                    /></span>
 
-                    <span>{{
-                      scope.row.type ? t(`obs2.${scope.row.type}`) : ''
-                    }}</span>
+                    <span>{{ scope.row.type ? t(`obs2.${scope.row.type}`) : "" }}</span>
                   </template>
                 </el-table-column>
                 <el-table-column :label="t('obs2.Start When')" align="center">
-                  <el-table-column
-                    :label="t('obs2.When Party')"
-                    align="center"
-                    width="70"
-                  >
+                  <el-table-column :label="t('obs2.When Party')" align="center" width="70">
                     <template #default="scope">
                       <el-input-number
                         v-model="scope.row.partyLength"
@@ -832,12 +784,7 @@ function tableRowClassName({ row }: { row: Settings }) {
                       <el-checkbox v-model="scope.row.combatEnd" />
                     </template>
                   </el-table-column>
-                  <el-table-column
-                    prop="wipe"
-                    :label="t('obs2.Wipe')"
-                    align="center"
-                    width="50"
-                  >
+                  <el-table-column prop="wipe" :label="t('obs2.Wipe')" align="center" width="50">
                     <template #default="scope">
                       <el-checkbox v-model="scope.row.wipe" />
                     </template>
@@ -853,16 +800,9 @@ function tableRowClassName({ row }: { row: Settings }) {
                     </template>
                   </el-table-column>
                 </el-table-column>
-                <el-table-column
-                  :label="t('obs2.Custom Path')"
-                  align="left"
-                  min-width="200"
-                >
+                <el-table-column :label="t('obs2.Custom Path')" align="left" min-width="200">
                   <template #default="scope">
-                    <el-input
-                      v-model="scope.row.customPath"
-                      style="width: 100%"
-                    />
+                    <el-input v-model="scope.row.customPath" style="width: 100%" />
                   </template>
                 </el-table-column>
               </el-table>
@@ -888,7 +828,10 @@ function tableRowClassName({ row }: { row: Settings }) {
   user-select: none;
   overflow: visible;
   color: #fff;
-  text-shadow: -1px 0 2px #000, 0 1px 2px #000, 1px 0 2px #000;
+  text-shadow:
+    -1px 0 2px #000,
+    0 1px 2px #000,
+    1px 0 2px #000;
   width: fit-content;
   left: 50%;
   transform: translateX(-50%);
@@ -903,11 +846,15 @@ function tableRowClassName({ row }: { row: Settings }) {
   background-color: #666;
   flex-shrink: 0;
   align-self: center;
-  box-shadow: 0 0 2px rgba(0, 0, 0, 0.9), 0 0 3px rgba(0, 0, 0, 0.7);
+  box-shadow:
+    0 0 2px rgba(0, 0, 0, 0.9),
+    0 0 3px rgba(0, 0, 0, 0.7);
 
   &.is-recording {
     background-color: #ff3333;
-    box-shadow: 0 0 4px rgba(255, 50, 50, 1), 0 0 6px rgba(255, 0, 0, 0.8),
+    box-shadow:
+      0 0 4px rgba(255, 50, 50, 1),
+      0 0 6px rgba(255, 0, 0, 0.8),
       0 0 2px rgba(0, 0, 0, 0.9);
   }
 }
@@ -962,8 +909,11 @@ function tableRowClassName({ row }: { row: Settings }) {
   &.active {
     color: #fff;
     font-weight: 500;
-    text-shadow: 0 0 3px rgba(255, 235, 0, 1), 0 0 5px rgba(255, 210, 0, 1),
-      0 0 7px rgba(255, 180, 0, 0.8), 0 0 1px rgba(0, 0, 0, 1);
+    text-shadow:
+      0 0 3px rgba(255, 235, 0, 1),
+      0 0 5px rgba(255, 210, 0, 1),
+      0 0 7px rgba(255, 180, 0, 0.8),
+      0 0 1px rgba(0, 0, 0, 1);
   }
 }
 
@@ -1138,7 +1088,7 @@ function tableRowClassName({ row }: { row: Settings }) {
   flex-direction: column;
 }
 
-.table-card :deep(.el-card__body) {
+.table-card ::deep(.el-card__body) {
   overflow: auto;
   flex: 1;
   min-height: 0;
@@ -1150,7 +1100,7 @@ function tableRowClassName({ row }: { row: Settings }) {
 
 // 美化滚动条
 .table-card,
-.table-card :deep(.el-card__body),
+.table-card ::deep(.el-card__body),
 :deep(.el-table__body-wrapper) {
   &::-webkit-scrollbar {
     width: 8px;
@@ -1290,7 +1240,7 @@ function tableRowClassName({ row }: { row: Settings }) {
   flex-direction: column;
   gap: 4px;
 
-  :deep(.el-form-item) {
+  ::deep(.el-form-item) {
     margin-bottom: 4px;
 
     &:last-child {

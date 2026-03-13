@@ -1,196 +1,193 @@
 <script setup lang="ts">
-import { ArrowLeft, Search } from '@element-plus/icons-vue'
+import { ArrowLeft, Search } from "@element-plus/icons-vue";
 
-import { compareSame, isCompareSameSourceId, isLowerTierActionId, normalizeUpgradeActionId } from '@/utils/compareSaveAction'
+import {
+  compareSame,
+  isCompareSameSourceId,
+  isLowerTierActionId,
+  normalizeUpgradeActionId,
+} from "@/utils/compareSaveAction";
 
 export interface ActionPickerGridItem {
-  id: number
-  name: string
-  iconSrc?: string
-  recast1000ms?: number
-  classJobLevel?: number
-  isRoleAction?: boolean
-  disabled?: boolean
-  disabledReason?: string
-  attrs?: Record<string, string | number>
+  id: number;
+  name: string;
+  iconSrc?: string;
+  recast1000ms?: number;
+  classJobLevel?: number;
+  isRoleAction?: boolean;
+  disabled?: boolean;
+  disabledReason?: string;
+  attrs?: Record<string, string | number>;
 }
 
-const props = withDefaults(defineProps<{
-  title?: string
-  width?: string
-  teleported?: boolean
-  destroyOnClose?: boolean
-  lockScroll?: boolean
-  loading: boolean
-  pool: ActionPickerGridItem[]
-  disabledIds?: Set<number>
-  currentActionId?: number | null
-  emptyText?: string
-  promptText?: string
-  promptVisible?: boolean
-  globalDisabled?: boolean
-  searchPlaceholder?: string
-  searchDisabled?: boolean
-  targetLabel?: string
-  showBack?: boolean
-  backDisabled?: boolean
-  backText?: string
-}>(), {
-  title: '选择技能',
-  width: '860px',
-  teleported: false,
-  destroyOnClose: true,
-  lockScroll: false,
-  currentActionId: null,
-  emptyText: '当前没有匹配技能',
-  promptText: '',
-  promptVisible: false,
-  globalDisabled: false,
-  searchPlaceholder: '输入技能名或ID',
-  searchDisabled: false,
-  targetLabel: '',
-  showBack: true,
-  backDisabled: false,
-  backText: '返回',
-})
+const props = withDefaults(
+  defineProps<{
+    title?: string;
+    width?: string;
+    teleported?: boolean;
+    destroyOnClose?: boolean;
+    lockScroll?: boolean;
+    loading: boolean;
+    pool: ActionPickerGridItem[];
+    disabledIds?: Set<number>;
+    currentActionId?: number | null;
+    emptyText?: string;
+    promptText?: string;
+    promptVisible?: boolean;
+    globalDisabled?: boolean;
+    searchPlaceholder?: string;
+    searchDisabled?: boolean;
+    targetLabel?: string;
+    showBack?: boolean;
+    backDisabled?: boolean;
+    backText?: string;
+  }>(),
+  {
+    title: "选择技能",
+    width: "860px",
+    teleported: false,
+    destroyOnClose: true,
+    lockScroll: false,
+    currentActionId: null,
+    emptyText: "当前没有匹配技能",
+    promptText: "",
+    promptVisible: false,
+    globalDisabled: false,
+    searchPlaceholder: "输入技能名或ID",
+    searchDisabled: false,
+    targetLabel: "",
+    showBack: true,
+    backDisabled: false,
+    backText: "返回",
+  },
+);
 
 const emit = defineEmits<{
-  pick: [item: ActionPickerGridItem]
-  back: []
-}>()
+  pick: [item: ActionPickerGridItem];
+  back: [];
+}>();
 
-const visible = defineModel<boolean>('visible', { default: false })
-const search = defineModel<string>('search', { default: '' })
-const hideShortCD = ref(true)
+const visible = defineModel<boolean>("visible", { default: false });
+const search = defineModel<string>("search", { default: "" });
+const hideShortCD = ref(true);
 
 const internalResult = computed(() => {
-  const keyword = search.value.trim().toLowerCase()
-  if (!keyword)
-    return props.pool
-  return props.pool.filter(item => item.name.toLowerCase().includes(keyword) || String(item.id).includes(keyword))
-})
+  const keyword = search.value.trim().toLowerCase();
+  if (!keyword) return props.pool;
+  return props.pool.filter(
+    (item) => item.name.toLowerCase().includes(keyword) || String(item.id).includes(keyword),
+  );
+});
 
 const orderedResult = computed(() => {
   interface FamilySortState {
-    state: number
-    recast: number
-    representativeId: number
+    state: number;
+    recast: number;
+    representativeId: number;
   }
 
   const getFamilyId = (actionId: number) => {
-    const upgraded = normalizeUpgradeActionId(actionId)
-    const same = compareSame(upgraded)
-    return normalizeUpgradeActionId(same)
-  }
+    const upgraded = normalizeUpgradeActionId(actionId);
+    const same = compareSame(upgraded);
+    return normalizeUpgradeActionId(same);
+  };
 
   const getMemberState = (actionId: number) => {
-    if (isLowerTierActionId(actionId))
-      return 0
-    if (isCompareSameSourceId(actionId))
-      return 1
-    return 2
-  }
+    if (isLowerTierActionId(actionId)) return 0;
+    if (isCompareSameSourceId(actionId)) return 1;
+    return 2;
+  };
 
-  const familyState = new Map<number, FamilySortState>()
+  const familyState = new Map<number, FamilySortState>();
   for (const item of internalResult.value) {
-    const familyId = getFamilyId(item.id)
-    const state = getMemberState(item.id)
-    const recastRaw = Number(item.recast1000ms ?? 0)
-    const recast = Number.isFinite(recastRaw) ? recastRaw : -1
-    const prev = familyState.get(familyId)
-    if (!prev || state > prev.state || (state === prev.state && (recast > prev.recast || (recast === prev.recast && item.id < prev.representativeId)))) {
-      familyState.set(familyId, { state, recast, representativeId: item.id })
+    const familyId = getFamilyId(item.id);
+    const state = getMemberState(item.id);
+    const recastRaw = Number(item.recast1000ms ?? 0);
+    const recast = Number.isFinite(recastRaw) ? recastRaw : -1;
+    const prev = familyState.get(familyId);
+    if (
+      !prev ||
+      state > prev.state ||
+      (state === prev.state &&
+        (recast > prev.recast || (recast === prev.recast && item.id < prev.representativeId)))
+    ) {
+      familyState.set(familyId, { state, recast, representativeId: item.id });
     }
   }
 
-  return [...internalResult.value].sort((a, b) => {
-    const aFamilyId = getFamilyId(a.id)
-    const bFamilyId = getFamilyId(b.id)
+  return internalResult.value.toSorted((a, b) => {
+    const aFamilyId = getFamilyId(a.id);
+    const bFamilyId = getFamilyId(b.id);
     if (aFamilyId !== bFamilyId) {
-      const aFamily = familyState.get(aFamilyId)
-      const bFamily = familyState.get(bFamilyId)
-      const aRecast = aFamily?.recast ?? -1
-      const bRecast = bFamily?.recast ?? -1
-      if (aRecast !== bRecast)
-        return bRecast - aRecast
-      return (aFamily?.representativeId ?? aFamilyId) - (bFamily?.representativeId ?? bFamilyId)
+      const aFamily = familyState.get(aFamilyId);
+      const bFamily = familyState.get(bFamilyId);
+      const aRecast = aFamily?.recast ?? -1;
+      const bRecast = bFamily?.recast ?? -1;
+      if (aRecast !== bRecast) return bRecast - aRecast;
+      return (aFamily?.representativeId ?? aFamilyId) - (bFamily?.representativeId ?? bFamilyId);
     }
-    const aState = getMemberState(a.id)
-    const bState = getMemberState(b.id)
-    if (aState !== bState)
-      return aState - bState
-    const aLevel = Number(a.classJobLevel ?? Number.MAX_SAFE_INTEGER)
-    const bLevel = Number(b.classJobLevel ?? Number.MAX_SAFE_INTEGER)
-    if (aLevel !== bLevel)
-      return aLevel - bLevel
-    return a.id - b.id
-  })
-})
+    const aState = getMemberState(a.id);
+    const bState = getMemberState(b.id);
+    if (aState !== bState) return aState - bState;
+    const aLevel = Number(a.classJobLevel ?? Number.MAX_SAFE_INTEGER);
+    const bLevel = Number(b.classJobLevel ?? Number.MAX_SAFE_INTEGER);
+    if (aLevel !== bLevel) return aLevel - bLevel;
+    return a.id - b.id;
+  });
+});
 
 const filteredResult = computed(() => {
-  if (!hideShortCD.value)
-    return orderedResult.value
-  return orderedResult.value.filter(item => (item.recast1000ms ?? 0) > 5)
-})
+  if (!hideShortCD.value) return orderedResult.value;
+  return orderedResult.value.filter((item) => (item.recast1000ms ?? 0) > 5);
+});
 
-const jobItems = computed(() => filteredResult.value.filter(item => !item.isRoleAction))
-const roleItems = computed(() => filteredResult.value.filter(item => item.isRoleAction))
+const jobItems = computed(() => filteredResult.value.filter((item) => !item.isRoleAction));
+const roleItems = computed(() => filteredResult.value.filter((item) => item.isRoleAction));
 
 function getInternalDisableReason(item: ActionPickerGridItem) {
-  if (isLowerTierActionId(item.id))
-    return '下位技能'
-  if (isCompareSameSourceId(item.id))
-    return '共享CD'
-  if (props.disabledIds?.has(item.id) || item.disabled)
-    return item.disabledReason || '已存在'
-  return ''
+  if (isLowerTierActionId(item.id)) return "下位技能";
+  if (isCompareSameSourceId(item.id)) return "共享CD";
+  if (props.disabledIds?.has(item.id) || item.disabled) return item.disabledReason || "已存在";
+  return "";
 }
 
 watch(visible, (val) => {
-  if (!val)
-    hideShortCD.value = true
-})
+  if (!val) hideShortCD.value = true;
+});
 
 function formatRecast1000ms(recastValue: number | undefined) {
-  const recast1000ms = Number(recastValue ?? 0)
-  if (!Number.isFinite(recast1000ms) || recast1000ms <= 0)
-    return 'CD -'
-  const seconds = recast1000ms
-  const text = Number.isInteger(seconds) ? String(seconds) : seconds.toFixed(1).replace(/\.0$/, '')
-  return `CD ${text}s`
+  const recast1000ms = Number(recastValue ?? 0);
+  if (!Number.isFinite(recast1000ms) || recast1000ms <= 0) return "CD -";
+  const seconds = recast1000ms;
+  const text = Number.isInteger(seconds) ? String(seconds) : seconds.toFixed(1).replace(/\.0$/, "");
+  return `CD ${text}s`;
 }
 
 function isDisabled(item: ActionPickerGridItem) {
-  return !!getInternalDisableReason(item) || !!props.globalDisabled
+  return !!getInternalDisableReason(item) || !!props.globalDisabled;
 }
 
 function isCurrent(item: ActionPickerGridItem) {
-  return props.currentActionId !== null && props.currentActionId === item.id
+  return props.currentActionId !== null && props.currentActionId === item.id;
 }
 
 function getStatusText(item: ActionPickerGridItem) {
-  const parts: string[] = []
-  if (isCurrent(item))
-    parts.push('当前')
-  const internalReason = getInternalDisableReason(item)
-  if (internalReason)
-    parts.push(internalReason)
-  return parts.join(' / ')
+  const parts: string[] = [];
+  if (isCurrent(item)) parts.push("当前");
+  const internalReason = getInternalDisableReason(item);
+  if (internalReason) parts.push(internalReason);
+  return parts.join(" / ");
 }
 
 function resolveItemAttrs(item: ActionPickerGridItem) {
-  if (!item.attrs)
-    return undefined
-  return Object.fromEntries(
-    Object.entries(item.attrs).map(([key, value]) => [key, String(value)]),
-  )
+  if (!item.attrs) return undefined;
+  return Object.fromEntries(Object.entries(item.attrs).map(([key, value]) => [key, String(value)]));
 }
 
 function handleBack() {
-  if (props.backDisabled)
-    return
-  visible.value = false
-  emit('back')
+  if (props.backDisabled) return;
+  visible.value = false;
+  emit("back");
 }
 </script>
 
@@ -247,9 +244,7 @@ function handleBack() {
       </div>
 
       <section v-if="jobItems.length" class="picker-group">
-        <div class="picker-group-title">
-          职业技能
-        </div>
+        <div class="picker-group-title">职业技能</div>
         <div class="picker-grid">
           <button
             v-for="item in jobItems"
@@ -264,18 +259,9 @@ function handleBack() {
             <div class="picker-cell-name">
               {{ item.name }}
             </div>
-            <div class="picker-cell-id">
-              #{{ item.id }}
-            </div>
-            <img
-              v-if="item.iconSrc"
-              :src="item.iconSrc"
-              :alt="item.name"
-              class="picker-icon"
-            >
-            <div v-else class="picker-icon picker-icon-empty">
-              无
-            </div>
+            <div class="picker-cell-id">#{{ item.id }}</div>
+            <img v-if="item.iconSrc" :src="item.iconSrc" :alt="item.name" class="picker-icon" />
+            <div v-else class="picker-icon picker-icon-empty">无</div>
             <div class="picker-cell-meta">
               {{ formatRecast1000ms(item.recast1000ms) }}
             </div>
@@ -287,9 +273,7 @@ function handleBack() {
       </section>
 
       <section v-if="roleItems.length" class="picker-group">
-        <div class="picker-group-title">
-          职能技能
-        </div>
+        <div class="picker-group-title">职能技能</div>
         <div class="picker-grid">
           <button
             v-for="item in roleItems"
@@ -304,18 +288,9 @@ function handleBack() {
             <div class="picker-cell-name">
               {{ item.name }}
             </div>
-            <div class="picker-cell-id">
-              #{{ item.id }}
-            </div>
-            <img
-              v-if="item.iconSrc"
-              :src="item.iconSrc"
-              :alt="item.name"
-              class="picker-icon"
-            >
-            <div v-else class="picker-icon picker-icon-empty">
-              无
-            </div>
+            <div class="picker-cell-id">#{{ item.id }}</div>
+            <img v-if="item.iconSrc" :src="item.iconSrc" :alt="item.name" class="picker-icon" />
+            <div v-else class="picker-icon picker-icon-empty">无</div>
             <div class="picker-cell-meta">
               {{ formatRecast1000ms(item.recast1000ms) }}
             </div>
@@ -326,7 +301,12 @@ function handleBack() {
         </div>
       </section>
 
-      <div v-if="!props.promptVisible && !props.loading && jobItems.length === 0 && roleItems.length === 0" class="picker-empty">
+      <div
+        v-if="
+          !props.promptVisible && !props.loading && jobItems.length === 0 && roleItems.length === 0
+        "
+        class="picker-empty"
+      >
         {{ props.emptyText }}
       </div>
     </div>
@@ -334,7 +314,7 @@ function handleBack() {
 </template>
 
 <style scoped lang="scss">
-.action-picker-dialog :deep(.el-dialog__header) {
+.action-picker-dialog ::deep(.el-dialog__header) {
   padding: 8px 10px 0;
 }
 
@@ -386,15 +366,17 @@ function handleBack() {
   min-width: 0;
 }
 
-.picker-search-input :deep(.el-input__wrapper) {
+.picker-search-input ::deep(.el-input__wrapper) {
   height: 32px;
   box-shadow: 0 0 0 1px var(--el-border-color) inset;
   background: var(--el-fill-color-blank);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.picker-search-input :deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 1px var(--el-color-primary) inset, 0 0 0 3px var(--el-color-primary-light-8);
+.picker-search-input ::deep(.el-input__wrapper.is-focus) {
+  box-shadow:
+    0 0 0 1px var(--el-color-primary) inset,
+    0 0 0 3px var(--el-color-primary-light-8);
 }
 
 .picker-header-controls {
@@ -408,17 +390,17 @@ function handleBack() {
   border-radius: 6px;
 }
 
-.picker-header-controls :deep(.el-checkbox) {
+.picker-header-controls ::deep(.el-checkbox) {
   height: auto;
   margin-right: 0;
 }
 
-.picker-header-controls :deep(.el-checkbox__label) {
+.picker-header-controls ::deep(.el-checkbox__label) {
   font-size: 11px;
   color: var(--el-text-color-regular);
 }
 
-.action-picker-dialog :deep(.el-dialog__body) {
+.action-picker-dialog ::deep(.el-dialog__body) {
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -427,7 +409,7 @@ function handleBack() {
   overflow: hidden;
 }
 
-.action-picker-dialog :deep(.el-dialog) {
+.action-picker-dialog ::deep(.el-dialog) {
   max-width: min(980px, calc(100vw - 20px));
   max-height: min(90vh, calc(100vh - 16px));
   margin: 8px auto 0;
@@ -435,7 +417,7 @@ function handleBack() {
   flex-direction: column;
 }
 
-.action-picker-dialog :deep(.picker-grid-wrap) {
+.action-picker-dialog ::deep(.picker-grid-wrap) {
   flex: 1;
   min-height: 0;
   overflow: auto;
@@ -468,7 +450,7 @@ function handleBack() {
 }
 
 .picker-group-title::after {
-  content: '';
+  content: "";
   flex: 1;
   height: 1px;
   background: var(--el-border-color-lighter);

@@ -1,39 +1,32 @@
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from "vue";
 
-const demo = ref(false)
-let initialized = false
-let listeners = 0
+const demo = ref(false);
+let initialized = false;
+let listeners = 0;
 
 function handleOverlayStateUpdate(e: CustomEvent<{ isLocked: boolean }>) {
-  demo.value = e?.detail?.isLocked === false
+  demo.value = e?.detail?.isLocked === false;
 }
 
 function useDemo() {
   onMounted(() => {
-    listeners++
+    listeners++;
     if (!initialized) {
-      demo.value
-        = document.getElementById('unlocked')?.style?.display === 'flex'
-      document.addEventListener(
-        'onOverlayStateUpdate',
-        handleOverlayStateUpdate,
-      )
-      initialized = true
+      demo.value = document.getElementById("unlocked")?.style?.display === "flex";
+      document.addEventListener("onOverlayStateUpdate", handleOverlayStateUpdate);
+      initialized = true;
     }
-  })
+  });
 
   onUnmounted(() => {
-    listeners--
+    listeners--;
     if (listeners <= 0 && initialized) {
-      document.removeEventListener(
-        'onOverlayStateUpdate',
-        handleOverlayStateUpdate,
-      )
-      initialized = false
+      document.removeEventListener("onOverlayStateUpdate", handleOverlayStateUpdate);
+      initialized = false;
     }
-  })
+  });
 
-  return demo
+  return demo;
 }
 
-export { useDemo }
+export { useDemo };

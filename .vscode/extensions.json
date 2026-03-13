@@ -1,7 +1,3 @@
 {
-  "recommendations": [
-    "dbaeumer.vscode-eslint",
-    "antfu.unocss",
-    "vue.volar"
-  ]
+  "recommendations": ["VoidZero.vite-plus-extension-pack", "oxc.oxc-vscode"]
 }

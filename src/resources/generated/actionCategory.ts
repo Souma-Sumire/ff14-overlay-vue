@@ -21,7 +21,7 @@ export const ActionCategoryTargetMap: Record<string, string> = {
   16: "",
   17: "弩炮",
   18: "",
-}
+};
 
 export const AttackTypeTargetMap: Record<string, string> = {
   1: "斩击",
@@ -32,4 +32,4 @@ export const AttackTypeTargetMap: Record<string, string> = {
   6: "吐息",
   7: "音波",
   8: "极限技",
-}
+};

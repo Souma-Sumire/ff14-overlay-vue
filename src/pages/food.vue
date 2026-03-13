@@ -1,229 +1,221 @@
 <script setup lang="ts">
-import type { EventMap } from 'cactbot/types/event'
-import type { Food, Medicine, Players } from '@/types/food'
-import { useDemo } from '@/composables/useDemo'
-import { useDev } from '@/composables/useDev'
-import { useLang } from '@/composables/useLang'
-import { useZone } from '@/composables/useZone'
-import { demoFoodData } from '@/mock/demoFoodData'
-import meals from '@/resources/generated/meals.json'
-import medicines from '@/resources/generated/medicine.json'
-import Util from '@/utils/util'
-import NetRegexes from '../../cactbot/resources/netregexes'
+import type { EventMap } from "cactbot/types/event";
+import type { Food, Medicine, Players } from "@/types/food";
+import { useDemo } from "@/composables/useDemo";
+import { useDev } from "@/composables/useDev";
+import { useLang } from "@/composables/useLang";
+import { useZone } from "@/composables/useZone";
+import { demoFoodData } from "@/mock/demoFoodData";
+import meals from "@/resources/generated/meals.json";
+import medicines from "@/resources/generated/medicine.json";
+import Util from "@/utils/util";
+import NetRegexes from "../../cactbot/resources/netregexes";
 import {
   addOverlayListener,
   removeOverlayListener,
-} from '../../cactbot/resources/overlay_plugin_api'
+} from "../../cactbot/resources/overlay_plugin_api";
 
-const { t } = useLang()
-const { zoneType } = useZone()
-const party: Ref<{ id: string, name: string, jobName: string }[]> = ref([])
-const effectData = new Map<string, Food>()
-const medicineData = new Map<string, Medicine[]>()
-const uiData: Ref<Players[]> = useStorage('souma-food-ui-data', [])
-const demo = useDemo()
-const dev = useDev()
+const { t } = useLang();
+const { zoneType } = useZone();
+const party: Ref<{ id: string; name: string; jobName: string }[]> = ref([]);
+const effectData = new Map<string, Food>();
+const medicineData = new Map<string, Medicine[]>();
+const uiData: Ref<Players[]> = useStorage("souma-food-ui-data", []);
+const demo = useDemo();
+const dev = useDev();
 const medicineTypeColorMap: Record<string, string> = {
-  刚: '#FF9999', // 亮粉红
-  巧: '#E6A8FF', // 亮紫色
-  耐: '#FFF3AD', // 奶油黄
-  智: '#7DABFF', // 亮蓝色
-  意: '#85E3D1', // 柔和的亮青色
-}
+  刚: "#FF9999", // 亮粉红
+  巧: "#E6A8FF", // 亮紫色
+  耐: "#FFF3AD", // 奶油黄
+  智: "#7DABFF", // 亮蓝色
+  意: "#85E3D1", // 柔和的亮青色
+};
 const orderedUiData = computed(() =>
-  (demo.value || dev.value)
+  demo.value || dev.value
     ? demoFoodData
-    : uiData.value.slice().sort((a, b) => getOrder(a) - getOrder(b)),
-)
+    : uiData.value.toSorted((a, b) => getOrder(a) - getOrder(b)),
+);
 const display = computed(
   () =>
-    (zoneType.value !== 'Pvp'
-      && party.value.length >= 6
-      && uiData.value.filter(v => v.food).length >= (uiData.value.length * 0.5))
-    || demo.value || dev.value,
-)
+    (zoneType.value !== "Pvp" &&
+      party.value.length >= 6 &&
+      uiData.value.filter((v) => v.food).length >= uiData.value.length * 0.5) ||
+    demo.value ||
+    dev.value,
+);
 
 watch(demo, () => {
-  fullUpdateFriendlyCombatants()
-})
+  fullUpdateFriendlyCombatants();
+});
 
 const netRegexs = {
-  gainsEffect: NetRegexes.gainsEffect({ effectId: ['30', '31'] }),
-  losesEffect: NetRegexes.losesEffect({ effectId: ['30', '31'] }),
-  wipe: NetRegexes.network6d({ command: ['40000010', '4000000F'] }),
-}
+  gainsEffect: NetRegexes.gainsEffect({ effectId: ["30", "31"] }),
+  losesEffect: NetRegexes.losesEffect({ effectId: ["30", "31"] }),
+  wipe: NetRegexes.network6d({ command: ["40000010", "4000000F"] }),
+};
 
 function fullUpdateFriendlyCombatants() {
-  uiData.value = party.value.map(v => ({
+  uiData.value = party.value.map((v) => ({
     ...v,
     food: effectData.get(v.id),
     medicine: medicineData.get(v.id) || [],
     jobName: v.jobName,
-  }))
+  }));
 }
 
 function tickUpdateDuration() {
-  const now = Date.now()
-  let needUpdate = false
+  const now = Date.now();
+  let needUpdate = false;
 
   for (const [key, food] of effectData) {
-    const remaining = Math.floor((food.expiredMillisecond - now) / 1000)
+    const remaining = Math.floor((food.expiredMillisecond - now) / 1000);
     if (remaining < 0) {
       // 食物过期了，但由于某种情况没有收到losesEffect，手动删除
-      effectData.delete(key)
-      needUpdate = true
-    }
-    else if (food.durationSeconds !== remaining) {
-      food.durationSeconds = remaining
-      needUpdate = true
+      effectData.delete(key);
+      needUpdate = true;
+    } else if (food.durationSeconds !== remaining) {
+      food.durationSeconds = remaining;
+      needUpdate = true;
     }
   }
 
   if (needUpdate) {
-    fullUpdateFriendlyCombatants()
+    fullUpdateFriendlyCombatants();
   }
 }
 
-const handleLogLine: EventMap['LogLine'] = (e) => {
-  if (e.line[0] === '26') {
-    const matches = netRegexs.gainsEffect.exec(e.rawLine)
+const handleLogLine: EventMap["LogLine"] = (e) => {
+  if (e.line[0] === "26") {
+    const matches = netRegexs.gainsEffect.exec(e.rawLine);
     if (matches && matches.groups) {
-      const effectId = matches.groups.effectId
-      const count = matches.groups.count
-      const id = Number.parseInt(count, 16)
-      const key = (id >= 10000 ? id - 10000 : id).toString()
+      const effectId = matches.groups.effectId;
+      const count = matches.groups.count;
+      const id = Number.parseInt(count, 16);
+      const key = (id >= 10000 ? id - 10000 : id).toString();
 
-      if (effectId === '30') {
+      if (effectId === "30") {
         // 食物
-        const data0 = meals[key as keyof typeof meals]
+        const data0 = meals[key as keyof typeof meals];
         if (data0) {
           effectData.set(matches.groups.targetId, {
             durationSeconds: Number.parseFloat(matches.groups.duration),
-            expiredMillisecond:
-              Date.now() + Number.parseFloat(matches.groups.duration) * 1000,
+            expiredMillisecond: Date.now() + Number.parseFloat(matches.groups.duration) * 1000,
             name: data0.Name,
             params: data0.ParamsValues,
             hq: id >= 10000,
             level: Number(data0.Level),
-          })
-          fullUpdateFriendlyCombatants()
+          });
+          fullUpdateFriendlyCombatants();
         }
-      }
-      else if (effectId === '31') {
+      } else if (effectId === "31") {
         // 药
-        const medInfo = medicines[key as keyof typeof medicines]
+        const medInfo = medicines[key as keyof typeof medicines];
         if (medInfo) {
-          const match = medInfo.Name.match(/(?:(?<grade>\d+)级)?(?<type>.)力之(?<name>.)药/)!
+          const match = medInfo.Name.match(/(?:(?<grade>\d+)级)?(?<type>.)力之(?<name>.)药/)!;
           if (!match) {
             // 我们只关心爆发药
-            return
+            return;
           }
-          const grade = match.groups!.grade ?? undefined
-          const type = match.groups!.type!
-          const shortName = match.groups!.name!
-          const isHq = id >= 10000
-          const targetId = matches.groups.targetId
-          const currentMeds = medicineData.get(targetId) || []
+          const grade = match.groups!.grade ?? undefined;
+          const type = match.groups!.type!;
+          const shortName = match.groups!.name!;
+          const isHq = id >= 10000;
+          const targetId = matches.groups.targetId;
+          const currentMeds = medicineData.get(targetId) || [];
           currentMeds.push({
             name: medInfo.Name,
             hq: isHq,
             grade,
             shortName,
             type,
-          })
+          });
 
-          medicineData.set(targetId, currentMeds)
-          fullUpdateFriendlyCombatants()
+          medicineData.set(targetId, currentMeds);
+          fullUpdateFriendlyCombatants();
         }
       }
     }
-  }
-  else if (e.line[0] === '30') {
-    const matches = netRegexs.losesEffect.exec(e.rawLine)
+  } else if (e.line[0] === "30") {
+    const matches = netRegexs.losesEffect.exec(e.rawLine);
     if (matches && matches.groups) {
-      const effectId = matches.groups.effectId
-      if (effectId === '30') {
-        effectData.delete(matches.groups.targetId)
+      const effectId = matches.groups.effectId;
+      if (effectId === "30") {
+        effectData.delete(matches.groups.targetId);
       }
-      fullUpdateFriendlyCombatants()
+      fullUpdateFriendlyCombatants();
     }
-  }
-  else if (e.line[0] === '33') {
-    const matches = netRegexs.wipe.exec(e.rawLine)
+  } else if (e.line[0] === "33") {
+    const matches = netRegexs.wipe.exec(e.rawLine);
     if (matches) {
-      medicineData.clear()
-      fullUpdateFriendlyCombatants()
+      medicineData.clear();
+      fullUpdateFriendlyCombatants();
     }
-  }
-  else if (e.line[0] === '01') {
+  } else if (e.line[0] === "01") {
     // 换线清空爆发药记录
-    medicineData.clear()
+    medicineData.clear();
   }
-}
+};
 
-const handlePartyChanged: EventMap['PartyChanged'] = (e) => {
+const handlePartyChanged: EventMap["PartyChanged"] = (e) => {
   party.value = e.party
-    .filter(v => v.inParty)
+    .filter((v) => v.inParty)
     .map((v) => {
       return {
         id: v.id,
         name: v.name,
         jobName: Util.jobToFullName(Util.jobEnumToJob(v.job)).simple2,
-      }
-    })
-  fullUpdateFriendlyCombatants()
-}
+      };
+    });
+  fullUpdateFriendlyCombatants();
+};
 
-function getFoodParams(params: Food['params'], hq: boolean): string {
+function getFoodParams(params: Food["params"], hq: boolean): string {
   const p = params
-    .filter(v => v.Params !== 'Vitality' && v.Params)
+    .filter((v) => v.Params !== "Vitality" && v.Params)
     .sort((a, b) => {
-      const aV = hq ? a['Max{HQ}'] : a.Max
-      const bV = hq ? b['Max{HQ}'] : b.Max
-      return Number.parseInt(aV, 10) - Number.parseInt(bV, 10)
+      const aV = hq ? a["Max{HQ}"] : a.Max;
+      const bV = hq ? b["Max{HQ}"] : b.Max;
+      return Number.parseInt(aV, 10) - Number.parseInt(bV, 10);
     })
-    .map(v => t(`food.${v.Params}`))
-    .join('>')
+    .map((v) => t(`food.${v.Params}`))
+    .join(">");
 
-  return p
+  return p;
 }
 
 function getText(seconds: number): string {
-  if (seconds < 60)
-    return t('food.seconds', [seconds])
-  const m = Math.floor(seconds / 60)
-  return m >= 60 ? t('food.>1hour') : t('food.minutes', [m])
+  if (seconds < 60) return t("food.seconds", [seconds]);
+  const m = Math.floor(seconds / 60);
+  return m >= 60 ? t("food.>1hour") : t("food.minutes", [m]);
 }
 
 function getOrder(item: Players) {
-  if (!item.food)
-    return -9999
-  return item.food.durationSeconds
+  if (!item.food) return -9999;
+  return item.food.durationSeconds;
 }
 
 onMounted(() => {
-  addOverlayListener('LogLine', handleLogLine)
-  addOverlayListener('PartyChanged', handlePartyChanged)
+  addOverlayListener("LogLine", handleLogLine);
+  addOverlayListener("PartyChanged", handlePartyChanged);
 
-  fullUpdateFriendlyCombatants()
+  fullUpdateFriendlyCombatants();
 
   setInterval(() => {
-    if (!demo.value)
-      tickUpdateDuration()
-  }, 1_000)
-})
+    if (!demo.value) tickUpdateDuration();
+  }, 1_000);
+});
 
 onUnmounted(() => {
-  removeOverlayListener('LogLine', handleLogLine)
-  removeOverlayListener('PartyChanged', handlePartyChanged)
-})
+  removeOverlayListener("LogLine", handleLogLine);
+  removeOverlayListener("PartyChanged", handlePartyChanged);
+});
 </script>
 
 <template>
   <CommonActWrapper>
     <template #readme>
       <span class="demo-text">
-        {{ $t('food.demo-text') }}
+        {{ $t("food.demo-text") }}
       </span>
     </template>
     <div class="container" :class="{ demo }">
@@ -240,10 +232,7 @@ onUnmounted(() => {
             <template v-if="item.food">
               <span class="food-name-wrapper">
                 <span class="food-params">{{
-                  `(${item.food.level})${getFoodParams(
-                    item.food.params,
-                    item.food.hq,
-                  )}`
+                  `(${item.food.level})${getFoodParams(item.food.params, item.food.hq)}`
                 }}</span>
                 <span class="food-name">{{ item.food.name }}</span>
                 <i class="xiv hq" :class="{ invisible: !item.food.hq }" />
@@ -263,15 +252,14 @@ onUnmounted(() => {
             </template>
             <template v-else>
               <span class="food-name-wrapper" />
-              <span class="food-timer no-food">{{ $t('food.no-food') }}</span>
+              <span class="food-timer no-food">{{ $t("food.no-food") }}</span>
             </template>
             <div class="medicine-list">
               <span v-for="(med, index) in item.medicine" :key="index" class="medicine-record">
-                <span
-                  class="medicine-short"
-                  :style="{ color: medicineTypeColorMap[med.type] }"
-                >{{ med.shortName }}</span>
-                <span class="medicine-grade">{{ med.grade ?? '' }}</span>
+                <span class="medicine-short" :style="{ color: medicineTypeColorMap[med.type] }">{{
+                  med.shortName
+                }}</span>
+                <span class="medicine-grade">{{ med.grade ?? "" }}</span>
                 <span class="medicine-hq-wrapper" :class="{ invisible: !med.hq }">
                   <i class="xiv hq" />
                 </span>
@@ -289,7 +277,7 @@ onUnmounted(() => {
 
 .xiv,
 .ffxiv {
-  font-family: 'FFXIV';
+  font-family: "FFXIV";
 }
 
 :global(body) {
@@ -305,7 +293,7 @@ onUnmounted(() => {
 }
 
 .container {
-  font-family: 'Microsoft YaHei', 'Segoe UI', Tahoma, sans-serif;
+  font-family: "Microsoft YaHei", "Segoe UI", Tahoma, sans-serif;
   color: #e0e0e0;
   width: fit-content;
   background-color: rgba(0, 0, 0, 0.01);
@@ -354,7 +342,10 @@ onUnmounted(() => {
   transform-origin: right center;
   opacity: 0;
   visibility: hidden;
-  transition: transform 0.2s ease, opacity 0.2s ease, width 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease,
+    width 0.2s ease;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -375,13 +366,15 @@ onUnmounted(() => {
 .food-params,
 .food-name {
   position: absolute;
-  right: 1.0em;
-  max-width: calc(100% - 1.0em);
+  right: 1em;
+  max-width: calc(100% - 1em);
   text-align: right;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .food-params {
@@ -454,7 +447,9 @@ onUnmounted(() => {
 .medicine-hq-wrapper {
   width: 0;
   opacity: 0;
-  transition: width 0.2s ease, opacity 0.2s ease;
+  transition:
+    width 0.2s ease,
+    opacity 0.2s ease;
   display: flex;
   align-items: center;
   margin-left: -1px;
@@ -482,7 +477,7 @@ onUnmounted(() => {
 .medicine-grade {
   font-size: 8px;
   color: #eee;
-  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-family: "Segoe UI", Tahoma, sans-serif;
   text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.7);
   margin-left: -1px;
 }
@@ -500,7 +495,10 @@ onUnmounted(() => {
   right: 0;
   font-size: 14px;
   width: 6.5em;
-  text-shadow: 1px 1px 1px #000, -1px -1px 1px #000, 1px -1px 1px #000,
+  text-shadow:
+    1px 1px 1px #000,
+    -1px -1px 1px #000,
+    1px -1px 1px #000,
     -1px 1px 1px #000;
   opacity: 1;
   color: lightblue;

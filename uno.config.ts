@@ -1,4 +1,4 @@
-import { defineConfig, presetAttributify, presetWind3 } from 'unocss'
+import { defineConfig, presetAttributify, presetWind3 } from "unocss";
 
 export default defineConfig({
   presets: [
@@ -7,4 +7,4 @@ export default defineConfig({
     }),
     presetWind3(),
   ],
-})
+});

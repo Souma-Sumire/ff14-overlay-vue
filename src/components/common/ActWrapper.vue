@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { useActReady } from '@/composables/useActReady'
-import { useDemo } from '@/composables/useDemo'
+import { useActReady } from "@/composables/useActReady";
+import { useDemo } from "@/composables/useDemo";
 
-const params = useUrlSearchParams('hash')
-const actReady = useActReady()
-const demo = useDemo()
+const params = useUrlSearchParams("hash");
+const actReady = useActReady();
+const demo = useDemo();
 </script>
 
 <template>
   <el-card v-if="!actReady" class="act-not-ready">
-    <h1>{{ $t('actWrapper.notReady') }}</h1>
+    <h1>{{ $t("actWrapper.notReady") }}</h1>
   </el-card>
   <div
     v-show="actReady"

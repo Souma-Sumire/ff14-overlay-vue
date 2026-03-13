@@ -10,9 +10,11 @@ export const MITIGATION_GRID_WIDTH = {
   skillCell: 24,
   skillIcon: 22,
   addColumnHeader: 28,
-} as const
+} as const;
 
 export function getMitigationGridColumnWidth(skillCount: number) {
-  const normalizedSkillCount = Math.max(0, Math.floor(skillCount))
-  return normalizedSkillCount * MITIGATION_GRID_WIDTH.skillCell + MITIGATION_GRID_WIDTH.columnPadding
+  const normalizedSkillCount = Math.max(0, Math.floor(skillCount));
+  return (
+    normalizedSkillCount * MITIGATION_GRID_WIDTH.skillCell + MITIGATION_GRID_WIDTH.columnPadding
+  );
 }

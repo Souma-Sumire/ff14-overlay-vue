@@ -1,44 +1,44 @@
-import type { DynamicValue } from '@/types/dynamicValue'
-import type { FFIcon } from '@/types/fflogs'
+import type { DynamicValue } from "@/types/dynamicValue";
+import type { FFIcon } from "@/types/fflogs";
 
 interface KeySkill {
   // 此key是对于技能来说的，而不是技能的具体实例
-  key: string
-  id: number
-  tts: string
-  duration: DynamicValue
-  recast1000ms: DynamicValue
-  job: number[]
-  line: number
-  minLevel: number
-  maxCharges: DynamicValue
+  key: string;
+  id: number;
+  tts: string;
+  duration: DynamicValue;
+  recast1000ms: DynamicValue;
+  job: number[];
+  line: number;
+  minLevel: number;
+  maxCharges: DynamicValue;
 }
 
 interface KeySkillEntity {
   // 此key是对于技能来说的，而不是技能的具体实例
-  skillKey: string
+  skillKey: string;
   // 此key是对于某个具体玩家的技能实例来说的，同一个技能可能有多个实例
-  instanceKey: string
-  id: number
-  tts: string
-  duration: number
-  recast1000ms: number
-  job: number[]
-  line: number
-  minLevel: number
-  maxCharges: number
-  src: string
+  instanceKey: string;
+  id: number;
+  tts: string;
+  duration: number;
+  recast1000ms: number;
+  job: number[];
+  line: number;
+  minLevel: number;
+  maxCharges: number;
+  src: string;
   owner: {
-    id: string
-    name: string
-    job: number
-    jobIcon: FFIcon
-    jobName: string
+    id: string;
+    name: string;
+    job: number;
+    jobIcon: FFIcon;
+    jobName: string;
     hasDuplicate: {
-      skill: boolean
-      job: boolean
-    }
-  }
+      skill: boolean;
+      job: boolean;
+    };
+  };
 }
 
-export { KeySkill, KeySkillEntity }
+export { KeySkill, KeySkillEntity };

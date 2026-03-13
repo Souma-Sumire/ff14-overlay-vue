@@ -1,24 +1,23 @@
-import { customRef } from 'vue'
+import { customRef } from "vue";
 
 export function debounceRef<T>(value: T, duration = 1000) {
-  let timer: number | null = null
+  let timer: number | null = null;
 
   return customRef((track, trigger) => {
     return {
       get() {
-        track()
-        return value
+        track();
+        return value;
       },
       set(val) {
-        if (timer)
-          clearTimeout(timer)
+        if (timer) clearTimeout(timer);
 
-        value = val
+        value = val as T;
         timer = window.setTimeout(() => {
-          trigger()
-          timer = null
-        }, duration)
+          trigger();
+          timer = null;
+        }, duration);
       },
-    }
-  })
+    };
+  });
 }
