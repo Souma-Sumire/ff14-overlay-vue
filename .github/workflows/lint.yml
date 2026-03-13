@@ -19,19 +19,19 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-
       - name: Install Vite+
-        run: npm install -g vite-plus
+        run: |
+          curl -fsSL https://vite.plus | bash
+          echo "$HOME/.vite-plus/bin" >> $GITHUB_PATH
+
+      - name: Install Node.js
+        run: vp env pin lts && vp env install
 
       - name: Install Dependencies
         run: vp install
 
       - name: Apply Patches
-        run: git apply patches/0001-cactbot-all.patch
+        run: bash scripts/update-cactbot.sh
 
       - name: Lint
         run: vp check
