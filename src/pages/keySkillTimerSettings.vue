@@ -916,7 +916,7 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
   white-space: nowrap;
 }
 
-.toolbar-left ::deep(.el-switch__label) {
+.toolbar-left :deep(.el-switch__label) {
   white-space: nowrap;
 }
 
@@ -928,7 +928,7 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
   min-width: 128px;
 }
 
-.lang-switch-wrap ::deep(.language-select) {
+.lang-switch-wrap :deep(.language-select) {
   width: 92px;
 }
 
@@ -1158,7 +1158,7 @@ function hasJobWarning(actionId: number, row: KeySkillRow) {
   border: 1px solid var(--el-border-color-lighter);
 }
 
-.debug-desc ::deep(.el-descriptions__label) {
+.debug-desc :deep(.el-descriptions__label) {
   width: 70px;
   white-space: nowrap;
 }

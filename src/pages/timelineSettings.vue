@@ -1091,7 +1091,7 @@ init();
   align-items: stretch;
   width: 100%;
 
-  ::deep(.el-radio) {
+  :deep(.el-radio) {
     margin-right: 0;
     height: auto;
     padding: 10px 15px;

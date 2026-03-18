@@ -331,7 +331,7 @@ img {
   width: 110px;
 }
 
-.level-sync-control ::deep(.el-slider__runway) {
+.level-sync-control :deep(.el-slider__runway) {
   margin: 0;
 }
 </style>

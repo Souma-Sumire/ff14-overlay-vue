@@ -317,12 +317,12 @@ const type = "style";
       0 -1px 1px #000;
   }
 
-  ::deep(.input-number) {
+  :deep(.input-number) {
     width: 8em;
     height: 1.15em;
   }
 
-  ::deep(.input-string) {
+  :deep(.input-string) {
     width: 9em;
     height: 1.35em;
   }

@@ -4571,11 +4571,11 @@ function handleColumnNameClick(col: ColumnDef) {
   flex-direction: column;
   max-height: 400px;
   overflow-y: auto;
-  ::deep(.el-checkbox-group) {
+  :deep(.el-checkbox-group) {
     display: flex;
     flex-direction: column;
   }
-  ::deep(.el-checkbox) {
+  :deep(.el-checkbox) {
     margin-right: 0;
     width: 100%;
   }
@@ -4737,7 +4737,7 @@ function handleColumnNameClick(col: ColumnDef) {
   display: flex;
   align-items: center;
 
-  ::deep(.el-checkbox__label) {
+  :deep(.el-checkbox__label) {
     display: inline-flex;
     align-items: center;
     vertical-align: middle;
@@ -5012,34 +5012,34 @@ function handleColumnNameClick(col: ColumnDef) {
 .offset-input {
   width: 120px;
 
-  ::deep(.el-input-number__increase),
-  ::deep(.el-input-number__decrease) {
+  :deep(.el-input-number__increase),
+  :deep(.el-input-number__decrease) {
     right: 1px;
     left: auto;
   }
 
-  ::deep(.el-input-number__increase) {
+  :deep(.el-input-number__increase) {
     top: auto;
     bottom: 1px;
     border-top: 1px solid var(--el-border-color);
     border-bottom: none;
   }
 
-  ::deep(.el-input-number__decrease) {
+  :deep(.el-input-number__decrease) {
     top: 1px;
     bottom: auto;
     border-top: none;
     border-bottom: 1px solid var(--el-border-color);
   }
 
-  ::deep(.el-input-number__increase .el-icon),
-  ::deep(.el-input-number__decrease .el-icon) {
+  :deep(.el-input-number__increase .el-icon),
+  :deep(.el-input-number__decrease .el-icon) {
     transform: rotate(180deg);
   }
 }
 
 .offset-input-inc-disabled {
-  ::deep(.el-input-number__increase) {
+  :deep(.el-input-number__increase) {
     pointer-events: none;
     cursor: not-allowed;
     opacity: 0.45;
@@ -5047,7 +5047,7 @@ function handleColumnNameClick(col: ColumnDef) {
 }
 
 .offset-input-dec-disabled {
-  ::deep(.el-input-number__decrease) {
+  :deep(.el-input-number__decrease) {
     pointer-events: none;
     cursor: not-allowed;
     opacity: 0.45;
@@ -5175,21 +5175,21 @@ function handleColumnNameClick(col: ColumnDef) {
   .inline-radio-group {
     flex: 1;
     min-width: 0;
-    ::deep(.el-radio-button__inner) {
+    :deep(.el-radio-button__inner) {
       padding: 4px 9px;
       font-size: 12px;
       box-shadow: none !important;
     }
-    ::deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
+    :deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
       box-shadow: none !important;
     }
-    ::deep(.el-radio-button + .el-radio-button .el-radio-button__inner) {
+    :deep(.el-radio-button + .el-radio-button .el-radio-button__inner) {
       margin-left: -1px;
     }
   }
 
   .inline-radio-group-compact {
-    ::deep(.el-radio-button__inner) {
+    :deep(.el-radio-button__inner) {
       padding: 2px 7px;
       font-size: 11px;
     }
@@ -5463,13 +5463,13 @@ function handleColumnNameClick(col: ColumnDef) {
       // Left border indicator for visual grouping
       border-left: 4px solid #409eff;
 
-      ::deep(.el-checkbox) {
+      :deep(.el-checkbox) {
         height: 100%;
         display: flex;
         align-items: center;
       }
 
-      ::deep(.el-checkbox__label) {
+      :deep(.el-checkbox__label) {
         font-weight: 600;
         font-size: 12px;
         color: #606266;
@@ -5488,7 +5488,7 @@ function handleColumnNameClick(col: ColumnDef) {
         display: flex;
         align-items: center;
 
-        ::deep(.el-checkbox__label) {
+        :deep(.el-checkbox__label) {
           font-weight: normal;
           font-size: 12px;
           color: #606266;

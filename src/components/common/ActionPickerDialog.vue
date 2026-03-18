@@ -314,7 +314,7 @@ function handleBack() {
 </template>
 
 <style scoped lang="scss">
-.action-picker-dialog ::deep(.el-dialog__header) {
+.action-picker-dialog :deep(.el-dialog__header) {
   padding: 8px 10px 0;
 }
 
@@ -366,14 +366,14 @@ function handleBack() {
   min-width: 0;
 }
 
-.picker-search-input ::deep(.el-input__wrapper) {
+.picker-search-input :deep(.el-input__wrapper) {
   height: 32px;
   box-shadow: 0 0 0 1px var(--el-border-color) inset;
   background: var(--el-fill-color-blank);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.picker-search-input ::deep(.el-input__wrapper.is-focus) {
+.picker-search-input :deep(.el-input__wrapper.is-focus) {
   box-shadow:
     0 0 0 1px var(--el-color-primary) inset,
     0 0 0 3px var(--el-color-primary-light-8);
@@ -390,17 +390,17 @@ function handleBack() {
   border-radius: 6px;
 }
 
-.picker-header-controls ::deep(.el-checkbox) {
+.picker-header-controls :deep(.el-checkbox) {
   height: auto;
   margin-right: 0;
 }
 
-.picker-header-controls ::deep(.el-checkbox__label) {
+.picker-header-controls :deep(.el-checkbox__label) {
   font-size: 11px;
   color: var(--el-text-color-regular);
 }
 
-.action-picker-dialog ::deep(.el-dialog__body) {
+.action-picker-dialog :deep(.el-dialog__body) {
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -409,7 +409,7 @@ function handleBack() {
   overflow: hidden;
 }
 
-.action-picker-dialog ::deep(.el-dialog) {
+.action-picker-dialog :deep(.el-dialog) {
   max-width: min(980px, calc(100vw - 20px));
   max-height: min(90vh, calc(100vh - 16px));
   margin: 8px auto 0;
@@ -417,7 +417,7 @@ function handleBack() {
   flex-direction: column;
 }
 
-.action-picker-dialog ::deep(.picker-grid-wrap) {
+.action-picker-dialog :deep(.picker-grid-wrap) {
   flex: 1;
   min-height: 0;
   overflow: auto;

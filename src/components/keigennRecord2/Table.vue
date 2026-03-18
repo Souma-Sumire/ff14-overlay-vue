@@ -896,11 +896,11 @@ defineExpose({
 .keigenn-table {
   font-size: 12px;
 
-  ::deep(.el-table-v2__row) {
+  :deep(.el-table-v2__row) {
     width: 100% !important;
   }
 
-  ::deep(.el-table-v2__header-row) {
+  :deep(.el-table-v2__header-row) {
     width: 100% !important;
   }
 }

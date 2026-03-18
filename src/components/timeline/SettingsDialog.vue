@@ -286,17 +286,17 @@ const testTimeline = ref<ITimelineLine[]>([
 
 <style lang="scss" scoped>
 .timeline-settings-dialog {
-  ::deep(.el-dialog__header) {
+  :deep(.el-dialog__header) {
     margin-right: 0;
     padding: 8px 16px;
     border-bottom: 1px solid var(--el-border-color-lighter);
     background-color: var(--el-fill-color-light);
     cursor: move;
   }
-  ::deep(.el-dialog__body) {
+  :deep(.el-dialog__body) {
     padding: 4px 16px;
   }
-  ::deep(.el-dialog__footer) {
+  :deep(.el-dialog__footer) {
     border-top: 1px solid var(--el-border-color-lighter);
     padding: 6px 16px;
   }
@@ -377,10 +377,10 @@ const testTimeline = ref<ITimelineLine[]>([
     }
   }
 
-  ::deep(.el-slider__runway) {
+  :deep(.el-slider__runway) {
     margin-right: 8px;
   } // 留出8px空隙
-  ::deep(.el-slider__input) {
+  :deep(.el-slider__input) {
     width: 60px;
   }
 }

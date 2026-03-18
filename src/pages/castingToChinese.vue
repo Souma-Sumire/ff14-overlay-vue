@@ -402,7 +402,7 @@ function resetSettings() {
     position: absolute;
     left: v-bind(offsetProgressX);
     top: v-bind(offsetProgressY);
-    ::deep(.el-progress-bar) {
+    :deep(.el-progress-bar) {
       box-sizing: content-box;
       box-shadow:
         0 0 4px #f8a100,
@@ -416,7 +416,7 @@ function resetSettings() {
         background-color: #38260b;
       }
     }
-    ::deep(.el-progress-bar__inner) {
+    :deep(.el-progress-bar__inner) {
       transition-duration: 0s !important;
     }
   }

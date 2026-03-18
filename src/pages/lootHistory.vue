@@ -5555,7 +5555,7 @@ html.dark .onboarding-role-setup {
     white-space: nowrap;
     transition: none !important;
     padding: 0;
-    ::deep(span) {
+    span {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -5738,7 +5738,7 @@ html.dark {
       min-width: 80px;
       max-width: 150px;
 
-      ::deep(.el-input__wrapper) {
+      .el-input__wrapper {
         background-color: rgba(255, 255, 255, 0.05) !important;
         box-shadow: none !important;
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -5752,13 +5752,13 @@ html.dark {
         }
       }
 
-      ::deep(.el-input__inner) {
+      .el-input__inner {
         color: rgba(255, 255, 255, 0.8) !important;
         font-size: 11px;
         height: 22px;
       }
 
-      ::deep(.el-input__prefix) {
+      .el-input__prefix {
         margin-right: 4px;
       }
     }
@@ -7067,7 +7067,7 @@ html.dark .lock-card p {
   box-sizing: border-box;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-  & ::deep(.date-picker-el) {
+  & :deep(.date-picker-el) {
     width: 145px !important;
     min-width: 140px !important;
     transform: translateY(-1.5px) !important;
@@ -7108,7 +7108,7 @@ html.dark .lock-card p {
       background: rgba(239, 68, 68, 0.05) !important;
     }
 
-    ::deep(i),
+    :deep(i),
     .el-icon {
       font-size: 14px;
     }
@@ -7126,7 +7126,7 @@ html.dark .lock-card p {
   margin-left: 4px;
   font-weight: normal;
 }
-.path-toolbar ::deep(.el-button) {
+.path-toolbar :deep(.el-button) {
   height: 28px !important;
   margin: 0 !important;
   padding: 0 6px !important;
@@ -7138,7 +7138,7 @@ html.dark .lock-card p {
   line-height: 0 !important;
   letter-spacing: -0.01em;
 }
-.path-toolbar ::deep(.el-input__wrapper) {
+.path-toolbar :deep(.el-input__wrapper) {
   height: 28px !important;
   width: 100% !important;
   background: #f8fafc;
@@ -7148,17 +7148,17 @@ html.dark .lock-card p {
   display: flex;
   align-items: center;
 }
-.path-toolbar ::deep(.el-input__wrapper):hover {
+.path-toolbar :deep(.el-input__wrapper):hover {
   box-shadow: 0 0 0 1px #cbd5e1 inset !important;
   background: #f1f5f9;
 }
-.path-toolbar ::deep(.el-input__wrapper).is-focus {
+.path-toolbar :deep(.el-input__wrapper).is-focus {
   box-shadow:
     0 0 0 1px #3b82f6 inset,
     0 0 0 3px rgba(59, 130, 246, 0.1) !important;
   background: white;
 }
-.path-toolbar ::deep(.el-input__inner) {
+.path-toolbar :deep(.el-input__inner) {
   font-size: 10.2px;
   color: #1e293b;
   font-weight: 600;
@@ -7173,14 +7173,14 @@ html.dark .lock-card p {
   justify-content: center !important;
   text-align: center !important;
 }
-.path-toolbar ::deep(.el-input__suffix) {
+.path-toolbar :deep(.el-input__suffix) {
   position: absolute !important;
   right: 4px !important;
   top: 50% !important;
   transform: translateY(-50%) !important;
   z-index: 1;
 }
-.path-toolbar ::deep(.el-input__prefix) {
+.path-toolbar :deep(.el-input__prefix) {
   position: absolute !important;
   left: 8px !important;
   top: 50% !important;
@@ -7196,7 +7196,7 @@ html.dark .lock-card p {
   flex-shrink: 0;
   white-space: nowrap;
 }
-.header-right ::deep(.el-switch__label) {
+.header-right :deep(.el-switch__label) {
   white-space: nowrap;
 }
 
@@ -7809,7 +7809,7 @@ html.dark .early-access-disclaimer {
   background: #cbd5e1;
   border-radius: 4px;
 }
-.selector-tags ::deep(.mini-tag-el) {
+.selector-tags :deep(.mini-tag-el) {
   margin: 0 !important;
   display: inline-flex !important;
   justify-content: center;
@@ -7823,7 +7823,7 @@ html.dark .early-access-disclaimer {
   text-overflow: ellipsis;
   font-size: 11px;
 }
-.selector-tags ::deep(.el-check-tag__content) {
+.selector-tags :deep(.el-check-tag__content) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -8291,7 +8291,7 @@ html.dark {
   color: #3b82f6;
 }
 
-.mode-tabs-el ::deep(.el-tab-pane) {
+.mode-tabs-el :deep(.el-tab-pane) {
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 0 0 12px 12px;
@@ -8723,7 +8723,7 @@ html.dark {
   border: none !important;
 }
 
-.mode-tabs-el ::deep(.el-tabs__header .el-tabs__item) {
+.mode-tabs-el :deep(.el-tabs__header .el-tabs__item) {
   border: 1px solid #e2e8f0 !important;
   background: #f8fafc !important;
   margin-right: -1px !important;
@@ -8736,16 +8736,16 @@ html.dark {
   margin-bottom: -1px;
 }
 
-.mode-tabs-el ::deep(.el-tabs__header .el-tabs__item:first-child) {
+.mode-tabs-el :deep(.el-tabs__header .el-tabs__item:first-child) {
   border-top-left-radius: 8px !important;
   margin-left: 0 !important;
 }
 
-.mode-tabs-el ::deep(.el-tabs__header .el-tabs__item:last-child) {
+.mode-tabs-el :deep(.el-tabs__header .el-tabs__item:last-child) {
   border-top-right-radius: 8px !important;
 }
 
-.mode-tabs-el ::deep(.el-tabs__header .el-tabs__item.is-active) {
+.mode-tabs-el :deep(.el-tabs__header .el-tabs__item.is-active) {
   background: white !important;
   color: var(--primary-color) !important;
   font-weight: 800;
@@ -8856,18 +8856,18 @@ html.dark .drop-hint {
   color: rgba(255, 255, 255, 0.4);
 }
 
-.empty-hint ::deep(.el-button) {
+.empty-hint :deep(.el-button) {
   padding: 12px 32px;
   font-weight: 600;
   border-radius: 10px;
 }
 
-.loot-record-table ::deep(.el-table__row) {
+.loot-record-table :deep(.el-table__row) {
   content-visibility: auto;
   contain-intrinsic-size: 1px 48px;
 }
 
-.loot-record-table ::deep(th.el-table__cell) {
+.loot-record-table :deep(th.el-table__cell) {
   background-color: #f8fafc;
   color: #64748b;
   font-weight: 800;
@@ -9773,7 +9773,7 @@ html.dark {
       .special-add-select-compact {
         width: 140px;
 
-        ::deep(.el-input__wrapper) {
+        :deep(.el-input__wrapper) {
           background-color: transparent !important;
           box-shadow: none !important;
           border: 1px dashed #cbd5e1;
@@ -10047,3 +10047,4 @@ html.dark {
   height: 100%;
 }
 </style>
+

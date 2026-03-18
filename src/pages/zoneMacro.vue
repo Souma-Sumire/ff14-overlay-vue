@@ -877,7 +877,7 @@ $main-font:
     gap: 0;
     flex-wrap: wrap;
 
-    ::deep(.el-button) {
+    :deep(.el-button) {
       margin-left: 0 !important;
       border-radius: 0;
       &:first-child {
@@ -891,7 +891,7 @@ $main-font:
     }
   }
 
-  ::deep(.el-button) {
+  :deep(.el-button) {
     transition: all 0.2s ease;
     border-radius: 6px;
     font-size: 13px;
@@ -976,7 +976,7 @@ $main-font:
     border-color: var(--el-color-primary-light-5);
   }
 
-  ::deep(.el-card__body) {
+  :deep(.el-card__body) {
     padding: 0;
     flex: 1;
     display: flex;
@@ -1006,9 +1006,9 @@ $main-font:
   color: var(--el-text-color-regular);
   background: var(--el-bg-color-overlay);
 
-  ::deep(h1),
-  ::deep(h2),
-  ::deep(h3) {
+  :deep(h1),
+  :deep(h2),
+  :deep(h3) {
     color: var(--el-color-primary);
     font-size: 1.2em;
     margin: 12px 0 4px 0;
@@ -1019,17 +1019,17 @@ $main-font:
     }
   }
 
-  ::deep(ul),
-  ::deep(ol) {
+  :deep(ul),
+  :deep(ol) {
     margin: 4px 0;
     padding-left: 20px;
   }
 
-  ::deep(li) {
+  :deep(li) {
     margin: 2px 0;
   }
 
-  ::deep(mark) {
+  :deep(mark) {
     background-color: #ffeb3b;
     color: #333;
     border-radius: 4px;
@@ -1070,11 +1070,11 @@ $main-font:
     }
   }
 
-  ::deep(.el-card__body) {
+  :deep(.el-card__body) {
     padding: 0.75em;
   }
 
-  ::deep(a) {
+  :deep(a) {
     color: var(--el-color-primary);
     padding: 0.5em;
     font-weight: 600;
@@ -1094,7 +1094,7 @@ $main-font:
     gap: 6px;
     flex-wrap: wrap;
 
-    ::deep(.el-button) {
+    :deep(.el-button) {
       margin: 0;
       border-radius: 6px;
       font-size: 12px;

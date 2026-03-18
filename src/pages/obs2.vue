@@ -1088,7 +1088,7 @@ function tableRowClassName({ row }: { row: Settings }) {
   flex-direction: column;
 }
 
-.table-card ::deep(.el-card__body) {
+.table-card :deep(.el-card__body) {
   overflow: auto;
   flex: 1;
   min-height: 0;
@@ -1100,7 +1100,7 @@ function tableRowClassName({ row }: { row: Settings }) {
 
 // 美化滚动条
 .table-card,
-.table-card ::deep(.el-card__body),
+.table-card :deep(.el-card__body),
 :deep(.el-table__body-wrapper) {
   &::-webkit-scrollbar {
     width: 8px;
@@ -1240,7 +1240,7 @@ function tableRowClassName({ row }: { row: Settings }) {
   flex-direction: column;
   gap: 4px;
 
-  ::deep(.el-form-item) {
+  :deep(.el-form-item) {
     margin-bottom: 4px;
 
     &:last-child {

@@ -752,7 +752,7 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.toolbar-left ::deep(.el-switch__label) {
+.toolbar-left :deep(.el-switch__label) {
   white-space: nowrap;
 }
 
@@ -764,7 +764,7 @@ onMounted(() => {
   min-width: 128px;
 }
 
-.lang-switch-wrap ::deep(.language-select) {
+.lang-switch-wrap :deep(.language-select) {
   width: 92px;
 }
 
@@ -940,12 +940,12 @@ onMounted(() => {
   grid-column: 3 / span 2;
 }
 
-.job-actions ::deep(.el-button) {
+.job-actions :deep(.el-button) {
   flex: 0 0 auto;
   --el-button-size: 18px;
 }
 
-.job-actions ::deep(.job-action-text) {
+.job-actions :deep(.job-action-text) {
   width: 100%;
   padding-inline: 0;
 }
@@ -1204,7 +1204,7 @@ onMounted(() => {
   border-style: dotted;
 }
 
-.slot-add-wrap ::deep(.el-button) {
+.slot-add-wrap :deep(.el-button) {
   --el-button-size: 18px;
   padding: 0 4px;
 }

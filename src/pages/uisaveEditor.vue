@@ -889,11 +889,11 @@ function onDragLeave() {
       border-color: var(--el-color-primary-light-3);
     }
 
-    ::deep(.el-card__header) {
+    :deep(.el-card__header) {
       padding: 8px 12px;
       border-bottom: 1px solid var(--el-border-color-lighter);
     }
-    ::deep(.el-card__body) {
+    :deep(.el-card__body) {
       padding: 10px;
     }
 
@@ -925,7 +925,7 @@ function onDragLeave() {
       }
       .header-zone-select {
         flex: 1;
-        ::deep(.el-input__inner) {
+        :deep(.el-input__inner) {
           font-size: 13px;
           font-weight: 600;
           border: none;
@@ -984,14 +984,14 @@ function onDragLeave() {
             width: 32px;
             margin: 0;
             height: 100%;
-            ::deep(.el-checkbox__label) {
+            :deep(.el-checkbox__label) {
               font-size: 12px;
               font-weight: 900;
               padding: 0 0 0 2px;
             }
           }
 
-          ::deep(.coord-input) {
+          :deep(.coord-input) {
             flex: 1;
             min-width: 0;
             .el-input__wrapper {

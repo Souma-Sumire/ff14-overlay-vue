@@ -183,7 +183,7 @@ $trasDuration: 1;
       aside {
         background-color: rgb(255, 136, 136);
       }
-      ::deep(span) {
+      :deep(span) {
         font-size: calc(
           var(--font-size, $fontSize) * var(--up-coming-scale, $upComingScale) * 1px
         ) !important;
@@ -191,7 +191,7 @@ $trasDuration: 1;
           padding-right: 0.2em;
         }
       }
-      span ::deep(.skill_icon) {
+      span :deep(.skill_icon) {
         transition-property: all;
         transition-duration: calc(var(--tras-duration, $trasDuration) * 1s);
         transition-timing-function: ease;
@@ -239,19 +239,19 @@ $trasDuration: 1;
         // &:first-of-type {
         //   flex: 1;
         // }
-        > ::deep(span) {
+        > :deep(span) {
           // white-space: nowrap;
           text-overflow: ellipsis;
           overflow: hidden;
           flex: 1;
         }
       }
-      > ::deep(div) {
+      > :deep(div) {
         width: calc(40px * var(--up-coming-scale, 1));
         height: calc(40px * var(--up-coming-scale, 1));
         top: calc(4px * var(--up-coming-scale, 1));
       }
-      span ::deep(.skill_icon) {
+      span :deep(.skill_icon) {
         position: relative;
         top: 0px;
         left: calc(-4px * var(--normal-scale, $normalScale));

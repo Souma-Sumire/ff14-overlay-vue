@@ -346,7 +346,7 @@ watch(
     }
   }
 
-  ::deep(.el-card__header) {
+  :deep(.el-card__header) {
     padding: 12px 20px;
     border-bottom: 1px dashed var(--el-border-color-lighter);
     background: transparent;

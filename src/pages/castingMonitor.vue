@@ -98,7 +98,7 @@ setInterval(() => {
   left: 0;
   top: 0;
   background-color: rgba($color: #000000, $alpha: 0.2);
-  ::deep(.el-main) {
+  :deep(.el-main) {
     padding: 0;
   }
 }
@@ -133,7 +133,7 @@ footer {
     0 -1px 2px #000;
 }
 
-.debug-party-slider ::deep(.el-slider) {
+.debug-party-slider :deep(.el-slider) {
   flex: 1;
 }
 </style>

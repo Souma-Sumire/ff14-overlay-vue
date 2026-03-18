@@ -71,7 +71,7 @@ span {
   padding: 0 5px;
   margin-right: 5px;
 
-  ::deep(small) {
+  :deep(small) {
     font-size: 0.7em;
   }
 }

@@ -3297,7 +3297,7 @@ async function createSheetFromTemplate(template: MitigationSheetTemplate) {
     background: #fff;
     .edit-input {
       width: 240px;
-      ::deep(.el-input__inner) {
+      :deep(.el-input__inner) {
         height: 22px;
         font-size: 12px;
         padding: 0 4px;

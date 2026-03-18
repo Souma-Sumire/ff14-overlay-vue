@@ -1772,10 +1772,10 @@ const getRoleGroupClass = getRoleType;
   min-height: 32px;
 
   // Element Plus 按钮自带左边距，我们不需要 gap
-  ::deep(.el-button + .el-button),
-  ::deep(.el-button + .el-dropdown),
-  ::deep(.el-dropdown + .el-button),
-  ::deep(.el-dropdown + .el-dropdown) {
+  :deep(.el-button + .el-button),
+  :deep(.el-button + .el-dropdown),
+  :deep(.el-dropdown + .el-button),
+  :deep(.el-dropdown + .el-dropdown) {
     margin-left: 12px;
   }
 }
@@ -1889,7 +1889,7 @@ const getRoleGroupClass = getRoleType;
 }
 
 .bis-config-dialog {
-  ::deep(.el-dialog) {
+  :deep(.el-dialog) {
     width: fit-content !important;
     min-width: 600px;
     max-width: 95vw !important;
@@ -1898,14 +1898,14 @@ const getRoleGroupClass = getRoleType;
     overflow: hidden;
   }
 
-  ::deep(.el-dialog__body) {
+  :deep(.el-dialog__body) {
     padding: 20px;
     padding-top: 10px;
   }
 }
 
 .offset-config-dialog {
-  ::deep(.el-dialog) {
+  :deep(.el-dialog) {
     width: fit-content !important;
     min-width: 700px;
     max-width: 95vw !important;
@@ -1917,7 +1917,7 @@ const getRoleGroupClass = getRoleType;
     overflow: hidden;
   }
 
-  ::deep(.el-dialog__body) {
+  :deep(.el-dialog__body) {
     padding: 16px 20px 12px;
     overflow: auto;
   }
@@ -2162,13 +2162,13 @@ const getRoleGroupClass = getRoleType;
 
 // 队长分配专用下拉框样式
 .captain-player-popper {
-  ::deep(.el-select-dropdown__wrap) {
+  :deep(.el-select-dropdown__wrap) {
     max-height: none !important; // 移除滚动条高度限制
   }
-  ::deep(.el-select-dropdown__list) {
+  :deep(.el-select-dropdown__list) {
     padding: 2px 0;
   }
-  ::deep(.el-select-dropdown__item) {
+  :deep(.el-select-dropdown__item) {
     height: 26px !important; // 压缩行高
     line-height: 26px !important;
     padding: 0 12px;
@@ -2449,7 +2449,7 @@ const getRoleGroupClass = getRoleType;
   .macro-cell {
     border-bottom: 1px solid rgba(148, 163, 184, 0.1) !important;
 
-    ::deep(tr.is-layer-end:not(:last-child)) & {
+    :deep(tr.is-layer-end:not(:last-child)) & {
       border-bottom: 1px solid black !important;
     }
   }
@@ -2778,7 +2778,7 @@ const getRoleGroupClass = getRoleType;
       height: auto !important;
       padding: 4px 0 !important;
 
-      ::deep(.player-display) {
+      :deep(.player-display) {
         flex-direction: column;
         gap: 0;
         width: 100%;
@@ -2807,7 +2807,7 @@ const getRoleGroupClass = getRoleType;
   gap: 2px;
   padding: 4px 0;
 
-  ::deep(.player-display) {
+  :deep(.player-display) {
     flex-direction: column;
     gap: 0;
   }
@@ -2982,7 +2982,7 @@ const getRoleGroupClass = getRoleType;
       padding: 0;
       margin-left: -2px;
 
-      ::deep(.player-display) {
+      :deep(.player-display) {
         transform: scale(0.9);
         .player-name-text {
           display: none !important;
@@ -3150,7 +3150,7 @@ const getRoleGroupClass = getRoleType;
   max-height: 320px;
   overflow-y: auto;
 
-  ::deep(.el-dropdown-menu__item) {
+  :deep(.el-dropdown-menu__item) {
     padding: 0 8px;
     line-height: 20px;
     height: auto;
@@ -3241,7 +3241,7 @@ const getRoleGroupClass = getRoleType;
 
 .mini-stepper {
   width: 76px !important;
-  ::deep(.el-input__wrapper) {
+  :deep(.el-input__wrapper) {
     padding-left: 8px;
     padding-right: 30px;
     box-shadow: 0 0 0 1px #e2e8f0 inset;
@@ -3251,8 +3251,8 @@ const getRoleGroupClass = getRoleType;
       box-shadow: 0 0 0 1px #3b82f6 inset;
     }
   }
-  ::deep(.el-input-number__increase),
-  ::deep(.el-input-number__decrease) {
+  :deep(.el-input-number__increase),
+  :deep(.el-input-number__decrease) {
     width: 24px;
     background: #f1f5f9;
     border-left: 1px solid #e2e8f0;
@@ -3631,7 +3631,7 @@ html.dark {
     width: 56px !important;
     height: 20px;
 
-    ::deep(.el-input__wrapper) {
+    :deep(.el-input__wrapper) {
       padding: 0;
       text-align: center;
       background: transparent;
@@ -3646,7 +3646,7 @@ html.dark {
       }
     }
 
-    ::deep(.el-input__inner) {
+    :deep(.el-input__inner) {
       height: 20px;
       line-height: 20px;
       text-align: center;
@@ -3657,19 +3657,19 @@ html.dark {
     }
 
     &.is-nonzero {
-      ::deep(.el-input__inner) {
+      :deep(.el-input__inner) {
         color: #3b82f6;
       }
-      ::deep(.el-input__wrapper) {
+      :deep(.el-input__wrapper) {
         border-bottom-color: #3b82f6;
       }
     }
 
     html.dark & {
-      ::deep(.el-input__wrapper) {
+      :deep(.el-input__wrapper) {
         border-bottom-color: #334155;
       }
-      &.is-nonzero ::deep(.el-input__inner) {
+      &.is-nonzero :deep(.el-input__inner) {
         color: #60a5fa;
       }
     }

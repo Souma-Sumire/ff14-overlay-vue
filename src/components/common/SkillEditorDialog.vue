@@ -279,16 +279,16 @@ function handleIconError(event: Event) {
 }
 
 .skill-editor-dialog,
-.skill-editor-dialog ::deep(*),
-.skill-editor-dialog ::deep(.el-dialog__title),
-.skill-editor-dialog ::deep(.el-input__inner),
-.skill-editor-dialog ::deep(.el-textarea__inner),
-.skill-editor-dialog ::deep(.el-select__selected-item),
-.skill-editor-dialog ::deep(.el-button) {
+.skill-editor-dialog :deep(*),
+.skill-editor-dialog :deep(.el-dialog__title),
+.skill-editor-dialog :deep(.el-input__inner),
+.skill-editor-dialog :deep(.el-textarea__inner),
+.skill-editor-dialog :deep(.el-select__selected-item),
+.skill-editor-dialog :deep(.el-button) {
   font-family: var(--editor-font-family);
 }
 
-.skill-editor-dialog ::deep(.el-dialog__body) {
+.skill-editor-dialog :deep(.el-dialog__body) {
   padding: 10px;
 }
 
@@ -310,13 +310,13 @@ function handleIconError(event: Event) {
   gap: 10px;
 }
 
-.editor-head ::deep(.editor-icon) {
+.editor-head :deep(.editor-icon) {
   width: 42px;
   height: 42px;
   border-radius: 8px;
 }
 
-.editor-head ::deep(.editor-icon-empty) {
+.editor-head :deep(.editor-icon-empty) {
   display: grid;
   place-items: center;
   font-size: 12px;
@@ -325,12 +325,12 @@ function handleIconError(event: Event) {
   background: var(--el-fill-color-light);
 }
 
-.editor-head ::deep(.editor-summary) {
+.editor-head :deep(.editor-summary) {
   min-width: 0;
   flex: 1;
 }
 
-.editor-head ::deep(.editor-name) {
+.editor-head :deep(.editor-name) {
   font-size: 14px;
   font-weight: 700;
   white-space: nowrap;
@@ -338,7 +338,7 @@ function handleIconError(event: Event) {
   text-overflow: ellipsis;
 }
 
-.editor-head ::deep(.editor-sub) {
+.editor-head :deep(.editor-sub) {
   font-size: 12px;
   color: var(--el-text-color-secondary);
   white-space: nowrap;
@@ -352,35 +352,35 @@ function handleIconError(event: Event) {
   gap: 10px;
 }
 
-.editor-grid ::deep(.editor-field) {
+.editor-grid :deep(.editor-field) {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.editor-grid ::deep(.editor-field label) {
+.editor-grid :deep(.editor-field label) {
   font-size: 12px;
   color: var(--el-text-color-secondary);
 }
 
-.editor-grid ::deep(.editor-field.span-2) {
+.editor-grid :deep(.editor-field.span-2) {
   grid-column: span 2;
 }
 
-.editor-grid ::deep(.number-input-full) {
+.editor-grid :deep(.number-input-full) {
   width: 100%;
 }
 
-.editor-grid ::deep(.number-input-full .el-input__wrapper) {
+.editor-grid :deep(.number-input-full .el-input__wrapper) {
   padding-left: 11px;
   padding-right: 11px;
 }
 
-.editor-grid ::deep(.number-input-full .el-input__inner) {
+.editor-grid :deep(.number-input-full .el-input__inner) {
   text-align: left;
 }
 
-.editor-grid ::deep(.input-error-tip) {
+.editor-grid :deep(.input-error-tip) {
   font-size: 12px;
   line-height: 1.2;
   color: var(--el-color-danger);
@@ -409,10 +409,10 @@ function handleIconError(event: Event) {
   justify-content: flex-end;
 }
 
-.skill-editor-dialog ::deep(.editor-action-btn),
-.skill-editor-dialog ::deep(.editor-footer .el-button),
-.skill-editor-dialog ::deep(.editor-head .el-button),
-.skill-editor-dialog ::deep(.editor-body .el-button) {
+.skill-editor-dialog :deep(.editor-action-btn),
+.skill-editor-dialog :deep(.editor-footer .el-button),
+.skill-editor-dialog :deep(.editor-head .el-button),
+.skill-editor-dialog :deep(.editor-body .el-button) {
   height: 32px;
   padding-left: 12px;
   padding-right: 12px;
@@ -436,7 +436,7 @@ function handleIconError(event: Event) {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .editor-grid ::deep(.editor-field.span-2) {
+  .editor-grid :deep(.editor-field.span-2) {
     grid-column: span 1;
   }
 }

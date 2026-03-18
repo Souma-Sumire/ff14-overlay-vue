@@ -175,7 +175,7 @@ watch(locale, () => {
 
 <style scoped lang="scss">
 .no-border {
-  ::deep(.el-input__wrapper) {
+  :deep(.el-input__wrapper) {
     box-shadow: none !important;
     background: transparent !important;
     padding: 0 8px;

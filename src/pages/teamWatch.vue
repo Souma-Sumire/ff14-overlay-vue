@@ -403,13 +403,13 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
 }
-.menu-tools ::deep(.el-button) {
+.menu-tools :deep(.el-button) {
   width: 88px;
   margin-left: 0;
   justify-content: center;
   padding-inline: 8px;
 }
-.menu-tools ::deep(.el-button + .el-button) {
+.menu-tools :deep(.el-button + .el-button) {
   margin-left: 0;
 }
 </style>

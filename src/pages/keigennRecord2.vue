@@ -1314,7 +1314,7 @@ function formatTimestamp(ms: number): string {
   right: 15px;
 }
 
-.combat-select ::deep(.el-select__suffix) {
+.combat-select :deep(.el-select__suffix) {
   width: 14px;
   right: 7px;
 }

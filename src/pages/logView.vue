@@ -1562,7 +1562,7 @@ function encounterLabel(enc: EncounterCandidate) {
 .encounter-select {
   width: 100%;
 
-  ::deep(.el-input__wrapper) {
+  :deep(.el-input__wrapper) {
     background-color: var(--lv-bg-page);
     box-shadow: 0 0 0 1px var(--lv-border-strong) inset;
   }
@@ -1667,7 +1667,7 @@ function encounterLabel(enc: EncounterCandidate) {
 }
 
 /* ── Filter visual states ── */
-.regex-error ::deep(.el-input__wrapper) {
+.regex-error :deep(.el-input__wrapper) {
   box-shadow: 0 0 0 1px var(--lv-danger) inset !important;
   background-color: var(--lv-danger-soft);
 }
@@ -1818,7 +1818,7 @@ function encounterLabel(enc: EncounterCandidate) {
   flex: 1 1 280px;
   max-width: 460px;
 
-  ::deep(.el-input__wrapper) {
+  :deep(.el-input__wrapper) {
     box-shadow: 0 0 0 1px var(--lv-border-strong) inset;
     background: var(--lv-bg-elevated);
     border-radius: 5px;
@@ -1834,7 +1834,7 @@ function encounterLabel(enc: EncounterCandidate) {
 .time-range-input {
   width: 118px;
 
-  ::deep(.el-input__wrapper) {
+  :deep(.el-input__wrapper) {
     background: var(--lv-bg-elevated);
     box-shadow: 0 0 0 1px var(--lv-border-strong) inset;
     min-height: 30px;
@@ -1845,7 +1845,7 @@ function encounterLabel(enc: EncounterCandidate) {
 .actor-filter-input {
   width: 160px;
 
-  ::deep(.el-input__wrapper) {
+  :deep(.el-input__wrapper) {
     background: var(--lv-bg-elevated);
     box-shadow: 0 0 0 1px var(--lv-border-strong) inset;
     min-height: 30px;
@@ -1897,7 +1897,7 @@ function encounterLabel(enc: EncounterCandidate) {
 .encounter-select-sidebar {
   width: 100%;
 
-  ::deep(.el-input__wrapper) {
+  :deep(.el-input__wrapper) {
     background-color: transparent;
     box-shadow: none;
     border: 1px solid var(--lv-border-strong);
@@ -1922,15 +1922,15 @@ function encounterLabel(enc: EncounterCandidate) {
   background: var(--lv-bg-page);
   overflow: hidden !important; /* Clip translated content at the outermost boundary */
 
-  ::deep(.el-table-v2__root) {
+  :deep(.el-table-v2__root) {
     background: var(--lv-bg-page);
   }
 
-  ::deep(.el-table-v2__emptyblock) {
+  :deep(.el-table-v2__emptyblock) {
     background: var(--lv-bg-page);
   }
 
-  ::deep(.el-table-v2__row) {
+  :deep(.el-table-v2__row) {
     transition: background-color 0.15s;
     background: var(--lv-bg-page);
 
@@ -1939,7 +1939,7 @@ function encounterLabel(enc: EncounterCandidate) {
     }
   }
 
-  ::deep(.el-table-v2__header-row) {
+  :deep(.el-table-v2__header-row) {
     background: var(--lv-bg-elevated) !important;
     color: var(--lv-text-muted);
     font-weight: 600;
@@ -1949,7 +1949,7 @@ function encounterLabel(enc: EncounterCandidate) {
     font-size: 10px;
   }
 
-  ::deep(.el-table-v2__header-cell) {
+  :deep(.el-table-v2__header-cell) {
     background: transparent !important;
     border-right: 1px solid var(--lv-border);
     &:last-child {
@@ -1957,7 +1957,7 @@ function encounterLabel(enc: EncounterCandidate) {
     }
   }
 
-  ::deep(.el-table-v2__row-cell) {
+  :deep(.el-table-v2__row-cell) {
     background: transparent !important;
     border-bottom: 1px solid var(--lv-border);
     border-right: 1px solid var(--lv-border);
@@ -1967,8 +1967,8 @@ function encounterLabel(enc: EncounterCandidate) {
     }
   }
 
-  ::deep(.el-table-v2__header-cell:first-child),
-  ::deep(.el-table-v2__row-cell:first-child) {
+  :deep(.el-table-v2__header-cell:first-child),
+  :deep(.el-table-v2__row-cell:first-child) {
     padding-left: 6px;
     padding-right: 6px;
   }
