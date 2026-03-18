@@ -1,1 +1,0 @@
-import{l as e}from"./vendor-vue-I2Qtm_P8.js";import{$n as t,Jn as n,cr as r,dr as i}from"./shared-common-CjLCInck.js";var a=t({__name:`index`,setup(t){let a=e();return r(()=>{a.push(`/startPages`)}),(e,t)=>(i(),n(`div`))}});export{a as default};
