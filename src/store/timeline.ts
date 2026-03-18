@@ -99,14 +99,11 @@ export const useTimelineStore = defineStore("timeline", {
         Reflect.deleteProperty(timeline.condition, "zoneId");
       }
       if (timeline.condition.phase === undefined) {
-        const bNpcId = timeline.condition.bNpcId;
-        const finalIds = bossPhase[timeline.condition.zoneID];
-        if (bNpcId !== undefined && finalIds !== undefined) {
-          if (finalIds.bNpcId.includes(Number(bNpcId))) {
-            timeline.condition.phase = "final";
-          } else {
-            timeline.condition.phase = "door";
-          }
+        const boss = timeline.condition.fflogsBoss;
+        const phaseInfo = bossPhase[timeline.condition.zoneID];
+        if (boss !== undefined && phaseInfo !== undefined) {
+          timeline.condition.phase = phaseInfo.fflogsBoss === boss ? "final" : "door";
+          Reflect.deleteProperty(timeline.condition, "fflogsBoss");
         }
       }
       if (timeline.codeFight && !timeline.source) {
