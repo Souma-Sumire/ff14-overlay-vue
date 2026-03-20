@@ -1373,7 +1373,7 @@ const sortedSummaryPlayers = computed(() => {
   players.forEach((p) => {
     counts[p] = Object.values(summary[p] || {}).reduce((sum, val) => sum + val, 0);
   });
-  return players.toSorted((a, b) => comparePlayersByRole(a, b, counts));
+  return players.slice().sort((a, b) => comparePlayersByRole(a, b, counts));
 });
 
 const visibleUniqueItems = computed(() => {
@@ -10047,4 +10047,3 @@ html.dark {
   height: 100%;
 }
 </style>
-

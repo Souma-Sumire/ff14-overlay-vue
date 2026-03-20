@@ -79,7 +79,7 @@ const sortIndexMap = computed(() => {
 
 const sortedRows = computed(() => {
   const sortMap = sortIndexMap.value;
-  return rows.value.toSorted((a, b) => {
+  return rows.value.slice().sort((a, b) => {
     const aJob = Util.baseJobEnumConverted(a.job);
     const bJob = Util.baseJobEnumConverted(b.job);
     const aIndex = sortMap.get(aJob) ?? -1;

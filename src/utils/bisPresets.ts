@@ -373,7 +373,7 @@ function checkDuplicatePresets() {
     // 创建一个不包含名字的副本用于比较
     const compareData = {
       roleType: p.roleType,
-      specificRoles: p.specificRoles ? p.specificRoles.toSorted() : undefined,
+      specificRoles: p.specificRoles ? p.specificRoles.slice().sort() : undefined,
       config: p.config,
     };
     const key = JSON.stringify(compareData);

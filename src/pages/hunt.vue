@@ -249,7 +249,8 @@ function getColorDom(monster: DiscoveredMonsters[number]): string {
 
 function getMultipleText(monsters: DiscoveredMonsters[number][]): string {
   return monsters
-    .toSorted((a, b) => a.instance - b.instance)
+    .slice()
+    .sort((a, b) => a.instance - b.instance)
     .map((item) => {
       return getColorDom(item);
     })
@@ -901,7 +902,7 @@ function cleanUpExpiredData(): Promise<void> {
   if (before !== allMonstersData.value.length) {
     ElMessage.info(`已清理${allMonstersData.value.length}条过期数据`);
   }
-  const monstersSorted = monstersData.value.toSorted((a, b) => b.timestamp - a.timestamp);
+  const monstersSorted = monstersData.value.slice().sort((a, b) => b.timestamp - a.timestamp);
   const lastUpadateTime = monstersSorted.length > 0 ? monstersSorted[0]!.timestamp : 0;
   return new Promise((resolve) => {
     if (lastUpadateTime > 0) {

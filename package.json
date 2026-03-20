@@ -14,7 +14,7 @@
     "generate:dd-normalize": "jiti scripts/ddNormalize.ts",
     "generate:dd-vulnerabilities": "jiti scripts/ddVulnerabilitiesBake.ts --only-undefined-to-bool",
     "submodule": "git submodule update --remote && jiti scripts/patch.ts",
-    "generate": "jiti scripts/all.ts"
+    "generate": "jiti scripts/all.ts && vp fmt src/resources/generated"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",

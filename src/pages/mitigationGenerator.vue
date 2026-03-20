@@ -384,7 +384,7 @@ function applySavedSkillOrder(skills: MitigationSkill[], savedOrder?: number[]) 
   if (!savedOrder || savedOrder.length === 0) return [...skills];
 
   const orderMap = new Map(savedOrder.map((id, index) => [id, index]));
-  return skills.toSorted((a, b) => {
+  return skills.slice().sort((a, b) => {
     const indexA = orderMap.get(a.id) ?? Number.MAX_SAFE_INTEGER;
     const indexB = orderMap.get(b.id) ?? Number.MAX_SAFE_INTEGER;
     if (indexA === indexB) return a.recast - b.recast;
@@ -1593,7 +1593,7 @@ function getSkillsForJob(jobEnum: number, level = 100): MitigationSkill[] {
 
 function sortColumnsByJob(list: ColumnDef[]) {
   const roleOrder: Record<string, number> = { tank: 0, healer: 1, dps: 2, unknown: 3 };
-  return list.toSorted((a, b) => {
+  return list.slice().sort((a, b) => {
     const orderDiff = getJobOrder(a.jobEnum) - getJobOrder(b.jobEnum);
     if (orderDiff !== 0) return orderDiff;
     if (a.role !== b.role) return roleOrder[a.role]! - roleOrder[b.role]!;

@@ -2484,7 +2484,7 @@ function runAutoArrangeForExclusiveGroup(params: {
   const unitKeySet = new Set(units.map((unit) => unit.key));
   const preferredFirstUnit =
     mode === "overwrite"
-      ? units.toSorted((a, b) => {
+      ? units.slice().sort((a, b) => {
           const orderDiff =
             getExclusiveGroupUnitPriority(a, columnOrderByKey) -
             getExclusiveGroupUnitPriority(b, columnOrderByKey);

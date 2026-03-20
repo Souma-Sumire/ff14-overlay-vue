@@ -145,7 +145,7 @@ function calculateReductionMultiplier(
 function calculateMedian(arr: number[]): number {
   if (arr.length === 0) return 0;
 
-  const sorted = arr.toSorted((a, b) => a - b);
+  const sorted = arr.slice().sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
   return sorted.length % 2 !== 0
     ? sorted[mid] || 0
@@ -514,7 +514,7 @@ export function useLogParser() {
 
     const grouped: GroupedRawEvents[] = [];
     const groupedByStableKey = new Map<string, GroupedRawEvents[]>();
-    const sortedRawEvents = rawEvents.toSorted((a, b) => a.timestamp - b.timestamp);
+    const sortedRawEvents = rawEvents.slice().sort((a, b) => a.timestamp - b.timestamp);
     for (const event of sortedRawEvents) {
       // Group by ability id (instead of source) so simultaneous same-mechanic hits
       // from multiple casters are merged into one mechanic row with multi-targets.
@@ -543,7 +543,7 @@ export function useLogParser() {
     const rowDrafts: Array<
       Omit<MitigationRow, "isAOE" | "isTB"> & { localIsAOE: boolean; localIsTB: boolean }
     > = [];
-    const sortedGroups = grouped.toSorted((a, b) => a.firstTimestamp - b.firstTimestamp);
+    const sortedGroups = grouped.slice().sort((a, b) => a.firstTimestamp - b.firstTimestamp);
 
     for (let groupIndex = 0; groupIndex < sortedGroups.length; groupIndex += 1) {
       const group = sortedGroups[groupIndex]!;

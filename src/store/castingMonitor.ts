@@ -168,7 +168,7 @@ export const useCastingMonitorStore = defineStore("castingMonitor", {
   },
   getters: {
     partyDataFormatted(state) {
-      return state.partyData.toSorted((a, b) => {
+      return state.partyData.slice().sort((a, b) => {
         const aSort = DEFAULT_JOB_SORT_INDEX.get(a.job) ?? Number.POSITIVE_INFINITY;
         const bSort = DEFAULT_JOB_SORT_INDEX.get(b.job) ?? Number.POSITIVE_INFINITY;
         return aSort - bSort;

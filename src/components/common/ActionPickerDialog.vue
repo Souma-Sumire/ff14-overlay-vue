@@ -115,7 +115,7 @@ const orderedResult = computed(() => {
     }
   }
 
-  return internalResult.value.toSorted((a, b) => {
+  return internalResult.value.slice().sort((a, b) => {
     const aFamilyId = getFamilyId(a.id);
     const bFamilyId = getFamilyId(b.id);
     if (aFamilyId !== bFamilyId) {

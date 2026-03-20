@@ -33,7 +33,7 @@ const medicineTypeColorMap: Record<string, string> = {
 const orderedUiData = computed(() =>
   demo.value || dev.value
     ? demoFoodData
-    : uiData.value.toSorted((a, b) => getOrder(a) - getOrder(b)),
+    : uiData.value.slice().sort((a, b) => getOrder(a) - getOrder(b)),
 );
 const display = computed(
   () =>

@@ -43,6 +43,9 @@ export default defineConfig({
   },
   lint: {
     ignorePatterns: ["dist/**", "node_modules/**", "cactbot/**"],
+    rules: {
+      "unicorn/prefer-array-to-sorted": "off",
+    },
     options: {
       typeAware: true,
       typeCheck: true,
