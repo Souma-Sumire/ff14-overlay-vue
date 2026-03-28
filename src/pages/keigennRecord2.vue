@@ -14,7 +14,17 @@ import type { Player } from "@/types/partyPlayer";
 import { ZoomIn, ZoomOut } from "@element-plus/icons-vue";
 import { useDark } from "@vueuse/core";
 // TODO: 死亡回放：治疗栏目的状态追踪治疗有关的buff
-import { markRaw, nextTick, ref, shallowReactive, shallowRef, triggerRef } from "vue";
+import {
+  computed,
+  markRaw,
+  nextTick,
+  onUnmounted,
+  ref,
+  shallowReactive,
+  shallowRef,
+  triggerRef,
+  watchEffect,
+} from "vue";
 import { useDev } from "@/composables/useDev";
 import { useIndexedDB } from "@/composables/useIndexedDB";
 import { getCactbotLocaleMessage } from "@/composables/useLang";
@@ -60,6 +70,61 @@ const minimize = ref(userOptions.minimize);
 const actionKey = userOptions.actionCN ? "actionCN" : ("action" as const);
 
 const loading = ref(false);
+
+const SCALE_CSS_VAR = "--keigenn-record2-scale";
+
+const safeScale = computed(() => {
+  const scaleValue = Number(userOptions.scale ?? 1);
+  if (!Number.isFinite(scaleValue) || scaleValue <= 0) return 1;
+  return scaleValue;
+});
+
+watchEffect(() => {
+  document.documentElement.style.setProperty(SCALE_CSS_VAR, safeScale.value.toString());
+});
+
+onUnmounted(() => {
+  document.documentElement.style.removeProperty(SCALE_CSS_VAR);
+  combatSelectPopperObserver?.disconnect();
+});
+
+let combatSelectPopperObserver: MutationObserver | null = null;
+let applyingCombatSelectScale = false;
+
+function applyCombatSelectScale(popper: HTMLElement) {
+  if (applyingCombatSelectScale) return;
+  applyingCombatSelectScale = true;
+  const scaleValue = safeScale.value;
+  popper.style.transformOrigin = "top left";
+  const baseTransform = popper.style.transform || "";
+  const withoutScale = baseTransform.replace(/scale\([^)]+\)/g, "").trim();
+  const nextTransform = `${withoutScale} scale(${scaleValue})`.trim();
+  popper.style.transform = nextTransform;
+  requestAnimationFrame(() => {
+    applyingCombatSelectScale = false;
+  });
+}
+
+function handleCombatSelectVisible(visible: boolean) {
+  if (!visible) {
+    combatSelectPopperObserver?.disconnect();
+    combatSelectPopperObserver = null;
+    return;
+  }
+  nextTick(() => {
+    const popper = document.querySelector(".combat-select-popup");
+    if (!popper) return;
+    const popperEl = popper as HTMLElement;
+    applyCombatSelectScale(popperEl);
+    combatSelectPopperObserver?.disconnect();
+    combatSelectPopperObserver = new MutationObserver(() => applyCombatSelectScale(popperEl));
+    combatSelectPopperObserver.observe(popperEl, {
+      attributes: true,
+      attributeFilter: ["style"],
+    });
+  });
+}
+
 
 interface PlayerSP extends Player {
   timestamp: number;
@@ -1251,39 +1316,42 @@ function formatTimestamp(ms: number): string {
     :style="{ '--scale': userOptions.scale, '--opacity': userOptions.opacity }"
     @contextmenu.prevent
   >
-    <header>
-      <div class="header-select">
-        <el-select
-          v-show="!minimize"
-          v-model="select"
+    <div class="wrapper-scale">
+      <header>
+        <div class="header-select">
+          <el-select
+            v-show="!minimize"
+            v-model="select"
           size="small"
           class="combat-select"
           :class="store.isBrowser ? 'browser' : 'act'"
           popper-class="combat-select-popup"
           :offset="0"
           :show-arrow="false"
+          @visible-change="handleCombatSelectVisible"
         >
-          <el-option
-            v-for="i in data.length"
-            :key="`${data[i - 1]!.key}-${data[i - 1]!.duration}-${data[i - 1]!.zoneName}`"
-            :value="i - 1"
-            :label="`${data[i - 1]!.zoneName}${data[i - 1]!.zoneName === '' ? '' : ` - [${data[i - 1]!.duration}] ${formatTimestamp(data[i - 1]!.timestamp)}`}`"
-          />
-        </el-select>
-      </div>
-      <el-button
-        v-if="!store.isBrowser"
-        class="minimize"
-        :class="minimize ? 'in-minimize' : 'not-minimize'"
-        :icon="minimize ? ZoomIn : ZoomOut"
-        circle
-        :style="{ opacity: minimize ? 0.5 : 1 }"
-        @click="clickMinimize"
-      />
-    </header>
-    <main v-show="!minimize" style="height: 100%">
-      <KeigennRecord2Table ref="tableRef" :rows="data[select]!.table" :action-key="actionKey" />
-    </main>
+            <el-option
+              v-for="i in data.length"
+              :key="`${data[i - 1]!.key}-${data[i - 1]!.duration}-${data[i - 1]!.zoneName}`"
+              :value="i - 1"
+              :label="`${data[i - 1]!.zoneName}${data[i - 1]!.zoneName === '' ? '' : ` - [${data[i - 1]!.duration}] ${formatTimestamp(data[i - 1]!.timestamp)}`}`"
+            />
+          </el-select>
+        </div>
+        <el-button
+          v-if="!store.isBrowser"
+          class="minimize"
+          :class="minimize ? 'in-minimize' : 'not-minimize'"
+          :icon="minimize ? ZoomIn : ZoomOut"
+          circle
+          :style="{ opacity: minimize ? 0.5 : 1 }"
+          @click="clickMinimize"
+        />
+      </header>
+      <main v-show="!minimize" style="height: 100%">
+        <KeigennRecord2Table ref="tableRef" :rows="data[select]!.table" :action-key="actionKey" />
+      </main>
+    </div>
   </div>
   <div v-if="store.isBrowser || dev" class="testLog">
     <el-button v-if="dev" @click="test"> 测试 </el-button>
@@ -1345,12 +1413,20 @@ main {
 }
 
 .wrapper {
-  zoom: var(--scale, 1);
   padding: 0;
   margin: 0;
   height: 100vh;
   width: 100%;
   position: relative;
+  overflow: hidden;
+}
+
+.wrapper-scale {
+  width: calc(100% / var(--scale, 1));
+  height: calc(100% / var(--scale, 1));
+  position: relative;
+  transform: scale(var(--scale, 1));
+  transform-origin: top left;
 }
 
 .minimize {
@@ -1446,7 +1522,9 @@ main {
 
 :deep(.combat-select-popup) {
   left: 0 !important;
+  overflow: visible;
 }
+
 
 .testLog {
   position: fixed;

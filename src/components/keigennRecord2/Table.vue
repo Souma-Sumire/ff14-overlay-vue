@@ -8,7 +8,7 @@ import type {
 } from "element-plus";
 import type { RowVO } from "@/types/keigennRecord2";
 import { Clock } from "@element-plus/icons-vue";
-import { onClickOutside, useWindowSize } from "@vueuse/core";
+import { onClickOutside, useElementSize } from "@vueuse/core";
 import { ElIcon, ElMessage } from "element-plus";
 import { computed, h } from "vue";
 import { useLang } from "@/composables/useLang";
@@ -229,7 +229,7 @@ function handleScroll(e: WheelEvent) {
 }
 
 const tableContainer = useTemplateRef<HTMLElement>("tableContainer");
-const { width: tableWidth, height: tableHeight } = useWindowSize();
+const { width: tableWidth, height: tableHeight } = useElementSize(tableContainer);
 
 onMounted(() => {
   tableContainer.value?.addEventListener("wheel", handleScroll, { passive: true });
