@@ -735,6 +735,7 @@ defineExpose({
           'left',
         ]"
       >
+        <div class="keigenn-popover-scale" :style="{ '--popover-scale': userOptions.scale }">
         <template v-if="hoveredRow && tooltipMode === 'amount'">
           <div class="row-info">
             <div class="info-line">{{ t("keigennRecord.source") }}: {{ hoveredRow.source }}</div>
@@ -870,6 +871,7 @@ defineExpose({
             </div>
           </div>
         </template>
+        </div>
       </el-popover>
     </div>
   </div>
@@ -1124,14 +1126,25 @@ defineExpose({
 
 <style lang="scss">
 body .el-popover.keigenn-global-popover {
-  padding: 4px 6px;
-  background: rgb(29, 30, 31);
-  border: 1px solid #444;
-  color: rgb(207, 211, 220);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  font-size: 12px;
-  line-height: 1.2;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
   pointer-events: none;
+  overflow: visible;
+
+  .keigenn-popover-scale {
+    display: inline-block;
+    zoom: var(--popover-scale, 1);
+    transform-origin: top left;
+    padding: 4px 6px;
+    background: rgb(29, 30, 31);
+    border: 1px solid #444;
+    color: rgb(207, 211, 220);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    font-size: 12px;
+    line-height: 1.2;
+  }
 
   .row-info {
     padding: 0;
