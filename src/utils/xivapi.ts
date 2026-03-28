@@ -21,6 +21,42 @@ const CACHE_VERSION_STORAGE_KEY = "xivapi-cache-version";
 const PRIMARY_SITE_STORAGE_KEY = "xivapi-primary-site";
 const ACTION_META_CACHE_STORE = "xivapi-action-meta-cache";
 const ACTION_SEARCH_CACHE_STORE = "xivapi-action-search-cache";
+const HIGH_RES_SCALE_THRESHOLD = 2;
+const HIGH_RES_SUFFIX = "_hr1";
+
+function getScaleFromUrl(): number {
+  if (typeof window === "undefined") return 1;
+  const queries: string[] = [];
+  const hash = window.location.hash || "";
+  const hashQueryIndex = hash.indexOf("?");
+  if (hashQueryIndex >= 0 && hashQueryIndex < hash.length - 1) {
+    queries.push(hash.slice(hashQueryIndex + 1));
+  }
+  const search = window.location.search?.replace(/^\?/, "");
+  if (search) queries.push(search);
+  for (const query of queries) {
+    const params = new URLSearchParams(query);
+    const scaleRaw = params.get("scale");
+    if (scaleRaw === null) continue;
+    const scaleValue = Number(scaleRaw);
+    if (Number.isFinite(scaleValue)) return scaleValue;
+  }
+  return 1;
+}
+
+function isHighResEnabled(): boolean {
+  return getScaleFromUrl() >= HIGH_RES_SCALE_THRESHOLD;
+}
+
+function appendHighResSuffix(path: string): string {
+  if (!isHighResEnabled()) return path;
+  if (path.endsWith(`${HIGH_RES_SUFFIX}.png`)) return path;
+  return path.replace(/\.png$/, `${HIGH_RES_SUFFIX}.png`);
+}
+
+function stripHighResSuffix(path: string): string {
+  return path.replace(new RegExp(`${HIGH_RES_SUFFIX}\\.png$`), ".png");
+}
 
 function isSiteName(value: unknown): value is SiteName {
   return typeof value === "string" && value in SITE_HOST;
@@ -93,24 +129,24 @@ function rerouteFailedImage(img: HTMLImageElement, failedUrl: URL): void {
 export function getIconSrcById(iconId: number): string {
   if (!Number.isFinite(iconId) || iconId <= 0) return EMPTY_IMAGE;
   const full = completeIcon(Math.trunc(iconId));
-  // const suffix = highRes ? '_hr1' : ''
-  return `//${SITE_HOST[primarySite].imgHost}/i/${full}.png`;
+  const basePath = `//${SITE_HOST[primarySite].imgHost}/i/${full}.png`;
+  return appendHighResSuffix(basePath);
 }
 
 export function getIconSrcByFullIcon(fullIcon: string): string {
   if (!fullIcon) return EMPTY_IMAGE;
-  // const suffix = highRes ? '_hr1' : ''
-  return `//${SITE_HOST[primarySite].imgHost}/i/${fullIcon}.png`;
+  const basePath = `//${SITE_HOST[primarySite].imgHost}/i/${fullIcon}.png`;
+  return appendHighResSuffix(basePath);
 }
 
 export function getIconSrcByPath(iconPath: string, itemIsHQ = false): string {
   if (!iconPath) return EMPTY_IMAGE;
   if (/^https?:\/\//.test(iconPath)) return iconPath;
-  // const suffix = highRes ? '_hr1' : ''
+  const suffix = isHighResEnabled() ? HIGH_RES_SUFFIX : "";
   const baseUrl = `//${SITE_HOST[primarySite].imgHost}`;
   return `${baseUrl}${iconPath}`.replace(
     /(\d{6})\.png$/,
-    (_m, p1) => `${itemIsHQ ? "hq/" : ""}${p1}.png`,
+    (_m, p1) => `${itemIsHQ ? "hq/" : ""}${p1}${suffix}.png`,
   );
 }
 
@@ -119,7 +155,15 @@ export function rerouteImgSrc(src: string): string {
   try {
     const url = new URL(src, window.location.href);
     const site = resolveSiteByHost(url.hostname);
-    if (site && site !== primarySite) return `//${SITE_HOST[primarySite].imgHost}${url.pathname}`;
+    let nextPath = url.pathname;
+    if (isHighResEnabled() && nextPath.endsWith(".png")) {
+      nextPath = appendHighResSuffix(nextPath);
+    }
+    if (site && site !== primarySite) return `//${SITE_HOST[primarySite].imgHost}${nextPath}`;
+    if (nextPath !== url.pathname) {
+      url.pathname = nextPath;
+      return url.toString();
+    }
   } catch {}
   return src;
 }
@@ -318,6 +362,13 @@ export function handleImgError(event: Event): void {
   try {
     const errorUrl = new URL(target.src, window.location.href);
     isLocalFallback = errorUrl.origin === window.location.origin;
+    if (errorUrl.pathname.endsWith(`${HIGH_RES_SUFFIX}.png`) && !target.dataset.hrFallback) {
+      target.dataset.hrFallback = "1";
+      const normalUrl = new URL(errorUrl.toString());
+      normalUrl.pathname = stripHighResSuffix(errorUrl.pathname);
+      target.src = normalUrl.toString();
+      return;
+    }
   } catch {
     //
   }
