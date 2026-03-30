@@ -37,6 +37,7 @@ export interface RowVO {
   shield: string;
   povId: string;
   reduction: number;
+  isPvP: boolean;
   keySkills: KeySkillSnapshot[];
   preCalculated: {
     reductionColor: string;

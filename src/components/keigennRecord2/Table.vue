@@ -522,7 +522,7 @@ const columns = computed<Column[]>(() => [
             zIndex: 10,
           },
         },
-        rowData.type === "death"
+        rowData.type === "death" || props.rows[0]?.isPvP
           ? undefined
           : h(
               "div",

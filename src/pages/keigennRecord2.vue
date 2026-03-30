@@ -626,6 +626,7 @@ function handleLine(line: string) {
               shield,
               povId,
               reduction,
+              isPvP,
               keySkills: getKeySkillSnapshot(timestamp, targetId),
             }),
           );
@@ -689,6 +690,7 @@ function handleLine(line: string) {
             shield: "0",
             povId,
             reduction: 0,
+            isPvP,
             keySkills: getKeySkillSnapshot(timestamp, targetId!),
           }),
         );
@@ -889,6 +891,7 @@ function handleLine(line: string) {
             shield: shieldData[targetId] ?? "0",
             povId,
             reduction: 0,
+            isPvP,
             keySkills: [],
           }),
         );
@@ -1300,6 +1303,7 @@ function test() {
       shield: "10",
       povId: "test-id",
       reduction: 0.1,
+      isPvP,
       keySkills: [],
     }),
   );
