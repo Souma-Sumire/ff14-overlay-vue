@@ -28,6 +28,7 @@ import {
 import { useDev } from "@/composables/useDev";
 import { useIndexedDB } from "@/composables/useIndexedDB";
 import { getCactbotLocaleMessage } from "@/composables/useLang";
+import { getZoneType } from "@/composables/useZone";
 import { JobResourceManager } from "@/modules/jobResourceTracker";
 import { GLOBAL_SKILL_MAX_LEVEL } from "@/resources/globalSkills";
 import { getJobResourceActionCost } from "@/resources/jobResourceActionCost";
@@ -154,6 +155,7 @@ let partyEventParty: PlayerSP[] = [];
 let rsvData: Record<number, string> = {};
 let combatTimeStamp = 0;
 let zoneName = "";
+let isPvP = false;
 let rowCounter = 0;
 let pendingRows: RowVO[] = [];
 let batchTimer: number | null = null;
@@ -523,7 +525,7 @@ function handleLine(line: string) {
         const isDamage =
           ability.isAttack &&
           ability.amount >= 0 &&
-          sourceId.startsWith("4") &&
+          (isPvP || sourceId.startsWith("4")) &&
           targetId.startsWith("1");
 
         if (isHeal || isDamage) {
@@ -755,6 +757,8 @@ function handleLine(line: string) {
           const useLangZoneName = getCactbotLocaleMessage(ZoneInfo[zoneId]?.name);
           if (useLangZoneName && useLangZoneName !== "Unknown") zoneName = useLangZoneName;
         }
+        const zoneInfo = ZoneInfo[zoneId];
+        isPvP = !!zoneInfo && getZoneType(zoneInfo) === "Pvp";
         cooldownTracker = {};
         resourceManager.clear();
         stopCombat(new Date(splitLine[logDefinitions.ChangeZone.fields.timestamp]!).getTime());
