@@ -28,6 +28,7 @@ import {
 import { useDev } from "@/composables/useDev";
 import { useIndexedDB } from "@/composables/useIndexedDB";
 import { getCactbotLocaleMessage } from "@/composables/useLang";
+import { getZoneType } from "@/composables/useZone";
 import { JobResourceManager } from "@/modules/jobResourceTracker";
 import { GLOBAL_SKILL_MAX_LEVEL } from "@/resources/globalSkills";
 import { getJobResourceActionCost } from "@/resources/jobResourceActionCost";
@@ -125,7 +126,6 @@ function handleCombatSelectVisible(visible: boolean) {
   });
 }
 
-
 interface PlayerSP extends Player {
   timestamp: number;
 }
@@ -154,6 +154,8 @@ let partyEventParty: PlayerSP[] = [];
 let rsvData: Record<number, string> = {};
 let combatTimeStamp = 0;
 let zoneName = "";
+// 不能用useZone的zoneType,因为需要全日志驱动。而不依赖ACT事件。
+let isPvP = false;
 let rowCounter = 0;
 let pendingRows: RowVO[] = [];
 let batchTimer: number | null = null;
@@ -436,6 +438,8 @@ function handleLine(line: string) {
             name: vulnerable.name,
             isFriendly: vulnerable.isFriendly,
           };
+        } else if (isPvP && keigenn && count > 1 && count <= 16) {
+          keigenn.fullIcon = stackUrl(keigenn.fullIcon, count);
         }
         const duration = splitLine[logDefinitions.GainsEffect.fields.duration]!;
         const source = splitLine[logDefinitions.GainsEffect.fields.source]!;
@@ -523,7 +527,7 @@ function handleLine(line: string) {
         const isDamage =
           ability.isAttack &&
           ability.amount >= 0 &&
-          sourceId.startsWith("4") &&
+          (isPvP || sourceId.startsWith("4")) &&
           targetId.startsWith("1");
 
         if (isHeal || isDamage) {
@@ -755,6 +759,8 @@ function handleLine(line: string) {
           const useLangZoneName = getCactbotLocaleMessage(ZoneInfo[zoneId]?.name);
           if (useLangZoneName && useLangZoneName !== "Unknown") zoneName = useLangZoneName;
         }
+        const zoneInfo = ZoneInfo[zoneId];
+        isPvP = !!zoneInfo && getZoneType(zoneInfo) === "Pvp";
         cooldownTracker = {};
         resourceManager.clear();
         stopCombat(new Date(splitLine[logDefinitions.ChangeZone.fields.timestamp]!).getTime());
@@ -1322,14 +1328,14 @@ function formatTimestamp(ms: number): string {
           <el-select
             v-show="!minimize"
             v-model="select"
-          size="small"
-          class="combat-select"
-          :class="store.isBrowser ? 'browser' : 'act'"
-          popper-class="combat-select-popup"
-          :offset="0"
-          :show-arrow="false"
-          @visible-change="handleCombatSelectVisible"
-        >
+            size="small"
+            class="combat-select"
+            :class="store.isBrowser ? 'browser' : 'act'"
+            popper-class="combat-select-popup"
+            :offset="0"
+            :show-arrow="false"
+            @visible-change="handleCombatSelectVisible"
+          >
             <el-option
               v-for="i in data.length"
               :key="`${data[i - 1]!.key}-${data[i - 1]!.duration}-${data[i - 1]!.zoneName}`"
@@ -1524,7 +1530,6 @@ main {
   left: 0 !important;
   overflow: visible;
 }
-
 
 .testLog {
   position: fixed;
