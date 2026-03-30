@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  vite: npm:@voidzero-dev/vite-plus-core@^0.1.12
+  vite: npm:@voidzero-dev/vite-plus-core@^0.1.14
 
 importers:
 
