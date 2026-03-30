@@ -12,7 +12,10 @@ for (const keigenn of keigenns) {
 }
 
 export function getKeigenn(decId: string): Keigenn | undefined {
-  return keigennMap.get(decId);
+  const keigenn = keigennMap.get(decId);
+  // 浅拷贝一次，避免修改原对象的属性。
+  if (!keigenn) return undefined;
+  return { ...keigenn };
 }
 
 export function multiplierEffect(

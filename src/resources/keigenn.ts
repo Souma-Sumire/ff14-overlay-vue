@@ -875,7 +875,6 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     name: "连续剑伤",
     id: 3053,
     type: "multiplier",
-    // todo 叠层实现
     performance: { physics: 1.05, magic: 1.05, darkness: 1 },
     isFriendly: true,
   },
