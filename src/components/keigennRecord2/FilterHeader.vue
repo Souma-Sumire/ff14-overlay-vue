@@ -38,3 +38,14 @@ function handleChange(value: string) {
     </ElSelect>
   </div>
 </template>
+
+<style lang="scss">
+.keigenn-header-select-popper {
+  margin-top: 0 !important;
+  inset-block-start: calc(24px * var(--keigenn-record2-scale, 1)) !important;
+
+  .el-select-dropdown {
+    zoom: var(--keigenn-record2-scale, 1) !important;
+  }
+}
+</style>

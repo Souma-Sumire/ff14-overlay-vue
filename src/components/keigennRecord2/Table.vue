@@ -1342,11 +1342,6 @@ body .el-popover.keigenn-global-popover {
 </style>
 
 <style lang="scss">
-.keigenn-header-select-popper {
-  margin-top: 0 !important;
-  inset-block-start: 24px !important;
-}
-
 .death-recap-popover {
   display: table;
   width: auto; /* Allow table to shrink/grow */
