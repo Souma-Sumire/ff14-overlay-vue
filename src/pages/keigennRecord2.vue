@@ -596,7 +596,10 @@ function handleLine(line: string) {
             let reductionMultiplier = 1;
             for (const k of keigenns) {
               if (k.type !== "absorbed") {
-                reductionMultiplier *= k.performance[type as keyof PerformanceType] ?? 1;
+                const performance = k.performance[type as keyof PerformanceType] ?? 1;
+                const stackCount = k.count >= 1 && k.count <= 16 ? k.count : 1;
+                const stackedPerformance = 1 - (1 - performance) * stackCount;
+                reductionMultiplier *= stackedPerformance;
               }
             }
             reduction = 1 - reductionMultiplier * flagMultiplier;
