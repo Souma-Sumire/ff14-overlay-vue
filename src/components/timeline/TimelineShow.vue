@@ -229,13 +229,14 @@ $trasDuration: 1;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding-right: 12px;
       font-size: calc(calc(var(--font-size, $fontSize) * 1px) * var(--normal-scale, $normalScale));
       // font-size: calc(calc(var(--font-size, $fontSize) * 1px));
       > span {
         display: flex;
         align-items: center;
         overflow: auto;
-        padding: 0 1px;
+        padding: 0 2px;
         // &:first-of-type {
         //   flex: 1;
         // }
