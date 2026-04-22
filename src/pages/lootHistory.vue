@@ -3564,27 +3564,12 @@ const activeStep = computed(() => {
                       </div>
                       <div class="compact-grid">
                         <RoleSetupItem
-                          v-for="role in ['MT', 'ST']"
+                          v-for="role in ['MT', 'ST', 'H1', 'H2']"
                           :key="role"
                           v-model="playerRoles[role]"
                           allow-create
                           :role="role"
-                          variant="card"
-                          :all-players="allPlayers"
-                          :get-display-name="getDisplayName"
-                          :get-player-role="getPlayerRole"
-                          :assigned-players="assignedPlayers"
-                          @change="(val: string) => handleRolePlayerChange(val, role)"
-                        />
-                        <div class="grid-spacer" />
-                        <div class="grid-spacer" />
-                        <RoleSetupItem
-                          v-for="role in ['H1', 'H2']"
-                          :key="role"
-                          v-model="playerRoles[role]"
-                          allow-create
-                          :role="role"
-                          variant="card"
+                          variant="row"
                           :all-players="allPlayers"
                           :get-display-name="getDisplayName"
                           :get-player-role="getPlayerRole"
@@ -3602,7 +3587,7 @@ const activeStep = computed(() => {
                           v-model="playerRoles[role]"
                           allow-create
                           :role="role"
-                          variant="card"
+                          variant="row"
                           :all-players="allPlayers"
                           :get-display-name="getDisplayName"
                           :get-player-role="getPlayerRole"
@@ -3630,13 +3615,14 @@ const activeStep = computed(() => {
                         </div>
                       </template>
                       <ElSelect
-                        placeholder="添加离队..."
+                        placeholder="添加已离队队员"
                         filterable
                         allow-create
                         default-first-option
                         size="small"
                         value=""
                         class="special-add-select-compact"
+                        style="width: 160px"
                         @change="addSpecialRole($event)"
                       >
                         <ElOption
@@ -9653,13 +9639,15 @@ html.dark {
     width: 100%;
   }
 
-  .role-groups-compact {
-    display: flex;
-    flex-direction: column;
-    gap: 32px;
-    margin-bottom: 32px;
-    align-items: center;
-  }
+    .role-groups-compact {
+      width: 100%;
+      max-width: 520px; /* 控制两列之间的距离 */
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      margin: 10px auto 32px;
+      align-items: flex-start;
+    }
 
   .role-col {
     display: flex;
@@ -9677,7 +9665,7 @@ html.dark {
       color: #94a3b8;
       text-transform: uppercase;
       letter-spacing: 1px;
-      padding-left: 2px;
+      padding-left: 4px;
 
       .dot {
         width: 6px;
@@ -9702,14 +9690,11 @@ html.dark {
     }
 
     .compact-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-
-    .grid-spacer {
-      height: 0;
-      display: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      padding: 0 4px;
     }
   }
 
@@ -9771,7 +9756,7 @@ html.dark {
       }
 
       .special-add-select-compact {
-        width: 140px;
+        width: 160px;
 
         :deep(.el-input__wrapper) {
           background-color: transparent !important;
@@ -9967,19 +9952,6 @@ html.dark {
   padding: 0;
 }
 
-.role-setup-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.role-setup-label {
-  flex-shrink: 0;
-  width: 24px;
-  display: flex;
-  justify-content: center;
-  transform: scale(0.85);
-}
 
 .role-divider {
   margin: 10px 0 6px;

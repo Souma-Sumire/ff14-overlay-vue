@@ -102,11 +102,80 @@ function handleChange(val: string) {
 </template>
 
 <style lang="scss">
+.role-setup-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.is-variant-card {
+    display: contents; /* 让子元素直接参与父网格 */
+  }
+
+  &.is-variant-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 2px 4px;
+    width: 100%;
+    
+    .item-header {
+      flex-shrink: 0;
+      width: 32px;
+      display: flex;
+      justify-content: center;
+    }
+    
+    .item-body {
+      flex: 0 1 180px; /* 固定基础宽度为180px，允许缩小 */
+      min-width: 0;
+    }
+  }
+
+  .item-body {
+    .role-select {
+      width: 100% !important;
+
+      :deep(.el-input__wrapper) {
+        box-shadow: none !important;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        padding: 0 8px;
+        height: 30px;
+        transition: border-color 0.1s;
+        
+        &:hover {
+          border-color: #cbd5e1;
+        }
+        
+        &.is-focus {
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 1px #3b82f6 inset !important;
+        }
+      }
+    }
+  }
+}
+
 .role-setup-select-popper {
   max-width: calc(100vw - 24px);
 }
 
 .role-setup-select-popper .el-select-dropdown__wrap {
   max-height: 240px;
+}
+
+html.dark {
+  .role-setup-item {
+    &.is-variant-row .item-body .role-select :deep(.el-input__wrapper) {
+      background-color: #0f172a !important;
+      border-color: #334155;
+      
+      &:hover {
+        border-color: #475569;
+      }
+    }
+  }
 }
 </style>
