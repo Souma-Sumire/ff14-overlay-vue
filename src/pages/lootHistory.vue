@@ -3322,6 +3322,29 @@ async function confirmClear() {
   ElMessage.success({ message: "所选数据已清空", showClose: true });
 }
 
+async function handleHardReset() {
+  try {
+    await ElMessageBox.confirm("确定要重置所有本地数据和配置吗？此操作不可撤销。", "警告", {
+      confirmButtonText: "确定重置",
+      cancelButtonText: "取消",
+      type: "warning",
+    });
+    // 强制勾选所有清空项
+    clearForm.value = {
+      loot: true,
+      bis: true,
+      roles: true,
+      mapping: true,
+      weekCorrection: true,
+      playerCorrection: true,
+    };
+    await confirmClear();
+    location.reload(); // 重置后刷新页面以确保状态绝对纯净
+  } catch {
+    // cancelled
+  }
+}
+
 async function handleWinnerChange(record: LootRecord, newPlayer: string) {
   if (!newPlayer) return;
   pendingWinnerChange.value = { record, newPlayer };
@@ -3488,6 +3511,9 @@ const activeStep = computed(() => {
                     <div class="secondary-actions">
                       <el-button plain class="wizard-btn" @click="importInputRef?.click()">
                         <el-icon><Upload /></el-icon> 从备份文件导入
+                      </el-button>
+                      <el-button plain link class="reset-link" @click="handleHardReset">
+                        <el-icon><RefreshRight /></el-icon> 重置一切
                       </el-button>
                     </div>
                   </div>
@@ -10043,5 +10069,29 @@ html.dark {
 
 .wizard-content {
   height: 100%;
+}
+
+.reset-link {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #94a3b8 !important;
+  &:hover {
+    color: #ef4444 !important;
+  }
+}
+
+.reset-link-small {
+  font-size: 11px;
+  color: #c0c4cc !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  &:hover {
+    color: #f56c6c !important;
+  }
+}
+
+.title-main {
+  flex: 1;
 }
 </style>
