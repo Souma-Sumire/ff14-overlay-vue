@@ -2080,6 +2080,11 @@ async function syncLogFiles(userInitiated = false) {
     if (newRecordCount > 0) {
       existingKeys.value = localKeys;
 
+      const rawRecords = await dbRecords.getAll();
+      lootRecords.value = rawRecords
+        .map((r) => ({ ...r, timestamp: new Date(r.timestamp) }))
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
       handlePotentialDuplicatesWithIncomingMap(incomingMap, "sync");
 
       if (!isFirstSync) {
@@ -2108,7 +2113,9 @@ async function syncLogFiles(userInitiated = false) {
       }, 800);
     }
 
-    logPath.value = currentHandle.value.name;
+    if (currentHandle.value) {
+      logPath.value = currentHandle.value.name;
+    }
   } catch (err: any) {
     console.error("Sync error:", err.message);
   } finally {
