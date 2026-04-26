@@ -3235,7 +3235,7 @@ async function confirmClear() {
     lootRecords.value = [];
     existingKeys.value = new Set();
     blacklistedKeys.value = new Set(); // 新增：重置本地黑名单
-    
+
     // 清空与记录相关的缓存和 UI 配置
     processedFiles.value = {};
     itemVisibility.value = {};
@@ -3248,14 +3248,14 @@ async function confirmClear() {
     logPath.value = ""; // 新增：清空本地日志路径记录
     lastSyncTime.value = "";
     isSyncNeeded.value = false; // 新增：重置同步状态
-    
+
     // 重置搜索与过滤状态
     itemSearchKeyword.value = "";
     winnerSearchPlayer.value = "";
     viewMode.value = "summary";
     showOnlyRole.value = false;
     isOnlyRaidMembersActive.value = false;
-    
+
     // 重置同步时间范围
     syncStartDate.value = GAME_VERSION_CONFIG.RAID_START_TIME;
     syncEndDate.value = null;
@@ -3284,7 +3284,7 @@ async function confirmClear() {
     tasks.push(dbConfig.remove("syncEndDate"));
     tasks.push(dbConfig.remove("itemSearchKeyword"));
     tasks.push(dbConfig.remove("winnerSearchPlayer"));
-    
+
     // 如果文件句柄也保存在 dbHandle 中，删除之
     try {
       tasks.push(dbHandle.remove("current-log-dir"));
@@ -9691,15 +9691,15 @@ html.dark {
     width: 100%;
   }
 
-    .role-groups-compact {
-      width: 100%;
-      max-width: 520px; /* 控制两列之间的距离 */
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 60px;
-      margin: 10px auto 32px;
-      align-items: flex-start;
-    }
+  .role-groups-compact {
+    width: 100%;
+    max-width: 520px; /* 控制两列之间的距离 */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    margin: 10px auto 32px;
+    align-items: flex-start;
+  }
 
   .role-col {
     display: flex;
@@ -10003,7 +10003,6 @@ html.dark {
   gap: 4px 8px;
   padding: 0;
 }
-
 
 .role-divider {
   margin: 10px 0 6px;

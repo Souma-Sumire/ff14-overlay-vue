@@ -119,14 +119,14 @@ function handleChange(val: string) {
     gap: 12px;
     padding: 2px 4px;
     width: 100%;
-    
+
     .item-header {
       flex-shrink: 0;
       width: 32px;
       display: flex;
       justify-content: center;
     }
-    
+
     .item-body {
       flex: 0 1 180px; /* 固定基础宽度为180px，允许缩小 */
       min-width: 0;
@@ -144,11 +144,11 @@ function handleChange(val: string) {
         padding: 0 8px;
         height: 30px;
         transition: border-color 0.1s;
-        
+
         &:hover {
           border-color: #cbd5e1;
         }
-        
+
         &.is-focus {
           border-color: #3b82f6;
           box-shadow: 0 0 0 1px #3b82f6 inset !important;
@@ -171,7 +171,7 @@ html.dark {
     &.is-variant-row .item-body .role-select :deep(.el-input__wrapper) {
       background-color: #0f172a !important;
       border-color: #334155;
-      
+
       &:hover {
         border-color: #475569;
       }
