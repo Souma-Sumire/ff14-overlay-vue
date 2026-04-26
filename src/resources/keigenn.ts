@@ -263,6 +263,13 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     isFriendly: true,
   },
   {
+    name: "大星云",
+    id: 3838,
+    type: "multiplier",
+    performance: { physics: 0.6, magic: 0.6, darkness: 1 },
+    isFriendly: true,
+  },
+  {
     name: "光之心",
     id: 1839,
     type: "multiplier",
