@@ -23,6 +23,11 @@ const ACTION_META_CACHE_STORE = "xivapi-action-meta-cache";
 const ACTION_SEARCH_CACHE_STORE = "xivapi-action-search-cache";
 const HIGH_RES_SCALE_THRESHOLD = 2;
 const HIGH_RES_SUFFIX = "_hr1";
+const HTTPS_PROTOCOL = "https:";
+
+function buildHttpsOrigin(host: string): string {
+  return `${HTTPS_PROTOCOL}//${host}`;
+}
 
 function getScaleFromUrl(): number {
   if (typeof window === "undefined") return 1;
@@ -122,20 +127,20 @@ function rerouteFailedImage(img: HTMLImageElement, failedUrl: URL): void {
 
   const nextSite = getOtherSite(failedSite);
   img.dataset.tried = "1";
-  img.src = `//${SITE_HOST[nextSite].imgHost}${failedUrl.pathname}`;
+  img.src = `${buildHttpsOrigin(SITE_HOST[nextSite].imgHost)}${failedUrl.pathname}`;
   img.addEventListener("load", () => setPrimarySite(nextSite), { once: true });
 }
 
 export function getIconSrcById(iconId: number): string {
   if (!Number.isFinite(iconId) || iconId <= 0) return EMPTY_IMAGE;
   const full = completeIcon(Math.trunc(iconId));
-  const basePath = `//${SITE_HOST[primarySite].imgHost}/i/${full}.png`;
+  const basePath = `${buildHttpsOrigin(SITE_HOST[primarySite].imgHost)}/i/${full}.png`;
   return appendHighResSuffix(basePath);
 }
 
 export function getIconSrcByFullIcon(fullIcon: string): string {
   if (!fullIcon) return EMPTY_IMAGE;
-  const basePath = `//${SITE_HOST[primarySite].imgHost}/i/${fullIcon}.png`;
+  const basePath = `${buildHttpsOrigin(SITE_HOST[primarySite].imgHost)}/i/${fullIcon}.png`;
   return appendHighResSuffix(basePath);
 }
 
@@ -143,7 +148,7 @@ export function getIconSrcByPath(iconPath: string, itemIsHQ = false): string {
   if (!iconPath) return EMPTY_IMAGE;
   if (/^https?:\/\//.test(iconPath)) return iconPath;
   const suffix = isHighResEnabled() ? HIGH_RES_SUFFIX : "";
-  const baseUrl = `//${SITE_HOST[primarySite].imgHost}`;
+  const baseUrl = buildHttpsOrigin(SITE_HOST[primarySite].imgHost);
   return `${baseUrl}${iconPath}`.replace(
     /(\d{6})\.png$/,
     (_m, p1) => `${itemIsHQ ? "hq/" : ""}${p1}${suffix}.png`,
@@ -159,7 +164,8 @@ export function rerouteImgSrc(src: string): string {
     if (isHighResEnabled() && nextPath.endsWith(".png")) {
       nextPath = appendHighResSuffix(nextPath);
     }
-    if (site && site !== primarySite) return `//${SITE_HOST[primarySite].imgHost}${nextPath}`;
+    if (site && site !== primarySite)
+      return `${buildHttpsOrigin(SITE_HOST[primarySite].imgHost)}${nextPath}`;
     if (nextPath !== url.pathname) {
       url.pathname = nextPath;
       return url.toString();
@@ -192,7 +198,7 @@ async function requestWithFallback(path: string): Promise<any> {
     const sites: SiteName[] = [primarySite, getOtherSite(primarySite)];
     for (const siteName of sites) {
       // 构建完整 URL
-      const baseUrl = `//${SITE_HOST[siteName].host}/api`;
+      const baseUrl = `${buildHttpsOrigin(SITE_HOST[siteName].host)}/api`;
       const urlObj = new URL(
         `${baseUrl}${path.startsWith("/") ? "" : "/"}${path}`,
         window.location.href,
@@ -379,11 +385,11 @@ export function handleImgError(event: Event): void {
   }
 
   if (target.src.includes("pictomancer.png")) {
-    target.src = "//souma.diemoe.net/resources/img/pictomancer.png";
+    target.src = "https://souma.diemoe.net/resources/img/pictomancer.png";
     return;
   }
   if (target.src.includes("viper.png")) {
-    target.src = "//souma.diemoe.net/resources/img/viper.png";
+    target.src = "https://souma.diemoe.net/resources/img/viper.png";
     return;
   }
 
