@@ -6,6 +6,8 @@ import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
 import { onMounted } from "vue";
 import CommonActWrapper from "@/components/common/ActWrapper.vue";
 import { ElButton, ElContainer, ElHeader, ElMain, ElSlider } from "element-plus";
+import CastingMonitorHeader from "@/components/castingMonitor/Header.vue";
+import CastingMonitorMain from "@/components/castingMonitor/Main.vue";
 
 const castingMonitorStore = useCastingMonitorStore();
 const dev = useDev();

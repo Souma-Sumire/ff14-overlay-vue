@@ -16,6 +16,7 @@ import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
 import { useStorage } from "@vueuse/core";
 import CommonActWrapper from "@/components/common/ActWrapper.vue";
 import { ElIcon } from "element-plus";
+import TimelineTimelineShow from "@/components/timeline/TimelineShow.vue";
 
 const timelineStore = useTimelineStore();
 const timelinePageData = reactive({

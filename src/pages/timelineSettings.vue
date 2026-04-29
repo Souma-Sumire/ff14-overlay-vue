@@ -51,6 +51,9 @@ import {
   ElTableColumn,
   ElText,
 } from "element-plus";
+import TimelineFflogsImport from "@/components/timeline/FflogsImport.vue";
+import TimelineSettingsDialog from "@/components/timeline/SettingsDialog.vue";
+import TimelineTimelineShow from "@/components/timeline/TimelineShow.vue";
 
 const router = useRouter();
 const { wsConnected } = useWebSocket({ allowClose: true, addWsParam: true });

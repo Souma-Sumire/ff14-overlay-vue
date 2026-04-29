@@ -6,6 +6,7 @@ import { computed, ref, watchEffect } from "vue";
 import { useTimelineStore } from "@/store/timeline";
 import { ShowStyleConfigEnum, TimelineConfigEnum } from "@/types/timeline";
 import { ElButton, ElDialog, ElForm, ElSlider } from "element-plus";
+import TimelineTimelineShow from "@/components/timeline/TimelineShow.vue";
 
 interface Props {
   modelValue: boolean;
