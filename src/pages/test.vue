@@ -10,6 +10,7 @@ import type { Ref } from "vue";
 import { computed, ref } from "vue";
 import CommonLanguageSwitcher from "@/components/common/LanguageSwitcher.vue";
 import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
+import { ElButton, ElCard, ElCol, ElRow, ElTag } from "element-plus";
 
 const { t } = useLang();
 

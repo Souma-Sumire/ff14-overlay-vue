@@ -15,6 +15,7 @@ import {
 import { ZoneInfo } from "@/resources/zoneInfo";
 import { MARKER_MAP, parseUISave, xorCrypt } from "@/utils/uisaveParser";
 import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
+import { ElButton, ElCard, ElCheckbox, ElIcon, ElInputNumber, ElTag } from "element-plus";
 
 const { t } = useI18n();
 

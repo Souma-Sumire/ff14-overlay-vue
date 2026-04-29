@@ -19,6 +19,23 @@ import { useStorage } from "@vueuse/core";
 import CommonActWrapper from "@/components/common/ActWrapper.vue";
 import CommonLanguageSwitcher from "@/components/common/LanguageSwitcher.vue";
 import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
+import {
+  ElAlert,
+  ElButton,
+  ElCard,
+  ElCheckbox,
+  ElDescriptions,
+  ElDescriptionsItem,
+  ElDivider,
+  ElForm,
+  ElFormItem,
+  ElInput,
+  ElInputNumber,
+  ElMain,
+  ElSwitch,
+  ElTable,
+  ElTableColumn,
+} from "element-plus";
 
 const { t } = useLang();
 

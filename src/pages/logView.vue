@@ -8,6 +8,16 @@ import { useLogParser } from "@/composables/useLogParser";
 import logDefinitions from "../../cactbot/resources/netlog_defs";
 import { useStorage } from "@vueuse/core";
 import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
+import {
+  ElAutoResizer,
+  ElCheckbox,
+  ElDialog,
+  ElIcon,
+  ElInput,
+  ElOption,
+  ElSelect,
+  ElTableV2,
+} from "element-plus";
 
 // ─── Type-code → name mapping ───────────────────────────────────────────────
 const typeCodeNameMap = new Map<string, string>();

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ElTooltip } from "element-plus";
+
 interface SummaryItem {
   count: number;
   isBis?: boolean;

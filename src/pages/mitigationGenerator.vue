@@ -66,6 +66,21 @@ import { getMitigationGridColumnWidth, MITIGATION_GRID_WIDTH } from "@/utils/mit
 import Util from "@/utils/util";
 import { getIconSrcByPath } from "@/utils/xivapi";
 import { useDark, useToggle } from "@vueuse/core";
+import {
+  ElButton,
+  ElColorPicker,
+  ElDialog,
+  ElDropdown,
+  ElDropdownItem,
+  ElDropdownMenu,
+  ElIcon,
+  ElInput,
+  ElInputNumber,
+  ElPopover,
+  ElRadio,
+  ElRadioButton,
+  ElRadioGroup,
+} from "element-plus";
 
 const { parseFile, extractMechanics } = useLogParser();
 

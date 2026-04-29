@@ -7,6 +7,8 @@ import type { Ref } from "vue";
 import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import CommonLanguageSwitcher from "@/components/common/LanguageSwitcher.vue";
 import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
+import { ElCard, ElContainer, ElDivider, ElHeader, ElImage, ElLink, ElMain } from "element-plus";
+import { RouterLink } from "vue-router";
 
 const { t, locale } = useLang();
 

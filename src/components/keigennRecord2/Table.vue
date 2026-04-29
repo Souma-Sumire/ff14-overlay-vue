@@ -19,6 +19,7 @@ import Util from "@/utils/util";
 import { handleImgError } from "@/utils/xivapi";
 import FilterHeader from "./FilterHeader.vue";
 import { onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef, watch } from "vue";
+import { ElEmpty, ElPopover, ElTableV2 } from "element-plus";
 
 const props = defineProps<{
   rows: RowVO[];

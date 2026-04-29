@@ -34,6 +34,17 @@ import { getRoleType, PART_ORDER, ROLE_DEFINITIONS } from "@/utils/lootParser";
 
 import { getCurrentWeekNumber } from "@/utils/raidWeekUtils";
 import PlayerDisplay from "./PlayerDisplay.vue";
+import {
+  ElButton,
+  ElDialog,
+  ElDropdown,
+  ElDropdownItem,
+  ElDropdownMenu,
+  ElIcon,
+  ElInputNumber,
+  ElPopover,
+  ElTooltip,
+} from "element-plus";
 
 const props = defineProps<{
   players: string[];

@@ -8,6 +8,7 @@ import {
 } from "../../../cactbot/resources/overlay_plugin_api";
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { useStorage } from "@vueuse/core";
+import { ElButton, ElInput, ElInputNumber, ElPopconfirm, ElSwitch } from "element-plus";
 
 const now = ref(0);
 const game = reactive({

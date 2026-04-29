@@ -26,6 +26,7 @@ import Util from "@/utils/util";
 import { getIconSrcByPath, handleImgError, searchActionsByClassJobs } from "@/utils/xivapi";
 import CommonLanguageSwitcher from "@/components/common/LanguageSwitcher.vue";
 import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
+import { ElButton, ElIcon, ElInput, ElPopconfirm, ElSwitch } from "element-plus";
 
 interface JobRow {
   job: number;

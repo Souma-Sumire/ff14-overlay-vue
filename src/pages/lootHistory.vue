@@ -87,6 +87,25 @@ import { formatDateTime as formatTime } from "@/utils/time";
 import LogParserWorker from "@/workers/logParser.ts?worker";
 import { useDark } from "@vueuse/core";
 import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
+import {
+  ElAlert,
+  ElButton,
+  ElCheckboxGroup,
+  ElCheckTag,
+  ElDropdown,
+  ElDropdownItem,
+  ElDropdownMenu,
+  ElIcon,
+  ElPagination,
+  ElPopconfirm,
+  ElPopover,
+  ElProgress,
+  ElTable,
+  ElTableColumn,
+  ElTabPane,
+  ElTabs,
+  ElTooltip,
+} from "element-plus";
 
 if (typeof window !== "undefined") {
   const savedTheme = window.localStorage

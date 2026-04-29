@@ -4,6 +4,7 @@ import { localeToCactbotLang, useLang } from "@/composables/useLang";
 import aethercurrent from "@/resources/generated/aethercurrent.json";
 import { ref } from "vue";
 import CommonLanguageSwitcher from "@/components/common/LanguageSwitcher.vue";
+import { ElContainer, ElHeader, ElMain, ElOption, ElSelect } from "element-plus";
 
 const { locale } = useLang();
 

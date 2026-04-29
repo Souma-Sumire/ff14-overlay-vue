@@ -5,6 +5,7 @@ import { getCactbotLocaleMessage, useLang } from "@/composables/useLang";
 import { ZoneInfo } from "@/resources/zoneInfo";
 import ContentType from "../../cactbot/resources/content_type";
 import { computed, ref, watch } from "vue";
+import { ElCascader } from "element-plus";
 
 const props = defineProps({
   selectZone: {

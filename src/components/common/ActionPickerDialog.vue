@@ -8,6 +8,7 @@ import {
   normalizeUpgradeActionId,
 } from "@/utils/compareSaveAction";
 import { computed, ref, watch } from "vue";
+import { ElButton, ElCheckbox, ElDialog, ElInput } from "element-plus";
 
 export interface ActionPickerGridItem {
   id: number;

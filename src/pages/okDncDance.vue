@@ -6,6 +6,7 @@ import { addOverlayListener, callOverlayHandler } from "../../cactbot/resources/
 import { onMounted } from "vue";
 import { useStorage } from "@vueuse/core";
 import CommonActWrapper from "@/components/common/ActWrapper.vue";
+import { ElForm, ElFormItem, ElInput, ElOption, ElPopover, ElSelect, ElSwitch } from "element-plus";
 
 type Lang = "cn" | "en" | "ja";
 

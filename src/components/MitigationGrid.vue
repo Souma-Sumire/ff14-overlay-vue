@@ -28,6 +28,18 @@ import { getMitigationGridColumnWidth, MITIGATION_GRID_WIDTH } from "@/utils/mit
 import { formatTime } from "@/utils/time";
 import Util from "@/utils/util";
 import { handleImgError } from "@/utils/xivapi";
+import {
+  ElButton,
+  ElCheckbox,
+  ElIcon,
+  ElInputNumber,
+  ElOption,
+  ElPopover,
+  ElRadioButton,
+  ElRadioGroup,
+  ElSelect,
+  ElTooltip,
+} from "element-plus";
 
 type AutoArrangeStrategy = "max-total" | "tb-priority" | "peak-smoothing";
 type AutoArrangeCoverageScope = "self" | "party";

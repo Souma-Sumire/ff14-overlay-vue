@@ -38,6 +38,27 @@ import { useDebounceFn, useStorage } from "@vueuse/core";
 import CommonLanguageSwitcher from "@/components/common/LanguageSwitcher.vue";
 import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
 import ZoneMacroMarksDiv from "@/components/zoneMacro/MarksDiv.vue";
+import {
+  ElButton,
+  ElCard,
+  ElCheckbox,
+  ElContainer,
+  ElDialog,
+  ElDivider,
+  ElEmpty,
+  ElHeader,
+  ElInput,
+  ElInputNumber,
+  ElLink,
+  ElMain,
+  ElPopover,
+  ElRow,
+  ElSpace,
+  ElSwitch,
+  ElTable,
+  ElTableColumn,
+  ElTooltip,
+} from "element-plus";
 
 const { t } = useI18n();
 

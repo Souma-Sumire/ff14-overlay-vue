@@ -5,6 +5,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { computed, ref, watchEffect } from "vue";
 import { useTimelineStore } from "@/store/timeline";
 import { ShowStyleConfigEnum, TimelineConfigEnum } from "@/types/timeline";
+import { ElButton, ElDialog, ElForm, ElSlider } from "element-plus";
 
 interface Props {
   modelValue: boolean;

@@ -3,6 +3,7 @@ import type { Lang } from "@/types/lang";
 import { useStorage } from "@vueuse/core";
 import { onMounted, watch } from "vue";
 import { useLang } from "@/composables/useLang";
+import { ElOption, ElSelect } from "element-plus";
 
 const props = defineProps({
   teleported: {

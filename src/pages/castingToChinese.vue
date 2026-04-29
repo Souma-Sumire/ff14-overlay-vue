@@ -4,6 +4,18 @@ import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
 import { computed, reactive, ref } from "vue";
 import { useStorage } from "@vueuse/core";
 import CommonActWrapper from "@/components/common/ActWrapper.vue";
+import {
+  ElButton,
+  ElHeader,
+  ElInput,
+  ElInputNumber,
+  ElMain,
+  ElOption,
+  ElPopconfirm,
+  ElProgress,
+  ElSelect,
+  ElSwitch,
+} from "element-plus";
 
 function getName(line: string[]): string {
   const id = Number.parseInt(line[4]!, 16);

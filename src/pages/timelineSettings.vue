@@ -22,6 +22,35 @@ import { computed, onMounted, onUnmounted, reactive, ref, toRef, watch } from "v
 import { useDebounceFn, useLocalStorage } from "@vueuse/core";
 import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
 import ZoneSelecter from "@/components/zoneSelecter.vue";
+import {
+  ElButton,
+  ElButtonGroup,
+  ElCard,
+  ElCheckbox,
+  ElCol,
+  ElContainer,
+  ElDialog,
+  ElEmpty,
+  ElForm,
+  ElFormItem,
+  ElHeader,
+  ElIcon,
+  ElInput,
+  ElLink,
+  ElMain,
+  ElOption,
+  ElPopover,
+  ElRadio,
+  ElRadioButton,
+  ElRadioGroup,
+  ElRow,
+  ElSelect,
+  ElSlider,
+  ElSpace,
+  ElTable,
+  ElTableColumn,
+  ElText,
+} from "element-plus";
 
 const router = useRouter();
 const { wsConnected } = useWebSocket({ allowClose: true, addWsParam: true });

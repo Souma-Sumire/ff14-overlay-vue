@@ -61,6 +61,7 @@ import { onMounted, toRaw } from "vue";
 import { useToggle } from "@vueuse/core";
 import CommonTestLog from "@/components/common/TestLog.vue";
 import KeigennRecord2Table from "@/components/keigennRecord2/Table.vue";
+import { ElButton, ElOption, ElSelect } from "element-plus";
 
 const dev = useDev();
 

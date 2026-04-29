@@ -18,6 +18,20 @@ import ZoneId from "../../cactbot/resources/zone_id";
 import { computed, onMounted, ref, watch, watchEffect } from "vue";
 import { useStorage } from "@vueuse/core";
 import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
+import {
+  ElButton,
+  ElCheckbox,
+  ElCol,
+  ElForm,
+  ElFormItem,
+  ElOption,
+  ElRadioButton,
+  ElRadioGroup,
+  ElRow,
+  ElSelect,
+  ElSlider,
+  ElTooltip,
+} from "element-plus";
 
 const { wsConnected } = useWebSocket({ allowClose: true, addWsParam: true });
 

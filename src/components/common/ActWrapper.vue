@@ -2,6 +2,7 @@
 import { useActReady } from "@/composables/useActReady";
 import { useDemo } from "@/composables/useDemo";
 import { useUrlSearchParams } from "@vueuse/core";
+import { ElCard } from "element-plus";
 
 const params = useUrlSearchParams("hash");
 const actReady = useActReady();

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Moon, Sunny } from "@element-plus/icons-vue";
 import { useDark, useToggle } from "@vueuse/core";
+import { ElIcon } from "element-plus";
 
 const props = defineProps<{
   storageKey: string;

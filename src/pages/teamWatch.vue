@@ -15,6 +15,7 @@ import {
 } from "../../cactbot/resources/overlay_plugin_api";
 import { computed, onMounted, onUnmounted, watch } from "vue";
 import CommonActWrapper from "@/components/common/ActWrapper.vue";
+import { ElButton } from "element-plus";
 
 const params = useUrlSearchParams("hash");
 const store = useTeamWatchStore();

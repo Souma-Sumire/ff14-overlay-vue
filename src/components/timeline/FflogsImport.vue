@@ -19,6 +19,22 @@ import { CacheManager } from "@/utils/cacheManager";
 import Util from "@/utils/util";
 import { getIconSrcByPath, handleImgError } from "@/utils/xivapi";
 import { onMounted, reactive, ref } from "vue";
+import {
+  ElButton,
+  ElCard,
+  ElForm,
+  ElFormItem,
+  ElIcon,
+  ElInput,
+  ElOption,
+  ElSelect,
+  ElStep,
+  ElSteps,
+  ElSwitch,
+  ElTable,
+  ElTableColumn,
+  ElTooltip,
+} from "element-plus";
 
 const props = defineProps<{
   filters: Record<string, number[]>;

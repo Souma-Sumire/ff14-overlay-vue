@@ -30,6 +30,14 @@ import Util from "@/utils/util";
 import { handleImgError, searchActionsByClassJobs } from "@/utils/xivapi";
 import CommonLanguageSwitcher from "@/components/common/LanguageSwitcher.vue";
 import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
+import {
+  ElButton,
+  ElDescriptions,
+  ElDescriptionsItem,
+  ElInput,
+  ElPopover,
+  ElSwitch,
+} from "element-plus";
 
 interface KeySkillRow {
   key: string;

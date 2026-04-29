@@ -138,7 +138,7 @@ function handleChange(val: string) {
     .role-select {
       width: 100% !important;
 
-      :deep(.el-input__wrapper) {
+      .el-input__wrapper {
         box-shadow: none !important;
         border: 1px solid #e2e8f0;
         border-radius: 4px;
@@ -169,7 +169,7 @@ function handleChange(val: string) {
 
 html.dark {
   .role-setup-item {
-    &.is-variant-row .item-body .role-select :deep(.el-input__wrapper) {
+    &.is-variant-row .item-body .role-select .el-input__wrapper {
       background-color: #0f172a !important;
       border-color: #334155;
 

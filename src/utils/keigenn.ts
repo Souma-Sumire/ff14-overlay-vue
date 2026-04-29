@@ -6,8 +6,13 @@ import { completeIcon, statusData } from "../resources/logic/status";
 const keigennMap: Map<string, Keigenn> = new Map();
 
 for (const keigenn of keigenns) {
-  const icon = statusData[keigenn.id]![1];
-  keigenn.fullIcon = completeIcon(icon);
+  const statusEntry = statusData[keigenn.id];
+  if (!statusEntry) {
+    console.warn(`[keigenn] Missing status data for id ${keigenn.id} (${keigenn.name})`);
+    keigenn.fullIcon = completeIcon(0);
+  } else {
+    keigenn.fullIcon = completeIcon(statusEntry[1]);
+  }
   keigennMap.set(keigenn.id.toString(16).toUpperCase().padStart(2, "0"), keigenn as Keigenn);
 }
 

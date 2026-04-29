@@ -4,6 +4,7 @@ import { useDark } from "@vueuse/core";
 import { ElMessage } from "element-plus";
 import { ref } from "vue";
 import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
+import { ElButton, ElDialog, ElEmpty, ElTable, ElTableColumn, ElUpload } from "element-plus";
 
 interface Result {
   type: string;

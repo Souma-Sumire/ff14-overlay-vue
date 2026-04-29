@@ -14,6 +14,7 @@ import {
 } from "../../cactbot/resources/overlay_plugin_api";
 import { computed, onMounted, onUnmounted } from "vue";
 import CommonActWrapper from "@/components/common/ActWrapper.vue";
+import { ElButton, ElSlider } from "element-plus";
 
 const storeKeySkill = useKeySkillStore();
 const { zoneType } = useZone();

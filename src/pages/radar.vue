@@ -10,6 +10,7 @@ import type { EventMap, PluginCombatantState } from "cactbot/types/event";
 import type { Ref } from "vue";
 import { computed, onMounted, onUnmounted, ref, useTemplateRef } from "vue";
 import CommonActWrapper from "@/components/common/ActWrapper.vue";
+import { ElAlert } from "element-plus";
 
 const searchTargetName = ref("");
 const searchTargets = ref<PluginCombatantState[]>([]);
