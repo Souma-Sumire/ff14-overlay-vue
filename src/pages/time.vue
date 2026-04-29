@@ -3,6 +3,8 @@ import type { EventMap } from "../../cactbot/types/event";
 import moment from "moment";
 import { useWebSocket } from "@/composables/useWebSocket";
 import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
+import { ref } from "vue";
+import { useUrlSearchParams } from "@vueuse/core";
 
 useWebSocket({ allowClose: true, addWsParam: true });
 

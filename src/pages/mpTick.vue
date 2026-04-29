@@ -4,6 +4,7 @@ import {
   addOverlayListener,
   removeOverlayListener,
 } from "../../cactbot/resources/overlay_plugin_api";
+import { onMounted, onUnmounted, useTemplateRef } from "vue";
 
 let playerID: string;
 

@@ -11,6 +11,7 @@ import {
   removeOverlayListener,
 } from "../../cactbot/resources/overlay_plugin_api";
 import type { EventMap } from "cactbot/types/event";
+import { onMounted, onUnmounted, reactive, ref } from "vue";
 
 const usedRole: Role[] = ["tank", "healer", "dps"] as const;
 const storePartySort = usePartySortStore();

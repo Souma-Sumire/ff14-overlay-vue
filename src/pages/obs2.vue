@@ -14,6 +14,8 @@ import {
   removeOverlayListener,
 } from "../../cactbot/resources/overlay_plugin_api";
 import type { EventMap } from "cactbot/types/event";
+import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
+import { useStorage } from "@vueuse/core";
 
 const { t } = useLang();
 

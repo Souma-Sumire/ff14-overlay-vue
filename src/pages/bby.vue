@@ -14,6 +14,7 @@ import {
   removeOverlayListener,
 } from "../../cactbot/resources/overlay_plugin_api";
 import type { EventMap } from "cactbot/types/event";
+import { useDark, useToggle } from "@vueuse/core";
 
 const dev = useDev();
 

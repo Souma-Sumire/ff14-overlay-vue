@@ -3,6 +3,8 @@ import type { ComponentPublicInstance } from "vue";
 import type { Menu } from "@/resources/menuData";
 import { useLang } from "@/composables/useLang";
 import { getRawMenuData, MENU_ORDER } from "@/resources/menuData";
+import type { Ref } from "vue";
+import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 
 const { t, locale } = useLang();
 

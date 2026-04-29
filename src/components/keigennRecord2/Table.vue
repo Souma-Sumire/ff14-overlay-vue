@@ -18,6 +18,7 @@ import { copyToClipboard } from "@/utils/clipboard";
 import Util from "@/utils/util";
 import { handleImgError } from "@/utils/xivapi";
 import FilterHeader from "./FilterHeader.vue";
+import { onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef, watch } from "vue";
 
 const props = defineProps<{
   rows: RowVO[];

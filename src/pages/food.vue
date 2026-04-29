@@ -14,6 +14,9 @@ import {
   addOverlayListener,
   removeOverlayListener,
 } from "../../cactbot/resources/overlay_plugin_api";
+import type { Ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { useStorage } from "@vueuse/core";
 
 const { t } = useLang();
 const { zoneType } = useZone();

@@ -3,6 +3,7 @@ import type { Party } from "../../cactbot/types/event";
 import { usePartySortStore } from "@/store/partySort";
 import NetRegexes from "../../cactbot/resources/netregexes";
 import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
+import { computed, onMounted, ref, watch } from "vue";
 
 const storePartySort = usePartySortStore();
 

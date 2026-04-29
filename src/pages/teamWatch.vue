@@ -13,6 +13,7 @@ import {
   addOverlayListener,
   removeOverlayListener,
 } from "../../cactbot/resources/overlay_plugin_api";
+import { computed, onMounted, onUnmounted, watch } from "vue";
 
 const params = useUrlSearchParams("hash");
 const store = useTeamWatchStore();

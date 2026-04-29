@@ -5,6 +5,7 @@ import {
   callOverlayHandler,
   removeOverlayListener,
 } from "../../cactbot/resources/overlay_plugin_api";
+import { onMounted, onUnmounted, reactive } from "vue";
 
 const state = reactive({
   islandId: 0,

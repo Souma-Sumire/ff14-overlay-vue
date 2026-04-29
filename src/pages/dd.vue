@@ -13,6 +13,8 @@ import {
   addOverlayListener,
   removeOverlayListener,
 } from "../../cactbot/resources/overlay_plugin_api";
+import { onMounted, onUnmounted, watchEffect } from "vue";
+import { useStorage } from "@vueuse/core";
 
 interface Abilities {
   stun: boolean;

@@ -8,6 +8,7 @@ import {
   addOverlayListener,
   removeOverlayListener,
 } from "../../cactbot/resources/overlay_plugin_api";
+import { computed, onMounted, onUnmounted, reactive } from "vue";
 
 const { zoneType } = useZone();
 

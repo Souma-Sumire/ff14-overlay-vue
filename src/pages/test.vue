@@ -6,6 +6,8 @@ import { useWebSocket } from "@/composables/useWebSocket";
 import NetRegexes from "../../cactbot/resources/netregexes";
 import { addOverlayListener, callOverlayHandler } from "../../cactbot/resources/overlay_plugin_api";
 import UserConfig from "../../cactbot/resources/user_config";
+import type { Ref } from "vue";
+import { computed, ref } from "vue";
 
 const { t } = useLang();
 

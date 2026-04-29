@@ -6,6 +6,7 @@ import { VueDraggable } from "vue-draggable-plus";
 import { DEFAULT_JOB_SORT_ORDER } from "@/resources/jobSortOrder";
 import { usePartySortStore } from "@/store/partySort";
 import Util from "@/utils/util";
+import { ref } from "vue";
 
 const props = defineProps<{ party: Player[] }>();
 const emit = defineEmits<(e: "update") => void>();

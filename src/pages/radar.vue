@@ -7,6 +7,8 @@ import {
   removeOverlayListener,
 } from "../../cactbot/resources/overlay_plugin_api";
 import type { EventMap, PluginCombatantState } from "cactbot/types/event";
+import type { Ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, useTemplateRef } from "vue";
 
 const searchTargetName = ref("");
 const searchTargets = ref<PluginCombatantState[]>([]);

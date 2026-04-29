@@ -15,6 +15,8 @@ import HuntData from "../../cactbot/resources/hunt";
 import { addOverlayListener, callOverlayHandler } from "../../cactbot/resources/overlay_plugin_api";
 import sonar from "../../cactbot/resources/sounds/freesound/sonar.webm";
 import ZoneId from "../../cactbot/resources/zone_id";
+import { computed, onMounted, ref, watch, watchEffect } from "vue";
+import { useStorage } from "@vueuse/core";
 
 const { wsConnected } = useWebSocket({ allowClose: true, addWsParam: true });
 

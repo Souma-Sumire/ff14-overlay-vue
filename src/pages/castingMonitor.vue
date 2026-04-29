@@ -3,6 +3,7 @@ import { computed } from "vue";
 import { useDev } from "@/composables/useDev";
 import { useCastingMonitorStore } from "@/store/castingMonitor";
 import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
+import { onMounted } from "vue";
 
 const castingMonitorStore = useCastingMonitorStore();
 const dev = useDev();

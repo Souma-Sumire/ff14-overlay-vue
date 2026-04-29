@@ -18,6 +18,7 @@ import { useTimelineStore } from "@/store/timeline";
 import { CacheManager } from "@/utils/cacheManager";
 import Util from "@/utils/util";
 import { getIconSrcByPath, handleImgError } from "@/utils/xivapi";
+import { onMounted, reactive, ref } from "vue";
 
 const props = defineProps<{
   filters: Record<string, number[]>;

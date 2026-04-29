@@ -2,7 +2,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import vue from "@vitejs/plugin-vue";
 import Unocss from "unocss/vite";
-import AutoImport from "unplugin-auto-import/vite";
 import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
 import Components from "unplugin-vue-components/vite";
 import viteCompression from "vite-plugin-compression";
@@ -101,11 +100,6 @@ export default defineConfig({
       include: [/\.vue$/, /\.md$/],
     }),
     Markdown(),
-    AutoImport({
-      imports: ["vue", "@vueuse/core"],
-      dts: "./src/types/auto-imports.d.ts",
-      resolvers: [ElementPlusResolver({ importStyle: false })],
-    }),
     Components({
       resolvers: [ElementPlusResolver({ importStyle: false })],
       deep: true,

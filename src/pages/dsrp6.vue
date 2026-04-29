@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { getActionIconSrc } from "@/utils/xivapi";
 import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
+import { reactive } from "vue";
 
 addOverlayListener("LogLine", handleLogLine);
 // startOverlayEvents();

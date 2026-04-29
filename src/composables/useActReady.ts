@@ -1,3 +1,4 @@
+import { useUrlSearchParams } from "@vueuse/core";
 import { onMounted, ref } from "vue";
 import { callOverlayHandler } from "../../cactbot/resources/overlay_plugin_api";
 import { useDev } from "./useDev";

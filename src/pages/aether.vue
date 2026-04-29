@@ -2,6 +2,7 @@
 import type { Lang } from "@/types/lang";
 import { localeToCactbotLang, useLang } from "@/composables/useLang";
 import aethercurrent from "@/resources/generated/aethercurrent.json";
+import { ref } from "vue";
 
 const { locale } = useLang();
 

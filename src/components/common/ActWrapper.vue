@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useActReady } from "@/composables/useActReady";
 import { useDemo } from "@/composables/useDemo";
+import { useUrlSearchParams } from "@vueuse/core";
 
 const params = useUrlSearchParams("hash");
 const actReady = useActReady();

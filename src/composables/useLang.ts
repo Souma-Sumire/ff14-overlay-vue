@@ -1,4 +1,6 @@
 import type { CLang, Lang } from "@/types/lang";
+import { useUrlSearchParams } from "@vueuse/core";
+import { ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
 const params = useUrlSearchParams("hash");
@@ -22,7 +24,7 @@ function useLang() {
   // 监听 i18n locale 变化,同步到 globalLocale
   watch(
     () => i18n.locale.value,
-    (newLocale) => {
+    (newLocale: string) => {
       globalLocale.value = newLocale as Lang;
     },
   );

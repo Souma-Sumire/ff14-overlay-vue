@@ -85,6 +85,7 @@ import {
 } from "@/utils/raidWeekUtils";
 import { formatDateTime as formatTime } from "@/utils/time";
 import LogParserWorker from "@/workers/logParser.ts?worker";
+import { useDark } from "@vueuse/core";
 
 if (typeof window !== "undefined") {
   const savedTheme = window.localStorage

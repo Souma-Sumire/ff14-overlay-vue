@@ -2,6 +2,7 @@
 import { useCastingMonitorStore } from "@/store/castingMonitor";
 import Util from "@/utils/util";
 import { handleImgError } from "@/utils/xivapi";
+import { watchEffect } from "vue";
 
 const params = new URLSearchParams(window.location.href.split("?")[1]);
 

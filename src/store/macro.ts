@@ -2,8 +2,10 @@ import type { MessageBoxInputData } from "element-plus";
 import type { Lang } from "@/types/lang";
 import type { MacroInfoMacro, MacroInfoPlace } from "@/types/macro";
 import type { QueueArr, Slot, WayMarkObj } from "@/types/PostNamazu";
+import { useStorage, useToggle } from "@vueuse/core";
 import { ElInputNumber, ElMessage, ElMessageBox } from "element-plus";
 import { defineStore } from "pinia";
+import { h } from "vue";
 import { copyToClipboard } from "@/utils/clipboard";
 import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
 import {
@@ -282,8 +284,10 @@ const useMacroStore = defineStore("macro", {
             min: 1,
             max: 30,
             size: "large",
-            "onUpdate:modelValue": (val) => {
-              slotIndex.value = val;
+            "onUpdate:modelValue": (val: number | null | undefined) => {
+              if (typeof val === "number") {
+                slotIndex.value = val;
+              }
             },
           }),
         showCancelButton: true,

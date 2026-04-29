@@ -3,6 +3,8 @@ import type { QueueArr } from "@/types/PostNamazu";
 import { doQueueActions } from "@/utils/postNamazu";
 import NetRegexes from "../../cactbot/resources/netregexes";
 import { addOverlayListener, callOverlayHandler } from "../../cactbot/resources/overlay_plugin_api";
+import { onMounted } from "vue";
+import { useStorage } from "@vueuse/core";
 
 type Lang = "cn" | "en" | "ja";
 

@@ -4,6 +4,7 @@ import type { PropType } from "vue";
 import { getCactbotLocaleMessage, useLang } from "@/composables/useLang";
 import { ZoneInfo } from "@/resources/zoneInfo";
 import ContentType from "../../cactbot/resources/content_type";
+import { computed, ref, watch } from "vue";
 
 const props = defineProps({
   selectZone: {

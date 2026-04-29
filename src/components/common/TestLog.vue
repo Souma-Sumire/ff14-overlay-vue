@@ -2,6 +2,7 @@
 import { UploadFilled } from "@element-plus/icons-vue";
 import { ElIcon, ElLoading } from "element-plus";
 import { useLang } from "@/composables/useLang";
+import { ref } from "vue";
 
 const emits = defineEmits<{
   (e: "handleLine", line: string): unknown;

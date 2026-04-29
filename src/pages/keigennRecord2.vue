@@ -57,6 +57,8 @@ import logDefinitions from "../../cactbot/resources/netlog_defs";
 
 import NetRegexes from "../../cactbot/resources/netregexes";
 import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
+import { onMounted, toRaw } from "vue";
+import { useToggle } from "@vueuse/core";
 
 const dev = useDev();
 

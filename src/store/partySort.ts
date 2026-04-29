@@ -1,3 +1,4 @@
+import { useStorage } from "@vueuse/core";
 import { defineStore } from "pinia";
 import { DEFAULT_JOB_SORT_ORDER } from "@/resources/jobSortOrder";
 

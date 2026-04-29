@@ -65,6 +65,7 @@ import { buildPartyColumnKey } from "@/utils/mitigationConstants";
 import { getMitigationGridColumnWidth, MITIGATION_GRID_WIDTH } from "@/utils/mitigationGridLayout";
 import Util from "@/utils/util";
 import { getIconSrcByPath } from "@/utils/xivapi";
+import { useDark, useToggle } from "@vueuse/core";
 
 const { parseFile, extractMechanics } = useLogParser();
 
