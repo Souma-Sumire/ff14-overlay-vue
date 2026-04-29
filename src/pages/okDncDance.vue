@@ -5,6 +5,7 @@ import NetRegexes from "../../cactbot/resources/netregexes";
 import { addOverlayListener, callOverlayHandler } from "../../cactbot/resources/overlay_plugin_api";
 import { onMounted } from "vue";
 import { useStorage } from "@vueuse/core";
+import CommonActWrapper from "@/components/common/ActWrapper.vue";
 
 type Lang = "cn" | "en" | "ja";
 

@@ -1,6 +1,6 @@
 import type { Lang } from "./types/lang";
 import { createHead } from "@vueuse/head";
-import { ElMessage } from "element-plus";
+import { ElLoadingDirective, ElMessage } from "element-plus";
 import { createPinia } from "pinia";
 import { createApp } from "vue";
 import { createI18n } from "vue-i18n";
@@ -61,6 +61,7 @@ async function bootstrap() {
   app.use(pinia);
   app.use(VueLazyload);
   app.use(i18n);
+  app.directive("loading", ElLoadingDirective);
 
   checkReferrer();
   app.mount("#app");

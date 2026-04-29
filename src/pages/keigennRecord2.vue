@@ -59,6 +59,8 @@ import NetRegexes from "../../cactbot/resources/netregexes";
 import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
 import { onMounted, toRaw } from "vue";
 import { useToggle } from "@vueuse/core";
+import CommonTestLog from "@/components/common/TestLog.vue";
+import KeigennRecord2Table from "@/components/keigennRecord2/Table.vue";
 
 const dev = useDev();
 

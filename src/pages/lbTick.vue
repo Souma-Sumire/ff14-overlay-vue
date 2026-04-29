@@ -9,6 +9,7 @@ import {
   removeOverlayListener,
 } from "../../cactbot/resources/overlay_plugin_api";
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
+import CommonActWrapper from "@/components/common/ActWrapper.vue";
 
 const { zoneType } = useZone();
 const dev = useDev();

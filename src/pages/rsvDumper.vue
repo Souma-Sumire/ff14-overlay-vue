@@ -3,6 +3,7 @@ import type { UploadProps } from "element-plus";
 import { useDark } from "@vueuse/core";
 import { ElMessage } from "element-plus";
 import { ref } from "vue";
+import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
 
 interface Result {
   type: string;

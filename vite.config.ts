@@ -2,8 +2,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import vue from "@vitejs/plugin-vue";
 import Unocss from "unocss/vite";
-import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
-import Components from "unplugin-vue-components/vite";
 import viteCompression from "vite-plugin-compression";
 import Markdown from "vite-plugin-md";
 import Pages from "vite-plugin-pages";
@@ -100,12 +98,6 @@ export default defineConfig({
       include: [/\.vue$/, /\.md$/],
     }),
     Markdown(),
-    Components({
-      resolvers: [ElementPlusResolver({ importStyle: false })],
-      deep: true,
-      dts: "./src/types/components.d.ts",
-      directoryAsNamespace: true,
-    }),
     viteCompression({
       algorithm: "gzip",
       ext: ".gz",

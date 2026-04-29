@@ -8,6 +8,8 @@ import { addOverlayListener, callOverlayHandler } from "../../cactbot/resources/
 import UserConfig from "../../cactbot/resources/user_config";
 import type { Ref } from "vue";
 import { computed, ref } from "vue";
+import CommonLanguageSwitcher from "@/components/common/LanguageSwitcher.vue";
+import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
 
 const { t } = useLang();
 

@@ -35,6 +35,9 @@ import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
 import "github-markdown-css/github-markdown-light.css";
 import { computed, onMounted, ref, toRef, watch } from "vue";
 import { useDebounceFn, useStorage } from "@vueuse/core";
+import CommonLanguageSwitcher from "@/components/common/LanguageSwitcher.vue";
+import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
+import ZoneMacroMarksDiv from "@/components/zoneMacro/MarksDiv.vue";
 
 const { t } = useI18n();
 

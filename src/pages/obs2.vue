@@ -16,6 +16,9 @@ import {
 import type { EventMap } from "cactbot/types/event";
 import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
 import { useStorage } from "@vueuse/core";
+import CommonActWrapper from "@/components/common/ActWrapper.vue";
+import CommonLanguageSwitcher from "@/components/common/LanguageSwitcher.vue";
+import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
 
 const { t } = useLang();
 

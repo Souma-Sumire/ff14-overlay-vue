@@ -28,6 +28,8 @@ import { validateDynamicValue } from "@/utils/dynamicValueValidation";
 import { tts } from "@/utils/tts";
 import Util from "@/utils/util";
 import { handleImgError, searchActionsByClassJobs } from "@/utils/xivapi";
+import CommonLanguageSwitcher from "@/components/common/LanguageSwitcher.vue";
+import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
 
 interface KeySkillRow {
   key: string;

@@ -24,6 +24,8 @@ import { copyToClipboard } from "@/utils/clipboard";
 import { idToSrc, parseDynamicValue } from "@/utils/dynamicValue";
 import Util from "@/utils/util";
 import { getIconSrcByPath, handleImgError, searchActionsByClassJobs } from "@/utils/xivapi";
+import CommonLanguageSwitcher from "@/components/common/LanguageSwitcher.vue";
+import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
 
 interface JobRow {
   job: number;

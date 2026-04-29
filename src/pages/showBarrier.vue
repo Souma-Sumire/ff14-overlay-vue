@@ -4,6 +4,8 @@ import { usePartySortStore } from "@/store/partySort";
 import NetRegexes from "../../cactbot/resources/netregexes";
 import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
 import { computed, onMounted, ref, watch } from "vue";
+import CommonActWrapper from "@/components/common/ActWrapper.vue";
+import CommonDragJob from "@/components/common/DragJob.vue";
 
 const storePartySort = usePartySortStore();
 

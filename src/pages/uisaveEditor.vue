@@ -14,6 +14,7 @@ import {
 } from "@/resources/logic/contentFinderCondition";
 import { ZoneInfo } from "@/resources/zoneInfo";
 import { MARKER_MAP, parseUISave, xorCrypt } from "@/utils/uisaveParser";
+import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
 
 const { t } = useI18n();
 

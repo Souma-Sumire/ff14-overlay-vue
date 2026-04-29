@@ -7,6 +7,7 @@ import { computed, h, onMounted, onUnmounted, ref, watch } from "vue";
 import { useLogParser } from "@/composables/useLogParser";
 import logDefinitions from "../../cactbot/resources/netlog_defs";
 import { useStorage } from "@vueuse/core";
+import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
 
 // ─── Type-code → name mapping ───────────────────────────────────────────────
 const typeCodeNameMap = new Map<string, string>();

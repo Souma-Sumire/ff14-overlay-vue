@@ -17,6 +17,7 @@ import {
 import type { Ref } from "vue";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useStorage } from "@vueuse/core";
+import CommonActWrapper from "@/components/common/ActWrapper.vue";
 
 const { t } = useLang();
 const { zoneType } = useZone();

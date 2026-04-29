@@ -2,6 +2,7 @@
 import { getActionIconSrc } from "@/utils/xivapi";
 import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
 import { reactive } from "vue";
+import CommonActWrapper from "@/components/common/ActWrapper.vue";
 
 addOverlayListener("LogLine", handleLogLine);
 // startOverlayEvents();

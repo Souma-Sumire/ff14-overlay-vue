@@ -86,6 +86,7 @@ import {
 import { formatDateTime as formatTime } from "@/utils/time";
 import LogParserWorker from "@/workers/logParser.ts?worker";
 import { useDark } from "@vueuse/core";
+import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
 
 if (typeof window !== "undefined") {
   const savedTheme = window.localStorage

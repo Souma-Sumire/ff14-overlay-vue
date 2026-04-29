@@ -6,6 +6,7 @@ import {
   removeOverlayListener,
 } from "../../cactbot/resources/overlay_plugin_api";
 import { onMounted, onUnmounted, reactive } from "vue";
+import CommonActWrapper from "@/components/common/ActWrapper.vue";
 
 const state = reactive({
   islandId: 0,

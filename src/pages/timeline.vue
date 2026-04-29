@@ -14,6 +14,7 @@ import {
 } from "../../cactbot/resources/overlay_plugin_api";
 import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
 import { useStorage } from "@vueuse/core";
+import CommonActWrapper from "@/components/common/ActWrapper.vue";
 
 const timelineStore = useTimelineStore();
 const timelinePageData = reactive({

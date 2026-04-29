@@ -20,6 +20,8 @@ import { EventMap } from "../../cactbot/types/event";
 import { Job } from "../../cactbot/types/job";
 import { computed, onMounted, onUnmounted, reactive, ref, toRef, watch } from "vue";
 import { useDebounceFn, useLocalStorage } from "@vueuse/core";
+import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
+import ZoneSelecter from "@/components/zoneSelecter.vue";
 
 const router = useRouter();
 const { wsConnected } = useWebSocket({ allowClose: true, addWsParam: true });

@@ -5,6 +5,7 @@ import {
   removeOverlayListener,
 } from "../../cactbot/resources/overlay_plugin_api";
 import { onMounted, onUnmounted, useTemplateRef } from "vue";
+import CommonActWrapper from "@/components/common/ActWrapper.vue";
 
 let playerID: string;
 

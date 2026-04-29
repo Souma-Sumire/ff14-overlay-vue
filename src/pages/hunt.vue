@@ -17,6 +17,7 @@ import sonar from "../../cactbot/resources/sounds/freesound/sonar.webm";
 import ZoneId from "../../cactbot/resources/zone_id";
 import { computed, onMounted, ref, watch, watchEffect } from "vue";
 import { useStorage } from "@vueuse/core";
+import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
 
 const { wsConnected } = useWebSocket({ allowClose: true, addWsParam: true });
 

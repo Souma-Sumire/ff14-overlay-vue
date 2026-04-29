@@ -5,6 +5,8 @@ import { useLang } from "@/composables/useLang";
 import { getRawMenuData, MENU_ORDER } from "@/resources/menuData";
 import type { Ref } from "vue";
 import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import CommonLanguageSwitcher from "@/components/common/LanguageSwitcher.vue";
+import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
 
 const { t, locale } = useLang();
 

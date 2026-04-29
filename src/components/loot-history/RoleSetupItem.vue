@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import PlayerDisplay from "./PlayerDisplay.vue";
 import RoleBadge from "./RoleBadge.vue";
+import { ElOption, ElSelect } from "element-plus";
 
 const props = withDefaults(
   defineProps<{

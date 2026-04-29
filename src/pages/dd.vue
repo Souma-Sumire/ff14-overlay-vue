@@ -15,6 +15,7 @@ import {
 } from "../../cactbot/resources/overlay_plugin_api";
 import { onMounted, onUnmounted, watchEffect } from "vue";
 import { useStorage } from "@vueuse/core";
+import CommonActWrapper from "@/components/common/ActWrapper.vue";
 
 interface Abilities {
   stun: boolean;
