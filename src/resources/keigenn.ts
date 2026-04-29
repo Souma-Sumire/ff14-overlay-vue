@@ -742,14 +742,14 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     name: "防御",
     id: 3054,
     type: "multiplier",
-    performance: { physics: 0.1, magic: 0.1, darkness: 1 },
+    performance: { physics: 0.01, magic: 0.01, darkness: 1 },
     isFriendly: true,
   },
   {
     name: "弱化防御",
     id: 3673,
     type: "multiplier",
-    performance: { physics: 0.55, magic: 0.55, darkness: 1 },
+    performance: { physics: 0.505, magic: 0.505, darkness: 1 },
     isFriendly: true,
   },
   {
@@ -1178,6 +1178,13 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     id: 3224,
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
+    isFriendly: true,
+  },
+  {
+    name: "山崩",
+    id: 5531,
+    type: "multiplier",
+    performance: { physics: 0.85, magic: 0.85, darkness: 1 },
     isFriendly: true,
   },
   {
