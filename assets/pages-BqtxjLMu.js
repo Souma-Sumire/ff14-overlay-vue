@@ -1,1 +1,0 @@
-import{u as e}from"./vendor-vue-CH30se7I.js";import{Yn as t,er as n,fr as r,lr as i}from"./shared-common-Cx406rVT.js";var a=n({__name:`index`,setup(n){let a=e();return i(()=>{a.push(`/startPages`)}),(e,n)=>(r(),t(`div`))}});export{a as default};

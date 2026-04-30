@@ -1,0 +1,1 @@
+import{y as e}from"./cactbot-C200N8im.js";function t(t){return t===``?Promise.resolve(void 0):e({call:`cactbotSay`,text:t})}export{t};
