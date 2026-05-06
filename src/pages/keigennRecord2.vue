@@ -240,7 +240,7 @@ const regexes = {
   addCombatant: NetRegexes.addedCombatant(),
   removingCombatant: NetRegexes.removingCombatant(),
   networkDoT: NetRegexes.networkDoT(),
-  wipe: NetRegexes.network6d({ command: ["40000010", "4000000F"] }),
+  wipe: NetRegexes.network6d({ command: ["40000003", "40000010", "4000000F"] }),
 } as const;
 
 const STORAGE_KEY = "keigenn-record-2";

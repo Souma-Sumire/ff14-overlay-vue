@@ -67,7 +67,7 @@ const netRegex = {
   countdownCancel: NetRegexes.countdownCancel(),
   losesEffect: NetRegexes.losesEffect(),
   changeZone: NetRegexes.changeZone(),
-  wipe: NetRegexes.network6d({ command: ["40000010", "4000000F"] }),
+  wipe: NetRegexes.network6d({ command: ["40000003", "40000010", "4000000F"] }),
 };
 
 const eventHandlers = {

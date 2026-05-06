@@ -55,7 +55,7 @@ watch(demo, () => {
 const netRegexs = {
   gainsEffect: NetRegexes.gainsEffect({ effectId: ["30", "31"] }),
   losesEffect: NetRegexes.losesEffect({ effectId: ["30", "31"] }),
-  wipe: NetRegexes.network6d({ command: ["40000010", "4000000F"] }),
+  wipe: NetRegexes.network6d({ command: ["40000003", "40000010", "4000000F"] }),
 };
 
 function fullUpdateFriendlyCombatants() {

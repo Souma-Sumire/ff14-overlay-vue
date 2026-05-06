@@ -8,7 +8,7 @@ import { useDev } from "@/composables/useDev";
 import { useLang } from "@/composables/useLang";
 import { CONTENT_TYPES, useZone } from "@/composables/useZone";
 import logDefinitions from "../../cactbot/resources/netlog_defs";
-import NetRegexes, { commonNetRegex } from "../../cactbot/resources/netregexes";
+import NetRegexes from "../../cactbot/resources/netregexes";
 import {
   addOverlayListener,
   removeOverlayListener,
@@ -84,7 +84,7 @@ const REGEXES = {
   inCombat: NetRegexes.inCombat(),
   countdown: NetRegexes.countdown(),
   countdownCancel: NetRegexes.countdownCancel(),
-  wipe: commonNetRegex.wipe,
+  wipe: NetRegexes.network6d({ command: ["40000003", "40000010", "4000000F"] }),
 } as const;
 
 const DEFAULT_ENABLE_SETTINGS: Omit<Settings, "type"> = {
