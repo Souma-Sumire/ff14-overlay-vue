@@ -4,10 +4,14 @@ import type { EventMap } from "../../cactbot/types/event";
 import { useLang } from "@/composables/useLang";
 import { useWebSocket } from "@/composables/useWebSocket";
 import NetRegexes from "../../cactbot/resources/netregexes";
-import { addOverlayListener, callOverlayHandler } from "../../cactbot/resources/overlay_plugin_api";
+import {
+  addOverlayListener,
+  callOverlayHandler,
+  removeOverlayListener,
+} from "../../cactbot/resources/overlay_plugin_api";
 import UserConfig from "../../cactbot/resources/user_config";
 import type { Ref } from "vue";
-import { computed, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import CommonLanguageSwitcher from "@/components/common/LanguageSwitcher.vue";
 import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
 import { ElButton, ElCard, ElCol, ElRow, ElTag } from "element-plus";
@@ -63,8 +67,7 @@ const userConfig = ref<Options & { CactbotUserDirectory: string; DefaultAlertOut
 const systemTime = ref("");
 
 const updateTime = () => (systemTime.value = new Date().toLocaleString());
-updateTime();
-setInterval(updateTime, 1000);
+let systemTimeTimer: number | null = null;
 
 function tts(text: string) {
   callOverlayHandler({
@@ -287,18 +290,41 @@ const onLogLine: EventMap["LogLine"] = (ev) => {
   }
 };
 
-addOverlayListener("ChangePrimaryPlayer", onEvent);
-addOverlayListener("ChangeZone", onEvent);
-addOverlayListener("CombatData", onEvent);
-addOverlayListener("EnmityTargetData", onEvent);
-addOverlayListener("PartyChanged", onEvent);
-addOverlayListener("onGameExistsEvent", onEvent);
-addOverlayListener("onGameActiveChangedEvent", onEvent);
-addOverlayListener("onInCombatChangedEvent", onEvent);
-addOverlayListener("onZoneChangedEvent", onEvent);
-addOverlayListener("onPlayerDied", onEvent);
-addOverlayListener("onPlayerChangedEvent", onEvent);
-addOverlayListener("LogLine", onLogLine);
+onMounted(() => {
+  updateTime();
+  systemTimeTimer = window.setInterval(updateTime, 1000);
+  addOverlayListener("ChangePrimaryPlayer", onEvent);
+  addOverlayListener("ChangeZone", onEvent);
+  addOverlayListener("CombatData", onEvent);
+  addOverlayListener("EnmityTargetData", onEvent);
+  addOverlayListener("PartyChanged", onEvent);
+  addOverlayListener("onGameExistsEvent", onEvent);
+  addOverlayListener("onGameActiveChangedEvent", onEvent);
+  addOverlayListener("onInCombatChangedEvent", onEvent);
+  addOverlayListener("onZoneChangedEvent", onEvent);
+  addOverlayListener("onPlayerDied", onEvent);
+  addOverlayListener("onPlayerChangedEvent", onEvent);
+  addOverlayListener("LogLine", onLogLine);
+});
+
+onUnmounted(() => {
+  removeOverlayListener("ChangePrimaryPlayer", onEvent);
+  removeOverlayListener("ChangeZone", onEvent);
+  removeOverlayListener("CombatData", onEvent);
+  removeOverlayListener("EnmityTargetData", onEvent);
+  removeOverlayListener("PartyChanged", onEvent);
+  removeOverlayListener("onGameExistsEvent", onEvent);
+  removeOverlayListener("onGameActiveChangedEvent", onEvent);
+  removeOverlayListener("onInCombatChangedEvent", onEvent);
+  removeOverlayListener("onZoneChangedEvent", onEvent);
+  removeOverlayListener("onPlayerDied", onEvent);
+  removeOverlayListener("onPlayerChangedEvent", onEvent);
+  removeOverlayListener("LogLine", onLogLine);
+  if (systemTimeTimer !== null) {
+    window.clearInterval(systemTimeTimer);
+    systemTimeTimer = null;
+  }
+});
 </script>
 
 <template>

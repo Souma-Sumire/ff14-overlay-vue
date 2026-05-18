@@ -2,8 +2,11 @@
 import type { Party } from "../../cactbot/types/event";
 import { usePartySortStore } from "@/store/partySort";
 import NetRegexes from "../../cactbot/resources/netregexes";
-import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
-import { computed, onMounted, ref, watch } from "vue";
+import {
+  addOverlayListener,
+  removeOverlayListener,
+} from "../../cactbot/resources/overlay_plugin_api";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import CommonActWrapper from "@/components/common/ActWrapper.vue";
 import CommonDragJob from "@/components/common/DragJob.vue";
 
@@ -23,7 +26,7 @@ enum ShowType {
   BOTH = "3",
 }
 
-let timer: number | number = 0;
+let timer: number | null = null;
 
 const party = ref([] as PartyMember[]);
 const povId = ref("");
@@ -46,7 +49,7 @@ function handleLine(line: string) {
   }
 }
 
-function handlePartyChanged() {
+function sortPartyMembers() {
   party.value.sort((a, b) => {
     if (a.id === povId.value) {
       return -1;
@@ -71,36 +74,63 @@ function getString(p: PartyMember) {
   return `${p.barrierPercent}%(${p.barrierAmount})`;
 }
 
-onMounted(() => {
-  addOverlayListener("LogLine", (e) => {
-    handleLine(e.rawLine);
-  });
-  addOverlayListener("PartyChanged", (e) => {
-    party.value = e.party
-      .filter((v) => v.inParty)
-      .map((v) => ({ ...v, barrierPercent: 0, barrierAmount: 0 }));
-  });
-  addOverlayListener("ChangePrimaryPlayer", (e) => {
-    povId.value = Number(e.charID).toString(16).toUpperCase();
-  });
-  watch(
-    [party, povId, storePartySort.arr],
-    () => {
-      clearInterval(timer);
-      if (povId.value) {
-        handlePartyChanged();
-      } else {
-        timer = window.setInterval(() => {
-          if (povId.value) {
-            handlePartyChanged();
-            clearInterval(timer);
-          }
-        }, 100);
+function handleOverlayLogLine(e: { rawLine: string }) {
+  handleLine(e.rawLine);
+}
+
+function handleOverlayPartyChanged(e: { party: Party[] }) {
+  party.value = e.party
+    .filter((v) => v.inParty)
+    .map((v) => ({ ...v, barrierPercent: 0, barrierAmount: 0 }));
+}
+
+function handleOverlayPrimaryPlayer(e: { charID: number }) {
+  povId.value = Number(e.charID).toString(16).toUpperCase();
+}
+
+function handleHashChange(e: HashChangeEvent) {
+  url.value = e.newURL;
+}
+
+watch(
+  [party, povId, storePartySort.arr],
+  () => {
+    if (timer !== null) {
+      window.clearInterval(timer);
+      timer = null;
+    }
+    if (povId.value) {
+      sortPartyMembers();
+      return;
+    }
+    timer = window.setInterval(() => {
+      if (!povId.value) return;
+      sortPartyMembers();
+      if (timer !== null) {
+        window.clearInterval(timer);
+        timer = null;
       }
-    },
-    { immediate: true },
-  );
-  window.addEventListener("hashchange", (e) => (url.value = e.newURL));
+    }, 100);
+  },
+  { immediate: true },
+);
+
+onMounted(() => {
+  addOverlayListener("LogLine", handleOverlayLogLine);
+  addOverlayListener("PartyChanged", handleOverlayPartyChanged);
+  addOverlayListener("ChangePrimaryPlayer", handleOverlayPrimaryPlayer);
+  window.addEventListener("hashchange", handleHashChange);
+});
+
+onUnmounted(() => {
+  removeOverlayListener("LogLine", handleOverlayLogLine);
+  removeOverlayListener("PartyChanged", handleOverlayPartyChanged);
+  removeOverlayListener("ChangePrimaryPlayer", handleOverlayPrimaryPlayer);
+  window.removeEventListener("hashchange", handleHashChange);
+  if (timer !== null) {
+    window.clearInterval(timer);
+    timer = null;
+  }
 });
 </script>
 

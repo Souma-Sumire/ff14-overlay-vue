@@ -166,6 +166,18 @@ let pendingRows: RowVO[] = [];
 let batchTimer: number | null = null;
 const colorCache = new Map<number, string>();
 
+function loadStoredJson<T>(key: string, fallback: T): T {
+  const raw = localStorage.getItem(key);
+  if (!raw) return fallback;
+  try {
+    return JSON.parse(raw) as T;
+  } catch (error) {
+    console.warn(`Failed to parse persisted data for ${key}:`, error);
+    localStorage.removeItem(key);
+    return fallback;
+  }
+}
+
 // 从 localStorage 加载持久化数据
 function loadPersistentData() {
   try {
@@ -182,17 +194,13 @@ function loadPersistentData() {
     const savedPovId = localStorage.getItem(STORAGE_KEYS.POV_ID);
     if (savedPovId) povId = savedPovId;
 
-    const savedPartyList = localStorage.getItem(STORAGE_KEYS.PARTY_LIST);
-    if (savedPartyList) partyLogList = JSON.parse(savedPartyList);
-
-    const savedEntitiesMap = localStorage.getItem(STORAGE_KEYS.ENTITIES_MAP);
-    if (savedEntitiesMap) entitiesMap = JSON.parse(savedEntitiesMap);
-
-    const savedPartyEvent = localStorage.getItem(STORAGE_KEYS.PARTY_EVENT);
-    if (savedPartyEvent) partyEventParty = JSON.parse(savedPartyEvent);
-
-    const savedRsvData = localStorage.getItem(STORAGE_KEYS.RSV_DATA);
-    if (savedRsvData) rsvData = JSON.parse(savedRsvData);
+    partyLogList = loadStoredJson(STORAGE_KEYS.PARTY_LIST, [] as string[]);
+    entitiesMap = loadStoredJson(
+      STORAGE_KEYS.ENTITIES_MAP,
+      {} as Record<string, { job: number; timestamp: number; name: string; level: number }>,
+    );
+    partyEventParty = loadStoredJson(STORAGE_KEYS.PARTY_EVENT, [] as PlayerSP[]);
+    rsvData = loadStoredJson(STORAGE_KEYS.RSV_DATA, {} as Record<number, string>);
 
     const savedZoneName = localStorage.getItem(STORAGE_KEYS.ZONE_NAME);
     if (savedZoneName) zoneName = savedZoneName;

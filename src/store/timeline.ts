@@ -177,8 +177,16 @@ export const useTimelineStore = defineStore("timeline", {
     },
     loadTimelineSettings() {
       const ls = localStorage.getItem("timelines");
-      if (ls) {
-        const data = JSON.parse(ls);
+      if (!ls) return;
+
+      try {
+        const data = JSON.parse(ls) as Partial<{
+          allTimelines: ITimeline[];
+          configValues: Partial<TimelineConfigValues>;
+          settings: { api?: string };
+          showStyle: Partial<ShowStyle>;
+          filters: Record<string, number[]>;
+        }>;
         this.allTimelines = data.allTimelines ?? [];
         this.configValues = { ...configValues, ...data.configValues };
         this.showStyle = { ...showStyle, ...data.showStyle };
@@ -187,6 +195,15 @@ export const useTimelineStore = defineStore("timeline", {
         this.allTimelines.forEach((timeline) => {
           this.normalizeTimeline(timeline);
         });
+      } catch (e) {
+        console.warn("Failed to load timeline settings:", e);
+        this.allTimelines = [];
+        this.configValues = { ...configValues };
+        this.showStyle = { ...showStyle };
+        this.settings = { api: "" };
+        this.filters = {};
+        localStorage.removeItem("timelines");
+        ElMessage.warning("时间轴设置已损坏，已重置为默认值");
       }
     },
     sortTimelines() {

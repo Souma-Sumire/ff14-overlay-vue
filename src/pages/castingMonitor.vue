@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import type { EventMap } from "cactbot/types/event";
+import { computed, onMounted, onUnmounted } from "vue";
 import { useDev } from "@/composables/useDev";
 import { useCastingMonitorStore } from "@/store/castingMonitor";
-import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
-import { onMounted } from "vue";
+import {
+  addOverlayListener,
+  removeOverlayListener,
+} from "../../cactbot/resources/overlay_plugin_api";
 import CommonActWrapper from "@/components/common/ActWrapper.vue";
 import { ElButton, ElContainer, ElHeader, ElMain, ElSlider } from "element-plus";
 import CastingMonitorHeader from "@/components/castingMonitor/Header.vue";
@@ -24,20 +27,34 @@ const commonLayoutStyle = computed(() => {
   };
 });
 
+const handleBroadcastMessage: EventMap["BroadcastMessage"] = (e) => {
+  if (e.source === "castMonitorOverlay") {
+    castingMonitorStore.focusTargetId = (e.msg as { targetId: string }).targetId;
+  }
+};
+
+let cleanupTimer: number | null = null;
+
 onMounted(() => {
   addOverlayListener("ChangePrimaryPlayer", castingMonitorStore.handleChangePrimaryPlayer);
   addOverlayListener("LogLine", castingMonitorStore.handleLogLine);
   addOverlayListener("PartyChanged", castingMonitorStore.handlePartyChanged);
-  addOverlayListener("BroadcastMessage", (e) => {
-    if (e.source === "castMonitorOverlay") {
-      castingMonitorStore.focusTargetId = (e.msg as { targetId: string }).targetId;
-    }
-  });
+  addOverlayListener("BroadcastMessage", handleBroadcastMessage);
+  cleanupTimer = window.setInterval(() => {
+    castingMonitorStore.cleanUpExpired();
+  }, 1000);
 });
 
-setInterval(() => {
-  castingMonitorStore.cleanUpExpired();
-}, 1000);
+onUnmounted(() => {
+  removeOverlayListener("ChangePrimaryPlayer", castingMonitorStore.handleChangePrimaryPlayer);
+  removeOverlayListener("LogLine", castingMonitorStore.handleLogLine);
+  removeOverlayListener("PartyChanged", castingMonitorStore.handlePartyChanged);
+  removeOverlayListener("BroadcastMessage", handleBroadcastMessage);
+  if (cleanupTimer !== null) {
+    window.clearInterval(cleanupTimer);
+    cleanupTimer = null;
+  }
+});
 </script>
 
 <template>

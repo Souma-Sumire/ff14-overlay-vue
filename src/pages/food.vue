@@ -58,6 +58,8 @@ const netRegexs = {
   wipe: NetRegexes.network6d({ command: ["40000003", "40000010", "4000000F"] }),
 };
 
+let durationTimer: number | null = null;
+
 function fullUpdateFriendlyCombatants() {
   uiData.value = party.value.map((v) => ({
     ...v,
@@ -204,7 +206,7 @@ onMounted(() => {
 
   fullUpdateFriendlyCombatants();
 
-  setInterval(() => {
+  durationTimer = window.setInterval(() => {
     if (!demo.value) tickUpdateDuration();
   }, 1_000);
 });
@@ -212,6 +214,10 @@ onMounted(() => {
 onUnmounted(() => {
   removeOverlayListener("LogLine", handleLogLine);
   removeOverlayListener("PartyChanged", handlePartyChanged);
+  if (durationTimer !== null) {
+    window.clearInterval(durationTimer);
+    durationTimer = null;
+  }
 });
 </script>
 

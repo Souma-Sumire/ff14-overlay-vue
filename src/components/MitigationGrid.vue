@@ -918,11 +918,7 @@ function shouldShowCellUseIcon(
 ) {
   const info = getCellSim(row, col, skillId);
   if (!info) return false;
-  return (
-    !!info.showDot ||
-    info.status === "active" ||
-    isFirstVisibleUseCell(rowIndex, col, skillId, info)
-  );
+  return isFirstVisibleUseCell(rowIndex, col, skillId, info);
 }
 
 function shouldMuteCellUseIcon(row: MitigationRow, col: ColumnDef, skillId: number) {
