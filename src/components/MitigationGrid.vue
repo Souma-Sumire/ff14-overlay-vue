@@ -316,45 +316,6 @@ const mechanicTargetContextMenuRef = ref<HTMLElement | null>(null);
 const columnContextMenuRef = ref<HTMLElement | null>(null);
 const skillContextMenuRef = ref<HTMLElement | null>(null);
 const CONTEXT_MENU_VIEWPORT_PADDING = 8;
-const gridContainerRef = ref<HTMLElement | null>(null);
-const firstVisibleContentRowIndex = ref(0);
-let firstVisibleRowSyncRaf: number | null = null;
-
-function updateFirstVisibleContentRowIndex() {
-  const container = gridContainerRef.value;
-  if (!container) {
-    firstVisibleContentRowIndex.value = 0;
-    return;
-  }
-  const contentRows = [...container.querySelectorAll<HTMLElement>(".row.content-row")];
-  if (contentRows.length === 0) {
-    firstVisibleContentRowIndex.value = 0;
-    return;
-  }
-  const containerRect = container.getBoundingClientRect();
-  const headerRow = container.querySelector<HTMLElement>(".row.header");
-  const visibleTop = headerRow?.getBoundingClientRect().bottom ?? containerRect.top;
-  let nextIndex = 0;
-  for (let i = 0; i < contentRows.length; i++) {
-    const rect = contentRows[i]?.getBoundingClientRect();
-    if (!rect) continue;
-    if (rect.bottom > visibleTop + 0.5) {
-      nextIndex = i;
-      break;
-    }
-    nextIndex = i;
-  }
-  firstVisibleContentRowIndex.value = Math.max(0, Math.min(nextIndex, contentRows.length - 1));
-}
-
-function scheduleFirstVisibleContentRowSync() {
-  if (firstVisibleRowSyncRaf !== null) return;
-  firstVisibleRowSyncRaf = window.requestAnimationFrame(() => {
-    firstVisibleRowSyncRaf = null;
-    updateFirstVisibleContentRowIndex();
-  });
-}
-
 function isContextOverlay(id: string | null): id is ContextOverlayId {
   return (
     id === "mechanic-ctx" ||
@@ -546,13 +507,8 @@ function handleWindowClick() {
 }
 
 function handleWindowResize() {
-  scheduleFirstVisibleContentRowSync();
   if (!isContextOverlay(activeOverlay.value)) return;
   void ensureContextMenuPositionInViewport(activeOverlay.value);
-}
-
-function handleGridScroll() {
-  scheduleFirstVisibleContentRowSync();
 }
 
 function handleWindowKeydown(event: KeyboardEvent) {
@@ -572,28 +528,14 @@ onMounted(() => {
   window.addEventListener("click", handleWindowClick);
   window.addEventListener("keydown", handleWindowKeydown);
   window.addEventListener("resize", handleWindowResize);
-  nextTick(() => {
-    scheduleFirstVisibleContentRowSync();
-  });
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener("click", handleWindowClick);
   window.removeEventListener("keydown", handleWindowKeydown);
   window.removeEventListener("resize", handleWindowResize);
-  if (firstVisibleRowSyncRaf !== null) window.cancelAnimationFrame(firstVisibleRowSyncRaf);
   cancelSkillDetailHide();
 });
-
-watch(
-  () => props.rows,
-  () => {
-    nextTick(() => {
-      scheduleFirstVisibleContentRowSync();
-    });
-  },
-  { deep: false },
-);
 
 // Watch activeOverlay to close hover popovers
 watch(activeOverlay, (val) => {
@@ -899,12 +841,8 @@ function isFirstVisibleUseCell(
   if (!info || !Number.isFinite(info.useTimestamp)) return false;
   if (info.status !== "active" && info.status !== "active-start" && info.status !== "cooldown")
     return false;
-  const visibleStartIndex = Math.max(0, firstVisibleContentRowIndex.value);
-  if (rowIndex < visibleStartIndex) return false;
-  if (rowIndex <= visibleStartIndex) return true;
-  const prevRowIndex = rowIndex - 1;
-  if (prevRowIndex < visibleStartIndex) return true;
-  const prevRow = props.rows[prevRowIndex];
+  if (rowIndex <= 0) return true;
+  const prevRow = props.rows[rowIndex - 1];
   if (!prevRow) return true;
   const prevUseTimestamp = getCellSim(prevRow, col, skillId)?.useTimestamp;
   return !isSameUseTimestamp(info.useTimestamp, prevUseTimestamp);
@@ -3674,12 +3612,7 @@ function handleColumnNameClick(col: ColumnDef) {
 </script>
 
 <template>
-  <div
-    ref="gridContainerRef"
-    class="grid-container"
-    @contextmenu.prevent
-    @scroll.passive="handleGridScroll"
-  >
+  <div class="grid-container" @contextmenu.prevent>
     <div class="grid-table" :style="gridStyleVars">
       <!-- Header -->
       <div class="row header">
