@@ -511,16 +511,59 @@ function handleWindowResize() {
   void ensureContextMenuPositionInViewport(activeOverlay.value);
 }
 
+function isShortcutInputTarget(target: EventTarget | null) {
+  const element = target instanceof HTMLElement ? target : document.activeElement;
+  if (!(element instanceof HTMLElement)) return false;
+  const tagName = element.tagName;
+  return (
+    element.isContentEditable ||
+    tagName === "INPUT" ||
+    tagName === "TEXTAREA" ||
+    tagName === "SELECT" ||
+    !!element.closest(".el-input, .el-textarea, .el-select, .el-input-number, .el-message-box")
+  );
+}
+
 function handleWindowKeydown(event: KeyboardEvent) {
   if (event.key === "Escape") {
     event.preventDefault();
-    clearOverlays();
+    if (activeOverlay.value) {
+      clearOverlays();
+    } else if (selectedCell.value) {
+      clearSelectedCell();
+    }
     return;
   }
-  if (event.key !== "Enter") return;
   if (activeOverlay.value === "mechanic-target-ctx") {
+    if (event.key !== "Enter") return;
     event.preventDefault();
     applyMechanicTargetsToCurrent();
+    return;
+  }
+  if (!selectedCell.value || activeOverlay.value || isShortcutInputTarget(event.target)) return;
+  if (event.key === "Enter") {
+    event.preventDefault();
+    toggleSelectedCellAction();
+    return;
+  }
+  if (event.key === "ArrowLeft") {
+    event.preventDefault();
+    moveSelectedCell(0, -1);
+    return;
+  }
+  if (event.key === "ArrowRight") {
+    event.preventDefault();
+    moveSelectedCell(0, 1);
+    return;
+  }
+  if (event.key === "ArrowUp") {
+    event.preventDefault();
+    moveSelectedCell(-1, 0);
+    return;
+  }
+  if (event.key === "ArrowDown") {
+    event.preventDefault();
+    moveSelectedCell(1, 0);
   }
 }
 
@@ -662,14 +705,25 @@ function getCellSim(row: MitigationRow, col: ColumnDef, skillId: number) {
 const TIMESTAMP_EPSILON = 0.001;
 const EXACT_USE_TOLERANCE_SECONDS = 0.5;
 
-interface EditingCellState {
-  actionId: string;
+interface SelectedCellState {
   rowKey: string;
   colKey: string;
   skillId: number;
-  target: HTMLElement;
-  title: string;
-  baseTime: number;
+}
+
+interface CellToggleState {
+  isChecked: boolean;
+  canCancelRenderedUse: boolean;
+  canToggle: boolean;
+  mode: "add" | "remove" | "disabled";
+  disabledReason?: string;
+  suggestedTimestamp?: number;
+}
+
+interface ActionPlacementAvailability {
+  canPlace: boolean;
+  timestamp: number;
+  reason?: string;
 }
 
 function isTimestampClose(
@@ -765,6 +819,14 @@ function resolveRowKeyByTimestamp(ts: number) {
   return rows[idx]?.key;
 }
 
+function resolveRowByTimestamp(ts: number) {
+  const rows = sourceRows.value;
+  if (rows.length === 0) return undefined;
+  const idx = rows.findIndex((r) => r.timestamp >= ts);
+  if (idx === -1) return rows.at(-1);
+  return rows[idx];
+}
+
 function getSkillMeta(col: ColumnDef, skillId: number) {
   const skill = col.skills.find((s) => s.id === skillId);
   return {
@@ -773,12 +835,15 @@ function getSkillMeta(col: ColumnDef, skillId: number) {
   };
 }
 
-function validateActionPlacement(
+function getDefaultManualOffsetSeconds(row: MitigationRow) {
+  return !row.isAOE && !row.isTB && !row.isShare ? 0 : -2;
+}
+
+function getActionPlacementErrorMessage(
   col: ColumnDef,
   skillId: number,
   newTimestamp: number,
   ignoreAction?: PlayerActionRecord,
-  showConflictMessage = true,
 ) {
   const columnKey = col.key;
 
@@ -787,10 +852,7 @@ function validateActionPlacement(
   const maxCharges = skill?.maxCharges || 1;
   const isChargeBased = maxCharges > 1;
 
-  if (skill?.isTargetMitigation && newTimestamp < 0) {
-    if (showConflictMessage) ElMessage.error("目标减技能不允许在 0 秒之前释放");
-    return false;
-  }
+  if (skill?.isTargetMitigation && newTimestamp < 0) return "目标减技能不允许在 0 秒之前释放";
 
   const recastWindow = recast;
   if (recastWindow > 0 && !isChargeBased) {
@@ -799,14 +861,11 @@ function validateActionPlacement(
       if (action.columnKey !== columnKey || action.skillId !== skillId) continue;
       const otherStart = action.timestamp;
       const otherWindow = action.recastOverride ?? recast;
-      if (newTimestamp < otherStart + otherWindow && otherStart < newTimestamp + recastWindow) {
-        if (showConflictMessage) ElMessage.error("与已有的技能释放冲突");
-        return false;
-      }
+      if (newTimestamp < otherStart + otherWindow && otherStart < newTimestamp + recastWindow)
+        return "与已有的技能释放冲突";
     }
   }
 
-  // Charge-based validation: Ensure no future point in time has negative charges
   if (isChargeBased && skill) {
     const max = skill.maxCharges || 1;
     const r = skill.recast || 1;
@@ -822,10 +881,64 @@ function validateActionPlacement(
     allUsages.push(newTimestamp);
     allUsages.sort((a, b) => a - b);
     const deficitAt = getFirstChargeDeficitTime(allUsages, max, r);
-    if (deficitAt !== null) return false;
+    if (deficitAt !== null) return `会导致 ${formatTime(deficitAt)} 处充能不足`;
   }
 
+  return null;
+}
+
+function validateActionPlacement(
+  col: ColumnDef,
+  skillId: number,
+  newTimestamp: number,
+  ignoreAction?: PlayerActionRecord,
+  showConflictMessage = true,
+) {
+  const errorMessage = getActionPlacementErrorMessage(col, skillId, newTimestamp, ignoreAction);
+  if (errorMessage) {
+    if (showConflictMessage) ElMessage.error(errorMessage);
+    return false;
+  }
   return true;
+}
+
+function getAddPlacementAvailability(
+  row: MitigationRow,
+  col: ColumnDef,
+  skillId: number,
+  ignoreAction?: PlayerActionRecord,
+): ActionPlacementAvailability {
+  const defaultTimestamp = row.timestamp + getDefaultManualOffsetSeconds(row);
+  const defaultReason = getActionPlacementErrorMessage(
+    col,
+    skillId,
+    defaultTimestamp,
+    ignoreAction,
+  );
+  if (!defaultReason) return { canPlace: true, timestamp: defaultTimestamp };
+
+  const fallbackTimestamp = row.timestamp;
+  if (Math.abs(fallbackTimestamp - defaultTimestamp) < TIMESTAMP_EPSILON) {
+    return {
+      canPlace: false,
+      timestamp: defaultTimestamp,
+      reason: defaultReason,
+    };
+  }
+
+  const fallbackReason = getActionPlacementErrorMessage(
+    col,
+    skillId,
+    fallbackTimestamp,
+    ignoreAction,
+  );
+  if (!fallbackReason) return { canPlace: true, timestamp: fallbackTimestamp };
+
+  return {
+    canPlace: false,
+    timestamp: fallbackTimestamp,
+    reason: fallbackReason,
+  };
 }
 
 function isSameUseTimestamp(left: number | undefined, right: number | undefined) {
@@ -866,15 +979,16 @@ function shouldMuteCellUseIcon(row: MitigationRow, col: ColumnDef, skillId: numb
   return false;
 }
 
-function toggleCell(row: MitigationRow, rowIndex: number, col: ColumnDef, skillId: number) {
+function getCellToggleState(
+  row: MitigationRow,
+  rowIndex: number,
+  col: ColumnDef,
+  skillId: number,
+  info = getCellSim(row, col, skillId),
+): CellToggleState {
   const columnKey = col.key;
-  const isNormalMechanicCell = !row.isAOE && !row.isTB && !row.isShare;
-  const defaultManualOffsetSeconds = isNormalMechanicCell ? 0 : -2;
-
-  const info = getCellSim(row, col, skillId);
   const isChecked = findActionIndexByCell(props.playerActions, row.key, columnKey, skillId) !== -1;
   const firstVisibleUseCell = isFirstVisibleUseCell(rowIndex, col, skillId, info);
-
   const isExactUseCell = isTimestampClose(
     info?.useTimestamp,
     row.timestamp,
@@ -887,7 +1001,28 @@ function toggleCell(row: MitigationRow, rowIndex: number, col: ColumnDef, skillI
       info.status === "active-start" ||
       info.status === "active" ||
       isExactUseCell);
-  const canClick = isChecked || canCancelRenderedUse || (info?.status === "" && info?.ready);
+  const addPlacement =
+    info?.status === "" && info.ready ? getAddPlacementAvailability(row, col, skillId) : undefined;
+  const canToggle = isChecked || canCancelRenderedUse || !!addPlacement?.canPlace;
+  return {
+    isChecked,
+    canCancelRenderedUse,
+    canToggle,
+    mode: isChecked || canCancelRenderedUse ? "remove" : canToggle ? "add" : "disabled",
+    disabledReason: addPlacement && !addPlacement.canPlace ? addPlacement.reason : undefined,
+    suggestedTimestamp: addPlacement?.timestamp,
+  };
+}
+
+function toggleCell(row: MitigationRow, rowIndex: number, col: ColumnDef, skillId: number) {
+  const columnKey = col.key;
+
+  const info = getCellSim(row, col, skillId);
+  const {
+    isChecked,
+    canCancelRenderedUse,
+    canToggle: canClick,
+  } = getCellToggleState(row, rowIndex, col, skillId, info);
 
   if (!canClick) return;
 
@@ -917,27 +1052,96 @@ function toggleCell(row: MitigationRow, rowIndex: number, col: ColumnDef, skillI
       return;
     }
   } else {
-    let newTimestamp = row.timestamp + defaultManualOffsetSeconds;
-    if (!validateActionPlacement(col, skillId, newTimestamp, undefined, false)) {
-      const fallbackOffset = Math.max(defaultManualOffsetSeconds, 0);
-      newTimestamp = row.timestamp + fallbackOffset;
+    const addPlacement = getAddPlacementAvailability(row, col, skillId);
+    if (!addPlacement.canPlace) {
+      if (addPlacement.reason) ElMessage.error(addPlacement.reason);
+      return;
     }
-    if (!validateActionPlacement(col, skillId, newTimestamp)) return;
     const record: PlayerActionRecord = {
       id: createActionId(),
-      timestamp: newTimestamp,
+      timestamp: addPlacement.timestamp,
       columnKey,
       skillId,
-      rowKey: resolveRowKeyByTimestamp(newTimestamp) || row.key,
+      rowKey: resolveRowKeyByTimestamp(addPlacement.timestamp) || row.key,
     };
     newActions.push(record);
   }
   emitPlayerActions(newActions);
 }
 
-const editingCell = ref<EditingCellState | null>(null);
+const gridMainRef = ref<HTMLElement | null>(null);
+const selectedCell = ref<SelectedCellState | null>(null);
 const editForm = reactive({ offset: 0 });
 const EDIT_OFFSET_BOUNDARY_SCAN_LIMIT = 7200;
+
+function isSelectedCell(row: MitigationRow, col: ColumnDef, skillId: number) {
+  return (
+    selectedCell.value?.rowKey === row.key &&
+    selectedCell.value?.colKey === col.key &&
+    selectedCell.value?.skillId === skillId
+  );
+}
+
+function isSelectedRow(row: MitigationRow) {
+  return selectedCell.value?.rowKey === row.key;
+}
+
+function buildCellDomKey(rowKey: string, colKey: string, skillId: number) {
+  return `${rowKey}::${colKey}::${skillId}`;
+}
+
+function scrollCellIntoView(rowKey: string, colKey: string, skillId: number) {
+  void nextTick(() => {
+    const cellKey = buildCellDomKey(rowKey, colKey, skillId);
+    const target = [
+      ...(gridMainRef.value?.querySelectorAll<HTMLElement>(".cell-check") ?? []),
+    ].find((cell) => cell.dataset.cellKey === cellKey);
+    target?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  });
+}
+
+function selectCell(
+  row: MitigationRow,
+  col: ColumnDef,
+  skillId: number,
+  options: { ensureVisible?: boolean } = {},
+) {
+  clearOverlays();
+  selectedCell.value = {
+    rowKey: row.key,
+    colKey: col.key,
+    skillId,
+  };
+  if (options.ensureVisible) scrollCellIntoView(row.key, col.key, skillId);
+}
+
+function clearSelectedCell() {
+  selectedCell.value = null;
+}
+
+function handleCellClick(row: MitigationRow, col: ColumnDef, skillId: number) {
+  selectCell(row, col, skillId);
+}
+
+function handleCellDoubleClick(
+  row: MitigationRow,
+  rowIndex: number,
+  col: ColumnDef,
+  skillId: number,
+) {
+  selectCell(row, col, skillId);
+  toggleCell(row, rowIndex, col, skillId);
+}
+
+function handleCellContextMenu(
+  event: MouseEvent,
+  row: MitigationRow,
+  col: ColumnDef,
+  skill: MitigationSkill,
+) {
+  event.preventDefault();
+  selectCell(row, col, skill.id);
+}
 
 function findCellAction(row: MitigationRow, col: ColumnDef, skillId: number) {
   const info = getCellSim(row, col, skillId);
@@ -950,17 +1154,169 @@ function findCellAction(row: MitigationRow, col: ColumnDef, skillId: number) {
   return findActionByUseTimestamp(props.playerActions, col.key, skillId, info?.useTimestamp);
 }
 
+function resolveActionAnchorRow(action: PlayerActionRecord) {
+  if (action.rowKey) {
+    const byKey = sourceRows.value.find((row) => row.key === action.rowKey);
+    if (byKey) return byKey;
+  }
+  return resolveRowByTimestamp(action.timestamp);
+}
+
+const selectedCellContext = computed(() => {
+  const current = selectedCell.value;
+  if (!current) return null;
+  const rowIndex = props.rows.findIndex((row) => row.key === current.rowKey);
+  if (rowIndex === -1) return null;
+  const row = props.rows[rowIndex];
+  const col = props.columns.find((item) => item.key === current.colKey);
+  if (!row || !col) return null;
+  const skill = col.skills.find((item) => item.id === current.skillId);
+  if (!skill) return null;
+  const sim = getCellSim(row, col, skill.id);
+  if (!sim) return null;
+  const action = findCellAction(row, col, skill.id);
+  const actionAnchorRow = action ? resolveActionAnchorRow(action) : undefined;
+  const actionBaseTime = actionAnchorRow?.timestamp ?? row.timestamp;
+  return {
+    row,
+    rowIndex,
+    col,
+    skill,
+    sim,
+    action,
+    actionAnchorRow,
+    actionBaseTime,
+    toggleState: getCellToggleState(row, rowIndex, col, skill.id, sim),
+  };
+});
+
+const selectionCellOrder = computed(() =>
+  props.columns.flatMap((col) =>
+    getVisibleSkills(col).map((skill) => ({
+      col,
+      skillId: skill.id,
+    })),
+  ),
+);
+
+function getSelectedCellPosition() {
+  const current = selectedCell.value;
+  if (!current) return null;
+  const rowIndex = props.rows.findIndex((row) => row.key === current.rowKey);
+  const cellIndex = selectionCellOrder.value.findIndex(
+    (entry) => entry.col.key === current.colKey && entry.skillId === current.skillId,
+  );
+  if (rowIndex === -1 || cellIndex === -1) return null;
+  return { rowIndex, cellIndex };
+}
+
+function selectCellByPosition(rowIndex: number, cellIndex: number) {
+  const row = props.rows[rowIndex];
+  const entry = selectionCellOrder.value[cellIndex];
+  if (!row || !entry) return;
+  selectCell(row, entry.col, entry.skillId, { ensureVisible: true });
+}
+
+function moveSelectedCell(rowDelta: number, cellDelta: number) {
+  if (props.rows.length === 0 || selectionCellOrder.value.length === 0) return;
+  const current = getSelectedCellPosition();
+  if (!current) return;
+
+  const nextRowIndex = Math.min(Math.max(current.rowIndex + rowDelta, 0), props.rows.length - 1);
+  const nextCellIndex = Math.min(
+    Math.max(current.cellIndex + cellDelta, 0),
+    selectionCellOrder.value.length - 1,
+  );
+  if (nextRowIndex === current.rowIndex && nextCellIndex === current.cellIndex) return;
+  selectCellByPosition(nextRowIndex, nextCellIndex);
+}
+
+const selectedCellContextIdentity = computed(() => {
+  const ctx = selectedCellContext.value;
+  if (!ctx) return "";
+  return [
+    ctx.row.key,
+    ctx.col.key,
+    ctx.skill.id,
+    ctx.action?.id || "",
+    ctx.action?.timestamp || "",
+    ctx.actionBaseTime,
+  ].join("|");
+});
+
+watch(
+  selectedCellContextIdentity,
+  () => {
+    const ctx = selectedCellContext.value;
+    if (!ctx?.action) {
+      editForm.offset = 0;
+      return;
+    }
+    editForm.offset = ctx.action.timestamp - ctx.actionBaseTime;
+  },
+  { immediate: true },
+);
+
+watch(
+  () => selectedCellContext.value,
+  (ctx) => {
+    if (selectedCell.value && !ctx) clearSelectedCell();
+  },
+  { deep: false },
+);
+
+const selectedCellStatusLabel = computed(() => {
+  const ctx = selectedCellContext.value;
+  if (!ctx) return "";
+  return getStatusLabelForCell(
+    ctx.sim.status,
+    ctx.sim.useTimestamp,
+    ctx.row.timestamp,
+    ctx.skill.duration,
+  );
+});
+
+const selectedCellPrimaryActionLabel = computed(() => {
+  const ctx = selectedCellContext.value;
+  if (!ctx) return "请选择单元格";
+  if (ctx.toggleState.mode === "remove") {
+    return ctx.toggleState.isChecked ? "移除此处释放" : "移除当前覆盖释放";
+  }
+  if (ctx.toggleState.mode === "add") return "在此处添加释放";
+  return "此处当前不可操作";
+});
+
+const selectedCellInlineHint = computed(() => {
+  const ctx = selectedCellContext.value;
+  if (!ctx) return "";
+  if (ctx.toggleState.mode === "add") {
+    if (
+      ctx.toggleState.suggestedTimestamp !== undefined &&
+      !isTimestampClose(ctx.toggleState.suggestedTimestamp, ctx.row.timestamp)
+    ) {
+      return `这会新增一次释放，并自动落在 ${formatTime(ctx.toggleState.suggestedTimestamp)}。`;
+    }
+    return "这会在当前机制附近新增一次释放。";
+  }
+  if (ctx.toggleState.mode === "remove" && ctx.toggleState.isChecked)
+    return "当前格绑定了一个明确的释放记录。";
+  if (ctx.toggleState.mode === "remove") return "当前格显示的是一次持续中的覆盖效果。";
+  if (ctx.toggleState.disabledReason)
+    return `当前不能在这里添加释放：${ctx.toggleState.disabledReason}`;
+  if (ctx.sim.status === "cooldown") return "当前技能还在冷却中。";
+  if (ctx.sim.status === "conflict") return "当前技能会与后续释放节奏冲突。";
+  return "当前格因为冷却、充能或约束条件，暂时不能放置释放。";
+});
+
 function getEditingActionContext() {
-  if (!editingCell.value) return null;
-  const { actionId, rowKey, colKey, skillId, baseTime } = editingCell.value;
-  const col = props.columns.find((c) => c.key === colKey);
-  if (!col) return null;
-  const columnKey = col.key;
-  const originalAction =
-    findActionById(props.playerActions, actionId) ||
-    findActionByCell(props.playerActions, rowKey, columnKey, skillId);
-  if (!originalAction) return null;
-  return { col, skillId, baseTime, originalAction };
+  const ctx = selectedCellContext.value;
+  if (!ctx?.action) return null;
+  return {
+    col: ctx.col,
+    skillId: ctx.skill.id,
+    baseTime: ctx.actionBaseTime,
+    originalAction: ctx.action,
+  };
 }
 
 function canUpdateEditOffsetWithContext(
@@ -1031,59 +1387,32 @@ const editOffsetModel = computed<number>({
 });
 
 const editDisplayTime = computed(() => {
-  if (!editingCell.value) return "";
-  return formatTime(editingCell.value.baseTime + editForm.offset);
+  const ctx = getEditingActionContext();
+  if (!ctx) return "";
+  return formatTime(ctx.baseTime + editForm.offset);
 });
 
-function handleRightClickCell(
-  event: MouseEvent,
-  row: MitigationRow,
-  col: ColumnDef,
-  skill: MitigationSkill & { id: number; name: string },
-) {
-  event.preventDefault();
-  if (activeOverlay.value || editingCell.value) {
-    clearOverlays();
-  }
-  const action = findCellAction(row, col, skill.id);
-  if (!action) return;
-
-  editingCell.value = {
-    actionId: action.id,
-    rowKey: row.key,
-    colKey: col.key,
-    skillId: skill.id,
-    target: event.currentTarget as HTMLElement,
-    title: `${formatTime(row.timestamp)} | ${skill.name}`,
-    baseTime: row.timestamp,
-  };
-  editForm.offset = action.timestamp - row.timestamp;
+function toggleSelectedCellAction() {
+  const ctx = selectedCellContext.value;
+  if (!ctx) return;
+  toggleCell(ctx.row, ctx.rowIndex, ctx.col, ctx.skill.id);
 }
 
 function saveEdit() {
-  if (!editingCell.value) return;
-  const { actionId, rowKey, colKey, skillId, baseTime } = editingCell.value;
-  const col = props.columns.find((c) => c.key === colKey);
-  if (!col) return;
-  const columnKey = col.key;
-
-  let index = findActionIndexById(props.playerActions, actionId);
-  if (index === -1) index = findActionIndexByCell(props.playerActions, rowKey, columnKey, skillId);
-
-  if (index !== -1) {
-    const originalAction = props.playerActions[index]!;
-    const newTimestamp = baseTime + editForm.offset;
-    if (!validateActionPlacement(col, skillId, newTimestamp, originalAction)) return;
-    const newActions = [...props.playerActions];
-    newActions[index] = {
-      ...originalAction,
-      id: originalAction.id || createActionId(),
-      timestamp: newTimestamp,
-      rowKey: resolveRowKeyByTimestamp(newTimestamp),
-    };
-    emitPlayerActions(newActions);
-  }
-  editingCell.value = null;
+  const ctx = getEditingActionContext();
+  if (!ctx) return;
+  const index = findActionIndexById(props.playerActions, ctx.originalAction.id);
+  if (index === -1) return;
+  const newTimestamp = ctx.baseTime + editForm.offset;
+  if (!validateActionPlacement(ctx.col, ctx.skillId, newTimestamp, ctx.originalAction)) return;
+  const newActions = [...props.playerActions];
+  newActions[index] = {
+    ...ctx.originalAction,
+    id: ctx.originalAction.id || createActionId(),
+    timestamp: newTimestamp,
+    rowKey: resolveRowKeyByTimestamp(newTimestamp),
+  };
+  emitPlayerActions(newActions);
 }
 
 const columnHiddenHash = computed(() => {
@@ -1138,6 +1467,7 @@ function getCellClasses(row: MitigationRow, rowIndex: number, col: ColumnDef, sk
     {
       "conn-prev": connPrev,
       "conn-next": connNext,
+      "is-selected": isSelectedCell(row, col, skillId),
     },
   ];
 }
@@ -1477,7 +1807,9 @@ function pasteColumnData() {
     });
 }
 
-const isCellPopoverVisible = computed(() => !activeOverlay.value && cellPopover.visible);
+const isCellPopoverVisible = computed(
+  () => !activeOverlay.value && !selectedCell.value && cellPopover.visible,
+);
 
 function showCellPopover(
   event: MouseEvent,
@@ -1485,7 +1817,7 @@ function showCellPopover(
   col: ColumnDef,
   skill: MitigationSkill,
 ) {
-  if (activeOverlay.value || editingCell.value || !!activeSkillDetailKey.value) return;
+  if (activeOverlay.value || !!selectedCell.value || !!activeSkillDetailKey.value) return;
   hideSkillDetail();
   const info = getCellSim(row, col, skill.id);
   if (!info) return;
@@ -1514,7 +1846,6 @@ const cellPopoverInfo = computed(() => {
 
 function clearOverlays() {
   activeOverlay.value = null;
-  editingCell.value = null;
   cellPopover.visible = false;
   hideSkillDetail();
 }
@@ -3613,499 +3944,664 @@ function handleColumnNameClick(col: ColumnDef) {
 
 <template>
   <div class="grid-container" @contextmenu.prevent>
-    <div class="grid-table" :style="gridStyleVars">
-      <!-- Header -->
-      <div class="row header">
-        <div class="cell fixed-w-cast-start">
-          <span class="header-label">读条</span>
-        </div>
-        <div class="cell fixed-w-time">
-          <span class="header-label">时间</span>
-        </div>
-        <div class="cell fixed-w-name">
-          <div class="header-inner">
-            <span class="header-label">机制名称</span>
-            <el-popover
-              :visible="activeOverlay === 'mechanic-filter'"
-              placement="bottom-start"
-              width="auto"
-              trigger="click"
-              :show-arrow="false"
-            >
-              <template #reference>
-                <el-icon
-                  class="filter-icon"
-                  :class="{ active: (filterMechanics?.length || 0) > 0 }"
-                  @click.stop="toggleOverlay('mechanic-filter')"
-                >
-                  <Filter />
-                </el-icon>
-              </template>
-              <div class="filter-popover" @click.stop>
-                <div class="filter-section">
-                  <div class="section-header">
-                    <el-checkbox
-                      :model-value="isAOESelected"
-                      :indeterminate="isIndeterminateAOE"
-                      @change="handleAOEMechanicsChange"
-                    >
-                      AOE
-                    </el-checkbox>
-                  </div>
-                  <div class="section-list">
-                    <el-checkbox
-                      v-for="opt in aoeMechanics"
-                      :key="opt.actionId"
-                      :model-value="isMechanicChecked(opt.actionId)"
-                      :label="
-                        opt.actionId
-                          ? opt.action
-                            ? `${opt.action} (${opt.actionId})`
-                            : opt.actionId
-                          : opt.action
-                      "
-                      size="small"
-                      @change="(value) => handleMechanicToggle(opt.actionId, value)"
-                    />
-                  </div>
-                </div>
-
-                <div class="filter-section">
-                  <div class="section-header">
-                    <el-checkbox
-                      :model-value="isShareSelected"
-                      :indeterminate="isIndeterminateShare"
-                      @change="handleShareMechanicsChange"
-                    >
-                      分摊
-                    </el-checkbox>
-                  </div>
-                  <div class="section-list">
-                    <el-checkbox
-                      v-for="opt in shareMechanics"
-                      :key="opt.actionId"
-                      :model-value="isMechanicChecked(opt.actionId)"
-                      :label="
-                        opt.actionId
-                          ? opt.action
-                            ? `${opt.action} (${opt.actionId})`
-                            : opt.actionId
-                          : opt.action
-                      "
-                      size="small"
-                      @change="(value) => handleMechanicToggle(opt.actionId, value)"
-                    />
-                  </div>
-                </div>
-
-                <div class="filter-section">
-                  <div class="section-header">
-                    <el-checkbox
-                      :model-value="isTBSelected"
-                      :indeterminate="isIndeterminateTB"
-                      @change="handleTBMechanicsChange"
-                    >
-                      死刑
-                    </el-checkbox>
-                  </div>
-                  <div class="section-list">
-                    <el-checkbox
-                      v-for="opt in tbMechanics"
-                      :key="opt.actionId"
-                      :model-value="isMechanicChecked(opt.actionId)"
-                      :label="
-                        opt.actionId
-                          ? opt.action
-                            ? `${opt.action} (${opt.actionId})`
-                            : opt.actionId
-                          : opt.action
-                      "
-                      size="small"
-                      @change="(value) => handleMechanicToggle(opt.actionId, value)"
-                    />
-                  </div>
-                </div>
-
-                <div class="filter-section">
-                  <div class="section-header">
-                    <el-checkbox
-                      :model-value="isNormalSelected"
-                      :indeterminate="isIndeterminateNormal"
-                      @change="handleNormalMechanicsChange"
-                    >
-                      其他
-                    </el-checkbox>
-                  </div>
-                  <div class="section-list">
-                    <el-checkbox
-                      v-for="opt in normalMechanics"
-                      :key="opt.actionId"
-                      :model-value="isMechanicChecked(opt.actionId)"
-                      :label="
-                        opt.actionId
-                          ? opt.action
-                            ? `${opt.action} (${opt.actionId})`
-                            : opt.actionId
-                          : opt.action
-                      "
-                      size="small"
-                      @change="(value) => handleMechanicToggle(opt.actionId, value)"
-                    />
-                  </div>
-                </div>
-              </div>
-            </el-popover>
+    <div ref="gridMainRef" class="grid-main">
+      <div class="grid-table" :style="gridStyleVars">
+        <!-- Header -->
+        <div class="row header">
+          <div class="cell fixed-w-cast-start">
+            <span class="header-label">读条</span>
           </div>
-        </div>
-        <div class="cell fixed-w-target">
-          <span class="header-label">目标</span>
-        </div>
-
-        <div class="cell fixed-w-dmg">
-          <span class="header-label">原伤</span>
-        </div>
-        <div class="cell fixed-w-shield">
-          <span class="header-label">护盾</span>
-        </div>
-        <div class="cell fixed-w-reduction">
-          <span class="header-label">减伤率</span>
-        </div>
-        <div class="cell fixed-w-dmg">
-          <span class="header-label">模拟伤害</span>
-        </div>
-
-        <VueDraggable
-          :model-value="columns"
-          class="columns-drag-row"
-          :animation="150"
-          :force-fallback="true"
-          :fallback-tolerance="16"
-          ghost-class="col-ghost"
-          drag-class="col-drag"
-          fallback-class="col-fallback"
-          handle=".col-name-trigger"
-          @start="isColumnDragging = true"
-          @end="onColumnDragEnd"
-          @update:model-value="handleColumnsDragUpdate"
-        >
-          <div
-            v-for="col in columns"
-            :key="col.key"
-            class="cell col-header"
-            :style="{ width: `${getColumnWidth(col)}px`, minWidth: `${getColumnWidth(col)}px` }"
-          >
-            <div class="col-name-row">
+          <div class="cell fixed-w-time">
+            <span class="header-label">时间</span>
+          </div>
+          <div class="cell fixed-w-name">
+            <div class="header-inner">
+              <span class="header-label">机制名称</span>
               <el-popover
-                :visible="activeOverlay === `col-filter-${col.key}`"
-                placement="bottom"
-                :width="150"
-                popper-style="padding: 6px"
+                :visible="activeOverlay === 'mechanic-filter'"
+                placement="bottom-start"
+                width="auto"
                 trigger="click"
                 :show-arrow="false"
               >
                 <template #reference>
-                  <div
-                    class="col-name col-name-trigger"
-                    :class="{ filtered: (col.hiddenSkillIds?.length || 0) > 0 }"
-                    @click.stop="handleColumnNameClick(col)"
-                    @contextmenu.prevent="handleRightClickColumn(col, $event)"
+                  <el-icon
+                    class="filter-icon"
+                    :class="{ active: (filterMechanics?.length || 0) > 0 }"
+                    @click.stop="toggleOverlay('mechanic-filter')"
                   >
-                    <span class="col-name-main">{{ getMitigationColumnDisplayName(col) }}</span>
-                  </div>
+                    <Filter />
+                  </el-icon>
                 </template>
-                <div class="skill-filter-list" @click.stop>
-                  <div class="column-party-editor">
-                    <el-select
-                      v-if="partyCompositionJobOptions && partyCompositionJobOptions.length > 0"
-                      :model-value="col.jobEnum"
-                      size="small"
-                      class="column-party-job-select"
-                      @update:model-value="(value) => handlePartyColumnJobChange(col, value)"
-                    >
-                      <el-option
-                        v-for="option in partyCompositionJobOptions"
-                        :key="option.value"
-                        :label="option.label"
-                        :value="option.value"
-                      />
-                    </el-select>
-                  </div>
-                  <VueDraggable
-                    :model-value="col.skills"
-                    :animation="150"
-                    :force-fallback="true"
-                    ghost-class="ghost"
-                    drag-class="drag"
-                    fallback-class="fallback"
-                    handle=".drag-handle"
-                    class="skill-drag-list"
-                    :class="{ 'is-dragging': isDragging, 'just-finished-drag': isJustFinishedDrag }"
-                    @start="isDragging = true"
-                    @end="onDragEnd"
-                    @update:model-value="
-                      (val: MitigationSkill[]) => handleSkillsDragUpdate(col, val)
-                    "
-                  >
-                    <div v-for="skill in col.skills" :key="skill.id" class="skill-filter-item">
+                <div class="filter-popover" @click.stop>
+                  <div class="filter-section">
+                    <div class="section-header">
                       <el-checkbox
-                        :model-value="!isSkillHidden(col, skill.id)"
-                        size="small"
-                        class="skill-checkbox"
-                        @update:model-value="toggleSkillVisibility(col, skill.id)"
+                        :model-value="isAOESelected"
+                        :indeterminate="isIndeterminateAOE"
+                        @change="handleAOEMechanicsChange"
                       >
-                        <div class="skill-filter-label">
-                          <img :src="skill.icon" class="mini-icon" />
-                          <span>{{ skill.name }}</span>
-                        </div>
+                        AOE
                       </el-checkbox>
-                      <div class="drag-handle">
-                        <el-icon><Rank /></el-icon>
-                      </div>
                     </div>
-                  </VueDraggable>
+                    <div class="section-list">
+                      <el-checkbox
+                        v-for="opt in aoeMechanics"
+                        :key="opt.actionId"
+                        :model-value="isMechanicChecked(opt.actionId)"
+                        :label="
+                          opt.actionId
+                            ? opt.action
+                              ? `${opt.action} (${opt.actionId})`
+                              : opt.actionId
+                            : opt.action
+                        "
+                        size="small"
+                        @change="(value) => handleMechanicToggle(opt.actionId, value)"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="filter-section">
+                    <div class="section-header">
+                      <el-checkbox
+                        :model-value="isShareSelected"
+                        :indeterminate="isIndeterminateShare"
+                        @change="handleShareMechanicsChange"
+                      >
+                        分摊
+                      </el-checkbox>
+                    </div>
+                    <div class="section-list">
+                      <el-checkbox
+                        v-for="opt in shareMechanics"
+                        :key="opt.actionId"
+                        :model-value="isMechanicChecked(opt.actionId)"
+                        :label="
+                          opt.actionId
+                            ? opt.action
+                              ? `${opt.action} (${opt.actionId})`
+                              : opt.actionId
+                            : opt.action
+                        "
+                        size="small"
+                        @change="(value) => handleMechanicToggle(opt.actionId, value)"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="filter-section">
+                    <div class="section-header">
+                      <el-checkbox
+                        :model-value="isTBSelected"
+                        :indeterminate="isIndeterminateTB"
+                        @change="handleTBMechanicsChange"
+                      >
+                        死刑
+                      </el-checkbox>
+                    </div>
+                    <div class="section-list">
+                      <el-checkbox
+                        v-for="opt in tbMechanics"
+                        :key="opt.actionId"
+                        :model-value="isMechanicChecked(opt.actionId)"
+                        :label="
+                          opt.actionId
+                            ? opt.action
+                              ? `${opt.action} (${opt.actionId})`
+                              : opt.actionId
+                            : opt.action
+                        "
+                        size="small"
+                        @change="(value) => handleMechanicToggle(opt.actionId, value)"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="filter-section">
+                    <div class="section-header">
+                      <el-checkbox
+                        :model-value="isNormalSelected"
+                        :indeterminate="isIndeterminateNormal"
+                        @change="handleNormalMechanicsChange"
+                      >
+                        其他
+                      </el-checkbox>
+                    </div>
+                    <div class="section-list">
+                      <el-checkbox
+                        v-for="opt in normalMechanics"
+                        :key="opt.actionId"
+                        :model-value="isMechanicChecked(opt.actionId)"
+                        :label="
+                          opt.actionId
+                            ? opt.action
+                              ? `${opt.action} (${opt.actionId})`
+                              : opt.actionId
+                            : opt.action
+                        "
+                        size="small"
+                        @change="(value) => handleMechanicToggle(opt.actionId, value)"
+                      />
+                    </div>
+                  </div>
                 </div>
               </el-popover>
             </div>
-            <div class="skills-row">
-              <div
-                v-for="skill in getVisibleSkills(col)"
-                :key="skill.id"
-                class="skill-icon-wrap clickable"
-                @contextmenu.prevent="handleRightClickSkill($event, col, skill)"
-                @mouseenter="cancelSkillDetailHide"
-                @mouseleave="scheduleHideSkillDetail"
-              >
-                <el-tooltip
+          </div>
+          <div class="cell fixed-w-target">
+            <span class="header-label">目标</span>
+          </div>
+
+          <div class="cell fixed-w-dmg">
+            <span class="header-label">原伤</span>
+          </div>
+          <div class="cell fixed-w-shield">
+            <span class="header-label">护盾</span>
+          </div>
+          <div class="cell fixed-w-reduction">
+            <span class="header-label">减伤率</span>
+          </div>
+          <div class="cell fixed-w-dmg">
+            <span class="header-label">模拟伤害</span>
+          </div>
+
+          <VueDraggable
+            :model-value="columns"
+            class="columns-drag-row"
+            :animation="150"
+            :force-fallback="true"
+            :fallback-tolerance="16"
+            ghost-class="col-ghost"
+            drag-class="col-drag"
+            fallback-class="col-fallback"
+            handle=".col-name-trigger"
+            @start="isColumnDragging = true"
+            @end="onColumnDragEnd"
+            @update:model-value="handleColumnsDragUpdate"
+          >
+            <div
+              v-for="col in columns"
+              :key="col.key"
+              class="cell col-header"
+              :style="{ width: `${getColumnWidth(col)}px`, minWidth: `${getColumnWidth(col)}px` }"
+            >
+              <div class="col-name-row">
+                <el-popover
+                  :visible="activeOverlay === `col-filter-${col.key}`"
+                  placement="bottom"
+                  :width="150"
+                  popper-style="padding: 6px"
                   trigger="click"
-                  placement="top"
-                  :offset="5"
-                  effect="light"
-                  popper-class="skill-header-tooltip"
-                  :visible="isSkillDetailVisible(col.key, skill.id)"
-                  @update:visible="
-                    (visible) => updateSkillDetailVisible(col.key, skill.id, visible)
-                  "
+                  :show-arrow="false"
                 >
-                  <template #content>
+                  <template #reference>
                     <div
-                      class="skill-header-tooltip-content"
+                      class="col-name col-name-trigger"
+                      :class="{ filtered: (col.hiddenSkillIds?.length || 0) > 0 }"
+                      @click.stop="handleColumnNameClick(col)"
+                      @contextmenu.prevent="handleRightClickColumn(col, $event)"
+                    >
+                      <span class="col-name-main">{{ getMitigationColumnDisplayName(col) }}</span>
+                    </div>
+                  </template>
+                  <div class="skill-filter-list" @click.stop>
+                    <div class="column-party-editor">
+                      <el-select
+                        v-if="partyCompositionJobOptions && partyCompositionJobOptions.length > 0"
+                        :model-value="col.jobEnum"
+                        size="small"
+                        class="column-party-job-select"
+                        @update:model-value="(value) => handlePartyColumnJobChange(col, value)"
+                      >
+                        <el-option
+                          v-for="option in partyCompositionJobOptions"
+                          :key="option.value"
+                          :label="option.label"
+                          :value="option.value"
+                        />
+                      </el-select>
+                    </div>
+                    <VueDraggable
+                      :model-value="col.skills"
+                      :animation="150"
+                      :force-fallback="true"
+                      ghost-class="ghost"
+                      drag-class="drag"
+                      fallback-class="fallback"
+                      handle=".drag-handle"
+                      class="skill-drag-list"
+                      :class="{
+                        'is-dragging': isDragging,
+                        'just-finished-drag': isJustFinishedDrag,
+                      }"
+                      @start="isDragging = true"
+                      @end="onDragEnd"
+                      @update:model-value="
+                        (val: MitigationSkill[]) => handleSkillsDragUpdate(col, val)
+                      "
+                    >
+                      <div v-for="skill in col.skills" :key="skill.id" class="skill-filter-item">
+                        <el-checkbox
+                          :model-value="!isSkillHidden(col, skill.id)"
+                          size="small"
+                          class="skill-checkbox"
+                          @update:model-value="toggleSkillVisibility(col, skill.id)"
+                        >
+                          <div class="skill-filter-label">
+                            <img :src="skill.icon" class="mini-icon" />
+                            <span>{{ skill.name }}</span>
+                          </div>
+                        </el-checkbox>
+                        <div class="drag-handle">
+                          <el-icon><Rank /></el-icon>
+                        </div>
+                      </div>
+                    </VueDraggable>
+                  </div>
+                </el-popover>
+              </div>
+              <div class="skills-row">
+                <div
+                  v-for="skill in getVisibleSkills(col)"
+                  :key="skill.id"
+                  class="skill-icon-wrap clickable"
+                  @contextmenu.prevent="handleRightClickSkill($event, col, skill)"
+                  @mouseenter="cancelSkillDetailHide"
+                  @mouseleave="scheduleHideSkillDetail"
+                >
+                  <el-tooltip
+                    trigger="click"
+                    placement="top"
+                    :offset="5"
+                    effect="light"
+                    popper-class="skill-header-tooltip"
+                    :visible="isSkillDetailVisible(col.key, skill.id)"
+                    @update:visible="
+                      (visible) => updateSkillDetailVisible(col.key, skill.id, visible)
+                    "
+                  >
+                    <template #content>
+                      <div
+                        class="skill-header-tooltip-content"
+                        @mouseenter="cancelSkillDetailHide"
+                        @mouseleave="scheduleHideSkillDetail"
+                      >
+                        <div class="skill-header-tooltip-title">
+                          {{ skill.name }}
+                        </div>
+                        <div class="skill-header-tooltip-row">
+                          ID: <span class="font-mono">{{ skill.id }}</span>
+                        </div>
+                        <div class="skill-header-tooltip-row">
+                          冷却:
+                          <span class="font-mono">{{ formatSkillSeconds(skill.recast) }}</span>
+                        </div>
+                        <div class="skill-header-tooltip-row">
+                          持续:
+                          <span class="font-mono">{{ formatSkillSeconds(skill.duration) }}</span>
+                        </div>
+                        <div class="skill-header-tooltip-row">
+                          充能: <span class="font-mono">{{ skill.maxCharges || 1 }}</span>
+                        </div>
+                        <div class="skill-header-tooltip-row">
+                          作用域: {{ getSkillScopeLabel(skill.mitigationScope) }}
+                        </div>
+                        <div class="skill-header-tooltip-row">
+                          减伤: {{ getSkillMitigationSummary(skill) }}
+                        </div>
+                      </div>
+                    </template>
+                    <div
+                      class="skill-icon-reference"
+                      @click.stop
                       @mouseenter="cancelSkillDetailHide"
                       @mouseleave="scheduleHideSkillDetail"
                     >
-                      <div class="skill-header-tooltip-title">
-                        {{ skill.name }}
-                      </div>
-                      <div class="skill-header-tooltip-row">
-                        ID: <span class="font-mono">{{ skill.id }}</span>
-                      </div>
-                      <div class="skill-header-tooltip-row">
-                        冷却: <span class="font-mono">{{ formatSkillSeconds(skill.recast) }}</span>
-                      </div>
-                      <div class="skill-header-tooltip-row">
-                        持续:
-                        <span class="font-mono">{{ formatSkillSeconds(skill.duration) }}</span>
-                      </div>
-                      <div class="skill-header-tooltip-row">
-                        充能: <span class="font-mono">{{ skill.maxCharges || 1 }}</span>
-                      </div>
-                      <div class="skill-header-tooltip-row">
-                        作用域: {{ getSkillScopeLabel(skill.mitigationScope) }}
-                      </div>
-                      <div class="skill-header-tooltip-row">
-                        减伤: {{ getSkillMitigationSummary(skill) }}
-                      </div>
+                      <img
+                        v-if="skill.icon"
+                        :src="skill.icon"
+                        :alt="skill.name"
+                        class="skill-icon"
+                        @error="handleImgError"
+                      />
+                      <span v-else class="skill-letter">{{ skill.name[0] }}</span>
                     </div>
-                  </template>
-                  <div
-                    class="skill-icon-reference"
-                    @click.stop
-                    @mouseenter="cancelSkillDetailHide"
-                    @mouseleave="scheduleHideSkillDetail"
-                  >
-                    <img
-                      v-if="skill.icon"
-                      :src="skill.icon"
-                      :alt="skill.name"
-                      class="skill-icon"
-                      @error="handleImgError"
-                    />
-                    <span v-else class="skill-letter">{{ skill.name[0] }}</span>
-                  </div>
-                </el-tooltip>
+                  </el-tooltip>
+                </div>
               </div>
             </div>
+          </VueDraggable>
+          <div class="cell add-column-header">
+            <el-button size="small" text class="add-column-btn" @click.stop="addPartyColumn()">
+              <el-icon><Plus /></el-icon>
+            </el-button>
           </div>
-        </VueDraggable>
-        <div class="cell add-column-header">
-          <el-button size="small" text class="add-column-btn" @click.stop="addPartyColumn()">
-            <el-icon><Plus /></el-icon>
-          </el-button>
-        </div>
-      </div>
-
-      <!-- Rows -->
-      <div
-        v-for="(row, rowIndex) in rows"
-        :key="`${row.key}_${rowIndex}`"
-        v-memo="[
-          row._v,
-          row._sim?.shieldAbsorbed,
-          columns.length,
-          columnHiddenHash,
-          columnOrderHash,
-          damageNumberDisplayUnit,
-          mechanicColors.aoe,
-          mechanicColors.share,
-          mechanicColors.tb,
-          mechanicColors.normal,
-        ]"
-        class="row content-row"
-      >
-        <div class="cell fixed-w-cast-start">
-          {{ getCastStartDisplay(row) }}
-        </div>
-        <div class="cell fixed-w-time">
-          {{ formatTime(row.timestamp) }}
-        </div>
-        <div
-          class="cell fixed-w-name clickable text-ellipsis"
-          :class="{
-            'text-share': row.isShare,
-            'text-aoe': row.isAOE,
-            'text-tb': row.isTB,
-            'text-normal': !row.isShare && !row.isAOE && !row.isTB,
-          }"
-          :style="{
-            color: row.isShare
-              ? mechanicColors.share || '#f59e0b'
-              : row.isAOE
-                ? mechanicColors.aoe
-                : row.isTB
-                  ? mechanicColors.tb
-                  : mechanicColors.normal,
-          }"
-          @contextmenu.prevent="handleRightClickMechanic(row, $event)"
-        >
-          {{ row.action }}
-        </div>
-        <div
-          class="cell fixed-w-target clickable text-ellipsis"
-          @contextmenu.prevent="handleRightClickMechanicTarget(row, $event)"
-        >
-          <template v-if="isRowTargetingAllParty(row)">
-            <span class="target-all">全部</span>
-          </template>
-          <template v-else>
-            <template
-              v-for="(targetName, index) in getTargetLeadingNames(row)"
-              :key="`${row.key}_${targetName}_${index}`"
-            >
-              <span :class="getTargetRoleClass(targetName)">{{ targetName }}</span>
-              <span v-if="index < getTargetLeadingNames(row).length - 1"> / </span>
-            </template>
-            <span>{{ getTargetOverflowSuffix(row) }}</span>
-          </template>
         </div>
 
+        <!-- Rows -->
         <div
-          class="cell fixed-w-dmg font-mono"
-          :class="row._sim?.damageTypeClass"
-          @contextmenu.prevent="handleRightClickMechanicDamage(row, $event)"
+          v-for="(row, rowIndex) in rows"
+          :key="`${row.key}_${rowIndex}`"
+          v-memo="[
+            row._v,
+            row._sim?.shieldAbsorbed,
+            selectedCell?.rowKey,
+            selectedCell?.colKey,
+            selectedCell?.skillId,
+            columns.length,
+            columnHiddenHash,
+            columnOrderHash,
+            damageNumberDisplayUnit,
+            mechanicColors.aoe,
+            mechanicColors.share,
+            mechanicColors.tb,
+            mechanicColors.normal,
+          ]"
+          class="row content-row"
+          :class="{ 'is-selected-row': isSelectedRow(row) }"
         >
-          <span>{{ formatDamageNumber(row.rawDamage) }}</span>
-        </div>
-        <div class="cell fixed-w-shield">
-          <span class="font-mono">{{ formatDamageNumber(getRowShieldValue(row)) }}</span>
-        </div>
-        <div class="cell fixed-w-reduction font-mono">
-          {{ formatReduction(getRowReductionRate(row)) }}
-        </div>
-        <div class="cell fixed-w-dmg font-mono">
-          {{ formatDamageNumber(getSimulatedDamage(row)) }}
-        </div>
-
-        <div
-          v-for="col in columns"
-          :key="col.key"
-          class="cell col-content"
-          :style="{ width: `${getColumnWidth(col)}px`, minWidth: `${getColumnWidth(col)}px` }"
-        >
+          <div class="cell fixed-w-cast-start">
+            {{ getCastStartDisplay(row) }}
+          </div>
+          <div class="cell fixed-w-time">
+            {{ formatTime(row.timestamp) }}
+          </div>
           <div
-            v-for="skill in getVisibleSkills(col)"
-            :key="skill.id"
-            :class="getCellClasses(row, rowIndex, col, skill.id)"
-            @click.left="toggleCell(row, rowIndex, col, skill.id)"
-            @contextmenu.prevent="handleRightClickCell($event, row, col, skill)"
+            class="cell fixed-w-name clickable text-ellipsis"
+            :class="{
+              'text-share': row.isShare,
+              'text-aoe': row.isAOE,
+              'text-tb': row.isTB,
+              'text-normal': !row.isShare && !row.isAOE && !row.isTB,
+            }"
+            :style="{
+              color: row.isShare
+                ? mechanicColors.share || '#f59e0b'
+                : row.isAOE
+                  ? mechanicColors.aoe
+                  : row.isTB
+                    ? mechanicColors.tb
+                    : mechanicColors.normal,
+            }"
+            @contextmenu.prevent="handleRightClickMechanic(row, $event)"
+          >
+            {{ row.action }}
+          </div>
+          <div
+            class="cell fixed-w-target clickable text-ellipsis"
+            @contextmenu.prevent="handleRightClickMechanicTarget(row, $event)"
+          >
+            <template v-if="isRowTargetingAllParty(row)">
+              <span class="target-all">全部</span>
+            </template>
+            <template v-else>
+              <template
+                v-for="(targetName, index) in getTargetLeadingNames(row)"
+                :key="`${row.key}_${targetName}_${index}`"
+              >
+                <span :class="getTargetRoleClass(targetName)">{{ targetName }}</span>
+                <span v-if="index < getTargetLeadingNames(row).length - 1"> / </span>
+              </template>
+              <span>{{ getTargetOverflowSuffix(row) }}</span>
+            </template>
+          </div>
+
+          <div
+            class="cell fixed-w-dmg font-mono"
+            :class="row._sim?.damageTypeClass"
+            @contextmenu.prevent="handleRightClickMechanicDamage(row, $event)"
+          >
+            <span>{{ formatDamageNumber(row.rawDamage) }}</span>
+          </div>
+          <div class="cell fixed-w-shield">
+            <span class="font-mono">{{ formatDamageNumber(getRowShieldValue(row)) }}</span>
+          </div>
+          <div class="cell fixed-w-reduction font-mono">
+            {{ formatReduction(getRowReductionRate(row)) }}
+          </div>
+          <div class="cell fixed-w-dmg font-mono">
+            {{ formatDamageNumber(getSimulatedDamage(row)) }}
+          </div>
+
+          <div
+            v-for="col in columns"
+            :key="col.key"
+            class="cell col-content"
+            :style="{ width: `${getColumnWidth(col)}px`, minWidth: `${getColumnWidth(col)}px` }"
           >
             <div
-              v-if="shouldShowCellUseIcon(row, rowIndex, col, skill.id)"
-              class="check-dot"
-              :class="{ 'is-muted': shouldMuteCellUseIcon(row, col, skill.id) }"
+              v-for="skill in getVisibleSkills(col)"
+              :key="skill.id"
+              :class="getCellClasses(row, rowIndex, col, skill.id)"
+              :data-cell-key="buildCellDomKey(row.key, col.key, skill.id)"
+              @click.left="handleCellClick(row, col, skill.id)"
+              @dblclick.left="handleCellDoubleClick(row, rowIndex, col, skill.id)"
+              @contextmenu.prevent="handleCellContextMenu($event, row, col, skill)"
             >
-              <img
-                v-if="skill.icon"
-                :src="skill.icon"
-                :alt="skill.name"
-                class="check-icon"
-                @error="handleImgError"
+              <div
+                v-if="shouldShowCellUseIcon(row, rowIndex, col, skill.id)"
+                class="check-dot"
+                :class="{ 'is-muted': shouldMuteCellUseIcon(row, col, skill.id) }"
+              >
+                <img
+                  v-if="skill.icon"
+                  :src="skill.icon"
+                  :alt="skill.name"
+                  class="check-icon"
+                  @error="handleImgError"
+                />
+                <span v-else class="check-letter">{{ skill.name[0] }}</span>
+              </div>
+              <div
+                class="hover-trigger"
+                @mouseenter="showCellPopover($event, row, col, skill)"
+                @mouseleave="hideCellPopover"
               />
-              <span v-else class="check-letter">{{ skill.name[0] }}</span>
             </div>
-            <div
-              class="hover-trigger"
-              @mouseenter="showCellPopover($event, row, col, skill)"
-              @mouseleave="hideCellPopover"
-            />
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Edit Popover -->
-    <el-popover
-      :visible="!!editingCell"
-      :virtual-ref="editingCell?.target"
-      virtual-triggering
-      width="240"
-      popper-style="padding: 8px"
-    >
-      <div class="edit-popover" @click.stop>
-        <div class="edit-field">
-          <span>时间：</span>
-          <span class="time-display font-mono">{{ editDisplayTime }}</span>
+    <aside class="grid-inspector" @click.stop>
+      <template v-if="selectedCellContext">
+        <div class="inspector-header">
+          <div class="inspector-eyebrow">
+            {{ getMitigationColumnDisplayName(selectedCellContext.col) }}
+          </div>
+          <div class="inspector-title-row">
+            <img
+              v-if="selectedCellContext.skill.icon"
+              :src="selectedCellContext.skill.icon"
+              :alt="selectedCellContext.skill.name"
+              class="inspector-skill-icon"
+              @error="handleImgError"
+            />
+            <div v-else class="inspector-skill-fallback">
+              {{ selectedCellContext.skill.name[0] }}
+            </div>
+            <div class="inspector-title-group">
+              <div class="inspector-title">{{ selectedCellContext.skill.name }}</div>
+              <div class="inspector-subtitle">
+                {{ formatTime(selectedCellContext.row.timestamp) }} ·
+                {{ selectedCellContext.row.action }}
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="edit-field">
-          <span>偏移：</span>
-          <el-input-number
-            v-model="editOffsetModel"
-            :step="1"
-            size="small"
-            controls-position="right"
-            class="offset-input"
-            :class="[
-              {
-                'offset-input-inc-disabled': !canIncreaseEditOffset,
-                'offset-input-dec-disabled': !canDecreaseEditOffset,
-              },
-            ]"
-          />
-        </div>
-        <div class="edit-field">
-          <span>范围：</span>
-          <span class="offset-boundary-display font-mono"
-            >{{ editOffsetLowerLabel }} / {{ editOffsetUpperLabel }}</span
+
+        <div class="inspector-section">
+          <div class="inspector-chip-row">
+            <span
+              class="inspector-chip"
+              :class="{
+                'is-ready': selectedCellContext.sim.status === '',
+                'is-active':
+                  selectedCellContext.sim.status === 'active' ||
+                  selectedCellContext.sim.status === 'active-start',
+                'is-cooldown': selectedCellContext.sim.status === 'cooldown',
+                'is-conflict': selectedCellContext.sim.status === 'conflict',
+              }"
+            >
+              {{ selectedCellStatusLabel }}
+            </span>
+            <span class="inspector-chip is-muted">
+              {{ getSkillScopeLabel(selectedCellContext.skill.mitigationScope) }}
+            </span>
+          </div>
+          <p class="inspector-note">{{ selectedCellInlineHint }}</p>
+          <p
+            v-if="
+              selectedCellContext.sim.useTimestamp !== undefined &&
+              !isTimestampClose(
+                selectedCellContext.sim.useTimestamp,
+                selectedCellContext.row.timestamp,
+                EXACT_USE_TOLERANCE_SECONDS,
+              )
+            "
+            class="inspector-note emphasis"
           >
+            当前格显示的是
+            {{ formatTime(selectedCellContext.sim.useTimestamp) }}
+            开始的持续效果。
+          </p>
         </div>
-        <el-button
-          type="primary"
-          size="small"
-          style="width: 100%; margin-top: 8px"
-          @click="saveEdit"
-        >
-          Apply
-        </el-button>
-      </div>
-    </el-popover>
+
+        <div class="inspector-section">
+          <div class="inspector-section-title">当前机制</div>
+          <div class="inspector-kv">
+            <span>时间</span>
+            <strong class="font-mono">{{ formatTime(selectedCellContext.row.timestamp) }}</strong>
+          </div>
+          <div class="inspector-kv">
+            <span>目标</span>
+            <strong>{{ getTargetDisplayNames(selectedCellContext.row).join(" / ") || "-" }}</strong>
+          </div>
+          <div class="inspector-kv">
+            <span>原伤</span>
+            <strong class="font-mono">{{
+              formatDamageNumber(selectedCellContext.row.rawDamage)
+            }}</strong>
+          </div>
+          <div class="inspector-kv">
+            <span>模拟伤害</span>
+            <strong class="font-mono">{{
+              formatDamageNumber(getSimulatedDamage(selectedCellContext.row))
+            }}</strong>
+          </div>
+          <div class="inspector-kv">
+            <span>减伤效果</span>
+            <strong>{{ getSkillMitigationSummary(selectedCellContext.skill) }}</strong>
+          </div>
+        </div>
+
+        <div class="inspector-section">
+          <div class="inspector-section-title">释放状态</div>
+          <div class="inspector-kv">
+            <span>释放时间</span>
+            <strong class="font-mono">
+              {{
+                selectedCellContext.sim.useTimestamp !== undefined
+                  ? formatTime(selectedCellContext.sim.useTimestamp)
+                  : "--"
+              }}
+            </strong>
+          </div>
+          <div class="inspector-kv">
+            <span>剩余冷却</span>
+            <strong class="font-mono">{{ Math.round(selectedCellContext.sim.recastLeft) }}s</strong>
+          </div>
+          <div v-if="(selectedCellContext.skill.maxCharges ?? 0) > 1" class="inspector-kv">
+            <span>当前充能</span>
+            <strong class="font-mono">
+              {{ selectedCellContext.sim.charges }} / {{ selectedCellContext.skill.maxCharges }}
+            </strong>
+          </div>
+          <p
+            v-if="
+              selectedCellContext.sim.status === 'conflict' && selectedCellContext.sim.conflictTime
+            "
+            class="inspector-note danger"
+          >
+            会导致 {{ formatTime(selectedCellContext.sim.conflictTime) }} 处充能不足。
+          </p>
+        </div>
+
+        <div class="inspector-section">
+          <div class="inspector-section-title">操作</div>
+          <el-button
+            type="primary"
+            size="small"
+            :disabled="!selectedCellContext.toggleState.canToggle"
+            @click="toggleSelectedCellAction"
+          >
+            {{ selectedCellPrimaryActionLabel }}
+          </el-button>
+          <el-button text size="small" @click="clearSelectedCell">清除选择</el-button>
+          <p class="inspector-note shortcut">Enter 执行当前操作，方向键切到相邻技能格。</p>
+        </div>
+
+        <div class="inspector-section" :class="{ 'is-disabled': !selectedCellContext.action }">
+          <div class="inspector-section-title">释放时间微调</div>
+          <template v-if="selectedCellContext.action">
+            <div class="inspector-kv">
+              <span>锚点机制</span>
+              <strong class="font-mono">
+                {{
+                  formatTime(
+                    selectedCellContext.actionAnchorRow?.timestamp ??
+                      selectedCellContext.row.timestamp,
+                  )
+                }}
+              </strong>
+            </div>
+            <div class="inspector-kv">
+              <span>当前释放</span>
+              <strong class="font-mono">{{ editDisplayTime }}</strong>
+            </div>
+            <div class="inspector-edit-row">
+              <span>偏移</span>
+              <el-input-number
+                v-model="editOffsetModel"
+                :step="1"
+                size="small"
+                controls-position="right"
+                class="offset-input"
+                :class="[
+                  {
+                    'offset-input-inc-disabled': !canIncreaseEditOffset,
+                    'offset-input-dec-disabled': !canDecreaseEditOffset,
+                  },
+                ]"
+                @wheel.prevent="preventNumberInputWheel"
+              />
+            </div>
+            <div class="inspector-kv">
+              <span>可调范围</span>
+              <strong class="font-mono"
+                >{{ editOffsetLowerLabel }} / {{ editOffsetUpperLabel }}</strong
+              >
+            </div>
+            <el-button type="default" size="small" @click="saveEdit">保存时间</el-button>
+          </template>
+          <p v-else class="inspector-note">
+            先在这里添加一次实际释放，或选中一个已经落下的释放，再进行偏移调整。
+          </p>
+        </div>
+      </template>
+      <template v-else>
+        <div class="inspector-empty">
+          <div class="inspector-empty-title">检查器</div>
+          <p class="inspector-note">
+            单击左侧任意技能格，右侧会固定显示这格的状态、释放时间和可执行操作。
+          </p>
+          <p class="inspector-note">
+            这版先把高频动作搬到明处：添加/移除释放、查看覆盖来源、调节偏移。
+          </p>
+        </div>
+      </template>
+    </aside>
 
     <!-- Context Menu -->
     <!-- Mechanic Context Menu -->
@@ -4385,7 +4881,8 @@ function handleColumnNameClick(col: ColumnDef) {
   --mg-col-name-bg: rgba(124, 58, 237, 0.08);
 
   height: 100%;
-  overflow: auto;
+  display: flex;
+  overflow: hidden;
   background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
   font-family:
     ui-sans-serif,
@@ -4395,10 +4892,224 @@ function handleColumnNameClick(col: ColumnDef) {
   user-select: none;
 }
 
+.grid-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
 .grid-table {
   display: inline-flex;
   flex-direction: column;
+  width: max-content;
   min-width: 100%;
+}
+
+.grid-inspector {
+  width: 320px;
+  flex-shrink: 0;
+  border-left: 1px solid #e5e7eb;
+  background:
+    radial-gradient(circle at top right, rgba(14, 165, 233, 0.08), transparent 32%),
+    linear-gradient(180deg, #fcfdff 0%, #f8fbff 100%);
+  overflow-y: auto;
+  padding: 16px 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.inspector-header,
+.inspector-section,
+.inspector-empty {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+}
+
+.inspector-header {
+  padding: 14px;
+}
+
+.inspector-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.inspector-title-row {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.inspector-skill-icon,
+.inspector-skill-fallback {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.inspector-skill-icon {
+  border: 1px solid #cbd5e1;
+  object-fit: cover;
+  display: block;
+}
+
+.inspector-skill-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1d4ed8;
+  font-size: 18px;
+  font-weight: 700;
+  border: 1px solid #bfdbfe;
+}
+
+.inspector-title-group {
+  min-width: 0;
+}
+
+.inspector-title {
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.inspector-subtitle {
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.inspector-section {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.inspector-section.is-disabled {
+  opacity: 0.72;
+}
+
+.inspector-section-title {
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.inspector-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.inspector-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid #dbeafe;
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+
+.inspector-chip.is-ready {
+  color: #0369a1;
+  border-color: #bae6fd;
+  background: #f0f9ff;
+}
+
+.inspector-chip.is-active {
+  color: #047857;
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+}
+
+.inspector-chip.is-cooldown {
+  color: #475569;
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.inspector-chip.is-conflict {
+  color: #b91c1c;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.inspector-chip.is-muted {
+  color: #475569;
+  border-color: #e2e8f0;
+  background: #f8fafc;
+}
+
+.inspector-note {
+  margin: 0;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.inspector-note.emphasis {
+  color: #0f172a;
+}
+
+.inspector-note.danger {
+  color: #b91c1c;
+}
+
+.inspector-note.shortcut {
+  color: #2563eb;
+}
+
+.inspector-kv,
+.inspector-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.inspector-kv > span,
+.inspector-edit-row > span {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.inspector-kv > strong {
+  min-width: 0;
+  text-align: right;
+  color: #0f172a;
+}
+
+.inspector-edit-row {
+  align-items: flex-start;
+}
+
+.inspector-empty {
+  padding: 18px 16px;
+}
+
+.inspector-empty-title {
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 8px;
 }
 
 .row {
@@ -4408,6 +5119,33 @@ function handleColumnNameClick(col: ColumnDef) {
   &:not(.header):hover {
     background-color: #fafafa;
   }
+}
+
+.content-row.is-selected-row {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(37, 99, 235, 0.08) 0,
+      rgba(37, 99, 235, 0.03) 180px,
+      transparent 420px
+    ),
+    #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(37, 99, 235, 0.14),
+    inset 0 -1px 0 rgba(37, 99, 235, 0.14);
+}
+
+.content-row.is-selected-row .fixed-w-time,
+.content-row.is-selected-row .fixed-w-cast-start,
+.content-row.is-selected-row .fixed-w-target,
+.content-row.is-selected-row .fixed-w-shield,
+.content-row.is-selected-row .fixed-w-reduction,
+.content-row.is-selected-row .fixed-w-dmg {
+  background-color: rgba(239, 246, 255, 0.9);
+}
+
+.content-row.is-selected-row .fixed-w-name {
+  background: linear-gradient(90deg, rgba(219, 234, 254, 0.95), rgba(239, 246, 255, 0.9));
 }
 
 .header {
@@ -4816,6 +5554,16 @@ function handleColumnNameClick(col: ColumnDef) {
   margin-right: -1px;
   margin-bottom: -1px;
 
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 2px solid transparent;
+    box-sizing: border-box;
+    pointer-events: none;
+    z-index: 4;
+  }
+
   &:hover {
     border-color: #10b981;
     z-index: 5;
@@ -4859,6 +5607,16 @@ function handleColumnNameClick(col: ColumnDef) {
     background: #10b981;
     border-color: #059669;
     z-index: 2;
+  }
+
+  &.is-selected {
+    border-color: #2563eb;
+    z-index: 6;
+
+    &::after {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.14);
+    }
   }
 
   &.conn-prev {
@@ -5249,6 +6007,18 @@ function handleColumnNameClick(col: ColumnDef) {
 
 .font-mono {
   font-family: monospace;
+}
+
+@media (max-width: 1180px) {
+  .grid-container {
+    flex-direction: column;
+  }
+
+  .grid-inspector {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid #e5e7eb;
+  }
 }
 
 .empty-uses {
