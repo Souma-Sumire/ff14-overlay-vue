@@ -130,6 +130,8 @@ windowAction.set(0xa82d, { type: "cast", window: [60, 60], syncOnce: true, battl
 
 // 极火车
 windowAction.set(0xb24d, { type: "cast", window: [60, 60], syncOnce: true, battleOnce: true }); // 无尽狂奔
+// 极恩欧
+windowAction.set(0xc36d, { type: "cast", window: [60, 60], syncOnce: true, battleOnce: true }); // 无光的世界
 
 export function factory(events: FFlogsStance): FFlogsStance {
   for (const event of events) {
