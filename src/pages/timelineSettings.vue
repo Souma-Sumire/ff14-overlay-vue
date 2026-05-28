@@ -549,6 +549,10 @@ function openMitigationGenerator() {
   window.open(href, "_blank");
 }
 
+function openHealerBook() {
+  window.open("https://xivhealer.cn/", "_blank", "noopener,noreferrer");
+}
+
 function fflogsImportClick() {
   showFFlogsDialog.value = true;
 }
@@ -712,6 +716,8 @@ init();
             </el-button>
             <el-button type="primary" size="small" @click="openDocs"> 从 在线文档 获取 </el-button>
             <el-button type="primary" size="small" @click="createNewTimeline"> 手动编写 </el-button>
+            <el-button size="small" @click="openMitigationGenerator"> 减伤规划器 </el-button>
+            <el-button size="small" @click="openHealerBook">HealerBook</el-button>
           </el-button-group>
           <!-- <el-button
             color="#543d6c"
@@ -727,9 +733,6 @@ init();
               导出全部
             </el-button>
           </el-button-group>
-          <el-button size="small" @click="openMitigationGenerator">
-            打开减伤规划器（测试中）
-          </el-button>
         </el-space>
 
         <el-space>
