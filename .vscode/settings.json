@@ -6,5 +6,7 @@
     "source.fixAll.oxc": "explicit"
   },
   "i18n-ally.localesPaths": ["src/locales"],
-  "oxc.path.oxlint": "./node_modules/.bin/oxlint.CMD"
+  "oxc.path.oxlint": "./node_modules/.bin/oxlint.CMD",
+  "oxc.typeAware": false
 }
+
