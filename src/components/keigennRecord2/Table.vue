@@ -368,7 +368,8 @@ const columns = computed<Column[]>(() => [
           ),
         ]);
       }
-      return h("span", rowData[props.actionKey] ?? "");
+      const actionName = rowData[props.actionKey] ?? "";
+      return h("span", { title: actionName }, actionName);
     },
   },
   {
@@ -972,6 +973,13 @@ defineExpose({
 }
 
 :deep(.col-action) {
+  display: block;
+  overflow: hidden !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:deep(.row-death .col-action) {
   overflow: visible !important;
 
   .el-table-v2__row-cell {
