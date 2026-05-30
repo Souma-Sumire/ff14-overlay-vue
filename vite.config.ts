@@ -5,8 +5,7 @@ import Unocss from "unocss/vite";
 import viteCompression from "vite-plugin-compression";
 import Markdown from "vite-plugin-md";
 import Pages from "vite-plugin-pages";
-import sassDts from "vite-plugin-sass-dts";
-import { defineConfig } from "vite-plus";
+import type { UserConfig } from "vite-plus";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,15 +33,13 @@ function injectBuildTime() {
 }
 
 // https://vitejs.dev/config/
-export default defineConfig({
+const config: UserConfig = {
   staged: {
     "*.{js,ts,tsx,vue,svelte}": "vp check --fix",
   },
   lint: {
     ignorePatterns: ["dist/**", "node_modules/**", "cactbot/**"],
-    rules: {
-      "unicorn/prefer-array-to-sorted": "off",
-    },
+    rules: {},
     options: {
       typeAware: true,
       typeCheck: true,
@@ -108,9 +105,15 @@ export default defineConfig({
     Pages({
       importMode: "async",
     }),
-    sassDts(),
     injectBuildTime(),
   ],
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: "modern",
+      },
+    } as any,
+  },
   define: {
     __VUE_OPTIONS_API__: false,
   },
@@ -137,4 +140,6 @@ export default defineConfig({
   optimizeDeps: {
     include: ["vue", "vue-router", "pinia", "element-plus", "@vueuse/core"],
   },
-});
+};
+
+export default config;
