@@ -38,6 +38,7 @@ const targetFilter = ref(""); // 目标筛选
 watch(
   () => props.rows,
   (rows) => {
+    popoverVisible.value = false;
     if (rows.length === 0) {
       actionFilter.value = "";
       targetFilter.value = "";
