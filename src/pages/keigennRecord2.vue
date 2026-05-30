@@ -92,6 +92,7 @@ watchEffect(() => {
 onUnmounted(() => {
   document.documentElement.style.removeProperty(SCALE_CSS_VAR);
   combatSelectPopperObserver?.disconnect();
+  clearScheduledStopCombatPersistence();
 });
 
 let combatSelectPopperObserver: MutationObserver | null = null;
@@ -164,7 +165,11 @@ let isPvP = false;
 let rowCounter = 0;
 let pendingRows: RowVO[] = [];
 let batchTimer: number | null = null;
+let stopCombatPersistenceTimer: number | null = null;
+const pendingStopCombatEncounters = new Map<string, Encounter>();
 const colorCache = new Map<number, string>();
+const STOP_COMBAT_SAVE_DELAY = 500;
+const processedEncounters = new WeakSet<Encounter>();
 
 function loadStoredJson<T>(key: string, fallback: T): T {
   const raw = localStorage.getItem(key);
@@ -224,32 +229,43 @@ function savePersistentData() {
   }
 }
 
-const select = ref(0);
-const data = shallowRef<Encounter[]>([
-  {
+function createEmptyEncounter(key = "init", timestamp = -1): Encounter {
+  const encounter: Encounter = {
     zoneName: "",
     duration: "00:00",
     table: shallowReactive([]),
-    key: "init",
-    timestamp: -1,
-  },
-]);
-const regexes = {
-  rsv: /^262\|(?<timestamp>[^|]*)\|[^|]*\|[^|]*\|_rsv_(?<id>\d+)_[^|]+\|(?<real>[^|]*)\|/i,
-  ability: NetRegexes.ability(),
-  statusEffectExplicit: NetRegexes.statusEffectExplicit(),
-  gainsEffect: NetRegexes.gainsEffect(),
-  losesEffect: NetRegexes.losesEffect(),
-  death: NetRegexes.wasDefeated(),
-  inCombat: /^260\|(?<timestamp>[^|]*)\|(?<inACTCombat>[^|]*)\|(?<inGameCombat>[^|]*)\|/,
-  changeZone: NetRegexes.changeZone(),
-  partyList: /^11\|(?<timestamp>[^|]*)\|(?<partyCount>\d*)\|(?<list>(?:\w{8}\|)*)\w{16}/,
-  primaryPlayer: /^02\|(?<timestamp>[^|]*)\|(?<id>[^|]*)\|(?<name>[^|]*)/,
-  addCombatant: NetRegexes.addedCombatant(),
-  removingCombatant: NetRegexes.removingCombatant(),
-  networkDoT: NetRegexes.networkDoT(),
-  wipe: NetRegexes.network6d({ command: ["40000003", "40000010", "4000000F"] }),
-} as const;
+    key,
+    timestamp,
+  };
+  // 实时创建的 encounter 的行已在 addRow 中通过 markRaw 处理，无需再延迟处理
+  processedEncounters.add(encounter);
+  return encounter;
+}
+
+const select = ref(0);
+const data = shallowRef<Encounter[]>([createEmptyEncounter()]);
+const rsvKeyPattern = /^_rsv_(\d+)_/;
+const wipeRegex = NetRegexes.network6d({ command: ["40000003", "40000010", "4000000F"] });
+
+// 延迟处理：仅在 encounter 被选中时才执行图片路由和 markRaw
+function ensureEncounterProcessed(encounter: Encounter) {
+  if (processedEncounters.has(encounter)) return;
+  processedEncounters.add(encounter);
+  for (const row of encounter.table) {
+    if (row.preCalculated) {
+      for (const k of row.preCalculated.keigenns) k.src = rerouteImgSrc(k.src);
+      for (const s of row.preCalculated.sortedSkills ?? []) s.icon = rerouteImgSrc(s.icon);
+    }
+    markRaw(row);
+  }
+}
+
+const selectedRows = computed(() => {
+  const encounter = data.value[select.value];
+  if (!encounter) return [];
+  ensureEncounterProcessed(encounter);
+  return encounter.table;
+});
 
 const STORAGE_KEY = "keigenn-record-2";
 
@@ -290,18 +306,13 @@ function getSkillMapForLevel(level: number) {
 }
 
 function beforeHandle() {
+  clearScheduledStopCombatPersistence();
   loading.value = true;
   combatTimeStamp = 0;
   cooldownTracker = {};
   select.value = 0;
   data.value.length = 0;
-  data.value.push({
-    zoneName: "",
-    duration: "00:00",
-    table: shallowReactive([]),
-    key: "init",
-    timestamp: -1,
-  });
+  data.value.push(createEmptyEncounter());
   // 清理各种数据
   shieldData = {};
   statusData = {
@@ -323,22 +334,9 @@ function beforeHandle() {
 async function afterHandle() {
   loading.value = false;
 
-  // 如果有待处理的数据,手动触发批量插入
-  if (batchTimer !== null) {
-    cancelAnimationFrame(batchTimer);
-    batchTimer = null;
-    if (pendingRows.length > 0) {
-      if (isPush) {
-        data.value[0]!.table.push(...pendingRows);
-        nextTick(() => tableRef.value?.scrollToBottom());
-      } else {
-        data.value[0]!.table.unshift(...pendingRows.reverse());
-      }
-      pendingRows = [];
-    }
-  }
+  flushPendingRows(true);
 
-  await saveStorage();
+  await saveAllEncounters();
   savePersistentData();
   triggerRef(data);
 }
@@ -426,8 +424,7 @@ function handleLine(line: string) {
   switch (type) {
     case "26": // GainsEffect
       {
-        const match = regexes.gainsEffect.exec(line);
-        if (!match) return;
+        if (!splitLine[logDefinitions.GainsEffect.fields.effectId]) return;
         const effectId = splitLine[logDefinitions.GainsEffect.fields.effectId]!;
         const effect = splitLine[logDefinitions.GainsEffect.fields.effect]!;
         const target = splitLine[logDefinitions.GainsEffect.fields.target]!;
@@ -656,31 +653,31 @@ function handleLine(line: string) {
 
     case "25": // Death
       {
-        const match = regexes.death.exec(line);
-        if (!match || !match.groups) return;
-        const targetId = match.groups.targetId!;
-        const target = match.groups.target!;
-        const sourceId = match.groups.sourceId!;
-        const source = sourceId === "E0000000" ? "地形杀" : match.groups.source!;
-        const rawTimestamp = match.groups.timestamp!;
+        const targetId = splitLine[logDefinitions.WasDefeated.fields.targetId]!;
+        const target = splitLine[logDefinitions.WasDefeated.fields.target]!;
+        const sourceId = splitLine[logDefinitions.WasDefeated.fields.sourceId]!;
+        const source =
+          sourceId === "E0000000" ? "地形杀" : splitLine[logDefinitions.WasDefeated.fields.source]!;
 
         if (combatTimeStamp === 0) return;
 
         if (
           !(
             targetId === povId ||
-            partyLogList.includes(targetId!) ||
+            partyLogList.includes(targetId) ||
             partyEventParty.some((v) => v.id === targetId)
           )
         ) {
           return;
         }
 
-        const timestamp = new Date(rawTimestamp!).getTime();
+        const timestamp = new Date(
+          splitLine[logDefinitions.WasDefeated.fields.timestamp]!,
+        ).getTime();
         const time = timestamp - combatTimeStamp;
         const formattedTime = formatTime(time);
 
-        const { jobEnum, job, jobIcon, hasDuplicate } = getCachedJobInfo(targetId!);
+        const { jobEnum, job, jobIcon, hasDuplicate } = getCachedJobInfo(targetId);
 
         addRow(
           prepareRowVO({
@@ -692,7 +689,7 @@ function handleLine(line: string) {
             actionCN: sourceId === "E0000000" ? "地形杀" : "死亡",
             source,
             target,
-            targetId: targetId!,
+            targetId,
             job,
             jobIcon,
             jobEnum,
@@ -707,7 +704,7 @@ function handleLine(line: string) {
             povId,
             reduction: 0,
             isPvP,
-            keySkills: getKeySkillSnapshot(timestamp, targetId!),
+            keySkills: getKeySkillSnapshot(timestamp, targetId),
           }),
         );
       }
@@ -715,9 +712,9 @@ function handleLine(line: string) {
 
     case "38": // StatusEffect (Shields)
       {
-        const match = regexes.statusEffectExplicit.exec(line);
-        if (match && match.groups?.targetId!.startsWith("1")) {
-          shieldData[match.groups!.targetId!] = match.groups!.currentShield!;
+        const shieldTargetId = splitLine[logDefinitions.StatusEffect.fields.targetId];
+        if (shieldTargetId?.startsWith("1")) {
+          shieldData[shieldTargetId] = splitLine[logDefinitions.StatusEffect.fields.currentShield]!;
         }
       }
       break;
@@ -734,25 +731,8 @@ function handleLine(line: string) {
             return;
           }
           if (data.value[0]!.table.length !== 0 || pendingRows.length !== 0) {
-            if (batchTimer !== null) {
-              cancelAnimationFrame(batchTimer);
-              batchTimer = null;
-            }
-            if (pendingRows.length > 0) {
-              if (isPush) {
-                data.value[0]!.table.push(...pendingRows);
-              } else {
-                data.value[0]!.table.unshift(...pendingRows.reverse());
-              }
-              pendingRows = [];
-            }
-            data.value.unshift({
-              zoneName: "",
-              duration: "00:00",
-              table: shallowReactive([]),
-              key,
-              timestamp: timeStamp,
-            });
+            flushPendingRows();
+            data.value.unshift(createEmptyEncounter(key, timeStamp));
             triggerRef(data);
           }
           combatTimeStamp = timeStamp;
@@ -787,11 +767,14 @@ function handleLine(line: string) {
 
     case "11": // PartyList
       {
-        const match = regexes.partyList.exec(line);
-        if (match) {
-          partyLogList = (match.groups?.list?.split("|") ?? []).filter(Boolean);
-          invalidateJobCache();
+        const partyCount = Number(splitLine[logDefinitions.PartyList.fields.partyCount]) || 0;
+        const ids: string[] = [];
+        for (let i = 0; i < partyCount; i++) {
+          const id = splitLine[logDefinitions.PartyList.fields.id0 + i];
+          if (id) ids.push(id);
         }
+        partyLogList = ids;
+        invalidateJobCache();
       }
       break;
 
@@ -833,11 +816,11 @@ function handleLine(line: string) {
 
     case "262": // RSV
       {
-        const match = regexes.rsv.exec(line);
-        if (match) {
-          const id = Number(match.groups?.id as string);
-          const real = splitLine[logDefinitions.RSVData.fields.value];
-          if (id && real) rsvData[Number(id)] = real;
+        const rsvKey = splitLine[logDefinitions.RSVData.fields.key];
+        const rsvValue = splitLine[logDefinitions.RSVData.fields.value];
+        if (rsvKey && rsvValue) {
+          const rsvIdMatch = rsvKeyPattern.exec(rsvKey);
+          if (rsvIdMatch) rsvData[Number(rsvIdMatch[1])] = rsvValue;
         }
       }
       break;
@@ -915,7 +898,7 @@ function handleLine(line: string) {
       break;
 
     case "33": // ActorControl (including Wipe)
-      if (regexes.wipe.exec(line)) {
+      if (wipeRegex.exec(line)) {
         resourceManager.reset();
         cooldownTracker = {};
         shieldData = {};
@@ -1007,22 +990,36 @@ function addRow(row: RowVO) {
   pendingRows.push(markRaw(row));
   if (batchTimer === null) {
     batchTimer = requestAnimationFrame(() => {
-      if (isPush) {
-        data.value[0]!.table.push(...pendingRows);
-        if (!loading.value) {
-          nextTick(() => tableRef.value?.scrollToBottom());
-        }
-      } else {
-        data.value[0]!.table.unshift(...pendingRows.reverse());
-      }
-      pendingRows = [];
+      appendPendingRows(!loading.value);
       batchTimer = null;
     });
   }
 }
 
+function appendPendingRows(shouldScrollToBottom = false) {
+  if (pendingRows.length === 0) return;
+  if (isPush) {
+    data.value[0]!.table.push(...pendingRows);
+    if (shouldScrollToBottom) {
+      nextTick(() => tableRef.value?.scrollToBottom());
+    }
+  } else {
+    data.value[0]!.table.unshift(...pendingRows.reverse());
+  }
+  pendingRows = [];
+}
+
+function flushPendingRows(shouldScrollToBottom = false) {
+  if (batchTimer !== null) {
+    cancelAnimationFrame(batchTimer);
+    batchTimer = null;
+  }
+  appendPendingRows(shouldScrollToBottom);
+}
+
 function stopCombat(timeStamp: number) {
   if (combatTimeStamp === 0) return;
+  flushPendingRows(!loading.value);
   data.value[0]!.duration = formatTime(timeStamp - combatTimeStamp);
   data.value[0] = markRaw(data.value[0]!);
   combatTimeStamp = 0;
@@ -1030,8 +1027,8 @@ function stopCombat(timeStamp: number) {
   statusData.enemy = {};
   shieldData = {};
   invalidateJobCache();
-  savePersistentData();
-  saveStorage();
+  triggerRef(data);
+  scheduleStopCombatPersistence(data.value[0]!);
 }
 
 function getKeySkillSnapshot(timestamp: number, targetId: string): KeySkillSnapshot[] {
@@ -1137,20 +1134,56 @@ function getKeySkillSnapshot(timestamp: number, targetId: string): KeySkillSnaps
     });
 }
 
-async function saveStorage() {
-  if (loading.value) {
-    return;
+function isStorableEncounter(encounter: Encounter) {
+  return encounter.key !== "init" && encounter.timestamp > 0 && encounter.table.length > 0;
+}
+
+function toStoredEncounter(encounter: Encounter): Encounter {
+  return {
+    ...toRaw(encounter),
+    table: toRaw(encounter.table),
+  };
+}
+
+function getStorableEncounters(encounters: Encounter[]): Encounter[] {
+  return encounters.filter(isStorableEncounter).map(toStoredEncounter);
+}
+
+async function saveAllEncounters() {
+  if (loading.value) return;
+  await db.replaceAll(getStorableEncounters(data.value));
+}
+
+function scheduleStopCombatPersistence(encounter: Encounter) {
+  if (loading.value) return;
+  pendingStopCombatEncounters.set(encounter.key, encounter);
+  if (stopCombatPersistenceTimer !== null) {
+    window.clearTimeout(stopCombatPersistenceTimer);
   }
-  const validData = data.value
-    .filter((v) => v.key !== "init" && v.timestamp > 0 && v.table.length > 0)
-    .map((v) => {
-      const rawTable = Array.isArray(v.table) ? toRaw(v.table) : [];
-      return {
-        ...toRaw(v),
-        table: rawTable,
-      };
+  stopCombatPersistenceTimer = window.setTimeout(() => {
+    stopCombatPersistenceTimer = null;
+    if (loading.value) {
+      // loading 期间重新调度
+      scheduleStopCombatPersistence(encounter);
+      return;
+    }
+    const toSave = getStorableEncounters(Array.from(pendingStopCombatEncounters.values()));
+    pendingStopCombatEncounters.clear();
+    if (toSave.length === 0) return;
+    savePersistentData();
+    const savePromise = toSave.length === 1 ? db.set(toSave[0]!) : db.bulkSet(toSave);
+    void savePromise.catch((error) => {
+      console.error("Failed to save combat data:", error);
     });
-  await db.replaceAll(validData);
+  }, STOP_COMBAT_SAVE_DELAY);
+}
+
+function clearScheduledStopCombatPersistence() {
+  if (stopCombatPersistenceTimer !== null) {
+    window.clearTimeout(stopCombatPersistenceTimer);
+    stopCombatPersistenceTimer = null;
+  }
+  pendingStopCombatEncounters.clear();
 }
 
 async function loadStorage() {
@@ -1163,43 +1196,41 @@ async function loadStorage() {
       const loadData = await db.getAll();
       if (loadData.length) {
         data.value.length = 0;
-        let result = loadData
-          .filter((v) => store.isBrowser || v.timestamp > Date.now() - 1000 * 60 * 60 * 24 * 3)
-          .sort((a, b) => a.timestamp - b.timestamp);
+        const now = Date.now();
+        const expiryThreshold = now - 1000 * 60 * 60 * 24 * 3;
+        const expiredKeys: string[] = [];
+
+        const filtered = loadData.filter((v) => {
+          if (store.isBrowser || v.timestamp > expiryThreshold) return true;
+          expiredKeys.push(v.key);
+          return false;
+        });
+
+        // 按 key 逐条删除过期记录，避免重新序列化全部有效数据
+        if (expiredKeys.length > 0) {
+          void Promise.all(expiredKeys.map((key) => db.remove(key)));
+        }
+
+        let result = filtered.sort((a, b) => a.timestamp - b.timestamp);
 
         if (!isPush) {
           result = result.reverse();
         }
 
-        const mappedResult = result.map((v) => ({
-          ...v,
-          table: shallowReactive(
-            Array.isArray(v.table)
-              ? v.table.map((row: RowVO) => {
-                  // 将 IndexedDB 中固化的旧站点图片 URL 重新路由到当前首选站点
-                  if (row.preCalculated) {
-                    for (const k of row.preCalculated.keigenns) k.src = rerouteImgSrc(k.src);
-                    for (const s of row.preCalculated.sortedSkills ?? [])
-                      s.icon = rerouteImgSrc(s.icon);
-                  }
-                  return markRaw(row);
-                })
-              : [],
-          ),
-        }));
+        for (const v of result) {
+          v.table = shallowReactive(v.table ?? []);
+          data.value.push(v);
+        }
 
-        data.value.push(...mappedResult);
+        // 只处理当前选中的 encounter（select=0），其余延迟到被选中时再处理
+        if (data.value.length > 0) {
+          ensureEncounterProcessed(data.value[0]!);
+        }
       }
     }
 
     if (data.value.length === 0) {
-      data.value.push({
-        zoneName: "",
-        duration: "00:00",
-        table: shallowReactive([]),
-        key: "init",
-        timestamp: -1,
-      });
+      data.value.push(createEmptyEncounter());
     }
     triggerRef(data);
   } catch (e) {
@@ -1260,13 +1291,7 @@ onMounted(async () => {
       const startTime = now - durationMs;
 
       if (data.value[0]!.table.length !== 0) {
-        data.value.unshift({
-          zoneName: "",
-          duration: "00:00",
-          table: shallowReactive([]),
-          key: String(startTime),
-          timestamp: startTime,
-        });
+        data.value.unshift(createEmptyEncounter(String(startTime), startTime));
         triggerRef(data);
       }
 
@@ -1285,13 +1310,7 @@ function clickMinimize() {
 
 function test() {
   if (data.value[0]?.key === "init" || data.value[0] === undefined) {
-    data.value.unshift({
-      zoneName: "",
-      duration: "00:00",
-      table: shallowReactive([]),
-      key: "test",
-      timestamp: Date.now(),
-    });
+    data.value.unshift(createEmptyEncounter("test", Date.now()));
     triggerRef(data);
     select.value = 0;
   }
@@ -1375,7 +1394,7 @@ function formatTimestamp(ms: number): string {
         />
       </header>
       <main v-show="!minimize" style="height: 100%">
-        <KeigennRecord2Table ref="tableRef" :rows="data[select]!.table" :action-key="actionKey" />
+        <KeigennRecord2Table ref="tableRef" :rows="selectedRows" :action-key="actionKey" />
       </main>
     </div>
   </div>
