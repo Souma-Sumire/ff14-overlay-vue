@@ -582,15 +582,25 @@ function handleLine(line: string) {
             ...Object.values(statusData.enemy[source] ?? []),
           ]
             .map((v) => {
-              const remain = Math.max(0, (v.expirationTimestamp - timestamp) / 1000);
-              // 返回新对象，避免修改原始 statusData
+              const remain = (v.expirationTimestamp - timestamp) / 1000;
               return {
                 ...v,
-                remainingDuration:
-                  remain >= 999 ? "" : remain.toFixed(remain > 0.05 && remain < 0.95 ? 1 : 0),
+                remain,
               };
             })
-            .filter((v) => Number(v.remainingDuration) > -3);
+            .filter((v) => v.remain > -3)
+            .map((v) => {
+              const displayRemain = Math.max(0, v.remain);
+              const { remain, ...rest } = v;
+              // 返回新对象，避免修改原始 statusData
+              return {
+                ...rest,
+                remainingDuration:
+                  displayRemain >= 999
+                    ? ""
+                    : displayRemain.toFixed(displayRemain > 0.05 && displayRemain < 0.95 ? 1 : 0),
+              };
+            });
 
           const shield = shieldData[targetId] ?? "0";
           const amount = ability.amount;
