@@ -9,4 +9,3 @@
   "oxc.path.oxlint": "./node_modules/.bin/oxlint.CMD",
   "oxc.typeAware": false
 }
-
