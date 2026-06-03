@@ -2913,6 +2913,10 @@ fastPP(
 fastPP(
   `{"Name":"火仙女佩莉","MapID":1079,"A":{"X":-760,"Z":-815,"Y":-54,"Active":true},"B":{"X":-750,"Z":-805,"Y":-54,"Active":true},"C":{"X":-760,"Z":-795,"Y":-54,"Active":true},"D":{"X":-770,"Z":-805,"Y":-54,"Active":true},"One":{"X":-770,"Z":-815,"Y":-54,"Active":true},"Two":{"X":-750,"Z":-815,"Y":-54,"Active":true},"Three":{"X":-750,"Z":-795,"Y":-54,"Active":true},"Four":{"X":-770,"Z":-795,"Y":-54,"Active":true}}`,
 );
+// 绝妖星
+fastPP(
+  `{"Name":"1A2（P1放箭头）","MapID":1094,"A":{"X":100,"Y":0,"Z":93,"ID":0,"Active":true},"B":{"X":107,"Y":0,"Z":100,"ID":1,"Active":true},"C":{"X":100,"Y":0,"Z":107,"ID":2,"Active":true},"D":{"X":93,"Y":0,"Z":100,"ID":3,"Active":true},"One":{"X":93,"Y":0,"Z":93,"ID":7,"Active":true},"Two":{"X":107,"Y":0,"Z":93,"ID":4,"Active":true},"Three":{"X":107,"Y":0,"Z":107,"ID":5,"Active":true},"Four":{"X":93,"Y":0,"Z":107,"ID":6,"Active":true}}`,
+);
 function getSource(title: string, href: string): string {
   return `<a href='${href}'target='_blank'>${title}</a>`;
 }
