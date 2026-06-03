@@ -3723,11 +3723,11 @@ function formatDamageInputDisplay(value: string | number | undefined) {
   return formatDamageNumber(value);
 }
 
-function parseDamageInputValue(value: string) {
+function parseDamageInputValue(value: string): string {
   const normalized = String(value ?? "")
     .replaceAll(",", "")
     .trim();
-  if (!normalized) return 0;
+  if (!normalized) return "0";
   const upper = normalized.toUpperCase();
   let multiplier = getDamageNumberUnitScale();
   let rawNumberText = upper;
@@ -3736,8 +3736,8 @@ function parseDamageInputValue(value: string) {
     multiplier = upper.endsWith("K") ? 1000 : 10000;
   }
   const parsed = Number(rawNumberText);
-  if (!Number.isFinite(parsed)) return 0;
-  return Math.max(0, Math.round(parsed * multiplier));
+  if (!Number.isFinite(parsed)) return "0";
+  return Math.max(0, Math.round(parsed * multiplier)).toString();
 }
 
 function getMechanicMenuTitle(row: MitigationRow | null | undefined) {

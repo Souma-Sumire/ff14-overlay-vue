@@ -684,12 +684,13 @@ function getJobStr(icon: FFIcon) {
             {{ getJobStr(row.icon) }}
           </template>
         </el-table-column>
+        <!-- @vue-generic {Friendlies} -->
         <el-table-column label="选定" width="100" align="center">
-          <template #default="scope">
+          <template #default="{ row }">
             <el-button
               type="primary"
               size="small"
-              @click="handleFFlogsQueryResultFriendliesList(scope.row)"
+              @click="handleFFlogsQueryResultFriendliesList(row)"
             >
               选择
             </el-button>

@@ -4328,22 +4328,23 @@ const activeStep = computed(() => {
                   class="loot-record-table"
                   cell-class-name="loot-cell"
                 >
+                  <!-- @vue-generic {LootRecord} -->
                   <el-table-column label="周" width="60" align="center">
-                    <template #default="scope">
+                    <template #default="{ row }">
                       <div
                         class="col-week-interactive"
-                        :class="{ 'is-actionable': canCorrectWeek(scope.row) }"
-                        @click.stop="handleRecordTrigger($event, scope.row)"
-                        @contextmenu.prevent="handleRecordTrigger($event, scope.row)"
+                        :class="{ 'is-actionable': canCorrectWeek(row) }"
+                        @click.stop="handleRecordTrigger($event, row)"
+                        @contextmenu.prevent="handleRecordTrigger($event, row)"
                       >
                         <div
-                          v-if="recordWeekCorrections[scope.row.key]"
+                          v-if="recordWeekCorrections[row.key]"
                           class="week-correction-display"
                         >
                           <div class="original-week">
                             W{{
                               getRaidWeekIndex(
-                                scope.row.timestamp,
+                                row.timestamp,
                                 GAME_VERSION_CONFIG.RAID_START_TIME,
                               )
                             }}
@@ -4354,23 +4355,23 @@ const activeStep = computed(() => {
                           <div class="corrected-week">
                             W{{
                               getRaidWeekIndex(
-                                scope.row.timestamp,
+                                row.timestamp,
                                 GAME_VERSION_CONFIG.RAID_START_TIME,
-                              ) + (recordWeekCorrections[scope.row.key] || 0)
+                              ) + (recordWeekCorrections[row.key] || 0)
                             }}
                           </div>
                         </div>
                         <div v-else class="col-week">
                           W{{
                             getRaidWeekIndex(
-                              scope.row.timestamp,
+                              row.timestamp,
                               GAME_VERSION_CONFIG.RAID_START_TIME,
                             )
                           }}
                           <el-tooltip
                             v-if="
-                              rawSuspiciousKeys.has(scope.row.key) &&
-                              !recordWeekCorrections[scope.row.key]
+                              rawSuspiciousKeys.has(row.key) &&
+                              !recordWeekCorrections[row.key]
                             "
                             placement="top"
                             :enterable="false"
@@ -4386,11 +4387,12 @@ const activeStep = computed(() => {
                       </div>
                     </template>
                   </el-table-column>
+                  <!-- @vue-generic {LootRecord} -->
                   <el-table-column label="时间" width="140">
-                    <template #default="scope">
+                    <template #default="{ row }">
                       <div class="col-time">
                         <ElTag
-                          v-if="scope.row.isManual"
+                          v-if="row.isManual"
                           size="small"
                           type="info"
                           effect="plain"
@@ -4398,10 +4400,11 @@ const activeStep = computed(() => {
                         >
                           手动添加
                         </ElTag>
-                        <span v-else class="time-date">{{ formatTime(scope.row.timestamp) }}</span>
+                        <span v-else class="time-date">{{ formatTime(row.timestamp) }}</span>
                       </div>
                     </template>
                   </el-table-column>
+                  <!-- @vue-generic {LootRecord} -->
                   <el-table-column width="240">
                     <template #header>
                       <div
@@ -4431,12 +4434,13 @@ const activeStep = computed(() => {
                         </ElSelect>
                       </div>
                     </template>
-                    <template #default="scope">
+                    <template #default="{ row }">
                       <div class="col-item">
-                        <span class="item-text">{{ scope.row.item }}</span>
+                        <span class="item-text">{{ row.item }}</span>
                       </div>
                     </template>
                   </el-table-column>
+                  <!-- @vue-generic {LootRecord} -->
                   <el-table-column width="260">
                     <template #header>
                       <div
@@ -4474,28 +4478,28 @@ const activeStep = computed(() => {
                         </ElSelect>
                       </div>
                     </template>
-                    <template #default="scope">
+                    <template #default="{ row }">
                       <div
                         class="winner-selector-trigger"
-                        @click.stop="openWinnerPopover($event, scope.row)"
+                        @click.stop="openWinnerPopover($event, row)"
                       >
                         <div
-                          v-if="recordPlayerCorrections[scope.row.key]"
+                          v-if="recordPlayerCorrections[row.key]"
                           class="correction-winner-display"
                         >
                           <div class="original-row" title="原始记录获得者">
                             <span class="correction-label">原始记录:</span>
                             <LootPlayerRoll
-                              v-if="getOriginalRollInfo(scope.row)"
-                              :roll="getOriginalRollInfo(scope.row)!"
+                              v-if="getOriginalRollInfo(row)"
+                              :roll="getOriginalRollInfo(row)!"
                               :show-only-role="showOnlyRole"
                               :get-player-role="getPlayerRole"
                               class="original-display"
                             />
                             <PlayerDisplay
                               v-else
-                              :name="scope.row.player"
-                              :role="getPlayerRole(scope.row.player)"
+                              :name="row.player"
+                              :role="getPlayerRole(row.player)"
                               :show-only-role="showOnlyRole"
                               class="original-display"
                             />
@@ -4505,8 +4509,8 @@ const activeStep = computed(() => {
                               <BottomRight />
                             </el-icon>
                             <LootPlayerRoll
-                              v-if="getWinnerRollInfo(scope.row)"
-                              :roll="getWinnerRollInfo(scope.row)!"
+                              v-if="getWinnerRollInfo(row)"
+                              :roll="getWinnerRollInfo(row)!"
                               is-winner
                               :show-only-role="showOnlyRole"
                               :get-player-role="getPlayerRole"
@@ -4515,8 +4519,8 @@ const activeStep = computed(() => {
                         </div>
                         <template v-else>
                           <LootPlayerRoll
-                            v-if="getWinnerRollInfo(scope.row)"
-                            :roll="getWinnerRollInfo(scope.row)!"
+                            v-if="getWinnerRollInfo(row)"
+                            :roll="getWinnerRollInfo(row)!"
                             is-winner
                             :show-only-role="showOnlyRole"
                             :get-player-role="getPlayerRole"
@@ -4529,11 +4533,12 @@ const activeStep = computed(() => {
                       </div>
                     </template>
                   </el-table-column>
+                  <!-- @vue-generic {LootRecord} -->
                   <el-table-column label="其他 Roll 点记录">
-                    <template #default="scope">
+                    <template #default="{ row }">
                       <div class="col-rolls">
                         <LootPlayerRoll
-                          v-for="roll in getOtherRolls(scope.row)"
+                          v-for="roll in getOtherRolls(row)"
                           :key="roll.player"
                           :roll="roll"
                           :show-only-role="showOnlyRole"
@@ -4542,13 +4547,14 @@ const activeStep = computed(() => {
                       </div>
                     </template>
                   </el-table-column>
+                  <!-- @vue-generic {LootRecord} -->
                   <el-table-column label="操作" width="60" align="center">
-                    <template #default="scope">
+                    <template #default="{ row }">
                       <el-popconfirm
                         title="确定永久删除吗？"
                         confirm-button-text="删除"
                         cancel-button-text="取消"
-                        @confirm="deleteRecord(scope.row)"
+                        @confirm="deleteRecord(row)"
                       >
                         <template #reference>
                           <el-button type="danger" :icon="Delete" size="small" circle plain />

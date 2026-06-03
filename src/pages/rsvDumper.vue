@@ -260,9 +260,10 @@ function saveResultsToFile() {
       <el-table-column prop="id" label="ID" />
       <el-table-column prop="str1" label="RSV Data 1" width="400" />
       <el-table-column prop="str2" label="RSV Data 2" />
+      <!-- @vue-generic {Result} -->
       <el-table-column label="操作" width="150">
-        <template #default="scope">
-          <el-button size="small" type="primary" @click="showHex(scope.row)">
+        <template #default="{ row }">
+          <el-button size="small" type="primary" @click="showHex(row)">
             查看 HexDump
           </el-button>
         </template>
