@@ -2915,7 +2915,13 @@ fastPP(
 );
 // 绝妖星
 fastPP(
-  `{"Name":"1A2（P1放箭头）","MapID":1094,"A":{"X":100,"Y":0,"Z":93,"ID":0,"Active":true},"B":{"X":107,"Y":0,"Z":100,"ID":1,"Active":true},"C":{"X":100,"Y":0,"Z":107,"ID":2,"Active":true},"D":{"X":93,"Y":0,"Z":100,"ID":3,"Active":true},"One":{"X":93,"Y":0,"Z":93,"ID":7,"Active":true},"Two":{"X":107,"Y":0,"Z":93,"ID":4,"Active":true},"Three":{"X":107,"Y":0,"Z":107,"ID":5,"Active":true},"Four":{"X":93,"Y":0,"Z":107,"ID":6,"Active":true}}`,
+  `{"Name":"1A2","MapID":1094,"A":{"X":100,"Y":0,"Z":93,"ID":0,"Active":true},"B":{"X":107,"Y":0,"Z":100,"ID":1,"Active":true},"C":{"X":100,"Y":0,"Z":107,"ID":2,"Active":true},"D":{"X":93,"Y":0,"Z":100,"ID":3,"Active":true},"One":{"X":93,"Y":0,"Z":93,"ID":7,"Active":true},"Two":{"X":107,"Y":0,"Z":93,"ID":4,"Active":true},"Three":{"X":107,"Y":0,"Z":107,"ID":5,"Active":true},"Four":{"X":93,"Y":0,"Z":107,"ID":6,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"4A1","MapID":1094,"A":{"X":100,"Y":0,"Z":93,"ID":0,"Active":true},"B":{"X":107,"Y":0,"Z":100,"ID":1,"Active":true},"C":{"X":100,"Y":0,"Z":107,"ID":2,"Active":true},"D":{"X":93,"Y":0,"Z":100,"ID":3,"Active":true},"One":{"X":107,"Y":0,"Z":93,"ID":4,"Active":true},"Two":{"X":107,"Y":0,"Z":107,"ID":5,"Active":true},"Three":{"X":93,"Y":0,"Z":107,"ID":6,"Active":true},"Four":{"X":93,"Y":0,"Z":93,"ID":7,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"盗火回转寿司","MapID":1094,"A":{"X":100,"Y":0,"Z":88,"ID":0,"Active":true},"B":{"X":112,"Y":0,"Z":100,"ID":1,"Active":true},"C":{"X":100,"Y":0,"Z":112,"ID":2,"Active":true},"D":{"X":88,"Y":0,"Z":100,"ID":3,"Active":true},"One":{"X":88,"Y":0,"Z":88,"ID":4,"Active":true},"Two":{"X":112,"Y":0,"Z":88,"ID":5,"Active":true},"Three":{"X":112,"Y":0,"Z":112,"ID":6,"Active":true},"Four":{"X":88,"Y":0,"Z":112,"ID":7,"Active":true}}`,
 );
 function getSource(title: string, href: string): string {
   return `<a href='${href}'target='_blank'>${title}</a>`;

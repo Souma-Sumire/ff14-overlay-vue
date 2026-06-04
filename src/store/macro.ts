@@ -97,7 +97,7 @@ const useMacroStore = defineStore("macro", {
       zoneNow: useStorage("my-zone-now", "1226"),
       zoneNowName: useStorage("my-zone-now-name", ""),
       fastEntrance: [
-        { text: { zhCn: "异闻商客" }, value: "1317" },
+        { text: { zhCn: "绝妖星" }, value: "1363" },
         { text: { zhCn: "M9S" }, value: "1321" },
         { text: { zhCn: "M10S" }, value: "1323" },
         { text: { zhCn: "M11S" }, value: "1325" },
