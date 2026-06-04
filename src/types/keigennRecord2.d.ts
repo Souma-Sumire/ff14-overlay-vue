@@ -24,6 +24,8 @@ export interface RowVO {
   source: string;
   target: string;
   targetId: string;
+  targetIndex?: number;
+  targetCount?: number;
   job: string;
   jobIcon: FFIcon;
   jobEnum: number;

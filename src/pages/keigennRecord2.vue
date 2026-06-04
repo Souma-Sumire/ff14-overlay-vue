@@ -604,6 +604,8 @@ function handleLine(line: string) {
 
           const shield = shieldData[targetId] ?? "0";
           const amount = ability.amount;
+          const targetIndex = Number(splitLine[logDefinitions.Ability.fields.targetIndex!]!) + 1; // 0开始的，加一方便计算
+          const targetCount = Number(splitLine[logDefinitions.Ability.fields.targetCount!]!); // 1开始的，不要加一
           let reduction = 0;
           // 即死、闪避、治疗
           if (!isHeal && effect !== "instant death" && effect !== "dodge") {
@@ -636,6 +638,8 @@ function handleLine(line: string) {
               source,
               target,
               targetId,
+              targetIndex,
+              targetCount,
               job,
               jobIcon,
               jobEnum,

@@ -287,6 +287,7 @@
       "target_only": "只看 [{jobName}]"
     },
     "dodge": "回避",
+    "targetIndex": "判定计数",
     "damage done": "击中",
     "blocked damage": "格挡",
     "parried damage": "招架",

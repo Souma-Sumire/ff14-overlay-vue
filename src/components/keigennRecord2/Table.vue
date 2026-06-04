@@ -744,6 +744,10 @@ defineExpose({
             <div class="row-info">
               <div class="info-line">{{ t("keigennRecord.source") }}: {{ hoveredRow.source }}</div>
               <div class="info-line">
+                {{ t("keigennRecord.targetIndex") }}: {{ hoveredRow.targetIndex }}/
+                {{ hoveredRow.targetCount }}
+              </div>
+              <div class="info-line">
                 {{ t("keigennRecord.playerShield") }}: {{ hoveredRow.shield }}%
               </div>
               <div class="info-line">
