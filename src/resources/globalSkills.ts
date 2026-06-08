@@ -79,7 +79,7 @@ const rawGlobalSkillDefinitions: RawGlobalSkillDefinition[] = [
   { id: 3570, recast1000ms: 60, maxCharges: "(lv) => lv>=98 ? 2 : 1" },
   { id: 7432, recast1000ms: 30, maxCharges: "(lv) => lv>=98 ? 2 : 1" },
   { id: 25861, recast1000ms: 60, duration: 8 },
-  { id: 16542, recast1000ms: 90 },
+  { id: 16542, recast1000ms: "(lv) => lv>=92? 60 : 90" },
   { id: 3585, recast1000ms: 90 },
   { id: 16538, recast1000ms: 120, duration: 20 },
   { id: 188, recast1000ms: 30, duration: 18 },

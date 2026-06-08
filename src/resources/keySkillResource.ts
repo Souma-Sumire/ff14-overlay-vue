@@ -1,4 +1,5 @@
 import type { KeySkill } from "@/types/keySkill";
+import "@/resources/globalSkills";
 import {
   getGlobalSkillDefinitionById,
   resolveBakedActionMeta,

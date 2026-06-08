@@ -1,4 +1,5 @@
 import type { KeigennSkill, Scope } from "@/types/keigennRecord2";
+import "@/resources/globalSkills";
 import {
   getGlobalSkillDefinitionById,
   resolveBakedActionMeta,

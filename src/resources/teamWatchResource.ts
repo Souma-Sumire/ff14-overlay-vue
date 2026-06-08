@@ -1,10 +1,12 @@
 import type { TeamWatchActionMetaRaw, TeamWatchStorageData } from "@/types/teamWatchTypes";
+import "@/resources/globalSkills";
 import {
   getActionIconId,
   resolveActionDisplayName,
   resolveActionMinLevel,
   resolveHighestSupportedActionInFamily,
   uniqueInts,
+  getGlobalSkillDefinitionById,
 } from "@/resources/logic/actionMetaResolver";
 import Util from "@/utils/util";
 
@@ -73,15 +75,21 @@ export function normalizeTeamWatchActionMetaRaw(aid: number, value: any): TeamWa
     iconId = getActionIconId(id);
   }
 
+  const global = getGlobalSkillDefinitionById(id);
+
   return {
     id,
     name: String(raw.name || resolveActionDisplayName(id, id)).trim(),
     iconId: iconId || 0,
     actionCategory: Number(raw.actionCategory) || 0,
-    recast1000ms: raw.recast1000ms ?? 0,
-    duration: raw.duration ?? 0,
-    maxCharges: raw.maxCharges ?? 1,
-    classJobLevel: resolveActionMinLevel(raw.classJobLevel ?? 1, { actionId: id, fallback: 1 }),
+    recast1000ms:
+      global?.recast1000ms !== undefined ? global.recast1000ms : (raw.recast1000ms ?? 0),
+    duration: global?.duration !== undefined ? global.duration : (raw.duration ?? 0),
+    maxCharges: global?.maxCharges !== undefined ? global.maxCharges : (raw.maxCharges ?? 1),
+    classJobLevel: resolveActionMinLevel(
+      global?.minLevel !== undefined ? global.minLevel : (raw.classJobLevel ?? 1),
+      { actionId: id, fallback: 1 },
+    ),
   };
 }
 
