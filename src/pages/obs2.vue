@@ -84,7 +84,7 @@ const REGEXES = {
   inCombat: NetRegexes.inCombat(),
   countdown: NetRegexes.countdown(),
   countdownCancel: NetRegexes.countdownCancel(),
-  wipe: NetRegexes.network6d({ command: ["40000003", "40000010", "4000000F"] }),
+  wipe: NetRegexes.network6d({ command: ["40000010", "4000000F"] }),
 } as const;
 
 const DEFAULT_ENABLE_SETTINGS: Omit<Settings, "type"> = {
