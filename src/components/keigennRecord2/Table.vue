@@ -556,6 +556,21 @@ const columns = computed<Column[]>(() => [
           h(
             "span",
             {
+              class: "only-this-player-inline",
+              onClick: (e: MouseEvent) => {
+                e.stopPropagation();
+                if (targetFilter.value === rowData.targetId) {
+                  targetFilter.value = "";
+                } else {
+                  targetFilter.value = rowData.targetId;
+                }
+              },
+            },
+            targetFilter.value === rowData.targetId ? "[恢复全部]" : "[只看TA]",
+          ),
+          h(
+            "span",
+            {
               class: "death-recap-inline",
               "data-row-key": rowData.key,
               "data-hover-mode": "death-recap",
@@ -1210,6 +1225,21 @@ defineExpose({
   &:hover {
     opacity: 1;
     color: #fff;
+  }
+}
+
+:deep(.only-this-player-inline) {
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  opacity: 0.6;
+  color: #999999;
+  margin-right: 8px;
+
+  &:hover {
+    opacity: 0.9;
+    color: #ffffff;
   }
 }
 
