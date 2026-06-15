@@ -4337,16 +4337,10 @@ const activeStep = computed(() => {
                         @click.stop="handleRecordTrigger($event, row)"
                         @contextmenu.prevent="handleRecordTrigger($event, row)"
                       >
-                        <div
-                          v-if="recordWeekCorrections[row.key]"
-                          class="week-correction-display"
-                        >
+                        <div v-if="recordWeekCorrections[row.key]" class="week-correction-display">
                           <div class="original-week">
                             W{{
-                              getRaidWeekIndex(
-                                row.timestamp,
-                                GAME_VERSION_CONFIG.RAID_START_TIME,
-                              )
+                              getRaidWeekIndex(row.timestamp, GAME_VERSION_CONFIG.RAID_START_TIME)
                             }}
                           </div>
                           <el-icon class="week-arrow">
@@ -4354,25 +4348,17 @@ const activeStep = computed(() => {
                           </el-icon>
                           <div class="corrected-week">
                             W{{
-                              getRaidWeekIndex(
-                                row.timestamp,
-                                GAME_VERSION_CONFIG.RAID_START_TIME,
-                              ) + (recordWeekCorrections[row.key] || 0)
+                              getRaidWeekIndex(row.timestamp, GAME_VERSION_CONFIG.RAID_START_TIME) +
+                              (recordWeekCorrections[row.key] || 0)
                             }}
                           </div>
                         </div>
                         <div v-else class="col-week">
                           W{{
-                            getRaidWeekIndex(
-                              row.timestamp,
-                              GAME_VERSION_CONFIG.RAID_START_TIME,
-                            )
+                            getRaidWeekIndex(row.timestamp, GAME_VERSION_CONFIG.RAID_START_TIME)
                           }}
                           <el-tooltip
-                            v-if="
-                              rawSuspiciousKeys.has(row.key) &&
-                              !recordWeekCorrections[row.key]
-                            "
+                            v-if="rawSuspiciousKeys.has(row.key) && !recordWeekCorrections[row.key]"
                             placement="top"
                             :enterable="false"
                           >

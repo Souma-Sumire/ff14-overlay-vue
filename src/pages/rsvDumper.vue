@@ -263,9 +263,7 @@ function saveResultsToFile() {
       <!-- @vue-generic {Result} -->
       <el-table-column label="操作" width="150">
         <template #default="{ row }">
-          <el-button size="small" type="primary" @click="showHex(row)">
-            查看 HexDump
-          </el-button>
+          <el-button size="small" type="primary" @click="showHex(row)"> 查看 HexDump </el-button>
         </template>
       </el-table-column>
     </el-table>

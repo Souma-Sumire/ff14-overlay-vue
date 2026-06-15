@@ -937,13 +937,9 @@ init();
           <!-- @vue-generic {ITimeline} -->
           <el-table-column label="操作" width="220">
             <template #default="{ row }">
-              <el-button type="primary" size="small" @click="editTimeline(row)">
-                编辑
-              </el-button>
+              <el-button type="primary" size="small" @click="editTimeline(row)"> 编辑 </el-button>
               <el-button size="small" @click="copyTimeline(row)"> 制作副本 </el-button>
-              <el-button type="danger" size="small" @click="deleteTimeline(row)">
-                删除
-              </el-button>
+              <el-button type="danger" size="small" @click="deleteTimeline(row)"> 删除 </el-button>
             </template>
           </el-table-column>
         </el-table>
