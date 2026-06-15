@@ -42,6 +42,9 @@ import { parseDynamicValue } from "@/utils/dynamicValue";
 import Util from "@/utils/util";
 import { parseAction } from "@/utils/xivapi";
 import { Party } from "../../cactbot/types/event";
+import { useUrlSearchParams } from "@vueuse/core";
+
+const urlParams = useUrlSearchParams("hash");
 
 const TEAM_WATCH_ACTION_COLUMNS = [
   "ID",
@@ -322,8 +325,10 @@ const useTeamWatchStore = defineStore("teamWatch", () => {
       ? teamWatchFakeParty
       : [...party.value]
           .sort((a, b) => {
-            if (a.id === playerId.value) return -1;
-            if (b.id === playerId.value) return 1;
+            if (urlParams.noSort !== "1") {
+              if (a.id === playerId.value) return -1;
+              if (b.id === playerId.value) return 1;
+            }
             const aBaseJob = Util.baseJobEnumConverted(a.job);
             const bBaseJob = Util.baseJobEnumConverted(b.job);
             const aIndex = sortRuleUser.value.indexOf(aBaseJob);
