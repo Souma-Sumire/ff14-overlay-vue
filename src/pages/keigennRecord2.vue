@@ -188,6 +188,9 @@ function loadStoredJson<T>(key: string, fallback: T): T {
 // 从 localStorage 加载持久化数据
 function loadPersistentData() {
   try {
+    // 自动清理可能已超限的旧缓存，恢复 localStorage 空间
+    localStorage.removeItem(STORAGE_KEYS.METADATA_LIST);
+
     const savedVersion = localStorage.getItem(STORAGE_KEYS.VERSION);
     if (savedVersion !== DATA_VERSION) {
       Object.values(STORAGE_KEYS).forEach((key) => {
@@ -226,14 +229,6 @@ function savePersistentData() {
     localStorage.setItem(STORAGE_KEYS.PARTY_EVENT, JSON.stringify(partyEventParty));
     localStorage.setItem(STORAGE_KEYS.RSV_DATA, JSON.stringify(rsvData));
     localStorage.setItem(STORAGE_KEYS.ZONE_NAME, zoneName);
-
-    const metadataList = data.value.map((v) => ({
-      key: v.key,
-      zoneName: v.zoneName,
-      duration: v.duration,
-      timestamp: v.timestamp,
-    }));
-    localStorage.setItem(STORAGE_KEYS.METADATA_LIST, JSON.stringify(metadataList));
   } catch (e) {
     console.error("Failed to save persistent data:", e);
   }
@@ -1256,29 +1251,9 @@ async function loadStorage() {
       await db.replaceAll([]);
       data.value.length = 0;
     } else {
-      let loadData: any[] = [];
-      const rawMetadata = localStorage.getItem(STORAGE_KEYS.METADATA_LIST);
-      if (rawMetadata) {
-        try {
-          loadData = JSON.parse(rawMetadata);
-        } catch (e) {
-          console.warn("Failed to parse metadata list from localStorage:", e);
-        }
-      }
+      const loadData = await db.getAllMetadata();
 
-      // 如果本地没有元数据缓存，则进行降级：读取一次 IndexedDB，之后写入本地缓存
-      if (!loadData || loadData.length === 0) {
-        const fullData = await db.getAll();
-        loadData = fullData.map((v) => ({
-          key: v.key,
-          zoneName: v.zoneName,
-          duration: v.duration,
-          timestamp: v.timestamp,
-        }));
-        localStorage.setItem(STORAGE_KEYS.METADATA_LIST, JSON.stringify(loadData));
-      }
-
-      if (loadData.length) {
+      if (loadData && loadData.length) {
         data.value.length = 0;
         const now = Date.now();
         const expiryThreshold = now - 1000 * 60 * 60 * 24 * 3;
@@ -1293,13 +1268,6 @@ async function loadStorage() {
         // 按 key 逐条删除过期记录
         if (expiredKeys.length > 0) {
           void Promise.all(expiredKeys.map((key) => db.remove(key)));
-          const updatedMetadata = filtered.map((v) => ({
-            key: v.key,
-            zoneName: v.zoneName,
-            duration: v.duration,
-            timestamp: v.timestamp,
-          }));
-          localStorage.setItem(STORAGE_KEYS.METADATA_LIST, JSON.stringify(updatedMetadata));
         }
 
         let result = filtered.sort((a, b) => a.timestamp - b.timestamp);
