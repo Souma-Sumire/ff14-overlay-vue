@@ -23,6 +23,7 @@ import {
   shallowReactive,
   shallowRef,
   triggerRef,
+  watch,
   watchEffect,
 } from "vue";
 import { useDev } from "@/composables/useDev";
@@ -145,6 +146,7 @@ const STORAGE_KEYS = {
   RSV_DATA: "souma-keigenn-record-2-rsv-data",
   ZONE_NAME: "souma-keigenn-record-2-zone-name",
   VERSION: "keigenn-record-2-data-version",
+  METADATA_LIST: "keigenn-record-2-metadata-list",
 } as const;
 
 const DATA_VERSION = "v20260131";
@@ -224,6 +226,14 @@ function savePersistentData() {
     localStorage.setItem(STORAGE_KEYS.PARTY_EVENT, JSON.stringify(partyEventParty));
     localStorage.setItem(STORAGE_KEYS.RSV_DATA, JSON.stringify(rsvData));
     localStorage.setItem(STORAGE_KEYS.ZONE_NAME, zoneName);
+
+    const metadataList = data.value.map((v) => ({
+      key: v.key,
+      zoneName: v.zoneName,
+      duration: v.duration,
+      timestamp: v.timestamp,
+    }));
+    localStorage.setItem(STORAGE_KEYS.METADATA_LIST, JSON.stringify(metadataList));
   } catch (e) {
     console.error("Failed to save persistent data:", e);
   }
@@ -1165,7 +1175,19 @@ function getStorableEncounters(encounters: Encounter[]): Encounter[] {
 
 async function saveAllEncounters() {
   if (loading.value) return;
-  await db.replaceAll(getStorableEncounters(data.value));
+  const toSaveList: Encounter[] = [];
+  for (const encounter of data.value) {
+    if (!isStorableEncounter(encounter)) continue;
+    if (!encounter.table || encounter.table.length === 0) {
+      const detail = await db.get(encounter.key);
+      if (detail) {
+        toSaveList.push(detail);
+      }
+    } else {
+      toSaveList.push(toStoredEncounter(encounter));
+    }
+  }
+  await db.replaceAll(toSaveList);
 }
 
 function scheduleStopCombatPersistence(encounter: Encounter) {
@@ -1200,6 +1222,32 @@ function clearScheduledStopCombatPersistence() {
   pendingStopCombatEncounters.clear();
 }
 
+async function loadEncounterDetail(index: number) {
+  const encounter = data.value[index];
+  if (!encounter || encounter.key === "init") return;
+
+  // 如果已经有战斗日志了，就不需要再去加载了
+  if (encounter.table && encounter.table.length > 0) return;
+
+  loading.value = true;
+  try {
+    const detail = await db.get(encounter.key);
+    if (detail && detail.table) {
+      encounter.table = shallowReactive(detail.table);
+      ensureEncounterProcessed(encounter);
+      triggerRef(data);
+    }
+  } catch (e) {
+    console.error("Failed to load encounter details for key " + encounter.key, e);
+  } finally {
+    loading.value = false;
+  }
+}
+
+watch(select, async (newVal) => {
+  await loadEncounterDetail(newVal);
+});
+
 async function loadStorage() {
   select.value = 0;
   try {
@@ -1207,7 +1255,28 @@ async function loadStorage() {
       await db.replaceAll([]);
       data.value.length = 0;
     } else {
-      const loadData = await db.getAll();
+      let loadData: any[] = [];
+      const rawMetadata = localStorage.getItem(STORAGE_KEYS.METADATA_LIST);
+      if (rawMetadata) {
+        try {
+          loadData = JSON.parse(rawMetadata);
+        } catch (e) {
+          console.warn("Failed to parse metadata list from localStorage:", e);
+        }
+      }
+
+      // 如果本地没有元数据缓存，则进行降级：读取一次 IndexedDB，之后写入本地缓存
+      if (!loadData || loadData.length === 0) {
+        const fullData = await db.getAll();
+        loadData = fullData.map((v) => ({
+          key: v.key,
+          zoneName: v.zoneName,
+          duration: v.duration,
+          timestamp: v.timestamp,
+        }));
+        localStorage.setItem(STORAGE_KEYS.METADATA_LIST, JSON.stringify(loadData));
+      }
+
       if (loadData.length) {
         data.value.length = 0;
         const now = Date.now();
@@ -1220,9 +1289,16 @@ async function loadStorage() {
           return false;
         });
 
-        // 按 key 逐条删除过期记录，避免重新序列化全部有效数据
+        // 按 key 逐条删除过期记录
         if (expiredKeys.length > 0) {
           void Promise.all(expiredKeys.map((key) => db.remove(key)));
+          const updatedMetadata = filtered.map((v) => ({
+            key: v.key,
+            zoneName: v.zoneName,
+            duration: v.duration,
+            timestamp: v.timestamp,
+          }));
+          localStorage.setItem(STORAGE_KEYS.METADATA_LIST, JSON.stringify(updatedMetadata));
         }
 
         let result = filtered.sort((a, b) => a.timestamp - b.timestamp);
@@ -1232,13 +1308,14 @@ async function loadStorage() {
         }
 
         for (const v of result) {
-          v.table = shallowReactive(v.table ?? []);
+          // 初始化 table 为空，防止 Vue 对其进行深度响应式递归和全量生成 DOM 节点卡死
+          v.table = shallowReactive([]);
           data.value.push(v);
         }
 
-        // 只处理当前选中的 encounter（select=0），其余延迟到被选中时再处理
+        // 仅处理并懒加载当前选中的最新战斗
         if (data.value.length > 0) {
-          ensureEncounterProcessed(data.value[0]!);
+          await loadEncounterDetail(0);
         }
       }
     }

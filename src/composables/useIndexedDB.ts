@@ -64,6 +64,19 @@ export function useIndexedDB<T extends { key: string }>(storeName: string) {
 
   return {
     getAll: () => withDB((db) => db.getAll(storeName)),
+    getAllMetadata: () =>
+      withDB(async (db) => {
+        const tx = db.transaction(storeName, "readonly");
+        const store = tx.objectStore(storeName);
+        const result: any[] = [];
+        let cursor = await store.openCursor();
+        while (cursor) {
+          const { table: _table, ...metadata } = cursor.value;
+          result.push(metadata);
+          cursor = await cursor.continue();
+        }
+        return result;
+      }),
     get: (key: string) => withDB((db) => db.get(storeName, key)),
     set: (item: T) => withDB((db) => db.put(storeName, item)),
     bulkSet: (items: T[]) =>
