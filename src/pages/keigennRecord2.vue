@@ -854,8 +854,9 @@ function handleLine(line: string) {
         const which = splitLine[logDefinitions.NetworkDoT.fields.which]!;
         const effectId = splitLine[logDefinitions.NetworkDoT.fields.effectId]!;
         const effectIdNum = Number.parseInt(effectId, 16);
-        const isMicrocosmos = which === "HoT" && effectIdNum === 0xa9e;
-        if (!isMicrocosmos && !userOptions.parseDoT) return;
+        const isHoT = which === "HoT";
+        const isMicrocosmos = isHoT && effectIdNum === 0xa9e;
+        if (!isHoT && !userOptions.parseDoT) return;
 
         const targetId = splitLine[logDefinitions.NetworkDoT.fields.id]!;
         if (
@@ -909,8 +910,8 @@ function handleLine(line: string) {
             keigenns: [],
             currentHp,
             maxHp,
-            effect: isMicrocosmos ? "heal" : "damage done",
-            type: isMicrocosmos ? "heal" : "dot",
+            effect: isHoT ? "heal" : "damage done",
+            type: isHoT ? "heal" : "dot",
             shield: shieldData[targetId] ?? "0",
             povId,
             reduction: 0,
