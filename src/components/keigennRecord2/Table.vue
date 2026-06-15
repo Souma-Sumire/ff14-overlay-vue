@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import type {
-  Column,
-  MessageHandler,
-  Placement,
-  RowEventHandlers,
-  TableV2Instance,
-} from "element-plus";
+import type { Column, MessageHandler, RowEventHandlers, TableV2Instance } from "element-plus";
 import type { RowVO } from "@/types/keigennRecord2";
 import { Clock } from "@element-plus/icons-vue";
 import { onClickOutside, useElementSize } from "@vueuse/core";
@@ -18,8 +12,8 @@ import { copyToClipboard } from "@/utils/clipboard";
 import Util from "@/utils/util";
 import { handleImgError } from "@/utils/xivapi";
 import FilterHeader from "./FilterHeader.vue";
-import { onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef, watch } from "vue";
-import { ElEmpty, ElPopover, ElTableV2 } from "element-plus";
+import { nextTick, onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef, watch } from "vue";
+import { ElEmpty, ElTableV2 } from "element-plus";
 
 const props = defineProps<{
   rows: RowVO[];
@@ -31,6 +25,9 @@ const { t } = useLang();
 const store = useKeigennRecord2Store();
 const userOptions = store.userOptions;
 const contextMenu = useTemplateRef<HTMLElement>("contextMenu");
+const singletonPopover = useTemplateRef<HTMLElement>("singletonPopover");
+
+const actionWidth = ref(64); // 技能列宽度，默认值 64
 
 const actionFilter = ref(""); // 技能筛选
 const targetFilter = ref(""); // 目标筛选
@@ -42,18 +39,16 @@ const contextMenuRow = ref<RowVO | null>(null);
 
 // 全局浮层控制
 const hoveredRow = ref<RowVO | null>(null);
-const virtualRef = ref<HTMLElement | { getBoundingClientRect: () => DOMRect }>({
-  getBoundingClientRect: () =>
-    ({ top: 0, left: 0, bottom: 0, right: 0, width: 0, height: 0 }) as DOMRect,
-});
 const tooltipMode = ref<"amount" | "skills" | "death-recap" | null>(null);
 const popoverVisible = ref(false);
-const popoverPlacement = ref("top" as Placement);
+const popoverStyle = ref<Record<string, string>>({ top: "0px", left: "0px", visibility: "hidden" });
 
 watch(
   () => props.rows,
   (rows) => {
     popoverVisible.value = false;
+    hoveredRow.value = null;
+    tooltipMode.value = null;
     if (rows.length === 0) {
       actionFilter.value = "";
       targetFilter.value = "";
@@ -144,6 +139,18 @@ function updateRecapData(deathRow: RowVO) {
   // 对结果进行去重并按时间从新到旧排序（死亡 0.0s 在最上面）
   const finalResult = Array.from(new Set(result)).sort((a, b) => b.timestamp - a.timestamp);
 
+  // 寻找致死伤害记录（跳过死亡行、治疗行，且伤害量需大于当时玩家当前血量）
+  let overkillStr = "";
+  const killerRow = finalResult.find(
+    (r) => r.type !== "death" && r.effect !== "heal" && r.amount > r.currentHp,
+  );
+  if (killerRow) {
+    const overkill = killerRow.amount - killerRow.currentHp;
+    const overkillDisplay =
+      overkill > 9_999 ? `${(overkill / 10_000).toFixed(0)}万` : overkill.toLocaleString();
+    overkillStr = ` (差${overkillDisplay}?)`;
+  }
+
   recapRows.value = finalResult.map((r) => {
     const isHeal = r.effect === "heal";
     const isDeath = r.type === "death";
@@ -168,7 +175,7 @@ function updateRecapData(deathRow: RowVO) {
       timeStr: `${((r.timestamp - deathTime) / 1000).toFixed(1).replace("-0.0", "0.0")}s`,
       amountStr,
       amountClass,
-      actionCN: r.actionCN,
+      actionCN: isDeath ? `${r.actionCN}${overkillStr}` : r.actionCN,
       isDeath,
       iconSrc: "",
       keigenns: r.preCalculated.keigenns,
@@ -176,58 +183,107 @@ function updateRecapData(deathRow: RowVO) {
   });
 }
 
-function handleHover(row: RowVO, mode: "amount" | "skills" | "death-recap", e: MouseEvent) {
+function positionPopover(triggerEl: HTMLElement, mode: string) {
+  popoverStyle.value = {
+    ...popoverStyle.value,
+    visibility: "hidden",
+  };
+
+  nextTick(() => {
+    if (!popoverVisible.value || !singletonPopover.value) return;
+
+    const rect = triggerEl.getBoundingClientRect();
+    const gap = 4;
+    const popoverEl = singletonPopover.value;
+    const popoverRect = popoverEl.getBoundingClientRect();
+    const w = popoverRect.width;
+
+    let left = 0;
+    if (mode === "amount") {
+      left = rect.right + gap;
+    } else {
+      left = rect.left - gap - w;
+    }
+
+    let top = rect.top;
+
+    if (left < 0) {
+      left = 0;
+    }
+    if (top < 0) {
+      top = 0;
+    }
+
+    popoverStyle.value = {
+      top: `${top}px`,
+      left: `${left}px`,
+      visibility: "visible",
+    };
+  });
+}
+
+function handleHover(
+  row: RowVO,
+  mode: "amount" | "skills" | "death-recap",
+  triggerEl: HTMLElement,
+) {
   if (popoverVisible.value && hoveredRow.value?.key === row.key && tooltipMode.value === mode)
     return;
 
   tooltipMode.value = mode;
-  if (mode === "skills") {
-    popoverPlacement.value = "left";
-  } else if (mode === "death-recap") {
-    popoverPlacement.value = "auto";
+  if (mode === "death-recap") {
     updateRecapData(row);
-  } else {
-    popoverPlacement.value = "right";
   }
   hoveredRow.value = row;
-  virtualRef.value = e.currentTarget as HTMLElement;
+  positionPopover(triggerEl, mode);
   popoverVisible.value = true;
 }
 
 const lastMousePos = { x: 0, y: 0 };
+
 function handleMouseMove(e: MouseEvent) {
   lastMousePos.x = e.clientX;
   lastMousePos.y = e.clientY;
-}
 
-function updateHoverState(x: number, y: number) {
-  const el = document.elementFromPoint(x, y);
-  const trigger = el?.closest("[data-row-key][data-hover-mode]") as HTMLElement;
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  if (el?.closest(".keigenn-singleton-popover")) return;
+
+  const trigger = el?.closest("[data-row-key][data-hover-mode]") as HTMLElement | null;
   if (trigger) {
-    const key = trigger.dataset.rowKey;
-    const mode = trigger.dataset.hoverMode as any;
+    const key = trigger.dataset.rowKey!;
+    const mode = trigger.dataset.hoverMode as "amount" | "skills" | "death-recap";
     const row = tableData.value.find((r) => r.key === key);
     if (row) {
-      handleHover(row, mode, { currentTarget: trigger } as any);
+      handleHover(row, mode, trigger);
       return;
     }
   }
-  popoverVisible.value = false;
+
+  if (popoverVisible.value) {
+    popoverVisible.value = false;
+  }
 }
 
 let scrollFrame = 0;
-function handleScroll(e: WheelEvent) {
+function handleScroll() {
   if (contextMenuVisible.value) {
     contextMenuVisible.value = false;
   }
 
-  const target = e.target as HTMLElement;
-  if (target?.closest(".keigenn-global-popover")) return;
-
-  // 使用 rAF 延迟探测，确保滚动后的 DOM 已经更新并稳定
+  popoverVisible.value = false;
   cancelAnimationFrame(scrollFrame);
   scrollFrame = requestAnimationFrame(() => {
-    updateHoverState(lastMousePos.x, lastMousePos.y);
+    const el = document.elementFromPoint(lastMousePos.x, lastMousePos.y);
+    if (el?.closest(".keigenn-singleton-popover")) return;
+    const trigger = el?.closest("[data-row-key][data-hover-mode]") as HTMLElement | null;
+    if (trigger) {
+      const key = trigger.dataset.rowKey!;
+      const mode = trigger.dataset.hoverMode as "amount" | "skills" | "death-recap";
+      const row = tableData.value.find((r) => r.key === key);
+      if (row) {
+        handleHover(row, mode, trigger);
+      }
+    }
   });
 }
 
@@ -242,12 +298,45 @@ onMounted(() => {
 onBeforeUnmount(() => {
   tableContainer.value?.removeEventListener("wheel", handleScroll);
   window.removeEventListener("mousemove", handleMouseMove);
+  window.removeEventListener("mousemove", handleResizeMove);
+  window.removeEventListener("mouseup", handleResizeStop);
   cancelAnimationFrame(scrollFrame);
 });
 
 onClickOutside(contextMenu, () => {
   contextMenuVisible.value = false;
 });
+
+let isResizing = false;
+let startX = 0;
+let startWidth = 0;
+
+function handleResizeStart(e: MouseEvent) {
+  e.preventDefault();
+  e.stopPropagation();
+  isResizing = true;
+  startX = e.clientX;
+  startWidth = actionWidth.value;
+
+  window.addEventListener("mousemove", handleResizeMove);
+  window.addEventListener("mouseup", handleResizeStop);
+  document.body.style.cursor = "col-resize";
+}
+
+function handleResizeMove(e: MouseEvent) {
+  if (!isResizing) return;
+  const deltaX = e.clientX - startX;
+  const newWidth = Math.max(40, Math.min(250, startWidth + deltaX));
+  actionWidth.value = newWidth;
+}
+
+function handleResizeStop() {
+  if (!isResizing) return;
+  isResizing = false;
+  window.removeEventListener("mousemove", handleResizeMove);
+  window.removeEventListener("mouseup", handleResizeStop);
+  document.body.style.cursor = "";
+}
 
 const actionOptions = computed(() => {
   const filteredRows = props.rows.filter((r) => store.debugShowHeals || r.effect !== "heal");
@@ -324,17 +413,23 @@ const columns = computed<Column[]>(() => [
     key: "action",
     title: t("keigennRecord.action"),
     dataKey: props.actionKey as string,
-    width: 64,
+    width: actionWidth.value,
     align: "center" as const,
     class: "col-action",
     headerCellRenderer: () =>
-      h(FilterHeader, {
-        modelValue: actionFilter.value,
-        options: actionOptions.value,
-        placeholder: t("keigennRecord.action"),
-        width: "4.5em",
-        onUpdate: (v: string) => (actionFilter.value = v === ALL_STR ? "" : v),
-      }),
+      h("div", { class: "header-action-container" }, [
+        h(FilterHeader, {
+          modelValue: actionFilter.value,
+          options: actionOptions.value,
+          placeholder: t("keigennRecord.action"),
+          width: "4.5em",
+          onUpdate: (v: string) => (actionFilter.value = v === ALL_STR ? "" : v),
+        }),
+        h("div", {
+          class: "resize-handle",
+          onMousedown: handleResizeStart,
+        }),
+      ]),
     cellRenderer: ({ rowData }) => {
       if (rowData.type === "death") {
         const isTerrain = rowData.source === "地形杀";
@@ -352,21 +447,6 @@ const columns = computed<Column[]>(() => [
                 h("span", { class: "death-source-name" }, rowData.source),
                 h("span", " 做掉了！"),
               ]),
-          h(
-            "span",
-            {
-              class: "death-recap-inline",
-              "data-row-key": rowData.key,
-              "data-hover-mode": "death-recap",
-              onMouseenter: (e: MouseEvent) => {
-                handleHover(rowData, "death-recap", e);
-              },
-              onClick: (e: MouseEvent) => {
-                copyLastRowBeforeDeath(rowData, e);
-              },
-            },
-            " [死亡回放]",
-          ),
         ]);
       }
       const actionName = rowData[props.actionKey] ?? "";
@@ -428,7 +508,6 @@ const columns = computed<Column[]>(() => [
           class: "amount",
           "data-row-key": rowData.key,
           "data-hover-mode": "amount",
-          onMouseenter: (e: MouseEvent) => handleHover(rowData, "amount", e),
         },
         [
           h(
@@ -472,7 +551,22 @@ const columns = computed<Column[]>(() => [
     class: "col-keigenns",
     headerCellRenderer: () => renderHeader(t("keigennRecord.keigenns")),
     cellRenderer: ({ rowData }: { rowData: RowVO }) => {
-      if (rowData.type === "death") return renderEmpty();
+      if (rowData.type === "death") {
+        return h("div", { class: "death-recap-right" }, [
+          h(
+            "span",
+            {
+              class: "death-recap-inline",
+              "data-row-key": rowData.key,
+              "data-hover-mode": "death-recap",
+              onClick: (e: MouseEvent) => {
+                copyLastRowBeforeDeath(rowData, e);
+              },
+            },
+            "[死亡回放]",
+          ),
+        ]);
+      }
       return h("div", { class: "status-container" }, [
         ...rowData.preCalculated.keigenns.map((k) =>
           h("span", { class: "status-wrapper" }, [
@@ -534,7 +628,6 @@ const columns = computed<Column[]>(() => [
                 class: "view-icon",
                 "data-row-key": rowData.key,
                 "data-hover-mode": "skills",
-                onMouseenter: (e: MouseEvent) => handleHover(rowData, "skills", e),
               },
               [
                 h(
@@ -662,7 +755,11 @@ defineExpose({
 </script>
 
 <template>
-  <div ref="tableContainer" class="table-container">
+  <div
+    ref="tableContainer"
+    class="table-container"
+    :style="{ '--action-width': `${actionWidth}px` }"
+  >
     <div class="table-wrapper">
       <el-table-v2
         v-if="tableWidth > 0 && tableHeight > 0"
@@ -717,170 +814,158 @@ defineExpose({
         </ul>
       </div>
 
-      <el-popover
-        v-model:visible="popoverVisible"
-        :virtual-ref="virtualRef"
-        virtual-triggering
-        popper-class="keigenn-global-popover"
-        transition="none"
-        :show-after="0"
-        :hide-after="0"
-        :offset="2"
-        :enterable="true"
-        :teleported="true"
-        :placement="popoverPlacement"
-        width="auto"
-        :fallback-placements="[
-          'top-end',
-          'top-start',
-          'bottom',
-          'bottom-end',
-          'bottom-start',
-          'left',
-        ]"
-      >
-        <div class="keigenn-popover-scale" :style="{ '--popover-scale': userOptions.scale }">
-          <template v-if="hoveredRow && tooltipMode === 'amount'">
-            <div class="row-info">
-              <div class="info-line">{{ t("keigennRecord.source") }}: {{ hoveredRow.source }}</div>
-              <div class="info-line">
-                {{ t("keigennRecord.targetIndex") }}: {{ hoveredRow.targetIndex }}/
-                {{ hoveredRow.targetCount }}
-              </div>
-              <div class="info-line">
-                {{ t("keigennRecord.playerShield") }}: {{ hoveredRow.shield }}%
-              </div>
-              <div class="info-line">
-                {{ t("keigennRecord.playerHp") }}: {{ hoveredRow.currentHp.toLocaleString() }}({{
-                  hoveredRow.preCalculated.hpPercent
-                }}%)
-              </div>
-              <template v-if="hoveredRow.reduction < 1 && hoveredRow.type !== 'dot'">
-                <div class="info-divider" />
+      <Teleport to="body">
+        <div
+          v-show="popoverVisible && hoveredRow"
+          ref="singletonPopover"
+          class="keigenn-singleton-popover"
+          :style="popoverStyle"
+        >
+          <div class="keigenn-popover-scale" :style="{ '--popover-scale': userOptions.scale }">
+            <template v-if="hoveredRow && tooltipMode === 'amount'">
+              <div class="row-info">
                 <div class="info-line">
-                  {{ t("keigennRecord.reductionRate") }}:
-                  {{ (hoveredRow.reduction * 100).toFixed(2) }}%
+                  {{ t("keigennRecord.source") }}: {{ hoveredRow.source }}
                 </div>
                 <div class="info-line">
-                  {{ t("keigennRecord.originalDamage") }}:
-                  <span :class="hoveredRow.preCalculated.damageTypeClass">{{
-                    hoveredRow.preCalculated.originalDamageDisplay
-                  }}</span>
+                  {{ t("keigennRecord.targetIndex") }}: {{ hoveredRow.targetIndex }}/
+                  {{ hoveredRow.targetCount }}
                 </div>
-              </template>
-            </div>
-          </template>
-
-          <template v-else-if="hoveredRow && tooltipMode === 'skills'">
-            <div class="skill-popover-content">
-              <template v-if="getAllSkills(hoveredRow).length > 0">
-                <div class="skill-grid">
-                  <template
-                    v-for="skill in getAllSkills(hoveredRow)"
-                    :key="`${skill.id}-${skill.ownerId}`"
-                  >
-                    <div class="skill-wrapper">
-                      <div
-                        class="skill-icon-container"
-                        :title="`${skill.ownerName} (${skill.ownerJobName})`"
-                      >
-                        <img :src="skill.icon" class="skill-icon" @error="handleImgError" />
-                        <div v-if="!skill.ready" class="skill-overlay" />
-                        <span v-if="skill.recastLeft > 0" class="skill-text">{{
-                          skill.recastLeft
-                        }}</span>
-                        <span v-if="(skill.maxCharges ?? 0) > 1" class="skill-charges">{{
-                          skill.chargesReady
-                        }}</span>
-                        <span
-                          v-if="skill.jobResource !== undefined"
-                          class="skill-resource"
-                          :style="{
-                            fontSize: skill.jobResource.toString().length > 2 ? '9px' : '11px',
-                          }"
-                          >{{ skill.jobResource }}</span
-                        >
-                        <span v-if="skill.extraText" class="skill-extra-text">{{
-                          skill.extraText
-                        }}</span>
-                        <span
-                          v-if="isDuplicateSkill(getAllSkills(hoveredRow), skill.id)"
-                          class="skill-job-name"
-                          >{{ getSimpleJobName(skill.ownerJob) }}</span
-                        >
-                      </div>
-                    </div>
-                  </template>
+                <div class="info-line">
+                  {{ t("keigennRecord.playerShield") }}: {{ hoveredRow.shield }}%
                 </div>
-              </template>
-
-              <div v-if="getAllSkills(hoveredRow).length === 0" class="no-data">
-                {{ t("keigennRecord.noData") }}
-              </div>
-            </div>
-          </template>
-
-          <template v-else-if="hoveredRow && tooltipMode === 'death-recap'">
-            <div class="death-recap-popover">
-              <div class="recap-header">
-                <span>{{ t("keigennRecord.time") }}</span>
-                <span class="align-right">{{ t("keigennRecord.amount") }}</span>
-                <span>{{ t("keigennRecord.action") }}</span>
-                <span>{{ t("keigennRecord.keigenns") }}</span>
-              </div>
-              <!-- 列表内容 -->
-              <div
-                v-for="row in recapRows"
-                :key="row.key"
-                class="recap-row"
-                :class="{ 'is-death': row.isDeath }"
-              >
-                <!-- Time -->
-                <span class="time">{{ row.timeStr }}</span>
-
-                <!-- Amount -->
-                <span class="amount-cell align-right" :class="row.amountClass">
-                  {{ row.amountStr }}
-                </span>
-
-                <!-- Ability -->
-                <div class="ability-cell">
-                  <div class="ability-content">
-                    <img
-                      v-if="row.iconSrc"
-                      :src="row.iconSrc"
-                      class="ability-icon"
-                      @error="handleImgError"
-                    />
-                    <span class="ability-name" :title="row.actionCN">{{ row.actionCN }}</span>
+                <div class="info-line">
+                  {{ t("keigennRecord.playerHp") }}: {{ hoveredRow.currentHp.toLocaleString() }}({{
+                    hoveredRow.preCalculated.hpPercent
+                  }}%)
+                </div>
+                <template v-if="hoveredRow.reduction < 1 && hoveredRow.type !== 'dot'">
+                  <div class="info-divider" />
+                  <div class="info-line">
+                    {{ t("keigennRecord.reductionRate") }}:
+                    {{ (hoveredRow.reduction * 100).toFixed(2) }}%
                   </div>
-                </div>
+                  <div class="info-line">
+                    {{ t("keigennRecord.originalDamage") }}:
+                    <span :class="hoveredRow.preCalculated.damageTypeClass">{{
+                      hoveredRow.preCalculated.originalDamageDisplay
+                    }}</span>
+                  </div>
+                </template>
+              </div>
+            </template>
 
-                <!-- Status -->
-                <div class="status-cell">
-                  <div class="status-content">
-                    <div v-for="(k, idx) in row.keigenns" :key="idx" class="status-wrapper">
-                      <div
-                        class="status"
-                        :title="k.title"
-                        :data-duration="k.duration"
-                        :class="{ 'is-pov': k.isPov }"
-                      >
-                        <img
-                          :src="k.src"
-                          class="status-icon"
-                          :class="k.usefulClass"
-                          @error="handleImgError"
-                        />
+            <template v-else-if="hoveredRow && tooltipMode === 'skills'">
+              <div class="skill-popover-content">
+                <template v-if="getAllSkills(hoveredRow).length > 0">
+                  <div class="skill-grid">
+                    <template
+                      v-for="skill in getAllSkills(hoveredRow)"
+                      :key="`${skill.id}-${skill.ownerId}`"
+                    >
+                      <div class="skill-wrapper">
+                        <div
+                          class="skill-icon-container"
+                          :title="`${skill.ownerName} (${skill.ownerJobName})`"
+                        >
+                          <img :src="skill.icon" class="skill-icon" @error="handleImgError" />
+                          <div v-if="!skill.ready" class="skill-overlay" />
+                          <span v-if="skill.recastLeft > 0" class="skill-text">{{
+                            skill.recastLeft
+                          }}</span>
+                          <span v-if="(skill.maxCharges ?? 0) > 1" class="skill-charges">{{
+                            skill.chargesReady
+                          }}</span>
+                          <span
+                            v-if="skill.jobResource !== undefined"
+                            class="skill-resource"
+                            :style="{
+                              fontSize: skill.jobResource.toString().length > 2 ? '9px' : '11px',
+                            }"
+                            >{{ skill.jobResource }}</span
+                          >
+                          <span v-if="skill.extraText" class="skill-extra-text">{{
+                            skill.extraText
+                          }}</span>
+                          <span
+                            v-if="isDuplicateSkill(getAllSkills(hoveredRow), skill.id)"
+                            class="skill-job-name"
+                            >{{ getSimpleJobName(skill.ownerJob) }}</span
+                          >
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+
+                <div v-if="getAllSkills(hoveredRow).length === 0" class="no-data">
+                  {{ t("keigennRecord.noData") }}
+                </div>
+              </div>
+            </template>
+
+            <template v-else-if="hoveredRow && tooltipMode === 'death-recap'">
+              <div class="death-recap-popover">
+                <div class="recap-header">
+                  <span>{{ t("keigennRecord.time") }}</span>
+                  <span class="align-right">{{ t("keigennRecord.amount") }}</span>
+                  <span>{{ t("keigennRecord.action") }}</span>
+                  <span>{{ t("keigennRecord.keigenns") }}</span>
+                </div>
+                <!-- 列表内容 -->
+                <div
+                  v-for="row in recapRows"
+                  :key="row.key"
+                  class="recap-row"
+                  :class="{ 'is-death': row.isDeath }"
+                >
+                  <!-- Time -->
+                  <span class="time">{{ row.timeStr }}</span>
+
+                  <!-- Amount -->
+                  <span class="amount-cell align-right" :class="row.amountClass">
+                    {{ row.amountStr }}
+                  </span>
+
+                  <!-- Ability -->
+                  <div class="ability-cell">
+                    <div class="ability-content">
+                      <img
+                        v-if="row.iconSrc"
+                        :src="row.iconSrc"
+                        class="ability-icon"
+                        @error="handleImgError"
+                      />
+                      <span class="ability-name" :title="row.actionCN">{{ row.actionCN }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Status -->
+                  <div class="status-cell">
+                    <div class="status-content">
+                      <div v-for="(k, idx) in row.keigenns" :key="idx" class="status-wrapper">
+                        <div
+                          class="status"
+                          :title="k.title"
+                          :data-duration="k.duration"
+                          :class="{ 'is-pov': k.isPov }"
+                        >
+                          <img
+                            :src="k.src"
+                            class="status-icon"
+                            :class="k.usefulClass"
+                            @error="handleImgError"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </template>
+            </template>
+          </div>
         </div>
-      </el-popover>
+      </Teleport>
     </div>
   </div>
 </template>
@@ -890,6 +975,103 @@ defineExpose({
   width: 4px !important;
   pointer-events: none !important;
 }
+
+:deep(.col-time) {
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  flex: 0 0 40px !important;
+}
+
+:deep(.col-action) {
+  width: var(--action-width, 64px) !important;
+  min-width: var(--action-width, 64px) !important;
+  max-width: var(--action-width, 64px) !important;
+  flex: 0 0 var(--action-width, 64px) !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:deep(.el-table-v2__header-cell.col-action) {
+  overflow: visible !important;
+}
+
+:deep(.header-action-container) {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:deep(.resize-handle) {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 20;
+  background-color: transparent;
+  transition: background-color 0.2s;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 20%;
+    bottom: 20%;
+    left: 2px;
+    width: 2px;
+    background-color: var(--el-color-primary, #409eff);
+    border-radius: 1px;
+    opacity: 0.6;
+    transition:
+      opacity 0.2s,
+      background-color 0.2s;
+  }
+
+  &:hover::after,
+  &:active::after {
+    opacity: 1;
+    background-color: var(--el-color-primary-light-3, #79bbff);
+  }
+}
+
+:deep(.col-target) {
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  flex: 0 0 34px !important;
+}
+
+:deep(.col-amount) {
+  width: 52px !important;
+  min-width: 52px !important;
+  max-width: 52px !important;
+  flex: 0 0 52px !important;
+}
+
+:deep(.col-reduction) {
+  width: 35px !important;
+  min-width: 35px !important;
+  max-width: 35px !important;
+  flex: 0 0 35px !important;
+}
+
+:deep(.col-skills) {
+  width: 24px !important;
+  min-width: 24px !important;
+  max-width: 24px !important;
+  flex: 0 0 24px !important;
+}
+
+:deep(.col-keigenns) {
+  min-width: 100px !important;
+  flex: 1 1 100px !important;
+}
+
 .table-container {
   height: 100%;
   width: 100%;
@@ -1007,15 +1189,27 @@ defineExpose({
     color: #ffe58f;
     font-weight: bold;
   }
+}
 
-  .death-recap-inline {
-    font-weight: bold;
-    margin-left: 8px;
-    cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    opacity: 0.8;
-    color: inherit;
+:deep(.death-recap-right) {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
+  padding-right: 4px;
+}
+
+:deep(.death-recap-inline) {
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  opacity: 0.8;
+  color: #c4c4c4;
+
+  &:hover {
+    opacity: 1;
+    color: #fff;
   }
 }
 
@@ -1140,13 +1334,11 @@ defineExpose({
 </style>
 
 <style lang="scss">
-body .el-popover.keigenn-global-popover {
-  padding: 0;
-  background: transparent;
-  border: none;
-  box-shadow: none;
+.keigenn-singleton-popover {
+  position: fixed;
+  z-index: 2000;
   pointer-events: none;
-  overflow: visible;
+  width: max-content;
 
   .keigenn-popover-scale {
     display: inline-block;
@@ -1278,7 +1470,6 @@ body .el-popover.keigenn-global-popover {
             color: #fff;
             font-weight: bold;
             font-size: 11px;
-            z-index: 3;
             z-index: 3;
             text-shadow:
               -1px 0 1.5px #000,
@@ -1484,7 +1675,7 @@ body .el-popover.keigenn-global-popover {
         display: flex;
         column-gap: 0px;
         row-gap: 0px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         align-items: center;
       }
 
