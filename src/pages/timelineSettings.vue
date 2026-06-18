@@ -182,7 +182,7 @@ const maxSlider = ref(0);
 function editTimeline(timeline: ITimeline): void {
   currentTimelineEditing.value = timeline;
   dialogVisible.value = true;
-  updateTransmissionTimeline();
+  updateTransmissionTimeline(true);
 }
 
 function closeDialog() {
@@ -193,7 +193,7 @@ function createNewTimeline(): void {
   editTimeline(timelineStore.allTimelines[timelineStore.newTimeline()]!);
 }
 
-function updateTransmissionTimeline() {
+function updateTransmissionTimeline(resetSlider = false) {
   parsedTimelineLines.value = [
     {
       time: 0,
@@ -208,7 +208,11 @@ function updateTransmissionTimeline() {
     parsedTimelineLines.value = result;
     const maxTime = Math.max(...parsedTimelineLines.value.map((v) => v.time), 550);
     maxSlider.value = maxTime + 30;
-    simulatedCombatTime.value = -timelineStore.configValues.preBattle;
+    if (resetSlider) {
+      simulatedCombatTime.value = -timelineStore.configValues.preBattle;
+    } else if (simulatedCombatTime.value > maxSlider.value) {
+      simulatedCombatTime.value = maxSlider.value;
+    }
   });
 }
 
@@ -221,6 +225,7 @@ function timelineTimeFormat() {
         : moment.utc(Number(match) * 1000).format("mm:ss.S");
     },
   );
+  updateTransmissionTimeline(false);
 }
 
 function deleteTimeline(target: ITimeline): void {
@@ -584,6 +589,7 @@ function removeCommentsInTimeline() {
         "",
       );
       ElMessage.success("完成");
+      updateTransmissionTimeline(false);
     })
     .catch(() => {});
 }
@@ -1067,7 +1073,7 @@ init();
               :autosize="{ minRows: 10, maxRows: 20 }"
               wrap="off"
               placeholder="请键入时间轴文本"
-              @change="updateTransmissionTimeline()"
+              @change="updateTransmissionTimeline(false)"
             />
           </el-col>
           <timeline-timeline-show
