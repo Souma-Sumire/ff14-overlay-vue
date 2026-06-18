@@ -202,11 +202,9 @@ async function loadPickerPool(job: number) {
       classJobLevel: row.ClassJobLevel,
       recast1000ms: (() => {
         const meta = getGlobalSkillDefinitionById(row.ID);
+        const fallback = Number(row.Recast100ms ?? 0) / 10;
         return (
-          parseDynamicValue(
-            meta?.recast1000ms ?? Number(row.Recast1000ms ?? 0),
-            GLOBAL_SKILL_MAX_LEVEL,
-          ) ?? Number(row.Recast1000ms ?? 0)
+          parseDynamicValue(meta?.recast1000ms ?? fallback, GLOBAL_SKILL_MAX_LEVEL) ?? fallback
         );
       })(),
       isRoleAction: Number(row.IsRoleAction ?? 0) > 0,
