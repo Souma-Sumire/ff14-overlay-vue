@@ -67,5 +67,12 @@
     "onlyBuiltDependencies": [
       "@parcel/watcher"
     ]
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "24.17.0",
+      "onFail": "download"
+    }
   }
 }
