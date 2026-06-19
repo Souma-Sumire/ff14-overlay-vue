@@ -2,7 +2,7 @@ import type { Lang } from "./types/lang";
 import { createHead } from "@vueuse/head";
 import { ElLoadingDirective, ElMessage } from "element-plus";
 import { createPinia } from "pinia";
-import { createApp } from "vue";
+import { createApp, watch } from "vue";
 import { createI18n } from "vue-i18n";
 import VueLazyload from "vue-lazyload";
 import App from "./App.vue";
@@ -65,6 +65,25 @@ async function bootstrap() {
 
   checkReferrer();
   app.mount("#app");
+
+  watch(
+    () => i18n.global.locale.value,
+    () => {
+      const unlockedText = document.getElementById("unlocked-text");
+      if (unlockedText) {
+        unlockedText.textContent = i18n.global.t("unlocked.text");
+      }
+      const topLeft = document.getElementById("unlocked-top-left");
+      if (topLeft) {
+        topLeft.textContent = i18n.global.t("unlocked.topLeft");
+      }
+      const center = document.getElementById("unlocked-center");
+      if (center) {
+        center.textContent = i18n.global.t("unlocked.center");
+      }
+    },
+    { immediate: true },
+  );
 
   const { protocol, hostname, href } = window.location;
   const isLocal = ["localhost", "127.0.0.1", "::1"].includes(hostname);

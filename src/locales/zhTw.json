@@ -606,5 +606,10 @@
     "inputEmpty": "輸入不能為空",
     "jsonError": "JSON 格式錯誤",
     "invalidPPJson": "無效的 PPJSON"
+  },
+  "unlocked": {
+    "text": "🔓 請調整至合適大小，隨後在ACT勾選\"鎖定懸浮窗\"以開始使用。",
+    "topLeft": "左上角",
+    "center": "中心點"
   }
 }

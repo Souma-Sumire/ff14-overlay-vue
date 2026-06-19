@@ -610,5 +610,10 @@
     "inputEmpty": "输入不能为空",
     "jsonError": "JSON 格式错误",
     "invalidPPJson": "无效的 PPJSON"
+  },
+  "unlocked": {
+    "text": "🔓 请调整至合适大小，随后在ACT勾选\"锁定悬浮窗\"以开始使用。",
+    "topLeft": "左上角",
+    "center": "中心点"
   }
 }

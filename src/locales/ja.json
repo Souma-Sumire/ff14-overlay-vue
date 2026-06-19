@@ -606,5 +606,10 @@
     "inputEmpty": "入力は空にできません",
     "jsonError": "JSON形式エラー",
     "invalidPPJson": "無効なPPJSON"
+  },
+  "unlocked": {
+    "text": "🔓 適切なサイズに調整し、ACTで「レイアウトのロック」にチェックを入れて使用を開始してください。",
+    "topLeft": "左上",
+    "center": "中心"
   }
 }

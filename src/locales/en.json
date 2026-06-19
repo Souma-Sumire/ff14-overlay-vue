@@ -606,5 +606,10 @@
     "inputEmpty": "Input cannot be empty",
     "jsonError": "JSON format error",
     "invalidPPJson": "Invalid PPJSON"
+  },
+  "unlocked": {
+    "text": "🔓 Adjust size, then check \"Lock Overlay\" in ACT to start.",
+    "topLeft": "Top Left",
+    "center": "Center"
   }
 }
