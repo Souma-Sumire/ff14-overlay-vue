@@ -52,6 +52,7 @@ const handleLogLine: EventMap["LogLine"] = (e) => {
       // 重置 / 消耗
       state.chain = 0;
       state.chainList = [];
+      state.bonusTotal = 0;
     } else if (add > LB_INCREMENT) {
       // 奖池还在累计
       state.chain += add;
