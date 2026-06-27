@@ -224,7 +224,9 @@
       "kook_purify": "同时支持 KOOK 客户端和网页版。隐藏广告，屏蔽个性化入场音效。",
       "uisave_editor": "对UISAVE.DAT（场地标点）文件进行解析和编辑的工具。代码参考自 {0} 。",
       "uisave_editor_credits": "ff14_config_editor",
-      "loot_history": "自动记录零式战利品掉落与 Roll 点记录。支持多种统计、BIS 分配建议等功能。",      "dmu_blacksmith_police": "统计绝妖星 P3 打铁威力亏损，帮助分析输出优化。",      "mitigation_generator": "减伤规划表格。\n唯一优点：可以直接导出“治疗/减伤时间轴”时间轴文本。\n缺点：缺少很多功能。"
+      "loot_history": "自动记录零式战利品掉落与 Roll 点记录。支持多种统计、BIS 分配建议等功能。",
+      "dmu_blacksmith_police": "统计绝妖星 P3 打铁威力亏损，帮助分析输出优化。",
+      "mitigation_generator": "减伤规划表格。\n唯一优点：可以直接导出“治疗/减伤时间轴”时间轴文本。\n缺点：缺少很多功能。"
     }
   },
   "dd": {
