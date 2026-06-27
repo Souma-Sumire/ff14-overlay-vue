@@ -123,10 +123,31 @@ function processLogData(logText: string) {
     let currentPull: Pull | null = null;
     let currentZoneId = 0;
 
-    // 第一遍：解析 03 行建立玩家→职业映射
+    const pushPull = (pull: Pull) => {
+      if (
+        hasCombatEvents &&
+        !pull.hasCombatState &&
+        pull.records.length === 0 &&
+        (pull.damageEventCount || 0) < 100
+      ) {
+        console.log(
+          `[Discarded Pull] startTime=${pull.startTime}, duration=${Math.round(pull.durationMs / 1000)}s, zone=${pull.zoneId}, records=${pull.records.length}, damageCount=${pull.damageEventCount}`,
+        );
+        return;
+      }
+      pull.id = parsedPulls.length + 1;
+      parsedPulls.push(pull);
+    };
+
+    // 第一遍：解析 03 行建立玩家→职业映射，并判断是否包含 260 战斗事件
+    let hasCombatEvents = false;
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      if (!line || !line.startsWith("03|")) continue;
+      if (!line) continue;
+      if (line.startsWith("260|")) {
+        hasCombatEvents = true;
+      }
+      if (!line.startsWith("03|")) continue;
       const parts = line.split("|");
       if (parts.length < 5) continue;
       const sourceId = parts[2] ?? "";
@@ -216,7 +237,7 @@ function processLogData(logText: string) {
       }
 
       // 无 260 日志，则通过伤害行为自动切分
-      if (currentPull === null && (type === "21" || type === "22")) {
+      if (!hasCombatEvents && currentPull === null && (type === "21" || type === "22")) {
         currentPull = {
           id: parsedPulls.length + 1,
           startTime: timestampStr,
@@ -346,7 +367,37 @@ function processLogData(logText: string) {
       }
     }
 
-    pulls.value = parsedPulls;
+    // 对解析出的战局进行合并，处理因 ACT 误判而在极短时间内发生“脱战又立即进战”的切裂情况
+    const mergedPulls: Pull[] = [];
+    for (let i = 0; i < parsedPulls.length; i++) {
+      const current = parsedPulls[i];
+      if (!current) continue;
+
+      if (mergedPulls.length > 0) {
+        const last = mergedPulls[mergedPulls.length - 1]!;
+        const lastEndTime = parseTimestamp(last.endTime);
+        const currentStartTime = parseTimestamp(current.startTime);
+
+        // 如果两场战斗的间隔小于等于 5 秒，视为同一次战斗误切分裂，进行合并
+        if (currentStartTime - lastEndTime <= 5000) {
+          last.endTime = current.endTime;
+          last.durationMs = parseTimestamp(current.endTime) - parseTimestamp(last.startTime);
+          last.records.push(...current.records);
+          if (current.enteredP3) {
+            last.enteredP3 = true;
+          }
+          continue;
+        }
+      }
+      mergedPulls.push(current);
+    }
+
+    // 重新分配连续自增的 Pull ID
+    mergedPulls.forEach((p, idx) => {
+      p.id = idx + 1;
+    });
+
+    pulls.value = mergedPulls;
 
     // 日志解析成功后，过滤只显示绝妖星 P3 战局
     const firstWithRecords = visiblePulls.value.find((p) => p.records.length > 0);
