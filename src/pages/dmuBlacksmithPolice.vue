@@ -39,6 +39,7 @@ interface BlacksmithRecord {
   decayPct: number; // 目标衰减保留百分比（0 表示无衰减）
   logType: string; // 日志行类型：21=单体伤害，22=群体伤害
   rawLog: string; // 原始 ACT 日志行
+  job: string; // 打铁当时的职业
 }
 
 import ALL_SKILLS_DATA from "../resources/generated/blacksmithSkills.json";
@@ -49,24 +50,33 @@ const skillsDict = ALL_SKILLS_DATA as Record<string, { base: number; pct?: numbe
 // 从 03 日志行解析的职业 ID → 中文名映射（十六进制 jobId）
 const jobIdToName: Record<string, string> = {
   "13": "骑士",
+  "1": "剑术师", // 01 -> 1
   "15": "战士",
+  "3": "斧术师", // 03 -> 3
   "20": "暗黑骑士",
   "25": "绝枪战士",
   "18": "白魔法师",
+  "6": "幻术师", // 06 -> 6
   "1C": "学者",
   "21": "占星术士",
   "28": "贤者",
   "14": "武僧",
+  "2": "格斗家", // 02 -> 2
   "16": "龙骑士",
+  "4": "枪术师", // 04 -> 4
   "1E": "忍者",
+  "1D": "双剑师", // 1D
   "22": "武士",
   "27": "钐镰客",
   "29": "蝰蛇剑士",
   "17": "吟游诗人",
+  "5": "弓箭手", // 05 -> 5
   "1F": "机工士",
   "26": "舞者",
   "19": "黑魔法师",
+  "7": "咒术师", // 07 -> 7
   "1B": "召唤师",
+  "1A": "秘术师", // 1A
   "23": "赤魔法师",
   "2A": "绘灵法师",
 };
@@ -123,40 +133,12 @@ function processLogData(logText: string) {
     let currentPull: Pull | null = null;
     let currentZoneId = 0;
 
-    const pushPull = (pull: Pull) => {
-      if (
-        hasCombatEvents &&
-        !pull.hasCombatState &&
-        pull.records.length === 0 &&
-        (pull.damageEventCount || 0) < 100
-      ) {
-        console.log(
-          `[Discarded Pull] startTime=${pull.startTime}, duration=${Math.round(pull.durationMs / 1000)}s, zone=${pull.zoneId}, records=${pull.records.length}, damageCount=${pull.damageEventCount}`,
-        );
-        return;
-      }
-      pull.id = parsedPulls.length + 1;
-      parsedPulls.push(pull);
-    };
-
-    // 第一遍：解析 03 行建立玩家→职业映射，并判断是否包含 260 战斗事件
+    // 第一遍：快速扫描是否包含 260 战斗事件
     let hasCombatEvents = false;
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      if (!line) continue;
-      if (line.startsWith("260|")) {
+      if (lines[i]?.startsWith("260|")) {
         hasCombatEvents = true;
-      }
-      if (!line.startsWith("03|")) continue;
-      const parts = line.split("|");
-      if (parts.length < 5) continue;
-      const sourceId = parts[2] ?? "";
-      const jobId = parts[4] ?? "";
-      if (sourceId && jobId) {
-        const jobName = jobIdToName[jobId.toUpperCase()];
-        if (jobName) {
-          playerJobMap.value[sourceId.toUpperCase()] = jobName;
-        }
+        break;
       }
     }
 
@@ -181,12 +163,34 @@ function processLogData(logText: string) {
       const line = lines[i];
       if (!line) continue;
 
+      // 03 行实时更新玩家职业映射，确保拿到打本当时的职业
+      if (line.startsWith("03|")) {
+        // 仅在绝妖星本内（TerritoryType ID = 1363）才收集职业，防止本外换职业污染映射
+        if (currentZoneId === 1363) {
+          const parts = line.split("|");
+          if (parts.length >= 5) {
+            const sourceId = parts[2] ?? "";
+            let jobId = (parts[4] ?? "").toUpperCase();
+            if (jobId.startsWith("0X")) {
+              jobId = jobId.substring(2);
+            }
+            jobId = jobId.replace(/^0+/, "");
+            if (sourceId && jobId) {
+              const jobName = jobIdToName[jobId];
+              if (jobName) {
+                playerJobMap.value[sourceId.toUpperCase()] = jobName;
+              }
+            }
+          }
+        }
+        continue;
+      }
+
       // 01 地图切换事件
       if (line.startsWith("01|")) {
         const parts = line.split("|");
         const zoneHex = parts[2] ?? "";
         currentZoneId = parseInt(zoneHex, 16) || parseInt(zoneHex, 10) || 0;
-
         if (currentPull) {
           if (currentPull.durationMs > 5000 || currentPull.records.length > 0) {
             parsedPulls.push(currentPull);
@@ -351,6 +355,7 @@ function processLogData(logText: string) {
                       decayPct: skillData?.pct ?? 0,
                       logType: type,
                       rawLog: rawLines,
+                      job: playerJobMap.value[sourceId.toUpperCase()] || "未知", // 记录打本当时的职业
                     });
                   }
                 }
@@ -399,12 +404,9 @@ function processLogData(logText: string) {
 
     pulls.value = mergedPulls;
 
-    // 日志解析成功后，过滤只显示绝妖星 P3 战局
-    const firstWithRecords = visiblePulls.value.find((p) => p.records.length > 0);
-    if (firstWithRecords) {
-      selectedPullId.value = firstWithRecords.id;
-    } else if (visiblePulls.value.length > 0 && visiblePulls.value[0]) {
-      selectedPullId.value = visiblePulls.value[0]!.id;
+    // 日志解析成功后，默认选中全局汇总 (ALL)
+    if (visiblePulls.value.length > 0) {
+      selectedPullId.value = -1;
     }
     if (selectedPullId.value) {
       const msg =
@@ -469,6 +471,26 @@ const visiblePulls = computed(() => {
 // 当前选中的战斗回合
 const selectedPull = computed(() => {
   if (selectedPullId.value === null) return null;
+  if (selectedPullId.value === -1) {
+    // 构造一个虚拟的“全局汇总” Pull
+    const allRecords: BlacksmithRecord[] = [];
+    displayPulls.value.forEach((p) => {
+      p.records.forEach((r) => {
+        allRecords.push({
+          ...r,
+          timeOffset: `P#${p.id} ${r.timeOffset}`, // 带上 P# 序号以便在时间线上做识别
+        });
+      });
+    });
+    return {
+      id: -1,
+      startTime: displayPulls.value[0]?.startTime || "",
+      endTime: displayPulls.value[displayPulls.value.length - 1]?.endTime || "",
+      durationMs: displayPulls.value.reduce((sum, p) => sum + p.durationMs, 0),
+      records: allRecords,
+      zoneId: 1363,
+    };
+  }
   return (
     visiblePulls.value.find((p) => p.id === selectedPullId.value) || visiblePulls.value[0] || null
   );
@@ -484,12 +506,53 @@ function jobFromRecord(r: BlacksmithRecord): string {
   return playerJobMap.value[r.sourceId.toUpperCase()] || "未知";
 }
 
-// 获取显示用的名称（匿名模式下返回职业名）
-function displayName(r: BlacksmithRecord): string {
+// 统一处理玩家名字的匿名映射，并为队里的相同职业进行编号区分
+const playerDisplayNameMap = computed(() => {
+  const nameMap: Record<string, string> = {};
+  if (!selectedPull.value) return nameMap;
+
+  // 收集当前局内出现的所有玩家以及其职业
+  const playerJobs: Record<string, string> = {};
+  selectedPull.value.records.forEach((r) => {
+    if (r.source) {
+      playerJobs[r.source] = jobFromRecord(r);
+    }
+  });
+
+  const sortedNames = Object.keys(playerJobs).sort();
+
   if (anonymousMode.value) {
-    return jobFromRecord(r);
+    // 统计每个职业的人数
+    const jobTotalPlayers: Record<string, number> = {};
+    sortedNames.forEach((name) => {
+      const job = playerJobs[name]!;
+      jobTotalPlayers[job] = (jobTotalPlayers[job] || 0) + 1;
+    });
+
+    const jobCounts: Record<string, number> = {};
+    sortedNames.forEach((name) => {
+      const job = playerJobs[name]!;
+      // 如果队伍里有同职业（该职业人数 > 1），则加上序号编号（例如 绘灵法师 1, 绘灵法师 2）
+      if ((jobTotalPlayers[job] ?? 0) > 1) {
+        jobCounts[job] = (jobCounts[job] || 0) + 1;
+        nameMap[name] = `${job} ${jobCounts[job]}`;
+      } else {
+        nameMap[name] = job;
+      }
+    });
+  } else {
+    // 未开启匿名时，保持原玩家姓名
+    sortedNames.forEach((name) => {
+      nameMap[name] = name;
+    });
   }
-  return r.source;
+
+  return nameMap;
+});
+
+// 获取显示用的名称
+function displayName(r: BlacksmithRecord): string {
+  return playerDisplayNameMap.value[r.source] || r.source;
 }
 
 // 监听选中的战局变化，战局变化时重置筛选玩家
@@ -503,7 +566,7 @@ const currentRecords = computed(() => {
   const recs = selectedPull.value.records;
   if (filterPlayerName.value) {
     return recs.filter((r) => {
-      const matchKey = anonymousMode.value ? jobFromRecord(r) : r.source;
+      const matchKey = playerDisplayNameMap.value[r.source] || r.source;
       return matchKey === filterPlayerName.value;
     });
   }
@@ -517,7 +580,7 @@ const playerStats = computed(() => {
   const statsMap: Record<string, { total: number; lostPotency: number }> = {};
 
   selectedPull.value.records.forEach((r) => {
-    const key = anonymousMode.value ? jobFromRecord(r) : r.source;
+    const key = r.source; // 始终以玩家真实名字为 Key 进行聚合，确保多名同职业玩家不会被错误合并
     let stat = statsMap[key];
     if (!stat) {
       stat = { total: 0, lostPotency: 0 };
@@ -527,12 +590,114 @@ const playerStats = computed(() => {
     stat.lostPotency += r.lostPotency || 0;
   });
 
+  const pullCount = displayPulls.value.length || 1;
+
   return Object.entries(statsMap)
-    .map(([name, counts]) => ({
-      name,
-      ...counts,
-    }))
+    .map(([name, counts]) => {
+      const isGlobal = selectedPull.value?.id === -1;
+      return {
+        name: playerDisplayNameMap.value[name] || name, // 转换为可能带有编号的展示名
+        total: counts.total,
+        lostPotency: counts.lostPotency,
+        // 全局模式下计算场均亏损，否则显示单局总亏损
+        averageLost: isGlobal ? Math.round(counts.lostPotency / pullCount) : counts.lostPotency,
+      };
+    })
     .sort((a, b) => b.lostPotency - a.lostPotency);
+});
+
+// 获取全局有效战局的实际开始到结束的时间范围（例如 "06/21 15:07 - 17:13"）
+const globalTimeRange = computed(() => {
+  if (displayPulls.value.length === 0) return "";
+  const first = displayPulls.value[0]!;
+  const last = displayPulls.value[displayPulls.value.length - 1]!;
+
+  const formatTimeHM = (isoStr: string) => {
+    try {
+      const t = new Date(isoStr);
+      if (isNaN(t.getTime())) return "";
+      const h = t.getHours().toString().padStart(2, "0");
+      const m = t.getMinutes().toString().padStart(2, "0");
+      return `${h}:${m}`;
+    } catch {
+      return "";
+    }
+  };
+
+  const formatDateMD = (isoStr: string) => {
+    try {
+      const t = new Date(isoStr);
+      if (isNaN(t.getTime())) return "";
+      const m = (t.getMonth() + 1).toString().padStart(2, "0");
+      const d = t.getDate().toString().padStart(2, "0");
+      return `${m}/${d}`;
+    } catch {
+      return "";
+    }
+  };
+
+  const dateStr = formatDateMD(first.startTime);
+  const startStr = formatTimeHM(first.startTime);
+  const endStr = formatTimeHM(last.endTime);
+  if (dateStr && startStr && endStr) {
+    return `${dateStr} ${startStr} - ${endStr}`;
+  }
+  return "";
+});
+
+// 统计整个日志中被最频繁打铁打出的前 10 个技能
+const globalSkillStats = computed(() => {
+  if (pulls.value.length === 0) return [];
+  const stats: Record<
+    string,
+    {
+      total: number;
+      lostPotency: number;
+      playerCounts: Record<string, number>;
+      job: string;
+    }
+  > = {};
+
+  pulls.value.forEach((p) => {
+    p.records.forEach((r) => {
+      const key = r.ability;
+      let stat = stats[key];
+      if (!stat) {
+        stat = { total: 0, lostPotency: 0, playerCounts: {}, job: jobFromRecord(r) };
+        stats[key] = stat;
+      }
+      stat.total++;
+      stat.lostPotency += r.lostPotency || 0;
+      stat.playerCounts[r.source] = (stat.playerCounts[r.source] || 0) + 1;
+    });
+  });
+
+  return Object.entries(stats)
+    .map(([ability, data]) => {
+      // 找出打铁该技能次数最多的玩家
+      let topPlayerName = "";
+      let maxCount = 0;
+      Object.entries(data.playerCounts).forEach(([name, count]) => {
+        if (count > maxCount) {
+          maxCount = count;
+          topPlayerName = name;
+        }
+      });
+
+      // 匿名下显示职业名，非匿名下显示真实玩家名
+      const displayName = anonymousMode.value
+        ? data.job
+        : playerDisplayNameMap.value[topPlayerName] || topPlayerName;
+
+      return {
+        ability,
+        displayName,
+        total: data.total,
+        lostPotency: data.lostPotency,
+      };
+    })
+    .sort((a, b) => b.lostPotency - a.lostPotency)
+    .slice(0, 10);
 });
 
 const formattedDuration = computed(() => {
@@ -613,6 +778,39 @@ const selectedPullTotalRecordsCount = computed(() => {
             </div>
           </template>
           <div class="pull-list">
+            <!-- 全局汇总独立大入口 -->
+            <div
+              class="global-summary-btn"
+              :class="{ active: selectedPullId === -1 }"
+              @click="selectedPullId = -1"
+            >
+              <div class="btn-main-row">
+                <span class="btn-title">全日志汇总统计</span>
+                <span class="btn-badge">共 {{ displayPulls.length }} 局</span>
+              </div>
+              <div class="btn-sub-row">
+                <span
+                  >总打铁:
+                  <b>{{ displayPulls.reduce((sum, p) => sum + p.records.length, 0) }}</b> 次</span
+                >
+                <span
+                  >总亏损:
+                  <b>{{
+                    displayPulls.reduce(
+                      (sum, p) => sum + p.records.reduce((s, r) => s + r.lostPotency, 0),
+                      0,
+                    )
+                  }}</b>
+                  威力</span
+                >
+              </div>
+            </div>
+
+            <!-- 分割线 -->
+            <div class="list-divider">
+              <span class="divider-text">单局战局列表</span>
+            </div>
+
             <div
               v-for="p in visiblePulls"
               :key="p.id"
@@ -662,7 +860,9 @@ const selectedPullTotalRecordsCount = computed(() => {
             <ElCol :span="8">
               <ElCard class="glass-card mini-metric-card">
                 <div class="metric-content">
-                  <div class="label">战局持续时间</div>
+                  <div class="label">
+                    {{ selectedPull.id === -1 ? "总战斗时长" : "战局持续时间" }}
+                  </div>
                   <div class="value">{{ formattedDuration(selectedPull.durationMs) }}</div>
                 </div>
               </ElCard>
@@ -670,7 +870,9 @@ const selectedPullTotalRecordsCount = computed(() => {
             <ElCol :span="8">
               <ElCard class="glass-card mini-metric-card">
                 <div class="metric-content">
-                  <div class="label">本局打铁总次数</div>
+                  <div class="label">
+                    {{ selectedPull.id === -1 ? "全日志打铁总次数" : "本局打铁总次数" }}
+                  </div>
                   <div class="value red-text">{{ selectedPullTotalRecordsCount }} 次</div>
                 </div>
               </ElCard>
@@ -678,7 +880,9 @@ const selectedPullTotalRecordsCount = computed(() => {
             <ElCol :span="8">
               <ElCard class="glass-card mini-metric-card">
                 <div class="metric-content">
-                  <div class="label">本局流失总威力</div>
+                  <div class="label">
+                    {{ selectedPull.id === -1 ? "全日志亏损总威力" : "本局亏损总威力" }}
+                  </div>
                   <div class="value orange-text">
                     {{ selectedPullTotalLostPotency }}
                   </div>
@@ -690,18 +894,33 @@ const selectedPullTotalRecordsCount = computed(() => {
           <!-- 个人打铁威力亏损排行 -->
           <ElCard class="glass-card details-card">
             <template #header>
-              <span class="header-title">本局个人威力亏损排行</span>
+              <span class="header-title">{{
+                selectedPull.id === -1
+                  ? globalTimeRange
+                    ? `${globalTimeRange} 个人威力亏损排行`
+                    : "全日志个人威力亏损排行"
+                  : "本局个人威力亏损排行"
+              }}</span>
             </template>
             <ElTable :data="playerStats" style="width: 100%" class="custom-table" dark>
               <template #empty>
-                <span class="table-empty-text">本局暂无打铁记录</span>
+                <span class="table-empty-text">{{
+                  selectedPull.id === -1 ? "全日志暂无打铁记录" : "本局暂无打铁记录"
+                }}</span>
               </template>
               <ElTableColumn type="index" label="排名" width="60" align="center" />
               <ElTableColumn prop="name" label="角色" min-width="140" />
               <ElTableColumn prop="total" label="总打铁次数" width="150" align="center" />
-              <ElTableColumn prop="lostPotency" label="亏损总威力" width="150" align="center">
+              <ElTableColumn
+                prop="lostPotency"
+                :label="selectedPull.id === -1 ? '场均亏损威力' : '亏损总威力'"
+                width="150"
+                align="center"
+              >
                 <template #default="{ row }">
-                  <span class="lost-potency-text">{{ row.lostPotency }}</span>
+                  <span class="lost-potency-text">{{
+                    selectedPull.id === -1 ? row.averageLost : row.lostPotency
+                  }}</span>
                 </template>
               </ElTableColumn>
               <ElTableColumn label="亏损威力占比" min-width="140">
@@ -721,11 +940,41 @@ const selectedPullTotalRecordsCount = computed(() => {
             </ElTable>
           </ElCard>
 
-          <!-- 直观的时间线打铁明细 -->
-          <ElCard class="glass-card details-card">
+          <!-- 全局模式下展示：最常打铁技能排行 -->
+          <ElCard v-if="selectedPullId === -1" class="glass-card details-card">
+            <template #header>
+              <span class="header-title">{{
+                globalTimeRange ? `${globalTimeRange} 最多亏损威力排行` : "最多亏损威力排行"
+              }}</span>
+            </template>
+            <ElTable :data="globalSkillStats" style="width: 100%" class="custom-table" dark>
+              <template #empty>
+                <span class="table-empty-text">全日志暂无打铁记录</span>
+              </template>
+              <ElTableColumn type="index" label="排名" width="60" align="center" />
+              <ElTableColumn prop="ability" label="技能名称" min-width="140" />
+              <ElTableColumn
+                prop="displayName"
+                :label="anonymousMode ? '对应职业' : '对应玩家'"
+                width="150"
+                align="center"
+              />
+              <ElTableColumn prop="total" label="总打铁次数" width="150" align="center" />
+              <ElTableColumn prop="lostPotency" label="累计亏损威力" width="150" align="center">
+                <template #default="{ row }">
+                  <span class="lost-potency-text">{{ row.lostPotency }}</span>
+                </template>
+              </ElTableColumn>
+            </ElTable>
+          </ElCard>
+
+          <!-- 直观的时间线打铁明细 (非全局模式下展示) -->
+          <ElCard v-if="selectedPullId !== -1" class="glass-card details-card">
             <template #header>
               <div class="timeline-card-header">
-                <span class="header-title">打铁时间线明细</span>
+                <span class="header-title">{{
+                  selectedPull.id === -1 ? "全日志打铁时间线明细" : "打铁时间线明细"
+                }}</span>
                 <div class="filter-wrapper">
                   <span class="filter-label">视角筛选:</span>
                   <ElSelect
@@ -754,7 +1003,7 @@ const selectedPullTotalRecordsCount = computed(() => {
               </ElTableColumn>
               <template #empty>
                 <span class="table-empty-text">{{
-                  filterPlayerName ? "该玩家本局无打铁记录" : "本局暂无打铁记录"
+                  filterPlayerName ? "该玩家当前视角下无打铁记录" : "当前暂无打铁记录"
                 }}</span>
               </template>
               <ElTableColumn label="相对时间" width="120" align="center">
@@ -1320,5 +1569,87 @@ const selectedPullTotalRecordsCount = computed(() => {
   white-space: pre;
   overflow-x: auto;
   line-height: 1.5;
+}
+
+.global-summary-btn {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  &.active {
+    background: rgba(59, 140, 255, 0.06);
+    border-color: rgba(59, 140, 255, 0.35);
+    box-shadow: inset 0 0 10px rgba(59, 140, 255, 0.1);
+
+    .btn-title {
+      color: #3b8cff;
+    }
+  }
+
+  .btn-main-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .btn-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e3e3e9;
+    transition: color 0.2s ease;
+  }
+
+  .btn-badge {
+    background: rgba(255, 255, 255, 0.06);
+    color: #8888a0;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  .btn-sub-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #8888a0;
+
+    b {
+      font-family: Consolas, monospace;
+    }
+  }
+}
+
+.list-divider {
+  display: flex;
+  align-items: center;
+  margin: 12px 0 12px 0;
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .divider-text {
+    padding: 0 8px;
+    font-size: 10px;
+    color: #555562;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
 }
 </style>
