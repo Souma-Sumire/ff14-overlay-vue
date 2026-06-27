@@ -37,6 +37,7 @@ interface BlacksmithRecord {
   lostPotency: number; // 亏损的威力
   basePotency: number; // 技能原始基础威力
   decayPct: number; // 目标衰减保留百分比（0 表示无衰减）
+  splashType: string; // 溅射判定类型
   logType: string; // 日志行类型：21=单体伤害，22=群体伤害
   rawLog: string; // 原始 ACT 日志行
   job: string; // 打铁当时的职业
@@ -363,6 +364,7 @@ function processLogData(logText: string) {
                       basePotency: skillData?.base ?? 0,
                       decayPct: skillData?.pct ?? 0,
                       logType: type,
+                      splashType: skillData?.splashType ?? "",
                       rawLog: rawLines,
                       job: playerJobMap.value[sourceId.toUpperCase()] || "未知", // 记录打本当时的职业
                     });
@@ -702,8 +704,7 @@ const globalSkillStats = computed(() => {
         lostPotency: data.lostPotency,
       };
     })
-    .sort((a, b) => b.lostPotency - a.lostPotency)
-    .slice(0, 10);
+    .sort((a, b) => b.lostPotency - a.lostPotency);
 });
 
 const formattedDuration = computed(() => {
@@ -1051,6 +1052,28 @@ const selectedPullTotalRecordsCount = computed(() => {
               <ElTableColumn label="衰减" width="70" align="center">
                 <template #default="{ row }">
                   <span class="cell-mono">{{ row.decayPct > 0 ? row.decayPct + "%" : "-" }}</span>
+                </template>
+              </ElTableColumn>
+              <ElTableColumn label="判定" width="80" align="center">
+                <template #default="{ row }">
+                  <span
+                    class="type-tag"
+                    :class="{
+                      'type-tag--self': row.splashType === 'selfArea',
+                      'type-tag--dir': row.splashType === 'directional',
+                      'type-tag--target': row.splashType === 'target',
+                    }"
+                  >
+                    {{
+                      row.splashType === "selfArea"
+                        ? "自身"
+                        : row.splashType === "directional"
+                          ? "方向"
+                          : row.splashType === "target"
+                            ? "目标"
+                            : ""
+                    }}
+                  </span>
                 </template>
               </ElTableColumn>
               <ElTableColumn prop="lostPotency" label="亏损威力" width="90" align="center">
@@ -1566,6 +1589,21 @@ const selectedPullTotalRecordsCount = computed(() => {
   &--aoe {
     background: rgba(59, 140, 255, 0.12);
     color: #5b9cf5;
+  }
+
+  &--self {
+    background: rgba(140, 158, 224, 0.14);
+    color: #a0b0f0;
+  }
+
+  &--dir {
+    background: rgba(112, 182, 182, 0.14);
+    color: #7cc8c8;
+  }
+
+  &--target {
+    background: rgba(130, 180, 140, 0.14);
+    color: #8cc498;
   }
 }
 

@@ -153,11 +153,14 @@ async function run() {
               }
             }
 
+            // 检测溅射判定类型
             let splashType = null;
-            if (content.includes("向目标所在方向") && content.includes('攻击复数敌人时')) {
+            if (content.includes("向目标所在方向")) {
               splashType = "directional";
-            } else {
+            } else if (content.includes("对自身周围")) {
               splashType = "selfArea";
+            } else if (content.includes("对目标及其周围")) {
+              splashType = "target";
             }
 
             if (dictionary[name]) {
@@ -217,21 +220,17 @@ async function run() {
     delete dictionary[trait];
   }
 
-  // 写入 JSON 威力表文件，采用一个技能占一行的精简格式
-  const lines = [];
-  for (const [name, skill] of Object.entries(dictionary)) {
-    const parts = [];
-    parts.push(`"base": ${skill.base}`);
-    if (skill.pct !== undefined) {
-      parts.push(`"pct": ${skill.pct}`);
-    }
-    if (skill.splashType) {
-      parts.push(`"splashType": "${skill.splashType}"`);
-    }
-    lines.push(`  "${name}": { ${parts.join(", ")} }`);
-  }
-  const jsonStr = `{\n${lines.join(",\n")}\n}\n`;
-  fs.writeFileSync(jsonPath, jsonStr, "utf8");
+  // 写入 JSON：每个技能一行
+  const lines = Object.keys(dictionary)
+    .sort()
+    .map((name) => {
+      const skill = dictionary[name];
+      const entry = { base: skill.base };
+      if (skill.pct !== undefined) entry.pct = skill.pct;
+      if (skill.splashType) entry.splashType = skill.splashType;
+      return `"${name}":${JSON.stringify(entry)}`;
+    });
+  fs.writeFileSync(jsonPath, `{${lines.join(",\n")}}`, "utf8");
   console.log(
     `- 成功将共 ${Object.keys(dictionary).length} 个技能的威力字典写入 blacksmithSkills.json`,
   );
@@ -272,15 +271,12 @@ async function run() {
     return a.localeCompare(b);
   });
 
-  // 4. 将黑名单写入 json 文件
+  // 4. 将黑名单写入 json 文件（紧凑格式）
   console.log("4. 将黑名单写入 blacksmithBlacklist.json...");
-  const listLines = [];
-  for (const hex of sortedHexIds) {
-    const names = Array.from(new Set(nameToHex[hex])).join("/");
-    listLines.push(`  "${hex}": "${names}"`);
-  }
-  const blacklistJsonStr = `{\n${listLines.join(",\n")}\n}\n`;
-  fs.writeFileSync(blacklistJsonPath, blacklistJsonStr, "utf8");
+  const blLines = sortedHexIds.map(
+    (hex) => `"${hex}":${JSON.stringify(Array.from(new Set(nameToHex[hex])).join("/"))}`,
+  );
+  fs.writeFileSync(blacklistJsonPath, `{${blLines.join(",\n")}}`, "utf8");
   console.log(
     `- 成功将带技能名备注的黑名单（共 ${sortedHexIds.length} 个）写入了 blacksmithBlacklist.json！`,
   );
