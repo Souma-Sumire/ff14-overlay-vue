@@ -314,42 +314,56 @@ function processLogData(logText: string) {
 
                     const lost = calculateRecordLostPotency(abilityName);
 
-                    // 收集关联日志行：当前免疫行 + 紧随的副目标命中行
+                    // 收集关联日志行：当前免疫行 + 所有后续副目标命中行（仅怪物目标）
                     let rawLines = line;
-                    const nextIdx = i + 1;
-                    if (nextIdx < lines.length) {
+                    let shouldSkipRecord = false;
+                    // sequence 字段是同一次技能释放的唯一标识（LogGuide index 42，network log parts[44+offset]）
+                    const mainSequence = parts[44 + offset];
+                    for (let nextIdx = i + 1; nextIdx < lines.length; nextIdx++) {
                       const nextLine = lines[nextIdx];
-                      if (nextLine) {
-                        const np = nextLine.split("|");
-                        if (
-                          np[0] === type &&
-                          np[4] === actionId &&
-                          np[2] === sourceId &&
-                          np[1] === parts[1]
-                        ) {
-                          let nOffset = 0;
-                          let nFlags = np[8] ?? "";
-                          if (kShiftFlagValues.includes(nFlags)) {
-                            nOffset += 2;
-                            nFlags = np[8 + nOffset] ?? nFlags;
-                          }
-                          if (kShiftFlagValues2.includes(nFlags)) {
-                            nOffset += 2;
-                            nFlags = np[8 + nOffset] ?? nFlags;
-                          }
-                          const nTargetIndex = np[45 + nOffset];
-                          if (nTargetIndex !== "0") {
-                            // selfArea（对自身周围）：命中纯按施法者距离，先无效必为打铁，不跳过。
-                            // directional（向目标方向）及普通目标AOE：无法区分Case②③，保守跳过。
-                            const nFlagVal = parseInt(nFlags, 16);
-                            const splashType = skillData?.splashType;
-                            if ((nFlagVal & 0xff) !== 7 && splashType !== "selfArea") {
-                              continue;
-                            }
-                            rawLines += "\n" + nextLine;
-                          }
+                      if (!nextLine) break;
+                      const np = nextLine.split("|");
+                      // 先做类型粗筛，再计算 nOffset，再用 sequence 精确判断是否同一次技能
+                      if (np[0] !== type) break;
+                      let nOffset = 0;
+                      let nFlags = np[8] ?? "";
+                      if (kShiftFlagValues.includes(nFlags)) {
+                        nOffset += 2;
+                        nFlags = np[8 + nOffset] ?? nFlags;
+                      }
+                      if (kShiftFlagValues2.includes(nFlags)) {
+                        nOffset += 2;
+                        nFlags = np[8 + nOffset] ?? nFlags;
+                      }
+                      // 用 sequence 字段判断：同一次技能的所有行 sequence 相同
+                      const nSeq = np[44 + nOffset];
+                      if (mainSequence ? nSeq !== mainSequence : (np[4] !== actionId || np[2] !== sourceId || np[1] !== parts[1])) {
+                        break;
+                      }
+                      const nTargetIdx = parseInt(np[45 + nOffset] ?? "0", 10);
+                      const nTargetCount = parseInt(np[46 + nOffset] ?? "0", 10);
+                      if (nTargetIdx !== 0) {
+                        // selfArea（对自身周围）：命中纯按施法者距离，先无效必为打铁，不跳过。
+                        // directional（向目标方向）及普通目标AOE：无法区分Case②③，保守跳过。
+                        const nFlagVal = parseInt(nFlags, 16);
+                        const splashType = skillData?.splashType;
+                        if ((nFlagVal & 0xff) !== 7 && splashType !== "selfArea") {
+                          shouldSkipRecord = true;
+                          break;
+                        }
+                        // 仅收集怪物目标行，过滤玩家自身等非怪物目标
+                        const nTargetId = np[6] ?? "";
+                        if (nTargetId.startsWith("4")) {
+                          rawLines += "\n" + nextLine;
                         }
                       }
+                      // 已处理完最后一个目标，提前退出（targetCount - 1 == targetIndex）
+                      if (nTargetCount > 0 && nTargetIdx === nTargetCount - 1) {
+                        break;
+                      }
+                    }
+                    if (shouldSkipRecord) {
+                      continue;
                     }
 
                     activePull.records.push({
