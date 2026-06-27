@@ -16,6 +16,8 @@ export interface Menu {
 }
 
 export const MENU_ORDER: string[] = [
+  "startPages.menu.dmu_blacksmith_police",
+  "startPages.menu.kook_purify",
   "startPages.menu.loot_history",
   "startPages.menu.keigenn_record2",
   "startPages.menu.healing_timeline",
@@ -43,7 +45,6 @@ export const MENU_ORDER: string[] = [
   "startPages.menu.hunt_map",
   "startPages.menu.mogstation_patch",
   "startPages.menu.stone_sky_logs",
-  "startPages.menu.kook_purify",
 ];
 
 export function getRawMenuData(
@@ -145,7 +146,6 @@ export function getRawMenuData(
       title: "startPages.menu.mitigation_generator",
       type: "网页/工具",
       path: "mitigationGenerator",
-      isNew: true,
       src: "mitigationGenerator.webp",
       comment: "startPages.comment.mitigation_generator",
       imageWidth: 300,
@@ -249,14 +249,21 @@ export function getRawMenuData(
     {
       title: "startPages.menu.kook_purify",
       type: "网页/工具",
-      path: "https://greasyfork.org/zh-CN/scripts/546095-kook%E5%87%80%E5%8C%96",
+      path: "https://github.com/Souma-Sumire/kook-purifier",
       comment: "startPages.comment.kook_purify",
+      isNew: true,
     },
     {
       title: "startPages.menu.loot_history",
       type: "网页/工具",
       path: "lootHistory",
       comment: "startPages.comment.loot_history",
+    },
+    {
+      title: "startPages.menu.dmu_blacksmith_police",
+      type: "网页/工具",
+      path: "dmuBlacksmithPolice",
+      comment: "startPages.comment.dmu_blacksmith_police",
       isNew: true,
     },
   ];

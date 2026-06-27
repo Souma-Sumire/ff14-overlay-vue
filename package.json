@@ -14,7 +14,8 @@
     "generate:dd-normalize": "jiti scripts/ddNormalize.ts",
     "generate:dd-vulnerabilities": "jiti scripts/ddVulnerabilitiesBake.ts --only-undefined-to-bool",
     "submodule": "git submodule update --remote && jiti scripts/patch.ts",
-    "generate": "jiti scripts/all.ts && vp fmt src/resources/generated"
+    "generate": "jiti scripts/all.ts && vp fmt src/resources/generated",
+    "generate:blacksmith-skills": "node scripts/generateBlacksmithSkills.cjs"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
@@ -59,6 +60,13 @@
     "vite-plus": "0.2.1",
     "vue-tsc": "^3.3.5"
   },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "24.17.0",
+      "onFail": "download"
+    }
+  },
   "packageManager": "pnpm@10.33.2+sha512.a90faf6feeab71ad6c6e57f94e0fe1a12f5dcc22cd754db40ae9593eb6a3e0b6b12e3540218bb37ae083404b1f2ce6db2a4121e979829b4aff94b99f49da1cf8",
   "pnpm": {
     "overrides": {
@@ -67,12 +75,5 @@
     "onlyBuiltDependencies": [
       "@parcel/watcher"
     ]
-  },
-  "devEngines": {
-    "runtime": {
-      "name": "node",
-      "version": "24.17.0",
-      "onFail": "download"
-    }
   }
 }

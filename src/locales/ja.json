@@ -190,9 +190,10 @@
       "aether_map": "[ウェブ] エーテライトマップ",
       "mogstation_patch": "[Tampermonkey] モグステーション中国語化",
       "stone_sky_logs": "[Tampermonkey] 石の家-スキルログ照会",
-      "kook_purify": "[Tampermonkey] KOOK浄化",
+      "kook_purify": "[Github] KOOK浄化 (クライアント+ウェブ/Tampermonkey)",
       "uisave_editor": "[ウェブ] UISAVE.DAT（フィールドマーカー）エディタ",
       "loot_history": "[ウェブ] 固定PT装備分配＆BIS管理ツール",
+      "dmu_blacksmith_police": "[ウェブ] 絶妖星 P3 鍛冶警察",
       "mitigation_generator": "[ウェブ] 軽減プランナー"
     },
     "comment": {
@@ -220,10 +221,11 @@
       "act_self_test": "ACTが正常に動作しているかユーザーが自己診断するためのツール。",
       "mogstation_patch": "日本語版モグステーションのみ対象。",
       "stone_sky_logs": "データは72時間キャッシュ。水晶アイコンクリックでFFLOGSページへ遷移。",
-      "kook_purify": "KOOKウェブ版の煩わしい広告を非表示。個別入場SEをブロック。",
+      "kook_purify": "KOOKクライアントとウェブ版の両方に対応。広告を非表示にし、個別入場SEをブロック。",
       "uisave_editor": "UISAVE.DAT（フィールドマーカー）ファイルの解析および編集を行うためのツールです。コードは {0} を参考にしています。",
       "uisave_editor_credits": "ff14_config_editor",
       "loot_history": "零式のドロップ品とロット記録を自動保存。統計やBIS分配提案など、多彩な機能をサポート。",
+      "dmu_blacksmith_police": "絶妖星 P3 の鍛冶威力損失を集計し、ダメージ最適化を支援します。",
       "mitigation_generator": "軽減計画表。唯一の利点は「ヒール/軽減タイムライン」のテキストを直接エクスポートできること。欠点：機能がかなり不足しています。"
     }
   },

@@ -190,9 +190,10 @@
       "aether_map": "[Web] Aetheryte Map",
       "mogstation_patch": "[Tampermonkey] MogStation Chinese Translation",
       "stone_sky_logs": "[Tampermonkey] Stone-Sky Logs Query",
-      "kook_purify": "[Tampermonkey] KOOK Purification",
+      "kook_purify": "[Github] KOOK Purifier (Client + Web/Tampermonkey)",
       "uisave_editor": "[Web] UISAVE.DAT (Waymark) Editor",
       "loot_history": "[Web/Tool] Static Gear Loot & BIS Manager",
+      "dmu_blacksmith_police": "[Web/Tool] DMU P3 Blacksmith Police",
       "mitigation_generator": "[Web/Tool] Mitigation Planner"
     },
     "comment": {
@@ -220,10 +221,11 @@
       "act_self_test": "Allows users to self-check if ACT is running correctly.",
       "mogstation_patch": "Only for the Japanese version of the Mog Station.",
       "stone_sky_logs": "Data is cached for 72 hours. Clicking the Crystal icon jumps to the FFLogs page.",
-      "kook_purify": "Hides various annoying ads on the KOOK web version. Blocks personalized entry sound effects.",
+      "kook_purify": "Supports both KOOK client and web version. Hides ads and blocks personalized entry sound effects.",
       "uisave_editor": "A tool for parsing and editing UISAVE.DAT (Waymark) files. Code referenced from {0}.",
       "uisave_editor_credits": "ff14_config_editor",
       "loot_history": "Automatically records Savage loot drops and Roll results. Supports various statistics, BIS allocation suggestions, and more.",
+      "dmu_blacksmith_police": "Tracks Blacksmith potency losses in DMU P3 to help analyze damage optimization.",
       "mitigation_generator": "Mitigation planning sheet. Its only advantage is that it can directly export timeline text for healing/mitigation. Downside: it lacks many features."
     }
   },

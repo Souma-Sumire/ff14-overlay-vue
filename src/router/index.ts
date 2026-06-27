@@ -46,6 +46,7 @@ const routeTitles = new Map(
     zoneMacro: "副本宏",
     keySkillTimer: "关键技能监控2",
     keySkillTimerSettings: "关键技能监控2 设置",
+    dmuBlacksmithPolice: "绝妖星 P3 打铁警察统计",
   }),
 );
 for (const route of router.getRoutes()) {
