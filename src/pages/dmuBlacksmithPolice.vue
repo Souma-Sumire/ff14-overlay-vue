@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, computed } from "vue";
 import {
   ElCard,
   ElButton,
@@ -563,22 +563,75 @@ function displayName(r: BlacksmithRecord): string {
   return playerDisplayNameMap.value[r.source] || r.source;
 }
 
-// 监听选中的战局变化，战局变化时重置筛选玩家
-watch(selectedPullId, () => {
-  filterPlayerName.value = "";
+// 全局玩家名→展示名映射（跨所有展示战局），供视角筛选使用
+const globalPlayerDisplayNameMap = computed(() => {
+  const nameMap: Record<string, string> = {};
+  const playerJobs: Record<string, string> = {};
+  displayPulls.value.forEach((p) => {
+    p.records.forEach((r) => {
+      if (r.source) {
+        playerJobs[r.source] = jobFromRecord(r);
+      }
+    });
+  });
+
+  const sortedNames = Object.keys(playerJobs).sort();
+
+  if (anonymousMode.value) {
+    const jobTotalPlayers: Record<string, number> = {};
+    sortedNames.forEach((name) => {
+      const job = playerJobs[name]!;
+      jobTotalPlayers[job] = (jobTotalPlayers[job] || 0) + 1;
+    });
+
+    const jobCounts: Record<string, number> = {};
+    sortedNames.forEach((name) => {
+      const job = playerJobs[name]!;
+      if ((jobTotalPlayers[job] ?? 0) > 1) {
+        jobCounts[job] = (jobCounts[job] || 0) + 1;
+        nameMap[name] = `${job} ${jobCounts[job]}`;
+      } else {
+        nameMap[name] = job;
+      }
+    });
+  } else {
+    sortedNames.forEach((name) => {
+      nameMap[name] = name;
+    });
+  }
+
+  return nameMap;
+});
+
+// 全局视角筛选：按展示名过滤记录列表
+function filterRecordsByPlayer(records: BlacksmithRecord[]): BlacksmithRecord[] {
+  if (!filterPlayerName.value) return records;
+  return records.filter((r) => {
+    const dName = globalPlayerDisplayNameMap.value[r.source] || r.source;
+    return dName === filterPlayerName.value;
+  });
+}
+
+// 全局视角可用玩家列表（去重、排序）
+const globalPlayerOptions = computed(() => {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  displayPulls.value.forEach((p) => {
+    p.records.forEach((r) => {
+      const dName = globalPlayerDisplayNameMap.value[r.source] || r.source;
+      if (!seen.has(dName)) {
+        seen.add(dName);
+        result.push(dName);
+      }
+    });
+  });
+  return result.sort();
 });
 
 // 过滤后的记录列表 (依据当前选中的 Pull)
 const currentRecords = computed(() => {
   if (!selectedPull.value) return [];
-  const recs = selectedPull.value.records;
-  if (filterPlayerName.value) {
-    return recs.filter((r) => {
-      const matchKey = playerDisplayNameMap.value[r.source] || r.source;
-      return matchKey === filterPlayerName.value;
-    });
-  }
-  return recs;
+  return filterRecordsByPlayer(selectedPull.value.records);
 });
 
 // 统计本局内个人打铁及威力亏损数据
@@ -587,7 +640,7 @@ const playerStats = computed(() => {
 
   const statsMap: Record<string, { total: number; lostPotency: number }> = {};
 
-  selectedPull.value.records.forEach((r) => {
+  filterRecordsByPlayer(selectedPull.value.records).forEach((r) => {
     const key = r.source; // 始终以玩家真实名字为 Key 进行聚合，确保多名同职业玩家不会被错误合并
     let stat = statsMap[key];
     if (!stat) {
@@ -655,7 +708,7 @@ const globalTimeRange = computed(() => {
 
 // 统计整个日志中被最频繁打铁打出的前 10 个技能
 const globalSkillStats = computed(() => {
-  if (pulls.value.length === 0) return [];
+  if (displayPulls.value.length === 0) return [];
   const stats: Record<
     string,
     {
@@ -666,8 +719,8 @@ const globalSkillStats = computed(() => {
     }
   > = {};
 
-  pulls.value.forEach((p) => {
-    p.records.forEach((r) => {
+  displayPulls.value.forEach((p) => {
+    filterRecordsByPlayer(p.records).forEach((r) => {
       const key = r.ability;
       let stat = stats[key];
       if (!stat) {
@@ -695,7 +748,7 @@ const globalSkillStats = computed(() => {
       // 匿名下显示职业名，非匿名下显示真实玩家名
       const displayName = anonymousMode.value
         ? data.job
-        : playerDisplayNameMap.value[topPlayerName] || topPlayerName;
+        : globalPlayerDisplayNameMap.value[topPlayerName] || topPlayerName;
 
       return {
         ability,
@@ -731,11 +784,15 @@ function formatStartTime(isoStr: string): string {
 
 const selectedPullTotalLostPotency = computed(() => {
   if (!selectedPull.value) return 0;
-  return selectedPull.value.records.reduce((sum, r) => sum + r.lostPotency, 0);
+  return filterRecordsByPlayer(selectedPull.value.records).reduce(
+    (sum, r) => sum + r.lostPotency,
+    0,
+  );
 });
 
 const selectedPullTotalRecordsCount = computed(() => {
-  return selectedPull.value ? selectedPull.value.records.length : 0;
+  if (!selectedPull.value) return 0;
+  return filterRecordsByPlayer(selectedPull.value.records).length;
 });
 </script>
 
@@ -791,8 +848,26 @@ const selectedPullTotalRecordsCount = computed(() => {
         <ElCard class="glass-card left-list-card">
           <template #header>
             <div class="card-header">
-              <span class="header-title">战局回合列表</span>
+              <span class="header-title">战斗记录</span>
               <ElButton type="info" size="small" @click="resetData" plain>重新上传</ElButton>
+            </div>
+            <div class="global-filter-bar">
+              <span class="filter-label">视角筛选:</span>
+              <ElSelect
+                v-model="filterPlayerName"
+                placeholder="全队视角"
+                size="small"
+                style="width: 100%"
+                clearable
+              >
+                <ElOption label="全队视角" value="" />
+                <ElOption
+                  v-for="name in globalPlayerOptions"
+                  :key="name"
+                  :label="name"
+                  :value="name"
+                />
+              </ElSelect>
             </div>
           </template>
           <div class="pull-list">
@@ -803,19 +878,27 @@ const selectedPullTotalRecordsCount = computed(() => {
               @click="selectedPullId = -1"
             >
               <div class="btn-main-row">
-                <span class="btn-title">全日志汇总统计</span>
+                <span class="btn-title">汇总统计</span>
                 <span class="btn-badge">共 {{ displayPulls.length }} 局</span>
               </div>
               <div class="btn-sub-row">
                 <span
                   >总打铁:
-                  <b>{{ displayPulls.reduce((sum, p) => sum + p.records.length, 0) }}</b> 次</span
+                  <b>{{
+                    displayPulls.reduce(
+                      (sum, p) => sum + filterRecordsByPlayer(p.records).length,
+                      0,
+                    )
+                  }}</b>
+                  次</span
                 >
                 <span
                   >总亏损:
                   <b>{{
                     displayPulls.reduce(
-                      (sum, p) => sum + p.records.reduce((s, r) => s + r.lostPotency, 0),
+                      (sum, p) =>
+                        sum +
+                        filterRecordsByPlayer(p.records).reduce((s, r) => s + r.lostPotency, 0),
                       0,
                     )
                   }}</b>
@@ -833,35 +916,30 @@ const selectedPullTotalRecordsCount = computed(() => {
               v-for="p in visiblePulls"
               :key="p.id"
               class="pull-item"
-              :class="{ active: selectedPullId === p.id, 'no-records': p.records.length === 0 }"
+              :class="{
+                active: selectedPullId === p.id,
+                'no-records': filterRecordsByPlayer(p.records).length === 0,
+              }"
               @click="selectedPullId = p.id"
             >
-              <template v-if="p.records.length > 0">
-                <div class="pull-item-row">
-                  <span class="pull-index">#{{ p.id }}</span>
-                  <span class="pull-time">{{ formatStartTime(p.startTime) }}</span>
-                  <span class="pull-dur">{{ formattedDuration(p.durationMs) }}</span>
-                </div>
-                <div class="pull-item-row pull-item-stats">
-                  <span
-                    >打铁 <b class="highlight-red">{{ p.records.length }}</b> 次</span
-                  >
-                  <span class="pull-loss"
-                    >亏损
-                    <b class="highlight-orange">{{
-                      p.records.reduce((sum, r) => sum + r.lostPotency, 0)
-                    }}</b></span
-                  >
-                </div>
-              </template>
-              <template v-else>
-                <div class="pull-item-row pull-item-empty">
-                  <span class="pull-index muted">#{{ p.id }}</span>
-                  <span class="pull-time muted">{{ formatStartTime(p.startTime) }}</span>
-                  <span class="pull-dur muted">{{ formattedDuration(p.durationMs) }}</span>
-                  <span class="pull-no-data">无记录</span>
-                </div>
-              </template>
+              <div class="pull-item-row">
+                <span class="pull-index">#{{ p.id }}</span>
+                <span class="pull-time">{{ formatStartTime(p.startTime) }}</span>
+                <span class="pull-dur">{{ formattedDuration(p.durationMs) }}</span>
+              </div>
+              <div class="pull-item-row pull-item-stats">
+                <span
+                  >打铁
+                  <b class="highlight-red">{{ filterRecordsByPlayer(p.records).length }}</b>
+                  次</span
+                >
+                <span class="pull-loss"
+                  >亏损
+                  <b class="highlight-orange">{{
+                    filterRecordsByPlayer(p.records).reduce((sum, r) => sum + r.lostPotency, 0)
+                  }}</b></span
+                >
+              </div>
             </div>
           </div>
         </ElCard>
@@ -889,7 +967,7 @@ const selectedPullTotalRecordsCount = computed(() => {
               <ElCard class="glass-card mini-metric-card">
                 <div class="metric-content">
                   <div class="label">
-                    {{ selectedPull.id === -1 ? "全日志打铁总次数" : "本局打铁总次数" }}
+                    {{ selectedPull.id === -1 ? "共计打铁总次数" : "本局打铁总次数" }}
                   </div>
                   <div class="value red-text">{{ selectedPullTotalRecordsCount }} 次</div>
                 </div>
@@ -899,7 +977,7 @@ const selectedPullTotalRecordsCount = computed(() => {
               <ElCard class="glass-card mini-metric-card">
                 <div class="metric-content">
                   <div class="label">
-                    {{ selectedPull.id === -1 ? "全日志亏损总威力" : "本局亏损总威力" }}
+                    {{ selectedPull.id === -1 ? "共计亏损总威力" : "本局亏损总威力" }}
                   </div>
                   <div class="value orange-text">
                     {{ selectedPullTotalLostPotency }}
@@ -916,14 +994,14 @@ const selectedPullTotalRecordsCount = computed(() => {
                 selectedPull.id === -1
                   ? globalTimeRange
                     ? `${globalTimeRange} 个人威力亏损排行`
-                    : "全日志个人威力亏损排行"
+                    : "共计个人威力亏损排行"
                   : "本局个人威力亏损排行"
               }}</span>
             </template>
             <ElTable :data="playerStats" style="width: 100%" class="custom-table" dark>
               <template #empty>
                 <span class="table-empty-text">{{
-                  selectedPull.id === -1 ? "全日志暂无打铁记录" : "本局暂无打铁记录"
+                  selectedPull.id === -1 ? "共计暂无打铁记录" : "本局暂无打铁记录"
                 }}</span>
               </template>
               <ElTableColumn type="index" label="排名" width="60" align="center" />
@@ -967,7 +1045,7 @@ const selectedPullTotalRecordsCount = computed(() => {
             </template>
             <ElTable :data="globalSkillStats" style="width: 100%" class="custom-table" dark>
               <template #empty>
-                <span class="table-empty-text">全日志暂无打铁记录</span>
+                <span class="table-empty-text">共计暂无打铁记录</span>
               </template>
               <ElTableColumn type="index" label="排名" width="60" align="center" />
               <ElTableColumn prop="ability" label="技能名称" min-width="140" />
@@ -986,31 +1064,16 @@ const selectedPullTotalRecordsCount = computed(() => {
             </ElTable>
           </ElCard>
 
-          <!-- 直观的时间线打铁明细 (非全局模式下展示) -->
-          <ElCard v-if="selectedPullId !== -1" class="glass-card details-card">
+          <!-- 直观的时间线打铁明细（全局/单局均可用视角筛选） -->
+          <ElCard class="glass-card details-card">
             <template #header>
               <div class="timeline-card-header">
                 <span class="header-title">{{
-                  selectedPull.id === -1 ? "全日志打铁时间线明细" : "打铁时间线明细"
+                  selectedPull.id === -1 ? "共计打铁时间线明细" : "打铁时间线明细"
                 }}</span>
-                <div class="filter-wrapper">
-                  <span class="filter-label">视角筛选:</span>
-                  <ElSelect
-                    v-model="filterPlayerName"
-                    placeholder="筛选玩家"
-                    size="small"
-                    style="width: 140px"
-                    clearable
-                  >
-                    <ElOption label="全队视角" value="" />
-                    <ElOption
-                      v-for="p in playerStats"
-                      :key="p.name"
-                      :label="p.name"
-                      :value="p.name"
-                    />
-                  </ElSelect>
-                </div>
+                <span v-if="filterPlayerName" class="active-filter-badge"
+                  >当前视角：{{ filterPlayerName }}</span
+                >
               </div>
             </template>
             <ElTable :data="currentRecords" style="width: 100%" class="custom-table" dark>
@@ -1311,6 +1374,21 @@ const selectedPullTotalRecordsCount = computed(() => {
     font-weight: 600;
     color: #d4d4dc;
   }
+
+  .global-filter-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+
+    .filter-label {
+      font-size: 11px;
+      color: #6c6c7a;
+      font-weight: 500;
+    }
+  }
 }
 
 .pull-list {
@@ -1358,30 +1436,39 @@ const selectedPullTotalRecordsCount = computed(() => {
     }
   }
 
-  // 零打铁记录：紧凑单行，低饱和
+  // 零打铁记录：布局不变，仅低饱和配色
   &.no-records {
-    padding: 5px 10px;
-
-    .pull-item-empty {
-      gap: 6px;
+    .pull-index {
+      background: rgba(255, 255, 255, 0.04);
+      color: #5a5a6a;
     }
-
-    .muted {
-      color: #5a5a6a !important;
+    .pull-time,
+    .pull-dur {
+      color: #5a5a6a;
     }
-
-    .pull-no-data {
-      margin-left: auto;
-      font-size: 10px;
+    .pull-item-stats {
       color: #4a4a58;
+      .highlight-red,
+      .highlight-orange {
+        color: #5a5a6a;
+      }
     }
 
     &.active {
-      .muted {
-        color: #808090 !important;
+      .pull-index {
+        background: rgba(255, 255, 255, 0.08);
+        color: #808090;
       }
-      .pull-no-data {
+      .pull-time,
+      .pull-dur {
+        color: #808090;
+      }
+      .pull-item-stats {
         color: #6c6c7c;
+        .highlight-red,
+        .highlight-orange {
+          color: #808090;
+        }
       }
     }
   }
@@ -1625,6 +1712,15 @@ const selectedPullTotalRecordsCount = computed(() => {
   flex-wrap: wrap;
   gap: 8px;
   width: 100%;
+}
+
+.active-filter-badge {
+  font-size: 11px;
+  color: #7cc8c8;
+  background: rgba(112, 182, 182, 0.12);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 500;
 }
 
 .filter-wrapper {
