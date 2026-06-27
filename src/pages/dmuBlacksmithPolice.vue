@@ -20,6 +20,7 @@ import { Upload as IconUpload } from "@element-plus/icons-vue";
 interface Pull {
   id: number;
   startTime: string;
+  startTimeMs: number; // 缓存解析后的毫秒时间戳，避免主循环中反复 new Date()
   endTime: string;
   durationMs: number;
   records: BlacksmithRecord[];
@@ -123,6 +124,27 @@ const blackList = blacksmithBlacklist;
 const kShiftFlagValues = ["3E", "113", "213", "313"];
 const kShiftFlagValues2 = ["A10", "E"];
 
+/**
+ * 计算 21/22 日志行的 kShift 偏移量，返回偏移后的 flags 与 damage。
+ * 主行处理与副目标收集循环共用，避免重复代码。
+ */
+function getEffectOffset(parts: string[]): { offset: number; flags: string; damage: string } {
+  let offset = 0;
+  let flags = parts[8] ?? "";
+  let damage = parts[9] ?? "";
+  if (kShiftFlagValues.includes(flags)) {
+    offset += 2;
+    flags = parts[8 + offset] ?? flags;
+    damage = parts[9 + offset] ?? damage;
+  }
+  if (kShiftFlagValues2.includes(flags)) {
+    offset += 2;
+    flags = parts[8 + offset] ?? flags;
+    damage = parts[9 + offset] ?? damage;
+  }
+  return { offset, flags, damage };
+}
+
 // 日志解析核心逻辑
 function processLogData(logText: string) {
   isProcessing.value = true;
@@ -222,6 +244,7 @@ function processLogData(logText: string) {
         currentPull = {
           id: parsedPulls.length + 1,
           startTime: timestampStr,
+          startTimeMs: logTime,
           endTime: timestampStr,
           durationMs: 0,
           records: [],
@@ -248,6 +271,7 @@ function processLogData(logText: string) {
         currentPull = {
           id: parsedPulls.length + 1,
           startTime: timestampStr,
+          startTimeMs: logTime,
           endTime: timestampStr,
           durationMs: 0,
           records: [],
@@ -259,17 +283,19 @@ function processLogData(logText: string) {
       if (activePull) {
         if (logTime > 0) {
           activePull.endTime = timestampStr;
-          activePull.durationMs = logTime - parseTimestamp(activePull.startTime);
+          activePull.durationMs = logTime - activePull.startTimeMs; // 直接用缓存的数字，避免重复 new Date()
         }
 
         // 免疫/打铁核心过滤
-        if ((type === "21" || type === "22") && parts.length >= 10) {
+        // parts 至少需要到 parts[46+offset(max=4)] = parts[50]，宽松检查 >= 51
+        if ((type === "21" || type === "22") && parts.length >= 51) {
           const sourceId = parts[2] ?? "";
           const sourceName = parts[3] ?? "";
           const actionId = parts[4] ?? "";
           const abilityName = parts[5] ?? "";
           const targetId = parts[6] ?? "";
           const targetName = parts[7] ?? "";
+          const actionIdUpper = actionId.toUpperCase(); // 缓存，避免多处重复调用
 
           // 目标是怪 且 来源是玩家 且 非自动攻击
           if (
@@ -278,21 +304,9 @@ function processLogData(logText: string) {
             actionId !== "07" &&
             actionId !== "08"
           ) {
-            if (!(actionId.toUpperCase() in blackList)) {
-              // 偏移位移检测
-              let offset = 0;
-              let flags = parts[8] ?? "";
-              let damage = parts[9] ?? "";
-              if (kShiftFlagValues.includes(flags)) {
-                offset += 2;
-                flags = parts[8 + offset] ?? flags;
-                damage = parts[9 + offset] ?? damage;
-              }
-              if (kShiftFlagValues2.includes(flags)) {
-                offset += 2;
-                flags = parts[8 + offset] ?? flags;
-                damage = parts[9 + offset] ?? damage;
-              }
+            if (!(actionIdUpper in blackList)) {
+              // 偏移位移检测（复用 getEffectOffset 辅助函数）
+              const { offset, flags, damage } = getEffectOffset(parts);
 
               const targetIndex = parts[45 + offset];
 
@@ -304,7 +318,7 @@ function processLogData(logText: string) {
                   const flagVal = parseInt(flags || "0", 16);
                   // 判断最低字节是否为 7 (代表被防火墙免疫/无效伤害)
                   if ((flagVal & 0xff) === 7) {
-                    const elapsedMs = logTime - parseTimestamp(activePull.startTime);
+                    const elapsedMs = logTime - activePull.startTimeMs; // 直接用缓存的数字
                     const skillData = skillsDict[abilityName.trim()];
 
                     // 群体伤害(22)仅统计带目标衰减数据的技能
@@ -325,16 +339,7 @@ function processLogData(logText: string) {
                       const np = nextLine.split("|");
                       // 先做类型粗筛，再计算 nOffset，再用 sequence 精确判断是否同一次技能
                       if (np[0] !== type) break;
-                      let nOffset = 0;
-                      let nFlags = np[8] ?? "";
-                      if (kShiftFlagValues.includes(nFlags)) {
-                        nOffset += 2;
-                        nFlags = np[8 + nOffset] ?? nFlags;
-                      }
-                      if (kShiftFlagValues2.includes(nFlags)) {
-                        nOffset += 2;
-                        nFlags = np[8 + nOffset] ?? nFlags;
-                      }
+                      const { offset: nOffset, flags: nFlags } = getEffectOffset(np); // 复用辅助函数
                       // 用 sequence 字段判断：同一次技能的所有行 sequence 相同
                       const nSeq = np[44 + nOffset];
                       if (mainSequence ? nSeq !== mainSequence : (np[4] !== actionId || np[2] !== sourceId || np[1] !== parts[1])) {
@@ -372,7 +377,7 @@ function processLogData(logText: string) {
                       source: sourceName,
                       sourceId: sourceId,
                       ability: abilityName,
-                      actionId: actionId.toUpperCase(),
+                      actionId: actionIdUpper,
                       targetName: targetName,
                       lostPotency: lost,
                       basePotency: skillData?.base ?? 0,
