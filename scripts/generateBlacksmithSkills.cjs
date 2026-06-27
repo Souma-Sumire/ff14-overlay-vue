@@ -33,7 +33,6 @@ const baseUrl = "https://actff1.web.sdo.com/project/20190917jobguid/dateconfig/"
 const projectRoot = path.resolve(__dirname, "..");
 const cacheDir = path.join(projectRoot, "node_modules/.cache/blacksmith");
 const jsonPath = path.join(projectRoot, "src/resources/generated/blacksmithSkills.json");
-const actionChinesePath = path.join(projectRoot, "src/resources/generated/actionChinese.json");
 const blacklistJsonPath = path.join(
   projectRoot,
   "src/resources/generated/blacksmithBlacklist.json",
@@ -154,6 +153,13 @@ async function run() {
               }
             }
 
+            let splashType = null;
+            if (content.includes("向目标所在方向") && content.includes('攻击复数敌人时')) {
+              splashType = "directional";
+            } else {
+              splashType = "selfArea";
+            }
+
             if (dictionary[name]) {
               if (maxPotency > dictionary[name].base) {
                 dictionary[name].base = maxPotency;
@@ -161,10 +167,16 @@ async function run() {
               if (falloffPct > 0) {
                 dictionary[name].pct = falloffPct;
               }
+              if (splashType) {
+                dictionary[name].splashType = splashType;
+              }
             } else {
               dictionary[name] = { base: maxPotency };
               if (falloffPct > 0) {
                 dictionary[name].pct = falloffPct;
+              }
+              if (splashType) {
+                dictionary[name].splashType = splashType;
               }
             }
           }
@@ -184,13 +196,13 @@ async function run() {
     delete dictionary["掠影示现效果提高III"];
   }
 
-  // 补全舞者舞步结束的各种变体名称的威力数据（均为 75% 目标衰减）
-  dictionary["双色标准舞步结束"] = { base: 850, pct: 75 };
-  dictionary["单色标准舞步结束"] = { base: 540, pct: 75 };
-  dictionary["四色技巧舞步结束"] = { base: 1300, pct: 75 };
-  dictionary["三色技巧舞步结束"] = { base: 950, pct: 75 };
-  dictionary["双色技巧舞步结束"] = { base: 780, pct: 75 };
-  dictionary["单色技巧舞步结束"] = { base: 540, pct: 75 };
+  // 补全舞者舞步结束的各种变体名称的威力数据（均为 75% 目标衰减，自身中心AOE）
+  dictionary["双色标准舞步结束"] = { base: 850, pct: 75, splashType: "selfArea" };
+  dictionary["单色标准舞步结束"] = { base: 540, pct: 75, splashType: "selfArea" };
+  dictionary["四色技巧舞步结束"] = { base: 1300, pct: 75, splashType: "selfArea" };
+  dictionary["三色技巧舞步结束"] = { base: 950, pct: 75, splashType: "selfArea" };
+  dictionary["双色技巧舞步结束"] = { base: 780, pct: 75, splashType: "selfArea" };
+  dictionary["单色技巧舞步结束"] = { base: 540, pct: 75, splashType: "selfArea" };
   const traitsToDelete = [
     "技能威力提高",
     "技能威力提高II",
@@ -213,6 +225,9 @@ async function run() {
     if (skill.pct !== undefined) {
       parts.push(`"pct": ${skill.pct}`);
     }
+    if (skill.splashType) {
+      parts.push(`"splashType": "${skill.splashType}"`);
+    }
     lines.push(`  "${name}": { ${parts.join(", ")} }`);
   }
   const jsonStr = `{\n${lines.join(",\n")}\n}\n`;
@@ -223,10 +238,6 @@ async function run() {
 
   // 3. 构建黑名单（仅包含无法选定目标的场地/自身中心AOE）
   console.log("3. 正在生成黑名单...");
-  if (!fs.existsSync(actionChinesePath)) {
-    throw new Error(`找不到项目自带的 actionChinese.json。路径: ${actionChinesePath}`);
-  }
-  const actionChinese = JSON.parse(fs.readFileSync(actionChinesePath, "utf8"));
 
   const baseBlacklistMap = {
     "1D5F": "六分反击",

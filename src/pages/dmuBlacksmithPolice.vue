@@ -13,6 +13,7 @@ import {
   ElOption,
   ElMessage,
   ElSwitch,
+  ElAlert,
 } from "element-plus";
 import { Upload as IconUpload } from "@element-plus/icons-vue";
 
@@ -21,7 +22,6 @@ interface Pull {
   startTime: string;
   endTime: string;
   durationMs: number;
-  enteredP3: boolean;
   records: BlacksmithRecord[];
   zoneId: number;
 }
@@ -45,7 +45,10 @@ interface BlacksmithRecord {
 import ALL_SKILLS_DATA from "../resources/generated/blacksmithSkills.json";
 import blacksmithBlacklist from "../resources/generated/blacksmithBlacklist.json";
 
-const skillsDict = ALL_SKILLS_DATA as Record<string, { base: number; pct?: number }>;
+const skillsDict = ALL_SKILLS_DATA as Record<
+  string,
+  { base: number; pct?: number; splashType?: string }
+>;
 
 // 从 03 日志行解析的职业 ID → 中文名映射（十六进制 jobId）
 const jobIdToName: Record<string, string> = {
@@ -220,7 +223,6 @@ function processLogData(logText: string) {
           startTime: timestampStr,
           endTime: timestampStr,
           durationMs: 0,
-          enteredP3: false,
           records: [],
           zoneId: currentZoneId,
         };
@@ -247,7 +249,6 @@ function processLogData(logText: string) {
           startTime: timestampStr,
           endTime: timestampStr,
           durationMs: 0,
-          enteredP3: false,
           records: [],
           zoneId: currentZoneId,
         };
@@ -333,9 +334,17 @@ function processLogData(logText: string) {
                           }
                           if (kShiftFlagValues2.includes(nFlags)) {
                             nOffset += 2;
+                            nFlags = np[8 + nOffset] ?? nFlags;
                           }
                           const nTargetIndex = np[45 + nOffset];
                           if (nTargetIndex !== "0") {
+                            // selfArea（对自身周围）：命中纯按施法者距离，先无效必为打铁，不跳过。
+                            // directional（向目标方向）及普通目标AOE：无法区分Case②③，保守跳过。
+                            const nFlagVal = parseInt(nFlags, 16);
+                            const splashType = skillData?.splashType;
+                            if ((nFlagVal & 0xff) !== 7 && splashType !== "selfArea") {
+                              continue;
+                            }
                             rawLines += "\n" + nextLine;
                           }
                         }
@@ -388,9 +397,6 @@ function processLogData(logText: string) {
           last.endTime = current.endTime;
           last.durationMs = parseTimestamp(current.endTime) - parseTimestamp(last.startTime);
           last.records.push(...current.records);
-          if (current.enteredP3) {
-            last.enteredP3 = true;
-          }
           continue;
         }
       }
@@ -735,12 +741,23 @@ const selectedPullTotalRecordsCount = computed(() => {
 <template>
   <div class="blacksmith-container">
     <div class="header-container">
-      <h1 class="main-title">绝妖星 P3 打铁警察</h1>
+      <h1 class="main-title">绝妖星 P3 打铁警察（不保证准确）</h1>
       <label class="anon-toggle">
         <span class="anon-label">匿名</span>
         <ElSwitch v-model="anonymousMode" size="small" />
       </label>
     </div>
+
+    <!-- 已知缺陷提示 -->
+    <ElAlert type="warning" :closable="false" show-icon class="limitation-notice">
+      <template #title>
+        <span class="notice-title">已知局限性</span>
+      </template>
+      <p class="notice-text">
+        对于<b>向目标方向</b>发动+对于副目标存在伤害衰减（如死者之岸、决断）等技能，
+        我们无法判断玩家是【选了正确的BOSS但技能先判定了错误的BOSS】还是【选了错误的BOSS但技能先判定了正确的BOSS】，故这种情况不参与统计。
+      </p>
+    </ElAlert>
 
     <!-- 1. 日志上传面板 (当没有符合条件的绝妖星P3回合时显示) -->
     <ElCard v-if="displayPulls.length === 0" class="glass-card upload-panel">
@@ -1109,6 +1126,32 @@ const selectedPullTotalRecordsCount = computed(() => {
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
+  }
+}
+
+// 已知局限性提示
+.limitation-notice {
+  margin-bottom: 16px;
+  background: rgba(230, 162, 60, 0.08);
+  border: 1px solid rgba(230, 162, 60, 0.25);
+  border-radius: 8px;
+
+  :deep(.el-alert__icon) {
+    color: #e6a23c;
+  }
+  .notice-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e6a23c;
+  }
+  .notice-text {
+    margin: 4px 0 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #c0a060;
+    b {
+      color: #e0c080;
+    }
   }
 }
 
