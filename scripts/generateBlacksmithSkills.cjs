@@ -215,7 +215,7 @@ async function run() {
     }
     lines.push(`  "${name}": { ${parts.join(", ")} }`);
   }
-  const jsonStr = `{\n${lines.join(",\n")}\n}`;
+  const jsonStr = `{\n${lines.join(",\n")}\n}\n`;
   fs.writeFileSync(jsonPath, jsonStr, "utf8");
   console.log(
     `- 成功将共 ${Object.keys(dictionary).length} 个技能的威力字典写入 blacksmithSkills.json`,
@@ -268,7 +268,7 @@ async function run() {
     const names = Array.from(new Set(nameToHex[hex])).join("/");
     listLines.push(`  "${hex}": "${names}"`);
   }
-  const blacklistJsonStr = `{\n${listLines.join(",\n")}\n}`;
+  const blacklistJsonStr = `{\n${listLines.join(",\n")}\n}\n`;
   fs.writeFileSync(blacklistJsonPath, blacklistJsonStr, "utf8");
   console.log(
     `- 成功将带技能名备注的黑名单（共 ${sortedHexIds.length} 个）写入了 blacksmithBlacklist.json！`,
