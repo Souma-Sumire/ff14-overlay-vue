@@ -27,13 +27,23 @@ function processFlags(flag: string) {
   return { effect, properties, type };
 }
 
-// 0x01 = dodge
-// 0x03 = damage done
-// 0x05 = blocked damage
-// 0x06 = parried damage
-// 0x33 = instant death
-// 0x000004 = heal
-// 0x200004 = crit heal
+// 0x01 = dodge (闪避/未击中)
+// 0x02 = fully resisted (完全抵抗，如控制技能被免疫)
+// 0x03 = damage done (正常造成伤害)
+// 0x05 = blocked damage (格挡伤害)
+// 0x06 = parried damage (招架伤害)
+// 0x07 = invulnerable (无效伤害/无敌免疫)
+// 0x08 = no effect (无效果)
+// 0x0a = mp loss (消耗/扣除 MP)
+// 0x0b = mp gain (恢复 MP)
+// 0x0e = status applied to target (目标被施加状态)
+// 0x0f = status applied to caster (自身被施加状态)
+// 0x10 = status removed (状态解除/消失)
+// 0x14 = status no effect (状态未生效)
+// 0x18 = aggro increase (仇恨增加)
+// 0x33 = instant death (即死)
+// 0x000004 = heal (治疗)
+// 0x200004 = crit heal (暴击治疗)
 
 function processEffect(flag: string): DamageEffect {
   switch (true) {
