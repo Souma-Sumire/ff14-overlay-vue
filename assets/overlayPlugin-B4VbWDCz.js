@@ -1,0 +1,1 @@
+import{v as e}from"./cactbot-BAVu88e_.js";function t(t){let n=t;!t.startsWith(`http://`)&&!t.startsWith(`https://`)&&(n=`${window.location.origin}${window.location.pathname}${t.startsWith(`/`)?t:`/${t}`}`),e({call:`openWebsiteWithWS`,url:n})}async function n(){return(await e({call:`cactbotChooseDirectory`}))?.data}export{n,t};
