@@ -5,12 +5,12 @@ import Unocss from "unocss/vite";
 import viteCompression from "vite-plugin-compression";
 import Markdown from "vite-plugin-md";
 import Pages from "vite-plugin-pages";
-import type { UserConfig } from "vite-plus";
+import { defineConfig, type PluginOption } from "vite-plus";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-function injectBuildTime() {
+function injectBuildTime(): PluginOption {
   return {
     name: "inject-build-time",
     transformIndexHtml(html: string) {
@@ -33,7 +33,7 @@ function injectBuildTime() {
 }
 
 // https://vitejs.dev/config/
-const config: UserConfig = {
+export default defineConfig({
   staged: {
     "*.{js,ts,tsx,vue,svelte}": "vp check --fix",
   },
@@ -101,7 +101,7 @@ const config: UserConfig = {
       threshold: 1024,
       deleteOriginFile: false,
     }),
-    Unocss(),
+    Unocss() as unknown as PluginOption,
     Pages({
       importMode: "async",
     }),
@@ -111,8 +111,8 @@ const config: UserConfig = {
     preprocessorOptions: {
       scss: {
         api: "modern",
-      },
-    } as any,
+      } as Record<string, unknown>,
+    },
   },
   define: {
     __VUE_OPTIONS_API__: false,
@@ -140,6 +140,4 @@ const config: UserConfig = {
   optimizeDeps: {
     include: ["vue", "vue-router", "pinia", "element-plus", "@vueuse/core"],
   },
-};
-
-export default config;
+});
