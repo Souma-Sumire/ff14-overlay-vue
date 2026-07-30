@@ -183,6 +183,7 @@ const filter = ref<LogFilterState>({
 const isDragging = ref(false);
 let dragCounter = 0;
 const TYPE_COLUMN_WIDTH = 118;
+
 const enabledTypeCodePrefs = useStorage<Record<string, boolean>>("log-view-enabled-type-codes", {});
 const contextMenuVisible = ref(false);
 const contextMenuPosition = ref({ x: 0, y: 0 });
@@ -214,15 +215,8 @@ watch(
 
 watch(selectedEncounterId, (newVal, oldVal) => {
   if (oldVal !== null && newVal !== null && newVal !== oldVal) {
-    filter.value.searchInputText = "";
-    filter.value.appliedSearchText = "";
-    filter.value.showSearchResultsOnly = false;
     filter.value.timeRangeStartText = "";
     filter.value.timeRangeEndText = "";
-    filter.value.sourceIdFilterText = "";
-    filter.value.sourceFilterText = "";
-    filter.value.targetIdFilterText = "";
-    filter.value.targetFilterText = "";
   }
 });
 
@@ -1945,6 +1939,8 @@ function encounterLabel(enc: EncounterCandidate) {
   :deep(.el-table-v2__row) {
     transition: background-color 0.15s;
     background: var(--lv-bg-page);
+    user-select: text;
+    -webkit-user-select: text;
 
     &:hover {
       background: var(--lv-bg-elevated) !important;
@@ -1973,7 +1969,7 @@ function encounterLabel(enc: EncounterCandidate) {
     background: transparent !important;
     border-bottom: 1px solid var(--lv-border);
     border-right: 1px solid var(--lv-border);
-    padding-right: 10px; /* 保留一些右侧呼吸空间 */
+    padding-right: 10px;
     &:last-child {
       border-right: none;
     }
@@ -1983,6 +1979,13 @@ function encounterLabel(enc: EncounterCandidate) {
   :deep(.el-table-v2__row-cell:first-child) {
     padding-left: 6px;
     padding-right: 6px;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  :deep(.el-table-v2__row-cell:last-child) {
+    user-select: text;
+    -webkit-user-select: text;
   }
 }
 
