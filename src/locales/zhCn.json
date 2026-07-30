@@ -194,7 +194,11 @@
       "kook_purify": "[Github] KOOK净化 (客户端+网页/油猴脚本)",
       "loot_history": "[网页/工具] 固定队装备分配与 BIS 管理工具",
       "dmu_blacksmith_police": "[网页/工具] 绝妖星 P3 打铁警察统计",
-      "mitigation_generator": "[网页/工具] 减伤规划器"
+      "mitigation_generator": "[网页/工具] 减伤规划器",
+      "blubook": "[网页] 青魔法书图鉴",
+      "cactbot_runtime": "[ACT悬浮窗] 职能分配",
+      "log_view": "[网页] Log 日志查看器",
+      "mp_tick": "[ACT悬浮窗] MP Tick 监控"
     },
     "comment": {
       "github_patch": "详见仓库 README",

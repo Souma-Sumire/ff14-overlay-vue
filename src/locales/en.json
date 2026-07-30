@@ -194,7 +194,11 @@
       "uisave_editor": "[Web] UISAVE.DAT (Waymark) Editor",
       "loot_history": "[Web/Tool] Static Gear Loot & BIS Manager",
       "dmu_blacksmith_police": "[Web/Tool] DMU P3 Blacksmith Police",
-      "mitigation_generator": "[Web/Tool] Mitigation Planner"
+      "mitigation_generator": "[Web/Tool] Mitigation Planner",
+      "blubook": "[Web] Blue Magic Spell Book",
+      "cactbot_runtime": "[ACT Overlay] Role Assignment",
+      "log_view": "[Web] Log Viewer",
+      "mp_tick": "[ACT Overlay] MP Tick Monitor"
     },
     "comment": {
       "github_patch": "See README in the repository for details.",

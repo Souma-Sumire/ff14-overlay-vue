@@ -47,6 +47,8 @@ const routeTitles = new Map(
     keySkillTimer: "关键技能监控2",
     keySkillTimerSettings: "关键技能监控2 设置",
     dmuBlacksmithPolice: "绝妖星 P3 打铁警察统计",
+    logView: "Log 日志查看器",
+    mpTick: "MP Tick 监控",
   }),
 );
 for (const route of router.getRoutes()) {

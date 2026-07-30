@@ -194,7 +194,11 @@
       "uisave_editor": "[ウェブ] UISAVE.DAT（フィールドマーカー）エディタ",
       "loot_history": "[ウェブ] 固定PT装備分配＆BIS管理ツール",
       "dmu_blacksmith_police": "[ウェブ] 絶妖星 P3 鍛冶警察",
-      "mitigation_generator": "[ウェブ] 軽減プランナー"
+      "mitigation_generator": "[ウェブ] 軽減プランナー",
+      "blubook": "[ウェブ] 青魔法図鑑",
+      "cactbot_runtime": "[ACTオーバーレイ] 役割割り振り",
+      "log_view": "[ウェブ] ログビューアー",
+      "mp_tick": "[ACTオーバーレイ] MP Tick モニター"
     },
     "comment": {
       "github_patch": "詳細はリポジトリのREADME参照",

@@ -16,7 +16,6 @@ export interface Menu {
 }
 
 export const MENU_ORDER: string[] = [
-  "startPages.menu.dmu_blacksmith_police",
   "startPages.menu.kook_purify",
   "startPages.menu.loot_history",
   "startPages.menu.keigenn_record2",
@@ -32,6 +31,10 @@ export const MENU_ORDER: string[] = [
   "startPages.menu.instanced_area_info",
   "startPages.menu.casting_to_chinese",
   "startPages.menu.uisave_editor",
+  "startPages.menu.blubook",
+  "startPages.menu.cactbot_runtime",
+  "startPages.menu.log_view",
+  "startPages.menu.mp_tick",
   "startPages.menu.mitigation_generator",
   "startPages.menu.aether_map",
   "startPages.menu.combat_time_obs",
@@ -45,6 +48,7 @@ export const MENU_ORDER: string[] = [
   "startPages.menu.hunt_map",
   "startPages.menu.mogstation_patch",
   "startPages.menu.stone_sky_logs",
+  "startPages.menu.dmu_blacksmith_police",
 ];
 
 export function getRawMenuData(
