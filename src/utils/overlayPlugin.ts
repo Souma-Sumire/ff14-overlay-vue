@@ -36,5 +36,3 @@ export async function selectNativeDirectory(): Promise<string | undefined> {
   const res = await callOverlayHandler({ call: "cactbotChooseDirectory" });
   return res?.data;
 }
-
-

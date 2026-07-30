@@ -41,9 +41,6 @@ jobs:
           curl -fsSL https://vite.plus | bash
           echo "$HOME/.vite-plus/bin" >> $GITHUB_PATH
 
-      - name: Install Node.js
-        run: vp env install
-
       - name: Install Dependencies
         run: vp install
 

@@ -417,9 +417,7 @@ onUnmounted(() => {
     </div>
     <template #readme>
       <div v-if="demo" class="unlocked-toolbar">
-        <button class="open-settings-btn" @click="handleOpenSettings">
-          打开时间轴设置页面
-        </button>
+        <button class="open-settings-btn" @click="handleOpenSettings">打开时间轴设置页面</button>
       </div>
     </template>
   </CommonActWrapper>
