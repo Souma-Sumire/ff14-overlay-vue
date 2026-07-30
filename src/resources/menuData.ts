@@ -268,7 +268,26 @@ export function getRawMenuData(
       type: "网页/工具",
       path: "dmuBlacksmithPolice",
       comment: "startPages.comment.dmu_blacksmith_police",
-      isNew: true,
+    },
+    {
+      title: "startPages.menu.blubook",
+      type: "网页/工具",
+      path: "blubook",
+    },
+    {
+      title: "startPages.menu.cactbot_runtime",
+      type: "悬浮窗",
+      path: "cactbotRuntime",
+    },
+    {
+      title: "startPages.menu.log_view",
+      type: "网页/工具",
+      path: "logView",
+    },
+    {
+      title: "startPages.menu.mp_tick",
+      type: "悬浮窗",
+      path: "mpTick",
     },
   ];
 }
