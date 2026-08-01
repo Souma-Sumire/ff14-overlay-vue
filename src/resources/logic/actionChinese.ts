@@ -1,7 +1,7 @@
 import actionChineseRaw from "@/resources/generated/actionChinese.json";
 import { actionId2ClassJobLevel } from "./actionMetaResolver";
 
-const rawActionChinese: Record<string, string> = actionChineseRaw;
+const rawActionChinese = actionChineseRaw as unknown as Record<string, string>;
 let cachedActionList: Array<{ id: number; name: string }> | null = null;
 
 function getCachedActionList() {
