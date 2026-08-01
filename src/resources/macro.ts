@@ -2923,6 +2923,16 @@ fastPP(
 fastPP(
   `{"Name":"盗火回转寿司","MapID":1094,"A":{"X":100,"Y":0,"Z":88,"ID":0,"Active":true},"B":{"X":112,"Y":0,"Z":100,"ID":1,"Active":true},"C":{"X":100,"Y":0,"Z":112,"ID":2,"Active":true},"D":{"X":88,"Y":0,"Z":100,"ID":3,"Active":true},"One":{"X":88,"Y":0,"Z":88,"ID":4,"Active":true},"Two":{"X":112,"Y":0,"Z":88,"ID":5,"Active":true},"Three":{"X":112,"Y":0,"Z":112,"ID":6,"Active":true},"Four":{"X":88,"Y":0,"Z":112,"ID":7,"Active":true}}`,
 );
+// 超模之塔
+fastPP(
+  `{"Name":"老四 来自yoko","MapID":1114,"A":{"X":-0.118,"Z":-636,"Y":-684,"Active":true},"B":{"X":-7.27,"Z":-624,"Y":-684,"Active":true},"C":{"X":7.64,"Z":-624,"Y":-684,"Active":true},"D":{"X":0,"Z":0,"Y":0},"One":{"X":-7.31,"Z":-632,"Y":-684,"Active":true},"Two":{"X":0.186,"Z":-620,"Y":-684,"Active":true},"Three":{"X":7.81,"Z":-633,"Y":-684,"Active":true},"Four":{"X":0,"Z":0,"Y":0}}`,
+);
+fastPP(
+  `{"Name":"老三往里缩 来自yoko","MapID":1114,"A":{"X":100,"Y":-724,"Z":788,"ID":0,"Active":true},"B":{"X":112,"Y":-724,"Z":800,"ID":1,"Active":true},"C":{"X":100,"Y":-724,"Z":812,"ID":2,"Active":true},"D":{"X":88,"Y":-724,"Z":800,"ID":3,"Active":true},"One":{"X":91.5,"Y":-724,"Z":791.5,"ID":4,"Active":true},"Two":{"X":108.5,"Y":-724,"Z":791.5,"ID":5,"Active":true},"Three":{"X":108.5,"Y":-724,"Z":808.5,"ID":6,"Active":true},"Four":{"X":91.5,"Y":-724,"Z":808.5,"ID":7,"Active":true}}`,
+);
+fastPP(
+  `{"Name":"老三 来自我","MapID":1114,"A":{"X":100,"Y":-724,"Z":787,"ID":0,"Active":true},"B":{"X":113,"Y":-724,"Z":800,"ID":1,"Active":true},"C":{"X":100,"Y":-724,"Z":813,"ID":2,"Active":true},"D":{"X":87,"Y":-724,"Z":800,"ID":3,"Active":true},"One":{"X":85.252,"Y":-724,"Z":791.5,"ID":4,"Active":true},"Two":{"X":114.702,"Y":-724,"Z":791.5,"ID":5,"Active":true},"Three":{"X":114.702,"Y":-724,"Z":808.5,"ID":6,"Active":true},"Four":{"X":85.252,"Y":-724,"Z":808.5,"ID":7,"Active":true}}`,
+);
 function getSource(title: string, href: string): string {
   return `<a href='${href}'target='_blank'>${title}</a>`;
 }
