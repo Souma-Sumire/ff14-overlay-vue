@@ -5,14 +5,11 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.oxc": "explicit"
   },
-  "i18n-ally.localesPaths": ["src/locales"],
+  "i18n-ally.localesPaths": [
+    "src/locales"
+  ],
   "oxc.path.oxlint": "./node_modules/.bin/oxlint.CMD",
   "oxc.typeAware": false,
   "i18n-ally.keystyle": "nested",
-  "typescript.tsserver.maxTsServerMemory": 8192,
-  "vue.inlayHints.missingProps": false,
-  "vue.inlayHints.inlineHandlerLeading": false,
-  "vue.inlayHints.optionsWrapper": false,
-  "vue.inlayHints.destructuredProps": false,
-  "vue.inlayHints.vBindShorthand": false
+  "js/ts.tsdk.path": "node_modules\\typescript\\lib"
 }
