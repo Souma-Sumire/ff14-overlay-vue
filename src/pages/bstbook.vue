@@ -10,6 +10,7 @@ import {
   ElInput,
   ElMessage,
   ElMessageBox,
+  ElRadio,
   ElRadioButton,
   ElRadioGroup,
   ElSlider,
@@ -156,18 +157,24 @@ function preloadImages(): void {
       const img = new Image();
       img.onload = () => recordCdnSuccess(img.src);
       img.onerror = () => {
-        if (activeCdn.value === "souma.diemoe.net") {
-          activeCdn.value = CDN_SOURCES[0];
-        }
-        const currentHost = CDN_SOURCES.find((h) => url.includes(h));
-        if (currentHost) {
-          const currentIndex = CDN_SOURCES.indexOf(currentHost);
-          const nextHost = CDN_SOURCES[(currentIndex + 1) % CDN_SOURCES.length];
-          const nextUrl = makeIconUrl(b.Icon, false, nextHost);
-          const retryImg = new Image();
-          retryImg.onload = () => recordCdnSuccess(retryImg.src);
-          retryImg.src = nextUrl;
-        }
+        const hrUrl = makeIconUrl(b.Icon, true);
+        const hrImg = new Image();
+        hrImg.onload = () => recordCdnSuccess(hrImg.src);
+        hrImg.onerror = () => {
+          if (activeCdn.value === "souma.diemoe.net") {
+            activeCdn.value = CDN_SOURCES[0];
+          }
+          const currentHost = CDN_SOURCES.find((h) => url.includes(h));
+          if (currentHost) {
+            const currentIndex = CDN_SOURCES.indexOf(currentHost);
+            const nextHost = CDN_SOURCES[(currentIndex + 1) % CDN_SOURCES.length];
+            const nextUrl = makeIconUrl(b.Icon, false, nextHost);
+            const retryImg = new Image();
+            retryImg.onload = () => recordCdnSuccess(retryImg.src);
+            retryImg.src = nextUrl;
+          }
+        };
+        hrImg.src = hrUrl;
       };
       img.src = url;
     }
@@ -203,8 +210,8 @@ const selectedAttackTypes = ref<string[]>([...ALL_ATTACK_TYPES]);
 const selectedBorrowActions = ref<string[]>([...ALL_BORROW_ACTIONS]);
 type HabitatTypeFilter = "all" | "overworld" | "dungeon";
 const selectedHabitatType = ref<HabitatTypeFilter>("all");
-const selectedOverworldHabitats = ref<string[]>([...OVERWORLD_HABITATS]);
-const selectedDungeonHabitats = ref<string[]>([...DUNGEON_HABITATS]);
+const selectedOverworldHabitat = ref<string>("all");
+const selectedDungeonHabitat = ref<string>("all");
 const selectedReleaseRanges = ref<string[]>([...ALL_RANGES]);
 const selectedOrderRanges = ref<string[]>([...ALL_RANGES]);
 const selectedCaptureStatus = ref<string[]>([...ALL_CAPTURE_STATUS]);
@@ -249,6 +256,17 @@ function getShortName(name: string): string {
   return name.replace(/种$/, "");
 }
 
+function formatSlotLevel(level?: string): string {
+  if (!level || level.trim() === "-") return "";
+  if (level.includes("/")) {
+    const [min, max] = parseBeastLevelRange(level);
+    if (min > 0 && max > 0) {
+      return `${min}~${max}`;
+    }
+  }
+  return level;
+}
+
 function formatTooltipDesc(desc?: string): string {
   if (!desc) return "暂无技能说明";
   return desc.replaceAll("\n", "<br/>");
@@ -265,8 +283,9 @@ watch(
     selectedTaxonomies,
     selectedAttackTypes,
     selectedBorrowActions,
-    selectedOverworldHabitats,
-    selectedDungeonHabitats,
+    selectedHabitatType,
+    selectedOverworldHabitat,
+    selectedDungeonHabitat,
     selectedReleaseRanges,
     selectedOrderRanges,
     selectedCaptureStatus,
@@ -312,18 +331,28 @@ function isBeastMatched(v: BeastEntry): boolean {
 
   if (selectedHabitatType.value === "overworld") {
     const habitats = v.Habitats ?? [
-      { Summary: v.HabitatSummary ?? "--", Type: (v.HabitatType as BeastHabitatItem["Type"]) ?? "overworld" },
+      {
+        Summary: v.HabitatSummary ?? "--",
+        Type: (v.HabitatType as BeastHabitatItem["Type"]) ?? "overworld",
+      },
     ];
     const hasMatch = habitats.some(
-      (h) => h.Type === "overworld" && selectedOverworldHabitats.value?.includes(h.Summary),
+      (h) =>
+        h.Type === "overworld" &&
+        (selectedOverworldHabitat.value === "all" || h.Summary === selectedOverworldHabitat.value),
     );
     if (!hasMatch) return false;
   } else if (selectedHabitatType.value === "dungeon") {
     const habitats = v.Habitats ?? [
-      { Summary: v.HabitatSummary ?? "--", Type: (v.HabitatType as BeastHabitatItem["Type"]) ?? "dungeon" },
+      {
+        Summary: v.HabitatSummary ?? "--",
+        Type: (v.HabitatType as BeastHabitatItem["Type"]) ?? "dungeon",
+      },
     ];
     const hasMatch = habitats.some(
-      (h) => h.Type === "dungeon" && selectedDungeonHabitats.value?.includes(h.Summary),
+      (h) =>
+        h.Type === "dungeon" &&
+        (selectedDungeonHabitat.value === "all" || h.Summary === selectedDungeonHabitat.value),
     );
     if (!hasMatch) return false;
   }
@@ -377,7 +406,7 @@ const beastsDisplay = ref<BeastDisplay[]>(
   beasts.map((b) => ({
     ...b,
     IconUrl: makeIconUrl(b.Icon, false),
-    LargeIconUrl: makeIconUrl(b.Icon, true),
+    LargeIconUrl: makeIconUrl(b.Icon, false),
     ReleaseIconUrl: makeIconUrl(b.ReleaseIcon, false),
     OrderIconUrl: makeIconUrl(b.OrderIcon, false),
     BorrowIconUrl: makeIconUrl(b.BorrowIcon, false),
@@ -453,29 +482,46 @@ const isSelectedCaptured = computed({
 const mapDialogVisible = ref(false);
 const activeMapHabitat = ref<BeastHabitatItem | undefined>(undefined);
 
+function parseHabitatMinLevel(hab: BeastHabitatItem, fallbackLevel?: string): number {
+  const lvl = hab.Level ?? fallbackLevel;
+  if (!lvl || lvl.trim() === "-") return 0;
+  const nums = lvl.match(/\d+/g)?.map(Number);
+  if (!nums || nums.length === 0) return 0;
+  return Math.min(...nums);
+}
+
 const displayHabitats = computed<BeastHabitatItem[]>(() => {
   if (!selectedDisplay.value) return [];
+  let list: BeastHabitatItem[];
   if (selectedDisplay.value.Habitats && selectedDisplay.value.Habitats.length > 0) {
-    return selectedDisplay.value.Habitats;
+    list = [...selectedDisplay.value.Habitats];
+  } else {
+    list = [
+      {
+        Summary: selectedDisplay.value.HabitatSummary ?? "--",
+        Type: (selectedDisplay.value.HabitatType as BeastHabitatItem["Type"]) ?? "overworld",
+        MapId: selectedDisplay.value.MapId,
+        Coords: selectedDisplay.value.Coords,
+        CoordsList:
+          selectedDisplay.value.CoordsList ??
+          (selectedDisplay.value.Coords ? [selectedDisplay.value.Coords] : undefined),
+        CoordsNote: selectedDisplay.value.CoordsNote,
+        Level: selectedDisplay.value.Level,
+      },
+    ];
   }
-  return [
-    {
-      Summary: selectedDisplay.value.HabitatSummary ?? "--",
-      Type: (selectedDisplay.value.HabitatType as BeastHabitatItem["Type"]) ?? "overworld",
-      MapId: selectedDisplay.value.MapId,
-      Coords: selectedDisplay.value.Coords,
-      CoordsList:
-        selectedDisplay.value.CoordsList ??
-        (selectedDisplay.value.Coords ? [selectedDisplay.value.Coords] : undefined),
-      CoordsNote: selectedDisplay.value.CoordsNote,
-      Level: selectedDisplay.value.Level,
-    },
-  ];
+
+  const fallback = selectedDisplay.value.Level;
+  list.sort((a, b) => parseHabitatMinLevel(a, fallback) - parseHabitatMinLevel(b, fallback));
+
+  return list;
 });
 
-const hasMultipleHabitats = computed<boolean>(() => {
-  return displayHabitats.value.length > 1;
-});
+function getHabitatDisplayLevel(hab: BeastHabitatItem): string | undefined {
+  const lvl = hab.Level ?? selectedDisplay.value?.Level;
+  if (!lvl || lvl.trim() === "-") return undefined;
+  return lvl;
+}
 
 function isHabitatMapEnabled(hab: BeastHabitatItem): boolean {
   return Boolean(hab.MapId && (hab.Coords || hab.CoordsList?.length));
@@ -485,6 +531,10 @@ function openHabitatMap(hab: BeastHabitatItem): void {
   if (!isHabitatMapEnabled(hab)) return;
   activeMapHabitat.value = hab;
   mapDialogVisible.value = true;
+}
+
+function handleSelectBeastFromMap(num: number): void {
+  selectedBeastNumber.value = num;
 }
 
 watch(selectedDisplay, (val) => {
@@ -505,10 +555,12 @@ function handleIconError(
 
   const currentUrl = entry[field];
 
-  if (field === "LargeIconUrl" && /_hr1\.png/.test(currentUrl)) {
-    entry[field] = currentUrl.replace("_hr1.png", ".png");
+  if ((field === "LargeIconUrl" || field === "IconUrl") && !/_hr1\.png/.test(currentUrl)) {
+    entry[field] = currentUrl.replace(/\.png$/, "_hr1.png");
     return;
   }
+
+  const baseSmallUrl = currentUrl.replace("_hr1.png", ".png");
 
   const currentHost = CDN_SOURCES.find((h) => currentUrl.includes(h));
   if (currentHost) {
@@ -536,7 +588,7 @@ function handleIconError(
     if (nextHost) {
       const oldPrefix = getCdnPrefix(currentHost);
       const newPrefix = getCdnPrefix(nextHost);
-      entry[field] = currentUrl.replace(oldPrefix, newPrefix).replace(currentHost, nextHost);
+      entry[field] = baseSmallUrl.replace(oldPrefix, newPrefix).replace(currentHost, nextHost);
       return;
     }
   }
@@ -677,19 +729,21 @@ function handleClearAllCaptured(): void {
             </el-radio-group>
 
             <div v-if="selectedHabitatType === 'overworld'" class="habitat-sub-group">
-              <el-checkbox-group v-model="selectedOverworldHabitats" size="small">
-                <el-checkbox v-for="h in OVERWORLD_HABITATS" :key="h" :value="h" :label="h">
+              <el-radio-group v-model="selectedOverworldHabitat" size="small">
+                <el-radio value="all" label="all">全部</el-radio>
+                <el-radio v-for="h in OVERWORLD_HABITATS" :key="h" :value="h" :label="h">
                   {{ h === "--" ? "无" : h }}
-                </el-checkbox>
-              </el-checkbox-group>
+                </el-radio>
+              </el-radio-group>
             </div>
 
             <div v-else-if="selectedHabitatType === 'dungeon'" class="habitat-sub-group">
-              <el-checkbox-group v-model="selectedDungeonHabitats" size="small">
-                <el-checkbox v-for="h in DUNGEON_HABITATS" :key="h" :value="h" :label="h">
+              <el-radio-group v-model="selectedDungeonHabitat" size="small">
+                <el-radio value="all" label="all">全部</el-radio>
+                <el-radio v-for="h in DUNGEON_HABITATS" :key="h" :value="h" :label="h">
                   {{ h }}
-                </el-checkbox>
-              </el-checkbox-group>
+                </el-radio>
+              </el-radio-group>
             </div>
           </div>
         </div>
@@ -794,7 +848,7 @@ function handleClearAllCaptured(): void {
                 <div v-else class="unknown-mark">?</div>
 
                 <span v-if="slot.beast.Level && !editingMode" class="slot-level-badge">
-                  Lv.{{ slot.beast.Level }}
+                  Lv.{{ formatSlotLevel(slot.beast.Level) }}
                 </span>
 
                 <div class="slot-name-badge">
@@ -831,7 +885,7 @@ function handleClearAllCaptured(): void {
               </span>
             </div>
             <div class="header-capture">
-              <el-checkbox v-model="isSelectedCaptured" label="已捕获该魔兽" size="small" />
+              <el-checkbox v-model="isSelectedCaptured" label="已捕获该魔兽" size="large" />
             </div>
           </div>
 
@@ -929,44 +983,54 @@ function handleClearAllCaptured(): void {
           <div class="habitat-section">
             <div class="habitat-title">主要栖息地</div>
             <div class="habitat-location">
-              <el-tooltip
-                :disabled="!canShowMap"
-                content="点击打开地图"
-                placement="top"
-                :show-after="50"
-              >
-                <div
-                  class="habitat-card"
-                  :class="{ 'clickable-card': canShowMap }"
-                  @click="canShowMap && (mapDialogVisible = true)"
-                >
-                  <svg
-                    v-if="canShowMap"
-                    class="map-pin-icon"
-                    viewBox="0 0 16 16"
-                    width="15"
-                    height="15"
-                    fill="currentColor"
+              <template v-for="(hab, idx) in displayHabitats" :key="idx">
+                <div class="habitat-item-row">
+                  <span v-if="getHabitatDisplayLevel(hab)" class="habitat-level-text">
+                    Lv.{{ getHabitatDisplayLevel(hab) }}
+                  </span>
+                  <el-tooltip
+                    :disabled="!isHabitatMapEnabled(hab)"
+                    content="点击打开地图"
+                    placement="top"
+                    :show-after="50"
                   >
-                    <path
-                      d="M8 0a5.53 5.53 0 0 0-5.5 5.5c0 3.82 5.5 10.5 5.5 10.5s5.5-6.68 5.5-10.5A5.53 5.53 0 0 0 8 0zm0 7.5a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"
-                    />
-                  </svg>
-                  <span class="location-name">{{ selectedDisplay.HabitatSummary ?? "--" }}</span>
-                  <span v-if="selectedDisplay.Coords" class="location-coords">
-                    X: {{ selectedDisplay.Coords.x }}, Y: {{ selectedDisplay.Coords.y }}
-                  </span>
-                  <span v-if="selectedDisplay.CoordsNote" class="location-coords-note">
-                    ({{ selectedDisplay.CoordsNote }})
-                  </span>
-                  <span
-                    v-if="selectedDisplay.HabitatType === 'dungeon'"
-                    class="location-dungeon-tag"
-                  >
-                    副本
-                  </span>
+                    <div
+                      class="habitat-card"
+                      :class="{ 'clickable-card': isHabitatMapEnabled(hab) }"
+                      @click="openHabitatMap(hab)"
+                    >
+                      <svg
+                        v-if="isHabitatMapEnabled(hab)"
+                        class="map-pin-icon"
+                        viewBox="0 0 16 16"
+                        width="15"
+                        height="15"
+                        fill="currentColor"
+                      >
+                        <path
+                          d="M8 0a5.53 5.53 0 0 0-5.5 5.5c0 3.82 5.5 10.5 5.5 10.5s5.5-6.68 5.5-10.5A5.53 5.53 0 0 0 8 0zm0 7.5a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"
+                        />
+                      </svg>
+                      <span class="location-name">{{ hab.Summary }}</span>
+                      <div
+                        v-if="hab.CoordsList && hab.CoordsList.length > 0"
+                        class="location-coords-group"
+                      >
+                        <span v-for="(c, cIdx) in hab.CoordsList" :key="cIdx" class="coord-badge">
+                          ({{ c.x }}, {{ c.y }})
+                        </span>
+                      </div>
+                      <div v-else-if="hab.Coords" class="location-coords-group">
+                        <span class="coord-badge"> ({{ hab.Coords.x }}, {{ hab.Coords.y }}) </span>
+                      </div>
+                      <span v-if="hab.CoordsNote" class="location-coords-note">
+                        ({{ hab.CoordsNote }})
+                      </span>
+                      <span v-if="hab.Type === 'dungeon'" class="location-dungeon-tag"> 副本 </span>
+                    </div>
+                  </el-tooltip>
                 </div>
-              </el-tooltip>
+              </template>
             </div>
           </div>
 
@@ -996,6 +1060,15 @@ function handleClearAllCaptured(): void {
           class="credit-link"
         >
           BV19nbV6TEQk
+        </a>
+        /
+        <a
+          href="https://ff14.huijiwiki.com/wiki/%E9%AD%94%E5%85%BD%E5%9B%BE%E9%89%B4"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="credit-link"
+        >
+          灰机WIKI
         </a>
       </div>
 
@@ -1029,9 +1102,23 @@ function handleClearAllCaptured(): void {
       v-if="selectedDisplay"
       v-model="mapDialogVisible"
       :beast-name="selectedDisplay.Name"
-      :habitat-name="selectedDisplay.HabitatSummary ?? ''"
-      :map-id="selectedDisplay.MapId"
-      :coords="selectedDisplay.Coords"
+      :habitat-name="activeMapHabitat?.Summary ?? selectedDisplay.HabitatSummary ?? ''"
+      :map-id="activeMapHabitat?.MapId ?? selectedDisplay.MapId"
+      :coords="
+        activeMapHabitat?.CoordsList ??
+        activeMapHabitat?.Coords ??
+        selectedDisplay.CoordsList ??
+        selectedDisplay.Coords
+      "
+      :all-beasts="beastsDisplay"
+      :captured="captured"
+      :current-beast-number="selectedDisplay.Number"
+      @select-beast="handleSelectBeastFromMap"
+      @toggle-capture="
+        (num: number, val: boolean) => {
+          captured[num.toString()] = val;
+        }
+      "
     />
   </div>
 </template>
@@ -1073,7 +1160,6 @@ function handleClearAllCaptured(): void {
   .filter-panel {
     width: 100%;
     max-width: 1250px;
-    min-width: 960px;
     margin-bottom: 12px;
     padding: 10px 18px;
     background: #fdfbf7;
@@ -1116,21 +1202,34 @@ function handleClearAllCaptured(): void {
             width: 320px;
           }
 
-          :deep(.el-checkbox-group) {
+          :deep(.el-checkbox-group),
+          :deep(.el-radio-group) {
             display: flex;
             flex-wrap: wrap;
             gap: 2px 14px;
             align-items: center;
           }
 
-          :deep(.el-checkbox) {
+          :deep(.el-checkbox),
+          :deep(.el-radio) {
             margin-right: 0;
             color: #3b2d1d;
             height: 24px;
 
-            .el-checkbox__label {
+            .el-checkbox__label,
+            .el-radio__label {
               font-size: 12px;
               padding-left: 5px;
+            }
+
+            .el-radio__input.is-checked .el-radio__inner {
+              background-color: #836f58;
+              border-color: #836f58;
+            }
+
+            .el-radio__input.is-checked + .el-radio__label {
+              color: #5d4a36;
+              font-weight: 600;
             }
           }
 
@@ -1210,7 +1309,6 @@ function handleClearAllCaptured(): void {
   .bstbook-container {
     width: 100%;
     max-width: 1250px;
-    min-width: 960px;
     height: 596px;
     min-height: 596px;
     max-height: 596px;
@@ -1229,6 +1327,9 @@ function handleClearAllCaptured(): void {
       display: flex;
       flex-direction: column;
       box-sizing: border-box;
+      transition:
+        width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
       .panel-header {
         margin-bottom: 10px;
@@ -1275,7 +1376,7 @@ function handleClearAllCaptured(): void {
             line-height: 28px;
             padding: 0 10px;
             font-size: 12px;
-            background: #f4eee5;
+            background: #f4ede3;
             border-color: #dcd4c6;
             color: #5d4a36;
           }
@@ -1299,6 +1400,9 @@ function handleClearAllCaptured(): void {
         grid-template-columns: repeat(5, 82px);
         gap: 13px 19px;
         justify-content: space-between;
+        transition:
+          gap 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+          grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
         .grid-cell {
           display: flex;
@@ -1322,7 +1426,12 @@ function handleClearAllCaptured(): void {
             background: #f2ece2;
             border: 1px solid #ddd4c7;
             box-sizing: border-box;
-            transition: all 0.15s ease-in-out;
+            transition:
+              width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              background 0.15s ease-in-out,
+              border-color 0.15s ease-in-out,
+              box-shadow 0.15s ease-in-out;
 
             &:hover {
               border-color: #bfaea0;
@@ -1335,6 +1444,9 @@ function handleClearAllCaptured(): void {
               border-radius: 4px;
               object-fit: cover;
               display: block;
+              transition:
+                width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             }
 
             .unknown-mark {
@@ -1348,6 +1460,10 @@ function handleClearAllCaptured(): void {
               position: absolute;
               top: 3px;
               right: 4px;
+              max-width: 52px;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
               font-size: 10px;
               font-weight: 800;
               color: #5c3202;
@@ -1420,10 +1536,10 @@ function handleClearAllCaptured(): void {
 
             .captured-mark {
               position: absolute;
-              top: -4px;
-              left: -4px;
-              width: 20px;
-              height: 20px;
+              top: 2px;
+              left: 2px;
+              width: 16px;
+              height: 16px;
               background: #2e7d32;
               color: #ffffff;
               border: 1.5px solid #ffffff;
@@ -1431,7 +1547,7 @@ function handleClearAllCaptured(): void {
               display: flex;
               align-items: center;
               justify-content: center;
-              font-size: 13px;
+              font-size: 10px;
               font-weight: 900;
               box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
               z-index: 2;
@@ -1505,6 +1621,7 @@ function handleClearAllCaptured(): void {
       overflow: hidden;
       user-select: text;
       box-sizing: border-box;
+      transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
       .detail-header {
         display: flex;
@@ -1558,8 +1675,49 @@ function handleClearAllCaptured(): void {
           flex-shrink: 0;
 
           :deep(.el-checkbox) {
-            font-weight: 600;
-            color: #5d4a36;
+            margin: 0;
+            cursor: pointer;
+            user-select: none;
+            --el-checkbox-checked-bg-color: #257a2b;
+            --el-checkbox-checked-input-border-color: #257a2b;
+            --el-checkbox-input-border-color-hover: #257a2b;
+
+            .el-checkbox__inner {
+              border: 1.8px solid #4a3622;
+              border-radius: 3px;
+              background: #ffffff;
+              transition: all 0.15s ease;
+            }
+
+            &:hover {
+              .el-checkbox__inner {
+                border-color: #257a2b;
+              }
+              .el-checkbox__label {
+                color: #257a2b;
+              }
+            }
+
+            &.is-checked {
+              .el-checkbox__inner {
+                background-color: #257a2b;
+                border-color: #257a2b;
+              }
+
+              .el-checkbox__label {
+                color: #1b5e20;
+                font-weight: 800;
+              }
+            }
+
+            .el-checkbox__label {
+              font-size: 15px;
+              font-weight: 700;
+              color: #1a1006;
+              padding-left: 8px;
+              letter-spacing: 0.5px;
+              transition: color 0.15s ease;
+            }
           }
         }
       }
@@ -1584,6 +1742,9 @@ function handleClearAllCaptured(): void {
           box-sizing: border-box;
           overflow: hidden;
           padding: 6px;
+          transition:
+            width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
           .avatar-img {
             width: 100%;
@@ -1812,61 +1973,93 @@ function handleClearAllCaptured(): void {
 
         .habitat-location {
           display: flex;
-          align-items: center;
-          flex-wrap: wrap;
+          flex-direction: column;
+          align-items: flex-start;
           gap: 6px;
 
-          .habitat-card {
-            display: inline-flex;
+          .habitat-item-row {
+            display: flex;
             align-items: center;
             gap: 8px;
-            background: #ede2d3;
-            border: 1px solid #d5c3ac;
-            padding: 2px 10px;
-            border-radius: 4px;
-            line-height: 1.3;
-            user-select: none;
 
-            .map-pin-icon {
-              flex-shrink: 0;
-              color: #7b4c16;
-            }
-
-            .location-name {
+            .habitat-level-text {
               font-size: 13px;
-              font-weight: 600;
-              color: #2b1c0e;
-            }
-
-            .location-coords {
-              font-size: 13px;
-              font-family: Consolas, "Courier New", monospace;
               font-weight: 700;
-              color: #7b4c16;
+              color: #8c430e;
+              min-width: 46px;
+              flex-shrink: 0;
+              line-height: 1.3;
             }
 
-            .location-coords-note {
-              font-size: 12px;
-              color: #8c7d6b;
-            }
+            .habitat-card {
+              display: inline-flex;
+              align-items: center;
+              gap: 8px;
+              background: #ede2d3;
+              border: 1px solid #d5c3ac;
+              padding: 2px 10px;
+              border-radius: 4px;
+              line-height: 1.3;
+              user-select: none;
 
-            .location-dungeon-tag {
-              font-size: 12px;
-              font-weight: 600;
-              color: #7b4c16;
-            }
+              .map-pin-icon {
+                flex-shrink: 0;
+                color: #7b4c16;
+              }
 
-            &.clickable-card {
-              cursor: pointer;
-              transition: all 0.15s;
+              .location-name {
+                font-size: 13px;
+                font-weight: 600;
+                color: #2b1c0e;
+              }
 
-              &:hover {
-                background: #e4d3bd;
-                border-color: #bfaea0;
+              .location-coords-group {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
 
-                .location-coords,
-                .map-pin-icon {
-                  color: #53330e;
+                .coord-badge {
+                  display: inline-block;
+                  font-size: 12px;
+                  font-family: Consolas, "Courier New", monospace;
+                  font-weight: 700;
+                  color: #7b4c16;
+                  line-height: 14px;
+                  transition: color 0.15s;
+
+                  &:not(:last-child)::after {
+                    content: ",";
+                    margin-right: 4px;
+                  }
+                }
+              }
+
+              .location-coords-note {
+                font-size: 12px;
+                color: #8c7d6b;
+              }
+
+              .location-dungeon-tag {
+                font-size: 12px;
+                font-weight: 600;
+                color: #7b4c16;
+              }
+
+              &.clickable-card {
+                cursor: pointer;
+                transition: all 0.15s;
+
+                &:hover {
+                  background: #e4d3bd;
+                  border-color: #bfaea0;
+
+                  .map-pin-icon {
+                    color: #53330e;
+                  }
+
+                  .location-coords-group .coord-badge {
+                    color: #53330e;
+                  }
                 }
               }
             }
@@ -1878,8 +2071,8 @@ function handleClearAllCaptured(): void {
         margin-top: auto;
         font-size: 12px;
         color: #8c7d6b;
-        line-height: 1.5;
-        max-height: 74px;
+        line-height: 1.55;
+        max-height: 88px;
         overflow-y: auto;
         padding-right: 6px;
         flex-shrink: 0;
@@ -1900,19 +2093,6 @@ function handleClearAllCaptured(): void {
         }
       }
 
-      @media (max-width: 1100px) {
-        padding: 14px 16px 12px;
-
-        .meta-section {
-          gap: 12px;
-
-          .avatar-wrap {
-            width: 96px;
-            height: 96px;
-          }
-        }
-      }
-
       .empty-detail {
         display: flex;
         align-items: center;
@@ -1927,7 +2107,7 @@ function handleClearAllCaptured(): void {
   .page-footer-bar {
     width: 100%;
     max-width: 1250px;
-    min-width: 960px;
+    min-width: 0;
     margin-top: 10px;
     display: flex;
     align-items: center;
@@ -2047,6 +2227,273 @@ function handleClearAllCaptured(): void {
       .tip-sep {
         color: #c8beaf;
         margin: 0 2px;
+      }
+    }
+  }
+
+  @media (max-width: 1079px) and (min-width: 861px) {
+    padding: 16px 12px 24px;
+
+    .bstbook-container {
+      .left-panel {
+        width: 450px;
+        padding: 12px 14px 10px;
+
+        .grid-panel {
+          grid-template-columns: repeat(5, 74px);
+          gap: 10px 12px;
+          justify-content: center;
+
+          .slot-card {
+            width: 74px;
+            height: 80px;
+
+            .beast-icon {
+              width: 56px;
+              height: 56px;
+            }
+          }
+        }
+      }
+
+      .right-panel {
+        padding: 14px 16px 12px;
+
+        .meta-section {
+          gap: 12px;
+
+          .avatar-wrap {
+            width: 92px;
+            height: 92px;
+          }
+
+          .borrow-card {
+            width: 78px;
+            min-width: 78px;
+          }
+        }
+
+        .habitat-desc {
+          margin-top: auto;
+          max-height: 88px;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 860px) {
+    padding: 14px 10px 24px;
+
+    .bstbook-container {
+      flex-direction: column;
+      height: auto;
+      min-height: auto;
+      max-height: unset;
+      overflow: visible;
+
+      .left-panel {
+        width: 100%;
+        max-width: 490px;
+        margin: 0 auto;
+        padding: 14px 12px 10px;
+
+        .grid-panel {
+          grid-template-columns: repeat(5, 76px);
+          gap: 10px 12px;
+          justify-content: center;
+
+          .slot-card {
+            width: 76px;
+            height: 82px;
+
+            .beast-icon {
+              width: 58px;
+              height: 58px;
+            }
+          }
+        }
+      }
+
+      .right-panel {
+        width: 100%;
+        border-left: none;
+        border-top: 1.5px solid #e8dfd2;
+        height: auto;
+        min-height: auto;
+        max-height: unset;
+        overflow: visible;
+        padding: 16px 16px 18px;
+
+        .habitat-desc {
+          max-height: unset;
+          overflow-y: visible;
+          margin-top: 10px;
+        }
+      }
+    }
+
+    .page-footer-bar {
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      text-align: center;
+
+      .footer-mark-tools {
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .footer-cmd-tips {
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+    }
+  }
+
+  @media (max-width: 560px) {
+    padding: 10px 8px 20px;
+
+    .filter-panel {
+      padding: 8px 10px;
+
+      .filter-section .filter-row {
+        gap: 6px;
+
+        .filter-item.search-item {
+          width: 100%;
+          max-width: 100%;
+
+          :deep(.el-input) {
+            width: 100%;
+          }
+        }
+      }
+    }
+
+    .bstbook-container {
+      .left-panel {
+        padding: 10px 8px 10px;
+
+        .panel-header {
+          flex-wrap: wrap;
+          gap: 8px;
+          justify-content: center;
+        }
+
+        .grid-panel {
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+          gap: 6px 4px;
+
+          .slot-card {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 82 / 88;
+            min-width: 0;
+            padding-top: 2px;
+
+            .beast-icon {
+              width: 78%;
+              height: 78%;
+              border-radius: 3px;
+            }
+
+            .unknown-mark {
+              font-size: 20px;
+              margin-top: 8px;
+            }
+
+            .slot-level-badge {
+              font-size: 9px;
+              right: 2px;
+              top: 2px;
+            }
+
+            .slot-name-badge {
+              height: 17px;
+              padding: 0 2px;
+
+              .badge-number {
+                font-size: 10px;
+                min-width: 16px;
+              }
+
+              .badge-name {
+                font-size: 10px;
+              }
+            }
+          }
+        }
+      }
+
+      .right-panel {
+        padding: 12px 10px 14px;
+
+        .detail-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+
+        .meta-section {
+          flex-wrap: wrap;
+          gap: 10px;
+
+          .avatar-wrap {
+            width: 80px;
+            height: 80px;
+          }
+
+          .attrs-wrap {
+            min-width: 100%;
+            font-size: 13px;
+          }
+
+          .borrow-card {
+            margin-left: 0;
+            width: 100%;
+            max-width: 100%;
+            padding: 6px 10px;
+
+            .borrow-box {
+              flex-direction: row;
+              gap: 10px;
+              align-items: center;
+
+              .borrow-icon-wrap {
+                width: 40px;
+                height: 40px;
+                flex-shrink: 0;
+              }
+
+              .borrow-name {
+                text-align: left;
+                margin-top: 0;
+              }
+            }
+          }
+        }
+
+        .skill-item .skill-main {
+          flex-wrap: wrap;
+          gap: 8px;
+
+          .skill-range-tag {
+            margin-left: 0;
+            align-self: flex-start;
+          }
+        }
+
+        .habitat-section .habitat-location .habitat-item-row {
+          flex-wrap: wrap;
+          gap: 4px;
+
+          .habitat-card {
+            flex-wrap: wrap;
+            word-break: break-all;
+            max-width: 100%;
+          }
+        }
       }
     }
   }

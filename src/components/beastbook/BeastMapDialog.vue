@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
-import { ElDialog, ElLoadingDirective as vLoading } from "element-plus";
+import { ElCheckbox, ElDialog, ElLoadingDirective as vLoading } from "element-plus";
 
 interface EorzeaMapInstance {
   loadMapKey(key: number): Promise<void>;
@@ -34,16 +34,55 @@ export interface BeastCoord {
   y: number;
 }
 
+export interface BeastHabitatItem {
+  Summary: string;
+  Type: "overworld" | "dungeon" | "special";
+  MapId?: number;
+  Coords?: BeastCoord;
+  CoordsList?: BeastCoord[];
+  CoordsNote?: string;
+  Level?: string;
+}
+
+export interface BeastListItem {
+  Number: number;
+  Name: string;
+  Level?: string;
+  IconUrl: string;
+  MapId?: number;
+  Habitats?: BeastHabitatItem[];
+  HabitatSummary?: string;
+  Coords?: BeastCoord;
+  CoordsList?: BeastCoord[];
+}
+
+interface MapMonsterItem {
+  number: number;
+  name: string;
+  level: string;
+  sortLevel: number;
+  iconUrl: string;
+  coordsList: BeastCoord[];
+  coordsText: string;
+  isCaptured: boolean;
+  isSelected: boolean;
+}
+
 const props = defineProps<{
   modelValue: boolean;
   beastName: string;
   habitatName: string;
   mapId?: number;
   coords?: BeastCoord | BeastCoord[];
+  allBeasts?: BeastListItem[];
+  captured?: Record<string, boolean>;
+  currentBeastNumber?: number;
 }>();
 
 const emit = defineEmits<{
   (e: "update:modelValue", value: boolean): void;
+  (e: "selectBeast", beastNumber: number): void;
+  (e: "toggleCapture", beastNumber: number, captured: boolean): void;
 }>();
 
 const visible = computed({
@@ -56,24 +95,104 @@ const loading = ref(false);
 let mapInstance: EorzeaMapInstance | null = null;
 let scriptLoadPromise: Promise<void> | null = null;
 
-const currentMapId = computed<number | undefined>(() => props.mapId);
+const activeBeastNumber = ref<number>(props.currentBeastNumber ?? 0);
+const activeBeastName = ref<string>(props.beastName);
+const activeCoords = ref<BeastCoord[]>([]);
 
-const normalizedCoords = computed<BeastCoord[]>(() => {
+const isCurrentBeastCaptured = computed<boolean>({
+  get: () => {
+    if (!props.captured || !activeBeastNumber.value) return false;
+    return Boolean(props.captured[activeBeastNumber.value.toString()]);
+  },
+  set: (val: boolean) => {
+    if (!props.captured || !activeBeastNumber.value) return;
+    props.captured[activeBeastNumber.value.toString()] = val;
+    emit("toggleCapture", activeBeastNumber.value, val);
+  },
+});
+
+function getInitialCoords(): BeastCoord[] {
   if (!props.coords) return [];
   if (Array.isArray(props.coords)) return props.coords;
   return [props.coords];
+}
+
+const currentMapId = computed<number | undefined>(() => props.mapId);
+
+const normalizedCoords = computed<BeastCoord[]>(() => {
+  if (activeCoords.value.length > 0) return activeCoords.value;
+  return getInitialCoords();
 });
 
-const formattedCoordsText = computed<string>(() => {
-  const list = normalizedCoords.value;
-  if (list.length === 0) return "";
-  return list.map((c) => `X: ${c.x}, Y: ${c.y}`).join(" / ");
-});
+function parseLevelSort(levelStr?: string): number {
+  if (!levelStr || levelStr.trim() === "-") return 999;
+  const nums = levelStr.match(/\d+/g)?.map(Number);
+  if (!nums || nums.length === 0) return 999;
+  return Math.min(...nums);
+}
 
-const externalMapUrl = computed<string>(() => {
-  const first = normalizedCoords.value[0];
-  if (!currentMapId.value || !first) return "";
-  return `https://map.wakingsands.com/#f=mark&id=${currentMapId.value}&x=${first.x}&y=${first.y}`;
+const mapMonsterList = computed<MapMonsterItem[]>(() => {
+  if (!props.allBeasts || props.allBeasts.length === 0) return [];
+  const list: MapMonsterItem[] = [];
+
+  for (const b of props.allBeasts) {
+    let matchedHab: BeastHabitatItem | undefined;
+    if (b.Habitats && b.Habitats.length > 0) {
+      matchedHab = b.Habitats.find((h) => {
+        if (props.mapId && h.MapId === props.mapId) return true;
+        if (props.habitatName && h.Summary === props.habitatName) return true;
+        return false;
+      });
+    }
+
+    const isTopMatch =
+      !matchedHab &&
+      ((props.mapId && b.MapId === props.mapId) ||
+        (props.habitatName && b.HabitatSummary === props.habitatName));
+
+    if (matchedHab || isTopMatch) {
+      const level = matchedHab?.Level ?? b.Level ?? "-";
+      let coords: BeastCoord[] = [];
+      if (matchedHab) {
+        if (matchedHab.CoordsList && matchedHab.CoordsList.length > 0) {
+          coords = matchedHab.CoordsList;
+        } else if (matchedHab.Coords) {
+          coords = [matchedHab.Coords];
+        }
+      }
+      if (coords.length === 0) {
+        if (b.CoordsList && b.CoordsList.length > 0) {
+          coords = b.CoordsList;
+        } else if (b.Coords) {
+          coords = [b.Coords];
+        }
+      }
+
+      const coordsText = coords.map((c) => `X: ${c.x}, Y: ${c.y}`).join(" / ");
+      const isCap = Boolean(props.captured?.[b.Number.toString()]);
+      const isSel = b.Number === activeBeastNumber.value;
+
+      list.push({
+        number: b.Number,
+        name: b.Name,
+        level,
+        sortLevel: parseLevelSort(level),
+        iconUrl: b.IconUrl,
+        coordsList: coords,
+        coordsText,
+        isCaptured: isCap,
+        isSelected: isSel,
+      });
+    }
+  }
+
+  // 排序规则：按等级升序排列；同等级按编号升序
+  return list.sort((a, b) => {
+    if (a.sortLevel !== b.sortLevel) {
+      return a.sortLevel - b.sortLevel;
+    }
+    return a.number - b.number;
+  });
 });
 
 function loadStyle(href: string): Promise<void> {
@@ -138,8 +257,11 @@ async function ensureLibrariesLoaded(): Promise<void> {
   return scriptLoadPromise;
 }
 
-async function renderMap(): Promise<void> {
-  if (!mapContainerRef.value || !currentMapId.value || !props.coords) return;
+async function renderMap(targetCoords?: BeastCoord[]): Promise<void> {
+  if (!mapContainerRef.value || !currentMapId.value) return;
+  const coordsList = targetCoords ?? normalizedCoords.value;
+  if (coordsList.length === 0) return;
+
   loading.value = true;
 
   try {
@@ -154,12 +276,6 @@ async function renderMap(): Promise<void> {
     if (!mapInstance) {
       mapContainerRef.value.innerHTML = "";
       mapInstance = await eorzeaMap.create(mapContainerRef.value);
-    }
-
-    const coordsList = normalizedCoords.value;
-    if (coordsList.length === 0) {
-      loading.value = false;
-      return;
     }
 
     await mapInstance.loadMapKey(currentMapId.value);
@@ -183,8 +299,24 @@ async function renderMap(): Promise<void> {
   }
 }
 
+let resizeObserver: ResizeObserver | null = null;
+
+function handleSelectMonster(item: MapMonsterItem): void {
+  activeBeastNumber.value = item.number;
+  activeBeastName.value = item.name;
+  activeCoords.value = item.coordsList;
+  emit("selectBeast", item.number);
+  void renderMap(item.coordsList);
+}
+
 function handleOpened(): void {
   nextTick(() => {
+    if (!resizeObserver && mapContainerRef.value && typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(() => {
+        mapInstance?.invalidateSize();
+      });
+      resizeObserver.observe(mapContainerRef.value);
+    }
     if (mapInstance) {
       mapInstance.invalidateSize();
       void renderMap();
@@ -199,8 +331,15 @@ function handleClose(): void {
 }
 
 watch(
-  () => [props.habitatName, props.coords],
+  () => [props.habitatName, props.coords, props.currentBeastNumber, props.beastName],
   () => {
+    activeBeastNumber.value = props.currentBeastNumber ?? 0;
+    activeBeastName.value = props.beastName;
+    if (props.coords) {
+      activeCoords.value = Array.isArray(props.coords) ? props.coords : [props.coords];
+    } else {
+      activeCoords.value = [];
+    }
     if (visible.value) {
       void renderMap();
     }
@@ -208,6 +347,10 @@ watch(
 );
 
 onBeforeUnmount(() => {
+  if (resizeObserver) {
+    resizeObserver.disconnect();
+    resizeObserver = null;
+  }
   if (mapInstance && typeof mapInstance.remove === "function") {
     mapInstance.remove();
     mapInstance = null;
@@ -219,132 +362,562 @@ onBeforeUnmount(() => {
   <el-dialog
     v-model="visible"
     class="beast-map-dialog"
-    width="680px"
-    top="8vh"
+    width="92vw"
+    top="2.5vh"
+    :show-close="false"
     :append-to-body="true"
     @opened="handleOpened"
     @close="handleClose"
   >
-    <template #header>
-      <div class="map-dialog-header">
-        <div class="header-titles">
-          <span class="beast-title">{{ beastName }}</span>
-          <span class="habitat-badge">{{ habitatName }}</span>
-          <span v-if="formattedCoordsText" class="coords-badge">{{ formattedCoordsText }}</span>
-        </div>
-        <a
-          v-if="externalMapUrl"
-          :href="externalMapUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="external-map-link"
-        >
-          全屏打开
-        </a>
+    <div class="map-dialog-body">
+      <div v-loading="loading" class="map-wrapper">
+        <section class="erozea-map-outer">
+          <div class="eorzea-map-glass" />
+          <div id="beast-eorzea-map" ref="mapContainerRef" class="eorzea-map-inner" />
+          <div class="eorzea-map-resize-handler" />
+        </section>
       </div>
-    </template>
 
-    <div v-loading="loading" class="map-wrapper">
-      <section class="erozea-map-outer">
-        <div class="eorzea-map-glass" />
-        <div id="beast-eorzea-map" ref="mapContainerRef" class="eorzea-map-inner" />
-        <div class="eorzea-map-resize-handler" />
-      </section>
+      <div v-if="mapMonsterList.length > 0" class="sidebar-panel">
+        <div class="sidebar-controls">
+          <div v-if="activeBeastNumber" class="active-beast-info">
+            <span class="active-num">#{{ activeBeastNumber }}</span>
+            <span class="active-name">{{ activeBeastName }}</span>
+          </div>
+          <div class="controls-actions">
+            <el-checkbox
+              v-if="activeBeastNumber"
+              v-model="isCurrentBeastCaptured"
+              size="large"
+              class="header-capture-checkbox"
+            >
+              已捕获该魔兽
+            </el-checkbox>
+            <button
+              type="button"
+              class="dialog-close-btn"
+              title="关闭"
+              aria-label="关闭"
+              @click="handleClose"
+            >
+              <svg viewBox="0 0 1024 1024" width="16" height="16" fill="currentColor">
+                <path
+                  d="M576 512l277.333333-277.333333c17.066667-17.066667 17.066667-46.933333 0-64s-46.933333-17.066667-64 0L512 448 234.666667 170.666667c-17.066667-17.066667-46.933333-17.066667-64 0s-17.066667 46.933333 0 64L448 512 170.666667 789.333333c-17.066667 17.066667-17.066667 46.933333 0 64 8.533333 8.533333 19.2 12.8 32 12.8s23.466667-4.266667 32-12.8L512 576l277.333333 277.333333c8.533333 8.533333 19.2 12.8 32 12.8s23.466667-4.266667 32-12.8c17.066667-17.066667 17.066667-46.933333 0-64L576 512z"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="map-sidebar">
+          <div class="sidebar-table-head">
+            <span class="col-cell col-num">序号</span>
+            <span class="col-cell col-icon-placeholder" />
+            <span class="col-cell col-name">名称</span>
+            <span class="col-cell col-level">等级</span>
+            <span class="col-cell col-coords">坐标</span>
+          </div>
+          <div class="sidebar-list">
+            <div
+              v-for="item in mapMonsterList"
+              :key="item.number"
+              class="sidebar-item"
+              :class="{
+                captured: item.isCaptured,
+                active: item.isSelected,
+              }"
+              @click="handleSelectMonster(item)"
+            >
+              <span class="col-cell col-num">#{{ item.number }}</span>
+              <div class="col-cell col-icon-wrap">
+                <img :src="item.iconUrl" class="monster-icon" alt="" />
+                <span v-if="item.isCaptured" class="captured-mark">✓</span>
+              </div>
+              <span class="col-cell col-name">{{ item.name }}</span>
+              <span class="col-cell col-level">{{ item.level }}</span>
+              <div class="col-cell col-coords">
+                <div v-for="(coord, cIdx) in item.coordsList" :key="cIdx" class="coord-pair">
+                  <span class="coord-paren">(</span>
+                  <span class="coord-val">{{ coord.x }}</span>
+                  <span class="coord-sep">,</span>
+                  <span class="coord-val">{{ coord.y }}</span>
+                  <span class="coord-paren">)</span>
+                </div>
+                <div v-if="item.coordsList.length === 0" class="coord-pair coord-empty">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </el-dialog>
 </template>
 
 <style scoped lang="scss">
 :deep(.el-dialog.beast-map-dialog) {
+  width: 92vw;
+  min-width: 960px;
+  max-width: 1720px;
   background: #faf7f0;
-  border: 1px solid #d4c8b8;
+  border: 1.5px solid #d4c8b8;
   border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22);
+  margin-bottom: 20px;
 
   .el-dialog__header {
-    padding: 12px 18px 10px;
-    margin-right: 0;
-    border-bottom: 1px solid #e8dfd2;
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
   }
 
   .el-dialog__body {
-    padding: 12px 16px 16px;
+    padding: 12px;
   }
 }
 
-.map-dialog-header {
+.map-dialog-body {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-right: 28px;
-
-  .header-titles {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    .beast-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: #2b1f13;
-    }
-
-    .habitat-badge {
-      font-size: 12px;
-      color: #7b4c16;
-      background: #ede2d3;
-      padding: 1px 6px;
-      border-radius: 3px;
-      border: 1px solid #d5c3ac;
-    }
-
-    .coords-badge {
-      font-size: 12px;
-      font-family: Consolas, "Courier New", monospace;
-      font-weight: 700;
-      color: #7b4c16;
-      background: #ede2d3;
-      padding: 1px 6px;
-      border-radius: 3px;
-      border: 1px solid #d5c3ac;
-    }
-  }
-
-  .external-map-link {
-    font-size: 12px;
-    color: #409eff;
-    text-decoration: none;
-    border: 1px solid #b3d8ff;
-    padding: 2px 8px;
-    border-radius: 4px;
-    background: #ecf5ff;
-
-    &:hover {
-      background: #409eff;
-      color: #fff;
-    }
-  }
+  gap: 14px;
+  height: 82vh;
+  min-height: 600px;
+  max-height: 980px;
 }
 
 .map-wrapper {
-  width: 100%;
-  height: 520px;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
   background: #111;
   border: 1px solid #d4c8b8;
   border-radius: 4px;
   overflow: hidden;
   position: relative;
+  user-select: none;
+  -webkit-user-select: none;
 
   .erozea-map-outer {
     width: 100%;
     height: 100%;
     position: relative;
     overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
 
     .eorzea-map-inner {
       width: 100%;
       height: 100%;
+      user-select: none;
+      -webkit-user-select: none;
+
+      :deep(*) {
+        user-select: none !important;
+        -webkit-user-select: none !important;
+      }
     }
+  }
+}
+
+.sidebar-panel {
+  width: 460px;
+  flex-shrink: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .sidebar-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2px;
+    height: 32px;
+    flex-shrink: 0;
+
+    .active-beast-info {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 6px;
+      user-select: none;
+
+      .active-num {
+        font-size: 15px;
+        font-weight: 800;
+        color: #753b08;
+      }
+
+      .active-name {
+        font-size: 16px;
+        font-weight: 800;
+        color: #1a1006;
+      }
+    }
+
+    .controls-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-capture-checkbox {
+      margin: 0;
+      cursor: pointer;
+      user-select: none;
+      --el-checkbox-checked-bg-color: #257a2b;
+      --el-checkbox-checked-input-border-color: #257a2b;
+      --el-checkbox-input-border-color-hover: #257a2b;
+
+      :deep(.el-checkbox__inner) {
+        border: 1.8px solid #4a3622;
+        border-radius: 3px;
+        background: #ffffff;
+        transition: all 0.15s ease;
+      }
+
+      &:hover {
+        :deep(.el-checkbox__inner) {
+          border-color: #257a2b;
+        }
+        :deep(.el-checkbox__label) {
+          color: #257a2b;
+        }
+      }
+
+      &.is-checked {
+        :deep(.el-checkbox__inner) {
+          background-color: #257a2b;
+          border-color: #257a2b;
+        }
+
+        :deep(.el-checkbox__label) {
+          color: #1b5e20;
+          font-weight: 800;
+        }
+      }
+
+      :deep(.el-checkbox__label) {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1a1006;
+        padding-left: 8px;
+        letter-spacing: 0.5px;
+        transition: color 0.15s ease;
+      }
+    }
+
+    .dialog-close-btn {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #6e5741;
+      padding: 0;
+      transition: all 0.15s ease;
+
+      &:hover {
+        background: #ebdcc8;
+        color: #1a1006;
+      }
+    }
+  }
+
+  .map-sidebar {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    background: #fdfbf7;
+    border: 1px solid #d8cdbf;
+    border-radius: 4px;
+    box-sizing: border-box;
+    overflow: hidden;
+
+    .sidebar-table-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: #f0e7db;
+      border-bottom: 1px solid #dccebd;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #6b553e;
+      flex-shrink: 0;
+      font-family: inherit;
+
+      .col-cell {
+        font-family: inherit;
+      }
+    }
+
+    .sidebar-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2px 0;
+      display: flex;
+      flex-direction: column;
+      scrollbar-width: thin;
+      scrollbar-color: #dcd4c6 transparent;
+
+      &::-webkit-scrollbar {
+        width: 5px;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: #dcd4c6;
+        border-radius: 2px;
+      }
+
+      .sidebar-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-bottom: 1px solid #efe6d8;
+        background: transparent;
+        cursor: pointer;
+        position: relative;
+        transition: background-color 0.15s ease;
+
+        &:hover {
+          background: #f4ede1;
+        }
+
+        &.active {
+          background: #fff6e6;
+          box-shadow:
+            inset 0 1px 0 #fae7cb,
+            inset 0 -1px 0 #fae7cb;
+
+          &::before {
+            content: "";
+            position: absolute;
+            left: 3px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 6px solid #d47e12;
+          }
+
+          .col-level {
+            color: #b05700 !important;
+            font-weight: 800;
+          }
+
+          .col-num {
+            color: #b05700 !important;
+            font-weight: 700;
+          }
+
+          .col-name {
+            color: #b05700 !important;
+            font-weight: 900;
+          }
+
+          .col-coords .coord-val {
+            color: #8f4500 !important;
+            font-weight: 800;
+          }
+
+          .col-coords .coord-paren,
+          .col-coords .coord-sep {
+            color: #b05700 !important;
+            font-weight: 700;
+          }
+
+          .col-icon-wrap .monster-icon {
+            opacity: 1 !important;
+            filter: none !important;
+            box-shadow: 0 0 0 1.5px #d47e12;
+          }
+        }
+
+        &.captured {
+          .col-level,
+          .col-coords .coord-val,
+          .col-coords .coord-paren,
+          .col-coords .coord-sep {
+            color: #b5a898 !important;
+            font-weight: 400;
+          }
+
+          .col-num {
+            color: #baaea0;
+            font-weight: 400;
+          }
+
+          .col-name {
+            color: #9c8e7e;
+            font-weight: 500;
+          }
+
+          .col-icon-wrap .monster-icon {
+            opacity: 0.45;
+            filter: grayscale(60%);
+          }
+        }
+      }
+    }
+
+    .col-cell {
+      min-width: 0;
+    }
+
+    .col-level {
+      width: 48px;
+      text-align: center;
+      flex-shrink: 0;
+      white-space: nowrap;
+      font-family: Consolas, monospace;
+      font-variant-numeric: tabular-nums;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #4a3622;
+    }
+
+    .col-icon-placeholder,
+    .col-icon-wrap {
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .monster-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 4px;
+        object-fit: cover;
+        display: block;
+      }
+
+      .captured-mark {
+        position: absolute;
+        top: -3px;
+        right: -3px;
+        width: 16px;
+        height: 16px;
+        background: #2e7d32;
+        color: #ffffff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 900;
+        border: 1.5px solid #ffffff;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+        box-sizing: border-box;
+      }
+    }
+
+    .col-num {
+      width: 36px;
+      text-align: center;
+      flex-shrink: 0;
+      font-family: Consolas, monospace;
+      font-variant-numeric: tabular-nums;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #7b6855;
+    }
+
+    .col-name {
+      flex: 1;
+      min-width: 0;
+      text-align: left;
+      padding-left: 2px;
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #2b1f13;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .col-coords {
+      width: 82px;
+      text-align: center;
+      flex-shrink: 0;
+      font-family: Consolas, monospace;
+      font-variant-numeric: tabular-nums;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #4a3622;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+
+      .coord-pair {
+        display: inline-flex;
+        align-items: baseline;
+        justify-content: center;
+        line-height: 17px;
+        white-space: nowrap;
+        letter-spacing: -0.4px;
+
+        .coord-paren {
+          color: #9c8a77;
+          font-weight: normal;
+          padding: 0;
+        }
+
+        .coord-sep {
+          color: #9c8a77;
+          margin-right: 2px;
+        }
+
+        .coord-val {
+          color: #4a3622;
+          font-weight: 600;
+        }
+      }
+
+      .coord-empty {
+        color: #b5a898;
+      }
+    }
+  }
+}
+
+@media (max-width: 960px) {
+  :deep(.el-dialog.beast-map-dialog) {
+    width: 96vw !important;
+    max-width: 98vw !important;
+    margin-top: 1.5vh !important;
+
+    .el-dialog__header {
+      display: none !important;
+    }
+
+    .el-dialog__body {
+      padding: 8px 10px 12px;
+      overflow-x: auto;
+    }
+  }
+
+  .map-dialog-body {
+    min-width: 760px;
+  }
+
+  .sidebar-panel {
+    width: 420px;
   }
 }
 </style>
