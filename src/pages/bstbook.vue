@@ -517,25 +517,15 @@ function handleBatchCapture(): void {
 
             <div v-if="selectedHabitatType === 'overworld'" class="habitat-sub-group">
               <el-checkbox-group v-model="selectedOverworldHabitats" size="small">
-                <el-checkbox
-                  v-for="h in OVERWORLD_HABITATS"
-                  :key="h"
-                  :value="h"
-                  :label="h"
-                >
-                  {{ h === '--' ? '无' : h }}
+                <el-checkbox v-for="h in OVERWORLD_HABITATS" :key="h" :value="h" :label="h">
+                  {{ h === "--" ? "无" : h }}
                 </el-checkbox>
               </el-checkbox-group>
             </div>
 
             <div v-else-if="selectedHabitatType === 'dungeon'" class="habitat-sub-group">
               <el-checkbox-group v-model="selectedDungeonHabitats" size="small">
-                <el-checkbox
-                  v-for="h in DUNGEON_HABITATS"
-                  :key="h"
-                  :value="h"
-                  :label="h"
-                >
+                <el-checkbox v-for="h in DUNGEON_HABITATS" :key="h" :value="h" :label="h">
                   {{ h }}
                 </el-checkbox>
               </el-checkbox-group>
@@ -771,7 +761,10 @@ function handleBatchCapture(): void {
               <span v-if="selectedDisplay.Coords" class="habitat-coords">
                 X: {{ selectedDisplay.Coords.x }}, Y: {{ selectedDisplay.Coords.y }}
               </span>
-              <span v-else-if="selectedDisplay.HabitatType === 'dungeon'" class="habitat-coords habitat-dungeon-tag">
+              <span
+                v-else-if="selectedDisplay.HabitatType === 'dungeon'"
+                class="habitat-coords habitat-dungeon-tag"
+              >
                 副本
               </span>
             </div>
@@ -788,13 +781,7 @@ function handleBatchCapture(): void {
         <span class="tools-label">标记：</span>
         <el-checkbox v-model="editingMode" label="编辑模式" size="small" />
         <el-checkbox v-model="grayCaptured" label="未拥有的变灰" size="small" />
-        <el-button
-          size="small"
-          class="batch-btn"
-          @click="handleBatchCapture"
-        >
-          批量标记
-        </el-button>
+        <el-button size="small" class="batch-btn" @click="handleBatchCapture"> 批量标记 </el-button>
       </div>
 
       <div class="footer-cmd-tips">
@@ -1027,7 +1014,9 @@ function handleBatchCapture(): void {
           flex-direction: column;
           align-items: center;
           cursor: pointer;
-          transition: opacity 0.2s ease, filter 0.2s ease;
+          transition:
+            opacity 0.2s ease,
+            filter 0.2s ease;
 
           .slot-card {
             position: relative;

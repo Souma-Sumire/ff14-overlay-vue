@@ -8303,6 +8303,46 @@
       "ja": "ベンティーニ貨物駅"
     }
   },
+  "1339": {
+    "id": "f1x1/01",
+    "name": {
+      "cn": "斗兽奇弈 第一盘",
+      "en": "First Board of the Unbroken",
+      "ja": "闘獣練 第一盤"
+    }
+  },
+  "1340": {
+    "id": "f1x2/01",
+    "name": {
+      "cn": "斗兽奇弈 第二盘",
+      "en": "Second Board of the Unbroken",
+      "ja": "闘獣練 第二盤"
+    }
+  },
+  "1341": {
+    "id": "f1x3/01",
+    "name": {
+      "cn": "斗兽奇弈 第三盘",
+      "en": "Third Board of the Unbroken",
+      "ja": "闘獣練 第三盤"
+    }
+  },
+  "1342": {
+    "id": "f1x4/01",
+    "name": {
+      "cn": "斗兽奇弈高段 第一盘",
+      "en": "First Master's Board",
+      "ja": "闘獣練 特一盤"
+    }
+  },
+  "1343": {
+    "id": "f1x5/01",
+    "name": {
+      "cn": "斗兽奇弈高段 第二盘",
+      "en": "Second Master's Board",
+      "ja": "闘獣練 特二盤"
+    }
+  },
   "1344": {
     "id": "x6ef/00",
     "name": {
@@ -8375,6 +8415,22 @@
       "ja": "被検世界「シグマ」V4.0"
     }
   },
+  "1364": {
+    "id": "v6e1/00",
+    "name": {
+      "cn": "无名浮岛",
+      "en": "Unmoored Isle",
+      "ja": "名もなき浮島"
+    }
+  },
+  "1365": {
+    "id": "v6e1/00",
+    "name": {
+      "cn": "无名浮岛",
+      "en": "Unmoored Isle",
+      "ja": "名もなき浮島"
+    }
+  },
   "1366": {
     "id": "r2d1/00",
     "name": {
@@ -8402,17 +8458,25 @@
   "1369": {
     "id": "f1de/01",
     "name": {
-      "cn": "闹鬼盛宴",
-      "en": "The Phantoms' Feast",
-      "ja": "ホーンテッドフィースト"
+      "cn": "废弃墓地",
+      "en": "The Dire Deepcroft",
+      "ja": "廃墓所"
     }
   },
   "1370": {
     "id": "f1de/01",
     "name": {
-      "cn": "闹鬼盛宴",
-      "en": "The Phantoms' Feast",
-      "ja": "ホーンテッドフィースト"
+      "cn": "废弃墓地",
+      "en": "The Dire Deepcroft",
+      "ja": "廃墓所"
+    }
+  },
+  "1371": {
+    "id": "v6e1/00",
+    "name": {
+      "cn": "无名浮岛",
+      "en": "Unmoored Isle",
+      "ja": "名もなき浮島"
     }
   },
   "1372": {

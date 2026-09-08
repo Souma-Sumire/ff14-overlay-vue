@@ -33,8 +33,10 @@ vp install
 vp run submodule
 # 開発モード
 vp dev
-# ビルド
-vp run build
+# 通常ビルド
+vp build
+# フルビルド（サブモジュール更新 + ローカルデータマイニングリソース更新(ffxiv-datamining-hexcode-mixedに依存) + ビルド）
+vp run submodule && vp run generate && vp build
 ```
 
 ほとんどのページは、`dev` パラメータを使用してテストモードに入ることができます。例：

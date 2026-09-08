@@ -33,8 +33,10 @@ vp install
 vp run submodule
 # 开发模式
 vp dev
-# 构建
-vp run build
+# 日常构建
+vp build
+# 全量构建（更新子模块 + 更新本地解包资源(依赖我的另一个项目ffxiv-datamining-hexcode-mixed) + 构建）
+vp run submodule && vp run generate && vp build
 ```
 
 大部分页面，可以通过 dev 参数来进入测试模式。例如：

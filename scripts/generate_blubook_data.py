@@ -8,7 +8,7 @@ import csv
 import re
 import os
 
-BASE = r"E:\Github\ffxiv-datamining-hexcode-mixed\chs"
+BASE = r"D:\Github\ffxiv-datamining-hexcode-mixed\chs"
 BLUBOOK_FILE = r"d:\GitHub\ff14-overlay-vue\src\pages\blubook.vue"
 
 # ── 1. Read AozAction.csv ──

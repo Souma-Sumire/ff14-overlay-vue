@@ -1,6 +1,13 @@
+import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { csvPaths } from "./paths.js";
+
+if (!fs.existsSync(csvPaths.ja) || !fs.existsSync(csvPaths.cn)) {
+  console.log("ℹ️ 数据挖掘目录不存在，跳过数据生成脚本。");
+  process.exit(0);
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

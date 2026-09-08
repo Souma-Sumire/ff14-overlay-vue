@@ -33,8 +33,10 @@ vp install
 vp run submodule
 # Development mode
 vp dev
-# Build
-vp run build
+# Routine build
+vp build
+# Full build (update submodules + update local datamined resources (depends on ffxiv-datamining-hexcode-mixed) + build)
+vp run submodule && vp run generate && vp build
 ```
 
 Most pages can be tested by adding `dev` parameter. Example:
