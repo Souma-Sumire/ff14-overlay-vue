@@ -27,8 +27,8 @@ jobs:
       - name: Install Dependencies
         run: vp install
 
-      - name: Apply Patches
-        run: bash scripts/update-cactbot.sh
+      - name: Update Submodules & Patch
+        run: vp run submodule
 
       - name: Lint
         run: vp check
