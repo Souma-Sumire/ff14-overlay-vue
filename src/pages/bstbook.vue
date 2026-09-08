@@ -246,23 +246,23 @@ function toRoman(num: number): string {
 function isBeastMatched(v: BeastEntry): boolean {
   const isCap = Boolean(captured.value[v.Number.toString()]);
   const statusText = isCap ? "已拥有" : "未拥有";
-  if (!selectedCaptureStatus.value.includes(statusText)) return false;
-  if (!selectedTaxonomies.value.includes(v.Taxonomy)) return false;
-  if (!selectedAttackTypes.value.includes(v.AutoAttackType)) return false;
-  if (!selectedBorrowActions.value.includes(v.BorrowName)) return false;
+  if (!selectedCaptureStatus.value?.includes(statusText)) return false;
+  if (!selectedTaxonomies.value?.includes(v.Taxonomy)) return false;
+  if (!selectedAttackTypes.value?.includes(v.AutoAttackType)) return false;
+  if (!selectedBorrowActions.value?.includes(v.BorrowName)) return false;
 
   if (selectedHabitatType.value === "overworld") {
     if (v.HabitatType !== "overworld") return false;
     const hab = v.HabitatSummary ?? "--";
-    if (!selectedOverworldHabitats.value.includes(hab)) return false;
+    if (!selectedOverworldHabitats.value?.includes(hab)) return false;
   } else if (selectedHabitatType.value === "dungeon") {
     if (v.HabitatType !== "dungeon") return false;
     const hab = v.HabitatSummary ?? "--";
-    if (!selectedDungeonHabitats.value.includes(hab)) return false;
+    if (!selectedDungeonHabitats.value?.includes(hab)) return false;
   }
 
-  if (!selectedReleaseRanges.value.includes(v.ReleaseRange)) return false;
-  if (!selectedOrderRanges.value.includes(v.OrderRange)) return false;
+  if (!selectedReleaseRanges.value?.includes(v.ReleaseRange)) return false;
+  if (!selectedOrderRanges.value?.includes(v.OrderRange)) return false;
 
   const key = searchStr.value.trim();
   if (!key) return true;
@@ -278,8 +278,7 @@ function isBeastMatched(v: BeastEntry): boolean {
     reg.test(v.OrderName) ||
     reg.test(v.OrderDescription) ||
     reg.test(v.HabitatSummary ?? "") ||
-    reg.test(v.Habitat) ||
-    (v.Coords ? reg.test(`X: ${v.Coords.x}, Y: ${v.Coords.y}`) : false)
+    reg.test(v.Habitat)
   );
 }
 
@@ -363,6 +362,17 @@ const selectedDisplay = computed<BeastDisplay | undefined>(() => {
   return beastsDisplay.value.find((b) => b.Number === match.Number);
 });
 
+const isSelectedCaptured = computed({
+  get: () => {
+    if (!selectedDisplay.value) return false;
+    return Boolean(captured.value[selectedDisplay.value.Number.toString()]);
+  },
+  set: (val: boolean) => {
+    if (!selectedDisplay.value) return;
+    captured.value[selectedDisplay.value.Number.toString()] = val;
+  },
+});
+
 const mapDialogVisible = ref(false);
 
 const canShowMap = computed(() => {
@@ -373,9 +383,10 @@ const failedHostMap = new WeakMap<HTMLImageElement, Set<string>>();
 
 function handleIconError(
   e: Event,
-  number: number,
+  number: number | undefined,
   field: "IconUrl" | "LargeIconUrl" | "ReleaseIconUrl" | "OrderIconUrl" | "BorrowIconUrl",
 ): void {
+  if (!number) return;
   const img = e.target as HTMLImageElement;
   const entry = beastsDisplay.value.find((v) => v.Number === number);
   if (!entry) return;
@@ -473,6 +484,19 @@ function handleBatchCapture(): void {
       ElMessage({ type: "info", message: "已取消" });
     });
 }
+
+function handleClearAllCaptured(): void {
+  ElMessageBox.confirm("确定将所有魔兽标记为未捕获吗？", "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+    .then(() => {
+      captured.value = {};
+      ElMessage({ type: "success", message: "已全部标记为未捕获" });
+    })
+    .catch(() => {});
+}
 </script>
 
 <template>
@@ -484,7 +508,7 @@ function handleBatchCapture(): void {
           <div class="filter-content">
             <el-input
               v-model="searchStr"
-              placeholder="搜索名称 / 技能 / 属性 / 描述 / 坐标"
+              placeholder="搜索名称 / 技能 / 属性 / 描述 / 栖息地"
               class="search-input"
               clearable
               size="small"
@@ -630,7 +654,7 @@ function handleBatchCapture(): void {
                   class="beast-icon"
                   draggable="false"
                   @load="handleIconLoad"
-                  @error="handleIconError($event, slot.beast.Number, 'IconUrl')"
+                  @error="handleIconError($event, slot.beast?.Number, 'IconUrl')"
                 />
                 <div v-else class="unknown-mark">?</div>
 
@@ -663,11 +687,7 @@ function handleBatchCapture(): void {
               <span class="name" v-html="highlight(selectedDisplay.Name)" />
             </div>
             <div class="header-capture">
-              <el-checkbox
-                v-model="captured[selectedDisplay.Number.toString()]"
-                label="已捕获该魔兽"
-                size="small"
-              />
+              <el-checkbox v-model="isSelectedCaptured" label="已捕获该魔兽" size="small" />
             </div>
           </div>
 
@@ -679,7 +699,7 @@ function handleBatchCapture(): void {
                 class="avatar-img"
                 draggable="false"
                 @load="handleIconLoad"
-                @error="handleIconError($event, selectedDisplay.Number, 'LargeIconUrl')"
+                @error="handleIconError($event, selectedDisplay?.Number, 'LargeIconUrl')"
               />
             </div>
             <div class="attrs-wrap">
@@ -708,7 +728,7 @@ function handleBatchCapture(): void {
                       class="borrow-icon"
                       draggable="false"
                       @load="handleIconLoad"
-                      @error="handleIconError($event, selectedDisplay.Number, 'BorrowIconUrl')"
+                      @error="handleIconError($event, selectedDisplay?.Number, 'BorrowIconUrl')"
                     />
                     <div v-else class="borrow-placeholder" />
                   </div>
@@ -728,7 +748,7 @@ function handleBatchCapture(): void {
                   class="skill-icon"
                   draggable="false"
                   @load="handleIconLoad"
-                  @error="handleIconError($event, selectedDisplay.Number, 'ReleaseIconUrl')"
+                  @error="handleIconError($event, selectedDisplay?.Number, 'ReleaseIconUrl')"
                 />
                 <div v-else class="skill-placeholder" />
               </div>
@@ -750,7 +770,7 @@ function handleBatchCapture(): void {
                   class="skill-icon"
                   draggable="false"
                   @load="handleIconLoad"
-                  @error="handleIconError($event, selectedDisplay.Number, 'OrderIconUrl')"
+                  @error="handleIconError($event, selectedDisplay?.Number, 'OrderIconUrl')"
                 />
                 <div v-else class="skill-placeholder" />
               </div>
@@ -798,6 +818,9 @@ function handleBatchCapture(): void {
         <el-checkbox v-model="editingMode" label="编辑模式" size="small" />
         <el-checkbox v-model="grayCaptured" label="未拥有的变灰" size="small" />
         <el-button size="small" class="batch-btn" @click="handleBatchCapture"> 批量标记 </el-button>
+        <el-button size="small" class="batch-btn" @click="handleClearAllCaptured">
+          清空捕获
+        </el-button>
       </div>
 
       <div class="footer-cmd-tips">
