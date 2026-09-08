@@ -49,6 +49,7 @@ const routeTitles = new Map(
     dmuBlacksmithPolice: "绝妖星 P3 打铁警察统计",
     logView: "Log 日志查看器",
     mpTick: "简单跳蓝监控",
+    bstbook: "驯兽师魔兽图鉴",
   }),
 );
 for (const route of router.getRoutes()) {

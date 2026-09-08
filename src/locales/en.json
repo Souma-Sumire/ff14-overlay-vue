@@ -196,6 +196,7 @@
       "dmu_blacksmith_police": "[Web/Tool] DMU P3 Blacksmith Police",
       "mitigation_generator": "[Web/Tool] Mitigation Planner",
       "blubook": "[Web] Blue Magic Spell Book",
+      "bstbook": "[Web] Beastmaster Guide",
       "cactbot_runtime": "[ACT Overlay] Role Assignment",
       "log_view": "[Web] Log Viewer",
       "mp_tick": "[ACT Overlay] MP Tick Monitor"

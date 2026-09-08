@@ -16,6 +16,7 @@ export interface Menu {
 }
 
 export const MENU_ORDER: string[] = [
+  "startPages.menu.bstbook",
   "startPages.menu.kook_purify",
   "startPages.menu.loot_history",
   "startPages.menu.keigenn_record2",
@@ -273,6 +274,12 @@ export function getRawMenuData(
       title: "startPages.menu.blubook",
       type: "网页/工具",
       path: "blubook",
+    },
+    {
+      title: "startPages.menu.bstbook",
+      type: "网页/工具",
+      path: "bstbook",
+      isNew: true,
     },
     {
       title: "startPages.menu.cactbot_runtime",
