@@ -1808,7 +1808,7 @@ function handleClearAllCaptured(): void {
         font-size: 12px;
         color: #8c7d6b;
         line-height: 1.5;
-        max-height: 42px;
+        max-height: 74px;
         overflow-y: auto;
         padding-right: 6px;
         flex-shrink: 0;
