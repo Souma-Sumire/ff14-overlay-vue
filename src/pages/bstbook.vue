@@ -12,6 +12,7 @@ import {
   ElMessageBox,
   ElRadioButton,
   ElRadioGroup,
+  ElSlider,
   ElTooltip,
 } from "element-plus";
 import beastbookData from "@/assets/data/beastbook.json";
@@ -55,6 +56,7 @@ const bestiaryCmdDetail = `<b>/魔兽图鉴</b><br/>
 export interface BeastEntry {
   Number: number;
   Name: string;
+  Level?: string;
   Taxonomy: string;
   AutoAttackType: string;
   BorrowName: string;
@@ -72,6 +74,7 @@ export interface BeastEntry {
   HabitatType?: string;
   Habitat: string;
   Coords?: { x: number; y: number };
+  CoordsNote?: string;
   MapId?: number;
   Icon?: number;
 }
@@ -189,6 +192,31 @@ const selectedReleaseRanges = ref<string[]>([...ALL_RANGES]);
 const selectedOrderRanges = ref<string[]>([...ALL_RANGES]);
 const selectedCaptureStatus = ref<string[]>([...ALL_CAPTURE_STATUS]);
 
+type SortType = "default" | "level";
+const sortType = useStorage<SortType>("bstbook-sortType", "default");
+const selectedLevelRange = ref<[number, number]>([1, 50]);
+
+function parseBeastLevelRange(levelStr?: string): [number, number] {
+  if (!levelStr) return [1, 1];
+  const parts = levelStr.split(/[~-]/).map((s) => parseInt(s.trim(), 10));
+  const min = parts[0] ?? 1;
+  const max = parts[1] ?? min;
+  return [min, max];
+}
+
+function getBeastSortLevel(b: BeastEntry): number {
+  if (!b.Level) return 0;
+  const [min] = parseBeastLevelRange(b.Level);
+  return min;
+}
+
+function isBeastLevelMatched(v: BeastEntry, range: [number, number]): boolean {
+  const [selMin, selMax] = range;
+  if (selMin <= 1 && selMax >= 50) return true;
+  const [bMin, bMax] = parseBeastLevelRange(v.Level);
+  return bMax >= selMin && bMin <= selMax;
+}
+
 function getShortName(name: string): string {
   return name.replace(/种$/, "");
 }
@@ -214,6 +242,8 @@ watch(
     selectedReleaseRanges,
     selectedOrderRanges,
     selectedCaptureStatus,
+    selectedLevelRange,
+    sortType,
   ],
   () => {
     nextTick(() => {
@@ -244,6 +274,7 @@ function toRoman(num: number): string {
 }
 
 function isBeastMatched(v: BeastEntry): boolean {
+  if (!isBeastLevelMatched(v, selectedLevelRange.value)) return false;
   const isCap = Boolean(captured.value[v.Number.toString()]);
   const statusText = isCap ? "已拥有" : "未拥有";
   if (!selectedCaptureStatus.value?.includes(statusText)) return false;
@@ -282,7 +313,17 @@ function isBeastMatched(v: BeastEntry): boolean {
   );
 }
 
-const matchedBeasts = computed(() => beasts.filter((b) => isBeastMatched(b)));
+const sortedBeasts = computed<BeastEntry[]>(() => {
+  if (sortType.value === "level") {
+    return [...beasts].sort((a, b) => {
+      const diff = getBeastSortLevel(a) - getBeastSortLevel(b);
+      return diff !== 0 ? diff : a.Number - b.Number;
+    });
+  }
+  return beasts;
+});
+
+const matchedBeasts = computed(() => sortedBeasts.value.filter((b) => isBeastMatched(b)));
 
 const totalPages = computed(() => Math.max(1, Math.ceil(beasts.length / PAGE_SIZE)));
 
@@ -312,10 +353,10 @@ const isSwitching = ref(false);
 const currentSlots = computed<SlotItem[]>(() => {
   const slots: SlotItem[] = [];
   const startIndex = (page.value - 1) * PAGE_SIZE;
+  const pageBeasts = sortedBeasts.value.slice(startIndex, startIndex + PAGE_SIZE);
 
   for (let i = 0; i < PAGE_SIZE; i++) {
-    const beastNumber = startIndex + i + 1;
-    const targetBeast = beasts.find((b) => b.Number === beastNumber);
+    const targetBeast = pageBeasts[i];
     if (targetBeast) {
       const beastDisplay = beastsDisplay.value.find((d) => d.Number === targetBeast.Number);
       const isCaptured = Boolean(captured.value[targetBeast.Number.toString()]);
@@ -517,6 +558,16 @@ function handleClearAllCaptured(): void {
         </div>
 
         <div class="filter-row">
+          <span class="filter-label">排序：</span>
+          <div class="filter-content">
+            <el-radio-group v-model="sortType" size="small">
+              <el-radio-button value="default" label="default">编号排序</el-radio-button>
+              <el-radio-button value="level" label="level">等级排序</el-radio-button>
+            </el-radio-group>
+          </div>
+        </div>
+
+        <div class="filter-row">
           <span class="filter-label">状态：</span>
           <div class="filter-content">
             <el-checkbox-group v-model="selectedCaptureStatus" size="small">
@@ -524,6 +575,23 @@ function handleClearAllCaptured(): void {
                 {{ s }}
               </el-checkbox>
             </el-checkbox-group>
+          </div>
+        </div>
+
+        <div class="filter-row level-filter-row">
+          <span class="filter-label">等级：</span>
+          <div class="filter-content level-filter-content">
+            <el-slider
+              v-model="selectedLevelRange"
+              range
+              :min="1"
+              :max="50"
+              size="small"
+              class="level-slider"
+            />
+            <span class="level-range-text"
+              >Lv.{{ selectedLevelRange[0] }} ~ Lv.{{ selectedLevelRange[1] }}</span
+            >
           </div>
         </div>
 
@@ -658,7 +726,14 @@ function handleClearAllCaptured(): void {
                 />
                 <div v-else class="unknown-mark">?</div>
 
-                <div class="slot-name-badge" v-html="highlight(getShortName(slot.beast.Name))" />
+                <span v-if="slot.beast.Level && !editingMode" class="slot-level-badge">
+                  Lv.{{ slot.beast.Level }}
+                </span>
+
+                <div class="slot-name-badge">
+                  <span class="badge-number">#{{ slot.slotNumber }}</span>
+                  <span class="badge-name" v-html="highlight(getShortName(slot.beast.Name))" />
+                </div>
 
                 <el-checkbox
                   v-if="editingMode"
@@ -669,7 +744,6 @@ function handleClearAllCaptured(): void {
                 <div v-if="!editingMode && slot.isCaptured" class="captured-mark">✓</div>
               </template>
             </div>
-            <div class="slot-number">{{ slot.slotNumber }}</div>
           </div>
         </div>
 
@@ -685,6 +759,9 @@ function handleClearAllCaptured(): void {
             <div class="title-group">
               <span class="roman-num">{{ toRoman(selectedDisplay.Number) }}</span>
               <span class="name" v-html="highlight(selectedDisplay.Name)" />
+              <span v-if="selectedDisplay.Level" class="level-badge">
+                Lv.{{ selectedDisplay.Level }}
+              </span>
             </div>
             <div class="header-capture">
               <el-checkbox v-model="isSelectedCaptured" label="已捕获该魔兽" size="small" />
@@ -785,24 +862,44 @@ function handleClearAllCaptured(): void {
           <div class="habitat-section">
             <div class="habitat-title">主要栖息地</div>
             <div class="habitat-location">
-              <span class="location-name">{{ selectedDisplay.HabitatSummary ?? "--" }}</span>
-              <span
-                v-if="selectedDisplay.Coords"
-                class="habitat-coords"
-                :class="{ 'clickable-coords': canShowMap }"
-                @click="canShowMap && (mapDialogVisible = true)"
+              <el-tooltip
+                :disabled="!canShowMap"
+                content="点击打开地图"
+                placement="top"
+                :show-after="50"
               >
-                X: {{ selectedDisplay.Coords.x }}, Y: {{ selectedDisplay.Coords.y }}
-              </span>
-              <span v-if="canShowMap" class="habitat-map-btn" @click="mapDialogVisible = true">
-                地图
-              </span>
-              <span
-                v-else-if="selectedDisplay.HabitatType === 'dungeon'"
-                class="habitat-coords habitat-dungeon-tag"
-              >
-                副本
-              </span>
+                <div
+                  class="habitat-card"
+                  :class="{ 'clickable-card': canShowMap }"
+                  @click="canShowMap && (mapDialogVisible = true)"
+                >
+                  <svg
+                    v-if="canShowMap"
+                    class="map-pin-icon"
+                    viewBox="0 0 16 16"
+                    width="15"
+                    height="15"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M8 0a5.53 5.53 0 0 0-5.5 5.5c0 3.82 5.5 10.5 5.5 10.5s5.5-6.68 5.5-10.5A5.53 5.53 0 0 0 8 0zm0 7.5a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"
+                    />
+                  </svg>
+                  <span class="location-name">{{ selectedDisplay.HabitatSummary ?? "--" }}</span>
+                  <span v-if="selectedDisplay.Coords" class="location-coords">
+                    X: {{ selectedDisplay.Coords.x }}, Y: {{ selectedDisplay.Coords.y }}
+                  </span>
+                  <span v-if="selectedDisplay.CoordsNote" class="location-coords-note">
+                    ({{ selectedDisplay.CoordsNote }})
+                  </span>
+                  <span
+                    v-if="selectedDisplay.HabitatType === 'dungeon'"
+                    class="location-dungeon-tag"
+                  >
+                    副本
+                  </span>
+                </div>
+              </el-tooltip>
             </div>
           </div>
 
@@ -821,6 +918,18 @@ function handleClearAllCaptured(): void {
         <el-button size="small" class="batch-btn" @click="handleClearAllCaptured">
           清空捕获
         </el-button>
+      </div>
+
+      <div class="footer-credit">
+        魔兽捕获地点数据来源参考自@GreatGBL
+        <a
+          href="https://www.bilibili.com/video/BV19nbV6TEQk/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="credit-link"
+        >
+          BV19nbV6TEQk
+        </a>
       </div>
 
       <div class="footer-cmd-tips">
@@ -888,14 +997,14 @@ function handleClearAllCaptured(): void {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 16px 0;
+  justify-content: flex-start;
+  padding: 24px 0 36px;
   box-sizing: border-box;
   color: #3b2d1d;
   user-select: none;
 
   .filter-panel {
-    width: 1140px;
+    width: 1250px;
     margin-bottom: 12px;
     padding: 10px 18px;
     background: #fdfbf7;
@@ -955,40 +1064,73 @@ function handleClearAllCaptured(): void {
               padding-left: 5px;
             }
           }
+
+          :deep(.el-radio-button__inner) {
+            padding: 3px 9px;
+            font-size: 12px;
+            height: 24px;
+            line-height: 16px;
+            background: #f4ede3;
+            border-color: #d8cdbf;
+            color: #5d4a36;
+          }
+
+          :deep(.el-radio-button.is-active .el-radio-button__inner) {
+            background: #836f58;
+            border-color: #6d5b47;
+            color: #fff;
+            box-shadow: -1px 0 0 0 #6d5b47;
+          }
+        }
+
+        &.level-filter-row {
+          .level-filter-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+
+            .level-slider {
+              width: 240px;
+              margin: 0 4px;
+
+              :deep(.el-slider__bar) {
+                background-color: #836f58;
+              }
+
+              :deep(.el-slider__button) {
+                border-color: #836f58;
+                width: 13px;
+                height: 13px;
+              }
+            }
+
+            .level-range-text {
+              font-size: 12px;
+              font-weight: 700;
+              color: #5d4a36;
+              min-width: 96px;
+            }
+          }
         }
 
         &.habitat-filter-row {
+          min-height: 50px;
+
           .habitat-filter-content {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 12px;
             flex-wrap: wrap;
+            min-height: 50px;
 
             .habitat-type-radios {
               flex-shrink: 0;
-
-              :deep(.el-radio-button__inner) {
-                padding: 3px 9px;
-                font-size: 12px;
-                height: 24px;
-                line-height: 16px;
-                background: #f4ede3;
-                border-color: #d8cdbf;
-                color: #5d4a36;
-              }
-
-              :deep(.el-radio-button.is-active .el-radio-button__inner) {
-                background: #836f58;
-                border-color: #6d5b47;
-                color: #fff;
-                box-shadow: -1px 0 0 0 #6d5b47;
-              }
             }
 
             .habitat-sub-group {
               flex: 1;
               display: flex;
-              align-items: center;
+              align-items: flex-start;
             }
           }
         }
@@ -997,10 +1139,10 @@ function handleClearAllCaptured(): void {
   }
 
   .bstbook-container {
-    width: 1140px;
-    height: 646px;
-    min-height: 646px;
-    max-height: 646px;
+    width: 1250px;
+    height: 596px;
+    min-height: 596px;
+    max-height: 596px;
     overflow: hidden;
     display: flex;
     background: #faf7f0;
@@ -1010,15 +1152,15 @@ function handleClearAllCaptured(): void {
     box-sizing: border-box;
 
     .left-panel {
-      width: 440px;
+      width: 530px;
       flex-shrink: 0;
-      padding: 16px 24px 14px;
+      padding: 14px 20px 12px;
       display: flex;
       flex-direction: column;
       box-sizing: border-box;
 
       .panel-header {
-        margin-bottom: 12px;
+        margin-bottom: 10px;
 
         .pagination-bar {
           display: flex;
@@ -1053,8 +1195,8 @@ function handleClearAllCaptured(): void {
 
       .grid-panel {
         display: grid;
-        grid-template-columns: repeat(5, 68px);
-        gap: 6px 12px;
+        grid-template-columns: repeat(5, 82px);
+        gap: 13px 19px;
         justify-content: space-between;
 
         .grid-cell {
@@ -1068,14 +1210,14 @@ function handleClearAllCaptured(): void {
 
           .slot-card {
             position: relative;
-            width: 66px;
-            height: 76px;
+            width: 82px;
+            height: 88px;
             border-radius: 6px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            padding-top: 2px;
+            padding-top: 3px;
             background: #f2ece2;
             border: 1px solid #ddd4c7;
             box-sizing: border-box;
@@ -1087,18 +1229,38 @@ function handleClearAllCaptured(): void {
             }
 
             .beast-icon {
-              width: 54px;
-              height: 54px;
+              width: 62px;
+              height: 62px;
               border-radius: 4px;
               object-fit: cover;
               display: block;
             }
 
             .unknown-mark {
-              font-size: 24px;
+              font-size: 26px;
               font-weight: bold;
               color: #b5a794;
               margin-top: 14px;
+            }
+
+            .slot-level-badge {
+              position: absolute;
+              top: 3px;
+              right: 4px;
+              font-size: 10px;
+              font-weight: 800;
+              color: #5c3202;
+              letter-spacing: -0.2px;
+              pointer-events: none;
+              z-index: 2;
+              line-height: 12px;
+              text-shadow:
+                1px 1px 0 #fff,
+                -1px -1px 0 #fff,
+                1px -1px 0 #fff,
+                -1px 1px 0 #fff,
+                0 0 3px #fff;
+              filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.28));
             }
 
             .slot-name-badge {
@@ -1106,28 +1268,45 @@ function handleClearAllCaptured(): void {
               bottom: 0;
               left: 0;
               right: 0;
-              height: 18px;
-              line-height: 18px;
-              font-size: 11px;
-              text-align: center;
-              color: #f7eedf;
-              background: rgba(36, 26, 17, 0.58);
+              height: 20px;
+              display: flex;
+              align-items: baseline;
+              padding: 0 4px;
+              box-sizing: border-box;
+              background: rgba(36, 26, 17, 0.68);
               border-bottom-left-radius: 5px;
               border-bottom-right-radius: 5px;
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              padding: 0 2px;
-              box-sizing: border-box;
               pointer-events: none;
               z-index: 1;
 
-              :deep(em) {
-                background: #f1b332;
-                color: #2b1f13;
-                font-style: normal;
-                padding: 0 1px;
-                border-radius: 2px;
+              .badge-number {
+                font-size: 11px;
+                font-weight: 700;
+                color: #e5b364;
+                flex-shrink: 0;
+                margin-right: 3px;
+                letter-spacing: -0.2px;
+                line-height: 20px;
+              }
+
+              .badge-name {
+                flex: 1;
+                font-size: 11px;
+                text-align: center;
+                color: #f7eedf;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                line-height: 20px;
+                padding-right: 2px;
+
+                :deep(em) {
+                  background: #f1b332;
+                  color: #2b1f13;
+                  font-style: normal;
+                  padding: 0 1px;
+                  border-radius: 2px;
+                }
               }
             }
 
@@ -1141,7 +1320,7 @@ function handleClearAllCaptured(): void {
             .captured-mark {
               position: absolute;
               top: -4px;
-              right: -4px;
+              left: -4px;
               width: 20px;
               height: 20px;
               background: #2e7d32;
@@ -1182,10 +1361,6 @@ function handleClearAllCaptured(): void {
                 border-color: #d6ccbe;
               }
             }
-
-            .slot-number {
-              color: #b5a794;
-            }
           }
 
           &.active:not(.unmatched-cell) .slot-card {
@@ -1194,16 +1369,6 @@ function handleClearAllCaptured(): void {
               0 0 6px rgba(230, 162, 60, 0.4);
             border-color: #e6a23c;
             background: #fdfbf7;
-          }
-
-          .slot-number {
-            margin-top: 4px;
-            font-size: 13px;
-            font-weight: bold;
-            color: #5d4a36;
-            text-align: center;
-            min-height: 17px;
-            line-height: 17px;
           }
         }
       }
@@ -1231,7 +1396,7 @@ function handleClearAllCaptured(): void {
       height: 100%;
       min-height: 0;
       max-height: 100%;
-      padding: 24px 32px 18px;
+      padding: 18px 28px 14px;
       border-left: 1px solid #e8dfd2;
       display: flex;
       flex-direction: column;
@@ -1243,7 +1408,7 @@ function handleClearAllCaptured(): void {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
         flex-shrink: 0;
 
         .title-group {
@@ -1263,6 +1428,18 @@ function handleClearAllCaptured(): void {
             font-weight: bold;
             color: #2b1f13;
           }
+
+          .level-badge {
+            font-size: 13px;
+            font-weight: 700;
+            color: #8c430e;
+            background: #f7e8d0;
+            border: 1px solid #e2cbab;
+            border-radius: 4px;
+            padding: 1px 6px;
+            line-height: 16px;
+            letter-spacing: 0.5px;
+          }
         }
 
         .header-capture {
@@ -1281,7 +1458,7 @@ function handleClearAllCaptured(): void {
         display: flex;
         align-items: center;
         gap: 24px;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
         flex-shrink: 0;
 
         .avatar-wrap {
@@ -1519,56 +1696,60 @@ function handleClearAllCaptured(): void {
         .habitat-location {
           display: flex;
           align-items: center;
-          gap: 10px;
 
-          .location-name {
-            font-size: 13px;
-            font-weight: normal;
-            color: #2b1c0e;
-          }
-
-          .habitat-coords {
-            font-size: 13px;
-            font-family: Consolas, "Courier New", monospace;
-            font-weight: 700;
-            color: #7b4c16;
+          .habitat-card {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             background: #ede2d3;
-            padding: 1px 7px;
-            border-radius: 4px;
             border: 1px solid #d5c3ac;
+            padding: 2px 10px;
+            border-radius: 4px;
+            line-height: 1.3;
+            user-select: none;
 
-            &.clickable-coords {
+            .map-pin-icon {
+              flex-shrink: 0;
+              color: #7b4c16;
+            }
+
+            .location-name {
+              font-size: 13px;
+              font-weight: 600;
+              color: #2b1c0e;
+            }
+
+            .location-coords {
+              font-size: 13px;
+              font-family: Consolas, "Courier New", monospace;
+              font-weight: 700;
+              color: #7b4c16;
+            }
+
+            .location-coords-note {
+              font-size: 12px;
+              color: #8c7d6b;
+            }
+
+            .location-dungeon-tag {
+              font-size: 12px;
+              font-weight: 600;
+              color: #7b4c16;
+            }
+
+            &.clickable-card {
               cursor: pointer;
               transition: all 0.15s;
 
               &:hover {
                 background: #e4d3bd;
                 border-color: #bfaea0;
-                color: #53330e;
+
+                .location-coords,
+                .map-pin-icon {
+                  color: #53330e;
+                }
               }
-            }
-
-            &.habitat-dungeon-tag {
-              font-family: inherit;
-              font-size: 12px;
-            }
-          }
-
-          .habitat-map-btn {
-            font-size: 12px;
-            color: #7b4c16;
-            background: #f4ece1;
-            border: 1px solid #d5c3ac;
-            padding: 1px 7px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.15s;
-            user-select: none;
-
-            &:hover {
-              background: #e4d3bd;
-              border-color: #bfaea0;
-              color: #53330e;
             }
           }
         }
@@ -1612,7 +1793,7 @@ function handleClearAllCaptured(): void {
   }
 
   .page-footer-bar {
-    width: 1140px;
+    width: 1250px;
     margin-top: 10px;
     display: flex;
     align-items: center;
@@ -1671,6 +1852,24 @@ function handleClearAllCaptured(): void {
           background-color: #ebe3d6;
           border-color: #c4b4a0;
           color: #4b3b2a;
+        }
+      }
+    }
+
+    .footer-credit {
+      font-size: 11px;
+      color: #9c8d7c;
+      text-align: center;
+      user-select: text;
+
+      .credit-link {
+        color: #7b4c16;
+        text-decoration: underline;
+        margin-left: 2px;
+        transition: color 0.15s;
+
+        &:hover {
+          color: #d6942c;
         }
       }
     }
