@@ -558,16 +558,6 @@ function handleClearAllCaptured(): void {
         </div>
 
         <div class="filter-row">
-          <span class="filter-label">排序：</span>
-          <div class="filter-content">
-            <el-radio-group v-model="sortType" size="small">
-              <el-radio-button value="default" label="default">编号排序</el-radio-button>
-              <el-radio-button value="level" label="level">等级排序</el-radio-button>
-            </el-radio-group>
-          </div>
-        </div>
-
-        <div class="filter-row">
           <span class="filter-label">状态：</span>
           <div class="filter-content">
             <el-checkbox-group v-model="selectedCaptureStatus" size="small">
@@ -693,6 +683,12 @@ function handleClearAllCaptured(): void {
             >
               {{ p }}
             </button>
+          </div>
+          <div class="sort-controls">
+            <el-radio-group v-model="sortType" size="small">
+              <el-radio-button value="default" label="default">编号排序</el-radio-button>
+              <el-radio-button value="level" label="level">等级排序</el-radio-button>
+            </el-radio-group>
           </div>
         </div>
 
@@ -1165,6 +1161,9 @@ function handleClearAllCaptured(): void {
 
       .panel-header {
         margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
 
         .pagination-bar {
           display: flex;
@@ -1193,6 +1192,33 @@ function handleClearAllCaptured(): void {
               border-color: #d6942c;
               color: #fff;
             }
+          }
+        }
+
+        .sort-controls {
+          display: flex;
+          align-items: center;
+
+          :deep(.el-radio-button__inner) {
+            height: 30px;
+            line-height: 28px;
+            padding: 0 10px;
+            font-size: 12px;
+            background: #f4eee5;
+            border-color: #dcd4c6;
+            color: #5d4a36;
+          }
+
+          :deep(.el-radio-button__inner:hover) {
+            background-color: #ebe3d6;
+            color: #5d4a36;
+          }
+
+          :deep(.el-radio-button.is-active .el-radio-button__inner) {
+            background-color: #e6a23c;
+            border-color: #d6942c;
+            color: #fff;
+            box-shadow: -1px 0 0 0 #d6942c;
           }
         }
       }
