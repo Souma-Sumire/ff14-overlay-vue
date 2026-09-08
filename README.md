@@ -29,10 +29,8 @@
 ```bash
 # 安装依赖
 vp install
-# 初始化子模块
-git submodule update --init --recursive
-# 拉取最新 cactbot 代码并应用补丁
-bash scripts/update-cactbot.sh
+# 初始化并同步子模块与补丁
+vp run submodule
 # 开发模式
 vp dev
 # 构建

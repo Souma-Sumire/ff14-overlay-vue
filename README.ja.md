@@ -29,10 +29,8 @@
 ```bash
 # 依存関係のインストール
 vp install
-# サブモジュールの初期化
-git submodule update --init --recursive
-# 最新の cactbot コードを取得してパッチを適用
-bash scripts/update-cactbot.sh
+# サブモジュールの初期化・同期とパッチ適用
+vp run submodule
 # 開発モード
 vp dev
 # ビルド

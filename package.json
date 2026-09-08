@@ -13,7 +13,7 @@
     "generate:action-meta-lite": "jiti scripts/actionMetaBake.ts",
     "generate:dd-normalize": "jiti scripts/ddNormalize.ts",
     "generate:dd-vulnerabilities": "jiti scripts/ddVulnerabilitiesBake.ts --only-undefined-to-bool",
-    "submodule": "git submodule update --remote && jiti scripts/patch.ts",
+    "submodule": "git submodule update --init --recursive --remote && jiti scripts/patch.ts",
     "generate": "jiti scripts/all.ts && vp fmt src/resources/generated",
     "generate:blacksmith-skills": "node scripts/generateBlacksmithSkills.cjs"
   },

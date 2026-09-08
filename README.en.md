@@ -29,10 +29,8 @@
 ```bash
 # Install dependencies
 vp install
-# Initialize submodules
-git submodule update --init --recursive
-# Pull latest cactbot code and apply patches
-bash scripts/update-cactbot.sh
+# Initialize and sync submodules with patches
+vp run submodule
 # Development mode
 vp dev
 # Build
