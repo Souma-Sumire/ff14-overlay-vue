@@ -16,6 +16,7 @@ import {
 } from "element-plus";
 import beastbookData from "@/assets/data/beastbook.json";
 import beastConstants from "@/assets/data/beastbookConstants.json";
+import BeastMapDialog from "@/components/beastbook/BeastMapDialog.vue";
 
 if (typeof window !== "undefined") {
   const savedTheme = window.localStorage.getItem("bstbook-theme");
@@ -71,6 +72,7 @@ export interface BeastEntry {
   HabitatType?: string;
   Habitat: string;
   Coords?: { x: number; y: number };
+  MapId?: number;
   Icon?: number;
 }
 
@@ -359,6 +361,12 @@ const selectedDisplay = computed<BeastDisplay | undefined>(() => {
     matchedBeasts.value[0];
   if (!match) return undefined;
   return beastsDisplay.value.find((b) => b.Number === match.Number);
+});
+
+const mapDialogVisible = ref(false);
+
+const canShowMap = computed(() => {
+  return Boolean(selectedDisplay.value?.Coords && selectedDisplay.value.MapId);
 });
 
 const failedHostMap = new WeakMap<HTMLImageElement, Set<string>>();
@@ -758,8 +766,16 @@ function handleBatchCapture(): void {
             <div class="habitat-title">主要栖息地</div>
             <div class="habitat-location">
               <span class="location-name">{{ selectedDisplay.HabitatSummary ?? "--" }}</span>
-              <span v-if="selectedDisplay.Coords" class="habitat-coords">
+              <span
+                v-if="selectedDisplay.Coords"
+                class="habitat-coords"
+                :class="{ 'clickable-coords': canShowMap }"
+                @click="canShowMap && (mapDialogVisible = true)"
+              >
                 X: {{ selectedDisplay.Coords.x }}, Y: {{ selectedDisplay.Coords.y }}
+              </span>
+              <span v-if="canShowMap" class="habitat-map-btn" @click="mapDialogVisible = true">
+                地图
               </span>
               <span
                 v-else-if="selectedDisplay.HabitatType === 'dungeon'"
@@ -809,6 +825,15 @@ function handleBatchCapture(): void {
         <span class="tip-desc">打开图鉴窗口</span>
       </div>
     </div>
+
+    <BeastMapDialog
+      v-if="selectedDisplay"
+      v-model="mapDialogVisible"
+      :beast-name="selectedDisplay.Name"
+      :habitat-name="selectedDisplay.HabitatSummary ?? ''"
+      :map-id="selectedDisplay.MapId"
+      :coords="selectedDisplay.Coords"
+    />
   </div>
 </template>
 
@@ -1489,9 +1514,38 @@ function handleBatchCapture(): void {
             border-radius: 4px;
             border: 1px solid #d5c3ac;
 
+            &.clickable-coords {
+              cursor: pointer;
+              transition: all 0.15s;
+
+              &:hover {
+                background: #e4d3bd;
+                border-color: #bfaea0;
+                color: #53330e;
+              }
+            }
+
             &.habitat-dungeon-tag {
               font-family: inherit;
               font-size: 12px;
+            }
+          }
+
+          .habitat-map-btn {
+            font-size: 12px;
+            color: #7b4c16;
+            background: #f4ece1;
+            border: 1px solid #d5c3ac;
+            padding: 1px 7px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s;
+            user-select: none;
+
+            &:hover {
+              background: #e4d3bd;
+              border-color: #bfaea0;
+              color: #53330e;
             }
           }
         }

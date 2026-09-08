@@ -49,6 +49,7 @@ const xbmPetMap = parseCsv("XBMPet.csv");
 const petMap = parseCsv("Pet.csv");
 const actionMap = parseCsv("Action.csv");
 const placeNameMap = parseCsv("PlaceName.csv");
+const mapMap = parseCsv("Map.csv");
 const cfcMap = parseCsv("ContentFinderCondition.csv");
 const actionTransientMap = parseCsv("ActionTransient.csv");
 
@@ -206,11 +207,22 @@ for (const i of petNumbers) {
   const locationKey = row[6];
   const locationId = row[7];
   let habitatSummary = "--";
+  let mapId = undefined;
 
   if (locationKey === "1" && locationId && locationId !== "0") {
     const pRow = placeNameMap.get(locationId);
     if (pRow) {
       habitatSummary = pRow[0].replace(/^"|"$/g, "");
+    }
+    for (const [mId, mRow] of mapMap.entries()) {
+      if (
+        mRow[11] === locationId &&
+        (!mRow[12] || mRow[12] === "0" || mRow[12] === '""') &&
+        mRow[3] === "0"
+      ) {
+        mapId = parseInt(mId, 10);
+        break;
+      }
     }
   } else if (locationKey === "2" && locationId && locationId !== "0") {
     const cfcRow = cfcMap.get(locationId);
@@ -244,6 +256,7 @@ for (const i of petNumbers) {
     HabitatType: locationKey === "2" ? "dungeon" : "overworld",
     Habitat: habitat,
     Coords: coord ? { x: coord.x, y: coord.y } : undefined,
+    MapId: mapId,
     Icon: icon,
   });
 }
