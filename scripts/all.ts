@@ -26,6 +26,7 @@ const scripts: string[] = [
   "contentFinderCondition.ts",
   "meals.ts",
   "world.ts",
+  "beastbook.ts",
 ];
 
 console.log("--- Running scripts ---");

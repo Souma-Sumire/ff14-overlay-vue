@@ -42,6 +42,9 @@ export interface BeastHabitatItem {
   CoordsList?: BeastCoord[];
   CoordsNote?: string;
   Level?: string;
+  MobName?: string;
+  Tag?: "FATE" | "理符" | "行会令";
+  EventName?: string;
 }
 
 export interface BeastListItem {
@@ -51,14 +54,16 @@ export interface BeastListItem {
   IconUrl: string;
   MapId?: number;
   Habitats?: BeastHabitatItem[];
+  SubstituteHabitats?: BeastHabitatItem[];
   HabitatSummary?: string;
-  Coords?: BeastCoord;
-  CoordsList?: BeastCoord[];
 }
 
 interface MapMonsterItem {
   number: number;
-  name: string;
+  primaryName: string;
+  subName?: string;
+  eventTag?: string;
+  eventName?: string;
   level: string;
   sortLevel: number;
   iconUrl: string;
@@ -71,6 +76,9 @@ interface MapMonsterItem {
 const props = defineProps<{
   modelValue: boolean;
   beastName: string;
+  subName?: string;
+  eventTag?: string;
+  eventName?: string;
   habitatName: string;
   mapId?: number;
   coords?: BeastCoord | BeastCoord[];
@@ -96,7 +104,10 @@ let mapInstance: EorzeaMapInstance | null = null;
 let scriptLoadPromise: Promise<void> | null = null;
 
 const activeBeastNumber = ref<number>(props.currentBeastNumber ?? 0);
-const activeBeastName = ref<string>(props.beastName);
+const activePrimaryName = ref<string>(props.beastName);
+const activeSubName = ref<string | undefined>(props.subName);
+const activeEventTag = ref<string | undefined>(props.eventTag);
+const activeEventName = ref<string | undefined>(props.eventName);
 const activeCoords = ref<BeastCoord[]>([]);
 
 const isCurrentBeastCaptured = computed<boolean>({
@@ -131,50 +142,97 @@ function parseLevelSort(levelStr?: string): number {
   return Math.min(...nums);
 }
 
+function getMatchedHabitatForBeast(
+  b: BeastListItem,
+  isCurrentSelected: boolean,
+): BeastHabitatItem | undefined {
+  const currentTag = activeEventTag.value ?? props.eventTag;
+  const currentEvent = activeEventName.value ?? props.eventName;
+  const currentSub = activeSubName.value ?? props.subName;
+
+  if (isCurrentSelected && (currentTag || currentEvent || currentSub)) {
+    if (b.SubstituteHabitats && b.SubstituteHabitats.length > 0) {
+      const exactSub = b.SubstituteHabitats.find((h) => {
+        if (props.mapId && h.MapId !== props.mapId) return false;
+        if (currentEvent && h.EventName === currentEvent) return true;
+        if (currentSub && h.MobName === currentSub) return true;
+        return false;
+      });
+      if (exactSub) return exactSub;
+
+      if (currentTag) {
+        const tagSub = b.SubstituteHabitats.find((h) => {
+          if (props.mapId && h.MapId !== props.mapId) return false;
+          return h.Tag === currentTag;
+        });
+        if (tagSub) return tagSub;
+      }
+    }
+  }
+
+  if (isCurrentSelected && props.coords) {
+    const coordsArr = Array.isArray(props.coords) ? props.coords : [props.coords];
+    const firstCoord = coordsArr[0];
+    if (firstCoord) {
+      const allCandidateHabs = [...(b.Habitats ?? []), ...(b.SubstituteHabitats ?? [])];
+      const coordHit = allCandidateHabs.find((h) => {
+        if (props.mapId && h.MapId !== props.mapId) return false;
+        if (h.Coords && h.Coords.x === firstCoord.x && h.Coords.y === firstCoord.y) return true;
+        if (h.CoordsList?.some((c) => c.x === firstCoord.x && c.y === firstCoord.y)) return true;
+        return false;
+      });
+      if (coordHit) return coordHit;
+    }
+  }
+
+  if (b.Habitats && b.Habitats.length > 0) {
+    const mainHit = b.Habitats.find((h) => {
+      if (props.mapId && h.MapId === props.mapId) return true;
+      if (props.habitatName && h.Summary === props.habitatName) return true;
+      return false;
+    });
+    if (mainHit) return mainHit;
+  }
+
+  if (b.SubstituteHabitats && b.SubstituteHabitats.length > 0) {
+    const subFallback = b.SubstituteHabitats.find((h) => {
+      if (props.mapId && h.MapId === props.mapId) return true;
+      if (props.habitatName && h.Summary === props.habitatName) return true;
+      return false;
+    });
+    if (subFallback) return subFallback;
+  }
+
+  return undefined;
+}
+
 const mapMonsterList = computed<MapMonsterItem[]>(() => {
   if (!props.allBeasts || props.allBeasts.length === 0) return [];
   const list: MapMonsterItem[] = [];
 
   for (const b of props.allBeasts) {
-    let matchedHab: BeastHabitatItem | undefined;
-    if (b.Habitats && b.Habitats.length > 0) {
-      matchedHab = b.Habitats.find((h) => {
-        if (props.mapId && h.MapId === props.mapId) return true;
-        if (props.habitatName && h.Summary === props.habitatName) return true;
-        return false;
-      });
-    }
+    const isSel = b.Number === activeBeastNumber.value;
+    const isCurrent = isSel || b.Number === props.currentBeastNumber;
+    const matchedHab = getMatchedHabitatForBeast(b, isCurrent);
 
-    const isTopMatch =
-      !matchedHab &&
-      ((props.mapId && b.MapId === props.mapId) ||
-        (props.habitatName && b.HabitatSummary === props.habitatName));
-
-    if (matchedHab || isTopMatch) {
-      const level = matchedHab?.Level ?? b.Level ?? "-";
+    if (matchedHab) {
+      const level = matchedHab.Level ?? b.Level ?? "-";
       let coords: BeastCoord[] = [];
-      if (matchedHab) {
-        if (matchedHab.CoordsList && matchedHab.CoordsList.length > 0) {
-          coords = matchedHab.CoordsList;
-        } else if (matchedHab.Coords) {
-          coords = [matchedHab.Coords];
-        }
-      }
-      if (coords.length === 0) {
-        if (b.CoordsList && b.CoordsList.length > 0) {
-          coords = b.CoordsList;
-        } else if (b.Coords) {
-          coords = [b.Coords];
-        }
+      if (matchedHab.CoordsList && matchedHab.CoordsList.length > 0) {
+        coords = matchedHab.CoordsList;
+      } else if (matchedHab.Coords) {
+        coords = [matchedHab.Coords];
       }
 
       const coordsText = coords.map((c) => `X: ${c.x}, Y: ${c.y}`).join(" / ");
       const isCap = Boolean(props.captured?.[b.Number.toString()]);
-      const isSel = b.Number === activeBeastNumber.value;
 
       list.push({
         number: b.Number,
-        name: b.Name,
+        primaryName: b.Name,
+        subName: matchedHab.MobName,
+        eventTag: matchedHab.Tag,
+        eventName: matchedHab.EventName,
         level,
         sortLevel: parseLevelSort(level),
         iconUrl: b.IconUrl,
@@ -186,13 +244,24 @@ const mapMonsterList = computed<MapMonsterItem[]>(() => {
     }
   }
 
-  // 排序规则：按等级升序排列；同等级按编号升序
   return list.sort((a, b) => {
     if (a.sortLevel !== b.sortLevel) {
       return a.sortLevel - b.sortLevel;
     }
     return a.number - b.number;
   });
+});
+
+const maxLevelColWidth = computed<string>(() => {
+  let maxLen = 4;
+  for (const item of mapMonsterList.value) {
+    const text = item.level.replace(/\s*\/\s*/g, "/");
+    if (text.length > maxLen) {
+      maxLen = text.length;
+    }
+  }
+  const px = Math.ceil(maxLen * 7.1 + 8);
+  return `${Math.max(px, 48)}px`;
 });
 
 function loadStyle(href: string): Promise<void> {
@@ -303,7 +372,10 @@ let resizeObserver: ResizeObserver | null = null;
 
 function handleSelectMonster(item: MapMonsterItem): void {
   activeBeastNumber.value = item.number;
-  activeBeastName.value = item.name;
+  activePrimaryName.value = item.primaryName;
+  activeSubName.value = item.subName;
+  activeEventTag.value = item.eventTag;
+  activeEventName.value = item.eventName;
   activeCoords.value = item.coordsList;
   emit("selectBeast", item.number);
   void renderMap(item.coordsList);
@@ -331,10 +403,22 @@ function handleClose(): void {
 }
 
 watch(
-  () => [props.habitatName, props.coords, props.currentBeastNumber, props.beastName],
+  () => [
+    props.modelValue,
+    props.habitatName,
+    props.coords,
+    props.currentBeastNumber,
+    props.beastName,
+    props.subName,
+    props.eventTag,
+    props.eventName,
+  ],
   () => {
     activeBeastNumber.value = props.currentBeastNumber ?? 0;
-    activeBeastName.value = props.beastName;
+    activePrimaryName.value = props.beastName;
+    activeSubName.value = props.subName;
+    activeEventTag.value = props.eventTag;
+    activeEventName.value = props.eventName;
     if (props.coords) {
       activeCoords.value = Array.isArray(props.coords) ? props.coords : [props.coords];
     } else {
@@ -344,6 +428,7 @@ watch(
       void renderMap();
     }
   },
+  { immediate: true },
 );
 
 onBeforeUnmount(() => {
@@ -381,8 +466,25 @@ onBeforeUnmount(() => {
       <div v-if="mapMonsterList.length > 0" class="sidebar-panel">
         <div class="sidebar-controls">
           <div v-if="activeBeastNumber" class="active-beast-info">
-            <span class="active-num">#{{ activeBeastNumber }}</span>
-            <span class="active-name">{{ activeBeastName }}</span>
+            <div class="active-title-row">
+              <span class="active-num">#{{ activeBeastNumber }}</span>
+              <span class="active-name">{{ activePrimaryName }}</span>
+              <span v-if="activeSubName" class="active-sub-tag">
+                {{ activeSubName }}
+              </span>
+            </div>
+            <div v-if="activeEventTag || activeEventName" class="active-event-row">
+              <span
+                v-if="activeEventTag"
+                class="active-event-tag"
+                :class="`tag-${activeEventTag === '行会令' ? 'guildorder' : activeEventTag === '理符' ? 'leve' : activeEventTag === 'FATE' ? 'fate' : 'dungeon'}`"
+              >
+                {{ activeEventTag }}
+              </span>
+              <span v-if="activeEventName" class="active-event-title">
+                {{ activeEventName }}
+              </span>
+            </div>
           </div>
           <div class="controls-actions">
             <el-checkbox
@@ -414,7 +516,7 @@ onBeforeUnmount(() => {
             <span class="col-cell col-num">序号</span>
             <span class="col-cell col-icon-placeholder" />
             <span class="col-cell col-name">名称</span>
-            <span class="col-cell col-level">等级</span>
+            <span class="col-cell col-level" :style="{ width: maxLevelColWidth }">等级</span>
             <span class="col-cell col-coords">坐标</span>
           </div>
           <div class="sidebar-list">
@@ -433,8 +535,27 @@ onBeforeUnmount(() => {
                 <img :src="item.iconUrl" class="monster-icon" alt="" />
                 <span v-if="item.isCaptured" class="captured-mark">✓</span>
               </div>
-              <span class="col-cell col-name">{{ item.name }}</span>
-              <span class="col-cell col-level">{{ item.level }}</span>
+              <div class="col-cell col-name">
+                <div class="name-main-line">
+                  <span class="primary-text">{{ item.primaryName }}</span>
+                  <span v-if="item.subName" class="sub-text">{{ item.subName }}</span>
+                </div>
+                <div v-if="item.eventTag || item.eventName" class="name-event-line">
+                  <span
+                    v-if="item.eventTag"
+                    class="event-tag-badge"
+                    :class="`tag-${item.eventTag === '行会令' ? 'guildorder' : item.eventTag === '理符' ? 'leve' : item.eventTag === 'FATE' ? 'fate' : 'dungeon'}`"
+                  >
+                    {{ item.eventTag }}
+                  </span>
+                  <span v-if="item.eventName" class="event-name-text">
+                    {{ item.eventName }}
+                  </span>
+                </div>
+              </div>
+              <span class="col-cell col-level" :style="{ width: maxLevelColWidth }">
+                {{ item.level.replace(/\s*\/\s*/g, "/") }}
+              </span>
               <div class="col-cell col-coords">
                 <div v-for="(coord, cIdx) in item.coordsList" :key="cIdx" class="coord-pair">
                   <span class="coord-paren">(</span>
@@ -532,26 +653,97 @@ onBeforeUnmount(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 2px;
-    height: 32px;
+    padding: 2px 2px;
+    min-height: 38px;
+    height: auto;
     flex-shrink: 0;
 
     .active-beast-info {
-      display: inline-flex;
-      align-items: baseline;
-      gap: 6px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
       user-select: none;
+      gap: 2px;
+      min-width: 0;
 
-      .active-num {
-        font-size: 15px;
-        font-weight: 800;
-        color: #753b08;
+      .active-title-row {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 6px;
+
+        .active-num {
+          font-size: 15px;
+          font-weight: 800;
+          color: #753b08;
+        }
+
+        .active-name {
+          font-size: 16px;
+          font-weight: 800;
+          color: #1a1006;
+          word-break: break-word;
+        }
+
+        .active-sub-tag {
+          font-size: 11px;
+          font-weight: 700;
+          color: #7e5210;
+          background: #fbf4e6;
+          border: 1px solid #dec08a;
+          padding: 0 5px;
+          border-radius: 2px;
+          line-height: 15px;
+          white-space: nowrap;
+        }
       }
 
-      .active-name {
-        font-size: 16px;
-        font-weight: 800;
-        color: #1a1006;
+      .active-event-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        .active-event-tag {
+          font-size: 10px;
+          font-weight: 700;
+          padding: 0 4px;
+          border-radius: 2px;
+          line-height: 14px;
+          height: 14px;
+          flex-shrink: 0;
+          white-space: nowrap;
+
+          &.tag-fate {
+            color: #7e5210;
+            background: #fbf4e6;
+            border: 1px solid #dec08a;
+          }
+
+          &.tag-leve {
+            color: #1c5947;
+            background: #e8f4f0;
+            border: 1px solid #9ecbbd;
+          }
+
+          &.tag-guildorder {
+            color: #29437a;
+            background: #edf0f8;
+            border: 1px solid #abb7da;
+          }
+
+          &.tag-dungeon {
+            color: #2b496e;
+            background: #edf2f7;
+            border: 1px solid #a8bdd6;
+          }
+        }
+
+        .active-event-title {
+          font-size: 12px;
+          font-weight: 600;
+          color: #5c4a38;
+          line-height: 1.25;
+        }
       }
     }
 
@@ -776,15 +968,16 @@ onBeforeUnmount(() => {
     }
 
     .col-level {
-      width: 48px;
       text-align: center;
       flex-shrink: 0;
       white-space: nowrap;
-      font-family: Consolas, monospace;
+      font-family: Consolas, "Segoe UI", monospace;
       font-variant-numeric: tabular-nums;
-      font-size: 13.5px;
+      font-size: 12.5px;
       font-weight: 700;
       color: #4a3622;
+      line-height: 1.2;
+      letter-spacing: -0.2px;
     }
 
     .col-icon-placeholder,
@@ -841,12 +1034,88 @@ onBeforeUnmount(() => {
       min-width: 0;
       text-align: left;
       padding-left: 2px;
-      font-size: 14.5px;
-      font-weight: 700;
-      color: #2b1f13;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 2px;
+
+      .name-main-line {
+        display: flex;
+        align-items: baseline;
+        gap: 5px;
+        flex-wrap: wrap;
+
+        .primary-text {
+          font-size: 14px;
+          font-weight: 700;
+          color: #2b1f13;
+          word-break: break-word;
+        }
+
+        .sub-text {
+          font-size: 11px;
+          font-weight: 700;
+          color: #7e5210;
+          background: #fbf4e6;
+          border: 1px solid #dec08a;
+          padding: 0 4px;
+          border-radius: 2px;
+          line-height: 14px;
+          white-space: nowrap;
+        }
+      }
+
+      .name-event-line {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-wrap: wrap;
+        line-height: 1.25;
+
+        .event-tag-badge {
+          font-size: 10px;
+          font-weight: 700;
+          padding: 0 3px;
+          border-radius: 2px;
+          line-height: 13px;
+          height: 13px;
+          flex-shrink: 0;
+          white-space: nowrap;
+
+          &.tag-fate {
+            color: #7e5210;
+            background: #fbf4e6;
+            border: 1px solid #dec08a;
+          }
+
+          &.tag-leve {
+            color: #1c5947;
+            background: #e8f4f0;
+            border: 1px solid #9ecbbd;
+          }
+
+          &.tag-guildorder {
+            color: #29437a;
+            background: #edf0f8;
+            border: 1px solid #abb7da;
+          }
+
+          &.tag-dungeon {
+            color: #2b496e;
+            background: #edf2f7;
+            border: 1px solid #a8bdd6;
+          }
+        }
+
+        .event-name-text {
+          font-size: 11.5px;
+          color: #705d4b;
+          font-weight: 600;
+          white-space: normal;
+          line-height: 1.25;
+          word-break: break-all;
+        }
+      }
     }
 
     .col-coords {

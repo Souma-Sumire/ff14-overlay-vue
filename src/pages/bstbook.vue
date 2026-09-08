@@ -67,6 +67,10 @@ export interface BeastHabitatItem {
   CoordsList?: BeastCoord[];
   CoordsNote?: string;
   Level?: string;
+  MobName?: string;
+  IsSubstitute?: boolean;
+  Tag?: "FATE" | "理符" | "行会令";
+  EventName?: string;
 }
 
 export interface BeastEntry {
@@ -89,12 +93,11 @@ export interface BeastEntry {
   HabitatSummary?: string;
   HabitatType?: string;
   Habitat: string;
-  Coords?: BeastCoord;
-  CoordsList?: BeastCoord[];
-  CoordsNote?: string;
   MapId?: number;
   Habitats?: BeastHabitatItem[];
   Icon?: number;
+  Substitutes?: string[];
+  SubstituteHabitats?: BeastHabitatItem[];
 }
 
 export interface BeastDisplay extends Omit<
@@ -298,27 +301,26 @@ watch(
     });
   },
 );
-
-function toRoman(num: number): string {
-  const lookup: [number, string][] = [
-    [50, "L"],
-    [40, "XL"],
-    [10, "X"],
-    [9, "IX"],
-    [5, "V"],
-    [4, "IV"],
-    [1, "I"],
-  ];
-  let roman = "";
-  let n = num;
-  for (const [val, sym] of lookup) {
-    while (n >= val) {
-      roman += sym;
-      n -= val;
-    }
-  }
-  return roman || num.toString();
-}
+// function toRoman(num: number): string {
+//   const lookup: [number, string][] = [
+//     [50, "L"],
+//     [40, "XL"],
+//     [10, "X"],
+//     [9, "IX"],
+//     [5, "V"],
+//     [4, "IV"],
+//     [1, "I"],
+//   ];
+//   let roman = "";
+//   let n = num;
+//   for (const [val, sym] of lookup) {
+//     while (n >= val) {
+//       roman += sym;
+//       n -= val;
+//     }
+//   }
+//   return roman || num.toString();
+// }
 
 function isBeastMatched(v: BeastEntry): boolean {
   if (!isBeastLevelMatched(v, selectedLevelRange.value)) return false;
@@ -374,7 +376,16 @@ function isBeastMatched(v: BeastEntry): boolean {
     reg.test(v.OrderName) ||
     reg.test(v.OrderDescription) ||
     reg.test(v.HabitatSummary ?? "") ||
-    reg.test(v.Habitat)
+    reg.test(v.Habitat) ||
+    (v.Substitutes ? v.Substitutes.some((s) => reg.test(s)) : false) ||
+    (v.SubstituteHabitats
+      ? v.SubstituteHabitats.some(
+          (h) => reg.test(h.Summary) || (h.MobName ? reg.test(h.MobName) : false),
+        )
+      : false) ||
+    (v.Habitats
+      ? v.Habitats.some((h) => reg.test(h.Summary) || (h.MobName ? reg.test(h.MobName) : false))
+      : false)
   );
 }
 
@@ -501,11 +512,6 @@ const displayHabitats = computed<BeastHabitatItem[]>(() => {
         Summary: selectedDisplay.value.HabitatSummary ?? "--",
         Type: (selectedDisplay.value.HabitatType as BeastHabitatItem["Type"]) ?? "overworld",
         MapId: selectedDisplay.value.MapId,
-        Coords: selectedDisplay.value.Coords,
-        CoordsList:
-          selectedDisplay.value.CoordsList ??
-          (selectedDisplay.value.Coords ? [selectedDisplay.value.Coords] : undefined),
-        CoordsNote: selectedDisplay.value.CoordsNote,
         Level: selectedDisplay.value.Level,
       },
     ];
@@ -517,11 +523,36 @@ const displayHabitats = computed<BeastHabitatItem[]>(() => {
   return list;
 });
 
+const displaySubstitutes = computed<BeastHabitatItem[]>(() => {
+  if (!selectedDisplay.value) return [];
+  const list = selectedDisplay.value.SubstituteHabitats ?? [];
+  return [...list];
+});
+
 function getHabitatDisplayLevel(hab: BeastHabitatItem): string | undefined {
   const lvl = hab.Level ?? selectedDisplay.value?.Level;
   if (!lvl || lvl.trim() === "-") return undefined;
-  return lvl;
+  return lvl.replace(/\s*\/\s*/g, "/");
 }
+
+function computeHabitatLevelColWidth(habList: BeastHabitatItem[]): string {
+  let maxLen = 0;
+  for (const hab of habList) {
+    const lvl = getHabitatDisplayLevel(hab);
+    if (lvl) {
+      const fullText = `Lv.${lvl}`;
+      if (fullText.length > maxLen) {
+        maxLen = fullText.length;
+      }
+    }
+  }
+  if (maxLen === 0) return "0px";
+  const widthPx = Math.ceil(maxLen * 6.35 + 2);
+  return `${widthPx}px`;
+}
+
+const mainHabitatLevelWidth = computed(() => computeHabitatLevelColWidth(displayHabitats.value));
+const subHabitatLevelWidth = computed(() => computeHabitatLevelColWidth(displaySubstitutes.value));
 
 function isHabitatMapEnabled(hab: BeastHabitatItem): boolean {
   return Boolean(hab.MapId && (hab.Coords || hab.CoordsList?.length));
@@ -878,11 +909,8 @@ function handleClearAllCaptured(): void {
         <template v-if="selectedDisplay">
           <div class="detail-header">
             <div class="title-group">
-              <span class="roman-num">{{ toRoman(selectedDisplay.Number) }}</span>
+              <span class="roman-num">#{{ selectedDisplay.Number }}</span>
               <span class="name" v-html="highlight(selectedDisplay.Name)" />
-              <span v-if="selectedDisplay.Level" class="level-badge">
-                Lv.{{ selectedDisplay.Level }}
-              </span>
             </div>
             <div class="header-capture">
               <el-checkbox v-model="isSelectedCaptured" label="已捕获该魔兽" size="large" />
@@ -910,29 +938,32 @@ function handleClearAllCaptured(): void {
                 <span class="attr-text" v-html="highlight(selectedDisplay.AutoAttackType)" />
               </div>
             </div>
-            <div class="borrow-card">
-              <el-tooltip
-                raw-content
-                :content="formatTooltipDesc(selectedDisplay.BorrowDescription)"
-                placement="left-start"
-                :show-after="100"
-                popper-class="borrow-tooltip"
-              >
-                <div class="borrow-box">
-                  <div class="borrow-icon-wrap">
-                    <img
-                      v-if="!isSwitching && selectedDisplay.BorrowIconUrl"
-                      :src="selectedDisplay.BorrowIconUrl"
-                      class="borrow-icon"
-                      draggable="false"
-                      @load="handleIconLoad"
-                      @error="handleIconError($event, selectedDisplay?.Number, 'BorrowIconUrl')"
-                    />
-                    <div v-else class="borrow-placeholder" />
+            <div class="borrow-column">
+              <div class="skill-title">借用</div>
+              <div class="borrow-card">
+                <el-tooltip
+                  raw-content
+                  :content="formatTooltipDesc(selectedDisplay.BorrowDescription)"
+                  placement="left-start"
+                  :show-after="100"
+                  popper-class="borrow-tooltip"
+                >
+                  <div class="borrow-box">
+                    <div class="borrow-icon-wrap">
+                      <img
+                        v-if="!isSwitching && selectedDisplay.BorrowIconUrl"
+                        :src="selectedDisplay.BorrowIconUrl"
+                        class="borrow-icon"
+                        draggable="false"
+                        @load="handleIconLoad"
+                        @error="handleIconError($event, selectedDisplay?.Number, 'BorrowIconUrl')"
+                      />
+                      <div v-else class="borrow-placeholder" />
+                    </div>
+                    <span class="borrow-name" v-html="highlight(selectedDisplay.BorrowName)" />
                   </div>
-                  <span class="borrow-name" v-html="highlight(selectedDisplay.BorrowName)" />
-                </div>
-              </el-tooltip>
+                </el-tooltip>
+              </div>
             </div>
           </div>
 
@@ -951,10 +982,14 @@ function handleClearAllCaptured(): void {
                 <div v-else class="skill-placeholder" />
               </div>
               <div class="skill-detail">
-                <div class="skill-name" v-html="highlight(selectedDisplay.ReleaseName)" />
+                <div class="skill-header-line">
+                  <span class="skill-name" v-html="highlight(selectedDisplay.ReleaseName)" />
+                  <span v-if="selectedDisplay.ReleaseRange" class="skill-range-tag">
+                    {{ selectedDisplay.ReleaseRange }}
+                  </span>
+                </div>
                 <div class="skill-desc" v-html="highlight(selectedDisplay.ReleaseDescription)" />
               </div>
-              <div class="skill-range-tag">{{ selectedDisplay.ReleaseRange }}</div>
             </div>
           </div>
 
@@ -973,64 +1008,197 @@ function handleClearAllCaptured(): void {
                 <div v-else class="skill-placeholder" />
               </div>
               <div class="skill-detail">
-                <div class="skill-name" v-html="highlight(selectedDisplay.OrderName)" />
+                <div class="skill-header-line">
+                  <span class="skill-name" v-html="highlight(selectedDisplay.OrderName)" />
+                  <span v-if="selectedDisplay.OrderRange" class="skill-range-tag">
+                    {{ selectedDisplay.OrderRange }}
+                  </span>
+                </div>
                 <div class="skill-desc" v-html="highlight(selectedDisplay.OrderDescription)" />
               </div>
-              <div class="skill-range-tag">{{ selectedDisplay.OrderRange }}</div>
             </div>
           </div>
 
-          <div class="habitat-section">
-            <div class="habitat-title">主要栖息地</div>
-            <div class="habitat-location">
-              <template v-for="(hab, idx) in displayHabitats" :key="idx">
-                <div class="habitat-item-row">
-                  <span v-if="getHabitatDisplayLevel(hab)" class="habitat-level-text">
-                    Lv.{{ getHabitatDisplayLevel(hab) }}
-                  </span>
-                  <el-tooltip
-                    :disabled="!isHabitatMapEnabled(hab)"
-                    content="点击打开地图"
-                    placement="top"
-                    :show-after="50"
-                  >
-                    <div
-                      class="habitat-card"
-                      :class="{ 'clickable-card': isHabitatMapEnabled(hab) }"
-                      @click="openHabitatMap(hab)"
-                    >
-                      <svg
+          <div
+            class="habitat-section"
+            :class="{ 'has-substitutes': displaySubstitutes.length > 0 }"
+          >
+            <div class="habitat-columns">
+              <div class="habitat-col main-habitat-col">
+                <div class="habitat-title">主要栖息地</div>
+                <div class="habitat-location">
+                  <template v-for="(hab, idx) in displayHabitats" :key="idx">
+                    <div class="habitat-item-row">
+                      <span
+                        v-if="getHabitatDisplayLevel(hab)"
+                        class="habitat-level-text"
+                        :style="{ width: mainHabitatLevelWidth, minWidth: mainHabitatLevelWidth }"
+                      >
+                        Lv.{{ getHabitatDisplayLevel(hab) }}
+                      </span>
+                      <span
+                        class="habitat-type-tag"
+                        :class="hab.Type === 'dungeon' ? 'tag-dungeon' : 'tag-overworld'"
+                      >
+                        {{ hab.Type === "dungeon" ? "副本" : "野外" }}
+                      </span>
+                      <el-tooltip
                         v-if="isHabitatMapEnabled(hab)"
-                        class="map-pin-icon"
-                        viewBox="0 0 16 16"
-                        width="15"
-                        height="15"
-                        fill="currentColor"
+                        content="点击打开地图"
+                        placement="top"
+                        :show-after="50"
                       >
-                        <path
-                          d="M8 0a5.53 5.53 0 0 0-5.5 5.5c0 3.82 5.5 10.5 5.5 10.5s5.5-6.68 5.5-10.5A5.53 5.53 0 0 0 8 0zm0 7.5a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"
-                        />
-                      </svg>
-                      <span class="location-name">{{ hab.Summary }}</span>
-                      <div
-                        v-if="hab.CoordsList && hab.CoordsList.length > 0"
-                        class="location-coords-group"
-                      >
-                        <span v-for="(c, cIdx) in hab.CoordsList" :key="cIdx" class="coord-badge">
-                          ({{ c.x }}, {{ c.y }})
+                        <button type="button" class="habitat-map-btn" @click="openHabitatMap(hab)">
+                          <svg
+                            class="map-pin-icon"
+                            viewBox="0 0 16 16"
+                            width="13"
+                            height="13"
+                            fill="currentColor"
+                          >
+                            <path
+                              d="M8 0a5.53 5.53 0 0 0-5.5 5.5c0 3.82 5.5 10.5 5.5 10.5s5.5-6.68 5.5-10.5A5.53 5.53 0 0 0 8 0zm0 7.5a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"
+                            />
+                          </svg>
+                          <span class="location-name">{{ hab.Summary }}</span>
+                          <span
+                            v-if="hab.CoordsList && hab.CoordsList.length > 0"
+                            class="location-coords"
+                          >
+                            <span
+                              v-for="(c, cIdx) in hab.CoordsList"
+                              :key="cIdx"
+                              class="coord-badge"
+                              ><span class="coord-paren">(</span>{{ c.x }},{{ c.y
+                              }}<span class="coord-paren">)</span></span
+                            >
+                          </span>
+                          <span v-else-if="hab.Coords" class="location-coords">
+                            <span class="coord-badge"
+                              ><span class="coord-paren">(</span>{{ hab.Coords.x }},{{ hab.Coords.y
+                              }}<span class="coord-paren">)</span></span
+                            >
+                          </span>
+                          <span v-if="hab.CoordsNote" class="location-coords-note">
+                            ({{ hab.CoordsNote }})
+                          </span>
+                        </button>
+                      </el-tooltip>
+                      <span v-else class="habitat-plain-text">
+                        {{ hab.Summary }}
+                      </span>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
+              <div class="habitat-col substitute-col">
+                <div class="habitat-title">
+                  <span>同模怪物（Beta）</span>
+                  <span class="habitat-title-note">* 仅供参考，不保证真实性</span>
+                </div>
+                <div class="habitat-location scrollable">
+                  <template v-if="displaySubstitutes.length > 0">
+                    <template v-for="(subHab, idx) in displaySubstitutes" :key="idx">
+                      <div class="habitat-item-row">
+                        <span
+                          v-if="getHabitatDisplayLevel(subHab)"
+                          class="habitat-level-text"
+                          :style="{ width: subHabitatLevelWidth, minWidth: subHabitatLevelWidth }"
+                        >
+                          Lv.{{ getHabitatDisplayLevel(subHab) }}
+                        </span>
+
+                        <span
+                          v-if="subHab.Tag === '行会令'"
+                          class="habitat-type-tag tag-guildorder"
+                        >
+                          行会令
+                        </span>
+                        <span v-else-if="subHab.Tag === '理符'" class="habitat-type-tag tag-leve">
+                          理符
+                        </span>
+                        <span v-else-if="subHab.Tag === 'FATE'" class="habitat-type-tag tag-fate">
+                          FATE
+                        </span>
+                        <span
+                          v-else-if="subHab.Type === 'dungeon'"
+                          class="habitat-type-tag tag-dungeon"
+                        >
+                          副本
+                        </span>
+                        <span v-else class="habitat-type-tag tag-overworld"> 野外 </span>
+
+                        <span
+                          v-if="
+                            subHab.Tag === '行会令' ||
+                            (subHab.Tag === '理符' && !isHabitatMapEnabled(subHab))
+                          "
+                          class="habitat-plain-text"
+                          :title="subHab.EventName || subHab.Summary"
+                        >
+                          {{ subHab.EventName || subHab.Summary }}
+                        </span>
+                        <el-tooltip
+                          v-else-if="isHabitatMapEnabled(subHab)"
+                          :content="
+                            subHab.EventName
+                              ? `【${subHab.Tag || '平替'}】${subHab.EventName} · 点击打开地图`
+                              : '点击打开地图'
+                          "
+                          placement="top"
+                          :show-after="50"
+                        >
+                          <button
+                            type="button"
+                            class="habitat-map-btn"
+                            @click="openHabitatMap(subHab)"
+                          >
+                            <svg
+                              class="map-pin-icon"
+                              viewBox="0 0 16 16"
+                              width="13"
+                              height="13"
+                              fill="currentColor"
+                            >
+                              <path
+                                d="M8 0a5.53 5.53 0 0 0-5.5 5.5c0 3.82 5.5 10.5 5.5 10.5s5.5-6.68 5.5-10.5A5.53 5.53 0 0 0 8 0zm0 7.5a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"
+                              />
+                            </svg>
+                            <span class="location-name">{{ subHab.Summary }}</span>
+                            <span
+                              v-if="subHab.CoordsList && subHab.CoordsList.length > 0"
+                              class="location-coords"
+                            >
+                              <span
+                                v-for="(c, cIdx) in subHab.CoordsList"
+                                :key="cIdx"
+                                class="coord-badge"
+                                ><span class="coord-paren">(</span>{{ c.x }},{{ c.y
+                                }}<span class="coord-paren">)</span></span
+                              >
+                            </span>
+                            <span v-else-if="subHab.Coords" class="location-coords">
+                              <span class="coord-badge"
+                                ><span class="coord-paren">(</span>{{ subHab.Coords.x }},{{
+                                  subHab.Coords.y
+                                }}<span class="coord-paren">)</span></span
+                              >
+                            </span>
+                            <span v-if="subHab.CoordsNote" class="location-coords-note">
+                              ({{ subHab.CoordsNote }})
+                            </span>
+                          </button>
+                        </el-tooltip>
+                        <span v-else class="habitat-plain-text">
+                          {{ subHab.Summary }}
                         </span>
                       </div>
-                      <div v-else-if="hab.Coords" class="location-coords-group">
-                        <span class="coord-badge"> ({{ hab.Coords.x }}, {{ hab.Coords.y }}) </span>
-                      </div>
-                      <span v-if="hab.CoordsNote" class="location-coords-note">
-                        ({{ hab.CoordsNote }})
-                      </span>
-                      <span v-if="hab.Type === 'dungeon'" class="location-dungeon-tag"> 副本 </span>
-                    </div>
-                  </el-tooltip>
+                    </template>
+                  </template>
+                  <div v-else class="habitat-empty-placeholder">暂无平替魔物</div>
                 </div>
-              </template>
+              </div>
             </div>
           </div>
 
@@ -1102,13 +1270,16 @@ function handleClearAllCaptured(): void {
       v-if="selectedDisplay"
       v-model="mapDialogVisible"
       :beast-name="selectedDisplay.Name"
+      :sub-name="activeMapHabitat?.MobName"
+      :event-tag="activeMapHabitat?.Tag"
+      :event-name="activeMapHabitat?.EventName"
       :habitat-name="activeMapHabitat?.Summary ?? selectedDisplay.HabitatSummary ?? ''"
       :map-id="activeMapHabitat?.MapId ?? selectedDisplay.MapId"
       :coords="
         activeMapHabitat?.CoordsList ??
         activeMapHabitat?.Coords ??
-        selectedDisplay.CoordsList ??
-        selectedDisplay.Coords
+        selectedDisplay.Habitats?.[0]?.CoordsList ??
+        selectedDisplay.Habitats?.[0]?.Coords
       "
       :all-beasts="beastsDisplay"
       :captured="captured"
@@ -1308,7 +1479,7 @@ function handleClearAllCaptured(): void {
 
   .bstbook-container {
     width: 100%;
-    max-width: 1250px;
+    max-width: 1280px;
     height: 596px;
     min-height: 596px;
     max-height: 596px;
@@ -1627,6 +1798,9 @@ function handleClearAllCaptured(): void {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        height: 28px;
+        min-height: 28px;
+        max-height: 28px;
         margin-bottom: 12px;
         flex-shrink: 0;
         gap: 8px;
@@ -1656,7 +1830,8 @@ function handleClearAllCaptured(): void {
           }
 
           .level-badge {
-            font-size: 13px;
+            font-family: Consolas, "Segoe UI", Monaco, monospace;
+            font-size: 12.5px;
             font-weight: 700;
             color: #8c430e;
             background: #f7e8d0;
@@ -1664,8 +1839,9 @@ function handleClearAllCaptured(): void {
             border-radius: 4px;
             padding: 1px 6px;
             line-height: 16px;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.2px;
             flex-shrink: 0;
+            font-variant-numeric: tabular-nums;
           }
         }
 
@@ -1725,23 +1901,26 @@ function handleClearAllCaptured(): void {
       .meta-section {
         display: flex;
         align-items: center;
-        gap: 16px;
-        margin-bottom: 12px;
+        gap: 14px;
+        height: 84px;
+        min-height: 84px;
+        max-height: 84px;
+        margin-bottom: 6px;
         flex-shrink: 0;
 
         .avatar-wrap {
-          width: 110px;
-          height: 110px;
+          width: 84px;
+          height: 84px;
           flex-shrink: 0;
           display: flex;
           align-items: center;
           justify-content: center;
           background: #f2ece2;
           border: 1px solid #d4c8b8;
-          border-radius: 8px;
+          border-radius: 6px;
           box-sizing: border-box;
           overflow: hidden;
-          padding: 6px;
+          padding: 4px;
           transition:
             width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
             height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1757,28 +1936,28 @@ function handleClearAllCaptured(): void {
         .attrs-wrap {
           display: flex;
           flex-direction: column;
-          gap: 10px;
-          font-size: 14px;
+          gap: 6px;
+          font-size: 13px;
           min-width: 140px;
           flex: 1;
 
           .attr-row {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
 
             .attr-title {
               color: #0b6e51;
               font-weight: 700;
-              min-width: 64px;
-              font-size: 13px;
+              min-width: 60px;
+              font-size: 12px;
               flex-shrink: 0;
             }
 
             .attr-text {
               color: #332517;
               font-weight: 600;
-              font-size: 14px;
+              font-size: 13px;
               white-space: nowrap;
               overflow: hidden;
               text-overflow: ellipsis;
@@ -1786,71 +1965,100 @@ function handleClearAllCaptured(): void {
           }
         }
 
-        .borrow-card {
+        .borrow-column {
           margin-left: auto;
-          width: 86px;
-          min-width: 86px;
-          max-width: 86px;
-          flex-shrink: 0;
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: center;
-          background: #f7f2ea;
-          border: 1px solid #dcd4c6;
-          border-radius: 8px;
-          padding: 8px 6px;
-          box-sizing: border-box;
 
-          .borrow-box {
-            width: 100%;
+          .skill-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #a86c0c;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+            line-height: 1.2;
+          }
+
+          .borrow-card {
+            width: 56px;
+            min-width: 56px;
+            max-width: 64px;
+            flex-shrink: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            cursor: pointer;
+            justify-content: flex-start;
+            background: transparent;
+            border: none;
+            padding: 0;
+            box-sizing: border-box;
 
-            .borrow-icon-wrap {
-              width: 50px;
-              height: 50px;
-              border-radius: 6px;
-              background: #f2ece2;
-              border: 1.5px solid #d4a853;
-              box-sizing: border-box;
-              overflow: hidden;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              box-shadow: 0 1px 4px rgba(168, 108, 12, 0.15);
-
-              .borrow-icon {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
-              }
-
-              .borrow-placeholder {
-                width: 100%;
-                height: 100%;
-              }
-            }
-
-            .borrow-name {
+            .borrow-box {
               width: 100%;
-              text-align: center;
-              font-size: 13px;
-              font-weight: 700;
-              color: #2b1f13;
-              margin-top: 6px;
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              cursor: pointer;
+
+              .borrow-icon-wrap {
+                width: 48px;
+                height: 48px;
+                border-radius: 6px;
+                background: #f2ece2;
+                border: 1.5px solid #d4a853;
+                box-sizing: border-box;
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 1px 4px rgba(168, 108, 12, 0.18);
+                transition:
+                  transform 0.15s ease,
+                  border-color 0.15s ease;
+
+                .borrow-icon {
+                  width: 100%;
+                  height: 100%;
+                  object-fit: cover;
+                  display: block;
+                }
+
+                .borrow-placeholder {
+                  width: 100%;
+                  height: 100%;
+                }
+              }
+
+              &:hover .borrow-icon-wrap {
+                border-color: #b5832a;
+                transform: scale(1.04);
+              }
+
+              .borrow-name {
+                width: 72px;
+                text-align: center;
+                font-size: 11px;
+                font-weight: 700;
+                color: #2b1f13;
+                margin-top: 3px;
+                margin-bottom: -12px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                line-height: 1.2;
+                position: relative;
+                z-index: 2;
+              }
             }
           }
         }
       }
 
       .skill-item {
+        height: 84px;
+        min-height: 84px;
+        max-height: 84px;
         margin-bottom: 8px;
         flex-shrink: 0;
 
@@ -1904,16 +2112,42 @@ function handleClearAllCaptured(): void {
             min-height: 64px;
             overflow: hidden;
 
-            .skill-name {
-              font-size: 15px;
-              font-weight: 700;
-              color: #22180f;
+            .skill-header-line {
+              display: flex;
+              align-items: center;
+              gap: 8px;
               height: 18px;
               line-height: 18px;
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
               margin-bottom: 2px;
+              min-width: 0;
+
+              .skill-name {
+                font-size: 15px;
+                font-weight: 700;
+                color: #22180f;
+                line-height: 18px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                flex-shrink: 1;
+              }
+
+              .skill-range-tag {
+                font-size: 11px;
+                color: #5c4a39;
+                background: #ebd8c2;
+                border: 1px solid #d4c1aa;
+                padding: 0 6px;
+                border-radius: 3px;
+                font-weight: 600;
+                line-height: 16px;
+                height: 18px;
+                white-space: nowrap;
+                flex-shrink: 0;
+                box-sizing: border-box;
+                display: inline-flex;
+                align-items: center;
+              }
             }
 
             .skill-desc {
@@ -1942,137 +2176,296 @@ function handleClearAllCaptured(): void {
               }
             }
           }
-
-          .skill-range-tag {
-            margin-left: auto;
-            align-self: center;
-            font-size: 12px;
-            color: #5c4a39;
-            background: #ebd8c2;
-            padding: 3px 9px;
-            border-radius: 4px;
-            font-weight: 500;
-            line-height: 1.4;
-            white-space: nowrap;
-            flex-shrink: 0;
-          }
         }
       }
 
       .habitat-section {
-        margin-top: 6px;
-        flex-shrink: 0;
+        margin-top: 4px;
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
 
-        .habitat-title {
-          font-size: 13px;
-          font-weight: 700;
-          color: #a86c0c;
-          letter-spacing: 0.5px;
-          margin-bottom: 4px;
-        }
-
-        .habitat-location {
+        .habitat-columns {
           display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 6px;
+          gap: 12px;
+          width: 100%;
+          flex: 1;
+          min-height: 0;
 
-          .habitat-item-row {
+          .habitat-col {
+            min-width: 0;
             display: flex;
-            align-items: center;
-            gap: 8px;
+            flex-direction: column;
+            min-height: 0;
+            box-sizing: border-box;
 
-            .habitat-level-text {
-              font-size: 13px;
-              font-weight: 700;
-              color: #8c430e;
-              min-width: 46px;
-              flex-shrink: 0;
-              line-height: 1.3;
+            &.main-habitat-col {
+              flex: 0 0 252px;
+              width: 252px;
             }
 
-            .habitat-card {
-              display: inline-flex;
-              align-items: center;
-              gap: 8px;
-              background: #ede2d3;
-              border: 1px solid #d5c3ac;
-              padding: 2px 10px;
-              border-radius: 4px;
-              line-height: 1.3;
-              user-select: none;
+            &.substitute-col {
+              flex: 1;
+              min-width: 0;
+            }
 
-              .map-pin-icon {
-                flex-shrink: 0;
-                color: #7b4c16;
+            .habitat-title {
+              font-size: 12px;
+              font-weight: 700;
+              color: #a86c0c;
+              letter-spacing: 0.5px;
+              height: 18px;
+              line-height: 18px;
+              margin-bottom: 6px;
+              display: flex;
+              align-items: baseline;
+              gap: 6px;
+              flex-shrink: 0;
+
+              .habitat-title-note {
+                font-size: 10.5px;
+                font-weight: 400;
+                color: #8c7d6b;
+                letter-spacing: normal;
+              }
+            }
+
+            .habitat-location {
+              display: flex;
+              flex-direction: column;
+              align-items: flex-start;
+              gap: 4px;
+              flex: 1;
+              min-height: 0;
+              max-height: 136px;
+              overflow-y: auto;
+              padding-right: 4px;
+              scrollbar-width: thin;
+              scrollbar-color: #dcd4c6 transparent;
+
+              &::-webkit-scrollbar {
+                width: 3px;
               }
 
-              .location-name {
-                font-size: 13px;
-                font-weight: 600;
-                color: #2b1c0e;
+              &::-webkit-scrollbar-thumb {
+                background: #dcd4c6;
+                border-radius: 2px;
               }
 
-              .location-coords-group {
-                display: inline-flex;
-                align-items: center;
-                gap: 5px;
+              &::-webkit-scrollbar-thumb:hover {
+                background: #bfaea0;
+              }
 
-                .coord-badge {
-                  display: inline-block;
-                  font-size: 12px;
-                  font-family: Consolas, "Courier New", monospace;
+              .habitat-item-row {
+                display: flex;
+                align-items: flex-start;
+                gap: 4px;
+                width: 100%;
+                min-width: 0;
+                min-height: 22px;
+                box-sizing: border-box;
+
+                .habitat-level-text {
+                  font-family: sans-serif;
+                  font-size: 11.5px;
                   font-weight: 700;
-                  color: #7b4c16;
-                  line-height: 14px;
-                  transition: color 0.15s;
+                  color: #8c430e;
+                  flex-shrink: 0;
+                  line-height: 16px;
+                  margin-top: 2px;
+                  white-space: nowrap;
+                  letter-spacing: -0.3px;
+                  font-variant-numeric: tabular-nums;
+                }
 
-                  &:not(:last-child)::after {
-                    content: ",";
-                    margin-right: 4px;
+                .habitat-type-tag {
+                  font-size: 10.5px;
+                  font-weight: 700;
+                  width: 38px;
+                  min-width: 38px;
+                  max-width: 38px;
+                  height: 18px;
+                  line-height: 16px;
+                  border-radius: 2px;
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                  flex-shrink: 0;
+                  box-sizing: border-box;
+                  letter-spacing: 0.2px;
+                  margin-top: 1px;
+
+                  &.tag-overworld {
+                    color: #24522a;
+                    background: #edf4ec;
+                    border: 1px solid #a3c4a8;
+                  }
+
+                  &.tag-dungeon {
+                    color: #1e3d66;
+                    background: #eef3f9;
+                    border: 1px solid #9db5d2;
+                  }
+
+                  &.tag-fate {
+                    color: #7c4708;
+                    background: #fdf6e6;
+                    border: 1px solid #d9b87b;
+                  }
+
+                  &.tag-leve {
+                    color: #17544b;
+                    background: #ecf5f3;
+                    border: 1px solid #9cc4bd;
+                  }
+
+                  &.tag-guildorder {
+                    color: #38306b;
+                    background: #f1eff8;
+                    border: 1px solid #b3a7d4;
                   }
                 }
-              }
 
-              .location-coords-note {
-                font-size: 12px;
-                color: #8c7d6b;
-              }
+                .habitat-plain-text {
+                  font-size: 11.5px;
+                  font-weight: 600;
+                  color: #3b2d1d;
+                  line-height: 16px;
+                  margin-top: 2px;
+                  word-break: break-all;
+                  flex: 1;
+                  min-width: 0;
+                }
 
-              .location-dungeon-tag {
-                font-size: 12px;
-                font-weight: 600;
-                color: #7b4c16;
-              }
-
-              &.clickable-card {
-                cursor: pointer;
-                transition: all 0.15s;
-
-                &:hover {
-                  background: #e4d3bd;
-                  border-color: #bfaea0;
+                .habitat-map-btn {
+                  display: inline-flex;
+                  flex-wrap: wrap;
+                  align-items: center;
+                  gap: 2px 4px;
+                  padding: 1px 6px;
+                  background: #fbf8f2;
+                  border: 1px solid #cbbeae;
+                  border-radius: 4px;
+                  font-size: 11.5px;
+                  color: #433221;
+                  line-height: 16px;
+                  min-height: 20px;
+                  cursor: pointer;
+                  user-select: none;
+                  transition: all 0.15s ease;
+                  text-align: left;
+                  box-sizing: border-box;
+                  max-width: 100%;
+                  flex-shrink: 1;
 
                   .map-pin-icon {
-                    color: #53330e;
+                    color: #8c430e;
+                    flex-shrink: 0;
+                    width: 12px;
+                    height: 12px;
+                    margin-top: 2px;
+                    align-self: flex-start;
+                    transition:
+                      transform 0.15s ease,
+                      color 0.15s ease;
                   }
 
-                  .location-coords-group .coord-badge {
-                    color: #53330e;
+                  .location-name {
+                    font-size: 11.5px;
+                    font-weight: 700;
+                    color: #2e2012;
+                    line-height: 16px;
+                    word-break: break-word;
+                  }
+
+                  .location-coords {
+                    display: inline-flex;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    gap: 1px 3px;
+
+                    .coord-badge {
+                      display: inline-block;
+                      font-size: 11px;
+                      font-family: Consolas, "Courier New", monospace;
+                      font-weight: 700;
+                      color: #7b4c16;
+                      line-height: 16px;
+                      letter-spacing: -0.5px;
+                      transition: color 0.15s;
+
+                      &:not(:last-child)::after {
+                        content: ",";
+                      }
+
+                      .coord-paren {
+                        display: inline-block;
+                        transform: scaleX(0.75);
+                        margin: 0 -0.5px;
+                      }
+                    }
+                  }
+
+                  .location-coords-note {
+                    font-size: 10.5px;
+                    color: #8c7d6b;
+                    line-height: 16px;
+                  }
+
+                  &:hover {
+                    background: #f5ebe0;
+                    border-color: #8c430e;
+                    color: #8c430e;
+                    box-shadow: 0 1px 3px rgba(140, 67, 14, 0.12);
+
+                    .map-pin-icon {
+                      color: #b45309;
+                      transform: scale(1.1);
+                    }
+
+                    .location-coords .coord-badge {
+                      color: #8c430e;
+                    }
+                  }
+
+                  &:active {
+                    background: #ede0cf;
+                    transform: translateY(1px);
                   }
                 }
               }
+
+              .habitat-empty-placeholder {
+                font-size: 12px;
+                color: #a59888;
+                line-height: 26px;
+                height: 26px;
+                font-style: italic;
+              }
+            }
+
+            &.main-habitat-col {
+              flex: 0 0 calc(50% - 6px);
+              width: calc(50% - 6px);
+              max-width: calc(50% - 6px);
+            }
+
+            &.substitute-col {
+              flex: 0 0 calc(50% - 6px);
+              width: calc(50% - 6px);
+              max-width: calc(50% - 6px);
             }
           }
         }
       }
 
       .habitat-desc {
-        margin-top: auto;
-        font-size: 12px;
-        color: #8c7d6b;
-        line-height: 1.55;
-        max-height: 88px;
+        margin-top: 6px;
+        font-size: 11px;
+        color: #9c8d7c;
+        line-height: 1.45;
+        max-height: 34px;
         overflow-y: auto;
         padding-right: 6px;
         flex-shrink: 0;
@@ -2080,7 +2473,7 @@ function handleClearAllCaptured(): void {
         scrollbar-color: #dcd4c6 transparent;
 
         &::-webkit-scrollbar {
-          width: 4px;
+          width: 3px;
         }
 
         &::-webkit-scrollbar-thumb {
@@ -2274,8 +2667,8 @@ function handleClearAllCaptured(): void {
         }
 
         .habitat-desc {
-          margin-top: auto;
-          max-height: 88px;
+          margin-top: 6px;
+          max-height: 34px;
         }
       }
     }
@@ -2488,7 +2881,7 @@ function handleClearAllCaptured(): void {
           flex-wrap: wrap;
           gap: 4px;
 
-          .habitat-card {
+          .habitat-map-btn {
             flex-wrap: wrap;
             word-break: break-all;
             max-width: 100%;
