@@ -998,13 +998,15 @@ function handleClearAllCaptured(): void {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 24px 0 36px;
+  padding: 24px 16px 36px;
   box-sizing: border-box;
   color: #3b2d1d;
   user-select: none;
 
   .filter-panel {
-    width: 1250px;
+    width: 100%;
+    max-width: 1250px;
+    min-width: 960px;
     margin-bottom: 12px;
     padding: 10px 18px;
     background: #fdfbf7;
@@ -1139,7 +1141,9 @@ function handleClearAllCaptured(): void {
   }
 
   .bstbook-container {
-    width: 1250px;
+    width: 100%;
+    max-width: 1250px;
+    min-width: 960px;
     height: 596px;
     min-height: 596px;
     max-height: 596px;
@@ -1393,10 +1397,11 @@ function handleClearAllCaptured(): void {
 
     .right-panel {
       flex: 1;
+      min-width: 0;
       height: 100%;
       min-height: 0;
       max-height: 100%;
-      padding: 18px 28px 14px;
+      padding: 18px 24px 14px;
       border-left: 1px solid #e8dfd2;
       display: flex;
       flex-direction: column;
@@ -1410,23 +1415,30 @@ function handleClearAllCaptured(): void {
         justify-content: space-between;
         margin-bottom: 12px;
         flex-shrink: 0;
+        gap: 8px;
 
         .title-group {
           display: flex;
           align-items: baseline;
           gap: 12px;
+          min-width: 0;
+          flex-shrink: 1;
 
           .roman-num {
             font-size: 20px;
             font-weight: bold;
             color: #594735;
             min-width: 44px;
+            flex-shrink: 0;
           }
 
           .name {
             font-size: 21px;
             font-weight: bold;
             color: #2b1f13;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
 
           .level-badge {
@@ -1439,6 +1451,7 @@ function handleClearAllCaptured(): void {
             padding: 1px 6px;
             line-height: 16px;
             letter-spacing: 0.5px;
+            flex-shrink: 0;
           }
         }
 
@@ -1457,13 +1470,13 @@ function handleClearAllCaptured(): void {
       .meta-section {
         display: flex;
         align-items: center;
-        gap: 24px;
+        gap: 16px;
         margin-bottom: 12px;
         flex-shrink: 0;
 
         .avatar-wrap {
-          width: 120px;
-          height: 120px;
+          width: 110px;
+          height: 110px;
           flex-shrink: 0;
           display: flex;
           align-items: center;
@@ -1486,35 +1499,41 @@ function handleClearAllCaptured(): void {
         .attrs-wrap {
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 10px;
           font-size: 14px;
-          min-width: 190px;
+          min-width: 140px;
+          flex: 1;
 
           .attr-row {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
 
             .attr-title {
               color: #0b6e51;
               font-weight: 700;
-              min-width: 90px;
+              min-width: 64px;
               font-size: 13px;
+              flex-shrink: 0;
             }
 
             .attr-text {
               color: #332517;
               font-weight: 600;
               font-size: 14px;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
             }
           }
         }
 
         .borrow-card {
           margin-left: auto;
-          width: 90px;
-          min-width: 90px;
-          max-width: 90px;
+          width: 86px;
+          min-width: 86px;
+          max-width: 86px;
+          flex-shrink: 0;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -1618,6 +1637,7 @@ function handleClearAllCaptured(): void {
 
           .skill-detail {
             flex: 1;
+            min-width: 0;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -1696,6 +1716,8 @@ function handleClearAllCaptured(): void {
         .habitat-location {
           display: flex;
           align-items: center;
+          flex-wrap: wrap;
+          gap: 6px;
 
           .habitat-card {
             display: inline-flex;
@@ -1781,6 +1803,19 @@ function handleClearAllCaptured(): void {
         }
       }
 
+      @media (max-width: 1100px) {
+        padding: 14px 16px 12px;
+
+        .meta-section {
+          gap: 12px;
+
+          .avatar-wrap {
+            width: 96px;
+            height: 96px;
+          }
+        }
+      }
+
       .empty-detail {
         display: flex;
         align-items: center;
@@ -1793,13 +1828,17 @@ function handleClearAllCaptured(): void {
   }
 
   .page-footer-bar {
-    width: 1250px;
+    width: 100%;
+    max-width: 1250px;
+    min-width: 960px;
     margin-top: 10px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     box-sizing: border-box;
     padding: 0 4px;
+    flex-wrap: wrap;
+    gap: 8px;
 
     .footer-mark-tools {
       display: flex;
