@@ -83,6 +83,9 @@ export default defineConfig({
         if (warning.code === "EVAL" && warning.id?.includes("cactbot/resources/user_config.ts")) {
           return;
         }
+        if (warning.code === "INVALID_ANNOTATION") {
+          return;
+        }
         warn(warning);
       },
     },
