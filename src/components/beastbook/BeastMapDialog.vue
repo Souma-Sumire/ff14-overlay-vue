@@ -29,12 +29,17 @@ interface GlobalWithEorzeaMap extends Window {
   jQuery?: unknown;
 }
 
+export interface BeastCoord {
+  x: number;
+  y: number;
+}
+
 const props = defineProps<{
   modelValue: boolean;
   beastName: string;
   habitatName: string;
   mapId?: number;
-  coords?: { x: number; y: number };
+  coords?: BeastCoord | BeastCoord[];
 }>();
 
 const emit = defineEmits<{
@@ -53,9 +58,22 @@ let scriptLoadPromise: Promise<void> | null = null;
 
 const currentMapId = computed<number | undefined>(() => props.mapId);
 
+const normalizedCoords = computed<BeastCoord[]>(() => {
+  if (!props.coords) return [];
+  if (Array.isArray(props.coords)) return props.coords;
+  return [props.coords];
+});
+
+const formattedCoordsText = computed<string>(() => {
+  const list = normalizedCoords.value;
+  if (list.length === 0) return "";
+  return list.map((c) => `X: ${c.x}, Y: ${c.y}`).join(" / ");
+});
+
 const externalMapUrl = computed<string>(() => {
-  if (!currentMapId.value || !props.coords) return "";
-  return `https://map.wakingsands.com/#f=mark&id=${currentMapId.value}&x=${props.coords.x}&y=${props.coords.y}`;
+  const first = normalizedCoords.value[0];
+  if (!currentMapId.value || !first) return "";
+  return `https://map.wakingsands.com/#f=mark&id=${currentMapId.value}&x=${first.x}&y=${first.y}`;
 });
 
 function loadStyle(href: string): Promise<void> {
@@ -138,18 +156,28 @@ async function renderMap(): Promise<void> {
       mapInstance = await eorzeaMap.create(mapContainerRef.value);
     }
 
-    const { x, y } = props.coords;
+    const coordsList = normalizedCoords.value;
+    if (coordsList.length === 0) {
+      loading.value = false;
+      return;
+    }
+
     await mapInstance.loadMapKey(currentMapId.value);
 
     const iconUrl = eorzeaMap.loader.getIconUrl("ui/icon/060000/060561.tex");
-    const marker = eorzeaMap.simpleMarker(x, y, iconUrl, mapInstance.mapInfo);
-    mapInstance.addMarker(marker);
+    for (const c of coordsList) {
+      const marker = eorzeaMap.simpleMarker(c.x, c.y, iconUrl, mapInstance.mapInfo);
+      mapInstance.addMarker(marker);
+    }
 
-    setTimeout(() => {
-      if (mapInstance) {
-        mapInstance.setView(mapInstance.mapToLatLng2D(x, y), -1);
-      }
-    }, 150);
+    const first = coordsList[0];
+    if (first) {
+      setTimeout(() => {
+        if (mapInstance) {
+          mapInstance.setView(mapInstance.mapToLatLng2D(first.x, first.y), -1);
+        }
+      }, 150);
+    }
   } finally {
     loading.value = false;
   }
@@ -202,7 +230,7 @@ onBeforeUnmount(() => {
         <div class="header-titles">
           <span class="beast-title">{{ beastName }}</span>
           <span class="habitat-badge">{{ habitatName }}</span>
-          <span v-if="coords" class="coords-badge">X: {{ coords.x }}, Y: {{ coords.y }}</span>
+          <span v-if="formattedCoordsText" class="coords-badge">{{ formattedCoordsText }}</span>
         </div>
         <a
           v-if="externalMapUrl"

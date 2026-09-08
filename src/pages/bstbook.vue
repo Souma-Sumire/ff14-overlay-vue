@@ -53,6 +53,21 @@ const bestiaryCmdDetail = `<b>/魔兽图鉴</b><br/>
 （别名：/bestiary, /bstbook）<br/>
 打开游戏内魔兽图鉴窗口。`;
 
+export interface BeastCoord {
+  x: number;
+  y: number;
+}
+
+export interface BeastHabitatItem {
+  Summary: string;
+  Type: "overworld" | "dungeon" | "special";
+  MapId?: number;
+  Coords?: BeastCoord;
+  CoordsList?: BeastCoord[];
+  CoordsNote?: string;
+  Level?: string;
+}
+
 export interface BeastEntry {
   Number: number;
   Name: string;
@@ -73,9 +88,11 @@ export interface BeastEntry {
   HabitatSummary?: string;
   HabitatType?: string;
   Habitat: string;
-  Coords?: { x: number; y: number };
+  Coords?: BeastCoord;
+  CoordsList?: BeastCoord[];
   CoordsNote?: string;
   MapId?: number;
+  Habitats?: BeastHabitatItem[];
   Icon?: number;
 }
 
@@ -197,15 +214,16 @@ const sortType = useStorage<SortType>("bstbook-sortType", "default");
 const selectedLevelRange = ref<[number, number]>([1, 50]);
 
 function parseBeastLevelRange(levelStr?: string): [number, number] {
-  if (!levelStr) return [1, 1];
-  const parts = levelStr.split(/[~-]/).map((s) => parseInt(s.trim(), 10));
-  const min = parts[0] ?? 1;
-  const max = parts[1] ?? min;
+  if (!levelStr || levelStr.trim() === "-") return [0, 0];
+  const nums = levelStr.match(/\d+/g)?.map(Number);
+  if (!nums || nums.length === 0) return [0, 0];
+  const min = Math.min(...nums);
+  const max = Math.max(...nums);
   return [min, max];
 }
 
 function getBeastSortLevel(b: BeastEntry): number {
-  if (!b.Level) return 0;
+  if (!b.Level || b.Level.trim() === "-") return 0;
   const [min] = parseBeastLevelRange(b.Level);
   return min;
 }
@@ -213,6 +231,16 @@ function getBeastSortLevel(b: BeastEntry): number {
 function isBeastLevelMatched(v: BeastEntry, range: [number, number]): boolean {
   const [selMin, selMax] = range;
   if (selMin <= 1 && selMax >= 50) return true;
+  if (!v.Level || v.Level.trim() === "-") return true;
+
+  if (v.Habitats && v.Habitats.length > 0) {
+    return v.Habitats.some((h) => {
+      const targetLevel = h.Level ?? v.Level;
+      const [min, max] = parseBeastLevelRange(targetLevel);
+      return max >= selMin && min <= selMax;
+    });
+  }
+
   const [bMin, bMax] = parseBeastLevelRange(v.Level);
   return bMax >= selMin && bMin <= selMax;
 }
@@ -283,13 +311,21 @@ function isBeastMatched(v: BeastEntry): boolean {
   if (!selectedBorrowActions.value?.includes(v.BorrowName)) return false;
 
   if (selectedHabitatType.value === "overworld") {
-    if (v.HabitatType !== "overworld") return false;
-    const hab = v.HabitatSummary ?? "--";
-    if (!selectedOverworldHabitats.value?.includes(hab)) return false;
+    const habitats = v.Habitats ?? [
+      { Summary: v.HabitatSummary ?? "--", Type: (v.HabitatType as BeastHabitatItem["Type"]) ?? "overworld" },
+    ];
+    const hasMatch = habitats.some(
+      (h) => h.Type === "overworld" && selectedOverworldHabitats.value?.includes(h.Summary),
+    );
+    if (!hasMatch) return false;
   } else if (selectedHabitatType.value === "dungeon") {
-    if (v.HabitatType !== "dungeon") return false;
-    const hab = v.HabitatSummary ?? "--";
-    if (!selectedDungeonHabitats.value?.includes(hab)) return false;
+    const habitats = v.Habitats ?? [
+      { Summary: v.HabitatSummary ?? "--", Type: (v.HabitatType as BeastHabitatItem["Type"]) ?? "dungeon" },
+    ];
+    const hasMatch = habitats.some(
+      (h) => h.Type === "dungeon" && selectedDungeonHabitats.value?.includes(h.Summary),
+    );
+    if (!hasMatch) return false;
   }
 
   if (!selectedReleaseRanges.value?.includes(v.ReleaseRange)) return false;
@@ -415,9 +451,44 @@ const isSelectedCaptured = computed({
 });
 
 const mapDialogVisible = ref(false);
+const activeMapHabitat = ref<BeastHabitatItem | undefined>(undefined);
 
-const canShowMap = computed(() => {
-  return Boolean(selectedDisplay.value?.Coords && selectedDisplay.value.MapId);
+const displayHabitats = computed<BeastHabitatItem[]>(() => {
+  if (!selectedDisplay.value) return [];
+  if (selectedDisplay.value.Habitats && selectedDisplay.value.Habitats.length > 0) {
+    return selectedDisplay.value.Habitats;
+  }
+  return [
+    {
+      Summary: selectedDisplay.value.HabitatSummary ?? "--",
+      Type: (selectedDisplay.value.HabitatType as BeastHabitatItem["Type"]) ?? "overworld",
+      MapId: selectedDisplay.value.MapId,
+      Coords: selectedDisplay.value.Coords,
+      CoordsList:
+        selectedDisplay.value.CoordsList ??
+        (selectedDisplay.value.Coords ? [selectedDisplay.value.Coords] : undefined),
+      CoordsNote: selectedDisplay.value.CoordsNote,
+      Level: selectedDisplay.value.Level,
+    },
+  ];
+});
+
+const hasMultipleHabitats = computed<boolean>(() => {
+  return displayHabitats.value.length > 1;
+});
+
+function isHabitatMapEnabled(hab: BeastHabitatItem): boolean {
+  return Boolean(hab.MapId && (hab.Coords || hab.CoordsList?.length));
+}
+
+function openHabitatMap(hab: BeastHabitatItem): void {
+  if (!isHabitatMapEnabled(hab)) return;
+  activeMapHabitat.value = hab;
+  mapDialogVisible.value = true;
+}
+
+watch(selectedDisplay, (val) => {
+  activeMapHabitat.value = val?.Habitats?.[0];
 });
 
 const failedHostMap = new WeakMap<HTMLImageElement, Set<string>>();
@@ -917,7 +988,7 @@ function handleClearAllCaptured(): void {
       </div>
 
       <div class="footer-credit">
-        魔兽捕获地点数据来源参考自@GreatGBL
+        数据来源参考
         <a
           href="https://www.bilibili.com/video/BV19nbV6TEQk/"
           target="_blank"
