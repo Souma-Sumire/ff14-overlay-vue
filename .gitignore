@@ -3,6 +3,7 @@ node_modules
 # Build outputs
 dist
 dist-ssr
+dist-maps
 *.local
 
 # Auto-generated files

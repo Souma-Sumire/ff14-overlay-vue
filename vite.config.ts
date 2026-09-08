@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import vue from "@vitejs/plugin-vue";
@@ -9,6 +10,32 @@ import { defineConfig, type PluginOption } from "vite-plus";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+function separateSourcemaps(): PluginOption {
+  return {
+    name: "separate-sourcemaps",
+    enforce: "post",
+    apply: "build",
+    async closeBundle() {
+      const assetsDir = path.resolve(__dirname, "dist/assets");
+      const targetDir = path.resolve(__dirname, "dist-maps");
+      if (!fs.existsSync(assetsDir)) {
+        return;
+      }
+      await fs.promises.rm(targetDir, { recursive: true, force: true });
+      await fs.promises.mkdir(targetDir, { recursive: true });
+
+      const files = await fs.promises.readdir(assetsDir);
+      for (const file of files) {
+        if (file.endsWith(".map") || file.endsWith(".map.gz")) {
+          const src = path.join(assetsDir, file);
+          const dest = path.join(targetDir, file);
+          await fs.promises.rename(src, dest);
+        }
+      }
+    },
+  };
+}
 
 function injectBuildTime(): PluginOption {
   return {
@@ -91,7 +118,7 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 2000,
     reportCompressedSize: false,
-    sourcemap: false,
+    sourcemap: "hidden",
   },
   plugins: [
     vue({
@@ -109,6 +136,7 @@ export default defineConfig({
       importMode: "async",
     }),
     injectBuildTime(),
+    separateSourcemaps(),
   ],
   css: {
     preprocessorOptions: {
