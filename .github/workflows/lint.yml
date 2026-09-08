@@ -22,6 +22,7 @@ jobs:
       - name: Install Vite+
         run: |
           curl -fsSL https://vite.plus | bash
+          echo "$HOME/.local/share/vite-plus/bin" >> $GITHUB_PATH
           echo "$HOME/.vite-plus/bin" >> $GITHUB_PATH
 
       - name: Install Dependencies
