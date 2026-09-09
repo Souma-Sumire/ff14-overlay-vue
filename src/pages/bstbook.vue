@@ -16,7 +16,6 @@ import {
   ElSlider,
   ElTooltip,
 } from "element-plus";
-import beastbookData from "@/resources/generated/beastbook.json";
 import BeastMapDialog from "@/components/beastbook/BeastMapDialog.vue";
 import {
   ALL_ATTACK_TYPES,
@@ -26,8 +25,15 @@ import {
   ALL_TAXONOMIES,
   DUNGEON_HABITATS,
   OVERWORLD_HABITATS,
+  beastbookData,
+  getBeastDisplayLevel,
+  getBeastHabitats,
+  getBeastMinLevel,
+  hasMatchingHabitat,
+  matchesBeastLevelRange,
+  parseBeastLevelRange,
   resolveHabitatTypeTag,
-  resolveSubstituteTag,
+  sortHabitatsByLevel,
   type BeastCoord,
   type BeastDisplay,
   type BeastEntry,
@@ -173,46 +179,6 @@ type SortType = "default" | "level";
 const sortType = useStorage<SortType>("bstbook-sortType", "default");
 const selectedLevelRange = ref<[number, number]>([1, 50]);
 
-function parseBeastLevelRange(levelStr?: string): [number, number] {
-  if (!levelStr || levelStr.trim() === "-") return [0, 0];
-  const nums = levelStr.match(/\d+/g)?.map(Number);
-  if (!nums || nums.length === 0) return [0, 0];
-  const min = Math.min(...nums);
-  const max = Math.max(...nums);
-  return [min, max];
-}
-
-function getBeastDisplayLevel(b: BeastEntry): string {
-  if (!b.Habitats || b.Habitats.length === 0) return "-";
-  const levels = Array.from(
-    new Set(b.Habitats.map((h) => h.Level).filter((l): l is string => Boolean(l && l !== "-"))),
-  );
-  return levels.length > 0 ? levels.join(" / ") : "-";
-}
-
-function getBeastSortLevel(b: BeastEntry): number {
-  const levelStr = getBeastDisplayLevel(b);
-  if (levelStr === "-") return 0;
-  const [min] = parseBeastLevelRange(levelStr);
-  return min;
-}
-
-function isBeastLevelMatched(v: BeastEntry, range: [number, number]): boolean {
-  const [selMin, selMax] = range;
-  if (selMin <= 1 && selMax >= 50) return true;
-
-  if (v.Habitats && v.Habitats.length > 0) {
-    return v.Habitats.some((h) => {
-      const targetLevel = h.Level;
-      if (!targetLevel || targetLevel.trim() === "-") return false;
-      const [min, max] = parseBeastLevelRange(targetLevel);
-      return max >= selMin && min <= selMax;
-    });
-  }
-
-  return true;
-}
-
 function getShortName(name: string): string {
   return name.replace(/种$/, "");
 }
@@ -233,11 +199,13 @@ function formatTooltipDesc(desc?: string): string {
   return desc.replaceAll("\n", "<br/>");
 }
 
-watch(searchStr, () => {
+function resetPage(): void {
   nextTick(() => {
     page.value = 1;
   });
-});
+}
+
+watch(searchStr, resetPage);
 
 watch(
   [
@@ -253,35 +221,11 @@ watch(
     selectedLevelRange,
     sortType,
   ],
-  () => {
-    nextTick(() => {
-      page.value = 1;
-    });
-  },
+  resetPage,
 );
-// function toRoman(num: number): string {
-//   const lookup: [number, string][] = [
-//     [50, "L"],
-//     [40, "XL"],
-//     [10, "X"],
-//     [9, "IX"],
-//     [5, "V"],
-//     [4, "IV"],
-//     [1, "I"],
-//   ];
-//   let roman = "";
-//   let n = num;
-//   for (const [val, sym] of lookup) {
-//     while (n >= val) {
-//       roman += sym;
-//       n -= val;
-//     }
-//   }
-//   return roman || num.toString();
-// }
 
 function isBeastMatched(v: BeastEntry): boolean {
-  if (!isBeastLevelMatched(v, selectedLevelRange.value)) return false;
+  if (!matchesBeastLevelRange(v, selectedLevelRange.value)) return false;
   const isCap = Boolean(captured.value[v.Number.toString()]);
   const statusText = isCap ? "已拥有" : "未拥有";
   if (!selectedCaptureStatus.value?.includes(statusText)) return false;
@@ -290,21 +234,9 @@ function isBeastMatched(v: BeastEntry): boolean {
   if (!selectedBorrowActions.value?.includes(v.BorrowName)) return false;
 
   if (selectedHabitatType.value === "overworld") {
-    const habitats = v.Habitats ?? [];
-    const hasMatch = habitats.some(
-      (h) =>
-        h.Type === "overworld" &&
-        (selectedOverworldHabitat.value === "all" || h.Summary === selectedOverworldHabitat.value),
-    );
-    if (!hasMatch) return false;
+    if (!hasMatchingHabitat(v, ["overworld", "fate"], selectedOverworldHabitat.value)) return false;
   } else if (selectedHabitatType.value === "dungeon") {
-    const habitats = v.Habitats ?? [];
-    const hasMatch = habitats.some(
-      (h) =>
-        h.Type === "dungeon" &&
-        (selectedDungeonHabitat.value === "all" || h.Summary === selectedDungeonHabitat.value),
-    );
-    if (!hasMatch) return false;
+    if (!hasMatchingHabitat(v, ["dungeon"], selectedDungeonHabitat.value)) return false;
   }
 
   if (!selectedReleaseRanges.value?.includes(v.ReleaseRange)) return false;
@@ -324,22 +256,19 @@ function isBeastMatched(v: BeastEntry): boolean {
     reg.test(v.OrderName) ||
     reg.test(v.OrderDescription) ||
     reg.test(v.Habitat) ||
-    (v.Substitutes ? v.Substitutes.some((s) => reg.test(s)) : false) ||
-    (v.SubstituteHabitats
-      ? v.SubstituteHabitats.some(
-          (h) => reg.test(h.Summary) || (h.MobName ? reg.test(h.MobName) : false),
-        )
-      : false) ||
-    (v.Habitats
-      ? v.Habitats.some((h) => reg.test(h.Summary) || (h.MobName ? reg.test(h.MobName) : false))
-      : false)
+    getBeastHabitats(v).some(
+      (h) =>
+        (h.Summary ? reg.test(h.Summary) : false) ||
+        (h.MobName ? reg.test(h.MobName) : false) ||
+        (h.EventName ? reg.test(h.EventName) : false),
+    )
   );
 }
 
 const sortedBeasts = computed<BeastEntry[]>(() => {
   if (sortType.value === "level") {
     return [...beasts].sort((a, b) => {
-      const diff = getBeastSortLevel(a) - getBeastSortLevel(b);
+      const diff = getBeastMinLevel(a) - getBeastMinLevel(b);
       return diff !== 0 ? diff : a.Number - b.Number;
     });
   }
@@ -441,25 +370,12 @@ const isSelectedCaptured = computed({
 const mapDialogVisible = ref(false);
 const activeMapHabitat = ref<BeastHabitatItem | undefined>(undefined);
 
-function parseHabitatMinLevel(hab: BeastHabitatItem): number {
-  const lvl = hab.Level;
-  if (!lvl || lvl.trim() === "-") return 0;
-  const nums = lvl.match(/\d+/g)?.map(Number);
-  if (!nums || nums.length === 0) return 0;
-  return Math.min(...nums);
-}
-
 const displayHabitats = computed<BeastHabitatItem[]>(() => {
-  if (!selectedDisplay.value) return [];
-  const list = selectedDisplay.value.Habitats ? [...selectedDisplay.value.Habitats] : [];
-  list.sort((a, b) => parseHabitatMinLevel(a) - parseHabitatMinLevel(b));
-  return list;
+  return sortHabitatsByLevel(selectedDisplay.value?.Habitats);
 });
 
-const displaySubstitutes = computed<BeastHabitatItem[]>(() => {
-  if (!selectedDisplay.value) return [];
-  const list = selectedDisplay.value.SubstituteHabitats ?? [];
-  return [...list];
+const displayCommunityHabitats = computed<BeastHabitatItem[]>(() => {
+  return sortHabitatsByLevel(selectedDisplay.value?.CommunityHabitats);
 });
 
 function getHabitatDisplayLevel(hab: BeastHabitatItem): string | undefined {
@@ -468,35 +384,8 @@ function getHabitatDisplayLevel(hab: BeastHabitatItem): string | undefined {
   return lvl.replace(/\s*\/\s*/g, "/");
 }
 
-function computeHabitatLevelColWidth(habList: BeastHabitatItem[]): string {
-  let maxLen = 0;
-  for (const hab of habList) {
-    const lvl = getHabitatDisplayLevel(hab);
-    if (lvl) {
-      const fullText = `Lv.${lvl}`;
-      if (fullText.length > maxLen) {
-        maxLen = fullText.length;
-      }
-    }
-  }
-  if (maxLen === 0) return "0px";
-  const widthPx = Math.ceil(maxLen * 6.35 + 2);
-  return `${widthPx}px`;
-}
-
-const mainHabitatLevelWidth = computed(() => computeHabitatLevelColWidth(displayHabitats.value));
-const subHabitatLevelWidth = computed(() => computeHabitatLevelColWidth(displaySubstitutes.value));
-
 function isHabitatMapEnabled(hab: BeastHabitatItem): boolean {
   return Boolean(hab.MapId && hab.Coords && hab.Coords.length > 0);
-}
-
-function isHabitatPlainEvent(hab: BeastHabitatItem): boolean {
-  return hab.Tag === "行会令" || (hab.Tag === "理符" && !isHabitatMapEnabled(hab));
-}
-
-function isHabitatPlainText(hab: BeastHabitatItem): boolean {
-  return !isHabitatMapEnabled(hab) && !isHabitatPlainEvent(hab);
 }
 
 function openHabitatMap(hab: BeastHabitatItem): void {
@@ -531,8 +420,7 @@ watch(selectedDisplay, (val) => {
   if (mapDialogVisible.value && activeMapHabitat.value) {
     const currentMapId = activeMapHabitat.value.MapId;
     const currentSummary = activeMapHabitat.value.Summary;
-    const allHabs = [...(val.Habitats ?? []), ...(val.SubstituteHabitats ?? [])];
-    const match = allHabs.find((h) => {
+    const match = getBeastHabitats(val).find((h) => {
       if (currentMapId && h.MapId === currentMapId) return true;
       if (currentSummary && h.Summary === currentSummary) return true;
       return false;
@@ -992,157 +880,150 @@ function handleClearAllCaptured(): void {
             </div>
           </div>
 
-          <div
-            class="habitat-section"
-            :class="{ 'has-substitutes': displaySubstitutes.length > 0 }"
-          >
+          <div class="habitat-section">
             <div class="habitat-columns">
               <div class="habitat-col main-habitat-col">
-                <div class="habitat-title">主要栖息地</div>
-                <div class="habitat-location">
-                  <template v-for="(hab, idx) in displayHabitats" :key="idx">
-                    <div class="habitat-item-row">
-                      <span
-                        v-if="getHabitatDisplayLevel(hab)"
-                        class="habitat-level-text"
-                        :style="{ width: mainHabitatLevelWidth, minWidth: mainHabitatLevelWidth }"
-                      >
-                        Lv.{{ getHabitatDisplayLevel(hab) }}
-                      </span>
-                      <span
-                        v-if="resolveHabitatTypeTag(hab.Type)"
-                        class="habitat-type-tag"
-                        :class="resolveHabitatTypeTag(hab.Type)?.className"
-                      >
-                        {{ resolveHabitatTypeTag(hab.Type)?.label }}
-                      </span>
-                      <el-tooltip
-                        v-if="isHabitatMapEnabled(hab)"
-                        content="点击打开地图"
-                        placement="top"
-                        :show-after="50"
-                      >
-                        <button type="button" class="habitat-map-btn" @click="openHabitatMap(hab)">
-                          <svg
-                            class="map-pin-icon"
-                            viewBox="0 0 16 16"
-                            width="13"
-                            height="13"
-                            fill="currentColor"
-                          >
-                            <path
-                              d="M8 0a5.53 5.53 0 0 0-5.5 5.5c0 3.82 5.5 10.5 5.5 10.5s5.5-6.68 5.5-10.5A5.53 5.53 0 0 0 8 0zm0 7.5a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"
-                            />
-                          </svg>
-                          <span class="location-name">{{ hab.Summary }}</span>
-                          <span v-if="hab.Coords && hab.Coords.length > 0" class="location-coords">
-                            <span v-for="(c, cIdx) in hab.Coords" :key="cIdx" class="coord-badge"
-                              ><span class="coord-paren">(</span>{{ c.x }},{{ c.y
-                              }}<span class="coord-paren">)</span></span
-                            >
-                          </span>
-                          <span v-if="hab.CoordsNote" class="location-coords-note">
-                            ({{ hab.CoordsNote }})
-                          </span>
-                        </button>
-                      </el-tooltip>
-                      <span
-                        v-if="!isHabitatMapEnabled(hab)"
-                        class="habitat-plain-text"
-                        :title="hab.MobName ? `${hab.Summary} · ${hab.MobName}` : hab.Summary"
-                      >
-                        {{ hab.MobName ? `${hab.Summary} · ${hab.MobName}` : hab.Summary }}
-                      </span>
-                    </div>
-                  </template>
-                </div>
-              </div>
-
-              <div v-if="displaySubstitutes.length > 0" class="habitat-col substitute-col">
-                <div class="habitat-title">
-                  <span>同模怪物（Beta）</span>
-                  <span class="habitat-title-note">* 仅供参考，不保证真实性</span>
-                </div>
-                <div class="habitat-location scrollable">
-                  <template v-for="(subHab, idx) in displaySubstitutes" :key="idx">
-                    <div class="habitat-item-row">
-                      <span
-                        v-if="getHabitatDisplayLevel(subHab)"
-                        class="habitat-level-text"
-                        :style="{ width: subHabitatLevelWidth, minWidth: subHabitatLevelWidth }"
-                      >
-                        Lv.{{ getHabitatDisplayLevel(subHab) }}
-                      </span>
-
-                      <span
-                        v-if="resolveSubstituteTag(subHab.Tag, subHab.Type)"
-                        class="habitat-type-tag"
-                        :class="resolveSubstituteTag(subHab.Tag, subHab.Type)?.className"
-                      >
-                        {{ resolveSubstituteTag(subHab.Tag, subHab.Type)?.label }}
-                      </span>
-
-                      <span
-                        v-if="isHabitatPlainEvent(subHab)"
-                        class="habitat-plain-text"
-                        :title="subHab.EventName || subHab.Summary"
-                      >
-                        {{ subHab.EventName || subHab.Summary }}
-                      </span>
-                      <el-tooltip
-                        v-if="isHabitatMapEnabled(subHab)"
-                        :content="
-                          subHab.EventName
-                            ? `【${subHab.Tag || '平替'}】${subHab.EventName} · 点击打开地图`
-                            : '点击打开地图'
-                        "
-                        placement="top"
-                        :show-after="50"
-                      >
-                        <button
-                          type="button"
-                          class="habitat-map-btn"
-                          @click="openHabitatMap(subHab)"
+                <div class="habitat-group">
+                  <div class="habitat-title">主要栖息地</div>
+                  <div class="habitat-location">
+                    <template v-for="(hab, idx) in displayHabitats" :key="idx">
+                      <div class="habitat-item-row">
+                        <span class="habitat-level-text">
+                          {{
+                            getHabitatDisplayLevel(hab) ? `Lv.${getHabitatDisplayLevel(hab)}` : ""
+                          }}
+                        </span>
+                        <span
+                          class="habitat-type-tag"
+                          :class="resolveHabitatTypeTag(hab.Type)?.className"
                         >
-                          <svg
-                            class="map-pin-icon"
-                            viewBox="0 0 16 16"
-                            width="13"
-                            height="13"
-                            fill="currentColor"
+                          {{ resolveHabitatTypeTag(hab.Type)?.label }}
+                        </span>
+                        <div class="habitat-item-content">
+                          <button
+                            v-if="isHabitatMapEnabled(hab)"
+                            type="button"
+                            class="habitat-map-btn"
+                            @click="openHabitatMap(hab)"
                           >
-                            <path
-                              d="M8 0a5.53 5.53 0 0 0-5.5 5.5c0 3.82 5.5 10.5 5.5 10.5s5.5-6.68 5.5-10.5A5.53 5.53 0 0 0 8 0zm0 7.5a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"
-                            />
-                          </svg>
-                          <span class="location-name">{{ subHab.Summary }}</span>
-                          <span
-                            v-if="subHab.Coords && subHab.Coords.length > 0"
-                            class="location-coords"
-                          >
-                            <span v-for="(c, cIdx) in subHab.Coords" :key="cIdx" class="coord-badge"
-                              ><span class="coord-paren">(</span>{{ c.x }},{{ c.y
-                              }}<span class="coord-paren">)</span></span
+                            <svg
+                              class="map-pin-icon"
+                              viewBox="0 0 16 16"
+                              width="13"
+                              height="13"
+                              fill="currentColor"
                             >
+                              <path
+                                d="M8 0a5.53 5.53 0 0 0-5.5 5.5c0 3.82 5.5 10.5 5.5 10.5s5.5-6.68 5.5-10.5A5.53 5.53 0 0 0 8 0zm0 7.5a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"
+                              />
+                            </svg>
+                            <span class="location-name">{{ hab.Summary }}</span>
+                            <span
+                              v-if="hab.Coords && hab.Coords.length > 0"
+                              class="location-coords"
+                            >
+                              <span v-for="(c, cIdx) in hab.Coords" :key="cIdx" class="coord-badge"
+                                ><span class="coord-paren">(</span>{{ c.x }},{{ c.y
+                                }}<span class="coord-paren">)</span></span
+                              >
+                            </span>
+                            <span v-if="hab.CoordsNote" class="location-coords-note">
+                              ({{ hab.CoordsNote }})
+                            </span>
+                          </button>
+                          <span
+                            v-if="!isHabitatMapEnabled(hab)"
+                            class="habitat-plain-text"
+                            :title="hab.MobName ? `${hab.Summary}（${hab.MobName}）` : hab.Summary"
+                          >
+                            {{ hab.MobName ? `${hab.Summary}（${hab.MobName}）` : hab.Summary }}
                           </span>
-                          <span v-if="subHab.CoordsNote" class="location-coords-note">
-                            ({{ subHab.CoordsNote }})
+                          <span v-if="hab.Note" class="habitat-note" :title="hab.Note">
+                            ({{ hab.Note }})
                           </span>
-                        </button>
-                      </el-tooltip>
-                      <span
-                        v-if="isHabitatPlainText(subHab)"
-                        class="habitat-plain-text"
-                        :title="
-                          subHab.MobName ? `${subHab.Summary} · ${subHab.MobName}` : subHab.Summary
-                        "
-                      >
-                        {{
-                          subHab.MobName ? `${subHab.Summary} · ${subHab.MobName}` : subHab.Summary
-                        }}
-                      </span>
-                    </div>
-                  </template>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+
+                <div
+                  v-if="displayCommunityHabitats.length > 0"
+                  class="habitat-group community-group"
+                >
+                  <div class="habitat-title">社区提交</div>
+                  <div class="habitat-location">
+                    <template v-for="(hab, idx) in displayCommunityHabitats" :key="idx">
+                      <div class="habitat-item-row">
+                        <span class="habitat-level-text">
+                          {{
+                            getHabitatDisplayLevel(hab) ? `Lv.${getHabitatDisplayLevel(hab)}` : ""
+                          }}
+                        </span>
+                        <span
+                          class="habitat-type-tag"
+                          :class="resolveHabitatTypeTag(hab.Type)?.className"
+                        >
+                          {{ resolveHabitatTypeTag(hab.Type)?.label }}
+                        </span>
+                        <div class="habitat-item-content">
+                          <button
+                            v-if="isHabitatMapEnabled(hab)"
+                            type="button"
+                            class="habitat-map-btn"
+                            @click="openHabitatMap(hab)"
+                          >
+                            <svg
+                              class="map-pin-icon"
+                              viewBox="0 0 16 16"
+                              width="13"
+                              height="13"
+                              fill="currentColor"
+                            >
+                              <path
+                                d="M8 0a5.53 5.53 0 0 0-5.5 5.5c0 3.82 5.5 10.5 5.5 10.5s5.5-6.68 5.5-10.5A5.53 5.53 0 0 0 8 0zm0 7.5a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"
+                              />
+                            </svg>
+                            <span class="location-name">{{
+                              hab.MobName
+                                ? `${hab.Summary}（${hab.MobName}）`
+                                : hab.EventName || hab.Summary
+                            }}</span>
+                            <span
+                              v-if="hab.Coords && hab.Coords.length > 0"
+                              class="location-coords"
+                            >
+                              <span v-for="(c, cIdx) in hab.Coords" :key="cIdx" class="coord-badge"
+                                ><span class="coord-paren">(</span>{{ c.x }},{{ c.y
+                                }}<span class="coord-paren">)</span></span
+                              >
+                            </span>
+                            <span v-if="hab.CoordsNote" class="location-coords-note">
+                              ({{ hab.CoordsNote }})
+                            </span>
+                          </button>
+                          <span
+                            v-if="!isHabitatMapEnabled(hab)"
+                            class="habitat-plain-text"
+                            :title="
+                              hab.MobName
+                                ? `${hab.Summary}（${hab.MobName}）`
+                                : hab.EventName || hab.Summary
+                            "
+                          >
+                            {{
+                              hab.MobName
+                                ? `${hab.Summary}（${hab.MobName}）`
+                                : hab.EventName || hab.Summary
+                            }}
+                          </span>
+                          <span v-if="hab.Note" class="habitat-note" :title="hab.Note">
+                            ({{ hab.Note }})
+                          </span>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1217,7 +1098,7 @@ function handleClearAllCaptured(): void {
       v-model="mapDialogVisible"
       :beast-name="selectedDisplay.Name"
       :sub-name="activeMapHabitat?.MobName"
-      :event-tag="activeMapHabitat?.Tag"
+      :event-tag="activeMapHabitat?.Type"
       :event-name="activeMapHabitat?.EventName"
       :habitat-name="activeMapHabitat?.Summary ?? selectedDisplay.Habitats?.[0]?.Summary ?? ''"
       :map-id="activeMapHabitat?.MapId ?? selectedDisplay.Habitats?.[0]?.MapId"
@@ -2145,11 +2026,19 @@ function handleClearAllCaptured(): void {
               flex: 1;
               width: 100%;
               max-width: 100%;
-            }
+              overflow-y: auto;
+              scrollbar-width: thin;
+              scrollbar-color: #dcd4c6 transparent;
 
-            &.substitute-col {
-              flex: 1;
-              min-width: 0;
+              .habitat-group {
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+
+                &.community-group {
+                  margin-top: 10px;
+                }
+              }
             }
 
             .habitat-title {
@@ -2178,34 +2067,16 @@ function handleClearAllCaptured(): void {
               flex-direction: column;
               align-items: flex-start;
               gap: 4px;
-              flex: 1;
-              min-height: 0;
-              max-height: 136px;
-              overflow-y: auto;
-              padding-right: 4px;
-              scrollbar-width: thin;
-              scrollbar-color: #dcd4c6 transparent;
-
-              &::-webkit-scrollbar {
-                width: 3px;
-              }
-
-              &::-webkit-scrollbar-thumb {
-                background: #dcd4c6;
-                border-radius: 2px;
-              }
-
-              &::-webkit-scrollbar-thumb:hover {
-                background: #bfaea0;
-              }
+              width: 100%;
+              box-sizing: border-box;
 
               .habitat-item-row {
-                display: flex;
-                align-items: flex-start;
-                gap: 4px;
+                display: grid;
+                grid-template-columns: 58px 28px minmax(0, 1fr);
+                align-items: baseline;
+                column-gap: 2px;
                 width: 100%;
                 min-width: 0;
-                min-height: 22px;
                 box-sizing: border-box;
 
                 .habitat-level-text {
@@ -2213,101 +2084,85 @@ function handleClearAllCaptured(): void {
                   font-size: 11.5px;
                   font-weight: 700;
                   color: #8c430e;
-                  flex-shrink: 0;
-                  line-height: 16px;
-                  margin-top: 2px;
+                  line-height: 18px;
                   white-space: nowrap;
                   letter-spacing: -0.3px;
                   font-variant-numeric: tabular-nums;
+                  text-align: right;
                 }
 
                 .habitat-type-tag {
-                  font-size: 10.5px;
-                  font-weight: 700;
-                  width: 38px;
-                  min-width: 38px;
-                  max-width: 38px;
-                  height: 18px;
-                  line-height: 16px;
-                  border-radius: 2px;
-                  display: inline-flex;
-                  align-items: center;
-                  justify-content: center;
-                  flex-shrink: 0;
-                  box-sizing: border-box;
-                  letter-spacing: 0.2px;
-                  margin-top: 1px;
+                  font-size: 11.5px;
+                  // font-weight: 700;
+                  line-height: 18px;
+                  user-select: none;
+                  white-space: nowrap;
+                  padding-left: 3px;
 
                   &.tag-overworld {
-                    color: #24522a;
-                    background: #edf4ec;
-                    border: 1px solid #a3c4a8;
+                    color: #2b6c33;
                   }
 
                   &.tag-dungeon {
-                    color: #1e3d66;
-                    background: #eef3f9;
-                    border: 1px solid #9db5d2;
+                    color: #204e84;
                   }
 
                   &.tag-fate {
-                    color: #7c4708;
-                    background: #fdf6e6;
-                    border: 1px solid #d9b87b;
+                    color: #a05c08;
                   }
+                }
 
-                  &.tag-leve {
-                    color: #17544b;
-                    background: #ecf5f3;
-                    border: 1px solid #9cc4bd;
-                  }
-
-                  &.tag-guildhest {
-                    color: #38306b;
-                    background: #f1eff8;
-                    border: 1px solid #b3a7d4;
-                  }
+                .habitat-item-content {
+                  display: flex;
+                  flex-wrap: wrap;
+                  align-items: baseline;
+                  gap: 2px 4px;
+                  min-width: 0;
                 }
 
                 .habitat-plain-text {
                   font-size: 11.5px;
                   font-weight: 600;
                   color: #3b2d1d;
-                  line-height: 16px;
-                  margin-top: 2px;
+                  line-height: 18px;
                   word-break: break-all;
-                  flex: 1;
                   min-width: 0;
+                }
+
+                .habitat-note {
+                  font-size: 11px;
+                  font-weight: 500;
+                  color: #7b6d5c;
+                  line-height: 18px;
+                  word-break: break-all;
                 }
 
                 .habitat-map-btn {
                   display: inline-flex;
                   flex-wrap: wrap;
-                  align-items: center;
-                  gap: 2px 4px;
-                  padding: 1px 6px;
+                  align-items: baseline;
+                  gap: 2px 2px;
+                  padding: 1px 4px;
                   background: #fbf8f2;
                   border: 1px solid #cbbeae;
                   border-radius: 4px;
                   font-size: 11.5px;
                   color: #433221;
-                  line-height: 16px;
-                  min-height: 20px;
                   cursor: pointer;
                   user-select: none;
                   transition: all 0.15s ease;
                   text-align: left;
                   box-sizing: border-box;
                   max-width: 100%;
-                  flex-shrink: 1;
+                  min-width: 0;
+                  flex: 0 1 auto;
 
                   .map-pin-icon {
                     color: #8c430e;
                     flex-shrink: 0;
                     width: 12px;
                     height: 12px;
-                    margin-top: 2px;
-                    align-self: flex-start;
+                    align-self: center;
                     transition:
                       transform 0.15s ease,
                       color 0.15s ease;
@@ -2317,7 +2172,7 @@ function handleClearAllCaptured(): void {
                     font-size: 11.5px;
                     font-weight: 700;
                     color: #2e2012;
-                    line-height: 16px;
+                    line-height: 18px;
                     word-break: break-word;
                   }
 
@@ -2333,7 +2188,7 @@ function handleClearAllCaptured(): void {
                       font-family: Consolas, "Courier New", monospace;
                       font-weight: 700;
                       color: #7b4c16;
-                      line-height: 16px;
+                      line-height: 18px;
                       letter-spacing: -0.5px;
                       transition: color 0.15s;
 
@@ -2352,7 +2207,7 @@ function handleClearAllCaptured(): void {
                   .location-coords-note {
                     font-size: 10.5px;
                     color: #8c7d6b;
-                    line-height: 16px;
+                    line-height: 18px;
                   }
 
                   &:hover {
@@ -2376,19 +2231,6 @@ function handleClearAllCaptured(): void {
                     transform: translateY(1px);
                   }
                 }
-              }
-            }
-          }
-        }
-
-        &.has-substitutes {
-          .habitat-columns {
-            .habitat-col {
-              &.main-habitat-col,
-              &.substitute-col {
-                flex: 0 0 calc(50% - 6px);
-                width: calc(50% - 6px);
-                max-width: calc(50% - 6px);
               }
             }
           }
@@ -2813,8 +2655,7 @@ function handleClearAllCaptured(): void {
         }
 
         .habitat-section .habitat-location .habitat-item-row {
-          flex-wrap: wrap;
-          gap: 4px;
+          grid-template-columns: 58px 28px minmax(0, 1fr);
 
           .habitat-map-btn {
             flex-wrap: wrap;

@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 import { ElCheckbox, ElDialog, ElLoadingDirective as vLoading } from "element-plus";
-import { getBeastEventTagClass, type BeastSubstituteTag } from "@/resources/beastbook";
+import {
+  getBeastEventTagClass,
+  getBeastEventTagLabel,
+  type BeastHabitatType,
+} from "@/resources/beastbook";
 
 interface EorzeaMapMarker {
   remove?(): void;
@@ -42,15 +46,14 @@ export interface BeastCoord {
 
 export interface BeastHabitatItem {
   Summary: string;
-  Type: "overworld" | "dungeon" | "special";
+  Type: BeastHabitatType;
   MapId?: number;
   Coords?: BeastCoord[];
   CoordsNote?: string;
   Level?: string;
   MobName?: string;
-  IsSubstitute?: boolean;
-  Tag?: "FATE" | "理符" | "行会令";
   EventName?: string;
+  Note?: string;
 }
 
 export interface BeastListItem {
@@ -67,16 +70,16 @@ export interface BeastListItem {
   Level: string;
   IconUrl: string;
   Habitats?: BeastHabitatItem[];
-  Substitutes?: string[];
-  SubstituteHabitats?: BeastHabitatItem[];
+  CommunityHabitats?: BeastHabitatItem[];
 }
 
 interface MapMonsterItem {
   number: number;
   primaryName: string;
   subName?: string;
-  eventTag?: BeastSubstituteTag | string;
+  eventTag?: string;
   eventName?: string;
+  note?: string;
   level: string;
   sortLevel: number;
   iconUrl: string;
@@ -91,7 +94,7 @@ const props = defineProps<{
   modelValue: boolean;
   beastName: string;
   subName?: string;
-  eventTag?: BeastSubstituteTag | string;
+  eventTag?: string;
   eventName?: string;
   habitatName: string;
   mapId?: number;
@@ -120,7 +123,7 @@ let scriptLoadPromise: Promise<void> | null = null;
 const activeBeastNumber = ref<number>(props.currentBeastNumber ?? 0);
 const activePrimaryName = ref<string>(props.beastName);
 const activeSubName = ref<string | undefined>(props.subName);
-const activeEventTag = ref<BeastSubstituteTag | string | undefined>(props.eventTag);
+const activeEventTag = ref<string | undefined>(props.eventTag);
 const activeEventName = ref<string | undefined>(props.eventName);
 const activeCoords = ref<BeastCoord[]>([]);
 
@@ -154,104 +157,113 @@ function parseLevelSort(levelStr?: string): number {
   return Math.min(...nums);
 }
 
-function getMatchedHabitatForBeast(
+function getMatchedHabitatsForBeast(
   b: BeastListItem,
   isCurrentSelected: boolean,
-): BeastHabitatItem | undefined {
+): BeastHabitatItem[] {
   const currentTag = activeEventTag.value ?? props.eventTag;
   const currentEvent = activeEventName.value ?? props.eventName;
   const currentSub = activeSubName.value ?? props.subName;
 
-  if (isCurrentSelected && (currentTag || currentEvent || currentSub)) {
-    if (b.SubstituteHabitats && b.SubstituteHabitats.length > 0) {
-      const exactSub = b.SubstituteHabitats.find((h) => {
-        if (props.mapId && h.MapId !== props.mapId) return false;
-        if (currentEvent && h.EventName === currentEvent) return true;
-        if (currentSub && h.MobName === currentSub) return true;
-        return false;
-      });
-      if (exactSub) return exactSub;
+  const allCandidateHabs = [...(b.Habitats ?? []), ...(b.CommunityHabitats ?? [])];
 
-      if (currentTag) {
-        const tagSub = b.SubstituteHabitats.find((h) => {
-          if (props.mapId && h.MapId !== props.mapId) return false;
-          return h.Tag === currentTag;
-        });
-        if (tagSub) return tagSub;
+  const mapHabs = allCandidateHabs.filter((h) => {
+    if (props.mapId != null && h.MapId !== props.mapId) {
+      return false;
+    }
+    return true;
+  });
+
+  if (mapHabs.length === 0) {
+    return [];
+  }
+
+  if (isCurrentSelected) {
+    const exactEvent = mapHabs.find((h) => {
+      if (currentEvent && h.EventName === currentEvent) {
+        return true;
+      }
+
+      if (currentSub && h.MobName === currentSub) {
+        return true;
+      }
+
+      return false;
+    });
+
+    if (exactEvent) {
+      return [exactEvent, ...mapHabs.filter((h) => h !== exactEvent)];
+    }
+
+    if (currentTag) {
+      const tagMatch = mapHabs.find((h) => h.Type?.toLowerCase() === currentTag.toLowerCase());
+
+      if (tagMatch) {
+        return [tagMatch, ...mapHabs.filter((h) => h !== tagMatch)];
+      }
+    }
+
+    if (props.coords?.length) {
+      const coordMatch = mapHabs.find((h) =>
+        h.Coords?.some((c) => props.coords!.some((pc) => pc.x === c.x && pc.y === c.y)),
+      );
+
+      if (coordMatch) {
+        return [coordMatch, ...mapHabs.filter((h) => h !== coordMatch)];
       }
     }
   }
 
-  if (isCurrentSelected && props.coords && props.coords.length > 0) {
-    const firstCoord = props.coords[0];
-    if (firstCoord) {
-      const allCandidateHabs = [...(b.Habitats ?? []), ...(b.SubstituteHabitats ?? [])];
-      const coordHit = allCandidateHabs.find((h) => {
-        if (props.mapId && h.MapId !== props.mapId) return false;
-        return h.Coords?.some((c) => c.x === firstCoord.x && c.y === firstCoord.y);
-      });
-      if (coordHit) return coordHit;
-    }
-  }
-
-  if (b.Habitats && b.Habitats.length > 0) {
-    const mainHit = b.Habitats.find((h) => {
-      if (props.mapId && h.MapId === props.mapId) return true;
-      if (props.habitatName && h.Summary === props.habitatName) return true;
-      return false;
-    });
-    if (mainHit) return mainHit;
-  }
-
-  if (b.SubstituteHabitats && b.SubstituteHabitats.length > 0) {
-    const subFallback = b.SubstituteHabitats.find((h) => {
-      if (props.mapId && h.MapId === props.mapId) return true;
-      if (props.habitatName && h.Summary === props.habitatName) return true;
-      return false;
-    });
-    if (subFallback) return subFallback;
-  }
-
-  return undefined;
+  return mapHabs;
 }
 
 const mapMonsterList = computed<MapMonsterItem[]>(() => {
-  if (!props.allBeasts || props.allBeasts.length === 0) return [];
+  if (!props.allBeasts || props.allBeasts.length === 0) {
+    return [];
+  }
+
   const list: MapMonsterItem[] = [];
 
   for (const b of props.allBeasts) {
     const isSel = b.Number === activeBeastNumber.value;
     const isCurrent = isSel || b.Number === props.currentBeastNumber;
-    const matchedHab = getMatchedHabitatForBeast(b, isCurrent);
 
-    if (matchedHab) {
-      const level = matchedHab.Level ?? b.Level ?? "-";
-      const coords = matchedHab.Coords ?? [];
-      const coordsText = coords.map((c) => `X: ${c.x}, Y: ${c.y}`).join(" / ");
-      const isCap = Boolean(props.captured?.[b.Number.toString()]);
+    const matchedHabs = getMatchedHabitatsForBeast(b, isCurrent);
+
+    if (matchedHabs.length === 0) {
+      continue;
+    }
+
+    const isCap = Boolean(props.captured?.[b.Number.toString()]);
+
+    matchedHabs.forEach((habitat, index) => {
+      const coords = habitat.Coords ?? [];
+      const level = habitat.Level ?? b.Level ?? "-";
 
       list.push({
         number: b.Number,
         primaryName: b.Name,
-        subName: matchedHab.MobName,
-        eventTag: matchedHab.Tag,
-        eventName: matchedHab.EventName,
+        subName: habitat.MobName,
+        eventTag: habitat.Type,
+        eventName: habitat.EventName,
+        note: habitat.Note,
         level,
         sortLevel: parseLevelSort(level),
         iconUrl: b.IconUrl,
         coords,
-        coordsText,
+        coordsText: coords.map((c) => `X: ${c.x}, Y: ${c.y}`).join(" / "),
         isCaptured: isCap,
-        isSelected: isSel,
-        habitatItem: matchedHab,
+        isSelected: isSel && index === 0,
+        habitatItem: habitat,
       });
-    }
+    });
   }
 
   return list.sort((a, b) => {
     if (a.sortLevel !== b.sortLevel) {
       return a.sortLevel - b.sortLevel;
     }
+
     return a.number - b.number;
   });
 });
@@ -388,7 +400,15 @@ async function renderMap(targetCoords?: BeastCoord[]): Promise<void> {
     const first = coords[0];
     if (first) {
       const targetLatLng = mapInstance.mapToLatLng2D(first.x, first.y);
-      mapInstance.setView(targetLatLng, -0.5, { animate: !isMapChanged });
+      if (isMapChanged) {
+        setTimeout(() => {
+          if (mapInstance) {
+            mapInstance.setView(targetLatLng, 0);
+          }
+        }, 300);
+      } else {
+        mapInstance.setView(targetLatLng, 0, { animate: true });
+      }
     }
   } finally {
     loading.value = false;
@@ -421,7 +441,7 @@ function handleOpened(): void {
       const first = activeCoords.value[0] ?? normalizedCoords.value[0];
       if (first) {
         const targetLatLng = mapInstance.mapToLatLng2D(first.x, first.y);
-        mapInstance.setView(targetLatLng, -0.5, { animate: false });
+        mapInstance.setView(targetLatLng, 0, { animate: false });
       }
     } else {
       void renderMap();
@@ -501,13 +521,16 @@ onBeforeUnmount(() => {
                 {{ activeSubName }}
               </span>
             </div>
-            <div v-if="activeEventTag || activeEventName" class="active-event-row">
+            <div
+              v-if="getBeastEventTagLabel(activeEventTag) || activeEventName"
+              class="active-event-row"
+            >
               <span
-                v-if="activeEventTag"
+                v-if="getBeastEventTagLabel(activeEventTag)"
                 class="active-event-tag"
                 :class="getBeastEventTagClass(activeEventTag)"
               >
-                {{ activeEventTag }}
+                {{ getBeastEventTagLabel(activeEventTag) }}
               </span>
               <span v-if="activeEventName" class="active-event-title">
                 {{ activeEventName }}
@@ -568,16 +591,22 @@ onBeforeUnmount(() => {
                   <span class="primary-text">{{ item.primaryName }}</span>
                   <span v-if="item.subName" class="sub-text">{{ item.subName }}</span>
                 </div>
-                <div v-if="item.eventTag || item.eventName" class="name-event-line">
+                <div
+                  v-if="getBeastEventTagLabel(item.eventTag) || item.eventName || item.note"
+                  class="name-event-line"
+                >
                   <span
-                    v-if="item.eventTag"
+                    v-if="getBeastEventTagLabel(item.eventTag)"
                     class="event-tag-badge"
                     :class="getBeastEventTagClass(item.eventTag)"
                   >
-                    {{ item.eventTag }}
+                    {{ getBeastEventTagLabel(item.eventTag) }}
                   </span>
                   <span v-if="item.eventName" class="event-name-text">
                     {{ item.eventName }}
+                  </span>
+                  <span v-if="item.note" class="event-note-text" :title="item.note">
+                    ({{ item.note }})
                   </span>
                 </div>
               </div>
@@ -669,6 +698,18 @@ onBeforeUnmount(() => {
   }
 }
 
+:deep(.leaflet-control-layers-list),
+:deep(.leaflet-control-layers-scrollbar) {
+  max-height: none !important;
+  overflow: hidden !important;
+  scrollbar-width: none;
+}
+
+:deep(.leaflet-control-layers-list::-webkit-scrollbar),
+:deep(.leaflet-control-layers-scrollbar::-webkit-scrollbar) {
+  display: none;
+}
+
 .sidebar-panel {
   width: 460px;
   flex-shrink: 0;
@@ -745,6 +786,12 @@ onBeforeUnmount(() => {
             color: #7e5210;
             background: #fbf4e6;
             border: 1px solid #dec08a;
+          }
+
+          &.tag-overworld {
+            color: #1c5947;
+            background: #e8f4f0;
+            border: 1px solid #9ecbbd;
           }
 
           &.tag-leve {
@@ -1116,16 +1163,10 @@ onBeforeUnmount(() => {
             border: 1px solid #dec08a;
           }
 
-          &.tag-leve {
+          &.tag-overworld {
             color: #1c5947;
             background: #e8f4f0;
             border: 1px solid #9ecbbd;
-          }
-
-          &.tag-guildhest {
-            color: #29437a;
-            background: #edf0f8;
-            border: 1px solid #abb7da;
           }
 
           &.tag-dungeon {
@@ -1139,6 +1180,15 @@ onBeforeUnmount(() => {
           font-size: 11.5px;
           color: #705d4b;
           font-weight: 600;
+          white-space: normal;
+          line-height: 1.25;
+          word-break: break-all;
+        }
+
+        .event-note-text {
+          font-size: 11px;
+          color: #8c7d6b;
+          font-weight: 500;
           white-space: normal;
           line-height: 1.25;
           word-break: break-all;

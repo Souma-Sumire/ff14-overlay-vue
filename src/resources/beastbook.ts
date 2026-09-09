@@ -1,8 +1,9 @@
-import beastbookData from "@/resources/generated/beastbook.json";
+import rawBeastbookData from "./generated/beastbook.json";
+import { BEAST_COMMUNITY_PATCHES, type BeastCommunityPatch } from "./beastbookCommunity";
+import { getMapIdByName } from "./maps";
 
-export type BeastHabitatType = "overworld" | "dungeon" | "special";
-
-export type BeastSubstituteTag = "行会令" | "理符" | "FATE";
+export type BeastHabitatSourceType = "overworld" | "dungeon" | "fate";
+export type BeastHabitatType = BeastHabitatSourceType | "special";
 
 export interface BeastTagMeta {
   label: string;
@@ -12,38 +13,66 @@ export interface BeastTagMeta {
 export const BEAST_HABITAT_TYPE_META: Record<BeastHabitatType, BeastTagMeta | null> = {
   overworld: { label: "野外", className: "tag-overworld" },
   dungeon: { label: "副本", className: "tag-dungeon" },
+  fate: { label: "FATE", className: "tag-fate" },
   special: null,
 };
 
-export const BEAST_SUBSTITUTE_TAG_META: Record<BeastSubstituteTag, BeastTagMeta> = {
-  行会令: { label: "行会令", className: "tag-guildhest" },
-  理符: { label: "理符", className: "tag-leve" },
-  FATE: { label: "FATE", className: "tag-fate" },
-};
+export function normalizeHabitatItem(
+  hab: BeastHabitatItem,
+  beastInfo?: { number: number; name: string },
+): BeastHabitatItem {
+  const summary = hab.Summary?.trim() ?? "";
+  let mapId = hab.MapId;
 
-export function resolveHabitatTypeTag(type?: string): BeastTagMeta | null {
+  if (
+    (hab.Type === "overworld" || hab.Type === "fate") &&
+    summary &&
+    summary !== "--" &&
+    summary !== "初始自带"
+  ) {
+    const resolvedMapId = getMapIdByName(summary);
+    if (resolvedMapId !== undefined) {
+      mapId = resolvedMapId;
+    } else {
+      const infoText = beastInfo ? `（怪兽 #${beastInfo.number} ${beastInfo.name}）` : "";
+      console.error(
+        `[Beastbook] 未知地图名称: "${summary}"${infoText}，无法解析 MapId，请检查并修正地图名称。`,
+      );
+    }
+  }
+
+  return {
+    ...hab,
+    Summary: summary,
+    MapId: mapId,
+  };
+}
+
+export function resolveHabitatTypeTag(type?: BeastHabitatType): BeastTagMeta | null {
   if (!type) return null;
   if (Object.prototype.hasOwnProperty.call(BEAST_HABITAT_TYPE_META, type)) {
-    return BEAST_HABITAT_TYPE_META[type as BeastHabitatType];
+    return BEAST_HABITAT_TYPE_META[type] ?? null;
   }
   return null;
 }
 
-export function resolveSubstituteTag(tag?: string, type?: string): BeastTagMeta | null {
-  if (tag && Object.prototype.hasOwnProperty.call(BEAST_SUBSTITUTE_TAG_META, tag)) {
-    return BEAST_SUBSTITUTE_TAG_META[tag as BeastSubstituteTag];
+function resolveHabitatTypeTagFromValue(type?: string): BeastTagMeta | null {
+  const normalizedType = type?.toLowerCase();
+  if (
+    !normalizedType ||
+    !Object.prototype.hasOwnProperty.call(BEAST_HABITAT_TYPE_META, normalizedType)
+  ) {
+    return null;
   }
-  if (type) {
-    return resolveHabitatTypeTag(type);
-  }
-  return null;
+  return resolveHabitatTypeTag(normalizedType as BeastHabitatType);
 }
 
 export function getBeastEventTagClass(tag?: string): string {
-  if (tag && Object.prototype.hasOwnProperty.call(BEAST_SUBSTITUTE_TAG_META, tag)) {
-    return BEAST_SUBSTITUTE_TAG_META[tag as BeastSubstituteTag].className;
-  }
-  return "";
+  return resolveHabitatTypeTagFromValue(tag)?.className ?? "";
+}
+
+export function getBeastEventTagLabel(tag?: string): string | undefined {
+  return resolveHabitatTypeTagFromValue(tag)?.label;
 }
 
 export interface BeastCoord {
@@ -59,9 +88,8 @@ export interface BeastHabitatItem {
   CoordsNote?: string;
   Level?: string;
   MobName?: string;
-  IsSubstitute?: boolean;
-  Tag?: BeastSubstituteTag;
   EventName?: string;
+  Note?: string;
 }
 
 export interface BeastEntry {
@@ -82,9 +110,8 @@ export interface BeastEntry {
   OrderIcon?: number;
   Habitat: string;
   Habitats?: BeastHabitatItem[];
+  CommunityHabitats?: BeastHabitatItem[];
   Icon?: number;
-  Substitutes?: string[];
-  SubstituteHabitats?: BeastHabitatItem[];
 }
 
 export interface BeastDisplay extends Omit<
@@ -97,6 +124,69 @@ export interface BeastDisplay extends Omit<
   ReleaseIconUrl: string;
   OrderIconUrl: string;
   BorrowIconUrl: string;
+}
+
+export function getBeastHabitats(
+  beast: Pick<BeastEntry, "Habitats" | "CommunityHabitats">,
+): BeastHabitatItem[] {
+  return [...(beast.Habitats ?? []), ...(beast.CommunityHabitats ?? [])];
+}
+
+export function parseBeastLevelRange(level?: string): [number, number] {
+  if (!level || level.trim() === "-") return [0, 0];
+  const levels = level.match(/\d+/g)?.map(Number);
+  if (!levels?.length) return [0, 0];
+  return [Math.min(...levels), Math.max(...levels)];
+}
+
+export function getBeastDisplayLevel(
+  beast: Pick<BeastEntry, "Habitats" | "CommunityHabitats">,
+): string {
+  const levels = [
+    ...new Set(
+      getBeastHabitats(beast)
+        .map((habitat) => habitat.Level)
+        .filter((level): level is string => Boolean(level && level !== "-")),
+    ),
+  ];
+  return levels.length > 0 ? levels.join(" / ") : "-";
+}
+
+export function getBeastMinLevel(
+  beast: Pick<BeastEntry, "Habitats" | "CommunityHabitats">,
+): number {
+  return parseBeastLevelRange(getBeastDisplayLevel(beast))[0];
+}
+
+export function matchesBeastLevelRange(
+  beast: Pick<BeastEntry, "Habitats" | "CommunityHabitats">,
+  [selectedMin, selectedMax]: [number, number],
+): boolean {
+  if (selectedMin <= 1 && selectedMax >= 50) return true;
+  const habitats = getBeastHabitats(beast);
+  return (
+    habitats.length === 0 ||
+    habitats.some(({ Level }) => {
+      const [min, max] = parseBeastLevelRange(Level);
+      return max >= selectedMin && min <= selectedMax;
+    })
+  );
+}
+
+export function sortHabitatsByLevel(habitats?: BeastHabitatItem[]): BeastHabitatItem[] {
+  return [...(habitats ?? [])].sort(
+    (a, b) => parseBeastLevelRange(a.Level)[0] - parseBeastLevelRange(b.Level)[0],
+  );
+}
+
+export function hasMatchingHabitat(
+  beast: Pick<BeastEntry, "Habitats" | "CommunityHabitats">,
+  types: readonly BeastHabitatType[],
+  summary = "all",
+): boolean {
+  return getBeastHabitats(beast).some(
+    (habitat) => types.includes(habitat.Type) && (summary === "all" || habitat.Summary === summary),
+  );
 }
 
 export const ALL_CAPTURE_STATUS = ["已拥有", "未拥有"] as const;
@@ -149,12 +239,12 @@ export function extractBeastConstants(entries: BeastEntry[]): {
   overworldHabitats: string[];
   dungeonHabitats: string[];
 } {
-  const allHabitats: BeastHabitatItem[] = entries.flatMap((b) => b.Habitats ?? []);
+  const allHabitats = entries.flatMap(getBeastHabitats);
 
   const rawOverworld = [
     ...new Set(
       allHabitats
-        .filter((h) => h.Type === "overworld")
+        .filter((h) => h.Type === "overworld" || h.Type === "fate")
         .map((h) => h.Summary)
         .filter((s): s is string => Boolean(s)),
     ),
@@ -179,7 +269,49 @@ export function extractBeastConstants(entries: BeastEntry[]): {
   };
 }
 
-const defaultConstants = extractBeastConstants(beastbookData as BeastEntry[]);
+export function applyCommunityPatches(
+  rawList: BeastEntry[],
+  patches: Record<number, BeastCommunityPatch>,
+): BeastEntry[] {
+  return rawList.map((beast) => {
+    const patch = patches[beast.Number];
+    if (!patch) return beast;
+
+    const baseHabs = beast.Habitats ? [...beast.Habitats] : [];
+    let primaryHab: BeastHabitatItem;
+
+    if (baseHabs.length > 0 && baseHabs[0]) {
+      primaryHab = { ...baseHabs[0] };
+    } else {
+      primaryHab = {
+        Summary: "--",
+        Type: "overworld",
+      };
+    }
+
+    if (patch.coords !== undefined) primaryHab.Coords = patch.coords;
+    if (patch.level !== undefined) primaryHab.Level = patch.level;
+
+    const beastInfo = { number: beast.Number, name: beast.Name };
+    const extraHabs: BeastHabitatItem[] = (patch.extraHabitats ? [...patch.extraHabitats] : []).map(
+      (hab) => normalizeHabitatItem(hab, beastInfo),
+    );
+    const sortedExtraHabitats = sortHabitatsByLevel(extraHabs);
+
+    return {
+      ...beast,
+      Habitats: [normalizeHabitatItem(primaryHab, beastInfo)],
+      CommunityHabitats: sortedExtraHabitats.length > 0 ? sortedExtraHabitats : undefined,
+    };
+  });
+}
+
+export const beastbookData: BeastEntry[] = applyCommunityPatches(
+  rawBeastbookData as BeastEntry[],
+  BEAST_COMMUNITY_PATCHES,
+);
+
+const defaultConstants = extractBeastConstants(beastbookData);
 
 export const ALL_TAXONOMIES: readonly string[] = defaultConstants.taxonomies;
 export const ALL_ATTACK_TYPES: readonly string[] = defaultConstants.attackTypes;

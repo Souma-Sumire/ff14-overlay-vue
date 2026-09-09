@@ -26,6 +26,7 @@ const scripts: string[] = [
   "contentFinderCondition.ts",
   "meals.ts",
   "world.ts",
+  "extractMaps.ts",
   "beastbook.ts",
 ];
 

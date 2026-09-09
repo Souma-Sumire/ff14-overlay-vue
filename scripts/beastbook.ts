@@ -3,7 +3,6 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { csvPaths } from "./paths.js";
-import type { BeastCoord } from "../src/resources/beastbook";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -75,364 +74,15 @@ const placeNameMap = parseCsv("PlaceName.csv");
 const mapMap = parseCsv("Map.csv");
 const cfcMap = parseCsv("ContentFinderCondition.csv");
 const actionTransientMap = parseCsv("ActionTransient.csv");
-const territoryTypeMap = parseCsv("TerritoryType.csv");
-const guildOrderMap = parseCsv("GuildOrder.csv");
-const bnpcNameMap = parseCsv("BNpcName.csv");
 const addonMap = parseCsv("Addon.csv");
 const xbmElementMap = parseCsv("XBMElement.csv");
 const attackTypeMap = parseCsv("AttackType.csv");
-
-interface BeastCommunityHabitat {
-  mapId?: number;
-  summary?: string;
-  coords?: BeastCoord[];
-  level?: string;
-  type?: "overworld" | "dungeon" | "special";
-  mobName?: string;
-}
-
-interface BeastCommunityCoordEntry {
-  coords?: BeastCoord[];
-  level?: string;
-  habitats?: BeastCommunityHabitat[];
-}
-
-interface SubstituteRuleFate {
-  eventName: string;
-  mobName: string;
-  mapId: number;
-  coords: BeastCoord[];
-  level?: string;
-  summary?: string;
-}
-
-interface SubstituteRuleLeve {
-  eventName: string;
-  mobName: string;
-  mapId: number;
-  coords: BeastCoord[];
-  level?: string;
-  summary?: string;
-}
-
-interface SubstituteRuleDungeon {
-  summary: string;
-  mobName: string;
-  level?: string;
-}
-
-interface SubstituteRule {
-  guildhests?: string[];
-  fates?: SubstituteRuleFate[];
-  leves?: SubstituteRuleLeve[];
-  dungeons?: SubstituteRuleDungeon[];
-  bnpcIds?: string[];
-}
-
-const communityCoords: Record<number, BeastCommunityCoordEntry> = {
-  2: {
-    coords: [{ x: 23.1, y: 17 }],
-    level: "1~2",
-  },
-  3: {
-    coords: [{ x: 23.8, y: 25.6 }],
-    level: "3~4",
-  },
-  4: {
-    coords: [
-      { x: 22, y: 22 },
-      { x: 20, y: 18 },
-    ],
-    level: "4~6",
-  },
-  5: {
-    coords: [{ x: 28.5, y: 24.3 }],
-    level: "5~9",
-  },
-  6: {
-    coords: [{ x: 30.9, y: 18.2 }],
-    level: "4~9",
-  },
-  7: {
-    coords: [{ x: 20.3, y: 28.6 }],
-    level: "6~8",
-  },
-  8: {
-    coords: [{ x: 19, y: 19 }],
-    level: "10",
-  },
-  9: {
-    coords: [{ x: 15.3, y: 14.3 }],
-    level: "10~13",
-  },
-  10: {
-    level: "1~4 / 10~13",
-    habitats: [
-      {
-        mapId: 21,
-        coords: [{ x: 22, y: 30 }],
-        level: "1~4",
-      },
-      {
-        mapId: 15,
-        coords: [{ x: 16, y: 12.5 }],
-        level: "10~13",
-      },
-    ],
-  },
-  11: {
-    coords: [{ x: 21, y: 26 }],
-    level: "6",
-  },
-  12: {
-    coords: [{ x: 21.4, y: 16.3 }],
-    level: "5~7",
-  },
-  13: {
-    coords: [
-      { x: 18.5, y: 28.3 },
-      { x: 19.6, y: 27.6 },
-    ],
-    level: "14",
-  },
-  14: {
-    coords: [{ x: 20.5, y: 18.5 }],
-    level: "4~8",
-  },
-  15: {
-    coords: [{ x: 16.5, y: 16.5 }],
-    level: "13",
-  },
-  16: {
-    coords: [
-      { x: 21, y: 23 },
-      { x: 22.8, y: 20.8 },
-    ],
-    level: "16",
-  },
-  17: {
-    level: "17 / 38",
-    habitats: [
-      {
-        summary: "封锁坑道铜铃铜山",
-        type: "dungeon",
-        level: "17",
-      },
-      {
-        summary: "流沙迷宫樵鸣洞",
-        type: "dungeon",
-        mobName: "滑沙",
-        level: "38",
-      },
-    ],
-  },
-  19: {
-    coords: [{ x: 26.5, y: 15.9 }],
-    level: "7",
-  },
-  20: {
-    coords: [{ x: 23, y: 26 }],
-    level: "10",
-  },
-  21: {
-    coords: [{ x: 24.1, y: 23.6 }],
-    level: "16",
-  },
-  22: {
-    coords: [{ x: 27, y: 25 }],
-    level: "3~4",
-  },
-  23: {
-    coords: [{ x: 24, y: 12.3 }],
-    level: "29",
-  },
-  24: {
-    coords: [{ x: 28.8, y: 36.7 }],
-    level: "30",
-  },
-  25: {
-    coords: [{ x: 22, y: 30 }],
-    level: "12",
-  },
-  26: {
-    coords: [{ x: 18.5, y: 17.5 }],
-    level: "8",
-  },
-  27: {
-    coords: [{ x: 16.8, y: 14.5 }],
-    level: "14",
-  },
-  28: {
-    coords: [{ x: 15.2, y: 37.5 }],
-    level: "31",
-  },
-  29: {
-    coords: [{ x: 17.4, y: 23.7 }],
-    level: "7",
-  },
-  30: {
-    coords: [{ x: 25.2, y: 24.5 }],
-    level: "12",
-  },
-  31: {
-    level: "4 / 9 / 33",
-    habitats: [
-      {
-        mapId: 16,
-        coords: [{ x: 24.6, y: 23 }],
-        level: "4",
-      },
-      {
-        mapId: 20,
-        coords: [{ x: 23, y: 23 }],
-        level: "9",
-      },
-      {
-        mapId: 17,
-        coords: [{ x: 17, y: 26 }],
-        level: "33",
-      },
-    ],
-  },
-  32: {
-    coords: [{ x: 30.6, y: 24 }],
-    level: "33",
-  },
-  33: {
-    coords: [{ x: 15.3, y: 14.7 }],
-    level: "34",
-  },
-  34: {
-    coords: [{ x: 31.2, y: 20.3 }],
-    level: "9",
-  },
-  35: {
-    coords: [{ x: 25, y: 39 }],
-    level: "32",
-  },
-  36: {
-    coords: [{ x: 27, y: 15 }],
-    level: "12~17",
-  },
-  39: {
-    coords: [{ x: 13.5, y: 22.3 }],
-    level: "31",
-  },
-  40: {
-    coords: [{ x: 20.2, y: 18.4 }],
-    level: "7",
-  },
-  41: {
-    coords: [
-      { x: 26.5, y: 18.9 },
-      { x: 26.1, y: 21.2 },
-    ],
-    level: "6",
-  },
-  42: {
-    coords: [{ x: 26.3, y: 12.9 }],
-    level: "45",
-  },
-  47: {
-    level: "50",
-    habitats: [
-      {
-        summary: "凛冽洞天披雪大冰壁",
-        type: "dungeon",
-        level: "50",
-      },
-      {
-        summary: "希瓦歼灭战",
-        type: "dungeon",
-        level: "50",
-      },
-    ],
-  },
-};
-
-const substituteRules: Record<number, SubstituteRule> = {
-  10: {
-    fates: [
-      {
-        eventName: "大胡蜂和黄衫队",
-        mobName: "胡蜂王",
-        mapId: 15,
-        coords: [{ x: 14.0, y: 15.0 }],
-        level: "13",
-      },
-    ],
-    bnpcIds: ["893", "953", "1983", "641"],
-  },
-  18: {
-    guildhests: ["2"],
-    fates: [
-      {
-        eventName: "无头骑士——波克曼",
-        mobName: "波克曼",
-        mapId: 5,
-        coords: [{ x: 27.3, y: 22.1 }],
-        level: "20",
-      },
-    ],
-  },
-  25: {
-    guildhests: ["4"],
-  },
-  31: {
-    guildhests: ["3"],
-  },
-  38: {
-    fates: [
-      {
-        eventName: "狂暴巨兽——强化奇美拉",
-        mobName: "强化奇美拉",
-        mapId: 53,
-        coords: [{ x: 31.4, y: 7.3 }],
-        level: "49",
-      },
-    ],
-  },
-  39: {
-    guildhests: ["9"],
-  },
-  40: {
-    guildhests: ["10"],
-  },
-  47: {
-    fates: [
-      {
-        eventName: "指挥官",
-        mobName: "寒冰指挥官",
-        mapId: 211,
-        coords: [{ x: 16.5, y: 13.6 }],
-        level: "48",
-      },
-    ],
-  },
-  50: {
-    fates: [
-      {
-        eventName: "传说的魔兽——贝希摩斯",
-        mobName: "贝希摩斯王",
-        mapId: 25,
-        coords: [{ x: 33.1, y: 16.2 }],
-        level: "50",
-      },
-    ],
-  },
-};
 
 interface BeastHabitat {
   Summary: string;
   Type: string;
   MapId?: number;
-  Coords?: BeastCoord[];
   Level?: string;
-  Tag?: string;
-  EventName?: string;
-  MobName?: string;
-  IsSubstitute?: boolean;
-  CoordsNote?: string;
 }
 
 interface BeastEntry {
@@ -453,9 +103,7 @@ interface BeastEntry {
   OrderIcon: number;
   Habitat: string;
   Icon: number;
-  Habitats?: BeastHabitat[];
-  Substitutes?: string[];
-  SubstituteHabitats?: BeastHabitat[];
+  Habitats: BeastHabitat[];
 }
 
 function cleanHex(str: string): string {
@@ -469,20 +117,6 @@ function cleanHex(str: string): string {
     .replace(/<hex:[0-9A-Fa-f]+>/g, "")
     .replace(/^"|"$/g, "")
     .trim();
-}
-
-function getPlaceName(pId?: string): string {
-  if (!pId) return "";
-  const r = placeNameMap.get(pId);
-  return r && r[0] ? r[0].replace(/^"|"$/g, "") : "";
-}
-
-function getPlaceNameByMapId(mId?: number | string): string {
-  if (!mId) return "";
-  const mMap = mapMap.get(mId.toString());
-  if (!mMap) return "";
-  const placeId = mMap[11];
-  return getPlaceName(placeId);
 }
 
 function getTaxonomyName(code: number): string {
@@ -564,124 +198,6 @@ function getHabitatType(locationKey?: string): string {
   return HABITAT_TYPE_MAP.get(locationKey ? locationKey.toString() : "") || "overworld";
 }
 
-const bnpcNames = [...bnpcNameMap.values()]
-  .map((r) => (r && r[0] ? r[0].replace(/^"|"$/g, "").trim() : ""))
-  .filter((n) => n.length >= 2)
-  .sort((a, b) => b.length - a.length);
-
-function getGuildhestSub(goId: string): BeastHabitat | null {
-  const goRow = guildOrderMap.get(goId);
-  if (!goRow) return null;
-  const title = getCol(goRow, 1).replace(/^"|"$/g, "");
-  const targetContent = (10000 + parseInt(goId, 10)).toString();
-  let cfcLevel = "-";
-  for (const cfcRow of cfcMap.values()) {
-    if (cfcRow[3] === targetContent) {
-      cfcLevel = cfcRow[18] || "-";
-      break;
-    }
-  }
-
-  let mobName = "";
-  for (const name of bnpcNames) {
-    if (title.includes(name)) {
-      mobName = name;
-      break;
-    }
-  }
-
-  return {
-    Summary: `行会令：${title}`,
-    Type: "dungeon",
-    Tag: "行会令",
-    EventName: title,
-    MobName: mobName,
-    IsSubstitute: true,
-    Level: cfcLevel,
-  };
-}
-
-interface BnpcSpawnInfo {
-  mapId: number;
-  place: string;
-  x: number;
-  y: number;
-  territoryId: string;
-}
-
-const levelLines = fs.readFileSync(path.join(chsPath, "Level.csv"), "utf8").split(/\r?\n/);
-const bnpcSpawnsMap = new Map<string, BnpcSpawnInfo[]>();
-
-for (let i = 3; i < levelLines.length; i++) {
-  const l = levelLines[i];
-  if (!l) continue;
-  const p = l.split(",");
-  if (p.length < 11) continue;
-  if (p[6] === "9") {
-    const bnpcId = p[7];
-    const mapIdStr = p[8];
-    const rawXStr = p[1];
-    const rawZStr = p[3];
-    const tId = p[10];
-    if (!bnpcId || !mapIdStr || !tId || rawXStr === undefined || rawZStr === undefined) continue;
-
-    const tRow = territoryTypeMap.get(tId);
-    if (!tRow) continue;
-    const intendedUse = getColInt(tRow, 10);
-    if (intendedUse === 9) continue;
-
-    const mMap = mapMap.get(mapIdStr);
-    if (!mMap) continue;
-
-    const scale = getColInt(mMap, 7) / 100;
-    const offsetX = getColInt(mMap, 8);
-    const offsetY = getColInt(mMap, 9);
-    const rawX = parseFloat(rawXStr);
-    const rawZ = parseFloat(rawZStr);
-
-    const x = parseFloat(
-      ((((rawX + offsetX) * scale + 1024) / 2048) * (41 / scale) + 1).toFixed(1),
-    );
-    const y = parseFloat(
-      ((((rawZ + offsetY) * scale + 1024) / 2048) * (41 / scale) + 1).toFixed(1),
-    );
-
-    if (Number.isNaN(x) || Number.isNaN(y)) continue;
-
-    const pId = tRow[5] || tRow[4] || mMap[11];
-    const place = getPlaceName(pId);
-    if (!place) continue;
-
-    if (!bnpcSpawnsMap.has(bnpcId)) bnpcSpawnsMap.set(bnpcId, []);
-    const list = bnpcSpawnsMap.get(bnpcId);
-    if (
-      list &&
-      !list.some((s) => s.place === place && Math.abs(s.x - x) < 0.5 && Math.abs(s.y - y) < 0.5)
-    ) {
-      list.push({
-        mapId: parseInt(mapIdStr, 10),
-        place,
-        x,
-        y,
-        territoryId: tId,
-      });
-    }
-  }
-}
-
-const currentJsonPath = path.resolve(__dirname, "../src/resources/generated/beastbook.json");
-const existingBeastMap = new Map<number, BeastEntry>();
-if (fs.existsSync(currentJsonPath)) {
-  try {
-    const existingList: BeastEntry[] = JSON.parse(fs.readFileSync(currentJsonPath, "utf8"));
-    existingList.forEach((item) => {
-      if (item && item.Number) {
-        existingBeastMap.set(item.Number, item);
-      }
-    });
-  } catch {}
-}
-
 const beastbook: BeastEntry[] = [];
 
 const petNumbers = [...xbmPetMap.keys()]
@@ -692,8 +208,6 @@ const petNumbers = [...xbmPetMap.keys()]
 for (const i of petNumbers) {
   const row = xbmPetMap.get(i.toString());
   if (!row) continue;
-
-  const existing = existingBeastMap.get(i);
 
   const petId = getCol(row, 0);
   const petRow = petMap.get(petId);
@@ -728,8 +242,11 @@ for (const i of petNumbers) {
   const locationId = getCol(row, 7);
   let habitatSummary = "--";
   let mapId: number | undefined = undefined;
+  let habitatLevel: string | undefined = undefined;
 
-  if (locationKey === "1" && locationId && locationId !== "0") {
+  if (locationKey === "0") {
+    habitatSummary = "初始自带";
+  } else if (locationKey === "1" && locationId && locationId !== "0") {
     const pRow = placeNameMap.get(locationId);
     if (pRow) {
       habitatSummary = getCol(pRow, 0).replace(/^"|"$/g, "");
@@ -748,158 +265,24 @@ for (const i of petNumbers) {
     const cfcRow = cfcMap.get(locationId);
     if (cfcRow) {
       habitatSummary = getCol(cfcRow, 43).replace(/^"|"$/g, "") || "--";
+      const lvl = getCol(cfcRow, 17);
+      if (lvl && lvl !== "0") {
+        habitatLevel = lvl;
+      }
     }
   }
 
   const habitat = cleanHex(getCol(row, 8).replace(/^"|"$/g, ""));
   const icon = getColInt(row, 4);
 
-  const comm = communityCoords[i];
-  let habitats: BeastHabitat[] = [];
-  if (comm) {
-    if (comm.habitats && comm.habitats.length > 0) {
-      habitats = comm.habitats.map((h) => {
-        const hMapId = h.mapId ?? mapId;
-        const hSummary = h.summary || getPlaceNameByMapId(hMapId) || habitatSummary;
-        return {
-          Summary: hSummary,
-          Type: h.type || getHabitatType(locationKey),
-          MapId: hMapId,
-          Coords: h.coords,
-          Level: h.level || comm.level || existing?.Habitats?.[0]?.Level || "-",
-          MobName: h.mobName,
-        };
-      });
-    } else {
-      habitats = [
-        {
-          Summary: habitatSummary,
-          Type: getHabitatType(locationKey),
-          MapId: mapId,
-          Coords: comm.coords,
-          Level: comm.level || existing?.Habitats?.[0]?.Level || "-",
-        },
-      ];
-    }
-  } else if (existing && existing.Habitats && existing.Habitats.length > 0) {
-    habitats = existing.Habitats.filter((h) => !h.IsSubstitute);
-  } else {
-    habitats = [
-      {
-        Summary: habitatSummary,
-        Type: getHabitatType(locationKey),
-        MapId: mapId,
-        Coords: existing?.Habitats?.[0]?.Coords,
-        Level: existing?.Habitats?.[0]?.Level || "-",
-      },
-    ];
-  }
-
-  const rule = substituteRules[i];
-  const substitutesSet = new Set<string>();
-  const substituteHabitats: BeastHabitat[] = [];
-
-  if (rule) {
-    if (rule.guildhests) {
-      rule.guildhests.forEach((goId) => {
-        const goSub = getGuildhestSub(goId);
-        if (goSub) {
-          if (goSub.MobName) substitutesSet.add(goSub.MobName);
-          if (
-            !substituteHabitats.some(
-              (h) => h.Summary === goSub.Summary && h.MobName === goSub.MobName,
-            )
-          ) {
-            substituteHabitats.push(goSub);
-          }
-        }
-      });
-    }
-
-    if (rule.fates) {
-      rule.fates.forEach((f) => {
-        substitutesSet.add(f.mobName);
-        substituteHabitats.push({
-          Summary: f.summary || getPlaceNameByMapId(f.mapId),
-          Type: "overworld",
-          Tag: "FATE",
-          EventName: f.eventName,
-          MapId: f.mapId,
-          Coords: f.coords,
-          MobName: f.mobName,
-          IsSubstitute: true,
-          Level: f.level,
-        });
-      });
-    }
-
-    if (rule.leves) {
-      rule.leves.forEach((l) => {
-        substitutesSet.add(l.mobName);
-        substituteHabitats.push({
-          Summary: l.summary || getPlaceNameByMapId(l.mapId),
-          Type: "overworld",
-          Tag: "理符",
-          EventName: l.eventName,
-          MapId: l.mapId,
-          Coords: l.coords,
-          MobName: l.mobName,
-          IsSubstitute: true,
-          Level: l.level,
-        });
-      });
-    }
-
-    if (rule.dungeons) {
-      rule.dungeons.forEach((d) => {
-        substitutesSet.add(d.mobName);
-        substituteHabitats.push({
-          Summary: d.summary,
-          Type: "dungeon",
-          MobName: d.mobName,
-          IsSubstitute: true,
-          Level: d.level,
-        });
-      });
-    }
-
-    if (rule.bnpcIds) {
-      rule.bnpcIds.forEach((bId) => {
-        const nameRow = bnpcNameMap.get(bId);
-        const mobName = nameRow ? getCol(nameRow, 0).replace(/^"|"$/g, "") : "";
-        if (mobName) substitutesSet.add(mobName);
-
-        const spawns = bnpcSpawnsMap.get(bId) || [];
-        const groupedByPlace = new Map<string, BnpcSpawnInfo[]>();
-        spawns.forEach((s) => {
-          if (!groupedByPlace.has(s.place)) groupedByPlace.set(s.place, []);
-          groupedByPlace.get(s.place)?.push(s);
-        });
-
-        for (const [place, list] of groupedByPlace.entries()) {
-          const first = list[0];
-          if (!first) continue;
-          const coords = list.slice(0, 3).map((pt) => ({ x: pt.x, y: pt.y }));
-          const exists = substituteHabitats.some(
-            (h) => h.Summary === place && h.MobName === mobName,
-          );
-          if (!exists) {
-            substituteHabitats.push({
-              Summary: place,
-              Type: "overworld",
-              MapId: first.mapId,
-              Coords: coords,
-              Level: existing?.Habitats?.[0]?.Level,
-              MobName: mobName,
-              IsSubstitute: true,
-            });
-          }
-        }
-      });
-    }
-  }
-
-  const substitutes = substitutesSet.size > 0 ? [...substitutesSet] : undefined;
+  const habitats: BeastHabitat[] = [
+    {
+      Summary: habitatSummary,
+      Type: getHabitatType(locationKey),
+      MapId: mapId,
+      ...(habitatLevel ? { Level: habitatLevel } : {}),
+    },
+  ];
 
   beastbook.push({
     Number: i,
@@ -920,8 +303,6 @@ for (const i of petNumbers) {
     Habitat: habitat,
     Icon: icon,
     Habitats: habitats,
-    Substitutes: substitutes,
-    SubstituteHabitats: substituteHabitats.length > 0 ? substituteHabitats : undefined,
   });
 }
 

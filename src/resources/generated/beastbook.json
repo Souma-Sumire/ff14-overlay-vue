@@ -20,8 +20,7 @@
     "Habitats": [
       {
         "Summary": "初始自带",
-        "Type": "special",
-        "Level": "-"
+        "Type": "special"
       }
     ]
   },
@@ -47,14 +46,7 @@
       {
         "Summary": "黑衣森林中央林区",
         "Type": "overworld",
-        "MapId": 4,
-        "Coords": [
-          {
-            "x": 23.1,
-            "y": 17
-          }
-        ],
-        "Level": "1~2"
+        "MapId": 4
       }
     ]
   },
@@ -80,14 +72,7 @@
       {
         "Summary": "中拉诺西亚",
         "Type": "overworld",
-        "MapId": 15,
-        "Coords": [
-          {
-            "x": 23.8,
-            "y": 25.6
-          }
-        ],
-        "Level": "3~4"
+        "MapId": 15
       }
     ]
   },
@@ -113,18 +98,7 @@
       {
         "Summary": "中拉诺西亚",
         "Type": "overworld",
-        "MapId": 15,
-        "Coords": [
-          {
-            "x": 22,
-            "y": 22
-          },
-          {
-            "x": 20,
-            "y": 18
-          }
-        ],
-        "Level": "4~6"
+        "MapId": 15
       }
     ]
   },
@@ -150,14 +124,7 @@
       {
         "Summary": "黑衣森林北部林区",
         "Type": "overworld",
-        "MapId": 7,
-        "Coords": [
-          {
-            "x": 28.5,
-            "y": 24.3
-          }
-        ],
-        "Level": "5~9"
+        "MapId": 7
       }
     ]
   },
@@ -183,14 +150,7 @@
       {
         "Summary": "拉诺西亚低地",
         "Type": "overworld",
-        "MapId": 16,
-        "Coords": [
-          {
-            "x": 30.9,
-            "y": 18.2
-          }
-        ],
-        "Level": "4~9"
+        "MapId": 16
       }
     ]
   },
@@ -216,14 +176,7 @@
       {
         "Summary": "西萨纳兰",
         "Type": "overworld",
-        "MapId": 20,
-        "Coords": [
-          {
-            "x": 20.3,
-            "y": 28.6
-          }
-        ],
-        "Level": "6~8"
+        "MapId": 20
       }
     ]
   },
@@ -249,14 +202,7 @@
       {
         "Summary": "黑衣森林中央林区",
         "Type": "overworld",
-        "MapId": 4,
-        "Coords": [
-          {
-            "x": 19,
-            "y": 19
-          }
-        ],
-        "Level": "10"
+        "MapId": 4
       }
     ]
   },
@@ -282,14 +228,7 @@
       {
         "Summary": "中拉诺西亚",
         "Type": "overworld",
-        "MapId": 15,
-        "Coords": [
-          {
-            "x": 15.3,
-            "y": 14.3
-          }
-        ],
-        "Level": "10~13"
+        "MapId": 15
       }
     ]
   },
@@ -315,105 +254,7 @@
       {
         "Summary": "中萨纳兰",
         "Type": "overworld",
-        "MapId": 21,
-        "Coords": [
-          {
-            "x": 22,
-            "y": 30
-          }
-        ],
-        "Level": "1~4"
-      },
-      {
-        "Summary": "中拉诺西亚",
-        "Type": "overworld",
-        "MapId": 15,
-        "Coords": [
-          {
-            "x": 16,
-            "y": 12.5
-          }
-        ],
-        "Level": "10~13"
-      }
-    ],
-    "Substitutes": ["胡蜂王", "鲜花胡蜂", "杀人蜂云", "胡蜂"],
-    "SubstituteHabitats": [
-      {
-        "Summary": "中拉诺西亚",
-        "Type": "overworld",
-        "Tag": "FATE",
-        "EventName": "大胡蜂和黄衫队",
-        "MapId": 15,
-        "Coords": [
-          {
-            "x": 14,
-            "y": 15
-          }
-        ],
-        "MobName": "胡蜂王",
-        "IsSubstitute": true,
-        "Level": "13"
-      },
-      {
-        "Summary": "中萨纳兰",
-        "Type": "overworld",
-        "MapId": 21,
-        "Coords": [
-          {
-            "x": 26.8,
-            "y": 19.1
-          },
-          {
-            "x": 27.2,
-            "y": 19.6
-          }
-        ],
-        "Level": "1~4",
-        "MobName": "胡蜂王",
-        "IsSubstitute": true
-      },
-      {
-        "Summary": "西萨纳兰",
-        "Type": "overworld",
-        "MapId": 20,
-        "Coords": [
-          {
-            "x": 16.7,
-            "y": 16
-          }
-        ],
-        "Level": "1~4",
-        "MobName": "鲜花胡蜂",
-        "IsSubstitute": true
-      },
-      {
-        "Summary": "南萨纳兰",
-        "Type": "overworld",
-        "MapId": 23,
-        "Coords": [
-          {
-            "x": 22.1,
-            "y": 14.2
-          }
-        ],
-        "Level": "1~4",
-        "MobName": "杀人蜂云",
-        "IsSubstitute": true
-      },
-      {
-        "Summary": "东萨纳兰",
-        "Type": "overworld",
-        "MapId": 22,
-        "Coords": [
-          {
-            "x": 11.1,
-            "y": 23.9
-          }
-        ],
-        "Level": "1~4",
-        "MobName": "胡蜂",
-        "IsSubstitute": true
+        "MapId": 21
       }
     ]
   },
@@ -439,14 +280,7 @@
       {
         "Summary": "西萨纳兰",
         "Type": "overworld",
-        "MapId": 20,
-        "Coords": [
-          {
-            "x": 21,
-            "y": 26
-          }
-        ],
-        "Level": "6"
+        "MapId": 20
       }
     ]
   },
@@ -472,14 +306,7 @@
       {
         "Summary": "中拉诺西亚",
         "Type": "overworld",
-        "MapId": 15,
-        "Coords": [
-          {
-            "x": 21.4,
-            "y": 16.3
-          }
-        ],
-        "Level": "5~7"
+        "MapId": 15
       }
     ]
   },
@@ -505,18 +332,7 @@
       {
         "Summary": "黑衣森林中央林区",
         "Type": "overworld",
-        "MapId": 4,
-        "Coords": [
-          {
-            "x": 18.5,
-            "y": 28.3
-          },
-          {
-            "x": 19.6,
-            "y": 27.6
-          }
-        ],
-        "Level": "14"
+        "MapId": 4
       }
     ]
   },
@@ -542,14 +358,7 @@
       {
         "Summary": "中拉诺西亚",
         "Type": "overworld",
-        "MapId": 15,
-        "Coords": [
-          {
-            "x": 20.5,
-            "y": 18.5
-          }
-        ],
-        "Level": "4~8"
+        "MapId": 15
       }
     ]
   },
@@ -575,14 +384,7 @@
       {
         "Summary": "西萨纳兰",
         "Type": "overworld",
-        "MapId": 20,
-        "Coords": [
-          {
-            "x": 16.5,
-            "y": 16.5
-          }
-        ],
-        "Level": "13"
+        "MapId": 20
       }
     ]
   },
@@ -608,18 +410,7 @@
       {
         "Summary": "西拉诺西亚",
         "Type": "overworld",
-        "MapId": 18,
-        "Coords": [
-          {
-            "x": 21,
-            "y": 23
-          },
-          {
-            "x": 22.8,
-            "y": 20.8
-          }
-        ],
-        "Level": "16"
+        "MapId": 18
       }
     ]
   },
@@ -646,12 +437,6 @@
         "Summary": "封锁坑道铜铃铜山",
         "Type": "dungeon",
         "Level": "17"
-      },
-      {
-        "Summary": "流沙迷宫樵鸣洞",
-        "Type": "dungeon",
-        "Level": "38",
-        "MobName": "滑沙"
       }
     ]
   },
@@ -679,34 +464,6 @@
         "Type": "dungeon",
         "Level": "20"
       }
-    ],
-    "Substitutes": ["波克曼"],
-    "SubstituteHabitats": [
-      {
-        "Summary": "行会令：打倒会在战斗中召唤增员的波克曼！",
-        "Type": "dungeon",
-        "Tag": "行会令",
-        "EventName": "打倒会在战斗中召唤增员的波克曼！",
-        "MobName": "波克曼",
-        "IsSubstitute": true,
-        "Level": "11"
-      },
-      {
-        "Summary": "黑衣森林东部林区",
-        "Type": "overworld",
-        "Tag": "FATE",
-        "EventName": "无头骑士——波克曼",
-        "MapId": 5,
-        "Coords": [
-          {
-            "x": 27.3,
-            "y": 22.1
-          }
-        ],
-        "MobName": "波克曼",
-        "IsSubstitute": true,
-        "Level": "20"
-      }
     ]
   },
   {
@@ -731,14 +488,7 @@
       {
         "Summary": "拉诺西亚低地",
         "Type": "overworld",
-        "MapId": 16,
-        "Coords": [
-          {
-            "x": 26.5,
-            "y": 15.9
-          }
-        ],
-        "Level": "7"
+        "MapId": 16
       }
     ]
   },
@@ -764,14 +514,7 @@
       {
         "Summary": "黑衣森林中央林区",
         "Type": "overworld",
-        "MapId": 4,
-        "Coords": [
-          {
-            "x": 23,
-            "y": 26
-          }
-        ],
-        "Level": "10"
+        "MapId": 4
       }
     ]
   },
@@ -797,14 +540,7 @@
       {
         "Summary": "西拉诺西亚",
         "Type": "overworld",
-        "MapId": 18,
-        "Coords": [
-          {
-            "x": 24.1,
-            "y": 23.6
-          }
-        ],
-        "Level": "16"
+        "MapId": 18
       }
     ]
   },
@@ -830,14 +566,7 @@
       {
         "Summary": "西萨纳兰",
         "Type": "overworld",
-        "MapId": 20,
-        "Coords": [
-          {
-            "x": 27,
-            "y": 25
-          }
-        ],
-        "Level": "3~4"
+        "MapId": 20
       }
     ]
   },
@@ -863,14 +592,7 @@
       {
         "Summary": "南萨纳兰",
         "Type": "overworld",
-        "MapId": 23,
-        "Coords": [
-          {
-            "x": 24,
-            "y": 12.3
-          }
-        ],
-        "Level": "29"
+        "MapId": 23
       }
     ]
   },
@@ -896,14 +618,7 @@
       {
         "Summary": "东拉诺西亚",
         "Type": "overworld",
-        "MapId": 17,
-        "Coords": [
-          {
-            "x": 28.8,
-            "y": 36.7
-          }
-        ],
-        "Level": "30"
+        "MapId": 17
       }
     ]
   },
@@ -929,26 +644,7 @@
       {
         "Summary": "中萨纳兰",
         "Type": "overworld",
-        "MapId": 21,
-        "Coords": [
-          {
-            "x": 22,
-            "y": 30
-          }
-        ],
-        "Level": "12"
-      }
-    ],
-    "Substitutes": ["金币龟"],
-    "SubstituteHabitats": [
-      {
-        "Summary": "行会令：削弱金币龟的力量，用陷阱将其捕获！",
-        "Type": "dungeon",
-        "Tag": "行会令",
-        "EventName": "削弱金币龟的力量，用陷阱将其捕获！",
-        "MobName": "金币龟",
-        "IsSubstitute": true,
-        "Level": "16"
+        "MapId": 21
       }
     ]
   },
@@ -974,14 +670,7 @@
       {
         "Summary": "中拉诺西亚",
         "Type": "overworld",
-        "MapId": 15,
-        "Coords": [
-          {
-            "x": 18.5,
-            "y": 17.5
-          }
-        ],
-        "Level": "8"
+        "MapId": 15
       }
     ]
   },
@@ -1007,14 +696,7 @@
       {
         "Summary": "西萨纳兰",
         "Type": "overworld",
-        "MapId": 20,
-        "Coords": [
-          {
-            "x": 16.8,
-            "y": 14.5
-          }
-        ],
-        "Level": "14"
+        "MapId": 20
       }
     ]
   },
@@ -1040,14 +722,7 @@
       {
         "Summary": "南萨纳兰",
         "Type": "overworld",
-        "MapId": 23,
-        "Coords": [
-          {
-            "x": 15.2,
-            "y": 37.5
-          }
-        ],
-        "Level": "31"
+        "MapId": 23
       }
     ]
   },
@@ -1073,14 +748,7 @@
       {
         "Summary": "中萨纳兰",
         "Type": "overworld",
-        "MapId": 21,
-        "Coords": [
-          {
-            "x": 17.4,
-            "y": 23.7
-          }
-        ],
-        "Level": "7"
+        "MapId": 21
       }
     ]
   },
@@ -1106,14 +774,7 @@
       {
         "Summary": "拉诺西亚低地",
         "Type": "overworld",
-        "MapId": 16,
-        "Coords": [
-          {
-            "x": 25.2,
-            "y": 24.5
-          }
-        ],
-        "Level": "12"
+        "MapId": 16
       }
     ]
   },
@@ -1139,50 +800,7 @@
       {
         "Summary": "拉诺西亚低地",
         "Type": "overworld",
-        "MapId": 16,
-        "Coords": [
-          {
-            "x": 24.6,
-            "y": 23
-          }
-        ],
-        "Level": "4"
-      },
-      {
-        "Summary": "西萨纳兰",
-        "Type": "overworld",
-        "MapId": 20,
-        "Coords": [
-          {
-            "x": 23,
-            "y": 23
-          }
-        ],
-        "Level": "9"
-      },
-      {
-        "Summary": "东拉诺西亚",
-        "Type": "overworld",
-        "MapId": 17,
-        "Coords": [
-          {
-            "x": 17,
-            "y": 26
-          }
-        ],
-        "Level": "33"
-      }
-    ],
-    "Substitutes": ["越壁蟾蜍"],
-    "SubstituteHabitats": [
-      {
-        "Summary": "行会令：突破三道关门，打倒最深处的越壁蟾蜍！",
-        "Type": "dungeon",
-        "Tag": "行会令",
-        "EventName": "突破三道关门，打倒最深处的越壁蟾蜍！",
-        "MobName": "越壁蟾蜍",
-        "IsSubstitute": true,
-        "Level": "16"
+        "MapId": 16
       }
     ]
   },
@@ -1208,14 +826,7 @@
       {
         "Summary": "东拉诺西亚",
         "Type": "overworld",
-        "MapId": 17,
-        "Coords": [
-          {
-            "x": 30.6,
-            "y": 24
-          }
-        ],
-        "Level": "33"
+        "MapId": 17
       }
     ]
   },
@@ -1241,14 +852,7 @@
       {
         "Summary": "拉诺西亚外地",
         "Type": "overworld",
-        "MapId": 30,
-        "Coords": [
-          {
-            "x": 15.3,
-            "y": 14.7
-          }
-        ],
-        "Level": "34"
+        "MapId": 30
       }
     ]
   },
@@ -1274,14 +878,7 @@
       {
         "Summary": "黑衣森林中央林区",
         "Type": "overworld",
-        "MapId": 4,
-        "Coords": [
-          {
-            "x": 31.2,
-            "y": 20.3
-          }
-        ],
-        "Level": "9"
+        "MapId": 4
       }
     ]
   },
@@ -1307,14 +904,7 @@
       {
         "Summary": "南萨纳兰",
         "Type": "overworld",
-        "MapId": 23,
-        "Coords": [
-          {
-            "x": 25,
-            "y": 39
-          }
-        ],
-        "Level": "32"
+        "MapId": 23
       }
     ]
   },
@@ -1340,14 +930,7 @@
       {
         "Summary": "黑衣森林中央林区",
         "Type": "overworld",
-        "MapId": 4,
-        "Coords": [
-          {
-            "x": 27,
-            "y": 15
-          }
-        ],
-        "Level": "12~17"
+        "MapId": 4
       }
     ]
   },
@@ -1401,25 +984,6 @@
         "Type": "dungeon",
         "Level": "38"
       }
-    ],
-    "Substitutes": ["强化奇美拉"],
-    "SubstituteHabitats": [
-      {
-        "Summary": "库尔札斯中央高地",
-        "Type": "overworld",
-        "Tag": "FATE",
-        "EventName": "狂暴巨兽——强化奇美拉",
-        "MapId": 53,
-        "Coords": [
-          {
-            "x": 31.4,
-            "y": 7.3
-          }
-        ],
-        "MobName": "强化奇美拉",
-        "IsSubstitute": true,
-        "Level": "49"
-      }
     ]
   },
   {
@@ -1444,26 +1008,7 @@
       {
         "Summary": "黑衣森林中央林区",
         "Type": "overworld",
-        "MapId": 4,
-        "Coords": [
-          {
-            "x": 13.5,
-            "y": 22.3
-          }
-        ],
-        "Level": "31"
-      }
-    ],
-    "Substitutes": ["剧毒魔花谭琳"],
-    "SubstituteHabitats": [
-      {
-        "Summary": "行会令：注意两种泡泡的同时打倒剧毒魔花谭琳！",
-        "Type": "dungeon",
-        "Tag": "行会令",
-        "EventName": "注意两种泡泡的同时打倒剧毒魔花谭琳！",
-        "MobName": "剧毒魔花谭琳",
-        "IsSubstitute": true,
-        "Level": "31"
+        "MapId": 4
       }
     ]
   },
@@ -1489,26 +1034,7 @@
       {
         "Summary": "中拉诺西亚",
         "Type": "overworld",
-        "MapId": 15,
-        "Coords": [
-          {
-            "x": 20.2,
-            "y": 18.4
-          }
-        ],
-        "Level": "7"
-      }
-    ],
-    "Substitutes": ["布索"],
-    "SubstituteHabitats": [
-      {
-        "Summary": "行会令：扑灭苍蓝的火焰，打倒妖异布索！",
-        "Type": "dungeon",
-        "Tag": "行会令",
-        "EventName": "扑灭苍蓝的火焰，打倒妖异布索！",
-        "MobName": "布索",
-        "IsSubstitute": true,
-        "Level": "31"
+        "MapId": 15
       }
     ]
   },
@@ -1534,18 +1060,7 @@
       {
         "Summary": "黑衣森林中央林区",
         "Type": "overworld",
-        "MapId": 4,
-        "Coords": [
-          {
-            "x": 26.5,
-            "y": 18.9
-          },
-          {
-            "x": 26.1,
-            "y": 21.2
-          }
-        ],
-        "Level": "6"
+        "MapId": 4
       }
     ]
   },
@@ -1571,14 +1086,7 @@
       {
         "Summary": "摩杜纳",
         "Type": "overworld",
-        "MapId": 25,
-        "Coords": [
-          {
-            "x": 26.3,
-            "y": 12.9
-          }
-        ],
-        "Level": "45"
+        "MapId": 25
       }
     ]
   },
@@ -1709,30 +1217,6 @@
         "Summary": "凛冽洞天披雪大冰壁",
         "Type": "dungeon",
         "Level": "50"
-      },
-      {
-        "Summary": "希瓦歼灭战",
-        "Type": "dungeon",
-        "Level": "50"
-      }
-    ],
-    "Substitutes": ["寒冰指挥官"],
-    "SubstituteHabitats": [
-      {
-        "Summary": "库尔札斯西部高地",
-        "Type": "overworld",
-        "Tag": "FATE",
-        "EventName": "指挥官",
-        "MapId": 211,
-        "Coords": [
-          {
-            "x": 16.5,
-            "y": 13.6
-          }
-        ],
-        "MobName": "寒冰指挥官",
-        "IsSubstitute": true,
-        "Level": "48"
       }
     ]
   },
@@ -1810,25 +1294,6 @@
       {
         "Summary": "水晶塔 古代人迷宫",
         "Type": "dungeon",
-        "Level": "50"
-      }
-    ],
-    "Substitutes": ["贝希摩斯王"],
-    "SubstituteHabitats": [
-      {
-        "Summary": "摩杜纳",
-        "Type": "overworld",
-        "Tag": "FATE",
-        "EventName": "传说的魔兽——贝希摩斯",
-        "MapId": 25,
-        "Coords": [
-          {
-            "x": 33.1,
-            "y": 16.2
-          }
-        ],
-        "MobName": "贝希摩斯王",
-        "IsSubstitute": true,
         "Level": "50"
       }
     ]
