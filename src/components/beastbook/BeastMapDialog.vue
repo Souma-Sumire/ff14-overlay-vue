@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 import { ElCheckbox, ElDialog, ElLoadingDirective as vLoading } from "element-plus";
+import { getBeastEventTagClass, type BeastSubstituteTag } from "@/resources/beastbook";
 
 interface EorzeaMapMarker {
   remove?(): void;
@@ -47,6 +48,7 @@ export interface BeastHabitatItem {
   CoordsNote?: string;
   Level?: string;
   MobName?: string;
+  IsSubstitute?: boolean;
   Tag?: "FATE" | "理符" | "行会令";
   EventName?: string;
 }
@@ -54,9 +56,18 @@ export interface BeastHabitatItem {
 export interface BeastListItem {
   Number: number;
   Name: string;
-  Level?: string;
+  Taxonomy: string;
+  AutoAttackType: string;
+  BorrowName: string;
+  ReleaseName: string;
+  ReleaseRange: string;
+  OrderName: string;
+  OrderRange: string;
+  Habitat: string;
+  Level: string;
   IconUrl: string;
   Habitats?: BeastHabitatItem[];
+  Substitutes?: string[];
   SubstituteHabitats?: BeastHabitatItem[];
 }
 
@@ -64,7 +75,7 @@ interface MapMonsterItem {
   number: number;
   primaryName: string;
   subName?: string;
-  eventTag?: string;
+  eventTag?: BeastSubstituteTag | string;
   eventName?: string;
   level: string;
   sortLevel: number;
@@ -80,7 +91,7 @@ const props = defineProps<{
   modelValue: boolean;
   beastName: string;
   subName?: string;
-  eventTag?: string;
+  eventTag?: BeastSubstituteTag | string;
   eventName?: string;
   habitatName: string;
   mapId?: number;
@@ -109,7 +120,7 @@ let scriptLoadPromise: Promise<void> | null = null;
 const activeBeastNumber = ref<number>(props.currentBeastNumber ?? 0);
 const activePrimaryName = ref<string>(props.beastName);
 const activeSubName = ref<string | undefined>(props.subName);
-const activeEventTag = ref<string | undefined>(props.eventTag);
+const activeEventTag = ref<BeastSubstituteTag | string | undefined>(props.eventTag);
 const activeEventName = ref<string | undefined>(props.eventName);
 const activeCoords = ref<BeastCoord[]>([]);
 
@@ -494,7 +505,7 @@ onBeforeUnmount(() => {
               <span
                 v-if="activeEventTag"
                 class="active-event-tag"
-                :class="`tag-${activeEventTag === '行会令' ? 'guildhest' : activeEventTag === '理符' ? 'leve' : activeEventTag === 'FATE' ? 'fate' : 'dungeon'}`"
+                :class="getBeastEventTagClass(activeEventTag)"
               >
                 {{ activeEventTag }}
               </span>
@@ -561,7 +572,7 @@ onBeforeUnmount(() => {
                   <span
                     v-if="item.eventTag"
                     class="event-tag-badge"
-                    :class="`tag-${item.eventTag === '行会令' ? 'guildhest' : item.eventTag === '理符' ? 'leve' : item.eventTag === 'FATE' ? 'fate' : 'dungeon'}`"
+                    :class="getBeastEventTagClass(item.eventTag)"
                   >
                     {{ item.eventTag }}
                   </span>

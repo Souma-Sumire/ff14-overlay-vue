@@ -19,6 +19,12 @@ import {
 import beastbookData from "@/assets/data/beastbook.json";
 import beastConstants from "@/assets/data/beastbookConstants.json";
 import BeastMapDialog from "@/components/beastbook/BeastMapDialog.vue";
+import {
+  resolveHabitatTypeTag,
+  resolveSubstituteTag,
+  type BeastHabitatType,
+  type BeastSubstituteTag,
+} from "@/resources/beastbook";
 
 if (typeof window !== "undefined") {
   const savedTheme = window.localStorage.getItem("bstbook-theme");
@@ -61,14 +67,14 @@ export interface BeastCoord {
 
 export interface BeastHabitatItem {
   Summary: string;
-  Type: "overworld" | "dungeon" | "special";
+  Type: BeastHabitatType;
   MapId?: number;
   Coords?: BeastCoord[];
   CoordsNote?: string;
   Level?: string;
   MobName?: string;
   IsSubstitute?: boolean;
-  Tag?: "FATE" | "理符" | "行会令";
+  Tag?: BeastSubstituteTag;
   EventName?: string;
 }
 
@@ -535,6 +541,14 @@ const subHabitatLevelWidth = computed(() => computeHabitatLevelColWidth(displayS
 
 function isHabitatMapEnabled(hab: BeastHabitatItem): boolean {
   return Boolean(hab.MapId && hab.Coords && hab.Coords.length > 0);
+}
+
+function isHabitatPlainEvent(hab: BeastHabitatItem): boolean {
+  return hab.Tag === "行会令" || (hab.Tag === "理符" && !isHabitatMapEnabled(hab));
+}
+
+function isHabitatPlainText(hab: BeastHabitatItem): boolean {
+  return !isHabitatMapEnabled(hab) && !isHabitatPlainEvent(hab);
 }
 
 function openHabitatMap(hab: BeastHabitatItem): void {
@@ -1048,10 +1062,11 @@ function handleClearAllCaptured(): void {
                         Lv.{{ getHabitatDisplayLevel(hab) }}
                       </span>
                       <span
+                        v-if="resolveHabitatTypeTag(hab.Type)"
                         class="habitat-type-tag"
-                        :class="hab.Type === 'dungeon' ? 'tag-dungeon' : 'tag-overworld'"
+                        :class="resolveHabitatTypeTag(hab.Type)?.className"
                       >
-                        {{ hab.Type === "dungeon" ? "副本" : "野外" }}
+                        {{ resolveHabitatTypeTag(hab.Type)?.label }}
                       </span>
                       <el-tooltip
                         v-if="isHabitatMapEnabled(hab)"
@@ -1084,7 +1099,7 @@ function handleClearAllCaptured(): void {
                         </button>
                       </el-tooltip>
                       <span
-                        v-else
+                        v-if="!isHabitatMapEnabled(hab)"
                         class="habitat-plain-text"
                         :title="hab.MobName ? `${hab.Summary} · ${hab.MobName}` : hab.Summary"
                       >
@@ -1111,35 +1126,23 @@ function handleClearAllCaptured(): void {
                         Lv.{{ getHabitatDisplayLevel(subHab) }}
                       </span>
 
-                      <span v-if="subHab.Tag === '行会令'" class="habitat-type-tag tag-guildhest">
-                        行会令
-                      </span>
-                      <span v-else-if="subHab.Tag === '理符'" class="habitat-type-tag tag-leve">
-                        理符
-                      </span>
-                      <span v-else-if="subHab.Tag === 'FATE'" class="habitat-type-tag tag-fate">
-                        FATE
-                      </span>
                       <span
-                        v-else-if="subHab.Type === 'dungeon'"
-                        class="habitat-type-tag tag-dungeon"
+                        v-if="resolveSubstituteTag(subHab.Tag, subHab.Type)"
+                        class="habitat-type-tag"
+                        :class="resolveSubstituteTag(subHab.Tag, subHab.Type)?.className"
                       >
-                        副本
+                        {{ resolveSubstituteTag(subHab.Tag, subHab.Type)?.label }}
                       </span>
-                      <span v-else class="habitat-type-tag tag-overworld"> 野外 </span>
 
                       <span
-                        v-if="
-                          subHab.Tag === '行会令' ||
-                          (subHab.Tag === '理符' && !isHabitatMapEnabled(subHab))
-                        "
+                        v-if="isHabitatPlainEvent(subHab)"
                         class="habitat-plain-text"
                         :title="subHab.EventName || subHab.Summary"
                       >
                         {{ subHab.EventName || subHab.Summary }}
                       </span>
                       <el-tooltip
-                        v-else-if="isHabitatMapEnabled(subHab)"
+                        v-if="isHabitatMapEnabled(subHab)"
                         :content="
                           subHab.EventName
                             ? `【${subHab.Tag || '平替'}】${subHab.EventName} · 点击打开地图`
@@ -1180,7 +1183,7 @@ function handleClearAllCaptured(): void {
                         </button>
                       </el-tooltip>
                       <span
-                        v-else
+                        v-if="isHabitatPlainText(subHab)"
                         class="habitat-plain-text"
                         :title="
                           subHab.MobName ? `${subHab.Summary} · ${subHab.MobName}` : subHab.Summary
