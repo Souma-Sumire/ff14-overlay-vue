@@ -394,43 +394,64 @@ function openHabitatMap(hab: BeastHabitatItem): void {
   mapDialogVisible.value = true;
 }
 
-let skipNextHabitatReset = false;
+function handleSelectBeastFromMap(
+  beastNumber: number,
+  habitat?: BeastHabitatItem,
+  coords?: BeastCoord[],
+) {
+  const beast = beastsDisplay.value.find((b) => b.Number === beastNumber);
 
-function handleSelectBeastFromMap(num: number, habitat?: BeastHabitatItem): void {
+  if (!beast) {
+    return;
+  }
+
+  selectedBeastNumber.value = beast.Number;
+
   if (habitat) {
-    activeMapHabitat.value = habitat;
-    skipNextHabitatReset = true;
+    activeMapHabitat.value = {
+      ...habitat,
+      ...(coords && coords.length > 0 ? { Coords: coords } : {}),
+    };
+  } else if (coords && coords.length > 0) {
+    activeMapHabitat.value = {
+      Summary: "",
+      Type: "overworld",
+      Coords: coords,
+    };
+  } else {
+    activeMapHabitat.value = undefined;
   }
-  const targetIndex = sortedBeasts.value.findIndex((b) => b.Number === num);
-  if (targetIndex !== -1) {
-    page.value = Math.floor(targetIndex / PAGE_SIZE) + 1;
-  }
-  selectedBeastNumber.value = num;
 }
 
 watch(selectedDisplay, (val) => {
-  if (skipNextHabitatReset) {
-    skipNextHabitatReset = false;
-    return;
-  }
   if (!val) {
     activeMapHabitat.value = undefined;
     return;
   }
+
   if (mapDialogVisible.value && activeMapHabitat.value) {
     const currentMapId = activeMapHabitat.value.MapId;
-    const currentSummary = activeMapHabitat.value.Summary;
+    const currentCoords = activeMapHabitat.value.Coords;
+
     const match = getBeastHabitats(val).find((h) => {
-      if (currentMapId && h.MapId === currentMapId) return true;
-      if (currentSummary && h.Summary === currentSummary) return true;
+      if (currentMapId && h.MapId === currentMapId) {
+        if (!currentCoords?.length) return true;
+
+        return h.Coords?.some((c) => currentCoords.some((pc) => pc.x === c.x && pc.y === c.y));
+      }
+
       return false;
     });
+
     if (match) {
       activeMapHabitat.value = match;
       return;
     }
   }
-  activeMapHabitat.value = val.Habitats?.[0];
+
+  if (!activeMapHabitat.value) {
+    activeMapHabitat.value = val.Habitats?.[0];
+  }
 });
 
 const failedHostMap = new WeakMap<HTMLImageElement, Set<string>>();
@@ -1100,18 +1121,13 @@ function handleClearAllCaptured(): void {
       :sub-name="activeMapHabitat?.MobName"
       :event-tag="activeMapHabitat?.Type"
       :event-name="activeMapHabitat?.EventName"
-      :habitat-name="activeMapHabitat?.Summary ?? selectedDisplay.Habitats?.[0]?.Summary ?? ''"
-      :map-id="activeMapHabitat?.MapId ?? selectedDisplay.Habitats?.[0]?.MapId"
-      :coords="activeMapHabitat?.Coords ?? selectedDisplay.Habitats?.[0]?.Coords"
+      :habitat-name="activeMapHabitat?.Summary ?? ''"
+      :map-id="activeMapHabitat?.MapId"
+      :coords="activeMapHabitat?.Coords"
       :all-beasts="beastsDisplay"
       :captured="captured"
       :current-beast-number="selectedDisplay.Number"
       @select-beast="handleSelectBeastFromMap"
-      @toggle-capture="
-        (num: number, val: boolean) => {
-          captured[num.toString()] = val;
-        }
-      "
     />
   </div>
 </template>

@@ -106,7 +106,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "update:modelValue", value: boolean): void;
-  (e: "selectBeast", beastNumber: number, habitat?: BeastHabitatItem): void;
+  (e: "selectBeast", beastNumber: number, habitat?: BeastHabitatItem, coords?: BeastCoord[]): void;
   (e: "toggleCapture", beastNumber: number, captured: boolean): void;
 }>();
 
@@ -159,62 +159,25 @@ function parseLevelSort(levelStr?: string): number {
 
 function getMatchedHabitatsForBeast(
   b: BeastListItem,
-  isCurrentSelected: boolean,
+  _isCurrentSelected: boolean,
 ): BeastHabitatItem[] {
-  const currentTag = activeEventTag.value ?? props.eventTag;
-  const currentEvent = activeEventName.value ?? props.eventName;
-  const currentSub = activeSubName.value ?? props.subName;
-
   const allCandidateHabs = [...(b.Habitats ?? []), ...(b.CommunityHabitats ?? [])];
 
-  const mapHabs = allCandidateHabs.filter((h) => {
+  return allCandidateHabs.filter((h) => {
     if (props.mapId != null && h.MapId !== props.mapId) {
       return false;
     }
+
     return true;
   });
+}
 
-  if (mapHabs.length === 0) {
-    return [];
+function habitatItemMatchesActive(habitat: BeastHabitatItem, coords: BeastCoord[]): boolean {
+  if (!coords.length || !habitat.Coords?.length) {
+    return false;
   }
 
-  if (isCurrentSelected) {
-    const exactEvent = mapHabs.find((h) => {
-      if (currentEvent && h.EventName === currentEvent) {
-        return true;
-      }
-
-      if (currentSub && h.MobName === currentSub) {
-        return true;
-      }
-
-      return false;
-    });
-
-    if (exactEvent) {
-      return [exactEvent, ...mapHabs.filter((h) => h !== exactEvent)];
-    }
-
-    if (currentTag) {
-      const tagMatch = mapHabs.find((h) => h.Type?.toLowerCase() === currentTag.toLowerCase());
-
-      if (tagMatch) {
-        return [tagMatch, ...mapHabs.filter((h) => h !== tagMatch)];
-      }
-    }
-
-    if (props.coords?.length) {
-      const coordMatch = mapHabs.find((h) =>
-        h.Coords?.some((c) => props.coords!.some((pc) => pc.x === c.x && pc.y === c.y)),
-      );
-
-      if (coordMatch) {
-        return [coordMatch, ...mapHabs.filter((h) => h !== coordMatch)];
-      }
-    }
-  }
-
-  return mapHabs;
+  return habitat.Coords.some((hc) => coords.some((c) => c.x === hc.x && c.y === hc.y));
 }
 
 const mapMonsterList = computed<MapMonsterItem[]>(() => {
@@ -226,9 +189,7 @@ const mapMonsterList = computed<MapMonsterItem[]>(() => {
 
   for (const b of props.allBeasts) {
     const isSel = b.Number === activeBeastNumber.value;
-    const isCurrent = isSel || b.Number === props.currentBeastNumber;
-
-    const matchedHabs = getMatchedHabitatsForBeast(b, isCurrent);
+    const matchedHabs = getMatchedHabitatsForBeast(b, false);
 
     if (matchedHabs.length === 0) {
       continue;
@@ -236,7 +197,7 @@ const mapMonsterList = computed<MapMonsterItem[]>(() => {
 
     const isCap = Boolean(props.captured?.[b.Number.toString()]);
 
-    matchedHabs.forEach((habitat, index) => {
+    matchedHabs.forEach((habitat) => {
       const coords = habitat.Coords ?? [];
       const level = habitat.Level ?? b.Level ?? "-";
 
@@ -253,7 +214,7 @@ const mapMonsterList = computed<MapMonsterItem[]>(() => {
         coords,
         coordsText: coords.map((c) => `X: ${c.x}, Y: ${c.y}`).join(" / "),
         isCaptured: isCap,
-        isSelected: isSel && index === 0,
+        isSelected: isSel && habitatItemMatchesActive(habitat, activeCoords.value),
         habitatItem: habitat,
       });
     });
@@ -423,7 +384,8 @@ function handleSelectMonster(item: MapMonsterItem): void {
   activeSubName.value = item.subName;
   activeEventTag.value = item.eventTag;
   activeEventName.value = item.eventName;
-  activeCoords.value = item.coords;
+  activeCoords.value = item.habitatItem?.Coords ?? item.coords;
+
   emit("selectBeast", item.number, item.habitatItem);
   void renderMap(item.coords);
 }
