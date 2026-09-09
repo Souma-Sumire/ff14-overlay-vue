@@ -16,15 +16,25 @@ import {
   ElSlider,
   ElTooltip,
 } from "element-plus";
-import beastbookData from "@/assets/data/beastbook.json";
-import beastConstants from "@/assets/data/beastbookConstants.json";
+import beastbookData from "@/resources/generated/beastbook.json";
 import BeastMapDialog from "@/components/beastbook/BeastMapDialog.vue";
 import {
+  ALL_ATTACK_TYPES,
+  ALL_BORROW_ACTIONS,
+  ALL_CAPTURE_STATUS,
+  ALL_RANGES,
+  ALL_TAXONOMIES,
+  DUNGEON_HABITATS,
+  OVERWORLD_HABITATS,
   resolveHabitatTypeTag,
   resolveSubstituteTag,
-  type BeastHabitatType,
-  type BeastSubstituteTag,
+  type BeastCoord,
+  type BeastDisplay,
+  type BeastEntry,
+  type BeastHabitatItem,
 } from "@/resources/beastbook";
+
+export type { BeastCoord, BeastDisplay, BeastEntry, BeastHabitatItem };
 
 if (typeof window !== "undefined") {
   const savedTheme = window.localStorage.getItem("bstbook-theme");
@@ -38,15 +48,6 @@ useDark({
   initialValue: "light",
 });
 
-const ALL_TAXONOMIES: readonly string[] = beastConstants.taxonomies;
-const ALL_ATTACK_TYPES: readonly string[] = beastConstants.attackTypes;
-const ALL_BORROW_ACTIONS: readonly string[] = beastConstants.borrowActions;
-const OVERWORLD_HABITATS: readonly string[] = beastConstants.overworldHabitats;
-const DUNGEON_HABITATS: readonly string[] = beastConstants.dungeonHabitats;
-const ALL_RANGES: readonly string[] = beastConstants.ranges;
-
-const ALL_CAPTURE_STATUS = ["已拥有", "未拥有"] as const;
-
 const beastSizeCmdDetail = `<b>/驯兽尺寸 魔兽的名字 尺寸</b><br/>
 （别名：/beastsize, /beastpetsize）<br/>
 变更自身召唤出的魔兽的尺寸（仅自身生效）。<br/>
@@ -59,59 +60,6 @@ const beastSizeCmdDetail = `<b>/驯兽尺寸 魔兽的名字 尺寸</b><br/>
 const bestiaryCmdDetail = `<b>/魔兽图鉴</b><br/>
 （别名：/bestiary, /bstbook）<br/>
 打开游戏内魔兽图鉴窗口。`;
-
-export interface BeastCoord {
-  x: number;
-  y: number;
-}
-
-export interface BeastHabitatItem {
-  Summary: string;
-  Type: BeastHabitatType;
-  MapId?: number;
-  Coords?: BeastCoord[];
-  CoordsNote?: string;
-  Level?: string;
-  MobName?: string;
-  IsSubstitute?: boolean;
-  Tag?: BeastSubstituteTag;
-  EventName?: string;
-}
-
-export interface BeastEntry {
-  Number: number;
-  Name: string;
-  Taxonomy: string;
-  AutoAttackType: string;
-  BorrowName: string;
-  BorrowIcon?: number;
-  BorrowDescription?: string;
-  ReleaseName: string;
-  ReleaseDescription: string;
-  ReleaseRange: string;
-  ReleaseIcon?: number;
-  OrderName: string;
-  OrderDescription: string;
-  OrderRange: string;
-  OrderIcon?: number;
-  Habitat: string;
-  Habitats?: BeastHabitatItem[];
-  Icon?: number;
-  Substitutes?: string[];
-  SubstituteHabitats?: BeastHabitatItem[];
-}
-
-export interface BeastDisplay extends Omit<
-  BeastEntry,
-  "Icon" | "ReleaseIcon" | "OrderIcon" | "BorrowIcon"
-> {
-  Level: string;
-  IconUrl: string;
-  LargeIconUrl: string;
-  ReleaseIconUrl: string;
-  OrderIconUrl: string;
-  BorrowIconUrl: string;
-}
 
 const CDN_SOURCES = ["cafemaker.wakingsands.com", "xivapi.com", "souma.diemoe.net"] as const;
 

@@ -174,7 +174,7 @@ const learnMap: Record<string, string> = {
 };
 
 // 从 JSON 加载自动生成的数据，合并手动维护的 learnMap
-import aozActionsData from "@/assets/data/aozActions.json";
+import aozActionsData from "@/resources/generated/aozActions.json";
 interface AozActionJson {
   ID: number;
   ActionID: number;

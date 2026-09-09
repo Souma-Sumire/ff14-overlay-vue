@@ -4,7 +4,6 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { csvPaths } from "./paths.js";
 import type { BeastCoord } from "../src/resources/beastbook";
-import { communityCoords, substituteRules } from "../src/resources/beastbook";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -82,6 +81,346 @@ const bnpcNameMap = parseCsv("BNpcName.csv");
 const addonMap = parseCsv("Addon.csv");
 const xbmElementMap = parseCsv("XBMElement.csv");
 const attackTypeMap = parseCsv("AttackType.csv");
+
+interface BeastCommunityHabitat {
+  mapId?: number;
+  summary?: string;
+  coords?: BeastCoord[];
+  level?: string;
+  type?: "overworld" | "dungeon" | "special";
+  mobName?: string;
+}
+
+interface BeastCommunityCoordEntry {
+  coords?: BeastCoord[];
+  level?: string;
+  habitats?: BeastCommunityHabitat[];
+}
+
+interface SubstituteRuleFate {
+  eventName: string;
+  mobName: string;
+  mapId: number;
+  coords: BeastCoord[];
+  level?: string;
+  summary?: string;
+}
+
+interface SubstituteRuleLeve {
+  eventName: string;
+  mobName: string;
+  mapId: number;
+  coords: BeastCoord[];
+  level?: string;
+  summary?: string;
+}
+
+interface SubstituteRuleDungeon {
+  summary: string;
+  mobName: string;
+  level?: string;
+}
+
+interface SubstituteRule {
+  guildhests?: string[];
+  fates?: SubstituteRuleFate[];
+  leves?: SubstituteRuleLeve[];
+  dungeons?: SubstituteRuleDungeon[];
+  bnpcIds?: string[];
+}
+
+const communityCoords: Record<number, BeastCommunityCoordEntry> = {
+  2: {
+    coords: [{ x: 23.1, y: 17 }],
+    level: "1~2",
+  },
+  3: {
+    coords: [{ x: 23.8, y: 25.6 }],
+    level: "3~4",
+  },
+  4: {
+    coords: [
+      { x: 22, y: 22 },
+      { x: 20, y: 18 },
+    ],
+    level: "4~6",
+  },
+  5: {
+    coords: [{ x: 28.5, y: 24.3 }],
+    level: "5~9",
+  },
+  6: {
+    coords: [{ x: 30.9, y: 18.2 }],
+    level: "4~9",
+  },
+  7: {
+    coords: [{ x: 20.3, y: 28.6 }],
+    level: "6~8",
+  },
+  8: {
+    coords: [{ x: 19, y: 19 }],
+    level: "10",
+  },
+  9: {
+    coords: [{ x: 15.3, y: 14.3 }],
+    level: "10~13",
+  },
+  10: {
+    level: "1~4 / 10~13",
+    habitats: [
+      {
+        mapId: 21,
+        coords: [{ x: 22, y: 30 }],
+        level: "1~4",
+      },
+      {
+        mapId: 15,
+        coords: [{ x: 16, y: 12.5 }],
+        level: "10~13",
+      },
+    ],
+  },
+  11: {
+    coords: [{ x: 21, y: 26 }],
+    level: "6",
+  },
+  12: {
+    coords: [{ x: 21.4, y: 16.3 }],
+    level: "5~7",
+  },
+  13: {
+    coords: [
+      { x: 18.5, y: 28.3 },
+      { x: 19.6, y: 27.6 },
+    ],
+    level: "14",
+  },
+  14: {
+    coords: [{ x: 20.5, y: 18.5 }],
+    level: "4~8",
+  },
+  15: {
+    coords: [{ x: 16.5, y: 16.5 }],
+    level: "13",
+  },
+  16: {
+    coords: [
+      { x: 21, y: 23 },
+      { x: 22.8, y: 20.8 },
+    ],
+    level: "16",
+  },
+  17: {
+    level: "17 / 38",
+    habitats: [
+      {
+        summary: "封锁坑道铜铃铜山",
+        type: "dungeon",
+        level: "17",
+      },
+      {
+        summary: "流沙迷宫樵鸣洞",
+        type: "dungeon",
+        mobName: "滑沙",
+        level: "38",
+      },
+    ],
+  },
+  19: {
+    coords: [{ x: 26.5, y: 15.9 }],
+    level: "7",
+  },
+  20: {
+    coords: [{ x: 23, y: 26 }],
+    level: "10",
+  },
+  21: {
+    coords: [{ x: 24.1, y: 23.6 }],
+    level: "16",
+  },
+  22: {
+    coords: [{ x: 27, y: 25 }],
+    level: "3~4",
+  },
+  23: {
+    coords: [{ x: 24, y: 12.3 }],
+    level: "29",
+  },
+  24: {
+    coords: [{ x: 28.8, y: 36.7 }],
+    level: "30",
+  },
+  25: {
+    coords: [{ x: 22, y: 30 }],
+    level: "12",
+  },
+  26: {
+    coords: [{ x: 18.5, y: 17.5 }],
+    level: "8",
+  },
+  27: {
+    coords: [{ x: 16.8, y: 14.5 }],
+    level: "14",
+  },
+  28: {
+    coords: [{ x: 15.2, y: 37.5 }],
+    level: "31",
+  },
+  29: {
+    coords: [{ x: 17.4, y: 23.7 }],
+    level: "7",
+  },
+  30: {
+    coords: [{ x: 25.2, y: 24.5 }],
+    level: "12",
+  },
+  31: {
+    level: "4 / 9 / 33",
+    habitats: [
+      {
+        mapId: 16,
+        coords: [{ x: 24.6, y: 23 }],
+        level: "4",
+      },
+      {
+        mapId: 20,
+        coords: [{ x: 23, y: 23 }],
+        level: "9",
+      },
+      {
+        mapId: 17,
+        coords: [{ x: 17, y: 26 }],
+        level: "33",
+      },
+    ],
+  },
+  32: {
+    coords: [{ x: 30.6, y: 24 }],
+    level: "33",
+  },
+  33: {
+    coords: [{ x: 15.3, y: 14.7 }],
+    level: "34",
+  },
+  34: {
+    coords: [{ x: 31.2, y: 20.3 }],
+    level: "9",
+  },
+  35: {
+    coords: [{ x: 25, y: 39 }],
+    level: "32",
+  },
+  36: {
+    coords: [{ x: 27, y: 15 }],
+    level: "12~17",
+  },
+  39: {
+    coords: [{ x: 13.5, y: 22.3 }],
+    level: "31",
+  },
+  40: {
+    coords: [{ x: 20.2, y: 18.4 }],
+    level: "7",
+  },
+  41: {
+    coords: [
+      { x: 26.5, y: 18.9 },
+      { x: 26.1, y: 21.2 },
+    ],
+    level: "6",
+  },
+  42: {
+    coords: [{ x: 26.3, y: 12.9 }],
+    level: "45",
+  },
+  47: {
+    level: "50",
+    habitats: [
+      {
+        summary: "凛冽洞天披雪大冰壁",
+        type: "dungeon",
+        level: "50",
+      },
+      {
+        summary: "希瓦歼灭战",
+        type: "dungeon",
+        level: "50",
+      },
+    ],
+  },
+};
+
+const substituteRules: Record<number, SubstituteRule> = {
+  10: {
+    fates: [
+      {
+        eventName: "大胡蜂和黄衫队",
+        mobName: "胡蜂王",
+        mapId: 15,
+        coords: [{ x: 14.0, y: 15.0 }],
+        level: "13",
+      },
+    ],
+    bnpcIds: ["893", "953", "1983", "641"],
+  },
+  18: {
+    guildhests: ["2"],
+    fates: [
+      {
+        eventName: "无头骑士——波克曼",
+        mobName: "波克曼",
+        mapId: 5,
+        coords: [{ x: 27.3, y: 22.1 }],
+        level: "20",
+      },
+    ],
+  },
+  25: {
+    guildhests: ["4"],
+  },
+  31: {
+    guildhests: ["3"],
+  },
+  38: {
+    fates: [
+      {
+        eventName: "狂暴巨兽——强化奇美拉",
+        mobName: "强化奇美拉",
+        mapId: 53,
+        coords: [{ x: 31.4, y: 7.3 }],
+        level: "49",
+      },
+    ],
+  },
+  39: {
+    guildhests: ["9"],
+  },
+  40: {
+    guildhests: ["10"],
+  },
+  47: {
+    fates: [
+      {
+        eventName: "指挥官",
+        mobName: "寒冰指挥官",
+        mapId: 211,
+        coords: [{ x: 16.5, y: 13.6 }],
+        level: "48",
+      },
+    ],
+  },
+  50: {
+    fates: [
+      {
+        eventName: "传说的魔兽——贝希摩斯",
+        mobName: "贝希摩斯王",
+        mapId: 25,
+        coords: [{ x: 33.1, y: 16.2 }],
+        level: "50",
+      },
+    ],
+  },
+};
 
 interface BeastHabitat {
   Summary: string;
@@ -330,7 +669,7 @@ for (let i = 3; i < levelLines.length; i++) {
   }
 }
 
-const currentJsonPath = path.resolve(__dirname, "../src/assets/data/beastbook.json");
+const currentJsonPath = path.resolve(__dirname, "../src/resources/generated/beastbook.json");
 const existingBeastMap = new Map<number, BeastEntry>();
 if (fs.existsSync(currentJsonPath)) {
   try {
@@ -586,79 +925,6 @@ for (const i of petNumbers) {
   });
 }
 
-const REGION_KEYWORDS = ["黑衣森林", "拉诺西亚", "萨纳兰", "库尔札斯", "摩杜纳"];
-const SUB_DIRECTION_ORDER = ["中央", "中", "东", "西", "南", "北", "低地", "高地", "外地"];
-
-function sortOverworldHabitats(list: string[]): string[] {
-  const withoutEmpty = list.filter((h) => h !== "--");
-  withoutEmpty.sort((a, b) => {
-    const regIndexA = REGION_KEYWORDS.findIndex((k) => a.includes(k));
-    const regIndexB = REGION_KEYWORDS.findIndex((k) => b.includes(k));
-
-    const safeRegA = regIndexA === -1 ? 999 : regIndexA;
-    const safeRegB = regIndexB === -1 ? 999 : regIndexB;
-
-    if (safeRegA !== safeRegB) {
-      return safeRegA - safeRegB;
-    }
-
-    const regKeyA = REGION_KEYWORDS[regIndexA];
-    const regKeyB = REGION_KEYWORDS[regIndexB];
-    const pureA = regKeyA ? a.replace(regKeyA, "") : a;
-    const pureB = regKeyB ? b.replace(regKeyB, "") : b;
-
-    const dirIndexA = SUB_DIRECTION_ORDER.findIndex((d) => pureA.includes(d));
-    const dirIndexB = SUB_DIRECTION_ORDER.findIndex((d) => pureB.includes(d));
-
-    const safeDirA = dirIndexA === -1 ? 999 : dirIndexA;
-    const safeDirB = dirIndexB === -1 ? 999 : dirIndexB;
-
-    if (safeDirA !== safeDirB) {
-      return safeDirA - safeDirB;
-    }
-
-    return a.localeCompare(b, "zh-CN");
-  });
-
-  if (list.includes("--")) {
-    withoutEmpty.push("--");
-  }
-  return withoutEmpty;
-}
-
-const allHabitats = beastbook.flatMap((b) => b.Habitats ?? []);
-const rawOverworld = [
-  ...new Set(
-    allHabitats
-      .filter((h) => h.Type === "overworld")
-      .map((h) => h.Summary)
-      .filter((s): s is string => Boolean(s)),
-  ),
-];
-const overworldHabitats = sortOverworldHabitats(rawOverworld);
-
-const constants = {
-  taxonomies: [...new Set(beastbook.map((b) => b.Taxonomy))].filter(Boolean),
-  attackTypes: [...new Set(beastbook.map((b) => b.AutoAttackType))].filter(Boolean),
-  borrowActions: [...new Set(beastbook.map((b) => b.BorrowName))].filter(Boolean),
-  ranges: [
-    ...new Set([...beastbook.map((b) => b.ReleaseRange), ...beastbook.map((b) => b.OrderRange)]),
-  ].filter(Boolean),
-  overworldHabitats,
-  dungeonHabitats: [
-    ...new Set(
-      allHabitats
-        .filter((h) => h.Type === "dungeon")
-        .map((h) => h.Summary)
-        .filter((s): s is string => Boolean(s)),
-    ),
-  ],
-};
-
-const outputPath = path.resolve(__dirname, "../src/assets/data/beastbook.json");
+const outputPath = path.resolve(__dirname, "../src/resources/generated/beastbook.json");
 fs.writeFileSync(outputPath, JSON.stringify(beastbook, null, 2), "utf8");
 console.log("Successfully generated", beastbook.length, "entries to", outputPath);
-
-const constantsPath = path.resolve(__dirname, "../src/assets/data/beastbookConstants.json");
-fs.writeFileSync(constantsPath, JSON.stringify(constants, null, 2), "utf8");
-console.log("Successfully generated constants to", constantsPath);

@@ -1709,6 +1709,11 @@
         "Summary": "凛冽洞天披雪大冰壁",
         "Type": "dungeon",
         "Level": "50"
+      },
+      {
+        "Summary": "希瓦歼灭战",
+        "Type": "dungeon",
+        "Level": "50"
       }
     ],
     "Substitutes": ["寒冰指挥官"],
