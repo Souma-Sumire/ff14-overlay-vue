@@ -2,12 +2,17 @@
 import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 import { ElCheckbox, ElDialog, ElLoadingDirective as vLoading } from "element-plus";
 
+interface EorzeaMapMarker {
+  remove?(): void;
+  addTo?(map: unknown): void;
+}
+
 interface EorzeaMapInstance {
   loadMapKey(key: number): Promise<void>;
   addMarker(marker: unknown): void;
-  setView(latlng: unknown, zoom: number): void;
+  setView(latlng: unknown, zoom: number, options?: { animate?: boolean }): void;
   mapToLatLng2D(x: number, y: number): unknown;
-  invalidateSize(): void;
+  invalidateSize(options?: { animate?: boolean }): void;
   mapInfo: unknown;
   remove?(): void;
 }
@@ -38,8 +43,7 @@ export interface BeastHabitatItem {
   Summary: string;
   Type: "overworld" | "dungeon" | "special";
   MapId?: number;
-  Coords?: BeastCoord;
-  CoordsList?: BeastCoord[];
+  Coords?: BeastCoord[];
   CoordsNote?: string;
   Level?: string;
   MobName?: string;
@@ -52,10 +56,8 @@ export interface BeastListItem {
   Name: string;
   Level?: string;
   IconUrl: string;
-  MapId?: number;
   Habitats?: BeastHabitatItem[];
   SubstituteHabitats?: BeastHabitatItem[];
-  HabitatSummary?: string;
 }
 
 interface MapMonsterItem {
@@ -67,10 +69,11 @@ interface MapMonsterItem {
   level: string;
   sortLevel: number;
   iconUrl: string;
-  coordsList: BeastCoord[];
+  coords: BeastCoord[];
   coordsText: string;
   isCaptured: boolean;
   isSelected: boolean;
+  habitatItem?: BeastHabitatItem;
 }
 
 const props = defineProps<{
@@ -81,7 +84,7 @@ const props = defineProps<{
   eventName?: string;
   habitatName: string;
   mapId?: number;
-  coords?: BeastCoord | BeastCoord[];
+  coords?: BeastCoord[];
   allBeasts?: BeastListItem[];
   captured?: Record<string, boolean>;
   currentBeastNumber?: number;
@@ -89,7 +92,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "update:modelValue", value: boolean): void;
-  (e: "selectBeast", beastNumber: number): void;
+  (e: "selectBeast", beastNumber: number, habitat?: BeastHabitatItem): void;
   (e: "toggleCapture", beastNumber: number, captured: boolean): void;
 }>();
 
@@ -123,9 +126,7 @@ const isCurrentBeastCaptured = computed<boolean>({
 });
 
 function getInitialCoords(): BeastCoord[] {
-  if (!props.coords) return [];
-  if (Array.isArray(props.coords)) return props.coords;
-  return [props.coords];
+  return props.coords ?? [];
 }
 
 const currentMapId = computed<number | undefined>(() => props.mapId);
@@ -170,16 +171,13 @@ function getMatchedHabitatForBeast(
     }
   }
 
-  if (isCurrentSelected && props.coords) {
-    const coordsArr = Array.isArray(props.coords) ? props.coords : [props.coords];
-    const firstCoord = coordsArr[0];
+  if (isCurrentSelected && props.coords && props.coords.length > 0) {
+    const firstCoord = props.coords[0];
     if (firstCoord) {
       const allCandidateHabs = [...(b.Habitats ?? []), ...(b.SubstituteHabitats ?? [])];
       const coordHit = allCandidateHabs.find((h) => {
         if (props.mapId && h.MapId !== props.mapId) return false;
-        if (h.Coords && h.Coords.x === firstCoord.x && h.Coords.y === firstCoord.y) return true;
-        if (h.CoordsList?.some((c) => c.x === firstCoord.x && c.y === firstCoord.y)) return true;
-        return false;
+        return h.Coords?.some((c) => c.x === firstCoord.x && c.y === firstCoord.y);
       });
       if (coordHit) return coordHit;
     }
@@ -217,13 +215,7 @@ const mapMonsterList = computed<MapMonsterItem[]>(() => {
 
     if (matchedHab) {
       const level = matchedHab.Level ?? b.Level ?? "-";
-      let coords: BeastCoord[] = [];
-      if (matchedHab.CoordsList && matchedHab.CoordsList.length > 0) {
-        coords = matchedHab.CoordsList;
-      } else if (matchedHab.Coords) {
-        coords = [matchedHab.Coords];
-      }
-
+      const coords = matchedHab.Coords ?? [];
       const coordsText = coords.map((c) => `X: ${c.x}, Y: ${c.y}`).join(" / ");
       const isCap = Boolean(props.captured?.[b.Number.toString()]);
 
@@ -236,10 +228,11 @@ const mapMonsterList = computed<MapMonsterItem[]>(() => {
         level,
         sortLevel: parseLevelSort(level),
         iconUrl: b.IconUrl,
-        coordsList: coords,
+        coords,
         coordsText,
         isCaptured: isCap,
         isSelected: isSel,
+        habitatItem: matchedHab,
       });
     }
   }
@@ -326,10 +319,20 @@ async function ensureLibrariesLoaded(): Promise<void> {
   return scriptLoadPromise;
 }
 
+let lastRenderedKey = "";
+let loadedMapKey: number | null = null;
+let currentCustomMarkers: EorzeaMapMarker[] = [];
+
 async function renderMap(targetCoords?: BeastCoord[]): Promise<void> {
   if (!mapContainerRef.value || !currentMapId.value) return;
-  const coordsList = targetCoords ?? normalizedCoords.value;
-  if (coordsList.length === 0) return;
+  const coords = targetCoords ?? normalizedCoords.value;
+  if (coords.length === 0) return;
+
+  const renderKey = `${currentMapId.value}_${coords.map((c) => `${c.x},${c.y}`).join(";")}`;
+  if (renderKey === lastRenderedKey && mapInstance) {
+    return;
+  }
+  lastRenderedKey = renderKey;
 
   loading.value = true;
 
@@ -347,21 +350,34 @@ async function renderMap(targetCoords?: BeastCoord[]): Promise<void> {
       mapInstance = await eorzeaMap.create(mapContainerRef.value);
     }
 
-    await mapInstance.loadMapKey(currentMapId.value);
-
-    const iconUrl = eorzeaMap.loader.getIconUrl("ui/icon/060000/060561.tex");
-    for (const c of coordsList) {
-      const marker = eorzeaMap.simpleMarker(c.x, c.y, iconUrl, mapInstance.mapInfo);
-      mapInstance.addMarker(marker);
+    const isMapChanged = loadedMapKey !== currentMapId.value;
+    if (isMapChanged) {
+      await mapInstance.loadMapKey(currentMapId.value);
+      loadedMapKey = currentMapId.value;
+      currentCustomMarkers = [];
+    } else {
+      for (const m of currentCustomMarkers) {
+        m.remove?.();
+      }
+      currentCustomMarkers = [];
     }
 
-    const first = coordsList[0];
+    const iconUrl = eorzeaMap.loader.getIconUrl("ui/icon/060000/060561.tex");
+    for (const c of coords) {
+      const marker = eorzeaMap.simpleMarker(
+        c.x,
+        c.y,
+        iconUrl,
+        mapInstance.mapInfo,
+      ) as EorzeaMapMarker;
+      mapInstance.addMarker(marker);
+      currentCustomMarkers.push(marker);
+    }
+
+    const first = coords[0];
     if (first) {
-      setTimeout(() => {
-        if (mapInstance) {
-          mapInstance.setView(mapInstance.mapToLatLng2D(first.x, first.y), -1);
-        }
-      }, 150);
+      const targetLatLng = mapInstance.mapToLatLng2D(first.x, first.y);
+      mapInstance.setView(targetLatLng, -0.5, { animate: !isMapChanged });
     }
   } finally {
     loading.value = false;
@@ -376,22 +392,26 @@ function handleSelectMonster(item: MapMonsterItem): void {
   activeSubName.value = item.subName;
   activeEventTag.value = item.eventTag;
   activeEventName.value = item.eventName;
-  activeCoords.value = item.coordsList;
-  emit("selectBeast", item.number);
-  void renderMap(item.coordsList);
+  activeCoords.value = item.coords;
+  emit("selectBeast", item.number, item.habitatItem);
+  void renderMap(item.coords);
 }
 
 function handleOpened(): void {
   nextTick(() => {
     if (!resizeObserver && mapContainerRef.value && typeof ResizeObserver !== "undefined") {
       resizeObserver = new ResizeObserver(() => {
-        mapInstance?.invalidateSize();
+        mapInstance?.invalidateSize({ animate: false });
       });
       resizeObserver.observe(mapContainerRef.value);
     }
     if (mapInstance) {
-      mapInstance.invalidateSize();
-      void renderMap();
+      mapInstance.invalidateSize({ animate: false });
+      const first = activeCoords.value[0] ?? normalizedCoords.value[0];
+      if (first) {
+        const targetLatLng = mapInstance.mapToLatLng2D(first.x, first.y);
+        mapInstance.setView(targetLatLng, -0.5, { animate: false });
+      }
     } else {
       void renderMap();
     }
@@ -400,6 +420,7 @@ function handleOpened(): void {
 
 function handleClose(): void {
   visible.value = false;
+  lastRenderedKey = "";
 }
 
 watch(
@@ -419,11 +440,7 @@ watch(
     activeSubName.value = props.subName;
     activeEventTag.value = props.eventTag;
     activeEventName.value = props.eventName;
-    if (props.coords) {
-      activeCoords.value = Array.isArray(props.coords) ? props.coords : [props.coords];
-    } else {
-      activeCoords.value = [];
-    }
+    activeCoords.value = props.coords ?? [];
     if (visible.value) {
       void renderMap();
     }
@@ -477,7 +494,7 @@ onBeforeUnmount(() => {
               <span
                 v-if="activeEventTag"
                 class="active-event-tag"
-                :class="`tag-${activeEventTag === '行会令' ? 'guildorder' : activeEventTag === '理符' ? 'leve' : activeEventTag === 'FATE' ? 'fate' : 'dungeon'}`"
+                :class="`tag-${activeEventTag === '行会令' ? 'guildhest' : activeEventTag === '理符' ? 'leve' : activeEventTag === 'FATE' ? 'fate' : 'dungeon'}`"
               >
                 {{ activeEventTag }}
               </span>
@@ -544,7 +561,7 @@ onBeforeUnmount(() => {
                   <span
                     v-if="item.eventTag"
                     class="event-tag-badge"
-                    :class="`tag-${item.eventTag === '行会令' ? 'guildorder' : item.eventTag === '理符' ? 'leve' : item.eventTag === 'FATE' ? 'fate' : 'dungeon'}`"
+                    :class="`tag-${item.eventTag === '行会令' ? 'guildhest' : item.eventTag === '理符' ? 'leve' : item.eventTag === 'FATE' ? 'fate' : 'dungeon'}`"
                   >
                     {{ item.eventTag }}
                   </span>
@@ -557,14 +574,14 @@ onBeforeUnmount(() => {
                 {{ item.level.replace(/\s*\/\s*/g, "/") }}
               </span>
               <div class="col-cell col-coords">
-                <div v-for="(coord, cIdx) in item.coordsList" :key="cIdx" class="coord-pair">
+                <div v-for="(coord, cIdx) in item.coords" :key="cIdx" class="coord-pair">
                   <span class="coord-paren">(</span>
                   <span class="coord-val">{{ coord.x }}</span>
                   <span class="coord-sep">,</span>
                   <span class="coord-val">{{ coord.y }}</span>
                   <span class="coord-paren">)</span>
                 </div>
-                <div v-if="item.coordsList.length === 0" class="coord-pair coord-empty">-</div>
+                <div v-if="item.coords.length === 0" class="coord-pair coord-empty">-</div>
               </div>
             </div>
           </div>
@@ -725,7 +742,7 @@ onBeforeUnmount(() => {
             border: 1px solid #9ecbbd;
           }
 
-          &.tag-guildorder {
+          &.tag-guildhest {
             color: #29437a;
             background: #edf0f8;
             border: 1px solid #abb7da;
@@ -1094,7 +1111,7 @@ onBeforeUnmount(() => {
             border: 1px solid #9ecbbd;
           }
 
-          &.tag-guildorder {
+          &.tag-guildhest {
             color: #29437a;
             background: #edf0f8;
             border: 1px solid #abb7da;

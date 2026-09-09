@@ -3,6 +3,8 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { csvPaths } from "./paths.js";
+import type { BeastCoord } from "../src/resources/beastbook";
+import { communityCoords, substituteRules } from "../src/resources/beastbook";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -81,18 +83,12 @@ const addonMap = parseCsv("Addon.csv");
 const xbmElementMap = parseCsv("XBMElement.csv");
 const attackTypeMap = parseCsv("AttackType.csv");
 
-interface BeastCoord {
-  x: number;
-  y: number;
-}
-
 interface BeastHabitat {
   Summary: string;
   Type: string;
   MapId?: number;
-  Coords?: BeastCoord;
+  Coords?: BeastCoord[];
   Level?: string;
-  CoordsList?: BeastCoord[];
   Tag?: string;
   EventName?: string;
   MobName?: string;
@@ -116,63 +112,12 @@ interface BeastEntry {
   OrderDescription: string;
   OrderRange: string;
   OrderIcon: number;
-  HabitatSummary: string;
-  HabitatType: string;
   Habitat: string;
-  MapId?: number;
   Icon: number;
-  Level?: string;
   Habitats?: BeastHabitat[];
   Substitutes?: string[];
   SubstituteHabitats?: BeastHabitat[];
 }
-
-interface CommunityCoordItem {
-  mapId?: number;
-  summary?: string;
-  coords?: BeastCoord;
-  level?: string;
-  coordsList?: BeastCoord[];
-}
-
-interface CommunityCoordEntry {
-  coords?: BeastCoord;
-  level?: string;
-  coordsList?: BeastCoord[];
-  habitats?: CommunityCoordItem[];
-}
-
-interface SubstituteRuleFate {
-  eventName: string;
-  mobName: string;
-  mapId: number;
-  coords: BeastCoord;
-  level?: string;
-  summary?: string;
-}
-
-interface SubstituteRuleLeve {
-  eventName: string;
-  mobName: string;
-  mapId: number;
-  coords: BeastCoord;
-  level?: string;
-  summary?: string;
-}
-
-interface SubstituteRule {
-  guildOrders?: string[];
-  fates?: SubstituteRuleFate[];
-  leves?: SubstituteRuleLeve[];
-  bnpcIds?: string[];
-}
-
-const communityCoords: Record<string, CommunityCoordEntry> = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "data/communityCoords.json"), "utf8"),
-);
-const substituteRules: Record<string, SubstituteRule> = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "data/substituteRules.json"), "utf8"),
-);
 
 function cleanHex(str: string): string {
   if (!str) return "";
@@ -285,15 +230,15 @@ const bnpcNames = [...bnpcNameMap.values()]
   .filter((n) => n.length >= 2)
   .sort((a, b) => b.length - a.length);
 
-function getGuildOrderSub(goId: string): BeastHabitat | null {
+function getGuildhestSub(goId: string): BeastHabitat | null {
   const goRow = guildOrderMap.get(goId);
   if (!goRow) return null;
   const title = getCol(goRow, 1).replace(/^"|"$/g, "");
   const targetContent = (10000 + parseInt(goId, 10)).toString();
-  let cfcLevel = "10";
+  let cfcLevel = "-";
   for (const cfcRow of cfcMap.values()) {
     if (cfcRow[3] === targetContent) {
-      cfcLevel = cfcRow[18] || "10";
+      cfcLevel = cfcRow[18] || "-";
       break;
     }
   }
@@ -433,12 +378,12 @@ for (const i of petNumbers) {
   const orderName = orderRow ? getCol(orderRow, 0).replace(/^"|"$/g, "") : "";
   const orderIcon = orderRow ? getColInt(orderRow, 2) : 0;
   const orderRange = getActionRange(orderRow);
-  const orderDescription = cleanHex(getCol(row, 10).replace(/^"|"$/g, ""));
+  const orderDescription = cleanHex(getCol(row, 9).replace(/^"|"$/g, ""));
 
   const releaseName = releaseRow ? getCol(releaseRow, 0).replace(/^"|"$/g, "") : "";
   const releaseIcon = releaseRow ? getColInt(releaseRow, 2) : 0;
   const releaseRange = getActionRange(releaseRow);
-  const releaseDescription = cleanHex(getCol(row, 9).replace(/^"|"$/g, ""));
+  const releaseDescription = cleanHex(getCol(row, 10).replace(/^"|"$/g, ""));
 
   const locationKey = getCol(row, 6);
   const locationId = getCol(row, 7);
@@ -470,7 +415,7 @@ for (const i of petNumbers) {
   const habitat = cleanHex(getCol(row, 8).replace(/^"|"$/g, ""));
   const icon = getColInt(row, 4);
 
-  const comm = communityCoords[i.toString()] || communityCoords[i];
+  const comm = communityCoords[i];
   let habitats: BeastHabitat[] = [];
   if (comm) {
     if (comm.habitats && comm.habitats.length > 0) {
@@ -479,25 +424,21 @@ for (const i of petNumbers) {
         const hSummary = h.summary || getPlaceNameByMapId(hMapId) || habitatSummary;
         return {
           Summary: hSummary,
-          Type: getHabitatType(locationKey),
+          Type: h.type || getHabitatType(locationKey),
           MapId: hMapId,
           Coords: h.coords,
-          Level: h.level || comm.level || (existing ? existing.Level : "-"),
-          CoordsList: h.coordsList && h.coordsList.length > 0 ? h.coordsList : undefined,
+          Level: h.level || comm.level || existing?.Habitats?.[0]?.Level || "-",
+          MobName: h.mobName,
         };
       });
     } else {
-      const coords = comm.coords;
-      const coordsList =
-        comm.coordsList && comm.coordsList.length > 0 ? comm.coordsList : undefined;
       habitats = [
         {
           Summary: habitatSummary,
           Type: getHabitatType(locationKey),
           MapId: mapId,
-          Coords: coords,
-          Level: comm.level || (existing ? existing.Level : "-"),
-          CoordsList: coordsList,
+          Coords: comm.coords,
+          Level: comm.level || existing?.Habitats?.[0]?.Level || "-",
         },
       ];
     }
@@ -510,25 +451,19 @@ for (const i of petNumbers) {
         Type: getHabitatType(locationKey),
         MapId: mapId,
         Coords: existing?.Habitats?.[0]?.Coords,
-        Level: existing ? existing.Level : "-",
-        CoordsList: existing?.Habitats?.[0]?.CoordsList,
+        Level: existing?.Habitats?.[0]?.Level || "-",
       },
     ];
   }
 
-  const primaryHab = habitats[0];
-  const mainMapId = primaryHab?.MapId ?? mapId;
-  const mainSummary = primaryHab?.Summary ?? habitatSummary;
-  const mainLevel = comm?.level || primaryHab?.Level || (existing ? existing.Level : "-");
-
-  const rule = substituteRules[i.toString()] || substituteRules[i];
+  const rule = substituteRules[i];
   const substitutesSet = new Set<string>();
   const substituteHabitats: BeastHabitat[] = [];
 
   if (rule) {
-    if (rule.guildOrders) {
-      rule.guildOrders.forEach((goId) => {
-        const goSub = getGuildOrderSub(goId);
+    if (rule.guildhests) {
+      rule.guildhests.forEach((goId) => {
+        const goSub = getGuildhestSub(goId);
         if (goSub) {
           if (goSub.MobName) substitutesSet.add(goSub.MobName);
           if (
@@ -576,6 +511,19 @@ for (const i of petNumbers) {
       });
     }
 
+    if (rule.dungeons) {
+      rule.dungeons.forEach((d) => {
+        substitutesSet.add(d.mobName);
+        substituteHabitats.push({
+          Summary: d.summary,
+          Type: "dungeon",
+          MobName: d.mobName,
+          IsSubstitute: true,
+          Level: d.level,
+        });
+      });
+    }
+
     if (rule.bnpcIds) {
       rule.bnpcIds.forEach((bId) => {
         const nameRow = bnpcNameMap.get(bId);
@@ -592,7 +540,7 @@ for (const i of petNumbers) {
         for (const [place, list] of groupedByPlace.entries()) {
           const first = list[0];
           if (!first) continue;
-          const coordsList = list.slice(0, 3).map((pt) => ({ x: pt.x, y: pt.y }));
+          const coords = list.slice(0, 3).map((pt) => ({ x: pt.x, y: pt.y }));
           const exists = substituteHabitats.some(
             (h) => h.Summary === place && h.MobName === mobName,
           );
@@ -601,9 +549,8 @@ for (const i of petNumbers) {
               Summary: place,
               Type: "overworld",
               MapId: first.mapId,
-              Coords: coordsList[0],
-              Level: existing ? existing.Level : undefined,
-              CoordsList: coordsList,
+              Coords: coords,
+              Level: existing?.Habitats?.[0]?.Level,
               MobName: mobName,
               IsSubstitute: true,
             });
@@ -631,12 +578,8 @@ for (const i of petNumbers) {
     OrderDescription: orderDescription,
     OrderRange: orderRange,
     OrderIcon: orderIcon,
-    HabitatSummary: mainSummary,
-    HabitatType: getHabitatType(locationKey),
     Habitat: habitat,
-    MapId: mainMapId,
     Icon: icon,
-    Level: mainLevel,
     Habitats: habitats,
     Substitutes: substitutes,
     SubstituteHabitats: substituteHabitats.length > 0 ? substituteHabitats : undefined,
@@ -683,11 +626,12 @@ function sortOverworldHabitats(list: string[]): string[] {
   return withoutEmpty;
 }
 
+const allHabitats = beastbook.flatMap((b) => b.Habitats ?? []);
 const rawOverworld = [
   ...new Set(
-    beastbook
-      .filter((b) => b.HabitatType === "overworld")
-      .map((b) => b.HabitatSummary)
+    allHabitats
+      .filter((h) => h.Type === "overworld")
+      .map((h) => h.Summary)
       .filter((s): s is string => Boolean(s)),
   ),
 ];
@@ -703,9 +647,9 @@ const constants = {
   overworldHabitats,
   dungeonHabitats: [
     ...new Set(
-      beastbook
-        .filter((b) => b.HabitatType === "dungeon")
-        .map((b) => b.HabitatSummary)
+      allHabitats
+        .filter((h) => h.Type === "dungeon")
+        .map((h) => h.Summary)
         .filter((s): s is string => Boolean(s)),
     ),
   ],
