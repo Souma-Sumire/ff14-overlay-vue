@@ -302,10 +302,10 @@ export const BEAST_COMMUNITY_PATCHES: Record<number, BeastCommunityPatch> = {
   "38": {
     extraHabitats: [
       {
-        Summary: "库尔札斯中央高地",
+        Summary: "北萨纳兰",
         Type: "fate",
         EventName: "狂暴巨兽——强化奇美拉",
-        Coords: [{ x: 31.4, y: 7.3 }],
+        Coords: [{ x: 17, y: 14.5 }],
         MobName: "强化奇美拉",
         Level: "49",
       },
