@@ -402,11 +402,19 @@ export const BEAST_COMMUNITY_PATCHES: Record<number, BeastCommunityPatch> = {
   "50": {
     extraHabitats: [
       {
-        Summary: "摩杜纳",
+        Summary: "库尔札斯中央高地",
+        Type: "fate",
+        EventName: "受伤的魔兽——贝希摩斯",
+        Coords: [{ x: 4, y: 15 }],
+        MobName: "贝希摩斯",
+        Level: "50",
+      },
+      {
+        Summary: "库尔札斯中央高地",
         Type: "fate",
         EventName: "传说的魔兽——贝希摩斯",
-        Coords: [{ x: 33.1, y: 16.2 }],
-        MobName: "贝希摩斯王",
+        Coords: [{ x: 6.2, y: 22.1 }],
+        MobName: "贝希摩斯",
         Level: "50",
       },
     ],
