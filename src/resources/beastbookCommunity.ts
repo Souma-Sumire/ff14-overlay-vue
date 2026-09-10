@@ -278,6 +278,14 @@ export const BEAST_COMMUNITY_PATCHES: Record<number, BeastCommunityPatch> = {
   "35": {
     coords: [{ x: 25, y: 39 }],
     level: "32",
+    extraHabitats: [
+      {
+        Summary: "休养胜地布雷福洛克斯野营地",
+        Type: "dungeon",
+        Level: "32",
+        MobName: "白烬火蛟",
+      },
+    ],
   },
   "36": {
     coords: [{ x: 27, y: 15 }],
