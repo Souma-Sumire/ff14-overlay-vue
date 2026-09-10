@@ -308,4 +308,4 @@ for (const i of petNumbers) {
 
 const outputPath = path.resolve(__dirname, "../src/resources/generated/beastbook.json");
 fs.writeFileSync(outputPath, JSON.stringify(beastbook, null, 2), "utf8");
-console.log("Successfully generated", beastbook.length, "entries to", outputPath);
+// console.log("Successfully generated", beastbook.length, "entries to", outputPath);

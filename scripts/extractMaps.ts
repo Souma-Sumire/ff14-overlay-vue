@@ -93,9 +93,9 @@ for (const [mId, r] of mapMap.entries()) {
 
 const mapsOutputPath = path.resolve(__dirname, "../src/resources/generated/maps.json");
 fs.writeFileSync(mapsOutputPath, JSON.stringify(mapNameToId, null, 2), "utf8");
-console.log(
-  "Successfully generated",
-  Object.keys(mapNameToId).length,
-  "map mappings to",
-  mapsOutputPath,
-);
+// console.log(
+//   "Successfully generated",
+//   Object.keys(mapNameToId).length,
+//   "map mappings to",
+//   mapsOutputPath,
+// );
