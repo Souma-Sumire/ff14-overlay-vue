@@ -266,7 +266,7 @@ export const BEAST_COMMUNITY_PATCHES: Record<number, BeastCommunityPatch> = {
         Summary: "拉诺西亚高地",
         Type: "overworld",
         Coords: [{ x: 9.6, y: 21.2 }],
-        MobName: "长须豹幼崽",
+        MobName: "高阶长须豹",
         Level: "23",
       },
     ],
