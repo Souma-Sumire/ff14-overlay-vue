@@ -185,6 +185,16 @@ export const BEAST_COMMUNITY_PATCHES: Record<number, BeastCommunityPatch> = {
   "23": {
     coords: [{ x: 24, y: 12.3 }],
     level: "29",
+    extraHabitats: [
+      {
+        Summary: "黑衣森林北部林区",
+        Type: "fate",
+        EventName: "红月的叛逆者",
+        Coords: [{ x: 16, y: 31 }],
+        MobName: "红月巨像",
+        Level: "25",
+      },
+    ],
   },
   "24": {
     coords: [{ x: 28.8, y: 36.7 }],
@@ -292,6 +302,14 @@ export const BEAST_COMMUNITY_PATCHES: Record<number, BeastCommunityPatch> = {
         Type: "dungeon",
         Level: "32",
         MobName: "白烬火蛟",
+      },
+      {
+        Summary: "南萨纳兰",
+        Type: "fate",
+        EventName: "精心培养的孩子",
+        Coords: [{ x: 16, y: 12 }],
+        MobName: "强化型战斗火蛟",
+        Level: "25",
       },
     ],
   },
