@@ -156,14 +156,6 @@ export const BEAST_COMMUNITY_PATCHES: Record<number, BeastCommunityPatch> = {
         MobName: "波克曼",
         Level: "11",
       },
-      {
-        Summary: "黑衣森林东部林区",
-        Type: "fate",
-        EventName: "无头骑士——波克曼",
-        Coords: [{ x: 27.3, y: 22.1 }],
-        MobName: "波克曼",
-        Level: "20",
-      },
     ],
   },
   "19": {
@@ -215,6 +207,24 @@ export const BEAST_COMMUNITY_PATCHES: Record<number, BeastCommunityPatch> = {
   "26": {
     coords: [{ x: 18.5, y: 17.5 }],
     level: "8",
+    extraHabitats: [
+      {
+        Summary: "东拉诺西亚",
+        Type: "fate",
+        EventName: "命中注定",
+        Coords: [{ x: 27.5, y: 28.8 }],
+        MobName: "冲撞水牛",
+        Level: "28",
+      },
+      {
+        Summary: "东拉诺西亚",
+        Type: "fate",
+        EventName: "命中注定",
+        Coords: [{ x: 27.5, y: 28.8 }],
+        MobName: "发情水牛",
+        Level: "31",
+      },
+    ],
   },
   "27": {
     coords: [{ x: 16.8, y: 14.5 }],
@@ -223,6 +233,24 @@ export const BEAST_COMMUNITY_PATCHES: Record<number, BeastCommunityPatch> = {
   "28": {
     coords: [{ x: 15.2, y: 37.5 }],
     level: "31",
+    extraHabitats: [
+      {
+        Summary: "南萨纳兰",
+        Type: "fate",
+        EventName: "沙漠之子",
+        Coords: [{ x: 14.7, y: 32.2 }],
+        MobName: "沙地巨虫",
+        Level: "29",
+      },
+      {
+        Summary: "南萨纳兰",
+        Type: "fate",
+        EventName: "沙漠皇帝——乌尔哈德希",
+        Coords: [{ x: 14.5, y: 30.3 }],
+        MobName: "沙地巨虫",
+        Level: "29",
+      },
+    ],
   },
   "29": {
     coords: [{ x: 17.4, y: 23.7 }],
@@ -259,6 +287,16 @@ export const BEAST_COMMUNITY_PATCHES: Record<number, BeastCommunityPatch> = {
   "32": {
     coords: [{ x: 30.6, y: 24 }],
     level: "33",
+    extraHabitats: [
+      {
+        Summary: "东拉诺西亚",
+        Type: "fate",
+        EventName: "盛夏之门",
+        Coords: [{ x: 30.2, y: 29.2 }],
+        MobName: "蜂鸟",
+        Level: "30",
+      },
+    ],
   },
   "33": {
     coords: [{ x: 15.3, y: 14.7 }],
