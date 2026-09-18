@@ -186,6 +186,14 @@ export const BEAST_COMMUNITY_PATCHES: Record<number, BeastCommunityPatch> = {
         MobName: "红月巨像",
         Level: "25",
       },
+      {
+        Summary: "南萨纳兰",
+        Type: "fate",
+        EventName: "解开真理",
+        Coords: [{ x: 24, y: 12.5 }],
+        MobName: "晶岩守卫",
+        Level: "26",
+      },
     ],
   },
   "24": {
