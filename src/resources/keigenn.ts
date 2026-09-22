@@ -480,6 +480,20 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     isFriendly: true,
   },
   {
+    name: "天眼通",
+    id: 3853,
+    type: "multiplier",
+    performance: { physics: 0.9, magic: 0.9, darkness: 1 },
+    isFriendly: true,
+  },
+  {
+    name: "通天眼",
+    id: 3853,
+    type: "multiplier",
+    performance: { physics: 0.9, magic: 0.9, darkness: 1 },
+    isFriendly: true,
+  },
+  {
     name: "金刚极意",
     id: 1179,
     type: "multiplier",
