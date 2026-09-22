@@ -382,7 +382,8 @@ function prepareRowVO(row: Omit<RowVO, "preCalculated">): RowVO {
   const { amount, maxHp, currentHp, shield, type, reduction } = row;
   const shieldValue = Math.round((maxHp * +shield) / 100);
   const hpPercent = Math.round((currentHp / maxHp) * 100);
-  const originalDamage = (amount && Math.round((amount + shieldValue) / (1 - reduction))) || 0;
+  const originalDamage =
+    (amount && reduction < 1 && Math.round((amount + shieldValue) / (1 - reduction))) || 0;
   const originalDamageDisplay = originalDamage.toLocaleString();
 
   const commonSkillSort = (a: KeySkillSnapshot, b: KeySkillSnapshot) => {
@@ -452,6 +453,7 @@ function handleLine(line: string) {
             fullIcon: realIcon,
             name: vulnerable.name,
             isFriendly: vulnerable.isFriendly,
+            canStack: true,
           };
         } else if (isPvP && keigenn && count > 1 && count <= 16) {
           keigenn.fullIcon = stackUrl(keigenn.fullIcon, count);
@@ -477,6 +479,7 @@ function handleLine(line: string) {
           performance: keigenn.performance,
           fullIcon: keigenn.fullIcon,
           isPov: povId === sourceId,
+          canStack: keigenn.canStack,
         };
         if (targetId.startsWith("1") && keigenn.isFriendly) {
           if (statusData.friendly[targetId] === undefined) statusData.friendly[targetId] = {};
@@ -624,7 +627,7 @@ function handleLine(line: string) {
             for (const k of keigenns) {
               if (k.type !== "absorbed") {
                 const performance = k.performance[type as keyof PerformanceType] ?? 1;
-                const stackCount = k.count >= 1 && k.count <= 16 ? k.count : 1;
+                const stackCount = k.canStack && k.count >= 1 && k.count <= 16 ? k.count : 1;
                 const stackedPerformance = 1 - (1 - performance) * stackCount;
                 reductionMultiplier *= stackedPerformance;
               }

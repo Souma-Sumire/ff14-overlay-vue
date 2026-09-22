@@ -94,6 +94,7 @@ export interface Status {
   fullIcon: string;
   isPov: boolean;
   remainingDuration?: string;
+  canStack?: boolean;
 }
 
 export interface Encounter {
@@ -120,6 +121,7 @@ export interface Keigenn {
   performance: PerformanceType;
   isFriendly: boolean;
   name: string;
+  canStack?: boolean;
 }
 
 export interface CombatDataEvent {

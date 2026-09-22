@@ -943,6 +943,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0.01, magic: 0.01, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "弱化防御",
@@ -950,6 +951,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0.505, magic: 0.505, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "无法防御",
@@ -957,6 +959,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "强盾猛击",
@@ -964,6 +967,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 1.1, magic: 1.1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "圣盾阵",
@@ -971,6 +975,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "忠义之盾",
@@ -978,6 +983,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0.85, magic: 0.85, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "列阵",
@@ -985,6 +991,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0.67, magic: 0.67, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "神圣领域",
@@ -992,6 +999,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0, magic: 0, darkness: 0 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "暴怒",
@@ -999,6 +1007,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 1.25, magic: 1.25, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "铁壁",
@@ -1006,6 +1015,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0.5, magic: 0.5, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "猛攻",
@@ -1013,6 +1023,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 1.1, magic: 1.1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "原初的血烟",
@@ -1020,6 +1031,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "至黑之夜",
@@ -1027,6 +1039,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "不死救赎",
@@ -1034,6 +1047,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "刚玉之心",
@@ -1041,6 +1055,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0.9, magic: 0.9, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "超高速",
@@ -1048,6 +1063,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "命运之印",
@@ -1055,6 +1071,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "撕喉",
@@ -1062,6 +1079,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "裂膛",
@@ -1069,6 +1087,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "穿目",
@@ -1076,6 +1095,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "连续剑伤",
@@ -1083,6 +1103,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 1.05, magic: 1.05, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
 
   // * 治疗职业
@@ -1092,6 +1113,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "水流幕",
@@ -1099,6 +1121,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "自然的奇迹",
@@ -1106,6 +1129,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 1.2, magic: 1.2, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "护盾",
@@ -1113,6 +1137,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0.9, magic: 0.9, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "鼓舞",
@@ -1120,6 +1145,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "激励",
@@ -1127,6 +1153,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0.9, magic: 0.9, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "连环计",
@@ -1134,6 +1161,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 1.1, magic: 1.1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "炽天的幕帘",
@@ -1141,6 +1169,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "慰藉",
@@ -1148,6 +1177,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "吉星相位（夜）",
@@ -1155,6 +1185,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "本轮",
@@ -1162,6 +1193,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "王冠之贵妇",
@@ -1169,6 +1201,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0.9, magic: 0.9, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "王冠之领主",
@@ -1176,6 +1209,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 1.1, magic: 1.1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "输血",
@@ -1183,6 +1217,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "血印",
@@ -1190,6 +1225,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "箭毒",
@@ -1197,6 +1233,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 1.1, magic: 1.1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "均衡诊断",
@@ -1204,6 +1241,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "中庸之道",
@@ -1211,6 +1249,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0, magic: 0, darkness: 0 },
     isFriendly: true,
+    canStack: true,
   },
 
   // * 近战DPS
@@ -1220,6 +1259,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "红莲龙血",
@@ -1227,6 +1267,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 1.15, magic: 1.15, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "天穹破碎",
@@ -1234,6 +1275,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "残影",
@@ -1241,6 +1283,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "风遁之术",
@@ -1248,6 +1291,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "土遁之术",
@@ -1255,6 +1299,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0.85, magic: 0.85, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "必杀剑·地天",
@@ -1262,6 +1307,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0.67, magic: 0.67, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "奥义斩浪",
@@ -1269,6 +1315,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "回返斩浪",
@@ -1276,6 +1323,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "守护纹",
@@ -1283,6 +1331,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "恐慌",
@@ -1290,6 +1339,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "蛇鳞",
@@ -1297,6 +1347,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0.5, magic: 0.5, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "蛇鳞甲",
@@ -1304,6 +1355,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
 
   // * 远敏DPS
@@ -1313,6 +1365,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0.75, magic: 0.75, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "光阴神的庇护",
@@ -1320,6 +1373,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0.75, magic: 0.75, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "扇舞",
@@ -1327,6 +1381,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0.8, magic: 0.8, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "刃舞",
@@ -1334,6 +1389,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0.75, magic: 0.75, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "刃舞·终",
@@ -1341,6 +1397,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "诱惑",
@@ -1348,6 +1405,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
 
   // * 法系DPS
@@ -1357,6 +1415,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 1.25, magic: 1.25, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "磁暴",
@@ -1364,6 +1423,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "寒冰环",
@@ -1371,6 +1431,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0.8, magic: 0.8, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "守护之光",
@@ -1378,6 +1439,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "山崩",
@@ -1385,6 +1447,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0.85, magic: 0.85, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "魔回刺",
@@ -1392,6 +1455,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "魔交击斩",
@@ -1399,6 +1463,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "魔连攻",
@@ -1406,6 +1471,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "鼓励",
@@ -1413,6 +1479,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0.92, magic: 0.92, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "剑身强部",
@@ -1420,6 +1487,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "兽爪构想",
@@ -1427,6 +1495,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 1.1, magic: 1.1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "坦培拉涂层",
@@ -1434,6 +1503,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "油性坦培拉涂层",
@@ -1441,6 +1511,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "absorbed",
     performance: { physics: 1, magic: 1, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
   {
     name: "胖胖之壁",
@@ -1448,6 +1519,7 @@ const keigenns: (Omit<Keigenn, "fullIcon"> & { fullIcon?: string })[] = [
     type: "multiplier",
     performance: { physics: 0.75, magic: 0.75, darkness: 1 },
     isFriendly: true,
+    canStack: true,
   },
 
   // #endregion
