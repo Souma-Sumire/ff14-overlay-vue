@@ -86,13 +86,11 @@ function getGroupedZoneOptions(t: (key: string) => string, locale: string) {
     .map(([id, info]) => ({ id, ...info }))
     .sort((a, b) => {
       if (a.exVersion !== b.exVersion) return b.exVersion - a.exVersion;
-      if (
-        a.contentType === ContentType.Raids &&
-        b.contentType === ContentType.Raids &&
-        b.name.ja &&
-        a.name.ja
-      ) {
-        return a.name.ja.localeCompare(b.name.ja);
+      if (a.contentType !== b.contentType) {
+        return (a.contentType ?? 0) - (b.contentType ?? 0);
+      }
+      if (a.contentType === ContentType.Raids && a.name.ja && b.name.ja) {
+        return a.name.ja.localeCompare(b.name.ja, "ja", { numeric: true });
       }
       return Number(a.id) - Number(b.id);
     })
