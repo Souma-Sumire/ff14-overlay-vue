@@ -1472,7 +1472,7 @@ function formatTimestamp(ms: number): string {
 </template>
 
 <style lang="scss" scoped>
-:global(body) {
+:global(html[data-route="keigennRecord2"] body) {
   background: transparent;
   padding: 0;
   margin: 0;

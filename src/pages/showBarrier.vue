@@ -162,7 +162,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped lang="scss">
-:global(html) {
+:global(html[data-route="showBarrier"]) {
   user-select: none;
   overflow: hidden;
 }

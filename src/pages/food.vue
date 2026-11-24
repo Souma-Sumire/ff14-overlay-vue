@@ -290,7 +290,7 @@ onUnmounted(() => {
   font-family: "FFXIV";
 }
 
-:global(body) {
+:global(html[data-route="food"] body) {
   background-color: transparent;
   margin: 0;
   padding: 2px;

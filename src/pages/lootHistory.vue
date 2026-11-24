@@ -5345,9 +5345,9 @@ const activeStep = computed(() => {
   );
 }
 
-html,
-body,
-#app {
+html[data-route="lootHistory"],
+html[data-route="lootHistory"] body,
+html[data-route="lootHistory"] #app {
   height: 100%;
   width: 100%;
   overflow: hidden !important;
@@ -5357,8 +5357,8 @@ body,
   padding: 0 !important;
 }
 
-html.dark,
-html.dark body {
+html[data-route="lootHistory"].dark,
+html[data-route="lootHistory"].dark body {
   background-color: #0f172a !important;
   color-scheme: dark;
   --ffxiv-stripe-color: rgba(255, 255, 255, 0.08);

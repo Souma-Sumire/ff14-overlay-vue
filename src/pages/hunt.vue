@@ -1212,12 +1212,12 @@ onMounted(async () => {
 </template>
 
 <style scoped lang="scss">
-:global(html) {
+:global(html[data-route="hunt"]) {
   overflow: -moz-scrollbars-none;
   -ms-overflow-style: none;
 }
 
-:global(html::-webkit-scrollbar) {
+:global(html[data-route="hunt"]::-webkit-scrollbar) {
   display: none;
 }
 

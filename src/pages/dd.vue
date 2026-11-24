@@ -309,21 +309,21 @@ $font-size: 1.25rem;
 $outline-size: 0.1rem;
 $outline-blur: 0.15rem;
 
-:global(body::-webkit-scrollbar) {
+:global(html[data-route="dd"] body::-webkit-scrollbar) {
   display: none;
 }
 
-:global(body::-webkit-scrollbar) {
+:global(html[data-route="dd"] body::-webkit-scrollbar) {
   width: 0.25rem;
   height: 0.25rem;
 }
 
-:global(body::-webkit-scrollbar-thumb) {
+:global(html[data-route="dd"] body::-webkit-scrollbar-thumb) {
   height: 1.5rem;
   border-radius: 0.25rem;
 }
 
-:global(body) {
+:global(html[data-route="dd"] body) {
   user-select: none;
 }
 

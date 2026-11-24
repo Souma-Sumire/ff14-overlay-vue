@@ -244,7 +244,7 @@ function testShuffleParty() {
 </template>
 
 <style scoped lang="scss">
-:global(body) {
+:global(html[data-route="cactbotRuntime"] body) {
   overflow: hidden;
 }
 

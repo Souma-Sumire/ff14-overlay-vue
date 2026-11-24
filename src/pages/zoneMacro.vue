@@ -835,8 +835,8 @@ $main-font:
   pointer-events: initial;
 }
 
-:global(html),
-:global(body) {
+:global(html[data-route="zoneMacro"]),
+:global(html[data-route="zoneMacro"] body) {
   height: 100%;
   width: 100%;
   margin: 0;

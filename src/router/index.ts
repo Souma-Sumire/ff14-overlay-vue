@@ -68,6 +68,7 @@ router.afterEach((to, _from) => {
   // 这会导致离开这些页面后,其他页面无法正常滚动或出现样式残留
   const body = document.body;
   const html = document.documentElement;
+  html.dataset.route = to.name?.toString() ?? "";
 
   // 只重置可能影响滚动和显示的关键属性
   if (body.style.height === "100%" || body.style.height === "100vh") {

@@ -425,10 +425,12 @@ const contactLinks = computed(() => [
 </template>
 
 <style lang="scss" scoped>
-:global(html),
-:global(body) {
+:global(html[data-route="startPages"]),
+:global(html[data-route="startPages"] body) {
   margin: 0;
+  height: auto;
   min-height: 100%;
+  overflow-y: auto;
   background-color: var(--el-bg-color);
   color: var(--el-text-color-primary);
 }
