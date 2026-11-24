@@ -1,0 +1,1 @@
+import{m as e}from"./cactbot-BtA6uqsY.js";function t(t){return t===``?Promise.resolve(void 0):e({call:`cactbotSay`,text:t})}export{t};
