@@ -29,6 +29,7 @@ import { Job } from "../../cactbot/types/job";
 import {
   computed,
   defineAsyncComponent,
+  nextTick,
   onMounted,
   onUnmounted,
   reactive,
@@ -36,7 +37,7 @@ import {
   toRef,
   watch,
 } from "vue";
-import { useDebounceFn, useLocalStorage } from "@vueuse/core";
+import { useDebounceFn, useLocalStorage, useResizeObserver } from "@vueuse/core";
 import CommonThemeToggle from "@/components/common/ThemeToggle.vue";
 import ZoneSelecter from "@/components/zoneSelecter.vue";
 import {
@@ -452,13 +453,6 @@ function previewRowTts(text: string) {
   tts(text);
 }
 
-function formatJobsFull(jobs: Job[]): string {
-  return jobs
-    .map((v) => getLabel(v))
-    .join("、")
-    .replace("冒险者", "全部职业");
-}
-
 function getJobIconSrc(job: Job): string {
   if (!job || job === "NONE") return "";
   const full = Util.jobToFullName(job.toUpperCase() as Job);
@@ -467,6 +461,71 @@ function getJobIconSrc(job: Job): string {
 }
 
 let prevEditingJobs: Job[] = [];
+
+const JOB_TAG_GAP = 6;
+const JOB_TAG_ARROW_RESERVE = 22;
+const JOB_TAG_INDICATOR_RESERVE = 52;
+
+const jobsSelectRef = ref<InstanceType<typeof ElSelect> | null>(null);
+const maxJobTags = ref(1);
+let tagMeasureCtx: CanvasRenderingContext2D | null = null;
+
+function measureTextWidth(text: string, font: string) {
+  tagMeasureCtx ??= document.createElement("canvas").getContext("2d");
+  if (!tagMeasureCtx) return text.length * 12;
+  tagMeasureCtx.font = font;
+  return tagMeasureCtx.measureText(text).width;
+}
+
+// 按选择框实际宽度决定折叠前能放下几个职业标签，避免宽选择框里只显示一个标签
+function updateMaxJobTags() {
+  const root = jobsSelectRef.value?.$el as HTMLElement | null | undefined;
+  const selection = root?.querySelector<HTMLElement>(".el-select__selection");
+  const jobs = currentTimelineEditing.value.condition.jobs;
+  const firstJob = jobs[0];
+  if (!selection || !firstJob) {
+    maxJobTags.value = 1;
+    return;
+  }
+
+  const firstTag = selection.querySelector<HTMLElement>(".el-tag");
+  const style = getComputedStyle(firstTag ?? selection);
+  const font = `${style.fontSize} ${style.fontFamily}`;
+  const baseTextWidth = measureTextWidth(getLabel(firstJob), font);
+  const baseTagWidth = firstTag?.offsetWidth ?? baseTextWidth + 38;
+  const tagWidths = jobs.map(
+    (job) => baseTagWidth + measureTextWidth(getLabel(job), font) - baseTextWidth,
+  );
+
+  const fitCount = (limit: number) => {
+    let used = 0;
+    let count = 0;
+    for (const width of tagWidths) {
+      used += width + JOB_TAG_GAP;
+      if (used > limit) break;
+      count += 1;
+    }
+    return count;
+  };
+
+  const available = selection.clientWidth - JOB_TAG_ARROW_RESERVE;
+  if (fitCount(available) === jobs.length) {
+    maxJobTags.value = jobs.length;
+    return;
+  }
+  maxJobTags.value = Math.max(1, fitCount(available - JOB_TAG_INDICATOR_RESERVE));
+}
+
+useResizeObserver(
+  () => jobsSelectRef.value?.$el as HTMLElement | null | undefined,
+  () => updateMaxJobTags(),
+);
+
+watch(
+  () => currentTimelineEditing.value.condition.jobs,
+  () => nextTick(updateMaxJobTags),
+  { deep: true },
+);
 
 function handleEditingJobsChange(nextJobs: Job[]) {
   if (nextJobs.includes("NONE") && nextJobs.length > 1) {
@@ -1210,12 +1269,7 @@ init();
               </span>
             </template>
           </el-table-column>
-          <el-table-column
-            prop="condition"
-            label="适用职业"
-            min-width="120"
-            :show-overflow-tooltip="true"
-          >
+          <el-table-column prop="condition" label="适用职业" min-width="200">
             <template #header>
               <span class="label-with-tip">
                 <span>适用职业</span>
@@ -1228,30 +1282,21 @@ init();
               </span>
             </template>
             <template #default="scope">
-              <el-tooltip
-                :disabled="scope.row.condition.jobs.length <= 3"
-                :content="formatJobsFull(scope.row.condition.jobs)"
-                placement="top"
-              >
-                <span class="table-jobs-cell">
-                  <template v-for="(job, idx) in scope.row.condition.jobs.slice(0, 3)" :key="job">
-                    <span class="table-job-chip">
-                      <img
-                        v-if="getJobIconSrc(job)"
-                        :src="getJobIconSrc(job)"
-                        :alt="getLabel(job)"
-                        class="job-option-icon"
-                        @error="handleImgError"
-                      />
-                      <span>{{ getLabel(job) }}</span>
-                    </span>
-                    <span v-if="idx < Math.min(scope.row.condition.jobs.length, 3) - 1">、</span>
-                  </template>
-                  <span v-if="scope.row.condition.jobs.length > 3" class="table-jobs-more">
-                    等 {{ scope.row.condition.jobs.length }} 个职业
+              <span class="table-jobs-cell">
+                <template v-for="(job, idx) in scope.row.condition.jobs" :key="job">
+                  <span class="table-job-chip">
+                    <img
+                      v-if="getJobIconSrc(job)"
+                      :src="getJobIconSrc(job)"
+                      :alt="getLabel(job)"
+                      class="job-option-icon"
+                      @error="handleImgError"
+                    />
+                    <span>{{ getLabel(job) }}</span>
+                    <span v-if="idx < scope.row.condition.jobs.length - 1">、</span>
                   </span>
-                </span>
-              </el-tooltip>
+                </template>
+              </span>
             </template>
           </el-table-column>
           <!-- @vue-generic {ITimeline} -->
@@ -1447,10 +1492,12 @@ init();
                 </span>
               </template>
               <el-select
+                ref="jobsSelectRef"
                 v-model="currentTimelineEditing.condition.jobs"
                 multiple
                 collapse-tags
-                collapse-tags-indicator
+                collapse-tags-tooltip
+                :max-collapse-tags="maxJobTags"
                 style="width: 100%"
                 placeholder="选择适用职业"
                 @change="handleEditingJobsChange"
@@ -1942,24 +1989,17 @@ init();
 }
 
 .table-jobs-cell {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  flex-wrap: nowrap;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  row-gap: 2px;
 }
 
 .table-job-chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-}
-
-.table-jobs-more {
-  margin-left: 4px;
-  color: var(--el-text-color-secondary);
+  white-space: nowrap;
 }
 
 .scrub-controls {
