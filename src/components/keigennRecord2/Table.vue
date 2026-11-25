@@ -660,6 +660,7 @@ let startX = 0;
 let startWidth = 0;
 
 function handleResizeStart(e: MouseEvent) {
+  if (e.button !== 0) return;
   e.preventDefault();
   e.stopPropagation();
   isResizing.value = true;
