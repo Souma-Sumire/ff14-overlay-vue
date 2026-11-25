@@ -44,6 +44,7 @@ import {
   ElButton,
   ElCheckbox,
   ElDialog,
+  ElDrawer,
   ElForm,
   ElFormItem,
   ElIcon,
@@ -62,6 +63,7 @@ import {
 } from "element-plus";
 import TimelineFflogsImport from "@/components/timeline/FflogsImport.vue";
 import TimelineSettingsDialog from "@/components/timeline/SettingsDialog.vue";
+import TimelineSyntaxDocs from "@/components/timeline/SyntaxDocs.vue";
 import TimelineTimelineShow from "@/components/timeline/TimelineShow.vue";
 
 const TimelineCodeEditor = defineAsyncComponent(
@@ -932,8 +934,10 @@ function openDocs() {
   window.open(href, "_blank");
 }
 
+const showSyntaxDrawer = ref(false);
+
 function openMarkdown() {
-  router.push({ path: "/timelineHelp" });
+  showSyntaxDrawer.value = true;
 }
 
 function openMitigationGenerator() {
@@ -1375,6 +1379,15 @@ init();
         </el-table-column>
       </el-table>
     </el-dialog>
+
+    <el-drawer
+      v-model="showSyntaxDrawer"
+      title="时间轴语法"
+      size="min(760px, 94vw)"
+      class="syntax-drawer"
+    >
+      <TimelineSyntaxDocs />
+    </el-drawer>
 
     <timeline-settings-dialog v-model="showSettings" @save="saveSettingsChanges" />
 
@@ -1999,6 +2012,13 @@ init();
   align-items: center;
   gap: 4px;
   white-space: nowrap;
+}
+
+.syntax-drawer {
+  :deep(.el-drawer__body) {
+    padding: 8px 24px 40px;
+    overflow-y: auto;
+  }
 }
 
 .scrub-controls {
