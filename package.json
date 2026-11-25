@@ -18,7 +18,15 @@
     "generate:blacksmith-skills": "node scripts/generateBlacksmithSkills.cjs"
   },
   "dependencies": {
+    "@codemirror/autocomplete": "^6.20.4",
+    "@codemirror/commands": "^6.11.1",
+    "@codemirror/language": "^6.13.1",
+    "@codemirror/lint": "^6.9.8",
+    "@codemirror/search": "^6.7.2",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.15",
     "@element-plus/icons-vue": "^2.3.2",
+    "@lezer/highlight": "^1.2.5",
     "@vueuse/core": "^14.4.0",
     "@vueuse/head": "^2.0.0",
     "echarts": "^6.1.0",

@@ -38,8 +38,15 @@ const playerState = useStorage("timeline-condition-2", {
   jobs: ["NONE"],
   phase: undefined,
 } as ITimelineCondition);
+const selectedTimelineMemory = useStorage<Record<string, string>>("timeline-selected-memory", {});
 const dev = useDev();
 const demo = useDemo();
+
+function getTimelineMemoryKey(): string {
+  const job = playerState.value.jobs[0] ?? "NONE";
+  const phase = playerState.value.phase ?? "";
+  return `${playerState.value.zoneID}:${job}:${phase}`;
+}
 
 const syncLines = computed(() => timelinePageData.loadedTimeline.filter((item) => item.sync));
 const loadedTimelineTTS = computed(() => timelinePageData.loadedTimeline.filter((v) => v.tts));
@@ -62,12 +69,15 @@ function getTimeline() {
   } else if (candidate.length > 1) {
     // 多个结果
     timelinePageData.optionalTimeline = candidate;
-    mountTimeline(candidate[0]!);
+    const savedName = selectedTimelineMemory.value[getTimelineMemoryKey()];
+    const matched = savedName ? candidate.find((t) => t.name === savedName) : undefined;
+    mountTimeline(matched ?? candidate[0]!);
   }
 }
 
 // 用户选择了某个时间轴
 function selectedTimeline(timeline: ITimeline) {
+  selectedTimelineMemory.value[getTimelineMemoryKey()] = timeline.name;
   mountTimeline(timeline);
 }
 
@@ -370,54 +380,64 @@ onUnmounted(() => {
 <template>
   <CommonActWrapper>
     <div id="wrapper">
-      <ul
+      <section
         v-if="
           timelinePageData.optionalTimeline.length &&
           runtimeTimeSeconds <= -timelineStore.configValues.preBattle
         "
-        class="optionalTimelines"
+        class="optional-timelines"
+        aria-label="选择时间轴"
       >
-        <span
-          style="
-            color: white;
-            text-shadow:
-              1px 1px 1px black,
-              -1px -1px 1px black,
-              1px -1px 1px black,
-              -1px 1px 1px black;
-          "
-          >选择一个时间轴</span
-        >
-        <li
-          v-for="(item, index) in timelinePageData.optionalTimeline"
-          :key="index"
-          :class="timelinePageData.selectedOptionalTimeline === item ? 'active' : ''"
-          @click="selectedTimeline(item)"
-        >
-          {{ item.name }}
-          <el-icon v-if="timelinePageData.selectedOptionalTimeline === item">
-            <Check />
-          </el-icon>
-        </li>
-      </ul>
+        <div class="optional-header">选择一个时间轴</div>
+        <ul class="optional-list">
+          <li
+            v-for="(item, index) in timelinePageData.optionalTimeline"
+            :key="index"
+            class="optional-item"
+            :class="{ active: timelinePageData.selectedOptionalTimeline === item }"
+          >
+            <button
+              type="button"
+              class="optional-btn"
+              :aria-pressed="timelinePageData.selectedOptionalTimeline === item"
+              @click="selectedTimeline(item)"
+            >
+              <span class="optional-name">{{ item.name }}</span>
+              <el-icon
+                v-if="timelinePageData.selectedOptionalTimeline === item"
+                class="optional-check"
+              >
+                <Check />
+              </el-icon>
+            </button>
+          </li>
+        </ul>
+      </section>
       <timeline-timeline-show
         :config="timelineStore.configValues"
         :lines="timelinePageData.loadedTimeline"
         :runtime="runtimeTimeSeconds"
         :show-style="timelineStore.showStyle"
       />
-      <button v-if="dev" @click="getTimeline()">获取时间轴</button>
-      <button v-if="dev" @click="startTimeline(30)">开始从-30</button>
-      <button v-if="dev" @click="startTimeline(0)">开始从0</button>
-      <button v-if="dev" @click="stopTimeline()">团灭</button>
-      <button v-if="dev" @click="fakeJump(1000)">跳转1000测试</button>
-      <button v-if="dev" @click="tts('今天天气真不错')">TTS测试</button>
-      <button v-if="dev" @click="testAlert">弹窗测试</button>
-      <span v-if="dev" style="color: white; background-color: black">{{ runtimeTimeSeconds }}</span>
+      <div v-if="dev" class="dev-toolbar">
+        <button type="button" @click="getTimeline()">获取时间轴</button>
+        <button type="button" @click="startTimeline(30)">开始从-30</button>
+        <button type="button" @click="startTimeline(0)">开始从0</button>
+        <button type="button" @click="stopTimeline()">团灭</button>
+        <button type="button" @click="fakeJump(1000)">跳转1000测试</button>
+        <button type="button" @click="tts('今天天气真不错')">TTS测试</button>
+        <button type="button" @click="testAlert">弹窗测试</button>
+        <span class="dev-runtime">{{ runtimeTimeSeconds.toFixed(1) }}s</span>
+      </div>
     </div>
     <template #readme>
       <div v-if="demo" class="unlocked-toolbar">
-        <button class="open-settings-btn" @click="handleOpenSettings">打开时间轴设置页面</button>
+        <button type="button" class="open-settings-btn" @click="handleOpenSettings">
+          打开时间轴设置
+        </button>
+        <p v-if="playerState.jobs[0] === 'NONE'" class="overlay-hint">
+          未检测到职业：请在 ACT 中启用 <code>CactbotOverlay.dll</code>
+        </p>
       </div>
     </template>
   </CommonActWrapper>
@@ -441,72 +461,178 @@ onUnmounted(() => {
   overflow: hidden;
   user-select: none;
   min-height: 100px;
-  .icon {
-    background-color: rgba($color: #000000, $alpha: 0.01);
-    cursor: pointer;
-    filter: drop-shadow(1px 2px 1px black);
-    fill: blueviolet;
-    opacity: 0.8;
-    transition-duration: 0.2s;
-    position: fixed;
-    top: 0;
-    right: 0;
-    margin: 5px;
-    &:hover {
-      opacity: 1;
-      transform-origin: center center;
-      transform: scale(1.2);
-    }
+}
+
+.optional-timelines {
+  width: fit-content;
+  min-width: 176px;
+  max-width: 280px;
+  margin: 4px 6px 8px;
+  background-color: rgba(18, 20, 26, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  font-family: "PingFang SC", "Microsoft YaHei UI", sans-serif;
+}
+
+.optional-header {
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.78);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.optional-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.optional-item {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+
+  &:last-child {
+    border-bottom: none;
   }
-  .optionalTimelines {
-    font-size: 18px;
-    li {
-      background-color: lightblue;
-      margin: 1px 0px;
-      padding: 1px 2px;
-      white-space: nowrap;
-      font-size: 14px;
-      letter-spacing: -0.5px;
-      &:hover {
-        cursor: pointer;
-        text-decoration: underline;
-      }
-      &.active {
-        font-weight: bold;
-      }
-    }
-  }
-  footer {
-    position: fixed;
-    bottom: 0;
-    right: 0;
+
+  &.active .optional-btn {
+    background-color: rgba(64, 158, 255, 0.24);
+    color: #ffffff;
+    font-weight: 600;
   }
 }
+
+.optional-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 13px;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #409eff;
+    outline-offset: -2px;
+  }
+}
+
+.optional-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.optional-check {
+  flex-shrink: 0;
+  color: #79bbff;
+}
+
+.dev-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 6px;
+
+  button {
+    padding: 3px 8px;
+    font-size: 12px;
+    color: #f3f4f6;
+    background-color: rgba(24, 27, 34, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    cursor: pointer;
+
+    &:hover {
+      background-color: rgba(45, 51, 64, 0.95);
+    }
+  }
+
+  .dev-runtime {
+    padding: 2px 6px;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: #ffffff;
+    background-color: rgba(0, 0, 0, 0.85);
+    border-radius: 4px;
+  }
+}
+
 .unlocked-toolbar {
   position: fixed;
-  top: 6px;
-  right: 6px;
+  top: 8px;
+  right: 8px;
   z-index: 9999;
   pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  font-family: "PingFang SC", "Microsoft YaHei UI", sans-serif;
 }
 
 .open-settings-btn {
-  padding: 3px 8px;
+  padding: 5px 12px;
   cursor: pointer;
-  background-color: #2b2b2b;
-  color: #ffffff;
-  border: 1px solid #666666;
-  border-radius: 2px;
-  font-size: 13px;
-  user-select: none;
+  background-color: rgba(22, 25, 32, 0.92);
+  color: #f9fafb;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease;
 
   &:hover {
-    background-color: #3f3f3f;
-    border-color: #999999;
+    background-color: rgba(38, 43, 54, 0.96);
+    border-color: rgba(121, 187, 255, 0.7);
   }
 
   &:active {
-    background-color: #1a1a1a;
+    background-color: rgba(15, 17, 22, 0.98);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #409eff;
+    outline-offset: 2px;
+  }
+}
+
+.overlay-hint {
+  max-width: 240px;
+  padding: 5px 9px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(20, 22, 28, 0.88);
+  border: 1px solid rgba(230, 162, 60, 0.45);
+  border-radius: 5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: #f3d19e;
   }
 }
 </style>

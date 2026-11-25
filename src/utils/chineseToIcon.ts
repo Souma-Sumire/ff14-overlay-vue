@@ -1,4 +1,6 @@
 import { BAKED_ACTION_META_LITE_BY_ID } from "@/resources/generated/bakedActionMetaLite";
+import { ROLE_ACTION_CATEGORY_BY_JOB } from "@/resources/generated/roleActionCategoryByJob";
+import Util from "@/utils/util";
 
 const userActionMap = new Map([
   ["任务指令", 123],
@@ -224,4 +226,97 @@ function chineseToIcon(chinese: string): number | undefined {
   return Math.trunc(iconNum);
 }
 
-export { chineseToIcon };
+export interface TimelineActionCompletion {
+  label: string;
+  detail?: string;
+  iconId?: number;
+  jobEnums?: number[];
+  boost?: number;
+}
+
+let cachedCompletions: TimelineActionCompletion[] | null = null;
+
+function getCategoryToJobsMap(): Map<number, number[]> {
+  const map = new Map<number, number[]>();
+  for (const [rawJob, categories] of Object.entries(ROLE_ACTION_CATEGORY_BY_JOB)) {
+    const jobEnum = Number(rawJob);
+    if (!Number.isFinite(jobEnum) || jobEnum <= 0) continue;
+    for (const cat of categories) {
+      const list = map.get(cat);
+      if (list) list.push(jobEnum);
+      else map.set(cat, [jobEnum]);
+    }
+  }
+  return map;
+}
+
+function getTimelineActionCompletions(): TimelineActionCompletion[] {
+  if (cachedCompletions) return cachedCompletions;
+
+  const categoryToJobs = getCategoryToJobsMap();
+  const metaByName = new Map<string, { iconId: number; jobEnums: Set<number> }>();
+
+  for (const meta of Object.values(BAKED_ACTION_META_LITE_BY_ID)) {
+    const name = String(meta.name ?? "").trim();
+    const icon = Math.trunc(Number(meta.icon ?? 0));
+    if (!name || !Number.isFinite(icon) || icon <= 0) continue;
+
+    let entry = metaByName.get(name);
+    if (!entry) {
+      entry = { iconId: icon, jobEnums: new Set<number>() };
+      metaByName.set(name, entry);
+    } else if (entry.iconId === 405 && icon !== 405) {
+      entry.iconId = icon;
+    }
+
+    if (meta.classJob > 0) {
+      const converted = Util.baseJobEnumConverted(meta.classJob);
+      if (converted > 0) entry.jobEnums.add(converted);
+    }
+    if (meta.isRoleAction && meta.classJobCategory > 0) {
+      const jobs = categoryToJobs.get(meta.classJobCategory);
+      if (jobs) {
+        for (const j of jobs) entry.jobEnums.add(j);
+      }
+    }
+  }
+
+  const list: TimelineActionCompletion[] = [];
+  const seen = new Set<string>();
+
+  for (const [alias, fullName] of chineseAbbreviationMap.entries()) {
+    const target = metaByName.get(fullName);
+    list.push({
+      label: alias,
+      detail: fullName,
+      iconId: target?.iconId ?? chineseToIcon(fullName),
+      jobEnums: target ? [...target.jobEnums] : undefined,
+      boost: 2,
+    });
+    seen.add(alias);
+  }
+
+  for (const [name, iconId] of userActionMap.entries()) {
+    if (!seen.has(name)) {
+      list.push({ label: name, detail: "通用指令", iconId, boost: 1 });
+      seen.add(name);
+    }
+  }
+
+  for (const [name, info] of metaByName.entries()) {
+    if (!seen.has(name)) {
+      list.push({
+        label: name,
+        iconId: info.iconId,
+        jobEnums: info.jobEnums.size > 0 ? [...info.jobEnums] : undefined,
+        boost: 0,
+      });
+      seen.add(name);
+    }
+  }
+
+  cachedCompletions = list;
+  return cachedCompletions;
+}
+
+export { chineseToIcon, getTimelineActionCompletions };

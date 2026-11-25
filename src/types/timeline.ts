@@ -40,6 +40,7 @@ export interface ITimelineLine {
   alertAlready: boolean;
   tts?: string;
   label?: string;
+  lineNumber?: number;
 }
 
 export enum TimelineConfigEnum {

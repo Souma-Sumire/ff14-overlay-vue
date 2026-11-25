@@ -251,28 +251,51 @@ export function parseAction(text: string) {
   return text.matchAll(/<(?<name>[^<>]*?)!?>(?<repeat>~)?/g);
 }
 
+const regexMethodAlias: Record<string, keyof typeof Regexes> = {
+  ActorControl: "network6d",
+  PlayerStats: "statChange",
+  CEDirector: "ceDirector",
+  RemovedCombatant: "removingCombatant",
+};
+
+export function resolveCactbotRegexKey(eventType: string): keyof typeof Regexes | undefined {
+  const key = (regexMethodAlias[eventType] ??
+    `${eventType.charAt(0).toLowerCase()}${eventType.slice(1)}`) as keyof typeof Regexes;
+  return typeof Regexes[key] === "function" ? key : undefined;
+}
+
+export const SUPPORTED_CACTBOT_EVENT_TYPES = Object.keys(logDefinitions).filter(
+  (type) => resolveCactbotRegexKey(type) !== undefined,
+);
+
 const syncRegex = new RegExp(
-  `(?:[^#]*?\\s)?(?<netRegexType>${Object.keys(logDefinitions).join(
+  `(?:[^#]*?\\s)?(?<netRegexType>${SUPPORTED_CACTBOT_EVENT_TYPES.join(
     "|",
   )})\\s*(?<netRegex>\\{.*\\})(?<args>\\s.*)?$`,
 );
 
-const regexStr = {
-  ActorControl: "network6d",
-  StartsUsing: "startsUsing",
-  Ability: "ability",
-  InCombat: "inCombat",
-};
+export interface TimelineParseError {
+  lineNumber: number;
+  text: string;
+  message: string;
+}
 
-export async function parseTimeline(rawTimeline: string): Promise<ITimelineLine[]> {
+const linePattern = /^\s*(?<time>[-:：\d.]+)\s+(?<action>["'“”][^"'“”]*["'“”]).*$/;
+
+export async function parseTimelineWithErrors(
+  rawTimeline: string,
+): Promise<{ lines: ITimelineLine[]; errors: TimelineParseError[] }> {
   const total: ITimelineLine[] = [];
-  const matches = [
-    ...rawTimeline.matchAll(/^\s*(?<time>[-:：\d.]+)\s+(?<action>["'“”][^"'“”]*["'“”]).*$/gm),
-  ];
-  for (let i = 0; i < matches.length; i++) {
+  const errors: TimelineParseError[] = [];
+  const rawLines = rawTimeline.split(/\r?\n/);
+
+  for (let i = 0; i < rawLines.length; i++) {
+    const rawLine = rawLines[i]!;
+    const match = linePattern.exec(rawLine);
+    if (!match) continue;
+
     let sync: RegExp | undefined;
     let onceSync: boolean = false;
-    const match = matches[i]!;
     const jump = match[0].match(/(?<=jump ?)[-:：\d.]+/)?.[0];
     const normalSync = match[0].match(/(?<=sync(?:\.once)? ?\/).+(?=\/)/)?.[0];
     const normalOnce = /sync\.once/.test(match[0]);
@@ -290,28 +313,44 @@ export async function parseTimeline(rawTimeline: string): Promise<ITimelineLine[
     try {
       params = JSON5.parse(cactbotSync?.netRegex ?? "{}");
     } catch (e) {
-      ElMessage.error({
-        type: "error",
-        message: `“${match[0] ?? ""}”解析失败：${e instanceof Error ? e.message : String(e)}`,
+      errors.push({
+        lineNumber: i + 1,
+        text: rawLine.trim(),
+        message: e instanceof Error ? e.message : String(e),
       });
-      break;
+      continue;
     }
     Reflect.deleteProperty(params, "source");
     if (cactbotRegexType) {
       try {
-        const key =
-          regexStr[cactbotRegexType as keyof typeof regexStr] ??
-          (cactbotRegexType.toLowerCase() as keyof typeof Regexes);
+        const key = resolveCactbotRegexKey(cactbotRegexType);
+        if (!key) {
+          throw new Error(`不支持的事件类型「${cactbotRegexType}」`);
+        }
         onceSync = / once/.test(match[0]) || params.once;
         Reflect.deleteProperty(params, "once");
-        const regex = Regexes[key as keyof typeof Regexes] as (params: unknown) => RegExp;
+        const regex = Regexes[key] as (params: unknown) => RegExp;
         sync = regex({ ...params, capture: false });
       } catch (e) {
-        console.error(`Failed to parse ${cactbotRegexType} regex:`, e);
+        errors.push({
+          lineNumber: i + 1,
+          text: rawLine.trim(),
+          message: e instanceof Error ? e.message : String(e),
+        });
+        continue;
       }
-    } else {
-      sync = normalSync ? new RegExp(normalSync) : undefined;
-      onceSync = normalOnce;
+    } else if (normalSync) {
+      try {
+        sync = new RegExp(normalSync);
+        onceSync = normalOnce;
+      } catch (e) {
+        errors.push({
+          lineNumber: i + 1,
+          text: rawLine.trim(),
+          message: e instanceof Error ? e.message : String(e),
+        });
+        continue;
+      }
     }
 
     total.push({
@@ -326,8 +365,21 @@ export async function parseTimeline(rawTimeline: string): Promise<ITimelineLine[
       windowAfter: Number.parseFloat(windowAfter || windowBefore || "2.5"),
       jump: jump ? Number.parseFloat(jump) : undefined,
       tts: sync ? undefined : tts || ttsSim,
+      lineNumber: i + 1,
     });
   }
   total.sort((a, b) => a.time - b.time);
-  return total;
+  return { lines: total, errors };
+}
+
+export async function parseTimeline(rawTimeline: string): Promise<ITimelineLine[]> {
+  const { lines, errors } = await parseTimelineWithErrors(rawTimeline);
+  if (errors.length > 0) {
+    const first = errors[0]!;
+    ElMessage.error({
+      type: "error",
+      message: `第 ${first.lineNumber} 行解析失败：${first.message}`,
+    });
+  }
+  return lines;
 }

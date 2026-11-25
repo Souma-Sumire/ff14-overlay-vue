@@ -21,7 +21,6 @@ import { getIconSrcByPath, handleImgError } from "@/utils/xivapi";
 import { onMounted, reactive, ref } from "vue";
 import {
   ElButton,
-  ElCard,
   ElForm,
   ElFormItem,
   ElIcon,
@@ -389,8 +388,10 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
           battleOnce,
         } = item;
 
+        const timeText = time.toFixed(1);
+
         if (sourceIsFriendly) {
-          return `${time} "<${actionName}>~"${addTTS.value ? ` tts "${actionName}"` : ""}`;
+          return `${timeText} "<${actionName}>~"${addTTS.value ? ` tts "${actionName}"` : ""}`;
         }
 
         if (
@@ -398,7 +399,7 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
           (type === "cast" && !window) ||
           fflogsQueryConfig.battleSyncedIDs.includes(actionId)
         ) {
-          return `# ${time} "${actionName}"`;
+          return `# ${timeText} "${actionName}"`;
         }
 
         const source = fflogsQueryConfig.enemies.find((e) => e.id === sourceID);
@@ -406,7 +407,7 @@ function handeleFFlogsQueryResultFriendiesListFilter() {
 
         const hexId = actionId.toString(16).toUpperCase();
         const regexType = type === "begincast" ? "StartsUsing" : "Ability";
-        const syncLine = `${time} "${actionName}" ${regexType} { id: "${hexId}" }`;
+        const syncLine = `${timeText} "${actionName}" ${regexType} { id: "${hexId}" }`;
         if (battleOnce && window) {
           fflogsQueryConfig.battleSyncedIDs.push(actionId);
         }
@@ -560,12 +561,13 @@ function handeleFFlogsQueryResultEnemiesListFilter() {
     fflogsQueryConfig.abilityFilterEvents
       .map((item) => {
         const { time, actionName, actionId, type } = item;
+        const timeText = time.toFixed(1);
         const regexType = type === "begincast" ? "StartsUsing" : "Ability";
         const hexId = actionId.toString(16).toUpperCase();
         const source = fflogsQueryConfig.enemies.find((e) => e.id === item.sourceID);
         const sourceType = source?.type === "Boss" ? "Boss" : "分身";
         const sourceName = source?.name ?? "未知";
-        return `${time} "${actionName}" ${regexType} { id: "${hexId}" } #${sourceName}（${sourceType}）`;
+        return `${timeText} "${actionName}" ${regexType} { id: "${hexId}" } #${sourceName}（${sourceType}）`;
       })
       .join("\n");
   const index = timelineStore.newTimeline(
@@ -609,83 +611,93 @@ function openFFLogsProfile() {
 function getJobStr(icon: FFIcon) {
   return Util.jobToFullName(Util.jobEnumToJob(Util.iconToJobEnum(icon))).cn;
 }
+
+function selectAllFriendlySkills() {
+  fflogsQueryConfig.abilityFilterSelected = fflogsQueryConfig.abilityFilterCandidate.map(
+    (item) => item.actionId,
+  );
+}
+
+function clearFriendlySkills() {
+  fflogsQueryConfig.abilityFilterSelected = [];
+}
+
+function selectAllEnemySkills() {
+  fflogsQueryConfig.enemiesAbilityFilterSelected = fflogsQueryConfig.abilityFilterCandidate.map(
+    (item) => item.actionName,
+  );
+}
+
+function clearEnemySkills() {
+  fflogsQueryConfig.enemiesAbilityFilterSelected = [];
+}
 </script>
 
 <template>
-  <el-button
-    :style="currentStep > 0 ? {} : { visibility: 'hidden', pointerEvent: 'none' }"
-    type="primary"
-    text
-    position-absolute
-    z-999
-    class="guide"
-    @click="currentStep--"
-  >
-    上一步
-  </el-button>
-  <el-steps :active="currentStep" class="steps-guide" align-center>
-    <el-step title="导入战斗" />
-    <el-step title="选择目标" />
-    <el-step title="过滤技能" />
-  </el-steps>
-  <el-card v-if="currentStep === 0" class="input-section">
-    <el-form label-width="150px" class="fflogs-form">
-      <el-form-item label="FF Logs 战斗链接">
-        <el-input
-          v-model="inputUrl"
-          placeholder="https://www.fflogs.com/reports/AAAaAaAAaa1aA1aA?fight=1"
-          autocomplete="on"
-        />
-      </el-form-item>
-      <el-form-item label="FF logs V1 Key">
-        <el-input
-          v-model="timelineStore.settings.api"
-          placeholder="在 FF Logs 个人设置页面获取 V1 API Key"
-          type="password"
-          show-password
-        >
-          <template #append>
-            <el-tooltip
-              content="点击前往 FF Logs 个人设置页面，在最下方填写 V1客户名称 并点击确认后，再获取你的 V1 客户端密钥"
-              placement="top"
-              effect="light"
-            >
-              <el-button type="primary" link @click="openFFLogsProfile"> 如何获取 </el-button>
-            </el-tooltip>
-          </template>
-        </el-input>
-      </el-form-item>
-      <el-form-item>
-        <el-button
-          :disabled="queryText === QueryTextEnum.querying"
-          type="primary"
-          @click="queryFFlogsReportFights(inputUrl)"
-        >
-          <el-icon v-if="isLoading" class="is-loading">
-            <Loading />
-          </el-icon>
-          {{ queryText }}
-        </el-button>
-      </el-form-item>
-    </el-form>
-  </el-card>
+  <div class="fflogs-import">
+    <el-steps :active="currentStep" class="steps-guide" align-center>
+      <el-step title="导入战斗" />
+      <el-step title="选择目标" />
+      <el-step title="过滤技能" />
+    </el-steps>
 
-  <div class="query-results">
-    <el-card v-if="currentStep === 1" class="player-selection">
+    <section v-if="currentStep === 0" class="step-panel">
+      <el-form label-position="top" class="fflogs-form">
+        <el-form-item label="FF Logs 战斗链接">
+          <el-input
+            v-model="inputUrl"
+            placeholder="https://www.fflogs.com/reports/AAAaAaAAaa1aA1aA?fight=1"
+            autocomplete="on"
+            @keyup.enter="queryFFlogsReportFights(inputUrl)"
+          />
+        </el-form-item>
+        <el-form-item label="FF Logs V1 API Key">
+          <el-input
+            v-model="timelineStore.settings.api"
+            placeholder="在 FF Logs 个人设置页面获取 V1 API Key"
+            type="password"
+            show-password
+          >
+            <template #append>
+              <el-tooltip
+                content="前往 FF Logs 个人设置页面，在最下方填写 V1 客户名称并确认后获取密钥"
+                placement="top"
+                effect="light"
+              >
+                <el-button @click="openFFLogsProfile">如何获取</el-button>
+              </el-tooltip>
+            </template>
+          </el-input>
+        </el-form-item>
+        <div class="step-actions step-actions-end">
+          <el-button
+            :disabled="queryText === QueryTextEnum.querying"
+            type="primary"
+            @click="queryFFlogsReportFights(inputUrl)"
+          >
+            <el-icon v-if="isLoading" class="is-loading">
+              <Loading />
+            </el-icon>
+            {{ queryText }}
+          </el-button>
+        </div>
+      </el-form>
+    </section>
+
+    <section v-if="currentStep === 1" class="step-panel">
       <el-table
         :data="fflogsQueryConfig.friendlies.filter((v) => !['NPC'].includes(v.icon))"
-        stripe
         border
         class="friendlies-table"
       >
         <el-table-column prop="name" label="玩家名称" />
-        <el-table-column label="职业">
+        <el-table-column label="职业" width="140">
           <template #default="{ row }">
             {{ getJobStr(row.icon) }}
           </template>
         </el-table-column>
         <!-- @vue-generic {Friendlies} -->
-        <el-table-column label="选定" width="100" align="center">
+        <el-table-column label="操作" width="100" align="center">
           <template #default="{ row }">
             <el-button
               type="primary"
@@ -697,138 +709,198 @@ function getJobStr(icon: FFIcon) {
           </template>
         </el-table-column>
       </el-table>
-      <div flex="~" m-t-10>
-        <el-button type="info" @click="handleFFlogsQueryResultEnemiesList()">
-          不选择玩家，而是生成BOSS时间轴
+      <div class="step-actions">
+        <el-button @click="currentStep--">上一步</el-button>
+        <el-button @click="handleFFlogsQueryResultEnemiesList()">
+          不选择玩家，直接生成 BOSS 时间轴
         </el-button>
       </div>
-    </el-card>
+    </section>
 
-    <el-card v-if="currentStep === 2" class="ability-filter">
-      <div class="ability-filter-container">
-        <div v-if="!confirmEnabled" class="loading-abilities">
-          <el-icon class="is-loading">
-            <Loading />
-          </el-icon>
-          <span>正在加载技能列表...</span>
-        </div>
-        <template v-if="confirmEnabled && fflogsQueryConfig.type === 'friendies'">
-          <el-select
-            v-model="fflogsQueryConfig.abilityFilterSelected"
-            multiple
-            placeholder="选择需要导入的技能"
-            :fit-input-width="true"
-            class="ability-filter-select"
-            filterable
-          >
-            <el-option
-              v-for="rule in fflogsQueryConfig.abilityFilterCandidate"
-              :key="rule.actionId"
-              :value="rule.actionId"
-              :label="rule.actionName"
-              class="ability-filter-option"
+    <section v-if="currentStep === 2" class="step-panel">
+      <div v-if="!confirmEnabled" class="loading-abilities">
+        <el-icon class="is-loading">
+          <Loading />
+        </el-icon>
+        <span>正在加载技能列表...</span>
+      </div>
+
+      <template v-else-if="fflogsQueryConfig.type === 'friendies'">
+        <el-form label-position="top" class="filter-form">
+          <el-form-item>
+            <template #label>
+              <div class="filter-label-row">
+                <span>
+                  选择需要导入的技能（已选 {{ fflogsQueryConfig.abilityFilterSelected.length }} /
+                  {{ fflogsQueryConfig.abilityFilterCandidate.length }} 项）
+                </span>
+                <div class="filter-quick-actions">
+                  <el-button size="small" @click="selectAllFriendlySkills">全选</el-button>
+                  <el-button size="small" @click="clearFriendlySkills">清空</el-button>
+                </div>
+              </div>
+            </template>
+            <el-select
+              v-model="fflogsQueryConfig.abilityFilterSelected"
+              multiple
+              placeholder="选择需要导入的技能"
+              :fit-input-width="true"
+              class="ability-filter-select"
+              filterable
             >
-              <img
-                :src="getIconSrcByPath(`/i/${rule.url}.png`)"
-                class="ability-filter-icon"
-                :alt="rule.actionName"
-                :onerror="handleImgError"
-              />
-              <span>{{ rule.actionName }}</span>
-            </el-option>
-          </el-select>
-          <el-form-item label="添加 TTS 语法" m-t-3 w-60>
+              <el-option
+                v-for="rule in fflogsQueryConfig.abilityFilterCandidate"
+                :key="rule.actionId"
+                :value="rule.actionId"
+                :label="rule.actionName"
+                class="ability-filter-option"
+              >
+                <img
+                  :src="getIconSrcByPath(`/i/${rule.url}.png`)"
+                  class="ability-filter-icon"
+                  :alt="rule.actionName"
+                  :onerror="handleImgError"
+                />
+                <span>{{ rule.actionName }}</span>
+              </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="添加 TTS 语法">
             <el-switch v-model="addTTS" />
           </el-form-item>
+        </el-form>
+        <div class="step-actions">
+          <el-button @click="currentStep--">上一步</el-button>
           <el-button
-            type="success"
-            class="filter-confirm-btn"
+            type="primary"
             :disabled="!confirmEnabled"
             @click="handeleFFlogsQueryResultFriendiesListFilter"
           >
-            {{ "生成玩家时间轴" }}
+            生成玩家时间轴
           </el-button>
-        </template>
-        <template v-else-if="confirmEnabled && fflogsQueryConfig.type === 'enemies'">
-          <el-select
-            v-if="confirmEnabled"
-            v-model="fflogsQueryConfig.enemiesAbilityFilterSelected"
-            multiple
-            placeholder="选择需要导入的技能"
-            :fit-input-width="true"
-            class="ability-filter-select"
-            filterable
-          >
-            <el-option
-              v-for="rule in fflogsQueryConfig.abilityFilterCandidate"
-              :key="rule.actionName"
-              :value="rule.actionName"
-              class="ability-filter-option"
+        </div>
+      </template>
+
+      <template v-else-if="fflogsQueryConfig.type === 'enemies'">
+        <el-form label-position="top" class="filter-form">
+          <el-form-item>
+            <template #label>
+              <div class="filter-label-row">
+                <span>
+                  选择需要导入的 BOSS 技能（已选
+                  {{ fflogsQueryConfig.enemiesAbilityFilterSelected.length }} /
+                  {{ fflogsQueryConfig.abilityFilterCandidate.length }} 项）
+                </span>
+                <div class="filter-quick-actions">
+                  <el-button size="small" @click="selectAllEnemySkills">全选</el-button>
+                  <el-button size="small" @click="clearEnemySkills">清空</el-button>
+                </div>
+              </div>
+            </template>
+            <el-select
+              v-model="fflogsQueryConfig.enemiesAbilityFilterSelected"
+              multiple
+              placeholder="选择需要导入的技能"
+              :fit-input-width="true"
+              class="ability-filter-select"
+              filterable
             >
-              <span> {{ rule.actionName }} </span>
-            </el-option>
-          </el-select>
+              <el-option
+                v-for="rule in fflogsQueryConfig.abilityFilterCandidate"
+                :key="rule.actionName"
+                :value="rule.actionName"
+                :label="rule.actionName"
+                class="ability-filter-option"
+              >
+                <span>{{ rule.actionName }}</span>
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-form>
+        <div class="step-actions">
+          <el-button @click="currentStep--">上一步</el-button>
           <el-button
-            type="success"
-            class="filter-confirm-btn"
+            type="primary"
             :disabled="!confirmEnabled"
             @click="handeleFFlogsQueryResultEnemiesListFilter"
           >
-            {{ "生成敌人时间轴" }}
+            生成 BOSS 时间轴
           </el-button>
-        </template>
-      </div>
-    </el-card>
+        </div>
+      </template>
+    </section>
   </div>
 </template>
 
 <style lang="scss" scoped>
-.guide {
-  margin-bottom: 20px;
-  text-align: center;
+.fflogs-import {
+  padding: 4px 4px 0;
 }
 
 .steps-guide {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
-.input-section {
-  margin-bottom: 20px;
+.step-panel {
+  border-top: 1px solid var(--el-border-color-lighter);
+  padding-top: 20px;
 }
 
 .fflogs-form {
-  max-width: 600px;
+  max-width: 560px;
   margin: 0 auto;
-}
-
-.query-results {
-  margin-top: 20px;
-}
-
-.player-selection,
-.ability-filter {
-  margin-bottom: 20px;
 }
 
 .friendlies-table {
   width: 100%;
 }
 
-.ability-filter-container {
+.loading-abilities {
   display: flex;
   align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 36px 0;
+  color: var(--el-text-color-secondary);
+  font-size: 14px;
+}
+
+.filter-form {
+  width: 100%;
+
+  :deep(.el-form-item__label) {
+    width: 100%;
+    padding-right: 0;
+  }
+}
+
+.filter-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.filter-quick-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  :deep(.el-button + .el-button) {
+    margin-left: 0;
+  }
 }
 
 .ability-filter-select {
-  flex-grow: 1;
-  margin-right: 10px;
+  width: 100%;
 }
 
 .ability-filter-option {
   display: inline-flex;
   align-items: center;
-  padding: auto 1px;
-  border: 1px dashed rgba(128, 128, 128, 0.3);
+  padding: 0 6px;
+  border: 1px dashed var(--el-border-color);
   border-radius: 4px;
   margin: 3px;
 }
@@ -836,35 +908,21 @@ function getJobStr(icon: FFIcon) {
 .ability-filter-icon {
   width: 20px;
   height: 20px;
-  margin-right: 10px;
+  margin-right: 8px;
   object-fit: contain;
 }
 
-.filter-confirm-btn {
-  flex-shrink: 0;
-}
-
-.loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+.step-actions {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  z-index: 9999;
-  color: white;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--el-border-color-lighter);
 }
 
-.custom-message-box {
-  max-width: 500px;
-  width: 90%;
-}
-
-.custom-message-box .el-message-box__content {
-  word-break: break-word;
+.step-actions-end {
+  justify-content: flex-end;
 }
 </style>
