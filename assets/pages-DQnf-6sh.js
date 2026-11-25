@@ -1,0 +1,1 @@
+import{q as e}from"./vendor-vue-C_1Z5ZJh.js";import{Xn as t,dr as n,mr as r,nr as i}from"./shared-common-D-WtjCi_.js";var a=i({__name:`index`,setup(i){let a=e();return n(()=>{a.push(`/startPages`)}),(e,n)=>(r(),t(`div`))}});export{a as default};
