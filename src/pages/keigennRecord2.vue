@@ -11,7 +11,7 @@ import type {
   Status,
 } from "@/types/keigennRecord2";
 import type { Player } from "@/types/partyPlayer";
-import { ZoomIn, ZoomOut } from "@element-plus/icons-vue";
+import { Setting, UploadFilled, ZoomIn, ZoomOut } from "@element-plus/icons-vue";
 import { useDark } from "@vueuse/core";
 // TODO: 死亡回放：治疗栏目的状态追踪治疗有关的buff
 import {
@@ -28,7 +28,7 @@ import {
 } from "vue";
 import { useDev } from "@/composables/useDev";
 import { useIndexedDB } from "@/composables/useIndexedDB";
-import { getCactbotLocaleMessage } from "@/composables/useLang";
+import { getCactbotLocaleMessage, useLang } from "@/composables/useLang";
 import { getZoneType } from "@/composables/useZone";
 import { JobResourceManager } from "@/modules/jobResourceTracker";
 import { GLOBAL_SKILL_MAX_LEVEL } from "@/resources/globalSkills";
@@ -52,29 +52,59 @@ import {
 } from "@/utils/keigenn";
 
 import { formatTimeMs as formatTime } from "@/utils/time";
+import { getJobIconUrl } from "@/utils/keigennRecord2";
 import Util from "@/utils/util";
-import { getIconSrcByFullIcon, rerouteImgSrc } from "@/utils/xivapi";
+import { ensureIconCacheReady, getIconSrcByFullIcon, rerouteImgSrc } from "@/utils/xivapi";
 import logDefinitions from "../../cactbot/resources/netlog_defs";
 
 import NetRegexes from "../../cactbot/resources/netregexes";
 import { addOverlayListener } from "../../cactbot/resources/overlay_plugin_api";
-import { onMounted, toRaw } from "vue";
+import { onBeforeUnmount, onMounted, toRaw } from "vue";
+import { useRoute } from "vue-router";
 import { useToggle } from "@vueuse/core";
-import CommonTestLog from "@/components/common/TestLog.vue";
 import KeigennRecord2Table from "@/components/keigennRecord2/Table.vue";
-import { ElButton, ElOption, ElSelect } from "element-plus";
+import { copyToClipboard } from "@/utils/clipboard";
+import { ElButton, ElIcon, ElLoading, ElMessage, ElOption, ElSelect } from "element-plus";
 
 const dev = useDev();
+const { t } = useLang();
+const route = useRoute();
 
 const store = useKeigennRecord2Store();
 const userOptions = store.userOptions;
+store.syncUrlOptions();
 // 某些情况下OverlayPluginApi并不会立即被挂在到window上。用户上报，未复现。
 store.checkIsBrowser();
-const isPush = userOptions.order === "push";
+
+watch(
+  () => route.fullPath,
+  () => {
+    store.syncUrlOptions();
+  },
+);
+
+watch(
+  () => store.userOptions,
+  () => {
+    store.saveUserOptions();
+  },
+  { deep: true },
+);
+const isPush = computed(() => userOptions.order === "push");
 
 const minimize = ref(userOptions.minimize);
+const onlyDeath = ref(false);
+const hideAA = ref(false);
+const showHeals = ref(false);
+const settingsOpen = ref(false);
 
-const actionKey = userOptions.actionCN ? "actionCN" : ("action" as const);
+const browserFileInputRef = ref<HTMLInputElement | null>(null);
+const browserCombatSelectRef = ref<InstanceType<typeof ElSelect> | null>(null);
+const actCombatSelectRef = ref<InstanceType<typeof ElSelect> | null>(null);
+const isDragOverPage = ref(false);
+let pageDragCounter = 0;
+
+const actionKey = computed(() => (userOptions.actionCN ? "actionCN" : ("action" as const)));
 
 const loading = ref(false);
 
@@ -290,7 +320,7 @@ const trackedSkills = keigennSkills;
 
 const resourceManager = new JobResourceManager();
 
-const db = useIndexedDB<Encounter>(STORAGE_KEY);
+const db = useIndexedDB<Encounter>(STORAGE_KEY, { hasMetadataStore: true });
 
 function getSkillMapForLevel(level: number) {
   let map = skillMapCache.get(level);
@@ -352,7 +382,7 @@ function getReductionColor(reduction: number) {
 
   const CURVE_CAP_PERCENTAGE = 0.5; // 封顶百分比 （也就是减伤达到50%时，颜色变为最亮）
   const CURVE_POWER = 0.8; // 曲率，值越小，颜色变化越大
-  const GRAY_START = 88; // 起始颜色的灰度值
+  const GRAY_START = 132; // 起始颜色的灰度值
   const START_COLOR = [GRAY_START, GRAY_START, GRAY_START];
   const TARGET_COLOR = [50, 250, 200];
   const cappedReduction = Math.min(1, roundedReduction / CURVE_CAP_PERCENTAGE);
@@ -366,11 +396,6 @@ function getReductionColor(reduction: number) {
   const color = `rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}, 1)`;
   colorCache.set(roundedReduction, color);
   return color;
-}
-
-function getJobIconUrl(jobIcon: string, type: number) {
-  const jobName = jobIcon.replaceAll(/([A-Z])/g, " $1").trim();
-  return `https://souma.diemoe.net/resources/img/cj${type}/${jobName}.png`;
 }
 
 function prepareRowVO(row: Omit<RowVO, "preCalculated">): RowVO {
@@ -1021,7 +1046,7 @@ function addRow(row: RowVO) {
 
 function appendPendingRows(shouldScrollToBottom = false) {
   if (pendingRows.length === 0) return;
-  if (isPush) {
+  if (isPush.value) {
     data.value[0]!.table.push(...pendingRows);
     if (shouldScrollToBottom) {
       nextTick(() => tableRef.value?.scrollToBottom());
@@ -1247,6 +1272,26 @@ watch(select, async (newVal) => {
   await loadEncounterDetail(newVal);
 });
 
+watch(
+  () => userOptions.order,
+  () => {
+    const currentKey = data.value[select.value]?.key;
+    for (const encounter of data.value) {
+      if (encounter.table && encounter.table.length > 1) {
+        encounter.table.reverse();
+      }
+    }
+    if (data.value.length > 1) {
+      data.value.reverse();
+      if (currentKey) {
+        const nextIndex = data.value.findIndex((e) => e.key === currentKey);
+        if (nextIndex !== -1) select.value = nextIndex;
+      }
+    }
+    triggerRef(data);
+  },
+);
+
 async function loadStorage() {
   select.value = 0;
   try {
@@ -1254,7 +1299,7 @@ async function loadStorage() {
       await db.replaceAll([]);
       data.value.length = 0;
     } else {
-      const loadData = await db.getAllMetadata();
+      const [loadData] = await Promise.all([db.getAllMetadata(), ensureIconCacheReady()]);
 
       if (loadData && loadData.length) {
         data.value.length = 0;
@@ -1263,7 +1308,7 @@ async function loadStorage() {
         const expiredKeys: string[] = [];
 
         const filtered = loadData.filter((v) => {
-          if (store.isBrowser || v.timestamp > expiryThreshold) return true;
+          if (canImportLog.value || v.timestamp > expiryThreshold) return true;
           expiredKeys.push(v.key);
           return false;
         });
@@ -1275,7 +1320,7 @@ async function loadStorage() {
 
         let result = filtered.sort((a, b) => a.timestamp - b.timestamp);
 
-        if (!isPush) {
+        if (!isPush.value) {
           result = result.reverse();
         }
 
@@ -1303,7 +1348,21 @@ async function loadStorage() {
   }
 }
 
+function handleGlobalKeydown(e: KeyboardEvent) {
+  if (e.key === "Escape" && settingsOpen.value) {
+    settingsOpen.value = false;
+  }
+}
+
+function handleWindowDismiss() {
+  browserCombatSelectRef.value?.blur();
+  actCombatSelectRef.value?.blur();
+}
+
 onMounted(async () => {
+  window.addEventListener("keydown", handleGlobalKeydown);
+  window.addEventListener("blur", handleWindowDismiss);
+  document.documentElement.addEventListener("mouseleave", handleWindowDismiss);
   // 加载持久化数据
   loadPersistentData();
 
@@ -1367,6 +1426,12 @@ onMounted(async () => {
   }) as any);
 });
 
+onBeforeUnmount(() => {
+  window.removeEventListener("keydown", handleGlobalKeydown);
+  window.removeEventListener("blur", handleWindowDismiss);
+  document.documentElement.removeEventListener("mouseleave", handleWindowDismiss);
+});
+
 function clickMinimize() {
   minimize.value = !minimize.value;
 }
@@ -1416,58 +1481,495 @@ function formatTimestamp(ms: number): string {
 
   return `${h}:${mm}:${ss}`;
 }
+
+function getEncounterLabel(encounter: Encounter): string {
+  if (!encounter.zoneName) return "";
+  return `${encounter.zoneName} - [${encounter.duration}] ${formatTimestamp(encounter.timestamp)}`;
+}
+
+const hasAnyEncounterData = computed(() =>
+  data.value.some((e) => e.key !== "init" || e.table.length > 0),
+);
+const canImportLog = computed(() => store.isBrowser || dev.value);
+
+const hasAnyFilter = computed(() => {
+  return Boolean(
+    onlyDeath.value || hideAA.value || showHeals.value || tableRef.value?.hasColumnFilters,
+  );
+});
+
+function clearAllFilters() {
+  onlyDeath.value = false;
+  hideAA.value = false;
+  showHeals.value = false;
+  tableRef.value?.clearFilters?.();
+}
+
+async function clearAllEncounters() {
+  clearAllFilters();
+  beforeHandle();
+  loading.value = false;
+  try {
+    await db.clear();
+  } catch (e) {
+    console.error("Failed to clear IndexedDB:", e);
+  }
+  Object.values(STORAGE_KEYS).forEach((key) => {
+    if (key !== STORAGE_KEYS.VERSION) localStorage.removeItem(key);
+  });
+  triggerRef(data);
+  ElMessage.success({ message: t("keigennRecord.settings.clearedRecords"), duration: 1200 });
+}
+
+function resetOptions() {
+  store.resetUserOptions();
+}
+
+async function processLogFiles(files: FileList | null) {
+  if (!files || files.length === 0) return;
+
+  beforeHandle();
+  const instance = ElLoading.service({
+    fullscreen: true,
+    text: t("testLog.loading"),
+    lock: true,
+    background: "rgba(0, 0, 0, 0.7)",
+  });
+
+  try {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]!;
+      const text = await file.text();
+      const lines = text.split("\n");
+      for (const line of lines) {
+        handleLine(line);
+      }
+    }
+  } finally {
+    instance.close();
+    await afterHandle();
+    if (browserFileInputRef.value) browserFileInputRef.value.value = "";
+  }
+}
+
+function openLogPicker() {
+  browserFileInputRef.value?.click();
+}
+
+function handleFileInputChange(e: Event) {
+  const files = (e.target as HTMLInputElement).files;
+  void processLogFiles(files);
+}
+
+function handlePageDragEnter(e: DragEvent) {
+  if (!canImportLog.value) return;
+  if (!e.dataTransfer?.types.includes("Files")) return;
+  e.preventDefault();
+  pageDragCounter++;
+  isDragOverPage.value = true;
+}
+
+function handlePageDragOver(e: DragEvent) {
+  if (!canImportLog.value) return;
+  if (!e.dataTransfer?.types.includes("Files")) return;
+  e.preventDefault();
+}
+
+function handlePageDragLeave(e: DragEvent) {
+  if (!canImportLog.value) return;
+  e.preventDefault();
+  pageDragCounter = Math.max(0, pageDragCounter - 1);
+  if (pageDragCounter === 0) {
+    isDragOverPage.value = false;
+  }
+}
+
+function handlePageDrop(e: DragEvent) {
+  if (!canImportLog.value) return;
+  e.preventDefault();
+  pageDragCounter = 0;
+  isDragOverPage.value = false;
+  const files = e.dataTransfer?.files || null;
+  void processLogFiles(files);
+}
+
+function buildActUrl(): string {
+  const base = `${window.location.origin}${window.location.pathname}#/keigennRecord2`;
+  const q = new URLSearchParams();
+  if (userOptions.scale !== 1) q.set("scale", String(userOptions.scale));
+  if (userOptions.opacity !== 0.9) q.set("opacity", String(userOptions.opacity));
+  if (userOptions.iconType !== 2) q.set("iconType", String(userOptions.iconType));
+  if (userOptions.parseAA !== true) q.set("parseAA", "0");
+  if (userOptions.parseDoT !== false) q.set("parseDoT", "1");
+  if (userOptions.minimize !== false) q.set("minimize", "1");
+  if (userOptions.minimizeStyle !== "icon") q.set("minimizeStyle", userOptions.minimizeStyle);
+  if (userOptions.actionCN !== true) q.set("actionCN", "0");
+  if (userOptions.statusCN !== true) q.set("statusCN", "0");
+  if (userOptions.order !== "unshift") q.set("order", userOptions.order);
+  if (userOptions.anonymous) q.set("anonymous", "1");
+  const qs = q.toString();
+  return qs ? `${base}?${qs}` : base;
+}
+
+function copyActUrl() {
+  copyToClipboard(buildActUrl())
+    .then(() =>
+      ElMessage.success({ message: t("keigennRecord.settings.copyActSuccess"), duration: 1200 }),
+    )
+    .catch(() => ElMessage.error(t("keigennRecord.copyFailed")));
+}
 </script>
 
 <template>
   <div
     class="wrapper"
+    :class="{ 'is-browser': store.isBrowser }"
     :style="{ '--scale': userOptions.scale, '--opacity': userOptions.opacity }"
     @contextmenu.prevent
+    @dragenter="handlePageDragEnter"
+    @dragover="handlePageDragOver"
+    @dragleave="handlePageDragLeave"
+    @drop="handlePageDrop"
   >
-    <div class="wrapper-scale">
-      <header>
-        <div class="header-select">
-          <el-select
-            v-show="!minimize"
-            v-model="select"
-            size="small"
-            class="combat-select"
-            :class="store.isBrowser ? 'browser' : 'act'"
-            popper-class="combat-select-popup"
-            :offset="0"
-            :show-arrow="false"
-            @visible-change="handleCombatSelectVisible"
-          >
-            <el-option
-              v-for="i in data.length"
-              :key="`${data[i - 1]!.key}-${data[i - 1]!.duration}-${data[i - 1]!.zoneName}`"
-              :value="i - 1"
-              :label="`${data[i - 1]!.zoneName}${data[i - 1]!.zoneName === '' ? '' : ` - [${data[i - 1]!.duration}] ${formatTimestamp(data[i - 1]!.timestamp)}`}`"
-            />
-          </el-select>
-        </div>
-        <el-button
-          v-if="!store.isBrowser"
-          class="minimize"
-          :class="minimize ? 'in-minimize' : 'not-minimize'"
-          :icon="minimize ? ZoomIn : ZoomOut"
-          circle
-          :style="{ opacity: minimize ? 0.5 : 1 }"
-          @click="clickMinimize"
-        />
-      </header>
-      <main v-show="!minimize" style="height: 100%">
-        <KeigennRecord2Table ref="tableRef" :rows="selectedRows" :action-key="actionKey" />
-      </main>
-    </div>
-  </div>
-  <div v-if="store.isBrowser || dev" class="testLog">
-    <el-button v-if="dev" @click="test"> 测试 </el-button>
-    <CommonTestLog
-      @before-handle="beforeHandle"
-      @after-handle="afterHandle"
-      @handle-line="handleLine"
+    <input
+      v-if="canImportLog"
+      ref="browserFileInputRef"
+      type="file"
+      multiple
+      accept=".log,.txt"
+      class="hidden-file-input"
+      @change="handleFileInputChange"
     />
+
+    <div v-if="store.isBrowser && hasAnyEncounterData" class="browser-toolbar">
+      <el-select
+        ref="browserCombatSelectRef"
+        v-model="select"
+        size="small"
+        class="combat-select browser"
+        popper-class="combat-select-popup is-browser-popup"
+        :offset="4"
+        :show-arrow="false"
+        :placeholder="$t('keigennRecord.toolbar.noEncounters')"
+        @visible-change="handleCombatSelectVisible"
+      >
+        <el-option
+          v-for="i in data.length"
+          :key="`${data[i - 1]!.key}-${data[i - 1]!.duration}-${data[i - 1]!.zoneName}`"
+          :value="i - 1"
+          :label="getEncounterLabel(data[i - 1]!)"
+        />
+      </el-select>
+
+      <div class="toolbar-divider" />
+
+      <div class="toolbar-toggles">
+        <button
+          type="button"
+          class="toolbar-btn"
+          :class="{ 'is-active': onlyDeath }"
+          @click="onlyDeath = !onlyDeath"
+        >
+          {{ $t("keigennRecord.toolbar.onlyDeath") }}
+        </button>
+        <button
+          type="button"
+          class="toolbar-btn"
+          :class="{ 'is-active': hideAA }"
+          @click="hideAA = !hideAA"
+        >
+          {{ $t("keigennRecord.toolbar.hideAA") }}
+        </button>
+        <button
+          type="button"
+          class="toolbar-btn"
+          :class="{ 'is-active': showHeals }"
+          @click="showHeals = !showHeals"
+        >
+          {{ $t("keigennRecord.toolbar.showHeals") }}
+        </button>
+        <button
+          type="button"
+          class="toolbar-btn"
+          :class="{ 'is-active': userOptions.anonymous }"
+          @click="userOptions.anonymous = !userOptions.anonymous"
+        >
+          {{ $t("keigennRecord.toolbar.anonymous") }}
+        </button>
+        <button
+          v-if="hasAnyFilter"
+          type="button"
+          class="toolbar-btn toolbar-btn-reset"
+          @click="clearAllFilters"
+        >
+          {{ $t("keigennRecord.toolbar.clearFilters") }}
+        </button>
+      </div>
+
+      <div class="toolbar-actions">
+        <button v-if="dev" type="button" class="toolbar-btn" @click="test">
+          {{ $t("keigennRecord.toolbar.test") }}
+        </button>
+        <button type="button" class="toolbar-btn toolbar-btn-reset" @click="clearAllEncounters">
+          {{ $t("keigennRecord.toolbar.clearRecords") }}
+        </button>
+        <button
+          type="button"
+          class="toolbar-btn"
+          :class="{ 'is-active': settingsOpen }"
+          @click="settingsOpen = !settingsOpen"
+        >
+          {{ $t("keigennRecord.toolbar.settings") }}
+        </button>
+        <button type="button" class="toolbar-btn toolbar-btn-primary" @click="openLogPicker">
+          {{ $t("keigennRecord.toolbar.importLog") }}
+        </button>
+      </div>
+    </div>
+
+    <div v-if="store.isBrowser && !hasAnyEncounterData" class="browser-landing">
+      <div class="landing-inner">
+        <h1 class="landing-title">{{ $t("keigennRecord.landing.title") }}</h1>
+        <p class="landing-desc">{{ $t("keigennRecord.landing.desc") }}</p>
+        <div class="landing-actions">
+          <button type="button" class="landing-btn landing-btn-primary" @click="openLogPicker">
+            {{ $t("keigennRecord.landing.selectFile") }}
+          </button>
+          <button type="button" class="landing-btn" @click="settingsOpen = !settingsOpen">
+            {{ $t("keigennRecord.toolbar.settings") }}
+          </button>
+          <button v-if="dev" type="button" class="landing-btn" @click="test">
+            {{ $t("keigennRecord.toolbar.test") }}
+          </button>
+        </div>
+        <p class="landing-note">{{ $t("keigennRecord.actTip") }}</p>
+      </div>
+    </div>
+
+    <div v-else class="table-stage">
+      <div class="wrapper-scale" :class="{ 'is-scaled': safeScale !== 1 }">
+        <header v-if="!store.isBrowser">
+          <div class="header-select">
+            <el-select
+              v-show="!minimize"
+              ref="actCombatSelectRef"
+              v-model="select"
+              size="small"
+              class="combat-select act"
+              popper-class="combat-select-popup is-act-popup"
+              :offset="2"
+              placement="bottom-end"
+              :show-arrow="false"
+              @visible-change="handleCombatSelectVisible"
+            >
+              <el-option
+                v-for="i in data.length"
+                :key="`${data[i - 1]!.key}-${data[i - 1]!.duration}-${data[i - 1]!.zoneName}`"
+                :value="i - 1"
+                :label="getEncounterLabel(data[i - 1]!)"
+              />
+            </el-select>
+          </div>
+          <button
+            v-show="!minimize"
+            type="button"
+            class="act-settings-btn"
+            @click="settingsOpen = !settingsOpen"
+          >
+            <ElIcon :size="12">
+              <Setting />
+            </ElIcon>
+          </button>
+          <el-button
+            class="minimize"
+            :class="[
+              minimize ? 'in-minimize' : 'not-minimize',
+              { 'is-icon-only': minimize && userOptions.minimizeStyle === 'icon' },
+            ]"
+            :icon="minimize ? ZoomIn : ZoomOut"
+            :circle="!minimize || userOptions.minimizeStyle === 'icon'"
+            :style="{
+              opacity: minimize ? (userOptions.minimizeStyle === 'icon' ? 0.5 : 0.85) : 1,
+            }"
+            @click="clickMinimize"
+          >
+            <template v-if="minimize && userOptions.minimizeStyle !== 'icon'">
+              {{ $t("keigennRecord.minimizeLabel") }}
+            </template>
+          </el-button>
+        </header>
+        <main v-show="!minimize" style="height: 100%">
+          <KeigennRecord2Table
+            ref="tableRef"
+            :rows="selectedRows"
+            :action-key="actionKey"
+            :only-death="onlyDeath"
+            :hide-auto-attack="hideAA"
+            :show-heals="showHeals"
+          >
+            <template v-if="store.isBrowser" #empty>
+              <div class="browser-empty-guide">
+                <p class="empty-tip">{{ $t("keigennRecord.landing.emptyFiltered") }}</p>
+                <button
+                  type="button"
+                  class="toolbar-btn toolbar-btn-reset"
+                  @click="clearAllFilters"
+                >
+                  {{ $t("keigennRecord.toolbar.clearFilters") }}
+                </button>
+              </div>
+            </template>
+          </KeigennRecord2Table>
+        </main>
+      </div>
+    </div>
+
+    <div v-if="!store.isBrowser && dev" class="dev-act-test">
+      <el-button v-if="hasAnyEncounterData" size="small" @click="clearAllEncounters">
+        {{ $t("keigennRecord.toolbar.clearRecords") }}
+      </el-button>
+      <el-button size="small" @click="openLogPicker">
+        {{ $t("keigennRecord.toolbar.importLog") }}
+      </el-button>
+      <el-button size="small" @click="test">{{ $t("keigennRecord.toolbar.test") }}</el-button>
+    </div>
+
+    <div v-if="canImportLog && isDragOverPage" class="drag-overlay">
+      <div class="drag-overlay-box">
+        <ElIcon :size="28">
+          <UploadFilled />
+        </ElIcon>
+        <span>{{ $t("keigennRecord.landing.dragDrop") }}</span>
+      </div>
+    </div>
+
+    <div v-if="settingsOpen" class="settings-backdrop" @click.self="settingsOpen = false">
+      <div class="settings-panel">
+        <div class="settings-header">
+          <span class="settings-title">{{ $t("keigennRecord.settings.title") }}</span>
+          <button type="button" class="toolbar-btn" @click="settingsOpen = false">
+            {{ $t("keigennRecord.settings.close") }}
+          </button>
+        </div>
+        <div class="settings-body">
+          <label class="setting-row">
+            <span>{{ $t("keigennRecord.settings.scale") }}</span>
+            <span class="setting-ctrl">
+              <input
+                v-model.number="userOptions.scale"
+                type="range"
+                min="0.6"
+                max="2"
+                step="0.05"
+              />
+              <span class="setting-val">{{ Number(userOptions.scale).toFixed(2) }}</span>
+            </span>
+          </label>
+          <label class="setting-row">
+            <span>{{ $t("keigennRecord.settings.opacity") }}</span>
+            <span class="setting-ctrl">
+              <input
+                v-model.number="userOptions.opacity"
+                type="range"
+                min="0.1"
+                max="1"
+                step="0.05"
+              />
+              <span class="setting-val">{{ Number(userOptions.opacity).toFixed(2) }}</span>
+            </span>
+          </label>
+          <label class="setting-row">
+            <span>{{ $t("keigennRecord.settings.anonymous") }}</span>
+            <input v-model="userOptions.anonymous" type="checkbox" />
+          </label>
+          <label class="setting-row">
+            <span>{{ $t("keigennRecord.settings.actionCN") }}</span>
+            <input v-model="userOptions.actionCN" type="checkbox" />
+          </label>
+          <label class="setting-row">
+            <span>{{ $t("keigennRecord.settings.statusCN") }}</span>
+            <input v-model="userOptions.statusCN" type="checkbox" />
+          </label>
+          <label class="setting-row">
+            <span class="setting-label"
+              >{{ $t("keigennRecord.settings.parseAA")
+              }}<span class="setting-hint">{{
+                $t("keigennRecord.settings.newRecordsOnly")
+              }}</span></span
+            >
+            <input v-model="userOptions.parseAA" type="checkbox" />
+          </label>
+          <label class="setting-row">
+            <span class="setting-label"
+              >{{ $t("keigennRecord.settings.parseDoT")
+              }}<span class="setting-hint">{{
+                $t("keigennRecord.settings.newRecordsOnly")
+              }}</span></span
+            >
+            <input v-model="userOptions.parseDoT" type="checkbox" />
+          </label>
+          <label class="setting-row">
+            <span>{{ $t("keigennRecord.settings.orderTop") }}</span>
+            <input
+              type="checkbox"
+              :checked="userOptions.order === 'unshift'"
+              @change="
+                userOptions.order = ($event.target as HTMLInputElement).checked ? 'unshift' : 'push'
+              "
+            />
+          </label>
+          <div class="setting-row">
+            <span>{{ $t("keigennRecord.settings.iconType") }}</span>
+            <div class="icon-type-group">
+              <button
+                v-for="val in [1, 2, 3, 4]"
+                :key="val"
+                type="button"
+                class="toolbar-btn icon-type-btn"
+                :class="{ 'is-active': userOptions.iconType === val }"
+                @click="userOptions.iconType = val"
+              >
+                {{ val }}
+              </button>
+            </div>
+          </div>
+          <div class="setting-row">
+            <span>{{ $t("keigennRecord.settings.minimizeStyle") }}</span>
+            <div class="icon-type-group">
+              <button
+                type="button"
+                class="toolbar-btn icon-type-btn"
+                :class="{ 'is-active': userOptions.minimizeStyle === 'text' }"
+                @click="userOptions.minimizeStyle = 'text'"
+              >
+                {{ $t("keigennRecord.settings.minimizeStyleText") }}
+              </button>
+              <button
+                type="button"
+                class="toolbar-btn icon-type-btn"
+                :class="{ 'is-active': userOptions.minimizeStyle === 'icon' }"
+                @click="userOptions.minimizeStyle = 'icon'"
+              >
+                {{ $t("keigennRecord.settings.minimizeStyleIcon") }}
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="settings-footer">
+          <button type="button" class="toolbar-btn" @click="resetOptions">
+            {{ $t("keigennRecord.settings.resetDefaults") }}
+          </button>
+          <button
+            v-if="store.isBrowser"
+            type="button"
+            class="toolbar-btn toolbar-btn-primary"
+            @click="copyActUrl"
+          >
+            {{ $t("keigennRecord.settings.copyActUrl") }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -1483,14 +1985,9 @@ function formatTimestamp(ms: number): string {
   user-select: none;
 }
 
-// 限制对 Element Plus 内部样式的修改，使用 :deep
-:deep(.el-select__suffix) {
+// 仅在 ACT 窄选择框内压缩下拉箭头间距
+.combat-select.act :deep(.el-select__suffix) {
   position: relative;
-  width: 0px;
-  right: 15px;
-}
-
-.combat-select :deep(.el-select__suffix) {
   width: 14px;
   right: 7px;
 }
@@ -1527,14 +2024,133 @@ main {
   width: 100%;
   position: relative;
   overflow: hidden;
+
+  &.is-browser {
+    display: flex;
+    flex-direction: column;
+    background-color: #141518;
+  }
+}
+
+.browser-toolbar {
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  background-color: #1b1d22;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 16px;
+  background-color: rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+}
+
+.toolbar-toggles,
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.toolbar-actions {
+  margin-left: auto;
+}
+
+.toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  padding: 0 9px;
+  font-size: 12px;
+  line-height: 1;
+  color: #c5ccd6;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 2px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
+
+  &:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.11);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  &.is-active {
+    color: #ffffff;
+    background-color: rgba(64, 158, 255, 0.24);
+    border-color: rgba(64, 158, 255, 0.72);
+  }
+
+  &.toolbar-btn-primary {
+    color: #ffffff;
+    background-color: #2f6fd6;
+    border-color: #4683e6;
+
+    &:hover {
+      background-color: #3b7be0;
+      border-color: #6298ee;
+    }
+  }
+
+  &.toolbar-btn-reset {
+    color: #ffd3d3;
+    background-color: rgba(255, 82, 82, 0.14);
+    border-color: rgba(255, 82, 82, 0.4);
+
+    &:hover {
+      color: #ffffff;
+      background-color: rgba(255, 82, 82, 0.28);
+      border-color: rgba(255, 82, 82, 0.7);
+    }
+  }
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.table-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+
+  .is-browser & {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+  }
 }
 
 .wrapper-scale {
-  width: calc(100% / var(--scale, 1));
-  height: calc(100% / var(--scale, 1));
+  width: 100%;
+  height: 100%;
   position: relative;
-  transform: scale(var(--scale, 1));
-  transform-origin: top left;
+
+  &.is-scaled {
+    width: calc(100% / var(--scale, 1));
+    height: calc(100% / var(--scale, 1));
+    transform: scale(var(--scale, 1));
+    transform-origin: top left;
+  }
 }
 
 .minimize {
@@ -1543,9 +2159,6 @@ main {
   margin-bottom: 0 !important;
   margin-left: auto !important;
   margin-right: 0 !important;
-  border: none !important;
-  width: 22px !important;
-  height: 22px !important;
   z-index: 13;
 
   i {
@@ -1554,45 +2167,49 @@ main {
 }
 
 .not-minimize {
-  background-color: rgba(20, 20, 20, 0.4);
+  border: none !important;
+  width: 22px !important;
+  height: 22px !important;
+  background-color: rgba(20, 20, 20, 0.45);
 }
 
 .in-minimize {
-  background-color: rgba(20, 20, 20, 1);
+  height: 22px !important;
+  padding: 0 7px !important;
+  border-radius: 2px !important;
+  font-size: 11px !important;
+  color: #e6ebf2 !important;
+  background-color: rgba(20, 20, 20, 0.92) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  gap: 3px;
+
+  &.is-icon-only {
+    width: 22px !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 50% !important;
+    background-color: rgba(20, 20, 20, 1) !important;
+    gap: 0;
+  }
 }
 
-/* ===== Element Plus 穿透样式 ===== */
-:deep(.el-table-v2__main) {
+/* ===== 表格穿透样式 ===== */
+:deep(.keigenn-table) {
   background-color: rgba(20, 20, 20, var(--opacity));
   border-radius: 6px;
 }
 
-:deep(.el-select-dropdown__list) {
-  padding: 0;
+.is-browser :deep(.keigenn-table) {
+  border-radius: 0;
+  background-color: #141518;
 }
 
-:deep(.el-select-dropdown__item) {
-  padding: 0 0.5em;
-}
-
-:deep(.header-filter) {
-  position: fixed;
-}
-
-:deep(.el-table-v2__row-cell) {
+:deep(.keigenn-row-cell) {
   padding: 0 2px;
 }
 
-:deep(.el-table-v2__row) {
+:deep(.keigenn-table-row) {
   cursor: pointer;
-}
-
-:deep(.col-action) {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  line-height: 28px;
 }
 
 :deep(.el-select__wrapper) {
@@ -1607,48 +2224,347 @@ main {
   color: unset !important;
 }
 
+.combat-select.browser :deep(.el-select__wrapper) {
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.combat-select.browser :deep(.el-select__placeholder) {
+  color: #e6ebf2 !important;
+}
+
 /* ===== 战斗记录选择器 ===== */
-.combat-select {
-  height: 21px;
+.act-settings-btn {
   position: absolute;
   top: 1px;
+  right: 52px;
+  width: 22px;
+  height: 21px;
+  padding: 0;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   z-index: 15;
   border-radius: 2px;
-  box-shadow: 0 0 0 1px rgba(200, 200, 200, 0.2);
+  color: #c5ccd6;
+  background-color: rgba(20, 20, 20, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+
+  &:hover {
+    color: #ffffff;
+    background-color: rgba(45, 48, 56, 0.85);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
 }
 
 .combat-select.act {
+  height: 21px;
+  position: absolute;
+  top: 1px;
   width: 24px;
   right: 26px;
-  background-color: rgba(20, 20, 20, 0.4);
+  z-index: 15;
+  border-radius: 3px;
+  background-color: rgba(20, 20, 20, 0.55);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
+  transition: background-color 0.12s ease;
+
+  &:hover {
+    background-color: rgba(45, 48, 56, 0.85);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+  }
 }
 
 .combat-select.browser {
-  width: 20em;
-  right: 2px;
+  width: clamp(200px, 36vw, 440px);
+  flex-shrink: 1;
 }
 
-:deep(.combat-select-popup) {
-  left: 0 !important;
-  overflow: visible;
+@media (max-width: 520px) {
+  .browser-toolbar {
+    gap: 3px;
+    padding: 0 5px;
+  }
+
+  .toolbar-divider {
+    display: none;
+  }
+
+  .toolbar-toggles,
+  .toolbar-actions {
+    gap: 3px;
+  }
+
+  .combat-select.browser {
+    width: 68px;
+  }
+
+  .toolbar-btn {
+    height: 22px;
+    padding: 0 4px;
+    font-size: 11px;
+  }
 }
 
-.testLog {
-  position: fixed;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  opacity: 0.5;
-  z-index: 100;
-  transition: all 0.3s ease-in-out;
+.browser-landing {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+
+  .landing-inner {
+    width: 100%;
+    max-width: 440px;
+    padding-left: 16px;
+    border-left: 2px solid #3b7be0;
+  }
+
+  .landing-title {
+    margin: 0;
+    font-size: clamp(18px, 3vw, 24px);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #eef2f7;
+    line-height: 1.25;
+  }
+
+  .landing-desc {
+    margin: 8px 0 0;
+    font-size: 13px;
+    color: #aab3c2;
+    line-height: 1.5;
+  }
+
+  .landing-actions {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .landing-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    padding: 0 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #d6dbe3;
+    background-color: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 2px;
+    cursor: pointer;
+    transition:
+      background-color 0.12s ease,
+      border-color 0.12s ease,
+      color 0.12s ease;
+
+    &:hover {
+      color: #ffffff;
+      background-color: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.34);
+    }
+
+    &.landing-btn-primary {
+      color: #ffffff;
+      background-color: #2f6fd6;
+      border-color: #4683e6;
+
+      &:hover {
+        background-color: #3b7be0;
+        border-color: #6298ee;
+      }
+    }
+  }
+
+  .landing-note {
+    margin: 14px 0 0;
+    font-size: 12px;
+    color: #747d8c;
+    line-height: 1.5;
+  }
+}
+
+.browser-empty-guide {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 10px;
+  padding: 16px;
+  max-width: 100%;
+  box-sizing: border-box;
+
+  .empty-tip {
+    margin: 0;
+    font-size: 12px;
+    color: #9ba4b2;
+    text-align: center;
+    max-width: 360px;
+    line-height: 1.5;
+  }
+}
+
+.dev-act-test {
+  position: fixed;
+  right: 6px;
+  bottom: 6px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0.55;
+
+  :deep(.el-button + .el-button) {
+    margin-left: 0;
+  }
 
   &:hover {
     opacity: 1;
   }
+}
+
+.drag-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  background: rgba(16, 18, 22, 0.84);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  pointer-events: none;
+
+  .drag-overlay-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 20px 28px;
+    border-radius: 2px;
+    border: 1px dashed var(--el-color-primary);
+    background: rgba(64, 158, 255, 0.1);
+    color: #e6ebf2;
+    font-size: 13px;
+  }
+}
+
+.settings-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 3500;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.settings-panel {
+  width: 100%;
+  max-width: 340px;
+  max-height: calc(100vh - 16px);
+  display: flex;
+  flex-direction: column;
+  background: #1b1d22;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 2px;
+  color: #e6ebf2;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65);
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+  .settings-title {
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
+
+.settings-body {
+  padding: 8px 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: #c5ccd6;
+  cursor: pointer;
+
+  input[type="checkbox"] {
+    accent-color: #3b7be0;
+    cursor: pointer;
+  }
+
+  .setting-label {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .setting-hint {
+    font-size: 10.5px;
+    color: #828b99;
+  }
+}
+
+.setting-ctrl {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  input[type="range"] {
+    width: 100px;
+    accent-color: #3b7be0;
+  }
+
+  .setting-val {
+    width: 32px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: #e6ebf2;
+  }
+}
+
+.icon-type-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.icon-type-btn {
+  height: 22px;
+  padding: 0 6px;
+  font-size: 11px;
+}
+
+.settings-footer {
+  padding: 8px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 :deep(.el-select--small .el-select__wrapper) {

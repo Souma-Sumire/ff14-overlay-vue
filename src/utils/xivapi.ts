@@ -21,9 +21,18 @@ const CACHE_VERSION_STORAGE_KEY = "xivapi-cache-version";
 const PRIMARY_SITE_STORAGE_KEY = "xivapi-primary-site";
 const ACTION_META_CACHE_STORE = "xivapi-action-meta-cache";
 const ACTION_SEARCH_CACHE_STORE = "xivapi-action-search-cache";
+const ICON_CACHE_NAME = "xivapi-icon-cache-v1";
 const HIGH_RES_SCALE_THRESHOLD = 2;
 const HIGH_RES_SUFFIX = "_hr1";
 const HTTPS_PROTOCOL = "https:";
+const IMG_FAIL_SWITCH_THRESHOLD = 5;
+
+const iconBlobUrlMap = new Map<string, string>();
+const pendingIconCache = new Map<string, Promise<void>>();
+let consecutivePrimaryImgFailures = 0;
+let iconCacheReadyPromise: Promise<void> | null = null;
+let cachedScaleLocationKey = "";
+let cachedScaleValue = 1;
 
 function buildHttpsOrigin(host: string): string {
   return `${HTTPS_PROTOCOL}//${host}`;
@@ -31,6 +40,10 @@ function buildHttpsOrigin(host: string): string {
 
 function getScaleFromUrl(): number {
   if (typeof window === "undefined") return 1;
+  const locationKey = `${window.location.hash}|${window.location.search}`;
+  if (locationKey === cachedScaleLocationKey) {
+    return cachedScaleValue;
+  }
   const queries: string[] = [];
   const hash = window.location.hash || "";
   const hashQueryIndex = hash.indexOf("?");
@@ -39,14 +52,20 @@ function getScaleFromUrl(): number {
   }
   const search = window.location.search?.replace(/^\?/, "");
   if (search) queries.push(search);
+  let resolvedScale = 1;
   for (const query of queries) {
     const params = new URLSearchParams(query);
     const scaleRaw = params.get("scale");
     if (scaleRaw === null) continue;
     const scaleValue = Number(scaleRaw);
-    if (Number.isFinite(scaleValue)) return scaleValue;
+    if (Number.isFinite(scaleValue)) {
+      resolvedScale = scaleValue;
+      break;
+    }
   }
-  return 1;
+  cachedScaleLocationKey = locationKey;
+  cachedScaleValue = resolvedScale;
+  return resolvedScale;
 }
 
 function isHighResEnabled(): boolean {
@@ -118,6 +137,111 @@ const pendingNetworkRequests = new Map<string, Promise<any>>();
 export const EMPTY_IMAGE =
   "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==";
 
+function buildAssetUrl(site: SiteName, iconSubPath: string): string {
+  const texPath = iconSubPath
+    .replace(/^\/?i\//, "")
+    .replace(/^ui\/icon\//, "")
+    .replace(/\.png$/i, ".tex");
+  return `${buildHttpsOrigin(SITE_HOST[site].host)}/api/asset?path=${encodeURIComponent(`ui/icon/${texPath}`)}&format=png`;
+}
+
+function extractIconSubPath(url: URL): string | null {
+  if (url.pathname === "/api/asset") {
+    const assetPath = url.searchParams.get("path");
+    if (assetPath && assetPath.startsWith("ui/icon/")) {
+      return assetPath.slice("ui/icon/".length).replace(/\.tex$/i, ".png");
+    }
+    return null;
+  }
+  if (url.pathname.startsWith("/i/")) {
+    return url.pathname.slice(3);
+  }
+  return null;
+}
+
+function getIconCacheRequestUrl(iconSubPath: string): string {
+  return `https://xivapi-icon.local/i/${iconSubPath}`;
+}
+
+async function hydrateIconCache(): Promise<void> {
+  if (typeof window === "undefined" || !("caches" in window)) return;
+  try {
+    const cache = await window.caches.open(ICON_CACHE_NAME);
+    const keys = await cache.keys();
+    await Promise.all(
+      keys.map(async (req) => {
+        try {
+          const url = new URL(req.url);
+          if (!url.pathname.startsWith("/i/")) return;
+          const subPath = url.pathname.slice(3);
+          if (iconBlobUrlMap.has(subPath)) return;
+          const resp = await cache.match(req);
+          if (!resp || !resp.ok) return;
+          const blob = await resp.blob();
+          if (blob.size > 0) {
+            iconBlobUrlMap.set(subPath, URL.createObjectURL(blob));
+          }
+        } catch {
+          // 忽略单条缓存读取异常
+        }
+      }),
+    );
+  } catch {
+    // 忽略不支持 Cache API 的环境
+  }
+}
+
+export function ensureIconCacheReady(): Promise<void> {
+  if (!iconCacheReadyPromise) {
+    iconCacheReadyPromise = hydrateIconCache();
+  }
+  return iconCacheReadyPromise;
+}
+
+function cacheIconInBackground(iconSubPath: string, assetUrl: string): void {
+  if (typeof window === "undefined" || !("caches" in window)) return;
+  if (iconBlobUrlMap.has(iconSubPath) || pendingIconCache.has(iconSubPath)) return;
+
+  const task = (async () => {
+    try {
+      const cache = await window.caches.open(ICON_CACHE_NAME);
+      const cacheKey = getIconCacheRequestUrl(iconSubPath);
+      const existing = await cache.match(cacheKey);
+      if (existing?.ok) {
+        const blob = await existing.blob();
+        if (blob.size > 0) {
+          iconBlobUrlMap.set(iconSubPath, URL.createObjectURL(blob));
+          return;
+        }
+      }
+      const resp = await fetch(assetUrl, { mode: "cors", cache: "force-cache" });
+      if (!resp.ok) return;
+      const cloned = resp.clone();
+      const blob = await resp.blob();
+      if (blob.size === 0) return;
+      iconBlobUrlMap.set(iconSubPath, URL.createObjectURL(blob));
+      await cache.put(cacheKey, cloned);
+    } catch {
+      // 忽略网络或存储异常
+    } finally {
+      pendingIconCache.delete(iconSubPath);
+    }
+  })();
+
+  pendingIconCache.set(iconSubPath, task);
+}
+
+function resolveIconUrl(iconSubPath: string): string {
+  const normalized = appendHighResSuffix(iconSubPath.replace(/^\/?i\//, ""));
+  const cachedBlob = iconBlobUrlMap.get(normalized);
+  if (cachedBlob) return cachedBlob;
+  const assetUrl = buildAssetUrl(primarySite, normalized);
+  cacheIconInBackground(normalized, assetUrl);
+  return assetUrl;
+}
+
+void ensureIconCacheReady();
+
 function rerouteFailedImage(img: HTMLImageElement, failedUrl: URL): void {
   const failedSite = resolveSiteByHost(failedUrl.hostname);
   if (!failedSite) {
@@ -126,40 +250,61 @@ function rerouteFailedImage(img: HTMLImageElement, failedUrl: URL): void {
   }
 
   const nextSite = getOtherSite(failedSite);
+  const subPath = extractIconSubPath(failedUrl);
+  if (failedSite === primarySite) {
+    consecutivePrimaryImgFailures++;
+  }
   img.dataset.tried = "1";
-  img.src = `${buildHttpsOrigin(SITE_HOST[nextSite].imgHost)}${failedUrl.pathname}`;
-  img.addEventListener("load", () => setPrimarySite(nextSite), { once: true });
+  const nextUrl = subPath
+    ? buildAssetUrl(nextSite, subPath)
+    : `${buildHttpsOrigin(SITE_HOST[nextSite].imgHost)}${failedUrl.pathname}`;
+  img.src = nextUrl;
+  img.addEventListener(
+    "load",
+    () => {
+      if (consecutivePrimaryImgFailures >= IMG_FAIL_SWITCH_THRESHOLD) {
+        consecutivePrimaryImgFailures = 0;
+        setPrimarySite(nextSite);
+      }
+      if (subPath) {
+        cacheIconInBackground(subPath, nextUrl);
+      }
+    },
+    { once: true },
+  );
 }
 
 export function getIconSrcById(iconId: number): string {
   if (!Number.isFinite(iconId) || iconId <= 0) return EMPTY_IMAGE;
   const full = completeIcon(Math.trunc(iconId));
-  const basePath = `${buildHttpsOrigin(SITE_HOST[primarySite].imgHost)}/i/${full}.png`;
-  return appendHighResSuffix(basePath);
+  return resolveIconUrl(`${full}.png`);
 }
 
 export function getIconSrcByFullIcon(fullIcon: string): string {
   if (!fullIcon) return EMPTY_IMAGE;
-  const basePath = `${buildHttpsOrigin(SITE_HOST[primarySite].imgHost)}/i/${fullIcon}.png`;
-  return appendHighResSuffix(basePath);
+  return resolveIconUrl(`${fullIcon}.png`);
 }
 
 export function getIconSrcByPath(iconPath: string, itemIsHQ = false): string {
   if (!iconPath) return EMPTY_IMAGE;
   if (/^https?:\/\//.test(iconPath)) return iconPath;
-  const suffix = isHighResEnabled() ? HIGH_RES_SUFFIX : "";
-  const baseUrl = buildHttpsOrigin(SITE_HOST[primarySite].imgHost);
-  return `${baseUrl}${iconPath}`.replace(
-    /(\d{6})\.png$/,
-    (_m, p1) => `${itemIsHQ ? "hq/" : ""}${p1}${suffix}.png`,
-  );
+  const normalized = iconPath
+    .replace(/^\/?i\//, "")
+    .replace(/(\d{6})\.png$/, (_m, p1) => `${itemIsHQ ? "hq/" : ""}${p1}.png`);
+  return resolveIconUrl(normalized);
 }
 
 export function rerouteImgSrc(src: string): string {
-  if (!src || src === EMPTY_IMAGE) return src;
+  if (!src || src === EMPTY_IMAGE || src.startsWith("blob:") || src.startsWith("data:")) {
+    return src;
+  }
   try {
     const url = new URL(src, window.location.href);
     const site = resolveSiteByHost(url.hostname);
+    const subPath = site ? extractIconSubPath(url) : null;
+    if (subPath) {
+      return resolveIconUrl(subPath);
+    }
     let nextPath = url.pathname;
     if (isHighResEnabled() && nextPath.endsWith(".png")) {
       nextPath = appendHighResSuffix(nextPath);
@@ -368,6 +513,15 @@ export function handleImgError(event: Event): void {
   try {
     const errorUrl = new URL(target.src, window.location.href);
     isLocalFallback = errorUrl.origin === window.location.origin;
+    const subPath = extractIconSubPath(errorUrl);
+    if (subPath?.endsWith(`${HIGH_RES_SUFFIX}.png`) && !target.dataset.hrFallback) {
+      target.dataset.hrFallback = "1";
+      target.src = buildAssetUrl(
+        resolveSiteByHost(errorUrl.hostname) ?? primarySite,
+        stripHighResSuffix(subPath),
+      );
+      return;
+    }
     if (errorUrl.pathname.endsWith(`${HIGH_RES_SUFFIX}.png`) && !target.dataset.hrFallback) {
       target.dataset.hrFallback = "1";
       const normalUrl = new URL(errorUrl.toString());

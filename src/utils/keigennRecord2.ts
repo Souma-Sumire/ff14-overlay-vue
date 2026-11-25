@@ -14,3 +14,9 @@ export function isLethal(row: RowVO): boolean {
     !row.keigenns.some((k) => invincibleEffect.includes(k.effectId))
   );
 }
+
+export function getJobIconUrl(jobIcon: string, type: number): string {
+  if (!jobIcon) return "";
+  const jobName = jobIcon.replaceAll(/([A-Z])/g, " $1").trim();
+  return `https://souma.diemoe.net/resources/img/cj${type}/${jobName}.png`;
+}

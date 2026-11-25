@@ -374,6 +374,60 @@
       "SGE": "SGE",
       "VPR": "VPR",
       "PCT": "PCT"
+    },
+    "minimizeLabel": "Mit",
+    "onlyThisPlayer": "Only",
+    "restoreAll": "All",
+    "deathRecap": "Death Recap",
+    "deathTerrain": "Terrain",
+    "deathByTerrain": "fell to {source}!",
+    "deathBySource": "defeated by {source}!",
+    "overkillDiff": "Overkill {amount}",
+    "tenThousandUnit": "k",
+    "scope": {
+      "party": "Party",
+      "other": "Single",
+      "self": "Self"
+    },
+    "toolbar": {
+      "noEncounters": "No Encounters",
+      "onlyDeath": "Deaths",
+      "hideAA": "Hide AA",
+      "showHeals": "Heals",
+      "anonymous": "Anon",
+      "clearFilters": "Reset Filters",
+      "clearRecords": "Clear",
+      "settings": "Settings",
+      "importLog": "Import Log",
+      "test": "Test"
+    },
+    "landing": {
+      "title": "Mitigation Record",
+      "desc": "Drop an ACT log file (.log / .txt) anywhere on the page, or click to import",
+      "selectFile": "Select Log File",
+      "dragDrop": "Release to import ACT log",
+      "emptyFiltered": "No records match the current filters"
+    },
+    "settings": {
+      "title": "Settings",
+      "close": "Close",
+      "scale": "Scale",
+      "opacity": "Opacity",
+      "anonymous": "Anonymous Mode",
+      "actionCN": "Chinese Skill Names",
+      "statusCN": "Chinese Status Names",
+      "parseAA": "Parse Auto-Attacks",
+      "parseDoT": "Parse DoT",
+      "newRecordsOnly": "New records only",
+      "orderTop": "Newest on Top",
+      "iconType": "Job Icon Style",
+      "minimizeStyle": "Minimized Style",
+      "minimizeStyleText": "Icon + Text",
+      "minimizeStyleIcon": "Icon Only",
+      "resetDefaults": "Reset Defaults",
+      "copyActUrl": "Copy ACT URL with Settings",
+      "copyActSuccess": "ACT URL Copied",
+      "clearedRecords": "Records Cleared"
     }
   },
   "keySkillTimer": {

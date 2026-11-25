@@ -91,6 +91,7 @@ const nameToJobEnum: Record<Job, number> = {
   SGE: 40,
   VPR: 41,
   PCT: 42,
+  BST: 43,
 };
 
 const baseJob = [
@@ -421,6 +422,13 @@ const nameToFullName: Record<
     cn: "绘灵法师",
     simple1: "绘",
     simple2: "绘灵",
+  },
+  BST: {
+    en: "Beastmaster",
+    ja: "魔獣使い",
+    cn: "魔兽使",
+    simple1: "兽",
+    simple2: "魔兽",
   },
 };
 const allJobs = Object.keys(nameToJobEnum) as Job[];

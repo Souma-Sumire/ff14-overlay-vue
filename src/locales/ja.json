@@ -374,6 +374,60 @@
       "SGE": "賢者",
       "VPR": "ヴァイパー",
       "PCT": "ピクトマンサー"
+    },
+    "minimizeLabel": "軽減",
+    "onlyThisPlayer": "対象のみ",
+    "restoreAll": "すべて表示",
+    "deathRecap": "デスログ",
+    "deathTerrain": "落下・地形",
+    "deathByTerrain": "は{source}で倒れた！",
+    "deathBySource": "は{source}に倒された！",
+    "overkillDiff": "超過 {amount}",
+    "tenThousandUnit": "万",
+    "scope": {
+      "party": "全体",
+      "other": "単体",
+      "self": "自身"
+    },
+    "toolbar": {
+      "noEncounters": "戦闘なし",
+      "onlyDeath": "戦闘不能",
+      "hideAA": "AA非表示",
+      "showHeals": "回復表示",
+      "anonymous": "匿名",
+      "clearFilters": "絞り込み解除",
+      "clearRecords": "履歴消去",
+      "settings": "設定",
+      "importLog": "ログ読込",
+      "test": "テスト"
+    },
+    "landing": {
+      "title": "軽減ログ",
+      "desc": "ACTログファイル（.log / .txt）をページにドロップするか、クリックして読み込みます",
+      "selectFile": "ファイルを選択",
+      "dragDrop": "ドロップしてACTログを読み込む",
+      "emptyFiltered": "現在の絞り込み条件に一致する記録はありません"
+    },
+    "settings": {
+      "title": "設定",
+      "close": "閉じる",
+      "scale": "拡大率",
+      "opacity": "背景不透明度",
+      "anonymous": "匿名モード",
+      "actionCN": "スキル名中国語化",
+      "statusCN": "ステータス名中国語化",
+      "parseAA": "オートアタック解析",
+      "parseDoT": "DoT解析",
+      "newRecordsOnly": "新規記録のみ有効",
+      "orderTop": "新しい記録を上に",
+      "iconType": "ジョブアイコン",
+      "minimizeStyle": "最小化表示",
+      "minimizeStyleText": "アイコン+文字",
+      "minimizeStyleIcon": "アイコンのみ",
+      "resetDefaults": "初期化",
+      "copyActUrl": "この設定でACT用URLをコピー",
+      "copyActSuccess": "ACT用URLをコピーしました",
+      "clearedRecords": "履歴を消去しました"
     }
   },
   "keySkillTimer": {

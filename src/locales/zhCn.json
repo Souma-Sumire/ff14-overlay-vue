@@ -377,6 +377,60 @@
       "SGE": "贤者",
       "VPR": "蛇武",
       "PCT": "绘灵"
+    },
+    "minimizeLabel": "减伤",
+    "onlyThisPlayer": "只看TA",
+    "restoreAll": "恢复全部",
+    "deathRecap": "死亡回放",
+    "deathTerrain": "地形杀",
+    "deathByTerrain": "因 {source} 倒下了！",
+    "deathBySource": "被 {source} 做掉了！",
+    "overkillDiff": "差 {amount}",
+    "tenThousandUnit": "万",
+    "scope": {
+      "party": "团",
+      "other": "单",
+      "self": "自"
+    },
+    "toolbar": {
+      "noEncounters": "暂无场次",
+      "onlyDeath": "仅看死亡",
+      "hideAA": "隐藏平A",
+      "showHeals": "显示治疗",
+      "anonymous": "匿名",
+      "clearFilters": "清除筛选",
+      "clearRecords": "清空记录",
+      "settings": "设置",
+      "importLog": "导入日志",
+      "test": "测试"
+    },
+    "landing": {
+      "title": "减伤记录",
+      "desc": "拖入 ACT 日志文件（.log / .txt）到页面任意位置，或点击导入",
+      "selectFile": "选择日志文件",
+      "dragDrop": "释放鼠标即可导入 ACT 日志",
+      "emptyFiltered": "当前筛选条件下暂无记录"
+    },
+    "settings": {
+      "title": "设置",
+      "close": "关闭",
+      "scale": "缩放倍率",
+      "opacity": "背景透明度",
+      "anonymous": "匿名模式",
+      "actionCN": "技能中文化",
+      "statusCN": "状态中文化",
+      "parseAA": "解析自动攻击",
+      "parseDoT": "解析持续伤害",
+      "newRecordsOnly": "仅对新记录生效",
+      "orderTop": "新记录置顶",
+      "iconType": "职业图标样式",
+      "minimizeStyle": "缩小样式",
+      "minimizeStyleText": "图标+文字",
+      "minimizeStyleIcon": "单图标",
+      "resetDefaults": "恢复默认",
+      "copyActUrl": "复制使用此设置的 ACT 地址",
+      "copyActSuccess": "已复制 ACT 地址",
+      "clearedRecords": "已清空记录"
     }
   },
   "keySkillTimer": {
