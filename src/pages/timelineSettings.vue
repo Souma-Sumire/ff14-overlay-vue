@@ -933,8 +933,7 @@ function openDocs() {
 }
 
 function openMarkdown() {
-  const href = router.resolve({ path: "/timelineHelp" }).href;
-  window.open(href, "_blank");
+  router.push({ path: "/timelineHelp" });
 }
 
 function openMitigationGenerator() {
