@@ -157,8 +157,28 @@
     },
     "contact": {
       "header": "Contact Me",
+      "qq_group": "QQ Group",
       "qq_group_alt": "Eorzea is not a lawless land",
       "warning": "Other accounts are counterfeits; please disregard any information from them."
+    },
+    "tabs": {
+      "all": "All",
+      "combat": "Combat Overlays",
+      "raid_tool": "Raid & Tools",
+      "exploration": "Guides & Maps",
+      "script": "Scripts & Patches"
+    },
+    "search": {
+      "placeholder": "Search tools or descriptions...",
+      "empty": "No matching tools found",
+      "reset": "Clear filters"
+    },
+    "action": {
+      "open": "Open",
+      "visit": "Visit",
+      "copy_url": "Copy URL",
+      "copied": "Copied",
+      "params": "URL Parameters"
     },
     "badge": {
       "new": "New",

@@ -157,8 +157,28 @@
     },
     "contact": {
       "header": "聯絡我",
+      "qq_group": "QQ 群",
       "qq_group_alt": "艾歐澤亞不是法外之地",
       "warning": "其餘帳號均為山寨，請勿相信任何資訊"
+    },
+    "tabs": {
+      "all": "全部",
+      "combat": "戰鬥懸浮窗",
+      "raid_tool": "副本與工具",
+      "exploration": "圖鑑與探索",
+      "script": "外部腳本與補丁"
+    },
+    "search": {
+      "placeholder": "搜尋工具名稱或說明...",
+      "empty": "找不到符合條件的工具",
+      "reset": "清除篩選"
+    },
+    "action": {
+      "open": "開啟",
+      "visit": "前往",
+      "copy_url": "複製網址",
+      "copied": "已複製",
+      "params": "參數說明"
     },
     "badge": {
       "new": "新",

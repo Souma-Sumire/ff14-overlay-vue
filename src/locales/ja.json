@@ -157,8 +157,28 @@
     },
     "contact": {
       "header": "連絡先",
+      "qq_group": "QQ グループ",
       "qq_group_alt": "エオルゼアは無法地帯ではありません",
       "warning": "その他のアカウントは偽物ですので、いかなる情報も信用しないでください"
+    },
+    "tabs": {
+      "all": "すべて",
+      "combat": "戦闘オーバーレイ",
+      "raid_tool": "レイド・ツール",
+      "exploration": "図鑑・探索",
+      "script": "外部スクリプト・パッチ"
+    },
+    "search": {
+      "placeholder": "ツール名や説明を検索...",
+      "empty": "一致するツールが見つかりません",
+      "reset": "絞り込みを解除"
+    },
+    "action": {
+      "open": "開く",
+      "visit": "開く",
+      "copy_url": "URLコピー",
+      "copied": "コピー済み",
+      "params": "URLパラメータ"
     },
     "badge": {
       "new": "新",

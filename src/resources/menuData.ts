@@ -1,8 +1,11 @@
 export type MenuType = "网页/工具" | "悬浮窗";
 
+export type MenuCategory = "combat" | "raidTool" | "exploration" | "script";
+
 export interface Menu {
   title: string;
   type: MenuType;
+  category: MenuCategory;
   path: string;
   comment?: string;
   commentArgs?: (string | number)[];
@@ -16,40 +19,40 @@ export interface Menu {
 }
 
 export const MENU_ORDER: string[] = [
-  "startPages.menu.bstbook",
-  "startPages.menu.kook_purify",
-  "startPages.menu.loot_history",
   "startPages.menu.keigenn_record2",
-  "startPages.menu.healing_timeline",
-  "startPages.menu.key_skill_timer",
-  "startPages.menu.zone_macro",
-  "startPages.menu.team_watch",
   "startPages.menu.dd_atlas",
-  "startPages.menu.obs_auto_record2",
-  "startPages.menu.cactbot_raidboss",
-  "startPages.menu.casting_monitor",
-  "startPages.menu.food_police",
-  "startPages.menu.instanced_area_info",
-  "startPages.menu.casting_to_chinese",
-  "startPages.menu.uisave_editor",
-  "startPages.menu.blubook",
+  "startPages.menu.healing_timeline",
   "startPages.menu.cactbot_runtime",
-  "startPages.menu.log_view",
-  "startPages.menu.mp_tick",
-  "startPages.menu.mitigation_generator",
-  "startPages.menu.aether_map",
-  "startPages.menu.combat_time_obs",
+  "startPages.menu.team_watch",
+  "startPages.menu.key_skill_timer",
+  "startPages.menu.bstbook",
+  "startPages.menu.zone_macro",
+  "startPages.menu.food_police",
+  "startPages.menu.casting_monitor",
+  "startPages.menu.obs_auto_record2",
+  "startPages.menu.instanced_area_info",
   "startPages.menu.radar",
-  "startPages.menu.enmity_reminder",
-  "startPages.menu.limit_break_tip",
-  "startPages.menu.show_barrier",
-  "startPages.menu.github_patch",
+  "startPages.menu.casting_to_chinese",
   "startPages.menu.fflogs_uploader_download",
-  "startPages.menu.act_self_test",
+  "startPages.menu.limit_break_tip",
+  "startPages.menu.mp_tick",
+  "startPages.menu.enmity_reminder",
+  "startPages.menu.combat_time_obs",
+  "startPages.menu.aether_map",
+  "startPages.menu.show_barrier",
+  "startPages.menu.mitigation_generator",
   "startPages.menu.hunt_map",
+  "startPages.menu.blubook",
+  "startPages.menu.act_self_test",
+  "startPages.menu.loot_history",
+  "startPages.menu.dmu_blacksmith_police",
+  "startPages.menu.log_view",
+  "startPages.menu.uisave_editor",
+  "startPages.menu.kook_purify",
+  "startPages.menu.cactbot_raidboss",
+  "startPages.menu.github_patch",
   "startPages.menu.mogstation_patch",
   "startPages.menu.stone_sky_logs",
-  "startPages.menu.dmu_blacksmith_police",
 ];
 
 export function getRawMenuData(
@@ -60,18 +63,21 @@ export function getRawMenuData(
     {
       title: "startPages.menu.github_patch",
       type: "网页/工具",
+      category: "script",
       path: "https://github.com/Souma-Sumire/FFXIVChnTextPatch-Souma/",
       comment: "startPages.comment.github_patch",
     },
     {
       title: "startPages.menu.cactbot_raidboss",
       type: "网页/工具",
+      category: "script",
       path: "https://github.com/Souma-Sumire/raidboss-user-js-public",
       comment: "startPages.comment.cactbot_raidboss",
     },
     {
       title: "startPages.menu.uisave_editor",
       type: "网页/工具",
+      category: "raidTool",
       path: "uisaveEditor",
       comment: "startPages.comment.uisave_editor",
       commentArgs: [
@@ -81,11 +87,13 @@ export function getRawMenuData(
     {
       title: "startPages.menu.fflogs_uploader_download",
       type: "网页/工具",
+      category: "raidTool",
       path: "fflogsUploaderDownload",
     },
     {
       title: "startPages.menu.keigenn_record2",
       type: "悬浮窗",
+      category: "combat",
       path: `keigennRecord2?scale=1&opacity=0.9&targetType=icon&iconType=2&parseAA=1&parseDoT=0&minimize=0&actionCN=1&statusCN=1&order=unshift&lang=${locale}`,
       comment: "startPages.comment.keigenn_record2_params",
       direction: "row-reverse",
@@ -95,6 +103,7 @@ export function getRawMenuData(
     {
       title: "startPages.menu.key_skill_timer",
       type: "悬浮窗",
+      category: "combat",
       path: `keySkillTimer?scale=1&opacity=1&lang=${locale}`,
       comment: "startPages.comment.key_skill_timer_params",
       src: "keySkillTimer.webp",
@@ -102,6 +111,7 @@ export function getRawMenuData(
     {
       title: "startPages.menu.dd_atlas",
       type: "悬浮窗",
+      category: "exploration",
       path: `dd?scale=1&lang=${locale}`,
       src: "dd.webp",
       comment: "startPages.comment.dd_atlas",
@@ -113,6 +123,7 @@ export function getRawMenuData(
     {
       title: "startPages.menu.zone_macro",
       type: "网页/工具",
+      category: "raidTool",
       path: `zoneMacro?lang=${locale}`,
       src: "zoneMacro.webp",
       comment: "startPages.comment.zone_macro",
@@ -124,12 +135,14 @@ export function getRawMenuData(
     {
       title: "startPages.menu.obs_auto_record2",
       type: "悬浮窗",
+      category: "raidTool",
       path: "obs2",
       comment: "startPages.comment.obs_auto_record2",
     },
     {
       title: "startPages.menu.food_police",
       type: "悬浮窗",
+      category: "combat",
       path: `food?lang=${locale}`,
       src: "food.webp",
       comment: "startPages.comment.food_police",
@@ -138,6 +151,7 @@ export function getRawMenuData(
     {
       title: "startPages.menu.healing_timeline",
       type: "悬浮窗",
+      category: "combat",
       path: "timeline",
       src: "timeline.webp",
       comment: "startPages.comment.healing_timeline",
@@ -150,6 +164,7 @@ export function getRawMenuData(
     {
       title: "startPages.menu.mitigation_generator",
       type: "网页/工具",
+      category: "raidTool",
       path: "mitigationGenerator",
       src: "mitigationGenerator.webp",
       comment: "startPages.comment.mitigation_generator",
@@ -158,6 +173,7 @@ export function getRawMenuData(
     {
       title: "startPages.menu.casting_monitor",
       type: "悬浮窗",
+      category: "combat",
       path: `castingMonitor?duration=15&displayAA=false&type=focus&api=cafemaker&showHeader=true&syncFocusWS=false&lang=${locale}`,
       src: "castingMonitor.webp",
       comment: "startPages.comment.casting_monitor_params",
@@ -165,6 +181,7 @@ export function getRawMenuData(
     {
       title: "startPages.menu.instanced_area_info",
       type: "悬浮窗",
+      category: "exploration",
       path: "instancedAreaInfo",
       src: "instancedAreaInfo.webp",
       comment: "startPages.comment.instanced_area_info",
@@ -173,6 +190,7 @@ export function getRawMenuData(
     {
       title: "startPages.menu.casting_to_chinese",
       type: "悬浮窗",
+      category: "combat",
       path: "castingToChinese",
       comment: "startPages.comment.casting_to_chinese",
       src: "castingToChinese.webp",
@@ -181,11 +199,13 @@ export function getRawMenuData(
     {
       title: "startPages.menu.aether_map",
       type: "网页/工具",
+      category: "exploration",
       path: "aether",
     },
     {
       title: "startPages.menu.combat_time_obs",
       type: "悬浮窗",
+      category: "raidTool",
       path: "time?mode=combat",
       comment: "startPages.comment.combat_time_obs_params",
       src: "time.webp",
@@ -195,6 +215,7 @@ export function getRawMenuData(
     {
       title: "startPages.menu.radar",
       type: "悬浮窗",
+      category: "exploration",
       path: "radar",
       src: "radar.webp",
       comment: "startPages.comment.radar",
@@ -203,12 +224,14 @@ export function getRawMenuData(
     {
       title: "startPages.menu.enmity_reminder",
       type: "悬浮窗",
+      category: "combat",
       path: "enmity",
       comment: "startPages.comment.enmity_reminder",
     },
     {
       title: "startPages.menu.limit_break_tip",
       type: "悬浮窗",
+      category: "combat",
       path: `lbTick?lang=${locale}`,
       comment: "startPages.comment.limit_break_tip",
       src: "limitBreakTip.webp",
@@ -217,12 +240,14 @@ export function getRawMenuData(
     {
       title: "startPages.menu.show_barrier",
       type: "悬浮窗",
+      category: "combat",
       path: "showBarrier?lineHeight=1&fontSize=26&type=1&showSettings=1",
       comment: "startPages.comment.show_barrier_params",
     },
     {
       title: "startPages.menu.team_watch",
       type: "悬浮窗",
+      category: "combat",
       path: `teamWatch?scale=1&opacity=1&postNamazu=false&lang=${locale}`,
       comment: "startPages.comment.team_watch",
       src: "teamWatch.webp",
@@ -231,29 +256,34 @@ export function getRawMenuData(
     {
       title: "startPages.menu.act_self_test",
       type: "网页/工具",
+      category: "raidTool",
       path: "test",
       comment: "startPages.comment.act_self_test",
     },
     {
       title: "startPages.menu.hunt_map",
       type: "网页/工具",
+      category: "exploration",
       path: "hunt",
     },
     {
       title: "startPages.menu.mogstation_patch",
       type: "网页/工具",
+      category: "script",
       path: "https://greasyfork.org/zh-CN/scripts/449987-mogstation%E8%8E%AB%E5%8F%A4%E7%AB%99%E6%B1%89%E5%8C%96",
       comment: "startPages.comment.mogstation_patch",
     },
     {
       title: "startPages.menu.stone_sky_logs",
       type: "网页/工具",
+      category: "script",
       path: "https://greasyfork.org/zh-CN/scripts/482604-%E7%9F%B3%E4%B9%8B%E5%AE%B6-%E4%BF%AE%E4%B8%BA%E6%9F%A5%E8%AF%A2",
       comment: "startPages.comment.stone_sky_logs",
     },
     {
       title: "startPages.menu.kook_purify",
       type: "网页/工具",
+      category: "script",
       path: "https://github.com/Souma-Sumire/kook-purifier",
       comment: "startPages.comment.kook_purify",
       isNew: true,
@@ -261,39 +291,46 @@ export function getRawMenuData(
     {
       title: "startPages.menu.loot_history",
       type: "网页/工具",
+      category: "raidTool",
       path: "lootHistory",
       comment: "startPages.comment.loot_history",
     },
     {
       title: "startPages.menu.dmu_blacksmith_police",
       type: "网页/工具",
+      category: "raidTool",
       path: "dmuBlacksmithPolice",
       comment: "startPages.comment.dmu_blacksmith_police",
     },
     {
       title: "startPages.menu.blubook",
       type: "网页/工具",
+      category: "exploration",
       path: "blubook",
     },
     {
       title: "startPages.menu.bstbook",
       type: "网页/工具",
+      category: "exploration",
       path: "bstbook",
       isNew: true,
     },
     {
       title: "startPages.menu.cactbot_runtime",
       type: "悬浮窗",
+      category: "combat",
       path: "cactbotRuntime",
     },
     {
       title: "startPages.menu.log_view",
       type: "网页/工具",
+      category: "raidTool",
       path: "logView",
     },
     {
       title: "startPages.menu.mp_tick",
       type: "悬浮窗",
+      category: "combat",
       path: "mpTick",
     },
   ];

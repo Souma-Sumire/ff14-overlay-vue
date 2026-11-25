@@ -157,8 +157,28 @@
     },
     "contact": {
       "header": "联系我",
+      "qq_group": "QQ 群",
       "qq_group_alt": "艾欧泽亚不是法外之地",
       "warning": "其余账号均为山寨，请勿相信任何信息"
+    },
+    "tabs": {
+      "all": "全部",
+      "combat": "战斗悬浮窗",
+      "raid_tool": "副本与工具",
+      "exploration": "图鉴与探索",
+      "script": "外部脚本与补丁"
+    },
+    "search": {
+      "placeholder": "搜索工具名称或说明...",
+      "empty": "没有找到匹配的工具",
+      "reset": "清空筛选"
+    },
+    "action": {
+      "open": "打开",
+      "visit": "前往",
+      "copy_url": "复制地址",
+      "copied": "已复制",
+      "params": "参数说明"
     },
     "badge": {
       "new": "新",
