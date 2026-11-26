@@ -2285,7 +2285,7 @@ function copyActUrl() {
                   :class="{ 'is-active': userOptions.iconType === val }"
                   @click="userOptions.iconType = val"
                 >
-                  <span class="choice-option-key">{{ val }}</span>
+                  <span class="choice-option-key">{{ val }}.</span>
                   <span class="job-icon-style-slot">
                     <img
                       :src="getCachedJobIconUrl('Paladin', val)"
@@ -2306,7 +2306,7 @@ function copyActUrl() {
                   :class="{ 'is-active': userOptions.minimizeStyle === 'text' }"
                   @click="userOptions.minimizeStyle = 'text'"
                 >
-                  <span class="choice-option-key">1</span>
+                  <span class="choice-option-key">1.</span>
                   <span class="minimize-sample is-text">
                     <ElIcon :size="10">
                       <ZoomIn />
@@ -2320,7 +2320,7 @@ function copyActUrl() {
                   :class="{ 'is-active': userOptions.minimizeStyle === 'icon' }"
                   @click="userOptions.minimizeStyle = 'icon'"
                 >
-                  <span class="choice-option-key">2</span>
+                  <span class="choice-option-key">2.</span>
                   <span class="minimize-sample is-icon">
                     <ElIcon :size="12">
                       <ZoomIn />
@@ -3277,12 +3277,12 @@ main {
   align-items: center;
 
   &.is-cols-4 {
-    grid-template-columns: repeat(4, minmax(44px, 1fr));
+    grid-template-columns: repeat(4, minmax(45px, 1fr));
     gap: 5px;
   }
 
   &.is-cols-2 {
-    grid-template-columns: repeat(2, minmax(66px, 1fr));
+    grid-template-columns: repeat(2, minmax(72px, 1fr));
     gap: 6px;
   }
 }
@@ -3291,32 +3291,29 @@ main {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
   height: 24px;
-  padding: 0 6px;
-  font-size: 10.5px;
+  padding: 0 5px;
+  font-size: 11px;
   line-height: 1;
   color: #c5ccd6;
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background-color: transparent;
+  border: none;
   border-radius: 3px;
   cursor: pointer;
   white-space: nowrap;
   transition:
     background-color 0.12s ease,
-    border-color 0.12s ease,
     color 0.12s ease;
 
   &:hover {
     color: #ffffff;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.34);
+    background-color: rgba(255, 255, 255, 0.08);
   }
 
   &.is-active {
     color: #ffffff;
-    background-color: rgba(64, 158, 255, 0.2);
-    border-color: #4c8df6;
+    background-color: rgba(64, 158, 255, 0.24);
   }
 
   .choice-option-key {
@@ -3365,17 +3362,23 @@ main {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 16px;
+    height: 18px;
     color: #e6ebf2;
+    background-color: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.28);
     flex-shrink: 0;
 
     &.is-text {
-      font-size: 10px;
+      padding: 0 5px;
+      border-radius: 2px;
+      font-size: 9.5px;
       gap: 2px;
     }
 
     &.is-icon {
-      width: 16px;
+      width: 18px;
+      padding: 0;
+      border-radius: 50%;
 
       svg {
         transform: translate(0.75px, 0.25px);
