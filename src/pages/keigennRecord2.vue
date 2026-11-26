@@ -2287,6 +2287,7 @@ function copyActUrl() {
                   <img
                     :src="getCachedJobIconUrl('Paladin', val)"
                     class="job-icon-style-img"
+                    :class="{ 'is-style-3': val === 3 }"
                     alt=""
                   />
                 </button>
@@ -2318,7 +2319,7 @@ function copyActUrl() {
                   @click="userOptions.minimizeStyle = 'icon'"
                 >
                   <span class="minimize-sample is-icon">
-                    <ElIcon :size="11">
+                    <ElIcon :size="12">
                       <ZoomIn />
                     </ElIcon>
                   </span>
@@ -2774,6 +2775,10 @@ main {
   width: 22px !important;
   height: 22px !important;
   background-color: rgba(20, 20, 20, 0.45);
+
+  svg {
+    transform: translate(0.8px, 0.3px);
+  }
 }
 
 .in-minimize {
@@ -2794,6 +2799,10 @@ main {
     font-size: var(--el-font-size-base) !important;
     background-color: rgba(20, 20, 20, 1) !important;
     gap: 0;
+
+    svg {
+      transform: translate(0.8px, 0.3px);
+    }
   }
 }
 
@@ -3330,6 +3339,11 @@ main {
     height: 18px;
     object-fit: contain;
     display: block;
+
+    &.is-style-3 {
+      width: 23px;
+      height: 23px;
+    }
   }
 
   .minimize-sample {
@@ -3338,7 +3352,7 @@ main {
     justify-content: center;
     height: 18px;
     color: #e6ebf2;
-    background-color: rgba(20, 20, 20, 0.92);
+    background-color: transparent;
     border: 1px solid rgba(255, 255, 255, 0.24);
     flex-shrink: 0;
 
@@ -3353,6 +3367,10 @@ main {
       width: 18px;
       padding: 0;
       border-radius: 50%;
+
+      svg {
+        transform: translate(0.75px, 0.25px);
+      }
     }
   }
 }
