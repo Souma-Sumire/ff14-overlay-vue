@@ -21,6 +21,7 @@ import { getJobIconUrl } from "@/utils/keigennRecord2";
 import Util from "@/utils/util";
 import { EMPTY_IMAGE, handleImgError, rerouteImgSrc } from "@/utils/xivapi";
 import FilterHeader from "./FilterHeader.vue";
+import SkillCooldownIcon from "./SkillCooldownIcon.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -938,9 +939,64 @@ function getJobSortIndex(jobEnum: number): number {
   return index === -1 ? Number.MAX_SAFE_INTEGER : index;
 }
 
+function getSimpleJobName(jobEnum: number): string {
+  return Util.jobToFullName(Util.jobEnumToJob(jobEnum))?.simple1 ?? "";
+}
+
+const popoverScaleStyle = computed(() => {
+  const baseScale =
+    Number.isFinite(userOptions.scale) && userOptions.scale > 0 ? userOptions.scale : 1;
+  let extraScale = 1;
+  if (tooltipMode.value === "skills") {
+    extraScale =
+      Number.isFinite(userOptions.skillPopoverScale) && userOptions.skillPopoverScale > 0
+        ? userOptions.skillPopoverScale
+        : 1;
+  } else if (tooltipMode.value === "amount") {
+    extraScale =
+      Number.isFinite(userOptions.amountPopoverScale) && userOptions.amountPopoverScale > 0
+        ? userOptions.amountPopoverScale
+        : 1;
+  }
+  const iconSize =
+    Number.isFinite(userOptions.skillIconSize) && userOptions.skillIconSize > 0
+      ? userOptions.skillIconSize
+      : 28;
+  return {
+    "--popover-scale": String(baseScale * extraScale),
+    "--skill-icon-size": `${iconSize}px`,
+    "--skill-icon-scale": String(iconSize / 28),
+  };
+});
+
+const duplicateSkillIds = computed<Set<number>>(() => {
+  const row = hoveredRow.value;
+  if (!row || tooltipMode.value !== "skills" || userOptions.skillLayout !== "group") {
+    return new Set();
+  }
+  const seen = new Set<number>();
+  const duplicates = new Set<number>();
+  for (const s of row.preCalculated.sortedSkills || []) {
+    if (seen.has(s.id)) duplicates.add(s.id);
+    else seen.add(s.id);
+  }
+  return duplicates;
+});
+
+const skillGroups = computed<{ scope: Scope; label: string; skills: KeySkillSnapshot[] }[]>(() => {
+  const row = hoveredRow.value;
+  if (!row || tooltipMode.value !== "skills" || userOptions.skillLayout !== "group") return [];
+  const all = row.preCalculated.sortedSkills || [];
+  return SKILL_SCOPE_META.map(({ scope, labelKey }) => ({
+    scope,
+    label: t(labelKey),
+    skills: all.filter((s) => s.scope === scope),
+  })).filter((g) => g.skills.length > 0);
+});
+
 const skillPlayerRows = computed<SkillPlayerRow[]>(() => {
   const row = hoveredRow.value;
-  if (!row || tooltipMode.value !== "skills") return [];
+  if (!row || tooltipMode.value !== "skills" || userOptions.skillLayout === "group") return [];
   const all = row.preCalculated.sortedSkills || [];
   const byOwner = new Map<string, SkillPlayerRow>();
 
@@ -1275,12 +1331,17 @@ defineExpose({
           :class="{ 'is-interactive': tooltipMode === 'death-recap' }"
           :style="popoverStyle"
         >
-          <div class="keigenn-popover-scale" :style="{ '--popover-scale': userOptions.scale }">
+          <div class="keigenn-popover-scale" :style="popoverScaleStyle">
             <template v-if="hoveredRow && tooltipMode === 'amount'">
               <div class="row-info">
                 <div class="info-grid">
                   <span class="info-label">{{ t("keigennRecord.source") }}</span>
                   <span class="info-value">{{ hoveredRow.source }}</span>
+
+                  <span class="info-label">{{ t("keigennRecord.targetName") }}</span>
+                  <span class="info-value">{{
+                    userOptions.anonymous ? hoveredRow.job : hoveredRow.target
+                  }}</span>
 
                   <span class="info-label">{{ t("keigennRecord.targetIndex") }}</span>
                   <span class="info-value num"
@@ -1330,95 +1391,94 @@ defineExpose({
 
             <template v-else-if="hoveredRow && tooltipMode === 'skills'">
               <div class="skill-popover-content">
-                <template v-if="skillPlayerRows.length > 0">
-                  <table class="skill-matrix">
-                    <thead>
-                      <tr>
-                        <th class="skill-col-job" />
-                        <th
-                          v-for="meta in SKILL_SCOPE_META"
-                          :key="meta.scope"
-                          class="skill-col-scope"
-                          :class="`is-${meta.scope}`"
-                        >
-                          {{ t(meta.labelKey) }}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr
-                        v-for="player in skillPlayerRows"
-                        :key="player.ownerId"
-                        :class="{ 'is-target': player.isTarget }"
-                      >
-                        <td class="skill-job-cell">
-                          <img
-                            v-if="player.jobIconSrc"
-                            :src="player.jobIconSrc"
-                            class="skill-player-job-icon"
-                            @error="handleJobImgError"
+                <template v-if="userOptions.skillLayout === 'group'">
+                  <template v-if="skillGroups.length > 0">
+                    <div class="skill-groups">
+                      <div v-for="group in skillGroups" :key="group.scope" class="skill-group-row">
+                        <span class="skill-scope-tag">{{ group.label }}</span>
+                        <div class="skill-grid">
+                          <SkillCooldownIcon
+                            v-for="skill in group.skills"
+                            :key="`${skill.id}-${skill.ownerId}`"
+                            :skill="skill"
+                            :job-label="
+                              duplicateSkillIds.has(skill.id)
+                                ? getSimpleJobName(skill.ownerJob)
+                                : undefined
+                            "
                           />
-                          <span
-                            v-if="player.hasDuplicateJob && !userOptions.anonymous"
-                            class="skill-player-dup-name"
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                  <div v-else class="no-data">
+                    {{ t("keigennRecord.noData") }}
+                  </div>
+                </template>
+
+                <template v-else>
+                  <template v-if="skillPlayerRows.length > 0">
+                    <table class="skill-matrix">
+                      <thead>
+                        <tr>
+                          <th class="skill-col-job" />
+                          <th
+                            v-for="meta in SKILL_SCOPE_META"
+                            :key="meta.scope"
+                            class="skill-col-scope"
+                            :class="`is-${meta.scope}`"
                           >
-                            {{ player.shortName }}
-                          </span>
-                        </td>
-                        <td
-                          v-for="meta in SKILL_SCOPE_META"
-                          :key="meta.scope"
-                          class="skill-scope-cell"
-                          :class="`is-${meta.scope}`"
+                            {{ t(meta.labelKey) }}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr
+                          v-for="player in skillPlayerRows"
+                          :key="player.ownerId"
+                          :class="{ 'is-target': player.isTarget }"
                         >
-                          <div
-                            v-if="player.skillsByScope[meta.scope].length > 0"
-                            class="skill-cell-list"
+                          <td class="skill-job-cell">
+                            <img
+                              v-if="player.jobIconSrc"
+                              :src="player.jobIconSrc"
+                              class="skill-player-job-icon"
+                              @error="handleJobImgError"
+                            />
+                            <span
+                              v-if="player.hasDuplicateJob && !userOptions.anonymous"
+                              class="skill-player-dup-name"
+                            >
+                              {{ player.shortName }}
+                            </span>
+                          </td>
+                          <td
+                            v-for="meta in SKILL_SCOPE_META"
+                            :key="meta.scope"
+                            class="skill-scope-cell"
                             :class="`is-${meta.scope}`"
                           >
                             <div
-                              v-for="skill in player.skillsByScope[meta.scope]"
-                              :key="`${skill.id}-${skill.ownerId}`"
-                              class="skill-icon-container"
+                              v-if="player.skillsByScope[meta.scope].length > 0"
+                              class="skill-cell-list"
+                              :class="`is-${meta.scope}`"
                             >
-                              <img
-                                :src="skill.icon"
-                                class="skill-icon"
-                                :class="{ 'is-cooldown': !skill.ready }"
-                                :data-tried="undefined"
-                                :data-hr-fallback="undefined"
-                                @error="handleImgError"
+                              <SkillCooldownIcon
+                                v-for="skill in player.skillsByScope[meta.scope]"
+                                :key="`${skill.id}-${skill.ownerId}`"
+                                :skill="skill"
                               />
-                              <div v-if="!skill.ready" class="skill-overlay" />
-                              <span v-if="skill.recastLeft > 0" class="skill-text">{{
-                                skill.recastLeft
-                              }}</span>
-                              <span v-if="(skill.maxCharges ?? 0) > 1" class="skill-charges">{{
-                                skill.chargesReady
-                              }}</span>
-                              <span
-                                v-if="skill.jobResource !== undefined"
-                                class="skill-resource"
-                                :style="{
-                                  fontSize:
-                                    skill.jobResource.toString().length > 2 ? '9px' : '11px',
-                                }"
-                                >{{ skill.jobResource }}</span
-                              >
-                              <span v-if="skill.extraText" class="skill-extra-text">{{
-                                skill.extraText
-                              }}</span>
                             </div>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </template>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </template>
 
-                <div v-else class="no-data">
-                  {{ t("keigennRecord.noData") }}
-                </div>
+                  <div v-else class="no-data">
+                    {{ t("keigennRecord.noData") }}
+                  </div>
+                </template>
               </div>
             </template>
 
@@ -2322,6 +2382,39 @@ defineExpose({
     max-width: 100%;
     overflow-x: auto;
 
+    .skill-groups {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .skill-group-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 5px;
+    }
+
+    .skill-scope-tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: var(--skill-icon-size, 28px);
+      padding-right: 5px;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #a6b0bf;
+      border-right: 1px solid rgba(255, 255, 255, 0.16);
+      flex-shrink: 0;
+    }
+
+    .skill-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+      max-width: min(calc(var(--skill-icon-size, 28px) * 6 + 10px), calc(100vw - 50px));
+    }
+
     .skill-matrix {
       border-collapse: collapse;
       width: max-content;
@@ -2390,112 +2483,15 @@ defineExpose({
         align-items: center;
 
         &.is-party {
-          max-width: 148px;
+          max-width: calc(var(--skill-icon-size, 28px) * 5 + 8px);
         }
 
         &.is-other {
-          max-width: 58px;
+          max-width: calc(var(--skill-icon-size, 28px) * 2 + 2px);
         }
 
         &.is-self {
-          max-width: 88px;
-        }
-      }
-
-      .skill-icon-container {
-        position: relative;
-        width: 28px;
-        height: 28px;
-        border-radius: 3px;
-        overflow: hidden;
-        background: #222;
-        flex-shrink: 0;
-
-        .skill-icon {
-          width: 100%;
-          height: 100%;
-
-          &.is-cooldown {
-            filter: saturate(0.72) brightness(0.66) contrast(1.14);
-          }
-        }
-
-        .skill-overlay {
-          position: absolute;
-          inset: 0;
-          background-color: rgba(0, 0, 0, 0.08);
-          z-index: 1;
-        }
-
-        .skill-text {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%) scale(0.95);
-          color: #fff;
-          font-weight: 700;
-          font-size: 12px;
-          line-height: 1;
-          font-variant-numeric: tabular-nums;
-          white-space: nowrap;
-          z-index: 2;
-          text-shadow:
-            -1px -1px 0 #000,
-            1px -1px 0 #000,
-            -1px 1px 0 #000,
-            1px 1px 0 #000,
-            0 1px 2px rgba(0, 0, 0, 0.9);
-        }
-
-        .skill-charges {
-          position: absolute;
-          bottom: -1px;
-          right: 0px;
-          transform: scale(0.7);
-          transform-origin: right bottom;
-          color: #fff;
-          font-weight: bold;
-          font-size: 11px;
-          z-index: 3;
-          text-shadow:
-            -1px 0 1.5px #000,
-            0 1px 1.5px #000,
-            1px 0 1.5px #000,
-            0 -1px 1.5px #000;
-        }
-
-        .skill-resource {
-          position: absolute;
-          top: -1px;
-          right: 0px;
-          transform: scale(0.7);
-          transform-origin: right top;
-          color: #64b5f6;
-          font-weight: bold;
-          font-size: 11px;
-          z-index: 3;
-          text-shadow:
-            -1px 0 1.5px #000,
-            0 1px 1.5px #000,
-            1px 0 1.5px #000,
-            0 -1px 1.5px #000;
-        }
-
-        .skill-extra-text {
-          position: absolute;
-          top: -1px;
-          left: 0px;
-          transform: scale(0.7);
-          transform-origin: left top;
-          color: #ff9800;
-          font-weight: bold;
-          font-size: 11px;
-          z-index: 3;
-          text-shadow:
-            -1px 0 1.5px #000,
-            0 1px 1.5px #000,
-            1px 0 1.5px #000,
-            0 -1px 1.5px #000;
+          max-width: calc(var(--skill-icon-size, 28px) * 3 + 4px);
         }
       }
     }

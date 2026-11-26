@@ -1623,6 +1623,12 @@ function buildActUrl(): string {
   if (userOptions.parseDoT !== false) q.set("parseDoT", "1");
   if (userOptions.minimize !== false) q.set("minimize", "1");
   if (userOptions.minimizeStyle !== "icon") q.set("minimizeStyle", userOptions.minimizeStyle);
+  if (userOptions.skillLayout !== "matrix") q.set("skillLayout", userOptions.skillLayout);
+  if (userOptions.skillIconSize !== 28) q.set("skillIconSize", String(userOptions.skillIconSize));
+  if (userOptions.skillPopoverScale !== 1)
+    q.set("skillPopoverScale", String(userOptions.skillPopoverScale));
+  if (userOptions.amountPopoverScale !== 1)
+    q.set("amountPopoverScale", String(userOptions.amountPopoverScale));
   if (userOptions.actionCN !== true) q.set("actionCN", "0");
   if (userOptions.statusCN !== true) q.set("statusCN", "0");
   if (userOptions.order !== "unshift") q.set("order", userOptions.order);
@@ -1975,6 +1981,70 @@ function copyActUrl() {
               </button>
             </div>
           </div>
+          <div class="setting-row">
+            <span>{{ $t("keigennRecord.settings.skillLayout") }}</span>
+            <div class="icon-type-group">
+              <button
+                type="button"
+                class="toolbar-btn icon-type-btn"
+                :class="{ 'is-active': userOptions.skillLayout === 'matrix' }"
+                @click="userOptions.skillLayout = 'matrix'"
+              >
+                {{ $t("keigennRecord.settings.skillLayoutMatrix") }}
+              </button>
+              <button
+                type="button"
+                class="toolbar-btn icon-type-btn"
+                :class="{ 'is-active': userOptions.skillLayout === 'group' }"
+                @click="userOptions.skillLayout = 'group'"
+              >
+                {{ $t("keigennRecord.settings.skillLayoutGroup") }}
+              </button>
+            </div>
+          </div>
+          <label class="setting-row">
+            <span>{{ $t("keigennRecord.settings.skillIconSize") }}</span>
+            <span class="setting-ctrl">
+              <input
+                v-model.number="userOptions.skillIconSize"
+                type="range"
+                min="20"
+                max="40"
+                step="1"
+              />
+              <span class="setting-val">{{ userOptions.skillIconSize }}px</span>
+            </span>
+          </label>
+          <label class="setting-row">
+            <span>{{ $t("keigennRecord.settings.skillPopoverScale") }}</span>
+            <span class="setting-ctrl">
+              <input
+                v-model.number="userOptions.skillPopoverScale"
+                type="range"
+                min="0.6"
+                max="2"
+                step="0.05"
+              />
+              <span class="setting-val">{{
+                Number(userOptions.skillPopoverScale).toFixed(2)
+              }}</span>
+            </span>
+          </label>
+          <label class="setting-row">
+            <span>{{ $t("keigennRecord.settings.amountPopoverScale") }}</span>
+            <span class="setting-ctrl">
+              <input
+                v-model.number="userOptions.amountPopoverScale"
+                type="range"
+                min="0.6"
+                max="2"
+                step="0.05"
+              />
+              <span class="setting-val">{{
+                Number(userOptions.amountPopoverScale).toFixed(2)
+              }}</span>
+            </span>
+          </label>
         </div>
         <div class="settings-footer">
           <button type="button" class="toolbar-btn" @click="resetOptions">
@@ -2559,7 +2629,7 @@ main {
   }
 
   .setting-val {
-    width: 32px;
+    min-width: 36px;
     text-align: right;
     font-variant-numeric: tabular-nums;
     color: #e6ebf2;
