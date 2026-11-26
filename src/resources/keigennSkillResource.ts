@@ -1,16 +1,16 @@
-import type { KeigennSkill, Scope } from "@/types/keigennRecord2";
+import type { KeigennSkill, SkillScope } from "@/types/keigennRecord2";
 import "@/resources/globalSkills";
 import {
   getGlobalSkillDefinitionById,
   resolveBakedActionMeta,
 } from "@/resources/logic/actionMetaResolver";
 
-const keigennSkillDefinitions: { id: number; scope: Scope }[] = [
+const keigennSkillDefinitions: { id: number; scope: SkillScope }[] = [
   { id: 30, scope: "party" }, // 神圣领域
   { id: 43, scope: "party" }, // 死斗
   { id: 3638, scope: "party" }, // 行尸走肉
   { id: 16152, scope: "party" }, // 超火流星
-  { id: 140, scope: "party" }, // 天赐祝福
+  { id: 140, scope: "single" }, // 天赐祝福
   { id: 25862, scope: "party" }, // 礼仪之铃
   { id: 25868, scope: "party" }, // 疾风怒涛之计
   { id: 25874, scope: "party" }, // 大宇宙
@@ -48,43 +48,42 @@ const keigennSkillDefinitions: { id: number; scope: Scope }[] = [
   { id: 16464, scope: "other" }, // 原初的勇猛
   { id: 36927, scope: "self" }, // 暗影卫
   { id: 3634, scope: "self" }, // 弃明投暗
-  { id: 7393, scope: "party" }, // 至黑之夜
-  { id: 25754, scope: "party" }, // 献奉
+  { id: 7393, scope: "single" }, // 至黑之夜
+  { id: 25754, scope: "single" }, // 献奉
   { id: 36935, scope: "self" }, // 大星云
   { id: 16140, scope: "self" }, // 伪装
-  { id: 25758, scope: "party" }, // 刚玉之心
-  { id: 16151, scope: "party" }, // 极光
-  { id: 3570, scope: "party" }, // 神名
-  { id: 7432, scope: "party" }, // 神祝祷
-  { id: 25861, scope: "party" }, // 水流幕
+  { id: 25758, scope: "single" }, // 刚玉之心
+  { id: 16151, scope: "single" }, // 极光
+  { id: 3570, scope: "single" }, // 神名
+  { id: 7432, scope: "single" }, // 神祝祷
+  { id: 25861, scope: "single" }, // 水流幕
   { id: 16542, scope: "party" }, // 秘策
   { id: 3585, scope: "party" }, // 展开战术
   { id: 16538, scope: "party" }, // 异想的幻光
   { id: 188, scope: "party" }, // 野战治疗阵
   { id: 3583, scope: "party" }, // 不屈不挠之策
-  { id: 7434, scope: "party" }, // 深谋远虑之策
+  { id: 7434, scope: "single" }, // 深谋远虑之策
   { id: 16545, scope: "party" }, // 炽天召唤
-  { id: 25867, scope: "party" }, // 生命回生法
+  { id: 25867, scope: "single" }, // 生命回生法
   { id: 37014, scope: "party" }, // 炽天附体
-  { id: 3614, scope: "party" }, // 先天禀赋
+  { id: 3614, scope: "single" }, // 先天禀赋
   { id: 3613, scope: "party" }, // 命运之轮
   { id: 16553, scope: "party" }, // 天星冲日
   { id: 7439, scope: "party" }, // 地星
-  { id: 16556, scope: "party" }, // 天星交错
+  { id: 16556, scope: "single" }, // 天星交错
   { id: 16557, scope: "party" }, // 天宫图
   { id: 16559, scope: "party" }, // 中间学派
-  { id: 25873, scope: "party" }, // 擢升
+  { id: 25873, scope: "single" }, // 擢升
   { id: 24298, scope: "party" }, // 坚角清汁
-  { id: 24299, scope: "party" }, // 寄生清汁
-  { id: 24303, scope: "party" }, // 白牛清汁
-  { id: 24305, scope: "party" }, // 输血
+  { id: 24299, scope: "single" }, // 寄生清汁
+  { id: 24303, scope: "single" }, // 白牛清汁
+  { id: 24305, scope: "single" }, // 输血
   { id: 24311, scope: "party" }, // 泛输血
   { id: 24310, scope: "party" }, // 整体论
   { id: 24300, scope: "party" }, // 活化
   { id: 24318, scope: "party" }, // 魂灵风息
   { id: 37035, scope: "party" }, // 智慧之爱
   { id: 7394, scope: "self" }, // 金刚极意
-  { id: 7394, scope: "other" },
   { id: 65, scope: "party" }, // 真言
   { id: 2241, scope: "self" }, // 残影
   { id: 36962, scope: "self" }, // 天眼通

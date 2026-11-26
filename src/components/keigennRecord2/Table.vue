@@ -2483,11 +2483,11 @@ defineExpose({
         align-items: center;
 
         &.is-party {
-          max-width: calc(var(--skill-icon-size, 28px) * 5 + 8px);
+          max-width: calc(var(--skill-icon-size, 28px) * 4 + 6px);
         }
 
         &.is-other {
-          max-width: calc(var(--skill-icon-size, 28px) * 2 + 2px);
+          max-width: calc(var(--skill-icon-size, 28px) * 3 + 4px);
         }
 
         &.is-self {

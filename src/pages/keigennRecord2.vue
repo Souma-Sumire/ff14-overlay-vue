@@ -8,6 +8,8 @@ import type {
   KeySkillSnapshot,
   PerformanceType,
   RowVO,
+  Scope,
+  SkillScope,
   Status,
 } from "@/types/keigennRecord2";
 import type { Player } from "@/types/partyPlayer";
@@ -984,8 +986,12 @@ interface JobInfo {
   hasDuplicate: boolean;
 }
 
+type SkillSnapshotSkeleton = Omit<KeySkillSnapshot, "ready" | "recastLeft" | "scope"> & {
+  scope: SkillScope;
+};
+
 const jobInfoCache = new Map<string, JobInfo>();
-let skillSnapshotSkeletonCache: Omit<KeySkillSnapshot, "ready" | "recastLeft">[] | null = null;
+let skillSnapshotSkeletonCache: SkillSnapshotSkeleton[] | null = null;
 
 function invalidateJobCache() {
   jobInfoCache.clear();
@@ -1152,12 +1158,14 @@ function getKeySkillSnapshot(timestamp: number, targetId: string): KeySkillSnaps
 
   return skillSnapshotSkeletonCache
     .filter((v) => {
-      if (v.scope === "party") return true;
+      if (v.scope === "party" || v.scope === "single") return true;
       if (v.scope === "self") return v.ownerId === targetId;
       if (v.scope === "other") return v.ownerId !== targetId;
       return false;
     })
     .map((item) => {
+      const scope: Scope =
+        item.scope === "single" ? (item.ownerId === targetId ? "self" : "other") : item.scope;
       const history = cooldownTracker[item.ownerId]?.[compareSame(item.id)] ?? [];
       const { charges: chargesReady, recastLeft: recastLeftMs } = calculateCharges(
         history,
@@ -1193,6 +1201,7 @@ function getKeySkillSnapshot(timestamp: number, targetId: string): KeySkillSnaps
 
       return {
         ...item,
+        scope,
         jobResource,
         recastLeft,
         ready,

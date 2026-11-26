@@ -3,6 +3,7 @@ import type { FFIcon } from "@/types/fflogs";
 import type { DamageEffect, DamageType } from "@/utils/flags";
 
 export type Scope = "self" | "party" | "other";
+export type SkillScope = Scope | "single";
 
 export interface KeigennSkill {
   id: number;
@@ -10,7 +11,7 @@ export interface KeigennSkill {
   job: number[];
   minLevel: number;
   maxCharges?: DynamicValue;
-  scope: Scope;
+  scope: SkillScope;
   duration?: DynamicValue;
 }
 
