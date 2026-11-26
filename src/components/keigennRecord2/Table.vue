@@ -509,11 +509,12 @@ function pinDeathRecap(row: RowVO, triggerEl: HTMLElement) {
   positionPopover(triggerEl, "death-recap");
 }
 
-function applyHoverTarget(el: HTMLElement | null) {
+function applyHoverTarget(el: EventTarget | null) {
   if (isPopoverPinned.value) return;
-  if (el?.closest(".keigenn-singleton-popover")) return;
+  const element = el instanceof Element ? el : el instanceof Node ? el.parentElement : null;
+  if (element?.closest(".keigenn-singleton-popover")) return;
 
-  const trigger = el?.closest("[data-row-index][data-hover-mode]") as HTMLElement | null;
+  const trigger = element?.closest("[data-row-index][data-hover-mode]") as HTMLElement | null;
   if (trigger) {
     const rowIndex = Number(trigger.dataset.rowIndex);
     const row = Number.isInteger(rowIndex) ? tableData.value[rowIndex] : undefined;
@@ -532,9 +533,8 @@ function applyHoverTarget(el: HTMLElement | null) {
 }
 
 const lastMousePos = { x: 0, y: 0 };
-let lastMouseButtons = 0;
 let isPointerInsideTable = false;
-let pendingMoveTarget: HTMLElement | null = null;
+let pendingMoveTarget: EventTarget | null = null;
 let moveRafId = 0;
 let scrollRafId = 0;
 let scrollEndTimer: number | null = null;
@@ -558,20 +558,24 @@ function handleTableMouseLeave() {
 function handleMouseMove(e: MouseEvent) {
   lastMousePos.x = e.clientX;
   lastMousePos.y = e.clientY;
-  lastMouseButtons = e.buttons;
 
-  if (isPopoverPinned.value || isScrolling.value || isResizing.value || e.buttons !== 0) {
+  // ACT OverlayPlugin 转发无按键移动时也可能带有 buttons=1，不可据此拦截
+  if (isPopoverPinned.value || isScrolling.value || isResizing.value) {
     return;
   }
 
-  pendingMoveTarget = e.target as HTMLElement | null;
+  pendingMoveTarget = e.target;
   if (moveRafId) return;
   moveRafId = requestAnimationFrame(() => {
     moveRafId = 0;
-    if (isPopoverPinned.value || isScrolling.value || isResizing.value || lastMouseButtons !== 0) {
+    if (isPopoverPinned.value || isScrolling.value || isResizing.value) {
       return;
     }
-    applyHoverTarget(pendingMoveTarget);
+    const target =
+      pendingMoveTarget instanceof Node && pendingMoveTarget.isConnected
+        ? pendingMoveTarget
+        : document.elementFromPoint(lastMousePos.x, lastMousePos.y);
+    applyHoverTarget(target);
   });
 }
 
@@ -597,17 +601,12 @@ function handleBodyScroll() {
   scrollEndTimer = window.setTimeout(() => {
     scrollEndTimer = null;
     isScrolling.value = false;
-    if (!isPopoverPinned.value && isPointerInsideTable && lastMouseButtons === 0) {
+    if (!isPopoverPinned.value && isPointerInsideTable) {
       nextTick(() => {
-        if (
-          isScrolling.value ||
-          isPopoverPinned.value ||
-          !isPointerInsideTable ||
-          lastMouseButtons !== 0
-        ) {
+        if (isScrolling.value || isPopoverPinned.value || !isPointerInsideTable) {
           return;
         }
-        const el = document.elementFromPoint(lastMousePos.x, lastMousePos.y) as HTMLElement | null;
+        const el = document.elementFromPoint(lastMousePos.x, lastMousePos.y);
         applyHoverTarget(el);
       });
     }
@@ -1305,7 +1304,13 @@ defineExpose({
                           class="skill-wrapper"
                         >
                           <div class="skill-icon-container">
-                            <img :src="skill.icon" class="skill-icon" @error="handleImgError" />
+                            <img
+                              :src="skill.icon"
+                              class="skill-icon"
+                              :data-tried="undefined"
+                              :data-hr-fallback="undefined"
+                              @error="handleImgError"
+                            />
                             <div v-if="!skill.ready" class="skill-overlay" />
                             <span v-if="skill.recastLeft > 0" class="skill-text">{{
                               skill.recastLeft

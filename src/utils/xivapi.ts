@@ -28,6 +28,7 @@ const HTTPS_PROTOCOL = "https:";
 const IMG_FAIL_SWITCH_THRESHOLD = 5;
 
 const iconBlobUrlMap = new Map<string, string>();
+const activeIconBlobUrls = new Set<string>();
 const pendingIconCache = new Map<string, Promise<void>>();
 let consecutivePrimaryImgFailures = 0;
 let iconCacheReadyPromise: Promise<void> | null = null;
@@ -179,7 +180,9 @@ async function hydrateIconCache(): Promise<void> {
           if (!resp || !resp.ok) return;
           const blob = await resp.blob();
           if (blob.size > 0) {
-            iconBlobUrlMap.set(subPath, URL.createObjectURL(blob));
+            const blobUrl = URL.createObjectURL(blob);
+            activeIconBlobUrls.add(blobUrl);
+            iconBlobUrlMap.set(subPath, blobUrl);
           }
         } catch {
           // 忽略单条缓存读取异常
@@ -198,6 +201,10 @@ export function ensureIconCacheReady(): Promise<void> {
   return iconCacheReadyPromise;
 }
 
+export function isActiveBlobUrl(src: string): boolean {
+  return activeIconBlobUrls.has(src);
+}
+
 function cacheIconInBackground(iconSubPath: string, assetUrl: string): void {
   if (typeof window === "undefined" || !("caches" in window)) return;
   if (iconBlobUrlMap.has(iconSubPath) || pendingIconCache.has(iconSubPath)) return;
@@ -210,7 +217,9 @@ function cacheIconInBackground(iconSubPath: string, assetUrl: string): void {
       if (existing?.ok) {
         const blob = await existing.blob();
         if (blob.size > 0) {
-          iconBlobUrlMap.set(iconSubPath, URL.createObjectURL(blob));
+          const blobUrl = URL.createObjectURL(blob);
+          activeIconBlobUrls.add(blobUrl);
+          iconBlobUrlMap.set(iconSubPath, blobUrl);
           return;
         }
       }
@@ -219,7 +228,9 @@ function cacheIconInBackground(iconSubPath: string, assetUrl: string): void {
       const cloned = resp.clone();
       const blob = await resp.blob();
       if (blob.size === 0) return;
-      iconBlobUrlMap.set(iconSubPath, URL.createObjectURL(blob));
+      const blobUrl = URL.createObjectURL(blob);
+      activeIconBlobUrls.add(blobUrl);
+      iconBlobUrlMap.set(iconSubPath, blobUrl);
       await cache.put(cacheKey, cloned);
     } catch {
       // 忽略网络或存储异常

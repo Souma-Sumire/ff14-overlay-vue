@@ -54,7 +54,12 @@ import {
 import { formatTimeMs as formatTime } from "@/utils/time";
 import { getJobIconUrl } from "@/utils/keigennRecord2";
 import Util from "@/utils/util";
-import { ensureIconCacheReady, getIconSrcByFullIcon, rerouteImgSrc } from "@/utils/xivapi";
+import {
+  ensureIconCacheReady,
+  getIconSrcByFullIcon,
+  isActiveBlobUrl,
+  rerouteImgSrc,
+} from "@/utils/xivapi";
 import logDefinitions from "../../cactbot/resources/netlog_defs";
 
 import NetRegexes from "../../cactbot/resources/netregexes";
@@ -284,12 +289,27 @@ const wipeRegex = NetRegexes.network6d({ command: ["40000003", "40000010", "4000
 
 // 延迟处理：仅在 encounter 被选中时才执行图片路由和 markRaw
 function ensureEncounterProcessed(encounter: Encounter) {
+  if (encounter.table.length === 0) return;
   if (processedEncounters.has(encounter)) return;
   processedEncounters.add(encounter);
   for (const row of encounter.table) {
     if (row.preCalculated) {
-      for (const k of row.preCalculated.keigenns) k.src = rerouteImgSrc(k.src);
-      for (const s of row.preCalculated.sortedSkills ?? []) s.icon = rerouteImgSrc(s.icon);
+      for (let i = 0; i < row.preCalculated.keigenns.length; i++) {
+        const k = row.preCalculated.keigenns[i]!;
+        if (k.src.startsWith("blob:") && !isActiveBlobUrl(k.src)) {
+          const fullIcon = row.keigenns[i]?.fullIcon;
+          k.src = fullIcon ? getIconSrcByFullIcon(fullIcon) : "";
+        } else {
+          k.src = rerouteImgSrc(k.src);
+        }
+      }
+      for (const s of row.preCalculated.sortedSkills ?? []) {
+        if (s.icon.startsWith("blob:") && !isActiveBlobUrl(s.icon)) {
+          s.icon = idToSrc(s.id);
+        } else {
+          s.icon = rerouteImgSrc(s.icon);
+        }
+      }
     }
     markRaw(row);
   }
