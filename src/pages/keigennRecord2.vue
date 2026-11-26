@@ -1801,22 +1801,23 @@ function copyActUrl() {
             </ElIcon>
           </button>
           <el-button
-            class="minimize"
-            :class="[
-              minimize ? 'in-minimize' : 'not-minimize',
-              { 'is-icon-only': minimize && userOptions.minimizeStyle === 'icon' },
-            ]"
-            :icon="minimize ? ZoomIn : ZoomOut"
-            :circle="!minimize || userOptions.minimizeStyle === 'icon'"
-            :style="{
-              opacity: minimize ? (userOptions.minimizeStyle === 'icon' ? 0.5 : 0.85) : 1,
-            }"
+            v-if="minimize && userOptions.minimizeStyle !== 'icon'"
+            class="minimize in-minimize"
+            :icon="ZoomIn"
+            :style="{ opacity: 0.85 }"
             @click="clickMinimize"
           >
-            <template v-if="minimize && userOptions.minimizeStyle !== 'icon'">
-              {{ $t("keigennRecord.minimizeLabel") }}
-            </template>
+            {{ $t("keigennRecord.minimizeLabel") }}
           </el-button>
+          <el-button
+            v-else
+            class="minimize"
+            :class="minimize ? 'in-minimize is-icon-only' : 'not-minimize'"
+            :icon="minimize ? ZoomIn : ZoomOut"
+            circle
+            :style="{ opacity: minimize ? 0.5 : 1 }"
+            @click="clickMinimize"
+          />
         </header>
         <main v-show="!minimize" style="height: 100%">
           <KeigennRecord2Table
@@ -2208,6 +2209,7 @@ main {
     padding: 0 !important;
     border: none !important;
     border-radius: 50% !important;
+    font-size: var(--el-font-size-base) !important;
     background-color: rgba(20, 20, 20, 1) !important;
     gap: 0;
   }
