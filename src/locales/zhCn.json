@@ -426,8 +426,6 @@
       "orderTop": "新记录置顶",
       "iconType": "职业图标样式",
       "minimizeStyle": "缩小样式",
-      "minimizeStyleText": "图标+文字",
-      "minimizeStyleIcon": "单图标",
       "skillLayout": "冷却弹窗布局",
       "skillLayoutMatrix": "矩阵",
       "skillLayoutGroup": "分类",

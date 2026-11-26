@@ -423,8 +423,6 @@
       "orderTop": "Newest on Top",
       "iconType": "Job Icon Style",
       "minimizeStyle": "Minimized Style",
-      "minimizeStyleText": "Icon + Text",
-      "minimizeStyleIcon": "Icon Only",
       "skillLayout": "Cooldown Layout",
       "skillLayoutMatrix": "Matrix",
       "skillLayoutGroup": "Group",

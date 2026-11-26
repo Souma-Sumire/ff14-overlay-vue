@@ -423,8 +423,6 @@
       "orderTop": "新記錄置頂",
       "iconType": "職業圖示樣式",
       "minimizeStyle": "縮小樣式",
-      "minimizeStyleText": "圖示+文字",
-      "minimizeStyleIcon": "單圖示",
       "skillLayout": "冷卻彈窗佈局",
       "skillLayoutMatrix": "矩陣",
       "skillLayoutGroup": "分類",

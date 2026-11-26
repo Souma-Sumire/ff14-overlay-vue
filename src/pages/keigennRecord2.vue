@@ -1746,17 +1746,22 @@ const previewSkills = computed(() =>
 const previewTargetId = getSkillLayoutPreviewTargetId();
 const previewAmountDetail = computed(() => getAmountDetailPreview(userOptions.anonymous));
 
-const sliderPreviewZoomStyle = computed(() => {
+const settingsPreviewScaleStyle = computed(() => {
+  const preview = settingsPreview.value;
+  if (!preview) return {};
   const baseScale =
     Number.isFinite(userOptions.scale) && userOptions.scale > 0 ? userOptions.scale : 1;
-  const preview = settingsPreview.value;
-  if (!preview || preview.kind !== "slider") return {};
-  if (preview.target === "skill") {
+  if (preview.kind === "layout" || (preview.kind === "slider" && preview.target === "skill")) {
+    const layout = preview.kind === "layout" ? preview.layout : userOptions.skillLayout;
     const extraScale =
       Number.isFinite(userOptions.skillPopoverScale) && userOptions.skillPopoverScale > 0
         ? userOptions.skillPopoverScale
         : 1;
-    const iconSize = userOptions[activeIconSizeMeta.value.key];
+    const meta = SKILL_ICON_SIZE_META[layout] ?? SKILL_ICON_SIZE_META.matrix;
+    const rawIconSize = userOptions[meta.key];
+    const fallbackIconSize = layout === "matrix" ? 24 : 26;
+    const iconSize =
+      Number.isFinite(rawIconSize) && rawIconSize > 0 ? rawIconSize : fallbackIconSize;
     return {
       "--preview-scale": String(baseScale * extraScale),
       "--skill-icon-size": `${iconSize}px`,
@@ -2214,7 +2219,7 @@ function copyActUrl() {
       <div ref="settingsPanelRef" class="settings-panel">
         <template v-if="settingsView === 'main'">
           <div class="settings-body">
-            <label
+            <div
               class="setting-row"
               @mouseenter="openSliderPreview('scale', $event)"
               @mouseleave="handleSliderMouseLeave"
@@ -2233,8 +2238,8 @@ function copyActUrl() {
                 />
                 <span class="setting-val">{{ Number(userOptions.scale).toFixed(2) }}</span>
               </span>
-            </label>
-            <label
+            </div>
+            <div
               class="setting-row"
               @mouseenter="openSliderPreview('amount', $event)"
               @mouseleave="handleSliderMouseLeave"
@@ -2255,8 +2260,8 @@ function copyActUrl() {
                   Number(userOptions.amountPopoverScale).toFixed(2)
                 }}</span>
               </span>
-            </label>
-            <label class="setting-row">
+            </div>
+            <div class="setting-row">
               <span>{{ $t("keigennRecord.settings.opacity") }}</span>
               <span class="setting-ctrl">
                 <input
@@ -2268,7 +2273,7 @@ function copyActUrl() {
                 />
                 <span class="setting-val">{{ Number(userOptions.opacity).toFixed(2) }}</span>
               </span>
-            </label>
+            </div>
             <div class="setting-row setting-wrap-row">
               <span>{{ $t("keigennRecord.settings.iconType") }}</span>
               <div class="choice-grid is-cols-4">
@@ -2281,12 +2286,14 @@ function copyActUrl() {
                   @click="userOptions.iconType = val"
                 >
                   <span class="choice-option-key">{{ val }}</span>
-                  <img
-                    :src="getCachedJobIconUrl('Paladin', val)"
-                    class="job-icon-style-img"
-                    :class="{ 'is-style-3': val === 3 }"
-                    alt=""
-                  />
+                  <span class="job-icon-style-slot">
+                    <img
+                      :src="getCachedJobIconUrl('Paladin', val)"
+                      class="job-icon-style-img"
+                      :class="`is-style-${val}`"
+                      alt=""
+                    />
+                  </span>
                 </button>
               </div>
             </div>
@@ -2299,15 +2306,13 @@ function copyActUrl() {
                   :class="{ 'is-active': userOptions.minimizeStyle === 'text' }"
                   @click="userOptions.minimizeStyle = 'text'"
                 >
+                  <span class="choice-option-key">1</span>
                   <span class="minimize-sample is-text">
                     <ElIcon :size="10">
                       <ZoomIn />
                     </ElIcon>
                     <span>{{ $t("keigennRecord.minimizeLabel") }}</span>
                   </span>
-                  <span class="choice-option-text">{{
-                    $t("keigennRecord.settings.minimizeStyleText")
-                  }}</span>
                 </button>
                 <button
                   type="button"
@@ -2315,33 +2320,31 @@ function copyActUrl() {
                   :class="{ 'is-active': userOptions.minimizeStyle === 'icon' }"
                   @click="userOptions.minimizeStyle = 'icon'"
                 >
+                  <span class="choice-option-key">2</span>
                   <span class="minimize-sample is-icon">
                     <ElIcon :size="12">
                       <ZoomIn />
                     </ElIcon>
                   </span>
-                  <span class="choice-option-text">{{
-                    $t("keigennRecord.settings.minimizeStyleIcon")
-                  }}</span>
                 </button>
               </div>
             </div>
 
             <div class="settings-divider" />
 
-            <label class="setting-row">
+            <div class="setting-row">
               <span>{{ $t("keigennRecord.settings.anonymous") }}</span>
               <input v-model="userOptions.anonymous" type="checkbox" />
-            </label>
-            <label class="setting-row">
+            </div>
+            <div class="setting-row">
               <span>{{ $t("keigennRecord.settings.actionCN") }}</span>
               <input v-model="userOptions.actionCN" type="checkbox" />
-            </label>
-            <label class="setting-row">
+            </div>
+            <div class="setting-row">
               <span>{{ $t("keigennRecord.settings.statusCN") }}</span>
               <input v-model="userOptions.statusCN" type="checkbox" />
-            </label>
-            <label class="setting-row">
+            </div>
+            <div class="setting-row">
               <span class="setting-label"
                 >{{ $t("keigennRecord.settings.parseAA")
                 }}<span class="setting-hint">{{
@@ -2349,8 +2352,8 @@ function copyActUrl() {
                 }}</span></span
               >
               <input v-model="userOptions.parseAA" type="checkbox" />
-            </label>
-            <label class="setting-row">
+            </div>
+            <div class="setting-row">
               <span class="setting-label"
                 >{{ $t("keigennRecord.settings.parseDoT")
                 }}<span class="setting-hint">{{
@@ -2358,8 +2361,8 @@ function copyActUrl() {
                 }}</span></span
               >
               <input v-model="userOptions.parseDoT" type="checkbox" />
-            </label>
-            <label class="setting-row">
+            </div>
+            <div class="setting-row">
               <span>{{ $t("keigennRecord.settings.orderTop") }}</span>
               <input
                 type="checkbox"
@@ -2370,7 +2373,7 @@ function copyActUrl() {
                     : 'push'
                 "
               />
-            </label>
+            </div>
 
             <div class="settings-divider" />
 
@@ -2393,13 +2396,13 @@ function copyActUrl() {
                 </button>
               </div>
             </div>
-            <label v-if="userOptions.skillLayout === 'matrix'" class="setting-row setting-sub-row">
+            <div v-if="userOptions.skillLayout === 'matrix'" class="setting-row setting-sub-row">
               <span class="setting-label">
                 {{ $t("keigennRecord.settings.singleInBoth") }}
               </span>
               <input v-model="userOptions.singleInBoth" type="checkbox" />
-            </label>
-            <label
+            </div>
+            <div
               class="setting-row"
               @mouseenter="openSliderPreview('skill', $event)"
               @mouseleave="handleSliderMouseLeave"
@@ -2418,7 +2421,7 @@ function copyActUrl() {
                 />
                 <span class="setting-val">{{ userOptions[activeIconSizeMeta.key] }}px</span>
               </span>
-            </label>
+            </div>
             <div
               v-if="userOptions.skillLayout === 'matrix'"
               class="setting-row setting-wrap-row"
@@ -2427,7 +2430,7 @@ function copyActUrl() {
             >
               <span>{{ $t("keigennRecord.settings.skillColsMatrix") }}</span>
               <div class="col-limit-group">
-                <label v-for="col in MATRIX_COL_LIMIT_META" :key="col.key" class="col-limit-item">
+                <div v-for="col in MATRIX_COL_LIMIT_META" :key="col.key" class="col-limit-item">
                   <span class="col-limit-label">{{ $t(col.labelKey) }}</span>
                   <input
                     v-model.number="userOptions[col.key]"
@@ -2439,10 +2442,10 @@ function copyActUrl() {
                     @input="handleSliderInput('skill', $event)"
                     @blur="clampMatrixColInput(col.key, col.min, col.max)"
                   />
-                </label>
+                </div>
               </div>
             </div>
-            <label
+            <div
               v-else
               class="setting-row"
               @mouseenter="openSliderPreview('skill', $event)"
@@ -2462,8 +2465,8 @@ function copyActUrl() {
                 />
                 <span class="setting-val">{{ userOptions[activeLinearColLimitMeta.key] }}</span>
               </span>
-            </label>
-            <label
+            </div>
+            <div
               class="setting-row"
               @mouseenter="openSliderPreview('skill', $event)"
               @mouseleave="handleSliderMouseLeave"
@@ -2484,7 +2487,7 @@ function copyActUrl() {
                   Number(userOptions.skillPopoverScale).toFixed(2)
                 }}</span>
               </span>
-            </label>
+            </div>
             <div class="setting-row setting-wrap-row">
               <span>{{ $t("keigennRecord.settings.skillSort") }}</span>
               <button type="button" class="toolbar-btn icon-type-btn" @click="openSkillSortView">
@@ -2532,29 +2535,17 @@ function copyActUrl() {
         class="skill-layout-preview-popover"
         :style="settingsPreviewStyle"
       >
-        <div
-          v-if="settingsPreview.kind === 'layout'"
-          class="skill-layout-preview-scale"
-          :style="{
-            '--skill-icon-size': settingsPreview.layout === 'matrix' ? '24px' : '26px',
-            '--skill-icon-scale': String((settingsPreview.layout === 'matrix' ? 24 : 26) / 28),
-          }"
-        >
+        <div class="settings-preview-scale" :style="settingsPreviewScaleStyle">
           <SkillCooldownView
+            v-if="settingsPreview.kind === 'layout'"
             :skills="previewSkills"
             :target-id="previewTargetId"
             :layout="settingsPreview.layout"
             :anonymous="userOptions.anonymous"
             :single-in-both="userOptions.singleInBoth"
           />
-        </div>
-        <div
-          v-else-if="settingsPreview.kind === 'slider'"
-          class="slider-preview-scale"
-          :style="sliderPreviewZoomStyle"
-        >
           <SkillCooldownView
-            v-if="settingsPreview.target === 'skill'"
+            v-else-if="settingsPreview.target === 'skill'"
             :skills="previewSkills"
             :target-id="previewTargetId"
             :layout="userOptions.skillLayout"
@@ -3089,7 +3080,7 @@ main {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
 
@@ -3127,7 +3118,6 @@ main {
   min-height: 21px;
   font-size: 12px;
   color: #cfd6e0;
-  cursor: pointer;
   transition: color 0.12s ease;
 
   &:hover {
@@ -3256,7 +3246,6 @@ main {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  cursor: pointer;
 
   .col-limit-label {
     font-size: 11px;
@@ -3293,7 +3282,7 @@ main {
   }
 
   &.is-cols-2 {
-    grid-template-columns: repeat(2, minmax(84px, 1fr));
+    grid-template-columns: repeat(2, minmax(66px, 1fr));
     gap: 6px;
   }
 }
@@ -3303,7 +3292,7 @@ main {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  height: 26px;
+  height: 24px;
   padding: 0 6px;
   font-size: 10.5px;
   line-height: 1;
@@ -3340,15 +3329,35 @@ main {
     color: #dbeafe;
   }
 
+  .job-icon-style-slot {
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
   .job-icon-style-img {
     width: 18px;
     height: 18px;
     object-fit: contain;
     display: block;
 
+    &.is-style-1 {
+      transform: translateY(0.5px);
+    }
+
+    &.is-style-2 {
+      transform: scale(0.88);
+    }
+
     &.is-style-3 {
-      width: 23px;
-      height: 23px;
+      transform: scale(1.26);
+    }
+
+    &.is-style-4 {
+      transform: scale(0.94);
     }
   }
 
@@ -3356,23 +3365,17 @@ main {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 18px;
+    height: 16px;
     color: #e6ebf2;
-    background-color: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.24);
     flex-shrink: 0;
 
     &.is-text {
-      padding: 0 4px;
-      border-radius: 2px;
-      font-size: 9px;
+      font-size: 10px;
       gap: 2px;
     }
 
     &.is-icon {
-      width: 18px;
-      padding: 0;
-      border-radius: 50%;
+      width: 16px;
 
       svg {
         transform: translate(0.75px, 0.25px);
@@ -3426,7 +3429,6 @@ main {
   max-width: calc(100vw - 12px);
   max-height: calc(100vh - 12px);
   overflow: hidden;
-  padding: 6px 8px;
   background: rgb(24, 25, 29);
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 4px;
@@ -3434,17 +3436,18 @@ main {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.72);
   box-sizing: border-box;
 
-  .skill-layout-preview-scale {
-    zoom: 0.76;
-    transform-origin: top left;
-  }
-
-  .slider-preview-scale {
+  .settings-preview-scale {
+    display: inline-block;
     zoom: var(--preview-scale, 1);
     transform-origin: top left;
+    padding: 6px 8px;
     font-size: 12px;
     line-height: 1.25;
     font-variant-numeric: tabular-nums;
+    max-width: 100%;
+    max-height: calc((100vh - 12px) / var(--preview-scale, 1));
+    overflow-y: auto;
+    box-sizing: border-box;
   }
 }
 </style>

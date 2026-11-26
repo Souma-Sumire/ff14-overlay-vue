@@ -423,8 +423,6 @@
       "orderTop": "新しい記録を上に",
       "iconType": "ジョブアイコン",
       "minimizeStyle": "最小化表示",
-      "minimizeStyleText": "アイコン+文字",
-      "minimizeStyleIcon": "アイコンのみ",
       "skillLayout": "CD表示形式",
       "skillLayoutMatrix": "表",
       "skillLayoutGroup": "分類",
