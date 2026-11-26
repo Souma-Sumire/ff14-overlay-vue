@@ -20,6 +20,7 @@ import { copyToClipboard } from "@/utils/clipboard";
 import { getCachedJobIconUrl } from "@/utils/keigennRecord2";
 import Util from "@/utils/util";
 import { EMPTY_IMAGE } from "@/utils/xivapi";
+import AmountDetailView from "./AmountDetailView.vue";
 import FilterHeader from "./FilterHeader.vue";
 import SkillCooldownView from "./SkillCooldownView.vue";
 
@@ -930,12 +931,23 @@ const popoverScaleStyle = computed(() => {
   };
 });
 
-function getAmountHpMetrics(row: RowVO) {
-  const hp = Math.max(0, Math.min(100, row.preCalculated.hpPercent || 0));
-  const shield = Math.max(0, Math.min(100, Number(row.shield) || 0));
-  const shieldBar = Math.min(100 - hp, shield);
-  return { hp, shield, shieldBar, lowHp: hp <= 25 };
-}
+const hoveredAmountDetail = computed(() => {
+  const row = hoveredRow.value;
+  if (!row || tooltipMode.value !== "amount") return null;
+  return {
+    source: row.source,
+    targetName: userOptions.anonymous ? row.job : row.target,
+    targetIndex: row.targetIndex,
+    targetCount: row.targetCount,
+    currentHp: row.currentHp,
+    hpPercent: row.preCalculated.hpPercent,
+    shield: row.shield,
+    reduction: row.reduction,
+    type: row.type,
+    damageTypeClass: row.preCalculated.damageTypeClass,
+    originalDamageDisplay: row.preCalculated.originalDamageDisplay,
+  };
+});
 
 defineExpose({
   scrollToBottom,
@@ -1224,61 +1236,8 @@ defineExpose({
           :style="popoverStyle"
         >
           <div class="keigenn-popover-scale" :style="popoverScaleStyle">
-            <template v-if="hoveredRow && tooltipMode === 'amount'">
-              <div class="row-info">
-                <div class="info-grid">
-                  <span class="info-label">{{ t("keigennRecord.source") }}</span>
-                  <span class="info-value">{{ hoveredRow.source }}</span>
-
-                  <span class="info-label">{{ t("keigennRecord.targetName") }}</span>
-                  <span class="info-value">{{
-                    userOptions.anonymous ? hoveredRow.job : hoveredRow.target
-                  }}</span>
-
-                  <span class="info-label">{{ t("keigennRecord.targetIndex") }}</span>
-                  <span class="info-value num"
-                    >{{ hoveredRow.targetIndex }}/{{ hoveredRow.targetCount }}</span
-                  >
-
-                  <span class="info-label">{{ t("keigennRecord.playerHp") }}</span>
-                  <span class="info-value num"
-                    >{{ hoveredRow.currentHp.toLocaleString() }} ({{
-                      hoveredRow.preCalculated.hpPercent
-                    }}%)</span
-                  >
-
-                  <span class="info-label">{{ t("keigennRecord.playerShield") }}</span>
-                  <span class="info-value num">{{ hoveredRow.shield }}%</span>
-                </div>
-
-                <div class="hp-shield-bar">
-                  <div
-                    class="hp-segment"
-                    :class="{ 'is-low': getAmountHpMetrics(hoveredRow).lowHp }"
-                    :style="{ width: `${getAmountHpMetrics(hoveredRow).hp}%` }"
-                  />
-                  <div
-                    v-if="getAmountHpMetrics(hoveredRow).shieldBar > 0"
-                    class="shield-segment"
-                    :style="{ width: `${getAmountHpMetrics(hoveredRow).shieldBar}%` }"
-                  />
-                </div>
-
-                <template v-if="hoveredRow.reduction < 1 && hoveredRow.type !== 'dot'">
-                  <div class="info-divider" />
-                  <div class="info-grid">
-                    <span class="info-label">{{ t("keigennRecord.reductionRate") }}</span>
-                    <span class="info-value num"
-                      >{{ (hoveredRow.reduction * 100).toFixed(2) }}%</span
-                    >
-
-                    <span class="info-label">{{ t("keigennRecord.originalDamage") }}</span>
-                    <span class="info-value num" :class="hoveredRow.preCalculated.damageTypeClass">
-                      {{ hoveredRow.preCalculated.originalDamageDisplay }}
-                    </span>
-                  </div>
-                </template>
-              </div>
+            <template v-if="hoveredAmountDetail && tooltipMode === 'amount'">
+              <AmountDetailView :detail="hoveredAmountDetail" />
             </template>
 
             <template v-else-if="hoveredRow && tooltipMode === 'skills'">
@@ -2118,72 +2077,6 @@ defineExpose({
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-    }
-  }
-
-  .row-info {
-    padding: 0;
-    margin: 0;
-    min-width: 156px;
-
-    .info-grid {
-      display: grid;
-      grid-template-columns: auto minmax(64px, 1fr);
-      gap: 3px 12px;
-      align-items: center;
-    }
-
-    .info-label {
-      color: #939ba8;
-      font-size: 11px;
-      white-space: nowrap;
-      text-align: left;
-    }
-
-    .info-value {
-      color: #e6ebf2;
-      font-size: 12px;
-      font-weight: 500;
-      text-align: right;
-      white-space: nowrap;
-      max-width: 180px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-
-      &.num {
-        font-variant-numeric: tabular-nums;
-      }
-    }
-
-    .hp-shield-bar {
-      margin-top: 6px;
-      width: 100%;
-      height: 4px;
-      border-radius: 2px;
-      background: rgba(255, 255, 255, 0.1);
-      overflow: hidden;
-      display: flex;
-
-      .hp-segment {
-        height: 100%;
-        background: #4caf50;
-
-        &.is-low {
-          background: #ff5252;
-        }
-      }
-
-      .shield-segment {
-        height: 100%;
-        background: #f5b731;
-      }
-    }
-
-    .info-divider {
-      height: 1px;
-      background: rgba(255, 255, 255, 0.12);
-      margin: 6px 0;
-      width: 100%;
     }
   }
 }

@@ -15,6 +15,7 @@ import type {
 import type { Player } from "@/types/partyPlayer";
 import { Setting, UploadFilled, ZoomIn, ZoomOut } from "@element-plus/icons-vue";
 import { useDark } from "@vueuse/core";
+import AmountDetailView from "@/components/keigennRecord2/AmountDetailView.vue";
 import SkillCooldownView from "@/components/keigennRecord2/SkillCooldownView.vue";
 // TODO: 死亡回放：治疗栏目的状态追踪治疗有关的buff
 import {
@@ -44,7 +45,12 @@ import { ZoneInfo } from "@/resources/zoneInfo";
 
 import { useKeigennRecord2Store } from "@/store/keigennRecord2";
 import { compareSame } from "@/utils/compareSaveAction";
-import { getSkillLayoutPreviewSkills, getSkillLayoutPreviewTargetId } from "@/utils/keigennPreview";
+import {
+  getAmountDetailPreview,
+  getJobIconPreviewUrls,
+  getSkillLayoutPreviewSkills,
+  getSkillLayoutPreviewTargetId,
+} from "@/utils/keigennPreview";
 import { calculateCharges } from "@/utils/cooldown";
 import { idToSrc, parseDynamicValue } from "@/utils/dynamicValue";
 import { processAbilityLine, processFlags } from "@/utils/flags";
@@ -1625,6 +1631,12 @@ function handlePageDrop(e: DragEvent) {
 }
 
 type SkillLayoutOption = "matrix" | "group" | "flat";
+type SliderPreviewKind = "scale" | "skill" | "amount";
+type SettingsPreviewState =
+  | { kind: "layout"; layout: SkillLayoutOption }
+  | { kind: "job-icon"; iconType: number }
+  | { kind: "slider"; target: SliderPreviewKind }
+  | null;
 
 const SKILL_LAYOUT_OPTIONS: { value: SkillLayoutOption; labelKey: string }[] = [
   { value: "matrix", labelKey: "keigennRecord.settings.skillLayoutMatrix" },
@@ -1662,67 +1674,220 @@ const activeIconSizeMeta = computed(
   () => SKILL_ICON_SIZE_META[userOptions.skillLayout] ?? SKILL_ICON_SIZE_META.matrix,
 );
 
-const layoutPreviewMode = ref<SkillLayoutOption | null>(null);
-const layoutPreviewRef = ref<HTMLElement | null>(null);
-const layoutPreviewStyle = ref<Record<string, string>>({
+const settingsPanelRef = ref<HTMLElement | null>(null);
+const settingsPreview = ref<SettingsPreviewState>(null);
+const settingsPreviewRef = ref<HTMLElement | null>(null);
+const settingsPreviewStyle = ref<Record<string, string>>({
   top: "0px",
   left: "0px",
   visibility: "hidden",
 });
+let activePreviewTriggerEl: HTMLElement | null = null;
+let isSliderDragging = false;
+let isPointerOverSlider = false;
+
 const previewSkills = computed(() =>
-  layoutPreviewMode.value ? getSkillLayoutPreviewSkills() : [],
+  settingsPreview.value &&
+  (settingsPreview.value.kind === "layout" ||
+    (settingsPreview.value.kind === "slider" && settingsPreview.value.target === "skill"))
+    ? getSkillLayoutPreviewSkills()
+    : [],
 );
 const previewTargetId = getSkillLayoutPreviewTargetId();
+const previewJobIcons = computed(() =>
+  settingsPreview.value?.kind === "job-icon"
+    ? getJobIconPreviewUrls(settingsPreview.value.iconType)
+    : [],
+);
+const previewAmountDetail = computed(() => getAmountDetailPreview(userOptions.anonymous));
 
-watch(settingsOpen, (open) => {
-  if (!open) layoutPreviewMode.value = null;
+const sliderPreviewZoomStyle = computed(() => {
+  const baseScale =
+    Number.isFinite(userOptions.scale) && userOptions.scale > 0 ? userOptions.scale : 1;
+  const preview = settingsPreview.value;
+  if (!preview || preview.kind !== "slider") return {};
+  if (preview.target === "skill") {
+    const extraScale =
+      Number.isFinite(userOptions.skillPopoverScale) && userOptions.skillPopoverScale > 0
+        ? userOptions.skillPopoverScale
+        : 1;
+    const iconSize = userOptions[activeIconSizeMeta.value.key];
+    return {
+      "--preview-scale": String(baseScale * extraScale),
+      "--skill-icon-size": `${iconSize}px`,
+      "--skill-icon-scale": String(iconSize / 28),
+    };
+  }
+  const extraScale =
+    preview.target === "amount" &&
+    Number.isFinite(userOptions.amountPopoverScale) &&
+    userOptions.amountPopoverScale > 0
+      ? userOptions.amountPopoverScale
+      : 1;
+  return {
+    "--preview-scale": String(baseScale * extraScale),
+  };
 });
 
-function openLayoutPreview(layout: SkillLayoutOption, event: Event) {
-  const target = event.currentTarget as HTMLElement | null;
-  layoutPreviewMode.value = layout;
-  layoutPreviewStyle.value = { top: "0px", left: "0px", visibility: "hidden" };
-  if (!target) return;
+function computeVerticalPreviewPos(triggerRect: DOMRect, previewRect: DOMRect) {
+  const gap = 6;
+  const margin = 6;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const w = previewRect.width;
+  const h = previewRect.height;
 
+  const belowTop = triggerRect.bottom + gap;
+  const aboveTop = triggerRect.top - gap - h;
+  let top = belowTop;
+  if (belowTop + h <= vh - margin) {
+    top = belowTop;
+  } else if (aboveTop >= margin) {
+    top = aboveTop;
+  } else {
+    top =
+      vh - triggerRect.bottom >= triggerRect.top
+        ? Math.max(margin, vh - h - margin)
+        : Math.max(margin, aboveTop);
+  }
+
+  const centeredLeft = triggerRect.left + triggerRect.width / 2 - w / 2;
+  const left = Math.max(margin, Math.min(centeredLeft, Math.max(margin, vw - w - margin)));
+  return { top, left };
+}
+
+function computeSidePreviewPos(panelRect: DOMRect, rowRect: DOMRect, previewRect: DOMRect) {
+  const gap = 8;
+  const margin = 6;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const w = previewRect.width;
+  const h = previewRect.height;
+
+  const rightLeft = panelRect.right + gap;
+  const leftLeft = panelRect.left - gap - w;
+  if (rightLeft + w <= vw - margin) {
+    return {
+      left: rightLeft,
+      top: Math.max(margin, Math.min(rowRect.top, vh - h - margin)),
+    };
+  }
+  if (leftLeft >= margin) {
+    return {
+      left: leftLeft,
+      top: Math.max(margin, Math.min(rowRect.top, vh - h - margin)),
+    };
+  }
+  return computeVerticalPreviewPos(rowRect, previewRect);
+}
+
+function positionSettingsPreview() {
   nextTick(() => {
-    const el = layoutPreviewRef.value;
-    if (!el || layoutPreviewMode.value !== layout) return;
-    const triggerRect = target.getBoundingClientRect();
+    const el = settingsPreviewRef.value;
+    const trigger = activePreviewTriggerEl;
+    const state = settingsPreview.value;
+    if (!el || !trigger || !state) return;
+
+    const triggerRect = trigger.getBoundingClientRect();
     const previewRect = el.getBoundingClientRect();
-    const gap = 6;
-    const margin = 6;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const w = previewRect.width;
-    const h = previewRect.height;
+    const pos =
+      state.kind === "slider" && settingsPanelRef.value
+        ? computeSidePreviewPos(
+            settingsPanelRef.value.getBoundingClientRect(),
+            triggerRect,
+            previewRect,
+          )
+        : computeVerticalPreviewPos(triggerRect, previewRect);
 
-    const belowTop = triggerRect.bottom + gap;
-    const aboveTop = triggerRect.top - gap - h;
-    let top = belowTop;
-    if (belowTop + h <= vh - margin) {
-      top = belowTop;
-    } else if (aboveTop >= margin) {
-      top = aboveTop;
-    } else {
-      top =
-        vh - triggerRect.bottom >= triggerRect.top
-          ? Math.max(margin, vh - h - margin)
-          : Math.max(margin, aboveTop);
-    }
-
-    const centeredLeft = triggerRect.left + triggerRect.width / 2 - w / 2;
-    const left = Math.max(margin, Math.min(centeredLeft, Math.max(margin, vw - w - margin)));
-    layoutPreviewStyle.value = {
-      top: `${Math.round(top)}px`,
-      left: `${Math.round(left)}px`,
+    settingsPreviewStyle.value = {
+      top: `${Math.round(pos.top)}px`,
+      left: `${Math.round(pos.left)}px`,
       visibility: "visible",
     };
   });
 }
 
-function closeLayoutPreview() {
-  layoutPreviewMode.value = null;
+function openButtonPreview(state: Exclude<SettingsPreviewState, null>, event: Event) {
+  activePreviewTriggerEl = event.currentTarget as HTMLElement | null;
+  settingsPreview.value = state;
+  settingsPreviewStyle.value = { top: "0px", left: "0px", visibility: "hidden" };
+  positionSettingsPreview();
 }
+
+function closeButtonPreview() {
+  if (isSliderDragging) return;
+  settingsPreview.value = null;
+  activePreviewTriggerEl = null;
+}
+
+function openSliderPreview(target: SliderPreviewKind, event: Event) {
+  isPointerOverSlider = true;
+  activePreviewTriggerEl = event.currentTarget as HTMLElement | null;
+  const alreadySame =
+    settingsPreview.value?.kind === "slider" && settingsPreview.value.target === target;
+  settingsPreview.value = { kind: "slider", target };
+  if (!alreadySame) {
+    settingsPreviewStyle.value = { top: "0px", left: "0px", visibility: "hidden" };
+  }
+  positionSettingsPreview();
+}
+
+function handleSliderInput(target: SliderPreviewKind, event: Event) {
+  const row = (event.currentTarget as HTMLElement | null)?.closest(
+    ".setting-row",
+  ) as HTMLElement | null;
+  if (row) activePreviewTriggerEl = row;
+  settingsPreview.value = { kind: "slider", target };
+  positionSettingsPreview();
+}
+
+function handleWindowSliderPointerUp() {
+  isSliderDragging = false;
+  if (!isPointerOverSlider) {
+    settingsPreview.value = null;
+    activePreviewTriggerEl = null;
+  }
+}
+
+function handleSliderPointerDown(target: SliderPreviewKind, event: Event) {
+  isSliderDragging = true;
+  const row = (event.currentTarget as HTMLElement | null)?.closest(
+    ".setting-row",
+  ) as HTMLElement | null;
+  if (row) activePreviewTriggerEl = row;
+  settingsPreview.value = { kind: "slider", target };
+  positionSettingsPreview();
+  window.removeEventListener("pointerup", handleWindowSliderPointerUp);
+  window.addEventListener("pointerup", handleWindowSliderPointerUp, { once: true });
+}
+
+function handleSliderMouseLeave() {
+  isPointerOverSlider = false;
+  if (!isSliderDragging) {
+    settingsPreview.value = null;
+    activePreviewTriggerEl = null;
+  }
+}
+
+function handleSliderBlur() {
+  if (!isSliderDragging && !isPointerOverSlider) {
+    settingsPreview.value = null;
+    activePreviewTriggerEl = null;
+  }
+}
+
+watch(settingsOpen, (open) => {
+  if (!open) {
+    isSliderDragging = false;
+    isPointerOverSlider = false;
+    settingsPreview.value = null;
+    activePreviewTriggerEl = null;
+  }
+});
+
+onUnmounted(() => {
+  window.removeEventListener("pointerup", handleWindowSliderPointerUp);
+});
 
 function buildActUrl(): string {
   const base = `${window.location.origin}${window.location.pathname}#/keigennRecord2`;
@@ -1988,7 +2153,7 @@ function copyActUrl() {
     </div>
 
     <div v-if="settingsOpen" class="settings-backdrop" @click.self="settingsOpen = false">
-      <div class="settings-panel">
+      <div ref="settingsPanelRef" class="settings-panel">
         <div class="settings-header">
           <span class="settings-title">{{ $t("keigennRecord.settings.title") }}</span>
           <button type="button" class="toolbar-btn" @click="settingsOpen = false">
@@ -1996,7 +2161,11 @@ function copyActUrl() {
           </button>
         </div>
         <div class="settings-body">
-          <label class="setting-row">
+          <label
+            class="setting-row"
+            @mouseenter="openSliderPreview('scale', $event)"
+            @mouseleave="handleSliderMouseLeave"
+          >
             <span>{{ $t("keigennRecord.settings.scale") }}</span>
             <span class="setting-ctrl">
               <input
@@ -2005,6 +2174,9 @@ function copyActUrl() {
                 min="0.6"
                 max="2"
                 step="0.05"
+                @pointerdown="handleSliderPointerDown('scale', $event)"
+                @input="handleSliderInput('scale', $event)"
+                @blur="handleSliderBlur"
               />
               <span class="setting-val">{{ Number(userOptions.scale).toFixed(2) }}</span>
             </span>
@@ -2072,6 +2244,10 @@ function copyActUrl() {
                 class="toolbar-btn icon-type-btn"
                 :class="{ 'is-active': userOptions.iconType === val }"
                 @click="userOptions.iconType = val"
+                @mouseenter="openButtonPreview({ kind: 'job-icon', iconType: val }, $event)"
+                @mouseleave="closeButtonPreview"
+                @focus="openButtonPreview({ kind: 'job-icon', iconType: val }, $event)"
+                @blur="closeButtonPreview"
               >
                 {{ val }}
               </button>
@@ -2108,23 +2284,26 @@ function copyActUrl() {
                 class="toolbar-btn icon-type-btn"
                 :class="{ 'is-active': userOptions.skillLayout === opt.value }"
                 @click="userOptions.skillLayout = opt.value"
-                @mouseenter="openLayoutPreview(opt.value, $event)"
-                @mouseleave="closeLayoutPreview"
-                @focus="openLayoutPreview(opt.value, $event)"
-                @blur="closeLayoutPreview"
+                @mouseenter="openButtonPreview({ kind: 'layout', layout: opt.value }, $event)"
+                @mouseleave="closeButtonPreview"
+                @focus="openButtonPreview({ kind: 'layout', layout: opt.value }, $event)"
+                @blur="closeButtonPreview"
               >
                 {{ $t(opt.labelKey) }}
               </button>
             </div>
           </div>
-          <label class="setting-row setting-sub-row">
+          <label v-if="userOptions.skillLayout === 'matrix'" class="setting-row setting-sub-row">
             <span class="setting-label">
               {{ $t("keigennRecord.settings.singleInBoth") }}
-              <span class="setting-hint">{{ $t("keigennRecord.settings.singleInBothHint") }}</span>
             </span>
             <input v-model="userOptions.singleInBoth" type="checkbox" />
           </label>
-          <label class="setting-row">
+          <label
+            class="setting-row"
+            @mouseenter="openSliderPreview('skill', $event)"
+            @mouseleave="handleSliderMouseLeave"
+          >
             <span>{{ $t(activeIconSizeMeta.labelKey) }}</span>
             <span class="setting-ctrl">
               <input
@@ -2133,11 +2312,18 @@ function copyActUrl() {
                 :min="activeIconSizeMeta.min"
                 :max="activeIconSizeMeta.max"
                 step="1"
+                @pointerdown="handleSliderPointerDown('skill', $event)"
+                @input="handleSliderInput('skill', $event)"
+                @blur="handleSliderBlur"
               />
               <span class="setting-val">{{ userOptions[activeIconSizeMeta.key] }}px</span>
             </span>
           </label>
-          <label class="setting-row">
+          <label
+            class="setting-row"
+            @mouseenter="openSliderPreview('skill', $event)"
+            @mouseleave="handleSliderMouseLeave"
+          >
             <span>{{ $t("keigennRecord.settings.skillPopoverScale") }}</span>
             <span class="setting-ctrl">
               <input
@@ -2146,13 +2332,20 @@ function copyActUrl() {
                 min="0.6"
                 max="2"
                 step="0.05"
+                @pointerdown="handleSliderPointerDown('skill', $event)"
+                @input="handleSliderInput('skill', $event)"
+                @blur="handleSliderBlur"
               />
               <span class="setting-val">{{
                 Number(userOptions.skillPopoverScale).toFixed(2)
               }}</span>
             </span>
           </label>
-          <label class="setting-row">
+          <label
+            class="setting-row"
+            @mouseenter="openSliderPreview('amount', $event)"
+            @mouseleave="handleSliderMouseLeave"
+          >
             <span>{{ $t("keigennRecord.settings.amountPopoverScale") }}</span>
             <span class="setting-ctrl">
               <input
@@ -2161,6 +2354,9 @@ function copyActUrl() {
                 min="0.6"
                 max="2"
                 step="0.05"
+                @pointerdown="handleSliderPointerDown('amount', $event)"
+                @input="handleSliderInput('amount', $event)"
+                @blur="handleSliderBlur"
               />
               <span class="setting-val">{{
                 Number(userOptions.amountPopoverScale).toFixed(2)
@@ -2186,25 +2382,50 @@ function copyActUrl() {
 
     <Teleport to="body">
       <div
-        v-if="settingsOpen && layoutPreviewMode"
-        ref="layoutPreviewRef"
+        v-if="settingsOpen && settingsPreview"
+        ref="settingsPreviewRef"
         class="skill-layout-preview-popover"
-        :style="layoutPreviewStyle"
+        :style="settingsPreviewStyle"
       >
+        <div v-if="settingsPreview.kind === 'job-icon'" class="job-icon-preview-row">
+          <img
+            v-for="(src, idx) in previewJobIcons"
+            :key="idx"
+            :src="src"
+            class="job-icon-preview-img"
+            alt=""
+          />
+        </div>
         <div
+          v-else-if="settingsPreview.kind === 'layout'"
           class="skill-layout-preview-scale"
           :style="{
-            '--skill-icon-size': layoutPreviewMode === 'matrix' ? '22px' : '24px',
-            '--skill-icon-scale': String((layoutPreviewMode === 'matrix' ? 22 : 24) / 28),
+            '--skill-icon-size': settingsPreview.layout === 'matrix' ? '22px' : '24px',
+            '--skill-icon-scale': String((settingsPreview.layout === 'matrix' ? 22 : 24) / 28),
           }"
         >
           <SkillCooldownView
             :skills="previewSkills"
             :target-id="previewTargetId"
-            :layout="layoutPreviewMode"
+            :layout="settingsPreview.layout"
             :anonymous="userOptions.anonymous"
             :single-in-both="userOptions.singleInBoth"
           />
+        </div>
+        <div
+          v-else-if="settingsPreview.kind === 'slider'"
+          class="slider-preview-scale"
+          :style="sliderPreviewZoomStyle"
+        >
+          <SkillCooldownView
+            v-if="settingsPreview.target === 'skill'"
+            :skills="previewSkills"
+            :target-id="previewTargetId"
+            :layout="userOptions.skillLayout"
+            :anonymous="userOptions.anonymous"
+            :single-in-both="userOptions.singleInBoth"
+          />
+          <AmountDetailView v-else :detail="previewAmountDetail" />
         </div>
       </div>
     </Teleport>
@@ -2827,16 +3048,38 @@ main {
   max-width: calc(100vw - 12px);
   max-height: calc(100vh - 12px);
   overflow: hidden;
-  padding: 5px 6px;
+  padding: 6px 8px;
   background: rgb(24, 25, 29);
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 4px;
   color: rgb(214, 219, 227);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.72);
+  box-sizing: border-box;
+
+  .job-icon-preview-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    .job-icon-preview-img {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+      display: block;
+    }
+  }
 
   .skill-layout-preview-scale {
     zoom: 0.64;
     transform-origin: top left;
+  }
+
+  .slider-preview-scale {
+    zoom: var(--preview-scale, 1);
+    transform-origin: top left;
+    font-size: 12px;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
   }
 }
 </style>

@@ -66,7 +66,7 @@ function handleJobImgError(e: Event) {
 }
 
 const effectiveSkills = computed<KeySkillSnapshot[]>(() => {
-  if (!props.singleInBoth) return props.skills;
+  if (props.layout !== "matrix" || !props.singleInBoth) return props.skills;
   const expanded: KeySkillSnapshot[] = [];
   for (const s of props.skills) {
     expanded.push(s);
@@ -333,8 +333,8 @@ const skillPlayerRows = computed<SkillPlayerRow[]>(() => {
 
   td.skill-job-cell {
     width: 22px;
-    padding: 2px 3px;
-    vertical-align: middle;
+    padding: calc(2px + max(0px, (var(--skill-icon-size, 24px) - 18px) / 2)) 3px 2px;
+    vertical-align: top;
     text-align: center;
 
     .skill-player-job-icon {
@@ -357,7 +357,8 @@ const skillPlayerRows = computed<SkillPlayerRow[]>(() => {
 
   td.skill-scope-cell {
     padding: 2px 3px;
-    vertical-align: middle;
+    vertical-align: top;
+    text-align: left;
     border-left: 1px solid rgba(255, 255, 255, 0.08);
   }
 
@@ -365,7 +366,9 @@ const skillPlayerRows = computed<SkillPlayerRow[]>(() => {
     display: flex;
     flex-wrap: wrap;
     gap: 2px;
-    align-items: center;
+    align-items: flex-start;
+    justify-content: flex-start;
+    align-content: flex-start;
 
     &.is-party {
       max-width: calc(var(--skill-icon-size, 28px) * 4 + 6px);

@@ -1,6 +1,7 @@
-import type { KeySkillSnapshot, Scope } from "@/types/keigennRecord2";
+import type { AmountDetailData, KeySkillSnapshot, Scope } from "@/types/keigennRecord2";
 import { DEFAULT_JOB_SORT_ORDER } from "@/resources/jobSortOrder";
 import { idToSrc } from "@/utils/dynamicValue";
+import { getCachedJobIconUrl } from "@/utils/keigennRecord2";
 import Util from "@/utils/util";
 import { rerouteImgSrc } from "@/utils/xivapi";
 
@@ -296,4 +297,29 @@ export function getSkillLayoutPreviewSkills(): KeySkillSnapshot[] {
 
   cachedPreviewSkills = built;
   return built;
+}
+
+const PREVIEW_JOB_ENUMS = [19, 24, 34, 23]; // 坦克、治疗、近战、远程
+
+export function getJobIconPreviewUrls(iconType: number): string[] {
+  return PREVIEW_JOB_ENUMS.map((jobEnum) =>
+    getCachedJobIconUrl(Util.jobEnumToIcon(jobEnum), iconType),
+  );
+}
+
+export function getAmountDetailPreview(anonymous: boolean): AmountDetailData {
+  const jobName = Util.jobToFullName(Util.jobEnumToJob(37))?.simple2 ?? "绝枪";
+  return {
+    source: "暗黑冲击",
+    targetName: anonymous ? jobName : "光之战士",
+    targetIndex: 1,
+    targetCount: 2,
+    currentHp: 84250,
+    hpPercent: 62,
+    shield: "18",
+    reduction: 0.42,
+    type: "magic",
+    damageTypeClass: "magic",
+    originalDamageDisplay: "145,200",
+  };
 }

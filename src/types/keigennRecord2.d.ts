@@ -81,6 +81,20 @@ export interface KeySkillSnapshot {
   extraText?: string;
 }
 
+export interface AmountDetailData {
+  source: string;
+  targetName: string;
+  targetIndex?: number;
+  targetCount?: number;
+  currentHp: number;
+  hpPercent: number;
+  shield: string;
+  reduction: number;
+  type: string;
+  damageTypeClass: string;
+  originalDamageDisplay: string;
+}
+
 export interface Status {
   type: KeigennType;
   name: string;
