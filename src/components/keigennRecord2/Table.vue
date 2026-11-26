@@ -766,15 +766,24 @@ function clearFilters() {
 
 const jobIconCache = new Map<string, string>();
 
-function getDisplayJobIcon(rowData: RowVO): string {
-  if (!rowData.jobIcon) return rowData.preCalculated.jobIconSrc;
+function resolveJobIconUrl(jobIcon: string): string {
+  if (!jobIcon) return "";
   const iconType = store.userOptions.iconType;
-  const cacheKey = `${rowData.jobIcon}|${iconType}`;
+  const cacheKey = `${jobIcon}|${iconType}`;
   const cached = jobIconCache.get(cacheKey);
   if (cached !== undefined) return cached;
-  const resolved = rerouteImgSrc(getJobIconUrl(rowData.jobIcon, iconType));
+  const resolved = rerouteImgSrc(getJobIconUrl(jobIcon, iconType));
   jobIconCache.set(cacheKey, resolved);
   return resolved;
+}
+
+function getDisplayJobIcon(rowData: RowVO): string {
+  if (!rowData.jobIcon) return rowData.preCalculated.jobIconSrc;
+  return resolveJobIconUrl(rowData.jobIcon);
+}
+
+function getJobIconSrcByEnum(jobEnum: number): string {
+  return resolveJobIconUrl(Util.jobEnumToIcon(jobEnum));
 }
 
 function handleJobImgError(e: Event) {
@@ -907,23 +916,15 @@ function scrollToBottom() {
   syncScrollRange(maxTop);
 }
 
-function isDuplicateSkill(skills: { id: number }[], currentId: number) {
-  let count = 0;
-  for (const s of skills) {
-    if (s.id === currentId) {
-      count++;
-      if (count > 1) return true;
-    }
-  }
-  return false;
-}
-
-function getSimpleJobName(jobEnum: number) {
-  return Util.jobToFullName(Util.jobEnumToJob(jobEnum))?.simple1 ?? "";
-}
-
-function getAllSkills(row: RowVO) {
-  return row.preCalculated.sortedSkills || [];
+interface SkillPlayerRow {
+  ownerId: string;
+  ownerName: string;
+  shortName: string;
+  ownerJob: number;
+  jobIconSrc: string;
+  isTarget: boolean;
+  hasDuplicateJob: boolean;
+  skillsByScope: Record<Scope, KeySkillSnapshot[]>;
 }
 
 const SKILL_SCOPE_META: { scope: Scope; labelKey: string }[] = [
@@ -932,14 +933,54 @@ const SKILL_SCOPE_META: { scope: Scope; labelKey: string }[] = [
   { scope: "self", labelKey: "keigennRecord.scope.self" },
 ];
 
-function getSkillGroups(row: RowVO): { scope: Scope; label: string; skills: KeySkillSnapshot[] }[] {
-  const all = getAllSkills(row);
-  return SKILL_SCOPE_META.map(({ scope, labelKey }) => ({
-    scope,
-    label: t(labelKey),
-    skills: all.filter((s) => s.scope === scope),
-  })).filter((g) => g.skills.length > 0);
+function getJobSortIndex(jobEnum: number): number {
+  const index = DEFAULT_JOB_SORT_ORDER.indexOf(jobEnum);
+  return index === -1 ? Number.MAX_SAFE_INTEGER : index;
 }
+
+const skillPlayerRows = computed<SkillPlayerRow[]>(() => {
+  const row = hoveredRow.value;
+  if (!row || tooltipMode.value !== "skills") return [];
+  const all = row.preCalculated.sortedSkills || [];
+  const byOwner = new Map<string, SkillPlayerRow>();
+
+  for (const skill of all) {
+    let entry = byOwner.get(skill.ownerId);
+    if (!entry) {
+      entry = {
+        ownerId: skill.ownerId,
+        ownerName: skill.ownerName,
+        shortName: skill.ownerName.slice(0, 2),
+        ownerJob: skill.ownerJob,
+        jobIconSrc: getJobIconSrcByEnum(skill.ownerJob),
+        isTarget: skill.ownerId === row.targetId,
+        hasDuplicateJob: false,
+        skillsByScope: { party: [], other: [], self: [] },
+      };
+      byOwner.set(skill.ownerId, entry);
+    }
+    entry.skillsByScope[skill.scope].push(skill);
+  }
+
+  const jobCounts = new Map<number, number>();
+  for (const entry of byOwner.values()) {
+    jobCounts.set(entry.ownerJob, (jobCounts.get(entry.ownerJob) ?? 0) + 1);
+  }
+
+  const rows = Array.from(byOwner.values());
+  for (const entry of rows) {
+    entry.hasDuplicateJob = (jobCounts.get(entry.ownerJob) ?? 0) > 1;
+  }
+
+  rows.sort((a, b) => {
+    const jobDiff = getJobSortIndex(a.ownerJob) - getJobSortIndex(b.ownerJob);
+    if (jobDiff !== 0) return jobDiff;
+    if (a.isTarget !== b.isTarget) return a.isTarget ? -1 : 1;
+    return a.ownerId.localeCompare(b.ownerId);
+  });
+
+  return rows;
+});
 
 function getAmountHpMetrics(row: RowVO) {
   const hp = Math.max(0, Math.min(100, row.preCalculated.hpPercent || 0));
@@ -1289,57 +1330,90 @@ defineExpose({
 
             <template v-else-if="hoveredRow && tooltipMode === 'skills'">
               <div class="skill-popover-content">
-                <template v-if="getSkillGroups(hoveredRow).length > 0">
-                  <div class="skill-groups">
-                    <div
-                      v-for="group in getSkillGroups(hoveredRow)"
-                      :key="group.scope"
-                      class="skill-group-row"
-                    >
-                      <span class="skill-scope-tag">{{ group.label }}</span>
-                      <div class="skill-grid">
-                        <div
-                          v-for="skill in group.skills"
-                          :key="`${skill.id}-${skill.ownerId}`"
-                          class="skill-wrapper"
+                <template v-if="skillPlayerRows.length > 0">
+                  <table class="skill-matrix">
+                    <thead>
+                      <tr>
+                        <th class="skill-col-job" />
+                        <th
+                          v-for="meta in SKILL_SCOPE_META"
+                          :key="meta.scope"
+                          class="skill-col-scope"
+                          :class="`is-${meta.scope}`"
                         >
-                          <div class="skill-icon-container">
-                            <img
-                              :src="skill.icon"
-                              class="skill-icon"
-                              :class="{ 'is-cooldown': !skill.ready }"
-                              :data-tried="undefined"
-                              :data-hr-fallback="undefined"
-                              @error="handleImgError"
-                            />
-                            <div v-if="!skill.ready" class="skill-overlay" />
-                            <span v-if="skill.recastLeft > 0" class="skill-text">{{
-                              skill.recastLeft
-                            }}</span>
-                            <span v-if="(skill.maxCharges ?? 0) > 1" class="skill-charges">{{
-                              skill.chargesReady
-                            }}</span>
-                            <span
-                              v-if="skill.jobResource !== undefined"
-                              class="skill-resource"
-                              :style="{
-                                fontSize: skill.jobResource.toString().length > 2 ? '9px' : '11px',
-                              }"
-                              >{{ skill.jobResource }}</span
+                          {{ t(meta.labelKey) }}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr
+                        v-for="player in skillPlayerRows"
+                        :key="player.ownerId"
+                        :class="{ 'is-target': player.isTarget }"
+                      >
+                        <td class="skill-job-cell">
+                          <img
+                            v-if="player.jobIconSrc"
+                            :src="player.jobIconSrc"
+                            class="skill-player-job-icon"
+                            @error="handleJobImgError"
+                          />
+                          <span
+                            v-if="player.hasDuplicateJob && !userOptions.anonymous"
+                            class="skill-player-dup-name"
+                          >
+                            {{ player.shortName }}
+                          </span>
+                        </td>
+                        <td
+                          v-for="meta in SKILL_SCOPE_META"
+                          :key="meta.scope"
+                          class="skill-scope-cell"
+                          :class="`is-${meta.scope}`"
+                        >
+                          <div
+                            v-if="player.skillsByScope[meta.scope].length > 0"
+                            class="skill-cell-list"
+                            :class="`is-${meta.scope}`"
+                          >
+                            <div
+                              v-for="skill in player.skillsByScope[meta.scope]"
+                              :key="`${skill.id}-${skill.ownerId}`"
+                              class="skill-icon-container"
                             >
-                            <span v-if="skill.extraText" class="skill-extra-text">{{
-                              skill.extraText
-                            }}</span>
-                            <span
-                              v-if="isDuplicateSkill(getAllSkills(hoveredRow), skill.id)"
-                              class="skill-job-name"
-                              >{{ getSimpleJobName(skill.ownerJob) }}</span
-                            >
+                              <img
+                                :src="skill.icon"
+                                class="skill-icon"
+                                :class="{ 'is-cooldown': !skill.ready }"
+                                :data-tried="undefined"
+                                :data-hr-fallback="undefined"
+                                @error="handleImgError"
+                              />
+                              <div v-if="!skill.ready" class="skill-overlay" />
+                              <span v-if="skill.recastLeft > 0" class="skill-text">{{
+                                skill.recastLeft
+                              }}</span>
+                              <span v-if="(skill.maxCharges ?? 0) > 1" class="skill-charges">{{
+                                skill.chargesReady
+                              }}</span>
+                              <span
+                                v-if="skill.jobResource !== undefined"
+                                class="skill-resource"
+                                :style="{
+                                  fontSize:
+                                    skill.jobResource.toString().length > 2 ? '9px' : '11px',
+                                }"
+                                >{{ skill.jobResource }}</span
+                              >
+                              <span v-if="skill.extraText" class="skill-extra-text">{{
+                                skill.extraText
+                              }}</span>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </template>
 
                 <div v-else class="no-data">
@@ -2245,155 +2319,183 @@ defineExpose({
   }
 
   .skill-popover-content {
-    .skill-groups {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
+    max-width: 100%;
+    overflow-x: auto;
 
-    .skill-group-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 5px;
-    }
+    .skill-matrix {
+      border-collapse: collapse;
+      width: max-content;
 
-    .skill-scope-tag {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 18px;
-      height: 28px;
-      padding-right: 5px;
-      font-size: 10.5px;
-      font-weight: 600;
-      color: #a6b0bf;
-      border-right: 1px solid rgba(255, 255, 255, 0.16);
-      flex-shrink: 0;
-    }
+      th.skill-col-job {
+        width: 22px;
+        padding: 0 2px 3px 0;
+      }
 
-    .skill-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2px;
-      max-width: min(192px, calc(100vw - 50px));
+      th.skill-col-scope {
+        padding: 0 4px 3px;
+        font-size: 10.5px;
+        font-weight: 600;
+        color: #9ba4b2;
+        text-align: center;
+        white-space: nowrap;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+      }
 
-      .skill-wrapper {
+      tbody tr {
+        & + tr {
+          border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        &.is-target {
+          background: rgba(96, 165, 250, 0.12);
+          box-shadow: inset 2px 0 0 #60a5fa;
+        }
+      }
+
+      td.skill-job-cell {
+        width: 22px;
+        padding: 2px 3px;
+        vertical-align: middle;
+        text-align: center;
+
+        .skill-player-job-icon {
+          display: block;
+          width: 18px;
+          height: 18px;
+          margin: 0 auto;
+          object-fit: contain;
+        }
+
+        .skill-player-dup-name {
+          display: block;
+          margin-top: 1px;
+          font-size: 9px;
+          line-height: 1;
+          color: #dbeafe;
+          white-space: nowrap;
+        }
+      }
+
+      td.skill-scope-cell {
+        padding: 2px 3px;
+        vertical-align: middle;
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .skill-cell-list {
         display: flex;
-        flex-direction: column;
+        flex-wrap: wrap;
+        gap: 2px;
         align-items: center;
+
+        &.is-party {
+          max-width: 148px;
+        }
+
+        &.is-other {
+          max-width: 58px;
+        }
+
+        &.is-self {
+          max-width: 88px;
+        }
+      }
+
+      .skill-icon-container {
+        position: relative;
         width: 28px;
+        height: 28px;
+        border-radius: 3px;
+        overflow: hidden;
+        background: #222;
+        flex-shrink: 0;
 
-        .skill-icon-container {
-          position: relative;
-          width: 28px;
-          height: 28px;
-          border-radius: 3px;
-          overflow: hidden;
-          background: #222;
+        .skill-icon {
+          width: 100%;
+          height: 100%;
 
-          .skill-icon {
-            width: 100%;
-            height: 100%;
-
-            &.is-cooldown {
-              filter: saturate(0.72) brightness(0.66) contrast(1.14);
-            }
+          &.is-cooldown {
+            filter: saturate(0.72) brightness(0.66) contrast(1.14);
           }
+        }
 
-          .skill-overlay {
-            position: absolute;
-            inset: 0;
-            background-color: rgba(0, 0, 0, 0.08);
-            z-index: 1;
-          }
+        .skill-overlay {
+          position: absolute;
+          inset: 0;
+          background-color: rgba(0, 0, 0, 0.08);
+          z-index: 1;
+        }
 
-          .skill-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.95);
-            color: #fff;
-            font-weight: 700;
-            font-size: 12px;
-            line-height: 1;
-            font-variant-numeric: tabular-nums;
-            white-space: nowrap;
-            z-index: 2;
-            text-shadow:
-              -1px -1px 0 #000,
-              1px -1px 0 #000,
-              -1px 1px 0 #000,
-              1px 1px 0 #000,
-              0 1px 2px rgba(0, 0, 0, 0.9);
-          }
+        .skill-text {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) scale(0.95);
+          color: #fff;
+          font-weight: 700;
+          font-size: 12px;
+          line-height: 1;
+          font-variant-numeric: tabular-nums;
+          white-space: nowrap;
+          z-index: 2;
+          text-shadow:
+            -1px -1px 0 #000,
+            1px -1px 0 #000,
+            -1px 1px 0 #000,
+            1px 1px 0 #000,
+            0 1px 2px rgba(0, 0, 0, 0.9);
+        }
 
-          .skill-charges {
-            position: absolute;
-            bottom: -1px;
-            right: 0px;
-            transform: scale(0.7);
-            transform-origin: right bottom;
-            color: #fff;
-            font-weight: bold;
-            font-size: 11px;
-            z-index: 3;
-            text-shadow:
-              -1px 0 1.5px #000,
-              0 1px 1.5px #000,
-              1px 0 1.5px #000,
-              0 -1px 1.5px #000;
-          }
+        .skill-charges {
+          position: absolute;
+          bottom: -1px;
+          right: 0px;
+          transform: scale(0.7);
+          transform-origin: right bottom;
+          color: #fff;
+          font-weight: bold;
+          font-size: 11px;
+          z-index: 3;
+          text-shadow:
+            -1px 0 1.5px #000,
+            0 1px 1.5px #000,
+            1px 0 1.5px #000,
+            0 -1px 1.5px #000;
+        }
 
-          .skill-job-name {
-            position: absolute;
-            bottom: -1px;
-            left: 0px;
-            transform: scale(0.7);
-            transform-origin: left bottom;
-            color: #fff;
-            font-weight: bold;
-            font-size: 11px;
-            z-index: 3;
-            text-shadow:
-              -1px 0 1.5px #000,
-              0 1px 1.5px #000,
-              1px 0 1.5px #000,
-              0 -1px 1.5px #000;
-          }
+        .skill-resource {
+          position: absolute;
+          top: -1px;
+          right: 0px;
+          transform: scale(0.7);
+          transform-origin: right top;
+          color: #64b5f6;
+          font-weight: bold;
+          font-size: 11px;
+          z-index: 3;
+          text-shadow:
+            -1px 0 1.5px #000,
+            0 1px 1.5px #000,
+            1px 0 1.5px #000,
+            0 -1px 1.5px #000;
+        }
 
-          .skill-resource {
-            position: absolute;
-            top: -1px;
-            right: 0px;
-            transform: scale(0.7);
-            transform-origin: right top;
-            color: #64b5f6;
-            font-weight: bold;
-            font-size: 11px;
-            z-index: 3;
-            text-shadow:
-              -1px 0 1.5px #000,
-              0 1px 1.5px #000,
-              1px 0 1.5px #000,
-              0 -1px 1.5px #000;
-          }
-
-          .skill-extra-text {
-            position: absolute;
-            top: -1px;
-            left: 0px;
-            transform: scale(0.7);
-            transform-origin: left top;
-            color: #ff9800;
-            font-weight: bold;
-            font-size: 11px;
-            z-index: 3;
-            text-shadow:
-              -1px 0 1.5px #000,
-              0 1px 1.5px #000,
-              1px 0 1.5px #000,
-              0 -1px 1.5px #000;
-          }
+        .skill-extra-text {
+          position: absolute;
+          top: -1px;
+          left: 0px;
+          transform: scale(0.7);
+          transform-origin: left top;
+          color: #ff9800;
+          font-weight: bold;
+          font-size: 11px;
+          z-index: 3;
+          text-shadow:
+            -1px 0 1.5px #000,
+            0 1px 1.5px #000,
+            1px 0 1.5px #000,
+            0 -1px 1.5px #000;
         }
       }
     }
