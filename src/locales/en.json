@@ -436,6 +436,9 @@
       "skillPopoverScale": "Cooldown Popup Scale",
       "amountPopoverScale": "Damage Popup Scale",
       "resetDefaults": "Reset Defaults",
+      "resetConfirm": "Reset all settings to defaults?",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
       "copyActUrl": "Copy ACT URL with Settings",
       "copyActSuccess": "ACT URL Copied",
       "clearedRecords": "Records Cleared"

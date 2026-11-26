@@ -79,7 +79,15 @@ import { useRoute } from "vue-router";
 import { useToggle } from "@vueuse/core";
 import KeigennRecord2Table from "@/components/keigennRecord2/Table.vue";
 import { copyToClipboard } from "@/utils/clipboard";
-import { ElButton, ElIcon, ElLoading, ElMessage, ElOption, ElSelect } from "element-plus";
+import {
+  ElButton,
+  ElIcon,
+  ElLoading,
+  ElMessage,
+  ElOption,
+  ElPopconfirm,
+  ElSelect,
+} from "element-plus";
 
 const dev = useDev();
 const { t } = useLang();
@@ -2154,12 +2162,6 @@ function copyActUrl() {
 
     <div v-if="settingsOpen" class="settings-backdrop" @click.self="settingsOpen = false">
       <div ref="settingsPanelRef" class="settings-panel">
-        <div class="settings-header">
-          <span class="settings-title">{{ $t("keigennRecord.settings.title") }}</span>
-          <button type="button" class="toolbar-btn" @click="settingsOpen = false">
-            {{ $t("keigennRecord.settings.close") }}
-          </button>
-        </div>
         <div class="settings-body">
           <label
             class="setting-row"
@@ -2193,46 +2195,6 @@ function copyActUrl() {
               />
               <span class="setting-val">{{ Number(userOptions.opacity).toFixed(2) }}</span>
             </span>
-          </label>
-          <label class="setting-row">
-            <span>{{ $t("keigennRecord.settings.anonymous") }}</span>
-            <input v-model="userOptions.anonymous" type="checkbox" />
-          </label>
-          <label class="setting-row">
-            <span>{{ $t("keigennRecord.settings.actionCN") }}</span>
-            <input v-model="userOptions.actionCN" type="checkbox" />
-          </label>
-          <label class="setting-row">
-            <span>{{ $t("keigennRecord.settings.statusCN") }}</span>
-            <input v-model="userOptions.statusCN" type="checkbox" />
-          </label>
-          <label class="setting-row">
-            <span class="setting-label"
-              >{{ $t("keigennRecord.settings.parseAA")
-              }}<span class="setting-hint">{{
-                $t("keigennRecord.settings.newRecordsOnly")
-              }}</span></span
-            >
-            <input v-model="userOptions.parseAA" type="checkbox" />
-          </label>
-          <label class="setting-row">
-            <span class="setting-label"
-              >{{ $t("keigennRecord.settings.parseDoT")
-              }}<span class="setting-hint">{{
-                $t("keigennRecord.settings.newRecordsOnly")
-              }}</span></span
-            >
-            <input v-model="userOptions.parseDoT" type="checkbox" />
-          </label>
-          <label class="setting-row">
-            <span>{{ $t("keigennRecord.settings.orderTop") }}</span>
-            <input
-              type="checkbox"
-              :checked="userOptions.order === 'unshift'"
-              @change="
-                userOptions.order = ($event.target as HTMLInputElement).checked ? 'unshift' : 'push'
-              "
-            />
           </label>
           <div class="setting-row">
             <span>{{ $t("keigennRecord.settings.iconType") }}</span>
@@ -2274,6 +2236,52 @@ function copyActUrl() {
               </button>
             </div>
           </div>
+
+          <div class="settings-divider" />
+
+          <label class="setting-row">
+            <span>{{ $t("keigennRecord.settings.anonymous") }}</span>
+            <input v-model="userOptions.anonymous" type="checkbox" />
+          </label>
+          <label class="setting-row">
+            <span>{{ $t("keigennRecord.settings.actionCN") }}</span>
+            <input v-model="userOptions.actionCN" type="checkbox" />
+          </label>
+          <label class="setting-row">
+            <span>{{ $t("keigennRecord.settings.statusCN") }}</span>
+            <input v-model="userOptions.statusCN" type="checkbox" />
+          </label>
+          <label class="setting-row">
+            <span class="setting-label"
+              >{{ $t("keigennRecord.settings.parseAA")
+              }}<span class="setting-hint">{{
+                $t("keigennRecord.settings.newRecordsOnly")
+              }}</span></span
+            >
+            <input v-model="userOptions.parseAA" type="checkbox" />
+          </label>
+          <label class="setting-row">
+            <span class="setting-label"
+              >{{ $t("keigennRecord.settings.parseDoT")
+              }}<span class="setting-hint">{{
+                $t("keigennRecord.settings.newRecordsOnly")
+              }}</span></span
+            >
+            <input v-model="userOptions.parseDoT" type="checkbox" />
+          </label>
+          <label class="setting-row">
+            <span>{{ $t("keigennRecord.settings.orderTop") }}</span>
+            <input
+              type="checkbox"
+              :checked="userOptions.order === 'unshift'"
+              @change="
+                userOptions.order = ($event.target as HTMLInputElement).checked ? 'unshift' : 'push'
+              "
+            />
+          </label>
+
+          <div class="settings-divider" />
+
           <div class="setting-row">
             <span>{{ $t("keigennRecord.settings.skillLayout") }}</span>
             <div class="icon-type-group">
@@ -2365,9 +2373,21 @@ function copyActUrl() {
           </label>
         </div>
         <div class="settings-footer">
-          <button type="button" class="toolbar-btn" @click="resetOptions">
-            {{ $t("keigennRecord.settings.resetDefaults") }}
-          </button>
+          <ElPopconfirm
+            :title="$t('keigennRecord.settings.resetConfirm')"
+            :confirm-button-text="$t('keigennRecord.settings.confirm')"
+            :cancel-button-text="$t('keigennRecord.settings.cancel')"
+            :width="184"
+            placement="top-start"
+            popper-class="keigenn-settings-popconfirm"
+            @confirm="resetOptions"
+          >
+            <template #reference>
+              <button type="button" class="toolbar-btn">
+                {{ $t("keigennRecord.settings.resetDefaults") }}
+              </button>
+            </template>
+          </ElPopconfirm>
           <button
             v-if="store.isBrowser"
             type="button"
@@ -2375,6 +2395,9 @@ function copyActUrl() {
             @click="copyActUrl"
           >
             {{ $t("keigennRecord.settings.copyActUrl") }}
+          </button>
+          <button v-else type="button" class="toolbar-btn" @click="settingsOpen = false">
+            {{ $t("keigennRecord.settings.close") }}
           </button>
         </div>
       </div>
@@ -2928,36 +2951,51 @@ main {
 
 .settings-panel {
   width: 100%;
-  max-width: 340px;
+  max-width: 344px;
   max-height: calc(100vh - 16px);
   display: flex;
   flex-direction: column;
-  background: #1b1d22;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 2px;
+  background: #191b20;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
   color: #e6ebf2;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65);
-}
-
-.settings-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-
-  .settings-title {
-    font-size: 13px;
-    font-weight: 600;
-  }
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.72);
+  overflow: hidden;
 }
 
 .settings-body {
-  padding: 8px 12px;
+  padding: 12px 10px 12px 14px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 4px 0;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.36);
+    }
+  }
+}
+
+.settings-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 3px 0;
+  flex-shrink: 0;
 }
 
 .setting-row {
@@ -2965,9 +3003,15 @@ main {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  min-height: 24px;
   font-size: 12px;
-  color: #c5ccd6;
+  color: #cfd6e0;
   cursor: pointer;
+  transition: color 0.12s ease;
+
+  &:hover {
+    color: #eef2f7;
+  }
 
   &.setting-sub-row {
     padding-left: 10px;
@@ -2975,8 +3019,12 @@ main {
   }
 
   input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    margin: 0;
     accent-color: #3b7be0;
     cursor: pointer;
+    flex-shrink: 0;
   }
 
   .setting-label {
@@ -2994,11 +3042,42 @@ main {
 .setting-ctrl {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 
   input[type="range"] {
-    width: 100px;
-    accent-color: #3b7be0;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 104px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+    outline: none;
+    cursor: pointer;
+
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #4c8df6;
+      border: 1.5px solid #eef2f7;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+      transition: transform 0.1s ease;
+
+      &:hover {
+        transform: scale(1.12);
+      }
+    }
+
+    &::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #4c8df6;
+      border: 1.5px solid #eef2f7;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    }
   }
 
   .setting-val {
@@ -3019,12 +3098,13 @@ main {
 
 .icon-type-btn {
   height: 22px;
-  padding: 0 6px;
+  padding: 0 7px;
   font-size: 11px;
 }
 
 .settings-footer {
-  padding: 8px 12px;
+  padding: 9px 14px;
+  background: rgba(0, 0, 0, 0.18);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
@@ -3040,6 +3120,25 @@ main {
 
 <style lang="scss">
 @use "@/styles/compact-select.scss";
+
+.keigenn-settings-popconfirm.el-popper {
+  z-index: 4200 !important;
+  background: #23262d !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #e6ebf2 !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.68) !important;
+
+  .el-popper__arrow::before {
+    background: #23262d !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
+  }
+
+  .el-popconfirm__main {
+    color: #e6ebf2;
+    font-size: 12px;
+    margin: 4px 0 8px;
+  }
+}
 
 .skill-layout-preview-popover {
   position: fixed;

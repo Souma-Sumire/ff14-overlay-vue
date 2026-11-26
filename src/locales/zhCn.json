@@ -439,6 +439,9 @@
       "skillPopoverScale": "冷却弹窗缩放",
       "amountPopoverScale": "伤害详情缩放",
       "resetDefaults": "恢复默认",
+      "resetConfirm": "确定恢复默认设置？",
+      "confirm": "确定",
+      "cancel": "取消",
       "copyActUrl": "复制使用此设置的 ACT 地址",
       "copyActSuccess": "已复制 ACT 地址",
       "clearedRecords": "已清空记录"

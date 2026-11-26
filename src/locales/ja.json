@@ -436,6 +436,9 @@
       "skillPopoverScale": "CDポップアップ倍率",
       "amountPopoverScale": "被ダメ詳細倍率",
       "resetDefaults": "初期化",
+      "resetConfirm": "設定を初期状態に戻しますか？",
+      "confirm": "確定",
+      "cancel": "キャンセル",
       "copyActUrl": "この設定でACT用URLをコピー",
       "copyActSuccess": "ACT用URLをコピーしました",
       "clearedRecords": "履歴を消去しました"

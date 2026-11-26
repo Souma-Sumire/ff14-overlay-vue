@@ -436,6 +436,9 @@
       "skillPopoverScale": "冷卻彈窗縮放",
       "amountPopoverScale": "傷害詳情縮放",
       "resetDefaults": "恢復預設",
+      "resetConfirm": "確定恢復預設設定？",
+      "confirm": "確定",
+      "cancel": "取消",
       "copyActUrl": "複製使用此設定的 ACT 位址",
       "copyActSuccess": "已複製 ACT 位址",
       "clearedRecords": "已清空記錄"
