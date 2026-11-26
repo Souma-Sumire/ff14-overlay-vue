@@ -2214,9 +2214,6 @@ function copyActUrl() {
       <div ref="settingsPanelRef" class="settings-panel">
         <template v-if="settingsView === 'main'">
           <div class="settings-body">
-            <div class="settings-section-title">
-              {{ $t("keigennRecord.settings.sectionAppearance") }}
-            </div>
             <label
               class="setting-row"
               @mouseenter="openSliderPreview('scale', $event)"
@@ -2272,7 +2269,7 @@ function copyActUrl() {
                 <span class="setting-val">{{ Number(userOptions.opacity).toFixed(2) }}</span>
               </span>
             </label>
-            <div class="setting-row">
+            <div class="setting-row setting-wrap-row">
               <span>{{ $t("keigennRecord.settings.iconType") }}</span>
               <div class="choice-grid is-cols-4">
                 <button
@@ -2293,7 +2290,7 @@ function copyActUrl() {
                 </button>
               </div>
             </div>
-            <div class="setting-row">
+            <div class="setting-row setting-wrap-row">
               <span>{{ $t("keigennRecord.settings.minimizeStyle") }}</span>
               <div class="choice-grid is-cols-2">
                 <button
@@ -2331,9 +2328,6 @@ function copyActUrl() {
             </div>
 
             <div class="settings-divider" />
-            <div class="settings-section-title">
-              {{ $t("keigennRecord.settings.sectionParsing") }}
-            </div>
 
             <label class="setting-row">
               <span>{{ $t("keigennRecord.settings.anonymous") }}</span>
@@ -2379,11 +2373,8 @@ function copyActUrl() {
             </label>
 
             <div class="settings-divider" />
-            <div class="settings-section-title">
-              {{ $t("keigennRecord.settings.sectionCooldown") }}
-            </div>
 
-            <div class="setting-row">
+            <div class="setting-row setting-wrap-row">
               <span>{{ $t("keigennRecord.settings.skillLayout") }}</span>
               <div class="icon-type-group">
                 <button
@@ -2430,7 +2421,7 @@ function copyActUrl() {
             </label>
             <div
               v-if="userOptions.skillLayout === 'matrix'"
-              class="setting-row"
+              class="setting-row setting-wrap-row"
               @mouseenter="openSliderPreview('skill', $event)"
               @mouseleave="handleSliderMouseLeave"
             >
@@ -2494,7 +2485,7 @@ function copyActUrl() {
                 }}</span>
               </span>
             </label>
-            <div class="setting-row">
+            <div class="setting-row setting-wrap-row">
               <span>{{ $t("keigennRecord.settings.skillSort") }}</span>
               <button type="button" class="toolbar-btn icon-type-btn" @click="openSkillSortView">
                 {{ $t("keigennRecord.settings.configure") }} ›
@@ -3124,24 +3115,15 @@ main {
 .settings-divider {
   height: 1px;
   background: rgba(255, 255, 255, 0.08);
-  margin: 4px 0 2px;
+  margin: 5px 0 3px;
   flex-shrink: 0;
-}
-
-.settings-section-title {
-  font-size: 10.5px;
-  font-weight: 600;
-  color: #828b99;
-  letter-spacing: 0.03em;
-  line-height: 1.2;
-  margin: 1px 0 2px;
 }
 
 .setting-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px 10px;
   min-height: 21px;
   font-size: 12px;
   color: #cfd6e0;
@@ -3150,6 +3132,21 @@ main {
 
   &:hover {
     color: #eef2f7;
+  }
+
+  > span:first-child:not(.setting-label) {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  &.setting-wrap-row {
+    flex-wrap: wrap;
+    row-gap: 4px;
+
+    > :last-child {
+      margin-left: auto;
+      max-width: 100%;
+    }
   }
 
   &.setting-sub-row {
@@ -3169,24 +3166,30 @@ main {
   .setting-label {
     display: inline-flex;
     align-items: baseline;
-    gap: 6px;
+    flex-wrap: wrap;
+    gap: 2px 6px;
+    min-width: 0;
+    flex: 1;
   }
 
   .setting-hint {
     font-size: 10.5px;
     color: #828b99;
+    white-space: nowrap;
   }
 }
 
 .setting-ctrl {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
 
   input[type="range"] {
     -webkit-appearance: none;
     appearance: none;
-    width: 104px;
+    width: 96px;
     height: 4px;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.16);
@@ -3244,24 +3247,27 @@ main {
 .col-limit-group {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px 6px;
 }
 
 .col-limit-item {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   cursor: pointer;
 
   .col-limit-label {
     font-size: 11px;
     color: #9ba4b2;
+    white-space: nowrap;
   }
 
   .col-limit-input {
-    width: 38px;
+    width: 34px;
     height: 21px;
-    padding: 0 4px;
+    padding: 0 3px;
     font-size: 11.5px;
     font-variant-numeric: tabular-nums;
     text-align: center;
@@ -3282,13 +3288,13 @@ main {
   align-items: center;
 
   &.is-cols-4 {
-    grid-template-columns: repeat(4, minmax(46px, 1fr));
-    gap: 6px;
+    grid-template-columns: repeat(4, minmax(44px, 1fr));
+    gap: 5px;
   }
 
   &.is-cols-2 {
-    grid-template-columns: repeat(2, minmax(96px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(2, minmax(84px, 1fr));
+    gap: 6px;
   }
 }
 
@@ -3296,10 +3302,10 @@ main {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 4px;
   height: 26px;
-  padding: 0 7px;
-  font-size: 11px;
+  padding: 0 6px;
+  font-size: 10.5px;
   line-height: 1;
   color: #c5ccd6;
   background-color: rgba(255, 255, 255, 0.05);
@@ -3357,9 +3363,9 @@ main {
     flex-shrink: 0;
 
     &.is-text {
-      padding: 0 5px;
+      padding: 0 4px;
       border-radius: 2px;
-      font-size: 9.5px;
+      font-size: 9px;
       gap: 2px;
     }
 
