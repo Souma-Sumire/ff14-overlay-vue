@@ -2214,6 +2214,9 @@ function copyActUrl() {
       <div ref="settingsPanelRef" class="settings-panel">
         <template v-if="settingsView === 'main'">
           <div class="settings-body">
+            <div class="settings-section-title">
+              {{ $t("keigennRecord.settings.sectionAppearance") }}
+            </div>
             <label
               class="setting-row"
               @mouseenter="openSliderPreview('scale', $event)"
@@ -2234,6 +2237,28 @@ function copyActUrl() {
                 <span class="setting-val">{{ Number(userOptions.scale).toFixed(2) }}</span>
               </span>
             </label>
+            <label
+              class="setting-row"
+              @mouseenter="openSliderPreview('amount', $event)"
+              @mouseleave="handleSliderMouseLeave"
+            >
+              <span>{{ $t("keigennRecord.settings.amountPopoverScale") }}</span>
+              <span class="setting-ctrl">
+                <input
+                  v-model.number="userOptions.amountPopoverScale"
+                  type="range"
+                  min="0.6"
+                  max="2"
+                  step="0.05"
+                  @pointerdown="handleSliderPointerDown('amount', $event)"
+                  @input="handleSliderInput('amount', $event)"
+                  @blur="handleSliderBlur"
+                />
+                <span class="setting-val">{{
+                  Number(userOptions.amountPopoverScale).toFixed(2)
+                }}</span>
+              </span>
+            </label>
             <label class="setting-row">
               <span>{{ $t("keigennRecord.settings.opacity") }}</span>
               <span class="setting-ctrl">
@@ -2249,16 +2274,16 @@ function copyActUrl() {
             </label>
             <div class="setting-row">
               <span>{{ $t("keigennRecord.settings.iconType") }}</span>
-              <div class="icon-type-group">
+              <div class="choice-grid is-cols-4">
                 <button
                   v-for="val in [1, 2, 3, 4]"
                   :key="val"
                   type="button"
-                  class="toolbar-btn job-icon-style-btn"
+                  class="choice-option-btn"
                   :class="{ 'is-active': userOptions.iconType === val }"
-                  :title="String(val)"
                   @click="userOptions.iconType = val"
                 >
+                  <span class="choice-option-key">{{ val }}</span>
                   <img
                     :src="getCachedJobIconUrl('Paladin', val)"
                     class="job-icon-style-img"
@@ -2269,32 +2294,45 @@ function copyActUrl() {
             </div>
             <div class="setting-row">
               <span>{{ $t("keigennRecord.settings.minimizeStyle") }}</span>
-              <div class="icon-type-group">
+              <div class="choice-grid is-cols-2">
                 <button
                   type="button"
-                  class="minimize-preview-btn is-text"
+                  class="choice-option-btn"
                   :class="{ 'is-active': userOptions.minimizeStyle === 'text' }"
                   @click="userOptions.minimizeStyle = 'text'"
                 >
-                  <ElIcon :size="12">
-                    <ZoomIn />
-                  </ElIcon>
-                  <span>{{ $t("keigennRecord.minimizeLabel") }}</span>
+                  <span class="minimize-sample is-text">
+                    <ElIcon :size="10">
+                      <ZoomIn />
+                    </ElIcon>
+                    <span>{{ $t("keigennRecord.minimizeLabel") }}</span>
+                  </span>
+                  <span class="choice-option-text">{{
+                    $t("keigennRecord.settings.minimizeStyleText")
+                  }}</span>
                 </button>
                 <button
                   type="button"
-                  class="minimize-preview-btn is-icon"
+                  class="choice-option-btn"
                   :class="{ 'is-active': userOptions.minimizeStyle === 'icon' }"
                   @click="userOptions.minimizeStyle = 'icon'"
                 >
-                  <ElIcon :size="13">
-                    <ZoomIn />
-                  </ElIcon>
+                  <span class="minimize-sample is-icon">
+                    <ElIcon :size="11">
+                      <ZoomIn />
+                    </ElIcon>
+                  </span>
+                  <span class="choice-option-text">{{
+                    $t("keigennRecord.settings.minimizeStyleIcon")
+                  }}</span>
                 </button>
               </div>
             </div>
 
             <div class="settings-divider" />
+            <div class="settings-section-title">
+              {{ $t("keigennRecord.settings.sectionParsing") }}
+            </div>
 
             <label class="setting-row">
               <span>{{ $t("keigennRecord.settings.anonymous") }}</span>
@@ -2340,6 +2378,9 @@ function copyActUrl() {
             </label>
 
             <div class="settings-divider" />
+            <div class="settings-section-title">
+              {{ $t("keigennRecord.settings.sectionCooldown") }}
+            </div>
 
             <div class="setting-row">
               <span>{{ $t("keigennRecord.settings.skillLayout") }}</span>
@@ -2449,28 +2490,6 @@ function copyActUrl() {
                 />
                 <span class="setting-val">{{
                   Number(userOptions.skillPopoverScale).toFixed(2)
-                }}</span>
-              </span>
-            </label>
-            <label
-              class="setting-row"
-              @mouseenter="openSliderPreview('amount', $event)"
-              @mouseleave="handleSliderMouseLeave"
-            >
-              <span>{{ $t("keigennRecord.settings.amountPopoverScale") }}</span>
-              <span class="setting-ctrl">
-                <input
-                  v-model.number="userOptions.amountPopoverScale"
-                  type="range"
-                  min="0.6"
-                  max="2"
-                  step="0.05"
-                  @pointerdown="handleSliderPointerDown('amount', $event)"
-                  @input="handleSliderInput('amount', $event)"
-                  @blur="handleSliderBlur"
-                />
-                <span class="setting-val">{{
-                  Number(userOptions.amountPopoverScale).toFixed(2)
                 }}</span>
               </span>
             </label>
@@ -3096,8 +3115,17 @@ main {
 .settings-divider {
   height: 1px;
   background: rgba(255, 255, 255, 0.08);
-  margin: 2px 0;
+  margin: 4px 0 2px;
   flex-shrink: 0;
+}
+
+.settings-section-title {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #828b99;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+  margin: 1px 0 2px;
 }
 
 .setting-row {
@@ -3240,55 +3268,92 @@ main {
   }
 }
 
-.job-icon-style-btn {
-  width: 26px;
-  height: 24px;
-  padding: 0;
+.choice-grid {
+  display: inline-grid;
+  align-items: center;
 
-  .job-icon-style-img {
-    width: 19px;
-    height: 19px;
-    object-fit: contain;
-    display: block;
+  &.is-cols-4 {
+    grid-template-columns: repeat(4, minmax(46px, 1fr));
+    gap: 6px;
+  }
+
+  &.is-cols-2 {
+    grid-template-columns: repeat(2, minmax(96px, 1fr));
+    gap: 8px;
   }
 }
 
-.minimize-preview-btn {
+.choice-option-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 22px;
-  color: #e6ebf2;
-  background-color: rgba(20, 20, 20, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  gap: 5px;
+  height: 26px;
+  padding: 0 7px;
+  font-size: 11px;
+  line-height: 1;
+  color: #c5ccd6;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 3px;
   cursor: pointer;
+  white-space: nowrap;
   transition:
+    background-color 0.12s ease,
     border-color 0.12s ease,
-    box-shadow 0.12s ease,
-    background-color 0.12s ease;
-
-  &.is-text {
-    padding: 0 7px;
-    border-radius: 2px;
-    font-size: 11px;
-    line-height: 1;
-    gap: 3px;
-  }
-
-  &.is-icon {
-    width: 22px;
-    padding: 0;
-    border-radius: 50%;
-    background-color: rgba(20, 20, 20, 1);
-  }
+    color 0.12s ease;
 
   &:hover {
-    border-color: rgba(255, 255, 255, 0.45);
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.34);
   }
 
   &.is-active {
+    color: #ffffff;
+    background-color: rgba(64, 158, 255, 0.2);
     border-color: #4c8df6;
-    box-shadow: 0 0 0 1px rgba(76, 141, 246, 0.55);
+  }
+
+  .choice-option-key {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: #9ba4b2;
+  }
+
+  &.is-active .choice-option-key {
+    color: #dbeafe;
+  }
+
+  .job-icon-style-img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    display: block;
+  }
+
+  .minimize-sample {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 18px;
+    color: #e6ebf2;
+    background-color: rgba(20, 20, 20, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    flex-shrink: 0;
+
+    &.is-text {
+      padding: 0 5px;
+      border-radius: 2px;
+      font-size: 9.5px;
+      gap: 2px;
+    }
+
+    &.is-icon {
+      width: 18px;
+      padding: 0;
+      border-radius: 50%;
+    }
   }
 }
 
