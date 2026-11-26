@@ -1307,6 +1307,7 @@ defineExpose({
                             <img
                               :src="skill.icon"
                               class="skill-icon"
+                              :class="{ 'is-cooldown': !skill.ready }"
                               :data-tried="undefined"
                               :data-hr-fallback="undefined"
                               @error="handleImgError"
@@ -2261,7 +2262,7 @@ defineExpose({
       align-items: center;
       justify-content: center;
       width: 18px;
-      height: 24px;
+      height: 28px;
       padding-right: 5px;
       font-size: 10.5px;
       font-weight: 600;
@@ -2274,18 +2275,18 @@ defineExpose({
       display: flex;
       flex-wrap: wrap;
       gap: 2px;
-      max-width: min(180px, calc(100vw - 50px));
+      max-width: min(192px, calc(100vw - 50px));
 
       .skill-wrapper {
         display: flex;
         flex-direction: column;
         align-items: center;
-        width: 24px;
+        width: 28px;
 
         .skill-icon-container {
           position: relative;
-          width: 24px;
-          height: 24px;
+          width: 28px;
+          height: 28px;
           border-radius: 3px;
           overflow: hidden;
           background: #222;
@@ -2293,12 +2294,16 @@ defineExpose({
           .skill-icon {
             width: 100%;
             height: 100%;
+
+            &.is-cooldown {
+              filter: saturate(0.72) brightness(0.66) contrast(1.14);
+            }
           }
 
           .skill-overlay {
             position: absolute;
             inset: 0;
-            background-color: rgba(0, 0, 0, 0.62);
+            background-color: rgba(0, 0, 0, 0.08);
             z-index: 1;
           }
 
@@ -2306,16 +2311,20 @@ defineExpose({
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) scale(0.9);
+            transform: translate(-50%, -50%) scale(0.95);
             color: #fff;
-            font-weight: bold;
+            font-weight: 700;
             font-size: 12px;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
             z-index: 2;
             text-shadow:
-              -1px 0 2px #000,
-              0 1px 2px #000,
-              1px 0 2px #000,
-              0 -1px 2px #000;
+              -1px -1px 0 #000,
+              1px -1px 0 #000,
+              -1px 1px 0 #000,
+              1px 1px 0 #000,
+              0 1px 2px rgba(0, 0, 0, 0.9);
           }
 
           .skill-charges {
