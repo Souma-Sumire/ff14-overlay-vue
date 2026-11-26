@@ -47,6 +47,26 @@ const SKILL_SCOPE_META: { scope: Scope; labelKey: string }[] = [
 const { t } = useLang();
 const store = useKeigennRecord2Store();
 
+function clampColCount(val: number, fallback: number, min: number, max: number): number {
+  if (!Number.isFinite(val) || val <= 0) return fallback;
+  return Math.min(max, Math.max(min, Math.round(val)));
+}
+
+const layoutLimitVars = computed(() => {
+  const partyCols = clampColCount(store.userOptions.skillColsMatrixParty, 4, 1, 10);
+  const otherCols = clampColCount(store.userOptions.skillColsMatrixOther, 3, 1, 8);
+  const selfCols = clampColCount(store.userOptions.skillColsMatrixSelf, 3, 1, 8);
+  const groupCols = clampColCount(store.userOptions.skillColsGroup, 6, 2, 12);
+  const flatCols = clampColCount(store.userOptions.skillColsFlat, 7, 3, 14);
+  return {
+    "--skill-cols-party": String(partyCols),
+    "--skill-cols-other": String(otherCols),
+    "--skill-cols-self": String(selfCols),
+    "--skill-cols-group": String(groupCols),
+    "--skill-cols-flat": String(flatCols),
+  };
+});
+
 function getJobSortIndex(jobEnum: number): number {
   const order = getEffectiveJobOrder(store.userOptions.jobOrder);
   const normalized = Util.baseJobEnumConverted(jobEnum);
@@ -146,7 +166,7 @@ const skillPlayerRows = computed<SkillPlayerRow[]>(() => {
 </script>
 
 <template>
-  <div class="skill-popover-content">
+  <div class="skill-popover-content" :style="layoutLimitVars">
     <template v-if="effectiveSkills.length === 0">
       <div class="no-data">
         {{ t("keigennRecord.noData") }}
@@ -255,10 +275,16 @@ const skillPlayerRows = computed<SkillPlayerRow[]>(() => {
 }
 
 .skill-grid-flat {
-  display: grid;
-  grid-template-columns: repeat(7, var(--skill-icon-size, 28px));
+  display: flex;
+  flex-wrap: wrap;
   gap: 2px;
-  width: fit-content;
+  max-width: min(
+    calc(
+      var(--skill-icon-size, 28px) * var(--skill-cols-flat, 7) + (var(--skill-cols-flat, 7) - 1) *
+        2px
+    ),
+    calc(100vw - 50px)
+  );
 }
 
 .skill-groups {
@@ -291,7 +317,13 @@ const skillPlayerRows = computed<SkillPlayerRow[]>(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 2px;
-  max-width: min(calc(var(--skill-icon-size, 28px) * 6 + 10px), calc(100vw - 50px));
+  max-width: min(
+    calc(
+      var(--skill-icon-size, 28px) * var(--skill-cols-group, 6) + (var(--skill-cols-group, 6) - 1) *
+        2px
+    ),
+    calc(100vw - 50px)
+  );
 }
 
 .skill-matrix {
@@ -365,15 +397,24 @@ const skillPlayerRows = computed<SkillPlayerRow[]>(() => {
     align-content: flex-start;
 
     &.is-party {
-      max-width: calc(var(--skill-icon-size, 28px) * 4 + 6px);
+      max-width: calc(
+        var(--skill-icon-size, 28px) * var(--skill-cols-party, 4) +
+          (var(--skill-cols-party, 4) - 1) * 2px
+      );
     }
 
     &.is-other {
-      max-width: calc(var(--skill-icon-size, 28px) * 3 + 4px);
+      max-width: calc(
+        var(--skill-icon-size, 28px) * var(--skill-cols-other, 3) +
+          (var(--skill-cols-other, 3) - 1) * 2px
+      );
     }
 
     &.is-self {
-      max-width: calc(var(--skill-icon-size, 28px) * 3 + 4px);
+      max-width: calc(
+        var(--skill-icon-size, 28px) * var(--skill-cols-self, 3) + (var(--skill-cols-self, 3) - 1) *
+          2px
+      );
     }
   }
 }

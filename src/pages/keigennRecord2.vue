@@ -1682,6 +1682,48 @@ const activeIconSizeMeta = computed(
   () => SKILL_ICON_SIZE_META[userOptions.skillLayout] ?? SKILL_ICON_SIZE_META.matrix,
 );
 
+type MatrixColKey = "skillColsMatrixParty" | "skillColsMatrixOther" | "skillColsMatrixSelf";
+
+const MATRIX_COL_LIMIT_META: { key: MatrixColKey; labelKey: string; min: number; max: number }[] = [
+  { key: "skillColsMatrixParty", labelKey: "keigennRecord.scope.party", min: 1, max: 10 },
+  { key: "skillColsMatrixOther", labelKey: "keigennRecord.scope.other", min: 1, max: 8 },
+  { key: "skillColsMatrixSelf", labelKey: "keigennRecord.scope.self", min: 1, max: 8 },
+];
+
+const LINEAR_COL_LIMIT_META: Record<
+  "group" | "flat",
+  { key: "skillColsGroup" | "skillColsFlat"; labelKey: string; min: number; max: number }
+> = {
+  group: {
+    key: "skillColsGroup",
+    labelKey: "keigennRecord.settings.skillColsGroup",
+    min: 2,
+    max: 12,
+  },
+  flat: {
+    key: "skillColsFlat",
+    labelKey: "keigennRecord.settings.skillColsFlat",
+    min: 3,
+    max: 14,
+  },
+};
+
+const activeLinearColLimitMeta = computed(() =>
+  userOptions.skillLayout === "flat" ? LINEAR_COL_LIMIT_META.flat : LINEAR_COL_LIMIT_META.group,
+);
+
+function clampMatrixColInput(key: MatrixColKey, min: number, max: number) {
+  const val = Number(userOptions[key]);
+  if (!Number.isFinite(val) || val < min) {
+    userOptions[key] = min;
+  } else if (val > max) {
+    userOptions[key] = max;
+  } else {
+    userOptions[key] = Math.round(val);
+  }
+  handleSliderBlur();
+}
+
 const settingsPanelRef = ref<HTMLElement | null>(null);
 const settingsPreview = ref<SettingsPreviewState>(null);
 const settingsPreviewRef = ref<HTMLElement | null>(null);
@@ -1911,6 +1953,14 @@ function buildActUrl(): string {
     q.set("skillIconSizeGroup", String(userOptions.skillIconSizeGroup));
   if (userOptions.skillIconSizeFlat !== 26)
     q.set("skillIconSizeFlat", String(userOptions.skillIconSizeFlat));
+  if (userOptions.skillColsMatrixParty !== 4)
+    q.set("skillColsMatrixParty", String(userOptions.skillColsMatrixParty));
+  if (userOptions.skillColsMatrixOther !== 3)
+    q.set("skillColsMatrixOther", String(userOptions.skillColsMatrixOther));
+  if (userOptions.skillColsMatrixSelf !== 3)
+    q.set("skillColsMatrixSelf", String(userOptions.skillColsMatrixSelf));
+  if (userOptions.skillColsGroup !== 6) q.set("skillColsGroup", String(userOptions.skillColsGroup));
+  if (userOptions.skillColsFlat !== 7) q.set("skillColsFlat", String(userOptions.skillColsFlat));
   if (userOptions.skillPopoverScale !== 1)
     q.set("skillPopoverScale", String(userOptions.skillPopoverScale));
   if (userOptions.amountPopoverScale !== 1)
@@ -2334,6 +2384,50 @@ function copyActUrl() {
                   @blur="handleSliderBlur"
                 />
                 <span class="setting-val">{{ userOptions[activeIconSizeMeta.key] }}px</span>
+              </span>
+            </label>
+            <div
+              v-if="userOptions.skillLayout === 'matrix'"
+              class="setting-row"
+              @mouseenter="openSliderPreview('skill', $event)"
+              @mouseleave="handleSliderMouseLeave"
+            >
+              <span>{{ $t("keigennRecord.settings.skillColsMatrix") }}</span>
+              <div class="col-limit-group">
+                <label v-for="col in MATRIX_COL_LIMIT_META" :key="col.key" class="col-limit-item">
+                  <span class="col-limit-label">{{ $t(col.labelKey) }}</span>
+                  <input
+                    v-model.number="userOptions[col.key]"
+                    type="number"
+                    :min="col.min"
+                    :max="col.max"
+                    class="col-limit-input"
+                    @focus="openSliderPreview('skill', $event)"
+                    @input="handleSliderInput('skill', $event)"
+                    @blur="clampMatrixColInput(col.key, col.min, col.max)"
+                  />
+                </label>
+              </div>
+            </div>
+            <label
+              v-else
+              class="setting-row"
+              @mouseenter="openSliderPreview('skill', $event)"
+              @mouseleave="handleSliderMouseLeave"
+            >
+              <span>{{ $t(activeLinearColLimitMeta.labelKey) }}</span>
+              <span class="setting-ctrl">
+                <input
+                  v-model.number="userOptions[activeLinearColLimitMeta.key]"
+                  type="range"
+                  :min="activeLinearColLimitMeta.min"
+                  :max="activeLinearColLimitMeta.max"
+                  step="1"
+                  @pointerdown="handleSliderPointerDown('skill', $event)"
+                  @input="handleSliderInput('skill', $event)"
+                  @blur="handleSliderBlur"
+                />
+                <span class="setting-val">{{ userOptions[activeLinearColLimitMeta.key] }}</span>
               </span>
             </label>
             <label
@@ -3108,6 +3202,42 @@ main {
   height: 22px;
   padding: 0 7px;
   font-size: 11px;
+}
+
+.col-limit-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.col-limit-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+
+  .col-limit-label {
+    font-size: 11px;
+    color: #9ba4b2;
+  }
+
+  .col-limit-input {
+    width: 38px;
+    height: 21px;
+    padding: 0 4px;
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    color: #eef2f7;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 2px;
+    outline: none;
+
+    &:focus {
+      border-color: #4c8df6;
+    }
+  }
 }
 
 .job-icon-style-btn {

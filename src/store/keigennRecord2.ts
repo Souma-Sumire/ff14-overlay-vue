@@ -17,6 +17,11 @@ export interface KeigennUserOptions {
   skillIconSizeMatrix: number;
   skillIconSizeGroup: number;
   skillIconSizeFlat: number;
+  skillColsMatrixParty: number;
+  skillColsMatrixOther: number;
+  skillColsMatrixSelf: number;
+  skillColsGroup: number;
+  skillColsFlat: number;
   skillPopoverScale: number;
   amountPopoverScale: number;
   jobOrder: number[];
@@ -41,6 +46,11 @@ const DEFAULT_USER_OPTIONS: KeigennUserOptions = {
   skillIconSizeMatrix: 24, // 成员矩阵冷却图标大小（px）
   skillIconSizeGroup: 26, // 分类分组冷却图标大小（px）
   skillIconSizeFlat: 26, // 平铺排序冷却图标大小（px）
+  skillColsMatrixParty: 4, // 矩阵团列每行最大技能数
+  skillColsMatrixOther: 3, // 矩阵单列每行最大技能数
+  skillColsMatrixSelf: 3, // 矩阵自列每行最大技能数
+  skillColsGroup: 6, // 分类布局每行最大技能数
+  skillColsFlat: 7, // 平铺布局每行最大技能数
   skillPopoverScale: 1, // 冷却弹窗独立缩放倍率
   amountPopoverScale: 1, // 伤害详情弹窗独立缩放倍率
   jobOrder: [], // 自定义职业排序（空数组表示使用默认顺序）
@@ -154,6 +164,36 @@ function normalizeUserOptions(options: KeigennUserOptions): KeigennUserOptions {
     DEFAULT_USER_OPTIONS.skillIconSizeFlat,
     18,
     40,
+  );
+  options.skillColsMatrixParty = clampIntOption(
+    options.skillColsMatrixParty,
+    DEFAULT_USER_OPTIONS.skillColsMatrixParty,
+    1,
+    10,
+  );
+  options.skillColsMatrixOther = clampIntOption(
+    options.skillColsMatrixOther,
+    DEFAULT_USER_OPTIONS.skillColsMatrixOther,
+    1,
+    8,
+  );
+  options.skillColsMatrixSelf = clampIntOption(
+    options.skillColsMatrixSelf,
+    DEFAULT_USER_OPTIONS.skillColsMatrixSelf,
+    1,
+    8,
+  );
+  options.skillColsGroup = clampIntOption(
+    options.skillColsGroup,
+    DEFAULT_USER_OPTIONS.skillColsGroup,
+    2,
+    12,
+  );
+  options.skillColsFlat = clampIntOption(
+    options.skillColsFlat,
+    DEFAULT_USER_OPTIONS.skillColsFlat,
+    3,
+    14,
   );
   if (!Number.isFinite(options.skillPopoverScale) || options.skillPopoverScale <= 0) {
     options.skillPopoverScale = DEFAULT_USER_OPTIONS.skillPopoverScale;
