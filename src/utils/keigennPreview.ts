@@ -9,6 +9,7 @@ interface PreviewSkillSeed {
   ownerId: string;
   ownerJob: number;
   scope: Scope;
+  isSingle?: boolean;
   recast1000ms: number;
   recastLeft: number;
   ready: boolean;
@@ -16,10 +17,57 @@ interface PreviewSkillSeed {
   maxCharges?: number;
 }
 
-const PREVIEW_TARGET_ID = "preview-pld";
+const PREVIEW_TARGET_ID = "preview-gnb";
 
 const PREVIEW_SKILL_SEEDS: PreviewSkillSeed[] = [
-  // PLD (目标)
+  // GNB (目标)
+  {
+    id: 16160,
+    ownerId: "preview-gnb",
+    ownerJob: 37,
+    scope: "party",
+    recast1000ms: 90,
+    recastLeft: 0,
+    ready: true,
+  },
+  {
+    id: 7535,
+    ownerId: "preview-gnb",
+    ownerJob: 37,
+    scope: "party",
+    recast1000ms: 60,
+    recastLeft: 18,
+    ready: false,
+  },
+  {
+    id: 25758,
+    ownerId: "preview-gnb",
+    ownerJob: 37,
+    scope: "self",
+    isSingle: true,
+    recast1000ms: 25,
+    recastLeft: 12,
+    ready: false,
+  },
+  {
+    id: 7531,
+    ownerId: "preview-gnb",
+    ownerJob: 37,
+    scope: "self",
+    recast1000ms: 90,
+    recastLeft: 35,
+    ready: false,
+  },
+  {
+    id: 36935,
+    ownerId: "preview-gnb",
+    ownerJob: 37,
+    scope: "self",
+    recast1000ms: 120,
+    recastLeft: 0,
+    ready: true,
+  },
+  // PLD
   {
     id: 3540,
     ownerId: "preview-pld",
@@ -56,61 +104,6 @@ const PREVIEW_SKILL_SEEDS: PreviewSkillSeed[] = [
     recastLeft: 5,
     ready: false,
   },
-  {
-    id: 7531,
-    ownerId: "preview-pld",
-    ownerJob: 19,
-    scope: "self",
-    recast1000ms: 90,
-    recastLeft: 35,
-    ready: false,
-  },
-  {
-    id: 36920,
-    ownerId: "preview-pld",
-    ownerJob: 19,
-    scope: "self",
-    recast1000ms: 120,
-    recastLeft: 0,
-    ready: true,
-  },
-  {
-    id: 25746,
-    ownerId: "preview-pld",
-    ownerJob: 19,
-    scope: "self",
-    recast1000ms: 5,
-    recastLeft: 0,
-    ready: true,
-  },
-  // GNB
-  {
-    id: 16160,
-    ownerId: "preview-gnb",
-    ownerJob: 37,
-    scope: "party",
-    recast1000ms: 90,
-    recastLeft: 0,
-    ready: true,
-  },
-  {
-    id: 7535,
-    ownerId: "preview-gnb",
-    ownerJob: 37,
-    scope: "party",
-    recast1000ms: 60,
-    recastLeft: 18,
-    ready: false,
-  },
-  {
-    id: 25758,
-    ownerId: "preview-gnb",
-    ownerJob: 37,
-    scope: "other",
-    recast1000ms: 25,
-    recastLeft: 12,
-    ready: false,
-  },
   // WHM
   {
     id: 16536,
@@ -144,6 +137,7 @@ const PREVIEW_SKILL_SEEDS: PreviewSkillSeed[] = [
     ownerId: "preview-whm",
     ownerJob: 24,
     scope: "other",
+    isSingle: true,
     recast1000ms: 60,
     recastLeft: 28,
     ready: false,
@@ -153,6 +147,7 @@ const PREVIEW_SKILL_SEEDS: PreviewSkillSeed[] = [
     ownerId: "preview-whm",
     ownerJob: 24,
     scope: "other",
+    isSingle: true,
     recast1000ms: 30,
     recastLeft: 11,
     ready: true,
@@ -192,6 +187,7 @@ const PREVIEW_SKILL_SEEDS: PreviewSkillSeed[] = [
     ownerId: "preview-sch",
     ownerJob: 28,
     scope: "other",
+    isSingle: true,
     recast1000ms: 45,
     recastLeft: 0,
     ready: true,
@@ -283,6 +279,7 @@ export function getSkillLayoutPreviewSkills(): KeySkillSnapshot[] {
       chargesReady: seed.chargesReady,
       maxCharges: seed.maxCharges,
       scope: seed.scope,
+      isSingle: seed.isSingle,
     };
   });
 

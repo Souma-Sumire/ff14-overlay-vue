@@ -13,7 +13,10 @@ export interface KeigennUserOptions {
   minimize: boolean;
   minimizeStyle: "text" | "icon";
   skillLayout: "matrix" | "group" | "flat";
-  skillIconSize: number;
+  singleInBoth: boolean;
+  skillIconSizeMatrix: number;
+  skillIconSizeGroup: number;
+  skillIconSizeFlat: number;
   skillPopoverScale: number;
   amountPopoverScale: number;
   actionCN: boolean;
@@ -32,7 +35,10 @@ const DEFAULT_USER_OPTIONS: KeigennUserOptions = {
   minimize: false, // 启动时迷你化
   minimizeStyle: "icon", // 缩小样式：图标+文字 | 单图标
   skillLayout: "matrix", // 冷却弹窗布局：成员矩阵 | 分类分组 | 平铺排序
-  skillIconSize: 28, // 冷却图标大小（px）
+  singleInBoth: false, // 是否将 single 技能同时显示在自和单
+  skillIconSizeMatrix: 24, // 成员矩阵冷却图标大小（px）
+  skillIconSizeGroup: 26, // 分类分组冷却图标大小（px）
+  skillIconSizeFlat: 26, // 平铺排序冷却图标大小（px）
   skillPopoverScale: 1, // 冷却弹窗独立缩放倍率
   amountPopoverScale: 1, // 伤害详情弹窗独立缩放倍率
   actionCN: true, // action显示中文化
@@ -63,6 +69,11 @@ function parseParams<T>(v: unknown, def: T): T {
   return def;
 }
 
+function clampIntOption(val: number, fallback: number, min: number, max: number): number {
+  if (!Number.isFinite(val) || val <= 0) return fallback;
+  return Math.min(max, Math.max(min, Math.round(val)));
+}
+
 function normalizeUserOptions(options: KeigennUserOptions): KeigennUserOptions {
   if (
     options.skillLayout !== "matrix" &&
@@ -71,11 +82,24 @@ function normalizeUserOptions(options: KeigennUserOptions): KeigennUserOptions {
   ) {
     options.skillLayout = DEFAULT_USER_OPTIONS.skillLayout;
   }
-  if (!Number.isFinite(options.skillIconSize) || options.skillIconSize <= 0) {
-    options.skillIconSize = DEFAULT_USER_OPTIONS.skillIconSize;
-  } else {
-    options.skillIconSize = Math.min(48, Math.max(16, Math.round(options.skillIconSize)));
-  }
+  options.skillIconSizeMatrix = clampIntOption(
+    options.skillIconSizeMatrix,
+    DEFAULT_USER_OPTIONS.skillIconSizeMatrix,
+    16,
+    32,
+  );
+  options.skillIconSizeGroup = clampIntOption(
+    options.skillIconSizeGroup,
+    DEFAULT_USER_OPTIONS.skillIconSizeGroup,
+    18,
+    40,
+  );
+  options.skillIconSizeFlat = clampIntOption(
+    options.skillIconSizeFlat,
+    DEFAULT_USER_OPTIONS.skillIconSizeFlat,
+    18,
+    40,
+  );
   if (!Number.isFinite(options.skillPopoverScale) || options.skillPopoverScale <= 0) {
     options.skillPopoverScale = DEFAULT_USER_OPTIONS.skillPopoverScale;
   } else {

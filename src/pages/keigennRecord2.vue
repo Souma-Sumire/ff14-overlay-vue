@@ -1203,6 +1203,7 @@ function getKeySkillSnapshot(timestamp: number, targetId: string): KeySkillSnaps
       return {
         ...item,
         scope,
+        isSingle: item.scope === "single" ? true : undefined,
         jobResource,
         recastLeft,
         ready,
@@ -1631,6 +1632,36 @@ const SKILL_LAYOUT_OPTIONS: { value: SkillLayoutOption; labelKey: string }[] = [
   { value: "flat", labelKey: "keigennRecord.settings.skillLayoutFlat" },
 ];
 
+type SkillIconSizeKey = "skillIconSizeMatrix" | "skillIconSizeGroup" | "skillIconSizeFlat";
+
+const SKILL_ICON_SIZE_META: Record<
+  SkillLayoutOption,
+  { key: SkillIconSizeKey; labelKey: string; min: number; max: number }
+> = {
+  matrix: {
+    key: "skillIconSizeMatrix",
+    labelKey: "keigennRecord.settings.skillIconSizeMatrix",
+    min: 16,
+    max: 32,
+  },
+  group: {
+    key: "skillIconSizeGroup",
+    labelKey: "keigennRecord.settings.skillIconSizeGroup",
+    min: 18,
+    max: 40,
+  },
+  flat: {
+    key: "skillIconSizeFlat",
+    labelKey: "keigennRecord.settings.skillIconSizeFlat",
+    min: 18,
+    max: 40,
+  },
+};
+
+const activeIconSizeMeta = computed(
+  () => SKILL_ICON_SIZE_META[userOptions.skillLayout] ?? SKILL_ICON_SIZE_META.matrix,
+);
+
 const layoutPreviewMode = ref<SkillLayoutOption | null>(null);
 const layoutPreviewRef = ref<HTMLElement | null>(null);
 const layoutPreviewStyle = ref<Record<string, string>>({
@@ -1704,7 +1735,13 @@ function buildActUrl(): string {
   if (userOptions.minimize !== false) q.set("minimize", "1");
   if (userOptions.minimizeStyle !== "icon") q.set("minimizeStyle", userOptions.minimizeStyle);
   if (userOptions.skillLayout !== "matrix") q.set("skillLayout", userOptions.skillLayout);
-  if (userOptions.skillIconSize !== 28) q.set("skillIconSize", String(userOptions.skillIconSize));
+  if (userOptions.singleInBoth) q.set("singleInBoth", "1");
+  if (userOptions.skillIconSizeMatrix !== 24)
+    q.set("skillIconSizeMatrix", String(userOptions.skillIconSizeMatrix));
+  if (userOptions.skillIconSizeGroup !== 26)
+    q.set("skillIconSizeGroup", String(userOptions.skillIconSizeGroup));
+  if (userOptions.skillIconSizeFlat !== 26)
+    q.set("skillIconSizeFlat", String(userOptions.skillIconSizeFlat));
   if (userOptions.skillPopoverScale !== 1)
     q.set("skillPopoverScale", String(userOptions.skillPopoverScale));
   if (userOptions.amountPopoverScale !== 1)
@@ -2080,17 +2117,24 @@ function copyActUrl() {
               </button>
             </div>
           </div>
+          <label class="setting-row setting-sub-row">
+            <span class="setting-label">
+              {{ $t("keigennRecord.settings.singleInBoth") }}
+              <span class="setting-hint">{{ $t("keigennRecord.settings.singleInBothHint") }}</span>
+            </span>
+            <input v-model="userOptions.singleInBoth" type="checkbox" />
+          </label>
           <label class="setting-row">
-            <span>{{ $t("keigennRecord.settings.skillIconSize") }}</span>
+            <span>{{ $t(activeIconSizeMeta.labelKey) }}</span>
             <span class="setting-ctrl">
               <input
-                v-model.number="userOptions.skillIconSize"
+                v-model.number="userOptions[activeIconSizeMeta.key]"
                 type="range"
-                min="20"
-                max="40"
+                :min="activeIconSizeMeta.min"
+                :max="activeIconSizeMeta.max"
                 step="1"
               />
-              <span class="setting-val">{{ userOptions.skillIconSize }}px</span>
+              <span class="setting-val">{{ userOptions[activeIconSizeMeta.key] }}px</span>
             </span>
           </label>
           <label class="setting-row">
@@ -2150,8 +2194,8 @@ function copyActUrl() {
         <div
           class="skill-layout-preview-scale"
           :style="{
-            '--skill-icon-size': '24px',
-            '--skill-icon-scale': String(24 / 28),
+            '--skill-icon-size': layoutPreviewMode === 'matrix' ? '22px' : '24px',
+            '--skill-icon-scale': String((layoutPreviewMode === 'matrix' ? 22 : 24) / 28),
           }"
         >
           <SkillCooldownView
@@ -2159,6 +2203,7 @@ function copyActUrl() {
             :target-id="previewTargetId"
             :layout="layoutPreviewMode"
             :anonymous="userOptions.anonymous"
+            :single-in-both="userOptions.singleInBoth"
           />
         </div>
       </div>
@@ -2702,6 +2747,11 @@ main {
   font-size: 12px;
   color: #c5ccd6;
   cursor: pointer;
+
+  &.setting-sub-row {
+    padding-left: 10px;
+    border-left: 2px solid rgba(255, 255, 255, 0.14);
+  }
 
   input[type="checkbox"] {
     accent-color: #3b7be0;

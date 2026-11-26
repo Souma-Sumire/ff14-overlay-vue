@@ -915,10 +915,14 @@ const popoverScaleStyle = computed(() => {
         ? userOptions.amountPopoverScale
         : 1;
   }
-  const iconSize =
-    Number.isFinite(userOptions.skillIconSize) && userOptions.skillIconSize > 0
-      ? userOptions.skillIconSize
-      : 28;
+  const iconSizeMap = {
+    matrix: userOptions.skillIconSizeMatrix,
+    group: userOptions.skillIconSizeGroup,
+    flat: userOptions.skillIconSizeFlat,
+  };
+  const rawIconSize = iconSizeMap[userOptions.skillLayout] ?? 24;
+  const fallbackIconSize = userOptions.skillLayout === "matrix" ? 24 : 26;
+  const iconSize = Number.isFinite(rawIconSize) && rawIconSize > 0 ? rawIconSize : fallbackIconSize;
   return {
     "--popover-scale": String(baseScale * extraScale),
     "--skill-icon-size": `${iconSize}px`,
@@ -1283,6 +1287,7 @@ defineExpose({
                 :target-id="hoveredRow.targetId"
                 :layout="userOptions.skillLayout"
                 :anonymous="userOptions.anonymous"
+                :single-in-both="userOptions.singleInBoth"
               />
             </template>
 

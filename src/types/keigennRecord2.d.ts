@@ -75,6 +75,7 @@ export interface KeySkillSnapshot {
   chargesReady?: number;
   maxCharges?: number;
   scope: Scope;
+  isSingle?: boolean;
   jobResource?: number;
   resourceCost?: number;
   extraText?: string;

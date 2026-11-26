@@ -3,6 +3,7 @@ import type { KeySkillSnapshot, Scope } from "@/types/keigennRecord2";
 import { computed } from "vue";
 import { useLang } from "@/composables/useLang";
 import { DEFAULT_JOB_SORT_ORDER } from "@/resources/jobSortOrder";
+import { keigennSkills } from "@/resources/keigennSkillResource";
 import { useKeigennRecord2Store } from "@/store/keigennRecord2";
 import { getCachedJobIconUrl } from "@/utils/keigennRecord2";
 import Util from "@/utils/util";
@@ -15,11 +16,18 @@ const props = withDefaults(
     targetId: string;
     layout: "matrix" | "group" | "flat";
     anonymous?: boolean;
+    singleInBoth?: boolean;
   }>(),
   {
     anonymous: false,
+    singleInBoth: false,
   },
 );
+
+const SINGLE_SKILL_IDS = new Set(
+  keigennSkills.filter((s) => s.scope === "single").map((s) => s.id),
+);
+const SCOPE_ORDER: Record<Scope, number> = { party: 0, other: 1, self: 2 };
 
 interface SkillPlayerRow {
   ownerId: string;
@@ -57,11 +65,31 @@ function handleJobImgError(e: Event) {
   }
 }
 
+const effectiveSkills = computed<KeySkillSnapshot[]>(() => {
+  if (!props.singleInBoth) return props.skills;
+  const expanded: KeySkillSnapshot[] = [];
+  for (const s of props.skills) {
+    expanded.push(s);
+    if (s.scope === "self" && (s.isSingle || SINGLE_SKILL_IDS.has(s.id))) {
+      expanded.push({ ...s, scope: "other" });
+    }
+  }
+  expanded.sort((a, b) => {
+    if (a.scope !== b.scope) return SCOPE_ORDER[a.scope] - SCOPE_ORDER[b.scope];
+    if (a.ownerJob !== b.ownerJob) {
+      return getJobSortIndex(a.ownerJob) - getJobSortIndex(b.ownerJob);
+    }
+    if (a.recast1000ms !== b.recast1000ms) return b.recast1000ms - a.recast1000ms;
+    return a.id - b.id;
+  });
+  return expanded;
+});
+
 const duplicateSkillIds = computed<Set<number>>(() => {
   if (props.layout === "matrix") return new Set();
   const seen = new Set<number>();
   const duplicates = new Set<number>();
-  for (const s of props.skills) {
+  for (const s of effectiveSkills.value) {
     if (seen.has(s.id)) duplicates.add(s.id);
     else seen.add(s.id);
   }
@@ -73,7 +101,7 @@ const skillGroups = computed<{ scope: Scope; label: string; skills: KeySkillSnap
   return SKILL_SCOPE_META.map(({ scope, labelKey }) => ({
     scope,
     label: t(labelKey),
-    skills: props.skills.filter((s) => s.scope === scope),
+    skills: effectiveSkills.value.filter((s) => s.scope === scope),
   })).filter((g) => g.skills.length > 0);
 });
 
@@ -81,7 +109,7 @@ const skillPlayerRows = computed<SkillPlayerRow[]>(() => {
   if (props.layout !== "matrix") return [];
   const byOwner = new Map<string, SkillPlayerRow>();
 
-  for (const skill of props.skills) {
+  for (const skill of effectiveSkills.value) {
     let entry = byOwner.get(skill.ownerId);
     if (!entry) {
       entry = {
@@ -125,7 +153,7 @@ const skillPlayerRows = computed<SkillPlayerRow[]>(() => {
 
 <template>
   <div class="skill-popover-content">
-    <template v-if="skills.length === 0">
+    <template v-if="effectiveSkills.length === 0">
       <div class="no-data">
         {{ t("keigennRecord.noData") }}
       </div>
@@ -134,7 +162,7 @@ const skillPlayerRows = computed<SkillPlayerRow[]>(() => {
     <template v-else-if="layout === 'flat'">
       <div class="skill-grid-flat">
         <SkillCooldownIcon
-          v-for="skill in skills"
+          v-for="skill in effectiveSkills"
           :key="`${skill.id}-${skill.ownerId}-${skill.scope}`"
           :skill="skill"
           :job-label="
@@ -311,8 +339,8 @@ const skillPlayerRows = computed<SkillPlayerRow[]>(() => {
 
     .skill-player-job-icon {
       display: block;
-      width: 18px;
-      height: 18px;
+      width: min(18px, var(--skill-icon-size, 24px));
+      height: min(18px, var(--skill-icon-size, 24px));
       margin: 0 auto;
       object-fit: contain;
     }
