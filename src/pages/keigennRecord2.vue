@@ -48,7 +48,6 @@ import { useKeigennRecord2Store } from "@/store/keigennRecord2";
 import { compareSame } from "@/utils/compareSaveAction";
 import {
   getAmountDetailPreview,
-  getJobIconPreviewUrls,
   getSkillLayoutPreviewSkills,
   getSkillLayoutPreviewTargetId,
 } from "@/utils/keigennPreview";
@@ -63,7 +62,7 @@ import {
 } from "@/utils/keigenn";
 
 import { formatTimeMs as formatTime } from "@/utils/time";
-import { getJobIconUrl } from "@/utils/keigennRecord2";
+import { getCachedJobIconUrl, getJobIconUrl } from "@/utils/keigennRecord2";
 import Util from "@/utils/util";
 import {
   ensureIconCacheReady,
@@ -1644,7 +1643,6 @@ type SkillLayoutOption = "matrix" | "group" | "flat";
 type SliderPreviewKind = "scale" | "skill" | "amount";
 type SettingsPreviewState =
   | { kind: "layout"; layout: SkillLayoutOption }
-  | { kind: "job-icon"; iconType: number }
   | { kind: "slider"; target: SliderPreviewKind }
   | null;
 
@@ -1704,11 +1702,6 @@ const previewSkills = computed(() =>
     : [],
 );
 const previewTargetId = getSkillLayoutPreviewTargetId();
-const previewJobIcons = computed(() =>
-  settingsPreview.value?.kind === "job-icon"
-    ? getJobIconPreviewUrls(settingsPreview.value.iconType)
-    : [],
-);
 const previewAmountDetail = computed(() => getAmountDetailPreview(userOptions.anonymous));
 
 const sliderPreviewZoomStyle = computed(() => {
@@ -1747,19 +1740,11 @@ function computeVerticalPreviewPos(triggerRect: DOMRect, previewRect: DOMRect) {
   const w = previewRect.width;
   const h = previewRect.height;
 
-  const belowTop = triggerRect.bottom + gap;
-  const aboveTop = triggerRect.top - gap - h;
-  let top = belowTop;
-  if (belowTop + h <= vh - margin) {
-    top = belowTop;
-  } else if (aboveTop >= margin) {
-    top = aboveTop;
-  } else {
-    top =
-      vh - triggerRect.bottom >= triggerRect.top
-        ? Math.max(margin, vh - h - margin)
-        : Math.max(margin, aboveTop);
-  }
+  // 仅依据触发器在视口中的上下剩余空间决定方向，保证各选项预览方向一致
+  const preferBelow = vh - triggerRect.bottom >= triggerRect.top;
+  const top = preferBelow
+    ? Math.min(triggerRect.bottom + gap, Math.max(margin, vh - h - margin))
+    : Math.max(margin, triggerRect.top - gap - h);
 
   const centeredLeft = triggerRect.left + triggerRect.width / 2 - w / 2;
   const left = Math.max(margin, Math.min(centeredLeft, Math.max(margin, vw - w - margin)));
@@ -2156,7 +2141,7 @@ function copyActUrl() {
       </div>
     </div>
 
-    <div v-if="!store.isBrowser && dev" class="dev-act-test">
+    <div v-if="!store.isBrowser && dev && !minimize" class="dev-act-test">
       <el-button v-if="hasAnyEncounterData" size="small" @click="clearAllEncounters">
         {{ $t("keigennRecord.toolbar.clearRecords") }}
       </el-button>
@@ -2219,15 +2204,16 @@ function copyActUrl() {
                   v-for="val in [1, 2, 3, 4]"
                   :key="val"
                   type="button"
-                  class="toolbar-btn icon-type-btn"
+                  class="toolbar-btn job-icon-style-btn"
                   :class="{ 'is-active': userOptions.iconType === val }"
+                  :title="String(val)"
                   @click="userOptions.iconType = val"
-                  @mouseenter="openButtonPreview({ kind: 'job-icon', iconType: val }, $event)"
-                  @mouseleave="closeButtonPreview"
-                  @focus="openButtonPreview({ kind: 'job-icon', iconType: val }, $event)"
-                  @blur="closeButtonPreview"
                 >
-                  {{ val }}
+                  <img
+                    :src="getCachedJobIconUrl('Paladin', val)"
+                    class="job-icon-style-img"
+                    alt=""
+                  />
                 </button>
               </div>
             </div>
@@ -2236,19 +2222,24 @@ function copyActUrl() {
               <div class="icon-type-group">
                 <button
                   type="button"
-                  class="toolbar-btn icon-type-btn"
+                  class="minimize-preview-btn is-text"
                   :class="{ 'is-active': userOptions.minimizeStyle === 'text' }"
                   @click="userOptions.minimizeStyle = 'text'"
                 >
-                  {{ $t("keigennRecord.settings.minimizeStyleText") }}
+                  <ElIcon :size="12">
+                    <ZoomIn />
+                  </ElIcon>
+                  <span>{{ $t("keigennRecord.minimizeLabel") }}</span>
                 </button>
                 <button
                   type="button"
-                  class="toolbar-btn icon-type-btn"
+                  class="minimize-preview-btn is-icon"
                   :class="{ 'is-active': userOptions.minimizeStyle === 'icon' }"
                   @click="userOptions.minimizeStyle = 'icon'"
                 >
-                  {{ $t("keigennRecord.settings.minimizeStyleIcon") }}
+                  <ElIcon :size="13">
+                    <ZoomIn />
+                  </ElIcon>
                 </button>
               </div>
             </div>
@@ -2436,21 +2427,12 @@ function copyActUrl() {
         class="skill-layout-preview-popover"
         :style="settingsPreviewStyle"
       >
-        <div v-if="settingsPreview.kind === 'job-icon'" class="job-icon-preview-row">
-          <img
-            v-for="(src, idx) in previewJobIcons"
-            :key="idx"
-            :src="src"
-            class="job-icon-preview-img"
-            alt=""
-          />
-        </div>
         <div
-          v-else-if="settingsPreview.kind === 'layout'"
+          v-if="settingsPreview.kind === 'layout'"
           class="skill-layout-preview-scale"
           :style="{
-            '--skill-icon-size': settingsPreview.layout === 'matrix' ? '22px' : '24px',
-            '--skill-icon-scale': String((settingsPreview.layout === 'matrix' ? 22 : 24) / 28),
+            '--skill-icon-size': settingsPreview.layout === 'matrix' ? '24px' : '26px',
+            '--skill-icon-scale': String((settingsPreview.layout === 'matrix' ? 24 : 26) / 28),
           }"
         >
           <SkillCooldownView
@@ -2990,11 +2972,11 @@ main {
 }
 
 .settings-body {
-  padding: 12px 10px 12px 14px;
+  padding: 10px 10px 10px 14px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
 
@@ -3020,7 +3002,7 @@ main {
 .settings-divider {
   height: 1px;
   background: rgba(255, 255, 255, 0.08);
-  margin: 3px 0;
+  margin: 2px 0;
   flex-shrink: 0;
 }
 
@@ -3029,7 +3011,7 @@ main {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 24px;
+  min-height: 21px;
   font-size: 12px;
   color: #cfd6e0;
   cursor: pointer;
@@ -3128,6 +3110,58 @@ main {
   font-size: 11px;
 }
 
+.job-icon-style-btn {
+  width: 26px;
+  height: 24px;
+  padding: 0;
+
+  .job-icon-style-img {
+    width: 19px;
+    height: 19px;
+    object-fit: contain;
+    display: block;
+  }
+}
+
+.minimize-preview-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  color: #e6ebf2;
+  background-color: rgba(20, 20, 20, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  cursor: pointer;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease,
+    background-color 0.12s ease;
+
+  &.is-text {
+    padding: 0 7px;
+    border-radius: 2px;
+    font-size: 11px;
+    line-height: 1;
+    gap: 3px;
+  }
+
+  &.is-icon {
+    width: 22px;
+    padding: 0;
+    border-radius: 50%;
+    background-color: rgba(20, 20, 20, 1);
+  }
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.45);
+  }
+
+  &.is-active {
+    border-color: #4c8df6;
+    box-shadow: 0 0 0 1px rgba(76, 141, 246, 0.55);
+  }
+}
+
 .settings-footer {
   padding: 9px 14px;
   background: rgba(0, 0, 0, 0.18);
@@ -3181,21 +3215,8 @@ main {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.72);
   box-sizing: border-box;
 
-  .job-icon-preview-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-
-    .job-icon-preview-img {
-      width: 24px;
-      height: 24px;
-      object-fit: contain;
-      display: block;
-    }
-  }
-
   .skill-layout-preview-scale {
-    zoom: 0.64;
+    zoom: 0.76;
     transform-origin: top left;
   }
 

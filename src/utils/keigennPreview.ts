@@ -1,7 +1,6 @@
 import type { AmountDetailData, KeySkillSnapshot, Scope } from "@/types/keigennRecord2";
 import { DEFAULT_JOB_SORT_ORDER } from "@/resources/jobSortOrder";
 import { idToSrc } from "@/utils/dynamicValue";
-import { getCachedJobIconUrl } from "@/utils/keigennRecord2";
 import Util from "@/utils/util";
 import { rerouteImgSrc } from "@/utils/xivapi";
 
@@ -297,14 +296,6 @@ export function getSkillLayoutPreviewSkills(): KeySkillSnapshot[] {
 
   cachedPreviewSkills = built;
   return built;
-}
-
-const PREVIEW_JOB_ENUMS = [19, 24, 34, 23]; // 坦克、治疗、近战、远程
-
-export function getJobIconPreviewUrls(iconType: number): string[] {
-  return PREVIEW_JOB_ENUMS.map((jobEnum) =>
-    getCachedJobIconUrl(Util.jobEnumToIcon(jobEnum), iconType),
-  );
 }
 
 export function getAmountDetailPreview(anonymous: boolean): AmountDetailData {
