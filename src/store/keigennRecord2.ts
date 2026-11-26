@@ -19,6 +19,8 @@ export interface KeigennUserOptions {
   skillIconSizeFlat: number;
   skillPopoverScale: number;
   amountPopoverScale: number;
+  jobOrder: number[];
+  jobSkillOrder: Record<number, number[]>;
   actionCN: boolean;
   statusCN: boolean;
   order: "unshift" | "push";
@@ -41,13 +43,60 @@ const DEFAULT_USER_OPTIONS: KeigennUserOptions = {
   skillIconSizeFlat: 26, // 平铺排序冷却图标大小（px）
   skillPopoverScale: 1, // 冷却弹窗独立缩放倍率
   amountPopoverScale: 1, // 伤害详情弹窗独立缩放倍率
+  jobOrder: [], // 自定义职业排序（空数组表示使用默认顺序）
+  jobSkillOrder: {}, // 自定义各职业冷却技能排序
   actionCN: true, // action显示中文化
   statusCN: true, // status显示中文化
   order: "unshift", // 数据排列顺序
   anonymous: false, // 匿名模式（玩家名替换为职业名）
 };
 
+function createDefaultUserOptions(): KeigennUserOptions {
+  return {
+    ...DEFAULT_USER_OPTIONS,
+    jobOrder: [],
+    jobSkillOrder: {},
+  };
+}
+
 const USER_OPTION_KEYS = Object.keys(DEFAULT_USER_OPTIONS) as (keyof KeigennUserOptions)[];
+
+function parseJsonIfString(v: unknown): unknown {
+  if (typeof v !== "string") return v;
+  try {
+    return JSON.parse(v);
+  } catch {
+    return v;
+  }
+}
+
+function parseNumberArray(v: unknown): number[] {
+  const raw = parseJsonIfString(v);
+  if (!Array.isArray(raw)) return [];
+  const result: number[] = [];
+  const seen = new Set<number>();
+  for (const item of raw) {
+    const num = Number(item);
+    if (Number.isInteger(num) && num >= 0 && !seen.has(num)) {
+      seen.add(num);
+      result.push(num);
+    }
+  }
+  return result;
+}
+
+function parseJobSkillOrder(v: unknown): Record<number, number[]> {
+  const raw = parseJsonIfString(v);
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  const result: Record<number, number[]> = {};
+  for (const [k, list] of Object.entries(raw as Record<string, unknown>)) {
+    const jobEnum = Number(k);
+    if (!Number.isInteger(jobEnum) || jobEnum <= 0) continue;
+    const ids = parseNumberArray(list);
+    if (ids.length > 0) result[jobEnum] = ids;
+  }
+  return result;
+}
 
 function parseParams<T>(v: unknown, def: T): T {
   if (v === undefined || v === null || v === "") return def;
@@ -65,6 +114,12 @@ function parseParams<T>(v: unknown, def: T): T {
   }
   if (typeof def === "string") {
     return typeof v === "string" ? (v as T) : def;
+  }
+  if (Array.isArray(def)) {
+    return parseNumberArray(v) as T;
+  }
+  if (typeof def === "object") {
+    return parseJobSkillOrder(v) as T;
   }
   return def;
 }
@@ -110,11 +165,13 @@ function normalizeUserOptions(options: KeigennUserOptions): KeigennUserOptions {
   } else {
     options.amountPopoverScale = Math.min(3, Math.max(0.4, options.amountPopoverScale));
   }
+  options.jobOrder = parseNumberArray(options.jobOrder);
+  options.jobSkillOrder = parseJobSkillOrder(options.jobSkillOrder);
   return options;
 }
 
 function loadStoredUserOptions(): KeigennUserOptions {
-  const result: KeigennUserOptions = { ...DEFAULT_USER_OPTIONS };
+  const result = createDefaultUserOptions();
   try {
     const raw = localStorage.getItem(OPTIONS_STORAGE_KEY);
     if (!raw) return result;
@@ -194,7 +251,7 @@ export const useKeigennRecord2Store = defineStore("keigennRecord2", {
       persistUserOptions(this.userOptions);
     },
     resetUserOptions() {
-      Object.assign(this.userOptions, DEFAULT_USER_OPTIONS);
+      Object.assign(this.userOptions, createDefaultUserOptions());
       persistUserOptions(this.userOptions);
     },
     syncUrlOptions() {

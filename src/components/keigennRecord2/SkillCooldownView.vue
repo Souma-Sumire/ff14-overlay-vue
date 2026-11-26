@@ -2,10 +2,9 @@
 import type { KeySkillSnapshot, Scope } from "@/types/keigennRecord2";
 import { computed } from "vue";
 import { useLang } from "@/composables/useLang";
-import { DEFAULT_JOB_SORT_ORDER } from "@/resources/jobSortOrder";
 import { keigennSkills } from "@/resources/keigennSkillResource";
 import { useKeigennRecord2Store } from "@/store/keigennRecord2";
-import { getCachedJobIconUrl } from "@/utils/keigennRecord2";
+import { getCachedJobIconUrl, getEffectiveJobOrder, sortKeySkills } from "@/utils/keigennRecord2";
 import Util from "@/utils/util";
 import { EMPTY_IMAGE } from "@/utils/xivapi";
 import SkillCooldownIcon from "./SkillCooldownIcon.vue";
@@ -27,7 +26,6 @@ const props = withDefaults(
 const SINGLE_SKILL_IDS = new Set(
   keigennSkills.filter((s) => s.scope === "single").map((s) => s.id),
 );
-const SCOPE_ORDER: Record<Scope, number> = { party: 0, other: 1, self: 2 };
 
 interface SkillPlayerRow {
   ownerId: string;
@@ -50,8 +48,12 @@ const { t } = useLang();
 const store = useKeigennRecord2Store();
 
 function getJobSortIndex(jobEnum: number): number {
-  const index = DEFAULT_JOB_SORT_ORDER.indexOf(jobEnum);
-  return index === -1 ? Number.MAX_SAFE_INTEGER : index;
+  const order = getEffectiveJobOrder(store.userOptions.jobOrder);
+  const normalized = Util.baseJobEnumConverted(jobEnum);
+  const index = order.indexOf(normalized);
+  if (index !== -1) return index;
+  const rawIndex = order.indexOf(jobEnum);
+  return rawIndex === -1 ? Number.MAX_SAFE_INTEGER : rawIndex;
 }
 
 function getSimpleJobName(jobEnum: number): string {
@@ -66,23 +68,15 @@ function handleJobImgError(e: Event) {
 }
 
 const effectiveSkills = computed<KeySkillSnapshot[]>(() => {
-  if (props.layout !== "matrix" || !props.singleInBoth) return props.skills;
-  const expanded: KeySkillSnapshot[] = [];
-  for (const s of props.skills) {
-    expanded.push(s);
-    if (s.scope === "self" && (s.isSingle || SINGLE_SKILL_IDS.has(s.id))) {
-      expanded.push({ ...s, scope: "other" });
-    }
-  }
-  expanded.sort((a, b) => {
-    if (a.scope !== b.scope) return SCOPE_ORDER[a.scope] - SCOPE_ORDER[b.scope];
-    if (a.ownerJob !== b.ownerJob) {
-      return getJobSortIndex(a.ownerJob) - getJobSortIndex(b.ownerJob);
-    }
-    if (a.recast1000ms !== b.recast1000ms) return b.recast1000ms - a.recast1000ms;
-    return a.id - b.id;
-  });
-  return expanded;
+  const baseSkills =
+    props.layout === "matrix" && props.singleInBoth
+      ? props.skills.flatMap((s) =>
+          s.scope === "self" && (s.isSingle || SINGLE_SKILL_IDS.has(s.id))
+            ? [s, { ...s, scope: "other" as const }]
+            : [s],
+        )
+      : props.skills;
+  return sortKeySkills(baseSkills, store.userOptions.jobOrder, store.userOptions.jobSkillOrder);
 });
 
 const duplicateSkillIds = computed<Set<number>>(() => {

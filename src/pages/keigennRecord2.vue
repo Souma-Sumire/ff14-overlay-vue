@@ -17,6 +17,7 @@ import { Setting, UploadFilled, ZoomIn, ZoomOut } from "@element-plus/icons-vue"
 import { useDark } from "@vueuse/core";
 import AmountDetailView from "@/components/keigennRecord2/AmountDetailView.vue";
 import SkillCooldownView from "@/components/keigennRecord2/SkillCooldownView.vue";
+import SkillSortPanel from "@/components/keigennRecord2/SkillSortPanel.vue";
 // TODO: 死亡回放：治疗栏目的状态追踪治疗有关的buff
 import {
   computed,
@@ -120,6 +121,7 @@ const onlyDeath = ref(false);
 const hideAA = ref(false);
 const showHeals = ref(false);
 const settingsOpen = ref(false);
+const settingsView = ref<"main" | "skill-sort">("main");
 
 const browserFileInputRef = ref<HTMLInputElement | null>(null);
 const browserCombatSelectRef = ref<InstanceType<typeof ElSelect> | null>(null);
@@ -1884,8 +1886,17 @@ function handleSliderBlur() {
   }
 }
 
+function openSkillSortView() {
+  isSliderDragging = false;
+  isPointerOverSlider = false;
+  settingsPreview.value = null;
+  activePreviewTriggerEl = null;
+  settingsView.value = "skill-sort";
+}
+
 watch(settingsOpen, (open) => {
   if (!open) {
+    settingsView.value = "main";
     isSliderDragging = false;
     isPointerOverSlider = false;
     settingsPreview.value = null;
@@ -1919,6 +1930,10 @@ function buildActUrl(): string {
     q.set("skillPopoverScale", String(userOptions.skillPopoverScale));
   if (userOptions.amountPopoverScale !== 1)
     q.set("amountPopoverScale", String(userOptions.amountPopoverScale));
+  if (userOptions.jobOrder.length > 0) q.set("jobOrder", JSON.stringify(userOptions.jobOrder));
+  if (Object.keys(userOptions.jobSkillOrder).length > 0) {
+    q.set("jobSkillOrder", JSON.stringify(userOptions.jobSkillOrder));
+  }
   if (userOptions.actionCN !== true) q.set("actionCN", "0");
   if (userOptions.statusCN !== true) q.set("statusCN", "0");
   if (userOptions.order !== "unshift") q.set("order", userOptions.order);
@@ -2162,244 +2177,255 @@ function copyActUrl() {
 
     <div v-if="settingsOpen" class="settings-backdrop" @click.self="settingsOpen = false">
       <div ref="settingsPanelRef" class="settings-panel">
-        <div class="settings-body">
-          <label
-            class="setting-row"
-            @mouseenter="openSliderPreview('scale', $event)"
-            @mouseleave="handleSliderMouseLeave"
-          >
-            <span>{{ $t("keigennRecord.settings.scale") }}</span>
-            <span class="setting-ctrl">
-              <input
-                v-model.number="userOptions.scale"
-                type="range"
-                min="0.6"
-                max="2"
-                step="0.05"
-                @pointerdown="handleSliderPointerDown('scale', $event)"
-                @input="handleSliderInput('scale', $event)"
-                @blur="handleSliderBlur"
-              />
-              <span class="setting-val">{{ Number(userOptions.scale).toFixed(2) }}</span>
-            </span>
-          </label>
-          <label class="setting-row">
-            <span>{{ $t("keigennRecord.settings.opacity") }}</span>
-            <span class="setting-ctrl">
-              <input
-                v-model.number="userOptions.opacity"
-                type="range"
-                min="0.1"
-                max="1"
-                step="0.05"
-              />
-              <span class="setting-val">{{ Number(userOptions.opacity).toFixed(2) }}</span>
-            </span>
-          </label>
-          <div class="setting-row">
-            <span>{{ $t("keigennRecord.settings.iconType") }}</span>
-            <div class="icon-type-group">
-              <button
-                v-for="val in [1, 2, 3, 4]"
-                :key="val"
-                type="button"
-                class="toolbar-btn icon-type-btn"
-                :class="{ 'is-active': userOptions.iconType === val }"
-                @click="userOptions.iconType = val"
-                @mouseenter="openButtonPreview({ kind: 'job-icon', iconType: val }, $event)"
-                @mouseleave="closeButtonPreview"
-                @focus="openButtonPreview({ kind: 'job-icon', iconType: val }, $event)"
-                @blur="closeButtonPreview"
-              >
-                {{ val }}
-              </button>
-            </div>
-          </div>
-          <div class="setting-row">
-            <span>{{ $t("keigennRecord.settings.minimizeStyle") }}</span>
-            <div class="icon-type-group">
-              <button
-                type="button"
-                class="toolbar-btn icon-type-btn"
-                :class="{ 'is-active': userOptions.minimizeStyle === 'text' }"
-                @click="userOptions.minimizeStyle = 'text'"
-              >
-                {{ $t("keigennRecord.settings.minimizeStyleText") }}
-              </button>
-              <button
-                type="button"
-                class="toolbar-btn icon-type-btn"
-                :class="{ 'is-active': userOptions.minimizeStyle === 'icon' }"
-                @click="userOptions.minimizeStyle = 'icon'"
-              >
-                {{ $t("keigennRecord.settings.minimizeStyleIcon") }}
-              </button>
-            </div>
-          </div>
-
-          <div class="settings-divider" />
-
-          <label class="setting-row">
-            <span>{{ $t("keigennRecord.settings.anonymous") }}</span>
-            <input v-model="userOptions.anonymous" type="checkbox" />
-          </label>
-          <label class="setting-row">
-            <span>{{ $t("keigennRecord.settings.actionCN") }}</span>
-            <input v-model="userOptions.actionCN" type="checkbox" />
-          </label>
-          <label class="setting-row">
-            <span>{{ $t("keigennRecord.settings.statusCN") }}</span>
-            <input v-model="userOptions.statusCN" type="checkbox" />
-          </label>
-          <label class="setting-row">
-            <span class="setting-label"
-              >{{ $t("keigennRecord.settings.parseAA")
-              }}<span class="setting-hint">{{
-                $t("keigennRecord.settings.newRecordsOnly")
-              }}</span></span
+        <template v-if="settingsView === 'main'">
+          <div class="settings-body">
+            <label
+              class="setting-row"
+              @mouseenter="openSliderPreview('scale', $event)"
+              @mouseleave="handleSliderMouseLeave"
             >
-            <input v-model="userOptions.parseAA" type="checkbox" />
-          </label>
-          <label class="setting-row">
-            <span class="setting-label"
-              >{{ $t("keigennRecord.settings.parseDoT")
-              }}<span class="setting-hint">{{
-                $t("keigennRecord.settings.newRecordsOnly")
-              }}</span></span
-            >
-            <input v-model="userOptions.parseDoT" type="checkbox" />
-          </label>
-          <label class="setting-row">
-            <span>{{ $t("keigennRecord.settings.orderTop") }}</span>
-            <input
-              type="checkbox"
-              :checked="userOptions.order === 'unshift'"
-              @change="
-                userOptions.order = ($event.target as HTMLInputElement).checked ? 'unshift' : 'push'
-              "
-            />
-          </label>
+              <span>{{ $t("keigennRecord.settings.scale") }}</span>
+              <span class="setting-ctrl">
+                <input
+                  v-model.number="userOptions.scale"
+                  type="range"
+                  min="0.6"
+                  max="2"
+                  step="0.05"
+                  @pointerdown="handleSliderPointerDown('scale', $event)"
+                  @input="handleSliderInput('scale', $event)"
+                  @blur="handleSliderBlur"
+                />
+                <span class="setting-val">{{ Number(userOptions.scale).toFixed(2) }}</span>
+              </span>
+            </label>
+            <label class="setting-row">
+              <span>{{ $t("keigennRecord.settings.opacity") }}</span>
+              <span class="setting-ctrl">
+                <input
+                  v-model.number="userOptions.opacity"
+                  type="range"
+                  min="0.1"
+                  max="1"
+                  step="0.05"
+                />
+                <span class="setting-val">{{ Number(userOptions.opacity).toFixed(2) }}</span>
+              </span>
+            </label>
+            <div class="setting-row">
+              <span>{{ $t("keigennRecord.settings.iconType") }}</span>
+              <div class="icon-type-group">
+                <button
+                  v-for="val in [1, 2, 3, 4]"
+                  :key="val"
+                  type="button"
+                  class="toolbar-btn icon-type-btn"
+                  :class="{ 'is-active': userOptions.iconType === val }"
+                  @click="userOptions.iconType = val"
+                  @mouseenter="openButtonPreview({ kind: 'job-icon', iconType: val }, $event)"
+                  @mouseleave="closeButtonPreview"
+                  @focus="openButtonPreview({ kind: 'job-icon', iconType: val }, $event)"
+                  @blur="closeButtonPreview"
+                >
+                  {{ val }}
+                </button>
+              </div>
+            </div>
+            <div class="setting-row">
+              <span>{{ $t("keigennRecord.settings.minimizeStyle") }}</span>
+              <div class="icon-type-group">
+                <button
+                  type="button"
+                  class="toolbar-btn icon-type-btn"
+                  :class="{ 'is-active': userOptions.minimizeStyle === 'text' }"
+                  @click="userOptions.minimizeStyle = 'text'"
+                >
+                  {{ $t("keigennRecord.settings.minimizeStyleText") }}
+                </button>
+                <button
+                  type="button"
+                  class="toolbar-btn icon-type-btn"
+                  :class="{ 'is-active': userOptions.minimizeStyle === 'icon' }"
+                  @click="userOptions.minimizeStyle = 'icon'"
+                >
+                  {{ $t("keigennRecord.settings.minimizeStyleIcon") }}
+                </button>
+              </div>
+            </div>
 
-          <div class="settings-divider" />
+            <div class="settings-divider" />
 
-          <div class="setting-row">
-            <span>{{ $t("keigennRecord.settings.skillLayout") }}</span>
-            <div class="icon-type-group">
-              <button
-                v-for="opt in SKILL_LAYOUT_OPTIONS"
-                :key="opt.value"
-                type="button"
-                class="toolbar-btn icon-type-btn"
-                :class="{ 'is-active': userOptions.skillLayout === opt.value }"
-                @click="userOptions.skillLayout = opt.value"
-                @mouseenter="openButtonPreview({ kind: 'layout', layout: opt.value }, $event)"
-                @mouseleave="closeButtonPreview"
-                @focus="openButtonPreview({ kind: 'layout', layout: opt.value }, $event)"
-                @blur="closeButtonPreview"
+            <label class="setting-row">
+              <span>{{ $t("keigennRecord.settings.anonymous") }}</span>
+              <input v-model="userOptions.anonymous" type="checkbox" />
+            </label>
+            <label class="setting-row">
+              <span>{{ $t("keigennRecord.settings.actionCN") }}</span>
+              <input v-model="userOptions.actionCN" type="checkbox" />
+            </label>
+            <label class="setting-row">
+              <span>{{ $t("keigennRecord.settings.statusCN") }}</span>
+              <input v-model="userOptions.statusCN" type="checkbox" />
+            </label>
+            <label class="setting-row">
+              <span class="setting-label"
+                >{{ $t("keigennRecord.settings.parseAA")
+                }}<span class="setting-hint">{{
+                  $t("keigennRecord.settings.newRecordsOnly")
+                }}</span></span
               >
-                {{ $t(opt.labelKey) }}
+              <input v-model="userOptions.parseAA" type="checkbox" />
+            </label>
+            <label class="setting-row">
+              <span class="setting-label"
+                >{{ $t("keigennRecord.settings.parseDoT")
+                }}<span class="setting-hint">{{
+                  $t("keigennRecord.settings.newRecordsOnly")
+                }}</span></span
+              >
+              <input v-model="userOptions.parseDoT" type="checkbox" />
+            </label>
+            <label class="setting-row">
+              <span>{{ $t("keigennRecord.settings.orderTop") }}</span>
+              <input
+                type="checkbox"
+                :checked="userOptions.order === 'unshift'"
+                @change="
+                  userOptions.order = ($event.target as HTMLInputElement).checked
+                    ? 'unshift'
+                    : 'push'
+                "
+              />
+            </label>
+
+            <div class="settings-divider" />
+
+            <div class="setting-row">
+              <span>{{ $t("keigennRecord.settings.skillLayout") }}</span>
+              <div class="icon-type-group">
+                <button
+                  v-for="opt in SKILL_LAYOUT_OPTIONS"
+                  :key="opt.value"
+                  type="button"
+                  class="toolbar-btn icon-type-btn"
+                  :class="{ 'is-active': userOptions.skillLayout === opt.value }"
+                  @click="userOptions.skillLayout = opt.value"
+                  @mouseenter="openButtonPreview({ kind: 'layout', layout: opt.value }, $event)"
+                  @mouseleave="closeButtonPreview"
+                  @focus="openButtonPreview({ kind: 'layout', layout: opt.value }, $event)"
+                  @blur="closeButtonPreview"
+                >
+                  {{ $t(opt.labelKey) }}
+                </button>
+              </div>
+            </div>
+            <label v-if="userOptions.skillLayout === 'matrix'" class="setting-row setting-sub-row">
+              <span class="setting-label">
+                {{ $t("keigennRecord.settings.singleInBoth") }}
+              </span>
+              <input v-model="userOptions.singleInBoth" type="checkbox" />
+            </label>
+            <label
+              class="setting-row"
+              @mouseenter="openSliderPreview('skill', $event)"
+              @mouseleave="handleSliderMouseLeave"
+            >
+              <span>{{ $t(activeIconSizeMeta.labelKey) }}</span>
+              <span class="setting-ctrl">
+                <input
+                  v-model.number="userOptions[activeIconSizeMeta.key]"
+                  type="range"
+                  :min="activeIconSizeMeta.min"
+                  :max="activeIconSizeMeta.max"
+                  step="1"
+                  @pointerdown="handleSliderPointerDown('skill', $event)"
+                  @input="handleSliderInput('skill', $event)"
+                  @blur="handleSliderBlur"
+                />
+                <span class="setting-val">{{ userOptions[activeIconSizeMeta.key] }}px</span>
+              </span>
+            </label>
+            <label
+              class="setting-row"
+              @mouseenter="openSliderPreview('skill', $event)"
+              @mouseleave="handleSliderMouseLeave"
+            >
+              <span>{{ $t("keigennRecord.settings.skillPopoverScale") }}</span>
+              <span class="setting-ctrl">
+                <input
+                  v-model.number="userOptions.skillPopoverScale"
+                  type="range"
+                  min="0.6"
+                  max="2"
+                  step="0.05"
+                  @pointerdown="handleSliderPointerDown('skill', $event)"
+                  @input="handleSliderInput('skill', $event)"
+                  @blur="handleSliderBlur"
+                />
+                <span class="setting-val">{{
+                  Number(userOptions.skillPopoverScale).toFixed(2)
+                }}</span>
+              </span>
+            </label>
+            <label
+              class="setting-row"
+              @mouseenter="openSliderPreview('amount', $event)"
+              @mouseleave="handleSliderMouseLeave"
+            >
+              <span>{{ $t("keigennRecord.settings.amountPopoverScale") }}</span>
+              <span class="setting-ctrl">
+                <input
+                  v-model.number="userOptions.amountPopoverScale"
+                  type="range"
+                  min="0.6"
+                  max="2"
+                  step="0.05"
+                  @pointerdown="handleSliderPointerDown('amount', $event)"
+                  @input="handleSliderInput('amount', $event)"
+                  @blur="handleSliderBlur"
+                />
+                <span class="setting-val">{{
+                  Number(userOptions.amountPopoverScale).toFixed(2)
+                }}</span>
+              </span>
+            </label>
+            <div class="setting-row">
+              <span>{{ $t("keigennRecord.settings.skillSort") }}</span>
+              <button type="button" class="toolbar-btn icon-type-btn" @click="openSkillSortView">
+                {{ $t("keigennRecord.settings.configure") }} ›
               </button>
             </div>
           </div>
-          <label v-if="userOptions.skillLayout === 'matrix'" class="setting-row setting-sub-row">
-            <span class="setting-label">
-              {{ $t("keigennRecord.settings.singleInBoth") }}
-            </span>
-            <input v-model="userOptions.singleInBoth" type="checkbox" />
-          </label>
-          <label
-            class="setting-row"
-            @mouseenter="openSliderPreview('skill', $event)"
-            @mouseleave="handleSliderMouseLeave"
-          >
-            <span>{{ $t(activeIconSizeMeta.labelKey) }}</span>
-            <span class="setting-ctrl">
-              <input
-                v-model.number="userOptions[activeIconSizeMeta.key]"
-                type="range"
-                :min="activeIconSizeMeta.min"
-                :max="activeIconSizeMeta.max"
-                step="1"
-                @pointerdown="handleSliderPointerDown('skill', $event)"
-                @input="handleSliderInput('skill', $event)"
-                @blur="handleSliderBlur"
-              />
-              <span class="setting-val">{{ userOptions[activeIconSizeMeta.key] }}px</span>
-            </span>
-          </label>
-          <label
-            class="setting-row"
-            @mouseenter="openSliderPreview('skill', $event)"
-            @mouseleave="handleSliderMouseLeave"
-          >
-            <span>{{ $t("keigennRecord.settings.skillPopoverScale") }}</span>
-            <span class="setting-ctrl">
-              <input
-                v-model.number="userOptions.skillPopoverScale"
-                type="range"
-                min="0.6"
-                max="2"
-                step="0.05"
-                @pointerdown="handleSliderPointerDown('skill', $event)"
-                @input="handleSliderInput('skill', $event)"
-                @blur="handleSliderBlur"
-              />
-              <span class="setting-val">{{
-                Number(userOptions.skillPopoverScale).toFixed(2)
-              }}</span>
-            </span>
-          </label>
-          <label
-            class="setting-row"
-            @mouseenter="openSliderPreview('amount', $event)"
-            @mouseleave="handleSliderMouseLeave"
-          >
-            <span>{{ $t("keigennRecord.settings.amountPopoverScale") }}</span>
-            <span class="setting-ctrl">
-              <input
-                v-model.number="userOptions.amountPopoverScale"
-                type="range"
-                min="0.6"
-                max="2"
-                step="0.05"
-                @pointerdown="handleSliderPointerDown('amount', $event)"
-                @input="handleSliderInput('amount', $event)"
-                @blur="handleSliderBlur"
-              />
-              <span class="setting-val">{{
-                Number(userOptions.amountPopoverScale).toFixed(2)
-              }}</span>
-            </span>
-          </label>
-        </div>
-        <div class="settings-footer">
-          <ElPopconfirm
-            :title="$t('keigennRecord.settings.resetConfirm')"
-            :confirm-button-text="$t('keigennRecord.settings.confirm')"
-            :cancel-button-text="$t('keigennRecord.settings.cancel')"
-            :width="184"
-            placement="top-start"
-            popper-class="keigenn-settings-popconfirm"
-            @confirm="resetOptions"
-          >
-            <template #reference>
-              <button type="button" class="toolbar-btn">
-                {{ $t("keigennRecord.settings.resetDefaults") }}
-              </button>
-            </template>
-          </ElPopconfirm>
-          <button
-            v-if="store.isBrowser"
-            type="button"
-            class="toolbar-btn toolbar-btn-primary"
-            @click="copyActUrl"
-          >
-            {{ $t("keigennRecord.settings.copyActUrl") }}
-          </button>
-          <button v-else type="button" class="toolbar-btn" @click="settingsOpen = false">
-            {{ $t("keigennRecord.settings.close") }}
-          </button>
-        </div>
+          <div class="settings-footer">
+            <ElPopconfirm
+              :title="$t('keigennRecord.settings.resetConfirm')"
+              :confirm-button-text="$t('keigennRecord.settings.confirm')"
+              :cancel-button-text="$t('keigennRecord.settings.cancel')"
+              :width="184"
+              placement="top-start"
+              popper-class="keigenn-settings-popconfirm"
+              @confirm="resetOptions"
+            >
+              <template #reference>
+                <button type="button" class="toolbar-btn">
+                  {{ $t("keigennRecord.settings.resetDefaults") }}
+                </button>
+              </template>
+            </ElPopconfirm>
+            <button
+              v-if="store.isBrowser"
+              type="button"
+              class="toolbar-btn toolbar-btn-primary"
+              @click="copyActUrl"
+            >
+              {{ $t("keigennRecord.settings.copyActUrl") }}
+            </button>
+            <button v-else type="button" class="toolbar-btn" @click="settingsOpen = false">
+              {{ $t("keigennRecord.settings.close") }}
+            </button>
+          </div>
+        </template>
+        <SkillSortPanel v-else @back="settingsView = 'main'" @close="settingsOpen = false" />
       </div>
     </div>
 
