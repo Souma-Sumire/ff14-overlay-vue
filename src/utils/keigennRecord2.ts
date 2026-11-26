@@ -1,4 +1,5 @@
 import type { RowVO } from "@/types/keigennRecord2";
+import { rerouteImgSrc } from "@/utils/xivapi";
 
 export const invincibleEffect = [
   Number(409).toString(16).toUpperCase(), // 死斗
@@ -19,4 +20,16 @@ export function getJobIconUrl(jobIcon: string, type: number): string {
   if (!jobIcon) return "";
   const jobName = jobIcon.replaceAll(/([A-Z])/g, " $1").trim();
   return `https://souma.diemoe.net/resources/img/cj${type}/${jobName}.png`;
+}
+
+const cachedJobIconMap = new Map<string, string>();
+
+export function getCachedJobIconUrl(jobIcon: string, iconType: number): string {
+  if (!jobIcon) return "";
+  const cacheKey = `${jobIcon}|${iconType}`;
+  const cached = cachedJobIconMap.get(cacheKey);
+  if (cached !== undefined) return cached;
+  const resolved = rerouteImgSrc(getJobIconUrl(jobIcon, iconType));
+  cachedJobIconMap.set(cacheKey, resolved);
+  return resolved;
 }

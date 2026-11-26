@@ -428,6 +428,7 @@
       "skillLayout": "Cooldown Layout",
       "skillLayoutMatrix": "Matrix",
       "skillLayoutGroup": "Grouped",
+      "skillLayoutFlat": "Compact",
       "skillIconSize": "Cooldown Icon Size",
       "skillPopoverScale": "Cooldown Popup Scale",
       "amountPopoverScale": "Damage Popup Scale",

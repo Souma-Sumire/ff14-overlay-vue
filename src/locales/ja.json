@@ -428,6 +428,7 @@
       "skillLayout": "CD表示形式",
       "skillLayoutMatrix": "メンバー表",
       "skillLayoutGroup": "分類別",
+      "skillLayoutFlat": "一覧",
       "skillIconSize": "CDアイコンサイズ",
       "skillPopoverScale": "CDポップアップ倍率",
       "amountPopoverScale": "被ダメ詳細倍率",

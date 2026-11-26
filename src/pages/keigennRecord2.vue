@@ -15,6 +15,7 @@ import type {
 import type { Player } from "@/types/partyPlayer";
 import { Setting, UploadFilled, ZoomIn, ZoomOut } from "@element-plus/icons-vue";
 import { useDark } from "@vueuse/core";
+import SkillCooldownView from "@/components/keigennRecord2/SkillCooldownView.vue";
 // TODO: 死亡回放：治疗栏目的状态追踪治疗有关的buff
 import {
   computed,
@@ -43,6 +44,7 @@ import { ZoneInfo } from "@/resources/zoneInfo";
 
 import { useKeigennRecord2Store } from "@/store/keigennRecord2";
 import { compareSame } from "@/utils/compareSaveAction";
+import { getSkillLayoutPreviewSkills, getSkillLayoutPreviewTargetId } from "@/utils/keigennPreview";
 import { calculateCharges } from "@/utils/cooldown";
 import { idToSrc, parseDynamicValue } from "@/utils/dynamicValue";
 import { processAbilityLine, processFlags } from "@/utils/flags";
@@ -1158,9 +1160,8 @@ function getKeySkillSnapshot(timestamp: number, targetId: string): KeySkillSnaps
 
   return skillSnapshotSkeletonCache
     .filter((v) => {
-      if (v.scope === "party" || v.scope === "single") return true;
+      if (v.scope === "party" || v.scope === "single" || v.scope === "other") return true;
       if (v.scope === "self") return v.ownerId === targetId;
-      if (v.scope === "other") return v.ownerId !== targetId;
       return false;
     })
     .map((item) => {
@@ -1622,6 +1623,76 @@ function handlePageDrop(e: DragEvent) {
   void processLogFiles(files);
 }
 
+type SkillLayoutOption = "matrix" | "group" | "flat";
+
+const SKILL_LAYOUT_OPTIONS: { value: SkillLayoutOption; labelKey: string }[] = [
+  { value: "matrix", labelKey: "keigennRecord.settings.skillLayoutMatrix" },
+  { value: "group", labelKey: "keigennRecord.settings.skillLayoutGroup" },
+  { value: "flat", labelKey: "keigennRecord.settings.skillLayoutFlat" },
+];
+
+const layoutPreviewMode = ref<SkillLayoutOption | null>(null);
+const layoutPreviewRef = ref<HTMLElement | null>(null);
+const layoutPreviewStyle = ref<Record<string, string>>({
+  top: "0px",
+  left: "0px",
+  visibility: "hidden",
+});
+const previewSkills = computed(() =>
+  layoutPreviewMode.value ? getSkillLayoutPreviewSkills() : [],
+);
+const previewTargetId = getSkillLayoutPreviewTargetId();
+
+watch(settingsOpen, (open) => {
+  if (!open) layoutPreviewMode.value = null;
+});
+
+function openLayoutPreview(layout: SkillLayoutOption, event: Event) {
+  const target = event.currentTarget as HTMLElement | null;
+  layoutPreviewMode.value = layout;
+  layoutPreviewStyle.value = { top: "0px", left: "0px", visibility: "hidden" };
+  if (!target) return;
+
+  nextTick(() => {
+    const el = layoutPreviewRef.value;
+    if (!el || layoutPreviewMode.value !== layout) return;
+    const triggerRect = target.getBoundingClientRect();
+    const previewRect = el.getBoundingClientRect();
+    const gap = 6;
+    const margin = 6;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const w = previewRect.width;
+    const h = previewRect.height;
+
+    const belowTop = triggerRect.bottom + gap;
+    const aboveTop = triggerRect.top - gap - h;
+    let top = belowTop;
+    if (belowTop + h <= vh - margin) {
+      top = belowTop;
+    } else if (aboveTop >= margin) {
+      top = aboveTop;
+    } else {
+      top =
+        vh - triggerRect.bottom >= triggerRect.top
+          ? Math.max(margin, vh - h - margin)
+          : Math.max(margin, aboveTop);
+    }
+
+    const centeredLeft = triggerRect.left + triggerRect.width / 2 - w / 2;
+    const left = Math.max(margin, Math.min(centeredLeft, Math.max(margin, vw - w - margin)));
+    layoutPreviewStyle.value = {
+      top: `${Math.round(top)}px`,
+      left: `${Math.round(left)}px`,
+      visibility: "visible",
+    };
+  });
+}
+
+function closeLayoutPreview() {
+  layoutPreviewMode.value = null;
+}
+
 function buildActUrl(): string {
   const base = `${window.location.origin}${window.location.pathname}#/keigennRecord2`;
   const q = new URLSearchParams();
@@ -1994,20 +2065,18 @@ function copyActUrl() {
             <span>{{ $t("keigennRecord.settings.skillLayout") }}</span>
             <div class="icon-type-group">
               <button
+                v-for="opt in SKILL_LAYOUT_OPTIONS"
+                :key="opt.value"
                 type="button"
                 class="toolbar-btn icon-type-btn"
-                :class="{ 'is-active': userOptions.skillLayout === 'matrix' }"
-                @click="userOptions.skillLayout = 'matrix'"
+                :class="{ 'is-active': userOptions.skillLayout === opt.value }"
+                @click="userOptions.skillLayout = opt.value"
+                @mouseenter="openLayoutPreview(opt.value, $event)"
+                @mouseleave="closeLayoutPreview"
+                @focus="openLayoutPreview(opt.value, $event)"
+                @blur="closeLayoutPreview"
               >
-                {{ $t("keigennRecord.settings.skillLayoutMatrix") }}
-              </button>
-              <button
-                type="button"
-                class="toolbar-btn icon-type-btn"
-                :class="{ 'is-active': userOptions.skillLayout === 'group' }"
-                @click="userOptions.skillLayout = 'group'"
-              >
-                {{ $t("keigennRecord.settings.skillLayoutGroup") }}
+                {{ $t(opt.labelKey) }}
               </button>
             </div>
           </div>
@@ -2070,6 +2139,30 @@ function copyActUrl() {
         </div>
       </div>
     </div>
+
+    <Teleport to="body">
+      <div
+        v-if="settingsOpen && layoutPreviewMode"
+        ref="layoutPreviewRef"
+        class="skill-layout-preview-popover"
+        :style="layoutPreviewStyle"
+      >
+        <div
+          class="skill-layout-preview-scale"
+          :style="{
+            '--skill-icon-size': '24px',
+            '--skill-icon-scale': String(24 / 28),
+          }"
+        >
+          <SkillCooldownView
+            :skills="previewSkills"
+            :target-id="previewTargetId"
+            :layout="layoutPreviewMode"
+            :anonymous="userOptions.anonymous"
+          />
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -2676,4 +2769,24 @@ main {
 
 <style lang="scss">
 @use "@/styles/compact-select.scss";
+
+.skill-layout-preview-popover {
+  position: fixed;
+  z-index: 4100;
+  pointer-events: none;
+  max-width: calc(100vw - 12px);
+  max-height: calc(100vh - 12px);
+  overflow: hidden;
+  padding: 5px 6px;
+  background: rgb(24, 25, 29);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 4px;
+  color: rgb(214, 219, 227);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.72);
+
+  .skill-layout-preview-scale {
+    zoom: 0.64;
+    transform-origin: top left;
+  }
+}
 </style>

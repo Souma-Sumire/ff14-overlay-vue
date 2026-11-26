@@ -431,6 +431,7 @@
       "skillLayout": "冷却弹窗布局",
       "skillLayoutMatrix": "成员矩阵",
       "skillLayoutGroup": "分类分组",
+      "skillLayoutFlat": "平铺排序",
       "skillIconSize": "冷却图标大小",
       "skillPopoverScale": "冷却弹窗缩放",
       "amountPopoverScale": "伤害详情缩放",

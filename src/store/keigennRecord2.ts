@@ -12,7 +12,7 @@ export interface KeigennUserOptions {
   parseDoT: boolean;
   minimize: boolean;
   minimizeStyle: "text" | "icon";
-  skillLayout: "matrix" | "group";
+  skillLayout: "matrix" | "group" | "flat";
   skillIconSize: number;
   skillPopoverScale: number;
   amountPopoverScale: number;
@@ -31,7 +31,7 @@ const DEFAULT_USER_OPTIONS: KeigennUserOptions = {
   parseDoT: false, // 解析DoT
   minimize: false, // 启动时迷你化
   minimizeStyle: "icon", // 缩小样式：图标+文字 | 单图标
-  skillLayout: "matrix", // 冷却弹窗布局：成员矩阵 | 分类分组
+  skillLayout: "matrix", // 冷却弹窗布局：成员矩阵 | 分类分组 | 平铺排序
   skillIconSize: 28, // 冷却图标大小（px）
   skillPopoverScale: 1, // 冷却弹窗独立缩放倍率
   amountPopoverScale: 1, // 伤害详情弹窗独立缩放倍率
@@ -64,7 +64,11 @@ function parseParams<T>(v: unknown, def: T): T {
 }
 
 function normalizeUserOptions(options: KeigennUserOptions): KeigennUserOptions {
-  if (options.skillLayout !== "matrix" && options.skillLayout !== "group") {
+  if (
+    options.skillLayout !== "matrix" &&
+    options.skillLayout !== "group" &&
+    options.skillLayout !== "flat"
+  ) {
     options.skillLayout = DEFAULT_USER_OPTIONS.skillLayout;
   }
   if (!Number.isFinite(options.skillIconSize) || options.skillIconSize <= 0) {
