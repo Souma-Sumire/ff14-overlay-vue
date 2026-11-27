@@ -424,6 +424,7 @@
       "parseDoT": "解析持续伤害",
       "newRecordsOnly": "仅对新记录生效",
       "orderTop": "新记录置顶",
+      "lang": "语言",
       "iconType": "职业图标样式",
       "minimizeStyle": "缩小样式",
       "skillLayout": "冷却弹窗布局",

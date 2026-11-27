@@ -1,3 +1,4 @@
+import type { Lang } from "@/types/lang";
 import { defineStore } from "pinia";
 
 const DEBUG_SHOW_HEALS = false; // 调试用：主表显示治疗记录
@@ -30,6 +31,7 @@ export interface KeigennUserOptions {
   statusCN: boolean;
   order: "unshift" | "push";
   anonymous: boolean;
+  lang: Lang;
 }
 
 const DEFAULT_USER_OPTIONS: KeigennUserOptions = {
@@ -59,6 +61,7 @@ const DEFAULT_USER_OPTIONS: KeigennUserOptions = {
   statusCN: true, // status显示中文化
   order: "unshift", // 数据排列顺序
   anonymous: false, // 匿名模式（玩家名替换为职业名）
+  lang: "zhCn", // 界面语言
 };
 
 function createDefaultUserOptions(): KeigennUserOptions {
@@ -207,6 +210,14 @@ function normalizeUserOptions(options: KeigennUserOptions): KeigennUserOptions {
   }
   options.jobOrder = parseNumberArray(options.jobOrder);
   options.jobSkillOrder = parseJobSkillOrder(options.jobSkillOrder);
+  if (
+    options.lang !== "zhCn" &&
+    options.lang !== "zhTw" &&
+    options.lang !== "en" &&
+    options.lang !== "ja"
+  ) {
+    options.lang = DEFAULT_USER_OPTIONS.lang;
+  }
   return options;
 }
 

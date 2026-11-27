@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // 职业信息缓存
 import type { FFIcon } from "@/types/fflogs";
+import type { Lang } from "@/types/lang";
 import type {
   CombatDataEvent,
   Encounter,
@@ -90,7 +91,7 @@ import {
 } from "element-plus";
 
 const dev = useDev();
-const { t } = useLang();
+const { t, setLang } = useLang();
 const route = useRoute();
 
 const store = useKeigennRecord2Store();
@@ -98,6 +99,14 @@ const userOptions = store.userOptions;
 store.syncUrlOptions();
 // 某些情况下OverlayPluginApi并不会立即被挂在到window上。用户上报，未复现。
 store.checkIsBrowser();
+
+watch(
+  () => userOptions.lang,
+  (val) => {
+    setLang(val);
+  },
+  { immediate: true },
+);
 
 watch(
   () => route.fullPath,
@@ -1639,6 +1648,13 @@ function handlePageDrop(e: DragEvent) {
   void processLogFiles(files);
 }
 
+const LANG_OPTIONS: { value: Lang; label: string }[] = [
+  { value: "zhCn", label: "简体中文" },
+  { value: "zhTw", label: "繁體中文" },
+  { value: "en", label: "English" },
+  { value: "ja", label: "日本語" },
+];
+
 type SkillLayoutOption = "matrix" | "group" | "flat";
 type SliderPreviewKind = "scale" | "skill" | "amount";
 type SettingsPreviewState =
@@ -1978,6 +1994,7 @@ function buildActUrl(): string {
   if (userOptions.statusCN !== true) q.set("statusCN", "0");
   if (userOptions.order !== "unshift") q.set("order", userOptions.order);
   if (userOptions.anonymous) q.set("anonymous", "1");
+  if (userOptions.lang !== "zhCn") q.set("lang", userOptions.lang);
   const qs = q.toString();
   return qs ? `${base}?${qs}` : base;
 }
@@ -2219,7 +2236,7 @@ function copyActUrl() {
       <div
         ref="settingsPanelRef"
         class="settings-panel"
-        :class="{ 'is-sort-view': settingsView === 'sort' }"
+        :class="{ 'is-sort-view': settingsView === 'skill-sort' }"
       >
         <template v-if="settingsView === 'main'">
           <div class="settings-body">
@@ -2332,6 +2349,23 @@ function copyActUrl() {
                   </span>
                 </button>
               </div>
+            </div>
+            <div class="setting-row">
+              <span>{{ $t("keigennRecord.settings.lang") }}</span>
+              <el-select
+                v-model="userOptions.lang"
+                size="small"
+                class="settings-lang-select"
+                popper-class="keigenn-settings-select-popup"
+                :show-arrow="false"
+              >
+                <el-option
+                  v-for="opt in LANG_OPTIONS"
+                  :key="opt.value"
+                  :label="opt.label"
+                  :value="opt.value"
+                />
+              </el-select>
             </div>
 
             <div class="settings-divider" />
@@ -3409,10 +3443,69 @@ main {
   padding: 0 8px;
   min-height: 22px;
 }
+
+.settings-lang-select {
+  width: 108px;
+  flex-shrink: 0;
+
+  :deep(.el-select__wrapper) {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: none !important;
+    border-radius: 2px;
+    min-height: 22px;
+    height: 22px;
+    padding: 0 7px;
+
+    &.is-focused {
+      border-color: #4c8df6;
+    }
+  }
+
+  :deep(.el-select__selected-item) {
+    color: #eef2f7;
+    font-size: 11.5px;
+  }
+
+  :deep(.el-select__caret) {
+    color: #9ba4b2;
+  }
+}
 </style>
 
 <style lang="scss">
 @use "@/styles/compact-select.scss";
+
+.keigenn-settings-select-popup.el-popper {
+  z-index: 4200 !important;
+  background: #23262d !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.68) !important;
+
+  .el-select-dropdown__list {
+    padding: 2px 0 !important;
+  }
+
+  .el-select-dropdown__item {
+    height: 24px !important;
+    line-height: 24px !important;
+    min-height: 24px !important;
+    padding: 0 9px !important;
+    font-size: 11.5px !important;
+    color: #cfd6e0 !important;
+
+    &.is-hovering {
+      background: rgba(255, 255, 255, 0.08) !important;
+      color: #ffffff !important;
+    }
+
+    &.is-selected {
+      background: rgba(64, 158, 255, 0.18) !important;
+      color: #6ea8fe !important;
+      font-weight: 600;
+    }
+  }
+}
 
 .keigenn-settings-popconfirm.el-popper {
   z-index: 4200 !important;

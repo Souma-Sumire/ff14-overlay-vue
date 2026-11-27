@@ -421,6 +421,7 @@
       "parseDoT": "Parse DoT",
       "newRecordsOnly": "New records only",
       "orderTop": "Newest on Top",
+      "lang": "Language",
       "iconType": "Job Icon Style",
       "minimizeStyle": "Minimized Style",
       "skillLayout": "Cooldown Layout",

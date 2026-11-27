@@ -421,6 +421,7 @@
       "parseDoT": "DoT解析",
       "newRecordsOnly": "新規記録のみ有効",
       "orderTop": "新しい記録を上に",
+      "lang": "言語",
       "iconType": "ジョブアイコン",
       "minimizeStyle": "最小化表示",
       "skillLayout": "CD表示形式",
