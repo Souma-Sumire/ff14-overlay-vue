@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import type { KeigennSkill, SkillScope } from "@/types/keigennRecord2";
+import type { Lang } from "@/types/lang";
 import { ElPopconfirm } from "element-plus";
 import { computed, ref } from "vue";
 import { VueDraggable } from "vue-draggable-plus";
-import { useLang } from "@/composables/useLang";
+import { localeToCactbotLang, useLang } from "@/composables/useLang";
 import { GLOBAL_SKILL_MAX_LEVEL } from "@/resources/globalSkills";
 import { keigennSkills } from "@/resources/keigennSkillResource";
 import { getActionChinese } from "@/resources/logic/actionChinese";
@@ -51,7 +52,7 @@ const DEFAULT_SCOPE_PRIORITY: Record<SkillScope, number> = {
   self: 2,
 };
 
-const { t } = useLang();
+const { t, locale } = useLang();
 const store = useKeigennRecord2Store();
 const userOptions = store.userOptions;
 const activeRole = ref<RoleTab>("all");
@@ -109,12 +110,14 @@ const orderedJobs = computed<SortJobEntry[]>(() => {
   const fullOrder = getEffectiveJobOrder(userOptions.jobOrder).filter((jobEnum) =>
     TRACKED_BATTLE_JOB_SET.has(jobEnum),
   );
+  const cLang = localeToCactbotLang(locale.value as Lang);
   return fullOrder
     .map((jobEnum) => {
       const job = Util.jobEnumToJob(jobEnum);
+      const fullName = Util.jobToFullName(job);
       return {
         jobEnum,
-        jobName: Util.jobToFullName(job)?.simple2 ?? job,
+        jobName: fullName?.[cLang] || fullName?.cn || fullName?.en || job,
         jobIconSrc: getCachedJobIconUrl(Util.jobEnumToIcon(jobEnum), userOptions.iconType),
         role: resolveRole(jobEnum),
       };
