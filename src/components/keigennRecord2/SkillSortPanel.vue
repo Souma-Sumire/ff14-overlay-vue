@@ -459,7 +459,7 @@ function handleJobImgError(e: Event) {
   display: flex;
   flex-wrap: wrap;
   gap: 3px;
-  padding-left: 4px;
+  padding-left: 2px;
 }
 
 .sort-skill-item {
@@ -488,14 +488,16 @@ function handleJobImgError(e: Event) {
     position: absolute;
     right: 0;
     bottom: 0;
-    padding: 0 2px;
-    font-size: 9px;
-    line-height: 11px;
+    padding: 0 3px;
+    font-size: 12px;
+    line-height: 14px;
     font-weight: 500;
     white-space: nowrap;
     color: #f1f5f9;
-    background: rgba(14, 16, 20, 0.84);
-    border-top-left-radius: 2px;
+    background: rgba(14, 16, 20, 0.86);
+    border-top-left-radius: 3px;
+    transform: scale(0.75);
+    transform-origin: right bottom;
     pointer-events: none;
 
     &.is-party {
@@ -509,6 +511,21 @@ function handleJobImgError(e: Event) {
 
     &.is-self {
       color: #86efac;
+    }
+  }
+}
+
+@media (max-width: 400px) {
+  .sort-skill-list {
+    gap: 2px;
+  }
+
+  .sort-skill-item {
+    width: 24px;
+    height: 24px;
+
+    .sort-skill-scope {
+      transform: scale(0.7);
     }
   }
 }

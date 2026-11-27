@@ -3103,18 +3103,25 @@ main {
   width: 100%;
   max-width: 344px;
   max-height: calc(100vh - 16px);
-
-  &.is-sort-view {
-    max-width: 368px;
-  }
   display: flex;
   flex-direction: column;
+  font-family:
+    "Microsoft YaHei UI",
+    "Microsoft YaHei",
+    "PingFang SC",
+    system-ui,
+    -apple-system,
+    sans-serif;
   background: #191b20;
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 4px;
   color: #e6ebf2;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.72);
   overflow: hidden;
+
+  &.is-sort-view {
+    max-width: 392px;
+  }
 }
 
 .settings-body {
