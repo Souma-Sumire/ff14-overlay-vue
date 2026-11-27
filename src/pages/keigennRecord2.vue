@@ -2216,7 +2216,11 @@ function copyActUrl() {
     </div>
 
     <div v-if="settingsOpen" class="settings-backdrop" @click.self="settingsOpen = false">
-      <div ref="settingsPanelRef" class="settings-panel">
+      <div
+        ref="settingsPanelRef"
+        class="settings-panel"
+        :class="{ 'is-sort-view': settingsView === 'sort' }"
+      >
         <template v-if="settingsView === 'main'">
           <div class="settings-body">
             <div
@@ -3065,6 +3069,10 @@ main {
   width: 100%;
   max-width: 344px;
   max-height: calc(100vh - 16px);
+
+  &.is-sort-view {
+    max-width: 368px;
+  }
   display: flex;
   flex-direction: column;
   background: #191b20;

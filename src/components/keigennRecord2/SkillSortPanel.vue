@@ -2,7 +2,7 @@
 import type { KeigennSkill, SkillScope } from "@/types/keigennRecord2";
 import type { Lang } from "@/types/lang";
 import { ElPopconfirm } from "element-plus";
-import { computed, ref } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { VueDraggable } from "vue-draggable-plus";
 import { localeToCactbotLang, useLang } from "@/composables/useLang";
 import { GLOBAL_SKILL_MAX_LEVEL } from "@/resources/globalSkills";
@@ -56,6 +56,15 @@ const { t, locale } = useLang();
 const store = useKeigennRecord2Store();
 const userOptions = store.userOptions;
 const activeRole = ref<RoleTab>("all");
+const sortBodyRef = ref<HTMLElement | null>(null);
+
+watch(activeRole, () => {
+  nextTick(() => {
+    if (sortBodyRef.value) {
+      sortBodyRef.value.scrollTop = 0;
+    }
+  });
+});
 
 const TRACKED_BATTLE_JOB_SET = new Set<number>(
   Util.getBattleJobs3()
@@ -207,7 +216,7 @@ function handleJobImgError(e: Event) {
       </button>
     </div>
 
-    <div class="sort-body">
+    <div ref="sortBodyRef" class="sort-body">
       <VueDraggable
         :model-value="orderedJobs"
         handle=".sort-job-head"
@@ -310,7 +319,7 @@ function handleJobImgError(e: Event) {
   }
 
   .sort-title {
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 600;
     color: #eef2f7;
   }
@@ -331,7 +340,7 @@ function handleJobImgError(e: Event) {
   padding: 0 2px;
   background: transparent;
   border: none;
-  font-size: 11.5px;
+  font-size: 12px;
   color: #8f98a8;
   cursor: pointer;
   transition: color 0.12s ease;
@@ -360,7 +369,7 @@ function handleJobImgError(e: Event) {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 8px 10px 10px 14px;
+  padding: 8px 8px 10px 10px;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
 
@@ -449,14 +458,14 @@ function handleJobImgError(e: Event) {
 .sort-skill-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
-  padding-left: 6px;
+  gap: 3px;
+  padding-left: 4px;
 }
 
 .sort-skill-item {
   position: relative;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   border-radius: 3px;
   overflow: hidden;
   background: #222;
@@ -484,10 +493,8 @@ function handleJobImgError(e: Event) {
     line-height: 11px;
     font-weight: 500;
     white-space: nowrap;
-    -webkit-font-smoothing: antialiased;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.95);
     color: #f1f5f9;
-    background: rgba(10, 12, 16, 0.68);
+    background: rgba(14, 16, 20, 0.84);
     border-top-left-radius: 2px;
     pointer-events: none;
 
