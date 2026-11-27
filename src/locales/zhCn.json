@@ -448,7 +448,7 @@
       "roleTank": "坦克",
       "roleHealer": "治疗",
       "roleDps": "输出",
-      "scopeSingleBoth": "自·单",
+      "scopeSingleBoth": "自单",
       "resetDefaults": "恢复默认",
       "resetConfirm": "确定恢复默认设置？",
       "confirm": "确定",

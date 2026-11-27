@@ -139,6 +139,14 @@ function getOrderedSkillsForJob(jobEnum: number): SortSkillItem[] {
   return sorted.map(toSkillItem);
 }
 
+const orderedSkillsByJob = computed<Record<number, SortSkillItem[]>>(() => {
+  const result: Record<number, SortSkillItem[]> = {};
+  for (const job of orderedJobs.value) {
+    result[job.jobEnum] = getOrderedSkillsForJob(job.jobEnum);
+  }
+  return result;
+});
+
 function handleJobOrderUpdate(nextList: SortJobEntry[]) {
   const nextIds = nextList.map((item) => item.jobEnum);
   if (activeRole.value === "all") {
@@ -199,11 +207,14 @@ function handleJobImgError(e: Event) {
     <div class="sort-body">
       <VueDraggable
         :model-value="orderedJobs"
-        handle=".job-drag-handle"
-        :animation="140"
+        handle=".sort-job-head"
+        :animation="150"
         :force-fallback="true"
-        :fallback-tolerance="16"
-        ghost-class="sort-ghost"
+        :fallback-on-body="true"
+        :fallback-tolerance="2"
+        fallback-class="sort-drag-fallback"
+        chosen-class="sort-drag-chosen"
+        ghost-class="sort-drag-ghost"
         class="sort-job-list"
         @update:model-value="handleJobOrderUpdate"
       >
@@ -214,26 +225,35 @@ function handleJobImgError(e: Event) {
               v-if="job.jobIconSrc"
               :src="job.jobIconSrc"
               class="sort-job-icon"
+              draggable="false"
               @error="handleJobImgError"
             />
             <span class="sort-job-name">{{ job.jobName }}</span>
           </div>
           <VueDraggable
-            :model-value="getOrderedSkillsForJob(job.jobEnum)"
-            :animation="120"
+            :model-value="orderedSkillsByJob[job.jobEnum]"
+            :animation="150"
             :force-fallback="true"
-            :fallback-tolerance="16"
-            ghost-class="sort-ghost"
+            :fallback-on-body="true"
+            :fallback-tolerance="2"
+            fallback-class="sort-drag-fallback"
+            chosen-class="sort-drag-chosen"
+            ghost-class="sort-drag-ghost"
             class="sort-skill-list"
             @update:model-value="handleSkillOrderUpdate(job.jobEnum, $event)"
           >
             <div
-              v-for="skill in getOrderedSkillsForJob(job.jobEnum)"
+              v-for="skill in orderedSkillsByJob[job.jobEnum]"
               :key="skill.id"
               class="sort-skill-item"
               :title="`${skill.name} (${skill.recast}s · ${skill.scopeBadge})`"
             >
-              <img :src="skill.icon" class="sort-skill-img" @error="handleImgError" />
+              <img
+                :src="skill.icon"
+                class="sort-skill-img"
+                draggable="false"
+                @error="handleImgError"
+              />
               <span class="sort-skill-scope" :class="`is-${skill.scope}`">
                 {{ skill.scopeBadge }}
               </span>
@@ -368,6 +388,7 @@ function handleJobImgError(e: Event) {
 .sort-job-row {
   padding: 7px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  user-select: none;
 
   &:last-child {
     border-bottom: none;
@@ -379,22 +400,24 @@ function handleJobImgError(e: Event) {
   align-items: center;
   gap: 5px;
   margin-bottom: 5px;
+  cursor: grab;
+  user-select: none;
+
+  &:active {
+    cursor: grabbing;
+  }
 
   .job-drag-handle {
     color: #747d8c;
     font-size: 12px;
     line-height: 1;
-    cursor: grab;
     padding: 0 2px;
     user-select: none;
+    transition: color 0.12s ease;
+  }
 
-    &:hover {
-      color: #c5ccd6;
-    }
-
-    &:active {
-      cursor: grabbing;
-    }
+  &:hover .job-drag-handle {
+    color: #c5ccd6;
   }
 
   .sort-job-icon {
@@ -402,10 +425,11 @@ function handleJobImgError(e: Event) {
     height: 16px;
     object-fit: contain;
     display: block;
+    pointer-events: none;
   }
 
   .sort-job-name {
-    font-size: 11.5px;
+    font-size: 12px;
     font-weight: 600;
     color: #dbe2ec;
   }
@@ -414,19 +438,20 @@ function handleJobImgError(e: Event) {
 .sort-skill-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 5px;
   padding-left: 16px;
 }
 
 .sort-skill-item {
   position: relative;
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   border-radius: 3px;
   overflow: hidden;
   background: #222;
   cursor: grab;
   flex-shrink: 0;
+  user-select: none;
 
   &:active {
     cursor: grabbing;
@@ -443,12 +468,14 @@ function handleJobImgError(e: Event) {
     position: absolute;
     right: 0;
     bottom: 0;
-    padding: 0 2px;
-    font-size: 8px;
-    line-height: 1.15;
+    padding: 0 3px;
+    font-size: 10px;
+    line-height: 13px;
     font-weight: 600;
+    white-space: nowrap;
+    -webkit-font-smoothing: antialiased;
     color: #f1f5f9;
-    background: rgba(15, 17, 21, 0.82);
+    background: rgba(12, 14, 18, 0.94);
     border-top-left-radius: 2px;
     pointer-events: none;
 
@@ -467,8 +494,12 @@ function handleJobImgError(e: Event) {
   }
 }
 
-.sort-ghost {
-  opacity: 0.35;
+.sort-drag-ghost {
+  opacity: 0.28 !important;
+}
+
+.sort-drag-chosen {
+  opacity: 0.95;
 }
 
 .toolbar-btn {
@@ -506,5 +537,22 @@ function handleJobImgError(e: Event) {
   justify-content: space-between;
   gap: 8px;
   flex-shrink: 0;
+}
+</style>
+
+<style lang="scss">
+.sort-drag-fallback {
+  z-index: 5000 !important;
+  opacity: 0.96 !important;
+  pointer-events: none !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.72) !important;
+  outline: 1.5px solid #4c8df6;
+  border-radius: 3px;
+
+  &.sort-job-row {
+    background: #20232a;
+    padding: 7px 8px;
+    border-bottom: none;
+  }
 }
 </style>
