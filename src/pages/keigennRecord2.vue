@@ -2240,6 +2240,24 @@ function copyActUrl() {
       >
         <template v-if="settingsView === 'main'">
           <div class="settings-body">
+            <div class="setting-row setting-wrap-row">
+              <span>{{ $t("keigennRecord.settings.lang") }}</span>
+              <div class="icon-type-group">
+                <button
+                  v-for="opt in LANG_OPTIONS"
+                  :key="opt.value"
+                  type="button"
+                  class="toolbar-btn icon-type-btn"
+                  :class="{ 'is-active': userOptions.lang === opt.value }"
+                  @click="userOptions.lang = opt.value"
+                >
+                  {{ opt.label }}
+                </button>
+              </div>
+            </div>
+
+            <div class="settings-divider" />
+
             <div
               class="setting-row"
               @mouseenter="openSliderPreview('scale', $event)"
@@ -2349,23 +2367,6 @@ function copyActUrl() {
                   </span>
                 </button>
               </div>
-            </div>
-            <div class="setting-row">
-              <span>{{ $t("keigennRecord.settings.lang") }}</span>
-              <el-select
-                v-model="userOptions.lang"
-                size="small"
-                class="settings-lang-select"
-                popper-class="keigenn-settings-select-popup"
-                :show-arrow="false"
-              >
-                <el-option
-                  v-for="opt in LANG_OPTIONS"
-                  :key="opt.value"
-                  :label="opt.label"
-                  :value="opt.value"
-                />
-              </el-select>
             </div>
 
             <div class="settings-divider" />
@@ -3450,69 +3451,10 @@ main {
   padding: 0 8px;
   min-height: 22px;
 }
-
-.settings-lang-select {
-  width: 108px;
-  flex-shrink: 0;
-
-  :deep(.el-select__wrapper) {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    box-shadow: none !important;
-    border-radius: 2px;
-    min-height: 22px;
-    height: 22px;
-    padding: 0 7px;
-
-    &.is-focused {
-      border-color: #4c8df6;
-    }
-  }
-
-  :deep(.el-select__selected-item) {
-    color: #eef2f7;
-    font-size: 11.5px;
-  }
-
-  :deep(.el-select__caret) {
-    color: #9ba4b2;
-  }
-}
 </style>
 
 <style lang="scss">
 @use "@/styles/compact-select.scss";
-
-.keigenn-settings-select-popup.el-popper {
-  z-index: 4200 !important;
-  background: #23262d !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.68) !important;
-
-  .el-select-dropdown__list {
-    padding: 2px 0 !important;
-  }
-
-  .el-select-dropdown__item {
-    height: 24px !important;
-    line-height: 24px !important;
-    min-height: 24px !important;
-    padding: 0 9px !important;
-    font-size: 11.5px !important;
-    color: #cfd6e0 !important;
-
-    &.is-hovering {
-      background: rgba(255, 255, 255, 0.08) !important;
-      color: #ffffff !important;
-    }
-
-    &.is-selected {
-      background: rgba(64, 158, 255, 0.18) !important;
-      color: #6ea8fe !important;
-      font-weight: 600;
-    }
-  }
-}
 
 .keigenn-settings-popconfirm.el-popper {
   z-index: 4200 !important;
