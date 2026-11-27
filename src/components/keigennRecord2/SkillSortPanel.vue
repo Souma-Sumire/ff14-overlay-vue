@@ -386,7 +386,7 @@ function handleJobImgError(e: Event) {
 }
 
 .sort-job-row {
-  padding: 7px 0;
+  padding: 6px 0 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   user-select: none;
 
@@ -398,20 +398,28 @@ function handleJobImgError(e: Event) {
 .sort-job-head {
   display: flex;
   align-items: center;
-  gap: 5px;
-  margin-bottom: 5px;
+  gap: 6px;
+  padding: 4px 6px;
+  margin-bottom: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.04);
   cursor: grab;
   user-select: none;
+  transition: background-color 0.12s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.085);
+  }
 
   &:active {
     cursor: grabbing;
+    background: rgba(76, 141, 246, 0.14);
   }
 
   .job-drag-handle {
     color: #747d8c;
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1;
-    padding: 0 2px;
     user-select: none;
     transition: color 0.12s ease;
   }
@@ -439,7 +447,7 @@ function handleJobImgError(e: Event) {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  padding-left: 16px;
+  padding-left: 6px;
 }
 
 .sort-skill-item {
@@ -468,14 +476,15 @@ function handleJobImgError(e: Event) {
     position: absolute;
     right: 0;
     bottom: 0;
-    padding: 0 3px;
-    font-size: 10px;
-    line-height: 13px;
-    font-weight: 600;
+    padding: 0 2px;
+    font-size: 9px;
+    line-height: 11px;
+    font-weight: 500;
     white-space: nowrap;
     -webkit-font-smoothing: antialiased;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.95);
     color: #f1f5f9;
-    background: rgba(12, 14, 18, 0.94);
+    background: rgba(10, 12, 16, 0.68);
     border-top-left-radius: 2px;
     pointer-events: none;
 
